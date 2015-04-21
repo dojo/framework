@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "declaration": false,
+        "module": "camd",
+        "noImplicitAny": true,
+        "removeComments": false,
+        "sourceMap": false,
+        "target": "es5"
+    },
+    "filesGlob": [
+        "./**/*.ts",
+        "../typings/tsd.d.ts"
+    ],
+    "files": [
+        "./intern.ts",
+		"./intern-local.ts",
+		"./unit/all.ts",
+		"./unit/lang.ts",
+		"./functional/all.ts",
+		"../typings/tsd.d.ts",
+		"./typings/tsd.d.ts"
+    ]
+}

@@ -1,0 +1,20 @@
+{
+	"version": "1.5.0",
+	"compilerOptions": {
+		"declaration": false,
+		"module": "camd",
+		"noImplicitAny": true,
+		"outDir": "dist/",
+		"removeComments": false,
+		"sourceMap": true,
+		"target": "es5"
+	},
+	"filesGlob": [
+		"./src/**/*.ts",
+		"./typings/tsd.d.ts"
+	],
+	"files": [
+		"./src/lang.ts",
+		"./typings/tsd.d.ts"
+	]
+}
