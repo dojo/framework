@@ -1,13 +1,12 @@
 /* jshint node:true */
 
-var dtsGenerator = require('dts-generator');
-
 module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-ts');
 	grunt.loadNpmTasks('grunt-tslint');
+	grunt.loadNpmTasks('dts-generator');
 	grunt.loadNpmTasks('intern');
 
 	grunt.initConfig({
@@ -60,7 +59,7 @@ module.exports = function (grunt) {
 			}
 		},
 
-		dts: {
+		dtsGenerator: {
 			options: {
 				baseDir: 'src',
 				name: '<%= name %>'
@@ -169,22 +168,6 @@ module.exports = function (grunt) {
 		}
 	});
 
-	grunt.registerMultiTask('dts', function () {
-		var done = this.async();
-		var onProgress = grunt.verbose.writeln.bind(grunt.verbose);
-
-		var kwArgs = this.options();
-		var path = require('path');
-		kwArgs.files = this.filesSrc.map(function (filename) {
-			return path.relative(kwArgs.baseDir, filename);
-		});
-
-		dtsGenerator.generate(kwArgs, onProgress).then(function () {
-			grunt.log.writeln('Generated d.ts bundle at \x1b[36m' + kwArgs.out + '\x1b[39;49m');
-			done();
-		}, done);
-	});
-
 	grunt.registerMultiTask('rewriteSourceMaps', function () {
 		this.filesSrc.forEach(function (file) {
 			var map = JSON.parse(grunt.file.read(file));
@@ -214,7 +197,7 @@ module.exports = function (grunt) {
 		'ts:dist',
 		'rename:sourceMaps',
 		'rewriteSourceMaps',
-		'dts:tests'
+		'dtsGenerator:tests'
 	]);
 	grunt.registerTask('build-tests', [
 		'build',
@@ -224,7 +207,7 @@ module.exports = function (grunt) {
 		'build',
 		'copy:typings',
 		'copy:staticFiles',
-		'dts:dist'
+		'dtsGenerator:dist'
 	]);
 	grunt.registerTask('test', [ 'build-tests', 'intern:client' ]);
 	grunt.registerTask('test-local', [ 'build-tests', 'intern:local' ]);

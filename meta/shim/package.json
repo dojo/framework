@@ -12,7 +12,7 @@
 		"url": "https://github.com/dojo/core.git"
 	},
 	"devDependencies": {
-		"dts-generator": "1.3.1",
+		"dts-generator": "1.4.1",
 		"grunt": "0.4.5",
 		"grunt-contrib-clean": "0.6.0",
 		"grunt-contrib-copy": "0.8.0",
