@@ -1,7 +1,12 @@
+var array = {
+	map: Array.prototype.map
+};
+
 /**
  * Test whether all elements in the array pass the provided callback
  * @param items a collection of synchronous/asynchronous values
  * @param callback a synchronous/asynchronous test
+ * @return eventually returns true if all values pass; otherwise false
  */
 export function every<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<boolean> {
 	return Promise.all<T>(items).then(function (results) {
@@ -33,8 +38,24 @@ export function every<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Prom
 	});
 }
 
-// TODO implement
-//export function filter<T>(items: Array<T | Thenable<T>>, callback: Filterer<T>): Promise<T[]>;
+/**
+ * Returns an array of elements which pass the provided callback
+ * @param items a collection of synchronous/asynchronous values
+ * @param callback a synchronous/asynchronous test
+ * @return eventually returns a new array with only values that have passed
+ */
+export function filter<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<T[]> {
+	return Promise.all<T>(items).then(function (results) {
+		var pass: (boolean | Promise<boolean>)[] = array.map.call(results, callback);
+		return Promise.all<boolean>(pass).then<T[]>(function (pass) {
+			var arr: T[] = [];
+			for(var i = 0; i < pass.length; i++) {
+				pass[i] && arr.push(results[i]);
+			}
+			return arr;
+		});
+	});
+}
 
 // TODO implement
 //export function find<T>(items: Array<T | Thenable<T>>, callback: Filterer<T>): Promise<T>;
