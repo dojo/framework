@@ -27,14 +27,14 @@ function createTriggerablePromise<T>(): ControlledPromise<T> {
 	return dfd;
 }
 
+function helloWorldTest (value: any): boolean {
+	return value === 'hello' || value === 'world';
+}
+
 registerSuite({
 	name: 'async/iteration',
 
 	'.every<T>()': (function () {
-		function helloWorldTest (value: any): boolean {
-			return value === 'hello' || value === 'world';
-		}
-
 		function assertTrue (value: boolean): void {
 			assert.isTrue(value);
 		}
@@ -144,6 +144,117 @@ registerSuite({
 				response[1].resolve(false);
 
 				return promise;
+			}
+		};
+	})(),
+
+	'.filter()': (function () {
+		return {
+			'synchronous values': {
+				'one passing value': function () {
+					var values = ['hello'];
+					return iteration.filter(values, helloWorldTest).then(function (results) {
+						assert.deepEqual(results, values);
+					});
+				},
+
+				'one failing value': function () {
+					var values = ['failing value'];
+					return iteration.filter(values, helloWorldTest).then(function (results) {
+						assert.deepEqual(results, []);
+					});
+				},
+
+				'mixed passing and failing values': function () {
+					var values = ['hello', 'failing value', 'world'];
+					return iteration.filter(values, helloWorldTest).then(function (results) {
+						assert.deepEqual(results, ['hello', 'world']);
+					});
+				}
+			},
+
+			'asynchronous values': {
+				'one passing value': function () {
+					var values = [ createTriggerablePromise() ];
+					var promise = iteration.filter(values, helloWorldTest).then(function (results) {
+						assert.deepEqual(results, [ 'hello' ]);
+					});
+
+					values[0].resolve('hello');
+
+					return promise;
+				},
+
+				'one failing value': function () {
+					var values = [ createTriggerablePromise() ];
+					var promise = iteration.filter(values, helloWorldTest).then(function (results) {
+						assert.deepEqual(results, [ ]);
+					});
+
+					values[0].resolve('failing value');
+
+					return promise;
+				},
+
+				'mixed passing and failing values': function () {
+					var values = [ createTriggerablePromise(), createTriggerablePromise(), createTriggerablePromise() ];
+					var promise = iteration.filter(values, helloWorldTest).then(function (results) {
+						assert.deepEqual(results, [ 'hello', 'world' ]);
+					});
+
+					values[0].resolve('hello');
+					values[2].resolve('world');
+					values[1].resolve('failing value');
+
+					return promise;
+				},
+
+				'rejected value': function () {
+					var values = [ createTriggerablePromise() ];
+					var promise = iteration.filter(values, helloWorldTest).then(undefined, function () {
+						return true; // expect rejection
+					});
+
+					values[0].reject(new Error('kaboom!'));
+
+					return promise;
+				}
+			},
+
+			'asynchronous callback': {
+				'one asynchronous result': function () {
+					var values = [ 'unimportant' ];
+					return iteration.filter(values, function () {
+						return Promise.resolve(true);
+					}).then(function (results) {
+						assert.deepEqual(results, values);
+					});
+				},
+
+				'asynchronous results with an eventually rejected promise': function () {
+					var values = [ 'unimportant' ];
+					return iteration.filter(values, <any> function () {
+						throw new Error('kaboom!');
+					}).then(undefined, function () {
+						return true; // expect rejection
+					});
+				},
+
+				'mixed matched/unmatched asynchronous results': function () {
+					var values = [ 'hello', 'world', 'non-matching' ];
+					var pass = [ createTriggerablePromise(), createTriggerablePromise(), createTriggerablePromise()];
+					var promise = iteration.filter(values, function (value, i) {
+						return pass[i];
+					}).then(function (results) {
+						assert.deepEqual(results, [ 'hello', 'world' ]);
+					});
+
+					pass[0].resolve(true);
+					pass[1].resolve(true);
+					pass[2].resolve(false);
+
+					return promise;
+				}
 			}
 		};
 	})()
