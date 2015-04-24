@@ -1,6 +1,6 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import {isIdentical, copy} from 'src/lang';
+import {isIdentical, copy, lateBind} from 'src/lang';
 
 registerSuite({
 	name: 'lang functions',
@@ -82,5 +82,31 @@ registerSuite({
 		assert.isFalse(isIdentical(3, NaN));
 		assert.isFalse(isIdentical(3, '3'));
 		assert.isTrue(isIdentical(Infinity, Infinity));
+	},
+
+	'.lateBind() context': function () {
+		var object: {
+			method?: (...args: string[]) => string;
+		} = <any> {};
+		var method = lateBind(object, 'method');
+		object.method = function (): any {
+			return this;
+		};
+
+		assert.equal(method(), object, 'lateBind\'s context should be `object`.');
+	},
+
+	'.lateBind() arguments': function () {
+		var object: {
+			method?: (...args: string[]) => string;
+		} = <any> {};
+		var method = lateBind(object, 'method', 'The', 'quick', 'brown');
+		var suffix = 'fox jumped over the lazy dog';
+		object.method = function (...parts: string[]): string {
+			return parts.join(' ');
+		};
+
+		assert.equal(method('fox jumped over the lazy dog'), 'The quick brown ' + suffix,
+			'lateBind\'s additional arguments should be prepended to the wrapped function.');
 	}
 });

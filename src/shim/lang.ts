@@ -1,3 +1,5 @@
+var slice = Array.prototype.slice;
+
 export function copy(args: CopyArgs): any {
 
 	var target: any;
@@ -98,4 +100,17 @@ export function isIdentical(a: any, b: any): boolean {
 	return a === b ||
 		typeof a === 'number' && isNaN(a) &&
 		typeof b === 'number' && isNaN(b);
+}
+
+export function lateBind(
+	instance: {},
+	method: string,
+	...suppliedArgs: any[]
+): (...args: any[]) => any {
+	return function () {
+		var args: any[] = !arguments.length ? suppliedArgs : suppliedArgs.concat(slice.call(arguments));
+
+		// TS7017
+		return (<any> instance)[method].apply(instance, args);
+	};
 }
