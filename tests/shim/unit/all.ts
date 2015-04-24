@@ -1,2 +1,3 @@
-import lang = require('./lang'); lang;
-import iteration = require('./async/iteration'); iteration;
+import './lang';
+import './async/iteration';
+import './async/Promise';

@@ -45,6 +45,7 @@ export var loader = {
 	packages: [
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' }
+		{ name: 'dojo-platform', location: '../dojo-platform/dist' }
 	]
 };
 
