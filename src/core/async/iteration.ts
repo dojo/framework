@@ -2,6 +2,15 @@ var array = {
 	map: Array.prototype.map
 };
 
+function processValuesAndCallback<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<{ values: T[]; results: boolean[] }> {
+	return Promise.all<T>(items).then(function (results) {
+		var pass: (boolean | Promise<boolean>)[] = array.map.call(results, callback);
+		return Promise.all<boolean>(pass).then(function (pass) {
+			return { values: results, results: pass };
+		});
+	});
+}
+
 /**
  * Test whether all elements in the array pass the provided callback
  * @param items a collection of synchronous/asynchronous values
@@ -28,13 +37,13 @@ export function every<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Prom
 						if (pendingCount === 0) {
 							resolve(true);
 						}
-					})
+					});
 				}
 			}
 			if (pendingCount === 0) {
 				resolve(true);
 			}
-		})
+		});
 	});
 }
 
@@ -45,23 +54,32 @@ export function every<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Prom
  * @return eventually returns a new array with only values that have passed
  */
 export function filter<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<T[]> {
-	return Promise.all<T>(items).then(function (results) {
-		var pass: (boolean | Promise<boolean>)[] = array.map.call(results, callback);
-		return Promise.all<boolean>(pass).then<T[]>(function (pass) {
-			var arr: T[] = [];
-			for(var i = 0; i < pass.length; i++) {
-				pass[i] && arr.push(results[i]);
-			}
-			return arr;
-		});
+	return processValuesAndCallback(items, callback).then<T[]>(function ({ results, values }) {
+		var arr: T[] = [];
+		for (var i = 0; i < results.length; i++) {
+			results[i] && arr.push(values[i]);
+		}
+		return arr;
 	});
 }
 
-// TODO implement
-//export function find<T>(items: Array<T | Thenable<T>>, callback: Filterer<T>): Promise<T>;
+export function find<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<T> {
+	return findIndex<T>(items, callback).then(function (i) {
+		return i >= 0 ? items[i] : undefined;
+	});
+}
 
-// TODO implement
-//export function findIndex<T>(items: Array<T | Thenable<T>>, callback: Filterer<T>): Promise<number>;
+export function findIndex<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<number> {
+	// TODO we can improve this by returning immediately
+	return processValuesAndCallback(items, callback).then<number>(function ({ results, values }) {
+		for (var i = 0; i < results.length; i++) {
+			if (results[i]) {
+				return i;
+			}
+		}
+		return -1;
+	});
+}
 
 // TODO implement
 //export function map<T, U>(items: Array<T | Thenable<T>>, callback: Mapper<T, U>): Promise<U[]>;
@@ -79,16 +97,6 @@ export function filter<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Pro
 
 // TODO implement
 //export function some<T>(items: Array<T | Thenable<T>>, callback: Filterer<T>): Promise<boolean>;
-
-
-
-// TODO remove this when core/async/Promise is available
-export interface Thenable<T> {
-	then<U>(
-		onFulfilled?: (value?: T) => Thenable<U> | U,
-		onRejected?: (error?: Error) => Thenable<U> | U
-	): Thenable<U>;
-}
 
 export interface Filterer<T> extends Mapper<T, boolean> {}
 
