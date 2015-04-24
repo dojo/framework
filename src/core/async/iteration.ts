@@ -2,14 +2,21 @@ var array = {
 	map: Array.prototype.map
 };
 
-function processValuesAndCallback<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<{ values: T[]; results: boolean[] }> {
-	return Promise.all<T>(items).then(function (results) {
-		var pass: (boolean | Promise<boolean>)[] = array.map.call(results, callback);
-		return Promise.all<boolean>(pass).then(function (pass) {
-			return { values: results, results: pass };
+function processValuesAndCallback<T, U>(items: (T | Promise<T>)[], callback: Mapper<T, U>): Promise<{ values: T[]; results: U[] }> {
+	return Promise.all<T>(items)
+		.then(function (results) {
+			var pass: (U | Promise<U>)[] = array.map.call(results, callback);
+			return Promise.all<U>(pass)
+				.then<{ values: T[]; results: U[] }>(function (pass) {
+					return { values: results, results: pass };
+				});
 		});
-	});
 }
+
+//function reduceAndCallback<T, U>(items: (T | Promise<T>)[], callback: Reducer<T, U>,
+//								 initialValue: U, step?: number = 1): Promise<U> {
+//
+//}
 
 /**
  * Test whether all elements in the array pass the provided callback
@@ -81,16 +88,30 @@ export function findIndex<T>(items: (T | Promise<T>)[], callback: Filterer<T>): 
 	});
 }
 
-// TODO implement
-//export function map<T, U>(items: Array<T | Thenable<T>>, callback: Mapper<T, U>): Promise<U[]>;
+export function map<T, U>(items: (T | Promise<T>)[], callback: Mapper<T, U>): Promise<U[]> {
+	return processValuesAndCallback<T, U>(items, callback)
+			.then<U[]>(function ({ results, values}) {
+				return results;
+			});
+}
 
-// TODO implement
-//export function reduce<T, U>(items: Array<T | Thenable<T>>, callback: (previousValue: U, currentValue: T) => U,
-//	initialValue?: U): Promise<U>;
+//export function reduce<T, U>(items: (T | Promise<T>)[], callback: Reducer<T, U>,
+//							initialValue?: U): Promise<U> {
+//	return Promise.all<T>(items)
+//		.then(function (results) {
+//			var value: U = initialValue;
+//			for (var i = 0; i < results.length; i++) {
+//				value = callback(value, results[i]);
+//			}
+//			return value;
+//		});
+//}
 
 // TODO implement
 //export function reduceRight<T, U>(items: Array<T | Thenable<T>>, callback: (previousValue: U, currentValue: T) => U,
-//	initialValue?: U): Promise<U>;
+//	initialValue?: U): Promise<U> {
+//	return reduceAndCallback<T, U>(items, callback, initialValue, -1);
+//}
 
 // TODO implement
 //export function series<T, U>(items: Array<T | Thenable<T>>, operation: Operation<T, U>): Promise<U[]>;
@@ -102,6 +123,10 @@ export interface Filterer<T> extends Mapper<T, boolean> {}
 
 export interface Mapper<T, U> {
 	(value: T, index: number, array: T[]): (U | Thenable<U>);
+}
+
+export interface Reducer<T, U> {
+	(previousValue: U, currentValue: T, index: number, array: T[]): (U | Thenable<U>)
 }
 
 export interface Operation<T, U> {

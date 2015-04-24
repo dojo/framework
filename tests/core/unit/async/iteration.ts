@@ -33,6 +33,10 @@ function helloWorldTest (value: any): boolean {
 	return value === 'hello' || value === 'world';
 }
 
+function doublerMapper (value: any): any {
+	return value * 2;
+}
+
 function assertTrue (value: boolean): void {
 	assert.isTrue(value);
 }
@@ -430,29 +434,154 @@ registerSuite({
 
 	'.map()': {
 		'synchronous values': {
+			'transform a single value': function () {
+				var values = [ 1 ];
+				return iteration.map(values, doublerMapper).then(function (values) {
+					assert.deepEqual(values, [ 2 ]);
+				});
+			},
 
+			'transform multiple values': function () {
+				var values = [ 1, 2, 3 ];
+				return iteration.map(values, doublerMapper).then(function (values) {
+					assert.deepEqual(values, [ 2, 4, 6 ]);
+				});
+			}
 		},
 
 		'asynchronous values': {
+			'transform a single value': function () {
+				var values = [ createTriggerablePromise() ];
+				var promise = iteration.map(values, doublerMapper).then(function (values) {
+					assert.deepEqual(values, [ 2 ]);
+				});
 
+				values[0].resolve(1);
+
+				return promise;
+			},
+
+			'transform multiple values': function () {
+				var values = [ createTriggerablePromise(), createTriggerablePromise(), createTriggerablePromise() ];
+				var promise = iteration.map(values, doublerMapper).then(function (values) {
+					assert.deepEqual(values, [ 2, 4, 6 ]);
+				});
+
+				values[0].resolve(1);
+				values[1].resolve(2);
+				values[2].resolve(3);
+
+				return promise;
+			},
+
+			'transform multiple mixed values': function () {
+				var values: any[] = [ createTriggerablePromise(), 2, createTriggerablePromise(), 4 ];
+				var promise = iteration.map(values, doublerMapper).then(function (values) {
+					assert.deepEqual(values, [ 2, 4, 6, 8 ]);
+				});
+
+				values[0].resolve(1);
+				values[2].resolve(3);
+
+				return promise;
+			},
+
+			'one promised value is rejected': function () {
+				var values = [ createTriggerablePromise() ];
+				var promise = iteration.map(values, doublerMapper);
+
+				values[0].reject();
+
+				return isEventuallyRejected(promise);
+			}
 		},
 
 		'asynchronous callback': {
+			'one asynchronous mapping': function () {
+				var values = [ 'unused' ];
+				var results = [ createTriggerablePromise() ];
+				var promise = iteration.map(values, function (value, i) {
+					return results[i];
+				}).then(function (values) {
+					assert.deepEqual(values, [ 2 ])
+				});
 
+				results[0].resolve(2);
+
+				return promise;
+			},
+
+			'multiple asynchronous mappings': function () {
+				var values = [ 'unused', 'unused', 'unused' ];
+				var results = [ createTriggerablePromise(), createTriggerablePromise(), createTriggerablePromise() ];
+				var promise = iteration.map(values, function (value, i) {
+					return results[i];
+				}).then(function (values) {
+					assert.deepEqual(values, [ 2, 4, 6 ])
+				});
+
+				results[0].resolve(2);
+				results[1].resolve(4);
+				results[2].resolve(6);
+
+				return promise;
+			},
+
+			'one promised mapping is rejected': function () {
+				var values = [ 'unused' ];
+				var results = [ createTriggerablePromise() ];
+				var promise = iteration.map(values, function (value, i) {
+					return results[i];
+				});
+
+				results[0].reject();
+
+				return isEventuallyRejected(promise);
+			}
 		}
 	},
 
 	'.reduce()': {
 		'synchronous values': {
+			'reduce a single value': function () {
 
+			},
+
+			'reduce multiple values': function () {
+
+			}
 		},
 
 		'asynchronous values': {
+			'reduce a single value': function () {
 
+			},
+
+			'reduce multiple values': function () {
+
+			},
+
+			'reduce multiple mixed values': function () {
+
+			},
+
+			'one promised value is rejected': function () {
+
+			}
 		},
 
 		'asynchronous callback': {
+			'one asynchronous reduction': function () {
 
+			},
+
+			'multiple asynchronous reductions': function () {
+
+			},
+
+			'one promised reduction is rejected': function () {
+
+			}
 		}
 	},
 
