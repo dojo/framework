@@ -87,4 +87,11 @@ interface PromiseConstructor {
 	resolve(): Promise<void>;
 }
 
+interface Thenable<T> {
+	then<U>(
+		onFulfilled?: (value?: T) => Thenable<U> | U,
+		onRejected?: (error?: Error) => Thenable<U> | U
+	): Thenable<U>;
+}
+
 declare var Promise: PromiseConstructor;
