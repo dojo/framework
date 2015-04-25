@@ -20,6 +20,6 @@
 		"grunt-ts": "3.0.0",
 		"grunt-tslint": "2.0.0",
 		"intern": "2.2.2",
-		"typescript": "https://github.com/csnover/TypeScript/archive/0.20150416.0+1.5.0-alpha.plus.PR2605.tar.gz"
+		"typescript": "https://github.com/csnover/TypeScript/archive/0.20150422.0+378b5ffd1af2249658c8b7a3dc7465d911af93ff.tar.gz"
 	}
 }

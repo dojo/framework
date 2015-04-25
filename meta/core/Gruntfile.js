@@ -1,5 +1,12 @@
 /* jshint node:true */
 
+function mixin(destination, source) {
+	for (var key in source) {
+		destination[key] = source[key];
+	}
+	return destination;
+}
+
 module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-copy');
@@ -9,14 +16,20 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('dts-generator');
 	grunt.loadNpmTasks('intern');
 
+	var compilerOptions = grunt.file.readJSON('tsconfig.json').compilerOptions;
+
 	grunt.initConfig({
 		name: 'dojo-core',
 		all: [ 'src/**/*.ts', 'typings/tsd.d.ts' ],
 		tests: [ 'tests/**/*.ts', 'typings/tsd.d.ts' ],
+		devDirectory: compilerOptions.outDir,
 
 		clean: {
 			dist: {
 				src: [ 'dist/' ]
+			},
+			dev: {
+				src: [ '<%= devDirectory %>' ]
 			},
 			src: {
 				src: [ '{src,tests}/**/*.js' ],
@@ -30,21 +43,12 @@ module.exports = function (grunt) {
 					return false;
 				}
 			},
-			typings: {
-				src: [ 'tests/typings/dist/' ]
-			},
 			coverage: {
 				src: [ 'html-report/' ]
 			}
 		},
 
 		copy: {
-			sourceForDebugging: {
-				expand: true,
-				cwd: 'src/',
-				src: [ '**/*.ts' ],
-				dest: 'dist/_debug/'
-			},
 			staticFiles: {
 				expand: true,
 				cwd: '.',
@@ -69,13 +73,6 @@ module.exports = function (grunt) {
 					out: 'dist/typings/<%= name %>/<%= name %>-2.0.d.ts'
 				},
 				src: [ '<%= all %>' ]
-			},
-			tests: {
-				options: {
-					name: 'dist',
-					out: 'tests/typings/dist/dist.d.ts'
-				},
-				src: [ '<%= all %>' ]
 			}
 		},
 
@@ -83,7 +80,7 @@ module.exports = function (grunt) {
 			options: {
 				grep: grunt.option('grep') || '.*',
 				runType: 'runner',
-				config: 'tests/intern'
+				config: '<%= devDirectory %>/tests/intern'
 			},
 			runner: {
 				options: {
@@ -92,7 +89,7 @@ module.exports = function (grunt) {
 			},
 			local: {
 				options: {
-					config: 'tests/intern-local',
+					config: '<%= devDirectory %>/tests/intern-local',
 					reporters: [ 'runner', 'lcovhtml' ]
 				}
 			},
@@ -125,13 +122,16 @@ module.exports = function (grunt) {
 		},
 
 		ts: {
-			options: {
-				failOnTypeErrors: true,
-				fast: 'never',
-				noImplicitAny: true,
-				sourceMap: true,
-				target: 'es5',
-				module: 'camd'
+			options: mixin(
+				compilerOptions,
+				{
+					failOnTypeErrors: true,
+					fast: 'never'
+				}
+			),
+			dev: {
+				outDir: '<%= devDirectory %>',
+				src: [ '<%= all %>', '<%= tests %>' ]
 			},
 			dist: {
 				options: {
@@ -139,9 +139,6 @@ module.exports = function (grunt) {
 				},
 				outDir: 'dist',
 				src: [ '<%= all %>' ]
-			},
-			tests: {
-				src: [ '<%= tests %>' ]
 			}
 		},
 
@@ -150,7 +147,12 @@ module.exports = function (grunt) {
 				configuration: grunt.file.readJSON('tslint.json')
 			},
 			src: {
-				src: [ '<%= all %>', '<%= tests %>', '!typings/**/*.ts', '!tests/typings/**/*.ts' ]
+				src: [
+					'<%= all %>',
+					'<%= tests %>',
+					'!typings/**/*.ts',
+					'!tests/typings/**/*.ts'
+				]
 			}
 		},
 
@@ -161,7 +163,7 @@ module.exports = function (grunt) {
 				},
 				files: [ '<%= all %>', '<%= tests %>' ],
 				tasks: [
-					'build-tests',
+					'dev',
 					'tslint'
 				]
 			}
@@ -193,25 +195,20 @@ module.exports = function (grunt) {
 		grunt.log.writeln('Moved ' + this.files.length + ' files');
 	});
 
-	grunt.registerTask('build', [
+	grunt.registerTask('dev', [
+		'ts:dev'
+	]);
+	grunt.registerTask('dist', [
 		'ts:dist',
 		'rename:sourceMaps',
 		'rewriteSourceMaps',
-		'dtsGenerator:tests'
-	]);
-	grunt.registerTask('build-tests', [
-		'build',
-		'ts:tests'
-	]);
-	grunt.registerTask('dist', [
-		'build',
 		'copy:typings',
 		'copy:staticFiles',
 		'dtsGenerator:dist'
 	]);
-	grunt.registerTask('test', [ 'build-tests', 'intern:client' ]);
-	grunt.registerTask('test-local', [ 'build-tests', 'intern:local' ]);
-	grunt.registerTask('test-proxy', [ 'build-tests', 'intern:proxy' ]);
+	grunt.registerTask('test', [ 'dev', 'intern:client' ]);
+	grunt.registerTask('test-local', [ 'dev', 'intern:local' ]);
+	grunt.registerTask('test-proxy', [ 'dev', 'intern:proxy' ]);
 	grunt.registerTask('ci', [ 'tslint', 'test' ]);
-	grunt.registerTask('default', [ 'clean', 'build' ]);
+	grunt.registerTask('default', [ 'clean', 'dev' ]);
 };
