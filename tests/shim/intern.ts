@@ -43,8 +43,8 @@ export var useLoader = {
 export var loader = {
 	// Packages that should be registered with the loader in each testing environment
 	packages: [
-		{ name: 'dist', location: 'dist' },
-		{ name: 'tests', location: 'tests' }
+		{ name: 'src', location: '_build/src' },
+		{ name: 'tests', location: '_build/tests' }
 	]
 };
 
@@ -55,4 +55,4 @@ export var suites = [ 'tests/unit/all' ];
 export var functionalSuites = [ 'tests/functional/all' ];
 
 // A regular expression matching URLs to files that should not be included in code coverage analysis
-export var excludeInstrumentation = /^(?:node_modules|bower_components|tests)[\/\\]/;
+export var excludeInstrumentation = /^(?:node_modules|bower_components|_build[\/\\]tests)[\/\\]/;

@@ -1,6 +1,6 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import {isIdentical, copy} from 'dist/lang';
+import {isIdentical, copy} from 'src/lang';
 
 registerSuite({
 	name: 'lang functions',
