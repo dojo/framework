@@ -53,6 +53,10 @@ function isEventuallyRejected(promise: Promise<any>): Promise<any> {
 	});
 }
 
+function join(current:string, value: string): string {
+	return current + value;
+}
+
 function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>) => Promise<any>, solutions: any) {
 	function getExpectedSolution(test: any): any {
 		return solutions[test.parent.name][test.name];
@@ -543,12 +547,43 @@ registerSuite({
 
 	'.reduce()': {
 		'synchronous values': {
-			'reduce a single value': function () {
+			'reduce an empty array without initial value is eventually rejected': function () {
+				var promise = (<any> iteration.reduce)([]);
 
+				return isEventuallyRejected(promise);
+			},
+
+			'reduce a single value': function () {
+				var values = [ 'h' ];
+				return iteration.reduce(values, join).then(function (value) {
+					assert.strictEqual(value, 'h');
+				});
 			},
 
 			'reduce multiple values': function () {
+				var values = [ 'h', 'e', 'l', 'l', 'o' ];
+				return iteration.reduce(values, join).then(function (value) {
+					assert.strictEqual(value, 'hello');
+				});
+			},
 
+			'reduce multiple values with initializer': function () {
+				var values = [ 'w', 'o', 'r', 'l', 'd' ];
+				return iteration.reduce(values, join, 'hello ').then(function (value) {
+					assert.strictEqual(value, 'hello world');
+				});
+			},
+
+			'reduces a sparse array': function () {
+				var values = Array(10);
+				values[1] = 'h';
+				values[3] = 'e';
+				values[5] = 'l';
+				values[7] = 'l';
+				values[9] = 'o';
+				return iteration.reduce(values, join).then(function (value) {
+					assert.strictEqual(value, 'hello');
+				});
 			}
 		},
 
@@ -561,11 +596,19 @@ registerSuite({
 
 			},
 
+			'reduce multiple values with initializer': function () {
+
+			},
+
 			'reduce multiple mixed values': function () {
 
 			},
 
 			'one promised value is rejected': function () {
+
+			},
+
+			'reduces a sparse array': function () {
 
 			}
 		},
