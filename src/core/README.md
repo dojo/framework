@@ -4,6 +4,13 @@
 
 ### core/lang
 
+### core/async
+
+`core/async` contains a number of classes and utility modules to simplify working with asynchronous operations.
+
+#### Promise
+
+The `Promise` class extends `dojo-platform/Promise` with several new features, including static state inspection, cancelation support, and a `finally` method for easy cleanup.
 
 ## How do I use this package?
 
