@@ -9,3 +9,4 @@ bower_components
 tests/typings/dist/
 .baseDir.ts
 html-report
+/_build
