@@ -39,7 +39,10 @@ export default class Promise<T> extends PlatformPromise<T> {
 		return new Promise<U>(super.catch<U>(onRejected));
 	}
 
-	finally<U>(callback: () => U | Thenable<U>): Promise<U> {
+	/**
+	 * Allows for cleanup actions to be performed after resolution of a Promise.
+	 */
+	finally(callback: () => void | Thenable<any>): Promise<T> {
 		// handler to be used for fulfillment and rejection; whether it was fulfilled or rejected is explicitly
 		// indicated by the first argument
 		let handler = (rejected: boolean, valueOrError: any) => {
@@ -68,7 +71,7 @@ export default class Promise<T> extends PlatformPromise<T> {
 			}
 		};
 
-		return this.then<U>(handler.bind(null, false), handler.bind(null, true));
+		return this.then<T>(handler.bind(null, false), handler.bind(null, true));
 	}
 
 	then<U>(onFulfilled?: (value: T) => U | Thenable<U>,  onRejected?: (error: any) => U | Thenable<U>): Promise<U> {
@@ -77,7 +80,6 @@ export default class Promise<T> extends PlatformPromise<T> {
 }
 
 export enum State {
-	Canceled,
 	Fulfilled,
 	Pending,
 	Rejected
