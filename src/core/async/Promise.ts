@@ -9,11 +9,13 @@ export default class Promise<T> extends PlatformPromise<T> {
 		return new Promise<T>(PlatformPromise.race<T>(items));
 	}
 
-	static reject<T>(reason: any): Promise<T> {
+	static reject<T>(reason: any): Promise<any> {
 		return new Promise<T>(PlatformPromise.reject<T>(reason));
 	}
 
-	static resolve<T>(value: (T | Thenable<T>)): Promise<T> {
+	static resolve(): Promise<void>;
+	static resolve<T>(value: (T | Thenable<T>)): Promise<T>;
+	static resolve<T>(value?: any): Promise<T> {
 		return new Promise<T>(PlatformPromise.resolve<T>(value));
 	}
 

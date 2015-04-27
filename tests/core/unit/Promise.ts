@@ -151,11 +151,11 @@ function tests(PromiseType: PromiseConstructor) {
 
 			rejected: function () {
 				var dfd = this.async();
-				var promise = new Promise(Promise.reject('foo'));
-				promise.then(dfd.rejectOnError(function (value: any) {
+				var promise = new Promise(Promise.reject(new Error('foo')));
+				promise.then(dfd.rejectOnError(function (value: Error) {
 					assert.fail(false, true, 'Promise should not have resolved');
-				}), dfd.callback(function (error: any) {
-					assert.strictEqual(error, 'foo');
+				}), dfd.callback(function (error: Error) {
+					assert.strictEqual(error.message, 'foo');
 				}));
 			},
 
