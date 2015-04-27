@@ -2,6 +2,7 @@ import './array';
 import './global';
 import './has';
 import './lang';
+import './string';
 import './math';
 import './number';
 import './object';
