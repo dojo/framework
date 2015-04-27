@@ -1,8 +1,6 @@
-/// <reference path="../../../../dojo-platform/dist/typings/dojo-platform/dojo-platform-2.0.d.ts" />
-
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import { Promise } from 'src/async/Promise';
+import Promise from 'src/async/Promise';
 
 let suite = {
 	name: 'Promise',

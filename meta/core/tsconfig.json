@@ -18,15 +18,24 @@
 		"./typings/tsd.d.ts",
 		"./tests/typings/tsd.d.ts",
 
+		"./src/global.ts",
+		"./src/has.ts",
+		"./src/interfaces.d.ts",
 		"./src/lang.ts",
-		"./src/async/Promise.d.ts",
+		"./src/nextTick.ts",
+		"./src/Promise.ts",
+		"./src/async/Promise.ts",
 		"./src/async/iteration.ts",
 
 		"./tests/intern-local.ts",
 		"./tests/intern.ts",
 		"./tests/functional/all.ts",
 		"./tests/unit/all.ts",
+		"./tests/unit/global.ts",
+		"./tests/unit/has.ts",
 		"./tests/unit/lang.ts",
-		"./tests/unit/async/iteration.ts"
+		"./tests/unit/Promise.ts",
+		"./tests/unit/async/iteration.ts",
+		"./tests/unit/async/Promise.ts"
 	]
 }
