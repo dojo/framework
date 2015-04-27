@@ -44,8 +44,7 @@ export var loader = {
 	// Packages that should be registered with the loader in each testing environment
 	packages: [
 		{ name: 'src', location: '_build/src' },
-		{ name: 'tests', location: '_build/tests' },
-		{ name: 'dojo-platform', location: '../dojo-platform/dist' }
+		{ name: 'tests', location: '_build/tests' }
 	]
 };
 

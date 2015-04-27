@@ -1,3 +1,4 @@
+import Promise, { Thenable } from './Promise';
 // TODO remove this when platform is merged
 export interface ArrayLike<T> {
 	length: number;

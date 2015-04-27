@@ -1,8 +1,6 @@
-/// <reference path="../../../dojo-platform/dist/typings/dojo-platform/dojo-platform-2.0.d.ts" />
+import PlatformPromise, { isThenable, Thenable, Executor } from '../Promise';
 
-import PlatformPromise, { isThenable, Thenable, Executor } from 'dojo-platform/Promise';
-
-export class Promise<T> extends PlatformPromise<T> {
+export default class Promise<T> extends PlatformPromise<T> {
 	static all<T>(items: (T | Thenable<T>)[]): Promise<T[]> {
 		return new Promise<T[]>(PlatformPromise.all<T>(items));
 	}
@@ -81,4 +79,8 @@ export enum State {
 	Fulfilled,
 	Pending,
 	Rejected
+}
+
+export {
+	Thenable
 }

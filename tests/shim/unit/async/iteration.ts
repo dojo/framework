@@ -1,6 +1,7 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import iteration = require('src/async/iteration');
+import * as iteration from 'src/async/iteration';
+import Promise from 'src/async/Promise';
 
 interface ResolveFunc<T> {
 	(value: T | Promise<T>): Promise<T>
