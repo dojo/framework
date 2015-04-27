@@ -1,4 +1,5 @@
 import PlatformPromise, { isThenable, Thenable, Executor } from '../Promise';
+export { Thenable } from '../Promise';
 
 export default class Promise<T> extends PlatformPromise<T> {
 	static all<T>(items: (T | Thenable<T>)[]): Promise<T[]> {
@@ -22,18 +23,18 @@ export default class Promise<T> extends PlatformPromise<T> {
 	constructor(executor: PlatformPromise<T> | Executor<T>) {
 		super(executor);
 
-		if (executor instanceof Promise && (<Promise<T>> executor).state !== State.Pending) {
-			this.state = (<Promise<T>> executor).state;
+		if (executor instanceof Promise && (<Promise<T>> executor)._state !== State.Pending) {
+			this._state = (<Promise<T>> executor)._state;
 		}
 		else {
 			super.then(
-				() => this.state = State.Fulfilled,
-				() => this.state = State.Rejected
+				() => this._state = State.Fulfilled,
+				() => this._state = State.Rejected
 			);
 		}
 	}
 
-	state = State.Pending;
+	protected _state = State.Pending;
 
 	catch<U>(onRejected: (reason?: any) => U | Thenable<U>): Promise<U> {
 		return new Promise<U>(super.catch<U>(onRejected));
@@ -74,15 +75,19 @@ export default class Promise<T> extends PlatformPromise<T> {
 		return this.then<T>(handler.bind(null, false), handler.bind(null, true));
 	}
 
+	get state(): State {
+		return this._state;
+	}
+
 	then<U>(onFulfilled?: (value: T) => U | Thenable<U>,  onRejected?: (error: any) => U | Thenable<U>): Promise<U> {
 		return new Promise<U>(super.then<U>(onFulfilled, onRejected));
 	}
 }
 
 export enum State {
-	Fulfilled,
-	Pending,
-	Rejected
+	Fulfilled = 1,
+	Pending = 2,
+	Rejected = 3
 }
 
 export {
