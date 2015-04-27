@@ -99,6 +99,14 @@ module.exports = function (grunt) {
 					reporters: [ 'console', 'lcovhtml' ]
 				}
 			},
+			streams: {
+				/*  before using, run: npm install requirejs */
+				options: {
+					runType: 'client',
+					reporters: [ 'console', 'lcovhtml' ],
+					config: '<%= devDirectory %>/tests/intern-streams'
+				}
+			},
 			proxy: {
 				options: {
 					proxyOnly: true
