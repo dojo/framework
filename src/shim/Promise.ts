@@ -26,7 +26,7 @@ export interface Executor<T> {
  * Thenable represents any object with a callable `then` property.
  */
 export interface Thenable<T> {
-	then<U>(onFulfilled?: (value: T) => U | Thenable<U>, onRejected?: (error: any) => U | Thenable<U>): Thenable<U>;
+	then<U>(onFulfilled?: (value?: T) => U | Thenable<U>, onRejected?: (error?: any) => U | Thenable<U>): Thenable<U>;
 }
 
 /**
@@ -397,11 +397,13 @@ export class PlatformPromise<T> implements Thenable<T> {
 		return new this(PromiseConstructor.race(unwrapPromises(items)));
 	}
 
-	static reject<T>(reason?: any): PlatformPromise<T> {
+	static reject<T>(reason: Error): PlatformPromise<any> {
 		return new this(PromiseConstructor.reject(reason));
 	}
 
-	static resolve<T>(value: (T | Thenable<T>)): PlatformPromise<T> {
+	static resolve(): PlatformPromise<void>;
+	static resolve<T>(value: (T | Thenable<T>)): PlatformPromise<T>;
+	static resolve<T>(value?: any): PlatformPromise<T> {
 		if (value instanceof PlatformPromise) {
 			return value;
 		}
@@ -437,13 +439,13 @@ export class PlatformPromise<T> implements Thenable<T> {
 
 	private promise: typeof global.Promise;
 
-	catch<U>(onRejected: (reason?: any) => (U | Thenable<U>)): PlatformPromise<U> {
+	catch<U>(onRejected: (reason?: Error) => (U | Thenable<U>)): PlatformPromise<U> {
 		return this.then<U>(null, onRejected);
 	}
 
 	then<U>(
 		onFulfilled?: (value?: T) => (U | Thenable<U>),
-		onRejected?: (reason?: any) => (U | Thenable<U>)
+		onRejected?: (reason?: Error) => (U | Thenable<U>)
 	): PlatformPromise<U> {
 		return new PlatformPromise(this.promise.then(onFulfilled, onRejected));
 	}

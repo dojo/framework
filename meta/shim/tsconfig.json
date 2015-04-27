@@ -30,6 +30,14 @@
 		"./src/Promise.ts",
 		"./src/async/Promise.ts",
 		"./src/async/iteration.ts",
+		"./src/streams/interfaces.d.ts",
+		"./src/streams/ReadableStream.ts",
+		"./src/streams/ReadableStreamController.ts",
+		"./src/streams/ReadableStreamReader.ts",
+		"./src/streams/SizeQueue.ts",
+		"./src/streams/TransformStream.ts",
+		"./src/streams/util.ts",
+		"./src/streams/WritableStream.ts",
 
 		"./tests/intern-local.ts",
 		"./tests/intern.ts",
@@ -44,6 +52,13 @@
 		"./tests/unit/object.ts",
 		"./tests/unit/Promise.ts",
 		"./tests/unit/async/iteration.ts",
-		"./tests/unit/async/Promise.ts"
+		"./tests/unit/async/Promise.ts",
+		"./tests/unit/streams/all.ts",
+		"./tests/unit/streams/ReadableStream.ts",
+		"./tests/unit/streams/ReadableStreamController.ts",
+		"./tests/unit/streams/ReadableStreamReader.ts",
+		"./tests/unit/streams/SizeQueue.ts",
+		"./tests/unit/streams/TransformStream.ts",
+		"./tests/unit/streams/helpers/BaseStringSource.ts"
 	]
 }
