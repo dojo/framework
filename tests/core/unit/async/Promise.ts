@@ -2,7 +2,7 @@
 
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import { Promise } from 'dist/async/Promise';
+import { Promise } from 'src/async/Promise';
 
 let suite = {
 	name: 'Promise',
