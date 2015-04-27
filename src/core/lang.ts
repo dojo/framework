@@ -1,4 +1,4 @@
-var slice = Array.prototype.slice;
+var slice = Function.prototype.call.bind(Array.prototype.slice);
 
 export function copy(args: CopyArgs): any {
 
@@ -102,15 +102,19 @@ export function isIdentical(a: any, b: any): boolean {
 		typeof b === 'number' && isNaN(b);
 }
 
-export function lateBind(
-	instance: {},
-	method: string,
-	...suppliedArgs: any[]
-): (...args: any[]) => any {
+export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): (...args: any[]) => any {
 	return function () {
-		var args: any[] = !arguments.length ? suppliedArgs : suppliedArgs.concat(slice.call(arguments));
+		var args: any[] = arguments.length ? suppliedArgs.concat(slice(arguments)) : suppliedArgs;
 
 		// TS7017
 		return (<any> instance)[method].apply(instance, args);
+	};
+}
+
+export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs: any[]): (...args: any[]) => any {
+	return function () {
+		var args: any[] = arguments.length ? suppliedArgs.concat(slice(arguments)) : suppliedArgs;
+
+		return targetFunction.apply(this, args);
 	};
 }

@@ -1,6 +1,6 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import {isIdentical, copy, lateBind} from 'src/lang';
+import {isIdentical, copy, lateBind, partial} from 'src/lang';
 
 registerSuite({
 	name: 'lang functions',
@@ -106,7 +106,27 @@ registerSuite({
 			return parts.join(' ');
 		};
 
-		assert.equal(method('fox jumped over the lazy dog'), 'The quick brown ' + suffix,
+		assert.equal(method(suffix), 'The quick brown ' + suffix,
 			'lateBind\'s additional arguments should be prepended to the wrapped function.');
+	},
+
+	'.partial()': function () {
+		var ending = 'jumped over the lazy dog';
+		var finish = partial(function () {
+			var start = this.start ? [ this.start ] : [];
+
+			return start.concat(Array.prototype.slice.call(arguments)).join(' ');
+		}, 'jumped', 'over');
+
+		function Sentence(start: string = '') {
+			this.start = start;
+		}
+		Sentence.prototype.finish = finish;
+
+		assert.equal(finish('the lazy dog'), ending, 'The arguments supplied to `lang.partial` should be prepended' +
+			' to the arguments list of the returned function.');
+		assert.equal(new (<any> Sentence)('The quick brown fox').finish('the lazy dog'),
+			'The quick brown fox ' + ending,
+			'A function passed to `lang.partial` should inherit its context.');
 	}
 });
