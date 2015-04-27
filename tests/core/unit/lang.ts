@@ -101,12 +101,17 @@ registerSuite({
 			method?: (...args: string[]) => string;
 		} = <any> {};
 		var method = lateBind(object, 'method', 'The', 'quick', 'brown');
+		var methodNoArgs = lateBind(object, 'method');
 		var suffix = 'fox jumped over the lazy dog';
 		object.method = function (...parts: string[]): string {
 			return parts.join(' ');
 		};
 
 		assert.equal(method(suffix), 'The quick brown ' + suffix,
+			'lateBind\'s additional arguments should be prepended to the wrapped function.');
+		assert.equal(methodNoArgs(suffix), suffix,
+			'lateBind\'s additional arguments should be prepended to the wrapped function.');
+		assert.equal(method(), 'The quick brown',
 			'lateBind\'s additional arguments should be prepended to the wrapped function.');
 	},
 

@@ -103,12 +103,16 @@ export function isIdentical(a: any, b: any): boolean {
 }
 
 export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): (...args: any[]) => any {
-	return function () {
-		var args: any[] = arguments.length ? suppliedArgs.concat(slice(arguments)) : suppliedArgs;
+	return suppliedArgs.length ?
+		function () {
+			var args: any[] = arguments.length ? suppliedArgs.concat(slice(arguments)) : suppliedArgs;
 
-		// TS7017
-		return (<any> instance)[method].apply(instance, args);
-	};
+			// TS7017
+			return (<any> instance)[method].apply(instance, args);
+		} :
+		function () {
+			return (<any> instance)[method].apply(instance, arguments);
+		};
 }
 
 export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs: any[]): (...args: any[]) => any {
