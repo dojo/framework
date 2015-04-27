@@ -89,7 +89,3 @@ export enum State {
 	Pending = 2,
 	Rejected = 3
 }
-
-export {
-	Thenable
-}
