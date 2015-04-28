@@ -98,8 +98,8 @@ export function getPropertyDescriptor(object: Object, property: string): Propert
 
 export function isIdentical(a: any, b: any): boolean {
 	return a === b ||
-		typeof a === 'number' && isNaN(a) &&
-		typeof b === 'number' && isNaN(b);
+		/* both values are NaN */
+		(a !== a && b !== b);
 }
 
 export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): (...args: any[]) => any {
