@@ -2,6 +2,8 @@ import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import * as iteration from 'src/async/iteration';
 import Promise from 'src/async/Promise';
+import * as array from 'src/array';
+import { isEventuallyRejected, throwImmediatly } from '../../support/util';
 
 interface ResolveFunc<T> {
 	(value: T | Promise<T>): Promise<T>
@@ -30,6 +32,14 @@ function createTriggerablePromise<T>(): ControlledPromise<T> {
 	return dfd;
 }
 
+function createTriggerablePromises<T>(amount: number): ControlledPromise<T>[] {
+	var list = Array(amount);
+	for (amount--; amount >= 0; amount--) {
+		list[amount] = createTriggerablePromise<T>();
+	}
+	return list;
+}
+
 function helloWorldTest (value: any): boolean {
 	return value === 'hello' || value === 'world';
 }
@@ -44,14 +54,6 @@ function assertTrue (value: boolean): void {
 
 function assertFalse (value: boolean): void {
 	assert.isFalse(value);
-}
-
-function isEventuallyRejected(promise: Promise<any>): Promise<any> {
-	return promise.then<any>(function () {
-		throw new Error('unexpected code path');
-	}, function () {
-		return true; // expect rejection
-	});
 }
 
 function join(current:string, value: string): string {
@@ -177,6 +179,192 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 				});
 
 				result[0].reject();
+
+				return isEventuallyRejected(promise);
+			}
+		}
+	};
+}
+
+function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: iteration.Reducer<any, any>, initialvalue?: any) => Promise<any>, solutions: any) {
+	function getExpectedSolution(test: any): any {
+		return solutions[test.parent.name][test.name];
+	}
+
+	return {
+		'synchronous values': {
+			'reduce an empty array without initial value is eventually rejected': function () {
+				var promise = (<any> reduceMethod)([]);
+
+				return isEventuallyRejected(promise);
+			},
+
+			'reduce a single value without an initial value; should not call callback': function () {
+				var expected: any = getExpectedSolution(this);
+
+				var values = [ 'h' ];
+				return reduceMethod(values, throwImmediatly).then(function (value) {
+					assert.strictEqual(value, expected);
+				});
+			},
+
+			'reduce multiple values': function () {
+				var expected: any = getExpectedSolution(this);
+
+				var values = [ 'h', 'e', 'l', 'l', 'o' ];
+				return reduceMethod(values, join).then(function (value) {
+					assert.strictEqual(value, expected);
+				});
+			},
+
+			'reduce multiple values with initializer': function () {
+				var expected: any = getExpectedSolution(this);
+
+				var values = [ 'w', 'o', 'r', 'l', 'd' ];
+				return reduceMethod(values, join, 'hello ').then(function (value) {
+					assert.strictEqual(value, expected);
+				});
+			},
+
+			'reduces a sparse array': function () {
+				var expected: any = getExpectedSolution(this);
+
+				var values = Array(10);
+				values[1] = 'h';
+				values[3] = 'e';
+				values[5] = 'l';
+				values[7] = 'l';
+				values[9] = 'o';
+				return reduceMethod(values, join).then(function (value) {
+					assert.strictEqual(value, expected);
+				});
+			}
+		},
+
+		'asynchronous values': {
+			'reduce a single value without initial value; should not call callback': function () {
+				var expected: any = getExpectedSolution(this);
+
+				var values = [ createTriggerablePromise() ];
+				var promise = reduceMethod(values, throwImmediatly).then(function (value) {
+					assert.strictEqual(value, expected);
+				});
+
+				values[0].resolve('h');
+
+				return promise;
+			},
+
+			'reduce multiple values': function () {
+				var expected: any = getExpectedSolution(this);
+
+				var values = createTriggerablePromises(5);
+				var promise = reduceMethod(values, join).then(function (value) {
+					assert.strictEqual(value, expected);
+				});
+
+				values[0].resolve('h');
+				values[1].resolve('e');
+				values[2].resolve('l');
+				values[3].resolve('l');
+				values[4].resolve('o');
+
+				return promise;
+			},
+
+			'reduce multiple values with initializer': function () {
+				var expected: any = getExpectedSolution(this);
+
+				var values = createTriggerablePromises(5);
+				var promise = reduceMethod(values, join, 'hello ').then(function (value) {
+					assert.strictEqual(value, expected);
+				});
+
+				values[0].resolve('w');
+				values[1].resolve('o');
+				values[2].resolve('r');
+				values[3].resolve('l');
+				values[4].resolve('d');
+
+				return promise;
+			},
+
+			'reduce multiple mixed values': function () {
+				var expected: any = getExpectedSolution(this);
+
+				var values = [ 'h', 'e','l', 'l', createTriggerablePromise()];
+				var promise = reduceMethod(values, join).then(function (value) {
+					assert.strictEqual(value, expected);
+				});
+
+				(<ControlledPromise<{}>> values[4]).resolve('o');
+
+				return promise;
+			},
+
+			'one promised value is rejected': function () {
+				var values = createTriggerablePromises(1);
+				var promise = reduceMethod(values, join);
+
+				values[0].reject();
+
+				return isEventuallyRejected(promise);
+			},
+
+			'reduces a sparse array': function () {
+				var expected: any = getExpectedSolution(this);
+
+				var values = Array(10);
+				values[1] = createTriggerablePromise();
+				values[4] = 'e';
+				values[5] = 'l';
+				values[7] = 'l';
+				values[8] = 'o';
+
+				var promise = reduceMethod(values, join).then(function (value) {
+					assert.strictEqual(value, expected);
+				});
+
+				values[1].resolve('h');
+
+				return promise;
+			}
+		},
+
+		'asynchronous callback': {
+			'multiple asynchronous reductions': function () {
+				var { step, initialIndex, callbackValues } = getExpectedSolution(this);
+				var values: string[] = 'hello'.split('');
+				var results = createTriggerablePromises(values.length);
+				var previousIndex = initialIndex;
+				var promise = reduceMethod(values,
+					function (previous: string, value: string, index: number, array: string[]): Promise<string> {
+						assert.strictEqual(value, values[index]);
+						assert.strictEqual(index, previousIndex + step);
+						previousIndex = index;
+						assert.deepEqual(values, array);
+						if (index !== initialIndex) {
+							return results[index - step].then(function (result) {
+								console.log(previous)
+								assert.strictEqual(previous, result);
+								return results[index];
+							});
+						}
+						return results[index];
+					});
+
+				results.forEach(function (result, i) {
+					result.resolve(callbackValues[i]);
+				});
+
+				return promise;
+			},
+
+			'one promised reduction is rejected': function () {
+				var values: string[] = 'hello'.split('');
+				var promise = reduceMethod(values, function (): Promise<string> {
+					throw new Error('expected');
+				});
 
 				return isEventuallyRejected(promise);
 			}
@@ -546,102 +734,49 @@ registerSuite({
 		}
 	},
 
-	'.reduce()': {
+	'.reduce()': reduceTests(iteration.reduce, {
 		'synchronous values': {
-			'reduce an empty array without initial value is eventually rejected': function () {
-				var promise = (<any> iteration.reduce)([]);
-
-				return isEventuallyRejected(promise);
-			},
-
-			'reduce a single value': function () {
-				var values = [ 'h' ];
-				return iteration.reduce(values, join).then(function (value) {
-					assert.strictEqual(value, 'h');
-				});
-			},
-
-			'reduce multiple values': function () {
-				var values = [ 'h', 'e', 'l', 'l', 'o' ];
-				return iteration.reduce(values, join).then(function (value) {
-					assert.strictEqual(value, 'hello');
-				});
-			},
-
-			'reduce multiple values with initializer': function () {
-				var values = [ 'w', 'o', 'r', 'l', 'd' ];
-				return iteration.reduce(values, join, 'hello ').then(function (value) {
-					assert.strictEqual(value, 'hello world');
-				});
-			},
-
-			'reduces a sparse array': function () {
-				var values = Array(10);
-				values[1] = 'h';
-				values[3] = 'e';
-				values[5] = 'l';
-				values[7] = 'l';
-				values[9] = 'o';
-				return iteration.reduce(values, join).then(function (value) {
-					assert.strictEqual(value, 'hello');
-				});
-			}
+			'reduce a single value without an initial value; should not call callback': 'h',
+			'reduce multiple values': 'hello',
+			'reduce multiple values with initializer': 'hello world',
+			'reduces a sparse array': 'hello'
 		},
 
 		'asynchronous values': {
-			'reduce a single value': function () {
-
-			},
-
-			'reduce multiple values': function () {
-
-			},
-
-			'reduce multiple values with initializer': function () {
-
-			},
-
-			'reduce multiple mixed values': function () {
-
-			},
-
-			'one promised value is rejected': function () {
-
-			},
-
-			'reduces a sparse array': function () {
-
-			}
+			'reduce a single value without initial value; should not call callback': 'h',
+			'reduce multiple values': 'hello',
+			'reduce multiple values with initializer': 'hello world',
+			'reduce multiple mixed values': 'hello',
+			'reduces a sparse array': 'hello'
 		},
 
 		'asynchronous callback': {
-			'one asynchronous reduction': function () {
-
-			},
-
-			'multiple asynchronous reductions': function () {
-
-			},
-
-			'one promised reduction is rejected': function () {
-
-			}
+			'multiple asynchronous reductions': { step: 1, initialIndex: 0,
+				callbackValues: [ 'h', 'he', 'hel', 'hell', 'hello' ] }
 		}
-	},
+	}),
 
-	'.reduceRight()': {
+	'.reduceRight()': reduceTests(iteration.reduceRight, {
 		'synchronous values': {
-
+			'reduce a single value without an initial value; should not call callback': 'h',
+			'reduce multiple values': 'olleh',
+			'reduce multiple values with initializer': 'hello dlrow',
+			'reduces a sparse array': 'olleh'
 		},
 
 		'asynchronous values': {
-
+			'reduce a single value without initial value; should not call callback': 'h',
+			'reduce multiple values': 'olleh',
+			'reduce multiple values with initializer': 'hello dlrow',
+			'reduce multiple mixed values': 'olleh',
+			'reduces a sparse array': 'olleh'
 		},
 
 		'asynchronous callback': {
-
+			'multiple asynchronous reductions': { step: -1, initialIndex: 4,
+				callbackValues: [ 'olleh', 'olle', 'oll', 'ol', 'o' ]  }
 		}
-	},
+	}),
 
 	'.series()': {
 		'synchronous values': {
