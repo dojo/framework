@@ -3,42 +3,39 @@ export { Thenable } from '../Promise';
 
 export default class Promise<T> extends PlatformPromise<T> {
 	static all<T>(items: (T | Thenable<T>)[]): Promise<T[]> {
-		return new Promise<T[]>(PlatformPromise.all<T>(items));
+		return <Promise<T[]>> super.all<T>(items);
 	}
 
 	static race<T>(items: (T | Thenable<T>)[]): Promise<T> {
-		return new Promise<T>(PlatformPromise.race<T>(items));
+		return <Promise<T>> super.race<T>(items);
 	}
 
 	static reject<T>(reason: any): Promise<any> {
-		return new Promise<T>(PlatformPromise.reject<T>(reason));
+		return <Promise<any>> super.reject<T>(reason);
 	}
 
 	static resolve(): Promise<void>;
 	static resolve<T>(value: (T | Thenable<T>)): Promise<T>;
 	static resolve<T>(value?: any): Promise<T> {
-		return new Promise<T>(PlatformPromise.resolve<T>(value));
+		return <Promise<T>> super.resolve<T>(value);
 	}
 
-	constructor(executor: PlatformPromise<T> | Executor<T>) {
-		super(executor);
+	protected static copy<U>(other: PlatformPromise<U>): Promise<U> {
+		var promise = <Promise<U>> super.copy(other);
 
-		if (executor instanceof Promise && (<Promise<T>> executor)._state !== State.Pending) {
-			this._state = (<Promise<T>> executor)._state;
+		if (other instanceof Promise && other._state !== State.Pending) {
+			promise._state = other._state;
 		}
 		else {
-			super.then(
-				() => this._state = State.Fulfilled,
-				() => this._state = State.Rejected
+			other.then(
+				() => promise._state = State.Fulfilled,
+				() => promise._state = State.Rejected
 			);
 		}
+		return promise;
 	}
 
 	protected _state = State.Pending;
-
-	catch<U>(onRejected: (reason?: any) => U | Thenable<U>): Promise<U> {
-		return new Promise<U>(super.catch<U>(onRejected));
-	}
 
 	/**
 	 * Allows for cleanup actions to be performed after resolution of a Promise.
@@ -80,7 +77,7 @@ export default class Promise<T> extends PlatformPromise<T> {
 	}
 
 	then<U>(onFulfilled?: (value: T) => U | Thenable<U>,  onRejected?: (error: any) => U | Thenable<U>): Promise<U> {
-		return new Promise<U>(super.then<U>(onFulfilled, onRejected));
+		return Promise.copy(super.then<U>(onFulfilled, onRejected));
 	}
 }
 
