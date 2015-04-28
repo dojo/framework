@@ -1,9 +1,20 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import {padStart, padEnd} from 'dist/string';
+import {escapeRegExp, escapeXml, padStart, padEnd} from 'src/string';
 
 registerSuite({
 	name: 'string functions',
+
+	'.escapeRegExp()': function () {
+		assert.equal(escapeRegExp('[]{}()|\\^$.*+?'), '\\[\\]\\{\\}\\(\\)\\|\\\\\\^\\$\\.\\*\\+\\?');
+	},
+
+	'.escapeXml()': function () {
+		var html: string = '<p class="text">Fox & Hound\'s</p>';
+
+		assert.equal(escapeXml(html, false), '&lt;p class="text">Fox &amp; Hound\'s&lt;/p>');
+		assert.equal(escapeXml(html), '&lt;p class=&quot;text&quot;&gt;Fox &amp; Hound&#39;s&lt;/p&gt;');
+	},
 
 	'.padStart()': function () {
 		assert.equal(padStart('Lorem', 10), '00000Lorem');
