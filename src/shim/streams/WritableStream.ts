@@ -10,33 +10,11 @@ var SinkMethod = {
 	write: 'write'
 };
 
-// TODO: look into making an interface
-class Record<T> {
-	close: boolean = true;
-	chunk: T;
-	promise: Promise<void>;
-	reject: (error: Error) => void;
-	resolve: () => void;
-
-	constructor(kwArgs: Record.KwArgs<T>) {
-		if (kwArgs) {
-			this.close = kwArgs.close || false;
-			this.chunk = kwArgs.chunk;
-			this.promise = kwArgs.promise;
-			this.reject = kwArgs.reject;
-			this.resolve = kwArgs.resolve;
-		}
-	}
-}
-
-module Record {
-	export interface KwArgs<T> {
-		close?: boolean;
-		chunk?: T;
-		promise?: Promise<void>;
-		reject?: (error: Error) => void;
-		resolve?: () => void;
-	}
+interface Record<T> {
+	close?: boolean;
+	chunk?: T;
+	reject?: (error: Error) => void;
+	resolve?: () => void;
 }
 
 export default class WritableStream<T> {
@@ -125,12 +103,11 @@ export default class WritableStream<T> {
 		var chunkSize = 1;
 		var writeRecord: Record<T>;
 		var promise = new Promise<void>((resolve, reject) => {
-			writeRecord = new Record<T>({
+			writeRecord = {
 				chunk: chunk,
-				promise: promise,
 				reject: reject,
 				resolve: resolve
-			});
+			};
 		});
 
 		// 4.2.4.6-6.b
@@ -175,9 +152,7 @@ export default class WritableStream<T> {
 
 		this._state = State.Closing;
 
-		this._queue.enqueue(new Record<T>({
-			close: true
-		}), 0);
+		this._queue.enqueue({ close: true }, 0);
 
 		this._advanceQueue();
 
@@ -260,7 +235,7 @@ export default class WritableStream<T> {
 					this._syncStateWithQueue();
 				}
 				catch (error) {
-					this._error(error);
+					return this._error(error);
 				}
 
 				this._advanceQueue();
