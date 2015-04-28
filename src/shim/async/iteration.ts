@@ -1,13 +1,11 @@
 import Promise, { Thenable } from './Promise';
+import * as array from '../array'
+
 // TODO remove this when platform is merged
 export interface ArrayLike<T> {
 	length: number;
 	[n: number]: T;
 }
-
-var array = {
-	map: Array.prototype.map
-};
 
 /**
  * Processes all items and then applies the callback to each item and eventually returns an object containing the
@@ -19,7 +17,7 @@ var array = {
 function processValuesAndCallback<T, U>(items: (T | Promise<T>)[], callback: Mapper<T, U>): Promise<{ values: T[]; results: U[] }> {
 	return Promise.all<T>(items)
 		.then(function (results) {
-			var pass: (U | Promise<U>)[] = array.map.call(results, callback);
+			var pass: (U | Promise<U>)[] = Array.prototype.map.call(results, callback);
 			return Promise.all<U>(pass)
 				.then<{ values: T[]; results: U[] }>(function (pass) {
 					return { values: results, results: pass };
@@ -33,7 +31,8 @@ function processValuesAndCallback<T, U>(items: (T | Promise<T>)[], callback: Map
  * @param offset the starting offset
  * @return {number} the offset of the next index with a value; or -1 if not found
  */
-function findNextValueIndex<T>(list: ArrayLike<T>, offset: number = 0): number {
+function findNextValueIndex<T>(list: ArrayLike<T>, offset: number = -1): number {
+	offset++;
 	for (var length = list.length; offset < length; offset++) {
 		if(offset in list) {
 			return offset;
@@ -41,6 +40,60 @@ function findNextValueIndex<T>(list: ArrayLike<T>, offset: number = 0): number {
 	}
 	return -1;
 }
+
+function findLastValueIndex<T>(list: ArrayLike<T>, offset?: number): number {
+	offset = offset === undefined ? list.length : offset;
+	offset--;
+	for (; offset >= 0; offset--) {
+		console.log(offset)
+		if(offset in list) {
+			return offset;
+		}
+	}
+	return -1;
+}
+
+function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: number) => number, items: (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
+	var hasInitialValue = arguments.length > 3;
+	return Promise.all<T>(items)
+		.then(function (results) {
+			return new Promise(function (resolve, reject) {
+				function next(currentValue: U): void {
+					i = findNextIndex(items, i);
+					if (i >= 0) {
+						var result = callback(currentValue, results[i], i, results);
+
+						if ( (<Thenable<U>> result).then) {
+							(<Thenable<U>> result).then(next, reject);
+						}
+						else {
+							next(<U> result);
+						}
+					}
+					else {
+						resolve(currentValue);
+					}
+				};
+
+				var i:number;
+				var value: U;
+				if (hasInitialValue) {
+					value = initialValue;
+				}
+				else {
+					console.log(findNextIndex)
+					i = findNextIndex(items);
+
+					if (i < 0) {
+						throw new Error('reduce array with no initial value');
+					}
+					value = <any> results[i];
+				}
+				next(value);
+			});
+		});
+}
+
 
 /**
  * Test whether all elements in the array pass the provided callback
@@ -145,48 +198,16 @@ export function map<T, U>(items: (T | Promise<T>)[], callback: Mapper<T, U>): Pr
  * @return a promise eventually containing a value that is the result of the reduction
  */
 export function reduce<T, U>(items: (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
-	var hasInitialValue = arguments.length > 2;
-	return Promise.all<T>(items)
-		.then(function (results) {
-			return new Promise(function (resolve, reject) {
-				function next(currentValue: U): void {
-					i = findNextValueIndex(items, i);
-					if (i < results.length && i >= 0) {
-						var result = callback(currentValue, results[i], i, results);
-						i++;
-
-						if ( (<Thenable<U>> result).then) {
-							(<Thenable<U>> result).then(next, reject);
-						}
-						else {
-							next(<U> result);
-						}
-					}
-					else {
-						resolve(currentValue);
-					}
-				};
-
-				var i = 0;
-				var value: U;
-				if (hasInitialValue) {
-					value = initialValue;
-				}
-				else {
-					i = findNextValueIndex(items);
-					if (i < 0) {
-						throw new Error('reduce array with no initial value');
-					}
-					value = <any> results[i];
-					i++;
-				}
-				next(value);
-			});
-		});
+	var args: any[] = <any[]> array.from(arguments);
+	args.unshift(findNextValueIndex);
+	return generalReduce.apply(this, args);
 }
 
-// TODO implement
-//export function reduceRight<T, U>(items: (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U>;
+export function reduceRight<T, U>(items: (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
+	var args: any[] = <any[]> array.from(arguments);
+	args.unshift(findLastValueIndex);
+	return generalReduce.apply(this, args);
+}
 
 // TODO implement
 //export function series<T, U>(items: (T | Promise<T>)[], operation: Mapper<T, U>): Promise<U[]>;
