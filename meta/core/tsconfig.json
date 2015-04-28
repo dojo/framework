@@ -29,7 +29,6 @@
 		"./src/object.ts",
 		"./src/Promise.ts",
 		"./src/async/Promise.ts",
-		"./src/async/Task.ts",
 		"./src/async/iteration.ts",
 		"./src/streams/interfaces.d.ts",
 		"./src/streams/ReadableStream.ts",
