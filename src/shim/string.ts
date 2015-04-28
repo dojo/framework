@@ -10,10 +10,10 @@ var escapeXmlMap: { [key: string]: string } = {
 };
 
 function getPadding(text: string, size: number, character: string = '0'): string {
-	var length: number = Math.abs(Math.min(0, text.length - size));
+	var length: number = size - text.length;
 	var padding: string = '';
 
-	if (length === 0) {
+	if (length < 1) {
 		return padding;
 	}
 
