@@ -190,7 +190,7 @@ export class PromiseShim<T> implements Thenable<T> {
 	 * The executor must call either the passed `resolve` function when the asynchronous operation has completed
 	 * successfully, or the `reject` function when the operation fails.
 	 */
-	constructor(executor: PromiseShim<T> | Executor<T>) {
+	constructor(executor: Executor<T>) {
 		/**
 		 * If true, the resolution of this promise is chained ("locked in") to another promise.
 		 */
@@ -313,19 +313,14 @@ export class PromiseShim<T> implements Thenable<T> {
 			});
 		};
 
-		if (executor instanceof PromiseShim) {
-			resolve(executor.state, executor.state === State.Pending ? executor : executor.resolvedValue);
+		try {
+			(<Executor<T>> executor)(
+				resolve.bind(null, State.Fulfilled),
+				resolve.bind(null, State.Rejected)
+			);
 		}
-		else {
-			try {
-				(<Executor<T>> executor)(
-					resolve.bind(null, State.Fulfilled),
-					resolve.bind(null, State.Rejected)
-				);
-			}
-			catch (error) {
-				settle(State.Rejected, error);
-			}
+		catch (error) {
+			settle(State.Rejected, error);
 		}
 	}
 
@@ -390,15 +385,15 @@ let PromiseConstructor = global.Promise || PromiseShim;
  */
 export class PlatformPromise<T> implements Thenable<T> {
 	static all<T>(items: (T | Thenable<T>)[]): PlatformPromise<T[]> {
-		return new this(PromiseConstructor.all(unwrapPromises(items)));
+		return this.copy(PromiseConstructor.all(unwrapPromises(items)));
 	}
 
 	static race<T>(items: (T | Thenable<T>)[]): PlatformPromise<T> {
-		return new this(PromiseConstructor.race(unwrapPromises(items)));
+		return this.copy(PromiseConstructor.race(unwrapPromises(items)));
 	}
 
 	static reject<T>(reason: Error): PlatformPromise<any> {
-		return new this(PromiseConstructor.reject(reason));
+		return this.copy(PromiseConstructor.reject(reason));
 	}
 
 	static resolve(): PlatformPromise<void>;
@@ -407,34 +402,37 @@ export class PlatformPromise<T> implements Thenable<T> {
 		if (value instanceof PlatformPromise) {
 			return value;
 		}
-		return new this(PromiseConstructor.resolve(value));
+		return this.copy(PromiseConstructor.resolve(value));
 	}
 
-	constructor(executor: PlatformPromise<T> | Executor<T>) {
-		if (executor instanceof PlatformPromise) {
-			this.promise = executor.promise;
-		} else if (executor instanceof PromiseConstructor) {
-			this.promise = executor;
-		}
-		else {
-			let createResolve = (resolve: (value?: T | Thenable<T>) => void, reject: (reason?: any) => void) => {
-				return (value: any) => {
-					if (value === this) {
-						reject(new TypeError('Cannot chain a promise to itself'));
-					}
-					else {
-						resolve(value);
-					}
-				};
-			};
-			// Create safe executor that verifies that the the resolution value isn't this promise. Since any incoming
-			// promise should be wrapped, the native resolver can't automatically detect self-resolution.
-			let safeExecutor: Executor<T> = (resolve, reject) => {
-				(<Executor<T>> executor)(createResolve(resolve, reject), reject);
-			};
+	/**
+	 * Copy another PlatformPromise, taking on its inner state.
+	 */
+	protected static copy<U>(other: PlatformPromise<U>): PlatformPromise<U> {
+		var promise = Object.create(this.prototype, {
+			promise: { value: other instanceof PromiseConstructor ? other : other.promise }
+		});
+		return promise;
+	}
 
-			this.promise = new PromiseConstructor(safeExecutor);
-		}
+	constructor(executor: Executor<T>) {
+		let createResolve = (resolve: (value?: T | Thenable<T>) => void, reject: (reason?: any) => void) => {
+			return (value: any) => {
+				if (value === this) {
+					reject(new TypeError('Cannot chain a promise to itself'));
+				}
+				else {
+					resolve(value);
+				}
+			};
+		};
+		// Create safe executor that verifies that the the resolution value isn't this promise. Since any incoming
+		// promise should be wrapped, the native resolver can't automatically detect self-resolution.
+		let safeExecutor: Executor<T> = (resolve, reject) => {
+			(<Executor<T>> executor)(createResolve(resolve, reject), reject);
+		};
+
+		this.promise = new PromiseConstructor(safeExecutor);
 	}
 
 	private promise: typeof global.Promise;
@@ -447,7 +445,7 @@ export class PlatformPromise<T> implements Thenable<T> {
 		onFulfilled?: (value?: T) => (U | Thenable<U>),
 		onRejected?: (reason?: Error) => (U | Thenable<U>)
 	): PlatformPromise<U> {
-		return new PlatformPromise(this.promise.then(onFulfilled, onRejected));
+		return PlatformPromise.copy(this.promise.then(onFulfilled, onRejected));
 	}
 }
 

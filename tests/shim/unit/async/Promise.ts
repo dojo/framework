@@ -9,7 +9,7 @@ let suite = {
 		assert.instanceOf(Promise.all([]), Promise);
 		assert.instanceOf(Promise.race([]), Promise);
 		assert.instanceOf(Promise.resolve(0), Promise);
-		assert.instanceOf(Promise.reject(0), Promise);
+		assert.instanceOf(Promise.reject(new Error('foo')), Promise);
 	},
 
 	// ensure extended promise passes all the standard Promise tests
@@ -138,60 +138,6 @@ let suite = {
 			Promise.race([ normal, foreign ]).then(dfd.callback((value: any) => {
 				assert.strictEqual(value, 1);
 			}));
-		}
-	},
-
-	'construct from Promise': {
-		resolved: function () {
-			let dfd = this.async();
-			let promise = new Promise(Promise.resolve(5));
-			promise.then(dfd.callback(function (value: any) {
-				assert.strictEqual(value, 5);
-			}));
-		},
-
-		rejected: function () {
-			let dfd = this.async();
-			let promise = new Promise(Promise.reject('foo'));
-			promise.then(dfd.rejectOnError(function (value: any) {
-				assert.fail(false, true, 'Promise should not have resolved');
-			}), dfd.callback(function (error: any) {
-				assert.strictEqual(error, 'foo');
-			}));
-		},
-
-		'post-resolved': function () {
-			let dfd = this.async();
-			let resolver: (value: any) => void;
-			let p = new Promise(function (resolve, reject) {
-				resolver = resolve;
-			});
-			let promise = new Promise(p);
-			promise.then(dfd.callback(function (value: any) {
-				assert.strictEqual(value, 7);
-			}));
-
-			setTimeout(function () {
-				resolver(7);
-			});
-		},
-
-		'post-rejected': function () {
-			let dfd = this.async();
-			let resolver: (value: any) => void;
-			let p = new Promise(function (resolve, reject) {
-				resolver = reject;
-			});
-			let promise = new Promise(p);
-			promise.then(dfd.rejectOnError(function (value: any) {
-				assert.fail(false, true, 'Promise should not have resolved');
-			}), dfd.callback(function (error: any) {
-				assert.strictEqual(error, 'foo');
-			}));
-
-			setTimeout(function () {
-				resolver('foo');
-			});
 		}
 	},
 
