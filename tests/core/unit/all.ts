@@ -4,6 +4,7 @@ import './has';
 import './lang';
 import './string';
 import './math';
+import './nextTick';
 import './number';
 import './object';
 import './Promise';

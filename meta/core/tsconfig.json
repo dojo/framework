@@ -48,6 +48,7 @@
 		"./tests/unit/has.ts",
 		"./tests/unit/lang.ts",
 		"./tests/unit/math.ts",
+		"./tests/unit/nextTick.ts",
 		"./tests/unit/number.ts",
 		"./tests/unit/object.ts",
 		"./tests/unit/Promise.ts",
