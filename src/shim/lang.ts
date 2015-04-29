@@ -115,9 +115,34 @@ export interface CopyArgs {
 	sources: any[];
 }
 
+export function create(prototype: {}, ...mixins: {}[]): {} {
+	if (!mixins.length) {
+		throw new RangeError('lang.create requires at least one mixin object.');
+	}
+
+	return copy({
+		assignPrototype: false,
+		deep: false,
+		descriptors: false,
+		inherited: false,
+		target: Object.create(prototype),
+		sources: mixins
+	});
+}
+
+export function duplicate(source: {}): {} {
+	return copy({
+		assignPrototype: true,
+		deep: true,
+		descriptors: true,
+		sources: [ source ]
+	});
+}
+
 export function getPropertyNames(object: {}): string[] {
 	var setOfNames: {[index: string]: any} = {};
-	var names : string[];
+	var names : string[] = [];
+
 	do {
 		// go through each prototype to add the property names
 		var ownNames = Object.getOwnPropertyNames(object);
@@ -130,7 +155,8 @@ export function getPropertyNames(object: {}): string[] {
 			}
 		}
 		object = Object.getPrototypeOf(object);
-	} while (object);
+	} while (object && object !== Object.prototype);
+
 	return names;
 }
 
