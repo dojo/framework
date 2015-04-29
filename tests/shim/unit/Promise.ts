@@ -140,60 +140,6 @@ function tests(PromiseType: PromiseConstructor) {
 			}
 		},
 
-		'construct from Promise': {
-			resolved: function () {
-				var dfd = this.async();
-				var promise = new Promise(Promise.resolve(5));
-				promise.then(dfd.callback(function (value: any) {
-					assert.strictEqual(value, 5);
-				}));
-			},
-
-			rejected: function () {
-				var dfd = this.async();
-				var promise = new Promise(Promise.reject(new Error('foo')));
-				promise.then(dfd.rejectOnError(function (value: Error) {
-					assert.fail(false, true, 'Promise should not have resolved');
-				}), dfd.callback(function (error: Error) {
-					assert.strictEqual(error.message, 'foo');
-				}));
-			},
-
-			'post-resolved': function () {
-				var dfd = this.async();
-				var resolver: (value: any) => void;
-				var p = new Promise(function (resolve, reject) {
-					resolver = resolve;
-				});
-				var promise = new Promise(p);
-				promise.then(dfd.callback(function (value: any) {
-					assert.strictEqual(value, 7);
-				}));
-
-				setTimeout(function () {
-					resolver(7);
-				});
-			},
-
-			'post-rejected': function () {
-				var dfd = this.async();
-				var resolver: (value: any) => void;
-				var p = new Promise(function (resolve, reject) {
-					resolver = reject;
-				});
-				var promise = new Promise(p);
-				promise.then(dfd.rejectOnError(function (value: any) {
-					assert.fail(false, true, 'Promise should not have resolved');
-				}), dfd.callback(function (error: any) {
-					assert.strictEqual(error, 'foo');
-				}));
-
-				setTimeout(function () {
-					resolver('foo');
-				});
-			}
-		},
-
 		'#then': {
 			fulfillment: function () {
 				var dfd = this.async();

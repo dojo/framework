@@ -9,7 +9,7 @@ interface ReadRequest<T> {
 }
 
 export default class ReadableStreamReader<T> {
-	// TODO: rename to closed?
+
 	_closedPromise: Promise<void>;
 	private _ownerReadableStream: ReadableStream<T>;
 	_readRequests: ReadRequest<T>[];
@@ -39,7 +39,7 @@ export default class ReadableStreamReader<T> {
 		});
 
 		if (stream.state === State.Closed || stream.state === State.Errored) {
-			this.releaseLock();
+			this._release();
 		}
 	}
 
@@ -111,27 +111,22 @@ export default class ReadableStreamReader<T> {
 				done: false
 			});
 		} else {
-			var readResolve: (value: ReadResult<T>) => void;
-			var readReject: (reason: any) => void;
 			var readPromise = new Promise<ReadResult<T>>((resolve, reject) => {
-				readResolve = resolve;
-				readReject = reject;
+				this._readRequests.push({
+					promise: readPromise,
+					resolve: resolve,
+					reject: reject
+				});
+				stream._pull();
 			});
 
-			this._readRequests.push({
-				promise: readPromise,
-				resolve: readResolve,
-				reject: readReject
-			});
-			stream._pull();
 			return readPromise;
 		}
 	}
 
 	/**
 	 * release a reader's lock on the corresponding stream.
-	 * This method also incorporates the releaseReadableStreamReader from 3.5.13.
-	 * @alias ReleaseReadableStreamReader
+	 * 3.4.4.4. releaseLock()
 	 */
 	releaseLock(): void {
 		if (!isReadableStreamReader(this)) {
@@ -146,7 +141,14 @@ export default class ReadableStreamReader<T> {
 			throw new TypeError('3.4.4.4-3: Tried to release a reader lock when that reader has pending read calls un-settled');
 		}
 
-		// FIXME: this code doesn't look correct
+		this._release();
+	}
+
+	/**
+	 * 3.5.13. ReleaseReadableStreamReader ( reader )
+	 * alias ReleaseReadableStreamReader
+	 */
+	_release(): void {
 		var request: any;
 		if (this._ownerReadableStream.state === State.Errored) {
 			this.state = State.Errored;
@@ -155,15 +157,14 @@ export default class ReadableStreamReader<T> {
 			this._storedError = e;
 			this._rejectClosedPromise(e);
 
-			for (request in this._readRequests) {
-				request._reject(e);
+			for (request of this._readRequests) {
+				request.reject(e);
 			}
 		}
 		else {
 			this.state = State.Closed;
-			console.log('resolveing promise');
 			this._resolveClosedPromise();
-			for (request in this._readRequests) {
+			for (request of this._readRequests) {
 				request.resolve({
 					value: undefined,
 					done: true
