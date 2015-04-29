@@ -14,6 +14,7 @@ export default class ReadableStream<T> {
 
 	state: State;
 
+	// TBD: implement closed getter
 	_closedPromise: Promise<void>;
 	_closeRequested: boolean = false;
 	_controller: ReadableStreamController<T>;
@@ -350,14 +351,14 @@ export default class ReadableStream<T> {
 				var value = result.value;
 				var done = result.done;
 
-				if (done && !teeState.closedOrDeferred) {
+				if (done && !teeState.closedOrErrored) {
 					branch1._requestClose();
 					branch2._requestClose();
 
-					teeState.closedOrDeferred = true;
+					teeState.closedOrErrored = true;
 				}
 
-				if (teeState.closedOrDeferred) {
+				if (teeState.closedOrErrored) {
 					return;
 				}
 
