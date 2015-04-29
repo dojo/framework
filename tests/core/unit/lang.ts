@@ -5,13 +5,22 @@ import {isIdentical, copy, lateBind, partial} from 'src/lang';
 registerSuite({
 	name: 'lang functions',
 
-	'copy() simple': function () {
+	'.copy() invalid arguments': function () {
+		assert.throw(function () {
+			copy({
+				sources: []
+			});
+		});
+	},
+
+	'.copy() simple': function () {
 		var copyofObject = copy({
 			sources: [{a: 1}]
 		});
 		assert.equal(copyofObject.a, 1);
 	},
-	'copy() inherited': function () {
+
+	'.copy() inherited': function () {
 		var prototype = {
 			a: 1
 		};
@@ -19,13 +28,13 @@ registerSuite({
 		inheriting.b = 2;
 		var copyofInherited = copy({
 			inherited: true,
-			sources: [inheriting]
+			sources: [ inheriting ]
 		});
 		assert.equal(copyofInherited.a, 1);
 		assert.equal(copyofInherited.b, 2);
 	},
 
-	'copy() deep': function () {
+	'.copy() deep': function () {
 		var nested = {
 			a: {
 				b: 1
@@ -33,13 +42,28 @@ registerSuite({
 		};
 		var copyOfObject: any = copy({
 			deep: true,
-			sources: [nested]
+			sources: [ nested ]
 		});
 		assert.equal(copyOfObject.a.b, 1);
 		assert.notEqual(copyOfObject.a, nested.a);
 	},
 
-	'copy() descriptors': function () {
+	'.copy() deep arrays': function () {
+		var nested = {
+			a: {
+				b: [ 1 ]
+			}
+		};
+		var copyOfObject: any = copy({
+			deep: true,
+			sources: [ nested ]
+		});
+
+		assert.equal(copyOfObject.a.b[0], 1);
+		assert.notEqual(copyOfObject.a.b, nested.a.b);
+	},
+
+	'.copy() descriptors': function () {
 		var object: any = {
 			a: 1
 		};
