@@ -1,3 +1,4 @@
+import global from './global';
 declare var process: any;
 export var cache: { [feature: string]: any; } = Object.create(null);
 var testFunctions: { [feature: string]: () => any } = Object.create(null);

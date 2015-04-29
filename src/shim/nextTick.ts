@@ -3,20 +3,45 @@ import has from './has';
 import { Handle } from './interfaces';
 
 /**
+ * Create macro-scheduler based nextTick function.
+ */
+function createMacroScheduler(
+	schedule: ((callback: () => void, timeout?: number) => void),
+	clearSchedule: ((handle: any) => void)
+) {
+	let queue = new CallbackQueue();
+	let timer: any;
+
+	return function(callback: () => void): Handle {
+		let handle = queue.add(callback);
+
+		if (!timer) {
+			timer = schedule(function (): void {
+				clearSchedule(timer);
+				timer = null;
+				queue.drain();
+			}, 0);
+		}
+
+		return handle;
+	};
+}
+
+/**
  * An item in a CallbackQueue.
  */
-interface QueueItem<T extends Function> {
+interface QueueItem {
 	active: boolean;
-	callback: T;
+	callback: () => void;
 }
 
 /**
  * A queue of callbacks that will be executed in FIFO order when the queue is drained.
  */
-class CallbackQueue<T extends Function> {
-	private _callbacks: QueueItem<T>[] = [];
+class CallbackQueue {
+	private _callbacks: QueueItem[] = [];
 
-	add(callback: T): { destroy: () => void } {
+	add(callback: () => void): { destroy: () => void } {
 		let _callback = {
 			active: true,
 			callback: callback
@@ -36,7 +61,7 @@ class CallbackQueue<T extends Function> {
 
 	drain(...args: any[]): void {
 		let callbacks = this._callbacks;
-		let item: QueueItem<T>;
+		let item: QueueItem;
 		let count = callbacks.length;
 
 		// Any callbacks added after drain is called will be processed
@@ -52,23 +77,14 @@ class CallbackQueue<T extends Function> {
 	}
 }
 
-function noop(): void { }
-declare let process: any;
 let nextTick: (callback: () => void) => Handle;
 let nodeVersion = has('host-node');
+
 if (nodeVersion) {
 	// In Node.JS 0.9.x and 0.10.x, deeply recursive process.nextTick calls can cause stack overflows, so use
 	// setImmediate.
 	if (nodeVersion.indexOf('0.9.') === 0 || nodeVersion.indexOf('0.10.') === 0) {
-		nextTick = function (callback: () => void): Handle {
-			let timer = setImmediate(callback);
-			return {
-				destroy: function(): void {
-					this.destroy = noop;
-					clearImmediate(timer);
-				}
-			};
-		};
+		nextTick = createMacroScheduler(setImmediate, clearImmediate);
 	}
 	else {
 		nextTick = function(callback: () => void): Handle {
@@ -84,52 +100,35 @@ if (nodeVersion) {
 
 			return {
 				destroy: function (): void {
-					this.destroy = noop;
+					this.destroy = () => {};
 					removed = true;
 				}
 			};
 		};
 	}
 }
+else if (has('dom-mutationobserver')) {
+	let queue = new CallbackQueue();
+
+	nextTick = (function (): typeof nextTick {
+		let MutationObserver = this.MutationObserver || this.WebKitMutationObserver;
+		let element = document.createElement('div');
+		let observer = new MutationObserver(function (): void {
+			queue.drain();
+		});
+
+		observer.observe(element, { attributes: true });
+
+		return function(callback: () => void): Handle {
+			let handle = queue.add(callback);
+			element.setAttribute('drainQueue', '1');
+			return handle;
+		};
+	})();
+}
 else {
-	let queue = new CallbackQueue<() => void>();
-
-	if (has('dom-mutationobserver')) {
-		nextTick = (function (): typeof nextTick {
-			let MutationObserver = this.MutationObserver || this.WebKitMutationObserver;
-			let element = document.createElement('div');
-			let observer = new MutationObserver(function (): void {
-				queue.drain();
-			});
-
-			observer.observe(element, { attributes: true });
-
-			return function(callback: () => void): Handle {
-				let handle = queue.add(callback);
-				element.setAttribute('drainQueue', '1');
-				return handle;
-			};
-		})();
-	}
-	else {
-		nextTick = (function (): typeof nextTick {
-			// Node.js returns a Timer object from setTimeout, HTML5 specifies a number
-			let timer: any;
-			return function(callback: () => void): Handle {
-				let handle = queue.add(callback);
-
-				if (!timer) {
-					timer = setTimeout(function (): void {
-						clearTimeout(timer);
-						timer = null;
-						queue.drain();
-					}, 0);
-				}
-
-				return handle;
-			};
-		})();
-	}
+	// If nothing better is available, fallback to setTimeout
+	nextTick = createMacroScheduler(setTimeout, clearTimeout);
 }
 
 export default nextTick;
