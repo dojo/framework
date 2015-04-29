@@ -14,6 +14,7 @@ export default class ReadableStream<T> {
 
 	state: State;
 
+	// TBD: implement closed getter
 	_closedPromise: Promise<void>;
 	_closeRequested: boolean = false;
 	_controller: ReadableStreamController<T>;
@@ -131,7 +132,7 @@ export default class ReadableStream<T> {
 		this.state = State.Closed;
 
 		if (this.locked) {
-			return this._reader.releaseLock();
+			return this._reader._release();
 		}
 	}
 
@@ -174,7 +175,7 @@ export default class ReadableStream<T> {
 		this.state = State.Errored;
 
 		if (this.locked) {
-			return this._reader.releaseLock();
+			return this._reader._release();
 		}
 	}
 
@@ -225,7 +226,7 @@ export default class ReadableStream<T> {
 			reader = source.getReader();
 			reader._closedPromise.catch((reason: any) => {
 				// abortDest
-				reader.releaseLock();
+				reader._release();
 				if (!options.preventAbort) {
 					dest.abort(reason);
 				}
@@ -263,14 +264,14 @@ export default class ReadableStream<T> {
 			}
 			else {
 				lastRead.then(() => {
-					reader.releaseLock();
+					reader._release();
 					rejectPipeToPromise(reason);
 				});
 			}
 		}
 
 		function closeDest(): void {
-			reader.releaseLock();
+			reader._release();
 
 			var destState = dest.state;
 			if (!options.preventClose &&
@@ -333,12 +334,11 @@ export default class ReadableStream<T> {
 		};
 		teeState.promise = new Promise(resolve => teeState._resolve = resolve);
 
-		var createTeeReadableStreamBranchCancelFunction = (branch: number) => {
+		var createCancelFunction = (branch: number) => {
 			return (reason: any): void => {
 				teeState['canceled' + branch] = true;
 				teeState['reason' + branch] = reason;
 				if (teeState['canceled' + (branch === 1 ? 2 : 1)]) {
-					reader.releaseLock();
 					var cancelResult = this._cancel([teeState.reason1, teeState.reason2]);
 					teeState._resolve(cancelResult);
 				}
@@ -351,14 +351,14 @@ export default class ReadableStream<T> {
 				var value = result.value;
 				var done = result.done;
 
-				if (done && !teeState.closedOrDeferred) {
+				if (done && !teeState.closedOrErrored) {
 					branch1._requestClose();
 					branch2._requestClose();
 
-					teeState.closedOrDeferred = true;
+					teeState.closedOrErrored = true;
 				}
 
-				if (teeState.closedOrDeferred) {
+				if (teeState.closedOrErrored) {
 					return;
 				}
 
@@ -372,8 +372,8 @@ export default class ReadableStream<T> {
 			});
 		};
 
-		var cancel1 = createTeeReadableStreamBranchCancelFunction(1);
-		var cancel2 = createTeeReadableStreamBranchCancelFunction(2);
+		var cancel1 = createCancelFunction(1);
+		var cancel2 = createCancelFunction(2);
 		var underlyingSource1: Source<T> = <Source<T>> {
 			pull: pull,
 			cancel: cancel1
