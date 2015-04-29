@@ -34,7 +34,7 @@ export function add(feature: string, value: any, overwrite: boolean = false): vo
 export default function has(feature: string): any {
 	var result: any;
 
-	if (feature in testFunctions && typeof testFunctions[feature] === 'function') {
+	if (testFunctions[feature]) {
 		result = cache[feature] = testFunctions[feature].call(null);
 		testFunctions[feature] = null;
 	} else {
@@ -48,4 +48,13 @@ export default function has(feature: string): any {
  * OOTB feature tests
  */
 add('host-browser', typeof document !== 'undefined' && typeof location !== 'undefined');
-add('host-node', typeof process === 'object' && process.versions && process.versions.node);
+add('host-node', function () {
+	if (typeof process === 'object' && process.versions && process.versions.node) {
+		return process.versions.node;
+	}
+});
+add('float32array', 'Float32Array' in global);
+add('setimmediate', typeof global.setImmediate !== 'undefined');
+add('dom-mutationobserver', function(): boolean {
+	return has('host-browser') && Boolean(global.MutationObserver || global.WebKitMutationObserver);
+});

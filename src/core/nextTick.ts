@@ -1,5 +1,5 @@
 import global from './global';
-import has, { add as hasAdd } from './has';
+import has from './has';
 import { Handle } from './interfaces';
 
 /**
@@ -52,18 +52,14 @@ class CallbackQueue<T extends Function> {
 	}
 }
 
-hasAdd('dom-mutationobserver', function(): boolean {
-	return has('host-browser') && Boolean(global.MutationObserver || global.WebKitMutationObserver);
-});
-
 function noop(): void { }
 declare var process: any;
 var nextTick: (callback: () => void) => Handle;
-
-if (has('host-node')) {
+var nodeVersion = has('host-node');
+if (nodeVersion) {
 	// Node.JS 0.10 added `setImmediate` and then started throwing warnings when people called `nextTick` recursively;
 	// Node.JS 0.11 supposedly removes this behaviour, so only target 0.10
-	if (typeof setImmediate !== 'undefined' && process.version.indexOf('v0.10.') === 0) {
+	if (has('setimmediate') && nodeVersion.indexOf('0.10.') === 0) {
 		nextTick = function (callback: () => void): Handle {
 			var timer = setImmediate(callback);
 			return {
