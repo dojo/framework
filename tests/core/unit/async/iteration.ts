@@ -370,70 +370,64 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 			}
 		}
 	};
-}
+};
 
-registerSuite({
-	name: 'async/iteration',
+function haltImmediatelyTests(haltingMethod: (items: (any | Promise<any>)[], callback: iteration.Filterer<any>) => Promise<boolean>, solutions: any) {
+	function getParameters(test: any): any {
+		return solutions[test.parent.name][test.name];
+	}
 
-	'.every<T>()': {
+	function testAsynchronousValues() {
+		var { results, assertion } = getParameters(this);
+		var values = createTriggerablePromises(results.length);
+		var promise = haltingMethod(values, helloWorldTest).then(assertion);
+
+		values.forEach(function (value, index) {
+			value.resolve(results[index]);
+		});
+		return promise;
+	}
+
+	return {
 		'synchronous values': {
 			'one synchronous value': function () {
-				var values = ['hello'];
-				return iteration.every(values, helloWorldTest).then(assertTrue);
+				var { values, assertion } = getParameters(this);
+				return haltingMethod(values, helloWorldTest).then(assertion);
 			},
 
 			'multiple synchronous values': function () {
-				var values = [ 'hello', 'world' ];
-				return iteration.every<string>(values, helloWorldTest).then(assertTrue);
+				var { values, assertion } = getParameters(this);
+				return haltingMethod(values, helloWorldTest).then(assertion);
 			},
 
 			'multiple synchronous values with failure': function () {
-				var values = [ 'hello', 'world', 'potato' ];
-				return iteration.every(values, helloWorldTest).then(assertFalse);
+				var { values, assertion } = getParameters(this);
+				return haltingMethod(values, helloWorldTest).then(assertion);
 			}
 		},
 
 		'asynchronous values': {
 			'one asynchronous value': function () {
-				var values = [ createTriggerablePromise<string>() ];
-				var promise = iteration.every(values, helloWorldTest).then(assertTrue);
-
-				values[0].resolve('hello');
-				return promise;
+				return testAsynchronousValues.call(this);
 			},
 
 			'multiple asynchronous values': function () {
-				var values = [
-					createTriggerablePromise<string>(),
-					createTriggerablePromise<string>()
-				];
-				var promise = iteration.every(values, helloWorldTest).then(assertTrue);
-
-				values[0].resolve('hello');
-				values[1].resolve('world');
-				return promise;
+				return testAsynchronousValues.call(this);
 			},
 
 			'multiple asynchronous values with failure': function () {
-				var values = [
-					createTriggerablePromise<string>(),
-					createTriggerablePromise<string>()
-				];
-				var promise = iteration.every(values, helloWorldTest).then(assertFalse);
-
-				values[0].resolve('hello');
-				values[1].resolve('potato');
-				return promise;
+				return testAsynchronousValues.call(this);
 			},
 
 			'mixed synchronous and asynchronous values': function () {
+				var { results, assertion } = getParameters(this);
 				var values: any[] = [
-					'hello',
+					results[0],
 					createTriggerablePromise<string>()
 				];
-				var promise = iteration.every(values, helloWorldTest).then(assertTrue);
+				var promise = haltingMethod(values, helloWorldTest).then(assertion);
 
-				values[1].resolve('world');
+				values[1].resolve(results[1]);
 				return promise;
 			},
 
@@ -442,7 +436,7 @@ registerSuite({
 					'hello',
 					createTriggerablePromise<string>()
 				];
-				var promise = iteration.every(values, helloWorldTest);
+				var promise = haltingMethod(values, helloWorldTest);
 
 				values[1].reject();
 
@@ -452,37 +446,64 @@ registerSuite({
 
 		'asynchronous callback': {
 			'callback returns asynchronous results': function () {
+				var { resolution, assertion } = getParameters(this);
 				var values: any[] = ['unimportant', 'values'];
-				return iteration.every<string>(values, function () {
-					return Promise.resolve(true);
-				}).then(assertTrue);
+				return haltingMethod(values, function () {
+					return Promise.resolve(resolution);
+				}).then(assertion);
 			},
 
 			'callback returns asynchronous results with eventually rejected promise': function () {
 				var values: any[] = ['unimportant', 'values'];
-				var promise = iteration.every(values, <any> function () {
+				var promise = haltingMethod(values, <any> function () {
 					throw new Error('kablewie!');
 				});
 
 				return isEventuallyRejected(promise);
-			},
-
-			'callback returns multiple asynchronous results with a failure and every exits immediately': function () {
-				var values: any[] = ['unimportant', 'values'];
-				var response: any[] = [
-					createTriggerablePromise(),
-					createTriggerablePromise()
-				];
-				var promise = iteration.every<any>(values, function (value: any, i: number) {
-					return response[i];
-				}).then(assertFalse);
-
-				response[1].resolve(false);
-
-				return promise;
 			}
 		}
-	},
+	}
+}
+
+registerSuite({
+	name: 'async/iteration',
+
+	'.every<T>()': (function () {
+		var tests: any = haltImmediatelyTests(iteration.every, {
+				'synchronous values': {
+					'one synchronous value': { values: [ 'hello' ], assertion: assertTrue },
+					'multiple synchronous values': { values: [ 'hello', 'world' ], assertion: assertTrue },
+					'multiple synchronous values with failure': { values: [ 'hello', 'world', 'potato' ], assertion: assertFalse },
+				},
+				'asynchronous values': {
+					'one asynchronous value': { results: [ 'hello' ], assertion: assertTrue },
+					'multiple asynchronous values': { results: [ 'hello', 'world' ], assertion: assertTrue },
+					'multiple asynchronous values with failure': { results: [ 'hello', 'world', 'potato' ], assertion: assertFalse },
+					'mixed synchronous and asynchronous values': { results: [ 'hello', 'world' ], assertion: assertTrue },
+				},
+				'asynchronous callback': {
+					'callback returns asynchronous results': { resolution: true, assertion: assertTrue },
+				}
+			}
+		);
+
+		tests['asynchronous callback']['callback returns multiple asynchronous results with a failure and every exits immediately'] = function () {
+			var values: any[] = ['unimportant', 'values'];
+			var response: Promise<boolean>[] = [
+				createTriggerablePromise(),
+				createTriggerablePromise()
+			];
+			var promise = iteration.every<any>(values, function (value: any, i: number) {
+				return response[i];
+			}).then(assertFalse);
+
+			(<ControlledPromise<boolean>> response[1]).resolve(false);
+
+			return <any> promise;
+		};
+
+		return tests;
+	})(),
 
 	'.filter()': {
 		'synchronous values': {
@@ -845,17 +866,38 @@ registerSuite({
 		}
 	},
 
-	'.some()': {
-		'synchronous values': {
+	'.some()': (function () {
+		var tests: any = haltImmediatelyTests(iteration.some, {
+				'synchronous values': {
+					'one synchronous value': { values: [ 'hello' ], assertion: assertTrue },
+					'multiple synchronous values': { values: [ 'non-matching', 'world' ], assertion: assertTrue },
+					'multiple synchronous values with failure': { values: [ 'non-matching', 'non-matching' ], assertion: assertFalse },
+				},
+				'asynchronous values': {
+					'one asynchronous value': { results: [ 'hello' ], assertion: assertTrue },
+					'multiple asynchronous values': { results: [ 'non-matching', 'world' ], assertion: assertTrue },
+					'multiple asynchronous values with failure': { results: [ 'non-matching', 'non-matching' ], assertion: assertFalse },
+					'mixed synchronous and asynchronous values': { results: [ 'non-matching', 'world' ], assertion: assertTrue },
+				},
+				'asynchronous callback': {
+					'callback returns asynchronous results': { resolution: true, assertion: assertTrue },
+				}
+			}
+		);
 
-		},
+		tests['asynchronous callback']['callback returns multiple asynchronous results with a match and every exits immediately'] = function (): Promise<any> {
+			var values: any[] = [ 'unused', 'unused' ];
+			var response: Promise<boolean>[] = createTriggerablePromises(2);
+			var promise = iteration.some<any>(values, function (value: any, i: number) {
+				return response[i];
+			}).then(assertTrue);
 
-		'asynchronous values': {
+			(<ControlledPromise<boolean>> response[0]).resolve(false);
+			(<ControlledPromise<boolean>> response[1]).resolve(true);
 
-		},
+			return <any> promise;
+		};
 
-		'asynchronous callback': {
-
-		}
-	}
+		return tests;
+	})()
 });

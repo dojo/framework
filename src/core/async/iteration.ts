@@ -1,11 +1,6 @@
 import Promise, { Thenable } from './Promise';
 import * as array from '../array'
-
-// TODO remove this when platform is merged
-export interface ArrayLike<T> {
-	length: number;
-	[n: number]: T;
-}
+import { ArrayLike } from '../array';
 
 /**
  * Processes all items and then applies the callback to each item and eventually returns an object containing the
@@ -92,6 +87,36 @@ function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: numb
 		});
 }
 
+function testAndHaltOnCondition<T>(condition: boolean, items: (T | Promise<T>)[], callback: Filterer<T>): Promise<boolean> {
+	return Promise.all<T>(items).then(function (results) {
+		return new Promise<boolean>(function(resolve) {
+			var result: (boolean | Thenable<boolean>);
+			var pendingCount = 0;
+			for (var i = 0; i < results.length; i++) {
+				result = callback(results[i], i, results);
+				if (result === condition) {
+					return resolve(result);
+				}
+				else if ((<Thenable<boolean>> result).then) {
+					pendingCount++;
+					(<Thenable<boolean>> result).then(function (result) {
+						if (result === condition) {
+							resolve(result);
+						}
+						pendingCount--;
+						if (pendingCount === 0) {
+							resolve(!condition);
+						}
+					});
+				}
+			}
+			if (pendingCount === 0) {
+				resolve(!condition);
+			}
+		});
+	});
+}
+
 
 /**
  * Test whether all elements in the array pass the provided callback
@@ -100,33 +125,7 @@ function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: numb
  * @return eventually returns true if all values pass; otherwise false
  */
 export function every<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<boolean> {
-	return Promise.all<T>(items).then(function (results) {
-		return new Promise<boolean>(function(resolve) {
-			var result: (boolean | Thenable<boolean>);
-			var pendingCount = 0;
-			for (var i = 0; i < results.length; i++) {
-				result = callback(results[i], i, results);
-				if (result === false) {
-					return resolve(false);
-				}
-				else if ((<Thenable<boolean>> result).then) {
-					pendingCount++;
-					(<Thenable<boolean>> result).then(function (result) {
-						if (result === false) {
-							resolve(false);
-						}
-						pendingCount--;
-						if (pendingCount === 0) {
-							resolve(true);
-						}
-					});
-				}
-			}
-			if (pendingCount === 0) {
-				resolve(true);
-			}
-		});
-	});
+	return testAndHaltOnCondition(false, items, callback);
 }
 
 /**
@@ -223,8 +222,9 @@ export function series<T, U>(items: (T | Promise<T>)[], operation: Mapper<T, U>)
 	}, []);
 }
 
-// TODO implement
-//export function some<T>(items: Array<T | Thenable<T>>, callback: Filterer<T>): Promise<boolean>
+export function some<T>(items: Array<T | Promise<T>>, callback: Filterer<T>): Promise<boolean> {
+	return testAndHaltOnCondition<T>(true, items, callback);
+}
 
 export interface Filterer<T> extends Mapper<T, boolean> {}
 
