@@ -2,9 +2,11 @@ import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 
 import BaseStringSource from './helpers/BaseStringSource';
+import StringArraySink from './helpers/StringArraySink';
 import ReadableStream, { State } from 'src/streams/ReadableStream';
 import ReadableStreamController from 'src/streams/ReadableStreamController';
 import { ReadResult, Strategy } from 'src/streams/interfaces';
+import WritableStream, { State as WritableState } from 'src/streams/WritableStream';
 import Promise from 'src/Promise';
 
 var strategy: Strategy<string>;
@@ -523,6 +525,181 @@ registerSuite({
 
 			stream.error(new Error('testing'));
 		}
+	},
+
+	'pipeTo': {
+		'basic'() {
+			var dfd = this.async(asyncTimeout);
+			var sink = new StringArraySink();
+			var outStream = new WritableStream(sink);
+
+			var source = new BaseStringSource();
+			source.start = (controller: ReadableStreamController<string>): Promise<void> => {
+				controller.enqueue('test 1');
+				controller.enqueue('test 2');
+				controller.enqueue('test 3');
+				controller.close();
+				return Promise.resolve();
+			};
+			var inStream = new ReadableStream(source);
+			inStream.pipeTo(outStream).then(dfd.callback(() => {
+				assert.equal(3, sink.stringArray.length);
+				assert.equal(State.Closed, inStream.state);
+				assert.equal(WritableState.Closed, outStream.state);
+			}), dfd.rejectOnError(() => { assert.fail(); }));
+		},
+
+		'source start rejects'() {
+			var dfd = this.async(asyncTimeout);
+			var sink = new StringArraySink();
+			var outStream = new WritableStream(sink);
+
+			var source = new BaseStringSource();
+			source.start = () => {
+				return Promise.reject(new Error('test'));
+			};
+
+			var inStream = new ReadableStream(source);
+			inStream.pipeTo(outStream).then(
+				dfd.rejectOnError(() => { assert.fail(); }),
+				dfd.callback(() => {})
+			);
+		},
+
+		'source pull rejects'() {
+			var dfd = this.async(asyncTimeout);
+			var sink = new StringArraySink();
+			var outStream = new WritableStream(sink);
+
+			var source = new BaseStringSource();
+			source.start = (controller: ReadableStreamController<string>): Promise<void> => {
+				controller.enqueue('test 1');
+				return Promise.resolve();
+			};
+			source.pull = () => {
+				return Promise.reject(new Error('test'));
+			};
+
+			var inStream = new ReadableStream(source);
+			inStream.pipeTo(outStream).then(
+				dfd.rejectOnError(() => { assert.fail(); }),
+				dfd.callback(() => {
+					assert.equal(State.Errored, inStream.state);
+					assert.equal(WritableState.Errored, outStream.state);
+				})
+			);
+		},
+
+		'sink rejects'() {
+			var dfd = this.async(asyncTimeout);
+			var sink = new StringArraySink();
+			sink.write = () => { return Promise.reject(new Error('because')); };
+			var outStream = new WritableStream(sink);
+
+			var inStream = new ReadableStream(buildEnqueuingStartSource());
+			inStream.pipeTo(outStream).then(
+				dfd.rejectOnError(() => { assert.fail(); }),
+				dfd.callback(() => {
+					assert.equal(State.Closed, inStream.state);
+					assert.equal(WritableState.Errored, outStream.state);
+				})
+			);
+		},
+
+		'prevent close'() {
+			var dfd = this.async(asyncTimeout);
+			var sink = new StringArraySink();
+			var outStream = new WritableStream(sink);
+
+			var inStream = new ReadableStream(buildEnqueuingStartSource());
+			inStream.pipeTo(outStream, { preventClose: true }).then(dfd.callback(() => {
+				assert.equal(3, sink.stringArray.length);
+				assert.equal(WritableState.Writable, outStream.state);
+			}), dfd.rejectOnError(() => { assert.fail(); }));
+		},
+
+		'prevent cancel'() {
+			var dfd = this.async(asyncTimeout);
+			var sink = new StringArraySink();
+			sink.write = () => { return Promise.reject(new Error('because')); };
+			var outStream = new WritableStream(sink);
+
+			var inStream = new ReadableStream(buildEnqueuingStartSource());
+			inStream.pipeTo(outStream, { preventCancel: true }).then(
+				dfd.rejectOnError(() => { assert.fail(); }),
+				dfd.callback(() => {
+					assert.equal(State.Readable, inStream.state);
+					assert.equal(WritableState.Errored, outStream.state);
+				})
+			);
+		},
+
+		'prevent abort'() {
+			var dfd = this.async(asyncTimeout);
+			var sink = new StringArraySink();
+			var outStream = new WritableStream(sink);
+
+			var source = new BaseStringSource();
+			source.start = (controller: ReadableStreamController<string>): Promise<void> => {
+				controller.enqueue('test 1');
+				return Promise.resolve();
+			};
+			source.pull = () => {
+				return Promise.reject(new Error('test'));
+			};
+
+			var inStream = new ReadableStream(source);
+			inStream.pipeTo(outStream, { preventAbort: true }).then(
+				dfd.rejectOnError(() => { assert.fail(); }),
+				dfd.callback(() => {
+					assert.equal(State.Errored, inStream.state);
+					assert.equal(WritableState.Writable, outStream.state);
+				})
+			);
+		},
+
+		'writable closed'() {
+			var dfd = this.async(asyncTimeout);
+			var sink = new StringArraySink();
+			var outStream = new WritableStream(sink);
+			outStream.close();
+
+			var inStream = new ReadableStream(buildEnqueuingStartSource());
+			inStream.pipeTo(outStream).then(
+				dfd.rejectOnError(() => { assert.fail(); }),
+				dfd.callback(() => {
+					assert.equal(State.Closed, inStream.state);
+					assert.equal(WritableState.Closed, outStream.state);
+				})
+			);
+		},
+
+		'writable closed with prevent cancel'() {
+			var dfd = this.async(asyncTimeout);
+			var sink = new StringArraySink();
+			var outStream = new WritableStream(sink);
+			outStream.close();
+
+			var inStream = new ReadableStream(buildEnqueuingStartSource());
+			inStream.pipeTo(outStream, { preventCancel: true }).then(
+				dfd.rejectOnError(() => { assert.fail(); }),
+				dfd.callback(() => {
+					assert.equal(State.Readable, inStream.state);
+					assert.equal(WritableState.Closed, outStream.state);
+				})
+			);
+		}
 	}
 });
 
+function buildEnqueuingStartSource() {
+	var source = new BaseStringSource();
+	source.start = (controller: ReadableStreamController<string>): Promise<void> => {
+		controller.enqueue('test 1');
+		controller.enqueue('test 2');
+		controller.enqueue('test 3');
+		controller.close();
+		return Promise.resolve();
+	};
+	return source;
+}

@@ -56,7 +56,7 @@ export default class WritableStream<T> {
 	protected _underlyingSink: Sink<T>;
 	protected _writing: boolean;
 
-	constructor(underlyingSink: Sink<T>, strategy: Strategy<T>) {
+	constructor(underlyingSink: Sink<T>, strategy: Strategy<T> = {}) {
 		this._underlyingSink = underlyingSink;
 
 		this._closedPromise = new Promise<void>((resolve, reject) => {

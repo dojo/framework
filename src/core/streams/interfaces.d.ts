@@ -37,8 +37,6 @@ export interface Sink<T> {
 
 	start(error: () => void): Promise<void>;
 
-	strategy?: Strategy<T>;
-
 	/**
 	 *
 	 * @param chunk
