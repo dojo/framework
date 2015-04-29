@@ -353,7 +353,9 @@ let suite = {
 
 		resolved: function () {
 			let dfd = this.async();
-			var promise = Promise.resolve(5);
+			let promise = new Promise((resolve, reject) => {
+				resolve(5);
+			});
 			promise.then(dfd.callback(() => assert.strictEqual(promise.state, State.Fulfilled)));
 		},
 

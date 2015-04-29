@@ -37,6 +37,14 @@ export default class Promise<T> extends PlatformPromise<T> {
 
 	protected _state = State.Pending;
 
+	constructor(executor: Executor<T>) {
+		super(executor);
+		super.then(
+			() => this._state = State.Fulfilled,
+			() => this._state = State.Rejected
+		);
+	}
+
 	/**
 	 * Allows for cleanup actions to be performed after resolution of a Promise.
 	 */
