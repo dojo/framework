@@ -57,7 +57,7 @@ registerSuite({
 
 		'calls the stream cancel method'() {
 			var cancelCalled = false;
-			stream.cancel = () => { cancelCalled = true; return Promise.resolve(); };
+			stream._cancel = () => { cancelCalled = true; return Promise.resolve(); };
 			reader.cancel('reason');
 			assert.isTrue(cancelCalled);
 		}

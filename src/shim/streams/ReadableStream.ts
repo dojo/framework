@@ -3,7 +3,7 @@ import ReadableStreamReader from './ReadableStreamReader';
 import TransformStream from './TransformStream';
 import WritableStream, { State as WriteableState } from './WritableStream';
 import * as util from './util';
-import { PipeOptions, Source, Strategy } from './interfaces';
+import { PipeOptions, ReadResult, Source, Strategy } from './interfaces';
 import SizeQueue from './SizeQueue';
 import Promise from '../Promise';
 
@@ -14,8 +14,8 @@ export default class ReadableStream<T> {
 
 	state: State;
 
-	// TBD: implement closed getter
-	_closedPromise: Promise<void>;
+	closed: Promise<void>;
+
 	_closeRequested: boolean = false;
 	_controller: ReadableStreamController<T>;
 	_pullingPromise: Promise<void>;
@@ -84,7 +84,7 @@ export default class ReadableStream<T> {
 		return this._cancel(reason);
 	}
 
-	private _cancel(reason?: any): Promise<void> {
+	_cancel(reason?: any): Promise<void> {
 		// 3.2.4.1-3: return cancelReadableStream(this, reason);
 		if (this.state === State.Closed) {
 			return Promise.resolve();
@@ -211,7 +211,7 @@ export default class ReadableStream<T> {
 		return transformStream.readable;
 	}
 
-	pipeTo(dest: WritableStream<T>, options: PipeOptions): Promise<void> {
+	pipeTo(dest: WritableStream<T>, options: PipeOptions = {}): Promise<void> {
 		var source = this;
 		var resolvePipeToPromise: () => void;
 		var rejectPipeToPromise: (error: Error) => void;
@@ -224,9 +224,8 @@ export default class ReadableStream<T> {
 			rejectPipeToPromise = reject;
 
 			reader = source.getReader();
-			reader._closedPromise.catch((reason: any) => {
+			reader.closed.catch((reason: any) => {
 				// abortDest
-				reader._release();
 				if (!options.preventAbort) {
 					dest.abort(reason);
 				}
@@ -246,12 +245,12 @@ export default class ReadableStream<T> {
 
 		function doPipe(): void {
 			lastRead = reader.read();
-			Promise.all([lastRead, dest.ready]).then((options: [{ value: any, done: boolean}]) => {
-				if (options[0].done) {
+			Promise.all([lastRead, dest.ready]).then(([readResult, ready]) => {
+				if (readResult.done) {
 					closeDest();
 				}
 				else if (dest.state === WriteableState.Writable ) {
-					dest.write(options[0].value);
+					dest.write(readResult.value);
 					doPipe();
 				}
 			});
@@ -264,15 +263,13 @@ export default class ReadableStream<T> {
 			}
 			else {
 				lastRead.then(() => {
-					reader._release();
+					reader.releaseLock();
 					rejectPipeToPromise(reason);
 				});
 			}
 		}
 
 		function closeDest(): void {
-			reader._release();
-
 			var destState = dest.state;
 			if (!options.preventClose &&
 				(destState === WriteableState.Waiting || destState === WriteableState.Writable)) {
@@ -386,7 +383,7 @@ export default class ReadableStream<T> {
 		};
 		var branch2 = new ReadableStream(underlyingSource2);
 
-		reader._closedPromise.catch((r: any) => {
+		reader.closed.catch((r: any) => {
 			if (teeState.closedOrErrored) {
 				return;
 			}
@@ -417,10 +414,7 @@ export default class ReadableStream<T> {
 	_shouldApplyBackPressure(): boolean {
 		var queueSize = this._queue.totalSize;
 
-		var strategy = this._strategy;
-		var highwaterMark = (strategy && strategy.highwaterMark) || 1;
-
-		return queueSize > highwaterMark;
+		return queueSize > this._strategy.highwaterMark;
 	}
 }
 

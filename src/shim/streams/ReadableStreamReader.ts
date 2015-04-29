@@ -65,7 +65,7 @@ export default class ReadableStreamReader<T> {
 		}
 
 		if (this._ownerReadableStream && this._ownerReadableStream.state === State.Readable) {
-			return this._ownerReadableStream.cancel(reason);
+			return this._ownerReadableStream._cancel(reason);
 		}
 
 		// 3.4.4.2-4,5 - the spec calls for this to throw an error. We have changed it to reject instead
