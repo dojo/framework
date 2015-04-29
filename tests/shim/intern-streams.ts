@@ -9,7 +9,7 @@ export * from './intern';
 // loader
 export var useLoader = {
 	'host-node': 'requirejs',
-	'host-browser': 'node_modules/requirejs/require.js'
+	'host-browser': '../requirejs/require.js'
 };
 
 // Non-functional test suite(s) to run in each browser
