@@ -42,10 +42,8 @@ function findNextValueIndex<T>(list: ArrayLike<T>, offset: number = -1): number 
 }
 
 function findLastValueIndex<T>(list: ArrayLike<T>, offset?: number): number {
-	offset = offset === undefined ? list.length : offset;
-	offset--;
+	offset = (offset === undefined ? list.length : offset) - 1;
 	for (; offset >= 0; offset--) {
-		console.log(offset)
 		if(offset in list) {
 			return offset;
 		}
@@ -209,8 +207,21 @@ export function reduceRight<T, U>(items: (T | Promise<T>)[], callback: Reducer<T
 	return generalReduce.apply(this, args);
 }
 
-// TODO implement
-//export function series<T, U>(items: (T | Promise<T>)[], operation: Mapper<T, U>): Promise<U[]>;
+export function series<T, U>(items: (T | Promise<T>)[], operation: Mapper<T, U>): Promise<U[]> {
+	return generalReduce(findNextValueIndex, items, function (previousValue, currentValue, index, array) {
+		var result = operation(currentValue, index, array);
+
+		if ((<Thenable<U>> result).then) {
+			return (<Thenable<U>> result).then(function (value) {
+				previousValue.push(value);
+				return previousValue;
+			});
+		}
+
+		previousValue.push(result);
+		return previousValue;
+	}, []);
+}
 
 // TODO implement
 //export function some<T>(items: Array<T | Thenable<T>>, callback: Filterer<T>): Promise<boolean>
