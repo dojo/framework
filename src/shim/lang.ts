@@ -1,61 +1,108 @@
 var slice = Function.prototype.call.bind(Array.prototype.slice);
 
-export function copy(args: CopyArgs): any {
+function isObject(item: any): boolean {
+	return item && typeof item === 'object' && !Array.isArray(item) && !(item instanceof RegExp);
+}
 
+function copyArray(array: any[], kwArgs: CopyArgs): any[] {
+	return array.map(function (item: any): any {
+		if (Array.isArray(item)) {
+			return copyArray(item, kwArgs);
+		}
+
+		return isObject(item) ?
+			copy({
+				sources: [ item ],
+				deep: kwArgs.deep,
+				descriptors: kwArgs.descriptors,
+				inherited: kwArgs.inherited,
+				assignPrototype: kwArgs.assignPrototype
+			}) :
+			item;
+	});
+}
+
+export function copy(kwArgs: CopyArgs): any {
 	var target: any;
-	var sources: any[] = args.sources;
-	if (args.assignPrototype) {
+	var sources: any[] = kwArgs.sources;
+
+	if (!sources.length) {
+		throw new RangeError('lang.copy requires at least one source object.');
+	}
+
+	if (kwArgs.assignPrototype) {
 		// create from the same prototype
 		target = Object.create(Object.getPrototypeOf(sources[0]));
-	} else {
-		// use the target or create a new object
-		target = args.target || {};
 	}
+	else {
+		// use the target or create a new object
+		target = kwArgs.target || {};
+	}
+
 	for (var i = 0; i < sources.length; i++) {
 		// iterate through all the sources
-		var source: {[index: string]: any} = sources[i];
+		var source: { [index: string]: any } = sources[i];
 		var name: string;
 		var value: any;
-		if (args.descriptors) {
+
+		if (kwArgs.descriptors) {
 			// if we are copying descriptors, use to get{Own}PropertyNames so we get every property
 			// (including non enumerables).
-			var names = (args.inherited ? getPropertyNames : Object.getOwnPropertyNames)(source);
+			var names = (kwArgs.inherited ? getPropertyNames : Object.getOwnPropertyNames)(source);
+
 			for (var j = 0; j < names.length; j++) {
 				name = names[j];
 				// get the descriptor
-				var descriptor = (args.inherited ?
+				var descriptor = (kwArgs.inherited ?
 					getPropertyDescriptor : Object.getOwnPropertyDescriptor)(source, name);
 				value = descriptor.value;
-				// deep copy if necessary
-				if (value && typeof value === 'object' && args.deep) {
-					descriptor.value = copy({
-							sources: [value],
+
+				if (kwArgs.deep) {
+					if (Array.isArray(value)) {
+						descriptor.value = copyArray(value, kwArgs);
+					}
+					else if (isObject(value)) {
+						descriptor.value = copy({
+							sources: [ value ],
 							deep: true,
 							descriptors: true,
-							inherited: args.inherited,
-							assignPrototype: args.assignPrototype
+							inherited: kwArgs.inherited,
+							assignPrototype: kwArgs.assignPrototype
 						});
+					}
 				}
+
 				// and copy to the target
 				Object.defineProperty(target, name, descriptor);
 			}
-		} else {
-			// if we aren't using descriptors, we use a standard for-in to simplify skipping
-			// non-enumerables and inheritance. We could use Object.keys when we aren't inheriting
+		}
+		else {
+			// If we aren't using descriptors, we use a standard for-in to simplify skipping
+			// non-enumerables and inheritance. We could use Object.keys when we aren't inheriting.
 			for (name in source) {
-				if (args.inherited || source.hasOwnProperty(name)) {
+				if (kwArgs.inherited || source.hasOwnProperty(name)) {
 					value = source[name];
-					target[name] = value && ((typeof value === 'object' && args.deep) ?
-						copy({
-							sources: [value],
-							deep: true,
-							inherited: args.inherited,
-							assignPrototype: args.assignPrototype
-						}) : value);
+
+					if (kwArgs.deep) {
+						if (Array.isArray(value)) {
+							value = copyArray(value, kwArgs);
+						}
+						else if (isObject(value)) {
+							value = copy({
+								sources: [ value ],
+								deep: true,
+								inherited: kwArgs.inherited,
+								assignPrototype: kwArgs.assignPrototype
+							});
+						}
+					}
+
+					target[name] = value;
 				}
 			}
 		}
 	}
+
 	return target;
 }
 
