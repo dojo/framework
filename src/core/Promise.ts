@@ -82,7 +82,7 @@ export class PromiseShim<T> implements Thenable<T> {
 				if (item instanceof PromiseShim) {
 					// If an item PromiseShim rejects, this PromiseShim is immediately rejected with the item
 					// PromiseShim's rejection error.
-					item.then(fulfill.bind(null, index), reject.bind(null));
+					item.then(fulfill.bind(null, index), reject);
 				}
 				else {
 					PromiseShim.resolve(item).then(fulfill.bind(null, index));
@@ -144,10 +144,10 @@ export class PromiseShim<T> implements Thenable<T> {
 					if (item instanceof PromiseShim) {
 						// If a PromiseShim item rejects, this PromiseShim is immediately rejected with the item
 						// PromiseShim's rejection error.
-						item.then(resolve.bind(null), reject.bind(null));
+						item.then(resolve, reject);
 					}
 					else {
-						PromiseShim.resolve(item).then(resolve.bind(null));
+						PromiseShim.resolve(item).then(resolve);
 					}
 				}
 			}
