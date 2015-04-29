@@ -80,7 +80,7 @@ registerSuite({
 			var stream = new ReadableStream(source);
 			setTimeout(dfd.callback(() => {
 				assert.strictEqual(State.Errored, stream.state);
-			}));
+			}), 50);
 		}
 	},
 
@@ -216,12 +216,8 @@ registerSuite({
 
 		stream = new ReadableStream(new BaseStringSource(), strategy);
 		var reader = stream.getReader();
-		var released = false;
-		reader.releaseLock = () => {
-			released = true;
-		};
 		stream.error(error);
-		assert.isTrue(released);
+		assert.equal(State.Errored, reader.state);
 	},
 
 	'getReader': {
@@ -460,7 +456,7 @@ registerSuite({
 				dfd.callback((value: ReadResult<string>[]) => {
 					assert.equal('test 1', value[0].value);
 					assert.equal('test 1', value[1].value);
-				}), () => { assert.fail(); }
+				}), dfd.rejectOnError(() => { assert.fail(); })
 			);
 		},
 
@@ -484,7 +480,48 @@ registerSuite({
 				return reader.read();
 			}).then(dfd.callback(function (value: ReadResult<string>) {
 				assert.isTrue(value.done);
-			}), () => { assert.fail(); });
+			}), dfd.rejectOnError(() => { assert.fail(); }));
+		},
+
+		'two cancelled'() {
+			var dfd = this.async(asyncTimeout);
+			var source = new BaseStringSource();
+			source.start = (controller: ReadableStreamController<string>): Promise<void> => {
+				controller.enqueue('test 1');
+				controller.close();
+				return Promise.resolve();
+			};
+			var stream = new ReadableStream(source);
+			var [stream1, stream2] = stream.tee();
+			stream2.cancel();
+
+			assert.throws(() => { stream2.getReader().read(); });
+			var reader = stream1.getReader();
+			reader.read().then(function (value: ReadResult<string>) {
+				assert.isFalse(value.done);
+				assert.equal('test 1', value.value);
+				return reader.read();
+			}).then(dfd.callback(function (value: ReadResult<string>) {
+				assert.isTrue(value.done);
+			}), dfd.rejectOnError(() => { assert.fail(); }));
+		},
+
+		'error'() {
+			var dfd = this.async(asyncTimeout);
+			var source = new BaseStringSource();
+			var stream = new ReadableStream(source);
+			var [stream1, stream2] = stream.tee();
+
+			var reader1 = stream1.getReader();
+			var reader2 = stream2.getReader();
+
+			Promise.all([reader1.closed, reader2.closed]).then(dfd.rejectOnError(() => { assert.fail(); }),
+				dfd.callback(() => {
+					assert.equal(State.Errored, reader1.state);
+					assert.equal(State.Errored, reader2.state);
+				}));
+
+			stream.error(new Error('testing'));
 		}
 	}
 });

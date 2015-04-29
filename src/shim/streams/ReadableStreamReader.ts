@@ -9,7 +9,7 @@ interface ReadRequest<T> {
 }
 
 export default class ReadableStreamReader<T> {
-	// TODO: rename to closed?
+
 	_closedPromise: Promise<void>;
 	private _ownerReadableStream: ReadableStream<T>;
 	_readRequests: ReadRequest<T>[];
