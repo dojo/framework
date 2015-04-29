@@ -446,10 +446,11 @@ registerSuite({
 
 		'pull'() {
 			var dfd = this.async(asyncTimeout);
-			var i = 1;
 			var source = new BaseStringSource();
-			source.pull = (controller: ReadableStreamController<string>): Promise<void> => {
-				controller.enqueue('test ' + i++);
+			source.start = (controller: ReadableStreamController<string>): Promise<void> => {
+				controller.enqueue('test 1');
+				controller.enqueue('test 2');
+				controller.close();
 				return Promise.resolve();
 			};
 			var stream = new ReadableStream(source);
@@ -459,8 +460,31 @@ registerSuite({
 				dfd.callback((value: ReadResult<string>[]) => {
 					assert.equal('test 1', value[0].value);
 					assert.equal('test 1', value[1].value);
-				})
+				}), () => { assert.fail(); }
 			);
+		},
+
+		'one cancelled'() {
+			var dfd = this.async(asyncTimeout);
+			var source = new BaseStringSource();
+			source.start = (controller: ReadableStreamController<string>): Promise<void> => {
+				controller.enqueue('test 1');
+				controller.close();
+				return Promise.resolve();
+			};
+			var stream = new ReadableStream(source);
+			var [stream1, stream2] = stream.tee();
+			stream1.cancel();
+
+			assert.throws(() => { stream1.getReader().read(); });
+			var reader = stream2.getReader();
+			reader.read().then(function (value: ReadResult<string>) {
+				assert.isFalse(value.done);
+				assert.equal('test 1', value.value);
+				return reader.read();
+			}).then(dfd.callback(function (value: ReadResult<string>) {
+				assert.isTrue(value.done);
+			}), () => { assert.fail(); });
 		}
 	}
 });
