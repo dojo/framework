@@ -779,16 +779,69 @@ registerSuite({
 	}),
 
 	'.series()': {
-		'synchronous values': {
-
+		'no values returns an empty array': function () {
+			return iteration.series([], throwImmediatly).then(function (result) {
+				assert.deepEqual(result, []);
+			})
 		},
 
-		'asynchronous values': {
+		'synchronous values': function () {
+			var values = 'hello'.split('');
+			var expected = values;
 
+			var composite: number[] = [];
+			return iteration.series(values, function (value, index, array) {
+				composite.push(index);
+				assert.deepEqual(array, expected);
+				return value;
+			}).then(function (results) {
+				assert.deepEqual(composite, [ 0, 1, 2, 3, 4 ]);
+				assert.deepEqual(results, values);
+			});
 		},
 
-		'asynchronous callback': {
+		'asynchronous values': function () {
+			var values = createTriggerablePromises(5);
+			var expected = 'hello'.split('');
 
+			var composite: number[] = [];
+			var promise = iteration.series(values, function (value, index, array) {
+				composite.push(index);
+				assert.deepEqual(array, expected);
+				return value;
+			}).then(function (results) {
+				assert.deepEqual(composite, [ 0, 1, 2, 3, 4 ]);
+				assert.deepEqual(results, expected);
+			});
+
+			values[1].resolve('e');
+			values[3].resolve('l');
+			values[2].resolve('l');
+			values[0].resolve('h');
+			values[4].resolve('o');
+
+			return promise;
+		},
+
+		'asynchronous callback': function () {
+			var values = 'hello'.split('');
+			var results = createTriggerablePromises(5);
+			var promise = iteration.series(values, function (value, index, array) {
+				assert.strictEqual(value, array[index]);
+				return results[index].then(function () {
+					return index;
+				});
+			}).then(function (results) {
+				assert.deepEqual(results, [ 0, 1, 2, 3, 4 ]);
+			});
+
+			results[1].resolve();
+			results[3].resolve();
+			results[0].resolve();
+			results[2].resolve();
+			results[4].resolve();
+
+			return promise;
 		}
 	},
 
