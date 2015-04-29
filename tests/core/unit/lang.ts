@@ -1,23 +1,23 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import {isIdentical, copy, lateBind, partial} from 'src/lang';
+import * as lang from 'src/lang';
 
 registerSuite({
 	name: 'lang functions',
 
 	'.copy() invalid arguments': function () {
 		assert.throw(function () {
-			copy({
+			lang.copy({
 				sources: []
 			});
 		});
 	},
 
 	'.copy() simple': function () {
-		var copyofObject = copy({
+		var copyOfObject = lang.copy({
 			sources: [{a: 1}]
 		});
-		assert.equal(copyofObject.a, 1);
+		assert.equal(copyOfObject.a, 1);
 	},
 
 	'.copy() inherited': function () {
@@ -26,7 +26,7 @@ registerSuite({
 		};
 		var inheriting = Object.create(prototype);
 		inheriting.b = 2;
-		var copyofInherited = copy({
+		var copyofInherited = lang.copy({
 			inherited: true,
 			sources: [ inheriting ]
 		});
@@ -40,7 +40,7 @@ registerSuite({
 				b: 1
 			}
 		};
-		var copyOfObject: any = copy({
+		var copyOfObject: any = lang.copy({
 			deep: true,
 			sources: [ nested ]
 		});
@@ -54,7 +54,7 @@ registerSuite({
 				b: [ 1 ]
 			}
 		};
-		var copyOfObject: any = copy({
+		var copyOfObject: any = lang.copy({
 			deep: true,
 			sources: [ nested ]
 		});
@@ -87,8 +87,9 @@ registerSuite({
 					a: 5
 				}
 			});
-		var copyOfObject: any = copy({
+		var copyOfObject: any = lang.copy({
 			descriptors: true,
+			inherited: true,
 			sources: [object]
 		});
 		assert.equal(copyOfObject.a, 1);
@@ -98,21 +99,121 @@ registerSuite({
 		assert.equal(copyOfObject.hidden, 4);
 		assert.equal(copyOfObject.nested, object.nested);
 		assert.equal(copyOfObject.nested.a, 5);
+		assert.sameMembers(Object.getOwnPropertyNames(copyOfObject), [ 'a', 'b', 'c', 'hidden', 'nested' ]);
+	},
+
+	'.create()': function () {
+		var prototype = {
+			a: 1
+		};
+		var mixinPrototype = { lorem: 'ipsum' };
+		var mixin: any = Object.create(mixinPrototype, {
+			b: {
+				enumerable: true,
+				configurable: true,
+				writable: true,
+				value: { c: 2 }
+			},
+			d: {
+				enumerable: true,
+				configurable: true,
+				writable: false,
+				value: 3
+			},
+			e: {
+				value: 4
+			}
+		});
+		var object: any = lang.create(prototype, mixin);
+
+		assert.equal(Object.getPrototypeOf(object), prototype);
+		assert.equal(object.b, mixin.b);
+		assert.isTrue(Object.getOwnPropertyDescriptor(object, 'd').writable);
+		assert.isUndefined(object.e);
+		assert.isUndefined(object.lorem);
+		assert.throw(function () {
+			lang.create({});
+		});
+	},
+
+	'.duplicate()': function () {
+		var prototype = {
+			a: 1
+		};
+		var object: any = Object.create(prototype, {
+			b: { value: 2 },
+			c: {
+				configurable: false,
+				value: 3
+			},
+			d: {
+				value: {
+					e: 4
+				}
+			}
+		});
+		var copyOfObject: any = lang.duplicate(object);
+
+		assert.equal(Object.getPrototypeOf(copyOfObject), prototype);
+		assert.equal(copyOfObject.a, 1);
+		assert.equal(copyOfObject.b, 2);
+		assert.equal(copyOfObject.c, 3);
+		assert.equal(copyOfObject.d.e, 4);
+		assert.notEqual(copyOfObject.d, object.d);
+		assert.isFalse(Object.getOwnPropertyDescriptor(copyOfObject, 'c').configurable);
+	},
+
+	'.getPropertyDescriptor()': function () {
+		var object1 = {
+			get foo() { return 'bar'; }
+		};
+		var object2 = Object.create(object1);
+		var object3 = Object.create(object1, {
+			foo: {
+				get: function () { return 'baz'; }
+			}
+		});
+
+		assert.deepEqual(lang.getPropertyDescriptor(object1, 'foo'), Object.getOwnPropertyDescriptor(object1, 'foo'));
+		assert.deepEqual(lang.getPropertyDescriptor(object2, 'foo'), Object.getOwnPropertyDescriptor(object1, 'foo'));
+		assert.deepEqual(lang.getPropertyDescriptor(object3, 'foo'), Object.getOwnPropertyDescriptor(object3, 'foo'));
+	},
+
+	'.getPropertyNames()': function () {
+		var prototype = {
+			a: 1,
+			b: 7
+		};
+		var object: any = Object.create(prototype, {
+			b: { value: 2 },
+			c: {
+				configurable: false,
+				value: 3
+			},
+			d: {
+				value: {
+					e: 4
+				}
+			}
+		});
+		var names: string[] = lang.getPropertyNames(object);
+
+		assert.sameMembers(names, [ 'a', 'b', 'c', 'd' ]);
 	},
 
 	'.isIdentical()': function () {
-		assert.isTrue(isIdentical(2, 2));
-		assert.isTrue(isIdentical(NaN, NaN));
-		assert.isFalse(isIdentical(3, NaN));
-		assert.isFalse(isIdentical(3, '3'));
-		assert.isTrue(isIdentical(Infinity, Infinity));
+		assert.isTrue(lang.isIdentical(2, 2));
+		assert.isTrue(lang.isIdentical(NaN, NaN));
+		assert.isFalse(lang.isIdentical(3, NaN));
+		assert.isFalse(lang.isIdentical(3, '3'));
+		assert.isTrue(lang.isIdentical(Infinity, Infinity));
 	},
 
 	'.lateBind() context': function () {
 		var object: {
 			method?: (...args: string[]) => string;
 		} = <any> {};
-		var method = lateBind(object, 'method');
+		var method = lang.lateBind(object, 'method');
 		object.method = function (): any {
 			return this;
 		};
@@ -124,8 +225,8 @@ registerSuite({
 		var object: {
 			method?: (...args: string[]) => string;
 		} = <any> {};
-		var method = lateBind(object, 'method', 'The', 'quick', 'brown');
-		var methodNoArgs = lateBind(object, 'method');
+		var method = lang.lateBind(object, 'method', 'The', 'quick', 'brown');
+		var methodNoArgs = lang.lateBind(object, 'method');
 		var suffix = 'fox jumped over the lazy dog';
 		object.method = function (...parts: string[]): string {
 			return parts.join(' ');
@@ -141,7 +242,7 @@ registerSuite({
 
 	'.partial()': function () {
 		var ending = 'jumped over the lazy dog';
-		var finish = partial(function () {
+		var finish = lang.partial(function () {
 			var start = this.start ? [ this.start ] : [];
 
 			return start.concat(Array.prototype.slice.call(arguments)).join(' ');
