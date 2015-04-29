@@ -1,3 +1,5 @@
+import Promise from 'src/Promise';
+
 export function isEventuallyRejected(promise: Promise<any>): Promise<any> {
 	return promise.then<any>(function () {
 		console.log(arguments);
