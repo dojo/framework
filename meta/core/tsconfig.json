@@ -28,6 +28,7 @@
 		"./src/number.ts",
 		"./src/object.ts",
 		"./src/Promise.ts",
+		"./src/async/async.d.ts",
 		"./src/async/Promise.ts",
 		"./src/async/iteration.ts",
 		"./src/streams/interfaces.d.ts",
