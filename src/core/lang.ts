@@ -1,4 +1,5 @@
-var slice = Function.prototype.call.bind(Array.prototype.slice);
+var slice = Array.prototype.slice;
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function isObject(item: any): boolean {
 	return item && typeof item === 'object' && !Array.isArray(item) && !(item instanceof RegExp);
@@ -80,7 +81,7 @@ export function copy(kwArgs: CopyArgs): any {
 			// If we aren't using descriptors, we use a standard for-in to simplify skipping
 			// non-enumerables and inheritance. We could use Object.keys when we aren't inheriting.
 			for (name in source) {
-				if (kwArgs.inherited || source.hasOwnProperty(name)) {
+				if (kwArgs.inherited || hasOwnProperty.call(source, name)) {
 					value = source[name];
 
 					if (kwArgs.deep) {
@@ -178,7 +179,7 @@ export function isIdentical(a: any, b: any): boolean {
 export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): (...args: any[]) => any {
 	return suppliedArgs.length ?
 		function () {
-			var args: any[] = arguments.length ? suppliedArgs.concat(slice(arguments)) : suppliedArgs;
+			var args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
 
 			// TS7017
 			return (<any> instance)[method].apply(instance, args);
@@ -190,7 +191,7 @@ export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): 
 
 export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs: any[]): (...args: any[]) => any {
 	return function () {
-		var args: any[] = arguments.length ? suppliedArgs.concat(slice(arguments)) : suppliedArgs;
+		var args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
 
 		return targetFunction.apply(this, args);
 	};
