@@ -1,8 +1,7 @@
-import Promise from 'src/Promise';
+export { Thenable } from 'src/Promise';
 
-export function isEventuallyRejected(promise: Promise<any>): Promise<any> {
+export function isEventuallyRejected<T>(promise: Thenable<T>): Thenable<boolean> {
 	return promise.then<any>(function () {
-		console.log(arguments);
 		throw new Error('unexpected code path');
 	}, function () {
 		return true; // expect rejection
