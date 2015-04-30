@@ -10,5 +10,4 @@ import './object';
 import './Promise';
 import './async/iteration';
 import './async/Promise';
-import './async/delay';
-import './async/timeout';
+import './async/timing';
