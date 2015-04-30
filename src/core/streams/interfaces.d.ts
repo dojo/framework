@@ -35,7 +35,7 @@ export interface Sink<T> {
 
 	close(): Promise<void>;
 
-	start(error: () => void): Promise<void>;
+	start(error: (error: Error) => void): Promise<void>;
 
 	/**
 	 *
