@@ -74,7 +74,6 @@ function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: numb
 					value = initialValue;
 				}
 				else {
-					console.log(findNextIndex)
 					i = findNextIndex(items);
 
 					if (i < 0) {

@@ -345,7 +345,6 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 						assert.deepEqual(values, array);
 						if (index !== initialIndex) {
 							return results[index - step].then(function (result) {
-								console.log(previous)
 								assert.strictEqual(previous, result);
 								return results[index];
 							});
