@@ -1,5 +1,6 @@
 import Promise from './Promise';
 import PlatformPromise from '../Promise';
+import { Identity } from './async';
 
 /**
  * Used for delaying a Promise chain for a specific number of milliseconds.

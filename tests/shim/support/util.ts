@@ -1,3 +1,4 @@
+import { Thenable} from 'src/Promise';
 export { Thenable } from 'src/Promise';
 
 export function isEventuallyRejected<T>(promise: Thenable<T>): Thenable<boolean> {
