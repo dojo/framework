@@ -51,7 +51,11 @@ export default class WritableStream<T> {
 		this._strategy = util.normalizeStrategy(strategy);
 		this._syncStateWithQueue();
 
-		this._startedPromise = util.invokeOrNoop(this._underlyingSink, SinkMethod.start).then(() => {
+		this._startedPromise = util.invokeOrNoop(
+			this._underlyingSink,
+			SinkMethod.start,
+			[ this._error.bind(this) ]
+		).then(() => {
 			this._started = true;
 			this._startedPromise = undefined;
 		}, (error: Error) => {

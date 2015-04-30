@@ -99,6 +99,21 @@ registerSuite({
 			setTimeout(dfd.callback(() => {
 				assert.strictEqual(stream.state, State.Errored);
 			}));
+		},
+
+		'handles sink.start error with error function'() {
+			var dfd = this.async(1000);
+
+			sink.start = function(error: (error: Error) => void) {
+				error(new Error('test error'));
+				return Promise.resolve();
+			};
+
+			stream = new WritableStream(sink, strategy);
+
+			setTimeout(dfd.callback(() => {
+				assert.strictEqual(stream.state, State.Errored);
+			}));
 		}
 	},
 
