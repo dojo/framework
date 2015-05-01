@@ -10,8 +10,8 @@ registerSuite({
 	'simple transform'() {
 		var testValue = 'a';
 		var transform: Transform<number, string> = {
-			transform(chunk: string, enqueueInReadable: (chunk: number) => void, transformDone: () => void): void {
-				enqueueInReadable(chunk.charCodeAt(0));
+			transform(chunk: string, enqueue: (chunk: number) => void, transformDone: () => void): void {
+				enqueue(chunk.charCodeAt(0));
 				transformDone();
 			},
 
@@ -49,9 +49,9 @@ registerSuite({
 		var testValues = ['a', 'b', 'c'];
 		var input = [].concat(testValues);
 		var transform: Transform<number, string> = {
-			transform(chunk: string, enqueueInReadable: (chunk: number) => void, transformDone: () => void): void {
+			transform(chunk: string, enqueue: (chunk: number) => void, transformDone: () => void): void {
 				setTimeout(() => {
-					enqueueInReadable(chunk.charCodeAt(0));
+					enqueue(chunk.charCodeAt(0));
 					transformDone();
 				}, 20);
 			},
