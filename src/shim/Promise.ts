@@ -33,11 +33,6 @@ function unwrapPromises(items: any[]): any[] {
 }
 
 /**
- * PromiseConstructor points to the promise constructor this platform should use.
- */
-let PromiseConstructor = has('promise') ? global.Promise : PromiseShim;
-
-/**
  * Executor is the interface for functions used to initialize a Promise.
  */
 export interface Executor<T> {
@@ -324,6 +319,11 @@ export class PromiseShim<T> implements Thenable<T> {
 		onRejected?: (reason?: any) => (U | Thenable<U>)
 	): PromiseShim<U> { return null; }
 }
+
+/**
+ * PromiseConstructor points to the promise constructor this platform should use.
+ */
+let PromiseConstructor = has('promise') ? global.Promise : PromiseShim;
 
 /**
  * PlatformPromise is a very thin wrapper around either a native promise implementation or PromiseShim.
