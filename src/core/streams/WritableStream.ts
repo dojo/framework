@@ -64,7 +64,7 @@ export default class WritableStream<T> {
 	}
 
 	abort(reason: any): Promise<void> {
-		if (!this._isWritable()) {
+		if (!isWritableStream(this)) {
 			// 4.2.4.4-1
 			return Promise.reject(new TypeError('Must be a WritableStream'));
 		}
@@ -91,7 +91,7 @@ export default class WritableStream<T> {
 
 	write(chunk: T): Promise<void> {
 		// 4.2.4.6-1
-		if (!this._isWritable() ||
+		if (!isWritableStream(this) ||
 			// 4.2.4.6-2
 			this.state === State.Closed ||
 			this.state === State.Closing
@@ -136,7 +136,7 @@ export default class WritableStream<T> {
 
 	close(): Promise<void> {
 		// 4.2.4.5-1
-		if (!this._isWritable() ||
+		if (!isWritableStream(this) ||
 			// 4.2.4.5-2
 			this.state === State.Closed ||
 			this.state === State.Closing
@@ -164,7 +164,7 @@ export default class WritableStream<T> {
 	}
 
 	get closed(): Promise<void> {
-		if (this._isWritable()) {
+		if (isWritableStream(this)) {
 			return this._closedPromise;
 		}
 		else {
@@ -174,7 +174,7 @@ export default class WritableStream<T> {
 	}
 
 	get ready(): Promise<void> {
-		if (this._isWritable()) {
+		if (isWritableStream(this)) {
 			return this._readyPromise;
 		}
 		else {
@@ -184,7 +184,7 @@ export default class WritableStream<T> {
 	}
 
 	get state(): State {
-		if (this._isWritable()) {
+		if (isWritableStream(this)) {
 			return this._state;
 		}
 		else {
@@ -261,6 +261,7 @@ export default class WritableStream<T> {
 				// TODO: Assert 4.3.2.2-a.ii
 				this._resolveClosedPromise();
 				this._state = State.Closed;
+				this._underlyingSink = undefined;
 			}
 		}, (error: Error) => {
 			this._error(error);
@@ -291,10 +292,6 @@ export default class WritableStream<T> {
 
 		this._rejectClosedPromise(error);
 		this._state = State.Errored;
-	}
-
-	protected _isWritable(): boolean {
-		return this._underlyingSink != null;
 	}
 
 	// 4.3.5 SyncWritableStreamStateWithQueue
@@ -330,3 +327,7 @@ export default class WritableStream<T> {
  * WritableStream's possible states
  */
 export enum State { Closed, Closing, Errored, Waiting, Writable }
+
+function isWritableStream(x: any): boolean {
+	return Object.prototype.hasOwnProperty.call(x, '_underlyingSink');
+}

@@ -5,6 +5,7 @@ import BaseStringSink from './helpers/BaseStringSink';
 import { Sink, Strategy } from 'src/streams/interfaces';
 import Promise from 'src/Promise';
 
+var asyncTimeout = 1000;
 var stream: WritableStream<string>;
 var sink: Sink<string>;
 var strategy: Strategy<string> = {
@@ -13,6 +14,12 @@ var strategy: Strategy<string> = {
 	},
 	highwaterMark: Infinity
 };
+
+class ErrorableStream<T> extends WritableStream<T> {
+	error(error: Error): void {
+		super._error(error);
+	}
+}
 
 // A sink whose write operations must be manually resolved by calling 'next'
 class ManualSink extends BaseStringSink {
@@ -53,7 +60,7 @@ registerSuite({
 		},
 
 		closed() {
-			var dfd = this.async(100);
+			var dfd = this.async(asyncTimeout);
 
 			stream.closed.then(() => {
 				dfd.reject(new Error('New stream should not be closed'));
@@ -75,7 +82,7 @@ registerSuite({
 		},
 
 		'calls sink.start'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 
 			sink.start = function() {
 				dfd.resolve();
@@ -88,7 +95,7 @@ registerSuite({
 		},
 
 		'handles sink.start error'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 
 			sink.start = function() {
 				return Promise.reject(new Error('test error'));
@@ -102,7 +109,7 @@ registerSuite({
 		},
 
 		'handles sink.start error with error function'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 
 			sink.start = function(error: (error: Error) => void) {
 				error(new Error('test error'));
@@ -129,7 +136,7 @@ registerSuite({
 		},
 
 		'errored stream'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 
 			sink.start = function() {
 				return Promise.reject(new Error('test error'));
@@ -155,7 +162,7 @@ registerSuite({
 		},
 
 		'calls sink.close'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 
 			sink.close = dfd.callback(() => { });
 			stream = new WritableStream(sink, strategy);
@@ -194,7 +201,7 @@ registerSuite({
 		},
 
 		'handles backpressure from strategy'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 			var sink = new ManualSink();
 
 			stream = new WritableStream(sink, {
@@ -267,6 +274,17 @@ registerSuite({
 			}, (error: Error) => {
 				assert.strictEqual(stream.state, State.Errored);
 			});
+		},
+
+		'reject if errored'() {
+			var dfd = this.async(asyncTimeout);
+			sink = new BaseStringSink();
+			var stream = new ErrorableStream<string>(sink, strategy);
+			stream.error(new Error('test'));
+			stream.write('test').then(
+				dfd.rejectOnError(() => { assert.fail();}),
+				dfd.callback(() => { /* passed */})
+			);
 		}
 	},
 
@@ -308,18 +326,23 @@ registerSuite({
 		},
 
 		'calls sink.abort'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 
 			sink.abort = dfd.callback(() => { });
 			stream.abort('abc');
 		},
 
 		'calls sink.close if sink.abort is undefined'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 
 			sink.abort = undefined;
 			sink.close = dfd.callback(() => { });
 			stream.abort('abc');
+		},
+
+		'reject if not writable stream'() {
+			var dfd = this.async(asyncTimeout);
+			stream.abort.call({}).then(dfd.rejectOnError(() => { assert.fail(); }), dfd.callback(() => {}));
 		}
 	}
 });
