@@ -26,19 +26,39 @@ registerSuite({
 		controller = stream._controller;
 	},
 
-	'create no stream'() {
-		assert.throws(() => {
-			new ReadableStreamController<string>(null);
-		});
+	'constructor': {
+		'create no stream'() {
+			assert.throws(() => {
+				new ReadableStreamController<string>(null);
+			});
+		},
+
+		'create ReadableStreamController with unreadable stream'() {
+			var source = new BaseStringSource();
+			var stream = new ReadableStream<string>(source, strategy);
+			stream.readable = false;
+			assert.throws(() => {
+				new ReadableStreamController<string>(stream);
+			});
+		},
+
+		'throws an error if the stream is not readable'() {
+			assert.throws(() => {
+				new ReadableStreamController(<ReadableStream<string>>{});
+			});
+		}
 	},
 
-	'create ReadableStreamController with unreadable stream'() {
+	'desiredSize'() {
+		var strategy: Strategy<string> = {
+			size(chunk: string) {
+				return 1;
+			},
+			highwaterMark: 10
+		};
 		var source = new BaseStringSource();
 		var stream = new ReadableStream<string>(source, strategy);
-		stream.readable = false;
-		assert.throws(() => {
-			new ReadableStreamController<string>(stream);
-		});
+		assert.equal(10, stream._controller.desiredSize);
 	},
 
 	'close()': {
@@ -61,6 +81,10 @@ registerSuite({
 			assert.throws(() => {
 				controller.close();
 			});
+		},
+
+		'throw if not readable stream controller'() {
+			assert.throws(() => { controller.close.call({}); });
 		}
 	},
 
@@ -84,6 +108,15 @@ registerSuite({
 			assert.throws(() => {
 				controller.enqueue('foo');
 			});
+		},
+
+		'throw if not readable stream controller'() {
+			assert.throws(() => { controller.enqueue.call({}); });
+		},
+
+		'throw if stream error'() {
+			stream.error(new Error('test'));
+			assert.throws(() => { controller.enqueue('foo'); });
 		}
 	},
 
@@ -100,6 +133,10 @@ registerSuite({
 			stream.error = () => { errorCalled = true; };
 			controller.error(new Error('test'));
 			assert.isTrue(errorCalled);
-		}
+		},
+
+		'throw if not readable stream controller'() {
+			assert.throws(() => { controller.error.call({}); });
+		},
 	}
 });

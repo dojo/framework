@@ -28,16 +28,16 @@ export default class ReadableStreamController<T> {
 	 */
 	close(): void {
 		if (!isReadableStreamController(this)) {
-			throw new TypeError('3.3.4.1-1: ReadableStreamController#close can only be used on a ReadableStreamController');
+			throw new TypeError('3.3.4.2-1: ReadableStreamController#close can only be used on a ReadableStreamController');
 		}
 
 		var stream = this._controlledReadableStream;
 		if (stream._closeRequested) {
-			throw new TypeError('3.3.4.1-3: The stream has already been closed; do not close it again!');
+			throw new TypeError('3.3.4.2-3: The stream has already been closed; do not close it again!');
 		}
 
 		if (stream.state === State.Errored) {
-			throw new TypeError('3.3.4.1-4: The stream is in an errored state and cannot be closed');
+			throw new TypeError('3.3.4.2-4: The stream is in an errored state and cannot be closed');
 		}
 
 		return stream._requestClose();
@@ -48,7 +48,7 @@ export default class ReadableStreamController<T> {
 	 */
 	enqueue(chunk: T): void {
 		if (!isReadableStreamController(this)) {
-			throw new TypeError('3.3.4.2-1: ReadableStreamController#enqueue can only be used on a ReadableStreamController');
+			throw new TypeError('3.3.4.3-1: ReadableStreamController#enqueue can only be used on a ReadableStreamController');
 		}
 
 		var stream = this._controlledReadableStream;
@@ -57,12 +57,8 @@ export default class ReadableStreamController<T> {
 			throw stream._storedError;
 		}
 
-		if (stream.state === State.Errored) {
-			throw new TypeError('3.3.4.2-4: stream is closed');
-		}
-
 		if (stream._closeRequested) {
-			throw new TypeError('3.3.4.2-5: stream is draining');
+			throw new TypeError('3.3.4.3-4: stream is draining');
 		}
 
 		stream.enqueue(chunk);
