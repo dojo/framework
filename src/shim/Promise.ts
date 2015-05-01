@@ -2,6 +2,8 @@ import nextTick from './nextTick';
 import global from './global';
 import has, { add as hasAdd } from './has';
 
+hasAdd('promise', typeof global.Promise !== 'undefined');
+
 /**
  * Return true if a given value meets Promise's definition of "iterable".
  */
@@ -17,6 +19,25 @@ export function isThenable(value: any) {
 }
 
 /**
+ * Copy an array of values, replacing any PlatformPromises in the copy with unwrapped global.Promises. This is necessary
+ * for .all and .race so that the native promise doesn't treat the PlatformPromises like generic thenables.
+ */
+function unwrapPromises(items: any[]): any[] {
+	let unwrapped: typeof items = [];
+	let count = items.length;
+	for (let i = 0; i < count; i++) {
+		let item = items[i];
+		unwrapped[i] = item instanceof Promise ? item.promise : item;
+	}
+	return unwrapped;
+}
+
+/**
+ * PromiseConstructor points to the promise constructor this platform should use.
+ */
+let PromiseConstructor = has('promise') ? global.Promise : PromiseShim;
+
+/**
  * Executor is the interface for functions used to initialize a Promise.
  */
 export interface Executor<T> {
@@ -24,36 +45,16 @@ export interface Executor<T> {
 }
 
 /**
- * Thenable represents any object with a callable `then` property.
- */
-export interface Thenable<T> {
-	then<U>(onFulfilled?: (value?: T) => U | Thenable<U>, onRejected?: (error?: any) => U | Thenable<U>): Thenable<U>;
-}
-
-/**
  * PromiseShim is an implementation of the ES2015 Promise specification.
+ *
+ * @borrows Promise.all as PromiseShim.all
+ * @borrows Promise.race as PromiseShim.race
+ * @borrows Promise.reject as PromiseShim.reject
+ * @borrows Promise.resolve as PromiseShim.resolve
+ * @borrows Promise#catch as PromiseShim#catch
+ * @borrows Promise#then as PromiseShim#then
  */
 export class PromiseShim<T> implements Thenable<T> {
-	/**
-	 * Converts an iterable object containing promises into a single promise that resolves to a new iterable object
-	 * containing the fulfilled values of all the promises in the iterable, in the same order as the Promises in the
-	 * iterable. Iterable values that are not promises are converted to promises using PromiseShim.resolve.
-	 *
-	 * @example
-	 * PromiseShim.all([ PromiseShim.resolve('foo'), 'bar' ]).then(function (value) {
-	 *     value[0] === 'foo'; // true
-	 *     value[1] === 'bar'; // true
-	 * });
-	 *
-	 * @example
-	 * PromiseShim.all({
-	 *     foo: PromiseShim.resolve('foo'),
-	 *     bar: 'bar'
-	 * }).then((value) => {
-	 *     value.foo === 'foo'; // true
-	 *     value.bar === 'bar'; // true
-	 * });
-	 */
 	static all<T>(items: (T | Thenable<T>)[]): PromiseShim<T[]> {
 		return new this((
 			resolve: (value: any) => void,
@@ -106,24 +107,6 @@ export class PromiseShim<T> implements Thenable<T> {
 		});
 	}
 
-	/**
-	 * Converts an iterable object containing promises into a single promise that resolves or rejects as soon as one of
-	 * the promises in the iterable resolves or rejects, with the value of the resolved or rejected promise. Values in
-	 * the iterable that are not Promises are converted to Promises with PromiseShim.resolve.
-	 *
-	 * @example
-	 * PromiseShim.race([ PromiseShim.resolve('foo'), PromiseShim.resolve('bar') ]).then((value) => {
-	 *     value === 'foo'; // true
-	 * });
-	 *
-	 * @example
-	 * PromiseShim.race({
-	 *     foo: PromiseShim.resolve('foo'),
-	 *     bar: PromiseShim.resolve('bar')
-	 * }).then((value) => {
-	 *     value === 'foo'; // true
-	 * });
-	 */
 	static race<T>(items: (T | Thenable<T>)[]): PromiseShim<T> {
 		return new this((
 			resolve: (value: any) => void,
@@ -154,9 +137,6 @@ export class PromiseShim<T> implements Thenable<T> {
 		});
 	}
 
-	/**
-	 * Creates a new promise that is rejected with the given error.
-	 */
 	static reject<T>(reason?: any): PromiseShim<T> {
 		return new this((
 			resolve: (value: T) => void,
@@ -166,11 +146,9 @@ export class PromiseShim<T> implements Thenable<T> {
 		});
 	}
 
-	/**
-	 * Creates a new promise that is resolved with the given value. If the passed value is already a PromiseShim, it
-	 * will be returned as-is.
-	 */
-	static resolve<T>(value: (T | Thenable<T>)): PromiseShim<T> {
+	static resolve(): PromiseShim<void>;
+	static resolve<T>(value: (T | Thenable<T>)): PromiseShim<T>;
+	static resolve<T>(value?: any): PromiseShim<T> {
 		if (value instanceof PromiseShim) {
 			return value;
 		}
@@ -337,16 +315,10 @@ export class PromiseShim<T> implements Thenable<T> {
 	 */
 	private resolvedValue: any;
 
-	/**
-	 * Adds a callback to the promise to be invoked when the asynchronous operation throws an error.
-	 */
 	catch<U>(onRejected: (reason?: any) => (U | Thenable<U>)): PromiseShim<U> {
 		return this.then<U>(null, onRejected);
 	}
 
-	/**
-	 * Adds a callback to the promise to be invoked when the asynchronous operation completes successfully.
-	 */
 	then<U>(
 		onFulfilled?: (value?: T) => (U | Thenable<U>),
 		onRejected?: (reason?: any) => (U | Thenable<U>)
@@ -354,70 +326,112 @@ export class PromiseShim<T> implements Thenable<T> {
 }
 
 /**
- * The State enum represents the possible states of a promise.
- */
-enum State {
-	Fulfilled,
-	Pending,
-	Rejected
-}
-
-/**
- * Copy an array of values, replacing any PlatformPromises in the copy with unwrapped global.Promises. This is necessary
- * for .all and .race so that the native promise doesn't treat the PlatformPromises like generic thenables.
- */
-function unwrapPromises(items: any[]): any[] {
-	let unwrapped: typeof items = [];
-	let count = items.length;
-	for (let i = 0; i < count; i++) {
-		let item = items[i];
-		unwrapped[i] = item instanceof PlatformPromise ? item.promise : item;
-	}
-	return unwrapped;
-}
-
-/**
- * PromiseConstructor points to the promise constructor this platform should use.
- */
-hasAdd('promise', typeof global.Promise !== 'undefined');
-let PromiseConstructor = has('promise') ? global.Promise : PromiseShim;
-
-/**
  * PlatformPromise is a very thin wrapper around either a native promise implementation or PromiseShim.
  */
-export class PlatformPromise<T> implements Thenable<T> {
-	static all<T>(items: (T | Thenable<T>)[]): PlatformPromise<T[]> {
+export default class Promise<T> implements Thenable<T> {
+	/**
+	 * Converts an iterable object containing promises into a single promise that resolves to a new iterable object
+	 * containing the fulfilled values of all the promises in the iterable, in the same order as the Promises in the
+	 * iterable. Iterable values that are not promises are converted to promises using PromiseShim.resolve.
+	 *
+	 * @example
+	 * PromiseShim.all([ PromiseShim.resolve('foo'), 'bar' ]).then(function (value) {
+	 *     value[0] === 'foo'; // true
+	 *     value[1] === 'bar'; // true
+	 * });
+	 *
+	 * @example
+	 * PromiseShim.all({
+	 *     foo: PromiseShim.resolve('foo'),
+	 *     bar: 'bar'
+	 * }).then((value) => {
+	 *     value.foo === 'foo'; // true
+	 *     value.bar === 'bar'; // true
+	 * });
+	 */
+	static all<T>(items: (T | Thenable<T>)[]): Promise<T[]> {
 		return this.copy(PromiseConstructor.all(unwrapPromises(items)));
 	}
 
-	static race<T>(items: (T | Thenable<T>)[]): PlatformPromise<T> {
+	/**
+	 * Converts an iterable object containing promises into a single promise that resolves or rejects as soon as one of
+	 * the promises in the iterable resolves or rejects, with the value of the resolved or rejected promise. Values in
+	 * the iterable that are not Promises are converted to Promises with PromiseShim.resolve.
+	 *
+	 * @example
+	 * PromiseShim.race([ PromiseShim.resolve('foo'), PromiseShim.resolve('bar') ]).then((value) => {
+	 *     value === 'foo'; // true
+	 * });
+	 *
+	 * @example
+	 * PromiseShim.race({
+	 *     foo: PromiseShim.resolve('foo'),
+	 *     bar: PromiseShim.resolve('bar')
+	 * }).then((value) => {
+	 *     value === 'foo'; // true
+	 * });
+	 */
+	static race<T>(items: (T | Thenable<T>)[]): Promise<T> {
 		return this.copy(PromiseConstructor.race(unwrapPromises(items)));
 	}
 
-	static reject<T>(reason: Error): PlatformPromise<any> {
+	/**
+	 * Creates a new promise that is rejected with the given error.
+	 */
+	static reject<T>(reason: Error): Promise<any> {
 		return this.copy(PromiseConstructor.reject(reason));
 	}
 
-	static resolve(): PlatformPromise<void>;
-	static resolve<T>(value: (T | Thenable<T>)): PlatformPromise<T>;
-	static resolve<T>(value?: any): PlatformPromise<T> {
-		if (value instanceof PlatformPromise) {
+	/**
+	 * Creates a new promise that is resolved with the given value. If the passed value is already a PromiseShim, it
+	 * will be returned as-is.
+	 */
+	static resolve(): Promise<void>;
+	static resolve<T>(value: (T | Thenable<T>)): Promise<T>;
+	static resolve<T>(value?: any): Promise<T> {
+		if (value instanceof Promise) {
 			return value;
 		}
 		return this.copy(PromiseConstructor.resolve(value));
 	}
 
 	/**
-	 * Copy another PlatformPromise, taking on its inner state.
+	 * Copy another Promise, taking on its inner state.
 	 */
-	protected static copy<U>(other: PlatformPromise<U>): PlatformPromise<U> {
-		var promise = Object.create(this.prototype, {
+	protected static copy<U>(other: Promise<U>): Promise<U> {
+		let promise = Object.create(this.prototype, {
 			promise: { value: other instanceof PromiseConstructor ? other : other.promise }
 		});
+
+		if (other instanceof Promise && other._state !== State.Pending) {
+			promise._state = other._state;
+		}
+		else {
+			promise._state = State.Pending;
+			promise.promise.then(
+				() => promise._state = State.Fulfilled,
+				() => promise._state = State.Rejected
+			);
+		}
+
 		return promise;
 	}
 
+	/**
+	 * Creates a new Promise.
+	 *
+	 * @constructor
+	 *
+	 * @param executor
+	 * The executor function is called immediately when the PromiseShim is instantiated. It is responsible for
+	 * starting the asynchronous operation when it is invoked.
+	 *
+	 * The executor must call either the passed `resolve` function when the asynchronous operation has completed
+	 * successfully, or the `reject` function when the operation fails.
+	 */
 	constructor(executor: Executor<T>) {
+		// Create resolver that verifies that the the resolution value isn't this promise. Since any incoming promise
+		// should be wrapped, the native resolver can't automatically detect self-resolution.
 		let createResolve = (resolve: (value?: T | Thenable<T>) => void, reject: (reason?: any) => void) => {
 			return (value: any) => {
 				if (value === this) {
@@ -428,27 +442,96 @@ export class PlatformPromise<T> implements Thenable<T> {
 				}
 			};
 		};
-		// Create safe executor that verifies that the the resolution value isn't this promise. Since any incoming
-		// promise should be wrapped, the native resolver can't automatically detect self-resolution.
-		let safeExecutor: Executor<T> = (resolve, reject) => {
-			(<Executor<T>> executor)(createResolve(resolve, reject), reject);
-		};
 
-		this.promise = new PromiseConstructor(safeExecutor);
+		this.promise = new PromiseConstructor(<Executor<T>> ((resolve, reject) => {
+			executor(createResolve(resolve, reject), reject);
+		}));
+
+		this._state = State.Pending;
+		this.promise.then(
+			() => this._state = State.Fulfilled,
+			() => this._state = State.Rejected
+		);
 	}
 
+	/**
+	 * An object wrapped by this class that actually implements the Promise API.
+	 */
 	private promise: any;
 
-	catch<U>(onRejected: (reason?: Error) => (U | Thenable<U>)): PlatformPromise<U> {
+	/**
+	 * The internal state of this promise. This may be updated directly by subclasses.
+	 */
+	protected _state: State;
+
+	/**
+	 * Adds a callback to the promise to be invoked when the asynchronous operation throws an error.
+	 */
+	catch<U>(onRejected: (reason?: Error) => (U | Thenable<U>)): Promise<U> {
 		return this.then<U>(null, onRejected);
 	}
 
+	/**
+	 * Allows for cleanup actions to be performed after resolution of a Promise.
+	 */
+	finally(callback: () => void | Thenable<any>): Promise<T> {
+		// Handler to be used for fulfillment and rejection; whether it was fulfilled or rejected is explicitly
+		// indicated by the first argument
+		function handler(rejected: boolean, valueOrError: any) {
+			// If callback throws, the handler will throw
+			let result = callback();
+			if (isThenable(result)) {
+				// If callback returns a Thenable that rejects, return the rejection. Otherwise, return or throw the
+				// incoming value as appropriate when the Thenable resolves.
+				return Promise.resolve(result).then(() => {
+					if (rejected) {
+						throw valueOrError;
+					}
+					return valueOrError;
+				});
+			}
+			else {
+				// If callback returns a non-Thenable, return or throw the incoming value as appropriate.
+				if (rejected) {
+					throw valueOrError;
+				}
+				return valueOrError;
+			}
+		};
+
+		return this.then<T>(handler.bind(null, false), handler.bind(null, true));
+	}
+
+	/**
+	 * The current Promise state.
+	 */
+	get state(): State {
+		return this._state;
+	}
+
+	/**
+	 * Adds a callback to the promise to be invoked when the asynchronous operation completes successfully.
+	 */
 	then<U>(
 		onFulfilled?: (value?: T) => (U | Thenable<U>),
 		onRejected?: (reason?: Error) => (U | Thenable<U>)
-	): PlatformPromise<U> {
-		return PlatformPromise.copy(this.promise.then(onFulfilled, onRejected));
+	): Promise<U> {
+		return Promise.copy(this.promise.then(onFulfilled, onRejected));
 	}
 }
 
-export default PlatformPromise;
+/**
+ * The State enum represents the possible states of a promise.
+ */
+export enum State {
+	Fulfilled,
+	Pending,
+	Rejected
+}
+
+/**
+ * Thenable represents any object with a callable `then` property.
+ */
+export interface Thenable<T> {
+	then<U>(onFulfilled?: (value?: T) => U | Thenable<U>, onRejected?: (error?: any) => U | Thenable<U>): Thenable<U>;
+}
