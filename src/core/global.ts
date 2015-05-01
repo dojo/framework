@@ -1,2 +1,2 @@
-var globalObject: any = this;
+var globalObject: any = (function () { return this; })();
 export default globalObject;
