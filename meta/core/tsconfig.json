@@ -17,6 +17,7 @@
 	"files": [
 		"./src/DateObject.ts",
 		"./src/Evented.ts",
+		"./src/Map.ts",
 		"./src/Promise.ts",
 		"./src/Registry.ts",
 		"./src/Scheduler.ts",
@@ -83,6 +84,7 @@
 		"./tests/typings/tsd.d.ts",
 		"./tests/unit/DateObject.ts",
 		"./tests/unit/Evented.ts",
+		"./tests/unit/Map.ts",
 		"./tests/unit/Promise.ts",
 		"./tests/unit/Registry.ts",
 		"./tests/unit/Scheduler.ts",
