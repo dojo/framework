@@ -40,10 +40,6 @@ export default class ReadableStreamReader<T> {
 	}
 
 	get closed(): Promise<void> {
-		// TODO: look into using Promise.race
-		if (!isReadableStreamReader(this)) {
-			return Promise.reject(new TypeError('3.4.4.1-1: Must be a ReadableStreamReader instance'));
-		}
 		return this._closedPromise;
 	}
 

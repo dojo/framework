@@ -10,6 +10,7 @@ import Promise from 'src/Promise';
 var stream: ReadableStream<string>;
 var source: Source<string>;
 var reader: ReadableStreamReader<string>;
+var asyncTimeout = 1000;
 
 registerSuite({
 	name: 'ReadableStreamReader',
@@ -55,21 +56,39 @@ registerSuite({
 		}
 	},
 
+	'closed promise': {
+		'resolve on cancel'() {
+			var dfd = this.async(asyncTimeout);
+			reader.closed.then(dfd.callback(() => { /* passed */ }));
+			reader.cancel('reason');
+		},
+
+		'resolve on stream close'() {
+			var dfd = this.async(asyncTimeout);
+			reader.closed.then(
+				dfd.callback(() => { /* passed */}),
+				dfd.rejectOnError(() => { assert.fail(); })
+			);
+			stream._close();
+		}
+
+	},
+
 	'cancel()': {
 		'resolves if the reader is closed'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 			reader.state = State.Closed;
 			reader.cancel('reason').then(dfd.callback(() => {}));
 		},
 
 		'rejects if the reader is errored'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 			reader.state = State.Errored;
 			reader.cancel('reason').then(dfd.rejectOnError(() => {}), dfd.callback(() => {}));
 		},
 
 		'rejects with an error if state is readable and the owner stream state is not'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 			reader.state = State.Readable;
 			stream.state = State.Errored;
 			reader.cancel('reason').then(dfd.rejectOnError(() => {}), dfd.callback(() => {}));
@@ -80,12 +99,17 @@ registerSuite({
 			stream._cancel = () => { cancelCalled = true; return Promise.resolve(); };
 			reader.cancel('reason');
 			assert.isTrue(cancelCalled);
+		},
+
+		'reject if not readable stream reader'() {
+			var dfd = this.async(asyncTimeout);
+			reader.cancel.call({}).then(dfd.rejectOnError(() => { assert.fail(); }), dfd.callback(() => {}));
 		}
 	},
 
 	'read()': {
 		'resolves with an undefined value if the state is closed'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 			reader.state = State.Closed;
 			reader.read().then(dfd.callback((result: ReadResult<string>) => {
 				assert.isUndefined(result.value);
@@ -94,7 +118,7 @@ registerSuite({
 		},
 
 		'rejects wth an error if the state is errored'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 			reader.state = State.Errored;
 			reader.read().then(dfd.rejectOnError(() => {}), dfd.callback(() => {}));
 		},
@@ -112,6 +136,11 @@ registerSuite({
 			return reader.read().then((result: ReadResult<string>) => {
 				assert.strictEqual(result.value, chunkValue);
 			});
+		},
+
+		'reject if not readable stream reader'() {
+			var dfd = this.async(asyncTimeout);
+			reader.read.call({}).then(dfd.rejectOnError(() => { assert.fail(); }), dfd.callback(() => {}));
 		}
 	},
 
@@ -124,11 +153,22 @@ registerSuite({
 		},
 
 		'releases the lock and closes the reader'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 			reader.closed.then(dfd.callback(() => {
 				assert.strictEqual(reader.state, State.Closed);
 			}));
 			reader.releaseLock();
+		},
+
+		'reject if not readable stream reader'() {
+			assert.throws(() => { reader.releaseLock.call({}); });
+		},
+
+		'unlocked'() {
+			var result: any;
+			reader.releaseLock();
+			assert.doesNotThrow(() => { result = reader.releaseLock(); });
+			assert.isUndefined(result);
 		}
 	},
 
@@ -143,7 +183,7 @@ registerSuite({
 		},
 
 		'resolves the read with the resolved data'() {
-			var dfd = this.async(1000);
+			var dfd = this.async(asyncTimeout);
 			var resultChunk = 'test';
 			reader.read().then(dfd.callback((result: ReadResult<string>) => {
 				assert.strictEqual(result.value, resultChunk);
