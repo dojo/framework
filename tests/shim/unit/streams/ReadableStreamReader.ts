@@ -32,6 +32,26 @@ registerSuite({
 			assert.throws(() => {
 				new ReadableStreamReader(stream);
 			});
+		},
+
+		'throws an error if the stream is not readable'() {
+			assert.throws(() => {
+				new ReadableStreamReader(<ReadableStream<string>>{});
+			});
+		},
+
+		'closed stream'() {
+			stream.state = State.Closed;
+			assert.throws(() => {
+				new ReadableStreamReader(stream);
+			});
+		},
+
+		'error stream'() {
+			stream.state = State.Errored;
+			assert.throws(() => {
+				new ReadableStreamReader(stream);
+			});
 		}
 	},
 
