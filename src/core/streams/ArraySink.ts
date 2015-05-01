@@ -11,7 +11,7 @@ export default class ArraySink<T> implements Sink<T> {
 	chunks: T[];
 
 	abort(reason: any): Promise<void> {
-		return Promise.resolve();
+		return resolved;
 	}
 
 	close(): Promise<void> {
@@ -20,7 +20,7 @@ export default class ArraySink<T> implements Sink<T> {
 
 	start(error: () => void): Promise<void> {
 		this.chunks = [];
-		return Promise.resolve();
+		return resolved;
 	}
 
 	/**
@@ -31,6 +31,10 @@ export default class ArraySink<T> implements Sink<T> {
 		if (chunk) {
 			this.chunks.push(chunk);
 		}
-		return Promise.resolve();
+		return resolved;
 	}
 }
+
+// Since this Sink is doing no asynchronous operations,
+// use a single resolved promise for all returned promises.
+var resolved = Promise.resolve();
