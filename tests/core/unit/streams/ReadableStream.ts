@@ -2,7 +2,7 @@ import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 
 import BaseStringSource from './helpers/BaseStringSource';
-import StringArraySink from './helpers/StringArraySink';
+import ArraySink from 'src/streams/ArraySink';
 import ReadableStream, { State } from 'src/streams/ReadableStream';
 import ReadableStreamController from 'src/streams/ReadableStreamController';
 import { ReadResult, Strategy } from 'src/streams/interfaces';
@@ -530,7 +530,7 @@ registerSuite({
 	'pipeTo': {
 		'basic'() {
 			var dfd = this.async(asyncTimeout);
-			var sink = new StringArraySink();
+			var sink = new ArraySink<string>();
 			var outStream = new WritableStream(sink);
 
 			var source = new BaseStringSource();
@@ -543,7 +543,7 @@ registerSuite({
 			};
 			var inStream = new ReadableStream(source);
 			inStream.pipeTo(outStream).then(dfd.callback(() => {
-				assert.equal(3, sink.stringArray.length);
+				assert.equal(3, sink.chunks.length);
 				assert.equal(State.Closed, inStream.state);
 				assert.equal(WritableState.Closed, outStream.state);
 			}), dfd.rejectOnError(() => { assert.fail(); }));
@@ -551,7 +551,7 @@ registerSuite({
 
 		'source start rejects'() {
 			var dfd = this.async(asyncTimeout);
-			var sink = new StringArraySink();
+			var sink = new ArraySink<string>();
 			var outStream = new WritableStream(sink);
 
 			var source = new BaseStringSource();
@@ -568,7 +568,7 @@ registerSuite({
 
 		'source pull rejects'() {
 			var dfd = this.async(asyncTimeout);
-			var sink = new StringArraySink();
+			var sink = new ArraySink<string>();
 			var outStream = new WritableStream(sink);
 
 			var source = new BaseStringSource();
@@ -592,7 +592,7 @@ registerSuite({
 
 		'sink rejects'() {
 			var dfd = this.async(asyncTimeout);
-			var sink = new StringArraySink();
+			var sink = new ArraySink<string>();
 			sink.write = () => { return Promise.reject(new Error('because')); };
 			var outStream = new WritableStream(sink);
 
@@ -608,19 +608,19 @@ registerSuite({
 
 		'prevent close'() {
 			var dfd = this.async(asyncTimeout);
-			var sink = new StringArraySink();
+			var sink = new ArraySink<string>();
 			var outStream = new WritableStream(sink);
 
 			var inStream = new ReadableStream(buildEnqueuingStartSource());
 			inStream.pipeTo(outStream, { preventClose: true }).then(dfd.callback(() => {
-				assert.equal(3, sink.stringArray.length);
+				assert.equal(3, sink.chunks.length);
 				assert.equal(WritableState.Writable, outStream.state);
 			}), dfd.rejectOnError(() => { assert.fail(); }));
 		},
 
 		'prevent cancel'() {
 			var dfd = this.async(asyncTimeout);
-			var sink = new StringArraySink();
+			var sink = new ArraySink<string>();
 			sink.write = () => { return Promise.reject(new Error('because')); };
 			var outStream = new WritableStream(sink);
 
@@ -636,7 +636,7 @@ registerSuite({
 
 		'prevent abort'() {
 			var dfd = this.async(asyncTimeout);
-			var sink = new StringArraySink();
+			var sink = new ArraySink<string>();
 			var outStream = new WritableStream(sink);
 
 			var source = new BaseStringSource();
@@ -660,7 +660,7 @@ registerSuite({
 
 		'writable closed'() {
 			var dfd = this.async(asyncTimeout);
-			var sink = new StringArraySink();
+			var sink = new ArraySink<string>();
 			var outStream = new WritableStream(sink);
 			outStream.close();
 
@@ -676,7 +676,7 @@ registerSuite({
 
 		'writable closed with prevent cancel'() {
 			var dfd = this.async(asyncTimeout);
-			var sink = new StringArraySink();
+			var sink = new ArraySink<string>();
 			var outStream = new WritableStream(sink);
 			outStream.close();
 
