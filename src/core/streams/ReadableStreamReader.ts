@@ -37,10 +37,6 @@ export default class ReadableStreamReader<T> {
 			this._resolveClosedPromise = resolve;
 			this._rejectClosedPromise = reject;
 		});
-
-		if (stream.state === State.Closed || stream.state === State.Errored) {
-			this._release();
-		}
 	}
 
 	get closed(): Promise<void> {
@@ -196,14 +192,4 @@ export default class ReadableStreamReader<T> {
 
 export function isReadableStreamReader<T>(readableStreamReader: ReadableStreamReader<T>): boolean {
 	return Object.prototype.hasOwnProperty.call(readableStreamReader, '_ownerReadableStream');
-}
-
-export function cancelReadableStream<T>(stream: ReadableStream<T>, reason: string): Promise<void> {
-	console.warn('cancelReadableStream call should be stream.cancel');
-	return stream.cancel(reason);
-}
-
-export function readFromReadableStreamReader<T>(reader: ReadableStreamReader<T>): Promise<any> {
-	console.warn('readFromReadableStreamReader(reader) should be reader.read()');
-	return reader.read();
 }
