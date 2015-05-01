@@ -47,7 +47,6 @@ registerSuite({
 
 	'async transform'() {
 		var testValues = ['a', 'b', 'c'];
-		var input = [].concat(testValues);
 		var transform: Transform<number, string> = {
 			transform(chunk: string, enqueue: (chunk: number) => void, transformDone: () => void): void {
 				setTimeout(() => {
@@ -80,8 +79,8 @@ registerSuite({
 		var reader = stream.readable.getReader();
 		var results: number[] = [];
 
-		while (input.length) {
-			stream.writable.write(input.shift());
+		for (let i = 0; i < testValues.length; i++) {
+			stream.writable.write(testValues[i]);
 		}
 
 		stream.writable.close();
