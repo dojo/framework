@@ -1,7 +1,7 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import * as iteration from 'src/async/iteration';
-import Promise from 'src/async/Promise';
+import Promise from 'src/Promise';
 import * as array from 'src/array';
 import { isEventuallyRejected, throwImmediatly } from '../../support/util';
 

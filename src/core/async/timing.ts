@@ -1,5 +1,4 @@
-import Promise from './Promise';
-import PlatformPromise from '../Promise';
+import Promise from '../Promise';
 import { Identity } from './async';
 
 /**
@@ -39,7 +38,7 @@ export function timeout<T>(milliseconds: number, reason: Error): Identity<T> {
  * A Promise that will reject itself automatically after a time.
  * Useful for combining with other promises in Promise.race.
  */
-export class DelayedRejection extends PlatformPromise<any> {
+export class DelayedRejection extends Promise<any> {
 	/**
 	 * @param milliseconds the number of milliseconds to wait before triggering a rejection
 	 * @param reason the reason for the rejection

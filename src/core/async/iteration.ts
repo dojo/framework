@@ -1,4 +1,4 @@
-import Promise, { Thenable } from './Promise';
+import Promise, { Thenable } from '../Promise';
 import * as array from '../array'
 import { ArrayLike } from '../array';
 
