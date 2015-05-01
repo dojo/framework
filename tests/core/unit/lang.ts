@@ -1,6 +1,7 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import * as lang from 'src/lang';
+import {PropertyEvent} from 'src/observers/interfaces';
 
 registerSuite({
 	name: 'lang functions',
@@ -238,6 +239,30 @@ registerSuite({
 			'lateBind\'s additional arguments should be prepended to the wrapped function.');
 		assert.equal(method(), 'The quick brown',
 			'lateBind\'s additional arguments should be prepended to the wrapped function.');
+	},
+
+	'.observe()': function () {
+		var b: number;
+		var object = Object.create(Object.prototype, {
+			a: {
+				enumerable: false,
+				configurable: true,
+				value: 1
+			}
+		});
+		var observer = lang.observe(object, function (events: PropertyEvent[]): any {
+			var target = events[0].target;
+			b = (<any> target)[events[0].name];
+		});
+
+		observer.observeProperty('a');
+		object.a += 1;
+		assert.equal(b, 2);
+		assert.isFalse(Object.getOwnPropertyDescriptor(object, 'a').enumerable);
+
+		observer.destroy();
+		object.a += 1;
+		assert.equal(b, 2);
 	},
 
 	'.partial()': function () {

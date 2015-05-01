@@ -1,3 +1,6 @@
+import * as observers from './observers/interfaces';
+import ObjectObserver from './observers/ObjectObserver';
+
 var slice = Array.prototype.slice;
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -187,6 +190,13 @@ export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): 
 		function () {
 			return (<any> instance)[method].apply(instance, arguments);
 		};
+}
+
+export function observe(target: {}, listener: (events: observers.PropertyEvent[]) => any): ObjectObserver {
+	return new ObjectObserver({
+		target: target,
+		listener: listener
+	});
 }
 
 export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs: any[]): (...args: any[]) => any {
