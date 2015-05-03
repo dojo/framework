@@ -1,7 +1,7 @@
 import { Sink } from 'src/streams/WritableStream';
 import Promise from 'src/Promise';
 
-export default class BaseStringSource implements Sink<string> {
+export default class BaseStringSink implements Sink<string> {
 
 	abort(reason: any): Promise<void> {
 		return Promise.resolve();
