@@ -11,6 +11,7 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-watch');
+	grunt.loadNpmTasks('grunt-string-replace');
 	grunt.loadNpmTasks('grunt-ts');
 	grunt.loadNpmTasks('grunt-tslint');
 	grunt.loadNpmTasks('dts-generator');
@@ -129,6 +130,25 @@ module.exports = function (grunt) {
 			}
 		},
 
+		'string-replace': {
+			testIgnoreUmdWrapper: {
+				options: {
+					replacements: [
+						{
+							pattern: /(.*)/,
+							replacement: '$1/* istanbul ignore next */'
+						}
+					]
+				},
+				files: [
+					{
+						src: ['<%= devDirectory %>/**/*.js'],
+						dest: '<%= devDirectory %>'
+					}
+				]
+			}
+		},
+
 		ts: {
 			options: mixin(
 				compilerOptions,
@@ -214,9 +234,11 @@ module.exports = function (grunt) {
 		'copy:staticFiles',
 		'dtsGenerator:dist'
 	]);
-	grunt.registerTask('test', [ 'dev', 'intern:client', 'intern:streams' ]);
-	grunt.registerTask('test-local', [ 'dev', 'intern:local' ]);
-	grunt.registerTask('test-proxy', [ 'dev', 'intern:proxy' ]);
+	grunt.registerTask('testPrep', ['dev', 'string-replace:testIgnoreUmdWrapper']);
+	grunt.registerTask('test', [ 'testPrep', 'intern:client', 'intern:streams' ]);
+	grunt.registerTask('test-streams', [ 'testPrep', 'intern:streams' ]);
+	grunt.registerTask('test-local', [ 'testPrep', 'intern:local' ]);
+	grunt.registerTask('test-proxy', [ 'testPrep', 'intern:proxy' ]);
 	grunt.registerTask('ci', [ 'tslint', 'test' ]);
 	grunt.registerTask('default', [ 'clean', 'dev' ]);
 };
