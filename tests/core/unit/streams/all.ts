@@ -5,6 +5,8 @@ import './TransformStream';
 import './SizeQueue';
 import './WritableStream';
 
-// TODO: prevent these tests from loading in the browser
-import './adapters/ReadableNodeStreamSource';
-import './adapters/WritableNodeStreamSink';
+import has from 'src/has';
+if (has('host-node')) {
+	require('./adapters/ReadableNodeStreamSource');
+	require('./adapters/WritableNodeStreamSink');
+}
