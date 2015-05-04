@@ -1,8 +1,6 @@
 import nextTick from './nextTick';
 import global from './global';
-import has, { add as hasAdd } from './has';
-
-hasAdd('promise', typeof global.Promise !== 'undefined');
+import has from './has';
 
 /**
  * Return true if a given value meets Promise's definition of "iterable".

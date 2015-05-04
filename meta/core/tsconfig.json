@@ -19,6 +19,7 @@
 		"./tests/typings/tsd.d.ts",
 
 		"./src/array.ts",
+		"./src/decorators.ts",
 		"./src/global.ts",
 		"./src/has.ts",
 		"./src/interfaces.d.ts",
@@ -28,6 +29,7 @@
 		"./src/number.ts",
 		"./src/object.ts",
 		"./src/Promise.ts",
+		"./src/WeakMap.ts",
 		"./src/async/async.d.ts",
 		"./src/async/iteration.ts",
 		"./src/streams/interfaces.d.ts",

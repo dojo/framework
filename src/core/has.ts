@@ -59,3 +59,5 @@ add('setimmediate', typeof global.setImmediate !== 'undefined');
 add('dom-mutationobserver', function(): boolean {
 	return has('host-browser') && Boolean(global.MutationObserver || global.WebKitMutationObserver);
 });
+add('promise', typeof global.Promise !== 'undefined');
+add('weakmap', typeof global.WeakMap !== 'undefined');
