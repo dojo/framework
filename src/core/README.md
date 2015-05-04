@@ -57,6 +57,12 @@ Users will need to download and compile directly from the repository for the tim
    You only need to do this once to contribute to all Dojo Foundation projects.
 3. Submit a pull request!
 
+## Testing
+
+Test cases MUST be written using Intern using the Object test interface and Assert assertion interface.
+
+90% branch coverage MUST be provided for all code submitted to this repository, as reported by istanbul’s combined coverage results for all supported platforms.
+
 ## Licensing information
 
 © 2004–2015 Dojo Foundation & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
