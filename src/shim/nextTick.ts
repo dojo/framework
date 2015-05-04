@@ -1,6 +1,7 @@
 import global from './global';
 import has from './has';
 import { Handle } from './interfaces';
+import { QueueItem } from './queue';
 
 /**
  * Create macro-scheduler based nextTick function.
@@ -28,14 +29,6 @@ function createMacroScheduler(
 }
 
 /**
- * An item in a CallbackQueue.
- */
-interface QueueItem {
-	active: boolean;
-	callback: () => void;
-}
-
-/**
  * A queue of callbacks that will be executed in FIFO order when the queue is drained.
  */
 class CallbackQueue {
@@ -43,7 +36,7 @@ class CallbackQueue {
 
 	add(callback: () => void): { destroy: () => void } {
 		let _callback = {
-			active: true,
+			isActive: true,
 			callback: callback
 		};
 
@@ -53,7 +46,7 @@ class CallbackQueue {
 		return {
 			destroy: function() {
 				this.destroy = function() { };
-				_callback.active = false;
+				_callback.isActive = false;
 				_callback = null;
 			}
 		};
@@ -70,7 +63,7 @@ class CallbackQueue {
 
 		for (let i = 0; i < count; i++) {
 			item = callbacks[i];
-			if (item && item.active) {
+			if (item && item.isActive) {
 				item.callback.apply(null, args);
 			}
 		}
