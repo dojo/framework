@@ -10,3 +10,4 @@ import './object';
 import './Promise';
 import './async/iteration';
 import './async/timing';
+import './queue';
