@@ -1,28 +1,28 @@
 {
-  "name": "dojo-core",
-  "version": "2.0.0-pre",
-  "description": "Basic utilites for common TypeScript development",
-  "homepage": "http://dojotoolkit.org",
-  "bugs": {
-    "url": "https://github.com/dojo/core/issues"
-  },
-  "license": "BSD-3-Clause",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dojo/core.git"
-  },
-  "devDependencies": {
-    "benchmark": "^1.0.0",
-    "dts-generator": "1.4.1",
-    "grunt": "0.4.5",
-    "grunt-contrib-clean": "0.6.0",
-    "grunt-contrib-copy": "0.8.0",
-    "grunt-contrib-watch": "0.6.1",
-    "grunt-string-replace": "^1.2.0",
-    "grunt-ts": "3.0.0",
-    "grunt-tslint": "2.0.0",
-    "intern": "2.2.2",
-    "requirejs": "2.1.17",
-    "typescript": "https://github.com/csnover/TypeScript/archive/0.20150422.0+378b5ffd1af2249658c8b7a3dc7465d911af93ff.tar.gz"
-  }
+	"name": "dojo-core",
+	"version": "2.0.0-pre",
+	"description": "Basic utilites for common TypeScript development",
+	"homepage": "http://dojotoolkit.org",
+	"bugs": {
+		"url": "https://github.com/dojo/core/issues"
+	},
+	"license": "BSD-3-Clause",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/dojo/core.git"
+	},
+	"devDependencies": {
+		"benchmark": "^1.0.0",
+		"dts-generator": "1.4.1",
+		"grunt": "0.4.5",
+		"grunt-contrib-clean": "0.6.0",
+		"grunt-contrib-copy": "0.8.0",
+		"grunt-contrib-watch": "0.6.1",
+		"grunt-string-replace": "^1.2.0",
+		"grunt-ts": "3.0.0",
+		"grunt-tslint": "2.0.0",
+		"intern": "2.2.2",
+		"requirejs": "2.1.17",
+		"typescript": "https://github.com/csnover/TypeScript/archive/0.20150422.0+378b5ffd1af2249658c8b7a3dc7465d911af93ff.tar.gz"
+	}
 }
