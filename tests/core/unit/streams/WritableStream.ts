@@ -2,6 +2,7 @@ import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 import WritableStream, { State, Sink } from 'src/streams/WritableStream';
 import BaseStringSink from './helpers/BaseStringSink';
+import ManualSink from './helpers/ManualSink';
 import { Strategy } from 'src/streams/interfaces';
 import Promise from 'src/Promise';
 
@@ -18,31 +19,6 @@ var strategy: Strategy<string> = {
 class ErrorableStream<T> extends WritableStream<T> {
 	error(error: Error): void {
 		super._error(error);
-	}
-}
-
-// A sink whose write operations must be manually resolved by calling 'next'
-class ManualSink extends BaseStringSink {
-	values: string[] = [];
-	protected _resolvers: Function[] = [];
-
-	write(chunk: string): Promise<void> {
-		this.values.push(chunk);
-
-		return new Promise<void>((resolve, reject) => {
-			this._resolvers.push(resolve);
-		});
-	}
-
-	next() {
-		if (!this._resolvers.length) {
-			console.warn('ManualSink.next called with nothing in queue');
-			return;
-		}
-
-		var resolve = this._resolvers.shift();
-
-		resolve();
 	}
 }
 
@@ -202,7 +178,7 @@ registerSuite({
 
 		'handles backpressure from strategy'() {
 			var dfd = this.async(asyncTimeout);
-			var sink = new ManualSink();
+			var sink = new ManualSink<string>();
 
 			stream = new WritableStream(sink, {
 				size: (chunk: string) => { return 1; },
@@ -227,7 +203,7 @@ registerSuite({
 		},
 
 		'paused queue resumes'() {
-			var sink = new ManualSink();
+			var sink = new ManualSink<string>();
 			var testValues = [
 				'test1',
 				'test2',
