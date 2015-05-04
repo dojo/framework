@@ -1,3 +1,5 @@
+import './ByteLengthQueuingStrategy';
+import './CountQueuingStrategy';
 import './ReadableStream';
 import './ReadableStreamController';
 import './ReadableStreamReader';
