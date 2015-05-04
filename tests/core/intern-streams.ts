@@ -12,5 +12,14 @@ export var useLoader = {
 	'host-browser': '../requirejs/require.js'
 };
 
+export var loader = {
+	// Packages that should be registered with the loader in each testing environment
+	packages: [
+		{ name: 'src', location: '_build/src' },
+		{ name: 'tests', location: '_build/tests' },
+		{ name: 'dojo', location: 'node_modules/intern/node_modules/dojo'}
+	]
+};
+
 // Non-functional test suite(s) to run in each browser
 export var suites = [ 'tests/unit/streams/all' ];

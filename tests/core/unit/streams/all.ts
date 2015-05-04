@@ -5,8 +5,4 @@ import './TransformStream';
 import './SizeQueue';
 import './WritableStream';
 
-import has from 'src/has';
-if (has('host-node')) {
-	require('./adapters/ReadableNodeStreamSource');
-	require('./adapters/WritableNodeStreamSink');
-}
+import 'dojo/has!host-node?./nodeOnly:./browserOnly';
