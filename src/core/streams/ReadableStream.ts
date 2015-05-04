@@ -13,9 +13,7 @@ import Promise from '../Promise';
 export default class ReadableStream<T> {
 
 	state: State;
-
-	closed: Promise<void>;
-
+	
 	_closeRequested: boolean = false;
 	_controller: ReadableStreamController<T>;
 	_pullingPromise: Promise<void>;
