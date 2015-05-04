@@ -59,8 +59,7 @@ export default class ReadableStream<T> {
 	 * @returns {number}
 	 */
 	get desiredSize(): number {
-		var freeQueue = this._strategy.highwaterMark - this.queueSize;
-		return freeQueue < 0 ? 0 : freeQueue;
+		return this._strategy.highwaterMark - this.queueSize;
 	}
 
 	get queueSize(): number {

@@ -156,7 +156,7 @@ registerSuite({
 			stream.enqueue('This is a test');
 			assert.equal(0, stream.desiredSize);
 			stream.enqueue('This is a test');
-			assert.equal(0, stream.desiredSize);
+			assert.equal(-1, stream.desiredSize);
 
 			assert.strictEqual(3, stream.queueSize);
 		},
