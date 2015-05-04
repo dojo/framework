@@ -235,7 +235,7 @@ module.exports = function (grunt) {
 		'dtsGenerator:dist'
 	]);
 	grunt.registerTask('testPrep', ['dev', 'string-replace:testIgnoreUmdWrapper']);
-	grunt.registerTask('test', [ 'testPrep', 'intern:client', 'intern:streams' ]);
+	grunt.registerTask('test', [ 'testPrep', 'intern:client' ]);
 	grunt.registerTask('test-streams', [ 'testPrep', 'intern:streams' ]);
 	grunt.registerTask('test-local', [ 'testPrep', 'intern:local' ]);
 	grunt.registerTask('test-proxy', [ 'testPrep', 'intern:proxy' ]);
