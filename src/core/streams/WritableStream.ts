@@ -311,12 +311,7 @@ export default class WritableStream<T> {
 			return;
 		}
 
-		var queueSize = this._queue.length;
-
-		if (!queueSize) {
-			return;
-		}
-
+		var queueSize = this._queue.totalSize;
 		var shouldApplyBackPressure = queueSize > this._strategy.highwaterMark;
 
 		if (shouldApplyBackPressure && this.state === State.Writable) {
