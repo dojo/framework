@@ -9,5 +9,5 @@ export interface Strategy<T> {
 	/**
 	 * The number of chunks allowed in the queue before backpressure is applied.
 	 */
-	highwaterMark?: number;
+	highWaterMark?: number;
 }

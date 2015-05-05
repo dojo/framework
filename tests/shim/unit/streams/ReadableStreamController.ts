@@ -14,11 +14,11 @@ var strategy: Strategy<string> = {
 	size(chunk: string) {
 		return 1;
 	},
-	highwaterMark: Infinity
+	highWaterMark: Infinity
 };
 
 registerSuite({
-	name: 'ReadablsStreamController',
+	name: 'ReadableStreamController',
 
 	beforeEach() {
 		source = new BaseStringSource();
@@ -54,7 +54,7 @@ registerSuite({
 			size(chunk: string) {
 				return 1;
 			},
-			highwaterMark: 10
+			highWaterMark: 10
 		};
 		var source = new BaseStringSource();
 		var stream = new ReadableStream<string>(source, strategy);

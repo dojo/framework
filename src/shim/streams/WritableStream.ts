@@ -312,7 +312,7 @@ export default class WritableStream<T> {
 		}
 
 		var queueSize = this._queue.totalSize;
-		var shouldApplyBackPressure = queueSize > this._strategy.highwaterMark;
+		var shouldApplyBackPressure = queueSize > this._strategy.highWaterMark;
 
 		if (shouldApplyBackPressure && this.state === State.Writable) {
 			this._state = State.Waiting;

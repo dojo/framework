@@ -16,7 +16,7 @@ registerSuite({
 		var sink = new ManualSink<string>();
 
 		var stream = new WritableStream<string>(sink, new CountQueuingStrategy<string>({
-			highwaterMark: 2
+			highWaterMark: 2
 		}));
 
 		var promise = stream.write('test value 1');

@@ -67,10 +67,10 @@ export function createDataProperty(object: {}, property: string, value: any) {
 	Object.defineProperty(object, property, { value: value, writable: true, enumerable: true, configurable: true });
 }
 
-export function normalizeStrategy<T>({ size, highwaterMark = 1 }: Strategy<T>): Strategy<T> {
+export function normalizeStrategy<T>({ size, highWaterMark = 1 }: Strategy<T>): Strategy<T> {
 	return <Strategy <T>> {
 		size: size,
-		highwaterMark: highwaterMark > 0 ? highwaterMark : 1
+		highWaterMark: highWaterMark > 0 ? highWaterMark : 1
 	};
 }
 
