@@ -12,27 +12,30 @@ registerSuite({
 	name: 'CountQueuingStrategy',
 
 	size() {
-			var dfd = this.async(asyncTimeout);
-			var sink = new ManualSink<string>();
+		var dfd = this.async(asyncTimeout);
+		var sink = new ManualSink<string>();
 
-			var stream = new WritableStream<string>(sink, new CountQueuingStrategy<string>({
-				highWaterMark: 2
-			}));
+		var stream = new WritableStream<string>(sink, new CountQueuingStrategy<string>({
+			highwaterMark: 2
+		}));
 
-			var promise = stream.write('test value 1');
+		var promise = stream.write('test value 1');
+		assert.strictEqual(stream.state, State.Writable);
+
+		stream.write('test value 2');
+		assert.strictEqual(stream.state, State.Writable);
+
+		stream.write('test value 3');
+		assert.strictEqual(stream.state, State.Waiting);
+
+		setTimeout(() => {
+			sink.next();
+		}, 20);
+
+		promise.then(dfd.callback(() => {
 			assert.strictEqual(stream.state, State.Writable);
-
-			stream.write('test value 2');
-			assert.strictEqual(stream.state, State.Waiting);
-
-			setTimeout(() => {
-				sink.next();
-			}, 20);
-
-			return promise.then(dfd.callback(() => {
-				assert.strictEqual(stream.state, State.Writable);
-			}), (error: Error) => {
-				dfd.reject(error);
-			});
+		}), (error: Error) => {
+			dfd.reject(error);
+		});
 	}
 });
