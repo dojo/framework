@@ -33,7 +33,7 @@ export interface PipeOptions {
 export default class ReadableStream<T> {
 
 	state: State;
-	
+
 	_closeRequested: boolean = false;
 	_controller: ReadableStreamController<T>;
 	_pullingPromise: Promise<void>;
@@ -77,7 +77,7 @@ export default class ReadableStream<T> {
 	 * @returns {number}
 	 */
 	get desiredSize(): number {
-		return this._strategy.highwaterMark - this.queueSize;
+		return this._strategy.highWaterMark - this.queueSize;
 	}
 
 	get queueSize(): number {
@@ -431,7 +431,7 @@ export default class ReadableStream<T> {
 	_shouldApplyBackPressure(): boolean {
 		var queueSize = this._queue.totalSize;
 
-		return queueSize > this._strategy.highwaterMark;
+		return queueSize > this._strategy.highWaterMark;
 	}
 }
 

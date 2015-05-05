@@ -91,7 +91,7 @@ registerSuite({
 		beforeEach() {
 			strategy = {
 				size: (chunk: string) => { return 1; },
-				highwaterMark: 2
+				highWaterMark: 2
 			};
 		},
 
@@ -100,7 +100,7 @@ registerSuite({
 			var stream = new ReadableStream<string>(source);
 			assert.isNotNull(stream._strategy);
 			assert.isUndefined(stream._strategy.size);
-			assert.strictEqual(1, stream._strategy.highwaterMark);
+			assert.strictEqual(1, stream._strategy.highWaterMark);
 		},
 
 		'strategy'() {
@@ -109,15 +109,15 @@ registerSuite({
 			stream = new ReadableStream<string>(source, strategy);
 			assert.isNotNull(stream._strategy);
 			assert.isNotNull(stream._strategy.size);
-			assert.strictEqual(2, stream._strategy.highwaterMark);
+			assert.strictEqual(2, stream._strategy.highWaterMark);
 			assert.strictEqual(1, stream._strategy.size('test'));
 
 			// changing the source's strategy does not affect the stream that has already been created.
 			strategy = {
 				size: (chunk: string) => { return 10; },
-				highwaterMark: 25
+				highWaterMark: 25
 			};
-			assert.strictEqual(2, stream._strategy.highwaterMark);
+			assert.strictEqual(2, stream._strategy.highWaterMark);
 			assert.strictEqual(1, stream._strategy.size('test'));
 		},
 
@@ -125,7 +125,7 @@ registerSuite({
 			var source = new BaseStringSource();
 			var strategy = {
 				size: (chunk: string): number => { throw new Error('Size failure'); },
-				highwaterMark: 2
+				highWaterMark: 2
 			};
 
 			var stream = new ReadableStream(source, strategy);
@@ -146,7 +146,7 @@ registerSuite({
 			var source = new BaseStringSource();
 			var strategy: Strategy<string> = {
 				size: (chunk: string) => { return 1; },
-				highwaterMark: 2
+				highWaterMark: 2
 			};
 			var stream = new ReadableStream<string>(source, strategy);
 			stream.getReader();
@@ -166,7 +166,7 @@ registerSuite({
 			var source = new BaseStringSource();
 			var strategy: Strategy<string> = {
 				size: (chunk: string) => { return 5; },
-				highwaterMark: 15
+				highWaterMark: 15
 			};
 			var stream = new ReadableStream<string>(source, strategy);
 			stream.getReader();
@@ -179,7 +179,7 @@ registerSuite({
 			var source = new BaseStringSource();
 			var strategy: Strategy<string> = {
 				size: undefined,
-				highwaterMark: 15
+				highWaterMark: 15
 			};
 			var stream = new ReadableStream<string>(source, strategy);
 			stream.getReader();
@@ -192,7 +192,7 @@ registerSuite({
 			var source = new BaseStringSource();
 			var strategy: Strategy<string> = {
 				size: (chunk: string) => { return 1; },
-				highwaterMark: 2
+				highWaterMark: 2
 			};
 			var stream = new ReadableStream<string>(source, strategy);
 			var reader = stream.getReader();
@@ -368,7 +368,7 @@ registerSuite({
 		'closedRequested'() {
 			var dfd = this.async(asyncTimeout);
 			var stream = new ReadableStream(new BaseStringSource(), {
-				highwaterMark: 10
+				highWaterMark: 10
 			});
 			stream.started.then(dfd.callback(() => {
 				stream.enqueue('test');

@@ -15,7 +15,7 @@ registerSuite({
 		var sink = new ManualSink<ArrayBuffer>();
 
 		var stream = new WritableStream<ArrayBuffer>(sink, new ByteLengthQueuingStrategy<ArrayBuffer>({
-			highwaterMark: 2 * 1024
+			highWaterMark: 2 * 1024
 		}));
 
 		var promise = stream.write(new ArrayBuffer(1024));
@@ -43,7 +43,7 @@ registerSuite({
 		var sink = new ManualSink<any>();
 
 		var stream = new WritableStream<any>(sink, new ByteLengthQueuingStrategy<any>({
-			highwaterMark: 50
+			highWaterMark: 50
 		}));
 
 		// approximateByteSize = 44

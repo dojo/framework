@@ -13,7 +13,7 @@ var strategy: Strategy<string> = {
 	size(chunk: string) {
 		return 1;
 	},
-	highwaterMark: Infinity
+	highWaterMark: Infinity
 };
 
 class ErrorableStream<T> extends WritableStream<T> {
@@ -182,7 +182,7 @@ registerSuite({
 
 			stream = new WritableStream(sink, {
 				size: (chunk: string) => { return 1; },
-				highwaterMark: 1
+				highWaterMark: 1
 			});
 
 			var promise = stream.write('test1');
@@ -212,7 +212,7 @@ registerSuite({
 
 			stream = new WritableStream(sink, {
 				size: (chunk: string) => { return 1; },
-				highwaterMark: 1
+				highWaterMark: 1
 			});
 
 			// Peform two writes, putting the stream into 'waiting' state
@@ -242,7 +242,7 @@ registerSuite({
 				size(chunk: string): number {
 					throw new Error('Strategy.size test error');
 				},
-				highwaterMark: Infinity
+				highWaterMark: Infinity
 			});
 
 			stream.write('abc').then(() => {
