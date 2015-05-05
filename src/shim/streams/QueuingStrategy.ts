@@ -1,15 +1,15 @@
 import { Strategy } from './interfaces';
 
 export default class QueuingStrategy<T> implements Strategy<T> {
-	highWaterMark: number;
+	highwaterMark: number;
 
 	constructor(kwArgs: QueuingStrategy.KwArgs) {
-		this.highWaterMark = kwArgs.highWaterMark;
+		this.highwaterMark = kwArgs.highwaterMark;
 	}
 }
 
 module QueuingStrategy {
 	export interface KwArgs {
-		highWaterMark: number;
+		highwaterMark: number;
 	}
 }

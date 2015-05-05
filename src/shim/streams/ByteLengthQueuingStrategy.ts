@@ -1,4 +1,5 @@
 import QueuingStrategy from './QueuingStrategy';
+import { getApproximateByteSize } from './util';
 
 export default class ByteLengthQueuingStrategy<T> extends QueuingStrategy<T> {
 	size(chunk: T): number {
@@ -6,8 +7,7 @@ export default class ByteLengthQueuingStrategy<T> extends QueuingStrategy<T> {
 			return (<any> chunk).byteLength;
 		}
 		else {
-			// TODO: do we want to do byte size calculation of arbitrary values?
-			return 1;
+			return getApproximateByteSize(chunk);
 		}
 	}
 }
