@@ -24,6 +24,7 @@ module.exports = function (grunt) {
 		all: [ 'src/**/*.ts', 'typings/tsd.d.ts' ],
 		tests: [ 'tests/**/*.ts', 'typings/tsd.d.ts' ],
 		devDirectory: compilerOptions.outDir,
+		istanbulIgnoreNext: '/* istanbul ignore next */',
 
 		clean: {
 			dist: {
@@ -135,8 +136,12 @@ module.exports = function (grunt) {
 				options: {
 					replacements: [
 						{
-							pattern: /(.*)/,
-							replacement: '$1/* istanbul ignore next */'
+							pattern: /(var __extends.*)/,
+							replacement: '$1<%= istanbulIgnoreNext %>'
+						},
+						{
+							pattern: /(\(function.*)/,
+							replacement: '$1<%= istanbulIgnoreNext %>'
 						}
 					]
 				},
