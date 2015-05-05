@@ -1,11 +1,15 @@
 import ReadableStream, { State } from './ReadableStream';
-import { ReadResult } from './interfaces';
 import Promise from '../Promise';
 
 interface ReadRequest<T> {
 	promise: Promise<ReadResult<T>>;
 	resolve: (value: ReadResult<T>) => void;
 	reject: (reason: any) => void;
+}
+
+export interface ReadResult<T> {
+	value: T;
+	done: boolean;
 }
 
 export default class ReadableStreamReader<T> {

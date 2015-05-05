@@ -1,8 +1,15 @@
-import ReadableStream from './ReadableStream';
+import ReadableStream, { Source } from './ReadableStream';
 import ReadableStreamController from './ReadableStreamController';
-import WritableStream from './WritableStream';
-import { Sink, Source, Strategy, Transform } from './interfaces';
+import WritableStream, { Sink } from './WritableStream';
+import { Strategy } from './interfaces';
 import Promise from '../Promise';
+
+export interface Transform<R, W> {
+	transform(chunk: W, enqueueInReadable: (chunk: R) => void, transformDone: () => void): void;
+	flush(enqueue: Function, close: Function): void;
+	writableStrategy: Strategy<W>;
+	readableStrategy: Strategy<R>;
+}
 
 export default class TransformStream<R, W> {
 	readable: ReadableStream<R>;

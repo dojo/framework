@@ -1,4 +1,4 @@
-import { Sink } from '../interfaces';
+import { Sink } from '../WritableStream';
 import Promise from '../../Promise';
 
 type NodeSourceType = Buffer | string;

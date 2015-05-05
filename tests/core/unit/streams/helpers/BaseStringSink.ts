@@ -1,4 +1,4 @@
-import { Sink } from 'src/streams/interfaces';
+import { Sink } from 'src/streams/WritableStream';
 import Promise from 'src/Promise';
 
 export default class BaseStringSource implements Sink<string> {

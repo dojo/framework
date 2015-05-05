@@ -5,7 +5,8 @@ import BaseStringSource from './helpers/BaseStringSource';
 import ArraySink from 'src/streams/ArraySink';
 import ReadableStream, { State } from 'src/streams/ReadableStream';
 import ReadableStreamController from 'src/streams/ReadableStreamController';
-import { ReadResult, Strategy } from 'src/streams/interfaces';
+import { ReadResult } from 'src/streams/ReadableStreamReader';
+import { Strategy } from 'src/streams/interfaces';
 import WritableStream, { State as WritableState } from 'src/streams/WritableStream';
 import Promise from 'src/Promise';
 

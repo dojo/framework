@@ -1,4 +1,4 @@
-import { Source } from '../interfaces';
+import { Source } from '../ReadableStream';
 import ReadableStreamController from '../ReadableStreamController';
 import Promise from '../../Promise';
 import { Readable } from 'stream';
