@@ -1,10 +1,9 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 
-import ReadableStreamReader from 'src/streams/ReadableStreamReader';
-import ReadableStream, { State } from 'src/streams/ReadableStream';
+import ReadableStreamReader, { ReadResult } from 'src/streams/ReadableStreamReader';
+import ReadableStream, { State, Source } from 'src/streams/ReadableStream';
 import BaseStringSource from './helpers/BaseStringSource';
-import { ReadResult, Source } from 'src/streams/interfaces';
 import Promise from 'src/Promise';
 
 var stream: ReadableStream<string>;
@@ -28,14 +27,14 @@ registerSuite({
 			});
 		},
 
-		'throws an error if the stream is locked'() {
+		'throws an error if the stream is not readable'() {
 			stream.readable = false;
 			assert.throws(() => {
 				new ReadableStreamReader(stream);
 			});
 		},
 
-		'throws an error if the stream is not readable'() {
+		'throws an error if the stream is locked'() {
 			assert.throws(() => {
 				new ReadableStreamReader(<ReadableStream<string>>{});
 			});

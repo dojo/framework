@@ -1,5 +1,5 @@
 import * as util from './util';
-import { Sink, Strategy } from './interfaces';
+import { Strategy } from './interfaces';
 import SizeQueue from './SizeQueue';
 import Promise from '../Promise';
 
@@ -15,6 +15,17 @@ interface Record<T> {
 	chunk?: T;
 	reject?: (error: Error) => void;
 	resolve?: () => void;
+}
+
+export interface Sink<T> {
+
+	abort(reason?: any): Promise<void>;
+
+	close(): Promise<void>;
+
+	start(error: (error: Error) => void): Promise<void>;
+
+	write(chunk: T): Promise<void>;
 }
 
 export default class WritableStream<T> {

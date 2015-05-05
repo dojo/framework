@@ -1,11 +1,31 @@
 import ReadableStreamController from './ReadableStreamController';
-import ReadableStreamReader from './ReadableStreamReader';
+import ReadableStreamReader, { ReadResult } from './ReadableStreamReader';
 import TransformStream from './TransformStream';
 import WritableStream, { State as WriteableState } from './WritableStream';
 import * as util from './util';
-import { PipeOptions, ReadResult, Source, Strategy } from './interfaces';
+import { Strategy } from './interfaces';
 import SizeQueue from './SizeQueue';
 import Promise from '../Promise';
+
+/**
+ * Options used when piping a readable stream to a writable stream.
+ */
+export interface PipeOptions {
+	/**
+	 * Prevents the writable stream from closing when the pipe operation completes.
+	 */
+	preventClose?: boolean;
+
+	/**
+	 * Prevents the writable stream from erroring if the readable stream encounters an error.
+	 */
+	preventAbort?: boolean;
+
+	/**
+	 *  Prevents the readable stream from erroring if the writable stream encounters an error.
+	 */
+	preventCancel?: boolean;
+}
 
 /**
  * Implementation of a readable stream.
@@ -413,6 +433,15 @@ export default class ReadableStream<T> {
 
 		return queueSize > this._strategy.highwaterMark;
 	}
+}
+
+export interface Source<T> {
+
+	start(controller: ReadableStreamController<T>): Promise<void>;
+
+	pull(controller: ReadableStreamController<T>): Promise<void>;
+
+	cancel(reason?: any): Promise<void>;
 }
 
 /**

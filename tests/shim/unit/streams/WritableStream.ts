@@ -1,8 +1,8 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
-import WritableStream, { State } from 'src/streams/WritableStream';
+import WritableStream, { State, Sink } from 'src/streams/WritableStream';
 import BaseStringSink from './helpers/BaseStringSink';
-import { Sink, Strategy } from 'src/streams/interfaces';
+import { Strategy } from 'src/streams/interfaces';
 import Promise from 'src/Promise';
 
 var asyncTimeout = 1000;
