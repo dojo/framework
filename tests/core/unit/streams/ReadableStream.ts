@@ -717,16 +717,16 @@ function buildEnqueuingStartSource() {
 }
 
 class PrefixerTransform implements Transform<string, string> {
-	private prefix: string;
+	private suffix: string;
 	readableStrategy: Strategy<string>;
 	writableStrategy: Strategy<string>;
 
-	constructor(prefix: string) {
-		this.prefix = prefix;
+	constructor(suffix: string) {
+		this.suffix = suffix;
 	}
 
 	transform(chunk: string, enqueue: (chunk: string) => void, transformDone: () => void): void {
-		enqueue(chunk + this.prefix);
+		enqueue(chunk + this.suffix);
 		transformDone();
 	}
 
