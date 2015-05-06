@@ -51,6 +51,27 @@ registerSuite(function () {
 			}), 300);
 		},
 
+		'scheduler type': function () {
+			let dfd = this.async(300);
+			let macroScheduler = new Scheduler();
+			scheduler = new Scheduler({ type: 'micro' });
+
+			function test() {
+				macroScheduler.schedule(function () {
+					parts.push('second');
+				});
+				scheduler.schedule(function () {
+					parts.push('first');
+				});
+			}
+
+			test();
+			setTimeout(dfd.callback(function () {
+				assert.equal(parts.join(','), 'first,second',
+					'It should be possible to change the type of task being registered.');
+			}), 300);
+		},
+
 		'when deferWhileProcessing is true': function () {
 			let dfd = this.async(300);
 			scheduler = new Scheduler();
