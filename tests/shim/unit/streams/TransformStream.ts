@@ -1,9 +1,10 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import Promise from 'src/Promise';
-import { ReadResult, Strategy, Transform } from 'src/streams/interfaces';
+import { Strategy } from 'src/streams/interfaces';
 import { State as ReadableState } from 'src/streams/ReadableStream';
-import TransformStream from 'src/streams/TransformStream';
+import { ReadResult } from 'src/streams/ReadableStreamReader';
+import TransformStream, { Transform } from 'src/streams/TransformStream';
 import { State as WritableState } from 'src/streams/WritableStream';
 
 class CharToCodeTransform implements Transform<number, string> {
