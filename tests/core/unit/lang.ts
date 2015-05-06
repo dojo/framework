@@ -1,5 +1,6 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
+import has from 'src/has';
 import * as lang from 'src/lang';
 import {PropertyEvent} from 'src/observers/interfaces';
 
@@ -241,28 +242,139 @@ registerSuite({
 			'lateBind\'s additional arguments should be prepended to the wrapped function.');
 	},
 
-	'.observe()': function () {
-		var b: number;
-		var object = Object.create(Object.prototype, {
-			a: {
-				enumerable: false,
-				configurable: true,
-				value: 1
+	'.observe()': {
+		'property changes': function () {
+			let dfd = this.async(100);
+			let b: number;
+			let object = Object.create(Object.prototype, {
+				a: {
+					enumerable: false,
+					configurable: true,
+					writable: true,
+					value: 1
+				}
+			});
+			let observer = lang.observe(object, function (events: PropertyEvent[]): any {
+				let target = events[0].target;
+				b = (<any> target)[events[0].name];
+			});
+
+			observer.observeProperty('a');
+			object.a += 1;
+
+			setTimeout(dfd.callback(function () {
+				assert.equal(b, 2);
+				assert.isFalse(Object.getOwnPropertyDescriptor(object, 'a').enumerable);
+			}), 100);
+		},
+
+		'when attempting to observe an unwritable property': function () {
+			if (has('object-observe')) {
+				this.skip('This functionality is native to ES6 environments.');
 			}
-		});
-		var observer = lang.observe(object, function (events: PropertyEvent[]): any {
-			var target = events[0].target;
-			b = (<any> target)[events[0].name];
-		});
 
-		observer.observeProperty('a');
-		object.a += 1;
-		assert.equal(b, 2);
-		assert.isFalse(Object.getOwnPropertyDescriptor(object, 'a').enumerable);
+			let dfd = this.async(100);
+			let b: number;
+			let object = Object.create(Object.prototype, {
+				a: {
+					enumerable: false,
+					configurable: true,
+					writable: false,
+					value: 1
+				}
+			});
+			let observer = lang.observe(object, function (events: PropertyEvent[]): any {
+				let target = events[0].target;
+				b = (<any> target)[events[0].name];
+			});
 
-		observer.destroy();
-		object.a += 1;
-		assert.equal(b, 2);
+			observer.observeProperty('a');
+			object.a += 1;
+
+			setTimeout(dfd.callback(function () {
+				assert.isUndefined(b);
+			}), 100);
+		},
+
+		'when onlyReportObserved is true': function () {
+			if (!has('object-observe')) {
+				this.skip('This functionality is only available in ES6 environments');
+			}
+
+			let dfd = this.async(100);
+			let b: number;
+			let object: { a: number; b?: number } = { a: 1 };
+			let observer = lang.observe(object, function (events: PropertyEvent[]): any {
+				let target = events[0].target;
+				b = (<any> target)[events[0].name];
+			});
+
+			observer.observeProperty('a');
+			object.b = 3;
+
+			setTimeout(dfd.callback(function () {
+				assert.isUndefined(b);
+			}), 100);
+		},
+
+		'.observe() when onlyReportObserved is false': function () {
+			if (!has('object-observe')) {
+				this.skip('This functionality is only available in ES6 environments');
+			}
+
+			let dfd = this.async(100);
+			let b: number;
+			let object: { a: number; b?: number } = { a: 1 };
+			let observer = lang.observe(object, function (events: PropertyEvent[]): any {
+				console.log('here!!!!');
+				let target = events[0].target;
+				b = (<any> target)[events[0].name];
+			});
+
+			observer.onlyReportObserved = false;
+			object.b = 3;
+
+			setTimeout(dfd.callback(function () {
+				assert.equal(b, 3);
+			}), 100);
+		},
+
+		'handle.removeProperty()': function () {
+			let dfd = this.async(100);
+			let mirror: { a: number; b: string } = { a: null, b: null };
+			let object: { a: number; b: string } = { a: 1, b: 'Lorem' };
+			let observer = lang.observe(object, function (events: PropertyEvent[]): any {
+				let target = events[0].target;
+
+				(<any> mirror)[events[0].name] = (<any> target)[events[0].name];
+			});
+
+			observer.observeProperty('a', 'b');
+			observer.removeProperty('b');
+			object.a += 1;
+			object.b += ' ipsum';
+
+			setTimeout(dfd.callback(function () {
+				assert.equal(mirror.a, object.a);
+				assert.notEqual(mirror.b, object.b);
+			}), 100);
+		},
+
+		'handle.destroy()': function () {
+			let dfd = this.async(100);
+			let b: number;
+			let object = { a: 1 };
+			let observer = lang.observe(object, function (events: PropertyEvent[]): any {
+				let target = events[0].target;
+				b = (<any> target)[events[0].name];
+			});
+
+			observer.destroy();
+			object.a += 1;
+			setTimeout(dfd.callback(function () {
+				assert.isUndefined(b);
+			}), 100);
+		}
 	},
 
 	'.partial()': function () {
