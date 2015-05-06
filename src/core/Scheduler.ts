@@ -1,5 +1,11 @@
 import { Handle } from './interfaces';
-import { QueueItem, queueTask } from './queue';
+import { QueueItem, queueTask, queueDomTask, queueMicroTask } from './queue';
+
+let typeMap: { [key: string]: (callback: (...args: any[]) => any) => Handle; } = {
+	'macro': queueTask,
+	'micro': queueMicroTask,
+	'dom': queueDomTask
+};
 
 function getQueueHandle(item: Scheduler.Item): Handle {
 	return {
@@ -12,7 +18,18 @@ function getQueueHandle(item: Scheduler.Item): Handle {
 }
 
 export default class Scheduler {
+	/**
+	 * Determines whether any callbacks registered during should be added to the current batch (`false`)
+	 * or deferred until the next batch (`true`, default). If this is set to `false`, then any IDs passed
+	 * to callbacks registered by other callbacks in the batch will be ignored.
+	 */
 	deferWhileProcessing: boolean;
+
+	/**
+	 * Allows users to specify the type of task that should be scheduled.
+	 * Accepted values are 'macro' (default), 'micro', and 'dom'.
+	 */
+	type: string;
 
 	protected _boundDispatch: () => void;
 	protected _deferred: Scheduler.Item[];
@@ -23,6 +40,7 @@ export default class Scheduler {
 
 	constructor(kwArgs?: Scheduler.KwArgs) {
 		this.deferWhileProcessing = (kwArgs && 'deferWhileProcessing' in kwArgs) ? kwArgs.deferWhileProcessing : true;
+		this.type = (kwArgs && kwArgs.type && kwArgs.type in typeMap) ? kwArgs.type : 'macro';
 
 		this._boundDispatch = this._dispatch.bind(this);
 		this._isProcessing = false;
@@ -95,7 +113,7 @@ export default class Scheduler {
 		let id: string = item.id;
 
 		if (!this._task) {
-			this._task = queueTask(this._boundDispatch);
+			this._task = typeMap[this.type](this._boundDispatch);
 		}
 
 		// Specifying an ID only makes sense when the queue is still being built. Once the loop
@@ -120,7 +138,8 @@ export default class Scheduler {
 
 module Scheduler {
 	export interface KwArgs {
-		deferWhileProcessing: boolean;
+		deferWhileProcessing?: boolean;
+		type?: string;
 	}
 
 	export interface Item extends QueueItem {
