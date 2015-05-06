@@ -7,8 +7,10 @@ import ReadableStream, { State } from 'src/streams/ReadableStream';
 import ReadableStreamController from 'src/streams/ReadableStreamController';
 import { ReadResult } from 'src/streams/ReadableStreamReader';
 import { Strategy } from 'src/streams/interfaces';
-import WritableStream, { State as WritableState } from 'src/streams/WritableStream';
 import Promise from 'src/Promise';
+import TransformStream, { Transform } from 'src/streams/TransformStream';
+import WritableStream, { State as WritableState } from 'src/streams/WritableStream';
+
 
 var strategy: Strategy<string>;
 var asyncTimeout = 1000;
@@ -534,15 +536,7 @@ registerSuite({
 			var sink = new ArraySink<string>();
 			var outStream = new WritableStream(sink);
 
-			var source = new BaseStringSource();
-			source.start = (controller: ReadableStreamController<string>): Promise<void> => {
-				controller.enqueue('test 1');
-				controller.enqueue('test 2');
-				controller.enqueue('test 3');
-				controller.close();
-				return Promise.resolve();
-			};
-			var inStream = new ReadableStream(source);
+			var inStream = new ReadableStream(buildEnqueuingStartSource());
 			inStream.pipeTo(outStream).then(dfd.callback(() => {
 				assert.equal(3, sink.chunks.length);
 				assert.equal(State.Closed, inStream.state);
@@ -690,6 +684,23 @@ registerSuite({
 				})
 			);
 		}
+	},
+
+	'pipeThrough'() {
+		var dfd = this.async(asyncTimeout);
+		var sink = new ArraySink<string>();
+		var outStream = new WritableStream(sink);
+
+		var inStream = new ReadableStream(buildEnqueuingStartSource());
+		inStream.pipeThrough(new TransformStream(new PrefixerTransform('-transformed')))
+			.pipeTo(outStream).then(dfd.callback(() => {
+				assert.equal(3, sink.chunks.length);
+				assert.equal('test 1-transformed', sink.chunks[0]);
+				assert.equal('test 2-transformed', sink.chunks[1]);
+				assert.equal('test 3-transformed', sink.chunks[2]);
+			}), dfd.rejectOnError(() => {
+				assert.fail();
+			}));
 	}
 });
 
@@ -704,3 +715,23 @@ function buildEnqueuingStartSource() {
 	};
 	return source;
 }
+
+class PrefixerTransform implements Transform<string, string> {
+	private prefix: string;
+	readableStrategy: Strategy<string>;
+	writableStrategy: Strategy<string>;
+
+	constructor(prefix: string) {
+		this.prefix = prefix;
+	}
+
+	transform(chunk: string, enqueue: (chunk: string) => void, transformDone: () => void): void {
+		enqueue(chunk + this.prefix);
+		transformDone();
+	}
+
+	flush(enqueue: Function, close: Function): void {
+		close();
+	}
+}
+

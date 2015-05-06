@@ -182,7 +182,7 @@ export default class ReadableStream<T> {
 		this._pull();
 	}
 
-	error(error: Error) {
+	error(error: Error): void {
 		if (this.state !== State.Readable) {
 			throw new Error('3.5.7-1: State must be Readable');
 		}
@@ -192,7 +192,7 @@ export default class ReadableStream<T> {
 		this.state = State.Errored;
 
 		if (this.locked) {
-			return this._reader._release();
+			this._reader._release();
 		}
 	}
 

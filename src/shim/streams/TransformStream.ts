@@ -15,8 +15,7 @@ export default class TransformStream<R, W> {
 	readable: ReadableStream<R>;
 	writable: WritableStream<W>;
 
-	constructor(args: Transform<R, W>) {
-		let { transform, flush, writableStrategy, readableStrategy } = args;
+	constructor(transformer: Transform<R, W>) {
 		let writeChunk: W;
 		let writeDone: () => void;
 		let errorWritable: (error?: any) => void;
@@ -46,7 +45,7 @@ export default class TransformStream<R, W> {
 
 			close(): Promise<void> {
 				try {
-					flush(enqueueInReadable, closeReadable);
+					transformer.flush(enqueueInReadable, closeReadable);
 					return Promise.resolve();
 				} catch (e) {
 					errorWritable(e);
@@ -54,7 +53,7 @@ export default class TransformStream<R, W> {
 					return Promise.reject(e);
 				}
 			}
-		}, writableStrategy);
+		}, transformer.writableStrategy);
 
 		this.readable = new ReadableStream(<Source <R>> {
 			start(controller: ReadableStreamController<R>): Promise<void> {
@@ -74,13 +73,13 @@ export default class TransformStream<R, W> {
 			cancel(): Promise<void> {
 				return Promise.resolve();
 			}
-		}, readableStrategy);
+		}, transformer.readableStrategy);
 
 		function maybeDoTransform() {
 			if (!transforming) {
 				transforming = true;
 				try {
-					transform(writeChunk, enqueueInReadable, transformDone);
+					transformer.transform(writeChunk, enqueueInReadable, transformDone);
 					writeChunk = undefined;
 					chunkWrittenButNotYetTransformed = false;
 				} catch (e) {
