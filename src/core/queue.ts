@@ -2,7 +2,8 @@ import global from './global';
 import { Handle } from './interfaces';
 import has, { add as hasAdd } from './has';
 
-hasAdd('postmessage', 'postMessage' in global);
+hasAdd('postmessage', typeof postMessage === 'function');
+hasAdd('raf', typeof requestAnimationFrame === 'function');
 
 function executeTask(item: QueueItem): void {
 	if (item.isActive) {
@@ -10,12 +11,16 @@ function executeTask(item: QueueItem): void {
 	}
 }
 
-function getQueueHandle(item: QueueItem): Handle {
+function getQueueHandle(item: QueueItem, destructor?: (...args: any[]) => any): Handle {
 	return {
 		destroy: function () {
 			this.destroy = function () {};
 			item.isActive = false;
 			item.callback = null;
+
+			if (destructor) {
+				destructor();
+			}
 		}
 	};
 }
@@ -32,6 +37,7 @@ export interface QueueItem {
 
 export let queueTask = (function() {
 	let enqueue: (item: QueueItem) => void;
+	let destructor: (...args: any[]) => any;
 
 	// Since the IE implementation of `setImmediate` is not flawless, we will test for
 	// `postMessage` first.
@@ -55,13 +61,15 @@ export let queueTask = (function() {
 		};
 	}
 	else if (has('setimmediate')) {
-		enqueue = function (item: QueueItem): void {
-			setImmediate(executeTask.bind(null, item));
+		destructor = global.clearImmediate;
+		enqueue = function (item: QueueItem): any {
+			return setImmediate(executeTask.bind(null, item));
 		};
 	}
 	else {
-		enqueue = function (item: QueueItem): void {
-			setTimeout(executeTask.bind(null, item), 0);
+		destructor = global.clearTimeout;
+		enqueue = function (item: QueueItem): any {
+			return setTimeout(executeTask.bind(null, item), 0);
 		};
 	}
 
@@ -71,15 +79,39 @@ export let queueTask = (function() {
 			callback: callback
 		};
 
-		enqueue(item);
+		let id: any = enqueue(item);
 
-		return getQueueHandle(item);
+		return getQueueHandle(item, destructor && function () {
+			destructor(id);
+		});
+	};
+})();
+
+/**
+ * Since requestAnimationFrame's behavior does not match that expected from `queueTask`, it is not used there.
+ * However, at times it makes more sense to delegate to requestAnimationFrame; hence the following method.
+ */
+export let queueDomTask = (function () {
+	if (!has('raf')) {
+		return queueTask;
+	}
+
+	return function (callback: (...args: any[]) => any): Handle {
+		let item: QueueItem = {
+			isActive: true,
+			callback: callback
+		};
+
+		let rafId: number = requestAnimationFrame(executeTask.bind(null, item));
+
+		return getQueueHandle(item, function () {
+			cancelAnimationFrame(rafId);
+		});
 	};
 })();
 
 export let queueMicroTask = (function () {
-	// TODO: Should ./Promise be imported for the `has('promise')` test?
-	let hasPromise: boolean = ('Promise' in global);
+	let hasPromise = has('promise');
 	let nodeVersion: string = has('host-node');
 	let enqueue: (item: QueueItem) => void;
 
