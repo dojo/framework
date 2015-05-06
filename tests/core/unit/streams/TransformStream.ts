@@ -34,7 +34,6 @@ class CharToCodeTransform implements Transform<number, string> {
 
 	flush(enqueue: Function, close: Function): void {
 		close();
-		return;
 	}
 }
 
