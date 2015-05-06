@@ -1,8 +1,7 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 import CountQueuingStrategy from 'src/streams/CountQueuingStrategy';
-import WritableStream, { State } from 'src/streams/WritableStream';
-import { Sink } from 'src/streams/interfaces';
+import WritableStream, { Sink, State } from 'src/streams/WritableStream';
 import Promise from 'src/Promise';
 import ManualSink from './helpers/ManualSink';
 
