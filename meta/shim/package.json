@@ -21,8 +21,9 @@
 		"grunt-string-replace": "^1.2.0",
 		"grunt-ts": "3.0.0",
 		"grunt-tslint": "2.0.0",
+		"tslint": "2.1.1",
 		"intern": "2.2.2",
 		"requirejs": "2.1.17",
-		"typescript": "https://github.com/csnover/TypeScript/archive/0.20150422.0+378b5ffd1af2249658c8b7a3dc7465d911af93ff.tar.gz"
+		"typescript": "Arnavion/typescript-github#2015-05-06-3d0daef8eb08104920f9272b32d414b9266a5d78"
 	}
 }
