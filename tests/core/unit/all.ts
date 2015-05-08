@@ -1,6 +1,7 @@
 import './array';
 import './global';
 import './has';
+import './observers/ObjectObserver';
 import './lang';
 import './string';
 import './math';
