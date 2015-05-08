@@ -1,61 +1,68 @@
-# Dojo 2 core [![Build Status](https://travis-ci.org/dojo/dojo2.png)](https://travis-ci.org/sitepen/core)
+# Dojo 2 core
 
-## Modules
+This package provides a set of language helpers, utility functions, and classes for writing TypeScript applications.
+It includes APIs for feature detection, asynchronous and streaming operations, basic event handling,
+and making HTTP requests.
 
-### core/lang
+## Features
 
-### core/async
+### Feature Detection
 
-`core/async` contains a number of classes and utility modules to simplify working with asynchronous operations.
-
-#### Promise
-
-The `Promise` class extends `dojo-core/Promise` with several new features, including static state inspection, cancelation support, and a `finally` method for easy cleanup.
-
-### core/has
-
-Using the latest Web technologies isn't always as straight forward as developers would like due to differing support across browsers. `core/has` provides a simple feature detection API that makes it easy to detect which browsers support which features.
-
-This module is lazily instantiated. Code that determines if the feature is detected is not executed until the feature is actually requested. The return value is then cached for future calls for the same feature.
+Using the latest Web technologies isn't always as straightforward as developers would like due to differing support
+across platforms. `dojo-core/has` provides a simple feature detection API that makes it easy to detect which platforms
+support which features.
 
 #### Detecting Features
 
-`core/has` returns a function that accepts a single parameter: the name of the feature to test for. If the feature is available, a truthy value is returned, otherwise a falsy value is returned:
+The default export of `dojo-core/has` is a function which accepts a single parameter: the name of the feature to test for.
+If the feature is available, a truthy value is returned, otherwise a falsy value is returned:
 
-```js
-if (has('add-eventlistener')) {
-    element.addEventListener('click', function () { /* ... */ })
+```ts
+if (has('dom-addeventlistener')) {
+    element.addEventListener('click', function () { /* ... */ });
 }
 ```
 
 #### Adding Feature Detections
 
-It's important to be able to add new feature tests that aren't provided out-of-the-box by `core/has`.This can be done easily by using the `has.add` function. It accepts two parameters: the name of the feature and either a boolean value indicating its availability or a function that resolves to a truthy or falsy value:
+It's important to be able to add new feature tests that aren't provided out-of-the-box by `dojo-core/has`.
+This can be done easily by using the `add` function exported by the `has` module. It accepts two parameters:
+the name of the feature, and either an immediate value indicating its availability or a function that resolves to a
+value.
 
-```js
-has.add('queryselector', 'querySelector' in document && 'querySelectorAll' in document);
+When a function is passed, the feature will be lazily evaluated - i.e. the function is not executed until the feature is
+actually requested. The return value is then cached for future calls for the same feature.
+
+```ts
+import { add as hasAdd } from 'dojo-core/has';
+hasAdd('dom-queryselector', 'querySelector' in document && 'querySelectorAll' in document);
 
 // Lazily executed; useful if a polyfill is loaded after page load
-has.add('typedarray', function () {
+hasAdd('typedarray', function () {
     return 'ArrayBuffer' in window;
 });
-
 ```
 
 #### Accessing the Feature Cache
 
-`core/has` maintains an object containing keys that correspond to all features that have been both registered _and_ requested. The value associated with each feature name key corresponds to that feature's availability in the current browser. This object is accessed via `has.cache`.
+`dojo-core/has` maintains object hashes containing keys that correspond to all features that have been both
+registered _and_ requested. The value associated with each feature name key corresponds to that feature's availability
+in the current environment. The object hash containing evaluated features is accessible via the `cache` export.
+
+## Promises and Asynchronous Operations
+
+`dojo-core/Promise` implements an extensible, ES2015-compatible Promise shim,
+which includes state reporting and a `finally` method.
+
+`dojo-core/async` contains a number of utilities to simplify working with asynchronous operations.
 
 ## How do I use this package?
 
-Users will need to download and compile directly from the repository for the time being. Precompiled AMD modules will be provided in the near future as our release tools are improved.
+Users will need to download and compile directly from the repository for the time being. Precompiled AMD/CommonJS modules will be provided in the near future as our release tools are improved.
 
 ## How do I contribute?
 
-1. [Open an issue](https://github.com/sitepen/core/issues) for the work you are going to do.
-2. Sign the [Dojo Foundation Contributor License Agreement](http://dojofoundation.org/about/claForm).
-   You only need to do this once to contribute to all Dojo Foundation projects.
-3. Submit a pull request!
+We appreciate your interest!  Please see the [contributing guidelines](CONTRIBUTING.md).
 
 ## Testing
 
