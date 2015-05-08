@@ -1,7 +1,6 @@
 import global from './global';
-declare var process: any;
-export var cache: { [feature: string]: any; } = Object.create(null);
-var testFunctions: { [feature: string]: () => any } = Object.create(null);
+export let cache: { [feature: string]: any; } = Object.create(null);
+let testFunctions: { [feature: string]: () => any } = Object.create(null);
 
 /**
  * Register a new test for a named feature.
@@ -33,7 +32,7 @@ export function add(feature: string, value: any, overwrite: boolean = false): vo
  * @return The value of a given feature test
  */
 export default function has(feature: string): any {
-	var result: any;
+	let result: any;
 
 	if (testFunctions[feature]) {
 		result = cache[feature] = testFunctions[feature].call(null);

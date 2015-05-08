@@ -76,13 +76,13 @@ export function from<T>(arrayLike: (string | ArrayLike<T>), mapFunction?: MapCal
 		mapFunction = mapFunction.bind(thisArg);
 	}
 
-	var Constructor: any = this;
-	var items: ArrayLike<any> = Object(arrayLike);
-	var length: number = toLength(items.length);
+	const Constructor: any = this;
+	const items: ArrayLike<any> = Object(arrayLike);
+	const length: number = toLength(items.length);
 	// Support extension
-	var array: any[] = (typeof Constructor === 'function') ? <any[]> Object(new Constructor(length)) : new Array(length);
+	const array: any[] = (typeof Constructor === 'function') ? <any[]> Object(new Constructor(length)) : new Array(length);
 
-	for (var i = 0, value: any; i < length; i++) {
+	for (let i = 0, value: any; i < length; i++) {
 		value = items[i];
 		array[i] = mapFunction ? mapFunction(value, i) : value;
 	}
@@ -113,14 +113,12 @@ export function of() {
  * @return The filled target
  */
 export function fill<T>(target: ArrayLike<T>, value: any, start?: number, end?: number): ArrayLike<T> {
-	var len = toLength(target.length);
-	start = toInteger(start);
-	end = end ? toInteger(end) : len;
+	const length = toLength(target.length);
+	let i = normalizeOffset(toInteger(start), length);
+	end = normalizeOffset(end ? toInteger(end) : length, length);
 
-	var i = normalizeOffset(start, len);
-	var final = normalizeOffset(end, len);
-	for (; i < final; i++) {
-		target[i] = value;
+	while (i < end) {
+		target[i++] = value;
 	}
 
 	return target;
@@ -136,7 +134,7 @@ export function fill<T>(target: ArrayLike<T>, value: any, start?: number, end?: 
  * @return The first index whose value satisfies the passed callback, or -1 if no values satisfy it
  */
 export function findIndex<T>(target: ArrayLike<T>, callback: FindCallback<T>, thisArg?: {}): number {
-	var len = toLength(target.length);
+	const length = toLength(target.length);
 
 	if (!callback) {
 		throw new TypeError('find: second argument must be a function');
@@ -146,7 +144,7 @@ export function findIndex<T>(target: ArrayLike<T>, callback: FindCallback<T>, th
 		callback = callback.bind(thisArg);
 	}
 
-	for (var i = 0; i < len; i++) {
+	for (let i = 0; i < length; i++) {
 		if (callback(target[i], i, target)) {
 			return i;
 		}
@@ -164,7 +162,7 @@ export function findIndex<T>(target: ArrayLike<T>, callback: FindCallback<T>, th
  * @return The first element matching the callback, or undefined if one does not exist
  */
 export function find<T>(target: ArrayLike<T>, callback: FindCallback<T>, thisArg?: {}): T {
-	var index = findIndex<T>(target, callback, thisArg);
+	const index = findIndex<T>(target, callback, thisArg);
 	return index !== -1 ? target[index] : undefined;
 }
 
@@ -182,11 +180,11 @@ export function copyWithin<T>(target: ArrayLike<T>, offset: number, start?: numb
 		throw new TypeError('copyWithin: target must be an array-like object');
 	}
 
-	var length = toLength(target.length);
+	const length = toLength(target.length);
 	offset = normalizeOffset(toInteger(offset), length);
 	start = normalizeOffset(toInteger(start), length);
 	end = normalizeOffset(end ? toInteger(end) : length, length);
-	var count = Math.min(end - start, length - offset);
+	let count = Math.min(end - start, length - offset);
 
 	var direction = 1;
 	if (offset > start && offset < (start + count)) {
