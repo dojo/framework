@@ -1,5 +1,5 @@
-import { Sink } from './WritableStream';
 import Promise from '../Promise';
+import { Sink } from './WritableStream';
 
 /**
  * A WritableStream sink that collects the chunks it receives and

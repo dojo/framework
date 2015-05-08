@@ -1,7 +1,7 @@
-import * as util from './util';
 import { Strategy } from './interfaces';
-import SizeQueue from './SizeQueue';
 import Promise from '../Promise';
+import SizeQueue from './SizeQueue';
+import * as util from './util';
 
 var SinkMethod = {
 	abort: 'abort',
@@ -17,6 +17,15 @@ interface Record<T> {
 	resolve?: () => void;
 }
 
+/**
+ * WritableStream's possible states
+ */
+export enum State { Closed, Closing, Errored, Waiting, Writable }
+
+function isWritableStream(x: any): boolean {
+	return Object.prototype.hasOwnProperty.call(x, '_underlyingSink');
+}
+
 export interface Sink<T> {
 
 	abort(reason?: any): Promise<void>;
@@ -29,13 +38,42 @@ export interface Sink<T> {
 }
 
 export default class WritableStream<T> {
+	get closed(): Promise<void> {
+		if (isWritableStream(this)) {
+			return this._closedPromise;
+		}
+		else {
+			// 4.2.4.1-1
+			return Promise.reject(new TypeError('Must be a WritableStream'));
+		}
+	}
+
+	get ready(): Promise<void> {
+		if (isWritableStream(this)) {
+			return this._readyPromise;
+		}
+		else {
+			// 4.2.4.2-1
+			return Promise.reject(new TypeError('Must be a WritableStream'));
+		}
+	}
+
+	get state(): State {
+		if (isWritableStream(this)) {
+			return this._state;
+		}
+		else {
+			// 4.2.4.3-1
+			throw new TypeError('Must be a WritableStream');
+		}
+	}
+
 	protected _advancing: boolean;
 	protected _closedPromise: Promise<void>;
-	protected _queue: SizeQueue<Record<T>>;
-	protected _rejectClosedPromise: (error: Error) => void;
-	protected _resolveClosedPromise: () => void;
 	protected _readyPromise: Promise<void>;
+	protected _rejectClosedPromise: (error: Error) => void;
 	protected _rejectReadyPromise: (error: Error) => void;
+	protected _resolveClosedPromise: () => void;
 	protected _resolveReadyPromise: () => void;
 	protected _started: boolean;
 	protected _startedPromise: Promise<any>;
@@ -43,6 +81,7 @@ export default class WritableStream<T> {
 	protected _storedError: Error;
 	protected _strategy: Strategy<T>;
 	protected _underlyingSink: Sink<T>;
+	protected _queue: SizeQueue<Record<T>>;
 	protected _writing: boolean;
 
 	constructor(underlyingSink: Sink<T>, strategy: Strategy<T> = {}) {
@@ -74,136 +113,6 @@ export default class WritableStream<T> {
 		});
 	}
 
-	abort(reason: any): Promise<void> {
-		if (!isWritableStream(this)) {
-			// 4.2.4.4-1
-			return Promise.reject(new TypeError('Must be a WritableStream'));
-		}
-
-		if (this.state === State.Closed) {
-			// 4.2.4.4-2
-			return Promise.resolve();
-		}
-
-		if (this.state === State.Errored) {
-			// 4.2.4.4-3
-			return Promise.reject(this._storedError);
-		}
-
-		var error: Error = reason instanceof Error ? reason : new Error(reason);
-
-		this._error(error);
-
-		return util.promiseInvokeOrFallbackOrNoop(this._underlyingSink, SinkMethod.abort, [reason], SinkMethod.close)
-			.then(() => {
-			return;
-		});
-	}
-
-	write(chunk: T): Promise<void> {
-		// 4.2.4.6-1
-		if (!isWritableStream(this) ||
-			// 4.2.4.6-2
-			this.state === State.Closed ||
-			this.state === State.Closing
-		) {
-			return Promise.reject(new TypeError('Must be a WritableStream'));
-		}
-
-		if (this.state === State.Errored) {
-			// 4.2.4.6-3
-			return Promise.reject(this._storedError);
-		}
-
-		var chunkSize = 1;
-		var writeRecord: Record<T>;
-		var promise = new Promise<void>((resolve, reject) => {
-			writeRecord = {
-				chunk: chunk,
-				reject: reject,
-				resolve: resolve
-			};
-		});
-
-		// 4.2.4.6-6.b
-		try {
-			if (this._strategy && this._strategy.size) {
-				chunkSize = this._strategy.size(chunk);
-			}
-
-			this._queue.enqueue(writeRecord, chunkSize);
-			this._syncStateWithQueue();
-		}
-		catch (error) {
-			// 4.2.4.6-6.b, 4.2.4.6-10, 4.2.4.6-12
-			this._error(error);
-			return Promise.reject(error);
-		}
-
-		this._advanceQueue();
-
-		return promise;
-	}
-
-	close(): Promise<void> {
-		// 4.2.4.5-1
-		if (!isWritableStream(this) ||
-			// 4.2.4.5-2
-			this.state === State.Closed ||
-			this.state === State.Closing
-		) {
-			return Promise.reject(new TypeError('Must be a WritableStream'));
-		}
-
-		if (this.state === State.Errored) {
-			// 4.2.4.5-3
-			return Promise.reject(this._storedError);
-		}
-
-		if (this.state === State.Waiting) {
-			// 4.2.4.5-4
-			this._resolveReadyPromise();
-		}
-
-		this._state = State.Closing;
-
-		this._queue.enqueue({ close: true }, 0);
-
-		this._advanceQueue();
-
-		return this._closedPromise;
-	}
-
-	get closed(): Promise<void> {
-		if (isWritableStream(this)) {
-			return this._closedPromise;
-		}
-		else {
-			// 4.2.4.1-1
-			return Promise.reject(new TypeError('Must be a WritableStream'));
-		}
-	}
-
-	get ready(): Promise<void> {
-		if (isWritableStream(this)) {
-			return this._readyPromise;
-		}
-		else {
-			// 4.2.4.2-1
-			return Promise.reject(new TypeError('Must be a WritableStream'));
-		}
-	}
-
-	get state(): State {
-		if (isWritableStream(this)) {
-			return this._state;
-		}
-		else {
-			// 4.2.4.3-1
-			throw new TypeError('Must be a WritableStream');
-		}
-	}
-
 	// This method combines the logic of two methods:
 	// 4.3.1 CallOrScheduleWritableStreamAdvanceQueue
 	// 4.3.6 WritableStreamAdvanceQueue
@@ -223,7 +132,7 @@ export default class WritableStream<T> {
 			return;
 		}
 
-		var writeRecord: Record<T> = this._queue.peek();
+		const writeRecord: Record<T> = this._queue.peek();
 
 		if (writeRecord.close) {
 			// TODO: SKIP? Assert 4.3.6-3.a
@@ -285,7 +194,7 @@ export default class WritableStream<T> {
 			return;
 		}
 
-		var writeRecord: Record<T>;
+		let writeRecord: Record<T>;
 
 		while (this._queue.length) {
 			writeRecord = this._queue.dequeue();
@@ -311,8 +220,8 @@ export default class WritableStream<T> {
 			return;
 		}
 
-		var queueSize = this._queue.totalSize;
-		var shouldApplyBackPressure = queueSize > this._strategy.highWaterMark;
+		const queueSize = this._queue.totalSize;
+		const shouldApplyBackPressure = queueSize > this._strategy.highWaterMark;
 
 		if (shouldApplyBackPressure && this.state === State.Writable) {
 			this._state = State.Waiting;
@@ -327,13 +236,105 @@ export default class WritableStream<T> {
 			this._resolveReadyPromise();
 		}
 	}
+
+	abort(reason: any): Promise<void> {
+		if (!isWritableStream(this)) {
+			// 4.2.4.4-1
+			return Promise.reject(new TypeError('Must be a WritableStream'));
+		}
+
+		if (this.state === State.Closed) {
+			// 4.2.4.4-2
+			return Promise.resolve();
+		}
+
+		if (this.state === State.Errored) {
+			// 4.2.4.4-3
+			return Promise.reject(this._storedError);
+		}
+
+		const error: Error = reason instanceof Error ? reason : new Error(reason);
+
+		this._error(error);
+
+		return util.promiseInvokeOrFallbackOrNoop(this._underlyingSink, SinkMethod.abort, [reason], SinkMethod.close)
+			.then(() => {
+			return;
+		});
+	}
+
+	close(): Promise<void> {
+		// 4.2.4.5-1
+		if (!isWritableStream(this) ||
+			// 4.2.4.5-2
+			this.state === State.Closed ||
+			this.state === State.Closing
+		) {
+			return Promise.reject(new TypeError('Must be a WritableStream'));
+		}
+
+		if (this.state === State.Errored) {
+			// 4.2.4.5-3
+			return Promise.reject(this._storedError);
+		}
+
+		if (this.state === State.Waiting) {
+			// 4.2.4.5-4
+			this._resolveReadyPromise();
+		}
+
+		this._state = State.Closing;
+
+		this._queue.enqueue({ close: true }, 0);
+
+		this._advanceQueue();
+
+		return this._closedPromise;
+	}
+
+	write(chunk: T): Promise<void> {
+		// 4.2.4.6-1
+		if (!isWritableStream(this) ||
+			// 4.2.4.6-2
+			this.state === State.Closed ||
+			this.state === State.Closing
+		) {
+			return Promise.reject(new TypeError('Must be a WritableStream'));
+		}
+
+		if (this.state === State.Errored) {
+			// 4.2.4.6-3
+			return Promise.reject(this._storedError);
+		}
+
+		let chunkSize = 1;
+		let writeRecord: Record<T>;
+		let promise = new Promise<void>((resolve, reject) => {
+			writeRecord = {
+				chunk: chunk,
+				reject: reject,
+				resolve: resolve
+			};
+		});
+
+		// 4.2.4.6-6.b
+		try {
+			if (this._strategy && this._strategy.size) {
+				chunkSize = this._strategy.size(chunk);
+			}
+
+			this._queue.enqueue(writeRecord, chunkSize);
+			this._syncStateWithQueue();
+		}
+		catch (error) {
+			// 4.2.4.6-6.b, 4.2.4.6-10, 4.2.4.6-12
+			this._error(error);
+			return Promise.reject(error);
+		}
+
+		this._advanceQueue();
+
+		return promise;
+	}
 }
 
-/**
- * WritableStream's possible states
- */
-export enum State { Closed, Closing, Errored, Waiting, Writable }
-
-function isWritableStream(x: any): boolean {
-	return Object.prototype.hasOwnProperty.call(x, '_underlyingSink');
-}
