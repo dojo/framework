@@ -18,12 +18,12 @@
 		"grunt-contrib-clean": "0.6.0",
 		"grunt-contrib-copy": "0.8.0",
 		"grunt-contrib-watch": "0.6.1",
-		"grunt-string-replace": "^1.2.0",
+		"grunt-text-replace": "0.4.0",
 		"grunt-ts": "3.0.0",
 		"grunt-tslint": "2.0.0",
 		"tslint": "2.1.1",
 		"intern": "2.2.2",
 		"requirejs": "2.1.17",
-		"typescript": "Arnavion/typescript-github#2015-05-06-3d0daef8eb08104920f9272b32d414b9266a5d78"
+		"typescript": "Arnavion/typescript-github#2015-05-07-e1d05150f6acef05452772192a4abdfc7eb671eb"
 	}
 }

@@ -1,5 +1,5 @@
 /// <reference path="../dojo2/dojo.d.ts" />
-/// <reference path="../node/node.d.ts" />
+/// <reference path="../../../typings/node/node.d.ts" />
 
 declare module leadfoot {
 //	import request = require('dojo/request');
