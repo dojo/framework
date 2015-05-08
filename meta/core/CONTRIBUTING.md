@@ -29,7 +29,7 @@ If your desired contribution is more than a non-trivial fix, you should discuss 
 
 We require all contributions to be covered under the Dojo Foundation's [Contributor License Agreement][cla].  This can
 be done electronically and essentially ensures that you are making it clear that your contributions are your
-contributions, you have the legal right to contribute and you are transferring the copyright of your works to the Dojo 
+contributions, you have the legal right to contribute and you are transferring the copyright of your works to the Dojo
 Foundation.
 
 If you are an unfamiliar contributor to the committer assessing your pull request, it is best to make it clear how
@@ -216,7 +216,7 @@ unfamiliar to those who are just starting to contribute.
 [claCheck]: http://dojofoundation.org/about/claCheck
 [Creating a Pull Request]: https://help.github.com/articles/creating-a-pull-request
 [Fork a Repo]: https://help.github.com/articles/fork-a-repo
-[styleguide]: http://dojotoolkit.org/reference-guide/developer/styleguide.html
+[styleguide]: STYLE.md
 [JSDoc]: http://usejsdoc.org
 [Intern]: https://theintern.github.io
 [interactive rebase]: http://git-scm.com/book/en/Git-Tools-Rewriting-History#Changing-Multiple-Commit-Messages
