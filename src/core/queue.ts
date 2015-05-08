@@ -111,25 +111,19 @@ export let queueDomTask = (function () {
 })();
 
 export let queueMicroTask = (function () {
-	let hasPromise = has('promise');
-	let nodeVersion: string = has('host-node');
 	let enqueue: (item: QueueItem) => void;
 
-	if (!hasPromise && !nodeVersion && !has('dom-mutationobserver')) {
-		return queueTask;
-	}
-
-	if (hasPromise) {
+	if (has('promise')) {
 		enqueue = function (item: QueueItem): void {
 			global.Promise.resolve(item).then(executeTask);
 		};
 	}
-	else if (nodeVersion) {
+	else if (has('host-node')) {
 		enqueue = function (item: QueueItem): void {
 			global.process.nextTick(executeTask.bind(null, item));
 		};
 	}
-	else {
+	else if (has('dom-mutationobserver')) {
 		let HostMutationObserver = global.MutationObserver || global.WebKitMutationObserver;
 		let queue: QueueItem[] = [];
 		let node = document.createElement('div');
@@ -147,6 +141,9 @@ export let queueMicroTask = (function () {
 			queue.push(item);
 			node.setAttribute('queueStatus', '1');
 		};
+	}
+	else {
+		return queueTask;
 	}
 
 	return function (callback: (...args: any[]) => any): Handle {
