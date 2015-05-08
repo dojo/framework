@@ -23,7 +23,7 @@ registerSuite({
 	beforeEach() {
 		source = new BaseStringSource();
 		stream = new ReadableStream<string>(source, strategy);
-		controller = stream._controller;
+		controller = stream.controller;
 	},
 
 	'constructor': {
@@ -58,13 +58,13 @@ registerSuite({
 		};
 		var source = new BaseStringSource();
 		var stream = new ReadableStream<string>(source, strategy);
-		assert.equal(10, stream._controller.desiredSize);
+		assert.strictEqual(stream.controller.desiredSize, 10);
 	},
 
 	'close()': {
 		'calls close() on the ReadableStream'() {
 			var closeCalled = false;
-			stream._requestClose = () => { closeCalled = true; };
+			stream.requestClose = () => { closeCalled = true; };
 			controller.close();
 			assert.isTrue(closeCalled);
 		},
@@ -104,7 +104,7 @@ registerSuite({
 		},
 
 		'throws an error if a close has been requested'() {
-			stream._requestClose();
+			stream.requestClose();
 			assert.throws(() => {
 				controller.enqueue('foo');
 			});

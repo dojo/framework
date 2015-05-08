@@ -1,21 +1,16 @@
+import { Strategy } from './interfaces';
+import Promise from '../Promise';
 import ReadableStreamController from './ReadableStreamController';
 import ReadableStreamReader, { ReadResult } from './ReadableStreamReader';
-import TransformStream from './TransformStream';
-import WritableStream, { State as WriteableState } from './WritableStream';
-import * as util from './util';
-import { Strategy } from './interfaces';
 import SizeQueue from './SizeQueue';
-import Promise from '../Promise';
+import TransformStream from './TransformStream';
+import * as util from './util';
+import WritableStream, { State as WriteableState } from './WritableStream';
 
 /**
  * Options used when piping a readable stream to a writable stream.
  */
 export interface PipeOptions {
-	/**
-	 * Prevents the writable stream from closing when the pipe operation completes.
-	 */
-	preventClose?: boolean;
-
 	/**
 	 * Prevents the writable stream from erroring if the readable stream encounters an error.
 	 */
@@ -25,51 +20,43 @@ export interface PipeOptions {
 	 *  Prevents the readable stream from erroring if the writable stream encounters an error.
 	 */
 	preventCancel?: boolean;
+
+	/**
+	 * Prevents the writable stream from closing when the pipe operation completes.
+	 */
+	preventClose?: boolean;
 }
+
+
+export interface Source<T> {
+
+	start(controller: ReadableStreamController<T>): Promise<void>;
+
+	pull(controller: ReadableStreamController<T>): Promise<void>;
+
+	cancel(reason?: any): Promise<void>;
+}
+
+/**
+ * ReadableStream's possible states
+ */
+export enum State { Readable, Closed, Errored }
 
 /**
  * Implementation of a readable stream.
  */
 export default class ReadableStream<T> {
 
-	state: State;
-
-	_closeRequested: boolean = false;
-	_controller: ReadableStreamController<T>;
-	_pullingPromise: Promise<void>;
-	_pullScheduled: boolean;
-	_reader: ReadableStreamReader<T>;
-	_queue: SizeQueue<T>;
-	_started: boolean;
-	_startedPromise: Promise<void>;
-	_storedError: Error;
-	_strategy: Strategy<T>;
-	_underlyingSource: Source<T>;
-
 	/**
-	 * @constructor
+	 * @alias ShouldReadableStreamPull
 	 */
-	constructor(underlyingSource: Source<T>, strategy: Strategy<T> = {}) {
-		if (!underlyingSource) {
-			throw new Error('An ReadableStream Source must be provided.');
-		}
-		this.state = State.Readable;
-		this._underlyingSource = underlyingSource;
-		this._controller = new ReadableStreamController(this);
-		this._strategy = util.normalizeStrategy(strategy);
-		this._queue = new SizeQueue<T>();
-
-		this._startedPromise = new Promise<void>((resolveStarted) => {
-			var startResult = util.invokeOrNoop(this._underlyingSource, 'start', [this._controller]);
-			Promise.resolve(startResult).then(
-				() => {
-					this._started = true;
-					resolveStarted();
-					this._pull();
-				},
-				error => this.error(error)
-			);
-		});
+	protected get _allowPull(): boolean {
+		return !this.pullScheduled &&
+			!this.closeRequested &&
+			this._started &&
+			this.state !== State.Closed &&
+			this.state !== State.Errored &&
+			!this._shouldApplyBackPressure();
 	}
 
 	/**
@@ -80,28 +67,70 @@ export default class ReadableStream<T> {
 		return this._strategy.highWaterMark - this.queueSize;
 	}
 
-	get queueSize(): number {
-		return this._queue.totalSize;
+	get hasSource(): boolean {
+		return this._underlyingSource != null;
 	}
 
 	/**
-	 *
-	 * @param reason
-	 * @returns {null}
+	 * @alias IsReadableStreamLocked
 	 */
-	cancel(reason?: any): Promise<void> {
-		if (!this.hasSource) {
-			return Promise.reject(new TypeError('3.2.4.1-1: Must be a ReadableStream'));
-		}
-
-		if (this.locked) {
-			return Promise.reject(new TypeError('3.2.4.1-2: The stream is locked'));
-		}
-
-		return this._cancel(reason);
+	get locked(): boolean {
+		return this.hasSource && !!this.reader;
 	}
 
-	_cancel(reason?: any): Promise<void> {
+	get readable(): boolean {
+		return this.hasSource && this.state === State.Readable;
+	}
+
+	get started(): Promise<void> {
+		return this._startedPromise;
+	}
+
+	get queueSize(): number {
+		return this.queue.totalSize;
+	}
+
+	protected _pullingPromise: Promise<void>;
+	protected _started: boolean;
+	protected _startedPromise: Promise<void>;
+	protected _strategy: Strategy<T>;
+	protected _underlyingSource: Source<T>;
+
+	closeRequested: boolean = false;
+	controller: ReadableStreamController<T>;
+	pullScheduled: boolean;
+	queue: SizeQueue<T>;
+	reader: ReadableStreamReader<T>;
+	state: State;
+	storedError: Error;
+
+	/**
+	 * @constructor
+	 */
+	constructor(underlyingSource: Source<T>, strategy: Strategy<T> = {}) {
+		if (!underlyingSource) {
+			throw new Error('An ReadableStream Source must be provided.');
+		}
+		this.state = State.Readable;
+		this._underlyingSource = underlyingSource;
+		this.controller = new ReadableStreamController(this);
+		this._strategy = util.normalizeStrategy(strategy);
+		this.queue = new SizeQueue<T>();
+
+		this._startedPromise = new Promise<void>((resolveStarted) => {
+			const startResult = util.invokeOrNoop(this._underlyingSource, 'start', [this.controller]);
+			Promise.resolve(startResult).then(
+				() => {
+					this._started = true;
+					resolveStarted();
+					this.pull();
+				},
+				error => this.error(error)
+			);
+		});
+	}
+
+	protected _cancel(reason?: any): Promise<void> {
 		// 3.2.4.1-3: return cancelReadableStream(this, reason);
 		if (this.state === State.Closed) {
 			return Promise.resolve();
@@ -111,37 +140,44 @@ export default class ReadableStream<T> {
 			return Promise.reject(new TypeError('3.5.3-2: State is errored'));
 		}
 
-		this._queue.empty();
-		this._close();
+		this.queue.empty();
+		this.close();
 		return util.promiseInvokeOrNoop(this._underlyingSource, 'cancel', [reason]).then(() => undefined);
 	}
 
 	/**
-	 * Requests the stream be closed.  This method allows the queue to be emptied before the stream closes.
-	 *
-	 * 3.5.3. CloseReadableStream ( stream )
-	 * @alias CloseReadableStream
+	 * @alias shouldReadableStreamApplyBackPressure
 	 */
-	_requestClose(): void {
-		if (this._closeRequested || this.state !== State.Readable) {
-			return;
-		}
+	protected _shouldApplyBackPressure(): boolean {
+		const queueSize = this.queue.totalSize;
 
-		this._closeRequested = true;
-
-		if (this._queue.length === 0) {
-			this._close();
-		}
+		return queueSize > this._strategy.highWaterMark;
 	}
 
 	/**
-	 * Closes the stream without regard to the status of the queue.  Use {@link _requestClose} to close the
+	 *
+	 * @param reason
+	 * @returns {null}
+	 */
+	cancel(reason?: any): Promise<void> {
+		// if (!this.hasSource) {
+		// 	return Promise.reject(new TypeError('3.2.4.1-1: Must be a ReadableStream'));
+		// }
+
+		// if (this.locked) {
+		// 	return Promise.reject(new TypeError('3.2.4.1-2: The stream is locked'));
+		// }
+
+		return this._cancel(reason);
+	}
+
+	/**
+	 * Closes the stream without regard to the status of the queue.  Use {@link requestClose} to close the
 	 * stream and allow the queue to flush.
 	 *
 	 * 3.5.4. FinishClosingReadableStream ( stream )
-	 * @private
 	 */
-	_close(): void {
+	close(): void {
 		if (this.state !== State.Readable) {
 			return;
 		}
@@ -149,7 +185,7 @@ export default class ReadableStream<T> {
 		this.state = State.Closed;
 
 		if (this.locked) {
-			return this._reader._release();
+			return this.reader.release();
 		}
 	}
 
@@ -157,21 +193,20 @@ export default class ReadableStream<T> {
 	 * @alias EnqueueInReadableStream
 	 */
 	enqueue(chunk: T): void {
-		var chunkSize: number;
-		var size = this._strategy.size;
+		const size = this._strategy.size;
 
-		if (!this.readable || this._closeRequested) {
-			throw new Error('3.5.6-1,2: Stream._state should be Readable and stream._closeRequested should be true');
+		if (!this.readable || this.closeRequested) {
+			throw new Error('3.5.6-1,2: Stream._state should be Readable and stream.closeRequested should be true');
 		}
 
-		if (!this.locked || !this._reader.resolveReadRequest(chunk)) {
+		if (!this.locked || !this.reader.resolveReadRequest(chunk)) {
 
 			try {
-				chunkSize = 1;
+				let chunkSize = 1;
 				if (size) {
 					chunkSize = size(chunk);
 				}
-				this._queue.enqueue(chunk, chunkSize);
+				this.queue.enqueue(chunk, chunkSize);
 			}
 			catch (error) {
 				this.error(error);
@@ -179,7 +214,7 @@ export default class ReadableStream<T> {
 			}
 		}
 
-		this._pull();
+		this.pull();
 	}
 
 	error(error: Error): void {
@@ -187,12 +222,12 @@ export default class ReadableStream<T> {
 			throw new Error('3.5.7-1: State must be Readable');
 		}
 
-		this._queue.empty();
-		this._storedError = error;
+		this.queue.empty();
+		this.storedError = error;
 		this.state = State.Errored;
 
 		if (this.locked) {
-			this._reader._release();
+			this.reader.release();
 		}
 	}
 
@@ -208,33 +243,18 @@ export default class ReadableStream<T> {
 		return new ReadableStreamReader(this);
 	}
 
-	/**
-	 * @alias IsReadableStreamLocked
-	 */
-	get locked(): boolean {
-		return this.hasSource && !!this._reader;
-	}
-
-	get readable(): boolean {
-		return this.hasSource && this.state === State.Readable;
-	}
-
-	get hasSource(): boolean {
-		return this._underlyingSource != null;
-	}
-
 	pipeThrough(transformStream: TransformStream<T, any>, options?: PipeOptions): ReadableStream<T> {
 		this.pipeTo(transformStream.writable, options);
 		return transformStream.readable;
 	}
 
 	pipeTo(dest: WritableStream<T>, options: PipeOptions = {}): Promise<void> {
-		var source = this;
-		var resolvePipeToPromise: () => void;
-		var rejectPipeToPromise: (error: Error) => void;
-		var closedPurposefully = false;
-		var lastRead: any;
-		var reader: ReadableStreamReader<T>;
+		const source = this;
+		let resolvePipeToPromise: () => void;
+		let rejectPipeToPromise: (error: Error) => void;
+		let closedPurposefully = false;
+		let lastRead: any;
+		let reader: ReadableStreamReader<T>;
 
 		return new Promise<void>((resolve, reject) => {
 			resolvePipeToPromise = resolve;
@@ -287,7 +307,7 @@ export default class ReadableStream<T> {
 		}
 
 		function closeDest(): void {
-			var destState = dest.state;
+			const destState = dest.state;
 			if (!options.preventClose &&
 				(destState === WriteableState.Waiting || destState === WriteableState.Writable)) {
 
@@ -303,28 +323,42 @@ export default class ReadableStream<T> {
 	/**
 	 * @alias RequestReadableStreamPull
 	 */
-	_pull(): void {
+	pull(): void {
 		if (!this._allowPull) {
 			return;
 		}
 
 		if (this._pullingPromise) {
-			this._pullScheduled = true;
+			this.pullScheduled = true;
 			this._pullingPromise.then(() => {
-				this._pullScheduled = false;
-				this._pull();
+				this.pullScheduled = false;
+				this.pull();
 			});
 			return;
 		}
 
-		this._pullingPromise = util.promiseInvokeOrNoop(this._underlyingSource, 'pull', [this._controller]);
+		this._pullingPromise = util.promiseInvokeOrNoop(this._underlyingSource, 'pull', [this.controller]);
 		this._pullingPromise.then(() => {
 			this._pullingPromise = undefined;
 		}, e => this.error(e));
 	}
 
-	get started(): Promise<void> {
-		return this._startedPromise;
+	/**
+	 * Requests the stream be closed.  This method allows the queue to be emptied before the stream closes.
+	 *
+	 * 3.5.3. CloseReadableStream ( stream )
+	 * @alias CloseReadableStream
+	 */
+	requestClose(): void {
+		if (this.closeRequested || this.state !== State.Readable) {
+			return;
+		}
+
+		this.closeRequested = true;
+
+		if (this.queue.length === 0) {
+			this.close();
+		}
 	}
 
 	/**
@@ -337,9 +371,11 @@ export default class ReadableStream<T> {
 			throw new TypeError('3.2.4.5-1: must be a ReadableSream');
 		}
 
-		// var shouldBranch = false;
-		var reader = this.getReader();
-		var teeState: any = {
+		let branch1: ReadableStream<T>;
+		let branch2: ReadableStream<T>;
+
+		const reader = this.getReader();
+		const teeState: any = {
 			closedOrErrored: false,
 			canceled1: false,
 			canceled2: false,
@@ -348,26 +384,26 @@ export default class ReadableStream<T> {
 		};
 		teeState.promise = new Promise(resolve => teeState._resolve = resolve);
 
-		var createCancelFunction = (branch: number) => {
+		const createCancelFunction = (branch: number) => {
 			return (reason: any): void => {
 				teeState['canceled' + branch] = true;
 				teeState['reason' + branch] = reason;
 				if (teeState['canceled' + (branch === 1 ? 2 : 1)]) {
-					var cancelResult = this._cancel([teeState.reason1, teeState.reason2]);
+					const cancelResult = this._cancel([teeState.reason1, teeState.reason2]);
 					teeState._resolve(cancelResult);
 				}
 				return teeState.promise;
 			};
 		};
 
-		var pull = (controller: ReadableStreamController<T>) => {
+		const pull = (controller: ReadableStreamController<T>) => {
 			return reader.read().then((result: any) => {
-				var value = result.value;
-				var done = result.done;
+				const value = result.value;
+				const done = result.done;
 
 				if (done && !teeState.closedOrErrored) {
-					branch1._requestClose();
-					branch2._requestClose();
+					branch1.requestClose();
+					branch2.requestClose();
 
 					teeState.closedOrErrored = true;
 				}
@@ -386,19 +422,19 @@ export default class ReadableStream<T> {
 			});
 		};
 
-		var cancel1 = createCancelFunction(1);
-		var cancel2 = createCancelFunction(2);
-		var underlyingSource1: Source<T> = <Source<T>> {
+		const cancel1 = createCancelFunction(1);
+		const cancel2 = createCancelFunction(2);
+		const underlyingSource1: Source<T> = <Source<T>> {
 			pull: pull,
 			cancel: cancel1
 		};
-		var branch1 = new ReadableStream(underlyingSource1);
+		branch1 = new ReadableStream(underlyingSource1);
 
-		var underlyingSource2: Source<T> = <Source<T>> {
+		const underlyingSource2: Source<T> = <Source<T>> {
 			pull: pull,
 			cancel: cancel2
 		};
-		var branch2 = new ReadableStream(underlyingSource2);
+		branch2 = new ReadableStream(underlyingSource2);
 
 		reader.closed.catch((r: any) => {
 			if (teeState.closedOrErrored) {
@@ -412,40 +448,4 @@ export default class ReadableStream<T> {
 
 		return [ branch1, branch2 ];
 	}
-
-	/**
-	 * @alias ShouldReadableStreamPull
-	 */
-	get _allowPull(): boolean {
-		return !this._pullScheduled &&
-			!this._closeRequested &&
-			this._started &&
-			this.state !== State.Closed &&
-			this.state !== State.Errored &&
-			!this._shouldApplyBackPressure();
-	}
-
-	/**
-	 * @alias shouldReadableStreamApplyBackPressure
-	 */
-	_shouldApplyBackPressure(): boolean {
-		var queueSize = this._queue.totalSize;
-
-		return queueSize > this._strategy.highWaterMark;
-	}
 }
-
-export interface Source<T> {
-
-	start(controller: ReadableStreamController<T>): Promise<void>;
-
-	pull(controller: ReadableStreamController<T>): Promise<void>;
-
-	cancel(reason?: any): Promise<void>;
-}
-
-/**
- * ReadableStream's possible states
- */
-export enum State { Readable, Closed, Errored }
-

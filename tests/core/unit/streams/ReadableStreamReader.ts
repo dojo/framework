@@ -68,7 +68,7 @@ registerSuite({
 				dfd.callback(() => { /* passed */}),
 				dfd.rejectOnError(() => { assert.fail(); })
 			);
-			stream._close();
+			stream.close();
 		}
 
 	},
@@ -95,7 +95,7 @@ registerSuite({
 
 		'calls the stream cancel method'() {
 			var cancelCalled = false;
-			stream._cancel = () => { cancelCalled = true; return Promise.resolve(); };
+			(<any> stream)._cancel = () => { cancelCalled = true; return Promise.resolve(); };
 			reader.cancel('reason');
 			assert.isTrue(cancelCalled);
 		},
@@ -131,7 +131,7 @@ registerSuite({
 
 		'resolves with the chunk value'() {
 			var chunkValue = 'test';
-			stream._controller.enqueue(chunkValue);
+			stream.controller.enqueue(chunkValue);
 			return reader.read().then((result: ReadResult<string>) => {
 				assert.strictEqual(result.value, chunkValue);
 			});

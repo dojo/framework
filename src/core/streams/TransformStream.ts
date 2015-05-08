@@ -1,8 +1,8 @@
+import { Strategy } from './interfaces';
+import Promise from '../Promise';
 import ReadableStream, { Source } from './ReadableStream';
 import ReadableStreamController from './ReadableStreamController';
 import WritableStream, { Sink } from './WritableStream';
-import { Strategy } from './interfaces';
-import Promise from '../Promise';
 
 export interface Transform<R, W> {
 	transform(chunk: W, enqueueInReadable: (chunk: R) => void, transformDone: () => void): void;
@@ -25,6 +25,26 @@ export default class TransformStream<R, W> {
 		let closeReadable: (error?: any) => void;
 		let errorReadable: (error?: any) => void;
 
+		function maybeDoTransform() {
+			if (!transforming) {
+				transforming = true;
+				try {
+					transformer.transform(writeChunk, enqueueInReadable, transformDone);
+					writeChunk = undefined;
+					chunkWrittenButNotYetTransformed = false;
+				} catch (e) {
+					transforming = false;
+					errorWritable(e);
+					errorReadable(e);
+				}
+			}
+		}
+
+		function transformDone() {
+			transforming = false;
+			writeDone();
+		}
+
 		this.writable = new WritableStream<W>(<Sink <W>> {
 			abort(): Promise<void> {
 				return Promise.resolve();
@@ -38,7 +58,7 @@ export default class TransformStream<R, W> {
 			write(chunk: W) {
 				writeChunk = chunk;
 				chunkWrittenButNotYetTransformed = true;
-				var p = new Promise<void>(resolve => writeDone = resolve);
+				const p = new Promise<void>(resolve => writeDone = resolve);
 				maybeDoTransform();
 				return p;
 			},
@@ -74,25 +94,5 @@ export default class TransformStream<R, W> {
 				return Promise.resolve();
 			}
 		}, transformer.readableStrategy);
-
-		function maybeDoTransform() {
-			if (!transforming) {
-				transforming = true;
-				try {
-					transformer.transform(writeChunk, enqueueInReadable, transformDone);
-					writeChunk = undefined;
-					chunkWrittenButNotYetTransformed = false;
-				} catch (e) {
-					transforming = false;
-					errorWritable(e);
-					errorReadable(e);
-				}
-			}
-		}
-
-		function transformDone() {
-			transforming = false;
-			writeDone();
-		}
 	}
 }
