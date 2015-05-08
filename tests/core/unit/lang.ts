@@ -3,6 +3,7 @@ import assert = require('intern/chai!assert');
 import has from 'src/has';
 import * as lang from 'src/lang';
 import { PropertyEvent } from 'src/observers/interfaces';
+import { Es5Observer, Es7Observer } from 'src/observers/ObjectObserver';
 
 registerSuite({
 	name: 'lang functions',
@@ -163,6 +164,46 @@ registerSuite({
 		assert.equal(copyOfObject.d.e, 4);
 		assert.notEqual(copyOfObject.d, object.d);
 		assert.isFalse(Object.getOwnPropertyDescriptor(copyOfObject, 'c').configurable);
+	},
+
+	'.observe() when nextTurn is true': function () {
+		if (!has('object-observe')) {
+			this.skip('Native Object.observe support is required for this test.');
+		}
+
+		let observer = lang.observe({
+			target: {},
+			listener: function () {},
+			nextTurn: true
+		});
+		assert.isTrue(observer instanceof Es7Observer);
+	},
+
+	'.observe() when nextTurn is false': function () {
+		if (!has('object-observe')) {
+			this.skip('Native Object.observe support is required for this test.');
+		}
+
+		let observer = lang.observe({
+			target: {},
+			listener: function () {},
+			nextTurn: false
+		});
+		assert.isTrue(observer instanceof Es5Observer);
+	},
+
+	'.observe() onlyReportObserved': function () {
+		if (!has('object-observe')) {
+			this.skip('Native Object.observe support is required for this test.');
+		}
+
+		let observer = lang.observe({
+			target: {},
+			listener: function () {},
+			nextTurn: true,
+			onlyReportObserved: true
+		});
+		assert.isTrue(observer.onlyReportObserved, 'onlyReportObserved should be passed to the observer instance.');
 	},
 
 	'.getPropertyDescriptor()': function () {
