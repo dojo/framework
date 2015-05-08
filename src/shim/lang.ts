@@ -1,5 +1,6 @@
-import * as observers from './observers/interfaces';
-import ObjectObserver from './observers/ObjectObserver';
+import { PropertyEvent, Observer } from './observers/interfaces';
+import * as ObjectObserver from './observers/ObjectObserver';
+import has from './has';
 
 var slice = Array.prototype.slice;
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -192,11 +193,17 @@ export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): 
 		};
 }
 
-export function observe(target: {}, listener: (events: observers.PropertyEvent[]) => any): ObjectObserver {
-	return new ObjectObserver({
-		target: target,
-		listener: listener
-	});
+export function observe(kwArgs: ObserveArgs): Observer {
+	let Ctor = kwArgs.nextTurn && has('object-observe') ? ObjectObserver.Es7Observer : ObjectObserver.Es5Observer;
+
+	return new Ctor(kwArgs);
+}
+
+export interface ObserveArgs {
+	listener: (events: PropertyEvent[]) => any;
+	nextTurn?: boolean;
+	onlyReportObserved?: boolean;
+	target: {}
 }
 
 export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs: any[]): (...args: any[]) => any {
