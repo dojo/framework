@@ -1,7 +1,7 @@
-var escapeRegExpPattern = /[[\]{}()|\\^$.*+?]/g;
-var escapeXmlPattern = /[&<]/g;
-var escapeXmlForPattern = /[&<>'"]/g;
-var escapeXmlMap: { [key: string]: string } = {
+const escapeRegExpPattern = /[[\]{}()|\\^$.*+?]/g;
+const escapeXmlPattern = /[&<]/g;
+const escapeXmlForPattern = /[&<>'"]/g;
+const escapeXmlMap: { [key: string]: string } = {
 	'&': '&amp;',
 	'<': '&lt;',
 	'>': '&gt;',
@@ -10,8 +10,8 @@ var escapeXmlMap: { [key: string]: string } = {
 };
 
 function getPadding(text: string, size: number, character: string = '0'): string {
-	var length: number = size - text.length;
-	var padding: string = '';
+	let length: number = size - text.length;
+	let padding: string = '';
 
 	if (length < 1) {
 		return padding;
@@ -46,7 +46,7 @@ function normalizeSubstringArgs(name: string, text: string, search: string, posi
 		throw new TypeError('string.' + name + ' requires a valid string to search against.');
 	}
 
-	let length = text.length;
+	const length = text.length;
 	position = position !== position ? (isEnd ? length : 0) : position;
 	return [ text, String(search), Math.min(Math.max(position, 0), length) ];
 }
@@ -62,7 +62,7 @@ export function endsWith(text: string, search: string, endPosition?: number): bo
 
 	[ text, search, endPosition ] = normalizeSubstringArgs('endsWith', text, search, endPosition, true);
 
-	let start = endPosition - search.length;
+	const start = endPosition - search.length;
 	if (start < 0) {
 		return false;
 	}
@@ -79,7 +79,7 @@ export function escapeXml(xml: string, forAttribute: boolean = true): string {
 		return xml;
 	}
 
-	var pattern = forAttribute ? escapeXmlForPattern : escapeXmlPattern;
+	const pattern = forAttribute ? escapeXmlForPattern : escapeXmlPattern;
 
 	return xml.replace(pattern, function (character: string): string {
 		return escapeXmlMap[character];
@@ -127,7 +127,7 @@ export function startsWith(text: string, search: string, position: number = 0): 
 	search = String(search);
 	[ text, search, position ] = normalizeSubstringArgs('startsWith', text, search, position);
 
-	let end = position + search.length;
+	const end = position + search.length;
 	if (end > text.length) {
 		return false;
 	}

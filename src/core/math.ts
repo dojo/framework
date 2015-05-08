@@ -46,7 +46,7 @@ export function atanh(n: number): number {
  * @return The result
  */
 export function cosh(n: number): number {
-	var m = Math.exp(n);
+	const m = Math.exp(n);
 	return (m + 1 / m) / 2;
 }
 
@@ -57,10 +57,10 @@ export function cosh(n: number): number {
  */
 export function hypot(...args: number[]): number {
 	// See: http://mzl.la/1HDi6xP
-	var n = 0;
-	var length = arguments.length;
+	let n = 0;
+	const length = arguments.length;
 
-	for (var i = 0; i < length; i++) {
+	for (let i = 0; i < length; i++) {
 		if (arguments[i] === Infinity || arguments[i] === -Infinity) {
 			return Infinity;
 		}
@@ -76,8 +76,8 @@ export function hypot(...args: number[]): number {
  * @return The result
  */
 export function sinh(n: number): number {
-	var m = Math.exp(n);
-	  return (m - 1 / m) / 2;
+	const m = Math.exp(n);
+	return (m - 1 / m) / 2;
 }
 
 /**
@@ -92,7 +92,7 @@ export function tanh(n: number): number {
 	} else if (n === -Infinity) {
 		return -1;
 	} else {
-		var y = Math.exp(2 * n);
+		const y = Math.exp(2 * n);
 		return (y - 1) / (y + 1);
 	}
 }
@@ -144,7 +144,7 @@ export function log1p(n: number): number {
  * @return The result
  */
 export function cbrt(n: number): number {
-	var y = Math.pow(Math.abs(n), 1 / 3);
+	const y = Math.pow(Math.abs(n), 1 / 3);
 	return n < 0 ? -y : y;
 }
 
@@ -166,7 +166,7 @@ export function clz32(n: number): number {
  * @param n The number to use in calculation
  * @return The result
  */
-export var fround: (n: number) => number = has('float32array') ? function (n: number): number {
+export const fround: (n: number) => number = has('float32array') ? function (n: number): number {
 	return new Float32Array([n])[0];
 } :
 function (n: number): number {
@@ -182,7 +182,7 @@ function (n: number): number {
 	if (Math.abs(n) < MIN_FLOAT32) {
 		return 0;
 	}
-	var exponent = Math.floor(log2(Math.abs(n)));
+	const exponent = Math.floor(log2(Math.abs(n)));
 	return (Math.round((n / Math.pow(2, exponent) - 1) * FRACTION_UNITS) / FRACTION_UNITS + 1) * Math.pow(2, exponent);
 };
 
@@ -195,10 +195,10 @@ function (n: number): number {
  */
 export function imul(n: number, m: number): number {
 	// See: http://mzl.la/1K279FK
-	var ah = (n >>> 16) & 0xffff;
-	var al = n & 0xffff;
-	var bh = (m >>> 16) & 0xffff;
-	var bl = m & 0xffff;
+	const ah = (n >>> 16) & 0xffff;
+	const al = n & 0xffff;
+	const bh = (m >>> 16) & 0xffff;
+	const bl = m & 0xffff;
 	return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0) | 0);
 }
 

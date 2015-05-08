@@ -3,7 +3,7 @@ import assert = require('intern/chai!assert');
 import * as array from 'src/array';
 
 function assertFrom(arrayable: any, expected: any[]) {
-	var actual = array.from(arrayable);
+	let actual = array.from(arrayable);
 	assert.isArray(actual);
 	assert.deepEqual(expected, actual);
 }
@@ -34,7 +34,7 @@ registerSuite({
 		},
 
 		'from array-like': (function () {
-			var obj: any;
+			let obj: any;
 
 			return {
 				beforeEach: function () {
@@ -96,7 +96,7 @@ registerSuite({
 		},
 
 		'from string': function () {
-			var actual: array.ArrayLike<string> = array.from('hello');
+			let actual: array.ArrayLike<string> = array.from('hello');
 			assert.isArray(actual);
 			assert.deepEqual([ 'h', 'e', 'l', 'l', 'o' ], actual);
 		},
@@ -106,7 +106,7 @@ registerSuite({
 		},
 
 		'with optional map function': function () {
-			var actual = array.from([ 1, 2, 3 ], function (value: any) {
+			let actual = array.from([ 1, 2, 3 ], function (value: any) {
 				return value * 2;
 			});
 			assert.isArray(actual);
@@ -114,19 +114,19 @@ registerSuite({
 		},
 
 		'with optional map function and this argument': function () {
-			var thing = {
+			let thing = {
 				count: 0,
 				mapFunction: function () {
 					return this.count++;
 				}
 			};
-			var actual = array.from([ 1, 2, 3 ], thing.mapFunction, thing);
+			let actual = array.from([ 1, 2, 3 ], thing.mapFunction, thing);
 			assert.isArray(actual);
 			assert.deepEqual([ 0, 1, 2 ], actual);
 		},
 
 		'supports extension': function () {
-			var actual = MyArray.from([ 1, 2, 3 ]);
+			let actual = MyArray.from([ 1, 2, 3 ]);
 			assert.instanceOf(actual, MyArray);
 		}
 	},
@@ -148,63 +148,63 @@ registerSuite({
 
 	'#fill()': {
 		'basic fill array': function () {
-			var actual = array.fill([ 1, 2, 3 ], 9);
+			let actual = array.fill([ 1, 2, 3 ], 9);
 			assert.deepEqual(actual, [ 9, 9, 9 ]);
 		},
 
 		'fill with start': function () {
-			var actual = array.fill([ 1, 2, 3 ], 9, 1);
+			let actual = array.fill([ 1, 2, 3 ], 9, 1);
 			assert.deepEqual(actual, [ 1, 9, 9 ]);
 		},
 
 		'fill with negative start': function () {
-			var actual = array.fill([ 1, 2, 3 ], 9, -1);
+			let actual = array.fill([ 1, 2, 3 ], 9, -1);
 			assert.deepEqual(actual, [ 1, 2, 9 ]);
 		},
 
 		'fill with nonsense start results in 0 start': function () {
-			var expected = [ 9, 9, 9 ];
+			let expected = [ 9, 9, 9 ];
 			assert.deepEqual(array.fill([ 1, 2, 3 ], 9, NaN), expected);
 		},
 
 		'fill with start exceeding length results in nothing filled': function () {
-			var actual = array.fill([ 1, 2, 3 ], 9, Number.POSITIVE_INFINITY);
+			let actual = array.fill([ 1, 2, 3 ], 9, Number.POSITIVE_INFINITY);
 			assert.deepEqual(actual, [ 1, 2, 3 ]);
 		},
 
 		'fill with negative start larger than length results in 0 start': function () {
-			var actual = array.fill([ 1, 2, 3 ], 9, Number.NEGATIVE_INFINITY);
+			let actual = array.fill([ 1, 2, 3 ], 9, Number.NEGATIVE_INFINITY);
 			assert.deepEqual(actual, [ 9, 9, 9 ]);
 		},
 
 		'fill with valid start and end': function () {
-			var actual = array.fill([ 1, 2, 3 ], 9, 1, 2);
+			let actual = array.fill([ 1, 2, 3 ], 9, 1, 2);
 			assert.deepEqual(actual, [ 1, 9, 3 ]);
 		},
 
 		'fill with negative end': function () {
-			var actual = array.fill([ 1, 2, 3 ], 9, 0, -1);
+			let actual = array.fill([ 1, 2, 3 ], 9, 0, -1);
 			assert.deepEqual(actual, [ 9, 9, 3 ]);
 		},
 
 		'fill with nonsense end results in length': function () {
-			var actual = array.fill([ 1, 2, 3 ], 9, 0, NaN);
+			let actual = array.fill([ 1, 2, 3 ], 9, 0, NaN);
 			assert.deepEqual(actual, [ 9, 9, 9 ]);
 		},
 
 		'fill with 0 start and negative end larger than length results in nothing filled': function () {
-			var actual = array.fill([ 1, 2, 3 ], 9, 0, -4);
+			let actual = array.fill([ 1, 2, 3 ], 9, 0, -4);
 			assert.deepEqual(actual, [ 1, 2, 3 ]);
 		},
 
 		'fill with array-like object': function () {
-			var obj: array.ArrayLike<number> = {
+			let obj: array.ArrayLike<number> = {
 				0: 1,
 				1: 2,
 				2: 3,
 				length: 3
 			};
-			var actual = array.fill(obj, 9);
+			let actual = array.fill(obj, 9);
 			assert.deepEqual(actual, {
 				0: 9,
 				1: 9,
@@ -221,17 +221,17 @@ registerSuite({
 
 		return {
 			'item found': function () {
-				var haystack = [ 'duck', 'duck', 'goose' ];
+				let haystack = [ 'duck', 'duck', 'goose' ];
 				assert.strictEqual(array.findIndex(haystack, callback), 2);
 			},
 
 			'item not found': function () {
-				var haystack = [ 'duck', 'duck', 'duck' ];
+				let haystack = [ 'duck', 'duck', 'duck' ];
 				assert.strictEqual(array.findIndex(haystack, callback), -1);
 			},
 
 			'item found in array-like object': function () {
-				var haystack = <array.ArrayLike<string>> {
+				let haystack = <array.ArrayLike<string>> {
 					0: 'duck',
 					1: 'duck',
 					2: 'goose',
@@ -247,13 +247,13 @@ registerSuite({
 			},
 
 			'callback with this argument': function () {
-				var thing = {
+				let thing = {
 					callback: function (value: number) {
 						return this.needle === value;
 					},
 					needle: 3
 				};
-				var haystack: number[] = [ 0, 1, 2, 3, 4 ];
+				let haystack: number[] = [ 0, 1, 2, 3, 4 ];
 				assert.strictEqual(array.findIndex<number>(haystack, thing.callback, thing), 3);
 			}
 		};
@@ -266,12 +266,12 @@ registerSuite({
 
 		return {
 			'item found': function () {
-				var haystack = [ 2, 4, 6, 8 ];
+				let haystack = [ 2, 4, 6, 8 ];
 				assert.strictEqual(array.find(haystack, callback), 6);
 			},
 
 			'item not found': function () {
-				var haystack = [ 1, 2, 3, 4 ];
+				let haystack = [ 1, 2, 3, 4 ];
 				assert.isUndefined(array.find(haystack, callback));
 			}
 		};
@@ -279,7 +279,7 @@ registerSuite({
 
 	'#copyWithin()': {
 		'returns source array': function () {
-			var arr: any[] = [];
+			let arr: any[] = [];
 			assert.equal(array.copyWithin(arr, 0), arr);
 		},
 
@@ -290,57 +290,57 @@ registerSuite({
 		},
 
 		'array-like object': function () {
-			var obj: array.ArrayLike<string> = {
+			let obj: array.ArrayLike<string> = {
 				0: 'zero',
 				1: 'one',
 				2: 'two',
 				'length': 3
 			};
-			var expected = {
+			let expected = {
 				0: 'two',
 				1: 'one',
 				2: 'two',
 				'length': 3
 			};
-			var actual = array.copyWithin(obj, 0, -1);
+			let actual = array.copyWithin(obj, 0, -1);
 			assert.deepEqual(actual, expected);
 		},
 
 		'sparse array-like object': function () {
-			var obj: array.ArrayLike<string> = {
+			let obj: array.ArrayLike<string> = {
 				5: 'five',
 				10: 'ten',
 				'length': 15
 			};
-			var expected = {
+			let expected = {
 				4: 'five',
 				10: 'ten',
 				'length': 15
 			};
-			var actual = array.copyWithin(obj, 4, 5, 10);
+			let actual = array.copyWithin(obj, 4, 5, 10);
 			assert.deepEqual(actual, expected);
 		},
 
 		'negative length array-like object': function () {
-			var obj: array.ArrayLike<string> = {
+			let obj: array.ArrayLike<string> = {
 				0: 'zero',
 				1: 'one',
 				2: 'two',
 				'length': NaN
 			};
-			var expected = {
+			let expected = {
 				0: 'zero',
 				1: 'one',
 				2: 'two',
 				'length': NaN
 			};
-			var actual = array.copyWithin(obj, 1);
+			let actual = array.copyWithin(obj, 1);
 			assert.deepEqual(actual, expected);
 		},
 
 		'parameterized tests': (function () {
-			var tests: { [n: string]: any; } = {};
-			[
+			let tests: { [n: string]: any; } = {};
+			let parameters: any[] = [
 				[ 'null case', [ 1, 2, 3, 4, 5 ], 0 ],
 				[ 'positive offset', [ 1, 2, 1, 2, 3 ], 2 ],
 				[ 'negative offset subtracts from length', [ 1, 2, 1, 2, 3 ], -3 ],
@@ -348,11 +348,11 @@ registerSuite({
 				[ 'negative end subtracts from length', [ 1, 2, 3, 5, 5 ], 2, -2 ],
 				[ 'positive end', [ 5, 2, 3, 4, 5 ], 0, 4, 5 ],
 				[ 'negative end subtracts from length', [ 3, 2, 3, 4, 5 ], 0, 2, -2 ]
-			].forEach(function (parameters: any[]) {
-				var arr = [ 1, 2, 3, 4, 5 ];
-				var [ name, expected, offset, start, end ] = parameters;
+			];
+			parameters.forEach(function ([ name, expected, offset, start, end ]: [ string, number[], number, number, number ]) {
+				let arr = [ 1, 2, 3, 4, 5 ];
 				tests[name] = function () {
-					var actual = array.copyWithin(arr, offset, start, end);
+					let actual = array.copyWithin(arr, offset, start, end);
 					assert.deepEqual(actual, expected);
 				};
 			});
