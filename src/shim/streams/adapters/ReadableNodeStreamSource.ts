@@ -3,7 +3,7 @@ import { Source } from '../ReadableStream';
 import ReadableStreamController from '../ReadableStreamController';
 import { Readable } from 'stream';
 
-type NodeSourceType = Buffer | string;
+export type NodeSourceType = Buffer | string;
 export default class ReadableNodeStreamSource implements Source<NodeSourceType> {
 	protected _controller: ReadableStreamController<NodeSourceType>;
 	protected _isClosed: boolean;

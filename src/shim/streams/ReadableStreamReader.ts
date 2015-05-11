@@ -1,7 +1,7 @@
 import Promise from '../Promise';
 import ReadableStream, { State } from './ReadableStream';
 
-interface ReadRequest<T> {
+export interface ReadRequest<T> {
 	promise: Promise<ReadResult<T>>;
 	resolve: (value: ReadResult<T>) => void;
 	reject: (reason: any) => void;

@@ -1,9 +1,6 @@
 import global from './global';
 import { Handle } from './interfaces';
-import has, { add as hasAdd } from './has';
-
-hasAdd('postmessage', typeof postMessage === 'function');
-hasAdd('raf', typeof requestAnimationFrame === 'function');
+import has from './has';
 
 function executeTask(item: QueueItem): void {
 	if (item.isActive) {

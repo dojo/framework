@@ -1,9 +1,8 @@
 import { Observer, PropertyEvent } from './interfaces';
 import { is as isIdentical } from '../object';
-import has, { add as hasAdd } from '../has';
+import has from '../has';
 import Scheduler from '../Scheduler';
 
-hasAdd('object-observe', typeof (<any> Object).observe === 'function');
 let hasNativeObserve: boolean = has('object-observe');
 
 class BaseObjectObserver {
@@ -11,7 +10,7 @@ class BaseObjectObserver {
 	protected _propertyStore: {};
 	protected _target: any;
 
-	constructor(kwArgs?: ObjectObserver.KwArgs) {
+	constructor(kwArgs?: KwArgs) {
 		this._listener = kwArgs.listener;
 		this._propertyStore = {};
 		this._target = kwArgs.target;
@@ -31,7 +30,7 @@ module Native {
 
 		protected _observeHandler: (changes: any[]) => void;
 
-		constructor(kwArgs: ObjectObserver.KwArgs) {
+		constructor(kwArgs: KwArgs) {
 			super(kwArgs);
 
 			this.onlyReportObserved = 'onlyReportObserved' in kwArgs ? kwArgs.onlyReportObserved : true;
@@ -129,7 +128,7 @@ module Shim {
 		protected _descriptors: { [key: string]: PropertyDescriptor };
 		protected _scheduler: Scheduler;
 
-		constructor(kwArgs: ObjectObserver.KwArgs) {
+		constructor(kwArgs: KwArgs) {
 			super(kwArgs);
 
 			if (!(<any> this.constructor)._scheduler) {
@@ -238,6 +237,13 @@ module Shim {
 	}
 }
 
+export interface KwArgs {
+	listener: (events: PropertyEvent[]) => any;
+	nextTurn?: boolean;
+	onlyReportObserved?: boolean;
+	target: {};
+}
+
 export default class ObjectObserver implements Observer {
 	onlyReportObserved: boolean;
 
@@ -257,7 +263,7 @@ export default class ObjectObserver implements Observer {
 	protected _observer: Observer;
 	protected _target: {};
 
-	constructor(kwArgs: ObjectObserver.KwArgs) {
+	constructor(kwArgs: KwArgs) {
 		this._target = kwArgs.target;
 		this._listener = kwArgs.listener;
 		this.onlyReportObserved = ('onlyReportObserved' in kwArgs) ? kwArgs.onlyReportObserved : true;
@@ -297,14 +303,5 @@ export default class ObjectObserver implements Observer {
 				target: this._target
 			});
 		}
-	}
-}
-
-module ObjectObserver {
-	export interface KwArgs {
-		listener: (events: PropertyEvent[]) => any;
-		nextTurn?: boolean;
-		onlyReportObserved?: boolean;
-		target: {};
 	}
 }
