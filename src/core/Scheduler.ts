@@ -1,10 +1,10 @@
 import { Handle } from './interfaces';
-import { QueueItem, queueTask, queueDomTask, queueMicroTask } from './queue';
+import { QueueItem, queueTask, queueAnimationTask, queueMicroTask } from './queue';
 
 let typeMap: { [key: string]: (callback: (...args: any[]) => any) => Handle; } = {
 	'macro': queueTask,
 	'micro': queueMicroTask,
-	'dom': queueDomTask
+	'animation': queueAnimationTask
 };
 
 function getQueueHandle(item: Item): Handle {
@@ -36,7 +36,7 @@ export default class Scheduler {
 
 	/**
 	 * Allows users to specify the type of task that should be scheduled.
-	 * Accepted values are 'macro' (default), 'micro', and 'dom'.
+	 * Accepted values are 'macro' (default), 'micro', and 'animation'.
 	 */
 	type: string;
 

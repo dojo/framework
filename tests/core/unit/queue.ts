@@ -1,7 +1,7 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import has from 'src/has';
-import { queueTask, queueDomTask, queueMicroTask } from 'src/queue';
+import { queueTask, queueAnimationTask, queueMicroTask } from 'src/queue';
 
 registerSuite({
 	name: 'queue functions',
@@ -54,7 +54,7 @@ registerSuite({
 		}), 100);
 	},
 
-	'.queueDomTask()': function () {
+	'.queueAnimationTask()': function () {
 		if (!has('host-browser')) {
 			this.skip('browser required.');
 		}
@@ -63,12 +63,12 @@ registerSuite({
 		let dfd = this.async(300);
 
 		function a() {
-			queueDomTask(function () {
-				parts.push('queueDomTask 1');
+			queueAnimationTask(function () {
+				parts.push('queueAnimationTask 1');
 			});
 			parts.push('start');
-			queueDomTask(function () {
-				parts.push('queueDomTask 2');
+			queueAnimationTask(function () {
+				parts.push('queueAnimationTask 2');
 			});
 		}
 		function b() {
@@ -81,12 +81,12 @@ registerSuite({
 
 		c();
 		setTimeout(dfd.callback(function () {
-			assert.equal(parts.join(','), 'start,end,queueDomTask 1,queueDomTask 2',
-				'queueDomTasks should be executed to the beginning of the next loop.');
+			assert.equal(parts.join(','), 'start,end,queueAnimationTask 1,queueAnimationTask 2',
+				'queueAnimationTasks should be executed to the beginning of the next loop.');
 		}), 300);
 	},
 
-	'.queueDomTask() => handle.destroy()': function () {
+	'.queueAnimationTask() => handle.destroy()': function () {
 		if (!has('host-browser')) {
 			this.skip('browser required.');
 		}
@@ -98,8 +98,8 @@ registerSuite({
 			parts = [];
 
 			parts.push('start');
-			queueDomTask(function () {
-				parts.push('queueDomTask');
+			queueAnimationTask(function () {
+				parts.push('queueAnimationTask');
 			}).destroy();
 			parts.push('end');
 		}
