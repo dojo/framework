@@ -9,10 +9,25 @@ const escapeXmlMap: { [key: string]: string } = {
 	'\'': '&#39;'
 };
 
-function getPadding(text: string, size: number, character: string = '0'): string {
-	let length: number = size - text.length;
+/**
+ * Performs validation and padding operations used by padStart and padEnd.
+ */
+function getPadding(name: string, text: string, length: number, character: string = '0'): string {
+	if (text == null) {
+		throw new TypeError('string.' + name + ' requires a valid string.');
+	}
+
+	if (character.length !== 1) {
+		throw new TypeError('string.' + name + ' requires a valid padding character.');
+	}
+
+	if (length < 0 || length === Infinity) {
+		throw new RangeError('string.' + name + ' requires a valid length.');
+	}
+
 	let padding: string = '';
 
+	length -= text.length;
 	if (length < 1) {
 		return padding;
 	}
@@ -53,6 +68,9 @@ function normalizeSubstringArgs(name: string, text: string, search: string, posi
 
 /**
  * Determines whether a string ends with the given substring.
+ * @param text The string to look for the search string within
+ * @param search The string to search for
+ * @param endPosition The index searching should stop before (defaults to text.length)
  * @return Boolean indicating if the search string was found at the end of the given string
  */
 export function endsWith(text: string, search: string, endPosition?: number): boolean {
@@ -88,6 +106,9 @@ export function escapeXml(xml: string, forAttribute: boolean = true): string {
 
 /**
  * Determines whether a string includes the given substring (optionally starting from a given index).
+ * @param text The string to look for the search string within
+ * @param search The string to search for
+ * @param position The index to begin searching at
  * @return Boolean indicating if the search string was found within the given string
  */
 export function includes(text: string, search: string, position: number = 0): boolean {
@@ -95,32 +116,33 @@ export function includes(text: string, search: string, position: number = 0): bo
 	return text.indexOf(search, position) !== -1;
 }
 
-export function padStart(text: string, size: number, character: string = '0'): string {
-	if (character.length !== 1) {
-		throw new TypeError('string.padStart requires a valid padding character.');
-	}
-
-	if (size < 0 || size === Infinity) {
-		throw new RangeError('string.padStart requires a valid size.');
-	}
-
-	return getPadding(text, size, character) + text;
+/**
+ * Adds padding to the end of a string to ensure it is a certain length.
+ * @param text The string to pad
+ * @param length The target minimum length of the string
+ * @param character The character to pad onto the end of the string
+ * @return The string, padded to the given length if necessary
+ */
+export function padEnd(text: string, length: number, character: string = '0'): string {
+	return text + getPadding('padEnd', text, length, character);
 }
 
-export function padEnd(text: string, size: number, character: string = '0'): string {
-	if (character.length !== 1) {
-		throw new TypeError('string.padEnd requires a valid padding character.');
-	}
-
-	if (size < 0 || size === Infinity) {
-		throw new RangeError('string.padEnd requires a valid size.');
-	}
-
-	return text + getPadding(text, size, character);
+/**
+ * Adds padding to the beginning of a string to ensure it is a certain length.
+ * @param text The string to pad
+ * @param length The target minimum length of the string
+ * @param character The character to pad onto the beginning of the string
+ * @return The string, padded to the given length if necessary
+ */
+export function padStart(text: string, length: number, character: string = '0'): string {
+	return getPadding('padStart', text, length, character) + text;
 }
 
 /**
  * Determines whether a string begins with the given substring (optionally starting from a given index).
+ * @param text The string to look for the search string within
+ * @param search The string to search for
+ * @param position The index to begin searching at
  * @return Boolean indicating if the search string was found at the beginning of the given string
  */
 export function startsWith(text: string, search: string, position: number = 0): boolean {
