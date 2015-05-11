@@ -4,26 +4,6 @@ interface Pair<T> {
 }
 
 export default class SizeQueue<T> {
-	private _queue: Pair<T>[] = [];
-
-	dequeue(): T {
-		const pair = this._queue.shift();
-		return pair.value;
-	}
-
-	enqueue(value: T, size: number): void {
-		this._queue.push({ value: value, size: size });
-	}
-
-	empty() {
-		this._queue = [];
-	}
-
-	peek(): T {
-		const pair = this._queue[0];
-		return pair.value;
-	}
-
 	get totalSize(): number {
 		let totalSize = 0;
 		this._queue.forEach(pair => totalSize += pair.size);
@@ -32,5 +12,25 @@ export default class SizeQueue<T> {
 
 	get length(): number {
 		return this._queue.length;
+	}
+
+	private _queue: Pair<T>[] = [];
+
+	empty() {
+		this._queue = [];
+	}
+
+	enqueue(value: T, size: number): void {
+		this._queue.push({ value: value, size: size });
+	}
+
+	dequeue(): T {
+		const pair = this._queue.shift();
+		return pair.value;
+	}
+
+	peek(): T {
+		const pair = this._queue[0];
+		return pair.value;
 	}
 }

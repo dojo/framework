@@ -1,5 +1,5 @@
-import { Sink } from '../WritableStream';
 import Promise from '../../Promise';
+import { Sink } from '../WritableStream';
 
 type NodeSourceType = Buffer | string;
 export default class WritableNodeStreamSink implements Sink<NodeSourceType> {
@@ -16,6 +16,22 @@ export default class WritableNodeStreamSink implements Sink<NodeSourceType> {
 		this._nodeStream = nodeStream;
 		this._onError = this._handleError.bind(this);
 		this._nodeStream.on('error', this._onError);
+	}
+
+	protected _handleError(error: Error): void {
+		this._isClosed = true;
+		this._removeListeners();
+
+		if (this._rejectWritePromise) {
+			this._rejectWritePromise(error);
+			this._rejectWritePromise = undefined;
+		}
+
+		throw error;
+	}
+
+	protected _removeListeners(): void {
+		this._nodeStream.removeListener('error', this._onError);
 	}
 
 	abort(reason: any): Promise<void> {
@@ -68,21 +84,5 @@ export default class WritableNodeStreamSink implements Sink<NodeSourceType> {
 				}
 			});
 		});
-	}
-
-	protected _handleError(error: Error): void {
-		this._isClosed = true;
-		this._removeListeners();
-
-		if (this._rejectWritePromise) {
-			this._rejectWritePromise(error);
-			this._rejectWritePromise = undefined;
-		}
-
-		throw error;
-	}
-
-	protected _removeListeners(): void {
-		this._nodeStream.removeListener('error', this._onError);
 	}
 }

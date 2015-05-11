@@ -16,7 +16,7 @@ export default class ReadableStreamController<T> {
 			throw new TypeError('3.3.3-1: ReadableStreamController can only be constructed with a ReadableStream instance');
 		}
 
-		if (stream._controller !== undefined) {
+		if (stream.controller !== undefined) {
 			throw new TypeError('ReadableStreamController instances can only be created by the ReadableStream constructor');
 		}
 
@@ -31,8 +31,8 @@ export default class ReadableStreamController<T> {
 			throw new TypeError('3.3.4.2-1: ReadableStreamController#close can only be used on a ReadableStreamController');
 		}
 
-		var stream = this._controlledReadableStream;
-		if (stream._closeRequested) {
+		const stream = this._controlledReadableStream;
+		if (stream.closeRequested) {
 			throw new TypeError('3.3.4.2-3: The stream has already been closed; do not close it again!');
 		}
 
@@ -40,7 +40,7 @@ export default class ReadableStreamController<T> {
 			throw new TypeError('3.3.4.2-4: The stream is in an errored state and cannot be closed');
 		}
 
-		return stream._requestClose();
+		return stream.requestClose();
 	}
 
 	/**
@@ -51,13 +51,13 @@ export default class ReadableStreamController<T> {
 			throw new TypeError('3.3.4.3-1: ReadableStreamController#enqueue can only be used on a ReadableStreamController');
 		}
 
-		var stream = this._controlledReadableStream;
+		const stream = this._controlledReadableStream;
 
 		if (stream.state === State.Errored) {
-			throw stream._storedError;
+			throw stream.storedError;
 		}
 
-		if (stream._closeRequested) {
+		if (stream.closeRequested) {
 			throw new TypeError('3.3.4.3-4: stream is draining');
 		}
 
