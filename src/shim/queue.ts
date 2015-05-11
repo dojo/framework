@@ -88,7 +88,7 @@ export let queueTask = (function() {
  * Since requestAnimationFrame's behavior does not match that expected from `queueTask`, it is not used there.
  * However, at times it makes more sense to delegate to requestAnimationFrame; hence the following method.
  */
-export let queueDomTask = (function () {
+export let queueAnimationTask = (function () {
 	if (!has('raf')) {
 		return queueTask;
 	}
