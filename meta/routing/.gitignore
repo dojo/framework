@@ -1,0 +1,12 @@
+.sublimets
+.tscache
+*.js
+*.js.map
+!/*.js
+dist
+_build
+node_modules
+bower_components
+tests/typings/dist/
+.baseDir.ts
+html-report

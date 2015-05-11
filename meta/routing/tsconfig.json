@@ -1,0 +1,28 @@
+{
+	"version": "1.5.0",
+	"compilerOptions": {
+		"declaration": false,
+		"module": "umd",
+		"noImplicitAny": true,
+		"outDir": "_build/",
+		"removeComments": false,
+		"sourceMap": true,
+		"target": "es5"
+	},
+	"filesGlob": [
+		"./typings/tsd.d.ts",
+		"./src/**/*.ts",
+		"./tests/**/*.ts"
+	],
+	"files": [
+		"./typings/tsd.d.ts",
+		"./tests/typings/tsd.d.ts",
+
+		"./src/main.ts",
+
+		"./tests/intern-local.ts",
+		"./tests/intern.ts",
+		"./tests/functional/all.ts",
+		"./tests/unit/all.ts"
+	]
+}
