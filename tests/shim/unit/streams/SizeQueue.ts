@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 
 import SizeQueue from 'src/streams/SizeQueue';
 
-var queue: SizeQueue<string>;
+let queue: SizeQueue<string>;
 registerSuite({
 	name: 'SizeQueue',
 
@@ -12,7 +12,7 @@ registerSuite({
 	},
 
 	'enqueue() and dequeue()'() {
-		var str = 'test';
+		let str = 'test';
 		queue.enqueue(str, str.length);
 		assert.lengthOf(queue, 1);
 		assert.strictEqual(queue.dequeue(), str);
@@ -20,14 +20,14 @@ registerSuite({
 	},
 
 	'totalSize'() {
-		var str = 'test';
-		var len = 4;
-		queue.enqueue(str, len);
-		assert.strictEqual(queue.totalSize, len);
-		queue.enqueue(str, len);
-		assert.strictEqual(queue.totalSize, len * 2);
-		queue.enqueue(str, len);
-		assert.strictEqual(queue.totalSize, len * 3);
+		let str = 'test';
+		let length = 4;
+		queue.enqueue(str, length);
+		assert.strictEqual(queue.totalSize, length);
+		queue.enqueue(str, length);
+		assert.strictEqual(queue.totalSize, length * 2);
+		queue.enqueue(str, length);
+		assert.strictEqual(queue.totalSize, length * 3);
 	},
 
 	'empty()'() {
@@ -39,7 +39,7 @@ registerSuite({
 	},
 
 	'peek()'() {
-		var str = 'test';
+		let str = 'test';
 		queue.enqueue(str, str.length);
 		assert.lengthOf(queue, 1);
 		assert.strictEqual(queue.peek(), str);

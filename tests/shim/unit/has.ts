@@ -2,7 +2,7 @@ import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import has, { add as hasAdd, cache as hasCache } from 'src/has';
 
-var alreadyCached: { [key: string]: boolean } = {};
+let alreadyCached: { [key: string]: boolean } = {};
 
 registerSuite({
 		name: 'has',
@@ -60,7 +60,7 @@ registerSuite({
 			},
 
 			'deferred feature test evaluation'() {
-				var value = false;
+				let value = false;
 				hasAdd('deferred', function () {
 					return value;
 				});
@@ -71,7 +71,7 @@ registerSuite({
 			},
 
 			'tests should not coerce'() {
-				var answer = 42;
+				let answer = 42;
 
 				hasAdd('answer', answer);
 				assert.strictEqual(has('answer'), answer,

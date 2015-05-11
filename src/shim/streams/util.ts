@@ -21,8 +21,8 @@ http://creativecommons.org/publicdomain/zero/1.0/legalcode
 Returns the approximate memory usage, in bytes, of the specified object.
 */
 export function getApproximateByteSize(object: any): number {
-	var objects = [object];
-	var size = 0;
+	let objects = [ object ];
+	let size = 0;
 
 	for(let index = 0; index < objects.length; index++) {
 		switch (typeof objects[index]) {
@@ -49,7 +49,7 @@ export function getApproximateByteSize(object: any): number {
 				// loop over the keys
 				for (let key in objects[index]) {
 					// determine whether the value has already been processed
-					var processed = false;
+					let processed = false;
 
 					for (let j = 0; j < objects.length; j++) {
 						if (objects[j] === objects[index][key]){
@@ -70,7 +70,7 @@ export function getApproximateByteSize(object: any): number {
 }
 
 /**
- * call the method or return undefined
+ * Calls the method or returns undefined.
  */
 export function invokeOrNoop(O: any, P: string, args: any[] = []): any {
 	const method: Function = O[P];
@@ -111,7 +111,7 @@ export function promiseInvokeOrFallbackOrNoop(object: any, method1: string, args
 }
 
 /**
- * return a promise that resolves the with result of the method call or undefined
+ * Returns a promise that resolves the with result of the method call or undefined.
  */
 export function promiseInvokeOrNoop(O: any, P: string, args: any[] = []): Promise<any> {
 	let method: any;
@@ -134,4 +134,3 @@ export function promiseInvokeOrNoop(O: any, P: string, args: any[] = []): Promis
 		return Promise.reject(error);
 	}
 }
-

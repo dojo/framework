@@ -6,7 +6,9 @@ interface Pair<T> {
 export default class SizeQueue<T> {
 	get totalSize(): number {
 		let totalSize = 0;
-		this._queue.forEach(pair => totalSize += pair.size);
+		this._queue.forEach(function (pair) {
+			totalSize += pair.size;
+		});
 		return totalSize;
 	}
 

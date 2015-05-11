@@ -9,14 +9,14 @@ export function assign(target: any, ...sources: any[]): any {
 
 	target = Object(target);
 
-	for (var i = 0, length = sources.length, source: any; i < length; i++) {
+	for (let i = 0, length = sources.length, source: any; i < length; i++) {
 		source = sources[i];
 
 		if (source) {
 			source = Object(source);
-			var keys = Object.keys(source);
+			const keys = Object.keys(source);
 
-			for (var j = 0, keysLength = keys.length, key: string; j < keysLength; j++) {
+			for (let j = 0, keysLength = keys.length, key: string; j < keysLength; j++) {
 				key = keys[j];
 				target[key] = source[key];
 			}

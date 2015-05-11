@@ -186,7 +186,7 @@ export function copyWithin<T>(target: ArrayLike<T>, offset: number, start?: numb
 	end = normalizeOffset(end ? toInteger(end) : length, length);
 	let count = Math.min(end - start, length - offset);
 
-	var direction = 1;
+	let direction = 1;
 	if (offset > start && offset < (start + count)) {
 		direction = -1;
 		start += count - 1;

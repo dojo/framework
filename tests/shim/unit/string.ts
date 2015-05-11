@@ -86,14 +86,16 @@ registerSuite({
 	},
 
 	'.escapeRegExp()'() {
-		assert.equal(escapeRegExp('[]{}()|\\^$.*+?'), '\\[\\]\\{\\}\\(\\)\\|\\\\\\^\\$\\.\\*\\+\\?');
+		assert.strictEqual(escapeRegExp(''), '');
+		assert.strictEqual(escapeRegExp('[]{}()|\\^$.*+?'), '\\[\\]\\{\\}\\(\\)\\|\\\\\\^\\$\\.\\*\\+\\?');
 	},
 
 	'.escapeXml()'() {
 		let html = '<p class="text">Fox & Hound\'s</p>';
 
-		assert.equal(escapeXml(html, false), '&lt;p class="text">Fox &amp; Hound\'s&lt;/p>');
-		assert.equal(escapeXml(html), '&lt;p class=&quot;text&quot;&gt;Fox &amp; Hound&#39;s&lt;/p&gt;');
+		assert.strictEqual(escapeXml(''), '');
+		assert.strictEqual(escapeXml(html, false), '&lt;p class="text">Fox &amp; Hound\'s&lt;/p>');
+		assert.strictEqual(escapeXml(html), '&lt;p class=&quot;text&quot;&gt;Fox &amp; Hound&#39;s&lt;/p&gt;');
 	},
 
 	'.includes()': {
@@ -158,20 +160,20 @@ registerSuite({
 	'.padEnd()': {
 		'error cases': createPaddingErrorTests(padEnd),
 		'basic tests'() {
-			assert.equal(padEnd('Lorem', 10), 'Lorem00000');
-			assert.equal(padEnd('Lorem', 10, ' '), 'Lorem     ');
-			assert.equal(padEnd('Lorem', 5), 'Lorem');
-			assert.equal(padEnd('Lorem', 1), 'Lorem');
+			assert.strictEqual(padEnd('Lorem', 10), 'Lorem00000');
+			assert.strictEqual(padEnd('Lorem', 10, ' '), 'Lorem     ');
+			assert.strictEqual(padEnd('Lorem', 5), 'Lorem');
+			assert.strictEqual(padEnd('Lorem', 1), 'Lorem');
 		}
 	},
 
 	'.padStart()': {
 		'error cases': createPaddingErrorTests(padStart),
 		'basic tests'() {
-			assert.equal(padStart('Lorem', 10), '00000Lorem');
-			assert.equal(padStart('Lorem', 10, ' '), '     Lorem');
-			assert.equal(padStart('Lorem', 5), 'Lorem');
-			assert.equal(padStart('Lorem', 1), 'Lorem');
+			assert.strictEqual(padStart('Lorem', 10), '00000Lorem');
+			assert.strictEqual(padStart('Lorem', 10, ' '), '     Lorem');
+			assert.strictEqual(padStart('Lorem', 5), 'Lorem');
+			assert.strictEqual(padStart('Lorem', 1), 'Lorem');
 		}
 	},
 

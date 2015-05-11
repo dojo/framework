@@ -28,7 +28,7 @@ registerSuite({
 		},
 
 		array() {
-			var array = [
+			let array = [
 				true,
 				1024,
 				'abc',
@@ -48,7 +48,7 @@ registerSuite({
 		},
 
 		object() {
-			var obj = {
+			let obj = {
 				0: true,
 				abc: 'xyz',
 				xyz: 16,

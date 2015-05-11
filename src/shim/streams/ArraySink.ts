@@ -1,6 +1,10 @@
 import Promise from '../Promise';
 import { Sink } from './WritableStream';
 
+// Since this Sink is doing no asynchronous operations,
+// use a single resolved promise for all returned promises.
+let resolved = Promise.resolve();
+
 /**
  * A WritableStream sink that collects the chunks it receives and
  * stores them into an array.  Use the chunks property to retrieve
@@ -34,7 +38,3 @@ export default class ArraySink<T> implements Sink<T> {
 		return resolved;
 	}
 }
-
-// Since this Sink is doing no asynchronous operations,
-// use a single resolved promise for all returned promises.
-var resolved = Promise.resolve();

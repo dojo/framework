@@ -5,20 +5,20 @@ import WritableStream, { Sink, State } from 'src/streams/WritableStream';
 import Promise from 'src/Promise';
 import ManualSink from './helpers/ManualSink';
 
-var asyncTimeout = 1000;
+const ASYNC_TIMEOUT = 1000;
 
 registerSuite({
 	name: 'CountQueuingStrategy',
 
 	size() {
-		var dfd = this.async(asyncTimeout);
-		var sink = new ManualSink<string>();
+		let dfd = this.async(ASYNC_TIMEOUT);
+		let sink = new ManualSink<string>();
 
-		var stream = new WritableStream<string>(sink, new CountQueuingStrategy<string>({
+		let stream = new WritableStream<string>(sink, new CountQueuingStrategy<string>({
 			highWaterMark: 2
 		}));
 
-		var promise = stream.write('test value 1');
+		let promise = stream.write('test value 1');
 		assert.strictEqual(stream.state, State.Writable);
 
 		stream.write('test value 2');
@@ -27,13 +27,13 @@ registerSuite({
 		stream.write('test value 3');
 		assert.strictEqual(stream.state, State.Waiting);
 
-		setTimeout(() => {
+		setTimeout(function () {
 			sink.next();
 		}, 20);
 
-		promise.then(dfd.callback(() => {
+		promise.then(dfd.callback(function () {
 			assert.strictEqual(stream.state, State.Writable);
-		}), (error: Error) => {
+		}), function (error: Error) {
 			dfd.reject(error);
 		});
 	}

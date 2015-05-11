@@ -24,7 +24,8 @@ export function acosh(n: number): number {
 export function asinh(n: number): number {
 	if (n === -Infinity) {
 		return n;
-	} else {
+	}
+	else {
 		return Math.log(n + Math.sqrt(n * n + 1));
 	}
 }
@@ -89,9 +90,11 @@ export function sinh(n: number): number {
 export function tanh(n: number): number {
 	if (n === Infinity) {
 		return 1;
-	} else if (n === -Infinity) {
+	}
+	else if (n === -Infinity) {
 		return -1;
-	} else {
+	}
+	else {
 		const y = Math.exp(2 * n);
 		return (y - 1) / (y + 1);
 	}

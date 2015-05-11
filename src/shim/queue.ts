@@ -125,7 +125,7 @@ export let queueMicroTask = (function () {
 		let queue: QueueItem[] = [];
 		let node = document.createElement('div');
 		let observer = new HostMutationObserver(function (): void {
-			var item: QueueItem = queue.length && queue.shift();
+			const item: QueueItem = queue.length && queue.shift();
 
 			if (item && item.isActive) {
 				item.callback();

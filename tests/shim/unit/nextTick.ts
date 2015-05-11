@@ -12,13 +12,13 @@ registerSuite({
 		let dfd = this.async(1000, numTicks + timeouts);
 
 		for (let i = 0; i < numTicks; i++) {
-			nextTick(dfd.callback(() => {
+			nextTick(dfd.callback(function () {
 				assert.equal(timeouts, 1, 'nextTick should have fired before setTimeout');
 				nextTicks--;
 			}));
 		}
 
-		setTimeout(dfd.callback(() => {
+		setTimeout(dfd.callback(function () {
 			assert.equal(nextTicks, 0, 'all nextTicks should have fired before setTimeout');
 			timeouts--;
 		}));
@@ -30,11 +30,13 @@ registerSuite({
 	remove() {
 		let dfd = this.async();
 
-		let handle = nextTick(dfd.rejectOnError(() => {
+		let handle = nextTick(dfd.rejectOnError(function () {
 			assert(false, 'nextTick should not have fired');
 		}));
 
 		handle.destroy();
-		setTimeout(() => dfd.resolve(), 10);
+		setTimeout(function () {
+			dfd.resolve();
+		}, 10);
 	}
 });

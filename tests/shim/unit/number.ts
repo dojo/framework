@@ -1,6 +1,6 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import number = require('src/number');
+import * as number from 'src/number';
 
 function testEdgeCases(op: (value: any) => boolean) {
 	assert.isFalse(op({}));

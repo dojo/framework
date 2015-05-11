@@ -45,7 +45,7 @@ class CallbackQueue {
 
 		return {
 			destroy: function() {
-				this.destroy = function() { };
+				this.destroy = function() {};
 				_callback.isActive = false;
 				_callback = null;
 			}

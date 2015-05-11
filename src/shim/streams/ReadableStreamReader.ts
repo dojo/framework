@@ -12,6 +12,10 @@ export interface ReadResult<T> {
 	done: boolean;
 }
 
+export function isReadableStreamReader<T>(readableStreamReader: ReadableStreamReader<T>): boolean {
+	return Object.prototype.hasOwnProperty.call(readableStreamReader, '_ownerReadableStream');
+}
+
 export default class ReadableStreamReader<T> {
 	get closed(): Promise<void> {
 		return this._closedPromise;
@@ -189,8 +193,4 @@ export default class ReadableStreamReader<T> {
 		}
 		return false;
 	}
-}
-
-export function isReadableStreamReader<T>(readableStreamReader: ReadableStreamReader<T>): boolean {
-	return Object.prototype.hasOwnProperty.call(readableStreamReader, '_ownerReadableStream');
 }

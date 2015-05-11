@@ -1,11 +1,11 @@
-var Benchmark = require('benchmark');
-import {padEnd, padStart} from '../../src/string';
+import Benchmark = require('benchmark');
+import { padEnd, padStart } from '../../src/string';
 
-var text: string = 'Lorem';
-var count: number = 10;
-var character: string = ' ';
+const text: string = 'Lorem';
+const count: number = 10;
+const character: string = ' ';
 
-var benchmarks: any[] = [];
+let benchmarks: any[] = [];
 
 benchmarks.push({
 	name: 'stringUtil.padStart',

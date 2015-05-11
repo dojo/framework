@@ -1,5 +1,12 @@
 import ReadableStream, { State } from './ReadableStream';
 
+/**
+ * 3.5.9-1 has been ignored
+ */
+export function isReadableStreamController(x: any): boolean {
+	return Object.prototype.hasOwnProperty.call(x, '_controlledReadableStream');
+}
+
 export default class ReadableStreamController<T> {
 	private _controlledReadableStream: ReadableStream<T>;
 
@@ -78,11 +85,4 @@ export default class ReadableStreamController<T> {
 		// return errorReadableStream(this._controlledReadableStream, e);
 		this._controlledReadableStream.error(e);
 	}
-}
-
-/**
- * 3.5.9-1 has been ignored
- */
-export function isReadableStreamController(x: any): boolean {
-	return Object.prototype.hasOwnProperty.call(x, '_controlledReadableStream');
 }
