@@ -28,12 +28,32 @@ function isWritableStream(x: any): boolean {
 
 export interface Sink<T> {
 
+	/**
+	 * Indicates the stream is prematurely closing due to an error.  The sink should do any necessary cleanup
+	 * and release resources.
+	 * @param reason The reason the stream is closing.
+	 */
 	abort(reason?: any): Promise<void>;
 
+	/**
+	 * Indicates the stream is closing.  The sink should do any necessary cleanup and release resources.
+	 */
 	close(): Promise<void>;
 
+	/**
+	 * Requests the sink to prepare for receiving chunks.
+	 * @param error An error callback that can be used at any time by the sink to indicate an error has occurred.
+	 * @returns A promise that resolves when the sink's start operation has finished.  If the promise rejects,
+	 * 		the stream will be errored.
+	 */
 	start(error: (error: Error) => void): Promise<void>;
 
+	/**
+	 * Requests the sink write a chunk.
+	 * @param chunk The chunk to be written.
+	 * @returns A promise that resolves when the sink's write operation has finished.  If the promise rejects,
+	 * 		the stream will be errored.
+	 */
 	write(chunk: T): Promise<void>;
 }
 

@@ -30,10 +30,30 @@ export interface PipeOptions {
 
 export interface Source<T> {
 
+	/**
+	 * Tells the source to prepare for providing chunks to the stream.  While the source may enqueue chunks at this
+	 * point, it is not required.
+	 * @param controller The source can use the controller to enqueue chunks, close the stream or report an error.
+	 * @returns A promise that resolves when the source's start operation has finished.  If the promise rejects,
+	 * 		the stream will be errored.
+	 */
 	start(controller: ReadableStreamController<T>): Promise<void>;
 
+	/**
+	 * Requests that source enqueue chunks.  Use the controller to close the stream when no more chunks can
+	 * be provided.
+	 * @param controller The source can use the controller to enqueue chunks, close the stream or report an error.
+	 * @returns A promise that resolves when the source's pull operation has finished.  If the promise rejects,
+	 * 		the stream will be errored.
+	 */
 	pull(controller: ReadableStreamController<T>): Promise<void>;
 
+	/**
+	 * Indicates the stream is prematurely closing and allows the source to do any necessary clean up.
+	 * @param reason The reason why the stream is closing.
+	 * @returns A promise that resolves when the source's pull operation has finished.  If the promise rejects,
+	 * 		the stream will be errored.
+	 */
 	cancel(reason?: any): Promise<void>;
 }
 
