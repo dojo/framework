@@ -25,29 +25,8 @@ function getPadding(name: string, text: string, length: number, character: strin
 		throw new RangeError('string.' + name + ' requires a valid length.');
 	}
 
-	let padding: string = '';
-
 	length -= text.length;
-	if (length < 1) {
-		return padding;
-	}
-
-	// Efficiently repeat the passed-in character.
-	while (true) {
-		if ((length & 1) === 1) {
-			padding += character;
-		}
-
-		length >>= 1;
-
-		if (length === 0) {
-			break;
-		}
-
-		character += character;
-	}
-
-	return padding;
+	return length < 1 ? '' : repeat(character, length);
 }
 
 /**
@@ -67,6 +46,39 @@ function normalizeSubstringArgs(name: string, text: string, search: string, posi
 }
 
 /**
+ * Returns the UTF-16 encoded code point value of a given position in a string.
+ * @param text The string containing the element whose code point is to be determined
+ * @param position Position of an element within the string to retrieve the code point value from
+ * @return A non-negative integer representing the UTF-16 encoded code point value
+ */
+export function codePointAt(text: string, position: number = 0) {
+	// Adapted from https://github.com/mathiasbynens/String.prototype.codePointAt
+	if (text == null) {
+		throw new TypeError('string.codePointAt requries a valid string.');
+	}
+	const length = text.length;
+
+	if (position !== position) {
+		position = 0;
+	}
+	if (position < 0 || position >= length) {
+		return undefined;
+	}
+
+	// Get the first code unit
+	const first = text.charCodeAt(position);
+	if (first >= 0xD800 && first <= 0xDBFF && length > position + 1) {
+		// Start of a surrogate pair (high surrogate and there is a next code unit); check for low surrogate
+		// https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+		const second = text.charCodeAt(position + 1);
+		if (second >= 0xDC00 && second <= 0xDFFF) {
+			return (first - 0xD800) * 0x400 + second - 0xDC00 + 0x10000;
+		}
+	}
+	return first;
+}
+
+/**
  * Determines whether a string ends with the given substring.
  * @param text The string to look for the search string within
  * @param search The string to search for
@@ -74,7 +86,7 @@ function normalizeSubstringArgs(name: string, text: string, search: string, posi
  * @return Boolean indicating if the search string was found at the end of the given string
  */
 export function endsWith(text: string, search: string, endPosition?: number): boolean {
-	if (endPosition == null) {
+	if (endPosition == null && text != null) {
 		endPosition = text.length;
 	}
 
@@ -116,6 +128,55 @@ export function escapeXml(xml: string, forAttribute: boolean = true): string {
 }
 
 /**
+ * Returns a string created by using the specified sequence of code points.
+ * @param codePoints One or more code points
+ * @return A string containing the given code points
+ */
+export function fromCodePoint(...codePoints: number[]): string {
+	// Adapted from https://github.com/mathiasbynens/String.fromCodePoint
+	const length = arguments.length;
+	if (!length) {
+		return '';
+	}
+
+	const fromCharCode = String.fromCharCode;
+	const MAX_SIZE = 0x4000;
+	let codeUnits: number[] = [];
+	let index = -1;
+	let result = '';
+
+	while (++index < length) {
+		let codePoint = Number(arguments[index]);
+
+		// Code points must be finite integers within the valid range
+		let isValid = isFinite(codePoint) && Math.floor(codePoint) === codePoint &&
+			codePoint >= 0 && codePoint <= 0x10FFFF;
+		if (!isValid) {
+			throw RangeError('string.fromCodePoint: Invalid code point ' + codePoint);
+		}
+
+		if (codePoint <= 0xFFFF) {
+			// BMP code point
+			codeUnits.push(codePoint);
+		}
+		else {
+			// Astral code point; split in surrogate halves
+			// https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+			codePoint -= 0x10000;
+			let highSurrogate = (codePoint >> 10) + 0xD800;
+			let lowSurrogate = (codePoint % 0x400) + 0xDC00;
+			codeUnits.push(highSurrogate, lowSurrogate);
+		}
+
+		if (index + 1 === length || codeUnits.length > MAX_SIZE) {
+			result += fromCharCode.apply(null, codeUnits);
+			codeUnits.length = 0;
+		}
+	}
+	return result;
+}
+
+/**
  * Determines whether a string includes the given substring (optionally starting from a given index).
  * @param text The string to look for the search string within
  * @param search The string to search for
@@ -147,6 +208,37 @@ export function padEnd(text: string, length: number, character: string = '0'): s
  */
 export function padStart(text: string, length: number, character: string = '0'): string {
 	return getPadding('padStart', text, length, character) + text;
+}
+
+/**
+ * Returns a string containing the given string repeated the specified number of times.
+ * @param text The string to repeat
+ * @param count The number of times to repeat the string
+ * @return A string containing the input string repeated count times
+ */
+export function repeat(text: string, count: number = 0): string {
+	// Adapted from https://github.com/mathiasbynens/String.prototype.repeat
+	if (text == null) {
+		throw new TypeError('string.repeat requires a valid string.');
+	}
+	if (count !== count) {
+		count = 0;
+	}
+	if (count < 0 || count === Infinity) {
+		throw new RangeError('string.repeat requires a non-negative finite count.');
+	}
+
+	let result = '';
+	while (count) {
+		if (count % 2) {
+			result += text;
+		}
+		if (count > 1) {
+			text += text;
+		}
+		count >>= 1;
+	}
+	return result;
 }
 
 /**

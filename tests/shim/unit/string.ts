@@ -1,6 +1,7 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import { endsWith, escapeRegExp, escapeXml, includes, padStart, padEnd, startsWith } from 'src/string';
+import { codePointAt, endsWith, escapeRegExp, escapeXml, fromCodePoint, includes,
+	padStart, padEnd, repeat, startsWith } from 'src/string';
 
 function createPaddingErrorTests(func: (text: string, length: number, character?: string) => string) {
 	// Tests error cases for padStart and padEnd.
@@ -22,6 +23,50 @@ function createPaddingErrorTests(func: (text: string, length: number, character?
 
 registerSuite({
 	name: 'string functions',
+
+	'.codePointAt()': {
+		'throws on undefined or null string'() {
+			assert.throws(function () {
+				codePointAt(undefined);
+			}, TypeError);
+			assert.throws(function () {
+				codePointAt(null);
+			}, TypeError);
+		},
+
+		'string starting with a BMP symbol'() {
+			var text = 'abc\uD834\uDF06def';
+
+			// Cases expected to return the first code point (i.e. position 0)
+			assert.strictEqual(codePointAt(text), 0x61);
+			assert.strictEqual(codePointAt(text, 0), 0x61);
+			assert.strictEqual(codePointAt(text, NaN), 0x61);
+			assert.strictEqual(codePointAt(text, null), 0x61);
+			assert.strictEqual(codePointAt(text, undefined), 0x61);
+
+			// Cases expected to return undefined (i.e. position out of range)
+			assert.strictEqual(codePointAt(text, -Infinity), undefined);
+			assert.strictEqual(codePointAt(text, Infinity), undefined);
+			assert.strictEqual(codePointAt(text, -1), undefined);
+			assert.strictEqual(codePointAt(text, 42), undefined);
+
+			// Test various code points in the string
+			assert.strictEqual(codePointAt(text, 3), 0x1D306);
+			assert.strictEqual(codePointAt(text, 4), 0xDF06);
+			assert.strictEqual(codePointAt(text, 5), 0x64);
+		},
+
+		'string starting with an astral symbol'() {
+			var text = '\uD834\uDF06def';
+			assert.strictEqual(codePointAt(text, 0), 0x1D306);
+			assert.strictEqual(codePointAt(text, 1), 0xDF06);
+		},
+
+		'lone high/low surrogates'() {
+			assert.strictEqual(codePointAt('\uD834abc', 0), 0xD834);
+			assert.strictEqual(codePointAt('\uDF06abc', 0), 0xDF06);
+		}
+	},
 
 	'.endsWith()': {
 		'throws on undefined or null string'() {
@@ -96,6 +141,42 @@ registerSuite({
 		assert.strictEqual(escapeXml(''), '');
 		assert.strictEqual(escapeXml(html, false), '&lt;p class="text">Fox &amp; Hound\'s&lt;/p>');
 		assert.strictEqual(escapeXml(html), '&lt;p class=&quot;text&quot;&gt;Fox &amp; Hound&#39;s&lt;/p&gt;');
+	},
+
+	'.fromCodePoint()': {
+		'error cases'() {
+			let codePoints = [ -1, 0x10FFFF + 1, 3.14, 3e-2, Infinity, -Infinity, NaN, undefined ];
+			for (var i = codePoints.length; i--;) {
+				assert.throws(function () {
+					fromCodePoint(codePoints[i]);
+				}, RangeError);
+			}
+		},
+
+		'basic cases'() {
+			assert.strictEqual(fromCodePoint(null), '\0');
+			assert.strictEqual(fromCodePoint(0), '\0');
+			assert.strictEqual(fromCodePoint(), '');
+			assert.strictEqual(fromCodePoint(0x1D306), '\uD834\uDF06');
+			assert.strictEqual(fromCodePoint(0x1D306, 0x61, 0x1D307), '\uD834\uDF06a\uD834\uDF07');
+			assert.strictEqual(fromCodePoint(0x61, 0x62, 0x1D307), 'ab\uD834\uDF07');
+		},
+
+		'test that valid cases do not throw'() {
+			let counter = Math.pow(2, 15) * 3 / 2;
+			let oneUnitArgs: number[] = [];
+			let twoUnitArgs: number[] = [];
+
+			while (--counter >= 0) {
+				oneUnitArgs.push(0); // one code unit per symbol
+				twoUnitArgs.push(0xFFFF + 1); // two code units per symbol
+			}
+
+			assert.doesNotThrow(function () {
+				fromCodePoint.apply(null, oneUnitArgs);
+				fromCodePoint.apply(null, twoUnitArgs);
+			});
+		}
 	},
 
 	'.includes()': {
@@ -174,6 +255,41 @@ registerSuite({
 			assert.strictEqual(padStart('Lorem', 10, ' '), '     Lorem');
 			assert.strictEqual(padStart('Lorem', 5), 'Lorem');
 			assert.strictEqual(padStart('Lorem', 1), 'Lorem');
+		}
+	},
+
+	'.repeat()': {
+		'throws on undefined or null string'() {
+			assert.throws(function () {
+				repeat(undefined);
+			}, TypeError);
+			assert.throws(function () {
+				repeat(null);
+			}, TypeError);
+		},
+
+		'throws on negative or infinite count'() {
+			let counts = [ -Infinity, -1, Infinity ];
+			for (var i = counts.length; i--;) {
+				assert.throws(function () {
+					repeat('abc', counts[i]);
+				}, RangeError);
+			}
+		},
+
+		'returns empty string when passed 0, NaN, or no count'() {
+			assert.strictEqual(repeat('abc'), '');
+			let counts = [ undefined, null, 0, NaN ];
+			for (let i = counts.length; i--;) {
+				assert.strictEqual(repeat('abc', counts[i]), '');
+			}
+		},
+
+		'returns expected string for positive numbers'() {
+			assert.strictEqual(repeat('abc', 1), 'abc');
+			assert.strictEqual(repeat('abc', 2), 'abcabc');
+			assert.strictEqual(repeat('abc', 3), 'abcabcabc');
+			assert.strictEqual(repeat('abc', 4), 'abcabcabcabc');
 		}
 	},
 
