@@ -10,7 +10,7 @@ var SinkMethod = {
 	write: 'write'
 };
 
-interface Record<T> {
+export interface Record<T> {
 	close?: boolean;
 	chunk?: T;
 	reject?: (error: Error) => void;

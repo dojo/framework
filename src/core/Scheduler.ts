@@ -7,7 +7,7 @@ let typeMap: { [key: string]: (callback: (...args: any[]) => any) => Handle; } =
 	'dom': queueDomTask
 };
 
-function getQueueHandle(item: Scheduler.Item): Handle {
+function getQueueHandle(item: Item): Handle {
 	return {
 		destroy: function () {
 			this.destroy = function () {};
@@ -15,6 +15,15 @@ function getQueueHandle(item: Scheduler.Item): Handle {
 			item.callback = null;
 		}
 	};
+}
+
+export interface KwArgs {
+	deferWhileProcessing?: boolean;
+	type?: string;
+}
+
+export interface Item extends QueueItem {
+	id?: string;
 }
 
 export default class Scheduler {
@@ -32,13 +41,13 @@ export default class Scheduler {
 	type: string;
 
 	protected _boundDispatch: () => void;
-	protected _deferred: Scheduler.Item[];
+	protected _deferred: Item[];
 	protected _idMap: { [key: string]: number };
 	protected _isProcessing: boolean;
-	protected _queue: Scheduler.Item[];
+	protected _queue: Item[];
 	protected _task: Handle;
 
-	constructor(kwArgs?: Scheduler.KwArgs) {
+	constructor(kwArgs?: KwArgs) {
 		this.deferWhileProcessing = (kwArgs && 'deferWhileProcessing' in kwArgs) ? kwArgs.deferWhileProcessing : true;
 		this.type = (kwArgs && kwArgs.type && kwArgs.type in typeMap) ? kwArgs.type : 'macro';
 
@@ -52,7 +61,7 @@ export default class Scheduler {
 			return this._defer(callback, id);
 		}
 
-		let item: Scheduler.Item = {
+		let item: Item = {
 			id: id,
 			isActive: true,
 			callback: callback
@@ -64,7 +73,7 @@ export default class Scheduler {
 	}
 
 	protected _defer(callback: (...args: any[]) => void, id?: string): Handle {
-		let item: Scheduler.Item = {
+		let item: Item = {
 			id: id,
 			isActive: true,
 			callback: callback
@@ -86,7 +95,7 @@ export default class Scheduler {
 		this._idMap = null;
 
 		let queue = this._queue;
-		let item: Scheduler.Item;
+		let item: Item;
 
 		while (item = queue.shift()) {
 			if (item.isActive) {
@@ -96,18 +105,18 @@ export default class Scheduler {
 
 		this._isProcessing = false;
 
-		let deferred: Scheduler.Item[] = this._deferred;
+		let deferred: Item[] = this._deferred;
 		if (deferred && deferred.length) {
 			this._deferred = null;
 
-			let item: Scheduler.Item;
+			let item: Item;
 			while (item = deferred.shift()) {
 				this._schedule(item);
 			}
 		}
 	}
 
-	protected _schedule(item: Scheduler.Item): void {
+	protected _schedule(item: Item): void {
 		let queue = this._queue;
 		let idMap = this._idMap;
 		let id: string = item.id;
@@ -133,16 +142,5 @@ export default class Scheduler {
 		if (id && !this._isProcessing) {
 			idMap[id] = queue.length - 1;
 		}
-	}
-}
-
-module Scheduler {
-	export interface KwArgs {
-		deferWhileProcessing?: boolean;
-		type?: string;
-	}
-
-	export interface Item extends QueueItem {
-		id?: string;
 	}
 }
