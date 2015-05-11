@@ -1,5 +1,5 @@
-import ReadableStream, { State } from './ReadableStream';
 import Promise from '../Promise';
+import ReadableStream, { State } from './ReadableStream';
 
 interface ReadRequest<T> {
 	promise: Promise<ReadResult<T>>;
@@ -13,26 +13,29 @@ export interface ReadResult<T> {
 }
 
 export default class ReadableStreamReader<T> {
+	get closed(): Promise<void> {
+		return this._closedPromise;
+	}
 
-	_closedPromise: Promise<void>;
+	private _closedPromise: Promise<void>;
 	private _ownerReadableStream: ReadableStream<T>;
-	_readRequests: ReadRequest<T>[];
-	state: State;
 	private _storedError: Error;
+	private _readRequests: ReadRequest<T>[];
 	private _resolveClosedPromise: () => void;
 	private _rejectClosedPromise: (error: Error) => void;
+
+	state: State;
 
 	constructor(stream: ReadableStream<T>) {
 		if (!stream.readable) {
 			throw new TypeError('3.4.3-1: stream must be a ReadableStream');
 		}
 
-		// if (isReadableStreamLocked(stream)) {
 		if (stream.locked) {
 			throw new TypeError('3.4.3-2: stream cannot be locked');
 		}
 
-		stream._reader = this;
+		stream.reader = this;
 		this._ownerReadableStream = stream;
 		this.state = State.Readable;
 		this._storedError = undefined;
@@ -41,10 +44,6 @@ export default class ReadableStreamReader<T> {
 			this._resolveClosedPromise = resolve;
 			this._rejectClosedPromise = reject;
 		});
-	}
-
-	get closed(): Promise<void> {
-		return this._closedPromise;
 	}
 
 	cancel(reason: string): Promise<void> {
@@ -61,7 +60,7 @@ export default class ReadableStreamReader<T> {
 		}
 
 		if (this._ownerReadableStream && this._ownerReadableStream.state === State.Readable) {
-			return this._ownerReadableStream._cancel(reason);
+			return this._ownerReadableStream.cancel(reason);
 		}
 
 		// 3.4.4.2-4,5 - the spec calls for this to throw an error. We have changed it to reject instead
@@ -89,31 +88,33 @@ export default class ReadableStreamReader<T> {
 			return Promise.reject<ReadResult<T>>(new TypeError('3.5.12-2: reader state is Errored'));
 		}
 
-		var stream = this._ownerReadableStream;
+		const stream = this._ownerReadableStream;
 		if (!stream || stream.state !== State.Readable) {
 			throw new TypeError('3.5.12-3,4: Stream must exist and be readable');
 		}
 
-		var queue = stream._queue;
+		const queue = stream.queue;
 		if (queue.length > 0) {
-			var chunk = queue.dequeue();
-			if (stream._closeRequested && !queue.length) {
-				stream._close();
-			} else {
-				stream._pull();
+			const chunk = queue.dequeue();
+			if (stream.closeRequested && !queue.length) {
+				stream.close();
+			}
+			else {
+				stream.pull();
 			}
 			return Promise.resolve({
 				value: chunk,
 				done: false
 			});
-		} else {
-			var readPromise = new Promise<ReadResult<T>>((resolve, reject) => {
+		}
+		else {
+			const readPromise = new Promise<ReadResult<T>>((resolve, reject) => {
 				this._readRequests.push({
 					promise: readPromise,
 					resolve: resolve,
 					reject: reject
 				});
-				stream._pull();
+				stream.pull();
 			});
 
 			return readPromise;
@@ -137,19 +138,19 @@ export default class ReadableStreamReader<T> {
 			throw new TypeError('3.4.4.4-3: Tried to release a reader lock when that reader has pending read calls un-settled');
 		}
 
-		this._release();
+		this.release();
 	}
 
 	/**
 	 * 3.5.13. ReleaseReadableStreamReader ( reader )
 	 * alias ReleaseReadableStreamReader
 	 */
-	_release(): void {
-		var request: any;
+	release(): void {
+		let request: any;
 		if (this._ownerReadableStream.state === State.Errored) {
 			this.state = State.Errored;
 
-			var e = this._ownerReadableStream._storedError;
+			const e = this._ownerReadableStream.storedError;
 			this._storedError = e;
 			this._rejectClosedPromise(e);
 
@@ -169,7 +170,7 @@ export default class ReadableStreamReader<T> {
 		}
 
 		this._readRequests = [];
-		this._ownerReadableStream._reader = undefined;
+		this._ownerReadableStream.reader = undefined;
 		this._ownerReadableStream = undefined;
 	}
 
