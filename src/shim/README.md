@@ -49,7 +49,56 @@ hasAdd('typedarray', function () {
 registered _and_ requested. The value associated with each feature name key corresponds to that feature's availability
 in the current environment. The object hash containing evaluated features is accessible via the `cache` export.
 
-## Promises and Asynchronous Operations
+### Language Utilities
+
+The core package provides several modules offering a number of langauge utilities.  Some of these are heavily based
+on methods in the ES2015 proposal; others are additional APIs for commonly-performed tasks.
+
+#### array
+
+The `array` module contains analogues to the following ES2015 Array APIs:
+
+* `copyWithin` - Copies a sequence of elements to another position in the given array
+* `from` - Creates an `Array` from an array-like object
+* `fill` - Fills some or all elements of an array with a given value
+* `find` - Returns the first value in the array satisfying a given function
+* `findIndex` - Returns the first index in the array whose value satisfies a given function
+* `of` - Creates an `Array` with the given arguments as its elements
+
+#### lang
+
+The `lang` module contains various utility functions for tasks such as copying objects and creating late-bound
+or partial applications of functions.
+
+#### math
+
+The `math` module contains analogues to a number of ES2015 APIs, including many trigonometric and logarithmic
+functions.
+
+#### string
+
+The `string` module contains analogues to the following ES2015 String APIs:
+
+* `codePointAt` - Returns the UTF-16 encoded code point value of a position in a string
+* `endsWith` - Determines whether a string ends with the given substring
+* `fromCodePoint` - Creates a string using the specified sequence of code points
+* `includes` - Determines whether a string includes the given substring
+* `repeat` - Returns a string containing a string repeated a given number of times
+* `startsWith` - Determines whether a string begins with the given substring
+
+Special thanks to Mathias Bynens for granting permission to adopt code from his
+[`codePointAt`](https://github.com/mathiasbynens/String.prototype.codePointAt),
+[`fromCodePoint`](https://github.com/mathiasbynens/String.fromCodePoint), and
+[`repeat`](https://github.com/mathiasbynens/String.prototype.repeat) polyfills.
+
+The `string` module also contains the following utility functions:
+
+* `escapeRegExp` - Escapes a string to safely be included in regular expressions
+* `escapeXml` - Escapes XML (or HTML) content in a string
+* `padEnd` - Adds padding to the end of a string to ensure it is a certain length
+* `padStart` - Adds padding to the beginning of a string to ensure it is a certain length
+
+### Promises and Asynchronous Operations
 
 ### Promise
 
@@ -79,3 +128,8 @@ Test cases MUST be written using Intern using the Object test interface and Asse
 ## Licensing information
 
 © 2004–2015 Dojo Foundation & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+
+Some string functions (`codePointAt`, `fromCodePoint`, and `repeat`) adopted from polyfills by Mathias Bynens,
+under the [MIT](http://opensource.org/licenses/MIT) license.
+
+See [LICENSE](LICENSE) for details.
