@@ -7,10 +7,10 @@ import BaseStringSource from './helpers/BaseStringSource';
 import { Strategy } from 'src/streams/interfaces';
 import Promise from 'src/Promise';
 
-var stream: ReadableStream<string>;
-var source: Source<string>;
-var controller: ReadableStreamController<string>;
-var strategy: Strategy<string> = {
+let stream: ReadableStream<string>;
+let source: Source<string>;
+let controller: ReadableStreamController<string>;
+let strategy: Strategy<string> = {
 	size(chunk: string) {
 		return 1;
 	},
@@ -28,49 +28,51 @@ registerSuite({
 
 	'constructor': {
 		'create no stream'() {
-			assert.throws(() => {
+			assert.throws(function () {
 				new ReadableStreamController<string>(null);
 			});
 		},
 
 		'create ReadableStreamController with unreadable stream'() {
-			var source = new BaseStringSource();
-			var stream = new ReadableStream<string>(source, strategy);
+			let source = new BaseStringSource();
+			let stream = new ReadableStream<string>(source, strategy);
 			stream.readable = false;
-			assert.throws(() => {
+			assert.throws(function () {
 				new ReadableStreamController<string>(stream);
 			});
 		},
 
 		'throws an error if the stream is not readable'() {
-			assert.throws(() => {
+			assert.throws(function () {
 				new ReadableStreamController(<ReadableStream<string>>{});
 			});
 		}
 	},
 
 	'desiredSize'() {
-		var strategy: Strategy<string> = {
+		let strategy: Strategy<string> = {
 			size(chunk: string) {
 				return 1;
 			},
 			highWaterMark: 10
 		};
-		var source = new BaseStringSource();
-		var stream = new ReadableStream<string>(source, strategy);
+		let source = new BaseStringSource();
+		let stream = new ReadableStream<string>(source, strategy);
 		assert.strictEqual(stream.controller.desiredSize, 10);
 	},
 
 	'close()': {
 		'calls close() on the ReadableStream'() {
-			var closeCalled = false;
-			stream.requestClose = () => { closeCalled = true; };
+			let closeCalled = false;
+			stream.requestClose = function () {
+				closeCalled = true;
+			};
 			controller.close();
 			assert.isTrue(closeCalled);
 		},
 
 		'multiple close() calls throws error'() {
-			assert.throws(() => {
+			assert.throws(function () {
 				controller.close();
 				controller.close();
 			});
@@ -78,65 +80,77 @@ registerSuite({
 
 		'on an errored stream throws an error'() {
 			stream.state = State.Errored;
-			assert.throws(() => {
+			assert.throws(function () {
 				controller.close();
 			});
 		},
 
 		'throw if not readable stream controller'() {
-			assert.throws(() => { controller.close.call({}); });
+			assert.throws(function () {
+				controller.close.call({});
+			});
 		}
 	},
 
 	'enqueue()': {
 		'calls enqueue on the ReadableStream'() {
-			var enqueueCalled = false;
-			stream.enqueue = () => { enqueueCalled = true; return true; };
+			let enqueueCalled = false;
+			stream.enqueue = function () {
+				enqueueCalled = true; return true;
+			};
 			controller.enqueue('foo');
 			assert.isTrue(enqueueCalled);
 		},
 
 		'enqueue() throws an error if state is not Readable'() {
 			stream.state = State.Closed;
-			assert.throws(() => {
+			assert.throws(function () {
 				controller.enqueue('foo');
 			});
 		},
 
 		'throws an error if a close has been requested'() {
 			stream.requestClose();
-			assert.throws(() => {
+			assert.throws(function () {
 				controller.enqueue('foo');
 			});
 		},
 
 		'throw if not readable stream controller'() {
-			assert.throws(() => { controller.enqueue.call({}); });
+			assert.throws(function () {
+				controller.enqueue.call({});
+			});
 		},
 
 		'throw if stream error'() {
 			stream.error(new Error('test'));
-			assert.throws(() => { controller.enqueue('foo'); });
+			assert.throws(function () {
+				controller.enqueue('foo');
+			});
 		}
 	},
 
 	'error': {
 		'throws an error if stream is not Readable'() {
 			stream.state = State.Closed;
-			assert.throws(() => {
+			assert.throws(function () {
 				controller.error(new Error('test error'));
 			});
 		},
 
 		'calls error() on the ReadableStream'() {
-			var errorCalled = false;
-			stream.error = () => { errorCalled = true; };
+			let errorCalled = false;
+			stream.error = function () {
+				errorCalled = true;
+			};
 			controller.error(new Error('test'));
 			assert.isTrue(errorCalled);
 		},
 
 		'throw if not readable stream controller'() {
-			assert.throws(() => { controller.error.call({}); });
-		},
+			assert.throws(function () {
+				controller.error.call({});
+			});
+		}
 	}
 });

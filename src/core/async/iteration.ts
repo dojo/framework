@@ -12,7 +12,7 @@ import { ArrayLike } from '../array';
 function processValuesAndCallback<T, U>(items: (T | Promise<T>)[], callback: Mapper<T, U>): Promise<{ values: T[]; results: U[] }> {
 	return Promise.all<T>(items)
 		.then(function (results) {
-			var pass: (U | Promise<U>)[] = Array.prototype.map.call(results, callback);
+			let pass: (U | Promise<U>)[] = Array.prototype.map.call(results, callback);
 			return Promise.all<U>(pass)
 				.then<{ values: T[]; results: U[] }>(function (pass) {
 					return { values: results, results: pass };
@@ -28,7 +28,7 @@ function processValuesAndCallback<T, U>(items: (T | Promise<T>)[], callback: Map
  */
 function findNextValueIndex<T>(list: ArrayLike<T>, offset: number = -1): number {
 	offset++;
-	for (var length = list.length; offset < length; offset++) {
+	for (let length = list.length; offset < length; offset++) {
 		if(offset in list) {
 			return offset;
 		}
@@ -47,14 +47,15 @@ function findLastValueIndex<T>(list: ArrayLike<T>, offset?: number): number {
 }
 
 function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: number) => number, items: (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
-	var hasInitialValue = arguments.length > 3;
+	const hasInitialValue = arguments.length > 3;
 	return Promise.all<T>(items)
 		.then(function (results) {
 			return new Promise(function (resolve, reject) {
+				let i: number;
 				function next(currentValue: U): void {
 					i = findNextIndex(items, i);
 					if (i >= 0) {
-						var result = callback(currentValue, results[i], i, results);
+						const result = callback(currentValue, results[i], i, results);
 
 						if ( (<Thenable<U>> result).then) {
 							(<Thenable<U>> result).then(next, reject);
@@ -68,8 +69,7 @@ function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: numb
 					}
 				};
 
-				var i:number;
-				var value: U;
+				let value: U;
 				if (hasInitialValue) {
 					value = initialValue;
 				}
@@ -89,9 +89,9 @@ function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: numb
 function testAndHaltOnCondition<T>(condition: boolean, items: (T | Promise<T>)[], callback: Filterer<T>): Promise<boolean> {
 	return Promise.all<T>(items).then(function (results) {
 		return new Promise<boolean>(function(resolve) {
-			var result: (boolean | Thenable<boolean>);
-			var pendingCount = 0;
-			for (var i = 0; i < results.length; i++) {
+			let result: (boolean | Thenable<boolean>);
+			let pendingCount = 0;
+			for (let i = 0; i < results.length; i++) {
 				result = callback(results[i], i, results);
 				if (result === condition) {
 					return resolve(result);
@@ -135,8 +135,8 @@ export function every<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Prom
  */
 export function filter<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<T[]> {
 	return processValuesAndCallback(items, callback).then<T[]>(function ({ results, values }) {
-		var arr: T[] = [];
-		for (var i = 0; i < results.length; i++) {
+		let arr: T[] = [];
+		for (let i = 0; i < results.length; i++) {
 			results[i] && arr.push(values[i]);
 		}
 		return arr;
@@ -164,7 +164,7 @@ export function find<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promi
 export function findIndex<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<number> {
 	// TODO we can improve this by returning immediately
 	return processValuesAndCallback(items, callback).then<number>(function ({ results, values }) {
-		for (var i = 0; i < results.length; i++) {
+		for (let i = 0; i < results.length; i++) {
 			if (results[i]) {
 				return i;
 			}
@@ -194,20 +194,20 @@ export function map<T, U>(items: (T | Promise<T>)[], callback: Mapper<T, U>): Pr
  * @return a promise eventually containing a value that is the result of the reduction
  */
 export function reduce<T, U>(items: (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
-	var args: any[] = <any[]> array.from(arguments);
+	let args: any[] = <any[]> array.from(arguments);
 	args.unshift(findNextValueIndex);
 	return generalReduce.apply(this, args);
 }
 
 export function reduceRight<T, U>(items: (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
-	var args: any[] = <any[]> array.from(arguments);
+	let args: any[] = <any[]> array.from(arguments);
 	args.unshift(findLastValueIndex);
 	return generalReduce.apply(this, args);
 }
 
 export function series<T, U>(items: (T | Promise<T>)[], operation: Mapper<T, U>): Promise<U[]> {
 	return generalReduce(findNextValueIndex, items, function (previousValue, currentValue, index, array) {
-		var result = operation(currentValue, index, array);
+		const result = operation(currentValue, index, array);
 
 		if ((<Thenable<U>> result).then) {
 			return (<Thenable<U>> result).then(function (value) {

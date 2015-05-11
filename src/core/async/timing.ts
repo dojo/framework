@@ -25,7 +25,7 @@ export function delay<T>(milliseconds: number): Identity<T> {
  * @return {function(T): Promise<T>} a function that produces a promise that is rejected or resolved based on your timeout
  */
 export function timeout<T>(milliseconds: number, reason: Error): Identity<T> {
-	var start = Date.now();
+	const start = Date.now();
 	return function (value: T): Promise<T> {
 		if (Date.now() - milliseconds > start) {
 			return Promise.reject<T>(reason);

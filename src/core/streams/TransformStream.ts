@@ -58,7 +58,9 @@ export default class TransformStream<R, W> {
 			write(chunk: W) {
 				writeChunk = chunk;
 				chunkWrittenButNotYetTransformed = true;
-				const p = new Promise<void>(resolve => writeDone = resolve);
+				const p = new Promise<void>(function (resolve) {
+					writeDone = resolve;
+				});
 				maybeDoTransform();
 				return p;
 			},

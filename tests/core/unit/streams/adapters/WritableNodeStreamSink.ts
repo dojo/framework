@@ -30,8 +30,8 @@ class WriteStream extends Writable {
 	}
 }
 
-var nodeStream: WriteStream;
-var sink: WritableNodeStreamSink;
+let nodeStream: WriteStream;
+let sink: WritableNodeStreamSink;
 
 registerSuite({
 	name: 'WritableNodeStreamSink',
@@ -42,21 +42,21 @@ registerSuite({
 	},
 
 	'start()'() {
-		var dfd = this.async(1000);
+		let dfd = this.async(1000);
 		sink.start().then(dfd.callback(() => {}));
 	},
 
 	'start() after close'() {
-		var dfd = this.async(1000);
+		let dfd = this.async(1000);
 		sink.close().then(() => {
-			sink.start().then(dfd.reject.bind(dfd), dfd.callback(() => {}));
+			sink.start().then(dfd.reject.bind(dfd), dfd.callback(function () {}));
 		});
 	},
 
 	'write()'() {
-		var dfd = this.async(1000);
-		var value = 'test';
-		sink.write(value).then(dfd.callback(() => {
+		let dfd = this.async(1000);
+		let value = 'test';
+		sink.write(value).then(dfd.callback(function () {
 			assert.strictEqual(nodeStream.writtenChunk.toString('utf8'), value);
 			assert.isTrue(nodeStream.writeCalled);
 		}));
@@ -64,30 +64,29 @@ registerSuite({
 
 	'write() that throws'() {
 		nodeStream.shouldThrowError = true;
-		var dfd = this.async(1000);
-		var value = 'test';
-		sink.write(value).then(dfd.reject.bind(dfd), dfd.callback(() => {
-		}));
+		let dfd = this.async(1000);
+		let value = 'test';
+		sink.write(value).then(dfd.reject.bind(dfd), dfd.callback(function () {}));
 	},
 
 	'write() after close'() {
-		var dfd = this.async(1000);
-		var value = 'test';
-		sink.close().then(() => {
-			sink.write(value).then(dfd.reject.bind(dfd), dfd.callback(() => {}));
+		let dfd = this.async(1000);
+		let value = 'test';
+		sink.close().then(function () {
+			sink.write(value).then(dfd.reject.bind(dfd), dfd.callback(function () {}));
 		});
 	},
 
 	'close()'() {
-		var dfd = this.async(1000);
-		sink.close().then(dfd.callback(() => {
+		let dfd = this.async(1000);
+		sink.close().then(dfd.callback(function () {
 			assert.isTrue(nodeStream.endCalled);
 		}));
 	},
 
 	'abort()'() {
-		var dfd = this.async(1000);
-		sink.abort('some reason').then(dfd.callback(() => {
+		let dfd = this.async(1000);
+		sink.abort('some reason').then(dfd.callback(function () {
 			assert.isTrue(nodeStream.endCalled);
 		}));
 	}

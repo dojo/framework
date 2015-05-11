@@ -42,24 +42,24 @@ class CountStream extends Readable {
 	}
 
 	_read() {
-		var i = this._index++;
+		let i = this._index++;
 
 		if (i > this._max) {
 			// pushing null signals the end of data
 			this.push(null);
 		}
 		else {
-			var str = '' + i;
-			var buf = new Buffer(str, 'ascii');
+			let str = '' + i;
+			let buf = new Buffer(str, 'ascii');
 			this.push(buf);
 		}
 	}
 }
 
-var nodeStream: CountStream;
-var stream: ReadableStream<string>;
-var source: ReadableNodeStreamSource;
-var controller: Controller;
+let nodeStream: CountStream;
+let stream: ReadableStream<string>;
+let source: ReadableNodeStreamSource;
+let controller: Controller;
 
 registerSuite({
 	name: 'Node Readable Stream adapter',
@@ -72,7 +72,7 @@ registerSuite({
 	},
 
 	'start()'() {
-		var dfd = this.async(1000);
+		let dfd = this.async(1000);
 		source.start(controller).then(dfd.resolve.bind(dfd), dfd.reject.bind(dfd));
 	},
 
@@ -85,25 +85,25 @@ registerSuite({
 	},
 
 	'cancel()'() {
-		var dfd = this.async(1000);
-		source.start(controller).then(() => {
-			source.cancel().then(dfd.callback(() => {
+		let dfd = this.async(1000);
+		source.start(controller).then(function () {
+			source.cancel().then(dfd.callback(function () {
 				assert.isTrue(controller.closed);
 			}));
 		});
 	},
 
 	'retrieve new data'() {
-		var dfd = this.async(1000);
+		let dfd = this.async(1000);
 		stream = new ReadableStream<string>(source);
-		var reader = stream.getReader();
-		reader.read().then((value: any) => {
-			var num = +value.value;
+		let reader = stream.getReader();
+		reader.read().then(function (value: any) {
+			let num = Number(value.value);
 			assert.isNumber(num);
 			return num + 1;
-		}).then((newValue) => {
-			reader.read().then(dfd.callback((value: any) => {
-				assert.strictEqual(+value.value, newValue);
+		}).then(function (newValue) {
+			reader.read().then(dfd.callback(function (value: any) {
+				assert.strictEqual(Number(value.value), newValue);
 			}));
 		});
 	}

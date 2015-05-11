@@ -1,7 +1,7 @@
 import Benchmark = require('benchmark');
 import lang = require('../../src/lang');
 
-var benchmarks: Benchmark[] = [];
+let benchmarks: Benchmark[] = [];
 
 function onComplete() {
 	console.log(this.name + ': ' + this.hz + ' with a margin of error of ' + this.stats.moe);
@@ -11,7 +11,7 @@ benchmarks.push(new Benchmark('lang.copy (single source, all options false)',
 	// The `setup` option cannot be used, as the TypeScript compiler does not know
 	// that `setup`'s local variables are made available to the test function.
 	(function () {
-		var options = {
+		const options = {
 			sources: [ <any> { a: 1, b: 'Lorem ipsum', c: [], d: 4 } ]
 		};
 
@@ -23,7 +23,7 @@ benchmarks.push(new Benchmark('lang.copy (single source, all options false)',
 	}));
 
 benchmarks.push(new Benchmark('lang.copy (single source, descriptors true)', (function () {
-	var options = {
+	const options = {
 		descriptors: true,
 		sources: [
 			Object.create(Object.prototype, {
@@ -63,7 +63,7 @@ benchmarks.push(new Benchmark('lang.copy (single source, descriptors true)', (fu
 }));
 
 benchmarks.push(new Benchmark('lang.copy (multiple sources, all options true)', (function () {
-	var options = {
+	const options = {
 		assignPrototype: true,
 		deep: true,
 		descriptors: true,
@@ -131,7 +131,7 @@ benchmarks.push(new Benchmark('lang.copy (multiple sources, all options true)', 
 }));
 
 benchmarks.push(new Benchmark('lang.create', (function () {
-	var object = <any> { a: 1, b: 'Lorem ipsum', c: [], d: 4 };
+	let object = <any> { a: 1, b: 'Lorem ipsum', c: [], d: 4 };
 
 	return function () {
 		lang.create(object, object, object, object);
@@ -141,7 +141,7 @@ benchmarks.push(new Benchmark('lang.create', (function () {
 }));
 
 benchmarks.push(new Benchmark('lang.duplicate', (function () {
-	var object = <any> { a: 1, b: 'Lorem ipsum', c: [], d: 4 };
+	let object = <any> { a: 1, b: 'Lorem ipsum', c: [], d: 4 };
 
 	return function () {
 		lang.duplicate(object);
@@ -151,9 +151,9 @@ benchmarks.push(new Benchmark('lang.duplicate', (function () {
 }));
 
 benchmarks.push(new Benchmark('lang.getPropertyDescriptor', (function () {
-	var prototype = <any> { a: 1, b: 'Lorem ipsum', c: [], d: 4 };
-	var object = prototype;
-	var i = 10;
+	let prototype = <any> { a: 1, b: 'Lorem ipsum', c: [], d: 4 };
+	let object = prototype;
+	let i = 10;
 
 	while (i > 0) {
 		object = Object.create(object);
@@ -175,8 +175,8 @@ benchmarks.push(new Benchmark('lang.getPropertyDescriptor', (function () {
 }));
 
 benchmarks.push(new Benchmark('lang.isIdentical', (function () {
-	var a = Number('asdfx{}');
-	var b = Number('xkcd');
+	let a = Number('asdfx{}');
+	let b = Number('xkcd');
 
 	return function () {
 		lang.isIdentical(a, b);
@@ -186,7 +186,7 @@ benchmarks.push(new Benchmark('lang.isIdentical', (function () {
 }));
 
 benchmarks.push(new Benchmark('lang.lateBind', (function () {
-	var object: any = {
+	let object: any = {
 		method: function () {}
 	};
 
@@ -198,7 +198,7 @@ benchmarks.push(new Benchmark('lang.lateBind', (function () {
 }));
 
 benchmarks.push(new Benchmark('lang.lateBind (partial application)', (function () {
-	var object: any = {
+	let object: any = {
 		method: function () {}
 	};
 

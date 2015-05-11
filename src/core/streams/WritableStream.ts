@@ -3,7 +3,7 @@ import Promise from '../Promise';
 import SizeQueue from './SizeQueue';
 import * as util from './util';
 
-var SinkMethod = {
+const SinkMethod = {
 	abort: 'abort',
 	close: 'close',
 	start: 'start',
@@ -277,10 +277,10 @@ export default class WritableStream<T> {
 
 		this._error(error);
 
-		return util.promiseInvokeOrFallbackOrNoop(this._underlyingSink, SinkMethod.abort, [reason], SinkMethod.close)
-			.then(() => {
-			return;
-		});
+		return util.promiseInvokeOrFallbackOrNoop(this._underlyingSink, SinkMethod.abort, [ reason ], SinkMethod.close)
+			.then(function () {
+				return;
+			});
 	}
 
 	close(): Promise<void> {
@@ -329,7 +329,7 @@ export default class WritableStream<T> {
 
 		let chunkSize = 1;
 		let writeRecord: Record<T>;
-		let promise = new Promise<void>((resolve, reject) => {
+		let promise = new Promise<void>(function (resolve, reject) {
 			writeRecord = {
 				chunk: chunk,
 				reject: reject,
@@ -357,4 +357,3 @@ export default class WritableStream<T> {
 		return promise;
 	}
 }
-

@@ -138,7 +138,7 @@ export default class ReadableStream<T> {
 		this.queue = new SizeQueue<T>();
 
 		this._startedPromise = new Promise<void>((resolveStarted) => {
-			const startResult = util.invokeOrNoop(this._underlyingSource, 'start', [this.controller]);
+			const startResult = util.invokeOrNoop(this._underlyingSource, 'start', [ this.controller ]);
 			Promise.resolve(startResult).then(
 				() => {
 					this._started = true;
@@ -162,7 +162,7 @@ export default class ReadableStream<T> {
 
 		this.queue.empty();
 		this.close();
-		return util.promiseInvokeOrNoop(this._underlyingSource, 'cancel', [reason]).then(() => undefined);
+		return util.promiseInvokeOrNoop(this._underlyingSource, 'cancel', [ reason ]).then(function () {});
 	}
 
 	/**
@@ -269,40 +269,15 @@ export default class ReadableStream<T> {
 	}
 
 	pipeTo(dest: WritableStream<T>, options: PipeOptions = {}): Promise<void> {
-		const source = this;
 		let resolvePipeToPromise: () => void;
 		let rejectPipeToPromise: (error: Error) => void;
 		let closedPurposefully = false;
 		let lastRead: any;
 		let reader: ReadableStreamReader<T>;
 
-		return new Promise<void>((resolve, reject) => {
-			resolvePipeToPromise = resolve;
-			rejectPipeToPromise = reject;
-
-			reader = source.getReader();
-			reader.closed.catch((reason: any) => {
-				// abortDest
-				if (!options.preventAbort) {
-					dest.abort(reason);
-				}
-				rejectPipeToPromise(reason);
-			});
-
-			dest.closed.then(
-				() => {
-					if (!closedPurposefully) {
-						cancelSource(new TypeError('destination is closing or closed and cannot be piped to anymore'));
-					}
-				},
-				cancelSource
-			);
-			doPipe();
-		});
-
 		function doPipe(): void {
 			lastRead = reader.read();
-			Promise.all([lastRead, dest.ready]).then(([readResult, ready]) => {
+			Promise.all([ lastRead, dest.ready ]).then(function ([ readResult, ready ]) {
 				if (readResult.done) {
 					closeDest();
 				}
@@ -319,7 +294,7 @@ export default class ReadableStream<T> {
 				rejectPipeToPromise(reason);
 			}
 			else {
-				lastRead.then(() => {
+				lastRead.then(function () {
 					reader.releaseLock();
 					rejectPipeToPromise(reason);
 				});
@@ -338,6 +313,30 @@ export default class ReadableStream<T> {
 				resolvePipeToPromise();
 			}
 		}
+
+		return new Promise<void>((resolve, reject) => {
+			resolvePipeToPromise = resolve;
+			rejectPipeToPromise = reject;
+
+			reader = this.getReader();
+			reader.closed.catch((reason: any) => {
+				// abortDest
+				if (!options.preventAbort) {
+					dest.abort(reason);
+				}
+				rejectPipeToPromise(reason);
+			});
+
+			dest.closed.then(
+				function () {
+					if (!closedPurposefully) {
+						cancelSource(new TypeError('destination is closing or closed and cannot be piped to anymore'));
+					}
+				},
+				cancelSource
+			);
+			doPipe();
+		});
 	}
 
 	/**
@@ -357,10 +356,12 @@ export default class ReadableStream<T> {
 			return;
 		}
 
-		this._pullingPromise = util.promiseInvokeOrNoop(this._underlyingSource, 'pull', [this.controller]);
+		this._pullingPromise = util.promiseInvokeOrNoop(this._underlyingSource, 'pull', [ this.controller ]);
 		this._pullingPromise.then(() => {
 			this._pullingPromise = undefined;
-		}, e => this.error(e));
+		}, (e) => {
+			this.error(e);
+		});
 	}
 
 	/**
@@ -386,7 +387,7 @@ export default class ReadableStream<T> {
 	 * the two resulting ReadableStream instances
 	 * @alias TeeReadableStream
 	 */
-	tee(): [ReadableStream<T>, ReadableStream<T>] {
+	tee(): [ ReadableStream<T>, ReadableStream<T> ] {
 		if (!this.readable) {
 			throw new TypeError('3.2.4.5-1: must be a ReadableSream');
 		}
@@ -402,7 +403,9 @@ export default class ReadableStream<T> {
 			reason1: undefined,
 			reason2: undefined
 		};
-		teeState.promise = new Promise(resolve => teeState._resolve = resolve);
+		teeState.promise = new Promise(function (resolve) {
+			teeState._resolve = resolve;
+		});
 
 		const createCancelFunction = (branch: number) => {
 			return (reason: any): void => {
@@ -416,8 +419,8 @@ export default class ReadableStream<T> {
 			};
 		};
 
-		const pull = (controller: ReadableStreamController<T>) => {
-			return reader.read().then((result: any) => {
+		const pull = function (controller: ReadableStreamController<T>) {
+			return reader.read().then(function (result: any) {
 				const value = result.value;
 				const done = result.done;
 
@@ -456,7 +459,7 @@ export default class ReadableStream<T> {
 		};
 		branch2 = new ReadableStream(underlyingSource2);
 
-		reader.closed.catch((r: any) => {
+		reader.closed.catch(function (r: any) {
 			if (teeState.closedOrErrored) {
 				return;
 			}

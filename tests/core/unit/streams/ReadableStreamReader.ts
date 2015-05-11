@@ -6,50 +6,55 @@ import ReadableStream, { State, Source } from 'src/streams/ReadableStream';
 import BaseStringSource from './helpers/BaseStringSource';
 import Promise from 'src/Promise';
 
-var stream: ReadableStream<string>;
-var source: Source<string>;
-var reader: ReadableStreamReader<string>;
-var asyncTimeout = 1000;
+const ASYNC_TIMEOUT = 1000;
+let stream: ReadableStream<string>;
+let source: Source<string>;
+let reader: ReadableStreamReader<string>;
 
 registerSuite({
 	name: 'ReadableStreamReader',
 
 	beforeEach() {
 		source = new BaseStringSource();
-		stream = new ReadableStream<string>(source, { size(chunk: string) { return 1; }, highWaterMark: Infinity });
+		stream = new ReadableStream<string>(source, {
+			size(chunk: string) {
+				return 1;
+			},
+			highWaterMark: Infinity
+		});
 		reader = stream.getReader();
 	},
 
 	'constructor': {
 		'throws an error if no stream is present'() {
-			assert.throws(() => {
+			assert.throws(function () {
 				new ReadableStreamReader(null);
 			});
 		},
 
 		'throws an error if the stream is not readable'() {
 			stream.readable = false;
-			assert.throws(() => {
+			assert.throws(function () {
 				new ReadableStreamReader(stream);
 			});
 		},
 
 		'throws an error if the stream is locked'() {
-			assert.throws(() => {
+			assert.throws(function () {
 				new ReadableStreamReader(<ReadableStream<string>>{});
 			});
 		},
 
 		'closed stream'() {
 			stream.state = State.Closed;
-			assert.throws(() => {
+			assert.throws(function () {
 				new ReadableStreamReader(stream);
 			});
 		},
 
 		'error stream'() {
 			stream.state = State.Errored;
-			assert.throws(() => {
+			assert.throws(function () {
 				new ReadableStreamReader(stream);
 			});
 		}
@@ -57,16 +62,18 @@ registerSuite({
 
 	'closed promise': {
 		'resolve on cancel'() {
-			var dfd = this.async(asyncTimeout);
-			reader.closed.then(dfd.callback(() => { /* passed */ }));
+			let dfd = this.async(ASYNC_TIMEOUT);
+			reader.closed.then(dfd.callback(function () {}));
 			reader.cancel('reason');
 		},
 
 		'resolve on stream close'() {
-			var dfd = this.async(asyncTimeout);
+			let dfd = this.async(ASYNC_TIMEOUT);
 			reader.closed.then(
-				dfd.callback(() => { /* passed */}),
-				dfd.rejectOnError(() => { assert.fail(); })
+				dfd.callback(function () {}),
+				dfd.rejectOnError(function () {
+					assert.fail();
+				})
 			);
 			stream.close();
 		}
@@ -75,98 +82,118 @@ registerSuite({
 
 	'cancel()': {
 		'resolves if the reader is closed'() {
-			var dfd = this.async(asyncTimeout);
+			let dfd = this.async(ASYNC_TIMEOUT);
 			reader.state = State.Closed;
-			reader.cancel('reason').then(dfd.callback(() => {}));
+			reader.cancel('reason').then(dfd.callback(function () {}));
 		},
 
 		'rejects if the reader is errored'() {
-			var dfd = this.async(asyncTimeout);
+			let dfd = this.async(ASYNC_TIMEOUT);
 			reader.state = State.Errored;
-			reader.cancel('reason').then(dfd.rejectOnError(() => {}), dfd.callback(() => {}));
+			reader.cancel('reason').then(dfd.rejectOnError(function () {}), dfd.callback(function () {}));
 		},
 
 		'rejects with an error if state is readable and the owner stream state is not'() {
-			var dfd = this.async(asyncTimeout);
+			let dfd = this.async(ASYNC_TIMEOUT);
 			reader.state = State.Readable;
 			stream.state = State.Errored;
-			reader.cancel('reason').then(dfd.rejectOnError(() => {}), dfd.callback(() => {}));
+			reader.cancel('reason').then(dfd.rejectOnError(function () {}), dfd.callback(function () {}));
 		},
 
 		'calls the stream cancel method'() {
-			var cancelCalled = false;
-			(<any> stream)._cancel = () => { cancelCalled = true; return Promise.resolve(); };
+			let cancelCalled = false;
+			(<any> stream)._cancel = function () {
+				cancelCalled = true;
+				return Promise.resolve();
+			};
 			reader.cancel('reason');
 			assert.isTrue(cancelCalled);
 		},
 
 		'reject if not readable stream reader'() {
-			var dfd = this.async(asyncTimeout);
-			reader.cancel.call({}).then(dfd.rejectOnError(() => { assert.fail(); }), dfd.callback(() => {}));
+			let dfd = this.async(ASYNC_TIMEOUT);
+			reader.cancel.call({}).then(
+				dfd.rejectOnError(function () {
+					assert.fail();
+				}),
+				dfd.callback(function () {})
+			);
 		}
 	},
 
 	'read()': {
 		'resolves with an undefined value if the state is closed'() {
-			var dfd = this.async(asyncTimeout);
+			let dfd = this.async(ASYNC_TIMEOUT);
 			reader.state = State.Closed;
-			reader.read().then(dfd.callback((result: ReadResult<string>) => {
+			reader.read().then(dfd.callback(function (result: ReadResult<string>) {
 				assert.isUndefined(result.value);
 				assert.isTrue(result.done);
 			}));
 		},
 
 		'rejects wth an error if the state is errored'() {
-			var dfd = this.async(asyncTimeout);
+			let dfd = this.async(ASYNC_TIMEOUT);
 			reader.state = State.Errored;
-			reader.read().then(dfd.rejectOnError(() => {}), dfd.callback(() => {}));
+			reader.read().then(
+				dfd.rejectOnError(function () {}),
+				dfd.callback(function () {})
+			);
 		},
 
 		'throws an error if the stream is not readable'() {
 			stream.state = State.Closed;
-			assert.throws(() => {
+			assert.throws(function () {
 				reader.read();
 			});
 		},
 
 		'resolves with the chunk value'() {
-			var chunkValue = 'test';
+			let chunkValue = 'test';
 			stream.controller.enqueue(chunkValue);
-			return reader.read().then((result: ReadResult<string>) => {
+			return reader.read().then(function (result: ReadResult<string>) {
 				assert.strictEqual(result.value, chunkValue);
 			});
 		},
 
 		'reject if not readable stream reader'() {
-			var dfd = this.async(asyncTimeout);
-			reader.read.call({}).then(dfd.rejectOnError(() => { assert.fail(); }), dfd.callback(() => {}));
+			let dfd = this.async(ASYNC_TIMEOUT);
+			reader.read.call({}).then(
+				dfd.rejectOnError(function () {
+					assert.fail();
+				}),
+				dfd.callback(function () {})
+			);
 		}
 	},
 
 	'releaseLock()': {
 		'throws an error if there are pending read requests'() {
 			reader.read();
-			assert.throws(() => {
+			assert.throws(function () {
 				reader.releaseLock();
 			});
 		},
 
 		'releases the lock and closes the reader'() {
-			var dfd = this.async(asyncTimeout);
-			reader.closed.then(dfd.callback(() => {
+			let dfd = this.async(ASYNC_TIMEOUT);
+			reader.closed.then(dfd.callback(function () {
 				assert.strictEqual(reader.state, State.Closed);
 			}));
 			reader.releaseLock();
 		},
 
 		'reject if not readable stream reader'() {
-			assert.throws(() => { reader.releaseLock.call({}); });
+			assert.throws(function () {
+				reader.releaseLock.call({});
+			});
 		},
 
 		'unlocked'() {
-			var result: any;
+			let result: any;
 			reader.releaseLock();
-			assert.doesNotThrow(() => { result = reader.releaseLock(); });
+			assert.doesNotThrow(function () {
+				result = reader.releaseLock();
+			});
 			assert.isUndefined(result);
 		}
 	},
@@ -182,9 +209,9 @@ registerSuite({
 		},
 
 		'resolves the read with the resolved data'() {
-			var dfd = this.async(asyncTimeout);
-			var resultChunk = 'test';
-			reader.read().then(dfd.callback((result: ReadResult<string>) => {
+			let dfd = this.async(ASYNC_TIMEOUT);
+			let resultChunk = 'test';
+			reader.read().then(dfd.callback(function (result: ReadResult<string>) {
 				assert.strictEqual(result.value, resultChunk);
 			}));
 			reader.resolveReadRequest(resultChunk);

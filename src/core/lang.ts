@@ -2,8 +2,8 @@ import { PropertyEvent, Observer } from './observers/interfaces';
 import * as ObjectObserver from './observers/ObjectObserver';
 import has from './has';
 
-var slice = Array.prototype.slice;
-var hasOwnProperty = Object.prototype.hasOwnProperty;
+const slice = Array.prototype.slice;
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function isObject(item: any): boolean {
 	return item && typeof item === 'object' && !Array.isArray(item) && !(item instanceof RegExp);
@@ -28,8 +28,8 @@ function copyArray(array: any[], kwArgs: CopyArgs): any[] {
 }
 
 export function copy(kwArgs: CopyArgs): any {
-	var target: any;
-	var sources: any[] = kwArgs.sources;
+	let target: any;
+	let sources: any[] = kwArgs.sources;
 
 	if (!sources.length) {
 		throw new RangeError('lang.copy requires at least one source object.');
@@ -44,21 +44,21 @@ export function copy(kwArgs: CopyArgs): any {
 		target = kwArgs.target || {};
 	}
 
-	for (var i = 0; i < sources.length; i++) {
+	for (let i = 0; i < sources.length; i++) {
 		// iterate through all the sources
-		var source: { [index: string]: any } = sources[i];
-		var name: string;
-		var value: any;
+		const source: { [index: string]: any } = sources[i];
+		let name: string;
+		let value: any;
 
 		if (kwArgs.descriptors) {
 			// if we are copying descriptors, use to get{Own}PropertyNames so we get every property
 			// (including non enumerables).
-			var names = (kwArgs.inherited ? getPropertyNames : Object.getOwnPropertyNames)(source);
+			const names = (kwArgs.inherited ? getPropertyNames : Object.getOwnPropertyNames)(source);
 
-			for (var j = 0; j < names.length; j++) {
+			for (let j = 0; j < names.length; j++) {
 				name = names[j];
 				// get the descriptor
-				var descriptor = (kwArgs.inherited ?
+				const descriptor = (kwArgs.inherited ?
 					getPropertyDescriptor : Object.getOwnPropertyDescriptor)(source, name);
 				value = descriptor.value;
 
@@ -145,14 +145,14 @@ export function duplicate(source: {}): {} {
 }
 
 export function getPropertyNames(object: {}): string[] {
-	var setOfNames: {[index: string]: any} = {};
-	var names : string[] = [];
+	let setOfNames: { [index: string]: any } = {};
+	let names : string[] = [];
 
 	do {
 		// go through each prototype to add the property names
-		var ownNames = Object.getOwnPropertyNames(object);
-		for (var i = 0, l = ownNames.length; i < l; i++) {
-			var name = ownNames[i];
+		const ownNames = Object.getOwnPropertyNames(object);
+		for (let i = 0, l = ownNames.length; i < l; i++) {
+			const name = ownNames[i];
 			// check to make sure we haven't added it yet
 			if (setOfNames[name] !== true) {
 				setOfNames[name] = true;
@@ -160,16 +160,18 @@ export function getPropertyNames(object: {}): string[] {
 			}
 		}
 		object = Object.getPrototypeOf(object);
-	} while (object && object !== Object.prototype);
+	}
+	while (object && object !== Object.prototype);
 
 	return names;
 }
 
 export function getPropertyDescriptor(object: Object, property: string): PropertyDescriptor {
-	var descriptor: PropertyDescriptor;
+	let descriptor: PropertyDescriptor;
 	do {
 		descriptor = Object.getOwnPropertyDescriptor(object, property);
-	} while (!descriptor && (object = Object.getPrototypeOf(object)));
+	}
+	while (!descriptor && (object = Object.getPrototypeOf(object)));
 
 	return descriptor;
 }
@@ -183,7 +185,7 @@ export function isIdentical(a: any, b: any): boolean {
 export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): (...args: any[]) => any {
 	return suppliedArgs.length ?
 		function () {
-			var args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
+			const args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
 
 			// TS7017
 			return (<any> instance)[method].apply(instance, args);
@@ -208,7 +210,7 @@ export interface ObserveArgs {
 
 export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs: any[]): (...args: any[]) => any {
 	return function () {
-		var args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
+		const args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
 
 		return targetFunction.apply(this, args);
 	};

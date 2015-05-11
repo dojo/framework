@@ -20,8 +20,7 @@ export default class ManualSink<T> implements Sink<T> {
 			return;
 		}
 
-		var resolve = this._resolvers.shift();
-
+		const resolve = this._resolvers.shift();
 		resolve();
 	}
 

@@ -20,7 +20,8 @@ export function add(feature: string, value: any, overwrite: boolean = false): vo
 
 	if (typeof value === 'function') {
 		testFunctions[feature] = value;
-	} else {
+	}
+	else {
 		cache[feature] = value;
 	}
 }
@@ -37,7 +38,8 @@ export default function has(feature: string): any {
 	if (testFunctions[feature]) {
 		result = cache[feature] = testFunctions[feature].call(null);
 		testFunctions[feature] = null;
-	} else {
+	}
+	else {
 		result = cache[feature];
 	}
 

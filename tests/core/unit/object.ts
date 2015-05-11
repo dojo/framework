@@ -2,14 +2,14 @@ import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import * as object from 'src/object';
 
-var target: any;
+let target: any;
 
 function createAssignTestArrayLike(source: string | any[]) {
 	return function () {
 		object.assign(target, source);
 		assert.isDefined(target);
 		assert.isUndefined(target.length, 'The length property should not be copied from array or string');
-		for (var i = source.length; i--;) {
+		for (let i = source.length; i--;) {
 			assert.strictEqual(target[i], source[i]);
 		}
 	};
@@ -17,7 +17,7 @@ function createAssignTestArrayLike(source: string | any[]) {
 
 function createAssignTestUnchanged(source: any) {
 	return function () {
-		var original = Object.create(target);
+		let original = Object.create(target);
 		object.assign(target, source);
 
 		assert.deepEqual(target, original, 'The object should not be changed');
@@ -48,12 +48,12 @@ registerSuite({
 		},
 
 		'first and second arguments are defined'() {
-			var source = {
+			let source = {
 				property3: 'value3',
 				property4: 'value4'
 			};
 
-			var assigned = object.assign(target, source);
+			let assigned = object.assign(target, source);
 
 			assert.deepEqual(assigned, {
 				property1: 'value1',
@@ -65,8 +65,8 @@ registerSuite({
 		},
 
 		'only iterates over source\'s own keys'() {
-			var ancestor = { property3: 'value3' };
-			var source = Object.create(ancestor);
+			let ancestor = { property3: 'value3' };
+			let source = Object.create(ancestor);
 			source.property4 = 'value4';
 
 			object.assign(target, source);
@@ -79,17 +79,17 @@ registerSuite({
 		},
 
 		'many source objects'() {
-			var source1 = {
+			let source1 = {
 				property3: 'value3',
 				property4: 'value4'
 			};
 
-			var source2 = {
+			let source2 = {
 				property5: 'value5',
 				property6: 'value6'
 			};
 
-			var source3 = {
+			let source3 = {
 				property7: 'value7',
 				property8: 'value8'
 			};
@@ -109,12 +109,12 @@ registerSuite({
 		},
 
 		'many source objects, sparse'() {
-			var source1 = {
+			let source1 = {
 				property3: 'value3',
 				property4: 'value4'
 			};
 
-			var source3 = {
+			let source3 = {
 				property7: 'value7',
 				property8: 'value8'
 			};
@@ -154,7 +154,7 @@ registerSuite({
 		},
 
 		'the same object'() {
-			var obj = {};
+			let obj = {};
 			assert.isTrue(object.is(obj, obj));
 		},
 
@@ -195,7 +195,7 @@ registerSuite({
 		},
 
 		'two different Date objects with the same value'() {
-			var date = new Date();
+			let date = new Date();
 			assert.isFalse(object.is(date, new Date(Number(date))));
 		}
 	}
