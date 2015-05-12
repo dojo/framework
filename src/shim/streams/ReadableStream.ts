@@ -180,13 +180,9 @@ export default class ReadableStream<T> {
 	 * @returns {null}
 	 */
 	cancel(reason?: any): Promise<void> {
-		// if (!this.hasSource) {
-		// 	return Promise.reject(new TypeError('3.2.4.1-1: Must be a ReadableStream'));
-		// }
-
-		// if (this.locked) {
-		// 	return Promise.reject(new TypeError('3.2.4.1-2: The stream is locked'));
-		// }
+		if (!this.hasSource) {
+			return Promise.reject(new TypeError('3.2.4.1-1: Must be a ReadableStream'));
+		}
 
 		return this._cancel(reason);
 	}
@@ -205,7 +201,7 @@ export default class ReadableStream<T> {
 		this.state = State.Closed;
 
 		if (this.locked) {
-			return this.reader.release();
+			this.reader.release();
 		}
 	}
 

@@ -375,16 +375,13 @@ registerSuite({
 			);
 		},
 
-		// 'locked'() {
-		// 	var dfd = this.async(asyncTimeout);
-		// 	var stream = new ReadableStream(new BaseStringSource(), strategy);
-		// 	stream.getReader();
-		// 	assert.isTrue(stream.locked);
-		// 	stream.cancel().then(
-		// 		dfd.rejectOnError(() => { assert.fail(); }),
-		// 		dfd.callback((error: Error) => { assert.isObject(error); })
-		// 	);
-		// },
+		'locked'() {
+			let stream = new ReadableStream(new BaseStringSource(), strategy);
+			stream.getReader();
+			assert.isTrue(stream.locked);
+			// cancel should work just fine.
+			return stream.cancel();
+		},
 
 		'closed'() {
 			let dfd = this.async(ASYNC_TIMEOUT);
