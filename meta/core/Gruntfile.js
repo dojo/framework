@@ -60,7 +60,7 @@ module.exports = function (grunt) {
 				}
 			},
 			coverage: {
-				src: [ 'html-report/' ]
+				src: [ 'coverage-final.json', 'html-report/' ]
 			}
 		},
 
