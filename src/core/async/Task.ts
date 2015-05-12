@@ -9,7 +9,7 @@ export default class Task<T> extends Promise<T> {
 	protected static copy<U>(other: Promise<U>): Task<U> {
 		const task = <Task<U>> super.copy(other);
 		task.children = [];
-		task.canceler = other instanceof Task ? other.canceler : () => {};
+		task.canceler = other instanceof Task ? other.canceler : function () {};
 		return task;
 	}
 

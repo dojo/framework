@@ -12,9 +12,13 @@ let suite = {
 		let cancelerCalled = false;
 		let resolver: any;
 		let task = new Task(
-			(resolve, reject) => resolver = resolve,
-			() => cancelerCalled = true
-		).then(dfd.rejectOnError(() => {
+			function (resolve) {
+				resolver = resolve;
+			},
+			function () {
+				cancelerCalled = true;
+			}
+		).then(dfd.rejectOnError(function () {
 			assert(false, 'Task should not have resolved');
 		}));
 
@@ -24,7 +28,7 @@ let suite = {
 		assert.isTrue(cancelerCalled, 'Canceler should have been called synchronously');
 		assert.strictEqual(task.state, Canceled, 'Task should have Canceled state');
 
-		setTimeout(dfd.callback(() => {}), 100);
+		setTimeout(dfd.callback(function () {}), 100);
 	},
 
 	'Task#finally': {
@@ -32,15 +36,17 @@ let suite = {
 			let dfd = this.async();
 			let resolver: any;
 			let task = new Task(
-				(resolve, reject) => resolver = resolve,
-				() => {}
+				function (resolve) {
+					resolver = resolve;
+				},
+				function () {}
 			)
-			.then(dfd.rejectOnError(() => {
+			.then(dfd.rejectOnError(function () {
 				assert(false, 'Task should not have resolved');
-			}), dfd.rejectOnError(() => {
+			}), dfd.rejectOnError(function () {
 				assert(false, 'Task should not have rejected');
 			}))
-			.finally(dfd.callback(() => {}));
+			.finally(dfd.callback(function () {}));
 
 			task.cancel();
 			resolver();
@@ -50,15 +56,17 @@ let suite = {
 			let dfd = this.async();
 			let resolver: any;
 			let task = new Task(
-				(resolve, reject) => resolver = reject,
-				() => {}
+				function (resolve, reject) {
+					resolver = reject;
+				},
+				function () {}
 			)
-			.then(dfd.rejectOnError(() => {
+			.then(dfd.rejectOnError(function () {
 				assert(false, 'Task should not have resolved');
-			}), dfd.rejectOnError(() => {
+			}), dfd.rejectOnError(function () {
 				assert(false, 'Task should not have rejected');
 			}))
-			.finally(dfd.callback(() => {}));
+			.finally(dfd.callback(function () {}));
 
 			task.cancel();
 			resolver();
@@ -69,19 +77,21 @@ let suite = {
 			let resolvedTasks: any = {};
 			let resolver: any;
 			let task = new Task(
-				(resolve, reject) => resolver = resolve,
-				() => {}
-			).finally(() => {
+				function (resolve, reject) {
+					resolver = resolve;
+				},
+				function () {}
+			).finally(function () {
 				return Task.resolve(5);
 			});
 
-			let taskA = task.finally(() => {
+			let taskA = task.finally(function () {
 				dfd.resolve();
 				throw new Error('foo');
 			});
-			let taskD = taskA.finally(dfd.callback(() => {}));
-			let taskB = task.finally(dfd.callback(() => {}));
-			let taskC = task.finally(dfd.callback(() => {}));
+			let taskD = taskA.finally(dfd.callback(function () {}));
+			let taskB = task.finally(dfd.callback(function () {}));
+			let taskC = task.finally(dfd.callback(function () {}));
 
 			task.cancel();
 			resolver();
@@ -93,17 +103,23 @@ let suite = {
 			let resolver: any;
 
 			let task = new Task(
-				(resolve, reject) => resolver = resolve,
-				() => {}
-			).then(() => {
+				function (resolve, reject) {
+					resolver = resolve;
+				},
+				function () {}
+			).then(function () {
 				task.cancel();
-				return new Promise((resolve, reject) => {
+				return new Promise(function (resolve, reject) {
 					setTimeout(resolve);
 				});
 			})
-			.then(dfd.rejectOnError(() => assert(false, 'should not have run')))
-			.then(dfd.rejectOnError(() => assert(false, 'should not have run')))
-			.finally(dfd.callback(() => {}));
+			.then(dfd.rejectOnError(function () {
+				assert(false, 'should not have run');
+			}))
+			.then(dfd.rejectOnError(function () {
+				assert(false, 'should not have run');
+			}))
+			.finally(dfd.callback(function () {}));
 
 			resolver();
 		},
@@ -114,17 +130,23 @@ let suite = {
 			let resolver: any;
 
 			let task = new Task(
-				(resolve, reject) => resolver = resolve,
-				() => {}
-			).then(() => {
+				function (resolve, reject) {
+					resolver = resolve;
+				},
+				function () {}
+			).then(function () {
 				task.cancel();
-				return new Promise((resolve, reject) => {
+				return new Promise(function (resolve, reject) {
 					setTimeout(reject);
 				});
 			})
-			.then(dfd.rejectOnError(() => assert(false, 'should not have run')))
-			.then(dfd.rejectOnError(() => assert(false, 'should not have run')))
-			.finally(dfd.callback(() => {}));
+			.then(dfd.rejectOnError(function () {
+				assert(false, 'should not have run');
+			}))
+			.then(dfd.rejectOnError(function () {
+				assert(false, 'should not have run');
+			}))
+			.finally(dfd.callback(function () {}));
 
 			resolver();
 		}
