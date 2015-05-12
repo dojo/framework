@@ -51,10 +51,16 @@ in the current environment. The object hash containing evaluated features is acc
 
 ## Promises and Asynchronous Operations
 
-`dojo-core/Promise` implements an extensible, ES2015-compatible Promise shim,
-which includes state reporting and a `finally` method.
+### Promise
 
-`dojo-core/async` contains a number of utilities to simplify working with asynchronous operations.
+The `dojo-core/Promise` class is an implementation of the ES2015 Promise API that also includes static state inspection
+and a `finally` method for cleanup actions.
+
+`dojo-core/async` contains a number of classes and utility modules to simplify working with asynchronous operations.
+
+#### Task
+
+The `dojo-core/async/Task` class is an extension of `dojo-core/Promise` that provides cancelation support.
 
 ## How do I use this package?
 

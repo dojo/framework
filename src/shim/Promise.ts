@@ -21,8 +21,12 @@ export function isThenable(value: any) {
  * for .all and .race so that the native promise doesn't treat the PlatformPromises like generic thenables.
  */
 function unwrapPromises(items: any[]): any[] {
-	let unwrapped: typeof items = [];
-	let count = items.length;
+	if (!isIterable(items)) {
+		throw new Error('invalid argument');
+	}
+
+	const unwrapped: typeof items = [];
+	const count = items.length;
 	for (let i = 0; i < count; i++) {
 		let item = items[i];
 		unwrapped[i] = item instanceof Promise ? item.promise : item;
@@ -49,11 +53,8 @@ export interface Executor<T> {
  */
 export class PromiseShim<T> implements Thenable<T> {
 	static all<T>(items: (T | Thenable<T>)[]): PromiseShim<T[]> {
-		return new this((
-			resolve: (value: any) => void,
-			reject: (reason: any) => void
-		): void => {
-			let values: T[] = [];
+		return new this(function (resolve, reject) {
+			const values: T[] = [];
 			let complete = 0;
 			let total = 0;
 			let populating = true;
@@ -101,15 +102,12 @@ export class PromiseShim<T> implements Thenable<T> {
 	}
 
 	static race<T>(items: (T | Thenable<T>)[]): PromiseShim<T> {
-		return new this((
-			resolve: (value: any) => void,
-			reject: (reason: any) => void
-		): void => {
+		return new this(function (resolve, reject) {
 			if (!isIterable(items)) {
 				throw new Error('invalid argument');
 			}
 
-			let count = items.length;
+			const count = items.length;
 			let item: (T | Thenable<T>);
 
 			for (let i = 0; i < count; ++i) {
@@ -130,11 +128,8 @@ export class PromiseShim<T> implements Thenable<T> {
 		});
 	}
 
-	static reject<T>(reason?: any): PromiseShim<T> {
-		return new this((
-			resolve: (value: T) => void,
-			reject: (reason: any) => void
-		): void => {
+	static reject<T>(reason?: Error): PromiseShim<T> {
+		return new this(function (resolve, reject) {
 			reject(reason);
 		});
 	}
@@ -145,7 +140,7 @@ export class PromiseShim<T> implements Thenable<T> {
 		if (value instanceof PromiseShim) {
 			return value;
 		}
-		return new this((resolve: (value: T) => void): void => {
+		return new this(function (resolve) {
 			resolve(<T> value);
 		});
 	}
@@ -171,7 +166,7 @@ export class PromiseShim<T> implements Thenable<T> {
 		/**
 		 * Whether or not this promise is in a resolved state.
 		 */
-		let isResolved = (): boolean => {
+		const isResolved = (): boolean => {
 			return this.state !== State.Pending || isChained;
 		};
 
@@ -184,7 +179,7 @@ export class PromiseShim<T> implements Thenable<T> {
 		 * Initially pushes callbacks onto a queue for execution once this promise settles. After the promise settles,
 		 * enqueues callbacks for execution on the next event loop turn.
 		 */
-		let whenFinished = (callback: () => void): void => {
+		let whenFinished = function (callback: () => void): void {
 			callbacks.push(callback);
 		};
 
@@ -204,7 +199,7 @@ export class PromiseShim<T> implements Thenable<T> {
 		 * @param newState The resolved state for this promise.
 		 * @param {T|Error} value The resolved value for this promise.
 		 */
-		let settle = (newState: State, value: any): void => {
+		const settle = (newState: State, value: any): void => {
 			// A promise can only be settled once.
 			if (this.state !== State.Pending) {
 				return;
@@ -217,7 +212,7 @@ export class PromiseShim<T> implements Thenable<T> {
 			// Only enqueue a callback runner if there are callbacks so that initially fulfilled Promises don't have to
 			// wait an extra turn.
 			if (callbacks.length > 0) {
-				enqueue((): void => {
+				enqueue(function (): void {
 					let count = callbacks.length;
 					for (let i = 0; i < count; ++i) {
 						callbacks[i].call(null);
@@ -233,7 +228,7 @@ export class PromiseShim<T> implements Thenable<T> {
 		 * @param newState The resolved state for this promise.
 		 * @param {T|Error} value The resolved value for this promise.
 		 */
-		let resolve = (newState: State, value: any): void => {
+		const resolve = (newState: State, value: any): void => {
 			if (isResolved()) {
 				return;
 			}
@@ -255,17 +250,14 @@ export class PromiseShim<T> implements Thenable<T> {
 
 		this.then = <U>(
 			onFulfilled?: (value?: T) => (U | PromiseShim<U>),
-			onRejected?: (reason?: any) => (U | PromiseShim<U>)
+			onRejected?: (reason?: Error) => (U | PromiseShim<U>)
 		): PromiseShim<U> => {
-			return new PromiseShim<U>((
-				resolve: (value?: U) => void,
-				reject: (reason?: any) => void
-			): void => {
+			return new PromiseShim<U>((resolve, reject) => {
 				// whenFinished initially queues up callbacks for execution after the promise has settled. Once the
 				// promise has settled, whenFinished will schedule callbacks for execution on the next turn through the
 				// event loop.
-				whenFinished((): void => {
-					let callback: (value?: any) => any = this.state === State.Rejected ? onRejected : onFulfilled;
+				whenFinished(() => {
+					const callback: (value?: any) => any = this.state === State.Rejected ? onRejected : onFulfilled;
 
 					if (typeof callback === 'function') {
 						try {
@@ -308,25 +300,26 @@ export class PromiseShim<T> implements Thenable<T> {
 	 */
 	private resolvedValue: any;
 
-	catch<U>(onRejected: (reason?: any) => (U | Thenable<U>)): PromiseShim<U> {
-		return this.then<U>(null, onRejected);
-	}
-
-	then<U>(
+	then: <U>(
 		onFulfilled?: (value?: T) => (U | Thenable<U>),
-		onRejected?: (reason?: any) => (U | Thenable<U>)
-	): PromiseShim<U> { return null; }
+		onRejected?: (reason?: Error) => (U | Thenable<U>)
+	) => PromiseShim<U>;
 }
 
 /**
  * PromiseConstructor points to the promise constructor this platform should use.
  */
-let PromiseConstructor = has('promise') ? global.Promise : PromiseShim;
+const PromiseConstructor = has('promise') ? global.Promise : PromiseShim;
 
 /**
  * PlatformPromise is a very thin wrapper around either a native promise implementation or PromiseShim.
  */
 export default class Promise<T> implements Thenable<T> {
+	/**
+	 * Points to the promise constructor this platform should use.
+	 */
+	static PromiseConstructor = has('promise') ? global.Promise : PromiseShim;
+
 	/**
 	 * Converts an iterable object containing promises into a single promise that resolves to a new iterable object
 	 * containing the fulfilled values of all the promises in the iterable, in the same order as the Promises in the
@@ -348,7 +341,7 @@ export default class Promise<T> implements Thenable<T> {
 	 * });
 	 */
 	static all<T>(items: (T | Thenable<T>)[]): Promise<T[]> {
-		return this.copy(PromiseConstructor.all(unwrapPromises(items)));
+		return this.copy(Promise.PromiseConstructor.all(unwrapPromises(items)));
 	}
 
 	/**
@@ -370,14 +363,14 @@ export default class Promise<T> implements Thenable<T> {
 	 * });
 	 */
 	static race<T>(items: (T | Thenable<T>)[]): Promise<T> {
-		return this.copy(PromiseConstructor.race(unwrapPromises(items)));
+		return this.copy(Promise.PromiseConstructor.race(unwrapPromises(items)));
 	}
 
 	/**
 	 * Creates a new promise that is rejected with the given error.
 	 */
 	static reject<T>(reason: Error): Promise<any> {
-		return this.copy(PromiseConstructor.reject(reason));
+		return this.copy(Promise.PromiseConstructor.reject(reason));
 	}
 
 	/**
@@ -390,15 +383,15 @@ export default class Promise<T> implements Thenable<T> {
 		if (value instanceof Promise) {
 			return value;
 		}
-		return this.copy(PromiseConstructor.resolve(value));
+		return this.copy(Promise.PromiseConstructor.resolve(value));
 	}
 
 	/**
 	 * Copy another Promise, taking on its inner state.
 	 */
 	protected static copy<U>(other: Promise<U>): Promise<U> {
-		let promise = Object.create(this.prototype, {
-			promise: { value: other instanceof PromiseConstructor ? other : other.promise }
+		const promise = Object.create(this.prototype, {
+			promise: { value: other instanceof Promise.PromiseConstructor ? other : other.promise }
 		});
 
 		if (other instanceof Promise && other._state !== State.Pending) {
@@ -407,8 +400,8 @@ export default class Promise<T> implements Thenable<T> {
 		else {
 			promise._state = State.Pending;
 			promise.promise.then(
-				() => promise._state = State.Fulfilled,
-				() => promise._state = State.Rejected
+				function () { promise._state = State.Fulfilled },
+				function () { promise._state = State.Rejected }
 			);
 		}
 
@@ -428,27 +421,28 @@ export default class Promise<T> implements Thenable<T> {
 	 * successfully, or the `reject` function when the operation fails.
 	 */
 	constructor(executor: Executor<T>) {
-		// Create resolver that verifies that the the resolution value isn't this promise. Since any incoming promise
+		// Wrap the executor to verify that the the resolution value isn't this promise. Since any incoming promise
 		// should be wrapped, the native resolver can't automatically detect self-resolution.
-		let createResolve = (resolve: (value?: T | Thenable<T>) => void, reject: (reason?: any) => void) => {
-			return (value: any) => {
-				if (value === this) {
-					reject(new TypeError('Cannot chain a promise to itself'));
+		this.promise = new Promise.PromiseConstructor(<Executor<T>> ((resolve, reject) => {
+			executor(
+				(value) => {
+					if (value === this) {
+						reject(new TypeError('Cannot chain a promise to itself'));
+					}
+					else {
+						resolve(value);
+					}
+				},
+				function (reason): void {
+					reject(reason);
 				}
-				else {
-					resolve(value);
-				}
-			};
-		};
-
-		this.promise = new PromiseConstructor(<Executor<T>> ((resolve, reject) => {
-			executor(createResolve(resolve, reject), reject);
+			);
 		}));
 
 		this._state = State.Pending;
 		this.promise.then(
-			() => this._state = State.Fulfilled,
-			() => this._state = State.Rejected
+			() => { this._state = State.Fulfilled },
+			() => { this._state = State.Rejected }
 		);
 	}
 
@@ -477,11 +471,11 @@ export default class Promise<T> implements Thenable<T> {
 		// indicated by the first argument
 		function handler(rejected: boolean, valueOrError: any) {
 			// If callback throws, the handler will throw
-			let result = callback();
+			const result = callback();
 			if (isThenable(result)) {
 				// If callback returns a Thenable that rejects, return the rejection. Otherwise, return or throw the
 				// incoming value as appropriate when the Thenable resolves.
-				return Promise.resolve(result).then(() => {
+				return Promise.resolve(result).then(function () {
 					if (rejected) {
 						throw valueOrError;
 					}

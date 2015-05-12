@@ -17,16 +17,15 @@ export var capabilities = {
 // OnDemand. Options that will be permutated are browserName, version, platform, and platformVersion; any other
 // capabilities options specified for an environment will be copied as-is
 export var environments = [
-	{ browserName: 'internet explorer', version: '11', platform: 'Windows 8.1' },
-	{ browserName: 'internet explorer', version: '10', platform: 'Windows 8' },
-	{ browserName: 'internet explorer', version: [ '9', '10' ], platform: 'Windows 7' },
-	{ browserName: 'firefox', version: '36', platform: [ 'OS X 10.9', 'Windows 7', 'Windows XP', 'Linux' ] },
-	{ browserName: 'chrome', version: '', platform: [ 'Linux', 'OS X 10.9', 'Windows XP', 'Windows 7', 'Windows 8', 'Windows 8.1' ] },
-	{ browserName: 'safari', version: '8', platform: 'OS X 10.10' }
+	{ browserName: 'internet explorer', version: [ '10', '11' ], platform: 'WIN8' },
+	{ browserName: 'internet explorer', version: [ '9', '10' ], platform: 'WINDOWS' },
+	{ browserName: 'firefox', version: '36', platform: [ 'MAC', 'WINDOWS', 'XP' ] },
+	{ browserName: 'chrome', platform: [ 'MAC', 'XP', 'WINDOWS', 'WIN8' ] },
+	{ browserName: 'safari', version: '8', platform: 'MAC' }
 ];
 
 // Maximum number of simultaneous integration tests that should be executed on the remote WebDriver service
-export var maxConcurrency = 3;
+export var maxConcurrency = 2;
 
 // Name of the tunnel class to use for WebDriver tests
 export var tunnel = 'BrowserStackTunnel';

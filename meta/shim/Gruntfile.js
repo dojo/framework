@@ -266,6 +266,7 @@ module.exports = function (grunt) {
 		'dtsGenerator:dist'
 	]);
 	grunt.registerTask('test', [ 'dev', 'intern:client' ]);
+	grunt.registerTask('test-runner', [ 'dev', 'intern:runner' ]);
 	grunt.registerTask('test-streams', [ 'dev', 'intern:streams' ]);
 	grunt.registerTask('test-local', [ 'dev', 'intern:local' ]);
 	grunt.registerTask('test-proxy', [ 'dev', 'intern:proxy' ]);
