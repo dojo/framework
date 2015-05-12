@@ -20,7 +20,6 @@
 		"./src/WeakMap.ts",
 		"./src/array.ts",
 		"./src/async/Task.ts",
-		"./src/async/async.d.ts",
 		"./src/async/iteration.ts",
 		"./src/async/timing.ts",
 		"./src/decorators.ts",

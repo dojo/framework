@@ -1,5 +1,4 @@
 import Promise from '../Promise';
-import { Identity } from './async';
 
 /**
  * Used for delaying a Promise chain for a specific number of milliseconds.
@@ -15,6 +14,10 @@ export function delay<T>(milliseconds: number): Identity<T> {
 			}, milliseconds);
 		});
 	};
+}
+
+export interface Identity<T> {
+	(value: T): Promise<T>;
 }
 
 /**

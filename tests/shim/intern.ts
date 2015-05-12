@@ -10,18 +10,25 @@ export var proxyUrl = 'http://localhost:9000/';
 // Note that the `build` capability will be filled in with the current commit ID from the Travis CI environment
 // automatically
 export var capabilities = {
-	'selenium-version': '2.45.0'
+	'browserstack.selenium_version': '2.45.0',
+	project: 'Dojo 2',
+	name: 'dojo-core'
 };
 
 // Browsers to run integration testing against. Note that version numbers must be strings if used with Sauce
 // OnDemand. Options that will be permutated are browserName, version, platform, and platformVersion; any other
 // capabilities options specified for an environment will be copied as-is
 export var environments = [
-	{ browserName: 'internet explorer', version: [ '10', '11' ], platform: 'WIN8' },
-	{ browserName: 'internet explorer', version: [ '9', '10' ], platform: 'WINDOWS' },
-	{ browserName: 'firefox', version: '36', platform: [ 'MAC', 'WINDOWS', 'XP' ] },
-	{ browserName: 'chrome', platform: [ 'MAC', 'XP', 'WINDOWS', 'WIN8' ] },
-	{ browserName: 'safari', version: '8', platform: 'MAC' }
+	{ browser: 'IE', browser_version: '11', os: 'WINDOWS', os_version: '8.1' },
+	{ browser: 'IE', browser_version: '10', os: 'WINDOWS', os_version: '8' },
+	{ browser: 'IE', browser_version: '9', os: 'WINDOWS', os_version: '7' },
+	{ browser: 'Firefox', os: 'WINDOWS', os_version: '8.1' },
+	{ browser: 'Firefox', os: 'WINDOWS', os_version: 'XP' },
+	{ browser: 'Firefox', os: 'OS X' },
+	{ browser: 'Chrome', os: 'WINDOWS', os_version: '8.1' },
+	{ browser: 'Chrome', os: 'WINDOWS', os_version: 'XP' },
+	{ browser: 'Chrome', os: 'OS X' },
+	{ browser: 'Safari', browser_version: '8', os: 'OS X' }
 ];
 
 // Maximum number of simultaneous integration tests that should be executed on the remote WebDriver service
