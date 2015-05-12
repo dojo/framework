@@ -10,6 +10,7 @@ import './number';
 import './object';
 import './Promise';
 import './async/iteration';
+import './async/Task';
 import './async/timing';
 import './queue';
 import './Scheduler';
