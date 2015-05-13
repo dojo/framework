@@ -53,15 +53,12 @@ class CallbackQueue {
 
 	drain(...args: any[]): void {
 		let callbacks = this._callbacks;
-		let item: QueueItem;
-		let count = callbacks.length;
 
 		// Any callbacks added after drain is called will be processed
 		// the next time drain is called
 		this._callbacks = [];
 
-		for (let i = 0; i < count; i++) {
-			item = callbacks[i];
+		for (let item of callbacks) {
 			if (item && item.isActive) {
 				item.callback.apply(null, args);
 			}

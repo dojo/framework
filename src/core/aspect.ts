@@ -127,10 +127,26 @@ function getDispatcher(target: any, methodName: string): Dispatcher {
 	return dispatcher;
 }
 
-export function after(target: any, methodName: string, advice: (originalReturn: any, originalArgs: any[]) => any): Handle {
+/**
+ * Attaches "after" advice to be executed after the original method.
+ * The advising function will receive the original method's return value and arguments object.
+ * The value it returns will be returned from the method when it is called (even if the return value is undefined).
+ * @param target Object whose method will be aspected
+ * @param methodName Name of method to aspect
+ * @param advice Advising function which will receive the original method's return value and arguments object
+ * @return A handle which will remove the aspect when destroy is called
+ */
+export function after(target: any, methodName: string, advice: (originalReturn: any, originalArgs: IArguments) => any): Handle {
 	return advise(getDispatcher(target, methodName), 'after', advice);
 }
 
+/**
+ * Attaches "around" advice around the original method.
+ * @param target Object whose method will be aspected
+ * @param methodName Name of method to aspect
+ * @param advice Advising function which will receive the original function
+ * @return A handle which will remove the aspect when destroy is called
+ */
 export function around(target: any, methodName: string, advice: (previous: Function) => Function): Handle {
 	let dispatcher = getDispatcher(target, methodName);
 	let previous = dispatcher.around;
@@ -153,10 +169,26 @@ export function around(target: any, methodName: string, advice: (previous: Funct
 	});
 }
 
+/**
+ * Attaches "before" advice to be executed before the original method.
+ * @param target Object whose method will be aspected
+ * @param methodName Name of method to aspect
+ * @param advice Advising function which will receive the same arguments as the original, and may return new arguments
+ * @return A handle which will remove the aspect when destroy is called
+ */
 export function before(target: any, methodName: string, advice: (...originalArgs: any[]) => any[]): Handle {
 	return advise(getDispatcher(target, methodName), 'before', advice);
 }
 
+/**
+ * Attaches advice to be executed after the original method.
+ * The advising function will receive the same arguments as the original method.
+ * The value it returns will be returned from the method when it is called *unless* its return value is undefined.
+ * @param target Object whose method will be aspected
+ * @param methodName Name of method to aspect
+ * @param advice Advising function which will receive the same arguments as the original method
+ * @return A handle which will remove the aspect when destroy is called
+ */
 export function on(target: any, methodName: string, advice: (...originalArgs: any[]) => any): Handle {
 	return advise(getDispatcher(target, methodName), 'after', advice, true);
 }

@@ -26,6 +26,12 @@ interface DOMEventObject extends EventObject {
 	cancelable: boolean;
 }
 
+/**
+ * Provides a normalized mechanism for dispatching events for event emitters, Evented objects, or DOM nodes.
+ * @param target The target to emit the event from
+ * @param event The event object to emit
+ * @return Boolean indicating Whether the event was canceled (this will always be false for event emitters)
+ */
 export function emit(target: EventTarget, event: EventObject): boolean;
 export function emit(target: EventEmitter, event: EventObject): boolean;
 export function emit(target: Evented, event: EventObject): boolean;
@@ -61,6 +67,14 @@ export function emit(target: any, event: EventObject): boolean {
 	throw new Error('Target must be an event emitter');
 }
 
+/**
+ * Provides a normalized mechanism for listening to events from event emitters, Evented objects, or DOM nodes.
+ * @param target Target to listen for event on
+ * @param type Event type(s) to listen for; may be strings or extension events
+ * @param listener Callback to handle the event when it fires
+ * @param capture Whether the listener should be registered in the capture phase (DOM events only)
+ * @return A handle which will remove the listener when destroy is called
+ */
 export default function on(target: EventTarget, type: string, listener: EventCallback, capture?: boolean): Handle;
 export default function on(target: EventTarget, type: ExtensionEvent, listener: EventCallback, capture?: boolean): Handle;
 export default function on(target: EventTarget, type: (string | ExtensionEvent)[], listener: EventCallback, capture?: boolean): Handle;
@@ -85,7 +99,7 @@ export default function on(target: any, type: any, listener: any, capture?: bool
 
 	const callback = function () {
 		listener.apply(this, arguments);
-	}
+	};
 
 	if (target.addEventListener && target.removeEventListener) {
 		target.addEventListener(type, callback, capture);

@@ -3,21 +3,14 @@ import global from './global';
 import has from './has';
 
 /**
- * Return true if a given value meets Promise's definition of "iterable".
+ * Returns true if a given value meets Promise's definition of "iterable".
  */
 function isIterable(value: any) {
 	return Array.isArray(value);
 }
 
 /**
- * Return true if a given value has a `then` method.
- */
-export function isThenable(value: any) {
-	return value && typeof value.then === 'function';
-}
-
-/**
- * Copy an array of values, replacing any PlatformPromises in the copy with unwrapped global.Promises. This is necessary
+ * Copies an array of values, replacing any PlatformPromises in the copy with unwrapped global.Promises. This is necessary
  * for .all and .race so that the native promise doesn't treat the PlatformPromises like generic thenables.
  */
 function unwrapPromises(items: any[]): any[] {
@@ -39,6 +32,13 @@ function unwrapPromises(items: any[]): any[] {
  */
 export interface Executor<T> {
 	(resolve: (value?: T | Thenable<T>) => void, reject: (reason?: any) => void): void;
+}
+
+/**
+ * Returns true if a given value has a `then` method.
+ */
+export function isThenable(value: any) {
+	return value && typeof value.then === 'function';
 }
 
 /**
@@ -387,7 +387,7 @@ export default class Promise<T> implements Thenable<T> {
 	}
 
 	/**
-	 * Copy another Promise, taking on its inner state.
+	 * Copies another Promise, taking on its inner state.
 	 */
 	protected static copy<U>(other: Promise<U>): Promise<U> {
 		const promise = Object.create(this.prototype, {

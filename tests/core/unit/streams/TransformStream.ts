@@ -72,8 +72,8 @@ registerSuite({
 			}, 20);
 		};
 
-		for (let i = 0; i < testValues.length; i++) {
-			stream.writable.write(testValues[i]);
+		for (let testValue of testValues) {
+			stream.writable.write(testValue);
 		}
 
 		stream.writable.close();

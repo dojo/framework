@@ -30,7 +30,7 @@ function copyArray(array: any[], kwArgs: CopyArgs): any[] {
 
 export function copy(kwArgs: CopyArgs): any {
 	let target: any;
-	let sources: any[] = kwArgs.sources;
+	let sources: { [index: string]: any }[] = kwArgs.sources;
 
 	if (!sources.length) {
 		throw new RangeError('lang.copy requires at least one source object.');
@@ -45,23 +45,17 @@ export function copy(kwArgs: CopyArgs): any {
 		target = kwArgs.target || {};
 	}
 
-	for (let i = 0; i < sources.length; i++) {
-		// iterate through all the sources
-		const source: { [index: string]: any } = sources[i];
-		let name: string;
-		let value: any;
-
+	for (let source of sources) {
 		if (kwArgs.descriptors) {
 			// if we are copying descriptors, use to get{Own}PropertyNames so we get every property
 			// (including non enumerables).
 			const names = (kwArgs.inherited ? getPropertyNames : Object.getOwnPropertyNames)(source);
 
-			for (let j = 0; j < names.length; j++) {
-				name = names[j];
+			for (let name of names) {
 				// get the descriptor
 				const descriptor = (kwArgs.inherited ?
 					getPropertyDescriptor : Object.getOwnPropertyDescriptor)(source, name);
-				value = descriptor.value;
+				let value = descriptor.value;
 
 				if (kwArgs.deep) {
 					if (Array.isArray(value)) {
@@ -85,9 +79,9 @@ export function copy(kwArgs: CopyArgs): any {
 		else {
 			// If we aren't using descriptors, we use a standard for-in to simplify skipping
 			// non-enumerables and inheritance. We could use Object.keys when we aren't inheriting.
-			for (name in source) {
+			for (let name in source) {
 				if (kwArgs.inherited || hasOwnProperty.call(source, name)) {
-					value = source[name];
+					let value = source[name];
 
 					if (kwArgs.deep) {
 						if (Array.isArray(value)) {
@@ -152,8 +146,7 @@ export function getPropertyNames(object: {}): string[] {
 	do {
 		// go through each prototype to add the property names
 		const ownNames = Object.getOwnPropertyNames(object);
-		for (let i = 0, l = ownNames.length; i < l; i++) {
-			const name = ownNames[i];
+		for (let name of ownNames) {
 			// check to make sure we haven't added it yet
 			if (setOfNames[name] !== true) {
 				setOfNames[name] = true;
