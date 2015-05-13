@@ -66,6 +66,7 @@
 		"./tests/typings/tsd.d.ts",
 		"./tests/unit/Promise.ts",
 		"./tests/unit/Scheduler.ts",
+		"./tests/unit/WeakMap.ts",
 		"./tests/unit/all.ts",
 		"./tests/unit/array.ts",
 		"./tests/unit/async/Task.ts",

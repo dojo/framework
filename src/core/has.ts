@@ -64,4 +64,12 @@ add('object-observe', typeof (<any> Object).observe === 'function');
 add('postmessage', typeof postMessage === 'function');
 add('promise', typeof global.Promise !== 'undefined');
 add('raf', typeof requestAnimationFrame === 'function');
-add('weakmap', typeof global.WeakMap !== 'undefined');
+add('weakmap', function () {
+	if (typeof global.WeakMap !== 'undefined') {
+		const key1 = {};
+		const key2 = {};
+		const map = new global.WeakMap([ [ key1, 1 ] ]);
+		return map.get(key1) === 1 && map.set(key2, 2) === map;
+	}
+	return false;
+});
