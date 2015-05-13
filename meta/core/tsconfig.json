@@ -60,6 +60,7 @@
 		"./tests/typings/benchmark/benchmark.d.ts",
 		"./tests/typings/chai/chai.d.ts",
 		"./tests/typings/digdug/digdug.d.ts",
+		"./tests/typings/dist/dist.d.ts",
 		"./tests/typings/dojo2/dojo.d.ts",
 		"./tests/typings/intern/intern.d.ts",
 		"./tests/typings/leadfoot/leadfoot.d.ts",

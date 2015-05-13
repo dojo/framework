@@ -1,7 +1,7 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 import { Handle } from 'src/interfaces';
-import { queueTask } from 'src/queue';
+import { queueMicroTask, queueTask } from 'src/queue';
 import Scheduler from 'src/Scheduler';
 
 registerSuite(function () {
@@ -54,7 +54,7 @@ registerSuite(function () {
 		'scheduler type': function () {
 			const dfd = this.async(300);
 			const macroScheduler = new Scheduler();
-			scheduler = new Scheduler({ type: 'micro' });
+			scheduler = new Scheduler({ queueFunction: queueMicroTask });
 
 			function test() {
 				macroScheduler.schedule(function () {
