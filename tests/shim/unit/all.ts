@@ -14,3 +14,4 @@ import './async/Task';
 import './async/timing';
 import './queue';
 import './Scheduler';
+import './WeakMap';

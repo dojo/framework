@@ -2,8 +2,11 @@ import { hasClass } from './decorators';
 import global from './global';
 
 module Shim {
-	function getUID(): number {
-		return Math.floor(Math.random() * 100000000);
+	const DELETED: any = {};
+
+	interface Entry<K, V> {
+		key: K;
+		value: V;
 	}
 
 	let generateName = (function () {
@@ -13,7 +16,10 @@ module Shim {
 			return '__wm' + getUID() + (startId++ + '__');
 		};
 	})();
-	const DELETED: any = {};
+
+	function getUID(): number {
+		return Math.floor(Math.random() * 100000000);
+	}
 
 	export class WeakMap<K, V> {
 		private _name: string;
@@ -22,57 +28,64 @@ module Shim {
 			Object.defineProperty(this, '_name', {
 				value: generateName()
 			});
-			// TODO: 
-			for (const [ key, value ] of iterable) {
-				this.set(key, value);
+			if (iterable) {
+				for (const [ key, value ] of iterable) {
+					this.set(key, value);
+				}
 			}
 		}
 
-		set(key: any, value?: any): Shim.WeakMap<K, V> {
-			let entry: [ K, V ] = key[this._name];
-			if (entry && entry[0] === key) {
-				entry[1] = value;
+		delete(key: any): boolean {
+			const entry: Entry<K, V> = key[this._name];
+			if (entry && entry.key === key && entry.value !== DELETED) {
+				entry.value = DELETED;
+				return true;
 			}
-			else {
-				entry = [ key, value ];
-				Object.defineProperty(entry, '0', {
-					value: key
+			return false;
+		}
+
+		get(key: any): V {
+			const entry: Entry<K, V> = key[this._name];
+			if (entry && entry.key === key && entry.value !== DELETED) {
+				return entry.value;
+			}
+		}
+
+		has(key: any): boolean {
+			const entry: Entry<K, V> = key[this._name];
+			return Boolean(entry && entry.key === key && entry.value !== DELETED);
+		}
+
+		set(key: any, value?: any): Shim.WeakMap<K, V> {
+			if (!key || (typeof key !== 'object' && typeof key !== 'function')) {
+				throw new TypeError('Invalid value used as weak map key');
+			}
+			let entry: Entry<K, V> = key[this._name];
+			if (!entry || entry.key !== key) {
+				entry = Object.create(null, {
+					key: { value: key }
 				});
 				Object.defineProperty(key, this._name, {
 					value: entry
 				});
 			}
+			entry.value = value;
 			return this;
-		}
-
-		get(key: any): V {
-			const entry: [ K, V ] = key[this._name];
-			if (entry && entry[0] === key && entry[1] !== DELETED) {
-				return entry[1];
-			}
-		}
-
-		has(key: any): boolean {
-			const entry: [ K, V ] = key[this._name];
-			return Boolean(entry && entry[0] === key && entry[1] !== DELETED);
-		}
-
-		delete(key: any): boolean {
-			const entry: [ K, V ] = key[this._name];
-			if (entry && entry[0] === key) {
-				this.set(key, DELETED);
-			}
-			return false;
 		}
 	}
 }
 
 @hasClass('weakmap', global.WeakMap, Shim.WeakMap)
 export default class WeakMap<K, V> {
+	/* istanbul ignore next */
 	constructor(iterable?: any) {}
 
+	/* istanbul ignore next */
 	delete(key: K): boolean { throw new Error(); }
+	/* istanbul ignore next */
 	get(key: K): V { throw new Error(); }
+	/* istanbul ignore next */
 	has(key: K): boolean { throw new Error(); }
+	/* istanbul ignore next */
 	set(key: K, value?: V): WeakMap<K, V> { throw new Error(); }
 }
