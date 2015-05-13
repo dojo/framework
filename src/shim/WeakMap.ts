@@ -9,6 +9,10 @@ module Shim {
 		value: V;
 	}
 
+	function getUID(): number {
+		return Math.floor(Math.random() * 100000000);
+	}
+
 	let generateName = (function () {
 		let startId = Math.floor(Date.now() % 100000000);
 
@@ -16,10 +20,6 @@ module Shim {
 			return '__wm' + getUID() + (startId++ + '__');
 		};
 	})();
-
-	function getUID(): number {
-		return Math.floor(Math.random() * 100000000);
-	}
 
 	export class WeakMap<K, V> {
 		private _name: string;

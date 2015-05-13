@@ -3,6 +3,10 @@ import { createCompositeHandle } from './lang';
 import { on } from './aspect';
 
 export default class Evented {
+	/**
+	 * Emits an event, firing listeners registered for it.
+	 * @param event The event object to emit
+	 */
 	emit(data: EventObject): void {
 		const type = '__on' + data.type;
 		const method: Function = (<any> this)[type];
@@ -11,6 +15,12 @@ export default class Evented {
 		}
 	}
 
+	/**
+	 * Listens for an event, calling the listener whenever the event fires.
+	 * @param type Event type to listen for
+	 * @param listener Callback to handle the event when it fires
+	 * @return A handle which will remove the listener when destroy is called
+	 */
 	on(type: string, listener: (event: EventObject) => void): Handle {
 		const name = '__on' + type;
 		if (!(<any> this)[name]) {
