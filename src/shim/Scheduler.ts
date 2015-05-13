@@ -1,11 +1,5 @@
 import { Handle } from './interfaces';
-import { queueAnimationTask, QueueItem, queueMicroTask, queueTask } from './queue';
-
-const typeMap: { [key: string]: (callback: (...args: any[]) => any) => Handle; } = {
-	animation: queueAnimationTask,
-	macro: queueTask,
-	micro: queueMicroTask
-};
+import { QueueItem, queueTask } from './queue';
 
 function getQueueHandle(item: QueueItem): Handle {
 	return {
@@ -19,7 +13,7 @@ function getQueueHandle(item: QueueItem): Handle {
 
 export interface KwArgs {
 	deferWhileProcessing?: boolean;
-	type?: string;
+	queueFunction?: (callback: (...args: any[]) => any) => Handle;
 }
 
 export default class Scheduler {
@@ -36,10 +30,10 @@ export default class Scheduler {
 	deferWhileProcessing: boolean;
 
 	/**
-	 * Allows users to specify the type of task that should be scheduled.
-	 * Accepted values are 'macro' (default), 'micro', and 'animation'.
+	 * Allows users to specify the function that should be used to schedule callbacks.
+	 * If no function is provided, then `queueTask` will be used.
 	 */
-	type: string;
+	queueFunction: (callback: (...args: any[]) => any) => Handle;
 
 	protected _defer(callback: (...args: any[]) => void): Handle {
 		const item: QueueItem = {
@@ -85,15 +79,15 @@ export default class Scheduler {
 
 	protected _schedule(item: QueueItem): void {
 		if (!this._task) {
-			this._task = typeMap[this.type](this._boundDispatch);
+			this._task = this.queueFunction(this._boundDispatch);
 		}
 
 		this._queue.push(item);
 	}
 
-	constructor(kwArgs?: Scheduler.KwArgs) {
+	constructor(kwArgs?: KwArgs) {
 		this.deferWhileProcessing = (kwArgs && 'deferWhileProcessing' in kwArgs) ? kwArgs.deferWhileProcessing : true;
-		this.type = (kwArgs && kwArgs.type && kwArgs.type in typeMap) ? kwArgs.type : 'macro';
+		this.queueFunction = (kwArgs && kwArgs.queueFunction) ? kwArgs.queueFunction : queueTask;
 
 		this._boundDispatch = this._dispatch.bind(this);
 		this._isProcessing = false;
@@ -113,12 +107,5 @@ export default class Scheduler {
 		this._schedule(item);
 
 		return getQueueHandle(item);
-	}
-}
-
-module Scheduler {
-	export interface KwArgs {
-		deferWhileProcessing?: boolean;
-		type?: string;
 	}
 }

@@ -1,6 +1,7 @@
 import { Observer, PropertyEvent } from './interfaces';
 import { is as isIdentical } from '../object';
 import { add as hasAdd } from '../has';
+import { queueMicroTask } from '../queue';
 import Scheduler from '../Scheduler';
 
 hasAdd('object-observe', typeof (<any> Object).observe === 'function');
@@ -136,7 +137,7 @@ export class Es5Observer extends BaseObjectObserver implements Observer {
 		super(kwArgs);
 
 		if (!(<any> this.constructor)._scheduler) {
-			(<any> this.constructor)._scheduler = new Scheduler({ type: 'micro' });
+			(<any> this.constructor)._scheduler = new Scheduler({ queueFunction: queueMicroTask });
 		}
 
 		this.nextTurn = ('nextTurn' in kwArgs) ? kwArgs.nextTurn : true;
