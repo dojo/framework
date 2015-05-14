@@ -1,6 +1,8 @@
 import global from './global';
 import { Handle } from './interfaces';
-import has from './has';
+import has, { add as hasAdd } from './has';
+
+hasAdd('microtasks', (has('promise') || has('host-node') || has('dom-mutationobserver')));
 
 function executeTask(item: QueueItem): void {
 	if (item.isActive) {
@@ -30,6 +32,32 @@ interface PostMessageEvent extends Event {
 export interface QueueItem {
 	isActive: boolean;
 	callback: (...args: any[]) => any;
+}
+
+// When no mechanism for registering microtasks is exposed by the environment,
+// microtasks will be queued and then executed in a single macrotask before the other
+// macrotasks are executed.
+let checkMicroTaskQueue: () => void;
+let microTasks: QueueItem[];
+if (!has('microtasks')) {
+	let isMicroTaskQueued: boolean = false;
+
+	microTasks = [];
+	checkMicroTaskQueue = function (): void {
+		if (!isMicroTaskQueued) {
+			isMicroTaskQueued = true;
+			queueTask(function () {
+				isMicroTaskQueued = false;
+
+				if (microTasks.length) {
+					let item: QueueItem;
+					while (item = microTasks.shift()) {
+						executeTask(item);
+					}
+				}
+			});
+		}
+	};
 }
 
 export let queueTask = (function() {
@@ -70,7 +98,7 @@ export let queueTask = (function() {
 		};
 	}
 
-	return function (callback: (...args: any[]) => any): Handle {
+	function queueTask(callback: (...args: any[]) => any): Handle {
 		let item: QueueItem = {
 			isActive: true,
 			callback: callback
@@ -81,6 +109,12 @@ export let queueTask = (function() {
 		return getQueueHandle(item, destructor && function () {
 			destructor(id);
 		});
+	};
+
+	// TODO: Use aspect.before when it is available.
+	return has('microtasks') ? queueTask : function (callback: (...args: any[]) => any): Handle {
+		checkMicroTaskQueue();
+		return queueTask(callback);
 	};
 })();
 
@@ -140,7 +174,10 @@ export let queueMicroTask = (function () {
 		};
 	}
 	else {
-		return queueTask;
+		enqueue = function (item: QueueItem): void {
+			checkMicroTaskQueue();
+			microTasks.push(item);
+		};
 	}
 
 	return function (callback: (...args: any[]) => any): Handle {
