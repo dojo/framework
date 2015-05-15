@@ -1,5 +1,4 @@
 import has from './has';
-import global from './global';
 
 const FRACTION_UNITS = Math.pow(2, 23);
 const MAX_FLOAT32 = 3.4028234663852886e+38;

@@ -40,8 +40,8 @@ export var tunnel = 'BrowserStackTunnel';
 // The desired AMD loader to use when running unit tests (client.html/client.js). Omit to use the default Dojo
 // loader
 export var useLoader = {
-	'host-node': 'dojo/dojo',
-	'host-browser': 'node_modules/dojo/dojo.js'
+	'host-browser': 'node_modules/dojo/dojo.js',
+	'host-node': 'requirejs'
 };
 
 // Configuration options for the module loader; any AMD configuration options supported by the specified AMD loader
@@ -50,7 +50,9 @@ export var loader = {
 	// Packages that should be registered with the loader in each testing environment
 	packages: [
 		{ name: 'src', location: '_build/src' },
-		{ name: 'tests', location: '_build/tests' }
+		{ name: 'tests', location: '_build/tests' },
+		{ name: 'dojo', location: 'node_modules/intern/node_modules/dojo' },
+		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' }
 	]
 };
 

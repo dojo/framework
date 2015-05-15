@@ -1,6 +1,7 @@
 import { PropertyEvent, Observer } from './observers/interfaces';
 import * as ObjectObserver from './observers/ObjectObserver';
 import has from './has';
+import { Handle } from './interfaces';
 
 const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -214,4 +215,21 @@ export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs
 
 		return targetFunction.apply(this, args);
 	};
+}
+
+export function createHandle(destructor: () => void): Handle {
+	return {
+		destroy: function () {
+			this.destroy = function () {};
+			destructor.call(this);
+		}
+	};
+}
+
+export function createCompositeHandle(...handles: Handle[]): Handle {
+	return createHandle(function () {
+		for (let handle of handles) {
+			handle.destroy();
+		}
+	});
 }
