@@ -152,7 +152,7 @@ module.exports = function (grunt) {
 				overwrite: true,
 				replacements: [
 					{
-						from: /^(var __(?:extends|decorate) = )/gm,
+						from: /^(var __(?:extends|decorate|param) = )/gm,
 						to: '$1<%= istanbulIgnoreNext %> '
 					},
 					{
