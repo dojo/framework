@@ -37,6 +37,7 @@ module.exports = function (grunt) {
 		tsconfig: tsconfig,
 		all: [ '<%= tsconfig.filesGlob %>' ],
 		skipTests: [ '<%= all %>' , '!tests/**/*.ts' ],
+		staticTestFiles: 'tests/**/*.{html,css}',
 		devDirectory: '<%= tsconfig.compilerOptions.outDir %>',
 		istanbulIgnoreNext: '/* istanbul ignore next */',
 
@@ -70,6 +71,12 @@ module.exports = function (grunt) {
 				cwd: '.',
 				src: [ 'README.md', 'LICENSE', 'package.json', 'bower.json' ],
 				dest: 'dist/'
+			},
+			staticTestFiles: {
+				expand: true,
+				cwd: '.',
+				src: [ '<%= staticTestFiles %>' ],
+				dest: '<%= devDirectory %>'
 			},
 			typings: {
 				expand: true,
@@ -208,7 +215,7 @@ module.exports = function (grunt) {
 				options: {
 					atBegin: true
 				},
-				files: [ '<%= all %>' ],
+				files: [ '<%= all %>', '<%= staticTestFiles %>' ],
 				tasks: [
 					'dev'
 				]
@@ -254,6 +261,7 @@ module.exports = function (grunt) {
 
 	grunt.registerTask('dev', [
 		'ts:dev',
+		'copy:staticTestFiles',
 		'replace:addIstanbulIgnore',
 		'updateTsconfig'
 	]);
