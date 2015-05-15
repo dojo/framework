@@ -24,6 +24,7 @@
 		"tslint": "2.1.1",
 		"intern": "2.2.2",
 		"requirejs": "2.1.17",
-		"typescript": "Arnavion/typescript-github#2015-05-07-e1d05150f6acef05452772192a4abdfc7eb671eb"
+		"typescript": "Arnavion/typescript-github#2015-05-07-e1d05150f6acef05452772192a4abdfc7eb671eb",
+		"sinon": "1.14.1"
 	}
 }

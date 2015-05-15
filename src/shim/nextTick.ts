@@ -1,4 +1,3 @@
-import global from './global';
 import has from './has';
 import { Handle } from './interfaces';
 import { QueueItem } from './queue';
