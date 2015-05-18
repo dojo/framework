@@ -17,4 +17,5 @@ import './Promise';
 import './queue';
 import './Scheduler';
 import './string';
+import './UrlSearchParams';
 import './WeakMap';
