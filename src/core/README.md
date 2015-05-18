@@ -98,9 +98,13 @@ The `string` module also contains the following utility functions:
 * `padEnd` - Adds padding to the end of a string to ensure it is a certain length
 * `padStart` - Adds padding to the beginning of a string to ensure it is a certain length
 
+#### UrlSearchParams
+
+The `UrlSearchParams` class can be used to parse and generate URL query strings.
+
 ### Promises and Asynchronous Operations
 
-### Promise
+#### Promise
 
 The `dojo-core/Promise` class is an implementation of the ES2015 Promise API that also includes static state inspection
 and a `finally` method for cleanup actions.
