@@ -257,6 +257,32 @@ registerSuite({
 		}
 	},
 
+	'.raw()': {
+		'error cases'() {
+			assert.throws(function () {
+				string.raw(null);
+			}, TypeError);
+		},
+
+		'basic tests'() {
+			let answer = 42;
+			assert.strictEqual(string.raw`The answer is:\n${answer}`, 'The answer is:\\n42',
+				'string.raw applied to template string should result in expected value');
+
+			function getCallSite(callSite: TemplateStringsArray, ...substitutions: any[]) {
+				return callSite;
+			}
+
+			let callSite = getCallSite`The answer is:\n${answer}`;
+			assert.strictEqual(string.raw(callSite), 'The answer is:\\n',
+				'string.raw applied with insufficient arguments should result in no substitution');
+
+			callSite.raw = [ 'The answer is:\\n' ];
+			assert.strictEqual(string.raw(callSite, 42), 'The answer is:\\n',
+				'string.raw applied with insufficient raw fragments should result in truncation before substitution');
+		}
+	},
+
 	'.repeat()': {
 		'throws on undefined or null string'() {
 			assert.throws(function () {
