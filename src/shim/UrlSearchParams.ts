@@ -93,6 +93,9 @@ export default class UrlSearchParams {
 	 * @param key The key whose values are to be removed
 	 */
 	delete(key: string): void {
+		// Set to undefined rather than deleting the key, for better consistency across browsers.
+		// If a deleted key is re-added, most browsers put it at the end of iteration order, but IE maintains
+		// its original position.  This approach maintains the original position everywhere.
 		this._list[key] = undefined;
 	}
 
@@ -127,6 +130,22 @@ export default class UrlSearchParams {
 	 */
 	has(key: string): boolean {
 		return Array.isArray(this._list[key]);
+	}
+
+	/**
+	 * Returns an array of all keys which have been set.
+	 * @return An array of strings containing all keys set in the UrlSearchParams instance
+	 */
+	keys(): string[] {
+		const keys: string[] = [];
+
+		for (const key in this._list) {
+			if (this.has(key)) {
+				keys.push(key);
+			}
+		}
+
+		return keys;
 	}
 
 	/**

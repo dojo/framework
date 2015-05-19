@@ -91,6 +91,17 @@ registerSuite({
 		assert.isFalse(params.has('qux'), 'expected unassigned property to be false');
 	},
 
+	'#keys'() {
+		const params = new UrlSearchParams({ foo: 'bar', bar: undefined, baz: [] });
+		assert.deepEqual(params.keys(), [ 'foo', 'bar', 'baz' ]);
+		params.delete('foo');
+		assert.deepEqual(params.keys(), [ 'bar', 'baz' ]);
+
+		// Re-add to test consistent ordering across all platforms
+		params.append('foo', 'bar');
+		assert.deepEqual(params.keys(), [ 'foo', 'bar', 'baz' ]);
+	},
+
 	'#set'() {
 		const params = new UrlSearchParams({ foo: 'bar' });
 		params.set('foo', 'baz');
