@@ -4,6 +4,7 @@ import './async/iteration';
 import './async/Task';
 import './async/timing';
 import './Evented';
+import './encoding';
 import './global';
 import './has';
 import './lang';
