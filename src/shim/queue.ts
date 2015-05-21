@@ -144,14 +144,14 @@ export let queueAnimationTask = (function () {
 export let queueMicroTask = (function () {
 	let enqueue: (item: QueueItem) => void;
 
-	if (has('promise')) {
-		enqueue = function (item: QueueItem): void {
-			global.Promise.resolve(item).then(executeTask);
-		};
-	}
-	else if (has('host-node')) {
+	if (has('host-node')) {
 		enqueue = function (item: QueueItem): void {
 			global.process.nextTick(executeTask.bind(null, item));
+		};
+	}
+	else if (has('promise')) {
+		enqueue = function (item: QueueItem): void {
+			global.Promise.resolve(item).then(executeTask);
 		};
 	}
 	else if (has('dom-mutationobserver')) {
@@ -159,10 +159,11 @@ export let queueMicroTask = (function () {
 		let queue: QueueItem[] = [];
 		let node = document.createElement('div');
 		let observer = new HostMutationObserver(function (): void {
-			const item: QueueItem = queue.length && queue.shift();
-
-			if (item && item.isActive) {
-				item.callback();
+			while (queue.length > 0) {
+				const item = queue.shift();
+				if (item.isActive) {
+					item.callback();
+				}
 			}
 		});
 

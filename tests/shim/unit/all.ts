@@ -8,7 +8,6 @@ import './global';
 import './has';
 import './lang';
 import './math';
-import './nextTick';
 import './number';
 import './observers/ObjectObserver';
 import './object';
