@@ -1,4 +1,4 @@
-import nextTick from './nextTick';
+import { queueMicroTask } from './queue';
 import global from './global';
 import has from './has';
 
@@ -184,16 +184,6 @@ export class PromiseShim<T> implements Thenable<T> {
 		};
 
 		/**
-		 * Schedules a callback for execution during the next round through the event loop.
-		 *
-		 * @method
-		 * @param callback The callback to execute on the next turn through the event loop.
-		 */
-		function enqueue(callback: (...args: any[]) => any): void {
-			nextTick(callback);
-		}
-
-		/**
 		 * Settles this promise.
 		 *
 		 * @param newState The resolved state for this promise.
@@ -207,12 +197,12 @@ export class PromiseShim<T> implements Thenable<T> {
 
 			this.state = newState;
 			this.resolvedValue = value;
-			whenFinished = enqueue;
+			whenFinished = queueMicroTask;
 
 			// Only enqueue a callback runner if there are callbacks so that initially fulfilled Promises don't have to
 			// wait an extra turn.
 			if (callbacks.length > 0) {
-				enqueue(function (): void {
+				queueMicroTask(function (): void {
 					let count = callbacks.length;
 					for (let i = 0; i < count; ++i) {
 						callbacks[i].call(null);
