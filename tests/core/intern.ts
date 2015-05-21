@@ -63,4 +63,4 @@ export var suites = [ 'tests/unit/all' ];
 export var functionalSuites = [ 'tests/functional/all' ];
 
 // A regular expression matching URLs to files that should not be included in code coverage analysis
-export var excludeInstrumentation = /^(?:node_modules|bower_components|_build[\/\\]tests)[\/\\]/;
+export var excludeInstrumentation = /(?:node_modules|bower_components|tests)[\/\\]/;
