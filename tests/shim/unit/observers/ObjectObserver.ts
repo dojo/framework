@@ -21,7 +21,7 @@ registerSuite({
 				this.skip('Native Object.observe support is required for this test.');
 			}
 
-			const dfd = this.async(100);
+			const dfd = this.async(5000);
 			const object: { a: number; b?: number } = { a: 1 };
 
 			let isCalled: boolean = false;
@@ -45,7 +45,7 @@ registerSuite({
 				this.skip('Native Object.observe support is required for this test.');
 			}
 
-			const dfd = this.async(100);
+			const dfd = this.async(5000);
 			const object: { a: number; b?: number } = { a: 1 };
 
 			let b: number;
@@ -88,7 +88,7 @@ registerSuite({
 		},
 
 		'when attempting to observe an unwritable property': function () {
-			const dfd = this.async(100);
+			const dfd = this.async(5000);
 			const object = Object.create(Object.prototype, {
 				a: {
 					enumerable: false,
@@ -116,7 +116,7 @@ registerSuite({
 		},
 
 		'when nextTurn is true': function () {
-			const dfd = this.async(100);
+			const dfd = this.async(5000);
 			const object: { a: number; b?: number } = { a: 1 };
 
 			let count: number = 0;
@@ -136,7 +136,7 @@ registerSuite({
 		},
 
 		'when nextTurn is false': function () {
-			const dfd = this.async(100);
+			const dfd = this.async(5000);
 			const object: { a: number; b?: number } = { a: 1 };
 
 			let count: number = 0;
@@ -167,7 +167,7 @@ registerSuite({
 });
 
 function testPropertyChanges(Ctor: any): void {
-	const dfd = this.async(100);
+	const dfd = this.async(5000);
 	const object = Object.create(Object.prototype, {
 		a: {
 			enumerable: false,
@@ -204,7 +204,7 @@ function testPropertyChanges(Ctor: any): void {
 }
 
 function testRemoveProperty(Ctor: any): void {
-	const dfd = this.async(100);
+	const dfd = this.async(5000);
 	const mirror: { a: number; b: string } = { a: null, b: null };
 	const object: { a: number; b: string } = { a: 1, b: 'Lorem' };
 	const observer = new Ctor({
@@ -228,7 +228,7 @@ function testRemoveProperty(Ctor: any): void {
 }
 
 function testDestroy(Ctor: any): void {
-	const dfd = this.async(100);
+	const dfd = this.async(5000);
 	const object = { a: 1 };
 
 	let b: number;

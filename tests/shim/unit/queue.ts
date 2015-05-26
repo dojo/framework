@@ -7,7 +7,7 @@ registerSuite({
 	name: 'queue functions',
 
 	'.queueTask()': function () {
-		const dfd = this.async(300);
+		const dfd = this.async(5000);
 		const parts: string[] = [];
 
 		function a() {
@@ -35,7 +35,7 @@ registerSuite({
 	},
 
 	'.queueTask() => handle.destroy()': function () {
-		const dfd = this.async(100);
+		const dfd = this.async(5000);
 		let parts: string[];
 
 		function test() {
@@ -59,7 +59,7 @@ registerSuite({
 			this.skip('browser required.');
 		}
 
-		const dfd = this.async(300);
+		const dfd = this.async(5000);
 		const parts: string[] = [];
 
 		function a() {
@@ -91,7 +91,7 @@ registerSuite({
 			this.skip('browser required.');
 		}
 
-		const dfd = this.async(100);
+		const dfd = this.async(5000);
 		let parts: string[];
 
 		function test() {
@@ -111,7 +111,7 @@ registerSuite({
 	},
 
 	'.queueMicroTask()': function () {
-		const dfd = this.async(300);
+		const dfd = this.async(5000);
 		const parts: string[] = [];
 
 		function a() {
@@ -149,7 +149,7 @@ registerSuite({
 	},
 
 	'.queueMicroTask() => handle.destroy()': function () {
-		const dfd = this.async(100);
+		const dfd = this.async(5000);
 		let parts: string[];
 
 		function test() {
