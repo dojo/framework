@@ -1,6 +1,6 @@
-import core = require('../interfaces');
+import { Handle } from '../interfaces';
 
-export interface Observer extends core.Handle {
+export interface Observer extends Handle {
 	observeProperty(...property: string[]): void;
 	removeProperty(...property: string[]): void;
     nextTurn?: boolean;

@@ -1,5 +1,5 @@
 import has from './has';
-import { Handle } from './interfaces';
+import { Handle, Hash } from './interfaces';
 import { PropertyEvent, Observer } from './observers/interfaces';
 import * as ObjectObserver from './observers/ObjectObserver';
 
@@ -29,7 +29,7 @@ function copyArray(array: any[], kwArgs: CopyArgs): any[] {
 }
 
 export function copy(kwArgs: CopyArgs): any {
-	const sources: { [index: string]: any }[] = kwArgs.sources;
+	const sources: Hash<any>[] = kwArgs.sources;
 	let target: any;
 
 	if (!sources.length) {
@@ -141,7 +141,7 @@ export function duplicate(source: {}): {} {
 
 export function getPropertyNames(object: {}): string[] {
 	const names : string[] = [];
-	const setOfNames: { [index: string]: any } = {};
+	const setOfNames: Hash<any> = {};
 
 	do {
 		// go through each prototype to add the property names

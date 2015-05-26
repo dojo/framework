@@ -1,6 +1,7 @@
 import global from './global';
-export let cache: { [feature: string]: any; } = Object.create(null);
-let testFunctions: { [feature: string]: () => any } = Object.create(null);
+import { Hash } from './interfaces';
+export const cache: Hash<any> = Object.create(null);
+const testFunctions: Hash<() => any> = Object.create(null);
 
 /**
  * Register a new test for a named feature.

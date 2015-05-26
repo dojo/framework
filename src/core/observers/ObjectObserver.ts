@@ -1,4 +1,5 @@
 import { add as hasAdd } from '../has';
+import { Hash } from '../interfaces';
 import { Observer, PropertyEvent } from './interfaces';
 import { is as isIdentical } from '../object';
 import { queueMicroTask } from '../queue';
@@ -72,7 +73,7 @@ export class Es7Observer extends BaseObjectObserver implements Observer {
 		const target = this._target;
 
 		this._observeHandler = function (changes: Es7ChangeEvent[]): void {
-			const propertyMap: { [key: string]: number } = {};
+			const propertyMap: Hash<number> = {};
 			const events: PropertyEvent[] = changes.reduce(function (
 				events: PropertyEvent[],
 				change: Es7ChangeEvent
@@ -187,8 +188,8 @@ export class Es5Observer extends BaseObjectObserver implements Observer {
 	nextTurn: boolean;
 
 	protected _boundDispatch: () => void;
-	protected _currentlyScheduled: { [key: string]: PropertyEvent };
-	protected _descriptors: { [key: string]: PropertyDescriptor };
+	protected _currentlyScheduled: Hash<PropertyEvent>;
+	protected _descriptors: Hash<PropertyDescriptor>;
 	protected _scheduler: Scheduler;
 
 	/**
