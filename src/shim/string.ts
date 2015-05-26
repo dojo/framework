@@ -1,7 +1,9 @@
+import { Hash } from './interfaces';
+
 const escapeRegExpPattern = /[[\]{}()|\\^$.*+?]/g;
 const escapeXmlPattern = /[&<]/g;
 const escapeXmlForPattern = /[&<>'"]/g;
-const escapeXmlMap: { [key: string]: string } = {
+const escapeXmlMap: Hash<string> = {
 	'&': '&amp;',
 	'<': '&lt;',
 	'>': '&gt;',

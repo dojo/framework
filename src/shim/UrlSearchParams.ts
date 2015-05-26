@@ -1,15 +1,16 @@
+import { Hash } from './interfaces';
 import { duplicate } from './lang';
 
 /**
  * Object with string keys and string or string array values that describes a query string.
  */
-type ParamList = { [key: string]: string | string[] };
+type ParamList = Hash<string | string[]>;
 
 /**
  * Parses a query string, returning a ParamList object.
  */
 function parseQueryString(input: string): ParamList {
-	const query = <{ [key: string]: string[] }> {};
+	const query: Hash<string[]> = {};
 	for (const entry of input.split('&')) {
 		let [ key, value ] = entry.split('=');
 		key = key ? decodeURIComponent(key) : '';
@@ -72,7 +73,7 @@ export default class UrlSearchParams {
 	 * Maps property keys to arrays of values. The value for any property that has been set will be an array containing
 	 * at least one item. Properties that have been deleted will have a value of 'undefined'.
 	 */
-	protected _list: { [key: string]: string[] };
+	protected _list: Hash<string[]>;
 
 	/**
 	 * Appends a new value to the set of values for a key.
