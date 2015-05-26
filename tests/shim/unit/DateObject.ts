@@ -210,8 +210,10 @@ registerSuite({
 			})(),
 
 			'toString': function () {
-				var date = new DateObject(Date.UTC(1979, 2, 20));
-				assert.strictEqual(date.utc.toString(), 'Tue, 20 Mar 1979 00:00:00 GMT');
+				var milliseconds = Date.UTC(1979, 2, 20);
+				var expected = new Date(milliseconds);
+				var date = new DateObject(milliseconds);
+				assert.strictEqual(date.utc.toString(), expected.toUTCString());
 			}
 		}
 	},
