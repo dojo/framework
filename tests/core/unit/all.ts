@@ -18,3 +18,4 @@ import './Scheduler';
 import './string';
 import './UrlSearchParams';
 import './WeakMap';
+import './DateObject';
