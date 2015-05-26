@@ -60,6 +60,9 @@ add('setimmediate', typeof global.setImmediate !== 'undefined');
 add('dom-mutationobserver', function(): boolean {
 	return has('host-browser') && Boolean(global.MutationObserver || global.WebKitMutationObserver);
 });
+add('microtasks', function () {
+	return has('promise') || has('host-node') || has('dom-mutationobserver');
+});
 add('object-observe', typeof (<any> Object).observe === 'function');
 add('postmessage', typeof postMessage === 'function');
 add('promise', typeof global.Promise !== 'undefined');

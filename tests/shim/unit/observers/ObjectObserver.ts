@@ -21,10 +21,11 @@ registerSuite({
 				this.skip('Native Object.observe support is required for this test.');
 			}
 
-			let dfd = this.async(100);
+			const dfd = this.async(100);
+			const object: { a: number; b?: number } = { a: 1 };
+
 			let isCalled: boolean = false;
-			let object: { a: number; b?: number } = { a: 1 };
-			let observer = new Es7Observer({
+			const observer = new Es7Observer({
 				target: object,
 				listener: function (events: PropertyEvent[]): any {
 					isCalled = true;
@@ -44,14 +45,15 @@ registerSuite({
 				this.skip('Native Object.observe support is required for this test.');
 			}
 
-			let dfd = this.async(100);
+			const dfd = this.async(100);
+			const object: { a: number; b?: number } = { a: 1 };
+
 			let b: number;
-			let object: { a: number; b?: number } = { a: 1 };
-			new Es7Observer({
+			const observer = new Es7Observer({
 				onlyReportObserved: false,
 				target: object,
 				listener: function (events: PropertyEvent[]): any {
-					let target = events[0].target;
+					const target = events[0].target;
 					b = (<any> target)[events[0].name];
 				}
 			});
@@ -86,9 +88,8 @@ registerSuite({
 		},
 
 		'when attempting to observe an unwritable property': function () {
-			let dfd = this.async(100);
-			let b: number;
-			let object = Object.create(Object.prototype, {
+			const dfd = this.async(100);
+			const object = Object.create(Object.prototype, {
 				a: {
 					enumerable: false,
 					configurable: true,
@@ -96,10 +97,12 @@ registerSuite({
 					value: 1
 				}
 			});
-			let observer = new Es5Observer({
+
+			let b: number;
+			const observer = new Es5Observer({
 				target: object,
 				listener: function (events: PropertyEvent[]): any {
-					let target = events[0].target;
+					const target = events[0].target;
 					b = (<any> target)[events[0].name];
 				}
 			});
@@ -113,10 +116,11 @@ registerSuite({
 		},
 
 		'when nextTurn is true': function () {
-			let dfd = this.async(100);
+			const dfd = this.async(100);
+			const object: { a: number; b?: number } = { a: 1 };
+
 			let count: number = 0;
-			let object: { a: number; b?: number } = { a: 1 };
-			let observer = new Es5Observer({
+			const observer = new Es5Observer({
 				target: object,
 				listener: function (events: PropertyEvent[]): any {
 					++count;
@@ -132,10 +136,11 @@ registerSuite({
 		},
 
 		'when nextTurn is false': function () {
-			let dfd = this.async(100);
+			const dfd = this.async(100);
+			const object: { a: number; b?: number } = { a: 1 };
+
 			let count: number = 0;
-			let object: { a: number; b?: number } = { a: 1 };
-			let observer = new Es5Observer({
+			const observer = new Es5Observer({
 				nextTurn: false,
 				target: object,
 				listener: function (events: PropertyEvent[]): any {
@@ -162,10 +167,8 @@ registerSuite({
 });
 
 function testPropertyChanges(Ctor: any): void {
-	let dfd = this.async(100);
-	let b: number;
-	let length: number;
-	let object = Object.create(Object.prototype, {
+	const dfd = this.async(100);
+	const object = Object.create(Object.prototype, {
 		a: {
 			enumerable: false,
 			configurable: true,
@@ -173,10 +176,13 @@ function testPropertyChanges(Ctor: any): void {
 			value: 1
 		}
 	});
-	let observer = new Ctor({
+
+	let b: number;
+	let length: number;
+	const observer = new Ctor({
 		target: object,
 		listener: function (events: PropertyEvent[]): any {
-			let target = events[0].target;
+			const target = events[0].target;
 			b = (<any> target)[events[0].name];
 			length = events.length;
 		}
@@ -198,13 +204,13 @@ function testPropertyChanges(Ctor: any): void {
 }
 
 function testRemoveProperty(Ctor: any): void {
-	let dfd = this.async(100);
-	let mirror: { a: number; b: string } = { a: null, b: null };
-	let object: { a: number; b: string } = { a: 1, b: 'Lorem' };
-	let observer = new Ctor({
+	const dfd = this.async(100);
+	const mirror: { a: number; b: string } = { a: null, b: null };
+	const object: { a: number; b: string } = { a: 1, b: 'Lorem' };
+	const observer = new Ctor({
 		target: object,
 		listener: function (events: PropertyEvent[]): any {
-			let target = events[0].target;
+			const target = events[0].target;
 
 			(<any> mirror)[events[0].name] = (<any> target)[events[0].name];
 		}
@@ -222,13 +228,14 @@ function testRemoveProperty(Ctor: any): void {
 }
 
 function testDestroy(Ctor: any): void {
-	let dfd = this.async(100);
+	const dfd = this.async(100);
+	const object = { a: 1 };
+
 	let b: number;
-	let object = { a: 1 };
-	let observer = new Ctor({
+	const observer = new Ctor({
 		target: object,
 		listener: function (events: PropertyEvent[]): any {
-			let target = events[0].target;
+			const target = events[0].target;
 			b = (<any> target)[events[0].name];
 		}
 	});

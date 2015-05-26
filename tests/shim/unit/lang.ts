@@ -17,19 +17,19 @@ registerSuite({
 	},
 
 	'.copy() simple': function () {
-		let copyOfObject = lang.copy({
+		const copyOfObject = lang.copy({
 			sources: [{ a: 1 }]
 		});
 		assert.equal(copyOfObject.a, 1);
 	},
 
 	'.copy() inherited': function () {
-		let prototype = {
+		const prototype = {
 			a: 1
 		};
-		let inheriting = Object.create(prototype);
+		const inheriting = Object.create(prototype);
 		inheriting.b = 2;
-		let copyofInherited = lang.copy({
+		const copyofInherited = lang.copy({
 			inherited: true,
 			sources: [ inheriting ]
 		});
@@ -38,12 +38,12 @@ registerSuite({
 	},
 
 	'.copy() deep': function () {
-		let nested = {
+		const nested = {
 			a: {
 				b: 1
 			}
 		};
-		let copyOfObject: any = lang.copy({
+		const copyOfObject: any = lang.copy({
 			deep: true,
 			sources: [ nested ]
 		});
@@ -52,12 +52,12 @@ registerSuite({
 	},
 
 	'.copy() deep arrays': function () {
-		let nested = {
+		const nested = {
 			a: {
 				b: [ 1 ]
 			}
 		};
-		let copyOfObject: any = lang.copy({
+		const copyOfObject: any = lang.copy({
 			deep: true,
 			sources: [ nested ]
 		});
@@ -67,7 +67,7 @@ registerSuite({
 	},
 
 	'.copy() descriptors': function () {
-		let object: any = {
+		const object: any = {
 			a: 1
 		};
 		Object.defineProperty(object, 'b', {
@@ -90,7 +90,7 @@ registerSuite({
 					a: 5
 				}
 			});
-		let copyOfObject: any = lang.copy({
+		const copyOfObject: any = lang.copy({
 			descriptors: true,
 			inherited: true,
 			sources: [ object ]
@@ -106,11 +106,10 @@ registerSuite({
 	},
 
 	'.create()': function () {
-		let prototype = {
+		const prototype = {
 			a: 1
 		};
-		let mixinPrototype = { lorem: 'ipsum' };
-		let mixin: any = Object.create(mixinPrototype, {
+		const mixin: any = Object.create({ lorem: 'ipsum' }, {
 			b: {
 				enumerable: true,
 				configurable: true,
@@ -127,7 +126,7 @@ registerSuite({
 				value: 4
 			}
 		});
-		let object: any = lang.create(prototype, mixin);
+		const object: any = lang.create(prototype, mixin);
 
 		assert.equal(Object.getPrototypeOf(object), prototype);
 		assert.equal(object.b, mixin.b);
@@ -140,10 +139,10 @@ registerSuite({
 	},
 
 	'.duplicate()': function () {
-		let prototype = {
+		const prototype = {
 			a: 1
 		};
-		let object: any = Object.create(prototype, {
+		const object: any = Object.create(prototype, {
 			b: { value: 2 },
 			c: {
 				configurable: false,
@@ -155,7 +154,7 @@ registerSuite({
 				}
 			}
 		});
-		let copyOfObject: any = lang.duplicate(object);
+		const copyOfObject: any = lang.duplicate(object);
 
 		assert.equal(Object.getPrototypeOf(copyOfObject), prototype);
 		assert.equal(copyOfObject.a, 1);
@@ -171,7 +170,7 @@ registerSuite({
 			this.skip('Native Object.observe support is required for this test.');
 		}
 
-		let observer = lang.observe({
+		const observer = lang.observe({
 			target: {},
 			listener: function () {},
 			nextTurn: true
@@ -184,7 +183,7 @@ registerSuite({
 			this.skip('Native Object.observe support is required for this test.');
 		}
 
-		let observer = lang.observe({
+		const observer = lang.observe({
 			target: {},
 			listener: function () {},
 			nextTurn: false
@@ -197,7 +196,7 @@ registerSuite({
 			this.skip('Native Object.observe support is required for this test.');
 		}
 
-		let observer = lang.observe({
+		const observer = lang.observe({
 			target: {},
 			listener: function () {},
 			nextTurn: true,
@@ -207,11 +206,11 @@ registerSuite({
 	},
 
 	'.getPropertyDescriptor()': function () {
-		let object1 = {
+		const object1 = {
 			get foo() { return 'bar'; }
 		};
-		let object2 = Object.create(object1);
-		let object3 = Object.create(object1, {
+		const object2 = Object.create(object1);
+		const object3 = Object.create(object1, {
 			foo: {
 				get: function () {
 					return 'baz';
@@ -225,11 +224,11 @@ registerSuite({
 	},
 
 	'.getPropertyNames()': function () {
-		let prototype = {
+		const prototype = {
 			a: 1,
 			b: 7
 		};
-		let object: any = Object.create(prototype, {
+		const object: any = Object.create(prototype, {
 			b: { value: 2 },
 			c: {
 				configurable: false,
@@ -241,7 +240,7 @@ registerSuite({
 				}
 			}
 		});
-		let names: string[] = lang.getPropertyNames(object);
+		const names: string[] = lang.getPropertyNames(object);
 
 		assert.sameMembers(names, [ 'a', 'b', 'c', 'd' ]);
 	},
@@ -255,10 +254,10 @@ registerSuite({
 	},
 
 	'.lateBind() context': function () {
-		let object: {
+		const object: {
 			method?: (...args: string[]) => string;
 		} = <any> {};
-		let method = lang.lateBind(object, 'method');
+		const method = lang.lateBind(object, 'method');
 		object.method = function (): any {
 			return this;
 		};
@@ -267,12 +266,12 @@ registerSuite({
 	},
 
 	'.lateBind() arguments': function () {
-		let object: {
+		const object: {
 			method?: (...args: string[]) => string;
 		} = <any> {};
-		let method = lang.lateBind(object, 'method', 'The', 'quick', 'brown');
-		let methodNoArgs = lang.lateBind(object, 'method');
-		let suffix = 'fox jumped over the lazy dog';
+		const method = lang.lateBind(object, 'method', 'The', 'quick', 'brown');
+		const methodNoArgs = lang.lateBind(object, 'method');
+		const suffix = 'fox jumped over the lazy dog';
 		object.method = function (...parts: string[]): string {
 			return parts.join(' ');
 		};
@@ -286,9 +285,9 @@ registerSuite({
 	},
 
 	'.partial()': function () {
-		let ending = 'jumped over the lazy dog';
-		let finish = lang.partial(function () {
-			let start = this.start ? [ this.start ] : [];
+		const ending = 'jumped over the lazy dog';
+		const finish = lang.partial(function () {
+			const start = this.start ? [ this.start ] : [];
 
 			return start.concat(Array.prototype.slice.call(arguments)).join(' ');
 		}, 'jumped', 'over');
@@ -308,7 +307,7 @@ registerSuite({
 	'.createHandle'() {
 		let count = 0;
 		const handle = lang.createHandle(function(): void {
-			count++;
+			++count;
 		});
 
 		handle.destroy();
@@ -321,7 +320,7 @@ registerSuite({
 	'.createCompositeHandle'() {
 		let count = 0;
 		function destructor(): void {
-			count++;
+			++count;
 		}
 		const handle = lang.createCompositeHandle(
 			lang.createHandle(destructor),

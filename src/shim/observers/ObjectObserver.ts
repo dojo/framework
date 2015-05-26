@@ -1,6 +1,6 @@
+import { add as hasAdd } from '../has';
 import { Observer, PropertyEvent } from './interfaces';
 import { is as isIdentical } from '../object';
-import { add as hasAdd } from '../has';
 import { queueMicroTask } from '../queue';
 import Scheduler from '../Scheduler';
 
@@ -33,10 +33,29 @@ export interface KwArgs {
 }
 
 export class Es7Observer extends BaseObjectObserver implements Observer {
+	/**
+	 * Determines whether to block notifications for properties not added via `observeProperty`.
+	 * Defaults to `true.`
+	 *
+	 * Since `Object.observe` automatically reports any changes to the underlying object, there
+	 * needs to be a mechanism for ensuring consistency with `ObjectObserver` in environments
+	 * without a native `Object.observe` implementation.
+	 */
 	onlyReportObserved: boolean;
 
 	protected _observeHandler: (changes: any[]) => void;
 
+	/**
+	 * Creates a new Es7Observer that uses `Object.observe` to watch and notify listeners of changes.
+	 *
+	 * Requires a native `Object.observe` implementation.
+	 *
+	 * @constructor
+	 *
+	 * @param kwArgs
+	 * The `kwArgs` object is expected to contain the target object to observe and the callback
+	 * that will be fired when changes occur.
+	 */
 	constructor(kwArgs: KwArgs) {
 		super(kwArgs);
 
@@ -44,41 +63,21 @@ export class Es7Observer extends BaseObjectObserver implements Observer {
 		this._setObserver();
 	}
 
-	destroy(): void {
-		let target = this._target;
-
-		(<any> Object).unobserve(target, this._observeHandler);
-		this._listener = this._observeHandler = this._propertyStore = this._target = null;
-	}
-
-	observeProperty(...properties: string[]): void {
-		let store = <any> this._propertyStore;
-
-		properties.forEach(function (property: string): void {
-			store[property] = 1;
-		});
-	}
-
-	removeProperty(...properties: string[]): void {
-		let store = this._propertyStore;
-
-		properties.forEach(function (property: string): void {
-			// Since the store is just a simple map, using the `delete` operator is not problematic.
-			delete (<any> store)[property];
-		});
-	}
-
+	/**
+	 * Initializes observation on the underlying object, preventing multiple changes to the same
+	 * property from emitting multiple notifications.
+	 */
 	protected _setObserver(): void {
-		let target = this._target;
-		let store = this._propertyStore;
+		const store = this._propertyStore;
+		const target = this._target;
 
 		this._observeHandler = function (changes: Es7ChangeEvent[]): void {
-			let propertyMap: { [key: string]: number } = {};
-			let events: PropertyEvent[] = changes.reduce(function (
+			const propertyMap: { [key: string]: number } = {};
+			const events: PropertyEvent[] = changes.reduce(function (
 				events: PropertyEvent[],
 				change: Es7ChangeEvent
 			): PropertyEvent[] {
-				let property: string = change.name;
+				const property: string = change.name;
 
 				if (!this.onlyReportObserved || (property in store)) {
 					if (property in propertyMap) {
@@ -103,8 +102,59 @@ export class Es7Observer extends BaseObjectObserver implements Observer {
 
 		(<any> Object).observe(target, this._observeHandler);
 	}
+
+	/**
+	 * Ends all notifications on the target.
+	 */
+	destroy(): void {
+		const target = this._target;
+
+		(<any> Object).unobserve(target, this._observeHandler);
+		this._listener = this._observeHandler = this._propertyStore = this._target = null;
+	}
+
+	/**
+	 * Enables notifications for the given property (or properties).
+	 *
+	 * If the `onlyReportObserved` option is `false`, then adding new properties will have no effect until
+	 * `onlyReportObserved` is reset to `true`.
+	 *
+	 * @param properties The property name or arguments list of property names that will be observed.
+	 */
+	observeProperty(...properties: string[]): void {
+		const store = <any> this._propertyStore;
+
+		properties.forEach(function (property: string): void {
+			store[property] = 1;
+		});
+	}
+
+	/**
+	 * Disables notifications for the given property (or properties).
+	 *
+	 * If the `onlyReportObserved` option is `false`, then removing properties will have no effect until
+	 * `onlyReportObserved` is reset to `true`.
+	 *
+	 * * @param properties The property name or arguments list of property names that will be removed.
+	 */
+	removeProperty(...properties: string[]): void {
+		const store = this._propertyStore;
+
+		properties.forEach(function (property: string): void {
+			// Since the store is just a simple map, using the `delete` operator is not problematic.
+			delete (<any> store)[property];
+		});
+	}
 }
 
+/**
+ * In environments with no native `Object.observe` implementation, the notification system involves
+ * swapping out the underlying setters for observed properties with a setter that fires a registered
+ * callback. In order to properly unobserve properties, it is necessary to retrieve the original property
+ * descriptors, own or inherited. Since it is possible to observe properties that do not yet exist, a
+ * default descriptor can be returned. This default descriptor is the same as that generated by simple
+ * `object.property = value` operations.
+ */
 function getPropertyDescriptor(target: {}, property: string): PropertyDescriptor {
 	let descriptor: PropertyDescriptor;
 
@@ -124,8 +174,16 @@ function getPropertyDescriptor(target: {}, property: string): PropertyDescriptor
 }
 
 export class Es5Observer extends BaseObjectObserver implements Observer {
+	/**
+	 * The scheduler used to mimic native `Object.observe` reporting. Note that all changes to all
+	 * observed objects are notified within the same scheduled microtask.
+	 */
 	protected static _scheduler: Scheduler;
 
+	/**
+	 * Determines whether change notifications should be fired immediately (`false`) or queued with
+	 * the scheduler (`true`, thus mimicking native `Object.observe` behavior). Defaults to `true`.
+	 */
 	nextTurn: boolean;
 
 	protected _boundDispatch: () => void;
@@ -133,6 +191,18 @@ export class Es5Observer extends BaseObjectObserver implements Observer {
 	protected _descriptors: { [key: string]: PropertyDescriptor };
 	protected _scheduler: Scheduler;
 
+	/**
+	 * Creates a new Es5Observer to watch and notify listeners of changes.
+	 *
+	 * This should only be used when 1) there is no native `Object.observe` implementation or 2) notifications
+	 * should be fired immediately rather than queued.
+	 *
+	 * @constructor
+	 *
+	 * @param kwArgs
+	 * The `kwArgs` object is expected to contain the target object to observe and the callback
+	 * that will be fired when changes occur.
+	 */
 	constructor(kwArgs: KwArgs) {
 		super(kwArgs);
 
@@ -145,56 +215,6 @@ export class Es5Observer extends BaseObjectObserver implements Observer {
 		this._descriptors = {};
 		this._scheduler = (<any> this.constructor)._scheduler;
 		this._boundDispatch = this._dispatch.bind(this);
-	}
-
-	destroy(): void {
-		let descriptors = this._descriptors;
-
-		Object.keys(descriptors).forEach(this._restore, this);
-		this._descriptors = this._listener = this._propertyStore = this._target = null;
-	}
-
-	observeProperty(...properties: string[]): void {
-		let target = this._target;
-		let store = <any> this._propertyStore;
-		let self = this;
-
-		properties.forEach(function (property: string): void {
-			let descriptor: PropertyDescriptor = getPropertyDescriptor(target, property);
-
-			if (descriptor.writable) {
-				let observableDescriptor: PropertyDescriptor = {
-					configurable: descriptor ? descriptor.configurable : true,
-					enumerable: descriptor ? descriptor.enumerable : true,
-					get: function (): any {
-						return store[property];
-					},
-					set: function (value: any): void {
-						let previous: any = store[property];
-
-						if (!isIdentical(value, previous)) {
-							store[property] = value;
-
-							self._schedule(property);
-						}
-					}
-				};
-
-				store[property] = target[property];
-				self._descriptors[property] = descriptor;
-				Object.defineProperty(target, property, observableDescriptor);
-			}
-		});
-	}
-
-	removeProperty(...properties: string[]): void {
-		let store = this._propertyStore;
-
-		properties.forEach(function (property: string): void {
-			this._restore(property);
-			// Since the store is just a simple map, using the `delete` operator is not problematic.
-			delete (<any> store)[property];
-		}, this);
 	}
 
 	protected _dispatch() {
@@ -238,5 +258,68 @@ export class Es5Observer extends BaseObjectObserver implements Observer {
 		else {
 			this._listener([ event ]);
 		}
+	}
+
+	/**
+	 * Ends all notifications on the target, restoring it to its original state.
+	 */
+	destroy(): void {
+		let descriptors = this._descriptors;
+
+		Object.keys(descriptors).forEach(this._restore, this);
+		this._descriptors = this._listener = this._propertyStore = this._target = null;
+	}
+
+	/**
+	 * Enables notifications for the given property (or properties).
+	 *
+	 * @param properties The property name or arguments list of property names that will be observed.
+	 */
+	observeProperty(...properties: string[]): void {
+		let target = this._target;
+		let store = <any> this._propertyStore;
+		let self = this;
+
+		properties.forEach(function (property: string): void {
+			let descriptor: PropertyDescriptor = getPropertyDescriptor(target, property);
+
+			if (descriptor.writable) {
+				let observableDescriptor: PropertyDescriptor = {
+					configurable: descriptor ? descriptor.configurable : true,
+					enumerable: descriptor ? descriptor.enumerable : true,
+					get: function (): any {
+						return store[property];
+					},
+					set: function (value: any): void {
+						let previous: any = store[property];
+
+						if (!isIdentical(value, previous)) {
+							store[property] = value;
+
+							self._schedule(property);
+						}
+					}
+				};
+
+				store[property] = target[property];
+				self._descriptors[property] = descriptor;
+				Object.defineProperty(target, property, observableDescriptor);
+			}
+		});
+	}
+
+	/**
+	 * Disables notifications for the given property (or properties).
+	 *
+	 * @param properties The property name or arguments list of property names that will be removed.
+	 */
+	removeProperty(...properties: string[]): void {
+		let store = this._propertyStore;
+
+		properties.forEach(function (property: string): void {
+			this._restore(property);
+			// Since the store is just a simple map, using the `delete` operator is not problematic.
+			delete (<any> store)[property];
+		}, this);
 	}
 }

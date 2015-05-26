@@ -1,7 +1,7 @@
-import { PropertyEvent, Observer } from './observers/interfaces';
-import * as ObjectObserver from './observers/ObjectObserver';
 import has from './has';
 import { Handle } from './interfaces';
+import { PropertyEvent, Observer } from './observers/interfaces';
+import * as ObjectObserver from './observers/ObjectObserver';
 
 const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -29,8 +29,8 @@ function copyArray(array: any[], kwArgs: CopyArgs): any[] {
 }
 
 export function copy(kwArgs: CopyArgs): any {
+	const sources: { [index: string]: any }[] = kwArgs.sources;
 	let target: any;
-	let sources: { [index: string]: any }[] = kwArgs.sources;
 
 	if (!sources.length) {
 		throw new RangeError('lang.copy requires at least one source object.');
@@ -140,8 +140,8 @@ export function duplicate(source: {}): {} {
 }
 
 export function getPropertyNames(object: {}): string[] {
-	let setOfNames: { [index: string]: any } = {};
-	let names : string[] = [];
+	const names : string[] = [];
+	const setOfNames: { [index: string]: any } = {};
 
 	do {
 		// go through each prototype to add the property names
@@ -185,12 +185,13 @@ export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): 
 			return (<any> instance)[method].apply(instance, args);
 		} :
 		function () {
+			// TS7017
 			return (<any> instance)[method].apply(instance, arguments);
 		};
 }
 
 export function observe(kwArgs: ObserveArgs): Observer {
-	let Ctor = kwArgs.nextTurn && has('object-observe') ? ObjectObserver.Es7Observer : ObjectObserver.Es5Observer;
+	const Ctor = kwArgs.nextTurn && has('object-observe') ? ObjectObserver.Es7Observer : ObjectObserver.Es5Observer;
 
 	return new Ctor(kwArgs);
 }
