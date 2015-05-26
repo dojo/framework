@@ -15,6 +15,7 @@
 		"./typings/tsd.d.ts"
 	],
 	"files": [
+		"./src/DateObject.ts",
 		"./src/Evented.ts",
 		"./src/Promise.ts",
 		"./src/Scheduler.ts",
@@ -68,6 +69,7 @@
 		"./tests/typings/leadfoot/leadfoot.d.ts",
 		"./tests/typings/sinon/sinon.d.ts",
 		"./tests/typings/tsd.d.ts",
+		"./tests/unit/DateObject.ts",
 		"./tests/unit/Evented.ts",
 		"./tests/unit/Promise.ts",
 		"./tests/unit/Scheduler.ts",
