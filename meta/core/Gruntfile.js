@@ -80,9 +80,9 @@ module.exports = function (grunt) {
 			},
 			typings: {
 				expand: true,
-				cwd: 'typings/',
+				cwd: '_typings/',
 				src: [ '**/*.d.ts', '!tsd.d.ts' ],
-				dest: 'dist/typings/'
+				dest: 'dist/_typings/'
 			}
 		},
 
@@ -93,8 +93,7 @@ module.exports = function (grunt) {
 			},
 			dist: {
 				options: {
-					out: 'dist/typings/<%= name %>/<%= name %>-<%= version %>.d.ts',
-					externs: [ '../node/node.d.ts' ]
+					out: 'dist/_typings/<%= name %>/<%= name %>-<%= version %>.d.ts'
 				},
 				src: [ '<%= skipTests %>' ]
 			}
