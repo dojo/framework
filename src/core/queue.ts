@@ -1,8 +1,6 @@
 import global from './global';
+import has from './has';
 import { Handle } from './interfaces';
-import has, { add as hasAdd } from './has';
-
-hasAdd('microtasks', (has('promise') || has('host-node') || has('dom-mutationobserver')));
 
 function executeTask(item: QueueItem): void {
 	if (item.isActive) {
@@ -34,9 +32,8 @@ export interface QueueItem {
 	callback: (...args: any[]) => any;
 }
 
-// When no mechanism for registering microtasks is exposed by the environment,
-// microtasks will be queued and then executed in a single macrotask before the other
-// macrotasks are executed.
+// When no mechanism for registering microtasks is exposed by the environment, microtasks will
+// be queued and then executed in a single macrotask before the other macrotasks are executed.
 let checkMicroTaskQueue: () => void;
 let microTasks: QueueItem[];
 if (!has('microtasks')) {
@@ -60,14 +57,19 @@ if (!has('microtasks')) {
 	};
 }
 
-export let queueTask = (function() {
-	let enqueue: (item: QueueItem) => void;
+/**
+ * Schedules a callback to the macrotask queue.
+ *
+ * @param callback the function to be queued and later executed.
+ * @returns An object with a `destroy` method that, when called, prevents the registered callback from executing.
+ */
+export const queueTask = (function() {
 	let destructor: (...args: any[]) => any;
+	let enqueue: (item: QueueItem) => void;
 
-	// Since the IE implementation of `setImmediate` is not flawless, we will test for
-	// `postMessage` first.
+	// Since the IE implementation of `setImmediate` is not flawless, we will test for `postMessage` first.
 	if (has('postmessage')) {
-		let queue: QueueItem[] = [];
+		const queue: QueueItem[] = [];
 
 		global.addEventListener('message', function (event: PostMessageEvent): void {
 			// Confirm that the event was triggered by the current window and by this particular implementation.
@@ -99,12 +101,11 @@ export let queueTask = (function() {
 	}
 
 	function queueTask(callback: (...args: any[]) => any): Handle {
-		let item: QueueItem = {
+		const item: QueueItem = {
 			isActive: true,
 			callback: callback
 		};
-
-		let id: any = enqueue(item);
+		const id: any = enqueue(item);
 
 		return getQueueHandle(item, destructor && function () {
 			destructor(id);
@@ -119,28 +120,48 @@ export let queueTask = (function() {
 })();
 
 /**
+ * Schedules an animation task with `window.requestAnimationFrame` if it exists, or with `queueTask` otherwise.
+ *
  * Since requestAnimationFrame's behavior does not match that expected from `queueTask`, it is not used there.
  * However, at times it makes more sense to delegate to requestAnimationFrame; hence the following method.
+ *
+ * @param callback the function to be queued and later executed.
+ * @returns An object with a `destroy` method that, when called, prevents the registered callback from executing.
  */
-export let queueAnimationTask = (function () {
+export const queueAnimationTask = (function () {
 	if (!has('raf')) {
 		return queueTask;
 	}
 
-	return function (callback: (...args: any[]) => any): Handle {
-		let item: QueueItem = {
+	function queueAnimationTask(callback: (...args: any[]) => any): Handle {
+		const item: QueueItem = {
 			isActive: true,
 			callback: callback
 		};
-
-		let rafId: number = requestAnimationFrame(executeTask.bind(null, item));
+		const rafId: number = requestAnimationFrame(executeTask.bind(null, item));
 
 		return getQueueHandle(item, function () {
 			cancelAnimationFrame(rafId);
 		});
+	}
+
+	// TODO: Use aspect.before when it is available.
+	return has('microtasks') ? queueAnimationTask : function (callback: (...args: any[]) => any): Handle {
+		checkMicroTaskQueue();
+		return queueAnimationTask(callback);
 	};
 })();
 
+/**
+ * Schedules a callback to the microtask queue.
+ *
+ * Any callbacks registered with `queueMicroTask` will be executed before the next macrotask. If no native
+ * mechanism for scheduling macrotasks is exposed, then any callbacks will be fired before any macrotask
+ * registered with `queueTask` or `queueAnimationTask`.
+ *
+ * @param callback the function to be queued and later executed.
+ * @returns An object with a `destroy` method that, when called, prevents the registered callback from executing.
+ */
 export let queueMicroTask = (function () {
 	let enqueue: (item: QueueItem) => void;
 
@@ -155,13 +176,13 @@ export let queueMicroTask = (function () {
 		};
 	}
 	else if (has('dom-mutationobserver')) {
-		let HostMutationObserver = global.MutationObserver || global.WebKitMutationObserver;
-		let queue: QueueItem[] = [];
-		let node = document.createElement('div');
-		let observer = new HostMutationObserver(function (): void {
+		const HostMutationObserver = global.MutationObserver || global.WebKitMutationObserver;
+		const node = document.createElement('div');
+		const queue: QueueItem[] = [];
+		const observer = new HostMutationObserver(function (): void {
 			while (queue.length > 0) {
 				const item = queue.shift();
-				if (item.isActive) {
+				if (item && item.isActive) {
 					item.callback();
 				}
 			}
@@ -182,7 +203,7 @@ export let queueMicroTask = (function () {
 	}
 
 	return function (callback: (...args: any[]) => any): Handle {
-		let item: QueueItem = {
+		const item: QueueItem = {
 			isActive: true,
 			callback: callback
 		};

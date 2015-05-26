@@ -5,8 +5,8 @@ import { queueMicroTask, queueTask } from 'src/queue';
 import Scheduler from 'src/Scheduler';
 
 registerSuite(function () {
-	let scheduler: Scheduler;
 	let parts: string[];
+	let scheduler: Scheduler;
 
 	function a() {
 		parts.push('a');

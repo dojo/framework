@@ -1,6 +1,6 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import * as number from 'src/number';
+import * as numberUtil from 'src/number';
 
 function testEdgeCases(op: (value: any) => boolean) {
 	assert.isFalse(op({}));
@@ -17,41 +17,41 @@ registerSuite({
 		name: 'number',
 
 		'.isNaN()'() {
-			assert.isTrue(number.isNaN(NaN));
-			assert.isFalse(number.isNaN(42));
-			assert.isFalse(number.isNaN('NaN'));
-			testEdgeCases(number.isNaN);
+			assert.isTrue(numberUtil.isNaN(NaN));
+			assert.isFalse(numberUtil.isNaN(42));
+			assert.isFalse(numberUtil.isNaN('NaN'));
+			testEdgeCases(numberUtil.isNaN);
 		},
 
 		'.isFinite()'() {
-			assert.isTrue(number.isFinite(42));
-			assert.isTrue(number.isFinite(number.MAX_SAFE_INTEGER));
-			assert.isFalse(number.isFinite('42'));
-			assert.isFalse(number.isFinite(Infinity));
-			assert.isFalse(number.isFinite(-Infinity));
-			assert.isFalse(number.isFinite(NaN));
+			assert.isTrue(numberUtil.isFinite(42));
+			assert.isTrue(numberUtil.isFinite(numberUtil.MAX_SAFE_INTEGER));
+			assert.isFalse(numberUtil.isFinite('42'));
+			assert.isFalse(numberUtil.isFinite(Infinity));
+			assert.isFalse(numberUtil.isFinite(-Infinity));
+			assert.isFalse(numberUtil.isFinite(NaN));
 		},
 
 		'.isInteger()'() {
-			assert.isTrue(number.isInteger(42));
-			assert.isTrue(number.isInteger(-42));
-			assert.isTrue(number.isInteger(0));
-			assert.isTrue(number.isInteger(4.0));
-			assert.isFalse(number.isInteger(4.2));
-			assert.isFalse(number.isInteger('42'));
-			assert.isFalse(number.isInteger(NaN));
-			testEdgeCases(number.isInteger);
+			assert.isTrue(numberUtil.isInteger(42));
+			assert.isTrue(numberUtil.isInteger(-42));
+			assert.isTrue(numberUtil.isInteger(0));
+			assert.isTrue(numberUtil.isInteger(4.0));
+			assert.isFalse(numberUtil.isInteger(4.2));
+			assert.isFalse(numberUtil.isInteger('42'));
+			assert.isFalse(numberUtil.isInteger(NaN));
+			testEdgeCases(numberUtil.isInteger);
 		},
 
 		'.isSafeInteger()'() {
-			assert.isTrue(number.isSafeInteger(42));
-			assert.isTrue(number.isSafeInteger(number.MAX_SAFE_INTEGER));
-			assert.isFalse(number.isSafeInteger(number.MAX_SAFE_INTEGER + 1));
-			assert.isFalse(number.isSafeInteger(42.1));
-			assert.isFalse(number.isSafeInteger('42'));
-			assert.isFalse(number.isSafeInteger(Infinity));
-			assert.isFalse(number.isSafeInteger(NaN));
-			testEdgeCases(number.isSafeInteger);
+			assert.isTrue(numberUtil.isSafeInteger(42));
+			assert.isTrue(numberUtil.isSafeInteger(numberUtil.MAX_SAFE_INTEGER));
+			assert.isFalse(numberUtil.isSafeInteger(numberUtil.MAX_SAFE_INTEGER + 1));
+			assert.isFalse(numberUtil.isSafeInteger(42.1));
+			assert.isFalse(numberUtil.isSafeInteger('42'));
+			assert.isFalse(numberUtil.isSafeInteger(Infinity));
+			assert.isFalse(numberUtil.isSafeInteger(NaN));
+			testEdgeCases(numberUtil.isSafeInteger);
 		}
 	}
 );
