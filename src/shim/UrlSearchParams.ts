@@ -4,7 +4,7 @@ import { duplicate } from './lang';
 /**
  * Object with string keys and string or string array values that describes a query string.
  */
-type ParamList = Hash<string | string[]>;
+export type ParamList = Hash<string | string[]>;
 
 /**
  * Parses a query string, returning a ParamList object.
