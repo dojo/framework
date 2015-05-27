@@ -11,12 +11,6 @@ export interface EventEmitter {
 	removeListener(event: string, listener: EventCallback): EventEmitter;
 }
 
-export interface EventTarget {
-	accessKey?: string;
-	addEventListener(event: string, listener: EventCallback, capture?: boolean): void;
-	removeEventListener(event: string, listener: EventCallback, capture?: boolean): void;
-}
-
 interface DOMEventObject extends EventObject {
 	bubbles: boolean;
 	cancelable: boolean;

@@ -1,17 +1,17 @@
 import Evented from '../../Evented';
 import { Handle } from '../../interfaces';
-import on, { EventEmitter, EventTarget, ExtensionEvent } from '../../on';
+import on, { EventEmitter } from '../../on';
 import Promise from '../../Promise';
 import { Source } from '../ReadableStream';
 import ReadableStreamController from '../ReadableStreamController';
 
 type EventTargetTypes = Evented | EventEmitter | EventTarget;
-type EventTypes = Array<ExtensionEvent | string> | ExtensionEvent | string;
+type EventTypes = string | string[];
 
 export default class EventedStreamSource implements Source<Event> {
 	protected _controller: ReadableStreamController<Event>;
 	protected _target: EventTargetTypes;
-	protected _events: Array<ExtensionEvent | string>;
+	protected _events: string[];
 	protected _handles: Handle[];
 
 	constructor(target: EventTargetTypes, type: EventTypes) {
