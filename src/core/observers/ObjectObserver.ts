@@ -14,7 +14,7 @@ interface Es7ChangeEvent {
 	type: string;
 }
 
-class BaseObjectObserver {
+export class BaseObjectObserver {
 	protected _listener: (events: PropertyEvent[]) => any;
 	protected _propertyStore: {};
 	protected _target: any;
