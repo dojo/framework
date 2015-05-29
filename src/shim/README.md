@@ -121,7 +121,8 @@ Users will need to download and compile directly from the repository for the tim
 
 ## How do I contribute?
 
-We appreciate your interest!  Please see the [contributing guidelines](CONTRIBUTING.md).
+We appreciate your interest!  Please see the [Guidelines Repository](https://github.com/dojo/guidelines#readme) for the
+Contributing Guidelines and Style Guide.
 
 ## Testing
 
