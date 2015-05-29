@@ -12,7 +12,8 @@ TODO: Add appropriate usage and instruction guidelines
 
 ## How do I contribute?
 
-We appreciate your interest!  Please see the [contributing guidelines](CONTRIBUTING.md).
+We appreciate your interest!  Please see the [Guidelines Repository](https://github.com/dojo/guidelines#readme) for the
+Contributing Guidelines and Style Guide.
 
 ## Testing
 
