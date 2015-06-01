@@ -80,7 +80,7 @@ module.exports = function (grunt) {
 			},
 			typings: {
 				expand: true,
-				cwd: '_typings/',
+				cwd: 'typings/',
 				src: [ '**/*.d.ts', '!tsd.d.ts' ],
 				dest: 'dist/_typings/'
 			}
