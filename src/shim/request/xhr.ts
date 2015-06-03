@@ -1,16 +1,11 @@
+import Task from '../async/Task';
 import RequestTimeoutError from './errors/RequestTimeoutError';
 import global from '../global';
 import has from '../has';
-// TODO replace with async/Task when that's merged
-import { default as Task } from '../Promise';
-import { RequestOptions, RequestPromise, Response } from '../request';
+import { RequestOptions, Response, ResponsePromise } from '../request';
 
-export interface XHRRequestOptions extends RequestOptions {
+export interface XhrRequestOptions extends RequestOptions {
 	blockMainThread?: boolean;
-}
-
-export interface XHRResponse<T> extends Response<T> {
-	statusText: string;
 }
 
 /**
@@ -27,27 +22,9 @@ const responseTypeMap: { [key: string]: string; } = {
 	document: 'document'
 };
 
-export default function xhr<T>(url: string, options: XHRRequestOptions = {}): RequestPromise<T> {
-	let resolve: (value: XHRResponse<T> | Task<XHRResponse<T>>) => void;
-	let reject: (error: Error) => void;
-	// TODO: use proper Task signature when Task is available
-	// let promise = <RequestPromise<T>> (new Task<XHRResponse<T>>((_resolve, _reject) => {
-	// 	resolve = _resolve;
-	// 	reject = _reject;
-	// }, () => {
-	// 	request && request.abort();
-	// });
-	let promise = <RequestPromise<T>> new Task<XHRResponse<T>>(function (_resolve, _reject): void {
-		resolve = _resolve;
-		reject = _reject;
-	});
-
-	if (!options.method) {
-		options.method = 'GET';
-	}
-
+export default function xhr<T>(url: string, options: XhrRequestOptions = {}): ResponsePromise<T> {
 	const request = new XMLHttpRequest();
-	const response = <XHRResponse<T>> {
+	const response: Response<T> = {
 		data: null,
 		nativeResponse: request,
 		requestOptions: options,
@@ -60,72 +37,77 @@ export default function xhr<T>(url: string, options: XHRRequestOptions = {}): Re
 		}
 	};
 
-	if ((!options.user || !options.password) && options.auth) {
-		let auth = options.auth.split(':');
-		options.user = decodeURIComponent(auth[0]);
-		options.password = decodeURIComponent(auth[1]);
-	}
-
-	request.open(options.method, url, !options.blockMainThread, options.user, options.password);
-
-	if (has('xhr2') && options.responseType in responseTypeMap) {
-		request.responseType = responseTypeMap[options.responseType];
-	}
-
-	request.onreadystatechange = function (): void {
-		if (request.readyState === 4) {
-			request.onreadystatechange = function () {};
-
-			if (options.responseType === 'xml') {
-				response.data = request.responseXML;
-			}
-			else {
-				response.data = ('response' in request) ? request.response : request.responseText;
-			}
-
-			response.statusCode = request.status;
-			response.statusText = request.statusText;
-
-			resolve(response);
+	const promise = new Task<Response<T>>(function (resolve, reject): void {
+		if (!options.method) {
+			options.method = 'GET';
 		}
-	};
 
-	if (options.timeout > 0 && options.timeout !== Infinity) {
-		request.timeout = options.timeout;
-		request.ontimeout = function () {
-			reject(new RequestTimeoutError('The XMLHttpRequest request timed out.'));
+		if ((!options.user || !options.password) && options.auth) {
+			let auth = options.auth.split(':');
+			options.user = decodeURIComponent(auth[0]);
+			options.password = decodeURIComponent(auth[1]);
+		}
+
+		request.open(options.method, url, !options.blockMainThread, options.user, options.password);
+
+		if (has('xhr2') && options.responseType in responseTypeMap) {
+			request.responseType = responseTypeMap[options.responseType];
+		}
+
+		request.onreadystatechange = function (): void {
+			if (request.readyState === 4) {
+				request.onreadystatechange = function () {};
+
+				if (options.responseType === 'xml') {
+					response.data = request.responseXML;
+				}
+				else {
+					response.data = ('response' in request) ? request.response : request.responseText;
+				}
+
+				response.statusCode = request.status;
+				response.statusText = request.statusText;
+
+				resolve(response);
+			}
 		};
-	}
 
-	const headers = options.headers;
-	let hasContentTypeHeader: boolean = false;
-	for (let header in headers) {
-		if (header.toLowerCase() === 'content-type') {
-			hasContentTypeHeader = true;
+		if (options.timeout > 0 && options.timeout !== Infinity) {
+			request.timeout = options.timeout;
+			request.ontimeout = function () {
+				reject(new RequestTimeoutError('The XMLHttpRequest request timed out.'));
+			};
 		}
 
-		request.setRequestHeader(header, headers[header]);
-	}
+		const headers = options.headers;
+		let hasContentTypeHeader: boolean = false;
+		for (let header in headers) {
+			if (header.toLowerCase() === 'content-type') {
+				hasContentTypeHeader = true;
+			}
 
-	if (!headers || !('X-Requested-With' in headers)) {
-		request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-	}
+			request.setRequestHeader(header, headers[header]);
+		}
 
-	if (!hasContentTypeHeader && has('formdata') && options.data instanceof global.FormData) {
-		// Assume that most forms do not contain large binary files. If that is not the case,
-		// then "multipart/form-data" should be manually specified as the "Content-Type" header.
-		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	}
+		if (!headers || !('X-Requested-With' in headers)) {
+			request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+		}
 
-	try {
+		if (!hasContentTypeHeader && has('formdata') && options.data instanceof global.FormData) {
+			// Assume that most forms do not contain large binary files. If that is not the case,
+			// then "multipart/form-data" should be manually specified as the "Content-Type" header.
+			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		}
+
+		if (options.responseType === 'xml' && request.overrideMimeType) {
+			// This forces the XHR to parse the response as XML regardless of the MIME-type returned by the server
+			request.overrideMimeType('text/xml');
+		}
+
 		request.send(options.data);
-	}
-	catch (error) {
-		reject(error);
-	}
-
-	promise.data = promise.then(response => response.data);
-	promise.headers = promise.then(response => response);
+	}, function () {
+		request && request.abort();
+	});
 
 	return promise;
 }
