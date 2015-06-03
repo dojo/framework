@@ -6,6 +6,24 @@ export const Canceled = <State> 4;
  * Task is an extension of Promise that supports cancelation.
  */
 export default class Task<T> extends Promise<T> {
+	static all<T>(items: (T | Thenable<T>)[]): Task<T[]> {
+		return <any> super.all(items);
+	}
+
+	static race<T>(items: (T | Thenable<T>)[]): Task<T> {
+		return <any> super.race(items);
+	}
+
+	static reject<T>(reason: Error): Task<any> {
+		return <any> super.reject(reason);
+	}
+
+	static resolve(): Task<void>;
+	static resolve<T>(value: (T | Thenable<T>)): Task<T>;
+	static resolve<T>(value?: any): Task<T> {
+		return <any> super.resolve(value);
+	}
+
 	protected static copy<U>(other: Promise<U>): Task<U> {
 		const task = <Task<U>> super.copy(other);
 		task.children = [];
@@ -14,7 +32,7 @@ export default class Task<T> extends Promise<T> {
 	}
 
 	constructor(executor: Executor<T>, canceler?: () => void) {
-		super(<Executor<T>> ((resolve, reject) => {
+		super((resolve, reject) => {
 			// Don't let the Task resolve if it's been canceled
 			executor(
 				(value) => {
@@ -30,7 +48,7 @@ export default class Task<T> extends Promise<T> {
 					reject(reason);
 				}
 			);
-		}));
+		});
 
 		this.children = [];
 		this.canceler = () => {
@@ -106,7 +124,7 @@ export default class Task<T> extends Promise<T> {
 	}
 
 	then<U>(onFulfilled?: (value: T) => U | Thenable<U>,  onRejected?: (error: Error) => U | Thenable<U>): Task<U> {
-		const task = <Task<U>> Task.copy(super.then<U>(
+		const task = <Task<U>> super.then<U>(
 			// Don't call the onFulfilled or onRejected handlers if this Task is canceled
 			function (value) {
 				if (task._state === Canceled) {
@@ -126,7 +144,7 @@ export default class Task<T> extends Promise<T> {
 				}
 				throw error;
 			}
-		));
+		);
 
 		task.canceler = () => {
 			// If task's parent (this) hasn't been resolved, cancel it; downward propagation will start at the first
@@ -145,4 +163,9 @@ export default class Task<T> extends Promise<T> {
 
 		return task;
 	}
+
+	catch<U>(onRejected: (reason?: Error) => (U | Thenable<U>)): Task<U> {
+		return <any> super.catch(onRejected);
+	}
+
 }
