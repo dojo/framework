@@ -13,7 +13,7 @@ interface Entry<T> {
  * A registry of values tagged with matchers.
  */
 export default class Registry<T> {
-	private _defaultValue: T;
+	protected _defaultValue: T;
 	private _entries: Entry<T>[];
 
 	/**

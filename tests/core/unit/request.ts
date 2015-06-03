@@ -3,18 +3,15 @@ import assert = require('intern/chai!assert');
 import Deferred = require('intern/dojo/Deferred');
 import has = require('intern/dojo/has');
 import * as http from 'http';
-// TODO replace with async/Task when that's merged
-import { default as Task } from 'src/Promise';
-import request, { filterRegistry, providerRegistry, RequestOptions, RequestPromise, Response } from 'src/request';
-import { default as nodeRequest } from 'src/request/node';
-import { default as xhrRequest } from 'src/request/xhr';
+import Task from 'src/async/Task';
+import request, { filterRegistry, providerRegistry, RequestOptions, Response, ResponsePromise } from 'src/request';
 import * as url from 'url';
 
 const mockData = '{ "foo": "bar" }';
 let handle: any;
 
-function mockProvider(url: string): RequestPromise<any> {
-	return <RequestPromise<any>> Task.resolve({
+function mockProvider(url: string): ResponsePromise<any> {
+	return <ResponsePromise<any>> Task.resolve({
 		data: mockData
 	});
 }
@@ -27,11 +24,6 @@ const suite: { [name: string]: any } = {
 			handle.destroy();
 			handle = null;
 		}
-	},
-
-	'default provider'() {
-		const provider = providerRegistry.match();
-		assert.isTrue(provider === nodeRequest || provider === xhrRequest);
 	},
 
 	'custom provider': {

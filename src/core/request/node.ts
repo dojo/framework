@@ -1,10 +1,10 @@
+import Task from '../async/Task';
 import RequestTimeoutError from './errors/RequestTimeoutError';
 import { Handle } from '../interfaces';
 import * as http from 'http';
 import * as https from 'https';
-// TODO replace with async/Task when that's merged
-import { default as Task } from '../Promise';
-import { RequestError, RequestOptions, RequestPromise, Response } from '../request';
+import { createHandle } from '../lang';
+import { RequestError, RequestOptions, Response, ResponsePromise } from '../request';
 import ReadableNodeStreamSource from '../streams/adapters/ReadableNodeStreamSource';
 import WritableNodeStreamSink from '../streams/adapters/WritableNodeStreamSink';
 import ReadableStream from '../streams/ReadableStream';
@@ -64,43 +64,17 @@ export interface NodeRequestOptions<T> extends RequestOptions {
 }
 
 function normalizeHeaders(headers: { [name: string]: string }): { [name: string]: string } {
-	var normalizedHeaders: { [name: string]: string } = {};
-	for (var key in headers) {
+	const normalizedHeaders: { [name: string]: string } = {};
+	for (let key in headers) {
 		normalizedHeaders[key.toLowerCase()] = headers[key];
 	}
 
 	return normalizedHeaders;
 }
 
-export default function node<T>(url: string, options: NodeRequestOptions<T> = {}): RequestPromise<T> {
-	let resolve: (value: Response<T> | RequestPromise<T>) => void;
-	let reject: (error: Error) => void;
-	// TODO: use proper Task signature when Task is available
-	// let promise = <RequestPromise<T>> new Task<Response<T>>((_resolve, _reject) => {
-	// 	resolve = _resolve;
-	// 	reject = _reject;
-	// }, () => {
-	// 	request && request.abort();
-	// });
-	let promise = <RequestPromise<T>> new Task<Response<T>>((_resolve, _reject) => {
-		resolve = _resolve;
-		reject = _reject;
-	}).catch(function (error: Error): any {
-		let parsedUrl = urlUtil.parse(url);
-
-		if (parsedUrl.auth) {
-			parsedUrl.auth = '(redacted)';
-		}
-
-		let sanitizedUrl = urlUtil.format(parsedUrl);
-
-		error.message = '[' + requestOptions.method + ' ' + sanitizedUrl + '] ' + error.message;
-		throw error;
-	});
-
-	let parsedUrl = urlUtil.parse(options.proxy || url);
-
-	var requestOptions = <HttpsOptions> {
+export default function node<T>(url: string, options: NodeRequestOptions<T> = {}): ResponsePromise<T> {
+	const parsedUrl = urlUtil.parse(options.proxy || url);
+	const requestOptions: HttpsOptions = {
 		agent: options.agent,
 		auth: parsedUrl.auth || options.auth,
 		ca: options.ca,
@@ -140,8 +114,8 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 		requestOptions.auth = encodeURIComponent(options.user || '') + ':' + encodeURIComponent(options.password || '');
 	}
 
-	let request = (parsedUrl.protocol === 'https:' ? https : http).request(requestOptions);
-	let response = <Response<T>> {
+	const request = (parsedUrl.protocol === 'https:' ? https : http).request(requestOptions);
+	const response: Response<T> = {
 		data: null,
 		getHeader: function (name: string): string {
 			return (this.nativeResponse && this.nativeResponse.headers[name.toLowerCase()]) || null;
@@ -151,134 +125,141 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 		url: url
 	};
 
-	if (options.socketOptions) {
-		if ('timeout' in options.socketOptions) {
-			request.setTimeout(options.socketOptions.timeout);
-		}
-
-		if ('noDelay' in options.socketOptions) {
-			request.setNoDelay(options.socketOptions.noDelay);
-		}
-
-		if ('keepAlive' in options.socketOptions) {
-			var initialDelay: number = options.socketOptions.keepAlive;
-			request.setSocketKeepAlive(initialDelay >= 0, initialDelay);
-		}
-	}
-
-	let timeout: Handle;
-	request.once('response', function (nativeResponse: http.ClientResponse): void {
-		response.nativeResponse = nativeResponse;
-		response.statusCode = nativeResponse.statusCode;
-
-		// Redirection handling defaults to true in order to harmonise with the XHR provider, which will always
-		// follow redirects
-		// TODO: This redirect code is not 100% correct according to the RFC; needs to handle redirect loops and
-		// restrict/modify certain redirects
-		if (
-			response.statusCode >= 300 &&
-			response.statusCode < 400 &&
-			response.statusCode !== 304 &&
-			options.followRedirects !== false &&
-			nativeResponse.headers.location
-		) {
-			resolve(node(nativeResponse.headers.location, options));
-			return;
-		}
-
-		options.streamEncoding && nativeResponse.setEncoding(options.streamEncoding);
-		if (options.streamTarget) {
-			const responseSource = new ReadableNodeStreamSource(nativeResponse);
-			const responseReadableStream = new ReadableStream(responseSource);
-
-			responseReadableStream.pipeTo(<any> options.streamTarget)
-				.then(
-					function () {
-						resolve(response);
-					},
-					function (error: RequestError<T>) {
-						options.streamTarget.abort(error);
-						request.abort();
-						error.response = response;
-						reject(error);
-					}
-				);
-		}
-
-		let data: any[];
-		let loaded: number;
-		if (!options.streamData) {
-			data = [];
-			loaded = 0;
-
-			nativeResponse.on('data', function (chunk: any): void {
-				data.push(chunk);
-				loaded += (typeof chunk === 'string') ?
-					Buffer.byteLength(chunk, options.streamEncoding) :
-					chunk.length;
-			});
-		}
-
-		nativeResponse.once('end', function (): void {
-			timeout && timeout.destroy();
-
-			if (!options.streamData) {
-				// TODO: what type should data have?
-				response.data = <any> (options.streamEncoding ? data.join('') : Buffer.concat(data, loaded));
+	const promise = new Task<Response<T>>(function (resolve, reject) {
+		if (options.socketOptions) {
+			if ('timeout' in options.socketOptions) {
+				request.setTimeout(options.socketOptions.timeout);
 			}
 
-			// If using a streamTarget, wait for it to finish in case it throws an error
-			if (!options.streamTarget) {
-				resolve(response);
+			if ('noDelay' in options.socketOptions) {
+				request.setNoDelay(options.socketOptions.noDelay);
+			}
+
+			if ('keepAlive' in options.socketOptions) {
+				const initialDelay: number = options.socketOptions.keepAlive;
+				request.setSocketKeepAlive(initialDelay >= 0, initialDelay);
+			}
+		}
+
+		let timeout: Handle;
+		request.once('response', function (nativeResponse: http.ClientResponse): void {
+			response.nativeResponse = nativeResponse;
+			response.statusCode = nativeResponse.statusCode;
+
+			// Redirection handling defaults to true in order to harmonise with the XHR provider, which will always
+			// follow redirects
+			// TODO: This redirect code is not 100% correct according to the RFC; needs to handle redirect loops and
+			// restrict/modify certain redirects
+			if (
+				response.statusCode >= 300 &&
+				response.statusCode < 400 &&
+				response.statusCode !== 304 &&
+				options.followRedirects !== false &&
+				nativeResponse.headers.location
+			) {
+				resolve(node(nativeResponse.headers.location, options));
+				return;
+			}
+
+			options.streamEncoding && nativeResponse.setEncoding(options.streamEncoding);
+			if (options.streamTarget) {
+				const responseSource = new ReadableNodeStreamSource(nativeResponse);
+				const responseReadableStream = new ReadableStream(responseSource);
+
+				responseReadableStream.pipeTo(<any> options.streamTarget)
+					.then(
+						function () {
+							resolve(response);
+						},
+						function (error: RequestError<T>) {
+							options.streamTarget.abort(error);
+							request.abort();
+							error.response = response;
+							reject(error);
+						}
+					);
+			}
+
+			let data: any[];
+			let loaded: number;
+			if (!options.streamData) {
+				data = [];
+				loaded = 0;
+
+				nativeResponse.on('data', function (chunk: any): void {
+					data.push(chunk);
+					loaded += (typeof chunk === 'string') ?
+						Buffer.byteLength(chunk, options.streamEncoding) :
+						chunk.length;
+				});
+			}
+
+			nativeResponse.once('end', function (): void {
+				timeout && timeout.destroy();
+
+				if (!options.streamData) {
+					// TODO: what type should data have?
+					response.data = <any> (options.streamEncoding ? data.join('') : Buffer.concat(data, loaded));
+				}
+
+				// If using a streamTarget, wait for it to finish in case it throws an error
+				if (!options.streamTarget) {
+					resolve(response);
+				}
+				else {
+					options.streamTarget.close();
+				}
+			});
+		});
+
+		request.once('error', reject);
+
+		if (options.data) {
+			if (options.data instanceof ReadableStream) {
+				const requestSink = new WritableNodeStreamSink(request);
+				const writableRequest = new WritableStream(requestSink);
+				options.data.pipeTo(writableRequest)
+					.catch(function (error: RequestError<T>) {
+						error.response = response;
+						writableRequest.abort(error);
+						reject(error);
+					});
 			}
 			else {
-				options.streamTarget.close();
+				request.end();
 			}
-		});
-	});
-
-	request.once('error', reject);
-
-	if (options.data) {
-		if (options.data instanceof ReadableStream) {
-			const requestSink = new WritableNodeStreamSink(request);
-			const writableRequest = new WritableStream(requestSink);
-			options.data.pipeTo(writableRequest)
-				.catch(function (error: RequestError<T>) {
-					error.response = response;
-					writableRequest.abort(error);
-					reject(error);
-				});
 		}
 		else {
 			request.end();
 		}
-	}
-	else {
-		request.end();
-	}
 
-	if (options.timeout > 0 && options.timeout !== Infinity) {
-		timeout = (function (): Handle {
-			const timer = setTimeout(function (): void {
-				const error = new RequestTimeoutError('Request timed out after ' + options.timeout + 'ms');
-				error.response = response;
-				// TODO: uncomment when Task is available
-				// task.cancel(error);
-				reject(error);
-			}, options.timeout);
+		if (options.timeout > 0 && options.timeout !== Infinity) {
+			timeout = (function (): Handle {
+				const timer = setTimeout(function (): void {
+					const error = new RequestTimeoutError('Request timed out after ' + options.timeout + 'ms');
+					error.response = response;
+					reject(error);
+				}, options.timeout);
 
-			// TODO: use lang.createHandle
-			return {
-				destroy: function (): void {
+				return createHandle(function (): void {
 					clearTimeout(timer);
-				}
-			};
-		})();
-	}
+				});
+			})();
+		}
+	}, function () {
+		request.abort();
+	}).catch(function (error: Error): any {
+		let parsedUrl = urlUtil.parse(url);
 
-	promise.data = promise.then(response => response.data);
-	promise.headers = promise.then(response => response);
+		if (parsedUrl.auth) {
+			parsedUrl.auth = '(redacted)';
+		}
+
+		let sanitizedUrl = urlUtil.format(parsedUrl);
+
+		error.message = '[' + requestOptions.method + ' ' + sanitizedUrl + '] ' + error.message;
+		throw error;
+	});
 
 	return promise;
 }
