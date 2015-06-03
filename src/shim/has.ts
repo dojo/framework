@@ -77,3 +77,17 @@ add('weakmap', function () {
 	}
 	return false;
 });
+add('formdata', typeof global.FormData !== 'undefined');
+add('xhr', typeof global.XMLHttpRequest !== 'undefined');
+add('xhr2', has('xhr') && 'responseType' in global.XMLHttpRequest.prototype);
+add('xhr2-blob', function () {
+	if (!has('xhr2')) {
+		return false;
+	}
+
+	const request = new XMLHttpRequest();
+	request.open('GET', '/', true);
+	request.responseType = 'blob';
+	request.abort();
+	return request.responseType === 'blob';
+});
