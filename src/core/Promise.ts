@@ -498,7 +498,7 @@ export default class Promise<T> implements Thenable<T> {
 		onFulfilled?: (value?: T) => (U | Thenable<U>),
 		onRejected?: (reason?: Error) => (U | Thenable<U>)
 	): Promise<U> {
-		return Promise.copy(this.promise.then(onFulfilled, onRejected));
+		return (<typeof Promise> this.constructor).copy(this.promise.then(onFulfilled, onRejected));
 	}
 }
 
