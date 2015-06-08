@@ -8,104 +8,110 @@ import { Es5Observer, Es7Observer } from 'src/observers/ObjectObserver';
 registerSuite({
 	name: 'lang functions',
 
-	'.copy() invalid arguments': function () {
-		assert.throw(function () {
-			lang.copy({
-				sources: []
-			});
-		});
-	},
-
-	'.copy() simple': function () {
-		const copyOfObject = lang.copy({
-			sources: [{ a: 1 }]
-		});
-		assert.equal(copyOfObject.a, 1);
-	},
-
-	'.copy() inherited': function () {
-		const prototype = {
-			a: 1
-		};
-		const inheriting = Object.create(prototype);
-		inheriting.b = 2;
-		const copyofInherited = lang.copy({
-			inherited: true,
-			sources: [ inheriting ]
-		});
-		assert.equal(copyofInherited.a, 1);
-		assert.equal(copyofInherited.b, 2);
-	},
-
-	'.copy() deep': function () {
-		const nested = {
-			a: {
-				b: 1
-			}
-		};
-		const copyOfObject: any = lang.copy({
-			deep: true,
-			sources: [ nested ]
-		});
-		assert.equal(copyOfObject.a.b, 1);
-		assert.notEqual(copyOfObject.a, nested.a);
-	},
-
-	'.copy() deep arrays': function () {
-		const nested = {
-			a: {
-				b: [ 1 ]
-			}
-		};
-		const copyOfObject: any = lang.copy({
-			deep: true,
-			sources: [ nested ]
-		});
-
-		assert.equal(copyOfObject.a.b[0], 1);
-		assert.notEqual(copyOfObject.a.b, nested.a.b);
-	},
-
-	'.copy() descriptors': function () {
-		const object: any = {
-			a: 1
-		};
-		Object.defineProperty(object, 'b', {
-				get: function () {
-					return 2;
-				}
-			});
-		Object.defineProperty(object, 'c', {
-				enumerable: true,
+	'.assign()'() {
+		const source = Object.create({ a: 1 }, {
+			b: {
+				enumerable: false,
 				configurable: true,
 				writable: true,
-				value: 3
-			});
-		Object.defineProperty(object, 'hidden', {
-				enumerable: false,
-				value: 4
-			});
-		Object.defineProperty(object, 'nested', {
-				value: {
-					a: 5
-				}
-			});
-		const copyOfObject: any = lang.copy({
-			descriptors: true,
-			inherited: true,
-			sources: [ object ]
+				value: 2
+			}
 		});
-		assert.equal(copyOfObject.a, 1);
-		assert.equal(copyOfObject.b, 2);
-		assert.isFunction(Object.getOwnPropertyDescriptor(copyOfObject, 'b').get);
-		assert.equal(copyOfObject.c, 3);
-		assert.equal(copyOfObject.hidden, 4);
-		assert.equal(copyOfObject.nested, object.nested);
-		assert.equal(copyOfObject.nested.a, 5);
-		assert.sameMembers(Object.getOwnPropertyNames(copyOfObject), [ 'a', 'b', 'c', 'hidden', 'nested' ]);
+		source.c = 3;
+		source.nested = { a: 5 };
+
+		const copyOfObject: any = lang.assign(Object.create(null), source);
+		assert.isUndefined(copyOfObject.a);
+		assert.isUndefined(copyOfObject.b);
+		assert.strictEqual(copyOfObject.c, 3);
+		assert.strictEqual(copyOfObject.nested, source.nested);
+		assert.strictEqual(copyOfObject.nested.a, 5);
 	},
 
-	'.create()': function () {
+	'.deepAssign()'() {
+		const source = Object.create({ a: 1 }, {
+			b: {
+				enumerable: false,
+				configurable: true,
+				writable: true,
+				value: 2
+			}
+		});
+
+		source.c = {
+			d: 3,
+			e: [ 4, [ 5 ], { f: 6 } ]
+		};
+
+		const copyOfObject: any = lang.deepAssign(Object.create(null), source);
+		assert.isUndefined(copyOfObject.a);
+		assert.isUndefined(copyOfObject.b);
+		assert.strictEqual(copyOfObject.c.d, 3);
+		assert.strictEqual(copyOfObject.c.e.length, 3);
+		assert.notStrictEqual(copyOfObject.c.e[1], source.c.e[1]);
+		assert.notStrictEqual(copyOfObject.c.d[2], source.c.e[2]);
+		assert.notStrictEqual(copyOfObject.c.e, source.c.e);
+	},
+
+	'.mixin()'() {
+		const source = Object.create({
+			a: 1
+		});
+		source.c = 3;
+		source.nested = { a: 5 };
+		Object.defineProperty(source, 'b', {
+			enumerable: true,
+			get: function () {
+				return 2;
+			}
+		});
+		Object.defineProperty(source, 'hidden', {
+			enumerable: false,
+			value: 4
+		});
+		const copyOfObject: any = lang.mixin(Object.create(null), source);
+
+		assert.strictEqual(copyOfObject.a, 1);
+		assert.strictEqual(copyOfObject.b, 2);
+		assert.strictEqual(copyOfObject.c, 3);
+		assert.isUndefined(copyOfObject.hidden);
+		assert.strictEqual(copyOfObject.nested, source.nested);
+		assert.strictEqual(copyOfObject.nested.a, 5);
+	},
+
+	'.deepMixin()'() {
+		const source = Object.create({
+			nested: {
+				a: 1,
+				b: [ 2, [ 3 ], { f: 4 } ]
+			}
+		});
+		source.a = 1;
+		source.c = 3;
+		Object.defineProperty(source, 'b', {
+			enumerable: true,
+			get: function () {
+				return 2;
+			}
+		});
+		Object.defineProperty(source, 'hidden', {
+			enumerable: false,
+			value: 4
+		});
+		const copyOfObject: any = lang.deepMixin(Object.create(null), source);
+
+		assert.strictEqual(copyOfObject.a, 1);
+		assert.strictEqual(copyOfObject.b, 2);
+		assert.strictEqual(copyOfObject.c, 3);
+		assert.isUndefined(copyOfObject.hidden);
+		assert.strictEqual(copyOfObject.nested.a, 1);
+		assert.notStrictEqual(copyOfObject.nested, source.nested);
+		assert.notStrictEqual(copyOfObject.nested.b, source.nested.b);
+		assert.notStrictEqual(copyOfObject.nested.b[1], source.nested.b[1]);
+		assert.notStrictEqual(copyOfObject.nested.b[2], source.nested.b[2]);
+	},
+
+	'.create()'() {
 		const prototype = {
 			a: 1
 		};
@@ -128,8 +134,8 @@ registerSuite({
 		});
 		const object: any = lang.create(prototype, mixin);
 
-		assert.equal(Object.getPrototypeOf(object), prototype);
-		assert.equal(object.b, mixin.b);
+		assert.strictEqual(Object.getPrototypeOf(object), prototype);
+		assert.strictEqual(object.b, mixin.b);
 		assert.isTrue(Object.getOwnPropertyDescriptor(object, 'd').writable);
 		assert.isUndefined(object.e);
 		assert.isUndefined(object.lorem);
@@ -138,31 +144,21 @@ registerSuite({
 		});
 	},
 
-	'.duplicate()': function () {
+	'.duplicate()'() {
 		const prototype = {
 			a: 1
 		};
-		const object: any = Object.create(prototype, {
-			b: { value: 2 },
-			c: {
-				configurable: false,
-				value: 3
-			},
-			d: {
-				value: {
-					e: 4
-				}
-			}
+		const source: any = Object.create(prototype, {
+			b: { value: 2 }
 		});
-		const copyOfObject: any = lang.duplicate(object);
+		source.c = { d: 4 };
+		const copyOfObject: any = lang.duplicate(source);
 
-		assert.equal(Object.getPrototypeOf(copyOfObject), prototype);
-		assert.equal(copyOfObject.a, 1);
-		assert.equal(copyOfObject.b, 2);
-		assert.equal(copyOfObject.c, 3);
-		assert.equal(copyOfObject.d.e, 4);
-		assert.notEqual(copyOfObject.d, object.d);
-		assert.isFalse(Object.getOwnPropertyDescriptor(copyOfObject, 'c').configurable);
+		assert.strictEqual(Object.getPrototypeOf(copyOfObject), prototype);
+		assert.strictEqual(copyOfObject.a, 1);
+		assert.isUndefined(copyOfObject.b);
+		assert.strictEqual(copyOfObject.c.d, 4);
+		assert.notStrictEqual(copyOfObject.c, source.c);
 	},
 
 	'.observe() when nextTurn is true': function () {
@@ -203,46 +199,6 @@ registerSuite({
 			onlyReportObserved: true
 		});
 		assert.isTrue(observer.onlyReportObserved, 'onlyReportObserved should be passed to the observer instance.');
-	},
-
-	'.getPropertyDescriptor()': function () {
-		const object1 = {
-			get foo() { return 'bar'; }
-		};
-		const object2 = Object.create(object1);
-		const object3 = Object.create(object1, {
-			foo: {
-				get: function () {
-					return 'baz';
-				}
-			}
-		});
-
-		assert.deepEqual(lang.getPropertyDescriptor(object1, 'foo'), Object.getOwnPropertyDescriptor(object1, 'foo'));
-		assert.deepEqual(lang.getPropertyDescriptor(object2, 'foo'), Object.getOwnPropertyDescriptor(object1, 'foo'));
-		assert.deepEqual(lang.getPropertyDescriptor(object3, 'foo'), Object.getOwnPropertyDescriptor(object3, 'foo'));
-	},
-
-	'.getPropertyNames()': function () {
-		const prototype = {
-			a: 1,
-			b: 7
-		};
-		const object: any = Object.create(prototype, {
-			b: { value: 2 },
-			c: {
-				configurable: false,
-				value: 3
-			},
-			d: {
-				value: {
-					e: 4
-				}
-			}
-		});
-		const names: string[] = lang.getPropertyNames(object);
-
-		assert.sameMembers(names, [ 'a', 'b', 'c', 'd' ]);
 	},
 
 	'.isIdentical()': function () {

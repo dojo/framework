@@ -1,178 +1,142 @@
 import Benchmark = require('benchmark');
 import lang = require('../../src/lang');
 
-let benchmarks: Benchmark[] = [];
-
 function onComplete() {
 	console.log(this.name + ': ' + this.hz + ' with a margin of error of ' + this.stats.moe);
 }
 
-benchmarks.push(new Benchmark('lang.copy (single source, all options false)',
-	// The `setup` option cannot be used, as the TypeScript compiler does not know
-	// that `setup`'s local variables are made available to the test function.
-	(function () {
-		const options = {
-			sources: [ <any> { a: 1, b: 'Lorem ipsum', c: [], d: 4 } ]
-		};
+const simpleSource = { a: 1, b: 'Lorem ipsum', c: 4 };
+const simpleSourceWithArray = {
+		a: 1,
+		b: 'Dolor sit amet.',
+		c: [ 1, 2, 3 ],
+		d: 5
+	};
+const sourceFromConstructor = (function () {
+		function Answers(kwArgs: { [key: string]: any }) {
+			Object.keys(kwArgs).forEach(function (key: string): void {
+				(<any> this)[key] = kwArgs[key];
+			}, this);
+		}
 
-		return function () {
-			lang.copy(options);
-		};
-	})(), {
+		return new (<any> Answers)({
+			universe: 42
+		});
+	})();
+const sourceWithInherited = Object.create(Object.create(null, {
+		x: {
+			value: ('1234567890').split('')
+		},
+		y: {
+			enumerable: true,
+			value: /\s/
+		}
+	}), {
+		a: {
+			value: 1,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+		b: {
+			value: 'Lorem ipsum',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+		c: {
+			value: [],
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+		d: {
+			value: 4,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		}
+	});
+
+let benchmarks: Benchmark[] = [];
+
+benchmarks.push(new Benchmark('lang.assign (single source)', function () {
+		lang.assign(Object.create(null), simpleSource);
+	}, {
 		onComplete: onComplete
 	}));
 
-benchmarks.push(new Benchmark('lang.copy (single source, descriptors true)', (function () {
-	const options = {
-		descriptors: true,
-		sources: [
-			Object.create(Object.prototype, {
-				a: {
-					value: 1,
-					enumerable: true,
-					configurable: true,
-					writable: true
-				},
-				b: {
-					value: 'Lorem ipsum',
-					enumerable: true,
-					configurable: true,
-					writable: true
-				},
-				c: {
-					value: [],
-					enumerable: true,
-					configurable: true,
-					writable: true
-				},
-				d: {
-					value: 4,
-					enumerable: true,
-					configurable: true,
-					writable: true
-				}
-			})
-		]
-	};
+benchmarks.push(new Benchmark('lang.assign (multiple sources)', function () {
+		lang.assign(
+			Object.create(null),
+			simpleSource,
+			simpleSourceWithArray,
+			sourceWithInherited,
+			sourceFromConstructor
+		);
+	}, {
+		onComplete: onComplete
+	}));
 
-	return function () {
-		lang.copy(options);
-	};
-})(), {
-	onComplete: onComplete
-}));
+benchmarks.push(new Benchmark('lang.deepAssign (single source)', function () {
+		lang.deepAssign(Object.create(null), simpleSource);
+	}, {
+		onComplete: onComplete
+	}));
 
-benchmarks.push(new Benchmark('lang.copy (multiple sources, all options true)', (function () {
-	const options = {
-		assignPrototype: true,
-		deep: true,
-		descriptors: true,
-		sources: [
-			Object.create(Object.create(null, {
-				x: {
-					value: ('1234567890').split('')
-				},
-				y: {
-					enumerable: true,
-					value: /\s/
-				}
-			}), {
-				a: {
-					value: 1,
-					enumerable: true,
-					configurable: true,
-					writable: true
-				},
-				b: {
-					value: 'Lorem ipsum',
-					enumerable: true,
-					configurable: true,
-					writable: true
-				},
-				c: {
-					value: [],
-					enumerable: true,
-					configurable: true,
-					writable: true
-				},
-				d: {
-					value: 4,
-					enumerable: true,
-					configurable: true,
-					writable: true
-				}
-			}),
+benchmarks.push(new Benchmark('lang.deepAssign (multiple sources)', function () {
+		lang.deepAssign(
+			Object.create(null),
+			simpleSource,
+			simpleSourceWithArray,
+			sourceWithInherited,
+			sourceFromConstructor
+		);
+	}, {
+		onComplete: onComplete
+	}));
 
-			{
-				b: 'Dolor sit amet.',
-				c: [ 1, 2, 3 ],
-				d: 5
-			},
+benchmarks.push(new Benchmark('lang.mixin (single source)', function () {
+		lang.mixin(Object.create(null), simpleSource);
+	}, {
+		onComplete: onComplete
+	}));
 
-			(function () {
-				function Answers(kwArgs: { [key: string]: any }) {
-					Object.keys(kwArgs).forEach(function (key: string): void {
-						(<any> this)[key] = kwArgs[key];
-					}, this);
-				}
+benchmarks.push(new Benchmark('lang.mixin (multiple sources)', function () {
+		lang.mixin(
+			Object.create(null),
+			simpleSource,
+			simpleSourceWithArray,
+			sourceWithInherited,
+			sourceFromConstructor
+		);
+	}, {
+		onComplete: onComplete
+	}));
 
-				return new (<any> Answers)({
-					universe: 42
-				});
-			})()
-		]
-	};
+benchmarks.push(new Benchmark('lang.deepMixin (single source)', function () {
+		lang.deepMixin(Object.create(null), simpleSource);
+	}, {
+		onComplete: onComplete
+	}));
 
-	return function () {
-		lang.copy(options);
-	};
-})(), {
-	onComplete: onComplete
-}));
+benchmarks.push(new Benchmark('lang.deepMixin (multiple sources)', function () {
+		lang.deepMixin(
+			Object.create(null),
+			simpleSource,
+			simpleSourceWithArray,
+			sourceWithInherited,
+			sourceFromConstructor
+		);
+	}, {
+		onComplete: onComplete
+	}));
 
-benchmarks.push(new Benchmark('lang.create', (function () {
-	let object = <any> { a: 1, b: 'Lorem ipsum', c: [], d: 4 };
-
-	return function () {
-		lang.create(object, object, object, object);
-	};
-})(), {
-	onComplete: onComplete
-}));
-
-benchmarks.push(new Benchmark('lang.duplicate', (function () {
-	let object = <any> { a: 1, b: 'Lorem ipsum', c: [], d: 4 };
-
-	return function () {
-		lang.duplicate(object);
-	};
-})(), {
-	onComplete: onComplete
-}));
-
-benchmarks.push(new Benchmark('lang.getPropertyDescriptor', (function () {
-	let prototype = <any> { a: 1, b: 'Lorem ipsum', c: [], d: 4 };
-	let object = prototype;
-	let i = 10;
-
-	while (i > 0) {
-		object = Object.create(object);
-		--i;
-	}
-
-	Object.defineProperty(prototype, 'e', {
-		value: 5,
-		configurable: false,
-		enumerable: true,
-		writable: false
-	});
-
-	return function () {
-		lang.getPropertyDescriptor(object, 'e');
-	};
-})(), {
-	onComplete: onComplete
-}));
+benchmarks.push(new Benchmark('lang.create', function () {
+		lang.create(simpleSource, simpleSource, simpleSource, simpleSource);
+	}, {
+		onComplete: onComplete
+	}));
 
 benchmarks.push(new Benchmark('lang.isIdentical', (function () {
 	let a = Number('asdfx{}');
