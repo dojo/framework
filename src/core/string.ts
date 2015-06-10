@@ -1,6 +1,6 @@
 import { Hash } from './interfaces';
 
-const escapeRegExpPattern = /[[\]{}()|\\^$.*+?]/g;
+const escapeRegExpPattern = /[[\]{}()|\/\\^$.*+?]/g;
 const escapeXmlPattern = /[&<]/g;
 const escapeXmlForPattern = /[&<>'"]/g;
 const escapeXmlMap: Hash<string> = {
