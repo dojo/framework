@@ -131,7 +131,7 @@ registerSuite({
 
 	'.escapeRegExp()'() {
 		assert.strictEqual(stringUtil.escapeRegExp(''), '');
-		assert.strictEqual(stringUtil.escapeRegExp('[]{}()|\\^$.*+?'), '\\[\\]\\{\\}\\(\\)\\|\\\\\\^\\$\\.\\*\\+\\?');
+		assert.strictEqual(stringUtil.escapeRegExp('[]{}()|/\\^$.*+?'), '\\[\\]\\{\\}\\(\\)\\|\\/\\\\\\^\\$\\.\\*\\+\\?');
 	},
 
 	'.escapeXml()'() {
