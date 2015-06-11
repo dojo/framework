@@ -37,7 +37,7 @@ export interface Source<T> {
 	 * @returns A promise that resolves when the source's start operation has finished.  If the promise rejects,
 	 * 		the stream will be errored.
 	 */
-	start(controller: ReadableStreamController<T>): Promise<void>;
+	start?(controller: ReadableStreamController<T>): Promise<void>;
 
 	/**
 	 * Requests that source enqueue chunks.  Use the controller to close the stream when no more chunks can
@@ -46,7 +46,7 @@ export interface Source<T> {
 	 * @returns A promise that resolves when the source's pull operation has finished.  If the promise rejects,
 	 * 		the stream will be errored.
 	 */
-	pull(controller: ReadableStreamController<T>): Promise<void>;
+	pull?(controller: ReadableStreamController<T>): Promise<void>;
 
 	/**
 	 * Indicates the stream is prematurely closing and allows the source to do any necessary clean up.
@@ -54,7 +54,7 @@ export interface Source<T> {
 	 * @returns A promise that resolves when the source's pull operation has finished.  If the promise rejects,
 	 * 		the stream will be errored.
 	 */
-	cancel(reason?: any): Promise<void>;
+	cancel?(reason?: any): Promise<void>;
 }
 
 /**
@@ -404,7 +404,7 @@ export default class ReadableStream<T> {
 		});
 
 		const createCancelFunction = (branch: number) => {
-			return (reason: any): void => {
+			return (reason?: any): Promise<void> => {
 				teeState['canceled' + branch] = true;
 				teeState['reason' + branch] = reason;
 				if (teeState['canceled' + (branch === 1 ? 2 : 1)]) {
