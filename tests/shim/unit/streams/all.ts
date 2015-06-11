@@ -3,8 +3,9 @@ import './CountQueuingStrategy';
 import './ReadableStream';
 import './ReadableStreamController';
 import './ReadableStreamReader';
-import './TransformStream';
+import './SeekableStream';
 import './SizeQueue';
+import './TransformStream';
 import './WritableStream';
 import './adapters/EventedStreamSource';
 
