@@ -28,11 +28,18 @@ export interface PipeOptions {
 }
 
 
+/**
+ * The Source interface defines the methods a module can implement to create a source for a {@link ReadableStream}.
+ *
+ * The Stream API provides a consistent stream API while {@link ReadableStream.Source} and {@link WritableStream.Sink}
+ * implementations provide the logic to connect a stream to specific data sources & sinks.
+ */
 export interface Source<T> {
 
 	/**
 	 * Tells the source to prepare for providing chunks to the stream.  While the source may enqueue chunks at this
 	 * point, it is not required.
+	 *
 	 * @param controller The source can use the controller to enqueue chunks, close the stream or report an error.
 	 * @returns A promise that resolves when the source's start operation has finished.  If the promise rejects,
 	 * 		the stream will be errored.
@@ -42,6 +49,7 @@ export interface Source<T> {
 	/**
 	 * Requests that source enqueue chunks.  Use the controller to close the stream when no more chunks can
 	 * be provided.
+	 *
 	 * @param controller The source can use the controller to enqueue chunks, close the stream or report an error.
 	 * @returns A promise that resolves when the source's pull operation has finished.  If the promise rejects,
 	 * 		the stream will be errored.
@@ -59,6 +67,7 @@ export interface Source<T> {
 
 	/**
 	 * Indicates the stream is prematurely closing and allows the source to do any necessary clean up.
+	 *
 	 * @param reason The reason why the stream is closing.
 	 * @returns A promise that resolves when the source's pull operation has finished.  If the promise rejects,
 	 * 		the stream will be errored.
@@ -67,7 +76,7 @@ export interface Source<T> {
 }
 
 /**
- * ReadableStream's possible states
+ * `ReadableStream`'s possible states
  */
 export enum State { Readable, Closed, Errored }
 
@@ -76,9 +85,7 @@ export enum State { Readable, Closed, Errored }
  */
 export default class ReadableStream<T> {
 
-	/**
-	 * @alias ShouldReadableStreamPull
-	 */
+	// ShouldReadableStreamPull
 	protected get _allowPull(): boolean {
 		return !this.pullScheduled &&
 			!this.closeRequested &&
@@ -89,9 +96,13 @@ export default class ReadableStream<T> {
 	}
 
 	/**
-	 * 3.5.7. GetReadableStreamDesiredSize ( stream )
-	 * @returns {number}
+	 * Returns a number indicating how much additional data can be pushed by the source to the stream's queue before it
+	 * exceeds its `highWaterMark`. An underlying source should use this information to determine when and how to apply
+	 * backpressure.
+	 *
+	 * @returns The stream's strategy's `highWaterMark` value minus the queue size
 	 */
+	// 3.5.7. GetReadableStreamDesiredSize ( stream )
 	get desiredSize(): number {
 		return this._strategy.highWaterMark - this.queueSize;
 	}
@@ -101,8 +112,13 @@ export default class ReadableStream<T> {
 	}
 
 	/**
-	 * @alias IsReadableStreamLocked
+	 * A stream can only have one reader at a time. This value indicates if a stream already has a reader, and hence
+	 * cannot be read from other than by that reader. When a consumer is done with a reader they can dissociate it
+	 * by calling {@link ReadableStreamReader#releaseLock}.
+	 *
+	 * @returns True if the stream has a reader associated with it
 	 */
+	// IsReadableStreamLocked
 	get locked(): boolean {
 		return this.hasSource && !!this.reader;
 	}
@@ -111,6 +127,13 @@ export default class ReadableStream<T> {
 		return this.hasSource && this.state === State.Readable;
 	}
 
+	/**
+	 * This promise will resolve when the stream's underlying source has started and is ready to provide data. If
+	 * the {@link ReadableStreamReader#read} method is called before the stream has started it will not do anything.
+	 * Wait for this promise to resolve to ensure that your `read` calls are responded to as promptly as possible.
+	 *
+	 * @returns A promise that resolves when the stream is ready to be read from.
+	 */
 	get started(): Promise<void> {
 		return this._startedPromise;
 	}
@@ -134,7 +157,12 @@ export default class ReadableStream<T> {
 	storedError: Error;
 
 	/**
+	 * A `ReadableStream` requires an underlying source to supply data. The source interacts with the stream through
+	 * a {@link ReadableStreamController} that is associated with the stream, and provided to the source.
+	 *
 	 * @constructor
+	 * @param underlyingSource The source object that supplies data to the stream by interacting with its controller.
+	 * @param strategy The strategy for this stream.
 	 */
 	constructor(underlyingSource: Source<T>, strategy: Strategy<T> = {}) {
 		if (!underlyingSource) {
@@ -145,17 +173,15 @@ export default class ReadableStream<T> {
 		this.controller = new ReadableStreamController(this);
 		this._strategy = util.normalizeStrategy(strategy);
 		this.queue = new SizeQueue<T>();
-
 		this._startedPromise = new Promise<void>((resolveStarted) => {
 			const startResult = util.invokeOrNoop(this._underlyingSource, 'start', [ this.controller ]);
-			Promise.resolve(startResult).then(
-				() => {
-					this._started = true;
-					resolveStarted();
-					this.pull();
-				},
-				error => this.error(error)
-			);
+			Promise.resolve(startResult).then(() => {
+				this._started = true;
+				resolveStarted();
+				this.pull();
+			}, (error: Error) => {
+				this.error(error)
+			});
 		});
 	}
 
@@ -174,9 +200,7 @@ export default class ReadableStream<T> {
 		return util.promiseInvokeOrNoop(this._underlyingSource, 'cancel', [ reason ]).then(function () {});
 	}
 
-	/**
-	 * @alias shouldReadableStreamApplyBackPressure
-	 */
+	// shouldReadableStreamApplyBackPressure
 	protected _shouldApplyBackPressure(): boolean {
 		const queueSize = this.queue.totalSize;
 
@@ -185,8 +209,9 @@ export default class ReadableStream<T> {
 
 	/**
 	 *
-	 * @param reason
-	 * @returns {null}
+	 * @param reason A description of the reason the stream is being canceled.
+	 * @returns A promise that resolves when the stream has closed and the call to the underlying source's `cancel`
+	 *		method has completed.
 	 */
 	cancel(reason?: any): Promise<void> {
 		if (!this.hasSource) {
@@ -200,8 +225,8 @@ export default class ReadableStream<T> {
 	 * Closes the stream without regard to the status of the queue.  Use {@link requestClose} to close the
 	 * stream and allow the queue to flush.
 	 *
-	 * 3.5.4. FinishClosingReadableStream ( stream )
 	 */
+	// 3.5.4. FinishClosingReadableStream ( stream )
 	close(): void {
 		if (this.state !== State.Readable) {
 			return;
@@ -214,9 +239,7 @@ export default class ReadableStream<T> {
 		}
 	}
 
-	/**
-	 * @alias EnqueueInReadableStream
-	 */
+	// EnqueueInReadableStream
 	enqueue(chunk: T): void {
 		const size = this._strategy.size;
 
@@ -257,9 +280,9 @@ export default class ReadableStream<T> {
 	}
 
 	/**
-	 * create a new ReadableStreamReader and lock the stream to the new reader
-	 * @alias AcquireREadableStreamReader
+	 * create a new {@link ReadableStreamReader} and lock the stream to the new reader
 	 */
+	// AcquireReadableStreamReader
 	getReader(): ReadableStreamReader<T> {
 		if (!this.readable) {
 			throw new TypeError('3.2.4.2-1: must be a ReadableStream instance');
@@ -344,9 +367,7 @@ export default class ReadableStream<T> {
 		});
 	}
 
-	/**
-	 * @alias RequestReadableStreamPull
-	 */
+	// RequestReadableStreamPull
 	pull(): void {
 		if (!this._allowPull) {
 			return;
@@ -358,23 +379,23 @@ export default class ReadableStream<T> {
 				this.pullScheduled = false;
 				this.pull();
 			});
+
 			return;
 		}
 
 		this._pullingPromise = util.promiseInvokeOrNoop(this._underlyingSource, 'pull', [ this.controller ]);
 		this._pullingPromise.then(() => {
 			this._pullingPromise = undefined;
-		}, (e) => {
-			this.error(e);
+		}, (error: Error) => {
+			this.error(error);
 		});
 	}
 
 	/**
 	 * Requests the stream be closed.  This method allows the queue to be emptied before the stream closes.
 	 *
-	 * 3.5.3. CloseReadableStream ( stream )
-	 * @alias CloseReadableStream
 	 */
+	// 3.5.3. CloseReadableStream ( stream )
 	requestClose(): void {
 		if (this.closeRequested || this.state !== State.Readable) {
 			return;
@@ -390,8 +411,8 @@ export default class ReadableStream<T> {
 	/**
 	 * Tee a readable stream, returning a two-element array containing
 	 * the two resulting ReadableStream instances
-	 * @alias TeeReadableStream
 	 */
+	// TeeReadableStream
 	tee(): [ ReadableStream<T>, ReadableStream<T> ] {
 		if (!this.readable) {
 			throw new TypeError('3.2.4.5-1: must be a ReadableSream');

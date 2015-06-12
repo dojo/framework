@@ -6,6 +6,7 @@ import './ReadableStreamReader';
 import './SeekableStream';
 import './SizeQueue';
 import './TransformStream';
+import './util';
 import './WritableStream';
 import './adapters/EventedStreamSource';
 

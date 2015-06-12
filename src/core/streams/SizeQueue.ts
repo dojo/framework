@@ -3,6 +3,10 @@ interface Pair<T> {
 	size: number;
 }
 
+/**
+ * This class is used internally by {@link ReadableStream} and {@link WritableStream} as a simple queue.
+ * Each value in the queue includes a piece of metadata: the size of the value.
+ */
 export default class SizeQueue<T> {
 	get totalSize(): number {
 		let totalSize = 0;

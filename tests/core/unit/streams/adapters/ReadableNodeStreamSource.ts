@@ -1,7 +1,9 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { Readable } from 'stream';
+import Promise from 'src/Promise';
 import ReadableStream from 'src/streams/ReadableStream';
+import { ReadResult } from 'src/streams/ReadableStreamReader';
 import ReadableStreamController from 'src/streams/ReadableStreamController';
 import ReadableNodeStreamSource from 'src/streams/adapters/ReadableNodeStreamSource';
 
@@ -36,7 +38,9 @@ class CountStream extends Readable {
 
 	constructor(options?: {}) {
 		super(options);
-		this._max = 10000;
+		// The `_read` method will be called (by Node's `Readable` class?) until it pushes `null`, which means it will
+		// always be called `_max` times, so ensure this number is not too big
+		this._max = 10;
 		this._index = 0;
 		this.setEncoding('utf8');
 	}
@@ -49,7 +53,7 @@ class CountStream extends Readable {
 			this.push(null);
 		}
 		else {
-			let str = '' + i;
+			let str = String(i);
 			let buf = new Buffer(str, 'ascii');
 			this.push(buf);
 		}
@@ -62,11 +66,10 @@ let source: ReadableNodeStreamSource;
 let controller: Controller;
 
 registerSuite({
-	name: 'Node Readable Stream adapter',
+	name: 'ReadableNodeStreamSource',
 
 	beforeEach() {
 		nodeStream = new CountStream();
-		// source = new ReadableNodeStreamSource(nodeStream);
 		source = new ReadableNodeStreamSource(nodeStream);
 		controller = new Controller();
 	},
@@ -94,17 +97,25 @@ registerSuite({
 	},
 
 	'retrieve new data'() {
-		let dfd = this.async(1000);
-		stream = new ReadableStream<string>(source);
+		stream = new ReadableStream<string>(source, { highWaterMark: 1 });
 		let reader = stream.getReader();
-		reader.read().then(function (value: any) {
-			let num = Number(value.value);
-			assert.isNumber(num);
-			return num + 1;
-		}).then(function (newValue) {
-			reader.read().then(dfd.callback(function (value: any) {
-				assert.strictEqual(Number(value.value), newValue);
-			}));
+		let readIndex = 0;
+
+		function readNext(): Promise<void> {
+			return reader.read().then(function (result: ReadResult<string>) {
+				if (result.done) {
+					return Promise.resolve();
+				}
+
+				assert.strictEqual(result.value, String(readIndex));
+				readIndex += 1;
+
+				return readNext();
+			});
+		}
+
+		return stream.started.then(function () {
+			return readNext();
 		});
 	}
 });

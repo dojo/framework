@@ -1,21 +1,31 @@
 import Promise from '../Promise';
 import ReadableStream, { State } from './ReadableStream';
 
-export interface ReadRequest<T> {
+interface ReadRequest<T> {
 	promise: Promise<ReadResult<T>>;
 	resolve: (value: ReadResult<T>) => void;
 	reject: (reason: any) => void;
 }
 
+/**
+ * Represents the objects returned by {@link ReadableStreamReader#read}. The data is accessible on the `value` property.
+ * If the `done` property is true, the stream has no more data to provide.
+ */
 export interface ReadResult<T> {
 	value: T;
 	done: boolean;
 }
 
-export function isReadableStreamReader<T>(readableStreamReader: ReadableStreamReader<T>): boolean {
+function isReadableStreamReader<T>(readableStreamReader: ReadableStreamReader<T>): boolean {
 	return Object.prototype.hasOwnProperty.call(readableStreamReader, '_ownerReadableStream');
 }
 
+/**
+ * This class provides the interface for reading data from a stream. A reader can by acquired by calling
+ * {@link ReadableStream#getReader}. A {@link ReadableStream} can only have a single reader at any time. A reader can
+ * be released from the stream by calling {@link ReadableStreamReader.releaseLock}. If the stream still has data, a new
+ * reader can be acquired to read from the stream.
+ */
 export default class ReadableStreamReader<T> {
 	get closed(): Promise<void> {
 		return this._closedPromise;
@@ -51,6 +61,12 @@ export default class ReadableStreamReader<T> {
 		});
 	}
 
+	/**
+	 * Cancel a stream. The reader is released and the stream is closed. {@link ReadableStream.Source#cancel} is
+	 * called with the provided `reason`.
+	 *
+	 * @param reason The reason for canceling the stream
+	 */
 	cancel(reason: string): Promise<void> {
 		if (!isReadableStreamReader(this)) {
 			return Promise.reject(new TypeError('3.4.4.2-1: Must be a ReadableStreamReader instance'));
@@ -73,10 +89,11 @@ export default class ReadableStreamReader<T> {
 	}
 
 	/**
-	 * This method also incorporates the readFromReadableStreamReader from 3.5.12.
-	 * @alias ReadFromReadableStreamReader
-	 * @returns {Promise<ReadResult<T>>}
+	 * Read data from the stream.
+	 *
+	 * @returns A promise that resolves to a {@link ReadResult}.
 	 */
+	// This method also incorporates the ReadFromReadableStreamReader from 3.5.12.
 	read(): Promise<ReadResult<T>> {
 		if (!isReadableStreamReader(this)) {
 			return Promise.reject<ReadResult<T>>(new TypeError('3.4.4.3-1: Must be a ReadableStreamReader instance'));
@@ -127,12 +144,13 @@ export default class ReadableStreamReader<T> {
 	}
 
 	/**
-	 * release a reader's lock on the corresponding stream.
-	 * 3.4.4.4. releaseLock()
+	 * Release a reader's lock on the corresponding stream. The reader will no longer be readable. Further reading on
+	 * the stream can be done by acquiring a new `ReadableStreamReader`.
 	 */
+	// 3.4.4.4. releaseLock()
 	releaseLock(): void {
 		if (!isReadableStreamReader(this)) {
-			throw new TypeError('3.4.4.4-1: Must be a ReadableStreamrteader isntance');
+			throw new TypeError('3.4.4.4-1: Must be a ReadableStreamReader isntance');
 		}
 
 		if (!this._ownerReadableStream) {
@@ -146,10 +164,7 @@ export default class ReadableStreamReader<T> {
 		this.release();
 	}
 
-	/**
-	 * 3.5.13. ReleaseReadableStreamReader ( reader )
-	 * alias ReleaseReadableStreamReader
-	 */
+	// 3.5.13. ReleaseReadableStreamReader ( reader )
 	release(): void {
 		let request: any;
 		if (this._ownerReadableStream.state === State.Errored) {

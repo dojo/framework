@@ -60,5 +60,85 @@ registerSuite({
 			};
 			assert.strictEqual(util.getApproximateByteSize(obj), 50);
 		}
+	},
+
+	invokeOrNoop() {
+		const testParameters = [ 'a', 1 ];
+		let passedParameters: Array<any>;
+		let callCount = 0;
+		let obj = {
+			testMethod: function () {
+				passedParameters = Array.prototype.slice.call(arguments);
+				callCount += 1;
+			}
+		};
+
+		util.invokeOrNoop(obj, 'testMethod');
+		assert.strictEqual(callCount, 1, 'obj.testMethod should be called');
+		assert.strictEqual(passedParameters.length, 0, 'obj.testMethod should be called with no parameters');
+
+		util.invokeOrNoop(obj, 'testMethod', testParameters);
+		assert.strictEqual(callCount, 2, 'obj.testMethod should be called');
+		assert.sameMembers(passedParameters, testParameters, 'obj.testMethod should be called with test parameters');
+	},
+
+	promiseInvokeOrFallbackOrNoop() {
+		const testParameters = [ 'a', 1 ];
+		let passedParameters: Array<any>;
+		let callCount = 0;
+		let otherParameters: Array<any>;
+		let otherCallCount = 0;
+		let obj = {
+			testMethod: function () {
+				passedParameters = Array.prototype.slice.call(arguments);
+				callCount += 1;
+			},
+			otherMethod: function () {
+				otherParameters = Array.prototype.slice.call(arguments);
+				otherCallCount += 1;
+			}
+		};
+
+		return util.promiseInvokeOrFallbackOrNoop(obj, 'testMethod', undefined, 'otherMethod').then(function () {
+			assert.strictEqual(callCount, 1);
+			assert.strictEqual(otherCallCount, 0);
+
+			return util.promiseInvokeOrFallbackOrNoop(obj, 'NOMETHOD', undefined, 'otherMethod');
+		}).then(function () {
+			assert.strictEqual(callCount, 1);
+			assert.strictEqual(otherCallCount, 1);
+
+			return util.promiseInvokeOrFallbackOrNoop(obj, 'testMethod', testParameters, 'otherMethod');
+		}).then(function () {
+			assert.strictEqual(callCount, 2);
+			assert.strictEqual(otherCallCount, 1);
+			assert.sameMembers(passedParameters, testParameters, 'obj.testMethod should be called with test parameters');
+
+			return util.promiseInvokeOrFallbackOrNoop(obj, 'NOMETHOD', undefined, 'otherMethod', testParameters);
+		}).then(function () {
+			assert.strictEqual(callCount, 2);
+			assert.strictEqual(otherCallCount, 2);
+			assert.sameMembers(otherParameters, testParameters, 'obj.otherMethod should be called with test parameters');
+		});
+	},
+
+	promiseInvokeOrNoop() {
+		const testParameters = [ 'a', 1 ];
+		let passedParameters: Array<any>;
+		let callCount = 0;
+		let obj = {
+			testMethod: function () {
+				passedParameters = Array.prototype.slice.call(arguments);
+				callCount += 1;
+			}
+		};
+
+		return util.promiseInvokeOrNoop(obj, 'testMethod').then(function () {
+			assert.strictEqual(callCount, 1);
+
+			return util.promiseInvokeOrNoop(obj, 'testMethod', testParameters);
+		}).then(function () {
+			assert.sameMembers(passedParameters, testParameters, 'obj.testMethod should be called with test parameters');
+		});
 	}
 });
