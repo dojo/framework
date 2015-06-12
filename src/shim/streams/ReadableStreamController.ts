@@ -1,8 +1,6 @@
 import ReadableStream, { State } from './ReadableStream';
 
-/**
- * 3.5.9-1 has been ignored
- */
+// 3.5.9-1 has been ignored
 export function isReadableStreamController(x: any): boolean {
 	return Object.prototype.hasOwnProperty.call(x, '_controlledReadableStream');
 }
@@ -11,9 +9,13 @@ export default class ReadableStreamController<T> {
 	private _controlledReadableStream: ReadableStream<T>;
 
 	/**
-	 * 3.3.4.1. get desiredSize
-	 * @returns {number}
+	 * Returns a number indicating how much additional data can be pushed by the source to the stream's queue before it
+	 * exceeds its `highWaterMark`. An underlying source should use this information to determine when and how to apply
+	 * backpressure.
+	 *
+	 * @returns The stream's strategy's `highWaterMark` value minus the queue size
 	 */
+	// 3.3.4.1. get desiredSize
 	get desiredSize(): number {
 		return this._controlledReadableStream.desiredSize;
 	}
@@ -31,7 +33,9 @@ export default class ReadableStreamController<T> {
 	}
 
 	/**
-	 *
+	 * A source should call this method when it has no more data to provide. After this method is called, the stream
+	 * will provided any queued data to the reader, but once the stream's queue is exhausted the stream will be closed
+	 * and no more data can be read from it.
 	 */
 	close(): void {
 		if (!isReadableStreamController(this)) {
@@ -51,7 +55,9 @@ export default class ReadableStreamController<T> {
 	}
 
 	/**
+	 * A source should call this method to provide data to the stream.
 	 *
+	 * @param chunk The data to provide to the stream
 	 */
 	enqueue(chunk: T): void {
 		if (!isReadableStreamController(this)) {
@@ -72,9 +78,12 @@ export default class ReadableStreamController<T> {
 	}
 
 	/**
+	 * A source should call this method to indicate an error condition to the stream that irreparably disrupts the
+	 * source's (and thus the stream's) ability to provide all the intended data.
 	 *
+	 * @param error An error object representing the error condition in the source
 	 */
-	error(e: Error): void {
+	error(error: Error): void {
 		if (!isReadableStreamController(this)) {
 			throw new TypeError('3.3.4.3-1: ReadableStreamController#enqueue can only be used on a ReadableStreamController');
 		}
@@ -83,6 +92,6 @@ export default class ReadableStreamController<T> {
 			throw new TypeError(`3.3.4.3-2: the stream is ${this._controlledReadableStream.state} and so cannot be errored`);
 		}
 		// return errorReadableStream(this._controlledReadableStream, e);
-		this._controlledReadableStream.error(e);
+		this._controlledReadableStream.error(error);
 	}
 }

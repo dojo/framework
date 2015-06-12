@@ -1,13 +1,6 @@
 import { Strategy } from './interfaces';
 import Promise from '../Promise';
 
-/**
- *
- */
-export function createDataProperty(object: {}, property: string, value: any) {
-	Object.defineProperty(object, property, { value: value, writable: true, enumerable: true, configurable: true });
-}
-
 /*
 Based on sizeof.js by Stephen Morley
 

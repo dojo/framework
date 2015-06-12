@@ -27,10 +27,6 @@ export default class ArraySink<T> implements Sink<T> {
 		return resolved;
 	}
 
-	/**
-	 *
-	 * @param chunk
-	 */
 	write(chunk: T): Promise<void> {
 		if (chunk) {
 			this.chunks.push(chunk);

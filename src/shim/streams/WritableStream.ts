@@ -3,14 +3,10 @@ import Promise from '../Promise';
 import SizeQueue from './SizeQueue';
 import * as util from './util';
 
-const SinkMethod = {
-	abort: 'abort',
-	close: 'close',
-	start: 'start',
-	write: 'write'
-};
-
-export interface Record<T> {
+// A Record is used internally by the stream to process queued writes. It represents the chunk to be written plus
+// additional metadata used internally.
+interface Record<T> {
+	// This flag indicates that this record is the end of the stream and the stream should close when processing it
 	close?: boolean;
 	chunk?: T;
 	reject?: (error: Error) => void;
@@ -22,70 +18,82 @@ export interface Record<T> {
  */
 export enum State { Closed, Closing, Errored, Waiting, Writable }
 
+// This function is basically a context check to protect against calling WritableStream methods with incorrect context
+// (as one might accidentally do when passing a method as callback)
 function isWritableStream(x: any): boolean {
 	return Object.prototype.hasOwnProperty.call(x, '_underlyingSink');
 }
 
+/**
+ * The Sink interface defines the methods a module can implement to create a target sink for a `WritableStream`.
+ *
+ * The Stream API provides a consistent stream API while `ReadableStream.Source` and `WritableStream.Sink` implementors
+ * provide the logic to connect a stream to specific data sources & sinks.
+ */
 export interface Sink<T> {
 
 	/**
 	 * Indicates the stream is prematurely closing due to an error.  The sink should do any necessary cleanup
-	 * and release resources.
+	 * and release resources. When a stream calls `abort` it will discard any queued chunks. If the sink does not
+	 * provide an `abort` method then the stream will call `close` instead.
+	 *
 	 * @param reason The reason the stream is closing.
 	 */
-	abort(reason?: any): Promise<void>;
+	abort?(reason?: any): Promise<void>;
 
 	/**
-	 * Indicates the stream is closing.  The sink should do any necessary cleanup and release resources.
+	 * Indicates the stream is closing.  The sink should do any necessary cleanup and release resources. The stream
+	 * will not call this method until is has successfully written all queued chunks.
 	 */
-	close(): Promise<void>;
+	close?(): Promise<void>;
 
 	/**
 	 * Requests the sink to prepare for receiving chunks.
+	 *
 	 * @param error An error callback that can be used at any time by the sink to indicate an error has occurred.
 	 * @returns A promise that resolves when the sink's start operation has finished.  If the promise rejects,
 	 * 		the stream will be errored.
 	 */
-	start(error: (error: Error) => void): Promise<void>;
+	start?(error: (error: Error) => void): Promise<void>;
 
 	/**
 	 * Requests the sink write a chunk.
+	 *
 	 * @param chunk The chunk to be written.
 	 * @returns A promise that resolves when the sink's write operation has finished.  If the promise rejects,
 	 * 		the stream will be errored.
 	 */
-	write(chunk: T): Promise<void>;
+	write?(chunk: T): Promise<void>;
 }
 
+/**
+ * This class provides a writable stream implementation. Data written to a stream will be passed on to the underlying
+ * sink (`WritableStream.Sink`), an instance of which must be supplied to the stream upon instantation. This class
+ * provides the standard stream API, while implementations of the `Sink` API allow the data to be written to
+ * various persistence layers.
+ */
 export default class WritableStream<T> {
+	/**
+	 * @returns A promise that is resolved when the stream is closed, or is rejected if the stream errors.
+	 */
 	get closed(): Promise<void> {
-		if (isWritableStream(this)) {
-			return this._closedPromise;
-		}
-		else {
-			// 4.2.4.1-1
-			return Promise.reject(new TypeError('Must be a WritableStream'));
-		}
+		return this._closedPromise;
 	}
 
+	/**
+	 * @returns A promise that is resolved when the stream transitions away from the 'waiting' state. The stream will
+	 * use this to indicate backpressure - an unresolved `ready` promise indicates that writes should not yet be
+	 * performed.
+	 */
 	get ready(): Promise<void> {
-		if (isWritableStream(this)) {
-			return this._readyPromise;
-		}
-		else {
-			// 4.2.4.2-1
-			return Promise.reject(new TypeError('Must be a WritableStream'));
-		}
+		return this._readyPromise;
 	}
 
+	/**
+	 * @returns The stream's current @State
+	 */
 	get state(): State {
-		if (isWritableStream(this)) {
-			return this._state;
-		}
-		else {
-			// 4.2.4.3-1
-			throw new TypeError('Must be a WritableStream');
-		}
+		return this._state;
 	}
 
 	protected _advancing: boolean;
@@ -104,7 +112,7 @@ export default class WritableStream<T> {
 	protected _queue: SizeQueue<Record<T>>;
 	protected _writing: boolean;
 
-	constructor(underlyingSink: Sink<T>, strategy: Strategy<T> = {}) {
+	constructor(underlyingSink: Sink<T> = {}, strategy: Strategy<T> = {}) {
 		this._underlyingSink = underlyingSink;
 
 		this._closedPromise = new Promise<void>((resolve, reject) => {
@@ -121,10 +129,8 @@ export default class WritableStream<T> {
 		this._strategy = util.normalizeStrategy(strategy);
 		this._syncStateWithQueue();
 
-		this._startedPromise = util.invokeOrNoop(
-			this._underlyingSink,
-			SinkMethod.start,
-			[ this._error.bind(this) ]
+		this._startedPromise = Promise.resolve(
+			util.invokeOrNoop(this._underlyingSink, 'start', [ this._error.bind(this) ])
 		).then(() => {
 			this._started = true;
 			this._startedPromise = undefined;
@@ -169,7 +175,7 @@ export default class WritableStream<T> {
 
 		this._writing = true;
 
-		util.promiseInvokeOrNoop(this._underlyingSink, SinkMethod.write, [ writeRecord.chunk ]).then(() => {
+		util.promiseInvokeOrNoop(this._underlyingSink, 'write', [ writeRecord.chunk ]).then(() => {
 			if (this.state !== State.Errored) {
 				this._writing = false;
 				writeRecord.resolve();
@@ -196,7 +202,7 @@ export default class WritableStream<T> {
 			throw new Error('WritableStream#_close called while state is not "Closing"');
 		}
 
-		util.promiseInvokeOrNoop(this._underlyingSink, SinkMethod.close).then(() => {
+		util.promiseInvokeOrNoop(this._underlyingSink, 'close').then(() => {
 			if (this.state !== State.Errored) {
 				// TODO: Assert 4.3.2.2-a.ii
 				this._resolveClosedPromise();
@@ -257,10 +263,16 @@ export default class WritableStream<T> {
 		}
 	}
 
+	/**
+	 * Signals that the producer can no longer write to the stream and it should be immediately moved to an "errored"
+	 * state. Any un-written data that is queued will be discarded.
+	 */
 	abort(reason: any): Promise<void> {
+		// 4.2.4.4-1
 		if (!isWritableStream(this)) {
-			// 4.2.4.4-1
-			return Promise.reject(new TypeError('Must be a WritableStream'));
+			return Promise.reject(
+				new Error('WritableStream method called in context of object that is not a WritableStream instance')
+			);
 		}
 
 		if (this.state === State.Closed) {
@@ -277,20 +289,31 @@ export default class WritableStream<T> {
 
 		this._error(error);
 
-		return util.promiseInvokeOrFallbackOrNoop(this._underlyingSink, SinkMethod.abort, [ reason ], SinkMethod.close)
+		return util.promiseInvokeOrFallbackOrNoop(this._underlyingSink, 'abort', [ reason ], 'close')
 			.then(function () {
 				return;
 			});
 	}
 
+	/**
+	 * Signals that the producer is done writing to the stream and wishes to move it to a "closed" state. The stream
+	 * may have un-writted data queued; until the data has been written the stream will remain in the "closing" state.
+	 */
 	close(): Promise<void> {
 		// 4.2.4.5-1
-		if (!isWritableStream(this) ||
-			// 4.2.4.5-2
-			this.state === State.Closed ||
-			this.state === State.Closing
-		) {
-			return Promise.reject(new TypeError('Must be a WritableStream'));
+		if (!isWritableStream(this)) {
+			return Promise.reject(
+				new Error('WritableStream method called in context of object that is not a WritableStream instance')
+			);
+		}
+
+		// 4.2.4.5-2
+		if (this.state === State.Closed) {
+			return Promise.reject(new TypeError('Stream is already closed'));
+		}
+
+		if (this.state === State.Closing) {
+			return Promise.reject(new TypeError('Stream is already closing'));
 		}
 
 		if (this.state === State.Errored) {
@@ -304,22 +327,34 @@ export default class WritableStream<T> {
 		}
 
 		this._state = State.Closing;
-
 		this._queue.enqueue({ close: true }, 0);
-
 		this._advanceQueue();
 
 		return this._closedPromise;
 	}
 
+	/**
+	 * Enqueue a chunk of data to be written to the underlying sink. `write` can be called successively without waiting
+	 * for the previous write's promise to resolve. To respect the stream's backpressure indicator, check if the stream
+	 * has entered the "waiting" state between writes.
+	 *
+	 * @returns A promise that will be fulfilled when the chunk has been written to the underlying sink.
+	 */
 	write(chunk: T): Promise<void> {
 		// 4.2.4.6-1
-		if (!isWritableStream(this) ||
-			// 4.2.4.6-2
-			this.state === State.Closed ||
-			this.state === State.Closing
-		) {
-			return Promise.reject(new TypeError('Must be a WritableStream'));
+		if (!isWritableStream(this)) {
+			return Promise.reject(
+				new Error('WritableStream method called in context of object that is not a WritableStream instance')
+			);
+		}
+
+		// 4.2.4.6-2
+		if (this.state === State.Closed) {
+			return Promise.reject(new TypeError('Stream is closed'));
+		}
+
+		if (this.state === State.Closing) {
+			return Promise.reject(new TypeError('Stream is closing'));
 		}
 
 		if (this.state === State.Errored) {

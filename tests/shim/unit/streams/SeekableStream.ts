@@ -141,17 +141,5 @@ registerSuite({
 				})
 			});
 		}
-	},
-
-	errors: {
-		'seek'() {
-			stream = new SeekableStream<string>(source);
-			reader = stream.getReader();
-			return reader.read().then(function () {
-				assert.fail();
-			}, function () {
-				assert.fail();
-			});
-		}
 	}
 });

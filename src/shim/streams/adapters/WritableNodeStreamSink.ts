@@ -2,6 +2,7 @@ import Promise from '../../Promise';
 import { Sink } from '../WritableStream';
 
 export type NodeSourceType = Buffer | string;
+
 export default class WritableNodeStreamSink implements Sink<NodeSourceType> {
 	protected _encoding: string;
 	protected _isClosed: boolean;
