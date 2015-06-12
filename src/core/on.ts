@@ -17,10 +17,6 @@ export interface EventTarget {
 	removeEventListener(event: string, listener: EventCallback, capture?: boolean): void;
 }
 
-export interface ExtensionEvent {
-	(target: any, listener: EventCallback, capture?: boolean): Handle;
-}
-
 interface DOMEventObject extends EventObject {
 	bubbles: boolean;
 	cancelable: boolean;
@@ -40,13 +36,13 @@ export function emit(target: any, event: EventObject): boolean {
 		let nativeEvent = target.ownerDocument.createEvent('HTMLEvents');
 		nativeEvent.initEvent(
 			event.type,
-			Boolean((<DOMEventObject>event).bubbles),
-			Boolean((<DOMEventObject>event).cancelable)
+			Boolean((<DOMEventObject> event).bubbles),
+			Boolean((<DOMEventObject> event).cancelable)
 		);
 
 		for (let key in event) {
 			if (!(key in nativeEvent)) {
-				nativeEvent[key] = (<any>event)[key];
+				nativeEvent[key] = (<any> event)[key];
 			}
 		}
 
@@ -75,20 +71,9 @@ export function emit(target: any, event: EventObject): boolean {
  * @param capture Whether the listener should be registered in the capture phase (DOM events only)
  * @return A handle which will remove the listener when destroy is called
  */
-export default function on(target: EventTarget, type: string, listener: EventCallback, capture?: boolean): Handle;
-export default function on(target: EventTarget, type: ExtensionEvent, listener: EventCallback, capture?: boolean): Handle;
-export default function on(target: EventTarget, type: (string | ExtensionEvent)[], listener: EventCallback, capture?: boolean): Handle;
-export default function on(target: EventEmitter, type: string, listener: EventCallback): Handle;
-export default function on(target: EventEmitter, type: ExtensionEvent, listener: EventCallback): Handle;
-export default function on(target: EventEmitter, type: (string | ExtensionEvent)[], listener: EventCallback): Handle;
-export default function on(target: Evented, type: string, listener: EventCallback): Handle;
-export default function on(target: Evented, type: ExtensionEvent, listener: EventCallback): Handle;
-export default function on(target: Evented, type: (string | ExtensionEvent)[], listener: EventCallback): Handle;
+export default function on(target: EventTarget, type: string | string[], listener: EventCallback, capture?: boolean): Handle;
+export default function on(target: EventEmitter | Evented, type: string | string[], listener: EventCallback): Handle;
 export default function on(target: any, type: any, listener: any, capture?: boolean): Handle {
-	if (type.call) {
-		return type.call(this, target, listener, capture);
-	}
-
 	if (Array.isArray(type)) {
 		let handles: Handle[] = type.map(function (type: string): Handle {
 			return on(target, type, listener, capture);
@@ -101,6 +86,7 @@ export default function on(target: any, type: any, listener: any, capture?: bool
 		listener.apply(this, arguments);
 	};
 
+	// DOM EventTarget
 	if (target.addEventListener && target.removeEventListener) {
 		target.addEventListener(type, callback, capture);
 		return createHandle(function () {
@@ -109,12 +95,14 @@ export default function on(target: any, type: any, listener: any, capture?: bool
 	}
 
 	if (target.on) {
+		// EventEmitter
 		if (target.removeListener) {
 			target.on(type, callback);
 			return createHandle(function () {
 				target.removeListener(type, callback);
 			});
 		}
+		// Evented
 		else if (target.emit) {
 			return target.on(type, listener);
 		}

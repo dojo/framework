@@ -19,7 +19,7 @@ interface DOMEvent extends EventObject {
 }
 
 registerSuite({
-	name: 'events - EvenTarget',
+	name: 'events - EventTarget',
 
 	'common cases': common({
 		eventName: 'test',
