@@ -80,40 +80,16 @@ export default function createCommonTests(args: any) {
 
 		'on - multiple handlers'() {
 			const order: any[] = [];
-			const customEvent = function (target: any, listener: any) {
-				return on(target, 'custom', listener);
-			};
 			on(target, ['a', 'b'], function (event) {
 				order.push(1 + event.type);
 			});
-			on(target, [ 'a', customEvent ], function (event) {
+			on(target, [ 'a', 'c' ], function (event) {
 				order.push(2 + event.type);
 			});
 			emit(target, { type: 'a' });
 			emit(target, { type: 'b' });
-			emit(target, { type: 'custom' });
-			assert.deepEqual(order, [ '1a', '2a', '1b', '2custom' ]);
-		},
-
-		'on - extension events'() {
-			let listenerCallCount = 0;
-			let emittedEvent: any;
-			const extensionEvent = function (target: any, listener: any) {
-				return testOn(target, testEventName, listener);
-			};
-
-			testOn(target, extensionEvent, function (actualEvent: CustomEvent) {
-				listenerCallCount++;
-				assert.strictEqual(actualEvent.value, emittedEvent.value);
-			});
-
-			emittedEvent = { type: testEventName, value: 'foo' };
-			emit(target, emittedEvent);
-			assert.strictEqual(listenerCallCount, 1);
-
-			emittedEvent = { type: testEventName, value: 'bar' };
-			emit(target, emittedEvent);
-			assert.strictEqual(listenerCallCount, 2);
+			emit(target, { type: 'c' });
+			assert.deepEqual(order, [ '1a', '2a', '1b', '2c' ]);
 		}
 	};
 }
