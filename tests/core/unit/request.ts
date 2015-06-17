@@ -2,10 +2,12 @@ import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import Deferred = require('intern/dojo/Deferred');
 import has = require('intern/dojo/has');
-import * as http from 'http';
 import Task from 'src/async/Task';
 import request, { filterRegistry, providerRegistry, RequestOptions, Response, ResponsePromise } from 'src/request';
-import * as url from 'url';
+
+// These imports are only for type information
+import * as nodeHttp from 'http';
+import * as nodeUrl from 'url';
 
 const mockData = '{ "foo": "bar" }';
 let handle: any;
@@ -151,6 +153,8 @@ const suite: { [name: string]: any } = {
 };
 
 if (has('host-node')) {
+	const http: typeof nodeHttp = require('http');
+	const url: typeof nodeUrl = require('url');
 	const serverPort = 8124;
 	const serverUrl = 'http://localhost:' + serverPort;
 	let server: any;
