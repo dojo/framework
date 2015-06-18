@@ -5,7 +5,7 @@ import * as util from './util';
 
 // A Record is used internally by the stream to process queued writes. It represents the chunk to be written plus
 // additional metadata used internally.
-interface Record<T> {
+export interface Record<T> {
 	// This flag indicates that this record is the end of the stream and the stream should close when processing it
 	close?: boolean;
 	chunk?: T;

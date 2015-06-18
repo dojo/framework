@@ -5,8 +5,8 @@ import Promise from '../../Promise';
 import { Source } from '../ReadableStream';
 import ReadableStreamController from '../ReadableStreamController';
 
-type EventTargetTypes = Evented | EventEmitter | EventTarget;
-type EventTypes = string | string[];
+export type EventTargetTypes = Evented | EventEmitter | EventTarget;
+export type EventTypes = string | string[];
 
 export default class EventedStreamSource implements Source<Event> {
 	protected _controller: ReadableStreamController<Event>;

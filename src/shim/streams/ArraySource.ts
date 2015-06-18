@@ -1,6 +1,6 @@
-import Promise from 'src/Promise';
-import { Source } from 'src/streams/ReadableStream';
-import ReadableStreamController from 'src/streams/ReadableStreamController';
+import Promise from '../Promise';
+import { Source } from './ReadableStream';
+import ReadableStreamController from './ReadableStreamController';
 
 const resolved = Promise.resolve();
 
