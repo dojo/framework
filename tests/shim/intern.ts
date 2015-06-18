@@ -1,3 +1,5 @@
+import intern = require('intern');
+
 export var proxyPort = 9000;
 
 // A fully qualified URL to the Intern proxy
@@ -39,9 +41,15 @@ export var tunnel = 'BrowserStackTunnel';
 
 // The desired AMD loader to use when running unit tests (client.html/client.js). Omit to use the default Dojo
 // loader
+
+let loaderBasePath = '..';
+if (typeof location !== 'undefined' && location.pathname.indexOf('__intern/') > -1) {
+	// Support running unit tests from a web server that isn't the intern proxy
+	loaderBasePath = `${loaderBasePath}/node_modules`;
+}
 export var useLoader = {
-	'host-browser': 'node_modules/dojo/dojo.js',
-	'host-node': 'requirejs'
+	'host-browser': `${loaderBasePath}/dojo-loader/loader.js`,
+	'host-node': 'dojo-loader'
 };
 
 // Configuration options for the module loader; any AMD configuration options supported by the specified AMD loader
