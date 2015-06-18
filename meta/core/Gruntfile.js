@@ -7,6 +7,32 @@ function mixin(destination, source) {
 	return destination;
 }
 
+/**
+ * A work-around for grunt-ts 4.2.0-beta not handling experimentalDecorators
+ * and improperly handling the source map options
+ */
+function getTsOptions(baseOptions, overrides) {
+	var options = mixin({}, baseOptions);
+	if (overrides) {
+		options = mixin(options, overrides);
+	}
+	var additionalFlags = options.experimentalDecorators ? ['--experimentalDecorators'] : [];
+	if (options.inlineSources) {
+		additionalFlags.push('--inlineSources');
+	}
+	if (options.inlineSourceMap) {
+		additionalFlags.push('--inlineSourceMap');
+	}
+	if (options.sourceMap) {
+		additionalFlags.push('--sourceMap');
+	}
+	options.inlineSources = options.inlineSourceMap = options.sourceMap = false;
+
+	options.additionalFlags = additionalFlags.join(' ');
+
+	return options;
+}
+
 module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-copy');
@@ -19,7 +45,10 @@ module.exports = function (grunt) {
 
 	var tsconfigContent = grunt.file.read('tsconfig.json');
 	var tsconfig = JSON.parse(tsconfigContent);
-	var compilerOptions = mixin({}, tsconfig.compilerOptions);
+	var tsOptions = getTsOptions(tsconfig.compilerOptions, {
+		failOnTypeErrors: true,
+		fast: 'never'
+	});
 	tsconfig.filesGlob = tsconfig.filesGlob.map(function (glob) {
 		if (/^\.\//.test(glob)) {
 			// Remove the leading './' from the glob because grunt-ts
@@ -169,21 +198,18 @@ module.exports = function (grunt) {
 		},
 
 		ts: {
-			options: mixin(
-				compilerOptions,
-				{
-					failOnTypeErrors: true,
-					fast: 'never'
-				}
-			),
+			options: tsOptions,
 			dev: {
 				outDir: '<%= devDirectory %>',
 				src: [ '<%= all %>' ]
 			},
 			dist: {
-				options: {
-					mapRoot: '../dist/_debug'
-				},
+				options: getTsOptions(tsOptions, {
+					mapRoot: '../dist/_debug',
+					sourceMap: true,
+					inlineSourceMap: false,
+					inlineSources: true
+				}),
 				outDir: 'dist',
 				src: [ '<%= skipTests %>' ]
 			}
@@ -235,11 +261,9 @@ module.exports = function (grunt) {
 	grunt.registerMultiTask('rewriteSourceMaps', function () {
 		this.filesSrc.forEach(function (file) {
 			var map = JSON.parse(grunt.file.read(file));
-			var sourcesContent = map.sourcesContent = [];
 			var path = require('path');
-			map.sources = map.sources.map(function (source, index) {
-				sourcesContent[index] = grunt.file.read(path.resolve(path.dirname(file), source));
-				return source.replace(/^.*\/src\//, '');
+			map.sources = map.sources.map(function (source) {
+				return path.basename(source);
 			});
 			grunt.file.write(file, JSON.stringify(map));
 		});

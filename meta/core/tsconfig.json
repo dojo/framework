@@ -6,8 +6,10 @@
 		"noImplicitAny": true,
 		"outDir": "_build/",
 		"removeComments": false,
-		"sourceMap": true,
-		"target": "es5"
+		"target": "es5",
+		"experimentalDecorators": true,
+		"inlineSources": true,
+		"inlineSourceMap": true
 	},
 	"filesGlob": [
 		"./src/**/*.ts",
