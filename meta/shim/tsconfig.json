@@ -66,6 +66,7 @@
 		"./src/streams/interfaces.d.ts",
 		"./src/streams/util.ts",
 		"./src/string.ts",
+		"./src/util.ts",
 		"./tests/benchmark/all.ts",
 		"./tests/benchmark/lang.ts",
 		"./tests/benchmark/string.ts",
@@ -138,6 +139,7 @@
 		"./tests/unit/streams/nodeOnly.ts",
 		"./tests/unit/streams/util.ts",
 		"./tests/unit/string.ts",
+		"./tests/unit/util.ts",
 		"./typings/tsd.d.ts"
 	]
 }
