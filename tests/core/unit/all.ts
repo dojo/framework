@@ -25,3 +25,4 @@ import './string';
 import './UrlSearchParams';
 import './WeakMap';
 import './DateObject';
+import './util';
