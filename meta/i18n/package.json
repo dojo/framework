@@ -1,0 +1,35 @@
+{
+	"name": "dojo-i18n",
+	"version": "2.0.0-pre",
+	"description": "Dojo 2 Internationalization",
+	"homepage": "http://dojotoolkit.org",
+	"bugs": {
+		"url": "https://github.com/dojo/i18n/issues"
+	},
+	"main": "main.js",
+	"license": "BSD-3-Clause",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/dojo/i18n.git"
+	},
+	"dependencies": {
+		"dojo-core": "2.0.0-pre",
+		"globalize": "1.0.0",
+		"cldrjs": "0.4.1",
+		"cldr-data": "^27.0.0"
+	},
+	"devDependencies": {
+		"dts-generator": "1.4.1",
+		"dojo-loader": "2.0.0-alpha.1",
+		"grunt": "0.4.5",
+		"grunt-contrib-clean": "0.6.0",
+		"grunt-contrib-copy": "0.8.0",
+		"grunt-contrib-watch": "0.6.1",
+		"grunt-text-replace": "0.4.0",
+		"grunt-ts": "4.2.0-beta.1",
+		"grunt-tslint": "2.0.0",
+		"tslint": "2.1.1",
+		"intern": "2.2.2",
+		"typescript": "Arnavion/typescript-github#2015-06-15-1f587069da08150d512e95485cccf3f9a8115e06"
+	}
+}

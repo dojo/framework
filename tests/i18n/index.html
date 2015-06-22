@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Test</title>
+
+	<script>
+		var dojoConfig = {
+			async: true,
+		};
+	</script>
+	<script src="../node_modules/requirejs/require.js"></script>
+	<script>
+		require.config({
+			baseUrl: '../node_modules',
+			packages: [{
+				name: 'cldrjs',
+				location: 'cldrjs/dist'
+			}]
+		});
+		require([ 'cldrjs', 'cldrjs/unresolved' ]);
+	</script>
+</head>
+<body>
+</body>
+</html>
