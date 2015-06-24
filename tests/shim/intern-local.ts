@@ -7,5 +7,6 @@ export var tunnelOptions = {
 };
 
 export var environments = [
-	{ browserName: 'chrome' }
+	{ browserName: 'chrome' },
+	{ browserName: 'firefox' }
 ];
