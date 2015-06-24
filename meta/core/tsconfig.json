@@ -71,7 +71,6 @@
 		"./tests/benchmark/string.ts",
 		"./tests/functional/all.ts",
 		"./tests/intern-local.ts",
-		"./tests/intern-streams.ts",
 		"./tests/intern.ts",
 		"./tests/support/dojo.ts",
 		"./tests/support/node.d.ts",
