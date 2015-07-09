@@ -20,12 +20,43 @@ registerSuite({
 		source.c = 3;
 		source.nested = { a: 5 };
 
-		const copyOfObject: any = lang.assign(Object.create(null), source);
-		assert.isUndefined(copyOfObject.a);
-		assert.isUndefined(copyOfObject.b);
-		assert.strictEqual(copyOfObject.c, 3);
-		assert.strictEqual(copyOfObject.nested, source.nested);
-		assert.strictEqual(copyOfObject.nested.a, 5);
+		const object: any = Object.create(null);
+		const assignedObject: any = lang.assign(object, source);
+
+		assert.strictEqual(object, assignedObject, 'assign should return the modified target object');
+		assert.isUndefined(object.a, 'assign should not copy inherited properties');
+		assert.isUndefined(object.b, 'assign should not copy non-enumerable properties');
+		assert.strictEqual(object.c, 3);
+		assert.strictEqual(object.nested, source.nested, 'assign should perform a shallow copy');
+		assert.strictEqual(object.nested.a, 5);
+	},
+
+	'.assign() with multiple sources'() {
+		let source1 = {
+			property3: 'value3',
+			property4: 'value4'
+		};
+
+		let source3 = {
+			property7: 'value7',
+			property8: 'value8'
+		};
+
+		const object: any = {
+			property1: 'value1',
+			property2: 'value2'
+		};
+
+		lang.assign(object, source1, null, source3);
+
+		assert.deepEqual(object, {
+			property1: 'value1',
+			property2: 'value2',
+			property3: 'value3',
+			property4: 'value4',
+			property7: 'value7',
+			property8: 'value8'
+		});
 	},
 
 	'.deepAssign()'() {
@@ -43,14 +74,17 @@ registerSuite({
 			e: [ 4, [ 5 ], { f: 6 } ]
 		};
 
-		const copyOfObject: any = lang.deepAssign(Object.create(null), source);
-		assert.isUndefined(copyOfObject.a);
-		assert.isUndefined(copyOfObject.b);
-		assert.strictEqual(copyOfObject.c.d, 3);
-		assert.strictEqual(copyOfObject.c.e.length, 3);
-		assert.notStrictEqual(copyOfObject.c.e[1], source.c.e[1]);
-		assert.notStrictEqual(copyOfObject.c.d[2], source.c.e[2]);
-		assert.notStrictEqual(copyOfObject.c.e, source.c.e);
+		const object: any = Object.create(null);
+		const assignedObject: any = lang.deepAssign(object, source);
+
+		assert.strictEqual(object, assignedObject, 'deepAssign should return the modified target object');
+		assert.isUndefined(object.a, 'deepAssign should not copy inherited properties');
+		assert.isUndefined(object.b, 'deepAssign should not copy non-enumerable properties');
+		assert.strictEqual(object.c.d, 3);
+		assert.strictEqual(object.c.e.length, 3);
+		assert.notStrictEqual(object.c.e[1], source.c.e[1], 'deepAssign should perform a deep copy');
+		assert.notStrictEqual(object.c.d[2], source.c.e[2], 'deepAssign should perform a deep copy');
+		assert.notStrictEqual(object.c.e, source.c.e, 'deepAssign should perform a deep copy');
 	},
 
 	'.mixin()'() {
@@ -69,14 +103,17 @@ registerSuite({
 			enumerable: false,
 			value: 4
 		});
-		const copyOfObject: any = lang.mixin(Object.create(null), source);
 
-		assert.strictEqual(copyOfObject.a, 1);
-		assert.strictEqual(copyOfObject.b, 2);
-		assert.strictEqual(copyOfObject.c, 3);
-		assert.isUndefined(copyOfObject.hidden);
-		assert.strictEqual(copyOfObject.nested, source.nested);
-		assert.strictEqual(copyOfObject.nested.a, 5);
+		const object: any = Object.create(null);
+		const mixedObject: any = lang.mixin(object, source);
+
+		assert.strictEqual(object, mixedObject, 'mixin should return the modified target object');
+		assert.strictEqual(object.a, 1, 'mixin should copy inherited properties');
+		assert.strictEqual(object.b, 2);
+		assert.strictEqual(object.c, 3);
+		assert.isUndefined(object.hidden, 'mixin should not copy non-enumerable properties');
+		assert.strictEqual(object.nested, source.nested, 'mixin should perform a shallow copy');
+		assert.strictEqual(object.nested.a, 5);
 	},
 
 	'.deepMixin()'() {
@@ -98,17 +135,20 @@ registerSuite({
 			enumerable: false,
 			value: 4
 		});
-		const copyOfObject: any = lang.deepMixin(Object.create(null), source);
 
-		assert.strictEqual(copyOfObject.a, 1);
-		assert.strictEqual(copyOfObject.b, 2);
-		assert.strictEqual(copyOfObject.c, 3);
-		assert.isUndefined(copyOfObject.hidden);
-		assert.strictEqual(copyOfObject.nested.a, 1);
-		assert.notStrictEqual(copyOfObject.nested, source.nested);
-		assert.notStrictEqual(copyOfObject.nested.b, source.nested.b);
-		assert.notStrictEqual(copyOfObject.nested.b[1], source.nested.b[1]);
-		assert.notStrictEqual(copyOfObject.nested.b[2], source.nested.b[2]);
+		const object: any = Object.create(null);
+		const mixedObject: any = lang.deepMixin(object, source);
+
+		assert.strictEqual(object, mixedObject, 'deepMixin should return the modified target object');
+		assert.strictEqual(object.a, 1);
+		assert.strictEqual(object.b, 2);
+		assert.strictEqual(object.c, 3);
+		assert.isUndefined(object.hidden, 'deepMixin should not copy non-enumerable properties');
+		assert.strictEqual(object.nested.a, 1, 'deepMixin should copy inherited properties');
+		assert.notStrictEqual(object.nested, source.nested, 'deepMixin should perform a deep copy');
+		assert.notStrictEqual(object.nested.b, source.nested.b, 'deepMixin should perform a deep copy');
+		assert.notStrictEqual(object.nested.b[1], source.nested.b[1], 'deepMixin should perform a deep copy');
+		assert.notStrictEqual(object.nested.b[2], source.nested.b[2], 'deepMixin should perform a deep copy');
 	},
 
 	'.create()'() {
@@ -161,7 +201,7 @@ registerSuite({
 		assert.notStrictEqual(copyOfObject.c, source.c);
 	},
 
-	'.observe() when nextTurn is true': function () {
+	'.observe() when nextTurn is true'() {
 		if (!has('object-observe')) {
 			this.skip('Native Object.observe support is required for this test.');
 		}
@@ -174,7 +214,7 @@ registerSuite({
 		assert.isTrue(observer instanceof Es7Observer);
 	},
 
-	'.observe() when nextTurn is false': function () {
+	'.observe() when nextTurn is false'() {
 		if (!has('object-observe')) {
 			this.skip('Native Object.observe support is required for this test.');
 		}
@@ -187,7 +227,7 @@ registerSuite({
 		assert.isTrue(observer instanceof Es5Observer);
 	},
 
-	'.observe() onlyReportObserved': function () {
+	'.observe() onlyReportObserved'() {
 		if (!has('object-observe')) {
 			this.skip('Native Object.observe support is required for this test.');
 		}
@@ -201,7 +241,7 @@ registerSuite({
 		assert.isTrue(observer.onlyReportObserved, 'onlyReportObserved should be passed to the observer instance.');
 	},
 
-	'.isIdentical()': function () {
+	'.isIdentical()'() {
 		assert.isTrue(lang.isIdentical(2, 2));
 		assert.isTrue(lang.isIdentical(NaN, NaN));
 		assert.isFalse(lang.isIdentical(3, NaN));
@@ -209,7 +249,7 @@ registerSuite({
 		assert.isTrue(lang.isIdentical(Infinity, Infinity));
 	},
 
-	'.lateBind() context': function () {
+	'.lateBind() context'() {
 		const object: {
 			method?: (...args: string[]) => string;
 		} = <any> {};
@@ -218,10 +258,10 @@ registerSuite({
 			return this;
 		};
 
-		assert.equal(method(), object, 'lateBind\'s context should be `object`.');
+		assert.strictEqual(method(), object, 'lateBind\'s context should be `object`.');
 	},
 
-	'.lateBind() arguments': function () {
+	'.lateBind() arguments'() {
 		const object: {
 			method?: (...args: string[]) => string;
 		} = <any> {};
@@ -232,30 +272,34 @@ registerSuite({
 			return parts.join(' ');
 		};
 
-		assert.equal(method(suffix), 'The quick brown ' + suffix,
+		assert.strictEqual(method(suffix), 'The quick brown ' + suffix,
 			'lateBind\'s additional arguments should be prepended to the wrapped function.');
-		assert.equal(methodNoArgs(suffix), suffix,
+		assert.strictEqual(methodNoArgs(suffix), suffix,
 			'lateBind\'s additional arguments should be prepended to the wrapped function.');
-		assert.equal(method(), 'The quick brown',
+		assert.strictEqual(method(), 'The quick brown',
 			'lateBind\'s additional arguments should be prepended to the wrapped function.');
 	},
 
-	'.partial()': function () {
-		const ending = 'jumped over the lazy dog';
+	'.partial()'() {
+		const ending = 'jumps over the lazy dog';
 		const finish = lang.partial(function () {
 			const start = this.start ? [ this.start ] : [];
 
 			return start.concat(Array.prototype.slice.call(arguments)).join(' ');
-		}, 'jumped', 'over');
+		}, 'jumps', 'over');
 
 		function Sentence(start: string = '') {
 			this.start = start;
 		}
 		Sentence.prototype.finish = finish;
 
-		assert.equal(finish('the lazy dog'), ending, 'The arguments supplied to `lang.partial` should be prepended' +
-			' to the arguments list of the returned function.');
-		assert.equal(new (<any> Sentence)('The quick brown fox').finish('the lazy dog'),
+		assert.strictEqual(finish('the lazy dog'), ending,
+			'The arguments supplied to `lang.partial` should be prepended to the arguments list of the ' +
+			'original function.');
+		assert.strictEqual(finish(), 'jumps over',
+			'The arguments supplied to `lang.partial` should still be used even if no arguments are passed to the ' +
+			'wrapped function.');
+		assert.strictEqual(new (<any> Sentence)('The quick brown fox').finish('the lazy dog'),
 			'The quick brown fox ' + ending,
 			'A function passed to `lang.partial` should inherit its context.');
 	},
