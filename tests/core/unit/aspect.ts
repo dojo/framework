@@ -2,6 +2,7 @@ import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import sinon = require('sinon');
 import * as aspect from 'src/aspect';
+import { Handle } from 'src/interfaces';
 
 const slice = Array.prototype.slice;
 let obj: any;
@@ -33,9 +34,30 @@ registerSuite({
 				assert.isTrue(aspectSpy.calledBefore(methodSpy));
 				assert.isTrue(aspectSpy.calledOnce);
 				assert.isTrue(methodSpy.calledOnce);
-				assert.equal(aspectSpy.lastCall.args[0], 0);
-				assert.equal(methodSpy.lastCall.args[0], 1);
-				assert.equal(methodSpy.returnValues[0], 2);
+				assert.strictEqual(aspectSpy.lastCall.args[0], 0);
+				assert.strictEqual(methodSpy.lastCall.args[0], 1);
+				assert.strictEqual(methodSpy.returnValues[0], 2);
+			},
+
+			'no return value from advising function'() {
+				let receivedArgs: string[];
+				let beforeCalled = false;
+				let obj = {
+					method: function (...args: string[]) {
+						receivedArgs = args;
+					}
+				};
+
+				aspect.before(obj, 'method', function () {
+					beforeCalled = true;
+				});
+
+				obj.method('foo', 'bar');
+
+				assert.isTrue(beforeCalled,
+					'Before advice should be called before original function');
+				assert.deepEqual(receivedArgs, [ 'foo', 'bar' ],
+					'Arguments passed to original method should be unaltered if before advice returns undefined');
 			},
 
 			'multiple aspect.before()'() {
@@ -48,10 +70,29 @@ registerSuite({
 				obj.method(5);
 				assert.isTrue(aspectSpy2.calledBefore(aspectSpy1));
 				assert.isTrue(aspectSpy1.calledBefore(methodSpy));
-				assert.equal(aspectSpy2.lastCall.args[0], 5);
-				assert.equal(aspectSpy1.lastCall.args[0], 6);
-				assert.equal(methodSpy.lastCall.args[0], 7);
-				assert.equal(methodSpy.returnValues[0], 8);
+				assert.strictEqual(aspectSpy2.lastCall.args[0], 5);
+				assert.strictEqual(aspectSpy1.lastCall.args[0], 6);
+				assert.strictEqual(methodSpy.lastCall.args[0], 7);
+				assert.strictEqual(methodSpy.returnValues[0], 8);
+			},
+
+			'multiple aspect.before() with removal inside handler'() {
+				let count = 0;
+
+				const handle1 = aspect.before(obj, 'method', function () {
+					count++;
+				});
+
+				const handle2 = aspect.before(obj, 'method', function () {
+					handle2.destroy();
+					handle1.destroy();
+					count++;
+				});
+
+				assert.doesNotThrow(function () {
+					obj.method();
+				});
+				assert.strictEqual(count, 1, 'Only one advising function should be called');
 			}
 		},
 
@@ -61,7 +102,7 @@ registerSuite({
 				const aspectSpy = sinon.stub().returns(expected);
 
 				aspect.after(obj, 'method', aspectSpy);
-				assert.equal(obj.method(0), expected);
+				assert.strictEqual(obj.method(0), expected);
 				assert.isTrue(aspectSpy.calledAfter(methodSpy));
 			},
 
@@ -77,14 +118,34 @@ registerSuite({
 				assert.isTrue(aspectStub2.calledAfter(aspectStub1));
 			},
 
+			'multiple aspect.after() with removal inside handler'() {
+				let count = 0;
+
+				let handle2: Handle;
+				const handle1 = aspect.after(obj, 'method', function () {
+					handle1.destroy();
+					handle2.destroy();
+					count++;
+				});
+
+				handle2 = aspect.after(obj, 'method', function () {
+					count++;
+				});
+
+				assert.doesNotThrow(function () {
+					obj.method();
+				});
+				assert.strictEqual(count, 1, 'Only one advising function should be called');
+			},
+
 			'provides the original arguments to the aspect method'() {
 				const expected = 'expected';
 				const aspectStub = sinon.stub().returns(expected);
 
 				aspect.after(obj, 'method', aspectStub);
-				assert.equal(obj.method(0), expected);
+				assert.strictEqual(obj.method(0), expected);
 				assert.isTrue(aspectStub.calledAfter(methodSpy));
-				assert.equal(aspectStub.lastCall.args[0], 1);
+				assert.strictEqual(aspectStub.lastCall.args[0], 1);
 				assert.deepEqual(slice.call(aspectStub.lastCall.args[1]), methodSpy.lastCall.args);
 			}
 		},
@@ -97,16 +158,16 @@ registerSuite({
 
 				aspect.around(obj, 'method', aspectStub);
 
-				assert.equal(obj.method(0), expected);
+				assert.strictEqual(obj.method(0), expected);
 				assert.isTrue(aspectStub.calledOnce);
 				assert.isTrue(aroundFunction.calledOnce);
-				assert.equal(aroundFunction.firstCall.args[0], 0);
+				assert.strictEqual(aroundFunction.firstCall.args[0], 0);
 				assert.isFalse(methodSpy.called);
 
 				// test that the original method was provided
 				aspectStub.callArgWith(0, 10);
 				assert.isTrue(methodSpy.calledOnce);
-				assert.equal(methodSpy.firstCall.args[0], 10);
+				assert.strictEqual(methodSpy.firstCall.args[0], 10);
 			}
 		},
 
