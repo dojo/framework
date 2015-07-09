@@ -48,7 +48,7 @@ function advise(dispatcher: Dispatcher, type: string, advice: Function, receiveA
 
 	advice = previous = null;
 
-	return createHandle(function() {
+	return createHandle(function () {
 		let previous = advised.previous;
 		let next = advised.next;
 
@@ -68,7 +68,7 @@ function advise(dispatcher: Dispatcher, type: string, advice: Function, receiveA
 			}
 		}
 
-		dispatcher = advised = null;
+		dispatcher = advised.advice = advised = null;
 	});
 }
 
@@ -85,7 +85,9 @@ function getDispatcher(target: any, methodName: string): Dispatcher {
 			let before = dispatcher.before;
 
 			while (before) {
-				args = before.advice.apply(this, args) || args;
+				if (before.advice) {
+					args = before.advice.apply(this, args) || args;
+				}
 				before = before.next;
 			}
 
@@ -95,12 +97,14 @@ function getDispatcher(target: any, methodName: string): Dispatcher {
 
 			let after = dispatcher.after;
 			while (after && after.id < executionId) {
-				if (after.receiveArguments) {
-					let newResults = after.advice.apply(this, args);
-					results = newResults === undefined ? results : newResults;
-				}
-				else {
-					results = after.advice.call(this, results, args);
+				if (after.advice) {
+					if (after.receiveArguments) {
+						let newResults = after.advice.apply(this, args);
+						results = newResults === undefined ? results : newResults;
+					}
+					else {
+						results = after.advice.call(this, results, args);
+					}
 				}
 				after = after.next;
 			}
@@ -176,7 +180,7 @@ export function around(target: any, methodName: string, advice: (previous: Funct
  * @param advice Advising function which will receive the same arguments as the original, and may return new arguments
  * @return A handle which will remove the aspect when destroy is called
  */
-export function before(target: any, methodName: string, advice: (...originalArgs: any[]) => any[]): Handle {
+export function before(target: any, methodName: string, advice: (...originalArgs: any[]) => any[] | void): Handle {
 	return advise(getDispatcher(target, methodName), 'before', advice);
 }
 
