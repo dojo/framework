@@ -3,9 +3,9 @@ import has from './has';
 import { Handle } from './interfaces';
 import Promise from './Promise';
 import Registry, { Test } from './Registry';
+import load from './load';
 
-declare var require: Function;
-declare var define: { amd: any };
+declare var require: any;
 
 export class FilterRegistry extends Registry<RequestFilter> {
 	register(test: string | RegExp | RequestFilterTest, value: RequestFilter, first?: boolean): Handle {
@@ -65,21 +65,9 @@ export class ProviderRegistry extends Registry<RequestProvider> {
 		// provider. While that import is in-flight, subsequent requests will queue up while
 		// waiting for the provider to be fulfilled.
 		this._defaultValue = (url: string, options?: RequestOptions): ResponsePromise<any> => {
-			this._providerPromise = new Promise((resolve, reject) => {
-				if (typeof define === 'function' && define.amd) {
-					require([ defaultProvider ], (provider: { default: RequestProvider; }) => {
-						this._defaultValue = provider.default;
-						resolve(provider.default);
-					});
-				}
-				else if (has('host-node')) {
-					const provider: { default: RequestProvider; } = require(defaultProvider);
-					this._defaultValue = provider.default;
-					resolve(provider.default);
-				}
-				else {
-					reject(new Error('Unknown environment or loader'));
-				}
+			this._providerPromise = load(require, defaultProvider).then(([ providerModule ]: [ { default: RequestProvider } ]): RequestProvider => {
+				this._defaultValue = providerModule.default;
+				return providerModule.default;
 			});
 			this._defaultValue = deferRequest;
 			return deferRequest(url, options);

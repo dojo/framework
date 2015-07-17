@@ -8,6 +8,7 @@ import './encoding';
 import './global';
 import './has';
 import './lang';
+import './load';
 import './math';
 import './Map';
 import './number';

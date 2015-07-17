@@ -182,7 +182,6 @@ if (has('host-node')) {
 				nodeRequest = request;
 
 				response.writeHead(200, {
-					'Content-Length': body.length,
 					'Content-Type': 'application/json'
 				});
 				response.write(body);
