@@ -21,12 +21,6 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 			assert.instanceOf(promise, Promise, 'promise should have expected type');
 		},
 
-		'non-iterable': function () {
-			assert.throws(function () {
-				Promise.all(<any> 5);
-			});
-		},
-
 		'mixed values and resolved': function () {
 			let dfd = this.async();
 			Promise.all([ 0, Promise.resolve(1), Promise.resolve(2) ]).then(
@@ -76,19 +70,33 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 			}));
 		},
 
-		'sparse array': function () {
-			let dfd = this.async();
-			let iterable: any[] = [];
+		'sparse array': {
+			all() {
+				let dfd = this.async();
+				let iterable: any[] = [];
 
-			iterable[0] = Promise.resolve(0);
-			iterable[3] = Promise.resolve(3);
+				iterable[1] = Promise.resolve(1);
+				iterable[3] = Promise.resolve(3);
 
-			Promise.all(iterable).then(dfd.callback(function (value: number[]) {
-				assert.strictEqual(value[0], 0);
-				assert.isUndefined(value[1]);
-				assert.isUndefined(value[2]);
-				assert.strictEqual(value[3], 3);
-			}));
+				Promise.all(iterable).then(dfd.callback(function (value: number[]) {
+					assert.isUndefined(value[0]);
+					assert.strictEqual(value[1], 1);
+					assert.isUndefined(value[2]);
+					assert.strictEqual(value[3], 3);
+				}));
+			},
+
+			race() {
+				let dfd = this.async();
+				let iterable: any[] = [];
+
+				iterable[1] = Promise.resolve(1);
+				iterable[3] = Promise.resolve(3);
+
+				Promise.race(iterable).then(dfd.callback(function (value: number) {
+					assert.isUndefined(value);
+				}));
+			}
 		},
 
 		'value not input': function () {
@@ -108,12 +116,6 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 				assert.fail(false, true, 'Promise should not have resolved');
 			}));
 			setTimeout(dfd.callback(function () {}), 10);
-		},
-
-		'non-iterable': function () {
-			assert.throws(function () {
-				Promise.all(<any> 5);
-			});
 		},
 
 		'mixed values and resolved': function () {
@@ -425,6 +427,17 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 			let dfd = this.async();
 			Promise.resolve(5).finally(function () {
 				return Promise.reject(new Error('foo'));
+			}).then(dfd.rejectOnError(function (value: any) {
+				assert(false, 'Should not have rejected');
+			}), dfd.callback(function (reason: any) {
+				assert.propertyVal(reason, 'message', 'foo');
+			}));
+		},
+
+		'returned resolved promise on rejection rejects': function () {
+			let dfd = this.async();
+			Promise.reject(new Error('foo')).finally(function () {
+				return Promise.resolve(5);
 			}).then(dfd.rejectOnError(function (value: any) {
 				assert(false, 'Should not have rejected');
 			}), dfd.callback(function (reason: any) {

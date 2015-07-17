@@ -3,24 +3,16 @@ import global from './global';
 import has from './has';
 
 /**
- * Returns true if a given value meets Promise's definition of "iterable".
- */
-function isIterable(value: any) {
-	return Array.isArray(value);
-}
-
-/**
  * Copies an array of values, replacing any PlatformPromises in the copy with unwrapped global.Promises. This is necessary
  * for .all and .race so that the native promise doesn't treat the PlatformPromises like generic thenables.
  */
 function unwrapPromises(items: any[]): any[] {
-	if (!isIterable(items)) {
-		throw new Error('invalid argument');
-	}
-
 	const unwrapped: typeof items = [];
 	const count = items.length;
 	for (let i = 0; i < count; i++) {
+		if (!(i in items)) {
+			continue;
+		}
 		let item = items[i];
 		unwrapped[i] = item instanceof Promise ? item.promise : item;
 	}
@@ -42,7 +34,9 @@ export function isThenable(value: any) {
 }
 
 /**
- * PromiseShim is an implementation of the ES2015 Promise specification.
+ * PromiseShim is a partial implementation of the ES2015 Promise specification. It relies on Promise to do some safety
+ * checks such as verifying that a Promise isn't resolved with itself. This class is exported for testability, and is
+ * not intended to be used directly.
  *
  * @borrows Promise.all as PromiseShim.all
  * @borrows Promise.race as PromiseShim.race
@@ -84,16 +78,9 @@ export class PromiseShim<T> implements Thenable<T> {
 				}
 			}
 
-			if (!isIterable(items)) {
-				throw new Error('invalid argument');
-			}
-
 			let count = items.length;
 			for (let i = 0; i < count; ++i) {
-				// Handle sparse arrays
-				if (i in items) {
-					processItem(i, items[i]);
-				}
+				processItem(i, items[i]);
 			}
 			populating = false;
 
@@ -103,26 +90,19 @@ export class PromiseShim<T> implements Thenable<T> {
 
 	static race<T>(items: (T | Thenable<T>)[]): PromiseShim<T> {
 		return new this(function (resolve, reject) {
-			if (!isIterable(items)) {
-				throw new Error('invalid argument');
-			}
-
 			const count = items.length;
 			let item: (T | Thenable<T>);
 
 			for (let i = 0; i < count; ++i) {
-				// Handle sparse arrays
-				if (i in items) {
-					item = items[i];
+				item = items[i];
 
-					if (item instanceof PromiseShim) {
-						// If a PromiseShim item rejects, this PromiseShim is immediately rejected with the item
-						// PromiseShim's rejection error.
-						item.then(resolve, reject);
-					}
-					else {
-						PromiseShim.resolve(item).then(resolve);
-					}
+				if (item instanceof PromiseShim) {
+					// If a PromiseShim item rejects, this PromiseShim is immediately rejected with the item
+					// PromiseShim's rejection error.
+					item.then(resolve, reject);
+				}
+				else {
+					PromiseShim.resolve(item).then(resolve);
 				}
 			}
 		});
@@ -137,9 +117,6 @@ export class PromiseShim<T> implements Thenable<T> {
 	static resolve(): PromiseShim<void>;
 	static resolve<T>(value: (T | Thenable<T>)): PromiseShim<T>;
 	static resolve<T>(value?: any): PromiseShim<T> {
-		if (value instanceof PromiseShim) {
-			return value;
-		}
 		return new this(function (resolve) {
 			resolve(<T> value);
 		});
@@ -223,10 +200,7 @@ export class PromiseShim<T> implements Thenable<T> {
 				return;
 			}
 
-			if (value === this) {
-				settle(State.Rejected, new TypeError('Cannot chain a promise to itself'));
-			}
-			else if (isThenable(value)) {
+			if (isThenable(value)) {
 				value.then(
 					settle.bind(null, State.Fulfilled),
 					settle.bind(null, State.Rejected)
@@ -384,16 +358,11 @@ export default class Promise<T> implements Thenable<T> {
 			promise: { value: other instanceof Promise.PromiseConstructor ? other : other.promise }
 		});
 
-		if (other instanceof Promise && other._state !== State.Pending) {
-			promise._state = other._state;
-		}
-		else {
-			promise._state = State.Pending;
-			promise.promise.then(
-				function () { promise._state = State.Fulfilled },
-				function () { promise._state = State.Rejected }
-			);
-		}
+		promise._state = State.Pending;
+		promise.promise.then(
+			function () { promise._state = State.Fulfilled },
+			function () { promise._state = State.Rejected }
+		);
 
 		return promise;
 	}
