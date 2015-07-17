@@ -7,7 +7,7 @@ const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function isObject(item: any): boolean {
-	return item && typeof item === 'object' && !Array.isArray(item) && !(item instanceof RegExp);
+	return Object.prototype.toString.call(item) === '[object Object]';
 }
 
 function copyArray(array: any[], inherited: boolean): any[] {
