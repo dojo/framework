@@ -17,9 +17,11 @@
 		"no-console": false,
 		"no-consecutive-blank-lines": true,
 		"no-construct": false,
+		"no-constructor-vars": true,
 		"no-debugger": true,
 		"no-duplicate-key": true,
 		"no-duplicate-variable": true,
+		"no-shadowed-variable": false,
 		"no-empty": false,
 		"no-eval": true,
 		"no-string-literal": false,
@@ -30,6 +32,7 @@
 		"no-unused-expression": false,
 		"no-unused-variable": true,
 		"no-use-before-declare": false,
+		"no-var-keyword": true,
 		"no-var-requires": false,
 		"one-line": [ true, "check-open-brace", "check-whitespace" ],
 		"quotemark": [ true, "single" ],
@@ -38,14 +41,13 @@
 		"triple-equals": [ true, "allow-null-check" ],
 		"typedef": false,
 		"typedef-whitespace": [ true, {
-			"catch-clause": "nospace",
 			"index-signature": "nospace",
 			"parameter": "nospace",
-			"property-signature": "nospace",
-			"variable-declarator": "nospace"
+			"property-declaration": "nospace",
+			"variable-declaration": "nospace"
 		} ],
 		"use-strict": false,
 		"variable-name": false,
-		"whitespace": [ true, "check-branch", "check-decl", "check-operator", "check-separator", "check-type", "check-typecast" ]
+		"whitespace": [ true, "check-branch", "check-decl", "check-operator", "check-module", "check-separator", "check-type", "check-typecast" ]
 	}
 }

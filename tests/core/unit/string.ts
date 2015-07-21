@@ -34,7 +34,7 @@ registerSuite({
 		},
 
 		'string starting with a BMP symbol'() {
-			var text = 'abc\uD834\uDF06def';
+			const text = 'abc\uD834\uDF06def';
 
 			// Cases expected to return the first code point (i.e. position 0)
 			assert.strictEqual(stringUtil.codePointAt(text), 0x61);
@@ -56,7 +56,7 @@ registerSuite({
 		},
 
 		'string starting with an astral symbol'() {
-			var text = '\uD834\uDF06def';
+			const text = '\uD834\uDF06def';
 			assert.strictEqual(stringUtil.codePointAt(text, 0), 0x1D306);
 			assert.strictEqual(stringUtil.codePointAt(text, 1), 0xDF06);
 		},

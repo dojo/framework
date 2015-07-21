@@ -323,7 +323,7 @@ registerSuite({
 				}, function (error: Error) {
 					assert.strictEqual(stream.state, State.Closed, 'Stream should be in closed state');
 				});
-			})
+			});
 		},
 
 		'errored stream'() {

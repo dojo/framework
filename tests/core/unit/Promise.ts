@@ -182,7 +182,7 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 					r(new Error('foo'));
 				}
 			};
-			let promise = Promise.resolve(thenable).then(
+			Promise.resolve(thenable).then(
 				dfd.rejectOnError(function () {
 					resolved = true;
 					assert(false, 'should not have rejected');
@@ -226,7 +226,7 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 					f(2);
 				}
 			};
-			let promise = Promise.resolve(thenable).then(
+			Promise.resolve(thenable).then(
 				dfd.callback(function (value: any) {
 					resolved = true;
 					// value should be resolved value of thenable
@@ -360,7 +360,7 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 						}));
 				}
 			}
-		},
+		}
 	};
 
 	suite['#finally'] = {
@@ -530,7 +530,7 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 			let dfd = this.async();
 			let resolver: any;
 			let resolved = false;
-			let promise = new Promise(function (resolve, reject) {
+			new Promise(function (resolve, reject) {
 				resolver = resolve;
 			}).then(
 				dfd.callback(function () {
@@ -567,7 +567,7 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 			let dfd = this.async();
 			let resolver: any;
 			let resolved = false;
-			let promise = new Promise(function (resolve, reject) {
+			new Promise(function (resolve, reject) {
 				resolver = reject;
 			}).then(
 				dfd.rejectOnError(function () {
@@ -599,7 +599,7 @@ let suite = {
 			teardown() {
 				Promise.PromiseConstructor = originalConstructor;
 			}
-		}
+		};
 	})(),
 
 	Promise: {}

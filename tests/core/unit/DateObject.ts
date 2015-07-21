@@ -2,8 +2,8 @@ import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import DateObject, { KwArgs, OperationKwArgs, DateProperties } from 'src/DateObject';
 
-var date: Date;
-var object: DateObject;
+let date: Date;
+let object: DateObject;
 
 function assertPropertiesEqual(left: DateProperties, right: DateProperties): void {
 	assert.strictEqual(left.isLeapYear, right.isLeapYear);
@@ -22,8 +22,8 @@ registerSuite({
 	name: 'DateObject',
 
 	'creation': function () {
-		var date = new Date();
-		var object = new DateObject();
+		const date = new Date();
+		let object = new DateObject();
 
 		assert.closeTo(object.valueOf(), +date, 100);
 
@@ -145,29 +145,29 @@ registerSuite({
 
 		utc: {
 			'basic': function () {
-				var date = new Date(1979, 2, 20, 7, 20, 12, 123);
-				var obj = new DateObject(date);
-				var utc = obj.utc;
+				const date = new Date(1979, 2, 20, 7, 20, 12, 123);
+				const obj = new DateObject(date);
+				const utc = obj.utc;
 
 				assertPropertiesEqual(obj.add(60000 * date.getTimezoneOffset()), utc);
 			},
 
 			'leap year': function () {
-				var date = new Date(2012, 1, 29, 7, 20, 12, 123);
-				var obj = new DateObject(date);
-				var utc = obj.utc;
+				const date = new Date(2012, 1, 29, 7, 20, 12, 123);
+				const obj = new DateObject(date);
+				const utc = obj.utc;
 
 				assertPropertiesEqual(obj.add(60000 * date.getTimezoneOffset()), utc);
 			},
 
 			'setters': (function () {
 				function assertChange(property: string, dateProperty: string, value: number = 2) {
-					var date = new DateObject();
-					var time = date.time;
-					var expectedDate: any = new Date(time);
-					var initialValue = expectedDate[`getUTC${dateProperty}`]();
+					const date = new DateObject();
+					const time = date.time;
+					const expectedDate: any = new Date(time);
+					const initialValue = expectedDate[`getUTC${dateProperty}`]();
 					expectedDate[`setUTC${dateProperty}`](initialValue + value);
-					var expected: number = expectedDate[`getUTC${dateProperty}`]();
+					let expected: number = expectedDate[`getUTC${dateProperty}`]();
 					if (property === 'month') {
 						// Months are 0-indexed in Date and 1-indexed in DateObject
 						expected += 1;
@@ -206,20 +206,20 @@ registerSuite({
 					'milliseconds': function () {
 						assertChange('milliseconds', 'Milliseconds');
 					}
-				}
+				};
 			})(),
 
 			'toString': function () {
-				var milliseconds = Date.UTC(1979, 2, 20);
-				var expected = new Date(milliseconds);
-				var date = new DateObject(milliseconds);
+				const milliseconds = Date.UTC(1979, 2, 20);
+				const expected = new Date(milliseconds);
+				const date = new DateObject(milliseconds);
 				assert.strictEqual(date.utc.toString(), expected.toUTCString());
 			}
 		}
 	},
 
 	'parse': function () {
-		var date = DateObject.parse('Tue, 20 Mar 1979 00:00:00');
+		const date = DateObject.parse('Tue, 20 Mar 1979 00:00:00');
 		assertPropertiesEqual(date, new DateObject(new Date(1979, 2, 20)));
 	},
 
@@ -228,8 +228,8 @@ registerSuite({
 	},
 
 	'.to* methods': function () {
-		var date = new Date();
-		var object = new DateObject(date);
+		const date = new Date();
+		const object = new DateObject(date);
 
 		assert.strictEqual(object.toString(), date.toString());
 		assert.strictEqual(object.toDateString(), date.toDateString());
@@ -243,12 +243,12 @@ registerSuite({
 
 	'.add': (function () {
 		function addAndAssertEqual(kwArgs: KwArgs, addArgs: OperationKwArgs, expected: Date) {
-			var object = new DateObject(kwArgs);
+			const object = new DateObject(kwArgs);
 			assert.strictEqual(+object.add(addArgs), +expected);
 		}
 		return {
 			'returns new object': function () {
-				var object: DateObject = new DateObject();
+				const object: DateObject = new DateObject();
 
 				assert.notStrictEqual(object, object.add(1));
 			},
@@ -402,7 +402,7 @@ registerSuite({
 			},
 
 			'number': function () {
-				var date = new DateObject({ year: 2000, month: 2, dayOfMonth: 29 });
+				const date = new DateObject({ year: 2000, month: 2, dayOfMonth: 29 });
 
 				assert.strictEqual(date.add(100).time, date.time + 100);
 			}
@@ -410,7 +410,7 @@ registerSuite({
 	})(),
 
 	'isLeapYear': function () {
-		var date = new DateObject({
+		const date = new DateObject({
 			year: 2006,
 			month: 1,
 			dayOfMonth: 1
@@ -432,7 +432,7 @@ registerSuite({
 	},
 
 	'daysInMonth': function () {
-		var date = new DateObject({
+		const date = new DateObject({
 			year: 2006,
 			month: 1,
 			dayOfMonth: 1
@@ -479,8 +479,8 @@ registerSuite({
 	},
 
 	comparisons: (function () {
-		var younger = new DateObject(new Date(2012, 0, 31, 23, 55));
-		var older = new DateObject(new Date(2010, 7, 26, 4 , 15));
+		const younger = new DateObject(new Date(2012, 0, 31, 23, 55));
+		const older = new DateObject(new Date(2010, 7, 26, 4 , 15));
 
 		return {
 			compare: {
@@ -498,18 +498,18 @@ registerSuite({
 			},
 
 			compareDate: function () {
-				var similarDate1 = new DateObject(new Date(1979, 2, 20, 2, 4, 6));
-				var similarDate2 = new DateObject(new Date(1979, 2, 20, 1, 3, 5));
+				const similarDate1 = new DateObject(new Date(1979, 2, 20, 2, 4, 6));
+				const similarDate2 = new DateObject(new Date(1979, 2, 20, 1, 3, 5));
 
 				assert.strictEqual(similarDate1.compareDate(similarDate2), 0);
 			},
 
 			compareTime:  function () {
-				var similarTime1 = new DateObject(new Date(2015, 1, 1, 2, 4, 6));
-				var similarTime2 = new DateObject(new Date(1977, 3, 20, 2, 4, 6));
+				const similarTime1 = new DateObject(new Date(2015, 1, 1, 2, 4, 6));
+				const similarTime2 = new DateObject(new Date(1977, 3, 20, 2, 4, 6));
 
 				assert.strictEqual(similarTime1.compareTime(similarTime2), 0);
-			},
+			}
 		};
 	})()
 });

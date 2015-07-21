@@ -6,7 +6,7 @@ declare var define: {
 };
 
 export interface AMDRequire {
-	(moduleIds: string[], callback: (...modules:any[]) => void): void;
+	(moduleIds: string[], callback: (...modules: any[]) => void): void;
 }
 export interface NodeRequire {
 	(moduleId: string): any;

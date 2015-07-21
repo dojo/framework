@@ -1,5 +1,3 @@
-import intern = require('intern');
-
 export var proxyPort = 9000;
 
 // A fully qualified URL to the Intern proxy

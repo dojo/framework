@@ -9,8 +9,6 @@ import { ReadResult } from 'src/streams/ReadableStreamReader';
 import SeekableStream from 'src/streams/SeekableStream';
 import SeekableStreamReader from 'src/streams/SeekableStreamReader';
 
-const asyncTimeout = 1000;
-
 let data: string[];
 let source: ArraySource<string>;
 let stream: SeekableStream<string>;
@@ -138,7 +136,7 @@ registerSuite({
 
 				assert.throws(function () {
 					stream.getReader();
-				})
+				});
 			});
 		}
 	}

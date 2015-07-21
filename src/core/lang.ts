@@ -1,5 +1,5 @@
 import has from './has';
-import { Handle, Hash } from './interfaces';
+import { Handle } from './interfaces';
 import { PropertyEvent, Observer } from './observers/interfaces';
 import * as ObjectObserver from './observers/ObjectObserver';
 
@@ -211,7 +211,7 @@ export interface ObserveArgs {
 	listener: (events: PropertyEvent[]) => any;
 	nextTurn?: boolean;
 	onlyReportObserved?: boolean;
-	target: {}
+	target: {};
 }
 
 /**

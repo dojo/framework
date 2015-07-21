@@ -1,5 +1,5 @@
 import Promise, { Thenable } from '../Promise';
-import * as array from '../array'
+import * as array from '../array';
 import { ArrayLike } from '../array';
 
 /**
@@ -29,7 +29,7 @@ function processValuesAndCallback<T, U>(items: (T | Promise<T>)[], callback: Map
 function findNextValueIndex<T>(list: ArrayLike<T>, offset: number = -1): number {
 	offset++;
 	for (let length = list.length; offset < length; offset++) {
-		if(offset in list) {
+		if (offset in list) {
 			return offset;
 		}
 	}
@@ -39,7 +39,7 @@ function findNextValueIndex<T>(list: ArrayLike<T>, offset: number = -1): number 
 function findLastValueIndex<T>(list: ArrayLike<T>, offset?: number): number {
 	offset = (offset === undefined ? list.length : offset) - 1;
 	for (; offset >= 0; offset--) {
-		if(offset in list) {
+		if (offset in list) {
 			return offset;
 		}
 	}
@@ -116,7 +116,6 @@ function testAndHaltOnCondition<T>(condition: boolean, items: (T | Promise<T>)[]
 	});
 }
 
-
 /**
  * Test whether all elements in the array pass the provided callback
  * @param items a collection of synchronous/asynchronous values
@@ -163,7 +162,7 @@ export function find<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promi
  */
 export function findIndex<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<number> {
 	// TODO we can improve this by returning immediately
-	return processValuesAndCallback(items, callback).then<number>(function ({ results, values }) {
+	return processValuesAndCallback(items, callback).then<number>(function ({ results }) {
 		for (let i = 0; i < results.length; i++) {
 			if (results[i]) {
 				return i;
@@ -181,7 +180,7 @@ export function findIndex<T>(items: (T | Promise<T>)[], callback: Filterer<T>): 
  */
 export function map<T, U>(items: (T | Promise<T>)[], callback: Mapper<T, U>): Promise<U[]> {
 	return processValuesAndCallback<T, U>(items, callback)
-			.then<U[]>(function ({ results, values}) {
+			.then<U[]>(function ({ results }) {
 				return results;
 			});
 }
@@ -232,5 +231,5 @@ export interface Mapper<T, U> {
 }
 
 export interface Reducer<T, U> {
-	(previousValue: U, currentValue: T, index: number, array: T[]): (U | Thenable<U>)
+	(previousValue: U, currentValue: T, index: number, array: T[]): (U | Thenable<U>);
 }

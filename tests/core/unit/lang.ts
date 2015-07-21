@@ -2,7 +2,6 @@ import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import has from 'src/has';
 import * as lang from 'src/lang';
-import { PropertyEvent } from 'src/observers/interfaces';
 import { Es5Observer, Es7Observer } from 'src/observers/ObjectObserver';
 
 registerSuite({

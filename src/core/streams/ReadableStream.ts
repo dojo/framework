@@ -1,7 +1,7 @@
 import { Strategy } from './interfaces';
 import Promise from '../Promise';
 import ReadableStreamController from './ReadableStreamController';
-import ReadableStreamReader, { ReadResult } from './ReadableStreamReader';
+import ReadableStreamReader from './ReadableStreamReader';
 import SizeQueue from './SizeQueue';
 import TransformStream from './TransformStream';
 import * as util from './util';
@@ -26,7 +26,6 @@ export interface PipeOptions {
 	 */
 	preventClose?: boolean;
 }
-
 
 /**
  * The Source interface defines the methods a module can implement to create a source for a {@link ReadableStream}.
@@ -180,7 +179,7 @@ export default class ReadableStream<T> {
 				resolveStarted();
 				this.pull();
 			}, (error: Error) => {
-				this.error(error)
+				this.error(error);
 			});
 		});
 	}
@@ -211,7 +210,7 @@ export default class ReadableStream<T> {
 	 *
 	 * @param reason A description of the reason the stream is being canceled.
 	 * @returns A promise that resolves when the stream has closed and the call to the underlying source's `cancel`
-	 *		method has completed.
+	 * method has completed.
 	 */
 	cancel(reason?: any): Promise<void> {
 		if (!this.hasSource) {
