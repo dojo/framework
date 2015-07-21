@@ -304,7 +304,7 @@ export default class ReadableStream<T> {
 
 		function doPipe(): void {
 			lastRead = reader.read();
-			Promise.all([ lastRead, dest.ready ]).then(function ([ readResult, ready ]) {
+			Promise.all([ lastRead, dest.ready ]).then(function ([ readResult ]) {
 				if (readResult.done) {
 					closeDest();
 				}
