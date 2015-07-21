@@ -74,7 +74,6 @@ let suite = {
 
 		'canceled with multiple children'() {
 			let dfd = this.async(5000, 4);
-			let resolvedTasks: any = {};
 			let resolver: any;
 			let task = new Task(
 				function (resolve, reject) {
@@ -89,9 +88,9 @@ let suite = {
 				dfd.resolve();
 				throw new Error('foo');
 			});
-			let taskD = taskA.finally(dfd.callback(function () {}));
-			let taskB = task.finally(dfd.callback(function () {}));
-			let taskC = task.finally(dfd.callback(function () {}));
+			taskA.finally(dfd.callback(function () {}));
+			task.finally(dfd.callback(function () {}));
+			task.finally(dfd.callback(function () {}));
 
 			task.cancel();
 			resolver();
@@ -99,7 +98,6 @@ let suite = {
 
 		'canceled and resolved inside then callback'() {
 			let dfd = this.async();
-			let resolvedTasks: any = {};
 			let resolver: any;
 
 			let task = new Task(
@@ -126,7 +124,6 @@ let suite = {
 
 		'canceled and rejected inside then callback'() {
 			let dfd = this.async();
-			let resolvedTasks: any = {};
 			let resolver: any;
 
 			let task = new Task(

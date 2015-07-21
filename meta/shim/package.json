@@ -24,7 +24,7 @@
 		"grunt-tslint": "2.0.0",
 		"intern": "2.2.2",
 		"sinon": "1.14.1",
-		"tslint": "2.1.1",
+		"tslint": "2.4.0",
 		"typescript": "Arnavion/typescript-github#2015-06-15-1f587069da08150d512e95485cccf3f9a8115e06"
 	}
 }

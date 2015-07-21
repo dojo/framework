@@ -56,7 +56,7 @@ export default class Task<T> extends Promise<T> {
 				canceler();
 			}
 			this._cancel();
-		}
+		};
 	}
 
 	/**
@@ -90,7 +90,7 @@ export default class Task<T> extends Promise<T> {
 			catch (error) {
 				// Any errors in a `finally` callback are completely ignored during cancelation
 			}
-		}
+		};
 
 		if (this._finally) {
 			if (isThenable(finallyTask)) {
@@ -102,7 +102,7 @@ export default class Task<T> extends Promise<T> {
 		}
 
 		this.children.forEach(function (child) {
-			child._cancel(finallyTask)
+			child._cancel(finallyTask);
 		});
 	}
 

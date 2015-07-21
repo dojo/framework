@@ -1,6 +1,3 @@
-import ReadableStreamController from './ReadableStreamController';
-import Promise from '../Promise';
-
 export interface Strategy<T> {
 	/**
 	 * Computes the number of items in a chunk.

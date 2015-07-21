@@ -5,7 +5,6 @@ import ReadableStreamController from 'src/streams/ReadableStreamController';
 import ReadableStream, { Source, State } from 'src/streams/ReadableStream';
 import BaseStringSource from './helpers/BaseStringSource';
 import { Strategy } from 'src/streams/interfaces';
-import Promise from 'src/Promise';
 
 let stream: ReadableStream<string>;
 let source: Source<string>;
@@ -44,7 +43,7 @@ registerSuite({
 
 		'throws an error if the stream is not readable'() {
 			assert.throws(function () {
-				new ReadableStreamController(<ReadableStream<string>>{});
+				new ReadableStreamController(<ReadableStream<string>> {});
 			});
 		}
 	},

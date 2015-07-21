@@ -271,11 +271,6 @@ export class PromiseShim<T> implements Thenable<T> {
 }
 
 /**
- * PromiseConstructor points to the promise constructor this platform should use.
- */
-const PromiseConstructor = has('promise') ? global.Promise : PromiseShim;
-
-/**
  * PlatformPromise is a very thin wrapper around either a native promise implementation or PromiseShim.
  */
 export default class Promise<T> implements Thenable<T> {
@@ -360,8 +355,8 @@ export default class Promise<T> implements Thenable<T> {
 
 		promise._state = State.Pending;
 		promise.promise.then(
-			function () { promise._state = State.Fulfilled },
-			function () { promise._state = State.Rejected }
+			function () { promise._state = State.Fulfilled; },
+			function () { promise._state = State.Rejected; }
 		);
 
 		return promise;
@@ -400,8 +395,8 @@ export default class Promise<T> implements Thenable<T> {
 
 		this._state = State.Pending;
 		this.promise.then(
-			() => { this._state = State.Fulfilled },
-			() => { this._state = State.Rejected }
+			() => { this._state = State.Fulfilled; },
+			() => { this._state = State.Rejected; }
 		);
 	}
 
@@ -463,10 +458,7 @@ export default class Promise<T> implements Thenable<T> {
 	/**
 	 * Adds a callback to the promise to be invoked when the asynchronous operation completes successfully.
 	 */
-	then<U>(
-		onFulfilled?: (value?: T) => (U | Thenable<U>),
-		onRejected?: (reason?: Error) => (U | Thenable<U>)
-	): Promise<U> {
+	then<U>(onFulfilled?: (value?: T) => (U | Thenable<U>), onRejected?: (reason?: Error) => (U | Thenable<U>)): Promise<U> {
 		return (<typeof Promise> this.constructor).copy(this.promise.then(onFulfilled, onRejected));
 	}
 }

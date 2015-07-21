@@ -1,6 +1,5 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
-import { Handle } from 'src/interfaces';
 import { queueMicroTask, queueTask } from 'src/queue';
 import Scheduler from 'src/Scheduler';
 

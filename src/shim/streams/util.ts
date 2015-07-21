@@ -17,7 +17,7 @@ export function getApproximateByteSize(object: any): number {
 	let objects = [ object ];
 	let size = 0;
 
-	for(let index = 0; index < objects.length; index++) {
+	for (let index = 0; index < objects.length; index++) {
 		switch (typeof objects[index]) {
 			case 'boolean':
 				size += 4;
@@ -45,7 +45,7 @@ export function getApproximateByteSize(object: any): number {
 					let processed = false;
 
 					for (let j = 0; j < objects.length; j++) {
-						if (objects[j] === objects[index][key]){
+						if (objects[j] === objects[index][key]) {
 							processed = true;
 							break;
 						}

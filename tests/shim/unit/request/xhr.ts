@@ -1,6 +1,5 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as sinon from 'sinon';
 import has from 'src/has';
 import { default as xhrRequest } from 'src/request/xhr';
 

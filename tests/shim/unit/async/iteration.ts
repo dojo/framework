@@ -2,22 +2,21 @@ import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import * as iteration from 'src/async/iteration';
 import Promise from 'src/Promise';
-import * as array from 'src/array';
 import { isEventuallyRejected, throwImmediatly } from '../../support/util';
 
 interface ResolveFunc<T> {
-	(value: T | Promise<T>): Promise<T>
+	(value: T | Promise<T>): Promise<T>;
 	(): Promise<void>;
 }
 
 interface RejectFunc<T> {
-	(reason: any): Promise<T>
-	(): Promise<void>
+	(reason: any): Promise<T>;
+	(): Promise<void>;
 }
 
 interface ControlledPromise<T> extends Promise<T> {
-	resolve: ResolveFunc<T>
-	reject: RejectFunc<T>
+	resolve: ResolveFunc<T>;
+	reject: RejectFunc<T>;
 }
 
 function createTriggerablePromise<T>(): ControlledPromise<T> {
@@ -56,7 +55,7 @@ function assertFalse (value: boolean): void {
 	assert.isFalse(value);
 }
 
-function join(current:string, value: string): string {
+function join(current: string, value: string): string {
 	return current + value;
 }
 
@@ -292,7 +291,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 			'reduce multiple mixed values': function () {
 				let expected: any = getExpectedSolution(this);
 
-				let values = [ 'h', 'e','l', 'l', createTriggerablePromise()];
+				let values = [ 'h', 'e', 'l', 'l', createTriggerablePromise()];
 				let promise = reduceMethod(values, join).then(function (value) {
 					assert.strictEqual(value, expected);
 				});
@@ -461,7 +460,7 @@ function haltImmediatelyTests(haltingMethod: (items: (any | Promise<any>)[], cal
 				return isEventuallyRejected(promise);
 			}
 		}
-	}
+	};
 }
 
 registerSuite({
@@ -472,16 +471,16 @@ registerSuite({
 				'synchronous values': {
 					'one synchronous value': { values: [ 'hello' ], assertion: assertTrue },
 					'multiple synchronous values': { values: [ 'hello', 'world' ], assertion: assertTrue },
-					'multiple synchronous values with failure': { values: [ 'hello', 'world', 'potato' ], assertion: assertFalse },
+					'multiple synchronous values with failure': { values: [ 'hello', 'world', 'potato' ], assertion: assertFalse }
 				},
 				'asynchronous values': {
 					'one asynchronous value': { results: [ 'hello' ], assertion: assertTrue },
 					'multiple asynchronous values': { results: [ 'hello', 'world' ], assertion: assertTrue },
 					'multiple asynchronous values with failure': { results: [ 'hello', 'world', 'potato' ], assertion: assertFalse },
-					'mixed synchronous and asynchronous values': { results: [ 'hello', 'world' ], assertion: assertTrue },
+					'mixed synchronous and asynchronous values': { results: [ 'hello', 'world' ], assertion: assertTrue }
 				},
 				'asynchronous callback': {
-					'callback returns asynchronous results': { resolution: true, assertion: assertTrue },
+					'callback returns asynchronous results': { resolution: true, assertion: assertTrue }
 				}
 			}
 		);
@@ -716,7 +715,7 @@ registerSuite({
 				let promise = iteration.map(values, function (value, i) {
 					return results[i];
 				}).then(function (values) {
-					assert.deepEqual(values, [ 2 ])
+					assert.deepEqual(values, [ 2 ]);
 				});
 
 				results[0].resolve(2);
@@ -730,7 +729,7 @@ registerSuite({
 				let promise = iteration.map(values, function (value, i) {
 					return results[i];
 				}).then(function (values) {
-					assert.deepEqual(values, [ 2, 4, 6 ])
+					assert.deepEqual(values, [ 2, 4, 6 ]);
 				});
 
 				results[0].resolve(2);
@@ -802,7 +801,7 @@ registerSuite({
 		'no values returns an empty array': function () {
 			return iteration.series([], throwImmediatly).then(function (result) {
 				assert.deepEqual(result, []);
-			})
+			});
 		},
 
 		'synchronous values': function () {
@@ -870,16 +869,16 @@ registerSuite({
 				'synchronous values': {
 					'one synchronous value': { values: [ 'hello' ], assertion: assertTrue },
 					'multiple synchronous values': { values: [ 'non-matching', 'world' ], assertion: assertTrue },
-					'multiple synchronous values with failure': { values: [ 'non-matching', 'non-matching' ], assertion: assertFalse },
+					'multiple synchronous values with failure': { values: [ 'non-matching', 'non-matching' ], assertion: assertFalse }
 				},
 				'asynchronous values': {
 					'one asynchronous value': { results: [ 'hello' ], assertion: assertTrue },
 					'multiple asynchronous values': { results: [ 'non-matching', 'world' ], assertion: assertTrue },
 					'multiple asynchronous values with failure': { results: [ 'non-matching', 'non-matching' ], assertion: assertFalse },
-					'mixed synchronous and asynchronous values': { results: [ 'non-matching', 'world' ], assertion: assertTrue },
+					'mixed synchronous and asynchronous values': { results: [ 'non-matching', 'world' ], assertion: assertTrue }
 				},
 				'asynchronous callback': {
-					'callback returns asynchronous results': { resolution: true, assertion: assertTrue },
+					'callback returns asynchronous results': { resolution: true, assertion: assertTrue }
 				}
 			}
 		);

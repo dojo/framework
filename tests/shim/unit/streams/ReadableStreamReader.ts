@@ -41,7 +41,7 @@ registerSuite({
 
 		'throws an error if the stream is locked'() {
 			assert.throws(function () {
-				new ReadableStreamReader(<ReadableStream<string>>{});
+				new ReadableStreamReader(<ReadableStream<string>> {});
 			});
 		},
 

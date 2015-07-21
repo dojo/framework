@@ -6,11 +6,11 @@ export interface ArrayLike<T> {
 }
 
 export interface MapCallback<T> {
-	(element: T, index: number): T
+	(element: T, index: number): T;
 }
 
 export interface FindCallback<T> {
-	(element: T, index: number, array: ArrayLike<T>): boolean
+	(element: T, index: number, array: ArrayLike<T>): boolean;
 }
 
 /**

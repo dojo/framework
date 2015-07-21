@@ -79,7 +79,7 @@ export const ascii: Codec = {
 
 		return decoded;
 	}
-}
+};
 
 /**
  * Provides facilities for encoding a string into a Base64-encoded byte buffer and
@@ -139,7 +139,7 @@ export const base64: Codec = {
 		let decoded = '';
 		let i = 0;
 
-		for (let length = data.length - (data.length % 3); i < length;) {
+		for (let length = data.length - (data.length % 3); i < length; ) {
 			let encoded = data[i++] << 16 | data[i++] << 8 | data[i++];
 
 			decoded += BASE64_KEYSTR.charAt((encoded >>> 18) & 0x3F);
@@ -164,7 +164,7 @@ export const base64: Codec = {
 
 		return decoded;
 	}
-}
+};
 
 /**
  * Provides facilities for encoding a string into a hex-encoded byte buffer and
@@ -210,7 +210,7 @@ export const hex: Codec = {
 
 		return decoded;
 	}
-}
+};
 
 /**
  * Provides facilities for encoding a string into a UTF-8-encoded byte buffer and
@@ -332,4 +332,4 @@ export const utf8: Codec = {
 
 		return decoded;
 	}
-}
+};

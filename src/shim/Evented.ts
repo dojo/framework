@@ -1,5 +1,4 @@
 import { Handle, EventObject } from './interfaces';
-import { createCompositeHandle } from './lang';
 import { on } from './aspect';
 
 export default class Evented {

@@ -1,7 +1,6 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import Evented from 'src/Evented';
-import { Handle } from 'src/interfaces';
 
 interface CustomEvent {
 	type: string;

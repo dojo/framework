@@ -3,7 +3,6 @@ import * as registerSuite from 'intern!object';
 import ByteLengthQueuingStrategy from 'src/streams/ByteLengthQueuingStrategy';
 import WritableStream, { State } from 'src/streams/WritableStream';
 import ManualSink from './helpers/ManualSink';
-import { getApproximateByteSize } from 'src/streams/util';
 
 const ASYNC_TIMEOUT = 1000;
 

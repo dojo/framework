@@ -1,5 +1,4 @@
 import { ArrayLike } from './array';
-import { hasClass } from './decorators';
 import { is } from './object';
 
 /**

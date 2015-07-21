@@ -1,7 +1,7 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import has from 'src/has';
-import { Observer, PropertyEvent } from 'src/observers/interfaces';
+import { PropertyEvent } from 'src/observers/interfaces';
 import { Es5Observer, Es7Observer } from 'src/observers/ObjectObserver';
 
 registerSuite({
@@ -49,7 +49,7 @@ registerSuite({
 			const object: { a: number; b?: number } = { a: 1 };
 
 			let b: number;
-			const observer = new Es7Observer({
+			new Es7Observer({
 				onlyReportObserved: false,
 				target: object,
 				listener: function (events: PropertyEvent[]): any {

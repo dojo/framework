@@ -44,7 +44,7 @@ registerSuite({
 				const params = new UrlSearchParams(params1);
 				checkParams(params);
 			}
-		}
+		};
 	})(),
 
 	'#append': {
