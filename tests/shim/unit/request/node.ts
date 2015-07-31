@@ -2,7 +2,7 @@ import BaseStringSource from '../streams/helpers/BaseStringSource';
 import * as http from 'http';
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import Deferred = require('intern/dojo/Deferred');
+import DojoPromise = require('intern/dojo/Promise');
 import Promise from 'src/Promise';
 import RequestTimeoutError from 'src/request/errors/RequestTimeoutError';
 import { default as nodeRequest } from 'src/request/node';
@@ -40,7 +40,7 @@ registerSuite({
 	name: 'request/node',
 
 	setup() {
-		const dfd = new Deferred();
+		const dfd = new DojoPromise.Deferred();
 		const responseData: { [name: string]: any } = {
 			'foo.json': JSON.stringify({ foo: 'bar' }),
 			'redirected': 'redirected',

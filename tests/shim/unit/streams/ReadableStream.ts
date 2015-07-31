@@ -370,7 +370,7 @@ registerSuite({
 					assert.fail();
 				}),
 				dfd.callback(function (error: Error) {
-					assert.isObject(error);
+					assert.instanceOf(error, Error);
 				})
 			);
 		},
@@ -408,7 +408,7 @@ registerSuite({
 					assert.fail();
 				}),
 				dfd.callback(function (error: Error) {
-					assert.isObject(error);
+					assert.instanceOf(error, Error);
 				})
 			);
 		},
