@@ -167,7 +167,8 @@ registerSuite({
 			return stream.close().then(function () {
 				assert.fail(null, null, 'Method should not resolve on stream that is already closing');
 			}, function (error: Error) {
-				assert.strictEqual(stream.state, State.Closing, 'Stream should be in closing state');
+				// By the time the promise resolves, the stream may already be closed
+				assert(stream.state === State.Closed || stream.state === State.Closing, 'Stream should be closed or closing');
 			});
 		},
 

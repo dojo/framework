@@ -74,7 +74,6 @@
 		"./tests/functional/all.ts",
 		"./tests/intern-local.ts",
 		"./tests/intern.ts",
-		"./tests/support/dojo.ts",
 		"./tests/support/util.ts",
 		"./tests/typings/benchmark/benchmark.d.ts",
 		"./tests/typings/chai/chai.d.ts",

@@ -1,6 +1,6 @@
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
-import Deferred = require('intern/dojo/Deferred');
+import DojoPromise = require('intern/dojo/Promise');
 import has = require('intern/dojo/has');
 import Task from 'src/async/Task';
 import request, { filterRegistry, providerRegistry, RequestOptions, Response, ResponsePromise } from 'src/request';
@@ -166,7 +166,7 @@ if (has('host-node')) {
 
 	suite['node'] = {
 		setup() {
-			const dfd = new Deferred();
+			const dfd = new DojoPromise.Deferred();
 			const responseData: { [name: string]: any } = {
 				'foo.json': JSON.stringify({ foo: 'bar' }),
 				invalidJson: '<not>JSON</not>'

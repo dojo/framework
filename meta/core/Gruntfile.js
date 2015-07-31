@@ -1,36 +1,13 @@
 /* jshint node:true */
 
-function mixin(destination, source) {
-	for (var key in source) {
-		destination[key] = source[key];
+function mixin(destination) {
+	for (var i = 1; i < arguments.length; i++) {
+		var source = arguments[i];
+		for (var key in source) {
+			destination[key] = source[key];
+		}
 	}
 	return destination;
-}
-
-/**
- * A work-around for grunt-ts 4.2.0-beta not handling experimentalDecorators
- * and improperly handling the source map options
- */
-function getTsOptions(baseOptions, overrides) {
-	var options = mixin({}, baseOptions);
-	if (overrides) {
-		options = mixin(options, overrides);
-	}
-	var additionalFlags = options.experimentalDecorators ? ['--experimentalDecorators'] : [];
-	if (options.inlineSources) {
-		additionalFlags.push('--inlineSources');
-	}
-	if (options.inlineSourceMap) {
-		additionalFlags.push('--inlineSourceMap');
-	}
-	if (options.sourceMap) {
-		additionalFlags.push('--sourceMap');
-	}
-	options.inlineSources = options.inlineSourceMap = options.sourceMap = false;
-
-	options.additionalFlags = additionalFlags.join(' ');
-
-	return options;
 }
 
 module.exports = function (grunt) {
@@ -45,7 +22,7 @@ module.exports = function (grunt) {
 
 	var tsconfigContent = grunt.file.read('tsconfig.json');
 	var tsconfig = JSON.parse(tsconfigContent);
-	var tsOptions = getTsOptions(tsconfig.compilerOptions, {
+	var tsOptions = mixin({}, tsconfig.compilerOptions, {
 		failOnTypeErrors: true,
 		fast: 'never'
 	});
@@ -135,19 +112,19 @@ module.exports = function (grunt) {
 			},
 			runner: {
 				options: {
-					reporters: [ 'runner', 'lcovhtml' ]
+					reporters: [ 'Runner', 'LcovHtml' ]
 				}
 			},
 			local: {
 				options: {
 					config: '<%= devDirectory %>/tests/intern-local',
-					reporters: [ 'runner', 'lcovhtml' ]
+					reporters: [ 'Runner', 'LcovHtml' ]
 				}
 			},
 			client: {
 				options: {
 					runType: 'client',
-					reporters: [ 'console', 'lcovhtml' ]
+					reporters: [ 'Console', 'LcovHtml' ]
 				}
 			},
 			proxy: {
@@ -196,7 +173,7 @@ module.exports = function (grunt) {
 				src: [ '<%= all %>' ]
 			},
 			dist: {
-				options: getTsOptions(tsOptions, {
+				options: mixin({}, tsOptions, {
 					mapRoot: '../dist/_debug',
 					sourceMap: true,
 					inlineSourceMap: false,
