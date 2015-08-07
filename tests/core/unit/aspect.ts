@@ -171,6 +171,56 @@ registerSuite({
 			}
 		},
 
+		'.on()': {
+			'advising function returns undefined, returns original result'() {
+				const aspectStub = sinon.stub();
+
+				aspect.on(obj, 'method', aspectStub);
+
+				assert.strictEqual(obj.method(0), 1);
+
+				assert.deepEqual(aspectStub.lastCall.args, methodSpy.lastCall.args);
+				assert.isTrue(methodSpy.calledOnce);
+				assert.isTrue(aspectStub.calledOnce);
+				assert.isTrue(aspectStub.calledAfter(methodSpy));
+			},
+
+			'advising function returns defined values, returns advising function result'() {
+				const aspectStub = sinon.stub().returns(2);
+
+				aspect.on(obj, 'method', aspectStub);
+
+				assert.strictEqual(obj.method(0), 2);
+				assert.deepEqual(aspectStub.lastCall.args, methodSpy.lastCall.args);
+				assert.isTrue(methodSpy.calledOnce);
+				assert.isTrue(aspectStub.calledOnce);
+				assert.isTrue(aspectStub.calledAfter(methodSpy));
+			},
+
+			'there are previous advising functions (covering previous.next)'() {
+				const aspectStub1 = sinon.stub().returns(2);
+				const aspectStub2 = sinon.stub();
+				const aspectStub3 = sinon.stub().returns(6);
+
+				aspect.on(obj, 'method', aspectStub1);
+				aspect.on(obj, 'method', aspectStub2);
+				aspect.on(obj, 'method', aspectStub3);
+
+				assert.strictEqual(obj.method(0), 6);
+
+				assert.deepEqual(aspectStub1.lastCall.args, methodSpy.lastCall.args);
+				assert.deepEqual(aspectStub2.lastCall.args, methodSpy.lastCall.args);
+				assert.deepEqual(aspectStub3.lastCall.args, methodSpy.lastCall.args);
+
+				assert.isTrue(methodSpy.calledOnce);
+				assert.isTrue(aspectStub1.calledOnce);
+				assert.isTrue(aspectStub2.calledOnce);
+				assert.isTrue(aspectStub3.calledOnce);
+
+				sinon.assert.callOrder(methodSpy, aspectStub1, aspectStub2, aspectStub3);
+			}
+		},
+
 		'handle.destroy()': {
 			'prevents aspect from being called'() {
 				const aspectSpy = createBeforeSpy();
