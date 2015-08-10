@@ -4,6 +4,7 @@ import { Handle } from './interfaces';
 import Promise from './Promise';
 import Registry, { Test } from './Registry';
 import load from './load';
+import { ParamList } from './UrlSearchParams';
 
 declare var require: any;
 
@@ -126,7 +127,7 @@ export interface RequestOptions {
 	headers?: { [name: string]: string; };
 	method?: string;
 	password?: string;
-	query?: string;
+	query?: string | ParamList;
 	responseType?: string;
 	timeout?: number;
 	user?: string;
