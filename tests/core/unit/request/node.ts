@@ -271,13 +271,13 @@ registerSuite({
 				}).then(
 					dfd.resolve.bind(dfd),
 					dfd.callback(function (error: any): void {
-						assert.isObject(error);
+						assert.instanceOf(error, Error);
 					})
 				);
 			}
 		},
 
-		timeout(): void {
+		'"timeout"'(): void {
 			const dfd = this.async();
 			nodeRequest(getRequestUrl('foo.json'), { timeout: 1 })
 				.then(

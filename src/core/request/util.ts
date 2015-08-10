@@ -8,11 +8,7 @@ import UrlSearchParams from '../UrlSearchParams';
  * @param options The options hash that is used to generate the query string.
  */
 export function generateRequestUrl(url: string, options: RequestOptions): string {
-	let query = options.query || '';
-
-	if (typeof query === 'object') {
-		query = new UrlSearchParams(query).toString();
-	}
+	let query = new UrlSearchParams(options.query).toString();
 
 	if (options.cacheBust) {
 		const cacheBust = String(Date.now());
