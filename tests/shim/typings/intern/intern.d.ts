@@ -360,3 +360,14 @@ declare module 'intern/lib/Test' {
 
 	export = Test;
 }
+
+// Declaring a module for intern/dojo/topic so that our echo server
+// can listen for intern's internal event signalling that the runner
+// is terminating.
+declare module 'intern/dojo/topic' {
+	var topic: {
+		subscribe(name: string, callback: () => void):  void;
+	};
+
+	export = topic;
+}

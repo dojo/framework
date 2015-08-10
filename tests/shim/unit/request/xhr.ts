@@ -1,168 +1,452 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import * as sinon from 'sinon';
 import has from 'src/has';
-import { default as xhrRequest } from 'src/request/xhr';
+import Promise from 'src/Promise';
+import xhrRequest from 'src/request/xhr';
+import { Response } from 'src/request';
+import UrlSearchParams from 'src/UrlSearchParams';
 
-function getRequestUrl(dataKey: string): string {
-	return (<any> require).toUrl('../../support/data/' + dataKey);
+function requestResponseType(responseType?: string, options?: any) {
+	if (options) {
+		return xhrRequest('/__echo/xhr' + (responseType ? '?responseType=' + responseType : ''), options);
+	}
+	else {
+		return xhrRequest('/__echo/xhr' + (responseType ? '?responseType=' + responseType : ''));
+	}
 }
 
+let echoServerAvailable = false;
 registerSuite({
 	name: 'request/xhr',
 
+	before: function () {
+		return new Promise(function (resolve, reject) {
+			xhrRequest('/__echo/', {
+				method: 'get',
+				timeout: 10000
+			}).then(
+				function (response) {
+					if (response && response.statusCode === 200) {
+						echoServerAvailable = true;
+					}
+					resolve();
+				},
+				function () {
+					resolve();
+				}
+			);
+		});
+	},
+
 	'HTTP methods': {
-		specified(): void {
-			const dfd = this.async();
-			xhrRequest(getRequestUrl('foo.json'), { method: 'get' })
-				.then(
-					dfd.callback(function (response: any): void {
-						assert.strictEqual(response.requestOptions.method, 'get');
-					}),
-					dfd.reject.bind(dfd)
-				);
+		specified() {
+			if (!echoServerAvailable) {
+				this.skip('No echo server available');
+			}
+			return xhrRequest('/__echo/foo.json', { method: 'get' })
+				.then(function (response: any) {
+					assert.strictEqual(response.requestOptions.method, 'get');
+				});
 		},
 
-		'default'(): void {
-			const dfd = this.async();
-			xhrRequest(getRequestUrl('foo.json'))
-				.then(
-					dfd.callback(function (response: any): void {
-						assert.strictEqual(response.requestOptions.method, 'GET');
-					}),
-					dfd.reject.bind(dfd)
+		'default'() {
+			if (!echoServerAvailable) {
+				this.skip('No echo server available');
+			}
+			return xhrRequest('/__echo/foo.json')
+				.then(function (response: any) {
+					assert.strictEqual(response.requestOptions.method, 'GET');
+				});
+		},
+
+		'.get with URL query'() {
+			if (!echoServerAvailable) {
+				this.skip('No echo server available');
+			}
+			return xhrRequest('/__echo/xhr?color=blue&numbers=one&numbers=two', {
+				handleAs: 'json'
+			}).then(function (response: any) {
+				const query = JSON.parse(response.data).query;
+				assert.deepEqual(query, {
+					color: 'blue',
+					numbers: [ 'one', 'two' ]
+				});
+				assert.strictEqual(
+					response.url,
+					'/__echo/xhr?color=blue&numbers=one&numbers=two'
 				);
+			});
+		},
+
+		'.post': function () {
+			if (!echoServerAvailable) {
+				this.skip('No echo server available');
+			}
+			return xhrRequest('/__echo/post', {
+				method: 'POST',
+				data: new UrlSearchParams({ color: 'blue' }).toString(),
+				responseType: 'json'
+			}).then(function (response: any) {
+				const data = JSON.parse(response.data);
+				assert.strictEqual(data.method, 'POST');
+				const payload = data.payload;
+
+				assert.ok(payload && payload.color);
+				assert.strictEqual(payload.color, 'blue');
+			});
 		}
 	},
 
 	'request options': {
-		'timeout'(): void {
-			const dfd = this.async();
-			xhrRequest(getRequestUrl('foo.json'), { timeout: 1 })
+		'"timeout"'() {
+			if (!echoServerAvailable) {
+				this.skip('No echo server available');
+			}
+			return xhrRequest('/__echo/xhr', { timeout: 1 })
 				.then(
-					dfd.resolve.bind(dfd),
-					dfd.callback(function (error: Error): void {
+					function () {
+						assert(false, 'Should have timed out');
+					},
+					function (error: Error) {
 						assert.strictEqual(error.name, 'RequestTimeoutError');
-					})
+					}
 				);
 		},
 
-		'user and password'(): void {
-			const dfd = this.async();
-			xhrRequest(getRequestUrl('foo.json'), {
+		'user and password'() {
+			if (!echoServerAvailable) {
+				this.skip('No echo server available');
+			}
+			return xhrRequest('/__echo/foo.json', {
 				user: 'user',
 				password: 'password'
-			}).then(
-				dfd.callback(function (response: any): void {
-					assert.strictEqual(response.requestOptions.user, 'user');
-					assert.strictEqual(response.requestOptions.password, 'password');
-				}),
-				dfd.reject.bind(dfd)
-			);
+			}).then(function (response: any) {
+				assert.strictEqual(response.requestOptions.user, 'user');
+				assert.strictEqual(response.requestOptions.password, 'password');
+			});
 		},
 
-		'auth, without user or password'(): void {
-			const dfd = this.async();
-			xhrRequest(getRequestUrl('foo.json'), {
+		'auth, without user or password'() {
+			if (!echoServerAvailable) {
+				this.skip('No echo server available');
+			}
+			return xhrRequest('/__echo/foo.json', {
 				auth: 'user:password'
-			}).then(
-				dfd.callback(function (response: any): void {
-					assert.strictEqual(response.requestOptions.user, 'user');
-					assert.strictEqual(response.requestOptions.password, 'password');
-				}),
-				dfd.reject.bind(dfd)
-			);
+			}).then(function (response: any) {
+				assert.strictEqual(response.requestOptions.user, 'user');
+				assert.strictEqual(response.requestOptions.password, 'password');
+			});
+		},
+
+		'query': {
+			'.get with query URL and query option string'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				return xhrRequest('/__echo/xhr?color=blue&numbers=one&numbers=two', {
+					query: new UrlSearchParams({
+						foo: [ 'bar', 'baz' ],
+						thud: 'thonk',
+						xyzzy: '3'
+					}).toString(),
+					handleAs: 'json'
+				}).then(function (response: any) {
+					const query = JSON.parse(response.data).query;
+					assert.deepEqual(query, {
+						color: 'blue',
+						numbers: [ 'one', 'two' ],
+						thud: 'thonk',
+						foo: [ 'bar', 'baz' ],
+						xyzzy: '3'
+					});
+					assert.strictEqual(
+						response.url,
+						'/__echo/xhr?color=blue&numbers=one&numbers=two&foo=bar&foo=baz&thud=thonk&xyzzy=3'
+					);
+				});
+			},
+
+			'.get with query option string'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				return xhrRequest('/__echo/xhr', {
+					query: new UrlSearchParams({
+						foo: [ 'bar', 'baz' ],
+						thud: 'thonk',
+						xyzzy: '3'
+					}).toString(),
+					handleAs: 'json'
+				}).then(function (response: any) {
+					const query = JSON.parse(response.data).query;
+					assert.deepEqual(query, {
+						foo: [ 'bar', 'baz' ],
+						thud: 'thonk',
+						xyzzy: '3'
+					});
+					assert.strictEqual(
+						response.url,
+						'/__echo/xhr?foo=bar&foo=baz&thud=thonk&xyzzy=3'
+					);
+				});
+			},
+
+			'.get with query option object'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				return xhrRequest('/__echo/xhr', {
+					query: {
+						foo: [ 'bar', 'baz' ],
+						thud: 'thonk',
+						xyzzy: '3'
+					},
+					handleAs: 'json'
+				}).then(function (response: any) {
+					const query = JSON.parse(response.data).query;
+					assert.deepEqual(query, {
+						foo: [ 'bar', 'baz' ],
+						thud: 'thonk',
+						xyzzy: '3'
+					});
+					assert.strictEqual(
+						response.url,
+						'/__echo/xhr?foo=bar&foo=baz&thud=thonk&xyzzy=3'
+					);
+				});
+			},
+
+			'.get with cacheBust w/query string w/o/query option'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				let cacheBustStringA: string;
+				let cacheBustStringB: string;
+				return xhrRequest('/__echo/xhr?foo=bar', {
+					cacheBust: true
+				}).then(function (response) {
+					assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
+					cacheBustStringA = response.url.split('&')[1];
+					assert.isFalse(isNaN(Number(cacheBustStringA)));
+					return new Promise<Response<any>>(function (resolve, reject) {
+						setTimeout(function () {
+							xhrRequest('/__echo/xhr?foo=bar', {
+								cacheBust: true
+							}).then(resolve, reject);
+						}, 5);
+					});
+				}).then(function (response) {
+					assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
+					cacheBustStringB = response.url.split('&')[1];
+					assert.isFalse(isNaN(Number(cacheBustStringB)));
+
+					assert.notEqual(cacheBustStringA, cacheBustStringB);
+				});
+			},
+
+			'.get with cacheBust w/query string w/query option'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				let cacheBustStringA: string;
+				let cacheBustStringB: string;
+				return xhrRequest('/__echo/xhr?foo=bar', {
+					cacheBust: true,
+					query: {
+						bar: 'baz'
+					}
+				}).then(function (response) {
+					assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar&bar=baz'), 0);
+					cacheBustStringA = response.url.split('&')[2];
+					assert.isFalse(isNaN(Number(cacheBustStringA)));
+
+					return new Promise<Response<any>>(function (resolve, reject) {
+						setTimeout(function () {
+							xhrRequest('/__echo/xhr?foo=bar', {
+								cacheBust: true,
+								query: {
+									bar: 'baz'
+								}
+							}).then(resolve, reject);
+						}, 5);
+					});
+				}).then(function (response) {
+					assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar&bar=baz'), 0);
+					cacheBustStringB = response.url.split('&')[2];
+					assert.isFalse(isNaN(Number(cacheBustStringB)));
+
+					assert.notEqual(cacheBustStringA, cacheBustStringB);
+				});
+			},
+
+			'.get with cacheBust w/o/query string w/query option'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				let cacheBustStringA: string;
+				let cacheBustStringB: string;
+				return xhrRequest('/__echo/xhr', {
+					cacheBust: true,
+					query: {
+						foo: 'bar'
+					}
+				}).then(function (response) {
+					assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
+					cacheBustStringA = response.url.split('&')[1];
+					assert.isFalse(isNaN(Number(cacheBustStringA)));
+
+					return new Promise<Response<any>>(function (resolve, reject) {
+						setTimeout(function () {
+							xhrRequest('/__echo/xhr', {
+								cacheBust: true,
+								query: {
+									foo: 'bar'
+								}
+							}).then(resolve, reject);
+						}, 5);
+					});
+				}).then(function (response) {
+					assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
+					cacheBustStringB = response.url.split('&')[1];
+					assert.isFalse(isNaN(Number(cacheBustStringB)));
+
+					assert.notEqual(cacheBustStringA, cacheBustStringB);
+				});
+			},
+
+			'.get with cacheBust and no query'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				let cacheBustStringA: string;
+				let cacheBustStringB: string;
+				return xhrRequest('/__echo/xhr', {
+					cacheBust: true
+				}).then(function (response: any) {
+					cacheBustStringA = response.url.split('?')[1];
+					assert.ok(cacheBustStringA);
+					assert.isFalse(isNaN(Number(cacheBustStringA)));
+
+					return xhrRequest('/__echo/xhr', {
+						cacheBust: true
+					});
+				}).then(function (response: any) {
+					cacheBustStringB = response.url.split('?')[1];
+					assert.ok(cacheBustStringB);
+					assert.isFalse(isNaN(Number(cacheBustStringB)));
+					assert.notEqual(cacheBustStringA, cacheBustStringB);
+				});
+			}
 		},
 
 		'headers': {
-			'custom headers'() {
-				// TODO: Use sinon
-				const setRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
-				const headers: { [key: string]: string; } = {};
-				XMLHttpRequest.prototype.setRequestHeader = function (name: string, value: string): void {
-					headers[name] = value;
-				};
-				xhrRequest(getRequestUrl('foo.json'), {
+			'normalize header names'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				return xhrRequest('/__echo/normalize', {
 					headers: {
-						'X-Requested-With': 'arbitrary-value'
+						'CONTENT-TYPE': 'arbitrary-value'
 					}
+				}).then(function (response: any) {
+					const data = JSON.parse(response.data);
+					assert.isUndefined(data.headers['CONTENT-TYPE']);
+					assert.propertyVal(data.headers, 'content-type', 'arbitrary-value');
 				});
-				assert.strictEqual(headers['X-Requested-With'], 'arbitrary-value');
-				XMLHttpRequest.prototype.setRequestHeader = setRequestHeader;
+			},
+
+			'custom headers'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				return xhrRequest('/__echo/custom', {
+					headers: {
+						'Content-Type': 'application/arbitrary-value'
+					}
+				}).then(function (response: any) {
+					const data = JSON.parse(response.data);
+					assert.propertyVal(data.headers, 'content-type', 'application/arbitrary-value');
+				});
 			},
 
 			'default headers'() {
-				// TODO: Use sinon
-				const setRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
-				const headers: { [key: string]: string; } = {};
-				const options = has('formdata') ? { data: new FormData() } : {};
-				XMLHttpRequest.prototype.setRequestHeader = function (name: string, value: string): void {
-					headers[name] = value;
-				};
-				xhrRequest(getRequestUrl('foo.json'), options);
-				assert.strictEqual(headers['X-Requested-With'], 'XMLHttpRequest');
-
-				if (has('formdata')) {
-					assert.strictEqual(headers['Content-Type'], 'application/x-www-form-urlencoded');
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
 				}
+				const options = has('formdata') ? { data: new FormData() } : {};
+				return xhrRequest('/__echo/default', options).then(function (response: any) {
+					const data = JSON.parse(response.data);
+					assert.strictEqual(data.headers['x-requested-with'], 'XMLHttpRequest');
+					if (has('formdata')) {
+						assert.include(data.headers['content-type'], 'application/x-www-form-urlencoded');
+					}
+				});
+			}
+		},
 
-				XMLHttpRequest.prototype.setRequestHeader = setRequestHeader;
+		'responseType': {
+			'xml'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				sinon.spy(XMLHttpRequest.prototype, 'overrideMimeType');
+				return requestResponseType('xml', { responseType: 'xml' }).then(function (response: any) {
+					const foo: string = response.data.getElementsByTagName('foo')[0].getAttribute('value');
+					assert.strictEqual(foo, 'bar');
+					assert.isTrue((<any> XMLHttpRequest.prototype.overrideMimeType).calledOnce,
+						'Should have called overrideMimeType once');
+					assert.strictEqual(
+						'text/xml',
+						(<any> XMLHttpRequest.prototype.overrideMimeType).getCall(0).args[0],
+						'Should have called overrideMimetype with \'text/xml\'  as the argument'
+					);
+					(<any> XMLHttpRequest.prototype.overrideMimeType).restore();
+				});
+			},
+
+			'blob'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				return requestResponseType('gif', { responseType: 'blob' }).then(function (response: any) {
+					assert.instanceOf(response.data, Blob);
+				});
+			},
+
+			'arrayBuffer'() {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				return requestResponseType('gif', { responseType: 'arraybuffer' }).then(function (response: any) {
+					assert.instanceOf(response.data, ArrayBuffer);
+				});
 			}
 		}
 	},
 
 	'response object': {
-		properties(): void {
-			const dfd = this.async();
-			const url: string = getRequestUrl('foo.json');
-			xhrRequest(url)
-				.then(
-					dfd.callback(function (response: any): void {
-						assert.strictEqual(response.statusCode, 200);
-						assert.strictEqual(response.statusText, 'OK');
-						assert.isTrue(response.nativeResponse instanceof XMLHttpRequest);
-						assert.strictEqual(response.url, url);
-						assert.deepEqual(response.requestOptions, { method: 'GET' });
-					}),
-					dfd.reject.bind(dfd)
-				);
+		properties() {
+			if (!echoServerAvailable) {
+				this.skip('No echo server available');
+			}
+			return xhrRequest('/__echo/foo.json').then(function (response: any) {
+				assert.strictEqual(response.statusCode, 200);
+				assert.strictEqual(response.statusText, 'OK');
+				assert.isTrue(response.nativeResponse instanceof XMLHttpRequest);
+				assert.strictEqual(response.url, '/__echo/foo.json');
+				assert.deepEqual(response.requestOptions, { method: 'GET' });
+			});
 		},
 
-		'.getHeader'(): void {
-			const dfd = this.async();
-			xhrRequest(getRequestUrl('foo.json'))
-				.then(
-					dfd.callback(function (response: any): void {
-						const length: number = Number(response.getHeader('content-length'));
-						assert.strictEqual(length, response.data.length);
-					}),
-					dfd.reject.bind(dfd)
-				);
-		}
-	},
-
-	'response types': {
-		xml(): void {
-			const dfd = this.async();
-			xhrRequest(getRequestUrl('foo.xml'), { responseType: 'xml' })
-				.then(
-					dfd.callback(function (response: any): void {
-						const foo: string = response.data.getElementsByTagName('foo')[0].getAttribute('value');
-						assert.strictEqual(foo, 'bar');
-					}),
-					dfd.reject.bind(dfd)
-				);
-		},
-
-		'default'(): void {
-			const dfd = this.async();
-			xhrRequest(getRequestUrl('foo.json'))
-				.then(
-					dfd.callback(function (response: any): void {
-						const data: {} = JSON.parse(response.data);
-						assert.deepEqual(data, { foo: 'bar' });
-					}),
-					dfd.reject.bind(dfd)
-				);
+		'.getHeader'() {
+			if (!echoServerAvailable) {
+				this.skip('No echo server available');
+			}
+			return xhrRequest('/__echo/foo.json').then(function (response: any) {
+				const length: number = Number(response.getHeader('content-length'));
+				assert.strictEqual(length, response.data.length);
+			});
 		}
 	}
 });
