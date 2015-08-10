@@ -10,6 +10,7 @@ import WritableNodeStreamSink from '../streams/adapters/WritableNodeStreamSink';
 import ReadableStream from '../streams/ReadableStream';
 import WritableStream from '../streams/WritableStream';
 import * as urlUtil from 'url';
+import { generateRequestUrl } from './util';
 
 // TODO: Where should the dojo version come from? It used to be kernel, but we don't have that.
 let version = '2.0.0-pre';
@@ -73,7 +74,8 @@ function normalizeHeaders(headers: { [name: string]: string }): { [name: string]
 }
 
 export default function node<T>(url: string, options: NodeRequestOptions<T> = {}): ResponsePromise<T> {
-	const parsedUrl = urlUtil.parse(options.proxy || url);
+	const requestUrl = generateRequestUrl(url, options);
+	const parsedUrl = urlUtil.parse(options.proxy || requestUrl);
 	const requestOptions: HttpsOptions = {
 		agent: options.agent,
 		auth: parsedUrl.auth || options.auth,
@@ -89,7 +91,7 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 		passphrase: options.passphrase,
 		path: parsedUrl.path,
 		pfx: options.pfx,
-		port: +parsedUrl.port,
+		port: Number(parsedUrl.port),
 		rejectUnauthorized: options.rejectUnauthorized,
 		secureProtocol: options.secureProtocol,
 		socketPath: options.socketPath
@@ -100,12 +102,12 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 	}
 
 	if (options.proxy) {
-		requestOptions.path = url;
+		requestOptions.path = requestUrl;
 		if (parsedUrl.auth) {
 			requestOptions.headers['proxy-authorization'] = 'Basic ' + new Buffer(parsedUrl.auth).toString('base64');
 		}
 
-		let _parsedUrl = urlUtil.parse(url);
+		let _parsedUrl = urlUtil.parse(requestUrl);
 		requestOptions.headers['host'] = _parsedUrl.host;
 		requestOptions.auth = _parsedUrl.auth || options.auth;
 	}
@@ -122,7 +124,7 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 		},
 		requestOptions: options,
 		statusCode: null,
-		url: url
+		url: requestUrl
 	};
 
 	const promise = new Task<Response<T>>(function (resolve, reject) {
