@@ -64,6 +64,7 @@ add('dom-mutationobserver', function(): boolean {
 add('microtasks', function () {
 	return has('promise') || has('host-node') || has('dom-mutationobserver');
 });
+add('object-assign', typeof (<any> Object).assign === 'function');
 add('object-observe', typeof (<any> Object).observe === 'function');
 add('postmessage', typeof postMessage === 'function');
 add('promise', typeof global.Promise !== 'undefined');
