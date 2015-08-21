@@ -30,9 +30,9 @@ registerSuite({
 				let params = new UrlSearchParams('foo=bar&foo=baz&bar=foo&baz');
 				checkParams(params);
 
-				// Assignments after the first will be ignored
+				// Equals signs after the first will be included in the value
 				params = new UrlSearchParams('foo=bar=baz');
-				assert.deepEqual(params.getAll('foo'), [ 'bar' ]);
+				assert.deepEqual(params.getAll('foo'), [ 'bar=baz' ]);
 
 				// Handle empty keys
 				params = new UrlSearchParams('=foo&');

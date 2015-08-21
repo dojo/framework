@@ -12,7 +12,17 @@ export type ParamList = Hash<string | string[]>;
 function parseQueryString(input: string): ParamList {
 	const query: Hash<string[]> = {};
 	for (const entry of input.split('&')) {
-		let [ key, value ] = entry.split('=');
+		const indexOfFirstEquals = entry.indexOf('=');
+		let key: string;
+		let value: string;
+
+		if (indexOfFirstEquals >= 0) {
+			key = entry.slice(0, indexOfFirstEquals);
+			value = entry.slice(indexOfFirstEquals + 1);
+		} else {
+			key = entry;
+		}
+
 		key = key ? decodeURIComponent(key) : '';
 		value = value ? decodeURIComponent(value) : '';
 
