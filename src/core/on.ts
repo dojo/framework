@@ -22,10 +22,8 @@ interface DOMEventObject extends EventObject {
  * @param event The event object to emit
  * @return Boolean indicating Whether the event was canceled (this will always be false for event emitters)
  */
-export function emit(target: EventTarget, event: EventObject): boolean;
-export function emit(target: EventEmitter, event: EventObject): boolean;
-export function emit(target: Evented, event: EventObject): boolean;
-export function emit(target: any, event: EventObject): boolean {
+export function emit<T extends EventObject>(target: Evented | EventTarget | EventEmitter, event: T | EventObject): boolean;
+export function emit<T extends EventObject>(target: any, event: T | EventObject): boolean {
 	if (target.dispatchEvent && target.ownerDocument && target.ownerDocument.createEvent) {
 		const nativeEvent = target.ownerDocument.createEvent('HTMLEvents');
 		nativeEvent.initEvent(

@@ -124,6 +124,7 @@ export interface RequestOptions {
 	auth?: string;
 	cacheBust?: any;
 	data?: any;
+	handleAs?: string;
 	headers?: { [name: string]: string; };
 	method?: string;
 	password?: string;

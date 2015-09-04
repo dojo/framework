@@ -17,14 +17,14 @@ class CharToCodeTransform implements Transform<number, string> {
 			size(chunk: number) {
 				return 1;
 			},
-			highwaterMark: Infinity
+			highWaterMark: Infinity
 		};
 
 		this.writableStrategy = {
 			size(chunk: string) {
 				return 1;
 			},
-			highwaterMark: Infinity
+			highWaterMark: Infinity
 		};
 	}
 
