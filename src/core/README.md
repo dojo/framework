@@ -1,5 +1,8 @@
 # Dojo 2 core
 
+[![Build Status](https://travis-ci.org/dojo/core.svg?branch=coverage)](https://travis-ci.org/dojo/core)
+[![codecov.io](http://codecov.io/github/dojo/core/coverage.svg?branch=master)](http://codecov.io/github/dojo/core?branch=master)
+
 This package provides a set of language helpers, utility functions, and classes for writing TypeScript applications.
 It includes APIs for feature detection, asynchronous and streaming operations, basic event handling,
 and making HTTP requests.
@@ -129,6 +132,10 @@ Contributing Guidelines and Style Guide.
 Test cases MUST be written using Intern using the Object test interface and Assert assertion interface.
 
 90% branch coverage MUST be provided for all code submitted to this repository, as reported by istanbul’s combined coverage results for all supported platforms.
+
+Dojo core's continuous integration tests use the [BrowserStack](http://www.browserstack.com) cloud.
+
+[![BrowserStack](resources/BrowserStackLogo.png)](http://www.browserstack.com)
 
 ## Licensing information
 

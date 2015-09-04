@@ -2,10 +2,14 @@ import intern = require('intern');
 import echo = require('intern/dojo/has!host-node?./services/echo');
 
 let server: any;
-if (echo && intern.mode === 'runner') {
-	echo.start().then(function (_server: any) {
-		server = _server;
-	});
+
+// This hook is called when Intern starts
+export function setup() {
+	if (echo && intern.mode === 'runner') {
+		echo.start().then(function (_server: any) {
+			server = _server;
+		});
+	}
 }
 
 // This hook is called when Intern closes
@@ -25,7 +29,8 @@ export const proxyUrl = 'http://localhost:9001/';
 // Note that the `build` capability will be filled in with the current commit ID from the Travis CI environment
 // automatically
 export const capabilities = {
-	'browserstack.selenium_version': '2.45.0',
+	'browserstack.selenium_version': '2.46.0',
+	'browserstack.debug': false,
 	project: 'Dojo 2',
 	name: 'dojo-core'
 };
@@ -34,20 +39,14 @@ export const capabilities = {
 // OnDemand. Options that will be permutated are browserName, version, platform, and platformVersion; any other
 // capabilities options specified for an environment will be copied as-is
 export const environments = [
-	{ browser: 'IE', browser_version: '11', os: 'WINDOWS', os_version: '8.1' },
-	{ browser: 'IE', browser_version: '10', os: 'WINDOWS', os_version: '8' },
-	{ browser: 'IE', browser_version: '9', os: 'WINDOWS', os_version: '7' },
-	{ browser: 'Firefox', os: 'WINDOWS', os_version: '8.1' },
-	{ browser: 'Firefox', os: 'WINDOWS', os_version: 'XP' },
-	{ browser: 'Firefox', os: 'OS X' },
-	{ browser: 'Chrome', os: 'WINDOWS', os_version: '8.1' },
-	{ browser: 'Chrome', os: 'WINDOWS', os_version: 'XP' },
-	{ browser: 'Chrome', os: 'OS X' },
-	{ browser: 'Safari', browser_version: '8', os: 'OS X' }
+	{ browserName: 'internet explorer', version: [ '9', '10', '11' ], platform: 'WINDOWS' },
+	{ browserName: 'firefox', os: 'WINDOWS' },
+	{ browserName: 'chrome', os: 'WINDOWS' }/*,
+	{ browser: 'Safari', browser_version: '8', os: 'OS X' }*/
 ];
 
 // Maximum number of simultaneous integration tests that should be executed on the remote WebDriver service
-export const maxConcurrency = 2;
+export const maxConcurrency = 1;
 
 // Name of the tunnel class to use for WebDriver tests
 export const tunnel = 'BrowserStackTunnel';
@@ -63,7 +62,7 @@ export const initialBaseUrl: string = (function () {
 // The desired AMD loader to use when running unit tests (client.html/client.js). Omit to use the default Dojo
 // loader
 export const loaders = {
-	'host-browser': `node_modules/dojo-loader/loader.js`,
+	'host-browser': 'node_modules/dojo-loader/loader.js',
 	'host-node': 'dojo-loader'
 };
 
@@ -87,3 +86,5 @@ export const functionalSuites = [ 'tests/functional/all' ];
 
 // A regular expression matching URLs to files that should not be included in code coverage analysis
 export const excludeInstrumentation = /(?:node_modules|bower_components|tests)[\/]/;
+
+export const defaultTimeout = 5000;

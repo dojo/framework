@@ -30,33 +30,26 @@ const suite: { [name: string]: any } = {
 
 	'custom provider': {
 		'String matching'() {
-			const dfd = this.async();
 			handle = providerRegistry.register('arbitrary.html', mockProvider);
 
-			request.get('arbitrary.html')
-				.then(
-					dfd.callback(function (response: any): void {
-						assert.equal(response.data, mockData);
-					}),
-					dfd.reject.bind(dfd)
-				);
+			return request.get('arbitrary.html')
+				.then(function (response: any): void {
+					assert.equal(response.data, mockData);
+				})
+			;
 		},
 
 		'RegExp matching'() {
-			const dfd = this.async();
 			handle = providerRegistry.register(/arbitrary\.html$/, mockProvider);
 
-			request.get('arbitrary.html')
-				.then(
-					dfd.callback(function (response: any): void {
-						assert.equal(response.data, mockData);
-					}),
-					dfd.reject.bind(dfd)
-				);
+			return request.get('arbitrary.html')
+				.then(function (response: any): void {
+					assert.equal(response.data, mockData);
+				})
+			;
 		},
 
 		'Default matching'() {
-			const dfd = this.async();
 			handle = providerRegistry.register(
 				function (url: string): boolean {
 					return url === 'arbitrary.html';
@@ -64,13 +57,11 @@ const suite: { [name: string]: any } = {
 				mockProvider
 			);
 
-			request.get('arbitrary.html')
-				.then(
-					dfd.callback(function (response: any): void {
-						assert.equal(response.data, mockData);
-					}),
-					dfd.reject.bind(dfd)
-				);
+			return request.get('arbitrary.html')
+				.then(function (response: any): void {
+					assert.equal(response.data, mockData);
+				})
+			;
 		}
 	},
 
@@ -87,35 +78,28 @@ const suite: { [name: string]: any } = {
 				return response;
 			});
 
-			const dfd = this.async();
-			request.get('arbitrary.html')
-				.then(
-					dfd.callback(function (response: any): void {
-						assert.equal(response.data, data);
-					}),
-					dfd.reject.bind(dfd)
-				);
+			return request.get('arbitrary.html')
+				.then(function (response: any): void {
+					assert.equal(response.data, data);
+				})
+			;
 		},
 
 		'RegExp matching'() {
-			const dfd = this.async();
 			let data: string;
 			handle = filterRegistry.register(/arbitrary\.html$/, function (response: Response<any>): Response<any> {
 				data = response.data;
 				return response;
 			});
 
-			request.get('arbitrary.html')
-				.then(
-					dfd.callback(function (response: any): void {
-						assert.equal(response.data, data);
-					}),
-					dfd.reject.bind(dfd)
-				);
+			return request.get('arbitrary.html')
+				.then(function (response: any): void {
+					assert.equal(response.data, data);
+				})
+			;
 		},
 
 		'Default matching'() {
-			const dfd = this.async();
 			let data: string;
 
 			handle = filterRegistry.register(
@@ -128,26 +112,19 @@ const suite: { [name: string]: any } = {
 				}
 			);
 
-			request.get('arbitrary.html')
-				.then(
-					dfd.callback(function (response: any): void {
-						assert.equal(response.data, data);
-					}),
-					dfd.reject.bind(dfd)
-				);
+			return request.get('arbitrary.html')
+				.then(function (response: any): void {
+					assert.equal(response.data, data);
+				})
+			;
 		},
 
 		'JSON matching'() {
-			const dfd = this.async();
-
-			request.get('arbitrary.html', {
+			return request.get('arbitrary.html', {
 				responseType: 'json'
-			}).then(
-				dfd.callback(function (response: any) {
-					assert.deepEqual(response.data, { foo: 'bar' }, 'JSON parsing should be automatically provided.');
-				}),
-				dfd.reject.bind(dfd)
-			);
+			}).then(function (response: any) {
+				assert.deepEqual(response.data, { foo: 'bar' }, 'JSON parsing should be automatically provided.');
+			});
 		}
 	}
 };
@@ -258,14 +235,11 @@ if (has('host-browser')) {
 
 	suite['browser'] = {
 		'.get'() {
-			const dfd = this.async();
-			request.get(getRequestUrl('foo.json'))
-				.then(
-					dfd.callback(function (response: any) {
-						assert.deepEqual(JSON.parse(response.data), { foo: 'bar' });
-					}),
-					dfd.reject.bind(dfd)
-				);
+			return request.get(getRequestUrl('foo.json'))
+				.then(function (response: any) {
+					assert.deepEqual(JSON.parse(response.data), { foo: 'bar' });
+				})
+			;
 		},
 
 		'JSON filter'() {
@@ -274,14 +248,11 @@ if (has('host-browser')) {
 				return response;
 			});
 
-			const dfd = this.async();
-			request.get(getRequestUrl('foo.json'))
-				.then(
-					dfd.callback(function (response: any) {
-						assert.deepEqual(response.data, { foo: 'bar' });
-					}),
-					dfd.reject.bind(dfd)
-				);
+			return request.get(getRequestUrl('foo.json'))
+				.then(function (response: any) {
+					assert.deepEqual(response.data, { foo: 'bar' });
+				})
+			;
 		}
 	};
 }
