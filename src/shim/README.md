@@ -1,6 +1,6 @@
 # Dojo 2 core
 
-[![Build Status](https://travis-ci.org/dojo/core.svg?branch=coverage)](https://travis-ci.org/dojo/core)
+[![Build Status](https://travis-ci.org/dojo/core.svg?branch=master)](https://travis-ci.org/dojo/core)
 [![codecov.io](http://codecov.io/github/dojo/core/coverage.svg?branch=master)](http://codecov.io/github/dojo/core?branch=master)
 
 This package provides a set of language helpers, utility functions, and classes for writing TypeScript applications.
