@@ -10,4 +10,4 @@ import './util';
 import './WritableStream';
 import './adapters/EventedStreamSource';
 
-import 'dojo/has!host-node?./nodeOnly:./browserOnly';
+import 'dojo/has!host-node?./nodeOnly:';

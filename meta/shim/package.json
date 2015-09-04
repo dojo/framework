@@ -13,6 +13,7 @@
 	},
 	"devDependencies": {
 		"benchmark": "^1.0.0",
+		"codecov.io": "0.1.6",
 		"dojo-loader": "2.0.0-alpha.1",
 		"dts-generator": "1.5.0",
 		"formidable": "1.0.14",
@@ -26,6 +27,8 @@
 		"grunt-tslint": "2.0.0",
 		"http-proxy": "0.10.3",
 		"intern": "3.0.1",
+		"istanbul": "0.3.17",
+		"remap-istanbul": "git://github.com/sitepen/remap-istanbul.git#dd9f5cb3fe8d6261739ce0ccb49e7825239d43f9",
 		"sinon": "1.14.1",
 		"tslint": "2.4.0",
 		"typescript": "1.6.0-beta"
