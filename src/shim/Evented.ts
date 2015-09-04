@@ -6,7 +6,7 @@ export default class Evented {
 	 * Emits an event, firing listeners registered for it.
 	 * @param event The event object to emit
 	 */
-	emit(data: EventObject): void {
+	emit<T extends EventObject>(data: T): void {
 		const type = '__on' + data.type;
 		const method: Function = (<any> this)[type];
 		if (method) {
