@@ -78,6 +78,7 @@ add('weakmap', function () {
 	}
 	return false;
 });
+add('arraybuffer', typeof global.ArrayBuffer !== 'undefined');
 add('formdata', typeof global.FormData !== 'undefined');
 add('xhr', typeof global.XMLHttpRequest !== 'undefined');
 add('xhr2', has('xhr') && 'responseType' in global.XMLHttpRequest.prototype);

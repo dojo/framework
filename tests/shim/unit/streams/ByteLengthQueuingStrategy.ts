@@ -1,5 +1,6 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
+import has from 'src/has';
 import ByteLengthQueuingStrategy from 'src/streams/ByteLengthQueuingStrategy';
 import WritableStream, { State } from 'src/streams/WritableStream';
 import ManualSink from './helpers/ManualSink';
@@ -10,6 +11,9 @@ registerSuite({
 	name: 'ByteLengthQueuingStrategy',
 
 	size() {
+		if (!has('arraybuffer')) {
+			this.skip('ArrayBuffer doesn\'t exist in this environment');
+		}
 		let dfd = this.async(ASYNC_TIMEOUT);
 		let sink = new ManualSink<ArrayBuffer>();
 

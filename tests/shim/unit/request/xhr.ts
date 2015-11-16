@@ -1,6 +1,5 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as sinon from 'sinon';
 import has from 'src/has';
 import Promise from 'src/Promise';
 import xhrRequest from 'src/request/xhr';
@@ -390,24 +389,18 @@ registerSuite({
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
 				}
-				sinon.spy(XMLHttpRequest.prototype, 'overrideMimeType');
 				return requestResponseType('xml', { responseType: 'xml' }).then(function (response: any) {
 					const foo: string = response.data.getElementsByTagName('foo')[0].getAttribute('value');
 					assert.strictEqual(foo, 'bar');
-					assert.isTrue((<any> XMLHttpRequest.prototype.overrideMimeType).calledOnce,
-						'Should have called overrideMimeType once');
-					assert.strictEqual(
-						'text/xml',
-						(<any> XMLHttpRequest.prototype.overrideMimeType).getCall(0).args[0],
-						'Should have called overrideMimetype with \'text/xml\'  as the argument'
-					);
-					(<any> XMLHttpRequest.prototype.overrideMimeType).restore();
 				});
 			},
 
 			'blob'() {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
+				}
+				if (!has('xhr2-blob')) {
+					this.skip('Blob doesn\'t exist in this environment');
 				}
 				return requestResponseType('gif', { responseType: 'blob' }).then(function (response: any) {
 					assert.instanceOf(response.data, Blob);
@@ -417,6 +410,9 @@ registerSuite({
 			'arrayBuffer'() {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
+				}
+				if (!has('arraybuffer')) {
+					this.skip('ArrayBuffer doesn\'t exist in this environment');
 				}
 				return requestResponseType('gif', { responseType: 'arraybuffer' }).then(function (response: any) {
 					assert.instanceOf(response.data, ArrayBuffer);
