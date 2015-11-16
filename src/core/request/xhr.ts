@@ -2,6 +2,8 @@ import Task from '../async/Task';
 import RequestTimeoutError from './errors/RequestTimeoutError';
 import global from '../global';
 import has from '../has';
+import { Handle } from '../interfaces';
+import { createTimer } from '../util';
 import { RequestOptions, Response, ResponsePromise } from '../request';
 import { generateRequestUrl } from './util';
 
@@ -56,9 +58,11 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 			request.responseType = responseTypeMap[options.responseType];
 		}
 
+		let timeoutHandle: Handle;
 		request.onreadystatechange = function (): void {
 			if (request.readyState === 4) {
 				request.onreadystatechange = function () {};
+				timeoutHandle && timeoutHandle.destroy();
 
 				if (options.responseType === 'xml') {
 					response.data = request.responseXML;
@@ -69,7 +73,7 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 
 				response.statusCode = request.status;
 				response.statusText = request.statusText;
-				if (response.statusCode >= 200 && response.statusCode < 400) {
+				if (response.statusCode > 0 && response.statusCode < 400) {
 					resolve(response);
 				}
 				else {
@@ -83,9 +87,13 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 
 		if (options.timeout > 0 && options.timeout !== Infinity) {
 			request.timeout = options.timeout;
-			request.ontimeout = function () {
+			timeoutHandle = createTimer(function () {
+				// Reject first, since aborting will also fire onreadystatechange which would reject with a
+				// less specific error.  (This is also why we set up our own timeout rather than using
+				// native timeout and ontimeout, because that aborts and fires onreadystatechange before ontimeout.)
 				reject(new RequestTimeoutError('The XMLHttpRequest request timed out.'));
-			};
+				request.abort();
+			}, options.timeout);
 		}
 
 		const headers = options.headers;
