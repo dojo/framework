@@ -1,4 +1,5 @@
 import Promise from '../../src/Promise';
+import { Hash } from '../../src/interfaces'
 
 import http = require('intern/dojo/node!http');
 import querystring = require('intern/dojo/node!querystring');
@@ -45,6 +46,16 @@ function writeErrorResponse(response: any, error?: string) {
 	response.end();
 }
 
+function writeSuccessResponse(response: any, body: string) {
+	response.writeHead(200, {
+		'Content-Length': body.length,
+		'Content-Type': 'application/json'
+	});
+
+	response.write(body);
+	response.end();
+}
+
 function retrieveResource(response: any, responseType: string): void {
 	let resourceName: string;
 	let encoding: string;
@@ -88,7 +99,7 @@ export function start(port?: number): Promise<http.Server> {
 	const echoRequest = wrapWithMultipartHandler(function (request: any, response: any) {
 		try {
 			const queryString = request.url.split('?')[1];
-			let query: { [ name: string ]: string | string[] };
+			let query: Hash<string | string[]>;
 			let responseType = '';
 
 			if (queryString) {
@@ -133,14 +144,12 @@ export function start(port?: number): Promise<http.Server> {
 							headers: request.headers,
 							payload: data
 						});
-
-						response.writeHead(200, {
-							'Content-Length': body.length,
-							'Content-Type': 'application/json'
-						});
-
-						response.write(body);
-						response.end();
+						if (query && query['delay']) {
+							let delay = Number(query['delay']);
+							setTimeout(writeSuccessResponse, delay, response, body)
+						} else {
+							writeSuccessResponse(response, body);
+						}
 					}
 					else {
 						retrieveResource(response, responseType);

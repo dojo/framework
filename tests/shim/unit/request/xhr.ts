@@ -103,7 +103,7 @@ registerSuite({
 			if (!echoServerAvailable) {
 				this.skip('No echo server available');
 			}
-			return xhrRequest('/__echo/xhr', { timeout: 1 })
+			return xhrRequest('/__echo/xhr?delay=5000', { timeout: 10 })
 				.then(
 					function () {
 						assert(false, 'Should have timed out');
