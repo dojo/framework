@@ -143,7 +143,7 @@ export function deepMixin(target: {}, ...sources: {}[]): {} {
 
 /**
  * Creates a new object using the provided source's prototype as the prototype for the new object, and then
- * deep copies the provided source's values into the new target.
+ * deep copies the provided source's values  into the new target.
  *
  * @param source The object to duplicate
  * @return The new object
