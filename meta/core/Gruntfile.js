@@ -94,7 +94,7 @@ module.exports = function (grunt) {
 				expand: true,
 				cwd: 'typings/',
 				src: [ '**/*.d.ts', '!tsd.d.ts' ],
-				dest: 'dist/_typings/'
+				dest: 'dist/typings/'
 			}
 		},
 
@@ -105,7 +105,7 @@ module.exports = function (grunt) {
 			},
 			dist: {
 				options: {
-					out: 'dist/_typings/<%= name %>/<%= name %>-<%= version %>.d.ts'
+					out: 'dist/typings/<%= name %>/<%= name %>-<%= version %>.d.ts'
 				},
 				src: [ '<%= skipTests %>' ]
 			}
