@@ -12,7 +12,6 @@ import './load';
 import './math';
 import './Map';
 import './number';
-import './observers/ObjectObserver';
 import './object';
 import './on/all';
 import './Promise';

@@ -1,7 +1,5 @@
 import has from './has';
 import { Handle } from './interfaces';
-import { PropertyEvent, Observer } from './observers/interfaces';
-import * as ObjectObserver from './observers/ObjectObserver';
 
 const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -205,19 +203,6 @@ export function mixin(target: {}, ...sources: {}[]): {} {
 		sources: sources,
 		target: target
 	});
-}
-
-export function observe(kwArgs: ObserveArgs): Observer {
-	const Ctor = kwArgs.nextTurn && has('object-observe') ? ObjectObserver.Es7Observer : ObjectObserver.Es5Observer;
-
-	return new Ctor(kwArgs);
-}
-
-export interface ObserveArgs {
-	listener: (events: PropertyEvent[]) => any;
-	nextTurn?: boolean;
-	onlyReportObserved?: boolean;
-	target: {};
 }
 
 /**
