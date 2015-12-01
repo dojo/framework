@@ -81,7 +81,10 @@ function retrieveResource(response: any, responseType: string): void {
 			method: 'GET'
 		},
 		function (newResponse: any) {
-			response.writeHead(newResponse.statusCode, newResponse.headers);
+			response.writeHead(
+				newResponse.statusCode,
+				responseType === 'xml' ? {'content-type': 'text/xml'} : newResponse.headers
+			);
 			if (encoding) {
 				newResponse.setEncoding(encoding);
 			}
