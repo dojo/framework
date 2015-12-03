@@ -15,7 +15,7 @@
 		"benchmark": "^1.0.0",
 		"codecov.io": "0.1.6",
 		"dojo-loader": "2.0.0-alpha.1",
-		"dts-generator": "1.6.2",
+		"dts-generator": "1.6.3",
 		"formidable": "1.0.14",
 		"glob": "3.2.7",
 		"grunt": "0.4.5",
@@ -23,14 +23,14 @@
 		"grunt-contrib-copy": "0.8.0",
 		"grunt-contrib-watch": "0.6.1",
 		"grunt-text-replace": "0.4.0",
-		"grunt-ts": "4.2.0",
-		"grunt-tslint": "2.0.0",
+		"grunt-ts": "5.2.0",
+		"grunt-tslint": "3.0.0",
 		"http-proxy": "0.10.3",
 		"intern": "3.0.6",
 		"istanbul": "0.4.1",
 		"remap-istanbul": "0.4.0",
 		"sinon": "1.14.1",
-		"tslint": "2.4.0",
+		"tslint": "3.1.1",
 		"typescript": "1.7.3"
 	}
 }

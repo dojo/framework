@@ -1,5 +1,5 @@
 import Promise from '../../src/Promise';
-import { Hash } from '../../src/interfaces'
+import { Hash } from '../../src/interfaces';
 
 import http = require('intern/dojo/node!http');
 import querystring = require('intern/dojo/node!querystring');
@@ -149,7 +149,7 @@ export function start(port?: number): Promise<http.Server> {
 						});
 						if (query && query['delay']) {
 							let delay = Number(query['delay']);
-							setTimeout(writeSuccessResponse, delay, response, body)
+							setTimeout(writeSuccessResponse, delay, response, body);
 						} else {
 							writeSuccessResponse(response, body);
 						}
