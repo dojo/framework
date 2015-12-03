@@ -29,27 +29,29 @@ export const proxyUrl = 'http://localhost:9001/';
 // Note that the `build` capability will be filled in with the current commit ID from the Travis CI environment
 // automatically
 export const capabilities = {
-	'browserstack.selenium_version': '2.46.0',
-	'browserstack.debug': false,
 	project: 'Dojo 2',
-	name: 'dojo-core'
+	name: 'dojo-core',
+	fixSessionCapabilities: false
 };
 
 // Browsers to run integration testing against. Note that version numbers must be strings if used with Sauce
 // OnDemand. Options that will be permutated are browserName, version, platform, and platformVersion; any other
 // capabilities options specified for an environment will be copied as-is
 export const environments = [
-	{ browserName: 'internet explorer', version: [ '9', '10', '11' ], platform: 'WINDOWS' },
-	{ browserName: 'firefox', os: 'WINDOWS' },
-	{ browserName: 'chrome', os: 'WINDOWS' }/*,
-	{ browser: 'Safari', browser_version: '8', os: 'OS X' }*/
+	{ browserName: 'internet explorer', version: [ '9.0', '10.0', '11.0' ], platform: 'Windows 7' },
+	/* { browserName: 'microsoftedge', platform: 'Windows 10' }, */
+	{ browserName: 'firefox', platform: 'Windows 10' },
+	{ browserName: 'chrome', platform: 'Windows 10' },
+	/* { browserName: 'safari', version: '9', platform: 'OS X 10.11' },*/
+	{ browserName: 'android', platform: 'Linux', version: '4.4', deviceName: 'Google Nexus 7 HD Emulator' }/*,
+	{ browserName: 'iphone', version: '9.1', deviceName: 'iPhone 6' }*/
 ];
 
 // Maximum number of simultaneous integration tests that should be executed on the remote WebDriver service
-export const maxConcurrency = 1;
+export const maxConcurrency = 3;
 
 // Name of the tunnel class to use for WebDriver tests
-export const tunnel = 'BrowserStackTunnel';
+export const tunnel = 'SauceLabsTunnel';
 
 // Support running unit tests from a web server that isn't the intern proxy
 export const initialBaseUrl: string = (function () {

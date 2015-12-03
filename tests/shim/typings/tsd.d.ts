@@ -26,6 +26,18 @@ declare module 'intern/lib/reporters/Runner' {
 	export = Runner;
 }
 
+declare module 'intern/lib/reporters/Combined' {
+	class Combined {
+		protected hasErrors: boolean;
+		protected sessions: any;
+		protected _writeLine(): void;
+		protected output: { write(args: any[]): void; };
+
+		constructor(config?: any);
+	}
+	export = Combined;
+}
+
 declare module 'istanbul/lib/collector' {
 	class Collector {
 		add(coverage: any): void;
