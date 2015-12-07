@@ -23,12 +23,13 @@ export default class Evented {
 	on(type: string, listener: (event: EventObject) => void): Handle {
 		const name = '__on' + type;
 		if (!(<any> this)[name]) {
+			// define a non-enumerable property (see #77)
 			Object.defineProperty(this, name, {
 				configurable: true,
 				value: undefined,
 				writable: true
 			});
 		}
-		return on(this, '__on' + type, listener);
+		return on(this, name, listener);
 	}
 }
