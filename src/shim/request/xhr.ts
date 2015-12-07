@@ -86,7 +86,6 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 		};
 
 		if (options.timeout > 0 && options.timeout !== Infinity) {
-			request.timeout = options.timeout;
 			timeoutHandle = createTimer(function () {
 				// Reject first, since aborting will also fire onreadystatechange which would reject with a
 				// less specific error.  (This is also why we set up our own timeout rather than using
