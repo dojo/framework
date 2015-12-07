@@ -28,8 +28,10 @@ export interface Executor<T> {
 
 /**
  * Returns true if a given value has a `then` method.
+ * @param {any} value The value to check if is Thenable
+ * @returns {is Thenable<T>} A type guard if the value is thenable
  */
-export function isThenable(value: any) {
+export function isThenable<T>(value: any): value is Thenable<T> {
 	return value && typeof value.then === 'function';
 }
 
