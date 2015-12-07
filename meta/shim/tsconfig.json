@@ -8,8 +8,7 @@
 		"removeComments": false,
 		"target": "es5",
 		"experimentalDecorators": true,
-		"inlineSources": false,
-		"inlineSourceMap": false,
+		"sourceMaps": true,
 		"moduleResolution": "classic"
 	},
 	"filesGlob": [
