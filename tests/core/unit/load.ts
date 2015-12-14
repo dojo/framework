@@ -7,6 +7,10 @@ import Promise from 'src/Promise';
 const suite: any = {
 	name: 'load',
 
+	before() {
+		return load('tests/unit/load/a', 'tests/unit/load/b')
+	},
+
 	'global load'() {
 		const def = this.async(5000);
 
