@@ -8,7 +8,7 @@ const suite: any = {
 	name: 'load',
 
 	before() {
-		return load('tests/unit/load/a', 'tests/unit/load/b')
+		return load('tests/unit/load/a', 'tests/unit/load/b');
 	},
 
 	'global load'() {
