@@ -116,7 +116,7 @@ Look at [Map](docs/Map.md) for more information on how to use WeakMap.
 
 ## How do I contribute?
 
-We appreciate your interest! Please see the [Guidelines Repository](https://github.com/dojo/guidelines#readme)
+We appreciate your interest! Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme)
 for the Contributing Guidelines and Style Guide.
 
 Dojo core's continuous integration tests use the [BrowserStack](http://www.browserstack.com) cloud.
