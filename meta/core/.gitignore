@@ -3,6 +3,7 @@
 *.js
 *.js.map
 !/*.js
+!/tasks/*.js
 dist
 node_modules
 bower_components
