@@ -120,6 +120,7 @@
 		"./tests/unit/on/nodeOnly.ts",
 		"./tests/unit/queue.ts",
 		"./tests/unit/request.ts",
+		"./tests/unit/request/has.ts",
 		"./tests/unit/request/node.ts",
 		"./tests/unit/request/xhr.ts",
 		"./tests/unit/streams/ByteLengthQueuingStrategy.ts",
