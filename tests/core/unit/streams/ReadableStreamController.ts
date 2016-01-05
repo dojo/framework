@@ -35,7 +35,9 @@ registerSuite({
 		'create ReadableStreamController with unreadable stream'() {
 			let source = new BaseStringSource();
 			let stream = new ReadableStream<string>(source, strategy);
-			stream.readable = false;
+			Object.defineProperty(stream, 'readable', {
+				value: false
+			});
 			assert.throws(function () {
 				new ReadableStreamController<string>(stream);
 			});
