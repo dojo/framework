@@ -224,6 +224,22 @@ if (has('host-node')) {
 					}),
 					dfd.reject.bind(dfd)
 				);
+		},
+
+		'Buffer filter'() {
+			handle = filterRegistry.register(/foo\.json$/, function (response: Response<any>) {
+				return response;
+			});
+
+			const dfd = this.async();
+			const options: RequestOptions = { responseType: 'json' };
+			request.get(getRequestUrl('foo.json'), options)
+				.then(
+					dfd.callback(function (response: any) {
+						assert.deepEqual(response.data, { foo: 'bar' });
+					}),
+					dfd.reject.bind(dfd)
+				);
 		}
 	};
 }

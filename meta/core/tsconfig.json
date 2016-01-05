@@ -44,6 +44,7 @@
 		"./src/queue.ts",
 		"./src/request.ts",
 		"./src/request/errors/RequestTimeoutError.ts",
+		"./src/request/has.ts",
 		"./src/request/node.ts",
 		"./src/request/util.ts",
 		"./src/request/xhr.ts",
