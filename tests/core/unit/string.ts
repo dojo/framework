@@ -144,8 +144,9 @@ registerSuite({
 
 	'.fromCodePoint()': {
 		'error cases'() {
-			let codePoints = [ -1, 0x10FFFF + 1, 3.14, 3e-2, Infinity, -Infinity, NaN, undefined ];
-			for (var codePoint of codePoints) {
+			let codePoints = [-1, 0x10FFFF + 1, 3.14, 3e-2, Infinity, -Infinity, NaN, undefined];
+			let codePoint: any;
+			for (codePoint of codePoints) {
 				assert.throws(function () {
 					stringUtil.fromCodePoint(codePoint);
 				}, RangeError);
@@ -294,8 +295,9 @@ registerSuite({
 		},
 
 		'throws on negative or infinite count'() {
-			let counts = [ -Infinity, -1, Infinity ];
-			for (var count of counts) {
+			let counts = [-Infinity, -1, Infinity];
+			let count: number;
+			for (count of counts) {
 				assert.throws(function () {
 					stringUtil.repeat('abc', count);
 				}, RangeError);

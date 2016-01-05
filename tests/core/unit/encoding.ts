@@ -169,10 +169,11 @@ registerSuite({
 	'utf8': {
 		'.encode()'() {
 			let buffer = utf8.encode(UTF8_STRING);
+			let testData: any;
 			assert.deepEqual(buffer, UTF8_BUFFER);
 
 			// test surrogates
-			for (var testData of UTF8_SURROGATE_TEST_DATA) {
+			for (testData of UTF8_SURROGATE_TEST_DATA) {
 				assert.throws(function () {
 					utf8.encode(testData.encoding);
 				});
@@ -208,12 +209,13 @@ registerSuite({
 
 		'.decode()'() {
 			let decoded = utf8.decode(UTF8_BUFFER);
+			let testData: any;
 			assert.strictEqual(decoded, UTF8_STRING);
 
 			assert.strictEqual(UTF8_STRING, utf8.decode(utf8.encode(UTF8_STRING)));
 
 			// test surrogates
-			for (var testData of UTF8_SURROGATE_TEST_DATA) {
+			for (testData of UTF8_SURROGATE_TEST_DATA) {
 				assert.throws(function () {
 					utf8.decode(testData.decoding);
 				});
