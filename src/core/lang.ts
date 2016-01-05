@@ -8,10 +8,10 @@ function isObject(item: any): boolean {
 	return Object.prototype.toString.call(item) === '[object Object]';
 }
 
-function copyArray(array: any[], inherited: boolean): any[] {
-	return array.map(function (item: any): any {
+function copyArray<T>(array: T[], inherited: boolean): T[] {
+	return array.map(function (item: T): T {
 		if (Array.isArray(item)) {
-			return copyArray(item, inherited);
+			return  <any> copyArray(<any> item, inherited);
 		}
 
 		return !isObject(item) ?
@@ -19,20 +19,20 @@ function copyArray(array: any[], inherited: boolean): any[] {
 			_mixin({
 				deep: true,
 				inherited: inherited,
-				sources: [ item ],
-				target: {}
+				sources: <Array<T>> [ item ],
+				target: <T> {}
 			});
 	});
 }
 
-interface MixinArgs {
+interface MixinArgs<T extends {}, U extends {}> {
 	deep: boolean;
 	inherited: boolean;
-	sources: {}[];
-	target: {};
+	sources: U[];
+	target: T;
 }
 
-function _mixin(kwArgs: MixinArgs): {} {
+function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T,U>): T&U {
 	const deep = kwArgs.deep;
 	const inherited = kwArgs.inherited;
 	const target = kwArgs.target;
@@ -50,7 +50,7 @@ function _mixin(kwArgs: MixinArgs): {} {
 						value = _mixin({
 							deep: true,
 							inherited: inherited,
-							sources: [ value ],
+							sources: <U[]> [ value ],
 							target: {}
 						});
 					}
@@ -61,11 +61,11 @@ function _mixin(kwArgs: MixinArgs): {} {
 		}
 	}
 
-	return target;
+	return <T&U> target;
 }
 
 interface ObjectAssignConstructor extends ObjectConstructor {
-	assign(target: {}, ...sources: {}[]): {};
+	assign<T extends {}, U extends {}>(target: T, ...sources: U[]): T&U;
 }
 
 /**
@@ -77,7 +77,7 @@ interface ObjectAssignConstructor extends ObjectConstructor {
  */
 export const assign = has('object-assign') ?
 	(<ObjectAssignConstructor> Object).assign :
-	function (target: {}, ...sources: {}[]): {} {
+	function<T extends {}, U extends {}> (target: T, ...sources: U[]): T&U {
 		return _mixin({
 			deep: false,
 			inherited: false,
@@ -94,7 +94,7 @@ export const assign = has('object-assign') ?
  * @param mixins Any number of objects whose enumerable own properties will be copied to the created object
  * @return The new object
  */
-export function create(prototype: {}, ...mixins: {}[]): {} {
+export function create<T extends {}, U extends {}>(prototype: T, ...mixins: U[]): T&U {
 	if (!mixins.length) {
 		throw new RangeError('lang.create requires at least one mixin object.');
 	}
@@ -113,7 +113,7 @@ export function create(prototype: {}, ...mixins: {}[]): {} {
  * @param sources Any number of objects whose enumerable own properties will be copied to the target object
  * @return The modified target object
  */
-export function deepAssign(target: {}, ...sources: {}[]): {} {
+export function deepAssign<T extends {}, U extends {}>(target: T, ...sources: U[]): T&U {
 	return _mixin({
 		deep: true,
 		inherited: false,
@@ -130,7 +130,7 @@ export function deepAssign(target: {}, ...sources: {}[]): {} {
  * @param sources Any number of objects whose enumerable properties will be copied to the target object
  * @return The modified target object
  */
-export function deepMixin(target: {}, ...sources: {}[]): {} {
+export function deepMixin<T extends {}, U extends {}>(target: T, ...sources: U[]): T&U {
 	return _mixin({
 		deep: true,
 		inherited: true,
@@ -141,12 +141,12 @@ export function deepMixin(target: {}, ...sources: {}[]): {} {
 
 /**
  * Creates a new object using the provided source's prototype as the prototype for the new object, and then
- * deep copies the provided source's values  into the new target.
+ * deep copies the provided source's values into the new target.
  *
  * @param source The object to duplicate
  * @return The new object
  */
-export function duplicate(source: {}): {} {
+export function duplicate<T extends {}>(source: T): T {
 	const target = Object.create(Object.getPrototypeOf(source));
 
 	return deepMixin(target, source);
@@ -196,7 +196,7 @@ export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): 
  *
  * @return The modified target object
  */
-export function mixin(target: {}, ...sources: {}[]): {} {
+export function mixin<T extends {}, U extends {}>(target: T, ...sources: U[]): T&U {
 	return _mixin({
 		deep: false,
 		inherited: true,

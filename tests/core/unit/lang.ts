@@ -6,7 +6,15 @@ registerSuite({
 	name: 'lang functions',
 
 	'.assign()'() {
-		const source = Object.create({ a: 1 }, {
+		const source: {
+			a: number
+			b: {
+				enumerable: boolean,
+				configurable: boolean,
+				writable: boolean,
+				value: number
+			}
+		} = Object.create({ a: 1 }, {
 			b: {
 				enumerable: false,
 				configurable: true,
@@ -14,18 +22,23 @@ registerSuite({
 				value: 2
 			}
 		});
-		source.c = 3;
-		source.nested = { a: 5 };
+		(<any> source).c = 3;
+		(<any> source).nested = { a: 5 };
 
-		const object: any = Object.create(null);
-		const assignedObject: any = lang.assign(object, source);
+		const object: {
+			c: number,
+			nested: {
+				a: number
+			}
+		} = Object.create(null);
+		const assignedObject: typeof object & typeof source = lang.assign(object, source);
 
 		assert.strictEqual(object, assignedObject, 'assign should return the modified target object');
-		assert.isUndefined(object.a, 'assign should not copy inherited properties');
-		assert.isUndefined(object.b, 'assign should not copy non-enumerable properties');
-		assert.strictEqual(object.c, 3);
-		assert.strictEqual(object.nested, source.nested, 'assign should perform a shallow copy');
-		assert.strictEqual(object.nested.a, 5);
+		assert.isUndefined(assignedObject.a, 'assign should not copy inherited properties');
+		assert.isUndefined(assignedObject.b, 'assign should not copy non-enumerable properties');
+		assert.strictEqual(assignedObject.c, 3);
+		assert.strictEqual(assignedObject.nested, (<any> source).nested, 'assign should perform a shallow copy');
+		assert.strictEqual(assignedObject.nested.a, 5);
 	},
 
 	'.assign() with multiple sources'() {
@@ -39,12 +52,12 @@ registerSuite({
 			property8: 'value8'
 		};
 
-		const object: any = {
+		const object = {
 			property1: 'value1',
 			property2: 'value2'
 		};
 
-		lang.assign(object, source1, null, source3);
+		lang.assign<typeof object, typeof source1 | typeof source3>(object, source1, null, source3);
 
 		assert.deepEqual(object, {
 			property1: 'value1',
@@ -56,8 +69,45 @@ registerSuite({
 		});
 	},
 
+	'.assign() with inferred type from multiple sources'() {
+		let source1:  { a: number, b: number } | { c: number, d: number } = {
+			a: 1,
+			b: 2,
+			c: 3,
+			d: 4
+		};
+
+		let source2 = {
+			a: 3,
+			b: 2
+		};
+
+		let source3 = {
+			c: 3,
+			d: 4
+		}
+
+		const object = {};
+
+		const assignedObject = lang.assign(object, source1, source2, source3);
+		// Verify that the inferred type is what we expect
+		const alsoAssigned: {} & ({ a: number, b: number } | { c: number, d: number }) = lang.assign(object, source1, source2, source3);
+	},
+
 	'.deepAssign()'() {
-		const source = Object.create({ a: 1 }, {
+		const source: {
+			a: number,
+			b: {
+				enumerable: boolean,
+				configurable: boolean,
+				writable: boolean,
+				value: number
+			},
+			c: {
+				d: number,
+				e: any[]
+			}
+		} = Object.create({ a: 1 }, {
 			b: {
 				enumerable: false,
 				configurable: true,
@@ -71,21 +121,29 @@ registerSuite({
 			e: [ 4, [ 5 ], { f: 6 } ]
 		};
 
-		const object: any = Object.create(null);
-		const assignedObject: any = lang.deepAssign(object, source);
+		const object: {} = Object.create(null);
+		const assignedObject: {} & typeof source = lang.deepAssign(object, source);
 
 		assert.strictEqual(object, assignedObject, 'deepAssign should return the modified target object');
-		assert.isUndefined(object.a, 'deepAssign should not copy inherited properties');
-		assert.isUndefined(object.b, 'deepAssign should not copy non-enumerable properties');
-		assert.strictEqual(object.c.d, 3);
-		assert.strictEqual(object.c.e.length, 3);
-		assert.notStrictEqual(object.c.e[1], source.c.e[1], 'deepAssign should perform a deep copy');
-		assert.notStrictEqual(object.c.d[2], source.c.e[2], 'deepAssign should perform a deep copy');
-		assert.notStrictEqual(object.c.e, source.c.e, 'deepAssign should perform a deep copy');
+		assert.isUndefined(assignedObject.a, 'deepAssign should not copy inherited properties');
+		assert.isUndefined(assignedObject.b, 'deepAssign should not copy non-enumerable properties');
+		assert.strictEqual(assignedObject.c.d, 3);
+		assert.strictEqual(assignedObject.c.e.length, 3);
+		assert.notStrictEqual(assignedObject.c.e[1], source.c.e[1], 'deepAssign should perform a deep copy');
+		assert.notStrictEqual(assignedObject.c.e[2], source.c.e[2], 'deepAssign should perform a deep copy');
+		assert.notStrictEqual(assignedObject.c.e, source.c.e, 'deepAssign should perform a deep copy');
 	},
 
 	'.mixin()'() {
-		const source = Object.create({
+		const source: {
+			a: number,
+			c: number,
+			nested : {
+				a: number
+			},
+			b: number,
+			hidden: number
+		} = Object.create({
 			a: 1
 		});
 		source.c = 3;
@@ -101,20 +159,29 @@ registerSuite({
 			value: 4
 		});
 
-		const object: any = Object.create(null);
-		const mixedObject: any = lang.mixin(object, source);
+		const object: {} = Object.create(null);
+		const mixedObject: {} & typeof source = lang.mixin(object, source);
 
 		assert.strictEqual(object, mixedObject, 'mixin should return the modified target object');
-		assert.strictEqual(object.a, 1, 'mixin should copy inherited properties');
-		assert.strictEqual(object.b, 2);
-		assert.strictEqual(object.c, 3);
-		assert.isUndefined(object.hidden, 'mixin should not copy non-enumerable properties');
-		assert.strictEqual(object.nested, source.nested, 'mixin should perform a shallow copy');
-		assert.strictEqual(object.nested.a, 5);
+		assert.strictEqual(mixedObject.a, 1, 'mixin should copy inherited properties');
+		assert.strictEqual(mixedObject.b, 2);
+		assert.strictEqual(mixedObject.c, 3);
+		assert.isUndefined(mixedObject.hidden, 'mixin should not copy non-enumerable properties');
+		assert.strictEqual(mixedObject.nested, source.nested, 'mixin should perform a shallow copy');
+		assert.strictEqual(mixedObject.nested.a, 5);
 	},
 
 	'.deepMixin()'() {
-		const source = Object.create({
+		const source: {
+			nested: {
+				a: number,
+				b: any[]
+			},
+			a: number,
+			c: number,
+			b: number,
+			hidden: number
+		} = Object.create({
 			nested: {
 				a: 1,
 				b: [ 2, [ 3 ], { f: 4 } ]
@@ -133,26 +200,45 @@ registerSuite({
 			value: 4
 		});
 
-		const object: any = Object.create(null);
-		const mixedObject: any = lang.deepMixin(object, source);
+		const object: {} = Object.create(null);
+		const mixedObject: {} & typeof source = lang.deepMixin(object, source);
 
 		assert.strictEqual(object, mixedObject, 'deepMixin should return the modified target object');
-		assert.strictEqual(object.a, 1);
-		assert.strictEqual(object.b, 2);
-		assert.strictEqual(object.c, 3);
-		assert.isUndefined(object.hidden, 'deepMixin should not copy non-enumerable properties');
-		assert.strictEqual(object.nested.a, 1, 'deepMixin should copy inherited properties');
-		assert.notStrictEqual(object.nested, source.nested, 'deepMixin should perform a deep copy');
-		assert.notStrictEqual(object.nested.b, source.nested.b, 'deepMixin should perform a deep copy');
-		assert.notStrictEqual(object.nested.b[1], source.nested.b[1], 'deepMixin should perform a deep copy');
-		assert.notStrictEqual(object.nested.b[2], source.nested.b[2], 'deepMixin should perform a deep copy');
+		assert.strictEqual(mixedObject.a, 1);
+		assert.strictEqual(mixedObject.b, 2);
+		assert.strictEqual(mixedObject.c, 3);
+		assert.isUndefined(mixedObject.hidden, 'deepMixin should not copy non-enumerable properties');
+		assert.strictEqual(mixedObject.nested.a, 1, 'deepMixin should copy inherited properties');
+		assert.notStrictEqual(mixedObject.nested, source.nested, 'deepMixin should perform a deep copy');
+		assert.notStrictEqual(mixedObject.nested.b, source.nested.b, 'deepMixin should perform a deep copy');
+		assert.notStrictEqual(mixedObject.nested.b[1], source.nested.b[1], 'deepMixin should perform a deep copy');
+		assert.notStrictEqual(mixedObject.nested.b[2], source.nested.b[2], 'deepMixin should perform a deep copy');
 	},
 
 	'.create()'() {
 		const prototype = {
 			a: 1
 		};
-		const mixin: any = Object.create({ lorem: 'ipsum' }, {
+		const mixin: {
+			lorem: string,
+			b: {
+				enumerable: boolean,
+				configurable: boolean,
+				writable: boolean,
+				value: {
+					c: number
+				}
+			},
+			d: {
+				enumerable: boolean,
+				configurable: boolean,
+				writable: boolean,
+				value: number
+			},
+			e: {
+				value: number
+			}
+		} = Object.create({ lorem: 'ipsum' }, {
 			b: {
 				enumerable: true,
 				configurable: true,
@@ -169,7 +255,7 @@ registerSuite({
 				value: 4
 			}
 		});
-		const object: any = lang.create(prototype, mixin);
+		const object: typeof prototype & typeof mixin = lang.create(prototype, mixin);
 
 		assert.strictEqual(Object.getPrototypeOf(object), prototype);
 		assert.strictEqual(object.b, mixin.b);
@@ -185,11 +271,20 @@ registerSuite({
 		const prototype = {
 			a: 1
 		};
-		const source: any = Object.create(prototype, {
+		const source: {
+			a: number,
+			b: {
+				value: number
+			},
+			c: {
+				d: number
+			}
+		} = Object.create(prototype, {
 			b: { value: 2 }
 		});
 		source.c = { d: 4 };
-		const copyOfObject: any = lang.duplicate(source);
+
+		const copyOfObject: typeof source = lang.duplicate(source);
 
 		assert.strictEqual(Object.getPrototypeOf(copyOfObject), prototype);
 		assert.strictEqual(copyOfObject.a, 1);
