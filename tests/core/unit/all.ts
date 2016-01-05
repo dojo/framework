@@ -20,6 +20,7 @@ import './queue';
 import 'dojo/has!host-node?./request/node:./request/xhr';
 import './streams/all';
 import './request';
+import './request/has';
 import './Scheduler';
 import './string';
 import './UrlSearchParams';
