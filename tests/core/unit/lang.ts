@@ -85,13 +85,18 @@ registerSuite({
 		let source3 = {
 			c: 3,
 			d: 4
-		}
+		};
 
 		const object = {};
 
 		const assignedObject = lang.assign(object, source1, source2, source3);
+
+		assert(assignedObject);
+
 		// Verify that the inferred type is what we expect
 		const alsoAssigned: {} & ({ a: number, b: number } | { c: number, d: number }) = lang.assign(object, source1, source2, source3);
+
+		assert(alsoAssigned);
 	},
 
 	'.deepAssign()'() {
@@ -138,7 +143,7 @@ registerSuite({
 		const source: {
 			a: number,
 			c: number,
-			nested : {
+			nested: {
 				a: number
 			},
 			b: number,

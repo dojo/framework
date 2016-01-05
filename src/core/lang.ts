@@ -32,7 +32,7 @@ interface MixinArgs<T extends {}, U extends {}> {
 	target: T;
 }
 
-function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T,U>): T&U {
+function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
 	const deep = kwArgs.deep;
 	const inherited = kwArgs.inherited;
 	const target = kwArgs.target;
