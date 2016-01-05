@@ -6,8 +6,6 @@ registerSuite({
 	name: 'global',
 
 	'global references the global object for the target environment'() {
-		(function () {
-			assert.strictEqual(global, this);
-		})();
+		assert.strictEqual(global, Function('return this')());
 	}
 });

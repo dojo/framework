@@ -340,7 +340,7 @@ registerSuite({
 	'.partial()'() {
 		const ending = 'jumps over the lazy dog';
 		const finish = lang.partial(function () {
-			const start = this.start ? [ this.start ] : [];
+			const start = this && this.start ? [ this.start ] : [];
 
 			return start.concat(Array.prototype.slice.call(arguments)).join(' ');
 		}, 'jumps', 'over');

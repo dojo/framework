@@ -33,7 +33,9 @@ registerSuite({
 		},
 
 		'throws an error if the stream is not readable'() {
-			stream.readable = false;
+			Object.defineProperty(stream, 'readable', {
+				value: false
+			});
 			assert.throws(function () {
 				new ReadableStreamReader(stream);
 			});
