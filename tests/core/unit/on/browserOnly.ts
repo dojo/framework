@@ -40,5 +40,31 @@ registerSuite({
 
 		destroyTarget(target);
 		handle.destroy();
+	},
+
+	'emit on window'() {
+		const target = window;
+
+		const handle = on(target, 'test', function(evt: DOMEvent) {
+			evt.preventDefault();
+		});
+
+		assert.isTrue(emit(target, { type: 'test', cancelable: false }));
+		assert.isFalse(emit(target, { type: 'test', cancelable: true }));
+
+		handle.destroy();
+	},
+
+	'emit on document'() {
+		const target = document;
+
+		const handle = on(target, 'test', function(evt: DOMEvent) {
+			evt.preventDefault();
+		});
+
+		assert.isTrue(emit(target, { type: 'test', cancelable: false }));
+		assert.isFalse(emit(target, { type: 'test', cancelable: true }));
+
+		handle.destroy();
 	}
 });

@@ -24,8 +24,13 @@ interface DOMEventObject extends EventObject {
  */
 export function emit<T extends EventObject>(target: Evented | EventTarget | EventEmitter, event: T | EventObject): boolean;
 export function emit<T extends EventObject>(target: any, event: T | EventObject): boolean {
-	if (target.dispatchEvent && target.ownerDocument && target.ownerDocument.createEvent) {
-		const nativeEvent = target.ownerDocument.createEvent('HTMLEvents');
+	if (
+		target.dispatchEvent && /* includes window and document */
+			((target.ownerDocument && target.ownerDocument.createEvent) || /* matches nodes */
+			(target.document && target.document.createEvent) || /* matches window */
+			target.createEvent) /* matches document */
+	) {
+		const nativeEvent = (target.ownerDocument || target.document || target).createEvent('HTMLEvents');
 		nativeEvent.initEvent(
 			event.type,
 			Boolean((<DOMEventObject> event).bubbles),
