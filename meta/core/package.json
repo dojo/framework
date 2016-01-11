@@ -14,7 +14,7 @@
 	"devDependencies": {
 		"benchmark": "^1.0.0",
 		"codecov.io": "0.1.6",
-		"dojo-loader": "2.0.0-alpha.1",
+		"dojo-loader": "2.0.0-alpha.3",
 		"dts-generator": "1.6.3",
 		"formidable": "1.0.14",
 		"glob": "3.2.7",
