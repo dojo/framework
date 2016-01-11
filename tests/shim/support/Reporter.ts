@@ -60,6 +60,23 @@ class Reporter extends Runner {
 
 		this.charm.write('\n');
 
+		if (intern.mode === 'client') {
+			for (let sid in this._errors) {
+				this._errors[sid].forEach((test) => {
+					this.charm
+						.write(LIGHT_RED)
+						.write('× ' + test.id)
+						.foreground('white')
+						.write(' (' + (test.timeElapsed / 1000) + 's)')
+						.write('\n')
+						.foreground('red')
+						.write(test.error)
+						.display('reset')
+						.write('\n\n');
+				});
+			}
+		}
+
 		let message = `TOTAL: tested ${numEnvironments} platforms, ${numFailedTests}/${numTests} failed`;
 
 		if (numSkippedTests) {
