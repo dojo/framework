@@ -25,6 +25,9 @@ const responseTypeMap: { [key: string]: string; } = {
 	document: 'document'
 };
 
+/* a noop handle for cancelled requests */
+const noop = function() { };
+
 export default function xhr<T>(url: string, options: XhrRequestOptions = {}): ResponsePromise<T> {
 	const request = new XMLHttpRequest();
 	const requestUrl = generateRequestUrl(url, options);
@@ -40,6 +43,15 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 			return request.getResponseHeader(name);
 		}
 	};
+	let isAborted = false;
+
+	function abort() {
+		isAborted = true;
+		if (request) {
+			request.abort();
+			request.onreadystatechange = noop;
+		}
+	}
 
 	const promise = new Task<Response<T>>(function (resolve, reject): void {
 		if (!options.method) {
@@ -60,8 +72,8 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 
 		let timeoutHandle: Handle;
 		request.onreadystatechange = function (): void {
-			if (request.readyState === 4) {
-				request.onreadystatechange = function () {};
+			if (!isAborted && request.readyState === 4) {
+				request.onreadystatechange = noop;
 				timeoutHandle && timeoutHandle.destroy();
 
 				if (options.responseType === 'xml') {
@@ -91,7 +103,7 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 				// less specific error.  (This is also why we set up our own timeout rather than using
 				// native timeout and ontimeout, because that aborts and fires onreadystatechange before ontimeout.)
 				reject(new RequestTimeoutError('The XMLHttpRequest request timed out.'));
-				request.abort();
+				abort();
 			}, options.timeout);
 		}
 
@@ -122,7 +134,7 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 
 		request.send(options.data);
 	}, function () {
-		request && request.abort();
+		abort();
 	});
 
 	return promise;
