@@ -10,7 +10,7 @@ registerSuite({
 
 	'delay()': {
 		'resolves a promise after the given timeout': function () {
-			return timing.delay(250)(Date.now()).then(function (start: number) {
+			return timing.delay(251)(Date.now()).then(function (start: number) {
 				const diff: number = Date.now() - start;
 				assert.isAbove(diff, 250);
 			});
@@ -33,7 +33,7 @@ registerSuite({
 	'DelayedRejection': {
 		'is eventually rejected': function () {
 			const start = Date.now();
-			return new timing.DelayedRejection(100).then<any>(throwImmediatly, function (reason) {
+			return new timing.DelayedRejection(101).then<any>(throwImmediatly, function (reason) {
 				assert.isUndefined(reason);
 				assert.isAbove(Date.now(), start + 100);
 				return true;
@@ -43,7 +43,7 @@ registerSuite({
 		'is eventually rejected with error': function () {
 			const start = Date.now();
 			const expectedError = new Error('boom!');
-			return new timing.DelayedRejection(100, expectedError).then<any>(throwImmediatly, function (reason) {
+			return new timing.DelayedRejection(101, expectedError).then<any>(throwImmediatly, function (reason) {
 				assert.strictEqual(reason, expectedError);
 				assert.isAbove(Date.now(), start + 100);
 				return true;
