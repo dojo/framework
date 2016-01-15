@@ -270,7 +270,8 @@ module.exports = function (grunt) {
 		'rewriteSourceMaps',
 		'copy:typings',
 		'copy:staticFiles',
-		'dtsGenerator:dist'
+		'dtsGenerator:dist',
+		'updatePackageJson'
 	]);
 	grunt.registerTask('test-proxy', [ 'dev', 'intern:proxy' ]);
 	grunt.registerTask('default', [ 'clean', 'dev' ]);
