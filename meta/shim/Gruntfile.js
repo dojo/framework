@@ -44,6 +44,7 @@ module.exports = function (grunt) {
 		version: packageJson.version,
 		tsconfig: tsconfig,
 		tsconfigContent: tsconfigContent,
+		packageJson: packageJson,
 		all: [ '<%= tsconfig.filesGlob %>' ],
 		skipTests: [ '<%= all %>' , '!tests/**/*.ts' ],
 		staticTestFiles: [ 'tests/**/*.{html,css,json,xml}' ],
