@@ -159,7 +159,7 @@ module.exports = function (grunt) {
 			},
 			dist: {
 				options: {
-					inlineSourceMap: false,
+					inlineSourceMap: true,
 					inlineSources: true
 				},
 				outDir: 'dist',
