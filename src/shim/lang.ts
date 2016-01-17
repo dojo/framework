@@ -4,8 +4,14 @@ import { Handle } from './interfaces';
 const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
-function isObject(item: any): boolean {
-	return Object.prototype.toString.call(item) === '[object Object]';
+/**
+ * Type guard that ensures that the value can be coerced to Object
+ * to weed out host objects that do not derive from Object.
+ * @param  value The value to check
+ * @return       If the value is coercible into an Object
+ */
+function isObjectCoercible(value: any): value is Object {
+	return value === Object(value);
 }
 
 function copyArray<T>(array: T[], inherited: boolean): T[] {
@@ -14,7 +20,7 @@ function copyArray<T>(array: T[], inherited: boolean): T[] {
 			return  <any> copyArray(<any> item, inherited);
 		}
 
-		return !isObject(item) ?
+		return !isObjectCoercible(item) ?
 			item :
 			_mixin({
 				deep: true,
@@ -46,7 +52,7 @@ function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
 					if (Array.isArray(value)) {
 						value = copyArray(value, inherited);
 					}
-					else if (isObject(value)) {
+					else if (isObjectCoercible(value)) {
 						value = _mixin({
 							deep: true,
 							inherited: inherited,
