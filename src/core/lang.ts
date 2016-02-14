@@ -7,11 +7,15 @@ const hasOwnProperty = Object.prototype.hasOwnProperty;
 /**
  * Type guard that ensures that the value can be coerced to Object
  * to weed out host objects that do not derive from Object.
+ * This function is used to check if we want to deep copy an object or not.
+ * Note: In ES6 it is possible to modify an object's Symbol.toStringTag property, which will
+ * change the value returned by `toString`. This is a rare edge case that is difficult to handle,
+ * so it is not handled here.
  * @param  value The value to check
  * @return       If the value is coercible into an Object
  */
-function isObjectCoercible(value: any): value is Object {
-	return value === Object(value);
+function shouldDeepCopyObject(value: any): value is Object {
+	return Object.prototype.toString.call(value) === '[object Object]';
 }
 
 function copyArray<T>(array: T[], inherited: boolean): T[] {
@@ -20,7 +24,7 @@ function copyArray<T>(array: T[], inherited: boolean): T[] {
 			return  <any> copyArray(<any> item, inherited);
 		}
 
-		return !isObjectCoercible(item) ?
+		return !shouldDeepCopyObject(item) ?
 			item :
 			_mixin({
 				deep: true,
@@ -52,7 +56,7 @@ function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
 					if (Array.isArray(value)) {
 						value = copyArray(value, inherited);
 					}
-					else if (isObjectCoercible(value)) {
+					else if (shouldDeepCopyObject(value)) {
 						value = _mixin({
 							deep: true,
 							inherited: inherited,

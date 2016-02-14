@@ -183,8 +183,10 @@ registerSuite({
 				b: any[]
 			},
 			a: number,
-			c: number,
 			b: number,
+			c: number,
+			d: Date,
+			e: RegExp,
 			hidden: number
 		} = Object.create({
 			nested: {
@@ -194,6 +196,8 @@ registerSuite({
 		});
 		source.a = 1;
 		source.c = 3;
+		source.d = new Date();
+		source.e = /abc/;
 		Object.defineProperty(source, 'b', {
 			enumerable: true,
 			get: function () {
@@ -212,6 +216,8 @@ registerSuite({
 		assert.strictEqual(mixedObject.a, 1);
 		assert.strictEqual(mixedObject.b, 2);
 		assert.strictEqual(mixedObject.c, 3);
+		assert.strictEqual(mixedObject.d, source.d, 'deepMixin should not deep copy Date object');
+		assert.strictEqual(mixedObject.e, source.e, 'deepMixin should not deep copy RegExp object');
 		assert.isUndefined(mixedObject.hidden, 'deepMixin should not copy non-enumerable properties');
 		assert.strictEqual(mixedObject.nested.a, 1, 'deepMixin should copy inherited properties');
 		assert.notStrictEqual(mixedObject.nested, source.nested, 'deepMixin should perform a deep copy');
