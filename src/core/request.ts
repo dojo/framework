@@ -195,27 +195,11 @@ export default request;
  */
 filterRegistry.register(
 	function (response: Response<any>, url: string, options: RequestOptions) {
-		return typeof response.data === 'string' && options.responseType === 'json';
+		return typeof response.data && options && (options.responseType === 'json' || options.handleAs === 'json');
 	},
 	function (response: Response<any>, url: string, options: RequestOptions): Object {
 		return {
-			data: JSON.parse(response.data)
+			data: JSON.parse(String(response.data))
 		};
 	}
 );
-
-/**
- * Add a filter that automatically parses incoming Buffer responses in Node.
- */
-if (has('node-buffer')) {
-  filterRegistry.register(
-    function (response: Response<any>, url: string, options?: RequestOptions) {
-      return options && options.responseType === 'json' && typeof Buffer.isBuffer(response.data) !== 'undefined';
-    },
-    function (response: Response<any>, url: string, options: RequestOptions): Object {
-      return {
-        data: JSON.parse(String(response.data))
-      };
-    }
-  );
-}
