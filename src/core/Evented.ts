@@ -10,7 +10,7 @@ export default class Evented {
 		const type = '__on' + data.type;
 		const method: Function = (<any> this)[type];
 		if (method) {
-			return method.call(this, data);
+			method.call(this, data);
 		}
 	}
 

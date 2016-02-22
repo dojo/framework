@@ -20,7 +20,8 @@ interface DOMEventObject extends EventObject {
  * Provides a normalized mechanism for dispatching events for event emitters, Evented objects, or DOM nodes.
  * @param target The target to emit the event from
  * @param event The event object to emit
- * @return Boolean indicating Whether the event was canceled (this will always be false for event emitters)
+ * @return Boolean indicating if preventDefault was called on the event object (only relevant for DOM events;
+ *     always false for other event emitters)
  */
 export function emit<T extends EventObject>(target: Evented | EventTarget | EventEmitter, event: T | EventObject): boolean;
 export function emit<T extends EventObject>(target: any, event: T | EventObject): boolean {
@@ -48,10 +49,12 @@ export function emit<T extends EventObject>(target: any, event: T | EventObject)
 
 	if (target.emit) {
 		if (target.removeListener) {
+			// Node.js EventEmitter
 			target.emit(event.type, event);
 			return false;
 		}
 		else if (target.on) {
+			// Dojo Evented or similar
 			target.emit(event);
 			return false;
 		}
