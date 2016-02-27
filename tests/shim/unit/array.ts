@@ -359,5 +359,35 @@ registerSuite({
 
 			return tests;
 		})()
-	}
+	},
+
+	'#includes': (function() {
+		let arr: number[];
+		return {
+			beforeEach() {
+				arr = [ 1, 2, NaN, 3, 4, 5 ];
+			},
+
+			'item found'() {
+				assert.isTrue(array.includes(arr, 2));
+			},
+
+			'item not found from given starting index'() {
+				assert.isFalse(array.includes(arr, 1, 2));
+			},
+
+			'item not found'() {
+				assert.isFalse(array.includes(arr, 17));
+			},
+
+			'NaN found'() {
+				assert.isTrue(array.includes(arr, NaN));
+			},
+
+			'NaN not found'() {
+				assert.isFalse(array.includes(arr, NaN, 3));
+				assert.isFalse(array.includes([ 1, 2, 3 ], NaN));
+			}
+		};
+	})()
 });
