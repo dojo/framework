@@ -208,3 +208,23 @@ export function copyWithin<T>(target: ArrayLike<T>, offset: number, start?: numb
 
 	return target;
 }
+
+/**
+ * Determines whether an array includes a given value
+ * @param target the target array-like object
+ * @param searchElement the item to search for
+ * @param fromIndex the starting index to search from
+ */
+export function includes<T>(target: ArrayLike<T>, searchElement: T, fromIndex: number = 0): boolean {
+	let len = toLength(target.length);
+
+	for (let i = fromIndex; i < len; ++i) {
+		const currentElement = target[i];
+		if (searchElement === currentElement ||
+		   (searchElement !== searchElement && currentElement !== currentElement)) {
+			return true;
+		}
+	}
+
+	return false;
+}
