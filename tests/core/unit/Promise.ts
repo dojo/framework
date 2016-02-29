@@ -3,11 +3,11 @@ import assert = require('intern/chai!assert');
 import Promise, { Executor, PromiseShim, State, Thenable } from 'src/Promise';
 
 export interface PromiseType {
-        new <T>(executor: Executor<T>): Promise<T>;
-        all<T>(items: (T | Thenable<T>)[]): Promise<T>;
-        race<T>(items: (T | Thenable<T>)[]): Promise<T>;
-        reject<T>(reason: any): Promise<T>;
-        resolve<T>(value: (T | Thenable<T>)): Promise<T>;
+	new <T>(executor: Executor<T>): Promise<T>;
+	all<T>(items: (T | Thenable<T>)[]): Promise<T>;
+	race<T>(items: (T | Thenable<T>)[]): Promise<T>;
+	reject<T>(reason: any): Promise<T>;
+	resolve<T>(value: (T | Thenable<T>)): Promise<T>;
 }
 
 export function addPromiseTests(suite: any, Promise: PromiseType) {

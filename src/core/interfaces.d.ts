@@ -1,5 +1,5 @@
 export interface EventObject {
-    type: string;
+	type: string;
 }
 
 export interface Handle {
