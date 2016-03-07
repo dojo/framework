@@ -221,7 +221,7 @@ export function includes<T>(target: ArrayLike<T>, searchElement: T, fromIndex: n
 	for (let i = fromIndex; i < len; ++i) {
 		const currentElement = target[i];
 		if (searchElement === currentElement ||
-		   (searchElement !== searchElement && currentElement !== currentElement)) {
+			(searchElement !== searchElement && currentElement !== currentElement)) {
 			return true;
 		}
 	}
