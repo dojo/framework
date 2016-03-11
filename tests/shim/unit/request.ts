@@ -1,13 +1,8 @@
-import registerSuite = require('intern!object');
-import assert = require('intern/chai!assert');
-import DojoPromise = require('intern/dojo/Promise');
-import has = require('intern/dojo/has');
+import * as registerSuite from 'intern!object';
+import * as assert from 'intern/chai!assert';
 import Task from 'src/async/Task';
-import request, { filterRegistry, providerRegistry, RequestOptions, Response, ResponsePromise } from 'src/request';
-
-// These imports are only for type information
-import * as nodeHttp from 'http';
-import * as nodeUrl from 'url';
+import request, { filterRegistry, providerRegistry, Response, ResponsePromise } from 'src/request';
+import 'intern/dojo/has!host-node?./request_node:./request_browser';
 
 const mockData = '{ "foo": "bar" }';
 let handle: any;
@@ -18,7 +13,7 @@ function mockProvider(url: string): ResponsePromise<any> {
 	});
 }
 
-const suite: { [name: string]: any } = {
+registerSuite({
 	name: 'request',
 
 	afterEach() {
@@ -127,137 +122,4 @@ const suite: { [name: string]: any } = {
 			});
 		}
 	}
-};
-
-if (has('host-node')) {
-	const http: typeof nodeHttp = require('http');
-	const url: typeof nodeUrl = require('url');
-	const serverPort = 8124;
-	const serverUrl = 'http://localhost:' + serverPort;
-	let server: any;
-	let nodeRequest: any;
-
-	let getRequestUrl = function (dataKey: string): string {
-		return serverUrl + '?dataKey=' + dataKey;
-	};
-
-	suite['node'] = {
-		setup() {
-			const dfd = new DojoPromise.Deferred();
-			const responseData: { [name: string]: any } = {
-				'foo.json': new Buffer(JSON.stringify({ foo: 'bar' }), 'utf8'),
-				invalidJson: new Buffer('<not>JSON</not>', 'utf8')
-			};
-
-			function getResponseData(request: any) {
-				const urlInfo = url.parse(request.url, true);
-				return responseData[urlInfo.query.dataKey];
-			}
-
-			server = http.createServer(function(request, response){
-				const body = getResponseData(request);
-				nodeRequest = request;
-
-				response.writeHead(200, {
-					'Content-Type': 'application/json'
-				});
-				response.write(body);
-
-				response.end();
-			});
-
-			server.on('listening', dfd.resolve);
-			server.listen(serverPort);
-
-			return dfd.promise;
-		},
-
-		teardown() {
-			server.close();
-		},
-
-		afterEach() {
-			if (handle) {
-				handle.destroy();
-				handle = null;
-			}
-		},
-
-		'.get': {
-			'simple request'() {
-				const dfd = this.async();
-				request.get(getRequestUrl('foo.json'))
-					.then(
-						dfd.callback(function (response: any) {
-							assert.equal(String(response.data), JSON.stringify({ foo: 'bar' }));
-						}),
-						dfd.reject.bind(dfd)
-					);
-			},
-
-			'custom headers'() {
-				const dfd = this.async();
-				const options: RequestOptions = { headers: { 'Content-Type': 'application/json' } };
-				request.get(getRequestUrl('foo.json'), options)
-					.then(
-						dfd.callback(function (response: any) {
-							assert.equal(String(response.data), JSON.stringify({ foo: 'bar' }));
-							assert.notProperty(nodeRequest.headers, 'Content-Type', 'expected header to be normalized');
-							assert.propertyVal(nodeRequest.headers, 'content-type', 'application/json');
-						}),
-						dfd.reject.bind(dfd)
-					);
-			}
-		},
-
-		'JSON responseType filter'() {
-			return request.get(getRequestUrl('foo.json'), { responseType: 'json' })
-				.then(function(response: any) {
-					assert.deepEqual(response.data, { foo: 'bar' });
-				})
-			;
-		},
-
-		'JSON handleAs filter'() {
-			return request.get(getRequestUrl('foo.json'), { handleAs: 'json' })
-				.then(function(response: any) {
-					assert.deepEqual(response.data, { foo: 'bar' });
-				})
-			;
-		}
-	};
-}
-
-if (has('host-browser')) {
-	let getRequestUrl = function (dataKey: string): string {
-		return (<any> require).toUrl('../support/data/' + dataKey);
-	};
-
-	suite['browser'] = {
-		'.get'() {
-			return request.get(getRequestUrl('foo.json'))
-				.then(function (response: any) {
-					assert.deepEqual(JSON.parse(response.data), { foo: 'bar' });
-				})
-			;
-		},
-
-		'JSON responseType filter'() {
-			return request.get(getRequestUrl('foo.json'), { responseType: 'json' })
-				.then(function (response: any) {
-					assert.deepEqual(response.data, { foo: 'bar' });
-				})
-			;
-		},
-
-		'JSON handleAs filter'() {
-			return request.get(getRequestUrl('foo.json'), { handleAs: 'json' })
-				.then(function (response: any) {
-					assert.deepEqual(response.data, { foo: 'bar' });
-				})
-			;
-		}
-	};
-}
-
-registerSuite(suite);
+});

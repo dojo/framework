@@ -27,14 +27,6 @@ declare function clearInterval(intervalId: NodeJS.Timer): void;
 declare function setImmediate(callback: (...args: any[]) => void, ...args: any[]): any;
 declare function clearImmediate(immediateId: any): void;
 
-declare var require: {
-    (id: string): any;
-    resolve(id:string): string;
-    cache: any;
-    extensions: any;
-    main: any;
-};
-
 declare var module: {
     exports: any;
     require(id: string): any;
