@@ -1,4 +1,3 @@
-import { Require as AMDRequire } from 'dojo-loader/loader';
 import Promise from './Promise';
 
 declare var define: {
@@ -6,12 +5,10 @@ declare var define: {
 	amd: any;
 };
 
-export { Require as AMDRequire } from 'dojo-loader/loader';
-
 export interface NodeRequire {
 	(moduleId: string): any;
 }
-export type Require = AMDRequire | NodeRequire;
+export type Require = DojoLoader.Require | NodeRequire;
 
 export interface Load {
 	(require: Require, ...moduleIds: string[]): Promise<any[]>;

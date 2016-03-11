@@ -8,7 +8,7 @@
 		"removeComments": false,
 		"target": "es5",
 		"experimentalDecorators": true,
-		"sourceMaps": true,
+		"sourceMap": true,
 		"moduleResolution": "classic"
 	},
 	"filesGlob": [
@@ -120,9 +120,12 @@
 		"./tests/unit/on/nodeOnly.ts",
 		"./tests/unit/queue.ts",
 		"./tests/unit/request.ts",
+		"./tests/unit/request/all.ts",
 		"./tests/unit/request/has.ts",
 		"./tests/unit/request/node.ts",
 		"./tests/unit/request/xhr.ts",
+		"./tests/unit/request_browser.ts",
+		"./tests/unit/request_node.ts",
 		"./tests/unit/streams/ByteLengthQueuingStrategy.ts",
 		"./tests/unit/streams/CountQueuingStrategy.ts",
 		"./tests/unit/streams/ReadableStream.ts",
