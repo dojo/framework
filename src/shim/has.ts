@@ -4,6 +4,59 @@ export const cache: Hash<any> = Object.create(null);
 const testFunctions: Hash<() => any> = Object.create(null);
 
 /**
+ * Conditional loading of AMD modules based on a has feature test value.
+ *
+ * @param resourceId Gives the resolved module id to load.
+ * @param require The loader require function with respect to the module that contained the plugin resource in it's dependency list.
+ * @param load Callback to loader that consumes result of plugin demand.
+ */
+export function load(resourceId: string, require: DojoLoader.Require, load: (value?: any) => void, config?: DojoLoader.Config): void {
+	if (resourceId) {
+		require([ resourceId ], load);
+	}
+	else {
+		load();
+	}
+}
+
+/**
+ * Resolves resourceId into a module id based on possibly-nested tenary expression that branches on has feature test value(s).
+ *
+ * @param resourceId The id of the module
+ * @param normalize Resolves a relative module id into an absolute module id
+ */
+export function normalize(resourceId: string, normalize: (moduleId: string) => string): string {
+	const tokens = resourceId.match(/[\?:]|[^:\?]*/g);
+	let i = 0;
+
+	function get(skip?: boolean): string {
+		const term = tokens[i++];
+		if (term === ':') {
+			// empty string module name, resolves to null
+			return null;
+		}
+		else {
+			// postfixed with a ? means it is a feature to branch on, the term is the name of the feature
+			if (tokens[i++] === '?') {
+				if (!skip && has(term)) {
+					// matched the feature, get the first value from the options
+					return get();
+				}
+				else {
+					// did not match, get the second value, passing over the first
+					get(true);
+					return get(skip);
+				}
+			}
+			// a module
+			return term;
+		}
+	}
+	resourceId = get();
+	return resourceId && normalize(resourceId);
+}
+
+/**
  * Register a new test for a named feature.
  *
  * @example
