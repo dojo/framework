@@ -1,5 +1,5 @@
-import registerSuite = require('intern!object');
-import assert = require('intern/chai!assert');
+import * as registerSuite from 'intern!object';
+import * as assert from 'intern/chai!assert';
 import Promise, { Executor, PromiseShim, State, Thenable } from 'src/Promise';
 
 export interface PromiseType {

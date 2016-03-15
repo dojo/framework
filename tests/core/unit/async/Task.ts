@@ -1,5 +1,5 @@
-import registerSuite = require('intern!object');
-import assert = require('intern/chai!assert');
+import * as registerSuite from 'intern!object';
+import * as assert from 'intern/chai!assert';
 import Task, { Canceled } from 'src/async/Task';
 import Promise from 'src/Promise';
 import { addPromiseTests } from '../Promise';
