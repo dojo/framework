@@ -67,11 +67,13 @@
 		"./src/streams/interfaces.d.ts",
 		"./src/streams/util.ts",
 		"./src/string.ts",
+		"./src/text.ts",
 		"./src/util.ts",
 		"./tests/benchmark/all.ts",
 		"./tests/benchmark/lang.ts",
 		"./tests/benchmark/string.ts",
 		"./tests/functional/all.ts",
+		"./tests/functional/text/textPlugin.ts",
 		"./tests/intern-local.ts",
 		"./tests/intern.ts",
 		"./tests/services/echo.ts",
@@ -146,6 +148,7 @@
 		"./tests/unit/streams/nodeOnly.ts",
 		"./tests/unit/streams/util.ts",
 		"./tests/unit/string.ts",
+		"./tests/unit/text.ts",
 		"./tests/unit/util.ts",
 		"./typings/tsd.d.ts"
 	]

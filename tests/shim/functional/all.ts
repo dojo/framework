@@ -1,1 +1,1 @@
-export var removeThis = 1;
+import './text/textPlugin';
