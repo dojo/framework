@@ -1,6 +1,6 @@
-import registerSuite = require('intern!object');
-import assert = require('intern/chai!assert');
-import sinon = require('sinon');
+import * as registerSuite from 'intern!object';
+import * as assert from 'intern/chai!assert';
+import * as sinon from 'sinon';
 import * as aspect from 'src/aspect';
 import { Handle } from 'src/interfaces';
 

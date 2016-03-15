@@ -1,4 +1,4 @@
-import assert = require('intern/chai!assert');
+import * as assert from 'intern/chai!assert';
 import on, { emit, once, pausable } from 'src/on';
 import { Handle } from 'src/interfaces';
 

@@ -1,5 +1,5 @@
-import registerSuite = require('intern!object');
-import assert = require('intern/chai!assert');
+import * as registerSuite from 'intern!object';
+import * as assert from 'intern/chai!assert';
 import global from 'src/global';
 
 registerSuite({

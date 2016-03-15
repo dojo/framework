@@ -1,8 +1,8 @@
 import BaseStringSource from '../streams/helpers/BaseStringSource';
 import * as http from 'http';
-import registerSuite = require('intern!object');
-import assert = require('intern/chai!assert');
-import DojoPromise = require('intern/dojo/Promise');
+import * as registerSuite from 'intern!object';
+import * as assert from 'intern/chai!assert';
+import * as DojoPromise from 'intern/dojo/Promise';
 import Promise from 'src/Promise';
 import RequestTimeoutError from 'src/request/errors/RequestTimeoutError';
 import { default as nodeRequest } from 'src/request/node';
