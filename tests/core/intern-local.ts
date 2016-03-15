@@ -7,6 +7,5 @@ export const tunnelOptions = {
 };
 
 export const environments = [
-	{ browserName: 'chrome' },
-	{ browserName: 'firefox' }
+	{ browserName: 'chrome' }
 ];
