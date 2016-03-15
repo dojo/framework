@@ -228,7 +228,7 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 					});
 			}
 			else {
-				request.end();
+				request.end(options.data);
 			}
 		}
 		else {

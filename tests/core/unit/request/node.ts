@@ -128,10 +128,11 @@ registerSuite({
 			'string'(): void {
 				const dfd = this.async();
 				nodeRequest(getRequestUrl('foo.json'), {
-					data: '{ "foo": "bar" }'
+					data: '{ "foo": "bar" }',
+					method: 'POST'
 				}).then(
 					dfd.callback(function (response: any) {
-						assert.deepEqual(JSON.parse(response.data), { foo: 'bar' });
+						assert.deepEqual(requestData, { foo: 'bar' });
 					}),
 					dfd.reject.bind(dfd)
 				);
