@@ -1,7 +1,11 @@
 import global from './global';
 import { Hash } from './interfaces';
-export const cache: Hash<any> = Object.create(null);
-const testFunctions: Hash<() => any> = Object.create(null);
+
+export type TestResult = boolean | string | number;
+export type TestMethod = () => TestResult;
+
+export const cache: Hash<TestResult> = Object.create(null);
+export const testFunctions: Hash<TestMethod> = Object.create(null);
 
 /**
  * Conditional loading of AMD modules based on a has feature test value.
@@ -57,6 +61,16 @@ export function normalize(resourceId: string, normalize: (moduleId: string) => s
 }
 
 /**
+ * Check if a feature has already been registered
+ *
+ * @param feature the name of the feature
+ * @return if the feature has been registered
+ */
+export function exists(feature: string): boolean {
+	return feature in cache || feature in testFunctions;
+}
+
+/**
  * Register a new test for a named feature.
  *
  * @example
@@ -66,18 +80,26 @@ export function normalize(resourceId: string, normalize: (moduleId: string) => s
  * has.add('touch-events', function () {
  *    return 'ontouchstart' in document
  * });
+ *
+ * @param feature the name of the feature
+ * @param value the value reported of the feature, or a function that will be executed once on first test
+ * @param overwrite if an existing value should be overwritten. Defaults to false.
+ * @return if the feature test was successfully added
  */
-export function add(feature: string, value: any, overwrite: boolean = false): void {
-	if ((feature in cache || feature in testFunctions) && !overwrite) {
-		return;
+export function add(feature: string, value: TestResult | TestMethod, overwrite: boolean = false): boolean {
+	if (exists(feature) && !overwrite) {
+		return false;
 	}
 
 	if (typeof value === 'function') {
-		testFunctions[feature] = value;
+		testFunctions[feature] = <TestMethod> value;
 	}
 	else {
-		cache[feature] = value;
+		cache[feature] = <TestResult> value;
+		// Ensure we don't have stale tests sitting around that could overwrite a cache value being set
+		delete testFunctions[feature];
 	}
+	return true;
 }
 
 /**
@@ -86,7 +108,7 @@ export function add(feature: string, value: any, overwrite: boolean = false): vo
  * @param feature The name (if a string) or identifier (if an integer) of the feature to test.
  * @return The value of a given feature test
  */
-export default function has(feature: string): any {
+export default function has(feature: string): TestResult {
 	let result: any;
 
 	if (testFunctions[feature]) {
