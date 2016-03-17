@@ -28,6 +28,19 @@ const responseTypeMap: { [key: string]: string; } = {
 /* a noop handle for cancelled requests */
 const noop = function() { };
 
+/**
+ * Converts a string to an array buffer
+ * @param str The string to convert
+ */
+function stringToArrayBuffer(str: string): ArrayBuffer {
+	const buf = new ArrayBuffer(str.length * 2);
+	const bufView = new Uint8Array(buf);
+	for (let i = 0; i < str.length; i++) {
+		bufView[i] = str.charCodeAt(i);
+	}
+	return buf;
+};
+
 export default function xhr<T>(url: string, options: XhrRequestOptions = {}): ResponsePromise<T> {
 	const request = new XMLHttpRequest();
 	const requestUrl = generateRequestUrl(url, options);
@@ -81,6 +94,11 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 				}
 				else {
 					response.data = ('response' in request) ? request.response : request.responseText;
+					/* Android 4 has a defect where it doesn't respect the responseType
+					 * See https://github.com/dojo/core/issues/125 */
+					if (options.responseType === 'arraybuffer' && typeof response.data === 'string' && has('arraybuffer')) {
+						response.data = <any> stringToArrayBuffer((<any> response).data);
+					}
 				}
 
 				response.statusCode = request.status;
