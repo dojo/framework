@@ -1,22 +1,49 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
-import has, { add as hasAdd, cache as hasCache, normalize as hasNormalize, load as hasLoad } from 'src/has';
+import has, {
+	cache as hasCache,
+	testFunctions as hasTestFunctions,
+	add as hasAdd,
+	exists as hasExists,
+	normalize as hasNormalize,
+	load as hasLoad
+} from 'src/has';
+import { Hash } from 'src/interfaces';
 
-let alreadyCached: { [key: string]: boolean } = {};
+let alreadyCached: Hash<boolean>;
+let alreadyTest: Hash<boolean>;
+const feature = 'feature';  // default feature name for lazy devs
 
 registerSuite({
 		name: 'has',
 
-		// Run cache tests first to validate assumptions made for cleanup in other tests
-		'has cache': {
+		setup() {
+			alreadyCached = {};
+			Object.keys(hasCache).forEach(function (key) {
+				alreadyCached[key] = true;
+			});
 
-			teardown() {
-				delete hasCache['abc'];
-				delete hasCache['def'];
-				delete hasCache['deferred-cache'];
-			},
+			alreadyTest = {};
+			Object.keys(hasTestFunctions).forEach(function (key) {
+				alreadyTest[key] = true;
+			});
+		},
 
+		afterEach() {
+			for (let key of Object.keys(hasCache)) {
+				if (!alreadyCached[key]) {
+					delete hasCache[key];
+				}
+			}
+			for (let key of Object.keys(hasTestFunctions)) {
+				if (!alreadyTest[key]) {
+					delete hasTestFunctions[key];
+				}
+			}
+		},
+
+		'has.cache': {
 			'basic true/false tests'() {
 				hasAdd('abc', true);
 				assert.isTrue(hasCache['abc']);
@@ -37,38 +64,29 @@ registerSuite({
 			}
 		},
 
-		'adding feature detections': {
-			setup() {
-				Object.keys(hasCache).forEach(function (key) {
-					alreadyCached[key] = true;
-				});
-			},
-
-			afterEach() {
-				Object.keys(hasCache).forEach(function (key) {
-					if (!alreadyCached[key]) {
-						delete hasCache[key];
-					}
-				});
-			},
-
+		'has.add()': {
 			'basic tests with immediate values'() {
-				hasAdd('foo', true);
-				hasAdd('bar', false);
+				assert.isTrue(hasAdd('foo', true));
+				assert.isTrue(hasAdd('bar', false));
 
 				assert.isTrue(has('foo'));
 				assert.isFalse(has('bar'));
 			},
 
 			'deferred feature test evaluation'() {
-				let value = false;
-				hasAdd('deferred', function () {
-					return value;
-				});
+				const testMethod = sinon.stub().returns(true);
+				const feature = 'deferred-cache';
+				hasAdd(feature, testMethod);
 
-				value = true;
-				assert.isTrue(has('deferred'),
-					'Test function should not be run until the first time has is called for that feature');
+				assert.isTrue(hasExists(feature));
+				assert.isFalse(testMethod.called);
+
+				assert.isTrue(has(feature));
+				assert.isTrue(testMethod.called);
+
+				// ensure we only call the testMethod once
+				has(feature);
+				assert.isTrue(testMethod.calledOnce);
 			},
 
 			'tests should not coerce'() {
@@ -91,21 +109,64 @@ registerSuite({
 				}, TypeError);
 			},
 
-			'overwrite'() {
-				hasAdd('one', false);
-				assert.isFalse(has('one'));
-				hasAdd('one', true, true);
-				assert.isTrue(has('one'));
+			'feature is already defined; returns false'() {
+				assert.isTrue(hasAdd(feature, true));
+				assert.isFalse(hasAdd(feature, false));
+			},
+
+			overwrite: {
+				'value with value'() {
+					assert.isTrue(hasAdd(feature, 'old'));
+					assert.isTrue(hasAdd(feature, 'new', true));
+
+					assert.strictEqual(has(feature), 'new');
+				},
+
+				'value with test method'() {
+					assert.isTrue(hasAdd(feature, 'old'));
+					assert.isTrue(hasAdd(feature, () => 'new', true));
+
+					assert.strictEqual(has(feature), 'new');
+				},
+
+				'test method with value'() {
+					assert.isTrue(hasAdd(feature, () => 'old'));
+					assert.isTrue(hasAdd(feature, 'new', true));
+
+					assert.strictEqual(has(feature), 'new');
+				},
+
+				'test method with test method'() {
+					assert.isTrue(hasAdd(feature, () => 'old'));
+					assert.isTrue(hasAdd(feature, () => 'new', true));
+
+					assert.strictEqual(has(feature), 'new');
+				}
+			}
+		},
+
+		'has.exists()': {
+			'no test exists; returns false'() {
+				assert.isFalse(hasExists(feature));
+			},
+
+			'test value exists; returns true'() {
+				hasAdd(feature, true);
+				assert.isTrue(hasExists(feature));
+			},
+
+			'test method exists; returns true'() {
+				hasAdd(feature, () => true);
+				assert.isTrue(hasExists(feature));
+			},
+
+			'null test value counts as being defined'() {
+				hasAdd(feature, null);
+				assert.isTrue(hasExists(feature));
 			}
 		},
 
 		'has loader tests': {
-
-			teardown() {
-				delete hasCache['abc'];
-				delete hasCache['def'];
-			},
-
 			'both feature and no-feature modules provided'() {
 				const expectedHasBrowser = has('host-browser') ? 'intern/main' : 'intern!object';
 				const actualHasBrowser = hasNormalize('host-browser?intern:intern!object', (<DojoLoader.Require> require).toAbsMid);
