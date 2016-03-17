@@ -39,12 +39,15 @@ export const capabilities = {
 // capabilities options specified for an environment will be copied as-is
 export const environments = [
 	{ browserName: 'internet explorer', version: [ '9.0', '10.0', '11.0' ], platform: 'Windows 7' },
+	// Tests are hangling on MicrosoftEdge
 	// { browserName: 'MicrosoftEdge', platform: 'Windows 10' },
 	{ browserName: 'firefox', platform: 'Windows 10' },
 	{ browserName: 'chrome', platform: 'Windows 10' },
+	// tests are hanging on Safari
 	// { browserName: 'safari', version: '9.0', platform: 'OS X 10.11' },
-	{ browserName: 'android', deviceName: 'Google Nexus 7 HD Emulator' },
-	{ browserName: 'iphone', version: '7.1' }
+	{ browserName: 'android', deviceName: 'Google Nexus 7 HD Emulator' }/*,
+	// Unstable tests on iPhone
+	{ browserName: 'iphone', version: '7.1' }*/
 ];
 
 // Maximum number of simultaneous integration tests that should be executed on the remote WebDriver service
