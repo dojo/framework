@@ -2,8 +2,8 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import has from 'src/has';
 import * as text from 'src/text';
-import { spy, stub } from 'sinon';
-import * as fs from 'fs';
+import { stub } from 'sinon';
+import 'intern/dojo/has!host-node?./text_node:./text_browser';
 
 // The exported get function from the text module
 // uses fs.readFile on node systems, which resolves
@@ -19,9 +19,7 @@ const basePath = (function() {
 		return '_build/tests/support/data/';
 	}
 })();
-
 const absPathMock = (val: string) => val;
-let fsSpy: Sinon.SinonSpy;
 
 registerSuite({
 		name: 'text',
@@ -52,28 +50,7 @@ registerSuite({
 				assert.include(normalized, '!strip', 'Strip flag should be present');
 			}
 		},
-
 		'load': {
-			beforeEach() {
-				fsSpy = spy(fs, 'readFile');
-			},
-
-			afterEach() {
-				fsSpy.restore && fsSpy.restore();
-			},
-
-			'should return text and call require'() {
-				text.load(basePath + 'textLoad.txt', (<DojoLoader.Require> require), this.async().callback((val: string) => {
-					assert.isTrue(fsSpy.calledOnce, 'Read file should be called once');
-					assert.strictEqual(val, 'test', 'Correct text should be returned');
-				}));
-			},
-			'should return text from cache'() {
-				text.load(basePath + 'textLoad.txt', (<DojoLoader.Require> require), this.async().callback((val: string) => {
-					assert.isTrue(fsSpy.notCalled, 'Read file should not be called');
-					assert.strictEqual(val, 'test', 'Correct text should be returned');
-				}));
-			},
 			'should strip xml'() {
 				text.load(basePath + 'strip.xml!strip', (<DojoLoader.Require> require), this.async().callback((val: string) => {
 					assert.strictEqual(val, 'abc', 'Should have stripped the XML');

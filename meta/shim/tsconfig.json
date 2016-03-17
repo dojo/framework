@@ -149,6 +149,8 @@
 		"./tests/unit/streams/util.ts",
 		"./tests/unit/string.ts",
 		"./tests/unit/text.ts",
+		"./tests/unit/text_browser.ts",
+		"./tests/unit/text_node.ts",
 		"./tests/unit/util.ts",
 		"./typings/tsd.d.ts"
 	]
