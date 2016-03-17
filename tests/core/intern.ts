@@ -39,16 +39,16 @@ export const capabilities = {
 // capabilities options specified for an environment will be copied as-is
 export const environments = [
 	{ browserName: 'internet explorer', version: [ '9.0', '10.0', '11.0' ], platform: 'Windows 7' },
-	/* { browserName: 'microsoftedge', platform: 'Windows 10' }, */
+	{ browserName: 'MicrosoftEdge', platform: 'Windows 10' },
 	{ browserName: 'firefox', platform: 'Windows 10' },
 	{ browserName: 'chrome', platform: 'Windows 10' },
-	/* { browserName: 'safari', version: '9', platform: 'OS X 10.11' },*/
-	{ browserName: 'android', platform: 'Linux', version: '4.4', deviceName: 'Google Nexus 7 HD Emulator' }/*,
-	{ browserName: 'iphone', version: '9.1', deviceName: 'iPhone 6' }*/
+	{ browserName: 'safari', version: '9.0', platform: 'OS X 10.11' },
+	{ browserName: 'android', deviceName: 'Google Nexus 7 HD Emulator' },
+	{ browserName: 'iphone', version: [ '7.1', '8.4' ] }
 ];
 
 // Maximum number of simultaneous integration tests that should be executed on the remote WebDriver service
-export const maxConcurrency = 3;
+export const maxConcurrency = 5;
 
 // Name of the tunnel class to use for WebDriver tests
 export const tunnel = 'SauceLabsTunnel';
