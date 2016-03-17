@@ -414,7 +414,7 @@ declare module 'leadfoot/helpers/pollUntil' {
 	 */
 	function pollUntil<T>(poller: Function | string, args?: any[], timeout?: number, pollInterval?: number): (value: any) => Promise<T>;
 	function pollUntil<T>(poller: Function | string, timeout?: number, pollInterval?: number): (value: any) => Promise<T>;
-
+	namespace pollUntil { }
 	export = pollUntil;
 }
 

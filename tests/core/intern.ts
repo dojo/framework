@@ -75,7 +75,7 @@ export const loaderOptions = {
 	packages: [
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' },
-		{ name: 'dojo', location: 'node_modules/intern/node_modules/dojo' },
+		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
 		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' }
 	]
 };
