@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/dojo/core.svg?branch=master)](https://travis-ci.org/dojo/core)
 [![codecov.io](http://codecov.io/github/dojo/core/coverage.svg?branch=master)](http://codecov.io/github/dojo/core?branch=master)
+[![npm version](https://badge.fury.io/js/dojo-core.svg)](http://badge.fury.io/js/dojo-core)
 
 This package provides a set of language helpers, utility functions, and classes for writing TypeScript applications.
 It includes APIs for feature detection, asynchronous and streaming operations, basic event handling,
