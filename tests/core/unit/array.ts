@@ -1,6 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as array from 'src/array';
+import has, { add as hasAdd, TestResult } from 'src/has';
+import { mixin } from 'dojo/lang';
 
 function assertFrom(arrayable: any, expected: any[]) {
 	let actual = array.from(arrayable);
@@ -17,10 +19,58 @@ class MyArray {
 }
 MyArray.prototype = Object.create(Array.prototype);
 
+function createDojoTests(feature: string, tests: {}) {
+	const hasConfiguration: TestResult = has(feature);
+	const dojoTests: any = mixin({}, tests);
+
+	dojoTests.setup = function () {
+		hasAdd(feature, false, true);
+	};
+
+	dojoTests.teardown = function () {
+		hasAdd(feature, hasConfiguration, true);
+	};
+
+	return dojoTests;
+}
+
+function createNativeTests(feature: string, tests: {}) {
+	const hasConfiguration: TestResult = has(feature);
+
+	if (!hasConfiguration) {
+		return;
+	}
+
+	const nativeTests: any = mixin({}, tests);
+
+	nativeTests.setup = function () {
+		hasAdd(feature, true, true);
+	};
+
+	nativeTests.teardown = function () {
+		hasAdd(feature, hasConfiguration, true);
+	};
+
+	return nativeTests;
+}
+
+function createNativeAndDojoArrayTests(feature: string, tests: {}) {
+	const nativeTests = createNativeTests(feature, tests);
+	const allTests: any = {
+		dojo: createDojoTests(feature, tests)
+	};
+
+	if (nativeTests) {
+		allTests.native = nativeTests;
+	}
+
+	return allTests;
+}
+
 registerSuite({
 	name: 'array',
 
-	'.from()': {
+	'.from()': createNativeAndDojoArrayTests('es6-array-from', {
 		'from undefined: throws': function () {
 			assert.throws(function () {
 				array.from(undefined);
@@ -123,15 +173,10 @@ registerSuite({
 			let actual = array.from([ 1, 2, 3 ], thing.mapFunction, thing);
 			assert.isArray(actual);
 			assert.deepEqual([ 0, 1, 2 ], actual);
-		},
-
-		'supports extension': function () {
-			let actual = MyArray.from([ 1, 2, 3 ]);
-			assert.instanceOf(actual, MyArray);
 		}
-	},
+	}),
 
-	'.of()': {
+	'.of()': createNativeAndDojoArrayTests('es6-array-of', {
 		'empty arguments': function () {
 			assert.deepEqual(array.of(), []);
 		},
@@ -144,9 +189,9 @@ registerSuite({
 		'multiple arguments': function () {
 			assert.deepEqual(array.of('one', 'two', 'three'), [ 'one', 'two', 'three' ]);
 		}
-	},
+	}),
 
-	'#fill()': {
+	'#fill()': createNativeAndDojoArrayTests('es6-array-fill', {
 		'basic fill array': function () {
 			let actual = array.fill([ 1, 2, 3 ], 9);
 			assert.deepEqual(actual, [ 9, 9, 9 ]);
@@ -187,9 +232,9 @@ registerSuite({
 			assert.deepEqual(actual, [ 9, 9, 3 ]);
 		},
 
-		'fill with nonsense end results in length': function () {
+		'fill with nonsense end results in no change': function () {
 			let actual = array.fill([ 1, 2, 3 ], 9, 0, NaN);
-			assert.deepEqual(actual, [ 9, 9, 9 ]);
+			assert.deepEqual(actual, [ 1, 2, 3 ]);
 		},
 
 		'fill with 0 start and negative end larger than length results in nothing filled': function () {
@@ -212,9 +257,9 @@ registerSuite({
 				length: 3
 			});
 		}
-	},
+	}),
 
-	'#findIndex()': (function () {
+	'#findIndex()': createNativeAndDojoArrayTests('es6-array-findIndex', (function () {
 		function callback(element: string) {
 			return element === 'goose';
 		}
@@ -257,9 +302,9 @@ registerSuite({
 				assert.strictEqual(array.findIndex<number>(haystack, thing.callback, thing), 3);
 			}
 		};
-	})(),
+	})()),
 
-	'#find()': (function () {
+	'#find()': createNativeAndDojoArrayTests('es6-array-find', (function () {
 		function callback(element: number) {
 			return element > 5;
 		}
@@ -275,17 +320,17 @@ registerSuite({
 				assert.isUndefined(array.find(haystack, callback));
 			}
 		};
-	})(),
+	})()),
 
-	'#copyWithin()': {
+	'#copyWithin()': createNativeAndDojoArrayTests('es6-array-copyWithin', {
 		'returns source array': function () {
 			let arr: any[] = [];
-			assert.equal(array.copyWithin(arr, 0), arr);
+			assert.equal(array.copyWithin(arr, 0, 0), arr);
 		},
 
 		'null target: throws': function () {
 			assert.throws(function () {
-				array.copyWithin(null, 0);
+				array.copyWithin(null, 0, 0);
 			}, TypeError);
 		},
 
@@ -334,7 +379,7 @@ registerSuite({
 				2: 'two',
 				'length': NaN
 			};
-			let actual = array.copyWithin(obj, 1);
+			let actual = array.copyWithin(obj, 1, 0);
 			assert.deepEqual(actual, expected);
 		},
 
@@ -347,21 +392,23 @@ registerSuite({
 				[ 'positive start', [ 1, 2, 4, 5, 5 ], 2, 3 ],
 				[ 'negative end subtracts from length', [ 1, 2, 3, 5, 5 ], 2, -2 ],
 				[ 'positive end', [ 5, 2, 3, 4, 5 ], 0, 4, 5 ],
-				[ 'negative end subtracts from length', [ 3, 2, 3, 4, 5 ], 0, 2, -2 ]
+				[ 'negative end subtracts from length', [ 3, 2, 3, 4, 5 ], 0, 2, -2 ],
+				[ 'non-number end leaves data unchanged', [1, 2, 3, 4, 5], 0, 0, NaN]
 			];
 			parameters.forEach(function ([ name, expected, offset, start, end ]: [ string, number[], number, number, number ]) {
-				let arr = [ 1, 2, 3, 4, 5 ];
 				tests[name] = function () {
+					let arr = [ 1, 2, 3, 4, 5 ];
 					let actual = array.copyWithin(arr, offset, start, end);
+					assert.strictEqual(actual, arr, 'a new array should not be created');
 					assert.deepEqual(actual, expected);
 				};
 			});
 
 			return tests;
 		})()
-	},
+	}),
 
-	'#includes': (function() {
+	'#includes': createNativeAndDojoArrayTests('es7-array-includes', (function() {
 		let arr: number[];
 		return {
 			beforeEach() {
@@ -389,5 +436,12 @@ registerSuite({
 				assert.isFalse(array.includes([ 1, 2, 3 ], NaN));
 			}
 		};
-	})()
+	})()),
+
+	'extension support': createDojoTests('es6-array-from', {
+		'.from()': function () {
+			let actual = MyArray.from([ 1, 2, 3 ]);
+			assert.instanceOf(actual, MyArray);
+		}
+	})
 });
