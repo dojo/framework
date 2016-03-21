@@ -1,4 +1,5 @@
 import { MAX_SAFE_INTEGER as maxSafeInteger } from './number';
+import has from './has';
 
 export interface ArrayLike<T> {
 	length: number;
@@ -68,6 +69,11 @@ export function from<T>(arrayLike: ArrayLike<T>, mapFunction?: MapCallback<T>, t
  * @return The new Array
  */
 export function from<T>(arrayLike: (string | ArrayLike<T>), mapFunction?: MapCallback<T>, thisArg?: {}): ArrayLike<T> {
+	// Use the native Array.from() if it exists
+	if (has('es6-array-from')) {
+		return (<any> Array).from.apply(null, arguments);
+	}
+
 	if (arrayLike == null) {
 		throw new TypeError('from: requires an array-like object');
 	}
@@ -100,6 +106,10 @@ export function of(...items: any[]): any[];
  * @return An array from the given arguments
  */
 export function of() {
+	if (has('es6-array-of')) {
+		return (<any> Array).of.apply(null, arguments);
+	}
+
 	return Array.prototype.slice.call(arguments);
 }
 
@@ -113,9 +123,14 @@ export function of() {
  * @return The filled target
  */
 export function fill<T>(target: ArrayLike<T>, value: any, start?: number, end?: number): ArrayLike<T> {
+	if (has('es6-array-fill')) {
+		const method = (<any> Array.prototype).fill;
+		return method.call.apply(method, arguments);
+	}
+
 	const length = toLength(target.length);
 	let i = normalizeOffset(toInteger(start), length);
-	end = normalizeOffset(end ? toInteger(end) : length, length);
+	end = normalizeOffset(end === undefined ? length : toInteger(end), length);
 
 	while (i < end) {
 		target[i++] = value;
@@ -134,6 +149,11 @@ export function fill<T>(target: ArrayLike<T>, value: any, start?: number, end?: 
  * @return The first index whose value satisfies the passed callback, or -1 if no values satisfy it
  */
 export function findIndex<T>(target: ArrayLike<T>, callback: FindCallback<T>, thisArg?: {}): number {
+	if (has('es6-array-findIndex')) {
+		const method = (<any> Array.prototype).findIndex;
+		return method.call.apply(method, arguments);
+	}
+
 	const length = toLength(target.length);
 
 	if (!callback) {
@@ -162,6 +182,11 @@ export function findIndex<T>(target: ArrayLike<T>, callback: FindCallback<T>, th
  * @return The first element matching the callback, or undefined if one does not exist
  */
 export function find<T>(target: ArrayLike<T>, callback: FindCallback<T>, thisArg?: {}): T {
+	if (has('es6-array-find')) {
+		const method = (<any> Array.prototype).find;
+		return method.call.apply(method, arguments);
+	}
+
 	const index = findIndex<T>(target, callback, thisArg);
 	return index !== -1 ? target[index] : undefined;
 }
@@ -175,7 +200,12 @@ export function find<T>(target: ArrayLike<T>, callback: FindCallback<T>, thisArg
  * @param end The last (exclusive) index to copy; if negative, it counts backwards from length
  * @return The target
  */
-export function copyWithin<T>(target: ArrayLike<T>, offset: number, start?: number, end?: number): ArrayLike<T> {
+export function copyWithin<T>(target: ArrayLike<T>, offset: number, start: number, end?: number): ArrayLike<T> {
+	if (has('es6-array-copyWithin')) {
+		const method = (<any> Array.prototype).copyWithin;
+		return method.call.apply(method, arguments);
+	}
+
 	if (target == null) {
 		throw new TypeError('copyWithin: target must be an array-like object');
 	}
@@ -183,7 +213,7 @@ export function copyWithin<T>(target: ArrayLike<T>, offset: number, start?: numb
 	const length = toLength(target.length);
 	offset = normalizeOffset(toInteger(offset), length);
 	start = normalizeOffset(toInteger(start), length);
-	end = normalizeOffset(end ? toInteger(end) : length, length);
+	end = normalizeOffset(end === undefined ? length : toInteger(end), length);
 	let count = Math.min(end - start, length - offset);
 
 	let direction = 1;
@@ -216,6 +246,11 @@ export function copyWithin<T>(target: ArrayLike<T>, offset: number, start?: numb
  * @param fromIndex the starting index to search from
  */
 export function includes<T>(target: ArrayLike<T>, searchElement: T, fromIndex: number = 0): boolean {
+	if (has('es7-array-includes')) {
+		const method = (<any> Array.prototype).includes;
+		return method.call.apply(method, arguments);
+	}
+
 	let len = toLength(target.length);
 
 	for (let i = fromIndex; i < len; ++i) {
