@@ -1,8 +1,27 @@
+/*
+ * While setTimeout and setInterval work well enough for typical application demands on reasonably modern computers,
+ * JavaScript runtimes make no guarantee of timely execution. The delay passed to these functions only guarantees
+ * that the callback will not be executed before the specified delay has elapsed. There is no guarantee of how promptly
+ * the callback will be executed after the delay.
+ *
+ * Given this situation it is best to avoid automated tests that assume timely execution of delayed callbacks. This
+ * is especially relevant in cloud testing services where the resources allocated for the test machine may be
+ * severely limited, causing unexpected test failures.
+ *
+ * Additionally, while it is very convenient in test code to use setTimeout to schedule something at a certain time
+ * or to see if something has transpired after a certain interval, it should be avoided when possible due to its
+ * unreliability.
+ *
+ * Further discussion: https://github.com/dojo/core/issues/107
+ */
+
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import sinon = require('sinon');
+import * as sinon from 'sinon';
 import { Handle } from 'src/interfaces';
 import * as util from 'src/util';
+
+const TIMEOUT = 3000;
 
 registerSuite({
 	name: 'utility functions',
@@ -43,130 +62,182 @@ registerSuite({
 	})(),
 
 	debounce: {
-		'debounces callback'() {
-			const dfd = this.async(1000);
-			const spy = sinon.spy();
-			const debouncedFunction = util.debounce(spy, 100);
+		'preserves context'() {
+			const dfd = this.async(TIMEOUT);
+			const foo = {
+				bar: util.debounce(dfd.callback(function() {
+					assert.strictEqual(this, foo, 'Function should be executed with correct context');
+				}), 0)
+			};
 
-			debouncedFunction();
-			assert.strictEqual(spy.callCount, 0,
-				'Function should not be called until period has elapsed without further calls');
-
-			setTimeout(function () {
-				debouncedFunction();
-			}, 80);
-
-			setTimeout(function () {
-				debouncedFunction();
-			}, 160);
-
-			setTimeout(dfd.callback(function () {
-				assert.strictEqual(spy.callCount, 1,
-					'Function should be called once after a full period has elapsed with no calls, ' +
-					'after multiple calls within period');
-			}), 300);
+			foo.bar();
 		},
 
-		'fires callback after debounce period'() {
-			const dfd = this.async(1000);
-			const spy = sinon.spy();
-			const debouncedFunction = util.debounce(spy, 50);
+		'receives arguments'() {
+			const dfd = this.async(TIMEOUT);
+			const testArg1 = 5;
+			const testArg2 = 'a';
+			const debouncedFunction = util.debounce(dfd.callback(function (a: number, b: string) {
+				assert.strictEqual(a, testArg1, 'Function should receive correct arguments');
+				assert.strictEqual(b, testArg2, 'Function should receive correct arguments');
+			}), 0);
 
-			debouncedFunction();
+			debouncedFunction(testArg1, testArg2);
+		},
 
-			setTimeout(function () {
+		'debounces callback'() {
+			const dfd = this.async(TIMEOUT);
+			const debouncedFunction = util.debounce(dfd.callback(function () {
+				assert.isAbove(Date.now() - lastCallTick, 24,
+					'Function should not be called until period has elapsed without further calls');
+
+				// Typically, we expect the 3rd invocation to be the one that is executed.
+				// Although the setTimeout in 'run' specifies a delay of 5ms, a very slow test environment may
+				// take longer. If 25+ ms has actually elapsed, then the first or second invocation may end up
+				// being eligible for execution.
+				// If the first or second invocation has been called there's no need to let the run loop continue.
+				clearTimeout(handle);
+			}), 25);
+
+			let runCount = 1;
+			let lastCallTick: number;
+			let handle: any;
+
+			function run() {
+				lastCallTick = Date.now();
 				debouncedFunction();
-			}, 100);
+				runCount += 1;
 
-			setTimeout(function () {
-				debouncedFunction();
-			}, 200);
+				if (runCount < 4) {
+					handle = setTimeout(run, 5);
+				}
+			}
 
-			setTimeout(dfd.callback(function () {
-				assert.strictEqual(spy.callCount, 3);
-			}), 300);
+			run();
 		}
 	},
 
 	throttle: {
-		'throttles callback'() {
-			const spy = sinon.spy();
-			const throttledFunction = util.throttle(spy, 100);
+		'preserves context'() {
+			const dfd = this.async(TIMEOUT);
+			const foo = {
+				bar: util.throttle(dfd.callback(function() {
+					assert.strictEqual(this, foo, 'Function should be executed with correct context');
+				}), 0)
+			};
 
-			throttledFunction();
-			assert.strictEqual(spy.callCount, 1,
-				'Function should be called as soon as it is first invoked');
-
-			setTimeout(function () {
-				throttledFunction();
-				throttledFunction();
-				throttledFunction();
-			}, 80);
-
-			setTimeout(this.async().callback(function () {
-				assert.strictEqual(spy.callCount, 1,
-					'Further calls within same interval should be suppressed');
-			}), 150);
+			foo.bar();
 		},
 
-		'allows one callback per interval'() {
-			const dfd = this.async(1000);
-			const spy = sinon.spy();
-			const throttledFunction = util.throttle(spy, 50);
+		'receives arguments'() {
+			const dfd = this.async(TIMEOUT);
+			const testArg1 = 5;
+			const testArg2 = 'a';
+			const throttledFunction = util.throttle(dfd.callback(function (a: number, b: string) {
+				assert.strictEqual(a, testArg1, 'Function should receive correct arguments');
+				assert.strictEqual(b, testArg2, 'Function should receive correct arguments');
+			}), 0);
 
-			throttledFunction();
+			throttledFunction(testArg1, testArg2);
+		},
 
-			setTimeout(function () {
-				throttledFunction();
-			}, 100);
+		'throttles callback'() {
+			const dfd = this.async(TIMEOUT);
+			const spy = sinon.spy(function (a: string) {
+				assert.notStrictEqual(a, 'b', 'Second invocation should be throttled');
+				// Rounding errors?
+				// Technically, the time diff should be greater than 24ms, but in some cases
+				// it is equal to 24ms.
+				assert.isAbove(Date.now() - lastRunTick, 23,
+					'Function should not be called until throttle delay has elapsed');
 
-			setTimeout(dfd.callback(function () {
-				throttledFunction();
-				assert.strictEqual(spy.callCount, 3);
-			}), 200);
+				lastRunTick = Date.now();
+				if (spy.callCount > 1) {
+					clearTimeout(handle);
+					dfd.resolve();
+				}
+			});
+			const throttledFunction = util.throttle(spy, 25);
+
+			let runCount = 1;
+			let lastRunTick = 0;
+			let handle: any;
+
+			function run() {
+				throttledFunction('a');
+				throttledFunction('b');
+				runCount += 1;
+
+				if (runCount < 7) {
+					handle = setTimeout(run, 5);
+				}
+			}
+
+			run();
+			assert.strictEqual(spy.callCount, 1,
+				'Function should be called as soon as it is first invoked');
 		}
 	},
 
 	throttleAfter: {
-		'throttles callback'() {
-			const dfd = this.async(1000);
-			const spy = sinon.spy();
-			const throttledFunction = util.throttleAfter(spy, 100);
+		'preserves context'() {
+			const dfd = this.async(TIMEOUT);
+			const foo = {
+				bar: util.throttleAfter(dfd.callback(function() {
+					assert.strictEqual(this, foo, 'Function should be executed with correct context');
+				}), 0)
+			};
 
-			throttledFunction();
-			assert.strictEqual(spy.callCount, 0,
-				'Function should not be called until end of interval');
-
-			setTimeout(function () {
-				throttledFunction();
-				throttledFunction();
-				throttledFunction();
-			}, 90);
-
-			setTimeout(dfd.callback(function () {
-				assert.strictEqual(spy.callCount, 1,
-					'Function should be called once by end of interval');
-			}), 150);
+			foo.bar();
 		},
 
-		'allows one callback per interval'() {
-			const dfd = this.async(1000);
-			const spy = sinon.spy();
-			const throttledFunction = util.throttleAfter(spy, 50);
+		'receives arguments'() {
+			const dfd = this.async(TIMEOUT);
+			const testArg1 = 5;
+			const testArg2 = 'a';
+			const throttledFunction = util.throttleAfter(dfd.callback(function (a: number, b: string) {
+				assert.strictEqual(a, testArg1, 'Function should receive correct arguments');
+				assert.strictEqual(b, testArg2, 'Function should receive correct arguments');
+			}), 0);
 
-			throttledFunction();
+			throttledFunction(testArg1, testArg2);
+		},
 
-			setTimeout(function () {
-				throttledFunction();
-			}, 100);
+		'throttles callback'() {
+			const dfd = this.async(TIMEOUT);
+			const spy = sinon.spy(function (a: string) {
+				assert.notStrictEqual(a, 'b', 'Second invocation should be throttled');
+				// Rounding errors?
+				// Technically, the time diff should be greater than 24ms, but in some cases
+				// it is equal to 24ms.
+				assert.isAbove(Date.now() - lastRunTick, 23,
+					'Function should not be called until throttle delay has elapsed');
 
-			setTimeout(function () {
-				throttledFunction();
-			}, 200);
+				lastRunTick = Date.now();
+				if (spy.callCount > 1) {
+					clearTimeout(handle);
+					dfd.resolve();
+				}
+			});
+			const throttledFunction = util.throttle(spy, 25);
 
-			setTimeout(dfd.callback(function () {
-				assert.strictEqual(spy.callCount, 3);
-			}), 300);
+			let runCount = 1;
+			let lastRunTick = 0;
+			let handle: any;
+
+			function run() {
+				throttledFunction('a');
+				throttledFunction('b');
+				runCount += 1;
+
+				if (runCount < 7) {
+					handle = setTimeout(run, 5);
+				}
+			}
+
+			run();
+			assert.strictEqual(spy.callCount, 1,
+				'Function should be called as soon as it is first invoked');
 		}
 	}
 });
