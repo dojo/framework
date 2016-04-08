@@ -9,7 +9,7 @@ registerSuite({
 
 		'load': {
 			'should return text'() {
-				text.load(basePath + 'textLoad.txt', (<DojoLoader.Require> require), this.async().callback((val: string) => {
+				text.load(basePath + 'textLoad.txt', (<DojoLoader.RootRequire> require), this.async().callback((val: string) => {
 					assert.strictEqual(val, 'test', 'Correct text should be returned');
 				}));
 			}

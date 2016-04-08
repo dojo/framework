@@ -20,13 +20,13 @@ registerSuite({
 			},
 
 			'should return text and call fs'() {
-				text.load(basePath + 'textLoad.txt', (<DojoLoader.Require> require), this.async().callback((val: string) => {
+				text.load(basePath + 'textLoad.txt', (<DojoLoader.RootRequire> require), this.async().callback((val: string) => {
 					assert.isTrue(fsSpy.calledOnce, 'Read file should be called once');
 					assert.strictEqual(val, 'test', 'Correct text should be returned');
 				}));
 			},
 			'should return text from cache'() {
-				text.load(basePath + 'textLoad.txt', (<DojoLoader.Require> require), this.async().callback((val: string) => {
+				text.load(basePath + 'textLoad.txt', (<DojoLoader.RootRequire> require), this.async().callback((val: string) => {
 					assert.isTrue(fsSpy.notCalled, 'Read file should not be called');
 					assert.strictEqual(val, 'test', 'Correct text should be returned');
 				}));
