@@ -64,7 +64,7 @@ registerSuite({
 				this.skip('No echo server available');
 			}
 			return xhrRequest('/__echo/xhr?color=blue&numbers=one&numbers=two', {
-				handleAs: 'json'
+				responseType: 'json'
 			}).then(function (response: any) {
 				const query = JSON.parse(response.data).query;
 				assert.deepEqual(query, {
@@ -149,7 +149,7 @@ registerSuite({
 						thud: 'thonk',
 						xyzzy: '3'
 					}).toString(),
-					handleAs: 'json'
+					responseType: 'json'
 				}).then(function (response: any) {
 					const query = JSON.parse(response.data).query;
 					assert.deepEqual(query, {
@@ -176,7 +176,7 @@ registerSuite({
 						thud: 'thonk',
 						xyzzy: '3'
 					}).toString(),
-					handleAs: 'json'
+					responseType: 'json'
 				}).then(function (response: any) {
 					const query = JSON.parse(response.data).query;
 					assert.deepEqual(query, {
@@ -201,7 +201,7 @@ registerSuite({
 						thud: 'thonk',
 						xyzzy: '3'
 					},
-					handleAs: 'json'
+					responseType: 'json'
 				}).then(function (response: any) {
 					const query = JSON.parse(response.data).query;
 					assert.deepEqual(query, {

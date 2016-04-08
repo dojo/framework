@@ -124,7 +124,6 @@ export interface RequestOptions {
 	auth?: string;
 	cacheBust?: any;
 	data?: any;
-	handleAs?: string;
 	headers?: { [name: string]: string; };
 	method?: string;
 	password?: string;
@@ -195,7 +194,7 @@ export default request;
  */
 filterRegistry.register(
 	function (response: Response<any>, url: string, options: RequestOptions) {
-		return typeof response.data && options && (options.responseType === 'json' || options.handleAs === 'json');
+		return typeof response.data && options && options.responseType === 'json';
 	},
 	function (response: Response<any>, url: string, options: RequestOptions): Object {
 		return {
