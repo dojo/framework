@@ -93,13 +93,5 @@ registerSuite({
 				assert.deepEqual(response.data, { foo: 'bar' });
 			})
 		;
-	},
-
-	'JSON handleAs filter'() {
-		return request.get(getRequestUrl('foo.json'), { handleAs: 'json' })
-			.then(function(response: any) {
-				assert.deepEqual(response.data, { foo: 'bar' });
-			})
-		;
 	}
 });
