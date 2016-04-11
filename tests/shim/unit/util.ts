@@ -239,5 +239,79 @@ registerSuite({
 			assert.strictEqual(spy.callCount, 1,
 				'Function should be called as soon as it is first invoked');
 		}
+	},
+	getValueDescriptor: {
+		'no arguments'() {
+			const desc = util.getValueDescriptor('foo');
+			assert.deepEqual(desc, {
+				value: 'foo',
+				writable: true,
+				enumerable: false,
+				configurable: true
+			});
+		},
+		'true'() {
+			const desc = util.getValueDescriptor('foo', true);
+			assert.deepEqual(desc, {
+				value: 'foo',
+				writable: true,
+				enumerable: true,
+				configurable: true
+			});
+		},
+		'false, true'() {
+			const desc = util.getValueDescriptor('foo', false, true);
+			assert.deepEqual(desc, {
+				value: 'foo',
+				writable: true,
+				enumerable: false,
+				configurable: true
+			});
+		},
+		'true, true'() {
+			const desc = util.getValueDescriptor('foo', true, true);
+			assert.deepEqual(desc, {
+				value: 'foo',
+				writable: true,
+				enumerable: true,
+				configurable: true
+			});
+		},
+		'true, false, true'() {
+			const desc = util.getValueDescriptor('foo', true, false, true);
+			assert.deepEqual(desc, {
+				value: 'foo',
+				writable: false,
+				enumerable: true,
+				configurable: true
+			});
+		},
+		'true, true, true'() {
+			const desc = util.getValueDescriptor('foo', true, true, true);
+			assert.deepEqual(desc, {
+				value: 'foo',
+				writable: true,
+				enumerable: true,
+				configurable: true
+			});
+		},
+		'false, true, true'() {
+			const desc = util.getValueDescriptor('foo', false, true, true);
+			assert.deepEqual(desc, {
+				value: 'foo',
+				writable: true,
+				enumerable: false,
+				configurable: true
+			});
+		},
+		'false, false, true'() {
+			const desc = util.getValueDescriptor('foo', false, false, true);
+			assert.deepEqual(desc, {
+				value: 'foo',
+				writable: false,
+				enumerable: false,
+				configurable: true
+			});
+		}
 	}
 });
