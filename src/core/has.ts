@@ -176,3 +176,12 @@ add('es6-array-findIndex', 'findIndex' in global.Array.prototype);
 add('es6-array-find', 'find' in global.Array.prototype);
 add('es6-array-copyWithin', 'copyWithin' in global.Array.prototype);
 add('es7-array-includes', 'includes' in global.Array.prototype);
+add('es6-symbol', typeof global.Symbol === 'function');
+add('es6-set', () => {
+	if (typeof global.Set === 'function') {
+		/* IE11 and older versions of Safari are missing critical ES6 Set functionality */
+		const set = new global.Set([1]);
+		return set.has(1) && 'keys' in set && typeof set.keys === 'function';
+	}
+	return false;
+});
