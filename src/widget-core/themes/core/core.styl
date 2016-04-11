@@ -1,0 +1,108 @@
+@import 'nib';
+
+html, body {
+	height: 100%;
+	width: 100%;
+}
+
+body {
+	margin: 0;
+	overflow: hidden;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+dojo-container-layout {
+	display: flex;
+	height: 100%;
+}
+
+dojo-panel {
+	display: flex;
+	flex: 1;
+}
+
+dojo-panel-resize {
+	min-width: 100px;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: initial;
+	z-index: 2;
+}
+
+dojo-panel-tabbed {
+
+	> ul {
+		display: flex;
+		user-select: none;
+		list-style: none;
+		margin: 0;
+		padding-left: 0;
+	}
+
+	& > ul > li {
+		position: relative;
+		padding-left: 10px;
+		padding-right: 24px;
+		user-drag: element;
+		flex: 1;
+		max-width: 175px;
+		min-width: 40px;
+
+		&.active {
+			flex: 2;
+			width: fit-content;
+
+			.tab-label {
+				padding-right: 10px;
+			}
+		}
+
+		.tab-label {
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			cursor: default;
+		}
+
+		.tab-close {
+			position: absolute;
+			top: 1px;
+			right: 10px;
+			cursor: default;
+		}
+	}
+
+	& > .panels > * {
+		display: none;
+	}
+
+	& > .panels > .visible {
+		display: block;
+	}
+}
+
+.fixed {
+	flex: 0;
+}
+
+.horizontal {
+	flex-direction: row;
+}
+
+.vertical {
+	flex-direction: column;
+
+	& > dojo-resize-handle {
+		right: -5px;
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 10px;
+		cursor: col-resize;
+		z-index: 3;
+	}
+}
