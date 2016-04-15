@@ -152,7 +152,7 @@ function wrapError(store: MemoryStore<Object>, result: Error): MemoryStorePromis
 /**
  * Create a new instance of a MemoryStore
  */
-const createMemoryStore: MemoryStoreFactory = compose({
+const createMemoryStore = compose({
 	idProperty: 'id',
 
 	get(id: StoreIndex): MemoryStorePromise<Object> {
@@ -279,6 +279,6 @@ const createMemoryStore: MemoryStoreFactory = compose({
 	fromArray(data: any[]): MemoryStore<any> {
 		return createMemoryStore({ data });
 	}
-});
+}) as MemoryStoreFactory;
 
 export default createMemoryStore;

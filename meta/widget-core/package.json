@@ -14,7 +14,7 @@
 	"peerDependencies": {
 		"@reactivex/rxjs": ">5.0.0-beta",
 		"dojo-actions": ">2.0.0-alpha",
-		"dojo-compose": ">2.0.0-alpha",
+		"dojo-compose": "2.0.0-beta.1",
 		"dojo-core": ">2.0.0-alpha",
 		"immutable": "~3.7.6",
 		"maquette": "~2.3.1"
@@ -36,8 +36,8 @@
 		"intern": "3.1.1",
 		"istanbul": "0.4.3",
 		"jsdom": "7.2.2",
-		"remap-istanbul": "0.5.1",
-		"tslint": "3.7.1",
-		"typescript": "1.8.9"
+		"remap-istanbul": "0.6.2",
+		"tslint": "3.7.4",
+		"typescript": "1.8.10"
 	}
 }

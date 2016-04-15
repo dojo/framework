@@ -1,8 +1,9 @@
 import { h, VNode } from 'maquette/maquette';
+import { ComposeFactory } from 'dojo-compose/compose';
 import { Handle } from 'dojo-core/interfaces';
 import WeakMap from 'dojo-core/WeakMap';
 import { CachedRenderMixin, CachedRenderState, CachedRenderParent } from './createCachedRenderMixin';
-import createContainerMixin, { ContainerMixin, ContainerChild, ContainerMixinState } from './createContainerMixin';
+import createContainerMixin, { ContainerMixin, ContainerChild, ContainerMixinState, ContainerMixinOptions } from './createContainerMixin';
 
 export interface TabbedState extends ContainerMixinState { }
 
@@ -139,6 +140,8 @@ function getTabListeners(tabbed: TabbedMixin<TabbedChild, TabbedState>, tab: Tab
 	return tabListenersMap.get(tab);
 }
 
+export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChild, ContainerMixinOptions<TabbedState>>, ContainerMixinOptions<TabbedState>> {}
+
 const createTabbedMixin = createContainerMixin
 	.mixin({
 		mixin: {
@@ -192,6 +195,6 @@ const createTabbedMixin = createContainerMixin
 				return [ h(tabbed.tagNames.tabBar, tabs) ].concat(childrenNodes);
 			}
 		}
-	});
+	}) as TabbedMixinFactory;
 
 export default createTabbedMixin;

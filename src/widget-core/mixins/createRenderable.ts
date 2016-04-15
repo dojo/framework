@@ -35,11 +35,11 @@ export function isRenderable(value: any): value is Renderable {
 	return value && typeof value.render === 'function';
 }
 
-const createRenderable: RenderableFactory = compose({
+const createRenderable: RenderableFactory = compose<any, RenderableOptions>({
 		render: <RenderFunction> null,
 
 		tagName: 'div'
-	}, (instance: Renderable, options: RenderableOptions) => {
+	}, (instance, options) => {
 		if (options && options.tagName) {
 			instance.tagName = options.tagName;
 		}

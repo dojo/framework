@@ -142,7 +142,7 @@ const createStateful: StatefulFactory = compose({
 			observedStateMap.set(stateful, observedState);
 			return observedState.handle;
 		}
-	}, (instance: Stateful<State>, options: StatefulOptions<State>) => {
+	}, (instance: any, options: StatefulOptions<State>) => {
 		const state = {};
 		stateWeakMap.set(instance, state);
 		if (options) {
