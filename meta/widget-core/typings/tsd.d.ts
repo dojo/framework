@@ -1,5 +1,5 @@
 /// <reference path="../node_modules/dojo-actions/typings/dojo-actions/dojo-actions-2.0.0-pre.d.ts" />
-/// <reference path="../node_modules/dojo-core/typings/dojo-core/dojo-core-2.0.0-pre.d.ts" />
+/// <reference path="../node_modules/dojo-core/typings/dojo-core/dojo-core-2.0.0-alpha.3.d.ts" />
 /// <reference path="../node_modules/dojo-core/typings/symbol-shim/symbol-shim.d.ts" />
 /// <reference path="../node_modules/dojo-compose/typings/dojo-compose/dojo-compose-2.0.0-beta.1.d.ts" />
 /// <reference path="../node_modules/dojo-loader/typings/dojo-loader/dojo-loader-2.0.0-beta.2.d.ts" />
