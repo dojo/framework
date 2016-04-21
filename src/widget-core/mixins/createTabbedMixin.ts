@@ -192,7 +192,7 @@ const createTabbedMixin = createContainerMixin
 					}
 				});
 
-				return [ h(tabbed.tagNames.tabBar, tabs) ].concat(childrenNodes);
+				return [ h(tabbed.tagNames.tabBar, tabs), ...childrenNodes ];
 			}
 		}
 	}) as TabbedMixinFactory;
