@@ -52,9 +52,11 @@ export interface Projector extends VNodeEvented, ParentMixin<RenderableChild> {
 
 	/**
 	 * Attach the projector to the DOM and return a handle to detach it.
-	 * @param append If true, it will append to the root instead of the default of merging
+	 * @param append If `true`, it will append to the root instead of the default of merging
+	 * @param tagName If `append` is `true` then `tagName` will be used to determine what tag name
+	 *                is used to append to the root element. Defaults to `div`.
 	 */
-	attach(append?: boolean): Handle;
+	attach(append?: boolean, tagName?: string): Handle;
 
 	/**
 	 * Inform the projector that it is in a dirty state and should re-render.  Calling event handles will automatically
@@ -77,11 +79,6 @@ export interface Projector extends VNodeEvented, ParentMixin<RenderableChild> {
 	 * The root of the projector
 	 */
 	root: Element;
-
-	/**
-	 * When appending, what tag name should be used
-	 */
-	tagName?: string;
 
 	/**
 	 * An array of classes that should be applied to the root of the projector
@@ -117,6 +114,7 @@ interface ProjectorData {
 	state?: ProjectorState;
 	attachHandle?: Handle;
 	boundRender?: () => VNode;
+	tagName?: string;
 }
 
 const projectorDataMap = new WeakMap<Projector, ProjectorData>();
@@ -146,17 +144,19 @@ export const createProjector: ProjectorFactory = compose<any, ProjectorOptions>(
 		},
 		render(): VNode {
 			const projector: Projector = this;
+			const projectorData = projectorDataMap.get(projector);
 			const childVNodes: VNode[] = [];
 			projector.children.forEach((child) => childVNodes.push(child.render()));
-			return h(projector.tagName || 'div', projector.getNodeAttributes(), childVNodes);
+			return h(projectorData.tagName, projector.getNodeAttributes(), childVNodes);
 		},
-		attach(append?: boolean): Handle {
+		attach(append: boolean = false, tagName: string = 'div'): Handle {
 			const projector: Projector = this;
 			const projectorData = projectorDataMap.get(projector);
 			if (projectorData.state === ProjectorState.Attached) {
 				return projectorData.attachHandle;
 			}
 			projectorData.boundRender = projector.render.bind(projector);
+			projectorData.tagName = tagName;
 			/* attaching async, in order to help ensure that if there are any other async behaviours scheduled at the end of the
 			 * turn, they are executed before this, since the attachement is actually done in turn, but subsequent schedule
 			 * renders are done out of turn */
