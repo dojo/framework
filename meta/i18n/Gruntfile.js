@@ -122,7 +122,7 @@ module.exports = function (grunt) {
 			},
 			dist: {
 				options: {
-					out: 'dist/_typings/<%= name %>/<%= name %>-<%= version %>.d.ts'
+					out: 'dist/_typings/<%= name %>/<%= name %>.d.ts'
 				},
 				src: [ '<%= skipTests %>' ]
 			}
