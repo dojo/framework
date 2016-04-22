@@ -64,15 +64,6 @@ export interface NodeRequestOptions<T> extends RequestOptions {
 	streamTarget?: WritableStream<T>;
 }
 
-function normalizeHeaders(headers: { [name: string]: string }): { [name: string]: string } {
-	const normalizedHeaders: { [name: string]: string } = {};
-	for (let key in headers) {
-		normalizedHeaders[key.toLowerCase()] = headers[key];
-	}
-
-	return normalizedHeaders;
-}
-
 export default function node<T>(url: string, options: NodeRequestOptions<T> = {}): ResponsePromise<T> {
 	const requestUrl = generateRequestUrl(url, options);
 	const parsedUrl = urlUtil.parse(options.proxy || requestUrl);
@@ -82,7 +73,7 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 		ca: options.ca,
 		cert: options.cert,
 		ciphers: options.ciphers,
-		headers: normalizeHeaders(options.headers || {}),
+		headers: options.headers || {},
 		host: parsedUrl.host,
 		hostname: parsedUrl.hostname,
 		key: options.key,
