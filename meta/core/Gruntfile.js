@@ -213,7 +213,7 @@ module.exports = function (grunt) {
 			ci: {
 				options: {
 					reports: {
-						'lcovonly': 'coverage-final.lcov',
+						'json': 'coverage-final.json',
 						'text': null
 					}
 				},
