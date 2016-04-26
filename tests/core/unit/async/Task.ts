@@ -147,6 +147,19 @@ let suite = {
 
 			resolver();
 		}
+	},
+
+	'Task.resolve': {
+		'returns a task'() {
+			const task = Task.resolve('foo');
+
+			assert.isFunction(task.cancel, 'A task should have a cancel function');
+			assert.isFunction(task.finally, 'A task should have a finally function');
+
+			return task.then((result) => {
+				assert.strictEqual(result, 'foo', 'result should equal "foo"');
+			});
+		}
 	}
 };
 

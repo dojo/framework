@@ -21,7 +21,9 @@ export default class Task<T> extends Promise<T> {
 	static resolve(): Task<void>;
 	static resolve<T>(value: (T | Thenable<T>)): Task<T>;
 	static resolve<T>(value?: any): Task<T> {
-		return <any> super.resolve(value);
+		return new this((resolve) => {
+			resolve(value);
+		});
 	}
 
 	protected static copy<U>(other: Promise<U>): Task<U> {
