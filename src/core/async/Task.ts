@@ -3,6 +3,14 @@ import Promise, { Executor, State, Thenable, isThenable } from '../Promise';
 export const Canceled = <State> 4;
 
 /**
+ * A type guard that determines if `value` is a `Task`
+ * @param value The value to guard
+ */
+export function isTask<T>(value: any): value is Task<T> {
+	return Boolean(isThenable(value) && typeof value.cancel === 'function' && Array.isArray(value.children));
+}
+
+/**
  * Task is an extension of Promise that supports cancelation.
  */
 export default class Task<T> extends Promise<T> {
