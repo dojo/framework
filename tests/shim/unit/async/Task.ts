@@ -1,11 +1,23 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Task, { Canceled } from 'src/async/Task';
+import Task, { Canceled, isTask } from 'src/async/Task';
 import Promise from 'src/Promise';
 import { addPromiseTests } from '../Promise';
 
 let suite = {
 	name: 'Task',
+
+	'isTask()'() {
+		const task = new Task((resolve) => resolve(), () => {});
+
+		assert.isTrue(isTask(task), 'Should return true');
+		assert.isFalse(isTask(Promise.resolve()), 'Should return false');
+		assert.isFalse(isTask(true), 'Should return false');
+		assert.isFalse(isTask(null), 'Should return false');
+		assert.isFalse(isTask({}), 'Should return false');
+		assert.isFalse(isTask(1), 'Should return false');
+		assert.isFalse(isTask(NaN), 'Should return false');
+	},
 
 	'Task#cancel'() {
 		let dfd = this.async();
