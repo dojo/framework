@@ -178,7 +178,7 @@ export const createProjector: ProjectorFactory = compose<any, ProjectorOptions>(
 							}
 							/* else, swallow */
 						}
-						/* for some reason, Maquette still tryies to call this in some situations, so the noopVNode is
+						/* for some reason, Maquette still trys to call this in some situations, so the noopVNode is
 						 * used to return an empty structure */
 						projectorData.boundRender = noopVNode;
 						projectorData.state = ProjectorState.Detached;

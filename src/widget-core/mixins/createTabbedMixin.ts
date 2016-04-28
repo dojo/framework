@@ -1,5 +1,6 @@
 import { h, VNode } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
+import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { Handle } from 'dojo-core/interfaces';
 import WeakMap from 'dojo-core/WeakMap';
 import { CachedRenderMixin, CachedRenderState, CachedRenderParent } from './createCachedRenderMixin';
@@ -142,6 +143,8 @@ function getTabListeners(tabbed: TabbedMixin<TabbedChild, TabbedState>, tab: Tab
 
 export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChild, ContainerMixinOptions<TabbedState>>, ContainerMixinOptions<TabbedState>> {}
 
+const childrenNodesCache = new WeakMap<TabbedMixin<TabbedChild, TabbedState>, VNode[]>();
+
 const createTabbedMixin = createContainerMixin
 	.mixin({
 		mixin: {
@@ -175,25 +178,41 @@ const createTabbedMixin = createContainerMixin
 				/* We need to generate a set of VDom the represents the buttons */
 				/* TODO: Allow the location of the tab bar to be set (top/left/bottom/right) */
 				const tabs: VNode[] = [];
-				const childrenNodes: VNode[] = [];
+				const childrenNodes = childrenNodesCache.get(tabbed);
 				tabbed.children.forEach((tab, key) => {
 					if (tab === activeTab) {
 						const activeTabVNode = tab.render();
 						activeTabVNode.properties.classes['visible'] = true;
-						childrenNodes.push(activeTabVNode);
-						tabs.push(h(tabbed.tagNames.tab + '.active', { key: tab }, getTabChildVNode(tab)));
+						childrenNodes[key] = activeTabVNode;
+						tabs.push(h(tabbed.tagNames.tab, { key: tab, classes: { active: true } }, getTabChildVNode(tab)));
 					}
 					else {
 						/* TODO: Having trouble changing the classes on the subnodes, so once visible always visible,
 						 * The only choice was to just omit non visible nodes from the VDom, though I am not sure
 						 * this makes a lot of sense, because with a big render, it is a lot of DOM to add and remove
 						 */
-						tabs.push(h(tabbed.tagNames.tab, { key: tab }, getTabChildVNode(tab)));
+						if (childrenNodes[key]) {
+							childrenNodes[key] = undefined;
+						}
+						tabs.push(h(tabbed.tagNames.tab, { key: tab, classes: { active: false } }, getTabChildVNode(tab)));
 					}
 				});
 
+				console.log([ h(tabbed.tagNames.tabBar, tabs), ...childrenNodes ]);
+
 				return [ h(tabbed.tagNames.tabBar, tabs), ...childrenNodes ];
 			}
+		}
+	})
+	.mixin({
+		mixin: createDestroyable,
+		initialize(instance: TabbedMixin<TabbedChild, TabbedState>) {
+			childrenNodesCache.set(instance, []);
+			instance.own({
+				destroy() {
+					childrenNodesCache.delete(instance);
+				}
+			});
 		}
 	}) as TabbedMixinFactory;
 
