@@ -1,6 +1,6 @@
 # dojo-widgets
 
-[![Build Status](https://travis-ci.org/kitsonk/widgets.svg?branch=master)](https://travis-ci.org/dojo/widgets)
+[![Build Status](https://travis-ci.org/dojo/widgets.svg?branch=master)](https://travis-ci.org/dojo/widgets)
 [![codecov](https://codecov.io/gh/dojo/widgets/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/widgets)
 
 A core widget library for Dojo 2.
