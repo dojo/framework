@@ -1,6 +1,6 @@
-import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { VNode } from 'maquette/maquette';
-import createDestroyable, { Destroyable } from './createDestroyable';
+import compose, { ComposeFactory } from 'dojo-compose/compose';
+import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 import { ParentMixin } from './createParentMixin';
 
 export interface RenderFunction {

@@ -1,9 +1,9 @@
 import { List } from 'immutable/immutable';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
+import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 import { Handle } from 'dojo-core/interfaces';
 import WeakMap from 'dojo-core/WeakMap';
 import { Position, insertInList } from '../util/lang';
-import createDestroyable, { Destroyable } from './createDestroyable';
 import { Renderable } from './createRenderable';
 
 export interface ParentMixinOptions<C extends Child> {

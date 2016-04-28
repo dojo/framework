@@ -1,7 +1,7 @@
 import { h, VNode } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
+import { StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import createCachedRenderMixin, { CachedRenderMixin, CachedRenderState } from './createCachedRenderMixin';
-import { StatefulOptions } from './createStateful';
 
 export interface ListStateItem {
 	[property: string]: any;

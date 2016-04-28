@@ -1,10 +1,10 @@
-import { Handle, EventObject } from 'dojo-core/interfaces';
+import { EventObject, Handle } from 'dojo-core/interfaces';
 import { on } from 'dojo-core/aspect';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createEvented, { Evented, EventedOptions, EventedListener, resolveEventListener } from './createEvented';
+import createEvented, { Evented, EventedOptions, EventedListener, resolveListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 
 export interface VNodeListeners {
-	[on: string]: (ev?: EventObject) => boolean | void;
+	[on: string]: (ev?: TargettedEventObject) => boolean | void;
 	ontouchcancel?(ev?: TouchEvent): boolean | void;
 	ontouchend?(ev?: TouchEvent): boolean | void;
 	ontouchmove?(ev?: TouchEvent): boolean | void;
@@ -61,7 +61,7 @@ const vnodeEvents = [
 export interface VNodeEvented extends Evented {
 	listeners: VNodeListeners;
 	on(type: 'touchcancel', listener: EventedListener<TouchEvent>): Handle;
-	on(type: string, listener: EventedListener<EventObject>): Handle;
+	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
 
 export interface VNodeEventedFactory extends ComposeFactory<VNodeEvented, EventedOptions> { }
@@ -75,12 +75,12 @@ const createVNodeEvented: VNodeEventedFactory = createEvented.mixin({
 	},
 	aspectAdvice: {
 		around: {
-			on(origFn): (type: string, listener: EventedListener<EventObject>) => Handle {
-				return function (type: string, listener: EventedListener<EventObject>): Handle {
+			on(origFn): (type: string, listener: EventedListener<TargettedEventObject>) => Handle {
+				return function (type: string, listener: EventedListener<TargettedEventObject>): Handle {
 					const evented: VNodeEvented = this;
 					if (vnodeEvents.indexOf(type) > -1) {
 						type = 'on' + type;
-						return on(evented.listeners, type, resolveEventListener(listener));
+						return on(evented.listeners, type, resolveListener(listener));
 					}
 					else {
 						return origFn.call(evented, type, listener);

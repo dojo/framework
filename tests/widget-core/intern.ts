@@ -61,7 +61,6 @@ export const loaderOptions = {
 		{ name: 'tests', location: '_build/tests' },
 		{ name: 'node_modules', location: '_build/node_modules' },
 		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
-		{ name: 'dojo-actions', location: 'node_modules/dojo-actions' },
 		{ name: 'dojo-compose', location: 'node_modules/dojo-compose' },
 		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
 		{ name: 'immutable', location: 'node_modules/immutable/dist' },
@@ -78,4 +77,4 @@ export const suites = [ 'tests/unit/all' ];
 export const functionalSuites = [ 'tests/functional/all' ];
 
 // A regular expression matching URLs to files that should not be included in code coverage analysis
-export const excludeInstrumentation = /(?:node_modules|bower_components|tests|_modules)[\/\\]/;
+export const excludeInstrumentation = /(?:node_modules|bower_components|tests|examples)[\/\\]/;

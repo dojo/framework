@@ -1,10 +1,10 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import { EventObject, Handle } from 'dojo-core/interfaces';
+import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
+import createEvented, { Evented, EventedOptions, EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
+import createStateful, { Stateful, StatefulOptions, StateChangeEvent } from 'dojo-compose/mixins/createStateful';
+import { Handle } from 'dojo-core/interfaces';
 import createCachedRenderMixin, { CachedRenderMixin, CachedRenderState, CachedRenderParent } from './mixins/createCachedRenderMixin';
-import createDestroyable, { Destroyable } from './mixins/createDestroyable';
-import createEvented, { Evented, EventedOptions, EventedListener } from './mixins/createEvented';
 import createRenderable, { Renderable, RenderableOptions } from './mixins/createRenderable';
-import createStateful, { Stateful, StatefulOptions, StateChangeEvent } from './mixins/createStateful';
 import createVNodeEvented, { VNodeEvented } from './mixins/createVNodeEvented';
 
 export interface WidgetState extends CachedRenderState { }
@@ -15,7 +15,7 @@ export interface Widget<S extends WidgetState> extends Stateful<S>, Destroyable,
 	parent?: CachedRenderParent;
 
 	on(type: 'statechange', listener: EventedListener<StateChangeEvent<S>>): Handle;
-	on(type: string, listener: EventedListener<EventObject>): Handle;
+	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
 
 export interface WidgetFactory extends ComposeFactory<Widget<WidgetState>, WidgetOptions<WidgetState>> {

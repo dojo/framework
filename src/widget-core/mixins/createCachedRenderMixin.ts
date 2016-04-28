@@ -1,13 +1,13 @@
 import { h, VNode, VNodeProperties } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import { EventObject, Handle } from 'dojo-core/interfaces';
+import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
+import createStateful, { State, Stateful, StateChangeEvent, StatefulOptions } from 'dojo-compose/mixins/createStateful';
+import { Handle } from 'dojo-core/interfaces';
 import { assign } from 'dojo-core/lang';
 import Map from 'dojo-core/Map';
 import WeakMap from 'dojo-core/WeakMap';
-import { EventedListener } from './createEvented';
 import { ParentMixin } from './createParentMixin';
 import createRenderable, { Renderable } from './createRenderable';
-import createStateful, { State, Stateful, StateChangeEvent, StatefulOptions } from './createStateful';
 import createVNodeEvented, { VNodeEvented } from './createVNodeEvented';
 
 export type StylesHash = { [style: string]: string; };
@@ -63,7 +63,7 @@ export interface CachedRenderMixin<S extends CachedRenderState> extends Stateful
 	parent?: CachedRenderParent;
 
 	on(type: 'statechange', listener: EventedListener<StateChangeEvent<S>>): Handle;
-	on(type: string, listener: EventedListener<EventObject>): Handle;
+	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
 
 /**

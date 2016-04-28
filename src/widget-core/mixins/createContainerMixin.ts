@@ -1,9 +1,9 @@
 import { VNode } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
+import { StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import createCachedRenderMixin, { CachedRenderMixin, CachedRenderState } from './createCachedRenderMixin';
 import createParentMixin, { ParentMixinOptions, ParentMixin, Child } from './createParentMixin';
 import { Renderable } from './createRenderable';
-import { StatefulOptions } from './createStateful';
 
 export interface ContainerChild extends Child {
 	parent?: ParentMixin<this>;

@@ -1,6 +1,6 @@
 import { VNodeProperties } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createStateful, { Stateful, State, StatefulOptions } from './createStateful';
+import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import createCachedRenderMixin, { CachedRenderMixin, CachedRenderState } from './createCachedRenderMixin';
 
 export interface FormFieldMixinOptions<V, S extends FormFieldMixinState<V>> extends StatefulOptions<S> {

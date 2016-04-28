@@ -1,11 +1,11 @@
 import { VNode, h, VNodeProperties } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
+import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { Handle } from 'dojo-core/interfaces';
 import { on } from 'dojo-core/aspect';
 import WeakMap from 'dojo-core/WeakMap';
 import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
 import createContainerMixin, { ContainerMixin, ContainerMixinState, ContainerMixinOptions } from './mixins/createContainerMixin';
-import createDestroyable from './mixins/createDestroyable';
 import { Renderable } from './mixins/createRenderable';
 import { Projector } from './projector';
 
