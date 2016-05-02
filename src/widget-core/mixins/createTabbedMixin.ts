@@ -1,23 +1,21 @@
 import { h, VNode } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable from 'dojo-compose/mixins/createDestroyable';
+import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
+import { StateChangeEvent } from 'dojo-compose/mixins/createStateful';
 import { Handle } from 'dojo-core/interfaces';
 import WeakMap from 'dojo-core/WeakMap';
 import { CachedRenderMixin, CachedRenderState, CachedRenderParent } from './createCachedRenderMixin';
+import { Closeable, CloseableState } from './createCloseableMixin';
 import createContainerMixin, { ContainerMixin, ContainerChild, ContainerMixinState, ContainerMixinOptions } from './createContainerMixin';
 
 export interface TabbedState extends ContainerMixinState { }
 
-export interface TabbedChildState extends CachedRenderState {
+export interface TabbedChildState extends CachedRenderState, CloseableState {
 	/**
 	 * Whether the current child is the active/visible child
 	 */
 	active?: boolean;
-
-	/**
-	 * Should this child be allowed to be closed/destroyed
-	 */
-	closable?: boolean;
 
 	/**
 	 * Should this child represent that it is in a changed state that is not persisted
@@ -25,11 +23,15 @@ export interface TabbedChildState extends CachedRenderState {
 	changed?: boolean;
 }
 
-export interface TabbedChild extends ContainerChild, CachedRenderMixin<TabbedChildState> {
+export interface TabbedChild extends ContainerChild, Closeable<TabbedChildState>, CachedRenderMixin<TabbedChildState> {
 	/**
 	 * The childs parent
 	 */
 	parent?: CachedRenderParent;
+
+	on(type: 'close', listener: EventedListener<CloseEvent>): Handle;
+	on(type: 'statechange', listener: EventedListener<StateChangeEvent<TabbedChildState>>): Handle;
+	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
 
 export interface TabbedMixin<C extends TabbedChild, S extends TabbedState> extends ContainerMixin<C, S> {
@@ -113,9 +115,15 @@ function setTabListeners(tabbed: TabbedMixin<TabbedChild, TabbedState>, tab: Tab
 		},
 		onclickTabCloseListener(evt: MouseEvent): boolean {
 			evt.preventDefault();
-			/* TODO: actually close the tab */
-			console.log('close');
-			return;
+			tab.close().then((result) => {
+				/* while Maquette schedules a render on DOM events, close happens async, therefore we have to
+				 * invalidate the tabbed when resolved, otherwise the tab panel won't reflect the actual
+				 * children */
+				if (result) {
+					tabbed.invalidate();
+				};
+			});
+			return true;
 		}
 	});
 	return {
@@ -168,11 +176,11 @@ const createTabbedMixin = createContainerMixin
 
 				function getTabChildVNode(tab: TabbedChild): (VNode | string)[] {
 					const tabListeners = getTabListeners(tabbed, tab);
-					return [
-						h('div.tab-label', { onclick: tabListeners.onclickTabListener }, [ tab.state.label ]),
-						/* TODO: only show the close when the tab state is closable */
-						h('div.tab-close', { onclick: tabListeners.onclickTabCloseListener }, [ 'X' ])
-					];
+					const nodes = [ h('div.tab-label', { onclick: tabListeners.onclickTabListener }, [ tab.state.label ]) ];
+					if (tab.state.closeable) {
+						nodes.push(h('div.tab-close', { onclick: tabListeners.onclickTabCloseListener }, [ 'X' ]));
+					}
+					return nodes;
 				}
 
 				/* We need to generate a set of VDom the represents the buttons */
@@ -197,8 +205,6 @@ const createTabbedMixin = createContainerMixin
 						tabs.push(h(tabbed.tagNames.tab, { key: tab, classes: { active: false } }, getTabChildVNode(tab)));
 					}
 				});
-
-				console.log([ h(tabbed.tagNames.tabBar, tabs), ...childrenNodes ]);
 
 				return [ h(tabbed.tagNames.tabBar, tabs), ...childrenNodes ];
 			}

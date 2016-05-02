@@ -12,13 +12,13 @@ const widgetStore = createMemoryStore({
 	data: [
 		{ id: 'title', label: 'dojo-widget Examples'},
 		{ id: 'tabbed-panel' },
-		{ id: 'panel-1', label: 'foo' },
+		{ id: 'panel-1', label: 'foo', closeable: true },
 		{ id: 'foo', label: 'Validus os indoles. Demoveo ventosus illum ut refoveo saepius antehabeo euismod gravis aliquam ea aliquip. Autem ratis verto. Accumsan refero capio ludus consequat tincidunt roto modo ea dolore. Ad iustum blandit.' },
 		{ id: 'panel-2', label: 'bar foo qut qux quux', active: true },
 		{ id: 'bar', label: 'Si at humo euismod fatua melior praesent praemitto camur foras eros. Esca multo transverbero facilisi nisl exputo nisl.' },
 		{ id: 'panel-3', label: 'qat' },
 		{ id: 'baz', label: 'Odio vel inhibeo nostrud. Ad duis blandit facilisi hos multo nobis quibus zelus bene. Ideo veniam eum iriure ymo.' },
-		{ id: 'panel-4', label: 'baz' },
+		{ id: 'panel-4', label: 'baz', closeable: true },
 		{ id: 'qat', label: 'Sit pertineo at facilisis quidne qui et amet duis. Patria meus proprius immitto ne appellatio cogo jus. Cui genitus sudo. Suscipit abdo dignissim huic accumsan importunus inhibeo luptatum ut neque augue sagaciter. Iaceo odio exerci natu nonummy vel iaceo odio erat.' }
 	]
 });
