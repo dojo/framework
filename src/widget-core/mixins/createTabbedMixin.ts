@@ -186,34 +186,35 @@ const createTabbedMixin = createContainerMixin
 				/* We need to generate a set of VDom the represents the buttons */
 				/* TODO: Allow the location of the tab bar to be set (top/left/bottom/right) */
 				const tabs: VNode[] = [];
-				const childrenNodes = childrenNodesCache.get(tabbed);
+				let childrenNodes = childrenNodesCache.get(tabbed);
+
+				/* Best to discard the childrenNodes array if the sizes don't match, otherwise
+				 * we can get some vdom generation issues when adding or removing tabs */
+				if (!childrenNodes || childrenNodes.length !== tabbed.children.size) {
+					childrenNodes = Array(tabbed.children.size);
+					childrenNodesCache.set(tabbed, childrenNodes);
+				}
+
 				tabbed.children.forEach((tab, key) => {
-					if (tab === activeTab) {
-						const activeTabVNode = tab.render();
-						activeTabVNode.properties.classes['visible'] = true;
-						childrenNodes[key] = activeTabVNode;
-						tabs.push(h(tabbed.tagNames.tab, { key: tab, classes: { active: true } }, getTabChildVNode(tab)));
+					const isActiveTab = tab === activeTab;
+					if (isActiveTab || (childrenNodes[key] && childrenNodes[key].properties.classes['visible'])) {
+						tab.invalidate();
+						const tabVNode = tab.render();
+						tabVNode.properties.classes['visible'] = isActiveTab;
+						childrenNodes[key] = tabVNode;
 					}
-					else {
-						/* TODO: Having trouble changing the classes on the subnodes, so once visible always visible,
-						 * The only choice was to just omit non visible nodes from the VDom, though I am not sure
-						 * this makes a lot of sense, because with a big render, it is a lot of DOM to add and remove
-						 */
-						if (childrenNodes[key]) {
-							childrenNodes[key] = undefined;
-						}
-						tabs.push(h(tabbed.tagNames.tab, { key: tab, classes: { active: false } }, getTabChildVNode(tab)));
-					}
+					/* else, this tab isn't active and hasn't been previously rendered */
+
+					tabs.push(h(tabbed.tagNames.tab, { key: tab, classes: { active: isActiveTab } }, getTabChildVNode(tab)));
 				});
 
-				return [ h(tabbed.tagNames.tabBar, tabs), ...childrenNodes ];
+				return [ h(tabbed.tagNames.tabBar, tabs), h('div.panels', childrenNodes) ];
 			}
 		}
 	})
 	.mixin({
 		mixin: createDestroyable,
 		initialize(instance: TabbedMixin<TabbedChild, TabbedState>) {
-			childrenNodesCache.set(instance, []);
 			instance.own({
 				destroy() {
 					childrenNodesCache.delete(instance);
