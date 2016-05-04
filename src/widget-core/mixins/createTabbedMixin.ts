@@ -20,7 +20,7 @@ export interface TabbedChildState extends CachedRenderState, CloseableState {
 	/**
 	 * Should this child represent that it is in a changed state that is not persisted
 	 */
-	changed?: boolean;
+	changed?: boolean; /* TODO: Implement this feature, currently it does not affect anything */
 }
 
 export interface TabbedChild extends ContainerChild, Closeable<TabbedChildState>, CachedRenderMixin<TabbedChildState> {
@@ -73,6 +73,8 @@ function setActiveTab(tabbed: TabbedMixin<TabbedChild, TabbedState>, activeTab: 
  */
 function getActiveTab(tabbed: TabbedMixin<TabbedChild, TabbedState>): TabbedChild {
 	let activeTab = tabbed.children.find((tab) => tab.state.active);
+	/* TODO: when a tab closes, instead of going back to the previous active tab, it will always
+	 * revert to the first tab, maybe it would be better to keep track of a stack of tabs? */
 	if (!activeTab) {
 		activeTab = tabbed.children.first();
 	}

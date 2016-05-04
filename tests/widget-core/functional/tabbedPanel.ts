@@ -6,7 +6,7 @@ import projector from 'src/projector';
 const tabbedPanel = createTabbedPanel();
 
 const tab1 = createPanel({
-	state: { label: 'tab 1' }
+	state: { label: 'tab 1', closeable: true }
 });
 
 tab1.append(createWidget({
@@ -36,7 +36,7 @@ tab3.append(createWidget({
 tabbedPanel.append(tab3);
 
 const tab4 = createPanel({
-	state: { label: 'tab 4' }
+	state: { label: 'tab 4', closeable: true }
 });
 
 tab4.append(createWidget({

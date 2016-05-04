@@ -65,6 +65,24 @@ registerSuite({
 				.getVisibleText()
 				.then((text: string) => {
 					assert.strictEqual(text, 'tab 4');
+				})
+				.end()
+			.findByCssSelector('dojo-panel-tabbed > ul > :nth-child(4) > :last-child')
+				.click()
+				.end()
+			.findByCssSelector('dojo-panel.visible > div')
+				.getVisibleText()
+				.then((text: string) => {
+					const result = JSON.parse(text);
+					assert.deepEqual(result, {
+						id: 'tab1'
+					});
+				})
+				.end()
+			.findByCssSelector('dojo-panel-tabbed > ul > .active > :first-child')
+				.getVisibleText()
+				.then((text: string) => {
+					assert.strictEqual(text, 'tab 1');
 				});
 	}
 });
