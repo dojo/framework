@@ -4,6 +4,7 @@ import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import { StateChangeEvent } from 'dojo-compose/mixins/createStateful';
 import { Handle } from 'dojo-core/interfaces';
+import { List } from 'immutable/immutable';
 import WeakMap from 'dojo-core/WeakMap';
 import { CachedRenderMixin, CachedRenderState, CachedRenderParent } from './createCachedRenderMixin';
 import { Closeable, CloseableState } from './createCloseableMixin';
@@ -155,6 +156,8 @@ export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChi
 
 const childrenNodesCache = new WeakMap<TabbedMixin<TabbedChild, TabbedState>, VNode[]>();
 
+let tabbedList = List<TabbedMixin<TabbedChild, TabbedState>>();
+
 const createTabbedMixin = createContainerMixin
 	.mixin({
 		mixin: {
@@ -207,7 +210,11 @@ const createTabbedMixin = createContainerMixin
 					}
 					/* else, this tab isn't active and hasn't been previously rendered */
 
-					tabs.push(h(tabbed.tagNames.tab, { key: tab, classes: { active: isActiveTab } }, getTabChildVNode(tab)));
+					tabs.push(h(tabbed.tagNames.tab, {
+						key: tab,
+						classes: { active: isActiveTab },
+						'data-tab-id': `${tabbed.state.id || tabbedList.indexOf(tabbed)}-${tab.state.id || key}`
+					}, getTabChildVNode(tab)));
 				});
 
 				return [ h(tabbed.tagNames.tabBar, tabs), h('div.panels', childrenNodes) ];
@@ -217,9 +224,11 @@ const createTabbedMixin = createContainerMixin
 	.mixin({
 		mixin: createDestroyable,
 		initialize(instance: TabbedMixin<TabbedChild, TabbedState>) {
+			tabbedList = tabbedList.push(instance);
 			instance.own({
 				destroy() {
 					childrenNodesCache.delete(instance);
+					tabbedList = tabbedList.delete(tabbedList.indexOf(instance));
 				}
 			});
 		}
