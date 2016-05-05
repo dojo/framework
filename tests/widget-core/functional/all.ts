@@ -1,2 +1,2 @@
-import './interactive';
 import './tabbedPanelFunctional';
+import './widgetsFunctional';

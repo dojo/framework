@@ -13,7 +13,7 @@ registerSuite({
 
 	'Button'() {
 		return this.remote
-			.findById('button1')
+			.findByCssSelector('[data-widget-id=button1]')
 				.click()
 				.end()
 			.findById('output')
@@ -29,7 +29,7 @@ registerSuite({
 
 	'TextInput'() {
 		return this.remote
-			.findById('textinput1')
+			.findByCssSelector('[data-widget-id=textinput1]')
 				.click()
 				.type('bar')
 				.end()
