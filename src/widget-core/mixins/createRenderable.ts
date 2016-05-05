@@ -1,6 +1,5 @@
 import { VNode } from 'maquette/maquette';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 import { ParentMixin } from './createParentMixin';
 
 export interface RenderFunction {
@@ -18,7 +17,7 @@ export interface RenderableOptions {
 	parent?: ParentMixin<any>;
 }
 
-export interface Renderable extends Destroyable {
+export interface Renderable {
 	/**
 	 * Takes no arguments and returns a VNode
 	 */
@@ -35,28 +34,22 @@ export function isRenderable(value: any): value is Renderable {
 	return value && typeof value.render === 'function';
 }
 
-const createRenderable: RenderableFactory = compose<any, RenderableOptions>({
+const createRenderable: RenderableFactory = compose<Renderable, RenderableOptions>({
 		render: <RenderFunction> null,
-
 		tagName: 'div'
 	}, (instance, options) => {
-		if (options && options.tagName) {
-			instance.tagName = options.tagName;
-		}
-	})
-	.mixin({
-		mixin: createDestroyable,
-		initialize(instance: Renderable, options: RenderableOptions) {
-			if (options) {
-				if (options.render) {
-					instance.render = options.render;
-				}
-				if (options.tagName) {
-					instance.tagName = options.tagName;
-				}
-				if (options.parent) {
-					options.parent.append(instance);
-				}
+		if (options) {
+			if (options.tagName) {
+				instance.tagName = options.tagName;
+			}
+			if (options.render) {
+				instance.render = options.render;
+			}
+			if (options.tagName) {
+				instance.tagName = options.tagName;
+			}
+			if (options.parent) {
+				options.parent.append(instance);
 			}
 		}
 	});

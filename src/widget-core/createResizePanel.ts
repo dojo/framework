@@ -5,8 +5,8 @@ import { Handle } from 'dojo-core/interfaces';
 import { on } from 'dojo-core/aspect';
 import WeakMap from 'dojo-core/WeakMap';
 import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
+import { Child } from './mixins/createParentMixin';
 import createContainerMixin, { ContainerMixin, ContainerMixinState, ContainerMixinOptions } from './mixins/createContainerMixin';
-import { Renderable } from './mixins/createRenderable';
 import { Projector } from './projector';
 
 export interface ResizePanelState extends WidgetState, ContainerMixinState {
@@ -15,7 +15,7 @@ export interface ResizePanelState extends WidgetState, ContainerMixinState {
 
 export interface ResizePanelOptions extends WidgetOptions<ResizePanelState>, ContainerMixinOptions<ResizePanelState> { }
 
-export interface ResizePanel extends Widget<ResizePanelState>, ContainerMixin<Renderable, ResizePanelState> {
+export interface ResizePanel extends Widget<ResizePanelState>, ContainerMixin<Child, ResizePanelState> {
 	tagNames: {
 		handle: string;
 	};

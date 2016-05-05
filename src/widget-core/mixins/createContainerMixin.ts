@@ -3,7 +3,6 @@ import { ComposeFactory } from 'dojo-compose/compose';
 import { StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import createCachedRenderMixin, { CachedRenderMixin, CachedRenderState } from './createCachedRenderMixin';
 import createParentMixin, { ParentMixinOptions, ParentMixin, Child } from './createParentMixin';
-import { Renderable } from './createRenderable';
 
 export interface ContainerChild extends Child {
 	parent?: ParentMixin<this>;
@@ -32,7 +31,7 @@ const createContainerMixin: ContainerMixinFactory = createParentMixin
 	.mixin(createCachedRenderMixin)
 	.extend({
 		getChildrenNodes(): (VNode | string)[] {
-			const container: ContainerMixin<Renderable, ContainerMixinState> = this;
+			const container: ContainerMixin<Child, ContainerMixinState> = this;
 			const results: (VNode | string)[] = [];
 			/* Converting immutable lists toArray() is expensive */
 			container.children.forEach((child) => results.push(child.render()));

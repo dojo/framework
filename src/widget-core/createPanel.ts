@@ -5,7 +5,7 @@ import { Handle } from 'dojo-core/interfaces';
 import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
 import createCloseableMixin, { Closeable, CloseableState, CloseEvent } from './mixins/createCloseableMixin';
 import createContainerMixin, { ContainerMixin, ContainerMixinState, ContainerMixinOptions } from './mixins/createContainerMixin';
-import { Renderable } from './mixins/createRenderable';
+import { Child } from './mixins/createParentMixin';
 
 export interface PanelState extends WidgetState, CloseableState, ContainerMixinState {
 	label?: string;
@@ -13,7 +13,7 @@ export interface PanelState extends WidgetState, CloseableState, ContainerMixinS
 
 export interface PanelOptions extends WidgetOptions<PanelState>, ContainerMixinOptions<PanelState> { }
 
-export interface Panel extends Widget<PanelState>, Closeable<PanelState>, ContainerMixin<Renderable, PanelState> {
+export interface Panel extends Widget<PanelState>, Closeable<PanelState>, ContainerMixin<Child, PanelState> {
 	on(type: 'close', listener: EventedListener<CloseEvent>): Handle;
 	on(type: 'statechange', listener: EventedListener<StateChangeEvent<PanelState>>): Handle;
 	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;

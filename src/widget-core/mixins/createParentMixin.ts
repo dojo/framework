@@ -10,7 +10,7 @@ export interface ParentMixinOptions<C extends Child> {
 	children?: C[];
 }
 
-export interface Child extends Renderable { }
+export interface Child extends Renderable, Destroyable { }
 
 export interface ParentMixin<C> extends Destroyable {
 	/**

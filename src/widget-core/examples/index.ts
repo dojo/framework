@@ -2,7 +2,7 @@ import createMemoryStore from 'src/util/createMemoryStore';
 import createWidget from 'src/createWidget';
 import createPanel from 'src/createPanel';
 import createTabbedPanel from 'src/createTabbedPanel';
-import { Renderable } from 'src/mixins/createRenderable';
+import { Child } from 'src/mixins/createParentMixin';
 import projector from 'src/projector';
 
 /**
@@ -23,7 +23,7 @@ const widgetStore = createMemoryStore({
 	]
 });
 
-const widgets: Renderable[] = [];
+const widgets: Child[] = [];
 
 /**
  * Header widget

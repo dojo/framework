@@ -4,6 +4,12 @@ import * as assert from 'intern/chai!assert';
 import projector, { createProjector } from 'src/projector';
 import { h } from 'maquette/maquette';
 import createRenderable from 'src/mixins/createRenderable';
+import createDestroyable from 'dojo-compose/mixins/createDestroyable';
+import { ComposeFactory } from 'dojo-compose/compose';
+import { Child } from 'src/mixins/createParentMixin';
+
+const createRenderableChild = createDestroyable
+	.mixin(createRenderable) as ComposeFactory<Child, any>;
 
 registerSuite({
 	name: 'projector',
@@ -14,7 +20,7 @@ registerSuite({
 		const dfd = this.async();
 		const childNodeLength = document.body.childNodes.length;
 		let nodeText = 'foo';
-		const renderable = createRenderable({
+		const renderable = createRenderableChild({
 			render() {
 				return h('h2', [ nodeText ] );
 			}
@@ -46,7 +52,7 @@ registerSuite({
 		const projector1 = createProjector({});
 		projector1.setRoot(div);
 		let nodeText = 'bar';
-		const renderable = createRenderable({
+		const renderable = createRenderableChild({
 			render() {
 				return h('h1', [ nodeText ]);
 			}
@@ -96,8 +102,8 @@ registerSuite({
 		document.body.appendChild(div);
 		projector.setRoot(div);
 		const handle = projector.append([
-			createRenderable({ render() { return h('foo', [ 'foo' ]); } }),
-			createRenderable({ render() { return h('bar', [ 'bar' ]); } })
+			createRenderableChild({ render() { return h('foo', [ 'foo' ]); } }),
+			createRenderableChild({ render() { return h('bar', [ 'bar' ]); } })
 		]);
 		const attachHandle = projector.attach();
 		setTimeout(() => {
@@ -119,7 +125,7 @@ registerSuite({
 		const div = document.createElement('div');
 		document.body.appendChild(div);
 		projector.setRoot(div);
-		const handle = projector.insert(createRenderable({ render() { return h('foo', [ 'foo' ]); } }), 'first');
+		const handle = projector.insert(createRenderableChild({ render() { return h('foo', [ 'foo' ]); } }), 'first');
 		const attachHandle = projector.attach();
 		setTimeout(() => {
 			assert.strictEqual(div.childNodes.length, 1);

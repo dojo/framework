@@ -91,7 +91,7 @@ const createCachedRenderMixin: ComposeFactory<CachedRenderMixin<CachedRenderStat
 		mixin: {
 			getNodeAttributes(overrides?: VNodeProperties): VNodeProperties {
 				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				const props: VNodeProperties = cachedRender.state.id ? { id: cachedRender.state.id } : {};
+				const props: VNodeProperties = cachedRender.state.id ? { 'data-widget-id': cachedRender.state.id } : {};
 				for (let key in cachedRender.listeners) {
 					props[key] = cachedRender.listeners[key];
 				}

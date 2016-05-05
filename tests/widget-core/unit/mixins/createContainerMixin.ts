@@ -1,8 +1,14 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createContainerMixin from 'src/mixins/createContainerMixin';
+import createDestroyable from 'dojo-compose/mixins/createDestroyable';
+import { ComposeFactory } from 'dojo-compose/compose';
+import { Child } from 'src/mixins/createParentMixin';
 import createRenderable from 'src/mixins/createRenderable';
 import { VNode } from 'maquette/maquette';
+
+const createRenderableChild = createDestroyable
+	.mixin(createRenderable) as ComposeFactory<Child, any>;
 
 registerSuite({
 	name: 'mixins/createContainerMixin',
@@ -16,8 +22,8 @@ registerSuite({
 	'children at startup'() {
 		const container = createContainerMixin({
 			children: [
-				createRenderable({ tagName: 'foo' }),
-				createRenderable({ tagName: 'bar' })
+				createRenderableChild({ tagName: 'foo' }),
+				createRenderableChild({ tagName: 'bar' })
 			]
 		});
 		assert.strictEqual(container.children.size, 2);
@@ -29,8 +35,8 @@ registerSuite({
 	'append()': {
 		'single child'() {
 			const container = createContainerMixin();
-			const foo = createRenderable({ tagName: 'foo' });
-			const bar = createRenderable({ tagName: 'bar' });
+			const foo = createRenderableChild({ tagName: 'foo' });
+			const bar = createRenderableChild({ tagName: 'bar' });
 			container.append(foo);
 			const handle = container.append(bar);
 			assert.strictEqual(container.children.size, 2);
@@ -53,9 +59,9 @@ registerSuite({
 		},
 		'array'() {
 			const container = createContainerMixin();
-			const foo = createRenderable({ tagName: 'foo' });
-			const bar = createRenderable({ tagName: 'bar' });
-			const baz = createRenderable({ tagName: 'baz' });
+			const foo = createRenderableChild({ tagName: 'foo' });
+			const bar = createRenderableChild({ tagName: 'bar' });
+			const baz = createRenderableChild({ tagName: 'baz' });
 			const children = [ foo, bar, baz ];
 			const handle = container.append(children);
 			assert.strictEqual(container.children.size, 3);
@@ -82,18 +88,18 @@ registerSuite({
 	},
 	'insert()'() {
 		const container = createContainerMixin();
-		container.insert(createRenderable({ tagName: 'foo' }), 'first');
-		container.insert(createRenderable({ tagName: 'bar' }), 'first');
+		container.insert(createRenderableChild({ tagName: 'foo' }), 'first');
+		container.insert(createRenderableChild({ tagName: 'bar' }), 'first');
 		assert.strictEqual(container.children.get(0).tagName, 'bar');
 		assert.strictEqual(container.children.get(0).parent, container);
 		assert.strictEqual(container.children.get(1).tagName, 'foo');
 		assert.strictEqual(container.children.get(1).parent, container);
 	},
 	'destroy()'() {
-		const foo = createRenderable({ tagName: 'foo' });
-		const bar = createRenderable({ tagName: 'bar' });
-		const baz = createRenderable({ tagName: 'baz' });
-		const qat = createRenderable({ tagName: 'qat' });
+		const foo = createRenderableChild({ tagName: 'foo' });
+		const bar = createRenderableChild({ tagName: 'bar' });
+		const baz = createRenderableChild({ tagName: 'baz' });
+		const qat = createRenderableChild({ tagName: 'qat' });
 		const childContainer = createContainerMixin({
 			children: [ foo ]
 		});
@@ -123,7 +129,7 @@ registerSuite({
 		});
 	},
 	'getChildrenNodes()'() {
-		const createMockWidget = createRenderable
+		const createMockWidget = createRenderableChild
 			.extend({
 				render() {
 					return this.tagName;

@@ -25,8 +25,8 @@ registerSuite({
 		});
 
 		const nodeAttributes1 = widget1.getNodeAttributes();
-		assert.strictEqual(Object.keys(nodeAttributes1).length, 5, 'should have four keys only');
-		assert.strictEqual(nodeAttributes1.id, 'foo');
+		assert.strictEqual(Object.keys(nodeAttributes1).length, 5, 'should have five keys only');
+		assert.strictEqual(nodeAttributes1['data-widget-id'], 'foo');
 		assert.isFunction(nodeAttributes1.onclick, 'onclick is a function');
 		assert.deepEqual(nodeAttributes1.classes, {});
 
@@ -45,7 +45,7 @@ registerSuite({
 			}
 		});
 		const nodeAttributes3 = widget3.getNodeAttributes({ id: 'foo', onclick() {} });
-		assert.strictEqual(Object.keys(nodeAttributes3).length, 5, 'should have three keys only');
+		assert.strictEqual(Object.keys(nodeAttributes3).length, 6, 'should have six keys only');
 		assert.strictEqual(nodeAttributes3.id, 'foo');
 		assert.isFunction(nodeAttributes3.onclick, 'onclick is a function');
 	}

@@ -24,7 +24,7 @@ registerSuite({
 		});
 
 		let nodeAttributes = cachedRender.getNodeAttributes();
-		assert.strictEqual(nodeAttributes.id, 'foo');
+		assert.strictEqual(nodeAttributes['data-widget-id'], 'foo');
 		assert.isFunction(nodeAttributes.onclick);
 		nodeAttributes.onclick();
 		assert.strictEqual(count, 1);
@@ -33,12 +33,12 @@ registerSuite({
 
 		nodeAttributes = cachedRender.getNodeAttributes({
 			name: 'foo',
-			id: 'bar',
+			'data-widget-id': 'bar',
 			classes: { foo: false }
 		});
 
 		assert.strictEqual(nodeAttributes.name, 'foo');
-		assert.strictEqual(nodeAttributes.id, 'bar');
+		assert.strictEqual(nodeAttributes['data-widget-id'], 'bar');
 		assert.deepEqual(nodeAttributes.classes, { foo: false });
 		assert.strictEqual(Object.keys(nodeAttributes).length, 6);
 	},
@@ -66,7 +66,7 @@ registerSuite({
 		assert.deepEqual(result1, result3);
 		assert.deepEqual(result2, result4);
 		assert.strictEqual(result1.vnodeSelector, 'div');
-		assert.strictEqual(result1.properties.id, 'foo');
+		assert.strictEqual(result1.properties['data-widget-id'], 'foo');
 		assert.strictEqual(result1.text, 'foo');
 	},
 	'invalidate invalidates parent projector'() {

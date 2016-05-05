@@ -1,9 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createRenderable, { isRenderable } from 'src/mixins/createRenderable';
-import createContainerMixin from 'src/mixins/createContainerMixin';
 import { h } from 'maquette/maquette';
-import { createProjector } from 'src/projector';
+import Promise from 'dojo-core/Promise';
 
 registerSuite({
 	name: 'mixins/createRenderable',
@@ -31,27 +30,28 @@ registerSuite({
 		});
 		assert.strictEqual(renderable2.tagName, 'h1');
 	},
-	'option.parent': {
-		'container'() {
-			const parent = createContainerMixin();
-			const renderable = createRenderable({
-				render() {
-					return h('h1', [ 'Greetings' ]);
-				},
-				parent
-			});
-			assert.strictEqual(renderable.parent, parent);
-		},
-		'projector'() {
-			const projector = createProjector({});
-			const renderable = createRenderable({
-				render() {
-					return h('h1', [ 'Greetings' ]);
-				},
-				parent: projector
-			});
-			assert.strictEqual(renderable.parent, projector);
-		}
+	'option.parent'() {
+		let count = 0;
+		const parent = {
+			append(child: any) {
+				assert.strictEqual(child.tagName, 'div');
+				child.parent = this;
+				count++;
+				return { destroy() { } };
+			},
+			clear() { },
+			insert() { return { destroy() { } }; },
+			own() { return { destroy() { } }; },
+			destroy() { return Promise.resolve(true); }
+		};
+		const renderable = createRenderable({
+			render() {
+				return h('h1', [ 'Greetings' ]);
+			},
+			parent
+		});
+		assert.strictEqual(renderable.parent, parent);
+		assert.strictEqual(count, 1);
 	},
 	'isRenderable'() {
 		const renderable = createRenderable({

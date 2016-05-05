@@ -21,7 +21,7 @@ registerSuite({
 
 			const vnode = tabbed.render();
 			assert.deepEqual(vnode.properties, {
-				id: 'qux',
+				'data-widget-id': 'qux',
 				classes: {},
 				styles: {},
 				key: tabbed
