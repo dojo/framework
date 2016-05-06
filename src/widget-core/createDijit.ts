@@ -61,7 +61,7 @@ export interface DijitOptions<D extends DijitWidget> extends RenderableOptions, 
 	Ctor?: DijitWidgetConstructor<D> | string;
 }
 
-interface DijitState<D extends DijitWidget> extends State {
+export interface DijitState<D extends DijitWidget> extends State {
 	Ctor?: string;
 	params?: DijitWidgetParams;
 }
