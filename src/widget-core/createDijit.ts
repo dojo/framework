@@ -105,11 +105,26 @@ function constructDijitWidget(dijit: Dijit<DijitWidget>, srcNodeRef: Node): Diji
 	const dijitData = dijitDataWeakMap.get(dijit);
 	const Ctor = dijitData.Ctor;
 	if (Ctor && typeof Ctor === 'function') {
-		const dijitWidget = new Ctor(dijitData.params, srcNodeRef);
-		dijitWidget.startup();
-		return dijitWidget;
+		try {
+			const dijitWidget = new Ctor(dijitData.params, srcNodeRef);
+			dijitWidget.startup();
+			return dijitWidget;
+		}
+		catch (error) {
+			dijit.emit({
+				type: 'error',
+				target: dijit,
+				error
+			});
+		}
 	}
-	/* TODO, how to handle when there is no constructor at this point? */
+	else {
+		dijit.emit({
+			type: 'error',
+			target: dijit,
+			error: new Error('Invalid or missing Dijit widget constructor.')
+		});
+	}
 }
 
 /**
@@ -153,7 +168,7 @@ function resolveCtor<D extends DijitWidget>(Ctor: DijitWidgetConstructor<D> | st
 					resolve(Ctor);
 				}
 				else {
-					reject(new Error('Failed to load constructor'));
+					reject(new Error(`Failed to load constructor from MID: "${Ctor}"`));
 				}
 			});
 		});
@@ -228,9 +243,16 @@ const createDijit: DijitFactory = createRenderable
 			dijitData.afterCreate = afterCreate.bind(instance);
 			if (options) {
 				const Ctor = options.Ctor;
+				/* TODO: Should we actually be resolving "lazily"? */
 				if (typeof Ctor === 'string') {
 					resolveCtor(options.Ctor).then((Ctor) => {
 						dijitData.Ctor = Ctor;
+					}, (error) => {
+						instance.emit({
+							type: 'error',
+							error,
+							target: instance
+						});
 					});
 				}
 				else {
@@ -248,9 +270,15 @@ const createDijit: DijitFactory = createRenderable
 				if (Ctor || params) {
 					const dijitData = dijitDataWeakMap.get(instance);
 					if (!dijitData.dijitWidget) {
-						if (Ctor) {
+						if (Ctor) { /* TODO: same code as above on options */
 							resolveCtor(Ctor).then((Ctor) => {
 								dijitData.Ctor = Ctor;
+							}, (error) => {
+								instance.emit({
+									type: 'error',
+									error,
+									target: instance
+								});
 							});
 						}
 						if (params) {

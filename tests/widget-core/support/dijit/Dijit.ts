@@ -2,6 +2,9 @@ import { assign } from 'dojo-core/lang';
 
 class Dijit {
 	constructor(params: { [param: string]: any; }, srcNodeRef?: Node | string) {
+		if (params && params['throws']) {
+			throw new Error('Ooops!!!');
+		}
 		if (typeof srcNodeRef === 'string') {
 			srcNodeRef = document.getElementById(<string> srcNodeRef);
 		}
