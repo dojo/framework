@@ -2,7 +2,7 @@ import { h, VNode } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import createEvented from 'dojo-compose/mixins/createEvented';
-import createStateful, { Stateful, State } from 'dojo-compose/mixins/createStateful';
+import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import Promise from 'dojo-core/Promise';
 import WeakMap from 'dojo-core/WeakMap';
 import createRenderable, { Renderable, RenderableOptions } from './mixins/createRenderable';
@@ -49,7 +49,7 @@ export interface DijitWidgetConstructor<D extends DijitWidget> {
 	new (params: DijitWidgetParams, srcNodeRef: string | Node): D;
 }
 
-export interface DijitOptions<D extends DijitWidget> extends RenderableOptions {
+export interface DijitOptions<D extends DijitWidget> extends RenderableOptions, StatefulOptions<DijitState<D>> {
 	/**
 	 * An object of parameters to pass to the wrapped Dijit constructor
 	 */
