@@ -38,8 +38,7 @@ export const capabilities = {
 // OnDemand. Options that will be permutated are browserName, version, platform, and platformVersion; any other
 // capabilities options specified for an environment will be copied as-is
 export const environments = [
-	{ browserName: 'internet explorer', version: [ '9.0', '10.0', '11.0' ], platform: 'Windows 7' },
-	// Tests are hangling on MicrosoftEdge
+	{ browserName: 'internet explorer', version: [ '10.0', '11.0' ], platform: 'Windows 7' },
 	// { browserName: 'MicrosoftEdge', platform: 'Windows 10' },
 	{ browserName: 'firefox', platform: 'Windows 10' },
 	{ browserName: 'chrome', platform: 'Windows 10' },
@@ -51,7 +50,7 @@ export const environments = [
 ];
 
 // Maximum number of simultaneous integration tests that should be executed on the remote WebDriver service
-export const maxConcurrency = 2;
+export const maxConcurrency = 4;
 
 // Name of the tunnel class to use for WebDriver tests
 export const tunnel = 'SauceLabsTunnel';
