@@ -3,6 +3,7 @@ import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import createEvented from 'dojo-compose/mixins/createEvented';
 import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
+import Map from 'dojo-core/Map';
 import Promise from 'dojo-core/Promise';
 import WeakMap from 'dojo-core/WeakMap';
 import createRenderable, { Renderable, RenderableOptions } from './mixins/createRenderable';
@@ -79,7 +80,7 @@ export interface Dijit<D extends DijitWidget> extends Renderable, Stateful<Dijit
 	 *
 	 * TODO: Mark as readonly in TS 2.0
 	 */
-	Ctor: DijitWidgetConstructor<D>;
+	Ctor: DijitWidgetConstructor<D> | string;
 
 	/**
 	 * The parameters to pass the Dijit widget constructor
@@ -101,30 +102,14 @@ export interface DijitFactory extends ComposeFactory<Dijit<DijitWidget>, DijitOp
  * @param dijit The instance of the wrapper widget
  * @param srcNodeRef The DOM Node that should be used to pass to the Dijit constructor
  */
-function constructDijitWidget(dijit: Dijit<DijitWidget>, srcNodeRef: Node): DijitWidget {
+function constructDijitWidget(dijit: Dijit<DijitWidget>, srcNodeRef: Node): Promise<DijitWidget> {
 	const dijitData = dijitDataWeakMap.get(dijit);
-	const Ctor = dijitData.Ctor;
-	if (Ctor && typeof Ctor === 'function') {
-		try {
+	return resolveCtor(dijitData.Ctor)
+		.then((Ctor) => {
 			const dijitWidget = new Ctor(dijitData.params, srcNodeRef);
 			dijitWidget.startup();
 			return dijitWidget;
-		}
-		catch (error) {
-			dijit.emit({
-				type: 'error',
-				target: dijit,
-				error
-			});
-		}
-	}
-	else {
-		dijit.emit({
-			type: 'error',
-			target: dijit,
-			error: new Error('Invalid or missing Dijit widget constructor.')
 		});
-	}
 }
 
 /**
@@ -140,9 +125,23 @@ function afterCreate(element: HTMLElement) {
 		element.parentNode.removeChild(element);
 	}
 	else {
-		dijitData.dijitWidget = constructDijitWidget(dijit, element);
+		constructDijitWidget(dijit, element)
+			.then((dijitWidget) => {
+				dijitData.dijitWidget = dijitWidget;
+			}, (error) => {
+				dijit.emit({
+					type: 'error',
+					error,
+					target: dijit
+				});
+			});
 	}
 }
+
+/**
+ * A map of already loaded Ctors
+ */
+const ctorMap = new Map<string, DijitWidgetConstructor<DijitWidget>>();
 
 /**
  * Intrernal function that handles resolving a Dijit widget contructor, including potentially
@@ -155,6 +154,9 @@ function resolveCtor<D extends DijitWidget>(Ctor: DijitWidgetConstructor<D> | st
 	if (typeof Ctor !== 'string') {
 		return Promise.resolve(Ctor);
 	}
+	else if (ctorMap.has(Ctor)) {
+		return Promise.resolve(ctorMap.get(Ctor));
+	}
 	else {
 		/* TODO: Should we have a map of already resolved MIDs like the Dojo 1 Parser? */
 		return new Promise((resolve, reject) => {
@@ -162,9 +164,11 @@ function resolveCtor<D extends DijitWidget>(Ctor: DijitWidgetConstructor<D> | st
 				handle.remove();
 				reject(error);
 			});
-			require([ Ctor ], (Ctor: DijitWidgetConstructor<D>) => {
+			const mid = Ctor;
+			require([ mid ], (Ctor: DijitWidgetConstructor<D>) => {
 				handle.remove();
 				if (Ctor && typeof Ctor === 'function') {
+					ctorMap.set(mid, Ctor);
 					resolve(Ctor);
 				}
 				else {
@@ -192,7 +196,7 @@ interface DijitData<D extends DijitWidget> {
 	/**
 	 * The constructor for the Dijit
 	 */
-	Ctor?: DijitWidgetConstructor<D>;
+	Ctor?: DijitWidgetConstructor<D> | string;
 
 	/**
 	 * The callback provided to the VDOM to handle when the DOM node is created.
@@ -224,7 +228,7 @@ const createDijit: DijitFactory = createRenderable
 				return dijitDataWeakMap.get(dijit).dijitWidget;
 			},
 
-			get Ctor(): DijitWidgetConstructor<DijitWidget> {
+			get Ctor(): DijitWidgetConstructor<DijitWidget> | string {
 				const dijit: Dijit<DijitWidget> = this;
 				return dijitDataWeakMap.get(dijit).Ctor;
 			},
@@ -242,22 +246,7 @@ const createDijit: DijitFactory = createRenderable
 			/* create bound version of afterCreate */
 			dijitData.afterCreate = afterCreate.bind(instance);
 			if (options) {
-				const Ctor = options.Ctor;
-				/* TODO: Should we actually be resolving "lazily"? */
-				if (typeof Ctor === 'string') {
-					resolveCtor(options.Ctor).then((Ctor) => {
-						dijitData.Ctor = Ctor;
-					}, (error) => {
-						instance.emit({
-							type: 'error',
-							error,
-							target: instance
-						});
-					});
-				}
-				else {
-					dijitData.Ctor = Ctor;
-				}
+				dijitData.Ctor = options.Ctor;
 				dijitData.params = options.params || {};
 			}
 		}
@@ -271,15 +260,7 @@ const createDijit: DijitFactory = createRenderable
 					const dijitData = dijitDataWeakMap.get(instance);
 					if (!dijitData.dijitWidget) {
 						if (Ctor) { /* TODO: same code as above on options */
-							resolveCtor(Ctor).then((Ctor) => {
-								dijitData.Ctor = Ctor;
-							}, (error) => {
-								instance.emit({
-									type: 'error',
-									error,
-									target: instance
-								});
-							});
+							dijitData.Ctor = Ctor;
 						}
 						if (params) {
 							dijitData.params = params;

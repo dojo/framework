@@ -19,30 +19,11 @@ registerSuite({
 			assert.strictEqual(dijit.Ctor, Dijit);
 		},
 		'with mid'() {
-			const dfd = this.async();
-
 			const dijit = createDijit({
 				Ctor: 'tests/support/dijit/Dijit'
 			});
 
-			setTimeout(dfd.callback(() => {
-				assert.strictEqual(dijit.Ctor, Dijit);
-			}), 10);
-		},
-		'with bad mid'() {
-			const dfd = this.async();
-
-			const dijit = createDijit({
-				Ctor: 'this/will/be/bad',
-				listeners: {
-					error(event: any) {
-						assert.strictEqual(event.type, 'error');
-						assert.instanceOf(event.error, Error);
-						assert.strictEqual(event.target, dijit);
-						dfd.resolve();
-					}
-				}
-			});
+			assert.strictEqual(dijit.Ctor, 'tests/support/dijit/Dijit');
 		},
 		'with params'() {
 			const params = { foo: 'bar' };
@@ -63,23 +44,9 @@ registerSuite({
 			});
 
 			setTimeout(dfd.callback(() => {
-				assert.strictEqual(dijit.Ctor, Dijit);
+				assert.strictEqual(dijit.Ctor, 'tests/support/dijit/Dijit');
 				assert.deepEqual(dijit.params, { foo: 'bar' });
 			}), 10);
-		},
-		'bad mid'() {
-			const dfd = this.async();
-
-			const dijit = createDijit();
-			dijit.on('error', dfd.callback((event: any) => {
-				assert.strictEqual(event.type, 'error');
-				assert.instanceOf(event.error, Error);
-				assert.strictEqual(event.target, dijit);
-			}));
-
-			dijit.setState({
-				Ctor: 'this/will/not/load'
-			});
 		}
 	},
 	'render()': {
@@ -91,6 +58,8 @@ registerSuite({
 			assert.strictEqual(vnode.vnodeSelector, 'button');
 		},
 		'afterCreate'() {
+			const dfd = this.async();
+
 			const dijit = createDijit({
 				Ctor: Dijit,
 				params: { foo: 'bar' }
@@ -99,14 +68,54 @@ registerSuite({
 			const domNode = document.createElement(vnode.vnodeSelector);
 			assert.isUndefined(dijit.dijit);
 			vnode.properties.afterCreate(domNode, {}, vnode.vnodeSelector, {}, []);
-			assert.strictEqual(dijit.dijit.domNode, domNode);
-			assert.strictEqual(dijit.dijit.srcNodeRef, domNode);
-			assert.deepEqual(dijit.dijit.params, { foo: 'bar' });
-			assert.deepEqual(dijit.dijit._startupCalled, 1);
-			assert.deepEqual(dijit.dijit._destroyCalled, 0);
+			setTimeout(dfd.callback(() => {
+				assert.strictEqual(dijit.dijit.domNode, domNode);
+				assert.strictEqual(dijit.dijit.srcNodeRef, domNode);
+				assert.deepEqual(dijit.dijit.params, { foo: 'bar' });
+				assert.deepEqual(dijit.dijit._startupCalled, 1);
+				assert.deepEqual(dijit.dijit._destroyCalled, 0);
+			}), 10);
+		},
+		'afterCreate w/ mid'() {
+			const dfd = this.async();
+
+			const dijit = createDijit<Dijit>({
+				Ctor: 'tests/support/dijit/Dijit',
+				params: { foo: 'bar' }
+			});
+			const vnode = dijit.render();
+			const domNode = document.createElement(vnode.vnodeSelector);
+			assert.isUndefined(dijit.dijit);
+			vnode.properties.afterCreate(domNode, {}, vnode.vnodeSelector, vnode.properties, vnode.children);
+			setTimeout(dfd.callback(() => {
+				assert.strictEqual(dijit.dijit.domNode, domNode);
+				assert.strictEqual(dijit.dijit.srcNodeRef, domNode);
+				assert.deepEqual(dijit.dijit.params, { foo: 'bar' });
+				assert.deepEqual(dijit.dijit._startupCalled, 1);
+				assert.deepEqual(dijit.dijit._destroyCalled, 0);
+			}), 10);
+		},
+		'afterCreate w/ load from cache'() {
+			const dfd = this.async();
+
+			const dijit = createDijit<Dijit>({
+				Ctor: 'tests/support/dijit/Dijit',
+				params: { foo: 'bar' }
+			});
+			const vnode = dijit.render();
+			const domNode = document.createElement(vnode.vnodeSelector);
+			assert.isUndefined(dijit.dijit);
+			vnode.properties.afterCreate(domNode, {}, vnode.vnodeSelector, vnode.properties, vnode.children);
+			setTimeout(dfd.callback(() => {
+				assert.strictEqual(dijit.dijit.domNode, domNode);
+				assert.strictEqual(dijit.dijit.srcNodeRef, domNode);
+				assert.deepEqual(dijit.dijit.params, { foo: 'bar' });
+				assert.deepEqual(dijit.dijit._startupCalled, 1);
+				assert.deepEqual(dijit.dijit._destroyCalled, 0);
+			}), 10);
 		},
 		'afterCreate w/ no Ctor'() {
-			const dfd = this.async();
+			const dfd = this.async(100);
 
 			const dijit = createDijit();
 
@@ -120,8 +129,25 @@ registerSuite({
 			const domNode = document.createElement(vnode.vnodeSelector);
 			vnode.properties.afterCreate(domNode, {}, vnode.vnodeSelector, {}, []);
 		},
+		'afterCreate w/ bad mid'() {
+			const dfd = this.async(100);
+
+			const dijit = createDijit({
+				Ctor: 'this/is/not/going/to/work'
+			});
+
+			dijit.on('error', dfd.callback((event: any) => {
+				assert.strictEqual(event.type, 'error');
+				assert.instanceOf(event.error, Error);
+				assert.strictEqual(event.target, dijit);
+			}));
+
+			const vnode = dijit.render();
+			const domNode = document.createElement(vnode.vnodeSelector);
+			vnode.properties.afterCreate(domNode, {}, vnode.vnodeSelector, vnode.properties, vnode.children);
+		},
 		'afterCreate w/ Ctor throws'() {
-			const dfd = this.async();
+			const dfd = this.async(100);
 
 			const dijit = createDijit({
 				Ctor: Dijit,
@@ -139,6 +165,7 @@ registerSuite({
 			vnode.properties.afterCreate(domNode, {}, vnode.vnodeSelector, vnode.properties, vnode.children);
 		},
 		'afterCreate - new dom node'() {
+			const dfd = this.async();
 			const dijit = createDijit({
 				Ctor: Dijit,
 				params: { foo: 'bar' }
@@ -148,16 +175,18 @@ registerSuite({
 			document.body.appendChild(domNode);
 			const afterCreate = vnode.properties.afterCreate;
 			afterCreate(domNode, {}, vnode.vnodeSelector, {}, []);
-			assert(dijit.dijit);
-			const newVNode = dijit.render();
-			assert.strictEqual(newVNode.properties.afterCreate, afterCreate, 'should not change listeners');
-			document.body.removeChild(domNode);
-			const newDomNode = document.createElement(vnode.vnodeSelector);
-			document.body.appendChild(newDomNode);
-			assert.isNull(dijit.dijit.domNode.parentNode);
-			afterCreate(newDomNode, {}, vnode.vnodeSelector, {}, []);
-			assert.strictEqual(dijit.dijit.domNode, domNode);
-			assert.strictEqual(dijit.dijit.domNode.parentNode, document.body);
+			setTimeout(dfd.callback(() => {
+				assert(dijit.dijit);
+				const newVNode = dijit.render();
+				assert.strictEqual(newVNode.properties.afterCreate, afterCreate, 'should not change listeners');
+				document.body.removeChild(domNode);
+				const newDomNode = document.createElement(vnode.vnodeSelector);
+				document.body.appendChild(newDomNode);
+				assert.isNull(dijit.dijit.domNode.parentNode);
+				afterCreate(newDomNode, {}, vnode.vnodeSelector, {}, []);
+				assert.strictEqual(dijit.dijit.domNode, domNode);
+				assert.strictEqual(dijit.dijit.domNode.parentNode, document.body);
+			}), 10);
 		}
 	},
 	'destroy()': {
@@ -170,6 +199,7 @@ registerSuite({
 			return dijit.destroy();
 		},
 		'after dijit creation'() {
+			const dfd = this.async();
 			const dijit = createDijit({
 				Ctor: Dijit
 			});
@@ -178,12 +208,14 @@ registerSuite({
 			const domNode = document.createElement(vnode.vnodeSelector);
 			const afterCreate = vnode.properties.afterCreate;
 			afterCreate(domNode, {}, vnode.vnodeSelector, {}, []);
-			const dijitWidget = dijit.dijit;
-			assert.strictEqual(dijitWidget._destroyCalled, 0);
-			return dijit.destroy()
-				.then(() => {
-					assert.strictEqual(dijitWidget._destroyCalled, 1);
-				});
+			setTimeout(() => {
+				const dijitWidget = dijit.dijit;
+				assert.strictEqual(dijitWidget._destroyCalled, 0);
+				dijit.destroy()
+					.then(dfd.callback(() => {
+						assert.strictEqual(dijitWidget._destroyCalled, 1);
+					}));
+			}, 10);
 		}
 	}
 });

@@ -18,6 +18,14 @@ declare module 'rxjs/Rx' {
 	export * from 'node_modules/@reactivex/rxjs/dist/cjs/Rx';
 }
 
+declare module 'rxjs/Observable' {
+	export * from 'node_modules/@reactivex/rxjs/dist/cjs/Observable';
+}
+
+declare module 'rxjs/Observer' {
+	export * from 'node_modules/@reactivex/rxjs/dist/cjs/Observer';
+}
+
 /* For some reasons reactivex/rxjs is missing these */
 interface Iterator<T> {
 	next(value?: any): IteratorResult<T>;
