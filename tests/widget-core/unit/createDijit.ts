@@ -130,7 +130,7 @@ registerSuite({
 			vnode.properties.afterCreate(domNode, {}, vnode.vnodeSelector, {}, []);
 		},
 		'afterCreate w/ bad mid'() {
-			const dfd = this.async(100);
+			const dfd = this.async();
 
 			const dijit = createDijit({
 				Ctor: 'this/is/not/going/to/work'
