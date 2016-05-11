@@ -20,6 +20,6 @@ install:
 script:
   - "grunt"
   - "grunt intern:node --combined"
-  - "grunt intern:remote --combined"
+  - "grunt intern:saucelabs --combined"
   - "grunt remapIstanbul:ci"
   - "grunt uploadCoverage"
