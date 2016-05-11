@@ -1,11 +1,13 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import { Iterable, ShimIterator } from 'src/iterator';
 import Promise, { Executor, PromiseShim, State, Thenable } from 'src/Promise';
+import Symbol from 'src/Symbol';
 
 export interface PromiseType {
 	new <T>(executor: Executor<T>): Promise<T>;
-	all<T>(items: (T | Thenable<T>)[]): Promise<T>;
-	race<T>(items: (T | Thenable<T>)[]): Promise<T>;
+	all<T>(items: Iterable<T | Thenable<T>> | (T | Thenable<T>)[]): Promise<T>;
+	race<T>(items: Iterable<T | Thenable<T>> | (T | Thenable<T>)[]): Promise<T>;
 	reject<T>(reason: any): Promise<T>;
 	resolve<T>(value: (T | Thenable<T>)): Promise<T>;
 }
@@ -24,6 +26,22 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 		'mixed values and resolved': function () {
 			let dfd = this.async();
 			Promise.all([ 0, Promise.resolve(1), Promise.resolve(2) ]).then(
+				dfd.callback(function (value: number[]) {
+					assert.isArray(value);
+					assert.deepEqual(value, [ 0, 1, 2 ]);
+				})
+			);
+		},
+
+		'iterable argument': function () {
+			let dfd = this.async();
+			Promise.all({
+				[Symbol.iterator]() {
+					return new ShimIterator<number | Thenable<number>>([
+						0, Promise.resolve(1), Promise.resolve(2)
+					]);
+				}
+			}).then(
 				dfd.callback(function (value: number[]) {
 					assert.isArray(value);
 					assert.deepEqual(value, [ 0, 1, 2 ]);
@@ -124,6 +142,21 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 				.then(dfd.callback(function (value: any) {
 					assert.strictEqual(value, 0);
 				}));
+		},
+
+		'iterable argument': function () {
+			let dfd = this.async();
+			Promise.race({
+				[Symbol.iterator]() {
+					return new ShimIterator<number | Thenable<number>>([
+						0, Promise.resolve(1), Promise.resolve(2)
+					]);
+				}
+			}).then(
+				dfd.callback(function (value: any) {
+					assert.strictEqual(value, 0);
+				})
+			);
 		},
 
 		'reject if any rejected': function () {

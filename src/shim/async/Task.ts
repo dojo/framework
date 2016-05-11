@@ -1,3 +1,4 @@
+import { Iterable } from '../iterator';
 import Promise, { Executor, State, Thenable, isThenable } from '../Promise';
 
 export const Canceled = <State> 4;
@@ -14,12 +15,12 @@ export function isTask<T>(value: any): value is Task<T> {
  * Task is an extension of Promise that supports cancelation.
  */
 export default class Task<T> extends Promise<T> {
-	static all<T>(items: (T | Thenable<T>)[]): Task<T[]> {
-		return <any> super.all(items);
+	static all<T>(iterator: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): Task<T[]> {
+		return <any> super.all(iterator);
 	}
 
-	static race<T>(items: (T | Thenable<T>)[]): Task<T> {
-		return <any> super.race(items);
+	static race<T>(iterator: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): Task<T> {
+		return <any> super.race(iterator);
 	}
 
 	static reject<T>(reason: Error): Task<any> {
@@ -177,5 +178,4 @@ export default class Task<T> extends Promise<T> {
 	catch<U>(onRejected: (reason?: Error) => (U | Thenable<U>)): Task<U> {
 		return <any> super.catch(onRejected);
 	}
-
 }

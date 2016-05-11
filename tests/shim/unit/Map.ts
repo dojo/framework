@@ -1,5 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import { forOf, isIterable, IterableIterator, ShimIterator } from 'src/iterator';
 import Map from 'src/Map';
 
 let map: Map<any, any>;
@@ -27,12 +28,12 @@ registerSuite({
 			});
 		},
 
-		'array-like data'() {
+		'iterator data'() {
 			assert.doesNotThrow(function () {
-				map = new Map<number, string>({
+				map = new Map<number, string>(<any> new ShimIterator<[number, string]>({
 					length: 1,
 					0: [ 3, 'bar' ]
-				});
+				}));
 			});
 		}
 	},
@@ -73,6 +74,31 @@ registerSuite({
 		'key not found'() {
 			assert.isFalse(map.delete('foo'));
 		}
+	},
+
+	entries() {
+		function foo() {}
+		const array: any[] = [];
+		const object = Object.create(null);
+		mapArgs = [
+			[ 0, 0 ],
+			[ 1, '1' ],
+			[ 2, object ],
+			[ 3, array ],
+			[ 4, foo ],
+			[ 5, undefined ]
+		];
+		map = new Map<number, any>(mapArgs);
+		const entries: IterableIterator<[number, any]> = map.entries();
+
+		assert.isTrue(isIterable(entries), 'Returns an iterable.');
+
+		let i: number = 0;
+		forOf(entries, function (value: [ number, any ]): void {
+			assert.strictEqual(value[0], mapArgs[i][0]);
+			assert.strictEqual(value[1], mapArgs[i][1]);
+			i++;
+		});
 	},
 
 	forEach: {
@@ -145,6 +171,23 @@ registerSuite({
 		}
 	},
 
+	keys() {
+		mapArgs = '012345'.split('').map(function (value: string) {
+			const numeric = Number(value);
+			return [ numeric, numeric ];
+		});
+		map = new Map<number, number>(mapArgs);
+		const keys: IterableIterator<number> = map.keys();
+
+		assert.isTrue(isIterable(keys), 'Returns an iterable.');
+
+		let i: number = 0;
+		forOf(keys, function (value: number): void {
+			assert.strictEqual(value, mapArgs[i][0]);
+			i++;
+		});
+	},
+
 	set: {
 		'number key'() {
 			map = new Map<number, string>();
@@ -203,5 +246,29 @@ registerSuite({
 			assert.strictEqual(map.size, 1,
 				'size should remain the same after setting an existing key');
 		}
+	},
+
+	values() {
+		function foo() {}
+		const array: any[] = [];
+		const object = Object.create(null);
+		mapArgs = [
+			[ 0, 0 ],
+			[ 1, '1' ],
+			[ 2, object ],
+			[ 3, array ],
+			[ 4, foo ],
+			[ 5, undefined ]
+		];
+		map = new Map<number, any>(mapArgs);
+		const values: IterableIterator<any> = map.values();
+
+		assert.isTrue(isIterable(values), 'Returns an iterable.');
+
+		let i: number = 0;
+		forOf(values, function (value: any): void {
+			assert.strictEqual(value, mapArgs[i][1]);
+			i++;
+		});
 	}
 });

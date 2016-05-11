@@ -1,5 +1,6 @@
-import { MAX_SAFE_INTEGER as maxSafeInteger } from './number';
 import has from './has';
+import { forOf, isArrayLike, isIterable, Iterable } from './Iterator';
+import { MAX_SAFE_INTEGER as maxSafeInteger } from './number';
 
 export interface ArrayLike<T> {
 	length: number;
@@ -59,7 +60,7 @@ function normalizeOffset(value: number, length: number): number {
 }
 
 export function from(arrayLike: string, mapFunction?: MapCallback<string>, thisArg?: {}): ArrayLike<string>;
-export function from<T>(arrayLike: ArrayLike<T>, mapFunction?: MapCallback<T>, thisArg?: {}): ArrayLike<T>;
+export function from<T>(arrayLike: Iterable<T> | ArrayLike<T>, mapFunction?: MapCallback<T>, thisArg?: {}): ArrayLike<T>;
 /**
  * The Array.from() method creates a new Array instance from an array-like or iterable object.
  *
@@ -68,7 +69,7 @@ export function from<T>(arrayLike: ArrayLike<T>, mapFunction?: MapCallback<T>, t
  * @param [thisArg] The execution context for the map function
  * @return The new Array
  */
-export function from<T>(arrayLike: (string | ArrayLike<T>), mapFunction?: MapCallback<T>, thisArg?: {}): ArrayLike<T> {
+export function from<T>(arrayLike: (string | Iterable<T> | ArrayLike<T>), mapFunction?: MapCallback<T>, thisArg?: {}): ArrayLike<T> {
 	// Use the native Array.from() if it exists
 	if (has('es6-array-from')) {
 		return (<any> Array).from.apply(null, arguments);
@@ -83,17 +84,23 @@ export function from<T>(arrayLike: (string | ArrayLike<T>), mapFunction?: MapCal
 	}
 
 	const Constructor: any = this;
-	const items: ArrayLike<any> = Object(arrayLike);
-	const length: number = toLength(items.length);
+	const length: number = toLength((<any> arrayLike).length);
 	// Support extension
 	const array: any[] = (typeof Constructor === 'function') ? <any[]> Object(new Constructor(length)) : new Array(length);
 
-	for (let i = 0, value: any; i < length; i++) {
-		value = items[i];
-		array[i] = mapFunction ? mapFunction(value, i) : value;
+	if (!isArrayLike(arrayLike) && !isIterable(arrayLike)) {
+		return array;
 	}
 
-	array.length = length;
+	let i: number = 0;
+	forOf(<any> arrayLike, function (value: T): void {
+		array[i] = mapFunction ? mapFunction(value, i) : value;
+		i++;
+	});
+
+	if ((<any> arrayLike).length !== undefined) {
+		array.length = length;
+	}
 
 	return array;
 }

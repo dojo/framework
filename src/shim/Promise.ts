@@ -1,21 +1,18 @@
 import { queueMicroTask } from './queue';
 import global from './global';
 import has from './has';
+import { forOf, Iterable } from './iterator';
+import Symbol from './Symbol';
 
 /**
  * Copies an array of values, replacing any PlatformPromises in the copy with unwrapped global.Promises. This is necessary
  * for .all and .race so that the native promise doesn't treat the PlatformPromises like generic thenables.
  */
-function unwrapPromises(items: any[]): any[] {
-	const unwrapped: typeof items = [];
-	const count = items.length;
-	for (let i = 0; i < count; i++) {
-		if (!(i in items)) {
-			continue;
-		}
-		let item = items[i];
-		unwrapped[i] = item instanceof Promise ? item.promise : item;
-	}
+function unwrapPromises(iterable: Iterable<any> | any[]): any[] {
+	const unwrapped: any[] = [];
+	forOf(iterable, function (item: any): void {
+		unwrapped.push(item instanceof Promise ? item.promise : item);
+	});
 	return unwrapped;
 }
 
@@ -48,7 +45,7 @@ export function isThenable<T>(value: any): value is Thenable<T> {
  * @borrows Promise#then as PromiseShim#then
  */
 export class PromiseShim<T> implements Thenable<T> {
-	static all<T>(items: (T | Thenable<T>)[]): PromiseShim<T[]> {
+	static all<T>(iterable: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): PromiseShim<T[]> {
 		return new this(function (resolve, reject) {
 			const values: T[] = [];
 			let complete = 0;
@@ -80,24 +77,20 @@ export class PromiseShim<T> implements Thenable<T> {
 				}
 			}
 
-			let count = items.length;
-			for (let i = 0; i < count; ++i) {
-				processItem(i, items[i]);
-			}
+			let i: number = 0;
+			forOf(iterable, function (value: T | Thenable<T>) {
+				processItem(i, value);
+				i++;
+			});
 			populating = false;
 
 			finish();
 		});
 	}
 
-	static race<T>(items: (T | Thenable<T>)[]): PromiseShim<T> {
+	static race<T>(iterable: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): PromiseShim<T[]> {
 		return new this(function (resolve, reject) {
-			const count = items.length;
-			let item: (T | Thenable<T>);
-
-			for (let i = 0; i < count; ++i) {
-				item = items[i];
-
+			forOf(iterable, function (item: T | Thenable<T>) {
 				if (item instanceof PromiseShim) {
 					// If a PromiseShim item rejects, this PromiseShim is immediately rejected with the item
 					// PromiseShim's rejection error.
@@ -106,7 +99,7 @@ export class PromiseShim<T> implements Thenable<T> {
 				else {
 					PromiseShim.resolve(item).then(resolve);
 				}
-			}
+			});
 		});
 	}
 
@@ -270,6 +263,8 @@ export class PromiseShim<T> implements Thenable<T> {
 		onFulfilled?: (value?: T) => (U | Thenable<U>),
 		onRejected?: (reason?: Error) => (U | Thenable<U>)
 	) => PromiseShim<U>;
+
+	[Symbol.toStringTag]: string = 'Promise';
 }
 
 /**
@@ -301,8 +296,8 @@ export default class Promise<T> implements Thenable<T> {
 	 *     value.bar === 'bar'; // true
 	 * });
 	 */
-	static all<T>(items: (T | Thenable<T>)[]): Promise<T[]> {
-		return this.copy(Promise.PromiseConstructor.all(unwrapPromises(items)));
+	static all<T>(iterable: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): Promise<T[]> {
+		return this.copy(Promise.PromiseConstructor.all(unwrapPromises(iterable)));
 	}
 
 	/**
@@ -323,8 +318,8 @@ export default class Promise<T> implements Thenable<T> {
 	 *     value === 'foo'; // true
 	 * });
 	 */
-	static race<T>(items: (T | Thenable<T>)[]): Promise<T> {
-		return this.copy(Promise.PromiseConstructor.race(unwrapPromises(items)));
+	static race<T>(iterable: Iterable<(T | Thenable<T>)> |  (T | Thenable<T>)[]): Promise<T> {
+		return this.copy(Promise.PromiseConstructor.race(unwrapPromises(iterable)));
 	}
 
 	/**

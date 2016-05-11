@@ -2,6 +2,8 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as array from 'src/array';
 import has, { add as hasAdd, TestResult } from 'src/has';
+import { Iterator, ShimIterator } from 'src/iterator';
+import Symbol from 'src/Symbol';
 import { mixin } from 'dojo/lang';
 
 function assertFrom(arrayable: any, expected: any[]) {
@@ -135,6 +137,31 @@ registerSuite({
 				'1': 'one',
 				'2': 'two'
 			}, []);
+		},
+
+		'from iterator': {
+			'ShimIterator': function () {
+				assertFrom(new ShimIterator({
+					0: 'zero',
+					1: 'one',
+					2: 'two',
+					length: 3
+				}), [ 'zero', 'one', 'two' ]);
+			},
+
+			'Custom iterator': function () {
+				const iterator: Iterator<number> = <any> {
+					[Symbol.iterator]: function () {
+						return {
+							index: 0,
+							next: function () {
+								return this.index < 5 ? { value: this.index++ } : { done: true };
+							}
+						};
+					}
+				};
+				assertFrom(iterator, [ 0, 1, 2, 3, 4 ]);
+			}
 		},
 
 		'from boolean': function () {

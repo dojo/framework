@@ -1,5 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import { ShimIterator } from 'src/iterator';
 import WeakMap from 'src/WeakMap';
 
 interface Key {}
@@ -14,13 +15,27 @@ registerSuite({
 			assert.instanceOf(map, WeakMap, 'map should be an instance of WeakMap');
 		},
 
-		'iterable'() {
+		'array'() {
 			const key1: Key = {};
 			const key2: Key = {};
 			const map = new WeakMap<Key, number>([
 				[ key1, 1 ],
 				[ key2, 2 ]
 			]);
+
+			assert.isTrue(map.has(key1), 'key1 should be in map');
+			assert.isTrue(map.has(key2), 'key2 should be in map');
+			assert.strictEqual(map.get(key1), 1, 'key1 should equal 1');
+			assert.strictEqual(map.get(key2), 2, 'key2 should equal 2');
+		},
+
+		'iterable'() {
+			const key1: Key = {};
+			const key2: Key = {};
+			const map = new WeakMap<Key, number>(new ShimIterator<[Key, number]>([
+				[ key1, 1 ],
+				[ key2, 2 ]
+			]));
 
 			assert.isTrue(map.has(key1), 'key1 should be in map');
 			assert.isTrue(map.has(key2), 'key2 should be in map');
