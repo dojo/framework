@@ -185,3 +185,12 @@ add('es6-set', () => {
 	}
 	return false;
 });
+add('es6-map', function () {
+	if (typeof global.Map === 'function') {
+		// IE11 and older versions of Safari are missing critical ES6 Map functionality
+		const map = new global.Map([ [0, 1] ]);
+		return map.has(0) && typeof map.keys === 'function' &&
+			typeof map.values === 'function' && typeof map.entries === 'function';
+	}
+	return false;
+});

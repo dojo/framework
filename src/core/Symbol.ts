@@ -61,11 +61,17 @@ export namespace Shim {
 			desc += String(postfix || '');
 			created[desc] = true;
 			name = '@@' + desc;
-			defineProperty(objPrototype, name, {
-				set: function (value: any) {
-					defineProperty(this, name, getValueDescriptor(value));
-				}
-			});
+
+			// FIXME: Temporary guard until the duplicate execution when testing can be
+			// pinned down.
+			if (!Object.getOwnPropertyDescriptor(objPrototype, name)) {
+				defineProperty(objPrototype, name, {
+					set: function (value: any) {
+						defineProperty(this, name, getValueDescriptor(value));
+					}
+				});
+			}
+
 			return name;
 		};
 	}());

@@ -1,6 +1,6 @@
-import Promise, { Thenable } from '../Promise';
 import * as array from '../array';
-import { ArrayLike } from '../array';
+import { isArrayLike, Iterable } from '../iterator';
+import Promise, { Thenable } from '../Promise';
 
 /**
  * Processes all items and then applies the callback to each item and eventually returns an object containing the
@@ -9,7 +9,7 @@ import { ArrayLike } from '../array';
  * @param callback a callback that maps values to synchronous/asynchronous results
  * @return a list of objects holding the synchronous values and synchronous results.
  */
-function processValuesAndCallback<T, U>(items: (T | Promise<T>)[], callback: Mapper<T, U>): Promise<{ values: T[]; results: U[] }> {
+function processValuesAndCallback<T, U>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Mapper<T, U>): Promise<{ values: T[]; results: U[] }> {
 	return Promise.all<T>(items)
 		.then(function (results) {
 			let pass: (U | Promise<U>)[] = Array.prototype.map.call(results, callback);
@@ -46,14 +46,17 @@ function findLastValueIndex<T>(list: ArrayLike<T>, offset?: number): number {
 	return -1;
 }
 
-function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: number) => number, items: (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
+function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: number) => number, items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
 	const hasInitialValue = arguments.length > 3;
 	return Promise.all<T>(items)
 		.then(function (results) {
 			return new Promise(function (resolve, reject) {
+				// As iterators do not have indices like `ArrayLike` objects, the results array
+				// is used to determine the next value.
+				const list = isArrayLike(items) ? items : results;
 				let i: number;
 				function next(currentValue: U): void {
-					i = findNextIndex(items, i);
+					i = findNextIndex(list, i);
 					if (i >= 0) {
 						const result = callback(currentValue, results[i], i, results);
 
@@ -74,7 +77,7 @@ function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: numb
 					value = initialValue;
 				}
 				else {
-					i = findNextIndex(items);
+					i = findNextIndex(list);
 
 					if (i < 0) {
 						throw new Error('reduce array with no initial value');
@@ -86,7 +89,7 @@ function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: numb
 		});
 }
 
-function testAndHaltOnCondition<T>(condition: boolean, items: (T | Promise<T>)[], callback: Filterer<T>): Promise<boolean> {
+function testAndHaltOnCondition<T>(condition: boolean, items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Filterer<T>): Promise<boolean> {
 	return Promise.all<T>(items).then(function (results) {
 		return new Promise<boolean>(function(resolve) {
 			let result: (boolean | Thenable<boolean>);
@@ -122,7 +125,7 @@ function testAndHaltOnCondition<T>(condition: boolean, items: (T | Promise<T>)[]
  * @param callback a synchronous/asynchronous test
  * @return eventually returns true if all values pass; otherwise false
  */
-export function every<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<boolean> {
+export function every<T>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Filterer<T>): Promise<boolean> {
 	return testAndHaltOnCondition(false, items, callback);
 }
 
@@ -132,7 +135,7 @@ export function every<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Prom
  * @param callback a synchronous/asynchronous test
  * @return eventually returns a new array with only values that have passed
  */
-export function filter<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<T[]> {
+export function filter<T>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Filterer<T>): Promise<T[]> {
 	return processValuesAndCallback(items, callback).then<T[]>(function ({ results, values }) {
 		let arr: T[] = [];
 		for (let i = 0; i < results.length; i++) {
@@ -148,9 +151,10 @@ export function filter<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Pro
  * @param callback a synchronous/asynchronous test
  * @return a promise eventually containing the item or undefined if a match is not found
  */
-export function find<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<T> {
-	return findIndex<T>(items, callback).then(function (i) {
-		return i >= 0 ? items[i] : undefined;
+export function find<T>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Filterer<T>): Promise<T> {
+	const list: (T | Promise<T>)[] = isArrayLike(items) ? items : <(T | Promise<T>)[]> array.from(items);
+	return findIndex<T>(list, callback).then(function (i) {
+		return i >= 0 ? list[i] : undefined;
 	});
 }
 
@@ -160,7 +164,7 @@ export function find<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promi
  * @param callback a synchronous/asynchronous test
  * @return a promise eventually containing the index of the matching item or -1 if a match is not found
  */
-export function findIndex<T>(items: (T | Promise<T>)[], callback: Filterer<T>): Promise<number> {
+export function findIndex<T>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Filterer<T>): Promise<number> {
 	// TODO we can improve this by returning immediately
 	return processValuesAndCallback(items, callback).then<number>(function ({ results }) {
 		for (let i = 0; i < results.length; i++) {
@@ -178,7 +182,7 @@ export function findIndex<T>(items: (T | Promise<T>)[], callback: Filterer<T>): 
  * @param callback a synchronous/asynchronous transform function
  * @return a promise eventually containing a collection of each transformed value
  */
-export function map<T, U>(items: (T | Promise<T>)[], callback: Mapper<T, U>): Promise<U[]> {
+export function map<T, U>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Mapper<T, U>): Promise<U[]> {
 	return processValuesAndCallback<T, U>(items, callback)
 			.then<U[]>(function ({ results }) {
 				return results;
@@ -192,19 +196,19 @@ export function map<T, U>(items: (T | Promise<T>)[], callback: Mapper<T, U>): Pr
  * @param [initialValue] the first value to pass to the callback
  * @return a promise eventually containing a value that is the result of the reduction
  */
-export function reduce<T, U>(items: (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
+export function reduce<T, U>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
 	let args: any[] = <any[]> array.from(arguments);
 	args.unshift(findNextValueIndex);
 	return generalReduce.apply(this, args);
 }
 
-export function reduceRight<T, U>(items: (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
+export function reduceRight<T, U>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
 	let args: any[] = <any[]> array.from(arguments);
 	args.unshift(findLastValueIndex);
 	return generalReduce.apply(this, args);
 }
 
-export function series<T, U>(items: (T | Promise<T>)[], operation: Mapper<T, U>): Promise<U[]> {
+export function series<T, U>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], operation: Mapper<T, U>): Promise<U[]> {
 	return generalReduce(findNextValueIndex, items, function (previousValue, currentValue, index, array) {
 		const result = operation(currentValue, index, array);
 
@@ -220,7 +224,7 @@ export function series<T, U>(items: (T | Promise<T>)[], operation: Mapper<T, U>)
 	}, []);
 }
 
-export function some<T>(items: Array<T | Promise<T>>, callback: Filterer<T>): Promise<boolean> {
+export function some<T>(items: Iterable<T | Promise<T>> | Array<T | Promise<T>>, callback: Filterer<T>): Promise<boolean> {
 	return testAndHaltOnCondition<T>(true, items, callback);
 }
 
