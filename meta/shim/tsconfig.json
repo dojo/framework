@@ -78,6 +78,7 @@
 		"./tests/functional/all.ts",
 		"./tests/functional/text/textPlugin.ts",
 		"./tests/intern-local.ts",
+		"./tests/intern-saucelabs.ts",
 		"./tests/intern.ts",
 		"./tests/services/echo.ts",
 		"./tests/support/Reporter.ts",

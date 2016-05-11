@@ -120,6 +120,12 @@ module.exports = function (grunt) {
 				config: '<%= devDirectory %>/tests/intern',
 				reporters: [ 'Runner' ]
 			},
+			browserstack: {},
+			saucelabs: {
+				options: {
+					config: '<%= devDirectory %>/tests/intern-saucelabs'
+				}
+			},
 			remote: {},
 			local: {
 				options: {
