@@ -173,7 +173,7 @@ registerSuite({
 		},
 
 		'from string': function () {
-			let actual: array.ArrayLike<string> = array.from('hello');
+			let actual: ArrayLike<string> = array.from('hello');
 			assert.isArray(actual);
 			assert.deepEqual([ 'h', 'e', 'l', 'l', 'o' ], actual);
 		},
@@ -270,7 +270,7 @@ registerSuite({
 		},
 
 		'fill with array-like object': function () {
-			let obj: array.ArrayLike<number> = {
+			let obj: ArrayLike<number> = {
 				0: 1,
 				1: 2,
 				2: 3,
@@ -303,7 +303,7 @@ registerSuite({
 			},
 
 			'item found in array-like object': function () {
-				let haystack = <array.ArrayLike<string>> {
+				let haystack = <ArrayLike<string>> {
 					0: 'duck',
 					1: 'duck',
 					2: 'goose',
@@ -362,7 +362,7 @@ registerSuite({
 		},
 
 		'array-like object': function () {
-			let obj: array.ArrayLike<string> = {
+			let obj: ArrayLike<string> = {
 				0: 'zero',
 				1: 'one',
 				2: 'two',
@@ -379,7 +379,7 @@ registerSuite({
 		},
 
 		'sparse array-like object': function () {
-			let obj: array.ArrayLike<string> = {
+			let obj: ArrayLike<string> = {
 				5: 'five',
 				10: 'ten',
 				'length': 15
@@ -394,7 +394,7 @@ registerSuite({
 		},
 
 		'negative length array-like object': function () {
-			let obj: array.ArrayLike<string> = {
+			let obj: ArrayLike<string> = {
 				0: 'zero',
 				1: 'one',
 				2: 'two',
