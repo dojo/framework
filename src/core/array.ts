@@ -2,11 +2,6 @@ import has from './has';
 import { forOf, isArrayLike, isIterable, Iterable } from './iterator';
 import { MAX_SAFE_INTEGER as maxSafeInteger } from './number';
 
-export interface ArrayLike<T> {
-	length: number;
-	[n: number]: T;
-}
-
 export interface MapCallback<T> {
 	(element: T, index: number): T;
 }
