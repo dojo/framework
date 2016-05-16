@@ -76,7 +76,7 @@ export interface MemoryStoreOptions<T extends Object> {
 	idProperty?: StoreIndex;
 }
 
-enum ChangeTypes {
+export const enum ChangeTypes {
 	Add = 1,
 	Put,
 	Patch,

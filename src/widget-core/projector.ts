@@ -253,6 +253,6 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 		}
 	});
 
-const defaultProjector = createProjector();
+const defaultProjector: Projector = createProjector();
 
 export default defaultProjector;
