@@ -1,14 +1,15 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createRenderable, { isRenderable } from 'src/mixins/createRenderable';
+import { ParentMixin, Child } from 'src/mixins/createParentMixin';
 import { h } from 'maquette/maquette';
 import Promise from 'dojo-core/Promise';
+import { List } from 'immutable/immutable';
 
 registerSuite({
 	name: 'mixins/createRenderable',
 	'set render function'() {
 		const renderable = createRenderable();
-		assert.isNull(renderable.render);
 		renderable.render = () => {
 			return h('h1', [ 'Greetings' ]);
 		};
@@ -32,7 +33,10 @@ registerSuite({
 	},
 	'option.parent'() {
 		let count = 0;
-		const parent = {
+		const parent: ParentMixin<Child> = {
+			get children(): List<Child> {
+				return;
+			},
 			append(child: any) {
 				assert.strictEqual(child.tagName, 'div');
 				child.parent = this;

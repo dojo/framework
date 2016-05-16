@@ -5,29 +5,48 @@ import { Handle } from 'dojo-core/interfaces';
 import Promise from 'dojo-core/Promise';
 
 export interface CloseableState extends State {
+	/**
+	 * Determines if the widget is closeable or not
+	 */
 	closeable?: boolean;
 }
 
 export interface CloseEvent extends TargettedEventObject {
-	target: Closeable<CloseableState>;
+	/**
+	 * The event target
+	 */
+	target: CloseableMixin<CloseableState>;
+
+	/**
+	 * The event type
+	 */
 	type: 'close';
+
+	/**
+	 * Stop the default behaviour of the event
+	 */
 	preventDefault(): void;
 }
 
-export interface Closeable<S extends CloseableState> extends Stateful<S> {
+export interface Closeable {
+	/**
+	 * Attempt to close the widget
+	 */
 	close(): Promise<boolean>;
 
 	on(type: 'close', listener: EventedListener<CloseEvent>): Handle;
 	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
 
-export interface CloseableMixinFactory extends ComposeFactory<Closeable<CloseableState>, StatefulOptions<CloseableState>> { }
+export type CloseableMixin<S extends CloseableState> = Stateful<S> & Closeable;
+
+export interface CloseableMixinFactory extends ComposeFactory<CloseableMixin<CloseableState>, StatefulOptions<CloseableState>> { }
 
 const createCloseableMixin: CloseableMixinFactory = createStateful
 	.mixin({
 		mixin: {
 			close(): Promise<boolean> {
-				const closeable: Closeable<CloseableState> = this;
+				const closeable: CloseableMixin<CloseableState> = this;
 				if (closeable.state.closeable) {
 					let prevented = false;
 					closeable.emit({

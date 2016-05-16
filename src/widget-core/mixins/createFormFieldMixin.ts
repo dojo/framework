@@ -24,7 +24,7 @@ export interface FormFieldMixinState<V> extends State, CachedRenderState {
 	disabled?: boolean;
 }
 
-export interface FormFieldMixin<V, S extends FormFieldMixinState<V>> extends Stateful<S>, CachedRenderMixin<S> {
+export interface FormField {
 	/**
 	 * The HTML type for this widget
 	 */
@@ -36,14 +36,16 @@ export interface FormFieldMixin<V, S extends FormFieldMixinState<V>> extends Sta
 	value?: string;
 }
 
-export interface FormMixinFactory extends ComposeFactory<FormFieldMixin<any, FormFieldMixinState<any>>, FormFieldMixinState<any>> {
+export type FormFieldMixin<V, S extends FormFieldMixinState<V>> = FormField & Stateful<S> & CachedRenderMixin<S>;
+
+export interface FormMixinFactory extends ComposeFactory<FormFieldMixin<any, FormFieldMixinState<any>>, FormFieldMixinOptions<any, FormFieldMixinState<any>>> {
 	<V>(options?: FormFieldMixinOptions<V, FormFieldMixinState<V>>): FormFieldMixin<V, FormFieldMixinState<V>>;
 }
 
 const createFormMixin: FormMixinFactory = createStateful
 	.mixin(createCachedRenderMixin)
 	.mixin({
-		mixin: {
+		mixin: <FormField> {
 			get value(): string {
 				const formfield: FormFieldMixin<any, FormFieldMixinState<any>> = this;
 				return formfield.state.value;
@@ -56,7 +58,7 @@ const createFormMixin: FormMixinFactory = createStateful
 				}
 			}
 		},
-		initialize(instance: FormFieldMixin<any, FormFieldMixinState<any>>, options?: FormFieldMixinOptions<any, FormFieldMixinState<any>>) {
+		initialize(instance: FormField, options: FormFieldMixinOptions<any, FormFieldMixinState<any>>) {
 			if (options && options.type) {
 				instance.type = options.type;
 			}

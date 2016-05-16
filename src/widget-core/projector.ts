@@ -13,7 +13,7 @@ import createParentMixin, { ParentMixin, ParentMixinOptions, Child } from './mix
 /* maquette polyfills changed from 2.2 to 2.3 */
 global.requestAnimationFrame = global.requestAnimationFrame || global.window.requestAnimationFrame;
 
-export interface ProjectorOptions extends ParentMixinOptions<RenderableChild>, EventedOptions {
+export interface ProjectorOptions extends ParentMixinOptions<Child>, EventedOptions {
 	/**
 	 * The root element for the projector
 	 */
@@ -32,14 +32,7 @@ export interface ProjectorOptions extends ParentMixinOptions<RenderableChild>, E
 	append?: boolean;
 }
 
-export interface RenderableChild extends Child {
-	/**
-	 * Returns a VNode which represents the DOM of the item
-	 */
-	render(): VNode;
-}
-
-export interface Projector extends VNodeEvented, ParentMixin<RenderableChild> {
+export interface ProjectorMixin {
 	/**
 	 * Get the projector's VNode attributes
 	 */
@@ -101,6 +94,8 @@ export interface Projector extends VNodeEvented, ParentMixin<RenderableChild> {
 	state: ProjectorState;
 }
 
+export type Projector = VNodeEvented & ParentMixin<Child> & ProjectorMixin;
+
 export interface ProjectorFactory extends ComposeFactory<Projector, ProjectorOptions> { }
 
 export enum ProjectorState {
@@ -123,7 +118,7 @@ const noopHandle = { destroy() { } };
 const emptyVNode = h('div');
 const noopVNode = function(): VNode { return emptyVNode; };
 
-export const createProjector: ProjectorFactory = compose<any, ProjectorOptions>({
+export const createProjector: ProjectorFactory = compose<ProjectorMixin, ProjectorOptions>({
 		getNodeAttributes(overrides?: VNodeProperties): VNodeProperties {
 			/* TODO: This is the same logic as createCachedRenderMixin, merge somehow */
 			const projector: Projector = this;
@@ -227,8 +222,16 @@ export const createProjector: ProjectorFactory = compose<any, ProjectorOptions>(
 		}
 	})
 	.mixin({
+		mixin: createVNodeEvented,
+		initialize(instance) {
+			/* We have to stub out listeners for Maquette, otherwise it won't allow us to change them down the road */
+			instance.on('touchend', function () {});
+			instance.on('touchmove', function () {});
+		}
+	})
+	.mixin({
 		mixin: createParentMixin,
-		initialize(instance: Projector, options: ProjectorOptions) {
+		initialize(instance, options) {
 			const projector = createMaquetteProjector({});
 			const root = options && options.root || document.body;
 			projectorDataMap.set(instance, {
@@ -247,14 +250,6 @@ export const createProjector: ProjectorFactory = compose<any, ProjectorOptions>(
 					projector.invalidate();
 				}
 			}
-		}
-	})
-	.mixin({
-		mixin: createVNodeEvented,
-		initialize(instance: Projector) {
-			/* We have to stub out listeners for Maquette, otherwise it won't allow us to change them down the road */
-			instance.on('touchend', function () {});
-			instance.on('touchmove', function () {});
 		}
 	});
 

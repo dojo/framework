@@ -1,16 +1,13 @@
 import { h, VNode } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable from 'dojo-compose/mixins/createDestroyable';
-import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
-import { StateChangeEvent } from 'dojo-compose/mixins/createStateful';
+import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
+import { StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import { Handle } from 'dojo-core/interfaces';
 import { List } from 'immutable/immutable';
 import WeakMap from 'dojo-core/WeakMap';
-import { CachedRenderMixin, CachedRenderState, CachedRenderParent } from './createCachedRenderMixin';
-import { Closeable, CloseableState } from './createCloseableMixin';
-import createContainerMixin, { ContainerMixin, ContainerChild, ContainerMixinState, ContainerMixinOptions } from './createContainerMixin';
-
-export interface TabbedState extends ContainerMixinState { }
+import createCachedRenderMixin, { CachedRenderMixin, CachedRenderState } from './createCachedRenderMixin';
+import { CloseableMixin, CloseableState } from './createCloseableMixin';
+import createParentMixin, { ParentMixin, ParentMixinOptions, Child } from './createParentMixin';
 
 export interface TabbedChildState extends CachedRenderState, CloseableState {
 	/**
@@ -24,18 +21,15 @@ export interface TabbedChildState extends CachedRenderState, CloseableState {
 	changed?: boolean; /* TODO: Implement this feature, currently it does not affect anything */
 }
 
-export interface TabbedChild extends ContainerChild, Closeable<TabbedChildState>, CachedRenderMixin<TabbedChildState> {
-	/**
-	 * The childs parent
-	 */
-	parent?: CachedRenderParent;
+export type TabbedChild = Child & CloseableMixin<TabbedChildState> & CachedRenderMixin<TabbedChildState>;
 
-	on(type: 'close', listener: EventedListener<CloseEvent>): Handle;
-	on(type: 'statechange', listener: EventedListener<StateChangeEvent<TabbedChildState>>): Handle;
-	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
-}
+export interface TabbedMixinOptions extends ParentMixinOptions<TabbedChild>, StatefulOptions<CachedRenderState> { }
 
-export interface TabbedMixin<C extends TabbedChild, S extends TabbedState> extends ContainerMixin<C, S> {
+export interface Tabbed<C extends TabbedChild> {
+	children: List<TabbedChild>;
+
+	activeChild: C;
+
 	/**
 	 * Tag names used by sub parts of this widget
 	 */
@@ -43,19 +37,16 @@ export interface TabbedMixin<C extends TabbedChild, S extends TabbedState> exten
 		tabBar: string;
 		tab: string;
 	};
-
-	/**
-	 * The currently active (visible) child
-	 */
-	activeChild: C;
 }
+
+export type TabbedMixin<C extends TabbedChild> = Tabbed<C> & ParentMixin<C> & CachedRenderMixin<CachedRenderState> & Destroyable;
 
 /**
  * A utility function that sets the supplied tab as the active tab on the supplied tabbed mixin
  * @param tabbed The tabbed mixin to set the active child on
  * @param activeTab The tab to make active/visible
  */
-function setActiveTab(tabbed: TabbedMixin<TabbedChild, TabbedState>, activeTab: TabbedChild) {
+function setActiveTab(tabbed: TabbedMixin<TabbedChild>, activeTab: TabbedChild) {
 	if (activeTab.parent === tabbed) {
 		tabbed.children.forEach((tab) => {
 			if (tab !== activeTab && tab.state.active) {
@@ -72,7 +63,7 @@ function setActiveTab(tabbed: TabbedMixin<TabbedChild, TabbedState>, activeTab: 
  * Return the currently active tab, if no tab is active, the first tab will be made active
  * @param tabbed The tabbed mixin to return the active child for
  */
-function getActiveTab(tabbed: TabbedMixin<TabbedChild, TabbedState>): TabbedChild {
+function getActiveTab(tabbed: TabbedMixin<TabbedChild>): TabbedChild {
 	let activeTab = tabbed.children.find((tab) => tab.state.active);
 	/* TODO: when a tab closes, instead of going back to the previous active tab, it will always
 	 * revert to the first tab, maybe it would be better to keep track of a stack of tabs? */
@@ -108,7 +99,7 @@ const tabListenersMap = new WeakMap<TabbedChild, TabListeners>();
  * @param tabbed The tabbed mixin that should be effected when the listeners fire
  * @param tab The tab that the listeners are referring to
  */
-function setTabListeners(tabbed: TabbedMixin<TabbedChild, TabbedState>, tab: TabbedChild): Handle {
+function setTabListeners(tabbed: TabbedMixin<TabbedChild>, tab: TabbedChild): Handle {
 	/* TODO: There is an edge case where if a child tab is moved from one tabbed panel to another without being destroyed */
 	tabListenersMap.set(tab, {
 		onclickTabListener(evt: MouseEvent): boolean {
@@ -144,7 +135,7 @@ function setTabListeners(tabbed: TabbedMixin<TabbedChild, TabbedState>, tab: Tab
  * @param tabbed The tabbed mixin that the listerns refer to
  * @param tab The tab that the listeners should be retrieved for
  */
-function getTabListeners(tabbed: TabbedMixin<TabbedChild, TabbedState>, tab: TabbedChild): TabListeners {
+function getTabListeners(tabbed: TabbedMixin<TabbedChild>, tab: TabbedChild): TabListeners {
 	if (!tabListenersMap.has(tab)) {
 		/* When the tab is destroyed, it will remove its listeners */
 		tab.own(setTabListeners(tabbed, tab));
@@ -152,16 +143,15 @@ function getTabListeners(tabbed: TabbedMixin<TabbedChild, TabbedState>, tab: Tab
 	return tabListenersMap.get(tab);
 }
 
-export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChild, ContainerMixinOptions<TabbedState>>, ContainerMixinOptions<TabbedState>> {}
+export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChild>, TabbedMixinOptions> {}
 
-const childrenNodesCache = new WeakMap<TabbedMixin<TabbedChild, TabbedState>, VNode[]>();
+const childrenNodesCache = new WeakMap<TabbedMixin<TabbedChild>, VNode[]>();
 
-let tabbedList = List<TabbedMixin<TabbedChild, TabbedState>>();
+let tabbedList = List<TabbedMixin<TabbedChild>>();
 
-const createTabbedMixin = createContainerMixin
+const createTabbedMixin: TabbedMixinFactory = createCachedRenderMixin
 	.mixin({
-		mixin: {
-			tagName: 'dojo-panel-mixin',
+		mixin: <Tabbed<TabbedChild>> {
 			tagNames: {
 				tabBar: 'ul',
 				tab: 'li'
@@ -173,57 +163,61 @@ const createTabbedMixin = createContainerMixin
 
 			set activeChild(value: TabbedChild) {
 				setActiveTab(this, value);
-			},
-
-			getChildrenNodes(): (VNode | string)[] {
-				const tabbed: TabbedMixin<TabbedChild, TabbedState> = this;
-				const activeTab = getActiveTab(tabbed);
-
-				function getTabChildVNode(tab: TabbedChild): (VNode | string)[] {
-					const tabListeners = getTabListeners(tabbed, tab);
-					const nodes = [ h('div.tab-label', { onclick: tabListeners.onclickTabListener }, [ tab.state.label ]) ];
-					if (tab.state.closeable) {
-						nodes.push(h('div.tab-close', { onclick: tabListeners.onclickTabCloseListener }, [ 'X' ]));
-					}
-					return nodes;
-				}
-
-				/* We need to generate a set of VDom the represents the buttons */
-				/* TODO: Allow the location of the tab bar to be set (top/left/bottom/right) */
-				const tabs: VNode[] = [];
-				let childrenNodes = childrenNodesCache.get(tabbed);
-
-				/* Best to discard the childrenNodes array if the sizes don't match, otherwise
-				 * we can get some vdom generation issues when adding or removing tabs */
-				if (!childrenNodes || childrenNodes.length !== tabbed.children.size) {
-					childrenNodes = Array(tabbed.children.size);
-					childrenNodesCache.set(tabbed, childrenNodes);
-				}
-
-				tabbed.children.forEach((tab, key) => {
-					const isActiveTab = tab === activeTab;
-					if (isActiveTab || (childrenNodes[key] && childrenNodes[key].properties.classes['visible'])) {
-						tab.invalidate();
-						const tabVNode = tab.render();
-						tabVNode.properties.classes['visible'] = isActiveTab;
-						childrenNodes[key] = tabVNode;
-					}
-					/* else, this tab isn't active and hasn't been previously rendered */
-
-					tabs.push(h(tabbed.tagNames.tab, {
-						key: tab,
-						classes: { active: isActiveTab },
-						'data-tab-id': `${tabbed.state.id || tabbedList.indexOf(tabbed)}-${tab.state.id || key}`
-					}, getTabChildVNode(tab)));
-				});
-
-				return [ h(tabbed.tagNames.tabBar, tabs), h('div.panels', childrenNodes) ];
 			}
+		}
+	})
+	.mixin(createParentMixin)
+	.extend({
+		tagName: 'dojo-panel-mixin',
+
+		getChildrenNodes(): (VNode | string)[] {
+			const tabbed: TabbedMixin<TabbedChild> = this;
+			const activeTab = getActiveTab(tabbed);
+
+			function getTabChildVNode(tab: TabbedChild): (VNode | string)[] {
+				const tabListeners = getTabListeners(tabbed, tab);
+				const nodes = [ h('div.tab-label', { onclick: tabListeners.onclickTabListener }, [ tab.state.label ]) ];
+				if (tab.state.closeable) {
+					nodes.push(h('div.tab-close', { onclick: tabListeners.onclickTabCloseListener }, [ 'X' ]));
+				}
+				return nodes;
+			}
+
+			/* We need to generate a set of VDom the represents the buttons */
+			/* TODO: Allow the location of the tab bar to be set (top/left/bottom/right) */
+			const tabs: VNode[] = [];
+			let childrenNodes = childrenNodesCache.get(tabbed);
+
+			/* Best to discard the childrenNodes array if the sizes don't match, otherwise
+				* we can get some vdom generation issues when adding or removing tabs */
+			if (!childrenNodes || childrenNodes.length !== tabbed.children.size) {
+				childrenNodes = Array(tabbed.children.size);
+				childrenNodesCache.set(tabbed, childrenNodes);
+			}
+
+			tabbed.children.forEach((tab, key) => {
+				const isActiveTab = tab === activeTab;
+				if (isActiveTab || (childrenNodes[key] && childrenNodes[key].properties.classes['visible'])) {
+					tab.invalidate();
+					const tabVNode = tab.render();
+					tabVNode.properties.classes['visible'] = isActiveTab;
+					childrenNodes[key] = tabVNode;
+				}
+				/* else, this tab isn't active and hasn't been previously rendered */
+
+				tabs.push(h(tabbed.tagNames.tab, {
+					key: tab,
+					classes: { active: isActiveTab },
+					'data-tab-id': `${tabbed.state.id || tabbedList.indexOf(tabbed)}-${tab.state.id || key}`
+				}, getTabChildVNode(tab)));
+			});
+
+			return [ h(tabbed.tagNames.tabBar, tabs), h('div.panels', childrenNodes) ];
 		}
 	})
 	.mixin({
 		mixin: createDestroyable,
-		initialize(instance: TabbedMixin<TabbedChild, TabbedState>) {
+		initialize(instance) {
 			tabbedList = tabbedList.push(instance);
 			instance.own({
 				destroy() {
@@ -232,6 +226,6 @@ const createTabbedMixin = createContainerMixin
 				}
 			});
 		}
-	}) as TabbedMixinFactory;
+	});
 
 export default createTabbedMixin;

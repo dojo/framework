@@ -1,18 +1,17 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
-import createContainerMixin, { ContainerMixin, ContainerMixinState, ContainerMixinOptions } from './mixins/createContainerMixin';
-import { Child } from './mixins/createParentMixin';
+import createParentMixin, { ParentMixin, ParentMixinOptions, Child } from './mixins/createParentMixin';
+import createRenderableChildrenMixin from './mixins/createRenderableChildrenMixin';
 
-export interface LayoutContainerState extends WidgetState, ContainerMixinState { }
+export interface LayoutContainerOptions extends WidgetOptions<WidgetState>, ParentMixinOptions<Child> { }
 
-export interface LayoutContainerOptions extends WidgetOptions<LayoutContainerState>, ContainerMixinOptions<LayoutContainerState> { }
-
-export interface LayoutContainer extends Widget<LayoutContainerState>, ContainerMixin<Child, LayoutContainerState> { }
+export type LayoutContainer = Widget<WidgetState> & ParentMixin<Child>;
 
 export interface LayoutContainerFactory extends ComposeFactory<LayoutContainer, LayoutContainerOptions> { }
 
 const createContainer: LayoutContainerFactory = createWidget
-	.mixin(createContainerMixin)
+	.mixin(createParentMixin)
+	.mixin(createRenderableChildrenMixin)
 	.extend({
 		tagName: 'dojo-container-layout'
 	});

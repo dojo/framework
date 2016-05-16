@@ -7,16 +7,19 @@ import { Position, insertInList } from '../util/lang';
 import { Renderable } from './createRenderable';
 
 export interface ParentMixinOptions<C extends Child> {
+	/**
+	 * Children that are owned by the parent on creation
+	 */
 	children?: C[];
 }
 
-export interface Child extends Renderable, Destroyable { }
+export type Child = Renderable;
 
-export interface ParentMixin<C> extends Destroyable {
+export interface Parent<C extends Child> {
 	/**
 	 * An immutable list of children for this parent
 	 */
-	children?: List<C>;
+	children: List<C>;
 
 	/**
 	 * Append a child (or children) to the parent
@@ -43,7 +46,9 @@ export interface ParentMixin<C> extends Destroyable {
 	insert(child: C, position: Position, reference?: C): Handle;
 }
 
-export interface ParentMixinFactory extends ComposeFactory<ParentMixin<any>, ParentMixinOptions<any>> { }
+export type ParentMixin<C extends Child> = Parent<C> & Destroyable;
+
+export interface ParentMixinFactory extends ComposeFactory<ParentMixin<Child>, ParentMixinOptions<Child>> { }
 
 const childrenMap = new WeakMap<ParentMixin<Child>, List<Child>>();
 
@@ -94,7 +99,7 @@ function getRemoveHandle(parent: ParentMixin<Child>, child: Child | Child[]): Ha
 	}
 }
 
-const createParentMixin: ParentMixinFactory = compose({
+const createParentMixin: ParentMixinFactory = compose<Parent<Child>, ParentMixinOptions<Child>>({
 		get children(): List<Child> {
 			return childrenMap.get(this);
 		},
@@ -112,13 +117,6 @@ const createParentMixin: ParentMixinFactory = compose({
 			return getRemoveHandle(parent, child);
 		},
 
-		insert(child: Child, position: Position, reference?: Child): Handle {
-			const parent: ParentMixin<Child> = this;
-			childrenMap.set(parent, insertInList(childrenMap.get(parent), child, position, reference));
-			child.parent = parent;
-			return getRemoveHandle(parent, child);
-		},
-
 		clear(): void {
 			const parent: ParentMixin<Child> = this;
 			const children = childrenMap.get(parent);
@@ -126,6 +124,13 @@ const createParentMixin: ParentMixinFactory = compose({
 				children.forEach((child) => { child.parent === undefined; });
 				childrenMap.set(parent, List<Child>());
 			}
+		},
+
+		insert(child: Child, position: Position, reference?: Child): Handle {
+			const parent: ParentMixin<Child> = this;
+			childrenMap.set(parent, insertInList(childrenMap.get(parent), child, position, reference));
+			child.parent = parent;
+			return getRemoveHandle(parent, child);
 		}
 	})
 	.mixin({

@@ -1,7 +1,6 @@
 import { h, VNode } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import { StatefulOptions } from 'dojo-compose/mixins/createStateful';
-import createCachedRenderMixin, { CachedRenderMixin, CachedRenderState } from './createCachedRenderMixin';
+import createStateful, { Stateful, StatefulOptions, State } from 'dojo-compose/mixins/createStateful';
 
 export interface ListStateItem {
 	[property: string]: any;
@@ -9,24 +8,49 @@ export interface ListStateItem {
 	label: string;
 }
 
-export interface ListMixinState extends CachedRenderState {
-	items?: ListStateItem[];
+export interface ListMixinState<I extends ListStateItem> extends State {
+	/**
+	 * Any items that are to be rendered by the list
+	 */
+	items?: I[];
 }
 
 export interface TagNames {
+	/**
+	 * The tag name for the list item
+	 */
 	list: string;
+
+	/**
+	 * The tag name for the list items
+	 */
 	item: string;
 }
 
-export interface ListMixin extends CachedRenderMixin<ListMixinState> {
-	getChildrenNodes(): (VNode | string)[];
-	tagName: string;
+export interface List {
+	/**
+	 * A map of tag names to use with the list items
+	 */
 	tagNames: TagNames;
+
+	/**
+	 * Return an array of VNodes/strings the represent the rendered results of the list of this instance
+	 */
+	getChildrenNodes(): (VNode | string)[];
 }
 
-const createListMixin: ComposeFactory<ListMixin, StatefulOptions<ListMixinState>> = createCachedRenderMixin
+/**
+ * A mixin that provides the functionality to render a list of items that are in its state
+ */
+export type ListMixin = List & Stateful<ListMixinState<ListStateItem>>;
+
+export interface ListMixinFactory extends ComposeFactory<ListMixin, StatefulOptions<ListMixinState<ListStateItem>>> {
+	<I extends ListStateItem>(options?: StatefulOptions<ListMixinState<I>>): List;
+}
+
+const createListMixin: ListMixinFactory = createStateful
 	.mixin({
-		mixin: {
+		mixin: <List> {
 			getChildrenNodes(): (VNode | string)[] {
 				const list: ListMixin = this;
 				if (list.state && list.state.items) {
@@ -36,7 +60,6 @@ const createListMixin: ComposeFactory<ListMixin, StatefulOptions<ListMixinState>
 				return [];
 			},
 
-			tagName: 'dojo-list',
 			tagNames: {
 				list: 'ul',
 				item: 'li'

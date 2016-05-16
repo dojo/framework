@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createList, { ListState } from 'src/createList';
+import createList from 'src/createList';
 
 registerSuite({
 	name: 'createList',
@@ -31,7 +31,7 @@ registerSuite({
 			{ id: 5, label: 'qux' }
 		];
 		const list = createList({
-			state: <ListState> { items }
+			state: { items }
 		});
 		let vnode = list.render();
 		assert.strictEqual(vnode.vnodeSelector, 'dojo-list');

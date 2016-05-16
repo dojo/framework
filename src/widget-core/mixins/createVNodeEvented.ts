@@ -47,7 +47,7 @@ const vnodeEvents = [
 	'keyup',
 	'load',
 	'mousedown',
-	'mouseneter',
+	'mouseenter',
 	'mouseleave',
 	'mousemove',
 	'mouseout',
@@ -58,16 +58,51 @@ const vnodeEvents = [
 	'submit'
 ];
 
-export interface VNodeEvented extends Evented {
+export interface VNodeEventedMixin {
+	/**
+	 * A map of listeners that are exposed for use by the virutal DOM
+	 */
 	listeners: VNodeListeners;
+}
+
+export interface VNodeEventedOverrides {
 	on(type: 'touchcancel', listener: EventedListener<TouchEvent>): Handle;
+	on(type: 'touchend', listener: EventedListener<TouchEvent>): Handle;
+	on(type: 'touchmove', listener: EventedListener<TouchEvent>): Handle;
+	on(type: 'blur', listener: EventedListener<FocusEvent>): Handle;
+	on(type: 'change', listener: EventedListener<Event>): Handle;
+	on(type: 'click', listener: EventedListener<MouseEvent>): Handle;
+	on(type: 'dblclick', listener: EventedListener<MouseEvent>): Handle;
+	on(type: 'focus', listener: EventedListener<FocusEvent>): Handle;
+	on(type: 'input', listener: EventedListener<Event>): Handle;
+	on(type: 'keydown', listener: EventedListener<KeyboardEvent>): Handle;
+	on(type: 'keypress', listener: EventedListener<KeyboardEvent>): Handle;
+	on(type: 'keyup', listener: EventedListener<KeyboardEvent>): Handle;
+	on(type: 'load', listener: EventedListener<Event>): Handle;
+	on(type: 'mousedown', listener: EventedListener<MouseEvent>): Handle;
+	on(type: 'mouseenter', listener: EventedListener<MouseEvent>): Handle;
+	on(type: 'mouseleave', listener: EventedListener<MouseEvent>): Handle;
+	on(type: 'mousemove', listener: EventedListener<MouseEvent>): Handle;
+	on(type: 'mouseout', listener: EventedListener<MouseEvent>): Handle;
+	on(type: 'mouseover', listener: EventedListener<MouseEvent>): Handle;
+	on(type: 'mouseup', listener: EventedListener<MouseEvent>): Handle;
+	on(type: 'mousewheel', listener: EventedListener<MouseWheelEvent>): Handle;
+	on(type: 'scroll', listener: EventedListener<UIEvent>): Handle;
+	on(type: 'submit', listener: EventedListener<Event>): Handle;
+	/**
+	 * Add a listener to an event by type
+	 * @param type The type of event to listen for
+	 * @param listener The event listener to attach
+	 */
 	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
+
+export type VNodeEvented = Evented & VNodeEventedMixin & VNodeEventedOverrides;
 
 export interface VNodeEventedFactory extends ComposeFactory<VNodeEvented, EventedOptions> { }
 
 const createVNodeEvented: VNodeEventedFactory = createEvented.mixin({
-	mixin: {
+	mixin: <VNodeEventedMixin> {
 		listeners: <VNodeListeners> null
 	},
 	initialize(instance) {

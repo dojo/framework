@@ -1,26 +1,30 @@
 import { VNode, h, VNodeProperties } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable from 'dojo-compose/mixins/createDestroyable';
+import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 import { Handle } from 'dojo-core/interfaces';
 import { on } from 'dojo-core/aspect';
 import WeakMap from 'dojo-core/WeakMap';
 import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
-import { Child } from './mixins/createParentMixin';
-import createContainerMixin, { ContainerMixin, ContainerMixinState, ContainerMixinOptions } from './mixins/createContainerMixin';
+import createParentMixin, { ParentMixin, ParentMixinOptions, Child } from './mixins/createParentMixin';
+import createRenderableChildrenMixin from './mixins/createRenderableChildrenMixin';
 import { Projector } from './projector';
 
-export interface ResizePanelState extends WidgetState, ContainerMixinState {
+/* TODO: Abstract logic to a mixin */
+
+export interface ResizePanelState extends WidgetState {
 	width?: string;
 }
 
-export interface ResizePanelOptions extends WidgetOptions<ResizePanelState>, ContainerMixinOptions<ResizePanelState> { }
+export interface ResizePanelOptions extends WidgetOptions<ResizePanelState>, ParentMixinOptions<Child> { }
 
-export interface ResizePanel extends Widget<ResizePanelState>, ContainerMixin<Child, ResizePanelState> {
+export interface ResizePanelMixin {
 	tagNames: {
 		handle: string;
 	};
 	width: string;
 }
+
+export type ResizePanel = Widget<ResizePanelState> & ParentMixin<Child> & Destroyable & ResizePanelMixin;
 
 export interface ResizePanelFactory extends ComposeFactory<ResizePanel, ResizePanelOptions> { }
 
@@ -130,10 +134,10 @@ function setResizeListeners(resizePanel: ResizePanel): Handle {
 }
 
 const createResizePanel: ResizePanelFactory = createWidget
-	.mixin(createContainerMixin)
+	.mixin(createParentMixin)
+	.mixin(createRenderableChildrenMixin)
 	.mixin({
-		mixin: {
-			tagName: 'dojo-panel-resize',
+		mixin: <ResizePanelMixin> {
 			tagNames: {
 				handle: 'dojo-resize-handle'
 			},
@@ -162,6 +166,9 @@ const createResizePanel: ResizePanelFactory = createWidget
 				}
 			}
 		}
+	})
+	.extend({
+		tagName: 'dojo-panel-resize'
 	})
 	.mixin({
 		mixin: createDestroyable,

@@ -7,7 +7,6 @@ registerSuite({
 	creation() {
 		const list = createListMixin();
 		assert.isFunction(list.getChildrenNodes);
-		assert.strictEqual(list.tagName, 'dojo-list');
 		assert.deepEqual(list.tagNames, { list: 'ul', item: 'li' });
 	},
 	'getChildrenNodes()': {

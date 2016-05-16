@@ -9,7 +9,7 @@ export interface TypedTargetEvent<T extends EventTarget> extends Event {
 
 export interface TextInputOptions extends WidgetOptions<FormFieldMixinState<string>>, FormFieldMixinOptions<string, FormFieldMixinState<string>> { }
 
-export interface TextInput extends Widget<FormFieldMixinState<string>>, FormFieldMixin<string, FormFieldMixinState<string>> { }
+export type TextInput = Widget<FormFieldMixinState<string>> & FormFieldMixin<string, FormFieldMixinState<string>>;
 
 export interface TextInputFactory extends ComposeFactory<TextInput, TextInputOptions> { }
 

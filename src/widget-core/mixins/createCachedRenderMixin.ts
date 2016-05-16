@@ -1,12 +1,10 @@
 import { h, VNode, VNodeProperties } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
-import createStateful, { State, Stateful, StateChangeEvent, StatefulOptions } from 'dojo-compose/mixins/createStateful';
-import { Handle } from 'dojo-core/interfaces';
+import createStateful, { State, Stateful, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import { assign } from 'dojo-core/lang';
 import Map from 'dojo-core/Map';
 import WeakMap from 'dojo-core/WeakMap';
-import { ParentMixin } from './createParentMixin';
+import { ParentMixin, Child } from './createParentMixin';
 import createRenderable, { Renderable } from './createRenderable';
 import createVNodeEvented, { VNodeEvented } from './createVNodeEvented';
 
@@ -23,19 +21,25 @@ export interface CachedRenderState extends State {
 	 */
 	label?: string;
 
+	/**
+	 * Any classes to set at construction to the VNode
+	 */
 	classes?: string[];
 
+	/**
+	 * Any styles to set at startup to the VNode
+	 */
 	styles?: StylesHash;
 }
 
-export interface CachedRenderParent extends ParentMixin<any> {
+export type CachedRenderParent = ParentMixin<Child> & {
 	/**
 	 * Invalidate the widget so that it will recalculate on its next render
 	 */
 	invalidate(): void;
 }
 
-export interface CachedRenderMixin<S extends CachedRenderState> extends Stateful<S>, Renderable, VNodeEvented {
+export interface CachedRender {
 	/**
 	 * Returns the node attribute properties to be used by a render function
 	 * @param overrides Any optional overrides of properties
@@ -58,13 +62,25 @@ export interface CachedRenderMixin<S extends CachedRenderState> extends Stateful
 	 */
 	classes: string[];
 
+	render(): VNode;
+
+	/**
+	 * A has of styles that should be applied to root VNode of the widget.  If styles are present in the state, getting and
+	 * setting classes is done on the state, otherwiser they are shadowed on the instance.
+	 */
 	styles: StylesHash;
-
-	parent?: CachedRenderParent;
-
-	on(type: 'statechange', listener: EventedListener<StateChangeEvent<S>>): Handle;
-	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
+
+export interface CachedRenderOverrides {
+	/**
+	 * The parent of the widget
+	 */
+	parent?: CachedRenderParent;
+}
+
+export type CachedRenderMixin<S extends CachedRenderState> = Stateful<S> & Renderable & CachedRender & VNodeEvented & CachedRenderOverrides;
+
+export interface CachedRenderFactory extends ComposeFactory<CachedRenderMixin<CachedRenderState>, StatefulOptions<CachedRenderState>> { }
 
 /**
  * A map of dirty flags used when determining if the render function
@@ -79,16 +95,25 @@ const dirtyMap = new Map<CachedRenderMixin<CachedRenderState>, boolean>();
 const renderCache = new WeakMap<CachedRenderMixin<CachedRenderState>, VNode>();
 
 /**
- * A weak map to shadown the classes for the widget
+ * A weak map to shadow the classes for the widget
  */
 const shadowClasses = new WeakMap<CachedRenderMixin<CachedRenderState>, string[]>();
 
+/**
+ * A weak map to shadow the styles for the widget
+ */
 const shadowStyles = new WeakMap<CachedRenderMixin<CachedRenderState>, StylesHash>();
 
-const createCachedRenderMixin: ComposeFactory<CachedRenderMixin<CachedRenderState>, StatefulOptions<CachedRenderState>> = createStateful
+const createCachedRenderMixin: CachedRenderFactory = createStateful
 	.mixin(createRenderable)
 	.mixin({
-		mixin: {
+		mixin: createVNodeEvented,
+		initialize(instance: CachedRenderMixin<CachedRenderState>) {
+			instance.own(instance.on('statechange', () => { instance.invalidate(); } ));
+		}
+	})
+	.mixin({
+		mixin: <CachedRender> {
 			getNodeAttributes(overrides?: VNodeProperties): VNodeProperties {
 				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
 				const props: VNodeProperties = cachedRender.state.id ? { 'data-widget-id': cachedRender.state.id } : {};
@@ -170,21 +195,13 @@ const createCachedRenderMixin: ComposeFactory<CachedRenderMixin<CachedRenderStat
 					shadowStyles.set(cachedRender, value);
 					cachedRender.invalidate();
 				}
-			},
-
-			parent: <CachedRenderParent> null
+			}
 		},
 		initialize(instance) {
 			/* at this point, casting instance as the final type blows up the type inference, so the only choice is to
-			 * cast as any */
-			dirtyMap.set(<any> instance, true);
-			shadowClasses.set(<any> instance, []);
-		}
-	})
-	.mixin({
-		mixin: createVNodeEvented,
-		initialize(instance) {
-			instance.own(instance.on('statechange', () => { instance.invalidate(); } ));
+			* cast as any */
+			dirtyMap.set(instance, true);
+			shadowClasses.set(instance, []);
 		}
 	});
 

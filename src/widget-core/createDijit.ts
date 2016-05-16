@@ -1,7 +1,7 @@
 import { h, VNode } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable from 'dojo-compose/mixins/createDestroyable';
-import createEvented from 'dojo-compose/mixins/createEvented';
+import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
+import createEvented, { Evented } from 'dojo-compose/mixins/createEvented';
 import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import Map from 'dojo-core/Map';
 import Promise from 'dojo-core/Promise';
@@ -67,7 +67,7 @@ export interface DijitState<D extends DijitWidget> extends State {
 	params?: DijitWidgetParams;
 }
 
-export interface Dijit<D extends DijitWidget> extends Renderable, Stateful<DijitState<D>> {
+export interface DijitMixin<D extends DijitWidget> {
 	/**
 	 * Returns the instantiated Dijit or undefined
 	 *
@@ -89,6 +89,8 @@ export interface Dijit<D extends DijitWidget> extends Renderable, Stateful<Dijit
 	 */
 	params: DijitWidgetParams;
 }
+
+export type Dijit<D extends DijitWidget> = Renderable & Stateful<DijitState<D>> & DijitMixin<D> & Destroyable & Evented;
 
 export interface DijitFactory extends ComposeFactory<Dijit<DijitWidget>, DijitOptions<DijitWidget>> {
 	/**
@@ -217,7 +219,7 @@ const dijitDataWeakMap = new WeakMap<Dijit<DijitWidget>, DijitData<DijitWidget>>
 const createDijit: DijitFactory = createRenderable
 	.mixin(createStateful)
 	.mixin({
-		mixin: {
+		mixin: <DijitMixin<DijitWidget>> {
 			render(): VNode {
 				const dijit: Dijit<DijitWidget> = this;
 				const afterCreate = dijitDataWeakMap.get(dijit).afterCreate;
@@ -284,6 +286,6 @@ const createDijit: DijitFactory = createRenderable
 				}
 			});
 		}
-	}) as DijitFactory;
+	});
 
 export default createDijit;
