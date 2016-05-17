@@ -1,5 +1,4 @@
 /// <reference path="../dojo2/dojo.d.ts" />
-/// <reference path="../node/node.d.ts" />
 
 declare module leadfoot {
 //	import request = require('dojo/request');
@@ -636,7 +635,7 @@ declare module 'leadfoot/Command' {
 		 *
 		 * @param numCommandsToPop The number of element contexts to pop. Defaults to 1.
 		 */
-		end<U>(numCommandsToPop: number): Promise<U>;
+		end(numCommandsToPop?: number): Command<void>;
 
 		/**
 		 * Adds a callback to be invoked once the previously chained operation has completed.
@@ -657,7 +656,7 @@ declare module 'leadfoot/Command' {
 		 */
 		then<U>(
 			callback: (value: T, setContext?: Command.ContextSetter) => Promise.Thenable<U> | U,
-			errback: (error: Error, setContext?: Command.ContextSetter) => Promise.Thenable<U> | U
+			errback?: (error: Error, setContext?: Command.ContextSetter) => Promise.Thenable<U> | U
 		): Command<U>;
 
 		/**

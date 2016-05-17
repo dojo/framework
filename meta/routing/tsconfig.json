@@ -1,5 +1,5 @@
 {
-	"version": "1.5.0",
+	"version": "1.8.10",
 	"compilerOptions": {
 		"declaration": false,
 		"module": "umd",
@@ -16,13 +16,37 @@
 	],
 	"files": [
 		"./typings/tsd.d.ts",
-		"./tests/typings/tsd.d.ts",
-
+		"./src/_createRoute.ts",
+		"./src/_createRouter.ts",
+		"./src/_example.ts",
+		"./src/_history/alias-ambient-history.ts",
+		"./src/_history/hashHistory.ts",
+		"./src/_history/interfaces.ts",
+		"./src/_history/memoryHistory.ts",
+		"./src/_history/stateHistory.ts",
+		"./src/_interfaces.d.ts",
+		"./src/_path.ts",
+		"./src/history.ts",
 		"./src/main.ts",
-
-		"./tests/intern-local.ts",
-		"./tests/intern.ts",
 		"./tests/functional/all.ts",
-		"./tests/unit/all.ts"
+		"./tests/intern-local.ts",
+		"./tests/intern-saucelabs.ts",
+		"./tests/intern.ts",
+		"./tests/support/Reporter.ts",
+		"./tests/support/util.ts",
+		"./tests/typings/chai/chai.d.ts",
+		"./tests/typings/digdug/digdug.d.ts",
+		"./tests/typings/dojo2/dojo.d.ts",
+		"./tests/typings/intern/intern.d.ts",
+		"./tests/typings/leadfoot/leadfoot.d.ts",
+		"./tests/typings/node/node.d.ts",
+		"./tests/typings/tsd.d.ts",
+		"./tests/unit/all.ts",
+		"./tests/unit/createRoute.ts",
+		"./tests/unit/createRouter.ts",
+		"./tests/unit/history/all.ts",
+		"./tests/unit/history/createHashHistory.ts",
+		"./tests/unit/history/createHistory.ts",
+		"./tests/unit/history/createMemoryHistory.ts"
 	]
 }

@@ -14,14 +14,18 @@ declare module 'intern/main' {
 
 	export interface Config {
 		capabilities?: any;
+		coverageVariable?: string;
+		defaultTimeout?: number;
 		environments?: any[];
+		environmentRetries?: number;
 		excludeInstrumentation?: RegExp;
 		functionalSuites?: string[];
 		grep?: RegExp;
-		loader?: {
-			baseUrl?: string;
-			packages?: { name: string; location: string; main?: string; }[];
-			map?: { [remapModulePart: string]: { [sourceModulePart: string]: string; }; };
+		loader?: any;
+		loaderConfig?: any;
+		loaders?: {
+			'host-browser'?: string;
+			'host-node'?: string;
 		};
 		maxConcurrency?: number;
 		proxyPort?: number;
@@ -37,23 +41,23 @@ declare module 'intern/main' {
 	}
 
 	export var args: any;
+	export var executor: {
+		register(fn: (suite: Suite) => void): void;
+		run(): Promise<number>;
+		suites: Suite[];
+	};
 	export var mode: string;
-	export var config: Config;
-	export var maxConcurrency: number;
-	export var suites: Suite[];
-	export var tunnel: any;
-	export var grep: RegExp;
-	export function run(): Promise<void>;
 }
 
 declare module 'intern!bdd' {
 	import Promise = require('dojo/Promise');
+	import Test = require('intern/lib/Test');
 
 	var bdd: {
 		after(fn: () => any): void;
-		afterEach(fn: () => any): void;
+		afterEach(fn: (test: Test) => any): void;
 		before(fn: () => any): void;
-		beforeEach(fn: () => any): void;
+		beforeEach(fn: (test: Test) => any): void;
 		describe(name: string, factory: () => void): void;
 		it(name: string, test: () => any): void;
 	};
@@ -72,12 +76,13 @@ declare module 'intern!object' {
 
 declare module 'intern!tdd' {
 	import Promise = require('dojo/Promise');
+	import Test = require('intern/lib/Test');
 
 	var tdd: {
 		after(fn: () => any): void;
-		afterEach(fn: () => any): void;
+		afterEach(fn: (test: Test) => any): void;
 		before(fn: () => any): void;
-		beforeEach(fn: () => any): void;
+		beforeEach(fn: (test: Test) => any): void;
 		suite(name: string, factory: () => void): void;
 		test(name: string, test: () => any): void;
 	};
@@ -86,16 +91,16 @@ declare module 'intern!tdd' {
 }
 
 declare module 'intern/chai!' {
-	export = chai;
+	export = Chai;
 }
 
 declare module 'intern/chai!assert' {
-	var assert: chai.Assert;
+	var assert: Chai.AssertStatic;
 	export = assert;
 }
 
 declare module 'intern/chai!expect' {
-	var expect: chai.Expect;
+	var expect: Chai.ExpectStatic;
 	export = expect;
 }
 
@@ -109,9 +114,24 @@ declare module 'intern/dojo/has' {
 	export = has;
 }
 
+declare module 'intern/lib/ReporterManager' {
+	import Promise = require('dojo/Promise');
+
+	class ReporterManager {
+		add(ReporterCtor: Function, options: {}): { remove(): void; };
+		emit(eventName: string, ...args: any[]): Promise<void>;
+		empty(): void;
+		on(eventName: string, ...args: any[]): { remove(): void; };
+		run(): Promise<void>;
+	}
+
+	export = ReporterManager;
+}
+
 declare module 'intern/lib/Suite' {
 	import Command = require('leadfoot/Command');
 	import Promise = require('dojo/Promise');
+	import ReporterManager = require('intern/lib/ReporterManager');
 	import Test = require('intern/lib/Test');
 
 	class Suite {
@@ -124,13 +144,15 @@ declare module 'intern/lib/Suite' {
 		parent: Suite;
 
 		setup: () => Promise.Thenable<void> | void;
-		beforeEach: () => Promise.Thenable<void> | void;
-		afterEach: () => Promise.Thenable<void> | void;
+		beforeEach: (test: Test) => Promise.Thenable<void> | void;
+		afterEach: (test: Test) => Promise.Thenable<void> | void;
 		teardown: () => Promise.Thenable<void> | void;
 
 		error: Error;
 
 		timeElapsed: number;
+
+		timeout: number;
 
 		/**
 		 * A regular expression used to filter, by test ID, which tests are run.
@@ -143,6 +165,8 @@ declare module 'intern/lib/Suite' {
 		 * actually ready to be tested against. This property is only available to functional suites.
 		 */
 		remote: Command<void>;
+
+		reporterManager: ReporterManager;
 
 		/**
 		 * If true, the suite will only publish its start topic after the setup callback has finished,
@@ -213,6 +237,7 @@ declare module 'intern/lib/Suite' {
 			teardown?: typeof Suite.prototype.setup;
 			grep?: typeof Suite.prototype.grep;
 			remote?: typeof Suite.prototype.remote;
+			reporterManager?: typeof Suite.prototype.reporterManager;
 		}
 
 		export interface Serialized {
@@ -239,6 +264,7 @@ declare module 'intern/lib/Suite' {
 declare module 'intern/lib/Test' {
 	import Command = require('leadfoot/Command');
 	import Promise = require('dojo/Promise');
+	import ReporterManager = require('intern/lib/ReporterManager');
 	import Suite = require('intern/lib/Suite');
 
 	class Test {
@@ -268,6 +294,8 @@ declare module 'intern/lib/Test' {
 		 * @readonly
 		 */
 		remote: Command<void>;
+
+		reporterManager: ReporterManager;
 
 		sessionId: string;
 
@@ -309,6 +337,9 @@ declare module 'intern/lib/Test' {
 
 		export interface KwArgs {
 			name: typeof Test.prototype.name;
+			parent?: typeof Test.prototype.parent;
+			timeout?: typeof Test.prototype.timeout;
+			reporterManager?: typeof Test.prototype.reporterManager;
 		}
 
 		export interface Serialized {
@@ -323,9 +354,20 @@ declare module 'intern/lib/Test' {
 				name: string;
 				message: string;
 				stack: string;
-			}
+			};
 		}
 	}
 
 	export = Test;
+}
+
+// Declaring a module for intern/dojo/topic so that our echo server
+// can listen for intern's internal event signalling that the runner
+// is terminating.
+declare module 'intern/dojo/topic' {
+	var topic: {
+		subscribe(name: string, callback: () => void):  void;
+	};
+
+	export = topic;
 }

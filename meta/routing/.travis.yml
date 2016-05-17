@@ -1,9 +1,23 @@
 sudo: false
 language: node_js
 node_js:
-  - "0.10"
+  - "4.1"
+env:
+  global:
+    # Please get your own free key if you want to test yourself
+    - BROWSERSTACK_USERNAME: << USERNAME GOES HERE >>
+    - BROWSERSTACK_ACCESS_KEY: << ACCESS KEY GOES HERE >>
+    - SAUCE_USERNAME: << USERNAME GOES HERE >>
+    - SAUCE_ACCESS_KEY: << ACCESS KEY GOES HERE >>
 cache:
   directories:
     - node_modules
+install:
+  - "travis_retry npm install grunt-cli"
+  - "travis_retry npm install"
 script:
-  - "grunt ci"
+  - "grunt"
+  - "grunt intern:node --combined"
+  - "grunt intern:remote --combined"
+  - "grunt remapIstanbul:ci"
+  - "grunt uploadCoverage"

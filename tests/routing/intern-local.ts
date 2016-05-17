@@ -1,11 +1,11 @@
 export * from './intern';
 
-export var tunnel = 'NullTunnel';
-export var tunnelOptions = {
+export const tunnel = 'NullTunnel';
+export const tunnelOptions = {
 	hostname: 'localhost',
 	port: '4444'
 };
 
-export var environments = [
+export const environments = [
 	{ browserName: 'chrome' }
 ];

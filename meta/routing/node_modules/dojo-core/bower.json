@@ -1,0 +1,26 @@
+{
+	"name": "dojo-core",
+	"description": "Utilities to detect, provide, and install language runtime features.",
+	"keywords": [
+		"dojo",
+		"core",
+		"dojo2"
+	],
+	"authors": [
+		"Kris Zyp"
+	],
+	"main": "main.js",
+	"homepage": "http://dojotoolkit.org/",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/dojo/core.git"
+	},
+	"dependencies": {
+	},
+	"ignore": [
+		".*",
+		"tests"
+	],
+	"license": [ "BSD-3-Clause" ],
+	"moduleType": [ "amd" ]
+}

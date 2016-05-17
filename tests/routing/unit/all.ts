@@ -1,1 +1,3 @@
-export var removeThis = 1;
+import './createRoute';
+import './createRouter';
+import './history/all';
