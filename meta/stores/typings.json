@@ -1,0 +1,8 @@
+{
+	"name": "dojo-stores",
+	"dependencies": { },
+	"devDependencies": { },
+	"ambientDependencies": {
+		"node": "github:dojo/compose/typings/node/node.d.ts#77042c0e0f48396a6d77c592cfdb1ce0f71438cf"
+	}
+}

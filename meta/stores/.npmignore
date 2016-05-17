@@ -1,0 +1,15 @@
+/_build
+/support
+/tests
+/typings
+.editorconfig
+.gitattributes
+.gitignore
+.github
+.npmignore
+.travis.yml
+.tscache
+.vscode
+Gruntfile.js
+tsconfig.json
+tslint.json
