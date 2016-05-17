@@ -1,7 +1,7 @@
 sudo: false
 language: node_js
 node_js:
-  - "4.1"
+  - "5.1"
 env:
   global:
     # Please get your own free key if you want to test yourself
