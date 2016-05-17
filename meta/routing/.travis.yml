@@ -5,10 +5,10 @@ node_js:
 env:
   global:
     # Please get your own free key if you want to test yourself
-    - BROWSERSTACK_USERNAME: << USERNAME GOES HERE >>
-    - BROWSERSTACK_ACCESS_KEY: << ACCESS KEY GOES HERE >>
-    - SAUCE_USERNAME: << USERNAME GOES HERE >>
-    - SAUCE_ACCESS_KEY: << ACCESS KEY GOES HERE >>
+    - SAUCE_USERNAME: dojo2-ts-ci
+    - SAUCE_ACCESS_KEY: e92610e3-834e-4bec-a3b5-6f7b9d874601
+    - BROWSERSTACK_USERNAME: dtktestaccount1
+    - BROWSERSTACK_ACCESS_KEY: mG2qbEFJCZY2qLsM7yfx
 cache:
   directories:
     - node_modules
@@ -18,6 +18,6 @@ install:
 script:
   - "grunt"
   - "grunt intern:node --combined"
-  - "grunt intern:remote --combined"
+  - "grunt intern:saucelabs --combined"
   - "grunt remapIstanbul:ci"
   - "grunt uploadCoverage"

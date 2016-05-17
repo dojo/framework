@@ -1,6 +1,6 @@
 {
 	"name": "dojo-routing",
-	"description": "<< DESCRIPTION GOES HERE >>",
+	"description": "A routing library for Dojo 2 applications",
 	"keywords": [
 		"dojo",
 		"dojo2"

@@ -1,7 +1,7 @@
 # dojo-routing
 
-<!-- TODO: change and uncomment [![Build Status](https://travis-ci.org/dojo/<< package-name >>.svg?branch=master)](https://travis-ci.org/dojo/<< package-name >>)
-[![codecov.io](http://codecov.io/github/dojo/<< package-name >>/coverage.svg?branch=master)](http://codecov.io/github/dojo/<< package-name >>?branch=master) -->
+[![Build Status](https://travis-ci.org/dojo/routing.svg?branch=master)](https://travis-ci.org/dojo/routing)
+[![codecov](https://codecov.io/gh/dojo/routing/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/routing)
 
 A routing library for Dojo 2 applications.
 
