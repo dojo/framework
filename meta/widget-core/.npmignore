@@ -1,7 +1,9 @@
 /_build
+/html-report
 /support
 /tests
-/typings
+/typings/**
+!/typings/extras.d.ts
 .editorconfig
 .gitattributes
 .gitignore

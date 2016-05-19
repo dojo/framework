@@ -13,8 +13,8 @@
 		"moduleResolution": "classic"
 	},
 	"filesGlob": [
+		"./typings/extras.d.ts",
 		"./typings/index.d.ts",
-		"./typings/tsd.d.ts",
 		"./src/**/*.ts",
 		"./tests/**/*.ts"
 	],
