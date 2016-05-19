@@ -20,7 +20,6 @@
 	],
 	"files": [
 		"./typings/index.d.ts",
-		"./typings/tsd.d.ts",
 		"./src/createButton.ts",
 		"./src/createContainer.ts",
 		"./src/createDijit.ts",
@@ -34,6 +33,7 @@
 		"./src/examples/boot.ts",
 		"./src/examples/index.ts",
 		"./src/examples/scratch.ts",
+		"./src/interfaces.d.ts",
 		"./src/main.ts",
 		"./src/mixins/createCachedRenderMixin.ts",
 		"./src/mixins/createCloseableMixin.ts",

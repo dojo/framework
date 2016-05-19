@@ -1,8 +1,0 @@
-{
-  "resolution": "main",
-  "tree": {
-    "src": "https://raw.githubusercontent.com/dojo/typings/a62873258aa1deed48f9882c193c335436100d4b/custom/dojo2/dojo.d.ts",
-    "raw": "github:dojo/typings/custom/dojo2/dojo.d.ts#a62873258aa1deed48f9882c193c335436100d4b",
-    "typings": "https://raw.githubusercontent.com/dojo/typings/a62873258aa1deed48f9882c193c335436100d4b/custom/dojo2/dojo.d.ts"
-  }
-}

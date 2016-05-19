@@ -11,15 +11,17 @@ declare module 'maquette/maquette' {
 }
 
 declare module 'rxjs/Rx' {
-	export * from 'node_modules/@reactivex/rxjs/dist/cjs/Rx';
+	export * from '@reactivex/RxJS';
 }
 
 declare module 'rxjs/Observable' {
-	export * from 'node_modules/@reactivex/rxjs/dist/cjs/Observable';
+	import * as Observable from '@reactivex/RxJS/dist/cjs/Observable';
+	export = Observable;
 }
 
 declare module 'rxjs/Observer' {
-	export * from 'node_modules/@reactivex/rxjs/dist/cjs/Observer';
+	import * as Observer from '@reactivex/RxJS/dist/cjs/Observer';
+	export = Observer;
 }
 
 /* For some reasons reactivex/rxjs is missing these */

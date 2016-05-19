@@ -7,6 +7,7 @@
 dist
 _build
 /node_modules/*
+/typings
 bower_components
 tests/typings/dist/
 .baseDir.ts

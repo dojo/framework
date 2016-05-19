@@ -1,8 +1,0 @@
-{
-  "resolution": "main",
-  "tree": {
-    "src": "https://raw.githubusercontent.com/dojo/typings/92fcf688c0982c1107fca278de52e4bfe23bd8af/custom/intern/intern.d.ts",
-    "raw": "github:dojo/typings/custom/intern/intern.d.ts#92fcf688c0982c1107fca278de52e4bfe23bd8af",
-    "typings": "https://raw.githubusercontent.com/dojo/typings/92fcf688c0982c1107fca278de52e4bfe23bd8af/custom/intern/intern.d.ts"
-  }
-}
