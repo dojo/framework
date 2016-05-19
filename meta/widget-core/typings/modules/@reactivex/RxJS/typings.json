@@ -1,0 +1,12 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "/Users/kitsonk/github/widgets/node_modules/@reactivex/rxjs/package.json",
+    "raw": "npm:@reactivex/rxjs",
+    "main": "index.js",
+    "typings": "./dist/cjs/Rx.d.ts",
+    "version": "5.0.0-beta.6",
+    "global": false,
+    "name": "@reactivex/rxjs"
+  }
+}

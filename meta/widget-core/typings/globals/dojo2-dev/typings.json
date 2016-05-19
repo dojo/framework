@@ -1,0 +1,8 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/dojo/typings/288d3a9868194f0e1ad6687371dffd1d96cb39a1/custom/dev/dev.d.ts",
+    "raw": "github:dojo/typings/custom/dev/dev.d.ts#288d3a9868194f0e1ad6687371dffd1d96cb39a1",
+    "typings": "https://raw.githubusercontent.com/dojo/typings/288d3a9868194f0e1ad6687371dffd1d96cb39a1/custom/dev/dev.d.ts"
+  }
+}

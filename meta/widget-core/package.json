@@ -7,10 +7,16 @@
 		"url": "https://github.com/dojo/widgets/issues"
 	},
 	"license": "BSD-3-Clause",
+	"main": "./dist/umd/main.js",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/dojo/widgets.git"
 	},
+	"scripts": {
+		"prepublish": "grunt dist",
+		"test": "grunt test"
+	},
+	"typings": "./dist/umd/dojo-widgets.d.ts",
 	"peerDependencies": {
 		"@reactivex/rxjs": "5.0.0-beta.6",
 		"dojo-compose": ">=2.0.0-beta.2",
@@ -20,23 +26,25 @@
 	},
 	"devDependencies": {
 		"codecov.io": "0.1.6",
-		"dojo-loader": ">=2.0.0-beta.4",
+		"dojo-loader": ">=2.0.0-beta.5",
 		"dts-generator": "~1.7.0",
 		"glob": "7.0.3",
-		"grunt": "0.4.5",
+		"grunt": "^1.0.1",
 		"grunt-contrib-clean": "^1.0.0",
 		"grunt-contrib-copy": "^1.0.0",
 		"grunt-contrib-stylus": "~1.2.0",
 		"grunt-contrib-watch": "^1.0.0",
-		"grunt-release": "0.13.0",
+		"grunt-dojo2": ">=2.0.0-beta.5",
+		"grunt-release": "0.13.1",
 		"grunt-text-replace": "0.4.0",
-		"grunt-ts": "5.5.0-beta.2",
-		"grunt-tslint": "^3.0.0",
-		"intern": "~3.1.0",
+		"grunt-ts": "^5.5.1",
+		"grunt-tslint": "^3.1.0",
+		"grunt-typings": "kitsonk/grunt-typings#452cf5f29a6070965f85d0dcae48abbd75939179",
+		"intern": "^3.1.0",
 		"istanbul": "0.4.3",
 		"jsdom": "7.2.2",
-		"remap-istanbul": "0.6.3",
-		"tslint": "^3.0.0",
+		"remap-istanbul": "0.6.4",
+		"tslint": "^3.10.2",
 		"typescript": "1.8.10"
 	}
 }

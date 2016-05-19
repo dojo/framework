@@ -48,7 +48,7 @@ export const initialBaseUrl: string = (function () {
 // The desired AMD loader to use when running unit tests (client.html/client.js). Omit to use the default Dojo
 // loader
 export const loaders = {
-	'host-browser': 'node_modules/dojo-loader/loader.js',
+	'host-browser': 'node_modules/dojo-loader/dist/umd/loader.js',
 	'host-node': 'dojo-loader'
 };
 
@@ -65,7 +65,6 @@ export const loaderOptions = {
 		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
 		{ name: 'immutable', location: 'node_modules/immutable/dist' },
 		{ name: 'maquette', location: 'node_modules/maquette/dist' },
-		{ name: 'reflect-metadata', location: 'node_modules/reflect-metadata' },
 		{ name: 'rxjs', location: 'node_modules/@reactivex/rxjs/dist/amd' }
 	]
 };
