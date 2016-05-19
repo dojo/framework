@@ -19,6 +19,7 @@
 		"./tests/**/*.ts"
 	],
 	"files": [
+		"./typings/extras.d.ts",
 		"./typings/index.d.ts",
 		"./src/createButton.ts",
 		"./src/createContainer.ts",
