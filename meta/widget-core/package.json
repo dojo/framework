@@ -7,7 +7,7 @@
 		"url": "https://github.com/dojo/widgets/issues"
 	},
 	"license": "BSD-3-Clause",
-	"main": "./dist/umd/main.js",
+	"main": "index.js",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/dojo/widgets.git"
