@@ -47,6 +47,7 @@
 		"./src/mixins/createTabbedMixin.ts",
 		"./src/mixins/createVNodeEvented.ts",
 		"./src/projector.ts",
+		"./src/util/createCancelableEvent.ts",
 		"./src/util/createMemoryStore.ts",
 		"./src/util/has.ts",
 		"./src/util/lang.ts",
@@ -83,6 +84,7 @@
 		"./tests/unit/mixins/createVNodeEvented.ts",
 		"./tests/unit/projector.ts",
 		"./tests/unit/util/all.ts",
+		"./tests/unit/util/createCancelableEvent.ts",
 		"./tests/unit/util/createMemoryStore.ts",
 		"./tests/unit/util/has.ts",
 		"./tests/unit/util/lang.ts"

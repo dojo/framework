@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { insertInList, insertInArray } from 'src/util/lang';
+import { insertInList, insertInArray, stringToValue, valueToString } from 'src/util/lang';
 import { List } from 'immutable/immutable';
 
 registerSuite({
@@ -179,5 +179,35 @@ registerSuite({
 				}, Error);
 			}
 		}
+	},
+	'stringToValue()'() {
+		assert.isUndefined(stringToValue(''), 'emtpy string returns undefined');
+		assert.deepEqual(stringToValue('["foo",true,2]'), [ 'foo', true, 2 ]);
+		assert.deepEqual(stringToValue('{"foo":{"bar":true},"bar":[1,2,3]}'), {
+			foo: { bar: true },
+			bar: [ 1, 2, 3 ]
+		});
+		assert.strictEqual(stringToValue('{foo: "bar"}'), '{foo: "bar"}');
+		assert.strictEqual(stringToValue('1'), 1);
+		assert.strictEqual(stringToValue('0'), 0);
+		assert.strictEqual(stringToValue('Infinity'), Infinity);
+		assert.strictEqual(stringToValue('3.141592'), 3.141592);
+		assert.strictEqual(stringToValue('-2.12345'), -2.12345);
+		assert.instanceOf(stringToValue('{"foo":"__RegExp(/foo/g)"}').foo, RegExp);
+		assert.isTrue(stringToValue('true'));
+		assert.isFalse(stringToValue('false'));
+	},
+	'valueToString()'() {
+		assert.strictEqual(valueToString({ foo: 2 }), '{"foo":2}');
+		assert.strictEqual(valueToString([ 1, 2, 3 ]), '[1,2,3]');
+		assert.strictEqual(valueToString(1.23), '1.23');
+		assert.strictEqual(valueToString(undefined), '');
+		assert.strictEqual(valueToString(null), '');
+		assert.strictEqual(valueToString(NaN), '');
+		assert.strictEqual(valueToString(Infinity), 'Infinity');
+		assert.strictEqual(valueToString({ foo: /foo/g }), '{"foo":"__RegExp(/foo/g)"}');
+		assert.strictEqual(valueToString(0), '0');
+		assert.strictEqual(valueToString(true), 'true');
+		assert.strictEqual(valueToString(false), 'false');
 	}
 });

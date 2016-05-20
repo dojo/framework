@@ -3,6 +3,7 @@ import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/creat
 import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import { Handle } from 'dojo-core/interfaces';
 import Promise from 'dojo-core/Promise';
+import createCancelableEvent, { CancelableEvent } from '../util/createCancelableEvent';
 
 export interface CloseableState extends State {
 	/**
@@ -11,22 +12,7 @@ export interface CloseableState extends State {
 	closeable?: boolean;
 }
 
-export interface CloseEvent extends TargettedEventObject {
-	/**
-	 * The event target
-	 */
-	target: CloseableMixin<CloseableState>;
-
-	/**
-	 * The event type
-	 */
-	type: 'close';
-
-	/**
-	 * Stop the default behaviour of the event
-	 */
-	preventDefault(): void;
-}
+export interface CloseEvent extends CancelableEvent<'close', CloseableMixin<CloseableState>> { }
 
 export interface Closeable {
 	/**
@@ -48,15 +34,9 @@ const createCloseableMixin: CloseableMixinFactory = createStateful
 			close(): Promise<boolean> {
 				const closeable: CloseableMixin<CloseableState> = this;
 				if (closeable.state.closeable) {
-					let prevented = false;
-					closeable.emit({
-						type: 'close',
-						target: closeable,
-						preventDefault() {
-							prevented = true;
-						}
-					});
-					return prevented ? Promise.resolve(false) : closeable.destroy();
+					const event = createCancelableEvent({ type: 'close', target: closeable });
+					closeable.emit(event);
+					return event.defaultPrevented ? Promise.resolve(false) : closeable.destroy();
 				}
 				return Promise.resolve(false);
 			}

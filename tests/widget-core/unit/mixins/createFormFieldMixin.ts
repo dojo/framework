@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createFormFieldMixin, { FormMixinFactory } from 'src/mixins/createFormFieldMixin';
+import createFormFieldMixin, { ValueChangeEvent } from 'src/mixins/createFormFieldMixin';
 
 registerSuite({
 	name: 'mixins/createFormFieldMixin',
@@ -13,7 +13,7 @@ registerSuite({
 				disabled: false
 			}
 		});
-		assert.strictEqual(formfield.value, 2);
+		assert.strictEqual(formfield.value, '2');
 		assert.strictEqual(formfield.state.value, 2);
 		assert.strictEqual(formfield.type, 'foo');
 		assert.strictEqual(formfield.state.name, 'foo');
@@ -25,19 +25,70 @@ registerSuite({
 			state: { value }
 		});
 
-		assert.strictEqual(formfield.value, formfield.state.value);
+		assert.strictEqual(formfield.value, '{"foo":"foo"}');
 		formfield.setState({ value: { foo: 'bar' } });
-		assert.deepEqual(formfield.value, { foo: 'bar' });
+		assert.deepEqual(formfield.value, '{"foo":"bar"}');
 	},
 	'.value - setState'() {
 		let count = 0;
-		const createAfterFormFieldMixin: FormMixinFactory = createFormFieldMixin
+		const createAfterFormFieldMixin = createFormFieldMixin
 			.after('setState', () => count++);
-		const formfield = createAfterFormFieldMixin<any>();
+		const formfield = createAfterFormFieldMixin<string>();
 		formfield.value = 'foo';
 		assert.strictEqual(count, 1);
 		formfield.value = 'foo';
 		assert.strictEqual(count, 1);
+	},
+	'valuechange event': {
+		'emitted'() {
+			let count = 0;
+			const formfield = createFormFieldMixin<string>();
+			const handle = formfield.on('valuechange', (event) => {
+				count++;
+				assert.strictEqual(event.type, 'valuechange');
+				assert.strictEqual(event.target, formfield);
+				assert.strictEqual(event.oldValue, '');
+				assert.strictEqual(event.value, 'bar');
+				assert.isFalse(event.defaultPrevented);
+				assert.isFunction(event.preventDefault);
+			});
+			formfield.value = 'bar';
+			assert.strictEqual(count, 1);
+			formfield.value = 'bar';
+			assert.strictEqual(count, 1);
+			handle.destroy();
+			formfield.value = 'qat';
+			assert.strictEqual(count, 1);
+		},
+		'cancelable'() {
+			let count = 0;
+			const formfield = createFormFieldMixin({
+				value: 1,
+				listeners: {
+					valuechange(event: ValueChangeEvent<number>) {
+						if (isNaN(Number(event.value))) {
+							count++;
+							event.preventDefault();
+						}
+					}
+				}
+			});
+
+			assert.strictEqual(formfield.value, '1');
+			assert.strictEqual(formfield.state.value, 1);
+			formfield.value = '2';
+			assert.strictEqual(formfield.value, '2');
+			assert.strictEqual(formfield.state.value, 2);
+			assert.strictEqual(count, 0);
+			formfield.value = 'foo';
+			assert.strictEqual(count, 1);
+			assert.strictEqual(formfield.value, '2');
+			assert.strictEqual(formfield.state.value, 2);
+			formfield.value = '3.141592';
+			assert.strictEqual(formfield.value, '3.141592');
+			assert.strictEqual(formfield.state.value, 3.141592);
+			assert.strictEqual(count, 1);
+		}
 	},
 	'getNodeAttributes()'() {
 		const formfield = createFormFieldMixin({
