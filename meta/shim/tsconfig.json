@@ -32,6 +32,7 @@
 		"./src/iterator.ts",
 		"./src/lang.ts",
 		"./src/load.ts",
+		"./src/loader.d.ts",
 		"./src/main.ts",
 		"./src/Map.ts",
 		"./src/math.ts",

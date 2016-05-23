@@ -1,6 +1,9 @@
 import has from './has';
 import request, { Response } from './request';
 import Promise from './Promise';
+import { Config, Require } from './loader';
+
+declare const require: Require;
 
 /*
  * Strips <?xml ...?> declarations so that external SVG and XML
@@ -76,7 +79,7 @@ export function normalize(id: string, toAbsMid: (moduleId: string) => string): s
 	return (/^\./.test(url) ? toAbsMid(url) : url) + (parts[1] ? '!' + parts[1] : '');
 }
 
-export function load(id: string, require: DojoLoader.Require, load: (value?: any) => void, config?: DojoLoader.Config): void {
+export function load(id: string, require: Require, load: (value?: any) => void, config?: Config): void {
 	let parts = id.split('!');
 	let stripFlag = parts.length > 1;
 	let mid = parts[0];

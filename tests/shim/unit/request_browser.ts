@@ -1,9 +1,12 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import request from 'src/request';
+import { Require } from 'src/loader';
+
+declare const require: Require;
 
 const getRequestUrl = function (dataKey: string): string {
-	return (<any> require).toUrl('../support/data/' + dataKey);
+	return require.toUrl('../support/data/' + dataKey);
 };
 
 registerSuite({

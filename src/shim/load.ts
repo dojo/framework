@@ -1,6 +1,9 @@
 import Promise from './Promise';
+import { Require } from './loader';
 
-declare var define: {
+declare const require: Require;
+
+declare const define: {
 	(...args: any[]): any;
 	amd: any;
 };
@@ -8,7 +11,8 @@ declare var define: {
 export interface NodeRequire {
 	(moduleId: string): any;
 }
-export type Require = DojoLoader.Require | NodeRequire;
+
+export type Require = Require | NodeRequire;
 
 export interface Load {
 	(require: Require, ...moduleIds: string[]): Promise<any[]>;

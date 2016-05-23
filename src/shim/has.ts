@@ -1,5 +1,6 @@
 import global from './global';
 import { Hash } from './interfaces';
+import { Config, Require } from './loader';
 
 export type TestResult = boolean | string | number;
 export type TestMethod = () => TestResult;
@@ -14,7 +15,7 @@ export const testFunctions: Hash<TestMethod> = Object.create(null);
  * @param require The loader require function with respect to the module that contained the plugin resource in it's dependency list.
  * @param load Callback to loader that consumes result of plugin demand.
  */
-export function load(resourceId: string, require: DojoLoader.Require, load: (value?: any) => void, config?: DojoLoader.Config): void {
+export function load(resourceId: string, require: Require, load: (value?: any) => void, config?: Config): void {
 	if (resourceId) {
 		require([ resourceId ], load);
 	}

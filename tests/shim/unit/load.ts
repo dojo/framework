@@ -3,6 +3,10 @@ import * as registerSuite from 'intern!object';
 import has from 'src/has';
 import load from 'src/load';
 import Promise from 'src/Promise';
+import { RootRequire } from 'src/loader';
+import global from 'src/global';
+
+declare const require: RootRequire;
 
 const suite: any = {
 	name: 'load',
