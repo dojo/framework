@@ -1,4 +1,7 @@
 /_build
+/docs
+/html-report
+/resources
 /support
 /tests
 /typings
