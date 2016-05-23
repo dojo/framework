@@ -53,7 +53,6 @@ module.exports = function (grunt) {
 		'ts:dist',
 		'stylus:dist',
 		'rename:sourceMaps',
-		'rewriteSourceMaps:dist',
 		'dtsGenerator:dist'
 	]);
 };
