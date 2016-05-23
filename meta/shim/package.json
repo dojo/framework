@@ -16,7 +16,7 @@
 		"prepublish": "grunt dist",
 		"test": "grunt test"
 	},
-	"typings": "./dist/umd/dojo-widgets.d.ts",
+	"typings": "./dist/umd/dojo-core.d.ts",
 	"devDependencies": {
 		"benchmark": "^1.0.0",
 		"codecov.io": "0.1.6",
