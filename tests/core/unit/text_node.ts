@@ -3,6 +3,9 @@ import * as assert from 'intern/chai!assert';
 import * as text from 'src/text';
 import { spy, SinonSpy } from 'sinon';
 import * as fs from 'fs';
+import { RootRequire } from 'src/loader';
+
+declare const require: RootRequire;
 
 const basePath = '_build/tests/support/data/';
 let fsSpy: SinonSpy;
@@ -20,13 +23,13 @@ registerSuite({
 			},
 
 			'should return text and call fs'() {
-				text.load(basePath + 'textLoad.txt', (<DojoLoader.RootRequire> require), this.async().callback((val: string) => {
+				text.load(basePath + 'textLoad.txt', require, this.async().callback((val: string) => {
 					assert.isTrue(fsSpy.calledOnce, 'Read file should be called once');
 					assert.strictEqual(val, 'test', 'Correct text should be returned');
 				}));
 			},
 			'should return text from cache'() {
-				text.load(basePath + 'textLoad.txt', (<DojoLoader.RootRequire> require), this.async().callback((val: string) => {
+				text.load(basePath + 'textLoad.txt', require, this.async().callback((val: string) => {
 					assert.isTrue(fsSpy.notCalled, 'Read file should not be called');
 					assert.strictEqual(val, 'test', 'Correct text should be returned');
 				}));

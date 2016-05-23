@@ -22,9 +22,3 @@ declare module 'intern/dojo/node!http-proxy' {
 	import httpProxy = require('http-proxy');
 	export = httpProxy;
 }
-
-declare namespace NodeJS {
-	interface Global {
-		require: DojoLoader.RootRequire;
-	}
-}

@@ -4,6 +4,9 @@ import has from 'src/has';
 import * as text from 'src/text';
 import { stub } from 'sinon';
 import 'intern/dojo/has!host-node?./text_node:./text_browser';
+import { RootRequire } from 'src/loader';
+
+declare const require: RootRequire;
 
 // The exported get function from the text module
 // uses fs.readFile on node systems, which resolves
@@ -52,12 +55,12 @@ registerSuite({
 		},
 		'load': {
 			'should strip xml'() {
-				text.load(basePath + 'strip.xml!strip', (<DojoLoader.RootRequire> require), this.async().callback((val: string) => {
+				text.load(basePath + 'strip.xml!strip', require, this.async().callback((val: string) => {
 					assert.strictEqual(val, 'abc', 'Should have stripped the XML');
 				}));
 			},
 			'should strip html'() {
-				text.load(basePath + 'strip.html!strip', (<DojoLoader.RootRequire> require), this.async().callback((val: string) => {
+				text.load(basePath + 'strip.html!strip', require, this.async().callback((val: string) => {
 					assert.strictEqual(val, 'abc', 'Should have stripped the XML');
 				}));
 			}

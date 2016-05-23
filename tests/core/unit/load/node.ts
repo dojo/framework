@@ -1,4 +1,7 @@
 import load from '../../../src/load';
+import { Require } from '../../../src/loader';
+
+declare const require: Require;
 
 export const succeed = load(require, './a', './b');
 export const fail = load(require, './a', './c');
