@@ -3,9 +3,9 @@
 *.js
 *.js.map
 !/*.js
-!/tasks/*.js
 dist
 node_modules
+/typings/**
 bower_components
 tests/typings/dist/
 .baseDir.ts

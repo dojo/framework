@@ -10,6 +10,7 @@ import './has';
 import './iterator';
 import './lang';
 import './load';
+import './main';
 import './math';
 import './Map';
 import './number';
