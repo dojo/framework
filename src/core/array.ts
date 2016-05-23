@@ -54,8 +54,8 @@ function normalizeOffset(value: number, length: number): number {
 	return value < 0 ? Math.max(length + value, 0) : Math.min(value, length);
 }
 
-export function from(arrayLike: string, mapFunction?: MapCallback<string>, thisArg?: {}): ArrayLike<string>;
-export function from<T>(arrayLike: Iterable<T> | ArrayLike<T>, mapFunction?: MapCallback<T>, thisArg?: {}): ArrayLike<T>;
+export function from(arrayLike: string, mapFunction?: MapCallback<string>, thisArg?: {}): Array<string>;
+export function from<T>(arrayLike: Iterable<T> | ArrayLike<T>, mapFunction?: MapCallback<T>, thisArg?: {}): Array<T>;
 /**
  * The Array.from() method creates a new Array instance from an array-like or iterable object.
  *
@@ -64,7 +64,7 @@ export function from<T>(arrayLike: Iterable<T> | ArrayLike<T>, mapFunction?: Map
  * @param [thisArg] The execution context for the map function
  * @return The new Array
  */
-export function from<T>(arrayLike: (string | Iterable<T> | ArrayLike<T>), mapFunction?: MapCallback<T>, thisArg?: {}): ArrayLike<T> {
+export function from<T>(arrayLike: (string | Iterable<T> | ArrayLike<T>), mapFunction?: MapCallback<T>, thisArg?: {}): Array<T> {
 	// Use the native Array.from() if it exists
 	if (has('es6-array-from')) {
 		return (<any> Array).from.apply(null, arguments);
