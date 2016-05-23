@@ -1,11 +1,11 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as text from 'src/text';
-import { spy } from 'sinon';
+import { spy, SinonSpy } from 'sinon';
 import * as fs from 'fs';
 
 const basePath = '_build/tests/support/data/';
-let fsSpy: Sinon.SinonSpy;
+let fsSpy: SinonSpy;
 
 registerSuite({
 		name: 'text',

@@ -9,7 +9,7 @@
 	"authors": [
 		"Kris Zyp"
 	],
-	"main": "main.js",
+	"main": "dist/umd/main.js",
 	"homepage": "http://dojotoolkit.org/",
 	"repository": {
 		"type": "git",

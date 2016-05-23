@@ -1,7 +1,14 @@
+/_build
+/support
+/tests
+/typings
+.editorconfig
+.gitattributes
+.gitignore
 .npmignore
-.sublimets
 .travis.yml
-tests/
+.tscache
+.vscode
 Gruntfile.js
+tsconfig.json
 tslint.json
-*.ts
