@@ -43,6 +43,7 @@
 		"./src/mixins/createParentMixin.ts",
 		"./src/mixins/createRenderable.ts",
 		"./src/mixins/createRenderableChildrenMixin.ts",
+		"./src/mixins/createStatefulChildrenMixin.ts",
 		"./src/mixins/createTabbedMixin.ts",
 		"./src/mixins/createVNodeEvented.ts",
 		"./src/projector.ts",

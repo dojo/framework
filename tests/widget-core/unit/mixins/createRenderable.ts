@@ -5,6 +5,7 @@ import { ParentMixin, Child } from 'src/mixins/createParentMixin';
 import { h } from 'maquette/maquette';
 import Promise from 'dojo-core/Promise';
 import { List } from 'immutable/immutable';
+import { Handle } from 'dojo-core/interfaces';
 
 registerSuite({
 	name: 'mixins/createRenderable',
@@ -46,7 +47,9 @@ registerSuite({
 			clear() { },
 			insert() { return { destroy() { } }; },
 			own() { return { destroy() { } }; },
-			destroy() { return Promise.resolve(true); }
+			destroy() { return Promise.resolve(true); },
+			emit() { },
+			on(): Handle { return { destroy () { } }; }
 		};
 		const renderable = createRenderable({
 			render() {

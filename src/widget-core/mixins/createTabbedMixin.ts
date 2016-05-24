@@ -23,7 +23,7 @@ export interface TabbedChildState extends CachedRenderState, CloseableState {
 
 export type TabbedChild = Child & CloseableMixin<TabbedChildState> & CachedRenderMixin<TabbedChildState>;
 
-export interface TabbedMixinOptions extends ParentMixinOptions<TabbedChild>, StatefulOptions<CachedRenderState> { }
+export interface TabbedMixinOptions extends ParentMixinOptions<TabbedChild>, StatefulOptions<TabbedChildState> { }
 
 export interface Tabbed<C extends TabbedChild> {
 	children: List<TabbedChild>;

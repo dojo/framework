@@ -1,6 +1,6 @@
 import { List } from 'immutable/immutable';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
+import createEvented, { Evented, EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import { Handle } from 'dojo-core/interfaces';
 import WeakMap from 'dojo-core/WeakMap';
 import { Position, insertInList } from '../util/lang';
@@ -14,6 +14,12 @@ export interface ParentMixinOptions<C extends Child> {
 }
 
 export type Child = Renderable;
+
+export interface ChildListEvent<T extends Parent<C>, C extends Child> {
+	type: 'childlist';
+	target: T;
+	children: List<C>;
+}
 
 export interface Parent<C extends Child> {
 	/**
@@ -44,12 +50,18 @@ export interface Parent<C extends Child> {
 	 * @param reference The referencable child, if required
 	 */
 	insert(child: C, position: Position, reference?: C): Handle;
+
+	on?(type: 'childlist', listener: EventedListener<ChildListEvent<this, C>>): Handle;
+	on?(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
 
-export type ParentMixin<C extends Child> = Parent<C> & Destroyable;
+export type ParentMixin<C extends Child> = Parent<C> & Evented;
 
 export interface ParentMixinFactory extends ComposeFactory<ParentMixin<Child>, ParentMixinOptions<Child>> { }
 
+/**
+ * Contains a List of children per instance
+ */
 const childrenMap = new WeakMap<ParentMixin<Child>, List<Child>>();
 
 /**
@@ -63,10 +75,9 @@ function getRemoveHandle(parent: ParentMixin<Child>, child: Child | Child[]): Ha
 				if (destroyed) {
 					return;
 				}
-				const children = childrenMap.get(parent);
-				const idx = children.lastIndexOf(c);
+				const idx = parent.children.lastIndexOf(c);
 				if (idx > -1) {
-					childrenMap.set(parent, children.delete(idx));
+					parent.children = parent.children.delete(idx);
 				}
 				destroyed = true;
 				if (c.parent === parent) {
@@ -104,15 +115,27 @@ const createParentMixin: ParentMixinFactory = compose<Parent<Child>, ParentMixin
 			return childrenMap.get(this);
 		},
 
+		set children(value: List<Child>) {
+			const parent: ParentMixin<Child> = this;
+			if (!value.equals(childrenMap.get(parent))) {
+				childrenMap.set(parent, value);
+				parent.emit({
+					type: 'childlist',
+					target: parent,
+					children: value
+				});
+			}
+		},
+
 		append(child: Child | Child[]): Handle {
 			const parent: ParentMixin<Child> = this;
 			if (Array.isArray(child)) {
-				childrenMap.set(parent, <List<any>> childrenMap.get(parent).concat(child));
 				child.forEach((c) => c.parent = parent);
+				parent.children = <List<Child>> parent.children.concat(child);
 			}
 			else {
-				childrenMap.set(parent, childrenMap.get(parent).push(child));
 				child.parent = parent;
+				parent.children = parent.children.push(child);
 			}
 			return getRemoveHandle(parent, child);
 		},
@@ -122,19 +145,19 @@ const createParentMixin: ParentMixinFactory = compose<Parent<Child>, ParentMixin
 			const children = childrenMap.get(parent);
 			if (children) {
 				children.forEach((child) => { child.parent === undefined; });
-				childrenMap.set(parent, List<Child>());
+				parent.children = List<Child>();
 			}
 		},
 
 		insert(child: Child, position: Position, reference?: Child): Handle {
 			const parent: ParentMixin<Child> = this;
-			childrenMap.set(parent, insertInList(childrenMap.get(parent), child, position, reference));
 			child.parent = parent;
+			parent.children = insertInList(childrenMap.get(parent), child, position, reference);
 			return getRemoveHandle(parent, child);
 		}
 	})
 	.mixin({
-		mixin: createDestroyable,
+		mixin: createEvented,
 		initialize(instance, options) {
 			childrenMap.set(instance, List<any>());
 			if (options && options.children && options.children.length) {
@@ -143,8 +166,8 @@ const createParentMixin: ParentMixinFactory = compose<Parent<Child>, ParentMixin
 			instance.own({
 				destroy() {
 					const children = childrenMap.get(instance);
-					childrenMap.set(instance, List<Child>());
 					children.forEach((child) => child.destroy());
+					childrenMap.delete(instance);
 				}
 			});
 		}
