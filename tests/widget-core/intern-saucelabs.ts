@@ -4,7 +4,7 @@ export const environments = [
 	{ browserName: 'internet explorer', version: [ '10.0', '11.0' ], platform: 'Windows 7' },
 	/* Having issues with Edge with Intern and SauceLabs */
 	// { browserName: 'MicrosoftEdge', platform: 'Windows 10' },
-	{ browserName: 'firefox', platform: 'Windows 10' },
+	// { browserName: 'firefox', platform: 'Windows 10' },
 	{ browserName: 'chrome', platform: 'Windows 10' },
 	/* Having issues with Intern 3.1 and Safari on SauceLabs */
 	// { browserName: 'safari', version: '8.0', platform: 'OS X 10.10' },
