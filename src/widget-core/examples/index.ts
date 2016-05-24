@@ -4,6 +4,7 @@ import createPanel from 'src/createPanel';
 import createTabbedPanel from 'src/createTabbedPanel';
 import { Child } from 'src/mixins/createParentMixin';
 import projector from 'src/projector';
+import Promise from 'dojo-core/Promise';
 
 /**
  * A memory store which handles the widget states
@@ -11,7 +12,7 @@ import projector from 'src/projector';
 const widgetStore = createMemoryStore({
 	data: [
 		{ id: 'title', label: 'dojo-widget Examples'},
-		{ id: 'tabbed-panel' },
+		{ id: 'tabbed-panel', children: [ 'panel-1', 'panel-2', 'panel-3', 'panel-4' ] },
 		{ id: 'panel-1', label: 'foo', closeable: true },
 		{ id: 'foo', label: 'Validus os indoles. Demoveo ventosus illum ut refoveo saepius antehabeo euismod gravis aliquam ea aliquip. Autem ratis verto. Accumsan refero capio ludus consequat tincidunt roto modo ea dolore. Ad iustum blandit.' },
 		{ id: 'panel-2', label: 'bar foo qut qux quux', active: true },
@@ -22,6 +23,27 @@ const widgetStore = createMemoryStore({
 		{ id: 'qat', label: 'Sit pertineo at facilisis quidne qui et amet duis. Patria meus proprius immitto ne appellatio cogo jus. Cui genitus sudo. Suscipit abdo dignissim huic accumsan importunus inhibeo luptatum ut neque augue sagaciter. Iaceo odio exerci natu nonummy vel iaceo odio erat.' }
 	]
 });
+
+const widgetRegistry = {
+	get(id: string | symbol): Promise<Child> {
+		let widget: Child;
+		switch (id) {
+		case 'panel-1':
+			widget = panel1;
+			break;
+		case 'panel-2':
+			widget = panel2;
+			break;
+		case 'panel-3':
+			widget = panel3;
+			break;
+		case 'panel-4':
+			widget = panel4;
+			break;
+		}
+		return Promise.resolve(widget);
+	}
+};
 
 const widgets: Child[] = [];
 
@@ -36,7 +58,8 @@ widgets.push(createWidget({
 
 const tabbedPanel = createTabbedPanel({
 	id: 'tabbed-panel',
-	stateFrom: widgetStore
+	stateFrom: widgetStore,
+	widgetRegistry
 });
 
 widgets.push(tabbedPanel);
@@ -51,8 +74,6 @@ panel1.append(createWidget({
 	stateFrom: widgetStore
 }));
 
-tabbedPanel.append(panel1);
-
 const panel2 = createPanel({
 	id: 'panel-2',
 	stateFrom: widgetStore
@@ -62,8 +83,6 @@ panel2.append(createWidget({
 	id: 'bar',
 	stateFrom: widgetStore
 }));
-
-tabbedPanel.append(panel2);
 
 const panel3 = createPanel({
 	id: 'panel-3',
@@ -75,8 +94,6 @@ panel3.append(createWidget({
 	stateFrom: widgetStore
 }));
 
-tabbedPanel.append(panel3);
-
 const panel4 = createPanel({
 	id: 'panel-4',
 	stateFrom: widgetStore
@@ -86,8 +103,6 @@ panel4.append(createWidget({
 	id: 'qat',
 	stateFrom: widgetStore
 }));
-
-tabbedPanel.append(panel4);
 
 /* debug logging */
 projector.on('schedulerender', () => { console.log('scheduleRender()'); });

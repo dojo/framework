@@ -23,7 +23,7 @@ export interface TabbedChildState extends CachedRenderState, CloseableState {
 
 export type TabbedChild = Child & CloseableMixin<TabbedChildState> & CachedRenderMixin<TabbedChildState>;
 
-export interface TabbedMixinOptions extends ParentMixinOptions<TabbedChild>, StatefulOptions<TabbedChildState> { }
+export interface TabbedMixinOptions<C extends TabbedChild, S extends CachedRenderState> extends ParentMixinOptions<C>, StatefulOptions<S> { }
 
 export interface Tabbed<C extends TabbedChild> {
 	children: List<TabbedChild>;
@@ -143,7 +143,7 @@ function getTabListeners(tabbed: TabbedMixin<TabbedChild>, tab: TabbedChild): Ta
 	return tabListenersMap.get(tab);
 }
 
-export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChild>, TabbedMixinOptions> {}
+export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChild>, TabbedMixinOptions<TabbedChild, CachedRenderState>> {}
 
 const childrenNodesCache = new WeakMap<TabbedMixin<TabbedChild>, VNode[]>();
 

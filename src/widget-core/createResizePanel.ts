@@ -7,15 +7,16 @@ import WeakMap from 'dojo-core/WeakMap';
 import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
 import createParentMixin, { ParentMixin, ParentMixinOptions, Child } from './mixins/createParentMixin';
 import createRenderableChildrenMixin from './mixins/createRenderableChildrenMixin';
+import createStatefulChildrenMixin, { StatefulChildrenState, StatefulChildrenOptions } from './mixins/createStatefulChildrenMixin';
 import { Projector } from './projector';
 
 /* TODO: Abstract logic to a mixin */
 
-export interface ResizePanelState extends WidgetState {
+export interface ResizePanelState extends WidgetState, StatefulChildrenState {
 	width?: string;
 }
 
-export interface ResizePanelOptions extends WidgetOptions<ResizePanelState>, ParentMixinOptions<Child> { }
+export interface ResizePanelOptions extends WidgetOptions<ResizePanelState>, ParentMixinOptions<Child>, StatefulChildrenOptions<Child, ResizePanelState> { }
 
 export interface ResizePanelMixin {
 	tagNames: {
@@ -136,6 +137,7 @@ function setResizeListeners(resizePanel: ResizePanel): Handle {
 const createResizePanel: ResizePanelFactory = createWidget
 	.mixin(createParentMixin)
 	.mixin(createRenderableChildrenMixin)
+	.mixin(createStatefulChildrenMixin)
 	.mixin({
 		mixin: <ResizePanelMixin> {
 			tagNames: {
