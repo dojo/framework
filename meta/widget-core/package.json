@@ -20,7 +20,7 @@
 	"peerDependencies": {
 		"@reactivex/rxjs": "5.0.0-beta.6",
 		"dojo-compose": ">=2.0.0-beta.4",
-		"dojo-core": ">=2.0.0-alpha.5",
+		"dojo-core": ">=2.0.0-alpha.7",
 		"immutable": "^3.7.6",
 		"maquette": "^2.3.1"
 	},
