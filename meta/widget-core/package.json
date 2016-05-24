@@ -40,7 +40,7 @@
 		"grunt-ts": "^5.5.1",
 		"grunt-tslint": "^3.1.0",
 		"grunt-typings": "kitsonk/grunt-typings#452cf5f29a6070965f85d0dcae48abbd75939179",
-		"intern": "^3.1.0",
+		"intern": "^3.2.1",
 		"istanbul": "0.4.3",
 		"jsdom": "7.2.2",
 		"remap-istanbul": "0.6.4",

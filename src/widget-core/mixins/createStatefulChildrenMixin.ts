@@ -3,6 +3,7 @@ import createEvented from 'dojo-compose/mixins/createEvented';
 import createStateful, { Stateful, StatefulOptions, StateChangeEvent } from 'dojo-compose/mixins/createStateful';
 import Map from 'dojo-core/Map';
 import Promise from 'dojo-core/Promise';
+import WeakMap from 'dojo-core/WeakMap';
 import { List } from 'immutable/immutable';
 import { Child } from './createParentMixin';
 
