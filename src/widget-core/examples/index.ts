@@ -77,7 +77,18 @@ widgets.push(createWidget({
 const tabbedPanel = createTabbedPanel({
 	id: 'tabbed-panel',
 	stateFrom: widgetStore,
-	widgetRegistry
+	widgetRegistry,
+	listeners: {
+		error(evt) {
+			console.log(evt);
+		},
+		statechange(evt) {
+			console.log(evt);
+		},
+		childlist(evt) {
+			console.log(evt);
+		}
+	}
 });
 
 widgets.push(tabbedPanel);

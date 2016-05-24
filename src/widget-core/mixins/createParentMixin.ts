@@ -116,27 +116,30 @@ const createParentMixin: ParentMixinFactory = compose<Parent<Child>, ParentMixin
 		},
 
 		set children(value: List<Child>) {
-			const parent: ParentMixin<Child> = this;
+			const parent: ParentMixin<Child> & { invalidate?(): void; } = this;
 			if (!value.equals(childrenMap.get(parent))) {
+				value.forEach((widget) => {
+					if (widget.parent !== parent) {
+						widget.parent = parent;
+						/* TODO: If a child gets attached and reattached it may own multiple handles */
+						widget.own(getRemoveHandle(parent, widget));
+					}
+				});
 				childrenMap.set(parent, value);
 				parent.emit({
 					type: 'childlist',
 					target: parent,
 					children: value
 				});
+				if (parent.invalidate) {
+					parent.invalidate();
+				}
 			}
 		},
 
 		append(child: Child | Child[]): Handle {
 			const parent: ParentMixin<Child> = this;
-			if (Array.isArray(child)) {
-				child.forEach((c) => c.parent = parent);
-				parent.children = <List<Child>> parent.children.concat(child);
-			}
-			else {
-				child.parent = parent;
-				parent.children = parent.children.push(child);
-			}
+			parent.children = Array.isArray(child) ? <List<Child>> parent.children.concat(child) : parent.children = parent.children.push(child);
 			return getRemoveHandle(parent, child);
 		},
 

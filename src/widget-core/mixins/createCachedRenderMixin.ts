@@ -116,7 +116,7 @@ const createCachedRenderMixin: CachedRenderFactory = createStateful
 		mixin: <CachedRender> {
 			getNodeAttributes(overrides?: VNodeProperties): VNodeProperties {
 				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				const props: VNodeProperties = cachedRender.state.id ? { 'data-widget-id': cachedRender.state.id } : {};
+				const props: VNodeProperties = cachedRender.state && cachedRender.state.id ? { 'data-widget-id': cachedRender.state.id } : {};
 				for (let key in cachedRender.listeners) {
 					props[key] = cachedRender.listeners[key];
 				}
@@ -167,7 +167,7 @@ const createCachedRenderMixin: CachedRenderFactory = createStateful
 
 			get classes(): string[] {
 				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				return cachedRender.state.classes || shadowClasses.get(cachedRender);
+				return (cachedRender.state && cachedRender.state.classes) || shadowClasses.get(cachedRender);
 			},
 
 			set classes(value: string[]) {
@@ -183,7 +183,7 @@ const createCachedRenderMixin: CachedRenderFactory = createStateful
 
 			get styles(): StylesHash {
 				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				return cachedRender.state.styles || shadowStyles.get(cachedRender);
+				return (cachedRender.state && cachedRender.state.styles) || shadowStyles.get(cachedRender);
 			},
 
 			set styles(value: StylesHash) {

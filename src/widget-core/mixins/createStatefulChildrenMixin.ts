@@ -113,8 +113,7 @@ function manageChildrenState(evt: ChildListEvent<any, Child>) {
 
 	const currentChildrenIDs = <List<string>> evt.children.map((widget) => widgetRegistry.identify(widget));
 
-	if (!currentChildrenIDs.equals(cachedChildrenIDs.get(parent))) {
-		cachedChildrenIDs.set(parent, currentChildrenIDs);
+	if (!currentChildrenIDs.equals(List(parent.state.children))) {
 		const children = currentChildrenIDs.toArray();
 		parent.setState({ children });
 	}

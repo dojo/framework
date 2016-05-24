@@ -23,7 +23,7 @@ const createRenderableChildrenMixin: RenderableChildrenFactory = compose({
 		} = this;
 		const results: (VNode | string)[] = [];
 		/* Converting immutable lists toArray() is expensive */
-		renderableChildren.children.forEach((child) => results.push(child.render()));
+		renderableChildren.children && renderableChildren.children.forEach((child) => results.push(child.render()));
 		return results;
 	}
 });
