@@ -5,10 +5,11 @@ import Map from 'dojo-core/Map';
 import Promise from 'dojo-core/Promise';
 import WeakMap from 'dojo-core/WeakMap';
 import { List } from 'immutable/immutable';
-import { Child } from './createParentMixin';
+import { Child, ChildListEvent } from './createParentMixin';
 
 export interface ChildrenRegistry<C extends Child> {
 	get<D extends C>(id: string | symbol): Promise<D>;
+	identify(value: C): string | symbol;
 }
 
 export interface StatefulChildrenState {
@@ -46,7 +47,7 @@ const cachedChildrenIDs = new WeakMap<StatefulChildren<Child, StatefulChildrenSt
  * Internal statechange listener which deals with
  */
 function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
-	const parent: StatefulChildren<Child, StatefulChildrenState> = this;
+	const parent: StatefulChildren<Child, StatefulChildrenState> = <any> evt.target;
 
 	const widgetRegistry = registryMap.get(parent);
 	if (!widgetRegistry) {
@@ -100,6 +101,25 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
 	}
 }
 
+function manageChildrenState(evt: ChildListEvent<any, Child>) {
+	const parent: StatefulChildren<Child, StatefulChildrenState> = evt.target;
+
+	const widgetRegistry = registryMap.get(parent);
+	if (!widgetRegistry) {
+		/* We cannot manage children via state, as we have no way of resolving
+		 * the children IDs */
+		return;
+	}
+
+	const currentChildrenIDs = <List<string>> evt.children.map((widget) => widgetRegistry.identify(widget));
+
+	if (!currentChildrenIDs.equals(cachedChildrenIDs.get(parent))) {
+		cachedChildrenIDs.set(parent, currentChildrenIDs);
+		const children = currentChildrenIDs.toArray();
+		parent.setState({ children });
+	}
+}
+
 const createStatefulChildrenMixin: StatefulChildrenMixinFactory = createStateful
 	.mixin({
 		mixin: createEvented,
@@ -109,7 +129,8 @@ const createStatefulChildrenMixin: StatefulChildrenMixinFactory = createStateful
 				if (widgetRegistry) {
 					registryMap.set(instance, widgetRegistry);
 					childrenIdMap.set(instance, new Map<string, Child>());
-					instance.own(instance.on('statechange', manageChildren.bind(instance)));
+					instance.own(instance.on('statechange', manageChildren));
+					instance.own(instance.on('childlist', manageChildrenState));
 					instance.own({
 						destroy() {
 							registryMap.delete(instance);

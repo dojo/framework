@@ -42,6 +42,24 @@ const widgetRegistry = {
 			break;
 		}
 		return Promise.resolve(widget);
+	},
+	identify(value: Child): string | symbol {
+		let id: string | symbol;
+		switch (value) {
+		case panel1:
+			id = 'panel-1';
+			break;
+		case panel2:
+			id = 'panel-2';
+			break;
+		case panel3:
+			id = 'panel-3';
+			break;
+		case panel4:
+			id = 'panel-4';
+			break;
+		}
+		return id;
 	}
 };
 
