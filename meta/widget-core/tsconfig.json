@@ -34,7 +34,6 @@
 		"./src/examples/boot.ts",
 		"./src/examples/index.ts",
 		"./src/examples/scratch.ts",
-		"./src/interfaces.d.ts",
 		"./src/main.ts",
 		"./src/mixins/createCachedRenderMixin.ts",
 		"./src/mixins/createCloseableMixin.ts",

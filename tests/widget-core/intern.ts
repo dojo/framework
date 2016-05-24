@@ -62,7 +62,7 @@ export const loaderOptions = {
 		{ name: 'node_modules', location: '_build/node_modules' },
 		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
 		{ name: 'dojo-compose', location: 'node_modules/dojo-compose/dist/umd' },
-		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
+		{ name: 'dojo-core', location: 'node_modules/dojo-core/dist/umd' },
 		{ name: 'immutable', location: 'node_modules/immutable/dist' },
 		{ name: 'maquette', location: 'node_modules/maquette/dist' },
 		{ name: 'rxjs', location: 'node_modules/@reactivex/rxjs/dist/amd' }
