@@ -11,6 +11,7 @@
 .travis.yml
 .tscache
 .vscode
+codecov.yml
 Gruntfile.js
 tsconfig.json
 tslint.json
