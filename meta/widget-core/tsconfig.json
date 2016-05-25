@@ -13,14 +13,11 @@
 		"moduleResolution": "classic"
 	},
 	"filesGlob": [
-		"./typings/extras.d.ts",
-		"./typings/index.d.ts",
 		"./src/**/*.ts",
-		"./tests/**/*.ts"
+		"./tests/**/*.ts",
+		"./typings/index.d.ts"
 	],
 	"files": [
-		"./typings/extras.d.ts",
-		"./typings/index.d.ts",
 		"./src/createButton.ts",
 		"./src/createContainer.ts",
 		"./src/createDijit.ts",
@@ -88,7 +85,8 @@
 		"./tests/unit/util/createCancelableEvent.ts",
 		"./tests/unit/util/createMemoryStore.ts",
 		"./tests/unit/util/has.ts",
-		"./tests/unit/util/lang.ts"
+		"./tests/unit/util/lang.ts",
+		"./typings/index.d.ts"
 	],
 	"atom": {
 		"rewriteTsconfig": true
