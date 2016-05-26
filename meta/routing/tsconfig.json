@@ -7,15 +7,15 @@
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
-		"target": "es5"
+		"target": "es5",
+		"moduleResolution": "classic"
 	},
 	"filesGlob": [
-		"./typings/tsd.d.ts",
 		"./src/**/*.ts",
-		"./tests/**/*.ts"
+		"./tests/**/*.ts",
+		"./typings/index.d.ts"
 	],
 	"files": [
-		"./typings/tsd.d.ts",
 		"./src/_createRoute.ts",
 		"./src/_createRouter.ts",
 		"./src/_example.ts",
@@ -40,6 +40,7 @@
 		"./tests/unit/history/all.ts",
 		"./tests/unit/history/createHashHistory.ts",
 		"./tests/unit/history/createHistory.ts",
-		"./tests/unit/history/createMemoryHistory.ts"
+		"./tests/unit/history/createMemoryHistory.ts",
+		"./typings/index.d.ts"
 	]
 }

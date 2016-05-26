@@ -1,23 +1,22 @@
 sudo: false
 language: node_js
 node_js:
-  - "5.1"
+- '5.1'
 env:
   global:
-    # Please get your own free key if you want to test yourself
-    - SAUCE_USERNAME: dojo2-ts-ci
-    - SAUCE_ACCESS_KEY: e92610e3-834e-4bec-a3b5-6f7b9d874601
-    - BROWSERSTACK_USERNAME: dtktestaccount1
-    - BROWSERSTACK_ACCESS_KEY: mG2qbEFJCZY2qLsM7yfx
+  - SAUCE_USERNAME: dojo2-ts-ci
+  - SAUCE_ACCESS_KEY: e92610e3-834e-4bec-a3b5-6f7b9d874601
+  - BROWSERSTACK_USERNAME: dtktestaccount1
+  - BROWSERSTACK_ACCESS_KEY: mG2qbEFJCZY2qLsM7yfx
 cache:
   directories:
-    - node_modules
+  - node_modules
 install:
-  - "travis_retry npm install grunt-cli"
-  - "travis_retry npm install"
+- travis_retry npm install grunt-cli --global
+- travis_retry npm install
 script:
-  - "grunt"
-  - "grunt intern:node --combined"
-  - "grunt intern:saucelabs --combined"
-  - "grunt remapIstanbul:ci"
-  - "grunt uploadCoverage"
+- grunt
+- grunt intern:node --combined
+- grunt intern:saucelabs --combined
+- grunt remapIstanbul:ci
+- grunt uploadCoverage

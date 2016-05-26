@@ -19,7 +19,7 @@ export const capabilities = {
 // OnDemand. Options that will be permutated are browserName, version, platform, and platformVersion; any other
 // capabilities options specified for an environment will be copied as-is
 export const environments = [
-	{ browserName: 'internet explorer', version: [ '9', '10', '11' ], platform: 'WINDOWS' },
+	{ browserName: 'internet explorer', version: [ '10', '11' ], platform: 'WINDOWS' },
 	{ browserName: 'firefox', platform: 'WINDOWS' },
 	{ browserName: 'chrome', platform: 'WINDOWS' }/*,
 	{ browserName: 'Safari', version: '9', platform: 'OS X' }*/
@@ -53,11 +53,7 @@ export const loaderOptions = {
 	packages: [
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' },
-		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
-		{ name: 'dojo-actions', location: 'node_modules/dojo-actions' },
-		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
-		{ name: 'dojo-compose', location: 'node_modules/dojo-compose' },
-		{ name: 'dojo-widgets', location: 'node_modules/dojo-widgets' }
+		{ name: 'dojo', location: 'node_modules/intern/node_modules/dojo' }
 	]
 };
 
