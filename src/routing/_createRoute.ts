@@ -12,7 +12,7 @@ import {
 /**
  * Describes whether a route matched.
  */
-interface MatchResult<PP> {
+export interface MatchResult<PP> {
 	/**
 	 * Whether there are path segments that weren't matched by this route.
 	 */
@@ -42,7 +42,7 @@ export const enum Handler { Exec, Fallback, Index }
 /**
  * Describes the selection of a particular route.
  */
-interface Selection {
+export interface Selection {
 	/**
 	 * Which handler should be called when the route is executed.
 	 */

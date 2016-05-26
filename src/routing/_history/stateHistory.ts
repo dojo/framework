@@ -1,23 +1,25 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
+import createEvented from 'dojo-compose/mixins/createEvented';
 import global from 'dojo-core/global';
 import on from 'dojo-core/on';
-import createEvented from 'dojo-widgets/mixins/createEvented';
 
 import { BrowserHistory, History, HistoryOptions } from './interfaces';
 
-/**
- * A browser-based history manager that uses the history object to store the current value.
- */
-interface StateHistory extends History {
+export interface StateHistoryMixin {
 	_current?: string;
 	_history?: BrowserHistory;
 	_onPopstate(path: string): void;
 }
 
 /**
+ * A browser-based history manager that uses the history object to store the current value.
+ */
+export type StateHistory = History & StateHistoryMixin;
+
+/**
  * Options for creating StateHistory instances.
  */
-interface StateHistoryOptions extends HistoryOptions {
+export interface StateHistoryOptions extends HistoryOptions {
 	/**
 	 * A DOM window object. StateHistory uses the `history` and `location` properties and
 	 * listens to `popstate` events. The current value is initialized to the current path.
@@ -25,14 +27,13 @@ interface StateHistoryOptions extends HistoryOptions {
 	window: Window;
 }
 
-interface StateHistoryFactory extends ComposeFactory<StateHistory, StateHistoryOptions> {
+export interface StateHistoryFactory extends ComposeFactory<StateHistory, StateHistoryOptions> {
 	/**
 	 * Create a new StateHistory instance.
 	 * @param options Options to use during creation. If not specified the instance assumes
 	 *   the global object is a DOM window.
 	 */
 	(options?: StateHistoryOptions): StateHistory;
-
 }
 
 const createStateHistory: StateHistoryFactory = compose({

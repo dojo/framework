@@ -17,6 +17,11 @@
 		"test": "grunt test"
 	},
 	"typings": "./typings/dist/umd/dojo-routing.d.ts",
+	"peerDependencies": {
+		"@reactivex/rxjs": "5.0.0-beta.6",
+		"dojo-compose": "^2.0.0-beta.3",
+		"dojo-core": "^2.0.0-alpha.7"
+	},
 	"devDependencies": {
 		"codecov.io": "0.1.6",
 		"dojo-loader": ">=2.0.0-beta.5",

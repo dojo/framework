@@ -1,6 +1,6 @@
 import UrlSearchParams from 'dojo-core/UrlSearchParams';
 
-interface ParsedPath {
+export interface ParsedPath {
 	/**
 	 * Parameters extracted from the search component.
 	 */
@@ -60,7 +60,7 @@ export function parse (path: string): ParsedPath {
 	};
 }
 
-interface MatchResult {
+export interface MatchResult {
 	/**
 	 * Whether there are remaining segments that weren't matched.
 	 */
@@ -125,15 +125,15 @@ export function match ({ expectedSegments }: DeconstructedPath, segments: string
 	};
 }
 
-interface LiteralSegment {
+export interface LiteralSegment {
 	literal: string;
 }
 
-interface NamedSegment {
+export interface NamedSegment {
 	name: string;
 }
 
-type Segment = LiteralSegment | NamedSegment;
+export type Segment = LiteralSegment | NamedSegment;
 
 function isNamedSegment(segment: Segment): segment is NamedSegment {
 	return (<NamedSegment> segment).name !== undefined;

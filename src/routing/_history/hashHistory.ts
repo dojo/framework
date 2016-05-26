@@ -1,23 +1,25 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
+import createEvented from 'dojo-compose/mixins/createEvented';
 import global from 'dojo-core/global';
 import on from 'dojo-core/on';
-import createEvented from 'dojo-widgets/mixins/createEvented';
 
 import { History, HistoryOptions } from './interfaces';
 
-/**
- * A browser-based history manager that uses the location hash to store the current value.
- */
-interface HashHistory extends History {
+export interface HashHistoryMixin {
 	_current?: string;
 	_location?: Location;
 	_onHashchange(path: string): void;
 }
 
 /**
+ * A browser-based history manager that uses the location hash to store the current value.
+ */
+export type HashHistory = History & HashHistoryMixin;
+
+/**
  * Options for creating HashHistory instances.
  */
-interface HashHistoryOptions extends HistoryOptions {
+export interface HashHistoryOptions extends HistoryOptions {
 	/**
 	 * A DOM window object. HashHistory uses the `location` property and
 	 * listens to `hashchange` events. The current value is initialized to the
@@ -26,7 +28,7 @@ interface HashHistoryOptions extends HistoryOptions {
 	window: Window;
 }
 
-interface HashHistoryFactory extends ComposeFactory<HashHistory, HashHistoryOptions> {
+export interface HashHistoryFactory extends ComposeFactory<HashHistory, HashHistoryOptions> {
 	/**
 	 * Create a new HashHistory instance.
 	 * @param options Options to use during creation. If not specified the instance assumes

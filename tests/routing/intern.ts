@@ -42,7 +42,7 @@ export const initialBaseUrl: string = (function () {
 // The desired AMD loader to use when running unit tests (client.html/client.js). Omit to use the default Dojo
 // loader
 export const loaders = {
-	'host-browser': 'node_modules/dojo-loader/loader.js',
+	'host-browser': 'node_modules/dojo-loader/dist/umd/loader.js',
 	'host-node': 'dojo-loader'
 };
 
@@ -53,7 +53,9 @@ export const loaderOptions = {
 	packages: [
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' },
-		{ name: 'dojo', location: 'node_modules/intern/node_modules/dojo' }
+		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
+		{ name: 'dojo-compose', location: 'node_modules/dojo-compose/dist/umd' },
+		{ name: 'dojo-core', location: 'node_modules/dojo-core/dist/umd' }
 	]
 };
 

@@ -1,26 +1,28 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import createEvented from 'dojo-widgets/mixins/createEvented';
+import createEvented from 'dojo-compose/mixins/createEvented';
 
 import { History, HistoryOptions } from './interfaces';
 
-/**
- * A memory-backed history manager. Can be used outside of browsers.
- */
-interface MemoryHistory extends History {
+export interface MemoryHistoryMixin {
 	_current?: string;
 }
 
 /**
+ * A memory-backed history manager. Can be used outside of browsers.
+ */
+export type MemoryHistory = History & MemoryHistoryMixin;
+
+/**
  * Options for creating MemoryHistory instances.
  */
-interface MemoryHistoryOptions extends HistoryOptions {
+export interface MemoryHistoryOptions extends HistoryOptions {
 	/**
 	 * The current value is set to the path.
 	 */
 	path: string;
 }
 
-interface MemoryHistoryFactory extends ComposeFactory<MemoryHistory, MemoryHistoryOptions> {
+export interface MemoryHistoryFactory extends ComposeFactory<MemoryHistory, MemoryHistoryOptions> {
 	/**
 	 * Create a new MemoryHistory instance.
 	 * @param options Options to use during creation. If not specified the instance sets

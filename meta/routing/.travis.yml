@@ -13,6 +13,7 @@ cache:
   - node_modules
 install:
 - travis_retry npm install grunt-cli --global
+- "travis_retry npm install $(node -e \"var deps = require('./package.json').peerDependencies; for(var name in deps) process.stdout.write(name + '@' + deps[name] + ' ');\")"
 - travis_retry npm install
 script:
 - grunt

@@ -1,12 +1,12 @@
-import { EventObject, Handle } from 'dojo-core/interfaces';
-import { Evented, EventedListener, EventedOptions } from 'dojo-widgets/mixins/createEvented';
+import { Evented, EventedListener, EventedOptions, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
+import { Handle } from 'dojo-core/interfaces';
 
 export { BrowserHistory } from './alias-ambient-history';
 
 /**
  * Event object that is emitted for the 'change' event.
  */
-export interface HistoryChangeEvent extends EventObject {
+export interface HistoryChangeEvent extends TargettedEventObject {
 	/**
 	 * The new (current) value of the history. This is a path string.
 	 */
@@ -14,9 +14,9 @@ export interface HistoryChangeEvent extends EventObject {
 }
 
 /**
- * A history manager.
+ * A history manager mixin.
  */
-export interface History extends Evented {
+export interface HistoryMixin {
 	/**
 	 * Get the current value. This is a path string.
 	 */
@@ -33,14 +33,18 @@ export interface History extends Evented {
 	 * history entry to be replaced. Fires the 'change' event.
 	 */
 	replace(path: string): void;
+}
 
+export interface HistoryOverrides {
 	/**
 	 * Event emitted when the current value is changed, after the browser's history has
 	 * been updated.
 	 */
 	on(type: 'change', listener: EventedListener<HistoryChangeEvent>): Handle;
 
-	on(type: string, listener: EventedListener<EventObject>): Handle;
+	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
+
+export type History = Evented & HistoryMixin & HistoryOverrides;
 
 export interface HistoryOptions extends EventedOptions {}

@@ -1,17 +1,25 @@
 {
 	"name": "dojo-routing",
 	"devDependencies": {
+		"@reactivex/RxJS": "npm:@reactivex/rxjs",
 		"chai": "registry:npm/chai#3.5.0+20160415060238",
 		"glob": "registry:npm/glob#6.0.0+20160211003958"
 	},
+	"globalDependencies": {
+		"extra-rxjs": "github:dojo/typings/custom/dojo2-extras/rxjs.d.ts#004fc065b3b24412c9b6575cdc06545964c370b5"
+	},
 	"globalDevDependencies": {
 		"digdug": "github:dojo/typings/custom/digdug/digdug.d.ts#a62873258aa1deed48f9882c193c335436100d4b",
+		"dojo-compose": "npm:dojo-compose",
+		"dojo-core": "npm:dojo-core",
 		"dojo-loader": "npm:dojo-loader",
-		"dojo2": "github:dojo/typings/custom/dojo2/dojo.d.ts#a62873258aa1deed48f9882c193c335436100d4b",
 		"dojo2-dev": "github:dojo/typings/custom/dev/dev.d.ts#288d3a9868194f0e1ad6687371dffd1d96cb39a1",
+		"dojo2": "github:dojo/typings/custom/dojo2/dojo.d.ts#a62873258aa1deed48f9882c193c335436100d4b",
+		"es6-shim": "github:DefinitelyTyped/DefinitelyTyped/es6-shim/es6-shim.d.ts#6697d6f7dadbf5773cb40ecda35a76027e0783b2",
 		"gruntjs": "registry:dt/gruntjs#0.4.0+20160316171810",
 		"intern": "github:dojo/typings/custom/intern/intern.d.ts#92fcf688c0982c1107fca278de52e4bfe23bd8af",
 		"leadfoot": "github:dojo/typings/custom/leadfoot/leadfoot.d.ts#a62873258aa1deed48f9882c193c335436100d4b",
-		"node": "github:dojo/typings/custom/node/node.d.ts#a62873258aa1deed48f9882c193c335436100d4b"
+		"node": "github:dojo/typings/custom/node/node.d.ts#a62873258aa1deed48f9882c193c335436100d4b",
+		"symbol-shim": "github:dojo/typings/custom/symbol-shim/symbol-shim.d.ts#9a0185f465a3febe2bb1ff3f1210f43e5f96c5d2"
 	}
 }

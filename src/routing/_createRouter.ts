@@ -1,7 +1,7 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import { EventObject, Handle } from 'dojo-core/interfaces';
+import createEvented, { Evented, EventedOptions, EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
+import { Handle } from 'dojo-core/interfaces';
 import Task from 'dojo-core/async/Task';
-import createEvented, { Evented, EventedOptions, EventedListener } from 'dojo-widgets/mixins/createEvented';
 
 import { Route, Handler } from './_createRoute';
 import { Context, Parameters, Request } from './_interfaces';
@@ -10,7 +10,7 @@ import { parse as parsePath } from './_path';
 /**
  * An object to resume or cancel router dispatch.
  */
-interface DispatchDeferral {
+export interface DispatchDeferral {
 	/**
 	 * Call to prevent a path from being dispatched.
 	 */
@@ -25,7 +25,7 @@ interface DispatchDeferral {
 /**
  * Event object that is emitted for the 'navstart' event.
  */
-export interface NavigationStartEvent extends EventObject {
+export interface NavigationStartEvent extends TargettedEventObject {
 	/**
 	 * The path that has been navigated to.
 	 */
@@ -77,14 +77,16 @@ export interface RouterMixin {
 	fallback?(request: Request<any>): void;
 }
 
-export interface Router extends RouterMixin, Evented {
+export interface RouterOverrides {
 	/**
 	 * Event emitted when dispatch is called, but before routes are selected.
 	 */
 	on(type: 'navstart', listener: EventedListener<NavigationStartEvent>): Handle;
 
-	on(type: string, listener: EventedListener<EventObject>): Handle;
+	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
+
+export type Router = Evented & RouterMixin & RouterOverrides;
 
 /**
  * The options for the router.
