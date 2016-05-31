@@ -93,7 +93,7 @@ registerSuite({
 				assert.deepEqual(dijit.dijit.params, { foo: 'bar' });
 				assert.deepEqual(dijit.dijit._startupCalled, 1);
 				assert.deepEqual(dijit.dijit._destroyCalled, 0);
-			}), 10);
+			}), 50);
 		},
 		'afterCreate w/ load from cache'() {
 			const dfd = this.async();
@@ -112,7 +112,7 @@ registerSuite({
 				assert.deepEqual(dijit.dijit.params, { foo: 'bar' });
 				assert.deepEqual(dijit.dijit._startupCalled, 1);
 				assert.deepEqual(dijit.dijit._destroyCalled, 0);
-			}), 10);
+			}), 50);
 		},
 		'afterCreate w/ no Ctor'() {
 			const dfd = this.async(100);
