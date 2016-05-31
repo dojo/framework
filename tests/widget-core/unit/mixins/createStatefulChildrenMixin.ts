@@ -78,8 +78,8 @@ registerSuite({
 			setTimeout(dfd.callback(() => {
 				assert.deepEqual(widgetRegistry.stack, [ 'widget2' ], 'should not have called the widget registry');
 				assert.isTrue(List([ widget1, widget2 ]).equals(parent.children));
-			}), 10);
-		}, 10);
+			}), 50);
+		}, 50);
 	},
 	'childList'() {
 		const dfd = this.async();
