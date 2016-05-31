@@ -16,7 +16,7 @@
 		"prepublish": "grunt dist",
 		"test": "grunt test"
 	},
-	"typings": "./dist/umd/main.d.ts",
+	"typings": "./dist/umd/dojo-widgets.d.ts",
 	"peerDependencies": {
 		"@reactivex/rxjs": "5.0.0-beta.6",
 		"dojo-compose": ">=2.0.0-beta.4",
