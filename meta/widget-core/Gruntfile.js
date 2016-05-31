@@ -12,6 +12,11 @@ module.exports = function (grunt) {
 				dest: '<%= devDirectory %>'
 			}
 		},
+		dtsGenerator: {
+			options: {
+				main: 'dojo-widgets/main'
+			}
+		},
 		stylus: {
 			dev: {
 				options: {},
