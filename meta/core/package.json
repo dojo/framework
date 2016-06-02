@@ -32,7 +32,7 @@
 		"grunt-text-replace": "0.4.0",
 		"grunt-ts": "^5.5.1",
 		"grunt-tslint": "^3.1.0",
-		"grunt-typings": "kitsonk/grunt-typings#452cf5f29a6070965f85d0dcae48abbd75939179",
+		"grunt-typings": ">=0.1.5",
 		"http-proxy": "0.10.3",
 		"intern": "~3.2.3",
 		"istanbul": "0.4.3",
