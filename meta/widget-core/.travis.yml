@@ -1,7 +1,7 @@
 sudo: false
 language: node_js
 node_js:
-- '4.1'
+- '5.1'
 env:
   global:
   - SAUCE_USERNAME: dojo2-ts-ci
@@ -12,8 +12,7 @@ cache:
   directories:
   - node_modules
 install:
-- travis_retry npm install grunt-cli
-- travis_retry npm install typings --global
+- travis_retry npm install grunt-cli @reactivex/rxjs@5.0.0-beta.6 dojo-compose dojo-core immutable maquette
 - travis_retry npm install
 script:
 - grunt
