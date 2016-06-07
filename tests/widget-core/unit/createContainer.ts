@@ -19,7 +19,6 @@ registerSuite({
 		assert.isFunction(container.render);
 		assert.isFunction(container.setState);
 		assert.isObject(container.children);
-		assert.isObject(container.listeners);
 	},
 	'render()'() {
 		const container = createContainer();

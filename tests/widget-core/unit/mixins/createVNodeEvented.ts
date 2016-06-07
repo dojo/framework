@@ -7,7 +7,7 @@ registerSuite({
 	'register vdom event'() {
 		let count = 0;
 		const vnodeEvented = createVNodeEvented();
-		assert.isUndefined(vnodeEvented.listeners.ontouchcancel);
+		assert.isNull(vnodeEvented.listeners);
 		vnodeEvented.on('touchcancel', (event) => {
 			assert.strictEqual(event.type, 'touchcancel');
 			count++;
@@ -19,7 +19,7 @@ registerSuite({
 	'register non vdom event'() {
 		let count = 0;
 		const vnodeEvented = createVNodeEvented();
-		assert.strictEqual(Object.keys(vnodeEvented.listeners).length, 0);
+		assert.isNull(vnodeEvented.listeners);
 		vnodeEvented.on('foo', (event) => {
 			assert.strictEqual(event.type, 'foo');
 			count ++;
@@ -45,6 +45,63 @@ registerSuite({
 	'vnode event noop doesn\'t throw'() {
 		const vnodeEvented = createVNodeEvented();
 		vnodeEvented.emit({ type: 'touchcancel' });
+	},
+	'array of listeners': {
+		'during construction'() {
+			let count = 0;
+			const vnodeEvented = createVNodeEvented({
+				listeners: {
+					click: [
+						function () { count++; },
+						function () { count++; }
+					]
+				}
+			});
+			assert.isFunction(vnodeEvented.listeners.onclick);
+			vnodeEvented.emit({ type: 'click' });
+			assert.strictEqual(count, 2);
+		},
+		'.on()'() {
+			let count = 0;
+			const vnodeEvented = createVNodeEvented();
+			const handle = vnodeEvented.on('click', [
+				function () { count++; },
+				function () { count++; }
+			]);
+			assert.isFunction(vnodeEvented.listeners.onclick);
+			vnodeEvented.emit({ type: 'click' });
+			assert.strictEqual(count, 2);
+			handle.destroy();
+			vnodeEvented.emit({ type: 'click' });
+			assert.strictEqual(count, 2);
+		}
+	},
+	'map of listeners'() {
+		let countClick = 0;
+		let countFoo = 0;
+		const vnodeEvented = createVNodeEvented();
+		const handle = vnodeEvented.on({
+			'click'() { countClick++; },
+			'foo'() { countFoo++; }
+		});
+		assert.strictEqual(Object.keys(vnodeEvented.listeners).length, 1);
+		vnodeEvented.emit({ type: 'click' });
+		assert.strictEqual(countClick, 1);
+		assert.strictEqual(countFoo, 0);
+		vnodeEvented.emit({ type: 'foo' });
+		assert.strictEqual(countClick, 1);
+		assert.strictEqual(countFoo, 1);
+		handle.destroy();
+		vnodeEvented.emit({ type: 'click' });
+		vnodeEvented.emit({ type: 'foo' });
+		assert.strictEqual(countClick, 1);
+		assert.strictEqual(countFoo, 1);
+	},
+	'throws with bad arguments'() {
+		const vnodeEvented = createVNodeEvented();
+		assert.throws(() => {
+			(<any> vnodeEvented).on();
+		});
 	},
 	'actionable': {
 		'add action listener'() {

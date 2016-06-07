@@ -1,7 +1,7 @@
 import { EventObject, Handle } from 'dojo-core/interfaces';
 import { on } from 'dojo-core/aspect';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createEvented, { Evented, EventedOptions, EventedListener, resolveListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
+import createEvented, { Evented, EventedOptions, EventedListenerOrArray, EventedListenersMap, resolveListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 
 export interface VNodeListeners {
 	[on: string]: (ev?: TargettedEventObject) => boolean | void;
@@ -66,59 +66,104 @@ export interface VNodeEventedMixin {
 }
 
 export interface VNodeEventedOverrides {
-	on(type: 'touchcancel', listener: EventedListener<TouchEvent>): Handle;
-	on(type: 'touchend', listener: EventedListener<TouchEvent>): Handle;
-	on(type: 'touchmove', listener: EventedListener<TouchEvent>): Handle;
-	on(type: 'blur', listener: EventedListener<FocusEvent>): Handle;
-	on(type: 'change', listener: EventedListener<Event>): Handle;
-	on(type: 'click', listener: EventedListener<MouseEvent>): Handle;
-	on(type: 'dblclick', listener: EventedListener<MouseEvent>): Handle;
-	on(type: 'focus', listener: EventedListener<FocusEvent>): Handle;
-	on(type: 'input', listener: EventedListener<Event>): Handle;
-	on(type: 'keydown', listener: EventedListener<KeyboardEvent>): Handle;
-	on(type: 'keypress', listener: EventedListener<KeyboardEvent>): Handle;
-	on(type: 'keyup', listener: EventedListener<KeyboardEvent>): Handle;
-	on(type: 'load', listener: EventedListener<Event>): Handle;
-	on(type: 'mousedown', listener: EventedListener<MouseEvent>): Handle;
-	on(type: 'mouseenter', listener: EventedListener<MouseEvent>): Handle;
-	on(type: 'mouseleave', listener: EventedListener<MouseEvent>): Handle;
-	on(type: 'mousemove', listener: EventedListener<MouseEvent>): Handle;
-	on(type: 'mouseout', listener: EventedListener<MouseEvent>): Handle;
-	on(type: 'mouseover', listener: EventedListener<MouseEvent>): Handle;
-	on(type: 'mouseup', listener: EventedListener<MouseEvent>): Handle;
-	on(type: 'mousewheel', listener: EventedListener<MouseWheelEvent>): Handle;
-	on(type: 'scroll', listener: EventedListener<UIEvent>): Handle;
-	on(type: 'submit', listener: EventedListener<Event>): Handle;
+	on(type: 'touchcancel', listener: EventedListenerOrArray<TouchEvent>): Handle;
+	on(type: 'touchend', listener: EventedListenerOrArray<TouchEvent>): Handle;
+	on(type: 'touchmove', listener: EventedListenerOrArray<TouchEvent>): Handle;
+	on(type: 'blur', listener: EventedListenerOrArray<FocusEvent>): Handle;
+	on(type: 'change', listener: EventedListenerOrArray<Event>): Handle;
+	on(type: 'click', listener: EventedListenerOrArray<MouseEvent>): Handle;
+	on(type: 'dblclick', listener: EventedListenerOrArray<MouseEvent>): Handle;
+	on(type: 'focus', listener: EventedListenerOrArray<FocusEvent>): Handle;
+	on(type: 'input', listener: EventedListenerOrArray<Event>): Handle;
+	on(type: 'keydown', listener: EventedListenerOrArray<KeyboardEvent>): Handle;
+	on(type: 'keypress', listener: EventedListenerOrArray<KeyboardEvent>): Handle;
+	on(type: 'keyup', listener: EventedListenerOrArray<KeyboardEvent>): Handle;
+	on(type: 'load', listener: EventedListenerOrArray<Event>): Handle;
+	on(type: 'mousedown', listener: EventedListenerOrArray<MouseEvent>): Handle;
+	on(type: 'mouseenter', listener: EventedListenerOrArray<MouseEvent>): Handle;
+	on(type: 'mouseleave', listener: EventedListenerOrArray<MouseEvent>): Handle;
+	on(type: 'mousemove', listener: EventedListenerOrArray<MouseEvent>): Handle;
+	on(type: 'mouseout', listener: EventedListenerOrArray<MouseEvent>): Handle;
+	on(type: 'mouseover', listener: EventedListenerOrArray<MouseEvent>): Handle;
+	on(type: 'mouseup', listener: EventedListenerOrArray<MouseEvent>): Handle;
+	on(type: 'mousewheel', listener: EventedListenerOrArray<MouseWheelEvent>): Handle;
+	on(type: 'scroll', listener: EventedListenerOrArray<UIEvent>): Handle;
+	on(type: 'submit', listener: EventedListenerOrArray<Event>): Handle;
 	/**
 	 * Add a listener to an event by type
 	 * @param type The type of event to listen for
 	 * @param listener The event listener to attach
 	 */
-	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
+	on(type: string, listener: EventedListenerOrArray<TargettedEventObject>): Handle;
 }
 
 export type VNodeEvented = Evented & VNodeEventedMixin & VNodeEventedOverrides;
 
 export interface VNodeEventedFactory extends ComposeFactory<VNodeEvented, EventedOptions> { }
 
+/**
+ * Internal function that determines if an event is a VNode Event
+ * @params type The string the represents the event type
+ */
+function isVNodeEvent(type: string): boolean {
+	return Boolean(vnodeEvents.indexOf(type) > -1);
+}
+
+/**
+ * Internal function to convert an array of handles to a single array
+ *
+ * TODO: This is used in a couple places, maybe should migrate to a better place
+ *
+ * @params handles An array of handles
+ */
+function handlesArraytoHandle(handles: Handle[]): Handle {
+	return {
+		destroy() {
+			handles.forEach((handle) => handle.destroy());
+		}
+	};
+}
+
 const createVNodeEvented: VNodeEventedFactory = createEvented.mixin({
 	mixin: <VNodeEventedMixin> {
 		listeners: <VNodeListeners> null
 	},
-	initialize(instance) {
-		instance.listeners = {};
-	},
 	aspectAdvice: {
 		around: {
-			on(origFn): (type: string, listener: EventedListener<TargettedEventObject>) => Handle {
-				return function (type: string, listener: EventedListener<TargettedEventObject>): Handle {
+			on(origFn): (...args: any[]) => Handle {
+				return function (...args: any[]): Handle {
 					const evented: VNodeEvented = this;
-					if (vnodeEvents.indexOf(type) > -1) {
-						type = 'on' + type;
-						return on(evented.listeners, type, resolveListener(listener));
+					if (args.length === 2) { /* overload: on(type, listener) */
+						/* During initialization, sometimes the initialize functions occur out of order,
+						 * and Evented's initialize function could be called before this mixins, therefore
+						 * leaving this.listeners with an uninitiliazed value, therefore it is better to
+						 * determine if the value is unitialized here, ensuring that this.listeners is
+						 * always valid.
+						 */
+						if (evented.listeners === null) {
+							evented.listeners = {};
+						}
+						let type: string;
+						let listeners: EventedListenerOrArray<TargettedEventObject>;
+						[ type, listeners ] = args;
+						if (Array.isArray(listeners)) {
+							const handles = listeners.map((listener) => isVNodeEvent(type) ?
+								on(evented.listeners, 'on' + type, resolveListener(listener)) :
+								origFn.call(evented, type, listener));
+							return handlesArraytoHandle(handles);
+						}
+						else {
+							return isVNodeEvent(type) ?
+								on(evented.listeners, 'on' + type, resolveListener(listeners)) :
+								origFn.call(evented, type, listeners);
+						}
 					}
-					else {
-						return origFn.call(evented, type, listener);
+					else if (args.length === 1) { /* overload: on(listeners) */
+						const listenerMapArg: EventedListenersMap = args[0];
+						return handlesArraytoHandle(Object.keys(listenerMapArg).map((type) => evented.on(type, listenerMapArg[type])));
+					}
+					else { /* unexpected signature */
+						throw new TypeError('Invalid arguments');
 					}
 				};
 			},
@@ -126,7 +171,10 @@ const createVNodeEvented: VNodeEventedFactory = createEvented.mixin({
 			emit(origFn): <T extends EventObject>(event: T) => void {
 				return function <T extends EventObject>(event: T): void {
 					const evented: VNodeEvented = this;
-					if (vnodeEvents.indexOf(event.type) > -1) {
+					if (isVNodeEvent(event.type)) {
+						if (evented.listeners === null) {
+							evented.listeners = {};
+						}
 						const method = evented.listeners['on' + event.type];
 						if (method) {
 							method.call(evented, event);
