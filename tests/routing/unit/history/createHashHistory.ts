@@ -85,7 +85,8 @@ suite('createHashHistory', () => {
 		let window: Window & Evented;
 
 		beforeEach(() => {
-			const createFauxWindow = compose(sandbox.contentWindow).mixin(createEvented);
+			const { location } = sandbox.contentWindow;
+			const createFauxWindow = compose(<Window> { location }).mixin(createEvented);
 			window = createFauxWindow();
 		});
 

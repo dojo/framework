@@ -90,7 +90,8 @@ suite('createHistory', () => {
 		let window: Window & Evented;
 
 		beforeEach(() => {
-			const createFauxWindow = compose(sandbox.contentWindow).mixin(createEvented);
+			const { history, location } = sandbox.contentWindow;
+			const createFauxWindow = compose(<Window> { history, location }).mixin(createEvented);
 			window = createFauxWindow();
 		});
 
