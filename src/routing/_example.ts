@@ -1,3 +1,5 @@
+import Promise from 'dojo-core/Promise';
+
 import {
 	Context,
 	createRoute,

@@ -1,6 +1,7 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import createEvented, { Evented, EventedOptions, EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import { Handle } from 'dojo-core/interfaces';
+import Promise from 'dojo-core/Promise';
 import Task from 'dojo-core/async/Task';
 
 import { Route, Handler } from './_createRoute';

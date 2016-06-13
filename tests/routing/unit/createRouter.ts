@@ -1,3 +1,4 @@
+import Promise from 'dojo-core/Promise';
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 
