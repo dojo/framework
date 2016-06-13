@@ -110,6 +110,18 @@ suite('createStateHistory', () => {
 			assert.equal(emittedValue, '/foo');
 		});
 
+		test('ignores popstate for the current path', () => {
+			const history = createStateHistory({ window });
+
+			sandbox.contentWindow.history.pushState({}, '', '/foo');
+			emit(window, { type: 'popstate' });
+
+			history.on('change', () => {
+				throw new Error('Should not emit change for popstate events for the current path');
+			});
+			emit(window, { type: 'popstate' });
+		});
+
 		test('stops listening to popstate when destroyed', () => {
 			const history = createStateHistory({ window });
 			assert.equal(history.current, '/tests/support/sandbox.html');
