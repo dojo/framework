@@ -1,23 +1,17 @@
-import createRoute from './_createRoute';
+import createRoute from './createRoute';
 export { createRoute };
-export {
-	Route,
-	RouteOptions,
-	RouteFactory
-} from './_createRoute';
 
-import createRouter from './_createRouter';
+import createRouter from './createRouter';
 export { createRouter };
-export {
-	NavigationStartEvent,
-	RouterMixin,
-	RouterOptions,
-	RouterFactory
-} from './_createRouter';
 
-export {
-	DefaultParameters,
-	Context,
-	Parameters,
-	Request
-} from './_interfaces';
+import createHashHistory, { HashHistoryFactory } from './history/createHashHistory';
+import createMemoryHistory, { MemoryHistoryFactory } from './history/createMemoryHistory';
+import createStateHistory, { StateHistoryFactory } from './history/createStateHistory';
+
+export const history = {
+	createHashHistory,
+	createMemoryHistory,
+	createStateHistory
+};
+
+export { HashHistoryFactory, MemoryHistoryFactory, StateHistoryFactory };

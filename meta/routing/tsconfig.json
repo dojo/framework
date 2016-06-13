@@ -16,17 +16,15 @@
 		"./typings/index.d.ts"
 	],
 	"files": [
-		"./src/_createRoute.ts",
-		"./src/_createRouter.ts",
-		"./src/_example.ts",
-		"./src/_history/alias-ambient-history.ts",
-		"./src/_history/hashHistory.ts",
-		"./src/_history/interfaces.ts",
-		"./src/_history/memoryHistory.ts",
-		"./src/_history/stateHistory.ts",
-		"./src/_interfaces.d.ts",
 		"./src/_path.ts",
-		"./src/history.ts",
+		"./src/createRoute.ts",
+		"./src/createRouter.ts",
+		"./src/history/_alias-ambient-history.d.ts",
+		"./src/history/createHashHistory.ts",
+		"./src/history/createMemoryHistory.ts",
+		"./src/history/createStateHistory.ts",
+		"./src/history/interfaces.d.ts",
+		"./src/interfaces.d.ts",
 		"./src/main.ts",
 		"./tests/functional/all.ts",
 		"./tests/intern-local.ts",
@@ -39,8 +37,9 @@
 		"./tests/unit/createRouter.ts",
 		"./tests/unit/history/all.ts",
 		"./tests/unit/history/createHashHistory.ts",
-		"./tests/unit/history/createHistory.ts",
 		"./tests/unit/history/createMemoryHistory.ts",
+		"./tests/unit/history/createStateHistory.ts",
+		"./tests/unit/main.ts",
 		"./typings/index.d.ts"
 	]
 }

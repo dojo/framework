@@ -21,7 +21,7 @@ The examples below are provided in TypeScript syntax. The package does work unde
 ### Creating a router
 
 ```ts
-import { createRouter } from 'dojo-routing';
+import createRouter from 'dojo-routing/createRouter';
 
 const router = createRouter();
 ```
@@ -31,7 +31,7 @@ const router = createRouter();
 With the `router` from the previous example:
 
 ```ts
-import { createRoute } from 'dojo-routing'
+import createRoute from 'dojo-routing/createRoute';
 
 router.append(createRoute({ path: '/' }));
 router.append(createRoute({ path: '/about' }));
@@ -53,7 +53,7 @@ router.append([
 The router doesn't track navigation events by itself. Changed paths need to be dispatched by application code. Context must be provided, this is made available to the matched routes.
 
 ```ts
-import { Context } from 'dojo-routing';
+import { Context } from 'dojo-routing/interfaces';
 
 interface AppContext extends Context {
 	someKey: string;
@@ -73,7 +73,7 @@ Route selection starts in a future turn. An async Task is returned (see [`dojo-c
 The following creates a simple route. The `exec()` function is called when the route is executed.
 
 ```ts
-import { createRoute } from 'dojo-routing'
+import createRoute from 'dojo-routing/createRoute';
 
 const route = createRoute({
 	path: '/',
@@ -109,7 +109,7 @@ const route = createRoute({
 Routes can be appended to other routes:
 
 ```ts
-import { createRoute } from 'dojo-routing'
+import createRoute from 'dojo-routing/createRoute';
 
 const posts = createRoute({
 	path: '/posts',
@@ -166,7 +166,8 @@ const posts = createRoute({
 You can extract pathname segments. These will be added to the `params` object of the `request`:
 
 ```ts
-import { createRoute, DefaultParameters } from 'dojo-routing';
+import createRoute from 'dojo-routing/createRoute';
+import { DefaultParameters } from 'dojo-routing/interfaces';
 
 createRoute({
 	path: '/posts/{id}',
@@ -183,7 +184,8 @@ Parameter names must not be repeated in the route's path. They can't contain `{`
 You can customize the `params` object:
 
 ```ts
-import { createRoute, Parameters, Route } from 'dojo-routing';
+import createRoute, { Route } from 'dojo-routing/createRoute';
+import { Parameters } from 'dojo-routing/interfaces';
 
 interface MyParams extends Parameters {
 	id: number;
@@ -233,7 +235,8 @@ This also prevents any nested routes from being selected.
 Each route's path may include a search component. Name parameters to extract them into the `params` object:
 
 ```ts
-import { createRoute, DefaultParameters } from 'dojo-routing';
+import createRoute from 'dojo-routing/createRoute';
+import { DefaultParameters } from 'dojo-routing/interfaces';
 
 createRoute({
 	path: '/posts/{id}?{comment}',
@@ -272,7 +275,8 @@ createRoute({
 By default the `params` object will contain the *first* occurrence of each query parameter. However if you specify a `params()` function you'll get access to *all* values:
 
 ```ts
-import { createRoute, Parameters, Route } from 'dojo-routing';
+import createRoute, { Route } from 'dojo-routing/createRoute';
+import { Parameters } from 'dojo-routing/interfaces';
 
 interface MyParams extends Parameters {
 	id: number;
@@ -442,9 +446,9 @@ This library ships with three history managers. They share the same interface bu
 The recommended manager uses `pushState()` and `replaceState()` to [add or modify history entries](https://developer.mozilla.org/en-US/docs/Web/API/History_API#Adding_and_modifying_history_entries). This requires server-side support to work well:
 
 ```ts
-import { createHistory } from 'dojo-routing/history';
+import createStateHistory from 'dojo-routing/history/createStateHistory';
 
-const history = createHistory();
+const history = createStateHistory();
 ```
 
 This assumes the global object is a browser `window` object. It'll access `window.location` and `window.history`, as well as add an event listener for the `popstate` event.
@@ -452,7 +456,7 @@ This assumes the global object is a browser `window` object. It'll access `windo
 You can provide an explicit `window` object:
 
 ```ts
-const history = createHistory({ window: myWindowObject });
+const history = createStateHistory({ window: myWindowObject });
 ```
 
 This is mostly useful for testing purposes.
@@ -478,7 +482,7 @@ Applications should call `Router#dispatch()` with this value as the path.
 The hash-based manager uses the fragment identifier to store navigation state. This makes it a better fit for applications that are served as a static HTML file:
 
 ```ts
-import { createHashHistory } from 'dojo-routing/history';
+import createHashHistory from 'dojo-routing/history/createHashHistory';
 
 const history = createHashHistory();
 ```
@@ -492,7 +496,7 @@ Path strings are stored in the fragment identifier. `history.current` returns th
 Finally there is a memory-backed manager. This isn't very useful in browsers but can be helpful when writing tests.:
 
 ```ts
-import { createMemoryHistory } from 'dojo-routing/history';
+import createMemoryHistory from 'dojo-routing/history/createMemoryHistory';
 
 const history = createMemoryHistory();
 ```

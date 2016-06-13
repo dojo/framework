@@ -5,7 +5,7 @@ import Promise from 'dojo-core/Promise';
 import { afterEach, beforeEach, suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 
-import { createHashHistory } from '../../../src/history';
+import createHashHistory from '../../../src/history/createHashHistory';
 
 suite('createHashHistory', () => {
 	// Mask the globals so tests are forced to explicitly reference the

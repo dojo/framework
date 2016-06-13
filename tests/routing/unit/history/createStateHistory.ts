@@ -5,9 +5,9 @@ import Promise from 'dojo-core/Promise';
 import { afterEach, beforeEach, suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 
-import { createHistory } from '../../../src/history';
+import createStateHistory from '../../../src/history/createStateHistory';
 
-suite('createHistory', () => {
+suite('createStateHistory', () => {
 	// Mask the globals so tests are forced to explicitly reference the
 	// correct window.
 	/* tslint:disable */
@@ -32,26 +32,26 @@ suite('createHistory', () => {
 
 	test('initializes current path to current location', () => {
 		sandbox.contentWindow.history.pushState({}, '', '/foo?bar');
-		assert.equal(createHistory({ window: sandbox.contentWindow }).current, '/foo?bar');
+		assert.equal(createStateHistory({ window: sandbox.contentWindow }).current, '/foo?bar');
 	});
 
 	test('location defers to the global object', () => {
-		assert.equal(createHistory().current, window.location.pathname + window.location.search);
+		assert.equal(createStateHistory().current, window.location.pathname + window.location.search);
 	});
 
 	test('history defers to the global object', () => {
-		assert.equal(createHistory()._history, window.history);
+		assert.equal(createStateHistory()._history, window.history);
 	});
 
 	test('update path', () => {
-		const history = createHistory({ window: sandbox.contentWindow });
+		const history = createStateHistory({ window: sandbox.contentWindow });
 		history.set('/foo');
 		assert.equal(history.current, '/foo');
 		assert.equal(sandbox.contentWindow.location.pathname, '/foo');
 	});
 
 	test('emits change when path is updated', () => {
-		const history = createHistory({ window: sandbox.contentWindow });
+		const history = createStateHistory({ window: sandbox.contentWindow });
 		let emittedValue = '';
 		history.on('change', ({ value }) => {
 			emittedValue = value;
@@ -61,14 +61,14 @@ suite('createHistory', () => {
 	});
 
 	test('replace path', () => {
-		const history = createHistory({ window: sandbox.contentWindow });
+		const history = createStateHistory({ window: sandbox.contentWindow });
 		history.replace('/foo');
 		assert.equal(history.current, '/foo');
 		assert.equal(sandbox.contentWindow.location.pathname, '/foo');
 	});
 
 	test('emits change when path is replaced', () => {
-		const history = createHistory({ window: sandbox.contentWindow });
+		const history = createStateHistory({ window: sandbox.contentWindow });
 		let emittedValue = '';
 		history.on('change', ({ value }) => {
 			emittedValue = value;
@@ -81,7 +81,7 @@ suite('createHistory', () => {
 		const { length } = sandbox.contentWindow.history;
 		assert.isTrue(length < 49, 'Too many history entries to run this test. Please open a new browser window');
 
-		const history = createHistory({ window: sandbox.contentWindow });
+		const history = createStateHistory({ window: sandbox.contentWindow });
 		history.replace('/baz');
 		assert.equal(sandbox.contentWindow.history.length, length);
 	});
@@ -96,7 +96,7 @@ suite('createHistory', () => {
 		});
 
 		test('handles popstate', () => {
-			const history = createHistory({ window });
+			const history = createStateHistory({ window });
 
 			let emittedValue = '';
 			history.on('change', ({ value }) => {
@@ -111,7 +111,7 @@ suite('createHistory', () => {
 		});
 
 		test('stops listening to popstate when destroyed', () => {
-			const history = createHistory({ window });
+			const history = createStateHistory({ window });
 			assert.equal(history.current, '/tests/support/sandbox.html');
 
 			history.destroy();

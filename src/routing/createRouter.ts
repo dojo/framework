@@ -4,8 +4,8 @@ import { Handle } from 'dojo-core/interfaces';
 import Promise from 'dojo-core/Promise';
 import Task from 'dojo-core/async/Task';
 
-import { Route, Handler } from './_createRoute';
-import { Context, Parameters, Request } from './_interfaces';
+import { Route, Handler } from './createRoute';
+import { Context, Parameters, Request } from './interfaces';
 import { parse as parsePath } from './_path';
 
 /**

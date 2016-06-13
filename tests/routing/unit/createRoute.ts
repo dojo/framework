@@ -2,14 +2,8 @@ import UrlSearchParams from 'dojo-core/UrlSearchParams';
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 
-import {
-	Context as C,
-	createRoute,
-	DefaultParameters,
-	Parameters,
-	Request,
-	Route
-} from '../../src/main';
+import createRoute, { Route } from '../../src/createRoute';
+import { DefaultParameters, Context as C, Request, Parameters } from '../../src/interfaces';
 
 interface R extends Request<Parameters> {};
 

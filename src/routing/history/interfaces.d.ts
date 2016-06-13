@@ -1,7 +1,7 @@
 import { Evented, EventedListener, EventedOptions, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import { Handle } from 'dojo-core/interfaces';
 
-export { BrowserHistory } from './alias-ambient-history';
+export { BrowserHistory } from './_alias-ambient-history';
 
 /**
  * Event object that is emitted for the 'change' event.

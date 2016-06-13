@@ -2,7 +2,7 @@ import compose, { ComposeFactory } from 'dojo-compose/compose';
 import UrlSearchParams from 'dojo-core/UrlSearchParams';
 import { Hash } from 'dojo-core/interfaces';
 
-import { DefaultParameters, Context, Parameters, Request } from './_interfaces';
+import { DefaultParameters, Context, Parameters, Request } from './interfaces';
 import {
 	deconstruct as deconstructPath,
 	match as matchPath,

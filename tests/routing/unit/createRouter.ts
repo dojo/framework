@@ -2,14 +2,9 @@ import Promise from 'dojo-core/Promise';
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 
-import {
-	Context as C,
-	createRoute,
-	createRouter,
-	DefaultParameters,
-	Parameters,
-	Request
-} from '../../src/main';
+import createRoute from '../../src/createRoute';
+import createRouter from '../../src/createRouter';
+import { DefaultParameters, Context as C, Request, Parameters } from '../../src/interfaces';
 
 interface R extends Request<Parameters> {};
 

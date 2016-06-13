@@ -1,7 +1,7 @@
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 
-import { createMemoryHistory } from '../../../src/history';
+import createMemoryHistory from '../../../src/history/createMemoryHistory';
 
 suite('createMemoryHistory', () => {
 	test('default initial path is empty', () => {
