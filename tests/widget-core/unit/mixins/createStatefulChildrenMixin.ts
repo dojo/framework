@@ -49,7 +49,7 @@ registerSuite({
 		setTimeout(dfd.callback(() => {
 			assert.deepEqual(widgetRegistry.stack, [ 'widget1' ]);
 			assert.isTrue(List([ widget1 ]).equals(parent.children));
-		}), 10);
+		}), 50);
 	},
 	setState() {
 		const dfd = this.async();
@@ -62,7 +62,7 @@ registerSuite({
 		setTimeout(dfd.callback(() => {
 			assert.deepEqual(widgetRegistry.stack, [ 'widget2' ]);
 			assert.isTrue(List([ widget2 ]).equals(parent.children));
-		}), 10);
+		}), 50);
 	},
 	'chaching widgets'() {
 		const dfd = this.async();
@@ -103,7 +103,7 @@ registerSuite({
 			});
 			setTimeout(dfd.callback(() => {
 				assert.deepEqual(parent.state.children, [ 'widget2', 'widget3' ]);
-			}), 10);
-		}, 10);
+			}), 50);
+		}, 50);
 	}
 });

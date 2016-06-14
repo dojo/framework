@@ -46,7 +46,7 @@ registerSuite({
 			setTimeout(dfd.callback(() => {
 				assert.strictEqual(dijit.Ctor, 'tests/support/dijit/Dijit');
 				assert.deepEqual(dijit.params, { foo: 'bar' });
-			}), 10);
+			}), 50);
 		}
 	},
 	'render()': {
@@ -74,7 +74,7 @@ registerSuite({
 				assert.deepEqual(dijit.dijit.params, { foo: 'bar' });
 				assert.deepEqual(dijit.dijit._startupCalled, 1);
 				assert.deepEqual(dijit.dijit._destroyCalled, 0);
-			}), 10);
+			}), 50);
 		},
 		'afterCreate w/ mid'() {
 			const dfd = this.async();
@@ -186,7 +186,7 @@ registerSuite({
 				afterCreate(newDomNode, {}, vnode.vnodeSelector, {}, []);
 				assert.strictEqual(dijit.dijit.domNode, domNode);
 				assert.strictEqual(dijit.dijit.domNode.parentNode, document.body);
-			}), 10);
+			}), 50);
 		}
 	},
 	'destroy()': {
@@ -215,7 +215,7 @@ registerSuite({
 					.then(dfd.callback(() => {
 						assert.strictEqual(dijitWidget._destroyCalled, 1);
 					}));
-			}, 10);
+			}, 50);
 		}
 	}
 });
