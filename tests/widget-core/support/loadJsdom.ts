@@ -19,6 +19,11 @@ global.document = doc;
 /* Assign a global window as well */
 global.window = doc.defaultView;
 
+/* Polyfill requestAnimationFrame */
+global.requestAnimationFrame = (cb: (...args: any[]) => {}) => {
+	setImmediate(cb);
+};
+
 export default doc;
 
 console.log('Loaded JSDOM...');

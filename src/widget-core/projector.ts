@@ -1,4 +1,3 @@
-import './util/has!dom-requestanimationframe?:maquette/maquette-polyfills.min'; /* IE9/Node do not support RequestAnimationFrame */
 import { h, createProjector as createMaquetteProjector, Projector as MaquetteProjector, VNode, VNodeProperties } from 'maquette/maquette';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { EventedOptions } from 'dojo-compose/mixins/createEvented';
@@ -9,9 +8,6 @@ import { queueTask } from 'dojo-core/queue';
 import WeakMap from 'dojo-core/WeakMap';
 import createVNodeEvented, { VNodeEvented } from './mixins/createVNodeEvented';
 import createParentMixin, { ParentMixin, ParentMixinOptions, Child } from './mixins/createParentMixin';
-
-/* maquette polyfills changed from 2.2 to 2.3 */
-global.requestAnimationFrame = global.requestAnimationFrame || global.window.requestAnimationFrame;
 
 export type AttachType = 'append' | 'merge' | 'replace';
 
@@ -267,6 +263,6 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 		}
 	});
 
-const defaultProjector: Projector = createProjector();
+const defaultProjector: Projector = typeof global.document === 'undefined' ? null : createProjector();
 
 export default defaultProjector;
