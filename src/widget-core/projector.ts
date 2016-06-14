@@ -13,6 +13,8 @@ import createParentMixin, { ParentMixin, ParentMixinOptions, Child } from './mix
 /* maquette polyfills changed from 2.2 to 2.3 */
 global.requestAnimationFrame = global.requestAnimationFrame || global.window.requestAnimationFrame;
 
+export type AttachType = 'append' | 'merge' | 'replace';
+
 export interface ProjectorOptions extends ParentMixinOptions<Child>, EventedOptions {
 	/**
 	 * The root element for the projector
@@ -20,16 +22,14 @@ export interface ProjectorOptions extends ParentMixinOptions<Child>, EventedOpti
 	root?: Element;
 
 	/**
-	 * If `true`, automatically attach to the DOM during creation
+	 * If set, automatically attach to the DOM during creation
 	 */
-	autoAttach?: boolean;
+	autoAttach?: boolean | AttachType;
+}
 
-	/**
-	 * If `true`, append instead of merge when attaching to the projector to the DOM
-	 *
-	 * Only applies if `autoAttach` is `true`
-	 */
-	append?: boolean;
+export interface AttachOptions {
+	type?: AttachType;
+	tagName?: string;
 }
 
 export interface ProjectorMixin {
@@ -49,7 +49,7 @@ export interface ProjectorMixin {
 	 * @param tagName If `append` is `true` then `tagName` will be used to determine what tag name
 	 *                is used to append to the root element. Defaults to `div`.
 	 */
-	attach(append?: boolean, tagName?: string): Handle;
+	attach(options?: AttachOptions): Handle;
 
 	/**
 	 * Inform the projector that it is in a dirty state and should re-render.  Calling event handles will automatically
@@ -144,7 +144,7 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 			projector.children.forEach((child) => childVNodes.push(child.render()));
 			return h(projectorData.tagName, projector.getNodeAttributes(), childVNodes);
 		},
-		attach(append: boolean = false, tagName: string = 'div'): Handle {
+		attach({ type, tagName = 'div' }: AttachOptions = {}): Handle {
 			const projector: Projector = this;
 			const projectorData = projectorDataMap.get(projector);
 			if (projectorData.state === ProjectorState.Attached) {
@@ -156,7 +156,19 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 			 * turn, they are executed before this, since the attachement is actually done in turn, but subsequent schedule
 			 * renders are done out of turn */
 			queueTask(() => {
-				(append ? projectorData.projector.append : projectorData.projector.merge)(projectorData.root, projectorData.boundRender);
+				const { projector } = projectorData;
+				switch (type) {
+					case 'append':
+						projector.append(projectorData.root, projectorData.boundRender);
+						break;
+					case 'replace':
+						projector.replace(projectorData.root, projectorData.boundRender);
+						break;
+					case 'merge':
+					default:
+						projector.merge(projectorData.root, projectorData.boundRender);
+						break;
+				}
 			});
 			projectorData.state = ProjectorState.Attached;
 			projectorData.attachHandle = projector.own({
@@ -231,16 +243,18 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 	})
 	.mixin({
 		mixin: createParentMixin,
-		initialize(instance, options) {
+		initialize(instance: Projector, { autoAttach = false, root = document.body }: ProjectorOptions = {}) {
 			const projector = createMaquetteProjector({});
-			const root = options && options.root || document.body;
 			projectorDataMap.set(instance, {
 				projector,
 				root,
 				state: ProjectorState.Detached
 			});
-			if (options && options.autoAttach) {
-				instance.attach(options && options.append);
+			if (autoAttach === true) {
+				instance.attach({ type: 'merge' });
+			}
+			else if (typeof autoAttach === 'string') {
+				instance.attach({ type: autoAttach });
 			}
 		},
 		aspectAdvice: {
