@@ -46,7 +46,6 @@
 		"./src/projector.ts",
 		"./src/util/createCancelableEvent.ts",
 		"./src/util/createMemoryStore.ts",
-		"./src/util/has.ts",
 		"./src/util/lang.ts",
 		"./src/util/query.ts",
 		"./tests/functional/all.ts",
@@ -84,7 +83,6 @@
 		"./tests/unit/util/all.ts",
 		"./tests/unit/util/createCancelableEvent.ts",
 		"./tests/unit/util/createMemoryStore.ts",
-		"./tests/unit/util/has.ts",
 		"./tests/unit/util/lang.ts",
 		"./typings/index.d.ts"
 	],
