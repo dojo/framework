@@ -19,13 +19,23 @@ export interface ProjectorOptions extends ParentListMixinOptions<Child>, Evented
 	root?: Element;
 
 	/**
-	 * If set, automatically attach to the DOM during creation
+	 * If `true`, automatically attach to the DOM during creation (by merging). Do the same if a valid attach type is
+	 * provided (see `AttachOptions`). The attach type determines how the projector is attached.
 	 */
 	autoAttach?: boolean | AttachType;
 }
 
 export interface AttachOptions {
+	/**
+	 * If `'append'` it will append to the root. If `'merge'` it will merge with the root. If `'replace'` it will
+	 * replace the root.
+	 */
+
 	type?: AttachType;
+	/**
+	 * If `type` is `'append'` or `'replace'` then `tagName` will be used to determine what tag name
+	 * is used to append to or replace the root element. Defaults to `div`.
+	 */
 	tagName?: string;
 }
 
@@ -42,9 +52,7 @@ export interface ProjectorMixin {
 
 	/**
 	 * Attach the projector to the DOM and return a handle to detach it.
-	 * @param append If `true`, it will append to the root instead of the default of merging
-	 * @param tagName If `append` is `true` then `tagName` will be used to determine what tag name
-	 *                is used to append to the root element. Defaults to `div`.
+	 * @param options An optional map of options that change the default behaviour of the attachment
 	 */
 	attach(options?: AttachOptions): Handle;
 
