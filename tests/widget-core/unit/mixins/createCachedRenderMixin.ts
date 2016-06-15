@@ -31,15 +31,21 @@ registerSuite({
 		assert.deepEqual(nodeAttributes.classes, { bar: true });
 		assert.strictEqual(Object.keys(nodeAttributes).length, 5);
 
+		cachedRender.setState({ 'id': 'foo', classes: ['foo'] });
+
+		nodeAttributes = cachedRender.getNodeAttributes();
+
+		assert.deepEqual(nodeAttributes.classes, { foo: true, bar: false });
+
 		nodeAttributes = cachedRender.getNodeAttributes({
 			name: 'foo',
 			'data-widget-id': 'bar',
-			classes: { foo: false }
+			classes: { bar: false }
 		});
 
 		assert.strictEqual(nodeAttributes.name, 'foo');
 		assert.strictEqual(nodeAttributes['data-widget-id'], 'bar');
-		assert.deepEqual(nodeAttributes.classes, { foo: false });
+		assert.deepEqual(nodeAttributes.classes, { bar: false });
 		assert.strictEqual(Object.keys(nodeAttributes).length, 6);
 	},
 	'getChildrenNodes()'() {

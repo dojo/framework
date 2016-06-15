@@ -51,6 +51,8 @@
 		"./tests/functional/all.ts",
 		"./tests/functional/tabbedPanel.ts",
 		"./tests/functional/tabbedPanelFunctional.ts",
+		"./tests/functional/widgetClasses.ts",
+		"./tests/functional/widgetClassesFunctional.ts",
 		"./tests/functional/widgets.ts",
 		"./tests/functional/widgetsFunctional.ts",
 		"./tests/intern-local.ts",
