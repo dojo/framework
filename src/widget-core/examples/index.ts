@@ -2,7 +2,7 @@ import createMemoryStore from 'src/util/createMemoryStore';
 import createWidget from 'src/createWidget';
 import createPanel from 'src/createPanel';
 import createTabbedPanel from 'src/createTabbedPanel';
-import { Child } from 'src/mixins/createParentMixin';
+import { Child } from 'src/mixins/interfaces';
 import projector from 'src/projector';
 import Promise from 'dojo-core/Promise';
 

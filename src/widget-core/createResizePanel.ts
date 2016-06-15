@@ -5,9 +5,10 @@ import { Handle } from 'dojo-core/interfaces';
 import { on } from 'dojo-core/aspect';
 import WeakMap from 'dojo-core/WeakMap';
 import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
-import createParentMixin, { ParentMixin, ParentMixinOptions, Child } from './mixins/createParentMixin';
+import createParentListMixin, { ParentListMixin, ParentListMixinOptions } from './mixins/createParentListMixin';
 import createRenderableChildrenMixin from './mixins/createRenderableChildrenMixin';
 import createStatefulChildrenMixin, { StatefulChildrenState, StatefulChildrenOptions } from './mixins/createStatefulChildrenMixin';
+import { Child } from './mixins/interfaces';
 import { Projector } from './projector';
 
 /* TODO: Abstract logic to a mixin */
@@ -16,7 +17,7 @@ export interface ResizePanelState extends WidgetState, StatefulChildrenState {
 	width?: string;
 }
 
-export interface ResizePanelOptions extends WidgetOptions<ResizePanelState>, ParentMixinOptions<Child>, StatefulChildrenOptions<Child, ResizePanelState> { }
+export interface ResizePanelOptions extends WidgetOptions<ResizePanelState>, ParentListMixinOptions<Child>, StatefulChildrenOptions<Child, ResizePanelState> { }
 
 export interface ResizePanelMixin {
 	tagNames: {
@@ -25,7 +26,7 @@ export interface ResizePanelMixin {
 	width: string;
 }
 
-export type ResizePanel = Widget<ResizePanelState> & ParentMixin<Child> & Destroyable & ResizePanelMixin;
+export type ResizePanel = Widget<ResizePanelState> & ParentListMixin<Child> & Destroyable & ResizePanelMixin;
 
 export interface ResizePanelFactory extends ComposeFactory<ResizePanel, ResizePanelOptions> { }
 
@@ -135,7 +136,7 @@ function setResizeListeners(resizePanel: ResizePanel): Handle {
 }
 
 const createResizePanel: ResizePanelFactory = createWidget
-	.mixin(createParentMixin)
+	.mixin(createParentListMixin)
 	.mixin(createRenderableChildrenMixin)
 	.mixin(createStatefulChildrenMixin)
 	.mixin({

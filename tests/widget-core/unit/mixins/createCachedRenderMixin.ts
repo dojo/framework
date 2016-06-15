@@ -75,6 +75,39 @@ registerSuite({
 		assert.strictEqual(result1.properties['data-widget-id'], 'foo');
 		assert.strictEqual(result1.text, 'foo');
 	},
+	'id': {
+		'in state'() {
+			const cachedRender = createCachedRenderMixin({
+				state: {
+					id: 'foo'
+				}
+			});
+
+			assert.strictEqual(cachedRender.id, 'foo');
+		},
+		'generated'() {
+			let called = false;
+			const cachedRender = createCachedRenderMixin();
+
+			cachedRender.on('statechange', () => {
+				assert.strictEqual(cachedRender.id, cachedRender.state.id, 'state should match');
+				called = true;
+			});
+
+			const id = cachedRender.id;
+			assert.isTrue(called, 'statechange should have been called');
+
+			assert.include(id, createCachedRenderMixin.idBase, 'should include static idBase');
+			assert.notStrictEqual(cachedRender.id, createCachedRenderMixin.idBase, 'but shouldn\'t match exactly');
+			assert.strictEqual(id, cachedRender.id, 'should return same id');
+		},
+		'is read only'() {
+			const cachedRender = createCachedRenderMixin();
+			assert.throws(() => {
+				cachedRender.id = 'foo';
+			});
+		}
+	},
 	'invalidate invalidates parent projector'() {
 		let count = 0;
 		const projector = createProjector({});

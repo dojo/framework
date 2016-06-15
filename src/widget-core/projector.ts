@@ -7,11 +7,12 @@ import { assign } from 'dojo-core/lang';
 import { queueTask } from 'dojo-core/queue';
 import WeakMap from 'dojo-core/WeakMap';
 import createVNodeEvented, { VNodeEvented } from './mixins/createVNodeEvented';
-import createParentMixin, { ParentMixin, ParentMixinOptions, Child } from './mixins/createParentMixin';
+import createParentListMixin, { ParentListMixin, ParentListMixinOptions } from './mixins/createParentListMixin';
+import { Child } from './mixins/interfaces';
 
 export type AttachType = 'append' | 'merge' | 'replace';
 
-export interface ProjectorOptions extends ParentMixinOptions<Child>, EventedOptions {
+export interface ProjectorOptions extends ParentListMixinOptions<Child>, EventedOptions {
 	/**
 	 * The root element for the projector
 	 */
@@ -90,7 +91,7 @@ export interface ProjectorMixin {
 	state: ProjectorState;
 }
 
-export type Projector = VNodeEvented & ParentMixin<Child> & ProjectorMixin;
+export type Projector = VNodeEvented & ParentListMixin<Child> & ProjectorMixin;
 
 export interface ProjectorFactory extends ComposeFactory<Projector, ProjectorOptions> { }
 
@@ -238,7 +239,7 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 		}
 	})
 	.mixin({
-		mixin: createParentMixin,
+		mixin: createParentListMixin,
 		initialize(instance: Projector, { autoAttach = false, root = document.body }: ProjectorOptions = {}) {
 			const projector = createMaquetteProjector({});
 			projectorDataMap.set(instance, {

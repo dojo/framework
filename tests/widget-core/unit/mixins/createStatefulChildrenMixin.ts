@@ -3,7 +3,8 @@ import * as assert from 'intern/chai!assert';
 import createStatefulChildrenMixin from 'src/mixins/createStatefulChildrenMixin';
 import createRenderable, { Renderable } from 'src/mixins/createRenderable';
 import Promise from 'dojo-core/Promise';
-import { List } from 'immutable/immutable';
+import { List, Map } from 'immutable/immutable';
+import { Child } from 'src/mixins/interfaces';
 
 const widget1 = createRenderable();
 const widget2 = createRenderable();
@@ -32,78 +33,161 @@ const widgetRegistry = {
 	}
 };
 
+const createStatefulChildrenList = createStatefulChildrenMixin
+	.extend({
+		children: List<Child>()
+	});
+
+const createStatefulChildrenMap = createStatefulChildrenMixin
+	.extend({
+		children: Map<string, Child>()
+	});
+
 registerSuite({
 	name: 'mixins/createStatefulChildrenMixin',
 	beforeEach() {
 		widgetRegistry.stack = [];
 	},
-	creation() {
-		const dfd = this.async();
-		const parent: any = createStatefulChildrenMixin({
-			widgetRegistry,
-			state: {
-				children: [ 'widget1' ]
-			}
-		});
+	'List children': {
+		creation() {
+			const dfd = this.async();
+			const parent = createStatefulChildrenList({
+				widgetRegistry,
+				state: {
+					children: [ 'widget1' ]
+				}
+			});
 
-		setTimeout(dfd.callback(() => {
-			assert.deepEqual(widgetRegistry.stack, [ 'widget1' ]);
-			assert.isTrue(List([ widget1 ]).equals(parent.children));
-		}), 50);
-	},
-	setState() {
-		const dfd = this.async();
-		const parent: any = createStatefulChildrenMixin({
-			widgetRegistry
-		});
-
-		parent.setState({ children: [ 'widget2' ] });
-
-		setTimeout(dfd.callback(() => {
-			assert.deepEqual(widgetRegistry.stack, [ 'widget2' ]);
-			assert.isTrue(List([ widget2 ]).equals(parent.children));
-		}), 50);
-	},
-	'chaching widgets'() {
-		const dfd = this.async();
-		const parent: any = createStatefulChildrenMixin({
-			widgetRegistry
-		});
-
-		parent.setState({ children: [ 'widget1' ]});
-
-		setTimeout(() => {
-			widgetRegistry.stack = [];
-			parent.setState({ children: [ 'widget1', 'widget2' ] });
 			setTimeout(dfd.callback(() => {
-				assert.deepEqual(widgetRegistry.stack, [ 'widget2' ], 'should not have called the widget registry');
-				assert.isTrue(List([ widget1, widget2 ]).equals(parent.children));
+				assert.deepEqual(widgetRegistry.stack, [ 'widget1' ]);
+				assert.isTrue(List([ widget1 ]).equals(parent.children));
 			}), 50);
-		}, 50);
-	},
-	'childList'() {
-		const dfd = this.async();
+		},
+		setState() {
+			const dfd = this.async();
+			const parent = createStatefulChildrenList({
+				widgetRegistry
+			});
 
-		const parent = createStatefulChildrenMixin({
-			widgetRegistry
-		});
+			parent.setState({ children: [ 'widget2' ] });
 
-		parent.emit({
-			type: 'childlist',
-			target: parent,
-			children: List([ widget1, widget3 ])
-		});
+			setTimeout(dfd.callback(() => {
+				assert.deepEqual(widgetRegistry.stack, [ 'widget2' ]);
+				assert.isTrue(List([ widget2 ]).equals(parent.children));
+			}), 50);
+		},
+		'chaching widgets'() {
+			const dfd = this.async();
+			const parent = createStatefulChildrenList({
+				widgetRegistry
+			});
 
-		setTimeout(() => {
-			assert.deepEqual(parent.state.children, [ 'widget1', 'widget3' ]);
+			parent.setState({ children: [ 'widget1' ]});
+
+			setTimeout(() => {
+				widgetRegistry.stack = [];
+				parent.setState({ children: [ 'widget1', 'widget2' ] });
+				setTimeout(dfd.callback(() => {
+					assert.deepEqual(widgetRegistry.stack, [ 'widget2' ], 'should not have called the widget registry');
+					assert.isTrue(List([ widget1, widget2 ]).equals(parent.children));
+				}), 100);
+			}, 100);
+		},
+		'childList'() {
+			const dfd = this.async();
+
+			const parent = createStatefulChildrenList({
+				widgetRegistry
+			});
+
 			parent.emit({
 				type: 'childlist',
 				target: parent,
-				children: List([ widget2, widget3 ])
+				children: List([ widget1, widget3 ])
 			});
+
+			setTimeout(() => {
+				assert.deepEqual(parent.state.children, [ 'widget1', 'widget3' ]);
+				parent.emit({
+					type: 'childlist',
+					target: parent,
+					children: List([ widget2, widget3 ])
+				});
+				setTimeout(dfd.callback(() => {
+					assert.deepEqual(parent.state.children, [ 'widget2', 'widget3' ]);
+				}), 50);
+			}, 50);
+		}
+	},
+	'Map children': {
+		creation() {
+			const dfd = this.async();
+			const parent = createStatefulChildrenMap({
+				widgetRegistry,
+				state: {
+					children: [ 'widget1' ]
+				}
+			});
+
 			setTimeout(dfd.callback(() => {
-				assert.deepEqual(parent.state.children, [ 'widget2', 'widget3' ]);
+				assert.deepEqual(widgetRegistry.stack, [ 'widget1' ]);
+				assert.isTrue(Map({ widget1 }).equals(parent.children));
 			}), 50);
-		}, 50);
+		},
+		setState() {
+			const dfd = this.async();
+			const parent = createStatefulChildrenMap({
+				widgetRegistry
+			});
+
+			parent.setState({ children: [ 'widget2' ] });
+
+			setTimeout(dfd.callback(() => {
+				assert.deepEqual(widgetRegistry.stack, [ 'widget2' ]);
+				assert.isTrue(Map({ widget2 }).equals(parent.children));
+			}), 50);
+		},
+		'chaching widgets'() {
+			const dfd = this.async();
+			const parent = createStatefulChildrenMap({
+				widgetRegistry
+			});
+
+			parent.setState({ children: [ 'widget1' ]});
+
+			setTimeout(() => {
+				widgetRegistry.stack = [];
+				parent.setState({ children: [ 'widget1', 'widget2' ] });
+				setTimeout(dfd.callback(() => {
+					assert.deepEqual(widgetRegistry.stack, [ 'widget2' ], 'should not have called the widget registry');
+					assert.isTrue(Map({ widget1, widget2 }).equals(parent.children));
+				}), 100);
+			}, 100);
+		},
+		'childList'() {
+			const dfd = this.async();
+
+			const parent = createStatefulChildrenList({
+				widgetRegistry
+			});
+
+			parent.emit({
+				type: 'childlist',
+				target: parent,
+				children: Map({ widget1, widget3 })
+			});
+
+			setTimeout(() => {
+				assert.deepEqual(parent.state.children, [ 'widget1', 'widget3' ]);
+				parent.emit({
+					type: 'childlist',
+					target: parent,
+					children: Map({ widget2, widget3 })
+				});
+				setTimeout(dfd.callback(() => {
+					assert.deepEqual(parent.state.children, [ 'widget2', 'widget3' ]);
+				}), 50);
+			}, 50);
+		}
 	}
 });

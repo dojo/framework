@@ -6,7 +6,7 @@ import { h } from 'maquette/maquette';
 import createRenderable from 'src/mixins/createRenderable';
 import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { ComposeFactory } from 'dojo-compose/compose';
-import { Child } from 'src/mixins/createParentMixin';
+import { Child } from 'src/mixins/interfaces';
 
 const createRenderableChild = createDestroyable
 	.mixin(createRenderable) as ComposeFactory<Child, any>;

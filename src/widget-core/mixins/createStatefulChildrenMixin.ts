@@ -4,8 +4,9 @@ import createStateful, { Stateful, StatefulOptions, StateChangeEvent } from 'doj
 import Map from 'dojo-core/Map';
 import Promise from 'dojo-core/Promise';
 import WeakMap from 'dojo-core/WeakMap';
-import { List } from 'immutable/immutable';
-import { Child, ChildListEvent } from './createParentMixin';
+import { List, Map as ImmutableMap } from 'immutable/immutable';
+import { Child, ChildListEvent } from './interfaces';
+import { isList } from '../util/lang';
 
 export interface ChildrenRegistry<C extends Child> {
 	get<D extends C>(id: string | symbol): Promise<D>;
@@ -21,7 +22,7 @@ export interface StatefulChildrenOptions<C extends Child, S extends StatefulChil
 }
 
 export type StatefulChildren<C extends Child, S extends StatefulChildrenState> = Stateful<S> & {
-	children: List<C>;
+	children: List<C> | ImmutableMap<string, C>;
 }
 
 export interface StatefulChildrenMixinFactory extends ComposeFactory<Stateful<StatefulChildrenState>, StatefulChildrenOptions<Child, StatefulChildrenState>> {
@@ -66,26 +67,38 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
 	cachedChildrenIDs.set(parent, currentChildrenIDs);
 	const resolvingWidgets: [ Promise<Child>, string, number ][] = [];
 	let cachedChildren = childrenIdMap.get(parent);
-	const children: Child[] = [];
+
+	/* Sometimes we are dealing with children that are a list, somtimes, a Map */
+	const childrenList: Child[] = [];
+	const childrenMap: { [ id: string ]: Child } = {};
+	const childrenIsList = isList(parent.children);
 
 	/* Iterate through children ids, retrieving reference to widget or otherwise
 	 * requesting the widget from the registry */
 	currentChildrenIDs.forEach((id, key) => cachedChildren.has(id)
-		? children[key] = cachedChildren.get(id)
+		? childrenIsList
+			? childrenList[key] = cachedChildren.get(id)
+			: childrenMap[id] = cachedChildren.get(id)
 		/* Tuple of Promise, child ID, position in child list */
 		: resolvingWidgets.push([ widgetRegistry.get(id), id, key ]));
 
 	/* If we have requests for widgets outstanding, we need to wait for them to be
 	 * resolved and then populate them in the children */
 	if (resolvingWidgets.length) {
-		Promise.all(resolvingWidgets.map((item) => item[0]))
+		Promise.all(resolvingWidgets.map(([ promise ]) => promise))
 			.then((widgets) => {
 				widgets.forEach((widget, idx) => {
 					const [ , id, key ] = resolvingWidgets[idx];
-					children[key] = widget;
+					if (childrenIsList) {
+						childrenList[key] = widget;
+					}
+					else {
+						childrenMap[id] = widget;
+					}
 					cachedChildren.set(id, widget);
 				});
-				parent.children = List(children);
+				/* Some parents have a List, some have a Map, so setting them varies */
+				parent.children = isList(parent.children) ? List(childrenList) : ImmutableMap<string, Child>(childrenMap);
 			}, (error) => {
 				/* A promise got rejected for some reason */
 				parent.emit({
@@ -97,7 +110,7 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
 	}
 	else {
 		/* Otherwise we can just set the children */
-		parent.children = List(children);
+		parent.children = isList(parent.children) ? List(childrenList) : ImmutableMap<string, Child>(childrenMap);
 	}
 }
 
@@ -111,7 +124,11 @@ function manageChildrenState(evt: ChildListEvent<any, Child>) {
 		return;
 	}
 
-	const currentChildrenIDs = <List<string>> evt.children.map((widget) => widgetRegistry.identify(widget));
+	const evtChildren = evt.children;
+
+	const currentChildrenIDs = <List<string>> (isList(evtChildren)
+		? evtChildren.map((widget) => widgetRegistry.identify(widget))
+		: List(evtChildren.keys()));
 
 	if (!currentChildrenIDs.equals(List(parent.state.children))) {
 		const children = currentChildrenIDs.toArray();

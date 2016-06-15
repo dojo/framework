@@ -1,7 +1,7 @@
 import { h, VNode } from 'maquette/maquette';
-import compose, { ComposeFactory } from 'dojo-compose/compose';
+import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
-import { ParentMixin } from './createParentMixin';
+import { Parent } from './interfaces';
 
 export interface RenderFunction {
 	(): VNode;
@@ -13,9 +13,15 @@ export interface RenderableOptions {
 	 */
 	render?: RenderFunction;
 
+	/**
+	 * Override the widget's tagName during construction
+	 */
 	tagName?: string;
 
-	parent?: ParentMixin<any>;
+	/**
+	 * Set the widget's parent during construction
+	 */
+	parent?: Parent;
 }
 
 export interface RenderableMixin {
@@ -29,7 +35,10 @@ export interface RenderableMixin {
 	 */
 	tagName: string;
 
-	parent?: ParentMixin<Renderable>;
+	/**
+	 * A reference to the widget's parent
+	 */
+	parent?: Parent;
 }
 
 export type Renderable = Destroyable & RenderableMixin;
@@ -40,23 +49,26 @@ export function isRenderable(value: any): value is Renderable {
 	return value && typeof value.render === 'function';
 }
 
-const createRenderable: RenderableFactory = compose<RenderableMixin, RenderableOptions>({
-		render() {
-			const renderable: Renderable = this;
-			return h(renderable.tagName);
-		},
+const createRenderable: RenderableFactory = createDestroyable
+	.mixin<RenderableMixin, RenderableOptions>({
+		mixin: {
+			render() {
+				const renderable: Renderable = this;
+				return h(renderable.tagName);
+			},
 
-		tagName: 'div'
-	}, (instance, options) => {
-		if (options) {
-			const { tagName, render, parent } = options;
-			instance.tagName = tagName || instance.tagName;
-			instance.render = render || instance.render;
-			if (parent) {
-				parent.append(instance);
+			tagName: 'div'
+		},
+		initialize(instance, options) {
+			if (options) {
+				const { tagName, render, parent } = options;
+				instance.tagName = tagName || instance.tagName;
+				instance.render = render || instance.render;
+				if (parent) {
+					parent.append(instance);
+				}
 			}
 		}
-	})
-	.mixin(createDestroyable);
+	});
 
 export default createRenderable;

@@ -7,7 +7,8 @@ import { List } from 'immutable/immutable';
 import WeakMap from 'dojo-core/WeakMap';
 import createCachedRenderMixin, { CachedRenderMixin, CachedRenderState } from './createCachedRenderMixin';
 import { CloseableMixin, CloseableState } from './createCloseableMixin';
-import createParentMixin, { ParentMixin, ParentMixinOptions, Child } from './createParentMixin';
+import createParentListMixin, { ParentListMixin, ParentListMixinOptions } from './createParentListMixin';
+import { Child } from './interfaces';
 
 export interface TabbedChildState extends CachedRenderState, CloseableState {
 	/**
@@ -23,7 +24,7 @@ export interface TabbedChildState extends CachedRenderState, CloseableState {
 
 export type TabbedChild = Child & CloseableMixin<TabbedChildState> & CachedRenderMixin<TabbedChildState>;
 
-export interface TabbedMixinOptions<C extends TabbedChild, S extends CachedRenderState> extends ParentMixinOptions<C>, StatefulOptions<S> { }
+export interface TabbedMixinOptions<C extends TabbedChild, S extends CachedRenderState> extends ParentListMixinOptions<C>, StatefulOptions<S> { }
 
 export interface Tabbed<C extends TabbedChild> {
 	children: List<TabbedChild>;
@@ -39,7 +40,7 @@ export interface Tabbed<C extends TabbedChild> {
 	};
 }
 
-export type TabbedMixin<C extends TabbedChild> = Tabbed<C> & ParentMixin<C> & CachedRenderMixin<CachedRenderState> & Destroyable;
+export type TabbedMixin<C extends TabbedChild> = Tabbed<C> & ParentListMixin<C> & CachedRenderMixin<CachedRenderState> & Destroyable;
 
 /**
  * A utility function that sets the supplied tab as the active tab on the supplied tabbed mixin
@@ -166,7 +167,7 @@ const createTabbedMixin: TabbedMixinFactory = createCachedRenderMixin
 			}
 		}
 	})
-	.mixin(createParentMixin)
+	.mixin(createParentListMixin)
 	.extend({
 		tagName: 'dojo-panel-mixin',
 

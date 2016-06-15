@@ -1,4 +1,6 @@
 import { List } from 'immutable/immutable';
+import { Handle } from 'dojo-core/interfaces';
+import { Parent, Child, ChildrenMap } from '../mixins/interfaces';
 
 export type Position = number | 'first' | 'last' | 'before' | 'after';
 
@@ -95,4 +97,84 @@ export function stringToValue(str: string): any {
 		}
 		return undefined;
 	}
+}
+
+/**
+ * A type guard that deterimines if a value is an immutable List or not
+ */
+export function isList<T>(value: any): value is List<T> {
+	return value instanceof List;
+}
+
+/**
+ * A type guard that checks to see if the value is a Child
+ * @param value the value to guard for
+ */
+export function isChild<C extends Child>(value: any): value is C {
+	return value && typeof value === 'object' && typeof value.render === 'function';
+}
+
+/**
+ * A utility function that generates a handle that destroys any children
+ * @param parent The parent that the handle relates to
+ * @param child The child (or array of children) that the handle relates to
+ */
+export function getRemoveHandle<C extends Child>(parent: Parent, child: C | C[] | ChildrenMap<C>): Handle {
+	function getDestroyHandle(c: Child): Handle {
+		let destroyed = false;
+		return c.own({
+			destroy() {
+				if (destroyed) {
+					return;
+				}
+				const { children } = parent;
+				if (children.includes(c)) {
+					parent.children = isList(children) ? children.delete(children.lastIndexOf(c)) : children.delete(children.keyOf(c));
+				}
+				destroyed = true;
+				if (c.parent === parent) {
+					c.parent = undefined;
+				}
+			}
+		});
+	}
+
+	let destroyed = false;
+
+	if (Array.isArray(child)) {
+		const handles = child.map((c) => getDestroyHandle(c));
+		return {
+			destroy() {
+				if (destroyed) {
+					return;
+				}
+				handles.forEach(({ destroy }) => destroy());
+				destroyed = true;
+			}
+		};
+	}
+	else if (isChild(child)) {
+		const handle = getDestroyHandle(child);
+		return {
+			destroy() {
+				handle.destroy();
+			}
+		};
+	}
+	else {
+		const handles: Handle[] = [];
+		for (let key in child) {
+			handles.push(getDestroyHandle(child[key]));
+		}
+		return {
+			destroy() {
+				if (destroyed) {
+					return;
+				}
+				handles.forEach(({ destroy }) => destroy());
+				destroyed = true;
+			}
+		};
+	}
+
 }

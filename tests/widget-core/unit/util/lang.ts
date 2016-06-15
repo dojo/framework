@@ -1,6 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { insertInList, insertInArray, stringToValue, valueToString } from 'src/util/lang';
+import { insertInList, insertInArray, stringToValue, valueToString, isList, isChild } from 'src/util/lang';
+import createRenderable from 'src/mixins/createRenderable';
 import { List } from 'immutable/immutable';
 
 registerSuite({
@@ -209,5 +210,20 @@ registerSuite({
 		assert.strictEqual(valueToString(0), '0');
 		assert.strictEqual(valueToString(true), 'true');
 		assert.strictEqual(valueToString(false), 'false');
+	},
+	'isList()'() {
+		const list = List();
+		const arr: any[] = [];
+		assert.isTrue(isList(list));
+		assert.isFalse(isList(arr));
+	},
+	'isChild()'() {
+		const child = createRenderable();
+		const notChild = {};
+		assert.isTrue(isChild(child));
+		assert.isFalse(isChild(notChild));
+	},
+	'getRemoveHandle()': {
+		/* TODO: create tests */
 	}
 });

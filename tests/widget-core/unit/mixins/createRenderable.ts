@@ -1,7 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createRenderable, { isRenderable } from 'src/mixins/createRenderable';
-import { ParentMixin, Child } from 'src/mixins/createParentMixin';
+import { ParentListMixin } from 'src/mixins/createParentListMixin';
+import { Child } from 'src/mixins/interfaces';
 import { h } from 'maquette/maquette';
 import Promise from 'dojo-core/Promise';
 import { List } from 'immutable/immutable';
@@ -34,7 +35,7 @@ registerSuite({
 	},
 	'option.parent'() {
 		let count = 0;
-		const parent: ParentMixin<Child> = {
+		const parent: ParentListMixin<Child> = {
 			get children(): List<Child> {
 				return;
 			},
