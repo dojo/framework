@@ -26,8 +26,7 @@ registerSuite({
 			}
 		});
 		projector.append(renderable);
-		const attachHandle = projector.attach();
-		setTimeout(() => {
+		projector.attach().then((attachHandle) => {
 			assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
 			assert.strictEqual((<HTMLElement> document.body.lastChild).innerHTML, nodeText);
 			assert.strictEqual((<HTMLElement> document.body.lastChild).tagName.toLowerCase(), 'h2');
@@ -43,9 +42,9 @@ registerSuite({
 					}), 100);
 				});
 			}, 100);
-		}, 100);
+		}).catch(dfd.reject);
 	},
-	'lifycycle'() {
+	'lifecycle'() {
 		const dfd = this.async();
 		const div = document.createElement('div');
 		document.body.appendChild(div);
@@ -59,8 +58,7 @@ registerSuite({
 		});
 		const addHandle = projector1.append(renderable);
 		assert.strictEqual(div.childNodes.length, 0, 'there should be no children');
-		projector1.attach();
-		setTimeout(() => {
+		projector1.attach().then(() => {
 			assert.strictEqual(div.childNodes.length, 1, 'a child should be added');
 			assert.strictEqual((<HTMLElement> div.firstChild).tagName.toLowerCase(), 'h1');
 			assert.strictEqual((<HTMLElement> div.firstChild).innerHTML, nodeText);
@@ -75,25 +73,51 @@ registerSuite({
 					projector1.destroy();
 				}), 100);
 			}, 100);
-		}, 100);
+		}).catch(dfd.reject);
+	},
+	'\'attach\' event'() {
+		const div = document.createElement('div');
+		document.body.appendChild(div);
+		const projector1 = createProjector({});
+		projector1.setRoot(div);
+		let nodeText = 'bar';
+		const renderable = createRenderableChild({
+			render() {
+				return h('h1', [ nodeText ]);
+			}
+		});
+		projector1.append(renderable);
+		assert.strictEqual(div.childNodes.length, 0, 'there should be no children');
+		let eventFired = false;
+		projector1.on('attach', () => {
+			eventFired = true;
+			assert.strictEqual(div.childNodes.length, 1, 'a child should be added');
+			assert.strictEqual((<HTMLElement> div.firstChild).tagName.toLowerCase(), 'h1');
+			assert.strictEqual((<HTMLElement> div.firstChild).innerHTML, nodeText);
+		});
+		return projector1.attach().then(() => {
+			assert.isTrue(eventFired);
+			projector1.destroy();
+		});
 	},
 	'reattach'() {
 		const projector1 = createProjector({});
 		const div = document.createElement('div');
 		projector1.setRoot(div);
-		const handle = projector1.attach();
-		assert.strictEqual(handle, projector1.attach(), 'same handle should be returned');
-		handle.destroy();
+		const promise = projector1.attach();
+		assert.strictEqual(promise, projector1.attach(), 'same promise should be returned');
+		return promise.then((handle) => { handle.destroy(); });
 	},
 	'setRoot throws when already attached'() {
 		const projector = createProjector({});
 		const div = document.createElement('div');
 		projector.setRoot(div);
-		const handle = projector.attach();
-		assert.throws(() => {
-			projector.setRoot(document.body);
-		}, Error, 'already attached');
-		handle.destroy();
+		return projector.attach().then((handle) => {
+			assert.throws(() => {
+				projector.setRoot(document.body);
+			}, Error, 'already attached');
+			handle.destroy();
+		});
 	},
 	'append()'() {
 		const dfd = this.async();
@@ -105,8 +129,7 @@ registerSuite({
 			createRenderableChild({ render() { return h('foo', [ 'foo' ]); } }),
 			createRenderableChild({ render() { return h('bar', [ 'bar' ]); } })
 		]);
-		const attachHandle = projector.attach();
-		setTimeout(() => {
+		projector.attach().then((attachHandle) => {
 			assert.strictEqual(div.childNodes.length, 2);
 			assert.strictEqual((<HTMLElement> div.firstChild).innerHTML, 'foo');
 			assert.strictEqual((<HTMLElement> div.lastChild).innerHTML, 'bar');
@@ -117,7 +140,7 @@ registerSuite({
 				assert.strictEqual(div.childNodes.length, 0);
 				attachHandle.destroy();
 			}), 100);
-		}, 100);
+		}).catch(dfd.reject);
 	},
 	'insert()'() {
 		const dfd = this.async();
@@ -126,8 +149,7 @@ registerSuite({
 		document.body.appendChild(div);
 		projector.setRoot(div);
 		const handle = projector.insert(createRenderableChild({ render() { return h('foo', [ 'foo' ]); } }), 'first');
-		const attachHandle = projector.attach();
-		setTimeout(() => {
+		projector.attach().then((attachHandle) => {
 			assert.strictEqual(div.childNodes.length, 1);
 			assert.strictEqual((<HTMLElement> div.firstChild).innerHTML, 'foo');
 			handle.destroy();
@@ -137,6 +159,6 @@ registerSuite({
 				assert.strictEqual(div.childNodes.length, 0);
 				attachHandle.destroy();
 			}), 100);
-		}, 100);
+		}).catch(dfd.reject);
 	}
 });

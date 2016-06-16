@@ -1,10 +1,11 @@
 import { h, createProjector as createMaquetteProjector, Projector as MaquetteProjector, VNode, VNodeProperties } from 'maquette/maquette';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import { EventedOptions } from 'dojo-compose/mixins/createEvented';
+import { EventedListener, EventedOptions, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import global from 'dojo-core/global';
 import { Handle } from 'dojo-core/interfaces';
 import { assign } from 'dojo-core/lang';
 import { queueTask } from 'dojo-core/queue';
+import Promise from 'dojo-core/Promise';
 import WeakMap from 'dojo-core/WeakMap';
 import createVNodeEvented, { VNodeEvented } from './mixins/createVNodeEvented';
 import createParentListMixin, { ParentListMixin, ParentListMixinOptions } from './mixins/createParentListMixin';
@@ -51,10 +52,15 @@ export interface ProjectorMixin {
 	render(): VNode;
 
 	/**
-	 * Attach the projector to the DOM and return a handle to detach it.
+	 * Attach the projector to the DOM and return a promise.
+	 *
+	 * The promise is fulfilled when all previously appended children have been created.
+	 * It is fulfilled with a handle which can be used to detach the projector. The same promise is
+	 * returned when called more than once.
+	 *
 	 * @param options An optional map of options that change the default behaviour of the attachment
 	 */
-	attach(options?: AttachOptions): Handle;
+	attach(options?: AttachOptions): Promise<Handle>;
 
 	/**
 	 * Inform the projector that it is in a dirty state and should re-render.  Calling event handles will automatically
@@ -99,6 +105,15 @@ export interface ProjectorMixin {
 	state: ProjectorState;
 }
 
+export interface ProjectorOverrides {
+	/**
+	 * Event emitted after the projector has been attached to the DOM.
+	 */
+	on(type: 'attach', listener: EventedListener<TargettedEventObject>): Handle;
+
+	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
+}
+
 export type Projector = VNodeEvented & ParentListMixin<Child> & ProjectorMixin;
 
 export interface ProjectorFactory extends ComposeFactory<Projector, ProjectorOptions> { }
@@ -109,11 +124,13 @@ export enum ProjectorState {
 };
 
 interface ProjectorData {
+	afterInitialCreate?: () => void;
+	attachHandle?: Handle;
+	attachPromise?: Promise<Handle>;
+	boundRender?: () => VNode;
 	projector?: MaquetteProjector;
 	root?: Element;
 	state?: ProjectorState;
-	attachHandle?: Handle;
-	boundRender?: () => VNode;
 	tagName?: string;
 }
 
@@ -147,34 +164,18 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 			const projectorData = projectorDataMap.get(projector);
 			const childVNodes: VNode[] = [];
 			projector.children.forEach((child) => childVNodes.push(child.render()));
-			return h(projectorData.tagName, projector.getNodeAttributes(), childVNodes);
+			const props = projector.getNodeAttributes();
+			props.afterCreate = projectorData.afterInitialCreate;
+			return h(projectorData.tagName, props, childVNodes);
 		},
-		attach({ type, tagName = 'div' }: AttachOptions = {}): Handle {
+		attach({ type, tagName = 'div' }: AttachOptions = {}): Promise<Handle> {
 			const projector: Projector = this;
 			const projectorData = projectorDataMap.get(projector);
 			if (projectorData.state === ProjectorState.Attached) {
-				return projectorData.attachHandle;
+				return projectorData.attachPromise;
 			}
 			projectorData.boundRender = projector.render.bind(projector);
 			projectorData.tagName = tagName;
-			/* attaching async, in order to help ensure that if there are any other async behaviours scheduled at the end of the
-			 * turn, they are executed before this, since the attachement is actually done in turn, but subsequent schedule
-			 * renders are done out of turn */
-			queueTask(() => {
-				const { projector } = projectorData;
-				switch (type) {
-					case 'append':
-						projector.append(projectorData.root, projectorData.boundRender);
-						break;
-					case 'replace':
-						projector.replace(projectorData.root, projectorData.boundRender);
-						break;
-					case 'merge':
-					default:
-						projector.merge(projectorData.root, projectorData.boundRender);
-						break;
-				}
-			});
 			projectorData.state = ProjectorState.Attached;
 			projectorData.attachHandle = projector.own({
 				destroy() {
@@ -198,7 +199,37 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 					projectorData.attachHandle = noopHandle;
 				}
 			});
-			return projectorData.attachHandle;
+			projectorData.attachPromise = new Promise((resolve, reject) => {
+				projectorData.afterInitialCreate = () => {
+					try {
+						projector.emit({ type: 'attach' });
+						resolve(projectorData.attachHandle);
+					} catch (err) {
+						reject(err);
+					}
+				};
+			});
+
+			/* attaching async, in order to help ensure that if there are any other async behaviours scheduled at the end of the
+			 * turn, they are executed before this, since the attachement is actually done in turn, but subsequent schedule
+			 * renders are done out of turn */
+			queueTask(() => {
+				const { projector } = projectorData;
+				switch (type) {
+					case 'append':
+						projector.append(projectorData.root, projectorData.boundRender);
+						break;
+					case 'replace':
+						projector.replace(projectorData.root, projectorData.boundRender);
+						break;
+					case 'merge':
+					default:
+						projector.merge(projectorData.root, projectorData.boundRender);
+						break;
+				}
+			});
+
+			return projectorData.attachPromise;
 		},
 		invalidate(): void {
 			const projector: Projector = this;
