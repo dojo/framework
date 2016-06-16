@@ -4,10 +4,9 @@ import createStateful, { State, Stateful, StatefulOptions } from 'dojo-compose/m
 import { assign } from 'dojo-core/lang';
 import Map from 'dojo-core/Map';
 import WeakMap from 'dojo-core/WeakMap';
-import { ParentListMixin } from './createParentListMixin';
 import createRenderable, { Renderable } from './createRenderable';
 import createVNodeEvented, { VNodeEvented } from './createVNodeEvented';
-import { Child } from './interfaces';
+import { Parent } from './interfaces';
 
 export type StylesHash = { [style: string]: string; };
 
@@ -33,7 +32,7 @@ export interface CachedRenderState extends State {
 	styles?: StylesHash;
 }
 
-export type CachedRenderParent = ParentListMixin<Child> & {
+export type CachedRenderParent = Parent & {
 	/**
 	 * Invalidate the widget so that it will recalculate on its next render
 	 */

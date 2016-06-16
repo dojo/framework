@@ -8,6 +8,8 @@ export interface ChildrenMap<C extends Child> {
 	[key: string]: C;
 }
 
+export type ChildEntry<C extends Child> = [ string | number, C ];
+
 export interface ChildListEvent<T, C extends Child> {
 	children: Map<string, C> | List<C>;
 	target: T;

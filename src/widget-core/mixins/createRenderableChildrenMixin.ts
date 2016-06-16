@@ -2,9 +2,7 @@ import { VNode } from 'maquette/maquette';
 import { List } from 'immutable/immutable';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { from as arrayFrom } from 'dojo-core/array';
-import { Child } from './interfaces';
-
-export type ChildEntry<C extends Child> = [ string | number, C ];
+import { Child, ChildEntry } from './interfaces';
 
 export interface RenderableChildrenOptions {
 	/**

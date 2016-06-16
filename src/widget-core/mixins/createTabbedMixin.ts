@@ -1,14 +1,15 @@
+import { Map } from 'immutable/immutable';
 import { h, VNode } from 'maquette/maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 import { StatefulOptions } from 'dojo-compose/mixins/createStateful';
+import { from as arrayFrom } from 'dojo-core/array';
 import { Handle } from 'dojo-core/interfaces';
-import { List } from 'immutable/immutable';
 import WeakMap from 'dojo-core/WeakMap';
 import createCachedRenderMixin, { CachedRenderMixin, CachedRenderState } from './createCachedRenderMixin';
-import { CloseableMixin, CloseableState } from './createCloseableMixin';
-import createParentListMixin, { ParentListMixin, ParentListMixinOptions } from './createParentListMixin';
-import { Child } from './interfaces';
+import { Closeable, CloseableState } from './createCloseableMixin';
+import createParentMapMixin, { ParentMapMixin, ParentMapMixinOptions } from './createParentMapMixin';
+import { Child, ChildEntry } from './interfaces';
 
 export interface TabbedChildState extends CachedRenderState, CloseableState {
 	/**
@@ -22,14 +23,32 @@ export interface TabbedChildState extends CachedRenderState, CloseableState {
 	changed?: boolean; /* TODO: Implement this feature, currently it does not affect anything */
 }
 
-export type TabbedChild = Child & CloseableMixin<TabbedChildState> & CachedRenderMixin<TabbedChildState>;
+export type TabbedChild = Child & Closeable & CachedRenderMixin<TabbedChildState>;
 
-export interface TabbedMixinOptions<C extends TabbedChild, S extends CachedRenderState> extends ParentListMixinOptions<C>, StatefulOptions<S> { }
+export interface TabbedMixinOptions<C extends TabbedChild, S extends CachedRenderState> extends ParentMapMixinOptions<C>, StatefulOptions<S> {
+	/**
+	 * An optional method which can be used to sort the children
+	 */
+	sort?: <C extends Child>(valueA: ChildEntry<C>, valueB: ChildEntry<C>) => number;
+}
 
 export interface Tabbed<C extends TabbedChild> {
-	children: List<TabbedChild>;
+	/**
+	 * A map of the children owned by this widget
+	 */
+	children: Map<string, C>;
 
+	/**
+	 * A reference to the currently active child
+	 */
 	activeChild: C;
+
+	/**
+	 * An optional method which can be used to sort the children when they are rendered
+	 * @param valueA The first entry to be compared
+	 * @param valueB The second entry to be compared
+	 */
+	sort?<C extends Child>(valueA: ChildEntry<C>, valueB: ChildEntry<C>): number;
 
 	/**
 	 * Tag names used by sub parts of this widget
@@ -40,7 +59,7 @@ export interface Tabbed<C extends TabbedChild> {
 	};
 }
 
-export type TabbedMixin<C extends TabbedChild> = Tabbed<C> & ParentListMixin<C> & CachedRenderMixin<CachedRenderState> & Destroyable;
+export type TabbedMixin<C extends TabbedChild> = Tabbed<C> & ParentMapMixin<C> & CachedRenderMixin<CachedRenderState> & Destroyable;
 
 /**
  * A utility function that sets the supplied tab as the active tab on the supplied tabbed mixin
@@ -148,8 +167,6 @@ export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChi
 
 const childrenNodesCache = new WeakMap<TabbedMixin<TabbedChild>, VNode[]>();
 
-let tabbedList = List<TabbedMixin<TabbedChild>>();
-
 const createTabbedMixin: TabbedMixinFactory = createCachedRenderMixin
 	.mixin({
 		mixin: <Tabbed<TabbedChild>> {
@@ -167,7 +184,8 @@ const createTabbedMixin: TabbedMixinFactory = createCachedRenderMixin
 			}
 		}
 	})
-	.mixin(createParentListMixin)
+	.mixin(createParentMapMixin)
+	.mixin(createDestroyable)
 	.extend({
 		tagName: 'dojo-panel-mixin',
 
@@ -196,36 +214,30 @@ const createTabbedMixin: TabbedMixinFactory = createCachedRenderMixin
 				childrenNodesCache.set(tabbed, childrenNodes);
 			}
 
-			tabbed.children.forEach((tab, key) => {
+			const { sort } = tabbed;
+
+			const children = sort
+				? arrayFrom<[string, TabbedChild]>(<any> tabbed.children.entries()).sort(sort)
+				: arrayFrom<[string, TabbedChild]>(<any> tabbed.children.entries());
+
+			children.forEach(([ , tab ], idx) => {
 				const isActiveTab = tab === activeTab;
-				if (isActiveTab || (childrenNodes[key] && childrenNodes[key].properties.classes['visible'])) {
+				if (isActiveTab || (childrenNodes[idx] && childrenNodes[idx].properties.classes['visible'])) {
 					tab.invalidate();
 					const tabVNode = tab.render();
 					tabVNode.properties.classes['visible'] = isActiveTab;
-					childrenNodes[key] = tabVNode;
+					childrenNodes[idx] = tabVNode;
 				}
 				/* else, this tab isn't active and hasn't been previously rendered */
 
 				tabs.push(h(tabbed.tagNames.tab, {
 					key: tab,
 					classes: { active: isActiveTab },
-					'data-tab-id': `${tabbed.state.id || tabbedList.indexOf(tabbed)}-${tab.state.id || key}`
+					'data-tab-id': tabbed.id
 				}, getTabChildVNode(tab)));
 			});
 
 			return [ h(tabbed.tagNames.tabBar, tabs), h('div.panels', childrenNodes) ];
-		}
-	})
-	.mixin({
-		mixin: createDestroyable,
-		initialize(instance) {
-			tabbedList = tabbedList.push(instance);
-			instance.own({
-				destroy() {
-					childrenNodesCache.delete(instance);
-					tabbedList = tabbedList.delete(tabbedList.indexOf(instance));
-				}
-			});
 		}
 	});
 
