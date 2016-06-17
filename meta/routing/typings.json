@@ -1,13 +1,15 @@
 {
 	"name": "dojo-routing",
+	"globalDependencies": {
+		"dojo-compose": "npm:dojo-compose",
+		"dojo-core": "npm:dojo-core"
+	},
 	"devDependencies": {
 		"chai": "registry:npm/chai#3.5.0+20160415060238",
 		"glob": "registry:npm/glob#6.0.0+20160211003958"
 	},
 	"globalDevDependencies": {
 		"digdug": "github:dojo/typings/custom/digdug/digdug.d.ts#a62873258aa1deed48f9882c193c335436100d4b",
-		"dojo-compose": "npm:dojo-compose",
-		"dojo-core": "npm:dojo-core",
 		"dojo-loader": "npm:dojo-loader",
 		"dojo2-dev": "github:dojo/typings/custom/dev/dev.d.ts#288d3a9868194f0e1ad6687371dffd1d96cb39a1",
 		"dojo2": "github:dojo/typings/custom/dojo2/dojo.d.ts#a62873258aa1deed48f9882c193c335436100d4b",
