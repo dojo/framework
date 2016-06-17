@@ -1,6 +1,6 @@
 {
 	"name": "dojo-routing",
-	"version": "2.0.0-alpha.1",
+	"version": "2.0.0-pre",
 	"description": "A routing library for Dojo 2 applications",
 	"homepage": "http://dojotoolkit.org",
 	"bugs": {
