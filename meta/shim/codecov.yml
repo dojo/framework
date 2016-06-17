@@ -1,0 +1,10 @@
+comment:
+  branches:
+  - master
+  - feature/*
+coverage:
+  notify:
+    slack:
+      default:
+        url: "secret:Edc+HC1cJt1JJoV0jwebOEPNfk5DXBFBMMWgjsFRUJUaymGWE8gQ/D8oCHq42U7cXaWEtKDc3fa4hBtdtVyZTsae/MXdu1x4HNkBuLx2ZI3WKOerVZRaJ6bXkA9EtvSXa6gjVouiGGIrnjkb4DxRS72m4bqnFKMHSGkkzgComjk="
+        attachments: "sunburst, diff"
