@@ -44,7 +44,7 @@
 		"./src/mixins/createStatefulChildrenMixin.ts",
 		"./src/mixins/createTabbedMixin.ts",
 		"./src/mixins/createVNodeEvented.ts",
-		"./src/mixins/interfaces.d.ts",
+		"./src/mixins/interfaces.ts",
 		"./src/projector.ts",
 		"./src/util/createCancelableEvent.ts",
 		"./src/util/createMemoryStore.ts",
