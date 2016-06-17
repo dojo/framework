@@ -1,6 +1,7 @@
 import { Iterable } from '../iterator';
 import Promise, { Executor, State, Thenable, isThenable } from '../Promise';
 
+/* tslint:disable-next-line:variable-name */
 export const Canceled = <State> 4;
 
 /**

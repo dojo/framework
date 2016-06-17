@@ -93,7 +93,7 @@ registerSuite({
 
 		assert.isTrue(isIterable(entries), 'Returns an iterable.');
 
-		let i: number = 0;
+		let i = 0;
 		forOf(entries, function (value: [ number, any ]): void {
 			assert.strictEqual(value[0], mapArgs[i][0]);
 			assert.strictEqual(value[1], mapArgs[i][1]);
@@ -181,7 +181,7 @@ registerSuite({
 
 		assert.isTrue(isIterable(keys), 'Returns an iterable.');
 
-		let i: number = 0;
+		let i = 0;
 		forOf(keys, function (value: number): void {
 			assert.strictEqual(value, mapArgs[i][0]);
 			i++;
@@ -265,7 +265,7 @@ registerSuite({
 
 		assert.isTrue(isIterable(values), 'Returns an iterable.');
 
-		let i: number = 0;
+		let i = 0;
 		forOf(values, function (value: any): void {
 			assert.strictEqual(value, mapArgs[i][1]);
 			i++;

@@ -78,6 +78,7 @@ export function from<T>(arrayLike: (string | Iterable<T> | ArrayLike<T>), mapFun
 		mapFunction = mapFunction.bind(thisArg);
 	}
 
+	/* tslint:disable-next-line:variable-name */
 	const Constructor: any = this;
 	const length: number = toLength((<any> arrayLike).length);
 	// Support extension
@@ -87,7 +88,7 @@ export function from<T>(arrayLike: (string | Iterable<T> | ArrayLike<T>), mapFun
 		return array;
 	}
 
-	let i: number = 0;
+	let i = 0;
 	forOf(<any> arrayLike, function (value: T): void {
 		array[i] = mapFunction ? mapFunction(value, i) : value;
 		i++;

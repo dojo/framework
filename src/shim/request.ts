@@ -30,7 +30,7 @@ export class FilterRegistry extends Registry<RequestFilter> {
 	}
 }
 
-let defaultProvider: string = './request/xhr';
+let defaultProvider = './request/xhr';
 if (has('host-node')) {
 	defaultProvider = './request/node';
 }

@@ -1,9 +1,9 @@
 import Benchmark = require('benchmark');
 import { padEnd, padStart } from '../../src/string';
 
-const text: string = 'Lorem';
-const count: number = 10;
-const character: string = ' ';
+const text = 'Lorem';
+const count = 10;
+const character = ' ';
 
 let benchmarks: any[] = [];
 
