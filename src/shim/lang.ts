@@ -104,7 +104,14 @@ export const assign = has('object-assign') ?
  * @param mixins Any number of objects whose enumerable own properties will be copied to the created object
  * @return The new object
  */
-export function create<T extends {}, U extends {}>(prototype: T, ...mixins: U[]): T&U {
+export function create<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}, Z extends {}>(prototype: T, mixin1: U, mixin2: V, mixin3: W, mixin4: X, mixin5: Y, mixin6: Z): T & U & V & W & X & Y & Z;
+export function create<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(prototype: T, mixin1: U, mixin2: V, mixin3: W, mixin4: X, mixin5: Y): T & U & V & W & X & Y;
+export function create<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(prototype: T, mixin1: U, mixin2: V, mixin3: W, mixin4: X): T & U & V & W & X;
+export function create<T extends {}, U extends {}, V extends {}, W extends {}>(prototype: T, mixin1: U, mixin2: V, mixin3: W): T & U & V & W;
+export function create<T extends {}, U extends {}, V extends {}>(prototype: T, mixin1: U, mixin2: V): T & U & V;
+export function create<T extends {}, U extends {}>(prototype: T, mixin: U): T & U;
+export function create<T extends {}>(prototype: T): T;
+export function create(prototype: any, ...mixins: any[]): any {
 	if (!mixins.length) {
 		throw new RangeError('lang.create requires at least one mixin object.');
 	}
@@ -123,7 +130,13 @@ export function create<T extends {}, U extends {}>(prototype: T, ...mixins: U[])
  * @param sources Any number of objects whose enumerable own properties will be copied to the target object
  * @return The modified target object
  */
-export function deepAssign<T extends {}, U extends {}>(target: T, ...sources: U[]): T&U {
+export function deepAssign<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}, Z extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y, source6: Z): T & U & V & W & X & Y & Z;
+export function deepAssign<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y): T & U & V & W & X & Y;
+export function deepAssign<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(target: T, source1: U, source2: V, source3: W, source4: X): T & U & V & W & X;
+export function deepAssign<T extends {}, U extends {}, V extends {}, W extends {}>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
+export function deepAssign<T extends {}, U extends {}, V extends {}>(target: T, source1: U, source2: V): T & U & V;
+export function deepAssign<T extends {}, U extends {}>(target: T, source: U): T & U;
+export function deepAssign(target: any, ...sources: any[]): any {
 	return _mixin({
 		deep: true,
 		inherited: false,
@@ -140,7 +153,13 @@ export function deepAssign<T extends {}, U extends {}>(target: T, ...sources: U[
  * @param sources Any number of objects whose enumerable properties will be copied to the target object
  * @return The modified target object
  */
-export function deepMixin<T extends {}, U extends {}>(target: T, ...sources: U[]): T&U {
+export function deepMixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}, Z extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y, source6: Z): T & U & V & W & X & Y & Z;
+export function deepMixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y): T & U & V & W & X & Y;
+export function deepMixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(target: T, source1: U, source2: V, source3: W, source4: X): T & U & V & W & X;
+export function deepMixin<T extends {}, U extends {}, V extends {}, W extends {}>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
+export function deepMixin<T extends {}, U extends {}, V extends {}>(target: T, source1: U, source2: V): T & U & V;
+export function deepMixin<T extends {}, U extends {}>(target: T, source: U): T & U;
+export function deepMixin(target: any, ...sources: any[]): any {
 	return _mixin({
 		deep: true,
 		inherited: true,
@@ -206,7 +225,13 @@ export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): 
  *
  * @return The modified target object
  */
-export function mixin<T extends {}, U extends {}>(target: T, ...sources: U[]): T&U {
+export function mixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}, Z extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y, source6: Z): T & U & V & W & X & Y & Z;
+export function mixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y): T & U & V & W & X & Y;
+export function mixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(target: T, source1: U, source2: V, source3: W, source4: X): T & U & V & W & X;
+export function mixin<T extends {}, U extends {}, V extends {}, W extends {}>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
+export function mixin<T extends {}, U extends {}, V extends {}>(target: T, source1: U, source2: V): T & U & V;
+export function mixin<T extends {}, U extends {}>(target: T, source: U): T & U;
+export function mixin(target: any, ...sources: any[]): any {
 	return _mixin({
 		deep: false,
 		inherited: true,
