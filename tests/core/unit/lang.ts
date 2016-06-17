@@ -165,7 +165,7 @@ registerSuite({
 		});
 
 		const object: {} = Object.create(null);
-		const mixedObject: {} & typeof source = lang.mixin(object, source);
+		const mixedObject = lang.mixin(object, source);
 
 		assert.strictEqual(object, mixedObject, 'mixin should return the modified target object');
 		assert.strictEqual(mixedObject.a, 1, 'mixin should copy inherited properties');
@@ -174,6 +174,21 @@ registerSuite({
 		assert.isUndefined(mixedObject.hidden, 'mixin should not copy non-enumerable properties');
 		assert.strictEqual(mixedObject.nested, source.nested, 'mixin should perform a shallow copy');
 		assert.strictEqual(mixedObject.nested.a, 5);
+	},
+
+	'.mixin() - multiple sources'() {
+		const source1 = {
+			a: 12,
+			b: false
+		};
+		const source2 = {
+			c: 'string'
+		};
+		const mixedObject = lang.mixin({}, source1, source2);
+
+		assert.strictEqual(mixedObject.a, 12);
+		assert.strictEqual(mixedObject.b, false);
+		assert.strictEqual(mixedObject.c, 'string');
 	},
 
 	'.deepMixin()'() {
