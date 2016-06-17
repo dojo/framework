@@ -16,7 +16,7 @@
 		"prepublish": "grunt dist",
 		"test": "grunt test"
 	},
-	"typings": "./typings/dist/umd/dojo-routing.d.ts",
+	"typings": "./dist/umd/dojo-routing.d.ts",
 	"peerDependencies": {
 		"dojo-compose": "^2.0.0-beta.5",
 		"dojo-core": "^2.0.0-alpha.7"
