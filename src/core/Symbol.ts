@@ -3,7 +3,9 @@ import global from './global';
 import { getValueDescriptor } from './util';
 
 export namespace Shim {
+	/* tslint:disable-next-line:variable-name */
 	let Symbol: SymbolShimConstructor;
+	/* tslint:disable-next-line:variable-name */
 	let InternalSymbol: SymbolShimConstructor;
 
 	export interface SymbolShim {
@@ -164,9 +166,11 @@ export namespace Shim {
 	defineProperty(InternalSymbol.prototype, <any> Symbol.toPrimitive, getValueDescriptor(Symbol.prototype[Symbol.toPrimitive], false, false, true));
 	defineProperty(InternalSymbol.prototype, <any> Symbol.toStringTag, getValueDescriptor(Symbol.prototype[Symbol.toStringTag], false, false, true));
 
+	/* tslint:disable-next-line:variable-name */
 	export const Exposed = Symbol;
 }
 
+/* tslint:disable-next-line:variable-name */
 const SymbolShim: Shim.SymbolShimConstructor = has('es6-symbol') ? global.Symbol : Shim.Exposed;
 
 /**

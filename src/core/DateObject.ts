@@ -59,8 +59,8 @@ const operationHash: Hash<string> = Object.create(null, {
 });
 
 export default class DateObject implements DateProperties {
-	static parse(string: string): DateObject {
-		return new DateObject(Date.parse(string));
+	static parse(str: string): DateObject {
+		return new DateObject(Date.parse(str));
 	}
 
 	static now(): DateObject {

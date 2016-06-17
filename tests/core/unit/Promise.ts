@@ -12,6 +12,7 @@ export interface PromiseType {
 	resolve<T>(value: (T | Thenable<T>)): Promise<T>;
 }
 
+/* tslint:disable-next-line:variable-name */
 export function addPromiseTests(suite: any, Promise: PromiseType) {
 	suite['.all'] = {
 		'empty array': function () {

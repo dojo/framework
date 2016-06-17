@@ -70,7 +70,7 @@ registerSuite({
 	},
 
 	'.assign() with inferred type from multiple sources'() {
-		let source1:  { a: number, b: number } | { c: number, d: number } = {
+		let source1: { a: number, b: number } | { c: number, d: number } = {
 			a: 1,
 			b: 2,
 			c: 3,

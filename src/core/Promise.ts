@@ -77,7 +77,7 @@ export class PromiseShim<T> implements Thenable<T> {
 				}
 			}
 
-			let i: number = 0;
+			let i = 0;
 			forOf(iterable, function (value: T | Thenable<T>) {
 				processItem(i, value);
 				i++;
@@ -274,6 +274,7 @@ export default class Promise<T> implements Thenable<T> {
 	/**
 	 * Points to the promise constructor this platform should use.
 	 */
+	/* tslint:disable-next-line:variable-name */
 	static PromiseConstructor = has('promise') ? global.Promise : PromiseShim;
 
 	/**

@@ -37,7 +37,7 @@ export interface QueueItem {
 let checkMicroTaskQueue: () => void;
 let microTasks: QueueItem[];
 if (!has('microtasks')) {
-	let isMicroTaskQueued: boolean = false;
+	let isMicroTaskQueued = false;
 
 	microTasks = [];
 	checkMicroTaskQueue = function (): void {
@@ -176,6 +176,7 @@ export let queueMicroTask = (function () {
 		};
 	}
 	else if (has('dom-mutationobserver')) {
+		/* tslint:disable-next-line:variable-name */
 		const HostMutationObserver = global.MutationObserver || global.WebKitMutationObserver;
 		const node = document.createElement('div');
 		const queue: QueueItem[] = [];

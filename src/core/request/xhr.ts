@@ -126,7 +126,7 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 		}
 
 		const headers = options.headers;
-		let hasContentTypeHeader: boolean = false;
+		let hasContentTypeHeader = false;
 		for (let header in headers) {
 			if (header.toLowerCase() === 'content-type') {
 				hasContentTypeHeader = true;
