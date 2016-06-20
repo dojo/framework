@@ -2,12 +2,29 @@ import global from './global';
 import has from './has';
 import { Handle } from './interfaces';
 
+export interface QueueItem {
+	isActive: boolean;
+	callback: (...args: any[]) => any;
+}
+
+interface PostMessageEvent extends Event {
+	source: any;
+	data: string;
+}
+
+/**
+ * Executes a task
+ * @param item The task to execute
+ */
 function executeTask(item: QueueItem): void {
 	if (item.isActive) {
 		item.callback();
 	}
 }
 
+/**
+ * Get a handle to be able to remove an item from the queue
+ */
 function getQueueHandle(item: QueueItem, destructor?: (...args: any[]) => any): Handle {
 	return {
 		destroy: function () {
@@ -22,29 +39,14 @@ function getQueueHandle(item: QueueItem, destructor?: (...args: any[]) => any): 
 	};
 }
 
-interface PostMessageEvent extends Event {
-	source: any;
-	data: string;
-}
-
-export interface QueueItem {
-	isActive: boolean;
-	callback: (...args: any[]) => any;
-}
-
-// When no mechanism for registering microtasks is exposed by the environment, microtasks will
-// be queued and then executed in a single macrotask before the other macrotasks are executed.
-let checkMicroTaskQueue: () => void;
-let microTasks: QueueItem[];
-if (!has('microtasks')) {
-	let isMicroTaskQueued = false;
-
-	microTasks = [];
-	checkMicroTaskQueue = function (): void {
-		if (!isMicroTaskQueued) {
-			isMicroTaskQueued = true;
+const microTasks: QueueItem[] = [];
+let microTaskQueued = false;
+const checkMicroTaskQueue: () => void = !has('microtasks')
+	? function () {
+		if (!microTaskQueued) {
+			microTaskQueued = true;
 			queueTask(function () {
-				isMicroTaskQueued = false;
+				microTaskQueued = false;
 
 				if (microTasks.length) {
 					let item: QueueItem;
@@ -54,8 +56,8 @@ if (!has('microtasks')) {
 				}
 			});
 		}
-	};
-}
+	}
+	: function () {};
 
 /**
  * Schedules a callback to the macrotask queue.
@@ -120,39 +122,6 @@ export const queueTask = (function() {
 })();
 
 /**
- * Schedules an animation task with `window.requestAnimationFrame` if it exists, or with `queueTask` otherwise.
- *
- * Since requestAnimationFrame's behavior does not match that expected from `queueTask`, it is not used there.
- * However, at times it makes more sense to delegate to requestAnimationFrame; hence the following method.
- *
- * @param callback the function to be queued and later executed.
- * @returns An object with a `destroy` method that, when called, prevents the registered callback from executing.
- */
-export const queueAnimationTask = (function () {
-	if (!has('raf')) {
-		return queueTask;
-	}
-
-	function queueAnimationTask(callback: (...args: any[]) => any): Handle {
-		const item: QueueItem = {
-			isActive: true,
-			callback: callback
-		};
-		const rafId: number = requestAnimationFrame(executeTask.bind(null, item));
-
-		return getQueueHandle(item, function () {
-			cancelAnimationFrame(rafId);
-		});
-	}
-
-	// TODO: Use aspect.before when it is available.
-	return has('microtasks') ? queueAnimationTask : function (callback: (...args: any[]) => any): Handle {
-		checkMicroTaskQueue();
-		return queueAnimationTask(callback);
-	};
-})();
-
-/**
  * Schedules a callback to the microtask queue.
  *
  * Any callbacks registered with `queueMicroTask` will be executed before the next macrotask. If no native
@@ -162,7 +131,7 @@ export const queueAnimationTask = (function () {
  * @param callback the function to be queued and later executed.
  * @returns An object with a `destroy` method that, when called, prevents the registered callback from executing.
  */
-export let queueMicroTask = (function () {
+export const queueMicroTask = (function () {
 	let enqueue: (item: QueueItem) => void;
 
 	if (has('host-node')) {
@@ -170,7 +139,7 @@ export let queueMicroTask = (function () {
 			global.process.nextTick(executeTask.bind(null, item));
 		};
 	}
-	else if (has('promise')) {
+	else if (has('es6-promise')) {
 		enqueue = function (item: QueueItem): void {
 			global.Promise.resolve(item).then(executeTask);
 		};
