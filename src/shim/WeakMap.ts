@@ -1,5 +1,5 @@
-import { hasClass } from './decorators';
-import global from './global';
+import { hasClass } from './support/decorators';
+import global from './support/global';
 import { forOf, Iterable } from './iterator';
 import Symbol from './Symbol';
 
@@ -79,7 +79,7 @@ module Shim {
 	}
 }
 
-@hasClass('weakmap', global.WeakMap, Shim.WeakMap)
+@hasClass('es6-weakmap', global.WeakMap, Shim.WeakMap)
 export default class WeakMap<K, V> {
 	/* istanbul ignore next */
 	constructor(iterable?: any) {}

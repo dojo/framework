@@ -1,7 +1,7 @@
-import { hasClass } from './decorators';
+import { hasClass } from './support/decorators';
+import global from './support/global';
 import { forOf, Iterable, IterableIterator, ShimIterator } from './iterator';
-import global from './global';
-import { is } from './object';
+import { is as objectIs } from './object';
 import Symbol from './Symbol';
 
 export namespace Shim {
@@ -18,7 +18,7 @@ export namespace Shim {
 		 */
 		protected _indexOfKey(keys: K[], key: K): number {
 			for (let i = 0, length = keys.length; i < length; i++) {
-				if (is(keys[i], key)) {
+				if (objectIs(keys[i], key)) {
 					return i;
 				}
 			}

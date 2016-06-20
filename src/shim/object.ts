@@ -1,5 +1,8 @@
 /**
  * Determines whether two values are the same value.
+ *
+ * @param value1 The first value to compare
+ * @param value2 The second value to compare
  * @return true if the values are the same; false otherwise
  */
 export function is(value1: any, value2: any): boolean {

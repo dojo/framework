@@ -1,6 +1,6 @@
-import has from './has';
-import global from './global';
-import { getValueDescriptor } from './util';
+import has from './support/has';
+import global from './support/global';
+import { getValueDescriptor } from './support/util';
 
 export namespace Shim {
 	/* tslint:disable-next-line:variable-name */
@@ -171,10 +171,10 @@ export namespace Shim {
 }
 
 /* tslint:disable-next-line:variable-name */
-const SymbolShim: Shim.SymbolShimConstructor = has('es6-symbol') ? global.Symbol : Shim.Exposed;
+const SymbolShim: Shim.SymbolShimConstructor = has('es6-symbol') ? global.Symbol : global.Symbol = Shim.Exposed;
 
 /**
- * Fill any missing well known symbols if the native Symbol is missing the well known
+ * Fill any missing well known symbols if the native Symbol is missing them
  */
 [ 'hasInstance', 'isConcatSpreadable', 'iterator', 'species', 'replace', 'search', 'split', 'match', 'toPrimitive',
 	'toStringTag', 'unscopables' ].forEach((wellKnown) => {

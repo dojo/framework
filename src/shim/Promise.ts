@@ -1,8 +1,18 @@
-import { queueMicroTask } from './queue';
-import global from './global';
-import has from './has';
+import global from './support/global';
+import has from './support/has';
+import { queueMicroTask } from './support/queue';
+import { Thenable } from './interfaces';
 import { forOf, Iterable } from './iterator';
 import Symbol from './Symbol';
+
+/**
+ * The State enum represents the possible states of a promise.
+ */
+export const enum State {
+	Fulfilled,
+	Pending,
+	Rejected
+}
 
 /**
  * Copies an array of values, replacing any PlatformPromises in the copy with unwrapped global.Promises. This is necessary
@@ -20,6 +30,12 @@ function unwrapPromises(iterable: Iterable<any> | any[]): any[] {
  * Executor is the interface for functions used to initialize a Promise.
  */
 export interface Executor<T> {
+	/**
+	 * The executor for the promise
+	 *
+	 * @param resolve The resolver callback of the promise
+	 * @param reject The rejector callback of the promise
+	 */
 	(resolve: (value?: T | Thenable<T>) => void, reject: (reason?: any) => void): void;
 }
 
@@ -461,21 +477,4 @@ export default class Promise<T> implements Thenable<T> {
 	then<U>(onFulfilled?: (value?: T) => (U | Thenable<U>), onRejected?: (reason?: Error) => (U | Thenable<U>)): Promise<U> {
 		return (<typeof Promise> this.constructor).copy(this.promise.then(onFulfilled, onRejected));
 	}
-}
-
-/**
- * The State enum represents the possible states of a promise.
- */
-export enum State {
-	Fulfilled,
-	Pending,
-	Rejected
-}
-
-/**
- * Thenable represents any object with a callable `then` property.
- */
-export interface Thenable<T> {
-	then<U>(onFulfilled?: (value?: T) => U | Thenable<U>, onRejected?: (error?: any) => U | Thenable<U>): Thenable<U>;
-	then<U>(onFulfilled?: (value?: T) => U | Thenable<U>, onRejected?: (error?: any) => void): Thenable<U>;
 }
