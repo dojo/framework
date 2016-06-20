@@ -16,6 +16,12 @@ function testEdgeCases(op: (value: any) => boolean) {
 registerSuite({
 		name: 'number',
 
+		'constants'() {
+			assert.isNumber(numberUtil.EPSILON);
+			assert.isNumber(numberUtil.MAX_SAFE_INTEGER);
+			assert.isNumber(numberUtil.MIN_SAFE_INTEGER);
+		},
+
 		'.isNaN()'() {
 			assert.isTrue(numberUtil.isNaN(NaN));
 			assert.isFalse(numberUtil.isNaN(42));

@@ -110,7 +110,9 @@ registerSuite({
 		'.imul()'() {
 			assert.strictEqual(math.imul(2, 4), 8);
 			assert.strictEqual(math.imul(-1, 8), -8);
+			assert.strictEqual(math.imul(-2, -2), 4);
 			assert.strictEqual(math.imul(0xffffffff, 5), -5);
+			assert.strictEqual(math.imul(0xfffffffe, 5), -10);
 		},
 
 		'.log2()'() {

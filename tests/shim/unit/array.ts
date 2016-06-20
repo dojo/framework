@@ -1,10 +1,16 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as array from 'src/array';
-import has, { add as hasAdd, TestResult } from 'src/has';
+import has, { add as hasAdd } from 'src/support/has';
 import { Iterator, ShimIterator } from 'src/iterator';
 import Symbol from 'src/Symbol';
-import { mixin } from 'dojo/lang';
+
+function mixin<T, U>(destination: T, source: U): T & U {
+	for (let key in source) {
+		(<any> destination)[key] = (<any> source)[key];
+	}
+	return <any> destination;
+}
 
 function assertFrom(arrayable: any, expected: any[]) {
 	let actual = array.from(arrayable);
@@ -22,7 +28,7 @@ class MyArray {
 MyArray.prototype = Object.create(Array.prototype);
 
 function createDojoTests(feature: string, tests: {}) {
-	const hasConfiguration: TestResult = has(feature);
+	const hasConfiguration = has(feature);
 	const dojoTests: any = mixin({}, tests);
 
 	dojoTests.setup = function () {
@@ -37,7 +43,7 @@ function createDojoTests(feature: string, tests: {}) {
 }
 
 function createNativeTests(feature: string, tests: {}) {
-	const hasConfiguration: TestResult = has(feature);
+	const hasConfiguration = has(feature);
 
 	if (!hasConfiguration) {
 		return;

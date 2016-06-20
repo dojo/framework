@@ -2,24 +2,6 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as stringUtil from 'src/string';
 
-function createPaddingErrorTests(func: (text: string, length: number, character?: string) => string) {
-	// Tests error cases for padStart and padEnd.
-	return function () {
-		assert.throw(function () {
-			func(null, 10);
-		}, TypeError);
-		assert.throw(function () {
-			func('Lorem', 10, '');
-		}, TypeError);
-		assert.throw(function () {
-			func('Lorem', -5);
-		}, RangeError);
-		assert.throw(function () {
-			func('Lorem', Infinity);
-		}, RangeError);
-	};
-}
-
 registerSuite({
 	name: 'string functions',
 
@@ -129,19 +111,6 @@ registerSuite({
 		}
 	},
 
-	'.escapeRegExp()'() {
-		assert.strictEqual(stringUtil.escapeRegExp(''), '');
-		assert.strictEqual(stringUtil.escapeRegExp('[]{}()|/\\^$.*+?'), '\\[\\]\\{\\}\\(\\)\\|\\/\\\\\\^\\$\\.\\*\\+\\?');
-	},
-
-	'.escapeXml()'() {
-		let html = '<p class="text">Fox & Hound\'s</p>';
-
-		assert.strictEqual(stringUtil.escapeXml(''), '');
-		assert.strictEqual(stringUtil.escapeXml(html, false), '&lt;p class="text">Fox &amp; Hound\'s&lt;/p>');
-		assert.strictEqual(stringUtil.escapeXml(html), '&lt;p class=&quot;text&quot;&gt;Fox &amp; Hound&#39;s&lt;/p&gt;');
-	},
-
 	'.fromCodePoint()': {
 		'error cases'() {
 			let codePoints = [-1, 0x10FFFF + 1, 3.14, 3e-2, Infinity, -Infinity, NaN, undefined];
@@ -235,26 +204,6 @@ registerSuite({
 			assert.isTrue(stringUtil.includes('\xA2fa\uDA04', '\xA2fa\uDA04'));
 			assert.isTrue(stringUtil.includes('\xA2fa\uDA04', 'fa\uDA04', 1));
 			assert.isTrue(stringUtil.includes('\xA2fa\uDA04', '\uDA04', 3));
-		}
-	},
-
-	'.padEnd()': {
-		'error cases': createPaddingErrorTests(stringUtil.padEnd),
-		'basic tests'() {
-			assert.strictEqual(stringUtil.padEnd('Lorem', 10), 'Lorem00000');
-			assert.strictEqual(stringUtil.padEnd('Lorem', 10, ' '), 'Lorem     ');
-			assert.strictEqual(stringUtil.padEnd('Lorem', 5), 'Lorem');
-			assert.strictEqual(stringUtil.padEnd('Lorem', 1), 'Lorem');
-		}
-	},
-
-	'.padStart()': {
-		'error cases': createPaddingErrorTests(stringUtil.padStart),
-		'basic tests'() {
-			assert.strictEqual(stringUtil.padStart('Lorem', 10), '00000Lorem');
-			assert.strictEqual(stringUtil.padStart('Lorem', 10, ' '), '     Lorem');
-			assert.strictEqual(stringUtil.padStart('Lorem', 5), 'Lorem');
-			assert.strictEqual(stringUtil.padStart('Lorem', 1), 'Lorem');
 		}
 	},
 

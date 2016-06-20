@@ -1,26 +1,7 @@
-import intern = require('intern');
-import echo = require('intern/dojo/has!host-node?./services/echo');
-
-let server: any;
-
-// This hook is called when Intern starts
-export function setup() {
-	if (echo && intern.mode === 'runner') {
-		echo.start().then(function (_server: any) {
-			server = _server;
-		});
-	}
-}
-
-// This hook is called when Intern closes
-export function teardown() {
-	server && server.close();
-}
-
 export const proxyPort = 9000;
 
 // A fully qualified URL to the Intern proxy
-export const proxyUrl = 'http://localhost:9001/';
+export const proxyUrl = 'http://localhost:9000/';
 
 // Default desired capabilities for all environments. Individual capabilities can be overridden by any of the
 // specified browser environments in the `environments` array below as well. See
@@ -31,8 +12,7 @@ export const proxyUrl = 'http://localhost:9001/';
 export const capabilities = {
 	'browserstack.debug': false,
 	project: 'Dojo 2',
-	name: 'dojo-core',
-	fixSessionCapabilities: false
+	name: 'dojo-shim'
 };
 
 // Browsers to run integration testing against. Note that version numbers must be strings if used with Sauce
@@ -73,7 +53,7 @@ export const loaderOptions = {
 	packages: [
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' },
-		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
+		{ name: 'dojo', location: 'node_modules/intern/node_modules/dojo' },
 		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' }
 	]
 };
@@ -85,6 +65,4 @@ export const suites = [ 'tests/unit/all' ];
 export const functionalSuites = [ 'tests/functional/all' ];
 
 // A regular expression matching URLs to files that should not be included in code coverage analysis
-export const excludeInstrumentation = /(?:node_modules|bower_components|tests)[\/]/;
-
-export const defaultTimeout = 5000;
+export const excludeInstrumentation = /(?:node_modules|bower_components|tests)[\/\\]/;

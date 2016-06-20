@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { ShimIterator } from 'src/iterator';
 import WeakMap from 'src/WeakMap';
+import { ShimIterator } from 'src/iterator';
 
 interface Key {}
 
