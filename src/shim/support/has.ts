@@ -174,6 +174,7 @@ add('es6-symbol', typeof global.Symbol === 'function');
 add('arraybuffer', typeof global.ArrayBuffer !== 'undefined');
 add('float32array', 'Float32Array' in global);
 add('setimmediate', typeof global.setImmediate !== 'undefined');
+add('postmessage', typeof postMessage === 'function');
 add('microtasks', () => has('es6-promise') || has('host-node') || has('dom-mutationobserver'));
 
 /* DOM Features */
@@ -182,7 +183,6 @@ add('dom-mutationobserver', () => has('host-browser') && Boolean(global.Mutation
 
 /* XHR */
 
-add('postmessage', typeof postMessage === 'function');
 add('formdata', typeof global.FormData !== 'undefined');
 add('xhr', typeof global.XMLHttpRequest !== 'undefined');
 add('xhr2', has('xhr') && 'responseType' in global.XMLHttpRequest.prototype);

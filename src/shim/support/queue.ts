@@ -69,8 +69,16 @@ export const queueTask = (function() {
 	let destructor: (...args: any[]) => any;
 	let enqueue: (item: QueueItem) => void;
 
-	// Since the IE implementation of `setImmediate` is not flawless, we will test for `postMessage` first.
-	if (has('postmessage')) {
+	/* IE's setImmediate implementation is not perfect, but Edge treats postMessage like a microtask,
+	 * which causes a resolution problem.  Therefore browsers which have setImmediate and have either
+	 * native promises or don't support postMessage will use setImmediate (e.g. Edge and NodeJS) */
+	if (has('setimmediate') && (has('es6-promise') || !has('postmessage'))) {
+		destructor = global.clearImmediate;
+		enqueue = function (item: QueueItem): any {
+			return setImmediate(executeTask.bind(null, item));
+		};
+	}
+	else if (has('postmessage')) {
 		const queue: QueueItem[] = [];
 
 		global.addEventListener('message', function (event: PostMessageEvent): void {
@@ -87,12 +95,6 @@ export const queueTask = (function() {
 		enqueue = function (item: QueueItem): void {
 			queue.push(item);
 			global.postMessage('dojo-queue-message', '*');
-		};
-	}
-	else if (has('setimmediate')) {
-		destructor = global.clearImmediate;
-		enqueue = function (item: QueueItem): any {
-			return setImmediate(executeTask.bind(null, item));
 		};
 	}
 	else {
