@@ -20,13 +20,16 @@ export const capabilities = {
 // capabilities options specified for an environment will be copied as-is
 export const environments = [
 	{ browserName: 'internet explorer', version: [ '10', '11' ], platform: 'WINDOWS' },
+	{ browserName: 'microsoftedge', platform: 'WINDOWS'},
 	{ browserName: 'firefox', platform: 'WINDOWS' },
-	{ browserName: 'chrome', platform: 'WINDOWS' }/*,
-	{ browserName: 'Safari', version: '9', platform: 'OS X' }*/
+	{ browserName: 'chrome', platform: 'WINDOWS' },
+	{ browserName: 'safari', version: '9', platform: 'MAC' },
+	{ browserName: 'iPhone', platform: 'MAC', device: 'iPhone 6S' },
+	{ browserName: 'android', platform: 'ANDROID', device: 'Samsung Galaxy S5' }
 ];
 
 // Maximum number of simultaneous integration tests that should be executed on the remote WebDriver service
-export const maxConcurrency = 2;
+export const maxConcurrency = 1;
 
 // Name of the tunnel class to use for WebDriver tests
 export const tunnel = 'BrowserStackTunnel';
