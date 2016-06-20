@@ -1,7 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import Promise, { Executor, PromiseShim, State } from 'src/Promise';
+import { Thenable } from 'src/interfaces';
 import { Iterable, ShimIterator } from 'src/iterator';
-import Promise, { Executor, PromiseShim, State, Thenable } from 'src/Promise';
 import Symbol from 'src/Symbol';
 
 export interface PromiseType {
