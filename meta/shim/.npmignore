@@ -1,13 +1,11 @@
 /_build
-/docs
-/html-report
-/resources
 /support
 /tests
 /typings
 .editorconfig
 .gitattributes
 .gitignore
+.github
 .npmignore
 .travis.yml
 .tscache

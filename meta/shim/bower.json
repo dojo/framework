@@ -1,19 +1,17 @@
 {
-	"name": "dojo-core",
-	"description": "Utilities to detect, provide, and install language runtime features.",
+	"name": "dojo-<< package-name >>",
+	"description": "<< DESCRIPTION GOES HERE >>",
 	"keywords": [
 		"dojo",
-		"core",
 		"dojo2"
 	],
 	"authors": [
-		"Kris Zyp"
 	],
 	"main": "dist/umd/main.js",
 	"homepage": "http://dojotoolkit.org/",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/dojo/core.git"
+		"url": "git://github.com/dojo/<< package-name >>.git"
 	},
 	"dependencies": {
 	},

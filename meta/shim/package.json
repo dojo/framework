@@ -1,44 +1,41 @@
 {
-	"name": "dojo-core",
+	"name": "dojo-shim",
 	"version": "2.0.0-pre",
-	"description": "Basic utilites for common TypeScript development",
+	"description": "Modules that provide modular fills of ES6+ functionality",
 	"homepage": "http://dojotoolkit.org",
 	"bugs": {
-		"url": "https://github.com/dojo/core/issues"
+		"url": "https://github.com/dojo/shim/issues"
 	},
 	"license": "BSD-3-Clause",
 	"main": "index.js",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/dojo/core.git"
+		"url": "https://github.com/dojo/shim.git"
 	},
 	"scripts": {
 		"prepublish": "grunt dist",
 		"test": "grunt test"
 	},
-	"typings": "./dist/umd/dojo-core.d.ts",
+	"typings": "./dist/umd/dojo-shim.d.ts",
 	"devDependencies": {
-		"benchmark": "^1.0.0",
 		"codecov.io": "0.1.6",
-		"dojo-loader": ">=2.0.0-beta.5",
+		"dojo-loader": ">=2.0.0-beta",
 		"dts-generator": "~1.7.0",
-		"formidable": "1.0.17",
 		"glob": "^7.0.3",
-		"grunt": "^1.0.1",
+		"grunt": "~1.0.1",
 		"grunt-contrib-clean": "^1.0.0",
 		"grunt-contrib-copy": "^1.0.0",
 		"grunt-contrib-watch": "^1.0.0",
 		"grunt-dojo2": ">=2.0.0-beta.7",
-		"grunt-text-replace": "0.4.0",
+		"grunt-text-replace": "^0.4.0",
 		"grunt-ts": "^5.5.1",
 		"grunt-tslint": "^3.1.0",
 		"grunt-typings": ">=0.1.5",
-		"http-proxy": "0.10.3",
-		"intern": "~3.2.3",
-		"istanbul": "0.4.3",
-		"remap-istanbul": "0.6.4",
-		"sinon": "1.14.1",
-		"tslint": "^3.10.2",
-		"typescript": "~1.8.10"
+		"intern": "^3.2.3",
+		"istanbul": "^0.4.3",
+		"remap-istanbul": "^0.6.4",
+		"sinon": "^1.17.4",
+		"tslint": "^3.11.0",
+		"typescript": "^1.8.10"
 	}
 }
