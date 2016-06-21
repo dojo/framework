@@ -44,9 +44,9 @@ export function exists(feature: string): boolean {
  * @param value the value reported of the feature, or a function that will be executed once on first test
  * @param overwrite if an existing value should be overwritten. Defaults to false.
  */
-export function add(feature: string, value: FeatureTest | FeatureTestResult, overwrite: boolean = false): boolean {
+export function add(feature: string, value: FeatureTest | FeatureTestResult, overwrite: boolean = false): void {
 	if (exists(feature) && !overwrite) {
-		return false;
+		throw new TypeError(`Feature "${feature}" exists and overwrite not true.`);
 	}
 
 	if (typeof value === 'function') {
@@ -56,7 +56,6 @@ export function add(feature: string, value: FeatureTest | FeatureTestResult, ove
 		testResultsCache[feature] = value;
 		delete testFunctions[feature];
 	}
-	return true;
 }
 
 /**
@@ -71,8 +70,11 @@ export default function has(feature: string): FeatureTestResult {
 		result = testResultsCache[feature] = testFunctions[feature].call(null);
 		delete testFunctions[feature];
 	}
-	else {
+	else if (feature in testResultsCache) {
 		result = testResultsCache[feature];
+	}
+	else {
+		throw new TypeError(`Attempt to detect unregistered has feature "${feature}"`);
 	}
 
 	return result;
@@ -180,21 +182,3 @@ add('microtasks', () => has('es6-promise') || has('host-node') || has('dom-mutat
 /* DOM Features */
 
 add('dom-mutationobserver', () => has('host-browser') && Boolean(global.MutationObserver || global.WebKitMutationObserver));
-
-/* XHR */
-
-add('formdata', typeof global.FormData !== 'undefined');
-add('xhr', typeof global.XMLHttpRequest !== 'undefined');
-add('xhr2', has('xhr') && 'responseType' in global.XMLHttpRequest.prototype);
-add('xhr2-blob', function () {
-	if (!has('xhr2')) {
-		return false;
-	}
-
-	const request = new XMLHttpRequest();
-	request.open('GET', '/', true);
-	request.responseType = 'blob';
-	request.abort();
-	return request.responseType === 'blob';
-});
-

@@ -48,7 +48,9 @@ registerSuite({
 				assert.isFalse(hasCache['def']);
 
 				delete hasCache['abc'];
-				assert.isUndefined(has('abc'), 'Feature should be undefined after being removed from cache');
+				assert.throws(() => {
+					has('abc');
+				}, TypeError, 'Attempt to detect unregistered has feature');
 			},
 
 			'deferred feature test should not populate cache until evaluated'() {
@@ -63,8 +65,8 @@ registerSuite({
 
 		'has.add()': {
 			'basic tests with immediate values'() {
-				assert.isTrue(hasAdd('foo', true));
-				assert.isTrue(hasAdd('bar', false));
+				hasAdd('foo', true);
+				hasAdd('bar', false);
 
 				assert.isTrue(has('foo'));
 				assert.isFalse(has('bar'));
@@ -106,36 +108,38 @@ registerSuite({
 				}, TypeError);
 			},
 
-			'feature is already defined; returns false'() {
-				assert.isTrue(hasAdd(feature, true));
-				assert.isFalse(hasAdd(feature, false));
+			'feature is already defined; throws'() {
+				hasAdd(feature, true);
+				assert.throws(() => {
+					hasAdd(feature, false);
+				}, TypeError, 'exists and overwrite not true');
 			},
 
 			overwrite: {
 				'value with value'() {
-					assert.isTrue(hasAdd(feature, 'old'));
-					assert.isTrue(hasAdd(feature, 'new', true));
+					hasAdd(feature, 'old');
+					hasAdd(feature, 'new', true);
 
 					assert.strictEqual(has(feature), 'new');
 				},
 
 				'value with test method'() {
-					assert.isTrue(hasAdd(feature, 'old'));
-					assert.isTrue(hasAdd(feature, () => 'new', true));
+					hasAdd(feature, 'old');
+					hasAdd(feature, () => 'new', true);
 
 					assert.strictEqual(has(feature), 'new');
 				},
 
 				'test method with value'() {
-					assert.isTrue(hasAdd(feature, () => 'old'));
-					assert.isTrue(hasAdd(feature, 'new', true));
+					hasAdd(feature, () => 'old');
+					hasAdd(feature, 'new', true);
 
 					assert.strictEqual(has(feature), 'new');
 				},
 
 				'test method with test method'() {
-					assert.isTrue(hasAdd(feature, () => 'old'));
-					assert.isTrue(hasAdd(feature, () => 'new', true));
+					hasAdd(feature, () => 'old');
+					hasAdd(feature, () => 'new', true);
 
 					assert.strictEqual(has(feature), 'new');
 				}

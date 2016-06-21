@@ -53,12 +53,12 @@ registerSuite({
 				type = 'real';
 			}
 
-			@hasClass('test-decorator-noclass', Real, Fill)
-			class Target {
-				type = 'target';
-			}
-
-			assert.strictEqual(Target, Fill, 'the target should be the "fill" class');
+			assert.throws(() => {
+				@hasClass('test-decorator-noclass', Real, Fill)
+				class Target {
+					type = 'target';
+				}
+			}, TypeError, 'Attempt to detect unregistered has feature');
 		}
 	}
 });

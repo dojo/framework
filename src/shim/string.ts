@@ -261,7 +261,7 @@ export const startsWith: (text: string, search: string, position?: number) => bo
  * @param endPosition The index searching should stop before (defaults to text.length)
  * @return Boolean indicating if the search string was found at the end of the given string
  */
-export const endsWith: (text: string, search: string, endPosition?: number) => boolean = has('es6-string-endsWith')
+export const endsWith: (text: string, search: string, endPosition?: number) => boolean = has('es6-string-endswith')
 	? wrapNative((<any> String.prototype).endsWith)
 	: Shim.endsWith;
 

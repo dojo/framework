@@ -241,7 +241,7 @@ export const of: (...items: any[]) => any[] = has('es6-array-of')
  * @param end The last (exclusive) index to copy; if negative, it counts backwards from length
  * @return The target
  */
-export const copyWithin: <T>(target: ArrayLike<T>, offset: number, start: number, end?: number) => ArrayLike<T> = has('es6-array-copyWithin')
+export const copyWithin: <T>(target: ArrayLike<T>, offset: number, start: number, end?: number) => ArrayLike<T> = has('es6-array-copywithin')
 	? wrapNative((<any> Array.prototype).copyWithin)
 	: Shim.copyWithin;
 

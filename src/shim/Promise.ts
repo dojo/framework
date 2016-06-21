@@ -291,7 +291,7 @@ export default class Promise<T> implements Thenable<T> {
 	 * Points to the promise constructor this platform should use.
 	 */
 	/* tslint:disable-next-line:variable-name */
-	static PromiseConstructor = has('promise') ? global.Promise : PromiseShim;
+	static PromiseConstructor = has('es6-promise') ? global.Promise : PromiseShim;
 
 	/**
 	 * Converts an iterable object containing promises into a single promise that resolves to a new iterable object

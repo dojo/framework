@@ -292,7 +292,7 @@ registerSuite({
 		}
 	}),
 
-	'#findIndex()': createNativeAndDojoArrayTests('es6-array-findIndex', (function () {
+	'#findIndex()': createNativeAndDojoArrayTests('es6-array-findindex', (function () {
 		function callback(element: string) {
 			return element === 'goose';
 		}
@@ -355,7 +355,7 @@ registerSuite({
 		};
 	})()),
 
-	'#copyWithin()': createNativeAndDojoArrayTests('es6-array-copyWithin', {
+	'#copyWithin()': createNativeAndDojoArrayTests('es6-array-copywithin', {
 		'returns source array': function () {
 			let arr: any[] = [];
 			assert.equal(array.copyWithin(arr, 0, 0), arr);
