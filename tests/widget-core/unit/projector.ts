@@ -39,9 +39,9 @@ registerSuite({
 					setTimeout(dfd.callback(() => {
 						assert.strictEqual(document.body.childNodes.length, childNodeLength, 'child should have been removed');
 						attachHandle.destroy();
-					}), 100);
+					}), 300);
 				});
-			}, 100);
+			}, 300);
 		}).catch(dfd.reject);
 	},
 	'lifecycle'() {
@@ -71,8 +71,8 @@ registerSuite({
 				setTimeout(dfd.callback(() => {
 					assert.strictEqual(div.childNodes.length, 0, 'the node should be removed');
 					projector1.destroy();
-				}), 100);
-			}, 100);
+				}), 300);
+			}, 300);
 		}).catch(dfd.reject);
 	},
 	'\'attach\' event'() {
@@ -139,7 +139,7 @@ registerSuite({
 				handle.destroy();
 				assert.strictEqual(div.childNodes.length, 0);
 				attachHandle.destroy();
-			}), 100);
+			}), 300);
 		}).catch(dfd.reject);
 	},
 	'insert()'() {
@@ -158,7 +158,7 @@ registerSuite({
 				handle.destroy();
 				assert.strictEqual(div.childNodes.length, 0);
 				attachHandle.destroy();
-			}), 100);
+			}), 300);
 		}).catch(dfd.reject);
 	}
 });
