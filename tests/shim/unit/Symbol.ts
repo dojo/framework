@@ -22,9 +22,6 @@ registerSuite({
 		assert.isTrue(isSymbol(test));
 	},
 	'built in symbols': function () {
-		if (has('es6-symbol')) {
-			this.skip('so few symbols are built in to Symbol at this point, so skipping');
-		}
 		assert.isTrue(isSymbol(Symbol.hasInstance));
 		assert.isTrue(isSymbol(Symbol.isConcatSpreadable));
 		assert.isTrue(isSymbol(Symbol.iterator));
