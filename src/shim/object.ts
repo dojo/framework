@@ -43,6 +43,8 @@ export const getOwnPropertySymbols: (o: any) => symbol[] = 'getOwnPropertySymbol
  *
  * @param o The object to return the properties for
  */
+/* intentionally detecting `getOwnPropertySymbols` because we should should provide the shim
+ * when there is no support for symbols */
 export const getOwnPropertyNames: (o: any) => string[] = 'getOwnPropertySymbols' in Object
 	? Object.getOwnPropertyNames
 	: Shim.getOwnPropertyNames;
