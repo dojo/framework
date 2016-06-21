@@ -18,7 +18,7 @@ export namespace Shim {
 		[key: string]: symbol;
 	}
 
-	const globalSymbols: GlobalSymbols = {};
+	export const globalSymbols: GlobalSymbols = {};
 
 	interface TypedPropertyDescriptor<T> extends PropertyDescriptor {
 		value?: T;
@@ -93,13 +93,13 @@ export namespace Shim {
 	}
 
 	/* Decorate the Symbol function with the appropriate properties */
+	defineProperty(Symbol, 'for', getValueDescriptor(function (key: string): symbol {
+		if (globalSymbols[key]) {
+			return globalSymbols[key];
+		}
+		return (globalSymbols[key] = Symbol(String(key)));
+	}));
 	defineProperties(Symbol, {
-		for: getValueDescriptor(function (key: string): symbol {
-			if (globalSymbols[key]) {
-				return globalSymbols[key];
-			}
-			return (globalSymbols[key] = Symbol(String(key)));
-		}),
 		keyFor: getValueDescriptor(function (sym: symbol): string {
 			let key: string;
 			validateSymbol(sym);
@@ -109,17 +109,17 @@ export namespace Shim {
 				}
 			}
 		}),
-		hasInstance: getValueDescriptor(Symbol('hasInstance'), false, false),
-		isConcatSpreadable: getValueDescriptor(Symbol('isConcatSpreadable'), false, false),
-		iterator: getValueDescriptor(Symbol('iterator'), false, false),
-		match: getValueDescriptor(Symbol('match'), false, false),
-		replace: getValueDescriptor(Symbol('replace'), false, false),
-		search: getValueDescriptor(Symbol('search'), false, false),
-		species: getValueDescriptor(Symbol('species'), false, false),
-		split: getValueDescriptor(Symbol('split'), false, false),
-		toPrimitive: getValueDescriptor(Symbol('toPrimitive'), false, false),
-		toStringTag: getValueDescriptor(Symbol('toStringTag'), false, false),
-		unscopables: getValueDescriptor(Symbol('unscopables'), false, false)
+		hasInstance: getValueDescriptor(Symbol.for('hasInstance'), false, false),
+		isConcatSpreadable: getValueDescriptor(Symbol.for('isConcatSpreadable'), false, false),
+		iterator: getValueDescriptor(Symbol.for('iterator'), false, false),
+		match: getValueDescriptor(Symbol.for('match'), false, false),
+		replace: getValueDescriptor(Symbol.for('replace'), false, false),
+		search: getValueDescriptor(Symbol.for('search'), false, false),
+		species: getValueDescriptor(Symbol.for('species'), false, false),
+		split: getValueDescriptor(Symbol.for('split'), false, false),
+		toPrimitive: getValueDescriptor(Symbol.for('toPrimitive'), false, false),
+		toStringTag: getValueDescriptor(Symbol.for('toStringTag'), false, false),
+		unscopables: getValueDescriptor(Symbol.for('unscopables'), false, false)
 	});
 
 	/* Decorate the InternalSymbol object */
@@ -153,10 +153,12 @@ const SymbolShim: SymbolConstructor = has('es6-symbol') ? global.Symbol : global
 [ 'hasInstance', 'isConcatSpreadable', 'iterator', 'species', 'replace', 'search', 'split', 'match', 'toPrimitive',
 	'toStringTag', 'unscopables' ].forEach((wellKnown) => {
 		if (!(<any> SymbolShim)[wellKnown]) {
-			Object.defineProperty(SymbolShim, wellKnown, getValueDescriptor(SymbolShim(wellKnown), false, false));
+			Object.defineProperty(Symbol, wellKnown, getValueDescriptor(Symbol.for(wellKnown), false, false));
 		}
 	});
 
 export const isSymbol = Shim.isSymbol;
 
 export default SymbolShim;
+
+export const globalSymbols = Shim.globalSymbols;

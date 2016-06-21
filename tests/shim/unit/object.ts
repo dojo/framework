@@ -1,6 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as object from 'src/object';
+import 'src/Symbol';
 
 registerSuite({
 	name: 'object',
@@ -63,5 +64,43 @@ registerSuite({
 			let date = new Date();
 			assert.isFalse(object.is(date, new Date(Number(date))));
 		}
+	},
+
+	'.getOwnPropertySymbols()': {
+		'well-known'() {
+			const o = {
+				[Symbol.iterator]() {
+					return 'foo';
+				},
+				bar() {
+					return 'foo';
+				}
+			};
+			const [ sym, ...other ] = object.getOwnPropertySymbols(o);
+			assert.strictEqual(sym, Symbol.iterator);
+			assert.strictEqual(other.length, 0);
+		},
+		'Symbol.for'() {
+			const foo = Symbol.for('foo');
+			const o = {
+				[foo]: 'bar',
+				bar: 1
+			};
+			const [ sym, ...other ] = object.getOwnPropertySymbols(o);
+			assert.strictEqual(sym, foo);
+			assert.strictEqual(other.length, 0);
+		}
+	},
+
+	'.getOwnPropertyNames()'() {
+		const sym = Symbol('foo');
+		const o = {
+			[Symbol.iterator]() {
+				return 'foo';
+			},
+			[sym]: 'bar',
+			bar: 1
+		};
+		assert.deepEqual(object.getOwnPropertyNames(o), [ 'bar' ]);
 	}
 });
