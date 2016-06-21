@@ -3,7 +3,7 @@ import has from './support/has';
 import { queueMicroTask } from './support/queue';
 import { Thenable } from './interfaces';
 import { forOf, Iterable } from './iterator';
-import Symbol from './Symbol';
+import './Symbol';
 
 /**
  * The State enum represents the possible states of a promise.

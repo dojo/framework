@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import * as array from 'src/array';
 import has, { add as hasAdd } from 'src/support/has';
 import { Iterator, ShimIterator } from 'src/iterator';
-import Symbol from 'src/Symbol';
+import 'src/Symbol';
 
 function mixin<T, U>(destination: T, source: U): T & U {
 	for (let key in source) {

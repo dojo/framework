@@ -1,7 +1,7 @@
 import { hasClass } from './support/decorators';
 import global from './support/global';
 import { forOf, IterableIterator, Iterable, ShimIterator } from './iterator';
-import Symbol from './Symbol';
+import './Symbol';
 
 export namespace Shim {
 	export class Set<T> {

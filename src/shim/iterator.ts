@@ -1,5 +1,5 @@
 import { HIGH_SURROGATE_MIN, HIGH_SURROGATE_MAX } from './string';
-import Symbol from './Symbol';
+import './Symbol';
 
 export interface IteratorResult<T> {
 	done: boolean;

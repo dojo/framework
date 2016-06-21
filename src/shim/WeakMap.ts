@@ -1,7 +1,7 @@
 import { hasClass } from './support/decorators';
 import global from './support/global';
 import { forOf, Iterable } from './iterator';
-import Symbol from './Symbol';
+import './Symbol';
 
 module Shim {
 	const DELETED: any = {};

@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import Promise, { Executor, PromiseShim, State } from 'src/Promise';
 import { Thenable } from 'src/interfaces';
 import { Iterable, ShimIterator } from 'src/iterator';
-import Symbol from 'src/Symbol';
+import 'src/Symbol';
 
 export interface PromiseType {
 	new <T>(executor: Executor<T>): Promise<T>;

@@ -4,35 +4,9 @@ import { getValueDescriptor } from './support/util';
 
 export namespace Shim {
 	/* tslint:disable-next-line:variable-name */
-	let Symbol: SymbolShimConstructor;
+	let Symbol: SymbolConstructor;
 	/* tslint:disable-next-line:variable-name */
-	let InternalSymbol: SymbolShimConstructor;
-
-	export interface SymbolShim {
-		toString(): string;
-		valueOf(): Object;
-		[Symbol.toStringTag]: string;
-		[Symbol.toPrimitive]: symbol;
-		[s: string]: any;
-	}
-
-	export interface SymbolShimConstructor {
-		prototype: SymbolShim;
-		(description?: string|number): symbol;
-		for(key: string): symbol;
-		keyFor(sym: symbol): string;
-		hasInstance: symbol;
-		isConcatSpreadable: symbol;
-		iterator: symbol;
-		match: symbol;
-		replace: symbol;
-		search: symbol;
-		species: symbol;
-		split: symbol;
-		toPrimitive: symbol;
-		toStringTag: symbol;
-		unscopables: symbol;
-	}
+	let InternalSymbol: SymbolConstructor;
 
 	const defineProperties = Object.defineProperties;
 	const defineProperty = Object.defineProperty;
@@ -78,14 +52,14 @@ export namespace Shim {
 		};
 	}());
 
-	InternalSymbol = <any> function Symbol(description?: string|number): symbol {
+	InternalSymbol = function Symbol(description?: string|number): symbol {
 		if (this instanceof InternalSymbol) {
 			throw new TypeError('TypeError: Symbol is not a constructor');
 		}
 		return Symbol(description);
-	};
+	} as SymbolConstructor;
 
-	Symbol = <any> function Symbol(description?: string|number): symbol {
+	Symbol = function Symbol(description?: string|number): symbol {
 		if (this instanceof Symbol) {
 			throw new TypeError('TypeError: Symbol is not a constructor');
 		}
@@ -95,7 +69,7 @@ export namespace Shim {
 			__description__: getValueDescriptor(description),
 			__name__: getValueDescriptor(getSymbolName(description))
 		});
-	};
+	} as SymbolConstructor;
 
 	/**
 	 * A custom guard function that determines if an object is a symbol or not
@@ -171,7 +145,7 @@ export namespace Shim {
 }
 
 /* tslint:disable-next-line:variable-name */
-const SymbolShim: Shim.SymbolShimConstructor = has('es6-symbol') ? global.Symbol : global.Symbol = Shim.Exposed;
+const SymbolShim: SymbolConstructor = has('es6-symbol') ? global.Symbol : global.Symbol = Shim.Exposed;
 
 /**
  * Fill any missing well known symbols if the native Symbol is missing them

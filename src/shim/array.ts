@@ -287,10 +287,12 @@ export const findIndex: <T>(target: ArrayLike<T>, callback: FindCallback<T>, thi
 
 /**
  * Determines whether an array includes a given value
+ *
  * @param target the target array-like object
  * @param searchElement the item to search for
  * @param fromIndex the starting index to search from
+ * @return `true` if the array includes the element, otherwise `false`
  */
-export const includes = has('es7-array-includes')
+export const includes: <T>(target: ArrayLike<T>, searchElement: T, fromIndex?: number) => boolean  = has('es7-array-includes')
 	? wrapNative((<any> Array.prototype).includes)
 	: Shim.includes;

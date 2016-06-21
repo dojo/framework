@@ -24,6 +24,8 @@
 		"./src/main.ts",
 		"./src/Map.ts",
 		"./src/math.ts",
+		"./src/native/array.ts",
+		"./src/native/iterable.ts",
 		"./src/number.ts",
 		"./src/object.ts",
 		"./src/Promise.ts",

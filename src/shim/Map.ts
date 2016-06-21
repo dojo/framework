@@ -2,7 +2,7 @@ import { hasClass } from './support/decorators';
 import global from './support/global';
 import { forOf, Iterable, IterableIterator, ShimIterator } from './iterator';
 import { is as objectIs } from './object';
-import Symbol from './Symbol';
+import './Symbol';
 
 export namespace Shim {
 	/**

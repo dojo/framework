@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { forOf, IteratorResult } from 'src/iterator';
-import Symbol from 'src/Symbol';
+import 'src/Symbol';
 
 registerSuite({
 	name: 'iterator',
