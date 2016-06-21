@@ -173,7 +173,6 @@ add('es6-symbol', typeof global.Symbol === 'function');
 
 /* Miscellaneous features */
 
-add('arraybuffer', typeof global.ArrayBuffer !== 'undefined');
 add('float32array', 'Float32Array' in global);
 add('setimmediate', typeof global.setImmediate !== 'undefined');
 add('postmessage', typeof postMessage === 'function');
