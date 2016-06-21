@@ -73,7 +73,7 @@ export const queueTask = (function() {
 	if (has('postmessage')) {
 		const queue: QueueItem[] = [];
 
-		global.addEventListener('message', function (event: PostMessageEvent): void {
+		addEventListener('message', function (event: PostMessageEvent): void {
 			// Confirm that the event was triggered by the current window and by this particular implementation.
 			if (event.source === global && event.data === 'dojo-queue-message') {
 				event.stopPropagation();
@@ -86,17 +86,17 @@ export const queueTask = (function() {
 
 		enqueue = function (item: QueueItem): void {
 			queue.push(item);
-			global.postMessage('dojo-queue-message', '*');
+			postMessage('dojo-queue-message', '*');
 		};
 	}
 	else if (has('setimmediate')) {
-		destructor = global.clearImmediate;
+		destructor = clearImmediate;
 		enqueue = function (item: QueueItem): any {
 			return setImmediate(executeTask.bind(null, item));
 		};
 	}
 	else {
-		destructor = global.clearTimeout;
+		destructor = clearTimeout;
 		enqueue = function (item: QueueItem): any {
 			return setTimeout(executeTask.bind(null, item), 0);
 		};
@@ -136,7 +136,7 @@ export const queueMicroTask = (function () {
 
 	if (has('host-node')) {
 		enqueue = function (item: QueueItem): void {
-			global.process.nextTick(executeTask.bind(null, item));
+			process.nextTick(executeTask.bind(null, item));
 		};
 	}
 	/* Edge's Promise does not consitently resolve as a microtask, therefore not using Promise */
