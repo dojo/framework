@@ -152,7 +152,7 @@ const SymbolShim: SymbolConstructor = has('es6-symbol') ? global.Symbol : global
  */
 [ 'hasInstance', 'isConcatSpreadable', 'iterator', 'species', 'replace', 'search', 'split', 'match', 'toPrimitive',
 	'toStringTag', 'unscopables' ].forEach((wellKnown) => {
-		if (!(<any> SymbolShim)[wellKnown]) {
+		if (!(<any> Symbol)[wellKnown]) {
 			Object.defineProperty(Symbol, wellKnown, getValueDescriptor(Symbol.for(wellKnown), false, false));
 		}
 	});
