@@ -18,7 +18,7 @@ export namespace Shim {
 		[key: string]: symbol;
 	}
 
-	export const globalSymbols: GlobalSymbols = {};
+	const globalSymbols: GlobalSymbols = {};
 
 	interface TypedPropertyDescriptor<T> extends PropertyDescriptor {
 		value?: T;
@@ -160,5 +160,3 @@ const SymbolShim: SymbolConstructor = has('es6-symbol') ? global.Symbol : global
 export const isSymbol = Shim.isSymbol;
 
 export default SymbolShim;
-
-export const globalSymbols = Shim.globalSymbols;
