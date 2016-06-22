@@ -1,6 +1,6 @@
 import global from '../support/global';
 
-interface WeakMap<K, V> {
+export interface WeakMap<K, V> {
 	clear(): void;
 	delete(key: K): boolean;
 	get(key: K): V;
@@ -8,7 +8,7 @@ interface WeakMap<K, V> {
 	set(key: K, value?: V): this;
 }
 
-interface WeakMapConstructor {
+export interface WeakMapConstructor {
 	new (): WeakMap<any, any>;
 	new <K, V>(entries?: [K, V][]): WeakMap<K, V>;
 	prototype: WeakMap<any, any>;

@@ -1,6 +1,6 @@
 import global from '../support/global';
 
-interface Set<T> {
+export interface Set<T> {
 	add(value: T): this;
 	clear(): void;
 	delete(value: T): boolean;
@@ -9,7 +9,7 @@ interface Set<T> {
 	size: number;
 }
 
-interface SetConstructor {
+export interface SetConstructor {
 	new (): Set<any>;
 	new <T>(values?: T[]): Set<T>;
 	prototype: Set<any>;
