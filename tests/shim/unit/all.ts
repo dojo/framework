@@ -1,3 +1,4 @@
+import './native/all';
 import './support/decorators';
 import './support/global';
 import './support/has';
