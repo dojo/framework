@@ -6,7 +6,7 @@ registerSuite({
 	name: 'native/array',
 	'verify API'() {
 		if (!has('es6-array-from')) {
-			this.skip();
+			this.skip('No native support');
 		}
 		const dfd = this.async();
 		require([ 'src/native/array' ], dfd.callback((array: any) => {
