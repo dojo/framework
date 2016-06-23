@@ -30,12 +30,12 @@ registerSuite({
 				}
 			});
 			assert.deepEqual(results, [ 1, 2, 3 ]);
-
-			assert.isTrue(iterator.isArrayLike(arguments));
-			assert.isFalse(iterator.isArrayLike(false));
 			assert.throws(() => {
 				iterator.forOf(true);
 			}, TypeError);
+
+			assert.isTrue(iterator.isArrayLike(arguments));
+			assert.isFalse(iterator.isArrayLike(false));
 		}));
 	}
 });
