@@ -6,7 +6,7 @@ import global from 'src/support/global';
 hasAdd('es6-iterator', Boolean(global.Symbol && global.Symbol.iterator && global.Array.prototype[Symbol.iterator]));
 
 registerSuite({
-	name: 'native/array',
+	name: 'native/iterator',
 	'verify API'() {
 		if (!has('es6-iterator')) {
 			this.skip('No native support');
