@@ -5,7 +5,9 @@ export const environments = [
 	{ browserName: 'MicrosoftEdge', platform: 'Windows 10' },
 	{ browserName: 'firefox', platform: 'Windows 10' },
 	{ browserName: 'chrome', platform: 'Windows 10' },
-	{ browserName: 'safari', version: '9.0', platform: 'OS X 10.11' },
+	// Disable Safari 9 because of timing issues when running the tests.
+	// See <https://github.com/dojo/widgets/issues/5>.
+	// { browserName: 'safari', version: '9.0', platform: 'OS X 10.11' },
 	{ browserName: 'android', deviceName: 'Google Nexus 7 HD Emulator' },
 	{ browserName: 'iphone', version: '7.1' }
 ];
