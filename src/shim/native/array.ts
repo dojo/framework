@@ -102,4 +102,4 @@ export const findIndex: <T>(target: ArrayLike<T>, callback: FindCallback<T>, thi
  * @param searchElement the item to search for
  * @param fromIndex the starting index to search from
  */
-export const includes = wrapNative((<any> Array.prototype).includes);
+export const includes: <T>(target: ArrayLike<T>, searchElement: T, fromIndex?: number) => boolean = wrapNative((<any> Array.prototype).includes);
