@@ -104,24 +104,24 @@ const createFormMixin: FormMixinFactory = compose({
 			before: {
 				getNodeAttributes(...args: any[]) {
 					const formfield: FormFieldMixin<any, FormFieldMixinState<any>> = this;
-					let overrides: VNodeProperties = args[0];
-
-					if (!overrides) {
-						args[0] = overrides = {};
-					}
+					const overrides: VNodeProperties = {};
 
 					if (formfield.type) {
 						overrides['type'] = formfield.type;
 					}
-					if (formfield.value) {
-						overrides.value = formfield.value;
-					}
-					if (formfield.state.name) {
+					/* value should always be copied */
+					overrides.value = formfield.value;
+					if ('name' in formfield.state) {
 						overrides.name = formfield.state.name;
 					}
 					if (formfield.state.disabled) {
 						overrides['disabled'] = 'disabled';
 					}
+
+					if (!args[0]) {
+						args[0] = {};
+					}
+					assign(args[0], overrides);
 
 					return args;
 				}

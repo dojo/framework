@@ -90,35 +90,57 @@ registerSuite({
 			assert.strictEqual(count, 1);
 		}
 	},
-	'getNodeAttributes()'() {
-		const formfield = createFormFieldMixin({
-			type: 'foo',
-			state: {
-				value: 'bar',
-				name: 'baz'
-			}
-		});
+	'getNodeAttributes()': {
+		'truthy value'() {
+			const formfield = createFormFieldMixin({
+				type: 'foo',
+				state: {
+					value: 'bar',
+					name: 'baz'
+				}
+			});
 
-		let nodeAttributes = formfield.getNodeAttributes();
-		assert.strictEqual(nodeAttributes['type'], 'foo');
-		assert.strictEqual(nodeAttributes['value'], 'bar');
-		assert.strictEqual(nodeAttributes['name'], 'baz');
-		assert.isUndefined(nodeAttributes['disabled']);
+			let nodeAttributes = formfield.getNodeAttributes();
+			assert.strictEqual(nodeAttributes['type'], 'foo');
+			assert.strictEqual(nodeAttributes['value'], 'bar');
+			assert.strictEqual(nodeAttributes['name'], 'baz');
+			assert.isUndefined(nodeAttributes['disabled']);
 
-		formfield.setState({ disabled: true });
+			formfield.setState({ disabled: true });
 
-		nodeAttributes = formfield.getNodeAttributes();
-		assert.strictEqual(nodeAttributes['type'], 'foo');
-		assert.strictEqual(nodeAttributes['value'], 'bar');
-		assert.strictEqual(nodeAttributes['name'], 'baz');
-		assert.strictEqual(nodeAttributes['disabled'], 'disabled');
+			nodeAttributes = formfield.getNodeAttributes();
+			assert.strictEqual(nodeAttributes['type'], 'foo');
+			assert.strictEqual(nodeAttributes['value'], 'bar');
+			assert.strictEqual(nodeAttributes['name'], 'baz');
+			assert.strictEqual(nodeAttributes['disabled'], 'disabled');
 
-		formfield.setState({ disabled: false });
+			formfield.setState({ disabled: false });
 
-		nodeAttributes = formfield.getNodeAttributes();
-		assert.strictEqual(nodeAttributes['type'], 'foo');
-		assert.strictEqual(nodeAttributes['value'], 'bar');
-		assert.strictEqual(nodeAttributes['name'], 'baz');
-		assert.isUndefined(nodeAttributes['disabled']);
+			nodeAttributes = formfield.getNodeAttributes();
+			assert.strictEqual(nodeAttributes['type'], 'foo');
+			assert.strictEqual(nodeAttributes['value'], 'bar');
+			assert.strictEqual(nodeAttributes['name'], 'baz');
+			assert.isUndefined(nodeAttributes['disabled']);
+		},
+		'falsey value'() {
+			const formfield = createFormFieldMixin({
+				type: 'foo',
+				state: {
+					value: '',
+					name: 'baz'
+				}
+			});
+
+			let nodeAttributes = formfield.getNodeAttributes();
+			assert.strictEqual(nodeAttributes['value'], '');
+
+			formfield.setState({
+				value: undefined
+			});
+
+			nodeAttributes = formfield.getNodeAttributes();
+			assert.isUndefined(formfield.state.value);
+			assert.strictEqual(nodeAttributes['value'], '');
+		}
 	}
 });
