@@ -7,5 +7,6 @@ import './createParentMapMixin';
 import './createRenderable';
 import './createRenderableChildrenMixin';
 import './createStatefulChildrenMixin';
+import './createStatefulListenersMixin';
 import './createTabbedMixin';
 import './createVNodeEvented';
