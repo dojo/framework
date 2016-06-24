@@ -3,17 +3,17 @@ import global from '../support/global';
 /**
  * The smallest interval between two representable numbers.
  */
-export const EPSILON = 1;
+export const EPSILON = global.Number.EPSILON;
 
 /**
  * The maximum safe integer in JavaScript
  */
-export const MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+export const MAX_SAFE_INTEGER = global.Number.MAX_SAFE_INTEGER;
 
 /**
  * The minimum safe integer in JavaScript
  */
-export const MIN_SAFE_INTEGER = -MAX_SAFE_INTEGER;
+export const MIN_SAFE_INTEGER = global.Number.MIN_SAFE_INTEGER;
 
 /**
  * Determines whether the passed value is NaN without coersion.
@@ -21,9 +21,7 @@ export const MIN_SAFE_INTEGER = -MAX_SAFE_INTEGER;
  * @param value The value to test
  * @return true if the value is NaN, false if it is not
  */
-export function isNaN(value: any): boolean {
-	return typeof value === 'number' && global.isNaN(value);
-}
+export const isNaN = global.Number.isNaN;
 
 /**
  * Determines whether the passed value is a finite number without coersion.
@@ -31,9 +29,7 @@ export function isNaN(value: any): boolean {
  * @param value The value to test
  * @return true if the value is finite, false if it is not
  */
-export function isFinite(value: any): boolean {
-	return typeof value === 'number' && global.isFinite(value);
-}
+export const isFinite = global.Number.isFinite;
 
 /**
  * Determines whether the passed value is an integer.
@@ -41,9 +37,7 @@ export function isFinite(value: any): boolean {
  * @param value The value to test
  * @return true if the value is an integer, false if it is not
  */
-export function isInteger(value: any): boolean {
-	return isFinite(value) && Math.floor(value) === value;
-}
+export const isInteger = global.Number.isInteger;
 
 /**
  * Determines whether the passed value is an integer that is 'safe,' meaning:
@@ -55,6 +49,4 @@ export function isInteger(value: any): boolean {
  * @param value The value to test
  * @return true if the value is an integer, false if it is not
  */
-export function isSafeInteger(value: any): boolean {
-	return isInteger(value) && Math.abs(value) <= MAX_SAFE_INTEGER;
-}
+export const isSafeInteger = global.Number.isSafeInteger;
