@@ -13,7 +13,7 @@ registerSuite({
 		require([ 'src/native/Map' ], dfd.callback((m: any) => {
 			/* tslint:disable-next-line:variable-name */
 			const Map = m.default;
-			const map = new Map;
+			const map = new Map();
 			assert.instanceOf(map, global.Map);
 		}));
 	}
