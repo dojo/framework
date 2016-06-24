@@ -1,11 +1,14 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import has from 'src/support/has';
+import has, { add as hasAdd } from 'src/support/has';
+import global from 'src/support/global';
+
+hasAdd('es6-number', 'EPSILON' in global.Number);
 
 registerSuite({
 	name: 'native/number',
 	'verify API'() {
-		if (!has('es6-math-imul')) {
+		if (!has('es6-number')) {
 			this.skip('No native support');
 		}
 		const dfd = this.async();
