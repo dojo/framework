@@ -8,3 +8,4 @@ import './object';
 import './Promise';
 import './Set';
 import './string';
+import './Symbol';
