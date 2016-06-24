@@ -9,3 +9,4 @@ import './Promise';
 import './Set';
 import './string';
 import './Symbol';
+import './WeakMap';
