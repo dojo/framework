@@ -1,6 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import has from 'src/support/has';
+import global from 'src/support/global';
 
 registerSuite({
 	name: 'native/Symbol',
