@@ -7,3 +7,4 @@ import './number';
 import './object';
 import './Promise';
 import './Set';
+import './string';
