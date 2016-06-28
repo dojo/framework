@@ -24,7 +24,7 @@
   },
   "typings": "./dist/umd/dojo-routing.d.ts",
   "peerDependencies": {
-    "dojo-compose": "^2.0.0-beta.5",
+    "dojo-compose": "^2.0.0-beta.6",
     "dojo-core": "^2.0.0-alpha.7"
   },
   "devDependencies": {
