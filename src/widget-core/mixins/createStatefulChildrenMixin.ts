@@ -29,20 +29,17 @@ export interface StatefulChildrenMixinFactory extends ComposeFactory<Stateful<St
 	<C extends Child>(options?: StatefulChildrenOptions<C, StatefulChildrenState>): Stateful<StatefulChildrenState>;
 }
 
-/**
- * Contains a reference to the widgetRegistry per instance
- */
-const registryMap = new WeakMap<StatefulChildren<Child, StatefulChildrenState>, ChildrenRegistry<Child>>();
+interface ManagementState {
+	cache?: Map<string, Child>;
+	generation?: number;
+	current?: List<string>;
+	registry: ChildrenRegistry<Child>;
+}
 
 /**
- * Contains a Map of children IDs per instance
+ * Map that holds state for manageChildren and manageChildrenState by widget instance.
  */
-const childrenIdMap = new WeakMap<StatefulChildren<Child, StatefulChildrenState>, Map<string, Child>>();
-
-/**
- * Contains the last list of children we analyzed
- */
-const cachedChildrenIDs = new WeakMap<StatefulChildren<Child, StatefulChildrenState>, List<string>>();
+const managementMap = new WeakMap<StatefulChildren<Child, StatefulChildrenState>, ManagementState>();
 
 /**
  * Internal statechange listener which deals with
@@ -50,23 +47,28 @@ const cachedChildrenIDs = new WeakMap<StatefulChildren<Child, StatefulChildrenSt
 function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
 	const parent: StatefulChildren<Child, StatefulChildrenState> = <any> evt.target;
 
-	const widgetRegistry = registryMap.get(parent);
-	if (!widgetRegistry) {
-		/* We cannot manage children via state, as we have no way of resolving
-		 * the children IDs */
-		return;
+	/* Assume this function cannot be called without the widget being in the management map */
+	const internalState = managementMap.get(parent);
+	/* Initialize cache */
+	if (!internalState.cache) {
+		internalState.cache = new Map<string, Child>();
 	}
-	if (!cachedChildrenIDs.has(parent)) {
-		cachedChildrenIDs.set(parent, List<string>());
+	/* Initialize current children IDs */
+	if (!internalState.current) {
+		internalState.current = List<string>();
 	}
+	/* Increment the generation vector. Used when children are replaced asynchronously to ensure
+	 * no newer state is overriden. */
+	const generation = internalState.generation = (internalState.generation || 0) + 1;
+
 	const currentChildrenIDs = List(evt.state.children);
-	if (currentChildrenIDs.equals(cachedChildrenIDs.get(parent))) {
+	if (currentChildrenIDs.equals(internalState.current)) {
 		/* There are no changes to the children */
 		return;
 	}
-	cachedChildrenIDs.set(parent, currentChildrenIDs);
+
+	internalState.current = currentChildrenIDs;
 	const resolvingWidgets: [ Promise<Child>, string, number ][] = [];
-	let cachedChildren = childrenIdMap.get(parent);
 
 	/* Sometimes we are dealing with children that are a list, somtimes, a Map */
 	const childrenList: Child[] = [];
@@ -75,18 +77,24 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
 
 	/* Iterate through children ids, retrieving reference to widget or otherwise
 	 * requesting the widget from the registry */
-	currentChildrenIDs.forEach((id, key) => cachedChildren.has(id)
+	currentChildrenIDs.forEach((id, key) => internalState.cache.has(id)
 		? childrenIsList
-			? childrenList[key] = cachedChildren.get(id)
-			: childrenMap[id] = cachedChildren.get(id)
+			? childrenList[key] = internalState.cache.get(id)
+			: childrenMap[id] = internalState.cache.get(id)
 		/* Tuple of Promise, child ID, position in child list */
-		: resolvingWidgets.push([ widgetRegistry.get(id), id, key ]));
+		: resolvingWidgets.push([ internalState.registry.get(id), id, key ]));
 
 	/* If we have requests for widgets outstanding, we need to wait for them to be
 	 * resolved and then populate them in the children */
 	if (resolvingWidgets.length) {
 		Promise.all(resolvingWidgets.map(([ promise ]) => promise))
 			.then((widgets) => {
+				/* Only replace children if there is no newer state that either already has, or soon will,
+				 * replace the original listeners. */
+				if (internalState.generation !== generation) {
+					return;
+				}
+
 				widgets.forEach((widget, idx) => {
 					const [ , id, key ] = resolvingWidgets[idx];
 					if (childrenIsList) {
@@ -95,7 +103,7 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
 					else {
 						childrenMap[id] = widget;
 					}
-					cachedChildren.set(id, widget);
+					internalState.cache.set(id, widget);
 				});
 				/* Some parents have a List, some have a Map, so setting them varies */
 				parent.children = isList(parent.children) ? List(childrenList) : ImmutableMap<string, Child>(childrenMap);
@@ -117,17 +125,13 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
 function manageChildrenState(evt: ChildListEvent<any, Child>) {
 	const parent: StatefulChildren<Child, StatefulChildrenState> = evt.target;
 
-	const widgetRegistry = registryMap.get(parent);
-	if (!widgetRegistry) {
-		/* We cannot manage children via state, as we have no way of resolving
-		 * the children IDs */
-		return;
-	}
+	/* Assume this function cannot be called without the widget being in the management map */
+	const { registry } = managementMap.get(parent);
 
 	const evtChildren = evt.children;
 
 	const currentChildrenIDs = <List<string>> (isList(evtChildren)
-		? evtChildren.map((widget) => widgetRegistry.identify(widget))
+		? evtChildren.map((widget) => registry.identify(widget))
 		: List(evtChildren.keys()));
 
 	if (!currentChildrenIDs.equals(List(parent.state.children))) {
@@ -139,22 +143,17 @@ function manageChildrenState(evt: ChildListEvent<any, Child>) {
 const createStatefulChildrenMixin: StatefulChildrenMixinFactory = createStateful
 	.mixin({
 		mixin: createEvented,
-		initialize(instance: StatefulChildren<Child, StatefulChildrenState>, options: StatefulChildrenOptions<Child, StatefulChildrenState>) {
-			if (options) {
-				const { widgetRegistry } = options;
-				if (widgetRegistry) {
-					registryMap.set(instance, widgetRegistry);
-					childrenIdMap.set(instance, new Map<string, Child>());
-					instance.own(instance.on('statechange', manageChildren));
-					instance.own(instance.on('childlist', manageChildrenState));
-					instance.own({
-						destroy() {
-							registryMap.delete(instance);
-							childrenIdMap.delete(instance);
-							cachedChildrenIDs.delete(instance);
-						}
-					});
-				}
+		initialize(instance: StatefulChildren<Child, StatefulChildrenState>, { widgetRegistry: registry }: StatefulChildrenOptions<Child, StatefulChildrenState> = {}) {
+			if (registry) {
+				managementMap.set(instance, { registry });
+
+				instance.own(instance.on('statechange', manageChildren));
+				instance.own(instance.on('childlist', manageChildrenState));
+				instance.own({
+					destroy() {
+						managementMap.delete(instance);
+					}
+				});
 			}
 		}
 	});
