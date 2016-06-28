@@ -36,7 +36,7 @@
     "grunt-contrib-clean": "^1.0.0",
     "grunt-contrib-copy": "^1.0.0",
     "grunt-contrib-watch": "^1.0.0",
-    "grunt-dojo2": ">=2.0.0-beta.7",
+    "grunt-dojo2": ">=2.0.0-beta.9",
     "grunt-text-replace": "0.4.0",
     "grunt-ts": "^5.5.1",
     "grunt-tslint": "^3.1.0",
