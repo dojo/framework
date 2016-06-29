@@ -17,6 +17,9 @@
 		"test": "grunt test"
 	},
 	"typings": "./dist/umd/dojo-shim.d.ts",
+	"peerDependencies": {
+		"dojo-has": ">=2.0.0-alpha.1"
+	},
 	"devDependencies": {
 		"codecov.io": "0.1.6",
 		"dojo-loader": ">=2.0.0-beta",
@@ -34,7 +37,6 @@
 		"intern": "^3.2.3",
 		"istanbul": "^0.4.3",
 		"remap-istanbul": "^0.6.4",
-		"sinon": "^1.17.4",
 		"tslint": "^3.11.0",
 		"typescript": "^1.8.10"
 	}

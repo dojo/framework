@@ -1,170 +1,39 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as sinon from 'sinon';
-import has, {
-	testResultsCache as hasCache,
-	testFunctions as hasTestFunctions,
-	add as hasAdd,
-	exists as hasExists
-} from 'src/support/has';
-
-let alreadyCached: { [ feature: string ]: boolean };
-let alreadyTest: { [ feature: string ]: boolean };
-const feature = 'feature';  // default feature name for lazy devs
+import { exists } from 'src/support/has';
 
 registerSuite({
-		name: 'has',
+	name: 'support/has',
 
-		setup() {
-			alreadyCached = {};
-			Object.keys(hasCache).forEach(function (key) {
-				alreadyCached[key] = true;
-			});
-
-			alreadyTest = {};
-			Object.keys(hasTestFunctions).forEach(function (key) {
-				alreadyTest[key] = true;
-			});
-		},
-
-		afterEach() {
-			for (let key of Object.keys(hasCache)) {
-				if (!alreadyCached[key]) {
-					delete hasCache[key];
-				}
-			}
-			for (let key of Object.keys(hasTestFunctions)) {
-				if (!alreadyTest[key]) {
-					delete hasTestFunctions[key];
-				}
-			}
-		},
-
-		'has.cache': {
-			'basic true/false tests'() {
-				hasAdd('abc', true);
-				assert.isTrue(hasCache['abc']);
-				hasAdd('def', false);
-				assert.isFalse(hasCache['def']);
-
-				delete hasCache['abc'];
-				assert.throws(() => {
-					has('abc');
-				}, TypeError, 'Attempt to detect unregistered has feature');
-			},
-
-			'deferred feature test should not populate cache until evaluated'() {
-				hasAdd('deferred-cache', function () {
-					return true;
-				});
-				assert.notProperty(hasCache, 'deferred-cache');
-				has('deferred-cache');
-				assert.property(hasCache, 'deferred-cache');
-			}
-		},
-
-		'has.add()': {
-			'basic tests with immediate values'() {
-				hasAdd('foo', true);
-				hasAdd('bar', false);
-
-				assert.isTrue(has('foo'));
-				assert.isFalse(has('bar'));
-			},
-
-			'deferred feature test evaluation'() {
-				const testMethod = sinon.stub().returns(true);
-				const feature = 'deferred-cache';
-				hasAdd(feature, testMethod);
-
-				assert.isTrue(hasExists(feature));
-				assert.isFalse(testMethod.called);
-
-				assert.isTrue(has(feature));
-				assert.isTrue(testMethod.called);
-
-				// ensure we only call the testMethod once
-				has(feature);
-				assert.isTrue(testMethod.calledOnce);
-			},
-
-			'tests should not coerce'() {
-				let answer = 42;
-
-				hasAdd('answer', answer);
-				assert.strictEqual(has('answer'), answer,
-					'has feature should report original uncoerced value');
-
-				hasAdd('answer-function', function () {
-					return answer;
-				});
-				assert.strictEqual(has('answer-function'), answer,
-					'deferred has feature test should report uncoerced value');
-			},
-
-			'null test should not throw'() {
-				assert.doesNotThrow(function () {
-					hasAdd('baz', null);
-				}, TypeError);
-			},
-
-			'feature is already defined; throws'() {
-				hasAdd(feature, true);
-				assert.throws(() => {
-					hasAdd(feature, false);
-				}, TypeError, 'exists and overwrite not true');
-			},
-
-			overwrite: {
-				'value with value'() {
-					hasAdd(feature, 'old');
-					hasAdd(feature, 'new', true);
-
-					assert.strictEqual(has(feature), 'new');
-				},
-
-				'value with test method'() {
-					hasAdd(feature, 'old');
-					hasAdd(feature, () => 'new', true);
-
-					assert.strictEqual(has(feature), 'new');
-				},
-
-				'test method with value'() {
-					hasAdd(feature, () => 'old');
-					hasAdd(feature, 'new', true);
-
-					assert.strictEqual(has(feature), 'new');
-				},
-
-				'test method with test method'() {
-					hasAdd(feature, () => 'old');
-					hasAdd(feature, () => 'new', true);
-
-					assert.strictEqual(has(feature), 'new');
-				}
-			}
-		},
-
-		'has.exists()': {
-			'no test exists; returns false'() {
-				assert.isFalse(hasExists(feature));
-			},
-
-			'test value exists; returns true'() {
-				hasAdd(feature, true);
-				assert.isTrue(hasExists(feature));
-			},
-
-			'test method exists; returns true'() {
-				hasAdd(feature, () => true);
-				assert.isTrue(hasExists(feature));
-			},
-
-			'null test value counts as being defined'() {
-				hasAdd(feature, null);
-				assert.isTrue(hasExists(feature));
-			}
-		}
+	'features defined'() {
+		[
+			'es6-object-assign',
+			'es6-array-from',
+			'es6-array-of',
+			'es6-array-fill',
+			'es6-array-findindex',
+			'es6-array-find',
+			'es6-array-copywithin',
+			'es7-array-includes',
+			'es6-string-raw',
+			'es6-string-fromcodepoint',
+			'es6-string-codepointat',
+			'es6-string-normalize',
+			'es6-string-repeat',
+			'es6-string-startswith',
+			'es6-string-endswith',
+			'es6-string-includes',
+			'es6-math-imul',
+			'es6-promise',
+			'es6-set',
+			'es6-map',
+			'es6-weakmap',
+			'es6-symbol',
+			'float32array',
+			'setimmediate',
+			'postmessage',
+			'microtasks',
+			'dom-mutationobserver'
+		].forEach((feature) => assert.isTrue(exists(feature)));
 	}
-);
+});

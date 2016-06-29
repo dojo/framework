@@ -1,5 +1,8 @@
 {
 	"name": "dojo-shim",
+	"globalDependencies": {
+		"dojo-has": "npm:dojo-has"
+	},
 	"devDependencies": {
 		"chai": "registry:npm/chai#3.5.0+20160415060238",
 		"glob": "registry:npm/glob#6.0.0+20160211003958",
