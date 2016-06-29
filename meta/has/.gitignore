@@ -1,0 +1,14 @@
+*.js
+*.js.map
+!/*.js
+!/tasks/*.js
+/_build
+/bower_components
+/dist
+/html-report
+/node_modules
+/typings
+.baseDir.ts
+.tscache
+coverage-unmapped.json
+npm-debug.log
