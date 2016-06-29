@@ -1,6 +1,6 @@
 {
   "name": "dojo-has",
-  "version": "2.0.0-pre",
+  "version": "2.0.0-alpha.1",
   "description": "A feature detection library",
   "homepage": "http://dojotoolkit.org",
   "bugs": {
