@@ -9,7 +9,6 @@ if (has('es6-promise')) {
 	require([ 'src/native/Promise' ], (m: any) => {
 		/* tslint:disable-next-line:variable-name */
 		const Promise: any = m.default;
-		/* tslint:disable-next-line:variable-name */
 		function addPromiseTests(suite: any) {
 			suite['.all'] = {
 				'empty array': function () {

@@ -1,5 +1,5 @@
 import global from '../support/global';
-import { Thenable } from './interfaces';
+import { Thenable } from '../interfaces';
 import { forOf, Iterable } from './iterator';
 
 /**
