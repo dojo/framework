@@ -132,7 +132,7 @@ export namespace Shim {
  * @param n The number to use in calculation
  * @return The result
  */
-export const acosh: (n: number) => number = 'acosh' in Math
+export const acosh: (n: number) => number = has('es6-math-acosh')
 	? (<any> Math).acosh
 	: Shim.acosh;
 

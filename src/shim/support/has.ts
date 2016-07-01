@@ -37,6 +37,7 @@ add('es6-string-includes', 'includes' in global.String.prototype);
 
 /* Math */
 
+add('es6-math-acosh', typeof global.Math.acosh === 'function');
 add('es6-math-imul', () => {
 	if ('imul' in global.Math) {
 		/* Some versions of Safari on ios do not properly implement this */
