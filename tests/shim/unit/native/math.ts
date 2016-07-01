@@ -28,7 +28,7 @@ registerSuite({
 				'sinh',
 				'tanh',
 				'trunc'
-			].forEach((method: string) => assert.isFunction(math[method]));
+			].forEach((method: string) => assert.isFunction(math[method], `Math "${method}" is not defined`));
 			assert.strictEqual(Object.keys(math).length, 17);
 		}));
 	}
