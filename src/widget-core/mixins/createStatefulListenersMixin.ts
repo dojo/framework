@@ -5,11 +5,7 @@ import { Handle } from 'dojo-core/interfaces';
 import Map from 'dojo-core/Map';
 import Promise from 'dojo-core/Promise';
 import WeakMap from 'dojo-core/WeakMap';
-
-export interface ActionRegistry {
-	get(id: string | symbol): Promise<Actionable<TargettedEventObject>>;
-	identify(value: Actionable<TargettedEventObject>): string | symbol;
-}
+import { Registry, RegistryProvider } from './interfaces';
 
 export type ListenerOrArray = string | symbol | (string | symbol)[];
 
@@ -22,7 +18,7 @@ export interface StatefulListenersState {
 }
 
 export interface StatefulListenersOptions<S extends StatefulListenersState> extends StatefulOptions<S> {
-	actionRegistry?: ActionRegistry;
+	registryProvider?: RegistryProvider<Actionable<TargettedEventObject>>;
 }
 
 export type StatefulListeners<S extends StatefulListenersState> = Stateful<S>;
@@ -32,7 +28,7 @@ export interface StatefulListenersMixinFactory extends ComposeFactory<Stateful<S
 }
 
 function resolveListeners(
-	registry: ActionRegistry,
+	registry: Registry<Actionable<TargettedEventObject>>,
 	cache: Map<string | symbol, Actionable<TargettedEventObject>>,
 	ref: ListenerOrArray
 ): [(EventedListenerOrArray<TargettedEventObject>), Promise<(EventedListenerOrArray<TargettedEventObject>)>] {
@@ -72,7 +68,7 @@ interface ManagementState {
 	cache?: Map<string | symbol, Actionable<TargettedEventObject>>;
 	generation?: number;
 	handle?: Handle;
-	registry: ActionRegistry;
+	registry: Registry<Actionable<TargettedEventObject>>;
 }
 
 /**
@@ -146,8 +142,9 @@ function manageListeners(evt: StateChangeEvent<StatefulListenersState>): void {
 
 const createStatefulListenersMixin: StatefulListenersMixinFactory = createStateful.mixin({
 	mixin: createEvented,
-	initialize(instance: StatefulListeners<StatefulListenersState>, { actionRegistry: registry }: StatefulListenersOptions<StatefulListenersState> = {}) {
-		if (registry) {
+	initialize(instance: StatefulListeners<StatefulListenersState>, { registryProvider }: StatefulListenersOptions<StatefulListenersState> = {}) {
+		if (registryProvider) {
+			const registry = registryProvider.get('actions');
 			managementMap.set(instance, { registry });
 
 			instance.own(instance.on('statechange', manageListeners));

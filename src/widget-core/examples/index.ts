@@ -63,6 +63,16 @@ const widgetRegistry = {
 	}
 };
 
+const registryProvider = {
+	get(type: string) {
+		if (type === 'widgets') {
+			return widgetRegistry;
+		}
+
+		throw new Error('No such registry');
+	}
+};
+
 const widgets: Child[] = [];
 
 /**
@@ -77,7 +87,7 @@ widgets.push(createWidget({
 const tabbedPanel = createTabbedPanel({
 	id: 'tabbed-panel',
 	stateFrom: widgetStore,
-	widgetRegistry,
+	registryProvider,
 	listeners: {
 		error(evt) {
 			console.log(evt);

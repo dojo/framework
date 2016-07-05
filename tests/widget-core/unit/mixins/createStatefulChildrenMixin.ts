@@ -4,7 +4,7 @@ import createStatefulChildrenMixin from 'src/mixins/createStatefulChildrenMixin'
 import createRenderable, { Renderable } from 'src/mixins/createRenderable';
 import Promise from 'dojo-core/Promise';
 import { List, Map } from 'immutable/immutable';
-import { Child } from 'src/mixins/interfaces';
+import { Child, RegistryProvider } from 'src/mixins/interfaces';
 
 const widget1 = createRenderable();
 const widget2 = createRenderable();
@@ -33,6 +33,12 @@ const widgetRegistry = {
 	}
 };
 
+const registryProvider: RegistryProvider<Child> = {
+	get(type: string) {
+		return type === 'widgets' ? widgetRegistry : null;
+	}
+};
+
 const createStatefulChildrenList = createStatefulChildrenMixin
 	.extend({
 		children: List<Child>()
@@ -56,7 +62,7 @@ registerSuite({
 		creation() {
 			const dfd = this.async();
 			const parent = createStatefulChildrenList({
-				widgetRegistry,
+				registryProvider,
 				state: {
 					children: [ 'widget1' ]
 				}
@@ -70,7 +76,7 @@ registerSuite({
 		setState() {
 			const dfd = this.async();
 			const parent = createStatefulChildrenList({
-				widgetRegistry
+				registryProvider
 			});
 
 			parent.setState({ children: [ 'widget2' ] });
@@ -83,7 +89,7 @@ registerSuite({
 		'caching widgets'() {
 			const dfd = this.async();
 			const parent = createStatefulChildrenList({
-				widgetRegistry
+				registryProvider
 			});
 
 			parent.setState({ children: [ 'widget1' ]});
@@ -104,7 +110,7 @@ registerSuite({
 			const dfd = this.async();
 
 			const parent = createStatefulChildrenList({
-				widgetRegistry
+				registryProvider
 			});
 
 			parent.emit({
@@ -130,7 +136,7 @@ registerSuite({
 		creation() {
 			const dfd = this.async();
 			const parent = createStatefulChildrenMap({
-				widgetRegistry,
+				registryProvider,
 				state: {
 					children: [ 'widget1' ]
 				}
@@ -144,7 +150,7 @@ registerSuite({
 		setState() {
 			const dfd = this.async();
 			const parent = createStatefulChildrenMap({
-				widgetRegistry
+				registryProvider
 			});
 
 			parent.setState({ children: [ 'widget2' ] });
@@ -157,7 +163,7 @@ registerSuite({
 		'caching widgets'() {
 			const dfd = this.async();
 			const parent = createStatefulChildrenMap({
-				widgetRegistry
+				registryProvider
 			});
 
 			parent.setState({ children: [ 'widget1' ]});
@@ -178,7 +184,7 @@ registerSuite({
 			const dfd = this.async();
 
 			const parent = createStatefulChildrenList({
-				widgetRegistry
+				registryProvider
 			});
 
 			parent.emit({
@@ -202,7 +208,7 @@ registerSuite({
 	},
 	'Avoids updating children if there are no changes'() {
 		const parent = createStatefulChildrenList({
-			widgetRegistry
+			registryProvider
 		});
 
 		let setCount = 0;
@@ -225,7 +231,7 @@ registerSuite({
 	},
 	'Avoids updating state if there are no changes'() {
 		const parent = createStatefulChildrenList({
-			widgetRegistry
+			registryProvider
 		});
 
 		let setCount = 0;
@@ -257,7 +263,7 @@ registerSuite({
 	},
 	destroy() {
 		const parent = createStatefulChildrenList({
-			widgetRegistry
+			registryProvider
 		});
 
 		return delay().then(() => {
@@ -274,7 +280,11 @@ registerSuite({
 		const dfd = this.async();
 
 		const parent = createStatefulChildrenList({
-			widgetRegistry: rejectingRegistry,
+			registryProvider: {
+				get(type: string) {
+					return type === 'widgets' ? rejectingRegistry : null;
+				}
+			},
 			state: {
 				children: ['widget1']
 			}
@@ -290,7 +300,11 @@ registerSuite({
 		let registry = Object.create(widgetRegistry);
 
 		const parent = createStatefulChildrenList({
-			widgetRegistry: registry,
+			registryProvider: {
+				get(type: string) {
+					return type === 'widgets' ? registry : null;
+				}
+			},
 			state: {
 				children: ['widget1']
 			}

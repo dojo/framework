@@ -3,6 +3,7 @@ import * as assert from 'intern/chai!assert';
 import { Actionable, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import Promise from 'dojo-core/Promise';
 import createStatefulListenersMixin from 'src/mixins/createStatefulListenersMixin';
+import { RegistryProvider } from 'src/mixins/interfaces';
 
 type Action = Actionable<TargettedEventObject>;
 
@@ -57,6 +58,12 @@ const actionRegistry = {
 	}
 };
 
+const registryProvider: RegistryProvider<Action> = {
+	get(type: string) {
+		return type === 'actions' ? actionRegistry : null;
+	}
+};
+
 function delay() {
 	return new Promise((resolve) => setTimeout(resolve, 50));
 }
@@ -73,7 +80,7 @@ registerSuite({
 	creation: {
 		'with registry'() {
 			const widget = createStatefulListenersMixin({
-				actionRegistry,
+				registryProvider,
 				state: {
 					listeners: {
 						foo: 'action1',
@@ -112,7 +119,7 @@ registerSuite({
 	},
 	setState() {
 		const widget = createStatefulListenersMixin({
-			actionRegistry,
+			registryProvider,
 			state: {
 				listeners: {
 					foo: 'action1'
@@ -166,7 +173,7 @@ registerSuite({
 	},
 	'caches actions'() {
 		const widget = createStatefulListenersMixin({
-			actionRegistry,
+			registryProvider,
 			state: {
 				listeners: {
 					foo: 'action1'
@@ -189,7 +196,7 @@ registerSuite({
 	},
 	destroy() {
 		const widget = createStatefulListenersMixin({
-			actionRegistry,
+			registryProvider,
 			state: {
 				listeners: {
 					foo: 'action1'
@@ -211,7 +218,11 @@ registerSuite({
 		const dfd = this.async();
 
 		const widget = createStatefulListenersMixin({
-			actionRegistry: rejectingRegistry,
+			registryProvider: {
+				get(type: string) {
+					return type === 'actions' ? rejectingRegistry : null;
+				}
+			},
 			state: {
 				listeners: {
 					foo: 'action1'
@@ -229,7 +240,11 @@ registerSuite({
 		let registry = Object.create(actionRegistry);
 
 		const widget = createStatefulListenersMixin({
-			actionRegistry: registry,
+			registryProvider: {
+				get(type: string) {
+					return type === 'actions' ? registry : null;
+				}
+			},
 			state: {
 				listeners: {
 					foo: 'action1'

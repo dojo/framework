@@ -5,20 +5,15 @@ import Map from 'dojo-core/Map';
 import Promise from 'dojo-core/Promise';
 import WeakMap from 'dojo-core/WeakMap';
 import { List, Map as ImmutableMap } from 'immutable/immutable';
-import { Child, ChildListEvent } from './interfaces';
+import { Child, ChildListEvent, Registry, RegistryProvider } from './interfaces';
 import { isList } from '../util/lang';
-
-export interface ChildrenRegistry<C extends Child> {
-	get<D extends C>(id: string | symbol): Promise<D>;
-	identify(value: C): string | symbol;
-}
 
 export interface StatefulChildrenState {
 	children?: string[];
 }
 
 export interface StatefulChildrenOptions<C extends Child, S extends StatefulChildrenState> extends StatefulOptions<S> {
-	widgetRegistry?: ChildrenRegistry<C>;
+	registryProvider?: RegistryProvider<C>;
 }
 
 export type StatefulChildren<C extends Child, S extends StatefulChildrenState> = Stateful<S> & {
@@ -33,7 +28,7 @@ interface ManagementState {
 	cache?: Map<string, Child>;
 	generation?: number;
 	current?: List<string>;
-	registry: ChildrenRegistry<Child>;
+	registry: Registry<Child>;
 }
 
 /**
@@ -143,8 +138,9 @@ function manageChildrenState(evt: ChildListEvent<any, Child>) {
 const createStatefulChildrenMixin: StatefulChildrenMixinFactory = createStateful
 	.mixin({
 		mixin: createEvented,
-		initialize(instance: StatefulChildren<Child, StatefulChildrenState>, { widgetRegistry: registry }: StatefulChildrenOptions<Child, StatefulChildrenState> = {}) {
-			if (registry) {
+		initialize(instance: StatefulChildren<Child, StatefulChildrenState>, { registryProvider }: StatefulChildrenOptions<Child, StatefulChildrenState> = {}) {
+			if (registryProvider) {
+				const registry = registryProvider.get('widgets');
 				managementMap.set(instance, { registry });
 
 				instance.own(instance.on('statechange', manageChildren));
