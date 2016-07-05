@@ -3,7 +3,9 @@ export * from './intern';
 export const environments = [
 	{ browserName: 'internet explorer', version: [ '10.0', '11.0' ], platform: 'Windows 7' },
 	{ browserName: 'MicrosoftEdge', platform: 'Windows 10' },
-	{ browserName: 'firefox', platform: 'Windows 10' },
+	/* Pin Firefox to a specific version due to issues with current versions of Intern
+	 * and Firefox */
+	{ browserName: 'firefox', version: '43', platform: 'Windows 10' },
 	{ browserName: 'chrome', platform: 'Windows 10' },
 	// Disable Safari 9 because of timing issues when running the tests.
 	// See <https://github.com/dojo/widgets/issues/5>.
