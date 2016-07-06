@@ -1,5 +1,5 @@
+import Promise from 'dojo-shim/Promise';
 import { Strategy } from './interfaces';
-import Promise from '../Promise';
 import ReadableStream, { Source } from './ReadableStream';
 import { ReadResult } from './ReadableStreamReader';
 import SeekableStreamReader from './SeekableStreamReader';

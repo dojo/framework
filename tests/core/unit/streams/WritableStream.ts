@@ -4,7 +4,7 @@ import WritableStream, { State, Sink } from 'src/streams/WritableStream';
 import BaseStringSink from './helpers/BaseStringSink';
 import ManualSink from './helpers/ManualSink';
 import { Strategy } from 'src/streams/interfaces';
-import Promise from 'src/Promise';
+import Promise from 'dojo-shim/Promise';
 
 const ASYNC_TIMEOUT = 1000;
 let stream: WritableStream<string>;

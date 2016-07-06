@@ -1,4 +1,4 @@
-import Promise from '../../Promise';
+import Promise from 'dojo-shim/Promise';
 import { Source } from '../ReadableStream';
 import ReadableStreamController from '../ReadableStreamController';
 import { Readable } from 'stream';

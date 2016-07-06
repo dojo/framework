@@ -1,5 +1,5 @@
+import Promise from 'dojo-shim/Promise';
 import { Strategy } from './interfaces';
-import Promise from '../Promise';
 
 /*
 Based on sizeof.js by Stephen Morley

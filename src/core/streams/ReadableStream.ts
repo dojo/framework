@@ -1,5 +1,5 @@
+import Promise from 'dojo-shim/Promise';
 import { Strategy } from './interfaces';
-import Promise from '../Promise';
 import ReadableStreamController from './ReadableStreamController';
 import ReadableStreamReader from './ReadableStreamReader';
 import SizeQueue from './SizeQueue';

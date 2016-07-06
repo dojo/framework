@@ -1,4 +1,3 @@
-import Promise from '../../src/Promise';
 import { Hash } from '../../src/interfaces';
 
 import http = require('intern/dojo/node!http');
@@ -19,7 +18,7 @@ function wrapWithMultipartHandler(handleRequest: (request: any, response: any) =
 	return function (request: any, response: any) {
 		const headers = request.headers;
 		if (headers['content-type'] && multipartRE.test(headers['content-type'])) {
-			request.data = new Promise(function (resolve, reject) {
+			request.data = new Promise(function (resolve: any, reject: any) {
 				const parser = new formidable.IncomingForm();
 				parser.parse(request, function (err: any, fields: formidable.Fields, files: formidable.Files) {
 					if (err) {
@@ -98,7 +97,7 @@ function retrieveResource(response: any, responseType: string): void {
 	);
 }
 
-export function start(port?: number): Promise<http.Server> {
+export function start(port?: number): any {
 	const echoRequest = wrapWithMultipartHandler(function (request: any, response: any) {
 		try {
 			const queryString = request.url.split('?')[1];
@@ -117,7 +116,7 @@ export function start(port?: number): Promise<http.Server> {
 				}
 			}
 
-			new Promise(function (resolve, reject) {
+			new Promise(function (resolve: any, reject: any) {
 				if (request.data && typeof request.data.then === 'function') {
 					request.data.then(function (data: any) {
 							resolve(JSON.stringify(data));
@@ -180,7 +179,7 @@ export function start(port?: number): Promise<http.Server> {
 		}
 	});
 
-	const promise: Promise<http.Server> = new Promise(function (resolve, reject) {
+	const promise = new Promise(function (resolve: any, reject: any) {
 		server.on('listening', function () {
 			resolve(server);
 		});

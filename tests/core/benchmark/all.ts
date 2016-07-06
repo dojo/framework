@@ -1,2 +1,0 @@
-import './lang';
-import './string';

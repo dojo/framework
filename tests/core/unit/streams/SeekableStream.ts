@@ -3,7 +3,7 @@ import * as registerSuite from 'intern!object';
 
 import ArraySource from 'src/streams/ArraySource';
 import CountQueuingStrategy from 'src/streams/CountQueuingStrategy';
-import Promise from 'src/Promise';
+import Promise from 'dojo-shim/Promise';
 import { State } from 'src/streams/ReadableStream';
 import { ReadResult } from 'src/streams/ReadableStreamReader';
 import SeekableStream from 'src/streams/SeekableStream';

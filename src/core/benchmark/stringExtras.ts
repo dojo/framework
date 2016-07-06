@@ -1,5 +1,5 @@
 import Benchmark = require('benchmark');
-import { padEnd, padStart } from '../../src/string';
+import { padEnd, padStart } from '../../src/stringExtras';
 
 const text = 'Lorem';
 const count = 10;

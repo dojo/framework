@@ -1,5 +1,5 @@
 import { Sink } from 'src/streams/WritableStream';
-import Promise from 'src/Promise';
+import Promise from 'dojo-shim/Promise';
 
 // A sink whose write operations must be manually resolved by calling 'next'
 export default class ManualSink<T> implements Sink<T> {

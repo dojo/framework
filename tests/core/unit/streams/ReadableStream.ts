@@ -7,7 +7,7 @@ import OriginalReadableStream, { State } from 'src/streams/ReadableStream';
 import ReadableStreamController from 'src/streams/ReadableStreamController';
 import { ReadResult } from 'src/streams/ReadableStreamReader';
 import { Strategy } from 'src/streams/interfaces';
-import Promise from 'src/Promise';
+import Promise from 'dojo-shim/Promise';
 import TransformStream, { Transform } from 'src/streams/TransformStream';
 import WritableStream, { State as WritableState } from 'src/streams/WritableStream';
 

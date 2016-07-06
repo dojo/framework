@@ -1,8 +1,8 @@
 // This is a simple adaptation to TypeScript of the reference implementation (as of May 2015):
 // https://github.com/whatwg/streams/blob/master/reference-implementation/lib/transform-stream.js
 
+import Promise from 'dojo-shim/Promise';
 import { Strategy } from './interfaces';
-import Promise from '../Promise';
 import ReadableStream, { Source } from './ReadableStream';
 import ReadableStreamController from './ReadableStreamController';
 import WritableStream, { Sink } from './WritableStream';

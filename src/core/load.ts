@@ -1,4 +1,5 @@
-import Promise from './Promise';
+import P from 'dojo-shim/Promise';
+import global from './global';
 import { Require } from './loader';
 
 declare const require: Require;
@@ -8,6 +9,13 @@ declare const define: {
 	amd: any;
 };
 
+/* tslint:disable-next-line:variable-name */
+const Promise: typeof P = 'Promise' in global
+	? global.Promise
+	: typeof process === 'object' && process.versions && process.versions.node
+		? (<any> require('dojo-shim/dist/umd/Promise')).default
+		: (<any> require('dojo-shim/Promise')).default;
+
 export interface NodeRequire {
 	(moduleId: string): any;
 }
@@ -15,13 +23,13 @@ export interface NodeRequire {
 export type Require = Require | NodeRequire;
 
 export interface Load {
-	(require: Require, ...moduleIds: string[]): Promise<any[]>;
-	(...moduleIds: string[]): Promise<any[]>;
+	(require: Require, ...moduleIds: string[]): P<any[]>;
+	(...moduleIds: string[]): P<any[]>;
 }
 
 const load: Load = (function (): Load {
 	if (typeof module === 'object' && typeof module.exports === 'object') {
-		return function (contextualRequire: any, ...moduleIds: string[]): Promise<any[]> {
+		return function (contextualRequire: any, ...moduleIds: string[]): P<any[]> {
 			if (typeof contextualRequire === 'string') {
 				moduleIds.unshift(contextualRequire);
 				contextualRequire = require;
@@ -39,7 +47,7 @@ const load: Load = (function (): Load {
 		};
 	}
 	else if (typeof define === 'function' && define.amd) {
-		return function (contextualRequire: any, ...moduleIds: string[]): Promise<any[]> {
+		return function (contextualRequire: any, ...moduleIds: string[]): P<any[]> {
 			if (typeof contextualRequire === 'string') {
 				moduleIds.unshift(contextualRequire);
 				contextualRequire = require;

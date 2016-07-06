@@ -1,6 +1,6 @@
+import Promise from 'dojo-shim/Promise';
 import has from './has';
 import request, { Response } from './request';
-import Promise from './Promise';
 import { Config, Require } from './loader';
 
 declare const require: Require;

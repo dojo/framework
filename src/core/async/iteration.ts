@@ -1,6 +1,7 @@
-import * as array from '../array';
-import { isArrayLike, Iterable } from '../iterator';
-import Promise, { Thenable } from '../Promise';
+import * as array from 'dojo-shim/array';
+import { isArrayLike, Iterable } from 'dojo-shim/iterator';
+import Promise from 'dojo-shim/Promise';
+import { Thenable } from 'dojo-shim/interfaces';
 
 /**
  * Processes all items and then applies the callback to each item and eventually returns an object containing the

@@ -1,4 +1,4 @@
-import Promise from '../Promise';
+import Promise from 'dojo-shim/Promise';
 import ReadableStreamReader, { ReadResult } from './ReadableStreamReader';
 import SeekableStream from './SeekableStream';
 

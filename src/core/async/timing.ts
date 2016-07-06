@@ -1,4 +1,4 @@
-import Promise from '../Promise';
+import Promise from 'dojo-shim/Promise';
 
 /**
  * Used for delaying a Promise chain for a specific number of milliseconds.

@@ -9,12 +9,16 @@
 		<script src="../../../../node_modules/dojo-loader/dist/umd/loader.js"></script>
 		<script>
 			require.config({
+				baseUrl: '../../../../',
 				packages: [
-					{ name: 'core', location: '../../../src' }
+					{ name: 'src', location: '_build/src' },
+					{ name: 'tests', location: '_build/tests' },
+					{ name: 'dojo-has', location: 'node_modules/dojo-has/dist/umd' },
+					{ name: 'dojo-shim', location: 'node_modules/dojo-shim/dist/umd' }
 				]
 			});
 			require([
-				'core/text!../../support/data/strip.html!strip'
+				'src/text!./_build/tests/support/data/strip.html!strip'
 			], function (result) {
 				window.loaderTestResults = {
 					text: result

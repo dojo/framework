@@ -170,7 +170,7 @@ export let queueMicroTask = (function () {
 			global.process.nextTick(executeTask.bind(null, item));
 		};
 	}
-	else if (has('promise')) {
+	else if (has('es6-promise')) {
 		enqueue = function (item: QueueItem): void {
 			global.Promise.resolve(item).then(executeTask);
 		};

@@ -22,3 +22,5 @@ declare module 'intern/dojo/node!http-proxy' {
 	import httpProxy = require('http-proxy');
 	export = httpProxy;
 }
+
+declare const Promise: any;

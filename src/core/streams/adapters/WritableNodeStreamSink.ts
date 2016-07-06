@@ -1,4 +1,4 @@
-import Promise from '../../Promise';
+import Promise from 'dojo-shim/Promise';
 import { Sink } from '../WritableStream';
 
 export type NodeSourceType = Buffer | string;

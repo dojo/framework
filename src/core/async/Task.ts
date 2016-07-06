@@ -1,5 +1,6 @@
-import { Iterable } from '../iterator';
-import Promise, { Executor, State, Thenable, isThenable } from '../Promise';
+import { Iterable } from 'dojo-shim/iterator';
+import Promise, { Executor, State, isThenable } from 'dojo-shim/Promise';
+import { Thenable } from 'dojo-shim/interfaces';
 
 /* tslint:disable-next-line:variable-name */
 export const Canceled = <State> 4;

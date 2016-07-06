@@ -1,4 +1,4 @@
-import Promise from '../Promise';
+import Promise from 'dojo-shim/Promise';
 import ReadableStream, { State } from './ReadableStream';
 
 interface ReadRequest<T> {

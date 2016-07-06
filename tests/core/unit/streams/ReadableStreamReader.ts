@@ -4,7 +4,7 @@ import * as registerSuite from 'intern!object';
 import ReadableStreamReader, { ReadResult } from 'src/streams/ReadableStreamReader';
 import ReadableStream, { State, Source } from 'src/streams/ReadableStream';
 import BaseStringSource from './helpers/BaseStringSource';
-import Promise from 'src/Promise';
+import Promise from 'dojo-shim/Promise';
 
 const ASYNC_TIMEOUT = 1000;
 let stream: ReadableStream<string>;
