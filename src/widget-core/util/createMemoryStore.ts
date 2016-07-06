@@ -7,6 +7,15 @@ import WeakMap from 'dojo-shim/WeakMap';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 
+let uid = 0;
+
+/**
+ * Return a UID
+ */
+function getUID(): string {
+	return (1e9 * Math.random() >>> 0) + String(uid++);
+}
+
 export type StoreIndex = number | string;
 
 export interface MemoryStorePragma {
@@ -251,9 +260,11 @@ const createMemoryStore = compose<MemoryStoreMixin<Object>, MemoryStoreOptions<O
 			const store: MemoryStore<Object> = this;
 			const data = dataWeakMap.get(store);
 			const idProperty = store.idProperty;
-			const id =  options && 'id' in options ? options.id :
-				idProperty in item ? item[idProperty] :
-				data ? data.size : 0;
+			const id =  options && 'id' in options
+				? options.id
+				: idProperty in item
+					? item[idProperty]
+					: getUID();
 			if (options && options.replace === false && data && data.has(String(id))) {
 				return wrapError(store, Error(`Duplicate ID "${id}" when pragma "replace" is false`));
 			}

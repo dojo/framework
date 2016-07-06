@@ -51,4 +51,3 @@ projector.append(header);
 projector.attach();
 
 document.getElementsByTagName('body')[0].className += ' loaded';
-

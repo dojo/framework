@@ -42,4 +42,3 @@ next.addEventListener('click', (event) => {
 	closed = true;
 	projector.scheduleRender();
 });
-
