@@ -1,7 +1,7 @@
 sudo: false
 language: node_js
 node_js:
-- '5.1'
+- '6.1'
 env:
   global:
   - SAUCE_USERNAME: dojo2-ts-ci
