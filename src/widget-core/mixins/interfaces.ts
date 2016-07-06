@@ -1,5 +1,5 @@
 import { Handle } from 'dojo-core/interfaces';
-import Promise from 'dojo-core/Promise';
+import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
 import { Renderable } from './createRenderable';
 

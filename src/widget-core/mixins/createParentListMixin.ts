@@ -2,7 +2,7 @@ import { List } from 'immutable/immutable';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import createEvented, { Evented, EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import { Handle } from 'dojo-core/interfaces';
-import WeakMap from 'dojo-core/WeakMap';
+import WeakMap from 'dojo-shim/WeakMap';
 import { getRemoveHandle, insertInList, Position } from '../util/lang';
 import { Child, ChildListEvent } from './interfaces';
 

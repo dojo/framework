@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createStatefulChildrenMixin from 'src/mixins/createStatefulChildrenMixin';
 import createRenderable, { Renderable } from 'src/mixins/createRenderable';
-import Promise from 'dojo-core/Promise';
+import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable/immutable';
 import { Child, RegistryProvider } from 'src/mixins/interfaces';
 

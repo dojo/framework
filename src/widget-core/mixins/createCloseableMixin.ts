@@ -2,7 +2,7 @@ import { ComposeFactory } from 'dojo-compose/compose';
 import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import { Handle } from 'dojo-core/interfaces';
-import Promise from 'dojo-core/Promise';
+import Promise from 'dojo-shim/Promise';
 import createCancelableEvent, { CancelableEvent } from '../util/createCancelableEvent';
 
 export interface CloseableState extends State {

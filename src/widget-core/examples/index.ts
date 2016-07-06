@@ -4,7 +4,7 @@ import createPanel from 'src/createPanel';
 import createTabbedPanel from 'src/createTabbedPanel';
 import { Child } from 'src/mixins/interfaces';
 import projector from 'src/projector';
-import Promise from 'dojo-core/Promise';
+import Promise from 'dojo-shim/Promise';
 
 /**
  * A memory store which handles the widget states

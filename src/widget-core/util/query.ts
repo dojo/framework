@@ -1,6 +1,6 @@
 import { List } from 'immutable/immutable';
 import { ComposeFactory } from 'dojo-compose/compose';
-import Promise from 'dojo-core/Promise';
+import Promise from 'dojo-shim/Promise';
 
 interface MemoryStore<T> {
 	get(id: string | number): StorePromise<T>;

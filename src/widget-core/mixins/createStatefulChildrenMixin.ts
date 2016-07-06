@@ -1,9 +1,9 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import createEvented from 'dojo-compose/mixins/createEvented';
 import createStateful, { Stateful, StatefulOptions, StateChangeEvent } from 'dojo-compose/mixins/createStateful';
-import Map from 'dojo-core/Map';
-import Promise from 'dojo-core/Promise';
-import WeakMap from 'dojo-core/WeakMap';
+import Map from 'dojo-shim/Map';
+import Promise from 'dojo-shim/Promise';
+import WeakMap from 'dojo-shim/WeakMap';
 import { List, Map as ImmutableMap } from 'immutable/immutable';
 import { Child, ChildListEvent, Registry, RegistryProvider } from './interfaces';
 import { isList } from '../util/lang';

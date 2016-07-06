@@ -1,7 +1,7 @@
 import { VNode } from 'maquette/maquette';
 import { List } from 'immutable/immutable';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import { from as arrayFrom } from 'dojo-core/array';
+import { from as arrayFrom } from 'dojo-shim/array';
 import { Child, ChildEntry } from './interfaces';
 
 export interface RenderableChildrenOptions {

@@ -3,7 +3,7 @@ import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 import { Handle } from 'dojo-core/interfaces';
 import { on } from 'dojo-core/aspect';
-import WeakMap from 'dojo-core/WeakMap';
+import WeakMap from 'dojo-shim/WeakMap';
 import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
 import createParentListMixin, { ParentListMixin, ParentListMixinOptions } from './mixins/createParentListMixin';
 import createRenderableChildrenMixin from './mixins/createRenderableChildrenMixin';

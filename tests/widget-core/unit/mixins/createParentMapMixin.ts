@@ -4,7 +4,7 @@ import createParentMapMixin, { ParentMap } from 'src/mixins/createParentMapMixin
 import createRenderable, { Renderable } from 'src/mixins/createRenderable';
 import { Child } from 'src/mixins/interfaces';
 import { Map } from 'immutable/immutable';
-import { from as arrayFrom } from 'dojo-core/array';
+import { from as arrayFrom } from 'dojo-shim/array';
 
 type RenderableWithID = Renderable & { id?: string; };
 type ParentMapWithInvalidate = ParentMap<Child> & { invalidate?(): void; };

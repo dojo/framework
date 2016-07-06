@@ -3,9 +3,9 @@ import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 import createEvented, { Evented } from 'dojo-compose/mixins/createEvented';
 import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
-import Map from 'dojo-core/Map';
-import Promise from 'dojo-core/Promise';
-import WeakMap from 'dojo-core/WeakMap';
+import Map from 'dojo-shim/Map';
+import Promise from 'dojo-shim/Promise';
+import WeakMap from 'dojo-shim/WeakMap';
 import createRenderable, { Renderable, RenderableOptions } from './mixins/createRenderable';
 
 /**
