@@ -1,7 +1,7 @@
 import compose from 'dojo-compose/compose';
 import createEvented, { Evented } from 'dojo-compose/mixins/createEvented';
 import { emit } from 'dojo-core/on';
-import Promise from 'dojo-core/Promise';
+import Promise from 'dojo-shim/Promise';
 import { afterEach, beforeEach, suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 

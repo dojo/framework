@@ -2,7 +2,9 @@
 	"name": "dojo-routing",
 	"globalDependencies": {
 		"dojo-compose": "npm:dojo-compose",
-		"dojo-core": "npm:dojo-core"
+		"dojo-core": "npm:dojo-core",
+		"dojo-has": "npm:dojo-has",
+		"dojo-shim": "npm:dojo-shim"
 	},
 	"devDependencies": {
 		"chai": "registry:npm/chai#3.5.0+20160415060238",

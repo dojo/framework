@@ -1,4 +1,4 @@
-import Promise from 'dojo-core/Promise';
+import Promise from 'dojo-shim/Promise';
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 import { stub } from 'sinon';
