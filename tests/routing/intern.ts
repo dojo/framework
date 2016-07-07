@@ -55,7 +55,8 @@ export const loaderOptions = {
 		{ name: 'tests', location: '_build/tests' },
 		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
 		{ name: 'dojo-compose', location: 'node_modules/dojo-compose/dist/umd' },
-		{ name: 'dojo-core', location: 'node_modules/dojo-core/dist/umd' }
+		{ name: 'dojo-core', location: 'node_modules/dojo-core/dist/umd' },
+		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' }
 	]
 };
 

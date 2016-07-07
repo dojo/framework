@@ -44,6 +44,7 @@
     "intern": "~3.2.1",
     "istanbul": "0.4.3",
     "remap-istanbul": ">=0.6.4",
+    "sinon": "^1.17.4",
     "tslint": "^3.10.2",
     "typescript": "~1.8.10"
   }

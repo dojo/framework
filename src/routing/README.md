@@ -503,6 +503,14 @@ const history = createMemoryHistory();
 
 The `createMemoryHistory()` factory accepts a `path` option. It defaults to the empty string.
 
+#### Wiring History manager changes to Router dispatches
+
+Although you can manually wire a History manager `change` event to a `Router#dispatch()`, a utility function `Router#observeHistory()` will take care of the wiring for you. It takes a History manager, a Context and whether it should fire an initial dispatch.  An example of using it with a `StateHistory` manager:
+
+```ts
+router.observeHistory(createStateHistory(), { 'some': 'context' }, true);
+```
+
 ## How do I use this package?
 
 TODO: Add appropriate usage and instruction guidelines

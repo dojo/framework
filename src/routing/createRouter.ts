@@ -1,11 +1,14 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import createEvented, { Evented, EventedOptions, EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import { Handle } from 'dojo-core/interfaces';
+import { pausable, PausableHandle } from 'dojo-core/on';
 import Promise from 'dojo-core/Promise';
 import Task from 'dojo-core/async/Task';
+import WeakMap from 'dojo-core/WeakMap';
 
 import { Route, Handler } from './createRoute';
 import { Context, Parameters, Request } from './interfaces';
+import { History, HistoryChangeEvent } from './history/interfaces';
 import { parse as parsePath } from './_path';
 
 /**
@@ -61,6 +64,14 @@ export interface RouterMixin {
 	append(routes: Route<Parameters> | Route<Parameters>[]): void;
 
 	/**
+	 * Observe History, auto-wires the History change event to dispatch
+	 * @param history A History manager.
+	 * @param context A context object that is provided when executing selected routes.
+	 * @param dispatchInitial Whether to immediately dispatch with the History's current value.
+	 */
+	observeHistory(history: History, context: Context, dispatchInitial: boolean): PausableHandle;
+
+	/**
 	 * Select and execute routes for a given path.
 	 * @param context A context object that is provided when executing selected routes.
 	 * @param path The path.
@@ -101,6 +112,14 @@ export interface RouterOptions extends EventedOptions {
 	fallback?(request: Request<any>): void;
 }
 
+interface HistoryManager {
+	history: History;
+
+	context: Context;
+
+	listener: PausableHandle;
+}
+
 export interface RouterFactory extends ComposeFactory<Router, RouterOptions> {
 	/**
 	 * Create a new instance of a Router.
@@ -109,7 +128,10 @@ export interface RouterFactory extends ComposeFactory<Router, RouterOptions> {
 	(options?: RouterOptions): Router;
 }
 
+const historyMap = new WeakMap<Router, HistoryManager>();
+
 const createRouter: RouterFactory = compose<RouterMixin, RouterOptions>({
+
 	append (routes: Route<Parameters> | Route<Parameters>[]) {
 		if (Array.isArray(routes)) {
 			for (const route of routes) {
@@ -119,6 +141,23 @@ const createRouter: RouterFactory = compose<RouterMixin, RouterOptions>({
 		else {
 			this.routes.push(routes);
 		}
+	},
+
+	observeHistory(history: History, context: Context, dispatchInitial: boolean = false): PausableHandle {
+		const router: Router = this;
+		if (historyMap.has(router)) {
+			throw new Error('observeHistory can only be called once');
+		}
+		const listener = pausable(history, 'change', (event: HistoryChangeEvent) => {
+			router.dispatch(context, event.value);
+		});
+		historyMap.set(router, { history, listener, context });
+		if (dispatchInitial) {
+			router.dispatch(context, history.current);
+		}
+		router.own(listener);
+		router.own(history);
+		return listener;
 	},
 
 	dispatch (context: Context, path: string): Task<boolean> {

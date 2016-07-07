@@ -1,9 +1,11 @@
 import Promise from 'dojo-core/Promise';
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
+import { stub } from 'sinon';
 
 import createRoute from '../../src/createRoute';
 import createRouter from '../../src/createRouter';
+import createMemoryHistory from '../../src/history/createMemoryHistory';
 import { DefaultParameters, Context as C, Request, Parameters } from '../../src/interfaces';
 
 interface R extends Request<Parameters> {};
@@ -423,5 +425,58 @@ suite('createRouter', () => {
 		}).then(d => {
 			assert.deepEqual(extracted, {});
 		});
+	});
+
+	test('#observeHistory wires dispatch to a history change event', () => {
+		const router = createRouter();
+		const dispatch = stub(router, 'dispatch');
+
+		const history = createMemoryHistory();
+		const context = { 'foo': 'bar' };
+
+		router.observeHistory(history, context, false);
+		history.set('/foo');
+		assert.isTrue(dispatch.calledWith(context, '/foo'));
+	});
+
+	test('#observeHistory returns a pausable handler', () => {
+		const router = createRouter();
+		const dispatch = stub(router, 'dispatch');
+
+		const history = createMemoryHistory();
+		const context = { 'foo': 'bar' };
+
+		const listener = router.observeHistory(history, context, false);
+		listener.pause();
+		history.set('/foo');
+		assert.isFalse(dispatch.called);
+
+		listener.resume();
+		history.set('/bar');
+		assert.isTrue(dispatch.calledWith(context, '/bar'));
+	});
+
+	test('#observeHistory can dispatch immediately', () => {
+		const router = createRouter();
+		const dispatch = stub(router, 'dispatch');
+
+		const history = createMemoryHistory({ path: '/foo' });
+		const context = { 'foo': 'bar' };
+
+		router.observeHistory(history, context, true);
+		assert.isTrue(dispatch.calledWith(context, '/foo'));
+	});
+
+	test('#observeHistory throws if already called', () => {
+		const router = createRouter();
+		const history = createMemoryHistory();
+
+		function observeHistory() {
+			router.observeHistory(history, {}, false);
+		};
+
+		observeHistory();
+
+		assert.throws(observeHistory, /observeHistory can only be called once/);
 	});
 });
