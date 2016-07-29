@@ -1,5 +1,6 @@
 import { hasClass } from './support/decorators';
 import global from './support/global';
+import { ArrayLike } from './interfaces';
 import { forOf, Iterable } from './iterator';
 import './Symbol';
 
@@ -26,14 +27,12 @@ module Shim {
 	export class WeakMap<K, V> {
 		private _name: string;
 
-		constructor(iterable?: Array<[K, V]> | Iterable<[K, V]>) {
+		constructor(iterable?: ArrayLike<[K, V]> | Iterable<[K, V]>) {
 			Object.defineProperty(this, '_name', {
 				value: generateName()
 			});
 			if (iterable) {
-				forOf(iterable, (value: [K, V]) => {
-					this.set(value[0], value[1]);
-				});
+				forOf(iterable, ([ key, value ]: [K, V]) => this.set(key, value));
 			}
 		}
 
@@ -82,7 +81,7 @@ module Shim {
 @hasClass('es6-weakmap', global.WeakMap, Shim.WeakMap)
 export default class WeakMap<K, V> {
 	/* istanbul ignore next */
-	constructor(iterable?: any) {}
+	constructor(iterable?: ArrayLike<[K, V]> | Iterable<[K, V]>) {}
 
 	/* istanbul ignore next */
 	delete(key: K): boolean { throw new Error(); }

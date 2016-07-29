@@ -1,11 +1,13 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { forOf, IteratorResult } from 'src/iterator';
+import { forOf, get, ShimIterator } from 'src/iterator';
 import 'src/Symbol';
 
 registerSuite({
 	name: 'iterator',
+
 	'forOf': {
+
 		'strings'() {
 			const str = 'abcdefg';
 			const results: string[] = [];
@@ -17,6 +19,7 @@ registerSuite({
 
 			assert.deepEqual(results, expected);
 		},
+
 		'double byte strings'() {
 			const str = '¯\\_(ツ)_/¯';
 			const results: string[] = [];
@@ -28,6 +31,7 @@ registerSuite({
 
 			assert.deepEqual(results, expected);
 		},
+
 		'utf-16'() {
 			const str = '\uD801\uDC00';
 			const results: string[] = [];
@@ -39,6 +43,7 @@ registerSuite({
 
 			assert.deepEqual(results, expected);
 		},
+
 		'arrays'() {
 			const array: any[] = [ 'foo', 'bar', {}, 1, [ 'qat', 2 ] ];
 			const results: any[] = [];
@@ -50,12 +55,13 @@ registerSuite({
 			assert.deepEqual(results, array);
 			assert.notStrictEqual(results, array);
 		},
+
 		'iterable'() {
 			let counter = 0;
 			const iterable = {
 				[Symbol.iterator]() {
 					return {
-						next(): IteratorResult<number> {
+						next() {
 							counter++;
 							if (counter < 5) {
 								return {
@@ -64,7 +70,7 @@ registerSuite({
 								};
 							}
 							else {
-								return { done: true };
+								return { done: true, value: undefined };
 							}
 						}
 					};
@@ -79,6 +85,7 @@ registerSuite({
 
 			assert.deepEqual(results, expected);
 		},
+
 		'scoping'() {
 			const array = [ 'a', 'b' ];
 			const scope = { foo: 'bar' };
@@ -88,6 +95,7 @@ registerSuite({
 				assert.strictEqual(obj, array);
 			}, scope);
 		},
+
 		'doBreak': {
 			strings() {
 				const str = 'abcdefg';
@@ -110,7 +118,7 @@ registerSuite({
 				const iterable = {
 					[Symbol.iterator]() {
 						return {
-							next(): IteratorResult<number> {
+							next() {
 								counter++;
 								if (counter < 5) {
 									return {
@@ -119,7 +127,7 @@ registerSuite({
 									};
 								}
 								else {
-									return { done: true };
+									return { done: true, value: undefined };
 								}
 							}
 						};
@@ -138,5 +146,117 @@ registerSuite({
 				assert.deepEqual(results, expected);
 			}
 		}
+
+	},
+
+	'get': {
+
+		'iterable'() {
+			let counter = 0;
+			const iterable = {
+				[Symbol.iterator]() {
+					return {
+						next() {
+							counter++;
+							if (counter < 5) {
+								return {
+									value: counter,
+									done: false
+								};
+							}
+							else {
+								return { done: true, value: undefined };
+							}
+						}
+					};
+				}
+			};
+			const results: number[] = [];
+			const expected = [ 1, 2, 3, 4 ];
+			const iterator = get(iterable);
+			let result = iterator.next();
+			while (!result.done) {
+				results.push(result.value);
+				result = iterator.next();
+			}
+			assert.deepEqual(results, expected);
+		},
+
+		'arrayLike'() {
+			const obj: { [idx: number]: number; length: number; } = {
+				0: 1,
+				1: 2,
+				2: 3,
+				3: 4,
+				length: 4
+			};
+			const results: number[] = [];
+			const expected = [ 1, 2, 3, 4 ];
+			const iterator = get(obj);
+			let result = iterator.next();
+			while (!result.done) {
+				results.push(result.value);
+				result = iterator.next();
+			}
+			assert.deepEqual(results, expected);
+		}
+
+	},
+
+	'class ShimIterator': {
+
+		'iterable'() {
+			let counter = 0;
+			let nativeIterator: any;
+			const iterable = {
+				[Symbol.iterator]() {
+					return nativeIterator = {
+						next() {
+							counter++;
+							if (counter < 5) {
+								return {
+									value: counter,
+									done: false
+								};
+							}
+							else {
+								return { done: true, value: undefined };
+							}
+						}
+					};
+				}
+			};
+			const results: number[] = [];
+			const expected = [ 1, 2, 3, 4 ];
+			const iterator = new ShimIterator(iterable);
+			assert.strictEqual((<any> iterator)._nativeIterator, nativeIterator);
+			let result = iterator.next();
+			while (!result.done) {
+				results.push(result.value);
+				result = iterator.next();
+			}
+			assert.deepEqual(results, expected);
+		},
+
+		'arrayLike'() {
+			const obj: { [idx: number]: number; length: number; } = {
+				0: 1,
+				1: 2,
+				2: 3,
+				3: 4,
+				length: 4
+			};
+			const results: number[] = [];
+			const expected = [ 1, 2, 3, 4 ];
+			const iterator = new ShimIterator(obj);
+			assert.isUndefined((<any> iterator)._nativeIterator);
+			let result = iterator.next();
+			while (!result.done) {
+				results.push(result.value);
+				result = iterator.next();
+			}
+			assert.deepEqual(results, expected);
+		}
+
 	}
 });

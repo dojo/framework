@@ -30,7 +30,7 @@ registerSuite({
 
 		'iterator data'() {
 			assert.doesNotThrow(function () {
-				map = new Map<number, string>(<any> new ShimIterator<[number, string]>({
+				map = new Map(new ShimIterator<[number, string]>({
 					length: 1,
 					0: [ 3, 'bar' ]
 				}));
@@ -40,14 +40,14 @@ registerSuite({
 
 	clear: {
 		'empty map'() {
-			map = new Map<void, void>();
+			map = new Map();
 			assert.doesNotThrow(function () {
 				map.clear();
 			});
 		},
 
 		'non-empty map'() {
-			map = new Map<number, string>([
+			map = new Map([
 				[ 3, 'abc' ]
 			]);
 			map.clear();
@@ -58,7 +58,7 @@ registerSuite({
 
 	'delete': {
 		before() {
-			map = new Map<number, string>([
+			map = new Map([
 				[ 3, 'abc' ],
 				[ 4, 'def' ]
 			]);
@@ -136,7 +136,7 @@ registerSuite({
 
 	get: {
 		before() {
-			map = new Map<number, string>([
+			map = new Map([
 				[ 0, 'a' ],
 				[ 8, 'b' ],
 				[ NaN, 'c' ]

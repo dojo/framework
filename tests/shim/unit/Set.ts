@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import Set from 'src/Set';
-import { forOf } from 'src/iterator';
+import { forOf, ShimIterator } from 'src/iterator';
 
 registerSuite({
 	name: 'Set',
@@ -15,6 +15,21 @@ registerSuite({
 
 		'iterable'() {
 			const set = new Set([1, 2, 3, 2]);
+			assert.isTrue(set.has(1));
+			assert.isTrue(set.has(2));
+			assert.isTrue(set.has(3));
+			assert.isFalse(set.has(4));
+			assert.strictEqual(set.size, 3);
+		},
+
+		'arraylike'() {
+			const set = new Set(new ShimIterator({
+				0: 1,
+				1: 2,
+				2: 3,
+				3: 2,
+				length: 4
+			}));
 			assert.isTrue(set.has(1));
 			assert.isTrue(set.has(2));
 			assert.isTrue(set.has(3));

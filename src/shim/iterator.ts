@@ -1,9 +1,10 @@
+import { ArrayLike } from './interfaces';
 import { HIGH_SURROGATE_MIN, HIGH_SURROGATE_MAX } from './string';
 import './Symbol';
 
 export interface IteratorResult<T> {
 	done: boolean;
-	value?: T;
+	value: T;
 }
 
 export interface Iterator<T> {
@@ -29,15 +30,24 @@ const staticDone: IteratorResult<any> = { done: true, value: undefined };
 export class ShimIterator<T> {
 	private _list: ArrayLike<T>;
 	private _nextIndex: number = -1;
+	private _nativeIterator: Iterator<T>;
 
-	constructor(list: ArrayLike<T>) {
-		this._list = list;
+	constructor(list: ArrayLike<T> | Iterable<T>) {
+		if (isIterable(list)) {
+			this._nativeIterator = list[Symbol.iterator]();
+		}
+		else {
+			this._list = list;
+		}
 	};
 
 	/**
 	 * Return the next iteration result for the Iterator
 	 */
 	next(): IteratorResult<T> {
+		if (this._nativeIterator) {
+			return this._nativeIterator.next();
+		}
 		if (!this._list) {
 			return staticDone;
 		}
@@ -61,7 +71,7 @@ export class ShimIterator<T> {
  * @param value The value to type guard against
  */
 export function isIterable(value: any): value is Iterable<any> {
-	return value && typeof value[Symbol.iterator] !== 'undefined';
+	return value && typeof value[Symbol.iterator] === 'function';
 }
 
 /**
@@ -70,7 +80,7 @@ export function isIterable(value: any): value is Iterable<any> {
  * @param value The value to type guard against
  */
 export function isArrayLike(value: any): value is ArrayLike<any> {
-	return value && typeof value.length !== 'undefined';
+	return value && typeof value.length === 'number';
 }
 
 /**
@@ -80,8 +90,7 @@ export function isArrayLike(value: any): value is ArrayLike<any> {
  */
 export function get<T>(iterable: Iterable<T> | ArrayLike<T>): Iterator<T> {
 	if (isIterable(iterable)) {
-		/* have to cast as any, because the assumed index is implicit any */
-		return (<any> iterable)[Symbol.iterator]();
+		return iterable[Symbol.iterator]();
 	}
 	else if (isArrayLike(iterable)) {
 		return new ShimIterator(iterable);

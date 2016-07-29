@@ -1,5 +1,6 @@
 import { hasClass } from './support/decorators';
 import global from './support/global';
+import { ArrayLike } from './interfaces';
 import { forOf, Iterable, IterableIterator, ShimIterator } from './iterator';
 import { is as objectIs } from './object';
 import './Symbol';
@@ -35,7 +36,7 @@ export namespace Shim {
 		 * The first item in each tuple corresponds to the key of the map entry.
 		 * The second item corresponds to the value of the map entry.
 		 */
-		constructor(iterable?: Array<[K, V]> | Iterable<[K, V]>) {
+		constructor(iterable?: ArrayLike<[K, V]> | Iterable<[K, V]>) {
 			if (iterable) {
 				forOf(iterable, (value: [K, V]) => {
 					this.set(value[0], value[1]);
@@ -169,7 +170,7 @@ export namespace Shim {
 @hasClass('es6-map', global.Map, Shim.Map)
 export default class Map<K, V> {
 	/* istanbul ignore next */
-	constructor(iterable?: Array<[K, V]> | Iterable<[K, V]>) { };
+	constructor(iterable?: ArrayLike<[K, V]> | Iterable<[K, V]>) { };
 
 	/* istanbul ignore next */
 	get size(): number { throw new Error('Abstract method'); };

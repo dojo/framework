@@ -10,7 +10,7 @@ registerSuite({
 
 	construction: {
 		'no arguments'() {
-			const map: WeakMap<any, any> = new WeakMap();
+			const map = new WeakMap();
 			assert(map, 'map should exist');
 			assert.instanceOf(map, WeakMap, 'map should be an instance of WeakMap');
 		},
@@ -18,7 +18,7 @@ registerSuite({
 		'array'() {
 			const key1: Key = {};
 			const key2: Key = {};
-			const map = new WeakMap<Key, number>([
+			const map = new WeakMap([
 				[ key1, 1 ],
 				[ key2, 2 ]
 			]);
@@ -32,10 +32,11 @@ registerSuite({
 		'iterable'() {
 			const key1: Key = {};
 			const key2: Key = {};
-			const map = new WeakMap<Key, number>(new ShimIterator<[Key, number]>([
-				[ key1, 1 ],
-				[ key2, 2 ]
-			]));
+			const map = new WeakMap(new ShimIterator<[Key, number]>({
+				0: [ key1, 1 ],
+				1: [ key2, 2 ],
+				length: 2
+			}));
 
 			assert.isTrue(map.has(key1), 'key1 should be in map');
 			assert.isTrue(map.has(key2), 'key2 should be in map');
@@ -46,7 +47,7 @@ registerSuite({
 
 	'.delete'() {
 		const key: Key = {};
-		const map = new WeakMap<Key, number>([
+		const map = new WeakMap([
 			[ key, 1 ]
 		]);
 
@@ -58,7 +59,7 @@ registerSuite({
 	'.get'() {
 		const key1: Key = {};
 		const key2: Key = Object.create(key1);
-		const map = new WeakMap<Key, number>([
+		const map = new WeakMap([
 			[ key1, 1 ],
 			[ key2, 2 ]
 		]);
@@ -81,7 +82,7 @@ registerSuite({
 		const key1: Key = {};
 		const key2: Key = Object.create(key1);
 		const key3: Key = {};
-		const map = new WeakMap<Key, number>([
+		const map = new WeakMap([
 			[ key1, 1 ],
 			[ key3, 3 ]
 		]);

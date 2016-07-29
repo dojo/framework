@@ -1,5 +1,6 @@
 import { hasClass } from './support/decorators';
 import global from './support/global';
+import { ArrayLike } from './interfaces';
 import { forOf, IterableIterator, Iterable, ShimIterator } from './iterator';
 import './Symbol';
 
@@ -7,7 +8,7 @@ export namespace Shim {
 	export class Set<T> {
 		private _setData: T[] = [];
 
-		constructor(iterable?: Iterable<T> | ArrayLike<T>) {
+		constructor(iterable?: ArrayLike<T> | Iterable<T>) {
 			if (iterable) {
 				forOf(iterable, (value) => this.add(value));
 			}
@@ -74,7 +75,7 @@ export namespace Shim {
 @hasClass('es6-set', global.Set, Shim.Set)
 export default class Set<T> {
 	/* istanbul ignore next */
-	constructor(iterable?: Iterable<T> | ArrayLike<T>) { };
+	constructor(iterable?: ArrayLike<T> | Iterable<T>) { };
 
 	/* istanbul ignore next */
 	add(value: T): this { throw new Error('Abstract method'); };

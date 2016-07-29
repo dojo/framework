@@ -1,16 +1,17 @@
 import has from './support/has';
 import { wrapNative } from './support/util';
+import { ArrayLike } from './interfaces';
 import { forOf, isArrayLike, isIterable, Iterable } from './iterator';
 import { MAX_SAFE_INTEGER as maxSafeInteger } from './number';
 
-export interface MapCallback<T> {
+export interface MapCallback<T, U> {
 	/**
 	 * A callback function when mapping
 	 *
 	 * @param element The element that is currently being mapped
 	 * @param index The current index of the element
 	 */
-	(element: T, index: number): T;
+	(element: T, index: number): U;
 }
 
 export interface FindCallback<T> {
@@ -76,9 +77,7 @@ function normalizeOffset(value: number, length: number): number {
  * the functionality is required or not.
  */
 export namespace Shim {
-	export function from(arrayLike: string, mapFunction?: MapCallback<string>, thisArg?: {}): Array<string>;
-	export function from<T>(arrayLike: Iterable<T> | ArrayLike<T>, mapFunction?: MapCallback<T>, thisArg?: {}): Array<T>;
-	export function from<T>(arrayLike: (string | Iterable<T> | ArrayLike<T>), mapFunction?: MapCallback<T>, thisArg?: {}): Array<T> {
+	export function from(arrayLike: Iterable<any> | ArrayLike<any>, mapFunction?: MapCallback<any, any>, thisArg?: any): Array<any> {
 		if (arrayLike == null) {
 			throw new TypeError('from: requires an array-like object');
 		}
@@ -88,7 +87,7 @@ export namespace Shim {
 		}
 
 		/* tslint:disable-next-line:variable-name */
-		const Constructor: any = this;
+		const Constructor: ArrayConstructor = this;
 		const length: number = toLength((<any> arrayLike).length);
 		// Support extension
 		const array: any[] = (typeof Constructor === 'function') ? <any[]> Object(new Constructor(length)) : new Array(length);
@@ -98,7 +97,7 @@ export namespace Shim {
 		}
 
 		let i = 0;
-		forOf(<any> arrayLike, function (value: T): void {
+		forOf(arrayLike, function (value): void {
 			array[i] = mapFunction ? mapFunction(value, i) : value;
 			i++;
 		});
@@ -110,7 +109,7 @@ export namespace Shim {
 		return array;
 	}
 
-	export function of(...items: any[]): any[] {
+	export function of<T>(...items: T[]): Array<T> {
 		return Array.prototype.slice.call(items);
 	}
 
@@ -203,17 +202,41 @@ export namespace Shim {
 /* ES6 Array static methods */
 
 export interface From {
-	(arrayLike: string, mapFunction?: MapCallback<string>, thisArg?: {}): Array<string>;
-	<T>(arrayLike: Iterable<T> | ArrayLike<T>, mapFunction?: MapCallback<T>, thisArg?: {}): Array<T>;
 	/**
 	 * The Array.from() method creates a new Array instance from an array-like or iterable object.
 	 *
-	 * @param arrayLike An array-like or iterable object to convert to an array
+	 * @param arrayLike An array-like object to convert to an array
 	 * @param mapFunction A map function to call on each element in the array
 	 * @param thisArg The execution context for the map function
 	 * @return The new Array
 	 */
-	<T>(arrayLike: (string | Iterable<T> | ArrayLike<T>), mapFunction?: MapCallback<T>, thisArg?: {}): Array<T>;
+	<T, U>(arrayLike: ArrayLike<T>, mapFunction: MapCallback<T, U>, thisArg?: any): Array<U>;
+
+	/**
+	 * The Array.from() method creates a new Array instance from an array-like or iterable object.
+	 *
+	 * @param iterable An iterable object to convert to an array
+	 * @param mapFunction A map function to call on each element in the array
+	 * @param thisArg The execution context for the map function
+	 * @return The new Array
+	 */
+	<T, U>(iterable: Iterable<T>, mapFunction: MapCallback<T, U>, thisArg?: any): Array<U>;
+
+	/**
+	 * The Array.from() method creates a new Array instance from an array-like or iterable object.
+	 *
+	 * @param arrayLike An array-like object to convert to an array
+	 * @return The new Array
+	 */
+	<T>(arrayLike: ArrayLike<T>): Array<T>;
+
+	/**
+	 * The Array.from() method creates a new Array instance from an array-like or iterable object.
+	 *
+	 * @param arrayLike An iterable object to convert to an array
+	 * @return The new Array
+	 */
+	<T>(iterable: Iterable<T>): Array<T>;
 }
 
 export const from: From = has('es6-array-from')
@@ -226,7 +249,7 @@ export const from: From = has('es6-array-from')
  * @param arguments Any number of arguments for the array
  * @return An array from the given arguments
  */
-export const of: (...items: any[]) => any[] = has('es6-array-of')
+export const of: <T>(...items: T[]) => Array<T> = has('es6-array-of')
 	? (<any> Array).of
 	: Shim.of;
 
@@ -254,7 +277,7 @@ export const copyWithin: <T>(target: ArrayLike<T>, offset: number, start: number
  * @param end The (exclusive) index at which to stop filling
  * @return The filled target
  */
-export const fill: <T>(target: ArrayLike<T>, value: any, start?: number, end?: number) => ArrayLike<T> = has('es6-array-fill')
+export const fill: <T>(target: ArrayLike<T>, value: T, start?: number, end?: number) => ArrayLike<T> = has('es6-array-fill')
 	? wrapNative((<any> Array.prototype).fill)
 	: Shim.fill;
 

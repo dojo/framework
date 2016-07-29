@@ -2,17 +2,19 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as array from 'src/array';
 import has, { add as hasAdd } from 'src/support/has';
-import { Iterator, ShimIterator } from 'src/iterator';
+import { Iterable, ShimIterator } from 'src/iterator';
 import 'src/Symbol';
 
-function mixin<T, U>(destination: T, source: U): T & U {
+function mixin<T extends { [key: string]: any }, U extends { [key: string]: any }>(destination: T, source: U): T & U {
 	for (let key in source) {
-		(<any> destination)[key] = (<any> source)[key];
+		destination[key] = source[key];
 	}
 	return <any> destination;
 }
 
-function assertFrom(arrayable: any, expected: any[]) {
+function assertFrom<T>(arrayable: ArrayLike<T>, expected: T[]): void;
+function assertFrom<T>(arrayable: Iterable<T>, expected: T[]): void;
+function assertFrom(arrayable: any, expected: any[]): void {
 	let actual = array.from(arrayable);
 	assert.isArray(actual);
 	assert.deepEqual(expected, actual);
@@ -138,7 +140,7 @@ registerSuite({
 		})(),
 
 		'from not-array-like object': function () {
-			assertFrom({
+			assertFrom(<any> {
 				'0': 'zero',
 				'1': 'one',
 				'2': 'two'
@@ -156,12 +158,12 @@ registerSuite({
 			},
 
 			'Custom iterator': function () {
-				const iterator: Iterator<number> = <any> {
-					[Symbol.iterator]: function () {
+				const iterator = {
+					[Symbol.iterator]() {
 						return {
 							index: 0,
-							next: function () {
-								return this.index < 5 ? { value: this.index++ } : { done: true };
+							next() {
+								return this.index < 5 ? { value: this.index++, done: false } : { done: true, value: undefined };
 							}
 						};
 					}
@@ -171,15 +173,15 @@ registerSuite({
 		},
 
 		'from boolean': function () {
-			assertFrom(false, []);
+			assertFrom(<any> false, []);
 		},
 
 		'from number': function () {
-			assertFrom(1, []);
+			assertFrom(<any> 1, []);
 		},
 
 		'from string': function () {
-			let actual: ArrayLike<string> = array.from('hello');
+			let actual = array.from('hello');
 			assert.isArray(actual);
 			assert.deepEqual([ 'h', 'e', 'l', 'l', 'o' ], actual);
 		},
@@ -309,7 +311,7 @@ registerSuite({
 			},
 
 			'item found in array-like object': function () {
-				let haystack = <ArrayLike<string>> {
+				let haystack: ArrayLike<string> = {
 					0: 'duck',
 					1: 'duck',
 					2: 'goose',
@@ -320,7 +322,7 @@ registerSuite({
 
 			'callback is missing: throws': function () {
 				assert.throws(function () {
-					array.findIndex([], <any> undefined);
+					array.findIndex([], undefined);
 				});
 			},
 
@@ -332,7 +334,7 @@ registerSuite({
 					needle: 3
 				};
 				let haystack: number[] = [ 0, 1, 2, 3, 4 ];
-				assert.strictEqual(array.findIndex<number>(haystack, thing.callback, thing), 3);
+				assert.strictEqual(array.findIndex(haystack, thing.callback, thing), 3);
 			}
 		};
 	})()),
