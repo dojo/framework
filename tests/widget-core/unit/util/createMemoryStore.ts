@@ -132,16 +132,16 @@ registerSuite({
 					assert.deepEqual(item, { id: 1, foo: 'qat', bar: 1 });
 				});
 		},
-		'missing rejects'() {
+		'missing adds'() {
 			const store = createMemoryStore();
 
 			return store
-				.patch({ foo: 'qat', bar: 1}, { id: 1 })
+				.patch({ foo: 'qat', bar: 1 }, { id: 1 })
 				.then(() => {
-					throw new Error('Should have rejected');
-				}, (error) => {
-					assert.instanceOf(error, Error);
-					assert.strictEqual(error.message, 'Object with ID "1" not found, unable to patch.');
+					return store.get(1);
+				})
+				.then((item) => {
+					assert.deepEqual(item, { foo: 'qat', bar: 1, id: 1 });
 				});
 		},
 		'missing id rejects'() {

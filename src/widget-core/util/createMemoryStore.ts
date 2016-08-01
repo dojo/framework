@@ -290,14 +290,9 @@ const createMemoryStore = compose<MemoryStoreMixin<Object>, MemoryStoreOptions<O
 				return wrapError(store, new Error(`Object ID must either be passed in "partial.${idProperty}" or "options.id"`));
 			}
 			return wrapResult(store, store.get(id).then((item) => {
-				if (item) {
-					options = options || {};
-					options.id = id;
-					return store.put(assign(item, partial), options);
-				}
-				else {
-					return wrapError(store, new Error(`Object with ID "${id}" not found, unable to patch.`));
-				}
+				options = options || {};
+				options.id = id;
+				return store.put(assign(item || {}, partial), options);
 			}));
 		},
 
