@@ -106,7 +106,7 @@ registerSuite({
 
 		'null test should not throw'() {
 			assert.doesNotThrow(function () {
-				hasAdd('baz', null);
+				hasAdd('baz', <any> null);
 			}, TypeError);
 		},
 
@@ -164,7 +164,7 @@ registerSuite({
 		},
 
 		'null test value counts as being defined'() {
-			hasAdd(feature, null);
+			hasAdd(feature, <any> null);
 			assert.isTrue(hasExists(feature));
 		}
 	},
@@ -251,7 +251,7 @@ registerSuite({
 			const requireSpy = sinon.spy(require);
 			const loadedStub = sinon.stub();
 
-			hasLoad(null, require, loadedStub);
+			hasLoad(<any> null, require, loadedStub);
 			assert.isTrue(loadedStub.calledOnce);
 			assert.isFalse(requireSpy.calledOnce);
 		}

@@ -32,7 +32,7 @@ export const maxConcurrency = 2;
 export const tunnel = 'BrowserStackTunnel';
 
 // Support running unit tests from a web server that isn't the intern proxy
-export const initialBaseUrl: string = (function () {
+export const initialBaseUrl: string | null = (function () {
 	if (typeof location !== 'undefined' && location.pathname.indexOf('__intern/') > -1) {
 		return '/';
 	}

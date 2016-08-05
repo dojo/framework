@@ -3,7 +3,7 @@ import { Require, Config } from './loader';
 /**
  * The valid return types from a feature test
  */
-export type FeatureTestResult = boolean | string | number;
+export type FeatureTestResult = boolean | string | number | undefined;
 
 /**
  * A function that tests for a feature and returns a result
@@ -43,11 +43,11 @@ export function load(resourceId: string, require: Require, load: (value?: any) =
  * @param resourceId The id of the module
  * @param normalize Resolves a relative module id into an absolute module id
  */
-export function normalize(resourceId: string, normalize: (moduleId: string) => string): string {
-	const tokens = resourceId.match(/[\?:]|[^:\?]*/g);
+export function normalize(resourceId: string, normalize: (moduleId: string) => string): string | null {
+	const tokens: RegExpMatchArray = resourceId.match(/[\?:]|[^:\?]*/g) || [];
 	let i = 0;
 
-	function get(skip?: boolean): string {
+	function get(skip?: boolean): string | null {
 		const term = tokens[i++];
 		if (term === ':') {
 			// empty string module name, resolves to null
@@ -71,9 +71,9 @@ export function normalize(resourceId: string, normalize: (moduleId: string) => s
 		}
 	}
 
-	resourceId = get();
+	const id = get();
 
-	return resourceId && normalize(resourceId);
+	return id && normalize(id);
 }
 
 /**
