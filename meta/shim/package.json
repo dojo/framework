@@ -13,7 +13,7 @@
 		"url": "https://github.com/dojo/shim.git"
 	},
 	"scripts": {
-		"prepublish": "grunt dist",
+		"prepublish": "grunt peerDepInstall dist",
 		"test": "grunt test"
 	},
 	"typings": "./dist/umd/dojo-shim.d.ts",
