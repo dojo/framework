@@ -12,7 +12,7 @@ registerSuite({
 	instantiation: {
 		'null data'() {
 			assert.doesNotThrow(function () {
-				map = new Map<number, string>(null);
+				map = new Map<number, string>(<any> null);
 			});
 		},
 

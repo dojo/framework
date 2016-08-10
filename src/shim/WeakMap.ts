@@ -45,7 +45,7 @@ module Shim {
 			return false;
 		}
 
-		get(key: any): V {
+		get(key: any): V | undefined {
 			const entry: Entry<K, V> = key[this._name];
 			if (entry && entry.key === key && entry.value !== DELETED) {
 				return entry.value;

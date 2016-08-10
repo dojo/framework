@@ -5,7 +5,7 @@ import has from 'src/support/has';
 
 registerSuite({
 	name: 'Symbol',
-	native: function () {
+	native: function (this: any) {
 		if (!has('es6-symbol')) {
 			this.skip('checking native implementation');
 		}

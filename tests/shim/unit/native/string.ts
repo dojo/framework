@@ -4,7 +4,7 @@ import has from 'src/support/has';
 
 registerSuite({
 	name: 'native/string',
-	'verify API'() {
+	'verify API'(this: any) {
 		if (!has('es6-string-raw')) {
 			this.skip('No native support');
 		}

@@ -7,7 +7,7 @@ hasAdd('es6-object', 'getOwnPropertySymbols' in global.Object);
 
 registerSuite({
 	name: 'native/object',
-	'verify API'() {
+	'verify API'(this: any) {
 		if (!has('es6-object')) {
 			this.skip('No native support');
 		}

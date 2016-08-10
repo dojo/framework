@@ -99,7 +99,7 @@ export namespace Shim {
 		return result;
 	}
 
-	export function codePointAt(text: string, position: number = 0): number {
+	export function codePointAt(text: string, position: number = 0): number | undefined {
 		// Adapted from https://github.com/mathiasbynens/String.prototype.codePointAt
 		if (text == null) {
 			throw new TypeError('string.codePointAt requries a valid string.');
@@ -166,7 +166,7 @@ export namespace Shim {
 	}
 
 	export function endsWith(text: string, search: string, endPosition?: number): boolean {
-		if (endPosition == null && text != null) {
+		if (endPosition == null) {
 			endPosition = text.length;
 		}
 

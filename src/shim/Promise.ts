@@ -161,14 +161,16 @@ export class PromiseShim<T> implements Thenable<T> {
 		/**
 		 * Callbacks that should be invoked once the asynchronous operation has completed.
 		 */
-		let callbacks: Array<() => void> = [];
+		let callbacks: null | (Array<() => void>) = [];
 
 		/**
 		 * Initially pushes callbacks onto a queue for execution once this promise settles. After the promise settles,
 		 * enqueues callbacks for execution on the next event loop turn.
 		 */
 		let whenFinished = function (callback: () => void): void {
-			callbacks.push(callback);
+			if (callbacks) {
+				callbacks.push(callback);
+			}
 		};
 
 		/**
@@ -189,13 +191,15 @@ export class PromiseShim<T> implements Thenable<T> {
 
 			// Only enqueue a callback runner if there are callbacks so that initially fulfilled Promises don't have to
 			// wait an extra turn.
-			if (callbacks.length > 0) {
+			if (callbacks && callbacks.length > 0) {
 				queueMicroTask(function (): void {
-					let count = callbacks.length;
-					for (let i = 0; i < count; ++i) {
-						callbacks[i].call(null);
+					if (callbacks) {
+						let count = callbacks.length;
+						for (let i = 0; i < count; ++i) {
+							callbacks[i].call(null);
+						}
+						callbacks = null;
 					}
-					callbacks = null;
 				});
 			}
 		};
@@ -232,7 +236,7 @@ export class PromiseShim<T> implements Thenable<T> {
 				// promise has settled, whenFinished will schedule callbacks for execution on the next turn through the
 				// event loop.
 				whenFinished(() => {
-					const callback: (value?: any) => any = this.state === State.Rejected ? onRejected : onFulfilled;
+					const callback: ((value?: any) => any) | undefined = this.state === State.Rejected ? onRejected : onFulfilled;
 
 					if (typeof callback === 'function') {
 						try {
@@ -473,8 +477,8 @@ export default class Promise<T> implements Thenable<T> {
 	/**
 	 * Adds a callback to the promise to be invoked when the asynchronous operation completes successfully.
 	 */
-	then<U>(onFulfilled?: (value?: T) => (U | Thenable<U>), onRejected?: (reason?: Error) => void): Promise<U>;
-	then<U>(onFulfilled?: (value?: T) => (U | Thenable<U>), onRejected?: (reason?: Error) => (U | Thenable<U>)): Promise<U> {
+	then<U>(onFulfilled?: ((value?: T) => (U | Thenable<U> | null | undefined)) | null | undefined, onRejected?: (reason?: Error) => void): Promise<U>;
+	then<U>(onFulfilled?: ((value?: T) => (U | Thenable<U> | null | undefined)) | null | undefined, onRejected?: (reason?: Error) => (U | Thenable<U>)): Promise<U> {
 		return (<typeof Promise> this.constructor).copy(this.promise.then(onFulfilled, onRejected));
 	}
 }

@@ -38,7 +38,7 @@ export function isArrayLike(value: any): value is ArrayLike<any> {
  *
  * @param iterable The iterable object to return the iterator for
  */
-export function get<T>(iterable: Iterable<T> | ArrayLike<T> | string): Iterator<T> {
+export function get<T>(iterable: Iterable<T> | ArrayLike<T> | string): Iterator<T> | undefined {
 	if (isIterable(iterable)) {
 		/* have to cast as any, because the assumed index is implicit any */
 		return (<any> iterable)[Symbol.iterator]();

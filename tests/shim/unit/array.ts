@@ -83,13 +83,13 @@ registerSuite({
 	'.from()': createNativeAndDojoArrayTests('es6-array-from', {
 		'from undefined: throws': function () {
 			assert.throws(function () {
-				array.from(undefined);
+				array.from(<any> undefined);
 			}, TypeError);
 		},
 
 		'from null: throws': function () {
 			assert.throws(function () {
-				array.from(null);
+				array.from(<any> null);
 			});
 		},
 
@@ -162,7 +162,7 @@ registerSuite({
 					[Symbol.iterator]() {
 						return {
 							index: 0,
-							next() {
+							next(this: any) {
 								return this.index < 5 ? { value: this.index++, done: false } : { done: true, value: undefined };
 							}
 						};
@@ -201,7 +201,7 @@ registerSuite({
 		'with optional map function and this argument': function () {
 			let thing = {
 				count: 0,
-				mapFunction: function () {
+				mapFunction: function (this: any) {
 					return this.count++;
 				}
 			};
@@ -322,13 +322,13 @@ registerSuite({
 
 			'callback is missing: throws': function () {
 				assert.throws(function () {
-					array.findIndex([], undefined);
+					array.findIndex([], <any> undefined);
 				});
 			},
 
 			'callback with this argument': function () {
 				let thing = {
-					callback: function (value: number) {
+					callback: function (this: any, value: number) {
 						return this.needle === value;
 					},
 					needle: 3
@@ -365,7 +365,7 @@ registerSuite({
 
 		'null target: throws': function () {
 			assert.throws(function () {
-				array.copyWithin(null, 0, 0);
+				array.copyWithin(<any> null, 0, 0);
 			}, TypeError);
 		},
 

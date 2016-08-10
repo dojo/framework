@@ -7,7 +7,7 @@ hasAdd('es6-number', 'EPSILON' in global.Number);
 
 registerSuite({
 	name: 'native/number',
-	'verify API'() {
+	'verify API'(this: any) {
 		if (!has('es6-number')) {
 			this.skip('No native support');
 		}

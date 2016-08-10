@@ -9,10 +9,10 @@ registerSuite({
 	'.codePointAt()': {
 		'throws on undefined or null string'() {
 			assert.throws(function () {
-				stringUtil.codePointAt(undefined);
+				stringUtil.codePointAt(<any> undefined);
 			}, TypeError);
 			assert.throws(function () {
-				stringUtil.codePointAt(null);
+				stringUtil.codePointAt(<any> null);
 			}, TypeError);
 		},
 
@@ -23,14 +23,14 @@ registerSuite({
 			assert.strictEqual(stringUtil.codePointAt(text), 0x61);
 			assert.strictEqual(stringUtil.codePointAt(text, 0), 0x61);
 			assert.strictEqual(stringUtil.codePointAt(text, NaN), 0x61);
-			assert.strictEqual(stringUtil.codePointAt(text, null), 0x61);
-			assert.strictEqual(stringUtil.codePointAt(text, undefined), 0x61);
+			assert.strictEqual(stringUtil.codePointAt(text, <any> null), 0x61);
+			assert.strictEqual(stringUtil.codePointAt(text, <any> undefined), 0x61);
 
 			// Cases expected to return undefined (i.e. position out of range)
-			assert.strictEqual(stringUtil.codePointAt(text, -Infinity), undefined);
-			assert.strictEqual(stringUtil.codePointAt(text, Infinity), undefined);
-			assert.strictEqual(stringUtil.codePointAt(text, -1), undefined);
-			assert.strictEqual(stringUtil.codePointAt(text, 42), undefined);
+			assert.strictEqual(stringUtil.codePointAt(text, -Infinity), <any> undefined);
+			assert.strictEqual(stringUtil.codePointAt(text, Infinity), <any> undefined);
+			assert.strictEqual(stringUtil.codePointAt(text, -1), <any> undefined);
+			assert.strictEqual(stringUtil.codePointAt(text, 42), <any> undefined);
 
 			// Test various code points in the string
 			assert.strictEqual(stringUtil.codePointAt(text, 3), 0x1D306);
@@ -53,18 +53,18 @@ registerSuite({
 	'.endsWith()': {
 		'throws on undefined or null string'() {
 			assert.throws(function () {
-				stringUtil.endsWith(undefined, 'abc');
+				stringUtil.endsWith(<any> undefined, 'abc');
 			});
 			assert.throws(function () {
-				stringUtil.endsWith(null, 'abc');
+				stringUtil.endsWith(<any> null, 'abc');
 			});
 		},
 
 		'null or undefined search value'() {
-			assert.isTrue(stringUtil.endsWith('undefined', undefined));
-			assert.isFalse(stringUtil.endsWith('undefined', null));
-			assert.isTrue(stringUtil.endsWith('null', null));
-			assert.isFalse(stringUtil.endsWith('null', undefined));
+			assert.isTrue(stringUtil.endsWith('undefined', <any> undefined));
+			assert.isFalse(stringUtil.endsWith('undefined', <any> null));
+			assert.isTrue(stringUtil.endsWith('null', <any> null));
+			assert.isFalse(stringUtil.endsWith('null', <any> undefined));
 		},
 
 		'position is Infinity, not included, or NaN'() {
@@ -75,8 +75,8 @@ registerSuite({
 			 * and since the behaviour is really an edge case, going to just test for the
 			 * two different behaviours anyways */
 			let counts = has('es6-string-endswith')
-				? [ Infinity, undefined ]
-				: [ Infinity, undefined, null, NaN ];
+				? [ Infinity, <any> undefined ]
+				: [ Infinity, <any> undefined, null, NaN ];
 			for (let count of counts) {
 				assert.isTrue(stringUtil.endsWith('abc', '', count));
 				assert.isFalse(stringUtil.endsWith('abc', '\0', count));
@@ -134,7 +134,7 @@ registerSuite({
 
 	'.fromCodePoint()': {
 		'error cases'() {
-			let codePoints = [-1, 0x10FFFF + 1, 3.14, 3e-2, Infinity, -Infinity, NaN, undefined];
+			let codePoints = [-1, 0x10FFFF + 1, 3.14, 3e-2, Infinity, -Infinity, NaN, <any> undefined];
 			let codePoint: any;
 			for (codePoint of codePoints) {
 				assert.throws(function () {
@@ -144,7 +144,7 @@ registerSuite({
 		},
 
 		'basic cases'() {
-			assert.strictEqual(stringUtil.fromCodePoint(null), '\0');
+			assert.strictEqual(stringUtil.fromCodePoint(<any> null), '\0');
 			assert.strictEqual(stringUtil.fromCodePoint(0), '\0');
 			assert.strictEqual(stringUtil.fromCodePoint(), '');
 			assert.strictEqual(stringUtil.fromCodePoint(0x1D306), '\uD834\uDF06');
@@ -172,22 +172,22 @@ registerSuite({
 	'.includes()': {
 		'throws on undefined or null string'() {
 			assert.throws(function () {
-				stringUtil.includes(undefined, 'abc');
+				stringUtil.includes(<any> undefined, 'abc');
 			});
 			assert.throws(function () {
-				stringUtil.includes(null, 'abc');
+				stringUtil.includes(<any> null, 'abc');
 			});
 		},
 
 		'null or undefined search value'() {
-			assert.isTrue(stringUtil.includes('undefined', undefined));
-			assert.isFalse(stringUtil.includes('undefined', null));
-			assert.isTrue(stringUtil.includes('null', null));
-			assert.isFalse(stringUtil.includes('null', undefined));
+			assert.isTrue(stringUtil.includes('undefined', <any> undefined));
+			assert.isFalse(stringUtil.includes('undefined', <any> null));
+			assert.isTrue(stringUtil.includes('null', <any> null));
+			assert.isFalse(stringUtil.includes('null', <any> undefined));
 		},
 
 		'position is 0 (whether explicitly, by default, or due to NaN or negative)'() {
-			let counts = [ 0, -1, NaN, undefined, null ];
+			let counts = [ 0, -1, NaN, <any> undefined, null ];
 			for (let count of counts) {
 				assert.isTrue(stringUtil.includes('abc', '', count));
 				assert.isFalse(stringUtil.includes('abc', '\0', count));
@@ -231,7 +231,7 @@ registerSuite({
 	'.raw()': {
 		'error cases'() {
 			assert.throws(function () {
-				stringUtil.raw(null);
+				stringUtil.raw(<any> null);
 			}, TypeError);
 		},
 
@@ -248,7 +248,7 @@ registerSuite({
 			assert.strictEqual(stringUtil.raw(callSite), 'The answer is:\\n',
 				'stringUtil.raw applied with insufficient arguments should result in no substitution');
 
-			callSite.raw = [ 'The answer is:\\n' ];
+			(<any> callSite).raw = [ 'The answer is:\\n' ];
 			assert.strictEqual(stringUtil.raw(callSite, 42), 'The answer is:\\n',
 				'stringUtil.raw applied with insufficient raw fragments should result in truncation before substitution');
 		}
@@ -257,10 +257,10 @@ registerSuite({
 	'.repeat()': {
 		'throws on undefined or null string'() {
 			assert.throws(function () {
-				stringUtil.repeat(undefined);
+				stringUtil.repeat(<any> undefined);
 			}, TypeError);
 			assert.throws(function () {
-				stringUtil.repeat(null);
+				stringUtil.repeat(<any> null);
 			}, TypeError);
 		},
 
@@ -276,7 +276,7 @@ registerSuite({
 
 		'returns empty string when passed 0, NaN, or no count'() {
 			assert.strictEqual(stringUtil.repeat('abc'), '');
-			let counts = [ undefined, null, 0, NaN ];
+			let counts = [ <any> undefined, null, 0, NaN ];
 			for (let count of counts) {
 				assert.strictEqual(stringUtil.repeat('abc', count), '');
 			}
@@ -293,22 +293,22 @@ registerSuite({
 	'.startsWith()': {
 		'throws on undefined or null string'() {
 			assert.throws(function () {
-				stringUtil.startsWith(undefined, 'abc');
+				stringUtil.startsWith(<any> undefined, 'abc');
 			});
 			assert.throws(function () {
-				stringUtil.startsWith(null, 'abc');
+				stringUtil.startsWith(<any> null, 'abc');
 			});
 		},
 
 		'null or undefined search value'() {
-			assert.isTrue(stringUtil.startsWith('undefined', undefined));
-			assert.isFalse(stringUtil.startsWith('undefined', null));
-			assert.isTrue(stringUtil.startsWith('null', null));
-			assert.isFalse(stringUtil.startsWith('null', undefined));
+			assert.isTrue(stringUtil.startsWith('undefined', <any> undefined));
+			assert.isFalse(stringUtil.startsWith('undefined', <any> null));
+			assert.isTrue(stringUtil.startsWith('null', <any> null));
+			assert.isFalse(stringUtil.startsWith('null', <any> undefined));
 		},
 
 		'position is 0 (whether explicitly, by default, or due to NaN or negative)'() {
-			let counts = [ 0, -1, NaN, undefined, null ];
+			let counts = [ 0, -1, NaN, <any> undefined, null ];
 			for (let count of counts) {
 				assert.isTrue(stringUtil.startsWith('abc', '', count));
 				assert.isFalse(stringUtil.startsWith('abc', '\0', count));

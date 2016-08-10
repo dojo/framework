@@ -16,8 +16,8 @@ interface PostMessageEvent extends Event {
  * Executes a task
  * @param item The task to execute
  */
-function executeTask(item: QueueItem): void {
-	if (item.isActive) {
+function executeTask(item: QueueItem | undefined): void {
+	if (item && item.isActive) {
 		item.callback();
 	}
 }
@@ -25,13 +25,13 @@ function executeTask(item: QueueItem): void {
 /**
  * Get a handle to be able to remove an item from the queue
  */
-function getQueueHandle(item: QueueItem, destructor?: (...args: any[]) => any): Handle {
+function getQueueHandle(item: QueueItem | undefined, destructor?: (...args: any[]) => any): Handle {
 	return {
-		destroy: function () {
+		destroy: function (this: any) {
 			this.destroy = function () {};
-			item.isActive = false;
-			item.callback = null;
-
+			if (item) {
+				item.isActive = false;
+			}
 			if (destructor) {
 				destructor();
 			}
@@ -41,23 +41,7 @@ function getQueueHandle(item: QueueItem, destructor?: (...args: any[]) => any): 
 
 const microTasks: QueueItem[] = [];
 let microTaskQueued = false;
-const checkMicroTaskQueue: () => void = !has('microtasks')
-	? function () {
-		if (!microTaskQueued) {
-			microTaskQueued = true;
-			queueTask(function () {
-				microTaskQueued = false;
-
-				if (microTasks.length) {
-					let item: QueueItem;
-					while (item = microTasks.shift()) {
-						executeTask(item);
-					}
-				}
-			});
-		}
-	}
-	: function () {};
+let checkMicroTaskQueue: () => void = function () {};
 
 /**
  * Schedules a callback to the macrotask queue.
@@ -120,6 +104,23 @@ export const queueTask = (function() {
 		return queueTask(callback);
 	};
 })();
+
+checkMicroTaskQueue = !has('microtasks')
+	? function () {
+		if (!microTaskQueued) {
+			microTaskQueued = true;
+			queueTask(function () {
+				microTaskQueued = false;
+
+				if (microTasks.length) {
+					let item: QueueItem | undefined;
+					while (item = microTasks.shift()) {
+						executeTask(item);
+					}
+				}
+			});
+		}
+	} : checkMicroTaskQueue;
 
 /**
  * Schedules a callback to the microtask queue.

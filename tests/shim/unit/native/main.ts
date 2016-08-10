@@ -4,7 +4,7 @@ import has from 'src/support/has';
 
 registerSuite({
 	name: 'native/main',
-	'verify API'() {
+	'verify API'(this: any) {
 		if (!has('es6-array-from')) {
 			this.skip('No native support');
 		}

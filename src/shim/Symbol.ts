@@ -42,7 +42,7 @@ export namespace Shim {
 			// pinned down.
 			if (!Object.getOwnPropertyDescriptor(objPrototype, name)) {
 				defineProperty(objPrototype, name, {
-					set: function (value: any) {
+					set: function (this: Symbol, value: any) {
 						defineProperty(this, name, getValueDescriptor(value));
 					}
 				});
@@ -52,14 +52,14 @@ export namespace Shim {
 		};
 	}());
 
-	InternalSymbol = function Symbol(description?: string|number): symbol {
+	InternalSymbol = function Symbol(this: any, description?: string|number): symbol {
 		if (this instanceof InternalSymbol) {
 			throw new TypeError('TypeError: Symbol is not a constructor');
 		}
 		return Symbol(description);
 	} as SymbolConstructor;
 
-	Symbol = function Symbol(description?: string|number): symbol {
+	Symbol = function Symbol(this: Symbol, description?: string|number): symbol {
 		if (this instanceof Symbol) {
 			throw new TypeError('TypeError: Symbol is not a constructor');
 		}
@@ -100,7 +100,7 @@ export namespace Shim {
 		return (globalSymbols[key] = Symbol(String(key)));
 	}));
 	defineProperties(Symbol, {
-		keyFor: getValueDescriptor(function (sym: symbol): string {
+		keyFor: getValueDescriptor(function (sym: symbol): string | undefined {
 			let key: string;
 			validateSymbol(sym);
 			for (key in globalSymbols) {
@@ -125,16 +125,16 @@ export namespace Shim {
 	/* Decorate the InternalSymbol object */
 	defineProperties(InternalSymbol.prototype, {
 		constructor: getValueDescriptor(Symbol),
-		toString: getValueDescriptor(function () { return this.__name__; }, false, false)
+		toString: getValueDescriptor(function (this: { __name__: string }) { return this.__name__; }, false, false)
 	});
 
 	/* Decorate the Symbol.prototype */
 	defineProperties(Symbol.prototype, {
-		toString: getValueDescriptor(function () { return 'Symbol (' + (<any> validateSymbol(this)).__description__ + ')'; }),
-		valueOf: getValueDescriptor(function () { return validateSymbol(this); })
+		toString: getValueDescriptor(function (this: Symbol) { return 'Symbol (' + (<any> validateSymbol(this)).__description__ + ')'; }),
+		valueOf: getValueDescriptor(function (this: Symbol) { return validateSymbol(this); })
 	});
 
-	defineProperty(Symbol.prototype, <any> Symbol.toPrimitive, getValueDescriptor(function () { return validateSymbol(this); }));
+	defineProperty(Symbol.prototype, <any> Symbol.toPrimitive, getValueDescriptor(function (this: Symbol) { return validateSymbol(this); }));
 	defineProperty(Symbol.prototype, <any> Symbol.toStringTag, getValueDescriptor('Symbol', false, false, true));
 
 	defineProperty(InternalSymbol.prototype, <any> Symbol.toPrimitive, getValueDescriptor(Symbol.prototype[Symbol.toPrimitive], false, false, true));

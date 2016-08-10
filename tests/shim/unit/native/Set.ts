@@ -5,7 +5,7 @@ import global from 'src/support/global';
 
 registerSuite({
 	name: 'native/Set',
-	'verify API'() {
+	'verify API'(this: any) {
 		if (!has('es6-set')) {
 			this.skip('No native support');
 		}

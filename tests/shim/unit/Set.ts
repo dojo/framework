@@ -129,7 +129,7 @@ registerSuite({
 		const scope = {};
 		const set = new Set(source);
 		const results: any[] = [];
-		set.forEach(function (value, index, subject) {
+		set.forEach(function (this: any, value: any, index: any, subject: any) {
 			assert.strictEqual(set, subject);
 			assert.strictEqual(this, scope);
 			assert.strictEqual(value, index);

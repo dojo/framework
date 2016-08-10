@@ -5,7 +5,7 @@ import global from 'src/support/global';
 
 registerSuite({
 	name: 'native/Map',
-	'verify API'() {
+	'verify API'(this: any) {
 		if (!has('es6-map')) {
 			this.skip('No native support');
 		}

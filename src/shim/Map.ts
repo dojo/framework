@@ -111,7 +111,7 @@ export namespace Shim {
 		 * @param key The key to look up
 		 * @return The value if one exists or undefined
 		 */
-		get(key: K): V {
+		get(key: K): V | undefined {
 			const index = this._indexOfKey(this._keys, key);
 			return index < 0 ? undefined : this._values[index];
 		}
@@ -183,7 +183,7 @@ export default class Map<K, V> {
 	/* istanbul ignore next */
 	forEach(callback: (value: V, key: K, mapInstance: Map<K, V>) => any, context?: {}): void { throw new Error('Abstract method'); };
 	/* istanbul ignore next */
-	get(key: K): V { throw new Error('Abstract method'); };
+	get(key: K): V | undefined { throw new Error('Abstract method'); };
 	/* istanbul ignore next */
 	has(key: K): boolean { throw new Error('Abstract method'); };
 	/* istanbul ignore next */

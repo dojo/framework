@@ -4,7 +4,7 @@ import has from 'src/support/has';
 
 registerSuite({
 	name: 'native/math',
-	'verify API'() {
+	'verify API'(this: any) {
 		if (!has('es6-math-acosh')) {
 			this.skip('No native support');
 		}

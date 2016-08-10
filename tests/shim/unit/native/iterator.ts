@@ -7,7 +7,7 @@ hasAdd('es6-iterator', Boolean(global.Symbol && global.Symbol.iterator && global
 
 registerSuite({
 	name: 'native/iterator',
-	'verify API'() {
+	'verify API'(this: any) {
 		if (!has('es6-iterator')) {
 			this.skip('No native support');
 		}

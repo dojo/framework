@@ -61,7 +61,7 @@ registerSuite({
 			const iterable = {
 				[Symbol.iterator]() {
 					return {
-						next() {
+						next(): {value: number | undefined, done: boolean}  {
 							counter++;
 							if (counter < 5) {
 								return {
@@ -76,7 +76,7 @@ registerSuite({
 					};
 				}
 			};
-			const results: number[] = [];
+			const results: (undefined | number)[] = [];
 			const expected = [ 1, 2, 3, 4 ];
 
 			forOf(iterable, (value) => {
@@ -90,7 +90,7 @@ registerSuite({
 			const array = [ 'a', 'b' ];
 			const scope = { foo: 'bar' };
 
-			forOf(array, function (value, obj) {
+			forOf(array, function (this: any, value: any, obj: any) {
 				assert.strictEqual(this, scope);
 				assert.strictEqual(obj, array);
 			}, scope);
@@ -118,7 +118,7 @@ registerSuite({
 				const iterable = {
 					[Symbol.iterator]() {
 						return {
-							next() {
+							next(): {value: number | undefined, done: boolean} {
 								counter++;
 								if (counter < 5) {
 									return {
@@ -133,7 +133,7 @@ registerSuite({
 						};
 					}
 				};
-				const results: number[] = [];
+				const results: (undefined | number)[] = [];
 				const expected = [ 1, 2 ];
 
 				forOf(iterable, (value, obj, doBreak) => {
@@ -156,7 +156,7 @@ registerSuite({
 			const iterable = {
 				[Symbol.iterator]() {
 					return {
-						next() {
+						next(): {value: number | undefined, done: boolean} {
 							counter++;
 							if (counter < 5) {
 								return {
@@ -171,13 +171,15 @@ registerSuite({
 					};
 				}
 			};
-			const results: number[] = [];
+			const results: (undefined | number)[] = [];
 			const expected = [ 1, 2, 3, 4 ];
 			const iterator = get(iterable);
-			let result = iterator.next();
-			while (!result.done) {
-				results.push(result.value);
-				result = iterator.next();
+			if (iterator) {
+				let result = iterator.next();
+				while (!result.done) {
+					results.push(result.value);
+					result = iterator.next();
+				}
 			}
 			assert.deepEqual(results, expected);
 		},
@@ -193,10 +195,12 @@ registerSuite({
 			const results: number[] = [];
 			const expected = [ 1, 2, 3, 4 ];
 			const iterator = get(obj);
-			let result = iterator.next();
-			while (!result.done) {
-				results.push(result.value);
-				result = iterator.next();
+			if (iterator) {
+				let result = iterator.next();
+				while (!result.done) {
+					results.push(result.value);
+					result = iterator.next();
+				}
 			}
 			assert.deepEqual(results, expected);
 		}
@@ -211,7 +215,7 @@ registerSuite({
 			const iterable = {
 				[Symbol.iterator]() {
 					return nativeIterator = {
-						next() {
+						next(): {value: number | undefined, done: boolean} {
 							counter++;
 							if (counter < 5) {
 								return {
@@ -226,7 +230,7 @@ registerSuite({
 					};
 				}
 			};
-			const results: number[] = [];
+			const results: (undefined | number)[] = [];
 			const expected = [ 1, 2, 3, 4 ];
 			const iterator = new ShimIterator(iterable);
 			assert.strictEqual((<any> iterator)._nativeIterator, nativeIterator);

@@ -113,10 +113,10 @@ registerSuite({
 			map.set(1, 1);
 		});
 		assert.throws(function () {
-			map.set(null, 1);
+			map.set(<any> null, 1);
 		});
 		assert.throws(function () {
-			map.set(undefined, 1);
+			map.set(<any> undefined, 1);
 		});
 		assert.throws(function () {
 			map.set(true, 1);

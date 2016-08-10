@@ -5,7 +5,7 @@ import { queueTask, queueMicroTask } from 'src/support/queue';
 registerSuite({
 	name: 'queue functions',
 
-	'.queueTask()': function () {
+	'.queueTask()': function (this: any) {
 		const dfd = this.async(5000);
 		const parts: string[] = [];
 
@@ -33,7 +33,7 @@ registerSuite({
 		}), 300);
 	},
 
-	'.queueTask() => handle.destroy()': function () {
+	'.queueTask() => handle.destroy()': function (this: any) {
 		const dfd = this.async(5000);
 		let parts: string[];
 
@@ -53,7 +53,7 @@ registerSuite({
 		}), 100);
 	},
 
-	'.queueMicroTask()': function () {
+	'.queueMicroTask()': function (this: any) {
 		const dfd = this.async(5000);
 		const parts: string[] = [];
 
@@ -88,7 +88,7 @@ registerSuite({
 		}), 300);
 	},
 
-	'.queueMicroTask() => handle.destroy()': function () {
+	'.queueMicroTask() => handle.destroy()': function (this: any) {
 		const dfd = this.async(5000);
 		let parts: string[];
 

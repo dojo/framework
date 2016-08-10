@@ -88,7 +88,7 @@ export function isArrayLike(value: any): value is ArrayLike<any> {
  *
  * @param iterable The iterable object to return the iterator for
  */
-export function get<T>(iterable: Iterable<T> | ArrayLike<T>): Iterator<T> {
+export function get<T>(iterable: Iterable<T> | ArrayLike<T>): Iterator<T> | undefined {
 	if (isIterable(iterable)) {
 		return iterable[Symbol.iterator]();
 	}
@@ -141,14 +141,16 @@ export function forOf<T>(iterable: Iterable<T> | ArrayLike<T> | string, callback
 	}
 	else {
 		const iterator = get(iterable);
-		let result = iterator.next();
+		if (iterator) {
+			let result = iterator.next();
 
-		while (!result.done) {
-			callback.call(thisArg, result.value, iterable, doBreak);
-			if (broken) {
-				return;
+			while (!result.done) {
+				callback.call(thisArg, result.value, iterable, doBreak);
+				if (broken) {
+					return;
+				}
+				result = iterator.next();
 			}
-			result = iterator.next();
 		}
 	}
 }

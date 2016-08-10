@@ -5,7 +5,7 @@ import global from 'src/support/global';
 
 registerSuite({
 	name: 'native/Symbol',
-	'verify API'() {
+	'verify API'(this: any) {
 		if (!has('es6-symbol')) {
 			this.skip('No native support');
 		}
