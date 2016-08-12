@@ -48,7 +48,7 @@ registerSuite({
 		};
 
 		server = http.createServer(function (_request, response) {
-			const urlInfo = url.parse(_request.url, true);
+			const urlInfo = url.parse(<string> _request.url, true);
 			const dataKey: string = urlInfo.query.dataKey;
 			request = _request;
 
@@ -86,7 +86,7 @@ registerSuite({
 
 	'request options': {
 		data: {
-			stream(): void {
+			stream(this: any): void {
 				const dfd = this.async();
 				const source = new BaseStringSource();
 				source.start = function (controller: ReadableStreamController<string>): Promise<void> {
@@ -106,7 +106,7 @@ registerSuite({
 				);
 			},
 
-			'stream error'(): void {
+			'stream error'(this: any): void {
 				const dfd = this.async();
 				const source = new BaseStringSource();
 				source.start = function (controller: ReadableStreamController<string>): Promise<void> {
@@ -125,7 +125,7 @@ registerSuite({
 				);
 			},
 
-			'string'(): void {
+			'string'(this: any): void {
 				const dfd = this.async();
 				nodeRequest(getRequestUrl('foo.json'), {
 					data: '{ "foo": "bar" }',
@@ -139,7 +139,7 @@ registerSuite({
 			}
 		},
 
-		proxy(): void {
+		proxy(this: any): void {
 			const dfd = this.async();
 			const url = getRequestUrl('foo.json');
 			nodeRequest(url, {
@@ -158,7 +158,7 @@ registerSuite({
 		},
 
 		'user and password': {
-			both(): void {
+			both(this: any): void {
 				const dfd = this.async();
 				nodeRequest(getRequestUrl('foo.json'), {
 					user: 'user name',
@@ -174,7 +174,7 @@ registerSuite({
 				);
 			},
 
-			'user only'(): void {
+			'user only'(this: any): void {
 				const dfd = this.async();
 				nodeRequest(getRequestUrl('foo.json'), {
 					user: 'user name'
@@ -189,7 +189,7 @@ registerSuite({
 				);
 			},
 
-			'password only'(): void {
+			'password only'(this: any): void {
 				const dfd = this.async();
 				nodeRequest(getRequestUrl('foo.json'), {
 					password: 'pass word'
@@ -204,7 +204,7 @@ registerSuite({
 				);
 			},
 
-			error(): void {
+			error(this: any): void {
 				const dfd = this.async();
 				nodeRequest(getAuthRequestUrl('foo.json'), { timeout: 1 })
 					.then(
@@ -217,7 +217,7 @@ registerSuite({
 			}
 		},
 
-		socketOptions(): void {
+		socketOptions(this: any): void {
 			const dfd = this.async();
 			nodeRequest(getRequestUrl('foo.json'), {
 				socketOptions: {
@@ -237,7 +237,7 @@ registerSuite({
 			);
 		},
 
-		streamEncoding(): void {
+		streamEncoding(this: any): void {
 			const dfd = this.async();
 			nodeRequest(getRequestUrl('foo.json'), {
 				streamEncoding: 'utf8'
@@ -250,7 +250,7 @@ registerSuite({
 		},
 
 		streamTarget: {
-			success(): void {
+			success(this: any): void {
 				const dfd = this.async();
 				const sink = new ArraySink();
 				const stream = new WritableStream(sink);
@@ -264,7 +264,7 @@ registerSuite({
 				);
 			},
 
-			error(): void {
+			error(this: any): void {
 				const dfd = this.async();
 				const stream = new ErrorableStream<string>(new ArraySink());
 				nodeRequest(getRequestUrl('foo.json'), {
@@ -278,7 +278,7 @@ registerSuite({
 			}
 		},
 
-		'"timeout"'(): void {
+		'"timeout"'(this: any): void {
 			const dfd = this.async();
 			nodeRequest(getRequestUrl('foo.json'), { timeout: 1 })
 				.then(
@@ -291,7 +291,7 @@ registerSuite({
 	},
 
 	headers: {
-		'request headers should not be normalized'(): void {
+		'request headers should not be normalized'(this: any): void {
 			const dfd = this.async();
 			nodeRequest(getRequestUrl('foo.json'), {
 				headers: {
@@ -310,7 +310,7 @@ registerSuite({
 		},
 
 		'response headers': {
-			'before response'(): void {
+			'before response'(this: any): void {
 				const dfd = this.async();
 				nodeRequest(getRequestUrl('foo.json'), { timeout: 1 })
 					.then(
@@ -321,7 +321,7 @@ registerSuite({
 					);
 			},
 
-			'after response'(): void {
+			'after response'(this: any): void {
 				const dfd = this.async();
 				nodeRequest(getRequestUrl('foo.json'))
 					.then(
@@ -335,7 +335,7 @@ registerSuite({
 	},
 
 	'response object': {
-		properties(): void {
+		properties(this: any): void {
 			const dfd = this.async();
 			nodeRequest(getRequestUrl('foo.json'))
 				.then(
@@ -348,7 +348,7 @@ registerSuite({
 	},
 
 	'status codes': {
-		'302'(): void {
+		'302'(this: any): void {
 			const dfd = this.async();
 			nodeRequest(getRequestUrl('redirect'), { streamEncoding: 'utf8' })
 				.then(

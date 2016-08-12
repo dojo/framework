@@ -18,8 +18,8 @@
 	},
 	"typings": "./dist/umd/dojo-core.d.ts",
 	"peerDependencies": {
-		"dojo-has": ">=2.0.0-alpha.1",
-		"dojo-shim": ">=2.0.0-alpha.1"
+		"dojo-has": "next",
+		"dojo-shim": "next"
 	},
 	"devDependencies": {
 		"benchmark": "^1.0.0",
@@ -43,6 +43,6 @@
 		"remap-istanbul": "0.6.4",
 		"sinon": "1.14.1",
 		"tslint": "^3.10.2",
-		"typescript": "~1.8.10"
+		"typescript": "beta"
 	}
 }

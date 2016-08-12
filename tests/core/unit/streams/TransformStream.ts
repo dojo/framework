@@ -63,7 +63,7 @@ registerSuite({
 
 	'async transform'() {
 		let testValues = ['a', 'b', 'c'];
-		let results: number[] = [];
+		let results: (undefined | number)[] = [];
 
 		transform.transform = (chunk: string, enqueue: (chunk: number) => void, transformDone: () => void): void => {
 			setTimeout(function () {

@@ -35,7 +35,7 @@ registerSuite({
 			assert.strictEqual(stream.state, State.Writable, 'New stream state should be writable');
 		},
 
-		closed() {
+		closed(this: any) {
 			let dfd = this.async(ASYNC_TIMEOUT);
 
 			stream.closed.then(function () {
@@ -47,7 +47,7 @@ registerSuite({
 			}, 50);
 		},
 
-		ready() {
+		ready(this: any) {
 			let dfd = this.async(ASYNC_TIMEOUT);
 
 			return stream.ready.then(function () {
@@ -57,7 +57,7 @@ registerSuite({
 			});
 		},
 
-		'calls sink.start'() {
+		'calls sink.start'(this: any) {
 			let dfd = this.async(ASYNC_TIMEOUT);
 
 			sink.start = function() {
@@ -70,7 +70,7 @@ registerSuite({
 			});
 		},
 
-		'handles sink.start error'() {
+		'handles sink.start error'(this: any) {
 			let dfd = this.async(ASYNC_TIMEOUT);
 
 			sink.start = function() {
@@ -84,7 +84,7 @@ registerSuite({
 			}));
 		},
 
-		'handles sink.start error with error function'() {
+		'handles sink.start error with error function'(this: any) {
 			let dfd = this.async(ASYNC_TIMEOUT);
 
 			sink.start = function(error: (error: Error) => void) {
@@ -111,7 +111,7 @@ registerSuite({
 			});
 		},
 
-		'errored stream'() {
+		'errored stream'(this: any) {
 			let dfd = this.async(ASYNC_TIMEOUT);
 
 			sink.start = function() {
@@ -137,7 +137,7 @@ registerSuite({
 			});
 		},
 
-		'calls sink.close'() {
+		'calls sink.close'(this: any) {
 			let dfd = this.async(ASYNC_TIMEOUT);
 
 			sink.close = dfd.callback(function () {});
@@ -222,7 +222,7 @@ registerSuite({
 			});
 		},
 
-		'handles backpressure from strategy'() {
+		'handles backpressure from strategy'(this: any) {
 			let dfd = this.async(ASYNC_TIMEOUT);
 			let sink = new ManualSink<string>();
 
@@ -302,7 +302,7 @@ registerSuite({
 			});
 		},
 
-		'reject if errored'() {
+		'reject if errored'(this: any) {
 			let dfd = this.async(ASYNC_TIMEOUT);
 			sink = new BaseStringSink();
 			let stream = new ErrorableStream<string>(sink, strategy);
@@ -384,14 +384,14 @@ registerSuite({
 			});
 		},
 
-		'calls sink.abort'() {
+		'calls sink.abort'(this: any) {
 			let dfd = this.async(ASYNC_TIMEOUT);
 
 			sink.abort = dfd.callback(function () {});
 			stream.abort('abc');
 		},
 
-		'calls sink.close if sink.abort is undefined'() {
+		'calls sink.close if sink.abort is undefined'(this: any) {
 			let dfd = this.async(ASYNC_TIMEOUT);
 
 			sink.abort = undefined;

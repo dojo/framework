@@ -72,7 +72,7 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 	function getTests(useIterator: boolean = false): any {
 		return {
 			'synchronous values': {
-				'no matching values; returns undefined': function () {
+				'no matching values; returns undefined': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 					const values = [ 'non-matching' ];
 					const iterable = getIterable(useIterator, values);
@@ -81,7 +81,7 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 					});
 				},
 
-				'one matching value': function () {
+				'one matching value': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 					const values = [ 'non-matching', 'hello' ];
 					const iterable = getIterable(useIterator, values);
@@ -90,7 +90,7 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 					});
 				},
 
-				'multiple matching values; only returns the first': function () {
+				'multiple matching values; only returns the first': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 					const values = [ 'non-matching', 'hello', 'world' ];
 					const iterable = getIterable(useIterator, values);
@@ -101,7 +101,7 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 			},
 
 			'asynchronous values': {
-				'no matching values; returns undefined': function () {
+				'no matching values; returns undefined': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 					const values = [ createTriggerablePromise() ];
 					const iterable = getIterable(useIterator, values);
@@ -114,7 +114,7 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 					return promise;
 				},
 
-				'one matching value': function () {
+				'one matching value': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 					const values = [ createTriggerablePromise(), createTriggerablePromise() ];
 					const iterable = getIterable(useIterator, values);
@@ -128,7 +128,7 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 					return promise;
 				},
 
-				'multiple matching values; only returns the first': function () {
+				'multiple matching values; only returns the first': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 					const values = [ createTriggerablePromise(), createTriggerablePromise(), createTriggerablePromise() ];
 					const iterable = getIterable(useIterator, values);
@@ -143,7 +143,7 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 					return promise;
 				},
 
-				'mixed synchronous and asynchronous values': function () {
+				'mixed synchronous and asynchronous values': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 					const values = [ createTriggerablePromise(), 'hello', createTriggerablePromise() ];
 					const iterable = getIterable(useIterator, values);
@@ -169,7 +169,7 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 			},
 
 			'asynchronous callback': {
-				'one asynchronous result': function () {
+				'one asynchronous result': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 					const values = [ 'value1' ];
 					const iterable = getIterable(useIterator, values);
@@ -224,7 +224,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 					return isEventuallyRejected(promise);
 				},
 
-				'reduce a single value without an initial value; should not call callback': function () {
+				'reduce a single value without an initial value; should not call callback': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 
 					const values = [ 'h' ];
@@ -234,7 +234,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 					});
 				},
 
-				'reduce multiple values': function () {
+				'reduce multiple values': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 
 					const values = [ 'h', 'e', 'l', 'l', 'o' ];
@@ -244,7 +244,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 					});
 				},
 
-				'reduce multiple values with initializer': function () {
+				'reduce multiple values with initializer': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 
 					const values = [ 'w', 'o', 'r', 'l', 'd' ];
@@ -256,7 +256,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 			},
 
 			'asynchronous values': {
-				'reduce a single value without initial value; should not call callback': function () {
+				'reduce a single value without initial value; should not call callback': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 
 					const values = [ createTriggerablePromise() ];
@@ -270,7 +270,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 					return promise;
 				},
 
-				'reduce multiple values': function () {
+				'reduce multiple values': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 
 					const values = createTriggerablePromises(5);
@@ -288,7 +288,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 					return promise;
 				},
 
-				'reduce multiple values with initializer': function () {
+				'reduce multiple values with initializer': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 
 					const values = createTriggerablePromises(5);
@@ -306,7 +306,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 					return promise;
 				},
 
-				'reduce multiple mixed values': function () {
+				'reduce multiple mixed values': function (this: any) {
 					const expected: any = getExpectedSolution(this);
 
 					const values = [ 'h', 'e', 'l', 'l', createTriggerablePromise()];
@@ -332,7 +332,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 			},
 
 			'asynchronous callback': {
-				'multiple asynchronous reductions': function () {
+				'multiple asynchronous reductions': function (this: any) {
 					const { step, initialIndex, callbackValues } = getExpectedSolution(this);
 					const values: string[] = 'hello'.split('');
 					const iterable = getIterable(useIterator, values);
@@ -374,7 +374,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 	}
 
 	const arrayLikeTests = getTests(false);
-	arrayLikeTests['synchronous values']['reduces a sparse array'] = function () {
+	arrayLikeTests['synchronous values']['reduces a sparse array'] = function (this: any) {
 		const expected: any = getExpectedSolution(this);
 
 		const values = Array(10);
@@ -387,7 +387,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 			assert.strictEqual(value, expected);
 		});
 	};
-	arrayLikeTests['asynchronous values']['reduces a sparse array'] = function () {
+	arrayLikeTests['asynchronous values']['reduces a sparse array'] = function (this: any) {
 		const expected: any = getExpectedSolution(this);
 
 		const values = Array(10);
@@ -418,7 +418,7 @@ function haltImmediatelyTests(haltingMethod: (items: (any | Promise<any>)[], cal
 	}
 
 	function getTests(useIterator: boolean = false): any {
-		function testAsynchronousValues() {
+		function testAsynchronousValues(this: any) {
 			const { results, assertion } = getParameters(this);
 			const values = createTriggerablePromises(results.length);
 			const iterable = getIterable(useIterator, values);
@@ -432,19 +432,19 @@ function haltImmediatelyTests(haltingMethod: (items: (any | Promise<any>)[], cal
 
 		return {
 			'synchronous values': {
-				'one synchronous value': function () {
+				'one synchronous value': function (this: any) {
 					const { values, assertion } = getParameters(this);
 					const iterable = getIterable(useIterator, values);
 					return haltingMethod(iterable, helloWorldTest).then(assertion);
 				},
 
-				'multiple synchronous values': function () {
+				'multiple synchronous values': function (this: any) {
 					const { values, assertion } = getParameters(this);
 					const iterable = getIterable(useIterator, values);
 					return haltingMethod(iterable, helloWorldTest).then(assertion);
 				},
 
-				'multiple synchronous values with failure': function () {
+				'multiple synchronous values with failure': function (this: any) {
 					const { values, assertion } = getParameters(this);
 					const iterable = getIterable(useIterator, values);
 					return haltingMethod(iterable, helloWorldTest).then(assertion);
@@ -452,19 +452,19 @@ function haltImmediatelyTests(haltingMethod: (items: (any | Promise<any>)[], cal
 			},
 
 			'asynchronous values': {
-				'one asynchronous value': function () {
+				'one asynchronous value': function (this: any) {
 					return testAsynchronousValues.call(this);
 				},
 
-				'multiple asynchronous values': function () {
+				'multiple asynchronous values': function (this: any) {
 					return testAsynchronousValues.call(this);
 				},
 
-				'multiple asynchronous values with failure': function () {
+				'multiple asynchronous values with failure': function (this: any) {
 					return testAsynchronousValues.call(this);
 				},
 
-				'mixed synchronous and asynchronous values': function () {
+				'mixed synchronous and asynchronous values': function (this: any) {
 					const { results, assertion } = getParameters(this);
 					const values: any[] = [
 						results[0],
@@ -492,7 +492,7 @@ function haltImmediatelyTests(haltingMethod: (items: (any | Promise<any>)[], cal
 			},
 
 			'asynchronous callback': {
-				'callback returns asynchronous results': function () {
+				'callback returns asynchronous results': function (this: any) {
 					const { resolution, assertion } = getParameters(this);
 					const values: any[] = [ 'unimportant', 'values' ];
 					const iterable = getIterable(useIterator, values);

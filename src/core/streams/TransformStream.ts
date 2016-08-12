@@ -18,7 +18,7 @@ export interface Transform<R, W> {
 	 * and then call the supplied `enqueueInReadable` function, passing it the transformed data. After that it should
 	 * call the supplied `transformDone` function to notify the `TransformStream` that transformation is complete.
 	 */
-	transform(chunk: W, enqueueInReadable: (chunk: R) => void, transformDone: () => void): void;
+	transform(chunk: W | undefined, enqueueInReadable: (chunk: R) => void, transformDone: () => void): void;
 
 	/**
 	 * The `flush` method will be called by the `TransformStream` when its {@link WritableStream} is closed. Any logic
@@ -56,7 +56,7 @@ export default class TransformStream<R, W> {
 	writable: WritableStream<W>;
 
 	constructor(transformer: Transform<R, W>) {
-		let writeChunk: W;
+		let writeChunk: W | undefined;
 		let writeDone: () => void;
 		let errorWritable: (error?: any) => void;
 		let transforming = false;

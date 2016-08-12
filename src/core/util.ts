@@ -9,11 +9,13 @@ import { createHandle } from './lang';
  * @return Handle which can be destroyed to clear the timeout
  */
 export function createTimer(callback: (...args: any[]) => void, delay?: number): Handle {
-	let timerId = setTimeout(callback, delay);
+	let timerId: number | null = setTimeout(callback, delay);
 
 	return createHandle(function () {
-		clearTimeout(timerId);
-		timerId = null;
+		if (timerId) {
+			clearTimeout(timerId);
+			timerId = null;
+		}
 	});
 }
 
@@ -24,7 +26,7 @@ export function createTimer(callback: (...args: any[]) => void, delay?: number):
  * @param delay Number of milliseconds to wait after any invocations before calling the original callback
  * @return Debounced function
  */
-export function debounce<T extends (...args: any[]) => void>(callback: T, delay: number): T {
+export function debounce<T extends (this: any, ...args: any[]) => void>(callback: T, delay: number): T {
 	// node.d.ts clobbers setTimeout/clearTimeout with versions that return/receive NodeJS.Timer,
 	// but browsers return/receive a number
 	let timer: any;
@@ -33,7 +35,7 @@ export function debounce<T extends (...args: any[]) => void>(callback: T, delay:
 		timer && clearTimeout(timer);
 
 		let context = this;
-		let args = arguments;
+		let args: IArguments | null = arguments;
 
 		timer = setTimeout(function () {
 			callback.apply(context, args);
@@ -49,8 +51,8 @@ export function debounce<T extends (...args: any[]) => void>(callback: T, delay:
  * @param delay Number of milliseconds to wait before allowing the original callback to be called again
  * @return Throttled function
  */
-export function throttle<T extends (...args: any[]) => void>(callback: T, delay: number): T {
-	let ran: boolean;
+export function throttle<T extends (this: any, ...args: any[]) => void>(callback: T, delay: number): T {
+	let ran: boolean | null;
 
 	return <T> function () {
 		if (ran) {
@@ -74,8 +76,8 @@ export function throttle<T extends (...args: any[]) => void>(callback: T, delay:
  * @param delay Number of milliseconds to wait before calling the original callback and allowing it to be called again
  * @return Throttled function
  */
-export function throttleAfter<T extends (...args: any[]) => void>(callback: T, delay: number): T {
-	let ran: boolean;
+export function throttleAfter<T extends (this: any, ...args: any[]) => void>(callback: T, delay: number): T {
+	let ran: boolean | null;
 
 	return <T> function () {
 		if (ran) {
@@ -85,7 +87,7 @@ export function throttleAfter<T extends (...args: any[]) => void>(callback: T, d
 		ran = true;
 
 		let context = this;
-		let args = arguments;
+		let args: IArguments | null = arguments;
 
 		setTimeout(function () {
 			callback.apply(context, args);

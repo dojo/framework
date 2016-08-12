@@ -104,11 +104,11 @@ export default class WritableStream<T> {
 	protected _resolveClosedPromise: () => void;
 	protected _resolveReadyPromise: () => void;
 	protected _started: boolean;
-	protected _startedPromise: Promise<any>;
+	protected _startedPromise: Promise<any> | undefined;
 	protected _state: State;
 	protected _storedError: Error;
 	protected _strategy: Strategy<T>;
-	protected _underlyingSink: Sink<T>;
+	protected _underlyingSink: Sink<T> | undefined;
 	protected _queue: SizeQueue<Record<T>>;
 	protected _writing: boolean;
 
@@ -144,7 +144,7 @@ export default class WritableStream<T> {
 	// 4.3.6 WritableStreamAdvanceQueue
 	protected _advanceQueue() {
 		if (!this._started) {
-			if (!this._advancing) {
+			if (!this._advancing && this._startedPromise) {
 				this._advancing = true;
 				this._startedPromise.then(() => {
 					this._advanceQueue();
@@ -158,9 +158,9 @@ export default class WritableStream<T> {
 			return;
 		}
 
-		const writeRecord: Record<T> = this._queue.peek();
+		const writeRecord: Record<T> | undefined = this._queue.peek();
 
-		if (writeRecord.close) {
+		if (writeRecord && writeRecord.close) {
 			// TODO: SKIP? Assert 4.3.6-3.a
 			if (this.state !== State.Closing) {
 				throw new Error('Invalid record');
@@ -175,10 +175,14 @@ export default class WritableStream<T> {
 
 		this._writing = true;
 
-		util.promiseInvokeOrNoop(this._underlyingSink, 'write', [ writeRecord.chunk ]).then(() => {
+		const chunk = writeRecord ? writeRecord.chunk : undefined;
+
+		util.promiseInvokeOrNoop(this._underlyingSink, 'write', [ chunk ]).then(() => {
 			if (this.state !== State.Errored) {
 				this._writing = false;
-				writeRecord.resolve();
+				if (writeRecord && writeRecord.resolve) {
+					writeRecord.resolve();
+				}
 				this._queue.dequeue();
 
 				try {
@@ -220,12 +224,12 @@ export default class WritableStream<T> {
 			return;
 		}
 
-		let writeRecord: Record<T>;
+		let writeRecord: Record<T> | null | undefined;
 
 		while (this._queue.length) {
 			writeRecord = this._queue.dequeue();
 
-			if (!writeRecord.close) {
+			if (writeRecord && writeRecord.reject && !writeRecord.close) {
 				writeRecord.reject(error);
 			}
 		}
@@ -363,7 +367,7 @@ export default class WritableStream<T> {
 		}
 
 		let chunkSize = 1;
-		let writeRecord: Record<T>;
+		let writeRecord: Record<T> | undefined;
 		let promise = new Promise<void>(function (resolve, reject) {
 			writeRecord = {
 				chunk: chunk,

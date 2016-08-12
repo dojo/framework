@@ -6,7 +6,7 @@ function createPaddingErrorTests(func: (text: string, length: number, character?
 	// Tests error cases for padStart and padEnd.
 	return function () {
 		assert.throw(function () {
-			func(null, 10);
+			func(<any> null, 10);
 		}, TypeError);
 		assert.throw(function () {
 			func('Lorem', 10, '');

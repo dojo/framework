@@ -9,7 +9,7 @@ const ASYNC_TIMEOUT = 1000;
 registerSuite({
 	name: 'CountQueuingStrategy',
 
-	size() {
+	size(this: any) {
 		let dfd = this.async(ASYNC_TIMEOUT);
 		let sink = new ManualSink<string>();
 

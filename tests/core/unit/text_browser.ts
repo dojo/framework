@@ -11,7 +11,7 @@ registerSuite({
 		name: 'text',
 
 		'load': {
-			'should return text'() {
+			'should return text'(this: any) {
 				text.load(basePath + 'textLoad.txt', require, this.async().callback((val: string) => {
 					assert.strictEqual(val, 'test', 'Correct text should be returned');
 				}));

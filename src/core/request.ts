@@ -9,21 +9,22 @@ import { ParamList } from './UrlSearchParams';
 declare var require: any;
 
 export class FilterRegistry extends Registry<RequestFilter> {
-	register(test: string | RegExp | RequestFilterTest, value: RequestFilter, first?: boolean): Handle {
+	register(test: string | RegExp | RequestFilterTest | null, value: RequestFilter, first?: boolean): Handle {
 		let entryTest: Test;
+		const inTest = test;
 
-		if (typeof test === 'string') {
+		if (typeof inTest === 'string') {
 			entryTest = (response, url, options) => {
-				return test === url;
+				return inTest === url;
 			};
 		}
-		else if (test instanceof RegExp) {
+		else if (inTest instanceof RegExp) {
 			entryTest = (response, url, options) => {
-				return test.test(url);
+				return inTest.test(url);
 			};
 		}
 		else {
-			entryTest = <RequestFilterTest> test;
+			entryTest = <RequestFilterTest> inTest;
 		}
 
 		return super.register(entryTest, value, first);
@@ -49,8 +50,10 @@ export class ProviderRegistry extends Registry<RequestProvider> {
 					if (canceled) {
 						return;
 					}
-					actualResponse = provider(url, options);
-					actualResponse.then(resolve, reject);
+					if (provider) {
+						actualResponse = provider(url, options);
+						actualResponse.then(resolve, reject);
+					}
 				});
 			}, function () {
 				if (!canceled) {
@@ -75,7 +78,7 @@ export class ProviderRegistry extends Registry<RequestProvider> {
 		};
 	}
 
-	register(test: string | RegExp | RequestProviderTest, value: RequestProvider, first?: boolean): Handle {
+	register(test: string | RegExp | RequestProviderTest | null, value: RequestProvider, first?: boolean): Handle {
 		let entryTest: Test;
 
 		if (typeof test === 'string') {
@@ -85,7 +88,7 @@ export class ProviderRegistry extends Registry<RequestProvider> {
 		}
 		else if (test instanceof RegExp) {
 			entryTest = (url, options) => {
-				return test.test(url);
+				return test ? (<RegExp> test).test(url) : null;
 			};
 		}
 		else {
@@ -117,7 +120,7 @@ export interface RequestFilter {
 }
 
 export interface RequestFilterTest extends Test {
-	<T>(response: Response<any>, url: string, options?: RequestOptions): boolean;
+	<T>(response: Response<any>, url: string, options?: RequestOptions): boolean | null;
 }
 
 export interface RequestOptions {
@@ -138,18 +141,18 @@ export interface RequestProvider {
 }
 
 export interface RequestProviderTest extends Test {
-	(url: string, options?: RequestOptions): boolean;
+	(url: string, options?: RequestOptions): boolean | null;
 }
 
 export interface Response<T> {
-	data: T;
+	data: T | null;
 	nativeResponse?: any;
 	requestOptions: RequestOptions;
-	statusCode: number;
-	statusText?: string;
+	statusCode: number | null | undefined;
+	statusText?: string | null;
 	url: string;
 
-	getHeader(name: string): string;
+	getHeader(name: string): null | string;
 }
 
 /**

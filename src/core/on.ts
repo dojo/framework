@@ -82,7 +82,7 @@ export default function on(target: any, type: any, listener: any, capture?: bool
 		return createCompositeHandle(...handles);
 	}
 
-	const callback = function () {
+	const callback = function (this: any) {
 		listener.apply(this, arguments);
 	};
 
@@ -123,7 +123,9 @@ export default function on(target: any, type: any, listener: any, capture?: bool
 export function once(target: EventTarget, type: string | string[], listener: EventCallback, capture?: boolean): Handle;
 export function once(target: EventEmitter | Evented, type: string | string[], listener: EventCallback): Handle;
 export function once(target: any, type: any, listener: any, capture?: boolean): Handle {
-	const handle = on(target, type, function () {
+	// FIXME
+	// tslint:disable-next-line:no-var-keyword
+	var handle = on(target, type, function (this: any) {
 		handle.destroy();
 		return listener.apply(this, arguments);
 	}, capture);
@@ -149,7 +151,7 @@ export function pausable(target: EventEmitter | Evented, type: string | string[]
 export function pausable(target: any, type: any, listener: any, capture?: boolean): PausableHandle {
 	let paused: boolean;
 
-	const handle = <PausableHandle> on(target, type, function () {
+	const handle = <PausableHandle> on(target, type, function (this: any) {
 		if (!paused) {
 			return listener.apply(this, arguments);
 		}

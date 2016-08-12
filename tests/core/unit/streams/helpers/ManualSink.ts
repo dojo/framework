@@ -21,7 +21,9 @@ export default class ManualSink<T> implements Sink<T> {
 		}
 
 		const resolve = this._resolvers.shift();
-		resolve();
+		if (resolve) {
+			resolve();
+		}
 	}
 
 	abort(reason: any): Promise<void> {

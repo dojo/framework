@@ -141,7 +141,7 @@ export default class ReadableStream<T> {
 		return this.queue.totalSize;
 	}
 
-	protected _pullingPromise: Promise<void>;
+	protected _pullingPromise: Promise<void> | undefined;
 	protected _started: boolean;
 	protected _startedPromise: Promise<void>;
 	protected _strategy: Strategy<T>;
@@ -151,7 +151,7 @@ export default class ReadableStream<T> {
 	controller: ReadableStreamController<T>;
 	pullScheduled: boolean;
 	queue: SizeQueue<T>;
-	reader: ReadableStreamReader<T>;
+	reader: ReadableStreamReader<T> | undefined;
 	state: State;
 	storedError: Error;
 
@@ -233,7 +233,7 @@ export default class ReadableStream<T> {
 
 		this.state = State.Closed;
 
-		if (this.locked) {
+		if (this.locked && this.reader) {
 			this.reader.release();
 		}
 	}
@@ -246,7 +246,7 @@ export default class ReadableStream<T> {
 			throw new Error('3.5.6-1,2: Stream._state should be Readable and stream.closeRequested should be true');
 		}
 
-		if (!this.locked || !this.reader.resolveReadRequest(chunk)) {
+		if (!this.locked || (this.reader && !this.reader.resolveReadRequest(chunk))) {
 
 			try {
 				let chunkSize = 1;
@@ -273,7 +273,7 @@ export default class ReadableStream<T> {
 		this.storedError = error;
 		this.state = State.Errored;
 
-		if (this.locked) {
+		if (this.locked && this.reader) {
 			this.reader.release();
 		}
 	}
@@ -304,7 +304,8 @@ export default class ReadableStream<T> {
 
 		function doPipe(): void {
 			lastRead = reader.read();
-			Promise.all([ lastRead, dest.ready ]).then(function ([ readResult ]) {
+			Promise.all([ lastRead, dest.ready ]).then(function (result) {
+				const readResult = result ?  result[0] : null;
 				if (readResult.done) {
 					closeDest();
 				}

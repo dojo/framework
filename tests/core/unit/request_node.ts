@@ -61,7 +61,7 @@ registerSuite({
 	},
 
 	'.get': {
-		'simple request'() {
+		'simple request'(this: any) {
 			const dfd = this.async();
 			request.get(getRequestUrl('foo.json'))
 				.then(
@@ -72,7 +72,7 @@ registerSuite({
 				);
 		},
 
-		'custom headers'() {
+		'custom headers'(this: any) {
 			const dfd = this.async();
 			const options: RequestOptions = { headers: { 'Content-Type': 'application/json' } };
 			request.get(getRequestUrl('foo.json'), options)

@@ -75,7 +75,7 @@ registerSuite({
 		controller = new Controller();
 	},
 
-	'start()'() {
+	'start()'(this: any) {
 		let dfd = this.async(1000);
 		source.start(controller).then(dfd.resolve.bind(dfd), dfd.reject.bind(dfd));
 	},
@@ -88,7 +88,7 @@ registerSuite({
 		assert.strictEqual(controller.enqueuedValue, '1');
 	},
 
-	'cancel()'() {
+	'cancel()'(this: any) {
 		let dfd = this.async(1000);
 		source.start(controller).then(function () {
 			source.cancel().then(dfd.callback(function () {

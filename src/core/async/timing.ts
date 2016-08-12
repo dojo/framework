@@ -47,7 +47,7 @@ export class DelayedRejection extends Promise<any> {
 	 * @param reason the reason for the rejection
 	 */
 	constructor(milliseconds: number, reason?: Error) {
-		super(function (resolve, reject) {
+		super(function (this: DelayedRejection, resolve: Function, reject: Function) {
 			setTimeout(reason ? reject.bind(this, reason) : reject.bind(this), milliseconds);
 		});
 	}

@@ -15,7 +15,7 @@ const suite: any = {
 		return load('tests/unit/load/a', 'tests/unit/load/b');
 	},
 
-	'global load'() {
+	'global load'(this: any) {
 		const def = this.async(5000);
 
 		load('src/has', 'dojo-shim/Promise').then(def.callback(function ([ hasModule, promiseModule ]: [ any, any ]) {
@@ -24,7 +24,7 @@ const suite: any = {
 		}));
 	},
 
-	'contextual load'() {
+	'contextual load'(this: any) {
 		const def = this.async(5000);
 
 		load(require, './load/a', './load/b').then(def.callback(function ([ a, b ]: [ any, any ]) {
@@ -47,7 +47,7 @@ if (has('host-node')) {
 			assert.notStrictEqual(nodeLoad, load);
 		},
 
-		'global load succeeds'() {
+		'global load succeeds'(this: any) {
 			const def = this.async(5000);
 
 			const result: Promise<any[]> = nodeRequire(path.join(buildDir, 'tests', 'unit', 'load', 'node')).globalSucceed;
@@ -57,7 +57,7 @@ if (has('host-node')) {
 			}));
 		},
 
-		'global load with relative path fails'() {
+		'global load with relative path fails'(this: any) {
 			const def = this.async(5000);
 
 			const result: Promise<any[]> = nodeRequire(path.join(buildDir, 'tests', 'unit', 'load', 'node')).globalFail;
@@ -68,7 +68,7 @@ if (has('host-node')) {
 			}));
 		},
 
-		'contextual load succeeds'() {
+		'contextual load succeeds'(this: any) {
 			const def = this.async(5000);
 
 			const result: Promise<any[]> = nodeRequire(path.join(buildDir, 'tests', 'unit', 'load', 'node')).succeed;
@@ -78,7 +78,7 @@ if (has('host-node')) {
 			}));
 		},
 
-		'contextual load with non-existent module fails'() {
+		'contextual load with non-existent module fails'(this: any) {
 			const def = this.async(5000);
 
 			const result: Promise<any[]> = nodeRequire(path.join(buildDir, 'tests', 'unit', 'load', 'node')).fail;

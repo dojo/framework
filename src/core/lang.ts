@@ -249,7 +249,7 @@ export function mixin(target: any, ...sources: any[]): any {
  * @return The bound function
  */
 export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs: any[]): (...args: any[]) => any {
-	return function () {
+	return function (this: any) {
 		const args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
 
 		return targetFunction.apply(this, args);
@@ -266,7 +266,7 @@ export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs
  */
 export function createHandle(destructor: () => void): Handle {
 	return {
-		destroy: function () {
+		destroy: function (this: Handle) {
 			this.destroy = function () {};
 			destructor.call(this);
 		}

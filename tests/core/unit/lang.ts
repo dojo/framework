@@ -57,7 +57,7 @@ registerSuite({
 			property2: 'value2'
 		};
 
-		lang.assign<typeof object, typeof source1 | typeof source3>(object, source1, null, source3);
+		lang.assign<typeof object, typeof source1 | typeof source3>(object, source1, <any> null, source3);
 
 		assert.deepEqual(object, {
 			property1: 'value1',
@@ -148,7 +148,7 @@ registerSuite({
 			},
 			b: number,
 			hidden: number
-		} = Object.create({
+		} = <any> Object.create({
 			a: 1
 		});
 		source.c = 3;
@@ -203,7 +203,7 @@ registerSuite({
 			d: Date,
 			e: RegExp,
 			hidden: number
-		} = Object.create({
+		} = <any> Object.create({
 			nested: {
 				a: 1,
 				b: [ 2, [ 3 ], { f: 4 } ]
@@ -332,7 +332,7 @@ registerSuite({
 			method?: (...args: string[]) => string;
 		} = <any> {};
 		const method = lang.lateBind(object, 'method');
-		object.method = function (): any {
+		object.method = function (this: any): any {
 			return this;
 		};
 
@@ -360,13 +360,13 @@ registerSuite({
 
 	'.partial()'() {
 		const ending = 'jumps over the lazy dog';
-		const finish = lang.partial(function () {
+		const finish = lang.partial(function (this: any) {
 			const start = this && this.start ? [ this.start ] : [];
 
 			return start.concat(Array.prototype.slice.call(arguments)).join(' ');
 		}, 'jumps', 'over');
 
-		function Sentence(start: string = '') {
+		function Sentence(this: any, start: string = '') {
 			this.start = start;
 		}
 		Sentence.prototype.finish = finish;

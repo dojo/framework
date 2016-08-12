@@ -64,7 +64,7 @@ registerSuite({
 
 	invokeOrNoop() {
 		const testParameters = [ 'a', 1 ];
-		let passedParameters: Array<any>;
+		let passedParameters: any;
 		let callCount = 0;
 		let obj = {
 			testMethod: function () {
@@ -99,11 +99,11 @@ registerSuite({
 			}
 		};
 
-		return util.promiseInvokeOrFallbackOrNoop(obj, 'testMethod', undefined, 'otherMethod').then(function () {
+		return util.promiseInvokeOrFallbackOrNoop(obj, 'testMethod', <any> undefined, 'otherMethod').then(function () {
 			assert.strictEqual(callCount, 1);
 			assert.strictEqual(otherCallCount, 0);
 
-			return util.promiseInvokeOrFallbackOrNoop(obj, 'NOMETHOD', undefined, 'otherMethod');
+			return util.promiseInvokeOrFallbackOrNoop(obj, 'NOMETHOD', <any> undefined, 'otherMethod');
 		}).then(function () {
 			assert.strictEqual(callCount, 1);
 			assert.strictEqual(otherCallCount, 1);
@@ -114,7 +114,7 @@ registerSuite({
 			assert.strictEqual(otherCallCount, 1);
 			assert.sameMembers(passedParameters, testParameters, 'obj.testMethod should be called with test parameters');
 
-			return util.promiseInvokeOrFallbackOrNoop(obj, 'NOMETHOD', undefined, 'otherMethod', testParameters);
+			return util.promiseInvokeOrFallbackOrNoop(obj, 'NOMETHOD', <any> undefined, 'otherMethod', testParameters);
 		}).then(function () {
 			assert.strictEqual(callCount, 2);
 			assert.strictEqual(otherCallCount, 2);

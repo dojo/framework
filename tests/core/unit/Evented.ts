@@ -34,7 +34,7 @@ registerSuite({
 		'__on<eventname> methods': function () {
 			const evented = new Evented();
 			let expectedEvent: CustomEvent;
-			let actualEvent: CustomEvent;
+			let actualEvent: CustomEvent | undefined;
 
 			assert.notProperty(evented, 'ontestevent');
 			evented.on('testevent', function (event) {

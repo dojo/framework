@@ -11,7 +11,10 @@ function testOn(...args: any[]) {
 
 function cleanUpListeners(): void {
 	while (handles.length > 0) {
-		handles.pop().destroy();
+		const handle = handles.pop();
+		if (handle) {
+			handle.destroy();
+		}
 	}
 }
 

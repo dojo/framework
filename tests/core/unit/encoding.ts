@@ -82,8 +82,8 @@ registerSuite({
 			assert.lengthOf(buffer, 1);
 			assert.strictEqual(buffer[0], 49);
 
-			assert.deepEqual([], ascii.encode(undefined));
-			assert.deepEqual([], ascii.encode(null));
+			assert.deepEqual([], ascii.encode(<any> undefined));
+			assert.deepEqual([], ascii.encode(<any> null));
 		},
 
 		'.decode()'() {
@@ -92,8 +92,8 @@ registerSuite({
 
 			assert.strictEqual(ASCII_STRING, ascii.decode(ascii.encode(ASCII_STRING)));
 
-			assert.strictEqual(ascii.decode(undefined), '');
-			assert.strictEqual(ascii.decode(null), '');
+			assert.strictEqual(ascii.decode(<any> undefined), '');
+			assert.strictEqual(ascii.decode(<any> null), '');
 
 			if (hasBuffer) {
 				let buffer = new Buffer('The cat and the hat');
@@ -111,16 +111,16 @@ registerSuite({
 			let buffer = base64.encode(BASE64_STRING);
 			assert.deepEqual(buffer, BASE64_BUFFER);
 
-			assert.deepEqual([], base64.encode(undefined));
-			assert.deepEqual([], base64.encode(null));
+			assert.deepEqual([], base64.encode(<any> undefined));
+			assert.deepEqual([], base64.encode(<any> null));
 		},
 
 		'.decode()'() {
 			let decoded = base64.decode(BASE64_BUFFER);
 			assert.strictEqual(decoded, BASE64_STRING);
 
-			assert.strictEqual(base64.decode(undefined), '');
-			assert.strictEqual(base64.decode(null), '');
+			assert.strictEqual(base64.decode(<any> undefined), '');
+			assert.strictEqual(base64.decode(<any> null), '');
 
 			assert.strictEqual(base64.decode([ 102, 100, 97, 115, 0 ]), 'ZmRhcwA=');
 
@@ -142,8 +142,8 @@ registerSuite({
 			let buffer = hex.encode(HEX_STRING);
 			assert.deepEqual(buffer, HEX_BUFFER);
 
-			assert.deepEqual([], hex.encode(undefined));
-			assert.deepEqual([], hex.encode(null));
+			assert.deepEqual([], hex.encode(<any> undefined));
+			assert.deepEqual([], hex.encode(<any> null));
 		},
 
 		'.decode()'() {
@@ -152,8 +152,8 @@ registerSuite({
 			assert.strictEqual(decoded, HEX_STRING);
 
 			assert.strictEqual(HEX_STRING, hex.decode(hex.encode(HEX_STRING)));
-			assert.strictEqual(hex.decode(undefined), '');
-			assert.strictEqual(hex.decode(null), '');
+			assert.strictEqual(hex.decode(<any> undefined), '');
+			assert.strictEqual(hex.decode(<any> null), '');
 
 			if (hasBuffer) {
 				let buffer = new Buffer(HEX_BUFFER);
@@ -183,8 +183,8 @@ registerSuite({
 			assert.lengthOf(buffer, 1);
 			assert.strictEqual(buffer[0], 49);
 
-			assert.deepEqual([], utf8.encode(undefined));
-			assert.deepEqual([], utf8.encode(null));
+			assert.deepEqual([], utf8.encode(<any> undefined));
+			assert.deepEqual([], utf8.encode(<any> null));
 
 			buffer = utf8.encode('\u0000');
 			let bufferArray = [0];
@@ -227,8 +227,8 @@ registerSuite({
 			assert.strictEqual(utf8.decode([ 0xE2, 0xB0, 0xBC ]), 'ⰼ');
 			assert.strictEqual(utf8.decode([ 0xF0, 0x9D, 0x8C, 0x86 ]), '𐌆');
 
-			assert.strictEqual(utf8.decode(undefined), '');
-			assert.strictEqual(utf8.decode(null), '');
+			assert.strictEqual(utf8.decode(<any> undefined), '');
+			assert.strictEqual(utf8.decode(<any> null), '');
 
 			assert.throws(function () {
 				utf8.decode([ 0xFFFFFF ]);

@@ -3,25 +3,25 @@ import { createHandle } from './lang';
 
 interface Advised {
 	id?: number;
-	advice: Function;
-	previous?: Advised;
-	next?: Advised;
+	advice: Function | null;
+	previous?: Advised | null;
+	next?: Advised | null;
 	receiveArguments?: boolean;
 }
 
 interface Dispatcher {
 	(): any;
 	target: any;
-	before?: Advised;
+	before?: Advised | null;
 	around?: Advised;
-	after?: Advised;
+	after?: Advised | null;
 }
 
 let nextId = 0;
 
-function advise(dispatcher: Dispatcher, type: string, advice: Function, receiveArguments?: boolean): Handle {
+function advise(dispatcher: Dispatcher | null, type: string, advice: Function | null, receiveArguments?: boolean): Handle {
 	let previous = (<any> dispatcher)[type];
-	let advised: Advised = {
+	let advised: Advised | null = {
 		id: nextId++,
 		advice: advice,
 		receiveArguments: receiveArguments
@@ -37,7 +37,9 @@ function advise(dispatcher: Dispatcher, type: string, advice: Function, receiveA
 		}
 		else {
 			// add to the beginning
-			dispatcher.before = advised;
+			if (dispatcher) {
+				dispatcher.before = advised;
+			}
 			advised.next = previous;
 			previous.previous = advised;
 		}
@@ -49,8 +51,8 @@ function advise(dispatcher: Dispatcher, type: string, advice: Function, receiveA
 	advice = previous = null;
 
 	return createHandle(function () {
-		let previous = advised.previous;
-		let next = advised.next;
+		let previous = advised ? advised.previous : null;
+		let next = advised ?  advised.next : null;
 
 		if (!previous && !next) {
 			(<any> dispatcher)[type] = null;
@@ -67,8 +69,10 @@ function advise(dispatcher: Dispatcher, type: string, advice: Function, receiveA
 				next.previous = previous;
 			}
 		}
-
-		dispatcher = advised.advice = advised = null;
+		if (advised) {
+			advised.advice = null;
+		}
+		dispatcher = advised = null;
 	});
 }
 
@@ -78,7 +82,7 @@ function getDispatcher(target: any, methodName: string): Dispatcher {
 
 	if (!existing || existing.target !== target) {
 		// no dispatcher
-		target[methodName] = dispatcher = <Dispatcher> function (): any {
+		target[methodName] = dispatcher = <Dispatcher> function (this: Dispatcher): any {
 			let executionId = nextId;
 			let args = arguments;
 			let results: any;
@@ -91,7 +95,7 @@ function getDispatcher(target: any, methodName: string): Dispatcher {
 				before = before.next;
 			}
 
-			if (dispatcher.around) {
+			if (dispatcher.around && dispatcher.around.advice) {
 				results = dispatcher.around.advice(this, args);
 			}
 
@@ -151,18 +155,21 @@ export function after(target: any, methodName: string, advice: (originalReturn: 
  * @param advice Advising function which will receive the original function
  * @return A handle which will remove the aspect when destroy is called
  */
-export function around(target: any, methodName: string, advice: (previous: Function) => Function): Handle {
-	let dispatcher = getDispatcher(target, methodName);
+export function around(target: any, methodName: string, advice: null | ((previous: Function) => Function)): Handle {
+	let dispatcher: Dispatcher | null = getDispatcher(target, methodName);
 	let previous = dispatcher.around;
-	let advised = advice(function (): any {
-		return previous.advice(this, arguments);
-	});
+	let advised: Function | null;
+	if (advice) {
+		advised = advice(function (this: Dispatcher): any {
+			if (previous && previous.advice) {
+				return previous.advice(this, arguments);
+			}
+		});
+	}
 
 	dispatcher.around = {
 		advice: function (target: any, args: any[]): any {
-			return advised ?
-				advised.apply(target, args) :
-				previous.advice(target, args);
+			return advised ? advised.apply(target, args) : previous && previous.advice ? previous.advice(target, args) : null;
 		}
 	};
 

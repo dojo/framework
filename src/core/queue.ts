@@ -2,15 +2,15 @@ import global from './global';
 import has from './has';
 import { Handle } from './interfaces';
 
-function executeTask(item: QueueItem): void {
-	if (item.isActive) {
+function executeTask(item: QueueItem | undefined): void {
+	if (item && item.isActive && item.callback) {
 		item.callback();
 	}
 }
 
 function getQueueHandle(item: QueueItem, destructor?: (...args: any[]) => any): Handle {
 	return {
-		destroy: function () {
+		destroy: function (this: Handle) {
 			this.destroy = function () {};
 			item.isActive = false;
 			item.callback = null;
@@ -29,33 +29,11 @@ interface PostMessageEvent extends Event {
 
 export interface QueueItem {
 	isActive: boolean;
-	callback: (...args: any[]) => any;
+	callback: null | ((...args: any[]) => any);
 }
 
-// When no mechanism for registering microtasks is exposed by the environment, microtasks will
-// be queued and then executed in a single macrotask before the other macrotasks are executed.
 let checkMicroTaskQueue: () => void;
 let microTasks: QueueItem[];
-if (!has('microtasks')) {
-	let isMicroTaskQueued = false;
-
-	microTasks = [];
-	checkMicroTaskQueue = function (): void {
-		if (!isMicroTaskQueued) {
-			isMicroTaskQueued = true;
-			queueTask(function () {
-				isMicroTaskQueued = false;
-
-				if (microTasks.length) {
-					let item: QueueItem;
-					while (item = microTasks.shift()) {
-						executeTask(item);
-					}
-				}
-			});
-		}
-	};
-}
 
 /**
  * Schedules a callback to the macrotask queue.
@@ -118,6 +96,29 @@ export const queueTask = (function() {
 		return queueTask(callback);
 	};
 })();
+
+// When no mechanism for registering microtasks is exposed by the environment, microtasks will
+// be queued and then executed in a single macrotask before the other macrotasks are executed.
+if (!has('microtasks')) {
+	let isMicroTaskQueued = false;
+
+	microTasks = [];
+	checkMicroTaskQueue = function (): void {
+		if (!isMicroTaskQueued) {
+			isMicroTaskQueued = true;
+			queueTask(function () {
+				isMicroTaskQueued = false;
+
+				if (microTasks.length) {
+					let item: QueueItem | undefined;
+					while (item = microTasks.shift()) {
+						executeTask(item);
+					}
+				}
+			});
+		}
+	};
+}
 
 /**
  * Schedules an animation task with `window.requestAnimationFrame` if it exists, or with `queueTask` otherwise.
@@ -183,7 +184,7 @@ export let queueMicroTask = (function () {
 		const observer = new HostMutationObserver(function (): void {
 			while (queue.length > 0) {
 				const item = queue.shift();
-				if (item && item.isActive) {
+				if (item && item.isActive && item.callback) {
 					item.callback();
 				}
 			}

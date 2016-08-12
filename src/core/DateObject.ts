@@ -36,7 +36,7 @@ export interface DateProperties {
 	year: number;
 }
 
-const days = [ null, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
+const days = [ NaN, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
 
 const isLeapYear = (function () {
 	const date = new Date();
@@ -108,10 +108,10 @@ export default class DateObject implements DateProperties {
 		const self = this;
 		Object.defineProperty(this, 'utc', {
 			value: {
-				get isLeapYear(): boolean {
+				get isLeapYear(this: DateObject): boolean {
 					return isLeapYear(this.year);
 				},
-				get daysInMonth(): number {
+				get daysInMonth(this: DateObject): number {
 					const month = this.month;
 
 					if (month === 2 && this.isLeapYear) {

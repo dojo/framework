@@ -1,7 +1,7 @@
 import Benchmark = require('benchmark');
 import lang = require('../../src/lang');
 
-function onComplete() {
+function onComplete(this: any) {
 	console.log(this.name + ': ' + this.hz + ' with a margin of error of ' + this.stats.moe);
 }
 
@@ -13,8 +13,8 @@ const simpleSourceWithArray = {
 		d: 5
 	};
 const sourceFromConstructor = (function () {
-		function Answers(kwArgs: { [key: string]: any }) {
-			Object.keys(kwArgs).forEach(function (key: string): void {
+		function Answers(this: any, kwArgs: { [key: string]: any }) {
+			Object.keys(kwArgs).forEach(function (this: any, key: string): void {
 				(<any> this)[key] = kwArgs[key];
 			}, this);
 		}

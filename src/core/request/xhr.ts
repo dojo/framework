@@ -52,7 +52,7 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 		statusText: null,
 		url: requestUrl,
 
-		getHeader(name: string): string {
+		getHeader(name: string): null | string {
 			return request.getResponseHeader(name);
 		}
 	};
@@ -79,7 +79,7 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 
 		request.open(options.method, requestUrl, !options.blockMainThread, options.user, options.password);
 
-		if (has('xhr2') && options.responseType in responseTypeMap) {
+		if (has('xhr2') && options.responseType && options.responseType in responseTypeMap) {
 			request.responseType = responseTypeMap[options.responseType];
 		}
 
@@ -127,12 +127,13 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 
 		const headers = options.headers;
 		let hasContentTypeHeader = false;
-		for (let header in headers) {
-			if (header.toLowerCase() === 'content-type') {
-				hasContentTypeHeader = true;
+		if (headers) {
+			for (let header in headers) {
+				if (header.toLowerCase() === 'content-type') {
+					hasContentTypeHeader = true;
+				}
+				request.setRequestHeader(header, headers[header]);
 			}
-
-			request.setRequestHeader(header, headers[header]);
 		}
 
 		if (!headers || !('X-Requested-With' in headers)) {

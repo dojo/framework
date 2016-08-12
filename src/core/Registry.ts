@@ -5,16 +5,16 @@ import { Handle } from './interfaces';
  * entry.
  */
 interface Entry<T> {
-	test: Test;
-	value: T;
+	test: Test | null;
+	value: T | null;
 }
 
 /**
  * A registry of values tagged with matchers.
  */
 export default class Registry<T> {
-	protected _defaultValue: T;
-	private _entries: Entry<T>[];
+	protected _defaultValue: T | undefined;
+	private _entries: Entry<T>[] | null;
 
 	/**
 	 * Construct a new Registry, optionally containing a given default value.
@@ -32,11 +32,11 @@ export default class Registry<T> {
 	 * @returns the matching value, or a default value if one exists.
 	 */
 	match(...args: any[]): T {
-		let entries = this._entries.slice(0);
+		const entries = this._entries ? this._entries.slice(0) : [];
 		let entry: Entry<T>;
 
 		for (let i = 0; (entry = entries[i]); ++i) {
-			if (entry.test.apply(null, args)) {
+			if (entry.value && entry.test && entry.test.apply(null, args)) {
 				return entry.value;
 			}
 		}
@@ -55,9 +55,9 @@ export default class Registry<T> {
 	 * @param value A value being registered.
 	 * @param first If true, the newly registered test and value will be the first entry in the registry.
 	 */
-	register(test: Test, value: T, first?: boolean): Handle {
+	register(test: Test | null, value: T | null, first?: boolean): Handle {
 		let entries = this._entries;
-		let entry: Entry<T> = {
+		let entry: Entry<T> | null = {
 			test: test,
 			value: value
 		};
@@ -65,11 +65,13 @@ export default class Registry<T> {
 		(<any> entries)[(first ? 'unshift' : 'push')](entry);
 
 		return {
-			destroy: function () {
+			destroy: function (this: Handle) {
 				this.destroy = function (): void {};
 				let i = 0;
-				while ((i = entries.indexOf(entry, i)) > -1) {
-					entries.splice(i, 1);
+				if (entries && entry) {
+					while ((i = entries.indexOf(entry, i)) > -1) {
+						entries.splice(i, 1);
+					}
 				}
 				test = value = entries = entry = null;
 			}
@@ -81,5 +83,5 @@ export default class Registry<T> {
  * The interface that a test function must implement.
  */
 export interface Test {
-	(...args: any[]): boolean;
+	(...args: any[]): boolean | null;
 }

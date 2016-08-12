@@ -22,13 +22,13 @@ registerSuite({
 				fsSpy.restore && fsSpy.restore();
 			},
 
-			'should return text and call fs'() {
+			'should return text and call fs'(this: any) {
 				text.load(basePath + 'textLoad.txt', require, this.async().callback((val: string) => {
 					assert.isTrue(fsSpy.calledOnce, 'Read file should be called once');
 					assert.strictEqual(val, 'test', 'Correct text should be returned');
 				}));
 			},
-			'should return text from cache'() {
+			'should return text from cache'(this: any) {
 				text.load(basePath + 'textLoad.txt', require, this.async().callback((val: string) => {
 					assert.isTrue(fsSpy.notCalled, 'Read file should not be called');
 					assert.strictEqual(val, 'test', 'Correct text should be returned');

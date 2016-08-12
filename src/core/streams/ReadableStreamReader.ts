@@ -12,7 +12,7 @@ interface ReadRequest<T> {
  * If the `done` property is true, the stream has no more data to provide.
  */
 export interface ReadResult<T> {
-	value: T;
+	value: T | undefined;
 	done: boolean;
 }
 
@@ -32,12 +32,12 @@ export default class ReadableStreamReader<T> {
 	}
 
 	private _closedPromise: Promise<void>;
-	private _storedError: Error;
+	private _storedError: Error | undefined;
 	private _readRequests: ReadRequest<T>[];
 	private _resolveClosedPromise: () => void;
 	private _rejectClosedPromise: (error: Error) => void;
 
-	protected _ownerReadableStream: ReadableStream<T>;
+	protected _ownerReadableStream: ReadableStream<T> | undefined;
 
 	state: State;
 
@@ -76,8 +76,9 @@ export default class ReadableStreamReader<T> {
 			return Promise.resolve();
 		}
 
+		const storedError = <Error> this._storedError;
 		if (this.state === State.Errored) {
-			return Promise.reject(this._storedError);
+			return Promise.reject(storedError);
 		}
 
 		if (this._ownerReadableStream && this._ownerReadableStream.state === State.Readable) {
@@ -130,7 +131,9 @@ export default class ReadableStreamReader<T> {
 			});
 		}
 		else {
-			const readPromise = new Promise<ReadResult<T>>((resolve, reject) => {
+			// FIXME
+			// tslint:disable-next-line:no-var-keyword
+			var readPromise = new Promise<ReadResult<T>>((resolve, reject) => {
 				this._readRequests.push({
 					promise: readPromise,
 					resolve: resolve,
@@ -167,7 +170,7 @@ export default class ReadableStreamReader<T> {
 	// 3.5.13. ReleaseReadableStreamReader ( reader )
 	release(): void {
 		let request: any;
-		if (this._ownerReadableStream.state === State.Errored) {
+		if (this._ownerReadableStream && this._ownerReadableStream.state === State.Errored) {
 			this.state = State.Errored;
 
 			const e = this._ownerReadableStream.storedError;
@@ -190,7 +193,9 @@ export default class ReadableStreamReader<T> {
 		}
 
 		this._readRequests = [];
-		this._ownerReadableStream.reader = undefined;
+		if (this._ownerReadableStream) {
+			this._ownerReadableStream.reader = undefined;
+		}
 		this._ownerReadableStream = undefined;
 	}
 
@@ -201,11 +206,14 @@ export default class ReadableStreamReader<T> {
 	 */
 	resolveReadRequest(chunk: T): boolean {
 		if (this._readRequests.length > 0) {
-			this._readRequests.shift().resolve({
-				value: chunk,
-				done: false
-			});
-			return true;
+			const readRequest = this._readRequests.shift();
+			if (readRequest) {
+				readRequest.resolve({
+					value: chunk,
+					done: false
+				});
+				return true;
+			}
 		}
 		return false;
 	}

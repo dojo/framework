@@ -24,7 +24,7 @@ registerSuite({
 			'test2'
 		];
 		source = new ArraySource<string>(data);
-		stream = new SeekableStream<string>(source, new CountQueuingStrategy({ highWaterMark: Infinity }));
+		stream = new SeekableStream<string>(source, new CountQueuingStrategy<string>({ highWaterMark: Infinity }));
 		reader = stream.getReader();
 	},
 
@@ -91,7 +91,7 @@ registerSuite({
 		},
 
 		'with non-seekable source: forward'() {
-			source.seek = undefined;
+			source.seek = <any> undefined;
 
 			assert.strictEqual(reader.currentPosition, 0, 'Stream should start with seek position at 0');
 
@@ -104,7 +104,7 @@ registerSuite({
 		},
 
 		'with non-seekable source: backwards'() {
-			source.seek = undefined;
+			source.seek = <any> undefined;
 
 			return reader.read().then(function() {
 				assert.strictEqual(reader.currentPosition, 1, 'Reader should advance seek position');

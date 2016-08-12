@@ -10,7 +10,7 @@ const ASYNC_TIMEOUT = 1000;
 registerSuite({
 	name: 'ByteLengthQueuingStrategy',
 
-	size() {
+	size(this: any) {
 		if (!has('arraybuffer')) {
 			this.skip('ArrayBuffer doesn\'t exist in this environment');
 		}
@@ -41,7 +41,7 @@ registerSuite({
 		});
 	},
 
-	'size with object'() {
+	'size with object'(this: any) {
 		let dfd = this.async(ASYNC_TIMEOUT);
 		let sink = new ManualSink<any>();
 

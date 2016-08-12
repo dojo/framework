@@ -19,15 +19,11 @@ registerSuite(function () {
 
 		beforeEach(): void {
 			parts = [];
-		},
-
-		afterEach(): void {
-			parts = scheduler = null;
-		},
-
-		'callback handling': function () {
-			const dfd = this.async(5000);
 			scheduler = new Scheduler();
+		},
+
+		'callback handling': function (this: any) {
+			const dfd = this.async(5000);
 
 			function c() {
 				a();
@@ -50,7 +46,7 @@ registerSuite(function () {
 			}), 300);
 		},
 
-		'scheduler type': function () {
+		'scheduler type': function (this: any) {
 			const dfd = this.async(5000);
 			const macroScheduler = new Scheduler();
 			scheduler = new Scheduler({ queueFunction: queueMicroTask });
@@ -71,9 +67,8 @@ registerSuite(function () {
 			}), 300);
 		},
 
-		'when deferWhileProcessing is true': function () {
+		'when deferWhileProcessing is true': function (this: any) {
 			const dfd = this.async(5000);
-			scheduler = new Scheduler();
 
 			function test() {
 				scheduler.schedule(function () {
@@ -95,7 +90,7 @@ registerSuite(function () {
 			}), 300);
 		},
 
-		'when deferWhileProcessing is false': function () {
+		'when deferWhileProcessing is false': function (this: any) {
 			const dfd = this.async(5000);
 			scheduler = new Scheduler({ deferWhileProcessing: false });
 
@@ -119,9 +114,8 @@ registerSuite(function () {
 			}), 300);
 		},
 
-		'scheduler.schedule() => handle.destroy()': function () {
+		'scheduler.schedule() => handle.destroy()': function (this: any) {
 			const dfd = this.async(5000);
-			scheduler = new Scheduler();
 
 			function test() {
 				scheduler.schedule(function () {

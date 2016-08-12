@@ -23,7 +23,7 @@ benchmarks.push({
 
 benchmarks.forEach(function (benchmark: any): void {
 	new Benchmark(benchmark.name, benchmark.fn, {
-		onComplete: function () {
+		onComplete: function (this: any) {
 			console.log(this.name + ': ' + this.hz + ' with a margin of error of ' + this.stats.moe);
 		}
 	}).run();

@@ -16,13 +16,13 @@ registerSuite({
 			empty() {
 				// Empty UrlSearchParams should have no properties
 				const params = new UrlSearchParams();
-				assert.isNull(params.get('foo'));
+				assert.isUndefined(params.get('foo'));
 			},
 
 			// Next three tests should generate 'params' objects with same contents
 
 			object() {
-				const params = new UrlSearchParams({ foo: [ 'bar', 'baz' ], bar: 'foo', baz: null });
+				const params = new UrlSearchParams({ foo: [ 'bar', 'baz' ], bar: 'foo', baz: <any> null });
 				checkParams(params);
 			},
 
@@ -40,7 +40,7 @@ registerSuite({
 			},
 
 			UrlSearchParams() {
-				const params1 = new UrlSearchParams({ foo: [ 'bar', 'baz' ], bar: 'foo', baz: null });
+				const params1 = new UrlSearchParams({ foo: [ 'bar', 'baz' ], bar: 'foo', baz: <any> null });
 				const params = new UrlSearchParams(params1);
 				checkParams(params);
 			}
@@ -65,7 +65,7 @@ registerSuite({
 	'#delete'() {
 		const params = new UrlSearchParams({ foo: 'bar' });
 		params.delete('foo');
-		assert.isNull(params.get('foo'));
+		assert.isUndefined(params.get('foo'));
 	},
 
 	'#get'() {
@@ -74,17 +74,17 @@ registerSuite({
 		const params2 = new UrlSearchParams({ foo: [ 'baz', 'bar' ] });
 		assert.strictEqual(params1.get('foo'), 'bar');
 		assert.strictEqual(params2.get('foo'), 'baz');
-		assert.isNull(params2.get('bar'));
+		assert.isUndefined(params2.get('bar'));
 	},
 
 	'#getAll'() {
 		const params = new UrlSearchParams({ foo: [ 'bar', 'baz' ] });
 		assert.deepEqual(params.getAll('foo'), [ 'bar', 'baz' ]);
-		assert.isNull(params.getAll('bar'));
+		assert.isUndefined(params.getAll('bar'));
 	},
 
 	'#has'() {
-		const params = new UrlSearchParams({ foo: 'bar', bar: undefined, baz: [] });
+		const params = new UrlSearchParams({ foo: 'bar', bar: <any> undefined, baz: [] });
 		assert.isTrue(params.has('foo'), 'expected string property to be present');
 		assert.isTrue(params.has('bar'), 'expected undefined property to be present');
 		assert.isTrue(params.has('baz'), 'expected empty array property to be present');
@@ -92,7 +92,7 @@ registerSuite({
 	},
 
 	'#keys'() {
-		const params = new UrlSearchParams({ foo: 'bar', bar: undefined, baz: [] });
+		const params = new UrlSearchParams({ foo: 'bar', bar: <any> undefined, baz: [] });
 		assert.deepEqual(params.keys(), [ 'foo', 'bar', 'baz' ]);
 		params.delete('foo');
 		assert.deepEqual(params.keys(), [ 'bar', 'baz' ]);
@@ -117,18 +117,18 @@ registerSuite({
 		let params = new UrlSearchParams({ foo: [ 'bar', 'baz' ], bar: 'foo' });
 		assert.strictEqual(params.toString(), 'foo=bar&foo=baz&bar=foo');
 
-		params = new UrlSearchParams({ foo: 'bar', baz: null });
+		params = new UrlSearchParams({ foo: 'bar', baz: <any> null });
 		assert.strictEqual(params.toString(), 'foo=bar&baz');
 
-		params = new UrlSearchParams({ foo: 'bar', bar: null, baz: null });
+		params = new UrlSearchParams({ foo: 'bar', bar: <any> null, baz: <any> null });
 		assert.strictEqual(params.toString(), 'foo=bar&bar&baz');
 
-		params = new UrlSearchParams({ foo: 'bar', bar: undefined, baz: [] });
+		params = new UrlSearchParams({ foo: 'bar', bar: <any> undefined, baz: [] });
 		assert.strictEqual(params.toString(), 'foo=bar&bar&baz');
 		params.delete('foo');
 		assert.strictEqual(params.toString(), 'bar&baz');
 
-		params = new UrlSearchParams({ foo: [ null ] });
+		params = new UrlSearchParams({ foo: [ <any> null ] });
 		assert.strictEqual(params.toString(), 'foo');
 	},
 

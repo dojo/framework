@@ -8,7 +8,7 @@ export default class WritableNodeStreamSink implements Sink<NodeSourceType> {
 	protected _isClosed: boolean;
 	protected _nodeStream: NodeJS.WritableStream;
 	protected _onError: (error: Error) => void;
-	protected _rejectWritePromise: Function;
+	protected _rejectWritePromise: Function | undefined;
 
 	constructor(nodeStream: NodeJS.WritableStream, encoding: string = '') {
 		this._isClosed = false;
@@ -48,7 +48,7 @@ export default class WritableNodeStreamSink implements Sink<NodeSourceType> {
 			// TODO: if the node stream returns an error from 'end', should we:
 			// 1. reject this.close with the error? (implemented)
 			// 2. put 'this' into an error state? (this._handleError)
-			this._nodeStream.end(null, null, (error: Error) => {
+			this._nodeStream.end('', undefined, (error: Error) => {
 				if (error) {
 					reject(error);
 				}

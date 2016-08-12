@@ -3,7 +3,7 @@ import { QueueItem, queueTask } from './queue';
 
 function getQueueHandle(item: QueueItem): Handle {
 	return {
-		destroy: function () {
+		destroy: function (this: Handle) {
 			this.destroy = function () {};
 			item.isActive = false;
 			item.callback = null;
@@ -18,16 +18,16 @@ export interface KwArgs {
 
 export default class Scheduler {
 	protected _boundDispatch: () => void;
-	protected _deferred: QueueItem[];
+	protected _deferred: QueueItem[] | null;
 	protected _isProcessing: boolean;
 	protected _queue: QueueItem[];
-	protected _task: Handle;
+	protected _task: Handle | null;
 
 	/**
 	 * Determines whether any callbacks registered during should be added to the current batch (`false`)
 	 * or deferred until the next batch (`true`, default).
 	 */
-	deferWhileProcessing: boolean;
+	deferWhileProcessing: boolean | undefined;
 
 	/**
 	 * Allows users to specify the function that should be used to schedule callbacks.
@@ -52,25 +52,27 @@ export default class Scheduler {
 
 	protected _dispatch(): void {
 		this._isProcessing = true;
-		this._task.destroy();
-		this._task = null;
+		if (this._task) {
+			this._task.destroy();
+			this._task = null;
+		}
 
 		const queue = this._queue;
-		let item: QueueItem;
+		let item: QueueItem | undefined;
 
 		while (item = queue.shift()) {
-			if (item.isActive) {
+			if (item.isActive && item.callback) {
 				item.callback();
 			}
 		}
 
 		this._isProcessing = false;
 
-		let deferred: QueueItem[] = this._deferred;
+		let deferred: QueueItem[] | null = this._deferred;
 		if (deferred && deferred.length) {
 			this._deferred = null;
 
-			let item: QueueItem;
+			let item: QueueItem | undefined;
 			while (item = deferred.shift()) {
 				this._schedule(item);
 			}

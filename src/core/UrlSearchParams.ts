@@ -14,7 +14,7 @@ function parseQueryString(input: string): ParamList {
 	for (const entry of input.split('&')) {
 		const indexOfFirstEquals = entry.indexOf('=');
 		let key: string;
-		let value: string;
+		let value = '';
 
 		if (indexOfFirstEquals >= 0) {
 			key = entry.slice(0, indexOfFirstEquals);
@@ -83,7 +83,7 @@ export default class UrlSearchParams {
 	 * Maps property keys to arrays of values. The value for any property that has been set will be an array containing
 	 * at least one item. Properties that have been deleted will have a value of 'undefined'.
 	 */
-	protected _list: Hash<string[]>;
+	protected _list: Hash<string[] | undefined>;
 
 	/**
 	 * Appends a new value to the set of values for a key.
@@ -95,7 +95,10 @@ export default class UrlSearchParams {
 			this.set(key, value);
 		}
 		else {
-			this._list[key].push(value);
+			const values = this._list[key];
+			if (values) {
+				values.push(value);
+			}
 		}
 	}
 
@@ -115,11 +118,12 @@ export default class UrlSearchParams {
 	 * @param key The key to return the first value for
 	 * @return The first string value for the key
 	 */
-	get(key: string): string {
+	get(key: string): string | undefined {
 		if (!this.has(key)) {
-			return null;
+			return undefined;
 		}
-		return this._list[key][0];
+		const value = this._list[key];
+		return value ? value[0] : undefined;
 	}
 
 	/**
@@ -127,9 +131,9 @@ export default class UrlSearchParams {
 	 * @param key The key to return all values for
 	 * @return An array of strings containing all values for the key
 	 */
-	getAll(key: string): string[] {
+	getAll(key: string): string[] | undefined {
 		if (!this.has(key)) {
-			return null;
+			return undefined;
 		}
 		return this._list[key];
 	}
@@ -180,9 +184,11 @@ export default class UrlSearchParams {
 			}
 
 			const values = this._list[key];
-			const encodedKey = encodeURIComponent(key);
-			for (const value of values) {
-				query.push(encodedKey + (value ? ('=' + encodeURIComponent(value)) : ''));
+			if (values) {
+				const encodedKey = encodeURIComponent(key);
+				for (const value of values) {
+					query.push(encodedKey + (value ? ('=' + encodeURIComponent(value)) : ''));
+				}
 			}
 		}
 

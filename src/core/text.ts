@@ -28,7 +28,7 @@ function strip(text: string): string {
 let getText: (url: string, callback: (value: string) => void) => void;
 
 if (has('host-browser')) {
-	getText = function(url: string, callback: (value: string) => void): void {
+	getText = function(url: string, callback: (value: string | null) => void): void {
 		request(url).then(function(response: Response<string>) {
 			callback(response.data);
 		});
@@ -84,7 +84,7 @@ export function load(id: string, require: Require, load: (value?: any) => void, 
 	let stripFlag = parts.length > 1;
 	let mid = parts[0];
 	let url = require.toUrl(mid);
-	let text: string;
+	let text: string | undefined;
 
 	function finish(text: string): void {
 		load(stripFlag ? strip(text) : text);

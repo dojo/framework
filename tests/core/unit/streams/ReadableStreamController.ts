@@ -28,7 +28,7 @@ registerSuite({
 	'constructor': {
 		'create no stream'() {
 			assert.throws(function () {
-				new ReadableStreamController<string>(null);
+				new ReadableStreamController<string>(<any> null);
 			});
 		},
 

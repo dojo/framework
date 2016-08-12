@@ -73,7 +73,6 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 		ca: options.ca,
 		cert: options.cert,
 		ciphers: options.ciphers,
-		headers: options.headers || {},
 		host: parsedUrl.host,
 		hostname: parsedUrl.hostname,
 		key: options.key,
@@ -88,6 +87,8 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 		socketPath: options.socketPath
 	};
 
+	requestOptions.headers = options.headers || {};
+
 	if (!('user-agent' in requestOptions.headers)) {
 		requestOptions.headers['user-agent'] = 'dojo/' + version + ' Node.js/' + process.version.replace(/^v/, '');
 	}
@@ -99,7 +100,9 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 		}
 
 		let _parsedUrl = urlUtil.parse(requestUrl);
-		requestOptions.headers['host'] = _parsedUrl.host;
+		if (_parsedUrl.host) {
+			requestOptions.headers['host'] = _parsedUrl.host;
+		}
 		requestOptions.auth = _parsedUrl.auth || options.auth;
 	}
 
@@ -110,7 +113,7 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 	const request = (parsedUrl.protocol === 'https:' ? https : http).request(requestOptions);
 	const response: Response<T> = {
 		data: null,
-		getHeader: function (name: string): string {
+		getHeader: function (this: Response<T>, name: string): string {
 			return (this.nativeResponse && this.nativeResponse.headers[name.toLowerCase()]) || null;
 		},
 		requestOptions: options,
@@ -120,7 +123,7 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 
 	const promise = new Task<Response<T>>(function (resolve, reject) {
 		if (options.socketOptions) {
-			if ('timeout' in options.socketOptions) {
+			if (options.socketOptions.timeout) {
 				request.setTimeout(options.socketOptions.timeout);
 			}
 
@@ -129,7 +132,7 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 			}
 
 			if ('keepAlive' in options.socketOptions) {
-				const initialDelay: number = options.socketOptions.keepAlive;
+				const initialDelay: number | undefined = options.socketOptions.keepAlive;
 				request.setSocketKeepAlive(initialDelay >= 0, initialDelay);
 			}
 		}
@@ -165,7 +168,9 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 							resolve(response);
 						},
 						function (error: RequestError<T>) {
-							options.streamTarget.abort(error);
+							if (options.streamTarget) {
+								options.streamTarget.abort(error);
+							}
 							request.abort();
 							error.response = response;
 							reject(error);

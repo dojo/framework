@@ -20,22 +20,22 @@ export default class SizeQueue<T> {
 		return this._queue.length;
 	}
 
-	private _queue: Pair<T>[] = [];
+	private _queue: Pair<T | undefined>[] = [];
 
 	empty() {
 		this._queue = [];
 	}
 
-	enqueue(value: T, size: number): void {
+	enqueue(value: T | undefined, size: number): void {
 		this._queue.push({ value: value, size: size });
 	}
 
-	dequeue(): T {
+	dequeue(): T | null | undefined {
 		const pair = this._queue.shift();
-		return pair.value;
+		return pair ? pair.value : null;
 	}
 
-	peek(): T {
+	peek(): T | undefined {
 		const pair = this._queue[0];
 		return pair.value;
 	}

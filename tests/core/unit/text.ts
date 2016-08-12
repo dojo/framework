@@ -27,7 +27,7 @@ const absPathMock = (val: string) => val;
 registerSuite({
 		name: 'text',
 
-		'get'() {
+		'get'(this: any) {
 			text.get(basePath + 'correctText.txt').then(this.async().callback(function (text: string) {
 				assert.strictEqual(text, 'abc');
 			}));
@@ -54,12 +54,12 @@ registerSuite({
 			}
 		},
 		'load': {
-			'should strip xml'() {
+			'should strip xml'(this: any) {
 				text.load(basePath + 'strip.xml!strip', require, this.async().callback((val: string) => {
 					assert.strictEqual(val, 'abc', 'Should have stripped the XML');
 				}));
 			},
-			'should strip html'() {
+			'should strip html'(this: any) {
 				text.load(basePath + 'strip.html!strip', require, this.async().callback((val: string) => {
 					assert.strictEqual(val, 'abc', 'Should have stripped the XML');
 				}));

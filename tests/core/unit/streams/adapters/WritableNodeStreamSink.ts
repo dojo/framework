@@ -41,19 +41,19 @@ registerSuite({
 		sink = new WritableNodeStreamSink(nodeStream);
 	},
 
-	'start()'() {
+	'start()'(this: any) {
 		let dfd = this.async(1000);
 		sink.start().then(dfd.callback(() => {}));
 	},
 
-	'start() after close'() {
+	'start() after close'(this: any) {
 		let dfd = this.async(1000);
 		sink.close().then(() => {
 			sink.start().then(dfd.reject.bind(dfd), dfd.callback(function () {}));
 		});
 	},
 
-	'write()'() {
+	'write()'(this: any) {
 		let dfd = this.async(1000);
 		let value = 'test';
 		sink.write(value).then(dfd.callback(function () {
@@ -62,14 +62,14 @@ registerSuite({
 		}));
 	},
 
-	'write() that throws'() {
+	'write() that throws'(this: any) {
 		nodeStream.shouldThrowError = true;
 		let dfd = this.async(1000);
 		let value = 'test';
 		sink.write(value).then(dfd.reject.bind(dfd), dfd.callback(function () {}));
 	},
 
-	'write() after close'() {
+	'write() after close'(this: any) {
 		let dfd = this.async(1000);
 		let value = 'test';
 		sink.close().then(function () {
@@ -77,14 +77,14 @@ registerSuite({
 		});
 	},
 
-	'close()'() {
+	'close()'(this: any) {
 		let dfd = this.async(1000);
 		sink.close().then(dfd.callback(function () {
 			assert.isTrue(nodeStream.endCalled);
 		}));
 	},
 
-	'abort()'() {
+	'abort()'(this: any) {
 		let dfd = this.async(1000);
 		sink.abort('some reason').then(dfd.callback(function () {
 			assert.isTrue(nodeStream.endCalled);

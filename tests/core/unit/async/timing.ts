@@ -19,7 +19,7 @@ registerSuite({
 
 	'timeout()': {
 		'called before the timeout; resolves the promise': function () {
-			return Promise.resolve('unused').then(timing.timeout(100, new Error('Error')));
+			return Promise.resolve('unused').then((<any> timing).timeout(100, new Error('Error')));
 		},
 
 		'called after the timeout; rejects the promise': function () {

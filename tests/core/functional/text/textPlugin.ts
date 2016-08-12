@@ -12,7 +12,7 @@ function executeTest(suite: Suite, htmlTestPath: string, testFn: (result: any) =
 		.get(require.toUrl(htmlTestPath))
 		.then(pollUntil<any>(function() {
 			return (<any> window).loaderTestResults;
-		}, null, timeout), undefined)
+		}, undefined, timeout), undefined)
 		.then(testFn, function() {
 			throw new Error('loaderTestResult was not set.');
 		});
@@ -23,25 +23,25 @@ const text = 'abc';
 registerSuite({
 	name: 'text plugin',
 
-	'correct text'() {
+	'correct text'(this: any) {
 		return executeTest(this, './textPlugin.html', function(results: any) {
 			assert.strictEqual(results.text, text);
 		});
 	},
 
-	'strips XML'() {
+	'strips XML'(this: any) {
 		return executeTest(this, './textPluginXML.html', function(results: any) {
 			assert.strictEqual(results.text, text);
 		});
 	},
 
-	'strips HTML'() {
+	'strips HTML'(this: any) {
 		return executeTest(this, './textPluginHTML.html', function(results: any) {
 			assert.strictEqual(results.text, text);
 		});
 	},
 
-	'strips empty file'() {
+	'strips empty file'(this: any) {
 		return executeTest(this, './textPluginEmpty.html', function(results: any) {
 			assert.strictEqual(results.text, '');
 		});
