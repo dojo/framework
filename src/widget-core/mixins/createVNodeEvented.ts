@@ -131,8 +131,7 @@ const createVNodeEvented: VNodeEventedFactory = createEvented.mixin({
 	aspectAdvice: {
 		around: {
 			on(origFn): (...args: any[]) => Handle {
-				return function (...args: any[]): Handle {
-					const evented: VNodeEvented = this;
+				return function (this: VNodeEvented, ...args: any[]): Handle {
 					if (args.length === 2) { /* overload: on(type, listener) */
 						/* During initialization, sometimes the initialize functions occur out of order,
 						 * and Evented's initialize function could be called before this mixins, therefore
@@ -140,27 +139,27 @@ const createVNodeEvented: VNodeEventedFactory = createEvented.mixin({
 						 * determine if the value is unitialized here, ensuring that this.listeners is
 						 * always valid.
 						 */
-						if (evented.listeners === null) {
-							evented.listeners = {};
+						if (this.listeners === null) {
+							this.listeners = {};
 						}
 						let type: string;
 						let listeners: EventedListenerOrArray<TargettedEventObject>;
 						[ type, listeners ] = args;
 						if (Array.isArray(listeners)) {
 							const handles = listeners.map((listener) => isVNodeEvent(type) ?
-								on(evented.listeners, 'on' + type, resolveListener(listener)) :
-								origFn.call(evented, type, listener));
+								on(this.listeners, 'on' + type, resolveListener(listener)) :
+								origFn.call(this, type, listener));
 							return handlesArraytoHandle(handles);
 						}
 						else {
 							return isVNodeEvent(type) ?
-								on(evented.listeners, 'on' + type, resolveListener(listeners)) :
-								origFn.call(evented, type, listeners);
+								on(this.listeners, 'on' + type, resolveListener(listeners)) :
+								origFn.call(this, type, listeners);
 						}
 					}
 					else if (args.length === 1) { /* overload: on(listeners) */
 						const listenerMapArg: EventedListenersMap = args[0];
-						return handlesArraytoHandle(Object.keys(listenerMapArg).map((type) => evented.on(type, listenerMapArg[type])));
+						return handlesArraytoHandle(Object.keys(listenerMapArg).map((type) => this.on(type, listenerMapArg[type])));
 					}
 					else { /* unexpected signature */
 						throw new TypeError('Invalid arguments');
@@ -169,19 +168,18 @@ const createVNodeEvented: VNodeEventedFactory = createEvented.mixin({
 			},
 
 			emit(origFn): <T extends EventObject>(event: T) => void {
-				return function <T extends EventObject>(event: T): void {
-					const evented: VNodeEvented = this;
+				return function <T extends EventObject>(this: VNodeEvented, event: T): void {
 					if (isVNodeEvent(event.type)) {
-						if (evented.listeners === null) {
-							evented.listeners = {};
+						if (this.listeners === null) {
+							this.listeners = {};
 						}
-						const method = evented.listeners['on' + event.type];
+						const method = this.listeners['on' + event.type];
 						if (method) {
-							method.call(evented, event);
+							method.call(this, event);
 						}
 					}
 					else {
-						origFn.call(evented, event);
+						origFn.call(this, event);
 					}
 				};
 			}

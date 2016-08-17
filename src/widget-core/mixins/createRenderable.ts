@@ -52,9 +52,8 @@ export function isRenderable(value: any): value is Renderable {
 const createRenderable: RenderableFactory = createDestroyable
 	.mixin<RenderableMixin, RenderableOptions>({
 		mixin: {
-			render() {
-				const renderable: Renderable = this;
-				return h(renderable.tagName);
+			render(this: Renderable) {
+				return h(this.tagName);
 			},
 
 			tagName: 'div'

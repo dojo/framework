@@ -158,7 +158,7 @@ registerSuite({
 		}
 	},
 	'observer()': {
-		'subscribe'() {
+		'subscribe'(this: any) {
 			const dfd = this.async();
 			const store = createMemoryStore<{ id: number; foo: string; }>();
 			store
@@ -170,7 +170,7 @@ registerSuite({
 					}));
 				});
 		},
-		'receive updates'() {
+		'receive updates'(this: any) {
 			const dfd = this.async();
 			const store = createMemoryStore({
 				data: [
@@ -200,7 +200,7 @@ registerSuite({
 				store.put(item);
 			});
 		},
-		'subscribe to missing id'() {
+		'subscribe to missing id'(this: any) {
 			const dfd = this.async();
 			let callbackCount = 0;
 			let errorCount = 0;
@@ -259,7 +259,7 @@ registerSuite({
 					assert.isFalse(result);
 				});
 		},
-		'complete observable'() {
+		'complete observable'(this: any) {
 			const dfd = this.async();
 			const stack: any[] = [];
 			let complete = false;

@@ -39,7 +39,7 @@ registerSuite({
 			get children(): List<Child> {
 				return;
 			},
-			append(child: any) {
+			append(this: ParentListMixin<Child>, child: any) {
 				assert.strictEqual(child.tagName, 'div');
 				child.parent = this;
 				count++;

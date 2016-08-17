@@ -15,10 +15,10 @@ interface ActionStub extends Action {
 function createAction(): ActionStub {
 	return {
 		callCount: 0,
-		do(options) {
+		do(this: ActionStub) {
 			this.callCount++;
 		},
-		reset() {
+		reset(this: ActionStub) {
 			this.callCount = 0;
 		}
 	};
@@ -38,7 +38,7 @@ const actionMap: { [id: string]: ActionStub } = {
 
 const actionRegistry = {
 	getCalls: <(string | symbol)[]> [],
-	get(id: string | symbol): Promise<Action> {
+	get(this: any, id: string | symbol): Promise<Action> {
 		this.getCalls.push(id);
 		return Promise.resolve(actionMap[id]);
 	},
@@ -210,7 +210,7 @@ registerSuite({
 			});
 		});
 	},
-	'emits error if registry rejects get()'() {
+	'emits error if registry rejects get()'(this: any) {
 		let rejectingRegistry = Object.create(actionRegistry);
 		const expected = new Error();
 		rejectingRegistry.get = () => Promise.reject(expected);

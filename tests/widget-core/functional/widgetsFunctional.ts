@@ -4,14 +4,14 @@ import * as assert from 'intern/chai!assert';
 registerSuite({
 	name: 'interactive',
 
-	setup() {
+	setup(this: any) {
 		return this.remote
 			.get((<any> require).toUrl('./widgets.html'))
 			.setFindTimeout(5000)
 			.findByCssSelector('body.loaded');
 	},
 
-	'Button'() {
+	'Button'(this: any) {
 		return this.remote
 			.findByCssSelector('[data-widget-id=button1]')
 				.click()
@@ -27,7 +27,7 @@ registerSuite({
 				});
 	},
 
-	'TextInput'() {
+	'TextInput'(this: any) {
 		return this.remote
 			.findByCssSelector('[data-widget-id=textinput1]')
 				.click()

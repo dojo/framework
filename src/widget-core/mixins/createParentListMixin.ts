@@ -57,52 +57,48 @@ export interface ParentListMixinFactory extends ComposeFactory<ParentListMixin<C
 const childrenMap = new WeakMap<ParentListMixin<Child>, List<Child>>();
 
 const createParentMixin: ParentListMixinFactory = compose<ParentList<Child>, ParentListMixinOptions<Child>>({
-		get children(): List<Child> {
+		get children(this: ParentListMixin<Child> & { invalidate?(): void; } ): List<Child> {
 			return childrenMap.get(this);
 		},
 
-		set children(value: List<Child>) {
-			const parent: ParentListMixin<Child> & { invalidate?(): void; } = this;
-			if (!value.equals(childrenMap.get(parent))) {
+		set children(this: ParentListMixin<Child> & { invalidate?(): void; }, value: List<Child>) {
+			if (!value.equals(childrenMap.get(this))) {
 				value.forEach((widget) => {
-					if (widget.parent !== parent) {
-						widget.parent = parent;
+					if (widget.parent !== this) {
+						widget.parent = this;
 						/* TODO: If a child gets attached and reattached it may own multiple handles */
-						getRemoveHandle(parent, widget);
+						getRemoveHandle(this, widget);
 					}
 				});
-				childrenMap.set(parent, value);
-				parent.emit({
+				childrenMap.set(this, value);
+				this.emit({
 					type: 'childlist',
-					target: parent,
+					target: this,
 					children: value
 				});
-				if (parent.invalidate) {
-					parent.invalidate();
+				if (this.invalidate) {
+					this.invalidate();
 				}
 			}
 		},
 
-		append(child: Child | Child[]): Handle {
-			const parent: ParentListMixin<Child> = this;
-			parent.children = Array.isArray(child) ? <List<Child>> parent.children.concat(child) : parent.children.push(child);
-			return getRemoveHandle(parent, child);
+		append(this: ParentListMixin<Child>, child: Child | Child[]): Handle {
+			this.children = Array.isArray(child) ? <List<Child>> this.children.concat(child) : this.children.push(child);
+			return getRemoveHandle<Child>(this, child);
 		},
 
-		clear(): void {
-			const parent: ParentListMixin<Child> = this;
-			const children = childrenMap.get(parent);
+		clear(this: ParentListMixin<Child>): void {
+			const children = childrenMap.get(this);
 			if (children) {
 				children.forEach((child) => { child.parent === undefined; });
-				parent.children = List<Child>();
+				this.children = List<Child>();
 			}
 		},
 
-		insert(child: Child, position: Position, reference?: Child): Handle {
-			const parent: ParentListMixin<Child> = this;
-			child.parent = parent;
-			parent.children = insertInList(childrenMap.get(parent), child, position, reference);
-			return getRemoveHandle(parent, child);
+		insert(this: ParentListMixin<Child>, child: Child, position: Position, reference?: Child): Handle {
+			child.parent = this;
+			this.children = insertInList(childrenMap.get(this), child, position, reference);
+			return getRemoveHandle(this, child);
 		}
 	})
 	.mixin({

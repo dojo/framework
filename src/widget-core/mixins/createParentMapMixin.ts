@@ -73,49 +73,45 @@ function mapChildArray<C extends Child>(parent: ParentMap<C>, children: C[]): Ch
 }
 
 const createParentMapMixin: ParentMapMixinFactory = compose<ParentMap<Child>, ParentMapMixinOptions<Child>>({
-		get children(): Map<string, Child> {
+		get children(this: ParentMapMixin<Child> & { invalidate?(): void; }): Map<string, Child> {
 			return childrenMap.get(this);
 		},
 
-		set children(value: Map<string, Child>) {
-			const parent: ParentMapMixin<Child> & { invalidate?(): void; } = this;
-			if (!value.equals(childrenMap.get(parent))) {
+		set children(this: ParentMapMixin<Child> & { invalidate?(): void; }, value: Map<string, Child>) {
+			if (!value.equals(childrenMap.get(this))) {
 				value.forEach((widget) => {
-					if (widget.parent !== parent) {
-						widget.parent = parent;
+					if (widget.parent !== this) {
+						widget.parent = this;
 						/* TODO: If a child gets attached and reattached it may own multiple handles */
-						getRemoveHandle(parent, widget);
+						getRemoveHandle(this, widget);
 					}
 				});
-				childrenMap.set(parent, value);
-				parent.emit({
+				childrenMap.set(this, value);
+				this.emit({
 					type: 'childlist',
-					target: parent,
+					target: this,
 					children: value
 				});
-				if (parent.invalidate) {
-					parent.invalidate();
+				if (this.invalidate) {
+					this.invalidate();
 				}
 			}
 		},
 
-		append(child: Child | Child[]): Handle {
-			const parent: ParentMapMixin<Child> = this;
-			parent.children = Array.isArray(child) ?
-				parent.children.merge(mapChildArray(parent, child)) :
-				parent.children.set(getChildKey(parent, child), child);
-			return getRemoveHandle(parent, child);
+		append(this: ParentMapMixin<Child>, child: Child | Child[]): Handle {
+			this.children = Array.isArray(child) ?
+				this.children.merge(mapChildArray(this, child)) :
+				this.children.set(getChildKey(this, child), child);
+			return getRemoveHandle<Child>(this, child);
 		},
 
-		merge(children: ChildrenMap<Child>): Handle {
-			const parent: ParentMapMixin<Child> = this;
-			parent.children = parent.children.merge(children);
-			return getRemoveHandle(parent, children);
+		merge(this: ParentMapMixin<Child>, children: ChildrenMap<Child>): Handle {
+			this.children = this.children.merge(children);
+			return getRemoveHandle(this, children);
 		},
 
-		clear() {
-			const parent: ParentMapMixin<Child> = this;
-			parent.children = Map<string, Child>();
+		clear(this: ParentMapMixin<Child>) {
+			this.children = Map<string, Child>();
 		}
 	})
 	.mixin({

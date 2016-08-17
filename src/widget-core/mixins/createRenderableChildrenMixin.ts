@@ -28,15 +28,11 @@ export interface RenderableChildrenMixin {
 export interface RenderableChildrenFactory extends ComposeFactory<RenderableChildrenMixin, RenderableChildrenOptions> {}
 
 const createRenderableChildrenMixin: RenderableChildrenFactory = compose<RenderableChildrenMixin, RenderableChildrenOptions>({
-	getChildrenNodes(): (VNode | string)[] {
-		/* When this gets mixed in, if we had the children as part of the interface, we would end up overwritting what is
-		 * likely a get accessor for the children, so to protect ourselves, we won't have it part of the interface */
-		const renderableChildren: RenderableChildrenMixin & {
-			children: List<Child>; /* While this could be a Map, it still has .enteries and .forEach that behave in the
-									* same way as we would expect in order to provide the functionality at runtime */
-		} = this;
+	/* When this gets mixed in, if we had the children as part of the interface, we would end up overwritting what is
+	 * likely a get accessor for the children, so to protect ourselves, we won't have it part of the interface */
+	getChildrenNodes(this: RenderableChildrenMixin & { children: List<Child>; }): (VNode | string)[] {
 		const results: (VNode | string)[] = [];
-		const { children, sort } = renderableChildren;
+		const { children, sort } = this;
 		if (sort) {
 			arrayFrom(<ChildEntry<Child>[]> <any> children.entries()).sort(sort)
 				.forEach(([ , child ]) => results.push(child.render()));

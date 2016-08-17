@@ -34,7 +34,7 @@ registerSuite({
 		}
 	},
 	'.setState()': {
-		'configure'() {
+		'configure'(this: any) {
 			const dfd = this.async();
 
 			const dijit = createDijit();
@@ -57,7 +57,7 @@ registerSuite({
 			const vnode = dijit.render();
 			assert.strictEqual(vnode.vnodeSelector, 'button');
 		},
-		'afterCreate'() {
+		'afterCreate'(this: any) {
 			const dfd = this.async();
 
 			const dijit = createDijit({
@@ -76,7 +76,7 @@ registerSuite({
 				assert.deepEqual(dijit.dijit._destroyCalled, 0);
 			}), 50);
 		},
-		'afterCreate w/ mid'() {
+		'afterCreate w/ mid'(this: any) {
 			const dfd = this.async();
 
 			const dijit = createDijit<Dijit>({
@@ -95,7 +95,7 @@ registerSuite({
 				assert.deepEqual(dijit.dijit._destroyCalled, 0);
 			}), 50);
 		},
-		'afterCreate w/ load from cache'() {
+		'afterCreate w/ load from cache'(this: any) {
 			const dfd = this.async();
 
 			const dijit = createDijit<Dijit>({
@@ -114,7 +114,7 @@ registerSuite({
 				assert.deepEqual(dijit.dijit._destroyCalled, 0);
 			}), 50);
 		},
-		'afterCreate w/ no Ctor'() {
+		'afterCreate w/ no Ctor'(this: any) {
 			const dfd = this.async(100);
 
 			const dijit = createDijit();
@@ -129,7 +129,7 @@ registerSuite({
 			const domNode = document.createElement(vnode.vnodeSelector);
 			vnode.properties.afterCreate(domNode, {}, vnode.vnodeSelector, {}, []);
 		},
-		'afterCreate w/ bad mid'() {
+		'afterCreate w/ bad mid'(this: any) {
 			const dfd = this.async();
 
 			const dijit = createDijit({
@@ -146,7 +146,7 @@ registerSuite({
 			const domNode = document.createElement(vnode.vnodeSelector);
 			vnode.properties.afterCreate(domNode, {}, vnode.vnodeSelector, vnode.properties, vnode.children);
 		},
-		'afterCreate w/ Ctor throws'() {
+		'afterCreate w/ Ctor throws'(this: any) {
 			const dfd = this.async(100);
 
 			const dijit = createDijit({
@@ -164,7 +164,7 @@ registerSuite({
 			const domNode = document.createElement(vnode.vnodeSelector);
 			vnode.properties.afterCreate(domNode, {}, vnode.vnodeSelector, vnode.properties, vnode.children);
 		},
-		'afterCreate - new dom node'() {
+		'afterCreate - new dom node'(this: any) {
 			const dfd = this.async();
 			const dijit = createDijit({
 				Ctor: Dijit,
@@ -198,7 +198,7 @@ registerSuite({
 
 			return dijit.destroy();
 		},
-		'after dijit creation'() {
+		'after dijit creation'(this: any) {
 			const dfd = this.async();
 			const dijit = createDijit({
 				Ctor: Dijit

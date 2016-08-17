@@ -13,7 +13,7 @@ registerSuite({
 		assert.isObject(parent.children);
 	},
 	'on("childlist")': {
-		'append()'() {
+		'append()'(this: any) {
 			const dfd = this.async();
 			const parent = createParentListMixin();
 			const child = createRenderable();

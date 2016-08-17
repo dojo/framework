@@ -31,12 +31,11 @@ export interface CloseableMixinFactory extends ComposeFactory<CloseableMixin<Clo
 const createCloseableMixin: CloseableMixinFactory = createStateful
 	.mixin({
 		mixin: {
-			close(): Promise<boolean> {
-				const closeable: CloseableMixin<CloseableState> = this;
-				if (closeable.state.closeable) {
-					const event = createCancelableEvent({ type: 'close', target: closeable });
-					closeable.emit(event);
-					return event.defaultPrevented ? Promise.resolve(false) : closeable.destroy();
+			close(this: CloseableMixin<CloseableState>): Promise<boolean> {
+				if (this.state.closeable) {
+					const event = createCancelableEvent({ type: 'close', target: this });
+					this.emit(event);
+					return event.defaultPrevented ? Promise.resolve(false) : this.destroy();
 				}
 				return Promise.resolve(false);
 			}

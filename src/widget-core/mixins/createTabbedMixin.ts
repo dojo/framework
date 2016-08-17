@@ -175,11 +175,11 @@ const createTabbedMixin: TabbedMixinFactory = createCachedRenderMixin
 				tab: 'li'
 			},
 
-			get activeChild(): TabbedChild {
+			get activeChild(this: TabbedMixin<TabbedChild>): TabbedChild {
 				return getActiveTab(this);
 			},
 
-			set activeChild(value: TabbedChild) {
+			set activeChild(this: TabbedMixin<TabbedChild>, value: TabbedChild) {
 				setActiveTab(this, value);
 			}
 		}
@@ -189,8 +189,8 @@ const createTabbedMixin: TabbedMixinFactory = createCachedRenderMixin
 	.extend({
 		tagName: 'dojo-panel-mixin',
 
-		getChildrenNodes(): (VNode | string)[] {
-			const tabbed: TabbedMixin<TabbedChild> = this;
+		getChildrenNodes(this: TabbedMixin<TabbedChild>): (VNode | string)[] {
+			const tabbed = this;
 			const activeTab = getActiveTab(tabbed);
 
 			function getTabChildVNode(tab: TabbedChild): (VNode | string)[] {

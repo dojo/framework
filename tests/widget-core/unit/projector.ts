@@ -16,7 +16,7 @@ registerSuite({
 	setup() {
 		projector.clear();
 	},
-	basic() {
+	basic(this: any) {
 		const dfd = this.async();
 		const childNodeLength = document.body.childNodes.length;
 		let nodeText = 'foo';
@@ -44,7 +44,7 @@ registerSuite({
 			}, 300);
 		}).catch(dfd.reject);
 	},
-	'lifecycle'() {
+	'lifecycle'(this: any) {
 		const dfd = this.async();
 		const div = document.createElement('div');
 		document.body.appendChild(div);
@@ -119,7 +119,7 @@ registerSuite({
 			handle.destroy();
 		});
 	},
-	'append()'() {
+	'append()'(this: any) {
 		const dfd = this.async();
 		const projector = createProjector();
 		const div = document.createElement('div');
@@ -142,7 +142,7 @@ registerSuite({
 			}), 300);
 		}).catch(dfd.reject);
 	},
-	'insert()'() {
+	'insert()'(this: any) {
 		const dfd = this.async();
 		const projector = createProjector();
 		const div = document.createElement('div');

@@ -119,22 +119,21 @@ function constructDijitWidget(dijit: Dijit<DijitWidget>, srcNodeRef: Node): Prom
  * is added to the flow of the real DOM
  * @param element The DOM Element that is being
  */
-function afterCreate(element: HTMLElement) {
-	const dijit: Dijit<DijitWidget> = this;
-	const dijitData = dijitDataWeakMap.get(dijit);
+function afterCreate(this: Dijit<DijitWidget>, element: HTMLElement) {
+	const dijitData = dijitDataWeakMap.get(this);
 	if (dijitData.dijitWidget) {
 		element.parentNode.insertBefore(dijitData.dijitWidget.domNode, element);
 		element.parentNode.removeChild(element);
 	}
 	else {
-		constructDijitWidget(dijit, element)
+		constructDijitWidget(this, element)
 			.then((dijitWidget) => {
 				dijitData.dijitWidget = dijitWidget;
 			}, (error) => {
-				dijit.emit({
+				this.emit({
 					type: 'error',
 					error,
-					target: dijit
+					target: this
 				});
 			});
 	}
@@ -220,24 +219,20 @@ const createDijit: DijitFactory = createRenderable
 	.mixin(createStateful)
 	.mixin({
 		mixin: <DijitMixin<DijitWidget>> {
-			render(): VNode {
-				const dijit: Dijit<DijitWidget> = this;
-				const afterCreate = dijitDataWeakMap.get(dijit).afterCreate;
-				return h(dijit.tagName, { afterCreate });
+			render(this: Dijit<DijitWidget>): VNode {
+				const afterCreate = dijitDataWeakMap.get(this).afterCreate;
+				return h(this.tagName, { afterCreate });
 			},
-			get dijit(): DijitWidget {
-				const dijit: Dijit<DijitWidget> = this;
-				return dijitDataWeakMap.get(dijit).dijitWidget;
+			get dijit(this: Dijit<DijitWidget>): DijitWidget {
+				return dijitDataWeakMap.get(this).dijitWidget;
 			},
 
-			get Ctor(): DijitWidgetConstructor<DijitWidget> | string {
-				const dijit: Dijit<DijitWidget> = this;
-				return dijitDataWeakMap.get(dijit).Ctor;
+			get Ctor(this: Dijit<DijitWidget>): DijitWidgetConstructor<DijitWidget> | string {
+				return dijitDataWeakMap.get(this).Ctor;
 			},
 
-			get params(): DijitWidgetParams {
-				const dijit: Dijit<DijitWidget> = this;
-				return dijitDataWeakMap.get(dijit).params;
+			get params(this: Dijit<DijitWidget>): DijitWidgetParams {
+				return dijitDataWeakMap.get(this).params;
 			}
 		},
 		initialize(instance: Dijit<DijitWidget>, options: DijitOptions<DijitWidget>) {

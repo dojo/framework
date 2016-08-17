@@ -225,23 +225,21 @@ function wrapError(store: MemoryStore<Object>, result: Error): MemoryStorePromis
 const createMemoryStore = compose<MemoryStoreMixin<Object>, MemoryStoreOptions<Object>>({
 		idProperty: 'id',
 
-		get(id: StoreIndex): MemoryStorePromise<Object> {
-			const store: MemoryStore<Object> = this;
-			const data = dataWeakMap.get(store);
-			return wrapResult(store, data && data.get(String(id)));
+		get(this: MemoryStore<Object>, id: StoreIndex): MemoryStorePromise<Object> {
+			const data = dataWeakMap.get(this);
+			return wrapResult(this, data && data.get(String(id)));
 		},
 
-		observe<T>(id?: StoreIndex): Observable<T> {
-			const store: MemoryStore<Object> = this;
+		observe<T>(this: MemoryStore<Object>, id?: StoreIndex): Observable<T> {
 			if (id) {
-				return new Observable<T>(function subscribe(observer: Observer<T>) {
-					store.get(String(id)).then((item: T) => {
+				return new Observable<T>((observer: Observer<T>) => {
+					this.get(String(id)).then((item: T) => {
 						if (item) {
 							observer.next(item);
-							const observers = itemObserverWeakMap.get(store);
+							const observers = itemObserverWeakMap.get(this);
 							const observerArray: Observer<Object>[] = observers && observers.has(String(id)) ? observers.get(String(id)) : [];
 							observerArray.push(observer);
-							itemObserverWeakMap.set(store, (observers ? observers : Map<StoreIndex, Observer<Object>[]>()).set(String(id), observerArray));
+							itemObserverWeakMap.set(this, (observers ? observers : Map<StoreIndex, Observer<Object>[]>()).set(String(id), observerArray));
 						}
 						else {
 							observer.error(new Error(`ID "${id}" not found in store`));
@@ -256,47 +254,45 @@ const createMemoryStore = compose<MemoryStoreMixin<Object>, MemoryStoreOptions<O
 			}
 		},
 
-		put(item: { [property: string]: number | string; }, options?: MemoryStorePragma): MemoryStorePromise<Object> {
-			const store: MemoryStore<Object> = this;
-			const data = dataWeakMap.get(store);
-			const idProperty = store.idProperty;
+		put(this: MemoryStore<Object>, item: { [property: string]: number | string; }, options?: MemoryStorePragma): MemoryStorePromise<Object> {
+			const data = dataWeakMap.get(this);
+			const idProperty = this.idProperty;
 			const id =  options && 'id' in options
 				? options.id
 				: idProperty in item
 					? item[idProperty]
 					: getUID();
 			if (options && options.replace === false && data && data.has(String(id))) {
-				return wrapError(store, Error(`Duplicate ID "${id}" when pragma "replace" is false`));
+				return wrapError(this, Error(`Duplicate ID "${id}" when pragma "replace" is false`));
 			}
 			item[idProperty] = id;
-			dataWeakMap.set(store, (data ? data : OrderedMap<StoreIndex, Object>()).set(String(id), item));
+			dataWeakMap.set(this, (data ? data : OrderedMap<StoreIndex, Object>()).set(String(id), item));
 
-			const observers = itemObserverWeakMap.get(store);
+			const observers = itemObserverWeakMap.get(this);
 			if (observers && observers.has(String(id))) {
 				observers.get(String(id)).forEach((observer) => observer.next(item));
 			}
-			return wrapResult(store, item);
+			return wrapResult(this, item);
 		},
 
-		add(item: Object, options?: MemoryStorePragma): MemoryStorePromise<Object> {
+		add(this: MemoryStore<Object>, item: Object, options?: MemoryStorePragma): MemoryStorePromise<Object> {
 			return this.put(item, assign(options ? options : {}, { replace: false }));
 		},
 
-		patch(partial: { [property: string]: number | string; }, options?: MemoryStorePragma): MemoryStorePromise<Object> {
-			const store: MemoryStore<Object> = this;
-			const idProperty = store.idProperty;
+		patch(this: MemoryStore<Object>, partial: { [property: string]: number | string; }, options?: MemoryStorePragma): MemoryStorePromise<Object> {
+			const idProperty = this.idProperty;
 			const id = options && 'id' in options ? options.id : partial[idProperty];
 			if (!id) {
-				return wrapError(store, new Error(`Object ID must either be passed in "partial.${idProperty}" or "options.id"`));
+				return wrapError(this, new Error(`Object ID must either be passed in "partial.${idProperty}" or "options.id"`));
 			}
-			return wrapResult(store, store.get(id).then((item) => {
+			return wrapResult(this, this.get(id).then((item) => {
 				options = options || {};
 				options.id = id;
-				return store.put(assign(item || {}, partial), options);
+				return this.put(assign(item || {}, partial), options);
 			}));
 		},
 
-		delete(item: StoreIndex | { [property: string]: number | string; }): MemoryStorePromise<boolean> {
+		delete(this: MemoryStore<Object>, item: StoreIndex | { [property: string]: number | string; }): MemoryStorePromise<boolean> {
 			const store: MemoryStore<Object> = this;
 
 			/**
@@ -328,7 +324,7 @@ const createMemoryStore = compose<MemoryStoreMixin<Object>, MemoryStoreOptions<O
 			}
 			return wrapResult(store, false);
 		},
-		fromArray(items: Object[]): MemoryStorePromise<void> {
+		fromArray(this: MemoryStore<Object>, items: Object[]): MemoryStorePromise<void> {
 			const store: MemoryStore<Object> = this;
 			const map: Object = {};
 			const idProperty = store.idProperty;

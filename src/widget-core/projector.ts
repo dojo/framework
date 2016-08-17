@@ -141,43 +141,40 @@ const emptyVNode = h('div');
 const noopVNode = function(): VNode { return emptyVNode; };
 
 export const createProjector: ProjectorFactory = compose<ProjectorMixin, ProjectorOptions>({
-		getNodeAttributes(overrides?: VNodeProperties): VNodeProperties {
+		getNodeAttributes(this: Projector, overrides?: VNodeProperties): VNodeProperties {
 			/* TODO: This is the same logic as createCachedRenderMixin, merge somehow */
-			const projector: Projector = this;
 			const props: VNodeProperties = {};
-			for (let key in projector.listeners) {
-				props[key] = projector.listeners[key];
+			for (let key in this.listeners) {
+				props[key] = this.listeners[key];
 			}
 			const classes: { [index: string]: boolean; } = {};
-			if (projector.classes) {
-				projector.classes.forEach((c) => classes[c] = true);
+			if (this.classes) {
+				this.classes.forEach((c) => classes[c] = true);
 			}
 			props.classes = classes;
-			props.styles = projector.styles || {};
+			props.styles = this.styles || {};
 			if (overrides) {
 				assign(props, overrides);
 			}
 			return props;
 		},
-		render(): VNode {
-			const projector: Projector = this;
-			const projectorData = projectorDataMap.get(projector);
+		render(this: Projector): VNode {
+			const projectorData = projectorDataMap.get(this);
 			const childVNodes: VNode[] = [];
-			projector.children.forEach((child) => childVNodes.push(child.render()));
-			const props = projector.getNodeAttributes();
+			this.children.forEach((child) => childVNodes.push(child.render()));
+			const props = this.getNodeAttributes();
 			props.afterCreate = projectorData.afterInitialCreate;
 			return h(projectorData.tagName, props, childVNodes);
 		},
-		attach({ type, tagName = 'div' }: AttachOptions = {}): Promise<Handle> {
-			const projector: Projector = this;
-			const projectorData = projectorDataMap.get(projector);
+		attach(this: Projector, { type, tagName = 'div' }: AttachOptions = {}): Promise<Handle> {
+			const projectorData = projectorDataMap.get(this);
 			if (projectorData.state === ProjectorState.Attached) {
 				return projectorData.attachPromise;
 			}
-			projectorData.boundRender = projector.render.bind(projector);
+			projectorData.boundRender = this.render.bind(this);
 			projectorData.tagName = tagName;
 			projectorData.state = ProjectorState.Attached;
-			projectorData.attachHandle = projector.own({
+			projectorData.attachHandle = this.own({
 				destroy() {
 					if (projectorData.state === ProjectorState.Attached) {
 						projectorData.projector.stop();
@@ -202,7 +199,7 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 			projectorData.attachPromise = new Promise((resolve, reject) => {
 				projectorData.afterInitialCreate = () => {
 					try {
-						projector.emit({ type: 'attach' });
+						this.emit({ type: 'attach' });
 						resolve(projectorData.attachHandle);
 					} catch (err) {
 						reject(err);
@@ -231,18 +228,17 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 
 			return projectorData.attachPromise;
 		},
-		invalidate(): void {
-			const projector: Projector = this;
-			const projectorData = projectorDataMap.get(projector);
+		invalidate(this: Projector): void {
+			const projectorData = projectorDataMap.get(this);
 			if (projectorData.state === ProjectorState.Attached) {
-				projector.emit({
+				this.emit({
 					type: 'schedulerender',
-					target: projector
+					target: this
 				});
 				projectorData.projector.scheduleRender();
 			}
 		},
-		setRoot(root: Element): void {
+		setRoot(this: Projector, root: Element): void {
 			const projectorData = projectorDataMap.get(this);
 			if (projectorData.state === ProjectorState.Attached) {
 				throw new Error('Projector already attached, cannot change root element');
@@ -250,21 +246,21 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 			projectorData.root = root;
 		},
 
-		get root(): Element {
+		get root(this: Projector): Element {
 			const projectorData = projectorDataMap.get(this);
 			return projectorData && projectorData.root;
 		},
 
-		get projector(): MaquetteProjector {
+		get projector(this: Projector): MaquetteProjector {
 			return projectorDataMap.get(this).projector;
 		},
 
-		get document(): Document {
+		get document(this: Projector): Document {
 			const projectorData = projectorDataMap.get(this);
 			return projectorData && projectorData.root && projectorData.root.ownerDocument;
 		},
 
-		get state(): ProjectorState {
+		get state(this: Projector): ProjectorState {
 			const projectorData = projectorDataMap.get(this);
 			return projectorData && projectorData.state;
 		}
@@ -295,9 +291,8 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 		},
 		aspectAdvice: {
 			after: {
-				clear(): void {
-					const projector: Projector = this;
-					projector.invalidate();
+				clear(this: Projector): void {
+					this.invalidate();
 				}
 			}
 		}

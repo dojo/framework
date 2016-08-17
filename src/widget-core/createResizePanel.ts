@@ -144,9 +144,8 @@ const createResizePanel: ResizePanelFactory = createWidget
 			tagNames: {
 				handle: 'dojo-resize-handle'
 			},
-			get width(): string {
-				const resizePanel: ResizePanel = this;
-				return resizePanel.state && resizePanel.state && resizePanel.state.width;
+			get width(this: ResizePanel): string {
+				return this.state && this.state && this.state.width;
 			},
 			set width(value: string) {
 				const resizePanel: ResizePanel = this;
@@ -155,16 +154,14 @@ const createResizePanel: ResizePanelFactory = createWidget
 		},
 		aspectAdvice: {
 			after: {
-				getChildrenNodes(result: (VNode | string)[]): (VNode | string)[] {
-					const resizePanel: ResizePanel = this;
-					result.push(h(resizePanel.tagNames.handle, resizeNodePropertiesMap.get(resizePanel)));
+				getChildrenNodes(this: ResizePanel, result: (VNode | string)[]): (VNode | string)[] {
+					result.push(h(this.tagNames.handle, resizeNodePropertiesMap.get(this)));
 					return result;
 				},
-				getNodeAttributes(result: VNodeProperties) {
-					const resizePanel: ResizePanel = this;
+				getNodeAttributes(this: ResizePanel, result: VNodeProperties) {
 					result = result || {};
 					result.styles = result.styles || {};
-					result.styles['width'] = resizePanel.width || '200px';
+					result.styles['width'] = this.width || '200px';
 					return result;
 				}
 			}

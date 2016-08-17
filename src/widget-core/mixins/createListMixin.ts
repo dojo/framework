@@ -51,11 +51,10 @@ export interface ListMixinFactory extends ComposeFactory<ListMixin, StatefulOpti
 const createListMixin: ListMixinFactory = createStateful
 	.mixin({
 		mixin: <List> {
-			getChildrenNodes(): (VNode | string)[] {
-				const list: ListMixin = this;
-				if (list.state && list.state.items) {
-					const items = list.state.items;
-					return [ h(list.tagNames.list, items.map((item) => h(list.tagNames.item, { key: item }, [ item.label ]))) ];
+			getChildrenNodes(this: ListMixin): (VNode | string)[] {
+				if (this.state && this.state.items) {
+					const items = this.state.items;
+					return [ h(this.tagNames.list, items.map((item) => h(this.tagNames.item, { key: item }, [ item.label ]))) ];
 				}
 				return [];
 			},

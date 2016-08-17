@@ -147,37 +147,35 @@ const createCachedRenderMixin = createStateful
 	})
 	.mixin({
 		mixin: <CachedRender> {
-			getNodeAttributes(overrides?: VNodeProperties): VNodeProperties {
-				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				const props: VNodeProperties = cachedRender.state && cachedRender.state.id ? { 'data-widget-id': cachedRender.state.id } : {};
-				for (let key in cachedRender.listeners) {
-					props[key] = cachedRender.listeners[key];
+			getNodeAttributes(this: CachedRenderMixin<CachedRenderState>, overrides?: VNodeProperties): VNodeProperties {
+				const props: VNodeProperties = this.state && this.state.id ? { 'data-widget-id': this.state.id } : {};
+				for (let key in this.listeners) {
+					props[key] = this.listeners[key];
 				}
 				const classes: { [index: string]: boolean; } = {};
-				const widgetClasses = widgetClassesMap.get(cachedRender);
+				const widgetClasses = widgetClassesMap.get(this);
 
 				widgetClasses.forEach((c) => classes[c] = false);
 
-				if (cachedRender.classes) {
-					cachedRender.classes.forEach((c) => classes[c] = true);
-					widgetClassesMap.set(cachedRender, cachedRender.classes);
+				if (this.classes) {
+					this.classes.forEach((c) => classes[c] = true);
+					widgetClassesMap.set(this, this.classes);
 				}
 
 				props.classes = classes;
-				props.styles = cachedRender.styles || {};
-				props.key = cachedRender;
+				props.styles = this.styles || {};
+				props.key = this;
 				if (overrides) {
 					assign(props, overrides);
 				}
 				return props;
 			},
 
-			getChildrenNodes(): (VNode | string)[] {
-				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				return cachedRender.state.label ? [ cachedRender.state.label ] : undefined;
+			getChildrenNodes(this: CachedRenderMixin<CachedRenderState>): (VNode | string)[] {
+				return this.state.label ? [ this.state.label ] : undefined;
 			},
 
-			render(): VNode {
+			render(this: CachedRenderMixin<CachedRenderState>): VNode {
 				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
 				let cached = renderCache.get(cachedRender);
 				if (!dirtyMap.get(cachedRender) && cached) {
@@ -191,53 +189,47 @@ const createCachedRenderMixin = createStateful
 				}
 			},
 
-			invalidate(): void {
-				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				if (dirtyMap.get(cachedRender)) { /* short circuit if already dirty */
+			invalidate(this: CachedRenderMixin<CachedRenderState>): void {
+				if (dirtyMap.get(this)) { /* short circuit if already dirty */
 					return;
 				}
-				const parent = cachedRender.parent;
-				dirtyMap.set(cachedRender, true);
-				renderCache.delete(cachedRender); /* Allow GC to occur on renderCache */
+				const parent = this.parent;
+				dirtyMap.set(this, true);
+				renderCache.delete(this); /* Allow GC to occur on renderCache */
 				if (parent && parent.invalidate) {
 					parent.invalidate();
 				}
 			},
 
-			get id(): string {
-				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				return (cachedRender.state && cachedRender.state.id) || generateID(cachedRender);
+			get id(this: CachedRenderMixin<CachedRenderState>): string {
+				return (this.state && this.state.id) || generateID(this);
 			},
 
-			get classes(): string[] {
-				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				return (cachedRender.state && cachedRender.state.classes) || shadowClasses.get(cachedRender);
+			get classes(this: CachedRenderMixin<CachedRenderState>): string[] {
+				return (this.state && this.state.classes) || shadowClasses.get(this);
 			},
 
-			set classes(value: string[]) {
-				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				if (cachedRender.state.classes) {
-					cachedRender.setState({ classes: value });
+			set classes(this: CachedRenderMixin<CachedRenderState>, value: string[]) {
+				if (this.state.classes) {
+					this.setState({ classes: value });
 				}
 				else {
-					shadowClasses.set(cachedRender, value);
-					cachedRender.invalidate();
+					shadowClasses.set(this, value);
+					this.invalidate();
 				}
 			},
 
-			get styles(): StylesHash {
-				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				return (cachedRender.state && cachedRender.state.styles) || shadowStyles.get(cachedRender);
+			get styles(this: CachedRenderMixin<CachedRenderState>): StylesHash {
+				return (this.state && this.state.styles) || shadowStyles.get(this);
 			},
 
-			set styles(value: StylesHash) {
-				const cachedRender: CachedRenderMixin<CachedRenderState> = this;
-				if (cachedRender.state.styles) {
-					cachedRender.setState({ styles: value });
+			set styles(this: CachedRenderMixin<CachedRenderState>, value: StylesHash) {
+				if (this.state.styles) {
+					this.setState({ styles: value });
 				}
 				else {
-					shadowStyles.set(cachedRender, value);
-					cachedRender.invalidate();
+					shadowStyles.set(this, value);
+					this.invalidate();
 				}
 			}
 		},

@@ -58,24 +58,22 @@ export interface FormMixinFactory extends ComposeFactory<FormFieldMixin<any, For
 }
 
 const createFormMixin: FormMixinFactory = compose({
-		get value(): string {
-			const formfield: FormFieldMixin<any, FormFieldMixinState<any>> = this;
-			return valueToString(formfield.state.value);
+		get value(this: FormFieldMixin<any, FormFieldMixinState<any>>): string {
+			return valueToString(this.state.value);
 		},
 
-		set value(value: string) {
-			const formfield: FormFieldMixin<any, FormFieldMixinState<any>> = this;
-			if (value !== formfield.state.value) {
+		set value(this: FormFieldMixin<any, FormFieldMixinState<any>>, value: string) {
+			if (value !== this.state.value) {
 				const event = assign(createCancelableEvent({
 					type: 'valuechange',
-					target: formfield
+					target: this
 				}), {
-					oldValue: valueToString(formfield.state.value),
+					oldValue: valueToString(this.state.value),
 					value
 				});
-				formfield.emit(event);
+				this.emit(event);
 				if (!event.defaultPrevented) {
-					formfield.setState({ value: stringToValue(event.value) });
+					this.setState({ value: stringToValue(event.value) });
 				}
 			}
 		}
@@ -102,19 +100,18 @@ const createFormMixin: FormMixinFactory = compose({
 		mixin: createCachedRenderMixin,
 		aspectAdvice: {
 			before: {
-				getNodeAttributes(...args: any[]) {
-					const formfield: FormFieldMixin<any, FormFieldMixinState<any>> = this;
+				getNodeAttributes(this: FormFieldMixin<any, FormFieldMixinState<any>>, ...args: any[]) {
 					const overrides: VNodeProperties = {};
 
-					if (formfield.type) {
-						overrides['type'] = formfield.type;
+					if (this.type) {
+						overrides['type'] = this.type;
 					}
 					/* value should always be copied */
-					overrides.value = formfield.value;
-					if ('name' in formfield.state) {
-						overrides.name = formfield.state.name;
+					overrides.value = this.value;
+					if ('name' in this.state) {
+						overrides.name = this.state.name;
 					}
-					if (formfield.state.disabled) {
+					if (this.state.disabled) {
 						overrides['disabled'] = 'disabled';
 					}
 

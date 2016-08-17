@@ -4,14 +4,14 @@ import * as assert from 'intern/chai!assert';
 registerSuite({
 	name: 'interactive',
 
-	setup() {
+	setup(this: any) {
 		return this.remote
 			.get((<any> require).toUrl('./tabbedPanel.html'))
 			.setFindTimeout(5000)
 			.findByCssSelector('body.loaded');
 	},
 
-	'TabbedPanel'() {
+	'TabbedPanel'(this: any) {
 		return this.remote
 			.findByCssSelector('dojo-panel-tabbed > ul > :nth-child(2) > :first-child')
 				.click()
