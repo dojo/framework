@@ -173,8 +173,8 @@ const createRouter: RouterFactory = compose<RouterMixin, RouterOptions>({
 			path,
 			cancel,
 			defer () {
-				let cancel: () => void;
-				let resume: () => void;
+				let cancel: () => void = () => {};
+				let resume: () => void = () => {};
 				// TODO: remove casting to void when dojo/core#156 is resolved
 				deferrals.push(new Promise<void>((resolve, reject) => {
 					cancel = reject;
@@ -202,7 +202,7 @@ const createRouter: RouterFactory = compose<RouterMixin, RouterOptions>({
 						return false;
 					}
 
-					const dispatched = (<Router> this).routes.some(route => {
+					const dispatched = this.routes.some((route: Route<Parameters>) => {
 						const hierarchy = route.select(context, segments, trailingSlash, searchParams);
 						if (hierarchy.length === 0) {
 							return false;
@@ -214,10 +214,14 @@ const createRouter: RouterFactory = compose<RouterMixin, RouterOptions>({
 									route.exec({ context, params });
 									break;
 								case Handler.Fallback:
-									route.fallback({ context, params });
+									if (route.fallback) {
+										route.fallback({ context, params });
+									}
 									break;
 								case Handler.Index:
-									route.index({ context, params });
+									if (route.index) {
+										route.index({ context, params });
+									}
 									break;
 							}
 						}

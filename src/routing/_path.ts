@@ -26,7 +26,7 @@ export function parse (path: string): ParsedPath {
 	const tokens: string[] = path.split(/([/?#])/).filter(Boolean);
 
 	let pathnameTokens = tokens;
-	let searchParams: UrlSearchParams = null;
+	let searchParams: UrlSearchParams;
 
 	const searchStart = tokens.indexOf('?');
 	const hashStart = tokens.indexOf('#');

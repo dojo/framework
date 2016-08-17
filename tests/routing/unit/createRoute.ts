@@ -69,7 +69,7 @@ suite('createRoute', () => {
 
 	test('guard() receives the context', () => {
 		const context: C = {};
-		let received: C;
+		let received: C = <any> undefined;
 		const route = createRoute({
 			guard ({ context }: R) {
 				received = context;
@@ -206,7 +206,7 @@ suite('createRoute', () => {
 	});
 
 	test('guard() receives the extracted parameters', () => {
-		let received: Parameters;
+		let received: Parameters = <any> undefined;
 		const route = <Route<DefaultParameters>> createRoute({
 			path: '/{foo}/{bar}?{baz}&{qux}',
 			guard ({ params }: R) {
@@ -281,7 +281,7 @@ suite('createRoute', () => {
 		const route = createRoute({
 			path: '/{foo}',
 			params () {
-				return null;
+				return <any> null;
 			}
 		});
 

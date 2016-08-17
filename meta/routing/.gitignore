@@ -1,5 +1,6 @@
 .sublimets
 .tscache
+.tsconfig*.json
 *.js
 !/index.js
 *.js.map

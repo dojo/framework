@@ -19,15 +19,15 @@
     "url": "https://github.com/dojo/routing.git"
   },
   "scripts": {
-    "prepublish": "grunt dist",
+    "prepublish": "grunt peerDepInstall dist",
     "test": "grunt test"
   },
   "typings": "./dist/umd/dojo-routing.d.ts",
   "peerDependencies": {
-    "dojo-compose": "^2.0.0-beta.7",
-    "dojo-core": "^2.0.0-alpha.9",
-    "dojo-has": "^2.0.0-alpha.1",
-    "dojo-shim": "^2.0.0-alpha.1"
+    "dojo-compose": "next",
+    "dojo-core": "next",
+    "dojo-has": "next",
+    "dojo-shim": "next"
   },
   "devDependencies": {
     "codecov.io": "0.1.6",
@@ -47,7 +47,7 @@
     "istanbul": "0.4.3",
     "remap-istanbul": ">=0.6.4",
     "sinon": "^1.17.4",
-    "tslint": "^3.10.2",
-    "typescript": "~1.8.10"
+    "tslint": "next",
+    "typescript": "beta"
   }
 }

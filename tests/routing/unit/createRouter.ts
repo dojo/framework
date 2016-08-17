@@ -210,7 +210,7 @@ suite('createRouter', () => {
 			resumers.push(resume);
 		});
 
-		let dispatched = false;
+		let dispatched: boolean | undefined = false;
 		router.dispatch({} as C, '/foo').then(d => {
 			dispatched = d;
 		});
@@ -219,11 +219,11 @@ suite('createRouter', () => {
 
 		return Promise.resolve().then(() => {
 			assert.isFalse(dispatched);
-			resumers.shift()();
+			(<any> resumers.shift())();
 			return delay(10);
 		}).then(() => {
 			assert.isFalse(dispatched);
-			resumers.shift()();
+			(<any> resumers.shift())();
 			return delay(10);
 		}).then(() => {
 			assert.isTrue(dispatched);
@@ -239,7 +239,7 @@ suite('createRouter', () => {
 			exec () { executed = true; }
 		}));
 
-		let resume: () => void;
+		let resume: () => void = <any> undefined;
 		router.on('navstart', event => {
 			resume = event.defer().resume;
 		});

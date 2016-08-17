@@ -1,45 +1,34 @@
 {
-	"version": "1.8.10",
+	"version": "2.0.0",
 	"compilerOptions": {
 		"declaration": false,
 		"module": "umd",
 		"noImplicitAny": true,
 		"outDir": "_build/",
+		"baseUrl": "node_modules",
+		"paths": {
+			"dojo-has/*": [
+				"dojo-has/dist/umd/*"
+			],
+			"dojo-shim/*": [
+				"dojo-shim/dist/umd/*"
+			],
+			"dojo-core/*": [
+				"dojo-core/dist/umd/*"
+			],
+			"dojo-compose/*": [
+				"dojo-compose/dist/umd/*"
+			]
+		},
 		"removeComments": false,
 		"sourceMap": true,
 		"target": "es5",
-		"moduleResolution": "classic"
+		"moduleResolution": "classic",
+		"strictNullChecks": true
 	},
-	"filesGlob": [
+	"include": [
 		"./src/**/*.ts",
 		"./tests/**/*.ts",
-		"./typings/index.d.ts"
-	],
-	"files": [
-		"./src/_path.ts",
-		"./src/createRoute.ts",
-		"./src/createRouter.ts",
-		"./src/history/_alias-ambient-history.d.ts",
-		"./src/history/createHashHistory.ts",
-		"./src/history/createMemoryHistory.ts",
-		"./src/history/createStateHistory.ts",
-		"./src/history/interfaces.d.ts",
-		"./src/interfaces.d.ts",
-		"./src/main.ts",
-		"./tests/functional/all.ts",
-		"./tests/intern-local.ts",
-		"./tests/intern-saucelabs.ts",
-		"./tests/intern.ts",
-		"./tests/support/Reporter.ts",
-		"./tests/support/util.ts",
-		"./tests/unit/all.ts",
-		"./tests/unit/createRoute.ts",
-		"./tests/unit/createRouter.ts",
-		"./tests/unit/history/all.ts",
-		"./tests/unit/history/createHashHistory.ts",
-		"./tests/unit/history/createMemoryHistory.ts",
-		"./tests/unit/history/createStateHistory.ts",
-		"./tests/unit/main.ts",
 		"./typings/index.d.ts"
 	]
 }

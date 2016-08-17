@@ -249,7 +249,7 @@ const createRoute: RouteFactory = compose<Route<Parameters>, RouteOptions<Parame
 		// Only extract the search params defined in the route's path.
 		const knownSearchParams = (<DeconstructedPath> this.path).searchParameters.reduce((list, name) => {
 			const value = searchParams.getAll(name);
-			if (value !== null) {
+			if (value !== undefined) {
 				list[name] = value;
 			}
 			return list;
@@ -272,7 +272,7 @@ const createRoute: RouteFactory = compose<Route<Parameters>, RouteOptions<Parame
 		});
 		searchParameters.forEach(name => {
 			const value = searchParams.get(name);
-			if (value !== null) {
+			if (value !== undefined) {
 				params[name] = value;
 			}
 		});
@@ -315,7 +315,7 @@ const createRoute: RouteFactory = compose<Route<Parameters>, RouteOptions<Parame
 
 		return [];
 	}
-}, (instance, { exec, fallback, guard, index, params, path, trailingSlashMustMatch = true } = {}) => {
+}, (instance: Route<Parameters>, { exec, fallback, guard, index, params, path, trailingSlashMustMatch = true }: RouteOptions<Parameters> = {}) => {
 	if (path && /#/.test(path)) {
 		throw new TypeError('Path must not contain \'#\'');
 	}

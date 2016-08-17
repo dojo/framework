@@ -11,8 +11,8 @@ suite('createStateHistory', () => {
 	// Mask the globals so tests are forced to explicitly reference the
 	// correct window.
 	/* tslint:disable */
-	const history: void = null;
-	const location: void = null;
+	const history: void = <any> null;
+	const location: void = <any> null;
 	/* tslint:enable */
 
 	let sandbox: HTMLIFrameElement;
@@ -27,7 +27,7 @@ suite('createStateHistory', () => {
 
 	afterEach(() => {
 		document.body.removeChild(sandbox);
-		sandbox = null;
+		sandbox = <any> null;
 	});
 
 	test('initializes current path to current location', () => {
