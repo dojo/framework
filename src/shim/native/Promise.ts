@@ -179,7 +179,7 @@ export default class Promise<T> implements Thenable<T> {
 	/**
 	 * An object wrapped by this class that actually implements the Promise API.
 	 */
-	private promise: any;
+	promise: any;
 
 	/**
 	 * The internal state of this promise. This may be updated directly by subclasses.
