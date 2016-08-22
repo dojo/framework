@@ -41,7 +41,7 @@
     "istanbul": "^0.4.3",
     "remap-istanbul": "^0.6.4",
     "sinon": "^1.17.4",
-    "tslint": "^3.11.0",
-    "typescript": "beta"
+    "tslint": "next",
+    "typescript": "2.1.0-dev.20160819"
   }
 }
