@@ -110,7 +110,7 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 		requestOptions.auth = encodeURIComponent(options.user || '') + ':' + encodeURIComponent(options.password || '');
 	}
 
-	const request = (parsedUrl.protocol === 'https:' ? https : http).request(requestOptions);
+	const request = parsedUrl.protocol === 'https:' ? https.request(requestOptions) : http.request(requestOptions);
 	const response: Response<T> = {
 		data: null,
 		getHeader: function (this: Response<T>, name: string): string {

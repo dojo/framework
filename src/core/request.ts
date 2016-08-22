@@ -196,8 +196,8 @@ export default request;
  * Add a filter that automatically parses incoming JSON responses.
  */
 filterRegistry.register(
-	function (response: Response<any>, url: string, options: RequestOptions) {
-		return typeof response.data && options && options.responseType === 'json';
+	function (response: Response<any>, url: string, options: RequestOptions): boolean {
+		return Boolean(typeof response.data && options && options.responseType === 'json');
 	},
 	function (response: Response<any>, url: string, options: RequestOptions): Object {
 		return {
