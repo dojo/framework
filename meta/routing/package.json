@@ -24,10 +24,10 @@
   },
   "typings": "./dist/umd/dojo-routing.d.ts",
   "peerDependencies": {
-    "dojo-compose": "next",
-    "dojo-core": "next",
-    "dojo-has": "next",
-    "dojo-shim": "next"
+    "dojo-compose": ">=2.0.0-beta.9",
+    "dojo-core": ">=2.0.0-alpha.11",
+    "dojo-has": ">=2.0.0-alpha.3",
+    "dojo-shim": ">=2.0.0-alpha.3"
   },
   "devDependencies": {
     "codecov.io": "0.1.6",
@@ -48,6 +48,6 @@
     "remap-istanbul": ">=0.6.4",
     "sinon": "^1.17.4",
     "tslint": "next",
-    "typescript": "beta"
+    "typescript": "2.1.0-dev.20160819"
   }
 }
