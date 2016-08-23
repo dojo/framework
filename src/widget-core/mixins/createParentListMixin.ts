@@ -112,7 +112,6 @@ const createParentMixin: ParentListMixinFactory = compose<ParentList<Child>, Par
 				destroy() {
 					const children = childrenMap.get(instance);
 					children.forEach((child) => child.destroy());
-					childrenMap.delete(instance);
 				}
 			});
 		}

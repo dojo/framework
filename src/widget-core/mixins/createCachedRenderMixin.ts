@@ -138,11 +138,6 @@ const createCachedRenderMixin = createStateful
 		mixin: createVNodeEvented,
 		initialize(instance: CachedRenderMixin<CachedRenderState>) {
 			instance.own(instance.on('statechange', () => { instance.invalidate(); } ));
-			instance.own({
-				destroy() {
-					widgetClassesMap.delete(instance);
-				}
-			});
 		}
 	})
 	.mixin({

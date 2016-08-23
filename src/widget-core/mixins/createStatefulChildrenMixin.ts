@@ -145,11 +145,6 @@ const createStatefulChildrenMixin: StatefulChildrenMixinFactory = createStateful
 
 				instance.own(instance.on('statechange', manageChildren));
 				instance.own(instance.on('childlist', manageChildrenState));
-				instance.own({
-					destroy() {
-						managementMap.delete(instance);
-					}
-				});
 			}
 		}
 	});

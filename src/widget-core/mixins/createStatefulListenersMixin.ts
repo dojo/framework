@@ -148,11 +148,6 @@ const createStatefulListenersMixin: StatefulListenersMixinFactory = createStatef
 			managementMap.set(instance, { registry });
 
 			instance.own(instance.on('statechange', manageListeners));
-			instance.own({
-				destroy() {
-					managementMap.delete(instance);
-				}
-			});
 		}
 	}
 });

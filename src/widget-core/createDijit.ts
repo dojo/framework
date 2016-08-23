@@ -277,7 +277,6 @@ const createDijit: DijitFactory = createRenderable
 						/* TODO: Should we use .destroyRecursive()? */
 						dijitData.dijitWidget.destroy();
 					}
-					dijitDataWeakMap.delete(instance);
 				}
 			});
 		}
