@@ -150,7 +150,11 @@ registerSuite({
 		'throttles callback'(this: any) {
 			const dfd = this.async(TIMEOUT);
 			// FIXME
-			var spy = sinon.spy(function (a: string) {
+
+			let callCount = 0;
+			let cleared = false;
+			const throttledFunction = util.throttle(function (a: string) {
+				callCount++;
 				assert.notStrictEqual(a, 'b', 'Second invocation should be throttled');
 				// Rounding errors?
 				// Technically, the time diff should be greater than 24ms, but in some cases
@@ -159,12 +163,12 @@ registerSuite({
 					'Function should not be called until throttle delay has elapsed');
 
 				lastRunTick = Date.now();
-				if (spy.callCount > 1) {
+				if (callCount > 1) {
 					clearTimeout(handle);
+					cleared = true;
 					dfd.resolve();
 				}
-			});
-			const throttledFunction = util.throttle(spy, 25);
+			}, 25);
 
 			let runCount = 1;
 			let lastRunTick = 0;
@@ -175,13 +179,13 @@ registerSuite({
 				throttledFunction('b');
 				runCount += 1;
 
-				if (runCount < 7) {
+				if (runCount < 10 && !cleared) {
 					handle = setTimeout(run, 5);
 				}
 			}
 
 			run();
-			assert.strictEqual(spy.callCount, 1,
+			assert.strictEqual(callCount, 1,
 				'Function should be called as soon as it is first invoked');
 		}
 	},
@@ -214,7 +218,10 @@ registerSuite({
 		'throttles callback'(this: any) {
 			const dfd = this.async(TIMEOUT);
 			// FIXME
-			var spy = sinon.spy(function (a: string) {
+			let callCount = 0;
+			let cleared = false;
+			const throttledFunction = util.throttle(function (a: string) {
+				callCount++;
 				assert.notStrictEqual(a, 'b', 'Second invocation should be throttled');
 				// Rounding errors?
 				// Technically, the time diff should be greater than 24ms, but in some cases
@@ -223,12 +230,12 @@ registerSuite({
 					'Function should not be called until throttle delay has elapsed');
 
 				lastRunTick = Date.now();
-				if (spy.callCount > 1) {
+				if (callCount > 1) {
 					clearTimeout(handle);
+					cleared = true;
 					dfd.resolve();
 				}
-			});
-			const throttledFunction = util.throttle(spy, 25);
+			}, 25);
 
 			let runCount = 1;
 			let lastRunTick = 0;
@@ -239,13 +246,13 @@ registerSuite({
 				throttledFunction('b');
 				runCount += 1;
 
-				if (runCount < 7) {
+				if (runCount < 10 && !cleared) {
 					handle = setTimeout(run, 5);
 				}
 			}
 
 			run();
-			assert.strictEqual(spy.callCount, 1,
+			assert.strictEqual(callCount, 1,
 				'Function should be called as soon as it is first invoked');
 		}
 	}
