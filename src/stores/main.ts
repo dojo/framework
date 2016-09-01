@@ -1,3 +1,3 @@
-export function main() {
-	return {};
-}
+export {
+	/* provide the public API here */
+};

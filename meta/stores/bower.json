@@ -1,5 +1,5 @@
 {
-	"name": "dojo-<< package-name >>",
+	"name": "dojo-stores",
 	"description": "Client side data management for Dojo 2",
 	"keywords": [
 		"dojo",
@@ -11,7 +11,7 @@
 	"homepage": "http://dojotoolkit.org/",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/dojo/<< package-name >>.git"
+		"url": "git://github.com/dojo/stores.git"
 	},
 	"dependencies": {
 	},

@@ -32,7 +32,7 @@ export const maxConcurrency = 2;
 export const tunnel = 'BrowserStackTunnel';
 
 // Support running unit tests from a web server that isn't the intern proxy
-export const initialBaseUrl: string = (function () {
+export const initialBaseUrl: string | null = (function () {
 	if (typeof location !== 'undefined' && location.pathname.indexOf('__intern/') > -1) {
 		return '/';
 	}
@@ -42,7 +42,7 @@ export const initialBaseUrl: string = (function () {
 // The desired AMD loader to use when running unit tests (client.html/client.js). Omit to use the default Dojo
 // loader
 export const loaders = {
-	'host-browser': 'node_modules/dojo-loader/loader.js',
+	'host-browser': 'node_modules/dojo-loader/dist/umd/loader.js',
 	'host-node': 'dojo-loader'
 };
 

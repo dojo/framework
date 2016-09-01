@@ -1,36 +1,35 @@
 {
-	"version": "1.8.0",
+	"version": "2.0.0",
 	"compilerOptions": {
+		"baseUrl": "node_modules",
 		"declaration": false,
 		"module": "umd",
+		"moduleResolution": "classic",
 		"noImplicitAny": true,
+		"noImplicitThis": true,
 		"outDir": "_build/",
+		"paths": {
+			"dojo-has/*": [
+				"dojo-has/dist/umd/*"
+			],
+			"dojo-shim/*": [
+				"dojo-shim/dist/umd/*"
+			],
+			"dojo-core/*": [
+				"dojo-core/dist/umd/*"
+			],
+			"dojo-compose/*": [
+				"dojo-compose/dist/umd/*"
+			]
+		},
 		"removeComments": false,
 		"sourceMap": true,
-		"target": "es5",
-		"moduleResolution": "classic"
+		"strictNullChecks": true,
+		"target": "es5"
 	},
-	"filesGlob": [
-		"./typings/main.d.ts",
+	"include": [
+		"./typings/index.d.ts",
 		"./src/**/*.ts",
 		"./tests/**/*.ts"
-	],
-	"files": [
-		"./typings/tsd.d.ts",
-		"./src/main.ts",
-		"./tests/functional/all.ts",
-		"./tests/intern-local.ts",
-		"./tests/intern-saucelabs.ts",
-		"./tests/intern.ts",
-		"./tests/support/Reporter.ts",
-		"./tests/support/util.ts",
-		"./tests/typings/chai/chai.d.ts",
-		"./tests/typings/digdug/digdug.d.ts",
-		"./tests/typings/dojo2/dojo.d.ts",
-		"./tests/typings/intern/intern.d.ts",
-		"./tests/typings/leadfoot/leadfoot.d.ts",
-		"./tests/typings/node/node.d.ts",
-		"./tests/typings/tsd.d.ts",
-		"./tests/unit/all.ts"
 	]
 }

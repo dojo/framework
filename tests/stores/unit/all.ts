@@ -1,1 +1,1 @@
-export const removeThis = 1;
+import './main';
