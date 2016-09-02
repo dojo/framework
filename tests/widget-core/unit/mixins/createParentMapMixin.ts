@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import createParentMapMixin, { ParentMap } from 'src/mixins/createParentMapMixin';
 import createRenderable, { Renderable } from 'src/mixins/createRenderable';
 import { Child } from 'src/mixins/interfaces';
-import { Map } from 'immutable/immutable';
+import { Map } from 'immutable';
 import { from as arrayFrom } from 'dojo-shim/array';
 
 type RenderableWithID = Renderable & { id?: string; };

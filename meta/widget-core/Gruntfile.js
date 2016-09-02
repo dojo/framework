@@ -47,8 +47,7 @@ module.exports = function (grunt) {
 		'ts:dev',
 		'stylus:dev',
 		'copy:staticTestFiles',
-		'copy:staticExampleFiles',
-		'updateTsconfig'
+		'copy:staticExampleFiles'
 	]);
 
 	grunt.registerTask('dist', [
@@ -56,8 +55,6 @@ module.exports = function (grunt) {
 		'tslint',
 		'clean:dist',
 		'ts:dist',
-		'stylus:dist',
-		'rename:sourceMaps',
-		'dtsGenerator:dist'
+		'stylus:dist'
 	]);
 };

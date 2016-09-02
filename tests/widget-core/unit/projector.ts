@@ -2,7 +2,7 @@ import 'dojo/has!host-node?../support/loadJsdom';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import projector, { createProjector } from 'src/projector';
-import { h } from 'maquette/maquette';
+import { h } from 'maquette';
 import createRenderable from 'src/mixins/createRenderable';
 import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { ComposeFactory } from 'dojo-compose/compose';

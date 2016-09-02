@@ -1,4 +1,4 @@
-import { h, VNode, VNodeProperties } from 'maquette/maquette';
+import { h, VNode, VNodeProperties } from 'maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
 import createStateful, { State, Stateful, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import { assign } from 'dojo-core/lang';

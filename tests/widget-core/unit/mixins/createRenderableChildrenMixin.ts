@@ -3,8 +3,8 @@ import * as assert from 'intern/chai!assert';
 import createRenderableChildrenMixin, { RenderableChildrenMixin } from 'src/mixins/createRenderableChildrenMixin';
 import createRenderable from 'src/mixins/createRenderable';
 import { Child } from 'src/mixins/interfaces';
-import { List, Map } from 'immutable/immutable';
-import { VNode } from 'maquette/maquette';
+import { List, Map } from 'immutable';
+import { VNode } from 'maquette';
 
 type WithListChildren = RenderableChildrenMixin & { children?: List<Child>; };
 type WithMapChildren = RenderableChildrenMixin & { children?: Map<string, Child>; };

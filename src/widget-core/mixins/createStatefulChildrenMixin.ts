@@ -4,7 +4,7 @@ import createStateful, { Stateful, StatefulOptions, StateChangeEvent } from 'doj
 import Map from 'dojo-shim/Map';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
-import { List, Map as ImmutableMap } from 'immutable/immutable';
+import { List, Map as ImmutableMap } from 'immutable';
 import { Child, ChildListEvent, Registry, RegistryProvider } from './interfaces';
 import { isList } from '../util/lang';
 

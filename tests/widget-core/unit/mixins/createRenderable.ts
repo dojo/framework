@@ -3,9 +3,9 @@ import * as assert from 'intern/chai!assert';
 import createRenderable, { isRenderable } from 'src/mixins/createRenderable';
 import { ParentListMixin } from 'src/mixins/createParentListMixin';
 import { Child } from 'src/mixins/interfaces';
-import { h } from 'maquette/maquette';
+import { h } from 'maquette';
 import Promise from 'dojo-shim/Promise';
-import { List } from 'immutable/immutable';
+import { List } from 'immutable';
 import { Handle } from 'dojo-core/interfaces';
 
 registerSuite({

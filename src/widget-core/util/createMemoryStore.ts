@@ -1,4 +1,4 @@
-import { OrderedMap, Map } from 'immutable/immutable';
+import { OrderedMap, Map } from 'immutable';
 import { Observable } from 'rxjs/Observable';
 import { Observer } from 'rxjs/Observer';
 import { assign } from 'dojo-core/lang';

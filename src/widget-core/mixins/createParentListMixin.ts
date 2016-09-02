@@ -1,4 +1,4 @@
-import { List } from 'immutable/immutable';
+import { List } from 'immutable';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import createEvented, { Evented, EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import { Handle } from 'dojo-core/interfaces';

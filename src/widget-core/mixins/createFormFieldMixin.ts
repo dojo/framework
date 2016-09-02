@@ -1,4 +1,4 @@
-import { VNodeProperties } from 'maquette/maquette';
+import { VNodeProperties } from 'maquette';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';

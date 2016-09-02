@@ -1,4 +1,4 @@
-import { h, VNode } from 'maquette/maquette';
+import { h, VNode } from 'maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 import createEvented, { Evented } from 'dojo-compose/mixins/createEvented';

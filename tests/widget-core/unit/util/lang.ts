@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { insertInList, insertInArray, stringToValue, valueToString, isList, isChild } from 'src/util/lang';
 import createRenderable from 'src/mixins/createRenderable';
-import { List } from 'immutable/immutable';
+import { List } from 'immutable';
 
 registerSuite({
 	name: 'util/lang',

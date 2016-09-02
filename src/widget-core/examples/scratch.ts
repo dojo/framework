@@ -1,4 +1,4 @@
-import { createProjector, h, VNode } from 'maquette/maquette';
+import { createProjector, h, VNode } from 'maquette';
 
 let closed = false;
 

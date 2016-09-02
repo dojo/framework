@@ -1,4 +1,4 @@
-import { List } from 'immutable/immutable';
+import { List } from 'immutable';
 import { ComposeFactory } from 'dojo-compose/compose';
 import Promise from 'dojo-shim/Promise';
 

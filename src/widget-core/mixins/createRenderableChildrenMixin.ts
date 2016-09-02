@@ -1,5 +1,5 @@
-import { VNode } from 'maquette/maquette';
-import { List } from 'immutable/immutable';
+import { VNode } from 'maquette';
+import { List } from 'immutable';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { from as arrayFrom } from 'dojo-shim/array';
 import { Child, ChildEntry } from './interfaces';

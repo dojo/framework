@@ -1,5 +1,5 @@
-import { Map } from 'immutable/immutable';
-import { h, VNode } from 'maquette/maquette';
+import { Map } from 'immutable';
+import { h, VNode } from 'maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 import { StatefulOptions } from 'dojo-compose/mixins/createStateful';

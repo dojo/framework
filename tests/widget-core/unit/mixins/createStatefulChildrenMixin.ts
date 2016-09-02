@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import createStatefulChildrenMixin from 'src/mixins/createStatefulChildrenMixin';
 import createRenderable, { Renderable } from 'src/mixins/createRenderable';
 import Promise from 'dojo-shim/Promise';
-import { List, Map } from 'immutable/immutable';
+import { List, Map } from 'immutable';
 import { Child, RegistryProvider } from 'src/mixins/interfaces';
 
 const widget1 = createRenderable();

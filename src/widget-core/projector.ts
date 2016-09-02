@@ -1,4 +1,4 @@
-import { h, createProjector as createMaquetteProjector, Projector as MaquetteProjector, VNode, VNodeProperties } from 'maquette/maquette';
+import { h, createProjector as createMaquetteProjector, Projector as MaquetteProjector, VNode, VNodeProperties } from 'maquette';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { EventedListener, EventedOptions, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import global from 'dojo-core/global';

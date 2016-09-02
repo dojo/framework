@@ -1,4 +1,4 @@
-import { List } from 'immutable/immutable';
+import { List } from 'immutable';
 import { Handle } from 'dojo-core/interfaces';
 import { Parent, Child, ChildrenMap } from '../mixins/interfaces';
 
