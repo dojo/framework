@@ -6,20 +6,6 @@
 		"noImplicitAny": true,
 		"outDir": "_build/",
 		"baseUrl": "node_modules",
-		"paths": {
-			"dojo-has/*": [
-				"dojo-has/dist/umd/*"
-			],
-			"dojo-shim/*": [
-				"dojo-shim/dist/umd/*"
-			],
-			"dojo-core/*": [
-				"dojo-core/dist/umd/*"
-			],
-			"dojo-compose/*": [
-				"dojo-compose/dist/umd/*"
-			]
-		},
 		"removeComments": false,
 		"sourceMap": true,
 		"target": "es5",
