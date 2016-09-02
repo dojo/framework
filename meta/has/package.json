@@ -7,7 +7,8 @@
     "url": "https://github.com/dojo/has/issues"
   },
   "license": "BSD-3-Clause",
-  "main": "index.js",
+  "private": true,
+  "main": "main.js",
   "files": [
     "index.js",
     "dist",
@@ -19,10 +20,8 @@
     "url": "https://github.com/dojo/has.git"
   },
   "scripts": {
-    "prepublish": "grunt dist",
     "test": "grunt test"
   },
-  "typings": "./dist/umd/dojo-has.d.ts",
   "devDependencies": {
     "codecov.io": "0.1.6",
     "dojo-loader": ">=2.0.0-beta",
@@ -42,6 +41,6 @@
     "remap-istanbul": "^0.6.4",
     "sinon": "^1.17.4",
     "tslint": "next",
-    "typescript": "2.1.0-dev.20160819"
+    "typescript": "2.0.2"
   }
 }
