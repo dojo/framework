@@ -1,6 +1,6 @@
 {
   "name": "dojo-shim",
-  "version": "2.0.0-pre",
+  "version": "2.0.0-alpha.4",
   "description": "Modules that provide modular fills of ES6+ functionality",
   "homepage": "http://dojotoolkit.org",
   "bugs": {
