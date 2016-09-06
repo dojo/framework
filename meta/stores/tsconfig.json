@@ -1,5 +1,5 @@
 {
-	"version": "2.0.0",
+	"version": "2.0.2",
 	"compilerOptions": {
 		"baseUrl": "node_modules",
 		"declaration": false,
@@ -8,20 +8,6 @@
 		"noImplicitAny": true,
 		"noImplicitThis": true,
 		"outDir": "_build/",
-		"paths": {
-			"dojo-has/*": [
-				"dojo-has/dist/umd/*"
-			],
-			"dojo-shim/*": [
-				"dojo-shim/dist/umd/*"
-			],
-			"dojo-core/*": [
-				"dojo-core/dist/umd/*"
-			],
-			"dojo-compose/*": [
-				"dojo-compose/dist/umd/*"
-			]
-		},
 		"removeComments": false,
 		"sourceMap": true,
 		"strictNullChecks": true,

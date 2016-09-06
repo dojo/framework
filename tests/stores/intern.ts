@@ -53,7 +53,12 @@ export const loaderOptions = {
 	packages: [
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' },
-		{ name: 'dojo', location: 'node_modules/intern/node_modules/dojo' }
+		{ name: 'dojo-compose', location: 'node_modules/dojo-compose' },
+		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
+		{ name: 'dojo-has', location: 'node_modules/dojo-has' },
+		{ name: 'dojo-shim', location: 'node_modules/dojo-shim' },
+		{ name: 'immutable', location: 'node_modules/immutable/dist', main: 'immutable' },
+		{ name: 'rxjs', location: 'node_modules/@reactivex/rxjs/dist/amd' }
 	]
 };
 

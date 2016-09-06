@@ -4,6 +4,7 @@
 		"extra-rxjs": "github:dojo/typings/custom/dojo2-extras/rxjs.d.ts#004fc065b3b24412c9b6575cdc06545964c370b5"
 	},
 	"peerDependencies": {
+		"immutable": "npm:immutable",
 		"@reactivex/RxJS": "npm:@reactivex/rxjs"
 	},
 	"devDependencies": {

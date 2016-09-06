@@ -4,11 +4,8 @@ node_js:
 - '6'
 env:
   global:
-  # Please get your own free key if you want to test yourself
-  - BROWSERSTACK_USERNAME: << USERNAME GOES HERE >>
-  - BROWSERSTACK_ACCESS_KEY: << ACCESS KEY GOES HERE >>
-  - SAUCE_USERNAME: << USERNAME GOES HERE >>
-  - SAUCE_ACCESS_KEY: << ACCESS KEY GOES HERE >>
+  - SAUCE_USERNAME: dojo2-ts-ci
+  - SAUCE_ACCESS_KEY: e92610e3-834e-4bec-a3b5-6f7b9d874601
 cache:
   directories:
   - node_modules
