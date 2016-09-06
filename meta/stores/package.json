@@ -1,6 +1,6 @@
 {
   "name": "dojo-stores",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-pre",
   "description": "Client side data management for Dojo 2",
   "homepage": "http://dojotoolkit.org",
   "bugs": {
