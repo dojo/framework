@@ -41,6 +41,7 @@ module.exports = function (grunt) {
 	});
 
 	grunt.registerTask('dev', [
+		'clean:typings',
 		'typings',
 		'tslint',
 		'clean:dev',
@@ -51,6 +52,7 @@ module.exports = function (grunt) {
 	]);
 
 	grunt.registerTask('dist', [
+		'clean:typings',
 		'typings',
 		'tslint',
 		'clean:dist',
