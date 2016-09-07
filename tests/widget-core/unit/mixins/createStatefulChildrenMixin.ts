@@ -1,10 +1,13 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createStatefulChildrenMixin from 'src/mixins/createStatefulChildrenMixin';
-import createRenderable, { Renderable } from 'src/mixins/createRenderable';
+import createStatefulChildrenMixin, { CreateChildrenResults } from 'src/mixins/createStatefulChildrenMixin';
+import createRenderable, { Renderable, RenderableOptions } from 'src/mixins/createRenderable';
 import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
 import { Child, RegistryProvider } from 'src/mixins/interfaces';
+import compose, { ComposeFactory } from 'dojo-compose/compose';
+import createDestroyable from 'dojo-compose/mixins/createDestroyable';
+import { h } from 'maquette';
 
 const widget1 = createRenderable();
 const widget2 = createRenderable();
@@ -18,6 +21,8 @@ const widgetMap: { [id: string]: Renderable } = {
 	widget4
 };
 
+let widgetUID = 5;
+
 const widgetRegistry = {
 	stack: <(string | symbol)[]> [],
 	get(id: string | symbol): Promise<Renderable> {
@@ -30,6 +35,9 @@ const widgetRegistry = {
 			? 'widget2' : value === widget3
 			? 'widget3' : value === widget4
 			? 'widget4' : undefined;
+	},
+	create<C extends Renderable>(factory: ComposeFactory<C, any>, options?: any): Promise<[string | symbol, C]> {;
+		return Promise.resolve<[ string, C ]>([options && options.id || `widget${widgetUID++}`, factory(options)]);
 	}
 };
 
@@ -55,9 +63,11 @@ function delay() {
 
 registerSuite({
 	name: 'mixins/createStatefulChildrenMixin',
+
 	beforeEach() {
 		widgetRegistry.stack = [];
 	},
+
 	'List children': {
 		creation(this: any) {
 			const dfd = this.async();
@@ -132,6 +142,7 @@ registerSuite({
 			}, 50);
 		}
 	},
+
 	'Map children': {
 		creation(this: any) {
 			const dfd = this.async();
@@ -206,6 +217,7 @@ registerSuite({
 			}, 50);
 		}
 	},
+
 	'Avoids updating children if there are no changes'() {
 		const parent = createStatefulChildrenList({
 			registryProvider
@@ -229,6 +241,7 @@ registerSuite({
 			assert.equal(setCount, 1);
 		});
 	},
+
 	'Avoids updating state if there are no changes'() {
 		const parent = createStatefulChildrenList({
 			registryProvider
@@ -272,6 +285,7 @@ registerSuite({
 			});
 		});
 	},
+
 	'emits error if registry rejects get()'(this: any) {
 		let rejectingRegistry = Object.create(widgetRegistry);
 		const expected = new Error();
@@ -286,7 +300,7 @@ registerSuite({
 				}
 			},
 			state: {
-				children: ['widget1']
+				children: [ 'widget1' ]
 			}
 		});
 
@@ -295,6 +309,7 @@ registerSuite({
 			assert.strictEqual(evt.error, expected);
 		}));
 	},
+
 	'latest state determines the children'() {
 		const { get } = widgetRegistry;
 		let registry = Object.create(widgetRegistry);
@@ -306,7 +321,7 @@ registerSuite({
 				}
 			},
 			state: {
-				children: ['widget1']
+				children: [ 'widget1' ]
 			}
 		});
 
@@ -321,7 +336,7 @@ registerSuite({
 			};
 
 			parent.setState({
-				children: ['widget2']
+				children: [ 'widget2' ]
 			});
 
 			assert.ok(resolveFirst);
@@ -334,7 +349,7 @@ registerSuite({
 			};
 
 			parent.setState({
-				children: ['widget3']
+				children: [ 'widget3' ]
 			});
 
 			assert.ok(resolveSecond);
@@ -349,5 +364,420 @@ registerSuite({
 		}).then(() => {
 			assert.isTrue(List([ widget3 ]).equals(parent.children));
 		});
+	},
+
+	'#createChild()': {
+		'creation during mixin'() {
+			let p: Promise<[string, Renderable]>;
+			const registry = Object.create(widgetRegistry);
+			const createFoo = compose({})
+				.mixin({
+					mixin: createStatefulChildrenMixin,
+					initialize(instance) {
+						p = instance.createChild(createRenderable, <RenderableOptions> {
+							render() {
+								return h('div');
+							}
+						});
+					}
+				});
+
+			const foo = createFoo({
+				registryProvider: {
+					get(type: string) {
+						return type === 'widgets' ? registry : null;
+					}
+				},
+				id: 'parent'
+			});
+
+			return p.then((result) => {
+				const [ id ] = result;
+				assert.include(id, 'parent-child');
+				assert.deepEqual(foo.state.children, [ id ]);
+			});
+		},
+
+		'append children'() {
+			let p: Promise<[string, Renderable]>;
+			const registry = Object.create(widgetRegistry);
+			const createFoo = compose({})
+				.mixin({
+					mixin: createStatefulChildrenMixin,
+					initialize(instance) {
+						instance.setState({ children: [ 'foo' ] });
+						p = instance.createChild(createRenderable, <RenderableOptions> {
+							render() {
+								return h('div');
+							}
+						});
+					}
+				});
+
+			const foo = createFoo({
+				registryProvider: {
+					get(type: string) {
+						return type === 'widgets' ? registry : null;
+					}
+				},
+				id: 'parent'
+			});
+
+			return p.then((result) => {
+				const [ id ] = result;
+				assert.include(id, 'parent-child');
+				assert.deepEqual(foo.state.children, [ 'foo', id ]);
+			});
+		},
+
+		'creation during mixin - with setting ID'() {
+			let p: Promise<[string, Renderable]>;
+			const registry = Object.create(widgetRegistry);
+
+			const createFoo = compose({})
+				.mixin({
+					mixin: createStatefulChildrenMixin,
+					initialize(instance) {
+						p = instance.createChild(createRenderable, <RenderableOptions> {
+							render() {
+								return h('div');
+							},
+							id: 'foo'
+						});
+					}
+				});
+
+			createFoo({
+				registryProvider: {
+					get(type: string) {
+						return type === 'widgets' ? registry : null;
+					}
+				},
+				id: 'parent'
+			});
+
+			return p.then((result) => {
+				const [ id ] = result;
+				assert.strictEqual(id, 'foo');
+			});
+		},
+
+		'non-registry rejects'(this: any) {
+			const dfd = this.async();
+			const stateful = createStatefulChildrenMixin();
+			stateful.createChild(createRenderable)
+				.then(() => {
+					throw new Error('Should not have called');
+				}, dfd.callback((err: Error) => {
+					assert.instanceOf(err, Error);
+					assert.strictEqual(err.message, 'Unable to resolve registry');
+				}));
+		}
+	},
+
+	'#createChildren()': {
+		'with map'() {
+			let p: Promise<CreateChildrenResults<Child>>;
+			const registry = Object.create(widgetRegistry);
+			const createFoo = compose({})
+				.mixin({
+					mixin: createStatefulChildrenMixin,
+					initialize(instance) {
+						p = instance.createChildren({
+							foo: { factory: createRenderable },
+							bar: { factory: createRenderable }
+						});
+					}
+				});
+
+			const widget = createFoo({
+				id: 'foo',
+				registryProvider: {
+					get(type: string) {
+						return type === 'widgets' ? registry : null;
+					}
+				}
+			});
+
+			return p.then(({ foo, bar }) => {
+				assert(foo);
+				assert(bar);
+				assert.include(foo.id, 'foo-child');
+				assert.include(bar.id, 'foo-child');
+				assert.strictEqual(foo.widget.render().vnodeSelector, 'div');
+				assert.strictEqual(bar.widget.render().vnodeSelector, 'div');
+				assert.deepEqual(widget.state.children, [ foo.id, bar.id ]);
+			});
+		},
+
+		'with map append children'() {
+			let p: Promise<CreateChildrenResults<Child>>;
+			const registry = Object.create(widgetRegistry);
+			const createFoo = compose({})
+				.mixin({
+					mixin: createStatefulChildrenMixin,
+					initialize(instance) {
+						instance.setState({ children: [ 'foo' ]});
+						p = instance.createChildren({
+							foo: { factory: createRenderable },
+							bar: { factory: createRenderable }
+						});
+					}
+				});
+
+			const widget = createFoo({
+				id: 'foo',
+				registryProvider: {
+					get(type: string) {
+						return type === 'widgets' ? registry : null;
+					}
+				}
+			});
+
+			return p.then(({ foo, bar }) => {
+				assert(foo);
+				assert(bar);
+				assert.include(foo.id, 'foo-child');
+				assert.include(bar.id, 'foo-child');
+				assert.strictEqual(foo.widget.render().vnodeSelector, 'div');
+				assert.strictEqual(bar.widget.render().vnodeSelector, 'div');
+				assert.deepEqual(widget.state.children, [ 'foo', foo.id, bar.id ]);
+			});
+		},
+
+		'with map and options.id'() {
+			let p: Promise<CreateChildrenResults<Child>>;
+			const registry = Object.create(widgetRegistry);
+			const createFoo = compose({})
+				.mixin({
+					mixin: createStatefulChildrenMixin,
+					initialize(instance) {
+						p = instance.createChildren({
+							foo: { factory: createRenderable, options: { id: 'foo' } },
+							bar: { factory: createRenderable, options: { id: 'bar' } }
+						});
+					}
+				});
+
+			createFoo({
+				id: 'foo',
+				registryProvider: {
+					get(type: string) {
+						return type === 'widgets' ? registry : null;
+					}
+				}
+			});
+
+			return p.then(({ foo, bar }) => {
+				assert(foo);
+				assert(bar);
+				assert.strictEqual(foo.id, 'foo');
+				assert.strictEqual(bar.id, 'bar');
+				assert.strictEqual(foo.widget.render().vnodeSelector, 'div');
+				assert.strictEqual(bar.widget.render().vnodeSelector, 'div');
+			});
+		},
+
+		'destroy with map destroys children'() {
+			let p: Promise<CreateChildrenResults<Child>>;
+			const registry = Object.create(widgetRegistry);
+			let destroyCount = 0;
+			const createDestroyRenderable = createRenderable
+				.mixin({
+					mixin: createDestroyable,
+					initialize(instance) {
+						instance.own({
+							destroy() {
+								destroyCount++;
+							}
+						});
+					}
+				});
+
+			const createFoo = compose({})
+				.mixin({
+					mixin: createStatefulChildrenMixin,
+					initialize(instance) {
+						p = instance.createChildren({
+							foo: { factory: createDestroyRenderable, options: { id: 'foo' } },
+							bar: { factory: createDestroyRenderable, options: { id: 'bar' } }
+						});
+					}
+				});
+
+			const foo = createFoo({
+				id: 'foo',
+				registryProvider: {
+					get(type: string) {
+						return type === 'widgets' ? registry : null;
+					}
+				}
+			});
+
+			return p.then(() => {
+				assert.strictEqual(destroyCount, 0);
+				return foo.destroy();
+			})
+			.then(() => {
+				assert.strictEqual(destroyCount, 2);
+			});
+		},
+
+		'with array'() {
+			let p: Promise<[string, Child][]>;
+			const registry = Object.create(widgetRegistry);
+			const createFoo = compose({})
+				.mixin({
+					mixin: createStatefulChildrenMixin,
+					initialize(instance) {
+						p = instance.createChildren([ [ createRenderable, {} ], [ createRenderable, {} ] ]);
+					}
+				});
+
+			const widget = createFoo({
+				id: 'foo',
+				registryProvider: {
+					get(type: string) {
+						return type === 'widgets' ? registry : null;
+					}
+				}
+			});
+
+			return p.then(([ a, b ]) => {
+				assert(a);
+				assert(b);
+				const [ aID, aWidget ] = a;
+				const [ bID, bWidget ] = b;
+				assert.include(aID, 'foo-child');
+				assert.include(bID, 'foo-child');
+				assert.strictEqual(aWidget.render().vnodeSelector, 'div');
+				assert.strictEqual(bWidget.render().vnodeSelector, 'div');
+				assert.deepEqual(widget.state.children, [ aID, bID ]);
+			});
+		},
+
+		'with array append children'() {
+			let p: Promise<[string, Child][]>;
+			const registry = Object.create(widgetRegistry);
+			const createFoo = compose({})
+				.mixin({
+					mixin: createStatefulChildrenMixin,
+					initialize(instance) {
+						instance.setState({ children: [ 'foo' ]});
+						p = instance.createChildren([ [ createRenderable, {} ], [ createRenderable, {} ] ]);
+					}
+				});
+
+			const widget = createFoo({
+				id: 'foo',
+				registryProvider: {
+					get(type: string) {
+						return type === 'widgets' ? registry : null;
+					}
+				}
+			});
+
+			return p.then(([ a, b ]) => {
+				assert(a);
+				assert(b);
+				const [ aID, aWidget ] = a;
+				const [ bID, bWidget ] = b;
+				assert.include(aID, 'foo-child');
+				assert.include(bID, 'foo-child');
+				assert.strictEqual(aWidget.render().vnodeSelector, 'div');
+				assert.strictEqual(bWidget.render().vnodeSelector, 'div');
+				assert.deepEqual(widget.state.children, [ 'foo', aID, bID ]);
+			});
+		},
+
+		'with array and options.id'() {
+			let p: Promise<[string, Child][]>;
+			const registry = Object.create(widgetRegistry);
+			const createFoo = compose({})
+				.mixin({
+					mixin: createStatefulChildrenMixin,
+					initialize(instance) {
+						p = instance.createChildren([ [ createRenderable, { id: 'foo' } ], [ createRenderable, { id: 'bar' } ] ]);
+					}
+				});
+
+			const widget = createFoo({
+				id: 'foo',
+				registryProvider: {
+					get(type: string) {
+						return type === 'widgets' ? registry : null;
+					}
+				}
+			});
+
+			return p.then(([ a, b ]) => {
+				assert(a);
+				assert(b);
+				const [ aID, aWidget ] = a;
+				const [ bID, bWidget ] = b;
+				assert.strictEqual(aID, 'foo');
+				assert.strictEqual(bID, 'bar');
+				assert.strictEqual(aWidget.render().vnodeSelector, 'div');
+				assert.strictEqual(bWidget.render().vnodeSelector, 'div');
+				assert.deepEqual(widget.state.children, [ aID, bID ]);
+			});
+		},
+
+		'destroy with array destroys children'() {
+			let p: Promise<[string, Child][]>;
+			const registry = Object.create(widgetRegistry);
+			let destroyCount = 0;
+			const createDestroyRenderable = createRenderable
+				.mixin({
+					mixin: createDestroyable,
+					initialize(instance) {
+						instance.own({
+							destroy() {
+								destroyCount++;
+							}
+						});
+					}
+				});
+
+			const createFoo = compose({})
+				.mixin({
+					mixin: createStatefulChildrenMixin,
+					initialize(instance) {
+						p = instance.createChildren([
+							[ createDestroyRenderable, { id: 'foo' } ],
+							[ createDestroyRenderable, { id: 'bar' } ]
+						]);
+					}
+				});
+
+			const foo = createFoo({
+				id: 'foo',
+				registryProvider: {
+					get(type: string) {
+						return type === 'widgets' ? registry : null;
+					}
+				}
+			});
+
+			return p.then(() => {
+				assert.strictEqual(destroyCount, 0);
+				return foo.destroy();
+			})
+			.then(() => {
+				assert.strictEqual(destroyCount, 2);
+			});
+		},
+
+		'non-registry rejects'(this: any) {
+			const dfd = this.async();
+			const stateful = createStatefulChildrenMixin();
+			stateful.createChildren({})
+				.then(() => {
+					throw new Error('Should not have been called');
+				}, dfd.callback((err: Error) => {
+					assert.instanceOf(err, Error);
+					assert.strictEqual(err.message, 'Unable to resolve registry');
+				}));
+		}
 	}
 });

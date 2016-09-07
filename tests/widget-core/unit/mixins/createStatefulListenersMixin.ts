@@ -58,7 +58,7 @@ const actionRegistry = {
 	}
 };
 
-const registryProvider: RegistryProvider<Action> = {
+const registryProvider: RegistryProvider<Action> = <any> {
 	get(type: string) {
 		return type === 'actions' ? actionRegistry : null;
 	}
@@ -217,7 +217,7 @@ registerSuite({
 
 		const dfd = this.async();
 
-		const widget = createStatefulListenersMixin({
+		const widget = createStatefulListenersMixin(<any> {
 			registryProvider: {
 				get(type: string) {
 					return type === 'actions' ? rejectingRegistry : null;
@@ -239,7 +239,7 @@ registerSuite({
 		const { get } = actionRegistry;
 		let registry = Object.create(actionRegistry);
 
-		const widget = createStatefulListenersMixin({
+		const widget = createStatefulListenersMixin(<any> {
 			registryProvider: {
 				get(type: string) {
 					return type === 'actions' ? registry : null;

@@ -1,3 +1,4 @@
+import { ComposeFactory } from 'dojo-compose/compose';
 import { Handle } from 'dojo-core/interfaces';
 import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
@@ -46,6 +47,21 @@ export interface Registry<T> {
 }
 
 /**
+ * A special type of registry that allows realization of children on a parent
+ */
+export interface CreatableRegistry<T extends Child> extends Registry<T> {
+	/**
+	 * Realize a child of the specified parent, returning a promise which resolves with
+	 * a tuple that contains the ID and the realized instance.
+	 *
+	 * @param parent The parent where the realized child should be attached to
+	 * @param factory The factory that should be used to realize the child
+	 * @param options Any options that should be passed to the factory when realizing the child
+	 */
+	create<U extends T, O>(factory: ComposeFactory<U, O>, options?: O): Promise<[ string, U ]>;
+}
+
+/**
  * Provides access to read-only registries.
  */
 export interface RegistryProvider<T> {
@@ -54,5 +70,7 @@ export interface RegistryProvider<T> {
 	 *
 	 * Implementations should throw if the given type is not supported.
 	 */
-	get(type: 'actions' | 'stores' | 'widgets'): Registry<T>;
+	get<U extends T & Child>(type: 'widgets'): CreatableRegistry<U>;
+	get(type: 'actions' | 'stores'): Registry<T>;
+	get(type: string): Registry<T>;
 }

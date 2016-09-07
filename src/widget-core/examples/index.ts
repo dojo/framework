@@ -2,9 +2,10 @@ import createMemoryStore from 'src/util/createMemoryStore';
 import createWidget from 'src/createWidget';
 import createPanel from 'src/createPanel';
 import createTabbedPanel from 'src/createTabbedPanel';
-import { Child } from 'src/mixins/interfaces';
+import { Child, RegistryProvider } from 'src/mixins/interfaces';
 import projector from 'src/projector';
 import Promise from 'dojo-shim/Promise';
+import { ComposeFactory } from 'dojo-compose/compose';
 
 /**
  * A memory store which handles the widget states
@@ -24,6 +25,9 @@ const widgetStore = createMemoryStore({
 	]
 });
 
+/**
+ * This is a mock of dojo/app
+ */
 const widgetRegistry = {
 	get(id: string | symbol): Promise<Child> {
 		let widget: Child;
@@ -60,10 +64,13 @@ const widgetRegistry = {
 			break;
 		}
 		return id;
+	},
+	create(factory: ComposeFactory<any, any>, options?: any): Promise<[ string, Child ]> {
+		return factory(options);
 	}
 };
 
-const registryProvider = {
+const registryProvider: RegistryProvider<any> = {
 	get(type: string) {
 		if (type === 'widgets') {
 			return widgetRegistry;
