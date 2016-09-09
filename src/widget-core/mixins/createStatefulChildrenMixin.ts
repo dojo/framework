@@ -29,11 +29,19 @@ export interface CreateChildrenMap<C extends Child, O extends StatefulOptions<St
 	};
 }
 
+/**
+ * Interface that represents and item from a returned `.createChildren()` map
+ */
+export interface CreateChildrenResultsItem<C extends Child> {
+	id: string;
+	widget: C;
+}
+
+/**
+ * Interface that describes the children results returned from `.createChildren()`
+ */
 export interface CreateChildrenResults<C extends Child> {
-	[label: string]: {
-		id: string;
-		widget: C;
-	};
+	[label: string]: CreateChildrenResultsItem<C>;
 }
 
 export type StatefulChildren<C extends Child, S extends StatefulChildrenState> = Stateful<S> & {
