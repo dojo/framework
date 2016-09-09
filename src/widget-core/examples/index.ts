@@ -1,4 +1,4 @@
-import createMemoryStore from 'src/util/createMemoryStore';
+import createMemoryStore from 'dojo-stores/createMemoryStore';
 import createWidget from 'src/createWidget';
 import createPanel from 'src/createPanel';
 import createTabbedPanel from 'src/createTabbedPanel';

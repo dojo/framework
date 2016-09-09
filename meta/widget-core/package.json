@@ -23,6 +23,7 @@
     "dojo-core": ">=2.0.0-alpha.12",
     "dojo-has": ">=2.0.0-alpha.4",
     "dojo-shim": ">=2.0.0-alpha.4",
+    "dojo-stores": "^2.0.0-alpha.1",
     "immutable": "^3.7.6",
     "maquette": "^2.3.1"
   },
