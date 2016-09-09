@@ -2,8 +2,8 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { Actionable, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import Promise from 'dojo-shim/Promise';
-import createStatefulListenersMixin from 'src/mixins/createStatefulListenersMixin';
-import { RegistryProvider } from 'src/mixins/interfaces';
+import createStatefulListenersMixin from '../../../src/mixins/createStatefulListenersMixin';
+import { RegistryProvider } from '../../../src/mixins/interfaces';
 
 type Action = Actionable<TargettedEventObject>;
 

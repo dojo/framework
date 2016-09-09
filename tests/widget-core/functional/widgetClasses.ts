@@ -1,6 +1,6 @@
-import createButton from 'src/createButton';
-import createWidget, { WidgetState } from 'src/createWidget';
-import projector from 'src/projector';
+import createButton from '../../src/createButton';
+import createWidget, { WidgetState } from '../../src/createWidget';
+import projector from '../../src/projector';
 
 const addClassButton = createButton({
 	state: {

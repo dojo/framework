@@ -1,7 +1,7 @@
-import createTabbedPanel from 'src/createTabbedPanel';
-import createPanel from 'src/createPanel';
-import createWidget from 'src/createWidget';
-import projector from 'src/projector';
+import createTabbedPanel from '../../src/createTabbedPanel';
+import createPanel from '../../src/createPanel';
+import createWidget from '../../src/createWidget';
+import projector from '../../src/projector';
 
 const tabbedPanel = createTabbedPanel();
 

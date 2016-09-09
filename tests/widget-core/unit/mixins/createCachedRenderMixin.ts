@@ -1,8 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createCachedRenderMixin from 'src/mixins/createCachedRenderMixin';
+import createCachedRenderMixin from '../../../src/mixins/createCachedRenderMixin';
 import { before } from 'dojo-core/aspect';
-import { createProjector } from 'src/projector';
+import { createProjector } from '../../../src/projector';
 
 registerSuite({
 	name: 'mixins/createCachedRenderMixin',

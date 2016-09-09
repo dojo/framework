@@ -1,10 +1,10 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createStatefulChildrenMixin, { CreateChildrenResults } from 'src/mixins/createStatefulChildrenMixin';
-import createRenderable, { Renderable, RenderableOptions } from 'src/mixins/createRenderable';
+import createStatefulChildrenMixin, { CreateChildrenResults } from '../../../src/mixins/createStatefulChildrenMixin';
+import createRenderable, { Renderable, RenderableOptions } from '../../../src/mixins/createRenderable';
 import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
-import { Child, RegistryProvider } from 'src/mixins/interfaces';
+import { Child, RegistryProvider } from '../../../src/mixins/interfaces';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { h } from 'maquette';

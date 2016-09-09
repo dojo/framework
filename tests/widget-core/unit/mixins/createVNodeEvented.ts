@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createVNodeEvented from 'src/mixins/createVNodeEvented';
+import createVNodeEvented from '../../../src/mixins/createVNodeEvented';
 
 registerSuite({
 	name: 'mixins/createVNodeEvented',

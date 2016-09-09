@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createContainer from 'src/createContainer';
+import createContainer from '../../src/createContainer';
 
 registerSuite({
 	name: 'createContainer',

@@ -1,6 +1,6 @@
-import createButton from 'src/createButton';
-import createTextInput from 'src/createTextInput';
-import projector from 'src/projector';
+import createButton from '../../src/createButton';
+import createTextInput from '../../src/createTextInput';
+import projector from '../../src/projector';
 
 const output = (<HTMLPreElement> document.getElementById('output'));
 

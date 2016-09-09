@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createButton, { ButtonState } from 'src/createButton';
+import createButton, { ButtonState } from '../../src/createButton';
 
 registerSuite({
 	name: 'createButton',

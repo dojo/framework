@@ -1,8 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createRenderableChildrenMixin, { RenderableChildrenMixin } from 'src/mixins/createRenderableChildrenMixin';
-import createRenderable from 'src/mixins/createRenderable';
-import { Child } from 'src/mixins/interfaces';
+import createRenderableChildrenMixin, { RenderableChildrenMixin } from '../../../src/mixins/createRenderableChildrenMixin';
+import createRenderable from '../../../src/mixins/createRenderable';
+import { Child } from '../../../src/mixins/interfaces';
 import { List, Map } from 'immutable';
 import { VNode } from 'maquette';
 

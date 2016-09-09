@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createWidget from 'src/createWidget';
+import createWidget from '../../src/createWidget';
 
 registerSuite({
 	name: 'createWidget',

@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createTabbedMixin from 'src/mixins/createTabbedMixin';
-import createPanel from 'src/createPanel';
+import createTabbedMixin from '../../../src/mixins/createTabbedMixin';
+import createPanel from '../../../src/createPanel';
 import { from as arrayFrom } from 'dojo-shim/array';
 
 registerSuite({

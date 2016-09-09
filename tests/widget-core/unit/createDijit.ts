@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createDijit from 'src/createDijit';
+import createDijit from '../../src/createDijit';
 import * as Dijit from '../support/dijit/Dijit';
 
 registerSuite({

@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createList from 'src/createList';
+import createList from '../../src/createList';
 
 registerSuite({
 	name: 'createList',

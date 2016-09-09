@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createParentListMixin from 'src/mixins/createParentListMixin';
-import createRenderable from 'src/mixins/createRenderable';
+import createParentListMixin from '../../../src/mixins/createParentListMixin';
+import createRenderable from '../../../src/mixins/createRenderable';
 import { List } from 'immutable';
 
 registerSuite({

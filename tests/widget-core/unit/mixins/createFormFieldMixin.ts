@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createFormFieldMixin, { ValueChangeEvent } from 'src/mixins/createFormFieldMixin';
+import createFormFieldMixin, { ValueChangeEvent } from '../../../src/mixins/createFormFieldMixin';
 
 registerSuite({
 	name: 'mixins/createFormFieldMixin',

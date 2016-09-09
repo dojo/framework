@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createCloseableMixin from 'src/mixins/createCloseableMixin';
+import createCloseableMixin from '../../../src/mixins/createCloseableMixin';
 
 registerSuite({
 	name: 'mixins/createCloseableMixin',

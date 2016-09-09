@@ -1,8 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createParentMapMixin, { ParentMap } from 'src/mixins/createParentMapMixin';
-import createRenderable, { Renderable } from 'src/mixins/createRenderable';
-import { Child } from 'src/mixins/interfaces';
+import createParentMapMixin, { ParentMap } from '../../../src/mixins/createParentMapMixin';
+import createRenderable, { Renderable } from '../../../src/mixins/createRenderable';
+import { Child } from '../../../src/mixins/interfaces';
 import { Map } from 'immutable';
 import { from as arrayFrom } from 'dojo-shim/array';
 
