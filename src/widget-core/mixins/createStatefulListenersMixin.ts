@@ -1,5 +1,5 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import createEvented, { Actionable, EventedListenersMap, EventedListenerOrArray, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
+import { Actionable, EventedListenersMap, EventedListenerOrArray, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import createStateful, { Stateful, StatefulOptions, StateChangeEvent } from 'dojo-compose/mixins/createStateful';
 import { Handle } from 'dojo-core/interfaces';
 import Map from 'dojo-shim/Map';
@@ -27,6 +27,13 @@ export interface StatefulListenersMixinFactory extends ComposeFactory<Stateful<S
 	(options?: StatefulListenersOptions<StatefulListenersState>): Stateful<StatefulListenersState>;
 }
 
+/**
+ * Internal function that resolves listeners from the registry and then attaches them to the instance
+ *
+ * @param registry The action registry that contains the listeners to resolve
+ * @param cache The cache of already resolved listeners
+ * @param ref The reference to resolve
+ */
 function resolveListeners(
 	registry: Registry<Actionable<TargettedEventObject>>,
 	cache: Map<string | symbol, Actionable<TargettedEventObject>>,
@@ -49,25 +56,40 @@ function resolveListeners(
 		if (isSync) {
 			return [<Actionable<TargettedEventObject>[]> results, undefined];
 		}
-		return [undefined, Promise.all(results)];
+		return [ undefined, Promise.all(results) ];
 	}
 
 	const id = <string | symbol> ref;
 	if (cache.has(id)) {
-		return [cache.get(id), undefined];
+		return [ cache.get(id), undefined ];
 	}
 
 	const promise = registry.get(id);
 	promise.then((action) => {
 		cache.set(id, action);
 	});
-	return [undefined, promise];
+	return [ undefined, promise ];
 }
 
 interface ManagementState {
+	/**
+	 * A cache of actions that are already resolved
+	 */
 	cache?: Map<string | symbol, Actionable<TargettedEventObject>>;
+
+	/**
+	 * A generation marker to be able to deal with conflicts
+	 */
 	generation?: number;
+
+	/**
+	 * A reference to a destruction handle to remove listeners
+	 */
 	handle?: Handle;
+
+	/**
+	 * A reference to the action registry which should resolve named actions
+	 */
 	registry: Registry<Actionable<TargettedEventObject>>;
 }
 
@@ -140,16 +162,21 @@ function manageListeners(evt: StateChangeEvent<StatefulListenersState>): void {
 	}
 }
 
-const createStatefulListenersMixin: StatefulListenersMixinFactory = createStateful.mixin({
-	mixin: createEvented,
-	initialize(instance: StatefulListeners<StatefulListenersState>, { registryProvider }: StatefulListenersOptions<StatefulListenersState> = {}) {
-		if (registryProvider) {
-			const registry = registryProvider.get('actions');
-			managementMap.set(instance, { registry });
+const createStatefulListenersMixin: StatefulListenersMixinFactory = createStateful
+	.mixin({
+		initialize(instance: StatefulListeners<any>, { registryProvider, state }: StatefulListenersOptions<any> = {}) {
+			if (registryProvider) {
+				const registry = registryProvider.get('actions');
+				managementMap.set(instance, { registry });
 
-			instance.own(instance.on('statechange', manageListeners));
+				instance.own(instance.on('statechange', manageListeners));
+
+				/* Stateful will have already fired the statechange event at this point */
+				if (state) {
+					instance.setState(state);
+				}
+			}
 		}
-	}
 });
 
 export default createStatefulListenersMixin;

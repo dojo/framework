@@ -1,12 +1,12 @@
 import { h, VNode } from 'maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
-import createEvented, { Evented } from 'dojo-compose/mixins/createEvented';
-import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
+import createDestroyable from 'dojo-compose/mixins/createDestroyable';
+import createEvented from 'dojo-compose/mixins/createEvented';
+import { State } from 'dojo-compose/mixins/createStateful';
 import Map from 'dojo-shim/Map';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
-import createRenderable, { Renderable, RenderableOptions } from './mixins/createRenderable';
+import createRenderMixin, { RenderMixin, RenderMixinOptions } from './mixins/createRenderMixin';
 
 /**
  * The minimal API that is needed for Dojo 2 widgets to manage Dojo 1 Dijits
@@ -50,7 +50,7 @@ export interface DijitWidgetConstructor<D extends DijitWidget> {
 	new (params: DijitWidgetParams, srcNodeRef: string | Node): D;
 }
 
-export interface DijitOptions<D extends DijitWidget> extends RenderableOptions, StatefulOptions<DijitState<D>> {
+export interface DijitOptions<D extends DijitWidget> extends RenderMixinOptions<DijitState<D>> {
 	/**
 	 * An object of parameters to pass to the wrapped Dijit constructor
 	 */
@@ -90,7 +90,7 @@ export interface DijitMixin<D extends DijitWidget> {
 	params: DijitWidgetParams;
 }
 
-export type Dijit<D extends DijitWidget> = Renderable & Stateful<DijitState<D>> & DijitMixin<D> & Destroyable & Evented;
+export type Dijit<D extends DijitWidget> = RenderMixin<DijitState<D>> & DijitMixin<D>;
 
 export interface DijitFactory extends ComposeFactory<Dijit<DijitWidget>, DijitOptions<DijitWidget>> {
 	/**
@@ -215,8 +215,7 @@ const dijitDataWeakMap = new WeakMap<Dijit<DijitWidget>, DijitData<DijitWidget>>
  * Create a new instance of a Dijit "wrapper" which can integrate a Dijit into the Dojo 2
  * widgeting system.
  */
-const createDijit: DijitFactory = createRenderable
-	.mixin(createStateful)
+const createDijit: DijitFactory = createRenderMixin
 	.mixin({
 		mixin: <DijitMixin<DijitWidget>> {
 			render(this: Dijit<DijitWidget>): VNode {

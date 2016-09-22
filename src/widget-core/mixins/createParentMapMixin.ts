@@ -98,7 +98,7 @@ const createParentMapMixin: ParentMapMixinFactory = compose<ParentMap<Child>, Pa
 			}
 		},
 
-		append(this: ParentMapMixin<Child>, child: Child | Child[]): Handle {
+		append(this: ParentMapMixin<Child>, child: Child[] | Child): Handle {
 			this.children = Array.isArray(child) ?
 				this.children.merge(mapChildArray(this, child)) :
 				this.children.set(getChildKey(this, child), child);

@@ -16,6 +16,7 @@ registerSuite({
 			.findByCssSelector('dojo-panel-tabbed > ul > :nth-child(2) > :first-child')
 				.click()
 				.end()
+			.sleep(100)
 			.findByCssSelector('dojo-panel.visible > div')
 				.getVisibleText()
 				.then((text: string) => {
@@ -34,6 +35,7 @@ registerSuite({
 			.findByCssSelector('dojo-panel-tabbed > ul > :nth-child(3) > :first-child')
 				.click()
 				.end()
+			.sleep(100)
 			.findByCssSelector('dojo-panel.visible > div')
 				.getVisibleText()
 				.then((text: string) => {
@@ -52,6 +54,7 @@ registerSuite({
 			.findByCssSelector('dojo-panel-tabbed > ul > :nth-child(4) > :first-child')
 				.click()
 				.end()
+			.sleep(100)
 			.findByCssSelector('dojo-panel.visible > div')
 				.getVisibleText()
 				.then((text: string) => {
@@ -70,6 +73,7 @@ registerSuite({
 			.findByCssSelector('dojo-panel-tabbed > ul > :nth-child(4) > :last-child')
 				.click()
 				.end()
+			.sleep(100)
 			.findByCssSelector('dojo-panel.visible > div')
 				.getVisibleText()
 				.then((text: string) => {

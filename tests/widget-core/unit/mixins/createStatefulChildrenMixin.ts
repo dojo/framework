@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createStatefulChildrenMixin, { CreateChildrenResults } from '../../../src/mixins/createStatefulChildrenMixin';
-import createRenderable, { Renderable, RenderableOptions } from '../../../src/mixins/createRenderable';
+import createRenderMixin, { RenderMixin, RenderMixinOptions, RenderMixinState } from '../../../src/mixins/createRenderMixin';
 import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
 import { Child, RegistryProvider } from '../../../src/mixins/interfaces';
@@ -9,12 +9,12 @@ import compose, { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { h } from 'maquette';
 
-const widget1 = createRenderable();
-const widget2 = createRenderable();
-const widget3 = createRenderable();
-const widget4 = createRenderable();
+const widget1 = createRenderMixin();
+const widget2 = createRenderMixin();
+const widget3 = createRenderMixin();
+const widget4 = createRenderMixin();
 
-const widgetMap: { [id: string]: Renderable } = {
+const widgetMap: { [id: string]: Child } = {
 	widget1,
 	widget2,
 	widget3,
@@ -25,18 +25,18 @@ let widgetUID = 5;
 
 const widgetRegistry = {
 	stack: <(string | symbol)[]> [],
-	get(id: string | symbol): Promise<Renderable> {
+	get(id: string | symbol): Promise<RenderMixin<RenderMixinState>> {
 		widgetRegistry.stack.push(id);
 		return Promise.resolve(widgetMap[id]);
 	},
-	identify(value: Renderable): string | symbol {
+	identify(value: RenderMixin<RenderMixinState>): string | symbol {
 		return value === widget1
 			? 'widget1' : value === widget2
 			? 'widget2' : value === widget3
 			? 'widget3' : value === widget4
 			? 'widget4' : undefined;
 	},
-	create<C extends Renderable>(factory: ComposeFactory<C, any>, options?: any): Promise<[string | symbol, C]> {;
+	create<C extends RenderMixin<RenderMixinState>>(factory: ComposeFactory<C, any>, options?: any): Promise<[string | symbol, C]> {;
 		return Promise.resolve<[ string, C ]>([options && options.id || `widget${widgetUID++}`, factory(options)]);
 	}
 };
@@ -80,7 +80,7 @@ registerSuite({
 
 			setTimeout(dfd.callback(() => {
 				assert.deepEqual(widgetRegistry.stack, [ 'widget1' ]);
-				assert.isTrue(List([ widget1 ]).equals(parent.children));
+				assert.isTrue(List<Child>([ widget1 ]).equals(parent.children));
 			}), 50);
 		},
 		setState(this: any) {
@@ -93,7 +93,7 @@ registerSuite({
 
 			setTimeout(dfd.callback(() => {
 				assert.deepEqual(widgetRegistry.stack, [ 'widget2' ]);
-				assert.isTrue(List([ widget2 ]).equals(parent.children));
+				assert.isTrue(List<Child>([ widget2 ]).equals(parent.children));
 			}), 50);
 		},
 		'caching widgets'(this: any) {
@@ -109,10 +109,10 @@ registerSuite({
 				parent.setState({ children: [ 'widget1', 'widget2' ] });
 				setTimeout(dfd.callback(() => {
 					assert.deepEqual(widgetRegistry.stack, [ 'widget2' ], 'should not have called the widget registry');
-					assert.isTrue(List([ widget1, widget2 ]).equals(parent.children));
+					assert.isTrue(List<Child>([ widget1, widget2 ]).equals(parent.children));
 
 					parent.setState({ children: [ 'widget2', 'widget1' ] });
-					assert.isTrue(List([ widget2, widget1 ]).equals(parent.children), 'should synchronously update children when cached');
+					assert.isTrue(List<Child>([ widget2, widget1 ]).equals(parent.children), 'should synchronously update children when cached');
 				}), 100);
 			}, 100);
 		},
@@ -155,7 +155,7 @@ registerSuite({
 
 			setTimeout(dfd.callback(() => {
 				assert.deepEqual(widgetRegistry.stack, [ 'widget1' ]);
-				assert.isTrue(Map({ widget1 }).equals(parent.children));
+				assert.isTrue(Map<string, Child>({ widget1 }).equals(parent.children));
 			}), 50);
 		},
 		setState(this: any) {
@@ -168,7 +168,7 @@ registerSuite({
 
 			setTimeout(dfd.callback(() => {
 				assert.deepEqual(widgetRegistry.stack, [ 'widget2' ]);
-				assert.isTrue(Map({ widget2 }).equals(parent.children));
+				assert.isTrue(Map<Child>({ widget2 }).equals(parent.children));
 			}), 50);
 		},
 		'caching widgets'(this: any) {
@@ -184,10 +184,10 @@ registerSuite({
 				parent.setState({ children: [ 'widget1', 'widget2' ] });
 				setTimeout(dfd.callback(() => {
 					assert.deepEqual(widgetRegistry.stack, [ 'widget2' ], 'should not have called the widget registry');
-					assert.isTrue(Map({ widget1, widget2 }).equals(parent.children));
+					assert.isTrue(Map<Child>({ widget1, widget2 }).equals(parent.children));
 
 					parent.setState({ children: [ 'widget2', 'widget1' ] });
-					assert.isTrue(Map({ widget2, widget1 }).equals(parent.children), 'should synchronously update children when cached');
+					assert.isTrue(Map<Child>({ widget2, widget1 }).equals(parent.children), 'should synchronously update children when cached');
 				}), 100);
 			}, 100);
 		},
@@ -291,7 +291,7 @@ registerSuite({
 		const expected = new Error();
 		rejectingRegistry.get = () => Promise.reject(expected);
 
-		const dfd = this.async();
+		const dfd = this.async(250);
 
 		const parent = createStatefulChildrenList({
 			registryProvider: {
@@ -357,24 +357,24 @@ registerSuite({
 
 			return delay();
 		}).then(() => {
-			assert.isTrue(List([ widget3 ]).equals(parent.children));
+			assert.isTrue(List<Child>([ widget3 ]).equals(parent.children));
 
 			resolveFirst();
 			return delay();
 		}).then(() => {
-			assert.isTrue(List([ widget3 ]).equals(parent.children));
+			assert.isTrue(List<Child>([ widget3 ]).equals(parent.children));
 		});
 	},
 
 	'#createChild()': {
 		'creation during mixin'() {
-			let p: Promise<[string, Renderable]>;
+			let p: Promise<[string, RenderMixin<RenderMixinState>]>;
 			const registry = Object.create(widgetRegistry);
 			const createFoo = compose({})
 				.mixin({
 					mixin: createStatefulChildrenMixin,
 					initialize(instance) {
-						p = instance.createChild(createRenderable, <RenderableOptions> {
+						p = instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
 							render() {
 								return h('div');
 							}
@@ -399,14 +399,14 @@ registerSuite({
 		},
 
 		'append children'() {
-			let p: Promise<[string, Renderable]>;
+			let p: Promise<[string, RenderMixin<RenderMixinState>]>;
 			const registry = Object.create(widgetRegistry);
 			const createFoo = compose({})
 				.mixin({
 					mixin: createStatefulChildrenMixin,
 					initialize(instance) {
 						instance.setState({ children: [ 'foo' ] });
-						p = instance.createChild(createRenderable, <RenderableOptions> {
+						p = instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
 							render() {
 								return h('div');
 							}
@@ -431,14 +431,14 @@ registerSuite({
 		},
 
 		'creation during mixin - with setting ID'() {
-			let p: Promise<[string, Renderable]>;
+			let p: Promise<[string, RenderMixin<RenderMixinState>]>;
 			const registry = Object.create(widgetRegistry);
 
 			const createFoo = compose({})
 				.mixin({
 					mixin: createStatefulChildrenMixin,
 					initialize(instance) {
-						p = instance.createChild(createRenderable, <RenderableOptions> {
+						p = instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
 							render() {
 								return h('div');
 							},
@@ -465,7 +465,7 @@ registerSuite({
 		'non-registry rejects'(this: any) {
 			const dfd = this.async();
 			const stateful = createStatefulChildrenMixin();
-			stateful.createChild(createRenderable)
+			stateful.createChild(createRenderMixin)
 				.then(() => {
 					throw new Error('Should not have called');
 				}, dfd.callback((err: Error) => {
@@ -484,8 +484,8 @@ registerSuite({
 					mixin: createStatefulChildrenMixin,
 					initialize(instance) {
 						p = instance.createChildren({
-							foo: { factory: createRenderable },
-							bar: { factory: createRenderable }
+							foo: { factory: createRenderMixin },
+							bar: { factory: createRenderMixin }
 						});
 					}
 				});
@@ -519,8 +519,8 @@ registerSuite({
 					initialize(instance) {
 						instance.setState({ children: [ 'foo' ]});
 						p = instance.createChildren({
-							foo: { factory: createRenderable },
-							bar: { factory: createRenderable }
+							foo: { factory: createRenderMixin },
+							bar: { factory: createRenderMixin }
 						});
 					}
 				});
@@ -553,8 +553,8 @@ registerSuite({
 					mixin: createStatefulChildrenMixin,
 					initialize(instance) {
 						p = instance.createChildren({
-							foo: { factory: createRenderable, options: { id: 'foo' } },
-							bar: { factory: createRenderable, options: { id: 'bar' } }
+							foo: { factory: createRenderMixin, options: { id: 'foo' } },
+							bar: { factory: createRenderMixin, options: { id: 'bar' } }
 						});
 					}
 				});
@@ -582,7 +582,7 @@ registerSuite({
 			let p: Promise<CreateChildrenResults<Child>>;
 			const registry = Object.create(widgetRegistry);
 			let destroyCount = 0;
-			const createDestroyRenderable = createRenderable
+			const createDestroyRenderable = createRenderMixin
 				.mixin({
 					mixin: createDestroyable,
 					initialize(instance) {
@@ -630,7 +630,7 @@ registerSuite({
 				.mixin({
 					mixin: createStatefulChildrenMixin,
 					initialize(instance) {
-						p = instance.createChildren([ [ createRenderable, {} ], [ createRenderable, {} ] ]);
+						p = instance.createChildren([ [ createRenderMixin, {} ], [ createRenderMixin, {} ] ]);
 					}
 				});
 
@@ -664,7 +664,7 @@ registerSuite({
 					mixin: createStatefulChildrenMixin,
 					initialize(instance) {
 						instance.setState({ children: [ 'foo' ]});
-						p = instance.createChildren([ [ createRenderable, {} ], [ createRenderable, {} ] ]);
+						p = instance.createChildren([ [ createRenderMixin, {} ], [ createRenderMixin, {} ] ]);
 					}
 				});
 
@@ -697,7 +697,7 @@ registerSuite({
 				.mixin({
 					mixin: createStatefulChildrenMixin,
 					initialize(instance) {
-						p = instance.createChildren([ [ createRenderable, { id: 'foo' } ], [ createRenderable, { id: 'bar' } ] ]);
+						p = instance.createChildren([ [ createRenderMixin, { id: 'foo' } ], [ createRenderMixin, { id: 'bar' } ] ]);
 					}
 				});
 
@@ -727,7 +727,7 @@ registerSuite({
 			let p: Promise<[string, Child][]>;
 			const registry = Object.create(widgetRegistry);
 			let destroyCount = 0;
-			const createDestroyRenderable = createRenderable
+			const createDestroyRenderable = createRenderMixin
 				.mixin({
 					mixin: createDestroyable,
 					initialize(instance) {

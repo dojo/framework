@@ -7,7 +7,7 @@ import { Child } from './mixins/interfaces';
 
 export interface LayoutContainerState extends WidgetState, StatefulChildrenState { }
 
-export interface LayoutContainerOptions extends WidgetOptions<LayoutContainerState>, ParentListMixinOptions<Child>, StatefulChildrenOptions<Child, LayoutContainerState> { }
+export type LayoutContainerOptions = WidgetOptions<LayoutContainerState> & ParentListMixinOptions<Child> & StatefulChildrenOptions<Child, LayoutContainerState>;
 
 export type LayoutContainer = Widget<LayoutContainerState> & ParentListMixin<Child>;
 

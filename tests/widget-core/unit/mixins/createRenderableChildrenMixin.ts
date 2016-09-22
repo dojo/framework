@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createRenderableChildrenMixin, { RenderableChildrenMixin } from '../../../src/mixins/createRenderableChildrenMixin';
-import createRenderable from '../../../src/mixins/createRenderable';
+import createRenderMixin from '../../../src/mixins/createRenderMixin';
 import { Child } from '../../../src/mixins/interfaces';
 import { List, Map } from 'immutable';
 import { VNode } from 'maquette';
@@ -20,9 +20,9 @@ registerSuite({
 		'List children'() {
 			const parent: WithListChildren = createRenderableChildrenMixin();
 			parent.children = List([
-				createRenderable({ tagName: 'foo' }),
-				createRenderable({ tagName: 'bar' }),
-				createRenderable({ tagName: 'baz' })
+				createRenderMixin({ tagName: 'foo' }),
+				createRenderMixin({ tagName: 'bar' }),
+				createRenderMixin({ tagName: 'baz' })
 			]);
 			const vnodes = parent.getChildrenNodes();
 			assert.strictEqual(vnodes.length, 3);
@@ -33,9 +33,9 @@ registerSuite({
 		'Map children'() {
 			const parent: WithMapChildren = createRenderableChildrenMixin();
 			parent.children = Map<string, Child>([
-				[ 'foo', createRenderable({ tagName: 'foo' }) ],
-				[ 'bar', createRenderable({ tagName: 'bar' }) ],
-				[ 'baz', createRenderable({ tagName: 'baz' }) ]
+				[ 'foo', createRenderMixin({ tagName: 'foo' }) ],
+				[ 'bar', createRenderMixin({ tagName: 'bar' }) ],
+				[ 'baz', createRenderMixin({ tagName: 'baz' }) ]
 			]);
 			const vnodes = parent.getChildrenNodes();
 			assert.strictEqual(vnodes.length, 3);
@@ -48,8 +48,8 @@ registerSuite({
 		'with list children'() {
 			const parent: WithListChildren = createRenderableChildrenMixin();
 			parent.children = List([
-				createRenderable({ tagName: 'foo' }),
-				createRenderable({ tagName: 'bar' })
+				createRenderMixin({ tagName: 'foo' }),
+				createRenderMixin({ tagName: 'bar' })
 			]);
 			parent.sort = function (valueA: [ number, Child ], valueB: [ number, Child ]): number {
 				const [ , childA ] = valueA;
@@ -63,8 +63,8 @@ registerSuite({
 		'with map children'() {
 			const parent: WithMapChildren = createRenderableChildrenMixin();
 			parent.children = Map<string, Child>()
-				.set('foo', createRenderable({ tagName: 'foo' }))
-				.set('bar', createRenderable({ tagName: 'bar' }));
+				.set('foo', createRenderMixin({ tagName: 'foo' }))
+				.set('bar', createRenderMixin({ tagName: 'bar' }));
 			parent.sort = function (valueA: [ string, Child ], valueB: [ string, Child ]): number {
 				const [ keyA ] = valueA;
 				const [ keyB ] = valueB;
@@ -85,8 +85,8 @@ registerSuite({
 				}
 			});
 			parent.children = Map<string, Child>()
-				.set('foo', createRenderable({ tagName: 'foo' }))
-				.set('bar', createRenderable({ tagName: 'bar' }));
+				.set('foo', createRenderMixin({ tagName: 'foo' }))
+				.set('bar', createRenderMixin({ tagName: 'bar' }));
 			const vnodes = parent.getChildrenNodes();
 			assert.strictEqual((<VNode> vnodes[0]).vnodeSelector, 'bar');
 			assert.strictEqual((<VNode> vnodes[1]).vnodeSelector, 'foo');

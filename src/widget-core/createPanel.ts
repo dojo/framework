@@ -10,7 +10,7 @@ export interface PanelState extends WidgetState, CloseableState, StatefulChildre
 	label?: string;
 }
 
-export interface PanelOptions extends WidgetOptions<PanelState>, ParentListMixinOptions<Child>, StatefulChildrenOptions<Child, PanelState> { }
+export type PanelOptions = WidgetOptions<PanelState> & ParentListMixinOptions<Child> & StatefulChildrenOptions<Child, PanelState>;
 
 export type Panel = Widget<PanelState> & Closeable & ParentListMixin<Child>;
 

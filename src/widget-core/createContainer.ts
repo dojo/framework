@@ -7,7 +7,7 @@ import { Child } from './mixins/interfaces';
 
 export interface ContainerState extends WidgetState, StatefulChildrenState { }
 
-export interface ContainerOptions extends WidgetOptions<ContainerState>, StatefulChildrenOptions<Child, ContainerState> { }
+export type ContainerOptions = WidgetOptions<ContainerState> & StatefulChildrenOptions<Child, ContainerState>;
 
 export type Container = Widget<WidgetState> & ParentListMixin<Child>;
 

@@ -1,12 +1,12 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
 import createTabbedMixin, { TabbedMixin, TabbedChild, TabbedMixinOptions } from './mixins/createTabbedMixin';
-import { CachedRenderState } from './mixins/createCachedRenderMixin';
+import { RenderMixinState } from './mixins/createRenderMixin';
 import createStatefulChildrenMixin, { StatefulChildrenState, StatefulChildrenOptions } from './mixins/createStatefulChildrenMixin';
 
-export interface TabbedPanelState extends WidgetState, CachedRenderState, StatefulChildrenState { }
+export interface TabbedPanelState extends WidgetState, RenderMixinState, StatefulChildrenState { }
 
-export interface TabbedPanelOptions extends WidgetOptions<TabbedPanelState>, TabbedMixinOptions<TabbedChild, TabbedPanelState>, StatefulChildrenOptions<TabbedChild, TabbedPanelState> { }
+export type TabbedPanelOptions = WidgetOptions<TabbedPanelState> & TabbedMixinOptions<TabbedChild, TabbedPanelState> & StatefulChildrenOptions<TabbedChild, TabbedPanelState>;
 
 export type TabbedPanel = Widget<WidgetState> & TabbedMixin<TabbedChild>;
 

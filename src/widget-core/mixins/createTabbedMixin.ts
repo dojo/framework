@@ -6,12 +6,12 @@ import { StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import { Handle } from 'dojo-core/interfaces';
 import { from as arrayFrom } from 'dojo-shim/array';
 import WeakMap from 'dojo-shim/WeakMap';
-import createCachedRenderMixin, { CachedRenderMixin, CachedRenderState } from './createCachedRenderMixin';
+import createRenderMixin, { RenderMixin, RenderMixinState } from './createRenderMixin';
 import { Closeable, CloseableState } from './createCloseableMixin';
 import createParentMapMixin, { ParentMapMixin, ParentMapMixinOptions } from './createParentMapMixin';
 import { Child, ChildEntry } from './interfaces';
 
-export interface TabbedChildState extends CachedRenderState, CloseableState {
+export interface TabbedChildState extends RenderMixinState, CloseableState {
 	/**
 	 * Whether the current child is the active/visible child
 	 */
@@ -23,9 +23,9 @@ export interface TabbedChildState extends CachedRenderState, CloseableState {
 	changed?: boolean; /* TODO: Implement this feature, currently it does not affect anything */
 }
 
-export type TabbedChild = Child & Closeable & CachedRenderMixin<TabbedChildState>;
+export type TabbedChild = Child & Closeable & RenderMixin<TabbedChildState>;
 
-export interface TabbedMixinOptions<C extends TabbedChild, S extends CachedRenderState> extends ParentMapMixinOptions<C>, StatefulOptions<S> {
+export interface TabbedMixinOptions<C extends TabbedChild, S extends RenderMixinState> extends ParentMapMixinOptions<C>, StatefulOptions<S> {
 	/**
 	 * An optional method which can be used to sort the children
 	 */
@@ -59,7 +59,7 @@ export interface Tabbed<C extends TabbedChild> {
 	};
 }
 
-export type TabbedMixin<C extends TabbedChild> = Tabbed<C> & ParentMapMixin<C> & CachedRenderMixin<CachedRenderState> & Destroyable;
+export type TabbedMixin<C extends TabbedChild> = Tabbed<C> & ParentMapMixin<C> & RenderMixin<RenderMixinState> & Destroyable;
 
 /**
  * A utility function that sets the supplied tab as the active tab on the supplied tabbed mixin
@@ -163,11 +163,11 @@ function getTabListeners(tabbed: TabbedMixin<TabbedChild>, tab: TabbedChild): Ta
 	return tabListenersMap.get(tab);
 }
 
-export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChild>, TabbedMixinOptions<TabbedChild, CachedRenderState>> {}
+export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChild>, TabbedMixinOptions<TabbedChild, RenderMixinState>> {}
 
 const childrenNodesCache = new WeakMap<TabbedMixin<TabbedChild>, VNode[]>();
 
-const createTabbedMixin: TabbedMixinFactory = createCachedRenderMixin
+const createTabbedMixin: TabbedMixinFactory = createRenderMixin
 	.mixin({
 		mixin: <Tabbed<TabbedChild>> {
 			tagNames: {

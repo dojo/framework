@@ -1,35 +1,27 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createCachedRenderMixin from '../../../src/mixins/createCachedRenderMixin';
+import createRenderMixin from '../../../src/mixins/createRenderMixin';
 import { before } from 'dojo-core/aspect';
 import { createProjector } from '../../../src/projector';
 
 registerSuite({
-	name: 'mixins/createCachedRenderMixin',
+	name: 'mixins/createRenderMixin',
 	api() {
-		const cachedRender = createCachedRenderMixin();
+		const cachedRender = createRenderMixin();
 		assert(cachedRender);
 		assert.isFunction(cachedRender.getNodeAttributes);
 		assert.isFunction(cachedRender.getChildrenNodes);
 		assert.isFunction(cachedRender.invalidate);
 	},
 	'getNodeAttributes()'() {
-		let count = 0;
-		const click = function click() {
-			count++;
-		};
-		const cachedRender = createCachedRenderMixin({
-			listeners: { click },
+		const cachedRender = createRenderMixin({
 			state: { id: 'foo', classes: [ 'bar' ] }
 		});
 
 		let nodeAttributes = cachedRender.getNodeAttributes();
 		assert.strictEqual(nodeAttributes['data-widget-id'], 'foo');
-		assert.isFunction(nodeAttributes.onclick);
-		nodeAttributes.onclick();
-		assert.strictEqual(count, 1);
 		assert.deepEqual(nodeAttributes.classes, { bar: true });
-		assert.strictEqual(Object.keys(nodeAttributes).length, 5);
+		assert.strictEqual(Object.keys(nodeAttributes).length, 4);
 
 		cachedRender.setState({ 'id': 'foo', classes: ['foo'] });
 
@@ -46,22 +38,22 @@ registerSuite({
 		assert.strictEqual(nodeAttributes.name, 'foo');
 		assert.strictEqual(nodeAttributes['data-widget-id'], 'bar');
 		assert.deepEqual(nodeAttributes.classes, { bar: false });
-		assert.strictEqual(Object.keys(nodeAttributes).length, 6);
+		assert.strictEqual(Object.keys(nodeAttributes).length, 5);
 	},
 	'getChildrenNodes()'() {
-		const cachedRender = createCachedRenderMixin();
+		const cachedRender = createRenderMixin();
 		assert.isUndefined(cachedRender.getChildrenNodes());
 		cachedRender.setState({ label: 'foo' });
 		assert.deepEqual(cachedRender.getChildrenNodes(), [ 'foo' ]);
 	},
 	'render()/invalidate()'() {
-		const cachedRender = createCachedRenderMixin({
+		const cachedRender = createRenderMixin({
 			state: { id: 'foo', label: 'foo' }
 		});
-		cachedRender.invalidate();
-		cachedRender.invalidate();
 		const result1 = cachedRender.render();
 		const result2 = cachedRender.render();
+		cachedRender.invalidate();
+		cachedRender.invalidate();
 		cachedRender.setState({});
 		const result3 = cachedRender.render();
 		const result4 = cachedRender.render();
@@ -77,7 +69,7 @@ registerSuite({
 	},
 	'id': {
 		'in state'() {
-			const cachedRender = createCachedRenderMixin({
+			const cachedRender = createRenderMixin({
 				state: {
 					id: 'foo'
 				}
@@ -87,7 +79,7 @@ registerSuite({
 		},
 		'generated'() {
 			let called = false;
-			const cachedRender = createCachedRenderMixin();
+			const cachedRender = createRenderMixin();
 
 			cachedRender.on('statechange', () => {
 				assert.strictEqual(cachedRender.id, cachedRender.state.id, 'state should match');
@@ -97,14 +89,14 @@ registerSuite({
 			const id = cachedRender.id;
 			assert.isTrue(called, 'statechange should have been called');
 
-			assert.include(id, createCachedRenderMixin.idBase, 'should include static idBase');
-			assert.notStrictEqual(cachedRender.id, createCachedRenderMixin.idBase, 'but shouldn\'t match exactly');
+			assert.include(id, createRenderMixin.idBase, 'should include static idBase');
+			assert.notStrictEqual(cachedRender.id, createRenderMixin.idBase, 'but shouldn\'t match exactly');
 			assert.strictEqual(id, cachedRender.id, 'should return same id');
 		},
 		'is read only'() {
-			const cachedRender = createCachedRenderMixin();
+			const cachedRender = createRenderMixin();
 			assert.throws(() => {
-				cachedRender.id = 'foo';
+				(<any> cachedRender).id = 'foo'; /* .id is readonly, so TypeScript will prevent mutation */
 			});
 		}
 	},
@@ -115,7 +107,7 @@ registerSuite({
 			count++;
 		});
 		projector.attach();
-		const cachedRender = createCachedRenderMixin();
+		const cachedRender = createRenderMixin();
 		cachedRender.parent = projector;
 		cachedRender.invalidate();
 		assert.strictEqual(count, 0);
@@ -125,11 +117,11 @@ registerSuite({
 	},
 	'invalidate invalidates parent widget'() {
 		let count = 0;
-		const createParent = createCachedRenderMixin.before('invalidate', () => {
+		const createParent = createRenderMixin.before('invalidate', () => {
 			count++;
 		});
 		const parent = createParent();
-		const cachedRender = createCachedRenderMixin();
+		const cachedRender = createRenderMixin();
 		cachedRender.parent = <any> parent; /* trick typescript, becuase this isn't a real parent */
 		cachedRender.invalidate();
 		assert.strictEqual(count, 0);

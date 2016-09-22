@@ -1,10 +1,10 @@
-import { List } from 'immutable';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import createEvented, { Evented, EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import { Handle } from 'dojo-core/interfaces';
 import WeakMap from 'dojo-shim/WeakMap';
+import { List } from 'immutable';
 import { getRemoveHandle, insertInList, Position } from '../util/lang';
-import { Child, ChildListEvent } from './interfaces';
+import { Parent, Child, ChildListEvent } from './interfaces';
 
 export interface ParentListMixinOptions<C extends Child> {
 	/**
@@ -13,22 +13,11 @@ export interface ParentListMixinOptions<C extends Child> {
 	children?: C[];
 }
 
-export interface ParentList<C extends Child> {
+export interface ParentList<C extends Child> extends Parent {
 	/**
 	 * An immutable list of children for this parent
 	 */
-	children: List<C>;
-
-	/**
-	 * Append a child (or children) to the parent
-	 * @param child The child to append
-	 */
-	append(child: C): Handle;
-	/**
-	 * Append a child (or children) to the parent
-	 * @param children The children to append
-	 */
-	append(children: C[]): Handle;
+	children: List<Child>;
 
 	/**
 	 * Remove all children (but don't destory them)
@@ -37,17 +26,23 @@ export interface ParentList<C extends Child> {
 
 	/**
 	 * Insert a child in a specific position, providing the reference if required
+	 *
 	 * @param child The child to insert
 	 * @param position The position to insert the child
 	 * @param reference The referencable child, if required
 	 */
 	insert(child: C, position: Position, reference?: C): Handle;
-
-	on?(type: 'childlist', listener: EventedListener<ChildListEvent<this, C>>): Handle;
-	on?(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
 
-export type ParentListMixin<C extends Child> = ParentList<C> & Evented;
+export interface ParentListOverloads<C extends Child> {
+	/**
+	 * Listen for events emitted from a parent when its children are mutated
+	 */
+	on(type: 'childlist', listener: EventedListener<ChildListEvent<this, C>>): Handle;
+	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
+}
+
+export type ParentListMixin<C extends Child> = ParentList<C> & Evented & ParentListOverloads<C>;
 
 export interface ParentListMixinFactory extends ComposeFactory<ParentListMixin<Child>, ParentListMixinOptions<Child>> { }
 
@@ -82,7 +77,7 @@ const createParentMixin: ParentListMixinFactory = compose<ParentList<Child>, Par
 			}
 		},
 
-		append(this: ParentListMixin<Child>, child: Child | Child[]): Handle {
+		append(this: ParentListMixin<Child>, child: Child[] | Child): Handle {
 			this.children = Array.isArray(child) ? <List<Child>> this.children.concat(child) : this.children.push(child);
 			return getRemoveHandle<Child>(this, child);
 		},

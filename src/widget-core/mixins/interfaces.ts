@@ -1,26 +1,57 @@
 import { ComposeFactory } from 'dojo-compose/compose';
+import { Destroyable } from 'dojo-compose/mixins/createDestroyable';
 import { Handle } from 'dojo-core/interfaces';
 import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
-import { Renderable } from './createRenderable';
+import { VNode } from 'maquette';
 
-export type Child = Renderable & { id?: string };
+export interface Child extends Renderable, Destroyable {
+	readonly id: string;
 
-export interface ChildrenMap<C extends Child> {
-	[key: string]: C;
+	/**
+	 * A reference to the widget's parent
+	 */
+	parent: Parent | null;
 }
 
+/**
+ * A type alias that describes an entry in a parent map or list
+ */
 export type ChildEntry<C extends Child> = [ string | number, C ];
 
 export interface ChildListEvent<T, C extends Child> {
 	children: Map<string, C> | List<C>;
+
 	target: T;
+
 	type: 'childlist';
 }
 
+export interface ChildrenMap<C extends Child> {
+	[child: string]: C;
+}
+
 export interface Parent {
+	append(child: Child[] | Child): Handle;
+
 	children: Map<string, Child> | List<Child>;
-	append(child: Child | Child[]): Handle;
+
+	invalidate?(): void;
+}
+
+/**
+ * A special type of registry that allows realization of children on a parent
+ */
+export interface CreatableRegistry<T extends Child> extends Registry<T> {
+	/**
+	 * Realize a child of the specified parent, returning a promise which resolves with
+	 * a tuple that contains the ID and the realized instance.
+	 *
+	 * @param parent The parent where the realized child should be attached to
+	 * @param factory The factory that should be used to realize the child
+	 * @param options Any options that should be passed to the factory when realizing the child
+	 */
+	create<U extends T, O>(factory: ComposeFactory<U, O>, options?: O): Promise<[ string, U ]>;
 }
 
 /**
@@ -47,21 +78,6 @@ export interface Registry<T> {
 }
 
 /**
- * A special type of registry that allows realization of children on a parent
- */
-export interface CreatableRegistry<T extends Child> extends Registry<T> {
-	/**
-	 * Realize a child of the specified parent, returning a promise which resolves with
-	 * a tuple that contains the ID and the realized instance.
-	 *
-	 * @param parent The parent where the realized child should be attached to
-	 * @param factory The factory that should be used to realize the child
-	 * @param options Any options that should be passed to the factory when realizing the child
-	 */
-	create<U extends T, O>(factory: ComposeFactory<U, O>, options?: O): Promise<[ string, U ]>;
-}
-
-/**
  * Provides access to read-only registries.
  */
 export interface RegistryProvider<T> {
@@ -74,3 +90,21 @@ export interface RegistryProvider<T> {
 	get(type: 'actions' | 'stores'): Registry<T>;
 	get(type: string): Registry<T>;
 }
+
+export interface Renderable {
+	/**
+	 * Takes no arguments and returns a VNode
+	 */
+	render(): VNode;
+
+	/**
+	 * The tag name to be used
+	 */
+	tagName: string;
+}
+
+export interface RenderFunction {
+	(): VNode;
+}
+
+export type StylesHash = { [style: string]: string; };

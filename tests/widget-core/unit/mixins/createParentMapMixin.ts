@@ -1,12 +1,11 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createParentMapMixin, { ParentMap } from '../../../src/mixins/createParentMapMixin';
-import createRenderable, { Renderable } from '../../../src/mixins/createRenderable';
+import createRenderMixin from '../../../src/mixins/createRenderMixin';
 import { Child } from '../../../src/mixins/interfaces';
 import { Map } from 'immutable';
 import { from as arrayFrom } from 'dojo-shim/array';
 
-type RenderableWithID = Renderable & { id?: string; };
 type ParentMapWithInvalidate = ParentMap<Child> & { invalidate?(): void; };
 
 registerSuite({
@@ -19,8 +18,8 @@ registerSuite({
 		assert.isFunction(parent.clear);
 	},
 	'children at creation'() {
-		const widget1 = createRenderable();
-		const widget2 = createRenderable();
+		const widget1 = createRenderMixin();
+		const widget2 = createRenderMixin();
 		const parent = createParentMapMixin({
 			children: {
 				widget1,
@@ -33,9 +32,9 @@ registerSuite({
 	'append()': {
 		'child without ID'() {
 			const parent = createParentMapMixin();
-			const handle = parent.append(createRenderable({ tagName: 'foo' }));
+			const handle = parent.append(createRenderMixin({ tagName: 'foo' }));
 			assert.strictEqual(parent.children.size, 1);
-			assert.deepEqual(arrayFrom(<any> parent.children.keys()), [ 'child0' ]);
+			assert.deepEqual(arrayFrom(<any> parent.children.keys()), [ 'widget1' ]);
 			assert.deepEqual(arrayFrom<Child>(<any> parent.children.values()).map(({ tagName }) => tagName), [ 'foo' ]);
 			handle.destroy();
 			assert.strictEqual(parent.children.size, 0);
@@ -43,20 +42,19 @@ registerSuite({
 		'array without IDs'() {
 			const parent = createParentMapMixin();
 			const handle = parent.append([
-				createRenderable({ tagName: 'foo' }),
-				createRenderable({ tagName: 'bar' }),
-				createRenderable({ tagName: 'baz' })
+				createRenderMixin({ tagName: 'foo' }),
+				createRenderMixin({ tagName: 'bar' }),
+				createRenderMixin({ tagName: 'baz' })
 			]);
 			assert.strictEqual(parent.children.size, 3);
-			assert.deepEqual(arrayFrom(<any> parent.children.keys()), [ 'child0', 'child1', 'child2' ]);
+			assert.deepEqual(arrayFrom(<any> parent.children.keys()), [ 'widget2', 'widget3', 'widget4' ]);
 			assert.deepEqual(arrayFrom<Child>(<any> parent.children.values()).map(({ tagName }) => tagName), [ 'foo', 'bar', 'baz' ]);
 			handle.destroy();
 			assert.strictEqual(parent.children.size, 0);
 		},
 		'child with ID'() {
 			const parent = createParentMapMixin();
-			const widget1: RenderableWithID = createRenderable();
-			widget1.id = 'widget1';
+			const widget1 = createRenderMixin({ state: { id: 'widget1' } });
 			const handle = parent.append(widget1);
 			assert.strictEqual(parent.children.size, 1);
 			assert.deepEqual(arrayFrom(<any> parent.children.keys()), [ 'widget1' ]);
@@ -66,12 +64,9 @@ registerSuite({
 		},
 		'array with IDs'() {
 			const parent = createParentMapMixin();
-			const widget1: RenderableWithID = createRenderable();
-			widget1.id = 'widget1';
-			const widget2: RenderableWithID = createRenderable();
-			widget2.id = 'widget2';
-			const widget3: RenderableWithID = createRenderable();
-			widget3.id = 'widget3';
+			const widget1 = createRenderMixin({ state: { id: 'widget1' } });
+			const widget2 = createRenderMixin({ state: { id: 'widget2' } });
+			const widget3 = createRenderMixin({ state: { id: 'widget3' } });
 			const handle = parent.append([
 				widget1,
 				widget2,
@@ -87,14 +82,14 @@ registerSuite({
 	'merge()'() {
 		const parent = createParentMapMixin({
 			children: {
-				widget1: createRenderable({ tagName: 'foo' }),
-				widget2: createRenderable({ tagName: 'bar' })
+				widget1: createRenderMixin({ tagName: 'foo' }),
+				widget2: createRenderMixin({ tagName: 'bar' })
 			}
 		});
 		assert.strictEqual(parent.children.size, 2);
 		const handle = parent.merge({
-			widget1: createRenderable({ tagName: 'baz' }),
-			widget3: createRenderable({ tagName: 'qat' })
+			widget1: createRenderMixin({ tagName: 'baz' }),
+			widget3: createRenderMixin({ tagName: 'qat' })
 		});
 		assert.strictEqual(parent.children.size, 3);
 		assert.deepEqual(arrayFrom(<any> parent.children.keys()), [ 'widget1', 'widget2', 'widget3' ]);
@@ -105,11 +100,11 @@ registerSuite({
 	'clear()'() {
 		const parent = createParentMapMixin({
 			children: {
-				widget1: createRenderable()
+				widget1: createRenderMixin()
 			}
 		});
 		const handle = parent.merge({
-			widget2: createRenderable()
+			widget2: createRenderMixin()
 		});
 		assert.strictEqual(parent.children.size, 2);
 		parent.clear();
@@ -123,10 +118,10 @@ registerSuite({
 		parent.invalidate = () => called++;
 		assert.strictEqual(called, 0);
 		parent.merge({
-			widget1: createRenderable()
+			widget1: createRenderMixin()
 		});
 		assert.strictEqual(called, 1);
-		parent.append(createRenderable());
+		parent.append(createRenderMixin());
 		assert.strictEqual(called, 2);
 		parent.clear();
 		assert.strictEqual(called, 3);

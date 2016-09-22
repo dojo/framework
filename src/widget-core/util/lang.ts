@@ -120,7 +120,7 @@ export function isChild<C extends Child>(value: any): value is C {
  * @param child The child (or array of children) that the handle relates to
  */
 export function getRemoveHandle<C extends Child>(parent: Parent, child: C | C[] | ChildrenMap<C>): Handle {
-	function getDestroyHandle(c: Child): Handle {
+	function getDestroyHandle(c: C): Handle {
 		let destroyed = false;
 		return c.own({
 			destroy() {

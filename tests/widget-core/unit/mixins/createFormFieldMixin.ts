@@ -100,7 +100,7 @@ registerSuite({
 				}
 			});
 
-			let nodeAttributes = formfield.getNodeAttributes();
+			let nodeAttributes = formfield.nodeAttributes[0].call(formfield, {});
 			assert.strictEqual(nodeAttributes['type'], 'foo');
 			assert.strictEqual(nodeAttributes['value'], 'bar');
 			assert.strictEqual(nodeAttributes['name'], 'baz');
@@ -108,7 +108,7 @@ registerSuite({
 
 			formfield.setState({ disabled: true });
 
-			nodeAttributes = formfield.getNodeAttributes();
+			nodeAttributes = formfield.nodeAttributes[0].call(formfield, {});
 			assert.strictEqual(nodeAttributes['type'], 'foo');
 			assert.strictEqual(nodeAttributes['value'], 'bar');
 			assert.strictEqual(nodeAttributes['name'], 'baz');
@@ -116,7 +116,7 @@ registerSuite({
 
 			formfield.setState({ disabled: false });
 
-			nodeAttributes = formfield.getNodeAttributes();
+			nodeAttributes = formfield.nodeAttributes[0].call(formfield, {});
 			assert.strictEqual(nodeAttributes['type'], 'foo');
 			assert.strictEqual(nodeAttributes['value'], 'bar');
 			assert.strictEqual(nodeAttributes['name'], 'baz');
@@ -131,14 +131,14 @@ registerSuite({
 				}
 			});
 
-			let nodeAttributes = formfield.getNodeAttributes();
+			let nodeAttributes = formfield.nodeAttributes[0].call(formfield, {});
 			assert.strictEqual(nodeAttributes['value'], '');
 
 			formfield.setState({
 				value: undefined
 			});
 
-			nodeAttributes = formfield.getNodeAttributes();
+			nodeAttributes = formfield.nodeAttributes[0].call(formfield, {});
 			assert.isUndefined(formfield.state.value);
 			assert.strictEqual(nodeAttributes['value'], '');
 		}

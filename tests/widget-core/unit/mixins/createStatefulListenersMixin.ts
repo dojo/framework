@@ -215,7 +215,7 @@ registerSuite({
 		const expected = new Error();
 		rejectingRegistry.get = () => Promise.reject(expected);
 
-		const dfd = this.async();
+		const dfd = this.async(250);
 
 		const widget = createStatefulListenersMixin(<any> {
 			registryProvider: {
