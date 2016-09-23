@@ -31,16 +31,22 @@ const createRenderableChildrenMixin: RenderableChildrenFactory = compose<Rendera
 	/* When this gets mixed in, if we had the children as part of the interface, we would end up overwritting what is
 	 * likely a get accessor for the children, so to protect ourselves, we won't have it part of the interface */
 	getChildrenNodes(this: RenderableChildrenMixin & { children: List<Child>; }): (VNode | string)[] {
-		const results: (VNode | string)[] = [];
 		const { children, sort } = this;
-		if (sort) {
-			arrayFrom(<ChildEntry<Child>[]> <any> children.entries()).sort(sort)
-				.forEach(([ , child ]) => results.push(child.render()));
+		/* children is not guarunteed to be set, therefore need to guard against it */
+		if (children) {
+			const results: (VNode | string)[] = [];
+			if (sort) {
+				arrayFrom(<ChildEntry<Child>[]> <any> children.entries()).sort(sort)
+					.forEach(([ , child ]) => results.push(child.render()));
+			}
+			else {
+				children.forEach((child) => results.push(child.render()));
+			}
+			return results;
 		}
 		else {
-			children.forEach((child) => results.push(child.render()));
+			return [];
 		}
-		return results;
 	}
 }, (instance, options) => {
 	if (options) {

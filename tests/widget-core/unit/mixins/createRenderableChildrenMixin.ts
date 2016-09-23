@@ -42,6 +42,11 @@ registerSuite({
 			assert.strictEqual((<VNode> vnodes[0]).vnodeSelector, 'foo');
 			assert.strictEqual((<VNode> vnodes[1]).vnodeSelector, 'bar');
 			assert.strictEqual((<VNode> vnodes[2]).vnodeSelector, 'baz');
+		},
+		'Children Unassigned'() {
+			const parent: WithListChildren = createRenderableChildrenMixin();
+			const vnodes = parent.getChildrenNodes();
+			assert.strictEqual(vnodes.length, 0);
 		}
 	},
 	sort: {
@@ -90,6 +95,14 @@ registerSuite({
 			const vnodes = parent.getChildrenNodes();
 			assert.strictEqual((<VNode> vnodes[0]).vnodeSelector, 'bar');
 			assert.strictEqual((<VNode> vnodes[1]).vnodeSelector, 'foo');
+		},
+		'No Children, does not get called'() {
+			const parent: WithListChildren = createRenderableChildrenMixin();
+			parent.sort = function () {
+				throw new Error('should not be called');
+			};
+			const vnodes = parent.getChildrenNodes();
+			assert.strictEqual(vnodes.length, 0);
 		}
 	}
 });
