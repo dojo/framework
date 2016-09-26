@@ -280,8 +280,8 @@ export class PromiseShim<T> implements Thenable<T> {
 	private resolvedValue: any;
 
 	then: <U>(
-		onFulfilled?: (value?: T) => (U | Thenable<U>),
-		onRejected?: (reason?: Error) => (U | Thenable<U>)
+		onFulfilled?: (value: T) => (U | Thenable<U>),
+		onRejected?: (reason: Error) => (U | Thenable<U>)
 	) => PromiseShim<U>;
 
 	[Symbol.toStringTag]: string = 'Promise';
@@ -431,8 +431,8 @@ export default class Promise<T> implements Thenable<T> {
 	/**
 	 * Adds a callback to the promise to be invoked when the asynchronous operation throws an error.
 	 */
-	catch<U>(onRejected: (reason?: Error) => (U | Thenable<U>)): Promise<U>;
-	catch<U>(onRejected: (reason?: Error) => void): Promise<U> {
+	catch<U>(onRejected: (reason: Error) => (U | Thenable<U>)): Promise<U>;
+	catch<U>(onRejected: (reason: Error) => void): Promise<U> {
 		return this.then<U>(null, onRejected);
 	}
 
@@ -477,8 +477,8 @@ export default class Promise<T> implements Thenable<T> {
 	/**
 	 * Adds a callback to the promise to be invoked when the asynchronous operation completes successfully.
 	 */
-	then<U>(onFulfilled?: ((value?: T) => (U | Thenable<U> | null | undefined)) | null | undefined, onRejected?: (reason?: Error) => void): Promise<U>;
-	then<U>(onFulfilled?: ((value?: T) => (U | Thenable<U> | null | undefined)) | null | undefined, onRejected?: (reason?: Error) => (U | Thenable<U>)): Promise<U> {
+	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | null | undefined)) | null | undefined, onRejected?: (reason: Error) => void): Promise<U>;
+	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | null | undefined)) | null | undefined, onRejected?: (reason: Error) => (U | Thenable<U>)): Promise<U> {
 		return (<typeof Promise> this.constructor).copy(this.promise.then(onFulfilled, onRejected));
 	}
 }
