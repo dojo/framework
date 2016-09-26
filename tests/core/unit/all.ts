@@ -9,7 +9,7 @@ import './lang';
 import './load';
 import './main';
 import './on/all';
-import './Registry';
+import './MatchRegistry';
 import './queue';
 import './streams/all';
 import './request';

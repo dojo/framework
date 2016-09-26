@@ -2,13 +2,13 @@ import Promise from 'dojo-shim/Promise';
 import Task from './async/Task';
 import has from './request/has';
 import { Handle } from './interfaces';
-import Registry, { Test } from './Registry';
+import MatchRegistry, { Test } from './MatchRegistry';
 import load from './load';
 import { ParamList } from './UrlSearchParams';
 
 declare var require: any;
 
-export class FilterRegistry extends Registry<RequestFilter> {
+export class FilterRegistry extends MatchRegistry<RequestFilter> {
 	register(test: string | RegExp | RequestFilterTest | null, value: RequestFilter, first?: boolean): Handle {
 		let entryTest: Test;
 		const inTest = test;
@@ -36,7 +36,7 @@ if (has('host-node')) {
 	defaultProvider = './request/node';
 }
 
-export class ProviderRegistry extends Registry<RequestProvider> {
+export class ProviderRegistry extends MatchRegistry<RequestProvider> {
 	private _providerPromise: Promise<RequestProvider>;
 
 	constructor() {

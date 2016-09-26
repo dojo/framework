@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Registry from 'src/Registry';
+import MatchRegistry from 'src/MatchRegistry';
 
 function stringTest(value: string) {
 	return (...args: any[]): boolean => {
@@ -9,10 +9,10 @@ function stringTest(value: string) {
 }
 
 registerSuite({
-	name: 'Registry',
+	name: 'MatchRegistry',
 
 	'#match'() {
-		const registry = new Registry<any>();
+		const registry = new MatchRegistry<any>();
 		const handler = () => {};
 		registry.register((name: string) => {
 			return name === 'foo';
@@ -23,7 +23,7 @@ registerSuite({
 
 	'#register': {
 		multiple() {
-			const registry = new Registry<any>();
+			const registry = new MatchRegistry<any>();
 			const handler = () => {};
 			registry.register(stringTest('foo'), handler);
 			registry.register(stringTest('foo'), () => {});
@@ -31,7 +31,7 @@ registerSuite({
 		},
 
 		first() {
-			const registry = new Registry<number>();
+			const registry = new MatchRegistry<number>();
 			registry.register(stringTest('foo'), 1);
 			registry.register(stringTest('foo'), 2, true);
 			assert.strictEqual(registry.match('foo'), 2);
@@ -40,7 +40,7 @@ registerSuite({
 		},
 
 		destroy() {
-			const registry = new Registry<number>(2);
+			const registry = new MatchRegistry<number>(2);
 			const handle = registry.register(stringTest('foo'), 1);
 			assert.equal(registry.match('foo'), 1);
 			handle.destroy();
@@ -52,7 +52,7 @@ registerSuite({
 	},
 
 	'default value'() {
-		const registry = new Registry<any>('foo');
+		const registry = new MatchRegistry<any>('foo');
 		assert.strictEqual(registry.match('bar'), 'foo');
 	}
 });

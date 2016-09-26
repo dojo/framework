@@ -1,8 +1,8 @@
 import { Handle } from './interfaces';
 
 /**
- * An entry in a Registry. Each Entry contains a test to determine whether the Entry is applicable, and a value for the
- * entry.
+ * An entry in a MatchRegistry. Each Entry contains a test to determine whether the Entry is applicable, and a value for
+ * the entry.
  */
 interface Entry<T> {
 	test: Test | null;
@@ -12,12 +12,12 @@ interface Entry<T> {
 /**
  * A registry of values tagged with matchers.
  */
-export default class Registry<T> {
+export default class MatchRegistry<T> {
 	protected _defaultValue: T | undefined;
 	private _entries: Entry<T>[] | null;
 
 	/**
-	 * Construct a new Registry, optionally containing a given default value.
+	 * Construct a new MatchRegistry, optionally containing a given default value.
 	 */
 	constructor(defaultValue?: T) {
 		this._defaultValue = defaultValue;

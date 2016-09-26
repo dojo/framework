@@ -5,9 +5,9 @@ import Evented from './Evented';
 import global from './global';
 import * as lang from './lang';
 import load from './load';
+import MatchRegistry from './MatchRegistry';
 import on, { emit } from './on';
 import * as queue from './queue';
-import Registry from './Registry';
 import request from './request';
 import Scheduler from './Scheduler';
 import * as stringExtras from './stringExtras';
@@ -35,9 +35,9 @@ export {
 	global,
 	lang,
 	load,
+	MatchRegistry,
 	on,
 	queue,
-	Registry,
 	request,
 	Scheduler,
 	stringExtras,
