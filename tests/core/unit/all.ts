@@ -5,6 +5,7 @@ import './async/timing';
 import './Evented';
 import './encoding';
 import './global';
+import './IdentityRegistry';
 import './lang';
 import './load';
 import './main';
