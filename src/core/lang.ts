@@ -38,7 +38,7 @@ function copyArray<T>(array: T[], inherited: boolean): T[] {
 interface MixinArgs<T extends {}, U extends {}> {
 	deep: boolean;
 	inherited: boolean;
-	sources: U[];
+	sources: (U | null | undefined)[];
 	target: T;
 }
 
@@ -48,6 +48,9 @@ function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
 	const target = kwArgs.target;
 
 	for (let source of kwArgs.sources) {
+		if (source === null || source === undefined) {
+			continue;
+		}
 		for (let key in source) {
 			if (inherited || hasOwnProperty.call(source, key)) {
 				let value: any = (<any> source)[key];
@@ -75,7 +78,7 @@ function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
 }
 
 interface ObjectAssignConstructor extends ObjectConstructor {
-	assign<T extends {}, U extends {}>(target: T, ...sources: U[]): T&U;
+	assign<T extends {}, U extends {}>(target: T, ...sources: (U | null | undefined)[]): T&U;
 }
 
 /**
@@ -87,7 +90,7 @@ interface ObjectAssignConstructor extends ObjectConstructor {
  */
 export const assign = has('object-assign') ?
 	(<ObjectAssignConstructor> Object).assign :
-	function<T extends {}, U extends {}> (target: T, ...sources: U[]): T&U {
+	function<T extends {}, U extends {}> (target: T, ...sources: (U | null | undefined)[]): T&U {
 		return _mixin({
 			deep: false,
 			inherited: false,
