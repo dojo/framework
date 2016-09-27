@@ -107,7 +107,7 @@ export interface DijitFactory extends ComposeFactory<Dijit<DijitWidget>, DijitOp
 function constructDijitWidget(dijit: Dijit<DijitWidget>, srcNodeRef: Node): Promise<DijitWidget> {
 	const dijitData = dijitDataWeakMap.get(dijit);
 	return resolveCtor(dijitData.Ctor)
-		.then((Ctor) => {
+		.then((/* tslint:disable */Ctor/* tslint:enable */) => {
 			const dijitWidget = new Ctor(dijitData.params, srcNodeRef);
 			dijitWidget.startup();
 			return dijitWidget;
@@ -151,7 +151,7 @@ const ctorMap = new Map<string, DijitWidgetConstructor<DijitWidget>>();
  * Returns a `Promise` which resolves with the constructor.
  * @param Ctor The Dijit widget constructor to be resolved
  */
-function resolveCtor<D extends DijitWidget>(Ctor: DijitWidgetConstructor<D> | string): Promise<DijitWidgetConstructor<D>> {
+function resolveCtor<D extends DijitWidget>(/* tslint:disable */Ctor/* tslint:enable */: DijitWidgetConstructor<D> | string): Promise<DijitWidgetConstructor<D>> {
 	if (typeof Ctor !== 'string') {
 		return Promise.resolve(Ctor);
 	}
@@ -166,7 +166,7 @@ function resolveCtor<D extends DijitWidget>(Ctor: DijitWidgetConstructor<D> | st
 				reject(error);
 			});
 			const mid = Ctor;
-			require([ mid ], (Ctor: DijitWidgetConstructor<D>) => {
+			require([ mid ], (/* tslint:disable */Ctor/* tslint:enable */: DijitWidgetConstructor<D>) => {
 				handle.remove();
 				if (Ctor && typeof Ctor === 'function') {
 					ctorMap.set(mid, Ctor);
@@ -251,7 +251,7 @@ const createDijit: DijitFactory = createRenderMixin
 		mixin: createEvented,
 		initialize(instance: Dijit<DijitWidget>) {
 			instance.own(instance.on('statechange', (event) => {
-				const { Ctor, params } = event.state;
+				const { /* tslint:disable */Ctor/* tslint:enable */, params } = event.state;
 				if (Ctor || params) {
 					const dijitData = dijitDataWeakMap.get(instance);
 					if (!dijitData.dijitWidget) {

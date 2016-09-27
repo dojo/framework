@@ -2,13 +2,18 @@
   "name": "dojo-widgets",
   "version": "2.0.0-pre",
   "description": "A core widget library for Dojo 2",
+  "private": true,
   "homepage": "http://dojotoolkit.org",
   "bugs": {
     "url": "https://github.com/dojo/widgets/issues"
   },
   "license": "BSD-3-Clause",
   "main": "main.js",
-  "private": true,
+  "files": [
+    "dist",
+    "src",
+    "typings.json"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/dojo/widgets.git"
@@ -50,8 +55,8 @@
     "intern": "^3.2.3",
     "istanbul": "^0.4.5",
     "jsdom": "^9.5.0",
-    "remap-istanbul": "0.6.4",
-    "tslint": "next",
+    "remap-istanbul": "^0.6.4",
+    "tslint": "^3.11.0",
     "typescript": "2.0.2"
   }
 }
