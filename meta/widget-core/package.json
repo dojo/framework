@@ -57,6 +57,6 @@
     "jsdom": "^9.5.0",
     "remap-istanbul": "^0.6.4",
     "tslint": "^3.11.0",
-    "typescript": "2.0.2"
+    "typescript": "^2.0.3"
   }
 }
