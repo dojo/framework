@@ -28,7 +28,7 @@ export interface MemoryStorePromise<T> extends Promise<T> {
 	 */
 	get(id: StoreIndex): MemoryStorePromise<T>;
 
-	get(): MemoryStorePromise<T>;
+	get(): MemoryStorePromise<Iterator<T>>;
 
 	/**
 	 * Put an item in the object store.
