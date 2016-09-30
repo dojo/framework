@@ -8,10 +8,12 @@ This package provides a set of language helpers, utility functions, and classes 
 It includes APIs for feature detection, asynchronous and streaming operations, basic event handling,
 and making HTTP requests.
 
+**WARNING** This is *beta* software.  While we do not anticipate significant changes to the API at this stage, we may feel the need to do so.  This is not yet production ready, so you should use at your own risk.
+
 ## Installation
 
-This package is currently in Alpha with a initial stable release scheduled for later this year. You can download
-the Alpha by cloning or downloading this repository.
+This package is currently in Beta with a initial stable release scheduled for later this year. You can download
+the Beta by cloning or downloading this repository.
 
 ## Usage
 
@@ -126,7 +128,7 @@ Dojo core's continuous integration tests use the [BrowserStack](http://www.brows
 
 ## Licensing information
 
-© 2004–2015 Dojo Foundation & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© 2004–2016 Dojo Foundation & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
 Some string functions (`codePointAt`, `fromCodePoint`, and `repeat`) adopted from polyfills by Mathias Bynens,
 under the [MIT](http://opensource.org/licenses/MIT) license.
