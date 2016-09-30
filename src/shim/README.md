@@ -13,6 +13,8 @@ augmenting the built in classes in the global namespace.
 The one exception to this though is the `Symbol` functionality, in that the well-known symbols need to be located
 off of the global `Symbol` object in order to ensure that the correct symbol is referenced.
 
+**WARNING** This is *beta* software.  While we do not anticipate significant changes to the API at this stage, we may feel the need to do so.  This is not yet production ready, so you should use at your own risk.
+
 ## Features
 
 TODO: Add sections on features of this package
