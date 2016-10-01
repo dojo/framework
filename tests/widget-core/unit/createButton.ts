@@ -41,11 +41,11 @@ registerSuite({
 			}
 		});
 		let vnode = button.render();
-		assert.isUndefined(vnode.properties['disabled']);
+		assert.isFalse(vnode.properties['disabled']);
 		button.setState({
 			disabled: true
 		});
 		vnode = button.render();
-		assert.strictEqual(vnode.properties['disabled'], 'disabled');
+		assert.isTrue(vnode.properties['disabled']);
 	}
 });

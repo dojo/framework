@@ -104,7 +104,7 @@ registerSuite({
 			assert.strictEqual(nodeAttributes['type'], 'foo');
 			assert.strictEqual(nodeAttributes['value'], 'bar');
 			assert.strictEqual(nodeAttributes['name'], 'baz');
-			assert.isUndefined(nodeAttributes['disabled']);
+			assert.isFalse(nodeAttributes['disabled']);
 
 			formfield.setState({ disabled: true });
 
@@ -112,7 +112,7 @@ registerSuite({
 			assert.strictEqual(nodeAttributes['type'], 'foo');
 			assert.strictEqual(nodeAttributes['value'], 'bar');
 			assert.strictEqual(nodeAttributes['name'], 'baz');
-			assert.strictEqual(nodeAttributes['disabled'], 'disabled');
+			assert.isTrue(nodeAttributes['disabled']);
 
 			formfield.setState({ disabled: false });
 
@@ -120,7 +120,7 @@ registerSuite({
 			assert.strictEqual(nodeAttributes['type'], 'foo');
 			assert.strictEqual(nodeAttributes['value'], 'bar');
 			assert.strictEqual(nodeAttributes['name'], 'baz');
-			assert.isUndefined(nodeAttributes['disabled']);
+			assert.isFalse(nodeAttributes['disabled']);
 		},
 		'falsey value'() {
 			const formfield = createFormFieldMixin({
