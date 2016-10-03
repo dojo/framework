@@ -146,10 +146,23 @@ const noopHandle = { destroy() { } };
 const emptyVNode = h('div');
 const noopVNode = function(): VNode { return emptyVNode; };
 
+interface ProjectorAttributes {
+
+	classes?: {
+		[index: string]: boolean | null | undefined;
+	};
+
+	styles?: {
+		[index: string]: string | null | undefined;
+	};
+
+	[index: string]: any;
+}
+
 export const createProjector: ProjectorFactory = compose<ProjectorMixin, ProjectorOptions>({
 		getNodeAttributes(this: Projector, overrides?: VNodeProperties): VNodeProperties {
 			/* TODO: This is the same logic as createCachedRenderMixin, merge somehow */
-			const props: VNodeProperties = {};
+			const props: ProjectorAttributes  = {};
 			for (let key in this.listeners) {
 				props[key] = this.listeners[key];
 			}

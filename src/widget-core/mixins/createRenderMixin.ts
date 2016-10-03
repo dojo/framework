@@ -212,10 +212,8 @@ const createRenderMixin = createStateful
 
 			nodeAttributes: [
 				function (this: RenderMixin<RenderMixinState>): VNodeProperties {
-					const props: VNodeProperties = this.state && this.state.id
-						? { 'data-widget-id': this.state.id }
-						: {};
-
+					const baseIdProp = this.state && this.state.id ? { 'data-widget-id': this.state.id } : {};
+					const styles = this.styles || {};
 					const classes: { [index: string]: boolean; } = {};
 					const widgetClasses = widgetClassesMap.get(this);
 
@@ -226,10 +224,7 @@ const createRenderMixin = createStateful
 						widgetClassesMap.set(this, this.classes);
 					}
 
-					props.classes = classes;
-					props.styles = this.styles || {};
-					props.key = this;
-					return props;
+					return assign(baseIdProp, { key: this, classes, styles });
 				}
 			],
 
