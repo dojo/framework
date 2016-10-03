@@ -4,17 +4,16 @@
 		"declaration": false,
 		"module": "umd",
 		"noImplicitAny": true,
+		"strictNullChecks": true,
 		"outDir": "_build/",
-		"baseUrl": "node_modules",
 		"removeComments": false,
 		"sourceMap": true,
 		"target": "es5",
-		"moduleResolution": "classic",
-		"strictNullChecks": true
+		"moduleResolution": "node"
 	},
 	"include": [
+		"./typings/index.d.ts",
 		"./src/**/*.ts",
-		"./tests/**/*.ts",
-		"./typings/index.d.ts"
+		"./tests/**/*.ts"
 	]
 }

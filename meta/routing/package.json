@@ -2,13 +2,18 @@
   "name": "dojo-routing",
   "version": "2.0.0-pre",
   "description": "A routing library for Dojo 2 applications",
+  "private": true,
   "homepage": "http://dojotoolkit.org",
   "bugs": {
     "url": "https://github.com/dojo/routing/issues"
   },
   "license": "BSD-3-Clause",
   "main": "main.js",
-  "private": true,
+  "files": [
+    "dist",
+    "src",
+    "typings.json"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/dojo/routing.git"
@@ -28,20 +33,14 @@
     "dojo-loader": ">=2.0.0-beta.7",
     "dts-generator": "~1.7.0",
     "glob": "^7.0.3",
-    "grunt": "^1.0.1",
-    "grunt-contrib-clean": "^1.0.0",
-    "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-watch": "^1.0.0",
+    "grunt": "~1.0.1",
     "grunt-dojo2": ">=2.0.0-beta.16",
-    "grunt-text-replace": "0.4.0",
-    "grunt-ts": "^5.5.1",
-    "grunt-tslint": "^3.1.0",
-    "grunt-typings": "kitsonk/grunt-typings#452cf5f29a6070965f85d0dcae48abbd75939179",
-    "intern": "~3.2.1",
-    "istanbul": "0.4.3",
-    "remap-istanbul": ">=0.6.4",
+    "grunt-text-replace": "^0.4.0",
+    "intern": "^3.2.3",
+    "istanbul": "^0.4.3",
+    "remap-istanbul": "^0.6.4",
     "sinon": "^1.17.4",
-    "tslint": "next",
-    "typescript": "2.0.2"
+    "tslint": "^3.11.0",
+    "typescript": "~2.0.3"
   }
 }

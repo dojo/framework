@@ -1,12 +1,12 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 
-import * as main from 'src/main';
-import createRoute from 'src/createRoute';
-import createRouter from 'src/createRouter';
-import createHashHistory from 'src/history/createHashHistory';
-import createMemoryHistory from 'src/history/createMemoryHistory';
-import createStateHistory from 'src/history/createStateHistory';
+import * as main from '../../src/main';
+import createRoute from '../../src/createRoute';
+import createRouter from '../../src/createRouter';
+import createHashHistory from '../../src/history/createHashHistory';
+import createMemoryHistory from '../../src/history/createMemoryHistory';
+import createStateHistory from '../../src/history/createStateHistory';
 
 registerSuite({
 	name: 'main',
