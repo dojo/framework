@@ -6,6 +6,7 @@ import { h } from 'maquette';
 import createRenderMixin from '../../src/mixins/createRenderMixin';
 import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { ComposeFactory } from 'dojo-compose/compose';
+import global from 'dojo-core/global';
 import { Child } from '../../src/mixins/interfaces';
 
 const createRenderableChild = createDestroyable
@@ -74,6 +75,26 @@ registerSuite({
 				}), 300);
 			}, 300);
 		}).catch(dfd.reject);
+	},
+	'construct projector with css transitions'() {
+		global.cssTransitions = {};
+		try {
+			createProjector({ cssTransitions: true });
+		}
+		catch (err) {
+			assert.fail(null, null, 'Projector should be created without throwing an error');
+		}
+
+	},
+	'construting projector configured for css transitions throws when css-transitions script is not loaded.'() {
+		global.cssTransitions = undefined;
+		try {
+			createProjector({ cssTransitions: true });
+		}
+		catch (err) {
+			assert.isTrue(err instanceof Error);
+			assert.equal(err.message, 'Unable to create projector with css transitions enabled. Is the \'css-transition.js\' script loaded in the page?');
+		}
 	},
 	'\'attach\' event'() {
 		const div = document.createElement('div');

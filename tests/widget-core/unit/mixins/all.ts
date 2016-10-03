@@ -1,4 +1,5 @@
 import './createCloseableMixin';
+import './createCssTransitionMixin';
 import './createFormFieldMixin';
 import './createListMixin';
 import './createParentListMixin';
