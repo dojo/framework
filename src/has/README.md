@@ -11,6 +11,8 @@ detected features.  The features can also be asserted statically, thereby allowi
 optimization tool that can be used to make certain branches of code "dead" which can be elided during a build
 step.  The `has` module is also capable of allowing conditional loading of modules with certain loaders.
 
+**WARNING** This is *beta* software.  While we do not anticipate significant changes to the API at this stage, we may feel the need to do so.  This is not yet production ready, so you should use at your own risk.
+
 ## Features
 
 ### Feature Branching
