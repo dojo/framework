@@ -47,12 +47,17 @@ suite('createHashHistory', () => {
 
 	test('emits change when path is updated', () => {
 		const history = createHashHistory({ window: sandbox.contentWindow });
-		let emittedValue = '';
+		let emittedValues: string[] = [];
 		history.on('change', ({ value }) => {
-			emittedValue = value;
+			emittedValues.push(value);
 		});
 		history.set('/foo');
-		assert.equal(emittedValue, '/foo');
+
+		return new Promise((resolve) => setTimeout(resolve, 500))
+			.then(() => {
+				assert.lengthOf(emittedValues, 1);
+				assert.equal(emittedValues[0], '/foo');
+			});
 	});
 
 	test('replace path', () => {
@@ -64,12 +69,17 @@ suite('createHashHistory', () => {
 
 	test('emits change when path is replaced', () => {
 		const history = createHashHistory({ window: sandbox.contentWindow });
-		let emittedValue = '';
+		let emittedValues: string[] = [];
 		history.on('change', ({ value }) => {
-			emittedValue = value;
+			emittedValues.push(value);
 		});
 		history.replace('/foo');
-		assert.equal(emittedValue, '/foo');
+
+		return new Promise((resolve) => setTimeout(resolve, 500))
+			.then(() => {
+				assert.lengthOf(emittedValues, 1);
+				assert.equal(emittedValues[0], '/foo');
+			});
 	});
 
 	test('does not add a new history entry when path is replaced', () => {

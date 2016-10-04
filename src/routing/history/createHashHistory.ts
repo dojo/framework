@@ -79,11 +79,16 @@ const createHashHistory: HashHistoryFactory = compose.mixin(createEvented, {
 
 		instance.own(on(window, 'hashchange', () => {
 			const path = browserLocation.hash.slice(1);
-			privateState.current = path;
-			instance.emit({
-				type: 'change',
-				value: path
-			});
+
+			// Ignore hashchange for the current path. Guards against browsers firing hashchange when the history
+			// manager sets the hash.
+			if (path !== privateState.current) {
+				privateState.current = path;
+				instance.emit({
+					type: 'change',
+					value: path
+				});
+			}
 		}));
 	}
 });
