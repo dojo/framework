@@ -19,6 +19,8 @@ export interface HistoryChangeEvent extends TargettedEventObject {
 export interface HistoryMixin {
 	/**
 	 * Get the current value. This is a path string.
+	 *
+	 * Implementations may ensure that the value always starts with a slash.
 	 */
 	readonly current: string;
 

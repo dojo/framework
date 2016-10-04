@@ -471,7 +471,7 @@ const history = createStateHistory({ window: myWindowObject });
 
 This is mostly useful for testing purposes.
 
-Use `history.current` to get the current path. It's initialized to the browser's location when the history object was created.
+Use `history.current` to get the current path. It's initialized to the browser's location when the history object was created. It always starts with a `/`, regardless of the path string passed to the `history.set()` and `history.replace()` methods.
 
 Call `history.set()` with a path string to set a new path. This will use `window.history.pushState()` to change the URL shown in the browser.
 
@@ -486,6 +486,18 @@ history.on('change', event => {
 ```
 
 Applications should call `Router#dispatch()` with this value as the path.
+
+##### Specifying a base pathname
+
+A base pathname can be provided when creating the history manager:
+
+```ts
+const history = createStateHistory({ base: '/myapp' });
+```
+
+In this example, if the browser's location is `/myapp/index`, the path available at `history.current` and the `change` event value will be `/index`. When calling `history.set()` and `history.replace()` with say `/settings`, the browser's location will be changed to `/myapp/settings`.
+
+You may specify the base with or without a trailing slash.
 
 #### Fragment identifiers
 

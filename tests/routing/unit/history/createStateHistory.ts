@@ -46,6 +46,13 @@ suite('createStateHistory', () => {
 		assert.equal(sandbox.contentWindow.location.pathname, '/foo');
 	});
 
+	test('update path, adds leading slash if necessary', () => {
+		const history = createStateHistory({ window: sandbox.contentWindow });
+		history.set('foo');
+		assert.equal(history.current, '/foo');
+		assert.equal(sandbox.contentWindow.location.pathname, '/foo');
+	});
+
 	test('emits change when path is updated', () => {
 		const history = createStateHistory({ window: sandbox.contentWindow });
 		let emittedValue = '';
@@ -59,6 +66,13 @@ suite('createStateHistory', () => {
 	test('replace path', () => {
 		const history = createStateHistory({ window: sandbox.contentWindow });
 		history.replace('/foo');
+		assert.equal(history.current, '/foo');
+		assert.equal(sandbox.contentWindow.location.pathname, '/foo');
+	});
+
+	test('replace path, adds leading slash if necessary', () => {
+		const history = createStateHistory({ window: sandbox.contentWindow });
+		history.replace('foo');
 		assert.equal(history.current, '/foo');
 		assert.equal(sandbox.contentWindow.location.pathname, '/foo');
 	});
@@ -80,6 +94,79 @@ suite('createStateHistory', () => {
 		const history = createStateHistory({ window: sandbox.contentWindow });
 		history.replace('/baz');
 		assert.equal(sandbox.contentWindow.history.length, length);
+	});
+
+	suite('with base', () => {
+		test('throws if base contains #', () => {
+			assert.throws(() => {
+				createStateHistory({ base: '/foo#bar', window });
+			}, TypeError, 'base must not contain \'#\'');
+		});
+
+		test('throws if base contains ?', () => {
+			assert.throws(() => {
+				createStateHistory({ base: '/foo?bar', window });
+			}, TypeError, 'base must not contain \'?\'');
+		});
+
+		test('initializes current path, taking out the base, with trailing slash', () => {
+			sandbox.contentWindow.history.pushState({}, '', '/foo/bar?baz');
+			assert.equal(createStateHistory({ base: '/foo/', window: sandbox.contentWindow }).current, '/bar?baz');
+		});
+
+		test('initializes current path, taking out the base, without trailing slash', () => {
+			sandbox.contentWindow.history.pushState({}, '', '/foo/bar?baz');
+			assert.equal(createStateHistory({ base: '/foo', window: sandbox.contentWindow }).current, '/bar?baz');
+		});
+
+		test('initializes current path to / if it\'s not a base suffix', () => {
+			sandbox.contentWindow.history.pushState({}, '', '/foo/bar?baz');
+			assert.equal(createStateHistory({ base: '/thud/', window: sandbox.contentWindow }).current, '/');
+		});
+
+		test('#set expands the path with the base when pushing state, with trailing slash', () => {
+			const history = createStateHistory({ base: '/foo/', window: sandbox.contentWindow });
+			history.set('/bar');
+			assert.equal(history.current, '/bar');
+			assert.equal(sandbox.contentWindow.location.pathname, '/foo/bar');
+
+			history.set('baz');
+			assert.equal(history.current, '/baz');
+			assert.equal(sandbox.contentWindow.location.pathname, '/foo/baz');
+		});
+
+		test('#set expands the path with the base when pushing state, without trailing slash', () => {
+			const history = createStateHistory({ base: '/foo', window: sandbox.contentWindow });
+			history.set('/bar');
+			assert.equal(history.current, '/bar');
+			assert.equal(sandbox.contentWindow.location.pathname, '/foo/bar');
+
+			history.set('baz');
+			assert.equal(history.current, '/baz');
+			assert.equal(sandbox.contentWindow.location.pathname, '/foo/baz');
+		});
+
+		test('#replace expands the path with the base when replacing state, with trailing slash', () => {
+			const history = createStateHistory({ base: '/foo/', window: sandbox.contentWindow });
+			history.replace('/bar');
+			assert.equal(history.current, '/bar');
+			assert.equal(sandbox.contentWindow.location.pathname, '/foo/bar');
+
+			history.replace('baz');
+			assert.equal(history.current, '/baz');
+			assert.equal(sandbox.contentWindow.location.pathname, '/foo/baz');
+		});
+
+		test('#replace expands the path with the base when replacing state, without trailing slash', () => {
+			const history = createStateHistory({ base: '/foo', window: sandbox.contentWindow });
+			history.replace('/bar');
+			assert.equal(history.current, '/bar');
+			assert.equal(sandbox.contentWindow.location.pathname, '/foo/bar');
+
+			history.replace('baz');
+			assert.equal(history.current, '/baz');
+			assert.equal(sandbox.contentWindow.location.pathname, '/foo/baz');
+		});
 	});
 
 	suite('popstate', () => {
@@ -104,6 +191,48 @@ suite('createStateHistory', () => {
 
 			assert.equal(history.current, '/foo');
 			assert.equal(emittedValue, '/foo');
+		});
+
+		test('handles popstate with base, with trailing slash', () => {
+			const history = createStateHistory({ base: '/foo/', window });
+
+			let emittedValue = '';
+			history.on('change', ({ value }) => {
+				emittedValue = value;
+			});
+
+			sandbox.contentWindow.history.pushState({}, '', '/foo/bar');
+			emit(window, { type: 'popstate' });
+
+			assert.equal(history.current, '/bar');
+			assert.equal(emittedValue, '/bar');
+
+			sandbox.contentWindow.history.pushState({}, '', '/baz');
+			emit(window, { type: 'popstate' });
+
+			assert.equal(history.current, '/');
+			assert.equal(emittedValue, '/');
+		});
+
+		test('handles popstate with base, without trailing slash', () => {
+			const history = createStateHistory({ base: '/foo', window });
+
+			let emittedValue = '';
+			history.on('change', ({ value }) => {
+				emittedValue = value;
+			});
+
+			sandbox.contentWindow.history.pushState({}, '', '/foo/bar');
+			emit(window, { type: 'popstate' });
+
+			assert.equal(history.current, '/bar');
+			assert.equal(emittedValue, '/bar');
+
+			sandbox.contentWindow.history.pushState({}, '', '/baz');
+			emit(window, { type: 'popstate' });
+
+			assert.equal(history.current, '/');
+			assert.equal(emittedValue, '/');
 		});
 
 		test('ignores popstate for the current path', () => {

@@ -8,6 +8,8 @@ import { BrowserHistory, History, HistoryOptions } from './interfaces';
 
 /**
  * A browser-based history manager that uses the history object to store the current value.
+ *
+ * This manager ensures the current value always starts with a slash.
  */
 export type StateHistory = History;
 
@@ -15,6 +17,15 @@ export type StateHistory = History;
  * Options for creating StateHistory instances.
  */
 export interface StateHistoryOptions extends HistoryOptions {
+	/**
+	 * A base pathname. The current value, as well as the emitted change value, will be relative to this base (though
+	 * starting with a slash). If not set the DOM window's location's path will be used in its entirety. If the
+	 * location's path is not a suffix of the base, the value will be a single slash instead.
+	 *
+	 * Must not contain fragment identifiers or search components.
+	 */
+	base?: string;
+
 	/**
 	 * A DOM window object. StateHistory uses the `history` and `location` properties and
 	 * listens to `popstate` events. The current value is initialized to the current path.
@@ -32,11 +43,43 @@ export interface StateHistoryFactory extends ComposeFactory<StateHistory, StateH
 }
 
 interface PrivateState {
+	base: string;
 	current: string;
 	browserHistory: BrowserHistory;
 }
 
 const privateStateMap = new WeakMap<StateHistory, PrivateState>();
+
+function stripBase(base: string, path: string): string {
+	if (base === '/') {
+		return path;
+	}
+
+	if (path.indexOf(base) === 0) {
+		return ensureLeadingSlash(path.slice(base.length));
+	}
+	else {
+		return '/';
+	}
+}
+
+function prependBase(base: string, path: string): string {
+	const baseEndsWithSlash = /\/$/.test(base);
+	const pathStartsWithSlash = /^\//.test(path);
+	if (baseEndsWithSlash && pathStartsWithSlash) {
+		return base + path.slice(1);
+	}
+	else if (!baseEndsWithSlash && !pathStartsWithSlash) {
+		return `${base}/${path}`;
+	}
+	else {
+		return base + path;
+	}
+}
+
+function ensureLeadingSlash(path: string): string {
+	return /^\//.test(path) ? path : `/${path}`;
+}
 
 const createStateHistory: StateHistoryFactory = compose.mixin(createEvented, {
 	mixin: {
@@ -46,35 +89,49 @@ const createStateHistory: StateHistoryFactory = compose.mixin(createEvented, {
 
 		set(this: StateHistory, path: string) {
 			const privateState = privateStateMap.get(this);
-			privateState.current = path;
-			privateState.browserHistory.pushState({}, '', path);
-			this.emit({
-				type: 'change',
-				value: path
-			});
+			const { base, browserHistory } = privateState;
+
+			const value = ensureLeadingSlash(path);
+			const fullPath = prependBase(base, path);
+
+			privateState.current = value;
+			browserHistory.pushState({}, '', fullPath);
+			this.emit({ type: 'change', value });
 		},
 
 		replace(this: StateHistory, path: string) {
 			const privateState = privateStateMap.get(this);
-			privateState.current = path;
-			privateState.browserHistory.replaceState({}, '', path);
-			this.emit({
-				type: 'change',
-				value: path
-			});
+			const { base, browserHistory } = privateState;
+
+			const value = ensureLeadingSlash(path);
+			const fullPath = prependBase(base, path);
+
+			privateState.current = value;
+			browserHistory.replaceState({}, '', fullPath);
+			this.emit({ type: 'change', value });
 		}
 	},
-	initialize(instance: StateHistory, { window }: StateHistoryOptions = { window: global }) {
+	initialize(instance: StateHistory, { base = '/', window }: StateHistoryOptions = { window: global }) {
+		if (base !== '/') {
+			if (/#/.test(base)) {
+				throw new TypeError('base must not contain \'#\'');
+			}
+			if (/\?/.test(base)) {
+				throw new TypeError('base must not contain \'?\'');
+			}
+		}
+
 		const { history: browserHistory, location } = window;
 
 		const privateState: PrivateState = {
-			current: location.pathname + location.search,
+			base,
+			current: stripBase(base, location.pathname + location.search),
 			browserHistory
 		};
 		privateStateMap.set(instance, privateState);
 
 		instance.own(on(window, 'popstate', () => {
-			const path = location.pathname + location.search;
+			const path = stripBase(base, location.pathname + location.search);
 
 			// Ignore popstate for the current path. Guards against browsers firing
 			// popstate on page load, see
