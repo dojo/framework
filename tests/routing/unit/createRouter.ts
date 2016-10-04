@@ -428,67 +428,123 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('#observeHistory wires dispatch to a history change event', () => {
-		const router = createRouter();
-		const dispatch = stub(router, 'dispatch');
-
-		const history = createMemoryHistory();
-		const context = { 'foo': 'bar' };
-
-		router.observeHistory(history, context, false);
-		history.set('/foo');
-		assert.isTrue(dispatch.calledWith(context, '/foo'));
+	test('#start is a noop if the router was created without a history manager', () => {
+		assert.doesNotThrow(() => {
+			const listener = createRouter().start();
+			listener.pause();
+			listener.resume();
+			listener.destroy();
+		});
 	});
 
-	test('#observeHistory returns a pausable handler', () => {
-		const router = createRouter();
+	test('#start wires dispatch to a history change event', () => {
+		const history = createMemoryHistory();
+		const router = createRouter({ history });
 		const dispatch = stub(router, 'dispatch');
 
-		const history = createMemoryHistory();
-		const context = { 'foo': 'bar' };
+		router.start({ dispatchCurrent: false });
+		history.set('/foo');
+		assert.isTrue(dispatch.calledWith({}, '/foo'));
+	});
 
-		const listener = router.observeHistory(history, context, false);
+	test('#start returns a pausable handler', () => {
+		const history = createMemoryHistory();
+		const router = createRouter({ history });
+		const dispatch = stub(router, 'dispatch');
+
+		const listener = router.start({ dispatchCurrent: false });
 		listener.pause();
 		history.set('/foo');
 		assert.isFalse(dispatch.called);
 
 		listener.resume();
 		history.set('/bar');
-		assert.isTrue(dispatch.calledWith(context, '/bar'));
+		assert.isTrue(dispatch.calledWith({}, '/bar'));
 	});
 
-	test('#observeHistory can dispatch immediately', () => {
-		const router = createRouter();
+	test('#start can immediately dispatch for the current history value', () => {
+		const history = createMemoryHistory({ path: '/foo' });
+		const router = createRouter({ history });
 		const dispatch = stub(router, 'dispatch');
 
-		const history = createMemoryHistory({ path: '/foo' });
-		const context = { 'foo': 'bar' };
-
-		router.observeHistory(history, context, true);
-		assert.isTrue(dispatch.calledWith(context, '/foo'));
+		router.start({ dispatchCurrent: true });
+		assert.isTrue(dispatch.calledWith({}, '/foo'));
 	});
 
-	test('#observeHistory does not dispatch immediately by default', () => {
-		const router = createRouter();
+	test('#start can be configured not to immediately dispatch for the current history value', () => {
+		const history = createMemoryHistory({ path: '/foo' });
+		const router = createRouter({ history });
 		const dispatch = stub(router, 'dispatch');
 
-		const history = createMemoryHistory({ path: '/foo' });
-		const context = { 'foo': 'bar' };
-
-		router.observeHistory(history, context);
+		router.start({ dispatchCurrent: false });
 		assert.isTrue(dispatch.notCalled);
 	});
 
-	test('#observeHistory throws if already called', () => {
-		const router = createRouter();
-		const history = createMemoryHistory();
+	test('#start dispatches immediately by default', () => {
+		const history = createMemoryHistory({ path: '/foo' });
+		const router = createRouter({ history });
+		const dispatch = stub(router, 'dispatch');
 
-		function observeHistory() {
-			router.observeHistory(history, {}, false);
+		router.start();
+		assert.isTrue(dispatch.calledOnce);
+	});
+
+	test('#start throws if already called', () => {
+		const history = createMemoryHistory();
+		const router = createRouter({ history });
+
+		function start() {
+			router.start();
 		};
 
-		observeHistory();
+		start();
 
-		assert.throws(observeHistory, /observeHistory can only be called once/);
+		assert.throws(start, /start can only be called once/);
+	});
+
+	test('without a provided context, #start dispatches with an empty object as the context', () => {
+		const history = createMemoryHistory({ path: '/foo' });
+		const router = createRouter({ history });
+		const dispatch = stub(router, 'dispatch');
+
+		router.start();
+		const { args: [ initialContext ] } = dispatch.firstCall;
+		assert.deepEqual(initialContext, {});
+
+		history.set('/bar');
+		const { args: [ nextContext ] } = dispatch.secondCall;
+		assert.notStrictEqual(nextContext, initialContext);
+		assert.deepEqual(nextContext, {});
+	});
+
+	test('with a provided context, #start dispatches with that object as the context', () => {
+		const context = {};
+		const history = createMemoryHistory({ path: '/foo' });
+		const router = createRouter({ context, history });
+		const dispatch = stub(router, 'dispatch');
+
+		router.start();
+		const { args: [ initialContext ] } = dispatch.firstCall;
+		assert.strictEqual(initialContext, context);
+
+		history.set('/bar');
+		const { args: [ nextContext ] } = dispatch.secondCall;
+		assert.strictEqual(nextContext, context);
+	});
+
+	test('with a provided context factory, #start dispatches with factory\'s value as the context', () => {
+		const contexts = [ { first: true }, { second: true } ];
+		const context = () => contexts.shift();
+		const history = createMemoryHistory({ path: '/foo' });
+		const router = createRouter({ context, history });
+		const dispatch = stub(router, 'dispatch');
+
+		router.start();
+		const { args: [ initialContext ] } = dispatch.firstCall;
+		assert.deepEqual(initialContext, { first: true });
+
+		history.set('/bar');
+		const { args: [ nextContext ] } = dispatch.secondCall;
+		assert.deepEqual(nextContext, { second: true });
 	});
 });

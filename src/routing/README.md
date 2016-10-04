@@ -503,12 +503,39 @@ const history = createMemoryHistory();
 
 The `createMemoryHistory()` factory accepts a `path` option. It defaults to the empty string.
 
-#### Wiring History manager changes to Router dispatches
+#### Automatically observing a history manager
 
-Although you can manually wire a History manager `change` event to a `Router#dispatch()`, a utility function `Router#observeHistory()` will take care of the wiring for you. It takes a History manager, a Context and whether it should fire an initial dispatch.  An example of using it with a `StateHistory` manager:
+You could manually wire a history manager's `change` event to a `Router#dispatch()`, but that's a bit cumbersome. Instead you can provide the history manager when creating the router, and then use the `start()` method to make the router observe the history manager:
 
 ```ts
-router.observeHistory(createStateHistory(), { 'some': 'context' }, true);
+const router = createRouter({ history: createStateHistory() });
+router.start();
+```
+
+By default `start()` dispatches for the current history value. You can disable this:
+
+```ts
+router.start({ dispatchCurrent: false });
+```
+
+The context for these dispatches defaults to an empty object. A new object is used for every dispatch. You can configure the context when creating the router:
+
+```ts
+const router = createRouter({
+	context: { someKey: 'someValue' },
+	history: createStateHistory()
+});
+```
+
+Provide a function if you want a new context for every dispatch:
+
+```ts
+const router = createRouter({
+	context() {
+		return { someKey: 'someValue' };
+	},
+	history: createStateHistory()
+});
 ```
 
 ## How do I use this package?

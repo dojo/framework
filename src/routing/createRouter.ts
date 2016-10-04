@@ -63,14 +63,6 @@ export interface RouterMixin {
 	append(add: Route<Parameters> | Route<Parameters>[]): void;
 
 	/**
-	 * Observe History, auto-wires the History change event to dispatch
-	 * @param history A History manager.
-	 * @param context A context object that is provided when executing selected routes.
-	 * @param dispatchInitial Whether to immediately dispatch with the History's current value.
-	 */
-	observeHistory(history: History, context: Context, dispatchInitial?: boolean): PausableHandle;
-
-	/**
 	 * Select and execute routes for a given path.
 	 * @param context A context object that is provided when executing selected routes.
 	 * @param path The path.
@@ -78,6 +70,16 @@ export interface RouterMixin {
 	 *   on whether dispatching succeeded.
 	 */
 	dispatch(context: Context, path: string): Task<boolean>;
+
+	/**
+	 * Start the router.
+	 *
+	 * Observes the history manager provided when the router was created for change events and dispatches routes in
+	 * response. Noop if no history manager was provided.
+	 *
+	 * @param options An optional options object, can be used to prevent the router from immediately dispatching.
+	 */
+	start(options?: StartOptions): PausableHandle;
 }
 
 export interface RouterOverrides {
@@ -96,11 +98,32 @@ export type Router = Evented & RouterMixin & RouterOverrides;
  */
 export interface RouterOptions extends EventedOptions {
 	/**
+	 * A Context object to be used for all requests, or a function that provides such an object, called for each
+	 * dispatch.
+	 */
+	context?: Context | (() => Context);
+
+	/**
 	 * A handler called when no routes match the dispatch path.
 	 * @param request An object whose `context` property contains the dispatch context. No extracted parameters
 	 *   are available.
 	 */
-	fallback?(request: Request<any>): void;
+	fallback?: (request: Request<any>) => void;
+
+	/**
+	 * The history manager. Routes will be dispatched in response to change events emitted by the manager.
+	 */
+	history?: History;
+}
+
+/**
+ * The options for the router's start() method.
+ */
+export interface StartOptions {
+	/**
+	 * Whether to immediately dispatch with the history's current value.
+	 */
+	dispatchCurrent: boolean;
 }
 
 export interface RouterFactory extends ComposeFactory<Router, RouterOptions> {
@@ -112,13 +135,11 @@ export interface RouterFactory extends ComposeFactory<Router, RouterOptions> {
 }
 
 interface PrivateState {
-	fallback?(request: Request<any>): void;
-	observedHistory: null | {
-		history: History;
-		context: Context;
-		listener: PausableHandle;
-	};
+	contextFactory: () => Context;
+	fallback?: (request: Request<any>) => void;
+	history?: History;
 	routes: Route<Parameters>[];
+	started?: boolean;
 }
 
 const privateStateMap = new WeakMap<Router, PrivateState>();
@@ -150,28 +171,6 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 			else {
 				routes.push(add);
 			}
-		},
-
-		observeHistory(
-			this: Router,
-			history: History,
-			context: Context,
-			dispatchInitial: boolean = false
-		): PausableHandle {
-			const state = privateStateMap.get(this);
-			if (state.observedHistory) {
-				throw new Error('observeHistory can only be called once');
-			}
-			const listener = pausable(history, 'change', (event: HistoryChangeEvent) => {
-				this.dispatch(context, event.value);
-			});
-			state.observedHistory = { history, listener, context };
-			if (dispatchInitial) {
-				this.dispatch(context, history.current);
-			}
-			this.own(listener);
-			this.own(history);
-			return listener;
 		},
 
 		dispatch(this: Router, context: Context, path: string): Task<boolean> {
@@ -237,12 +236,61 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 					() => false
 				).then(resolve, reject);
 			}, cancel);
+		},
+
+		start(this: Router, { dispatchCurrent }: StartOptions = { dispatchCurrent: true }): PausableHandle {
+			const state = privateStateMap.get(this);
+			if (state.started) {
+				throw new Error('start can only be called once');
+			}
+			state.started = true;
+
+			const { contextFactory, history } = state;
+			if (!history) {
+				return {
+					pause() {},
+					resume() {},
+					destroy() {}
+				};
+			}
+
+			const listener = pausable(history, 'change', (event: HistoryChangeEvent) => {
+				this.dispatch(contextFactory(), event.value);
+			});
+			this.own(listener);
+
+			if (dispatchCurrent) {
+				this.dispatch(contextFactory(), history.current);
+			}
+
+			return listener;
 		}
 	},
-	initialize(instance: Router, { fallback }: RouterOptions = {}) {
+	initialize(instance: Router, { context, fallback, history }: RouterOptions = {}) {
+		let contextFactory: () => Context;
+		if (typeof context === 'function') {
+			contextFactory = context;
+		}
+		else if (typeof context === 'undefined') {
+			contextFactory = () => {
+				return {};
+			};
+		}
+		else {
+			// Assign to a constant since the context variable may be changed after the function is defined,
+			// which would violate its typing.
+			const sharedContext = context;
+			contextFactory = () => sharedContext;
+		}
+
+		if (history) {
+			instance.own(history);
+		}
+
 		privateStateMap.set(instance, {
+			contextFactory,
 			fallback,
-			observedHistory: null,
+			history,
 			routes: []
 		});
 	}
