@@ -12,8 +12,7 @@ function mixin<T extends { [key: string]: any }, U extends { [key: string]: any 
 	return <any> destination;
 }
 
-function assertFrom<T>(arrayable: ArrayLike<T>, expected: T[]): void;
-function assertFrom<T>(arrayable: Iterable<T>, expected: T[]): void;
+function assertFrom<T>(arrayable: ArrayLike<T> | Iterable<T>, expected: T[]): void;
 function assertFrom(arrayable: any, expected: any[]): void {
 	let actual = array.from(arrayable);
 	assert.isArray(actual);
@@ -94,7 +93,7 @@ registerSuite({
 		},
 
 		'from array-like': (function () {
-			let obj: any;
+			let obj: { [item: string]: any; length: number; };
 
 			return {
 				beforeEach: function () {
@@ -207,6 +206,25 @@ registerSuite({
 			};
 			let actual = array.from([ 1, 2, 3 ], thing.mapFunction, thing);
 			assert.isArray(actual);
+			assert.deepEqual([ 0, 1, 2 ], actual);
+		},
+
+		'with union type': function () {
+			let thing: ArrayLike<number> | Iterable<number> = {
+				'0': 0,
+				'1': 1,
+				'2': 2,
+				length: 3,
+				[Symbol.iterator]() {
+					return {
+						index: 0,
+						next(this: any) {
+							return this.index < 3 ? { value: this.index++, done: false } : { done: true, value: undefined };
+						}
+					};
+				}
+			};
+			let actual = array.from(thing);
 			assert.deepEqual([ 0, 1, 2 ], actual);
 		}
 	}),

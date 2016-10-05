@@ -205,38 +205,20 @@ export interface From {
 	/**
 	 * The Array.from() method creates a new Array instance from an array-like or iterable object.
 	 *
-	 * @param arrayLike An array-like object to convert to an array
+	 * @param source An array-like or iterable object to convert to an array
 	 * @param mapFunction A map function to call on each element in the array
 	 * @param thisArg The execution context for the map function
 	 * @return The new Array
 	 */
-	<T, U>(arrayLike: ArrayLike<T>, mapFunction: MapCallback<T, U>, thisArg?: any): Array<U>;
+	<T, U>(source: ArrayLike<T> | Iterable<T>, mapFunction: MapCallback<T, U>, thisArg?: any): Array<U>;
 
 	/**
 	 * The Array.from() method creates a new Array instance from an array-like or iterable object.
 	 *
-	 * @param iterable An iterable object to convert to an array
-	 * @param mapFunction A map function to call on each element in the array
-	 * @param thisArg The execution context for the map function
+	 * @param source An array-like or iterable object to convert to an array
 	 * @return The new Array
 	 */
-	<T, U>(iterable: Iterable<T>, mapFunction: MapCallback<T, U>, thisArg?: any): Array<U>;
-
-	/**
-	 * The Array.from() method creates a new Array instance from an array-like or iterable object.
-	 *
-	 * @param arrayLike An array-like object to convert to an array
-	 * @return The new Array
-	 */
-	<T>(arrayLike: ArrayLike<T>): Array<T>;
-
-	/**
-	 * The Array.from() method creates a new Array instance from an array-like or iterable object.
-	 *
-	 * @param arrayLike An iterable object to convert to an array
-	 * @return The new Array
-	 */
-	<T>(iterable: Iterable<T>): Array<T>;
+	<T>(source: ArrayLike<T> | Iterable<T>): Array<T>;
 }
 
 export const from: From = has('es6-array-from')
