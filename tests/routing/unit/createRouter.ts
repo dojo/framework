@@ -467,6 +467,17 @@ suite('createRouter', () => {
 		assert.isTrue(dispatch.calledWith(context, '/foo'));
 	});
 
+	test('#observeHistory does not dispatch immediately by default', () => {
+		const router = createRouter();
+		const dispatch = stub(router, 'dispatch');
+
+		const history = createMemoryHistory({ path: '/foo' });
+		const context = { 'foo': 'bar' };
+
+		router.observeHistory(history, context);
+		assert.isTrue(dispatch.notCalled);
+	});
+
 	test('#observeHistory throws if already called', () => {
 		const router = createRouter();
 		const history = createMemoryHistory();

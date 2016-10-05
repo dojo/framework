@@ -69,7 +69,7 @@ export interface RouterMixin {
 	 * @param context A context object that is provided when executing selected routes.
 	 * @param dispatchInitial Whether to immediately dispatch with the History's current value.
 	 */
-	observeHistory(history: History, context: Context, dispatchInitial: boolean): PausableHandle;
+	observeHistory(history: History, context: Context, dispatchInitial?: boolean): PausableHandle;
 
 	/**
 	 * Select and execute routes for a given path.
@@ -130,6 +130,21 @@ export interface RouterFactory extends ComposeFactory<Router, RouterOptions> {
 
 const historyMap = new WeakMap<Router, HistoryManager>();
 
+// istanbul ignore next
+const noop = () => {};
+
+function createDeferral() {
+	// Use noop since TypeScript doesn't know we're assigning cancel and resume in the promise executor.
+	let cancel: () => void = noop;
+	let resume: () => void = noop;
+	const promise = new Promise<void>((resolve, reject) => {
+		cancel = reject;
+		// Wrap resolve to avoid resume being called with a thenable if type checking is not used.
+		resume = () => resolve();
+	});
+	return { cancel, promise, resume };
+}
+
 const createRouter: RouterFactory = compose<RouterMixin, RouterOptions>({
 
 	append (routes: Route<Parameters> | Route<Parameters>[]) {
@@ -173,14 +188,8 @@ const createRouter: RouterFactory = compose<RouterMixin, RouterOptions>({
 			path,
 			cancel,
 			defer () {
-				let cancel: () => void = () => {};
-				let resume: () => void = () => {};
-				// TODO: remove casting to void when dojo/core#156 is resolved
-				deferrals.push(new Promise<void>((resolve, reject) => {
-					cancel = reject;
-					// Wrap resolve to avoid resume being called with a thenable if type checking is not used.
-					resume = () => resolve();
-				}));
+				const { cancel, promise, resume } = createDeferral();
+				deferrals.push(promise);
 				return { cancel, resume };
 			}
 		});
@@ -214,11 +223,13 @@ const createRouter: RouterFactory = compose<RouterMixin, RouterOptions>({
 									route.exec({ context, params });
 									break;
 								case Handler.Fallback:
+									// istanbul ignore else
 									if (route.fallback) {
 										route.fallback({ context, params });
 									}
 									break;
 								case Handler.Index:
+									// istanbul ignore else
 									if (route.index) {
 										route.index({ context, params });
 									}
