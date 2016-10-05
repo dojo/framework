@@ -520,6 +520,8 @@ By default `start()` dispatches for the current history value. You can disable t
 router.start({ dispatchCurrent: false });
 ```
 
+As an added benefit, when you use `start()` it ensures the previous dispatch is canceled when the history changes and it dispatches a new request.
+
 The context for these dispatches defaults to an empty object. A new object is used for every dispatch. You can configure the context when creating the router:
 
 ```ts

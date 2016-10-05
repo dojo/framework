@@ -264,13 +264,17 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 				};
 			}
 
+			let lastDispatch: Task<DispatchResult>;
 			const listener = pausable(history, 'change', (event: HistoryChangeEvent) => {
-				this.dispatch(contextFactory(), event.value);
+				if (lastDispatch) {
+					lastDispatch.cancel();
+				}
+				lastDispatch = this.dispatch(contextFactory(), event.value);
 			});
 			this.own(listener);
 
 			if (dispatchCurrent) {
-				this.dispatch(contextFactory(), history.current);
+				lastDispatch = this.dispatch(contextFactory(), history.current);
 			}
 
 			return listener;

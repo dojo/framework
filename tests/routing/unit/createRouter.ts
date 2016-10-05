@@ -1,10 +1,11 @@
+import Task from 'dojo-core/async/Task';
 import Promise from 'dojo-shim/Promise';
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
-import { stub } from 'sinon';
+import { stub, spy } from 'sinon';
 
 import createRoute from '../../src/createRoute';
-import createRouter, { NavigationStartEvent } from '../../src/createRouter';
+import createRouter, { DispatchResult, NavigationStartEvent } from '../../src/createRouter';
 import createMemoryHistory from '../../src/history/createMemoryHistory';
 import { DefaultParameters, Context as C, Request, Parameters } from '../../src/interfaces';
 
@@ -500,6 +501,38 @@ suite('createRouter', () => {
 		start();
 
 		assert.throws(start, /start can only be called once/);
+	});
+
+	test('#start ensures the previous dispatch is canceled', () => {
+		const history = createMemoryHistory({ path: '/foo' });
+		const router = createRouter({ history });
+		router.on('navstart', ({ defer }) => {
+			// Defer the dispatch, so cancelation has effect.
+			defer();
+		});
+
+		const dispatch = spy(router, 'dispatch');
+		const assertCanceled = (task: Task<DispatchResult>) => {
+			return new Promise((resolve) => {
+				task.finally(resolve);
+			});
+		};
+
+		router.start();
+
+		assert.isTrue(dispatch.calledOnce);
+		// Need to create this promise before changing the history due to <https://github.com/dojo/core/issues/205>.
+		const assertionPromise = assertCanceled(dispatch.firstCall.returnValue);
+		history.set('/bar');
+		return assertionPromise
+			.then(() => {
+				assert.isTrue(dispatch.calledTwice);
+
+				// Need to create this promise before changing the history due to <https://github.com/dojo/core/issues/205>.
+				const assertionPromise = assertCanceled(dispatch.secondCall.returnValue);
+				history.set('/baz');
+				return assertionPromise;
+			});
 	});
 
 	test('without a provided context, #start dispatches with an empty object as the context', () => {
