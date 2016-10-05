@@ -6,7 +6,7 @@
 
 A core widget library for Dojo 2.
 
-This is an *alpha* of Dojo 2 Widgets.  We expect several things to change before this package is released.  It is **not** production ready.
+**WARNING** This is *alpha* software. It is not yet production ready, so you should use at your own risk.
 
 For more background on Widgets for Dojo 2, there is a document describing the [widgeting system](https://github.com/dojo/meta/blob/master/documents/Widget-System.md).
 
