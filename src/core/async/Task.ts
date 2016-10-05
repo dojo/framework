@@ -136,7 +136,7 @@ export default class Task<T> extends Promise<T> {
 		return task;
 	}
 
-	then<U>(onFulfilled?: (value: T | undefined) => U | Thenable<U>,  onRejected?: (error: Error | undefined) => U | Thenable<U>): Task<U> {
+	then<U>(onFulfilled?: (value: T) => U | Thenable<U>,  onRejected?: (error: Error) => U | Thenable<U>): Task<U> {
 		// FIXME
 		// tslint:disable-next-line:no-var-keyword
 		var task = <Task<U>> super.then<U>(
