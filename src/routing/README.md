@@ -66,7 +66,9 @@ const context: AppContext = {
 router.dispatch(context, '/about');
 ```
 
-Route selection starts in a future turn. An async Task is returned (see [`dojo-core`](https://github.com/dojo/core)) which is resolved with `true` if a route was executed, or `false` if no route was selected. You can cancel the task in case a new navigation event occurs.
+Route selection starts in a future turn. An async Task is returned (see [`dojo-core`](https://github.com/dojo/core)) which is resolved with a result object. The object has a `success` property which is `false` if no route was selected, or dispatch was canceled. It's `true` otherwise.
+
+You can cancel the task in case a new navigation event occurs.
 
 ### Creating routes
 

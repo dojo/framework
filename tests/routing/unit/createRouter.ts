@@ -11,17 +11,17 @@ import { DefaultParameters, Context as C, Request, Parameters } from '../../src/
 interface R extends Request<Parameters> {};
 
 suite('createRouter', () => {
-	test('dispatch resolves to false if no route was executed', () => {
-		return createRouter().dispatch({} as C, '/').then(d => {
-			assert.isFalse(d);
+	test('dispatch resolves to unsuccessful result if no route was executed', () => {
+		return createRouter().dispatch({} as C, '/').then(result => {
+			assert.deepEqual(result, { success: false });
 		});
 	});
 
-	test('dispatch resolves to true if a route was executed', () => {
+	test('dispatch resolves to successful result if a route was executed', () => {
 		const router = createRouter();
 		router.append(createRoute());
-		return router.dispatch({} as C, '/').then(d => {
-			assert.isTrue(d);
+		return router.dispatch({} as C, '/').then(result => {
+			assert.deepEqual(result, { success: true });
 		});
 	});
 
@@ -166,7 +166,7 @@ suite('createRouter', () => {
 			event.cancel();
 		});
 
-		return router.dispatch({} as C, '/foo').then(d => {
+		return router.dispatch({} as C, '/foo').then(({ success: d }) => {
 			assert.isFalse(d);
 		});
 	});
@@ -179,7 +179,7 @@ suite('createRouter', () => {
 			Promise.resolve().then(cancel);
 		});
 
-		return router.dispatch({} as C, '/foo').then(d => {
+		return router.dispatch({} as C, '/foo').then(({ success: d }) => {
 			assert.isFalse(d);
 		});
 	});
@@ -192,7 +192,7 @@ suite('createRouter', () => {
 			Promise.resolve().then(resume);
 		});
 
-		return router.dispatch({} as C, '/foo').then(d => {
+		return router.dispatch({} as C, '/foo').then(({ success: d }) => {
 			assert.isTrue(d);
 		});
 	});
@@ -212,7 +212,7 @@ suite('createRouter', () => {
 		});
 
 		let dispatched: boolean | undefined = false;
-		router.dispatch({} as C, '/foo').then(d => {
+		router.dispatch({} as C, '/foo').then(({ success: d }) => {
 			dispatched = d;
 		});
 
@@ -264,7 +264,7 @@ suite('createRouter', () => {
 		});
 
 		const context = {} as C;
-		return router.dispatch(context, '/foo').then(d => {
+		return router.dispatch(context, '/foo').then(({ success: d }) => {
 			assert.isTrue(d);
 			assert.ok(received);
 			assert.strictEqual(received.context, context);
@@ -306,7 +306,7 @@ suite('createRouter', () => {
 		deep.append(deeper);
 		router.append(root);
 
-		return router.dispatch({} as C, 'foo/bar/baz').then(d => {
+		return router.dispatch({} as C, 'foo/bar/baz').then(({ success: d }) => {
 			assert.isTrue(d);
 		});
 	});
@@ -321,7 +321,7 @@ suite('createRouter', () => {
 			deep.append(deeper);
 			router.append(root);
 
-			return router.dispatch({} as C, `foo/bar/baz${withSlash ? '/' : ''}`).then(d => {
+			return router.dispatch({} as C, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
 				assert.isTrue(d === withSlash, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
 			});
 		}));
@@ -337,7 +337,7 @@ suite('createRouter', () => {
 			deep.append(deeper);
 			router.append(root);
 
-			return router.dispatch({} as C, `foo/bar/baz${withSlash ? '/' : ''}`).then(d => {
+			return router.dispatch({} as C, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
 				assert.isTrue(d !== withSlash, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
 			});
 		}));
@@ -356,7 +356,7 @@ suite('createRouter', () => {
 			deep.append(deeper);
 			router.append(root);
 
-			return router.dispatch({} as C, `foo/bar/baz${withSlash ? '/' : ''}`).then(d => {
+			return router.dispatch({} as C, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
 				assert.isTrue(d, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
 			});
 		}));
@@ -366,7 +366,7 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo' }));
 
-		return router.dispatch({} as C, '/foo?bar').then(d => {
+		return router.dispatch({} as C, '/foo?bar').then(({ success: d }) => {
 			assert.isTrue(d);
 		});
 	});
@@ -375,7 +375,7 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo' }));
 
-		return router.dispatch({} as C, '/foo#bar').then(d => {
+		return router.dispatch({} as C, '/foo#bar').then(({ success: d }) => {
 			assert.isTrue(d);
 		});
 	});
@@ -384,11 +384,11 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo' }));
 
-		return router.dispatch({} as C, '/foo?bar#baz').then(d => {
+		return router.dispatch({} as C, '/foo?bar#baz').then(({ success: d }) => {
 			assert.isTrue(d, '/foo?bar#baz');
 
 			return router.dispatch({} as C, '/foo#bar?baz');
-		}).then(d => {
+		}).then(({ success: d }) => {
 			assert.isTrue(d);
 		});
 	});
@@ -397,7 +397,7 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo/bar' }));
 
-		return router.dispatch({} as C, '//foo///bar').then(d => {
+		return router.dispatch({} as C, '//foo///bar').then(({ success: d }) => {
 			assert.isTrue(d);
 		});
 	});
@@ -413,17 +413,17 @@ suite('createRouter', () => {
 			}
 		}));
 
-		return router.dispatch({} as C, '/foo?bar=1&baz=2').then(d => {
+		return router.dispatch({} as C, '/foo?bar=1&baz=2').then(() => {
 			assert.deepEqual(extracted, {bar: '1', baz: '2'});
 
 			extracted = {};
 			return router.dispatch({} as C, '/foo?bar=3#baz=4');
-		}).then(d => {
+		}).then(() => {
 			assert.deepEqual(extracted, {bar: '3'});
 
 			extracted = {};
 			return router.dispatch({} as C, '/foo#bar=5?baz=6');
-		}).then(d => {
+		}).then(() => {
 			assert.deepEqual(extracted, {});
 		});
 	});

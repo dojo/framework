@@ -53,6 +53,16 @@ export interface NavigationStartEvent extends TargettedEventObject {
 }
 
 /**
+ * Describes the result of a dispatch.
+ */
+export interface DispatchResult {
+	/**
+	 * False if dispatch was canceled (via the navstart event) or if no routes could be selected. True otherwise.
+	 */
+	success: boolean;
+}
+
+/**
  * A router mixin.
  */
 export interface RouterMixin {
@@ -66,10 +76,8 @@ export interface RouterMixin {
 	 * Select and execute routes for a given path.
 	 * @param context A context object that is provided when executing selected routes.
 	 * @param path The path.
-	 * @return A task, allowing dispatching to be canceled. The task will be resolved with a boolean depending
-	 *   on whether dispatching succeeded.
 	 */
-	dispatch(context: Context, path: string): Task<boolean>;
+	dispatch(context: Context, path: string): Task<DispatchResult>;
 
 	/**
 	 * Start the router.
@@ -173,7 +181,7 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 			}
 		},
 
-		dispatch(this: Router, context: Context, path: string): Task<boolean> {
+		dispatch(this: Router, context: Context, path: string): Task<DispatchResult> {
 			let canceled = false;
 			const cancel = () => {
 				canceled = true;
@@ -195,19 +203,19 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 
 			// Synchronous cancelation.
 			if (canceled) {
-				return Task.resolve(false);
+				return Task.resolve({ success: false });
 			}
 
 			const { searchParams, segments, trailingSlash } = parsePath(path);
-			return new Task((resolve, reject) => {
+			return new Task<DispatchResult>((resolve, reject) => {
 				// *Always* start dispatching in a future turn, even if there were no deferrals.
-				Promise.all(deferrals).then(
+				Promise.all(deferrals).then<DispatchResult>(
 					() => {
 						// The cancel() function used in the NavigationStartEvent is reused as the Task canceler.
 						// Strictly speaking any navstart listener can cancel the dispatch asynchronously, as long as it
 						// manages to do so before this turn.
 						if (canceled) {
-							return false;
+							return { success: false };
 						}
 
 						const { fallback, routes } = privateStateMap.get(this);
@@ -226,14 +234,16 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 
 						if (!dispatched && fallback) {
 							fallback({ context, params: {} });
-							return true;
+							return { success: true };
 						}
 
-						return dispatched;
+						return { success: dispatched };
 					},
 					// When deferrals are canceled their corresponding promise is rejected. Ensure the task resolves
 					// with `false` instead of being rejected too.
-					() => false
+					() => {
+						return { success: false };
+					}
 				).then(resolve, reject);
 			}, cancel);
 		},
