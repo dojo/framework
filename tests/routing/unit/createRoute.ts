@@ -61,7 +61,13 @@ suite('createRoute', () => {
 		const route = <Route<DefaultParameters>> createRoute({
 			path: '/{foo}/{bar}?{baz}&{qux}'
 		});
-		const [{ params }] = route.select({} as C, ['quux', 'corge'], false, new UrlSearchParams('baz=grault&qux=garply'));
+
+		const result = route.select({} as C, ['quux', 'corge'], false, new UrlSearchParams('baz=grault&qux=garply'));
+		if (typeof result === 'string') {
+			throw new TypeError('Unexpected result');
+		}
+
+		const [ { params } ] = result;
 		assert.deepEqual(params, {
 			foo: 'quux',
 			bar: 'corge',
@@ -74,7 +80,13 @@ suite('createRoute', () => {
 		const route = <Route<DefaultParameters>> createRoute({
 			path: '/{foo}/{bar}?{baz}&{qux}'
 		});
-		const [{ params }] = route.select({} as C, ['quux', 'corge'], false, new UrlSearchParams('baz=grault'));
+
+		const result = route.select({} as C, ['quux', 'corge'], false, new UrlSearchParams('baz=grault'));
+		if (typeof result === 'string') {
+			throw new TypeError('Unexpected result');
+		}
+
+		const [ { params } ] = result;
 		assert.deepEqual(params, {
 			foo: 'quux',
 			bar: 'corge',
@@ -86,7 +98,13 @@ suite('createRoute', () => {
 		const route = <Route<DefaultParameters>> createRoute({
 			path: '/{foo}/{bar}?{baz}&{qux}'
 		});
-		const [{ params }] = route.select({} as C, ['quux', 'corge'], false, new UrlSearchParams('baz=grault&baz=garply'));
+
+		const result = route.select({} as C, ['quux', 'corge'], false, new UrlSearchParams('baz=grault&baz=garply'));
+		if (typeof result === 'string') {
+			throw new TypeError('Unexpected result');
+		}
+
+		const [ { params } ] = result;
 		assert.deepEqual(params, {
 			foo: 'quux',
 			bar: 'corge',
@@ -196,7 +214,13 @@ suite('createRoute', () => {
 				};
 			}
 		});
-		const [{ params }] = route.select({} as C, ['baz', 'qux'], false, new UrlSearchParams());
+
+		const result = route.select({} as C, ['baz', 'qux'], false, new UrlSearchParams());
+		if (typeof result === 'string') {
+			throw new TypeError('Unexpected result');
+		}
+
+		const [ { params } ] = result;
 		assert.deepEqual(params, {
 			upper: 'BAZ',
 			barIsQux: true
@@ -217,7 +241,13 @@ suite('createRoute', () => {
 				};
 			}
 		});
-		const [{ params }] = route.select({} as C, [], false, new UrlSearchParams('foo=baz&bar=qux&foo=BAZ'));
+
+		const result = route.select({} as C, [], false, new UrlSearchParams('foo=baz&bar=qux&foo=BAZ'));
+		if (typeof result === 'string') {
+			throw new TypeError('Unexpected result');
+		}
+
+		const [ { params } ] = result;
 		assert.deepEqual(params, {
 			fooArr: ['baz', 'BAZ'],
 			barIsQux: true
@@ -250,6 +280,10 @@ suite('createRoute', () => {
 	test('without a path, is selected for zero segments', () => {
 		const route = createRoute();
 		const selections = route.select({} as C, [], false, new UrlSearchParams());
+		if (typeof selections === 'string') {
+			throw new TypeError('Unexpected result');
+		}
+
 		assert.lengthOf(selections, 1);
 		assert.strictEqual(selections[0].route, route);
 	});
@@ -263,6 +297,10 @@ suite('createRoute', () => {
 	test('with a path, is selected if segments match', () => {
 		const route = createRoute({ path: '/foo/bar' });
 		const selections = route.select({} as C, ['foo', 'bar'], false, new UrlSearchParams());
+		if (typeof selections === 'string') {
+			throw new TypeError('Unexpected result');
+		}
+
 		assert.lengthOf(selections, 1);
 		assert.strictEqual(selections[0].route, route);
 	});
@@ -289,6 +327,10 @@ suite('createRoute', () => {
 		deep.append(deeper);
 
 		const selections = root.select({} as C, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
+		if (typeof selections === 'string') {
+			throw new TypeError('Unexpected result');
+		}
+
 		assert.lengthOf(selections, 3);
 		const [{ route: first }, { route: second }, { route: third }] = selections;
 		assert.strictEqual(first, root);
@@ -386,6 +428,32 @@ suite('createRoute', () => {
 		assert.lengthOf(selections, 0);
 	});
 
+	test('guards can request redirects by returning path strings', () => {
+		const root = createRoute({ path: '/root' });
+		const deep = createRoute({
+			path: '/deep',
+			guard() {
+				return '/shallow';
+			}
+		});
+		root.append(deep);
+
+		assert.strictEqual(root.select({} as C, ['root', 'deep'], false, new UrlSearchParams()), '/shallow');
+	});
+
+	test('guards can request redirects by returning empty path strings', () => {
+		const root = createRoute({ path: '/root' });
+		const deep = createRoute({
+			path: '/deep',
+			guard() {
+				return '';
+			}
+		});
+		root.append(deep);
+
+		assert.strictEqual(root.select({} as C, ['root', 'deep'], false, new UrlSearchParams()), '');
+	});
+
 	test('extracts path parameters for each nested route', () => {
 		const root = createRoute({ path: '/foo/{param}' });
 		const deep = createRoute({ path: '/bar/{param}' });
@@ -394,6 +462,10 @@ suite('createRoute', () => {
 		deep.append(deeper);
 
 		const selections = root.select({} as C, ['foo', 'root', 'bar', 'deep', 'baz', 'deeper'], false, new UrlSearchParams());
+		if (typeof selections === 'string') {
+			throw new TypeError('Unexpected result');
+		}
+
 		assert.lengthOf(selections, 3);
 		const [{ params: first }, { params: second }, { params: third }] = selections;
 		assert.deepEqual(first, { param: 'root' });

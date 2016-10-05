@@ -68,6 +68,8 @@ router.dispatch(context, '/about');
 
 Route selection starts in a future turn. An async Task is returned (see [`dojo-core`](https://github.com/dojo/core)) which is resolved with a result object. The object has a `success` property which is `false` if no route was selected, or dispatch was canceled. It's `true` otherwise.
 
+An optional `redirect` property may be present, in case one of the matched routes requested a redirect. The value of the `redirect` property is the new path. It may be an empty string. No routes are executed when a redirect is returned, instead you're expected to change the path and call `dispatch()` again.
+
 You can cancel the task in case a new navigation event occurs.
 
 ### Creating routes
@@ -521,6 +523,8 @@ router.start({ dispatchCurrent: false });
 ```
 
 As an added benefit, when you use `start()` it ensures the previous dispatch is canceled when the history changes and it dispatches a new request.
+
+`start()` also ensures history is replaced with the new path when routes request a redirect.
 
 The context for these dispatches defaults to an empty object. A new object is used for every dispatch. You can configure the context when creating the router:
 

@@ -76,10 +76,16 @@ export interface Route<P extends Parameters> {
 	 * @param segments Segments of the pathname (excluding slashes).
 	 * @param hasTrailingSlash Whether the pathname that's being matched ended with a slashes.
 	 * @param searchParams Parameters extracted from the search component.
-	 * @return An empty array if this (and any nested routes) could not be selected, else the selected routes and
-	 *   accompanying `params` objects.
+	 * @return A string if a matching route determined a redirect is necessary. The string should be the path to
+	 *   redirect to. Otherwise an empty array if this (and any nested routes) could not be selected, else the selected
+	 *   routes and accompanying `params` objects.
 	 */
-	select(context: Context, segments: string[], hasTrailingSlash: boolean, searchParams: UrlSearchParams): Selection[];
+	select(
+		context: Context,
+		segments: string[],
+		hasTrailingSlash: boolean,
+		searchParams: UrlSearchParams
+	): string | Selection[];
 }
 
 /**
@@ -118,9 +124,10 @@ export interface RouteOptions<P> {
 	 * Callback used to determine whether the route should be selected after it's been matched.
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
-	 * @return Returning `true` causes the route to be selected.
+	 * @return Returning `true` causes the route to be selected. Returning a string indicates that a redirect is
+	 *   required; the string should be the path to redirect to.
 	 */
-	guard?(request: Request<P>): boolean;
+	guard?(request: Request<P>): string | boolean;
 
 	/**
 	 * If specified, and the route is the final route in the hierarchy, when the route is executed, this handler is
@@ -155,7 +162,7 @@ interface PrivateState {
 	computeParams<P extends Parameters>(fromPathname: string[], searchParams: UrlSearchParams): null | P;
 	exec?(request: Request<Parameters>): void;
 	fallback?(request: Request<Parameters>): void;
-	guard?(request: Request<Parameters>): boolean;
+	guard?(request: Request<Parameters>): string | boolean;
 	index?(request: Request<Parameters>): void;
 }
 
@@ -237,20 +244,25 @@ const createRoute: RouteFactory<Parameters> =
 			segments: string[],
 			hasTrailingSlash: boolean,
 			searchParams: UrlSearchParams
-		): Selection[] {
+		): string | Selection[] {
 			const { exec, index, fallback, guard, routes } = privateStateMap.get(this);
 
-			const result = this.match(segments, hasTrailingSlash, searchParams);
+			const matchResult = this.match(segments, hasTrailingSlash, searchParams);
 
 			// Return early if possible.
-			if (!result || result.hasRemaining && routes.length === 0 && !fallback) {
+			if (!matchResult || matchResult.hasRemaining && routes.length === 0 && !fallback) {
 				return [];
 			}
 
-			const { hasRemaining, offset, params } = result;
-			// Always guard.
-			if (guard && !guard({ context, params })) {
-				return [];
+			const { hasRemaining, offset, params } = matchResult;
+			if (guard) {
+				const guardResult = guard({ context, params });
+				if (typeof guardResult === 'string') {
+					return guardResult;
+				}
+				if (!guardResult) {
+					return [];
+				}
 			}
 
 			// Use a noop handler if exec was not provided. Something needs to be
@@ -265,9 +277,12 @@ const createRoute: RouteFactory<Parameters> =
 			// Match the remaining segments. Return a hierarchy if nested routes were selected.
 			const remainingSegments = segments.slice(offset);
 			for (const nested of routes) {
-				const hierarchy = nested.select(context, remainingSegments, hasTrailingSlash, searchParams);
-				if (hierarchy.length > 0) {
-					return [{ handler, params, route: this }, ...hierarchy];
+				const nestedResult = nested.select(context, remainingSegments, hasTrailingSlash, searchParams);
+				if (typeof nestedResult === 'string') {
+					return nestedResult;
+				}
+				if (nestedResult.length > 0) {
+					return [{ handler, params, route: this }, ...nestedResult];
 				}
 			}
 

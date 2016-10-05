@@ -57,6 +57,11 @@ export interface NavigationStartEvent extends TargettedEventObject {
  */
 export interface DispatchResult {
 	/**
+	 * Whether a route requested a redirect to a different path.
+	 */
+	redirect?: string;
+
+	/**
 	 * False if dispatch was canceled (via the navstart event) or if no routes could be selected. True otherwise.
 	 */
 	success: boolean;
@@ -219,13 +224,18 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 						}
 
 						const { fallback, routes } = privateStateMap.get(this);
+						let redirect: undefined | string;
 						const dispatched = routes.some((route: Route<Parameters>) => {
-							const hierarchy = route.select(context, segments, trailingSlash, searchParams);
-							if (hierarchy.length === 0) {
+							const result = route.select(context, segments, trailingSlash, searchParams);
+							if (typeof result === 'string') {
+								redirect = result;
+								return true;
+							}
+							if (result.length === 0) {
 								return false;
 							}
 
-							for (const { handler, params } of hierarchy) {
+							for (const { handler, params } of result) {
 								handler({ context, params });
 							}
 
@@ -237,7 +247,11 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 							return { success: true };
 						}
 
-						return { success: dispatched };
+						const result: DispatchResult = { success: dispatched };
+						if (redirect !== undefined) {
+							result.redirect = redirect;
+						}
+						return result;
 					},
 					// When deferrals are canceled their corresponding promise is rejected. Ensure the task resolves
 					// with `false` instead of being rejected too.
@@ -264,17 +278,25 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 				};
 			}
 
-			let lastDispatch: Task<DispatchResult>;
-			const listener = pausable(history, 'change', (event: HistoryChangeEvent) => {
+			let lastDispatch: Task<void>;
+			const dispatch = (path: string) => {
 				if (lastDispatch) {
 					lastDispatch.cancel();
 				}
-				lastDispatch = this.dispatch(contextFactory(), event.value);
+				lastDispatch = this.dispatch(contextFactory(), path).then(({ redirect, success }) => {
+					if (success && redirect !== undefined) {
+						history.replace(redirect);
+					}
+				});
+			};
+
+			const listener = pausable(history, 'change', (event: HistoryChangeEvent) => {
+				dispatch(event.value);
 			});
 			this.own(listener);
 
 			if (dispatchCurrent) {
-				lastDispatch = this.dispatch(contextFactory(), history.current);
+				dispatch(history.current);
 			}
 
 			return listener;

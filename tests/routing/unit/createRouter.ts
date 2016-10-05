@@ -37,6 +37,49 @@ suite('createRouter', () => {
 		});
 	});
 
+	test('dispatch returns redirect', () => {
+		const router = createRouter();
+		router.append(createRoute({
+			path: '/foo',
+			guard() { return '/bar'; }
+		}));
+
+		return router.dispatch({} as C, '/foo').then((result) => {
+			assert.deepEqual(result, { redirect: '/bar', success: true });
+		});
+	});
+
+	test('dispatch may return empty redirect', () => {
+		const router = createRouter();
+		router.append(createRoute({
+			path: '/foo',
+			guard() { return ''; }
+		}));
+
+		return router.dispatch({} as C, '/foo').then((result) => {
+			assert.deepEqual(result, { redirect: '', success: true });
+		});
+	});
+
+	test('dispatch stops selecting routes once it has a redirect', () => {
+		const router = createRouter();
+		router.append(createRoute({
+			path: '/foo',
+			guard() { return '/bar'; }
+		}));
+
+		let executed = false;
+		router.append(createRoute({
+			path: '/foo',
+			exec() { executed = true; }
+		}));
+
+		return router.dispatch({} as C, '/foo').then((result) => {
+			assert.deepEqual(result, { redirect: '/bar', success: true });
+			assert.isFalse(executed);
+		});
+	});
+
 	test('dispatch executes selected routes, providing context and extracted parameters', () => {
 		const execs: { context: C, params: Parameters }[] = [];
 
@@ -441,7 +484,7 @@ suite('createRouter', () => {
 	test('#start wires dispatch to a history change event', () => {
 		const history = createMemoryHistory();
 		const router = createRouter({ history });
-		const dispatch = stub(router, 'dispatch');
+		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
 
 		router.start({ dispatchCurrent: false });
 		history.set('/foo');
@@ -451,7 +494,7 @@ suite('createRouter', () => {
 	test('#start returns a pausable handler', () => {
 		const history = createMemoryHistory();
 		const router = createRouter({ history });
-		const dispatch = stub(router, 'dispatch');
+		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
 
 		const listener = router.start({ dispatchCurrent: false });
 		listener.pause();
@@ -466,7 +509,7 @@ suite('createRouter', () => {
 	test('#start can immediately dispatch for the current history value', () => {
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ history });
-		const dispatch = stub(router, 'dispatch');
+		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
 
 		router.start({ dispatchCurrent: true });
 		assert.isTrue(dispatch.calledWith({}, '/foo'));
@@ -475,7 +518,7 @@ suite('createRouter', () => {
 	test('#start can be configured not to immediately dispatch for the current history value', () => {
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ history });
-		const dispatch = stub(router, 'dispatch');
+		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
 
 		router.start({ dispatchCurrent: false });
 		assert.isTrue(dispatch.notCalled);
@@ -484,7 +527,7 @@ suite('createRouter', () => {
 	test('#start dispatches immediately by default', () => {
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ history });
-		const dispatch = stub(router, 'dispatch');
+		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
 
 		router.start();
 		assert.isTrue(dispatch.calledOnce);
@@ -535,10 +578,54 @@ suite('createRouter', () => {
 			});
 	});
 
+	test('#start replaces history if the dispatch requested a redirect', () => {
+		const history = createMemoryHistory({ path: '/foo' });
+		const router = createRouter({ history });
+
+		const execs: string[] = [];
+		router.append([
+			createRoute({
+				path: '/foo',
+				guard() { return '/bar'; }
+			}),
+			createRoute({
+				path: '/bar',
+				exec() { execs.push('/bar'); }
+			}),
+			createRoute({
+				path: '/baz',
+				guard() { return ''; }
+			}),
+			createRoute({
+				path: '/',
+				exec() { execs.push('/'); }
+			})
+		]);
+
+		const paths: string[] = [];
+		router.on('navstart', ({ path }) => { paths.push(path); });
+
+		router.start();
+		return new Promise((resolve) => setTimeout(resolve, 50))
+			.then(() => {
+				assert.strictEqual(history.current, '/bar');
+				assert.deepEqual(paths, [ '/foo', '/bar' ]);
+				assert.deepEqual(execs, [ '/bar' ]);
+
+				history.set('/baz');
+				return new Promise((resolve) => setTimeout(resolve, 50));
+			})
+			.then(() => {
+				assert.strictEqual(history.current, '');
+				assert.deepEqual(paths, [ '/foo', '/bar', '/baz', '' ]);
+				assert.deepEqual(execs, [ '/bar', '/' ]);
+			});
+	});
+
 	test('without a provided context, #start dispatches with an empty object as the context', () => {
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ history });
-		const dispatch = stub(router, 'dispatch');
+		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
 
 		router.start();
 		const { args: [ initialContext ] } = dispatch.firstCall;
@@ -554,7 +641,7 @@ suite('createRouter', () => {
 		const context = {};
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ context, history });
-		const dispatch = stub(router, 'dispatch');
+		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
 
 		router.start();
 		const { args: [ initialContext ] } = dispatch.firstCall;
@@ -570,7 +657,7 @@ suite('createRouter', () => {
 		const context = () => contexts.shift();
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ context, history });
-		const dispatch = stub(router, 'dispatch');
+		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
 
 		router.start();
 		const { args: [ initialContext ] } = dispatch.firstCall;
