@@ -23,10 +23,10 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "dojo-compose": ">=2.0.0-beta.10",
-    "dojo-core": ">=2.0.0-alpha.12",
+    "dojo-compose": ">=2.0.0-beta.12",
+    "dojo-core": ">=2.0.0-alpha.15",
     "dojo-has": ">=2.0.0-alpha.4",
-    "dojo-shim": ">=2.0.0-alpha.4"
+    "dojo-shim": ">=2.0.0-beta.1"
   },
   "devDependencies": {
     "codecov.io": "0.1.6",
