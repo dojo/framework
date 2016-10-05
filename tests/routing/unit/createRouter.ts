@@ -1,11 +1,11 @@
 import Task from 'dojo-core/async/Task';
 import Promise from 'dojo-shim/Promise';
-import { suite, test } from 'intern!tdd';
+import { beforeEach, suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 import { stub, spy } from 'sinon';
 
 import createRoute from '../../src/createRoute';
-import createRouter, { DispatchResult, NavigationStartEvent } from '../../src/createRouter';
+import createRouter, { DispatchResult, ErrorEvent, NavigationStartEvent } from '../../src/createRouter';
 import createMemoryHistory from '../../src/history/createMemoryHistory';
 import { DefaultParameters, Context as C, Request, Parameters } from '../../src/interfaces';
 
@@ -666,5 +666,133 @@ suite('createRouter', () => {
 		history.set('/bar');
 		const { args: [ nextContext ] } = dispatch.secondCall;
 		assert.deepEqual(nextContext, { second: true });
+	});
+
+	suite('dispatch errors are emitted', () => {
+		let context: C = {};
+		let dispatch = () => new Promise(() => {});
+		let fallback: any = null;
+		let events: ErrorEvent[] = [];
+		const path = '/foo/bar';
+		let router = createRouter();
+
+		const verify = (promise: Promise<any>, ...errors: any[]) => {
+			return promise.then(() => {
+				assert.lengthOf(events, errors.length);
+				errors.forEach((error, index) => {
+					assert.strictEqual(events[index].context, context);
+					assert.strictEqual(events[index].error, error);
+					assert.strictEqual(events[index].path, path);
+					assert.strictEqual(events[index].target, router);
+				});
+			});
+		};
+
+		beforeEach(() => {
+			events = [];
+			fallback = null;
+			router = createRouter({
+				fallback() {
+					if (fallback) {
+						return fallback();
+					}
+				}
+			});
+			router.on('error', (event) => { events.push(event); });
+			dispatch = () => {
+				return new Promise((resolve) => {
+					router.dispatch(context, path).finally(resolve);
+				});
+			};
+		});
+
+		test('route selection throws', () => {
+			const error = new Error();
+			router.append(createRoute({
+				path,
+				guard(): boolean {
+					throw error;
+				}
+			}));
+			return verify(dispatch(), error);
+		});
+
+		test('route exec throws', () => {
+			const error = new Error();
+			router.append(createRoute({
+				path,
+				exec() {
+					throw error;
+				}
+			}));
+			return verify(dispatch(), error);
+		});
+
+		test('route fallback throws', () => {
+			const error = new Error();
+			router.append(createRoute({
+				path: '/foo',
+				fallback() {
+					throw error;
+				}
+			}));
+			return verify(dispatch(), error);
+		});
+
+		test('route index throws', () => {
+			const error = new Error();
+			router.append(createRoute({
+				path,
+				index() {
+					throw error;
+				}
+			}));
+			return verify(dispatch(), error);
+		});
+
+		test('router fallback throws', () => {
+			const error = new Error();
+			fallback = () => { throw error; };
+			return verify(dispatch(), error);
+		});
+
+		test('route exec returns a rejected thenable', () => {
+			const error = new Error();
+			router.append(createRoute({
+				path,
+				exec() {
+					return Promise.reject(error);
+				}
+			}));
+			return verify(dispatch(), error);
+		});
+
+		test('route fallback returns a rejected thenable', () => {
+			const error = new Error();
+			router.append(createRoute({
+				path: '/foo',
+				fallback() {
+					return Promise.reject(error);
+				}
+			}));
+			return verify(dispatch(), error);
+		});
+
+		test('route index returns a rejected thenable', () => {
+			const error = new Error();
+			router.append(createRoute({
+				path,
+				index() {
+					return Promise.reject(error);
+				}
+			}));
+			return verify(dispatch(), error);
+		});
+
+		test('router fallback returns a rejected thenable', () => {
+			const error = new Error();
+			fallback = () => { return Promise.reject(error); };
+			return verify(dispatch(), error);
+		});
 	});
 });

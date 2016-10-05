@@ -108,6 +108,8 @@ const route = createRoute({
 });
 ```
 
+You may return a thenable in order to [capture errors](#capturing-errors). Route dispatch does not wait for the thenable to resolve.
+
 ### Route hierarchies
 
 Routes can be appended to other routes:
@@ -162,6 +164,8 @@ const posts = createRoute({
 	}
 });
 ```
+
+You may return a thenable in order to [capture errors](#capturing-errors). Route dispatch does not wait for the thenable to resolve.
 
 ### Named parameters
 
@@ -373,6 +377,8 @@ posts.append(byId);
 
 No route will match `/posts/5/stats`, however there is a fallback for the `byId` route. The router will call `exec()` on the `posts` route and `fallback()` on the `byId` route.
 
+You may return a thenable in order to [capture errors](#capturing-errors). Route dispatch does not wait for the thenable to resolve.
+
 ### Preventing dispatches altogether
 
 You may want to prevent new routes from executing until the user has completed a certain task. You can listen to the `navstart` event emitted by the router to cancel or defer dispatches:
@@ -545,6 +551,10 @@ const router = createRouter({
 	history: createStateHistory()
 });
 ```
+
+### Capturing errors
+
+Errors that occur during dispatch are emitted under the `error` event. The event object contains the error as well as the context and path used for the dispatch.
 
 ## How do I use this package?
 

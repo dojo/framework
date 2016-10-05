@@ -8,6 +8,7 @@ import createEvented, {
 import { Handle } from 'dojo-core/interfaces';
 import { pausable, PausableHandle } from 'dojo-core/on';
 import Task from 'dojo-core/async/Task';
+import { Thenable } from 'dojo-shim/interfaces';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
 
@@ -50,6 +51,31 @@ export interface NavigationStartEvent extends TargettedEventObject {
 	 * @return an object which allows the caller to resume or cancel dispatch.
 	 */
 	defer(): DispatchDeferral;
+}
+
+/**
+ * Event object that is emitted for the 'error' event.
+ */
+export interface ErrorEvent extends TargettedEventObject {
+	/**
+	 * The context that was being dispatched when the error occurred.
+	 */
+	context: Context;
+
+	/**
+	 * The error.
+	 */
+	error: any;
+
+	/**
+	 * The path that was being dispatched when the error occurred.
+	 */
+	path: string;
+
+	/**
+	 * The router that emitted this event.
+	 */
+	target: Router;
 }
 
 /**
@@ -101,6 +127,14 @@ export interface RouterOverrides {
 	 */
 	on(type: 'navstart', listener: EventedListener<NavigationStartEvent>): Handle;
 
+	/**
+	 * Event emitted when errors occur during dispatch.
+	 *
+	 * Certain errors may reject the task returned when dispatching, but this task is not always accessible and may
+	 * hide errors if it's canceled.
+	 */
+	on(type: 'error', listener: EventedListener<ErrorEvent>): Handle;
+
 	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
 
@@ -121,7 +155,7 @@ export interface RouterOptions extends EventedOptions {
 	 * @param request An object whose `context` property contains the dispatch context. No extracted parameters
 	 *   are available.
 	 */
-	fallback?: (request: Request<any>) => void;
+	fallback?: (request: Request<any>) => void | Thenable<any>;
 
 	/**
 	 * The history manager. Routes will be dispatched in response to change events emitted by the manager.
@@ -149,7 +183,7 @@ export interface RouterFactory extends ComposeFactory<Router, RouterOptions> {
 
 interface PrivateState {
 	contextFactory: () => Context;
-	fallback?: (request: Request<any>) => void;
+	fallback?: (request: Request<any>) => void | Thenable<any>;
 	history?: History;
 	routes: Route<Parameters>[];
 	started?: boolean;
@@ -170,6 +204,24 @@ function createDeferral() {
 		resume = () => resolve();
 	});
 	return { cancel, promise, resume };
+}
+
+function reportError(router: Router, context: Context, path: string, error: any) {
+	router.emit<ErrorEvent>({
+		context,
+		error,
+		path,
+		target: router,
+		type: 'error'
+	});
+}
+
+function catchRejection(router: Router, context: Context, path: string, thenable: void | Thenable<any>) {
+	if (thenable) {
+		Promise.resolve(thenable).catch((error) => {
+			reportError(router, context, path, error);
+		});
+	}
 }
 
 const createRouter: RouterFactory = compose.mixin(createEvented, {
@@ -236,14 +288,14 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 							}
 
 							for (const { handler, params } of result) {
-								handler({ context, params });
+								catchRejection(this, context, path, handler({ context, params }));
 							}
 
 							return true;
 						});
 
 						if (!dispatched && fallback) {
-							fallback({ context, params: {} });
+							catchRejection(this, context, path, fallback({ context, params: {} }));
 							return { success: true };
 						}
 
@@ -258,7 +310,10 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 					() => {
 						return { success: false };
 					}
-				).then(resolve, reject);
+				).then(resolve, (error) => {
+					reportError(this, context, path, error);
+					reject(error);
+				});
 			}, cancel);
 		},
 

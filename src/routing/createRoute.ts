@@ -2,6 +2,7 @@ import compose, { ComposeFactory } from 'dojo-compose/compose';
 import UrlSearchParams from 'dojo-core/UrlSearchParams';
 import { Hash } from 'dojo-core/interfaces';
 import WeakMap from 'dojo-shim/WeakMap';
+import { Thenable } from 'dojo-shim/interfaces';
 
 import { DefaultParameters, Context, Parameters, Request } from './interfaces';
 import {
@@ -37,7 +38,7 @@ export interface Selection {
 	/**
 	 * Which handler should be called when the route is executed.
 	 */
-	handler: (request: Request<Parameters>) => void;
+	handler: (request: Request<Parameters>) => void | Thenable<any>;
 
 	/**
 	 * The extracted parameters.
@@ -110,7 +111,7 @@ export interface RouteOptions<P> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	exec?(request: Request<P>): void;
+	exec?(request: Request<P>): void | Thenable<any>;
 
 	/**
 	 * If specified, causes the route to be selected if there are no nested routes that match the remainder of
@@ -118,7 +119,7 @@ export interface RouteOptions<P> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	fallback?(request: Request<P>): void;
+	fallback?(request: Request<P>): void | Thenable<any>;
 
 	/**
 	 * Callback used to determine whether the route should be selected after it's been matched.
@@ -135,7 +136,7 @@ export interface RouteOptions<P> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	index?(request: Request<P>): void;
+	index?(request: Request<P>): void | Thenable<any>;
 
 	/**
 	 * Callback used for constructing the `params` object from extracted parameters, and validating the parameters.
@@ -160,10 +161,10 @@ interface PrivateState {
 	trailingSlashMustMatch: boolean;
 
 	computeParams<P extends Parameters>(fromPathname: string[], searchParams: UrlSearchParams): null | P;
-	exec?(request: Request<Parameters>): void;
-	fallback?(request: Request<Parameters>): void;
+	exec?(request: Request<Parameters>): void | Thenable<any>;
+	fallback?(request: Request<Parameters>): void | Thenable<any>;
 	guard?(request: Request<Parameters>): string | boolean;
-	index?(request: Request<Parameters>): void;
+	index?(request: Request<Parameters>): void | Thenable<any>;
 }
 
 const privateStateMap = new WeakMap<Route<Parameters>, PrivateState>();
