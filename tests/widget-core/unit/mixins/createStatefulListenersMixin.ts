@@ -53,7 +53,7 @@ const actionRegistry = {
 			case action4:
 				return 'action4';
 			default:
-				return undefined;
+				throw new Error('Could not identify');
 		}
 	}
 };
@@ -145,7 +145,7 @@ registerSuite({
 
 			widget.setState({
 				listeners: {
-					foo: undefined,
+					foo: [],
 					bar: ['action2', 'action3']
 				}
 			});

@@ -108,7 +108,7 @@ function constructDijitWidget(dijit: Dijit<DijitWidget>, srcNodeRef: Node): Prom
 	const dijitData = dijitDataWeakMap.get(dijit);
 	return resolveCtor(dijitData.Ctor)
 		.then((/* tslint:disable */Ctor/* tslint:enable */) => {
-			const dijitWidget = new Ctor(dijitData.params, srcNodeRef);
+			const dijitWidget = new Ctor(dijitData.params || {}, srcNodeRef);
 			dijitWidget.startup();
 			return dijitWidget;
 		});
@@ -151,7 +151,10 @@ const ctorMap = new Map<string, DijitWidgetConstructor<DijitWidget>>();
  * Returns a `Promise` which resolves with the constructor.
  * @param Ctor The Dijit widget constructor to be resolved
  */
-function resolveCtor<D extends DijitWidget>(/* tslint:disable */Ctor/* tslint:enable */: DijitWidgetConstructor<D> | string): Promise<DijitWidgetConstructor<D>> {
+function resolveCtor<D extends DijitWidget>(/* tslint:disable */Ctor/* tslint:enable */: DijitWidgetConstructor<D> | string | undefined): Promise<DijitWidgetConstructor<D>> {
+	if (Ctor === undefined) {
+		return Promise.reject(new Error('Cannot load undefined constructor'));
+	}
 	if (typeof Ctor !== 'string') {
 		return Promise.resolve(Ctor);
 	}
@@ -222,15 +225,15 @@ const createDijit: DijitFactory = createRenderMixin
 				const afterCreate = dijitDataWeakMap.get(this).afterCreate;
 				return h(this.tagName, { afterCreate });
 			},
-			get dijit(this: Dijit<DijitWidget>): DijitWidget {
+			get dijit(this: Dijit<DijitWidget>): DijitWidget | undefined {
 				return dijitDataWeakMap.get(this).dijitWidget;
 			},
 
-			get Ctor(this: Dijit<DijitWidget>): DijitWidgetConstructor<DijitWidget> | string {
+			get Ctor(this: Dijit<DijitWidget>): DijitWidgetConstructor<DijitWidget> | string | undefined {
 				return dijitDataWeakMap.get(this).Ctor;
 			},
 
-			get params(this: Dijit<DijitWidget>): DijitWidgetParams {
+			get params(this: Dijit<DijitWidget>): DijitWidgetParams | undefined {
 				return dijitDataWeakMap.get(this).params;
 			}
 		},
@@ -243,7 +246,7 @@ const createDijit: DijitFactory = createRenderMixin
 			dijitData.afterCreate = afterCreate.bind(instance);
 			if (options) {
 				dijitData.Ctor = options.Ctor;
-				dijitData.params = options.params || {};
+				dijitData.params = options.params;
 			}
 		}
 	})

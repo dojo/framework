@@ -40,7 +40,13 @@ const createRenderableChildrenMixin: RenderableChildrenFactory = compose<Rendera
 					.forEach(([ , child ]) => results.push(child.render()));
 			}
 			else {
-				children.forEach((child) => results.push(child.render()));
+				children.forEach((child) => {
+					// Workaround for https://github.com/facebook/immutable-js/pull/919
+					// istanbul ignore else
+					if (child) {
+						results.push(child.render());
+					}
+				});
 			}
 			return results;
 		}

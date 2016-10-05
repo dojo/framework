@@ -22,13 +22,13 @@ function getIndex<T>(list: List<T> | T[], item: T, position: Position, reference
 			idx = Array.isArray(list) ? list.length : list.size;
 			break;
 		case 'before':
-			idx = list.indexOf(reference);
+			idx = reference === undefined ? -1 : list.indexOf(reference);
 			if (idx === -1) {
 				throw new Error('reference not contained in this list');
 			}
 			break;
 		case 'after':
-			idx = list.indexOf(reference) + 1;
+			idx = reference === undefined ? 0 : list.indexOf(reference) + 1;
 			if (idx === 0) {
 				throw new Error('reference not contained in this list');
 			}
@@ -133,7 +133,7 @@ export function getRemoveHandle<C extends Child>(parent: Parent, child: C | C[] 
 				}
 				destroyed = true;
 				if (c.parent === parent) {
-					c.parent = undefined;
+					c.parent = null;
 				}
 			}
 		});

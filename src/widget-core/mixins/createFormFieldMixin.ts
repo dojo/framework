@@ -1,5 +1,5 @@
 import { VNodeProperties } from 'maquette';
-import compose, { ComposeFactory } from 'dojo-compose/compose';
+import { ComposeFactory } from 'dojo-compose/compose';
 import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
 import { Handle } from 'dojo-core/interfaces';
@@ -61,12 +61,6 @@ export interface FormField<V> {
 	nodeAttributes: NodeAttributeFunction[];
 
 	/**
-	 * Add listener for a `valuechange` event, emitted when the value on the widget changes
-	 */
-	on?(type: 'valuechange', listener: EventedListener<ValueChangeEvent<V>>): Handle;
-	on?(type: string, listener: EventedListener<TargettedEventObject>): Handle;
-
-	/**
 	 * The HTML type for this widget
 	 */
 	type?: string;
@@ -77,54 +71,61 @@ export interface FormField<V> {
 	value?: string;
 }
 
-export type FormFieldMixin<V, S extends FormFieldMixinState<V>> = FormField<V> & Stateful<S>;
+export interface FormFieldOverride<V> {
+	/**
+	 * Add listener for a `valuechange` event, emitted when the value on the widget changes
+	 */
+	on(type: 'valuechange', listener: EventedListener<ValueChangeEvent<V>>): Handle;
+	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
+}
+
+export type FormFieldMixin<V, S extends FormFieldMixinState<V>> = FormField<V> & Stateful<S> & FormFieldOverride<V>;
 
 export interface FormMixinFactory extends ComposeFactory<FormFieldMixin<any, FormFieldMixinState<any>>, FormFieldMixinOptions<any, FormFieldMixinState<any>>> {
 	<V>(options?: FormFieldMixinOptions<V, FormFieldMixinState<V>>): FormFieldMixin<V, FormFieldMixinState<V>>;
 }
 
-const createFormMixin: FormMixinFactory = compose({
-		get value(this: FormFieldMixin<any, FormFieldMixinState<any>>): string {
-			return valueToString(this.state.value);
-		},
-
-		set value(this: FormFieldMixin<any, FormFieldMixinState<any>>, value: string) {
-			if (value !== this.state.value) {
-				const event = assign(createCancelableEvent({
-					type: 'valuechange',
-					target: this
-				}), {
-					oldValue: valueToString(this.state.value),
-					value
-				});
-				this.emit(event);
-				if (!event.defaultPrevented) {
-					this.setState({ value: stringToValue(event.value) });
-				}
-			}
-		},
-
-		nodeAttributes: [
-			function (this: FormFieldMixin<any, FormFieldMixinState<any>>): VNodeProperties {
-				const { type, value, state } = this;
-				const { disabled, name } = state;
-
-				return { type, value, name, disabled: Boolean(disabled) };
-			}
-		]
-	}, (instance: FormField<any>, { type } = <any> {}) => {
-		if (type) {
-			instance.type = type;
-		}
-	})
+const createFormMixin: FormMixinFactory = createStateful
 	.mixin({
-		mixin: createStateful,
+		mixin: <FormField<any>> {
+			get value(this: FormFieldMixin<any, FormFieldMixinState<any>>): string {
+				return valueToString(this.state.value);
+			},
+
+			set value(this: FormFieldMixin<any, FormFieldMixinState<any>>, value: string) {
+				if (value !== this.state.value) {
+					const event = assign(createCancelableEvent({
+						type: 'valuechange',
+						target: this
+					}), {
+						oldValue: valueToString(this.state.value),
+						value
+					});
+					this.emit(event);
+					if (!event.defaultPrevented) {
+						this.setState({ value: stringToValue(event.value) });
+					}
+				}
+			},
+
+			nodeAttributes: [
+				function (this: FormFieldMixin<any, FormFieldMixinState<any>>): VNodeProperties {
+					const { type, value, state } = this;
+					const { disabled, name } = state;
+
+					return { type, value, name, disabled: Boolean(disabled) };
+				}
+			]
+		},
 		initialize(
 			instance: FormFieldMixin<any, FormFieldMixinState<any>>,
-			{ value } = <FormFieldMixinOptions<any, FormFieldMixinState<any>>> {}
+			{ value, type }: FormFieldMixinOptions<any, FormFieldMixinState<any>> = {}
 		) {
 			if (value) {
 				instance.setState({ value });
+			}
+			if (type) {
+				instance.type = type;
 			}
 		}
 	});

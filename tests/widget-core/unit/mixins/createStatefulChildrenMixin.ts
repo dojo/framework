@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createStatefulChildrenMixin, { CreateChildrenResults } from '../../../src/mixins/createStatefulChildrenMixin';
+import createStatefulChildrenMixin from '../../../src/mixins/createStatefulChildrenMixin';
 import createRenderMixin, { RenderMixin, RenderMixinOptions, RenderMixinState } from '../../../src/mixins/createRenderMixin';
 import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
@@ -30,11 +30,18 @@ const widgetRegistry = {
 		return Promise.resolve(widgetMap[id]);
 	},
 	identify(value: RenderMixin<RenderMixinState>): string | symbol {
-		return value === widget1
-			? 'widget1' : value === widget2
-			? 'widget2' : value === widget3
-			? 'widget3' : value === widget4
-			? 'widget4' : undefined;
+		switch (value) {
+			case widget1:
+				return 'widget1';
+			case widget2:
+				return 'widget2';
+			case widget3:
+				return 'widget3';
+			case widget4:
+				return 'widget4';
+			default:
+				throw new Error('Cannot identify value');
+		}
 	},
 	create<C extends RenderMixin<RenderMixinState>>(factory: ComposeFactory<C, any>, options?: any): Promise<[string | symbol, C]> {;
 		return Promise.resolve<[ string, C ]>([options && options.id || `widget${widgetUID++}`, factory(options)]);
@@ -43,7 +50,10 @@ const widgetRegistry = {
 
 const registryProvider: RegistryProvider<Child> = {
 	get(type: string) {
-		return type === 'widgets' ? widgetRegistry : null;
+		if (type === 'widgets') {
+			return widgetRegistry;
+		}
+		throw new Error('Bad registry type');
 	}
 };
 
@@ -228,7 +238,7 @@ registerSuite({
 		Object.defineProperty(parent, 'children', {
 			set(value: any) {
 				setCount++;
-				setChildren.call(parent, value);
+				setChildren!.call(parent, value);
 			}
 		});
 
@@ -296,7 +306,10 @@ registerSuite({
 		const parent = createStatefulChildrenList({
 			registryProvider: {
 				get(type: string) {
-					return type === 'widgets' ? rejectingRegistry : null;
+					if (type === 'widgets') {
+						return rejectingRegistry;
+					}
+					throw new Error('Bad registry type');
 				}
 			},
 			state: {
@@ -317,7 +330,11 @@ registerSuite({
 		const parent = createStatefulChildrenList({
 			registryProvider: {
 				get(type: string) {
-					return type === 'widgets' ? registry : null;
+					if (type === 'widgets') {
+						return registry;
+					}
+					throw new Error('Bad registry type');
+
 				}
 			},
 			state: {
@@ -368,30 +385,36 @@ registerSuite({
 
 	'#createChild()': {
 		'creation during mixin'() {
-			let p: Promise<[string, RenderMixin<RenderMixinState>]>;
-			const registry = Object.create(widgetRegistry);
-			const createFoo = compose({})
-				.mixin({
-					mixin: createStatefulChildrenMixin,
-					initialize(instance) {
-						p = instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
-							render() {
-								return h('div');
+			return new Promise((resolve) => {
+				const registry = Object.create(widgetRegistry);
+				const createFoo = compose({})
+					.mixin({
+						mixin: createStatefulChildrenMixin,
+						initialize(instance) {
+							instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
+								render() {
+									return h('div');
+								}
+							})
+							.then((createdChild) => {
+								resolve([ instance, createdChild ]);
+							});
+						}
+					});
+
+				createFoo({
+					registryProvider: {
+						get(type: string) {
+							if (type === 'widgets') {
+								return registry;
 							}
-						});
-					}
+							throw new Error('Bad registry type');
+						}
+					},
+					id: 'parent'
 				});
-
-			const foo = createFoo({
-				registryProvider: {
-					get(type: string) {
-						return type === 'widgets' ? registry : null;
-					}
-				},
-				id: 'parent'
-			});
-
-			return p.then((result) => {
+			})
+			.then(([ foo, result ]) => {
 				const [ id ] = result;
 				assert.include(id, 'parent-child');
 				assert.deepEqual(foo.state.children, [ id ]);
@@ -399,31 +422,37 @@ registerSuite({
 		},
 
 		'append children'() {
-			let p: Promise<[string, RenderMixin<RenderMixinState>]>;
-			const registry = Object.create(widgetRegistry);
-			const createFoo = compose({})
-				.mixin({
-					mixin: createStatefulChildrenMixin,
-					initialize(instance) {
-						instance.setState({ children: [ 'foo' ] });
-						p = instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
-							render() {
-								return h('div');
+			return new Promise((resolve) => {
+				const registry = Object.create(widgetRegistry);
+				const createFoo = compose({})
+					.mixin({
+						mixin: createStatefulChildrenMixin,
+						initialize(instance) {
+							instance.setState({ children: [ 'foo' ] });
+							instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
+								render() {
+									return h('div');
+								}
+							})
+							.then((createdChild) => {
+								resolve([ instance, createdChild ]);
+							});
+						}
+					});
+
+				createFoo({
+					registryProvider: {
+						get(type: string) {
+							if (type === 'widgets') {
+								return registry;
 							}
-						});
-					}
+							throw new Error('Bad registry type');
+						}
+					},
+					id: 'parent'
 				});
-
-			const foo = createFoo({
-				registryProvider: {
-					get(type: string) {
-						return type === 'widgets' ? registry : null;
-					}
-				},
-				id: 'parent'
-			});
-
-			return p.then((result) => {
+			})
+			.then(([ foo, result ]) => {
 				const [ id ] = result;
 				assert.include(id, 'parent-child');
 				assert.deepEqual(foo.state.children, [ 'foo', id ]);
@@ -431,32 +460,36 @@ registerSuite({
 		},
 
 		'creation during mixin - with setting ID'() {
-			let p: Promise<[string, RenderMixin<RenderMixinState>]>;
+			return new Promise<[string, RenderMixin<RenderMixinState>]>((resolve) => {
 			const registry = Object.create(widgetRegistry);
+				const createFoo = compose({})
+					.mixin({
+						mixin: createStatefulChildrenMixin,
+						initialize(instance) {
+							instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
+								render() {
+									return h('div');
+								},
+								id: 'foo'
+							})
+							.then(resolve);
+						}
+					});
 
-			const createFoo = compose({})
-				.mixin({
-					mixin: createStatefulChildrenMixin,
-					initialize(instance) {
-						p = instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
-							render() {
-								return h('div');
-							},
-							id: 'foo'
-						});
-					}
+				createFoo({
+					registryProvider: {
+						get(type: string) {
+							if (type === 'widgets') {
+								return registry;
+							}
+							throw new Error('Bad registry type');
+
+						}
+					},
+					id: 'parent'
 				});
-
-			createFoo({
-				registryProvider: {
-					get(type: string) {
-						return type === 'widgets' ? registry : null;
-					}
-				},
-				id: 'parent'
-			});
-
-			return p.then((result) => {
+			})
+			.then((result) => {
 				const [ id ] = result;
 				assert.strictEqual(id, 'foo');
 			});
@@ -477,29 +510,36 @@ registerSuite({
 
 	'#createChildren()': {
 		'with map'() {
-			let p: Promise<CreateChildrenResults<Child>>;
-			const registry = Object.create(widgetRegistry);
-			const createFoo = compose({})
-				.mixin({
-					mixin: createStatefulChildrenMixin,
-					initialize(instance) {
-						p = instance.createChildren({
-							foo: { factory: createRenderMixin },
-							bar: { factory: createRenderMixin }
-						});
-					}
-				});
+			return new Promise((resolve) => {
+				const registry = Object.create(widgetRegistry);
+				const createFoo = compose({})
+					.mixin({
+						mixin: createStatefulChildrenMixin,
+						initialize(instance) {
+							instance.createChildren({
+								foo: { factory: createRenderMixin },
+								bar: { factory: createRenderMixin }
+							})
+							.then((createdChildren) => {
+								resolve([ instance, createdChildren ]);
+							});
+						}
+					});
 
-			const widget = createFoo({
-				id: 'foo',
-				registryProvider: {
-					get(type: string) {
-						return type === 'widgets' ? registry : null;
-					}
-				}
-			});
+					createFoo({
+						id: 'foo',
+						registryProvider: {
+							get(type: string) {
+								if (type === 'widgets') {
+									return registry;
+								}
+								throw new Error('Bad registry type');
 
-			return p.then(({ foo, bar }) => {
+							}
+						}
+					});
+			})
+			.then(([ widget, { foo, bar } ]) => {
 				assert(foo);
 				assert(bar);
 				assert.include(foo.id, 'foo-child');
@@ -511,30 +551,36 @@ registerSuite({
 		},
 
 		'with map append children'() {
-			let p: Promise<CreateChildrenResults<Child>>;
-			const registry = Object.create(widgetRegistry);
-			const createFoo = compose({})
-				.mixin({
-					mixin: createStatefulChildrenMixin,
-					initialize(instance) {
-						instance.setState({ children: [ 'foo' ]});
-						p = instance.createChildren({
-							foo: { factory: createRenderMixin },
-							bar: { factory: createRenderMixin }
-						});
+			return new Promise((resolve) => {
+				const registry = Object.create(widgetRegistry);
+				const createFoo = compose({})
+					.mixin({
+						mixin: createStatefulChildrenMixin,
+						initialize(instance) {
+							instance.setState({ children: [ 'foo' ]});
+							instance.createChildren({
+								foo: { factory: createRenderMixin },
+								bar: { factory: createRenderMixin }
+							})
+							.then((createdChildren) => {
+								resolve([ instance, createdChildren ]);
+							});
+						}
+					});
+
+				createFoo({
+					id: 'foo',
+					registryProvider: {
+						get(type: string) {
+							if (type === 'widgets') {
+								return registry;
+							}
+							throw new Error('Bad registry type');
+						}
 					}
 				});
-
-			const widget = createFoo({
-				id: 'foo',
-				registryProvider: {
-					get(type: string) {
-						return type === 'widgets' ? registry : null;
-					}
-				}
-			});
-
-			return p.then(({ foo, bar }) => {
+			})
+			.then(([widget, { foo, bar }]) => {
 				assert(foo);
 				assert(bar);
 				assert.include(foo.id, 'foo-child');
@@ -546,29 +592,34 @@ registerSuite({
 		},
 
 		'with map and options.id'() {
-			let p: Promise<CreateChildrenResults<Child>>;
-			const registry = Object.create(widgetRegistry);
-			const createFoo = compose({})
-				.mixin({
-					mixin: createStatefulChildrenMixin,
-					initialize(instance) {
-						p = instance.createChildren({
-							foo: { factory: createRenderMixin, options: { id: 'foo' } },
-							bar: { factory: createRenderMixin, options: { id: 'bar' } }
-						});
+			return new Promise((resolve) => {
+				const registry = Object.create(widgetRegistry);
+				const createFoo = compose({})
+					.mixin({
+						mixin: createStatefulChildrenMixin,
+						initialize(instance) {
+							instance.createChildren({
+								foo: { factory: createRenderMixin, options: { id: 'foo' } },
+								bar: { factory: createRenderMixin, options: { id: 'bar' } }
+							})
+							.then(resolve);
+						}
+					});
+
+				createFoo({
+					id: 'foo',
+					registryProvider: {
+						get(type: string) {
+							if (type === 'widgets') {
+								return registry;
+							}
+							throw new Error('Bad registry type');
+
+						}
 					}
 				});
-
-			createFoo({
-				id: 'foo',
-				registryProvider: {
-					get(type: string) {
-						return type === 'widgets' ? registry : null;
-					}
-				}
-			});
-
-			return p.then(({ foo, bar }) => {
+			})
+			.then(({ foo, bar }) => {
 				assert(foo);
 				assert(bar);
 				assert.strictEqual(foo.id, 'foo');
@@ -579,42 +630,48 @@ registerSuite({
 		},
 
 		'destroy with map destroys children'() {
-			let p: Promise<CreateChildrenResults<Child>>;
-			const registry = Object.create(widgetRegistry);
 			let destroyCount = 0;
-			const createDestroyRenderable = createRenderMixin
-				.mixin({
-					mixin: createDestroyable,
-					initialize(instance) {
-						instance.own({
-							destroy() {
-								destroyCount++;
+			return new Promise((resolve) => {
+				const registry = Object.create(widgetRegistry);
+				const createDestroyRenderable = createRenderMixin
+					.mixin({
+						mixin: createDestroyable,
+						initialize(instance) {
+							instance.own({
+								destroy() {
+									destroyCount++;
+								}
+							});
+						}
+					});
+
+				const createFoo = compose({})
+					.mixin({
+						mixin: createStatefulChildrenMixin,
+						initialize(instance) {
+							instance.createChildren({
+								foo: { factory: createDestroyRenderable, options: { id: 'foo' } },
+								bar: { factory: createDestroyRenderable, options: { id: 'bar' } }
+							})
+							.then((createdChildren) => {
+								resolve([ instance, createdChildren ]);
+							});
+						}
+					});
+
+				createFoo({
+					id: 'foo',
+					registryProvider: {
+						get(type: string) {
+							if (type === 'widgets') {
+								return registry;
 							}
-						});
+							throw new Error('Bad registry type');
+
+						}
 					}
 				});
-
-			const createFoo = compose({})
-				.mixin({
-					mixin: createStatefulChildrenMixin,
-					initialize(instance) {
-						p = instance.createChildren({
-							foo: { factory: createDestroyRenderable, options: { id: 'foo' } },
-							bar: { factory: createDestroyRenderable, options: { id: 'bar' } }
-						});
-					}
-				});
-
-			const foo = createFoo({
-				id: 'foo',
-				registryProvider: {
-					get(type: string) {
-						return type === 'widgets' ? registry : null;
-					}
-				}
-			});
-
-			return p.then(() => {
+			}).then(([ foo ]) => {
 				assert.strictEqual(destroyCount, 0);
 				return foo.destroy();
 			})
@@ -624,26 +681,33 @@ registerSuite({
 		},
 
 		'with array'() {
-			let p: Promise<[string, Child][]>;
-			const registry = Object.create(widgetRegistry);
-			const createFoo = compose({})
-				.mixin({
-					mixin: createStatefulChildrenMixin,
-					initialize(instance) {
-						p = instance.createChildren([ [ createRenderMixin, {} ], [ createRenderMixin, {} ] ]);
+			return new Promise((resolve) => {
+				const registry = Object.create(widgetRegistry);
+				const createFoo = compose({})
+					.mixin({
+						mixin: createStatefulChildrenMixin,
+						initialize(instance) {
+							instance.createChildren([ [ createRenderMixin, {} ], [ createRenderMixin, {} ] ])
+							.then((createdChildren) => {
+								resolve([ instance, createdChildren ]);
+							});
+						}
+					});
+
+				createFoo({
+					id: 'foo',
+					registryProvider: {
+						get(type: string) {
+							if (type === 'widgets') {
+								return registry;
+							}
+							throw new Error('Bad registry type');
+
+						}
 					}
 				});
-
-			const widget = createFoo({
-				id: 'foo',
-				registryProvider: {
-					get(type: string) {
-						return type === 'widgets' ? registry : null;
-					}
-				}
-			});
-
-			return p.then(([ a, b ]) => {
+			})
+			.then(([ widget, [ a, b ] ]) => {
 				assert(a);
 				assert(b);
 				const [ aID, aWidget ] = a;
@@ -657,27 +721,34 @@ registerSuite({
 		},
 
 		'with array append children'() {
-			let p: Promise<[string, Child][]>;
-			const registry = Object.create(widgetRegistry);
-			const createFoo = compose({})
-				.mixin({
-					mixin: createStatefulChildrenMixin,
-					initialize(instance) {
-						instance.setState({ children: [ 'foo' ]});
-						p = instance.createChildren([ [ createRenderMixin, {} ], [ createRenderMixin, {} ] ]);
+			return new Promise((resolve) => {
+				const registry = Object.create(widgetRegistry);
+				const createFoo = compose({})
+					.mixin({
+						mixin: createStatefulChildrenMixin,
+						initialize(instance) {
+							instance.setState({ children: [ 'foo' ]});
+							instance.createChildren([ [ createRenderMixin, {} ], [ createRenderMixin, {} ] ])
+							.then((createdChildren) => {
+								resolve([ instance, createdChildren ]);
+							});
+						}
+					});
+
+				createFoo({
+					id: 'foo',
+					registryProvider: {
+						get(type: string) {
+							if (type === 'widgets') {
+								return registry;
+							}
+							throw new Error('Bad registry type');
+
+						}
 					}
 				});
-
-			const widget = createFoo({
-				id: 'foo',
-				registryProvider: {
-					get(type: string) {
-						return type === 'widgets' ? registry : null;
-					}
-				}
-			});
-
-			return p.then(([ a, b ]) => {
+			})
+			.then(([ widget, [ a, b ] ]) => {
 				assert(a);
 				assert(b);
 				const [ aID, aWidget ] = a;
@@ -691,26 +762,33 @@ registerSuite({
 		},
 
 		'with array and options.id'() {
-			let p: Promise<[string, Child][]>;
-			const registry = Object.create(widgetRegistry);
-			const createFoo = compose({})
-				.mixin({
-					mixin: createStatefulChildrenMixin,
-					initialize(instance) {
-						p = instance.createChildren([ [ createRenderMixin, { id: 'foo' } ], [ createRenderMixin, { id: 'bar' } ] ]);
+			return new Promise((resolve) => {
+				const registry = Object.create(widgetRegistry);
+				const createFoo = compose({})
+					.mixin({
+						mixin: createStatefulChildrenMixin,
+						initialize(instance) {
+							instance.createChildren([ [ createRenderMixin, { id: 'foo' } ], [ createRenderMixin, { id: 'bar' } ] ])
+														.then((createdChildren) => {
+								resolve([ instance, createdChildren ]);
+							});
+						}
+					});
+
+				createFoo({
+					id: 'foo',
+					registryProvider: {
+						get(type: string) {
+							if (type === 'widgets') {
+								return registry;
+							}
+							throw new Error('Bad registry type');
+
+						}
 					}
 				});
-
-			const widget = createFoo({
-				id: 'foo',
-				registryProvider: {
-					get(type: string) {
-						return type === 'widgets' ? registry : null;
-					}
-				}
-			});
-
-			return p.then(([ a, b ]) => {
+			})
+			.then(([ widget, [ a, b ] ]) => {
 				assert(a);
 				assert(b);
 				const [ aID, aWidget ] = a;
@@ -724,42 +802,49 @@ registerSuite({
 		},
 
 		'destroy with array destroys children'() {
-			let p: Promise<[string, Child][]>;
-			const registry = Object.create(widgetRegistry);
 			let destroyCount = 0;
-			const createDestroyRenderable = createRenderMixin
-				.mixin({
-					mixin: createDestroyable,
-					initialize(instance) {
-						instance.own({
-							destroy() {
-								destroyCount++;
+			return new Promise((resolve) => {
+				const registry = Object.create(widgetRegistry);
+				const createDestroyRenderable = createRenderMixin
+					.mixin({
+						mixin: createDestroyable,
+						initialize(instance) {
+							instance.own({
+								destroy() {
+									destroyCount++;
+								}
+							});
+						}
+					});
+
+				const createFoo = compose({})
+					.mixin({
+						mixin: createStatefulChildrenMixin,
+						initialize(instance) {
+							instance.createChildren([
+								[ createDestroyRenderable, { id: 'foo' } ],
+								[ createDestroyRenderable, { id: 'bar' } ]
+							])
+							.then((createdChildren) => {
+								resolve([ instance, createdChildren ]);
+							});
+						}
+					});
+
+				createFoo({
+					id: 'foo',
+					registryProvider: {
+						get(type: string) {
+							if (type === 'widgets') {
+								return registry;
 							}
-						});
+							throw new Error('Bad registry type');
+
+						}
 					}
 				});
-
-			const createFoo = compose({})
-				.mixin({
-					mixin: createStatefulChildrenMixin,
-					initialize(instance) {
-						p = instance.createChildren([
-							[ createDestroyRenderable, { id: 'foo' } ],
-							[ createDestroyRenderable, { id: 'bar' } ]
-						]);
-					}
-				});
-
-			const foo = createFoo({
-				id: 'foo',
-				registryProvider: {
-					get(type: string) {
-						return type === 'widgets' ? registry : null;
-					}
-				}
-			});
-
-			return p.then(() => {
+			})
+			.then(([ foo ]) => {
 				assert.strictEqual(destroyCount, 0);
 				return foo.destroy();
 			})

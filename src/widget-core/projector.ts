@@ -131,13 +131,13 @@ export enum ProjectorState {
 
 interface ProjectorData {
 	afterInitialCreate?: () => void;
-	attachHandle?: Handle;
+	attachHandle: Handle;
 	attachPromise?: Promise<Handle>;
-	boundRender?: () => VNode;
-	projector?: MaquetteProjector;
-	root?: Element;
-	state?: ProjectorState;
-	tagName?: string;
+	boundRender: () => VNode;
+	projector: MaquetteProjector;
+	root: Element;
+	state: ProjectorState;
+	tagName: string;
 }
 
 const projectorDataMap = new WeakMap<Projector, ProjectorData>();
@@ -180,18 +180,26 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 		render(this: Projector): VNode {
 			const projectorData = projectorDataMap.get(this);
 			const childVNodes: VNode[] = [];
-			this.children.forEach((child) => childVNodes.push(child.render()));
+			this.children.forEach((child) => {
+				// Workaround for https://github.com/facebook/immutable-js/pull/919
+				// istanbul ignore else
+				if (child) {
+					childVNodes.push(child.render());
+				}
+			});
 			const props = this.getNodeAttributes();
 			props.afterCreate = projectorData.afterInitialCreate;
 			return h(projectorData.tagName, props, childVNodes);
 		},
-		attach(this: Projector, { type, tagName = 'div' }: AttachOptions = {}): Promise<Handle> {
+		attach(this: Projector, { type, tagName }: AttachOptions = {}): Promise<Handle> {
 			const projectorData = projectorDataMap.get(this);
 			if (projectorData.state === ProjectorState.Attached) {
-				return projectorData.attachPromise;
+				return projectorData.attachPromise || Promise.resolve(noopHandle);
 			}
 			projectorData.boundRender = this.render.bind(this);
-			projectorData.tagName = tagName;
+			if (tagName !== undefined) {
+				projectorData.tagName = tagName;
+			}
 			projectorData.state = ProjectorState.Attached;
 			projectorData.attachHandle = this.own({
 				destroy() {
@@ -306,9 +314,12 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 			}
 			const projector = createMaquetteProjector(options);
 			projectorDataMap.set(instance, {
+				attachHandle: noopHandle,
+				boundRender: noopVNode,
 				projector,
 				root,
-				state: ProjectorState.Detached
+				state: ProjectorState.Detached,
+				tagName: 'div'
 			});
 			if (autoAttach === true) {
 				instance.attach({ type: 'merge' });
@@ -326,6 +337,42 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 		}
 	});
 
-const defaultProjector: Projector = typeof global.document === 'undefined' ? null : createProjector();
+// Projectors cannot be created outside of browser environments. Ensure that a default projector can always be
+// exported, even if it can't do anything.
+const createStubbedProjector: ProjectorFactory = compose({
+		getNodeAttributes(): VNodeProperties {
+			throw new Error('Projector is stubbed');
+		},
+		render(): VNode {
+			throw new Error('Projector is stubbed');
+		},
+		attach(): Promise<Handle> {
+			throw new Error('Projector is stubbed');
+		},
+		invalidate() {
+			throw new Error('Projector is stubbed');
+		},
+		setRoot(root: Element) {
+			throw new Error('Projector is stubbed');
+		},
+		get projector(): MaquetteProjector {
+			throw new Error('Projector is stubbed');
+		},
+		get root(): Element {
+			throw new Error('Projector is stubbed');
+		},
+		get document(): Document {
+			throw new Error('Projector is stubbed');
+		},
+		get state(): ProjectorState {
+			throw new Error('Projector is stubbed');
+		}
+	})
+	.mixin(createVNodeEvented)
+	.mixin(createParentListMixin);
+
+const defaultProjector: Projector = typeof global.document === 'undefined' ?
+	createStubbedProjector() :
+	createProjector();
 
 export default defaultProjector;

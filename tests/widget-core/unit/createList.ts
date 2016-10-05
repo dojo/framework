@@ -15,11 +15,11 @@ registerSuite({
 			{ id: 5, label: 'qux' }
 		];
 		list.setState({ items });
-		assert.strictEqual(list.state.items.length, 5);
+		assert.strictEqual(list.state.items!.length, 5);
 		items.pop();
-		assert.strictEqual(list.state.items.length, 5);
+		assert.strictEqual(list.state.items!.length, 5);
 		list.setState({ items });
-		assert.strictEqual(list.state.items.length, 4);
+		assert.strictEqual(list.state.items!.length, 4);
 	},
 
 	render() {
@@ -35,13 +35,13 @@ registerSuite({
 		});
 		let vnode = list.render();
 		assert.strictEqual(vnode.vnodeSelector, 'dojo-list');
-		assert.strictEqual(vnode.children.length, 1);
-		assert.strictEqual(vnode.children[0].vnodeSelector, 'ul');
-		assert.strictEqual(vnode.children[0].children.length, 5);
-		assert.strictEqual(vnode.children[0].children[0].vnodeSelector, 'li');
+		assert.strictEqual(vnode.children!.length, 1);
+		assert.strictEqual(vnode.children![0].vnodeSelector, 'ul');
+		assert.strictEqual(vnode.children![0].children!.length, 5);
+		assert.strictEqual(vnode.children![0].children![0].vnodeSelector, 'li');
 		items.pop();
 		list.setState({ items });
 		vnode = list.render();
-		assert.strictEqual(vnode.children[0].children.length, 4);
+		assert.strictEqual(vnode.children![0].children!.length, 4);
 	}
 });

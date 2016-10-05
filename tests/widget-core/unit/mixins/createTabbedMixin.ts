@@ -28,25 +28,25 @@ registerSuite({
 				key: tabbed
 			});
 			assert.strictEqual(vnode.vnodeSelector, 'dojo-panel-mixin');
-			assert.strictEqual(vnode.children.length, 2, 'should have two children');
+			assert.strictEqual(vnode.children!.length, 2, 'should have two children');
 
-			const [ tabBar, panels ] = vnode.children;
+			const [ tabBar, panels ] = vnode.children!;
 			assert.strictEqual(tabBar.vnodeSelector, 'ul');
-			assert.strictEqual(tabBar.children.length, 4);
-			tabBar.children.forEach((child) => assert.strictEqual(child.vnodeSelector, 'li'));
+			assert.strictEqual(tabBar.children!.length, 4);
+			tabBar.children!.forEach((child) => assert.strictEqual(child.vnodeSelector, 'li'));
 
-			const [ child1, child2, child3, child4 ] = tabBar.children;
-			assert.strictEqual(child1.children[0].text, 'foo');
-			assert.strictEqual(child1.children.length, 2);
-			assert.strictEqual(child2.children[0].text, 'bar');
-			assert.strictEqual(child2.children.length, 1);
-			assert.strictEqual(child3.children[0].text, 'baz');
-			assert.strictEqual(child3.children.length, 2);
-			assert.strictEqual(child4.children[0].text, 'qat');
-			assert.strictEqual(child4.children.length, 1);
+			const [ child1, child2, child3, child4 ] = tabBar.children!;
+			assert.strictEqual(child1.children![0].text, 'foo');
+			assert.strictEqual(child1.children!.length, 2);
+			assert.strictEqual(child2.children![0].text, 'bar');
+			assert.strictEqual(child2.children!.length, 1);
+			assert.strictEqual(child3.children![0].text, 'baz');
+			assert.strictEqual(child3.children!.length, 2);
+			assert.strictEqual(child4.children![0].text, 'qat');
+			assert.strictEqual(child4.children!.length, 1);
 
 			assert.strictEqual(panels.vnodeSelector, 'div.panels');
-			assert.strictEqual(panels.children.length, 1);
+			assert.strictEqual(panels.children!.length, 1);
 
 			assert.strictEqual(vnode, tabbed.render(), 'should cache results, if not invalidated');
 
@@ -91,8 +91,8 @@ registerSuite({
 			const tabbed = createTabbedMixin({
 				children: { foo, bar }
 			});
-			const [ tabBar ] = tabbed.render().children;
-			tabBar.children[0].children[0].properties.onclick(<any> {
+			const [ tabBar ] = tabbed.render().children!;
+			tabBar.children![0].children![0].properties!.onclick!(<any> {
 				preventDefault() { count++; }
 			});
 			assert.strictEqual(tabbed.activeChild, foo);

@@ -30,40 +30,32 @@ const widgetStore = createMemoryStore({
  */
 const widgetRegistry = {
 	get(id: string | symbol): Promise<Child> {
-		let widget: Child;
 		switch (id) {
 		case 'panel-1':
-			widget = panel1;
-			break;
+			return Promise.resolve(panel1);
 		case 'panel-2':
-			widget = panel2;
-			break;
+			return Promise.resolve(panel2);
 		case 'panel-3':
-			widget = panel3;
-			break;
+			return Promise.resolve(panel3);
 		case 'panel-4':
-			widget = panel4;
-			break;
+			return Promise.resolve(panel4);
+		default:
+			return Promise.reject(new Error('Unknown widget'));
 		}
-		return Promise.resolve(widget);
 	},
 	identify(value: Child): string | symbol {
-		let id: string | symbol;
 		switch (value) {
 		case panel1:
-			id = 'panel-1';
-			break;
+			return 'panel-1';
 		case panel2:
-			id = 'panel-2';
-			break;
+			return 'panel-2';
 		case panel3:
-			id = 'panel-3';
-			break;
+			return 'panel-3';
 		case panel4:
-			id = 'panel-4';
-			break;
+			return 'panel-4';
+		default:
+			throw new Error('Not registered');
 		}
-		return id;
 	},
 	create(factory: ComposeFactory<any, any>, options?: any): Promise<[ string, Child ]> {
 		return factory(options);

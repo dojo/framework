@@ -7,7 +7,7 @@ registerSuite({
 	'register vdom event'() {
 		let count = 0;
 		const vnodeEvented = createVNodeEvented();
-		assert.isNull(vnodeEvented.listeners);
+		assert.deepEqual(vnodeEvented.listeners, {});
 		vnodeEvented.on('touchcancel', (event) => {
 			assert.strictEqual(event.type, 'touchcancel');
 			count++;
@@ -19,12 +19,13 @@ registerSuite({
 	'register non vdom event'() {
 		let count = 0;
 		const vnodeEvented = createVNodeEvented();
-		assert.isNull(vnodeEvented.listeners);
+		const { listeners: initialListeners } = vnodeEvented;
 		vnodeEvented.on('foo', (event) => {
 			assert.strictEqual(event.type, 'foo');
 			count ++;
 		});
 		assert.strictEqual(Object.keys(vnodeEvented.listeners).length, 0);
+		assert.notStrictEqual(vnodeEvented.listeners, initialListeners);
 		vnodeEvented.emit({ type: 'foo' });
 		assert.strictEqual(count, 1);
 	},

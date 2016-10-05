@@ -11,6 +11,7 @@
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
+		"strictNullChecks": true,
 		"target": "es5"
 	},
 	"include": [

@@ -1,5 +1,5 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import { Actionable, EventedListenersMap, EventedListenerOrArray, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
+import { Actionable, EventedListenersMap, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import createStateful, { Stateful, StatefulOptions, StateChangeEvent } from 'dojo-compose/mixins/createStateful';
 import { Handle } from 'dojo-core/interfaces';
 import Map from 'dojo-shim/Map';
@@ -27,6 +27,25 @@ export interface StatefulListenersMixinFactory extends ComposeFactory<Stateful<S
 	(options?: StatefulListenersOptions<StatefulListenersState>): Stateful<StatefulListenersState>;
 }
 
+// Use generics to avoid annoying repetition of the Actionable<TargettedEventObject> type.
+type ResolvedListeners<T> = [T[], undefined] | [undefined, Promise<T[]>];
+function carriesValue<T>(result: ResolvedListeners<T>): result is [T[], undefined] {
+	return result[0] !== undefined;
+}
+
+type MixedResultOverride<T> = {
+	// Property on the array to track whether it contains promises, which makes the withoutPromises() type
+	// guard possible.
+	containsPromises?: boolean;
+	// These seem to need to be redeclared. Declared them as narrowly as possible for the actual usage below.
+	push(result: T[]): number;
+	push(result: Promise<T[]>): number;
+};
+type MixedResults<T> = (T[][] | (T[] | Promise<T[]>)[]) & MixedResultOverride<T>;
+function withoutPromises<T>(mixed: MixedResults<T>): mixed is T[][] & MixedResultOverride<T> {
+	return mixed.containsPromises !== true;
+}
+
 /**
  * Internal function that resolves listeners from the registry and then attaches them to the instance
  *
@@ -34,41 +53,48 @@ export interface StatefulListenersMixinFactory extends ComposeFactory<Stateful<S
  * @param cache The cache of already resolved listeners
  * @param ref The reference to resolve
  */
-function resolveListeners(
-	registry: Registry<Actionable<TargettedEventObject>>,
-	cache: Map<string | symbol, Actionable<TargettedEventObject>>,
+function resolveListeners<T>(
+	registry: Registry<T>,
+	cache: Map<string | symbol, T>,
 	ref: ListenerOrArray
-): [(EventedListenerOrArray<TargettedEventObject>), Promise<(EventedListenerOrArray<TargettedEventObject>)>] {
+): ResolvedListeners<T> {
 	if (Array.isArray(ref)) {
-		let isSync = true;
-		const results: (Actionable<TargettedEventObject> | Promise<Actionable<TargettedEventObject>>)[] = [];
+		const mixed: MixedResults<T> = [];
 		for (const item of ref) {
-			const [value, promise] = <[Actionable<TargettedEventObject>, Promise<Actionable<TargettedEventObject>>]> resolveListeners(registry, cache, item);
-			if (value) {
-				results.push(value);
+			const result = resolveListeners<T>(registry, cache, item);
+			if (carriesValue(result)) {
+				mixed.push(result[0]);
 			}
 			else {
-				isSync = false;
-				results.push(promise);
+				mixed.containsPromises = true;
+				mixed.push(result[1]);
 			}
 		}
 
-		if (isSync) {
-			return [<Actionable<TargettedEventObject>[]> results, undefined];
+		const flattened: T[] = [];
+		if (withoutPromises(mixed)) {
+			return [flattened.concat(...mixed), undefined];
 		}
-		return [ undefined, Promise.all(results) ];
+
+		return [
+			undefined,
+			Promise.all(mixed)
+				.then((results) => flattened.concat(...results))
+		];
 	}
 
-	const id = <string | symbol> ref;
-	if (cache.has(id)) {
-		return [ cache.get(id), undefined ];
+	if (cache.has(ref)) {
+		return [[<T> cache.get(ref)], undefined];
 	}
 
-	const promise = registry.get(id);
-	promise.then((action) => {
-		cache.set(id, action);
-	});
-	return [ undefined, promise ];
+	return [
+		undefined,
+		registry.get(ref)
+			.then((action) => {
+				cache.set(ref, action);
+				return [action];
+			})
+	];
 }
 
 interface ManagementState {
@@ -107,8 +133,9 @@ function manageListeners(evt: StateChangeEvent<StatefulListenersState>): void {
 	// Assume this function cannot be called without the widget being in the management map.
 	const internalState = managementMap.get(widget);
 	// Initialize cache.
+	const { cache = new Map<string | symbol, Actionable<TargettedEventObject>>() } = internalState;
 	if (!internalState.cache) {
-		internalState.cache = new Map<string | symbol, Actionable<TargettedEventObject>>();
+		internalState.cache = cache;
 	}
 	// Increment the generation vector. Used when listeners are replaced asynchronously to ensure
 	// no newer state is overriden.
@@ -121,14 +148,14 @@ function manageListeners(evt: StateChangeEvent<StatefulListenersState>): void {
 
 	const newListeners: EventedListenersMap = {};
 	// `promise` will be undefined if all actions are resolved synchronously
-	const promise = eventTypes.reduce<Promise<void>>((promise, eventType) => {
-		const [ value, listenersPromise ] = resolveListeners(internalState.registry, internalState.cache, listeners[eventType]);
-		if (value) {
-			newListeners[eventType] = value;
+	const promise = eventTypes.reduce<Promise<void> | undefined>((promise, eventType) => {
+		const result = resolveListeners<Actionable<TargettedEventObject>>(internalState.registry, cache, listeners[eventType]);
+		if (carriesValue(result)) {
+			newListeners[eventType] = result[0];
 			return promise;
 		}
 
-		return listenersPromise.then((value) => {
+		return result[1].then((value) => {
 			newListeners[eventType] = value;
 			return promise;
 		});

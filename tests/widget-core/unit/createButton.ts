@@ -27,9 +27,9 @@ registerSuite({
 		const vnode = button.render();
 		assert.strictEqual(vnode.vnodeSelector, 'button');
 		assert.strictEqual(vnode.text, 'bar');
-		assert.strictEqual(vnode.properties['data-widget-id'], 'foo');
-		assert.strictEqual(vnode.properties.name, 'baz');
-		assert.strictEqual(vnode.properties['type'], 'button');
+		assert.strictEqual(vnode.properties!['data-widget-id'], 'foo');
+		assert.strictEqual(vnode.properties!.name, 'baz');
+		assert.strictEqual(vnode.properties!['type'], 'button');
 		assert.isUndefined(vnode.children);
 	},
 	disable() {
@@ -41,11 +41,11 @@ registerSuite({
 			}
 		});
 		let vnode = button.render();
-		assert.isFalse(vnode.properties['disabled']);
+		assert.isFalse(vnode.properties!['disabled']);
 		button.setState({
 			disabled: true
 		});
 		vnode = button.render();
-		assert.isTrue(vnode.properties['disabled']);
+		assert.isTrue(vnode.properties!['disabled']);
 	}
 });

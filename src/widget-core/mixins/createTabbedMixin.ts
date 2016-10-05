@@ -69,8 +69,12 @@ export type TabbedMixin<C extends TabbedChild> = Tabbed<C> & ParentMapMixin<C> &
 function setActiveTab(tabbed: TabbedMixin<TabbedChild>, activeTab: TabbedChild) {
 	if (activeTab.parent === tabbed) {
 		tabbed.children.forEach((tab) => {
-			if (tab !== activeTab && tab.state.active) {
-				tab.setState({ active: false });
+			// Workaround for https://github.com/facebook/immutable-js/pull/919
+			// istanbul ignore else
+			if (tab) {
+				if (tab !== activeTab && tab.state.active) {
+					tab.setState({ active: false });
+				}
 			}
 		});
 		if (!activeTab.state.active) {
@@ -84,7 +88,14 @@ function setActiveTab(tabbed: TabbedMixin<TabbedChild>, activeTab: TabbedChild) 
  * @param tabbed The tabbed mixin to return the active child for
  */
 function getActiveTab(tabbed: TabbedMixin<TabbedChild>): TabbedChild {
-	let activeTab = tabbed.children.find((tab) => tab.state.active);
+	let activeTab = tabbed.children.find((tab) => {
+		// Workaround for https://github.com/facebook/immutable-js/pull/919
+		// istanbul ignore if
+		if (!tab) {
+			return false;
+		}
+		return tab.state.active === true;
+	});
 	/* TODO: when a tab closes, instead of going back to the previous active tab, it will always
 	 * revert to the first tab, maybe it would be better to keep track of a stack of tabs? */
 	if (!activeTab) {
@@ -193,9 +204,12 @@ const createTabbedMixin: TabbedMixinFactory = createRenderMixin
 			const tabbed = this;
 			const activeTab = getActiveTab(tabbed);
 
-			function getTabChildVNode(tab: TabbedChild): (VNode | string)[] {
+			function getTabChildVNode(tab: TabbedChild): VNode[] {
 				const tabListeners = getTabListeners(tabbed, tab);
-				const nodes = [ h('div.tab-label', { onclick: tabListeners.onclickTabListener }, [ tab.state.label ]) ];
+				const nodes: VNode[] = [];
+				if (tab.state.label) {
+					nodes.push(h('div.tab-label', { onclick: tabListeners.onclickTabListener }, [ tab.state.label ]));
+				}
 				if (tab.state.closeable) {
 					nodes.push(h('div.tab-close', { onclick: tabListeners.onclickTabCloseListener }, [ 'X' ]));
 				}
@@ -222,10 +236,18 @@ const createTabbedMixin: TabbedMixinFactory = createRenderMixin
 
 			children.forEach(([ , tab ], idx) => {
 				const isActiveTab = tab === activeTab;
-				if (isActiveTab || (childrenNodes[idx] && childrenNodes[idx].properties.classes['visible'])) {
+				const node = childrenNodes[idx];
+				const isVisibleNode = node &&
+					node.properties &&
+					node.properties.classes &&
+					node.properties.classes['visible'];
+
+				if (isActiveTab || isVisibleNode) {
 					tab.invalidate();
 					const tabVNode = tab.render();
-					tabVNode.properties.classes['visible'] = isActiveTab;
+					if (tabVNode.properties && tabVNode.properties.classes) {
+						tabVNode.properties.classes['visible'] = isActiveTab;
+					}
 					childrenNodes[idx] = tabVNode;
 				}
 				/* else, this tab isn't active and hasn't been previously rendered */

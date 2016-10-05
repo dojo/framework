@@ -11,7 +11,7 @@ function render(): VNode {
 	return h('dojo-panel-tabbed', {
 		id: 'tabbed-panel'
 	}, [
-		h('ul', {}, [
+		h('ul', [
 			h('li', { classes: { active: false }, key: panel1 }, [ h('div.tab-label', [ 'tab 1' ]), h('div.tab-close', [ 'X' ]) ]),
 			h('li', { classes: { active: closed }, key: panel2 }, [ h('div.tab-label', [ 'tab 2' ]), h('div.tab-close', [ 'X' ]) ]),
 			h('li', { classes: { active: false }, key: panel3 }, [ h('div.tab-label', [ 'tab 3' ]), h('div.tab-close', [ 'X' ]) ]),
@@ -37,8 +37,9 @@ const projector = createProjector({});
 projector.append(document.body, render);
 
 const next = document.getElementById('next');
-
-next.addEventListener('click', (event) => {
-	closed = true;
-	projector.scheduleRender();
-});
+if (next) {
+	next.addEventListener('click', (event) => {
+		closed = true;
+		projector.scheduleRender();
+	});
+}

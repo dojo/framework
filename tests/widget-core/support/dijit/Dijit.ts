@@ -6,7 +6,7 @@ class Dijit {
 			throw new Error('Ooops!!!');
 		}
 		if (typeof srcNodeRef === 'string') {
-			srcNodeRef = document.getElementById(<string> srcNodeRef);
+			srcNodeRef = document.getElementById(srcNodeRef) || undefined;
 		}
 		this.srcNodeRef = <HTMLElement> srcNodeRef;
 		this.domNode = <HTMLElement> srcNodeRef;

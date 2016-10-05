@@ -52,17 +52,21 @@ export interface ParentListMixinFactory extends ComposeFactory<ParentListMixin<C
 const childrenMap = new WeakMap<ParentListMixin<Child>, List<Child>>();
 
 const createParentMixin: ParentListMixinFactory = compose<ParentList<Child>, ParentListMixinOptions<Child>>({
-		get children(this: ParentListMixin<Child> & { invalidate?(): void; } ): List<Child> {
+		get children(this: ParentListMixin<Child>): List<Child> {
 			return childrenMap.get(this);
 		},
 
-		set children(this: ParentListMixin<Child> & { invalidate?(): void; }, value: List<Child>) {
+		set children(this: ParentListMixin<Child>, value: List<Child>) {
 			if (!value.equals(childrenMap.get(this))) {
 				value.forEach((widget) => {
-					if (widget.parent !== this) {
-						widget.parent = this;
-						/* TODO: If a child gets attached and reattached it may own multiple handles */
-						getRemoveHandle(this, widget);
+					// Workaround for https://github.com/facebook/immutable-js/pull/919
+					// istanbul ignore else
+					if (widget) {
+						if (widget.parent !== this) {
+							widget.parent = this;
+							/* TODO: If a child gets attached and reattached it may own multiple handles */
+							getRemoveHandle(this, widget);
+						}
 					}
 				});
 				childrenMap.set(this, value);
@@ -85,7 +89,13 @@ const createParentMixin: ParentListMixinFactory = compose<ParentList<Child>, Par
 		clear(this: ParentListMixin<Child>): void {
 			const children = childrenMap.get(this);
 			if (children) {
-				children.forEach((child) => { child.parent === undefined; });
+				children.forEach((child) => {
+					// Workaround for https://github.com/facebook/immutable-js/pull/919
+					// istanbul ignore else
+					if (child) {
+						child.parent === undefined;
+					}
+				});
 				this.children = List<Child>();
 			}
 		},
@@ -106,7 +116,13 @@ const createParentMixin: ParentListMixinFactory = compose<ParentList<Child>, Par
 			instance.own({
 				destroy() {
 					const children = childrenMap.get(instance);
-					children.forEach((child) => child.destroy());
+					children.forEach((child) => {
+						// Workaround for https://github.com/facebook/immutable-js/pull/919
+						// istanbul ignore else
+						if (child) {
+							child.destroy();
+						}
+					});
 				}
 			});
 		}

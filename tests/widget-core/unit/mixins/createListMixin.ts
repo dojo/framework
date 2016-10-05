@@ -28,8 +28,8 @@ registerSuite({
 			if (typeof vnode !== 'string') {
 				assert.strictEqual(vnode.vnodeSelector, 'ul');
 				assert.isUndefined(vnode.text);
-				assert.strictEqual(vnode.children.length, 3);
-				const [ node1, node2, node3 ] = vnode.children;
+				assert.strictEqual(vnode.children!.length, 3);
+				const [ node1, node2, node3 ] = vnode.children!;
 				assert.strictEqual(node1.vnodeSelector, 'li');
 				assert.strictEqual(node1.text, 'foo');
 				assert.isUndefined(node1.children);

@@ -25,7 +25,7 @@ registerSuite({
 		container.append(createContainer());
 		const render = container.render();
 		assert.strictEqual(render.vnodeSelector, 'dojo-container');
-		assert.strictEqual(render.children.length, 1);
+		assert.strictEqual(render.children!.length, 1);
 		assert.isUndefined(render.text);
 		assert.isNull(render.domNode);
 	}

@@ -50,23 +50,27 @@ function setResizeListeners(resizePanel: ResizePanel): Handle {
 	let ontouchmoveHandle: Handle;
 
 	function onmouseupListener(evt: MouseEvent): boolean {
-		if (resizingMap.get(resizePanel)) {
-			evt.preventDefault();
-			resizingMap.delete(resizePanel);
-			onmousemoveHandle.destroy();
-			onmouseupHandle.destroy();
-			resizePanel.invalidate();
-			return true;
+		if (!resizingMap.has(resizePanel)) {
+			return false;
 		}
+
+		evt.preventDefault();
+		resizingMap.delete(resizePanel);
+		onmousemoveHandle.destroy();
+		onmouseupHandle.destroy();
+		resizePanel.invalidate();
+		return true;
 	}
 
 	function onmousemoveListener(evt: MouseEvent): boolean {
 		const originalWidth = resizingMap.get(resizePanel);
-		if (originalWidth) {
-			evt.preventDefault();
-			resizePanel.width = String(originalWidth.width + evt.clientX - originalWidth.clientX) + 'px';
-			return true;
+		if (!originalWidth) {
+			return false;
 		}
+
+		evt.preventDefault();
+		resizePanel.width = String(originalWidth.width + evt.clientX - originalWidth.clientX) + 'px';
+		return true;
 	}
 
 	function onmousedownListener(evt: MouseEvent): boolean {
@@ -81,6 +85,8 @@ function setResizeListeners(resizePanel: ResizePanel): Handle {
 				return true;
 			}
 		}
+
+		return false;
 	}
 
 	function ontouchendListener(evt: TouchEvent): boolean {
@@ -145,7 +151,7 @@ const createResizePanel: ResizePanelFactory = createWidget
 			nodeAttributes: [
 				function (this: ResizePanel, attributes: VNodeProperties): VNodeProperties {
 					const styles = assign({}, attributes.styles);
-					styles['width'] = this.width || '200px';
+					styles['width'] = this.width;
 					return { styles };
 				}
 			],
@@ -155,7 +161,7 @@ const createResizePanel: ResizePanelFactory = createWidget
 			},
 
 			get width(this: ResizePanel): string {
-				return this.state && this.state && this.state.width;
+				return this.state && this.state && this.state.width || '200px';
 			},
 
 			set width(value: string) {

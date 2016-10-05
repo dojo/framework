@@ -80,10 +80,14 @@ const createParentMapMixin: ParentMapMixinFactory = compose<ParentMap<Child>, Pa
 		set children(this: ParentMapMixin<Child> & { invalidate?(): void; }, value: Map<string, Child>) {
 			if (!value.equals(childrenMap.get(this))) {
 				value.forEach((widget) => {
-					if (widget.parent !== this) {
-						widget.parent = this;
-						/* TODO: If a child gets attached and reattached it may own multiple handles */
-						getRemoveHandle(this, widget);
+					// Workaround for https://github.com/facebook/immutable-js/pull/919
+					// istanbul ignore else
+					if (widget) {
+						if (widget.parent !== this) {
+							widget.parent = this;
+							/* TODO: If a child gets attached and reattached it may own multiple handles */
+							getRemoveHandle(this, widget);
+						}
 					}
 				});
 				childrenMap.set(this, value);
@@ -124,7 +128,13 @@ const createParentMapMixin: ParentMapMixinFactory = compose<ParentMap<Child>, Pa
 			instance.own({
 				destroy() {
 					const children = childrenMap.get(instance);
-					children.forEach((child) => child.destroy());
+					children.forEach((child) => {
+						// Workaround for https://github.com/facebook/immutable-js/pull/919
+						// istanbul ignore else
+						if (child) {
+							child.destroy();
+						}
+					});
 				}
 			});
 		}
