@@ -63,6 +63,17 @@ suite('createStateHistory', () => {
 		assert.equal(emittedValue, '/foo');
 	});
 
+	test('does not emit change if path is set to the current value', () => {
+		sandbox.contentWindow.history.pushState({}, '', '/foo');
+		const history = createStateHistory({ window: sandbox.contentWindow });
+		let emittedValues: string[] = [];
+		history.on('change', ({ value }) => {
+			emittedValues.push(value);
+		});
+		history.set('/foo');
+		assert.lengthOf(emittedValues, 0);
+	});
+
 	test('replace path', () => {
 		const history = createStateHistory({ window: sandbox.contentWindow });
 		history.replace('/foo');
@@ -85,6 +96,17 @@ suite('createStateHistory', () => {
 		});
 		history.replace('/foo');
 		assert.equal(emittedValue, '/foo');
+	});
+
+	test('does not emit change if path is replaced with the current value', () => {
+		sandbox.contentWindow.history.pushState({}, '', '/foo');
+		const history = createStateHistory({ window: sandbox.contentWindow });
+		let emittedValues: string[] = [];
+		history.on('change', ({ value }) => {
+			emittedValues.push(value);
+		});
+		history.replace('/foo');
+		assert.lengthOf(emittedValues, 0);
 	});
 
 	test('does not add a new history entry when path is replaced', () => {

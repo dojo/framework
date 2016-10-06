@@ -89,25 +89,29 @@ const createStateHistory: StateHistoryFactory = compose.mixin(createEvented, {
 
 		set(this: StateHistory, path: string) {
 			const privateState = privateStateMap.get(this);
-			const { base, browserHistory } = privateState;
-
 			const value = ensureLeadingSlash(path);
-			const fullPath = prependBase(base, path);
+			const fullPath = prependBase(privateState.base, path);
+
+			if (privateState.current === value) {
+				return;
+			}
 
 			privateState.current = value;
-			browserHistory.pushState({}, '', fullPath);
+			privateState.browserHistory.pushState({}, '', fullPath);
 			this.emit({ type: 'change', value });
 		},
 
 		replace(this: StateHistory, path: string) {
 			const privateState = privateStateMap.get(this);
-			const { base, browserHistory } = privateState;
-
 			const value = ensureLeadingSlash(path);
-			const fullPath = prependBase(base, path);
+			const fullPath = prependBase(privateState.base, path);
+
+			if (privateState.current === value) {
+				return;
+			}
 
 			privateState.current = value;
-			browserHistory.replaceState({}, '', fullPath);
+			privateState.browserHistory.replaceState({}, '', fullPath);
 			this.emit({ type: 'change', value });
 		}
 	},

@@ -47,6 +47,10 @@ const createHashHistory: HashHistoryFactory = compose.mixin(createEvented, {
 
 		set(this: HashHistory, path: string) {
 			const privateState = privateStateMap.get(this);
+			if (privateState.current === path) {
+				return;
+			}
+
 			privateState.current = path;
 			privateState.browserLocation.hash = '#' + path;
 			this.emit({
@@ -57,6 +61,10 @@ const createHashHistory: HashHistoryFactory = compose.mixin(createEvented, {
 
 		replace(this: HashHistory, path: string) {
 			const privateState = privateStateMap.get(this);
+			if (privateState.current === path) {
+				return;
+			}
+
 			privateState.current = path;
 
 			const { pathname, search } = privateState.browserLocation;
