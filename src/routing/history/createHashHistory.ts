@@ -6,8 +6,8 @@ import on from 'dojo-core/on';
 import { History, HistoryOptions } from './interfaces';
 
 export interface HashHistoryMixin {
-	_current?: string;
-	_location?: Location;
+	_current: string;
+	_location: Location;
 	_onHashchange(path: string): void;
 }
 
@@ -38,11 +38,15 @@ export interface HashHistoryFactory extends ComposeFactory<HashHistory, HashHist
 }
 
 const createHashHistory: HashHistoryFactory = compose({
-	get current () {
+	// N.B. Set per instance in the initializer
+	_current: '',
+	_location: {} as Location,
+
+	get current (this: HashHistory) {
 		return this._current;
 	},
 
-	set (path: string) {
+	set (this: HashHistory, path: string) {
 		this._current = path;
 		this._location.hash = '#' + path;
 		this.emit({
@@ -51,7 +55,7 @@ const createHashHistory: HashHistoryFactory = compose({
 		});
 	},
 
-	replace (path: string) {
+	replace (this: HashHistory, path: string) {
 		this._current = path;
 
 		const { pathname, search } = this._location;
@@ -63,7 +67,7 @@ const createHashHistory: HashHistoryFactory = compose({
 		});
 	},
 
-	_onHashchange (path: string) {
+	_onHashchange (this: HashHistory, path: string) {
 		this._current = path;
 		this.emit({
 			type: 'change',

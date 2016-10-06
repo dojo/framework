@@ -4,7 +4,7 @@ import * as assert from 'intern/chai!assert';
 import { stub } from 'sinon';
 
 import createRoute from '../../src/createRoute';
-import createRouter from '../../src/createRouter';
+import createRouter, { NavigationStartEvent } from '../../src/createRouter';
 import createMemoryHistory from '../../src/history/createMemoryHistory';
 import { DefaultParameters, Context as C, Request, Parameters } from '../../src/interfaces';
 
@@ -149,13 +149,14 @@ suite('createRouter', () => {
 	test('dispatch emits navstart event', () => {
 		const router = createRouter();
 
-		let received = '';
+		let received: NavigationStartEvent = null!;
 		router.on('navstart', event => {
-			received = event.path;
+			received = event;
 		});
 
 		router.dispatch({} as C, '/foo');
-		assert.equal(received, '/foo');
+		assert.equal(received.path, '/foo');
+		assert.isNull(received.target);
 	});
 
 	test('navstart listeners can synchronously cancel routing', () => {

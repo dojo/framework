@@ -55,7 +55,7 @@ export interface RouterMixin {
 	 * Holds top-level routes.
 	 * @private
 	 */
-	routes?: Route<Parameters>[];
+	routes: Route<Parameters>[];
 
 	/**
 	 * Append one or more routes.
@@ -146,8 +146,10 @@ function createDeferral() {
 }
 
 const createRouter: RouterFactory = compose<RouterMixin, RouterOptions>({
+	// N.B. Set per instance in the initializer
+	routes: [],
 
-	append (routes: Route<Parameters> | Route<Parameters>[]) {
+	append (this: Router, routes: Route<Parameters> | Route<Parameters>[]) {
 		if (Array.isArray(routes)) {
 			for (const route of routes) {
 				this.routes.push(route);
@@ -158,24 +160,23 @@ const createRouter: RouterFactory = compose<RouterMixin, RouterOptions>({
 		}
 	},
 
-	observeHistory(history: History, context: Context, dispatchInitial: boolean = false): PausableHandle {
-		const router: Router = this;
-		if (historyMap.has(router)) {
+	observeHistory(this: Router, history: History, context: Context, dispatchInitial: boolean = false): PausableHandle {
+		if (historyMap.has(this)) {
 			throw new Error('observeHistory can only be called once');
 		}
 		const listener = pausable(history, 'change', (event: HistoryChangeEvent) => {
-			router.dispatch(context, event.value);
+			this.dispatch(context, event.value);
 		});
-		historyMap.set(router, { history, listener, context });
+		historyMap.set(this, { history, listener, context });
 		if (dispatchInitial) {
-			router.dispatch(context, history.current);
+			this.dispatch(context, history.current);
 		}
-		router.own(listener);
-		router.own(history);
+		this.own(listener);
+		this.own(history);
 		return listener;
 	},
 
-	dispatch (context: Context, path: string): Task<boolean> {
+	dispatch (this: Router, context: Context, path: string): Task<boolean> {
 		let canceled = false;
 		const cancel = () => {
 			canceled = true;
@@ -183,15 +184,16 @@ const createRouter: RouterFactory = compose<RouterMixin, RouterOptions>({
 
 		const deferrals: Promise<void>[] = [];
 
-		this.emit({
-			type: 'navstart',
-			path,
+		this.emit<NavigationStartEvent>({
 			cancel,
 			defer () {
 				const { cancel, promise, resume } = createDeferral();
 				deferrals.push(promise);
 				return { cancel, resume };
-			}
+			},
+			path,
+			target: null,
+			type: 'navstart'
 		});
 
 		// Synchronous cancelation.

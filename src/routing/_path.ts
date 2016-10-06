@@ -67,19 +67,14 @@ export interface MatchResult {
 	hasRemaining: boolean;
 
 	/**
-	 * Whether the leading segments matched.
-	 */
-	isMatch: boolean;
-
-	/**
 	 * Position in the segments array that the remaining unmatched segments start.
 	 */
-	offset?: number;
+	offset: number;
 
 	/**
 	 * Values for named segments.
 	 */
-	values?: string[];
+	values: string[];
 }
 
 /**
@@ -88,20 +83,17 @@ export interface MatchResult {
  * @param segments Pathname segments as returned by `parse()`
  * @return A result object.
  */
-export function match ({ expectedSegments }: DeconstructedPath, segments: string[]): MatchResult {
+export function match ({ expectedSegments }: DeconstructedPath, segments: string[]): MatchResult | null {
 	if (expectedSegments.length === 0) {
 		return {
 			hasRemaining: segments.length > 0,
-			isMatch: true,
-			offset: 0
+			offset: 0,
+			values: []
 		};
 	}
 
 	if (expectedSegments.length > segments.length) {
-		return {
-			hasRemaining: false,
-			isMatch: false
-		};
+		return null;
 	}
 
 	let isMatch = true;
@@ -117,9 +109,12 @@ export function match ({ expectedSegments }: DeconstructedPath, segments: string
 		}
 	}
 
+	if (!isMatch) {
+		return null;
+	}
+
 	return {
 		hasRemaining: expectedSegments.length < segments.length,
-		isMatch,
 		offset: expectedSegments.length,
 		values
 	};

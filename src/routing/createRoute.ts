@@ -19,19 +19,14 @@ export interface MatchResult<PP> {
 	hasRemaining: boolean;
 
 	/**
-	 * Whether the route matched.
-	 */
-	isMatch: boolean;
-
-	/**
 	 * Position in the segments array that the remaining unmatched segments start.
 	 */
-	offset?: number;
+	offset: number;
 
 	/**
 	 * Any extracted parameters. Only available if the route matched.
 	 */
-	params?: PP;
+	params: PP;
 }
 
 /**
@@ -68,19 +63,19 @@ export interface Route<PP extends Parameters> {
 	 * A deconstructed form of the path the route was created for. Used for matching.
 	 * @private
 	 */
-	path?: DeconstructedPath;
+	path: DeconstructedPath;
 
 	/**
 	 * Holds the next level of the route hierarchy.
 	 * @private
 	 */
-	routes?: Route<Parameters>[];
+	routes: Route<Parameters>[];
 
 	/**
 	 * Whether trailing slashes in the matching path must match trailing slashes in this route's path.
 	 * @private
 	 */
-	trailingSlashMustMatch?: boolean;
+	trailingSlashMustMatch: boolean;
 
 	/**
 	 * Append one or more routes.
@@ -130,7 +125,7 @@ export interface Route<PP extends Parameters> {
 	 * @return Whether and how the route matched.
 	 * @private
 	 */
-	match(segments: string[], hasTrailingSlash: boolean, searchParams: UrlSearchParams): MatchResult<PP>;
+	match(segments: string[], hasTrailingSlash: boolean, searchParams: UrlSearchParams): null | MatchResult<PP>;
 
 	/**
 	 * Callback used for constructing the `params` object from extracted parameters, and validating the parameters.
@@ -139,7 +134,7 @@ export interface Route<PP extends Parameters> {
 	 * @return If `null` prevents the route from being selected, else the value for the `params` object.
 	 * @private
 	 */
-	params(fromPathname: string[], searchParams: UrlSearchParams): void | PP;
+	params(fromPathname: string[], searchParams: UrlSearchParams): null | PP;
 
 	/**
 	 * Attempt to select this and any nested routes.
@@ -207,7 +202,7 @@ export interface RouteOptions<PP> {
 	 * @param searchParams Parameters extracted from the search component.
 	 * @return If `null` prevents the route from being selected, else the value for the `params` object.
 	 */
-	params?(fromPathname: string[], searchParams: UrlSearchParams): void | PP;
+	params?(fromPathname: string[], searchParams: UrlSearchParams): null | PP;
 }
 
 export interface RouteFactory extends ComposeFactory<Route<Parameters>, RouteOptions<Parameters>> {
@@ -218,8 +213,15 @@ export interface RouteFactory extends ComposeFactory<Route<Parameters>, RouteOpt
 	<PP extends Parameters>(options?: RouteOptions<PP>): Route<PP>;
 }
 
+const DEFAULT_PATH = deconstructPath('/');
+
 const createRoute: RouteFactory = compose<Route<Parameters>, RouteOptions<Parameters>>({
-	append (routes: Route<Parameters> | Route<Parameters>[]) {
+	// N.B. Set per instance in the initializer
+	path: DEFAULT_PATH,
+	routes: [],
+	trailingSlashMustMatch: true,
+
+	append (this: Route<Parameters>, routes: Route<Parameters> | Route<Parameters>[]) {
 		if (Array.isArray(routes)) {
 			for (const route of routes) {
 				this.routes.push(route);
@@ -236,18 +238,18 @@ const createRoute: RouteFactory = compose<Route<Parameters>, RouteOptions<Parame
 		return true;
 	},
 
-	match (segments: string[], hasTrailingSlash: boolean, searchParams: UrlSearchParams): MatchResult<Parameters> {
-		const { hasRemaining, isMatch, offset, values } = matchPath(this.path, segments);
-		if (!isMatch) {
-			return { hasRemaining: false, isMatch: false };
+	match (this: Route<Parameters>, segments: string[], hasTrailingSlash: boolean, searchParams: UrlSearchParams): null | MatchResult<Parameters> {
+		const result = matchPath(this.path, segments);
+		if (result === null) {
+			return null;
 		}
 
-		if (!hasRemaining && this.trailingSlashMustMatch && this.path.trailingSlash !== hasTrailingSlash) {
-			return { hasRemaining: false, isMatch: false };
+		if (!result.hasRemaining && this.trailingSlashMustMatch && this.path.trailingSlash !== hasTrailingSlash) {
+			return null;
 		}
 
 		// Only extract the search params defined in the route's path.
-		const knownSearchParams = (<DeconstructedPath> this.path).searchParameters.reduce((list, name) => {
+		const knownSearchParams = this.path.searchParameters.reduce((list, name) => {
 			const value = searchParams.getAll(name);
 			if (value !== undefined) {
 				list[name] = value;
@@ -255,18 +257,19 @@ const createRoute: RouteFactory = compose<Route<Parameters>, RouteOptions<Parame
 			return list;
 		}, {} as Hash<string[]>);
 
-		const params = this.params(values, new UrlSearchParams(knownSearchParams));
+		const params = this.params(result.values, new UrlSearchParams(knownSearchParams));
 		if (params === null) {
-			return { hasRemaining: false, isMatch: false };
+			return null;
 		}
 
-		return { hasRemaining, isMatch: true, offset, params };
+		const { hasRemaining, offset } = result;
+		return { hasRemaining, offset, params };
 	},
 
-	params (fromPathname: string[], searchParams: UrlSearchParams): DefaultParameters {
+	params (this: Route<Parameters>, fromPathname: string[], searchParams: UrlSearchParams): null | DefaultParameters {
 		const params: DefaultParameters = {};
 
-		const { parameters, searchParameters } = <DeconstructedPath> this.path;
+		const { parameters, searchParameters } = this.path;
 		parameters.forEach((name, index) => {
 			params[name] = fromPathname[index];
 		});
@@ -280,14 +283,15 @@ const createRoute: RouteFactory = compose<Route<Parameters>, RouteOptions<Parame
 		return params;
 	},
 
-	select (context: Context, segments: string[], hasTrailingSlash: boolean, searchParams: UrlSearchParams): Selection[] {
-		const { isMatch, hasRemaining, offset, params } = this.match(segments, hasTrailingSlash, searchParams);
+	select (this: Route<Parameters>, context: Context, segments: string[], hasTrailingSlash: boolean, searchParams: UrlSearchParams): Selection[] {
+		const result = this.match(segments, hasTrailingSlash, searchParams);
 
 		// Return early if possible.
-		if (!isMatch || hasRemaining && this.routes.length === 0 && !this.fallback) {
+		if (!result || result.hasRemaining && this.routes.length === 0 && !this.fallback) {
 			return [];
 		}
 
+		const { hasRemaining, offset, params } = result;
 		// Always guard.
 		if (!this.guard({ context, params })) {
 			return [];

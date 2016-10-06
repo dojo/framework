@@ -4,7 +4,7 @@ import createEvented from 'dojo-compose/mixins/createEvented';
 import { History, HistoryOptions } from './interfaces';
 
 export interface MemoryHistoryMixin {
-	_current?: string;
+	_current: string;
 }
 
 /**
@@ -32,11 +32,14 @@ export interface MemoryHistoryFactory extends ComposeFactory<MemoryHistory, Memo
 }
 
 const createMemoryHistory: MemoryHistoryFactory = compose({
-	get current () {
+	// N.B. Set per instance in the initializer
+	_current: '',
+
+	get current (this: MemoryHistory) {
 		return this._current;
 	},
 
-	set (path: string) {
+	set (this: MemoryHistory, path: string) {
 		this._current = path;
 		this.emit({
 			type: 'change',
@@ -44,7 +47,7 @@ const createMemoryHistory: MemoryHistoryFactory = compose({
 		});
 	},
 
-	replace (path: string) {
+	replace (this: MemoryHistory, path: string) {
 		this.set(path);
 	}
 }).mixin({
