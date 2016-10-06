@@ -200,7 +200,7 @@ suite('createRouter', () => {
 
 		router.dispatch({} as C, '/foo');
 		assert.equal(received.path, '/foo');
-		assert.isNull(received.target);
+		assert.strictEqual(received.target, router);
 	});
 
 	test('navstart listeners can synchronously cancel routing', () => {

@@ -51,6 +51,11 @@ export interface NavigationStartEvent extends TargettedEventObject {
 	 * @return an object which allows the caller to resume or cancel dispatch.
 	 */
 	defer(): DispatchDeferral;
+
+	/**
+	 * The router that emitted this event.
+	 */
+	target: Router;
 }
 
 /**
@@ -254,7 +259,7 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 					return { cancel, resume };
 				},
 				path,
-				target: null,
+				target: this,
 				type: 'navstart'
 			});
 
