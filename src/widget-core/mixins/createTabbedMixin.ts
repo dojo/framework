@@ -10,6 +10,7 @@ import createRenderMixin, { RenderMixin, RenderMixinState } from './createRender
 import { Closeable, CloseableState } from './createCloseableMixin';
 import createParentMapMixin, { ParentMapMixin, ParentMapMixinOptions } from './createParentMapMixin';
 import { Child, ChildEntry } from './interfaces';
+import css from '../themes/structural/modules/TabbedMixin';
 
 export interface TabbedChildState extends RenderMixinState, CloseableState {
 	/**
@@ -208,10 +209,10 @@ const createTabbedMixin: TabbedMixinFactory = createRenderMixin
 				const tabListeners = getTabListeners(tabbed, tab);
 				const nodes: VNode[] = [];
 				if (tab.state.label) {
-					nodes.push(h('div.tab-label', { onclick: tabListeners.onclickTabListener }, [ tab.state.label ]));
+					nodes.push(h(`div.${css['tab-label']}`, { onclick: tabListeners.onclickTabListener }, [ tab.state.label ]));
 				}
 				if (tab.state.closeable) {
-					nodes.push(h('div.tab-close', { onclick: tabListeners.onclickTabCloseListener }, [ 'X' ]));
+					nodes.push(h('div', { onclick: tabListeners.onclickTabCloseListener }));
 				}
 				return nodes;
 			}
@@ -239,14 +240,13 @@ const createTabbedMixin: TabbedMixinFactory = createRenderMixin
 				const node = childrenNodes[idx];
 				const isVisibleNode = node &&
 					node.properties &&
-					node.properties.classes &&
-					node.properties.classes['visible'];
+					node.properties['data-visible'];
 
 				if (isActiveTab || isVisibleNode) {
 					tab.invalidate();
 					const tabVNode = tab.render();
-					if (tabVNode.properties && tabVNode.properties.classes) {
-						tabVNode.properties.classes['visible'] = isActiveTab;
+					if (tabVNode.properties) {
+						(tabVNode as any).properties['data-visible'] = String(isActiveTab);
 					}
 					childrenNodes[idx] = tabVNode;
 				}
@@ -254,12 +254,12 @@ const createTabbedMixin: TabbedMixinFactory = createRenderMixin
 
 				tabs.push(h(tabbed.tagNames.tab, {
 					key: tab,
-					classes: { active: isActiveTab },
+					'data-active': String(isActiveTab),
 					'data-tab-id': tabbed.id
 				}, getTabChildVNode(tab)));
 			});
 
-			return [ h(tabbed.tagNames.tabBar, tabs), h('div.panels', childrenNodes) ];
+			return [ h(tabbed.tagNames.tabBar, tabs), h('div.' + css.panels, childrenNodes) ];
 		}
 	});
 

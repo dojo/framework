@@ -2,8 +2,10 @@ import createMemoryStore from 'dojo-stores/createMemoryStore';
 import createWidget from '../createWidget';
 import createPanel from '../createPanel';
 import createTabbedPanel from '../createTabbedPanel';
+import createButton from '../createButton';
+import createResizePanel from '../createResizePanel';
 import { Child, RegistryProvider } from '../mixins/interfaces';
-import projector from '../projector';
+import { createProjector } from '../projector';
 import Promise from 'dojo-shim/Promise';
 import { ComposeFactory } from 'dojo-compose/compose';
 
@@ -12,7 +14,6 @@ import { ComposeFactory } from 'dojo-compose/compose';
  */
 const widgetStore = createMemoryStore({
 	data: [
-		{ id: 'title', label: 'dojo-widget Examples'},
 		{ id: 'tabbed-panel', children: [ 'panel-1', 'panel-2', 'panel-3', 'panel-4' ] },
 		{ id: 'panel-1', label: 'foo', closeable: true },
 		{ id: 'foo', label: 'Validus os indoles. Demoveo ventosus illum ut refoveo saepius antehabeo euismod gravis aliquam ea aliquip. Autem ratis verto. Accumsan refero capio ludus consequat tincidunt roto modo ea dolore. Ad iustum blandit.' },
@@ -72,35 +73,22 @@ const registryProvider: RegistryProvider<any> = {
 	}
 };
 
-const widgets: Child[] = [];
+const tabWidgets: Child[] = [];
 
-/**
- * Header widget
- */
-widgets.push(createWidget({
-	id: 'title',
-	stateFrom: widgetStore,
+tabWidgets.push(createWidget({
+	state: {
+		label: 'Tabbed Panel'
+	},
 	tagName: 'h1'
 }));
 
 const tabbedPanel = createTabbedPanel({
 	id: 'tabbed-panel',
 	stateFrom: widgetStore,
-	registryProvider,
-	listeners: {
-		error(evt) {
-			console.log(evt);
-		},
-		statechange(evt) {
-			console.log(evt);
-		},
-		childlist(evt) {
-			console.log(evt);
-		}
-	}
+	registryProvider
 });
 
-widgets.push(tabbedPanel);
+tabWidgets.push(tabbedPanel);
 
 const panel1 = createPanel({
 	id: 'panel-1',
@@ -142,11 +130,85 @@ panel4.append(createWidget({
 	stateFrom: widgetStore
 }));
 
-/* debug logging */
-projector.on('schedulerender', () => { console.log('scheduleRender()'); });
+const tabProjector = createProjector({ root: document.body });
+tabProjector.append(tabWidgets);
+tabProjector.attach();
 
-/* Append widgets to projector */
-projector.append(widgets);
+const buttonWidgets: Child[] = [];
 
-/* Attach projector to DOM */
-projector.attach();
+buttonWidgets.push(createWidget({
+	state: {
+		label: 'Buttons'
+	},
+	tagName: 'h1'
+}));
+
+buttonWidgets.push(createButton({
+	state: {
+		label: 'Button'
+	}
+}));
+
+buttonWidgets.push(createButton({
+	state: {
+		label: 'Disabled',
+		disabled: true
+	}
+}));
+
+buttonWidgets.push(createButton({
+	state: {
+		label: 'Success',
+		classes: ['success']
+	}
+}));
+
+buttonWidgets.push(createButton({
+	state: {
+		label: 'Disabled',
+		classes: ['success'],
+		disabled: true
+	}
+}));
+
+buttonWidgets.push(createButton({
+	state: {
+		label: 'Alert',
+		classes: ['alert']
+	}
+}));
+
+buttonWidgets.push(createButton({
+	state: {
+		label: 'Disabled',
+		classes: ['alert'],
+		disabled: true
+	}
+}));
+
+const buttonDiv = document.createElement('div');
+buttonDiv.classList.add('buttons');
+document.body.appendChild(buttonDiv);
+const buttonProjector = createProjector({ root: buttonDiv });
+buttonProjector.append(buttonWidgets);
+buttonProjector.attach();
+
+const panelWidgets: Child[] = [];
+
+panelWidgets.push(createWidget({
+	state: {
+		label: 'Resize Panel'
+	},
+	tagName: 'h1'
+}));
+
+panelWidgets.push(createResizePanel({
+	state: {
+		width: '400px',
+		height: '150px'
+	}
+}));
+
+const panelProjector = createProjector({ root: document.body });
+panelProjector.append(panelWidgets);
+panelProjector.attach();

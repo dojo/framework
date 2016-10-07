@@ -1,0 +1,11 @@
+.tab-label {
+	flex-grow: 1;
+}
+
+.panels > * {
+	display: none;
+}
+
+.panels > [data-visible="true"] {
+	display: block;
+}

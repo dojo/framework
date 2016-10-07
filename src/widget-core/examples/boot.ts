@@ -7,6 +7,7 @@ require.config({
 		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
 		{ name: 'dojo-has', location: 'node_modules/dojo-has' },
 		{ name: 'dojo-shim', location: 'node_modules/dojo-shim' },
+		{ name: 'dojo-stores', location: 'node_modules/dojo-stores'},
 		{ name: 'immutable', location: 'node_modules/immutable/dist', main: 'immutable' },
 		{ name: 'maquette', location: 'node_modules/maquette/dist', main: 'maquette' },
 		{ name: 'rxjs', location: 'node_modules/@reactivex/rxjs/dist/amd' }

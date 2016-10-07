@@ -45,7 +45,6 @@ registerSuite({
 			assert.strictEqual(child4.children![0].text, 'qat');
 			assert.strictEqual(child4.children!.length, 1);
 
-			assert.strictEqual(panels.vnodeSelector, 'div.panels');
 			assert.strictEqual(panels.children!.length, 1);
 
 			assert.strictEqual(vnode, tabbed.render(), 'should cache results, if not invalidated');

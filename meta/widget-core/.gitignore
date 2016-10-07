@@ -1,7 +1,3 @@
-*.js
-*.js.map
-!/*.js
-!/tasks/*.js
 /_build
 /bower_components
 /dist
@@ -11,4 +7,6 @@
 .baseDir.ts
 .tscache
 coverage-unmapped.json
+coverage-final.json
+coverage-final.lcov
 npm-debug.log

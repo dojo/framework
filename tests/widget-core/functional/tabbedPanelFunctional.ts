@@ -16,8 +16,7 @@ registerSuite({
 			.findByCssSelector('dojo-panel-tabbed > ul > :nth-child(2) > :first-child')
 				.click()
 				.end()
-			.sleep(100)
-			.findByCssSelector('dojo-panel.visible > div')
+			.findByCssSelector('dojo-panel[data-visible="true"] > div')
 				.getVisibleText()
 				.then((text: string) => {
 					const result = JSON.parse(text);
@@ -26,7 +25,7 @@ registerSuite({
 					});
 				})
 				.end()
-			.findByCssSelector('dojo-panel-tabbed > ul > .active > :first-child')
+			.findByCssSelector('dojo-panel-tabbed > ul > [data-active="true"] > :first-child')
 				.getVisibleText()
 				.then((text: string) => {
 					assert.strictEqual(text, 'tab 2');
@@ -35,8 +34,7 @@ registerSuite({
 			.findByCssSelector('dojo-panel-tabbed > ul > :nth-child(3) > :first-child')
 				.click()
 				.end()
-			.sleep(100)
-			.findByCssSelector('dojo-panel.visible > div')
+			.findByCssSelector('dojo-panel[data-visible="true"] > div')
 				.getVisibleText()
 				.then((text: string) => {
 					const result = JSON.parse(text);
@@ -45,7 +43,7 @@ registerSuite({
 					});
 				})
 				.end()
-			.findByCssSelector('dojo-panel-tabbed > ul > .active > :first-child')
+			.findByCssSelector('dojo-panel-tabbed > ul > [data-active="true"] > :first-child')
 				.getVisibleText()
 				.then((text: string) => {
 					assert.strictEqual(text, 'tab 3');
@@ -54,8 +52,7 @@ registerSuite({
 			.findByCssSelector('dojo-panel-tabbed > ul > :nth-child(4) > :first-child')
 				.click()
 				.end()
-			.sleep(100)
-			.findByCssSelector('dojo-panel.visible > div')
+			.findByCssSelector('dojo-panel[data-visible="true"] > div')
 				.getVisibleText()
 				.then((text: string) => {
 					const result = JSON.parse(text);
@@ -64,7 +61,7 @@ registerSuite({
 					});
 				})
 				.end()
-			.findByCssSelector('dojo-panel-tabbed > ul > .active > :first-child')
+			.findByCssSelector('dojo-panel-tabbed > ul > [data-active="true"] > :first-child')
 				.getVisibleText()
 				.then((text: string) => {
 					assert.strictEqual(text, 'tab 4');
@@ -73,8 +70,7 @@ registerSuite({
 			.findByCssSelector('dojo-panel-tabbed > ul > :nth-child(4) > :last-child')
 				.click()
 				.end()
-			.sleep(100)
-			.findByCssSelector('dojo-panel.visible > div')
+			.findByCssSelector('dojo-panel[data-visible="true"] > div')
 				.getVisibleText()
 				.then((text: string) => {
 					const result = JSON.parse(text);
@@ -83,7 +79,7 @@ registerSuite({
 					});
 				})
 				.end()
-			.findByCssSelector('dojo-panel-tabbed > ul > .active > :first-child')
+			.findByCssSelector('dojo-panel-tabbed > ul > [data-active="true"] > :first-child')
 				.getVisibleText()
 				.then((text: string) => {
 					assert.strictEqual(text, 'tab 1');

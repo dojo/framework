@@ -1,0 +1,16 @@
+.panel {
+	display: block;
+	position: relative;
+}
+
+.panel dojo-resize-handle {
+	display: block;
+	position: absolute;
+	right: 0;
+	bottom: 0;
+}
+
+.panel dojo-resize-handle:after {
+	content: '\21F2';
+	display: block;
+}
