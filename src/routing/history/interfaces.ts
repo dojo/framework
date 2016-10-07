@@ -20,7 +20,7 @@ export interface HistoryMixin {
 	/**
 	 * Get the current value. This is a path string.
 	 */
-	current: string;
+	readonly current: string;
 
 	/**
 	 * Set the current value. If used with a browser implementation causes a new history entry

@@ -39,10 +39,6 @@ suite('createStateHistory', () => {
 		assert.equal(createStateHistory().current, window.location.pathname + window.location.search);
 	});
 
-	test('history defers to the global object', () => {
-		assert.equal(createStateHistory()._history, window.history);
-	});
-
 	test('update path', () => {
 		const history = createStateHistory({ window: sandbox.contentWindow });
 		history.set('/foo');

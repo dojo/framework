@@ -1,16 +1,13 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import createEvented from 'dojo-compose/mixins/createEvented';
+import WeakMap from 'dojo-shim/WeakMap';
 
 import { History, HistoryOptions } from './interfaces';
-
-export interface MemoryHistoryMixin {
-	_current: string;
-}
 
 /**
  * A memory-backed history manager. Can be used outside of browsers.
  */
-export type MemoryHistory = History & MemoryHistoryMixin;
+export type MemoryHistory = History;
 
 /**
  * Options for creating MemoryHistory instances.
@@ -31,29 +28,33 @@ export interface MemoryHistoryFactory extends ComposeFactory<MemoryHistory, Memo
 	(options?: MemoryHistoryOptions): MemoryHistory;
 }
 
-const createMemoryHistory: MemoryHistoryFactory = compose({
-	// N.B. Set per instance in the initializer
-	_current: '',
+interface PrivateState {
+	current: string;
+}
 
-	get current (this: MemoryHistory) {
-		return this._current;
+const privateStateMap = new WeakMap<MemoryHistory, PrivateState>();
+
+const createMemoryHistory: MemoryHistoryFactory = compose.mixin(createEvented, {
+	mixin: {
+		get current(this: MemoryHistory) {
+			return privateStateMap.get(this).current;
+		},
+
+		set(this: MemoryHistory, path: string) {
+			const privateState = privateStateMap.get(this);
+			privateState.current = path;
+			this.emit({
+				type: 'change',
+				value: path
+			});
+		},
+
+		replace(this: MemoryHistory, path: string) {
+			this.set(path);
+		}
 	},
-
-	set (this: MemoryHistory, path: string) {
-		this._current = path;
-		this.emit({
-			type: 'change',
-			value: path
-		});
-	},
-
-	replace (this: MemoryHistory, path: string) {
-		this.set(path);
-	}
-}).mixin({
-	mixin: createEvented,
-	initialize(instance: MemoryHistory, { path }: MemoryHistoryOptions = { path: '' }) {
-		instance._current = path;
+	initialize(instance: MemoryHistory, { path: current }: MemoryHistoryOptions = { path: '' }) {
+		privateStateMap.set(instance, { current });
 	}
 });
 

@@ -1,18 +1,19 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import UrlSearchParams from 'dojo-core/UrlSearchParams';
 import { Hash } from 'dojo-core/interfaces';
+import WeakMap from 'dojo-shim/WeakMap';
 
 import { DefaultParameters, Context, Parameters, Request } from './interfaces';
 import {
 	deconstruct as deconstructPath,
 	match as matchPath,
 	DeconstructedPath
-} from './_path';
+} from './lib/path';
 
 /**
  * Describes whether a route matched.
  */
-export interface MatchResult<PP> {
+export interface MatchResult<P> {
 	/**
 	 * Whether there are path segments that weren't matched by this route.
 	 */
@@ -26,13 +27,8 @@ export interface MatchResult<PP> {
 	/**
 	 * Any extracted parameters. Only available if the route matched.
 	 */
-	params: PP;
+	params: P;
 }
-
-/**
- * Indicates which handler should be called when the route is executed.
- */
-export const enum Handler { Exec, Fallback, Index }
 
 /**
  * Describes the selection of a particular route.
@@ -41,7 +37,7 @@ export interface Selection {
 	/**
 	 * Which handler should be called when the route is executed.
 	 */
-	handler: Handler;
+	handler: (request: Request<Parameters>) => void;
 
 	/**
 	 * The extracted parameters.
@@ -58,64 +54,12 @@ export interface Selection {
  * A route.
  * The generic should be specified if parameter access is required.
  */
-export interface Route<PP extends Parameters> {
-	/**
-	 * A deconstructed form of the path the route was created for. Used for matching.
-	 * @private
-	 */
-	path: DeconstructedPath;
-
-	/**
-	 * Holds the next level of the route hierarchy.
-	 * @private
-	 */
-	routes: Route<Parameters>[];
-
-	/**
-	 * Whether trailing slashes in the matching path must match trailing slashes in this route's path.
-	 * @private
-	 */
-	trailingSlashMustMatch: boolean;
-
+export interface Route<P extends Parameters> {
 	/**
 	 * Append one or more routes.
 	 * @param routes A single route or an array containing 0 or more routes.
 	 */
-	append(routes: Route<Parameters> | Route<Parameters>[]): void;
-
-	/**
-	 * Callback used to execute the route if it's been selected.
-	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
-	 *   available under `params`.
-	 * @protected
-	 */
-	exec(request: Request<PP>): void;
-
-	/**
-	 * If specified, causes the route to be selected if there are no nested routes that match the remainder of
-	 * the dispatched path. When the route is executed, this handler is called rather than `exec()`.
-	 * @param request An object whose `context` property contains the dispatch context. No extracted parameters
-	 *   are available.
-	 * @protected
-	 */
-	fallback?(request: Request<PP>): void;
-
-	/**
-	 * Callback used to determine whether the route should be selected after it's been matched.
-	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
-	 *   available under `params`.
-	 * @private
-	 */
-	guard(request: Request<PP>): boolean;
-
-	/**
-	 * If specified, and the route is the final route in the hierarchy, when the route is executed, this handler is
-	 * called rather than `exec()`.
-	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
-	 *   available under `params`.
-	 * @protected
-	 */
-	index?(request: Request<PP>): void;
+	append(add: Route<Parameters> | Route<Parameters>[]): void;
 
 	/**
 	 * Determine whether the route matches.
@@ -123,18 +67,8 @@ export interface Route<PP extends Parameters> {
 	 * @param hasTrailingSlash Whether the pathname that's being matched ended with a slashes.
 	 * @param searchParams Parameters extracted from the search component.
 	 * @return Whether and how the route matched.
-	 * @private
 	 */
-	match(segments: string[], hasTrailingSlash: boolean, searchParams: UrlSearchParams): null | MatchResult<PP>;
-
-	/**
-	 * Callback used for constructing the `params` object from extracted parameters, and validating the parameters.
-	 * @param fromPathname Array of parameter values extracted from the pathname.
-	 * @param searchParams Parameters extracted from the search component.
-	 * @return If `null` prevents the route from being selected, else the value for the `params` object.
-	 * @private
-	 */
-	params(fromPathname: string[], searchParams: UrlSearchParams): null | PP;
+	match(segments: string[], hasTrailingSlash: boolean, searchParams: UrlSearchParams): null | MatchResult<P>;
 
 	/**
 	 * Attempt to select this and any nested routes.
@@ -151,7 +85,7 @@ export interface Route<PP extends Parameters> {
 /**
  * The options for the route.
  */
-export interface RouteOptions<PP> {
+export interface RouteOptions<P> {
 	/**
 	 * Path the route matches against. Pathname segments may be named, same for query parameters. Leading slashes are
 	 * ignored. Defaults to `/`.
@@ -170,7 +104,7 @@ export interface RouteOptions<PP> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	exec?(request: Request<PP>): void;
+	exec?(request: Request<P>): void;
 
 	/**
 	 * If specified, causes the route to be selected if there are no nested routes that match the remainder of
@@ -178,7 +112,7 @@ export interface RouteOptions<PP> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	fallback?(request: Request<PP>): void;
+	fallback?(request: Request<P>): void;
 
 	/**
 	 * Callback used to determine whether the route should be selected after it's been matched.
@@ -186,7 +120,7 @@ export interface RouteOptions<PP> {
 	 *   available under `params`.
 	 * @return Returning `true` causes the route to be selected.
 	 */
-	guard?(request: Request<PP>): boolean;
+	guard?(request: Request<P>): boolean;
 
 	/**
 	 * If specified, and the route is the final route in the hierarchy, when the route is executed, this handler is
@@ -194,7 +128,7 @@ export interface RouteOptions<PP> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	index?(request: Request<PP>): void;
+	index?(request: Request<P>): void;
 
 	/**
 	 * Callback used for constructing the `params` object from extracted parameters, and validating the parameters.
@@ -202,152 +136,189 @@ export interface RouteOptions<PP> {
 	 * @param searchParams Parameters extracted from the search component.
 	 * @return If `null` prevents the route from being selected, else the value for the `params` object.
 	 */
-	params?(fromPathname: string[], searchParams: UrlSearchParams): null | PP;
+	params?(fromPathname: string[], searchParams: UrlSearchParams): null | P;
 }
 
-export interface RouteFactory extends ComposeFactory<Route<Parameters>, RouteOptions<Parameters>> {
+export interface RouteFactory<P extends Parameters> extends ComposeFactory<Route<P>, RouteOptions<P>> {
 	/**
 	 * Create a new instance of a route.
 	 * @param options Options to use during creation.
 	 */
-	<PP extends Parameters>(options?: RouteOptions<PP>): Route<PP>;
+	<P>(options?: RouteOptions<P>): Route<P>;
 }
 
-const DEFAULT_PATH = deconstructPath('/');
+interface PrivateState {
+	path: DeconstructedPath;
+	routes: Route<Parameters>[];
+	trailingSlashMustMatch: boolean;
 
-const createRoute: RouteFactory = compose<Route<Parameters>, RouteOptions<Parameters>>({
-	// N.B. Set per instance in the initializer
-	path: DEFAULT_PATH,
-	routes: [],
-	trailingSlashMustMatch: true,
+	computeParams<P extends Parameters>(fromPathname: string[], searchParams: UrlSearchParams): null | P;
+	exec?(request: Request<Parameters>): void;
+	fallback?(request: Request<Parameters>): void;
+	guard?(request: Request<Parameters>): boolean;
+	index?(request: Request<Parameters>): void;
+}
 
-	append (this: Route<Parameters>, routes: Route<Parameters> | Route<Parameters>[]) {
-		if (Array.isArray(routes)) {
-			for (const route of routes) {
-				this.routes.push(route);
+const privateStateMap = new WeakMap<Route<Parameters>, PrivateState>();
+
+const noop = () => {};
+
+function computeDefaultParams(
+	parameters: string[],
+	searchParameters: string[],
+	fromPathname: string[],
+	searchParams: UrlSearchParams
+): null | DefaultParameters {
+	const params: DefaultParameters = {};
+	parameters.forEach((name, index) => {
+		params[name] = fromPathname[index];
+	});
+	searchParameters.forEach(name => {
+		const value = searchParams.get(name);
+		if (value !== undefined) {
+			params[name] = value;
+		}
+	});
+
+	return params;
+}
+
+const createRoute: RouteFactory<Parameters> =
+	compose({
+		append(this: Route<Parameters>, add: Route<Parameters> | Route<Parameters>[]) {
+			const { routes } = privateStateMap.get(this);
+			if (Array.isArray(add)) {
+				for (const route of add) {
+					routes.push(route);
+				}
+			}
+			else {
+				routes.push(add);
+			}
+		},
+
+		match(
+			this: Route<Parameters>,
+			segments: string[],
+			hasTrailingSlash: boolean,
+			searchParams: UrlSearchParams
+		): null | MatchResult<Parameters> {
+			const { computeParams, path, trailingSlashMustMatch } = privateStateMap.get(this);
+			const result = matchPath(path, segments);
+			if (result === null) {
+				return null;
+			}
+
+			if (!result.hasRemaining && trailingSlashMustMatch && path.trailingSlash !== hasTrailingSlash) {
+				return null;
+			}
+
+			// Only extract the search params defined in the route's path.
+			const knownSearchParams = path.searchParameters.reduce((list, name) => {
+				const value = searchParams.getAll(name);
+				if (value !== undefined) {
+					list[name] = value;
+				}
+				return list;
+			}, {} as Hash<string[]>);
+
+			const params = computeParams(result.values, new UrlSearchParams(knownSearchParams));
+			if (params === null) {
+				return null;
+			}
+
+			const { hasRemaining, offset } = result;
+			return { hasRemaining, offset, params };
+		},
+
+		select(
+			this: Route<Parameters>,
+			context: Context,
+			segments: string[],
+			hasTrailingSlash: boolean,
+			searchParams: UrlSearchParams
+		): Selection[] {
+			const { exec, index, fallback, guard, routes } = privateStateMap.get(this);
+
+			const result = this.match(segments, hasTrailingSlash, searchParams);
+
+			// Return early if possible.
+			if (!result || result.hasRemaining && routes.length === 0 && !fallback) {
+				return [];
+			}
+
+			const { hasRemaining, offset, params } = result;
+			// Always guard.
+			if (guard && !guard({ context, params })) {
+				return [];
+			}
+
+			// Use a noop handler if exec was not provided. Something needs to be
+			// returned otherwise the router may think no routes were selected.
+			const handler = exec || noop;
+
+			// Select this route, configure the index handler if specified.
+			if (!hasRemaining) {
+				return [{ handler: index || handler, params, route: this }];
+			}
+
+			// Match the remaining segments. Return a hierarchy if nested routes were selected.
+			const remainingSegments = segments.slice(offset);
+			for (const nested of routes) {
+				const hierarchy = nested.select(context, remainingSegments, hasTrailingSlash, searchParams);
+				if (hierarchy.length > 0) {
+					return [{ handler, params, route: this }, ...hierarchy];
+				}
+			}
+
+			// No remaining segments matched, only select this route if a fallback handler was specified.
+			if (fallback) {
+				return [{ handler: fallback, params, route: this }];
+			}
+
+			return [];
+		}
+	},
+	(
+		instance: Route<Parameters>,
+		{
+			exec,
+			fallback,
+			guard,
+			index,
+			params: computeParams,
+			path,
+			trailingSlashMustMatch = true
+		}: RouteOptions<Parameters> = {}
+	) => {
+		if (path && /#/.test(path)) {
+			throw new TypeError('Path must not contain \'#\'');
+		}
+
+		const deconstructedPath = deconstructPath(path || '/');
+		const { parameters, searchParameters } = deconstructedPath;
+
+		if (computeParams) {
+			if (parameters.length === 0 && searchParameters.length === 0) {
+				throw new TypeError('Can\'t specify params() if path doesn\'t contain any');
 			}
 		}
 		else {
-			this.routes.push(routes);
-		}
-	},
-
-	exec (request: Request<Parameters>) {},
-
-	guard (request: Request<Parameters>) {
-		return true;
-	},
-
-	match (this: Route<Parameters>, segments: string[], hasTrailingSlash: boolean, searchParams: UrlSearchParams): null | MatchResult<Parameters> {
-		const result = matchPath(this.path, segments);
-		if (result === null) {
-			return null;
+			computeParams = (fromPathname: string[], searchParams: UrlSearchParams) => {
+				return computeDefaultParams(parameters, searchParameters, fromPathname, searchParams);
+			};
 		}
 
-		if (!result.hasRemaining && this.trailingSlashMustMatch && this.path.trailingSlash !== hasTrailingSlash) {
-			return null;
-		}
-
-		// Only extract the search params defined in the route's path.
-		const knownSearchParams = this.path.searchParameters.reduce((list, name) => {
-			const value = searchParams.getAll(name);
-			if (value !== undefined) {
-				list[name] = value;
-			}
-			return list;
-		}, {} as Hash<string[]>);
-
-		const params = this.params(result.values, new UrlSearchParams(knownSearchParams));
-		if (params === null) {
-			return null;
-		}
-
-		const { hasRemaining, offset } = result;
-		return { hasRemaining, offset, params };
-	},
-
-	params (this: Route<Parameters>, fromPathname: string[], searchParams: UrlSearchParams): null | DefaultParameters {
-		const params: DefaultParameters = {};
-
-		const { parameters, searchParameters } = this.path;
-		parameters.forEach((name, index) => {
-			params[name] = fromPathname[index];
+		privateStateMap.set(instance, {
+			computeParams,
+			exec,
+			fallback,
+			guard,
+			index,
+			path: deconstructedPath,
+			routes: [],
+			trailingSlashMustMatch
 		});
-		searchParameters.forEach(name => {
-			const value = searchParams.get(name);
-			if (value !== undefined) {
-				params[name] = value;
-			}
-		});
-
-		return params;
-	},
-
-	select (this: Route<Parameters>, context: Context, segments: string[], hasTrailingSlash: boolean, searchParams: UrlSearchParams): Selection[] {
-		const result = this.match(segments, hasTrailingSlash, searchParams);
-
-		// Return early if possible.
-		if (!result || result.hasRemaining && this.routes.length === 0 && !this.fallback) {
-			return [];
-		}
-
-		const { hasRemaining, offset, params } = result;
-		// Always guard.
-		if (!this.guard({ context, params })) {
-			return [];
-		}
-
-		// Select this route, configure the index handler if specified.
-		if (!hasRemaining) {
-			const handler = this.index ? Handler.Index : Handler.Exec;
-			return [{ handler, params, route: this }];
-		}
-
-		// Match the remaining segments. Return a hierarchy if nested routes were selected.
-		const remainingSegments = segments.slice(offset);
-		for (const nested of this.routes) {
-			const hierarchy = nested.select(context, remainingSegments, hasTrailingSlash, searchParams);
-			if (hierarchy.length > 0) {
-				return [{ handler: Handler.Exec, params, route: this }, ...hierarchy];
-			}
-		}
-
-		// No remaining segments matched, only select this route if a fallback handler was specified.
-		if (this.fallback) {
-			return [{ handler: Handler.Fallback, params, route: this }];
-		}
-
-		return [];
-	}
-}, (instance: Route<Parameters>, { exec, fallback, guard, index, params, path, trailingSlashMustMatch = true }: RouteOptions<Parameters> = {}) => {
-	if (path && /#/.test(path)) {
-		throw new TypeError('Path must not contain \'#\'');
-	}
-
-	instance.path = deconstructPath(path || '/');
-	instance.routes = [];
-	instance.trailingSlashMustMatch = trailingSlashMustMatch;
-
-	if (exec) {
-		instance.exec = exec;
-	}
-	if (fallback) {
-		instance.fallback = fallback;
-	}
-	if (guard) {
-		instance.guard = guard;
-	}
-	if (index) {
-		instance.index = index;
-	}
-	if (params) {
-		const { parameters, searchParameters } = instance.path;
-		if (parameters.length === 0 && searchParameters.length === 0) {
-			throw new TypeError('Can\'t specify params() if path doesn\'t contain any');
-		}
-
-		instance.params = params;
-	}
-});
+	});
 
 export default createRoute;

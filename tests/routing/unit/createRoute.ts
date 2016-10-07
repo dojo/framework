@@ -14,48 +14,6 @@ suite('createRoute', () => {
 		});
 	});
 
-	test('exec() can be customized', () => {
-		let wasCustomized = false;
-		createRoute({
-			exec (request: R) {
-				wasCustomized = true;
-			}
-		}).exec({} as R);
-		assert.isTrue(wasCustomized);
-	});
-
-	test('if not customized, exec() is a noop', () => {
-		assert.doesNotThrow(() => {
-			createRoute().exec({} as R);
-		});
-	});
-
-	test('index() can be specified', () => {
-		assert.isUndefined(createRoute().index);
-		const index = () => {};
-		assert.strictEqual(createRoute({ index }).index, index);
-	});
-
-	test('fallback() can be specified', () => {
-		assert.isUndefined(createRoute().fallback);
-		const fallback = () => {};
-		assert.strictEqual(createRoute({ fallback }).fallback, fallback);
-	});
-
-	test('guard() can be customized', () => {
-		let wasCustomized = false;
-		createRoute({
-			guard (request: R) {
-				return wasCustomized = true;
-			}
-		}).guard({} as R);
-		assert.isTrue(wasCustomized);
-	});
-
-	test('if not customized, guard() returns true', () => {
-		assert.isTrue(createRoute().guard({} as R));
-	});
-
 	test('a route is not matched if guard() returns false', () => {
 		const route = createRoute({
 			guard () {

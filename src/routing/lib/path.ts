@@ -22,7 +22,7 @@ export interface ParsedPath {
  * @param path The path to parse.
  * @return The search params, pathname segments, and whether it ended with a trailing slash.
  */
-export function parse (path: string): ParsedPath {
+export function parse(path: string): ParsedPath {
 	const tokens: string[] = path.split(/([/?#])/).filter(Boolean);
 
 	let pathnameTokens = tokens;
@@ -83,7 +83,7 @@ export interface MatchResult {
  * @param segments Pathname segments as returned by `parse()`
  * @return A result object.
  */
-export function match ({ expectedSegments }: DeconstructedPath, segments: string[]): MatchResult | null {
+export function match({ expectedSegments }: DeconstructedPath, segments: string[]): MatchResult | null {
 	if (expectedSegments.length === 0) {
 		return {
 			hasRemaining: segments.length > 0,
@@ -164,7 +164,7 @@ export interface DeconstructedPath {
  * @param path The path to deconstruct.
  * @return An object describing the path's constituent parts.
  */
-export function deconstruct (path: string): DeconstructedPath {
+export function deconstruct(path: string): DeconstructedPath {
 	const expectedSegments: Segment[] = [];
 	const parameters: string[] = [];
 	const searchParameters: string[] = [];

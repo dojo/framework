@@ -22,7 +22,7 @@ export interface Parameters {
 /**
  * Describes the object passed to various route handlers.
  */
-export interface Request<PP extends Parameters> {
+export interface Request<P extends Parameters> {
 	/**
 	 * The dispatch context.
 	 */
@@ -31,5 +31,5 @@ export interface Request<PP extends Parameters> {
 	/**
 	 * The extracted parameters.
 	 */
-	params: PP;
+	params: P;
 }
