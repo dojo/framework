@@ -55,7 +55,7 @@ export interface NavigationStartEvent extends TargettedEventObject {
 	/**
 	 * The router that emitted this event.
 	 */
-	target: Router;
+	target: Router<Context>;
 }
 
 /**
