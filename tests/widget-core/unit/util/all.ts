@@ -1,2 +1,1 @@
-import './createCancelableEvent';
 import './lang';

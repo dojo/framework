@@ -2,10 +2,10 @@ import { VNodeProperties } from 'maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
 import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
 import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
+import createCancelableEvent, { CancelableEvent } from 'dojo-compose/util/createCancelableEvent';
 import { Handle } from 'dojo-core/interfaces';
 import { assign } from 'dojo-core/lang';
 import { NodeAttributeFunction } from './createRenderMixin';
-import createCancelableEvent, { CancelableEvent } from '../util/createCancelableEvent';
 import { stringToValue, valueToString } from '../util/lang';
 
 export interface FormFieldMixinOptions<V, S extends FormFieldMixinState<V>> extends StatefulOptions<S> {
