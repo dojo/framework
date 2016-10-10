@@ -302,7 +302,7 @@ const createRouter: RouterFactory<Context> = compose.mixin(createEvented, {
 
 						if (!dispatched && fallback) {
 							catchRejection(this, context, path, fallback({ context, params: {} }));
-							return { success: true };
+							return { success: false };
 						}
 
 						const result: DispatchResult = { success: dispatched };

@@ -307,7 +307,7 @@ suite('createRouter', () => {
 
 		const context = {} as Context;
 		return router.dispatch(context, '/foo').then(({ success: d }) => {
-			assert.isTrue(d);
+			assert.isFalse(d);
 			assert.ok(received);
 			assert.strictEqual(received.context, context);
 			assert.deepEqual(received.params, {});
