@@ -7,13 +7,11 @@ import { stub, spy } from 'sinon';
 import createRoute from '../../src/createRoute';
 import createRouter, { DispatchResult, ErrorEvent, NavigationStartEvent } from '../../src/createRouter';
 import createMemoryHistory from '../../src/history/createMemoryHistory';
-import { DefaultParameters, Context as C, Request, Parameters } from '../../src/interfaces';
-
-interface R extends Request<Parameters> {};
+import { DefaultParameters, Context, Request, Parameters } from '../../src/interfaces';
 
 suite('createRouter', () => {
 	test('dispatch resolves to unsuccessful result if no route was executed', () => {
-		return createRouter().dispatch({} as C, '/').then(result => {
+		return createRouter().dispatch({} as Context, '/').then(result => {
 			assert.deepEqual(result, { success: false });
 		});
 	});
@@ -21,7 +19,7 @@ suite('createRouter', () => {
 	test('dispatch resolves to successful result if a route was executed', () => {
 		const router = createRouter();
 		router.append(createRoute());
-		return router.dispatch({} as C, '/').then(result => {
+		return router.dispatch({} as Context, '/').then(result => {
 			assert.deepEqual(result, { success: true });
 		});
 	});
@@ -30,7 +28,7 @@ suite('createRouter', () => {
 		const err = {};
 		const router = createRouter();
 		router.append(createRoute({ exec () { throw err; }}));
-		return router.dispatch({} as C, '/').then(() => {
+		return router.dispatch({} as Context, '/').then(() => {
 			assert.fail('Should not be called');
 		}, actual => {
 			assert.strictEqual(actual, err);
@@ -44,7 +42,7 @@ suite('createRouter', () => {
 			guard() { return '/bar'; }
 		}));
 
-		return router.dispatch({} as C, '/foo').then((result) => {
+		return router.dispatch({} as Context, '/foo').then((result) => {
 			assert.deepEqual(result, { redirect: '/bar', success: true });
 		});
 	});
@@ -56,7 +54,7 @@ suite('createRouter', () => {
 			guard() { return ''; }
 		}));
 
-		return router.dispatch({} as C, '/foo').then((result) => {
+		return router.dispatch({} as Context, '/foo').then((result) => {
 			assert.deepEqual(result, { redirect: '', success: true });
 		});
 	});
@@ -74,16 +72,16 @@ suite('createRouter', () => {
 			exec() { executed = true; }
 		}));
 
-		return router.dispatch({} as C, '/foo').then((result) => {
+		return router.dispatch({} as Context, '/foo').then((result) => {
 			assert.deepEqual(result, { redirect: '/bar', success: true });
 			assert.isFalse(executed);
 		});
 	});
 
 	test('dispatch executes selected routes, providing context and extracted parameters', () => {
-		const execs: { context: C, params: Parameters }[] = [];
+		const execs: { context: Context, params: Parameters }[] = [];
 
-		const context = {} as C;
+		const context = {} as Context;
 		const router = createRouter();
 		const root = createRoute({
 			path: '/{foo}',
@@ -110,9 +108,9 @@ suite('createRouter', () => {
 	});
 
 	test('dispatch calls index() on the final selected route, providing context and extracted parameters', () => {
-		const calls: { method: string, context: C, params: Parameters }[] = [];
+		const calls: { method: string, context: Context, params: Parameters }[] = [];
 
-		const context = {} as C;
+		const context = {} as Context;
 		const router = createRouter();
 		const root = createRoute({
 			path: '/{foo}',
@@ -144,9 +142,9 @@ suite('createRouter', () => {
 	});
 
 	test('dispatch calls fallback() on the deepest matching route, providing context and extracted parameters', () => {
-		const calls: { method: string, context: C, params: Parameters }[] = [];
+		const calls: { method: string, context: Context, params: Parameters }[] = [];
 
-		const context = {} as C;
+		const context = {} as Context;
 		const router = createRouter();
 		const root = createRoute({
 			path: '/{foo}',
@@ -185,7 +183,7 @@ suite('createRouter', () => {
 			}
 		}));
 
-		return router.dispatch({} as C, '/foo').then(() => {
+		return router.dispatch({} as Context, '/foo').then(() => {
 			assert.deepEqual(order, ['first', 'second']);
 		});
 	});
@@ -198,7 +196,7 @@ suite('createRouter', () => {
 			received = event;
 		});
 
-		router.dispatch({} as C, '/foo');
+		router.dispatch({} as Context, '/foo');
 		assert.equal(received.path, '/foo');
 		assert.strictEqual(received.target, router);
 	});
@@ -210,7 +208,7 @@ suite('createRouter', () => {
 			event.cancel();
 		});
 
-		return router.dispatch({} as C, '/foo').then(({ success: d }) => {
+		return router.dispatch({} as Context, '/foo').then(({ success: d }) => {
 			assert.isFalse(d);
 		});
 	});
@@ -223,7 +221,7 @@ suite('createRouter', () => {
 			Promise.resolve().then(cancel);
 		});
 
-		return router.dispatch({} as C, '/foo').then(({ success: d }) => {
+		return router.dispatch({} as Context, '/foo').then(({ success: d }) => {
 			assert.isFalse(d);
 		});
 	});
@@ -236,7 +234,7 @@ suite('createRouter', () => {
 			Promise.resolve().then(resume);
 		});
 
-		return router.dispatch({} as C, '/foo').then(({ success: d }) => {
+		return router.dispatch({} as Context, '/foo').then(({ success: d }) => {
 			assert.isTrue(d);
 		});
 	});
@@ -256,7 +254,7 @@ suite('createRouter', () => {
 		});
 
 		let dispatched: boolean | undefined = false;
-		router.dispatch({} as C, '/foo').then(({ success: d }) => {
+		router.dispatch({} as Context, '/foo').then(({ success: d }) => {
 			dispatched = d;
 		});
 
@@ -289,7 +287,7 @@ suite('createRouter', () => {
 			resume = event.defer().resume;
 		});
 
-		const task = router.dispatch({} as C, '/foo');
+		const task = router.dispatch({} as Context, '/foo');
 		task.cancel();
 		resume();
 
@@ -299,7 +297,7 @@ suite('createRouter', () => {
 	});
 
 	test('router can be created with a fallback route', () => {
-		let received: R;
+		let received: Request<Context, Parameters>;
 
 		const router = createRouter({
 			fallback (request) {
@@ -307,7 +305,7 @@ suite('createRouter', () => {
 			}
 		});
 
-		const context = {} as C;
+		const context = {} as Context;
 		return router.dispatch(context, '/foo').then(({ success: d }) => {
 			assert.isTrue(d);
 			assert.ok(received);
@@ -336,7 +334,7 @@ suite('createRouter', () => {
 			})
 		]);
 
-		return router.dispatch({} as C, '/foo').then(() => {
+		return router.dispatch({} as Context, '/foo').then(() => {
 			assert.deepEqual(order, ['first', 'second']);
 		});
 	});
@@ -350,7 +348,7 @@ suite('createRouter', () => {
 		deep.append(deeper);
 		router.append(root);
 
-		return router.dispatch({} as C, 'foo/bar/baz').then(({ success: d }) => {
+		return router.dispatch({} as Context, 'foo/bar/baz').then(({ success: d }) => {
 			assert.isTrue(d);
 		});
 	});
@@ -365,7 +363,7 @@ suite('createRouter', () => {
 			deep.append(deeper);
 			router.append(root);
 
-			return router.dispatch({} as C, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
+			return router.dispatch({} as Context, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
 				assert.isTrue(d === withSlash, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
 			});
 		}));
@@ -381,7 +379,7 @@ suite('createRouter', () => {
 			deep.append(deeper);
 			router.append(root);
 
-			return router.dispatch({} as C, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
+			return router.dispatch({} as Context, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
 				assert.isTrue(d !== withSlash, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
 			});
 		}));
@@ -400,7 +398,7 @@ suite('createRouter', () => {
 			deep.append(deeper);
 			router.append(root);
 
-			return router.dispatch({} as C, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
+			return router.dispatch({} as Context, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
 				assert.isTrue(d, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
 			});
 		}));
@@ -410,7 +408,7 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo' }));
 
-		return router.dispatch({} as C, '/foo?bar').then(({ success: d }) => {
+		return router.dispatch({} as Context, '/foo?bar').then(({ success: d }) => {
 			assert.isTrue(d);
 		});
 	});
@@ -419,7 +417,7 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo' }));
 
-		return router.dispatch({} as C, '/foo#bar').then(({ success: d }) => {
+		return router.dispatch({} as Context, '/foo#bar').then(({ success: d }) => {
 			assert.isTrue(d);
 		});
 	});
@@ -428,10 +426,10 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo' }));
 
-		return router.dispatch({} as C, '/foo?bar#baz').then(({ success: d }) => {
+		return router.dispatch({} as Context, '/foo?bar#baz').then(({ success: d }) => {
 			assert.isTrue(d, '/foo?bar#baz');
 
-			return router.dispatch({} as C, '/foo#bar?baz');
+			return router.dispatch({} as Context, '/foo#bar?baz');
 		}).then(({ success: d }) => {
 			assert.isTrue(d);
 		});
@@ -441,7 +439,7 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo/bar' }));
 
-		return router.dispatch({} as C, '//foo///bar').then(({ success: d }) => {
+		return router.dispatch({} as Context, '//foo///bar').then(({ success: d }) => {
 			assert.isTrue(d);
 		});
 	});
@@ -457,16 +455,16 @@ suite('createRouter', () => {
 			}
 		}));
 
-		return router.dispatch({} as C, '/foo?bar=1&baz=2').then(() => {
+		return router.dispatch({} as Context, '/foo?bar=1&baz=2').then(() => {
 			assert.deepEqual(extracted, {bar: '1', baz: '2'});
 
 			extracted = {};
-			return router.dispatch({} as C, '/foo?bar=3#baz=4');
+			return router.dispatch({} as Context, '/foo?bar=3#baz=4');
 		}).then(() => {
 			assert.deepEqual(extracted, {bar: '3'});
 
 			extracted = {};
-			return router.dispatch({} as C, '/foo#bar=5?baz=6');
+			return router.dispatch({} as Context, '/foo#bar=5?baz=6');
 		}).then(() => {
 			assert.deepEqual(extracted, {});
 		});
@@ -669,10 +667,10 @@ suite('createRouter', () => {
 	});
 
 	suite('dispatch errors are emitted', () => {
-		let context: C = {};
+		let context: Context = {};
 		let dispatch = () => new Promise(() => {});
 		let fallback: any = null;
-		let events: ErrorEvent[] = [];
+		let events: ErrorEvent<Context>[] = [];
 		const path = '/foo/bar';
 		let router = createRouter();
 
@@ -794,5 +792,26 @@ suite('createRouter', () => {
 			fallback = () => { return Promise.reject(error); };
 			return verify(dispatch(), error);
 		});
+	});
+
+	// This test is mostly there to verify the typings at compile time.
+	test('createRouter takes a Context type', () => {
+		interface Refined extends Context {
+			refined: boolean;
+		}
+		const router = createRouter<Refined>({
+			context: { refined: true },
+			fallback({ context }) {
+				assert.isTrue(context.refined);
+			}
+		});
+		router.append(createRoute<Refined, any>({
+			path: '/foo',
+			exec({ context }) {
+				assert.isTrue(context.refined);
+			}
+		}));
+		router.dispatch({ refined: true }, '/foo');
+		router.dispatch({ refined: true }, '/bar');
 	});
 });

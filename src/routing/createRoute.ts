@@ -38,7 +38,7 @@ export interface Selection {
 	/**
 	 * Which handler should be called when the route is executed.
 	 */
-	handler: (request: Request<Parameters>) => void | Thenable<any>;
+	handler: (request: Request<Context, Parameters>) => void | Thenable<any>;
 
 	/**
 	 * The extracted parameters.
@@ -48,19 +48,19 @@ export interface Selection {
 	/**
 	 * The selected route.
 	 */
-	route: Route<Parameters>;
+	route: Route<Context, Parameters>;
 }
 
 /**
  * A route.
  * The generic should be specified if parameter access is required.
  */
-export interface Route<P extends Parameters> {
+export interface Route<C extends Context, P extends Parameters> {
 	/**
 	 * Append one or more routes.
 	 * @param routes A single route or an array containing 0 or more routes.
 	 */
-	append(add: Route<Parameters> | Route<Parameters>[]): void;
+	append(add: Route<Context, Parameters> | Route<Context, Parameters>[]): void;
 
 	/**
 	 * Determine whether the route matches.
@@ -92,7 +92,7 @@ export interface Route<P extends Parameters> {
 /**
  * The options for the route.
  */
-export interface RouteOptions<P> {
+export interface RouteOptions<C, P> {
 	/**
 	 * Path the route matches against. Pathname segments may be named, same for query parameters. Leading slashes are
 	 * ignored. Defaults to `/`.
@@ -111,7 +111,7 @@ export interface RouteOptions<P> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	exec?(request: Request<P>): void | Thenable<any>;
+	exec?(request: Request<C, P>): void | Thenable<any>;
 
 	/**
 	 * If specified, causes the route to be selected if there are no nested routes that match the remainder of
@@ -119,7 +119,7 @@ export interface RouteOptions<P> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	fallback?(request: Request<P>): void | Thenable<any>;
+	fallback?(request: Request<C, P>): void | Thenable<any>;
 
 	/**
 	 * Callback used to determine whether the route should be selected after it's been matched.
@@ -128,7 +128,7 @@ export interface RouteOptions<P> {
 	 * @return Returning `true` causes the route to be selected. Returning a string indicates that a redirect is
 	 *   required; the string should be the path to redirect to.
 	 */
-	guard?(request: Request<P>): string | boolean;
+	guard?(request: Request<C, P>): string | boolean;
 
 	/**
 	 * If specified, and the route is the final route in the hierarchy, when the route is executed, this handler is
@@ -136,7 +136,7 @@ export interface RouteOptions<P> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	index?(request: Request<P>): void | Thenable<any>;
+	index?(request: Request<C, P>): void | Thenable<any>;
 
 	/**
 	 * Callback used for constructing the `params` object from extracted parameters, and validating the parameters.
@@ -147,27 +147,28 @@ export interface RouteOptions<P> {
 	params?(fromPathname: string[], searchParams: UrlSearchParams): null | P;
 }
 
-export interface RouteFactory<P extends Parameters> extends ComposeFactory<Route<P>, RouteOptions<P>> {
+export interface RouteFactory<C extends Context, P extends Parameters> extends ComposeFactory<Route<C, P>, RouteOptions<C, P>> {
 	/**
 	 * Create a new instance of a route.
 	 * @param options Options to use during creation.
 	 */
-	<P>(options?: RouteOptions<P>): Route<P>;
+	<P>(options?: RouteOptions<Context, P>): Route<Context, P>;
+	<C, P>(options?: RouteOptions<C, P>): Route<C, P>;
 }
 
 interface PrivateState {
 	path: DeconstructedPath;
-	routes: Route<Parameters>[];
+	routes: Route<Context, Parameters>[];
 	trailingSlashMustMatch: boolean;
 
 	computeParams<P extends Parameters>(fromPathname: string[], searchParams: UrlSearchParams): null | P;
-	exec?(request: Request<Parameters>): void | Thenable<any>;
-	fallback?(request: Request<Parameters>): void | Thenable<any>;
-	guard?(request: Request<Parameters>): string | boolean;
-	index?(request: Request<Parameters>): void | Thenable<any>;
+	exec?(request: Request<Context, Parameters>): void | Thenable<any>;
+	fallback?(request: Request<Context, Parameters>): void | Thenable<any>;
+	guard?(request: Request<Context, Parameters>): string | boolean;
+	index?(request: Request<Context, Parameters>): void | Thenable<any>;
 }
 
-const privateStateMap = new WeakMap<Route<Parameters>, PrivateState>();
+const privateStateMap = new WeakMap<Route<Context, Parameters>, PrivateState>();
 
 const noop = () => {};
 
@@ -191,9 +192,9 @@ function computeDefaultParams(
 	return params;
 }
 
-const createRoute: RouteFactory<Parameters> =
+const createRoute: RouteFactory<Context, Parameters> =
 	compose({
-		append(this: Route<Parameters>, add: Route<Parameters> | Route<Parameters>[]) {
+		append(this: Route<Context, Parameters>, add: Route<Context, Parameters> | Route<Context, Parameters>[]) {
 			const { routes } = privateStateMap.get(this);
 			if (Array.isArray(add)) {
 				for (const route of add) {
@@ -206,7 +207,7 @@ const createRoute: RouteFactory<Parameters> =
 		},
 
 		match(
-			this: Route<Parameters>,
+			this: Route<Context, Parameters>,
 			segments: string[],
 			hasTrailingSlash: boolean,
 			searchParams: UrlSearchParams
@@ -240,7 +241,7 @@ const createRoute: RouteFactory<Parameters> =
 		},
 
 		select(
-			this: Route<Parameters>,
+			this: Route<Context, Parameters>,
 			context: Context,
 			segments: string[],
 			hasTrailingSlash: boolean,
@@ -296,7 +297,7 @@ const createRoute: RouteFactory<Parameters> =
 		}
 	},
 	(
-		instance: Route<Parameters>,
+		instance: Route<Context, Parameters>,
 		{
 			exec,
 			fallback,
@@ -305,7 +306,7 @@ const createRoute: RouteFactory<Parameters> =
 			params: computeParams,
 			path,
 			trailingSlashMustMatch = true
-		}: RouteOptions<Parameters> = {}
+		}: RouteOptions<Context, Parameters> = {}
 	) => {
 		if (path && /#/.test(path)) {
 			throw new TypeError('Path must not contain \'#\'');

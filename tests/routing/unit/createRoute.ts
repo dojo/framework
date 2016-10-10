@@ -2,10 +2,8 @@ import UrlSearchParams from 'dojo-core/UrlSearchParams';
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 
-import createRoute, { Route } from '../../src/createRoute';
-import { DefaultParameters, Context as C, Request, Parameters } from '../../src/interfaces';
-
-interface R extends Request<Parameters> {};
+import createRoute from '../../src/createRoute';
+import { DefaultParameters, Context, Parameters } from '../../src/interfaces';
 
 suite('createRoute', () => {
 	test('can create route without options', () => {
@@ -21,15 +19,15 @@ suite('createRoute', () => {
 			}
 		});
 
-		const selections = route.select({} as C, [], false, new UrlSearchParams());
+		const selections = route.select({} as Context, [], false, new UrlSearchParams());
 		assert.lengthOf(selections, 0);
 	});
 
 	test('guard() receives the context', () => {
-		const context: C = {};
-		let received: C = <any> undefined;
+		const context: Context = {};
+		let received: Context = <any> undefined;
 		const route = createRoute({
-			guard ({ context }: R) {
+			guard ({ context }) {
 				received = context;
 				return true;
 			}
@@ -58,11 +56,11 @@ suite('createRoute', () => {
 	});
 
 	test('path parameters are extracted', () => {
-		const route = <Route<DefaultParameters>> createRoute({
+		const route = createRoute<DefaultParameters>({
 			path: '/{foo}/{bar}?{baz}&{qux}'
 		});
 
-		const result = route.select({} as C, ['quux', 'corge'], false, new UrlSearchParams('baz=grault&qux=garply'));
+		const result = route.select({} as Context, ['quux', 'corge'], false, new UrlSearchParams('baz=grault&qux=garply'));
 		if (typeof result === 'string') {
 			throw new TypeError('Unexpected result');
 		}
@@ -77,11 +75,11 @@ suite('createRoute', () => {
 	});
 
 	test('search parameters are optional', () => {
-		const route = <Route<DefaultParameters>> createRoute({
+		const route = createRoute<DefaultParameters>({
 			path: '/{foo}/{bar}?{baz}&{qux}'
 		});
 
-		const result = route.select({} as C, ['quux', 'corge'], false, new UrlSearchParams('baz=grault'));
+		const result = route.select({} as Context, ['quux', 'corge'], false, new UrlSearchParams('baz=grault'));
 		if (typeof result === 'string') {
 			throw new TypeError('Unexpected result');
 		}
@@ -95,11 +93,11 @@ suite('createRoute', () => {
 	});
 
 	test('only the first search parameter value is extracted', () => {
-		const route = <Route<DefaultParameters>> createRoute({
+		const route = createRoute<DefaultParameters>({
 			path: '/{foo}/{bar}?{baz}&{qux}'
 		});
 
-		const result = route.select({} as C, ['quux', 'corge'], false, new UrlSearchParams('baz=grault&baz=garply'));
+		const result = route.select({} as Context, ['quux', 'corge'], false, new UrlSearchParams('baz=grault&baz=garply'));
 		if (typeof result === 'string') {
 			throw new TypeError('Unexpected result');
 		}
@@ -183,14 +181,14 @@ suite('createRoute', () => {
 
 	test('guard() receives the extracted parameters', () => {
 		let received: Parameters = <any> undefined;
-		const route = <Route<DefaultParameters>> createRoute({
+		const route = createRoute<DefaultParameters>({
 			path: '/{foo}/{bar}?{baz}&{qux}',
-			guard ({ params }: R) {
+			guard ({ params }) {
 				received = params;
 				return true;
 			}
 		});
-		route.select({} as C, ['quux', 'corge'], false, new UrlSearchParams('baz=grault&qux=garply'));
+		route.select({} as Context, ['quux', 'corge'], false, new UrlSearchParams('baz=grault&qux=garply'));
 		assert.deepEqual(received, {
 			foo: 'quux',
 			bar: 'corge',
@@ -204,7 +202,7 @@ suite('createRoute', () => {
 			upper: string;
 			barIsQux: boolean;
 		}
-		const route = <Route<Customized>> createRoute({
+		const route = createRoute<Customized>({
 			path: '/{foo}/{bar}',
 			params (fromPath) {
 				const [foo, bar] = fromPath;
@@ -215,7 +213,7 @@ suite('createRoute', () => {
 			}
 		});
 
-		const result = route.select({} as C, ['baz', 'qux'], false, new UrlSearchParams());
+		const result = route.select({} as Context, ['baz', 'qux'], false, new UrlSearchParams());
 		if (typeof result === 'string') {
 			throw new TypeError('Unexpected result');
 		}
@@ -232,17 +230,17 @@ suite('createRoute', () => {
 			fooArr: string[];
 			barIsQux: boolean;
 		}
-		const route = <Route<Customized>> createRoute({
+		const route = createRoute<Customized>({
 			path: '/?{foo}&{bar}',
 			params (fromPath, searchParams) {
 				return {
-					fooArr: searchParams.getAll('foo'),
+					fooArr: searchParams.getAll('foo') || [],
 					barIsQux: searchParams.get('bar') === 'qux'
 				};
 			}
 		});
 
-		const result = route.select({} as C, [], false, new UrlSearchParams('foo=baz&bar=qux&foo=BAZ'));
+		const result = route.select({} as Context, [], false, new UrlSearchParams('foo=baz&bar=qux&foo=BAZ'));
 		if (typeof result === 'string') {
 			throw new TypeError('Unexpected result');
 		}
@@ -273,13 +271,13 @@ suite('createRoute', () => {
 			}
 		});
 
-		const selections = route.select({} as C, ['foo'], false, new UrlSearchParams());
+		const selections = route.select({} as Context, ['foo'], false, new UrlSearchParams());
 		assert.lengthOf(selections, 0);
 	});
 
 	test('without a path, is selected for zero segments', () => {
 		const route = createRoute();
-		const selections = route.select({} as C, [], false, new UrlSearchParams());
+		const selections = route.select({} as Context, [], false, new UrlSearchParams());
 		if (typeof selections === 'string') {
 			throw new TypeError('Unexpected result');
 		}
@@ -290,13 +288,13 @@ suite('createRoute', () => {
 
 	test('without a path or nested routes, is not selected for segments', () => {
 		const route = createRoute();
-		const selections = route.select({} as C, ['foo'], false, new UrlSearchParams());
+		const selections = route.select({} as Context, ['foo'], false, new UrlSearchParams());
 		assert.lengthOf(selections, 0);
 	});
 
 	test('with a path, is selected if segments match', () => {
 		const route = createRoute({ path: '/foo/bar' });
-		const selections = route.select({} as C, ['foo', 'bar'], false, new UrlSearchParams());
+		const selections = route.select({} as Context, ['foo', 'bar'], false, new UrlSearchParams());
 		if (typeof selections === 'string') {
 			throw new TypeError('Unexpected result');
 		}
@@ -308,13 +306,13 @@ suite('createRoute', () => {
 	test('with a path, is not selected if segments do not match', () => {
 		{
 			const route = createRoute({ path: '/foo/bar' });
-			const selections = route.select({} as C, ['baz', 'qux'], false, new UrlSearchParams());
+			const selections = route.select({} as Context, ['baz', 'qux'], false, new UrlSearchParams());
 			assert.lengthOf(selections, 0);
 		}
 
 		{
 			const route = createRoute({ path: '/foo/bar' });
-			const selections = route.select({} as C, ['foo'], false, new UrlSearchParams());
+			const selections = route.select({} as Context, ['foo'], false, new UrlSearchParams());
 			assert.lengthOf(selections, 0);
 		}
 	});
@@ -326,7 +324,7 @@ suite('createRoute', () => {
 		root.append(deep);
 		deep.append(deeper);
 
-		const selections = root.select({} as C, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
+		const selections = root.select({} as Context, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
 		if (typeof selections === 'string') {
 			throw new TypeError('Unexpected result');
 		}
@@ -348,7 +346,7 @@ suite('createRoute', () => {
 			root.append(altDeep);
 			deep.append(deeper);
 
-			const selections = root.select({} as C, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
+			const selections = root.select({} as Context, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
 			assert.lengthOf(selections, 3);
 		}
 
@@ -361,7 +359,7 @@ suite('createRoute', () => {
 			root.append(deep);
 			deep.append(deeper);
 
-			const selections = root.select({} as C, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
+			const selections = root.select({} as Context, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
 			assert.lengthOf(selections, 2);
 		}
 	});
@@ -373,7 +371,7 @@ suite('createRoute', () => {
 		root.append(deep);
 		deep.append(deeper);
 
-		const selections = root.select({} as C, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
+		const selections = root.select({} as Context, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
 		assert.lengthOf(selections, 3);
 	});
 
@@ -385,7 +383,7 @@ suite('createRoute', () => {
 			root.append(deep);
 			deep.append(deeper);
 
-			const selections = root.select({} as C, ['foo', 'bar', 'baz'], withSlash, new UrlSearchParams());
+			const selections = root.select({} as Context, ['foo', 'bar', 'baz'], withSlash, new UrlSearchParams());
 			assert.lengthOf(selections, withSlash ? 3 : 0, `there is ${withSlash ? 'a' : 'no'} trailing slash when selecting`);
 		});
 	});
@@ -398,7 +396,7 @@ suite('createRoute', () => {
 			root.append(deep);
 			deep.append(deeper);
 
-			const selections = root.select({} as C, ['foo', 'bar', 'baz'], withSlash, new UrlSearchParams());
+			const selections = root.select({} as Context, ['foo', 'bar', 'baz'], withSlash, new UrlSearchParams());
 			assert.lengthOf(selections, withSlash ? 0 : 3, `there is ${withSlash ? 'a' : 'no'} trailing slash when selecting`);
 		});
 	});
@@ -414,7 +412,7 @@ suite('createRoute', () => {
 			root.append(deep);
 			deep.append(deeper);
 
-			const selections = root.select({} as C, ['foo', 'bar', 'baz'], withSlash, new UrlSearchParams());
+			const selections = root.select({} as Context, ['foo', 'bar', 'baz'], withSlash, new UrlSearchParams());
 			assert.lengthOf(selections, 3, `there is ${withSlash ? 'a' : 'no'} trailing slash when selecting`);
 		});
 	});
@@ -424,7 +422,7 @@ suite('createRoute', () => {
 		const deep = createRoute({ path: '/bar' });
 		root.append(deep);
 
-		const selections = root.select({} as C, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
+		const selections = root.select({} as Context, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
 		assert.lengthOf(selections, 0);
 	});
 
@@ -438,7 +436,7 @@ suite('createRoute', () => {
 		});
 		root.append(deep);
 
-		assert.strictEqual(root.select({} as C, ['root', 'deep'], false, new UrlSearchParams()), '/shallow');
+		assert.strictEqual(root.select({} as Context, ['root', 'deep'], false, new UrlSearchParams()), '/shallow');
 	});
 
 	test('guards can request redirects by returning empty path strings', () => {
@@ -451,7 +449,7 @@ suite('createRoute', () => {
 		});
 		root.append(deep);
 
-		assert.strictEqual(root.select({} as C, ['root', 'deep'], false, new UrlSearchParams()), '');
+		assert.strictEqual(root.select({} as Context, ['root', 'deep'], false, new UrlSearchParams()), '');
 	});
 
 	test('extracts path parameters for each nested route', () => {
@@ -461,7 +459,7 @@ suite('createRoute', () => {
 		root.append(deep);
 		deep.append(deeper);
 
-		const selections = root.select({} as C, ['foo', 'root', 'bar', 'deep', 'baz', 'deeper'], false, new UrlSearchParams());
+		const selections = root.select({} as Context, ['foo', 'root', 'bar', 'deep', 'baz', 'deeper'], false, new UrlSearchParams());
 		if (typeof selections === 'string') {
 			throw new TypeError('Unexpected result');
 		}
@@ -492,15 +490,15 @@ suite('createRoute', () => {
 		root.append(deep);
 
 		called = [];
-		root.select({} as C, ['root'], false, new UrlSearchParams());
+		root.select({} as Context, ['root'], false, new UrlSearchParams());
 		assert.deepEqual(called, ['root'], '/root');
 
 		called = [];
-		root.select({} as C, ['root', 'deep'], false, new UrlSearchParams());
+		root.select({} as Context, ['root', 'deep'], false, new UrlSearchParams());
 		assert.deepEqual(called, ['root', 'deep'], '/root/deep');
 
 		called = [];
-		root.select({} as C, ['root', 'deep', 'deeper'], false, new UrlSearchParams());
+		root.select({} as Context, ['root', 'deep', 'deeper'], false, new UrlSearchParams());
 		assert.deepEqual(called, ['root'], '/root/deep/deeper (deep isn’t selected because it doesn’t have a fallback)');
 	});
 
@@ -510,7 +508,25 @@ suite('createRoute', () => {
 		const altDeep = createRoute({ path: '/bar/baz' });
 		root.append([altDeep, deep]);
 
-		const selections = root.select({} as C, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
+		const selections = root.select({} as Context, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
 		assert.lengthOf(selections, 2);
+	});
+
+	// This test is mostly there to verify the typings at compile time.
+	test('createRoute takes a Context type', () => {
+		interface Refined extends Context {
+			refined: boolean;
+		}
+		const route = createRoute<Refined, any>({
+			path: '/foo',
+			exec({ context }) {
+				assert.isTrue(context.refined);
+			}
+		});
+		const context: Refined = { refined: true };
+		const result = route.select(context, ['foo'], false, new UrlSearchParams());
+		if (Array.isArray(result)) {
+			result[0].handler({ context, params: {} });
+		}
 	});
 });

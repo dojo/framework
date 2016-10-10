@@ -61,11 +61,11 @@ export interface NavigationStartEvent extends TargettedEventObject {
 /**
  * Event object that is emitted for the 'error' event.
  */
-export interface ErrorEvent extends TargettedEventObject {
+export interface ErrorEvent<C extends Context> extends TargettedEventObject {
 	/**
 	 * The context that was being dispatched when the error occurred.
 	 */
-	context: Context;
+	context: C;
 
 	/**
 	 * The error.
@@ -80,7 +80,7 @@ export interface ErrorEvent extends TargettedEventObject {
 	/**
 	 * The router that emitted this event.
 	 */
-	target: Router;
+	target: Router<C>;
 }
 
 /**
@@ -101,19 +101,19 @@ export interface DispatchResult {
 /**
  * A router mixin.
  */
-export interface RouterMixin {
+export interface RouterMixin<C extends Context> {
 	/**
 	 * Append one or more routes.
 	 * @param routes A single route or an array containing 0 or more routes.
 	 */
-	append(add: Route<Parameters> | Route<Parameters>[]): void;
+	append(add: Route<Context, Parameters> | Route<Context, Parameters>[]): void;
 
 	/**
 	 * Select and execute routes for a given path.
 	 * @param context A context object that is provided when executing selected routes.
 	 * @param path The path.
 	 */
-	dispatch(context: Context, path: string): Task<DispatchResult>;
+	dispatch(context: C, path: string): Task<DispatchResult>;
 
 	/**
 	 * Start the router.
@@ -126,7 +126,7 @@ export interface RouterMixin {
 	start(options?: StartOptions): PausableHandle;
 }
 
-export interface RouterOverrides {
+export interface RouterOverrides<C extends Context> {
 	/**
 	 * Event emitted when dispatch is called, but before routes are selected.
 	 */
@@ -138,29 +138,29 @@ export interface RouterOverrides {
 	 * Certain errors may reject the task returned when dispatching, but this task is not always accessible and may
 	 * hide errors if it's canceled.
 	 */
-	on(type: 'error', listener: EventedListener<ErrorEvent>): Handle;
+	on(type: 'error', listener: EventedListener<ErrorEvent<C>>): Handle;
 
 	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
 }
 
-export type Router = Evented & RouterMixin & RouterOverrides;
+export type Router<C extends Context> = Evented & RouterMixin<C> & RouterOverrides<C>;
 
 /**
  * The options for the router.
  */
-export interface RouterOptions extends EventedOptions {
+export interface RouterOptions<C extends Context> extends EventedOptions {
 	/**
 	 * A Context object to be used for all requests, or a function that provides such an object, called for each
 	 * dispatch.
 	 */
-	context?: Context | (() => Context);
+	context?: C | (() => C);
 
 	/**
 	 * A handler called when no routes match the dispatch path.
 	 * @param request An object whose `context` property contains the dispatch context. No extracted parameters
 	 *   are available.
 	 */
-	fallback?: (request: Request<any>) => void | Thenable<any>;
+	fallback?: (request: Request<C, Parameters>) => void | Thenable<any>;
 
 	/**
 	 * The history manager. Routes will be dispatched in response to change events emitted by the manager.
@@ -178,23 +178,24 @@ export interface StartOptions {
 	dispatchCurrent: boolean;
 }
 
-export interface RouterFactory extends ComposeFactory<Router, RouterOptions> {
+export interface RouterFactory<C extends Context> extends ComposeFactory<Router<C>, RouterOptions<C>> {
 	/**
 	 * Create a new instance of a Router.
 	 * @param options Options to use during creation.
 	 */
-	(options?: RouterOptions): Router;
+	(options?: RouterOptions<Context>): Router<Context>;
+	<C>(options?: RouterOptions<C>): Router<C>;
 }
 
 interface PrivateState {
 	contextFactory: () => Context;
-	fallback?: (request: Request<any>) => void | Thenable<any>;
+	fallback?: (request: Request<Context, Parameters>) => void | Thenable<any>;
 	history?: History;
-	routes: Route<Parameters>[];
+	routes: Route<Context, Parameters>[];
 	started?: boolean;
 }
 
-const privateStateMap = new WeakMap<Router, PrivateState>();
+const privateStateMap = new WeakMap<Router<Context>, PrivateState>();
 
 // istanbul ignore next
 const noop = () => {};
@@ -211,8 +212,8 @@ function createDeferral() {
 	return { cancel, promise, resume };
 }
 
-function reportError(router: Router, context: Context, path: string, error: any) {
-	router.emit<ErrorEvent>({
+function reportError(router: Router<Context>, context: Context, path: string, error: any) {
+	router.emit<ErrorEvent<Context>>({
 		context,
 		error,
 		path,
@@ -221,7 +222,7 @@ function reportError(router: Router, context: Context, path: string, error: any)
 	});
 }
 
-function catchRejection(router: Router, context: Context, path: string, thenable: void | Thenable<any>) {
+function catchRejection(router: Router<Context>, context: Context, path: string, thenable: void | Thenable<any>) {
 	if (thenable) {
 		Promise.resolve(thenable).catch((error) => {
 			reportError(router, context, path, error);
@@ -229,9 +230,9 @@ function catchRejection(router: Router, context: Context, path: string, thenable
 	}
 }
 
-const createRouter: RouterFactory = compose.mixin(createEvented, {
+const createRouter: RouterFactory<Context> = compose.mixin(createEvented, {
 	mixin: {
-		append(this: Router, add: Route<Parameters> | Route<Parameters>[]) {
+		append(this: Router<Context>, add: Route<Context, Parameters> | Route<Context, Parameters>[]) {
 			const { routes } = privateStateMap.get(this);
 			if (Array.isArray(add)) {
 				for (const route of add) {
@@ -243,7 +244,7 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 			}
 		},
 
-		dispatch(this: Router, context: Context, path: string): Task<DispatchResult> {
+		dispatch(this: Router<Context>, context: Context, path: string): Task<DispatchResult> {
 			let canceled = false;
 			const cancel = () => {
 				canceled = true;
@@ -282,7 +283,7 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 
 						const { fallback, routes } = privateStateMap.get(this);
 						let redirect: undefined | string;
-						const dispatched = routes.some((route: Route<Parameters>) => {
+						const dispatched = routes.some((route: Route<Context, Parameters>) => {
 							const result = route.select(context, segments, trailingSlash, searchParams);
 							if (typeof result === 'string') {
 								redirect = result;
@@ -322,7 +323,7 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 			}, cancel);
 		},
 
-		start(this: Router, { dispatchCurrent }: StartOptions = { dispatchCurrent: true }): PausableHandle {
+		start(this: Router<Context>, { dispatchCurrent }: StartOptions = { dispatchCurrent: true }): PausableHandle {
 			const state = privateStateMap.get(this);
 			if (state.started) {
 				throw new Error('start can only be called once');
@@ -362,14 +363,14 @@ const createRouter: RouterFactory = compose.mixin(createEvented, {
 			return listener;
 		}
 	},
-	initialize(instance: Router, { context, fallback, history }: RouterOptions = {}) {
-		let contextFactory: () => Context;
+	initialize<C extends Context>(instance: Router<C>, { context, fallback, history }: RouterOptions<C> = {}) {
+		let contextFactory: () => C;
 		if (typeof context === 'function') {
 			contextFactory = context;
 		}
 		else if (typeof context === 'undefined') {
 			contextFactory = () => {
-				return {};
+				return {} as C;
 			};
 		}
 		else {
