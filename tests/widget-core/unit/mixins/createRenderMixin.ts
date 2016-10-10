@@ -13,6 +13,38 @@ registerSuite({
 		assert.isFunction(cachedRender.getChildrenNodes);
 		assert.isFunction(cachedRender.invalidate);
 	},
+	'getSelectorAndWidgetClasses': {
+		'Applies widget class to selector'() {
+			const createWidgetClassesWidget = createRenderMixin.extend({
+				classes: [ 'widget-class' ]
+			});
+
+			const widget = createWidgetClassesWidget();
+			assert.deepEqual(widget.classes, [ 'widget-class' ]);
+			const selectorAndWidgetClasses = widget.getSelectorAndWidgetClasses();
+			assert.deepEqual(selectorAndWidgetClasses, 'div.widget-class');
+		},
+		'Applies multiple widget class to selector'() {
+			const createWidgetClassesWidget = createRenderMixin
+			.extend({
+				classes: [ 'widget-class' ]
+			})
+			.extend({
+				classes: [ 'widget-class-2' ]
+			});
+
+			const widget = createWidgetClassesWidget();
+			assert.deepEqual(widget.classes, [ 'widget-class', 'widget-class-2' ]);
+			const selectorAndWidgetClasses = widget.getSelectorAndWidgetClasses();
+			assert.deepEqual(selectorAndWidgetClasses, 'div.widget-class.widget-class-2');
+		},
+		'Returns just the selector when no widget classes exist'() {
+			const widget = createRenderMixin();
+			assert.deepEqual(widget.classes, []);
+			const selectorAndWidgetClasses = widget.getSelectorAndWidgetClasses();
+			assert.deepEqual(selectorAndWidgetClasses, 'div');
+		}
+	},
 	'getNodeAttributes()'() {
 		const cachedRender = createRenderMixin({
 			state: { id: 'foo', classes: [ 'bar' ] }
