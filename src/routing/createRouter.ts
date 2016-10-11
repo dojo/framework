@@ -340,13 +340,35 @@ const createRouter: RouterFactory<Context> = compose.mixin(createEvented, {
 			}
 
 			let lastDispatch: Task<void>;
+			let redirectCount = 0;
+			let redirecting = false;
+
 			const dispatch = (path: string) => {
 				if (lastDispatch) {
 					lastDispatch.cancel();
 				}
-				lastDispatch = this.dispatch(contextFactory(), path).then(({ redirect, success }) => {
+
+				// Reset redirect count if the dispatch was triggered by a non-redirect history change. This allows
+				// a route's exec / fallback / index handler to change the history, setting off a new flurry of
+				// redirects, without being encumbered by the number of redirects that led to that route being selected.
+				if (!redirecting) {
+					redirectCount = 0;
+				}
+
+				const context = contextFactory();
+				lastDispatch = this.dispatch(context, path).then(({ redirect, success }) => {
 					if (success && redirect !== undefined) {
+						redirectCount++;
+						if (redirectCount > 20) {
+							const error = new Error('More than 20 redirects, giving up');
+							reportError(this, context, path, error);
+							throw error;
+						}
+
+						redirecting = true;
+						// The history manager MUST emit the change event synchronously.
 						history.replace(redirect);
+						redirecting = false;
 					}
 				});
 			};

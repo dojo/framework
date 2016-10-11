@@ -620,6 +620,51 @@ suite('createRouter', () => {
 			});
 	});
 
+	test('start() handles up to 20 redirects', () => {
+		const history = createMemoryHistory();
+		const router = createRouter({ history });
+
+		let count = 0;
+		let ok: () => void;
+		router.append([
+			createRoute({
+				path: '/to',
+				guard() {
+					count++;
+					return count === 20 || '/and/fro';
+				},
+				exec() {
+					ok();
+				}
+			}),
+			createRoute({
+				path: '/and/fro',
+				guard() {
+					count++;
+					return count === 20 || '/to';
+				},
+				exec() {
+					ok();
+				}
+			})
+		]);
+
+		router.start({ dispatchCurrent: false });
+		return new Promise((resolve, reject) => {
+			ok = resolve;
+			history.set('/to');
+		}).then(() => {
+			assert.equal(count, 20);
+			count = 0;
+			return new Promise((resolve, reject) => {
+				ok = resolve;
+				history.set(history.current === '/to' ? '/and/fro' : '/to');
+			});
+		}).then(() => {
+			assert.equal(count, 20);
+		});
+	});
+
 	test('without a provided context, start() dispatches with an empty object as the context', () => {
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ history });
@@ -669,8 +714,9 @@ suite('createRouter', () => {
 	suite('dispatch errors are emitted', () => {
 		let context: Context = {};
 		let dispatch = () => new Promise(() => {});
-		let fallback: any = null;
 		let events: ErrorEvent<Context>[] = [];
+		let fallback: any = null;
+		let history = createMemoryHistory();
 		const path = '/foo/bar';
 		let router = createRouter();
 
@@ -689,12 +735,15 @@ suite('createRouter', () => {
 		beforeEach(() => {
 			events = [];
 			fallback = null;
+			history = createMemoryHistory();
 			router = createRouter({
+				context,
 				fallback() {
 					if (fallback) {
 						return fallback();
 					}
-				}
+				},
+				history
 			});
 			router.on('error', (event) => { events.push(event); });
 			dispatch = () => {
@@ -791,6 +840,52 @@ suite('createRouter', () => {
 			const error = new Error();
 			fallback = () => { return Promise.reject(error); };
 			return verify(dispatch(), error);
+		});
+
+		test('when redirecting more than 20 times in a row', () => {
+			let count: (path: string) => void;
+			const promise = new Promise((resolve) => {
+				let n = 0;
+				count = (path) => {
+					n++;
+					if (n > 20) {
+						resolve(path);
+					}
+				};
+			});
+
+			router.append([
+				createRoute({
+					path: '/to',
+					guard() {
+						count('/to');
+						return '/and/fro';
+					}
+				}),
+				createRoute({
+					path: '/and/fro',
+					guard() {
+						count('/and/fro');
+						return '/to';
+					}
+				})
+			]);
+
+			router.start({ dispatchCurrent: false });
+			history.set('/to');
+			return promise.then((path) => {
+				// Allow the redirect to propagate through the dispatch promise chain before checking to see if the
+				// error was emitted.
+				return new Promise((resolve) => setTimeout(resolve, 10, path));
+			}).then((path) => {
+				assert.lengthOf(events, 1);
+				const [ evt ] = events;
+				assert.strictEqual(evt.context, context);
+				assert.instanceOf(evt.error, Error);
+				assert.equal(evt.error.message, 'More than 20 redirects, giving up');
+				assert.strictEqual(evt.path, path);
+				assert.strictEqual(evt.target, router);
+			});
 		});
 	});
 
