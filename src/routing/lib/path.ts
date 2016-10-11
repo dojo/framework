@@ -229,6 +229,9 @@ export function deconstruct(path: string): DeconstructedPath {
 
 				if (t === '?') {
 					inSearchComponent = true;
+					if (expectedSegments.length === 0) {
+						throw new TypeError('Path must contain at least one segment');
+					}
 				}
 
 				if (t === '/') {

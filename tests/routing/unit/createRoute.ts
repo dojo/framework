@@ -55,6 +55,16 @@ suite('createRoute', () => {
 		}, TypeError, 'Path segment must not be empty');
 	});
 
+	test('path must contain at least one segment', () => {
+		assert.throws(() => {
+			createRoute({ path: '?{query}' });
+		}, TypeError, 'Path must contain at least one segment');
+
+		assert.throws(() => {
+			createRoute({ path: '/?{query}' });
+		}, TypeError, 'Path must contain at least one segment');
+	});
+
 	test('path parameters are extracted', () => {
 		const route = createRoute<DefaultParameters>({
 			path: '/{foo}/{bar}?{baz}&{qux}'
@@ -144,25 +154,25 @@ suite('createRoute', () => {
 
 	test('search parameters must be separated by &', () => {
 		assert.throws(() => {
-			createRoute({ path: '/?{foo}{bar}' });
+			createRoute({ path: '/segment?{foo}{bar}' });
 		}, TypeError, 'Search parameter must be followed by \'&\', got \'{\'');
 	});
 
 	test('search component must only contain parameters', () => {
 		assert.throws(() => {
-			createRoute({ path: '/?foo=bar' });
+			createRoute({ path: '/segment?foo=bar' });
 		}, TypeError, 'Expected parameter in search component, got \'foo=bar\'');
 
 		assert.throws(() => {
-			createRoute({ path: '/?{foo}&/bar' });
+			createRoute({ path: '/segment?{foo}&/bar' });
 		}, TypeError, 'Expected parameter in search component, got \'/\'');
 
 		assert.throws(() => {
-			createRoute({ path: '/?{foo}&?bar' });
+			createRoute({ path: '/segment?{foo}&?bar' });
 		}, TypeError, 'Expected parameter in search component, got \'?\'');
 
 		assert.throws(() => {
-			createRoute({ path: '/?{foo}&&bar' });
+			createRoute({ path: '/segment?{foo}&&bar' });
 		}, TypeError, 'Expected parameter in search component, got \'&\'');
 	});
 
@@ -175,7 +185,11 @@ suite('createRoute', () => {
 			createRoute({ path: '/{foo}?{foo}' });
 		}, TypeError, 'Parameter must have a unique name, got \'foo\'');
 		assert.throws(() => {
-			createRoute({ path: '?{foo}&{foo}' });
+			createRoute({ path: '/segment?{foo}&{foo}' });
+		}, TypeError, 'Parameter must have a unique name, got \'foo\'');
+
+		assert.throws(() => {
+			createRoute({ path: '/segment?{foo}&{foo}' });
 		}, TypeError, 'Parameter must have a unique name, got \'foo\'');
 	});
 
@@ -231,7 +245,7 @@ suite('createRoute', () => {
 			barIsQux: boolean;
 		}
 		const route = createRoute<Customized>({
-			path: '/?{foo}&{bar}',
+			path: '/segment?{foo}&{bar}',
 			params (fromPath, searchParams) {
 				return {
 					fooArr: searchParams.getAll('foo') || [],
@@ -240,7 +254,7 @@ suite('createRoute', () => {
 			}
 		});
 
-		const result = route.select({} as Context, [], false, new UrlSearchParams('foo=baz&bar=qux&foo=BAZ'));
+		const result = route.select({} as Context, ['segment'], false, new UrlSearchParams('foo=baz&bar=qux&foo=BAZ'));
 		if (typeof result === 'string') {
 			throw new TypeError('Unexpected result');
 		}
