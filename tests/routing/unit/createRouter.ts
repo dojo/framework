@@ -10,13 +10,13 @@ import createMemoryHistory from '../../src/history/createMemoryHistory';
 import { DefaultParameters, Context, Request, Parameters } from '../../src/interfaces';
 
 suite('createRouter', () => {
-	test('dispatch resolves to unsuccessful result if no route was executed', () => {
+	test('dispatch() resolves to unsuccessful result if no route was executed', () => {
 		return createRouter().dispatch({} as Context, '/').then(result => {
 			assert.deepEqual(result, { success: false });
 		});
 	});
 
-	test('dispatch resolves to successful result if a route was executed', () => {
+	test('dispatch() resolves to successful result if a route was executed', () => {
 		const router = createRouter();
 		router.append(createRoute());
 		return router.dispatch({} as Context, '/').then(result => {
@@ -24,7 +24,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('dispatch rejects when errors occur', () => {
+	test('dispatch() rejects when errors occur', () => {
 		const err = {};
 		const router = createRouter();
 		router.append(createRoute({ exec () { throw err; }}));
@@ -35,7 +35,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('dispatch returns redirect', () => {
+	test('dispatch() returns redirect', () => {
 		const router = createRouter();
 		router.append(createRoute({
 			path: '/foo',
@@ -47,7 +47,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('dispatch may return empty redirect', () => {
+	test('dispatch() may return empty redirect', () => {
 		const router = createRouter();
 		router.append(createRoute({
 			path: '/foo',
@@ -59,7 +59,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('dispatch stops selecting routes once it has a redirect', () => {
+	test('dispatch() stops selecting routes once it has a redirect', () => {
 		const router = createRouter();
 		router.append(createRoute({
 			path: '/foo',
@@ -78,7 +78,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('dispatch executes selected routes, providing context and extracted parameters', () => {
+	test('dispatch() executes selected routes, providing context and extracted parameters', () => {
 		const execs: { context: Context, params: Parameters }[] = [];
 
 		const context = {} as Context;
@@ -107,7 +107,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('dispatch calls index() on the final selected route, providing context and extracted parameters', () => {
+	test('dispatch() calls index() on the final selected route, providing context and extracted parameters', () => {
 		const calls: { method: string, context: Context, params: Parameters }[] = [];
 
 		const context = {} as Context;
@@ -141,7 +141,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('dispatch calls fallback() on the deepest matching route, providing context and extracted parameters', () => {
+	test('dispatch() calls fallback() on the deepest matching route, providing context and extracted parameters', () => {
 		const calls: { method: string, context: Context, params: Parameters }[] = [];
 
 		const context = {} as Context;
@@ -165,7 +165,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('dispatch selects routes in order of registration', () => {
+	test('dispatch() selects routes in order of registration', () => {
 		const order: string[] = [];
 
 		const router = createRouter();
@@ -188,7 +188,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('dispatch emits navstart event', () => {
+	test('dispatch() emits navstart event', () => {
 		const router = createRouter();
 
 		let received: NavigationStartEvent = null!;
@@ -273,7 +273,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('dispatch can be canceled', () => {
+	test('dispatch() can be canceled', () => {
 		const router = createRouter();
 
 		let executed = false;
@@ -470,7 +470,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('#start is a noop if the router was created without a history manager', () => {
+	test('start() is a noop if the router was created without a history manager', () => {
 		assert.doesNotThrow(() => {
 			const listener = createRouter().start();
 			listener.pause();
@@ -479,7 +479,7 @@ suite('createRouter', () => {
 		});
 	});
 
-	test('#start wires dispatch to a history change event', () => {
+	test('start() wires dispatch to a history change event', () => {
 		const history = createMemoryHistory();
 		const router = createRouter({ history });
 		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
@@ -489,7 +489,7 @@ suite('createRouter', () => {
 		assert.isTrue(dispatch.calledWith({}, '/foo'));
 	});
 
-	test('#start returns a pausable handler', () => {
+	test('start() returns a pausable handler', () => {
 		const history = createMemoryHistory();
 		const router = createRouter({ history });
 		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
@@ -504,7 +504,7 @@ suite('createRouter', () => {
 		assert.isTrue(dispatch.calledWith({}, '/bar'));
 	});
 
-	test('#start can immediately dispatch for the current history value', () => {
+	test('start() can immediately dispatch for the current history value', () => {
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ history });
 		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
@@ -513,7 +513,7 @@ suite('createRouter', () => {
 		assert.isTrue(dispatch.calledWith({}, '/foo'));
 	});
 
-	test('#start can be configured not to immediately dispatch for the current history value', () => {
+	test('start() can be configured not to immediately dispatch for the current history value', () => {
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ history });
 		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
@@ -522,7 +522,7 @@ suite('createRouter', () => {
 		assert.isTrue(dispatch.notCalled);
 	});
 
-	test('#start dispatches immediately by default', () => {
+	test('start() dispatches immediately by default', () => {
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ history });
 		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
@@ -531,7 +531,7 @@ suite('createRouter', () => {
 		assert.isTrue(dispatch.calledOnce);
 	});
 
-	test('#start throws if already called', () => {
+	test('start() throws if already called', () => {
 		const history = createMemoryHistory();
 		const router = createRouter({ history });
 
@@ -544,7 +544,7 @@ suite('createRouter', () => {
 		assert.throws(start, /start can only be called once/);
 	});
 
-	test('#start ensures the previous dispatch is canceled', () => {
+	test('start() ensures the previous dispatch is canceled', () => {
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ history });
 		router.on('navstart', ({ defer }) => {
@@ -576,7 +576,7 @@ suite('createRouter', () => {
 			});
 	});
 
-	test('#start replaces history if the dispatch requested a redirect', () => {
+	test('start() replaces history if the dispatch requested a redirect', () => {
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ history });
 
@@ -620,7 +620,7 @@ suite('createRouter', () => {
 			});
 	});
 
-	test('without a provided context, #start dispatches with an empty object as the context', () => {
+	test('without a provided context, start() dispatches with an empty object as the context', () => {
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ history });
 		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
@@ -635,7 +635,7 @@ suite('createRouter', () => {
 		assert.deepEqual(nextContext, {});
 	});
 
-	test('with a provided context, #start dispatches with that object as the context', () => {
+	test('with a provided context, start() dispatches with that object as the context', () => {
 		const context = {};
 		const history = createMemoryHistory({ path: '/foo' });
 		const router = createRouter({ context, history });
@@ -650,7 +650,7 @@ suite('createRouter', () => {
 		assert.strictEqual(nextContext, context);
 	});
 
-	test('with a provided context factory, #start dispatches with factory\'s value as the context', () => {
+	test('with a provided context factory, start() dispatches with factory\'s value as the context', () => {
 		const contexts = [ { first: true }, { second: true } ];
 		const context = () => contexts.shift();
 		const history = createMemoryHistory({ path: '/foo' });
@@ -795,7 +795,7 @@ suite('createRouter', () => {
 	});
 
 	// This test is mostly there to verify the typings at compile time.
-	test('createRouter takes a Context type', () => {
+	test('createRouter() takes a Context type', () => {
 		interface Refined extends Context {
 			refined: boolean;
 		}

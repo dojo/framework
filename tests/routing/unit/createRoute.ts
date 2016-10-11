@@ -527,7 +527,7 @@ suite('createRoute', () => {
 	});
 
 	// This test is mostly there to verify the typings at compile time.
-	test('createRoute takes a Context type', () => {
+	test('createRoute() takes a Context type', () => {
 		interface Refined extends Context {
 			refined: boolean;
 		}
