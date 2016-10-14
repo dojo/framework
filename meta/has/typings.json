@@ -12,7 +12,7 @@
 		"dojo2-dev": "github:dojo/typings/custom/dev/dev.d.ts#288d3a9868194f0e1ad6687371dffd1d96cb39a1",
 		"gruntjs": "registry:dt/gruntjs#0.4.0+20160316171810",
 		"intern": "github:dojo/typings/custom/intern/intern.d.ts#92fcf688c0982c1107fca278de52e4bfe23bd8af",
-		"leadfoot": "github:dojo/typings/custom/leadfoot/leadfoot.d.ts#a62873258aa1deed48f9882c193c335436100d4b",
+		"leadfoot": "github:dojo/typings/custom/leadfoot/leadfoot.d.ts#8f3dfe6cafd04dfa78068785551552a5cfd88db1",
 		"node": "github:dojo/typings/custom/node/node.d.ts#a62873258aa1deed48f9882c193c335436100d4b"
 	}
 }

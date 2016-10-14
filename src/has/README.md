@@ -118,6 +118,42 @@ declare module 'dojo-has!host-browser?foo/browser:foo/node' {
 }
 ```
 
+### Static Features
+
+Features can also be defined statically, before the module is loaded, in the global scope.  The main use case is when
+it is not desirable to detect these features from the environment (because they may not be accurate, like when using
+a build tool).  The features can only be specified before the module is loaded for the first time and cannot be
+changed once the module is loaded.  The values specified in the static features will *always* be returned from `has()`
+irrespective of how those features a subsequently defined using `add()`, even if `override` is specified.  In addition,
+if a value is being added via `add()` that is already defined as a static feature, it will still complete and not throw
+although if specified as function, the function will never be invoked.
+
+To specify the features, the global variable `DojoHasEnvironment` needs to be specified with a property of `staticFeatures`
+which is a simple map of the features:
+
+```typescript
+window.DojoHasEnvironment = {
+	staticFeatures: {
+		'host-node': true,
+		'host-browser': false,
+		'my-feature': 2
+	}
+};
+```
+
+`staticFeatures` can also be specified as a function, which returns an map of the features:
+
+```typescript
+window.DojoHasEnvironment = {
+	staticFeatures: function () {
+		return { 'host-node': true, 'host-browser': false, 'my-feature': 2 };
+	}
+};
+```
+
+This function will be run once when the module is loaded and the values returned from the function will be used as the
+static features.
+
 ## How do I use this package?
 
 TODO: Add appropriate usage and instruction guidelines

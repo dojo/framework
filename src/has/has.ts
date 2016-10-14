@@ -20,6 +20,77 @@ export const testCache: { [feature: string]: FeatureTestResult } = {};
  */
 export const testFunctions: { [feature: string]: FeatureTest } = {};
 
+export interface StaticHasFeatures {
+	[ feature: string ]: FeatureTestResult;
+}
+
+export interface DojoHasEnvironment {
+	/**
+	 * Static features defined in the enviornment that should be used by the `has` module
+	 * instead of run-time detection.
+	 */
+	staticFeatures?: StaticHasFeatures | (() => StaticHasFeatures);
+}
+
+declare global {
+	interface Window {
+		/**
+		 * The `dojo/has` enviornment which provides configuration when the module is
+		 * loaded.
+		 */
+		DojoHasEnvironment?: DojoHasEnvironment;
+	}
+}
+
+/**
+ * A reference to the global scope (`window` in a browser, `global` in NodeJS)
+ */
+const globalScope = (function (): any {
+	/* istanbul ignore else */
+	if (typeof window !== 'undefined') {
+		// Browsers
+		return window;
+	}
+	else if (typeof global !== 'undefined') {
+		// Node
+		return global;
+	}
+	else if (typeof self !== 'undefined') {
+		// Web workers
+		return self;
+	}
+	/* istanbul ignore next */
+	return {};
+})();
+
+/* Grab the staticFeatures if there are available */
+const { staticFeatures }: DojoHasEnvironment = globalScope.DojoHasEnvironment || {};
+
+/* Cleaning up the DojoHasEnviornment */
+if ('DojoHasEnvironment' in globalScope) {
+	delete globalScope.DojoHasEnvironment;
+}
+
+/**
+ * Custom type guard to narrow the `staticFeatures` to either a map or a function that
+ * returns a map.
+ *
+ * @param value The value to guard for
+ */
+function isStaticFeatureFunction(value: any): value is (() => StaticHasFeatures) {
+	return typeof value === 'function';
+}
+
+/**
+ * The cache of asserted features that were available in the global scope when the
+ * module loaded
+ */
+const staticCache: StaticHasFeatures = staticFeatures
+	? isStaticFeatureFunction(staticFeatures)
+		? staticFeatures.apply(globalScope)
+		: staticFeatures
+	: {}; /* Providing an empty cache, if none was in the environment
+
 /**
  * AMD plugin function.
  *
@@ -82,7 +153,7 @@ export function normalize(resourceId: string, normalize: (moduleId: string) => s
  * @param feature the name of the feature
  */
 export function exists(feature: string): boolean {
-	return Boolean(feature in testCache || testFunctions[feature]);
+	return Boolean(feature in staticCache || feature in testCache || testFunctions[feature]);
 }
 
 /**
@@ -101,7 +172,7 @@ export function exists(feature: string): boolean {
  * @param overwrite if an existing value should be overwritten. Defaults to false.
  */
 export function add(feature: string, value: FeatureTest | FeatureTestResult, overwrite: boolean = false): void {
-	if (exists(feature) && !overwrite) {
+	if (exists(feature) && !overwrite && !(feature in staticCache)) {
 		throw new TypeError(`Feature "${feature}" exists and overwrite not true.`);
 	}
 
@@ -122,7 +193,10 @@ export function add(feature: string, value: FeatureTest | FeatureTestResult, ove
 export default function has(feature: string): FeatureTestResult {
 	let result: FeatureTestResult;
 
-	if (testFunctions[feature]) {
+	if (feature in staticCache) {
+		result = staticCache[feature];
+	}
+	else if (testFunctions[feature]) {
 		result = testCache[feature] = testFunctions[feature].call(null);
 		delete testFunctions[feature];
 	}

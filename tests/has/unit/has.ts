@@ -8,7 +8,25 @@ import has, {
 	exists as hasExists,
 	normalize as hasNormalize,
 	load as hasLoad
-} from 'src/has';
+} from '../../src/has';
+
+const globalScope: any = (function (): any {
+	/* istanbul ignore else */
+	if (typeof window !== 'undefined') {
+		// Browsers
+		return window;
+	}
+	else if (typeof global !== 'undefined') {
+		// Node
+		return global;
+	}
+	else if (typeof self !== 'undefined') {
+		// Web workers
+		return self;
+	}
+	/* istanbul ignore next */
+	return {};
+})();
 
 let alreadyCached: { [ feature: string ]: boolean };
 let alreadyTest: { [ feature: string ]: boolean };
@@ -265,6 +283,47 @@ registerSuite({
 		'host-node'() {
 			assert.isTrue(hasExists('host-node'));
 			assert.strictEqual(has('host-node'), (typeof process === 'object' && process.versions && process.versions.node) || undefined);
+		}
+	},
+
+	'static has features': {
+		'staticFeatures object'(this: any) {
+			const dfd = this.async();
+			require.undef('src/has');
+			globalScope.DojoHasEnvironment = {
+				staticFeatures: {
+					'foo': 1,
+					'bar': 'bar',
+					'baz': false
+				}
+			};
+			require([ 'src/has' ], dfd.callback((mod: { default: typeof has }) => {
+				const h = mod.default;
+				assert(!('DojoHasEnvironment' in globalScope));
+				assert.strictEqual(h('foo'), 1);
+				assert.strictEqual(h('bar'), 'bar');
+				assert.isFalse(h('baz'));
+			}));
+		},
+		'staticFeatures function'(this: any) {
+			const dfd = this.async();
+			require.undef('src/has');
+			globalScope.DojoHasEnvironment = {
+				staticFeatures: function () {
+					return {
+						'foo': 1,
+						'bar': 'bar',
+						'baz': false
+					};
+				}
+			};
+			require([ 'src/has' ], dfd.callback((mod: { default: typeof has }) => {
+				const h = mod.default;
+				assert(!('DojoHasEnvironment' in globalScope));
+				assert.strictEqual(h('foo'), 1);
+				assert.strictEqual(h('bar'), 'bar');
+				assert.isFalse(h('baz'));
+			}));
 		}
 	}
 });
