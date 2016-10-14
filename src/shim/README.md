@@ -19,6 +19,23 @@ off of the global `Symbol` object in order to ensure that the correct symbol is 
 
 TODO: Add sections on features of this package
 
+### Data Structures
+
+#### Map
+
+The [`dojo-shim/Map` class](docs/Map.md) is an implementation of the ES2015 Map specification
+without iterators for use in older browsers.
+
+#### WeakMap
+
+The `dojo-shim/WeakMap` class is an implementation of the ES2015 WeakMap specification
+without iterators for use in older browsers. The main difference between WeakMap and Map
+is that WeakMap's keys can only be objects and that the store has a weak reference
+to the key/value pair. This allows for the garbage collector to remove pairs.
+
+Look at [Map](docs/Map.md) for more information on how to use WeakMap.
+
+
 ## How do I use this package?
 
 TODO: Add appropriate usage and instruction guidelines
