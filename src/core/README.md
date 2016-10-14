@@ -101,22 +101,6 @@ inspection and a `finally` method for cleanup actions.
 
 The `dojo-core/async/Task` class is an extension of `dojo-core/Promise` that provides cancelation support.
 
-### Data Structures
-
-#### Map
-
-The [`dojo-core/Map` class](docs/Map.md) is an implementation of the ES2015 Map specification
-without iterators for use in older browsers.
-
-#### WeakMap
-
-The `dojo-core/WeakMap` class is an implementation of the ES2015 WeakMap specification
-without iterators for use in older browsers. The main difference between WeakMap and Map
-is that WeakMap's keys can only be objects and that the store has a weak reference
-to the key/value pair. This allows for the garbage collector to remove pairs.
-
-Look at [Map](docs/Map.md) for more information on how to use WeakMap.
-
 ## How do I contribute?
 
 We appreciate your interest! Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme)
