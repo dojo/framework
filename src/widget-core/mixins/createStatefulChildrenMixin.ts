@@ -136,15 +136,16 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
 	if (!internalState.current) {
 		internalState.current = List<string>();
 	}
-	/* Increment the generation vector. Used when children are replaced asynchronously to ensure
-	 * no newer state is overriden. */
-	const generation = ++internalState.generation;
 
 	const currentChildrenIDs = evt.state.children ? List(evt.state.children) : List<string>();
 	if (currentChildrenIDs.equals(internalState.current)) {
 		/* There are no changes to the children */
 		return;
 	}
+
+	// Increment the generation vector. Used when children are replaced asynchronously to ensure
+	// no newer state is overriden.
+	const generation = ++internalState.generation;
 
 	internalState.current = currentChildrenIDs;
 	const resolvingWidgets: [ Promise<Child>, string, number ][] = [];

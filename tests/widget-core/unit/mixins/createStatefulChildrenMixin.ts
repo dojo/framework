@@ -383,6 +383,63 @@ registerSuite({
 		});
 	},
 
+	'only changed later state takes precedence over previous updates'() {
+		const { get } = widgetRegistry;
+		let registry = Object.create(widgetRegistry);
+
+		const parent = createStatefulChildrenList({
+			registryProvider: {
+				get(type: string) {
+					if (type === 'widgets') {
+						return registry;
+					}
+					throw new Error('Bad registry type');
+
+				}
+			},
+			state: {
+				children: [ 'widget1' ]
+			}
+		});
+
+		let resolveFirst: () => void;
+		let resolveSecond: () => void;
+		return delay().then(() => {
+			registry.get = (id: string) => {
+				return new Promise((resolve) => {
+					const first = get.call(registry, id);
+					resolveFirst = () => resolve(first);
+				});
+			};
+
+			parent.setState({
+				children: [ 'widget2' ]
+			});
+
+			assert.ok(resolveFirst);
+		}).then(() => {
+			registry.get = (id: string) => {
+				return new Promise((resolve) => {
+					const second = get.call(registry, id);
+					resolveSecond = () => resolve(second);
+				});
+			};
+
+			parent.setState({
+				children: [ 'widget2' ]
+			});
+
+			assert.notOk(resolveSecond);
+
+			resolveFirst();
+			return delay();
+		}).then(() => {
+			assert.isTrue(List<Child>([ widget2 ]).equals(parent.children));
+
+			return delay();
+		});
+	},
+
 	'#createChild()': {
 		'creation during mixin'() {
 			return new Promise((resolve) => {
