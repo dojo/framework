@@ -26,14 +26,28 @@ module Shim {
 
 	export class WeakMap<K, V> {
 		private _name: string;
+		private _frozenEntries: Entry<K, V>[];
 
 		constructor(iterable?: ArrayLike<[K, V]> | Iterable<[K, V]>) {
 			Object.defineProperty(this, '_name', {
 				value: generateName()
 			});
+
+			this._frozenEntries = [];
+
 			if (iterable) {
 				forOf(iterable, ([ key, value ]: [K, V]) => this.set(key, value));
 			}
+		}
+
+		private _getFrozenEntryIndex(key: any): number {
+			for (let i = 0; i < this._frozenEntries.length; i++) {
+				if (this._frozenEntries[i].key === key) {
+					return i;
+				}
+			}
+
+			return -1;
 		}
 
 		delete(key: any): boolean {
@@ -42,6 +56,13 @@ module Shim {
 				entry.value = DELETED;
 				return true;
 			}
+
+			const frozenIndex = this._getFrozenEntryIndex(key);
+			if (frozenIndex >= 0) {
+				this._frozenEntries.splice(frozenIndex, 1);
+				return true;
+			}
+
 			return false;
 		}
 
@@ -50,11 +71,25 @@ module Shim {
 			if (entry && entry.key === key && entry.value !== DELETED) {
 				return entry.value;
 			}
+
+			const frozenIndex = this._getFrozenEntryIndex(key);
+			if (frozenIndex >= 0) {
+				return this._frozenEntries[frozenIndex].value;
+			}
 		}
 
 		has(key: any): boolean {
 			const entry: Entry<K, V> = key[this._name];
-			return Boolean(entry && entry.key === key && entry.value !== DELETED);
+			if (Boolean(entry && entry.key === key && entry.value !== DELETED)) {
+				return true;
+			}
+
+			const frozenIndex = this._getFrozenEntryIndex(key);
+			if (frozenIndex >= 0) {
+				return true;
+			}
+
+			return false;
 		}
 
 		set(key: any, value?: any): Shim.WeakMap<K, V> {
@@ -66,9 +101,15 @@ module Shim {
 				entry = Object.create(null, {
 					key: { value: key }
 				});
-				Object.defineProperty(key, this._name, {
-					value: entry
-				});
+
+				if (Object.isFrozen(key)) {
+					this._frozenEntries.push(entry);
+				}
+				else {
+					Object.defineProperty(key, this._name, {
+						value: entry
+					});
+				}
 			}
 			entry.value = value;
 			return this;
