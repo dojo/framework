@@ -1,33 +1,21 @@
 {
-	"version": "1.5.0",
+	"version": "2.0.2",
 	"compilerOptions": {
 		"declaration": false,
 		"module": "umd",
 		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"strictNullChecks": true,
 		"outDir": "_build/",
+		"baseUrl": "node_modules",
 		"removeComments": false,
+		"sourceMap": true,
 		"target": "es5",
-		"experimentalDecorators": true,
-		"inlineSources": true,
-		"inlineSourceMap": true
+		"moduleResolution": "node"
 	},
-	"filesGlob": [
-		"./typings/tsd.d.ts",
+	"include": [
+		"./typings/index.d.ts",
 		"./src/**/*.ts",
 		"./tests/**/*.ts"
-	],
-	"files": [
-		"./typings/tsd.d.ts",
-		"./src/main.ts",
-		"./tests/functional/all.ts",
-		"./tests/intern-local.ts",
-		"./tests/intern.ts",
-		"./tests/typings/chai/chai.d.ts",
-		"./tests/typings/digdug/digdug.d.ts",
-		"./tests/typings/dojo2/dojo.d.ts",
-		"./tests/typings/intern/intern.d.ts",
-		"./tests/typings/leadfoot/leadfoot.d.ts",
-		"./tests/typings/tsd.d.ts",
-		"./tests/unit/all.ts"
 	]
 }
