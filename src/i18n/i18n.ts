@@ -3,6 +3,7 @@ import has from 'dojo-core/has';
 import global from 'dojo-core/global';
 import { Handle } from 'dojo-core/interfaces';
 import { assign } from 'dojo-core/lang';
+import Map from 'dojo-shim/Map';
 import Promise from 'dojo-shim/Promise';
 
 /**
@@ -26,10 +27,6 @@ export interface Bundle<T extends Messages> {
 	 * Note that any message key used in the i18n system MUST have a default specified here.
 	 */
 	readonly messages: T;
-}
-
-interface BundleMap<T extends Messages> {
-	[key: string]: T;
 }
 
 export interface I18n<T extends Messages> {
@@ -90,6 +87,7 @@ export interface Messages {
 const PATH_SEPARATOR: string = has('host-node') ? global.require('path').sep : '/';
 const VALID_PATH_PATTERN = new RegExp(PATH_SEPARATOR + '[^' + PATH_SEPARATOR + ']+$');
 const contextObjects: LocaleContext<LocaleState>[] = [];
+const bundleMap = new Map<string, Map<string, Messages>>();
 let rootLocale: string;
 
 /**
@@ -267,6 +265,32 @@ function validatePath(path: string): void {
 }
 
 /**
+ * Return the cached messages for the specified bundle and locale. If messages have not been previously loaded for the
+ * specified locale, no value will be returned.
+ *
+ * @param bundle
+ * The default bundle that is used to determine where the locale-specific bundles are located.
+ *
+ * @param locale
+ * The locale of the desired messages.
+ *
+ * @return The cached messages object, if it exists.
+ */
+export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale: string): T | void {
+	const { bundlePath, locales } = bundle;
+	const supportedLocales = getSupportedLocales(locale, bundle.locales);
+
+	if (!supportedLocales.length) {
+		return bundle.messages;
+	}
+
+	const cached = bundleMap.get(bundlePath);
+	if (cached) {
+		return cached.get(supportedLocales[supportedLocales.length - 1]) as T;
+	}
+}
+
+/**
  * Load locale-specific messages for the specified bundle and locale.
  *
  * @param bundle
@@ -305,15 +329,23 @@ function i18n<T extends Messages>(bundle: Bundle<T>, context?: any): Promise<T> 
 		});
 	}
 
-	const localePaths = resolveLocalePaths(path, locale, locales);
-
-	if (!localePaths.length) {
-		return Promise.resolve(messages);
+	const cachedMessages = getCachedMessages(bundle, locale);
+	if (cachedMessages) {
+		return Promise.resolve(cachedMessages);
 	}
 
+	const localePaths = resolveLocalePaths(path, locale, locales);
 	return loadLocaleBundles(localePaths).then((bundles: T[]): T => {
-		return bundles.reduce((previous: T, partial: T, i: number): T => {
+		return bundles.reduce((previous: T, partial: T): T => {
 			const localeMessages = assign({}, previous, partial);
+			let localeCache = bundleMap.get(bundlePath);
+
+			if (!localeCache) {
+				localeCache = new Map<string, Messages>();
+				bundleMap.set(bundlePath, localeCache);
+			}
+
+			localeCache.set(locale, Object.freeze(localeMessages));
 			return localeMessages;
 		}, messages);
 	});
@@ -326,6 +358,22 @@ Object.defineProperty(i18n, 'locale', {
 });
 
 export default i18n as I18n<Messages>;
+
+/**
+ * Invalidate the cache for a particular bundle, or invalidate the entire cache. Note that cached messages for all
+ * locales for a given bundle will be cleared.
+ *
+ * @param bundlePath
+ * The optional path of the bundle to invalidate. If no path is provided, then the cache is cleared for all bundles.
+ */
+export function invalidate(bundlePath?: string) {
+	if (bundlePath) {
+		bundleMap.delete(bundlePath);
+	}
+	else {
+		bundleMap.clear();
+	}
+}
 
 /**
  * Change the root locale, and invalidate any registered statefuls.

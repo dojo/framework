@@ -3,7 +3,7 @@ import has from 'dojo-core/has';
 import { Handle } from 'dojo-core/interfaces';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import i18n, { LocaleContext, LocaleState, Messages, switchLocale, systemLocale } from '../../src/i18n';
+import i18n, { getCachedMessages, invalidate, LocaleContext, LocaleState, Messages, switchLocale, systemLocale } from '../../src/i18n';
 import bundle from '../support/mocks/common/main';
 
 registerSuite({
@@ -11,6 +11,7 @@ registerSuite({
 
 	afterEach() {
 		switchLocale('');
+		invalidate();
 	},
 
 	systemLocale() {
@@ -25,6 +26,35 @@ registerSuite({
 		}
 
 		assert.strictEqual(systemLocale, expected);
+	},
+
+	getCachedMessages: {
+		'assert unregistered locale'() {
+			assert.isUndefined(getCachedMessages(bundle, 'ar'));
+		},
+
+		'assert supported locale'() {
+			return i18n(bundle, 'ar').then(() => {
+				assert.deepEqual(getCachedMessages(bundle, 'ar'), {
+					hello: 'السلام عليكم',
+					helloReply: 'و عليكم السام',
+					goodbye: 'مع السلامة'
+				}, 'Locale messages can be retrieved with a bundle object.');
+			});
+		},
+
+		'assert unsupported locale'(this: any) {
+			const cached = getCachedMessages(bundle, 'bogus-locale');
+			assert.deepEqual(cached, bundle.messages, 'Default messages returned for unsupported locale.');
+		},
+
+		'assert most specific supported locale returned'() {
+			return i18n(bundle, 'ar').then(() => {
+				const cached = getCachedMessages(bundle, 'ar');
+				assert.deepEqual(getCachedMessages(bundle, 'ar-IR'), cached,
+					'Messages are returned for the most specific supported locale.');
+			});
+		}
 	},
 
 	i18n: {
@@ -133,6 +163,42 @@ registerSuite({
 					helloReply: 'Hello',
 					goodbye: 'Goodbye'
 				}, 'Default messages returned when bundle provides no locales.');
+			});
+		},
+
+		'assert messages cached'() {
+			return i18n(bundle, 'ar-JO').then(function () {
+				return i18n(bundle, 'ar-JO');
+			}).then((messages: Messages) => {
+				const cached = getCachedMessages(bundle, 'ar-JO');
+
+				assert.strictEqual(cached, messages, 'Message dictionaries are cached.');
+			});
+		},
+
+		'assert message dictionaries are frozen'() {
+			return i18n(bundle, 'ar-JO').then(function () {
+				const cached = getCachedMessages(bundle, 'ar-JO');
+
+				assert.throws(() => {
+					cached['hello'] = 'Hello';
+				});
+			});
+		}
+	},
+
+	invalidate: {
+		'assert with a bundle path'() {
+			return i18n(bundle, 'ar').then((messages: Messages) => {
+				invalidate(bundle.bundlePath);
+				assert.isUndefined(getCachedMessages(bundle, 'ar'), 'The cache is invalidated for the specified bundle.');
+			});
+		},
+
+		'assert without a bundle path'() {
+			return i18n(bundle, 'ar').then((messages: Messages) => {
+				invalidate();
+				assert.isUndefined(getCachedMessages(bundle, 'ar'), 'The cache is invalidated for all bundles.');
 			});
 		}
 	},

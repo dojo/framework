@@ -68,6 +68,39 @@ i18n(bundle, context).then(function (messages: Messages) {
 
 If an unsupported locale is passed to `i18n`, then the default messages are returned. Further, any messages not provided by the locale-specific bundle will also fall back to their defaults. As such, the default bundle should contain _all_ message keys used by any of the locale-specific bundles.
 
+Once locale dictionaries for a bundle have been loaded, they are cached and can be accessed synchronously via `getCachedMessages`:
+
+```
+const messages = getCachedMessages(bundle, 'fr');
+console.log(messages.hello); // "Bonjour"
+console.log(messages.goodbye); // "Au revoir"
+```
+
+`getCachedMessages` will look up the bundle's supported `locales` to determine whether the default messages should be returned. Locales are also normalized to their most specific messages. For example, if the 'fr' locale is supported, but 'fr-CA' is not, `getCachedMessages` will return the messages for the 'fr' locale:
+
+
+```
+const frenchMessages = getCachedMessages(bundle, 'fr-CA');
+console.log(frenchMessages.hello); // "Bonjour"
+console.log(frenchMessages.goodbye); // "Au revoir"
+
+const madeUpLocaleMessages = getCachedMessages(bundle, 'made-up-locale');
+console.log(madeUpLocaleMessages.hello); // "Hello"
+console.log(madeUpLocaleMessages.goodbye); // "Goodbye"
+```
+
+If need be, bundle caches can be cleared with `invalidate`. If called with a bundle path, only the messages for that particular bundle are removed from the cache. Otherwise, all messages are cleared:
+
+```
+import i18n from 'dojo-i18n/main';
+import bundle from 'nls/common';
+
+i18n(bundle, 'ar').then(() => {
+	invalidate(bundle.bundlePath);
+	console.log(getCachedMessages(bundle, 'ar')); // undefined
+});
+```
+
 ### Determining the Current Locale
 
 The current locale can be accessed via the read-only property `i18n.locale`, which will always be either the locale set via `switchLocale` (see below) or the `systemLocale`. `systemLocale` is always set to the user's default locale.

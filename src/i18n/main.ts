@@ -1,5 +1,7 @@
 import i18n, {
 	Bundle,
+	getCachedMessages,
+	invalidate,
 	LocaleContext,
 	Messages,
 	switchLocale,
@@ -10,6 +12,8 @@ export default i18n;
 
 export {
 	Bundle,
+	getCachedMessages,
+	invalidate,
 	LocaleContext,
 	Messages,
 	switchLocale,
