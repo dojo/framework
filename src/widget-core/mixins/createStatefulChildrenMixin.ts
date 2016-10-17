@@ -83,7 +83,7 @@ interface ManagementState {
 	/**
 	 * A map of children to widget instances, so they don't have to be requested subsequently from the registry
 	 */
-	cache?: Map<string, Child>;
+	cache?: Map<string | symbol, Child>;
 
 	/**
 	 * The current set of children widgets
@@ -127,8 +127,10 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
 
 	/* Assume this function cannot be called without the widget being in the management map */
 	const internalState = managementMap.get(parent);
+
 	/* Initialize cache */
-	const { cache = new Map<string, Child>() } = internalState;
+	const { cache = new Map<string | symbol, Child>() } = internalState;
+
 	if (!internalState.cache) {
 		internalState.cache = cache;
 	}
@@ -170,8 +172,13 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
 				}
 			}
 			else {
+				const widgetPromise = internalState.registry.has(id).then((exists) => {
+					if (exists) {
+						return internalState.registry.get(id);
+					}
+				});
 				/* Tuple of Promise, child ID, position in child list */
-				resolvingWidgets.push([ internalState.registry.get(id), id, key ]);
+				resolvingWidgets.push([ widgetPromise, id, key ]);
 			}
 		}
 	});
@@ -189,13 +196,25 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
 
 				widgets.forEach((widget, idx) => {
 					const [ , id, key ] = resolvingWidgets[idx];
-					if (childrenIsList) {
-						childrenList[key] = widget;
+					if (widget) {
+						if (childrenIsList) {
+							childrenList[key] = widget;
+						}
+						else {
+							childrenMap[id] = widget;
+						}
+						cache.set(id, widget);
+						widget.own({
+							destroy() {
+								cache.delete(id);
+							}
+						});
 					}
 					else {
-						childrenMap[id] = widget;
+						if (childrenIsList) {
+							childrenList.splice(key, 1);
+						}
 					}
-					cache.set(id, widget);
 				});
 				/* Some parents have a List, some have a Map, so setting them varies */
 				parent.children = isList(parent.children) ? List(childrenList) : ImmutableMap<string, Child>(childrenMap);

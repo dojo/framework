@@ -60,6 +60,9 @@ const widgetRegistry = {
 	},
 	create(factory: ComposeFactory<any, any>, options?: any): Promise<[ string, Child ]> {
 		return factory(options);
+	},
+	has(id: string | symbol) {
+		return Promise.resolve(true);
 	}
 };
 

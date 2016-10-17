@@ -5,48 +5,15 @@ import createRenderMixin, { RenderMixin, RenderMixinOptions, RenderMixinState } 
 import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
 import { Child, RegistryProvider } from '../../../src/mixins/interfaces';
-import compose, { ComposeFactory } from 'dojo-compose/compose';
+import compose from 'dojo-compose/compose';
 import createDestroyable from 'dojo-compose/mixins/createDestroyable';
 import { h } from 'maquette';
+import widgetRegistry, { widgetMap } from '../../support/mockRegistryProvider';
 
-const widget1 = createRenderMixin();
-const widget2 = createRenderMixin();
-const widget3 = createRenderMixin();
-const widget4 = createRenderMixin();
-
-const widgetMap: { [id: string]: Child } = {
-	widget1,
-	widget2,
-	widget3,
-	widget4
-};
-
-let widgetUID = 5;
-
-const widgetRegistry = {
-	stack: <(string | symbol)[]> [],
-	get(id: string | symbol): Promise<RenderMixin<RenderMixinState>> {
-		widgetRegistry.stack.push(id);
-		return Promise.resolve(widgetMap[id]);
-	},
-	identify(value: RenderMixin<RenderMixinState>): string | symbol {
-		switch (value) {
-			case widget1:
-				return 'widget1';
-			case widget2:
-				return 'widget2';
-			case widget3:
-				return 'widget3';
-			case widget4:
-				return 'widget4';
-			default:
-				throw new Error('Cannot identify value');
-		}
-	},
-	create<C extends RenderMixin<RenderMixinState>>(factory: ComposeFactory<C, any>, options?: any): Promise<[string | symbol, C]> {;
-		return Promise.resolve<[ string, C ]>([options && options.id || `widget${widgetUID++}`, factory(options)]);
-	}
-};
+let widget1: Child;
+let widget2: Child;
+let widget3: Child;
+let widget4: Child;
 
 const registryProvider: RegistryProvider<Child> = {
 	get(type: string) {
@@ -75,7 +42,11 @@ registerSuite({
 	name: 'mixins/createStatefulChildrenMixin',
 
 	beforeEach() {
-		widgetRegistry.stack = [];
+		widgetRegistry.reset();
+		widget1 = <Child> widgetMap.get('widget1');
+		widget2 = <Child> widgetMap.get('widget2');
+		widget3 = <Child> widgetMap.get('widget3');
+		widget4 = <Child> widgetMap.get('widget4');
 	},
 
 	'List children': {
@@ -123,6 +94,23 @@ registerSuite({
 
 					parent.setState({ children: [ 'widget2', 'widget1' ] });
 					assert.isTrue(List<Child>([ widget2, widget1 ]).equals(parent.children), 'should synchronously update children when cached');
+				}), 100);
+			}, 100);
+		},
+		'cached widgets should be removed on destroy'(this: any) {
+			const dfd = this.async();
+			const parent = createStatefulChildrenList({
+				registryProvider
+			});
+
+			parent.setState({ children: [ 'widget1', 'widget2' ] });
+
+			setTimeout(() => {
+				widget2.destroy();
+				parent.setState({ children: [ 'widget2', 'widget1' ] });
+
+				setTimeout(dfd.callback(() => {
+					assert.isTrue(List<Child>([ widget1 ]).equals(parent.children), 'Should not');
 				}), 100);
 			}, 100);
 		},
@@ -324,7 +312,7 @@ registerSuite({
 	},
 
 	'latest state determines the children'() {
-		const { get } = widgetRegistry;
+		const { has } = widgetRegistry;
 		let registry = Object.create(widgetRegistry);
 
 		const parent = createStatefulChildrenList({
@@ -345,9 +333,9 @@ registerSuite({
 		let resolveFirst: () => void;
 		let resolveSecond: () => void;
 		return delay().then(() => {
-			registry.get = (id: string) => {
+			registry.has = (id: string) => {
 				return new Promise((resolve) => {
-					const first = get.call(registry, id);
+					const first = has.call(registry, id);
 					resolveFirst = () => resolve(first);
 				});
 			};
@@ -358,9 +346,9 @@ registerSuite({
 
 			assert.ok(resolveFirst);
 		}).then(() => {
-			registry.get = (id: string) => {
+			registry.has = (id: string) => {
 				return new Promise((resolve) => {
-					const second = get.call(registry, id);
+					const second = has.call(registry, id);
 					resolveSecond = () => resolve(second);
 				});
 			};
@@ -384,7 +372,7 @@ registerSuite({
 	},
 
 	'only changed later state takes precedence over previous updates'() {
-		const { get } = widgetRegistry;
+		const { has } = widgetRegistry;
 		let registry = Object.create(widgetRegistry);
 
 		const parent = createStatefulChildrenList({
@@ -405,9 +393,9 @@ registerSuite({
 		let resolveFirst: () => void;
 		let resolveSecond: () => void;
 		return delay().then(() => {
-			registry.get = (id: string) => {
+			registry.has = (id: string) => {
 				return new Promise((resolve) => {
-					const first = get.call(registry, id);
+					const first = has.call(registry, id);
 					resolveFirst = () => resolve(first);
 				});
 			};
@@ -418,9 +406,9 @@ registerSuite({
 
 			assert.ok(resolveFirst);
 		}).then(() => {
-			registry.get = (id: string) => {
+			registry.has = (id: string) => {
 				return new Promise((resolve) => {
-					const second = get.call(registry, id);
+					const second = has.call(registry, id);
 					resolveSecond = () => resolve(second);
 				});
 			};

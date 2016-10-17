@@ -52,6 +52,15 @@ export interface CreatableRegistry<T extends Child> extends Registry<T> {
 	 * @param options Any options that should be passed to the factory when realizing the child
 	 */
 	create<U extends T, O>(factory: ComposeFactory<U, O>, options?: O): Promise<[ string, U ]>;
+
+	/**
+	 * Check if the registry constains a widget with the identifier provided.
+	 *
+	 * @param id Identifier for the instance to check whether exists in the registry.
+	 * @return A promise for the result of the has check. The promise resolves to `true` if
+	 *   an instance is found and `false` otherwise.
+	 */
+	has(id: string | symbol): Promise<boolean>;
 }
 
 /**
