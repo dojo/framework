@@ -1,16 +1,14 @@
 {
-	"version": "2.0.2",
+	"version": "2.0.0",
 	"compilerOptions": {
-		"baseUrl": "node_modules",
 		"declaration": false,
 		"module": "umd",
-		"moduleResolution": "classic",
+		"moduleResolution": "node",
 		"noImplicitAny": true,
 		"noImplicitThis": true,
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
-		"strictNullChecks": true,
 		"target": "es5"
 	},
 	"include": [

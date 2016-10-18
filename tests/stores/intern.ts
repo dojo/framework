@@ -12,7 +12,7 @@ export const proxyUrl = 'http://localhost:9000/';
 export const capabilities = {
 	'browserstack.debug': false,
 	project: 'Dojo 2',
-	name: 'dojo-stores'
+	name: 'dojo-<< package-name >>'
 };
 
 // Browsers to run integration testing against. Note that version numbers must be strings if used with Sauce
@@ -32,7 +32,7 @@ export const maxConcurrency = 2;
 export const tunnel = 'BrowserStackTunnel';
 
 // Support running unit tests from a web server that isn't the intern proxy
-export const initialBaseUrl: string | null = (function () {
+export const initialBaseUrl: string = (function () {
 	if (typeof location !== 'undefined' && location.pathname.indexOf('__intern/') > -1) {
 		return '/';
 	}
@@ -53,12 +53,13 @@ export const loaderOptions = {
 	packages: [
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' },
+		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
 		{ name: 'dojo-compose', location: 'node_modules/dojo-compose' },
 		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
 		{ name: 'dojo-has', location: 'node_modules/dojo-has' },
 		{ name: 'dojo-shim', location: 'node_modules/dojo-shim' },
-		{ name: 'immutable', location: 'node_modules/immutable/dist', main: 'immutable' },
-		{ name: 'rxjs', location: 'node_modules/@reactivex/rxjs/dist/amd' }
+		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' },
+		{ name: 'rxjs', location: 'node_modules/@reactivex/rxjs/dist/amd', main: 'Rx.js' }
 	]
 };
 

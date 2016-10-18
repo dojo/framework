@@ -1,2 +1,14 @@
-import './main';
-import './createMemoryStore';
+import './patch/Patch';
+import './patch/Operation';
+import './patch/JsonPointer';
+import './query/filter';
+import './query/sort';
+import './query/StoreRange';
+import './query/createQuery';
+import './storage/createInMemoryStorage';
+import './store/createStore';
+import './store/createSubcollectionStore';
+import './store/mixins/createObservableStoreMixin';
+import './store/mixins/createQueryMixin';
+import './store/mixins/createTrackableMixin';
+import './store/mixins/createTransactionMixin';
