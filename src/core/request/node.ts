@@ -15,6 +15,8 @@ import { generateRequestUrl } from './util';
 // TODO: Where should the dojo version come from? It used to be kernel, but we don't have that.
 let version = '2.0.0-pre';
 
+const DEFAULT_REDIRECT_LIMIT = 15;
+
 interface Options {
 	agent?: any;
 	auth?: string;
@@ -62,6 +64,41 @@ export interface NodeRequestOptions<T> extends RequestOptions {
 	streamData?: boolean;
 	streamEncoding?: string;
 	streamTarget?: WritableStream<T>;
+	redirectOptions?: {
+		limit?: number;
+		count?: number;
+		keepOriginalMethod?: boolean;
+	};
+}
+
+function redirect<T>(resolve: (p?: any) => void, reject: (_?: Error) => void, url: string, options: NodeRequestOptions<T>): boolean {
+	if (!options.redirectOptions) {
+		options.redirectOptions = {};
+	}
+
+	const { limit: redirectLimit = DEFAULT_REDIRECT_LIMIT } = options.redirectOptions;
+	const { count: redirectCount = 0 } = options.redirectOptions;
+	const { followRedirects = true } = options;
+
+	if (!followRedirects) {
+		return false;
+	}
+
+	if (!url) {
+		reject(new Error('asked to redirect but no location header was found'));
+		return true;
+	}
+
+	if (redirectCount > redirectLimit) {
+		reject(new Error(`too many redirects, limit reached at ${redirectLimit}`));
+		return true;
+	}
+
+	options.redirectOptions.count = redirectCount + 1;
+
+	resolve(node(url, options));
+
+	return true;
 }
 
 export default function node<T>(url: string, options: NodeRequestOptions<T> = {}): ResponsePromise<T> {
@@ -144,17 +181,93 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 
 			// Redirection handling defaults to true in order to harmonise with the XHR provider, which will always
 			// follow redirects
-			// TODO: This redirect code is not 100% correct according to the RFC; needs to handle redirect loops and
-			// restrict/modify certain redirects
 			if (
 				response.statusCode >= 300 &&
-				response.statusCode < 400 &&
-				response.statusCode !== 304 &&
-				options.followRedirects !== false &&
-				nativeResponse.headers.location
+				response.statusCode < 400
 			) {
-				resolve(node(nativeResponse.headers.location, options));
-				return;
+				const redirectOptions = options.redirectOptions || {};
+				const newOptions = Object.create(options);
+
+				switch (response.statusCode) {
+					case 300:
+						/**
+						 * Note about 300 redirects. RFC 2616 doesn't specify what to do with them, it is up to the client to "pick
+						 * the right one".  We're picking like Chrome does, just don't pick any.
+						 */
+						break;
+
+					case 301:
+					case 302:
+						/**
+						 * RFC 2616 says,
+						 *
+						 *     If the 301 status code is received in response to a request other
+						 *     than GET or HEAD, the user agent MUST NOT automatically redirect the
+						 *     request unless it can be confirmed by the user, since this might
+						 *       change the conditions under which the request was issued.
+						 *
+						 *     Note: When automatically redirecting a POST request after
+						 *     receiving a 301 status code, some existing HTTP/1.0 user agents
+						 *     will erroneously change it into a GET request.
+						 *
+						 * We're going to be one of those erroneous agents, to prevent the request from failing..
+						 */
+						if ((requestOptions.method !== 'GET' && requestOptions.method !== 'HEAD') && !redirectOptions.keepOriginalMethod) {
+							newOptions.method = 'GET';
+						}
+
+						if (redirect<T>(resolve, reject, nativeResponse.headers.location, newOptions)) {
+							return;
+						}
+						break;
+
+					case 303:
+
+						/**
+						 * The response to the request can be found under a different URI and
+						 * SHOULD be retrieved using a GET method on that resource.
+						 */
+						if (requestOptions.method !== 'GET') {
+							newOptions.method = 'GET';
+						}
+
+						if (redirect<T>(resolve, reject, nativeResponse.headers.location, newOptions)) {
+							return;
+						}
+						break;
+
+					case 304:
+						// do nothing so this can fall through and return the response as normal. Nothing more can
+						// be done for 304
+						break;
+
+					case 305:
+						if (!nativeResponse.headers.location) {
+							reject(new Error('expected Location header to contain a proxy url'));
+						} else {
+							newOptions.proxy = nativeResponse.headers.location;
+							if (redirect<T>(resolve, reject, requestUrl, newOptions)) {
+								return;
+							}
+						}
+						break;
+
+					case 307:
+						/**
+						 *  If the 307 status code is received in response to a request other
+						 *  than GET or HEAD, the user agent MUST NOT automatically redirect the
+						 *  request unless it can be confirmed by the user, since this might
+						 *  change the conditions under which the request was issued.
+						 */
+						if (redirect<T>(resolve, reject, nativeResponse.headers.location, newOptions)) {
+							return;
+						}
+						break;
+
+					default:
+						reject(new Error('unhandled redirect status ' + response.statusCode));
+						return;
+				}
 			}
 
 			options.streamEncoding && nativeResponse.setEncoding(options.streamEncoding);

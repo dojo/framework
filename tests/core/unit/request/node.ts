@@ -1,22 +1,195 @@
 import BaseStringSource from '../streams/helpers/BaseStringSource';
-import * as http from 'http';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as DojoPromise from 'intern/dojo/Promise';
 import Promise from 'dojo-shim/Promise';
 import RequestTimeoutError from 'src/request/errors/RequestTimeoutError';
-import { default as nodeRequest } from 'src/request/node';
+import { default as nodeRequest, NodeRequestOptions } from 'src/request/node';
 import ArraySink from 'src/streams/ArraySink';
 import ReadableStream from 'src/streams/ReadableStream';
 import ReadableStreamController from 'src/streams/ReadableStreamController';
 import WritableStream from 'src/streams/WritableStream';
-import * as url from 'url';
+import { createServer } from 'http';
+import { parse } from 'url';
 
 const serverPort = 8124;
 const serverUrl = 'http://localhost:' + serverPort;
 let server: any;
-let request: any;
+let proxy: any;
 let requestData: string;
+
+interface DummyResponse {
+	body?: string;
+	headers?: { [key: string]: string };
+	statusCode?: number;
+}
+
+interface RedirectTestData {
+	title?: string;
+	method?: string;
+	url: string;
+	expectedPage?: string;
+	expectedCount?: number;
+	expectedMethod?: string;
+	expectedData?: any;
+	expectedToError?: boolean;
+	followRedirects?: boolean;
+	callback?: (_: any) => void;
+	keepOriginalMethod?: boolean;
+}
+
+const responseData: { [url: string]: DummyResponse } = {
+	'foo.json': {
+		body: JSON.stringify({ foo: 'bar' })
+	},
+	invalidJson: {
+		body: '<not>JSON</not>'
+	},
+	'redirect-success': {
+		body: JSON.stringify({ success: true })
+	},
+	'300-redirect': {
+		statusCode: 300,
+		body: JSON.stringify('beginning to redirect'),
+		headers: {
+			'Location': getRequestUrl('redirect-success')
+		}
+	},
+	'301-redirect': {
+		statusCode: 301,
+		body: JSON.stringify('beginning to redirect'),
+		headers: {
+			'Location': getRequestUrl('redirect-success')
+		}
+	},
+	'302-redirect': {
+		statusCode: 302,
+		body: JSON.stringify('beginning to redirect'),
+		headers: {
+			'Location': getRequestUrl('redirect-success')
+		}
+	},
+	'303-redirect': {
+		statusCode: 303,
+		body: JSON.stringify('beginning to redirect'),
+		headers: {
+			'Location': getRequestUrl('redirect-success')
+		}
+	},
+	'304-redirect': {
+		statusCode: 304,
+		body: JSON.stringify('beginning to redirect'),
+		headers: {
+			'Location': getRequestUrl('redirect-success')
+		}
+	},
+	'305-redirect': {
+		statusCode: 305,
+		body: JSON.stringify('beginning to redirect'),
+		headers: {
+			'Location': 'http://localhost:1337'
+		}
+	},
+	'305-redirect-broken': {
+		statusCode: 305,
+		body: JSON.stringify('beginning to redirect')
+	},
+	'306-redirect': {
+		statusCode: 306,
+		body: JSON.stringify('beginning to redirect'),
+		headers: {
+			'Location': getRequestUrl('redirect-success')
+		}
+	},
+	'307-redirect': {
+		statusCode: 307,
+		body: JSON.stringify('beginning to redirect'),
+		headers: {
+			'Location': getRequestUrl('redirect-success')
+		}
+	},
+	'infinite-redirect': {
+		statusCode: 301,
+		body: JSON.stringify('beginning to redirect'),
+		headers: {
+			'Location': getRequestUrl('infinite-redirect')
+		}
+	},
+	'broken-redirect': {
+		statusCode: 301,
+		body: JSON.stringify('beginning to redirect'),
+		headers: {}
+	}
+};
+
+function buildRedirectTests(methods: RedirectTestData[]) {
+	let tests: { [key: string]: () => void } = {};
+
+	methods.forEach((details) => {
+		const method = details.method;
+		const { keepOriginalMethod = false } = details;
+		const url = getRequestUrl(details.url);
+		const expectedMethod = details.expectedMethod || method;
+		const expectedPage = details.expectedPage ? getRequestUrl(details.expectedPage) : url;
+		const followRedirects = (details.followRedirects === undefined) ? true : details.followRedirects;
+
+		let title = details.title || (method + ' ' + (keepOriginalMethod ? 'w/' : 'w/o') + ' keepOriginalMethod');
+
+		tests[ title ] = () => {
+
+			let error: any = null;
+
+			return nodeRequest(getRequestUrl(details.url), {
+				responseType: 'json',
+				method: method,
+				followRedirects: followRedirects,
+				redirectOptions: {
+					keepOriginalMethod
+				}
+			})
+			.then((response) => {
+				if (details.callback) {
+					details.callback(response);
+				}
+
+				assert.deepPropertyVal(response, 'requestOptions.method', expectedMethod);
+				assert.equal(response.url, expectedPage);
+
+				if (details.expectedCount !== undefined) {
+					const { redirectOptions: { count: redirectCount = 0 } = {} } = <NodeRequestOptions<string>> response.requestOptions;
+
+					assert.equal(redirectCount, details.expectedCount);
+				}
+
+				if (details.expectedData !== undefined) {
+					if (response.data === null) {
+						assert.isNull(details.expectedData);
+					} else {
+						let data = JSON.parse(response.data.toString());
+						assert.deepEqual(data, details.expectedData);
+					}
+				}
+			})
+			.catch((e) => {
+				error = e;
+			})
+			.finally(() => {
+				if (details.expectedToError) {
+					assert.isNotNull(error, 'Expected an error to occur but none did');
+				} else if (error) {
+					throw error;
+				}
+			});
+		};
+	});
+
+	return tests;
+};
+
+function getResponseData(request: any): DummyResponse {
+	const urlInfo = parse(request.url, true);
+	return responseData[ urlInfo.query.dataKey ] || {};
+}
 
 function getRequestUrl(dataKey: string): string {
 	return serverUrl + '?dataKey=' + dataKey;
@@ -41,47 +214,61 @@ registerSuite({
 
 	setup() {
 		const dfd = new DojoPromise.Deferred();
-		const responseData: { [name: string]: any } = {
-			'foo.json': JSON.stringify({ foo: 'bar' }),
-			'redirected': 'redirected',
-			invalidJson: '<not>JSON</not>'
-		};
 
-		server = http.createServer(function (_request, response) {
-			const urlInfo = url.parse(<string> _request.url, true);
-			const dataKey: string = urlInfo.query.dataKey;
-			request = _request;
+		server = createServer(function (request, response) {
+			const { statusCode = 200, headers = {}, body = '{}' } = getResponseData(request);
 
 			const data: string[] = [];
 			request.on('data', function (chunk: any) {
 				data.push(chunk.toString('utf8'));
 			});
+
 			request.on('end', function () {
-				if (dataKey === 'redirect') {
-					response.writeHead(302, {
-						location: getRequestUrl('redirected')
-					});
-					response.end();
+				requestData = data.length ? JSON.parse(data.join()) : null;
+
+				if (!('Content-Type' in headers)) {
+					headers[ 'Content-Type' ] = 'application/json';
 				}
-				else {
-					const body = responseData[dataKey] || null;
-					requestData = data.length ? JSON.parse(data.join()) : null;
-					response.writeHead(200, {
-						'Content-Type': 'application/json'
-					});
-					response.end(body);
-				}
+
+				response.writeHead(statusCode, headers);
+
+				response.write(new Buffer(body, 'utf8'));
+
+				response.end();
 			});
 		});
 
 		server.on('listening', dfd.resolve);
 		server.listen(serverPort);
 
+		proxy = createServer((request, response) => {
+			const statusCode = 200,
+				headers: any = {},
+				body = '{}';
+
+			requestData = '';
+
+			if (!('Content-Type' in headers)) {
+				headers[ 'Content-Type' ] = 'application/json';
+			}
+
+			headers[ 'Proxy-agent' ] = 'nodejs';
+
+			response.writeHead(statusCode, headers);
+
+			response.write(new Buffer(body, 'utf8'));
+
+			response.end();
+		});
+
+		proxy.listen(1337);
+
 		return dfd.promise;
 	},
 
 	teardown() {
 		server.close();
+		proxy.close();
 	},
 
 	'request options': {
@@ -348,15 +535,393 @@ registerSuite({
 	},
 
 	'status codes': {
-		'302'(this: any): void {
-			const dfd = this.async();
-			nodeRequest(getRequestUrl('redirect'), { streamEncoding: 'utf8' })
-				.then(
-					dfd.callback(function (response: any): void {
-						assert.strictEqual(response.data, 'redirected');
-					}),
-					dfd.reject.bind(dfd)
-				);
+		'Redirects': {
+			'300 Multiple Choices': buildRedirectTests([
+				{
+					method: 'GET',
+					url: '300-redirect',
+					expectedCount: 0
+				},
+				{
+					method: 'POST',
+					url: '300-redirect',
+					expectedCount: 0
+				},
+				{
+					method: 'PUT',
+					url: '300-redirect',
+					expectedCount: 0
+				},
+				{
+					method: 'DELETE',
+					url: '300-redirect',
+					expectedCount: 0
+				},
+				{
+					method: 'HEAD',
+					url: '300-redirect',
+					expectedCount: 0
+				}
+			]),
+			'301 Moved Permanently': buildRedirectTests([
+				{
+					method: 'GET',
+					url: '301-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedData: { success: true }
+				},
+				{
+					method: 'HEAD',
+					url: '301-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1
+				},
+				{
+					method: 'POST',
+					url: '301-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'POST',
+					url: '301-redirect',
+					keepOriginalMethod: true,
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'POST',
+					expectedData: { success: true }
+				},
+				{
+					method: 'DELETE',
+					url: '301-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'DELETE',
+					url: '301-redirect',
+					keepOriginalMethod: true,
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'DELETE',
+					expectedData: { success: true }
+				},
+				{
+					method: 'PUT',
+					url: '301-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'PUT',
+					url: '301-redirect',
+					keepOriginalMethod: true,
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'PUT',
+					expectedData: { success: true }
+				}
+			]),
+
+			'302 Found': buildRedirectTests([
+				{
+					method: 'GET',
+					url: '302-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedData: { success: true }
+				},
+				{
+					method: 'HEAD',
+					url: '302-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1
+				},
+				{
+					method: 'POST',
+					url: '302-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'POST',
+					url: '302-redirect',
+					keepOriginalMethod: true,
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'POST',
+					expectedData: { success: true }
+				},
+				{
+					method: 'DELETE',
+					url: '302-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'DELETE',
+					url: '302-redirect',
+					keepOriginalMethod: true,
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'DELETE',
+					expectedData: { success: true }
+				},
+				{
+					method: 'PUT',
+					url: '302-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'PUT',
+					url: '302-redirect',
+					keepOriginalMethod: true,
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'PUT',
+					expectedData: { success: true }
+				}
+			]),
+
+			'303 See Other': buildRedirectTests([
+				{
+					method: 'GET',
+					url: '303-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedData: { success: true }
+				},
+				{
+					method: 'HEAD',
+					url: '303-redirect',
+					expectedPage: 'redirect-success',
+					expectedMethod: 'GET',
+					expectedCount: 1
+				},
+				{
+					method: 'POST',
+					url: '303-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'POST',
+					url: '303-redirect',
+					keepOriginalMethod: true,
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'DELETE',
+					url: '303-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'DELETE',
+					url: '303-redirect',
+					keepOriginalMethod: true,
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'PUT',
+					url: '303-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'PUT',
+					url: '303-redirect',
+					keepOriginalMethod: true,
+					expectedPage: 'redirect-success',
+					expectedCount: 1,
+					expectedMethod: 'GET',
+					expectedData: { success: true }
+				},
+				{
+					method: 'GET',
+					title: 'Without redirect following',
+					url: '303-redirect',
+					expectedPage: '303-redirect',
+					expectedCount: 0,
+					expectedMethod: 'GET',
+					followRedirects: false
+				}
+			]),
+
+			'304 Not Modified': buildRedirectTests([
+				{
+					method: 'GET',
+					url: '304-redirect',
+					expectedPage: '304-redirect',
+					expectedCount: 0
+				},
+				{
+					method: 'HEAD',
+					url: '304-redirect',
+					expectedPage: '304-redirect',
+					expectedCount: 0
+				},
+				{
+					method: 'POST',
+					url: '304-redirect',
+					expectedPage: '304-redirect',
+					expectedCount: 0
+
+				},
+				{
+					method: 'PUT',
+					url: '304-redirect',
+					expectedPage: '304-redirect',
+					expectedCount: 0
+				},
+				{
+					method: 'DELETE',
+					url: '304-redirect',
+					expectedPage: '304-redirect',
+					expectedCount: 0
+				}
+			]),
+
+			'305 Use Proxy': buildRedirectTests([
+				{
+					method: 'GET',
+					url: '305-redirect',
+					expectedCount: 1,
+					callback: (response) => {
+						assert.equal(response.nativeResponse.headers[ 'proxy-agent' ], 'nodejs');
+					}
+				},
+				{
+					title: 'Without a location header',
+					method: 'GET',
+					url: '305-redirect-broken',
+					expectedToError: true
+				},
+				{
+					method: 'GET',
+					title: 'Without redirect following',
+					url: '305-redirect',
+					expectedPage: '305-redirect',
+					expectedCount: 0,
+					expectedMethod: 'GET',
+					followRedirects: false
+				}
+			]),
+
+			'306 Unused': buildRedirectTests([
+				{
+					method: 'GET',
+					url: '306-redirect',
+					expectedToError: true
+				}
+			]),
+
+			'307 Temporary Redirect': buildRedirectTests([
+				{
+					method: 'GET',
+					url: '307-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1
+				},
+				{
+					method: 'HEAD',
+					url: '307-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1
+				},
+				{
+					method: 'POST',
+					url: '307-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1
+
+				},
+				{
+					method: 'PUT',
+					url: '307-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1
+				},
+				{
+					method: 'DELETE',
+					url: '307-redirect',
+					expectedPage: 'redirect-success',
+					expectedCount: 1
+				},
+				{
+					method: 'GET',
+					title: 'Without redirect following',
+					url: '307-redirect',
+					expectedPage: '307-redirect',
+					expectedCount: 0,
+					expectedMethod: 'GET',
+					followRedirects: false
+				}
+			]),
+
+			'Infinite Redirects': function () {
+				let didError = false;
+
+				return nodeRequest(getRequestUrl('infinite-redirect'), {
+					redirectOptions: {
+						limit: 10
+					}
+				}).then((response) => {
+				}).catch(() => {
+					didError = true;
+				}).finally(() => {
+					assert.isTrue(didError, 'Expected an error to occur but none did');
+				});
+			},
+
+			'Sensible Defaults': function () {
+				return nodeRequest(getRequestUrl('301-redirect'), {}).then((response) => {
+					assert.equal(response.url, getRequestUrl('redirect-success'));
+				});
+			},
+
+			'Redirect with no header': buildRedirectTests([
+				{
+					method: 'GET',
+					url: 'broken-redirect',
+					expectedToError: true
+				}
+			]),
+
+			'Can turn off follow redirects': buildRedirectTests([
+				{
+					method: 'GET',
+					url: '301-redirect',
+					expectedCount: 0,
+					followRedirects: false
+				}
+			])
 		}
 	}
 });
