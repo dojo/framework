@@ -4,7 +4,7 @@ import { beforeEach, suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 import { stub, spy } from 'sinon';
 
-import createRoute from '../../src/createRoute';
+import createRoute, { Route } from '../../src/createRoute';
 import createRouter, { DispatchResult, ErrorEvent, NavigationStartEvent } from '../../src/createRouter';
 import createMemoryHistory from '../../src/history/createMemoryHistory';
 import { DefaultParameters, Context, Request, Parameters } from '../../src/interfaces';
@@ -337,6 +337,31 @@ suite('createRouter', () => {
 		return router.dispatch({} as Context, '/foo').then(() => {
 			assert.deepEqual(order, ['first', 'second']);
 		});
+	});
+
+	test('routes can only be appended once', () => {
+		const router = createRouter();
+		const foo = createRoute({ path: '/foo' });
+		const bar = createRoute({ path: '/bar' });
+		const baz = createRoute({ path: '/baz' });
+
+		router.append(foo);
+		assert.throws(() => {
+			router.append(foo);
+		}, Error, 'Cannot append route that has already been appended');
+		assert.throws(() => {
+			router.append([ foo, bar ]);
+		}, Error, 'Cannot append route that has already been appended');
+
+		foo.append(bar);
+		assert.throws(() => {
+			router.append(bar);
+		}, Error, 'Cannot append route that has already been appended');
+
+		router.append(baz);
+		assert.throws(() => {
+			router.append(baz);
+		}, Error, 'Cannot append route that has already been appended');
 	});
 
 	test('leading slashes are irrelevant', () => {
@@ -709,6 +734,288 @@ suite('createRouter', () => {
 		history.set('/bar');
 		const { args: [ nextContext ] } = dispatch.secondCall;
 		assert.deepEqual(nextContext, { second: true });
+	});
+
+	test('link() throws if route has not been appended', () => {
+		const router = createRouter();
+		assert.throws(() => {
+			router.link(createRoute({ path: '/' }));
+		}, Error, 'Cannot generate link for route that is not in the hierarchy');
+		assert.throws(() => {
+			const foo = createRoute({ path: '/foo' });
+			const bar = createRoute({ path: '/bar' });
+			foo.append(bar);
+			router.link(bar);
+		}, Error, 'Cannot generate link for route that is not in the hierarchy');
+		assert.throws(() => {
+			const foo = createRoute({ path: '/foo' });
+			createRouter().append(foo);
+			router.link(foo);
+		}, Error, 'Cannot generate link for route that is not in the hierarchy');
+	});
+
+	test('link() combines paths of route hierarchy (no parameters)', () => {
+		const router = createRouter();
+		const routes = ['foo/', '/bar', 'baz/'].map(path => createRoute({ path }));
+		routes.reduce<{ append(route: Route<Context, Parameters>): void }>((parent, route) => {
+				parent.append(route);
+				return route;
+			}, router);
+
+		assert.equal(router.link(routes[2]), 'foo/bar/baz/');
+		assert.equal(router.link(routes[1]), 'foo/bar');
+	});
+
+	test('link() returns a prefixed path if history was provided', () => {
+		const history = createMemoryHistory();
+		history.prefix = (path) => `/prefixed/${path}`;
+		const router = createRouter({ history });
+		const route = createRoute({ path: 'foo' });
+		router.append(route);
+
+		assert.equal(router.link(route), '/prefixed/foo');
+	});
+
+	test('link() throws if parameters are missing', () => {
+		const router = createRouter();
+		const route = createRoute({ path: '/{foo}?{bar}' });
+		router.append(route);
+
+		assert.throws(() => {
+			router.link(route);
+		}, Error, 'Cannot generate link, missing parameter \'foo\'');
+		assert.throws(() => {
+			router.link(route, { foo: 'foo' });
+		}, Error, 'Cannot generate link, missing search parameter \'bar\'');
+	});
+
+	test('link() throws if more than one value is provided for a path parameter', () => {
+		const router = createRouter();
+		const route = createRoute({ path: '/{foo}' });
+		router.append(route);
+
+		assert.equal(router.link(route, { foo: [ 'foo' ] }), '/foo');
+		assert.throws(() => {
+			router.link(route, { foo: [ 'foo', 'bar' ] });
+		}, Error, 'Cannot generate link, multiple values for parameter \'foo\'');
+	});
+
+	test('link() fills in parameters', () => {
+		const router = createRouter();
+		const routes = ['{foo}', '{foo}?{bar}', 'end?{bar}&{baz}&{foo}'].map(path => createRoute({ path }));
+		routes.reduce<{ append(route: Route<Context, Parameters>): void }>((parent, route) => {
+				parent.append(route);
+				return route;
+			}, router);
+
+		assert.equal(router.link(routes[2], {
+			foo: 'foo',
+			bar: 'bar',
+			baz: [ 'baz1', 'baz2' ]
+		}), 'foo/foo/end?bar=bar&baz=baz1&baz=baz2&foo=foo');
+	});
+
+	test('link() fills in parameters from currently selected, matching routes', () => {
+		const history = createMemoryHistory();
+		const router = createRouter({ history });
+		const routes = ['/root/{foo}/deeper/{bar}', '{foo}?{bar}'].map(path => createRoute({ path }));
+		const ready = new Promise((resolve) => {
+			routes.push(createRoute({ path: 'end?{bar}&{baz}&{foo}', exec: resolve }));
+		});
+		routes.reduce<{ append(route: Route<Context, Parameters>): void }>((parent, route) => {
+				parent.append(route);
+				return route;
+			}, router);
+
+		router.start({ dispatchCurrent: false });
+		history.set('/root/FOO/deeper/BAR/foo/end?bar=bar&baz=baz1&baz=baz2&foo=f00');
+
+		return ready.then(() => {
+			assert.equal(router.link(routes[2]), '/root/FOO/deeper/BAR/foo/end?bar=bar&baz=baz1&baz=baz2&foo=f00');
+
+			const route = createRoute({ path: '{bar}' });
+			routes[0].append(route);
+			assert.equal(router.link(route, { bar: 'bar' }), '/root/FOO/deeper/bar/bar');
+		});
+	});
+
+	test('link() lets you override parameters from currently selected, matching routes', () => {
+		const history = createMemoryHistory();
+		const router = createRouter({ history });
+		const routes = ['/root/{foo}/deeper/{bar}', '{foo}?{bar}'].map(path => createRoute({ path }));
+		const ready = new Promise((resolve) => {
+			routes.push(createRoute({ path: 'end?{bar}&{baz}&{foo}', exec: resolve }));
+		});
+		routes.reduce<{ append(route: Route<Context, Parameters>): void }>((parent, route) => {
+				parent.append(route);
+				return route;
+			}, router);
+
+		router.start({ dispatchCurrent: false });
+		history.set('/root/FOO/deeper/BAR/foo/end?bar=bar&baz=baz1&baz=baz2&foo=f00');
+
+		return ready.then(() => {
+			assert.equal(router.link(routes[2], { foo: 'f00' }), '/root/f00/deeper/BAR/f00/end?bar=bar&baz=baz1&baz=baz2&foo=f00');
+		});
+	});
+
+	test('link() is available when executing the currently selected route', () => {
+		const history = createMemoryHistory();
+		const router = createRouter({ history });
+		const initial = createRoute({
+			path: '/initial/{foo}',
+			exec() {
+				history.set('/foo');
+			}
+		});
+		router.append(initial);
+
+		const ready = new Promise((resolve, reject) => {
+			const links: string[] = [];
+			const route = createRoute({
+				path: '/{foo}',
+				guard() {
+					links.push(router.link(initial));
+					return true;
+				},
+				params() {
+					links.push(router.link(initial));
+					return {};
+				},
+				exec() {
+					links.push(router.link(route));
+					resolve(links);
+				}
+			});
+			router.append(route);
+		});
+
+		router.start({ dispatchCurrent: false });
+		history.set('/initial/foo');
+
+		return ready.then((links) => {
+			assert.deepEqual(links, [ '/initial/foo', '/initial/foo', '/foo' ]);
+		});
+	});
+
+	test('there is no currently selected route for link() after a redirect is requested', () => {
+		const history = createMemoryHistory();
+		const router = createRouter({ history });
+		const initial = createRoute({
+			path: '/initial/{foo}',
+			exec() {
+				history.set('/redirect');
+			}
+		});
+		const redirect = createRoute({
+			path: '/redirect',
+			guard() {
+				return '/foo';
+			}
+		});
+		router.append([ initial, redirect ]);
+
+		const ready = new Promise((resolve) => {
+			const route = createRoute({
+				path: '/foo',
+				guard() {
+					resolve(new Promise((resolve) => {
+						resolve(router.link(initial));
+					}));
+					return true;
+				}
+			});
+			router.append(route);
+		});
+
+		router.start({ dispatchCurrent: false });
+		history.set('/initial/foo');
+
+		return ready
+			.then(() => {
+				throw new Error('Should have thrown');
+			})
+			.catch((err) => {
+				assert.equal(err.message, 'Cannot generate link, missing parameter \'foo\'');
+			});
+	});
+
+	test('there is no currently selected route for link() after a dispatch fails', () => {
+		const history = createMemoryHistory();
+		const router = createRouter({ history });
+		const initial = createRoute({
+			path: '/initial/{foo}',
+			exec() {
+				history.set('/missing');
+				setTimeout(() => {
+					history.set('/foo');
+				}, 50);
+			}
+		});
+		router.append(initial);
+
+		const ready = new Promise((resolve) => {
+			const route = createRoute({
+				path: '/foo',
+				guard() {
+					resolve(new Promise((resolve) => {
+						resolve(router.link(initial));
+					}));
+					return true;
+				}
+			});
+			router.append(route);
+		});
+
+		router.start({ dispatchCurrent: false });
+		history.set('/initial/foo');
+
+		return ready
+			.then(() => {
+				throw new Error('Should have thrown');
+			})
+			.catch((err) => {
+				assert.equal(err.message, 'Cannot generate link, missing parameter \'foo\'');
+			});
+	});
+
+	test('there is no currently selected route for link() after an unmanaged dispatch', () => {
+		const history = createMemoryHistory();
+		const router = createRouter({ history });
+		const initial = createRoute({
+			path: '/initial/{foo}',
+			exec() {
+				return router.dispatch({}, '/unmanaged').then(() => {
+					history.set('/foo');
+				});
+			}
+		});
+		const unmanaged = createRoute({ path: '/unmanaged' });
+		router.append([ initial, unmanaged ]);
+
+		const ready = new Promise((resolve) => {
+			const route = createRoute({
+				path: '/foo',
+				guard() {
+					resolve(new Promise((resolve) => {
+						resolve(router.link(initial));
+					}));
+					return true;
+				}
+			});
+			router.append(route);
+		});
+
+		router.start({ dispatchCurrent: false });
+		history.set('/initial/foo');
+
+		return ready
+			.then(() => {
+				throw new Error('Should have thrown');
+			})
+			.catch((err) => {
+				assert.equal(err.message, 'Cannot generate link, missing parameter \'foo\'');
+			});
 	});
 
 	suite('dispatch errors are emitted', () => {

@@ -5,11 +5,18 @@ import WeakMap from 'dojo-shim/WeakMap';
 import { Thenable } from 'dojo-shim/interfaces';
 
 import { DefaultParameters, Context, Parameters, Request } from './interfaces';
+import { hasBeenAppended } from './createRouter';
 import {
 	deconstruct as deconstructPath,
 	match as matchPath,
 	DeconstructedPath
 } from './lib/path';
+
+/**
+ * Hash object where keys are parameter names and keys are arrays of one or more
+ * parameter values.
+ */
+export type SearchParams = Hash<string[]>;
 
 /**
  * Describes whether a route matched.
@@ -29,7 +36,23 @@ export interface MatchResult<P> {
 	 * Any extracted parameters. Only available if the route matched.
 	 */
 	params: P;
+
+	/**
+	 * Values for named segments in the path, in order of occurrence.
+	 */
+	rawPathValues: string[];
+
+	/**
+	 * Values for known named query parameters that were actually present in the
+	 * path.
+	 */
+	rawSearchParams: SearchParams;
 }
+
+/**
+ * A request handler.
+ */
+export type Handler = (request: Request<Context, Parameters>) => void | Thenable<any>;
 
 /**
  * Describes the selection of a particular route.
@@ -38,12 +61,28 @@ export interface Selection {
 	/**
 	 * Which handler should be called when the route is executed.
 	 */
-	handler: (request: Request<Context, Parameters>) => void | Thenable<any>;
+	handler: Handler;
+
+	/**
+	 * The selected path.
+	 */
+	path: DeconstructedPath;
 
 	/**
 	 * The extracted parameters.
 	 */
 	params: Parameters;
+
+	/**
+	 * Values for named segments in the path, in order of occurrence.
+	 */
+	rawPathValues: string[];
+
+	/**
+	 * Values for known named query parameters that were actually present in the
+	 * path.
+	 */
+	rawSearchParams: SearchParams;
 
 	/**
 	 * The selected route.
@@ -57,7 +96,20 @@ export interface Selection {
  */
 export interface Route<C extends Context, P extends Parameters> {
 	/**
+	 * The route this route has been appended to.
+	 */
+	readonly parent?: Route<Context, Parameters>;
+
+	/**
+	 * Frozen, deconstructed path object.
+	 */
+	readonly path: DeconstructedPath;
+
+	/**
 	 * Append one or more routes.
+	 *
+	 * A route can only appended to another route, or a router itself, once.
+	 *
 	 * @param routes A single route or an array containing 0 or more routes.
 	 */
 	append(add: Route<Context, Parameters> | Route<Context, Parameters>[]): void;
@@ -162,13 +214,17 @@ interface PrivateState {
 	trailingSlashMustMatch: boolean;
 
 	computeParams<P extends Parameters>(fromPathname: string[], searchParams: UrlSearchParams): null | P;
-	exec?(request: Request<Context, Parameters>): void | Thenable<any>;
-	fallback?(request: Request<Context, Parameters>): void | Thenable<any>;
+	exec?: Handler;
+	fallback?: Handler;
 	guard?(request: Request<Context, Parameters>): string | boolean;
-	index?(request: Request<Context, Parameters>): void | Thenable<any>;
+	index?: Handler;
 }
 
 const privateStateMap = new WeakMap<Route<Context, Parameters>, PrivateState>();
+
+// Store parent relationships in a separate map, since it's the parent that adds entries to this map. Parents shouldn't
+// change the private state of their children.
+const parentMap = new WeakMap<Route<Context, Parameters>, Route<Context, Parameters>>();
 
 const noop = () => {};
 
@@ -194,15 +250,32 @@ function computeDefaultParams(
 
 const createRoute: RouteFactory<Context, Parameters> =
 	compose({
+		get parent(this: Route<Context, Parameters>) {
+			return parentMap.get(this);
+		},
+
+		get path(this: Route<Context, Parameters>) {
+			return privateStateMap.get(this).path;
+		},
+
 		append(this: Route<Context, Parameters>, add: Route<Context, Parameters> | Route<Context, Parameters>[]) {
 			const { routes } = privateStateMap.get(this);
+			const append = (route: Route<Context, Parameters>) => {
+				if (hasBeenAppended(route)) {
+					throw new Error('Cannot append route that has already been appended');
+				}
+
+				routes.push(route);
+				parentMap.set(route, this);
+			};
+
 			if (Array.isArray(add)) {
 				for (const route of add) {
-					routes.push(route);
+					append(route);
 				}
 			}
 			else {
-				routes.push(add);
+				append(add);
 			}
 		},
 
@@ -213,6 +286,7 @@ const createRoute: RouteFactory<Context, Parameters> =
 			searchParams: UrlSearchParams
 		): null | MatchResult<Parameters> {
 			const { computeParams, path, trailingSlashMustMatch } = privateStateMap.get(this);
+
 			const result = matchPath(path, segments);
 			if (result === null) {
 				return null;
@@ -223,21 +297,26 @@ const createRoute: RouteFactory<Context, Parameters> =
 			}
 
 			// Only extract the search params defined in the route's path.
-			const knownSearchParams = path.searchParameters.reduce((list, name) => {
+			const knownSearchParams = path.searchParameters.reduce<SearchParams>((list, name) => {
 				const value = searchParams.getAll(name);
 				if (value !== undefined) {
 					list[name] = value;
 				}
 				return list;
-			}, {} as Hash<string[]>);
+			}, {});
 
 			const params = computeParams(result.values, new UrlSearchParams(knownSearchParams));
 			if (params === null) {
 				return null;
 			}
 
-			const { hasRemaining, offset } = result;
-			return { hasRemaining, offset, params };
+			return {
+				hasRemaining: result.hasRemaining,
+				offset: result.offset,
+				params,
+				rawPathValues: result.values,
+				rawSearchParams: knownSearchParams
+			};
 		},
 
 		select(
@@ -247,7 +326,7 @@ const createRoute: RouteFactory<Context, Parameters> =
 			hasTrailingSlash: boolean,
 			searchParams: UrlSearchParams
 		): string | Selection[] {
-			const { exec, index, fallback, guard, routes } = privateStateMap.get(this);
+			const { exec, index, fallback, guard, path, routes } = privateStateMap.get(this);
 
 			const matchResult = this.match(segments, hasTrailingSlash, searchParams);
 
@@ -256,7 +335,7 @@ const createRoute: RouteFactory<Context, Parameters> =
 				return [];
 			}
 
-			const { hasRemaining, offset, params } = matchResult;
+			const { params } = matchResult;
 			if (guard) {
 				const guardResult = guard({ context, params });
 				if (typeof guardResult === 'string') {
@@ -267,33 +346,61 @@ const createRoute: RouteFactory<Context, Parameters> =
 				}
 			}
 
-			// Use a noop handler if exec was not provided. Something needs to be
-			// returned otherwise the router may think no routes were selected.
-			const handler = exec || noop;
+			let handler = exec;
+			let redirect: string | undefined;
+			let remainingSelection: Selection[] | undefined;
+			let selected = false;
 
+			if (matchResult.hasRemaining) {
+				// Match the remaining segments. Return a hierarchy if nested routes were selected.
+				const remainingSegments = segments.slice(matchResult.offset);
+				selected = routes.some((nested) => {
+					const nestedResult = nested.select(context, remainingSegments, hasTrailingSlash, searchParams);
+					if (typeof nestedResult === 'string') {
+						redirect = nestedResult;
+						return true;
+					}
+					if (nestedResult.length > 0) {
+						remainingSelection = nestedResult;
+						return true;
+					}
+					return false;
+				});
+
+				// No remaining segments matched, only select this route if a fallback handler was specified.
+				if (!selected && fallback) {
+					selected = true;
+					handler = fallback;
+				}
+			}
 			// Select this route, configure the index handler if specified.
-			if (!hasRemaining) {
-				return [{ handler: index || handler, params, route: this }];
-			}
-
-			// Match the remaining segments. Return a hierarchy if nested routes were selected.
-			const remainingSegments = segments.slice(offset);
-			for (const nested of routes) {
-				const nestedResult = nested.select(context, remainingSegments, hasTrailingSlash, searchParams);
-				if (typeof nestedResult === 'string') {
-					return nestedResult;
-				}
-				if (nestedResult.length > 0) {
-					return [{ handler, params, route: this }, ...nestedResult];
+			else {
+				selected = true;
+				if (index) {
+					handler = index;
 				}
 			}
 
-			// No remaining segments matched, only select this route if a fallback handler was specified.
-			if (fallback) {
-				return [{ handler: fallback, params, route: this }];
+			if (!selected) {
+				return [];
 			}
 
-			return [];
+			if (redirect !== undefined) {
+				return redirect;
+			}
+
+			const { rawPathValues, rawSearchParams } = matchResult;
+			const selection = {
+				// Use a noop handler if exec was not provided. Something needs to be returned otherwise the router may
+				// think no routes were selected.
+				handler: handler || noop,
+				path,
+				params,
+				rawPathValues,
+				rawSearchParams,
+				route: this
+			};
+			return remainingSelection ? [selection, ...remainingSelection] : [selection];
 		}
 	},
 	(

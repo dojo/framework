@@ -12,6 +12,10 @@ suite('createMemoryHistory', () => {
 		assert.equal(createMemoryHistory({ path: '/initial'}).current, '/initial');
 	});
 
+	test('does not prefix the path', () => {
+		assert.equal(createMemoryHistory().prefix('/foo'), '/foo');
+	});
+
 	test('update path', () => {
 		const history = createMemoryHistory();
 		history.set('/foo');

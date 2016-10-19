@@ -40,6 +40,10 @@ const createMemoryHistory: MemoryHistoryFactory = compose.mixin(createEvented, {
 			return privateStateMap.get(this).current;
 		},
 
+		prefix(path: string) {
+			return path;
+		},
+
 		set(this: MemoryHistory, path: string) {
 			const privateState = privateStateMap.get(this);
 			if (privateState.current === path) {

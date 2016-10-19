@@ -130,7 +130,13 @@ export interface NamedSegment {
 
 export type Segment = LiteralSegment | NamedSegment;
 
-function isNamedSegment(segment: Segment): segment is NamedSegment {
+/**
+ * Determine whether the segment is a NamedSegment.
+ *
+ * @param segment The segment to be checked
+ * @return true if the segment is a NamedSegment, false otherwise
+ */
+export function isNamedSegment(segment: Segment): segment is NamedSegment {
 	return (<NamedSegment> segment).name !== undefined;
 }
 
@@ -144,6 +150,11 @@ export interface DeconstructedPath {
 	expectedSegments: Segment[];
 
 	/**
+	 * Whether the pathname started with a slash.
+	 */
+	leadingSlash: boolean;
+
+	/**
 	 * Named path parameters, in the order that they occurred in the path.
 	 */
 	parameters: string[];
@@ -154,7 +165,7 @@ export interface DeconstructedPath {
 	searchParameters: string[];
 
 	/**
-	 * Whether the pathname ended with a trailing slash.
+	 * Whether the pathname ended with a slash.
 	 */
 	trailingSlash: boolean;
 }
@@ -171,6 +182,7 @@ export function deconstruct(path: string): DeconstructedPath {
 	let trailingSlash = false;
 
 	const tokens = path.split(/([/{}?&])/).filter(Boolean);
+	const leadingSlash = tokens[0] === '/';
 
 	let i = 0;
 	const consume = () => tokens[i++];
@@ -215,7 +227,7 @@ export function deconstruct(path: string): DeconstructedPath {
 					searchParameters.push(name);
 				} else {
 					parameters.push(name);
-					expectedSegments.push({ name });
+					expectedSegments.push(Object.freeze({ name }));
 				}
 
 				break;
@@ -263,9 +275,15 @@ export function deconstruct(path: string): DeconstructedPath {
 					throw new TypeError(`Expected parameter in search component, got '${t}'`);
 				}
 
-				expectedSegments.push({ literal: t });
+				expectedSegments.push(Object.freeze({ literal: t }));
 		}
 	}
 
-	return { expectedSegments, parameters, searchParameters, trailingSlash };
+	return Object.freeze({
+		expectedSegments: Object.freeze(expectedSegments),
+		leadingSlash,
+		parameters: Object.freeze(parameters),
+		searchParameters: Object.freeze(searchParameters),
+		trailingSlash
+	});
 }

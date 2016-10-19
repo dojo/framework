@@ -25,6 +25,11 @@ export interface HistoryMixin {
 	readonly current: string;
 
 	/**
+	 * Prefixes the value in order to create a path that can be used with a browser.
+	 */
+	prefix(path: string): string;
+
+	/**
 	 * Set the current value. If used with a browser implementation causes a new history entry
 	 * to be added. Fires the 'change' event.
 	 */

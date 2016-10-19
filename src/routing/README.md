@@ -48,6 +48,8 @@ router.append([
 ]);
 ```
 
+Routes can only be appended to a router once.
+
 ### Dispatching paths
 
 The router doesn't track navigation events by itself. Changed paths need to be dispatched by application code. Context must be provided, this is made available to the matched routes.
@@ -146,6 +148,8 @@ posts.append([
 	createRoute({ path: 'other' })
 ]);
 ```
+
+Routes can only be appended to another route, or a router, once.
 
 Starting the path of a nested route with a leading slash will not make it absolute. The nested route's path will still be relative to that of the route it's appended to.
 
@@ -447,6 +451,49 @@ router.append(createRoute({
 router.dispatch(context, '//foo///bar'); // Selects the /foo/bar route
 ```
 
+### Link generation
+
+The router can generate links for a given route:
+
+```ts
+const router = createRouter();
+const blog = createRoute({ path: '/blog' });
+router.append(blog);
+
+router.link(blog) === '/blog';
+```
+
+This also works with parameters:
+
+```ts
+const show = createRoute({ path: '/{id}' });
+blog.append(show);
+
+router.link(show, { id: '5' }) === '/blog/5';
+```
+
+And query parameters:
+
+```ts
+const show = createRoute({ path: '/{id}?{highlight}' });
+blog.append(show);
+
+router.link(show, { id: '5', highlight: '40' }) === '/blog/5?highlight=40';
+router.link(show, { id: '5', highlight: [ '40' ] }) === '/blog/5?highlight=40';
+router.link(show, { id: '5', highlight: [ '40', '55' ] }) === '/blog/5?highlight=40&highlight=55';
+```
+
+Note that if routes share the same parameter name they'll receive the same value:
+
+```ts
+const category = createRoute({ path: '/categories/{id}' });
+const post = createRoute({ path: '/posts/{id}' });
+blog.append(category);
+category.append(post);
+
+router.link(post, { id: '5' }) === '/blog/categories/5/posts/5';
+```
+
 ### History management
 
 This library ships with three history managers. They share the same interface but have different ways of monitoring and changing the navigation state.
@@ -525,7 +572,7 @@ const history = createMemoryHistory();
 
 The `createMemoryHistory()` factory accepts a `path` option. It defaults to the empty string.
 
-#### Automatically observing a history manager
+### Automatic routing and clever linking through `start()`
 
 You could manually wire a history manager's `change` event to a `Router#dispatch()`, but that's a bit cumbersome. Instead you can provide the history manager when creating the router, and then use the `start()` method to make the router observe the history manager:
 
@@ -563,6 +610,29 @@ const router = createRouter({
 	history: createStateHistory()
 });
 ```
+
+`link()` can use the currently selected routes when generating a new link. For instance given this router:
+
+```ts
+const history = createStateHistory();
+const router = createRouter({ history });
+
+const blog = createRoute({ path: '/blog' });
+const show = createRoute({ path: '/{id}' });
+const edit = createRoute({ path: '/edit' });
+
+router.append(blog);
+blog.append(show);
+show.append(edit);
+```
+
+If the current URL is `/blog/5`, then you can generate a link for the `edit` route without having to provide any parameters:
+
+```ts
+router.link(edit) === '/blog/5/edit';
+```
+
+Calling `dispatch()` directly will prevent the router from tracking selected routes. They'll also be unavailable after a redirect has been requested, before new routes have been selected.
 
 ### Capturing errors
 

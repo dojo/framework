@@ -38,6 +38,10 @@ suite('createHashHistory', () => {
 		assert.equal(createHashHistory().current, window.location.hash.slice(1));
 	});
 
+	test('prefixes the path with a #', () => {
+		assert.equal(createHashHistory().prefix('/foo'), '#/foo');
+	});
+
 	test('update path', () => {
 		const history = createHashHistory({ window: sandbox.contentWindow });
 		history.set('/foo');

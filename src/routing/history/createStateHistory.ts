@@ -63,20 +63,6 @@ function stripBase(base: string, path: string): string {
 	}
 }
 
-function prependBase(base: string, path: string): string {
-	const baseEndsWithSlash = /\/$/.test(base);
-	const pathStartsWithSlash = /^\//.test(path);
-	if (baseEndsWithSlash && pathStartsWithSlash) {
-		return base + path.slice(1);
-	}
-	else if (!baseEndsWithSlash && !pathStartsWithSlash) {
-		return `${base}/${path}`;
-	}
-	else {
-		return base + path;
-	}
-}
-
 function ensureLeadingSlash(path: string): string {
 	return /^\//.test(path) ? path : `/${path}`;
 }
@@ -87,31 +73,42 @@ const createStateHistory: StateHistoryFactory = compose.mixin(createEvented, {
 			return privateStateMap.get(this).current;
 		},
 
+		prefix(this: StateHistory, path: string) {
+			const { base } = privateStateMap.get(this);
+			const baseEndsWithSlash = /\/$/.test(base);
+			const pathStartsWithSlash = /^\//.test(path);
+			if (baseEndsWithSlash && pathStartsWithSlash) {
+				return base + path.slice(1);
+			}
+			else if (!baseEndsWithSlash && !pathStartsWithSlash) {
+				return `${base}/${path}`;
+			}
+			else {
+				return base + path;
+			}
+		},
+
 		set(this: StateHistory, path: string) {
 			const privateState = privateStateMap.get(this);
 			const value = ensureLeadingSlash(path);
-			const fullPath = prependBase(privateState.base, path);
-
 			if (privateState.current === value) {
 				return;
 			}
 
 			privateState.current = value;
-			privateState.browserHistory.pushState({}, '', fullPath);
+			privateState.browserHistory.pushState({}, '', this.prefix(path));
 			this.emit({ type: 'change', value });
 		},
 
 		replace(this: StateHistory, path: string) {
 			const privateState = privateStateMap.get(this);
 			const value = ensureLeadingSlash(path);
-			const fullPath = prependBase(privateState.base, path);
-
 			if (privateState.current === value) {
 				return;
 			}
 
 			privateState.current = value;
-			privateState.browserHistory.replaceState({}, '', fullPath);
+			privateState.browserHistory.replaceState({}, '', this.prefix(path));
 			this.emit({ type: 'change', value });
 		}
 	},

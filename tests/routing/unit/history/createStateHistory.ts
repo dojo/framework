@@ -39,6 +39,12 @@ suite('createStateHistory', () => {
 		assert.equal(createStateHistory().current, window.location.pathname + window.location.search);
 	});
 
+	test('prefixes path with leading slash if necessary', () => {
+		const history = createStateHistory({ window: sandbox.contentWindow });
+		assert.equal(history.prefix('/foo'), '/foo');
+		assert.equal(history.prefix('foo'), '/foo');
+	});
+
 	test('update path', () => {
 		const history = createStateHistory({ window: sandbox.contentWindow });
 		history.set('/foo');
@@ -144,6 +150,18 @@ suite('createStateHistory', () => {
 		test('initializes current path to / if it\'s not a base suffix', () => {
 			sandbox.contentWindow.history.pushState({}, '', '/foo/bar?baz');
 			assert.equal(createStateHistory({ base: '/thud/', window: sandbox.contentWindow }).current, '/');
+		});
+
+		test('#prefix prefixes path with the base (with trailing slash)', () => {
+			const history = createStateHistory({ base: '/foo/', window: sandbox.contentWindow });
+			assert.equal(history.prefix('/bar'), '/foo/bar');
+			assert.equal(history.prefix('bar'), '/foo/bar');
+		});
+
+		test('#prefix prefixes path with the base (without trailing slash)', () => {
+			const history = createStateHistory({ base: '/foo', window: sandbox.contentWindow });
+			assert.equal(history.prefix('/bar'), '/foo/bar');
+			assert.equal(history.prefix('bar'), '/foo/bar');
 		});
 
 		test('#set expands the path with the base when pushing state, with trailing slash', () => {

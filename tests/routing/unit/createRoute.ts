@@ -3,6 +3,7 @@ import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 
 import createRoute from '../../src/createRoute';
+import { deconstruct as deconstructPath } from '../../src/lib/path';
 import { DefaultParameters, Context, Parameters } from '../../src/interfaces';
 
 suite('createRoute', () => {
@@ -191,6 +192,29 @@ suite('createRoute', () => {
 		assert.throws(() => {
 			createRoute({ path: '/segment?{foo}&{foo}' });
 		}, TypeError, 'Parameter must have a unique name, got \'foo\'');
+	});
+
+	test('deconstructed path can be accessed and is deeply frozen', () => {
+		const { path } = createRoute({ path: '/foo/{bar}?{baz}' });
+		assert.isTrue(Object.isFrozen(path));
+
+		const { expectedSegments, leadingSlash, parameters, searchParameters, trailingSlash } = path;
+		assert.isTrue(Object.isFrozen(expectedSegments));
+		assert.isTrue(Object.isFrozen(parameters));
+		assert.isTrue(Object.isFrozen(searchParameters));
+
+		assert.lengthOf(expectedSegments, 2);
+		assert.isTrue(Object.isFrozen(expectedSegments[0]));
+		assert.isTrue(Object.isFrozen(expectedSegments[1]));
+		assert.deepEqual(expectedSegments, [
+			{ literal: 'foo' },
+			{ name: 'bar' }
+		]);
+
+		assert.isTrue(leadingSlash);
+		assert.deepEqual(parameters, [ 'bar' ]);
+		assert.deepEqual(searchParameters, [ 'baz' ]);
+		assert.isFalse(trailingSlash);
 	});
 
 	test('guard() receives the extracted parameters', () => {
@@ -440,6 +464,42 @@ suite('createRoute', () => {
 		assert.lengthOf(selections, 0);
 	});
 
+	test('selections contain expected properties', () => {
+		const root = createRoute({ path: '/foo/{param}?{foo}' });
+		const deep = createRoute({ path: '/bar/{param}?{bar}' });
+		const deeper = createRoute({ path: '/baz/{param}?{foo}&{baz}' });
+		root.append(deep);
+		deep.append(deeper);
+
+		const selections = root.select({} as Context, ['foo', 'root', 'bar', 'deep', 'baz', 'deeper'], false, new UrlSearchParams({
+			'foo': [ 'foo'] ,
+			'baz': [ 'one', 'two' ]
+		}));
+		if (typeof selections === 'string') {
+			throw new TypeError('Unexpected result');
+		}
+
+		assert.lengthOf(selections, 3);
+		const [first, second, third] = selections;
+		assert.deepEqual(first.params, { param: 'root', foo: 'foo' });
+		assert.deepEqual(first.rawPathValues, [ 'root' ]);
+		assert.deepEqual(first.rawSearchParams, { foo: [ 'foo' ] });
+		assert.deepEqual(first.path, deconstructPath('/foo/{param}?{foo}'));
+		assert.strictEqual(first.route, root);
+
+		assert.deepEqual(second.params, { param: 'deep' });
+		assert.deepEqual(second.rawPathValues, [ 'deep' ]);
+		assert.deepEqual(second.rawSearchParams, {});
+		assert.deepEqual(second.path, deconstructPath('/bar/{param}?{bar}'));
+		assert.strictEqual(second.route, deep);
+
+		assert.deepEqual(third.params, { param: 'deeper', foo: 'foo', baz: 'one' });
+		assert.deepEqual(third.rawPathValues, [ 'deeper' ]);
+		assert.deepEqual(third.rawSearchParams, { foo: [ 'foo' ], baz: [ 'one', 'two' ] });
+		assert.deepEqual(third.path, deconstructPath('/baz/{param}?{foo}&{baz}'));
+		assert.strictEqual(third.route, deeper);
+	});
+
 	test('guards can request redirects by returning path strings', () => {
 		const root = createRoute({ path: '/root' });
 		const deep = createRoute({
@@ -464,25 +524,6 @@ suite('createRoute', () => {
 		root.append(deep);
 
 		assert.strictEqual(root.select({} as Context, ['root', 'deep'], false, new UrlSearchParams()), '');
-	});
-
-	test('extracts path parameters for each nested route', () => {
-		const root = createRoute({ path: '/foo/{param}' });
-		const deep = createRoute({ path: '/bar/{param}' });
-		const deeper = createRoute({ path: '/baz/{param}' });
-		root.append(deep);
-		deep.append(deeper);
-
-		const selections = root.select({} as Context, ['foo', 'root', 'bar', 'deep', 'baz', 'deeper'], false, new UrlSearchParams());
-		if (typeof selections === 'string') {
-			throw new TypeError('Unexpected result');
-		}
-
-		assert.lengthOf(selections, 3);
-		const [{ params: first }, { params: second }, { params: third }] = selections;
-		assert.deepEqual(first, { param: 'root' });
-		assert.deepEqual(second, { param: 'deep' });
-		assert.deepEqual(third, { param: 'deeper' });
 	});
 
 	test('guard() is not called unnecessarily', () => {
@@ -524,6 +565,23 @@ suite('createRoute', () => {
 
 		const selections = root.select({} as Context, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
 		assert.lengthOf(selections, 2);
+	});
+
+	test('routes can only be appended once', () => {
+		const foo = createRoute({ path: '/foo' });
+		const bar = createRoute({ path: '/bar' });
+		const baz = createRoute({ path: '/baz' });
+
+		foo.append(bar);
+		assert.throws(() => {
+			foo.append(bar);
+		}, Error, 'Cannot append route that has already been appended');
+		assert.throws(() => {
+			foo.append([ bar, baz ]);
+		}, Error, 'Cannot append route that has already been appended');
+		assert.throws(() => {
+			baz.append(bar);
+		}, Error, 'Cannot append route that has already been appended');
 	});
 
 	// This test is mostly there to verify the typings at compile time.
