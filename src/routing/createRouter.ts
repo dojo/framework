@@ -128,7 +128,9 @@ export interface RouterMixin<C extends Context> {
 	 * Route hierarchies may require parameters to be present. Parameters are automatically derived from the currently
 	 * selected routes. Errors are thrown if parameters are missing or if the route is not in this router's hierarchy.
 	 *
-	 * @
+	 * @param route The route for which a link is generated
+	 * @param params Parameters to be used to generate the link
+	 * @return The generated link
 	 */
 	link(route: Route<Context, Parameters>, params?: LinkParams): string;
 
@@ -205,6 +207,10 @@ export interface RouterFactory<C extends Context> extends ComposeFactory<Router<
 }
 
 const parentMap = new WeakMap<Route<Context, Parameters>, Router<Context>>();
+
+/**
+ * Whether the route has been appended to another route or router.
+ */
 export function hasBeenAppended(route: Route<Context, Parameters>): boolean {
 	return parentMap.has(route) || route.parent !== undefined;
 }
