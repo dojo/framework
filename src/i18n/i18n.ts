@@ -3,6 +3,7 @@ import has from 'dojo-core/has';
 import global from 'dojo-core/global';
 import { Handle } from 'dojo-interfaces/core';
 import { assign } from 'dojo-core/lang';
+import load from 'dojo-core/load';
 import Map from 'dojo-shim/Map';
 import Promise from 'dojo-shim/Promise';
 
@@ -101,25 +102,9 @@ const loadLocaleBundles = (function () {
 		});
 	}
 
-	if (has('host-node')) {
-		return function<T extends Messages>(paths: string[]): Promise<T[]> {
-			const modules = paths.map((path: string): LocaleModule<T> => {
-				return global.require(path) as LocaleModule<T>;
-			});
-
-			return Promise.all(mapMessages(modules));
-		};
-	}
-
 	return function<T extends Messages>(paths: string[]): Promise<T[]> {
-		return new Promise<T[]>((resolve, reject) => {
-			const require = global.require;
-			require.on('error', (error: Error) => {
-				reject(error);
-			});
-			require(paths, (...modules: LocaleModule<T>[]) => {
-				resolve(mapMessages(modules));
-			});
+		return load(global.require, ...paths).then((modules: LocaleModule<T>[]) => {
+			return mapMessages(modules);
 		});
 	};
 })();
