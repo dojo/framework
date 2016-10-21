@@ -135,6 +135,20 @@ export interface RouterMixin<C extends Context> {
 	link(route: Route<Context, Parameters>, params?: LinkParams): string;
 
 	/**
+	 * Replace the current history value with a new path.
+	 *
+	 * Throws if the router was created without a history manager.
+	 */
+	replacePath(path: string): void;
+
+	/**
+	 * Sets the current history value to a new path.
+	 *
+	 * Throws if the router was created without a history manager.
+	 */
+	setPath(path: string): void;
+
+	/**
 	 * Start the router.
 	 *
 	 * Observes the history manager provided when the router was created for change events and dispatches routes in
@@ -505,6 +519,24 @@ const createRouter: RouterFactory<Context> = compose.mixin(createEvented, {
 			const path = search ? `${pathname}?${search}` : pathname;
 
 			return path;
+		},
+
+		replacePath(this: Router<Context>, path: string) {
+			const { history } = privateStateMap.get(this);
+			if (!history) {
+				throw new Error('Cannot replace path, router was created without a history manager');
+			}
+
+			history.replace(path);
+		},
+
+		setPath(this: Router<Context>, path: string) {
+			const { history } = privateStateMap.get(this);
+			if (!history) {
+				throw new Error('Cannot set path, router was created without a history manager');
+			}
+
+			history.set(path);
 		},
 
 		start(this: Router<Context>, { dispatchCurrent }: StartOptions = { dispatchCurrent: true }): PausableHandle {

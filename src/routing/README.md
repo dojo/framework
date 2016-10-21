@@ -583,9 +583,20 @@ const history = createMemoryHistory();
 
 The `createMemoryHistory()` factory accepts a `path` option. It defaults to the empty string.
 
-### Automatic routing and clever linking through `start()`
+### Making the router aware of the history manager
 
-You could manually wire a history manager's `change` event to a `Router#dispatch()`, but that's a bit cumbersome. Instead you can provide the history manager when creating the router, and then use the `start()` method to make the router observe the history manager:
+In browser-based applications it is desirable for the router to be aware of the history manager. This is why you can provide the history manager when creating the router:
+
+```ts
+const history = createStateHistory();
+const router = createRouter({ history });
+```
+
+Now instead of using `history.set()` and `history.replace()` you can use `router.setPath()` and `router.replacePath()`.
+
+#### Automatic routing and clever linking through `start()`
+
+You could manually wire a history manager's `change` event to a `Router#dispatch()`, but that's a bit cumbersome. Instead if you provided the history manager when creating the router, you can use the `start()` method to make the router observe the history manager:
 
 ```ts
 const router = createRouter({ history: createStateHistory() });

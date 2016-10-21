@@ -495,6 +495,38 @@ suite('createRouter', () => {
 		});
 	});
 
+	test('replacePath() throws if the router was created without a history manager', () => {
+		const router = createRouter();
+		assert.throws(() => {
+			router.replacePath('/foo');
+		}, Error, 'Cannot replace path, router was created without a history manager');
+	});
+
+	test('replacePath() sets the path on the history manager', () => {
+		const history = createMemoryHistory();
+		const replace = spy(history, 'replace');
+		const router = createRouter({ history });
+		router.replacePath('/foo');
+		assert.isTrue(replace.calledOnce);
+		assert.deepEqual(replace.firstCall.args, [ '/foo' ]);
+	});
+
+	test('setPath() throws if the router was created without a history manager', () => {
+		const router = createRouter();
+		assert.throws(() => {
+			router.setPath('/foo');
+		}, Error, 'Cannot set path, router was created without a history manager');
+	});
+
+	test('setPath() sets the path on the history manager', () => {
+		const history = createMemoryHistory();
+		const set = spy(history, 'set');
+		const router = createRouter({ history });
+		router.setPath('/foo');
+		assert.isTrue(set.calledOnce);
+		assert.deepEqual(set.firstCall.args, [ '/foo' ]);
+	});
+
 	test('start() is a noop if the router was created without a history manager', () => {
 		assert.doesNotThrow(() => {
 			const listener = createRouter().start();
