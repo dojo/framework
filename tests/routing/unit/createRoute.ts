@@ -1,8 +1,10 @@
 import UrlSearchParams from 'dojo-core/UrlSearchParams';
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
+import { stub } from 'sinon';
 
 import createRoute from '../../src/createRoute';
+import createRouter from '../../src/createRouter';
 import { deconstruct as deconstructPath } from '../../src/lib/path';
 import { DefaultParameters, Context, Parameters } from '../../src/interfaces';
 
@@ -582,6 +584,49 @@ suite('createRoute', () => {
 		assert.throws(() => {
 			baz.append(bar);
 		}, Error, 'Cannot append route that has already been appended');
+	});
+
+	test('link() throws if the route has not been appended to a router', () => {
+		const foo = createRoute();
+		const bar = createRoute();
+		foo.append(bar);
+
+		assert.throws(() => {
+			foo.link();
+		}, Error, 'Cannot generate link for route that is not in the hierarchy');
+		assert.throws(() => {
+			bar.link();
+		}, Error, 'Cannot generate link for route that is not in the hierarchy');
+	});
+
+	test('link() forwards to link() on router', () => {
+		const router = createRouter();
+		const foo = createRoute();
+		const bar = createRoute();
+		foo.append(bar);
+		router.append(foo);
+
+		const expected = '/foo';
+		const link = stub(router, 'link').returns(expected);
+
+		{
+			assert.equal(foo.link(), expected);
+			assert.isTrue(link.calledOnce);
+			const { args } = link.firstCall;
+			assert.lengthOf(args, 2);
+			assert.strictEqual(args[0], foo);
+			assert.isUndefined(args[1]);
+		}
+
+		{
+			const params = {};
+			assert.equal(bar.link(params), expected);
+			assert.isTrue(link.calledTwice);
+			const { args } = link.secondCall;
+			assert.lengthOf(args, 2);
+			assert.strictEqual(args[0], bar);
+			assert.strictEqual(args[1], params);
+		}
 	});
 
 	// This test is mostly there to verify the typings at compile time.

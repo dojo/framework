@@ -494,6 +494,17 @@ category.append(post);
 router.link(post, { id: '5' }) === '/blog/categories/5/posts/5';
 ```
 
+You can also generate links without having a reference to the router:
+
+```ts
+const router = createRouter();
+const blog = createRoute({ path: '/blog' });
+const show = createRoute({ path: '/{id}' });
+blog.append(show);
+
+show.link({ id: '5' }) === '/blog/5';
+```
+
 ### History management
 
 This library ships with three history managers. They share the same interface but have different ways of monitoring and changing the navigation state.

@@ -215,6 +215,25 @@ export function hasBeenAppended(route: Route<Context, Parameters>): boolean {
 	return parentMap.has(route) || route.parent !== undefined;
 }
 
+/**
+ * Finds the router whose route hierarchy the route has been appended to.
+ *
+ * Throws if the route was not appended to any router.
+ */
+export function findRouter(route: Route<Context, Parameters>): Router<Context> {
+	while (route.parent) {
+		route = route.parent;
+	}
+
+	const router = parentMap.get(route);
+	if (!router) {
+		throw new Error('Cannot generate link for route that is not in the hierarchy');
+	}
+	else {
+		return router;
+	}
+}
+
 interface PrivateState {
 	contextFactory: () => Context;
 	currentSelection: Selection[];

@@ -5,7 +5,7 @@ import WeakMap from 'dojo-shim/WeakMap';
 import { Thenable } from 'dojo-shim/interfaces';
 
 import { DefaultParameters, Context, Parameters, Request } from './interfaces';
-import { hasBeenAppended } from './createRouter';
+import { findRouter, hasBeenAppended, LinkParams } from './createRouter';
 import {
 	deconstruct as deconstructPath,
 	match as matchPath,
@@ -113,6 +113,17 @@ export interface Route<C extends Context, P extends Parameters> {
 	 * @param routes A single route or an array containing 0 or more routes.
 	 */
 	append(add: Route<Context, Parameters> | Route<Context, Parameters>[]): void;
+
+	/**
+	 * Generate a link for the route.
+	 *
+	 * Route hierarchies may require parameters to be present. Parameters are automatically derived from the currently
+	 * selected routes. Errors are thrown if parameters are missing or if the route is not in this router's hierarchy.
+	 *
+	 * @param params Parameters to be used to generate the link
+	 * @return The generated link
+	 */
+	link(params?: LinkParams): string;
 
 	/**
 	 * Determine whether the route matches.
@@ -277,6 +288,10 @@ const createRoute: RouteFactory<Context, Parameters> =
 			else {
 				append(add);
 			}
+		},
+
+		link(this: Route<Context, Parameters>, params?: LinkParams): string {
+			return findRouter(this).link(this, params);
 		},
 
 		match(
