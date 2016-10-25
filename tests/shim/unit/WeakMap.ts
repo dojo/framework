@@ -50,7 +50,7 @@ registerSuite({
 		const frozen: Key = {};
 		Object.freeze(frozen);
 
-		const map = new WeakMap([
+		const map = new WeakMap<Key | undefined | null, number>([
 			[ key, 1 ],
 			[ frozen, 2 ]
 		]);
@@ -61,6 +61,8 @@ registerSuite({
 		assert.isTrue(map.delete(frozen), 'deleting frozen should return true');
 		assert.isFalse(map.has(frozen), 'frozen should not be in map');
 		assert.isFalse(map.delete(frozen), 'deleting frozen again should return false');
+		assert.isFalse(map.delete(undefined), 'deleting undefined key should return false');
+		assert.isFalse(map.delete(null), 'deleting null key should return false');
 	},
 
 	'.get'() {
@@ -69,7 +71,7 @@ registerSuite({
 		const frozen: Key = {};
 		Object.freeze(frozen);
 
-		const map = new WeakMap([
+		const map = new WeakMap<Key | undefined | null, number>([
 			[ key1, 1 ],
 			[ key2, 2 ],
 			[ frozen, 3]
@@ -88,6 +90,9 @@ registerSuite({
 		assert.strictEqual(map.get(key1), undefined, 'key1 should still be undefined');
 		assert.strictEqual(map.get(key2), undefined, 'key2 should be undefined');
 
+		assert.strictEqual(map.get(undefined), undefined, 'getting undefined value should just return undefined');
+		assert.strictEqual(map.get(null), undefined, 'getting null value should just return undefined');
+
 		assert.strictEqual(map.get(frozen), 3, 'frozen should be 3');
 	},
 
@@ -96,10 +101,9 @@ registerSuite({
 		const key2: Key = Object.create(key1);
 		const key3: Key = {};
 		const frozen: Key = {};
-
 		Object.freeze(frozen);
 
-		const map = new WeakMap([
+		const map = new WeakMap<Key | undefined | null, number>([
 			[ key1, 1 ],
 			[ key3, 3 ],
 			[ frozen, 5]
@@ -108,6 +112,10 @@ registerSuite({
 		assert.isTrue(map.has(key1), 'key1 should be in map');
 		assert.isFalse(map.has(key2), 'key2 should not be in map');
 		assert.isTrue(map.has(key3), 'key3 should be in map');
+
+		assert.isFalse(map.has(undefined), 'undefined key should not be in map');
+		assert.isFalse(map.has(null), 'null key should not be in map');
+
 		assert.isTrue(map.has(frozen), 'frozen should be in the map');
 	},
 

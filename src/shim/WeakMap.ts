@@ -51,6 +51,10 @@ module Shim {
 		}
 
 		delete(key: any): boolean {
+			if (key === undefined || key === null) {
+				return false;
+			}
+
 			const entry: Entry<K, V> = key[this._name];
 			if (entry && entry.key === key && entry.value !== DELETED) {
 				entry.value = DELETED;
@@ -67,6 +71,10 @@ module Shim {
 		}
 
 		get(key: any): V | undefined {
+			if (key === undefined || key === null) {
+				return undefined;
+			}
+
 			const entry: Entry<K, V> = key[this._name];
 			if (entry && entry.key === key && entry.value !== DELETED) {
 				return entry.value;
@@ -79,6 +87,10 @@ module Shim {
 		}
 
 		has(key: any): boolean {
+			if (key === undefined || key === null) {
+				return false;
+			}
+
 			const entry: Entry<K, V> = key[this._name];
 			if (Boolean(entry && entry.key === key && entry.value !== DELETED)) {
 				return true;
