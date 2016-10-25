@@ -23,24 +23,17 @@
     "test": "grunt test"
   },
   "devDependencies": {
+    "@types/chai": "3.4.*",
+    "@types/glob": "5.0.*",
+    "@types/grunt": "0.4.*",
+    "@types/sinon": "1.16.*",
     "codecov.io": "0.1.6",
     "dojo-loader": ">=2.0.0-beta.7",
-    "dts-generator": "~1.7.0",
-    "glob": "^7.0.3",
     "grunt": "~1.0.1",
-    "grunt-contrib-clean": "^1.0.0",
-    "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-watch": "^1.0.0",
-    "grunt-dojo2": ">=2.0.0-beta.7",
-    "grunt-text-replace": "^0.4.0",
-    "grunt-ts": "^5.5.1",
-    "grunt-tslint": "^3.1.0",
-    "grunt-typings": ">=0.1.5",
+    "grunt-dojo2": ">=2.0.0-beta.16",
     "intern": "^3.2.3",
-    "istanbul": "^0.4.3",
-    "remap-istanbul": "^0.6.4",
     "sinon": "^1.17.4",
-    "tslint": "next",
-    "typescript": "2.0.2"
+    "tslint": "^3.11.0",
+    "typescript": "~2.0.3"
   }
 }

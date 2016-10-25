@@ -191,22 +191,22 @@ registerSuite({
 		'both feature and no-feature modules provided'() {
 			hasAdd('abc', true);
 			hasAdd('def', false);
-			assert.strictEqual(hasNormalize('abc?intern:intern!object', require.toAbsMid), 'intern/main');
-			assert.strictEqual(hasNormalize('def?intern:intern!object', require.toAbsMid), 'intern!object');
+			assert.strictEqual(hasNormalize('abc?intern:intern!object', (<any> require).toAbsMid), 'intern/main');
+			assert.strictEqual(hasNormalize('def?intern:intern!object', (<any> require).toAbsMid), 'intern!object');
 		},
 
 		'only feature module provided'() {
 			hasAdd('abc', true);
 			hasAdd('def', false);
-			assert.strictEqual(hasNormalize('abc?intern', require.toAbsMid), 'intern/main');
-			assert.isUndefined(hasNormalize('def?intern', require.toAbsMid));
+			assert.strictEqual(hasNormalize('abc?intern', (<any> require).toAbsMid), 'intern/main');
+			assert.isUndefined(hasNormalize('def?intern', (<any> require).toAbsMid));
 		},
 
 		'only no-feature module provided'() {
 			hasAdd('abc', true);
 			hasAdd('def', false);
-			assert.isNull(hasNormalize('abc?:intern', require.toAbsMid));
-			assert.strictEqual(hasNormalize('def?:intern', require.toAbsMid), 'intern/main');
+			assert.isNull(hasNormalize('abc?:intern', (<any> require).toAbsMid));
+			assert.strictEqual(hasNormalize('def?:intern', (<any> require).toAbsMid), 'intern/main');
 		},
 
 		'chained ternary test'() {
@@ -217,9 +217,9 @@ registerSuite({
 			hasAdd('abc', true);
 			hasAdd('def', false);
 
-			const actual1 = hasNormalize('abc?def?one:two:three', require.toAbsMid);
-			const actual2 = hasNormalize('abc?abc?one:two:three', require.toAbsMid);
-			const actual3 = hasNormalize('def?abc?one:two:three', require.toAbsMid);
+			const actual1 = hasNormalize('abc?def?one:two:three', (<any> require).toAbsMid);
+			const actual2 = hasNormalize('abc?abc?one:two:three', (<any> require).toAbsMid);
+			const actual3 = hasNormalize('def?abc?one:two:three', (<any> require).toAbsMid);
 
 			assert.strictEqual(expected1, actual1);
 			assert.strictEqual(expected2, actual2);
@@ -233,8 +233,8 @@ registerSuite({
 			hasAdd('abc', true);
 			hasAdd('def', false);
 
-			const actualHasFeatureModule = hasNormalize('abc?intern:intern!object', require.toAbsMid);
-			const actualHasNoFeatureModule = hasNormalize('def?intern:intern!object', require.toAbsMid);
+			const actualHasFeatureModule = hasNormalize('abc?intern:intern!object', (<any> require).toAbsMid);
+			const actualHasNoFeatureModule = hasNormalize('def?intern:intern!object', (<any> require).toAbsMid);
 
 			assert.strictEqual(expectedHasFeatureModule, actualHasFeatureModule);
 			assert.strictEqual(expectedHasNoFeatureModule, actualHasNoFeatureModule);
@@ -269,7 +269,7 @@ registerSuite({
 			const requireSpy = sinon.spy(require);
 			const loadedStub = sinon.stub();
 
-			hasLoad(<any> null, require, loadedStub);
+			hasLoad(<any> null, <any> require, loadedStub);
 			assert.isTrue(loadedStub.calledOnce);
 			assert.isFalse(requireSpy.calledOnce);
 		}
@@ -289,7 +289,7 @@ registerSuite({
 	'static has features': {
 		'staticFeatures object'(this: any) {
 			const dfd = this.async();
-			require.undef('src/has');
+			(<any> require).undef('src/has');
 			globalScope.DojoHasEnvironment = {
 				staticFeatures: {
 					'foo': 1,
@@ -297,7 +297,7 @@ registerSuite({
 					'baz': false
 				}
 			};
-			require([ 'src/has' ], dfd.callback((mod: { default: typeof has }) => {
+			(<any> require)([ 'src/has' ], dfd.callback((mod: { default: typeof has }) => {
 				const h = mod.default;
 				assert(!('DojoHasEnvironment' in globalScope));
 				assert.strictEqual(h('foo'), 1);
@@ -307,7 +307,7 @@ registerSuite({
 		},
 		'staticFeatures function'(this: any) {
 			const dfd = this.async();
-			require.undef('src/has');
+			(<any> require).undef('src/has');
 			globalScope.DojoHasEnvironment = {
 				staticFeatures: function () {
 					return {
@@ -317,7 +317,7 @@ registerSuite({
 					};
 				}
 			};
-			require([ 'src/has' ], dfd.callback((mod: { default: typeof has }) => {
+			(<any> require)([ 'src/has' ], dfd.callback((mod: { default: typeof has }) => {
 				const h = mod.default;
 				assert(!('DojoHasEnvironment' in globalScope));
 				assert.strictEqual(h('foo'), 1);
