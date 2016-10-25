@@ -276,6 +276,10 @@ registerSuite({
 	},
 
 	'built in feature flags': {
+		'debug'() {
+			assert.isTrue(hasExists('debug'));
+			assert.isTrue(has('debug'), 'Debug should default to true');
+		},
 		'host-browser'() {
 			assert.isTrue(hasExists('host-browser'));
 			assert.strictEqual(has('host-browser'), typeof document !== 'undefined' && typeof location !== 'undefined');
@@ -323,6 +327,22 @@ registerSuite({
 				assert.strictEqual(h('foo'), 1);
 				assert.strictEqual(h('bar'), 'bar');
 				assert.isFalse(h('baz'));
+			}));
+		},
+		'can override run-time defined features'(this: any) {
+			const dfd = this.async();
+			(<any> require).undef('src/has');
+			globalScope.DojoHasEnvironment = {
+				staticFeatures: {
+					debug: false
+				}
+			};
+			(<any> require)([ 'src/has' ], dfd.callback((mod: { default: typeof has, add: typeof hasAdd }) => {
+				const h = mod.default;
+				const hAdd = mod.add;
+				assert.isFalse(h('debug'), 'Static features override "add()"');
+				hAdd('debug', true, true);
+				assert.isFalse(h('debug'), 'Static features cannot be overwritten');
 			}));
 		}
 	}

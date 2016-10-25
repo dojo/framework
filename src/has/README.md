@@ -50,6 +50,7 @@ used to enable a developer to express other features.  The flags though that are
 
 |Feature Flag|Description|
 |------------|-----------|
+|`debug`|Provides a way to code path for code that is only usable when debugging or providing enhanced diagnostics that are not desired in a *production* build.  Defaults to `true` but should be configured statically as `false` in production builds.|
 |`host-browser`|Determines if the current environment contains a `window` and `document` object in the global context, therefore it being generally safe to assume the code is running in a browser environment.|
 |`host-node`|Attempts to detect if the environment appears to be a node environment.|
 

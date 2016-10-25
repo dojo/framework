@@ -215,7 +215,14 @@ export default function has(feature: string): FeatureTestResult {
  */
 
 /* Evironments */
+
+/* Used as a value to provide a debug only code path */
+add('debug', true);
+
+/* Detects if the environment is "browser like" */
 add('host-browser', typeof document !== 'undefined' && typeof location !== 'undefined');
+
+/* Detects if the enviornment appears to be NodeJS */
 add('host-node', function () {
 	if (typeof process === 'object' && process.versions && process.versions.node) {
 		return process.versions.node;
