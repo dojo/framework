@@ -8,8 +8,9 @@ export const environments = [
 	{ browserName: 'chrome', platform: 'Windows 10' },
 	/* Issues with SauceLabs and Safari ;-( */
 	// { browserName: 'safari', version: '9', platform: 'OS X 10.11' },
-	{ browserName: 'android', deviceName: 'Google Nexus 7 HD Emulator' },
-	{ browserName: 'iphone', version: '7.1' }
+	{ browserName: 'android', deviceName: 'Google Nexus 7 HD Emulator' }
+	/* Issues with SauceLabs and Safar iOS 8/9 */
+	// { browserName: 'iphone', version: '9.3' }
 ];
 
 /* SauceLabs supports more max concurrency */
