@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import has from 'src/support/has';
-import global from 'src/support/global';
+import has from '../../../src/support/has';
+import global from '../../../src/support/global';
 
 registerSuite({
 	name: 'native/Symbol',
@@ -10,7 +10,7 @@ registerSuite({
 			this.skip('No native support');
 		}
 		const dfd = this.async();
-		require([ 'src/native/Symbol' ], dfd.callback((m: any) => {
+		(<any> require)([ 'src/native/Symbol' ], dfd.callback((m: any) => {
 			/* tslint:disable-next-line:variable-name */
 			const Symbol = m.default;
 			const { isSymbol } = m;

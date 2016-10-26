@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import has from 'src/support/has';
+import has from '../../../src/support/has';
 
 registerSuite({
 	name: 'native/math',
@@ -9,7 +9,7 @@ registerSuite({
 			this.skip('No native support');
 		}
 		const dfd = this.async();
-		require([ 'src/native/math' ], dfd.callback((math: any) => {
+		(<any> require)([ 'src/native/math' ], dfd.callback((math: any) => {
 			[
 				'acosh',
 				'asinh',

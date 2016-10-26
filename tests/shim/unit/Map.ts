@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { forOf, isIterable, IterableIterator, ShimIterator } from 'src/iterator';
-import Map from 'src/Map';
+import { forOf, isIterable, IterableIterator, ShimIterator } from '../../src/iterator';
+import Map from '../../src/Map';
 
 let map: Map<any, any>;
 let mapArgs: any[];

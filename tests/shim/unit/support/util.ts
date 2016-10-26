@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import {
 	getValueDescriptor
-} from 'src/support/util';
+} from '../../../src/support/util';
 
 registerSuite({
 	name: 'util',

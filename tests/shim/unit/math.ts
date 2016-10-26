@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as math from 'src/math';
+import * as math from '../../src/math';
 
 function assertIsNaN(...results: number[]) {
 	for (let result of results) {

@@ -1,8 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as array from 'src/array';
-import has, { add as hasAdd } from 'src/support/has';
-import { Iterable, ShimIterator } from 'src/iterator';
+import * as array from '../../src/array';
+import has, { add as hasAdd } from '../../src/support/has';
+import { Iterable, ShimIterator } from '../../src/iterator';
 import 'src/Symbol';
 
 function mixin<T extends { [key: string]: any }, U extends { [key: string]: any }>(destination: T, source: U): T & U {

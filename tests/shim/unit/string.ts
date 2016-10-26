@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as stringUtil from 'src/string';
-import has from 'src/support/has';
+import * as stringUtil from '../../src/string';
+import has from '../../src/support/has';
 
 registerSuite({
 	name: 'string functions',

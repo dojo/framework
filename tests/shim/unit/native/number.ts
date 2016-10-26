@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import has, { add as hasAdd } from 'src/support/has';
-import global from 'src/support/global';
+import has, { add as hasAdd } from '../../../src/support/has';
+import global from '../../../src/support/global';
 
 hasAdd('es6-number', 'EPSILON' in global.Number);
 
@@ -12,7 +12,7 @@ registerSuite({
 			this.skip('No native support');
 		}
 		const dfd = this.async();
-		require([ 'src/native/number' ], dfd.callback((num: any) => {
+		(<any> require)([ 'src/native/number' ], dfd.callback((num: any) => {
 			[
 				'EPSILON',
 				'MAX_SAFE_INTEGER',

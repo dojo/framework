@@ -10,7 +10,7 @@
 		"removeComments": false,
 		"sourceMap": true,
 		"target": "es5",
-		"moduleResolution": "classic",
+		"moduleResolution": "node",
 		"strictNullChecks": true,
 		"noImplicitThis": true
 	},

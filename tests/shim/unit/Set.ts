@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Set from 'src/Set';
-import { forOf, ShimIterator } from 'src/iterator';
+import Set from '../../src/Set';
+import { forOf, ShimIterator } from '../../src/iterator';
 
 registerSuite({
 	name: 'Set',

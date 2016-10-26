@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as numberUtil from 'src/number';
+import * as numberUtil from '../../src/number';
 
 function testEdgeCases(op: (value: any) => boolean) {
 	assert.isFalse(op({}));

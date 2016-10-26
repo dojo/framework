@@ -1,12 +1,12 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import has from 'src/support/has';
-import { State } from 'src/native/Promise';
-import { Thenable } from 'src/interfaces';
-import { ShimIterator } from 'src/iterator';
+import has from '../../../src/support/has';
+import { State } from '../../../src/native/Promise';
+import { Thenable } from '../../../src/interfaces';
+import { ShimIterator } from '../../../src/iterator';
 
 if (has('es6-promise')) {
-	require([ 'src/native/Promise' ], (m: any) => {
+	(<any> require)([ 'src/native/Promise' ], (m: any) => {
 		/* tslint:disable-next-line:variable-name */
 		const Promise: any = m.default;
 		function addPromiseTests(suite: any) {

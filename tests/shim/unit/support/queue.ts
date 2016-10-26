@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { queueTask, queueMicroTask } from 'src/support/queue';
+import { queueTask, queueMicroTask } from '../../../src/support/queue';
 
 registerSuite({
 	name: 'queue functions',

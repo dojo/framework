@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import has from 'src/support/has';
+import has from '../../../src/support/has';
 
 registerSuite({
 	name: 'native/array',
@@ -9,7 +9,7 @@ registerSuite({
 			this.skip('No native support');
 		}
 		const dfd = this.async();
-		require([ 'src/native/array' ], dfd.callback((array: any) => {
+		(<any> require)([ 'src/native/array' ], dfd.callback((array: any) => {
 			assert.isFunction(array.from);
 			assert.isFunction(array.of);
 			assert.isFunction(array.copyWithin);

@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { exists } from 'src/support/has';
+import { exists } from '../../../src/support/has';
 
 registerSuite({
 	name: 'support/has',
