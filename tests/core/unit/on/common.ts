@@ -1,6 +1,6 @@
 import * as assert from 'intern/chai!assert';
 import on, { emit, once, pausable } from '../../../src/on';
-import { Handle } from '../../../src/interfaces';
+import { Handle } from 'dojo-interfaces/core';
 
 let handles: Handle[] = [];
 function testOn(...args: any[]) {

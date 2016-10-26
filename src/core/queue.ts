@@ -1,6 +1,6 @@
 import global from './global';
 import has from './has';
-import { Handle } from './interfaces';
+import { Handle } from 'dojo-interfaces/core';
 
 function executeTask(item: QueueItem | undefined): void {
 	if (item && item.isActive && item.callback) {

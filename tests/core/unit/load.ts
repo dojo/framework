@@ -3,7 +3,7 @@ import * as registerSuite from 'intern!object';
 import has from '../../src/has';
 import load from '../../src/load';
 import Promise from 'dojo-shim/Promise';
-import { RootRequire } from '../../src/loader';
+import { RootRequire } from 'dojo-interfaces/loader';
 import global from '../../src/global';
 
 declare const require: RootRequire;

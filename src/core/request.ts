@@ -1,7 +1,7 @@
 import Promise from 'dojo-shim/Promise';
 import Task from './async/Task';
 import has from './request/has';
-import { Handle } from './interfaces';
+import { Handle } from 'dojo-interfaces/core';
 import MatchRegistry, { Test } from './MatchRegistry';
 import load from './load';
 import { ParamList } from './UrlSearchParams';

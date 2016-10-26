@@ -1,4 +1,4 @@
-import { Handle, EventObject } from './interfaces';
+import { Handle, EventObject } from 'dojo-interfaces/core';
 import { on } from './aspect';
 
 export default class Evented {

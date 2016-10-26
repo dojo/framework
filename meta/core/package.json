@@ -33,6 +33,7 @@
     "@types/grunt": "~0.4.0",
     "@types/sinon": "~1.16.0",
     "benchmark": "^1.0.0",
+    "dojo-interfaces": ">=2.0.0-alpha.2",
     "dojo-loader": ">=2.0.0-beta.7",
     "formidable": "1.0.17",
     "grunt": "^1.0.1",

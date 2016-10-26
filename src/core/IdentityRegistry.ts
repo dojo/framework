@@ -1,6 +1,6 @@
 import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
-import { Handle } from './interfaces';
+import { Handle } from 'dojo-interfaces/core';
 
 const noop = () => {};
 

@@ -1,6 +1,6 @@
 import Task from '../async/Task';
 import RequestTimeoutError from './errors/RequestTimeoutError';
-import { Handle } from '../interfaces';
+import { Handle } from 'dojo-interfaces/core';
 import * as http from 'http';
 import * as https from 'https';
 import { createHandle } from '../lang';

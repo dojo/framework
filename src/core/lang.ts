@@ -1,5 +1,5 @@
 import has from './has';
-import { Handle } from './interfaces';
+import { Handle } from 'dojo-interfaces/core';
 
 const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;

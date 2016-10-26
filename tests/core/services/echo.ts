@@ -1,4 +1,4 @@
-import { Hash } from '../../src/interfaces';
+import { Hash } from 'dojo-interfaces/core';
 
 import http = require('intern/dojo/node!http');
 import querystring = require('intern/dojo/node!querystring');

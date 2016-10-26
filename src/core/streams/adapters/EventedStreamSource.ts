@@ -1,6 +1,6 @@
 import Promise from 'dojo-shim/Promise';
 import Evented from '../../Evented';
-import { Handle } from '../../interfaces';
+import { Handle } from 'dojo-interfaces/core';
 import on, { EventEmitter } from '../../on';
 import { Source } from '../ReadableStream';
 import ReadableStreamController from '../ReadableStreamController';

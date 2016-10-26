@@ -1,6 +1,6 @@
 import P from 'dojo-shim/Promise';
 import global from './global';
-import { Require } from './loader';
+import { Require } from 'dojo-interfaces/loader';
 
 declare const require: Require;
 

@@ -1,5 +1,5 @@
 import { repeat } from 'dojo-shim/string';
-import { Hash } from './interfaces';
+import { Hash } from 'dojo-interfaces/core';
 
 const escapeRegExpPattern = /[[\]{}()|\/\\^$.*+?]/g;
 const escapeXmlPattern = /[&<]/g;

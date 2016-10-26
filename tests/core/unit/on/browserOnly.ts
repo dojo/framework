@@ -2,7 +2,7 @@ import common from './common';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import on, { emit } from '../../../src/on';
-import { EventObject } from '../../../src/interfaces';
+import { EventObject } from 'dojo-interfaces/core';
 
 function createTarget(): HTMLElement {
 	let element = document.createElement('div');

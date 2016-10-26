@@ -1,7 +1,7 @@
 import Promise from 'dojo-shim/Promise';
 import has from './has';
 import request, { Response } from './request';
-import { Config, Require } from './loader';
+import { Config, Require } from 'dojo-interfaces/loader';
 
 declare const require: Require;
 

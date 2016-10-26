@@ -1,4 +1,4 @@
-import { Handle, EventObject } from './interfaces';
+import { Handle, EventObject } from 'dojo-interfaces/core';
 import { createHandle, createCompositeHandle } from './lang';
 import Evented from './Evented';
 
