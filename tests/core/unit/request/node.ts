@@ -3,12 +3,12 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as DojoPromise from 'intern/dojo/Promise';
 import Promise from 'dojo-shim/Promise';
-import RequestTimeoutError from 'src/request/errors/RequestTimeoutError';
-import { default as nodeRequest, NodeRequestOptions } from 'src/request/node';
-import ArraySink from 'src/streams/ArraySink';
-import ReadableStream from 'src/streams/ReadableStream';
-import ReadableStreamController from 'src/streams/ReadableStreamController';
-import WritableStream from 'src/streams/WritableStream';
+import RequestTimeoutError from '../../../src/request/errors/RequestTimeoutError';
+import { default as nodeRequest, NodeRequestOptions } from '../../../src/request/node';
+import ArraySink from '../../../src/streams/ArraySink';
+import ReadableStream from '../../../src/streams/ReadableStream';
+import ReadableStreamController from '../../../src/streams/ReadableStreamController';
+import WritableStream from '../../../src/streams/WritableStream';
 import { createServer } from 'http';
 import { parse } from 'url';
 

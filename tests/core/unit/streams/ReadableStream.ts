@@ -2,14 +2,14 @@ import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 
 import BaseStringSource from './helpers/BaseStringSource';
-import ArraySink from 'src/streams/ArraySink';
-import OriginalReadableStream, { State } from 'src/streams/ReadableStream';
-import ReadableStreamController from 'src/streams/ReadableStreamController';
-import { ReadResult } from 'src/streams/ReadableStreamReader';
-import { Strategy } from 'src/streams/interfaces';
+import ArraySink from '../../../src/streams/ArraySink';
+import OriginalReadableStream, { State } from '../../../src/streams/ReadableStream';
+import ReadableStreamController from '../../../src/streams/ReadableStreamController';
+import { ReadResult } from '../../../src/streams/ReadableStreamReader';
+import { Strategy } from '../../../src/streams/interfaces';
 import Promise from 'dojo-shim/Promise';
-import TransformStream, { Transform } from 'src/streams/TransformStream';
-import WritableStream, { State as WritableState } from 'src/streams/WritableStream';
+import TransformStream, { Transform } from '../../../src/streams/TransformStream';
+import WritableStream, { State as WritableState } from '../../../src/streams/WritableStream';
 
 function buildEnqueuingStartSource() {
 	let source = new BaseStringSource();

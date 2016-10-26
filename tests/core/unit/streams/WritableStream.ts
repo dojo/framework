@@ -1,9 +1,9 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
-import WritableStream, { State, Sink } from 'src/streams/WritableStream';
+import WritableStream, { State, Sink } from '../../../src/streams/WritableStream';
 import BaseStringSink from './helpers/BaseStringSink';
 import ManualSink from './helpers/ManualSink';
-import { Strategy } from 'src/streams/interfaces';
+import { Strategy } from '../../../src/streams/interfaces';
 import Promise from 'dojo-shim/Promise';
 
 const ASYNC_TIMEOUT = 1000;

@@ -1,4 +1,4 @@
-import { Sink } from 'src/streams/WritableStream';
+import { Sink } from '../../../../src/streams/WritableStream';
 import Promise from 'dojo-shim/Promise';
 
 export default class BaseStringSink implements Sink<string> {

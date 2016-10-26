@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import UrlSearchParams from 'src/UrlSearchParams';
+import UrlSearchParams from '../../src/UrlSearchParams';
 
 registerSuite({
 	name: 'UrlSearchParams',

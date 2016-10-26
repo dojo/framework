@@ -1,9 +1,9 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as text from 'src/text';
+import * as text from '../../src/text';
 import { spy, SinonSpy } from 'sinon';
 import * as fs from 'fs';
-import { RootRequire } from 'src/loader';
+import { RootRequire } from '../../src/loader';
 
 declare const require: RootRequire;
 

@@ -2,10 +2,10 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { Readable } from 'stream';
 import Promise from 'dojo-shim/Promise';
-import ReadableStream from 'src/streams/ReadableStream';
-import { ReadResult } from 'src/streams/ReadableStreamReader';
-import ReadableStreamController from 'src/streams/ReadableStreamController';
-import ReadableNodeStreamSource from 'src/streams/adapters/ReadableNodeStreamSource';
+import ReadableStream from '../../../../src/streams/ReadableStream';
+import { ReadResult } from '../../../../src/streams/ReadableStreamReader';
+import ReadableStreamController from '../../../../src/streams/ReadableStreamController';
+import ReadableNodeStreamSource from '../../../../src/streams/adapters/ReadableNodeStreamSource';
 
 class Controller extends ReadableStreamController<string> {
 	enqueuedValue: string;

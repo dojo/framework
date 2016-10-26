@@ -1,10 +1,10 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 
-import ReadableStreamController from 'src/streams/ReadableStreamController';
-import ReadableStream, { Source, State } from 'src/streams/ReadableStream';
+import ReadableStreamController from '../../../src/streams/ReadableStreamController';
+import ReadableStream, { Source, State } from '../../../src/streams/ReadableStream';
 import BaseStringSource from './helpers/BaseStringSource';
-import { Strategy } from 'src/streams/interfaces';
+import { Strategy } from '../../../src/streams/interfaces';
 
 let stream: ReadableStream<string>;
 let source: Source<string>;

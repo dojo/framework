@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import request from 'src/request';
-import { Require } from 'src/loader';
+import request from '../../src/request';
+import { Require } from '../../src/loader';
 
 declare const require: Require;
 

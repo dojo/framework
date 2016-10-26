@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as DojoPromise from 'intern/dojo/Promise';
-import request, { RequestOptions } from 'src/request';
+import request, { RequestOptions } from '../../src/request';
 import { createServer } from 'http';
 import { parse } from 'url';
 

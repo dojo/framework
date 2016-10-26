@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { Writable } from 'stream';
-import WritableNodeStreamSink from 'src/streams/adapters/WritableNodeStreamSink';
+import WritableNodeStreamSink from '../../../../src/streams/adapters/WritableNodeStreamSink';
 
 class WriteStream extends Writable {
 	writtenChunk: any;

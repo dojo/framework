@@ -1,6 +1,6 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
-import * as util from 'src/streams/util';
+import * as util from '../../../src/streams/util';
 
 const BOOLEAN_SIZE = 4;
 const NUMBER_SIZE = 8;

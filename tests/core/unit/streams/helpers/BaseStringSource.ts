@@ -1,5 +1,5 @@
-import ReadableStreamController from 'src/streams/ReadableStreamController';
-import { Source } from 'src/streams/ReadableStream';
+import ReadableStreamController from '../../../../src/streams/ReadableStreamController';
+import { Source } from '../../../../src/streams/ReadableStream';
 import Promise from 'dojo-shim/Promise';
 
 export default class BaseStringSource implements Source<string> {

@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import global from 'src/global';
+import global from '../../src/global';
 
 registerSuite({
 	name: 'global',

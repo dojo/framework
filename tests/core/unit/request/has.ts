@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import has from 'src/request/has';
+import has from '../../../src/request/has';
 
 registerSuite({
 	name: 'request/has',

@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Task from 'src/async/Task';
-import request, { filterRegistry, providerRegistry, Response, ResponsePromise } from 'src/request';
+import Task from '../../src/async/Task';
+import request, { filterRegistry, providerRegistry, Response, ResponsePromise } from '../../src/request';
 import 'intern/dojo/has!host-node?./request_node:./request_browser';
 
 const mockData = '{ "foo": "bar" }';

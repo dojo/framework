@@ -1,4 +1,4 @@
-import { Sink } from 'src/streams/WritableStream';
+import { Sink } from '../../../../src/streams/WritableStream';
 import Promise from 'dojo-shim/Promise';
 
 // A sink whose write operations must be manually resolved by calling 'next'

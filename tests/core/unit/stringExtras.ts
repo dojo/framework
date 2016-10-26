@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as stringExtras from 'src/stringExtras';
+import * as stringExtras from '../../src/stringExtras';
 
 function createPaddingErrorTests(func: (text: string, length: number, character?: string) => string) {
 	// Tests error cases for padStart and padEnd.

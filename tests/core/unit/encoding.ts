@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { ascii, utf8, hex, base64 } from 'src/encoding';
-import global from 'src/global';
+import { ascii, utf8, hex, base64 } from '../../src/encoding';
+import global from '../../src/global';
 
 const ASCII_BUFFER = [ 116, 104, 101, 32, 99, 97, 116, 32, 97, 110, 100, 32,
 	116, 104, 101, 32, 104, 97, 116 ];

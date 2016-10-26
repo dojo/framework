@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as lang from 'src/lang';
+import * as lang from '../../src/lang';
 
 registerSuite({
 	name: 'lang functions',

@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import Promise, { State } from 'dojo-shim/Promise';
 import { Thenable } from 'dojo-shim/interfaces';
 import { ShimIterator } from 'dojo-shim/iterator';
-import Task, { Canceled, isTask } from 'src/async/Task';
+import Task, { Canceled, isTask } from '../../../src/async/Task';
 
 let suite = {
 	name: 'Task',

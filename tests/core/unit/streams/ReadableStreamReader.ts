@@ -1,8 +1,8 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 
-import ReadableStreamReader, { ReadResult } from 'src/streams/ReadableStreamReader';
-import ReadableStream, { State, Source } from 'src/streams/ReadableStream';
+import ReadableStreamReader, { ReadResult } from '../../../src/streams/ReadableStreamReader';
+import ReadableStream, { State, Source } from '../../../src/streams/ReadableStream';
 import BaseStringSource from './helpers/BaseStringSource';
 import Promise from 'dojo-shim/Promise';
 

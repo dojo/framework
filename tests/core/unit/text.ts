@@ -1,10 +1,10 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import has from 'src/has';
-import * as text from 'src/text';
+import has from '../../src/has';
+import * as text from '../../src/text';
 import { stub } from 'sinon';
 import 'intern/dojo/has!host-node?./text_node:./text_browser';
-import { RootRequire } from 'src/loader';
+import { RootRequire } from '../../src/loader';
 
 declare const require: RootRequire;
 

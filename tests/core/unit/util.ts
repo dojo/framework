@@ -20,8 +20,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
-import { Handle } from 'src/interfaces';
-import * as util from 'src/util';
+import { Handle } from '../../src/interfaces';
+import * as util from '../../src/util';
 
 const TIMEOUT = 3000;
 

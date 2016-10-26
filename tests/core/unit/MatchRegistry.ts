@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import MatchRegistry from 'src/MatchRegistry';
+import MatchRegistry from '../../src/MatchRegistry';
 
 function stringTest(value: string) {
 	return (...args: any[]): boolean => {

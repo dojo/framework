@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import DateObject, { KwArgs, OperationKwArgs, DateProperties } from 'src/DateObject';
+import DateObject, { KwArgs, OperationKwArgs, DateProperties } from '../../src/DateObject';
 
 let date: Date;
 let object: DateObject;

@@ -3,7 +3,7 @@ import * as registerSuite from 'intern!object';
 import * as Suite from 'intern/lib/Suite';
 import * as Command from 'leadfoot/Command';
 import * as pollUntil from 'leadfoot/helpers/pollUntil';
-import { Require } from 'src/loader';
+import { Require } from '../../../src/loader';
 
 declare const require: Require;
 

@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 
-import SizeQueue from 'src/streams/SizeQueue';
+import SizeQueue from '../../../src/streams/SizeQueue';
 
 let queue: SizeQueue<string>;
 registerSuite({

@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Evented from 'src/Evented';
+import Evented from '../../src/Evented';
 
 interface CustomEvent {
 	type: string;

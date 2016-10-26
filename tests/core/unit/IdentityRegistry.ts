@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import Symbol from 'dojo-shim/Symbol';
 
-import IdentityRegistry from 'src/IdentityRegistry';
+import IdentityRegistry from '../../src/IdentityRegistry';
 
 class Value {}
 

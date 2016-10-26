@@ -1,13 +1,13 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 
-import ArraySource from 'src/streams/ArraySource';
-import CountQueuingStrategy from 'src/streams/CountQueuingStrategy';
+import ArraySource from '../../../src/streams/ArraySource';
+import CountQueuingStrategy from '../../../src/streams/CountQueuingStrategy';
 import Promise from 'dojo-shim/Promise';
-import { State } from 'src/streams/ReadableStream';
-import { ReadResult } from 'src/streams/ReadableStreamReader';
-import SeekableStream from 'src/streams/SeekableStream';
-import SeekableStreamReader from 'src/streams/SeekableStreamReader';
+import { State } from '../../../src/streams/ReadableStream';
+import { ReadResult } from '../../../src/streams/ReadableStreamReader';
+import SeekableStream from '../../../src/streams/SeekableStream';
+import SeekableStreamReader from '../../../src/streams/SeekableStreamReader';
 
 let data: string[];
 let source: ArraySource<string>;

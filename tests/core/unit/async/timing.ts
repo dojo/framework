@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as timing from 'src/async/timing';
+import * as timing from '../../../src/async/timing';
 import { throwImmediatly } from '../../support/util';
 import { isEventuallyRejected } from '../../support/util';
 import Promise from 'dojo-shim/Promise';

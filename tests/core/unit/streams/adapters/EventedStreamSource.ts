@@ -1,10 +1,10 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 
-import Evented from 'src/Evented';
-import ReadableStream from 'src/streams/ReadableStream';
-import ReadableStreamReader, { ReadResult } from 'src/streams/ReadableStreamReader';
-import EventedStreamSource from 'src/streams/adapters/EventedStreamSource';
+import Evented from '../../../../src/Evented';
+import ReadableStream from '../../../../src/streams/ReadableStream';
+import ReadableStreamReader, { ReadResult } from '../../../../src/streams/ReadableStreamReader';
+import EventedStreamSource from '../../../../src/streams/adapters/EventedStreamSource';
 
 let emitter: Evented;
 let stream: ReadableStream<Event>;

@@ -2,6 +2,10 @@
   "name": "dojo-core",
   "version": "2.0.0-pre",
   "description": "Basic utilites for common TypeScript development",
+  "engines": {
+    "node": "^6.0.0",
+    "npm": "^3.0.0"
+  },
   "homepage": "http://dojotoolkit.org",
   "bugs": {
     "url": "https://github.com/dojo/core/issues"
@@ -22,26 +26,21 @@
     "dojo-shim": ">=2.0.0-alpha.4"
   },
   "devDependencies": {
+    "@types/benchmark": "~1.0.0",
+    "@types/chai": "~3.4.0",
+    "@types/formidable": "~1.0.0",
+    "@types/glob": "~5.0.0",
+    "@types/grunt": "~0.4.0",
+    "@types/sinon": "~1.16.0",
     "benchmark": "^1.0.0",
-    "codecov.io": "0.1.6",
     "dojo-loader": ">=2.0.0-beta.7",
-    "dts-generator": "~1.7.0",
     "formidable": "1.0.17",
-    "glob": "^7.0.3",
     "grunt": "^1.0.1",
-    "grunt-contrib-clean": "^1.0.0",
-    "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-watch": "^1.0.0",
-    "grunt-dojo2": ">=2.0.0-beta.16",
-    "grunt-text-replace": "0.4.0",
-    "grunt-ts": "^5.5.1",
-    "grunt-tslint": "^3.1.0",
-    "grunt-typings": ">=0.1.5",
+    "grunt-dojo2": ">=2.0.0-beta.19",
     "http-proxy": "0.10.3",
-    "intern": "~3.2.3",
+    "intern": "^3.3.1",
     "istanbul": "0.4.3",
-    "remap-istanbul": "0.6.4",
-    "sinon": "1.14.1",
+    "sinon": "~1.16.0",
     "tslint": "^3.15.1",
     "typescript": "~2.0.3"
   }

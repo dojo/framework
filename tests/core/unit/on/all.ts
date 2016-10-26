@@ -1,8 +1,8 @@
 import common from './common';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import on, { emit } from 'src/on';
-import Evented from 'src/Evented';
+import on, { emit } from '../../../src/on';
+import Evented from '../../../src/Evented';
 import 'dojo/has!host-node?./nodeOnly:./browserOnly';
 
 registerSuite({

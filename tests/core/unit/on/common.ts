@@ -1,6 +1,6 @@
 import * as assert from 'intern/chai!assert';
-import on, { emit, once, pausable } from 'src/on';
-import { Handle } from 'src/interfaces';
+import on, { emit, once, pausable } from '../../../src/on';
+import { Handle } from '../../../src/interfaces';
 
 let handles: Handle[] = [];
 function testOn(...args: any[]) {

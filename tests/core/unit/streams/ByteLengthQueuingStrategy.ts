@@ -1,8 +1,8 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
-import has from 'src/has';
-import ByteLengthQueuingStrategy from 'src/streams/ByteLengthQueuingStrategy';
-import WritableStream, { State } from 'src/streams/WritableStream';
+import has from '../../../src/has';
+import ByteLengthQueuingStrategy from '../../../src/streams/ByteLengthQueuingStrategy';
+import WritableStream, { State } from '../../../src/streams/WritableStream';
 import ManualSink from './helpers/ManualSink';
 
 const ASYNC_TIMEOUT = 1000;

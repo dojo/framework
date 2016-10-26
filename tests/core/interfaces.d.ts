@@ -1,5 +1,5 @@
 declare module 'intern/dojo/has!host-node?./services/echo' {
-	import echo = require('tests/services/echo');
+	const echo: any;
 	export = echo;
 }
 
