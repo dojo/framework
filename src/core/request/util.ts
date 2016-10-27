@@ -5,16 +5,15 @@ import UrlSearchParams from '../UrlSearchParams';
  * Returns a URL formatted with optional query string and cache-busting segments.
  *
  * @param url The base URL.
- * @param options The options hash that is used to generate the query string.
+ * @param options The RequestOptions used to generate the query string or cacheBust.
  */
-export function generateRequestUrl(url: string, options: RequestOptions): string {
-	let query = new UrlSearchParams(options.query).toString();
-
-	if (options.cacheBust) {
-		const cacheBust = String(Date.now());
-		query += query ? '&' + cacheBust : cacheBust;
+export function generateRequestUrl(url: string,
+		{ query, cacheBust }: RequestOptions = {}): string {
+	query = new UrlSearchParams(query).toString();
+	if (cacheBust) {
+		const bustString = String(Date.now());
+		query += query ? `&${bustString}` : bustString;
 	}
-
 	const separator = url.indexOf('?') > -1 ? '&' : '?';
-	return query ? url + separator + query : url;
+	return query ? `${url}${separator}${query}` : url;
 }
