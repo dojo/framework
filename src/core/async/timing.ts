@@ -1,23 +1,24 @@
 import Promise from 'dojo-shim/Promise';
+import { Thenable } from 'dojo-shim/interfaces';
 
 /**
  * Used for delaying a Promise chain for a specific number of milliseconds.
  *
  * @param milliseconds the number of milliseconds to delay
- * @return {function(T): Promise<T>} a function producing a promise that eventually returns the value passed to it; usable with Thenable.then()
+ * @return {function (value: T | (() => T | Thenable<T>)): Promise<T>} a function producing a promise that eventually returns the value or executes the value function passed to it; usable with Thenable.then()
  */
 export function delay<T>(milliseconds: number): Identity<T> {
-	return function (value: T): Promise<T> {
+	return function (value?: T | (() => T | Thenable<T>)): Promise<T> {
 		return new Promise(function (resolve) {
 			setTimeout(function () {
-				resolve(value);
+				resolve(typeof value === 'function' ? value() : value);
 			}, milliseconds);
 		});
 	};
 }
 
 export interface Identity<T> {
-	(value: T): Promise<T>;
+	(value?: T | (() => T | Thenable<T>)): Promise<T>;
 }
 
 /**
