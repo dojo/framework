@@ -38,6 +38,7 @@ add('es6-string-includes', 'includes' in global.String.prototype);
 /* Math */
 
 add('es6-math-acosh', typeof global.Math.acosh === 'function');
+add('es6-math-clz32', typeof global.Math.clz32 === 'function');
 add('es6-math-imul', () => {
 	if ('imul' in global.Math) {
 		/* Some versions of Safari on ios do not properly implement this */
@@ -47,7 +48,7 @@ add('es6-math-imul', () => {
 });
 
 /* Promise */
-add('es6-promise', typeof global.Promise !== 'undefined');
+add('es6-promise', typeof global.Promise !== 'undefined' && typeof global.Symbol !== 'undefined');
 
 /* Set */
 add('es6-set', () => {
@@ -62,10 +63,20 @@ add('es6-set', () => {
 /* Map */
 add('es6-map', function () {
 	if (typeof global.Map === 'function') {
-		/* IE11 and older versions of Safari are missing critical ES6 Map functionality */
-		const map = new global.Map([ [0, 1] ]);
-		return map.has(0) && typeof map.keys === 'function' &&
-			typeof map.values === 'function' && typeof map.entries === 'function';
+		/*
+		IE11 and older versions of Safari are missing critical ES6 Map functionality
+		We wrap this in a try/catch because sometimes the Map constructor exists, but does not
+		take arguments (iOS 8.4)
+		 */
+		try {
+			const map = new global.Map([ [0, 1] ]);
+			return map.has(0) && typeof map.keys === 'function' &&
+				typeof map.values === 'function' && typeof map.entries === 'function';
+		}
+		catch (e) {
+			/* istanbul ignore next: not testing on iOS at the moment */
+			return false;
+		}
 	}
 	return false;
 });

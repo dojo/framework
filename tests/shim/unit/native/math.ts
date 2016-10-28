@@ -5,7 +5,7 @@ import has from '../../../src/support/has';
 registerSuite({
 	name: 'native/math',
 	'verify API'(this: any) {
-		if (!has('es6-math-acosh')) {
+		if (!has('es6-math-acosh') || !has('es6-math-clz32')) {
 			this.skip('No native support');
 		}
 		const dfd = this.async();
