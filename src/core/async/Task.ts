@@ -1,9 +1,16 @@
-import { Iterable } from 'dojo-shim/iterator';
-import Promise, { Executor, State, isThenable } from 'dojo-shim/Promise';
 import { Thenable } from 'dojo-shim/interfaces';
+import { Executor } from 'dojo-shim/Promise';
+import ExtensiblePromise from './ExtensiblePromise';
 
-/* tslint:disable-next-line:variable-name */
-export const Canceled = <State> 4;
+/**
+ * Describe the internal state of a task.
+ */
+export declare const enum State {
+	Fulfilled = 0,
+	Pending = 1,
+	Rejected = 2,
+	Canceled = 3
+}
 
 /**
  * A type guard that determines if `value` is a `Task`
@@ -14,62 +21,29 @@ export function isTask<T>(value: any): value is Task<T> {
 }
 
 /**
- * Task is an extension of Promise that supports cancelation.
+ * Returns true if a given value has a `then` method.
+ * @param {any} value The value to check if is Thenable
+ * @returns {is Thenable<T>} A type guard if the value is thenable
  */
-export default class Task<T> extends Promise<T> {
-	static all<T>(iterator: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): Task<T[]> {
-		return <any> super.all(iterator);
-	}
+export function isThenable<T>(value: any): value is Thenable<T> {
+	return value && typeof value.then === 'function';
+}
 
-	static race<T>(iterator: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): Task<T> {
-		return <any> super.race(iterator);
-	}
-
-	static reject<T>(reason: Error): Task<any> {
-		return <any> super.reject(reason);
-	}
-
-	static resolve(): Task<void>;
-	static resolve<T>(value: (T | Thenable<T>)): Task<T>;
-	static resolve<T>(value?: any): Task<T> {
-		return new this((resolve) => {
-			resolve(value);
-		});
-	}
-
-	protected static copy<U>(other: Promise<U>): Task<U> {
-		const task = <Task<U>> super.copy(other);
-		task.children = [];
-		task.canceler = other instanceof Task ? other.canceler : function () {};
-		return task;
-	}
-
-	constructor(executor: Executor<T>, canceler?: () => void) {
-		super((resolve, reject) => {
-			// Don't let the Task resolve if it's been canceled
-			executor(
-				(value) => {
-					if (this._state === Canceled) {
-						return;
-					}
-					resolve(value);
-				},
-				(reason) => {
-					if (this._state === Canceled) {
-						return;
-					}
-					reject(reason);
-				}
-			);
-		});
-
-		this.children = [];
-		this.canceler = () => {
-			if (canceler) {
-				canceler();
-			}
-			this._cancel();
-		};
+/**
+ * Task is an extension of Promise that supports cancellation and the Task#finally method.
+ */
+export default class Task<T> extends ExtensiblePromise<T> {
+	/**
+	 * Return a resolved task.
+	 *
+	 * @param value The value to resolve with
+	 *
+	 * @return {Task}
+	 */
+	public static resolve(): Task<void>;
+	public static resolve<T>(value: (T | Thenable<T>)): Task<T>;
+	public static resolve<T>(value?: any): Task<T> {
+		return new this<T>((resolve, reject) => resolve(value));
 	}
 
 	/**
@@ -88,13 +62,63 @@ export default class Task<T> extends Promise<T> {
 	private _finally: () => void | Thenable<any>;
 
 	/**
-	 * Propagates cancelation down through a Task tree. The Task's state is immediately set to canceled. If a Thenable
+	 * The state of the task
+	 */
+	protected _state: State;
+
+	get state() {
+		return this._state;
+	}
+
+	/**
+	 * @constructor
+	 *
+	 * Create a new task. Executor is run immediately. The canceler will be called when the task is canceled.
+	 *
+	 * @param executor Method that initiates some task
+	 * @param canceler Method to call when the task is canceled
+	 *
+	 */
+	constructor(executor: Executor<T>, canceler?: () => void) {
+		super((resolve, reject) => {
+			// Don't let the Task resolve if it's been canceled
+			executor(
+				(value) => {
+					if (this._state === State.Canceled) {
+						return;
+					}
+					this._state = State.Fulfilled;
+					resolve(value);
+				},
+				(reason) => {
+					if (this._state === State.Canceled) {
+						return;
+					}
+					this._state = State.Rejected;
+					reject(reason);
+				}
+			);
+		});
+
+		this._state = State.Pending;
+
+		this.children = [];
+		this.canceler = () => {
+			if (canceler) {
+				canceler();
+			}
+			this._cancel();
+		};
+	}
+
+	/**
+	 * Propagates cancellation down through a Task tree. The Task's state is immediately set to canceled. If a Thenable
 	 * finally task was passed in, it is resolved before calling this Task's finally callback; otherwise, this Task's
 	 * finally callback is immediately executed. `_cancel` is called for each child Task, passing in the value returned
 	 * by this Task's finally callback or a Promise chain that will eventually resolve to that value.
 	 */
 	private _cancel(finallyTask?: void | Thenable<any>): void {
-		this._state = Canceled;
+		this._state = State.Canceled;
 
 		const runFinally = () => {
 			try {
@@ -129,20 +153,37 @@ export default class Task<T> extends Promise<T> {
 		}
 	}
 
+	/**
+	 * Allows for cleanup actions to be performed after resolution of a Promise.
+	 */
 	finally(callback: () => void | Thenable<any>): Task<T> {
-		const task = <Task<T>> super.finally(callback);
+		const task = this.then<any>(
+			value => Task.resolve(callback()).then(() => value),
+			reason => Task.resolve(callback()).then(() => {
+				throw reason;
+			})
+		);
+
 		// Keep a reference to the callback; it will be called if the Task is canceled
 		task._finally = callback;
 		return task;
 	}
 
-	then<U>(onFulfilled?: (value: T) => U | Thenable<U>,  onRejected?: (error: Error) => U | Thenable<U>): Task<U> {
+	/**
+	 * Adds a callback to be invoked when the Task resolves or is rejected.
+	 *
+	 * @param {Function} onFulfilled   A function to call to handle the resolution. The paramter to the function will be the resolved value, if any.
+	 * @param {Function} onRejected    A function to call to handle the error. The parameter to the function will be the caught error.
+	 *
+	 * @returns {ExtensiblePromise}
+	 */
+	then<U>(onFulfilled?: (value?: T) => U | Thenable<U>, onRejected?: (error: Error) => U | Thenable<U>): this {
 		// FIXME
 		// tslint:disable-next-line:no-var-keyword
-		var task = <Task<U>> super.then<U>(
+		var task = super.then<U>(
 			// Don't call the onFulfilled or onRejected handlers if this Task is canceled
 			function (value) {
-				if (task._state === Canceled) {
+				if (task._state === State.Canceled) {
 					return;
 				}
 				if (onFulfilled) {
@@ -151,7 +192,7 @@ export default class Task<T> extends Promise<T> {
 				return <any> value;
 			},
 			function (error) {
-				if (task._state === Canceled) {
+				if (task._state === State.Canceled) {
 					return;
 				}
 				if (onRejected) {
@@ -177,9 +218,5 @@ export default class Task<T> extends Promise<T> {
 		this.children.push(task);
 
 		return task;
-	}
-
-	catch<U>(onRejected: (reason?: Error) => (U | Thenable<U>)): Task<U> {
-		return <any> super.catch(onRejected);
 	}
 }

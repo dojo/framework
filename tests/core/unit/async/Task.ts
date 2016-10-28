@@ -1,15 +1,16 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Promise, { State } from 'dojo-shim/Promise';
+import Promise from 'dojo-shim/Promise';
 import { Thenable } from 'dojo-shim/interfaces';
 import { ShimIterator } from 'dojo-shim/iterator';
-import Task, { Canceled, isTask } from '../../../src/async/Task';
+import Task, { State, isTask } from '../../../src/async/Task';
 
 let suite = {
 	name: 'Task',
 
 	'isTask()'() {
-		const task = new Task((resolve) => resolve(), () => {});
+		const task = new Task((resolve) => resolve(), () => {
+		});
 
 		assert.isTrue(isTask(task), 'Should return true');
 		assert.isFalse(isTask(Promise.resolve()), 'Should return false');
@@ -39,9 +40,47 @@ let suite = {
 		resolver();
 
 		assert.isTrue(cancelerCalled, 'Canceler should have been called synchronously');
-		assert.strictEqual(task.state, Canceled, 'Task should have Canceled state');
+		assert.strictEqual(task.state, State.Canceled, 'Task should have Canceled state');
 
 		setTimeout(dfd.callback(function () {}), 100);
+	},
+
+	'Task#cancel with no canceler'(this: any) {
+		let dfd = this.async();
+		let resolver: any;
+		let task = new Task((resolve) => {
+			resolver = resolve;
+		}).then(dfd.rejectOnError(function () {
+			assert(false, 'Task should not have resolved');
+		}));
+
+		task.cancel();
+		resolver();
+
+		assert.strictEqual(task.state, State.Canceled, 'Task should have canceled state');
+		setTimeout(dfd.callback(() => {
+		}), 100);
+	},
+
+	'Task#cancel resolved/rejected promises don\'t call canceler'(this: any) {
+		let dfd = this.async();
+		let cancelCalled = false;
+		let task = new Task((resolve) => {
+			setTimeout(() => {
+				resolve();
+			}, 0);
+		}, () => {
+			cancelCalled = true;
+		});
+
+		setTimeout(() => {
+			task.cancel();
+		}, 10);
+
+		setTimeout(dfd.callback(() => {
+			assert.strictEqual(task.state, State.Fulfilled, 'Task should have fulfilled state');
+			assert.isFalse(cancelCalled, 'Cancel should not have been called');
+		}), 100);
 	},
 
 	'Task#finally': {
@@ -59,7 +98,8 @@ let suite = {
 			}), dfd.rejectOnError(function () {
 				assert(false, 'Task should not have rejected');
 			}))
-			.finally(dfd.callback(function () {}));
+			.finally(dfd.callback(function () {
+			}));
 
 			task.cancel();
 			resolver();
@@ -156,6 +196,7 @@ let suite = {
 			.then(dfd.rejectOnError(function () {
 				assert(false, 'should not have run');
 			}))
+			.catch(() => {})
 			.finally(dfd.callback(function () {}));
 
 			resolver();
@@ -569,7 +610,9 @@ function addPromiseTests(suite: any, Promise: any) {
 
 		'called for rejected Promise': function (this: any) {
 			let dfd = this.async();
-			Promise.reject(new Error('foo')).finally(dfd.callback(function () {}));
+			Promise.reject(new Error('foo')).catch(() => {
+			}).finally(dfd.callback(function () {
+			}));
 		},
 
 		'value passes through': function (this: any) {
@@ -678,52 +721,6 @@ function addPromiseTests(suite: any, Promise: any) {
 				calledAlready = true;
 				assert.strictEqual(value, 1, 'resolver called with unexpected value');
 			})).then(dfd.resolve, dfd.reject);
-		},
-
-		'self-resolution': function (this: any) {
-			let dfd = this.async();
-			let resolve: undefined | ((value?: any) => void);
-			let promise = new Promise(function (_resolve: any) {
-				resolve = _resolve;
-			});
-
-			if (resolve) {
-				resolve(promise);
-			}
-
-			promise.then(
-				dfd.rejectOnError(function () {
-					assert(false, 'Should not be resolved');
-				}),
-				dfd.callback(function (error: Error) {
-					assert.instanceOf(error, TypeError, 'rejected with non-Error');
-				})
-			);
-		}
-	};
-
-	suite['state inspection'] = {
-		pending: function () {
-			let promise = new Promise(function (resolve: any, reject: any) {});
-			assert.strictEqual(promise.state, State.Pending);
-		},
-
-		resolved: function (this: any) {
-			let dfd = this.async();
-			let promise = new Promise(function (resolve: any, reject: any) {
-				resolve(5);
-			});
-			promise.then(dfd.callback(function () {
-				assert.strictEqual(promise.state, State.Fulfilled);
-			}));
-		},
-
-		rejected: function (this: any) {
-			let dfd = this.async();
-			let promise = Promise.reject(new Error('foo'));
-			promise.catch(dfd.callback(function () {
-				assert.strictEqual(promise.state, State.Rejected);
-			}));
 		}
 	};
 
@@ -744,25 +741,6 @@ function addPromiseTests(suite: any, Promise: any) {
 			);
 			assert.isFalse(resolved, 'should not be resolved');
 			resolver();
-		},
-
-		'resolved with self'(this: any) {
-			let dfd = this.async();
-			let resolver: any;
-			let promise = new Promise(function (resolve: any, reject: any) {
-				resolver = resolve;
-			});
-
-			promise.then(
-				dfd.rejectOnError(function () {
-					assert(false, 'should not have resolved');
-				}),
-				dfd.callback(function (error: Error) {
-					assert.equal(error.message, 'Cannot chain a promise to itself');
-				})
-			);
-
-			resolver(promise);
 		},
 
 		rejected(this: any) {

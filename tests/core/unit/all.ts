@@ -1,5 +1,6 @@
 import './aspect';
 import './async/iteration';
+import './async/ExtensiblePromise';
 import './async/Task';
 import './async/timing';
 import './Evented';

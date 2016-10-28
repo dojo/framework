@@ -147,7 +147,7 @@ function buildRedirectTests(methods: RedirectTestData[]) {
 					keepOriginalMethod
 				}
 			})
-			.then((response) => {
+			.then((response: any) => {
 				if (details.callback) {
 					details.callback(response);
 				}
@@ -901,7 +901,7 @@ registerSuite({
 			},
 
 			'Sensible Defaults': function () {
-				return nodeRequest(getRequestUrl('301-redirect'), {}).then((response) => {
+				return nodeRequest(getRequestUrl('301-redirect'), {}).then((response: any) => {
 					assert.equal(response.url, getRequestUrl('redirect-success'));
 				});
 			},

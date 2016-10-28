@@ -1,4 +1,4 @@
-import Promise from 'dojo-shim/Promise';
+import Promise from './ExtensiblePromise';
 import { Thenable } from 'dojo-shim/interfaces';
 
 /**
@@ -48,8 +48,13 @@ export class DelayedRejection extends Promise<any> {
 	 * @param reason the reason for the rejection
 	 */
 	constructor(milliseconds: number, reason?: Error) {
-		super(function (this: DelayedRejection, resolve: Function, reject: Function) {
-			setTimeout(reason ? reject.bind(this, reason) : reject.bind(this), milliseconds);
+		super(() => {
+		});
+
+		return new Promise(function (resolve, reject) {
+			setTimeout(() => {
+				reject(reason);
+			}, milliseconds);
 		});
 	}
 };
