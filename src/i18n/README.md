@@ -1,6 +1,6 @@
 # dojo-i18n
 
-An internationalization library that provides locale-specific message loading, and support for locale-specific message, date, and number formatting.
+An internationalization library that provides locale-specific message loading, and support for locale-specific message, date, and number formatting. To support locale-specific formatters, `dojo-i18n` utilizes the most up-to-date [CLDR data](http://cldr.unicode.org) from [The Unicode Consortium](http://unicode.org).
 
 ## Features
 
@@ -107,7 +107,7 @@ The current locale can be accessed via the read-only property `i18n.locale`, whi
 
 ### Changing the Root Locale
 
-The `switchLocale` method changes the root locale, and updates the state on all registered context objects that do not have a locale specified on their state. In the following example, two [Dojo 2 widgets](https://github.com/dojo/widgets) are registered, but only the second will be updated when the locale is switched since it does not have its own locale explicitly set.
+The `switchLocale` method changes the root locale, and returns a promise that resolves when all CLDR data have loaded for the specified locale. The state is updated for all registered context objects that do not have a locale specified on their state. In the following example, two [Dojo 2 widgets](https://github.com/dojo/widgets) are registered, but only the second is updated when the locale is switched since it does not have its own locale explicitly set.
 
 ```typescript
 import i18n, { switchLocale } from 'dojo-i18n/i18n';
@@ -132,12 +132,115 @@ const withoutLocale = createCustomWidget();
 
 // Change the locale to German. Since `withLocale` already has a specific locale,
 // it will not be re-rendered. The second widget (`withoutLocale`), however, will be.
-switchLocale('de');
+switchLocale('de').then(() => {
+	// ...
+});
+```
+
+### Loading CLDR data
+
+Since `dojo-i18n` automatically loads all CLDR data for the root locale, the CLDR JSON files need to be loaded manually only for additional locales used in isolated components (e.g., widgets). To load additional files manually, use the `loadCldrData` method exported by `dojo-i18n/cldr/load`:
+
+```
+import loadCldrData, { CldrDataResponse } from 'dojo-i18n/cldr/load';
+
+// Load data for a single locale:
+loadCldrData('ar-IQ').then((data: CldrDataResponse) => {
+	console.log(data['ar-IQ']);
+});
+
+// Load data for a single locale with a fallback in case the locale is unsupported.
+// The fallback's data are stored on the original locale in the response.
+loadCldrData('made-UP', 'en').then((data: CldrDataResponse) => {
+	console.log(data['made-UP']);
+});
+
+// Load data for multiple locales (note that a fallback cannot be used in this scenario):
+loadCldrData([ 'en', 'en-GB' ]).then((data: CldrDataResponse) => {
+	console.log(data['en']);
+	console.log(data['en-GB']);
+});
+
+// The underlying promise rejects with an unsupported locale and no valid fallback:
+loadCldrData('made-UP').catch((error: Error) => {
+	console.log(error.message); // "No CLDR data for locale: made-UP."
+});
+```
+
+`switchLocale` handles loading data for new locales, but when first starting the i18n ecosystem, either `switchLocale(defaultLocale)` or the `ready` method can be used:
+
+```typescript
+import { ready } from 'dojo-i18n/i18n';
+
+ready().then(() => {
+	// All CLDR data have been loaded for the root locale.
+});
 ```
 
 ### Custom message formatting (e.g., pluralization)
 
-This is currently not provided, but will be added in the near future.
+`dojo-i18n` relies on [Globalize.js](https://github.com/jquery/globalize/blob/master/doc/api/message/message-formatter.md) for [ICU message formatting](http://userguide.icu-project.org/formatparse/messages), and as such all of the features offered by Globalize.js are available through `dojo-i18n`. The `i18n` module exposes two methods that handle message formatting: 1) `formatMessage`, which directly returns a formatted message based on its inputs, and 2) `getMessageFormatter`, which returns a method dedicated to formatting a single message.
+
+As an example, suppose there is a locale bundle with a `guestInfo` message:
+
+```typescript
+const messages = {
+	guestInfo: `{gender, select,
+		female {
+			{guestCount, plural, offset:1
+			=0 {{host} does not give a party.}
+			=1 {{host} invites {guest} to her party.}
+			=2 {{host} invites {guest} and one other person to her party.}
+			other {{host} invites {guest} and # other people to her party.}}}
+		male {
+			{guestCount, plural, offset:1
+			=0 {{host} does not give a party.}
+			=1 {{host} invites {guest} to his party.}
+			=2 {{host} invites {guest} and one other person to his party.}
+			other {{host} invites {guest} and # other people to his party.}}}
+		other {
+			{guestCount, plural, offset:1
+			=0 {{host} does not give a party.}
+			=1 {{host} invites {guest} to their party.}
+			=2 {{host} invites {guest} and one other person to their party.}
+			other {{host} invites {guest} and # other people to their party.}}}}`
+};
+export default messages;
+```
+
+The above message can be converted directly with `formatMessage`, or `getMessageFormatter` can be used to generate a function that can be used over and over with different options. Note that the formatters created and used by both methods are cached, so there is no performance penalty from compiling the same message multiple times.
+
+Since the Globalize.js formatting methods use message paths rather than the message strings themselves, the `dojo-i18n` methods also require both the bundle path and the message key, which will be resolved to a message path. If an optional locale is provided, then the corresponding locale-specific message will be used. Otherwise, the current locale is assumed.
+
+```typescript
+import i18n, { formatMessage, getMessageFormatter } from 'dojo-i18n/i18n';
+import bundle from 'nls/main';
+
+// 1. Load the messages for the locale.
+i18n(bundle, 'en').then(() => {
+	const message = formatMessage(bundle.bundlePath, 'guestInfo', {
+		host: 'Margaret Mead',
+		gender: 'female',
+		guest: 'Laura Nader',
+		guestCount: 20
+	}, 'en');
+	console.log(message); // "Margaret Mead invites Laura Nader and 19 other people to her party."
+
+	const formatter = getMessageFormatter(bundle.bundlePath, 'guestInfo', 'en');
+	console.log(formatter({
+		host: 'Margaret Mead',
+		gender: 'female',
+		guest: 'Laura Nader',
+		guestCount: 20
+	})); // "Margaret Mead invites Laura Nader and 19 other people to her party."
+
+	console.log(formatter({
+		host: 'Marshall Sahlins',
+		gender: 'male',
+		guest: 'Bronisław Malinowski'
+	})); // "Marshall Sahlins invites Bronisław Malinowski to his party."
+});
+```
 
 ### Date and number formatting.
 

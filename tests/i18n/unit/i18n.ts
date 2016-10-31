@@ -3,15 +3,27 @@ import has from 'dojo-core/has';
 import { Handle } from 'dojo-interfaces/core';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import i18n, { getCachedMessages, invalidate, LocaleContext, LocaleState, Messages, switchLocale, systemLocale } from '../../src/i18n';
+import i18n, {
+	formatMessage,
+	getCachedMessages,
+	getMessageFormatter,
+	invalidate,
+	LocaleContext,
+	LocaleState,
+	Messages,
+	ready,
+	switchLocale,
+	systemLocale
+} from '../../src/i18n';
 import bundle from '../support/mocks/common/main';
+import partyBundle from '../support/mocks/common/party';
 
 registerSuite({
 	name: 'i18n',
 
 	afterEach() {
-		switchLocale('');
 		invalidate();
+		return switchLocale('');
 	},
 
 	systemLocale() {
@@ -25,7 +37,55 @@ registerSuite({
 			expected = global.process.env.LANG;
 		}
 
-		assert.strictEqual(systemLocale, expected);
+		assert.strictEqual(systemLocale, expected.replace(/^([^.]+).*/, '$1').replace(/_/g, '-'));
+	},
+
+	formatMessage: {
+		'assert without a locale'() {
+			return i18n(partyBundle).then(() => {
+				let formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+					host: 'Nita',
+					guestCount: 0
+				});
+				assert.strictEqual(formatted, 'Nita does not give a party.');
+
+				formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 1,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
+
+				formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 2,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
+
+				formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 42,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
+			});
+		},
+
+		'assert supported locale'() {
+			return i18n(bundle, 'ar').then(() => {
+				assert.strictEqual(formatMessage(bundle.bundlePath, 'hello', null, 'ar'), 'السلام عليكم');
+			});
+		},
+
+		'assert unsupported locale'() {
+			return i18n(bundle, 'fr').then(() => {
+				assert.strictEqual(formatMessage(bundle.bundlePath, 'hello', null, 'fr'), 'Hello');
+			});
+		}
 	},
 
 	getCachedMessages: {
@@ -53,6 +113,57 @@ registerSuite({
 				const cached = getCachedMessages(bundle, 'ar');
 				assert.deepEqual(getCachedMessages(bundle, 'ar-IR'), cached,
 					'Messages are returned for the most specific supported locale.');
+			});
+		}
+	},
+
+	getMessageFormatter: {
+		'assert without a locale'() {
+			return i18n(partyBundle).then(() => {
+				const formatter = getMessageFormatter(partyBundle.bundlePath, 'guestInfo');
+				let formatted = formatter({
+					host: 'Nita',
+					guestCount: 0
+				});
+				assert.strictEqual(formatted, 'Nita does not give a party.');
+
+				formatted = formatter({
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 1,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
+
+				formatted = formatter({
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 2,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
+
+				formatted = formatter({
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 42,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
+			});
+		},
+
+		'assert supported locale'() {
+			return i18n(bundle, 'ar').then(() => {
+				const formatter = getMessageFormatter(bundle.bundlePath, 'hello', 'ar');
+				assert.strictEqual(formatter(), 'السلام عليكم');
+			});
+		},
+
+		'assert unsupported locale'() {
+			return i18n(bundle, 'fr').then(() => {
+				const formatter = getMessageFormatter(bundle.bundlePath, 'hello', 'fr');
+				assert.strictEqual(formatter(), 'Hello');
 			});
 		}
 	},
@@ -203,6 +314,10 @@ registerSuite({
 		}
 	},
 
+	ready() {
+		assert.isFunction(ready().then, 'Returns a promise.');
+	},
+
 	switchLocale: (function (){
 		function getContext() {
 			return <any> {
@@ -225,7 +340,8 @@ registerSuite({
 				const context = getContext();
 
 				return i18n(bundle, context).then(function () {
-					switchLocale('ar');
+					return switchLocale('ar');
+				}).then(() => {
 					assert.isTrue(context.dirty, 'Context object invalidated.');
 				});
 			},
@@ -235,17 +351,20 @@ registerSuite({
 				context.state.locale = 'fr';
 
 				return i18n(bundle, context).then(function () {
-					switchLocale('ar');
+					return switchLocale('ar');
+				}).then(() => {
 					assert.isFalse(context.dirty, 'Context object not invalidated.');
 				});
 			},
 
 			'assert registered observers not updated when same locale is passed to `switchLocale`'() {
-				switchLocale('ar');
 				const context = getContext();
 
-				return i18n(bundle, context).then(function () {
-					switchLocale('ar');
+				return switchLocale('ar').then(() => {
+					return i18n(bundle, context);
+				}).then(function () {
+					return switchLocale('ar');
+				}).then(() => {
 					assert.isFalse(context.dirty, 'Context object not invalidated.');
 				});
 			},
@@ -257,7 +376,8 @@ registerSuite({
 					assert(context.handle);
 					context.handle.destroy();
 
-					switchLocale('ar');
+					return switchLocale('ar');
+				}).then(() => {
 					assert.isFalse(context.dirty, 'Context object not invalidated.');
 				});
 			},
@@ -273,7 +393,8 @@ registerSuite({
 					first.handle.destroy();
 					first.handle.destroy();
 
-					switchLocale('ar');
+					return switchLocale('ar');
+				}).then(() => {
 					assert.isTrue(second.dirty, 'Second object still invalidated.');
 				});
 			}
@@ -286,8 +407,9 @@ registerSuite({
 		},
 
 		'assert reflects current locale'() {
-			switchLocale('fr');
-			assert.strictEqual(i18n.locale, 'fr', '`i18n.locale` is the current locale.');
+			return switchLocale('fr').then(() => {
+				assert.strictEqual(i18n.locale, 'fr', '`i18n.locale` is the current locale.');
+			});
 		}
 	}
 });

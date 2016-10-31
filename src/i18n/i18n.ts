@@ -6,6 +6,9 @@ import { assign } from 'dojo-core/lang';
 import load from 'dojo-core/load';
 import Map from 'dojo-shim/Map';
 import Promise from 'dojo-shim/Promise';
+import * as Globalize from 'globalize/globalize/message';
+import loadCldrData from './cldr/load';
+import { generateLocales, normalizeLocale } from './util';
 
 /**
  * A default bundle used as basis for loading locale-specific bundles.
@@ -79,6 +82,13 @@ export interface LocaleState {
 }
 
 /**
+ * Describes a compiled ICU message formatter function.
+ */
+export interface MessageFormatter {
+	(options?: any): string;
+}
+
+/**
  * An object of keys to locale messages.
  */
 export interface Messages {
@@ -89,6 +99,7 @@ const PATH_SEPARATOR: string = has('host-node') ? global.require('path').sep : '
 const VALID_PATH_PATTERN = new RegExp(PATH_SEPARATOR + '[^' + PATH_SEPARATOR + ']+$');
 const contextObjects: LocaleContext<LocaleState>[] = [];
 const bundleMap = new Map<string, Map<string, Messages>>();
+const formatterMap = new Map<string, MessageFormatter>();
 let rootLocale: string;
 
 /**
@@ -123,29 +134,7 @@ const loadLocaleBundles = (function () {
  * A list of supported locales that match the target locale.
  */
 function getSupportedLocales(locale: string, supported: string[] = []): string[] {
-	const normalized = normalizeLocale(locale);
-	const parts = normalized.split('-');
-	const result: string[] = [];
-
-	let current = parts[0];
-
-	if (supported.indexOf(current) > -1) {
-		result.push(current);
-	}
-
-	for (let i = 0; i < parts.length - 1; i += 1) {
-		const next = parts[i + 1];
-
-		if (next) {
-			current += '-' + next;
-
-			if (supported.indexOf(current) > -1) {
-				result.push(current);
-			}
-		}
-	}
-
-	return result;
+	return generateLocales(locale).filter((locale: string) => supported.indexOf(locale) > -1);
 }
 
 /**
@@ -161,33 +150,6 @@ function isContextObject(value: any): boolean {
 
 /**
  * @private
- * Normalize a locale so that it can be converted to a bundle path.
- *
- * @param locale
- * The target locale.
- *
- * @return The normalized locale.
- */
-const normalizeLocale = (function () {
-	if (has('host-node')) {
-		return function (locale: string): string {
-			if (locale.indexOf('.') === -1) {
-				return locale;
-			}
-
-			return locale.split('.').slice(0, -1).map((part: string): string => {
-				return part.replace(/_/g, '-');
-			}).join('-');
-		};
-	}
-
-	return function (locale: string): string {
-		return locale;
-	};
-})();
-
-/**
- * @private
  * Extract a locale from the provided context. Either the context's locale or the current locale is returned.
  *
  * @param context
@@ -196,10 +158,10 @@ const normalizeLocale = (function () {
 function resolveLocale(context?: any): string {
 	if (context) {
 		if (typeof context === 'string') {
-			return context;
+			return normalizeLocale(context);
 		}
 		else if (context.state.locale) {
-			return context.state.locale;
+			return normalizeLocale(context.state.locale);
 		}
 	}
 	return rootLocale || systemLocale;
@@ -250,6 +212,35 @@ function validatePath(path: string): void {
 }
 
 /**
+ * Return a message formatted according to the ICU message format pattern.
+ *
+ * Usage:
+ * formatMessage(bundle.bundlePath, 'guestInfo', {
+ *   host: 'Bill',
+ *   guest: 'John'
+ * }, 'fr');
+ *
+ * @param bundlePath
+ * The message's bundle path.
+ *
+ * @param key
+ * The message's key.
+ *
+ * @param options
+ * An optional value used by the formatter to replace tokens with values.
+ *
+ * @param locale
+ * An optional locale for the formatter. If no locale is supplied, or if the locale is not supported, the
+ * default locale is used.
+ *
+ * @return
+ * The formatted message.
+ */
+export function formatMessage(bundlePath: string, key: string, options: any, locale?: string): string {
+	return getMessageFormatter(bundlePath, key, locale)(options || {});
+}
+
+/**
  * Return the cached messages for the specified bundle and locale. If messages have not been previously loaded for the
  * specified locale, no value will be returned.
  *
@@ -263,16 +254,71 @@ function validatePath(path: string): void {
  */
 export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale: string): T | void {
 	const { bundlePath, locales } = bundle;
+	const cached = bundleMap.get(bundlePath);
 	const supportedLocales = getSupportedLocales(locale, bundle.locales);
+
+	if (!cached) {
+		bundleMap.set(bundlePath, new Map<string, Messages>());
+		Globalize.loadMessages({
+			root: {
+				[bundlePath.replace(/\//g, '-')]: bundle.messages
+			}
+		});
+	}
 
 	if (!supportedLocales.length) {
 		return bundle.messages;
 	}
 
-	const cached = bundleMap.get(bundlePath);
 	if (cached) {
 		return cached.get(supportedLocales[supportedLocales.length - 1]) as T;
 	}
+}
+
+/**
+ * Return a function that formats a specific message, and takes an optional value for token replacement.
+ *
+ * Usage:
+ * const formatter = getMessageFormatter(bundlePath, 'guestInfo', 'fr');
+ * const message = formatter({
+ *   host: 'Miles',
+ *   gender: 'male',
+ *   guest: 'Oscar',
+ *   guestCount: '15'
+ * });
+ *
+ * @param bundlePath
+ * The message's bundle path.
+ *
+ * @param key
+ * The message's key.
+ *
+ * @param locale
+ * An optional locale for the formatter. If no locale is supplied, or if the locale is not supported, the
+ * default locale is used.
+ *
+ * @return
+ * The message formatter.
+ */
+export function getMessageFormatter(bundlePath: string, key: string, locale?: string): MessageFormatter {
+	const normalized = bundlePath.replace(/\//g, '-').replace(/-$/, '');
+	locale = normalizeLocale(locale || rootLocale || systemLocale);
+	const formatterKey = `${locale}:${bundlePath}:${key}`;
+	let formatter = formatterMap.get(formatterKey);
+
+	if (formatter) {
+		return formatter;
+	}
+
+	const globalize = locale !== (rootLocale || systemLocale) ? new Globalize(normalizeLocale(locale)) : Globalize;
+	formatter = globalize.messageFormatter(`${normalized}/${key}`);
+
+	const cached = bundleMap.get(bundlePath);
+	if (cached && cached.get(locale)) {
+		formatterMap.set(formatterKey, formatter);
+	}
+
+	return formatter;
 }
 
 /**
@@ -316,21 +362,24 @@ function i18n<T extends Messages>(bundle: Bundle<T>, context?: any): Promise<T> 
 
 	const cachedMessages = getCachedMessages(bundle, locale);
 	if (cachedMessages) {
-		return Promise.resolve(cachedMessages);
+		return loadCldrData(locale).then(() => cachedMessages);
 	}
 
 	const localePaths = resolveLocalePaths(path, locale, locales);
-	return loadLocaleBundles(localePaths).then((bundles: T[]): T => {
+	return loadCldrData(locale).then(() => {
+		return loadLocaleBundles(localePaths);
+	}).then((bundles: T[]): T => {
 		return bundles.reduce((previous: T, partial: T): T => {
 			const localeMessages = assign({}, previous, partial);
-			let localeCache = bundleMap.get(bundlePath);
-
-			if (!localeCache) {
-				localeCache = new Map<string, Messages>();
-				bundleMap.set(bundlePath, localeCache);
-			}
+			const localeCache = bundleMap.get(bundlePath) as Map<string, Messages>;
 
 			localeCache.set(locale, Object.freeze(localeMessages));
+			Globalize.loadMessages({
+				[locale]: {
+					[bundlePath.replace(/\//g, '-')]: localeMessages
+				}
+			});
+
 			return localeMessages;
 		}, messages);
 	});
@@ -361,22 +410,36 @@ export function invalidate(bundlePath?: string) {
 }
 
 /**
+ * Return a promise that resolves when all CLDR data for the current locale have been loaded.
+ *
+ * @return
+ * A promise that resolves when all data required for the current locale have loaded.
+ */
+export function ready(): Promise<void> {
+	return loadCldrData(rootLocale, systemLocale).then(() => {
+		Globalize.locale(rootLocale || systemLocale);
+	});
+}
+
+/**
  * Change the root locale, and invalidate any registered statefuls.
  *
  * @param locale
  * The new locale.
  */
-export function switchLocale(locale: string): void {
+export function switchLocale(locale: string): Promise<void> {
 	const previous = rootLocale;
-	rootLocale = locale;
+	rootLocale = normalizeLocale(locale);
 
-	if (previous !== rootLocale) {
-		contextObjects.forEach((context: LocaleContext<LocaleState>) => {
-			if (!context.state.locale) {
-				context.invalidate && context.invalidate();
-			}
-		});
-	}
+	return ready().then(() => {
+		if (previous !== rootLocale) {
+			contextObjects.forEach((context: LocaleContext<LocaleState>) => {
+				if (!context.state.locale) {
+					context.invalidate && context.invalidate();
+				}
+			});
+		}
+	});
 }
 
 /**
@@ -395,5 +458,5 @@ export const systemLocale: string = (function () {
 	else if (has('host-node')) {
 		systemLocale = global.process.env.LANG;
 	}
-	return systemLocale;
+	return normalizeLocale(systemLocale);
 })();
