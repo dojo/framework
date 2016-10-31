@@ -1,45 +1,43 @@
-# store
+# dojo-stores
 
-A library providing client side data management
+[![Build Status](https://travis-ci.org/dojo/stores.svg?branch=master)](https://travis-ci.org/dojo/stores)
+[![codecov.io](http://codecov.io/gh/dojo/stores/branch/master/graph/badge.svg)](http://codecov.io/gh/dojo/stores/branch/master)
 
 This library provides a data store, and several mixins built using [dojo-compose](https://github.com/dojo/compose) and TypeScript. The mixins provide additional functionality and APIs that can be added to the base store dynamically.
 
-## Storage
+**WARNING** This is *alpha* software. It is not yet production ready, so you should use at your own risk.
+
+## Features
+
+### Storage
 
 The underlying `Storage` interface provides the basic CRUD functionality, and is leveraged to provide the `Store` interface, which is the interface intended to be consumed. This means that the basic `createStore` factory, which defaults to using the provided `createInMemoryStorage` can be repurposed to interact with any storage medium by providing an object implementing the simpler `Storage` interface at instantiation.
-
 ```typescript
 import createStore from store/createStore';
 import { Storage } from store/createInMemroyStorage';
-
 const myCustomStorage: Storage = {
   // Implement storage API
 }
-
 const myCustomStore = createStore({
   storage: myCustomStorage
 });
 ```
 
-## Store
+### Store
 
 The `Store` interface provides basic CRUD operations, methods to retrieve records, and methods to create IDs. 
-
 ```typescript
 get(ids: string[] | string): Promise<T[]>;
 ```
 Retrieves store items associated with the provided ID or IDs. Will return undefined for any items that don't exist in the store.
-
 ```typescript
 identify(items: T[] | T): string[];
 ```
 Returns the IDs for the passed in items. By default the store will look for an `id` property on an item, if another property should be used, the `idProperty` can be specified when creating the store. The `idFunction` property can be provided if a more complicated, composite ID needs to be generated.
-
 ```typescript
 createId(): Promise<string>;
 ```
 Generates a new ID. The default implementation of `createId` involves incrementing an internally stored integer every time it is called.
-
 ```typescript
 add(items: T[] | T, options?: O): StoreObservable<T, U>;
 ```
@@ -48,12 +46,10 @@ Adds the item(s) to the store, failing if they already exist, unless the `reject
 put(items: T[] | T, options?: O): StoreObservable<T, U>;
 ```
 Adds or overwrites the specified items in the store. If overwrites should not be allowed, `rejectOverwrite` should be set to `true` in the provided options.
-
 ```typescript
 patch(updates: PatchArgument<T>, options?: O): StoreObservable<T, U>;
 ```
 Updates the item(s) indicated by PatchArgument in place in the store. The `Patch` interface is based on the [JSON Patch spec](https://tools.ietf.org/html/rfc6902), and can be serialized(not fully tested) to a format compliant with an HTTP patch request
-
 ```typescript
 delete(ids: string[] | string): StoreObservable<string, U>;
 ```
@@ -62,49 +58,42 @@ Delete the item(s) with the provided IDs from the store
 fetch(): Promise<T[]>;
 ```
 Returns a promise that will resolve to all of the data in the store
-
 ```typescript
 fetch<U>(query: Query<T, U>): Promise<U[]>;
 ```
 Returns a promise to the data matching the provided `Query` in the store.
 
-###Basic Usage
+#### Basic Usage
+
 ```typescript
 store.fetch().then(function(storeData) {
 	// storeData = data;
 });
-
 store.delete('1').then(function(deleted) {
 	// deleted = [ '1' ]
 });
-
 store.delete([ '2', '3' ]).then(function(deleted) {
 	// delete = [ '2', '3' ]
 });
-
 store.add([
 	{ id: '1', value: 2 },
 	{ id: '2', value: 3 },
 	{ id: '3', value: 4 }
 ]);
-
 store.put([
 	{ id: '1', value: 5 },
 	{ id: '4', value: 4 }
 ]);
-
 // These won't compile, because they don't match
 // the item type. The item type was inferred by the data argument
 // in the createStore initialization options, but it can also be
 // specified explicitly(i.e. createStore<TypeOfData, CrudOptions>();)
 // store.put({ id: '5', value: '' });
 // store.add('5');
-
 store.patch({ id: '2', patch: diff(
 	{ id: '2', value: 3 },
 	{ id: '2', value: 10 }
 )});
-
 store.fetch().then(function(data) {
 	// data =  [
 	// 	 { id: '1', value: 5 },
@@ -115,7 +104,7 @@ store.fetch().then(function(data) {
 });
 ```
 
-###Store Observable
+#### Store Observable
 
 The return type of the CRUD methods on the `Store` interface is a `StoreObservable`. This type provides a `then` method that operates the same way as a `Promise`, returning the final results of the operation to the callback provided to then if it is successful and passing any errors that occur to the error callback.
 
@@ -133,13 +122,13 @@ interface UpdateResults<T> {
 The built in store will only populate the `type` and `successfulData` properties, but this provides an extension point for store implementations to provide more details about the results of the operation, report results incrementally, or allow for the operation to be retried in the case of recoverable errors(e.g. data conflicts or network errors).
 
 
-## Subcollection Store
+### Subcollection Store
 
 The other base factory provided by this package is `createSubcollectionStore`. This base is required for certain mixins, specifically `createQueryMixin`, `createTrackableMixin`, but doesn't provide significant useful functionality other than that. As such, `createStore` should be preferred unless its specific functionality or those mixins are needed.
 
 A subcollection will delegate all crud operations to its `source`, which is the store it was created from.
 
-## createObservableStoreMixin
+### createObservableStoreMixin
 
 This store provides an API for observing the store itself, or specific items within the store.
 
@@ -207,7 +196,7 @@ A couple of things to note about this example:
 * If `fetchAroundUpdates` was set to true, the `beforeAll` and `afterAll` properties on the update object would be populated with the items in the store before and after the update respectively.
 * If this store is a subcollection of another store, observing the child store will result in receiving all updates from the parent store.
 
-## createQueryMixin
+### createQueryMixin
 
 This mixin provides the ability to filter items, sort items, select a range of items, or query for items via anything else that implements the `Query` interface.
 
@@ -247,7 +236,7 @@ queryStore
 
 ```
 
-##createTrackableMixin
+###createTrackableMixin
 
 This mixin allows a store to be `track`ed, providing additional details when it is observed. Specifically, updates from a tracked store will be limited to only those items that match a subcollection's query(if it is using query mixin), and will contain three new properties:
 ```typescript
@@ -312,7 +301,7 @@ Things to note about this example:
 * The store in this example uses `QueryMixin`, and `TrackableMixin`, both of which are have methods that return `this` as the type. In order for `this` to match both of these interfaces, the `TrackableObservableQueryStore` interface, which extends both of these interfaces, needs to be created and used as the type of the store.
 * This example uses the `createOrderedOperationsMixin`. This is to ensure that operations on the store all happen sequentially, and updates are what we would expect. See the section on the [createOrderedOperationsMixin](#createorderedoperationsmixin) for more details.
 
-## createOrderedOperationsMixin
+### createOrderedOperationsMixin
 `Store` provides a consistent, `Promise` and `Observable` based API for all store implementations. However, with the default storage implementation, some surprising results can occur, because while all operations return asynchronously, the underlying update happens synchronously as it is operating on local data. Specifically, calling `then` on a promise(or `StoreObservable`), will result in the provided callback being executed on the next tick, so in the following example, the second `put` command is executed before the `then` from the first is resolved.
 
 ```typescript
@@ -328,3 +317,38 @@ store.put(anotherItem);
 ```
 
 Under many circumstances this is not a problem. The actual updates of the data happen in the appropriate order, and the callbacks in these cases will only be returning the modified items anyways. However, in some cases, as with `createTrackableMixin`, or `createObservableStoreMixin` with `fetchAroundUpdates` set to true, this can create some surprising results. If you want to be able to rely on the assumption that you will receive an update from one operation before the next operation occurs, `createOrderedOperationsMixin` can be mixed into the base store factory before any other mixins. In some cases(e.g. a store making http) requests, the additional latency introduced by this restriction may cause significant performance penalties, so it's generally better not to use this mixin unless it is specifically needed.
+
+## How do I contribute?
+
+We appreciate your interest!  Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme) for the
+Contributing Guidelines and Style Guide.
+
+## Testing
+
+Test cases MUST be written using [Intern](https://theintern.github.io) using the Object test interface and Assert assertion interface.
+
+90% branch coverage MUST be provided for all code submitted to this repository, as reported by istanbul’s combined coverage results for all supported platforms.
+
+To test locally in node run:
+
+`grunt test`
+
+To test against browsers with a local selenium server run:
+
+`grunt test:local`
+
+To test against BrowserStack or Sauce Labs run:
+
+`grunt test:browserstack`
+
+or
+
+`grunt test:saucelabs`
+
+## Licensing information
+
+TODO: If third-party code was used to write this library, make a list of project names and licenses here
+
+* [Third-party lib one](https//github.com/foo/bar) ([New BSD](http://opensource.org/licenses/BSD-3-Clause))
+
+© 2004–2016 Dojo Foundation & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
