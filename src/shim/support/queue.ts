@@ -1,6 +1,6 @@
+import { Handle } from 'dojo-interfaces/core';
 import global from './global';
 import has from './has';
-import { Handle } from './interfaces';
 
 export interface QueueItem {
 	isActive: boolean;

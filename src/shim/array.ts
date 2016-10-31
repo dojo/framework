@@ -1,6 +1,6 @@
+import { ArrayLike } from 'dojo-interfaces/shim';
 import has from './support/has';
 import { wrapNative } from './support/util';
-import { ArrayLike } from './interfaces';
 import { forOf, isArrayLike, isIterable, Iterable } from './iterator';
 import { MAX_SAFE_INTEGER as maxSafeInteger } from './number';
 

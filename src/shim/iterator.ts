@@ -1,4 +1,4 @@
-import { ArrayLike } from './interfaces';
+import { ArrayLike } from 'dojo-interfaces/shim';
 import { HIGH_SURROGATE_MIN, HIGH_SURROGATE_MAX } from './string';
 import './Symbol';
 

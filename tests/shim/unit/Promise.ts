@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import { Thenable } from 'dojo-interfaces/shim';
 import Promise, { Executor } from '../../src/Promise';
-import { Thenable } from '../../src/interfaces';
 import { Iterable, ShimIterator } from '../../src/iterator';
 import '../../src/Symbol';
 
