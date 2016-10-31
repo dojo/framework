@@ -22,7 +22,7 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "dojo-has": ">=2.0.0-alpha.4",
+    "dojo-has": ">=2.0.0-alpha.6",
     "dojo-shim": ">=2.0.0-alpha.4"
   },
   "devDependencies": {
@@ -41,7 +41,7 @@
     "http-proxy": "0.10.3",
     "intern": "^3.3.1",
     "istanbul": "0.4.3",
-    "sinon": "~1.16.0",
+    "sinon": "~1.17.6",
     "tslint": "^3.15.1",
     "typescript": "~2.0.3"
   }

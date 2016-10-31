@@ -7,6 +7,7 @@ import './Evented';
 import './encoding';
 import './global';
 import './IdentityRegistry';
+import './instrument';
 import './lang';
 import './load';
 import './main';
