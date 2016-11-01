@@ -1,8 +1,12 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import Promise from 'dojo-shim/Promise';
 import { StoreOptions, CrudOptions } from '../../../../src/store/createStore';
 import { UpdateResults } from '../../../../src/storage/createInMemoryStorage';
-import createTrackableMixin, { TrackableOptions, TrackableMixin } from '../../../../src/store/mixins/createTrackableMixin';
+import createTrackableMixin, {
+	TrackableOptions, TrackableMixin,
+	TrackedObservableStoreMixin
+} from '../../../../src/store/mixins/createTrackableMixin';
 import createQueryMixin, { QueryMixin, QueryOptions } from '../../../../src/store/mixins/createQueryMixin';
 import { ComposeFactory } from 'dojo-compose/compose';
 import createSubcollectionStore from '../../../../src/store/createSubcollectionStore';
@@ -28,16 +32,176 @@ interface TrackableQueryStoreFactory extends ComposeFactory<TrackableObservableQ
 }
 
 registerSuite(function() {
-	let createTrackbleQueryStore = createSubcollectionStore
+	let createTrackableQueryStore = createSubcollectionStore
 		.mixin(createOrderedOperationMixin())
 		.mixin(createObservableStoreMixin())
 		.mixin(createQueryMixin())
 		.mixin(createTrackableMixin()) as TrackableQueryStoreFactory;
 	let trackableQueryStore: TrackableObservableQueryStore<ItemType, TrackableOptions<ItemType>, UpdateResults<ItemType>>;
+	function testObservableStore(
+		store: ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>,
+		dfd: any,
+		isFetching = true,
+		errorMessage?: string
+	) {
+		return new Promise(resolve => {
+			let firstUpdate = true;
+			let resolved = false;
+			store.observe().subscribe(update => {
+				try {
+					if (isFetching) {
+						assert.ok(update.beforeAll, 'Didn\'t have before all property');
+						assert.ok(update.afterAll, 'Didn\'t have after all property');
+					} else {
+						assert.notOk(update.beforeAll, 'Had before all property');
+						assert.notOk(update.afterAll, 'Had after all property');
+					}
+					if (firstUpdate) {
+						firstUpdate = false;
+					}
+					else if (!resolved) {
+						resolved = true;
+						resolve();
+					}
+				} catch (error) {
+					if (errorMessage) {
+						dfd.reject(Error(errorMessage));
+					}
+					else {
+						dfd.reject(error);
+					}
+				}
+			});
+
+			store.delete(['1', '2', '3', 'new', 'ignored']);
+			store.add(createData());
+		});
+	}
+	function testFetchingQueryStore(
+		trackedCollection: TrackedObservableStoreMixin<ItemType> & TrackableObservableQueryStore<
+			ItemType,
+			TrackableOptions<ItemType>,
+			UpdateResults<ItemType>
+		>,
+		dfd: any,
+		errorMessage?: string
+	) {
+		return new Promise(function(resolve) {
+			let notifiedOnDelete = false;
+			let notifiedOnAddition = false;
+			let notifiedOnUpdateIntoCollection = false;
+			let notifiedOnMoveInCollection = false;
+
+			trackedCollection.observe().subscribe(function(update) {
+				try {
+					if (!notifiedOnDelete) {
+						assert.equal(update.removedFromTracked.length, 1, 'Had wrong number of updates');
+						assert.deepEqual(update.removedFromTracked[0], {
+							previousIndex: 0,
+							item: { id: '2', value: 2, nestedProperty: { value: 2 } },
+							id: '2'
+						}, 'Didn\'t send proper delete notification');
+						assert.deepEqual(update.beforeAll, [
+							{ id: '2', value: 2, nestedProperty: { value: 2 } },
+							{ id: '3', value: 3, nestedProperty: { value: 1 } }
+						], 'Didn\'t have proper starting data');
+						assert.deepEqual(update.afterAll, [
+							{ id: '3', value: 3, nestedProperty: { value: 1 } }
+						], 'Didn\'t have proper ending data');
+						notifiedOnDelete = true;
+					}
+					else if (!notifiedOnAddition) {
+						assert.equal(update.addedToTracked.length, 1, 'Had wrong number of additions');
+						assert.deepEqual(update.addedToTracked[0], {
+							index: 1,
+							item: { id: 'new', value: 10, nestedProperty: { value: 10 } },
+							id: 'new'
+						}, 'Didn\'t send correct update for added item');
+						assert.deepEqual(update.beforeAll, [
+							{ id: '3', value: 3, nestedProperty: { value: 1 } }
+						], 'Didn\'t have proper starting data');
+						assert.deepEqual(update.afterAll, [
+							{ id: '3', value: 3, nestedProperty: { value: 1 } },
+							{ id: 'new', value: 10, nestedProperty: { value: 10 } }
+						], 'Didn\'t have proper ending data');
+						notifiedOnAddition = true;
+					}
+					else if (!notifiedOnUpdateIntoCollection) {
+						assert.equal(update.addedToTracked.length, 1, 'Had wrong number of updates');
+						assert.deepEqual(update.addedToTracked[0], {
+							index: 1,
+							item: { id: 'ignored', value: 5, nestedProperty: { value: 5 } },
+							id: 'ignored'
+						}, 'Didn\'t send correct update for item moved into tracking by update');
+						assert.deepEqual(update.beforeAll, [
+							{ id: '3', value: 3, nestedProperty: { value: 1 } },
+							{ id: 'new', value: 10, nestedProperty: { value: 10 } }
+						], 'Didn\'t have proper starting data');
+						assert.deepEqual(update.afterAll, [
+							{ id: '3', value: 3, nestedProperty: { value: 1 } },
+							{ id: 'ignored', value: 5, nestedProperty: { value: 5 } },
+							{ id: 'new', value: 10, nestedProperty: { value: 10 } }
+						], 'Didn\'t have proper ending data');
+						notifiedOnUpdateIntoCollection = true;
+					}
+					else if (!notifiedOnMoveInCollection) {
+						assert.equal(update.movedInTracked.length, 1, 'Had wrong number of  updates');
+						assert.deepEqual(update.movedInTracked[0], {
+							index: 1,
+							previousIndex: 2,
+							item: { id: 'new', value: 4, nestedProperty: { value: 10 }},
+							id: 'new'
+						}, 'Didn\'t send correct update for item moved within tracking');
+						assert.deepEqual(update.beforeAll, [
+							{ id: '3', value: 3, nestedProperty: { value: 1 } },
+							{ id: 'ignored', value: 5, nestedProperty: { value: 5 } },
+							{ id: 'new', value: 10, nestedProperty: { value: 10 } }
+						], 'Didn\'t have proper starting data');
+						assert.deepEqual(update.afterAll, [
+							{ id: '3', value: 3, nestedProperty: { value: 1 } },
+							{ id: 'new', value: 4, nestedProperty: { value: 10 }},
+							{ id: 'ignored', value: 5, nestedProperty: { value: 5 } }
+						], 'Didn\'t have proper ending data');
+						notifiedOnMoveInCollection = true;
+						resolve();
+					}
+				} catch (error) {
+					if (errorMessage) {
+						dfd.reject(Error(errorMessage));
+					}
+					else {
+						dfd.reject(error);
+					}
+				}
+			});
+
+			trackableQueryStore.delete('2');
+			trackableQueryStore.add({ id: 'new', value: 10, nestedProperty: { value: 10 }});
+			// Shouldn't create a notification
+			trackableQueryStore.add({ id: 'ignored', value: -1, nestedProperty: { value: -1 } });
+			// Should have no effect, release doesn't occur in place
+			trackableQueryStore = trackableQueryStore.release();
+			trackableQueryStore.put({
+				id: 'ignored',
+				value: 5,
+				nestedProperty: {
+					value: 5
+				}
+			});
+			trackableQueryStore.put({
+				id: 'new',
+				value: 4,
+				nestedProperty: {
+					value: 10
+				}
+			});
+		});
+	}
+
 	return {
 		name: 'createTrackableMixin',
 		beforeEach: function() {
-			trackableQueryStore = createTrackbleQueryStore({
+			trackableQueryStore = createTrackableQueryStore({
 				data: createData()
 			});
 		},
@@ -121,13 +285,6 @@ registerSuite(function() {
 					value: 5
 				}
 			});
-			// return trackableQueryStore.patch({
-			// 	id: 'ignored',
-			// 	patch: createPatch([
-			// 		createOperation(OperationType.Replace, createPointer('value'), 5) ,
-			// 		createOperation(OperationType.Replace, createPointer('nestedProperty', 'value'), 5)
-			// 	])
-			// });
 			trackableQueryStore.put({
 				id: 'new',
 				value: 4,
@@ -142,12 +299,11 @@ registerSuite(function() {
 					value: -1
 				}
 			});
-
 		},
 
-		'Alternate query and release with fetch around update': function(this: any) {
+		'alternate query and release with fetch around update': function(this: any) {
 			const dfd = this.async(1000);
-			trackableQueryStore = createTrackbleQueryStore({
+			trackableQueryStore = createTrackableQueryStore({
 				data: createData(),
 				fetchAroundUpdates: true
 			});
@@ -157,75 +313,215 @@ registerSuite(function() {
 				})
 				.sort('value')
 				.track();
+			testFetchingQueryStore(trackedCollection, dfd).then(dfd.resolve);
+		},
 
-			let notifiedOnDelete = false;
-			let notifiedOnAddition = false;
-			let notifiedOnUpdateIntoCollection = false;
-			let notifiedOnMoveInCollection = false;
+		'fetchAroundUpdates should be maintained across tracking, releasing, and querying': {
+			'fetchAroundUpdates = true'(this: any) {
+				const dfd = this.async(1000);
+				trackableQueryStore = createTrackableQueryStore({
+					data: createData(),
+					fetchAroundUpdates: true
+				});
+				let trackedCollection = trackableQueryStore
+					.filter(item => {
+						return item.value > 1;
+					})
+					.sort('value')
+					.track();
+				testFetchingQueryStore(trackedCollection, dfd, 'Starting').then(() => {
+					return testObservableStore(trackedCollection.release(), dfd, true, 'Starting observed');
+				}).then(() => {
+					trackedCollection = trackedCollection
+						.release()
+						.filter(item => {
+							return item.value > 1;
+						})
+						.track();
+					return testFetchingQueryStore(trackedCollection, dfd, 'Released fetching');
+				}).then(() => {
+					return testObservableStore(trackedCollection.release(), dfd, true, 'Released observed');
+				}).then(() => {
+					trackedCollection = trackedCollection
+						.release()
+						.release()
+						.track()
+						.track();
+					return testFetchingQueryStore(trackedCollection, dfd, 'Back to back calls fetching');
+				}).then(() => {
+					return testObservableStore(trackedCollection.release(), dfd, true, 'Back to back calls observed');
+				}).then(() => {
+					trackedCollection = trackedCollection
+						.range(0, 100)
+						.track();
+					return testFetchingQueryStore(trackedCollection, dfd, 'Range fetching');
+				}).then(() => {
+					return testObservableStore(trackedCollection.release(), dfd, true, 'Range observed');
+				}).then(() => {
+					trackedCollection = trackedCollection
+						.release()
+						.range(0, 100)
+						.track();
+					return testFetchingQueryStore(trackedCollection, dfd, 'Released Range fetching');
+				}).then(() => {
+					return testObservableStore(trackedCollection.release(), dfd, true, 'Released Range observed');
+				}).then(dfd.resolve);
+			},
 
-			trackedCollection.observe().subscribe(function(update) {
-				try {
-					if (!notifiedOnDelete) {
+			'fetchAroundUpdates = false'(this: any) {
+				const dfd = this.async(1000);
+				trackableQueryStore = createTrackableQueryStore({
+					data: createData(),
+					fetchAroundUpdates: false
+				});
+				let trackedCollection = trackableQueryStore
+					.filter(item => {
+						return item.value > 1;
+					})
+					.sort('value')
+					.track();
+				testFetchingQueryStore(trackedCollection, dfd, 'Starting').then(() => {
+					return testObservableStore(trackedCollection.release(), dfd, false, 'Starting observed');
+				}).then(() => {
+					trackedCollection = trackedCollection
+						.release()
+						.filter(item => {
+							return item.value > 1;
+						})
+						.track();
+					return testFetchingQueryStore(trackedCollection, dfd, 'Released fetching');
+				}).then(() => {
+					return testObservableStore(trackedCollection.release(), dfd, false, 'Released observed');
+				}).then(() => {
+					trackedCollection = trackedCollection
+						.release()
+						.release()
+						.track()
+						.track();
+					return testFetchingQueryStore(trackedCollection, dfd, 'Back to back calls fetching');
+				}).then(() => {
+					return testObservableStore(trackedCollection.release(), dfd, false, 'Back to back calls observed');
+				}).then(() => {
+					trackedCollection = trackedCollection
+						.range(0, 100)
+						.track();
+					return testFetchingQueryStore(trackedCollection, dfd, 'Range fetching');
+				}).then(() => {
+					return testObservableStore(trackedCollection.release(), dfd, false, 'Range observed');
+				}).then(() => {
+					trackedCollection = trackedCollection
+						.release()
+						.range(0, 100)
+						.track();
+					return testFetchingQueryStore(trackedCollection, dfd, 'Released Range fetching');
+				}).then(() => {
+					return testObservableStore(trackedCollection.release(), dfd, false, 'Released Range observed');
+				}).then(dfd.resolve);
+			}
+		},
+
+		'tracking with a range query': {
+			'full range'(this: any) {
+				const dfd = this.async(1000);
+				trackableQueryStore = createTrackableQueryStore({
+					data: createData(),
+					fetchAroundUpdates: true
+				});
+				const trackedCollection = trackableQueryStore
+					.filter(function(item) {
+						return item.value > 1;
+					})
+					.sort('value')
+					.range(0, 100)
+					.track();
+				testFetchingQueryStore(trackedCollection, dfd).then(dfd.resolve);
+			},
+			'full range, not initially fetching around updates'(this: any) {
+				const dfd = this.async(1000);
+				trackableQueryStore = createTrackableQueryStore({
+					data: createData()
+				});
+				const trackedCollection = trackableQueryStore
+					.filter(function(item) {
+						return item.value > 1;
+					})
+					.sort('value')
+					.range(0, 100)
+					.track();
+				testFetchingQueryStore(trackedCollection, dfd).then(dfd.resolve);
+			},
+			'item pushed into collection'(this: any)	{
+				const dfd = this.async(1000);
+				trackableQueryStore = createTrackableQueryStore({
+					data: createData(),
+					fetchAroundUpdates: true
+				});
+				const trackedCollection = trackableQueryStore
+					.sort('value')
+					.range(1, 2)
+					.track();
+
+				trackedCollection.observe().subscribe(function(update) {
+					try {
 						assert.equal(update.removedFromTracked.length, 1, 'Had wrong number of updates');
 						assert.deepEqual(update.removedFromTracked[0], {
-							previousIndex: 0,
-							item: { id: '2', value: 2, nestedProperty: { value: 2 } },
-							id: '2'
+							previousIndex: 1,
+							item: { id: '3', value: 3, nestedProperty: { value: 1 } },
+							id: '3'
 						}, 'Didn\'t send proper delete notification');
-						notifiedOnDelete = true;
-					}
-					else if (!notifiedOnAddition) {
 						assert.equal(update.addedToTracked.length, 1, 'Had wrong number of additions');
 						assert.deepEqual(update.addedToTracked[0], {
-							index: 1,
-							item: { id: 'new', value: 10, nestedProperty: { value: 10 } },
-							id: 'new'
+							index: 0,
+							item: { id: '1', value: 1, nestedProperty: { value: 3 } },
+							id: '1'
 						}, 'Didn\'t send correct update for added item');
-						notifiedOnAddition = true;
+						dfd.resolve();
+					} catch (error) {
+						dfd.reject(error);
 					}
-					else if (!notifiedOnUpdateIntoCollection) {
-						assert.equal(update.addedToTracked.length, 1, 'Had wrong number of updates');
-						assert.deepEqual(update.addedToTracked[0], {
-							index: 1,
-							item: { id: 'ignored', value: 5, nestedProperty: { value: 5 } },
-							id: 'ignored'
-						}, 'Didn\'t send correct update for item moved into tracking by update');
-						notifiedOnUpdateIntoCollection = true;
+				});
+				trackableQueryStore.put({
+					id: '0',
+					value: 0,
+					nestedProperty: { value: 10 }
+				});
+			}
+		},
+
+		'should be able to tracking a store without a query': function(this: any) {
+			const dfd = this.async(1000);
+			let firstUpdate = true;
+
+			trackableQueryStore.track().observe().subscribe(update => {
+				try {
+					if (firstUpdate) {
+						firstUpdate = false;
+						assert.deepEqual(update.deletes, [ '1' ], 'Should contain ID of deleted item');
 					}
-					else if (!notifiedOnMoveInCollection) {
-						assert.equal(update.movedInTracked.length, 1, 'Had wrong number of  updates');
-						assert.deepEqual(update.movedInTracked[0], {
-							index: 1,
-							previousIndex: 2,
-							item: { id: 'new', value: 4, nestedProperty: { value: 10 }},
-							id: 'new'
-						}, 'Didn\'t send correct update for item moved within tracking');
+					else {
+						assert.deepEqual(update.adds, [ createData()[0] ], 'Should contain added item');
 						dfd.resolve();
 					}
 				} catch (error) {
 					dfd.reject(error);
 				}
 			});
+			trackableQueryStore.delete('1');
+			trackableQueryStore.add(createData()[0]);
+		},
 
-			trackableQueryStore.delete('2');
-			trackableQueryStore.add({ id: 'new', value: 10, nestedProperty: { value: 10 }});
-			// Shouldn't create a notification
-			trackableQueryStore.add({ id: 'ignored', value: -1, nestedProperty: { value: -1 } });
-			trackableQueryStore = trackableQueryStore.release();
-			trackableQueryStore.put({
-				id: 'ignored',
-				value: 5,
-				nestedProperty: {
-					value: 5
+		'add data after initialization': function(this: any) {
+			const dfd = this.async(1000);
+			trackableQueryStore = createTrackableQueryStore<ItemType, CrudOptions, UpdateResults<ItemType>>();
+			trackableQueryStore.track().observe().subscribe(update => {
+				try {
+					assert.deepEqual(update.adds, createData(), 'Should contain added items');
+					dfd.resolve();
+				} catch (error) {
+					dfd.reject(error);
 				}
 			});
-			trackableQueryStore.put({
-				id: 'new',
-				value: 4,
-				nestedProperty: {
-					value: 10
-				}
-			});
+			trackableQueryStore.add(createData());
 		}
 	};
 });

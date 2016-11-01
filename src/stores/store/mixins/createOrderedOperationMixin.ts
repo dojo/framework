@@ -80,7 +80,6 @@ function queueStoreOperation(operation: Function, returnsPromise?: boolean) {
 							observers.forEach(function(observer) {
 								operationObservable.subscribe(observer);
 							});
-							// return operationObservable.toPromise();
 							return operationObservable;
 						});
 						pushed = true;

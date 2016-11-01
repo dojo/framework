@@ -50,7 +50,7 @@ export interface ObservableStoreState<T> {
 }
 
 export interface ObservableStore<T, O extends CrudOptions, U extends UpdateResults<T>> extends
-	ObservableStoreMixin<T>, Store<T, O, U> {};
+	ObservableStoreMixin<T>, Store<T, O, U> {}
 export type ObservableStoreOptions<T, O extends CrudOptions> = ObservableStoreMixinOptions<T> & StoreOptions<T, O>;
 
 const instanceStateMap = new WeakMap<ObservableStoreMixin<any>, ObservableStoreState<any>>();
