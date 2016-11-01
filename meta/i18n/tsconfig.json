@@ -1,5 +1,5 @@
 {
-	"version": "2.0.2",
+	"version": "2.0.3",
 	"compilerOptions": {
 		"declaration": false,
 		"module": "umd",
@@ -7,7 +7,6 @@
 		"noImplicitThis": true,
 		"strictNullChecks": true,
 		"outDir": "_build/",
-		"baseUrl": "node_modules",
 		"removeComments": false,
 		"sourceMap": true,
 		"target": "es5",

@@ -1,7 +1,7 @@
 /* tslint:disable:interface-name */
 import has from 'dojo-core/has';
 import global from 'dojo-core/global';
-import { Handle } from 'dojo-core/interfaces';
+import { Handle } from 'dojo-interfaces/core';
 import { assign } from 'dojo-core/lang';
 import Map from 'dojo-shim/Map';
 import Promise from 'dojo-shim/Promise';

@@ -1,6 +1,6 @@
 import global from 'dojo-core/global';
 import has from 'dojo-core/has';
-import { Handle } from 'dojo-core/interfaces';
+import { Handle } from 'dojo-interfaces/core';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import i18n, { getCachedMessages, invalidate, LocaleContext, LocaleState, Messages, switchLocale, systemLocale } from '../../src/i18n';
