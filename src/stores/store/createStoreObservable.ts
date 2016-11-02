@@ -1,5 +1,5 @@
 import Promise from 'dojo-shim/Promise';
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/Rx';
 import global from 'dojo-core/global';
 
 global.Rx = { config: { Promise } };

@@ -3,7 +3,7 @@ import createStoreObservable, { StoreObservable } from '../createStoreObservable
 import Patch from '../../patch/Patch';
 import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/Rx';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { UpdateResults } from '../../storage/createInMemoryStorage';
 

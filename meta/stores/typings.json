@@ -1,12 +1,10 @@
 {
 	"name": "dojo-stores",
-	"dependencies": {
-		"rxjs": "npm:@reactivex/rxjs/dist/es6/Rx.d.ts"
-	},
 	"globalDependencies": {
 		"es6-shim": "github:DefinitelyTyped/DefinitelyTyped/es6-shim/es6-shim.d.ts#6697d6f7dadbf5773cb40ecda35a76027e0783b2",
 		"service_worker_api": "registry:dt/service_worker_api#0.0.0+20150323201954",
-		"symbol-shim": "github:dojo/typings/custom/symbol-shim/symbol-shim.d.ts#9a0185f465a3febe2bb1ff3f1210f43e5f96c5d2"
+		"symbol-shim": "github:dojo/typings/custom/symbol-shim/symbol-shim.d.ts#9a0185f465a3febe2bb1ff3f1210f43e5f96c5d2",
+		"extra-rxjs": "github:dojo/typings/custom/dojo2-extras/rxjs.d.ts#103096ce945dd51a18cc47a9b7cf9191fdac0349"
 	},
 	"devDependencies": {
 		"chai": "registry:npm/chai#3.5.0+20160415060238",

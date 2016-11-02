@@ -2,7 +2,7 @@ import { SubcollectionStore, SubcollectionOptions } from '../createSubcollection
 import { CrudOptions, Store } from '../createStore';
 import { UpdateResults } from '../../storage/createInMemoryStorage';
 import { ObservableStore, ItemUpdate, StoreDelta } from './createObservableStoreMixin';
-import { Observable, Observer } from 'rxjs';
+import { Observable, Observer } from 'rxjs/Rx';
 import { ComposeMixinDescriptor } from 'dojo-compose/compose';
 import { after } from 'dojo-compose/aspect';
 import Map from 'dojo-shim/Map';

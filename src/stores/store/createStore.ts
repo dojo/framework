@@ -1,13 +1,12 @@
 import { Query } from '../query/createQuery';
-import Patch from '../patch/Patch';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
 import Map from 'dojo-shim/Map';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import { Observer, Observable } from 'rxjs';
+import { Observer, Observable } from 'rxjs/Rx';
 import createStoreObservable, { StoreObservable } from './createStoreObservable';
 import createInMemoryStorage, { Storage, UpdateResults } from '../storage/createInMemoryStorage';
-import { PatchMapEntry } from '../patch/Patch';
+import Patch, { PatchMapEntry } from '../patch/Patch';
 
 export const enum StoreOperation {
 	Add,
