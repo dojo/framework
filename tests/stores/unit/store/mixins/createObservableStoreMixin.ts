@@ -11,6 +11,7 @@ import createInMemoryStorage, { UpdateResults } from '../../../../src/storage/cr
 import { ComposeFactory } from 'dojo-compose/compose';
 import { SubcollectionStore, SubcollectionOptions } from '../../../../src/store/createSubcollectionStore';
 import createOrderedOperationMixin from '../../../../src/store/mixins/createOrderedOperationMixin';
+import createAsyncStorage from '../../support/AsyncStorage';
 
 interface ObservableStoreFactory extends ComposeFactory<ObservableStore<{}, {}, any>, ObservableStoreOptions<{}, {}>> {
 	<T, O extends CrudOptions, U extends UpdateResults<T>>(options?: ObservableStoreOptions<T, O>): ObservableStore<T, O, U>;
@@ -34,6 +35,13 @@ function getStoreAndDfd(test: any) {
 	});
 
 	return { dfd, observableStore, emptyObservableStore, data: createData(), fetchingObservableStore};
+}
+function getStoreWithAsyncStorage(test: any, asyncOptions?: {} ) {
+	const dfd = test.async(1000);
+	const asyncStorage = createAsyncStorage(asyncOptions);
+	const observableStore = createObservableStore({ storage: asyncStorage });
+
+	return { dfd, observableStore, asyncStorage };
 }
 
 registerSuite({
@@ -549,5 +557,82 @@ registerSuite({
 				);
 			}
 		};
-	})()
+	})(),
+
+	'async storage': {
+		'filtered subcollection async operations should be done in the order specified by the user.'(this: any) {
+			const { dfd, observableStore } = getStoreWithAsyncStorage(this);
+			const data = createData();
+			const updates = createUpdates();
+
+			observableStore.add(createData()).then(function(result) {
+				assert.deepEqual(result, data, 'Should have returned all added items');
+				return observableStore.put(updates[0]);
+			}).then(function(result) {
+				assert.deepEqual(result, updates[0], 'Should have returned all updated items');
+				return observableStore.delete(['2']);
+			}).then(function(result) {
+				assert.deepEqual(result, ['2'], 'Should have returned all deleted ids');
+				return observableStore.fetch();
+			}).then(function(result) {
+				assert.deepEqual(result, [ updates[0][0], updates[0][2] ], 'Should have returned all filtered items');
+			}).then(dfd.resolve);
+		},
+
+		'should be able to observe the whole store'(this: any) {
+			const { dfd, observableStore } = getStoreWithAsyncStorage(this);
+			const data = createData();
+
+			observableStore.observe().subscribe(dfd.callback(function(update: StoreDelta<ItemType>) {
+				assert.deepEqual(update, {
+					updates: [],
+					deletes: [],
+					beforeAll: undefined,
+					afterAll: undefined,
+					adds: [ data[0] ]
+				});
+			}));
+			observableStore.add(data[0]);
+		},
+		'should be able to observe single id'(this: any) {
+			const { dfd, observableStore } = getStoreWithAsyncStorage(this, { get: 20, put: 10 });
+			const data = createData();
+			const updatedItem = createUpdates()[0][0];
+			let firstUpdate = true;
+
+			observableStore.add(data[0]).then(function() {
+				observableStore.observe('1').subscribe(function(update: ItemType) {
+					try {
+						if (firstUpdate) {
+							firstUpdate = false;
+							assert.deepEqual(update, createUpdates()[0][0], 'Didn\'t send the updated item in the initial notification');
+							setTimeout(dfd.resolve, 100);
+						}
+						else {
+							throw Error('Should not have received a second update');
+						}
+					} catch (error) {
+						dfd.reject(error);
+					}
+				});
+
+				observableStore.put(updatedItem);
+			});
+		},
+		'should be able to observe with initial items'(this: any) {
+			const { dfd, asyncStorage } = getStoreWithAsyncStorage(this, { put: 20, get: 10 });
+			const observableStore = createObservableStore({ storage: asyncStorage, data: createData() });
+			const data = createData();
+
+			observableStore.observe('1').subscribe(function(update: ItemType) {
+				try {
+					assert.deepEqual(update, data[0], 'Didn\'t send the initial notification for item');
+					dfd.resolve();
+				} catch (error) {
+					dfd.reject(error);
+				}
+			});
+
+		}
+	}
 });

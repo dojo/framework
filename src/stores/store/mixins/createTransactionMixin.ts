@@ -70,10 +70,10 @@ function createTransactionMixin<T, O extends CrudOptions, U extends UpdateResult
 			commit(this: Transaction<T, O, U, C>) {
 				const state = instanceStateMap.get(this);
 				return createStoreObservable<T | string, U[]>(
-					Observable.zip<U[]>(...state.actions.map(
+					Observable.from(state.actions.map(
 						function(action: () => StoreObservable<T | string, U>) {
-							return action();
-						})),
+							return Observable.defer<U>(action);
+						})).mergeAll(1).toArray(),
 					function(updateResultsList) {
 						return updateResultsList.reduce(function(prev, next) {
 							return next.successfulData ? prev.concat(next.successfulData) : prev;

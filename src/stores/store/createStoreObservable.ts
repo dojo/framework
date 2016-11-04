@@ -10,7 +10,7 @@ global.Rx = { config: { Promise } };
  * any recoverable failures.
  */
 export interface StoreObservable<T, U> extends Observable<U> {
-	then<V>(onFulfilled?: ((value?: T[]) => (V | Promise<V> | null | undefined)) | null | undefined, onRejected?: (reason?: Error) => void): Promise<V>;
+	then<V>(onFulfilled?: ((value?: T[]) => (V | Promise<V> | StoreObservable<T, U> | null | undefined)) | null | undefined, onRejected?: (reason?: Error) => void): Promise<V>;
 }
 
 export default function createStoreObservable<T, U>(observable: Observable<U>, transform: (data: U) => T[]): StoreObservable<T, U> {

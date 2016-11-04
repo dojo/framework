@@ -5,6 +5,7 @@ import createTransactionMixin, { TransactionStore } from '../../../../src/store/
 import { createData, ItemType, createUpdates, patches, patchedItems } from '../../support/createData';
 import { UpdateResults } from '../../../../src/storage/createInMemoryStorage';
 import { ComposeFactory } from 'dojo-compose/compose';
+import createAsyncStorage from '../../support/AsyncStorage';
 
 interface TransactionStoreFactory extends ComposeFactory<TransactionStore<{}, {}, any, any>, any> {
 	<T, O extends CrudOptions, U extends UpdateResults<T>, C extends Store<T, O, U>>(options?: StoreOptions<T, O>): TransactionStore<T, O, U, C>;
@@ -116,6 +117,26 @@ registerSuite(function(){
 				.then(function(result) {
 					transactionStore.fetch().then(function(data) {
 						assert.deepEqual(data, updates[0],
+									'Transaction didn\'t properly resolve after all operations completed');
+					}).then(dfd.resolve);
+				});
+		},
+		'should queue up operations in order, regardless of the behavior of the async storage.'(this: any) {
+			const dfd = this.async(1000);
+			const transactionStore = createTransactionStore({
+				storage: createAsyncStorage({ delete: 10, put: 30 })
+			});
+			const data = createData();
+			const updates = createUpdates();
+
+			transactionStore.transaction()
+				.add(data)
+				.put(updates[0])
+				.delete(data[0].id)
+				.commit()
+				.then(function(result) {
+					transactionStore.fetch().then(function(data) {
+						assert.deepEqual(data, [ updates[0][1], updates[0][2] ],
 									'Transaction didn\'t properly resolve after all operations completed');
 					}).then(dfd.resolve);
 				});

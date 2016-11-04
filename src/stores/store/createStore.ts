@@ -46,19 +46,26 @@ export interface StoreFactory extends ComposeFactory<Store<{}, {}, any>, StoreOp
 
 interface BaseStoreState<T, O, U> {
 	storage: Storage<T, O>;
+	initialAddPromise: Promise<any>;
 }
 
 const instanceStateMap = new WeakMap<Store<{}, {}, any>, BaseStoreState<{}, {}, any>>();
 
 const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {}>>({
 	get(this: Store<{}, {}, any>, ids: string[] | string): Promise<{}[]> {
-		return instanceStateMap.get(this).storage.get(Array.isArray(ids) ? ids : [ ids ]);
+		const state = instanceStateMap.get(this);
+		return state.initialAddPromise.then(function() {
+			return state.storage.get(Array.isArray(ids) ? ids : [ ids ]);
+		});
+
 	},
 
 	add(this: Store<{}, {}, any>, items: {}[] | {}, options?: CrudOptions) {
 		const self = this;
-		const storeResultsPromise = instanceStateMap.get(self).storage
-			.add(Array.isArray(items) ? items : [ items ], options);
+		const state = instanceStateMap.get(self);
+		const storeResultsPromise = state.initialAddPromise.then(function() {
+			return state.storage.add(Array.isArray(items) ? items : [ items ], options);
+		});
 		// TODO refactoring - repetitive logic
 		return createStoreObservable(
 			new Observable<UpdateResults<{}>>(function subscribe(observer: Observer<UpdateResults<{}>>) {
@@ -78,8 +85,11 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 
 	put(this: Store<{}, {}, any>, items: {}[] | {}, options?: CrudOptions) {
 		const self = this;
-		const storeResultsPromise = instanceStateMap.get(self).storage
-			.put(Array.isArray(items) ? items : [ items ], options);
+		const state = instanceStateMap.get(self);
+		const storeResultsPromise = state.initialAddPromise.then(function() {
+			return state.storage.put(Array.isArray(items) ? items : [ items ], options);
+		});
+
 		return createStoreObservable(
 			new Observable<UpdateResults<{}>>(function subscribe(observer: Observer<UpdateResults<{}>>) {
 				storeResultsPromise
@@ -98,6 +108,7 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 
 	patch(this: Store<{}, {}, any>, updates: PatchArgument<{}>, options?: CrudOptions) {
 		const self = this;
+		const state = instanceStateMap.get(self);
 		let patchEntries: PatchMapEntry<{}, {}>[] = [];
 		if (Array.isArray(updates)) {
 			patchEntries = updates;
@@ -113,8 +124,10 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 		else {
 			patchEntries = [ updates ];
 		}
-		const storeResultsPromise = instanceStateMap.get(self).storage
-			.patch(patchEntries);
+		const storeResultsPromise = state.initialAddPromise.then(function() {
+			return state.storage.patch(patchEntries);
+		});
+
 		return createStoreObservable(
 			new Observable<UpdateResults<{}>>(function subscribe(observer: Observer<UpdateResults<{}>>) {
 				storeResultsPromise
@@ -133,8 +146,11 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 
 	delete(this: Store<{}, {}, any>, ids: string | string[]) {
 		const self = this;
-		const storeResultsPromise = instanceStateMap.get(self).storage
-			.delete(Array.isArray(ids) ? ids : [ ids ]);
+		const state = instanceStateMap.get(self);
+		const storeResultsPromise = state.initialAddPromise.then(function() {
+			return state.storage.delete(Array.isArray(ids) ? ids : [ ids ]);
+		});
+
 		return createStoreObservable(
 			new Observable<UpdateResults<{}>>(function subscribe(observer: Observer<UpdateResults<{}>>) {
 				storeResultsPromise
@@ -152,7 +168,10 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 	},
 
 	fetch<U>(this: Store<{}, {}, any>, query?: Query<{}, U>) {
-		return instanceStateMap.get(this).storage.fetch(query);
+		const state = instanceStateMap.get(this);
+		return state.initialAddPromise.then(function() {
+			return state.storage.fetch(query);
+		});
 	},
 
 	identify(this: Store<{}, {}, any>, items: {}[] | {}) {
@@ -166,12 +185,13 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 	options = options || {};
 	const data: T[] | null = options.data;
 	options.data = null;
-	const instanceState = {
-		storage: options.storage || createInMemoryStorage(options)
+	const instanceState: BaseStoreState<T, O, UpdateResults<T>> = {
+		storage: options.storage || createInMemoryStorage(options),
+		initialAddPromise: Promise.resolve()
 	};
 	instanceStateMap.set(instance, instanceState);
 	if (data) {
-		instance.add(data);
+		instanceState.initialAddPromise = instance.add(data).then(null, () => {});
 	}
 
 });

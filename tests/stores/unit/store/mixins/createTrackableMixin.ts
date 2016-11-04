@@ -11,11 +11,12 @@ import createQueryMixin, { QueryMixin, QueryOptions } from '../../../../src/stor
 import { ComposeFactory } from 'dojo-compose/compose';
 import createSubcollectionStore from '../../../../src/store/createSubcollectionStore';
 import createObservableStoreMixin from '../../../../src/store/mixins/createObservableStoreMixin';
-import { ItemType, createData } from '../../support/createData';
+import { ItemType, createData, createUpdates } from '../../support/createData';
 import { ObservableStore } from '../../../../src/store/mixins/createObservableStoreMixin';
 import { SubcollectionStore } from '../../../../src/store/createSubcollectionStore';
 import { ObservableStoreOptions } from '../../../../src/store/mixins/createObservableStoreMixin';
 import createOrderedOperationMixin from '../../../../src/store/mixins/createOrderedOperationMixin';
+import createAsyncStorage from '../../support/AsyncStorage';
 
 interface TrackableObservableQueryStore<T, O extends CrudOptions, U extends UpdateResults<T>> extends
 	ObservableStore<T, O, U>,
@@ -522,6 +523,90 @@ registerSuite(function() {
 				}
 			});
 			trackableQueryStore.add(createData());
+		},
+		'async storage': {
+			'tracked subcollection async operations should be done in the order specified by the user.'(this: any) {
+				const dfd = this.async(1000);
+				const trackableQueryStore = createTrackableQueryStore({
+					storage: createAsyncStorage()
+				});
+
+				const trackedCollection = trackableQueryStore
+					.filter(function(item: ItemType) {
+						return item.value > 1;
+					})
+					.sort('value')
+					.track();
+
+				const updates = createUpdates();
+
+				trackedCollection.add(createData()).then(function(result) {
+					assert.deepEqual(result, createData(), 'should have returned all added items');
+					return trackedCollection.put(updates[0]);
+				}).then(function(result) {
+					assert.deepEqual(result, updates[0], 'should have returned all updated items');
+					return trackedCollection.delete(['2']);
+				}).then(function(result) {
+					assert.deepEqual(result, ['2'], 'should have returned all deleted ids');
+					return trackedCollection.fetch();
+				}).then(function(result) {
+					assert.deepEqual(result, [ updates[0][0], updates[0][2] ], 'should have returned all filtered items');
+				}).then(dfd.resolve);
+			},
+
+			'tracked collection should filter out items that are not being tracked'(this: any) {
+				const dfd = this.async(1000);
+				const trackableQueryStore = createTrackableQueryStore({
+					storage: createAsyncStorage()
+				});
+				const data = createData();
+
+				const trackedCollection = trackableQueryStore
+					.filter(function(item: ItemType) {
+						return item.value > 1;
+					})
+					.sort('value')
+					.track();
+
+				let count = 0;
+				trackedCollection.observe().subscribe(function(update: any) {
+					count++;
+
+					if (count === 1) {
+						assert.deepEqual(update.adds, [ data[1], data[2] ]);
+					}
+					else if (count === 2) {
+						assert.deepEqual(update.deletes, [ '2' ]);
+						dfd.resolve();
+					}
+				});
+				trackedCollection.add(createData());
+				trackedCollection.delete(['1', '2']);
+			},
+
+			'ordered mixin should queue up operations in the order they are called, regardless of the behavior of the async storage'(this: any) {
+				const dfd = this.async(1000);
+				const trackableQueryStore = createTrackableQueryStore({
+					storage: createAsyncStorage({ fetch: 10, delete: 20, put: 30 })
+				});
+
+				const trackedCollection = trackableQueryStore
+					.filter(function(item: ItemType) {
+						return item.value > 1;
+					})
+					.sort('value')
+					.track();
+
+				trackedCollection.add(createData());
+				trackedCollection.put(createUpdates()[0]);
+				trackedCollection.delete(['1', '2']);
+				// fetch still got executed last, even if it takes the least amount of time
+				trackedCollection.fetch()
+					.then(function(result) {
+						assert.deepEqual(result, [ createUpdates()[0][2] ]);
+					})
+					.then(dfd.resolve);
+			}
 		}
 	};
 });

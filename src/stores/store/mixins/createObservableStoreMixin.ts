@@ -167,35 +167,52 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 					if (Array.isArray(idOrIds)) {
 						const ids = <string[]> idOrIds;
 
-						return new Observable<ItemUpdate<T>>(function subscribe(observer: Observer<ItemUpdate<T>>) {
-							const idSet = new Set<string>(ids);
-							self.get(ids).then(function(items: T[]) {
-								const retrievedIdSet = new Set<string>(self.identify(items));
-								let missingItemIds = ids.filter(id => !retrievedIdSet.has(id));
-
-								if (retrievedIdSet.size !== idSet.size || missingItemIds.length) {
-									observer.error(new Error(`ID(s) "${missingItemIds}" not found in store`));
+						const idSet = new Set<string>(ids);
+						const observable = new Observable<ItemUpdate<T>>(function subscribe(observer: Observer<ItemUpdate<T>>) {
+							const observerEntry: ObserverSetEntry<T> = {
+								observes: idSet,
+								observer: observer
+							};
+							ids.forEach(function(id: string) {
+								if (state.itemObservers.has(id)) {
+									state.itemObservers.get(id).push(observerEntry);
 								}
 								else {
-									const observerEntry: ObserverSetEntry<T> = {
-										observes: idSet,
-										observer: observer
-									};
-									ids.forEach(function(id: string) {
-										if (state.itemObservers.has(id)) {
-											state.itemObservers.get(id).push(observerEntry);
-										}
-										else {
-											state.itemObservers.set(id, [observerEntry]);
-										}
-									});
-									items.forEach((item, index) => observer.next({
-										item: item,
-										id: ids[index]
-									}));
+									state.itemObservers.set(id, [observerEntry]);
+								}
+							});
+							let isStarted = false;
+							observer.next = after(observer.next, (result: any) => {
+								isStarted = true;
+								return result;
+							});
+							observer.error = after(observer.error, (result: any) => {
+								isStarted = true;
+								return result;
+							});
+							observer.complete = after(observer.complete, (result: any) => {
+								isStarted = true;
+								return result;
+							});
+
+							self.get(ids).then(function(items: T[]) {
+								if (!isStarted) {
+									const retrievedIdSet = new Set<string>(self.identify(items));
+									let missingItemIds = ids.filter(id => !retrievedIdSet.has(id));
+
+									if (retrievedIdSet.size !== idSet.size || missingItemIds.length) {
+										observer.error(new Error(`ID(s) "${missingItemIds}" not found in store`));
+									}
+									else {
+										items.forEach((item, index) => observer.next({
+											item: item,
+											id: ids[index]
+										}));
+									}
 								}
 							});
 						});
+						return observable;
 					}
 					else {
 						const id = <string> idOrIds;

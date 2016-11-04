@@ -15,6 +15,7 @@ import { createOperation, OperationType } from '../../../src/patch/Operation';
 import createCompoundQuery from '../../../src/query/createQuery';
 import createInMemoryStorage from '../../../src/storage/createInMemoryStorage';
 import { createData, ItemType, createUpdates, patches, patchedItems } from '../support/createData';
+import createAsyncStorage from '../support/AsyncStorage';
 
 function getStoreAndDfd(test: any, data = createData()) {
 	const dfd = test.async(1000);
@@ -22,6 +23,14 @@ function getStoreAndDfd(test: any, data = createData()) {
 	const emptyStore = createStore();
 
 	return { dfd, store, emptyStore, data: createData() };
+}
+
+function getStoreWithAsyncStorage(test: any, asyncOptions?: {} ) {
+	const dfd = test.async(1000);
+	const asyncStorage = createAsyncStorage(asyncOptions);
+	const store = createStore({ storage: asyncStorage });
+
+	return { dfd, store, asyncStorage };
 }
 
 const ids = createData().map(function(item) {
@@ -321,6 +330,7 @@ registerSuite({
 			assert.equal(new Set(ids).size, generateNIds, 'Not all generated IDs were unique');
 		});
 	},
+
 	'should be able to get all updates by treating as a promise': {
 		add(this: any) {
 			const { dfd, emptyStore: store, data } = getStoreAndDfd(this);
@@ -368,6 +378,79 @@ registerSuite({
 			const { dfd, store, data } = getStoreAndDfd(this);
 			store.delete(ids).then(function(result) {
 				assert.deepEqual(result, ids, 'Should have returned all deleted ids');
+			}).then(dfd.resolve);
+		}
+	},
+
+	'async storage': {
+		'async operation should not be done immediately.'(this: any) {
+			const{ dfd, store } = getStoreWithAsyncStorage(this, { put: 21 });
+
+			const start = Date.now();
+			store.add(createData()).then(dfd.callback(function(result: ItemType[]) {
+				const finish = Date.now();
+				assert.isAbove(finish - start, 19 );
+				dfd.resolve();
+			}));
+		},
+		'should complete initial add before subsequent operations'(this: any) {
+			const dfd = this.async(1000);
+			const asyncStorage = createAsyncStorage();
+			const store = createStore({
+				storage: asyncStorage,
+				data: createData()
+			});
+
+			store.get(['1', '2', '3']).then(dfd.callback(function(items: ItemType[]) {
+				assert.deepEqual(items, createData(), 'Didn\'t retrieve items from async add');
+			}));
+		},
+		'failed initial add should not prevent subsequent operations'(this: any) {
+			const dfd = this.async(1000);
+			let fail = true;
+			const asyncStorage = createAsyncStorage
+				.around('add', function(add: () => Promise<ItemType>) {
+					return function(this: any) {
+						if (fail) {
+							fail = false;
+							return Promise.reject(Error('Error'));
+						}
+						else {
+							return add.apply(this, arguments);
+						}
+					};
+				})();
+			const data = createData();
+			const store = createStore({
+				storage: asyncStorage,
+				data: data
+			});
+
+			store.add(data).then(function() {
+				store.get(['1', '2', '3']).then(dfd.callback(function(items: ItemType[]) {
+					assert.isFalse(fail, 'Didn\'t fail for first operation');
+					assert.deepEqual(items, data, 'Didn\'t retrieve items from add following failed initial add');
+				}));
+			});
+		},
+		'fetch should not return items when it is done before add.'(this: any) {
+			const { dfd, store } = getStoreWithAsyncStorage(this, { put: 20, fetch: 10 });
+			store.add(createData());
+			store.fetch().then(function(storeData) {
+				assert.lengthOf(storeData, 0, 'should not have retrieved items');
+			}).then(dfd.resolve);
+		},
+		'async operations should be done in the order specified by the user.'(this: any) {
+			const{ dfd, store } = getStoreWithAsyncStorage(this);
+
+			store.add(createData()).then(function(result) {
+				assert.deepEqual(result, createData(), 'Should have returned all added items');
+				return store.put(createUpdates()[0]);
+			}).then(function(result) {
+				assert.deepEqual(result, createUpdates()[0], 'Should have returned all updated items');
+				return store.delete(ids[0]);
+			}).then(function(result) {
+				assert.deepEqual(result, [ids[0]], 'Should have returned all deleted ids');
 			}).then(dfd.resolve);
 		}
 	}
