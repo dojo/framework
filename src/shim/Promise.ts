@@ -370,9 +370,9 @@ export default class Promise<T> implements Thenable<T> {
 		throw new Error();
 	}
 
-	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | null | undefined)) | null | undefined, onRejected?: (reason: Error) => void): Promise<U>;
+	then<U>(onFulfilled?: (value: T) => U | Thenable<U> | undefined | null, onRejected?: (reason: Error) => void): Promise<U>;
 	/* istanbul ignore next */
-	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | null | undefined)) | null | undefined, onRejected?: (reason: Error) => (U | Thenable<U>)): Promise<U> {
+	then<U>(onFulfilled?: (value: T) => U | Thenable<U> | undefined | null, onRejected?: (reason: Error) => (U | Thenable<U>)): Promise<U> {
 		throw new Error();
 	}
 }

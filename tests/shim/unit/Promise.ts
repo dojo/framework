@@ -408,7 +408,7 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 
 		identity: function (this: any) {
 			let dfd = this.async();
-			Promise.resolve(5).then(null, dfd.rejectOnError(function (value: Error) {
+			Promise.resolve(5).then(undefined, dfd.rejectOnError(function (value: Error) {
 				assert(false, 'Should not have resolved');
 			})).then(dfd.callback(function (value: number) {
 				assert.strictEqual(value, 5);
