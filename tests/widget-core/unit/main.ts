@@ -15,6 +15,5 @@ registerSuite({
 		assert.isFunction(main.createTabbedPanel);
 		assert.isFunction(main.createTextInput);
 		assert.isFunction(main.createWidget);
-		assert.isObject(main.projector);
 	}
 });

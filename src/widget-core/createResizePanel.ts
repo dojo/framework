@@ -1,7 +1,8 @@
 import { VNode, h, VNodeProperties } from 'maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
-import { Handle } from 'dojo-core/interfaces';
+import createDestroyable from 'dojo-compose/bases/createDestroyable';
+import { Handle } from 'dojo-interfaces/core';
+import { Destroyable } from 'dojo-interfaces/bases';
 import { on } from 'dojo-core/aspect';
 import { assign } from 'dojo-core/lang';
 import WeakMap from 'dojo-shim/WeakMap';

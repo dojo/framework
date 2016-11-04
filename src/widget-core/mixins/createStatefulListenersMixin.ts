@@ -1,7 +1,8 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import { Actionable, EventedListenersMap, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
-import createStateful, { Stateful, StatefulOptions, StateChangeEvent } from 'dojo-compose/mixins/createStateful';
-import { Handle } from 'dojo-core/interfaces';
+import createStateful from 'dojo-compose/bases/createStateful';
+import { Actionable } from 'dojo-interfaces/abilities';
+import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
+import { EventedListenersMap, Stateful, StatefulOptions, StateChangeEvent } from 'dojo-interfaces/bases';
 import Map from 'dojo-shim/Map';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
@@ -18,7 +19,7 @@ export interface StatefulListenersState {
 }
 
 export interface StatefulListenersOptions<S extends StatefulListenersState> extends StatefulOptions<S> {
-	registryProvider?: RegistryProvider<Actionable<TargettedEventObject>>;
+	registryProvider?: RegistryProvider<Actionable<this, EventTargettedObject<this>>>;
 }
 
 export type StatefulListeners<S extends StatefulListenersState> = Stateful<S>;
@@ -97,11 +98,13 @@ function resolveListeners<T>(
 	];
 }
 
+type StatefulListenersActionable = Actionable<StatefulListeners<StatefulListenersState>, EventTargettedObject<StatefulListeners<StatefulListenersState>>>;
+
 interface ManagementState {
 	/**
 	 * A cache of actions that are already resolved
 	 */
-	cache?: Map<string | symbol, Actionable<TargettedEventObject>>;
+	cache?: Map<string | symbol, StatefulListenersActionable>;
 
 	/**
 	 * A generation marker to be able to deal with conflicts
@@ -116,7 +119,7 @@ interface ManagementState {
 	/**
 	 * A reference to the action registry which should resolve named actions
 	 */
-	registry: Registry<Actionable<TargettedEventObject>>;
+	registry: Registry<StatefulListenersActionable>;
 }
 
 /**
@@ -127,13 +130,13 @@ const managementMap = new WeakMap<StatefulListeners<StatefulListenersState>, Man
 /**
  * Internal statechange listener which replaces the listeners on the instance.
  */
-function manageListeners(evt: StateChangeEvent<StatefulListenersState>): void {
-	const widget: StatefulListeners<StatefulListenersState> = <any> evt.target;
+function manageListeners(evt: StateChangeEvent<StatefulListenersState, StatefulListeners<StatefulListenersState>>): void {
+	const widget = evt.target;
 
 	// Assume this function cannot be called without the widget being in the management map.
 	const internalState = managementMap.get(widget);
 	// Initialize cache.
-	const { cache = new Map<string | symbol, Actionable<TargettedEventObject>>() } = internalState;
+	const { cache = new Map<string | symbol, StatefulListenersActionable>() } = internalState;
 	if (!internalState.cache) {
 		internalState.cache = cache;
 	}
@@ -146,10 +149,10 @@ function manageListeners(evt: StateChangeEvent<StatefulListenersState>): void {
 	// Resolve the actions, create a listeners map that is compatible with widget.on()
 	const eventTypes = Object.keys(listeners);
 
-	const newListeners: EventedListenersMap = {};
+	const newListeners: EventedListenersMap<StatefulListeners<StatefulListenersState>> = {};
 	// `promise` will be undefined if all actions are resolved synchronously
 	const promise = eventTypes.reduce<Promise<void> | undefined>((promise, eventType) => {
-		const result = resolveListeners<Actionable<TargettedEventObject>>(internalState.registry, cache, listeners[eventType]);
+		const result = resolveListeners<StatefulListenersActionable>(internalState.registry, cache, listeners[eventType]);
 		if (carriesValue(result)) {
 			newListeners[eventType] = result[0];
 			return promise;
@@ -191,12 +194,12 @@ function manageListeners(evt: StateChangeEvent<StatefulListenersState>): void {
 
 const createStatefulListenersMixin: StatefulListenersMixinFactory = createStateful
 	.mixin({
-		initialize(instance: StatefulListeners<any>, { registryProvider, state }: StatefulListenersOptions<any> = {}) {
+		initialize(instance: StatefulListeners<StatefulListenersState>, { registryProvider, state }: StatefulListenersOptions<StatefulListenersState> = {}) {
 			if (registryProvider) {
 				const registry = registryProvider.get('actions');
 				managementMap.set(instance, { registry });
 
-				instance.own(instance.on('statechange', manageListeners));
+				instance.own(instance.on('state:changed', manageListeners));
 
 				/* Stateful will have already fired the statechange event at this point */
 				if (state) {

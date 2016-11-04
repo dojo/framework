@@ -1,9 +1,9 @@
 import { VNodeProperties } from 'maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
-import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
-import createCancelableEvent, { CancelableEvent } from 'dojo-compose/util/createCancelableEvent';
-import { Handle } from 'dojo-core/interfaces';
+import createStateful from 'dojo-compose/bases/createStateful';
+import createCancelableEvent from 'dojo-compose/bases/createCancelableEvent';
+import { EventTargettedObject, EventCancelableObject, Handle } from 'dojo-interfaces/core';
+import { EventedListener, Stateful, State, StatefulOptions } from 'dojo-interfaces/bases';
 import { assign } from 'dojo-core/lang';
 import { NodeAttributeFunction } from './createRenderMixin';
 import { stringToValue, valueToString } from '../util/lang';
@@ -37,7 +37,7 @@ export interface FormFieldMixinState<V> extends State {
 	value?: V;
 }
 
-export interface ValueChangeEvent<V> extends CancelableEvent<'valuechange', FormFieldMixin<V, FormFieldMixinState<V>>> {
+export interface ValueChangeEvent<V> extends EventCancelableObject<'valuechange', FormFieldMixin<V, FormFieldMixinState<V>>> {
 	/**
 	 * The event type (in this case, `valuechange`)
 	 */
@@ -75,8 +75,8 @@ export interface FormFieldOverride<V> {
 	/**
 	 * Add listener for a `valuechange` event, emitted when the value on the widget changes
 	 */
-	on(type: 'valuechange', listener: EventedListener<ValueChangeEvent<V>>): Handle;
-	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
+	on(type: 'valuechange', listener: EventedListener<FormFieldMixin<V, FormFieldMixinState<V>>, ValueChangeEvent<V>>): Handle;
+	on(type: string, listener: EventedListener<V, EventTargettedObject<V>>): Handle;
 }
 
 export type FormFieldMixin<V, S extends FormFieldMixinState<V>> = FormField<V> & Stateful<S> & FormFieldOverride<V>;

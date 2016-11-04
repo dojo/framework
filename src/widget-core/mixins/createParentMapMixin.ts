@@ -1,7 +1,8 @@
 import { Map } from 'immutable';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import createEvented, { Evented, EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
-import { Handle } from 'dojo-core/interfaces';
+import createEvented from 'dojo-compose/bases/createEvented';
+import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
+import { Evented, EventedListener } from 'dojo-interfaces/bases';
 import WeakMap from 'dojo-shim/WeakMap';
 import { Child, ChildListEvent, ChildrenMap } from './interfaces';
 import { getRemoveHandle } from '../util/lang';
@@ -39,8 +40,8 @@ export interface ParentMap<C extends Child> {
 	 */
 	merge(children: ChildrenMap<C>): Handle;
 
-	on?(type: 'childlist', listener: EventedListener<ChildListEvent<this, C>>): Handle;
-	on?(type: string, listener: EventedListener<TargettedEventObject>): Handle;
+	on?(type: 'childlist', listener: EventedListener<this, ChildListEvent<this, C>>): Handle;
+	on?(type: string, listener: EventedListener<this, EventTargettedObject<this>>): Handle;
 }
 
 export type ParentMapMixin<C extends Child> = ParentMap<C> & Evented;

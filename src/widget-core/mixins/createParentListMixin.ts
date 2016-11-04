@@ -1,6 +1,7 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import createEvented, { Evented, EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
-import { Handle } from 'dojo-core/interfaces';
+import createEvented from 'dojo-compose/bases/createEvented';
+import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
+import { Evented, EventedListener } from 'dojo-interfaces/bases';
 import WeakMap from 'dojo-shim/WeakMap';
 import { List } from 'immutable';
 import { getRemoveHandle, insertInList, Position } from '../util/lang';
@@ -38,8 +39,8 @@ export interface ParentListOverloads<C extends Child> {
 	/**
 	 * Listen for events emitted from a parent when its children are mutated
 	 */
-	on(type: 'childlist', listener: EventedListener<ChildListEvent<this, C>>): Handle;
-	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
+	on(type: 'childlist', listener: EventedListener<this, ChildListEvent<this, C>>): Handle;
+	on(type: string, listener: EventedListener<this, EventTargettedObject<this>>): Handle;
 }
 
 export type ParentListMixin<C extends Child> = ParentList<C> & Evented & ParentListOverloads<C>;

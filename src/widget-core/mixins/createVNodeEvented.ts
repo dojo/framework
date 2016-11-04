@@ -1,15 +1,14 @@
-import { EventObject, Handle } from 'dojo-core/interfaces';
+import { EventTargettedObject, EventObject, Handle } from 'dojo-interfaces/core';
 import { on } from 'dojo-core/aspect';
 import { assign } from 'dojo-core/lang';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createEvented, {
+import createEvented, { resolveListener } from 'dojo-compose/bases/createEvented';
+import {
 	Evented,
 	EventedOptions,
 	EventedListenerOrArray,
-	EventedListenersMap,
-	resolveListener,
-	TargettedEventObject
-} from 'dojo-compose/mixins/createEvented';
+	EventedListenersMap
+} from 'dojo-interfaces/bases';
 import Set from 'dojo-shim/Set';
 import { VNodeProperties } from 'maquette';
 import { NodeAttributeFunction } from './createRenderMixin';
@@ -17,7 +16,7 @@ import { NodeAttributeFunction } from './createRenderMixin';
 export type VNodeListenerReturn = boolean | undefined | null;
 
 export interface VNodeListeners {
-	[on: string]: undefined | ((ev?: TargettedEventObject) => VNodeListenerReturn);
+	[on: string]: undefined | ((ev?: EventTargettedObject<any>) => VNodeListenerReturn);
 	ontouchcancel?(ev?: TouchEvent): VNodeListenerReturn;
 	ontouchend?(ev?: TouchEvent): VNodeListenerReturn;
 	ontouchmove?(ev?: TouchEvent): VNodeListenerReturn;
@@ -84,36 +83,29 @@ export interface VNodeEventedMixin {
 }
 
 export interface VNodeEventedOverrides {
-	on(type: 'touchcancel', listener: EventedListenerOrArray<TouchEvent>): Handle;
-	on(type: 'touchend', listener: EventedListenerOrArray<TouchEvent>): Handle;
-	on(type: 'touchmove', listener: EventedListenerOrArray<TouchEvent>): Handle;
-	on(type: 'blur', listener: EventedListenerOrArray<FocusEvent>): Handle;
-	on(type: 'change', listener: EventedListenerOrArray<Event>): Handle;
-	on(type: 'click', listener: EventedListenerOrArray<MouseEvent>): Handle;
-	on(type: 'dblclick', listener: EventedListenerOrArray<MouseEvent>): Handle;
-	on(type: 'focus', listener: EventedListenerOrArray<FocusEvent>): Handle;
-	on(type: 'input', listener: EventedListenerOrArray<Event>): Handle;
-	on(type: 'keydown', listener: EventedListenerOrArray<KeyboardEvent>): Handle;
-	on(type: 'keypress', listener: EventedListenerOrArray<KeyboardEvent>): Handle;
-	on(type: 'keyup', listener: EventedListenerOrArray<KeyboardEvent>): Handle;
-	on(type: 'load', listener: EventedListenerOrArray<Event>): Handle;
-	on(type: 'mousedown', listener: EventedListenerOrArray<MouseEvent>): Handle;
-	on(type: 'mouseenter', listener: EventedListenerOrArray<MouseEvent>): Handle;
-	on(type: 'mouseleave', listener: EventedListenerOrArray<MouseEvent>): Handle;
-	on(type: 'mousemove', listener: EventedListenerOrArray<MouseEvent>): Handle;
-	on(type: 'mouseout', listener: EventedListenerOrArray<MouseEvent>): Handle;
-	on(type: 'mouseover', listener: EventedListenerOrArray<MouseEvent>): Handle;
-	on(type: 'mouseup', listener: EventedListenerOrArray<MouseEvent>): Handle;
-	on(type: 'mousewheel', listener: EventedListenerOrArray<MouseWheelEvent>): Handle;
-	on(type: 'scroll', listener: EventedListenerOrArray<UIEvent>): Handle;
-	on(type: 'submit', listener: EventedListenerOrArray<Event>): Handle;
-	/**
-	 * Add a listener to an event by type
-	 *
-	 * @param type The type of event to listen for
-	 * @param listener The event listener to attach
-	 */
-	on(type: string, listener: EventedListenerOrArray<TargettedEventObject>): Handle;
+	on(type: 'touchcancel', listener: EventedListenerOrArray<EventTarget, TouchEvent>): Handle;
+	on(type: 'touchend', listener: EventedListenerOrArray<EventTarget, TouchEvent>): Handle;
+	on(type: 'touchmove', listener: EventedListenerOrArray<EventTarget, TouchEvent>): Handle;
+	on(type: 'blur', listener: EventedListenerOrArray<EventTarget, FocusEvent>): Handle;
+	on(type: 'change', listener: EventedListenerOrArray<EventTarget, Event>): Handle;
+	on(type: 'click', listener: EventedListenerOrArray<EventTarget, MouseEvent>): Handle;
+	on(type: 'dblclick', listener: EventedListenerOrArray<EventTarget, MouseEvent>): Handle;
+	on(type: 'focus', listener: EventedListenerOrArray<EventTarget, FocusEvent>): Handle;
+	on(type: 'input', listener: EventedListenerOrArray<EventTarget, Event>): Handle;
+	on(type: 'keydown', listener: EventedListenerOrArray<EventTarget, KeyboardEvent>): Handle;
+	on(type: 'keypress', listener: EventedListenerOrArray<EventTarget, KeyboardEvent>): Handle;
+	on(type: 'keyup', listener: EventedListenerOrArray<EventTarget, KeyboardEvent>): Handle;
+	on(type: 'load', listener: EventedListenerOrArray<EventTarget, Event>): Handle;
+	on(type: 'mousedown', listener: EventedListenerOrArray<EventTarget, MouseEvent>): Handle;
+	on(type: 'mouseenter', listener: EventedListenerOrArray<EventTarget, MouseEvent>): Handle;
+	on(type: 'mouseleave', listener: EventedListenerOrArray<EventTarget, MouseEvent>): Handle;
+	on(type: 'mousemove', listener: EventedListenerOrArray<EventTarget, MouseEvent>): Handle;
+	on(type: 'mouseout', listener: EventedListenerOrArray<EventTarget, MouseEvent>): Handle;
+	on(type: 'mouseover', listener: EventedListenerOrArray<EventTarget, MouseEvent>): Handle;
+	on(type: 'mouseup', listener: EventedListenerOrArray<EventTarget, MouseEvent>): Handle;
+	on(type: 'mousewheel', listener: EventedListenerOrArray<EventTarget, MouseWheelEvent>): Handle;
+	on(type: 'scroll', listener: EventedListenerOrArray<EventTarget, UIEvent>): Handle;
+	on(type: 'submit', listener: EventedListenerOrArray<EventTarget, Event>): Handle;
 }
 
 export type VNodeEvented = Evented & VNodeEventedMixin & VNodeEventedOverrides;
@@ -165,7 +157,7 @@ const createVNodeEvented: VNodeEventedFactory = createEvented
 								this.listeners = {};
 							}
 							let type: string;
-							let listeners: EventedListenerOrArray<TargettedEventObject>;
+							let listeners: EventedListenerOrArray<VNodeEvented, EventTargettedObject<any>>;
 							[ type, listeners ] = args;
 							if (Array.isArray(listeners)) {
 								const handles = listeners.map((listener) => vnodeEvents.has(type) ?
@@ -180,7 +172,7 @@ const createVNodeEvented: VNodeEventedFactory = createEvented
 							}
 						}
 						else if (args.length === 1) { /* overload: on(listeners) */
-							const listenerMapArg: EventedListenersMap = args[0];
+							const listenerMapArg: EventedListenersMap<any> = args[0];
 							return handlesArraytoHandle(Object.keys(listenerMapArg).map((type) => this.on(type, listenerMapArg[type])));
 						}
 						else { /* unexpected signature */

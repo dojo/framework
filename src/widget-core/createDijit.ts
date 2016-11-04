@@ -1,8 +1,8 @@
 import { h, VNode } from 'maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable from 'dojo-compose/mixins/createDestroyable';
-import createEvented from 'dojo-compose/mixins/createEvented';
-import { State } from 'dojo-compose/mixins/createStateful';
+import createDestroyable from 'dojo-compose/bases/createDestroyable';
+import createEvented from 'dojo-compose/bases/createEvented';
+import { State } from 'dojo-interfaces/bases';
 import Map from 'dojo-shim/Map';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
@@ -253,7 +253,7 @@ const createDijit: DijitFactory = createRenderMixin
 	.mixin({
 		mixin: createEvented,
 		initialize(instance: Dijit<DijitWidget>) {
-			instance.own(instance.on('statechange', (event) => {
+			instance.own(instance.on('state:changed', (event) => {
 				const { /* tslint:disable */Ctor/* tslint:enable */, params } = event.state;
 				if (Ctor || params) {
 					const dijitData = dijitDataWeakMap.get(instance);

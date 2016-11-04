@@ -113,13 +113,13 @@ registerSuite({
 			let called = false;
 			const cachedRender = createRenderMixin();
 
-			cachedRender.on('statechange', () => {
+			cachedRender.on('state:changed', () => {
 				assert.strictEqual(cachedRender.id, cachedRender.state.id, 'state should match');
 				called = true;
 			});
 
 			const id = cachedRender.id;
-			assert.isTrue(called, 'statechange should have been called');
+			assert.isTrue(called, 'state:changed should have been called');
 
 			assert.include(id, createRenderMixin.idBase, 'should include static idBase');
 			assert.notStrictEqual(cachedRender.id, createRenderMixin.idBase, 'but shouldn\'t match exactly');

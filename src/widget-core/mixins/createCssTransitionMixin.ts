@@ -1,7 +1,8 @@
 import { VNodeProperties } from 'maquette';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { NodeAttributeFunction } from './createRenderMixin';
-import createStateful, { State, Stateful, StatefulOptions } from 'dojo-compose/mixins/createStateful';
+import createStateful from 'dojo-compose/bases/createStateful';
+import { State, Stateful, StatefulOptions } from 'dojo-interfaces/bases';
 
 export type CssTransitionMixinState = State & {
 	/**

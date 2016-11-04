@@ -16,6 +16,7 @@ registerSuite({
 			.findByCssSelector('dojo-panel-tabbed > ul > :nth-child(2) > :first-child')
 				.click()
 				.end()
+			.sleep(10)
 			.findByCssSelector('dojo-panel[data-visible="true"] > div')
 				.getVisibleText()
 				.then((text: string) => {

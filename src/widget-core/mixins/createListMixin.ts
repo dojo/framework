@@ -1,6 +1,7 @@
 import { h, VNode } from 'maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createStateful, { Stateful, StatefulOptions, State } from 'dojo-compose/mixins/createStateful';
+import createStateful from 'dojo-compose/bases/createStateful';
+import { Stateful, StatefulOptions, State } from 'dojo-interfaces/bases';
 
 export interface ListStateItem {
 	[property: string]: any;

@@ -1,6 +1,6 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import { Destroyable } from 'dojo-compose/mixins/createDestroyable';
-import { Handle } from 'dojo-core/interfaces';
+import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
+import { Destroyable } from 'dojo-interfaces/bases';
 import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
 import { VNode } from 'maquette';
@@ -19,12 +19,8 @@ export interface Child extends Renderable, Destroyable {
  */
 export type ChildEntry<C extends Child> = [ string | number, C ];
 
-export interface ChildListEvent<T, C extends Child> {
+export interface ChildListEvent<T, C extends Child> extends EventTargettedObject<T> {
 	children: Map<string, C> | List<C>;
-
-	target: T;
-
-	type: 'childlist';
 }
 
 export interface ChildrenMap<C extends Child> {

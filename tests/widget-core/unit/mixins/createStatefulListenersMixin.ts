@@ -1,11 +1,12 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { Actionable, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
+import { Actionable } from 'dojo-interfaces/abilities';
+import { EventTargettedObject } from 'dojo-interfaces/core';
 import Promise from 'dojo-shim/Promise';
 import createStatefulListenersMixin from '../../../src/mixins/createStatefulListenersMixin';
 import { RegistryProvider } from '../../../src/mixins/interfaces';
 
-type Action = Actionable<TargettedEventObject>;
+type Action = Actionable<any, EventTargettedObject<any>>;
 
 interface ActionStub extends Action {
 	callCount: number;

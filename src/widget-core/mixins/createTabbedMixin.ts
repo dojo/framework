@@ -1,9 +1,9 @@
 import { Map } from 'immutable';
 import { h, VNode } from 'maquette';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createDestroyable, { Destroyable } from 'dojo-compose/mixins/createDestroyable';
-import { StatefulOptions } from 'dojo-compose/mixins/createStateful';
-import { Handle } from 'dojo-core/interfaces';
+import createDestroyable from 'dojo-compose/bases/createDestroyable';
+import { Handle } from 'dojo-interfaces/core';
+import { Destroyable, StatefulOptions } from 'dojo-interfaces/bases';
 import { from as arrayFrom } from 'dojo-shim/array';
 import WeakMap from 'dojo-shim/WeakMap';
 import createRenderMixin, { RenderMixin, RenderMixinState } from './createRenderMixin';

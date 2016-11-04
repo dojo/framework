@@ -1,8 +1,8 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import createCancelableEvent, { CancelableEvent } from 'dojo-compose/util/createCancelableEvent';
-import { EventedListener, TargettedEventObject } from 'dojo-compose/mixins/createEvented';
-import createStateful, { Stateful, State, StatefulOptions } from 'dojo-compose/mixins/createStateful';
-import { Handle } from 'dojo-core/interfaces';
+import createCancelableEvent from 'dojo-compose/bases/createCancelableEvent';
+import createStateful from 'dojo-compose/bases/createStateful';
+import { EventCancelableObject, EventTargettedObject, Handle } from 'dojo-interfaces/core';
+import { EventedListener, Stateful, State, StatefulOptions } from 'dojo-interfaces/bases';
 import Promise from 'dojo-shim/Promise';
 
 export interface CloseableState extends State {
@@ -12,7 +12,7 @@ export interface CloseableState extends State {
 	closeable?: boolean;
 }
 
-export interface CloseEvent extends CancelableEvent<'close', CloseableMixin<CloseableState>> { }
+export interface CloseEvent extends EventCancelableObject<'close', CloseableMixin<CloseableState>> { }
 
 export interface Closeable {
 	/**
@@ -20,8 +20,8 @@ export interface Closeable {
 	 */
 	close(): Promise<boolean>;
 
-	on(type: 'close', listener: EventedListener<CloseEvent>): Handle;
-	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
+	on(type: 'close', listener: EventedListener<CloseableMixin<CloseableState>, CloseEvent>): Handle;
+	on(type: string, listener: EventedListener<CloseableState, EventTargettedObject<CloseableState>>): Handle;
 }
 
 export type CloseableMixin<S extends CloseableState> = Stateful<S> & Closeable;

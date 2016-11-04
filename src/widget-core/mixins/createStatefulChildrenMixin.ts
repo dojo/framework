@@ -1,5 +1,6 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import createStateful, { Stateful, StatefulOptions, StateChangeEvent, State } from 'dojo-compose/mixins/createStateful';
+import createStateful from 'dojo-compose/bases/createStateful';
+import { Stateful, StatefulOptions, StateChangeEvent, State } from 'dojo-interfaces/bases';
 import Map from 'dojo-shim/Map';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
@@ -122,8 +123,8 @@ const managementMap = new WeakMap<StatefulChildrenMixin<Child, StatefulChildrenS
  *
  * @param evt The state change event of the parent
  */
-function manageChildren(evt: StateChangeEvent<StatefulChildrenState>): void {
-	const parent: StatefulChildrenMixin<Child, StatefulChildrenState> = <any> evt.target;
+function manageChildren(evt: StateChangeEvent<StatefulChildrenState, StatefulChildrenMixin<Child, StatefulChildrenState>>): void {
+	const parent = evt.target;
 
 	/* Assume this function cannot be called without the widget being in the management map */
 	const internalState = managementMap.get(parent);
@@ -355,7 +356,7 @@ const createStatefulChildrenMixin: StatefulChildrenMixinFactory = createStateful
 				return this.createChildren([ [ factory, options ] ]).then(([ tuple ]) => tuple);
 			}
 		},
-		initialize(instance: StatefulChildrenMixin<any, any>, { registryProvider, id, state }: StatefulChildrenOptions<any, any> = {}) {
+		initialize(instance: StatefulChildrenMixin<Child, StatefulChildrenState>, { registryProvider, id, state }: StatefulChildrenOptions<any, any> = {}) {
 			if (registryProvider) {
 				const registry = registryProvider.get('widgets');
 				managementMap.set(instance, {
@@ -365,7 +366,7 @@ const createStatefulChildrenMixin: StatefulChildrenMixinFactory = createStateful
 					id
 				});
 
-				instance.own(instance.on('statechange', manageChildren));
+				instance.own(instance.on('state:changed', manageChildren));
 				instance.own(instance.on('childlist', manageChildrenState));
 
 				/* Stateful will have already fired the statechange event at this point */

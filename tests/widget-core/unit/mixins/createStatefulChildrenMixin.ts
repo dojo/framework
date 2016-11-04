@@ -6,7 +6,7 @@ import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
 import { Child, RegistryProvider } from '../../../src/mixins/interfaces';
 import compose from 'dojo-compose/compose';
-import createDestroyable from 'dojo-compose/mixins/createDestroyable';
+import createDestroyable from 'dojo-compose/bases/createDestroyable';
 import { h } from 'maquette';
 import widgetRegistry, { widgetMap } from '../../support/mockRegistryProvider';
 
