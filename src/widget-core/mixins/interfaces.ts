@@ -11,7 +11,7 @@ export interface Child extends Renderable, Destroyable {
 	/**
 	 * A reference to the widget's parent
 	 */
-	parent: Parent | null;
+	parent?: Parent | null;
 }
 
 /**

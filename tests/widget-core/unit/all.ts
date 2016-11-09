@@ -7,4 +7,5 @@ import './projector'; // projector should load before integrations, because it l
 import './integrations';
 import './main';
 import './mixins/all';
+import './bases/all';
 import './util/all';

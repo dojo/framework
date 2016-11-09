@@ -38,6 +38,7 @@
     "@types/glob": "5.0.*",
     "@types/grunt": "0.4.*",
     "@types/jsdom": "2.0.*",
+    "@types/sinon": "^1.16.31",
     "codecov.io": "0.1.6",
     "dojo-interfaces": "^2.0.0-alpha.4",
     "dojo-loader": ">=2.0.0-beta.7",
@@ -60,6 +61,7 @@
     "postcss-modules": "^0.5.1",
     "postcss-simple-vars": "^3.0.0",
     "remap-istanbul": "^0.6.4",
+    "sinon": "^1.17.6",
     "tslint": "^3.11.0",
     "typescript": "^2.0.3"
   }

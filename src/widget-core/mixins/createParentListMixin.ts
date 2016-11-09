@@ -50,19 +50,24 @@ export interface ParentListMixinFactory extends ComposeFactory<ParentListMixin<C
 /**
  * Contains a List of children per instance
  */
-const childrenMap = new WeakMap<ParentListMixin<Child>, List<Child>>();
+const childrenMap = new WeakMap<ParentListMixin<Child>, List<Child & Evented>>();
 
 const createParentMixin: ParentListMixinFactory = compose<ParentList<Child>, ParentListMixinOptions<Child>>({
-		get children(this: ParentListMixin<Child>): List<Child> {
+		get children(this: ParentListMixin<Child>): List<Child & Evented> {
 			return childrenMap.get(this);
 		},
 
-		set children(this: ParentListMixin<Child>, value: List<Child>) {
+		set children(this: ParentListMixin<Child>, value: List<Child & Evented>) {
 			if (!value.equals(childrenMap.get(this))) {
 				value.forEach((widget) => {
 					// Workaround for https://github.com/facebook/immutable-js/pull/919
 					// istanbul ignore else
 					if (widget) {
+						widget.on('invalidate', () => {
+							if (this.invalidate) {
+								this.invalidate();
+							}
+						});
 						if (widget.parent !== this) {
 							widget.parent = this;
 							/* TODO: If a child gets attached and reattached it may own multiple handles */

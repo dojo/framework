@@ -1,1 +1,2 @@
 import './lang';
+import './d';
