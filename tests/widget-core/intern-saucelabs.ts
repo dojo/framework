@@ -10,7 +10,7 @@ export const environments = [
 	// Disable Safari 9 because of timing issues when running the tests.
 	// See <https://github.com/dojo/widgets/issues/5>.
 	// { browserName: 'safari', version: '9.0', platform: 'OS X 10.11' },
-	{ browserName: 'android', deviceName: 'Google Nexus 7 HD Emulator' },
+	{ browserName: 'android', version: '5.1' },
 	{ browserName: 'iphone', version: '9.3' }
 ];
 
