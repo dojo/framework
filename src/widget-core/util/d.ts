@@ -14,9 +14,9 @@ export type TagNameOrFactory = string | ComposeFactory<Widget<WidgetState>, Widg
 
 export type DOptions = VNodeProperties | WidgetOptions<WidgetState>;
 
-function d(tagName: string, options?: VNodeProperties, children?: (DNode | VNode)[]): HNode;
+function d(tagName: string, options?: VNodeProperties, children?: (DNode | VNode | null)[]): HNode;
 function d(factory: ComposeFactory<Widget<WidgetState>, WidgetOptions<WidgetState>>, options: WidgetOptions<WidgetState>): WNode;
-function d(tagNameOrFactory: TagNameOrFactory, options: DOptions = {}, children: (DNode | VNode)[] = []): DNode {
+function d(tagNameOrFactory: TagNameOrFactory, options: DOptions = {}, children: (DNode | VNode | null)[] = []): DNode {
 
 	if (typeof tagNameOrFactory === 'string') {
 		children = children.filter((child) => child);
