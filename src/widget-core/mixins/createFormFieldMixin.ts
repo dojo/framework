@@ -1,11 +1,11 @@
-import { VNodeProperties } from 'maquette';
+import { VNodeProperties } from 'dojo-interfaces/vdom';
 import { ComposeFactory } from 'dojo-compose/compose';
 import createStateful from 'dojo-compose/bases/createStateful';
 import createCancelableEvent from 'dojo-compose/bases/createCancelableEvent';
 import { EventTargettedObject, EventCancelableObject, Handle } from 'dojo-interfaces/core';
 import { EventedListener, Stateful, State, StatefulOptions } from 'dojo-interfaces/bases';
 import { assign } from 'dojo-core/lang';
-import { NodeAttributeFunction } from './createRenderMixin';
+import { NodeAttributeFunction } from 'dojo-interfaces/widgetBases';
 import { stringToValue, valueToString } from '../util/lang';
 
 export interface FormFieldMixinOptions<V, S extends FormFieldMixinState<V>> extends StatefulOptions<S> {

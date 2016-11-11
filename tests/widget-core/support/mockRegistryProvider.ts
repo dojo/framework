@@ -1,4 +1,5 @@
-import createRenderMixin, { RenderMixin, RenderMixinState } from '../../src/mixins/createRenderMixin';
+import createWidgetBase from '../../src/bases/createWidgetBase';
+import { Widget, WidgetState } from 'dojo-interfaces/widgetBases';
 import Promise from 'dojo-shim/Promise';
 import { Child } from '../../src/mixins/interfaces';
 import { ComposeFactory } from 'dojo-compose/compose';
@@ -17,7 +18,7 @@ function reset() {
 	widgetRegistry.stack = [];
 
 	widgetIds.forEach((id) => {
-		const widget = createRenderMixin({ id });
+		const widget = createWidgetBase({ id });
 		widget.own({
 			destroy() {
 				widgetMap.delete(id);
@@ -32,7 +33,7 @@ function reset() {
 const widgetRegistry = {
 	reset,
 	stack: <(string | symbol)[]> [],
-	get(id: string | symbol): Promise<RenderMixin<RenderMixinState>> {
+	get(id: string | symbol): Promise<Widget<WidgetState>> {
 		widgetRegistry.stack.push(id);
 		const widget = widgetMap.get(id);
 		if (widget) {
@@ -42,7 +43,7 @@ const widgetRegistry = {
 			return Promise.reject(new Error(`Cannot find widget with id ${id}`));
 		}
 	},
-	identify(value: RenderMixin<RenderMixinState>): string | symbol {
+	identify(value: Widget<WidgetState>): string | symbol {
 		const id = widgetIdMap.get(value);
 		if (!id) {
 			throw new Error('Cannot identify value');
@@ -51,7 +52,7 @@ const widgetRegistry = {
 			return id;
 		}
 	},
-	create<C extends RenderMixin<RenderMixinState>>(factory: ComposeFactory<C, any>, options?: any): Promise<[string | symbol, C]> {;
+	create<C extends Widget<WidgetState>>(factory: ComposeFactory<C, any>, options?: any): Promise<[string | symbol, C]> {;
 		return Promise.resolve<[ string, C ]>([options && options.id || `widget${widgetUID++}`, factory(options)]);
 	},
 	has(id: string | symbol): Promise<boolean> {

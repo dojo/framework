@@ -3,14 +3,8 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import projector, { createProjector } from '../../src/projector';
 import { h } from 'maquette';
-import createRenderMixin from '../../src/mixins/createRenderMixin';
-import createDestroyable from 'dojo-compose/mixins/createDestroyable';
-import { ComposeFactory } from 'dojo-compose/compose';
+import createWidgetBase from '../../src/bases/createWidgetBase';
 import global from 'dojo-core/global';
-import { Child } from '../../src/mixins/interfaces';
-
-const createRenderableChild = createDestroyable
-	.mixin(createRenderMixin) as ComposeFactory<Child, any>;
 
 registerSuite({
 	name: 'projector',
@@ -21,11 +15,11 @@ registerSuite({
 		const dfd = this.async();
 		const childNodeLength = document.body.childNodes.length;
 		let nodeText = 'foo';
-		const renderable = createRenderableChild({
+		const renderable = createWidgetBase.extend({
 			render() {
 				return h('h2', [ nodeText ] );
 			}
-		});
+		})();
 		projector.append(renderable);
 		projector.attach().then((attachHandle) => {
 			assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
@@ -52,11 +46,11 @@ registerSuite({
 		const projector1 = createProjector({});
 		projector1.setRoot(div);
 		let nodeText = 'bar';
-		const renderable = createRenderableChild({
+		const renderable = createWidgetBase.extend({
 			render() {
 				return h('h1', [ nodeText ]);
 			}
-		});
+		})();
 		const addHandle = projector1.append(renderable);
 		assert.strictEqual(div.childNodes.length, 0, 'there should be no children');
 		projector1.attach().then(() => {
@@ -102,11 +96,11 @@ registerSuite({
 		const projector1 = createProjector({});
 		projector1.setRoot(div);
 		let nodeText = 'bar';
-		const renderable = createRenderableChild({
+		const renderable = createWidgetBase.extend({
 			render() {
 				return h('h1', [ nodeText ]);
 			}
-		});
+		})();
 		projector1.append(renderable);
 		assert.strictEqual(div.childNodes.length, 0, 'there should be no children');
 		let eventFired = false;
@@ -147,8 +141,8 @@ registerSuite({
 		document.body.appendChild(div);
 		projector.setRoot(div);
 		const handle = projector.append([
-			createRenderableChild({ render() { return h('foo', [ 'foo' ]); } }),
-			createRenderableChild({ render() { return h('bar', [ 'bar' ]); } })
+			createWidgetBase.extend({ render() { return h('foo', [ 'foo' ]); } })(),
+			createWidgetBase.extend({ render() { return h('bar', [ 'bar' ]); } })()
 		]);
 		projector.attach().then((attachHandle) => {
 			assert.strictEqual(div.childNodes.length, 2);
@@ -169,7 +163,7 @@ registerSuite({
 		const div = document.createElement('div');
 		document.body.appendChild(div);
 		projector.setRoot(div);
-		const handle = projector.insert(createRenderableChild({ render() { return h('foo', [ 'foo' ]); } }), 'first');
+		const handle = projector.insert(createWidgetBase.extend({ render(): any { return h('foo', [ 'foo' ]); } })(), 'first');
 		projector.attach().then((attachHandle) => {
 			assert.strictEqual(div.childNodes.length, 1);
 			assert.strictEqual((<HTMLElement> div.firstChild).innerHTML, 'foo');

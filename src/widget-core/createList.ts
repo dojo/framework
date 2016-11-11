@@ -1,5 +1,6 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
+import createWidgetBase from './bases/createWidgetBase';
+import { Widget, WidgetOptions, WidgetState } from 'dojo-interfaces/widgetBases';
 import createListMixin, { ListMixin, ListMixinState, ListStateItem } from './mixins/createListMixin';
 
 export interface ListState<I extends ListStateItem> extends WidgetState, ListMixinState<I> { }
@@ -10,7 +11,7 @@ export interface ListFactory extends ComposeFactory<List<ListStateItem>, WidgetO
 	<I extends ListStateItem>(options?: WidgetOptions<ListState<I>>): List<I>;
 }
 
-const createList: ListFactory = createWidget
+const createList: ListFactory = createWidgetBase
 	.mixin(createListMixin)
 	.extend({
 		tagName: 'dojo-list'

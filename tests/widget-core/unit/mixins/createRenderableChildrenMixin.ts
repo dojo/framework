@@ -1,10 +1,10 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import { HNode } from 'dojo-interfaces/widgetBases';
 import createRenderableChildrenMixin, { RenderableChildrenMixin } from '../../../src/mixins/createRenderableChildrenMixin';
-import createRenderMixin from '../../../src/mixins/createRenderMixin';
+import createWidgetBase from '../../../src/bases/createWidgetBase';
 import { Child } from '../../../src/mixins/interfaces';
 import { List, Map } from 'immutable';
-import { VNode } from 'maquette';
 
 type WithListChildren = RenderableChildrenMixin & { children?: List<Child>; };
 type WithMapChildren = RenderableChildrenMixin & { children?: Map<string, Child>; };
@@ -20,28 +20,28 @@ registerSuite({
 		'List children'() {
 			const parent: WithListChildren = createRenderableChildrenMixin();
 			parent.children = List([
-				createRenderMixin({ tagName: 'foo' }),
-				createRenderMixin({ tagName: 'bar' }),
-				createRenderMixin({ tagName: 'baz' })
+				createWidgetBase({ tagName: 'foo' }),
+				createWidgetBase({ tagName: 'bar' }),
+				createWidgetBase({ tagName: 'baz' })
 			]);
-			const vnodes = parent.getChildrenNodes();
-			assert.strictEqual(vnodes.length, 3);
-			assert.strictEqual((<VNode> vnodes[0]).vnodeSelector, 'foo');
-			assert.strictEqual((<VNode> vnodes[1]).vnodeSelector, 'bar');
-			assert.strictEqual((<VNode> vnodes[2]).vnodeSelector, 'baz');
+			const dnodes = parent.getChildrenNodes();
+			assert.strictEqual(dnodes.length, 3);
+			assert.strictEqual((<HNode> dnodes[0]).render().vnodeSelector, 'foo');
+			assert.strictEqual((<HNode> dnodes[1]).render().vnodeSelector, 'bar');
+			assert.strictEqual((<HNode> dnodes[2]).render().vnodeSelector, 'baz');
 		},
 		'Map children'() {
 			const parent: WithMapChildren = createRenderableChildrenMixin();
 			parent.children = Map<string, Child>([
-				[ 'foo', createRenderMixin({ tagName: 'foo' }) ],
-				[ 'bar', createRenderMixin({ tagName: 'bar' }) ],
-				[ 'baz', createRenderMixin({ tagName: 'baz' }) ]
+				[ 'foo', createWidgetBase({ tagName: 'foo' }) ],
+				[ 'bar', createWidgetBase({ tagName: 'bar' }) ],
+				[ 'baz', createWidgetBase({ tagName: 'baz' }) ]
 			]);
-			const vnodes = parent.getChildrenNodes();
-			assert.strictEqual(vnodes.length, 3);
-			assert.strictEqual((<VNode> vnodes[0]).vnodeSelector, 'foo');
-			assert.strictEqual((<VNode> vnodes[1]).vnodeSelector, 'bar');
-			assert.strictEqual((<VNode> vnodes[2]).vnodeSelector, 'baz');
+			const dnodes = parent.getChildrenNodes();
+			assert.strictEqual(dnodes.length, 3);
+			assert.strictEqual((<HNode> dnodes[0]).render().vnodeSelector, 'foo');
+			assert.strictEqual((<HNode> dnodes[1]).render().vnodeSelector, 'bar');
+			assert.strictEqual((<HNode> dnodes[2]).render().vnodeSelector, 'baz');
 		},
 		'Children Unassigned'() {
 			const parent: WithListChildren = createRenderableChildrenMixin();
@@ -53,23 +53,23 @@ registerSuite({
 		'with list children'() {
 			const parent: WithListChildren = createRenderableChildrenMixin();
 			parent.children = List([
-				createRenderMixin({ tagName: 'foo' }),
-				createRenderMixin({ tagName: 'bar' })
+				createWidgetBase({ tagName: 'foo' }),
+				createWidgetBase({ tagName: 'bar' })
 			]);
 			parent.sort = function (valueA: [ number, Child ], valueB: [ number, Child ]): number {
 				const [ , childA ] = valueA;
 				const [ , childB ] = valueB;
 				return childA.tagName < childB.tagName ? -1 : 1;
 			};
-			const vnodes = parent.getChildrenNodes();
-			assert.strictEqual((<VNode> vnodes[0]).vnodeSelector, 'bar');
-			assert.strictEqual((<VNode> vnodes[1]).vnodeSelector, 'foo');
+			const dnodes = parent.getChildrenNodes();
+			assert.strictEqual((<HNode> dnodes[0]).render().vnodeSelector, 'bar');
+			assert.strictEqual((<HNode> dnodes[1]).render().vnodeSelector, 'foo');
 		},
 		'with map children'() {
 			const parent: WithMapChildren = createRenderableChildrenMixin();
 			parent.children = Map<string, Child>()
-				.set('foo', createRenderMixin({ tagName: 'foo' }))
-				.set('bar', createRenderMixin({ tagName: 'bar' }));
+				.set('foo', createWidgetBase({ tagName: 'foo' }))
+				.set('bar', createWidgetBase({ tagName: 'bar' }));
 			parent.sort = function (valueA: [ string, Child ], valueB: [ string, Child ]): number {
 				const [ keyA ] = valueA;
 				const [ keyB ] = valueB;
@@ -77,9 +77,9 @@ registerSuite({
 				assert.isString(keyB);
 				return keyA < keyB ? -1 : 1;
 			};
-			const vnodes = parent.getChildrenNodes();
-			assert.strictEqual((<VNode> vnodes[0]).vnodeSelector, 'bar');
-			assert.strictEqual((<VNode> vnodes[1]).vnodeSelector, 'foo');
+			const dnodes = parent.getChildrenNodes();
+			assert.strictEqual((<HNode> dnodes[0]).render().vnodeSelector, 'bar');
+			assert.strictEqual((<HNode> dnodes[1]).render().vnodeSelector, 'foo');
 		},
 		'provided on creation'() {
 			const parent: WithMapChildren = createRenderableChildrenMixin({
@@ -90,11 +90,11 @@ registerSuite({
 				}
 			});
 			parent.children = Map<string, Child>()
-				.set('foo', createRenderMixin({ tagName: 'foo' }))
-				.set('bar', createRenderMixin({ tagName: 'bar' }));
-			const vnodes = parent.getChildrenNodes();
-			assert.strictEqual((<VNode> vnodes[0]).vnodeSelector, 'bar');
-			assert.strictEqual((<VNode> vnodes[1]).vnodeSelector, 'foo');
+				.set('foo', createWidgetBase({ tagName: 'foo' }))
+				.set('bar', createWidgetBase({ tagName: 'bar' }));
+			const dnodes = parent.getChildrenNodes();
+			assert.strictEqual((<HNode> dnodes[0]).render().vnodeSelector, 'bar');
+			assert.strictEqual((<HNode> dnodes[1]).render().vnodeSelector, 'foo');
 		},
 		'No Children, does not get called'() {
 			const parent: WithListChildren = createRenderableChildrenMixin();

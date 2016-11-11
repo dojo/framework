@@ -3,15 +3,10 @@ import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
 import { Destroyable } from 'dojo-interfaces/bases';
 import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
-import { VNode } from 'maquette';
+import { VNode } from 'dojo-interfaces/vdom';
 
 export interface Child extends Renderable, Destroyable {
 	readonly id: string;
-
-	/**
-	 * A reference to the widget's parent
-	 */
-	parent?: Parent | null;
 }
 
 /**

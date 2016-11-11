@@ -4,12 +4,19 @@ import createWidget from '../../src/createWidget';
 import projector from '../../src/projector';
 
 const tabbedPanel = createTabbedPanel();
+const createLabel = createWidget.extend({
+	nodeAttributes: [
+		function (this: any): any {
+			return { innerHTML: this.state.label };
+		}
+	]
+});
 
 const tab1 = createPanel({
 	state: { label: 'tab 1', closeable: true }
 });
 
-tab1.append(createWidget({
+tab1.append(createLabel({
 	state: { label: JSON.stringify({ id: 'tab1' }) }
 }));
 
@@ -19,7 +26,7 @@ const tab2 = createPanel({
 	state: { label: 'tab 2' }
 });
 
-tab2.append(createWidget({
+tab2.append(createLabel({
 	state: { label: JSON.stringify({ id: 'tab2' }) }
 }));
 
@@ -29,7 +36,7 @@ const tab3 = createPanel({
 	state: { label: 'tab 3' }
 });
 
-tab3.append(createWidget({
+tab3.append(createLabel({
 	state: { label: JSON.stringify({ id: 'tab3' }) }
 }));
 
@@ -39,7 +46,7 @@ const tab4 = createPanel({
 	state: { label: 'tab 4', closeable: true }
 });
 
-tab4.append(createWidget({
+tab4.append(createLabel({
 	state: { label: JSON.stringify({ id: 'tab4' }) }
 }));
 

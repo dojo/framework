@@ -1,5 +1,6 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import createRenderMixin, { RenderMixin, RenderMixinOptions, RenderMixinState } from './mixins/createRenderMixin';
+import createWidgetBase from './bases/createWidgetBase';
+import { Widget, WidgetOptions, WidgetState } from 'dojo-interfaces/widgetBases';
 import createFormFieldMixin, { FormFieldMixin, FormFieldMixinState, FormFieldMixinOptions } from './mixins/createFormFieldMixin';
 import createVNodeEvented, { VNodeEvented, VNodeEventedOptions } from './mixins/createVNodeEvented';
 
@@ -8,15 +9,15 @@ export interface TypedTargetEvent<T extends EventTarget> extends Event {
 	target: T;
 }
 
-export type TextInputState = RenderMixinState & FormFieldMixinState<string>;
+export type TextInputState = WidgetState & FormFieldMixinState<string>;
 
-export type TextInputOptions = RenderMixinOptions<TextInputState> & VNodeEventedOptions & FormFieldMixinOptions<string, TextInputState>;
+export type TextInputOptions = WidgetOptions<TextInputState> & VNodeEventedOptions & FormFieldMixinOptions<string, TextInputState>;
 
-export type TextInput = RenderMixin<TextInputState> & VNodeEvented & FormFieldMixin<string, TextInputState>;
+export type TextInput = Widget<TextInputState> & VNodeEvented & FormFieldMixin<string, TextInputState>;
 
 export interface TextInputFactory extends ComposeFactory<TextInput, TextInputOptions> { }
 
-const createTextInput: TextInputFactory = createRenderMixin
+const createTextInput: TextInputFactory = createWidgetBase
 	.mixin(createFormFieldMixin)
 	.mixin({
 		mixin: createVNodeEvented,

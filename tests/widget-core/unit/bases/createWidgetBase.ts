@@ -20,11 +20,20 @@ registerSuite({
 		'Applies default tagName'() {
 			const widget = createWidgetBase();
 			assert.deepEqual(widget.tagName, 'div');
+			const renderedWidget = widget.render();
+			assert.deepEqual(renderedWidget.vnodeSelector, 'div');
 		},
 		'Applies overridden tagName'() {
 			const widget = createWidgetBase.extend({ tagName: 'header' })();
 			assert.deepEqual(widget.tagName, 'header');
+			const renderedWidget = widget.render();
+			assert.deepEqual(renderedWidget.vnodeSelector, 'header');
 		}
+		},
+		'Applies classes to tagName'() {
+			const widget = createWidgetBase.extend({ tagName: 'header', classes: [ 'class-one', 'classTwo' ] })();
+			const renderedWidget = widget.render();
+			assert.deepEqual(renderedWidget.vnodeSelector, 'header.class-one.classTwo');
 	},
 	'getNodeAttributes()'() {
 		const widgetBase = createWidgetBase({
@@ -245,7 +254,7 @@ registerSuite({
 		'not in options or state'() {
 			const widgetBase = createWidgetBase();
 
-			assert.strictEqual(widgetBase.id, 'widget-1');
+			assert.strictEqual(widgetBase.id, 'widget-7');
 		},
 		'is read only'() {
 			const widgetBase = createWidgetBase();

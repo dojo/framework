@@ -3,7 +3,6 @@ import createWidget from '../createWidget';
 import createPanel from '../createPanel';
 import createTabbedPanel from '../createTabbedPanel';
 import createButton from '../createButton';
-import createResizePanel from '../createResizePanel';
 import { Child, RegistryProvider } from '../mixins/interfaces';
 import { createProjector } from '../projector';
 import Promise from 'dojo-shim/Promise';
@@ -204,14 +203,3 @@ panelWidgets.push(createWidget({
 	},
 	tagName: 'h1'
 }));
-
-panelWidgets.push(createResizePanel({
-	state: {
-		width: '400px',
-		height: '150px'
-	}
-}));
-
-const panelProjector = createProjector({ root: document.body });
-panelProjector.append(panelWidgets);
-panelProjector.attach();

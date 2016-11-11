@@ -1,5 +1,6 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
+import createWidgetBase from './bases/createWidgetBase';
+import { Widget, WidgetOptions, WidgetState } from 'dojo-interfaces/widgetBases';
 import createParentListMixin, { ParentListMixin, ParentListMixinOptions } from './mixins/createParentListMixin';
 import createRenderableChildrenMixin from './mixins/createRenderableChildrenMixin';
 import createStatefulChildrenMixin, { StatefulChildrenState, StatefulChildrenOptions } from './mixins/createStatefulChildrenMixin';
@@ -13,7 +14,7 @@ export type LayoutContainer = Widget<LayoutContainerState> & ParentListMixin<Chi
 
 export interface LayoutContainerFactory extends ComposeFactory<LayoutContainer, LayoutContainerOptions> { }
 
-const createContainer: LayoutContainerFactory = createWidget
+const createContainer: LayoutContainerFactory = createWidgetBase
 	.mixin(createParentListMixin)
 	.mixin(createRenderableChildrenMixin)
 	.mixin(createStatefulChildrenMixin)

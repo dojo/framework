@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createParentListMixin from '../../../src/mixins/createParentListMixin';
-import createRenderMixin from '../../../src/mixins/createRenderMixin';
+import createWidgetBase from '../../../src/bases/createWidgetBase';
 import { List } from 'immutable';
 
 registerSuite({
@@ -16,7 +16,7 @@ registerSuite({
 		'append()'(this: any) {
 			const dfd = this.async();
 			const parent = createParentListMixin();
-			const child = createRenderMixin();
+			const child = createWidgetBase();
 			parent.on('childlist', dfd.callback((event: any) => {
 				assert.strictEqual(event.type, 'childlist');
 				assert.strictEqual(event.target, parent);

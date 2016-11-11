@@ -4,7 +4,6 @@ import createDijit from './createDijit';
 import createLayoutContainer from './createLayoutContainer';
 import createList from './createList';
 import createPanel from './createPanel';
-import createResizePanel from './createResizePanel';
 import createTabbedPanel from './createTabbedPanel';
 import createTextInput from './createTextInput';
 import createWidget from './createWidget';
@@ -17,7 +16,6 @@ export {
 	createLayoutContainer,
 	createList,
 	createPanel,
-	createResizePanel,
 	createTabbedPanel,
 	createTextInput,
 	createWidget,

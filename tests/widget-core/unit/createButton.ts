@@ -27,11 +27,11 @@ registerSuite({
 		});
 		const vnode = button.render();
 		assert.strictEqual(vnode.vnodeSelector, 'button' + '.' + css.button);
-		assert.strictEqual(vnode.text, 'bar');
+		assert.strictEqual(vnode.properties!.innerHTML, 'bar');
 		assert.strictEqual(vnode.properties!['data-widget-id'], 'foo');
 		assert.strictEqual(vnode.properties!.name, 'baz');
 		assert.strictEqual(vnode.properties!['type'], 'button');
-		assert.isUndefined(vnode.children);
+		assert.lengthOf(vnode.children, 0);
 	},
 	disable() {
 		const button = createButton({

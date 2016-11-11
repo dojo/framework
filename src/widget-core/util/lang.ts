@@ -132,9 +132,6 @@ export function getRemoveHandle<C extends Child>(parent: Parent, child: C | C[] 
 					parent.children = isList(children) ? children.delete(children.lastIndexOf(c)) : children.delete(children.keyOf(c));
 				}
 				destroyed = true;
-				if (c.parent === parent) {
-					c.parent = null;
-				}
 			}
 		});
 	}

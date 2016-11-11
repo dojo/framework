@@ -68,11 +68,7 @@ const createParentMixin: ParentListMixinFactory = compose<ParentList<Child>, Par
 								this.invalidate();
 							}
 						});
-						if (widget.parent !== this) {
-							widget.parent = this;
-							/* TODO: If a child gets attached and reattached it may own multiple handles */
-							getRemoveHandle(this, widget);
-						}
+						getRemoveHandle(this, widget);
 					}
 				});
 				childrenMap.set(this, value);
@@ -95,19 +91,11 @@ const createParentMixin: ParentListMixinFactory = compose<ParentList<Child>, Par
 		clear(this: ParentListMixin<Child>): void {
 			const children = childrenMap.get(this);
 			if (children) {
-				children.forEach((child) => {
-					// Workaround for https://github.com/facebook/immutable-js/pull/919
-					// istanbul ignore else
-					if (child) {
-						child.parent === undefined;
-					}
-				});
 				this.children = List<Child>();
 			}
 		},
 
 		insert(this: ParentListMixin<Child>, child: Child, position: Position, reference?: Child): Handle {
-			child.parent = this;
 			this.children = insertInList(childrenMap.get(this), child, position, reference);
 			return getRemoveHandle(this, child);
 		}

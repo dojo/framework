@@ -11,7 +11,6 @@ registerSuite({
 		assert.isFunction(main.createLayoutContainer);
 		assert.isFunction(main.createList);
 		assert.isFunction(main.createPanel);
-		assert.isFunction(main.createResizePanel);
 		assert.isFunction(main.createTabbedPanel);
 		assert.isFunction(main.createTextInput);
 		assert.isFunction(main.createWidget);

@@ -1,22 +1,30 @@
 import { Map } from 'immutable';
-import { h, VNode } from 'maquette';
+import { VNode } from 'dojo-interfaces/vdom';
+import { DNode, HNode } from 'dojo-interfaces/widgetBases';
+import d from '../util/d';
 import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable from 'dojo-compose/bases/createDestroyable';
 import { Handle } from 'dojo-interfaces/core';
 import { Destroyable, StatefulOptions } from 'dojo-interfaces/bases';
 import { from as arrayFrom } from 'dojo-shim/array';
 import WeakMap from 'dojo-shim/WeakMap';
-import createRenderMixin, { RenderMixin, RenderMixinState } from './createRenderMixin';
+import createWidgetBase from './../bases/createWidgetBase';
+import { Widget, WidgetState } from 'dojo-interfaces/widgetBases';
 import { Closeable, CloseableState } from './createCloseableMixin';
 import createParentMapMixin, { ParentMapMixin, ParentMapMixinOptions } from './createParentMapMixin';
 import { Child, ChildEntry } from './interfaces';
 import css from '../themes/structural/modules/TabbedMixin';
 
-export interface TabbedChildState extends RenderMixinState, CloseableState {
+export interface TabbedChildState extends WidgetState, CloseableState {
 	/**
 	 * Whether the current child is the active/visible child
 	 */
 	active?: boolean;
+
+	/**
+	 *
+	 */
+	label?: string;
 
 	/**
 	 * Should this child represent that it is in a changed state that is not persisted
@@ -24,9 +32,9 @@ export interface TabbedChildState extends RenderMixinState, CloseableState {
 	changed?: boolean; /* TODO: Implement this feature, currently it does not affect anything */
 }
 
-export type TabbedChild = Child & Closeable & RenderMixin<TabbedChildState>;
+export type TabbedChild = Child & Closeable & Widget<TabbedChildState>;
 
-export interface TabbedMixinOptions<C extends TabbedChild, S extends RenderMixinState> extends ParentMapMixinOptions<C>, StatefulOptions<S> {
+export interface TabbedMixinOptions<C extends TabbedChild, S extends WidgetState> extends ParentMapMixinOptions<C>, StatefulOptions<S> {
 	/**
 	 * An optional method which can be used to sort the children
 	 */
@@ -60,7 +68,7 @@ export interface Tabbed<C extends TabbedChild> {
 	};
 }
 
-export type TabbedMixin<C extends TabbedChild> = Tabbed<C> & ParentMapMixin<C> & RenderMixin<RenderMixinState> & Destroyable;
+export type TabbedMixin<C extends TabbedChild> = Tabbed<C> & ParentMapMixin<C> & Widget<WidgetState> & Destroyable;
 
 /**
  * A utility function that sets the supplied tab as the active tab on the supplied tabbed mixin
@@ -68,19 +76,13 @@ export type TabbedMixin<C extends TabbedChild> = Tabbed<C> & ParentMapMixin<C> &
  * @param activeTab The tab to make active/visible
  */
 function setActiveTab(tabbed: TabbedMixin<TabbedChild>, activeTab: TabbedChild) {
-	if (activeTab.parent === tabbed) {
-		tabbed.children.forEach((tab) => {
-			// Workaround for https://github.com/facebook/immutable-js/pull/919
-			// istanbul ignore else
-			if (tab) {
-				if (tab !== activeTab && tab.state.active) {
-					tab.setState({ active: false });
-				}
-			}
-		});
-		if (!activeTab.state.active) {
-			activeTab.setState({ active: true });
+	tabbed.children.forEach((tab) => {
+		if (tab && tab !== activeTab && tab.state && tab.state.active) {
+			tab.setState({ active: false });
 		}
+	});
+	if (!activeTab.state.active) {
+		activeTab.setState({ active: true });
 	}
 }
 
@@ -89,18 +91,13 @@ function setActiveTab(tabbed: TabbedMixin<TabbedChild>, activeTab: TabbedChild) 
  * @param tabbed The tabbed mixin to return the active child for
  */
 function getActiveTab(tabbed: TabbedMixin<TabbedChild>): TabbedChild {
-	let activeTab = tabbed.children.find((tab) => {
-		// Workaround for https://github.com/facebook/immutable-js/pull/919
-		// istanbul ignore if
-		if (!tab) {
-			return false;
-		}
-		return tab.state.active === true;
+	let activeTab = tabbed.children.find((tab: any) => {
+		return tab && tab.state && tab.state.active;
 	});
 	/* TODO: when a tab closes, instead of going back to the previous active tab, it will always
 	 * revert to the first tab, maybe it would be better to keep track of a stack of tabs? */
 	if (!activeTab) {
-		activeTab = tabbed.children.first();
+		activeTab = tabbed.children.values().next().value;
 	}
 	if (activeTab) {
 		setActiveTab(tabbed, activeTab);
@@ -175,11 +172,11 @@ function getTabListeners(tabbed: TabbedMixin<TabbedChild>, tab: TabbedChild): Ta
 	return tabListenersMap.get(tab);
 }
 
-export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChild>, TabbedMixinOptions<TabbedChild, RenderMixinState>> {}
+export interface TabbedMixinFactory extends ComposeFactory<TabbedMixin<TabbedChild>, TabbedMixinOptions<TabbedChild, WidgetState>> {}
 
-const childrenNodesCache = new WeakMap<TabbedMixin<TabbedChild>, VNode[]>();
+const childrenNodesCache = new WeakMap<TabbedMixin<TabbedChild>, (HNode & { properties: any })[]>();
 
-const createTabbedMixin: TabbedMixinFactory = createRenderMixin
+const createTabbedMixin: TabbedMixinFactory = createWidgetBase
 	.mixin({
 		mixin: <Tabbed<TabbedChild>> {
 			tagNames: {
@@ -201,25 +198,25 @@ const createTabbedMixin: TabbedMixinFactory = createRenderMixin
 	.extend({
 		tagName: 'dojo-panel-mixin',
 
-		getChildrenNodes(this: TabbedMixin<TabbedChild>): (VNode | string)[] {
+		getChildrenNodes(this: TabbedMixin<TabbedChild>): (DNode | string)[] {
 			const tabbed = this;
 			const activeTab = getActiveTab(tabbed);
 
-			function getTabChildVNode(tab: TabbedChild): VNode[] {
+			function getTabChildVNode(tab: TabbedChild): DNode[] {
 				const tabListeners = getTabListeners(tabbed, tab);
-				const nodes: VNode[] = [];
+				const nodes: DNode[] = [];
 				if (tab.state.label) {
-					nodes.push(h(`div.${css['tab-label']}`, { onclick: tabListeners.onclickTabListener }, [ tab.state.label ]));
+					nodes.push(d(`div.${css['tab-label']}`, { onclick: tabListeners.onclickTabListener, innerHTML: tab.state.label }));
 				}
 				if (tab.state.closeable) {
-					nodes.push(h('div', { onclick: tabListeners.onclickTabCloseListener }));
+					nodes.push(d('div', { onclick: tabListeners.onclickTabCloseListener }));
 				}
 				return nodes;
 			}
 
 			/* We need to generate a set of VDom the represents the buttons */
 			/* TODO: Allow the location of the tab bar to be set (top/left/bottom/right) */
-			const tabs: VNode[] = [];
+			const tabs: DNode[] = [];
 			let childrenNodes = childrenNodesCache.get(tabbed);
 
 			/* Best to discard the childrenNodes array if the sizes don't match, otherwise
@@ -248,18 +245,26 @@ const createTabbedMixin: TabbedMixinFactory = createRenderMixin
 					if (tabVNode.properties) {
 						(tabVNode as any).properties['data-visible'] = String(isActiveTab);
 					}
-					childrenNodes[idx] = tabVNode;
+					const childNode: HNode & { properties: any }  = {
+						properties: tabVNode.properties,
+						children: [],
+						render(): VNode {
+							return tabVNode;
+						}
+					};
+					childNode.render.bind(tab);
+					childrenNodes[idx] = childNode;
 				}
 				/* else, this tab isn't active and hasn't been previously rendered */
 
-				tabs.push(h(tabbed.tagNames.tab, {
+				tabs.push(d(tabbed.tagNames.tab, {
 					key: tab,
 					'data-active': String(isActiveTab),
 					'data-tab-id': tabbed.id
 				}, getTabChildVNode(tab)));
 			});
 
-			return [ h(tabbed.tagNames.tabBar, tabs), h('div.' + css.panels, childrenNodes) ];
+			return [ d(tabbed.tagNames.tabBar, {}, tabs), d('div.' + css.panels, {}, childrenNodes) ];
 		}
 	});
 

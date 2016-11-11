@@ -24,21 +24,21 @@ registerSuite({
 					]
 				}
 			});
-			const [ vnode ] = list.getChildrenNodes();
+			const vnode = list.render().children![0];
 			if (typeof vnode !== 'string') {
 				assert.strictEqual(vnode.vnodeSelector, 'ul');
 				assert.isUndefined(vnode.text);
 				assert.strictEqual(vnode.children!.length, 3);
 				const [ node1, node2, node3 ] = vnode.children!;
 				assert.strictEqual(node1.vnodeSelector, 'li');
-				assert.strictEqual(node1.text, 'foo');
-				assert.isUndefined(node1.children);
+				assert.strictEqual(node1.properties!.innerHTML, 'foo');
+				assert.lengthOf(node1.children, 0);
 				assert.strictEqual(node2.vnodeSelector, 'li');
-				assert.strictEqual(node2.text, 'bar');
-				assert.isUndefined(node2.children);
+				assert.strictEqual(node2.properties!.innerHTML, 'bar');
+				assert.lengthOf(node2.children, 0);
 				assert.strictEqual(node3.vnodeSelector, 'li');
-				assert.strictEqual(node3.text, 'baz');
-				assert.isUndefined(node3.children);
+				assert.strictEqual(node3.properties!.innerHTML, 'baz');
+				assert.lengthOf(node3.children, 0);
 			}
 			else {
 				throw Error('vnode is string');

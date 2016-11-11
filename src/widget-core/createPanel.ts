@@ -1,5 +1,6 @@
 import { ComposeFactory } from 'dojo-compose/compose';
-import createWidget, { Widget, WidgetState, WidgetOptions } from './createWidget';
+import createWidgetBase from './bases/createWidgetBase';
+import { Widget, WidgetOptions, WidgetState } from 'dojo-interfaces/widgetBases';
 import createCloseableMixin, { Closeable, CloseableState } from './mixins/createCloseableMixin';
 import createParentListMixin, { ParentListMixin, ParentListMixinOptions } from './mixins/createParentListMixin';
 import createRenderableChildrenMixin from './mixins/createRenderableChildrenMixin';
@@ -16,7 +17,7 @@ export type Panel = Widget<PanelState> & Closeable & ParentListMixin<Child>;
 
 export interface PanelFactory extends ComposeFactory<Panel, PanelOptions> { }
 
-const createPanel: PanelFactory = createWidget
+const createPanel: PanelFactory = createWidgetBase
 	.mixin(createCloseableMixin)
 	.mixin(createParentListMixin)
 	.mixin(createRenderableChildrenMixin)

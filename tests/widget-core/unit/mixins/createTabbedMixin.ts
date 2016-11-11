@@ -36,13 +36,13 @@ registerSuite({
 			tabBar.children!.forEach((child) => assert.strictEqual(child.vnodeSelector, 'li'));
 
 			const [ child1, child2, child3, child4 ] = tabBar.children!;
-			assert.strictEqual(child1.children![0].text, 'foo');
+			assert.strictEqual(child1.children![0].properties!.innerHTML, 'foo');
 			assert.strictEqual(child1.children!.length, 2);
-			assert.strictEqual(child2.children![0].text, 'bar');
+			assert.strictEqual(child2.children![0].properties!.innerHTML, 'bar');
 			assert.strictEqual(child2.children!.length, 1);
-			assert.strictEqual(child3.children![0].text, 'baz');
+			assert.strictEqual(child3.children![0].properties!.innerHTML, 'baz');
 			assert.strictEqual(child3.children!.length, 2);
-			assert.strictEqual(child4.children![0].text, 'qat');
+			assert.strictEqual(child4.children![0].properties!.innerHTML, 'qat');
 			assert.strictEqual(child4.children!.length, 1);
 
 			assert.strictEqual(panels.children!.length, 1);

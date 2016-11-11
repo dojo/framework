@@ -38,15 +38,5 @@ registerSuite({
 		const nodeAttributes2 = widget2.getNodeAttributes();
 		assert.strictEqual(Object.keys(nodeAttributes2).length, 4, 'should have only three keys');
 		assert.isFunction(nodeAttributes1.onclick, 'onclick is a function');
-
-		const widget3 = createWidget({
-			state: {
-				id: 'bar'
-			}
-		});
-		const nodeAttributes3 = widget3.getNodeAttributes({ id: 'foo', onclick() {} });
-		assert.strictEqual(Object.keys(nodeAttributes3).length, 6, 'should have six keys only');
-		assert.strictEqual(nodeAttributes3.id, 'foo');
-		assert.isFunction(nodeAttributes3.onclick, 'onclick is a function');
 	}
 });

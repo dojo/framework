@@ -1,7 +1,8 @@
-import { h, VNode } from 'maquette';
+import { DNode } from 'dojo-interfaces/widgetBases';
+import d from './../util/d';
 import { ComposeFactory } from 'dojo-compose/compose';
-import createStateful from 'dojo-compose/bases/createStateful';
-import { Stateful, StatefulOptions, State } from 'dojo-interfaces/bases';
+import createWidgetBase from './../bases/createWidgetBase';
+import { Widget, WidgetState, WidgetOptions } from 'dojo-interfaces/widgetBases';
 
 export interface ListStateItem {
 	[property: string]: any;
@@ -9,7 +10,7 @@ export interface ListStateItem {
 	label: string;
 }
 
-export interface ListMixinState<I extends ListStateItem> extends State {
+export interface ListMixinState<I extends ListStateItem> extends WidgetState {
 	/**
 	 * Any items that are to be rendered by the list
 	 */
@@ -33,38 +34,34 @@ export interface List {
 	 * A map of tag names to use with the list items
 	 */
 	tagNames: TagNames;
-
-	/**
-	 * Return an array of VNodes/strings the represent the rendered results of the list of this instance
-	 */
-	getChildrenNodes(): (VNode | string)[];
 }
 
 /**
  * A mixin that provides the functionality to render a list of items that are in its state
  */
-export type ListMixin = List & Stateful<ListMixinState<ListStateItem>>;
+export type ListMixin = List & Widget<ListMixinState<ListStateItem>>;
 
-export interface ListMixinFactory extends ComposeFactory<ListMixin, StatefulOptions<ListMixinState<ListStateItem>>> {
-	<I extends ListStateItem>(options?: StatefulOptions<ListMixinState<I>>): List;
-}
+export interface ListMixinFactory extends ComposeFactory<ListMixin, WidgetOptions<ListMixinState<ListStateItem>>> {}
 
-const createListMixin: ListMixinFactory = createStateful
+const createListMixin: ListMixinFactory = createWidgetBase
 	.mixin({
 		mixin: <List> {
-			getChildrenNodes(this: ListMixin): (VNode | string)[] {
-				if (this.state && this.state.items) {
-					const items = this.state.items;
-					return [ h(this.tagNames.list, items.map((item) => h(this.tagNames.item, { key: item }, [ item.label ]))) ];
-				}
-				return [];
-			},
-
 			tagNames: {
 				list: 'ul',
 				item: 'li'
 			}
 		}
+	})
+	.extend({
+		childNodeRenderers: [
+			function(this: ListMixin): DNode[] {
+				if (this.state && this.state.items) {
+					const items = this.state.items;
+					return [ d(this.tagNames.list, {}, items.map((item) => d(this.tagNames.item, { key: item, innerHTML: item.label }))) ];
+				}
+				return [];
+			}
+		]
 	});
 
 export default createListMixin;

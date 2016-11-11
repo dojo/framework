@@ -48,7 +48,7 @@ export type ParentMapMixin<C extends Child> = ParentMap<C> & Evented;
 
 export interface ParentMapMixinFactory extends ComposeFactory<ParentMapMixin<Child>, ParentMapMixinOptions<Child>> { }
 
-const childrenMap = new WeakMap<ParentMapMixin<Child>, Map<string, Child>>();
+const childrenMap = new WeakMap<ParentMapMixin<Child>, Map<string, Child & Evented>>();
 
 /**
  * Function that resolves the key for the children map for a given child
@@ -74,21 +74,22 @@ function mapChildArray<C extends Child>(parent: ParentMap<C>, children: C[]): Ch
 }
 
 const createParentMapMixin: ParentMapMixinFactory = compose<ParentMap<Child>, ParentMapMixinOptions<Child>>({
-		get children(this: ParentMapMixin<Child> & { invalidate?(): void; }): Map<string, Child> {
+		get children(this: ParentMapMixin<Child> & { invalidate?(): void; }): Map<string, Child & Evented> {
 			return childrenMap.get(this);
 		},
 
-		set children(this: ParentMapMixin<Child> & { invalidate?(): void; }, value: Map<string, Child>) {
+		set children(this: ParentMapMixin<Child> & { invalidate?(): void; }, value: Map<string, Child & Evented>) {
 			if (!value.equals(childrenMap.get(this))) {
 				value.forEach((widget) => {
 					// Workaround for https://github.com/facebook/immutable-js/pull/919
 					// istanbul ignore else
 					if (widget) {
-						if (widget.parent !== this) {
-							widget.parent = this;
-							/* TODO: If a child gets attached and reattached it may own multiple handles */
-							getRemoveHandle(this, widget);
-						}
+						widget.on('invalidate', () => {
+							if (this.invalidate) {
+								this.invalidate();
+							}
+						});
+						getRemoveHandle(this, widget);
 					}
 				});
 				childrenMap.set(this, value);
@@ -122,7 +123,7 @@ const createParentMapMixin: ParentMapMixinFactory = compose<ParentMap<Child>, Pa
 	.mixin({
 		mixin: createEvented,
 		initialize(instance, options) {
-			childrenMap.set(instance, Map<string, Child>());
+			childrenMap.set(instance, Map<string, Child & Evented>());
 			if (options && options.children) {
 				instance.own(instance.merge(options.children));
 			}

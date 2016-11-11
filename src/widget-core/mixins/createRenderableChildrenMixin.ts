@@ -1,4 +1,4 @@
-import { VNode } from 'maquette';
+import { DNode } from 'dojo-interfaces/widgetBases';
 import { List } from 'immutable';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { from as arrayFrom } from 'dojo-shim/array';
@@ -15,7 +15,7 @@ export interface RenderableChildrenMixin {
 	/**
 	 * Return an array of VNodes/strings the represent the rendered results of the children of this instance
 	 */
-	getChildrenNodes(): (VNode | string)[];
+	getChildrenNodes(): DNode[];
 
 	/**
 	 * An optional method which can be used to sort the children when they are rendered
@@ -30,21 +30,21 @@ export interface RenderableChildrenFactory extends ComposeFactory<RenderableChil
 const createRenderableChildrenMixin: RenderableChildrenFactory = compose<RenderableChildrenMixin, RenderableChildrenOptions>({
 	/* When this gets mixed in, if we had the children as part of the interface, we would end up overwritting what is
 	 * likely a get accessor for the children, so to protect ourselves, we won't have it part of the interface */
-	getChildrenNodes(this: RenderableChildrenMixin & { children: List<Child>; }): (VNode | string)[] {
+	getChildrenNodes(this: RenderableChildrenMixin & { children: List<Child>; }): DNode[] {
 		const { children, sort } = this;
 		/* children is not guarunteed to be set, therefore need to guard against it */
 		if (children) {
-			const results: (VNode | string)[] = [];
+			const results: DNode[] = [];
 			if (sort) {
 				arrayFrom(<ChildEntry<Child>[]> <any> children.entries()).sort(sort)
-					.forEach(([ , child ]) => results.push(child.render()));
+					.forEach(([ , child ]) => results.push({ children: [], render: child.render.bind(child) }));
 			}
 			else {
 				children.forEach((child) => {
 					// Workaround for https://github.com/facebook/immutable-js/pull/919
 					// istanbul ignore else
 					if (child) {
-						results.push(child.render());
+						results.push({ children: [], render: child.render.bind(child) });
 					}
 				});
 			}

@@ -96,6 +96,13 @@ function manageDetachedChildren(instance: Widget<WidgetState>): void {
 	internalState.currentChildrenMap.clear();
 }
 
+function formatTagNameAndClasses(tagName: string, classes: string[]) {
+	if (classes.length) {
+		return `${tagName}.${classes.join('.')}`;
+	}
+	return tagName;
+}
+
 const createWidget: WidgetFactory = createStateful
 	.mixin<WidgetMixin, WidgetOptions<WidgetState>>({
 		mixin: {
@@ -165,7 +172,10 @@ const createWidget: WidgetFactory = createStateful
 			render(this: Widget<WidgetState>): VNode {
 				const internalState = widgetInternalStateMap.get(this);
 				if (internalState.dirty || !internalState.cachedVNode) {
-					const dNode = d(this.tagName, this.getNodeAttributes(), this.getChildrenNodes());
+					const dNode = d(formatTagNameAndClasses(this.tagName, this.classes),
+									this.getNodeAttributes(),
+									this.getChildrenNodes());
+
 					const widget = dNodeToVNode(this, dNode);
 					manageDetachedChildren(this);
 					internalState.cachedVNode = widget;

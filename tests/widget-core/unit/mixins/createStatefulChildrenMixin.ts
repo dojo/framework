@@ -1,7 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createStatefulChildrenMixin from '../../../src/mixins/createStatefulChildrenMixin';
-import createRenderMixin, { RenderMixin, RenderMixinOptions, RenderMixinState } from '../../../src/mixins/createRenderMixin';
+import createWidgetBase from '../../../src/bases/createWidgetBase';
+import { Widget, WidgetState, WidgetOptions } from 'dojo-interfaces/widgetBases';
 import Promise from 'dojo-shim/Promise';
 import { List, Map } from 'immutable';
 import { Child, RegistryProvider } from '../../../src/mixins/interfaces';
@@ -436,7 +437,7 @@ registerSuite({
 					.mixin({
 						mixin: createStatefulChildrenMixin,
 						initialize(instance) {
-							instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
+							instance.createChild(createWidgetBase, <WidgetOptions<WidgetState>> {
 								render() {
 									return h('div');
 								}
@@ -474,7 +475,7 @@ registerSuite({
 						mixin: createStatefulChildrenMixin,
 						initialize(instance) {
 							instance.setState({ children: [ 'foo' ] });
-							instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
+							instance.createChild(createWidgetBase, <WidgetOptions<WidgetState>> {
 								render() {
 									return h('div');
 								}
@@ -505,13 +506,13 @@ registerSuite({
 		},
 
 		'creation during mixin - with setting ID'() {
-			return new Promise<[string, RenderMixin<RenderMixinState>]>((resolve) => {
+			return new Promise<[string, Widget<WidgetState>]>((resolve) => {
 			const registry = Object.create(widgetRegistry);
 				const createFoo = compose({})
 					.mixin({
 						mixin: createStatefulChildrenMixin,
 						initialize(instance) {
-							instance.createChild(createRenderMixin, <RenderMixinOptions<RenderMixinState>> {
+							instance.createChild(createWidgetBase, <WidgetOptions<WidgetState>> {
 								render() {
 									return h('div');
 								},
@@ -543,7 +544,7 @@ registerSuite({
 		'non-registry rejects'(this: any) {
 			const dfd = this.async();
 			const stateful = createStatefulChildrenMixin();
-			stateful.createChild(createRenderMixin)
+			stateful.createChild(createWidgetBase)
 				.then(() => {
 					throw new Error('Should not have called');
 				}, dfd.callback((err: Error) => {
@@ -562,8 +563,8 @@ registerSuite({
 						mixin: createStatefulChildrenMixin,
 						initialize(instance) {
 							instance.createChildren({
-								foo: { factory: createRenderMixin },
-								bar: { factory: createRenderMixin }
+								foo: { factory: createWidgetBase },
+								bar: { factory: createWidgetBase }
 							})
 							.then((createdChildren) => {
 								resolve([ instance, createdChildren ]);
@@ -604,8 +605,8 @@ registerSuite({
 						initialize(instance) {
 							instance.setState({ children: [ 'foo' ]});
 							instance.createChildren({
-								foo: { factory: createRenderMixin },
-								bar: { factory: createRenderMixin }
+								foo: { factory: createWidgetBase },
+								bar: { factory: createWidgetBase }
 							})
 							.then((createdChildren) => {
 								resolve([ instance, createdChildren ]);
@@ -644,8 +645,8 @@ registerSuite({
 						mixin: createStatefulChildrenMixin,
 						initialize(instance) {
 							instance.createChildren({
-								foo: { factory: createRenderMixin, options: { id: 'foo' } },
-								bar: { factory: createRenderMixin, options: { id: 'bar' } }
+								foo: { factory: createWidgetBase, options: { id: 'foo' } },
+								bar: { factory: createWidgetBase, options: { id: 'bar' } }
 							})
 							.then(resolve);
 						}
@@ -678,7 +679,7 @@ registerSuite({
 			let destroyCount = 0;
 			return new Promise((resolve) => {
 				const registry = Object.create(widgetRegistry);
-				const createDestroyRenderable = createRenderMixin
+				const createDestroyRenderable = createWidgetBase
 					.mixin({
 						mixin: createDestroyable,
 						initialize(instance) {
@@ -732,7 +733,7 @@ registerSuite({
 					.mixin({
 						mixin: createStatefulChildrenMixin,
 						initialize(instance) {
-							instance.createChildren([ [ createRenderMixin, {} ], [ createRenderMixin, {} ] ])
+							instance.createChildren([ [ createWidgetBase, {} ], [ createWidgetBase, {} ] ])
 							.then((createdChildren) => {
 								resolve([ instance, createdChildren ]);
 							});
@@ -773,7 +774,7 @@ registerSuite({
 						mixin: createStatefulChildrenMixin,
 						initialize(instance) {
 							instance.setState({ children: [ 'foo' ]});
-							instance.createChildren([ [ createRenderMixin, {} ], [ createRenderMixin, {} ] ])
+							instance.createChildren([ [ createWidgetBase, {} ], [ createWidgetBase, {} ] ])
 							.then((createdChildren) => {
 								resolve([ instance, createdChildren ]);
 							});
@@ -813,7 +814,7 @@ registerSuite({
 					.mixin({
 						mixin: createStatefulChildrenMixin,
 						initialize(instance) {
-							instance.createChildren([ [ createRenderMixin, { id: 'foo' } ], [ createRenderMixin, { id: 'bar' } ] ])
+							instance.createChildren([ [ createWidgetBase, { id: 'foo' } ], [ createWidgetBase, { id: 'bar' } ] ])
 														.then((createdChildren) => {
 								resolve([ instance, createdChildren ]);
 							});
@@ -850,7 +851,7 @@ registerSuite({
 			let destroyCount = 0;
 			return new Promise((resolve) => {
 				const registry = Object.create(widgetRegistry);
-				const createDestroyRenderable = createRenderMixin
+				const createDestroyRenderable = createWidgetBase
 					.mixin({
 						mixin: createDestroyable,
 						initialize(instance) {

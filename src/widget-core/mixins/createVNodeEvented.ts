@@ -10,8 +10,8 @@ import {
 	EventedListenersMap
 } from 'dojo-interfaces/bases';
 import Set from 'dojo-shim/Set';
-import { VNodeProperties } from 'maquette';
-import { NodeAttributeFunction } from './createRenderMixin';
+import { VNodeProperties } from 'dojo-interfaces/vdom';
+import { NodeAttributeFunction } from 'dojo-interfaces/widgetBases';
 
 export type VNodeListenerReturn = boolean | undefined | null;
 
@@ -137,7 +137,7 @@ const createVNodeEvented: VNodeEventedFactory = createEvented
 			listeners: UNINITIALIZED_LISTENERS,
 
 			nodeAttributes: [
-				function (this: VNodeEvented): VNodeProperties {
+				function (this: any): VNodeProperties {
 					return assign({}, this.listeners);
 				}
 			]
