@@ -62,7 +62,7 @@ function dNodeToVNode(instance: Widget<WidgetState>, dNode: DNode): VNode {
 		}
 		else {
 			child = factory(dNode.options);
-			child.own(child.on('invalidate', () => {
+			child.own(child.on('invalidated', () => {
 				instance.invalidate();
 			}));
 			internalState.historicChildrenMap.set(childrenMapKey, child);
@@ -138,7 +138,7 @@ const createWidget: WidgetFactory = createStateful
 				const internalState = widgetInternalStateMap.get(this);
 				internalState.dirty = true;
 				this.emit({
-					type: 'invalidate',
+					type: 'invalidated',
 					target: this
 				});
 			},

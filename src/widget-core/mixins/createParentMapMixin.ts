@@ -84,7 +84,7 @@ const createParentMapMixin: ParentMapMixinFactory = compose<ParentMap<Child>, Pa
 					// Workaround for https://github.com/facebook/immutable-js/pull/919
 					// istanbul ignore else
 					if (widget) {
-						widget.on('invalidate', () => {
+						widget.on('invalidated', () => {
 							if (this.invalidate) {
 								this.invalidate();
 							}

@@ -63,7 +63,7 @@ const createParentMixin: ParentListMixinFactory = compose<ParentList<Child>, Par
 					// Workaround for https://github.com/facebook/immutable-js/pull/919
 					// istanbul ignore else
 					if (widget) {
-						widget.on('invalidate', () => {
+						widget.on('invalidated', () => {
 							if (this.invalidate) {
 								this.invalidate();
 							}

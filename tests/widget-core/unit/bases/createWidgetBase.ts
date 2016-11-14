@@ -278,10 +278,10 @@ registerSuite({
 		widgetBase.invalidate();
 		assert.strictEqual(count, 3);
 	},
-	'invalidate emits invalidate event'() {
+	'invalidate emits invalidated event'() {
 		const widgetBase = createWidgetBase();
 		let count = 0;
-		widgetBase.on('invalidate', function() {
+		widgetBase.on('invalidated', function() {
 			console.log('invalid');
 			count++;
 		});
