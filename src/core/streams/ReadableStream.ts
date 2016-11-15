@@ -173,8 +173,8 @@ export default class ReadableStream<T> {
 		this._strategy = util.normalizeStrategy(strategy);
 		this.queue = new SizeQueue<T>();
 		this._startedPromise = new Promise<void>((resolveStarted) => {
-			const startResult = util.invokeOrNoop(this._underlyingSource, 'start', [ this.controller ]);
-			Promise.resolve(startResult).then(() => {
+			const startResult = util.promiseInvokeOrNoop(this._underlyingSource, 'start', [ this.controller ]);
+			startResult.then(() => {
 				this._started = true;
 				resolveStarted();
 				this.pull();
@@ -265,7 +265,10 @@ export default class ReadableStream<T> {
 	}
 
 	error(error: Error): void {
-		if (this.state !== State.Readable) {
+		if (this.state === State.Errored) {
+			return;
+		}
+		else if (this.state !== State.Readable) {
 			throw new Error('3.5.7-1: State must be Readable');
 		}
 
@@ -310,15 +313,22 @@ export default class ReadableStream<T> {
 					closeDest();
 				}
 				else if (dest.state === WriteableState.Writable ) {
-					dest.write(readResult.value);
-					doPipe();
+					dest.write(readResult.value).then(
+						() => {
+							doPipe();
+						},
+						() => {
+						}
+					);
+
 				}
+			}, () => {
 			});
 		}
 
 		function cancelSource(reason: any): void {
 			if (!options.preventCancel) {
-				reader.cancel(reason);
+				reader.cancel(reason).catch(() => {});
 				rejectPipeToPromise(reason);
 			}
 			else {

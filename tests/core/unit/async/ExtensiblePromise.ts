@@ -42,10 +42,10 @@ registerSuite({
 
 	'then reject w/ no handler': function (this: any) {
 		let dfd = this.async();
+
 		ExtensiblePromise.reject().then(dfd.rejectOnError(() => {
 			assert.isTrue(false, 'Should not have resolved');
-		}), undefined);
-		setTimeout(dfd.callback(() => {
-		}), 100);
+		}), undefined).catch(dfd.callback(() => {
+		}));
 	}
 });

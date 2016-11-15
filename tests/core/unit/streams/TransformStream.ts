@@ -121,5 +121,21 @@ registerSuite({
 			assert.strictEqual(stream.readable.state, ReadableState.Errored);
 			assert.strictEqual(stream.writable.state, WritableState.Errored);
 		});
+	},
+
+	'sink.abort resolves'() {
+		return stream.writable.abort('reason').then(() => {
+			assert.strictEqual(stream.writable.state, WritableState.Errored);
+		}, () => {
+			assert.fail('should have succeeded');
+		});
+	},
+
+	'sink.cancel resolves'() {
+		return stream.readable.cancel('reason').then(() => {
+			assert.strictEqual(stream.readable.state, ReadableState.Closed);
+		}, () => {
+			assert.fail('should have succeeded');
+		});
 	}
 });

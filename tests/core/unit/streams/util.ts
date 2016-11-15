@@ -96,6 +96,9 @@ registerSuite({
 			otherMethod: function () {
 				otherParameters = Array.prototype.slice.call(arguments);
 				otherCallCount += 1;
+			},
+			errorMethod: function () {
+				throw new Error('error');
 			}
 		};
 
@@ -119,6 +122,16 @@ registerSuite({
 			assert.strictEqual(callCount, 2);
 			assert.strictEqual(otherCallCount, 2);
 			assert.sameMembers(otherParameters, testParameters, 'obj.otherMethod should be called with test parameters');
+
+			return util.promiseInvokeOrFallbackOrNoop(undefined, 'METHOD', <any> undefined, 'otherMethod');
+		}).then(() => {
+			assert.fail('should not have succeeded');
+		}, () => {
+			return util.promiseInvokeOrFallbackOrNoop(obj, 'errorMethod', <any> undefined, 'otherMethod');
+		}).then(() => {
+			assert.fail('should not have succeeded');
+		}, (error: any) => {
+			assert.equal(error.message, 'error');
 		});
 	},
 
@@ -130,6 +143,9 @@ registerSuite({
 			testMethod: function () {
 				passedParameters = Array.prototype.slice.call(arguments);
 				callCount += 1;
+			},
+			errorMethod: function () {
+				throw new Error('test');
 			}
 		};
 
@@ -139,6 +155,12 @@ registerSuite({
 			return util.promiseInvokeOrNoop(obj, 'testMethod', testParameters);
 		}).then(function () {
 			assert.sameMembers(passedParameters, testParameters, 'obj.testMethod should be called with test parameters');
+
+			return util.promiseInvokeOrNoop(obj, 'errorMethod');
+		}).then(() => {
+			assert.fail('should not have succeeded');
+		}, (error: any) => {
+			assert.equal(error.message, 'test');
 		});
 	}
 });

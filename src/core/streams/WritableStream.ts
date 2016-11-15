@@ -120,6 +120,8 @@ export default class WritableStream<T> {
 			this._rejectClosedPromise = reject;
 		});
 
+		this._closedPromise.catch(() => {});
+
 		this._advancing = false;
 		this._readyPromise = Promise.resolve();
 		this._queue = new SizeQueue<Record<T>>();
@@ -158,45 +160,43 @@ export default class WritableStream<T> {
 			return;
 		}
 
-		const writeRecord: Record<T> | undefined = this._queue.peek();
-
-		if (writeRecord && writeRecord.close) {
-			// TODO: SKIP? Assert 4.3.6-3.a
-			if (this.state !== State.Closing) {
-				throw new Error('Invalid record');
-			}
-
-			this._queue.dequeue();
-			// TODO: SKIP? Assert 4.3.6-3.c
-			this._close();
-
+		if (this._queue.length === 0) {
 			return;
-		}
+		} else {
+			const writeRecord: Record<T> | null | undefined = this._queue.peek();
 
-		this._writing = true;
-
-		const chunk = writeRecord ? writeRecord.chunk : undefined;
-
-		util.promiseInvokeOrNoop(this._underlyingSink, 'write', [ chunk ]).then(() => {
-			if (this.state !== State.Errored) {
-				this._writing = false;
-				if (writeRecord && writeRecord.resolve) {
-					writeRecord.resolve();
+			if (writeRecord && writeRecord.close) {
+				// TODO: SKIP? Assert 4.3.6-3.a
+				if (this.state !== State.Closing) {
+					throw new Error('Invalid record');
 				}
+
 				this._queue.dequeue();
+				// TODO: SKIP? Assert 4.3.6-3.c
+				this._close();
 
-				try {
-					this._syncStateWithQueue();
-				}
-				catch (error) {
-					return this._error(error);
-				}
-
-				this._advanceQueue();
+				return;
 			}
-		}, (error: Error) => {
-			this._error(error);
-		});
+
+			this._writing = true;
+
+			const chunk = writeRecord ? writeRecord.chunk : undefined;
+
+			util.promiseInvokeOrNoop(this._underlyingSink, 'write', [ chunk ]).then(() => {
+				if (this.state !== State.Errored) {
+					this._writing = false;
+					if (writeRecord && writeRecord.resolve) {
+						writeRecord.resolve();
+					}
+					this._queue.dequeue();
+
+					this._syncStateWithQueue();
+					this._advanceQueue();
+				}
+			}, (error: Error) => {
+				this._error(error);
+			});
+		}
 	}
 
 	// 4.3.2 CloseWritableStream
@@ -375,6 +375,7 @@ export default class WritableStream<T> {
 				resolve: resolve
 			};
 		});
+		promise.catch(() => {});
 
 		// 4.2.4.6-6.b
 		try {

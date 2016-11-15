@@ -59,6 +59,9 @@ export default class ReadableStreamReader<T> {
 			this._resolveClosedPromise = resolve;
 			this._rejectClosedPromise = reject;
 		});
+
+		this._closedPromise.catch(() => {
+		});
 	}
 
 	/**
@@ -131,16 +134,23 @@ export default class ReadableStreamReader<T> {
 			});
 		}
 		else {
-			// FIXME
-			// tslint:disable-next-line:no-var-keyword
-			var readPromise = new Promise<ReadResult<T>>((resolve, reject) => {
-				this._readRequests.push({
-					promise: readPromise,
-					resolve: resolve,
-					reject: reject
-				});
-				stream.pull();
+			let readResolve: (value: ReadResult<T>) => void = () => {
+			};
+			let readReject: (reason: any) => void = () => {
+			};
+
+			let readPromise = new Promise<ReadResult<T>>((resolve, reject) => {
+				readResolve = resolve;
+				readReject = reject;
 			});
+
+			this._readRequests.push({
+				promise: readPromise,
+				resolve: readResolve,
+				reject: readReject
+			});
+
+			stream.pull();
 
 			return readPromise;
 		}

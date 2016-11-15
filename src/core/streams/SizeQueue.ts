@@ -35,8 +35,8 @@ export default class SizeQueue<T> {
 		return pair ? pair.value : null;
 	}
 
-	peek(): T | undefined {
+	peek(): T | null | undefined {
 		const pair = this._queue[0];
-		return pair.value;
+		return pair ? pair.value : null;
 	}
 }

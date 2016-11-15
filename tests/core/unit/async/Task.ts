@@ -188,7 +188,7 @@ let suite = {
 				task.cancel();
 				return new Promise(function (resolve, reject) {
 					setTimeout(reject);
-				});
+				}).catch(() => {});
 			})
 			.then(dfd.rejectOnError(function () {
 				assert(false, 'should not have run');

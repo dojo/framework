@@ -344,6 +344,17 @@ registerSuite({
 			}, function (error: Error) {
 				assert.instanceOf(error, Error, 'Promise should reject with an Error');
 			});
+		},
+
+		'error if invalid record'(this: any) {
+			(<any> stream)._queue.enqueue({
+				close: true
+			});
+			(<any> stream)._started = true;
+
+			assert.throws(() => {
+				(<any> stream)._advanceQueue();
+			});
 		}
 	},
 

@@ -292,14 +292,16 @@ registerSuite({
 		assert.strictEqual(stream.queueSize, 0);
 		assert.strictEqual(stream.state, State.Errored);
 
-		assert.throws(function () {
-			stream.error(error);
-		});
-
 		stream = new ReadableStream(new BaseStringSource(), strategy);
 		let reader = stream.getReader();
 		stream.error(error);
 		assert.strictEqual(reader.state, State.Errored);
+
+		assert.throws(() => {
+			stream = new ReadableStream(new BaseStringSource(), strategy);
+			stream.state = State.Closed;
+			stream.error(new Error('error'));
+		});
 	},
 
 	'getReader': {

@@ -93,8 +93,7 @@ registerSuite({
 		'debounces callback'(this: any) {
 			const dfd = this.async(TIMEOUT);
 			const debouncedFunction = util.debounce(dfd.callback(function () {
-				assert.isAbove(Date.now() - lastCallTick, 24,
-					'Function should not be called until period has elapsed without further calls');
+				assert.isAbove(Date.now() - lastCallTick, 10, 'Function should not be called until period has elapsed without further calls');
 
 				// Typically, we expect the 3rd invocation to be the one that is executed.
 				// Although the setTimeout in 'run' specifies a delay of 5ms, a very slow test environment may

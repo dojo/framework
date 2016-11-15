@@ -17,6 +17,7 @@ registerSuite({
 		assert.lengthOf(queue, 1);
 		assert.strictEqual(queue.dequeue(), str);
 		assert.lengthOf(queue, 0);
+		assert.strictEqual(queue.dequeue(), null);
 	},
 
 	'totalSize'() {
@@ -44,5 +45,7 @@ registerSuite({
 		assert.lengthOf(queue, 1);
 		assert.strictEqual(queue.peek(), str);
 		assert.lengthOf(queue, 1);
+		queue.dequeue();
+		assert.strictEqual(queue.peek(), null);
 	}
 });
