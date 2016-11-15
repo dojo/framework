@@ -127,16 +127,19 @@ export default function xhr<T>(url: string, options: XhrRequestOptions = {}): Re
 
 		const headers = options.headers;
 		let hasContentTypeHeader = false;
+		let hasRequestedWithHeader = false;
 		if (headers) {
 			for (let header in headers) {
 				if (header.toLowerCase() === 'content-type') {
 					hasContentTypeHeader = true;
+				} else if (header.toLowerCase() === 'x-requested-with') {
+					hasRequestedWithHeader = true;
 				}
 				request.setRequestHeader(header, headers[header]);
 			}
 		}
 
-		if (!headers || !('X-Requested-With' in headers)) {
+		if (!hasRequestedWithHeader) {
 			request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 		}
 

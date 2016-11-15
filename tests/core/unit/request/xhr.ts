@@ -346,12 +346,16 @@ registerSuite({
 				}
 				return xhrRequest('/__echo/normalize', {
 					headers: {
-						'CONTENT-TYPE': 'arbitrary-value'
+						'CONTENT-TYPE': 'arbitrary-value',
+						'X-REQUESTED-WITH': 'test'
 					}
 				}).then(function (response: any) {
 					const data = JSON.parse(response.data);
 					assert.isUndefined(data.headers['CONTENT-TYPE']);
 					assert.propertyVal(data.headers, 'content-type', 'arbitrary-value');
+
+					assert.isUndefined(data.headers[ 'X-REQUESTED-WITH' ]);
+					assert.propertyVal(data.headers, 'x-requested-with', 'test');
 				});
 			},
 
@@ -366,6 +370,15 @@ registerSuite({
 				}).then(function (response: any) {
 					const data = JSON.parse(response.data);
 					assert.propertyVal(data.headers, 'content-type', 'application/arbitrary-value');
+
+					return xhrRequest('/__echo/custom', {
+						headers: {
+							'Range': 'bytes=0-1024'
+						}
+					});
+				}).then((response: any) => {
+					const data = JSON.parse(response.data);
+					assert.isDefined(data.headers, 'range');
 				});
 			},
 

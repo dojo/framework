@@ -496,6 +496,34 @@ registerSuite({
 			);
 		},
 
+		'user agent should be added if its not there'(this: any): any {
+			return nodeRequest(getRequestUrl('foo.json'), {}).then((response: any) => {
+				const header: any = response.nativeResponse.req._header;
+
+				assert.include(header, 'user-agent:');
+
+				return nodeRequest(getRequestUrl('food.json'), {
+					headers: {
+						'user-agent': 'already exists'
+					}
+				});
+			}).then((response: any) => {
+				const header: any = response.nativeResponse.req._header;
+
+				assert.include(header, 'user-agent: already exists');
+
+				return nodeRequest(getRequestUrl('food.json'), {
+					headers: {
+						'uSeR-AgEnT': 'mIxEd CaSe'
+					}
+				});
+			}).then((response: any) => {
+				const header: any = response.nativeResponse.req._header;
+
+				assert.include(header, 'uSeR-AgEnT: mIxEd CaSe');
+			});
+		},
+
 		'response headers': {
 			'before response'(this: any): void {
 				const dfd = this.async();

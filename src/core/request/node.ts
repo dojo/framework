@@ -126,7 +126,7 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 
 	requestOptions.headers = options.headers || {};
 
-	if (!('user-agent' in requestOptions.headers)) {
+	if (!Object.keys(requestOptions.headers).map(headerName => headerName.toLowerCase()).some(headerName => headerName === 'user-agent')) {
 		requestOptions.headers['user-agent'] = 'dojo/' + version + ' Node.js/' + process.version.replace(/^v/, '');
 	}
 
