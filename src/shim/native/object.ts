@@ -19,6 +19,10 @@ export const getOwnPropertySymbols: (o: any) => symbol[] = (<any> Object).getOwn
  *
  * @param o The object to return the properties for
  */
-/* intentionally detecting `getOwnPropertySymbols` because we should should provide the shim
- * when there is no support for symbols */
 export const getOwnPropertyNames: (o: any) => string[] = Object.getOwnPropertyNames;
+
+/**
+ * Returns the names of the enumerable properties and methods of an object.
+ * @param o Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
+ */
+export const keys: (o: any) => string[] = Object.keys;

@@ -16,6 +16,10 @@ namespace Shim {
 	export function getOwnPropertyNames(o: any): string[] {
 		return Object.getOwnPropertyNames(o).filter((key) => !Boolean(key.match(/^@@.+/)));
 	}
+
+	export function keys(o: any): string[] {
+		return Object.keys(o).filter((key) => !Boolean(key.match(/^@@.+/)));
+	}
 }
 
 /**
@@ -30,11 +34,16 @@ export const is: (value1: any, value2: any) => boolean = 'is' in Object
 	: Shim.is;
 
 /**
+ * Detect if there is native support for Symbol properties in Object
+ */
+const hasGetOwnPropertySymbols = 'getOwnPropertySymbols' in Object;
+
+/**
  * Returns an array of own properties who key is a symbol
  *
  * @param o The object to return the properties for
  */
-export const getOwnPropertySymbols: (o: any) => symbol[] = 'getOwnPropertySymbols' in Object
+export const getOwnPropertySymbols: (o: any) => symbol[] = hasGetOwnPropertySymbols
 	? (<any> Object).getOwnPropertySymbols
 	: Shim.getOwnPropertySymbols;
 
@@ -45,6 +54,16 @@ export const getOwnPropertySymbols: (o: any) => symbol[] = 'getOwnPropertySymbol
  */
 /* intentionally detecting `getOwnPropertySymbols` because we should should provide the shim
  * when there is no support for symbols */
-export const getOwnPropertyNames: (o: any) => string[] = 'getOwnPropertySymbols' in Object
+export const getOwnPropertyNames: (o: any) => string[] = hasGetOwnPropertySymbols
 	? Object.getOwnPropertyNames
 	: Shim.getOwnPropertyNames;
+
+/**
+ * Returns the names of the enumerable properties and methods of an object.
+ * @param o Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
+ */
+/* intentionally detecting `getOwnPropertySymbols` because we should should provide the shim
+ * when there is no support for symbols */
+export const keys: (o: any) => string[] = hasGetOwnPropertySymbols
+	? Object.keys
+	: Shim.keys;

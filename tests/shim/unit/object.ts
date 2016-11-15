@@ -102,5 +102,25 @@ registerSuite({
 			bar: 1
 		};
 		assert.deepEqual(object.getOwnPropertyNames(o), [ 'bar' ]);
+	},
+
+	'.keys()'() {
+		const sym = Symbol('foo');
+		const o = {
+			[Symbol.iterator]() {
+				return 'foo';
+			},
+			[sym]: 'bar',
+			bar: 1
+		};
+
+		Object.defineProperty(o, 'baz', {
+			value: 'qat',
+			enumerable: false
+		});
+
+		assert.strictEqual((<any> o).baz, 'qat');
+		assert.strictEqual((<any> o)[sym], 'bar');
+		assert.deepEqual(object.keys(o), [ 'bar' ]);
 	}
 });

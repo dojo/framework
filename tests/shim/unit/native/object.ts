@@ -16,9 +16,10 @@ registerSuite({
 			[
 				'is',
 				'getOwnPropertySymbols',
-				'getOwnPropertyNames'
+				'getOwnPropertyNames',
+				'keys'
 			].forEach((method) => assert.isFunction(object[method]));
-			assert.strictEqual(Object.keys(object).length, 3);
+			assert.strictEqual(Object.keys(object).length, 4);
 		}));
 	}
 });
