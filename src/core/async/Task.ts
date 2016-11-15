@@ -157,6 +157,11 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	 * Allows for cleanup actions to be performed after resolution of a Promise.
 	 */
 	finally(callback: () => void | Thenable<any>): Task<T> {
+		// if this task is already canceled, call the task
+		if (this._state === State.Canceled) {
+			return Task.resolve(callback());
+		}
+
 		const task = this.then<any>(
 			value => Task.resolve(callback()).then(() => value),
 			reason => Task.resolve(callback()).then(() => {

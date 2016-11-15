@@ -200,6 +200,48 @@ let suite = {
 			.finally(dfd.callback(function () {}));
 
 			resolver();
+		},
+
+		'invoked if already canceled'(this: any) {
+			const dfd = this.async();
+			const task = new Task(() => {
+			});
+			task.cancel();
+
+			task.finally(dfd.callback(() => {
+			}));
+		},
+
+		'finally is only called once when called after cancel'(this: any) {
+			let callCount = 0;
+			const dfd = this.async();
+			const task = new Task((resolve) => {
+				setTimeout(resolve, 10);
+			});
+			task.cancel();
+			task.finally(dfd.callback(() => {
+				callCount++;
+			}));
+
+			setTimeout(dfd.callback(() => {
+				assert.equal(callCount, 1);
+			}), 100);
+		},
+
+		'finally is only called once when called before cancel'(this: any) {
+			let callCount = 0;
+			const dfd = this.async();
+			const task = new Task((resolve) => {
+				setTimeout(resolve, 10);
+			});
+			task.finally(dfd.callback(() => {
+				callCount++;
+			}));
+			task.cancel();
+
+			setTimeout(dfd.callback(() => {
+				assert.equal(callCount, 1);
+			}), 100);
 		}
 	},
 
