@@ -80,24 +80,13 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	 *
 	 */
 	constructor(executor: Executor<T>, canceler?: () => void) {
+		// we have to initialize these to avoid a compiler error of using them before they are initialized
+		let superResolve: (value?: T | Thenable<T> | undefined) => void = () => {};
+		let superReject: (reason?: any) => void = () => {};
+
 		super((resolve, reject) => {
-			// Don't let the Task resolve if it's been canceled
-			executor(
-				(value) => {
-					if (this._state === State.Canceled) {
-						return;
-					}
-					this._state = State.Fulfilled;
-					resolve(value);
-				},
-				(reason) => {
-					if (this._state === State.Canceled) {
-						return;
-					}
-					this._state = State.Rejected;
-					reject(reason);
-				}
-			);
+			superResolve = resolve;
+			superReject = reject;
 		});
 
 		this._state = State.Pending;
@@ -109,6 +98,30 @@ export default class Task<T> extends ExtensiblePromise<T> {
 			}
 			this._cancel();
 		};
+
+		// Don't let the Task resolve if it's been canceled
+		try {
+			executor(
+				(value) => {
+					if (this._state === State.Canceled) {
+						return;
+					}
+					this._state = State.Fulfilled;
+					superResolve(value);
+				},
+				(reason) => {
+					if (this._state === State.Canceled) {
+						return;
+					}
+					this._state = State.Rejected;
+					superReject(reason);
+				}
+			);
+		}
+		catch (reason) {
+			this._state = State.Rejected;
+			superReject(reason);
+		}
 	}
 
 	/**

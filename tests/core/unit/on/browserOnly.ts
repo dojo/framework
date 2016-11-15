@@ -11,7 +11,9 @@ function createTarget(): HTMLElement {
 }
 
 function destroyTarget(target: HTMLElement): void {
-	target.parentNode.removeChild(target);
+	if (target.parentNode !== null) {
+		target.parentNode.removeChild(target);
+	}
 }
 
 interface DOMEvent extends EventObject {
