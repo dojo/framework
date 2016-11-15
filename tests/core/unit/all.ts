@@ -9,6 +9,7 @@ import './global';
 import './IdentityRegistry';
 import './instrument';
 import './lang';
+import './List';
 import './load';
 import './main';
 import './on/all';
