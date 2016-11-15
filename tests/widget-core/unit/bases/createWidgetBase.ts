@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createWidgetBase from '../../../src/bases/createWidgetBase';
 import { before } from 'dojo-core/aspect';
-import { DNode, HNode } from 'dojo-interfaces/widgetBases';
+import { DNode, HNode, WidgetState, WidgetOptions } from 'dojo-interfaces/widgetBases';
 import { createProjector } from '../../../src/projector';
 import d from '../../../src/util/d';
 import { stub } from 'sinon';
@@ -135,7 +135,7 @@ registerSuite({
 						function(this: any): (DNode | null)[] {
 							const state = this.state.classes ? { classes: this.state.classes } : {};
 							return [
-								this.state.hide ? null : d(testChildWidget, { tagName: 'footer', state })
+								this.state.hide ? null : d(testChildWidget, <WidgetOptions<WidgetState>> { tagName: 'footer', state })
 							];
 						}
 					]

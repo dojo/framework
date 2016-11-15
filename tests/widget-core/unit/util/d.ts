@@ -1,12 +1,13 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import { WidgetState, WidgetOptions } from 'dojo-interfaces/widgetBases';
 import createWidgetBase from '../../../src/bases/createWidgetBase';
 import d from '../../../src/util/d';
 
 registerSuite({
 	name: 'util/d',
 	'create DNode wrapper'() {
-		const options = { tagName: 'header', state: { hello: 'world' } };
+		const options: WidgetOptions<WidgetState> = { tagName: 'header', state: { hello: 'world' } };
 		const dNode = d(createWidgetBase, options);
 		assert.deepEqual(dNode.factory, createWidgetBase);
 		assert.deepEqual(dNode.options, options);

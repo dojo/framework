@@ -10,13 +10,18 @@ import {
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
 import { h } from 'maquette';
 
-export type TagNameOrFactory = string | ComposeFactory<Widget<WidgetState>, WidgetOptions<WidgetState>>;
+export type TagNameOrFactory<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S>> = string | ComposeFactory<W, O>;
 
-export type DOptions = VNodeProperties | WidgetOptions<WidgetState>;
+export type DOptions<S extends WidgetState, O extends WidgetOptions<S>> = VNodeProperties | O;
+
+type Children = (DNode | VNode | null)[];
 
 function d(tagName: string, options?: VNodeProperties, children?: (DNode | VNode | null)[]): HNode;
-function d(factory: ComposeFactory<Widget<WidgetState>, WidgetOptions<WidgetState>>, options: WidgetOptions<WidgetState>): WNode;
-function d(tagNameOrFactory: TagNameOrFactory, options: DOptions = {}, children: (DNode | VNode | null)[] = []): DNode {
+function d<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S>>(factory: ComposeFactory<W, O>, options: O): WNode;
+function d<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S>>(
+	tagNameOrFactory: TagNameOrFactory<S, W, O>,
+	options: DOptions<S, O> = {},
+	children: Children = []): DNode {
 
 	if (typeof tagNameOrFactory === 'string') {
 		children = children.filter((child) => child);
