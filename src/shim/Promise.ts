@@ -109,7 +109,7 @@ module Shim {
 			});
 		}
 
-		static reject<T>(reason?: Error): Promise<T> {
+		static reject<T>(reason?: any): Promise<T> {
 			return new this(function (resolve, reject) {
 				reject(reason);
 			});
@@ -167,7 +167,7 @@ module Shim {
 			 * Settles this promise.
 			 *
 			 * @param newState The resolved state for this promise.
-			 * @param {T|Error} value The resolved value for this promise.
+			 * @param {T|any} value The resolved value for this promise.
 			 */
 			const settle = (newState: State, value: any): void => {
 				// A promise can only be settled once.
@@ -198,7 +198,7 @@ module Shim {
 			 * Resolves this promise.
 			 *
 			 * @param newState The resolved state for this promise.
-			 * @param {T|Error} value The resolved value for this promise.
+			 * @param {T|any} value The resolved value for this promise.
 			 */
 			const resolve = (newState: State, value: any): void => {
 				if (isResolved()) {
@@ -218,7 +218,7 @@ module Shim {
 			};
 
 			this.then = <U>(onFulfilled?: (value?: T) => (U | Promise<U>),
-							onRejected?: (reason?: Error) => (U | Promise<U>)): Promise<U> => {
+							onRejected?: (reason?: any) => (U | Promise<U>)): Promise<U> => {
 				return new Promise<U>((resolve, reject) => {
 					// whenFinished initially queues up callbacks for execution after the promise has settled. Once the
 					// promise has settled, whenFinished will schedule callbacks for execution on the next turn through the
@@ -255,7 +255,7 @@ module Shim {
 			}
 		}
 
-		catch<U>(onRejected: (reason: Error) => (U | Thenable<U>)): Promise<U> {
+		catch<U>(onRejected: (reason: any) => (U | Thenable<U>)): Promise<U> {
 			return this.then<U>(undefined, onRejected);
 		}
 
@@ -267,11 +267,11 @@ module Shim {
 		/**
 		 * The resolved value for this promise.
 		 *
-		 * @type {T|Error}
+		 * @type {T|any}
 		 */
 		private resolvedValue: any;
 
-		then: <U>(onFulfilled?: (value: T) => (U | Thenable<U>), onRejected?: (reason: Error) => (U | Thenable<U>)) => Promise<U>;
+		then: <U>(onFulfilled?: (value: T) => (U | Thenable<U>), onRejected?: (reason: any) => (U | Thenable<U>)) => Promise<U>;
 
 		[Symbol.toStringTag]: string = 'Promise';
 	}
@@ -347,7 +347,7 @@ export default class Promise<T> implements Thenable<T> {
 	 * Creates a new promise that is rejected with the given error.
 	 */
 	/* istanbul ignore next */
-	static reject<T>(reason?: Error): Promise<any> {
+	static reject<T>(reason?: any): Promise<any> {
 		throw new Error();
 	}
 
@@ -364,15 +364,15 @@ export default class Promise<T> implements Thenable<T> {
 	/**
 	 * Adds a callback to the promise to be invoked when the asynchronous operation throws an error.
 	 */
-	catch<U>(onRejected: (reason: Error) => (U | Thenable<U>)): Promise<U>;
+	catch<U>(onRejected: (reason: any) => (U | Thenable<U>)): Promise<U>;
 	/* istanbul ignore next */
-	catch<U>(onRejected: (reason: Error) => void): Promise<U> {
+	catch<U>(onRejected: (reason: any) => void): Promise<U> {
 		throw new Error();
 	}
 
-	then<U>(onFulfilled?: (value: T) => U | Thenable<U> | undefined | null, onRejected?: (reason: Error) => void): Promise<U>;
+	then<U>(onFulfilled?: (value: T) => U | Thenable<U> | undefined | null, onRejected?: (reason: any) => void): Promise<U>;
 	/* istanbul ignore next */
-	then<U>(onFulfilled?: (value: T) => U | Thenable<U> | undefined | null, onRejected?: (reason: Error) => (U | Thenable<U>)): Promise<U> {
+	then<U>(onFulfilled?: (value: T) => U | Thenable<U> | undefined | null, onRejected?: (reason: any) => (U | Thenable<U>)): Promise<U> {
 		throw new Error();
 	}
 }
