@@ -24,6 +24,7 @@ export interface StoreOptions<T, O extends CrudOptions> {
 
 export interface CrudOptions {
 	rejectOverwrite?: boolean;
+	id?: string;
 }
 
 export type CrudArgument<T> = T | string | PatchMapEntry<T, T>;

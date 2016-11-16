@@ -1,6 +1,7 @@
 import Promise from 'dojo-shim/Promise';
-import { Observable } from 'rxjs/Rx';
+import { Subscribable, Observable } from 'rxjs/Observable';
 import global from 'dojo-core/global';
+import { Thenable } from 'dojo/Promise';
 
 global.Rx = { config: { Promise } };
 
@@ -9,18 +10,22 @@ global.Rx = { config: { Promise } };
  * only want to know about the end result of an operation, and don't want to deal with
  * any recoverable failures.
  */
-export interface StoreObservable<T, U> extends Observable<U> {
-	then<V>(onFulfilled?: ((value?: T[]) => (V | Promise<V> | StoreObservable<T, U> | null | undefined)) | null | undefined, onRejected?: (reason?: Error) => void): Promise<V>;
-}
+export type StoreObservable<T, U> = Subscribable<U> & Promise<T[]>
 
 export default function createStoreObservable<T, U>(observable: Observable<U>, transform: (data: U) => T[]): StoreObservable<T, U> {
-	const storeObservable = observable as StoreObservable<T, U>;
-	storeObservable.then = function<V>(onFulfilled?: ((value?: T[]) => (V | Promise<V> | null | undefined)) | null | undefined, onRejected?: (reason?: Error) => void): Promise<V> {
+	// Cast to any because the signatures of catch between the Observable and Promise interfaces are not
+	// compatible
+	const storeObservable: StoreObservable<T, U> = <any> observable;
+	storeObservable.then = function<V>(onFulfilled?: ((value: T[]) => (V | Promise<V> | null | undefined)) | null | undefined, onRejected?: (reason?: Error) => void): Promise<V> {
 		// Wrap in a shim promise because the interface that leaks through observable.toPromise is missing some
 		// properties on the shim(e.g. promise)
-		return Promise.resolve(storeObservable.toPromise()).then(function(result) {
-			return transform(result);
-		}).then<V>(onFulfilled, onRejected);
+		return Promise.resolve(observable.toPromise())
+			.then(transform)
+			.then<V>(onFulfilled, onRejected);
+	};
+
+	storeObservable.catch = function<U>(onRejected: (reason: Error) => (U | Thenable<U>)): Promise<U> {
+		return observable.toPromise().then(transform).then<U>(undefined, onRejected);
 	};
 
 	return storeObservable;

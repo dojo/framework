@@ -106,9 +106,9 @@ store.fetch().then(function(data) {
 
 #### Store Observable
 
-The return type of the CRUD methods on the `Store` interface is a `StoreObservable`. This type provides a `then` method that operates the same way as a `Promise`, returning the final results of the operation to the callback provided to then if it is successful and passing any errors that occur to the error callback.
+The return type of the CRUD methods on the `Store` interface is a `StoreObservable`. This type extends `Promise`. `then` returns the final results of the operation to the callback provided if it is successful, and passes any errors that occurred to the error callback otherwise.
 
-But it is also an observable. By default any subscribers will get exactly one `UpdateResults` object or an error before being completed.
+But it is also observable. By default any subscribers will get exactly one `UpdateResults` object or an error before being completed.
 
 ```typescript
 interface UpdateResults<T> {

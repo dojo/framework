@@ -338,6 +338,19 @@ registerSuite({
 			}).then(dfd.resolve);
 
 		},
+
+		'use catch': function(this: any) {
+			const { dfd, data } = getStoreAndDfd(this);
+			const store = createStore({
+				data: [ data[0], data[1] ]
+			});
+			const catchSpy = sinon.spy();
+			store.add(data[2]).catch(catchSpy).then(function(results) {
+				assert.isFalse(catchSpy.called, 'Shouldn\'t have called error handler');
+				assert.deepEqual(results, [ data[2] ], 'Didn\'t add item');
+			}).then(dfd.resolve);
+		},
+
 		'add with conflicts should fail': function(this: any) {
 			const { dfd,  data } = getStoreAndDfd(this);
 			const store = createStore({
@@ -352,6 +365,7 @@ registerSuite({
 				assert.deepEqual(result, data, 'Should have returned all updated items');
 			}).then(dfd.resolve);
 		},
+
 		'put with conflicts should override': function(this: any) {
 			const { dfd,  data } = getStoreAndDfd(this);
 			const store = createStore({
