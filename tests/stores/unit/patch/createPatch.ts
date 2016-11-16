@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import  { diff } from '../../../src/patch/Patch';
+import  { diff } from '../../../src/patch/createPatch';
 import { createData } from '../support/createData';
 
 registerSuite({

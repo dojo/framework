@@ -3,11 +3,11 @@ import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
 import Promise from 'dojo-shim/Promise';
 import createObservableStoreMixin, {
-	ObservableStore,
-		ObservableStoreOptions, StoreDelta, ItemUpdate } from '../../../../src/store/mixins/createObservableStoreMixin';
+	ObservableStore, ObservableStoreOptions, StoreDelta, ItemUpdate
+} from '../../../../src/store/mixins/createObservableStoreMixin';
 import { ItemType, createData, createUpdates, patches, patchedItems } from '../../support/createData';
-import createStore, { CrudOptions } from '../../../../src/store/createStore';
-import createInMemoryStorage, { UpdateResults } from '../../../../src/storage/createInMemoryStorage';
+import createStore, { CrudOptions, UpdateResults } from '../../../../src/store/createStore';
+import createInMemoryStorage from '../../../../src/storage/createInMemoryStorage';
 import { ComposeFactory } from 'dojo-compose/compose';
 import { SubcollectionStore, SubcollectionOptions } from '../../../../src/store/createSubcollectionStore';
 import createOrderedOperationMixin from '../../../../src/store/mixins/createOrderedOperationMixin';

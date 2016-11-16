@@ -1,10 +1,9 @@
-interface JsonPointer {
+export interface JsonPointer {
 	segments(): string[];
 	toString(): string;
 	push(segment: String): JsonPointer;
 	pop(): JsonPointer;
 }
-export default JsonPointer;
 
 export function navigate(path: JsonPointer, target: any) {
 	return path.segments().reduce(function(prev: any, next: string) {
@@ -26,7 +25,7 @@ function toString(...segments: string[]): string {
 	});
 }
 
-export function createPointer(...segments: string[]): JsonPointer {
+function createJsonPointer(...segments: string[]): JsonPointer {
 	return {
 		segments: function() {
 			return segments.map(segment => decode(segment));
@@ -34,9 +33,10 @@ export function createPointer(...segments: string[]): JsonPointer {
 			return toString(...segments);
 		},
 		push: function(segment: string) {
-			return createPointer(...segments.concat(segment));
+			return createJsonPointer(...segments.concat(segment));
 		},
-		pop: function() { return createPointer(...segments.slice(0, segments.length - 1));
+		pop: function() { return createJsonPointer(...segments.slice(0, segments.length - 1));
 		}
 	};
 }
+export default createJsonPointer;

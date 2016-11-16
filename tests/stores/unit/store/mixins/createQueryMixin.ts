@@ -7,12 +7,11 @@ import createQueryMixin, { QueryStore } from '../../../../src/store/mixins/creat
 import createObservableStoreMixin, { ObservableStore, ObservableStoreOptions } from '../../../../src/store/mixins/createObservableStoreMixin';
 import { createData, ItemType, patches, createUpdates } from '../../support/createData';
 import { SubcollectionOptions } from '../../../../src/store/createSubcollectionStore';
-import { CrudOptions, Store } from '../../../../src/store/createStore';
-import { UpdateResults } from '../../../../src/storage/createInMemoryStorage';
+import { CrudOptions, Store, UpdateResults } from '../../../../src/store/createStore';
 import { ComposeFactory } from 'dojo-compose/compose';
-import { createFilter } from '../../../../src/query/Filter';
-import { createRange } from '../../../../src/query/StoreRange';
-import { createSort } from '../../../../src/query/Sort';
+import createFilter from '../../../../src/query/createFilter';
+import createRange from '../../../../src/query/createStoreRange';
+import createSort from '../../../../src/query/createSort';
 import createAsyncStorage from '../../support/AsyncStorage';
 
 interface QueryStoreFactory extends ComposeFactory<QueryStore<{}, {}, any, any>, SubcollectionOptions<{}, {}, any>> {

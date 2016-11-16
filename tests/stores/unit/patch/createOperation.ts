@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import  { createOperation, OperationType } from '../../../src/patch/Operation';
+import  createOperation, { OperationType } from '../../../src/patch/createOperation';
 
 registerSuite({
 	name: 'Operation',

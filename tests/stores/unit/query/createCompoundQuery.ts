@@ -1,9 +1,10 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createCompoundQuery, { QueryType } from '../../../src/query/createQuery';
-import { createFilter } from '../../../src/query/Filter';
-import { createSort } from '../../../src/query/Sort';
-import { createRange } from '../../../src/query/StoreRange';
+import createCompoundQuery from '../../../src/query/createCompoundQuery';
+import { QueryType } from '../../../src/query/interfaces';
+import createFilter from '../../../src/query/createFilter';
+import createSort from '../../../src/query/createSort';
+import createRange from '../../../src/query/createStoreRange';
 import { createData } from '../support/createData';
 
 registerSuite({

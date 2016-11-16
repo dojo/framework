@@ -1,12 +1,12 @@
-import { Query } from '../query/createQuery';
+import { Query } from '../query/interfaces';
+import { Patch, PatchMapEntry } from '../patch/createPatch';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
 import Map from 'dojo-shim/Map';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { Observer, Observable } from 'rxjs/Rx';
 import createStoreObservable, { StoreObservable } from './createStoreObservable';
-import createInMemoryStorage, { Storage, UpdateResults } from '../storage/createInMemoryStorage';
-import Patch, { PatchMapEntry } from '../patch/Patch';
+import createInMemoryStorage, { Storage } from '../storage/createInMemoryStorage';
 
 export const enum StoreOperation {
 	Add,
@@ -24,6 +24,15 @@ export interface StoreOptions<T, O extends CrudOptions> {
 
 export interface CrudOptions {
 	rejectOverwrite?: boolean;
+}
+
+export type CrudArgument<T> = T | string | PatchMapEntry<T, T>;
+
+export interface UpdateResults<T> {
+	currentItems?: T[];
+	failedData?: CrudArgument<T>[];
+	successfulData: T[] | string[];
+	type: StoreOperation;
 }
 
 export type PatchArgument<T> = Map<string, Patch<T, T>> | { id: string; patch: Patch<T, T> } | { id: string; patch: Patch<T, T> }[];

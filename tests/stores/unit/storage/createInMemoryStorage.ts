@@ -4,10 +4,10 @@ import Set from 'dojo-shim/Set';
 import createInMemoryStorage from '../../../src/storage/createInMemoryStorage';
 import Promise from 'dojo-shim/Promise';
 import { StoreOperation } from '../../../src/store/createStore';
-import { createFilter } from '../../../src/query/Filter';
-import { createSort } from '../../../src/query/Sort';
-import { createRange } from '../../../src/query/StoreRange';
-import createCompoundQuery from '../../../src/query/createQuery';
+import createFilter from '../../../src/query/createFilter';
+import createSort from '../../../src/query/createSort';
+import createRange from '../../../src/query/createStoreRange';
+import createCompoundQuery from '../../../src/query/createCompoundQuery';
 import { createData, createUpdates, ItemType, patches } from '../support/createData';
 
 function getStorageAndDfd(test: any, option = {}) {

@@ -1,11 +1,10 @@
-import { Store, CrudOptions } from '../createStore';
+import { Store, CrudOptions, UpdateResults } from '../createStore';
 import createStoreObservable, { StoreObservable } from '../createStoreObservable';
-import Patch from '../../patch/Patch';
+import { Patch } from '../../patch/createPatch';
 import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
 import { Observable } from 'rxjs/Rx';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import { UpdateResults } from '../../storage/createInMemoryStorage';
 
 export interface TransactionMixin<T, O extends CrudOptions, U extends UpdateResults<T>, C extends Store<T, O, U>> {
 	transaction(): Transaction<T, O, U, C>;

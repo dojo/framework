@@ -1,13 +1,11 @@
 import { shouldRecurseInto, isEqual } from '../utils';
-import Operation, { OperationType, createOperation } from './Operation';
-import JsonPointer, { createPointer } from './JsonPointer';
-interface Patch<T, U> {
+import createOperation,  { Operation, OperationType } from './createOperation';
+import createJsonPointer, { JsonPointer } from './createJsonPointer';
+export interface Patch<T, U> {
 	operations: Operation[];
 	apply(target: T): U;
 	toString(): String;
 }
-
-export default Patch;
 
 export type PatchMapEntry<T, U> = { id: string; patch: Patch<T, U> };
 
@@ -15,7 +13,7 @@ function _diff(from: any, to: any, startingPath?: JsonPointer): Operation[] {
 	if (!shouldRecurseInto(from) || !shouldRecurseInto(to)) {
 		return [];
 	}
-	startingPath = startingPath || createPointer();
+	startingPath = startingPath || createJsonPointer();
 	const fromKeys = Object.keys(from);
 	const toKeys = Object.keys(to);
 	const operations: Operation[] = [];
@@ -47,7 +45,7 @@ export function diff<T, U>(from: T, to: U): Patch<T, U> {
 	return <Patch<T, U>> createPatch(_diff(from, to));
 }
 
-export function createPatch(operations: Operation[]) {
+function createPatch(operations: Operation[]) {
 	return {
 		operations: operations,
 		apply(this: Patch<any, any>, target: any) {
@@ -65,3 +63,4 @@ export function createPatch(operations: Operation[]) {
 		}
 	};
 }
+export default createPatch;

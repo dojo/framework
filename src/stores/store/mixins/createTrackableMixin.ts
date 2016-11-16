@@ -1,13 +1,12 @@
 import { SubcollectionStore, SubcollectionOptions } from '../createSubcollectionStore';
-import { CrudOptions, Store } from '../createStore';
-import { UpdateResults } from '../../storage/createInMemoryStorage';
+import { CrudOptions, Store, UpdateResults } from '../createStore';
 import { ObservableStore, ItemUpdate, StoreDelta } from './createObservableStoreMixin';
 import { Observable, Observer } from 'rxjs/Rx';
 import { ComposeMixinDescriptor } from 'dojo-compose/compose';
 import { after } from 'dojo-compose/aspect';
 import Map from 'dojo-shim/Map';
 import WeakMap from 'dojo-shim/WeakMap';
-import { Query } from '../../query/createQuery';
+import { Query } from '../../query/interfaces';
 
 export interface TrackedStoreDelta<T> extends StoreDelta<T> {
 	removedFromTracked: { item: T; id: string; previousIndex: number; }[];

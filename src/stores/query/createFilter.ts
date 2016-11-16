@@ -1,6 +1,6 @@
-import JsonPointer, { navigate, createPointer } from '../patch/JsonPointer';
+import createJsonPointer, { JsonPointer, navigate } from '../patch/createJsonPointer';
 import { isEqual } from '../utils';
-import { Query, QueryType } from './createQuery';
+import { Query, QueryType } from './interfaces';
 
 export type FilterFunction<T> = (data: T[]) => T[];
 export type ObjectPointer = JsonPointer | string;
@@ -59,19 +59,19 @@ export interface Filter<T> extends BooleanFilter<T> {
 	or(): BooleanFilter<T>;
 }
 
-export default Filter;
-
 function isFilter<T>(filterOrFunction: FilterChainMember<T>): filterOrFunction is Filter<T> {
 	return typeof filterOrFunction !== 'function'  && (<any> filterOrFunction).apply;
 }
 
-export function createFilter<T>(serializer?: (filter: Filter<T>) => string): Filter<T> {
+function createFilter<T>(serializer?: (filter: Filter<T>) => string): Filter<T> {
 	// var subFilters: NestedFilter<T> = subFilters || [];
 	let filters: FilterChainMember<T>[] = [];
 	serializer = serializer || serializeFilter;
 
 	return createFilterHelper(filters, serializer);
 }
+
+export default createFilter;
 
 function createFilterHelper<T>(filters: FilterChainMember<T>[], serializer?: (filter: Filter<T>) => string): Filter<T> {
 	// Small helpers to abstract common operations for building comparator filters
@@ -193,7 +193,7 @@ function applyFilterChain<T>(item: T, filterChain: FilterChainMember<T>[]): bool
 }
 
 function createComparator<T>(operator: FilterType, value: any, path?: ObjectPointer): SimpleFilter<T> {
-	path = typeof path === 'string' ? createPointer(path) : path;
+	path = typeof path === 'string' ? createJsonPointer(path) : path;
 	let test: (property: any) => boolean;
 	let filterType: FilterType;
 	let operatorString: string;

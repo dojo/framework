@@ -1,10 +1,10 @@
-import './patch/Patch';
-import './patch/Operation';
-import './patch/JsonPointer';
-import './query/filter';
-import './query/sort';
-import './query/StoreRange';
-import './query/createQuery';
+import './patch/createPatch';
+import './patch/createOperation';
+import './patch/createJsonPointer';
+import './query/createFilter';
+import './query/createSort';
+import './query/createStoreRange';
+import './query/createCompoundQuery';
 import './storage/createInMemoryStorage';
 import './store/createStore';
 import './store/createSubcollectionStore';

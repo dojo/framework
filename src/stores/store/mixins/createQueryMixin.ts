@@ -1,11 +1,11 @@
-import createCompoundQuery, { Query, QueryType, CompoundQuery } from '../../query/createQuery';
-import Filter, { createFilter } from '../../query/Filter';
-import StoreRange, { createRange } from '../../query/StoreRange';
-import { CrudOptions, Store } from '../createStore';
+import createCompoundQuery, {  CompoundQuery } from '../../query/createCompoundQuery';
+import { Query, QueryType } from '../../query/interfaces';
+import createFilter, { Filter } from '../../query/createFilter';
+import createRange, { StoreRange } from '../../query/createStoreRange';
+import { CrudOptions, Store, UpdateResults } from '../createStore';
+import createSort, { Sort } from '../../query/createSort';
 import { SubcollectionStore, SubcollectionOptions } from '../createSubcollectionStore';
 import WeakMap from 'dojo-shim/WeakMap';
-import { UpdateResults } from '../../storage/createInMemoryStorage';
-import { Sort, createSort } from '../../query/Sort';
 import { ComposeMixinDescriptor } from 'dojo-compose/compose';
 
 // export interface QueryMixin<T, O extends CrudOptions, U extends UpdateResults<T>, C extends SubcollectionStore<T, O, U, C>> extends SubcollectionStore<T, O, U, C> {

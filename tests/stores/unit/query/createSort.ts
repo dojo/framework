@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { createSort } from '../../../src/query/Sort';
-import { createPointer } from '../../../src/patch/JsonPointer';
+import createSort from '../../../src/query/createSort';
+import createJsonPointer from '../../../src/patch/createJsonPointer';
 
 type SimpleObj = { key1: string; id: number };
 type NestedObj = { key1: { key2: string }; id: number};
@@ -92,11 +92,11 @@ registerSuite({
 	},
 	'sort with json path': {
 		'sort with one path': function() {
-			assert.deepEqual(createSort<SimpleObj>(createPointer('key1')).apply(getSimpleList()),
+			assert.deepEqual(createSort<SimpleObj>(createJsonPointer('key1')).apply(getSimpleList()),
 				[ { key1: 'a', id: 3 }, { key1: 'b', id: 1 }, { key1: 'c', id: 2 } ]);
 		},
 		'sort with multiple paths': function() {
-			assert.deepEqual(createSort<NestedObj>(createPointer('key1', 'key2')).apply(nestedList),
+			assert.deepEqual(createSort<NestedObj>(createJsonPointer('key1', 'key2')).apply(nestedList),
 				[ { key1: { key2: 'a' }, id: 3 }, { key1: { key2: 'b' }, id: 1 }, { key1: { key2: 'c' }, id: 2 } ]);
 		}
 	},

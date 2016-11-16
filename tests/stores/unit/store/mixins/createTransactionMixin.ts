@@ -1,9 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import createStore, { StoreOperation, StoreOptions, CrudOptions, Store } from '../../../../src/store/createStore';
+import createStore, { StoreOperation, StoreOptions, CrudOptions, Store, UpdateResults} from '../../../../src/store/createStore';
 import createTransactionMixin, { TransactionStore } from '../../../../src/store/mixins/createTransactionMixin';
 import { createData, ItemType, createUpdates, patches, patchedItems } from '../../support/createData';
-import { UpdateResults } from '../../../../src/storage/createInMemoryStorage';
 import { ComposeFactory } from 'dojo-compose/compose';
 import createAsyncStorage from '../../support/AsyncStorage';
 

@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { createRange } from '../../../src/query/StoreRange';
+import createRange from '../../../src/query/createStoreRange';
 import { createData, ItemType } from '../support/createData';
 
 registerSuite({

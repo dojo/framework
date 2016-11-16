@@ -1,11 +1,10 @@
-import { Query } from '../query/createQuery';
-import { StoreOperation, CrudOptions, StoreOptions } from '../store/createStore';
+import { Query } from '../query/interfaces';
+import { StoreOperation, CrudOptions, StoreOptions, UpdateResults } from '../store/createStore';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
 import Map from 'dojo-shim/Map';
-import Patch from '../patch/Patch';
-import { PatchMapEntry } from '../patch/Patch';
+import { Patch } from '../patch/createPatch';
 import { duplicate } from 'dojo-core/lang';
 
 export interface Storage<T, O extends CrudOptions> {
@@ -27,14 +26,6 @@ export interface InMemoryStorageState<T> {
 	nextId?: number;
 	data?: T[];
 	index: Map<string, number>;
-}
-
-export type CrudArgument<T> = T | string | PatchMapEntry<T, T>;
-export interface UpdateResults<T> {
-	currentItems?: T[];
-	failedData?: CrudArgument<T>[];
-	successfulData: T[] | string[];
-	type: StoreOperation;
 }
 
 const instanceStateMap = new WeakMap<Storage<{}, {}>, InMemoryStorageState<{}>>();

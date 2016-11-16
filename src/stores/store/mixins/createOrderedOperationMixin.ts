@@ -1,5 +1,4 @@
-import { UpdateResults } from '../../storage/createInMemoryStorage';
-import { Store, CrudOptions, StoreOptions } from '../createStore';
+import { Store, CrudOptions, StoreOptions, UpdateResults } from '../createStore';
 import { ComposeMixinDescriptor } from 'dojo-compose/compose';
 import WeakMap from 'dojo-shim/WeakMap';
 import Promise from 'dojo-shim/Promise';

@@ -1,11 +1,10 @@
-import { CrudOptions, Store, StoreOptions } from '../createStore';
+import { CrudOptions, Store, StoreOptions, UpdateResults } from '../createStore';
 import { Observable, Observer } from 'rxjs/Rx';
 import WeakMap from 'dojo-shim/WeakMap';
 import Map from 'dojo-shim/Map';
 import Set from 'dojo-shim/Set';
 import Promise from 'dojo-shim/Promise';
 import { StoreObservable } from '../createStoreObservable';
-import { UpdateResults } from '../../storage/createInMemoryStorage';
 import { SubcollectionStore } from '../createSubcollectionStore';
 import { ComposeMixinDescriptor } from 'dojo-compose/compose';
 import { after } from 'dojo-compose/aspect';

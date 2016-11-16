@@ -1,23 +1,9 @@
 import WeakMap from 'dojo-shim/WeakMap';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-
-export interface Query<T, U> {
-	apply(data: T[]): U[];
-	toString(querySerializer?: (query: Query<any, any>) => string): string;
-	incremental?: boolean;
-	queryType: QueryType;
-}
+import { Query, QueryType } from './interfaces';
 
 export interface CompoundQuery<T, U> extends Query<T, U> {
 	withQuery: <V>(query: Query<U, V>) => CompoundQuery<T, V>;
-}
-
-export const enum QueryType {
-	Filter,
-	Sort,
-	Range,
-	Select,
-	Compound
 }
 
 export interface QueryOptions<T, U> {
@@ -33,15 +19,6 @@ interface QueryState<T, U> {
 
 const instanceStateMap = new WeakMap<Query<{}, {}>, QueryState<{}, {}>>();
 
-// this used to belong to CompoundQuery, but it is never used. Keep it for now.
-// function getQueryTypes<T, U>(instance: Query<T, U>) {
-// 	const state = instanceStateMap.get(instance);
-// 	const queryTypes = new Set<QueryType>();
-// 	[ ...state.queries, state.finalQuery ].forEach(function(query: Query<any, any>) {
-// 		return queryTypes.add(query.queryType);
-// 	});
-// 	return queryTypes;
-// }
 export interface QueryFactory extends ComposeFactory<CompoundQuery<{}, {}>, QueryOptions<{}, {}>> {
 	<T extends {}, U extends {}>(options?: QueryOptions<T, U>): CompoundQuery<T, U>;
 }
