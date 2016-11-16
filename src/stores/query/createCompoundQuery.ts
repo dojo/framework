@@ -56,7 +56,7 @@ const createCompoundQuery: QueryFactory = compose<CompoundQuery<{}, {}>, QueryOp
 	get incremental(this: Query<{}, {}>) {
 		const state = instanceStateMap.get(this);
 		return [ ...state.queries, state.finalQuery ].every(function(query: Query<any, any>) {
-			return query.incremental;
+			return Boolean(query.incremental);
 		});
 	}
 }, function<T, U>(instance: Query<T, U>, options: QueryOptions<T, U>) {

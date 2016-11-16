@@ -46,7 +46,7 @@ export interface Store<T, O extends CrudOptions, U extends UpdateResults<T>> {
 	patch(updates: PatchArgument<T>, options?: O): StoreObservable<T, U>;
 	delete(ids: string[] | string): StoreObservable<string, U>;
 	fetch(): Promise<T[]>;
-	fetch<U>(query: Query<T, U>): Promise<U[]>;
+	fetch<U>(query?: Query<T, U>): Promise<U[]>;
 }
 
 export interface StoreFactory extends ComposeFactory<Store<{}, {}, any>, StoreOptions<{}, {}>> {
@@ -192,8 +192,8 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 	}
 }, <T, O extends CrudOptions>(instance: Store<T, O, UpdateResults<T>>, options: StoreOptions<T, O>) => {
 	options = options || {};
-	const data: T[] | null = options.data;
-	options.data = null;
+	const data: T[] | undefined = options.data;
+	options.data = undefined;
 	const instanceState: BaseStoreState<T, O, UpdateResults<T>> = {
 		storage: options.storage || createInMemoryStorage(options),
 		initialAddPromise: Promise.resolve()

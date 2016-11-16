@@ -30,7 +30,7 @@ export type FilterChainMember<T> = (SimpleFilter<T> | BooleanOp);
 
 export interface SimpleFilter<T> extends Query<T, T> {
 	readonly filterType: FilterType;
-	readonly test?: (item: T) => boolean;
+	readonly test: (item: T) => boolean;
 	readonly filterChain?: FilterChainMember<T>[];
 	readonly path?: ObjectPointer;
 	readonly value?: any;
@@ -66,18 +66,18 @@ function isFilter<T>(filterOrFunction: FilterChainMember<T>): filterOrFunction i
 function createFilter<T>(serializer?: (filter: Filter<T>) => string): Filter<T> {
 	// var subFilters: NestedFilter<T> = subFilters || [];
 	let filters: FilterChainMember<T>[] = [];
-	serializer = serializer || serializeFilter;
 
-	return createFilterHelper(filters, serializer);
+	return createFilterHelper(filters, serializer || serializeFilter);
 }
 
 export default createFilter;
 
-function createFilterHelper<T>(filters: FilterChainMember<T>[], serializer?: (filter: Filter<T>) => string): Filter<T> {
+function createFilterHelper<T>(filters: FilterChainMember<T>[], serializer: (filter: Filter<T>) => string): Filter<T> {
 	// Small helpers to abstract common operations for building comparator filters
 	// The main helper delegates to the factory, adding and AND operation before the next filter,
 	// because by default each filter in a chain will be ANDed with the previous.
 	function comparatorFilterHelper(filterType: FilterType, value: any, path?: ObjectPointer): Filter<T> {
+		path = path || createJsonPointer();
 		const needsOperator = filters.length > 0 &&
 			(filters[filters.length - 1] !== BooleanOp.And && filters[filters.length - 1] !== BooleanOp.Or);
 		const newFilters = needsOperator ? [ ...filters, BooleanOp.And, createComparator<T>(filterType, value, path) ] :
@@ -192,70 +192,61 @@ function applyFilterChain<T>(item: T, filterChain: FilterChainMember<T>[]): bool
 	});
 }
 
-function createComparator<T>(operator: FilterType, value: any, path?: ObjectPointer): SimpleFilter<T> {
+function createComparator<T>(operator: FilterType, value: any, path: ObjectPointer): SimpleFilter<T> {
 	path = typeof path === 'string' ? createJsonPointer(path) : path;
 	let test: (property: any) => boolean;
-	let filterType: FilterType;
+	const filterType: FilterType = operator;
 	let operatorString: string;
 	switch (operator) {
 		case FilterType.LessThan:
-			filterType = FilterType.LessThan;
 			test = function(property) {
 				return property < value;
 			};
 			operatorString = 'lt';
 			break;
 		case FilterType.LessThanOrEqualTo:
-			filterType = FilterType.LessThanOrEqualTo;
 			test = function(property) {
 				return property <= value;
 			};
 			operatorString = 'lte';
 			break;
 		case FilterType.GreaterThan:
-			filterType = FilterType.GreaterThan;
 			test = function(property) {
 				return property > value;
 			};
 			operatorString = 'gt';
 			break;
 		case FilterType.GreaterThanOrEqualTo:
-			filterType = FilterType.GreaterThanOrEqualTo;
 			test = function(property) {
 				return property >= value;
 			};
 			operatorString = 'gte';
 			break;
 		case FilterType.EqualTo:
-			filterType = FilterType.EqualTo;
 			test = function(property) {
 				return property === value;
 			};
 			operatorString = 'eq';
 			break;
 		case FilterType.NotEqualTo:
-			filterType = FilterType.NotEqualTo;
 			test = function(property) {
 				return property !== value;
 			};
 			operatorString = 'ne';
 			break;
 		case FilterType.DeepEqualTo:
-			filterType = FilterType.DeepEqualTo;
 			test = function(property) {
 				return isEqual(property, value);
 			};
 			operatorString = 'eq';
 			break;
 		case FilterType.NotDeepEqualTo:
-			filterType = FilterType.NotDeepEqualTo;
 			test = function(property) {
 				return !isEqual(property, value);
 			};
 			operatorString = 'ne';
 			break;
 		case FilterType.Contains:
-			filterType = FilterType.Contains;
 			test = function(propertyOrItem) {
 				if (Array.isArray(propertyOrItem)) {
 					return propertyOrItem.indexOf(value) > -1;
@@ -267,20 +258,17 @@ function createComparator<T>(operator: FilterType, value: any, path?: ObjectPoin
 			operatorString = 'contains';
 			break;
 		case FilterType.In:
-			filterType = FilterType.In;
 			test = function(propertyOrItem) {
 				return Array.isArray(value) && value.indexOf(propertyOrItem) > -1;
 			};
 			operatorString = 'in';
 			break;
 		case FilterType.Matches:
-			filterType = FilterType.Matches;
 			test = function(property) {
 				return value.test(property);
 			};
 			break;
 		case FilterType.Custom:
-			filterType = FilterType.Custom;
 			test = value;
 			break;
 		// unreachable lines

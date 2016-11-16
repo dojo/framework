@@ -97,7 +97,7 @@ function notifyItemObservers<T, O extends CrudOptions, U extends UpdateResults<T
 ) {
 	function notify(id: string, after?: T) {
 		if (state.itemObservers.has(id)) {
-			state.itemObservers.get(id).map(function(observerOrEntry): Observer<ItemUpdate<T>> | null {
+			state.itemObservers.get(id)!.map(function(observerOrEntry): Observer<ItemUpdate<T>> | null {
 				if (isObserverEntry(observerOrEntry)) {
 					return observerOrEntry.observer;
 				}
@@ -113,7 +113,7 @@ function notifyItemObservers<T, O extends CrudOptions, U extends UpdateResults<T
 				});
 			});
 			if (after) {
-				state.itemObservers.get(id).map(function(observerOrEntry): Observer<T> | null {
+				state.itemObservers.get(id)!.map(function(observerOrEntry): Observer<T> | null {
 					if (isObserver(observerOrEntry)) {
 						return observerOrEntry;
 					}
@@ -136,7 +136,7 @@ function notifyItemObservers<T, O extends CrudOptions, U extends UpdateResults<T
 	}
 	else {
 		ids.forEach(function(id) {
-			notify(id, null);
+			notify(id, undefined);
 		});
 	}
 }
@@ -174,7 +174,7 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 							};
 							ids.forEach(function(id: string) {
 								if (state.itemObservers.has(id)) {
-									state.itemObservers.get(id).push(observerEntry);
+									state.itemObservers.get(id)!.push(observerEntry);
 								}
 								else {
 									state.itemObservers.set(id, [observerEntry]);
@@ -223,7 +223,7 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 								}
 								else {
 									if (state.itemObservers.has(id)) {
-										state.itemObservers.get(id).push(observer);
+										state.itemObservers.get(id)!.push(observer);
 									}
 									else {
 										state.itemObservers.set(id, [ observer ]);
@@ -316,7 +316,7 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 						notifyItemObservers(null, deleted, state, self);
 						deleted.forEach(function(id: string) {
 							if (state.itemObservers.has(id)) {
-								state.itemObservers.get(id).forEach(function(observerOrEntry) {
+								state.itemObservers.get(id)!.forEach(function(observerOrEntry) {
 									if (isObserverEntry(observerOrEntry)) {
 										observerOrEntry.observes.delete(id);
 										if (!observerOrEntry.observes.size) {

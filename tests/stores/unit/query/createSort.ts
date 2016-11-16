@@ -73,12 +73,12 @@ registerSuite({
 				id,
 				key1: null
 			}; } );
-			assert.deepEqual(createSort<SimpleObj>('key1', true).apply(sameKeyList),
+			assert.deepEqual(createSort<{ key1: null; id: number }>('key1', true).apply(sameKeyList),
 				[ { key1: null, id: 1 }, { key1: null, id: 2 }, { key1: null, id: 3 } ]);
 		},
 		'sort with partially null property value': function() {
 			const list = [ { key1: null, id: 1 }, { key1: 'a', id: 2 }, { key1: null, id: 3 } ];
-			assert.deepEqual(createSort<SimpleObj>('key1').apply(list),
+			assert.deepEqual(createSort<{ key1: null | string; id: number }>('key1').apply(list),
 				[ { key1: null, id: 1 }, { key1: null, id: 3 }, { key1: 'a', id: 2 } ]);
 		},
 		'sort with undefined property value': function() {
@@ -86,7 +86,7 @@ registerSuite({
 				id,
 				key1: undefined
 			}; } );
-			assert.deepEqual(createSort<SimpleObj>('key1', true).apply(sameKeyList),
+			assert.deepEqual(createSort<{ key1: undefined; id: number }>('key1', true).apply(sameKeyList),
 				[ { key1: undefined, id: 1 }, { key1: undefined, id: 2 }, { key1: undefined, id: 3 } ]);
 		}
 	},

@@ -236,7 +236,7 @@ registerSuite({
 							} catch (error) {
 								dfd.reject(error);
 							}
-						}, null, dfd.callback(function() {
+						}, undefined, dfd.callback(function() {
 							assert.isTrue(updatePassed, 'Should have updated before completing');
 						}));
 						observableStore.delete(ids[0]);
@@ -309,7 +309,7 @@ registerSuite({
 							}
 							else if (!firstDelete) {
 								assert.deepEqual(update, {
-									item: null,
+									item: undefined,
 									id: data[0].id
 								}, 'Didn\'t send the right update for first delete operation'
 												);
@@ -317,7 +317,7 @@ registerSuite({
 							}
 							else if (!secondDelete) {
 								assert.deepEqual(update, {
-									item: null,
+									item: undefined,
 									id: data[1].id
 								}, 'Didn\'t send the right update for second delete operation'
 												);
@@ -325,7 +325,7 @@ registerSuite({
 							}
 							else if (!thirdDelete) {
 								assert.deepEqual(update, {
-									item: null,
+									item: undefined,
 									id: data[2].id
 								}, 'Didn\'t send the right update for third delete operation'
 												);
@@ -338,7 +338,7 @@ registerSuite({
 						} catch (error) {
 							dfd.reject(error);
 						}
-					}, null, dfd.callback(function() {
+					}, undefined, dfd.callback(function() {
 						assert.isTrue(
 							putUpdate && patchUpdate && firstDelete && secondDelete && thirdDelete,
 							'Didn\'t send all updates before completing observable'
@@ -486,7 +486,7 @@ registerSuite({
 						}
 						else if (!firstDelete) {
 							assert.deepEqual(update, {
-									item: null,
+									item: undefined,
 									id: data[0].id
 								}, 'Didn\'t send the right update for first delete operation'
 							);
@@ -494,7 +494,7 @@ registerSuite({
 						}
 						else if (!secondDelete) {
 							assert.deepEqual(update, {
-									item: null,
+									item: undefined,
 									id: data[1].id
 								}, 'Didn\'t send the right update for second delete operation'
 							);
@@ -502,7 +502,7 @@ registerSuite({
 						}
 						else if (!thirdDelete) {
 							assert.deepEqual(update, {
-									item: null,
+									item: undefined,
 									id: data[2].id
 								}, 'Didn\'t send the right update for third delete operation'
 							);
@@ -515,7 +515,7 @@ registerSuite({
 					} catch (error) {
 						dfd.reject(error);
 					}
-				}, null, dfd.callback(function() {
+				}, undefined, dfd.callback(function() {
 					assert.isTrue(
 						putUpdate && patchUpdate && firstDelete && secondDelete && thirdDelete,
 						'Didn\'t send all updates before completing observable'
@@ -595,7 +595,7 @@ registerSuite({
 			observableStore.add(data[0]);
 		},
 		'should be able to observe single id'(this: any) {
-			const { dfd, observableStore } = getStoreWithAsyncStorage(this, { get: 20, put: 10 });
+			const { dfd, observableStore } = getStoreWithAsyncStorage(this, { get: 50, put: 10 });
 			const data = createData();
 			const updatedItem = createUpdates()[0][0];
 			let firstUpdate = true;
@@ -620,7 +620,7 @@ registerSuite({
 			});
 		},
 		'should be able to observe with initial items'(this: any) {
-			const { dfd, asyncStorage } = getStoreWithAsyncStorage(this, { put: 20, get: 10 });
+			const { dfd, asyncStorage } = getStoreWithAsyncStorage(this, { put: 50, get: 10 });
 			const observableStore = createObservableStore({ storage: asyncStorage, data: createData() });
 			const data = createData();
 

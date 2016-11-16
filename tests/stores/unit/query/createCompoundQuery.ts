@@ -11,7 +11,7 @@ registerSuite({
 	name: 'createQuery',
 
 	'Should create a Query of type CompoundQuery.'() {
-		assert.strictEqual(createCompoundQuery( { query: null } ).queryType, QueryType.Compound);
+		assert.strictEqual(createCompoundQuery( { query: <any> null } ).queryType, QueryType.Compound);
 	},
 	'Should create a CompoundQuery from a filter.'() {
 		const data = createData();

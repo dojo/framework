@@ -13,7 +13,7 @@ function _diff(from: any, to: any, startingPath?: JsonPointer): Operation[] {
 	if (!shouldRecurseInto(from) || !shouldRecurseInto(to)) {
 		return [];
 	}
-	startingPath = startingPath || createJsonPointer();
+	const path = startingPath || createJsonPointer();
 	const fromKeys = Object.keys(from);
 	const toKeys = Object.keys(to);
 	const operations: Operation[] = [];
@@ -21,20 +21,20 @@ function _diff(from: any, to: any, startingPath?: JsonPointer): Operation[] {
 	fromKeys.forEach(function(key) {
 		if (!isEqual(from[key], to[key])) {
 			if ((key in from) && !(key in to)) {
-				operations.push(createOperation(OperationType.Remove, startingPath.push(key)));
+				operations.push(createOperation(OperationType.Remove, path.push(key)));
 			}
 			else if (shouldRecurseInto(from[key]) && shouldRecurseInto(to[key])) {
-				operations.push(..._diff(from[key], to[key], startingPath.push(key)));
+				operations.push(..._diff(from[key], to[key], path.push(key)));
 			}
 			else {
-				operations.push(createOperation(OperationType.Replace, startingPath.push(key), to[key], null, from[key]));
+				operations.push(createOperation(OperationType.Replace, path.push(key), to[key], undefined, from[key]));
 			}
 		}
 	});
 
 	toKeys.forEach(function(key) {
 		if (!(key in from) && (key in to)) {
-			operations.push(createOperation(OperationType.Add, startingPath.push(key), to[key]));
+			operations.push(createOperation(OperationType.Add, path.push(key), to[key]));
 		}
 	});
 

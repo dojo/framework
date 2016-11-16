@@ -59,7 +59,7 @@ function buildTrackedUpdate<T, O extends CrudOptions, U extends UpdateResults<T>
 		let deletedIndices: number[] = [];
 		const trackedDeletes = update.deletes.filter(function(id) {
 			if (state.idToIndex.has(id)) {
-				const index = state.idToIndex.get(id);
+				const index = state.idToIndex.get(id)!;
 				deletedIndices.push(index);
 				removedFromTracked.push({
 					item: state.localData[index],
@@ -81,7 +81,7 @@ function buildTrackedUpdate<T, O extends CrudOptions, U extends UpdateResults<T>
 
 			store.identify(update.updates).forEach(function(id, index) {
 				if (state.idToIndex.has(id)) {
-					newData[state.idToIndex.get(id)] = update.updates[index];
+					newData[state.idToIndex.get(id)!] = update.updates[index];
 				}
 				else {
 					newData.push(update.updates[index]);
@@ -109,7 +109,7 @@ function buildTrackedUpdate<T, O extends CrudOptions, U extends UpdateResults<T>
 		updateIds.forEach(function(id, updateIndex) {
 			if (!newIndex.has(id) && state.idToIndex.has(id)) {
 				trackedUpdates.push(update.updates[updateIndex]);
-				const index = state.idToIndex.get(id);
+				const index = state.idToIndex.get(id)!;
 				removedFromTracked.push({
 					item: update.updates[updateIndex],
 					previousIndex: index,
@@ -118,8 +118,8 @@ function buildTrackedUpdate<T, O extends CrudOptions, U extends UpdateResults<T>
 			}
 			else if (newIndex.has(id) && state.idToIndex.has(id)) {
 				trackedUpdates.push(update.updates[updateIndex]);
-				const previouxIndex = state.idToIndex.get(id);
-				const index = newIndex.get(id);
+				const previouxIndex = state.idToIndex.get(id)!;
+				const index = newIndex.get(id)!;
 				movedInTracked.push({
 					item: newData[index],
 					id: id,
@@ -139,7 +139,7 @@ function buildTrackedUpdate<T, O extends CrudOptions, U extends UpdateResults<T>
 					trackedAdds.push(update.adds[itemIndex - update.updates.length]);
 				}
 				trackedAdds.push();
-				const index = newIndex.get(id);
+				const index = newIndex.get(id)!;
 				addedToTracked.push({
 					item: newData[index],
 					id: id,
@@ -154,7 +154,7 @@ function buildTrackedUpdate<T, O extends CrudOptions, U extends UpdateResults<T>
 				addedToTracked.push({
 					item: newData[index],
 					id: id,
-					index: newIndex.get(id)
+					index: newIndex.get(id)!
 				});
 			}
 		});
@@ -263,6 +263,7 @@ function createTrackableMixin<T, O extends CrudOptions, U extends UpdateResults<
 				subcollectionStore.getOptions,
 				function(this: any, options?: { fetchAroundUpdates?: boolean }) {
 					const state = instanceStateMap.get(this);
+					options = options || {};
 					options.fetchAroundUpdates = state.fetchAroundUpdates || state.wasFetchingAroundUpdates;
 
 					return options;

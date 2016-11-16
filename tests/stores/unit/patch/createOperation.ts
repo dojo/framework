@@ -31,7 +31,7 @@ registerSuite({
 		},
 
 		'Replace operation should treat "undefined" normally.'(this: any) {
-			const target = { prop1: undefined as number };
+			const target = { prop1: undefined };
 			const operation = createOperation(OperationType.Replace, ['prop1'], 2);
 			const result = operation.apply(target);
 
@@ -56,7 +56,7 @@ registerSuite({
 		},
 
 		'Copy operation should treat "undefined" normally.'(this: any) {
-			const target = { prop1: undefined as number };
+			const target = { prop1: undefined };
 			const operation = createOperation(OperationType.Copy, ['prop2'], null, ['prop1']);
 			const result = operation.apply(target);
 
@@ -64,9 +64,8 @@ registerSuite({
 		},
 
 		'Copy operation should throw an error when fromPath is missing.'(this: any) {
-			const fromPath: string[] = null;
 			assert.throws(function() {
-				createOperation(OperationType.Copy, ['any'], null, fromPath);
+				createOperation(OperationType.Copy, ['any'], null, <any> null);
 			}, /From value is required/);
 		},
 
@@ -88,7 +87,7 @@ registerSuite({
 		},
 
 		'Move operation should treat "undefined" normally.'(this: any) {
-			const target = { prop1: undefined as number };
+			const target = { prop1: undefined };
 			const operation = createOperation(OperationType.Move, ['prop2'], null, ['prop1']);
 			const result = operation.apply(target);
 
@@ -96,9 +95,8 @@ registerSuite({
 		},
 
 		'Move operation should throw an error when fromPath is missing.'(this: any) {
-			const fromPath: string[] = null;
 			assert.throws(function() {
-				createOperation(OperationType.Move, ['any'], null, fromPath);
+				createOperation(OperationType.Move, ['any'], null, <any> null);
 			}, /From value is required/);
 		},
 
@@ -128,10 +126,9 @@ registerSuite({
 		}
 	},
 	'Should throw an error when target is null.'(this: any) {
-		const target = null as {};
 		const operation = createOperation(OperationType.Add, ['prop1'], 1);
 		assert.throws(function() {
-			operation.apply(target);
+			operation.apply(<any> null);
 		}, /Invalid path/);
 	},
 	'Should throw an error when path is not found.'(this: any) {

@@ -71,6 +71,17 @@ registerSuite({
 		}).then(dfd.resolve);
 	},
 
+	'fetch with query and nested queries': function(this: any) {
+		const { dfd, queryStore } = getStoreAndDfd(this);
+		queryStore.filter(function(item: ItemType) {
+			return Boolean(item.id);
+		}).filter(function(item: ItemType) {
+			return String(item.id) === '2' || String(item.id) === '1';
+		}).fetch(createFilter().equalTo('id', '1')).then(function(items) {
+			assert.deepEqual(items, [ createData()[0] ], 'Didn\'t filter items properly with nested query and query in fetch');
+		}).then(dfd.resolve);
+	},
+
 	'should retrieve source collection\'s data with queries'(this: any) {
 		const { dfd, queryStore } = getStoreAndDfd(this);
 		queryStore
@@ -113,7 +124,7 @@ registerSuite({
 		const subCollection = observableQueryStore.filter(createFilter<ItemType>().lessThan('value', 3));
 		observableQueryStore.add(data[0]);
 		subCollection.observe().subscribe(function() {
-			let nextCall: () => any = calls.shift();
+			let nextCall: (() => any) | undefined = calls.shift();
 			if (nextCall) {
 				nextCall();
 			} else {

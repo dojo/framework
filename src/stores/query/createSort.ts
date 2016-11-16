@@ -40,7 +40,7 @@ function createSort<T>(
 		comparatorOrProperty: comparatorOrProperty,
 		descending: descending,
 		queryType: QueryType.Sort,
-		toString(this: Sort<T>, sortSerializer: ((query: Query<any, any>) => string) | ((sort: Sort<T>) => string)) {
+		toString(this: Sort<T>, sortSerializer?: ((query: Query<any, any>) => string) | ((sort: Sort<T>) => string)) {
 			if (isFunction) {
 				throw Error('Cannot parse this sort type to an RQL query string');
 			}

@@ -11,7 +11,7 @@ export interface Storage<T, O extends CrudOptions> {
 	identify(items: T[]|T): string[];
 	createId(): Promise<string>;
 	fetch(): Promise<T[]>;
-	fetch<V>(query: Query<T, V>): Promise<V[]>;
+	fetch<V>(query?: Query<T, V>): Promise<V[]>;
 	get(ids: string[]): Promise<T[]>;
 	put(items: T[], options?: O): Promise<UpdateResults<T>>;
 	add(items: T[], options?: O): Promise<UpdateResults<T>>;
@@ -45,8 +45,9 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 		const state = instanceStateMap.get(this);
 		const itemArray = Array.isArray(items) ? <IdObject []> items : [ <IdObject> items ];
 		if (state.idProperty) {
+			const idProperty: string = state.idProperty;
 			return itemArray.map((item) => {
-				return item[state.idProperty];
+				return item[idProperty];
 			});
 		}
 		else if (state.idFunction) {
@@ -66,14 +67,17 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 
 	fetch<V>(this: Storage<{}, {}>, query?: Query<{}, V>): Promise<V[]> {
 		const state = instanceStateMap.get(this);
-		return Promise.resolve((query ? query.apply(state.data) : state.data).slice());
+		const data = state.data || [];
+		return Promise.resolve((query ? query.apply(data) : data).slice());
 	},
 
 	get(this: Storage<{}, {}>, ids: string[]): Promise<{}[]> {
 		const state = instanceStateMap.get(this);
+		const data = state.data || [];
+		const objects: {}[] = [];
 		return Promise.resolve(ids.reduce(function(prev, next) {
-			return state.index.has(next) ? prev.concat( state.data[ state.index.get(next) ] ) : prev;
-		}, []));
+			return state.index.has(next) ? prev.concat( data[state.index.get(next)!] ) : prev;
+		}, objects));
 	},
 
 	put(this: Storage<{}, {}>, items: {}[], options?: CrudOptions): Promise<UpdateResults<{}>> {
@@ -100,11 +104,12 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 			return Promise.reject(new Error('Objects already exist in store'));
 		}
 
+		const data = state.data || (state.data = []);
 		updatedItems.forEach(function(item, index) {
-			state.data[oldIndices[index]] = item;
+			data[oldIndices[index]] = item;
 		});
 		newItems.forEach(function(item, index) {
-			state.index.set(newIds[index], state.data.push(item) - 1);
+			state.index.set(newIds[index], data.push(item) - 1);
 		});
 
 		return Promise.resolve({
@@ -126,13 +131,14 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 
 	delete(this: Storage<{}, {}>, ids: string[]): Promise<UpdateResults<{}>> {
 		const state = instanceStateMap.get(this);
+		const data = state.data || [];
 		const idsToRemove = ids.filter(function(id) {
 			return state.index.has(id);
 		});
 
 		const indices: number[] = idsToRemove
 			.map(function(id) {
-				return state.index.get(id);
+				return state.index.get(id)!;
 			})
 			.sort();
 
@@ -140,11 +146,11 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 			state.index.delete(id);
 		});
 		indices.forEach(function(index, indexArrayIndex) {
-			return state.data.splice(index - indexArrayIndex, 1);
+			return data.splice(index - indexArrayIndex, 1);
 		});
 		if (indices.length) {
 			const firstInvalidIndex = indices[0];
-			const updateIndexForIds = this.identify(state.data.slice(firstInvalidIndex));
+			const updateIndexForIds = this.identify(data.slice(firstInvalidIndex));
 			updateIndexForIds.forEach(function(id, index) {
 				state.index.set(id, index + firstInvalidIndex);
 			});
@@ -158,20 +164,21 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 
 	patch(this: Storage<{}, {}>, updates: { id: string; patch: Patch<{}, {}> }[]): Promise<UpdateResults<{}>> {
 		const state = instanceStateMap.get(this);
+		const data = state.data || (state.data = []);
 
 		const filteredUpdates = updates.filter(function(update) {
 			return state.index.has(update.id);
 		});
 		const oldIndices = filteredUpdates.map(function(update) {
-			return state.index.get(update.id);
+			return state.index.get(update.id)!;
 		});
 
 		// If there is a source, the data has already been patched so we only need to sort it
 		try {
 			const updatedItems = filteredUpdates.map(function(update, index) {
-				const item = duplicate(state.data[oldIndices[index]]);
+				const item = duplicate(data[oldIndices[index]]);
 				const updatedItem = update.patch.apply(item);
-				state.data[oldIndices[index]] = updatedItem;
+				data[oldIndices[index]] = updatedItem;
 				return updatedItem;
 			});
 

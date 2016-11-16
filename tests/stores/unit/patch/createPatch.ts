@@ -34,7 +34,7 @@ registerSuite({
 		const data = createData();
 		const from = data[0].nestedProperty;
 		const to = data[1].nestedProperty;
-		to.value = undefined;
+		to.value = <any> undefined;
 		const patch = diff(from, to);
 
 		const result = patch.apply(from);
@@ -47,7 +47,7 @@ registerSuite({
 		const data = createData();
 		const from = data[0].nestedProperty;
 		const to = data[1].nestedProperty;
-		from.value = undefined;
+		from.value = <any> undefined;
 		const patch = diff(from, to);
 
 		const result = patch.apply(from);

@@ -121,12 +121,12 @@ registerSuite({
 					nestedList.slice(1), 'Not deep equal with string path')	;
 			},
 			'filterChain should keep all filters': function() {
-				const filters = createFilter<SimpleObj>().lessThan('key', 5).greaterThan('key', 10).filterChain;
+				const filters = createFilter<SimpleObj>().lessThan('key', 5).greaterThan('key', 10).filterChain || [];
 				assert.lengthOf(filters, 3);
 				assert.strictEqual(filters[1], BooleanOp.And);
 			},
 			'SimpleFilter should have an apply that can be used individually.': function() {
-				const filters = createFilter<SimpleObj>().lessThan('key', 5).filterChain;
+				const filters = createFilter<SimpleObj>().lessThan('key', 5).filterChain || [];
 				const simpleFilter = <SimpleFilter<SimpleObj>> filters[0];
 
 				assert.deepEqual(simpleFilter.apply(simpleList), [ { key: 4, id: '3' } ]);
@@ -424,13 +424,13 @@ registerSuite({
 			function recursivelySerialize(filter: Filter<any>): string {
 				switch (filter.filterType) {
 					case FilterType.LessThan:
-						return filter.path.toString() + ' is less than ' + (filter.value || '');
+						return (filter.path || '').toString() + ' is less than ' + (filter.value || '');
 					case FilterType.GreaterThan:
-						return filter.path.toString() + ' is greater than ' + (filter.value || '');
+						return (filter.path || '').toString() + ' is greater than ' + (filter.value || '');
 					case FilterType.EqualTo:
-						return filter.path.toString() + ' is equal to ' + (filter.value || '');
+						return (filter.path || '').toString() + ' is equal to ' + (filter.value || '');
 					case FilterType.Compound:
-						return filter.filterChain.reduce((prev, next) => {
+						return (filter.filterChain || []).reduce((prev, next) => {
 							if (next === BooleanOp.And) {
 								return prev + ' and';
 							} else if (next === BooleanOp.Or) {

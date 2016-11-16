@@ -22,7 +22,7 @@ export interface Add extends Operation {
 
 function navigatePath(target: any, path: JsonPointer) {
 	let currentPath = '';
-	let lastSegment: string;
+	let lastSegment = '';
 	const pathSegments = path.segments();
 	pathSegments.forEach(
 		function(segment, index) {

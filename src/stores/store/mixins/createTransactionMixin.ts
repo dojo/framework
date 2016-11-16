@@ -74,9 +74,10 @@ function createTransactionMixin<T, O extends CrudOptions, U extends UpdateResult
 							return Observable.defer<U>(action);
 						})).mergeAll(1).toArray(),
 					function(updateResultsList) {
+						const data: (T | string)[] = [];
 						return updateResultsList.reduce(function(prev, next) {
 							return next.successfulData ? prev.concat(next.successfulData) : prev;
-						}, []);
+						}, data);
 					});
 			},
 
