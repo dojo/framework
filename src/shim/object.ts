@@ -1,3 +1,4 @@
+import has from './support/has';
 import './Symbol';
 
 namespace Shim {
@@ -36,7 +37,7 @@ export const is: (value1: any, value2: any) => boolean = 'is' in Object
 /**
  * Detect if there is native support for Symbol properties in Object
  */
-const hasGetOwnPropertySymbols = 'getOwnPropertySymbols' in Object;
+const hasGetOwnPropertySymbols = has('es6-symbol') && 'getOwnPropertySymbols' in Object;
 
 /**
  * Returns an array of own properties who key is a symbol

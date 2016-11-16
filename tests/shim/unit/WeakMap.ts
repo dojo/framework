@@ -170,5 +170,18 @@ registerSuite({
 		assert.doesNotThrow(function() {
 			map.set(frozen, 1);
 		});
+	},
+
+	'set with key that becomes frozen'() {
+		const key1: Key = {};
+		const map = new WeakMap<Key, number>();
+
+		map.set(key1, 7);
+
+		Object.freeze(key1);
+
+		let v = map.get(key1);
+
+		assert.equal(v, 7);
 	}
 });

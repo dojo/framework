@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import has, { add as hasAdd } from '../../../src/support/has';
 import global from '../../../src/support/global';
 
-hasAdd('es6-iterator', Boolean(global.Symbol && global.Symbol.iterator && global.Array.prototype[Symbol.iterator]));
+hasAdd('es6-iterator', () => Boolean(global.Symbol && global.Symbol.iterator && global.Array.prototype[Symbol.iterator]));
 
 registerSuite({
 	name: 'native/iterator',

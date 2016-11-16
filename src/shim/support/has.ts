@@ -7,6 +7,16 @@ export * from 'dojo-has/has';
 
 /* ECMAScript 6 and 7 Features */
 
+/*
+ * Determine whether or not native Symbol exists. If it doesn't, we don't want to use
+ * a few other native implementations like Map, WeakMap, Set.  Consider a polyfill that provides Symbol,
+ * Map, etc in the global namespace. If the polyfill's Symbol is not compatible with our Symbol, neither
+ * will be anything that uses their iterator symbol, like Map, Set, etc.
+ */
+
+/* Symbol */
+add('es6-symbol', typeof global.Symbol !== 'undefined' && typeof Symbol() === 'symbol');
+
 /* Object */
 add('es6-object-assign', typeof (<any> Object).assign === 'function');
 
@@ -26,7 +36,23 @@ add('es6-array-copywithin', 'copyWithin' in global.Array.prototype);
 add('es7-array-includes', 'includes' in global.Array.prototype);
 
 /* String */
-add('es6-string-raw', 'raw' in global.String);
+add('es6-string-raw', function () {
+	function getCallSite(callSite: TemplateStringsArray, ...substitutions: any[]) {
+		return callSite;
+	}
+
+	if ('raw' in global.String) {
+		let b = 1;
+		let callSite = getCallSite`a\n${b}`;
+
+		(<any> callSite).raw = [ 'a\\n' ];
+		const supportsTrunc = global.String.raw(callSite, 42) === 'a:\\n';
+
+		return supportsTrunc;
+	}
+
+	return false;
+});
 add('es6-string-fromcodepoint', 'fromCodePoint' in global.String);
 add('es6-string-codepointat', 'codePointAt' in global.String.prototype);
 add('es6-string-normalize', 'normalize' in global.String.prototype);
@@ -48,14 +74,14 @@ add('es6-math-imul', () => {
 });
 
 /* Promise */
-add('es6-promise', typeof global.Promise !== 'undefined' && typeof global.Symbol !== 'undefined');
+add('es6-promise', typeof global.Promise !== 'undefined' && has('es6-symbol'));
 
 /* Set */
 add('es6-set', () => {
 	if (typeof global.Set === 'function') {
 		/* IE11 and older versions of Safari are missing critical ES6 Set functionality */
 		const set = new global.Set([1]);
-		return set.has(1) && 'keys' in set && typeof set.keys === 'function';
+		return set.has(1) && 'keys' in set && typeof set.keys === 'function' && has('es6-symbol');
 	}
 	return false;
 });
@@ -70,8 +96,11 @@ add('es6-map', function () {
 		 */
 		try {
 			const map = new global.Map([ [0, 1] ]);
-			return map.has(0) && typeof map.keys === 'function' &&
-				typeof map.values === 'function' && typeof map.entries === 'function';
+
+			return map.has(0) &&
+				typeof map.keys === 'function' && has('es6-symbol') &&
+				typeof map.values === 'function' &&
+				typeof map.entries === 'function';
 		}
 		catch (e) {
 			/* istanbul ignore next: not testing on iOS at the moment */
@@ -88,13 +117,11 @@ add('es6-weakmap', function () {
 		const key1 = {};
 		const key2 = {};
 		const map = new global.WeakMap([ [ key1, 1 ] ]);
-		return map.get(key1) === 1 && map.set(key2, 2) === map;
+		Object.freeze(key1);
+		return map.get(key1) === 1 && map.set(key2, 2) === map && has('es6-symbol');
 	}
 	return false;
 });
-
-/* Symbol */
-add('es6-symbol', typeof global.Symbol === 'function');
 
 /* Miscellaneous features */
 
