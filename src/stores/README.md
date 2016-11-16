@@ -267,19 +267,12 @@ type TrackableQueryOptions<T, O extends CrudOptions> =
 interface TrackableQueryStoreFactory extends ComposeFactory<TrackableObservableQueryStore<{}, {}, any>, TrackableQueryOptions<{}, {}>> {
 	<T, O extends CrudOptions, U extends UpdateResults<T>>(options?: TrackableQueryOptions<T, O>): TrackableObservableQueryStore<T, O, U>;
 }
-interface TrackableObservableQueryStore<T, O extends CrudOptions, U extends UpdateResults<T>> extends
-	ObservableStore<T, O, U>,
-	SubcollectionStore<T, O, U, ObservableStore<T, O, U>>,
-	QueryMixin<T, O, U, ObservableStore<T, O, U>>,
-	TrackableMixin<T, O, U, ObservableStore<T, O, U>> {
-}
 
-type TrackableQueryOptions<T, O extends CrudOptions> =
-	TrackableOptions<T> & StoreOptions<T, CrudOptions> & QueryOptions<T> & ObservableStoreOptions<T, O>;
-
-interface TrackableQueryStoreFactory extends ComposeFactory<TrackableObservableQueryStore<{}, {}, any>, TrackableQueryOptions<{}, {}>> {
-	<T, O extends CrudOptions, U extends UpdateResults<T>>(options?: TrackableQueryOptions<T, O>): TrackableObservableQueryStore<T, O, U>;
-}
+let createTrackableQueryStore = createSubcollectionStore
+	.mixin(createOrderedOperationMixin())
+	.mixin(createObservableStoreMixin())
+	.mixin(createQueryMixin())
+	.mixin(createTrackableMixin()) as TrackableQueryStoreFactory;
 
 const trackableQueryStore = createTrackbleQueryStore({
 	data: [ ...data ]
@@ -291,6 +284,7 @@ const trackedCollection = trackableQueryStore
 	})
 	.sort('value')
 	.track();
+	
 trackedCollection.observe().subscribe(function(update) {
   // handle updates
 });
@@ -316,7 +310,7 @@ store.put(newItem).then(function() {
 store.put(anotherItem);
 ```
 
-Under many circumstances this is not a problem. The actual updates of the data happen in the appropriate order, and the callbacks in these cases will only be returning the modified items anyways. However, in some cases, as with `createTrackableMixin`, or `createObservableStoreMixin` with `fetchAroundUpdates` set to true, this can create some surprising results. If you want to be able to rely on the assumption that you will receive an update from one operation before the next operation occurs, `createOrderedOperationsMixin` can be mixed into the base store factory before any other mixins. In some cases(e.g. a store making http) requests, the additional latency introduced by this restriction may cause significant performance penalties, so it's generally better not to use this mixin unless it is specifically needed.
+Under many circumstances this is not a problem. The actual updates of the data happen in the appropriate order, and the callbacks in these cases will only be returning the modified items anyways. However, in some cases, as with `createTrackableMixin`, or `createObservableStoreMixin` with `fetchAroundUpdates` set to true, this can create some surprising results. If you want to be able to rely on the assumption that you will receive an update from one operation before the next operation occurs, `createOrderedOperationsMixin` can be mixed into the base store factory before any other mixins. In some cases(e.g. a store making HTTP requests), the additional latency introduced by this restriction may cause significant performance penalties, so it's generally better not to use this mixin unless it is specifically needed.
 
 ## How do I contribute?
 
