@@ -15,8 +15,8 @@ const createTransactionStore: TransactionStoreFactory = createStore
 
 registerSuite(function(){
 
-	function getStoreAndDfd(test: any) {
-		const dfd = test.async(1000);
+	function getStoreAndDfd(test: any, useAsync = true) {
+		const dfd = useAsync ? test.async(1000) : null;
 
 		const transactionStore = createTransactionStore();
 
@@ -84,23 +84,23 @@ registerSuite(function(){
 				}));
 		},
 		'should resolve as a thenable when all parts of a transaction have completed': function(this: any) {
-			const { dfd, transactionStore, data } = getStoreAndDfd(this);
+			const { transactionStore, data } = getStoreAndDfd(this, false);
 			const updates = createUpdates();
 
-			transactionStore.transaction()
+			return transactionStore.transaction()
 				.add(data)
 				.put(updates[0])
 				.delete(data[0].id)
 				.commit()
-				.then(function(result) {
-					transactionStore.fetch().then(function(data) {
+				.then(function() {
+					return transactionStore.fetch().then(function(data) {
 						assert.deepEqual(data, [ updates[0][1], updates[0][2] ],
 							'Transaction didn\'t properly resolve after all operations completed');
-					}).then(dfd.resolve);
+					});
 				});
 		},
 		'should be able to abort and start a new transaction.': function(this: any) {
-			const { dfd, transactionStore, data } = getStoreAndDfd(this);
+			const { transactionStore, data } = getStoreAndDfd(this, false);
 			const updates = createUpdates();
 
 			transactionStore.transaction()
@@ -113,31 +113,30 @@ registerSuite(function(){
 				.add(data)
 				.put(updates[0])
 				.commit()
-				.then(function(result) {
-					transactionStore.fetch().then(function(data) {
+				.then(function() {
+					return transactionStore.fetch().then(function(data) {
 						assert.deepEqual(data, updates[0],
 									'Transaction didn\'t properly resolve after all operations completed');
-					}).then(dfd.resolve);
+					});
 				});
 		},
 		'should queue up operations in order, regardless of the behavior of the async storage.'(this: any) {
-			const dfd = this.async(1000);
 			const transactionStore = createTransactionStore({
 				storage: createAsyncStorage({ delete: 10, put: 30 })
 			});
 			const data = createData();
 			const updates = createUpdates();
 
-			transactionStore.transaction()
+			return transactionStore.transaction()
 				.add(data)
 				.put(updates[0])
 				.delete(data[0].id)
 				.commit()
-				.then(function(result) {
-					transactionStore.fetch().then(function(data) {
+				.then(function() {
+					return transactionStore.fetch().then(function(data) {
 						assert.deepEqual(data, [ updates[0][1], updates[0][2] ],
 									'Transaction didn\'t properly resolve after all operations completed');
-					}).then(dfd.resolve);
+					});
 				});
 		}
 	};

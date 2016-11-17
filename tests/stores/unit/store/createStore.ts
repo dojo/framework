@@ -16,16 +16,16 @@ import createInMemoryStorage from '../../../src/storage/createInMemoryStorage';
 import { createData, ItemType, createUpdates, patches, patchedItems } from '../support/createData';
 import createAsyncStorage from '../support/AsyncStorage';
 
-function getStoreAndDfd(test: any, data = createData()) {
-	const dfd = test.async(1000);
+function getStoreAndDfd(test: any, data = createData(), useAsync = true) {
+	const dfd = useAsync ? test.async(1000) : null;
 	const store = createStore( { data: data } );
 	const emptyStore = createStore();
 
 	return { dfd, store, emptyStore, data: createData() };
 }
 
-function getStoreWithAsyncStorage(test: any, asyncOptions?: {} ) {
-	const dfd = test.async(1000);
+function getStoreWithAsyncStorage(test: any, asyncOptions?: {}, useAsync = true) {
+	const dfd = useAsync ? test.async(1000) : null;
 	const asyncStorage = createAsyncStorage(asyncOptions);
 	const store = createStore({ storage: asyncStorage });
 
@@ -40,64 +40,64 @@ registerSuite({
 	name: 'createStore',
 
 	'initialize store'(this: any) {
-		const { dfd, store, data } = getStoreAndDfd(this);
+		const { store, data } = getStoreAndDfd(this, createData(), false);
 
-		store.fetch().then(dfd.callback(function(fetchedData: ItemType[]) {
+		return store.fetch().then(function(fetchedData) {
 			assert.deepEqual(fetchedData, data, 'Fetched data didn\'t match provided data');
-		}));
+		});
 	},
 
 	'basic operations': {
 		'add': {
 			'should add new items'(this: any) {
-				const { dfd, emptyStore: store, data } = getStoreAndDfd(this);
+				const { emptyStore: store, data } = getStoreAndDfd(this, undefined, false);
 				// Add items
 				store.add([ data[0], data[1] ]);
 				store.add(data[2]);
-				store.fetch().then(function(storeData) {
+				return store.fetch().then(function(storeData) {
 					assert.deepEqual(storeData, data, 'Didn\'t add items');
-				}).then(dfd.resolve);
+				});
 			},
 
 			'add action with existing items should fail'(this: any) {
-				const { dfd, store } = getStoreAndDfd(this);
+				const { store } = getStoreAndDfd(this, undefined, false);
 				const updates = createUpdates();
 
-				store.add(updates[0][2]).then().catch(function (error: any) {
+				return store.add(updates[0][2]).then().catch(function (error: any) {
 					assert.equal(error.message, 'Objects already exist in store',
 						'Didn\'t reject with appropriate error message');
-				}).then(dfd.resolve);
+				});
 			},
 
 			'add action with `rejectOverwrite=false` in options should overwrite existing data': function(this: any) {
-				const { dfd, store } = getStoreAndDfd(this);
+				const { store } = getStoreAndDfd(this, undefined, false);
 				const updates = createUpdates();
 				// Update items with add
-				store.add(updates[0][2], { rejectOverwrite: false }).then(function(items) {
+				return store.add(updates[0][2], { rejectOverwrite: false }).then(function(items) {
 					assert.deepEqual(items, [ updates[0][2] ], 'Didn\'t successfully return item');
-				}).then(dfd.resolve);
+				});
 			}
 		},
 		'put': {
 			'should add new items'(this: any) {
-				const { dfd, data, emptyStore: store } = getStoreAndDfd(this);
+				const { data, emptyStore: store } = getStoreAndDfd(this, undefined, false);
 				// Add items with put
 				store.put([ data[0], data[1] ]);
 				store.put(data[2]);
-				store.fetch().then(function(storeData) {
+				return store.fetch().then(function(storeData) {
 					assert.deepEqual(storeData, data, 'Didn\'t add items');
-				}).then(dfd.resolve);
+				});
 			},
 
 			'should update existing items'(this: any) {
-				const { dfd, store } = getStoreAndDfd(this);
+				const { store } = getStoreAndDfd(this, undefined, false);
 				const updates = createUpdates();
 				// Add items with put
 				store.put([ updates[0][0], updates[0][1] ]);
 				store.put(updates[0][2]);
-				store.fetch().then(function(storeData) {
+				return store.fetch().then(function(storeData) {
 					assert.deepEqual(storeData, updates[0], 'Didn\'t update items');
-				}).then(dfd.resolve);
+				});
 			},
 			'put action with existing items should fail with `rejectOverwrite=true`': function(this: any) {
 				const { dfd, store } = getStoreAndDfd(this);
@@ -113,34 +113,34 @@ registerSuite({
 
 		'patch': {
 			'should allow patching with a single update'(this: any) {
-				const { dfd, store } = getStoreAndDfd(this);
+				const { store } = getStoreAndDfd(this, undefined, false);
 				store.patch(patches[0]);
-				store.fetch().then(function(storeData) {
+				return store.fetch().then(function(storeData) {
 					assert.deepEqual(storeData[0], patches[0].patch.apply(createData()[0]),
 						'Should have patched item');
-				}).then(dfd.resolve);
+				});
 			},
 
 			'should allow patching with an array'(this: any) {
-				const { dfd, store, data: copy } = getStoreAndDfd(this);
+				const { store, data: copy } = getStoreAndDfd(this, undefined, false);
 				store.patch(patches);
-				store.fetch().then(function(storeData) {
+				return store.fetch().then(function(storeData) {
 					assert.deepEqual(storeData, patches.map((patchObj, i) => patchObj.patch.apply(copy[i])),
 						'Should have patched all items');
-				}).then(dfd.resolve);
+				});
 			},
 
 			'should allow patching with a Map'(this: any) {
-				const { dfd, store, data: copy } = getStoreAndDfd(this);
+				const { store, data: copy } = getStoreAndDfd(this, undefined, false);
 
 				const map = new Map<string, Patch<ItemType, ItemType>>();
 				patches.forEach(patch => map.set(patch.id, patch.patch));
 
 				store.patch(map);
-				store.fetch().then(function(storeData) {
+				return store.fetch().then(function(storeData) {
 					assert.deepEqual(storeData, patches.map((patchObj, i) => patchObj.patch.apply(copy[i])),
 						'Should have patched all items');
-				}).then(dfd.resolve);
+				});
 			},
 
 			'should fail when patch is not applicable.'(this: any) {
@@ -161,19 +161,19 @@ registerSuite({
 		},
 		'delete': {
 			'should allow deleting a single item'(this: any) {
-				const { dfd, store, data: copy } = getStoreAndDfd(this);
+				const { store, data: copy } = getStoreAndDfd(this, undefined, false);
 				store.delete(ids[0]);
-				store.fetch().then(dfd.callback(function(data: ItemType[]) {
+				return store.fetch().then(function(data: ItemType[]) {
 					assert.deepEqual(data, [copy[1], copy[2]], 'Didn\'t delete item');
-				}));
+				});
 			},
 
 			'should allow deleting multiple items'(this: any) {
-				const {dfd, store } = getStoreAndDfd(this);
+				const { store } = getStoreAndDfd(this, undefined, false);
 				store.delete(ids);
-				store.fetch().then(dfd.callback(function(data: ItemType[]) {
+				return store.fetch().then(function(data) {
 					assert.deepEqual(data, [], 'Didn\'t delete items');
-				}));
+				});
 			},
 
 			'should fail when storage deletion fails.'(this: any) {
@@ -197,36 +197,36 @@ registerSuite({
 
 	'fetch': {
 		'should fetch with sort applied'(this: any) {
-			const { dfd, store, data } = getStoreAndDfd(this);
+			const { store, data } = getStoreAndDfd(this, undefined, false);
 
-			store.fetch(createSort<ItemType>('id', true))
-				.then(dfd.callback(function(fetchedData: ItemType[]) {
+			return store.fetch(createSort<ItemType>('id', true))
+				.then(function(fetchedData) {
 					assert.deepEqual(fetchedData, [ data[2], data[1], data[0] ], 'Data fetched with sort was incorrect');
-				}));
+				});
 		},
 
 		'should fetch with filter applied'(this: any) {
-			const { dfd, store, data } = getStoreAndDfd(this);
+			const { store, data } = getStoreAndDfd(this, undefined, false);
 
-			store.fetch(createFilter<ItemType>().lessThan('value', 2))
-				.then(dfd.callback(function(fetchedData: ItemType[]) {
+			return store.fetch(createFilter<ItemType>().lessThan('value', 2))
+				.then(function(fetchedData) {
 					assert.deepEqual(fetchedData, [ data[0] ], 'Data fetched with filter was incorrect');
-				}));
+				});
 		},
 
 		'should fetch with range applied'(this: any) {
-			const { dfd, store, data } = getStoreAndDfd(this);
+			const { store, data } = getStoreAndDfd(this, undefined, false);
 
-			store.fetch(createRange<ItemType>(1, 2))
-				.then(dfd.callback(function(fetchedData: ItemType[]) {
+			return store.fetch(createRange<ItemType>(1, 2))
+				.then(function(fetchedData) {
 					assert.deepEqual(fetchedData, [ data[1], data[2] ], 'Data fetched with range was incorrect');
-				}));
+				});
 		},
 
 		'should fetch with CompoundQuery applied'(this: any) {
-			const { dfd, store, data } = getStoreAndDfd(this);
+			const { store, data } = getStoreAndDfd(this, undefined, false);
 
-			store.fetch(
+			return store.fetch(
 				createCompoundQuery({
 					query:
 						createFilter()
@@ -235,9 +235,9 @@ registerSuite({
 							.deepEqualTo(createJsonPointer('nestedProperty', 'value'), 3)
 				}).withQuery(createSort(createJsonPointer('nestedProperty', 'value')))
 			)
-				.then(dfd.callback(function(fetchedData: ItemType[]) {
+				.then(function(fetchedData) {
 					assert.deepEqual(fetchedData, [ data[1], data[0] ], 'Data fetched with queries was incorrect');
-				}));
+				});
 		}
 	},
 
@@ -332,10 +332,10 @@ registerSuite({
 
 	'should be able to get all updates by treating as a promise': {
 		add(this: any) {
-			const { dfd, emptyStore: store, data } = getStoreAndDfd(this);
-			store.add(data).then(function(result) {
+			const { emptyStore: store, data } = getStoreAndDfd(this, undefined, false);
+			return store.add(data).then(function(result) {
 				assert.deepEqual(result, data, 'Should have returned all added items');
-			}).then(dfd.resolve);
+			});
 
 		},
 
@@ -360,66 +360,63 @@ registerSuite({
 		},
 
 		put(this: any) {
-			const { dfd, store, data } = getStoreAndDfd(this);
+			const { store, data } = getStoreAndDfd(this, undefined, false);
 			store.put(data).then(function(result) {
-				assert.deepEqual(result, data, 'Should have returned all updated items');
-			}).then(dfd.resolve);
+				return assert.deepEqual(result, data, 'Should have returned all updated items');
+			});
 		},
 
 		'put with conflicts should override': function(this: any) {
-			const { dfd,  data } = getStoreAndDfd(this);
+			const {  data } = getStoreAndDfd(this, undefined, false);
 			const store = createStore({
 				data: [ data[0], data[1] ]
 			});
-			store.put(data).then(function(result) {
+			return store.put(data).then(function(result) {
 				assert.deepEqual(result, data, 'Should have returned all updated items');
-			}).then(dfd.resolve);
+			});
 		},
 
 		patch(this: any) {
-			const { dfd, store, data } = getStoreAndDfd(this);
+			const { store, data } = getStoreAndDfd(this, undefined, false);
 			const expectedResult = data.map(function(item) {
 				item.value += 2;
 				item.nestedProperty.value += 2;
 				return item;
 			});
-			store.patch(patches).then(function(result) {
+			return store.patch(patches).then(function(result) {
 				assert.deepEqual(result, expectedResult, 'Should have returned all patched items');
-			}).then(dfd.resolve);
+			});
 		},
 		delete(this: any) {
-			const { dfd, store, data } = getStoreAndDfd(this);
-			store.delete(ids).then(function(result) {
+			const { store, data } = getStoreAndDfd(this, undefined, false);
+			return store.delete(ids).then(function(result) {
 				assert.deepEqual(result, ids, 'Should have returned all deleted ids');
-			}).then(dfd.resolve);
+			});
 		}
 	},
 
 	'async storage': {
 		'async operation should not be done immediately.'(this: any) {
-			const{ dfd, store } = getStoreWithAsyncStorage(this, { put: 21 });
+			const{ store } = getStoreWithAsyncStorage(this, { put: 21 }, false);
 
 			const start = Date.now();
-			store.add(createData()).then(dfd.callback(function(result: ItemType[]) {
+			return store.add(createData()).then(function() {
 				const finish = Date.now();
 				assert.isAbove(finish - start, 19 );
-				dfd.resolve();
-			}));
+			});
 		},
 		'should complete initial add before subsequent operations'(this: any) {
-			const dfd = this.async(1000);
 			const asyncStorage = createAsyncStorage();
 			const store = createStore({
 				storage: asyncStorage,
 				data: createData()
 			});
 
-			store.get(['1', '2', '3']).then(dfd.callback(function(items: ItemType[]) {
+			return store.get(['1', '2', '3']).then(function(items) {
 				assert.deepEqual(items, createData(), 'Didn\'t retrieve items from async add');
-			}));
+			});
 		},
 		'failed initial add should not prevent subsequent operations'(this: any) {
-			const dfd = this.async(1000);
 			let fail = true;
 			const asyncStorage = createAsyncStorage
 				.around('add', function(add: () => Promise<ItemType>) {
@@ -439,24 +436,24 @@ registerSuite({
 				data: data
 			});
 
-			store.add(data).then(function() {
-				store.get(['1', '2', '3']).then(dfd.callback(function(items: ItemType[]) {
+			return store.add(data).then(function() {
+				return store.get(['1', '2', '3']).then(function(items) {
 					assert.isFalse(fail, 'Didn\'t fail for first operation');
 					assert.deepEqual(items, data, 'Didn\'t retrieve items from add following failed initial add');
-				}));
+				});
 			});
 		},
 		'fetch should not return items when it is done before add.'(this: any) {
-			const { dfd, store } = getStoreWithAsyncStorage(this, { put: 20, fetch: 10 });
+			const { store } = getStoreWithAsyncStorage(this, { put: 20, fetch: 10 }, false);
 			store.add(createData());
-			store.fetch().then(function(storeData) {
+			return store.fetch().then(function(storeData) {
 				assert.lengthOf(storeData, 0, 'should not have retrieved items');
-			}).then(dfd.resolve);
+			});
 		},
 		'async operations should be done in the order specified by the user.'(this: any) {
-			const{ dfd, store } = getStoreWithAsyncStorage(this);
+			const{ store } = getStoreWithAsyncStorage(this, undefined, false);
 
-			store.add(createData()).then(function(result) {
+			return store.add(createData()).then(function(result) {
 				assert.deepEqual(result, createData(), 'Should have returned all added items');
 				return store.put(createUpdates()[0]);
 			}).then(function(result) {
@@ -464,7 +461,7 @@ registerSuite({
 				return store.delete(ids[0]);
 			}).then(function(result) {
 				assert.deepEqual(result, [ids[0]], 'Should have returned all deleted ids');
-			}).then(dfd.resolve);
+			});
 		}
 	}
 });

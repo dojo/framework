@@ -28,8 +28,8 @@ const createQueryStore: QueryStoreFactory = createSubcollectionStore
 const createObservableQueryStore: ObservableQueryFactory = createQueryStore
 	.mixin(createObservableStoreMixin());
 
-function getStoreAndDfd(test: any) {
-	const dfd = test.async(1000);
+function getStoreAndDfd(test: any, useAsync = true) {
+	const dfd = useAsync ? test.async(1000) : null;
 	const queryStore = createQueryStore<ItemType, CrudOptions, any>({
 		data: createData()
 	});
@@ -39,8 +39,8 @@ function getStoreAndDfd(test: any) {
 
 	return { dfd, queryStore, emptyStore, observableQueryStore };
 }
-function getStoreWithAsyncStorage(test: any, asyncOptions?: {} ) {
-	const dfd = test.async(1000);
+function getStoreWithAsyncStorage(test: any, asyncOptions?: {}, useAsync = true) {
+	const dfd = useAsync ? test.async(1000) : null;
 	const asyncStorage = createAsyncStorage(asyncOptions);
 	const queryStore = createQueryStore({ storage: asyncStorage });
 
@@ -50,25 +50,25 @@ function getStoreWithAsyncStorage(test: any, asyncOptions?: {} ) {
 registerSuite({
 	name: 'createQueryMixin',
 	'single query': function(this: any) {
-		const { dfd, queryStore } = getStoreAndDfd(this);
+		const { queryStore } = getStoreAndDfd(this, false);
 
-		queryStore.filter(function(item: ItemType) {
+		return queryStore.filter(function(item: ItemType) {
 			return String(item.id) === '1';
 		}).fetch().then(function(items) {
 			assert.deepEqual(items, [ createData()[0] ], 'Didn\'t filter items propertly');
-		}).then(dfd.resolve);
+		});
 	},
 
 	'nested queries': function(this: any) {
-		const { dfd, queryStore } = getStoreAndDfd(this);
+		const { queryStore } = getStoreAndDfd(this, false);
 
-		queryStore.filter(function(item: ItemType) {
+		return queryStore.filter(function(item) {
 			return String(item.id) === '1' || String(item.id) === '2';
 		}).filter(function(item: ItemType) {
 			return String(item.id) === '2';
 		}).fetch().then(function(items) {
 			assert.deepEqual(items, [ createData()[1] ], 'Didn\'t filter items properly with nested query');
-		}).then(dfd.resolve);
+		});
 	},
 
 	'fetch with query and nested queries': function(this: any) {
@@ -83,13 +83,13 @@ registerSuite({
 	},
 
 	'should retrieve source collection\'s data with queries'(this: any) {
-		const { dfd, queryStore } = getStoreAndDfd(this);
-		queryStore
+		const { queryStore } = getStoreAndDfd(this, false);
+		return queryStore
 			.filter(createFilter<ItemType>().lessThan('value', 3))
 			.sort('value', true)
-			.fetch().then(dfd.callback(function(fetchedData: ItemType[]) {
+			.fetch().then(function(fetchedData) {
 				assert.deepEqual(fetchedData, [ createData()[1], createData()[0] ]);
-			}));
+			});
 	},
 
 	'should delegate to source collection'(this: any) {
@@ -133,75 +133,73 @@ registerSuite({
 		});
 	},
 
-	'should allow fetch with sort on a sorted subcollection'(this: any) {
-		const { dfd, queryStore } = getStoreAndDfd(this);
+	'should allow fetch with sort on a sorted store'(this: any) {
+		const { queryStore } = getStoreAndDfd(this, false);
 		const data = createData();
 
-		queryStore.sort(createSort<ItemType>('id', true)).fetch(createSort<ItemType>('id', false))
-			.then(dfd.callback(function(fetchedData: ItemType[]) {
+		return queryStore.sort(createSort<ItemType>('id', true)).fetch(createSort<ItemType>('id', false))
+			.then(function(fetchedData) {
 				assert.deepEqual(fetchedData, [ data[0], data[1], data[2] ], 'Data fetched with sort was incorrect');
-			}));
+			});
 	},
 
-	'should allow fetch with filter on a filtered subcollection'(this: any) {
-		const { dfd, queryStore } = getStoreAndDfd(this);
+	'should allow fetch with filter on a filtered store'(this: any) {
+		const { queryStore } = getStoreAndDfd(this, false);
 		const data = createData();
 
-		queryStore.filter(createFilter<ItemType>().greaterThanOrEqualTo('value', 2)).fetch(createFilter<ItemType>().lessThan('value', 3))
-			.then(dfd.callback(function(fetchedData: ItemType[]) {
+		return queryStore.filter(createFilter<ItemType>().greaterThanOrEqualTo('value', 2)).fetch(createFilter<ItemType>().lessThan('value', 3))
+			.then(function(fetchedData: ItemType[]) {
 				assert.deepEqual(fetchedData, [ data[1] ], 'Data fetched with filter was incorrect');
-			}));
+			});
 	},
 
-	'should allow fetch with range on a ranged subcollection'(this: any) {
-		const { dfd, queryStore } = getStoreAndDfd(this);
+	'should allow fetch with range on a range filtered store'(this: any) {
+		const { queryStore } = getStoreAndDfd(this, false);
 		const data = createData();
 
-		queryStore.range(1, 2).fetch(createRange<ItemType>(1, 1))
-			.then(dfd.callback(function(fetchedData: ItemType[]) {
+		return queryStore.range(1, 2).fetch(createRange<ItemType>(1, 1))
+			.then(function(fetchedData: ItemType[]) {
 				assert.deepEqual(fetchedData, [ data[2] ], 'Data fetched with range was incorrect');
-			}));
+			});
 	},
 
 	'all query mixin APIs should work together'(this: any) {
-		const { dfd, queryStore } = getStoreAndDfd(this);
+		const { queryStore } = getStoreAndDfd(this, false);
 		const data = createData();
 
-		queryStore
+		return queryStore
 			.filter(createFilter<ItemType>().greaterThanOrEqualTo('value', 2))
 			.filter( (item) => item.value >= 2 )
 			.sort( createSort<ItemType>('id', true) )
 			.range(createRange<ItemType>(1, 1))
 			.range(0, 1)
-			.fetch().then(dfd.callback(function(fetchedData: ItemType[]) {
+			.fetch().then(function(fetchedData: ItemType[]) {
 				assert.deepEqual(fetchedData, [ data[1] ], 'Data fetched with multiple queries was incorrect');
-			}));
+			});
 	},
 
 	'async storage': {
 		'filtered subcollection fetch should not return items when it is done before add.'(this: any) {
-			const { dfd, queryStore: store } = getStoreWithAsyncStorage(this, { put: 20, fetch: 10 });
+			const { queryStore: store } = getStoreWithAsyncStorage(this, { put: 20, fetch: 10 }, false);
 			const subcollection = store.filter(createFilter().greaterThanOrEqualTo('value', 2));
 
 			subcollection.add(createData());
-			subcollection.fetch().then(function(storeData) {
+			return subcollection.fetch().then(function(storeData) {
 				assert.lengthOf(storeData, 0, 'should not have retrieved items');
-			}).then(dfd.resolve);
+			});
 		},
 		'should complete initial add before subsequent operations'(this: any) {
-			const dfd = this.async(1000);
 			const asyncStorage = createAsyncStorage();
 			const store = createQueryStore({
 				storage: asyncStorage,
 				data: createData()
 			});
 
-			store.get(['1', '2', '3']).then(dfd.callback(function(items: ItemType[]) {
+			return store.get(['1', '2', '3']).then(function(items: ItemType[]) {
 				assert.deepEqual(items, createData(), 'Didn\'t retrieve items from async add');
-			}));
+			});
 		},
 		'failed initial add should not prevent subsequent operations'(this: any) {
-			const dfd = this.async(1000);
 			let fail = true;
 			const asyncStorage = createAsyncStorage
 				.around('add', function(add: () => Promise<ItemType>) {
@@ -221,20 +219,20 @@ registerSuite({
 				data: data
 			});
 
-			store.add(data).then(function() {
-				store.get(['1', '2', '3']).then(dfd.callback(function(items: ItemType[]) {
+			return store.add(data).then(function() {
+				return store.get(['1', '2', '3']).then(function(items) {
 					assert.isFalse(fail, 'Didn\'t fail for first operation');
 					assert.deepEqual(items, data, 'Didn\'t retrieve items from add following failed initial add');
-				}));
+				});
 			});
 		},
 		'filtered subcollection async operations should be done in the order specified by the user.'(this: any) {
-			const { dfd, queryStore } = getStoreWithAsyncStorage(this);
+			const { queryStore } = getStoreWithAsyncStorage(this, undefined, false);
 			const subcollection = queryStore.filter(createFilter().greaterThan('value', 2));
 			const data = createData();
 			const updates = createUpdates();
 
-			subcollection.add(createData()).then(function(result) {
+			return subcollection.add(createData()).then(function(result) {
 				assert.deepEqual(result, data, 'Should have returned all added items');
 				return subcollection.put(updates[0]);
 			}).then(function(result) {
@@ -245,7 +243,7 @@ registerSuite({
 				return subcollection.fetch();
 			}).then(function(result) {
 				assert.deepEqual(result, [ updates[0][2] ], 'Should have returned all filtered items');
-			}).then(dfd.resolve);
+			});
 		}
 	}
 });

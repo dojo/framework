@@ -9,17 +9,11 @@ import { ItemType, createData, createUpdates, patches, patchedItems } from '../.
 import createStore, { CrudOptions, UpdateResults } from '../../../../src/store/createStore';
 import createInMemoryStorage from '../../../../src/storage/createInMemoryStorage';
 import { ComposeFactory } from 'dojo-compose/compose';
-import { SubcollectionStore, SubcollectionOptions } from '../../../../src/store/createSubcollectionStore';
 import createOrderedOperationMixin from '../../../../src/store/mixins/createOrderedOperationMixin';
 import createAsyncStorage from '../../support/AsyncStorage';
 
 interface ObservableStoreFactory extends ComposeFactory<ObservableStore<{}, {}, any>, ObservableStoreOptions<{}, {}>> {
 	<T, O extends CrudOptions, U extends UpdateResults<T>>(options?: ObservableStoreOptions<T, O>): ObservableStore<T, O, U>;
-}
-
-type SubcollectionObservableStore<T, O extends CrudOptions, U extends UpdateResults<T>> = ObservableStore<T, O, U> & SubcollectionStore<T, O, U, ObservableStore<T, O, U>>;
-interface ObservableSubcollectionStoreFactory extends ComposeFactory<SubcollectionStore<{}, {}, any, ObservableStore<{}, {}, any>>, SubcollectionOptions<{}, {}, any> & ObservableStoreOptions<{}, {}>> {
-	<T, O extends CrudOptions, U extends UpdateResults<T>>(options?: SubcollectionOptions<T, O, U> & ObservableStoreOptions<T, O>): SubcollectionStore<T, O, U, ObservableStore<T, O, U>>;
 }
 
 const createObservableStore: ObservableStoreFactory = createStore
@@ -36,8 +30,8 @@ function getStoreAndDfd(test: any) {
 
 	return { dfd, observableStore, emptyObservableStore, data: createData(), fetchingObservableStore};
 }
-function getStoreWithAsyncStorage(test: any, asyncOptions?: {} ) {
-	const dfd = test.async(1000);
+function getStoreWithAsyncStorage(test: any, asyncOptions?: {}, useAsync = true) {
+	const dfd = useAsync ? test.async(1000) : null;
 	const asyncStorage = createAsyncStorage(asyncOptions);
 	const observableStore = createObservableStore({ storage: asyncStorage });
 
@@ -561,11 +555,11 @@ registerSuite({
 
 	'async storage': {
 		'filtered subcollection async operations should be done in the order specified by the user.'(this: any) {
-			const { dfd, observableStore } = getStoreWithAsyncStorage(this);
+			const { observableStore } = getStoreWithAsyncStorage(this, undefined, false);
 			const data = createData();
 			const updates = createUpdates();
 
-			observableStore.add(createData()).then(function(result) {
+			return observableStore.add(createData()).then(function(result) {
 				assert.deepEqual(result, data, 'Should have returned all added items');
 				return observableStore.put(updates[0]);
 			}).then(function(result) {
@@ -576,7 +570,7 @@ registerSuite({
 				return observableStore.fetch();
 			}).then(function(result) {
 				assert.deepEqual(result, [ updates[0][0], updates[0][2] ], 'Should have returned all filtered items');
-			}).then(dfd.resolve);
+			});
 		},
 
 		'should be able to observe the whole store'(this: any) {
@@ -632,7 +626,6 @@ registerSuite({
 					dfd.reject(error);
 				}
 			});
-
 		}
 	}
 });

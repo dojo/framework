@@ -525,7 +525,6 @@ registerSuite(function() {
 		},
 		'async storage': {
 			'tracked subcollection async operations should be done in the order specified by the user.'(this: any) {
-				const dfd = this.async(1000);
 				const trackableQueryStore = createTrackableQueryStore({
 					storage: createAsyncStorage()
 				});
@@ -539,7 +538,7 @@ registerSuite(function() {
 
 				const updates = createUpdates();
 
-				trackedCollection.add(createData()).then(function(result) {
+				return trackedCollection.add(createData()).then(function(result) {
 					assert.deepEqual(result, createData(), 'should have returned all added items');
 					return trackedCollection.put(updates[0]);
 				}).then(function(result) {
@@ -550,7 +549,7 @@ registerSuite(function() {
 					return trackedCollection.fetch();
 				}).then(function(result) {
 					assert.deepEqual(result, [ updates[0][0], updates[0][2] ], 'should have returned all filtered items');
-				}).then(dfd.resolve);
+				});
 			},
 
 			'tracked collection should filter out items that are not being tracked'(this: any) {
@@ -584,7 +583,6 @@ registerSuite(function() {
 			},
 
 			'ordered mixin should queue up operations in the order they are called, regardless of the behavior of the async storage'(this: any) {
-				const dfd = this.async(1000);
 				const trackableQueryStore = createTrackableQueryStore({
 					storage: createAsyncStorage({ fetch: 10, delete: 20, put: 30 })
 				});
@@ -600,11 +598,10 @@ registerSuite(function() {
 				trackedCollection.put(createUpdates()[0]);
 				trackedCollection.delete(['1', '2']);
 				// fetch still got executed last, even if it takes the least amount of time
-				trackedCollection.fetch()
+				return trackedCollection.fetch()
 					.then(function(result) {
 						assert.deepEqual(result, [ createUpdates()[0][2] ]);
-					})
-					.then(dfd.resolve);
+					});
 			}
 		}
 	};
