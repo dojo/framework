@@ -19,15 +19,17 @@ export interface ButtonFactory extends ComposeFactory<Button, ButtonOptions> { }
 const createButton: ButtonFactory = createWidgetBase
 	.mixin(createFormFieldMixin)
 	.mixin(createVNodeEvented)
-	.extend({
-		nodeAttributes: [
-			function(this: Button): VNodeProperties {
-				return { innerHTML: this.state.label };
-			}
-		],
-		tagName: 'button',
-		type: 'button',
-		classes: [ css.button ]
+	.mixin({
+		mixin: {
+			nodeAttributes: [
+				function(this: Button): VNodeProperties {
+					return { innerHTML: this.state.label };
+				}
+			],
+			tagName: 'button',
+			type: 'button',
+			classes: [ css.button ]
+		}
 	});
 
 export default createButton;

@@ -26,13 +26,17 @@ const registryProvider: RegistryProvider<Child> = {
 };
 
 const createStatefulChildrenList = createStatefulChildrenMixin
-	.extend({
-		children: List<Child>()
+	.mixin({
+		mixin: {
+			children: List<Child>()
+		}
 	});
 
 const createStatefulChildrenMap = createStatefulChildrenMixin
-	.extend({
-		children: Map<string, Child>()
+	.mixin({
+		mixin: {
+			children: Map<string, Child>()
+		}
 	});
 
 function delay() {

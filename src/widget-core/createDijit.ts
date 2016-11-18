@@ -280,13 +280,15 @@ const createDijit: DijitFactory = createWidgetBase
 			});
 		}
 	})
-	.extend({
-		nodeAttributes: [
-			function(this: Dijit<DijitWidget>): VNodeProperties {
-				const afterCreate = dijitDataWeakMap.get(this).afterCreate;
-				return { afterCreate };
-			}
-		]
+	.mixin({
+		mixin: {
+			nodeAttributes: [
+				function(this: Dijit<DijitWidget>): VNodeProperties {
+					const afterCreate = dijitDataWeakMap.get(this).afterCreate;
+					return { afterCreate };
+				}
+			]
+		}
 	});
 
 export default createDijit;

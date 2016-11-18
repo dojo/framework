@@ -13,7 +13,7 @@ export interface ListFactory extends ComposeFactory<List<ListStateItem>, WidgetO
 
 const createList: ListFactory = createWidgetBase
 	.mixin(createListMixin)
-	.extend({
+	.override({
 		tagName: 'dojo-list'
 	});
 

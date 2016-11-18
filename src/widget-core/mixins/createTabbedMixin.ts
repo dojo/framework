@@ -195,76 +195,78 @@ const createTabbedMixin: TabbedMixinFactory = createWidgetBase
 	})
 	.mixin(createParentMapMixin)
 	.mixin(createDestroyable)
-	.extend({
-		tagName: 'dojo-panel-mixin',
+	.mixin({
+		mixin: {
+			tagName: 'dojo-panel-mixin',
 
-		getChildrenNodes(this: TabbedMixin<TabbedChild>): (DNode | string)[] {
-			const tabbed = this;
-			const activeTab = getActiveTab(tabbed);
+			getChildrenNodes(this: TabbedMixin<TabbedChild>): (DNode | string)[] {
+				const tabbed = this;
+				const activeTab = getActiveTab(tabbed);
 
-			function getTabChildVNode(tab: TabbedChild): DNode[] {
-				const tabListeners = getTabListeners(tabbed, tab);
-				const nodes: DNode[] = [];
-				if (tab.state.label) {
-					nodes.push(d(`div.${css['tab-label']}`, { onclick: tabListeners.onclickTabListener, innerHTML: tab.state.label }));
-				}
-				if (tab.state.closeable) {
-					nodes.push(d('div', { onclick: tabListeners.onclickTabCloseListener }));
-				}
-				return nodes;
-			}
-
-			/* We need to generate a set of VDom the represents the buttons */
-			/* TODO: Allow the location of the tab bar to be set (top/left/bottom/right) */
-			const tabs: DNode[] = [];
-			let childrenNodes = childrenNodesCache.get(tabbed);
-
-			/* Best to discard the childrenNodes array if the sizes don't match, otherwise
-				* we can get some vdom generation issues when adding or removing tabs */
-			if (!childrenNodes || childrenNodes.length !== tabbed.children.size) {
-				childrenNodes = Array(tabbed.children.size);
-				childrenNodesCache.set(tabbed, childrenNodes);
-			}
-
-			const { sort } = tabbed;
-
-			const children = sort
-				? arrayFrom<[string, TabbedChild]>(<any> tabbed.children.entries()).sort(sort)
-				: arrayFrom<[string, TabbedChild]>(<any> tabbed.children.entries());
-
-			children.forEach(([ , tab ], idx) => {
-				const isActiveTab = tab === activeTab;
-				const node = childrenNodes[idx];
-				const isVisibleNode = node &&
-					node.properties &&
-					node.properties['data-visible'];
-
-				if (isActiveTab || isVisibleNode) {
-					tab.invalidate();
-					const tabVNode = tab.render();
-					if (tabVNode.properties) {
-						(tabVNode as any).properties['data-visible'] = String(isActiveTab);
+				function getTabChildVNode(tab: TabbedChild): DNode[] {
+					const tabListeners = getTabListeners(tabbed, tab);
+					const nodes: DNode[] = [];
+					if (tab.state.label) {
+						nodes.push(d(`div.${css['tab-label']}`, { onclick: tabListeners.onclickTabListener, innerHTML: tab.state.label }));
 					}
-					const childNode: HNode & { properties: any }  = {
-						properties: tabVNode.properties,
-						children: [],
-						render(): VNode {
-							return tabVNode;
-						}
-					};
-					childNode.render.bind(tab);
-					childrenNodes[idx] = childNode;
+					if (tab.state.closeable) {
+						nodes.push(d('div', { onclick: tabListeners.onclickTabCloseListener }));
+					}
+					return nodes;
 				}
-				/* else, this tab isn't active and hasn't been previously rendered */
 
-				tabs.push(d(tabbed.tagNames.tab, {
-					key: tab,
-					'data-active': String(isActiveTab),
-					'data-tab-id': tabbed.id
-				}, getTabChildVNode(tab)));
-			});
+				/* We need to generate a set of VDom the represents the buttons */
+				/* TODO: Allow the location of the tab bar to be set (top/left/bottom/right) */
+				const tabs: DNode[] = [];
+				let childrenNodes = childrenNodesCache.get(tabbed);
 
-			return [ d(tabbed.tagNames.tabBar, {}, tabs), d('div.' + css.panels, {}, childrenNodes) ];
+				/* Best to discard the childrenNodes array if the sizes don't match, otherwise
+					* we can get some vdom generation issues when adding or removing tabs */
+				if (!childrenNodes || childrenNodes.length !== tabbed.children.size) {
+					childrenNodes = Array(tabbed.children.size);
+					childrenNodesCache.set(tabbed, childrenNodes);
+				}
+
+				const { sort } = tabbed;
+
+				const children = sort
+					? arrayFrom<[string, TabbedChild]>(<any> tabbed.children.entries()).sort(sort)
+					: arrayFrom<[string, TabbedChild]>(<any> tabbed.children.entries());
+
+				children.forEach(([ , tab ], idx) => {
+					const isActiveTab = tab === activeTab;
+					const node = childrenNodes[idx];
+					const isVisibleNode = node &&
+						node.properties &&
+						node.properties['data-visible'];
+
+					if (isActiveTab || isVisibleNode) {
+						tab.invalidate();
+						const tabVNode = tab.render();
+						if (tabVNode.properties) {
+							(tabVNode as any).properties['data-visible'] = String(isActiveTab);
+						}
+						const childNode: HNode & { properties: any }  = {
+							properties: tabVNode.properties,
+							children: [],
+							render(): VNode {
+								return tabVNode;
+							}
+						};
+						childNode.render.bind(tab);
+						childrenNodes[idx] = childNode;
+					}
+					/* else, this tab isn't active and hasn't been previously rendered */
+
+					tabs.push(d(tabbed.tagNames.tab, {
+						key: tab,
+						'data-active': String(isActiveTab),
+						'data-tab-id': tabbed.id
+					}, getTabChildVNode(tab)));
+				});
+
+				return [ d(tabbed.tagNames.tabBar, {}, tabs), d('div.' + css.panels, {}, childrenNodes) ];
+			}
 		}
 	});
 

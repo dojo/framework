@@ -24,14 +24,14 @@ registerSuite({
 			assert.deepEqual(renderedWidget.vnodeSelector, 'div');
 		},
 		'Applies overridden tagName'() {
-			const widget = createWidgetBase.extend({ tagName: 'header' })();
+			const widget = createWidgetBase.override({ tagName: 'header' })();
 			assert.deepEqual(widget.tagName, 'header');
 			const renderedWidget = widget.render();
 			assert.deepEqual(renderedWidget.vnodeSelector, 'header');
 		}
 		},
 		'Applies classes to tagName'() {
-			const widget = createWidgetBase.extend({ tagName: 'header', classes: [ 'class-one', 'classTwo' ] })();
+			const widget = createWidgetBase.override({ tagName: 'header', classes: [ 'class-one', 'classTwo' ] })();
 			const renderedWidget = widget.render();
 			assert.deepEqual(renderedWidget.vnodeSelector, 'header.class-one.classTwo');
 	},
@@ -58,12 +58,14 @@ registerSuite({
 		},
 		'getChildrenNodes with a ChildNodeRenderer'() {
 			const widgetBase = createWidgetBase
-				.extend({
-					childNodeRenderers: [
-						function(): DNode[] {
-							return [ d('div') ];
-						}
-					]
+				.mixin({
+					mixin: {
+						childNodeRenderers: [
+							function(): DNode[] {
+								return [ d('div') ];
+							}
+						]
+					}
 				})();
 
 			const childrenNodes = widgetBase.getChildrenNodes();
@@ -74,19 +76,23 @@ registerSuite({
 		},
 		'getChildrenNodes with multiple ChildNodeRenderers'() {
 			const widgetBase = createWidgetBase
-				.extend({
-					childNodeRenderers: [
-						function(): DNode[] {
-							return [ d('div') ];
-						}
-					]
+				.mixin({
+					mixin: {
+						childNodeRenderers: [
+							function(): DNode[] {
+								return [ d('div') ];
+							}
+						]
+					}
 				})
-				.extend({
-					childNodeRenderers: [
-						function(): DNode[] {
-							return [ d('div', {}, [ d('div') ]) ];
-						}
-					]
+				.mixin({
+					mixin: {
+						childNodeRenderers: [
+							function(): DNode[] {
+								return [ d('div', {}, [ d('div') ]) ];
+							}
+						]
+					}
 				})();
 
 			const childrenNodes = widgetBase.getChildrenNodes();
@@ -101,12 +107,14 @@ registerSuite({
 	render: {
 		'render with non widget children'() {
 			const widgetBase = createWidgetBase
-				.extend({
-					childNodeRenderers: [
-						function(): DNode[] {
-							return [ d('header') ];
-						}
-					]
+				.mixin({
+					mixin: {
+						childNodeRenderers: [
+							function(): DNode[] {
+								return [ d('header') ];
+							}
+						]
+					}
 				})();
 
 			const result = widgetBase.render();
@@ -130,15 +138,17 @@ registerSuite({
 			});
 
 			const widgetBase = createWidgetBase
-				.extend({
-					childNodeRenderers: [
-						function(this: any): (DNode | null)[] {
-							const state = this.state.classes ? { classes: this.state.classes } : {};
-							return [
-								this.state.hide ? null : d(testChildWidget, <WidgetOptions<WidgetState>> { tagName: 'footer', state })
-							];
-						}
-					]
+				.mixin({
+					mixin: {
+						childNodeRenderers: [
+							function(this: any): (DNode | null)[] {
+								const state = this.state.classes ? { classes: this.state.classes } : {};
+								return [
+									this.state.hide ? null : d(testChildWidget, <WidgetOptions<WidgetState>> { tagName: 'footer', state })
+								];
+							}
+						]
+					}
 				})();
 
 			const firstRenderResult = widgetBase.render();
@@ -187,15 +197,17 @@ registerSuite({
 		},
 		'render with multiple children of the same type without an id'() {
 			const widgetBase = createWidgetBase
-				.extend({
-					childNodeRenderers: [
-						function(this: any): (DNode | null)[] {
-							return [
-								d(createWidgetBase, {}),
-								d(createWidgetBase, {})
-							];
-						}
-					]
+				.mixin({
+					mixin: {
+						childNodeRenderers: [
+							function(this: any): (DNode | null)[] {
+								return [
+									d(createWidgetBase, {}),
+									d(createWidgetBase, {})
+								];
+							}
+						]
+					}
 				})();
 
 			const consoleStub = stub(console, 'error');

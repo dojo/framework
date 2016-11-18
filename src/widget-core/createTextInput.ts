@@ -27,9 +27,11 @@ const createTextInput: TextInputFactory = createWidgetBase
 			}));
 		}
 	})
-	.extend({
-		type: 'text',
-		tagName: 'input'
+	.mixin({
+		mixin: {
+			type: 'text',
+			tagName: 'input'
+		}
 	});
 
 export default createTextInput;

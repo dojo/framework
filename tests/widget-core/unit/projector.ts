@@ -15,7 +15,7 @@ registerSuite({
 		const dfd = this.async();
 		const childNodeLength = document.body.childNodes.length;
 		let nodeText = 'foo';
-		const renderable = createWidgetBase.extend({
+		const renderable = createWidgetBase.override({
 			render() {
 				return h('h2', [ nodeText ] );
 			}
@@ -46,7 +46,7 @@ registerSuite({
 		const projector1 = createProjector({});
 		projector1.setRoot(div);
 		let nodeText = 'bar';
-		const renderable = createWidgetBase.extend({
+		const renderable = createWidgetBase.override({
 			render() {
 				return h('h1', [ nodeText ]);
 			}
@@ -96,7 +96,7 @@ registerSuite({
 		const projector1 = createProjector({});
 		projector1.setRoot(div);
 		let nodeText = 'bar';
-		const renderable = createWidgetBase.extend({
+		const renderable = createWidgetBase.override({
 			render() {
 				return h('h1', [ nodeText ]);
 			}
@@ -141,8 +141,8 @@ registerSuite({
 		document.body.appendChild(div);
 		projector.setRoot(div);
 		const handle = projector.append([
-			createWidgetBase.extend({ render() { return h('foo', [ 'foo' ]); } })(),
-			createWidgetBase.extend({ render() { return h('bar', [ 'bar' ]); } })()
+			createWidgetBase.override({ render() { return h('foo', [ 'foo' ]); } })(),
+			createWidgetBase.override({ render() { return h('bar', [ 'bar' ]); } })()
 		]);
 		projector.attach().then((attachHandle) => {
 			assert.strictEqual(div.childNodes.length, 2);
@@ -163,7 +163,7 @@ registerSuite({
 		const div = document.createElement('div');
 		document.body.appendChild(div);
 		projector.setRoot(div);
-		const handle = projector.insert(createWidgetBase.extend({ render(): any { return h('foo', [ 'foo' ]); } })(), 'first');
+		const handle = projector.insert(createWidgetBase.override({ render(): any { return h('foo', [ 'foo' ]); } })(), 'first');
 		projector.attach().then((attachHandle) => {
 			assert.strictEqual(div.childNodes.length, 1);
 			assert.strictEqual((<HTMLElement> div.firstChild).innerHTML, 'foo');

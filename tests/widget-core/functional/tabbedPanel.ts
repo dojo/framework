@@ -4,12 +4,14 @@ import createWidget from '../../src/createWidget';
 import projector from '../../src/projector';
 
 const tabbedPanel = createTabbedPanel();
-const createLabel = createWidget.extend({
-	nodeAttributes: [
-		function (this: any): any {
-			return { innerHTML: this.state.label };
-		}
-	]
+const createLabel = createWidget.mixin({
+	mixin: {
+		nodeAttributes: [
+			function (this: any): any {
+				return { innerHTML: this.state.label };
+			}
+		]
+	}
 });
 
 const tab1 = createPanel({

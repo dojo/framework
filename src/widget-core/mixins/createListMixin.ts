@@ -52,16 +52,18 @@ const createListMixin: ListMixinFactory = createWidgetBase
 			}
 		}
 	})
-	.extend({
-		childNodeRenderers: [
-			function(this: ListMixin): DNode[] {
-				if (this.state && this.state.items) {
-					const items = this.state.items;
-					return [ d(this.tagNames.list, {}, items.map((item) => d(this.tagNames.item, { key: item, innerHTML: item.label }))) ];
+	.mixin({
+		mixin: {
+			childNodeRenderers: [
+				function(this: ListMixin): DNode[] {
+					if (this.state && this.state.items) {
+						const items = this.state.items;
+						return [ d(this.tagNames.list, {}, items.map((item) => d(this.tagNames.item, { key: item, innerHTML: item.label }))) ];
+					}
+					return [];
 				}
-				return [];
-			}
-		]
+			]
+		}
 	});
 
 export default createListMixin;
