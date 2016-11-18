@@ -83,7 +83,7 @@ function:
 add('my-feature', false, true);
 ```
 
-The module also has an `exits()` function which returns `true` if the feature flag has been added to `has()`:
+The module also has an `exists()` function which returns `true` if the feature flag has been added to `has()`:
 
 ```typescript
 import { exists, add } from 'dojo-has';
