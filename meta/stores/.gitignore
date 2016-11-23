@@ -21,3 +21,4 @@ html-report
 *.lcov
 .idea/
 .vscode/
+yarn.lock

@@ -37,11 +37,16 @@ export interface UpdateResults<T> {
 	type: StoreOperation;
 }
 
+type BasicPatch = {
+	id: string;
+	[index: string]: any;
+}
+
 export type PatchArgument<T> = Map<string, Patch<T, T>> |
 	{ id: string; patch: Patch<T, T> } |
-	{ id: string; } |
 	{ id: string; patch: Patch<T, T> }[] |
-	{ id: string; }[];
+	BasicPatch |
+	BasicPatch[];
 
 export interface Store<T, O extends CrudOptions, U extends UpdateResults<T>> {
 	get(ids: string[] | string): Promise<T[]>;
