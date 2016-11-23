@@ -121,6 +121,27 @@ registerSuite({
 			assert.lengthOf(result.children, 1);
 			assert.strictEqual(result.children && result.children[0].vnodeSelector, 'header');
 		},
+		'render with nested children'() {
+			const widgetBase = createWidgetBase
+				.mixin({
+					mixin: {
+						childNodeRenderers: [
+							function(): DNode[] {
+								return [
+									d('header', [
+										d('section')
+									])
+								];
+							}
+						]
+					}
+				})();
+
+			const result = widgetBase.render();
+			assert.lengthOf(result.children, 1);
+			assert.strictEqual(result.children![0].vnodeSelector, 'header');
+			assert.strictEqual(result.children![0].children![0].vnodeSelector, 'section');
+		},
 		'render with widget children'() {
 			let countWidgetCreated = 0;
 			let countWidgetDestroyed = 0;

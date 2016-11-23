@@ -30,6 +30,11 @@ registerSuite({
 		assert.isFunction(hNode.render);
 		assert.lengthOf(hNode.children, 2);
 	},
+	'create HNode wrapper with children as options param'() {
+		const hNode = d('div', [ d('div'), d('div') ]);
+		assert.isFunction(hNode.render);
+		assert.lengthOf(hNode.children, 2);
+	},
 	'throws an error if tagName/Factory is not a string or a Function'() {
 		assert.throws(() => { d(<any> 1); }, Error);
 	}

@@ -14,22 +14,30 @@ export type TagNameOrFactory<S extends WidgetState, W extends Widget<S>, O exten
 
 export type DOptions<S extends WidgetState, O extends WidgetOptions<S>> = VNodeProperties | O;
 
-type Children = (DNode | VNode | null)[];
+export type Children = (DNode | VNode | null)[];
 
-function d(tagName: string, options?: VNodeProperties, children?: (DNode | VNode | null)[]): HNode;
+function d(tagName: string, options: VNodeProperties, children?: Children): HNode;
+function d(tagName: string, children: Children): HNode;
+function d(tagName: string): HNode;
 function d<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S>>(factory: ComposeFactory<W, O>, options: O): WNode;
 function d<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S>>(
 	tagNameOrFactory: TagNameOrFactory<S, W, O>,
-	options: DOptions<S, O> = {},
-	children: Children = []): DNode {
+	optionsOrChildren: DOptions<S, O> = {},
+	children: Children = []
+): DNode {
 
 	if (typeof tagNameOrFactory === 'string') {
+		if (Array.isArray(optionsOrChildren)) {
+			children = optionsOrChildren;
+			optionsOrChildren = {};
+		}
+
 		children = children.filter((child) => child);
 
 		return {
 			children: children,
 			render(this: { children: VNode[] }) {
-				return h(<string> tagNameOrFactory, <VNodeProperties> options, this.children);
+				return h(<string> tagNameOrFactory, <VNodeProperties> optionsOrChildren, this.children);
 			}
 		};
 	}
@@ -37,7 +45,7 @@ function d<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S
 	if (typeof tagNameOrFactory === 'function') {
 		return {
 			factory: tagNameOrFactory,
-			options: <WidgetOptions<WidgetState>> options
+			options: <WidgetOptions<WidgetState>> optionsOrChildren
 		};
 	}
 
