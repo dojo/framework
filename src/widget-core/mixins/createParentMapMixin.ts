@@ -1,9 +1,9 @@
-import { Map } from 'immutable';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import createEvented from 'dojo-compose/bases/createEvented';
 import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
 import { Evented, EventedListener } from 'dojo-interfaces/bases';
 import WeakMap from 'dojo-shim/WeakMap';
+import Map from 'dojo-shim/Map';
 import { Child, ChildListEvent, ChildrenMap } from './interfaces';
 import { getRemoveHandle } from '../util/lang';
 
@@ -65,11 +65,11 @@ function getChildKey(parent: ParentMap<Child>, child: Child): string {
  * @param children An array of children to be mapped to the parent
  */
 function mapChildArray<C extends Child>(parent: ParentMap<C>, children: C[]): ChildrenMap<C> {
-	const childMap: ChildrenMap<C> = {};
+	const childMap: ChildrenMap<C> = new Map<string, C>();
 	let keyCount = parent.children.size;
 	/* TODO: in theory, if children are added, then removed and then added again, duplicate keys could
 	 * be generated*/
-	children.forEach((child) => childMap[child.id || 'child' + keyCount++] = child);
+	children.forEach((child) => childMap.set(child.id || 'child' + keyCount++, child));
 	return childMap;
 }
 
@@ -79,51 +79,61 @@ const createParentMapMixin: ParentMapMixinFactory = compose<ParentMap<Child>, Pa
 		},
 
 		set children(this: ParentMapMixin<Child> & { invalidate?(): void; }, value: Map<string, Child & Evented>) {
-			if (!value.equals(childrenMap.get(this))) {
-				value.forEach((widget) => {
-					// Workaround for https://github.com/facebook/immutable-js/pull/919
-					// istanbul ignore else
-					if (widget) {
-						widget.on('invalidated', () => {
-							if (this.invalidate) {
-								this.invalidate();
-							}
-						});
-						getRemoveHandle(this, widget);
+			value.forEach((widget) => {
+				widget.on('invalidated', () => {
+					if (this.invalidate) {
+						this.invalidate();
 					}
 				});
-				childrenMap.set(this, value);
-				this.emit({
-					type: 'childlist',
-					target: this,
-					children: value
-				});
-				if (this.invalidate) {
-					this.invalidate();
-				}
+				getRemoveHandle(this, widget);
+			});
+			childrenMap.set(this, value);
+			this.emit({
+				type: 'childlist',
+				target: this,
+				children: value
+			});
+			if (this.invalidate) {
+				this.invalidate();
 			}
 		},
 
 		append(this: ParentMapMixin<Child>, child: Child[] | Child): Handle {
-			this.children = Array.isArray(child) ?
-				this.children.merge(mapChildArray(this, child)) :
-				this.children.set(getChildKey(this, child), child);
+			const mergedChildren = new Map<string, Child>(this.children);
+
+			if (Array.isArray(child)) {
+				const childMapArray = mapChildArray(this, child);
+
+				childMapArray.forEach((value, key) => {
+					mergedChildren.set(key, value);
+				});
+			}
+			else {
+				mergedChildren.set(getChildKey(this, child), child);
+			}
+
+			this.children = mergedChildren;
 			return getRemoveHandle<Child>(this, child);
 		},
 
 		merge(this: ParentMapMixin<Child>, children: ChildrenMap<Child>): Handle {
-			this.children = this.children.merge(children);
+			const mergedChildren = new Map<string, Child>(this.children);
+			children.forEach((value, key) => {
+				mergedChildren.set(key, value);
+			});
+
+			this.children = mergedChildren;
 			return getRemoveHandle(this, children);
 		},
 
 		clear(this: ParentMapMixin<Child>) {
-			this.children = Map<string, Child>();
+			this.children = new Map<string, Child>();
 		}
 	})
 	.mixin({
 		mixin: createEvented,
 		initialize(instance, options) {
-			childrenMap.set(instance, Map<string, Child & Evented>());
+			childrenMap.set(instance, new Map<string, Child & Evented>());
 			if (options && options.children) {
 				instance.own(instance.merge(options.children));
 			}

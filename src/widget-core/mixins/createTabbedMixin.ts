@@ -1,4 +1,4 @@
-import { Map } from 'immutable';
+import Map from 'dojo-shim/Map';
 import { VNode } from 'dojo-interfaces/vdom';
 import { DNode, HNode } from 'dojo-interfaces/widgetBases';
 import d from '../util/d';
@@ -6,7 +6,7 @@ import { ComposeFactory } from 'dojo-compose/compose';
 import createDestroyable from 'dojo-compose/bases/createDestroyable';
 import { Handle } from 'dojo-interfaces/core';
 import { Destroyable, StatefulOptions } from 'dojo-interfaces/bases';
-import { from as arrayFrom } from 'dojo-shim/array';
+import { from as arrayFrom, find } from 'dojo-shim/array';
 import WeakMap from 'dojo-shim/WeakMap';
 import createWidgetBase from './../bases/createWidgetBase';
 import { Widget, WidgetState } from 'dojo-interfaces/widgetBases';
@@ -91,9 +91,10 @@ function setActiveTab(tabbed: TabbedMixin<TabbedChild>, activeTab: TabbedChild) 
  * @param tabbed The tabbed mixin to return the active child for
  */
 function getActiveTab(tabbed: TabbedMixin<TabbedChild>): TabbedChild {
-	let activeTab = tabbed.children.find((tab: any) => {
-		return tab && tab.state && tab.state.active;
+	let activeTab = find(arrayFrom(tabbed.children.values()), (tab) => {
+		return Boolean(tab && tab.state && tab.state.active);
 	});
+
 	/* TODO: when a tab closes, instead of going back to the previous active tab, it will always
 	 * revert to the first tab, maybe it would be better to keep track of a stack of tabs? */
 	if (!activeTab) {

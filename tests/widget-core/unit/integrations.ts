@@ -1,15 +1,11 @@
 import 'dojo/has!host-node?../support/loadJsdom';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as Immutable from 'immutable';
 import { h, createProjector } from 'maquette';
 import * as rx from 'rxjs/Rx';
 
 registerSuite({
 	name: 'integrations',
-	immutable() {
-		assert(Immutable);
-	},
 	maquette: {
 		basic() {
 			const projector = createProjector({});

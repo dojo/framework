@@ -18,7 +18,7 @@ registerSuite({
 		assert.isFunction(container.own);
 		assert.isFunction(container.render);
 		assert.isFunction(container.setState);
-		assert.isObject(container.children);
+		assert.isArray(container.children);
 	},
 	'render()'() {
 		const container = createContainer();

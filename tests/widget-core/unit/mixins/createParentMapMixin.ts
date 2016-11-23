@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import createParentMapMixin, { ParentMap } from '../../../src/mixins/createParentMapMixin';
 import createWidgetBase from '../../../src/bases/createWidgetBase';
 import { Child } from '../../../src/mixins/interfaces';
-import { Map } from 'immutable';
+import Map from 'dojo-shim/Map';
 import { from as arrayFrom } from 'dojo-shim/array';
 
 type ParentMapWithInvalidate = ParentMap<Child> & { invalidate?(): void; };
@@ -21,10 +21,7 @@ registerSuite({
 		const widget1 = createWidgetBase();
 		const widget2 = createWidgetBase();
 		const parent = createParentMapMixin({
-			children: {
-				widget1,
-				widget2
-			}
+			children: new Map<string, Child>([['widget1', widget1], ['widget2', widget2]])
 		});
 		assert.strictEqual(parent.children.get('widget1'), widget1);
 		assert.strictEqual(parent.children.get('widget2'), widget2);
@@ -81,16 +78,16 @@ registerSuite({
 	},
 	'merge()'() {
 		const parent = createParentMapMixin({
-			children: {
-				widget1: createWidgetBase({ tagName: 'foo' }),
-				widget2: createWidgetBase({ tagName: 'bar' })
-			}
+			children: new Map<string, Child>([
+				['widget1', createWidgetBase({ tagName: 'foo' })],
+				['widget2', createWidgetBase({ tagName: 'bar' })]
+			])
 		});
 		assert.strictEqual(parent.children.size, 2);
-		const handle = parent.merge({
-			widget1: createWidgetBase({ tagName: 'baz' }),
-			widget3: createWidgetBase({ tagName: 'qat' })
-		});
+		const handle = parent.merge(new Map<string, Child> ([
+			['widget1', createWidgetBase({ tagName: 'baz' })],
+			['widget3', createWidgetBase({ tagName: 'qat' })]
+		]));
 		assert.strictEqual(parent.children.size, 3);
 		assert.deepEqual(arrayFrom(<any> parent.children.keys()), [ 'widget1', 'widget2', 'widget3' ]);
 		assert.deepEqual(arrayFrom<Child>(<any> parent.children.values()).map(({ tagName }) => tagName), [ 'baz', 'bar', 'qat' ]);
@@ -99,13 +96,9 @@ registerSuite({
 	},
 	'clear()'() {
 		const parent = createParentMapMixin({
-			children: {
-				widget1: createWidgetBase()
-			}
+			children: new Map<string, Child> ([['widget1', createWidgetBase()]])
 		});
-		const handle = parent.merge({
-			widget2: createWidgetBase()
-		});
+		const handle = parent.merge(new Map<string, Child> ([['widget2', createWidgetBase()]]));
 		assert.strictEqual(parent.children.size, 2);
 		parent.clear();
 		assert.strictEqual(parent.children.size, 0);
@@ -117,9 +110,7 @@ registerSuite({
 		const parent: ParentMapWithInvalidate = createParentMapMixin();
 		parent.invalidate = () => called++;
 		assert.strictEqual(called, 0);
-		parent.merge({
-			widget1: createWidgetBase()
-		});
+		parent.merge(new Map<string, Child> ([['widget1', createWidgetBase()]]));
 		assert.strictEqual(called, 1);
 		parent.append(createWidgetBase());
 		assert.strictEqual(called, 2);

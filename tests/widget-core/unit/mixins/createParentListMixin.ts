@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createParentListMixin from '../../../src/mixins/createParentListMixin';
 import createWidgetBase from '../../../src/bases/createWidgetBase';
-import { List } from 'immutable';
+import { arrayEquals } from '../../../src/util/lang';
 
 registerSuite({
 	name: 'mixins/createParentMixin',
@@ -10,7 +10,7 @@ registerSuite({
 		const parent = createParentListMixin();
 		assert.isFunction(parent.append);
 		assert.isFunction(parent.insert);
-		assert.isObject(parent.children);
+		assert.isArray(parent.children);
 	},
 	'on("childlist")': {
 		'append()'(this: any) {
@@ -21,7 +21,7 @@ registerSuite({
 				assert.strictEqual(event.type, 'childlist');
 				assert.strictEqual(event.target, parent);
 				assert.strictEqual(event.children, parent.children);
-				assert.isTrue(event.children.equals(List([ child ])));
+				assert.isTrue(arrayEquals(event.children, [ child ]));
 			}));
 
 			parent.append(child);

@@ -1,14 +1,40 @@
-import { List } from 'immutable';
 import { Handle } from 'dojo-core/interfaces';
 import { Parent, Child, ChildrenMap } from '../mixins/interfaces';
+import { includes as arrayIncludes } from 'dojo-shim/array';
 
 export type Position = number | 'first' | 'last' | 'before' | 'after';
 
-function getIndex<T>(list: List<T> | T[], item: T, position: Position, reference?: T): number {
+export function arrayEquals<T, S>(from: any[], to: any[]): boolean {
+	let result = true;
+	if (!from || !to) {
+		return false;
+	}
+
+	if (from.length !== to.length) {
+		return false;
+	}
+
+	from.forEach((fromItem, index) => {
+		if (Array.isArray(fromItem) && Array.isArray(to[index])) {
+			if (!arrayEquals(fromItem, to[index])) {
+				result = false;
+				return;
+			}
+		}
+		else if (fromItem !== to[index]) {
+			result = false;
+			return;
+		}
+	});
+
+	return result;
+}
+
+function getIndex<T>(list: T[], item: T, position: Position, reference?: T): number {
 	let idx: number;
 	if (typeof position === 'number') {
 		idx = position;
-		const size = Array.isArray(list) ? list.length : list.size;
+		const size = list.length;
 		if (idx < 0 || idx > size) {
 			throw new Error('position is out of range');
 		}
@@ -19,7 +45,7 @@ function getIndex<T>(list: List<T> | T[], item: T, position: Position, reference
 			idx = 0;
 			break;
 		case 'last':
-			idx = Array.isArray(list) ? list.length : list.size;
+			idx = list.length;
 			break;
 		case 'before':
 			idx = reference === undefined ? -1 : list.indexOf(reference);
@@ -38,10 +64,6 @@ function getIndex<T>(list: List<T> | T[], item: T, position: Position, reference
 		}
 	}
 	return idx;
-}
-
-export function insertInList<T>(list: List<T>, item: T, position: Position, reference?: T): List<T> {
-	return list.insert(getIndex(list, item, position, reference), item);
 }
 
 export function insertInArray<T>(array: T[], item: T, position: Position, reference?: T): T[] {
@@ -100,13 +122,6 @@ export function stringToValue(str: string): any {
 }
 
 /**
- * A type guard that deterimines if a value is an immutable List or not
- */
-export function isList<T>(value: any): value is List<T> {
-	return value instanceof List;
-}
-
-/**
  * A type guard that checks to see if the value is a Child
  * @param value the value to guard for
  */
@@ -128,8 +143,21 @@ export function getRemoveHandle<C extends Child>(parent: Parent, child: C | C[] 
 					return;
 				}
 				const { children } = parent;
-				if (children.includes(c)) {
-					parent.children = isList(children) ? children.delete(children.lastIndexOf(c)) : children.delete(children.keyOf(c));
+
+				if (Array.isArray(children)) {
+					const childrenCopy = [ ...children ];
+					if (arrayIncludes(childrenCopy, c)) {
+						childrenCopy.splice(childrenCopy.lastIndexOf(c), 1);
+						parent.children = childrenCopy;
+					}
+				}
+				else {
+					children.forEach((value, key) => {
+						if (c === value) {
+							children.delete(key);
+						}
+					});
+					parent.children = children;
 				}
 				destroyed = true;
 			}
@@ -160,9 +188,9 @@ export function getRemoveHandle<C extends Child>(parent: Parent, child: C | C[] 
 	}
 	else {
 		const handles: Handle[] = [];
-		for (let key in child) {
-			handles.push(getDestroyHandle(child[key]));
-		}
+		child.forEach((value) => {
+			handles.push(getDestroyHandle(value));
+		});
 		return {
 			destroy() {
 				if (destroyed) {

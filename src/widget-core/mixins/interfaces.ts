@@ -1,8 +1,8 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
 import { Destroyable } from 'dojo-interfaces/bases';
+import Map from 'dojo-shim/Map';
 import Promise from 'dojo-shim/Promise';
-import { List, Map } from 'immutable';
 import { VNode } from 'dojo-interfaces/vdom';
 
 export interface Child extends Renderable, Destroyable {
@@ -15,17 +15,15 @@ export interface Child extends Renderable, Destroyable {
 export type ChildEntry<C extends Child> = [ string | number, C ];
 
 export interface ChildListEvent<T, C extends Child> extends EventTargettedObject<T> {
-	children: Map<string, C> | List<C>;
+	children: Map<string, C> | C[];
 }
 
-export interface ChildrenMap<C extends Child> {
-	[child: string]: C;
-}
+export type ChildrenMap<C extends Child> = Map<string, C>;
 
 export interface Parent {
 	append(child: Child[] | Child): Handle;
 
-	children: Map<string, Child> | List<Child>;
+	children: Map<string, Child> | Child[];
 
 	invalidate?(): void;
 }

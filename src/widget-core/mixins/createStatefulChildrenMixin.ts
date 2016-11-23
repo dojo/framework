@@ -4,9 +4,9 @@ import { Stateful, StatefulOptions, StateChangeEvent, State } from 'dojo-interfa
 import Map from 'dojo-shim/Map';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
-import { List, Map as ImmutableMap } from 'immutable';
 import { Child, ChildListEvent, CreatableRegistry, RegistryProvider } from './interfaces';
-import { isList } from '../util/lang';
+import { arrayEquals } from '../util/lang';
+import { from as arrayFrom } from 'dojo-shim/array';
 
 export interface StatefulChildrenState {
 	/**
@@ -48,7 +48,7 @@ export type StatefulChildren<C extends Child> = {
 	/**
 	 * The children that are associated with this widget
 	 */
-	children: List<C> | ImmutableMap<string, C>;
+	children: C[] | Map<string, C>;
 
 	/**
 	 * Creates an instance based on the supplied factory and adds the child to this parent
@@ -89,7 +89,7 @@ interface ManagementState {
 	/**
 	 * The current set of children widgets
 	 */
-	current?: List<string>;
+	current?: string[];
 
 	/**
 	 * A generation number to avoid race conditions when managing children
@@ -137,11 +137,11 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState, StatefulChi
 	}
 	/* Initialize current children IDs */
 	if (!internalState.current) {
-		internalState.current = List<string>();
+		internalState.current = [];
 	}
 
-	const currentChildrenIDs = evt.state.children ? List(evt.state.children) : List<string>();
-	if (currentChildrenIDs.equals(internalState.current)) {
+	const currentChildrenIDs = evt.state.children ? [...evt.state.children] : [];
+	if (arrayEquals(currentChildrenIDs, internalState.current)) {
 		/* There are no changes to the children */
 		return;
 	}
@@ -155,8 +155,8 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState, StatefulChi
 
 	/* Sometimes we are dealing with children that are a list, somtimes, a Map */
 	const childrenList: Child[] = [];
-	const childrenMap: { [ id: string ]: Child } = {};
-	const childrenIsList = isList(parent.children);
+	const childrenMap: Map<string, Child> = new Map<string, Child>();
+	const childrenIsList = Array.isArray(parent.children);
 
 	/* Iterate through children ids, retrieving reference to widget or otherwise
 	 * requesting the widget from the registry */
@@ -169,7 +169,7 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState, StatefulChi
 					childrenList[key] = <Child> cache.get(id);
 				}
 				else {
-					childrenMap[id] = <Child> cache.get(id);
+					childrenMap.set(id, <Child> cache.get(id));
 				}
 			}
 			else {
@@ -202,7 +202,7 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState, StatefulChi
 							childrenList[key] = widget;
 						}
 						else {
-							childrenMap[id] = widget;
+							childrenMap.set(id, widget);
 						}
 						cache.set(id, widget);
 						widget.own({
@@ -218,7 +218,7 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState, StatefulChi
 					}
 				});
 				/* Some parents have a List, some have a Map, so setting them varies */
-				parent.children = isList(parent.children) ? List(childrenList) : ImmutableMap<string, Child>(childrenMap);
+				parent.children = Array.isArray(parent.children) ? [...childrenList] : new Map<string, Child>(childrenMap);
 			}, (error) => {
 				/* A promise got rejected for some reason */
 				parent.emit({
@@ -230,7 +230,7 @@ function manageChildren(evt: StateChangeEvent<StatefulChildrenState, StatefulChi
 	}
 	else {
 		/* Otherwise we can just set the children */
-		parent.children = isList(parent.children) ? List(childrenList) : ImmutableMap<string, Child>(childrenMap);
+		parent.children = Array.isArray(parent.children) ? [...childrenList] : new Map<string, Child>(childrenMap);
 	}
 }
 
@@ -247,24 +247,19 @@ function manageChildrenState(evt: ChildListEvent<any, Child>) {
 
 	const evtChildren = evt.children;
 
-	let currentChildrenIDs: List<string>;
-	if (isList(evtChildren)) {
-		currentChildrenIDs = <List<string>> evtChildren.map((widget) => {
-			// Workaround for https://github.com/facebook/immutable-js/pull/919
-			// istanbul ignore else
-			if (widget) {
-				return registry.identify(widget);
-			}
+	let currentChildrenIDs: string[];
+	if (Array.isArray(evtChildren)) {
+		currentChildrenIDs = <string[]> evtChildren.map((widget) => {
+			return registry.identify(widget);
 		});
 	}
 	else {
-		currentChildrenIDs = List(evtChildren.keys());
+		currentChildrenIDs = arrayFrom(evtChildren.keys());
 	}
 
-	const storedChildren = parent.state.children ? List(parent.state.children) : List<string>();
-	if (!currentChildrenIDs.equals(storedChildren)) {
-		const children = currentChildrenIDs.toArray();
-		parent.setState({ children });
+	const storedChildren = parent.state.children ? [...parent.state.children] : [];
+	if (!arrayEquals(currentChildrenIDs, storedChildren)) {
+		parent.setState({ children: currentChildrenIDs });
 	}
 }
 

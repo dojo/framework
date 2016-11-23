@@ -4,12 +4,13 @@ import createStatefulChildrenMixin from '../../../src/mixins/createStatefulChild
 import createWidgetBase from '../../../src/bases/createWidgetBase';
 import { Widget, WidgetState, WidgetOptions } from 'dojo-interfaces/widgetBases';
 import Promise from 'dojo-shim/Promise';
-import { List, Map } from 'immutable';
 import { Child, RegistryProvider } from '../../../src/mixins/interfaces';
+import Map from 'dojo-shim/Map';
 import compose from 'dojo-compose/compose';
 import createDestroyable from 'dojo-compose/bases/createDestroyable';
 import { h } from 'maquette';
 import widgetRegistry, { widgetMap } from '../../support/mockRegistryProvider';
+import { arrayEquals } from '../../../src/util/lang';
 
 let widget1: Child;
 let widget2: Child;
@@ -28,14 +29,14 @@ const registryProvider: RegistryProvider<Child> = {
 const createStatefulChildrenList = createStatefulChildrenMixin
 	.mixin({
 		mixin: {
-			children: List<Child>()
+			children: []
 		}
 	});
 
 const createStatefulChildrenMap = createStatefulChildrenMixin
 	.mixin({
 		mixin: {
-			children: Map<string, Child>()
+			children: new Map<string, Child>()
 		}
 	});
 
@@ -66,7 +67,7 @@ registerSuite({
 
 			setTimeout(dfd.callback(() => {
 				assert.deepEqual(widgetRegistry.stack, [ 'widget1' ]);
-				assert.isTrue(List<Child>([ widget1 ]).equals(parent.children));
+				assert.isTrue(arrayEquals([ widget1 ], parent.children));
 			}), 50);
 		},
 		setState(this: any) {
@@ -79,7 +80,7 @@ registerSuite({
 
 			setTimeout(dfd.callback(() => {
 				assert.deepEqual(widgetRegistry.stack, [ 'widget2' ]);
-				assert.isTrue(List<Child>([ widget2 ]).equals(parent.children));
+				assert.isTrue(arrayEquals([ widget2 ], parent.children));
 			}), 50);
 		},
 		'caching widgets'(this: any) {
@@ -95,10 +96,10 @@ registerSuite({
 				parent.setState({ children: [ 'widget1', 'widget2' ] });
 				setTimeout(dfd.callback(() => {
 					assert.deepEqual(widgetRegistry.stack, [ 'widget2' ], 'should not have called the widget registry');
-					assert.isTrue(List<Child>([ widget1, widget2 ]).equals(parent.children));
+					assert.isTrue(arrayEquals([ widget1, widget2 ], parent.children));
 
 					parent.setState({ children: [ 'widget2', 'widget1' ] });
-					assert.isTrue(List<Child>([ widget2, widget1 ]).equals(parent.children), 'should synchronously update children when cached');
+					assert.isTrue(arrayEquals([ widget2, widget1 ], parent.children), 'should synchronously update children when cached');
 				}), 100);
 			}, 100);
 		},
@@ -112,10 +113,10 @@ registerSuite({
 
 			setTimeout(() => {
 				widget2.destroy();
-				parent.setState({ children: [ 'widget2', 'widget1' ] });
+				parent.setState({ children: [ 'widget1' ] });
 
 				setTimeout(dfd.callback(() => {
-					assert.isTrue(List<Child>([ widget1 ]).equals(parent.children), 'Should not');
+					assert.isTrue(arrayEquals([ widget1 ], parent.children), 'Should not');
 				}), 100);
 			}, 100);
 		},
@@ -129,7 +130,7 @@ registerSuite({
 			parent.emit({
 				type: 'childlist',
 				target: parent,
-				children: List([ widget1, widget3 ])
+				children: [ widget1, widget3 ]
 			});
 
 			setTimeout(() => {
@@ -137,7 +138,7 @@ registerSuite({
 				parent.emit({
 					type: 'childlist',
 					target: parent,
-					children: List([ widget2, widget3 ])
+					children: [ widget2, widget3 ]
 				});
 				setTimeout(dfd.callback(() => {
 					assert.deepEqual(parent.state.children, [ 'widget2', 'widget3' ]);
@@ -158,7 +159,8 @@ registerSuite({
 
 			setTimeout(dfd.callback(() => {
 				assert.deepEqual(widgetRegistry.stack, [ 'widget1' ]);
-				assert.isTrue(Map<string, Child>({ widget1 }).equals(parent.children));
+				assert.equal(parent.children.size, 1);
+				assert.equal(parent.children.get('widget1'), widget1);
 			}), 50);
 		},
 		setState(this: any) {
@@ -170,8 +172,8 @@ registerSuite({
 			parent.setState({ children: [ 'widget2' ] });
 
 			setTimeout(dfd.callback(() => {
-				assert.deepEqual(widgetRegistry.stack, [ 'widget2' ]);
-				assert.isTrue(Map<Child>({ widget2 }).equals(parent.children));
+				assert.equal(parent.children.size, 1);
+				assert.equal(parent.children.get('widget2'), widget2);
 			}), 50);
 		},
 		'caching widgets'(this: any) {
@@ -187,10 +189,9 @@ registerSuite({
 				parent.setState({ children: [ 'widget1', 'widget2' ] });
 				setTimeout(dfd.callback(() => {
 					assert.deepEqual(widgetRegistry.stack, [ 'widget2' ], 'should not have called the widget registry');
-					assert.isTrue(Map<Child>({ widget1, widget2 }).equals(parent.children));
-
-					parent.setState({ children: [ 'widget2', 'widget1' ] });
-					assert.isTrue(Map<Child>({ widget2, widget1 }).equals(parent.children), 'should synchronously update children when cached');
+					assert.equal(parent.children.size, 2);
+					assert.equal(parent.children.get('widget1'), widget1);
+					assert.equal(parent.children.get('widget2'), widget2);
 				}), 100);
 			}, 100);
 		},
@@ -204,7 +205,7 @@ registerSuite({
 			parent.emit({
 				type: 'childlist',
 				target: parent,
-				children: Map({ widget1, widget3 })
+				children: new Map([['widget1', widget1], ['widget3', widget3]])
 			});
 
 			setTimeout(() => {
@@ -212,7 +213,7 @@ registerSuite({
 				parent.emit({
 					type: 'childlist',
 					target: parent,
-					children: Map({ widget2, widget3 })
+					children: new Map([['widget2', widget2], ['widget3', widget3]])
 				});
 				setTimeout(dfd.callback(() => {
 					assert.deepEqual(parent.state.children, [ 'widget2', 'widget3' ]);
@@ -260,7 +261,7 @@ registerSuite({
 		parent.emit({
 			type: 'childlist',
 			target: parent,
-			children: List([ widget1 ])
+			children: [ widget1 ]
 		});
 
 		return delay().then(() => {
@@ -269,7 +270,7 @@ registerSuite({
 			parent.emit({
 				type: 'childlist',
 				target: parent,
-				children: List([ widget1 ])
+				children: [ widget1 ]
 			});
 
 			return delay();
@@ -367,12 +368,12 @@ registerSuite({
 
 			return delay();
 		}).then(() => {
-			assert.isTrue(List<Child>([ widget3 ]).equals(parent.children));
+			assert.isTrue(arrayEquals([ widget3 ], parent.children));
 
 			resolveFirst();
 			return delay();
 		}).then(() => {
-			assert.isTrue(List<Child>([ widget3 ]).equals(parent.children));
+			assert.isTrue(arrayEquals([ widget3 ], parent.children));
 		});
 	},
 
@@ -427,7 +428,7 @@ registerSuite({
 			resolveFirst();
 			return delay();
 		}).then(() => {
-			assert.isTrue(List<Child>([ widget2 ]).equals(parent.children));
+			assert.isTrue(arrayEquals([ widget2 ], parent.children));
 
 			return delay();
 		});

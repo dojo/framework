@@ -1,4 +1,3 @@
-import { List } from 'immutable';
 import { ComposeFactory } from 'dojo-compose/compose';
 import Promise from 'dojo-shim/Promise';
 
@@ -38,7 +37,7 @@ export interface Query<T> extends Promise<T> {
 	except(): this;
 
 	toArray(): Promise<any[]>;
-	toList(): Promise<List<any>>;
+	toList(): Promise<any[]>;
 	construct<T>(factory: ComposeFactory<T, any>): Promise<T[]>;
 
 	first(): Promise<any>;

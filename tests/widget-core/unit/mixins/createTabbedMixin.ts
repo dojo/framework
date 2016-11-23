@@ -3,18 +3,19 @@ import * as assert from 'intern/chai!assert';
 import createTabbedMixin from '../../../src/mixins/createTabbedMixin';
 import createPanel from '../../../src/createPanel';
 import { from as arrayFrom } from 'dojo-shim/array';
+import Map from 'dojo-shim/Map';
 
 registerSuite({
 	name: 'mixins/ceateTabbedMixin',
 	'creation': {
 		'with closable tabs'() {
 			const tabbed = createTabbedMixin({
-				children: {
-					foo: createPanel({ state: { closeable: true, id: 'foo', label: 'foo' }}),
-					bar: createPanel({ state: { closeable: false, id: 'bar', label: 'bar' }}),
-					baz: createPanel({ state: { closeable: true, id: 'baz', label: 'baz' }}),
-					qat: createPanel({ state: { closeable: false, id: 'qat', label: 'qat' }})
-				},
+				children: new Map<string, any>([
+					['foo', createPanel({ state: { closeable: true, id: 'foo', label: 'foo' }})],
+					['bar', createPanel({ state: { closeable: false, id: 'bar', label: 'bar' }})],
+					['baz', createPanel({ state: { closeable: true, id: 'baz', label: 'baz' }})],
+					['qat', createPanel({ state: { closeable: false, id: 'qat', label: 'qat' }})]
+				]),
 				state: {
 					id: 'qux'
 				}
@@ -64,7 +65,7 @@ registerSuite({
 			const foo = createPanel({ state: { closeable: true, id: 'foo', label: 'foo' }});
 			const bar = createPanel({ state: { closeable: false, id: 'bar', label: 'bar', active: true }});
 			const tabbed = createTabbedMixin({
-				children: { foo, bar }
+				children: new Map<string, any>([['foo', foo], ['bar', bar]])
 			});
 			assert.strictEqual(tabbed.activeChild, bar);
 			foo.setState({ active: true });
@@ -75,7 +76,7 @@ registerSuite({
 			const foo = createPanel({ state: { closeable: true, id: 'foo', label: 'foo' }});
 			const bar = createPanel({ state: { closeable: false, id: 'bar', label: 'bar', active: true }});
 			const tabbed = createTabbedMixin({
-				children: { foo, bar }
+				children: new Map<string, any>([['foo', foo], ['bar', bar]])
 			});
 			assert.strictEqual(tabbed.activeChild, bar);
 			tabbed.activeChild = foo;
@@ -88,7 +89,7 @@ registerSuite({
 			const foo = createPanel({ state: { closeable: true, id: 'foo', label: 'foo' }});
 			const bar = createPanel({ state: { closeable: false, id: 'bar', label: 'bar', active: true }});
 			const tabbed = createTabbedMixin({
-				children: { foo, bar }
+				children: new Map<string, any>([['foo', foo], ['bar', bar]])
 			});
 			const [ tabBar ] = tabbed.render().children!;
 			tabBar.children![0].children![0].properties!.onclick!(<any> {
@@ -105,7 +106,7 @@ registerSuite({
 			const baz = createPanel({ state: { closeable: true, id: 'baz', label: 'baz' }});
 			const qat = createPanel({ state: { closeable: false, id: 'qat', label: 'qat' }});
 			const tabbed = createTabbedMixin();
-			tabbed.merge({ foo, bar, baz, qat });
+			tabbed.merge(new Map<string, any>([ [ 'foo', foo ], [ 'bar', bar ], [ 'baz', baz ], [ 'qat', qat ] ]));
 			assert.deepEqual(arrayFrom(<any> tabbed.children.keys()), [ 'foo', 'bar', 'baz', 'qat' ]);
 		}
 	},
