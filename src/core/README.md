@@ -72,7 +72,7 @@ functions.
 
 #### string
 
-The [`dojo-core/string` module](docs/string.md) contains analogues to the some of the ES2015 String APIs.
+The [`dojo-core/stringExtras` module](docs/stringExtras.md) contains various string functions that are not available as part of the ES2015 String APIs.
 
 #### UrlSearchParams
 
