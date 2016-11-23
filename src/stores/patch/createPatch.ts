@@ -9,7 +9,7 @@ export interface Patch<T, U> {
 
 export type PatchMapEntry<T, U> = { id: string; patch: Patch<T, U> };
 
-function _diff(from: any, to: any, startingPath?: JsonPointer): Operation[] {
+function _diff(to: any, from: any, startingPath?: JsonPointer): Operation[] {
 	if (!shouldRecurseInto(from) || !shouldRecurseInto(to)) {
 		return [];
 	}
@@ -24,7 +24,7 @@ function _diff(from: any, to: any, startingPath?: JsonPointer): Operation[] {
 				operations.push(createOperation(OperationType.Remove, path.push(key)));
 			}
 			else if (shouldRecurseInto(from[key]) && shouldRecurseInto(to[key])) {
-				operations.push(..._diff(from[key], to[key], path.push(key)));
+				operations.push(..._diff(to[key], from[key], path.push(key)));
 			}
 			else {
 				operations.push(createOperation(OperationType.Replace, path.push(key), to[key], undefined, from[key]));
@@ -41,8 +41,10 @@ function _diff(from: any, to: any, startingPath?: JsonPointer): Operation[] {
 	return operations;
 }
 
-export function diff<T, U>(from: T, to: U): Patch<T, U> {
-	return <Patch<T, U>> createPatch(_diff(from, to));
+export function diff<T>(to: T): Patch<any, T>;
+export function diff<T, U>(to: U, from: T): Patch<T, U>;
+export function diff(to: any, from: any = {}) {
+	return createPatch(_diff(to, from));
 }
 
 function createPatch(operations: Operation[]) {

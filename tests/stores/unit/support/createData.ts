@@ -52,13 +52,13 @@ export const patches: { id: string; patch: Patch<ItemType, ItemType> }[] =
 	createData().map(function ({ id, value, nestedProperty: { value: nestedValue } }, index) {
 		return {
 			id: id,
-			patch: diff<ItemType, ItemType>(createData()[index], {
+			patch: diff<ItemType, ItemType>({
 				id: id,
 				value: value + 2,
 				nestedProperty: {
 					value: nestedValue + 2
 				}
-			})
+			}, createData()[index])
 		};
 	});
 

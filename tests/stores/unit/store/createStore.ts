@@ -121,6 +121,17 @@ registerSuite({
 				});
 			},
 
+			'should allow patching with a single object'(this: any) {
+				const { dfd, store } = getStoreAndDfd(this);
+				const update = createUpdates()[0][0];
+				store.patch(update);
+				store.fetch().then(function(storeData) {
+					const updateCopy = createUpdates()[0][0];
+					assert.deepEqual(update, updateCopy, 'Shouldn\'t have modified passed object');
+					assert.deepEqual(storeData[0], updateCopy, 'Should have patched item');
+				}).then(dfd.resolve);
+			},
+
 			'should allow patching with an array'(this: any) {
 				const { store, data: copy } = getStoreAndDfd(this, undefined, false);
 				store.patch(patches);
@@ -141,6 +152,27 @@ registerSuite({
 					assert.deepEqual(storeData, patches.map((patchObj, i) => patchObj.patch.apply(copy[i])),
 						'Should have patched all items');
 				});
+			},
+
+			'should allow patching with an array of items'(this: any) {
+				const { dfd, store } = getStoreAndDfd(this);
+				store.patch(createUpdates()[0]);
+				store.fetch().then(function(data) {
+					assert.deepEqual(data, createUpdates()[0], 'Should have patched objects based on provided items');
+				}).then(dfd.resolve);
+			},
+
+			'should allow patching with an object and id in options'(this: any) {
+				const { dfd, store } = getStoreAndDfd(this);
+				const update = createUpdates()[0][0];
+				// This should never really be done
+				update.id = 'new id';
+				store.patch(update, { id: '1' });
+				store.fetch().then(function(storeData) {
+					const updateCopy = createUpdates()[0][0];
+					updateCopy.id = 'new id';
+					assert.deepEqual(storeData[0], updateCopy, 'Should have patched item');
+				}).then(dfd.resolve);
 			},
 
 			'should fail when patch is not applicable.'(this: any) {

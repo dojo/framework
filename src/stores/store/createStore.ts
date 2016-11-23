@@ -1,10 +1,11 @@
 import { Query } from '../query/interfaces';
-import { Patch, PatchMapEntry } from '../patch/createPatch';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
 import Map from 'dojo-shim/Map';
+import { duplicate } from 'dojo-core/lang';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { Observer, Observable } from 'rxjs/Rx';
+import { diff, Patch, PatchMapEntry } from '../patch/createPatch';
 import createStoreObservable, { StoreObservable } from './createStoreObservable';
 import createInMemoryStorage, { Storage } from '../storage/createInMemoryStorage';
 
@@ -36,7 +37,11 @@ export interface UpdateResults<T> {
 	type: StoreOperation;
 }
 
-export type PatchArgument<T> = Map<string, Patch<T, T>> | { id: string; patch: Patch<T, T> } | { id: string; patch: Patch<T, T> }[];
+export type PatchArgument<T> = Map<string, Patch<T, T>> |
+	{ id: string; patch: Patch<T, T> } |
+	{ id: string; } |
+	{ id: string; patch: Patch<T, T> }[] |
+	{ id: string; }[];
 
 export interface Store<T, O extends CrudOptions, U extends UpdateResults<T>> {
 	get(ids: string[] | string): Promise<T[]>;
@@ -60,6 +65,17 @@ interface BaseStoreState<T, O, U> {
 }
 
 const instanceStateMap = new WeakMap<Store<{}, {}, any>, BaseStoreState<{}, {}, any>>();
+
+function isPatchArray(patches: any[]): patches is { id: string; patch: Patch<any, any>}[] {
+	return isPatch(patches[0]);
+}
+
+function isPatch(patchObj: any): patchObj is {id: string; patch: Patch<any, any> } {
+	const patch = patchObj && patchObj.patch;
+	const id = patchObj && patchObj.id;
+	return typeof id === 'string' && patch && Array.isArray(patch.operations) && typeof patch.apply === 'function' &&
+		typeof patch.toString === 'function';
+}
 
 const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {}>>({
 	get(this: Store<{}, {}, any>, ids: string[] | string): Promise<{}[]> {
@@ -121,7 +137,14 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 		const state = instanceStateMap.get(self);
 		let patchEntries: PatchMapEntry<{}, {}>[] = [];
 		if (Array.isArray(updates)) {
-			patchEntries = updates;
+			if (isPatchArray(updates)) {
+				patchEntries = updates;
+			}
+			else {
+				patchEntries = self.identify(updates).map((id, index) => {
+					return { id: id, patch: diff(updates[index])};
+				});
+			}
 		}
 		else if (updates instanceof Map) {
 			updates.forEach(function(value, key) {
@@ -131,9 +154,19 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 				});
 			});
 		}
-		else {
+		else if (isPatch(updates)) {
 			patchEntries = [ updates ];
 		}
+		else {
+			const dupe = duplicate(updates);
+			const idInOptions = (options && options.id);
+			const id = idInOptions || dupe.id;
+			if (!idInOptions) {
+				delete dupe.id;
+			}
+			patchEntries = [ { id: id, patch: diff(dupe) }];
+		}
+
 		const storeResultsPromise = state.initialAddPromise.then(function() {
 			return state.storage.patch(patchEntries);
 		});
