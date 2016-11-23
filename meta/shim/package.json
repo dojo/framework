@@ -28,7 +28,7 @@
     "dojo-interfaces": ">=2.0.0-alpha.4",
     "grunt": "~1.0.1",
     "grunt-dojo2": ">=2.0.0-beta.16",
-    "intern": "^3.3.1",
+    "intern": "3.3.2",
     "istanbul": "^0.4.3",
     "tslint": "^3.15.1",
     "typescript": "~2.0.3"
