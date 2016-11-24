@@ -35,6 +35,11 @@ registerSuite({
 		assert.isFunction(hNode.render);
 		assert.lengthOf(hNode.children, 2);
 	},
+	'create HNode wrapper with text node children'() {
+		const hNode = d('div', {}, [ 'This Text Node', 'That Text Node' ]);
+		assert.isFunction(hNode.render);
+		assert.lengthOf(hNode.children, 2);
+	},
 	'throws an error if tagName/Factory is not a string or a Function'() {
 		assert.throws(() => { d(<any> 1); }, Error);
 	}

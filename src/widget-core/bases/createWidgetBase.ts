@@ -43,11 +43,11 @@ function generateID(instance: Widget<WidgetState>): string {
 	return id;
 }
 
-function isWNode(child: DNode): child is WNode {
+function isWNode(child: WNode | HNode): child is WNode {
 	return child && (<WNode> child).factory !== undefined;
 }
 
-function dNodeToVNode(instance: Widget<WidgetState>, dNode: DNode): VNode {
+function dNodeToVNode(instance: Widget<WidgetState>, dNode: WNode | HNode): VNode {
 	const internalState = widgetInternalStateMap.get(instance);
 	let child: HNode | Widget<WidgetState>;
 	if (isWNode(dNode)) {
@@ -78,7 +78,12 @@ function dNodeToVNode(instance: Widget<WidgetState>, dNode: DNode): VNode {
 	else {
 		child = dNode;
 		if (child.children) {
-			child.children = child.children.map((child: DNode) => dNodeToVNode(instance, child));
+			child.children = child.children.map((child: DNode) => {
+				if (typeof child === 'string') {
+					return child;
+				}
+				return dNodeToVNode(instance, child);
+			});
 		}
 	}
 	return child.render();
