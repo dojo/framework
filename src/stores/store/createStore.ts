@@ -37,7 +37,7 @@ export interface UpdateResults<T> {
 	type: StoreOperation;
 }
 
-type BasicPatch = {
+export type BasicPatch = {
 	id: string;
 	[index: string]: any;
 }
