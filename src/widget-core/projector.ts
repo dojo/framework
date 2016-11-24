@@ -1,19 +1,20 @@
 import { h, createProjector as createMaquetteProjector, Projector as MaquetteProjector, VNode, VNodeProperties } from 'maquette';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
+import createEvented from 'dojo-compose/bases/createEvented';
 import global from 'dojo-core/global';
 import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
-import { EventedListener, EventedOptions } from 'dojo-interfaces/bases';
+import { EventedListener, EventedOptions, Evented } from 'dojo-interfaces/bases';
 import { assign } from 'dojo-core/lang';
 import { queueTask } from 'dojo-core/queue';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
 import createVNodeEvented, { VNodeEvented } from './mixins/createVNodeEvented';
-import createParentListMixin, { ParentListMixin, ParentListMixinOptions } from './mixins/createParentListMixin';
-import { Child } from './mixins/interfaces';
+import { Child, Parent } from './mixins/interfaces';
+import { getRemoveHandle, insertInArray, arrayEquals, Position } from './util/lang';
 
 export type AttachType = 'append' | 'merge' | 'replace';
 
-export interface ProjectorOptions extends ParentListMixinOptions<Child>, EventedOptions {
+export interface ProjectorOptions<C extends Child> extends EventedOptions {
 	/**
 	 * The root element for the projector
 	 */
@@ -30,6 +31,11 @@ export interface ProjectorOptions extends ParentListMixinOptions<Child>, Evented
 	 * The projector will fail create if the options is true but the global object cannot be found.
 	 */
 	cssTransitions?: boolean;
+
+	/**
+	 * Children that are owned by the parent on creation
+	 */
+	children?: C[];
 }
 
 export interface AttachOptions {
@@ -46,7 +52,7 @@ export interface AttachOptions {
 	tagName?: string;
 }
 
-export interface ProjectorMixin {
+export interface ProjectorMixin<C extends Child> extends Parent {
 	/**
 	 * Get the projector's VNode attributes
 	 */
@@ -109,9 +115,28 @@ export interface ProjectorMixin {
 	 * The current state of the projector
 	 */
 	state: ProjectorState;
+
+	/**
+	 * An immutable list of children for this parent
+	 */
+	children: Child[];
+
+	/**
+	 * Remove all children (but don't destory them)
+	 */
+	clear(): void;
+
+	/**
+	 * Insert a child in a specific position, providing the reference if required
+	 *
+	 * @param child The child to insert
+	 * @param position The position to insert the child
+	 * @param reference The referencable child, if required
+	 */
+	insert(child: C, position: Position, reference?: C): Handle;
 }
 
-export interface ProjectorOverrides {
+export interface ProjectorOverrides<C extends Child> {
 	/**
 	 * Event emitted after the projector has been attached to the DOM.
 	 */
@@ -120,9 +145,9 @@ export interface ProjectorOverrides {
 	on(type: string, listener: EventedListener<this, EventTargettedObject<this>>): Handle;
 }
 
-export type Projector = VNodeEvented & ParentListMixin<Child> & ProjectorMixin;
+export type Projector<C extends Child> = VNodeEvented & Evented & ProjectorMixin<Child>;
 
-export interface ProjectorFactory extends ComposeFactory<Projector, ProjectorOptions> { }
+export interface ProjectorFactory extends ComposeFactory<Projector<Child>, ProjectorOptions<Child>> { }
 
 export enum ProjectorState {
 	Attached = 1,
@@ -140,7 +165,7 @@ interface ProjectorData {
 	tagName: string;
 }
 
-const projectorDataMap = new WeakMap<Projector, ProjectorData>();
+const projectorDataMap = new WeakMap<Projector<Child>, ProjectorData>();
 
 const noopHandle = { destroy() { } };
 const emptyVNode = h('div');
@@ -159,8 +184,10 @@ interface ProjectorAttributes {
 	[index: string]: any;
 }
 
-export const createProjector: ProjectorFactory = compose<ProjectorMixin, ProjectorOptions>({
-		getNodeAttributes(this: Projector, overrides?: VNodeProperties): VNodeProperties {
+const childrenMap = new WeakMap<Projector<Child>, (Child & Evented)[]>();
+
+export const createProjector: ProjectorFactory = compose<ProjectorMixin<Child>, ProjectorOptions<Child>>({
+		getNodeAttributes(this: Projector<Child>, overrides?: VNodeProperties): VNodeProperties {
 			/* TODO: This is the same logic as createCachedRenderMixin, merge somehow */
 			const props: ProjectorAttributes  = {};
 			for (let key in this.listeners) {
@@ -177,7 +204,7 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 			}
 			return props;
 		},
-		render(this: Projector): VNode {
+		render(this: Projector<Child>): VNode {
 			const projectorData = projectorDataMap.get(this);
 			const childVNodes: VNode[] = [];
 			this.children.forEach((child) => {
@@ -191,7 +218,7 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 			props.afterCreate = projectorData.afterInitialCreate;
 			return h(projectorData.tagName, props, childVNodes);
 		},
-		attach(this: Projector, { type, tagName }: AttachOptions = {}): Promise<Handle> {
+		attach(this: Projector<Child>, { type, tagName }: AttachOptions = {}): Promise<Handle> {
 			const projectorData = projectorDataMap.get(this);
 			if (projectorData.state === ProjectorState.Attached) {
 				return projectorData.attachPromise || Promise.resolve(noopHandle);
@@ -255,7 +282,7 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 
 			return projectorData.attachPromise;
 		},
-		invalidate(this: Projector): void {
+		invalidate(this: Projector<Child>): void {
 			const projectorData = projectorDataMap.get(this);
 			if (projectorData.state === ProjectorState.Attached) {
 				this.emit({
@@ -265,7 +292,7 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 				projectorData.projector.scheduleRender();
 			}
 		},
-		setRoot(this: Projector, root: Element): void {
+		setRoot(this: Projector<Child>, root: Element): void {
 			const projectorData = projectorDataMap.get(this);
 			if (projectorData.state === ProjectorState.Attached) {
 				throw new Error('Projector already attached, cannot change root element');
@@ -273,23 +300,97 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 			projectorData.root = root;
 		},
 
-		get root(this: Projector): Element {
+		get root(this: Projector<Child>): Element {
 			const projectorData = projectorDataMap.get(this);
 			return projectorData && projectorData.root;
 		},
 
-		get projector(this: Projector): MaquetteProjector {
+		get projector(this: Projector<Child>): MaquetteProjector {
 			return projectorDataMap.get(this).projector;
 		},
 
-		get document(this: Projector): Document {
+		get document(this: Projector<Child>): Document {
 			const projectorData = projectorDataMap.get(this);
 			return projectorData && projectorData.root && projectorData.root.ownerDocument;
 		},
 
-		get state(this: Projector): ProjectorState {
+		get state(this: Projector<Child>): ProjectorState {
 			const projectorData = projectorDataMap.get(this);
 			return projectorData && projectorData.state;
+		},
+
+		get children(this: Projector<Child>): (Child & Evented)[] {
+			return childrenMap.get(this);
+		},
+
+		set children(this: Projector<Child>, value: (Child & Evented)[]) {
+			if (!arrayEquals(value, childrenMap.get(this))) {
+				value.forEach((widget) => {
+					// Workaround for https://github.com/facebook/immutable-js/pull/919
+					// istanbul ignore else
+					if (widget) {
+						widget.on('invalidated', () => {
+							if (this.invalidate) {
+								this.invalidate();
+							}
+						});
+						getRemoveHandle(this, widget);
+					}
+				});
+				childrenMap.set(this, value);
+				this.emit({
+					type: 'childlist',
+					target: this,
+					children: value
+				});
+				if (this.invalidate) {
+					this.invalidate();
+				}
+			}
+		},
+
+		append(this: Projector<Child>, child: Child[] | Child): Handle {
+			this.children = Array.isArray(child) ? this.children.concat(child) : this.children.concat([child]);
+			return getRemoveHandle<Child>(this, child);
+		},
+
+		clear(this: Projector<Child>): void {
+			const children = childrenMap.get(this);
+			if (children) {
+				this.children = [];
+			}
+			this.invalidate();
+		},
+
+		insert(this: Projector<Child>, child: Child, position: Position, reference?: Child): Handle {
+			this.children = insertInArray(childrenMap.get(this), child, position, reference);
+			return getRemoveHandle(this, child);
+		}
+	},
+	function initialize(instance: Projector<Child>, { cssTransitions = false, autoAttach = false, root = document.body }: ProjectorOptions<Child> = {}) {
+		const options: { transitions?: any } = {};
+		if (cssTransitions) {
+			if (global.cssTransitions) {
+				options.transitions = global.cssTransitions;
+			}
+			else {
+				throw new Error('Unable to create projector with css transitions enabled. Is the \'css-transition.js\' script loaded in the page?');
+			}
+		}
+		const projector = createMaquetteProjector(options);
+		projectorDataMap.set(instance, {
+			attachHandle: noopHandle,
+			boundRender: noopVNode,
+			projector,
+			root,
+			state: ProjectorState.Detached,
+			tagName: 'div'
+		});
+		if (autoAttach === true) {
+			instance.attach({ type: 'merge' });
+		}
+		else if (typeof autoAttach === 'string') {
+			instance.attach({ type: autoAttach });
 		}
 	})
 	.mixin({
@@ -301,39 +402,24 @@ export const createProjector: ProjectorFactory = compose<ProjectorMixin, Project
 		}
 	})
 	.mixin({
-		mixin: createParentListMixin,
-		initialize(instance: Projector, { cssTransitions = false, autoAttach = false, root = document.body }: ProjectorOptions = {}) {
-			const options: { transitions?: any } = {};
-			if (cssTransitions) {
-				if (global.cssTransitions) {
-					options.transitions = global.cssTransitions;
-				}
-				else {
-					throw new Error('Unable to create projector with css transitions enabled. Is the \'css-transition.js\' script loaded in the page?');
-				}
+		mixin: createEvented,
+		initialize(instance, options) {
+			childrenMap.set(instance, []);
+			if (options && options.children && options.children.length) {
+				instance.own(instance.append(options.children));
 			}
-			const projector = createMaquetteProjector(options);
-			projectorDataMap.set(instance, {
-				attachHandle: noopHandle,
-				boundRender: noopVNode,
-				projector,
-				root,
-				state: ProjectorState.Detached,
-				tagName: 'div'
+			instance.own({
+				destroy() {
+					const children = childrenMap.get(instance);
+					children.forEach((child) => {
+						// Workaround for https://github.com/facebook/immutable-js/pull/919
+						// istanbul ignore else
+						if (child) {
+							child.destroy();
+						}
+					});
+				}
 			});
-			if (autoAttach === true) {
-				instance.attach({ type: 'merge' });
-			}
-			else if (typeof autoAttach === 'string') {
-				instance.attach({ type: autoAttach });
-			}
-		},
-		aspectAdvice: {
-			after: {
-				clear(this: Projector): void {
-					this.invalidate();
-				}
-			}
 		}
 	});
 
@@ -366,12 +452,26 @@ const createStubbedProjector: ProjectorFactory = compose({
 		},
 		get state(): ProjectorState {
 			throw new Error('Projector is stubbed');
+		},
+		get children(): (Child & Evented)[] {
+			throw new Error('Projector is stubbed');
+		},
+		set children(child) {
+			throw new Error('Projector is stubbed');
+		},
+		append(): Handle {
+			throw new Error('Projector is stubbed');
+		},
+		clear(): void {
+			throw new Error('Projector is stubbed');
+		},
+		insert(): Handle {
+			throw new Error('Projector is stubbed');
 		}
 	})
-	.mixin(createVNodeEvented)
-	.mixin(createParentListMixin);
+	.mixin(createVNodeEvented);
 
-const defaultProjector: Projector = typeof global.document === 'undefined' ?
+const defaultProjector: Projector<Child> = typeof global.document === 'undefined' ?
 	createStubbedProjector() :
 	createProjector();
 

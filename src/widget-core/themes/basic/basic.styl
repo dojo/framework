@@ -2,10 +2,7 @@
 @import 'nib';
 
 // TODO: Figure out a way to automate these generated imports instead of explicitly pulling them in
-@import '../structural/_generated/TabbedMixin.css';
-@import '../structural/_generated/TabbedPanel.css';
 @import '../structural/_generated/Button.css';
-@import '../structural/_generated/ResizePanel.css';
 
 $dojoGreen = #01D48E;
 $dojoBlue = #51ADED;
@@ -19,64 +16,6 @@ $dojoBlack = #5A5A5A;
 .basic {
 	font-family: 'Open Sans', sans-serif;
 	font-size: 14px;
-	
-	dojo-panel-tabbed {
-		color: $dojoBlack;
-		box-sizing: border-box;
-		
-		* {
-			box-sizing: border-box;
-		}
-		
-		> ul {
-			> li {
-				border-top: 1px solid $dojoLightGray;
-				border-bottom: 1px solid $dojoBaseGray;
-				border-left: 1px solid $dojoLightGray;
-				background-color: $dojoOffWhite;
-				font-size: 16px;
-				font-weight: 700;
-				padding-top: 3px;
-				
-				&:last-child {
-					border-right: 1px solid $dojoLightGray;
-				}
-				
-				> div:nth-child(1) {
-					padding: 20px 10px;
-				}
-				
-				&[data-active="true"] {
-					border-top: 4px solid $dojoBlue;
-					border-right: 1px solid $dojoBaseGray;
-					border-bottom-color: transparent;
-					border-left: 1px solid $dojoBaseGray;
-					background-color: #FFF;
-					padding-top: 0;
-					
-					& + li {
-						border-left: 0;
-					}
-				}
-				
-				> div:nth-child(2) {
-					padding: 20px 20px 20px 5px;
-					
-					&:after {
-						content: '✖';
-						display: block;
-					}
-				}
-			}
-		}
-		
-		> div:nth-child(2) {
-			border-right: 1px solid $dojoBaseGray;
-			border-bottom: 1px solid $dojoBaseGray;
-			border-left: 1px solid $dojoBaseGray;
-			padding: 20px 10px;
-		}
-	}
 
 	button {
 		background-color: $dojoBlue;
@@ -90,20 +29,20 @@ $dojoBlack = #5A5A5A;
 		padding: 15px 0;
 		text-align: center;
 		width: 150px;
-		
+
 		&:hover:not([disabled]) {
 			background-color: darken($dojoBlue, 10%);
 		}
-		
+
 		&:active {
 			box-shadow: 0 0 15px 2px darken($dojoBlue, 35%) inset;
 		}
-		
+
 		&[disabled] {
 			opacity: 0.5;
 			cursor: default;
 		}
-		
+
 		&.success {
 			background-color: $dojoGreen;
 
@@ -115,7 +54,7 @@ $dojoBlack = #5A5A5A;
 				box-shadow: 0 0 15px 2px darken($dojoGreen, 35%) inset;
 			}
 		}
-		
+
 		&.alert {
 			background-color: $dojoRed;
 
@@ -126,17 +65,6 @@ $dojoBlack = #5A5A5A;
 			&:active {
 				box-shadow: 0 0 15px 2px darken($dojoRed, 35%) inset;
 			}
-		}
-	}
-	
-	dojo-panel-resize {
-		border: 1px solid $dojoBaseGray;
-		padding: 10px;
-		
-		dojo-resize-handle {
-			font-size: 20px;
-			padding: 3px 3px 0 3px;
-			color: $dojoBlack;
 		}
 	}
 }

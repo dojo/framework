@@ -5,11 +5,18 @@ import projector, { createProjector } from '../../src/projector';
 import { h } from 'maquette';
 import createWidgetBase from '../../src/bases/createWidgetBase';
 import global from 'dojo-core/global';
+import { arrayEquals } from '../../src/util/lang';
 
 registerSuite({
 	name: 'projector',
 	setup() {
 		projector.clear();
+	},
+	creation() {
+		const parent = createProjector();
+		assert.isFunction(parent.append);
+		assert.isFunction(parent.insert);
+		assert.isArray(parent.children);
 	},
 	basic(this: any) {
 		const dfd = this.async();
@@ -175,5 +182,20 @@ registerSuite({
 				attachHandle.destroy();
 			}), 300);
 		}).catch(dfd.reject);
+	},
+	'on("childlist")': {
+		'append()'(this: any) {
+			const dfd = this.async();
+			const parent = createProjector();
+			const child = createWidgetBase();
+			parent.on('childlist', dfd.callback((event: any) => {
+				assert.strictEqual(event.type, 'childlist');
+				assert.strictEqual(event.target, parent);
+				assert.strictEqual(event.children, parent.children);
+				assert.isTrue(arrayEquals(event.children, [ child ]));
+			}));
+
+			parent.append(child);
+		}
 	}
 });
