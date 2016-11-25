@@ -1,11 +1,10 @@
 import 'dojo/has!host-node?../support/loadJsdom';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import projector, { createProjector } from '../../src/projector';
+import projector, { createProjector, arrayEquals } from '../../src/projector';
 import { h } from 'maquette';
 import createWidgetBase from '../../src/bases/createWidgetBase';
 import global from 'dojo-core/global';
-import { arrayEquals } from '../../src/util/lang';
 
 registerSuite({
 	name: 'projector',

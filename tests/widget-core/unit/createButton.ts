@@ -1,7 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createButton, { ButtonState } from '../../src/createButton';
-import css from '../../src/themes/structural/modules/Button';
 
 registerSuite({
 	name: 'createButton',
@@ -26,7 +25,7 @@ registerSuite({
 			}
 		});
 		const vnode = button.render();
-		assert.strictEqual(vnode.vnodeSelector, 'button' + '.' + css.button);
+		assert.strictEqual(vnode.vnodeSelector, 'button');
 		assert.strictEqual(vnode.properties!.innerHTML, 'bar');
 		assert.strictEqual(vnode.properties!['data-widget-id'], 'foo');
 		assert.strictEqual(vnode.properties!.name, 'baz');

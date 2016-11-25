@@ -6,7 +6,6 @@ import { EventTargettedObject, EventCancelableObject, Handle } from 'dojo-interf
 import { EventedListener, Stateful, State, StatefulOptions } from 'dojo-interfaces/bases';
 import { assign } from 'dojo-core/lang';
 import { NodeAttributeFunction } from 'dojo-interfaces/widgetBases';
-import { stringToValue, valueToString } from '../util/lang';
 
 export interface FormFieldMixinOptions<V, S extends FormFieldMixinState<V>> extends StatefulOptions<S> {
 	/**
@@ -83,6 +82,56 @@ export type FormFieldMixin<V, S extends FormFieldMixinState<V>> = FormField<V> &
 
 export interface FormMixinFactory extends ComposeFactory<FormFieldMixin<any, FormFieldMixinState<any>>, FormFieldMixinOptions<any, FormFieldMixinState<any>>> {
 	<V>(options?: FormFieldMixinOptions<V, FormFieldMixinState<V>>): FormFieldMixin<V, FormFieldMixinState<V>>;
+}
+
+function valueReplacer(key: string, value: any): any {
+	if (value instanceof RegExp) {
+		return (`__RegExp(${value.toString()})`);
+	}
+	return value;
+}
+
+function valueReviver(key: string, value: any): any {
+	if (value.toString().indexOf('__RegExp(') === 0) {
+		const [ , regExpStr ] = value.match(/__RegExp\(([^\)]*)\)/);
+		const [ , regExp, flags ] = regExpStr.match(/^\/(.*?)\/([gimy]*)$/);
+		return new RegExp(regExp, flags);
+	}
+	return value;
+}
+
+/**
+ * Internal function to convert a state value to a string
+ * @param value The value to be converted
+ */
+export function valueToString(value: any): string {
+	return value
+		? Array.isArray(value) || typeof value === 'object'
+			? JSON.stringify(value, valueReplacer) : String(value)
+		: value === 0
+			? '0' : value === false
+				? 'false' : '';
+}
+
+/**
+ * Internal function to convert a string to the likely more complex value stored in
+ * state
+ * @param str The string to convert to a state value
+ */
+export function stringToValue(str: string): any {
+	try {
+		const value = JSON.parse(str, valueReviver);
+		return value;
+	}
+	catch (e) {
+		if (/^(\-|\+)?([0-9]+(\.[0-9]+)?|Infinity)$/.test(str)) {
+			return Number(str);
+		}
+		if (str) {
+			return str;
+		}
+		return undefined;
+	}
 }
 
 const createFormMixin: FormMixinFactory = createStateful

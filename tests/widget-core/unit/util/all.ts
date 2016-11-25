@@ -1,2 +1,1 @@
-import './lang';
 import './d';

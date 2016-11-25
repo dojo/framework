@@ -4,7 +4,6 @@ import createWidgetBase from './bases/createWidgetBase';
 import { Widget, WidgetOptions, WidgetState } from 'dojo-interfaces/widgetBases';
 import createVNodeEvented, { VNodeEvented, VNodeEventedOptions } from './mixins/createVNodeEvented';
 import createFormFieldMixin, { FormFieldMixin, FormFieldMixinState, FormFieldMixinOptions } from './mixins/createFormFieldMixin';
-import css from './themes/structural/modules/Button';
 
 export interface ButtonState extends WidgetState, FormFieldMixinState<string> {
 	label?: string;
@@ -27,8 +26,7 @@ const createButton: ButtonFactory = createWidgetBase
 				}
 			],
 			tagName: 'button',
-			type: 'button',
-			classes: [ css.button ]
+			type: 'button'
 		}
 	});
 

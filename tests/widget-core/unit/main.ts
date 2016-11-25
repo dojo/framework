@@ -6,7 +6,6 @@ registerSuite({
 	name: 'main',
 	'validate api'() {
 		assert.isFunction(main.createButton);
-		assert.isFunction(main.createDijit);
 		assert.isFunction(main.createTextInput);
 	}
 });
