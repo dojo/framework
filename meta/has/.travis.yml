@@ -8,12 +8,8 @@ env:
   - SAUCE_ACCESS_KEY: e92610e3-834e-4bec-a3b5-6f7b9d874601
   - BROWSERSTACK_USERNAME: dtktestaccount1
   - BROWSERSTACK_ACCESS_KEY: mG2qbEFJCZY2qLsM7yfx
-cache:
-  directories:
-  - node_modules
 install:
-- travis_retry npm install grunt-cli $(node -e "var deps = require('./package.json').peerDependencies;
-  for(var name in deps) process.stdout.write(name + '@' + deps[name] + ' ');")
+- travis_retry npm install grunt-cli
 - travis_retry npm install
 script:
 - grunt
@@ -21,6 +17,7 @@ script:
 - grunt intern:saucelabs --combined
 - grunt remapIstanbul:ci
 - grunt uploadCoverage
+- grunt dist
 notifications:
   slack:
     secure: mys3cAqs3gJ7HxLVhXMScDOZXCSdLsuVeMpAQXJ92/LxcMIS0wtIwaTqDox/n/U4tkhNEb1R3gJyEXBxeCu117umxX/aVNsR9HuZTXC+SjECwlPaan/qZkw7hSwqfwhEiGW4A8FGCA5OD+sq20ARpLZ718JrqzIYfSotpuJSHVg5OlfaCQIE3MdlpGjwJ0ZCxpsrVXVTmgFtxCmv8qmV24DcTnEQFmiXJftHhgi/npU/XdPAkdnjbS//iiWxV1vHiQagt0sVW3hxma5jzOaSHkiQQsJGNYCDCdLhzma3DDJoDS4sfznPMT08AQfSEzQiFhDIhNfJYVSbYjNbUq1O3xTSq83Lvdc/hQ1bLsYk7ZFqhWpRprijS6pYe/yp0TwlruzqTa5/a3qduCnc+ooMg72m1NxpUHiZG1NhD/IVz+ycEVt8P6yQpytXUsGiRGecmFJW0A0BrfrVcg7Ekwsr6Rmzxh4uKyXuOW7zTT3tn4CM1Q2fBZNXnQ9RlU7AIS3hiBIkv2SS89fuUrgTMEL9qDXF7zB4E9nc4mwvBM2YLHsdgiF+WSA1EERLxsYo9Ea3vtOUyjoi9A5EGKwHq7VAYEbEQfWYoDtIepSMmWCGjtDr3KI8oMdojkZdY0CrG7xGgruOX5QQQY6BEKTcgpW+ccVqjR5zB0Q8IZ04qhC5F+0=
