@@ -60,11 +60,9 @@ registerSuite({
 			const widgetBase = createWidgetBase
 				.mixin({
 					mixin: {
-						childNodeRenderers: [
-							function(): DNode[] {
-								return [ d('div') ];
-							}
-						]
+						getChildrenNodes: function(): DNode[] {
+							return [ d('div') ];
+						}
 					}
 				})();
 
@@ -73,35 +71,6 @@ registerSuite({
 			assert.lengthOf(childrenNodes, 1);
 			assert.isOk((<HNode> childrenNodes[0]).children);
 			assert.lengthOf((<HNode> childrenNodes[0]).children, 0);
-		},
-		'getChildrenNodes with multiple ChildNodeRenderers'() {
-			const widgetBase = createWidgetBase
-				.mixin({
-					mixin: {
-						childNodeRenderers: [
-							function(): DNode[] {
-								return [ d('div') ];
-							}
-						]
-					}
-				})
-				.mixin({
-					mixin: {
-						childNodeRenderers: [
-							function(): DNode[] {
-								return [ d('div', {}, [ d('div') ]) ];
-							}
-						]
-					}
-				})();
-
-			const childrenNodes = widgetBase.getChildrenNodes();
-
-			assert.lengthOf(childrenNodes, 2);
-			assert.isOk((<HNode> childrenNodes[0]).children);
-			assert.lengthOf((<HNode> childrenNodes[0]).children, 0);
-			assert.isOk((<HNode> childrenNodes[1]).children);
-			assert.lengthOf((<HNode> childrenNodes[1]).children, 1);
 		}
 	},
 	render: {
@@ -109,11 +78,9 @@ registerSuite({
 			const widgetBase = createWidgetBase
 				.mixin({
 					mixin: {
-						childNodeRenderers: [
-							function(): DNode[] {
-								return [ d('header') ];
-							}
-						]
+						getChildrenNodes: function(): DNode[] {
+							return [ d('header') ];
+						}
 					}
 				})();
 
@@ -125,15 +92,13 @@ registerSuite({
 			const widgetBase = createWidgetBase
 				.mixin({
 					mixin: {
-						childNodeRenderers: [
-							function(): DNode[] {
-								return [
-									d('header', [
-										d('section')
-									])
-								];
-							}
-						]
+						getChildrenNodes: function(): DNode[] {
+							return [
+								d('header', [
+									d('section')
+								])
+							];
+						}
 					}
 				})();
 
@@ -142,15 +107,13 @@ registerSuite({
 			assert.strictEqual(result.children![0].vnodeSelector, 'header');
 			assert.strictEqual(result.children![0].children![0].vnodeSelector, 'section');
 		},
-	'render with a text node children'() {
+		'render with a text node children'() {
 			const widgetBase = createWidgetBase
 				.mixin({
 					mixin: {
-						childNodeRenderers: [
-								function(): DNode[] {
-								return [ 'I am a text node' ];
-							}
-						]
+						getChildrenNodes: function(): DNode[] {
+							return [ 'I am a text node' ];
+						}
 					}
 				})();
 
@@ -162,11 +125,9 @@ registerSuite({
 			const widgetBase = createWidgetBase
 				.mixin({
 					mixin: {
-						childNodeRenderers: [
-							function(): DNode[] {
-								return [ 'I am a text node', 'Second text node' ];
-							}
-						]
+						getChildrenNodes: function(): DNode[] {
+							return [ 'I am a text node', 'Second text node' ];
+						}
 					}
 				})();
 
@@ -175,6 +136,17 @@ registerSuite({
 			assert.lengthOf(result.children, 2);
 			assert.strictEqual(result.children![0].text, 'I am a text node');
 			assert.strictEqual(result.children![1].text, 'Second text node');
+		},
+		'render with children provided via options'() {
+			const widgetBase = createWidgetBase({
+				getChildrenNodes: function(): DNode[] {
+					return [ d('header') ];
+				}
+			});
+
+			const result = widgetBase.render();
+			assert.lengthOf(result.children, 1);
+			assert.strictEqual(result.children![0].vnodeSelector, 'header');
 		},
 		'render with widget children'() {
 			let countWidgetCreated = 0;
@@ -195,14 +167,12 @@ registerSuite({
 			const widgetBase = createWidgetBase
 				.mixin({
 					mixin: {
-						childNodeRenderers: [
-							function(this: any): (DNode | null)[] {
-								const state = this.state.classes ? { classes: this.state.classes } : {};
-								return [
-									this.state.hide ? null : d(testChildWidget, <WidgetOptions<WidgetState>> { tagName: 'footer', state })
-								];
-							}
-						]
+						getChildrenNodes: function(this: any): (DNode | null)[] {
+							const state = this.state.classes ? { classes: this.state.classes } : {};
+							return [
+								this.state.hide ? null : d(testChildWidget, <WidgetOptions<WidgetState>> { tagName: 'footer', state })
+							];
+						}
 					}
 				})();
 
@@ -254,14 +224,12 @@ registerSuite({
 			const widgetBase = createWidgetBase
 				.mixin({
 					mixin: {
-						childNodeRenderers: [
-							function(this: any): (DNode | null)[] {
-								return [
-									d(createWidgetBase, {}),
-									d(createWidgetBase, {})
-								];
-							}
-						]
+						getChildrenNodes: function(this: any): (DNode | null)[] {
+							return [
+								d(createWidgetBase, {}),
+								d(createWidgetBase, {})
+							];
+						}
 					}
 				})();
 

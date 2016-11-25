@@ -111,19 +111,10 @@ function formatTagNameAndClasses(tagName: string, classes: string[]) {
 const createWidget: WidgetFactory = createStateful
 	.mixin<WidgetMixin, WidgetOptions<WidgetState>>({
 		mixin: {
-			childNodeRenderers: [],
-
 			classes: [],
 
 			getChildrenNodes(this: Widget<WidgetState>): DNode[] {
-				let childrenWrappers: DNode[] = [];
-
-				this.childNodeRenderers.forEach((fn) => {
-					const wrappers = fn.call(this);
-					childrenWrappers = childrenWrappers.concat(wrappers);
-				});
-
-				return childrenWrappers;
+				return [];
 			},
 
 			getNodeAttributes(this: Widget<WidgetState>, overrides?: VNodeProperties): VNodeProperties {
@@ -192,8 +183,12 @@ const createWidget: WidgetFactory = createStateful
 			tagName: 'div'
 		},
 		initialize(instance: Widget<WidgetState>, options: WidgetOptions<WidgetState> = {}) {
-			const { id, tagName } = options;
+			const { id, tagName, getChildrenNodes } = options;
 			instance.tagName = tagName || instance.tagName;
+
+			if (getChildrenNodes) {
+				instance.getChildrenNodes = getChildrenNodes;
+			}
 
 			widgetInternalStateMap.set(instance, {
 				id,
