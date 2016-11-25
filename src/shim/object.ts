@@ -1,5 +1,5 @@
 import has from './support/has';
-import './Symbol';
+import { isSymbol } from './Symbol';
 
 namespace Shim {
 	export function is(value1: any, value2: any): boolean {
@@ -20,6 +20,14 @@ namespace Shim {
 
 	export function keys(o: any): string[] {
 		return Object.keys(o).filter((key) => !Boolean(key.match(/^@@.+/)));
+	}
+
+	export function getOwnPropertyDescriptor(o: any, prop: string | symbol): PropertyDescriptor | undefined {
+		if (isSymbol(prop)) {
+			return (<any> Object).getOwnPropertyDescriptor(o, prop);
+		} else {
+			return Object.getOwnPropertyDescriptor(o, prop);
+		}
 	}
 }
 
@@ -68,3 +76,25 @@ export const getOwnPropertyNames: (o: any) => string[] = hasGetOwnPropertySymbol
 export const keys: (o: any) => string[] = hasGetOwnPropertySymbols
 	? Object.keys
 	: Shim.keys;
+
+export const getOwnPropertyDescriptor: (o: any, property: string | symbol) => PropertyDescriptor | undefined = hasGetOwnPropertySymbols
+	? Object.getOwnPropertyDescriptor
+	: Shim.getOwnPropertyDescriptor;
+
+function getOwnPropertyDescriptorsWrapper(o: any): any {
+	let descriptors: {[_: string]: PropertyDescriptor} = getOwnPropertyNames(o).reduce((descriptors: {[_: string]: PropertyDescriptor}, key: string) => {
+		descriptors[ key ] = <PropertyDescriptor> getOwnPropertyDescriptor(o, key);
+		return descriptors;
+	}, {});
+
+	getOwnPropertySymbols(o).forEach((sym: symbol) => {
+		descriptors[ sym ] = <PropertyDescriptor> getOwnPropertyDescriptor(o, sym);
+	});
+
+	return descriptors;
+}
+
+/* Return descriptors for enumerable and non enumerable properties on an object */
+export const getOwnPropertyDescriptors: (o: any) => any = 'getOwnPropertyDescriptors' in Object
+	? (<any> Object).getOwnPropertyDescriptors
+	: getOwnPropertyDescriptorsWrapper;

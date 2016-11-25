@@ -122,5 +122,44 @@ registerSuite({
 		assert.strictEqual((<any> o).baz, 'qat');
 		assert.strictEqual((<any> o)[sym], 'bar');
 		assert.deepEqual(object.keys(o), [ 'bar' ]);
+	},
+
+	'.getOwnPropertyDescriptors()'() {
+		const visibleSymbol = Symbol.for('foo');
+		const hiddenSymbol = Symbol.for('hidden');
+
+		const obj = {
+			prop1: 'value1',
+			get prop2() {
+				return 'value2';
+			},
+			set prop3(_: string) {
+			},
+			[visibleSymbol]: 'foo'
+		};
+
+		Object.defineProperty(obj, 'hidden', {
+			value: 'hidden',
+			enumerable: false
+		});
+
+		(<any> Object).defineProperty(obj, hiddenSymbol, {
+			value: 'test',
+			enumerable: false
+		});
+
+		let keys = object.getOwnPropertyDescriptors(obj);
+
+		assert.sameMembers(Object.keys(keys), [
+			'prop1',
+			'prop2',
+			'prop3',
+			'hidden'
+		]);
+
+		assert.sameMembers(object.getOwnPropertySymbols(obj), [
+			visibleSymbol,
+			hiddenSymbol
+		]);
 	}
 });
