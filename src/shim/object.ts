@@ -18,7 +18,7 @@ namespace Shim {
 		return Object.getOwnPropertyNames(o).filter((key) => !Boolean(key.match(/^@@.+/)));
 	}
 
-	export function keys(o: any): string[] {
+	export function symbolAwareKeys(o: any): string[] {
 		return Object.keys(o).filter((key) => !Boolean(key.match(/^@@.+/)));
 	}
 
@@ -28,6 +28,14 @@ namespace Shim {
 		} else {
 			return Object.getOwnPropertyDescriptor(o, prop);
 		}
+	}
+
+	export function values(o: any): any[] {
+		return keys(o).map(key => o[ key ]);
+	}
+
+	export function entries(o: any): any[] {
+		return keys(o).map(key => [ key, o[ key ] ]);
 	}
 }
 
@@ -75,7 +83,24 @@ export const getOwnPropertyNames: (o: any) => string[] = hasGetOwnPropertySymbol
  * when there is no support for symbols */
 export const keys: (o: any) => string[] = hasGetOwnPropertySymbols
 	? Object.keys
-	: Shim.keys;
+	: Shim.symbolAwareKeys;
+
+/**
+ * Returns the values of the enumerable properties and methods of an object.
+ * @param o Object that contains the properties and methods.
+ */
+export const values: (o: any) => any[] = 'values' in Object
+	? (<any> Object).values
+	: Shim.values;
+
+/**
+ * Returns the keys and values of the enumerable properties and methods of an object. Each entry will be returned as an
+ * array holding the [key, value].
+ * @param o Object that contains the properties and methods.
+ */
+export const entries: (o: any) => any[] = 'entries' in Object
+	? (<any> Object).entries
+	: Shim.entries;
 
 export const getOwnPropertyDescriptor: (o: any, property: string | symbol) => PropertyDescriptor | undefined = hasGetOwnPropertySymbols
 	? Object.getOwnPropertyDescriptor

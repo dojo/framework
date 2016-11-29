@@ -104,26 +104,6 @@ registerSuite({
 		assert.deepEqual(object.getOwnPropertyNames(o), [ 'bar' ]);
 	},
 
-	'.keys()'() {
-		const sym = Symbol('foo');
-		const o = {
-			[Symbol.iterator]() {
-				return 'foo';
-			},
-			[sym]: 'bar',
-			bar: 1
-		};
-
-		Object.defineProperty(o, 'baz', {
-			value: 'qat',
-			enumerable: false
-		});
-
-		assert.strictEqual((<any> o).baz, 'qat');
-		assert.strictEqual((<any> o)[sym], 'bar');
-		assert.deepEqual(object.keys(o), [ 'bar' ]);
-	},
-
 	'.getOwnPropertyDescriptors()'() {
 		const visibleSymbol = Symbol.for('foo');
 		const hiddenSymbol = Symbol.for('hidden');
@@ -161,5 +141,47 @@ registerSuite({
 			visibleSymbol,
 			hiddenSymbol
 		]);
+	},
+
+	'.keys()'() {
+		const sym = Symbol('foo');
+		const o = {
+			[Symbol.iterator]() {
+				return 'foo';
+			},
+			[sym]: 'bar',
+			bar: 1
+		};
+
+		Object.defineProperty(o, 'baz', {
+			value: 'qat',
+			enumerable: false
+		});
+
+		assert.strictEqual((<any> o).baz, 'qat');
+		assert.strictEqual((<any> o)[sym], 'bar');
+		assert.deepEqual(object.keys(o), [ 'bar' ]);
+	},
+
+	'.values()'() {
+		const sym = Symbol('foo');
+		const o = {
+			key1: 'value1',
+			key2: 2,
+			[sym]: 5
+		};
+
+		assert.sameMembers(object.values(o), [ 'value1', 2 ]);
+	},
+
+	'.entries()'() {
+		const sym = Symbol('foo');
+		const o = {
+			key1: 'value1',
+			key2: 2,
+			[sym]: 5
+		};
+
+		assert.sameDeepMembers(object.entries(o), [ [ 'key1', 'value1' ], [ 'key2', 2 ] ]);
 	}
 });
