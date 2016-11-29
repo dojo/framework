@@ -1,9 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createWidgetBase from '../../../src/bases/createWidgetBase';
-import { before } from 'dojo-core/aspect';
 import { DNode, HNode, WidgetState, WidgetOptions } from 'dojo-interfaces/widgetBases';
-import { createProjector } from '../../../src/projector';
 import d from '../../../src/util/d';
 import { stub } from 'sinon';
 
@@ -297,21 +295,6 @@ registerSuite({
 				(<any> widgetBase).id = 'foo'; /* .id is readonly, so TypeScript will prevent mutation */
 			});
 		}
-	},
-	'invalidate invalidates parent projector'() {
-		let count = 0;
-		const projector = createProjector({});
-		before(projector, 'invalidate', () => {
-			count++;
-		});
-		projector.attach();
-		const widgetBase = createWidgetBase();
-		projector.append(widgetBase);
-		widgetBase.invalidate();
-		assert.strictEqual(count, 2);
-		widgetBase.render();
-		widgetBase.invalidate();
-		assert.strictEqual(count, 3);
 	},
 	'invalidate emits invalidated event'() {
 		const widgetBase = createWidgetBase();

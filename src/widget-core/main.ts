@@ -1,9 +1,9 @@
 import createButton from './createButton';
 import createTextInput from './createTextInput';
-import projector from './projector';
+import createProjector from './createProjector';
 
 export {
 	createButton,
 	createTextInput,
-	projector
+	createProjector
 };
