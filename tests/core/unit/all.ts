@@ -23,4 +23,5 @@ import './stringExtras';
 import './text';
 import './UrlSearchParams';
 import './DateObject';
+import './uuid';
 import './util';
