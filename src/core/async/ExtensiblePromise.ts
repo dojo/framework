@@ -73,7 +73,7 @@ export default class ExtensiblePromise<T> {
 	 * @type {Promise}
 	 * The wrapped promise
 	 */
-	_promise: Promise<T>;
+	readonly _promise: Promise<T>;
 
 	/**
 	 * Creates a new extended Promise.

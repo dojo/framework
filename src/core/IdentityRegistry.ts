@@ -5,13 +5,13 @@ import { Handle } from 'dojo-interfaces/core';
 const noop = () => {};
 
 interface Entry<V> {
-	handle: Handle;
-	value: V;
+	readonly handle: Handle;
+	readonly value: V;
 }
 
 interface State<V> {
-	entryMap: Map<Identity, Entry<V>>;
-	idMap: WeakMap<V, Identity>;
+	readonly entryMap: Map<Identity, Entry<V>>;
+	readonly idMap: WeakMap<V, Identity>;
 }
 
 const privateStateMap = new WeakMap<IdentityRegistry<any>, State<any>>();

@@ -7,10 +7,10 @@ import * as util from './util';
 // additional metadata used internally.
 export interface Record<T> {
 	// This flag indicates that this record is the end of the stream and the stream should close when processing it
-	close?: boolean;
-	chunk?: T;
-	reject?: (error: Error) => void;
-	resolve?: () => void;
+	readonly close?: boolean;
+	readonly chunk?: T;
+	readonly reject?: (error: Error) => void;
+	readonly resolve?: () => void;
 }
 
 /**
@@ -107,9 +107,9 @@ export default class WritableStream<T> {
 	protected _startedPromise: Promise<any> | undefined;
 	protected _state: State;
 	protected _storedError: Error;
-	protected _strategy: Strategy<T>;
+	protected readonly _strategy: Strategy<T>;
 	protected _underlyingSink: Sink<T> | undefined;
-	protected _queue: SizeQueue<Record<T>>;
+	protected readonly _queue: SizeQueue<Record<T>>;
 	protected _writing: boolean;
 
 	constructor(underlyingSink: Sink<T> = {}, strategy: Strategy<T> = {}) {

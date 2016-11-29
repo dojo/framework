@@ -1,7 +1,7 @@
 import { RequestError, Response } from '../../request';
 
 export default class RequestTimeoutError<T> implements RequestError<T> {
-	message: string;
+	readonly message: string;
 	get name(): string {
 		return 'RequestTimeoutError';
 	}

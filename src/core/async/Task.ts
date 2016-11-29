@@ -54,7 +54,7 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	/**
 	 * Children of this Task (i.e., Tasks that were created from this Task with `then` or `catch`).
 	 */
-	private children: Task<any>[];
+	private readonly children: Task<any>[];
 
 	/**
 	 * The finally callback for this Task (if it was created by a call to `finally`).

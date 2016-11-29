@@ -1,6 +1,6 @@
 interface Pair<T> {
-	value: T;
-	size: number;
+	readonly value: T;
+	readonly size: number;
 }
 
 /**

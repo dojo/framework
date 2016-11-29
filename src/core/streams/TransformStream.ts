@@ -52,8 +52,8 @@ export interface Transform<R, W> {
  * is a {@link WritableStream}.
  */
 export default class TransformStream<R, W> {
-	readable: ReadableStream<R>;
-	writable: WritableStream<W>;
+	readonly readable: ReadableStream<R>;
+	readonly writable: WritableStream<W>;
 
 	constructor(transformer: Transform<R, W>) {
 		let writeChunk: W | undefined;

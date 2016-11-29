@@ -12,8 +12,8 @@ interface ReadRequest<T> {
  * If the `done` property is true, the stream has no more data to provide.
  */
 export interface ReadResult<T> {
-	value: T | undefined;
-	done: boolean;
+	readonly value: T | undefined;
+	readonly done: boolean;
 }
 
 function isReadableStreamReader<T>(readableStreamReader: ReadableStreamReader<T>): boolean {
@@ -31,7 +31,7 @@ export default class ReadableStreamReader<T> {
 		return this._closedPromise;
 	}
 
-	private _closedPromise: Promise<void>;
+	private readonly _closedPromise: Promise<void>;
 	private _storedError: Error | undefined;
 	private _readRequests: ReadRequest<T>[];
 	private _resolveClosedPromise: () => void;

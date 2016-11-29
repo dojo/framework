@@ -33,11 +33,11 @@ type AdviceType = 'before' | 'after';
  * A meta data structure when applying advice
  */
 interface Advised {
-	id?: number;
+	readonly id?: number;
 	advice?: Function;
 	previous?: Advised;
 	next?: Advised;
-	receiveArguments?: boolean;
+	readonly receiveArguments?: boolean;
 }
 
 /**

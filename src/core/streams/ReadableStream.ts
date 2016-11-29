@@ -143,14 +143,14 @@ export default class ReadableStream<T> {
 
 	protected _pullingPromise: Promise<void> | undefined;
 	protected _started: boolean;
-	protected _startedPromise: Promise<void>;
-	protected _strategy: Strategy<T>;
+	protected readonly _startedPromise: Promise<void>;
+	protected readonly _strategy: Strategy<T>;
 	protected _underlyingSource: Source<T>;
 
 	closeRequested: boolean = false;
 	controller: ReadableStreamController<T>;
 	pullScheduled: boolean;
-	queue: SizeQueue<T>;
+	readonly queue: SizeQueue<T>;
 	reader: ReadableStreamReader<T> | undefined;
 	state: State;
 	storedError: Error;

@@ -6,7 +6,7 @@ export function isReadableStreamController(x: any): boolean {
 }
 
 export default class ReadableStreamController<T> {
-	private _controlledReadableStream: ReadableStream<T>;
+	private readonly _controlledReadableStream: ReadableStream<T>;
 
 	/**
 	 * Returns a number indicating how much additional data can be pushed by the source to the stream's queue before it

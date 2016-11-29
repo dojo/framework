@@ -83,7 +83,7 @@ export default class UrlSearchParams {
 	 * Maps property keys to arrays of values. The value for any property that has been set will be an array containing
 	 * at least one item. Properties that have been deleted will have a value of 'undefined'.
 	 */
-	protected _list: Hash<string[] | undefined>;
+	protected readonly _list: Hash<string[] | undefined>;
 
 	/**
 	 * Appends a new value to the set of values for a key.
