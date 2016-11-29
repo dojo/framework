@@ -6,6 +6,6 @@ registerSuite({
 	name: 'global',
 
 	'global references the global object for the target environment'() {
-		assert.strictEqual(global, Function('return this')());
+		assert.isTrue('global' in global, 'Expecting global object to be in global object');
 	}
 });
