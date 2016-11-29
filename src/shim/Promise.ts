@@ -73,7 +73,7 @@ module Shim {
 
 				function processItem(index: number, item: (T | Thenable<T>)): void {
 					++total;
-					if (item instanceof Promise) {
+					if (isThenable(item)) {
 						// If an item Promise rejects, this Promise is immediately rejected with the item
 						// Promise's rejection error.
 						item.then(fulfill.bind(null, index), reject);

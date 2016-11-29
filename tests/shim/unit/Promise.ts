@@ -126,6 +126,20 @@ export function addPromiseTests(suite: any, Promise: PromiseType) {
 			Promise.all(iterable).then(dfd.callback(function (value: number[]) {
 				assert.notStrictEqual(value, iterable);
 			}));
+		},
+
+		'non-promise thenables': function (this: any) {
+			let dfd = this.async();
+			let thenable = {
+				then(resolve: (_: string) => void) {
+					resolve('test');
+				}
+			};
+
+			Promise.all<any>([ 'hello', thenable ]).then((results: any[]) => {
+				assert.deepEqual(results, [ 'hello', 'test' ]);
+				dfd.resolve();
+			});
 		}
 	};
 
