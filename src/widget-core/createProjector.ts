@@ -4,7 +4,7 @@ import { VNodeProperties } from 'dojo-interfaces/vdom';
 import { Widget, WidgetState, WidgetOptions } from 'dojo-interfaces/widgetBases';
 import WeakMap from 'dojo-shim/WeakMap';
 import { createProjector as createMaquetteProjector, Projector as MaquetteProjector } from 'maquette';
-import createWidgetBase from './bases/createWidgetBase';
+import createWidgetBase from './createWidgetBase';
 import global from 'dojo-core/global';
 import Promise from 'dojo-shim/Promise';
 

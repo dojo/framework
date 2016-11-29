@@ -1,9 +1,13 @@
-import createButton from './createButton';
-import createTextInput from './createTextInput';
 import createProjector from './createProjector';
+import createButton from './components/button/createButton';
+import createTextInput from './components/textinput/createTextInput';
+import createWidgetBase from './createWidgetBase';
+import d from './d';
 
 export {
 	createButton,
 	createTextInput,
-	createProjector
+	createProjector,
+	createWidgetBase,
+	d
 };

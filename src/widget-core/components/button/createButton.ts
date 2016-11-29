@@ -1,9 +1,9 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import { VNodeProperties } from 'dojo-interfaces/vdom';
-import createWidgetBase from './bases/createWidgetBase';
+import createWidgetBase from '../../createWidgetBase';
 import { Widget, WidgetOptions, WidgetState } from 'dojo-interfaces/widgetBases';
-import createVNodeEvented, { VNodeEvented, VNodeEventedOptions } from './mixins/createVNodeEvented';
-import createFormFieldMixin, { FormFieldMixin, FormFieldMixinState, FormFieldMixinOptions } from './mixins/createFormFieldMixin';
+import createVNodeEvented, { VNodeEvented, VNodeEventedOptions } from '../../mixins/createVNodeEvented';
+import createFormFieldMixin, { FormFieldMixin, FormFieldMixinState, FormFieldMixinOptions } from '../../mixins/createFormFieldMixin';
 
 export interface ButtonState extends WidgetState, FormFieldMixinState<string> {
 	label?: string;

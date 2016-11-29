@@ -1,8 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { WidgetState, WidgetOptions } from 'dojo-interfaces/widgetBases';
-import createWidgetBase from '../../../src/bases/createWidgetBase';
-import d from '../../../src/util/d';
+import createWidgetBase from '../../src/createWidgetBase';
+import d from '../../src/d';
 
 registerSuite({
 	name: 'util/d',

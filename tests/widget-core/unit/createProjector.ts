@@ -2,7 +2,7 @@ import 'dojo/has!host-node?../support/loadJsdom';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createProjector, { ProjectorState } from '../../src/createProjector';
-import d from '../../src/util/d';
+import d from '../../src/d';
 import global from 'dojo-core/global';
 import { spy } from 'sinon';
 
