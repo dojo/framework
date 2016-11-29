@@ -18,17 +18,18 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "dojo-has": ">=2.0.0-alpha.4"
+    "dojo-has": ">=2.0.0-alpha.6"
   },
   "devDependencies": {
-    "@types/chai": "3.4.*",
-    "@types/glob": "5.0.*",
-    "@types/grunt": "0.4.*",
+    "@types/chai": "~3.4.0",
+    "@types/glob": "~5.0.0",
+    "@types/grunt": "~0.4.0",
+    "@types/node": "~6.0.49",
     "dojo-loader": ">=2.0.0-beta.7",
-    "dojo-interfaces": ">=2.0.0-alpha.4",
+    "dojo-interfaces": ">=2.0.0-alpha.6",
     "grunt": "~1.0.1",
-    "grunt-dojo2": ">=2.0.0-beta.16",
-    "intern": "3.3.2",
+    "grunt-dojo2": ">=2.0.0-beta.22",
+    "intern": "^3.4.1",
     "istanbul": "^0.4.3",
     "tslint": "^3.15.1",
     "typescript": "~2.0.3"
