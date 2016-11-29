@@ -47,7 +47,7 @@
     "grunt-contrib-clean": "^1.0.0",
     "grunt-contrib-copy": "^1.0.0",
     "grunt-contrib-watch": "^1.0.0",
-    "grunt-dojo2": ">=2.0.0-beta.16",
+    "grunt-dojo2": ">=2.0.0-beta.21",
     "grunt-postcss": "^0.8.0",
     "grunt-text-replace": "^0.4.0",
     "grunt-ts": "^5.5.1",
