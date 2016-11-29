@@ -185,6 +185,52 @@ export namespace Shim {
 		return text.indexOf(search, position) !== -1;
 	}
 
+	export function padEnd(text: string, maxLength: number, fillString: string = ' '): string {
+		if (text === null || text === undefined) {
+			throw new TypeError('string.repeat requires a valid string.');
+		}
+
+		if (maxLength === Infinity) {
+			throw new RangeError('string.padEnd requires a non-negative finite count.');
+		}
+
+		if (maxLength === null || maxLength === undefined || maxLength < 0) {
+			maxLength = 0;
+		}
+
+		let strText = String(text);
+		const padding = maxLength - strText.length;
+
+		if (padding > 0) {
+			strText += repeat(fillString, Math.floor(padding / fillString.length)) + fillString.slice(0, padding % fillString.length);
+		}
+
+		return strText;
+	}
+
+	export function padStart(text: string, maxLength: number, fillString: string = ' '): string {
+		if (text === null || text === undefined) {
+			throw new TypeError('string.repeat requires a valid string.');
+		}
+
+		if (maxLength === Infinity) {
+			throw new RangeError('string.padStart requires a non-negative finite count.');
+		}
+
+		if (maxLength === null || maxLength === undefined || maxLength < 0) {
+			maxLength = 0;
+		}
+
+		let strText = String(text);
+		const padding = maxLength - strText.length;
+
+		if (padding > 0) {
+			strText = repeat(fillString, Math.floor(padding / fillString.length)) + fillString.slice(0, padding % fillString.length) + strText;
+		}
+
+		return strText;
+	}
+
 	/* TODO: Provide an iterator for a string to mimic [Symbol.iterator]? */
 }
 
@@ -276,3 +322,29 @@ export const endsWith: (text: string, search: string, endPosition?: number) => b
 export const includes: (text: string, search: string, position?: number) => boolean = has('es6-string-includes')
 	? wrapNative((<any> String.prototype).includes)
 	: Shim.includes;
+
+/**
+ * Pads the beginning of a string with a fill string until the string is a certain length.
+ *
+ * @param text          The string to pad
+ * @param maxLength     The desired length of the string
+ * @param fillString    The string to be repeated (fully or partially) until text is the maximum length
+ *
+ * @return A string that is at least the maximum length specified, padded in the front if necessary.
+ */
+export const padStart: (text: string, maxLength: number, fillString?: string) => string = has('es6-string-padstart')
+	? wrapNative((<any> String.prototype).padStart)
+	: Shim.padStart;
+
+/**
+ * Pads the end of a string with a fill string until the string is a certain length.
+ *
+ * @param text          The string to pad
+ * @param maxLength     The desired length of the string
+ * @param fillString    The string to be repeated (fully or partially) until text is the maximum length
+ *
+ * @return A string that is at least the maximum length specified, padded at the end if necessary.
+ */
+export const padEnd: (text: string, maxLength: number, fillString?: string) => string = has('es6-string-padend')
+	? wrapNative((<any> String.prototype).padEnd)
+	: Shim.padEnd;

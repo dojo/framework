@@ -60,6 +60,8 @@ add('es6-string-repeat', 'repeat' in global.String.prototype);
 add('es6-string-startswith', 'startsWith' in global.String.prototype);
 add('es6-string-endswith', 'endsWith' in global.String.prototype);
 add('es6-string-includes', 'includes' in global.String.prototype);
+add('es6-string-padstart', 'padStart' in global.String.prototype);
+add('es6-string-padend', 'padEnd' in global.String.prototype);
 
 /* Math */
 
