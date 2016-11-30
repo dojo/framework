@@ -6,7 +6,7 @@ export interface Set<T> {
 	delete(value: T): boolean;
 	forEach(callbackfn: (value: T, index: T, set: Set<T>) => void, thisArg?: any): void;
 	has(value: T): boolean;
-	size: number;
+	readonly size: number;
 }
 
 export interface SetConstructor {

@@ -25,8 +25,8 @@ module Shim {
 	})();
 
 	export class WeakMap<K, V> {
-		private _name: string;
-		private _frozenEntries: Entry<K, V>[];
+		private readonly _name: string;
+		private readonly _frozenEntries: Entry<K, V>[];
 
 		constructor(iterable?: ArrayLike<[K, V]> | Iterable<[K, V]>) {
 			Object.defineProperty(this, '_name', {

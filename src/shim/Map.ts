@@ -10,8 +10,8 @@ export namespace Shim {
 	 * An implementation analogous to the Map specification in ES2015.
 	 */
 	export class Map<K, V> {
-		protected _keys: K[] = [];
-		protected _values: V[] = [];
+		protected readonly _keys: K[] = [];
+		protected readonly _values: V[] = [];
 
 		/**
 		 * An alternative to Array.prototype.indexOf using Object.is

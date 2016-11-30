@@ -6,7 +6,7 @@ import './Symbol';
 
 export namespace Shim {
 	export class Set<T> {
-		private _setData: T[] = [];
+		private readonly _setData: T[] = [];
 
 		constructor(iterable?: ArrayLike<T> | Iterable<T>) {
 			if (iterable) {

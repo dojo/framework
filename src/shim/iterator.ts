@@ -3,8 +3,8 @@ import { HIGH_SURROGATE_MIN, HIGH_SURROGATE_MAX } from './string';
 import './Symbol';
 
 export interface IteratorResult<T> {
-	done: boolean;
-	value: T;
+	readonly done: boolean;
+	readonly value: T;
 }
 
 export interface Iterator<T> {

@@ -4,12 +4,12 @@ import has from './has';
 
 export interface QueueItem {
 	isActive: boolean;
-	callback: (...args: any[]) => any;
+	readonly callback: (...args: any[]) => any;
 }
 
 interface PostMessageEvent extends Event {
-	source: any;
-	data: string;
+	readonly source: any;
+	readonly data: string;
 }
 
 /**

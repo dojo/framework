@@ -1,6 +1,6 @@
 export interface IteratorResult<T> {
-	done: boolean;
-	value?: T;
+	readonly done: boolean;
+	readonly value?: T;
 }
 
 export interface Iterator<T> {

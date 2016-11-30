@@ -7,7 +7,7 @@ export interface Map<K, V> {
 	get(key: K): V | undefined;
 	has(key: K): boolean;
 	set(key: K, value?: V): this;
-	size: number;
+	readonly size: number;
 }
 
 export interface MapConstructor {
