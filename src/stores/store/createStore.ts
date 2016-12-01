@@ -239,7 +239,7 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 	};
 	instanceStateMap.set(instance, instanceState);
 	if (data) {
-		instanceState.initialAddPromise = instance.add(data).then(null, () => {});
+		instanceState.initialAddPromise = instance.add(data).then(undefined, () => {});
 	}
 
 });

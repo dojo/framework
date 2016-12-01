@@ -16,7 +16,7 @@ export default function createStoreObservable<T, U>(observable: Observable<U>, t
 	// Cast to any because the signatures of catch between the Observable and Promise interfaces are not
 	// compatible
 	const storeObservable: StoreObservable<T, U> = <any> observable;
-	storeObservable.then = function<V>(onFulfilled?: ((value: T[]) => (V | Promise<V> | null | undefined)) | null | undefined, onRejected?: (reason?: Error) => void): Promise<V> {
+	storeObservable.then = function<V>(onFulfilled?: ((value: T[]) => (V | Thenable<V> | null | undefined)) | undefined, onRejected?: (reason?: Error) => void): Promise<V> {
 		// Wrap in a shim promise because the interface that leaks through observable.toPromise is missing some
 		// properties on the shim(e.g. promise)
 		return Promise.resolve(observable.toPromise())
