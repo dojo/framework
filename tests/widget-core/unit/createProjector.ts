@@ -46,11 +46,9 @@ registerSuite({
 	'attach to projector': {
 		'append'() {
 			const childNodeLength = document.body.childNodes.length;
-			const projector = createProjector({
-				getChildrenNodes: function() {
-					return [ d('h2', [ 'foo' ] ) ];
-				}
-			});
+			const projector = createProjector();
+
+			projector.children = [ d('h2', [ 'foo' ] ) ];
 
 			return projector.append().then((attachHandle) => {
 				assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
@@ -62,11 +60,10 @@ registerSuite({
 		},
 		'replace'() {
 			const projector = createProjector({
-				tagName: 'body',
-				getChildrenNodes: function() {
-					return [ d('h2', [ 'foo' ] ) ];
-				}
+				tagName: 'body'
 			});
+
+			projector.children = [ d('h2', [ 'foo' ] ) ];
 
 			return projector.replace().then((attachHandle) => {
 				assert.strictEqual(document.body.childNodes.length, 1, 'child should have been added');
@@ -77,11 +74,9 @@ registerSuite({
 		},
 		'merge'() {
 			const childNodeLength = document.body.childNodes.length;
-			const projector = createProjector({
-				getChildrenNodes: function() {
-					return [ d('h2', [ 'foo' ] ) ];
-				}
-			});
+			const projector = createProjector();
+
+			projector.children = [ d('h2', [ 'foo' ] ) ];
 
 			return projector.merge().then((attachHandle) => {
 				assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
@@ -95,11 +90,11 @@ registerSuite({
 		const root = document.createElement('div');
 		document.body.appendChild(root);
 		const projector = createProjector({
-			getChildrenNodes: function() {
-				return [ d('h2', [ 'foo' ] ) ];
-			},
 			root
 		});
+
+		projector.children = [ d('h2', [ 'foo' ] ) ];
+
 		assert.strictEqual(root.childNodes.length, 0, 'there should be no children');
 		let eventFired = false;
 		projector.on('projector:attached', () => {

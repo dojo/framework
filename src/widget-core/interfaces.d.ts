@@ -348,11 +348,6 @@ export interface WidgetMixin {
 
 export interface WidgetOptions<S extends WidgetState> extends StatefulOptions<S> {
 	/**
-	 * Any child node render functions that should be added to this instance
-	 */
-	getChildrenNodes?: ChildNodeFunction;
-
-	/**
 	 * Any classes that should be added to this instances
 	 */
 	classes?: string[];

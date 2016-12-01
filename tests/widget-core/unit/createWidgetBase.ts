@@ -157,17 +157,6 @@ registerSuite({
 			assert.strictEqual(result.children![0].text, 'I am a text node');
 			assert.strictEqual(result.children![1].text, 'Second text node');
 		},
-		'render with children provided via options'() {
-			const widgetBase = createWidgetBase({
-				getChildrenNodes: function(): DNode[] {
-					return [ d('header') ];
-				}
-			});
-
-			const result = <VNode> widgetBase.render();
-			assert.lengthOf(result.children, 1);
-			assert.strictEqual(result.children![0].vnodeSelector, 'header');
-		},
 		'render with widget children'() {
 			let countWidgetCreated = 0;
 			let countWidgetDestroyed = 0;

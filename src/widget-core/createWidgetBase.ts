@@ -210,12 +210,8 @@ const createWidget: WidgetFactory = createStateful
 			tagName: 'div'
 		},
 		initialize(instance: Widget<WidgetState>, options: WidgetOptions<WidgetState> = {}) {
-			const { id, tagName, getChildrenNodes } = options;
+			const { id, tagName } = options;
 			instance.tagName = tagName || instance.tagName;
-
-			if (getChildrenNodes) {
-				instance.getChildrenNodes = getChildrenNodes;
-			}
 
 			widgetInternalStateMap.set(instance, {
 				id,
