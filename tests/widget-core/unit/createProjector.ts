@@ -44,6 +44,21 @@ registerSuite({
 			assert.equal(err.message, 'Unable to create projector with css transitions enabled. Is the \'css-transition.js\' script loaded in the page?');
 		}
 	},
+	'render throws an error for non VNode result'() {
+		const projector = createProjector.override({
+			getNode() {
+				return '';
+			}
+		})();
+
+		try {
+			projector.render();
+		}
+		catch (error) {
+			assert.isTrue(error instanceof Error);
+			assert.equal(error.message, 'Must provide a VNode at the root of a projector');
+		}
+	},
 	'attach event'() {
 		const root = document.createElement('div');
 		document.body.appendChild(root);

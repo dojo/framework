@@ -19,6 +19,13 @@ import { EventTargettedObject, Factory, Handle, StylesMap } from 'dojo-interface
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
 
 /**
+ * A function that is called to return top level node
+ */
+export interface NodeFunction {
+	(this: Widget<WidgetState>): DNode;
+}
+
+/**
  * A function that is called when collecting the children nodes on render.
  */
 export interface ChildNodeFunction {
@@ -268,6 +275,11 @@ export interface WidgetMixin {
 	readonly classes: string[];
 
 	/**
+	 * Get the top level node and children when rendering the widget.
+	 */
+	getNode: NodeFunction;
+
+	/**
 	 * Generate the children nodes when rendering the widget.
 	 */
 	getChildrenNodes: ChildNodeFunction;
@@ -313,7 +325,7 @@ export interface WidgetMixin {
 	 * return h(this.tagName, this.getNodeAttributes(), this.getChildrenNodes());
 	 * ```
 	 */
-	render(): VNode;
+	render(): VNode | string;
 
 	/**
 	 * The tagName (selector) that should be used when rendering the node.

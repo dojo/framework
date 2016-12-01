@@ -1,7 +1,6 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import createStateful from 'dojo-compose/bases/createStateful';
 import {
-	HNode,
 	DNode,
 	WNode,
 	Widget,
@@ -22,7 +21,7 @@ interface WidgetInternalState {
 	readonly id?: string;
 	dirty: boolean;
 	widgetClasses: string[];
-	cachedVNode?: VNode;
+	cachedVNode?: VNode | string;
 	historicChildrenMap: Map<string | Factory<Widget<WidgetState>, WidgetOptions<WidgetState>>, Widget<WidgetState>>;
 	currentChildrenMap: Map<string | Factory<Widget<WidgetState>, WidgetOptions<WidgetState>>, Widget<WidgetState>>;
 };
@@ -43,17 +42,24 @@ function generateID(instance: Widget<WidgetState>): string {
 	return id;
 }
 
-function isWNode(child: WNode | HNode): child is WNode {
-	return child && (<WNode> child).factory !== undefined;
+function isWNode(child: DNode): child is WNode {
+	return Boolean(child && (<WNode> child).factory !== undefined);
 }
 
-function dNodeToVNode(instance: Widget<WidgetState>, dNode: WNode | HNode): VNode {
+function dNodeToVNode(instance: Widget<WidgetState>, dNode: DNode): VNode | string {
 	const internalState = widgetInternalStateMap.get(instance);
-	let child: HNode | Widget<WidgetState>;
+
+	if (typeof dNode === 'string') {
+		return dNode;
+	}
+
 	if (isWNode(dNode)) {
 		const { factory, options: { id, state } } = dNode;
 		const childrenMapKey = id || factory;
 		const cachedChild = internalState.historicChildrenMap.get(childrenMapKey);
+
+		let child: Widget<WidgetState>;
+
 		if (cachedChild) {
 			child = cachedChild;
 			if (state) {
@@ -74,19 +80,15 @@ function dNodeToVNode(instance: Widget<WidgetState>, dNode: WNode | HNode): VNod
 			instance.emit({ type: 'error', target: instance, error: new Error(errorMsg) });
 		}
 		internalState.currentChildrenMap.set(childrenMapKey, child);
+
+		return child.render();
 	}
-	else {
-		child = dNode;
-		if (child.children) {
-			child.children = child.children.map((child: DNode) => {
-				if (typeof child === 'string') {
-					return child;
-				}
-				return dNodeToVNode(instance, child);
-			});
-		}
-	}
-	return child.render();
+
+	dNode.children = dNode.children.map((child: DNode) => {
+		return dNodeToVNode(instance, child);
+	});
+
+	return dNode.render();
 }
 
 function manageDetachedChildren(instance: Widget<WidgetState>): void {
@@ -112,6 +114,11 @@ const createWidget: WidgetFactory = createStateful
 	.mixin<WidgetMixin, WidgetOptions<WidgetState>>({
 		mixin: {
 			classes: [],
+
+			getNode(): DNode {
+				const tag = formatTagNameAndClasses(this.tagName, this.classes);
+				return d(tag, this.getNodeAttributes(), this.getChildrenNodes());
+			},
 
 			getChildrenNodes(this: Widget<WidgetState>): DNode[] {
 				return [];
@@ -165,14 +172,10 @@ const createWidget: WidgetFactory = createStateful
 
 			],
 
-			render(this: Widget<WidgetState>): VNode {
+			render(this: Widget<WidgetState>): VNode | string {
 				const internalState = widgetInternalStateMap.get(this);
 				if (internalState.dirty || !internalState.cachedVNode) {
-					const dNode = d(formatTagNameAndClasses(this.tagName, this.classes),
-									this.getNodeAttributes(),
-									this.getChildrenNodes());
-
-					const widget = dNodeToVNode(this, dNode);
+					const widget = dNodeToVNode(this, this.getNode());
 					manageDetachedChildren(this);
 					internalState.cachedVNode = widget;
 					internalState.dirty = false;

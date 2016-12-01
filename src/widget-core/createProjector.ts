@@ -1,6 +1,6 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
-import { VNodeProperties } from 'dojo-interfaces/vdom';
+import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
 import { Widget, WidgetState, WidgetOptions } from './interfaces';
 import WeakMap from 'dojo-shim/WeakMap';
 import { createProjector as createMaquetteProjector, Projector as MaquetteProjector } from 'maquette';
@@ -153,6 +153,16 @@ const createProjector: ProjectorFactory = createWidgetBase
 			get projectorState(this: Projector): ProjectorState {
 				const projectorData = projectorDataMap.get(this);
 				return projectorData && projectorData.state;
+			}
+		},
+		aspectAdvice: {
+			after: {
+				render(this: Projector, result: VNode | string) {
+					if (typeof result === 'string') {
+						throw new Error('Must provide a VNode at the root of a projector');
+					}
+					return result;
+				}
 			}
 		},
 		initialize(instance: Projector, options: ProjectorOptions = {}) {

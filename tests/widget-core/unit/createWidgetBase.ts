@@ -2,6 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createWidgetBase from '../../src/createWidgetBase';
 import { DNode, HNode, WidgetState, WidgetOptions } from './../../src/interfaces';
+import { VNode } from 'dojo-interfaces/vdom';
 import d from '../../src/d';
 import { stub } from 'sinon';
 
@@ -18,19 +19,19 @@ registerSuite({
 		'Applies default tagName'() {
 			const widget = createWidgetBase();
 			assert.deepEqual(widget.tagName, 'div');
-			const renderedWidget = widget.render();
+			const renderedWidget = <VNode> widget.render();
 			assert.deepEqual(renderedWidget.vnodeSelector, 'div');
 		},
 		'Applies overridden tagName'() {
 			const widget = createWidgetBase.override({ tagName: 'header' })();
 			assert.deepEqual(widget.tagName, 'header');
-			const renderedWidget = widget.render();
+			const renderedWidget = <VNode> widget.render();
 			assert.deepEqual(renderedWidget.vnodeSelector, 'header');
 		}
 		},
 		'Applies classes to tagName'() {
 			const widget = createWidgetBase.override({ tagName: 'header', classes: [ 'class-one', 'classTwo' ] })();
-			const renderedWidget = widget.render();
+			const renderedWidget = <VNode> widget.render();
 			assert.deepEqual(renderedWidget.vnodeSelector, 'header.class-one.classTwo');
 	},
 	'getNodeAttributes()'() {
@@ -82,7 +83,7 @@ registerSuite({
 					}
 				})();
 
-			const result = widgetBase.render();
+			const result = <VNode> widgetBase.render();
 			assert.lengthOf(result.children, 1);
 			assert.strictEqual(result.children && result.children[0].vnodeSelector, 'header');
 		},
@@ -100,7 +101,7 @@ registerSuite({
 					}
 				})();
 
-			const result = widgetBase.render();
+			const result = <VNode> widgetBase.render();
 			assert.lengthOf(result.children, 1);
 			assert.strictEqual(result.children![0].vnodeSelector, 'header');
 			assert.strictEqual(result.children![0].children![0].vnodeSelector, 'section');
@@ -115,7 +116,7 @@ registerSuite({
 					}
 				})();
 
-			const result = widgetBase.render();
+			const result = <VNode> widgetBase.render();
 			assert.isUndefined(result.children);
 			assert.equal(result.text, 'I am a text node');
 		},
@@ -129,7 +130,7 @@ registerSuite({
 					}
 				})();
 
-			const result = widgetBase.render();
+			const result = <VNode> widgetBase.render();
 			assert.isUndefined(result.text);
 			assert.lengthOf(result.children, 2);
 			assert.strictEqual(result.children![0].text, 'I am a text node');
@@ -142,7 +143,7 @@ registerSuite({
 				}
 			});
 
-			const result = widgetBase.render();
+			const result = <VNode> widgetBase.render();
 			assert.lengthOf(result.children, 1);
 			assert.strictEqual(result.children![0].vnodeSelector, 'header');
 		},
@@ -174,7 +175,7 @@ registerSuite({
 					}
 				})();
 
-			const firstRenderResult = widgetBase.render();
+			const firstRenderResult = <VNode> widgetBase.render();
 			assert.strictEqual(countWidgetCreated, 1);
 			assert.strictEqual(countWidgetDestroyed, 0);
 			assert.lengthOf(firstRenderResult.children, 1);
@@ -183,7 +184,7 @@ registerSuite({
 
 			widgetBase.invalidate();
 
-			const secondRenderResult = widgetBase.render();
+			const secondRenderResult = <VNode> widgetBase.render();
 			assert.strictEqual(countWidgetCreated, 1);
 			assert.strictEqual(countWidgetDestroyed, 0);
 			assert.lengthOf(secondRenderResult.children, 1);
@@ -192,7 +193,7 @@ registerSuite({
 
 			widgetBase.setState({ 'classes': ['test-class'] });
 			widgetBase.invalidate();
-			const thirdRenderResult = widgetBase.render();
+			const thirdRenderResult = <VNode> widgetBase.render();
 			assert.strictEqual(countWidgetCreated, 1);
 			assert.strictEqual(countWidgetDestroyed, 0);
 			assert.lengthOf(thirdRenderResult.children, 1);
@@ -203,7 +204,7 @@ registerSuite({
 			widgetBase.setState({ hide: true });
 			widgetBase.invalidate();
 
-			const forthRenderResult = widgetBase.render();
+			const forthRenderResult = <VNode> widgetBase.render();
 			assert.strictEqual(countWidgetCreated, 1);
 			assert.strictEqual(countWidgetDestroyed, 1);
 			assert.lengthOf(forthRenderResult.children, 0);
@@ -211,7 +212,7 @@ registerSuite({
 			widgetBase.setState({ hide: false });
 			widgetBase.invalidate();
 
-			const lastRenderResult = widgetBase.render();
+			const lastRenderResult = <VNode> widgetBase.render();
 			assert.strictEqual(countWidgetCreated, 2);
 			assert.strictEqual(countWidgetDestroyed, 1);
 			assert.lengthOf(lastRenderResult.children, 1);
@@ -240,8 +241,8 @@ registerSuite({
 			const widgetBase = createWidgetBase({
 				state: { id: 'foo', label: 'foo' }
 			});
-			const result1 = widgetBase.render();
-			const result2 = widgetBase.render();
+			const result1 = <VNode> widgetBase.render();
+			const result2 = <VNode> widgetBase.render();
 			widgetBase.invalidate();
 			widgetBase.invalidate();
 			widgetBase.setState({});
