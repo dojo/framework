@@ -14,8 +14,19 @@ import { assign } from 'dojo-core/lang';
 import WeakMap from 'dojo-shim/WeakMap';
 import Map from 'dojo-shim/Map';
 import d from './d';
+import createVNodeEvented, { VNodeEvented, VNodeEventedOptions } from './mixins/createVNodeEvented';
 
-export interface WidgetFactory extends ComposeFactory<Widget<WidgetState>, WidgetOptions<WidgetState>> {}
+/**
+ * Widget Base
+ */
+export type WidgetBase = Widget<WidgetState> & VNodeEvented
+
+/**
+ * Widget Base Options
+ */
+export type WidgetBaseOptions = WidgetOptions<WidgetState> & VNodeEventedOptions
+
+export interface WidgetFactory extends ComposeFactory<WidgetBase, WidgetBaseOptions> {}
 
 interface WidgetInternalState {
 	children: DNode[];
@@ -114,6 +125,7 @@ function formatTagNameAndClasses(tagName: string, classes: string[]) {
 }
 
 const createWidget: WidgetFactory = createStateful
+	.mixin(createVNodeEvented)
 	.mixin<WidgetMixin, WidgetOptions<WidgetState>>({
 		mixin: {
 			classes: [],

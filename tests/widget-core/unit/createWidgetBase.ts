@@ -44,14 +44,26 @@ registerSuite({
 			assert.deepEqual(renderedWidget.vnodeSelector, 'header.class-one.classTwo');
 	},
 	'getNodeAttributes()'() {
+		let clickCalled = false;
+		const expectedClickFunction = () => {
+			clickCalled = true;
+		};
+
 		const widgetBase = createWidgetBase({
-			state: { id: 'foo', classes: [ 'bar' ] }
+			state: { id: 'foo', classes: [ 'bar' ] },
+			listeners: {
+				click: expectedClickFunction
+			}
 		});
 
 		let nodeAttributes = widgetBase.getNodeAttributes();
+
 		assert.strictEqual(nodeAttributes['data-widget-id'], 'foo');
 		assert.deepEqual(nodeAttributes.classes, { bar: true });
-		assert.strictEqual(Object.keys(nodeAttributes).length, 4);
+		assert.strictEqual(Object.keys(nodeAttributes).length, 5);
+		assert.isFunction(nodeAttributes.onclick);
+		nodeAttributes.onclick!();
+		assert.isTrue(clickCalled);
 
 		widgetBase.setState({ 'id': 'foo', classes: ['foo'] });
 
