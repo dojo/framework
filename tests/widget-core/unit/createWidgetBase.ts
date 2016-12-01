@@ -16,13 +16,18 @@ registerSuite({
 		assert.isFunction(widgetBase.invalidate);
 	},
 	children() {
+		let childrenEventEmitted = false;
 		const expectedChild = d('div');
 		const widget = createWidgetBase();
+		widget.on('widget:children', () => {
+			childrenEventEmitted = true;
+		});
 
 		assert.lengthOf(widget.children, 0);
 		widget.children = [ expectedChild ];
 		assert.lengthOf(widget.children, 1);
 		assert.strictEqual(widget.children[0], expectedChild);
+		assert.isTrue(childrenEventEmitted);
 	},
 	tagName: {
 		'Applies default tagName'() {

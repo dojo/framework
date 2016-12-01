@@ -143,6 +143,18 @@ registerSuite({
 		});
 
 	},
+	'invalidate on setting children'() {
+		const projector = createProjector();
+		let called = false;
+
+		projector.on('invalidated', () => {
+			called = true;
+		});
+
+		projector.children = [ d('div') ];
+
+		assert.isTrue(called);
+	},
 	'invalidate before attached'() {
 		const projector = createProjector();
 		const maquetteProjectorSpy = spy(projector.projector, 'scheduleRender');

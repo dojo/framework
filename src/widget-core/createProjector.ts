@@ -242,6 +242,7 @@ const createProjector: ProjectorFactory = createWidgetBase
 				}
 			}
 
+			instance.own(instance.on('widget:children', instance.invalidate));
 			instance.own(instance.on('invalidated', scheduleRender));
 
 			const projector = createMaquetteProjector(maquetteProjectorOptions);

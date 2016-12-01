@@ -138,6 +138,10 @@ const createWidget: WidgetFactory = createStateful
 			set children(this: Widget<WidgetState>, children: DNode[]) {
 				const internalState = widgetInternalStateMap.get(this);
 				internalState.children = children;
+				this.emit({
+					type: 'widget:children',
+					target: this
+				});
 			},
 
 			get children() {
