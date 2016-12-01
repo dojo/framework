@@ -135,10 +135,10 @@ const myBasicWidget = createWidgetBase({
 
 #### `d`
 
-`d` is thse canonical mechanism for `dojo-widgets` to express a widget hierarchical structure using either Dojo widget factories or Hyperscript.
+`d` is the canonical mechanism for `dojo-widgets` to express a widget hierarchical structure using either Dojo widget factories or Hyperscript.
 
 It is imported by:
-	
+
 ```ts
 import d from 'dojo-widgets/d';
 ```
@@ -175,7 +175,7 @@ Creates a dojo-widget using the `factory` and `options`.
 d(factory: ComposeFactory<W, O>, options: O): WNode[];
 ```
 
-Creates a dojo-widget using the `factory` and `options` and the `children` 
+Creates a dojo-widget using the `factory` and `options` and the `children`
 
 ```ts
 d(factory: ComposeFactory<W, O>, options: O, children: DNode[]): WNode[];
@@ -183,7 +183,7 @@ d(factory: ComposeFactory<W, O>, options: O, children: DNode[]): WNode[];
 
 ### Authoring Custom Widgets
 
-To create custom reusable widgets you can extend `createWidgetBase`. 
+To create custom reusable widgets you can extend `createWidgetBase`.
 
 A simple widget with no children such as a `label` widget can be created like this:
 
@@ -282,9 +282,9 @@ The standard `WidgetOptions` are available and also `createProjector` adds two a
  * `root` - The `Element` that the projector attaches to. The default value is `document.body`
  * `cssTransitions` - Set to `true` to support css transitions and animations. The default value is `false`.
 
-**Note**: If `cssTransitions` is set to `true` then the projector expects Maquette's `css-transitions.js` to be loaded. 
+**Note**: If `cssTransitions` is set to `true` then the projector expects Maquette's `css-transitions.js` to be loaded.
 
-In order to attach the `createProjector` to the page call either `.append`, `.merge` or `.replace` depending on the type of attachment required and returns a promise.
+In order to attach the `createProjector` to the page call either `.append`, `.merge` or `.replace` depending on the type of attachment required and it returns a promise.
 
 Instantiating `createProjector` directly:
 
@@ -331,7 +331,7 @@ const createApp = createProjector.mixin({
 
 export default createApp;
 ```
-Using the custom widget assuming a class called `createApp.ts` reletive to it's usages:
+Using the custom widget assuming a class called `createApp.ts` relative to its usages:
 
 ```ts
 import createApp from './createApp';
@@ -345,7 +345,7 @@ app.append().then(() => {
 
 ### Dojo Widget Components
 
-A selection of core reusable widgets are provided for convenience that are fully accessible and internationalizable.
+A selection of core reusable widgets are provided for convenience that are fully accessible and open to internationalization.
 
 // TODO - list core components here.
 
