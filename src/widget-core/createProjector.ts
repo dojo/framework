@@ -17,6 +17,24 @@ export enum ProjectorState {
 };
 
 /**
+ * Attach type for the projector
+ */
+export enum AttachType {
+	Append = 1,
+	Merge = 2,
+	Replace = 3
+};
+
+export interface AttachOptions {
+
+	/**
+	 * If `'append'` it will append to the root. If `'merge'` it will merge with the root. If `'replace'` it will
+	 * replace the root.
+	 */
+	type: AttachType;
+}
+
+/**
  * Projector interface
  */
 export interface ProjectorOptions extends WidgetOptions<WidgetState> {
@@ -36,9 +54,21 @@ export interface ProjectorOptions extends WidgetOptions<WidgetState> {
 export interface ProjectorMixin {
 
 	/**
-	 * Attach the projector to the an element provided as the root.
+	 * Append the projector to the root.
 	 */
-	attach(): Promise<Handle>;
+	append(): Promise<Handle>;
+
+	/**
+	 * Merge the projector onto the root.
+	 */
+	merge(): Promise<Handle>;
+
+	/**
+	 * Replace the root with the projector node.
+	 *
+	 *
+	 */
+	replace(): Promise<Handle>;
 
 	/**
 	 * Root element to attach the projector
@@ -92,45 +122,79 @@ function scheduleRender(event: EventTargettedObject<Projector>) {
 	}
 }
 
+function attach(instance: Projector, { type }: AttachOptions) {
+	const projectorData = projectorDataMap.get(instance);
+	const render = instance.render.bind(instance);
+
+	if (projectorData.state === ProjectorState.Attached) {
+		return projectorData.attachPromise || Promise.resolve({});
+	}
+	projectorData.state = ProjectorState.Attached;
+
+	projectorData.attachHandle = instance.own({
+		destroy() {
+			if (projectorData.state === ProjectorState.Attached) {
+				projectorData.projector.stop();
+				projectorData.projector.detach(render);
+				projectorData.state = ProjectorState.Detached;
+			}
+			projectorData.attachHandle = { destroy() {} };
+		}
+	});
+
+	projectorData.attachPromise = new Promise((resolve, reject) => {
+		projectorData.afterCreate = () => {
+			instance.emit({
+				type: 'projector:attached',
+				target: instance
+			});
+			resolve(projectorData.attachHandle);
+		};
+	});
+
+	switch (type) {
+		case AttachType.Append:
+			projectorData.projector.append(projectorData.root, render);
+		break;
+		case AttachType.Merge:
+			projectorData.projector.merge(projectorData.root, render);
+		break;
+		case AttachType.Replace:
+			projectorData.projector.replace(projectorData.root, render);
+		break;
+	}
+
+	return projectorData.attachPromise;
+}
+
 /**
  * Projector Factory
  */
 const createProjector: ProjectorFactory = createWidgetBase
 	.mixin({
 		mixin: {
-			attach(this: Projector) {
-				const projectorData = projectorDataMap.get(this);
-				const render = this.render.bind(this);
+			append(this: Projector) {
+				const options = {
+					type: AttachType.Append
+				};
 
-				if (projectorData.state === ProjectorState.Attached) {
-					return projectorData.attachPromise || Promise.resolve({});
-				}
-				projectorData.state = ProjectorState.Attached;
+				return attach(this, options);
+			},
 
-				projectorData.attachHandle = this.own({
-					destroy() {
-						if (projectorData.state === ProjectorState.Attached) {
-							projectorData.projector.stop();
-							projectorData.projector.detach(render);
-							projectorData.state = ProjectorState.Detached;
-						}
-						projectorData.attachHandle = { destroy() {} };
-					}
-				});
+			merge(this: Projector) {
+				const options = {
+					type: AttachType.Merge
+				};
 
-				projectorData.attachPromise = new Promise((resolve, reject) => {
-					projectorData.afterCreate = () => {
-						this.emit({
-							type: 'projector:attached',
-							target: this
-						});
-						resolve(projectorData.attachHandle);
-					};
-				});
+				return attach(this, options);
+			},
 
-				projectorData.projector.append(projectorData.root, render);
+			replace(this: Projector) {
+				const options = {
+					type: AttachType.Replace
+				};
 
-				return projectorData.attachPromise;
+				return attach(this, options);
 			},
 
 			set root(this: Projector, root: Element) {

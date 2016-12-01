@@ -8,22 +8,6 @@ import { spy } from 'sinon';
 
 registerSuite({
 	name: 'projector',
-	basic(this: any) {
-		const childNodeLength = document.body.childNodes.length;
-		const projector = createProjector({
-			getChildrenNodes: function() {
-				return [ d('h2', [ 'foo' ] ) ];
-			}
-		});
-
-		return projector.attach().then((attachHandle) => {
-			assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
-			const child = <HTMLElement> document.body.lastChild;
-			assert.strictEqual(child.innerHTML, '<h2>foo</h2>');
-			assert.strictEqual(child.tagName.toLowerCase(), 'div');
-			assert.strictEqual(( <HTMLElement> child.firstChild).tagName.toLowerCase(), 'h2');
-		});
-	},
 	'construct projector with css transitions'() {
 		global.cssTransitions = {};
 		try {
@@ -59,6 +43,54 @@ registerSuite({
 			assert.equal(error.message, 'Must provide a VNode at the root of a projector');
 		}
 	},
+	'attach to projector': {
+		'append'() {
+			const childNodeLength = document.body.childNodes.length;
+			const projector = createProjector({
+				getChildrenNodes: function() {
+					return [ d('h2', [ 'foo' ] ) ];
+				}
+			});
+
+			return projector.append().then((attachHandle) => {
+				assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
+				const child = <HTMLElement> document.body.lastChild;
+				assert.strictEqual(child.innerHTML, '<h2>foo</h2>');
+				assert.strictEqual(child.tagName.toLowerCase(), 'div');
+				assert.strictEqual(( <HTMLElement> child.firstChild).tagName.toLowerCase(), 'h2');
+			});
+		},
+		'replace'() {
+			const projector = createProjector({
+				tagName: 'body',
+				getChildrenNodes: function() {
+					return [ d('h2', [ 'foo' ] ) ];
+				}
+			});
+
+			return projector.replace().then((attachHandle) => {
+				assert.strictEqual(document.body.childNodes.length, 1, 'child should have been added');
+				const child = <HTMLElement> document.body.lastChild;
+				assert.strictEqual(child.innerHTML, 'foo');
+				assert.strictEqual(child.tagName.toLowerCase(), 'h2');
+			});
+		},
+		'merge'() {
+			const childNodeLength = document.body.childNodes.length;
+			const projector = createProjector({
+				getChildrenNodes: function() {
+					return [ d('h2', [ 'foo' ] ) ];
+				}
+			});
+
+			return projector.merge().then((attachHandle) => {
+				assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
+				const child = <HTMLElement> document.body.lastChild;
+				assert.strictEqual(child.innerHTML, 'foo');
+				assert.strictEqual(child.tagName.toLowerCase(), 'h2');
+			});
+		}
+	},
 	'attach event'() {
 		const root = document.createElement('div');
 		document.body.appendChild(root);
@@ -76,7 +108,7 @@ registerSuite({
 			assert.strictEqual((<HTMLElement> root.firstChild).tagName.toLowerCase(), 'div');
 			assert.strictEqual((<HTMLElement> root.firstChild).innerHTML, '<h2>foo</h2>');
 		});
-		return projector.attach().then(() => {
+		return projector.append().then(() => {
 			assert.isTrue(eventFired);
 		});
 	},
@@ -91,7 +123,7 @@ registerSuite({
 		const projector = createProjector();
 
 		assert.equal(projector.projectorState, ProjectorState.Detached);
-		return projector.attach().then(() => {
+		return projector.append().then(() => {
 			assert.equal(projector.projectorState, ProjectorState.Attached);
 			projector.destroy();
 			assert.equal(projector.projectorState, ProjectorState.Detached);
@@ -103,7 +135,7 @@ registerSuite({
 		const maquetteProjectorStopSpy = spy(projector.projector, 'stop');
 		const maquetteProjectorDetachSpy = spy(projector.projector, 'detach');
 
-		return projector.attach().then(() => {
+		return projector.append().then(() => {
 			projector.destroy();
 
 			assert.isTrue(maquetteProjectorStopSpy.calledOnce);
@@ -139,7 +171,7 @@ registerSuite({
 			called = true;
 		});
 
-		return projector.attach().then(() => {
+		return projector.append().then(() => {
 			projector.invalidate();
 			assert.isTrue(maquetteProjectorSpy.called);
 			assert.isTrue(called);
@@ -148,14 +180,14 @@ registerSuite({
 	'reattach'() {
 		const root = document.createElement('div');
 		const projector = createProjector({ root });
-		const promise = projector.attach();
-		assert.strictEqual(promise, projector.attach(), 'same promise should be returned');
+		const promise = projector.append();
+		assert.strictEqual(promise, projector.append(), 'same promise should be returned');
 	},
 	'setRoot throws when already attached'() {
 		const projector = createProjector();
 		const div = document.createElement('div');
 		projector.root = div;
-		return projector.attach().then((handle) => {
+		return projector.append().then((handle) => {
 			assert.throws(() => {
 				projector.root = document.body;
 			}, Error, 'already attached');
