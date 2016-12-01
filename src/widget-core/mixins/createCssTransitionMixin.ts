@@ -1,6 +1,6 @@
 import { VNodeProperties } from 'dojo-interfaces/vdom';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import { NodeAttributeFunction } from 'dojo-interfaces/widgetBases';
+import { NodeAttributeFunction } from './../interfaces';
 import createStateful from 'dojo-compose/bases/createStateful';
 import { State, Stateful, StatefulOptions } from 'dojo-interfaces/bases';
 

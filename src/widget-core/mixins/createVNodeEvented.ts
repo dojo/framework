@@ -11,7 +11,7 @@ import {
 } from 'dojo-interfaces/bases';
 import Set from 'dojo-shim/Set';
 import { VNodeProperties } from 'dojo-interfaces/vdom';
-import { NodeAttributeFunction } from 'dojo-interfaces/widgetBases';
+import { NodeAttributeFunction } from './../interfaces';
 
 export type VNodeListenerReturn = boolean | undefined | null;
 

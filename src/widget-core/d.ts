@@ -6,7 +6,7 @@ import {
 	Widget,
 	WidgetState,
 	WidgetOptions
-} from 'dojo-interfaces/widgetBases';
+} from './interfaces';
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
 import { h } from 'maquette';
 

@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createWidgetBase from '../../src/createWidgetBase';
-import { DNode, HNode, WidgetState, WidgetOptions } from 'dojo-interfaces/widgetBases';
+import { DNode, HNode, WidgetState, WidgetOptions } from './../../src/interfaces';
 import d from '../../src/d';
 import { stub } from 'sinon';
 

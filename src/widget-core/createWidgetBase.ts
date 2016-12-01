@@ -8,7 +8,7 @@ import {
 	WidgetMixin,
 	WidgetState,
 	WidgetOptions
-} from 'dojo-interfaces/widgetBases';
+} from './interfaces';
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
 import { Factory } from 'dojo-interfaces/core';
 import { assign } from 'dojo-core/lang';

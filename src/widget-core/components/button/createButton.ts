@@ -1,7 +1,7 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import { VNodeProperties } from 'dojo-interfaces/vdom';
 import createWidgetBase from '../../createWidgetBase';
-import { Widget, WidgetOptions, WidgetState } from 'dojo-interfaces/widgetBases';
+import { Widget, WidgetOptions, WidgetState } from './../../interfaces';
 import createVNodeEvented, { VNodeEvented, VNodeEventedOptions } from '../../mixins/createVNodeEvented';
 import createFormFieldMixin, { FormFieldMixin, FormFieldMixinState, FormFieldMixinOptions } from '../../mixins/createFormFieldMixin';
 

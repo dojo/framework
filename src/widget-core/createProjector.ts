@@ -1,7 +1,7 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
 import { VNodeProperties } from 'dojo-interfaces/vdom';
-import { Widget, WidgetState, WidgetOptions } from 'dojo-interfaces/widgetBases';
+import { Widget, WidgetState, WidgetOptions } from './interfaces';
 import WeakMap from 'dojo-shim/WeakMap';
 import { createProjector as createMaquetteProjector, Projector as MaquetteProjector } from 'maquette';
 import createWidgetBase from './createWidgetBase';

@@ -1,6 +1,6 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import createWidgetBase from '../../createWidgetBase';
-import { Widget, WidgetOptions, WidgetState } from 'dojo-interfaces/widgetBases';
+import { Widget, WidgetOptions, WidgetState } from './../../interfaces';
 import createFormFieldMixin, { FormFieldMixin, FormFieldMixinState, FormFieldMixinOptions } from '../../mixins/createFormFieldMixin';
 import createVNodeEvented, { VNodeEvented, VNodeEventedOptions } from '../../mixins/createVNodeEvented';
 
