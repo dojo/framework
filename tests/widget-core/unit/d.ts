@@ -6,11 +6,18 @@ import d from '../../src/d';
 
 registerSuite({
 	name: 'util/d',
-	'create DNode wrapper'() {
+	'create WNode wrapper'() {
 		const options: WidgetOptions<WidgetState> = { tagName: 'header', state: { hello: 'world' } };
 		const dNode = d(createWidgetBase, options);
 		assert.deepEqual(dNode.factory, createWidgetBase);
 		assert.deepEqual(dNode.options, options);
+	},
+	'create WNode wrapper with children'() {
+		const options: WidgetOptions<WidgetState> = { tagName: 'header', state: { hello: 'world' } };
+		const dNode = d(createWidgetBase, options, [d('div')]);
+		assert.deepEqual(dNode.factory, createWidgetBase);
+		assert.deepEqual(dNode.options, options);
+		assert.lengthOf(dNode.children, 1);
 	},
 	'create HNode wrapper'() {
 		const hNode = d('div');

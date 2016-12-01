@@ -18,6 +18,7 @@ import d from './d';
 export interface WidgetFactory extends ComposeFactory<Widget<WidgetState>, WidgetOptions<WidgetState>> {}
 
 interface WidgetInternalState {
+	children: DNode[];
 	readonly id?: string;
 	dirty: boolean;
 	widgetClasses: string[];
@@ -54,7 +55,7 @@ function dNodeToVNode(instance: Widget<WidgetState>, dNode: DNode): VNode | stri
 	}
 
 	if (isWNode(dNode)) {
-		const { factory, options: { id, state } } = dNode;
+		const { children, factory, options: { id, state } } = dNode;
 		const childrenMapKey = id || factory;
 		const cachedChild = internalState.historicChildrenMap.get(childrenMapKey);
 
@@ -79,6 +80,8 @@ function dNodeToVNode(instance: Widget<WidgetState>, dNode: DNode): VNode | stri
 			console.error(errorMsg);
 			instance.emit({ type: 'error', target: instance, error: new Error(errorMsg) });
 		}
+
+		child.children = children;
 		internalState.currentChildrenMap.set(childrenMapKey, child);
 
 		return child.render();
@@ -120,8 +123,17 @@ const createWidget: WidgetFactory = createStateful
 				return d(tag, this.getNodeAttributes(), this.getChildrenNodes());
 			},
 
+			set children(this: Widget<WidgetState>, children: DNode[]) {
+				const internalState = widgetInternalStateMap.get(this);
+				internalState.children = children;
+			},
+
+			get children() {
+				return widgetInternalStateMap.get(this).children;
+			},
+
 			getChildrenNodes(this: Widget<WidgetState>): DNode[] {
-				return [];
+				return this.children;
 			},
 
 			getNodeAttributes(this: Widget<WidgetState>, overrides?: VNodeProperties): VNodeProperties {
@@ -198,7 +210,8 @@ const createWidget: WidgetFactory = createStateful
 				dirty: true,
 				widgetClasses: [],
 				historicChildrenMap: new Map<string | Factory<Widget<WidgetState>, WidgetOptions<WidgetState>>, Widget<WidgetState>>(),
-				currentChildrenMap: new Map<string | Factory<Widget<WidgetState>, WidgetOptions<WidgetState>>, Widget<WidgetState>>()
+				currentChildrenMap: new Map<string | Factory<Widget<WidgetState>, WidgetOptions<WidgetState>>, Widget<WidgetState>>(),
+				children: []
 			});
 
 			instance.own(instance.on('state:changed', () => {

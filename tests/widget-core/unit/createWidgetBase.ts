@@ -15,6 +15,15 @@ registerSuite({
 		assert.isFunction(widgetBase.getChildrenNodes);
 		assert.isFunction(widgetBase.invalidate);
 	},
+	children() {
+		const expectedChild = d('div');
+		const widget = createWidgetBase();
+
+		assert.lengthOf(widget.children, 0);
+		widget.children = [ expectedChild ];
+		assert.lengthOf(widget.children, 1);
+		assert.strictEqual(widget.children[0], expectedChild);
+	},
 	tagName: {
 		'Applies default tagName'() {
 			const widget = createWidgetBase();

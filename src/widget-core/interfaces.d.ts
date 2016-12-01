@@ -249,6 +249,11 @@ export interface WNode {
 	 * Options used to create factory a widget
 	 */
 	options: WidgetOptions<WidgetState>;
+
+	/**
+	 * DNode children
+	 */
+	children: DNode[];
 }
 
 export type DNode = HNode | WNode | string;
@@ -273,6 +278,11 @@ export interface WidgetMixin {
 	 * stored in the instances state object.
 	 */
 	readonly classes: string[];
+
+	/**
+	 * An array of children `DNode`s returned via `getChildrenNodes`
+	 */
+	children: DNode[];
 
 	/**
 	 * Get the top level node and children when rendering the widget.

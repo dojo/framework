@@ -20,6 +20,7 @@ function d(tagName: string, options: VNodeProperties, children?: Children): HNod
 function d(tagName: string, children: Children): HNode;
 function d(tagName: string): HNode;
 function d<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S>>(factory: ComposeFactory<W, O>, options: O): WNode;
+function d<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S>>(factory: ComposeFactory<W, O>, options: O, children: DNode[]): WNode;
 function d<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S>>(
 	tagNameOrFactory: TagNameOrFactory<S, W, O>,
 	optionsOrChildren: DOptions<S, O> = {},
@@ -44,6 +45,7 @@ function d<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S
 
 	if (typeof tagNameOrFactory === 'function') {
 		return {
+			children: <DNode[]> children,
 			factory: tagNameOrFactory,
 			options: <WidgetOptions<WidgetState>> optionsOrChildren
 		};
