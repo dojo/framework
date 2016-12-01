@@ -1,40 +1,5 @@
-var path = require('path');
-var fs = require('fs');
-
 module.exports = function (grunt) {
-	var staticExampleFiles = [ 'src/examples/**', '!src/examples/**/*.js' ];
-
 	require('grunt-dojo2').initConfig(grunt, {
-		copy: {
-			staticExampleFiles: {
-				expand: true,
-				cwd: '.',
-				src: staticExampleFiles,
-				dest: '<%= devDirectory %>'
-			}
-		},
-		dtsGenerator: {
-			options: {
-				main: 'dojo-widgets/main'
-			}
-		}
+		/* any custom configuration goes here */
 	});
-
-	grunt.registerTask('dev', [
-		'clean:typings',
-		'typings:dev',
-		'tslint',
-		'clean:dev',
-		'ts:dev',
-		'copy:staticTestFiles',
-		'copy:staticExampleFiles'
-	]);
-
-	grunt.registerTask('dist', [
-		'clean:typings',
-		'typings:dist',
-		'tslint',
-		'clean:dist',
-		'ts:dist'
-	]);
 };
