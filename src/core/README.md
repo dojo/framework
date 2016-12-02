@@ -5,7 +5,7 @@
 [![npm version](https://badge.fury.io/js/dojo-core.svg)](https://badge.fury.io/js/dojo-core)
 
 This package provides a set of language helpers, utility functions, and classes for writing TypeScript applications.
-It includes APIs for feature detection, asynchronous and streaming operations, basic event handling,
+It includes APIs for feature detection, asynchronous operations, basic event handling,
 and making HTTP requests.
 
 **WARNING** This is *beta* software.  While we do not anticipate significant changes to the API at this stage, we may feel the need to do so.  This is not yet production ready, so you should use at your own risk.

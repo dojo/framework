@@ -15,7 +15,6 @@ import './main';
 import './on/all';
 import './MatchRegistry';
 import './queue';
-import './streams/all';
 import './request';
 import './request/all';
 import './Scheduler';

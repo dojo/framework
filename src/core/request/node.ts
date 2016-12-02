@@ -5,10 +5,10 @@ import * as http from 'http';
 import * as https from 'https';
 import { createHandle } from '../lang';
 import { RequestError, RequestOptions, Response, ResponsePromise } from '../request';
-import ReadableNodeStreamSource from '../streams/adapters/ReadableNodeStreamSource';
-import WritableNodeStreamSink from '../streams/adapters/WritableNodeStreamSink';
-import ReadableStream from '../streams/ReadableStream';
-import WritableStream from '../streams/WritableStream';
+import ReadableNodeStreamSource from 'dojo-streams/adapters/ReadableNodeStreamSource';
+import WritableNodeStreamSink from 'dojo-streams/adapters/WritableNodeStreamSink';
+import ReadableStream from 'dojo-streams/ReadableStream';
+import WritableStream from 'dojo-streams/WritableStream';
 import * as urlUtil from 'url';
 import { generateRequestUrl } from './util';
 

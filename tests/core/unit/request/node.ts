@@ -1,14 +1,13 @@
-import BaseStringSource from '../streams/helpers/BaseStringSource';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as DojoPromise from 'intern/dojo/Promise';
 import Promise from 'dojo-shim/Promise';
 import RequestTimeoutError from '../../../src/request/errors/RequestTimeoutError';
 import { default as nodeRequest, NodeRequestOptions } from '../../../src/request/node';
-import ArraySink from '../../../src/streams/ArraySink';
-import ReadableStream from '../../../src/streams/ReadableStream';
-import ReadableStreamController from '../../../src/streams/ReadableStreamController';
-import WritableStream from '../../../src/streams/WritableStream';
+import ArraySink from 'dojo-streams/ArraySink';
+import ReadableStream, { Source } from 'dojo-streams/ReadableStream';
+import ReadableStreamController from 'dojo-streams/ReadableStreamController';
+import WritableStream from 'dojo-streams/WritableStream';
 import { createServer } from 'http';
 import { parse } from 'url';
 
@@ -17,6 +16,21 @@ const serverUrl = 'http://localhost:' + serverPort;
 let server: any;
 let proxy: any;
 let requestData: string;
+
+class BaseStringSource implements Source<string> {
+
+	start(controller: ReadableStreamController<string>): Promise<void> {
+		return Promise.resolve();
+	}
+
+	pull(controller: ReadableStreamController<string>): Promise<void> {
+		return Promise.resolve();
+	}
+
+	cancel(reason?: any): Promise<void> {
+		return Promise.resolve();
+	}
+}
 
 interface DummyResponse {
 	body?: string;
