@@ -143,7 +143,7 @@ export interface WidgetMixin<P extends WidgetProperties> {
 	/**
 	 * Properties passed to affect state
 	 */
-	properties: Partial<P>;
+	properties: P;
 
 	/**
 	 * Determine changed or new property keys on render.

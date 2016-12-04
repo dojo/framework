@@ -26,8 +26,13 @@
     "dojo-compose": ">=2.0.0-beta.10",
     "dojo-core": ">=2.0.0-alpha.14",
     "dojo-has": ">=2.0.0-alpha.4",
+    "dojo-i18n": ">=2.0.0-alpha.3",
     "dojo-shim": ">=2.0.0-beta.1",
     "maquette": ">=2.3.7 <=2.4.1"
+  },
+  "dependencies": {
+    "cldr-data": "~30.0.0",
+    "globalize": "^1.1.1"
   },
   "devDependencies": {
     "@types/chai": "3.4.*",

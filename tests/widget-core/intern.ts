@@ -60,16 +60,25 @@ export const loaderOptions = {
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' },
 		{ name: 'node_modules', location: '_build/node_modules' },
+		{ name: 'cldr-data', location: 'node_modules/cldr-data' },
+		{ name: 'cldr', location: 'node_modules/cldrjs/dist', main: 'cldr' },
 		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
 		{ name: 'dojo-compose', location: 'node_modules/dojo-compose' },
 		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
 		{ name: 'dojo-has', location: 'node_modules/dojo-has' },
+		{ name: 'dojo-i18n', location: 'node_modules/dojo-i18n' },
 		{ name: 'dojo-shim', location: 'node_modules/dojo-shim' },
+		{ name: 'globalize', location: 'node_modules/globalize/dist' },
 		{ name: 'immutable', location: 'node_modules/immutable/dist', main: 'immutable' },
 		{ name: 'maquette', location: 'node_modules/maquette/dist', main: 'maquette' },
 		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' },
 		{ name: 'rxjs', location: 'node_modules/@reactivex/rxjs/dist/amd' }
-	]
+	],
+	paths: {
+		'cldr/event': 'node_modules/cldrjs/dist/cldr/event',
+		'cldr/supplemental': 'node_modules/cldrjs/dist/cldr/supplemental',
+		'cldr/unresolved': 'node_modules/cldrjs/dist/cldr/unresolved'
+	}
 };
 
 // Non-functional test suite(s) to run in each browser
