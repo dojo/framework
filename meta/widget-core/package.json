@@ -28,7 +28,6 @@
     "dojo-core": ">=2.0.0-alpha.14",
     "dojo-has": ">=2.0.0-alpha.4",
     "dojo-shim": ">=2.0.0-beta.1",
-    "dojo-stores": "2.0.0-alpha.4",
     "maquette": ">=2.3.7 <=2.4.1"
   },
   "devDependencies": {
