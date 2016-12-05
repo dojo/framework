@@ -11,6 +11,7 @@ import './instrument';
 import './lang';
 import './List';
 import './load';
+import './load/webpack';
 import './main';
 import './Observable';
 import './on/all';
