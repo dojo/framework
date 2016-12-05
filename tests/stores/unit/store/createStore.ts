@@ -429,12 +429,12 @@ registerSuite({
 
 	'async storage': {
 		'async operation should not be done immediately.'(this: any) {
-			const{ store } = getStoreWithAsyncStorage(this, { put: 21 }, false);
+			const{ store } = getStoreWithAsyncStorage(this, { put: 50}, false);
 
 			const start = Date.now();
 			return store.add(createData()).then(function() {
 				const finish = Date.now();
-				assert.isAbove(finish - start, 19 );
+				assert.isAbove(finish - start, 25);
 			});
 		},
 		'should complete initial add before subsequent operations'(this: any) {
