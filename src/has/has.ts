@@ -153,7 +153,9 @@ export function normalize(resourceId: string, normalize: (moduleId: string) => s
  * @param feature the name of the feature
  */
 export function exists(feature: string): boolean {
-	return Boolean(feature in staticCache || feature in testCache || testFunctions[feature]);
+	const normalizedFeature = feature.toLowerCase();
+
+	return Boolean(normalizedFeature in staticCache || normalizedFeature in testCache || testFunctions[normalizedFeature]);
 }
 
 /**
@@ -172,16 +174,18 @@ export function exists(feature: string): boolean {
  * @param overwrite if an existing value should be overwritten. Defaults to false.
  */
 export function add(feature: string, value: FeatureTest | FeatureTestResult, overwrite: boolean = false): void {
-	if (exists(feature) && !overwrite && !(feature in staticCache)) {
+	const normalizedFeature = feature.toLowerCase();
+
+	if (exists(normalizedFeature) && !overwrite && !(normalizedFeature in staticCache)) {
 		throw new TypeError(`Feature "${feature}" exists and overwrite not true.`);
 	}
 
 	if (typeof value === 'function') {
-		testFunctions[feature] = value;
+		testFunctions[normalizedFeature] = value;
 	}
 	else {
-		testCache[feature] = value;
-		delete testFunctions[feature];
+		testCache[normalizedFeature] = value;
+		delete testFunctions[normalizedFeature];
 	}
 }
 
@@ -193,15 +197,17 @@ export function add(feature: string, value: FeatureTest | FeatureTestResult, ove
 export default function has(feature: string): FeatureTestResult {
 	let result: FeatureTestResult;
 
-	if (feature in staticCache) {
-		result = staticCache[feature];
+	const normalizedFeature = feature.toLowerCase();
+
+	if (normalizedFeature in staticCache) {
+		result = staticCache[normalizedFeature];
 	}
-	else if (testFunctions[feature]) {
-		result = testCache[feature] = testFunctions[feature].call(null);
-		delete testFunctions[feature];
+	else if (testFunctions[normalizedFeature]) {
+		result = testCache[normalizedFeature] = testFunctions[normalizedFeature].call(null);
+		delete testFunctions[normalizedFeature];
 	}
-	else if (feature in testCache) {
-		result = testCache[feature];
+	else if (normalizedFeature in testCache) {
+		result = testCache[normalizedFeature];
 	}
 	else {
 		throw new TypeError(`Attempt to detect unregistered has feature "${feature}"`);
@@ -214,7 +220,7 @@ export default function has(feature: string): FeatureTestResult {
  * Out of the box feature tests
  */
 
-/* Evironments */
+/* Environments */
 
 /* Used as a value to provide a debug only code path */
 add('debug', true);
@@ -222,7 +228,7 @@ add('debug', true);
 /* Detects if the environment is "browser like" */
 add('host-browser', typeof document !== 'undefined' && typeof location !== 'undefined');
 
-/* Detects if the enviornment appears to be NodeJS */
+/* Detects if the environment appears to be NodeJS */
 add('host-node', function () {
 	if (typeof process === 'object' && process.versions && process.versions.node) {
 		return process.versions.node;

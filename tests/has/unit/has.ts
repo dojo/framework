@@ -128,6 +128,11 @@ registerSuite({
 			}, TypeError);
 		},
 
+		'case should not matter'() {
+			hasAdd('APPLES', true);
+			assert.isTrue(has('apples'));
+		},
+
 		'feature is already defined; throws'() {
 			hasAdd(feature, true);
 			assert.throws(() => {
@@ -184,6 +189,11 @@ registerSuite({
 		'null test value counts as being defined'() {
 			hasAdd(feature, <any> null);
 			assert.isTrue(hasExists(feature));
+		},
+
+		'case should not matter'() {
+			hasAdd('apples', true);
+			assert.isTrue(hasExists('APPLES'));
 		}
 	},
 
