@@ -1,6 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import Symbol from 'dojo-shim/Symbol';
+import { from as arrayFrom } from 'dojo-shim/array';
 
 import IdentityRegistry from '../../src/IdentityRegistry';
 
@@ -169,5 +170,57 @@ registerSuite({
 			handle.destroy();
 			assert.isFalse(registry.has('id'));
 		}
+	},
+
+	'#values'() {
+		const value1 = new Value();
+		const value2 = new Value();
+		const value3 = new Value();
+
+		const registry = new IdentityRegistry<Value>();
+		registry.register('id1', value1);
+		registry.register('id2', value2);
+		registry.register('id3', value3);
+
+		assert.deepEqual(arrayFrom(registry.values()), [ value1, value2, value3 ]);
+	},
+
+	'#ids'() {
+		const value1 = new Value();
+		const value2 = new Value();
+		const value3 = new Value();
+
+		const registry = new IdentityRegistry<Value>();
+		registry.register('id1', value1);
+		registry.register('id2', value2);
+		registry.register('id3', value3);
+
+		assert.deepEqual(arrayFrom(registry.ids()), [ 'id1', 'id2', 'id3' ]);
+	},
+
+	'#entries'() {
+		const value1 = new Value();
+		const value2 = new Value();
+		const value3 = new Value();
+
+		const registry = new IdentityRegistry<Value>();
+		registry.register('id1', value1);
+		registry.register('id2', value2);
+		registry.register('id3', value3);
+
+		assert.deepEqual(arrayFrom(registry.entries()), [ [ 'id1', value1 ], [ 'id2', value2 ], [ 'id3', value3 ] ]);
+	},
+
+	'iterator'() {
+		const value1 = new Value();
+		const value2 = new Value();
+		const value3 = new Value();
+
+		const registry = new IdentityRegistry<Value>();
+		registry.register('id1', value1);
+		registry.register('id2', value2);
+		registry.register('id3', value3);
+
+		assert.deepEqual(arrayFrom(registry), [ [ 'id1', value1 ], [ 'id2', value2 ], [ 'id3', value3 ] ]);
 	}
 });
