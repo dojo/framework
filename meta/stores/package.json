@@ -14,7 +14,7 @@
   "typings": "./dist/umd/dojo-stores.d.ts",
   "peerDependencies": {
     "@reactivex/rxjs": "5.0.0-beta.6",
-    "dojo-compose": "2.0.0-beta.11",
+    "dojo-compose": ">=2.0.0-beta.18",
     "dojo-core": ">=2.0.0-alpha.11",
     "dojo-shim": ">=2.0.0-alpha.3",
     "dojo-has": ">=2.0.0-alpha.3",

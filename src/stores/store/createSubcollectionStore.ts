@@ -33,32 +33,34 @@ export interface SubcollectionFactory extends ComposeFactory<SubcollectionStore<
 }
 
 const createSubcollectionStore: SubcollectionFactory = createStore
-	.extend({
-		get source(this: SubcollectionStore<{}, {}, any, Store<{}, {}, any>>) {
-			const state = instanceStateMap.get(this);
-			return state && state.source;
-		},
+	.mixin({
+		mixin: {
+			get source(this: SubcollectionStore<{}, {}, any, Store<{}, {}, any>>) {
+				const state = instanceStateMap.get(this);
+				return state && state.source;
+			},
 
-		get factory(this: SubcollectionStore<{}, {}, any, Store<{}, {}, any>>) {
-			const state = instanceStateMap.get(this);
-			return state && state.factory;
-		},
+			get factory(this: SubcollectionStore<{}, {}, any, Store<{}, {}, any>>) {
+				const state = instanceStateMap.get(this);
+				return state && state.factory;
+			},
 
-		createSubcollection(this: SubcollectionStore<{}, {}, any, Store<{}, {}, any>>, options?: {}) {
-			// Need to reassign the factory or compose throws an error for instantiating
-			// with new
-			const factory = this.factory;
-			const defaultOptions = this.getOptions();
-			return factory(mixin(defaultOptions, options || {}));
-		},
+			createSubcollection(this: SubcollectionStore<{}, {}, any, Store<{}, {}, any>>, options?: {}) {
+				// Need to reassign the factory or compose throws an error for instantiating
+				// with new
+				const factory = this.factory;
+				const defaultOptions = this.getOptions();
+				return factory(mixin(defaultOptions, options || {}));
+			},
 
-		getOptions(this: SubcollectionStore<{}, {}, any, Store<{}, {}, any>>): SubcollectionOptions<{}, {}, any> {
-			return {
-				source: this.source || this,
-				// Provide something to prevent the Subcollection from instantiating its own storage. The type doesn't
-				// matter because it'll never be used.
-				storage: <any> true
-			};
+			getOptions(this: SubcollectionStore<{}, {}, any, Store<{}, {}, any>>): SubcollectionOptions<{}, {}, any> {
+				return {
+					source: this.source || this,
+					// Provide something to prevent the Subcollection from instantiating its own storage. The type doesn't
+					// matter because it'll never be used.
+					storage: <any> true
+				};
+			}
 		}
 	}).mixin({
 		initialize<T, O extends CrudOptions, U extends UpdateResults<T>>(
