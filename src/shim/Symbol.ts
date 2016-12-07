@@ -113,6 +113,7 @@ export namespace Shim {
 		isConcatSpreadable: getValueDescriptor(Symbol.for('isConcatSpreadable'), false, false),
 		iterator: getValueDescriptor(Symbol.for('iterator'), false, false),
 		match: getValueDescriptor(Symbol.for('match'), false, false),
+		observable: getValueDescriptor(Symbol.for('observable'), false, false),
 		replace: getValueDescriptor(Symbol.for('replace'), false, false),
 		search: getValueDescriptor(Symbol.for('search'), false, false),
 		species: getValueDescriptor(Symbol.for('species'), false, false),
@@ -151,7 +152,7 @@ const SymbolShim: SymbolConstructor = has('es6-symbol') ? global.Symbol : global
  * Fill any missing well known symbols if the native Symbol is missing them
  */
 [ 'hasInstance', 'isConcatSpreadable', 'iterator', 'species', 'replace', 'search', 'split', 'match', 'toPrimitive',
-	'toStringTag', 'unscopables' ].forEach((wellKnown) => {
+	'toStringTag', 'unscopables', 'observable' ].forEach((wellKnown) => {
 		if (!(<any> Symbol)[wellKnown]) {
 			Object.defineProperty(Symbol, wellKnown, getValueDescriptor(Symbol.for(wellKnown), false, false));
 		}

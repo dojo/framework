@@ -78,6 +78,9 @@ add('es6-math-imul', () => {
 /* Promise */
 add('es6-promise', typeof global.Promise !== 'undefined' && has('es6-symbol'));
 
+/* Observable */
+add('es-observable', typeof global.Observable !== 'undefined');
+
 /* Set */
 add('es6-set', () => {
 	if (typeof global.Set === 'function') {

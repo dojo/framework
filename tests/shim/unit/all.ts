@@ -11,6 +11,7 @@ import './Map';
 import './math';
 import './number';
 import './object';
+import './Observable';
 import './Promise';
 import './Set';
 import './string';
