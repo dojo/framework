@@ -2,7 +2,7 @@ import 'dojo/has!host-node?../support/loadJsdom';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createProjector, { ProjectorState } from '../../src/createProjector';
-import d from '../../src/d';
+import { v } from '../../src/d';
 import global from 'dojo-core/global';
 import { spy } from 'sinon';
 
@@ -48,7 +48,7 @@ registerSuite({
 			const childNodeLength = document.body.childNodes.length;
 			const projector = createProjector();
 
-			projector.children = [ d('h2', [ 'foo' ] ) ];
+			projector.children = [ v('h2', [ 'foo' ] ) ];
 
 			return projector.append().then((attachHandle) => {
 				assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
@@ -63,7 +63,7 @@ registerSuite({
 				tagName: 'body'
 			});
 
-			projector.children = [ d('h2', [ 'foo' ] ) ];
+			projector.children = [ v('h2', [ 'foo' ] ) ];
 
 			return projector.replace().then((attachHandle) => {
 				assert.strictEqual(document.body.childNodes.length, 1, 'child should have been added');
@@ -76,7 +76,7 @@ registerSuite({
 			const childNodeLength = document.body.childNodes.length;
 			const projector = createProjector();
 
-			projector.children = [ d('h2', [ 'foo' ] ) ];
+			projector.children = [ v('h2', [ 'foo' ] ) ];
 
 			return projector.merge().then((attachHandle) => {
 				assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
@@ -93,7 +93,7 @@ registerSuite({
 			root
 		});
 
-		projector.children = [ d('h2', [ 'foo' ] ) ];
+		projector.children = [ v('h2', [ 'foo' ] ) ];
 
 		assert.strictEqual(root.childNodes.length, 0, 'there should be no children');
 		let eventFired = false;
@@ -151,7 +151,7 @@ registerSuite({
 			called = true;
 		});
 
-		projector.children = [ d('div') ];
+		projector.children = [ v('div') ];
 
 		assert.isTrue(called);
 	},

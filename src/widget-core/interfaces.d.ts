@@ -17,6 +17,7 @@ import { Renderable, RenderableParent } from 'dojo-interfaces/abilities';
 import { EventedListener, State, Stateful, StatefulOptions } from 'dojo-interfaces/bases';
 import { EventTargettedObject, Factory, Handle, StylesMap } from 'dojo-interfaces/core';
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
+import { VNodeEvented, VNodeEventedOptions } from './mixins/createVNodeEvented';
 
 /**
  * A function that is called to return top level node
@@ -29,7 +30,7 @@ export interface NodeFunction {
  * A function that is called when collecting the children nodes on render.
  */
 export interface ChildNodeFunction {
-	(this: Widget<WidgetState>): DNode[] | VNode[];
+	(this: Widget<WidgetState>): DNode[];
 }
 
 /**
@@ -231,7 +232,7 @@ export interface HNode {
 	/**
 	 * Specified children
 	 */
-	children: (VNode | DNode | null)[];
+	children: (DNode | (VNode | string))[];
 
 	/**
 	 * render function that wraps returns VNode
@@ -256,9 +257,11 @@ export interface WNode {
 	children: DNode[];
 }
 
+export type Children = (DNode | null)[];
+
 export type DNode = HNode | WNode | string;
 
-export type Widget<S extends WidgetState> = Stateful<S> & WidgetMixin & WidgetOverloads;
+export type Widget<S extends WidgetState> = Stateful<S> & WidgetMixin & WidgetOverloads & VNodeEvented;
 
 export interface WidgetOverloads {
 	/**
@@ -346,7 +349,7 @@ export interface WidgetMixin {
 	tagName: string;
 }
 
-export interface WidgetOptions<S extends WidgetState> extends StatefulOptions<S> {
+export interface WidgetOptions<S extends WidgetState> extends StatefulOptions<S>, VNodeEventedOptions {
 	/**
 	 * Any classes that should be added to this instances
 	 */

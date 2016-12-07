@@ -56,7 +56,7 @@ The smallest `dojo-widgets` example looks like this:
 
 ```ts
 const projector = createProjector();
-projector.children = [ d('h1', [ 'Hello, Dojo!' ]) ];
+projector.children = [ v('h1', [ 'Hello, Dojo!' ]) ];
 projector.append();
 ```
 
@@ -82,6 +82,7 @@ To customise the widget an optional `options` argument can be provided with the 
 By default the base widget class applies `id`, `classes` and `styles` from the widget's specified `state` (either by direct state injection or via an observable store).
 
 #### Simple Widgets
+
 To create a basic widget `createWidgetBase` can be used directly by importing the class.
 
 ```ts
@@ -135,12 +136,14 @@ const myBasicWidget = createWidgetBase({
 
 #### `d`
 
-`d` is the canonical mechanism for `dojo-widgets` to express a widget hierarchical structure using either Dojo widget factories or Hyperscript.
+`d` is the module used to express hierarchical widget structures within Dojo 2. This structure constructed of `DNode`s (`DNode` is the intersection type of `HNode` and `WNode`).
+
+When creating custom widgets, you use the `v` and `w` functions from the `d` module.
 
 It is imported by:
 
 ```ts
-import d from 'dojo-widgets/d';
+import { v, w } from 'dojo-widgets/d';
 ```
 
 The argument and return types are available from `dojo-widgets/interfaces` as follows:
@@ -149,36 +152,40 @@ The argument and return types are available from `dojo-widgets/interfaces` as fo
 import { DNode, HNode, WNode } from 'dojo-widgets/interfaces';
 ```
 
-##### Hyperscript
+##### `v`
 
-Creates an element with the `tagName`
+`v` is an abstraction of Hyperscript that allows dojo 2 to manage caching and lazy creation.
+
+Creates an element with the `tag`
 
 ```ts
-d(tagName: string): HNode[];
+v(tag: string): HNode[];
 ```
 
-Creates an element with the `tagName` with the children specified by the array of `DNode`, `VNode` or `null`.
+Creates an element with the `tag` with the children specified by the array of `DNode`, `VNode` or `null`.
 
 ```ts
-d(tagName: string, children: (DNode | VNode | null)[]): HNode[];
+v(tag: string, children: (DNode | null)[]): HNode[];
 ```
 Creates an element with the `tagName` with the `VNodeProperties` options and optional children specified by the array of `DNode`, `VNode` or `null`.
 
 ```ts
-d(tagName: string, options: VNodeProperties, children?: (DNode | VNode | null)[]): HNode[];
+v(tag: string, options: VNodeProperties, children?: (DNode | null)[]): HNode[];
 ```
-##### Dojo Widget
+##### `w`
+
+`w` is an abstraction layer for dojo-widgets that enables dojo 2's lazy instantiation, instance management and caching.
 
 Creates a dojo-widget using the `factory` and `options`.
 
 ```ts
-d(factory: ComposeFactory<W, O>, options: O): WNode[];
+w(factory: ComposeFactory<W, O>, options: O): WNode[];
 ```
 
 Creates a dojo-widget using the `factory` and `options` and the `children`
 
 ```ts
-d(factory: ComposeFactory<W, O>, options: O, children: DNode[]): WNode[];
+w(factory: ComposeFactory<W, O>, options: O, children: (DNode | null)[]): WNode[];
 ```
 
 ### Authoring Custom Widgets
@@ -230,7 +237,7 @@ To create structured widgets override the `getChildrenNodes` function.
 import { ComposeFactory } from 'dojo-compose/compose';
 import { DNode, Widget, WidgetOptions, WidgetState } from 'dojo-widgets/interfaces';
 import createWidgetBase from 'dojo-widgets/createWidgetBase';
-import d from 'dojo-widgets/d';
+import { v } from 'dojo-widgets/d';
 
 interface ListItem {
     name: string;
@@ -252,7 +259,7 @@ function isEven(value: number) {
 
 function listItem(item: ListItem, itemNumber: number): DNode {
     const classes = isEven(itemNumber) ? {} : { 'odd-row': true };
-    return d('li', { innerHTML: item.name, classes });
+    return v('li', { innerHTML: item.name, classes });
 }
 
 const createListWidget: ListFactory = createWidgetBase.mixin({
@@ -261,7 +268,7 @@ const createListWidget: ListFactory = createWidgetBase.mixin({
 			const { items = [] } = this.state;
 			const listItems = items.map(listItem);
 
-			return [ d('ul', {}, listItems) ];
+			return [ v('ul', {}, listItems) ];
 		}
 	}
 });
@@ -290,7 +297,7 @@ Instantiating `createProjector` directly:
 
 ```ts
 import { DNode } from 'dojo-widgets/interfaces';
-import d from 'dojo-widgets/d';
+import { w } from 'dojo-widgets/d';
 import createProjector, { Projector } from 'dojo-widgets/createProjector';
 import createButton from 'dojo-widgets/components/button/createButton';
 import createTextInput from 'dojo-widgets/components/textinput/createTextInput';
@@ -298,8 +305,8 @@ import createTextInput from 'dojo-widgets/components/textinput/createTextInput';
 const projector = createProjector();
 
 projector.children = [
-	d(createTextInput, { id: 'textinput' }),
-	d(createButton, { id: 'button', state: { label: 'Button' } })
+	w(createTextInput, { id: 'textinput' }),
+	w(createButton, { id: 'button', state: { label: 'Button' } })
 ];
 
 projector.append().then(() => {
@@ -311,7 +318,7 @@ Using the `createProjector` as a base for a root widget:
 
 ```ts
 import { DNode } from 'dojo-widgets/interfaces';
-import d from 'dojo-widgets/d';
+import { w } from 'dojo-widgets/d';
 import createProjector, { Projector } from 'dojo-widgets/createProjector';
 import createButton from 'dojo-widgets/components/button/createButton';
 import createTextInput from 'dojo-widgets/components/textinput/createTextInput';
@@ -320,8 +327,8 @@ const createApp = createProjector.mixin({
 	mixin: {
 		getChildrenNodes: function(this: Projector): DNode[] {
 			return [
-				d(createTextInput, { id: 'textinput' }),
-				d(createButton, { id: 'button', state: { label: 'Button' } })
+				w(createTextInput, { id: 'textinput' }),
+				w(createButton, { id: 'button', state: { label: 'Button' } })
 			];
 		},
 		classes: [ 'main-app' ],

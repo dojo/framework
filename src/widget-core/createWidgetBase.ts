@@ -13,20 +13,10 @@ import { Factory } from 'dojo-interfaces/core';
 import { assign } from 'dojo-core/lang';
 import WeakMap from 'dojo-shim/WeakMap';
 import Map from 'dojo-shim/Map';
-import d from './d';
-import createVNodeEvented, { VNodeEvented, VNodeEventedOptions } from './mixins/createVNodeEvented';
+import { v } from './d';
+import createVNodeEvented from './mixins/createVNodeEvented';
 
-/**
- * Widget Base
- */
-export type WidgetBase = Widget<WidgetState> & VNodeEvented
-
-/**
- * Widget Base Options
- */
-export type WidgetBaseOptions = WidgetOptions<WidgetState> & VNodeEventedOptions
-
-export interface WidgetFactory extends ComposeFactory<WidgetBase, WidgetBaseOptions> {}
+export interface WidgetFactory extends ComposeFactory<Widget<WidgetState>, WidgetOptions<WidgetState>> {}
 
 interface WidgetInternalState {
 	children: DNode[];
@@ -132,7 +122,7 @@ const createWidget: WidgetFactory = createStateful
 
 			getNode(): DNode {
 				const tag = formatTagNameAndClasses(this.tagName, this.classes);
-				return d(tag, this.getNodeAttributes(), this.getChildrenNodes());
+				return v(tag, this.getNodeAttributes(), this.getChildrenNodes());
 			},
 
 			set children(this: Widget<WidgetState>, children: DNode[]) {

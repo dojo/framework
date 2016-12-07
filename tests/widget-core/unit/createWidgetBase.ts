@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import createWidgetBase from '../../src/createWidgetBase';
 import { DNode, HNode, WidgetState, WidgetOptions } from './../../src/interfaces';
 import { VNode } from 'dojo-interfaces/vdom';
-import d from '../../src/d';
+import { v, w } from '../../src/d';
 import { stub } from 'sinon';
 
 registerSuite({
@@ -17,7 +17,7 @@ registerSuite({
 	},
 	children() {
 		let childrenEventEmitted = false;
-		const expectedChild = d('div');
+		const expectedChild = v('div');
 		const widget = createWidgetBase();
 		widget.on('widget:children', () => {
 			childrenEventEmitted = true;
@@ -86,7 +86,7 @@ registerSuite({
 				.mixin({
 					mixin: {
 						getChildrenNodes: function(): DNode[] {
-							return [ d('div') ];
+							return [ v('div') ];
 						}
 					}
 				})();
@@ -104,7 +104,7 @@ registerSuite({
 				.mixin({
 					mixin: {
 						getChildrenNodes: function(): DNode[] {
-							return [ d('header') ];
+							return [ v('header') ];
 						}
 					}
 				})();
@@ -119,8 +119,8 @@ registerSuite({
 					mixin: {
 						getChildrenNodes: function(): DNode[] {
 							return [
-								d('header', [
-									d('section')
+								v('header', [
+									v('section')
 								])
 							];
 						}
@@ -184,7 +184,7 @@ registerSuite({
 						getChildrenNodes: function(this: any): (DNode | null)[] {
 							const state = this.state.classes ? { classes: this.state.classes } : {};
 							return [
-								this.state.hide ? null : d(testChildWidget, <WidgetOptions<WidgetState>> { tagName: 'footer', state })
+								this.state.hide ? null : w(testChildWidget, <WidgetOptions<WidgetState>> { tagName: 'footer', state })
 							];
 						}
 					}
@@ -240,8 +240,8 @@ registerSuite({
 					mixin: {
 						getChildrenNodes: function(this: any): (DNode | null)[] {
 							return [
-								d(createWidgetBase, {}),
-								d(createWidgetBase, {})
+								w(createWidgetBase, {}),
+								w(createWidgetBase, {})
 							];
 						}
 					}
