@@ -57,8 +57,8 @@ used to enable a developer to express other features.  The flags though that are
 ### Adding a Feature Test/Feature Detection
 
 The main module of the package exports a function named `add()` which allows the addition of features flags.  The feature
-tests can be expressed as a static value, or as a function which will be lazily evaluated when the feature flag is first
-requested from `has()`.  Once evaluated, the value is cached.
+tests can be expressed as a static value, a function which will be lazily evaluated when the feature flag is first
+requested from `has()`, or a thenable (an object with a `then` method, like a Promise).  Once evaluated, the value is cached.
 
 An example of adding a feature:
 
@@ -70,6 +70,10 @@ add('my-lazy-feature', () => {
 	/* will not be called yet */
 	return true;
 });
+add('my-promise', new Promise((resolve) => {
+	// start some asynchronous task
+	resolve(true);
+}));
 
 if (has('my-lazy-feature')) { /* feature function called here */
 	/* do something */
@@ -92,6 +96,9 @@ if (!exists('my-feature')) {
 	add('my-feature', false);
 }
 ```
+
+Note that if a thenable is passed to `add`, `exists` and `has` will return `false` until the thenable is resolved and a
+proper value can be returned.
 
 ### Conditional Module Loading
 

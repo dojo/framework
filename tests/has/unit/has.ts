@@ -140,6 +140,50 @@ registerSuite({
 			}, TypeError, 'exists and overwrite not true');
 		},
 
+		'works with thenable'(this: any) {
+			const dfd = this.async();
+
+			const thenable = {
+				then(resolve: (_: number) => void) {
+					setTimeout(() => {
+						resolve(5);
+					}, 10);
+
+					return thenable;
+				}
+			};
+
+			hasAdd('thenable', thenable);
+			assert.isFalse(has('thenable'));
+
+			setTimeout(dfd.callback(() => {
+				assert.equal(has('thenable'), 5);
+			}), 100);
+		},
+
+		'failed thenable removes itself from cache'(this: any) {
+			const dfd = this.async();
+
+			const thenable = {
+				then(_: (_: number) => void, reject: (_: Error) => void) {
+					setTimeout(() => {
+						reject(new Error('test error'));
+					}, 10);
+
+					return thenable;
+				}
+			};
+
+			hasAdd('thenable', thenable);
+			assert.isFalse(has('thenable'));
+
+			setTimeout(dfd.callback(() => {
+				assert.throws(() => {
+					has('thenable');
+				});
+			}), 100);
+		},
+
 		overwrite: {
 			'value with value'() {
 				hasAdd(feature, 'old');
@@ -189,6 +233,27 @@ registerSuite({
 		'null test value counts as being defined'() {
 			hasAdd(feature, <any> null);
 			assert.isTrue(hasExists(feature));
+		},
+
+		'exists with thenabale'(this: any) {
+			const dfd = this.async();
+
+			const thenable = {
+				then(resolve: (_: number) => void) {
+					setTimeout(() => {
+						resolve(5);
+					}, 10);
+
+					return thenable;
+				}
+			};
+
+			hasAdd('thenable', thenable);
+			assert.isFalse(hasExists('thenable'));
+
+			setTimeout(dfd.callback(() => {
+				assert.isTrue(hasExists('thenable'));
+			}), 100);
 		},
 
 		'case should not matter'() {

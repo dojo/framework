@@ -10,6 +10,15 @@ export type FeatureTestResult = boolean | string | number | undefined;
  */
 export type FeatureTest = () => FeatureTestResult;
 
+export type FeatureTestThenable = {
+	then<U>(onFulfilled?: (value: FeatureTestResult) => U | FeatureTestThenable, onRejected?: (error: any) => U | FeatureTestThenable): FeatureTestThenable;
+	then<U>(onFulfilled?: (value: FeatureTestResult) => U | FeatureTestThenable, onRejected?: (error: any) => void): FeatureTestThenable;
+};
+
+function isFeatureTestThenable(value: any): value is FeatureTestThenable {
+	return value && value.then;
+}
+
 /**
  * A cache of results of feature tests
  */
@@ -19,6 +28,12 @@ export const testCache: { [feature: string]: FeatureTestResult } = {};
  * A cache of the un-resolved feature tests
  */
 export const testFunctions: { [feature: string]: FeatureTest } = {};
+
+/**
+ * A cache of unresolved thenables (probably promises)
+ * @type {{}}
+ */
+const testThenables: { [feature: string]: FeatureTestThenable} = {};
 
 export interface StaticHasFeatures {
 	[ feature: string ]: FeatureTestResult;
@@ -173,7 +188,7 @@ export function exists(feature: string): boolean {
  * @param value the value reported of the feature, or a function that will be executed once on first test
  * @param overwrite if an existing value should be overwritten. Defaults to false.
  */
-export function add(feature: string, value: FeatureTest | FeatureTestResult, overwrite: boolean = false): void {
+export function add(feature: string, value: FeatureTest | FeatureTestResult | FeatureTestThenable, overwrite: boolean = false): void {
 	const normalizedFeature = feature.toLowerCase();
 
 	if (exists(normalizedFeature) && !overwrite && !(normalizedFeature in staticCache)) {
@@ -182,6 +197,14 @@ export function add(feature: string, value: FeatureTest | FeatureTestResult, ove
 
 	if (typeof value === 'function') {
 		testFunctions[normalizedFeature] = value;
+	}
+	else if (isFeatureTestThenable(value)) {
+		testThenables[ feature ] = value.then((resolvedValue: FeatureTestResult) => {
+			testCache [ feature ] = resolvedValue;
+			delete testThenables [ feature ];
+		}, () => {
+			delete testThenables [ feature ];
+		});
 	}
 	else {
 		testCache[normalizedFeature] = value;
@@ -208,6 +231,9 @@ export default function has(feature: string): FeatureTestResult {
 	}
 	else if (normalizedFeature in testCache) {
 		result = testCache[normalizedFeature];
+	}
+	else if (feature in testThenables) {
+		return false;
 	}
 	else {
 		throw new TypeError(`Attempt to detect unregistered has feature "${feature}"`);
