@@ -1,4 +1,5 @@
 import { ComposeFactory } from 'dojo-compose/compose';
+import { assign } from 'dojo-core/lang';
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
 import { h } from 'maquette';
 import {
@@ -47,8 +48,8 @@ export function v(tag: string, optionsOrChildren: VNodeProperties = {}, children
 
 		return {
 			children,
-			render(this: { children: VNode[] }) {
-				return h(tag, optionsOrChildren, this.children);
+			render<T>(this: { children: VNode[] }, options: { bind?: T } = { }) {
+				return h(tag, assign(options, optionsOrChildren), this.children);
 			}
 		};
 }

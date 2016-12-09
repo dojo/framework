@@ -255,6 +255,47 @@ registerSuite({
 			assert.isUndefined(result.children);
 			assert.equal(result.text, 'I am a text node');
 		},
+		'instance gets passed to VNodeProperties as bind to widget and all children'() {
+			const widgetBase = createWidgetBase
+			.mixin({
+				mixin: {
+					getChildrenNodes: function(): DNode[] {
+						return [
+							v('header', [
+								v('section')
+							])
+						];
+					}
+				}
+			})();
+
+			const result = <VNode> widgetBase.render();
+			assert.lengthOf(result.children, 1);
+			assert.strictEqual(result.properties!.bind, widgetBase);
+			assert.strictEqual(result.children![0].properties!.bind, widgetBase);
+			assert.strictEqual(result.children![0].children![0].properties!.bind, widgetBase);
+		},
+		'bind does not get overriden when specifically configured for the element'() {
+			const customThis = {};
+			const widgetBase = createWidgetBase
+			.mixin({
+				mixin: {
+					getChildrenNodes: function(): DNode[] {
+						return [
+							v('header', { bind: customThis }, [
+								v('section')
+							])
+						];
+					}
+				}
+			})();
+
+			const result = <VNode> widgetBase.render();
+			assert.lengthOf(result.children, 1);
+			assert.strictEqual(result.properties!.bind, widgetBase);
+			assert.strictEqual(result.children![0].properties!.bind, customThis);
+			assert.strictEqual(result.children![0].children![0].properties!.bind, widgetBase);
+		},
 		'render with multiple text node children'() {
 			const widgetBase = createWidgetBase
 				.mixin({

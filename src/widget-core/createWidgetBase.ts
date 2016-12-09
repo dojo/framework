@@ -125,7 +125,7 @@ function dNodeToVNode(instance: Widget<WidgetState>, dNode: DNode): VNode | stri
 			return dNodeToVNode(instance, child);
 		});
 
-	return dNode.render();
+	return dNode.render({ bind: instance });
 }
 
 function manageDetachedChildren(instance: Widget<WidgetState>): void {

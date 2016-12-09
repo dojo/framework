@@ -80,6 +80,8 @@ To customise the widget an optional `options` argument can be provided with the 
 
 By default the base widget class applies `id`, `classes` and `styles` from the widget's specified `state` (either by direct state injection or via an observable store).
 
+As a convenience, all event handlers are automatically bound to the widget instance, so state and other items on the instance can be easily accessed.
+
 #### Simple Widgets
 
 To create a basic widget `createWidgetBase` can be used directly by importing the class.
