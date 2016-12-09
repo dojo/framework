@@ -221,12 +221,9 @@ It is recommmended to use the factory registry when defining widgets using `w` i
 ```ts
 import load from 'dojo-core/load';
 
-registry.define('my-widget-1', () => {
-	return load('./my-widget-1');
-});
-
-registry.define('my-widget-2', () => {
-	return load('./my-widget-2');
+registry.define('my-widget', () => {
+	return load(require, './createMyWidget')
+		.then(([ createMyWidget ]) => createMyWidget.default);
 });
 ```
 
