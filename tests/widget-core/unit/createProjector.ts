@@ -22,13 +22,30 @@ registerSuite({
 		global.cssTransitions = undefined;
 		try {
 			createProjector({ cssTransitions: true });
+			assert.fail();
 		}
 		catch (err) {
 			assert.isTrue(err instanceof Error);
 			assert.equal(err.message, 'Unable to create projector with css transitions enabled. Is the \'css-transition.js\' script loaded in the page?');
 		}
 	},
-	'render throws an error for non VNode result'() {
+	'render throws an error for null result'() {
+		const projector = createProjector.override({
+			getNode() {
+				return null;
+			}
+		})();
+
+		try {
+			projector.render();
+			assert.fail();
+		}
+		catch (error) {
+			assert.isTrue(error instanceof Error);
+			assert.equal(error.message, 'Must provide a VNode at the root of a projector');
+		}
+	},
+	'render throws an error for string result'() {
 		const projector = createProjector.override({
 			getNode() {
 				return '';
@@ -37,6 +54,7 @@ registerSuite({
 
 		try {
 			projector.render();
+			assert.fail();
 		}
 		catch (error) {
 			assert.isTrue(error instanceof Error);

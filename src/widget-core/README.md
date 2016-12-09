@@ -36,10 +36,9 @@ npm install dojo-has
 npm install dojo-shim
 npm install dojo-core
 npm install dojo-compose
-npm install dojo-store
 ```
 
-To use dojo-widgets import the module in the project. For more details see [features](#features) below.
+To use dojo-widgets, import the module in the project. For more details see [features](#features) below.
 
 ```ts
 import createButton from 'dojo-widgets/components/button/createButton';
@@ -60,7 +59,7 @@ projector.children = [ v('h1', [ 'Hello, Dojo!' ]) ];
 projector.append();
 ```
 
-It renders a header saying "Hello World" on the page, see the following sections for more details.
+It renders a `h1` element saying "Hello, Dojo!" on the page. See the following sections for more details.
 
 ### Base Widget
 
@@ -136,7 +135,7 @@ const myBasicWidget = createWidgetBase({
 
 #### `d`
 
-`d` is the module used to express hierarchical widget structures within Dojo 2. This structure constructed of `DNode`s (`DNode` is the intersection type of `HNode` and `WNode`).
+`d` is the module that provides the functions and helper utilities that can be used to express widget structures within Dojo 2. This structure constructed of `DNode`s (`DNode` is the intersection type of `HNode` and `WNode`).
 
 When creating custom widgets, you use the `v` and `w` functions from the `d` module.
 
@@ -156,22 +155,81 @@ import { DNode, HNode, WNode } from 'dojo-widgets/interfaces';
 
 `v` is an abstraction of Hyperscript that allows dojo 2 to manage caching and lazy creation.
 
-Creates an element with the `tag`
+Creates an element with the specified `tag`
 
 ```ts
 v(tag: string): HNode[];
 ```
 
-Creates an element with the `tag` with the children specified by the array of `DNode`, `VNode` or `null`.
+where `tag` is in the form: element.className(s)#id, e.g.
+
+h2
+h2.foo
+h2.foo.bar
+h2.foo.bar#baz
+h2#baz
+
+`classNames` must be period (.) delimited if more than 1 class is specified.
+Please note, both the `classes` and `id` portions of the `tag` are optional.
+
+The results of the invocations above are:
+
+```
+h2                  (<h2></h2>)
+h2.foo              (<h2 class="foo"></h2>)
+h2.foo.bar          (<h2 class="foo bar"></h2>)
+h2.foo.bar#baz      (<h2 class="foo bar" id="baz"></h2>)
+h2#baz              (<h2 id="baz"></h2>)
+```
+
+Creates an element with the `tag` with the children specified by the array of `DNode`, `VNode`, `string` or `null` items.
 
 ```ts
 v(tag: string, children: (DNode | null)[]): HNode[];
 ```
-Creates an element with the `tagName` with the `VNodeProperties` options and optional children specified by the array of `DNode`, `VNode` or `null`.
+Creates an element with the `tagName` with `VNodeProperties` options and optional children specified by the array of `DNode`, `VNode`, `string` or `null` items.
 
 ```ts
 v(tag: string, options: VNodeProperties, children?: (DNode | null)[]): HNode[];
 ```
+
+##### `registry`
+
+The d module exports a global `registry` to be used to define a factory label against a `WidgetFactory`, `Promise<WidgetFactory>` or `() => Promise<WidgetFactory`.
+
+This enables consumers to specify a `string` label when authoring widgets using the `w` function (see below) and allows the factory to resolve asyncronously (for example if the module had not been loaded).
+
+```ts
+import { globalFactoryRegistry } from 'dojo-widgets/d';
+import createMyWidget from './createMyWidget';
+
+// registers the widget factory that will be available immediately
+globalFactoryRegistry.define('my-widget-1', createMyWidget);
+
+// registers a promise that is resolving to a widget factory and will be 
+// available as soon as the promise resolves.
+globalFactoryRegistry.define('my-widget-2', Promise.resolve(createMyWidget));
+
+// registers a function that will be lazily executed the first time the factory 
+// label is used within a widget render pipeline. The widget will be available 
+// as soon as the promise is resolved after the initial get.
+globalFactoryRegistry.define('my-widget-3', () => Promise.resolve(createMyWidget));
+```
+
+It is recommmended to use the factory registry when defining widgets using `w` in order to support lazy factory resolution when required. Example of registering a function that returns a `Promise` that resolves to a `Factory`.
+
+```ts
+import load from 'dojo-core/load';
+
+globalFactoryRegistry.define('my-widget-1', () => {
+	return load('./my-widget-1');
+});
+
+globalFactoryRegistry.define('my-widget-2', () => {
+	return load('./my-widget-2');
+});
+```
+
 ##### `w`
 
 `w` is an abstraction layer for dojo-widgets that enables dojo 2's lazy instantiation, instance management and caching.
@@ -179,13 +237,19 @@ v(tag: string, options: VNodeProperties, children?: (DNode | null)[]): HNode[];
 Creates a dojo-widget using the `factory` and `options`.
 
 ```ts
-w(factory: ComposeFactory<W, O>, options: O): WNode[];
+w(factory: string | ComposeFactory<W, O>, options: O): WNode[];
 ```
 
 Creates a dojo-widget using the `factory` and `options` and the `children`
 
 ```ts
-w(factory: ComposeFactory<W, O>, options: O, children: (DNode | null)[]): WNode[];
+w(factory: string | ComposeFactory<W, O>, options: O, children: (DNode | null)[]): WNode[];
+```
+Example `w` constucts:
+
+```ts
+w(createFactory, options, children);
+w('my-factory', options, children);
 ```
 
 ### Authoring Custom Widgets

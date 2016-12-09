@@ -221,8 +221,8 @@ const createProjector: ProjectorFactory = createWidgetBase
 		},
 		aspectAdvice: {
 			after: {
-				render(this: Projector, result: VNode | string) {
-					if (typeof result === 'string') {
+				render(this: Projector, result: VNode | string | null) {
+					if (typeof result === 'string' || result === null) {
 						throw new Error('Must provide a VNode at the root of a projector');
 					}
 					return result;

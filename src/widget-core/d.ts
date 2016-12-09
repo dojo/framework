@@ -5,50 +5,48 @@ import {
 	DNode,
 	HNode,
 	WNode,
-	Children,
 	Widget,
 	WidgetOptions,
 	WidgetState
 } from './interfaces';
+import FactoryRegistry from './FactoryRegistry';
+
+export const registry = new FactoryRegistry();
 
 export function w<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S>>(
-	factory: ComposeFactory<W, O>,
+	factory: ComposeFactory<W, O> | string,
 	options: O
 ): WNode;
 export function w<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S>>(
-	factory: ComposeFactory<W, O>,
+	factory: ComposeFactory<W, O> | string,
 	options: O,
-	children?: Children
+	children?: DNode[]
 ): WNode;
 export function w<S extends WidgetState, W extends Widget<S>, O extends WidgetOptions<S>>(
-	factory: ComposeFactory<W, O>,
+	factory: ComposeFactory<W, O> | string,
 	options: O,
-	children: Children = []
+	children: DNode[] = []
 ): WNode {
 
-	const filteredChildren = <(DNode)[]> children.filter((child) => child);
-
 	return {
-		children: filteredChildren,
+		children,
 		factory,
 		options
 	};
 }
 
-export function v(tag: string, options: VNodeProperties, children?: Children): HNode;
-export function v(tag: string, children: Children): HNode;
+export function v(tag: string, options: VNodeProperties, children?: DNode[]): HNode;
+export function v(tag: string, children: DNode[]): HNode;
 export function v(tag: string): HNode;
-export function v(tag: string, optionsOrChildren: VNodeProperties = {}, children: Children = []): HNode {
+export function v(tag: string, optionsOrChildren: VNodeProperties = {}, children: DNode[] = []): HNode {
 
 		if (Array.isArray(optionsOrChildren)) {
 			children = optionsOrChildren;
 			optionsOrChildren = {};
 		}
 
-		const filteredChildren = <DNode[]> children.filter((child) => child);
-
 		return {
-			children: filteredChildren,
+			children,
 			render(this: { children: VNode[] }) {
 				return h(tag, optionsOrChildren, this.children);
 			}

@@ -17,6 +17,7 @@ import { Renderable, RenderableParent } from 'dojo-interfaces/abilities';
 import { EventedListener, State, Stateful, StatefulOptions } from 'dojo-interfaces/bases';
 import { EventTargettedObject, Factory, Handle, StylesMap } from 'dojo-interfaces/core';
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
+import { ComposeFactory } from 'dojo-compose/compose';
 import { VNodeEvented, VNodeEventedOptions } from './mixins/createVNodeEvented';
 
 /**
@@ -228,6 +229,31 @@ export interface SubWidgetManager<W extends Renderable> {
 	readonly size: number;
 }
 
+export type WidgetFactoryFunction = () => Promise<WidgetFactory>
+
+export type FactoryRegistryItem = WidgetFactory | Promise<WidgetFactory> | WidgetFactoryFunction
+
+/**
+ * Factory Registry
+ */
+export interface FactoryRegistryInterface {
+
+	/**
+	 * Define a FactoryRegistryItem against a factory label
+	 */
+	define(factoryLabel: string, registryItem: FactoryRegistryItem): void;
+
+	/**
+	 * Return the registered FactoryRegistryItem for the label.
+	 */
+	get(factoryLabel: string): WidgetFactory | Promise<WidgetFactory> | null;
+
+	/**
+	 * Check if the factory label has already been used to define a FactoryRegistryItem.
+	 */
+	has(factoryLabel: string): boolean;
+}
+
 export interface HNode {
 	/**
 	 * Specified children
@@ -244,7 +270,7 @@ export interface WNode {
 	/**
 	 * Factory to create a widget
 	 */
-	factory: Factory<Widget<WidgetState>, WidgetOptions<WidgetState>>;
+	factory: WidgetFactory | string;
 
 	/**
 	 * Options used to create factory a widget
@@ -257,11 +283,11 @@ export interface WNode {
 	children: DNode[];
 }
 
-export type Children = (DNode | null)[];
-
-export type DNode = HNode | WNode | string;
+export type DNode = HNode | WNode | string | null;
 
 export type Widget<S extends WidgetState> = Stateful<S> & WidgetMixin & WidgetOverloads & VNodeEvented;
+
+export interface WidgetFactory extends ComposeFactory<Widget<WidgetState>, WidgetOptions<WidgetState>> {}
 
 export interface WidgetOverloads {
 	/**
@@ -338,7 +364,7 @@ export interface WidgetMixin {
 	 * return h(this.tagName, this.getNodeAttributes(), this.getChildrenNodes());
 	 * ```
 	 */
-	render(): VNode | string;
+	render(): VNode | string | null;
 
 	/**
 	 * The tagName (selector) that should be used when rendering the node.
@@ -347,6 +373,11 @@ export interface WidgetMixin {
 	 * this property with a getter.
 	 */
 	tagName: string;
+
+	/**
+	 * The specific Factory Registry passed to the widget via the `WidgetOptions`
+	 */
+	readonly registry: FactoryRegistryInterface;
 }
 
 export interface WidgetOptions<S extends WidgetState> extends StatefulOptions<S>, VNodeEventedOptions {
