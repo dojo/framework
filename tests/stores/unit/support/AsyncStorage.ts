@@ -1,17 +1,7 @@
 import createInMemoryStorage from '../../../src/storage/createInMemoryStorage';
 import Promise from 'dojo-shim/Promise';
 import WeakMap from 'dojo-shim/WeakMap';
-
-// TODO remove the following code and any dependencies in the tests, when https://github.com/dojo/core/pull/216 is landed
-export function delay<T>(milliseconds: number): Identity<T> {
-	return function (value: T): Promise<T> {
-		return new Promise(function (resolve) {
-			setTimeout(function () {
-				resolve(typeof value === 'function' ? value() : value);
-			}, milliseconds);
-		});
-	};
-}
+import { delay } from 'dojo-core/async/timing';
 
 export interface Identity<T> {
 	(value: T): Promise<T>;

@@ -6,7 +6,7 @@ import { duplicate } from 'dojo-core/lang';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { Observer, Observable } from 'rxjs/Rx';
 import { diff, Patch, PatchMapEntry } from '../patch/createPatch';
-import createStoreObservable, { StoreObservable } from './createStoreObservable';
+import _createStoreObservable, { StoreObservable } from './createStoreObservable';
 import createInMemoryStorage, { Storage } from '../storage/createInMemoryStorage';
 
 export const enum StoreOperation {
@@ -86,6 +86,24 @@ function isPatch(patchObj: any): patchObj is {id: string; patch: Patch<any, any>
 		typeof patch.toString === 'function';
 }
 
+function createStoreObservable(storeResultsPromise: Promise<UpdateResults<{}>>) {
+
+	return _createStoreObservable(
+		new Observable<UpdateResults<{}>>(function subscribe(observer: Observer<UpdateResults<{}>>) {
+			storeResultsPromise
+				.then(function(results) {
+					observer.next(results);
+					observer.complete();
+				}, function(error) {
+					observer.error(error);
+				});
+		}),
+		function(results: UpdateResults<{}>) {
+			return results.successfulData;
+		}
+	);
+}
+
 const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {}>>({
 	get(this: Store<{}, {}, any>, ids: string[] | string): Promise<{}[] | {}> {
 		const state = instanceStateMap.get(this);
@@ -105,21 +123,7 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 		const storeResultsPromise = state.initialAddPromise.then(function() {
 			return state.storage.add(Array.isArray(items) ? items : [ items ], options);
 		});
-		// TODO refactoring - repetitive logic
-		return createStoreObservable(
-			new Observable<UpdateResults<{}>>(function subscribe(observer: Observer<UpdateResults<{}>>) {
-				storeResultsPromise
-					.then(function(results) {
-						observer.next(results);
-						observer.complete();
-					}, function(error) {
-						observer.error(error);
-					});
-			}),
-			function(results: UpdateResults<{}>) {
-				return results.successfulData;
-			}
-		);
+		return createStoreObservable(storeResultsPromise);
 	},
 
 	put(this: Store<{}, {}, any>, items: {}[] | {}, options?: CrudOptions) {
@@ -129,20 +133,7 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 			return state.storage.put(Array.isArray(items) ? items : [ items ], options);
 		});
 
-		return createStoreObservable(
-			new Observable<UpdateResults<{}>>(function subscribe(observer: Observer<UpdateResults<{}>>) {
-				storeResultsPromise
-					.then(function(results) {
-						observer.next(results);
-						observer.complete();
-					}, function(error) {
-						observer.error(error);
-					});
-			}),
-			function(results: UpdateResults<{}>) {
-				return results.successfulData;
-			}
-		);
+		return createStoreObservable(storeResultsPromise);
 	},
 
 	patch(this: Store<{}, {}, any>, updates: PatchArgument<{}>, options?: CrudOptions) {
@@ -184,20 +175,7 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 			return state.storage.patch(patchEntries);
 		});
 
-		return createStoreObservable(
-			new Observable<UpdateResults<{}>>(function subscribe(observer: Observer<UpdateResults<{}>>) {
-				storeResultsPromise
-					.then(function(results) {
-						observer.next(results);
-						observer.complete();
-					}, function(error) {
-						observer.error(error);
-					});
-			}),
-			function(results: UpdateResults<{}>) {
-				return results.successfulData;
-			}
-		);
+		return createStoreObservable(storeResultsPromise);
 	},
 
 	delete(this: Store<{}, {}, any>, ids: string | string[]) {
@@ -207,20 +185,7 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 			return state.storage.delete(Array.isArray(ids) ? ids : [ ids ]);
 		});
 
-		return createStoreObservable(
-			new Observable<UpdateResults<{}>>(function subscribe(observer: Observer<UpdateResults<{}>>) {
-				storeResultsPromise
-					.then(function(results) {
-						observer.next(results);
-						observer.complete();
-					}, function(error) {
-						observer.error(error);
-					});
-			}),
-			function(results: UpdateResults<{}>) {
-				return results.successfulData;
-			}
-		);
+		return createStoreObservable(storeResultsPromise);
 	},
 
 	fetch<U>(this: Store<{}, {}, any>, query?: Query<{}, U>) {
