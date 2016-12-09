@@ -200,20 +200,20 @@ The d module exports a global `registry` to be used to define a factory label ag
 This enables consumers to specify a `string` label when authoring widgets using the `w` function (see below) and allows the factory to resolve asyncronously (for example if the module had not been loaded).
 
 ```ts
-import { globalFactoryRegistry } from 'dojo-widgets/d';
+import { registry } from 'dojo-widgets/d';
 import createMyWidget from './createMyWidget';
 
 // registers the widget factory that will be available immediately
-globalFactoryRegistry.define('my-widget-1', createMyWidget);
+registry.define('my-widget-1', createMyWidget);
 
-// registers a promise that is resolving to a widget factory and will be 
+// registers a promise that is resolving to a widget factory and will be
 // available as soon as the promise resolves.
-globalFactoryRegistry.define('my-widget-2', Promise.resolve(createMyWidget));
+registry.define('my-widget-2', Promise.resolve(createMyWidget));
 
-// registers a function that will be lazily executed the first time the factory 
-// label is used within a widget render pipeline. The widget will be available 
+// registers a function that will be lazily executed the first time the factory
+// label is used within a widget render pipeline. The widget will be available
 // as soon as the promise is resolved after the initial get.
-globalFactoryRegistry.define('my-widget-3', () => Promise.resolve(createMyWidget));
+registry.define('my-widget-3', () => Promise.resolve(createMyWidget));
 ```
 
 It is recommmended to use the factory registry when defining widgets using `w` in order to support lazy factory resolution when required. Example of registering a function that returns a `Promise` that resolves to a `Factory`.
@@ -221,11 +221,11 @@ It is recommmended to use the factory registry when defining widgets using `w` i
 ```ts
 import load from 'dojo-core/load';
 
-globalFactoryRegistry.define('my-widget-1', () => {
+registry.define('my-widget-1', () => {
 	return load('./my-widget-1');
 });
 
-globalFactoryRegistry.define('my-widget-2', () => {
+registry.define('my-widget-2', () => {
 	return load('./my-widget-2');
 });
 ```
