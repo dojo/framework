@@ -75,7 +75,7 @@ registerSuite({
 				const data = createData();
 				store.add(data[0]);
 				return subcollection.get(data[0].id).then(function(results) {
-					assert.deepEqual(results, [ data[0] ], 'Didn\'t get item from source');
+					assert.deepEqual(results, data[0], 'Didn\'t get item from source');
 				});
 			},
 
@@ -144,7 +144,7 @@ registerSuite({
 				const data = createData();
 				store.add(data[0]);
 				return store.get(data[0].id).then(function(results) {
-					assert.deepEqual(results, [ data[0] ], 'Didn\'t get item from source');
+					assert.deepEqual(results, data[0], 'Didn\'t get item from source');
 				});
 			}
 		};

@@ -74,7 +74,7 @@ const createSubcollectionStore: SubcollectionFactory = createStore
 		},
 		aspectAdvice: {
 			around: {
-				get(get: (ids: string | string[]) => Promise<{}[]>) {
+				get(get: (ids: string | string[]) => Promise<{} | {}[]>) {
 					return function(this: SubcollectionStore<{}, {}, any, Store<{}, {}, any>>, ids: string | string[]) {
 						if (this.source) {
 							return this.source.get(ids);

@@ -216,8 +216,7 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 					else {
 						const id = <string> idOrIds;
 						return new Observable<T>(function subscribe(observer: Observer<T>) {
-							self.get(id).then(function(items: T[]) {
-								const item = items[0];
+							self.get(id).then(function(item: T) {
 								if (!item) {
 									observer.error(new Error(`ID "${id}" not found in store`));
 								}

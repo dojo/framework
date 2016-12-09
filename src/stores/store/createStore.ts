@@ -49,8 +49,12 @@ export type PatchArgument<T> = Map<string, Patch<T, T>> |
 	BasicPatch[];
 
 export interface Store<T, O extends CrudOptions, U extends UpdateResults<T>> {
-	get(ids: string[] | string): Promise<T[]>;
-	identify(items: T[] | T): string[];
+	get(ids: string[]): Promise<T[]>;
+	get(id: string): Promise<T>;
+	get(ids: string | string[]): Promise<T | T[]>;
+	identify(items: T[]): string[];
+	identify(items: T): string;
+	identify(items: T | T[]): string | string[];
 	createId(): Promise<string>;
 	add(items: T[] | T, options?: O): StoreObservable<T, U>;
 	put(items: T[] | T, options?: O): StoreObservable<T, U>;
@@ -83,12 +87,16 @@ function isPatch(patchObj: any): patchObj is {id: string; patch: Patch<any, any>
 }
 
 const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {}>>({
-	get(this: Store<{}, {}, any>, ids: string[] | string): Promise<{}[]> {
+	get(this: Store<{}, {}, any>, ids: string[] | string): Promise<{}[] | {}> {
 		const state = instanceStateMap.get(this);
 		return state.initialAddPromise.then(function() {
-			return state.storage.get(Array.isArray(ids) ? ids : [ ids ]);
+			if (Array.isArray(ids)) {
+				return state.storage.get(ids);
+			}
+			else {
+				return state.storage.get([ids]).then(items => items[0]);
+			}
 		});
-
 	},
 
 	add(this: Store<{}, {}, any>, items: {}[] | {}, options?: CrudOptions) {
@@ -222,8 +230,14 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 		});
 	},
 
-	identify(this: Store<{}, {}, any>, items: {}[] | {}) {
-		return instanceStateMap.get(this).storage.identify(Array.isArray(items) ? items : [ items ]);
+	identify(this: Store<{}, {}, any>, items: {}[] | {}): any {
+		const storage = instanceStateMap.get(this).storage;
+		if (Array.isArray(items)) {
+			return storage.identify(items);
+		}
+		else {
+			return storage.identify([items])[0];
+		}
 	},
 
 	createId(this: Store<{}, {}, any>) {

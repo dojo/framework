@@ -48,6 +48,22 @@ registerSuite({
 	},
 
 	'basic operations': {
+		'get': {
+			'get one item by id should return the item'(this: any) {
+				const { store } = getStoreAndDfd(this, undefined, true);
+				return store.get('1').then(item => {
+					assert.deepEqual(item, createData()[0]);
+				});
+			},
+			'get multiple items by an array of ids should return the items array'(this: any) {
+				const { store } = getStoreAndDfd(this, undefined, true);
+				return store.get(['1', '2', '3']).then(items => {
+					assert.isTrue(Array.isArray(items));
+					assert.deepEqual(items, createData());
+				});
+			}
+		},
+
 		'add': {
 			'should add new items'(this: any) {
 				const { emptyStore: store, data } = getStoreAndDfd(this, undefined, false);
@@ -224,6 +240,19 @@ registerSuite({
 					})
 				);
 			}
+		},
+		'identify': {
+			'identify one item should return its id'(this: any) {
+				const { store, data } = getStoreAndDfd(this, undefined, false);
+				const id = store.identify(data[0]);
+				assert.strictEqual(id, data[0].id);
+			},
+			'identify multiple items should return an array of ids'(this: any) {
+				const { store, data } = getStoreAndDfd(this, undefined, false);
+				const ids = store.identify(data);
+				assert.isTrue(Array.isArray(ids));
+				assert.deepEqual(ids, data.map(({id}) => id));
+			}
 		}
 	},
 
@@ -320,7 +349,7 @@ registerSuite({
 		let retrievalCount = 0;
 
 		store.add(data[0]);
-		store.get(data[0].id).then(([ item ]) => {
+		store.get(data[0].id).then(item => {
 			retrievalCount++;
 			try {
 				assert.deepEqual(item, data[0], 'Should have received initial item');
@@ -329,7 +358,7 @@ registerSuite({
 			}
 		});
 		store.put(updates[0][0]);
-		store.get(data[0].id).then(([ item ]) => {
+		store.get(data[0].id).then(item => {
 			retrievalCount++;
 			try {
 				assert.deepEqual(item, updates[0][0], 'Should have received updated item');
@@ -339,7 +368,7 @@ registerSuite({
 		});
 
 		store.put(updates[1][0]);
-		store.get(data[0].id).then(([ item ]) => {
+		store.get(data[0].id).then(item => {
 			try {
 				assert.equal(retrievalCount, 2, 'Didn\'t perform gets in order');
 				assert.deepEqual(item, updates[1][0], 'Should have received second updated item');
