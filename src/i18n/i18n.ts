@@ -370,10 +370,10 @@ function i18n<T extends Messages>(bundle: Bundle<T>, context?: any): Promise<T> 
 		return loadLocaleBundles(localePaths);
 	}).then((bundles: T[]): T => {
 		return bundles.reduce((previous: T, partial: T): T => {
-			const localeMessages = assign({}, previous, partial);
+			const localeMessages: T = assign({}, previous, partial);
 			const localeCache = bundleMap.get(bundlePath) as Map<string, Messages>;
 
-			localeCache.set(locale, Object.freeze(localeMessages));
+			localeCache.set(locale, <T> Object.freeze(localeMessages));
 			Globalize.loadMessages({
 				[locale]: {
 					[bundlePath.replace(/\//g, '-')]: localeMessages
