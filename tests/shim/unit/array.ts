@@ -5,11 +5,11 @@ import has, { add as hasAdd } from '../../src/support/has';
 import { Iterable, ShimIterator } from '../../src/iterator';
 import 'src/Symbol';
 
-function mixin<T extends { [key: string]: any }, U extends { [key: string]: any }>(destination: T, source: U): T & U {
+function mixin(destination: any, source: any): any {
 	for (let key in source) {
 		destination[key] = source[key];
 	}
-	return <any> destination;
+	return destination;
 }
 
 function assertFrom<T>(arrayable: ArrayLike<T> | Iterable<T>, expected: T[]): void;
