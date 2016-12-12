@@ -12,6 +12,7 @@ For more background on dojo-widgets, there is a document describing the [widgeti
 
 - [Usage](#usage)
 - [Features](#features)
+    - [Widget Principles](#principles)
     - [Base Widget](#base-widget)
     	- [Simple Widgets](#simple-widgets)
     	- [d](#d)
@@ -60,6 +61,14 @@ projector.append();
 ```
 
 It renders a `h1` element saying "Hello, Dojo!" on the page. See the following sections for more details.
+
+### Principles
+
+These are some of the **important** principles to keep in mind when developing widgets:
+ 
+1. the widget *render* function should **never** be overridden
+2. with the exception of the top level projector you should **never** have to deal with widget instances.
+3. hyperscript should **always** be written using the dojo-widgets `v` helper function.
 
 ### Base Widget
 
