@@ -128,8 +128,8 @@ const createSubcollectionStore: SubcollectionFactory = createStore
 					};
 				},
 
-				fetch(fetch: (query?: Query<{}, {}>) => Promise<{}[]>) {
-					return function(this: SubcollectionStore<{}, {}, any, Store<{}, {}, any>>, query?: Query<{}, {}>) {
+				fetch(fetch: (query?: Query<{}>) => Promise<{}[]>) {
+					return function(this: SubcollectionStore<{}, {}, any, Store<{}, {}, any>>, query?: Query<{}>) {
 						if (this.source) {
 							return this.source.fetch(query);
 						}

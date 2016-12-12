@@ -28,7 +28,7 @@ export const enum BooleanOp {
 
 export type FilterChainMember<T> = (SimpleFilter<T> | BooleanOp);
 
-export interface SimpleFilter<T> extends Query<T, T> {
+export interface SimpleFilter<T> extends Query<T> {
 	readonly filterType: FilterType;
 	readonly test: (item: T) => boolean;
 	readonly filterChain?: FilterChainMember<T>[];
@@ -94,7 +94,7 @@ function createFilterHelper<T>(filters: FilterChainMember<T>[], serializer: (fil
 			return data.filter(this.test);
 		},
 		filterChain: filters,
-		toString(this: Filter<T>, filterSerializer?: ((query: Query<any, any>) => string) | ((filter: Filter<T>) => string)) {
+		toString(this: Filter<T>, filterSerializer?: ((query: Query<T>) => string) | ((filter: Filter<T>) => string)) {
 			return (filterSerializer || serializer)(this);
 		},
 		and(this: Filter<T>, newFilter?: Filter<T>) {

@@ -27,7 +27,7 @@ export type TrackableStore<T, O extends CrudOptions, U extends UpdateResults<T>,
 
 export interface TrackableOptions<T> {
 	isTracking?: boolean;
-	sourceQuery?: Query<T, T>;
+	sourceQuery?: Query<T>;
 	fetchAroundUpdates?: boolean;
 	wasFetchingAroundUpdates?: boolean;
 }
@@ -38,7 +38,7 @@ interface TrackableState<T> {
 	observable?: Observable<TrackedStoreDelta<T>>;
 	observers: Observer<TrackedStoreDelta<T>>[];
 	toRemoveIndices: number[];
-	sourceQuery?: Query<T, T>;
+	sourceQuery?: Query<T>;
 	fetchAroundUpdates?: boolean;
 	wasFetchingAroundUpdates?: boolean;
 }

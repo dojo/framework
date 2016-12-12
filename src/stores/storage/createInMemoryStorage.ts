@@ -10,8 +10,7 @@ import { duplicate } from 'dojo-core/lang';
 export interface Storage<T, O extends CrudOptions> {
 	identify(items: T[]|T): string[];
 	createId(): Promise<string>;
-	fetch(): Promise<T[]>;
-	fetch<V>(query?: Query<T, V>): Promise<V[]>;
+	fetch(query?: Query<T>): Promise<T[]>;
 	get(ids: string[]): Promise<T[]>;
 	put(items: T[], options?: O): Promise<UpdateResults<T>>;
 	add(items: T[], options?: O): Promise<UpdateResults<T>>;
@@ -65,7 +64,7 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 		return Promise.resolve(String(state.nextId++));
 	},
 
-	fetch<V>(this: Storage<{}, {}>, query?: Query<{}, V>): Promise<V[]> {
+	fetch(this: Storage<{}, {}>, query?: Query<{}>): Promise<{}[]> {
 		const state = instanceStateMap.get(this);
 		const data = state.data || [];
 		return Promise.resolve((query ? query.apply(data) : data).slice());

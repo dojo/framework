@@ -1,6 +1,6 @@
-export interface Query<T, U> {
-	apply(data: T[]): U[];
-	toString(querySerializer?: (query: Query<any, any>) => string): string;
+export interface Query<T> {
+	apply(data: T[]): T[];
+	toString(querySerializer?: (query: Query<T>) => string): string;
 	incremental?: boolean;
 	queryType: QueryType;
 }

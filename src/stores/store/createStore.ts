@@ -60,8 +60,7 @@ export interface Store<T, O extends CrudOptions, U extends UpdateResults<T>> {
 	put(items: T[] | T, options?: O): StoreObservable<T, U>;
 	patch(updates: PatchArgument<T>, options?: O): StoreObservable<T, U>;
 	delete(ids: string[] | string): StoreObservable<string, U>;
-	fetch(): Promise<T[]>;
-	fetch<U>(query?: Query<T, U>): Promise<U[]>;
+	fetch(query?: Query<T>): Promise<T[]>;
 }
 
 export interface StoreFactory extends ComposeFactory<Store<{}, {}, any>, StoreOptions<{}, {}>> {
@@ -188,7 +187,7 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 		return createStoreObservable(storeResultsPromise);
 	},
 
-	fetch<U>(this: Store<{}, {}, any>, query?: Query<{}, U>) {
+	fetch(this: Store<{}, {}, any>, query?: Query<{}>) {
 		const state = instanceStateMap.get(this);
 		return state.initialAddPromise.then(function() {
 			return state.storage.fetch(query);

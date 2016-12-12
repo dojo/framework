@@ -1,7 +1,7 @@
 import { Query, QueryType } from './interfaces';
 import createJsonPointer, { JsonPointer, navigate } from '../patch/createJsonPointer';
 
-export interface Sort<T> extends Query<T, T> {
+export interface Sort<T> extends Query<T> {
 	readonly comparatorOrProperty: ((a: T, b: T) => number) | string | JsonPointer;
 	readonly descending?: boolean;
 }
@@ -40,7 +40,7 @@ function createSort<T>(
 		comparatorOrProperty: comparatorOrProperty,
 		descending: descending,
 		queryType: QueryType.Sort,
-		toString(this: Sort<T>, sortSerializer?: ((query: Query<any, any>) => string) | ((sort: Sort<T>) => string)) {
+		toString(this: Sort<T>, sortSerializer: ((sort: Sort<T>) => string)) {
 			if (isFunction) {
 				throw Error('Cannot parse this sort type to an RQL query string');
 			}

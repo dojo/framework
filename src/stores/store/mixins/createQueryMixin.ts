@@ -10,7 +10,7 @@ import { ComposeMixinDescriptor } from 'dojo-compose/compose';
 
 // export interface QueryMixin<T, O extends CrudOptions, U extends UpdateResults<T>, C extends SubcollectionStore<T, O, U, C>> extends SubcollectionStore<T, O, U, C> {
 export interface QueryMixin<T, O extends CrudOptions, U extends UpdateResults<T>, C extends Store<T, O, U>> {
-	query(query: Query<T, T>): C & this;
+	query(query: Query<T>): C & this;
 	filter(filter: Filter<T>): C & this;
 	filter(test: (item: T) => boolean): C & this;
 	range(range: StoreRange<T>): C & this;
@@ -21,16 +21,16 @@ export interface QueryMixin<T, O extends CrudOptions, U extends UpdateResults<T>
 export type QueryStore<T, O extends CrudOptions, U extends UpdateResults<T>, C extends Store<T, O, U>> = QueryMixin<T, O, U, C> & C;
 
 export interface QueryOptions<T> {
-	sourceQuery?: Query<T, T>;
+	sourceQuery?: Query<T>;
 }
 
 interface QueryState<T> {
-	sourceQuery?: Query<T, T>;
+	sourceQuery?: Query<T>;
 }
 const instanceStateMap = new WeakMap<QueryMixin<any, any, UpdateResults<any>, any>, QueryState<any>>();
 
-function isFilter<T>(filterOrTest: Query<any, any> | ((item: T) => boolean)): filterOrTest is Filter<T> {
-	return typeof filterOrTest !== 'function' && (<Query<any, any>> filterOrTest).queryType === QueryType.Filter;
+function isFilter<T>(filterOrTest: Query<any> | ((item: T) => boolean)): filterOrTest is Filter<T> {
+	return typeof filterOrTest !== 'function' && (<Query<any>> filterOrTest).queryType === QueryType.Filter;
 }
 
 function isSort<T>(sortOrComparator: Sort<T> | ((a: T, b: T) => number) | string): sortOrComparator is Sort<T> {
@@ -49,11 +49,11 @@ function createQueryMixin<T, O extends CrudOptions, U extends UpdateResults<T>, 
 > {
 	const queryMixin: QueryMixin<T, O, U, C> = {
 
-		query(this: QueryStoreSubCollection<T, O, U, C>, query: Query<T, T>) {
+		query(this: QueryStoreSubCollection<T, O, U, C>, query: Query<T>) {
 			const state = instanceStateMap.get(this);
 			if (state.sourceQuery) {
 				const compoundQuery = state.sourceQuery.queryType === QueryType.Compound ?
-					<CompoundQuery<T, T>> state.sourceQuery : createCompoundQuery({ query: state.sourceQuery });
+					<CompoundQuery<T>> state.sourceQuery : createCompoundQuery({ query: state.sourceQuery });
 
 				query = compoundQuery.withQuery(query);
 			}
@@ -105,12 +105,12 @@ function createQueryMixin<T, O extends CrudOptions, U extends UpdateResults<T>, 
 			before: {
 				fetch(this: QueryStore<T, O, U, C>, ...args: any[]) {
 					const state = instanceStateMap.get(this);
-					let query: Query<T, T> = args[0];
+					let query = <Query<T>> args[0];
 					if (state && state.sourceQuery) {
 						const sourceQuery = state.sourceQuery!;
 						if (query) {
-							const compoundQuery = sourceQuery.queryType === QueryType.Compound ?
-								<CompoundQuery<T, T>> sourceQuery : createCompoundQuery({ query: sourceQuery });
+							const compoundQuery = state.sourceQuery.queryType === QueryType.Compound ?
+								<CompoundQuery<T>> state.sourceQuery : createCompoundQuery({ query: state.sourceQuery });
 
 							query = compoundQuery.withQuery(query);
 						}

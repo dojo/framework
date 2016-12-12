@@ -1,5 +1,5 @@
 import { Query, QueryType } from './interfaces';
-export interface StoreRange<T> extends Query<T, T> {
+export interface StoreRange<T> extends Query<T> {
 	readonly start: number;
 	readonly count: number;
 }
@@ -14,7 +14,7 @@ function createRange<T>(start: number, count: number, serializer?: (range: Store
 			return data.slice(start, start + count);
 		},
 		queryType: QueryType.Range,
-		toString(this: StoreRange<T>, rangeSerializer?: ((query: Query<any, any>) => string) | ((range: StoreRange<T>) => string) ) {
+		toString(this: StoreRange<T>, rangeSerializer?: ((query: Query<T>) => string) | ((range: StoreRange<T>) => string) ) {
 			return (rangeSerializer || serializer || serializeRange)(this);
 		},
 		start: start,

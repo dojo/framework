@@ -289,12 +289,11 @@ registerSuite({
 
 			return store.fetch(
 				createCompoundQuery({
-					query:
-						createFilter()
-							.deepEqualTo(createJsonPointer('nestedProperty', 'value'), 2)
-							.or()
-							.deepEqualTo(createJsonPointer('nestedProperty', 'value'), 3)
-				}).withQuery(createSort(createJsonPointer('nestedProperty', 'value')))
+					query: createFilter<ItemType>()
+						.deepEqualTo(createJsonPointer('nestedProperty', 'value'), 2)
+						.or()
+						.deepEqualTo(createJsonPointer('nestedProperty', 'value'), 3)
+				}).withQuery(createSort<ItemType>(createJsonPointer('nestedProperty', 'value')))
 			)
 				.then(function(fetchedData) {
 					assert.deepEqual(fetchedData, [ data[1], data[0] ], 'Data fetched with queries was incorrect');

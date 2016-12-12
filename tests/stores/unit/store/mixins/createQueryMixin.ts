@@ -77,7 +77,7 @@ registerSuite({
 			return Boolean(item.id);
 		}).filter(function(item: ItemType) {
 			return String(item.id) === '2' || String(item.id) === '1';
-		}).fetch(createFilter().equalTo('id', '1')).then(function(items) {
+		}).fetch(createFilter<ItemType>().equalTo('id', '1')).then(function(items) {
 			assert.deepEqual(items, [ createData()[0] ], 'Didn\'t filter items properly with nested query and query in fetch');
 		}).then(dfd.resolve);
 	},
