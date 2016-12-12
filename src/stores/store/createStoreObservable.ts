@@ -1,7 +1,7 @@
 import Promise from 'dojo-shim/Promise';
+import { Thenable } from 'dojo-interfaces/shim';
 import { Subscribable, Observable } from 'rxjs/Observable';
 import global from 'dojo-core/global';
-import { Thenable } from 'dojo/Promise';
 
 global.Rx = { config: { Promise } };
 
