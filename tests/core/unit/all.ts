@@ -12,6 +12,7 @@ import './lang';
 import './List';
 import './load';
 import './main';
+import './Observable';
 import './on/all';
 import './MatchRegistry';
 import './queue';

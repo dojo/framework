@@ -7,6 +7,6 @@
 		"http-proxy": "github:dojo/typings/custom/http-proxy/http-proxy.d.ts#208e87898cd7a7d65a6f63db4a45846cd7220476",
 		"intern": "github:dojo/typings/custom/intern/intern.d.ts#122b1902bdbdb7b94bdee35bbc27bc6747e1979d",
 		"leadfoot": "github:dojo/typings/custom/leadfoot/leadfoot.d.ts#840dfb52b52ec130e0ab2625663c68387adf1377",
-		"symbol-shim": "github:dojo/typings/custom/symbol-shim/symbol-shim.d.ts#9a0185f465a3febe2bb1ff3f1210f43e5f96c5d2"
+		"symbol-shim": "github:dojo/typings/custom/symbol-shim/symbol-shim.d.ts#003aa24b3448804a2c59e9a1d9740ca56e067e79"
 	}
 }
