@@ -1,4 +1,4 @@
-import { Iterable, forOf } from 'dojo-shim/iterator';
+import { Iterable, forOf, isIterable, isArrayLike } from 'dojo-shim/iterator';
 import Promise, { Executor } from 'dojo-shim/Promise';
 import { Thenable } from 'dojo-shim/interfaces';
 
@@ -16,6 +16,9 @@ function unwrapPromises(iterable: Iterable<any> | any[]): any[] {
 	});
 	return unwrapped;
 }
+
+export type DictionaryOfPromises<T> = { [_: string]: T | Promise<T> | Thenable<T> };
+export type ListOfPromises<T> = Iterable<(T | Thenable<T>)> | (T | Thenable<T>);
 
 /**
  * An extensible base to allow Promises to be extended in ES5. This class basically wraps a native Promise object,
@@ -46,14 +49,37 @@ export default class ExtensiblePromise<T> {
 	}
 
 	/**
-	 * Return a ExtensiblePromise that resolves when all of the passed in objects have resolved
+	 * Return a ExtensiblePromise that resolves when all of the passed in objects have resolved. When used with a key/value
+	 * pair, the returned promise's argument is a key/value pair of the original keys with their resolved values.
 	 *
-	 * @param iterable    An iterable of values to resolve. These can be Promises, ExtensiblePromises, or other objects
+	 * @example
+	 * ExtensiblePromise.all({ one: 1, two: 2 }).then(results => console.log(results));
+	 * // { one: 1, two: 2 }
+	 *
+	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
 	 * @returns {ExtensiblePromise}
 	 */
-	static all<F extends ExtensiblePromise<T>, T>(iterable: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): F {
+	static all<F extends ExtensiblePromise<{ [key: string]: T }>, T>(iterable: DictionaryOfPromises<T>): F;
+	static all<F extends ExtensiblePromise<T[]>, T>(iterable: ListOfPromises<T>): F;
+	static all<F extends ExtensiblePromise<any>, T>(iterable: DictionaryOfPromises<T> | ListOfPromises<T>): F {
+		if (!isArrayLike(iterable) && !isIterable(iterable)) {
+			const promiseKeys = Object.keys(iterable);
+
+			return <F> new this((resolve, reject) => {
+				Promise.all(promiseKeys.map(key => (<DictionaryOfPromises<T>> iterable)[ key ])).then((promiseResults: T[]) => {
+					const returnValue: {[_: string]: T} = {};
+
+					promiseResults.forEach((value: T, index: number) => {
+						returnValue[ promiseKeys[ index ] ] = value;
+					});
+
+					resolve(returnValue);
+				}, reject);
+			});
+		}
+
 		return <F> new this((resolve, reject) => {
-			Promise.all(unwrapPromises(iterable)).then(resolve, reject);
+			Promise.all(unwrapPromises(<Iterable<T>> iterable)).then(resolve, reject);
 		});
 	}
 
@@ -113,7 +139,7 @@ export default class ExtensiblePromise<T> {
 	 */
 	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => void): this;
 	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => (U | Thenable<U>)): this {
-		let e: Executor<U> = (resolve, reject) => {
+		const e: Executor<U> = (resolve, reject) => {
 			function handler(rejected: boolean, valueOrError: T | U | Error) {
 				const callback: ((value: T | U | Error) => (U | Thenable<U> | void)) | undefined = rejected ? onRejected : onFulfilled;
 
