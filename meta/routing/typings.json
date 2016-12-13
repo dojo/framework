@@ -1,11 +1,9 @@
 {
 	"name": "dojo-routing",
-	"globalDevDependencies": {
-		"digdug": "github:dojo/typings/custom/digdug/digdug.d.ts#a62873258aa1deed48f9882c193c335436100d4b",
-		"dojo2": "github:dojo/typings/custom/dojo2/dojo.d.ts#a62873258aa1deed48f9882c193c335436100d4b",
-		"dojo2-dev": "github:dojo/typings/custom/dev/dev.d.ts#288d3a9868194f0e1ad6687371dffd1d96cb39a1",
-		"intern": "github:dojo/typings/custom/intern/intern.d.ts#122b1902bdbdb7b94bdee35bbc27bc6747e1979d",
-		"leadfoot": "github:dojo/typings/custom/leadfoot/leadfoot.d.ts#840dfb52b52ec130e0ab2625663c68387adf1377",
+	"globalDependencies": {
 		"symbol-shim": "github:dojo/typings/custom/symbol-shim/symbol-shim.d.ts#9a0185f465a3febe2bb1ff3f1210f43e5f96c5d2"
+	},
+	"globalDevDependencies": {
+		"dojo2-dev": "github:dojo/typings/custom/dev/dev.d.ts#288d3a9868194f0e1ad6687371dffd1d96cb39a1"
 	}
 }

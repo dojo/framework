@@ -280,10 +280,10 @@ export function deconstruct(path: string): DeconstructedPath {
 	}
 
 	return Object.freeze({
-		expectedSegments: Object.freeze(expectedSegments),
+		expectedSegments: <Segment[]> Object.freeze(expectedSegments),
 		leadingSlash,
-		parameters: Object.freeze(parameters),
-		searchParameters: Object.freeze(searchParameters),
+		parameters: <string[]> Object.freeze(parameters),
+		searchParameters: <string[]> Object.freeze(searchParameters),
 		trailingSlash
 	});
 }

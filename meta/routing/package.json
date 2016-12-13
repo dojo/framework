@@ -23,23 +23,24 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "dojo-compose": ">=2.0.0-beta.12",
-    "dojo-core": ">=2.0.0-alpha.15",
-    "dojo-has": ">=2.0.0-alpha.4",
-    "dojo-shim": ">=2.0.0-beta.1"
+    "dojo-compose": "^2.0.0-beta.18",
+    "dojo-core": "^2.0.0-alpha.17",
+    "dojo-has": "^2.0.0-alpha.6",
+    "dojo-shim": "^2.0.0-beta.7"
   },
   "devDependencies": {
     "@types/chai": "~3.4.0",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
     "@types/sinon": "~1.16.0",
-    "dojo-loader": ">=2.0.0-beta.7",
+    "dojo-loader": "^2.0.0-beta.7",
+    "dojo-interfaces": "^2.0.0-alpha.8",
     "grunt": "~1.0.1",
-    "grunt-dojo2": ">=2.0.0-beta.16",
-    "intern": "^3.3.1",
+    "grunt-dojo2": ">=2.0.0-beta.22",
+    "intern": "^3.4.1",
     "istanbul": "^0.4.5",
     "sinon": "^1.17.4",
     "tslint": "^3.15.1",
-    "typescript": "2.0.3"
+    "typescript": "~2.1.4"
   }
 }

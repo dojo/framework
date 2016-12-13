@@ -208,8 +208,9 @@ suite('createRouter', () => {
 			event.cancel();
 		});
 
-		return router.dispatch({} as Context, '/foo').then(({ success: d }) => {
-			assert.isFalse(d);
+		return router.dispatch({} as Context, '/foo').then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			assert.isFalse(success);
 		});
 	});
 
@@ -221,8 +222,9 @@ suite('createRouter', () => {
 			Promise.resolve().then(cancel);
 		});
 
-		return router.dispatch({} as Context, '/foo').then(({ success: d }) => {
-			assert.isFalse(d);
+		return router.dispatch({} as Context, '/foo').then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			assert.isFalse(success);
 		});
 	});
 
@@ -234,8 +236,9 @@ suite('createRouter', () => {
 			Promise.resolve().then(resume);
 		});
 
-		return router.dispatch({} as Context, '/foo').then(({ success: d }) => {
-			assert.isTrue(d);
+		return router.dispatch({} as Context, '/foo').then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			assert.isTrue(success);
 		});
 	});
 
@@ -254,8 +257,9 @@ suite('createRouter', () => {
 		});
 
 		let dispatched: boolean | undefined = false;
-		router.dispatch({} as Context, '/foo').then(({ success: d }) => {
-			dispatched = d;
+		router.dispatch({} as Context, '/foo').then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			dispatched = success;
 		});
 
 		const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -306,8 +310,9 @@ suite('createRouter', () => {
 		});
 
 		const context = {} as Context;
-		return router.dispatch(context, '/foo').then(({ success: d }) => {
-			assert.isFalse(d);
+		return router.dispatch(context, '/foo').then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			assert.isFalse(success);
 			assert.ok(received);
 			assert.strictEqual(received.context, context);
 			assert.deepEqual(received.params, {});
@@ -373,8 +378,9 @@ suite('createRouter', () => {
 		deep.append(deeper);
 		router.append(root);
 
-		return router.dispatch({} as Context, 'foo/bar/baz').then(({ success: d }) => {
-			assert.isTrue(d);
+		return router.dispatch({} as Context, 'foo/bar/baz').then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			assert.isTrue(success);
 		});
 	});
 
@@ -388,8 +394,9 @@ suite('createRouter', () => {
 			deep.append(deeper);
 			router.append(root);
 
-			return router.dispatch({} as Context, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
-				assert.isTrue(d === withSlash, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
+			return router.dispatch({} as Context, `foo/bar/baz${withSlash ? '/' : ''}`).then((dispatchResult) => {
+				const { success } = dispatchResult || { success: false };
+				assert.isTrue(success === withSlash, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
 			});
 		}));
 	});
@@ -404,8 +411,9 @@ suite('createRouter', () => {
 			deep.append(deeper);
 			router.append(root);
 
-			return router.dispatch({} as Context, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
-				assert.isTrue(d !== withSlash, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
+			return router.dispatch({} as Context, `foo/bar/baz${withSlash ? '/' : ''}`).then((dispatchResult) => {
+				const { success } = dispatchResult || { success: false };
+				assert.isTrue(success !== withSlash, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
 			});
 		}));
 	});
@@ -423,8 +431,9 @@ suite('createRouter', () => {
 			deep.append(deeper);
 			router.append(root);
 
-			return router.dispatch({} as Context, `foo/bar/baz${withSlash ? '/' : ''}`).then(({ success: d }) => {
-				assert.isTrue(d, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
+			return router.dispatch({} as Context, `foo/bar/baz${withSlash ? '/' : ''}`).then((dispatchResult) => {
+				const { success } = dispatchResult || { success: false };
+				assert.isTrue(success, `there is ${withSlash ? 'a' : 'no'} trailing slash`);
 			});
 		}));
 	});
@@ -433,8 +442,9 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo' }));
 
-		return router.dispatch({} as Context, '/foo?bar').then(({ success: d }) => {
-			assert.isTrue(d);
+		return router.dispatch({} as Context, '/foo?bar').then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			assert.isTrue(success);
 		});
 	});
 
@@ -442,8 +452,9 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo' }));
 
-		return router.dispatch({} as Context, '/foo#bar').then(({ success: d }) => {
-			assert.isTrue(d);
+		return router.dispatch({} as Context, '/foo#bar').then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			assert.isTrue(success);
 		});
 	});
 
@@ -451,12 +462,14 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo' }));
 
-		return router.dispatch({} as Context, '/foo?bar#baz').then(({ success: d }) => {
-			assert.isTrue(d, '/foo?bar#baz');
+		return router.dispatch({} as Context, '/foo?bar#baz').then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			assert.isTrue(success, '/foo?bar#baz');
 
 			return router.dispatch({} as Context, '/foo#bar?baz');
-		}).then(({ success: d }) => {
-			assert.isTrue(d);
+		}).then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			assert.isTrue(success);
 		});
 	});
 
@@ -464,8 +477,9 @@ suite('createRouter', () => {
 		const router = createRouter();
 		router.append(createRoute({ path: '/foo/bar' }));
 
-		return router.dispatch({} as Context, '//foo///bar').then(({ success: d }) => {
-			assert.isTrue(d);
+		return router.dispatch({} as Context, '//foo///bar').then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			assert.isTrue(success);
 		});
 	});
 

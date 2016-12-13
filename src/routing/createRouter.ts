@@ -555,7 +555,7 @@ const createRouter: RouterFactory<Context> = compose.mixin(createEvented, {
 				};
 			}
 
-			let lastDispatch: Task<void>;
+			let lastDispatch: Task<DispatchResult>;
 			let redirectCount = 0;
 			let redirecting = false;
 
@@ -575,7 +575,8 @@ const createRouter: RouterFactory<Context> = compose.mixin(createEvented, {
 				state.dispatchFromStart = true;
 
 				const context = contextFactory();
-				lastDispatch = this.dispatch(context, path).then(({ redirect, success }) => {
+				lastDispatch = this.dispatch(context, path).then((dispatchResult) => {
+					const { success, redirect = undefined } = dispatchResult || { success: false };
 					if (success && redirect !== undefined) {
 						redirectCount++;
 						if (redirectCount > 20) {
