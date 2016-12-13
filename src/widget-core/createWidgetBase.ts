@@ -116,7 +116,7 @@ function dNodeToVNode(instance: Widget<WidgetState>, dNode: DNode): VNode | stri
 		child.children = children;
 		internalState.currentChildrenMap.set(childrenMapKey, child);
 
-		return child.render();
+		return child.__render__();
 	}
 
 	dNode.children = dNode.children
@@ -223,7 +223,7 @@ const createWidget: WidgetFactory = createStateful
 
 			],
 
-			render(this: Widget<WidgetState>): VNode | string | null {
+			__render__(this: Widget<WidgetState>): VNode | string | null {
 				const internalState = widgetInternalStateMap.get(this);
 				if (internalState.dirty || !internalState.cachedVNode) {
 					const widget = dNodeToVNode(this, this.getNode());

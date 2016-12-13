@@ -124,7 +124,7 @@ function scheduleRender(event: EventTargettedObject<Projector>) {
 
 function attach(instance: Projector, { type }: AttachOptions) {
 	const projectorData = projectorDataMap.get(instance);
-	const render = instance.render.bind(instance);
+	const render = instance.__render__.bind(instance);
 
 	if (projectorData.state === ProjectorState.Attached) {
 		return projectorData.attachPromise || Promise.resolve({});
@@ -221,7 +221,7 @@ const createProjector: ProjectorFactory = createWidgetBase
 		},
 		aspectAdvice: {
 			after: {
-				render(this: Projector, result: VNode | string | null) {
+				__render__(this: Projector, result: VNode | string | null) {
 					if (typeof result === 'string' || result === null) {
 						throw new Error('Must provide a VNode at the root of a projector');
 					}

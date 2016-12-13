@@ -25,7 +25,7 @@ registerSuite({
 				name: 'baz'
 			}
 		});
-		const vnode = <VNode> button.render();
+		const vnode = <VNode> button.__render__();
 		assert.strictEqual(vnode.vnodeSelector, 'button');
 		assert.strictEqual(vnode.properties!.innerHTML, 'bar');
 		assert.strictEqual(vnode.properties!['data-widget-id'], 'foo');
@@ -41,12 +41,12 @@ registerSuite({
 				name: 'baz'
 			}
 		});
-		let vnode = <VNode> button.render();
+		let vnode = <VNode> button.__render__();
 		assert.isFalse(vnode.properties!['disabled']);
 		button.setState({
 			disabled: true
 		});
-		vnode = <VNode> button.render();
+		vnode = <VNode> button.__render__();
 		assert.isTrue(vnode.properties!['disabled']);
 	}
 });

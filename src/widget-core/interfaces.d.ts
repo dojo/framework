@@ -174,7 +174,7 @@ export interface WidgetMixin {
 	 * return h(this.tagName, this.getNodeAttributes(), this.getChildrenNodes());
 	 * ```
 	 */
-	render(): VNode | string | null;
+	__render__(): VNode | string | null;
 
 	/**
 	 * The tagName (selector) that should be used when rendering the node.

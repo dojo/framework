@@ -37,7 +37,7 @@ registerSuite({
 		})();
 
 		try {
-			projector.render();
+			projector.__render__();
 			assert.fail();
 		}
 		catch (error) {
@@ -53,7 +53,7 @@ registerSuite({
 		})();
 
 		try {
-			projector.render();
+			projector.__render__();
 			assert.fail();
 		}
 		catch (error) {
