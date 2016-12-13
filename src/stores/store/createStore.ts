@@ -4,7 +4,7 @@ import WeakMap from 'dojo-shim/WeakMap';
 import Map from 'dojo-shim/Map';
 import { duplicate } from 'dojo-core/lang';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import { Observer, Observable } from 'rxjs/Rx';
+import { Observer, Observable } from 'dojo-core/Observable';
 import { diff, Patch, PatchMapEntry } from '../patch/createPatch';
 import _createStoreObservable, { StoreObservable } from './createStoreObservable';
 import createInMemoryStorage, { Storage } from '../storage/createInMemoryStorage';

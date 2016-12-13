@@ -1,7 +1,7 @@
 import { SubcollectionStore, SubcollectionOptions } from '../createSubcollectionStore';
 import { CrudOptions, Store, UpdateResults } from '../createStore';
 import { ObservableStore, ItemUpdate, StoreDelta } from './createObservableStoreMixin';
-import { Observable, Observer } from 'rxjs/Rx';
+import { Observable, Observer } from 'dojo-core/Observable';
 import { ComposeMixinDescriptor } from 'dojo-compose/compose';
 import { after } from 'dojo-compose/aspect';
 import Map from 'dojo-shim/Map';

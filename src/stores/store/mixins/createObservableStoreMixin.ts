@@ -1,5 +1,5 @@
 import { CrudOptions, Store, StoreOptions, UpdateResults } from '../createStore';
-import { Observable, Observer } from 'rxjs/Rx';
+import { Observable, Observer } from 'dojo-core/Observable';
 import WeakMap from 'dojo-shim/WeakMap';
 import Map from 'dojo-shim/Map';
 import Set from 'dojo-shim/Set';
