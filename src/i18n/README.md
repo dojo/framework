@@ -2,6 +2,8 @@
 
 An internationalization library that provides locale-specific message loading, and support for locale-specific message, date, and number formatting. To support locale-specific formatters, `dojo-i18n` utilizes the most up-to-date [CLDR data](http://cldr.unicode.org) from [The Unicode Consortium](http://unicode.org).
 
+**WARNING** This is _alpha_ software. It is not yet production ready, so you should use at your own risk.
+
 ## Features
 
 The examples below are provided in TypeScript syntax. The package does work under JavaScript, but for clarity, the examples will only include one syntax.
@@ -248,7 +250,24 @@ This is currently not provided, but will be added in the near future.
 
 ## How do I use this package?
 
-TODO: Add appropriate usage and instruction guidelines
+The easiest way to use this package is to install it via npm:
+
+```
+$ npm install dojo-i18n
+```
+
+In addition, you can clone this repository and use the Grunt build scripts to manage the package.
+
+Using under TypeScript or ES6 modules, you would generally want to just import the dojo-i18n/i18n module:
+
+```typescript
+import i18n, { Messages } from 'dojo-i18n/i18n';
+import messageBundle from 'path/to/bundle';
+
+i18n(messageBundle, 'fr').then((messages: Messages) => {
+	// locale-specific messages ready to use...
+});
+```
 
 ## How do I contribute?
 
