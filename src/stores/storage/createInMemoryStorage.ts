@@ -6,6 +6,7 @@ import WeakMap from 'dojo-shim/WeakMap';
 import Map from 'dojo-shim/Map';
 import { Patch } from '../patch/createPatch';
 import { duplicate } from 'dojo-core/lang';
+import uuid from 'dojo-core/uuid';
 
 export interface Storage<T, O extends CrudOptions> {
 	identify(items: T[]|T): string[];
@@ -22,7 +23,6 @@ export interface Storage<T, O extends CrudOptions> {
 export interface InMemoryStorageState<T> {
 	idProperty?: string;
 	idFunction?: (item: T) => string;
-	nextId?: number;
 	data: T[];
 	index: Map<string, number>;
 	returnsPromise: Promise<any>;
@@ -98,8 +98,7 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 	},
 
 	createId(this: Storage<{}, {}>): Promise<string> {
-		const state = instanceStateMap.get(this);
-		return Promise.resolve(String(state.nextId++));
+		return Promise.resolve(uuid());
 	},
 
 	fetch(this: Storage<{}, {}>, query?: Query<{}>): Promise<{}[]> {
@@ -238,7 +237,6 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 	options = options || {};
 	instanceStateMap.set(instance, {
 		data: [],
-		nextId: 1,
 		index: new Map<string, number>(),
 		idProperty: options.idProperty,
 		idFunction: options.idFunction,
