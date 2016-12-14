@@ -76,7 +76,7 @@ function createTransactionMixin<T, O extends CrudOptions, U extends UpdateResult
 					function(updateResultsList) {
 						const data: (T | string)[] = [];
 						return updateResultsList.reduce(function(prev, next) {
-							return next.successfulData ? prev.concat(next.successfulData) : prev;
+							return prev.concat(next.successfulData);
 						}, data);
 					});
 			},
@@ -87,7 +87,7 @@ function createTransactionMixin<T, O extends CrudOptions, U extends UpdateResult
 				return state.store;
 			}
 
-	}, function (instance: Transaction<T, O, U, C>, options: TransactionOptions<T, O, U, C> = {}) {
+	}, function (instance: Transaction<T, O, U, C>, options: TransactionOptions<T, O, U, C>) {
 		instanceStateMap.set(instance, {
 			store: options.store,
 			actions: []
@@ -103,6 +103,6 @@ function createTransactionMixin<T, O extends CrudOptions, U extends UpdateResult
 	});
 
 	return transactionMixin;
-};
+}
 
 export default createTransactionMixin;

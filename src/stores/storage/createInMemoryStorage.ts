@@ -23,8 +23,9 @@ export interface InMemoryStorageState<T> {
 	idProperty?: string;
 	idFunction?: (item: T) => string;
 	nextId?: number;
-	data?: T[];
+	data: T[];
 	index: Map<string, number>;
+	returnsPromise: Promise<any>;
 }
 
 const instanceStateMap = new WeakMap<Storage<{}, {}>, InMemoryStorageState<{}>>();
@@ -38,6 +39,43 @@ export interface InMemoryStorageFactory extends StorageFactory {
 }
 
 type IdObject = { [ index: string ]: string; id: string };
+
+function putSync(instance: Storage<{}, {}>, items: {}[], options?: CrudOptions) {
+	const state = instanceStateMap.get(instance);
+	const ids = instance.identify(items);
+
+	const updatedItems: {}[] = [];
+	const oldIndices: number[] = [];
+	const newIds: string[] = [];
+	const newItems: {}[] = [];
+
+	ids.forEach(function(id, index) {
+		const oldIndex = state.index.get(id);
+		if (typeof oldIndex === 'undefined') {
+			newIds.push(id);
+			newItems.push(items[index]);
+		}
+		else {
+			updatedItems.push(items[index]);
+			oldIndices.push(oldIndex);
+		}
+	});
+	if (oldIndices.length && options && options.rejectOverwrite) {
+		throw Error('Objects already exist in store');
+	}
+
+	const data = state.data;
+	updatedItems.forEach(function(item, index) {
+		data[oldIndices[index]] = item;
+	});
+	newItems.forEach(function(item, index) {
+		state.index.set(newIds[index], data.push(item) - 1);
+	});
+	return {
+		successfulData: items,
+		type: StoreOperation.Put
+	};
+}
 
 const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, CrudOptions>, StoreOptions<{}, CrudOptions>>({
 	identify(this: Storage<{}, {}>, items: IdObject[]| IdObject): string[] {
@@ -66,13 +104,16 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 
 	fetch(this: Storage<{}, {}>, query?: Query<{}>): Promise<{}[]> {
 		const state = instanceStateMap.get(this);
-		const data = state.data || [];
-		return Promise.resolve((query ? query.apply(data) : data).slice());
+		const fullData = state.data;
+		const data = (query ? query.apply(fullData) : fullData).slice();
+		const returnPromise = state.returnsPromise.then(() => data);
+		state.returnsPromise = returnPromise;
+		return returnPromise;
 	},
 
 	get(this: Storage<{}, {}>, ids: string[]): Promise<{}[]> {
 		const state = instanceStateMap.get(this);
-		const data = state.data || [];
+		const data = state.data;
 		const objects: {}[] = [];
 		return Promise.resolve(ids.reduce(function(prev, next) {
 			return state.index.has(next) ? prev.concat( data[state.index.get(next)!] ) : prev;
@@ -81,56 +122,43 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 
 	put(this: Storage<{}, {}>, items: {}[], options?: CrudOptions): Promise<UpdateResults<{}>> {
 		const state = instanceStateMap.get(this);
-		const ids = this.identify(items);
-
-		const updatedItems: {}[] = [];
-		const oldIndices: number[] = [];
-		const newIds: string[] = [];
-		const newItems: {}[] = [];
-
-		ids.forEach(function(id, index) {
-			const oldIndex = state.index.get(id);
-			if (typeof oldIndex === 'undefined') {
-				newIds.push(id);
-				newItems.push(items[index]);
-			}
-			else {
-				updatedItems.push(items[index]);
-				oldIndices.push(oldIndex);
-			}
-		});
-		if (oldIndices.length && options && options.rejectOverwrite) {
-			return Promise.reject(new Error('Objects already exist in store'));
+		try {
+			const result = putSync(this, items, options);
+			// Don't control the order operations are executed in, but make sure that the results
+			// resolve in the order they were actually executed in.
+			const returnPromise = state.returnsPromise.then(() => result);
+			state.returnsPromise = returnPromise;
+			return returnPromise;
+		} catch (error) {
+			return Promise.reject(error);
 		}
-
-		const data = state.data || (state.data = []);
-		updatedItems.forEach(function(item, index) {
-			data[oldIndices[index]] = item;
-		});
-		newItems.forEach(function(item, index) {
-			state.index.set(newIds[index], data.push(item) - 1);
-		});
-
-		return Promise.resolve({
-			successfulData: items,
-			type: StoreOperation.Put
-		});
 	},
 
 	add(this: Storage<{}, {}>, items: {}[], options?: CrudOptions): Promise<UpdateResults<{}>> {
 		options = options || {};
+		const state = instanceStateMap.get(this);
 		if (typeof options.rejectOverwrite === 'undefined') {
 			options.rejectOverwrite = true;
 		}
-		return this.put(items, options).then(function(result) {
-			result.type = StoreOperation.Add;
-			return result;
-		});
+
+		try {
+			const result = putSync(this, items, options);
+			// Don't control the order operations are executed in, but make sure that the results
+			// resolve in the order they were actually executed in.
+			const returnPromise = state.returnsPromise.then(() => {
+				result.type = StoreOperation.Add;
+				return result;
+			});
+			state.returnsPromise = returnPromise;
+			return returnPromise;
+		} catch (error) {
+			return Promise.reject(error);
+		}
 	},
 
 	delete(this: Storage<{}, {}>, ids: string[]): Promise<UpdateResults<{}>> {
 		const state = instanceStateMap.get(this);
-		const data = state.data || [];
+		const data = state.data;
 		const idsToRemove = ids.filter(function(id) {
 			return state.index.has(id);
 		});
@@ -155,15 +183,19 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 			});
 		}
 
-		return Promise.resolve({
+		// Don't control the order operations are executed in, but make sure that the results
+		// resolve in the order they were actually executed in.
+		const returnPromise = state.returnsPromise.then(() => ({
 			successfulData: idsToRemove,
 			type: StoreOperation.Delete
-		});
+		}));
+		state.returnsPromise = returnPromise;
+		return returnPromise;
 	},
 
 	patch(this: Storage<{}, {}>, updates: { id: string; patch: Patch<{}, {}> }[]): Promise<UpdateResults<{}>> {
 		const state = instanceStateMap.get(this);
-		const data = state.data || (state.data = []);
+		const data = state.data;
 
 		const filteredUpdates = updates.filter(function(update) {
 			return state.index.has(update.id);
@@ -172,7 +204,6 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 			return state.index.get(update.id)!;
 		});
 
-		// If there is a source, the data has already been patched so we only need to sort it
 		try {
 			const updatedItems = filteredUpdates.map(function(update, index) {
 				const item = duplicate(data[oldIndices[index]]);
@@ -180,11 +211,14 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 				data[oldIndices[index]] = updatedItem;
 				return updatedItem;
 			});
-
-			return Promise.resolve({
+			// Don't control the order operations are executed in, but make sure that the results
+			// resolve in the order they were actually executed in.
+			const returnsPromise = state.returnsPromise.then(() => ({
 				successfulData: updatedItems,
 				type: StoreOperation.Patch
-			});
+			}));
+			state.returnsPromise = returnsPromise;
+			return returnsPromise;
 		} catch (error) {
 			return Promise.reject(error);
 		}
@@ -207,7 +241,8 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 		nextId: 1,
 		index: new Map<string, number>(),
 		idProperty: options.idProperty,
-		idFunction: options.idFunction
+		idFunction: options.idFunction,
+		returnsPromise: Promise.resolve()
 	});
 });
 

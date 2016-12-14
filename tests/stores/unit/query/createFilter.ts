@@ -456,5 +456,33 @@ registerSuite({
 			'Return any item where key is greater than 3 and key is less than 5 or id is equal to value',
 			'Didn\'t use provided serialization function'
 		);
+	},
+
+	'ignore or at end of filter chain'(this: any) {
+		assert.deepEqual(
+			createFilter<SimpleObj>()
+				.custom((item) => true)
+				.notEqualTo('key', 5)
+				.or()
+				.apply(simpleList),
+			simpleList.slice(1),
+			'Or at end of filter shouldn\'t have changed the result');
+	},
+
+	'empty ands or ors at beginning of chain should not throw errors'(this: any) {
+		const emptyAnd = createFilter<SimpleObj>().and();
+		const emptyOr = createFilter<SimpleObj>().or();
+		assert.doesNotThrow(() => {
+			emptyAnd.apply(simpleList);
+			emptyOr.apply(simpleList);
+		}, 'Should\'t have thrown any errors');
+	},
+
+	'filter on entire object'(this: any) {
+		assert.deepEqual(
+			createFilter<SimpleObj>().deepEqualTo('', simpleList[0]).apply(simpleList),
+			[ simpleList[0] ],
+			'Should have returned the matching object'
+		);
 	}
 });

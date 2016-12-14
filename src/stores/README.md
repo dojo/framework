@@ -121,31 +121,41 @@ interface UpdateResults<T> {
 
 The built in store will only populate the `type` and `successfulData` properties, but this provides an extension point for store implementations to provide more details about the results of the operation, report results incrementally, or allow for the operation to be retried in the case of recoverable errors(e.g. data conflicts or network errors).
 
-
-### Subcollection Store
-
-The other base factory provided by this package is `createSubcollectionStore`. This base is required for certain mixins, specifically `createQueryMixin`, `createTrackableMixin`, but doesn't provide significant useful functionality other than that. As such, `createStore` should be preferred unless its specific functionality or those mixins are needed.
-
-A subcollection will delegate all crud operations to its `source`, which is the store it was created from.
-
 ### createObservableStoreMixin
 
 This store provides an API for observing the store itself, or specific items within the store.
 
 ```typescript
-interface UpdateResults<T> {
-	currentItems?: T[];
-	failedData?: CrudArgument<T>[];
-	successfulData: T[] | string[];
-	type: StoreOperation;
+export interface ObservableStoreMixin<T> {
+	/**
+	 * Observe the entire store, receiving deltas indicating the changes to the store.
+	 * When observing, an initial update will be sent with the last known state of the store in the `afterAll` property.
+	 * If fetchAroundUpdates is true, the store's local data will by synchronized with the underlying Storage.
+	 * If fetchAroundUpdates is not true, then the data will be the result of locally applying updates to the data
+	 * retrieved from the last fetch.
+	 */
+	observe(): Observable<StoreDelta<T>>;
+	/**
+	 * Receives the current state of the item with the specified ID whenever it is updated. This observable will be
+	 * completed if the item is deleted
+	 * @param id The ID of the item to observe
+	 */
+	observe(id: string): Observable<T>;
+	/**
+	 * Receives the current state of the items in an `ItemUpdate` object whenever they are updated. When any of the
+	 * items are deleted an `ItemUpdate` with the item's ID and no item property will be sent out. When all of the
+	 * observed items are deleted the observable will be completed.
+	 * @param ids - The IDS of the items to observe
+	 */
+	observe(ids: string[]): Observable<ItemUpdate<T>>;
 }
 
 interface StoreDelta<T> {
 	updates: T[];
 	deletes: string[];
 	adds: T[];
-	beforeAll?: T[];
-	afterAll?: T[];
+	beforeAll: T[];
+	afterAll: T[];
 }
 
 interface ItemUpdate<T> {
@@ -154,23 +164,26 @@ interface ItemUpdate<T> {
 }
 ```
 
+#### Observing the store
+
+When observing the whole store, an initial update will be received that contains the current data in the store in the `afterAll` property, and subsequent updates will represent the changes in the store since the last update.
+
+If the `fetchAroundUpdates` property is set to `true` in the options when creating the store, then the data in the store will be kept up to date with the underlying storage, and any updates will represent the latest data from the storage. If `fetchAroundUpdates` is `false` or not specified, then the local data will be modified in place according to the updates indicated by the `StoreDelta`, but it may become out of sync with the underlying storage. In this case, when fetching manually, the local data will be synced again. An update is sent after a `fetch`, and the update following a fetch may contain new items in the `afterAll` property that are not represented by the `updates`, `adds`, and `deletes` of the `StoreDelta` when `fetchAroundUpdates` is `false` and the store is out of sync with its storage.
+
 Example usage
 ```typescript
-interface ObservableStoreFactory extends ComposeFactory<ObservableStore<{}, {}, any>, ObservableStoreOptions<{}, {}>> {
-	<T, O extends CrudOptions, U extends UpdateResults<T>>(options?: ObservableStoreOptions<T, O>): ObservableStore<T, O, U>;
-}
-const createObservableStore: ObservableStoreFactory = createStore
-	.mixin(createObservableStoreMixin());
+import { createObservableStore } from 'dojo-stores/store/mixins/createObservableStoreMixin';
 
-const observableStore: ObservableStore = createObservableStore({
+const observableStore = createObservableStore({
 	data: [{ id: '1', value: 1 }]
 });
+
 observableStore.observe().subscribe(function(update) {
 	// update = {
 	// 	 updates: [ any items updated since last notification ],
 	// 	 deletes: [ any items deleted since last notification ],
-	// 	 beforeAll: undefined,
-	// 	 afterAll: undefined,
+	// 	 beforeAll: [ Empty for the first update, previous state for following updates],
+	// 	 afterAll: [ Current state of the sotre ],
 	// 	 adds: [ any items added since last notification ]
 	// }
 });
@@ -191,126 +204,177 @@ observableStore.observe([ 'itemId', 'otherItemId' ]).subscribe(function() {
 });
 
 ```
-A couple of things to note about this example:  
-* It's necessary to provide the factory interface in order to be able to specify the generics on the store.
-* If `fetchAroundUpdates` was set to true, the `beforeAll` and `afterAll` properties on the update object would be populated with the items in the store before and after the update respectively.
-* If this store is a subcollection of another store, observing the child store will result in receiving all updates from the parent store.
 
-### createQueryMixin
+### createQueryTransformMixin
 
-This mixin provides the ability to filter items, sort items, select a range of items, or query for items via anything else that implements the `Query` interface.
-
+This mixin provides the ability to filter, sort, select a range of, transform, or query for items using a custom query function. 
 ```typescript
-interface QueryMixin<T, O extends CrudOptions, U extends UpdateResults<T>, C extends Store<T, O, U>> {
-	query(query: Query<T, T>): C & this;
-	filter(filter: Filter<T>): C & this;
-	filter(test: (item: T) => boolean): C & this;
-	range(range: StoreRange<T>): C & this;
-	range(start: number, count: number): C & this;
-	sort(sort: Sort<T> | ((a: T, b: T) => number) | string, descending?: boolean): C & this;
+export interface QueryTransformMixin<T, S extends ObservableStore<T, any, any>> {
+	/**
+	 * Creates a query transform result with the provided query
+	 * @param query
+	 */
+	query(query: Query<T>): MappedQueryTransformResult<T, S>;
+	/**
+	 * Creates a query transform result with the provided filter
+	 * @param filter
+	 */
+	filter(filter: Filter<T>): MappedQueryTransformResult<T, S>;
+	/**
+	 * Creates a query transform result with a filter built from the provided test
+	 * @param test
+	 */
+	filter(test: (item: T) => boolean): MappedQueryTransformResult<T, S>;
+	/**
+	 * Creates a query transform result with the provided range
+	 * @param range
+	 */
+	range(range: StoreRange<T>): MappedQueryTransformResult<T, S>;
+	/**
+	 * Creates a query transform result with a range built based on the provided start and count
+	 * @param start
+	 * @param cound
+	 */
+	range(start: number, count: number): MappedQueryTransformResult<T, S>;
+	/**
+	 * Creates a query transform result with the provided sort or a sort build from the provided comparator or a
+	 * comparator for the specified property
+	 * @param sort
+	 * @param descending
+	 */
+	sort(sort: Sort<T> | ((a: T, b: T) => number) | string, descending?: boolean): MappedQueryTransformResult<T, S>;
+	/**
+	 * Create a query transform result that cannot be tracked, and cannot send tracked updates. This is the case because
+	 * the resulting query transform result will have no way to identify items, making it impossible to determine
+	 * whether their position has shifted or differentiating between updates and adds
+	 * @param transformation
+	 */
+	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryTransformResult<V, S>;
+	/**
+	 * Create a trackable query transform result with the specified transformation
+	 * @param transformation
+	 * @param idTransform
+	 */
+	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): MappedQueryTransformResult<V, S>;
 }
 ```
 
-Any of the calls to the query method will return a new store, which will be a subcollection of the original store. Calling `fetch` on that store will return the appropriate data by applying the query to the data in the original store. Any updates made to this store will be propagated back up to the original store, as with all subcollections.
+
+The result of querying or transforming will be a read only `QueryTransformResult`.
+
+```typescript
+export interface QueryTransformResult<T, S extends ObservableStore<any, any, any>> {
+	query(query: Query<T>): this;
+	filter(filter: Filter<T>): this;
+	filter(test: (item: T) => boolean): this;
+	range(range: StoreRange<T>): this;
+	range(start: number, count: number): this;
+	sort(sort: Sort<T> | ((a: T, b: T) => number) | string, descending?: boolean): this;
+	observe(): Observable<StoreDelta<T>>;
+	observe(id: string): Observable<T>;
+	observe(ids: string[]): Observable<ItemUpdate<T>>;
+	get(ids: string | string[]): Promise<T[]>;
+	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryTransformResult<V, S>;
+	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): this;
+	fetch(query?: Query<T>): Promise<T[]>;
+	source: S;
+}
+```
+
+The `QueryTransformResult` can be further queried or transformed, as well as observed, and has a reference to the source store if updates need to be performed on the original data.
+
+The observation API for the `QueryTransformResult` is very similar to the store's with a few changes.
+
+#### MappedQueryTransformResult
+Unless the transform method is called without an idTransform, the result of any queries to a store with the createQueryTransformMixin will be a `MappedQueryTransformResult`, which includes additional data in its `StoreDelta` updates, and provides a `track()` method. The `StoreDelta` interface is extended by the `TrackedStoreDelta` interface which the `MappedQueryTransformResult` provides to observers. This augments the interface by providing data indicating the current and previous indices of items that have been moved within, added to, or removed from, the view represented by the `MappedQueryTransformResult`. Unlike `updates`, `deletes`, and `adds`, these properties are not related to specific operations, but instead just represent changes in the position of items within the collection. 
+
+```typescript
+export interface TrackableStoreDelta<T> extends StoreDelta<T> {
+	/**
+	 * Contains info for any items that were formerly in the tracked collection and are now not, regardless of how
+	 * those items were removed
+	 */
+	removedFromTracked: { item: T; id: string; previousIndex: number; }[];
+	/**
+	 * Contains info for any items that are now in the tracked collection and formerly were not, regardless of how
+	 * those items were added
+	 */
+	addedToTracked: { item: T; id: string; index: number; }[];
+	/**
+	 * Contains info were previously and still are in the tracked collection but have changed position, regardless of
+	 * how the items were moved.
+	 */
+	movedInTracked: { item: T; id: string; previousIndex: number; index: number }[];
+}
+
+```
+
+As with the observable store mixin, the locally tracked data in a `MappedQueryTransformResult` has the potential to become out of sync with the underlying storage. If the source `ObservableStore` has `fetchAroundUpdates` set to true, then any query transform results produced from it will only send up to date information to observers. If the source is not fetching around updates, the `track()` method provided as part of the `MappedQueryTransformResult` interface can be used to create a copy of a `QueryTransformResult` that will fetch after any updates from its source to make sure it has the latest data. `track()` produces a `TrackedQueryTransformResult`, which has a `release()` method that provides a new, non-tracked query transform result.
+
+When `transform()` is called without an `idTransform`, the resulting `QueryTransformResult` has no way of determining the ID of a transformed item, and so it cannot tell whether changes from the source store represent updates or additions, and cannot keep an index to easily track the position of items within the store. As a result, a `QueryTransformResult` created this way will not contain positional information in its updates to observers, and cannot be tracked.
 
 Example Usage
 ```typescript
-interface QueryStoreFactory extends ComposeFactory<QueryStore<{}, {}, any, any>, SubcollectionOptions<{}, {}, any>> {
-	<T, O extends CrudOptions, U extends UpdateResults<T>>(options?: SubcollectionOptions<T, O, U>): QueryStore<T, O, U, Store<T, O, U>>;
-}
+import { createQueryStore } from 'dojo-stores/store/mixins/createQueryTransformMixin';
 
-const createQueryStore: QueryStoreFactory = createSubcollectionStore
-	.mixin(createQueryMixin());
-
-const queryStore = createQueryStore<ItemType, CrudOptions, any>({
-	data: createData()
+const data = [
+		{ id: '1', value: 1 },
+		{ id: '2', value: 2 },
+		{ id: '3', value: 3 }
+ 	];
+const queryStore = createQueryStore({
+	data: data
 });
 
-queryStore
-	.filter(createFilter<ItemType>().lessThan('value', 3))
-	.sort('value', true)
-	.fetch().then(function(data) {
-		// data will contain all items satisfying the 
-		// filter, sorted by the 'value' property
-	}));
-
-```
-
-###createTrackableMixin
-
-This mixin allows a store to be `track`ed, providing additional details when it is observed. Specifically, updates from a tracked store will be limited to only those items that match a subcollection's query(if it is using query mixin), and will contain three new properties:
-```typescript
-removedFromTracked: { item: T; id: string; previousIndex: number; }[];
-```
-Indicates which items were removed from the tracked store, either because they were deleted, or because they were updated and no longer match the query for this subcollection.
-```typescript
-addedToTracked: { item: T; id: string; index: number; }[];
-```
-Indicates which items were added to the tracked store, either because they were added, or because they were updated and now match the query for this subcollection.
-```typescript
-movedInTracked: { item: T; id: string; previousIndex: number; index: number }[];
-```
-Indicates items that have moved within the tracked store because they have changed and are now sorted differently.
-
-Example Usage
-```typescript
-interface TrackableObservableQueryStore<T, O extends CrudOptions, U extends UpdateResults<T>> extends
-	ObservableStore<T, O, U>,
-	SubcollectionStore<T, O, U, ObservableStore<T, O, U>>,
-	QueryMixin<T, O, U, ObservableStore<T, O, U>>,
-	TrackableMixin<T, O, U, ObservableStore<T, O, U>> {
-}
-
-type TrackableQueryOptions<T, O extends CrudOptions> =
-	TrackableOptions<T> & StoreOptions<T, CrudOptions> & QueryOptions<T> & ObservableStoreOptions<T, O>;
-
-interface TrackableQueryStoreFactory extends ComposeFactory<TrackableObservableQueryStore<{}, {}, any>, TrackableQueryOptions<{}, {}>> {
-	<T, O extends CrudOptions, U extends UpdateResults<T>>(options?: TrackableQueryOptions<T, O>): TrackableObservableQueryStore<T, O, U>;
-}
-
-let createTrackableQueryStore = createSubcollectionStore
-	.mixin(createOrderedOperationMixin())
-	.mixin(createObservableStoreMixin())
-	.mixin(createQueryMixin())
-	.mixin(createTrackableMixin()) as TrackableQueryStoreFactory;
-
-const trackableQueryStore = createTrackbleQueryStore({
-	data: [ ...data ]
+const filteredView = queryStore.filter((item) => item.value > 1);
+filteredView.fetch().then((data) => {
+	// data = [ { id: '2', value: 2 }, { id: '3', value: 3 } ]
 });
 
-const trackedCollection = trackableQueryStore
-	.filter(function(item) {
-		return item.value > 1;
-	})
-	.sort('value')
-	.track();
-	
-trackedCollection.observe().subscribe(function(update) {
-  // handle updates
+filteredView.observe().subscribe((update) => {
+	/*
+		initial update = {
+			deletes: [],
+			adds: [],
+			updates: [],
+			addedToTracked: [],
+			removedFromTracked: [],
+			movedInTracked: [],
+			beforeAll: [],
+			afterAll: []
+		}
+
+		subsequent update = {
+			deletes: [],
+			adds: data,
+			updates: [],
+			addedToTracked: [
+				{
+					id: '1',
+					item: data[0],
+					index: 0
+				},
+				{
+					id: '2',
+					item: data[1],
+					index: 1
+				},
+				{
+					id: '3',
+					item: data[2],
+					index: 2
+				}
+			],
+			beforeAll: [],
+			afterAll: []
+		};
+
+	*/
 });
 
 ```
 
-Things to note about this example:  
-* The store in this example uses `QueryMixin`, and `TrackableMixin`, both of which are have methods that return `this` as the type. In order for `this` to match both of these interfaces, the `TrackableObservableQueryStore` interface, which extends both of these interfaces, needs to be created and used as the type of the store.
-* This example uses the `createOrderedOperationsMixin`. This is to ensure that operations on the store all happen sequentially, and updates are what we would expect. See the section on the [createOrderedOperationsMixin](#createorderedoperationsmixin) for more details.
-
-### createOrderedOperationsMixin
-`Store` provides a consistent, `Promise` and `Observable` based API for all store implementations. However, with the default storage implementation, some surprising results can occur, because while all operations return asynchronously, the underlying update happens synchronously as it is operating on local data. Specifically, calling `then` on a promise(or `StoreObservable`), will result in the provided callback being executed on the next tick, so in the following example, the second `put` command is executed before the `then` from the first is resolved.
-
-```typescript
-const store = createStore({
- data: //some data
-});
-
-store.put(newItem).then(function() {
-	// executes after the next put
-});
-
-store.put(anotherItem);
-```
-
-Under many circumstances this is not a problem. The actual updates of the data happen in the appropriate order, and the callbacks in these cases will only be returning the modified items anyways. However, in some cases, as with `createTrackableMixin`, or `createObservableStoreMixin` with `fetchAroundUpdates` set to true, this can create some surprising results. If you want to be able to rely on the assumption that you will receive an update from one operation before the next operation occurs, `createOrderedOperationsMixin` can be mixed into the base store factory before any other mixins. In some cases(e.g. a store making HTTP requests), the additional latency introduced by this restriction may cause significant performance penalties, so it's generally better not to use this mixin unless it is specifically needed.
+If the observer starts observing after the initial add is already resolved, the first update they receive will be the `subsequent update` in this example. Here the first update is provided to an observer that subscribes synchronously with the initialization of the store, but the initial add happens asynchronously and so is not yet resolved. For a tracked collection, the first update will contain the data form a `fetch` to the source.
 
 ## How do I contribute?
 

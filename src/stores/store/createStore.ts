@@ -50,8 +50,8 @@ export type PatchArgument<T> = Map<string, Patch<T, T>> |
 
 export interface Store<T, O extends CrudOptions, U extends UpdateResults<T>> {
 	get(ids: string[]): Promise<T[]>;
-	get(id: string): Promise<T>;
-	get(ids: string | string[]): Promise<T | T[]>;
+	get(id: string): Promise<T | undefined>;
+	get(ids: string | string[]): Promise<T | undefined | T[]>;
 	identify(items: T[]): string[];
 	identify(items: T): string;
 	identify(items: T | T[]): string | string[];
@@ -108,7 +108,7 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 		const state = instanceStateMap.get(this);
 		return state.initialAddPromise.then(function() {
 			if (Array.isArray(ids)) {
-				return state.storage.get(ids);
+				return state.storage.get(ids).then((items) => items.filter((item) => Boolean(item)));
 			}
 			else {
 				return state.storage.get([ids]).then(items => items[0]);

@@ -1,23 +1,13 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as sinon from 'sinon';
-import Promise from 'dojo-shim/Promise';
-import createObservableStoreMixin, {
-	ObservableStore, ObservableStoreOptions, StoreDelta, ItemUpdate
+import {
+	createObservableStore, ObservableStore, StoreDelta, ItemUpdate
 } from '../../../../src/store/mixins/createObservableStoreMixin';
 import { ItemType, createData, createUpdates, patches, patchedItems } from '../../support/createData';
-import createStore, { CrudOptions, UpdateResults } from '../../../../src/store/createStore';
-import createInMemoryStorage from '../../../../src/storage/createInMemoryStorage';
-import { ComposeFactory } from 'dojo-compose/compose';
-import createOrderedOperationMixin from '../../../../src/store/mixins/createOrderedOperationMixin';
+import { CrudOptions, UpdateResults } from '../../../../src/store/createStore';
 import createAsyncStorage from '../../support/AsyncStorage';
-
-interface ObservableStoreFactory extends ComposeFactory<ObservableStore<{}, {}, any>, ObservableStoreOptions<{}, {}>> {
-	<T, O extends CrudOptions, U extends UpdateResults<T>>(options?: ObservableStoreOptions<T, O>): ObservableStore<T, O, U>;
-}
-
-const createObservableStore: ObservableStoreFactory = createStore
-	.mixin(createObservableStoreMixin());
+import createInMemoryStorage from '../../../../src/storage/createInMemoryStorage';
+import Set from 'dojo-shim/Set';
 
 function getStoreAndDfd(test: any) {
 	const dfd = test.async(1000);
@@ -47,72 +37,46 @@ registerSuite({
 		});
 		return {
 			'should be able to observe the whole store': {
+				'initial updates'(this: any) {
+					const { dfd, observableStore, data } = getStoreAndDfd(this);
+					let firstUpdate = true;
+					observableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+						try {
+							if (firstUpdate) {
+								firstUpdate = false;
+								assert.deepEqual(update, {
+									updates: [],
+									deletes: [],
+									adds: [],
+									beforeAll: [],
+									afterAll: []
+								}, 'Didn\'t send the proper initial update');
+							}
+							else {
+								assert.deepEqual(update, {
+									updates: [],
+									deletes: [],
+									adds: data,
+									beforeAll: [],
+									afterAll: data
+								}, 'Didn\'t send the proper initial update');
+								dfd.resolve();
+							}
+						} catch (error) {
+							dfd.reject(error);
+						}
+					});
+				},
 				put(this: any) {
-					const { dfd, observableStore } = getStoreAndDfd(this);
+					const { dfd, observableStore, data } = getStoreAndDfd(this);
 					const updates = createUpdates();
-					const subscription = observableStore.observe().subscribe(dfd.callback(function(update: StoreDelta<ItemType>) {
-						assert.deepEqual(update, {
-							updates: [ updates[0][0] ],
-							deletes: [],
-							beforeAll: undefined,
-							afterAll: undefined,
-							adds: []
-						}, 'Didn\'t send the proper update');
-						subscription.unsubscribe();
-					}));
-					observableStore.put(updates[0][0]);
-				},
-
-				patch(this: any) {
-					const { dfd, observableStore } = getStoreAndDfd(this);
-					observableStore.observe().subscribe(dfd.callback(function(update: StoreDelta<ItemType>) {
-						// Patch operate on the item itself in a memory store. This means that any references
-						// to that item will be updated immediately
-						assert.deepEqual(update, {
-							updates: [ patches[0].patch.apply(createData()[0]) ],
-							deletes: [],
-							beforeAll: undefined,
-							afterAll: undefined,
-							adds: []
-						}, 'Didn\'t send the proper update');
-					}));
-					observableStore.patch(patches[0]);
-				},
-
-				add(this: any) {
-					const { dfd, emptyObservableStore: observableStore, data } = getStoreAndDfd(this);
-					observableStore.observe().subscribe(dfd.callback(function(update: StoreDelta<ItemType>) {
-						assert.deepEqual(update, {
-							updates: [],
-							deletes: [],
-							beforeAll: undefined,
-							afterAll: undefined,
-							adds: [ data[0] ]
-						});
-					}));
-					observableStore.add(data[0]);
-				},
-
-				delete(this: any) {
-					const { dfd, observableStore } = getStoreAndDfd(this);
-					observableStore.observe().subscribe(dfd.callback(function(update: StoreDelta<ItemType>) {
-						assert.deepEqual(update, {
-							updates: [],
-							deletes: [ ids[0] ],
-
-							beforeAll: undefined,
-							afterAll: undefined,
-							adds: []
-						});
-					}));
-					observableStore.delete(ids[0]);
-				},
-
-				'with fetch around updates': {
-					put(this: any) {
-						const { dfd, fetchingObservableStore, data } = getStoreAndDfd(this);
-						const updates = createUpdates();
-						fetchingObservableStore.observe().subscribe(dfd.callback(function(update: StoreDelta<ItemType>) {
+					let ignoreFirst = 2;
+					observableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+						if (ignoreFirst) {
+							ignoreFirst--;
+							return;
+						}
+						try {
 							assert.deepEqual(update, {
 								updates: [ updates[0][0] ],
 								deletes: [],
@@ -120,24 +84,151 @@ registerSuite({
 								afterAll: [ updates[0][0], data[1], data[2] ],
 								adds: []
 							}, 'Didn\'t send the proper update');
+						} catch (error) {
+							dfd.reject(error);
+						}
+						dfd.resolve();
+					});
+					observableStore.put(updates[0][0]);
+				},
+
+				patch(this: any) {
+					const { dfd, observableStore, data } = getStoreAndDfd(this);
+					let ignoreFirst = 2;
+					observableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+						if (ignoreFirst) {
+							ignoreFirst--;
+							return;
+						}
+						// Patch operate on the item itself in a memory store. This means that any references
+						// to that item will be updated immediately
+						const item = patches[0].patch.apply(createData()[0]);
+						try {
+							assert.deepEqual(update, {
+								updates: [ item ],
+								deletes: [],
+								beforeAll: data,
+								afterAll: [ item, data[1], data[2] ],
+								adds: []
+							}, 'Didn\'t send the proper update');
+						} catch (error) {
+							dfd.reject(error);
+						}
+						dfd.resolve();
+					});
+					observableStore.patch(patches[0]);
+				},
+
+				add(this: any) {
+					const { dfd, emptyObservableStore: observableStore, data } = getStoreAndDfd(this);
+					let ignoreFirst = true;
+					observableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+						if (ignoreFirst) {
+							ignoreFirst = false;
+							return;
+						}
+						try {
+							assert.deepEqual(update, {
+								updates: [],
+								deletes: [],
+								beforeAll: [],
+								afterAll: [ data[0] ],
+								adds: [ data[0] ]
+							});
+						} catch (error) {
+							dfd.reject(error);
+						}
+						dfd.resolve();
+					});
+					observableStore.add(data[0]);
+				},
+
+				delete(this: any) {
+					const { dfd, observableStore, data } = getStoreAndDfd(this);
+					let ignoreFirst = 2;
+					observableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+						if (ignoreFirst) {
+							ignoreFirst--;
+							return;
+						}
+						try {
+							assert.deepEqual(update, {
+								updates: [],
+								deletes: [ ids[0] ],
+								beforeAll: data,
+								afterAll: [ data[1], data[2] ],
+								adds: []
+							});
+						} catch (error) {
+							dfd.reject(error);
+						}
+						dfd.resolve();
+					});
+					observableStore.delete(ids[0]);
+				},
+
+				'with fetch around updates': {
+					'initial update'(this: any) {
+						const { dfd, fetchingObservableStore, data } = getStoreAndDfd(this);
+						fetchingObservableStore.observe().subscribe(dfd.callback((update: StoreDelta<ItemType>) => {
+							assert.deepEqual(update, {
+								updates: [],
+								adds: [],
+								deletes: [],
+								afterAll: data,
+								beforeAll: []
+							}, 'Didn\'t send initial update with data');
 						}));
+					},
+					put(this: any) {
+						const { dfd, fetchingObservableStore, data } = getStoreAndDfd(this);
+						const updates = createUpdates();
+						let ignoreFirst = true;
+						fetchingObservableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+							if (ignoreFirst) {
+								ignoreFirst = false;
+								return;
+							}
+							try {
+								assert.deepEqual(update, {
+									updates: [ updates[0][0] ],
+									deletes: [],
+									beforeAll: data,
+									afterAll: [ updates[0][0], data[1], data[2] ],
+									adds: []
+								}, 'Didn\'t send the proper update');
+							} catch (error) {
+								dfd.reject(error);
+							}
+							dfd.resolve();
+						});
 						fetchingObservableStore.put(updates[0][0]);
 					},
 
 					patch(this: any) {
 						const { dfd, fetchingObservableStore, data} = getStoreAndDfd(this);
 						patches[0].patch.apply(data[0]);
-						fetchingObservableStore.observe().subscribe(dfd.callback(function(update: StoreDelta<ItemType>) {
-							// Patch operate on the item itself in a memory store. This means that any references
-							// to that item will be updated immediately
-							assert.deepEqual(update, {
-								updates: [ data[0] ],
-								deletes: [],
-								beforeAll: createData(),
-								afterAll: data,
-								adds: []
-							}, 'Didn\'t send the proper update');
-						}));
+						let ignoreFirst = true;
+						fetchingObservableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+							if (ignoreFirst) {
+								ignoreFirst = false;
+								return;
+							}
+							try {
+								// Patch operate on the item itself in a memory store. This means that any references
+								// to that item will be updated immediately
+								assert.deepEqual(update, {
+									updates: [ data[0] ],
+									deletes: [],
+									beforeAll: createData(),
+									afterAll: data,
+									adds: []
+								}, 'Didn\'t send the proper update');
+							} catch (error) {
+								dfd.reject(error);
+							}
+							dfd.resolve();
+						});
 						fetchingObservableStore.patch(patches[0]);
 					},
 
@@ -146,29 +237,49 @@ registerSuite({
 						const fetchingObservableStore = createObservableStore({
 							fetchAroundUpdates: true
 						});
-						fetchingObservableStore.observe().subscribe(dfd.callback(function(update: StoreDelta<ItemType>) {
-							assert.deepEqual(update, {
-								updates: [],
-								deletes: [],
-								beforeAll: [],
-								afterAll: [ data[0] ],
-								adds: [ data[0] ]
-							});
-						}));
+						let ignoreFirst = true;
+						fetchingObservableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+							if (ignoreFirst) {
+								ignoreFirst = false;
+								return;
+							}
+							try {
+								assert.deepEqual(update, {
+									updates: [],
+									deletes: [],
+									beforeAll: [],
+									afterAll: [ data[0] ],
+									adds: [ data[0] ]
+								});
+							} catch (error) {
+								dfd.reject(error);
+							}
+							dfd.resolve();
+						});
 						fetchingObservableStore.add(data[0]);
 					},
 
 					delete(this: any) {
 						const { dfd, fetchingObservableStore, data } = getStoreAndDfd(this);
-						fetchingObservableStore.observe().subscribe(dfd.callback(function(update: StoreDelta<ItemType>) {
-							assert.deepEqual(update, {
-								updates: [],
-								deletes: [ ids[0] ],
-								beforeAll: data,
-								afterAll: [ data[1], data[2] ],
-								adds: []
-							});
-						}));
+						let ignoreFirst = true;
+						fetchingObservableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+							if (ignoreFirst) {
+								ignoreFirst = false;
+								return;
+							}
+							try {
+								assert.deepEqual(update, {
+									updates: [],
+									deletes: [ids[0]],
+									beforeAll: data,
+									afterAll: [data[1], data[2]],
+									adds: []
+								});
+							} catch (error) {
+								dfd.reject(error);
+							}
+							dfd.resolve();
+						});
 						fetchingObservableStore.delete(ids[0]);
 					}
 				}
@@ -369,35 +480,20 @@ registerSuite({
 			'should receive an update when subscribed before initial items are stored'(this: any) {
 				const { dfd, emptyObservableStore: observableStore, data } = getStoreAndDfd(this);
 
-				observableStore.observe().subscribe(dfd.callback(function(update: StoreDelta<ItemType>) {
-					assert.deepEqual(update.adds, data, 'Should have received an update for all three items added');
-				}));
-				observableStore.add(data);
-			},
-
-			'should not receive an update when subscribed after initial items were stored'(this: any) {
-				const { dfd, observableStore } = getStoreAndDfd(this);
-				const updateData = createUpdates()[0][2];
-
-				observableStore.fetch().then(function(data: ItemType[]) {
-					try {
-						assert.isTrue(data.length > 0, 'initial items should have been stored.');
-					} catch (e) {
-						dfd.reject(e);
+				let ignoreFirst = true;
+				observableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+					if (ignoreFirst) {
+						ignoreFirst = false;
+						return;
 					}
-
-					observableStore.observe().subscribe(function(update: StoreDelta<ItemType>) {
-						try {
-							assert.isTrue(update.adds.length === 0, 'Should not receive initial adds made before subscription');
-							assert.deepEqual(update.updates, [updateData], 'Should only receive updates made after subscription');
-							dfd.resolve();
-						} catch (e) {
-							dfd.reject(e);
-						}
-					});
-
-					observableStore.put(updateData);
+					try {
+						assert.deepEqual(update.adds, data, 'Should have received an update for all three items added');
+					} catch (error) {
+						dfd.reject(error);
+					}
+					dfd.resolve();
 				});
+				observableStore.add(data);
 			},
 
 			'should not allow observing on non-existing ids'(this: any) {
@@ -430,103 +526,11 @@ registerSuite({
 				}));
 			},
 
-			'observing multiple ids with an ordered store': function(this: any) {
-				const dfd = this.async(1000);
-				const data = createData();
-
-				let initialUpdate = 0;
-
-				let putUpdate = false;
-				const put = createUpdates()[0][0];
-
-				let patchUpdate = false;
-				const patched = patches[1].patch.apply(createData()[1]);
-				const patch = patches[1];
-
-				let firstDelete = false;
-				let secondDelete = false;
-				let thirdDelete = false;
-				const observableStore = createObservableStore
-					.mixin(createOrderedOperationMixin())({
-						data: createData()
-					});
-				observableStore.observe(ids).subscribe(function(update: ItemUpdate<ItemType>) {
-					try {
-						if (initialUpdate < 3) {
-							// No special case because patch happens after add
-							assert.deepEqual(update, {
-									item: data[initialUpdate],
-									id: data[initialUpdate].id
-								}, 'Didn\'t send proper initial update'
-							);
-							initialUpdate++;
-							return;
-						}
-						if (!putUpdate) {
-							assert.deepEqual(update, {
-									item: put,
-									id: put.id
-								}, 'Didn\'t send the right update for put operation'
-							);
-							putUpdate = true;
-						}
-						else if (!patchUpdate) {
-							assert.deepEqual(update, {
-									item: patched,
-									id: patched.id
-								}, 'Didn\'t send the right update for patch operation'
-							);
-							patchUpdate = true;
-						}
-						else if (!firstDelete) {
-							assert.deepEqual(update, {
-									item: undefined,
-									id: data[0].id
-								}, 'Didn\'t send the right update for first delete operation'
-							);
-							firstDelete = true;
-						}
-						else if (!secondDelete) {
-							assert.deepEqual(update, {
-									item: undefined,
-									id: data[1].id
-								}, 'Didn\'t send the right update for second delete operation'
-							);
-							secondDelete = true;
-						}
-						else if (!thirdDelete) {
-							assert.deepEqual(update, {
-									item: undefined,
-									id: data[2].id
-								}, 'Didn\'t send the right update for third delete operation'
-							);
-							thirdDelete = true;
-						}
-						else {
-							throw Error('Shouldn\'t have received another update');
-						}
-
-					} catch (error) {
-						dfd.reject(error);
-					}
-				}, undefined, dfd.callback(function() {
-					assert.isTrue(
-						putUpdate && patchUpdate && firstDelete && secondDelete && thirdDelete,
-						'Didn\'t send all updates before completing observable'
-					);
-				}));
-				observableStore.put(put);
-				observableStore.patch(patch);
-				observableStore.delete([ ids[0], ids[1] ]);
-				observableStore.delete(ids[2]);
-			},
-
 			'when operation fails in an ordered store, the error should be sent the observable way.'(this: any) {
 				const dfd = this.async(1000);
-				const store = createObservableStore
-					.mixin(createOrderedOperationMixin())({
-						data: createData()
-					});
+				const store = createObservableStore({
+					data: createData()
+				});
 
 				const updates = createUpdates();
 
@@ -536,19 +540,110 @@ registerSuite({
 						assert.equal(error.message, 'Objects already exist in store', 'Didn\'t reject with appropriate error message');
 					}));
 			},
-			'when operation fails in an ordered store, the error should be sent the promise way.'(this: any) {
-				const dfd = this.async(1000);
-				const storage = createInMemoryStorage();
-				sinon.stub(storage, 'fetch').returns(Promise.reject(Error('failed')));
-				const store = createObservableStore
-					.mixin(createOrderedOperationMixin())({ storage });
 
-				store.fetch().then(
-					dfd.reject,
-					dfd.callback(function(error: Error) {
-						assert.equal(error.message, 'failed', 'Didn\'t reject with appropriate error message');
-					})
-				);
+			'deleting ID not in local cache'(this: any) {
+				const dfd = this.async(1000);
+				const preLoadedStorage = createInMemoryStorage();
+				preLoadedStorage.add(createData());
+				const store = createObservableStore({
+					storage: preLoadedStorage
+				});
+
+				let ignoreFirst = true;
+				store.observe().subscribe(dfd.rejectOnError((update: StoreDelta<ItemType>) => {
+					if (ignoreFirst) {
+						ignoreFirst = false;
+						return;
+					}
+
+					assert.deepEqual(update, {
+						updates: [],
+						deletes: [ '1' ],
+						adds: [],
+						afterAll: [],
+						beforeAll: []
+					});
+					dfd.resolve();
+				}));
+				store.delete('1');
+			},
+
+			'unsubscribing and resubscribing'(this: any) {
+				const store = createObservableStore({
+					fetchAroundUpdates: true,
+					data: createData()
+				});
+				const dfd = this.async(1000);
+				store.observe().subscribe(() => {
+					dfd.reject(Error('Shouldn\'t receive updates for unsubscribed observer'));
+				}).unsubscribe();
+
+				const newObject = {
+					id: 'new',
+					value: 10,
+					nestedProperty: {
+						value: 10
+					}
+				};
+				let ignoreFirst = true;
+				store.observe().subscribe((delta) => {
+					if (ignoreFirst) {
+						ignoreFirst = false;
+						return;
+					}
+
+					try {
+						assert.deepEqual(delta.adds, [ newObject ], 'Observable not functioning properly after unsubscribing');
+						dfd.resolve();
+					} catch (error) {
+						dfd.reject(error);
+					}
+				});
+				store.add(newObject);
+			},
+
+			'unsubscribing in update'(this: any) {
+				const store = createObservableStore({
+					fetchAroundUpdates: true,
+					data: createData()
+				});
+				const dfd = this.async(1000);
+				let ignoreUnsubscribeFirst = true;
+				let unsubscribed = false;
+				const subscription = store.observe().subscribe(() => {
+					if (ignoreUnsubscribeFirst) {
+						ignoreUnsubscribeFirst = false;
+						return;
+					}
+					if (!unsubscribed) {
+						unsubscribed = true;
+					}
+					subscription.unsubscribe();
+				});
+
+				let ignoreFirst = true;
+				store.observe().subscribe((delta) => {
+					if (ignoreFirst) {
+						ignoreFirst = false;
+						return;
+					}
+
+					try {
+						assert.deepEqual(delta.adds, [ newObject ], 'Observable not functioning properly after unsubscribing');
+						assert.isTrue(unsubscribed, 'Should have unsubscribed');
+						dfd.resolve();
+					} catch (error) {
+						dfd.reject(error);
+					}
+				});
+				const newObject = {
+					id: 'new',
+					value: 10,
+					nestedProperty: {
+						value: 10
+					}
+				};
+				store.add(newObject);
 			}
 		};
 	})(),
@@ -577,15 +672,25 @@ registerSuite({
 			const { dfd, observableStore } = getStoreWithAsyncStorage(this);
 			const data = createData();
 
-			observableStore.observe().subscribe(dfd.callback(function(update: StoreDelta<ItemType>) {
-				assert.deepEqual(update, {
-					updates: [],
-					deletes: [],
-					beforeAll: undefined,
-					afterAll: undefined,
-					adds: [ data[0] ]
-				});
-			}));
+			let ignoreFirst = true;
+			observableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+				if (ignoreFirst) {
+					ignoreFirst = false;
+					return;
+				}
+				try {
+					assert.deepEqual(update, {
+						updates: [],
+						deletes: [],
+						beforeAll: [],
+						afterAll: [data[0]],
+						adds: [data[0]]
+					});
+				} catch (error) {
+					dfd.reject(error);
+				}
+				dfd.resolve();
+			});
 			observableStore.add(data[0]);
 		},
 		'should be able to observe single id'(this: any) {
@@ -625,6 +730,27 @@ registerSuite({
 				} catch (error) {
 					dfd.reject(error);
 				}
+			});
+		},
+		'should only send one update if all items were updated before get finished'(this: any) {
+			const { dfd, observableStore } = getStoreWithAsyncStorage(this, { put: 10, get: 80 });
+			observableStore.add(createData()).then(() => {
+
+				const updates = createUpdates()[0];
+				const numbersFound = new Set<string>();
+				let updatesReceived = 0;
+				observableStore.observe([ '1', '2', '3' ]).subscribe(dfd.rejectOnError(({ id, item }: ItemUpdate<ItemType>) => {
+					assert.deepEqual(item, updates[Number(id) - 1], 'Didn\'t receive correct initial update for item one');
+					updatesReceived++;
+					numbersFound.add(id);
+					if (numbersFound.size === 3) {
+						setTimeout(dfd.resolve, 100);
+					}
+					else if (updatesReceived >= 3) {
+						dfd.reject(Error('Shouldn\'t have received any more updates'));
+					}
+				}));
+				observableStore.put(updates);
 			});
 		}
 	}

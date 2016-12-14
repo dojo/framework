@@ -36,7 +36,9 @@ const createAsyncStorage = createInMemoryStorage.mixin({
 			get(get: Function) {
 				return delayOperation(get, 'get');
 			},
-			// no add since add delegates to put
+			add(add: Function) {
+				return delayOperation(add, 'put');
+			},
 			put(put: Function) {
 				return delayOperation(put, 'put');
 			},

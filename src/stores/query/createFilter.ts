@@ -277,7 +277,7 @@ function createComparator<T>(operator: FilterType, value: any, path: ObjectPoint
 	}
 	return {
 		test(item: T) {
-			let propertyValue: any = path ? navigate(<JsonPointer> path, item) : item;
+			let propertyValue: any = navigate(<JsonPointer> path, item);
 			return test(propertyValue);
 		},
 		apply(this: Filter<T>, data: T[]) {

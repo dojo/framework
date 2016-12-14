@@ -2,10 +2,11 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createCompoundQuery from '../../../src/query/createCompoundQuery';
 import { QueryType } from '../../../src/query/interfaces';
-import createFilter from '../../../src/query/createFilter';
 import createSort from '../../../src/query/createSort';
 import createRange from '../../../src/query/createStoreRange';
 import { createData } from '../support/createData';
+import createFilter from '../../../src/query/createFilter';
+import { isCompoundQuery } from '../../../src/query/createCompoundQuery';
 
 registerSuite({
 	name: 'createQuery',
@@ -78,6 +79,57 @@ registerSuite({
 			.withQuery( createSort('id', true) );
 
 		assert.strictEqual( query.toString(), 'lt(id, 3)&Sort(id, -)' );
-	}
+	},
 
+	'Should be able to differentiate a CompoundQuery from other queries'(this: any) {
+		const compundQuery = createCompoundQuery();
+		const sort = createSort('any');
+		const filter = createFilter();
+		const range = createRange(0, 10);
+
+		assert.isFalse(isCompoundQuery(sort), 'Returned true for non-compound query');
+		assert.isFalse(isCompoundQuery(filter), 'Returned true for non-compound query');
+		assert.isFalse(isCompoundQuery(range), 'Returned true for non-compound query');
+		assert.isFalse(isCompoundQuery(undefined), 'Returned true for non-compound query');
+		assert.isTrue(isCompoundQuery(compundQuery), 'Returned false for compound query');
+	},
+
+	'Should return an empty string when serializing an empty compound query'(this: any) {
+		assert.strictEqual(createCompoundQuery().toString(), '', 'Should have returned an empty string');
+	},
+
+	'Should be able to identify whether this compound query is incremental'(this: any) {
+		const incrementalQuery = createCompoundQuery()
+			.withQuery(createFilter())
+			.withQuery(createSort('any'))
+			.withQuery({
+				queryType: QueryType.Filter,
+				toString() {
+					return '';
+				},
+				apply(data: any[]) {
+					return data;
+				},
+				incremental: true
+			});
+
+		const nonIncrementalQuery = createCompoundQuery()
+			.withQuery(createFilter())
+			.withQuery(createRange(0, 10));
+
+		assert.isTrue(incrementalQuery.incremental, 'Should have returned true for incremental query');
+		assert.isFalse(nonIncrementalQuery.incremental, 'Should have returned false for non-incremental query');
+	},
+
+	'Should be able to return array of queries'(this: any) {
+		const queries = [
+			createFilter(),
+			createSort('any'),
+			createRange(0, 10)
+		];
+
+		const compoundQuery = queries.reduce((prev, next) => prev.withQuery(next), createCompoundQuery());
+
+		assert.deepEqual(compoundQuery.queries, queries, 'Should return queries');
+	}
 });
