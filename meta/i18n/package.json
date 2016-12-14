@@ -35,7 +35,7 @@
     "dojo-loader": ">=2.0.0-beta.7",
     "grunt": "^1.0.1",
     "grunt-tslint": "^3.0.0",
-    "grunt-dojo2": ">=2.0.0-beta.19",
+    "grunt-dojo2": ">=2.0.0-beta.23",
     "intern": "~3.3.2",
     "istanbul": "~0.4.5",
     "sinon": "^1.17.6",
