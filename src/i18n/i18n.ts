@@ -1,10 +1,12 @@
 /* tslint:disable:interface-name */
+import createEvented from 'dojo-compose/bases/createEvented';
 import has from 'dojo-core/has';
 import global from 'dojo-core/global';
-import { Handle } from 'dojo-interfaces/core';
 import { assign } from 'dojo-core/lang';
 import load from 'dojo-core/load';
+import { Handle } from 'dojo-core/interfaces';
 import Map from 'dojo-shim/Map';
+import Observable, { Observer, Subscription, SubscriptionObserver } from 'dojo-shim/Observable';
 import Promise from 'dojo-shim/Promise';
 import * as Globalize from 'globalize/globalize/message';
 import loadCldrData from './cldr/load';
@@ -34,10 +36,7 @@ export interface Bundle<T extends Messages> {
 }
 
 export interface I18n<T extends Messages> {
-	(bundle: Bundle<T>): Promise<T>;
-	(bundle: Bundle<T>, context: LocaleContext<LocaleState>): Promise<T>;
-	(bundle: Bundle<T>, locale: string): Promise<T>;
-	(bundle: Bundle<T>, context?: any): Promise<T>;
+	(bundle: Bundle<T>, locale?: string): Promise<T>;
 
 	/**
 	 * The current namespace as set via `switchLocale`. Defaults to `systemLocale`.
@@ -45,40 +44,8 @@ export interface I18n<T extends Messages> {
 	readonly locale: string;
 }
 
-/**
- * Represents an object from which a locale can be read. If a context object also has both `invalidate` and `own`
- * methods, it will be updated (invalidated) when the locale is changed.
- */
-export interface LocaleContext<S extends LocaleState> {
-	/**
-	 * The state object from which the locale string is read.
-	 */
-	state: S;
-
-	/**
-	 * An optional method to invalidate the context object's state.
-	 */
-	invalidate?: () => void;
-
-	/**
-	 * An optional method that is capable of owning handles, presumably to destroy them when the context object
-	 * is destroyed.
-	 *
-	 * @param handle
-	 * A handle that, when destroyed, will prevent the context object from being invalidated when the locale
-	 * is changed.
-	 *
-	 * @return A handle to *unown* the passed handle.
-	 */
-	own?: (handle: Handle) => Handle;
-}
-
 interface LocaleModule<T extends Messages> {
 	default?: T;
-}
-
-export interface LocaleState {
-	locale?: string;
 }
 
 /**
@@ -97,9 +64,9 @@ export interface Messages {
 
 const PATH_SEPARATOR: string = has('host-node') ? global.require('path').sep : '/';
 const VALID_PATH_PATTERN = new RegExp(PATH_SEPARATOR + '[^' + PATH_SEPARATOR + ']+$');
-const contextObjects: LocaleContext<LocaleState>[] = [];
 const bundleMap = new Map<string, Map<string, Messages>>();
 const formatterMap = new Map<string, MessageFormatter>();
+const localeProducer = createEvented();
 let rootLocale: string;
 
 /**
@@ -135,36 +102,6 @@ const loadLocaleBundles = (function () {
  */
 function getSupportedLocales(locale: string, supported: string[] = []): string[] {
 	return generateLocales(locale).filter((locale: string) => supported.indexOf(locale) > -1);
-}
-
-/**
- * @private
- * A type guard that determines whether a context object is stateful and can be invalidated.
- *
- * @param value
- * The target value.
- */
-function isContextObject(value: any): boolean {
-	return Boolean(value.state) && typeof value.own === 'function' && typeof value.invalidate === 'function';
-}
-
-/**
- * @private
- * Extract a locale from the provided context. Either the context's locale or the current locale is returned.
- *
- * @param context
- * An optional context containing the locale information.
- */
-function resolveLocale(context?: any): string {
-	if (context) {
-		if (typeof context === 'string') {
-			return normalizeLocale(context);
-		}
-		else if (context.state.locale) {
-			return normalizeLocale(context.state.locale);
-		}
-	}
-	return rootLocale || systemLocale;
 }
 
 /**
@@ -327,20 +264,15 @@ export function getMessageFormatter(bundlePath: string, key: string, locale?: st
  * @param bundle
  * The default bundle that is used to determine where the locale-specific bundles are located.
  *
- * @param context
- * An optional locale, or stateful object that specifies a string locale. If the context is a stateful object with an
- * `invalidate` method, it will be invalidated when the locale is changed. If no context is provided, then the current
- * locale is assumed.
+ * @param locale
+ * An optional locale. If no locale is provided, then the current locale is assumed.
  *
  * @return A promise to the locale-specific messages.
  */
-function i18n<T extends Messages>(bundle: Bundle<T>): Promise<T>;
-function i18n<T extends Messages>(bundle: Bundle<T>, context: LocaleContext<LocaleState>): Promise<T>;
-function i18n<T extends Messages>(bundle: Bundle<T>, locale: string): Promise<T>;
-function i18n<T extends Messages>(bundle: Bundle<T>, context?: any): Promise<T> {
-	const locale = resolveLocale(context);
+function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Promise<T> {
 	const { bundlePath, locales, messages } = bundle;
 	const path = bundlePath.replace(/\/$/, '');
+	const currentLocale = locale || rootLocale || systemLocale;
 
 	try {
 		validatePath(path);
@@ -349,33 +281,22 @@ function i18n<T extends Messages>(bundle: Bundle<T>, context?: any): Promise<T> 
 		return Promise.reject(error);
 	}
 
-	if (context && isContextObject(context) && contextObjects.indexOf(context) === -1) {
-		contextObjects.push(context);
-		context.own(<Handle> {
-			destroy(this: Handle) {
-				this.destroy = () => {};
-				const index = contextObjects.indexOf(context);
-				contextObjects.splice(index, 1);
-			}
-		});
-	}
-
-	const cachedMessages = getCachedMessages(bundle, locale);
+	const cachedMessages = getCachedMessages(bundle, currentLocale);
 	if (cachedMessages) {
-		return loadCldrData(locale).then(() => cachedMessages);
+		return loadCldrData(currentLocale).then(() => cachedMessages);
 	}
 
-	const localePaths = resolveLocalePaths(path, locale, locales);
-	return loadCldrData(locale).then(() => {
+	const localePaths = resolveLocalePaths(path, currentLocale, locales);
+	return loadCldrData(currentLocale).then(() => {
 		return loadLocaleBundles(localePaths);
 	}).then((bundles: T[]): T => {
 		return bundles.reduce((previous: T, partial: T): T => {
 			const localeMessages: T = assign({}, previous, partial);
 			const localeCache = bundleMap.get(bundlePath) as Map<string, Messages>;
 
-			localeCache.set(locale, <T> Object.freeze(localeMessages));
+			localeCache.set(currentLocale, <T> Object.freeze(localeMessages));
 			Globalize.loadMessages({
-				[locale]: {
+				[currentLocale]: {
 					[bundlePath.replace(/\//g, '-')]: localeMessages
 				}
 			});
@@ -410,6 +331,39 @@ export function invalidate(bundlePath?: string) {
 }
 
 /**
+ * Register an observer to be notified when the root locale changes.
+ *
+ * @param observer
+ * The observer whose `next` method will receive the locale string on updates, and whose `error` method will receive
+ * an Error object if the locale switch fails.
+ *
+ * @return
+ * A subscription object that can be used to unsubscribe from updates.
+ */
+export const observeLocale = (function () {
+	const localeSource = new Observable<string>((observer: SubscriptionObserver<string>) => {
+		const handles: Handle[] = [
+			localeProducer.on('change', (event) => {
+				observer.next(event.target as string);
+			}),
+			localeProducer.on('error', (event: ErrorEvent) => {
+				observer.error(event.error);
+			})
+		];
+
+		return function () {
+			handles.forEach((handle: Handle) => {
+				handle.destroy();
+			});
+		};
+	});
+
+	return function (observer: Observer<string>): Subscription {
+		return localeSource.subscribe(observer);
+	};
+})();
+
+/**
  * Return a promise that resolves when all CLDR data for the current locale have been loaded.
  *
  * @return
@@ -422,7 +376,7 @@ export function ready(): Promise<void> {
 }
 
 /**
- * Change the root locale, and invalidate any registered statefuls.
+ * Change the root locale, and notify any registered observers.
  *
  * @param locale
  * The new locale.
@@ -433,12 +387,11 @@ export function switchLocale(locale: string): Promise<void> {
 
 	return ready().then(() => {
 		if (previous !== rootLocale) {
-			contextObjects.forEach((context: LocaleContext<LocaleState>) => {
-				if (!context.state.locale) {
-					context.invalidate && context.invalidate();
-				}
-			});
+			localeProducer.emit({ type: 'change', target: rootLocale });
 		}
+	}, (error: Error) => {
+		rootLocale = previous;
+		localeProducer.emit({ type: 'error', error: error });
 	});
 }
 

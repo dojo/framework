@@ -51,23 +51,6 @@ i18n(bundle, 'fr').then(function (messages: Messages) {
 });
 ```
 
-Alternatively, a context object with a `state` property can be used:
-
-
-```typescript
-import i18n, { LocaleContext, Messages } from 'dojo-i18n/main';
-import bundle from 'nls/common';
-
-const context = {
-	state: { locale: 'fr' }
-} as LocaleContext;
-
-i18n(bundle, context).then(function (messages: Messages) {
-	console.log(messages.hello); // "Bonjour"
-	console.log(messages.goodbye); // "Au revoir"
-});
-```
-
 If an unsupported locale is passed to `i18n`, then the default messages are returned. Further, any messages not provided by the locale-specific bundle will also fall back to their defaults. As such, the default bundle should contain _all_ message keys used by any of the locale-specific bundles.
 
 Once locale dictionaries for a bundle have been loaded, they are cached and can be accessed synchronously via `getCachedMessages`:
@@ -107,35 +90,34 @@ i18n(bundle, 'ar').then(() => {
 
 The current locale can be accessed via the read-only property `i18n.locale`, which will always be either the locale set via `switchLocale` (see below) or the `systemLocale`. `systemLocale` is always set to the user's default locale.
 
-### Changing the Root Locale
+### Changing the Root Locale and Observing Locale Changes
 
-The `switchLocale` method changes the root locale, and returns a promise that resolves when all CLDR data have loaded for the specified locale. The state is updated for all registered context objects that do not have a locale specified on their state. In the following example, two [Dojo 2 widgets](https://github.com/dojo/widgets) are registered, but only the second is updated when the locale is switched since it does not have its own locale explicitly set.
+The `switchLocale` method changes the root locale, and returns a promise that resolves when all CLDR data have loaded for the specified locale. All [`Observers`](https://github.com/dojo/shim) registered with `observeLocale` will be notified of locale changes, or notified of errors if the associated CLDR data could not be loaded (no `complete` method is currently used when switching locales).
 
 ```typescript
-import i18n, { switchLocale } from 'dojo-i18n/i18n';
-import createRenderMixin from 'dojo-widgets/mixins/createRenderMixin';
+import i18n, { observeLocale, switchLocale } from 'dojo-i18n/i18n';
 import bundle from 'nls/bundle';
 
-const createCustomWidget = createRenderMixin
-	.mixin({
-		render() {
-			return i18n(bundle, this).then(function (messages: Messages) {
-				return messages.hello;
-			});
-		}
-	});
+// Register an `Observable`
+observeLocale({
+	next(locale: string) {
+		// handle locale change...
+	},
 
-// Rendered with "Bonjour".
-const withLocale = createCustomWidget({
-	state: { locale: 'fr' }
+	error(error: Error) {
+		// handle error...
+	}
 });
-// Rendered with "Hello".
-const withoutLocale = createCustomWidget();
 
-// Change the locale to German. Since `withLocale` already has a specific locale,
-// it will not be re-rendered. The second widget (`withoutLocale`), however, will be.
+// Change the locale to German. If the CLDR are properly loaded, then the registered
+// observer's `next` method will be called with the new locale. Otherwise, its `error`
+// method will be called with an error object.
 switchLocale('de').then(() => {
 	// ...
+
+	// The locale is again switched to German, but since the current root locale is
+	// already German, registered observers will not be notified.
+	return switchLocale('de');
 });
 ```
 

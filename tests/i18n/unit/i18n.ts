@@ -1,16 +1,17 @@
 import global from 'dojo-core/global';
 import has from 'dojo-core/has';
-import { Handle } from 'dojo-interfaces/core';
+import Promise from 'dojo-shim/Promise';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import * as sinon from 'sinon';
+import * as cldrLoad from '../../src/cldr/load';
 import i18n, {
 	formatMessage,
 	getCachedMessages,
 	getMessageFormatter,
 	invalidate,
-	LocaleContext,
-	LocaleState,
 	Messages,
+	observeLocale,
 	ready,
 	switchLocale,
 	systemLocale
@@ -22,6 +23,11 @@ registerSuite({
 	name: 'i18n',
 
 	afterEach() {
+		const loadCldrData = <any> cldrLoad.default;
+		if (typeof loadCldrData.restore === 'function') {
+			loadCldrData.restore();
+		}
+
 		invalidate();
 		return switchLocale('');
 	},
@@ -205,34 +211,6 @@ registerSuite({
 			});
 		},
 
-		'assert context with locale'() {
-			const context: LocaleContext<LocaleState> = {
-				state: { locale: 'ar' }
-			};
-
-			return i18n(bundle, context).then(function (messages: Messages) {
-				assert.deepEqual(messages, {
-					hello: 'السلام عليكم',
-					helloReply: 'و عليكم السام',
-					goodbye: 'مع السلامة'
-				}, 'Locale is read from the context\'s state.');
-			});
-		},
-
-		'assert context without locale'() {
-			const context: LocaleContext<LocaleState> = {
-				state: {}
-			};
-
-			return i18n(bundle, context).then(function (messages: Messages) {
-				assert.deepEqual(messages, {
-					hello: 'Hello',
-					helloReply: 'Hello',
-					goodbye: 'Goodbye'
-				}, 'The system locale is used when a context is provided with no locale.');
-			});
-		},
-
 		'assert with nested locale'() {
 			return i18n(bundle, 'ar-JO').then(function (messages: Messages) {
 				// ar-JO is missing "goodbye" key
@@ -314,92 +292,77 @@ registerSuite({
 		}
 	},
 
+	observeLocale: {
+		'assert observer notified of error'() {
+			const onError = sinon.spy();
+			const subscription = observeLocale({ error: onError });
+			sinon.stub(cldrLoad, 'default').returns(Promise.reject(new Error('locale switch failure.')));
+
+			return switchLocale('ar').then(() => {
+				subscription.unsubscribe();
+				assert.isTrue(onError.called, '`observer.error` called with error object.');
+			});
+		},
+
+		'assert observer notified of locale change'() {
+			const next = sinon.spy();
+			const subscription = observeLocale({ next });
+
+			return switchLocale('ar').then(() => {
+				subscription.unsubscribe();
+				assert.isTrue(next.calledWith('ar'), '`observer.next` called with new locale.');
+			});
+		},
+
+		'assert observer not notified after unsubscribe'() {
+			const observer = { error: sinon.spy(), next: sinon.spy() };
+			const subscription = observeLocale(observer);
+			subscription.unsubscribe();
+
+			return switchLocale('ar').then(() => {
+				assert.isFalse(observer.next.called, '`observer.next` not called after unsubscribe.');
+
+				sinon.stub(cldrLoad, 'default').returns(Promise.reject(new Error('locale switch failure.')));
+				return switchLocale('ar-JO');
+			}).then(() => {
+				assert.isFalse(observer.error.called, '`observer.error` not called after unsubscribe.');
+			});
+		}
+	},
+
 	ready() {
 		assert.isFunction(ready().then, 'Returns a promise.');
 	},
 
-	switchLocale: (function (){
-		function getContext() {
-			return <any> {
-				dirty: false,
-				state: {},
+	switchLocale: {
+		'assert locale updated on success'() {
+			return switchLocale('en').then(() => {
+				return switchLocale('ar');
+			}).then(() => {
+				assert.strictEqual(i18n.locale, 'ar');
+			});
+		},
 
-				invalidate(this: any) {
-					this.dirty = true;
-				},
+		'assert locale not updated on error'() {
+			return switchLocale('en').then(() => {
+				sinon.stub(cldrLoad, 'default').returns(Promise.reject(new Error('locale switch error')));
+				return switchLocale('ar');
+			}).then(() => {
+				assert.strictEqual(i18n.locale, 'en', 'Root locale not changed.');
+			});
+		},
 
-				own(this: any, handle: Handle): Handle {
-					this.handle = handle;
-					return handle;
-				}
-			};
+		'assert observers not updated when locale remains the same'() {
+			const next = sinon.spy();
+			observeLocale({ next });
+
+			return switchLocale('ar').then(() => {
+				return switchLocale('ar');
+			}).then(() => {
+				assert.isFalse(next.calledTwice);
+			});
 		}
-
-		return {
-			'assert registered observers updated'() {
-				const context = getContext();
-
-				return i18n(bundle, context).then(function () {
-					return switchLocale('ar');
-				}).then(() => {
-					assert.isTrue(context.dirty, 'Context object invalidated.');
-				});
-			},
-
-			'assert registered observers with an explicit locale not updated'() {
-				const context = getContext();
-				context.state.locale = 'fr';
-
-				return i18n(bundle, context).then(function () {
-					return switchLocale('ar');
-				}).then(() => {
-					assert.isFalse(context.dirty, 'Context object not invalidated.');
-				});
-			},
-
-			'assert registered observers not updated when same locale is passed to `switchLocale`'() {
-				const context = getContext();
-
-				return switchLocale('ar').then(() => {
-					return i18n(bundle, context);
-				}).then(function () {
-					return switchLocale('ar');
-				}).then(() => {
-					assert.isFalse(context.dirty, 'Context object not invalidated.');
-				});
-			},
-
-			'assert registered observers not updated when handle is destroyed'() {
-				const context = getContext();
-
-				return i18n(bundle, context).then(function () {
-					assert(context.handle);
-					context.handle.destroy();
-
-					return switchLocale('ar');
-				}).then(() => {
-					assert.isFalse(context.dirty, 'Context object not invalidated.');
-				});
-			},
-
-			'assert handle does not continually remove context objects'() {
-				const first = getContext();
-				const second = getContext();
-
-				return i18n(bundle, first).then(function () {
-					return i18n(bundle, second);
-				}).then(function () {
-					first.handle.destroy();
-					first.handle.destroy();
-					first.handle.destroy();
-
-					return switchLocale('ar');
-				}).then(() => {
-					assert.isTrue(second.dirty, 'Second object still invalidated.');
-				});
-			}
-		};
-	})(),
+	},
 
 	locale: {
 		'assert defaults to system locale'() {

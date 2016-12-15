@@ -19,10 +19,10 @@
   },
   "peerDependencies": {
     "cldr-data": "~30.0.0",
-    "dojo-compose": ">=2.0.0-beta.15",
-    "dojo-core": ">=2.0.0-alpha.16",
+    "dojo-compose": ">=2.0.0-beta.18",
+    "dojo-core": ">=2.0.0-alpha.18",
     "dojo-has": ">=2.0.0-alpha.6",
-    "dojo-shim": ">=2.0.0-beta.3",
+    "dojo-shim": ">=2.0.0-beta.7",
     "globalize": "^1.1.1"
   },
   "devDependencies": {
