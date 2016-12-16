@@ -57,7 +57,7 @@ export interface FormField<V> {
 	/**
 	 * An array of functions that generate the node attributes on a render
 	 */
-	nodeAttributes: NodeAttributeFunction[];
+	nodeAttributes: NodeAttributeFunction<this>[];
 
 	/**
 	 * The HTML type for this widget

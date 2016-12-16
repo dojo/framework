@@ -21,7 +21,7 @@ export interface CssTransition {
 	 * An array of node attribute functions which return additional attributes that should be mixed into
 	 * the final VNode during a render call
 	 */
-	nodeAttributes: NodeAttributeFunction[];
+	nodeAttributes: NodeAttributeFunction<this>[];
 }
 
 export type CssTransitionMixin<S extends CssTransitionMixinState> = CssTransition & Stateful<S>;

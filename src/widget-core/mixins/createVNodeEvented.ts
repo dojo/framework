@@ -79,7 +79,7 @@ export interface VNodeEventedMixin {
 	/**
 	 * An array of functions the provide the VNode attributes when rendering
 	 */
-	nodeAttributes: NodeAttributeFunction[];
+	nodeAttributes: NodeAttributeFunction<this>[];
 }
 
 export interface VNodeEventedOverrides {

@@ -30,13 +30,13 @@ export interface ChildNodeFunction {
  * A function that is called when collecting the node attributes on render, accepting the current map of
  * attributes and returning a set of VNode properties that should mixed into the current attributes.
  */
-export interface NodeAttributeFunction {
+export interface NodeAttributeFunction<T> {
 	/**
 	 * A function which can return additional VNodeProperties which are
 	 *
 	 * @param attributes The current VNodeProperties that will be part of the render
 	 */
-	(this: Widget<WidgetState>, attributes: VNodeProperties): VNodeProperties;
+	(this: T, attributes: VNodeProperties): VNodeProperties;
 }
 
 export type WidgetFactoryFunction = () => Promise<WidgetFactory>
@@ -161,7 +161,7 @@ export interface WidgetMixin {
 	 * making it easy for mixins to alter the behaviour of the render process without needing to override or aspect
 	 * the `getNodeAttributes` method.
 	 */
-	nodeAttributes: NodeAttributeFunction[];
+	nodeAttributes: NodeAttributeFunction<Widget<WidgetState>>[];
 
 	/**
 	 * Render the widget, returing the virtual DOM node that represents this widget.
@@ -199,7 +199,7 @@ export interface WidgetOptions<S extends WidgetState> extends StatefulOptions<S>
 	/**
 	 * Any node attribute functions that should be added to this instance
 	 */
-	nodeAttributes?: NodeAttributeFunction | NodeAttributeFunction[];
+	nodeAttributes?: NodeAttributeFunction<Widget<WidgetState>> | NodeAttributeFunction<Widget<WidgetState>>[];
 
 	/**
 	 * Override the tag name for this widget instance
