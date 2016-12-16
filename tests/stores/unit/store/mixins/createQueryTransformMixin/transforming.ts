@@ -76,11 +76,62 @@ registerSuite({
 		).transform(
 			(item) => ({ id: item.id, __value: item._value + 1 })
 		);
-		transformedView.fetch().then(() => transformedView.get('item-1').then((data) => {
+		return transformedView.fetch().then(() => transformedView.get('item-1').then((data) => {
 			assert.deepEqual(data, { id: 'item-1', __value: 3 }, 'Didn\'t work with queries and transformations');
 		}));
 	},
 
+	'get with multiple ids'(this: any) {
+		const { queryStore } = getStoreAndDfd(this, false);
+
+		const transformedView = queryStore.filter(
+			(item) => item.value <= 2
+		).transform(
+			(item) => ({ id: item.id, _value: item.value + 1 })
+		).filter(
+			(item) => item._value <= 4
+		).transform(
+			(item) => ({ id: item.id, __value: item._value + 1 })
+		);
+		return transformedView.fetch().then(() => transformedView.get([ 'item-1', 'item-2' ]).then((data) => {
+			assert.deepEqual(data, [ { id: 'item-1', __value: 3 }, { id: 'item-2', __value: 4 } ], 'Didn\'t work with queries and transformations');
+		}));
+
+	},
+
+	'get with mapped transformation'(this: any) {
+		const { queryStore } = getStoreAndDfd(this, false);
+
+		const transformedView = queryStore.filter(
+			(item) => item.value <= 2
+		).transform(
+			(item) => ({ id: item.id, _value: item.value + 1 }), 'id'
+		).filter(
+			(item) => item._value <= 4
+		).transform(
+			(item) => ({ id: item.id, __value: item._value + 1 }), 'id'
+		);
+		return transformedView.fetch().then(() => transformedView.get('item-1').then((data) => {
+			assert.deepEqual(data, { id: 'item-1', __value: 3 }, 'Didn\'t work with queries and transformations');
+		}));
+	},
+
+	'get multiple ids with mapped transformation'(this: any) {
+		const { queryStore } = getStoreAndDfd(this, false);
+
+		const transformedView = queryStore.filter(
+			(item) => item.value <= 2
+		).transform(
+			(item) => ({ id: item.id, _value: item.value + 1 }), 'id'
+		).filter(
+			(item) => item._value <= 4
+		).transform(
+			(item) => ({ id: item.id, __value: item._value + 1 }), 'id'
+		);
+		return transformedView.fetch().then(() => transformedView.get([ 'item-1', 'item-2' ]).then((data) => {
+			assert.deepEqual(data, [ { id: 'item-1', __value: 3 }, { id: 'item-2', __value: 4 } ], 'Didn\'t work with queries and transformations');
+		}));
+	},
 	'applying additional queries in fetch'(this: any) {
 		const { queryStore } = getStoreAndDfd(this, false);
 

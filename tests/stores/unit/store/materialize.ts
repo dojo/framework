@@ -53,14 +53,14 @@ registerSuite({
 				initialUpdateFromSource = true;
 				assert.deepEqual(adds, [
 					{
-						_id: '2',
+						_id: 'item-2',
 						_value: 2,
 						_nestedProperty: {
 							_value: 2
 						}
 					},
 					{
-						_id: '3',
+						_id: 'item-3',
 						_value: 3,
 						_nestedProperty: {
 							_value: 1
@@ -69,13 +69,13 @@ registerSuite({
 				], 'Didn\'t add initial data to target store');
 			}
 			else {
-				assert.deepEqual(deletes, [ '2' ]);
+				assert.deepEqual(deletes, [ 'item-2' ]);
 				dfd.resolve();
 			}
 		}));
 
 		materialize({ source: trackedCollection, target: targetStore });
-		trackableQueryStore.delete('2');
+		trackableQueryStore.delete('item-2');
 	},
 
 	'Should stop applying updates after destroying handle'(this: any) {
@@ -112,14 +112,14 @@ registerSuite({
 				initialUpdateFromSource = true;
 				assert.deepEqual(adds, [
 					{
-						_id: '2',
+						_id: 'item-2',
 						_value: 2,
 						_nestedProperty: {
 							_value: 2
 						}
 					},
 					{
-						_id: '3',
+						_id: 'item-3',
 						_value: 3,
 						_nestedProperty: {
 							_value: 1
@@ -127,7 +127,7 @@ registerSuite({
 					}
 				], 'Didn\'t add initial data to target store');
 				handle.destroy();
-				trackableQueryStore.delete('2');
+				trackableQueryStore.delete('item-2');
 				setTimeout(dfd.resolve, 300);
 			}
 			else {
@@ -178,14 +178,14 @@ registerSuite({
 					initialUpdateFromSource = true;
 					assert.deepEqual(afterAll, [
 						{
-							_id: '2',
+							_id: 'item-2',
 							_value: 2,
 							_nestedProperty: {
 								_value: 2
 							}
 						},
 						{
-							_id: '3',
+							_id: 'item-3',
 							_value: 3,
 							_nestedProperty: {
 								_value: 1
@@ -194,13 +194,13 @@ registerSuite({
 					], 'Didn\'t add initial data to target store');
 				}
 				else {
-					assert.deepEqual(deletes, [ '2' ]);
+					assert.deepEqual(deletes, [ 'item-2' ]);
 					dfd.resolve();
 				}
 			})
 		});
 
-		trackableQueryStore.delete('2');
+		trackableQueryStore.delete('item-2');
 	},
 
 	'Shouldn\'t make any updates if initial update is empty'(this: any) {

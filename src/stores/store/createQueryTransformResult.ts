@@ -127,7 +127,7 @@ export interface QueryTransformState<T, S extends ObservableStore<any, any, any>
 	/**
 	 * Handle to the subscription to the source store
 	 */
-	sourceHandle?: Promise<Function>;
+	sourceHandle?: Promise<{ unsubscribe: Function }>;
 
 	inUpdate?: Promise<any>;
 }
@@ -152,7 +152,7 @@ export interface QueryTransformResult<T, S extends ObservableStore<any, any, any
 	observe(ids: string[]): Observable<ItemUpdate<T>>;
 	get(ids: string | string[]): Promise<T[]>;
 	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryTransformResult<V, S>;
-	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): this;
+	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): MappedQueryTransformResult<V, S>;
 	fetch(query?: Query<T>): Promise<T[]>;
 	source: S;
 }
@@ -592,13 +592,26 @@ export const createQueryTransformResult: QueryTransformResultFactory = compose<Q
 	get(this: QueryTransformResult<any, any>, ids: string | string[]) {
 		const state = instanceStateMap.get(this);
 		const promise: Promise<any> = state.initialFetch || Promise.resolve();
+		const mapped = isMapped(this);
 		return promise.then(() => {
-			if (Array.isArray(ids)) {
-				return ids.map((id) => state.localData[state.localIndex.get(id)!])
-					.filter((item) => Boolean(item));
+			if (mapped) {
+				if (Array.isArray(ids)) {
+					return ids.map((id) => state.localData[state.localIndex.get(id)!])
+						.filter((item) => Boolean(item));
+				}
+				else {
+					return state.localData[state.localIndex.get(ids)!];
+				}
 			}
 			else {
-				return state.localData[state.localIndex.get(ids)!];
+				return this.source.get(ids).then((data: {} | {}[]) => {
+					if (Array.isArray(data)) {
+						return queryAndTransformData(state.queriesAndTransformations, data);
+					}
+					else {
+						return queryAndTransformData(state.queriesAndTransformations, [ data ])[0];
+					}
+				});
 			}
 		});
 	},
@@ -606,7 +619,7 @@ export const createQueryTransformResult: QueryTransformResultFactory = compose<Q
 		this: QueryTransformResult<any, any>,
 		transformation: Patch<any, V> | ((item: any) => V),
 		idTransform?: string | ((item: V) => string)
-	) {
+	): any {
 		const state = instanceStateMap.get(this);
 		const options: QueryTransformOptions<any, any> = {
 			source: state.source,
@@ -743,8 +756,11 @@ export const createQueryTransformResult: QueryTransformResultFactory = compose<Q
 			function remove(observer: Observer<StoreDelta<any>>) {
 				state.observers.splice(state.observers.indexOf(observer), 1);
 				if (!state.observers.length && state.sourceHandle) {
-					state.sourceHandle.then((unsubscribe) => {
-						unsubscribe();
+					state.sourceHandle.then((subscription) => {
+						if (!state.observers.length) {
+							subscription.unsubscribe();
+						}
+
 					});
 				}
 			}

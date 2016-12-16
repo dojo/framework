@@ -373,7 +373,7 @@ registerSuite({
 			fetchAroundUpdates: true,
 			data: createData()
 		});
-		const dfd = this.async();
+		const dfd = this.async(1000);
 		const filteredView = queryStore.filter((item) => item.value > 1);
 		filteredView.observe().subscribe(() => {
 		}).unsubscribe();
