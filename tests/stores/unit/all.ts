@@ -12,3 +12,4 @@ import './store/mixins/createTransactionMixin';
 import './store/mixins/createQueryTransformMixin/querying';
 import './store/mixins/createQueryTransformMixin/tracking';
 import './store/mixins/createQueryTransformMixin/transforming';
+import './store/materialize';
