@@ -37,8 +37,8 @@ registerSuite(function() {
 						assert.equal(update.removedFromTracked.length, 1, 'Had wrong number of updates');
 						assert.deepEqual(update.removedFromTracked[0], {
 							previousIndex: 0,
-							item: { id: '2', value: 2, nestedProperty: { value: 2 } },
-							id: '2'
+							item: { id: 'item-2', value: 2, nestedProperty: { value: 2 } },
+							id: 'item-2'
 						}, 'Didn\'t send proper delete notification');
 
 						// Check added items
@@ -59,8 +59,8 @@ registerSuite(function() {
 						assert.deepEqual(update.movedInTracked[0], {
 							index: 0,
 							previousIndex: 1,
-							item: { id: '3', value: 3, nestedProperty: { value: 1 }},
-							id: '3'
+							item: { id: 'item-3', value: 3, nestedProperty: { value: 1 }},
+							id: 'item-3'
 						}, 'Didn\'t send correct update for item moved within tracking');
 						resolve();
 					} catch (error) {
@@ -68,7 +68,7 @@ registerSuite(function() {
 					}
 				});
 
-			trackedCollection.delete('2');
+			trackedCollection.delete('item-2');
 			trackedCollection.add({ id: 'new', value: 10, nestedProperty: { value: 10 }});
 			// Shouldn't create a notification
 			trackedCollection.add({ id: 'ignored', value: -1, nestedProperty: { value: -1 } });
@@ -112,8 +112,8 @@ registerSuite(function() {
 							assert.equal(update.removedFromTracked.length, 1, 'Had wrong number of updates');
 							assert.deepEqual(update.removedFromTracked[0], {
 								previousIndex: 0,
-								item: { id: '2', value: 2, nestedProperty: { value: 2 } },
-								id: '2'
+								item: { id: 'item-2', value: 2, nestedProperty: { value: 2 } },
+								id: 'item-2'
 							}, 'Didn\'t send proper delete notification');
 							notifiedOnDelete = true;
 						}
@@ -157,7 +157,7 @@ registerSuite(function() {
 					}
 			});
 
-			trackedCollection.delete('2');
+			trackedCollection.delete('item-2');
 			setTimeout(() => {
 				trackedCollection.add({ id: 'new', value: 10, nestedProperty: { value: 10 }});
 				// Shouldn't create a notification
@@ -203,7 +203,7 @@ registerSuite(function() {
 					.track();
 
 				trackableQueryStore.put({
-					id: '1',
+					id: 'item-1',
 					value: 5,
 					nestedProperty: {
 						value: 5
@@ -223,8 +223,8 @@ registerSuite(function() {
 
 						assert.deepEqual(update.addedToTracked[0], {
 							index: 2,
-							item: {id: '1', value: 5, nestedProperty: {value: 5}},
-							id: '1'
+							item: {id: 'item-1', value: 5, nestedProperty: {value: 5}},
+							id: 'item-1'
 						});
 					} catch (error) {
 						dfd.reject(error);
@@ -255,8 +255,8 @@ registerSuite(function() {
 					assert.equal(update.removedFromTracked.length, 1, 'Had wrong number of updates');
 					assert.deepEqual(update.removedFromTracked[0], {
 						previousIndex: 0,
-						item: { id: '2', value: 2, nestedProperty: { value: 2 } },
-						id: '2'
+						item: { id: 'item-2', value: 2, nestedProperty: { value: 2 } },
+						id: 'item-2'
 					}, 'Didn\'t send proper delete notification');
 
 					// Check added items
@@ -272,8 +272,8 @@ registerSuite(function() {
 					assert.deepEqual(update.movedInTracked[0], {
 						index: 0,
 						previousIndex: 1,
-						item: { id: '3', value: 3, nestedProperty: { value: 1 }},
-						id: '3'
+						item: { id: 'item-3', value: 3, nestedProperty: { value: 1 }},
+						id: 'item-3'
 					}, 'Didn\'t send correct update for item moved within tracking');
 					dfd.resolve();
 				} catch (error) {
@@ -281,7 +281,7 @@ registerSuite(function() {
 				}
 			});
 
-			trackableQueryStore.delete('2');
+			trackableQueryStore.delete('item-2');
 			trackableQueryStore.add({ id: 'new', value: 10, nestedProperty: { value: 10 }});
 			trackableQueryStore.add({ id: 'ignored', value: -1, nestedProperty: { value: -1 } });
 			trackableQueryStore.put({
@@ -391,14 +391,14 @@ registerSuite(function() {
 						assert.equal(update.removedFromTracked.length, 1, 'Had wrong number of updates');
 						assert.deepEqual(update.removedFromTracked[0], {
 							previousIndex: 1,
-							item: { id: '3', value: 3, nestedProperty: { value: 1 } },
-							id: '3'
+							item: { id: 'item-3', value: 3, nestedProperty: { value: 1 } },
+							id: 'item-3'
 						}, 'Didn\'t send proper delete notification');
 						assert.equal(update.addedToTracked.length, 1, 'Had wrong number of additions');
 						assert.deepEqual(update.addedToTracked[0], {
 							index: 0,
-							item: { id: '1', value: 1, nestedProperty: { value: 3 } },
-							id: '1'
+							item: { id: 'item-1', value: 1, nestedProperty: { value: 3 } },
+							id: 'item-1'
 						}, 'Didn\'t send correct update for added item');
 						dfd.resolve();
 					} catch (error) {
@@ -423,17 +423,17 @@ registerSuite(function() {
 						firstUpdate = false;
 						assert.deepEqual(update.addedToTracked, [
 							{
-								id: '1',
+								id: 'item-1',
 								index: 0,
 								item: data[0]
 							},
 							{
-								id: '2',
+								id: 'item-2',
 								index: 1,
 								item: data[1]
 							},
 							{
-								id: '3',
+								id: 'item-3',
 								index: 2,
 								item: data[2]
 							}
@@ -448,19 +448,19 @@ registerSuite(function() {
 							deletes: [],
 							movedInTracked: [
 								{
-									id: '1',
+									id: 'item-1',
 									previousIndex: 0,
 									index: 2,
 									item: data[0]
 								},
 								{
-									id: '2',
+									id: 'item-2',
 									previousIndex: 1,
 									index: 0,
 									item: data[1]
 								},
 								{
-									id: '3',
+									id: 'item-3',
 									previousIndex: 2,
 									index: 1,
 									item: data[2]
@@ -478,7 +478,7 @@ registerSuite(function() {
 					dfd.reject(error);
 				}
 			});
-			trackableQueryStore.delete('1');
+			trackableQueryStore.delete('item-1');
 			trackableQueryStore.add(createData()[0]);
 		},
 
@@ -515,17 +515,17 @@ registerSuite(function() {
 					const data = createData();
 					assert.deepEqual(update.addedToTracked, [
 						{
-							id: '1',
+							id: 'item-1',
 							index: 0,
 							item: data[0]
 						},
 						{
-							id: '2',
+							id: 'item-2',
 							index: 1,
 							item: data[1]
 						},
 						{
-							id: '3',
+							id: 'item-3',
 							index: 2,
 							item: data[2]
 						}
@@ -559,7 +559,7 @@ registerSuite(function() {
 							deletes: [],
 							movedInTracked: [],
 							removedFromTracked: [],
-							addedToTracked: [ { id: '3', index: 0, item: data[2] } ],
+							addedToTracked: [ { id: 'item-3', index: 0, item: data[2] } ],
 							beforeAll: [],
 							afterAll: [ data[2] ]
 						}, 'Should have cancelled out delete and add, and filtered out the other non-tracked delete');
@@ -569,7 +569,7 @@ registerSuite(function() {
 					}
 				});
 				trackableQueryStore.add(createData());
-				trackableQueryStore.delete(['1', '2']);
+				trackableQueryStore.delete(['item-1', 'item-2']);
 			});
 		},
 

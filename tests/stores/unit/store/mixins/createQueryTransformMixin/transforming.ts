@@ -25,9 +25,9 @@ registerSuite({
 			(item) => ({ newValue: `${item.id}-${item.value}` })
 		).fetch().then((data) => {
 			assert.deepEqual(data, [
-				{ newValue: '1-1' },
-				{ newValue: '2-2' },
-				{ newValue: '3-3' }
+				{ newValue: 'item-1-1' },
+				{ newValue: 'item-2-2' },
+				{ newValue: 'item-3-3' }
 			], 'Didn\'t transform data');
 		});
 	},
@@ -41,9 +41,9 @@ registerSuite({
 			(item) => ({ newerValue: `${item.newValue}-+` })
 		).fetch().then((data) => {
 			assert.deepEqual(data, [
-				{ newerValue: '1-1-+' },
-				{ newerValue: '2-2-+' },
-				{ newerValue: '3-3-+' }
+				{ newerValue: 'item-1-1-+' },
+				{ newerValue: 'item-2-2-+' },
+				{ newerValue: 'item-3-3-+' }
 			], 'Didn\'t transform data');
 		});
 	},
@@ -60,7 +60,7 @@ registerSuite({
 		).transform(
 			(item) => ({ id: item.id, __value: item._value + 1 })
 		).fetch().then((data) => {
-			assert.deepEqual(data, [ { id: '3', __value: 5 } ], 'Didn\'t work with queries and transformations');
+			assert.deepEqual(data, [ { id: 'item-3', __value: 5 } ], 'Didn\'t work with queries and transformations');
 		});
 	},
 
@@ -76,8 +76,8 @@ registerSuite({
 		).transform(
 			(item) => ({ id: item.id, __value: item._value + 1 })
 		);
-		transformedView.fetch().then(() => transformedView.get('1').then((data) => {
-			assert.deepEqual(data, { id: '1', __value: 3 }, 'Didn\'t work with queries and transformations');
+		transformedView.fetch().then(() => transformedView.get('item-1').then((data) => {
+			assert.deepEqual(data, { id: 'item-1', __value: 3 }, 'Didn\'t work with queries and transformations');
 		}));
 	},
 
@@ -91,7 +91,7 @@ registerSuite({
 		).fetch(createFilter<any>().custom(
 			(item) => item._value >= 4
 		)).then((data) => {
-			assert.deepEqual(data, [ { id: '3', _value: 4 } ], 'Didn\'t work with query in fetch');
+			assert.deepEqual(data, [ { id: 'item-3', _value: 4 } ], 'Didn\'t work with query in fetch');
 		});
 	},
 
@@ -103,9 +103,9 @@ registerSuite({
 
 					queryStore.transform(
 						(item) => ({ newValue: `${item.id}-${item.value}` })
-					).observe('1').subscribe(dfd.callback((update: { newValue: string }) => {
+					).observe('item-1').subscribe(dfd.callback((update: { newValue: string }) => {
 						assert.deepEqual(update, {
-							newValue: '1-1'
+							newValue: 'item-1-1'
 						}, 'Didn\'t receive once transformed update for single observed item');
 					}));
 				},
@@ -115,14 +115,14 @@ registerSuite({
 					let ignoreFirst = true;
 					queryStore.transform(
 						(item) => ({ newValue: `${item.id}-${item.value}` })
-					).observe('1').subscribe((update: { newValue: string }) => {
+					).observe('item-1').subscribe((update: { newValue: string }) => {
 						if (ignoreFirst) {
 							ignoreFirst = false;
 							return;
 						}
 						try {
 							assert.deepEqual(update, {
-								newValue: '1-100'
+								newValue: 'item-1-100'
 							}, 'Didn\'t receive once transformed update for single observed item');
 						} catch (error) {
 							dfd.reject(error);
@@ -131,7 +131,7 @@ registerSuite({
 					});
 
 					queryStore.put({
-						id: '1',
+						id: 'item-1',
 						value: 100,
 						nestedProperty: {
 							value: 1
@@ -143,9 +143,9 @@ registerSuite({
 
 					queryStore.transform(
 						(item) => ({ newValue: `${item.id}-${item.value}` })
-					).observe('1').subscribe(() => {}, undefined, dfd.resolve);
+					).observe('item-1').subscribe(() => {}, undefined, dfd.resolve);
 
-					queryStore.delete('1');
+					queryStore.delete('item-1');
 				}
 			},
 			'chained transformations': {
@@ -158,9 +158,9 @@ registerSuite({
 						(item) => ({ newerValue: `${item.newValue}-+` })
 					);
 
-					chainedTransformation.observe('1').subscribe(dfd.callback((update: { newerValue: string }) => {
+					chainedTransformation.observe('item-1').subscribe(dfd.callback((update: { newerValue: string }) => {
 						assert.deepEqual(update, {
-							newerValue: '1-1-+'
+							newerValue: 'item-1-1-+'
 						}, 'Didn\'t receive chained transformed update for single observed item');
 					}));
 				},
@@ -174,14 +174,14 @@ registerSuite({
 					);
 
 					let ignoreFirst = true;
-					chainedTransformation.observe('1').subscribe((update) => {
+					chainedTransformation.observe('item-1').subscribe((update) => {
 						if (ignoreFirst) {
 							ignoreFirst = false;
 							return;
 						}
 						try {
 							assert.deepEqual(update, {
-								newerValue: '1-100-+'
+								newerValue: 'item-1-100-+'
 							}, 'Didn\'t receive chained transformed update for single observed item');
 						} catch (error) {
 							dfd.reject(error);
@@ -190,7 +190,7 @@ registerSuite({
 					});
 
 					queryStore.put({
-						id: '1',
+						id: 'item-1',
 						value: 100,
 						nestedProperty: {
 							value: 1
@@ -204,9 +204,9 @@ registerSuite({
 						(item) => ({ newValue: `${item.id}-${item.value}` })
 					).transform(
 						(item) => ({ newerValue: `${item.newValue}-+` })
-					).observe('1').subscribe(() => {}, undefined, dfd.resolve);
+					).observe('item-1').subscribe(() => {}, undefined, dfd.resolve);
 
-					queryStore.delete('1');
+					queryStore.delete('item-1');
 				}
 			}
 		},
@@ -221,27 +221,27 @@ registerSuite({
 					);
 
 					let idsUpdated = new Set<string>();
-					singleTransformation.observe(['1', '2']).subscribe((update) => {
+					singleTransformation.observe(['item-1', 'item-2']).subscribe((update) => {
 						try {
-							if (update.id === '1') {
-								idsUpdated.add('1');
+							if (update.id === 'item-1') {
+								idsUpdated.add('item-1');
 								assert.deepEqual(update, {
-									id: '1',
+									id: 'item-1',
 									item: {
-										newValue: '1-1'
+										newValue: 'item-1-1'
 									}
 								}, 'Didn\'t receive once transformed update for first observed item');
 							}
-							else if (update.id === '2') {
-								idsUpdated.add('2');
+							else if (update.id === 'item-2') {
+								idsUpdated.add('item-2');
 								assert.deepEqual(update, {
-									id: '2',
+									id: 'item-2',
 									item: {
-										newValue: '2-2'
+										newValue: 'item-2-2'
 									}
 								}, 'Didn\'t receive once transformed update for second observed item');
 							}
-							if (idsUpdated.has('1') && idsUpdated.has('2')) {
+							if (idsUpdated.has('item-1') && idsUpdated.has('item-2')) {
 								dfd.resolve();
 							}
 						} catch (error) {
@@ -258,31 +258,31 @@ registerSuite({
 
 					let idsUpdated = new Set<string>();
 					let ignoreFirst = 2;
-					singleTransformation.observe(['1', '2']).subscribe((update) => {
+					singleTransformation.observe(['item-1', 'item-2']).subscribe((update) => {
 						if (ignoreFirst) {
 							ignoreFirst--;
 							return;
 						}
 						try {
-							if (update.id === '1') {
-								idsUpdated.add('1');
+							if (update.id === 'item-1') {
+								idsUpdated.add('item-1');
 								assert.deepEqual(update, {
-									id: '1',
+									id: 'item-1',
 									item: {
-										newValue: '1-100'
+										newValue: 'item-1-100'
 									}
 								}, 'Didn\'t receive once transformed update for first observed item');
 							}
-							else if (update.id === '2') {
-								idsUpdated.add('2');
+							else if (update.id === 'item-2') {
+								idsUpdated.add('item-2');
 								assert.deepEqual(update, {
-									id: '2',
+									id: 'item-2',
 									item: {
-										newValue: '2-200'
+										newValue: 'item-2-200'
 									}
 								}, 'Didn\'t receive once transformed update for second observed item');
 							}
-							if (idsUpdated.has('1') && idsUpdated.has('2')) {
+							if (idsUpdated.has('item-1') && idsUpdated.has('item-2')) {
 								dfd.resolve();
 							}
 						} catch (error) {
@@ -290,13 +290,13 @@ registerSuite({
 						}
 					});
 					queryStore.put([ {
-						id: '1',
+						id: 'item-1',
 						value: 100,
 						nestedProperty: {
 							value: 1
 						}
 					}, {
-						id: '2',
+						id: 'item-2',
 						value: 200,
 						nestedProperty: {
 							value: 1
@@ -311,14 +311,14 @@ registerSuite({
 					);
 
 					let ignoreFirst = 2;
-					singleTransformation.observe(['1', '2']).subscribe((update) => {
+					singleTransformation.observe(['item-1', 'item-2']).subscribe((update) => {
 						if (ignoreFirst) {
 							ignoreFirst--;
 							return;
 						}
 						try {
 							assert.deepEqual(update, {
-								id: '1',
+								id: 'item-1',
 								item: undefined
 							}, 'Didn\'t receive once transformed update for first observed item');
 							dfd.resolve();
@@ -326,7 +326,7 @@ registerSuite({
 							dfd.reject(error);
 						}
 					});
-					queryStore.delete('1');
+					queryStore.delete('item-1');
 				},
 				'completion'(this: any) {
 					const {dfd, queryStore} = getStoreAndDfd(this);
@@ -335,8 +335,8 @@ registerSuite({
 						(item) => ({ newValue: `${item.id}-${item.value}` })
 					);
 
-					singleTransformation.observe(['1', '2']).subscribe(() => {}, undefined, dfd.resolve);
-					queryStore.delete([ '1', '2' ]);
+					singleTransformation.observe(['item-1', 'item-2']).subscribe(() => {}, undefined, dfd.resolve);
+					queryStore.delete([ 'item-1', 'item-2' ]);
 				}
 			},
 			'chained transformations': {
@@ -350,27 +350,27 @@ registerSuite({
 					);
 
 					let idsUpdated = new Set<string>();
-					chainedTransformation.observe(['1', '2']).subscribe((update) => {
+					chainedTransformation.observe(['item-1', 'item-2']).subscribe((update) => {
 						try {
-							if (update.id === '1') {
-								idsUpdated.add('1');
+							if (update.id === 'item-1') {
+								idsUpdated.add('item-1');
 								assert.deepEqual(update, {
-									id: '1',
+									id: 'item-1',
 									item: {
-										newerValue: '1-1-+'
+										newerValue: 'item-1-1-+'
 									}
 								}, 'Didn\'t receive once transformed update for first observed item');
 							}
-							else if (update.id === '2') {
-								idsUpdated.add('2');
+							else if (update.id === 'item-2') {
+								idsUpdated.add('item-2');
 								assert.deepEqual(update, {
-									id: '2',
+									id: 'item-2',
 									item: {
-										newerValue: '2-2-+'
+										newerValue: 'item-2-2-+'
 									}
 								}, 'Didn\'t receive once transformed update for second observed item');
 							}
-							if (idsUpdated.has('1') && idsUpdated.has('2')) {
+							if (idsUpdated.has('item-1') && idsUpdated.has('item-2')) {
 								dfd.resolve();
 							}
 						} catch (error) {
@@ -389,31 +389,31 @@ registerSuite({
 
 					let idsUpdated = new Set<string>();
 					let ignoreFirst = 2;
-					chainedTransformation.observe(['1', '2']).subscribe((update) => {
+					chainedTransformation.observe(['item-1', 'item-2']).subscribe((update) => {
 						if (ignoreFirst) {
 							ignoreFirst--;
 							return;
 						}
 						try {
-							if (update.id === '1') {
-								idsUpdated.add('1');
+							if (update.id === 'item-1') {
+								idsUpdated.add('item-1');
 								assert.deepEqual(update, {
-									id: '1',
+									id: 'item-1',
 									item: {
-										newerValue: '1-100-+'
+										newerValue: 'item-1-100-+'
 									}
 								}, 'Didn\'t receive once transformed update for first observed item');
 							}
-							else if (update.id === '2') {
-								idsUpdated.add('2');
+							else if (update.id === 'item-2') {
+								idsUpdated.add('item-2');
 								assert.deepEqual(update, {
-									id: '2',
+									id: 'item-2',
 									item: {
-										newerValue: '2-200-+'
+										newerValue: 'item-2-200-+'
 									}
 								}, 'Didn\'t receive once transformed update for second observed item');
 							}
-							if (idsUpdated.has('1') && idsUpdated.has('2')) {
+							if (idsUpdated.has('item-1') && idsUpdated.has('item-2')) {
 								dfd.resolve();
 							}
 						} catch (error) {
@@ -421,13 +421,13 @@ registerSuite({
 						}
 					});
 					queryStore.put([ {
-						id: '1',
+						id: 'item-1',
 						value: 100,
 						nestedProperty: {
 							value: 1
 						}
 					}, {
-						id: '2',
+						id: 'item-2',
 						value: 200,
 						nestedProperty: {
 							value: 1
@@ -444,14 +444,14 @@ registerSuite({
 					);
 
 					let ignoreFirst = 2;
-					chainedTransformation.observe(['1', '2']).subscribe((update) => {
+					chainedTransformation.observe(['item-1', 'item-2']).subscribe((update) => {
 						if (ignoreFirst) {
 							ignoreFirst--;
 							return;
 						}
 						try {
 							assert.deepEqual(update, {
-								id: '1',
+								id: 'item-1',
 								item: undefined
 							}, 'Didn\'t receive once transformed update for first observed item');
 							dfd.resolve();
@@ -459,7 +459,7 @@ registerSuite({
 							dfd.reject(error);
 						}
 					});
-					queryStore.delete('1');
+					queryStore.delete('item-1');
 				},
 				'completion'(this: any) {
 					const {dfd, queryStore} = getStoreAndDfd(this);
@@ -468,8 +468,8 @@ registerSuite({
 						(item) => ({ newValue: `${item.id}-${item.value}` })
 					);
 
-					chainedTransformation.observe(['1', '2']).subscribe(() => {}, undefined, dfd.resolve);
-					queryStore.delete([ '1', '2' ]);
+					chainedTransformation.observe(['item-1', 'item-2']).subscribe(() => {}, undefined, dfd.resolve);
+					queryStore.delete([ 'item-1', 'item-2' ]);
 				}
 			},
 			'queries shouldn\'t affect targeted observation': {
@@ -481,33 +481,33 @@ registerSuite({
 					).transform(
 						(item) => ({ newValue: `${item.id}-${item.value}` })
 					).filter(
-						(item) => item.newValue.charAt(0) === '1'
+						(item) => item.newValue.charAt(0) === 'item-1'
 					).transform(
 						(item) => ({ newerValue: `${item.newValue}-+` })
 					);
 
 					let idsUpdated = new Set<string>();
-					chainedTransformation.observe(['1', '2']).subscribe((update) => {
+					chainedTransformation.observe(['item-1', 'item-2']).subscribe((update) => {
 						try {
-							if (update.id === '1') {
-								idsUpdated.add('1');
+							if (update.id === 'item-1') {
+								idsUpdated.add('item-1');
 								assert.deepEqual(update, {
-									id: '1',
+									id: 'item-1',
 									item: {
-										newerValue: '1-1-+'
+										newerValue: 'item-1-1-+'
 									}
 								}, 'Didn\'t receive once transformed update for first observed item');
 							}
-							else if (update.id === '2') {
-								idsUpdated.add('2');
+							else if (update.id === 'item-2') {
+								idsUpdated.add('item-2');
 								assert.deepEqual(update, {
-									id: '2',
+									id: 'item-2',
 									item: {
-										newerValue: '2-2-+'
+										newerValue: 'item-2-2-+'
 									}
 								}, 'Didn\'t receive once transformed update for second observed item');
 							}
-							if (idsUpdated.has('1') && idsUpdated.has('2')) {
+							if (idsUpdated.has('item-1') && idsUpdated.has('item-2')) {
 								dfd.resolve();
 							}
 						} catch (error) {
@@ -523,38 +523,38 @@ registerSuite({
 					).transform(
 						(item) => ({ newValue: `${item.id}-${item.value}` })
 					).filter(
-						(item) => item.newValue.charAt(0) === '1'
+						(item) => item.newValue.charAt(0) === 'item-1'
 					).transform(
 						(item) => ({ newerValue: `${item.newValue}-+` })
 					);
 
 					let idsUpdated = new Set<string>();
 					let ignoreFirst = 2;
-					chainedTransformation.observe(['1', '2']).subscribe((update) => {
+					chainedTransformation.observe(['item-1', 'item-2']).subscribe((update) => {
 						if (ignoreFirst) {
 							ignoreFirst--;
 							return;
 						}
 						try {
-							if (update.id === '1') {
-								idsUpdated.add('1');
+							if (update.id === 'item-1') {
+								idsUpdated.add('item-1');
 								assert.deepEqual(update, {
-									id: '1',
+									id: 'item-1',
 									item: {
-										newerValue: '1-100-+'
+										newerValue: 'item-1-100-+'
 									}
 								}, 'Didn\'t receive once transformed update for first observed item');
 							}
-							else if (update.id === '2') {
-								idsUpdated.add('2');
+							else if (update.id === 'item-2') {
+								idsUpdated.add('item-2');
 								assert.deepEqual(update, {
-									id: '2',
+									id: 'item-2',
 									item: {
-										newerValue: '2-200-+'
+										newerValue: 'item-2-200-+'
 									}
 								}, 'Didn\'t receive once transformed update for second observed item');
 							}
-							if (idsUpdated.has('1') && idsUpdated.has('2')) {
+							if (idsUpdated.has('item-1') && idsUpdated.has('item-2')) {
 								dfd.resolve();
 							}
 						} catch (error) {
@@ -562,13 +562,13 @@ registerSuite({
 						}
 					});
 					queryStore.put([ {
-						id: '1',
+						id: 'item-1',
 						value: 100,
 						nestedProperty: {
 							value: 1
 						}
 					}, {
-						id: '2',
+						id: 'item-2',
 						value: 200,
 						nestedProperty: {
 							value: 1
@@ -583,20 +583,20 @@ registerSuite({
 					).transform(
 						(item) => ({ newValue: `${item.id}-${item.value}` })
 					).filter(
-						(item) => item.newValue.charAt(0) === '1'
+						(item) => item.newValue.charAt(0) === 'item-1'
 					).transform(
 						(item) => ({ newerValue: `${item.newValue}-+` })
 					);
 
 					let ignoreFirst = 2;
-					chainedTransformation.observe(['1', '2']).subscribe((update) => {
+					chainedTransformation.observe(['item-1', 'item-2']).subscribe((update) => {
 						if (ignoreFirst) {
 							ignoreFirst--;
 							return;
 						}
 						try {
 							assert.deepEqual(update, {
-								id: '1',
+								id: 'item-1',
 								item: undefined
 							}, 'Didn\'t receive once transformed update for first observed item');
 							dfd.resolve();
@@ -604,7 +604,7 @@ registerSuite({
 							dfd.reject(error);
 						}
 					});
-					queryStore.delete('1');
+					queryStore.delete('item-1');
 				},
 				'completion'(this: any) {
 					const {dfd, queryStore} = getStoreAndDfd(this);
@@ -614,13 +614,13 @@ registerSuite({
 					).transform(
 						(item) => ({ newValue: `${item.id}-${item.value}` })
 					).filter(
-						(item) => item.newValue.charAt(0) === '1'
+						(item) => item.newValue.charAt(0) === 'item-1'
 					).transform(
 						(item) => ({ newerValue: `${item.newValue}-+` })
 					);
 
-					chainedTransformation.observe(['1', '2']).subscribe(() => {}, undefined, dfd.resolve);
-					queryStore.delete([ '1', '2' ]);
+					chainedTransformation.observe(['item-1', 'item-2']).subscribe(() => {}, undefined, dfd.resolve);
+					queryStore.delete([ 'item-1', 'item-2' ]);
 				}
 			}
 		}
@@ -635,7 +635,7 @@ registerSuite({
 			).transform(
 				(item) => ({ newValue: `${item.id}-${item.value}` })
 			).filter(
-				(item) => item.newValue.charAt(0) === '1'
+				(item) => item.newValue.indexOf('item-1') > -1
 			).transform(
 				(item) => ({ newerValue: `${item.newValue}-+` })
 			);
@@ -648,11 +648,11 @@ registerSuite({
 				}
 				try {
 					assert.deepEqual(update, {
-						adds: [ { newerValue: '1-1-+' } ],
+						adds: [ { newerValue: 'item-1-1-+' } ],
 						updates: [],
 						deletes: [],
 						beforeAll: [],
-						afterAll: [ { newerValue: '1-1-+' } ]
+						afterAll: [ { newerValue: 'item-1-1-+' } ]
 					}, 'Didn\'t properly filter before and after transforms when observing the whole result');
 				} catch (error) {
 					dfd.reject(error);
@@ -670,7 +670,7 @@ registerSuite({
 				// Loses 'mapped' status when no idTransform is specified
 				(item) => ({ newValue: `${item.id}-${item.value}` })
 			).filter(
-				(item) => item.newValue.charAt(0) === '1'
+				(item) => item.newValue.indexOf('item-1') > -1
 			).transform(
 				// Can become mapped again by specifying idTransform on last transformation, since all that matters
 				// is that the final state can be identified
@@ -685,16 +685,16 @@ registerSuite({
 				}
 				try {
 					assert.deepEqual(update, {
-						adds: [ { newerValue: '1-1-+' } ],
+						adds: [ { newerValue: 'item-1-1-+' } ],
 						updates: [],
 						deletes: [],
 						beforeAll: [],
-						afterAll: [ { newerValue: '1-1-+' } ],
+						afterAll: [ { newerValue: 'item-1-1-+' } ],
 						addedToTracked: [
 							{
-								item: { newerValue: '1-1-+' },
+								item: { newerValue: 'item-1-1-+' },
 								index: 0,
-								id: '1-1-+'
+								id: 'item-1-1-+'
 							}
 						],
 						removedFromTracked: [],
@@ -718,7 +718,7 @@ registerSuite({
 			return transformedStore.fetch().then((data) => transformedStore.identify(data)).then((ids) => {
 				assert.deepEqual(
 					ids,
-					[ '1-1-+', '2-2-+', '3-3-+'	],
+					[ 'item-1-1-+', 'item-2-2-+', 'item-3-3-+'	],
 					'Didn\'t properly identify items using idTransform function'
 				);
 			});
@@ -733,7 +733,7 @@ registerSuite({
 			return transformedStore.fetch().then((data) => transformedStore.identify(data)).then((ids) => {
 				assert.deepEqual(
 					ids,
-					[ '1-1', '2-2', '3-3' ],
+					[ 'item-1-1', 'item-2-2', 'item-3-3' ],
 					'Didn\'t properly identify items using idTransform property'
 				);
 			});
@@ -750,7 +750,7 @@ registerSuite({
 			return transformedStore.fetch().then((data) => transformedStore.identify(data)).then((ids) => {
 				assert.deepEqual(
 					ids,
-					[ '1-1-+', '2-2-+', '3-3-+' ],
+					[ 'item-1-1-+', 'item-2-2-+', 'item-3-3-+' ],
 					'Didn\'t properly identify items using idTransform property in chained transforms'
 				);
 			});

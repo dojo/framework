@@ -51,13 +51,13 @@ registerSuite({
 		'get': {
 			'get one item by id should return the item'(this: any) {
 				const { store } = getStoreAndDfd(this, undefined, true);
-				return store.get('1').then(item => {
+				return store.get('item-1').then(item => {
 					assert.deepEqual(item, createData()[0]);
 				});
 			},
 			'get multiple items by an array of ids should return the items array'(this: any) {
 				const { store } = getStoreAndDfd(this, undefined, true);
-				return store.get(['1', '2', '3']).then(items => {
+				return store.get(['item-1', 'item-2', 'item-3']).then(items => {
 					assert.isTrue(Array.isArray(items));
 					assert.deepEqual(items, createData());
 				});
@@ -183,7 +183,7 @@ registerSuite({
 				const update = createUpdates()[0][0];
 				// This should never really be done
 				update.id = 'new id';
-				store.patch(update, { id: '1' });
+				store.patch(update, { id: 'item-1' });
 				store.fetch().then(function(storeData) {
 					const updateCopy = createUpdates()[0][0];
 					updateCopy.id = 'new id';
@@ -196,7 +196,7 @@ registerSuite({
 				const operation = createOperation(OperationType.Replace, ['prop1'], 2);
 				const patch = createPatch([operation]);
 
-				store.patch({ id: '1', patch }).then(
+				store.patch({ id: 'item-1', patch }).then(
 					dfd.rejectOnError(function () {
 						assert(false, 'Should not have resolved');
 					}),
@@ -339,7 +339,7 @@ registerSuite({
 		});
 
 		assert.deepEqual(store.identify(updates[0]), [2, 3, 4], 'Should have used value property as the id');
-		assert.deepEqual(idFunctionStore.identify(data), ['1-id', '2-id', '3-id'], 'Should have used id function to create item ids');
+		assert.deepEqual(idFunctionStore.identify(data), ['item-1-id', 'item-2-id', 'item-3-id'], 'Should have used id function to create item ids');
 	},
 
 	'should execute calls in order in which they are called'(this: any) {
@@ -472,7 +472,7 @@ registerSuite({
 				data: createData()
 			});
 
-			return store.get(['1', '2', '3']).then(function(items) {
+			return store.get(['item-1', 'item-2', 'item-3']).then(function(items) {
 				assert.deepEqual(items, createData(), 'Didn\'t retrieve items from async add');
 			});
 		},
@@ -497,7 +497,7 @@ registerSuite({
 			});
 
 			return store.add(data).then(function() {
-				return store.get(['1', '2', '3']).then(function(items) {
+				return store.get(['item-1', 'item-2', 'item-3']).then(function(items) {
 					assert.isFalse(fail, 'Didn\'t fail for first operation');
 					assert.deepEqual(items, data, 'Didn\'t retrieve items from add following failed initial add');
 				});

@@ -62,7 +62,7 @@ registerSuite(function(){
 					assert.strictEqual(result[1].type, StoreOperation.Put, '2nd action should be of type "Put"');
 					assert.deepEqual(result[1].successfulData, createUpdates()[0]);
 					assert.strictEqual(result[2].type, StoreOperation.Delete, '3rd action should be of type "Delete"');
-					assert.deepEqual(result[2].successfulData, ['1']);
+					assert.deepEqual(result[2].successfulData, ['item-1']);
 					dfd.resolve();
 				}));
 		},

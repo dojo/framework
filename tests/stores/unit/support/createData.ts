@@ -9,17 +9,17 @@ export interface ItemType {
 export function createData(): ItemType[] {
 	return [
 		{
-			id: '1',
+			id: 'item-1',
 			value: 1,
 			nestedProperty: { value: 3 }
 		},
 		{
-			id: '2',
+			id: 'item-2',
 			value: 2,
 			nestedProperty: { value: 2 }
 		},
 		{
-			id: '3',
+			id: 'item-3',
 			value: 3,
 			nestedProperty: { value: 1 }
 		}

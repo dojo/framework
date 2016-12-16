@@ -34,7 +34,7 @@ registerSuite({
 		const { queryStore } = getStoreAndDfd(this, false);
 
 		return queryStore.filter(function(item: ItemType) {
-			return String(item.id) === '1';
+			return String(item.id) === 'item-1';
 		}).fetch().then(function(items) {
 			assert.deepEqual(items, [ createData()[0] ], 'Didn\'t filter items propertly');
 		});
@@ -44,9 +44,9 @@ registerSuite({
 		const { queryStore } = getStoreAndDfd(this, false);
 
 		return queryStore.filter(function(item) {
-			return String(item.id) === '1' || String(item.id) === '2';
+			return String(item.id) === 'item-1' || String(item.id) === 'item-2';
 		}).filter(function(item: ItemType) {
-			return String(item.id) === '2';
+			return String(item.id) === 'item-2';
 		}).fetch().then(function(items) {
 			assert.deepEqual(items, [ createData()[1] ], 'Didn\'t filter items properly with nested query');
 		});
@@ -55,7 +55,7 @@ registerSuite({
 	'get'(this: any) {
 		const { queryStore } = getStoreAndDfd(this, false);
 
-		return queryStore.filter((item) => item.value > 1).get('1').then((item) => {
+		return queryStore.filter((item) => item.value > 1).get('item-1').then((item) => {
 			assert.isUndefined(item, 'Shouldn\'t have returned item');
 		});
 	},
@@ -63,7 +63,7 @@ registerSuite({
 	'get multiple items'(this: any) {
 		const { queryStore } = getStoreAndDfd(this, false);
 
-		return queryStore.filter((item) => item.value > 1).get(['1', '2']).then((items) => {
+		return queryStore.filter((item) => item.value > 1).get(['item-1', 'item-2']).then((items) => {
 			assert.deepEqual(items, [], 'Shouldn\'t have returned items before they are added to local storage');
 		});
 	},
@@ -73,9 +73,9 @@ registerSuite({
 
 		const queriedView = queryStore.filter((item) => item.value > 1);
 		queriedView.fetch();
-		return queriedView.get('1').then((item) => {
+		return queriedView.get('item-1').then((item) => {
 			assert.isUndefined(item, 'Shouldn\'t have returned filtered item with updated collection');
-			return queriedView.get('2').then((item) => {
+			return queriedView.get('item-2').then((item) => {
 				assert.deepEqual(item, createData()[1], 'Should have returned item in filtered collection');
 			});
 		});
@@ -86,7 +86,7 @@ registerSuite({
 
 		const queriedView = queryStore.filter((item) => item.value > 1);
 		queriedView.fetch();
-		return queriedView.get(['1', '2']).then((items) => {
+		return queriedView.get(['item-1', 'item-2']).then((items) => {
 			assert.deepEqual(items, [ createData()[1] ], 'Should only return item in filtered collection');
 		});
 	},
@@ -117,8 +117,8 @@ registerSuite({
 		queryStore.filter(function(item: ItemType) {
 			return Boolean(item.id);
 		}).filter(function(item: ItemType) {
-			return String(item.id) === '2' || String(item.id) === '1';
-		}).fetch(createFilter<ItemType>().equalTo('id', '1')).then(function(items) {
+			return String(item.id) === 'item-2' || String(item.id) === 'item-1';
+		}).fetch(createFilter<ItemType>().equalTo('id', 'item-1')).then(function(items) {
 			assert.deepEqual(items, [ createData()[0] ], 'Didn\'t filter items properly with nested query and query in fetch');
 		}).then(dfd.resolve);
 	},
@@ -141,7 +141,7 @@ registerSuite({
 		const calls: Array<() => any> = [
 			// If an item is moved out of range we should still get notified
 			() => store.put({
-				id: '1',
+				id: 'item-1',
 				value: 4,
 				nestedProperty: {
 					value: 10
@@ -186,34 +186,34 @@ registerSuite({
 
 		store.add([
 			{
-				id: '1',
+				id: 'item-1',
 				value: 6
 			},
 			{
-				id: '2',
+				id: 'item-2',
 				value: 7
 			}
 		]);
-		store.add({ id: '3', value: 8 });
+		store.add({ id: 'item-3', value: 8 });
 		store.put([
 			{
-				id: '1',
+				id: 'item-1',
 				value: 7
 			},
 			{
-				id: '2',
+				id: 'item-2',
 				value: 6
 			}
 		]);
-		store.put({ id: '3', value: 7 });
+		store.put({ id: 'item-3', value: 7 });
 
 		store.patch([
-			{ id: '1', patch: diff({ id: '1', value: 8 }) },
-			{ id: '2', patch: diff({ id: '2', value: 8 }) }
+			{ id: 'item-1', patch: diff({ id: 'item-1', value: 8 }) },
+			{ id: 'item-2', patch: diff({ id: 'item-2', value: 8 }) }
 		]);
-		store.patch({ id: '3', patch: diff({ id: '3', value: 10 }) });
-		store.delete(['1', '2']);
-		store.delete('3');
+		store.patch({ id: 'item-3', patch: diff({ id: 'item-3', value: 10 }) });
+		store.delete(['item-1', 'item-2']);
+		store.delete('item-3');
 
 		setTimeout(dfd.resolve, 1000);
 	},
@@ -233,27 +233,27 @@ registerSuite({
 			}
 			try {
 				assert.deepEqual(update, {
-					deletes: [ '1' ],
+					deletes: [ 'item-1' ],
 					updates: [],
 					beforeAll: data,
 					afterAll: [ data[1], data[2] ],
 					adds: [],
 					removedFromTracked: [
 						{
-							id: '1',
+							id: 'item-1',
 							item: data[0],
 							previousIndex: 0
 						}
 					],
 					movedInTracked: [
 						{
-							id: '2',
+							id: 'item-2',
 							index: 0,
 							previousIndex: 1,
 							item: data[1]
 						},
 						{
-							id: '3',
+							id: 'item-3',
 							index: 1,
 							previousIndex: 2,
 							item: data[2]
@@ -266,7 +266,7 @@ registerSuite({
 			}
 			dfd.resolve();
 		});
-		store.delete('1');
+		store.delete('item-1');
 	},
 
 	'notification on item deleted from initial data after fetch'(this: any) {
@@ -284,27 +284,27 @@ registerSuite({
 			}
 			try {
 				assert.deepEqual(update, {
-					deletes: [ '1' ],
+					deletes: [ 'item-1' ],
 					updates: [],
 					beforeAll: data,
 					afterAll: [ data[1], data[2] ],
 					adds: [],
 					removedFromTracked: [
 						{
-							id: '1',
+							id: 'item-1',
 							item: data[0],
 							previousIndex: 0
 						}
 					],
 					movedInTracked: [
 						{
-							id: '2',
+							id: 'item-2',
 							index: 0,
 							previousIndex: 1,
 							item: data[1]
 						},
 						{
-							id: '3',
+							id: 'item-3',
 							index: 1,
 							previousIndex: 2,
 							item: data[2]
@@ -318,7 +318,7 @@ registerSuite({
 			dfd.resolve();
 		});
 		filtered.fetch().then(() => {
-			store.delete('1');
+			store.delete('item-1');
 		});
 	},
 
@@ -504,7 +504,7 @@ registerSuite({
 				data: createData()
 			});
 
-			return store.get(['1', '2', '3']).then(function(items: ItemType[]) {
+			return store.get(['item-1', 'item-2', 'item-3']).then(function(items: ItemType[]) {
 				assert.deepEqual(items, createData(), 'Didn\'t retrieve items from async add');
 			});
 		},
@@ -529,7 +529,7 @@ registerSuite({
 			});
 
 			return store.add(data).then(function() {
-				return store.get(['1', '2', '3']).then(function(items) {
+				return store.get(['item-1', 'item-2', 'item-3']).then(function(items) {
 					assert.isFalse(fail, 'Didn\'t fail for first operation');
 					assert.deepEqual(items, data, 'Didn\'t retrieve items from add following failed initial add');
 				});

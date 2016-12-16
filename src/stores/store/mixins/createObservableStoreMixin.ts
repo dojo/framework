@@ -53,7 +53,13 @@ export function mergeDeltas<T>(
 	instance: { identify(items: T | T[]): string[] },
 	...deltas: StoreDelta<T>[]
 ): StoreDelta<T> {
-	const head = deltas[0];
+	const head = deltas[0] || {
+			updates: [],
+			adds: [],
+			deletes: [],
+			beforeAll: [],
+			afterAll: []
+		};
 
 	/**
 	 * Takes the last instance of an item repeated in the list
@@ -439,7 +445,7 @@ function notifyItemObservers<T, O extends CrudOptions, U extends UpdateResults<T
 	}
 	if (items) {
 		items.forEach(function(after: T, index: number) {
-			const id = ids[index] || store.identify(after)[0];
+			const id = ids[index] || store.identify(after);
 			notify(id, after);
 		});
 	}

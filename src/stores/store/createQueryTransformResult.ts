@@ -163,7 +163,9 @@ export interface MappedQueryTransformResult<T, S extends ObservableStore<any, an
 	 * sure it has the latest data.
 	 */
 	track(): TrackedQueryTransformResult<T, S>;
-	identify(items: T[] | T): string[];
+	identify(items: T[]): string[];
+	identify(item: T): string;
+	identify(items: T | T[]): string | string[];
 	observe(): Observable<TrackableStoreDelta<T>>;
 	/**
 	 * These overrides aren't actually changing the signature, they are just necessary to make typescript happy about
@@ -415,7 +417,7 @@ function queryAndTransformData<T>(
 			if ((!ignoreSorts || next.queryType !== QueryType.Sort) && (!ignoreNonIncrementalQueries || next.incremental)) {
 				if (instance && state && isFilter(next)) {
 					return next
-						.or(createFilter().custom((item: T) => state.localIndex.has(instance.identify(item)[0])))
+						.or(createFilter().custom((item: T) => state.localIndex.has(instance.identify(item))))
 						.apply(prev);
 				}
 				else {
@@ -797,7 +799,7 @@ const createMappedQueryTransformResult: MappedQueryTransformResultFactory = <any
 					fetchAroundUpdates: state.fetchAroundUpdates
 				});
 			},
-			identify(this: QueryTransformResult<any, any>, items: any[] | any): string[] {
+			identify(this: QueryTransformResult<any, any>, items: any[] | any): string | string[] {
 				const state = instanceStateMap.get(this);
 				const lastTransformation = state.queriesAndTransformations.reduce<TransformationDescriptor<any, any> | undefined>(
 					(prev, next) => isTransformation(next) ? next : prev, undefined

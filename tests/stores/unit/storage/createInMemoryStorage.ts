@@ -31,7 +31,7 @@ registerSuite({
 			data.forEach( function(item, indx) {
 				(item as any).custId = item.id + '-CID';
 			});
-			assert.deepEqual(storage.identify(data), ['1-CID', '2-CID', '3-CID']);
+			assert.deepEqual(storage.identify(data), ['item-1-CID', 'item-2-CID', 'item-3-CID']);
 		},
 		'Should identify by idFunction if idProperty doesn\'t exist.'(this: any) {
 			const storage = createInMemoryStorage({
@@ -43,11 +43,11 @@ registerSuite({
 		},
 		'Should default to `id` property if neither idProperty nor idFunction exists.'(this: any) {
 			const storage = createInMemoryStorage();
-			assert.deepEqual(storage.identify(createData()), ['1', '2', '3']);
+			assert.deepEqual(storage.identify(createData()), ['item-1', 'item-2', 'item-3']);
 		},
 		'Should accept identifying a single item.'(this: any) {
 			const storage = createInMemoryStorage();
-			assert.deepEqual(storage.identify(createData()[2]), ['3']);
+			assert.deepEqual(storage.identify(createData()[2]), ['item-3']);
 		}
 	},
 
@@ -118,14 +118,14 @@ registerSuite({
 		'Should get single item.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			storage.add(data);
-			storage.get(['1']).then(function(items) {
+			storage.get(['item-1']).then(function(items) {
 				assert.deepEqual(items, [data[0]]);
 			}).then(dfd.resolve);
 		},
 		'Should get multiple items.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			storage.add(data);
-			storage.get(['1', '3']).then(function(items) {
+			storage.get(['item-1', 'item-3']).then(function(items) {
 				assert.deepEqual(items, [ data[0], data[2] ]);
 			}).then(dfd.resolve);
 		},
@@ -133,7 +133,7 @@ registerSuite({
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			storage.add(data);
 			const idNotExist = '4';
-			storage.get(['1', '3', idNotExist]).then(function(items) {
+			storage.get(['item-1', 'item-3', idNotExist]).then(function(items) {
 				assert.deepEqual(items, [ data[0], data[2] ]);
 			}).then(dfd.resolve);
 		}
@@ -150,7 +150,7 @@ registerSuite({
 		'Should fetch queried items when a query is provided.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			const query = createCompoundQuery( {
-				query: createFilter().lessThan('id', 3)
+				query: createFilter().lessThan('value', 3)
 			} )
 				.withQuery( createSort('id', true) )
 				.withQuery( createRange(1, 1) );
@@ -166,8 +166,8 @@ registerSuite({
 		'Should delete items from storage.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			storage.add(data);
-			storage.delete(['1', '3']).then(function(result) {
-				assert.deepEqual(result.successfulData, [ '1', '3' ]);
+			storage.delete(['item-1', 'item-3']).then(function(result) {
+				assert.deepEqual(result.successfulData, [ 'item-1', 'item-3' ]);
 				// TODO (not implemented yet) assert.deepEqual(result.currentItems, createData()[1]);
 			}).then(dfd.resolve);
 		},
@@ -175,7 +175,7 @@ registerSuite({
 			const { dfd, storage, data } = getStorageAndDfd(this);
 
 			storage.add(data);
-			storage.delete(['1', '3']).then(function(result) {
+			storage.delete(['item-1', 'item-3']).then(function(result) {
 				assert.deepEqual(result.type, StoreOperation.Delete);
 			}).then(dfd.resolve);
 		},
