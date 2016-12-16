@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
-import {createData, ItemType, createUpdates} from '../support/createData';
+import { createData, ItemType, createUpdates } from '../support/createData';
 import { createQueryStore } from '../../../src/store/mixins/createQueryTransformMixin';
 import { createObservableStore, StoreDelta } from '../../../src/store/mixins/createObservableStoreMixin';
 import materialize from '../../../src/store/materialize';
