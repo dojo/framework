@@ -1,11 +1,13 @@
 import compose, { ComposeFactory } from 'dojo-compose/compose';
-import createEvented, {
+import createEvented from 'dojo-compose/bases/createEvented';
+import {
 	Evented,
 	EventedOptions,
-	EventedListener,
-	TargettedEventObject
-} from 'dojo-compose/mixins/createEvented';
+	EventedListener
+} from 'dojo-interfaces/bases';
+import { EventTargettedObject, EventErrorObject } from 'dojo-interfaces/core';
 import { Handle, Hash } from 'dojo-core/interfaces';
+
 import Task from 'dojo-core/async/Task';
 import { pausable, PausableHandle } from 'dojo-core/on';
 import UrlSearchParams from 'dojo-core/UrlSearchParams';
@@ -37,7 +39,7 @@ export interface DispatchDeferral {
 /**
  * Event object that is emitted for the 'navstart' event.
  */
-export interface NavigationStartEvent extends TargettedEventObject {
+export interface NavigationStartEvent extends EventTargettedObject<Router<Context>> {
 	/**
 	 * The path that has been navigated to.
 	 */
@@ -53,36 +55,21 @@ export interface NavigationStartEvent extends TargettedEventObject {
 	 * @return an object which allows the caller to resume or cancel dispatch.
 	 */
 	defer(): DispatchDeferral;
-
-	/**
-	 * The router that emitted this event.
-	 */
-	target: Router<Context>;
 }
 
 /**
  * Event object that is emitted for the 'error' event.
  */
-export interface ErrorEvent<C extends Context> extends TargettedEventObject {
+export interface ErrorEvent<C extends Context> extends EventErrorObject<Router<C>> {
 	/**
 	 * The context that was being dispatched when the error occurred.
 	 */
 	context: C;
 
 	/**
-	 * The error.
-	 */
-	error: any;
-
-	/**
 	 * The path that was being dispatched when the error occurred.
 	 */
 	path: string;
-
-	/**
-	 * The router that emitted this event.
-	 */
-	target: Router<C>;
 }
 
 /**
@@ -163,7 +150,7 @@ export interface RouterOverrides<C extends Context> {
 	/**
 	 * Event emitted when dispatch is called, but before routes are selected.
 	 */
-	on(type: 'navstart', listener: EventedListener<NavigationStartEvent>): Handle;
+	on(type: 'navstart', listener: EventedListener<Router<Context>, NavigationStartEvent>): Handle;
 
 	/**
 	 * Event emitted when errors occur during dispatch.
@@ -171,9 +158,9 @@ export interface RouterOverrides<C extends Context> {
 	 * Certain errors may reject the task returned when dispatching, but this task is not always accessible and may
 	 * hide errors if it's canceled.
 	 */
-	on(type: 'error', listener: EventedListener<ErrorEvent<C>>): Handle;
+	on(type: 'error', listener: EventedListener<Router<C>, ErrorEvent<C>>): Handle;
 
-	on(type: string, listener: EventedListener<TargettedEventObject>): Handle;
+	on(type: string, listener: EventedListener<this, EventTargettedObject<this>>): Handle;
 }
 
 export type Router<C extends Context> = Evented & RouterMixin<C> & RouterOverrides<C>;

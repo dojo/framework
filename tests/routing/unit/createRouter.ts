@@ -1098,7 +1098,7 @@ suite('createRouter', () => {
 				},
 				history
 			});
-			router.on('error', (event) => { events.push(event); });
+			router.on('error', (event: any) => { events.push(event); });
 			dispatch = () => {
 				return new Promise((resolve) => {
 					router.dispatch(context, path).finally(resolve);

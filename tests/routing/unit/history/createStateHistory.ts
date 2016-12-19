@@ -1,5 +1,6 @@
 import compose from 'dojo-compose/compose';
-import createEvented, { Evented } from 'dojo-compose/mixins/createEvented';
+import createEvented from 'dojo-compose/bases/createEvented';
+import { Evented } from 'dojo-interfaces/bases';
 import { emit } from 'dojo-core/on';
 import Promise from 'dojo-shim/Promise';
 import { afterEach, beforeEach, suite, test } from 'intern!tdd';
