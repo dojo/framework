@@ -23,7 +23,6 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@reactivex/rxjs": "5.0.0-beta.6",
     "dojo-compose": ">=2.0.0-beta.10",
     "dojo-core": ">=2.0.0-alpha.14",
     "dojo-has": ">=2.0.0-alpha.4",

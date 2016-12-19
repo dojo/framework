@@ -2,7 +2,6 @@ import 'dojo/has!host-node?../support/loadJsdom';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { h, createProjector } from 'maquette';
-import * as rx from 'rxjs/Rx';
 
 registerSuite({
 	name: 'integrations',
@@ -28,8 +27,5 @@ registerSuite({
 			assert.strictEqual(nodes[0].firstChild!.firstChild!.textContent, 'Greetings');
 			assert.strictEqual((<HTMLDivElement> nodes[0].firstChild).className, 'saucer foo');
 		}
-	},
-	rx() {
-		assert(rx);
 	}
 });

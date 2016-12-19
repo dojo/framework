@@ -1,13 +1,13 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { VNode } from 'dojo-interfaces/vdom';
-import createButton, { ButtonState } from '../../../../src/components/button/createButton';
+import createButton from '../../../../src/components/button/createButton';
 
 registerSuite({
 	name: 'createButton',
 	construction() {
 		const button = createButton({
-			state: {
+			properties: {
 				id: 'foo',
 				label: 'bar',
 				name: 'baz'
@@ -19,7 +19,7 @@ registerSuite({
 	},
 	render() {
 		const button = createButton({
-			state: {
+			properties: {
 				id: 'foo',
 				label: 'bar',
 				name: 'baz'
@@ -35,7 +35,7 @@ registerSuite({
 	},
 	disable() {
 		const button = createButton({
-			state: <ButtonState> {
+			properties: {
 				id: 'foo',
 				label: 'bar',
 				name: 'baz'

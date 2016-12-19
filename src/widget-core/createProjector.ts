@@ -1,7 +1,7 @@
 import { ComposeFactory } from 'dojo-compose/compose';
 import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
-import { Widget, WidgetState, WidgetOptions } from './interfaces';
+import { Widget, WidgetState, WidgetOptions, WidgetProperties } from './interfaces';
 import WeakMap from 'dojo-shim/WeakMap';
 import { createProjector as createMaquetteProjector, Projector as MaquetteProjector } from 'maquette';
 import createWidgetBase from './createWidgetBase';
@@ -37,7 +37,7 @@ export interface AttachOptions {
 /**
  * Projector interface
  */
-export interface ProjectorOptions extends WidgetOptions<WidgetState> {
+export interface ProjectorOptions extends WidgetOptions<WidgetState, WidgetProperties> {
 
 	/**
 	 * An optional root of the projector
@@ -98,7 +98,7 @@ interface ProjectorData {
 	afterCreate?: () => void;
 }
 
-export type Projector = Widget<WidgetState> & ProjectorMixin;
+export type Projector = Widget<WidgetState, WidgetProperties> & ProjectorMixin;
 
 export interface ProjectorFactory extends ComposeFactory<Projector, ProjectorOptions> { }
 

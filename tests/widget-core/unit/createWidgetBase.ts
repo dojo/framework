@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import Promise from 'dojo-shim/Promise';
 import createWidgetBase from '../../src/createWidgetBase';
-import { DNode, HNode, WidgetState, WidgetOptions } from './../../src/interfaces';
+import { DNode, HNode, WidgetState, WidgetOptions, WidgetProperties } from './../../src/interfaces';
 import { VNode } from 'dojo-interfaces/vdom';
 import { v, w, registry } from '../../src/d';
 import { stub } from 'sinon';
@@ -56,7 +56,7 @@ registerSuite({
 		};
 
 		const widgetBase = createWidgetBase({
-			state: { id: 'foo', classes: [ 'bar' ] },
+			properties: { id: 'foo', classes: [ 'bar' ] },
 			listeners: {
 				click: expectedClickFunction
 			}
@@ -76,6 +76,31 @@ registerSuite({
 		nodeAttributes = widgetBase.getNodeAttributes();
 
 		assert.deepEqual(nodeAttributes.classes, { foo: true, bar: false });
+	},
+	diffProperties: {
+		'no updated properties'() {
+			const widgetBase = createWidgetBase({ properties: { id: 'id', foo: 'bar' }});
+			const updatedKeys = widgetBase.diffProperties({ id: 'id', foo: 'bar' });
+			assert.lengthOf(updatedKeys, 0);
+		},
+		'updated properties'() {
+			const widgetBase = createWidgetBase({ properties: { id: 'id', foo: 'bar' }});
+			widgetBase.properties = { id: 'id', foo: 'baz' };
+			const updatedKeys = widgetBase.diffProperties({ id: 'id', foo: 'bar' });
+			assert.lengthOf(updatedKeys, 1);
+		},
+		'new properties'() {
+			const widgetBase = createWidgetBase({ properties: { id: 'id', foo: 'bar' }});
+			widgetBase.properties = { id: 'id', foo: 'bar', bar: 'baz' };
+			const updatedKeys = widgetBase.diffProperties({ id: 'id', foo: 'bar' });
+			assert.lengthOf(updatedKeys, 1);
+		}
+	},
+	applyChangedProperties() {
+		const widgetBase = createWidgetBase({ id: 'id' });
+		widgetBase.applyChangedProperties({}, { foo: 'bar' });
+		assert.equal((<any> widgetBase.state).foo, 'bar');
+		assert.equal(widgetBase.state.id, 'id');
 	},
 	getChildrenNodes: {
 		'getChildrenNodes with no ChildNodeRenderers'() {
@@ -332,9 +357,9 @@ registerSuite({
 				.mixin({
 					mixin: {
 						getChildrenNodes: function(this: any): (DNode | null)[] {
-							const state = this.state.classes ? { classes: this.state.classes } : {};
+							const properties: WidgetProperties = this.state.classes ? { classes: this.state.classes } : {};
 							return [
-								this.state.hide ? null : w(testChildWidget, <WidgetOptions<WidgetState>> { tagName: 'footer', state })
+								this.state.hide ? null : w(testChildWidget, { tagName: 'footer', properties })
 							];
 						}
 					}
@@ -366,7 +391,7 @@ registerSuite({
 			assert.strictEqual(thirdRenderChild.vnodeSelector, 'footer');
 			assert.isTrue(thirdRenderChild.properties.classes['test-class']);
 
-			widgetBase.setState({ hide: true });
+			widgetBase.setState(<any> { hide: true });
 			widgetBase.invalidate();
 
 			const forthRenderResult = <VNode> widgetBase.__render__();
@@ -374,7 +399,7 @@ registerSuite({
 			assert.strictEqual(countWidgetDestroyed, 1);
 			assert.lengthOf(forthRenderResult.children, 0);
 
-			widgetBase.setState({ hide: false });
+			widgetBase.setState(<any> { hide: false });
 			widgetBase.invalidate();
 
 			const lastRenderResult = <VNode> widgetBase.__render__();
@@ -402,9 +427,51 @@ registerSuite({
 			assert.isTrue(consoleStub.calledWith('must provide unique keys when using the same widget factory multiple times'));
 			consoleStub.restore();
 		},
+		'render with updated properties'() {
+			let renderCount = 0;
+			const createMyWidget = createWidgetBase.mixin({
+				mixin: {
+					nodeAttributes: [
+						function(this: any): any {
+							const { state: { foo, bar } } = this;
+
+							return { foo, bar };
+						}
+					]
+				}
+			});
+			const widgetBase = createWidgetBase
+				.mixin({
+					mixin: {
+						getChildrenNodes: function(): DNode[] {
+							const options: (WidgetOptions<WidgetState, (WidgetProperties & { foo: string, bar?: string })>) = { properties: { foo: 'bar' }};
+
+							if (renderCount === 1) {
+								options.properties!.bar = 'baz';
+								options.properties!.foo = 'baz';
+							}
+
+							renderCount++;
+
+							return [
+								w(createMyWidget, options)
+							];
+						}
+					}
+				})();
+
+			let result = <VNode> widgetBase.__render__();
+			assert.isUndefined(result!.children![0].properties!['bar']);
+			assert.equal(result!.children![0].properties!['foo'], 'bar');
+
+			widgetBase.invalidate();
+			result = <VNode> widgetBase.__render__();
+			assert.equal(result!.children![0].properties!['foo'], 'baz');
+			assert.equal(result!.children![0].properties!['bar'], 'baz');
+		},
 		'__render__() and invalidate()'() {
 			const widgetBase = createWidgetBase({
-				state: { id: 'foo', label: 'foo' }
+				properties: { id: 'foo', label: 'foo' }
 			});
 			const result1 = <VNode> widgetBase.__render__();
 			const result2 = <VNode> widgetBase.__render__();
@@ -433,27 +500,27 @@ registerSuite({
 		},
 		'in state'() {
 			const widgetBase = createWidgetBase({
-				state: {
+				properties: {
 					id: 'foo'
 				}
 			});
 
 			assert.strictEqual(widgetBase.id, 'foo');
 		},
-		'in options and state'() {
+		'in options and properties'() {
 			const widgetBase = createWidgetBase({
 				id: 'foo',
-				state: {
+				properties: {
 					id: 'bar'
 				}
 			});
 
-			assert.strictEqual(widgetBase.id, 'foo');
+			assert.strictEqual(widgetBase.id, 'bar');
 		},
-		'not in options or state'() {
+		'not in options or properties'() {
 			const widgetBase = createWidgetBase();
 
-			assert.strictEqual(widgetBase.id, 'widget-1');
+			assert.include(widgetBase.id, 'widget-');
 		},
 		'is read only'() {
 			const widgetBase = createWidgetBase();

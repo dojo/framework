@@ -9,12 +9,13 @@ registerSuite({
 		assert.isDefined(cssTranistionMixin);
 	},
 	'getNodeAttributes()'() {
-		const cssTranistionMixin = createCssTransitionMixin({
-			state: {
-				enterAnimation: 'enter-animation-class',
-				exitAnimation: 'exit-animation-class'
-			}
+		const cssTranistionMixin = createCssTransitionMixin({});
+
+		cssTranistionMixin.setState({
+			enterAnimation: 'enter-animation-class',
+			exitAnimation: 'exit-animation-class'
 		});
+
 		const nodeAttributes = cssTranistionMixin.nodeAttributes[0].call(cssTranistionMixin, {});
 		assert.strictEqual(nodeAttributes.enterAnimation, 'enter-animation-class');
 		assert.strictEqual(nodeAttributes.exitAnimation, 'exit-animation-class');

@@ -4,9 +4,8 @@
  * Additional features and functionality are added to widgets by compositing mixins onto these
  * bases.
  */
-
 import Promise from 'dojo-shim/Promise';
-import { EventedListener, State, Stateful, StatefulOptions } from 'dojo-interfaces/bases';
+import { EventedListener, Stateful, StatefulOptions } from 'dojo-interfaces/bases';
 import { EventTargettedObject, Handle, StylesMap } from 'dojo-interfaces/core';
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
 import { ComposeFactory } from 'dojo-compose/compose';
@@ -16,14 +15,14 @@ import { VNodeEvented, VNodeEventedOptions } from './mixins/createVNodeEvented';
  * A function that is called to return top level node
  */
 export interface NodeFunction {
-	(this: Widget<WidgetState>): DNode;
+	(this: Widget<WidgetState, WidgetProperties>): DNode;
 }
 
 /**
  * A function that is called when collecting the children nodes on render.
  */
 export interface ChildNodeFunction {
-	(this: Widget<WidgetState>): DNode[];
+	(this: Widget<WidgetState, WidgetProperties>): DNode[];
 }
 
 /**
@@ -85,7 +84,7 @@ export interface WNode {
 	/**
 	 * Options used to create factory a widget
 	 */
-	options: WidgetOptions<WidgetState>;
+	options: WidgetOptions<WidgetState, WidgetProperties>;
 
 	/**
 	 * DNode children
@@ -95,9 +94,9 @@ export interface WNode {
 
 export type DNode = HNode | WNode | string | null;
 
-export type Widget<S extends WidgetState> = Stateful<S> & WidgetMixin & WidgetOverloads & VNodeEvented;
+export type Widget<S extends WidgetState, P extends WidgetProperties> = Stateful<S> & WidgetMixin<P> & WidgetOverloads & VNodeEvented;
 
-export interface WidgetFactory extends ComposeFactory<Widget<WidgetState>, WidgetOptions<WidgetState>> {}
+export interface WidgetFactory extends ComposeFactory<Widget<WidgetState, WidgetProperties>, WidgetOptions<WidgetState, WidgetProperties>> {}
 
 export interface WidgetOverloads {
 	/**
@@ -106,10 +105,10 @@ export interface WidgetOverloads {
 	 * @param type The event type to listen for
 	 * @param listener The listener to call when the event is emitted
 	 */
-	on(type: 'invalidated', listener: EventedListener<Widget<WidgetState>, EventTargettedObject<Widget<WidgetState>>>): Handle;
+	on(type: 'invalidated', listener: EventedListener<Widget<WidgetState, WidgetProperties>, EventTargettedObject<Widget<WidgetState, WidgetProperties>>>): Handle;
 }
 
-export interface WidgetMixin {
+export interface WidgetMixin<P extends WidgetProperties> {
 	/**
 	 * Classes which are applied upon render.
 	 *
@@ -142,6 +141,21 @@ export interface WidgetMixin {
 	getNodeAttributes(): VNodeProperties;
 
 	/**
+	 * Properties passed to affect state
+	 */
+	properties: Partial<P>;
+
+	/**
+	 * Determine changed or new property keys on render.
+	 */
+	diffProperties(this: Widget<WidgetState, WidgetProperties>, previousProperties: P): string[];
+
+	/**
+	 * apply change in properties
+	 */
+	applyChangedProperties(previousProperties: Partial<P>, currentProperties: Partial<P>): void;
+
+	/**
 	 * The ID of the widget, which gets automatically rendered in the VNode property `data-widget-id` when
 	 * rendered.
 	 */
@@ -161,7 +175,7 @@ export interface WidgetMixin {
 	 * making it easy for mixins to alter the behaviour of the render process without needing to override or aspect
 	 * the `getNodeAttributes` method.
 	 */
-	nodeAttributes: NodeAttributeFunction<Widget<WidgetState>>[];
+	nodeAttributes: NodeAttributeFunction<Widget<WidgetState, WidgetProperties>>[];
 
 	/**
 	 * Render the widget, returing the virtual DOM node that represents this widget.
@@ -190,24 +204,20 @@ export interface WidgetMixin {
 	readonly registry: FactoryRegistryInterface;
 }
 
-export interface WidgetOptions<S extends WidgetState> extends StatefulOptions<S>, VNodeEventedOptions {
+export interface WidgetOptions<S extends WidgetState, P extends WidgetProperties> extends StatefulOptions<S>, VNodeEventedOptions {
 	/**
-	 * Any classes that should be added to this instances
+	 * Properties used to affect internal widget state
 	 */
-	classes?: string[];
+	properties?: P;
 
-	/**
-	 * Any node attribute functions that should be added to this instance
-	 */
-	nodeAttributes?: NodeAttributeFunction<Widget<WidgetState>> | NodeAttributeFunction<Widget<WidgetState>>[];
-
-	/**
-	 * Override the tag name for this widget instance
-	 */
 	tagName?: string;
 }
 
-export interface WidgetState extends State {
+export interface WidgetProperties {
+	[key: string]: any;
+}
+
+export interface WidgetState {
 	/**
 	 * Any classes that should be mixed into the widget's VNode upon render.
 	 *

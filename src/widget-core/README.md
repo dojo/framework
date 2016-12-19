@@ -69,25 +69,38 @@ These are some of the **important** principles to keep in mind when developing w
 1. the widget *render* function should **never** be overridden
 2. with the exception of the top level projector you should **never** have to deal with widget instances.
 3. hyperscript should **always** be written using the dojo-widgets `v` helper function.
+4. `state` should **never** be set outside of the widget instance.
 
 ### Base Widget
 
 The class `createWidgetBase` provides all base dojo-widgets functionality including caching and widget lifecycle management. It can be used directly or extended to create custom widgets.
 
+#### Widget API
+
+A subset of the `Widget` API are intended to be overridden in scenarios where the default implemented behviour does not suffice.
+
+|Function|Description|Default Behaviour|
+|---|---|---|
+|getNode|Returns the top level node of a widget|Returns a `DNode` with the widgets `tagName`, the result of `this.getNodeAttributes` and `this.children`|
+|getChildrenNodes|Returns the child node structure of a widget|Returns the widgets children `DNode` array|
+|nodeAttributes|An array of functions that return VNodeProperties to be applied to the top level node|Returns attributes for `data-widget-id`, `classes` and `styles` using the widget's specified `state` (`id`, `classes`, `styles`) at the time of render|
+|diffProperties|Diffs the current properties against the previous properties and returns the updated/new keys in an array|Performs a shallow comparison using `===` of previous and current properties and returns an array of the keys.|
+|applyChangedProperties|Gets called to apply updated/new properties|If there are updated properties they are directly set onto the widgets `state` using `setState`.|
+
 To customise the widget an optional `options` argument can be provided with the following interface.
 
-**Type**: `WidgetOptions<WidgetState>` - All properties are optional.
+**Type**: `WidgetOptions<WidgetState, WidgetProperties>` - All properties are optional.
 
 |Property|Type|Description|
 |---|---|---|
 |id|string|identifier for the widget|
-|state|WidgetState|Initial state of the widget|
 |stateFrom|StoreObservablePatchable|Observable that provides state for the widget|
 |listeners|EventedListenersMap|Map of listeners for to attach to the widget|
 |tagName|string|Override the widgets tagname|
+|properties|WidgetProperties|Props to be passed to the widget. These can be used to determine state internally|
 |nodeAttributes|Function[]|An array of functions that return VNodeProperties to be applied to the VNode|
 
-By default the base widget class applies `id`, `classes` and `styles` from the widget's specified `state` (either by direct state injection or via an observable store).
+A widgets' `state` should **never** be directly set outside of the instance. In order to manipulate widget `state`, `properties` should be updated such as `widget.properties = { 'foo': 'bar' }` and then during the next render the new or updated properties are passed to `instance#applyChangedProperties`.
 
 As a convenience, all event handlers are automatically bound to the widget instance, so state and other items on the instance can be easily accessed.
 
@@ -112,7 +125,7 @@ The following example demonstrates how `id`, `classes` and `styles` are applied 
 import createWidgetBase from 'dojo-widgets/createWidgetBase';
 
 const myBasicWidget = createWidgetBase({
-    state: {
+    properties: {
         id: 'my-widget',
         classes: [ 'class-a', 'class-b' ],
         styles: [ 'width:20px' ]
@@ -201,7 +214,7 @@ v(tag: string, children: (DNode | null)[]): HNode[];
 Creates an element with the `tagName` with `VNodeProperties` options and optional children specified by the array of `DNode`, `VNode`, `string` or `null` items.
 
 ```ts
-v(tag: string, options: VNodeProperties, children?: (DNode | null)[]): HNode[];
+v(tag: string, properties: VNodeProperties, children?: (DNode | null)[]): HNode[];
 ```
 
 ##### `registry`
@@ -248,7 +261,7 @@ Creates a dojo-widget using the `factory` and `options`.
 w(factory: string | ComposeFactory<W, O>, options: O): WNode[];
 ```
 
-Creates a dojo-widget using the `factory` and `options` and the `children`
+Creates a dojo-widget using the `factory`, `options` and `children`
 
 ```ts
 w(factory: string | ComposeFactory<W, O>, options: O, children: (DNode | null)[]): WNode[];
@@ -378,7 +391,7 @@ const projector = createProjector();
 
 projector.children = [
 	w(createTextInput, { id: 'textinput' }),
-	w(createButton, { id: 'button', state: { label: 'Button' } })
+	w(createButton, { id: 'button', properties: { label: 'Button' } })
 ];
 
 projector.append().then(() => {
@@ -400,7 +413,7 @@ const createApp = createProjector.mixin({
 		getChildrenNodes: function(this: Projector): DNode[] {
 			return [
 				w(createTextInput, { id: 'textinput' }),
-				w(createButton, { id: 'button', state: { label: 'Button' } })
+				w(createButton, { id: 'button', properties: { label: 'Button' } })
 			];
 		},
 		classes: [ 'main-app' ],

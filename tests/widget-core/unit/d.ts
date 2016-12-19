@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { WidgetState, WidgetOptions } from './../../src/interfaces';
+import { WidgetOptions, WidgetState, WidgetProperties } from './../../src/interfaces';
 import createWidgetBase from '../../src/createWidgetBase';
 import { v, w, registry } from '../../src/d';
 import FactoryRegistry from './../../src/FactoryRegistry';
@@ -18,23 +18,23 @@ registerSuite({
 	},
 	w: {
 		'create WNode wrapper'() {
-			const options: WidgetOptions<WidgetState> = { tagName: 'header', state: { hello: 'world' } };
+			const options: WidgetOptions<WidgetState, WidgetProperties> = { id: 'id', tagName: 'header', properties: { hello: 'world' }};
 			const dNode = w(createWidgetBase, options);
 			assert.deepEqual(dNode.factory, createWidgetBase);
-			assert.deepEqual(dNode.options, options);
+			assert.deepEqual(dNode.options, { id: 'id', tagName: 'header', properties: { hello: 'world' } });
 		},
 		'create WNode wrapper using a factory label'() {
 			registry.define('my-widget', createWidgetBase);
-			const options: WidgetOptions<WidgetState> = { tagName: 'header', state: { hello: 'world' } };
+			const options: WidgetOptions<WidgetState, WidgetProperties> = { id: 'id', tagName: 'header', properties: { hello: 'world' }};
 			const dNode = w('my-widget', options);
 			assert.deepEqual(dNode.factory, 'my-widget');
-			assert.deepEqual(dNode.options, options);
+			assert.deepEqual(dNode.options, { id: 'id', tagName: 'header', properties: { hello: 'world' } });
 		},
 		'create WNode wrapper with children'() {
-			const options: WidgetOptions<WidgetState> = { tagName: 'header', state: { hello: 'world' } };
+			const options: WidgetOptions<WidgetState, WidgetProperties> = { id: 'id', tagName: 'header', properties: { hello: 'world' }};
 			const dNode = w(createWidgetBase, options, [ w(createWidgetBase, options) ]);
 			assert.deepEqual(dNode.factory, createWidgetBase);
-			assert.deepEqual(dNode.options, options);
+			assert.deepEqual(dNode.options, { id: 'id', tagName: 'header', properties: { hello: 'world' } });
 			assert.lengthOf(dNode.children, 1);
 		}
 	},

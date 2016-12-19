@@ -8,9 +8,13 @@ export interface ButtonState extends WidgetState, FormFieldMixinState<string> {
 	label?: string;
 }
 
-export interface ButtonOptions extends WidgetOptions<ButtonState>, FormFieldMixinOptions<any, ButtonState> { }
+export interface ButtonProperties {
+	label: string;
+}
 
-export type Button = Widget<ButtonState> & FormFieldMixin<string, ButtonState>;
+export interface ButtonOptions extends WidgetOptions<ButtonState, ButtonProperties>, FormFieldMixinOptions<any, ButtonState> { }
+
+export type Button = Widget<ButtonState, ButtonProperties> & FormFieldMixin<string, ButtonState>;
 
 export interface ButtonFactory extends ComposeFactory<Button, ButtonOptions> { }
 

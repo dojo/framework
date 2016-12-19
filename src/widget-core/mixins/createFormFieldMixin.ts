@@ -3,7 +3,7 @@ import { ComposeFactory } from 'dojo-compose/compose';
 import createStateful from 'dojo-compose/bases/createStateful';
 import createCancelableEvent from 'dojo-compose/bases/createCancelableEvent';
 import { EventTargettedObject, EventCancelableObject, Handle } from 'dojo-interfaces/core';
-import { EventedListener, Stateful, State, StatefulOptions } from 'dojo-interfaces/bases';
+import { EventedListener, Stateful, StatefulOptions } from 'dojo-interfaces/bases';
 import { assign } from 'dojo-core/lang';
 import { NodeAttributeFunction } from './../interfaces';
 
@@ -19,7 +19,7 @@ export interface FormFieldMixinOptions<V, S extends FormFieldMixinState<V>> exte
 	value?: V;
 }
 
-export interface FormFieldMixinState<V> extends State {
+export interface FormFieldMixinState<V> {
 	/**
 	 * Whether the field is currently disabled or not
 	 */

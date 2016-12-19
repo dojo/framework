@@ -2,9 +2,9 @@ import { VNodeProperties } from 'dojo-interfaces/vdom';
 import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { NodeAttributeFunction } from './../interfaces';
 import createStateful from 'dojo-compose/bases/createStateful';
-import { State, Stateful, StatefulOptions } from 'dojo-interfaces/bases';
+import { Stateful, StatefulOptions } from 'dojo-interfaces/bases';
 
-export type CssTransitionMixinState = State & {
+export type CssTransitionMixinState = {
 	/**
 	 * The class of the CSS animation to be applied as the widget enters the dom
 	 */
