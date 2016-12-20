@@ -665,7 +665,7 @@ export const createQueryTransformResult: QueryTransformResultFactory = compose<Q
 		// in an incorrect update
 		let nextUpdate: StoreDelta<any> = (state.queuedUpdates.length && mapped) ? mergeDeltas(
 			mapped,
-			...state.queuedUpdates.splice(0).map((update) => localizeUpdate(state, update, mapped, updateIndex))
+			state.queuedUpdates.splice(0).map((update) => localizeUpdate(state, update, mapped, updateIndex))
 		) : {
 			adds: [],
 			updates: [],

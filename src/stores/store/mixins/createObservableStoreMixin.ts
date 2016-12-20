@@ -51,7 +51,7 @@ export interface StoreDelta<T> {
  */
 export function mergeDeltas<T>(
 	instance: { identify(items: T | T[]): string[] },
-	...deltas: StoreDelta<T>[]
+	deltas: StoreDelta<T>[]
 ): StoreDelta<T> {
 	const head = deltas[0] || {
 			updates: [],
@@ -170,7 +170,7 @@ export function mergeDeltas<T>(
 	}
 
 	if (deltas[1]) {
-		const tail = mergeDeltas(instance, ...deltas.slice(1));
+		const tail = mergeDeltas(instance, deltas.slice(1));
 		const { oldDeletes, newAdds, newUpdates } = convertReplacementToUpdate(head.deletes, tail.adds, tail.updates);
 		const oldUpdates = removeOutdatedItems(tail.deletes, head.updates);
 		const { newDeletes, oldAdds } = removeCancellingUpdates(tail.deletes, head.adds);
@@ -357,7 +357,7 @@ function sendUpdates<T, O extends CrudOptions, U extends UpdateResults<T>>(
 	after?: T[]
 ) {
 	const state = instanceStateMap.get(store);
-	const storeDelta = mergeDeltas(store, ...state.queuedUpdates.splice(0));
+	const storeDelta = mergeDeltas(store, state.queuedUpdates.splice(0));
 	after = after || addUpdateDelete(store, state, state.localData, storeDelta);
 
 	storeDelta.beforeAll = state.localData;
