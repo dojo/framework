@@ -509,7 +509,7 @@ registerSuite({
 			assert.deepEqual((<any> myWidget.state).items, [ 'a', 'b' ]);
 			myWidget.setState(<any> { items: [ 'a', 'b', 'c'] });
 			myWidget.__render__();
-			assert.deepEqual((<any> myWidget.state).items , [ 'a', 'b' ]);
+			assert.deepEqual((<any> myWidget.state).items , [ 'a', 'b', 'c' ]);
 		},
 		'__render__() and invalidate()'() {
 			const widgetBase = createWidgetBase({

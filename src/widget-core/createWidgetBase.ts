@@ -19,6 +19,7 @@ import Map from 'dojo-shim/Map';
 import { v, registry } from './d';
 import FactoryRegistry from './FactoryRegistry';
 import createVNodeEvented from './mixins/createVNodeEvented';
+import shallowPropertyComparisonMixin from './mixins/shallowPropertyComparisonMixin';
 
 interface WidgetInternalState {
 	children: DNode[];
@@ -230,18 +231,7 @@ const createWidget: WidgetFactory = createStateful
 			},
 
 			diffProperties(this: Widget<WidgetState, WidgetProperties>, previousProperties: any): string[] {
-				const changedPropertyKeys: string[] = [];
-				Object.keys(this.properties).forEach((key) => {
-					if (previousProperties.hasOwnProperty(key)) {
-						if (previousProperties[key] !== this.properties[key]) {
-							changedPropertyKeys.push(key);
-						}
-					}
-					else {
-						changedPropertyKeys.push(key);
-					}
-				});
-				return changedPropertyKeys;
+				return Object.keys(this.properties);
 			},
 
 			nodeAttributes: [
@@ -261,8 +251,7 @@ const createWidget: WidgetFactory = createStateful
 
 					return assign(baseIdProp, { key: this, classes, styles });
 				}
-
-		],
+			],
 
 			__render__(this: Widget<WidgetState, WidgetProperties>): VNode | string | null {
 				const internalState = widgetInternalStateMap.get(this);
@@ -312,6 +301,7 @@ const createWidget: WidgetFactory = createStateful
 				instance.invalidate();
 			}));
 		}
-	});
+	})
+	.mixin(shallowPropertyComparisonMixin);
 
 export default createWidget;
