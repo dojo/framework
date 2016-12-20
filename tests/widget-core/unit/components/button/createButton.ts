@@ -33,6 +33,16 @@ registerSuite({
 		assert.strictEqual(vnode.properties!['type'], 'button');
 		assert.lengthOf(vnode.children, 0);
 	},
+	'button without label'() {
+		const button = createButton({
+			properties: {
+				id: 'foo',
+				name: 'baz'
+			}
+		});
+		const vnode = <VNode> button.__render__();
+		assert.isUndefined(vnode.properties!.innerHTML);
+	},
 	disable() {
 		const button = createButton({
 			properties: {
