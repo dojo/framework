@@ -94,6 +94,13 @@ registerSuite({
 			widgetBase.properties = { id: 'id', foo: 'bar', bar: 'baz' };
 			const updatedKeys = widgetBase.diffProperties({ id: 'id', foo: 'bar' });
 			assert.lengthOf(updatedKeys, 1);
+		},
+		'updated / new properties with falsy values'() {
+			const widgetBase = createWidgetBase({ properties: { id: 'id', foo: 'bar' }});
+			widgetBase.properties = { id: 'id', foo: '', bar: null, baz: 0, qux: false };
+			const updatedKeys = widgetBase.diffProperties({ id: 'id', foo: 'bar' });
+			assert.lengthOf(updatedKeys, 4);
+			assert.deepEqual(updatedKeys, [ 'foo', 'bar', 'baz', 'qux']);
 		}
 	},
 	applyChangedProperties() {
@@ -468,6 +475,41 @@ registerSuite({
 			result = <VNode> widgetBase.__render__();
 			assert.equal(result!.children![0].properties!['foo'], 'baz');
 			assert.equal(result!.children![0].properties!['bar'], 'baz');
+		},
+		'__render__ with updated array properties'() {
+			const properties = {
+				items: [
+					'a', 'b'
+				]
+			};
+
+			const myWidget = createWidgetBase({ properties });
+			myWidget.__render__();
+			assert.deepEqual((<any> myWidget.state).items, [ 'a', 'b' ]);
+			properties.items.push('c');
+			myWidget.properties = properties;
+			myWidget.invalidate();
+			myWidget.__render__();
+			assert.deepEqual((<any> myWidget.state).items , [ 'a', 'b', 'c' ]);
+			properties.items.push('d');
+			myWidget.properties = properties;
+			myWidget.invalidate();
+			myWidget.__render__();
+			assert.deepEqual((<any> myWidget.state).items , [ 'a', 'b', 'c', 'd' ]);
+		},
+		'__render__ with internally updated array state'() {
+			const properties = {
+				items: [
+					'a', 'b'
+				]
+			};
+
+			const myWidget = createWidgetBase({ properties });
+			myWidget.__render__();
+			assert.deepEqual((<any> myWidget.state).items, [ 'a', 'b' ]);
+			myWidget.setState(<any> { items: [ 'a', 'b', 'c'] });
+			myWidget.__render__();
+			assert.deepEqual((<any> myWidget.state).items , [ 'a', 'b' ]);
 		},
 		'__render__() and invalidate()'() {
 			const widgetBase = createWidgetBase({

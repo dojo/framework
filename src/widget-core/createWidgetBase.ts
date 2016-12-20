@@ -12,7 +12,7 @@ import {
 	FactoryRegistryItem
 } from './interfaces';
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
-import { assign } from 'dojo-core/lang';
+import { deepAssign, assign } from 'dojo-core/lang';
 import WeakMap from 'dojo-shim/WeakMap';
 import Promise from 'dojo-shim/Promise';
 import Map from 'dojo-shim/Map';
@@ -232,7 +232,7 @@ const createWidget: WidgetFactory = createStateful
 			diffProperties(this: Widget<WidgetState, WidgetProperties>, previousProperties: any): string[] {
 				const changedPropertyKeys: string[] = [];
 				Object.keys(this.properties).forEach((key) => {
-					if (previousProperties[key]) {
+					if (previousProperties.hasOwnProperty(key)) {
 						if (previousProperties[key] !== this.properties[key]) {
 							changedPropertyKeys.push(key);
 						}
@@ -276,7 +276,7 @@ const createWidget: WidgetFactory = createStateful
 						internalState.cachedVNode = widget;
 					}
 					internalState.dirty = false;
-					internalState.previousProperties = this.properties;
+					internalState.previousProperties = deepAssign({}, this.properties);
 					return widget;
 				}
 				return internalState.cachedVNode;
@@ -299,7 +299,7 @@ const createWidget: WidgetFactory = createStateful
 				id,
 				dirty: true,
 				widgetClasses: [],
-				previousProperties: properties,
+				previousProperties: deepAssign({}, properties),
 				factoryRegistry: new FactoryRegistry(),
 				initializedFactoryMap: new Map<string, Promise<WidgetFactory>>(),
 				historicChildrenMap: new Map<string | Promise<WidgetFactory> | WidgetFactory, Widget<WidgetState, WidgetProperties>>(),
