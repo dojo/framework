@@ -1,6 +1,6 @@
 {
   "name": "dojo-stores",
-  "version": "2.0.0-alpha.7",
+  "version": "2.0.0-pre",
   "description": "A new data store in TypeScript",
   "engines": {
     "node": "^6.0.0",
