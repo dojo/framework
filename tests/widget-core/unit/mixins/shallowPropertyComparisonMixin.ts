@@ -70,6 +70,21 @@ registerSuite({
 			assert.lengthOf(updatedKeys, 1);
 			assert.deepEqual(updatedKeys, [ 'items' ]);
 		},
+		'array property updated to be empty'() {
+			const properties = {
+				id: 'id',
+				items: [
+					{ foo: 'bar' }
+				]
+			};
+			const updatedProperties = deepAssign({}, properties);
+			updatedProperties.items.pop();
+
+			(<any> shallowPropertyComparisonMixin.mixin).properties = updatedProperties;
+			const updatedKeys = shallowPropertyComparisonMixin.mixin.diffProperties(properties);
+			assert.lengthOf(updatedKeys, 1);
+			assert.deepEqual(updatedKeys, [ 'items' ]);
+		},
 		'array property with new object item'() {
 			const properties: any = {
 				id: 'id',

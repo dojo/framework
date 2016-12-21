@@ -19,10 +19,7 @@ function isObject(value: any) {
  * Shallow comparison of all keys on the objects
  */
 function shallowCompare(from: any, to: any) {
-	if (to) {
-		return Object.keys(from).every((key) => from[key] === to[key]);
-	}
-	return false;
+	return Object.keys(from).every((key) => from[key] === to[key]);
 }
 
 /**
@@ -42,22 +39,28 @@ const shallowPropertyComparisonMixin: { mixin: ShallowPropertyComparisonMixin } 
 			entries(this.properties).forEach(([key, value]) => {
 				let isEqual = true;
 				if (previousProperties.hasOwnProperty(key)) {
+					const previousValue = previousProperties[key];
 					if (!(typeof value === 'function')) {
-						if (Array.isArray(value)) {
-							isEqual = value.every((item: any, index: number) => {
-								if (isObject(item)) {
-									return shallowCompare(item, previousProperties[key][index]);
-								}
-								else {
-									return item === previousProperties[key][index];
-								}
-							});
+						if (Array.isArray(value) && Array.isArray(previousValue)) {
+							if (value.length !== previousValue.length) {
+								isEqual = false;
+							}
+							else {
+								isEqual = value.every((item: any, index: number) => {
+									if (isObject(item)) {
+										return shallowCompare(item, previousValue[index]);
+									}
+									else {
+										return item === previousValue[index];
+									}
+								});
+							}
 						}
-						else if (isObject(value)) {
-							isEqual = shallowCompare(value, previousProperties[key]);
+						else if (isObject(value) && isObject(previousValue)) {
+							isEqual = shallowCompare(value, previousValue);
 						}
 						else {
-							isEqual = value === previousProperties[key];
+							isEqual = value === previousValue;
 						}
 					}
 				}
