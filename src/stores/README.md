@@ -190,7 +190,7 @@ observableStore.observe().subscribe(function(update) {
 
 observableStore.observe('itemId').subscribe(function(update) {
 	// update will be the item itself
-}, null, function() {
+}, undefined, function() {
 	// completion callback will be called if the item is deleted
 });
 
@@ -199,7 +199,7 @@ observableStore.observe([ 'itemId', 'otherItemId' ]).subscribe(function() {
 	//   item: The updated or null if the item was deleted,
 	//   id: The id of the item
 	// }
-}, null, function() {
+}, undefined, function() {
 	// completion callback will be called if all items are deleted
 });
 
