@@ -34,7 +34,7 @@ export function timeout<T>(milliseconds: number, reason: Error): Identity<T> {
 		if (Date.now() - milliseconds > start) {
 			return Promise.reject<T>(reason);
 		}
-		return Promise.resolve<T>(value);
+		return Promise.resolve(value);
 	};
 }
 

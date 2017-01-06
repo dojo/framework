@@ -18,7 +18,7 @@ function unwrapPromises(iterable: Iterable<any> | any[]): any[] {
 }
 
 export type DictionaryOfPromises<T> = { [_: string]: T | Promise<T> | Thenable<T> };
-export type ListOfPromises<T> = Iterable<(T | Thenable<T>)> | (T | Thenable<T>);
+export type ListOfPromises<T> = Iterable<(T | Thenable<T>)>;
 
 /**
  * An extensible base to allow Promises to be extended in ES5. This class basically wraps a native Promise object,
@@ -42,10 +42,10 @@ export default class ExtensiblePromise<T> {
 	 *
 	 * @returns {ExtensiblePromise}
 	 */
-	static resolve(): any;
-	static resolve<T>(value: (T | Thenable<T>)): any;
-	static resolve<T>(value?: any): any {
-		return new this<T>((resolve, reject) => resolve(value));
+	static resolve<F extends ExtensiblePromise<void>>(): F;
+	static resolve<T, F extends ExtensiblePromise<T>>(value: (T | Thenable<T>)): F;
+	static resolve<T, F extends ExtensiblePromise<T>>(value?: any): F {
+		return <F> new this<T>((resolve, reject) => resolve(value));
 	}
 
 	/**
@@ -60,6 +60,8 @@ export default class ExtensiblePromise<T> {
 	 * @returns {ExtensiblePromise}
 	 */
 	static all<F extends ExtensiblePromise<{ [key: string]: T }>, T>(iterable: DictionaryOfPromises<T>): F;
+	static all<F extends ExtensiblePromise<T[]>, T>(iterable: (T | Thenable<T>)[]): F;
+	static all<F extends ExtensiblePromise<T[]>, T>(iterable: T | Thenable<T>): F;
 	static all<F extends ExtensiblePromise<T[]>, T>(iterable: ListOfPromises<T>): F;
 	static all<F extends ExtensiblePromise<any>, T>(iterable: DictionaryOfPromises<T> | ListOfPromises<T>): F {
 		if (!isArrayLike(iterable) && !isIterable(iterable)) {
@@ -124,8 +126,8 @@ export default class ExtensiblePromise<T> {
 	 *
 	 * @returns {ExtensiblePromise}
 	 */
-	catch<U>(onRejected: (reason: Error) => (U | Thenable<U>)): this;
-	catch<U>(onRejected: (reason: Error) => void): this {
+	catch(onRejected: (reason: Error) => T | Thenable<T> | void): ExtensiblePromise<T>;
+	catch<U>(onRejected: (reason: Error) => U | Thenable<U>): ExtensiblePromise<U> {
 		return this.then<U>(undefined, onRejected);
 	}
 
@@ -137,8 +139,9 @@ export default class ExtensiblePromise<T> {
 	 *
 	 * @returns {ExtensiblePromise}
 	 */
-	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => void): this;
-	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => (U | Thenable<U>)): this {
+	then<U, V>(onFulfilled: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected: (reason: Error) => (V | Thenable<V>)): ExtensiblePromise<U | V>;
+	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => void): ExtensiblePromise<U>;
+	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => (U | Thenable<U>)): ExtensiblePromise<U> {
 		const e: Executor<U> = (resolve, reject) => {
 			function handler(rejected: boolean, valueOrError: T | U | Error) {
 				const callback: ((value: T | U | Error) => (U | Thenable<U> | void)) | undefined = rejected ? onRejected : onFulfilled;
