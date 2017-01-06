@@ -448,9 +448,25 @@ registerSuite({
 			});
 		},
 		delete(this: any) {
-			const { store, data } = getStoreAndDfd(this, undefined, false);
+			const { store } = getStoreAndDfd(this, undefined, false);
 			return store.delete(ids).then(function(result) {
 				assert.deepEqual(result, ids, 'Should have returned all deleted ids');
+			});
+		}
+	},
+
+	'should have totalLength property on fetch results': {
+		'fetch all'(this: any) {
+			const { store } = getStoreAndDfd(this, undefined, false);
+			return store.fetch().totalLength.then((totalLength) => {
+				assert.equal(3, totalLength, 'Didn\'t return the correct total length');
+			});
+		},
+
+		'filtered fetch'(this: any) {
+			const { store } = getStoreAndDfd(this, undefined, false);
+			return store.fetch(createFilter<any>().lessThan('value', 2)).totalLength.then((totalLength) => {
+				assert.equal(3, totalLength, 'Didn\'t return the correct total length');
 			});
 		}
 	},

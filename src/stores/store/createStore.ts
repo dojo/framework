@@ -7,7 +7,7 @@ import compose, { ComposeFactory } from 'dojo-compose/compose';
 import { Observer, Observable } from 'dojo-core/Observable';
 import { diff, Patch, PatchMapEntry } from '../patch/createPatch';
 import _createStoreObservable, { StoreObservable } from './createStoreObservable';
-import createInMemoryStorage, { Storage } from '../storage/createInMemoryStorage';
+import createInMemoryStorage, { Storage, FetchResult } from '../storage/createInMemoryStorage';
 
 export const enum StoreOperation {
 	Add,
@@ -60,7 +60,7 @@ export interface Store<T, O extends CrudOptions, U extends UpdateResults<T>> {
 	put(items: T[] | T, options?: O): StoreObservable<T, U>;
 	patch(updates: PatchArgument<T>, options?: O): StoreObservable<T, U>;
 	delete(ids: string[] | string): StoreObservable<string, U>;
-	fetch(query?: Query<T>): Promise<T[]>;
+	fetch(query?: Query<T>): FetchResult<T>;
 }
 
 export interface StoreFactory extends ComposeFactory<Store<{}, {}, any>, StoreOptions<{}, {}>> {
@@ -189,9 +189,20 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 
 	fetch(this: Store<{}, {}, any>, query?: Query<{}>) {
 		const state = instanceStateMap.get(this);
-		return state.initialAddPromise.then(function() {
-			return state.storage.fetch(query);
+		let resolveTotalLength: (totalLength: number) => void;
+		let rejectTotalLength: (error: any) => void;
+		const totalLength = new Promise((resolve, reject) => {
+			resolveTotalLength = resolve;
+			rejectTotalLength = reject;
 		});
+		const fetchResult: FetchResult<{}> = <any> state.initialAddPromise.then(function() {
+			const result = state.storage.fetch(query);
+			result.totalLength.then(resolveTotalLength, rejectTotalLength);
+			return result;
+		});
+		fetchResult.totalLength = totalLength;
+
+		return fetchResult;
 	},
 
 	identify(this: Store<{}, {}, any>, items: {}[] | {}): any {

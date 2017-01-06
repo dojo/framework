@@ -8,10 +8,14 @@ import { Patch } from '../patch/createPatch';
 import { duplicate } from 'dojo-core/lang';
 import uuid from 'dojo-core/uuid';
 
+export interface FetchResult<T> extends Promise<T[]> {
+	totalLength: Promise<number>;
+}
+
 export interface Storage<T, O extends CrudOptions> {
 	identify(items: T[]|T): string[];
 	createId(): Promise<string>;
-	fetch(query?: Query<T>): Promise<T[]>;
+	fetch(query?: Query<T>): FetchResult<T>;
 	get(ids: string[]): Promise<T[]>;
 	put(items: T[], options?: O): Promise<UpdateResults<T>>;
 	add(items: T[], options?: O): Promise<UpdateResults<T>>;
@@ -101,13 +105,14 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 		return Promise.resolve(uuid());
 	},
 
-	fetch(this: Storage<{}, {}>, query?: Query<{}>): Promise<{}[]> {
+	fetch(this: Storage<{}, {}>, query?: Query<{}>): FetchResult<{}> {
 		const state = instanceStateMap.get(this);
 		const fullData = state.data;
 		const data = (query ? query.apply(fullData) : fullData).slice();
 		const returnPromise = state.returnsPromise.then(() => data);
 		state.returnsPromise = returnPromise;
-		return returnPromise;
+		(<any> returnPromise).totalLength = Promise.resolve(fullData.length);
+		return returnPromise as FetchResult<{}>;
 	},
 
 	get(this: Storage<{}, {}>, ids: string[]): Promise<{}[]> {
