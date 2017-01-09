@@ -23,7 +23,6 @@ import shallowPropertyComparisonMixin from './mixins/shallowPropertyComparisonMi
 
 interface WidgetInternalState {
 	children: DNode[];
-	readonly id: string;
 	dirty: boolean;
 	widgetClasses: string[];
 	cachedVNode?: VNode | string;
@@ -38,15 +37,6 @@ interface WidgetInternalState {
  * Internal state map for widget instances
  */
 const widgetInternalStateMap = new WeakMap<Widget<WidgetState, WidgetProperties>, WidgetInternalState>();
-
-/**
- * The counter for generating a unique ID
- */
-let widgetCount = 0;
-
-function generateID(instance: Widget<WidgetState, WidgetProperties>): string {
-	return `widget-${++widgetCount}`;
-}
 
 function isWNode(child: DNode): child is WNode {
 	return Boolean(child && (<WNode> child).factory !== undefined);
@@ -68,7 +58,8 @@ function dNodeToVNode(instance: Widget<WidgetState, WidgetProperties>, dNode: DN
 	}
 
 	if (isWNode(dNode)) {
-		const { children, options: { id, properties } } = dNode;
+		const { children, options: { properties = {} } } = dNode;
+		const { id } = properties;
 
 		let { factory } = dNode;
 		let child: Widget<WidgetState, WidgetProperties>;
@@ -156,7 +147,7 @@ function generateProperties(instance: Widget<WidgetState, WidgetProperties>, pre
 	};
 
 	changedPropertyKeys.forEach((key) => {
-		changedProperties.currentProperties[key] = instance.properties[key];
+		changedProperties.currentProperties[key] = (<any> instance.properties)[key];
 		if (previousProperties[key]) {
 			changedProperties.previousProperties[key] = previousProperties[key];
 		}
@@ -217,10 +208,8 @@ const createWidget: WidgetFactory = createStateful
 				});
 			},
 
-			get id(this: Widget<WidgetState, WidgetProperties>): string {
-				const { id } = widgetInternalStateMap.get(this);
-
-				return id;
+			get id(this: Widget<WidgetState, WidgetProperties>): string | undefined {
+				return this.properties.id;
 			},
 
 			applyChangedProperties: function(this: Widget<WidgetState, WidgetProperties>, previousProperties: WidgetProperties, currentProperties: WidgetProperties): void {
@@ -279,13 +268,11 @@ const createWidget: WidgetFactory = createStateful
 		},
 		initialize(instance: Widget<WidgetState, WidgetProperties>, options: WidgetOptions<WidgetState, { id?: string }> = {}) {
 			const { tagName, properties = {} } = options;
-			const id = properties.id || options.id || generateID(instance);
 
 			instance.properties = properties;
 			instance.tagName = tagName || instance.tagName;
 
 			widgetInternalStateMap.set(instance, {
-				id,
 				dirty: true,
 				widgetClasses: [],
 				previousProperties: deepAssign({}, properties),

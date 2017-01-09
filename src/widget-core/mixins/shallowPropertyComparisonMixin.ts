@@ -33,7 +33,7 @@ function shallowCompare(from: any, to: any) {
  */
 const shallowPropertyComparisonMixin: { mixin: ShallowPropertyComparisonMixin } = {
 	mixin: {
-		diffProperties<T extends WidgetProperties>(this: { properties: T }, previousProperties: T): string[] {
+		diffProperties<T extends WidgetProperties & { [index: string]: any }>(this: { properties: T }, previousProperties: T): string[] {
 			const changedPropertyKeys: string[] = [];
 
 			entries(this.properties).forEach(([key, value]) => {

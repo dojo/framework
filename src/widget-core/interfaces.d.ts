@@ -159,7 +159,7 @@ export interface WidgetMixin<P extends WidgetProperties> {
 	 * The ID of the widget, which gets automatically rendered in the VNode property `data-widget-id` when
 	 * rendered.
 	 */
-	readonly id: string;
+	readonly id: string | undefined;
 
 	/**
 	 * Signal to the widget that it is in an invalid state and that it should not re-use its cache on the
@@ -214,7 +214,8 @@ export interface WidgetOptions<S extends WidgetState, P extends WidgetProperties
 }
 
 export interface WidgetProperties {
-	[key: string]: any;
+	id?: string;
+	classes?: string[];
 }
 
 export interface WidgetState {

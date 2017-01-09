@@ -79,33 +79,33 @@ registerSuite({
 	},
 	diffProperties: {
 		'no updated properties'() {
-			const widgetBase = createWidgetBase({ properties: { id: 'id', foo: 'bar' }});
-			const updatedKeys = widgetBase.diffProperties({ id: 'id', foo: 'bar' });
+			const widgetBase = createWidgetBase({ properties: <any> { id: 'id', foo: 'bar' }});
+			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' });
 			assert.lengthOf(updatedKeys, 0);
 		},
 		'updated properties'() {
-			const widgetBase = createWidgetBase({ properties: { id: 'id', foo: 'bar' }});
-			widgetBase.properties = { id: 'id', foo: 'baz' };
-			const updatedKeys = widgetBase.diffProperties({ id: 'id', foo: 'bar' });
+			const widgetBase = createWidgetBase({ properties: <any> { id: 'id', foo: 'bar' }});
+			widgetBase.properties = <any> { id: 'id', foo: 'baz' };
+			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' });
 			assert.lengthOf(updatedKeys, 1);
 		},
 		'new properties'() {
-			const widgetBase = createWidgetBase({ properties: { id: 'id', foo: 'bar' }});
-			widgetBase.properties = { id: 'id', foo: 'bar', bar: 'baz' };
-			const updatedKeys = widgetBase.diffProperties({ id: 'id', foo: 'bar' });
+			const widgetBase = createWidgetBase({ properties: <any> { id: 'id', foo: 'bar' }});
+			widgetBase.properties = <any> { id: 'id', foo: 'bar', bar: 'baz' };
+			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' });
 			assert.lengthOf(updatedKeys, 1);
 		},
 		'updated / new properties with falsy values'() {
-			const widgetBase = createWidgetBase({ properties: { id: 'id', foo: 'bar' }});
-			widgetBase.properties = { id: 'id', foo: '', bar: null, baz: 0, qux: false };
-			const updatedKeys = widgetBase.diffProperties({ id: 'id', foo: 'bar' });
+			const widgetBase = createWidgetBase({ properties: <any> { id: 'id', foo: 'bar' }});
+			widgetBase.properties = <any> { id: 'id', foo: '', bar: null, baz: 0, qux: false };
+			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' });
 			assert.lengthOf(updatedKeys, 4);
 			assert.deepEqual(updatedKeys, [ 'foo', 'bar', 'baz', 'qux']);
 		}
 	},
 	applyChangedProperties() {
-		const widgetBase = createWidgetBase({ id: 'id' });
-		widgetBase.applyChangedProperties({}, { foo: 'bar' });
+		const widgetBase = createWidgetBase({ properties: { id: 'id' } });
+		widgetBase.applyChangedProperties({}, <any> { foo: 'bar' });
 		assert.equal((<any> widgetBase.state).foo, 'bar');
 		assert.equal(widgetBase.state.id, 'id');
 	},
@@ -239,7 +239,7 @@ registerSuite({
 			});
 			const createMyWidget = createWidgetBase.mixin({
 				mixin: {
-					getChildrenNodes: function(this: any) {
+					getChildrenNodes: function(this: any): DNode[] {
 						return [ w('my-header', {}) ];
 					}
 				},
@@ -533,14 +533,7 @@ registerSuite({
 		}
 	},
 	'id': {
-		'in options'() {
-			const widgetBase = createWidgetBase({
-				id: 'foo'
-			});
-
-			assert.strictEqual(widgetBase.id, 'foo');
-		},
-		'in state'() {
+		'in properties'() {
 			const widgetBase = createWidgetBase({
 				properties: {
 					id: 'foo'
@@ -549,20 +542,10 @@ registerSuite({
 
 			assert.strictEqual(widgetBase.id, 'foo');
 		},
-		'in options and properties'() {
-			const widgetBase = createWidgetBase({
-				id: 'foo',
-				properties: {
-					id: 'bar'
-				}
-			});
-
-			assert.strictEqual(widgetBase.id, 'bar');
-		},
-		'not in options or properties'() {
+		'not in properties'() {
 			const widgetBase = createWidgetBase();
 
-			assert.include(widgetBase.id, 'widget-');
+			assert.isUndefined(widgetBase.id);
 		},
 		'is read only'() {
 			const widgetBase = createWidgetBase();
