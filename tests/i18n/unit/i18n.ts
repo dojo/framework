@@ -40,7 +40,7 @@ registerSuite({
 			expected = navigator.language || navigator.userLanguage;
 		}
 		else if (has('host-node')) {
-			expected = global.process.env.LANG;
+			expected = process.env.LANG;
 		}
 
 		assert.strictEqual(systemLocale, expected.replace(/^([^.]+).*/, '$1').replace(/_/g, '-'));
@@ -110,7 +110,7 @@ registerSuite({
 		},
 
 		'assert unsupported locale'(this: any) {
-			const cached = getCachedMessages(bundle, 'bogus-locale');
+			const cached = getCachedMessages(bundle, 'un-SU-pported');
 			assert.deepEqual(cached, bundle.messages, 'Default messages returned for unsupported locale.');
 		},
 

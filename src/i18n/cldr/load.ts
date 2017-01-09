@@ -1,14 +1,20 @@
 // required for Globalize/Cldr to properly resolve locales in the browser.
-import 'cldr/unresolved';
+import 'cldrjs/dist/cldr/unresolved';
+import { Require } from 'dojo-interfaces/loader';
 import Map from 'dojo-shim/Map';
-import global from 'dojo-core/global';
 import load from 'dojo-core/load';
 import coreRequest, { Response } from 'dojo-core/request';
 import has from 'dojo-has/has';
 import Promise from 'dojo-shim/Promise';
-import * as Globalize from 'globalize/globalize';
+import * as Globalize from 'globalize';
 import supportedMain from './locales';
 import { generateLocales } from '../util';
+
+declare const require: Require;
+declare const define: {
+	(...args: any[]): any;
+	amd: any;
+};
 
 /**
  * Describes the form of an individual CLDR data object.
@@ -70,21 +76,21 @@ const getJson: (paths: string[]) => Promise<CldrData[]> = (function () {
 	if (has('host-node')) {
 		return function (paths: string[]): Promise<{}[]> {
 			paths = paths.map(path => path + '.json');
-			return load(global.require, ...paths);
+			return load(require, ...paths);
 		};
 	}
-	else if (typeof global.define === 'function' && global.define.amd) {
-		return function (paths: string[]): Promise<CldrData[]> {
-			return Promise.all(paths.map((path: string): Promise<CldrData> => {
-				return <Promise<CldrData>> coreRequest.get(global.require.toUrl(path) + '.json', {
-					responseType: 'json'
-				}).then((response: Response<CldrData>) => response.data as CldrData);
-			}));
-		};
-	}
-	else {
-		throw new Error('Unknown loader');
-	}
+
+	return function (paths: string[]): Promise<CldrData[]> {
+		return Promise.all(paths.map((path: string): Promise<CldrData> => {
+			if (typeof require.toUrl === 'function') {
+				path = require.toUrl(path);
+			}
+
+			return <Promise<CldrData>> coreRequest.get(`${path}.json`, {
+				responseType: 'json'
+			}).then((response: Response<CldrData>) => response.data as CldrData);
+		}));
+	};
 })();
 
 /**

@@ -56,18 +56,21 @@ export const loaderOptions = {
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' },
 		{ name: 'cldr-data', location: 'node_modules/cldr-data' },
-		{ name: 'cldr', location: 'node_modules/cldrjs/dist', main: 'cldr' },
+		{ name: 'cldrjs', location: 'node_modules/cldrjs' },
 		{ name: 'dojo-compose', location: 'node_modules/dojo-compose' },
 		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
 		{ name: 'dojo-has', location: 'node_modules/dojo-has' },
 		{ name: 'dojo-shim', location: 'node_modules/dojo-shim' },
-		{ name: 'globalize', location: 'node_modules/globalize/dist' },
+		{ name: 'globalize', location: 'node_modules/globalize', main: 'dist/globalize' },
 		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' }
 	],
-	paths: {
-		'cldr/event': 'node_modules/cldrjs/dist/cldr/event',
-		'cldr/supplemental': 'node_modules/cldrjs/dist/cldr/supplemental',
-		'cldr/unresolved': 'node_modules/cldrjs/dist/cldr/unresolved'
+	map: {
+		globalize: {
+			'cldr': 'cldrjs/dist/cldr',
+			'cldr/event': 'cldrjs/dist/cldr/event',
+			'cldr/supplemental': 'cldrjs/dist/cldr/supplemental',
+			'cldr/unresolved': 'cldrjs/dist/cldr/unresolved'
+		}
 	}
 };
 

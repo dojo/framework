@@ -4,11 +4,11 @@ import has from 'dojo-core/has';
 import global from 'dojo-core/global';
 import { assign } from 'dojo-core/lang';
 import load from 'dojo-core/load';
-import { Handle } from 'dojo-core/interfaces';
+import { Handle } from 'dojo-interfaces/core';
 import Map from 'dojo-shim/Map';
 import Observable, { Observer, Subscription, SubscriptionObserver } from 'dojo-shim/Observable';
 import Promise from 'dojo-shim/Promise';
-import * as Globalize from 'globalize/globalize/message';
+import * as Globalize from 'globalize/dist/globalize/message';
 import loadCldrData from './cldr/load';
 import { generateLocales, normalizeLocale } from './util';
 
@@ -62,7 +62,7 @@ export interface Messages {
 	[key: string]: string;
 }
 
-const PATH_SEPARATOR: string = has('host-node') ? global.require('path').sep : '/';
+const PATH_SEPARATOR: string = has('host-node') ? require('path').sep : '/';
 const VALID_PATH_PATTERN = new RegExp(PATH_SEPARATOR + '[^' + PATH_SEPARATOR + ']+$');
 const bundleMap = new Map<string, Map<string, Messages>>();
 const formatterMap = new Map<string, MessageFormatter>();
@@ -81,11 +81,19 @@ const loadLocaleBundles = (function () {
 	}
 
 	return function<T extends Messages>(paths: string[]): Promise<T[]> {
-		return load(global.require, ...paths).then((modules: LocaleModule<T>[]) => {
+		return load(<any> require, ...paths).then((modules: LocaleModule<T>[]) => {
 			return mapMessages(modules);
 		});
 	};
 })();
+
+/**
+ * @private
+ * Return the root locale. Defaults to the system locale.
+ */
+function getRootLocale(): string {
+	return rootLocale || systemLocale;
+}
 
 /**
  * @private
@@ -239,7 +247,7 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
  */
 export function getMessageFormatter(bundlePath: string, key: string, locale?: string): MessageFormatter {
 	const normalized = bundlePath.replace(/\//g, '-').replace(/-$/, '');
-	locale = normalizeLocale(locale || rootLocale || systemLocale);
+	locale = normalizeLocale(locale || getRootLocale());
 	const formatterKey = `${locale}:${bundlePath}:${key}`;
 	let formatter = formatterMap.get(formatterKey);
 
@@ -247,7 +255,7 @@ export function getMessageFormatter(bundlePath: string, key: string, locale?: st
 		return formatter;
 	}
 
-	const globalize = locale !== (rootLocale || systemLocale) ? new Globalize(normalizeLocale(locale)) : Globalize;
+	const globalize = locale !== getRootLocale() ? new Globalize(normalizeLocale(locale)) : Globalize;
 	formatter = globalize.messageFormatter(`${normalized}/${key}`);
 
 	const cached = bundleMap.get(bundlePath);
@@ -272,7 +280,7 @@ export function getMessageFormatter(bundlePath: string, key: string, locale?: st
 function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Promise<T> {
 	const { bundlePath, locales, messages } = bundle;
 	const path = bundlePath.replace(/\/$/, '');
-	const currentLocale = locale || rootLocale || systemLocale;
+	const currentLocale = locale ? normalizeLocale(locale) : getRootLocale();
 
 	try {
 		validatePath(path);
@@ -307,9 +315,7 @@ function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Promise<T
 }
 
 Object.defineProperty(i18n, 'locale', {
-	get() {
-		return rootLocale || systemLocale;
-	}
+	get: getRootLocale
 });
 
 export default i18n as I18n<Messages>;
@@ -370,8 +376,9 @@ export const observeLocale = (function () {
  * A promise that resolves when all data required for the current locale have loaded.
  */
 export function ready(): Promise<void> {
-	return loadCldrData(rootLocale, systemLocale).then(() => {
-		Globalize.locale(rootLocale || systemLocale);
+	const locale = getRootLocale();
+	return loadCldrData(locale).then(() => {
+		Globalize.locale(locale);
 	});
 }
 
@@ -383,7 +390,7 @@ export function ready(): Promise<void> {
  */
 export function switchLocale(locale: string): Promise<void> {
 	const previous = rootLocale;
-	rootLocale = normalizeLocale(locale);
+	rootLocale = locale ? normalizeLocale(locale) : '';
 
 	return ready().then(() => {
 		if (previous !== rootLocale) {
@@ -409,7 +416,7 @@ export const systemLocale: string = (function () {
 		systemLocale = navigator.language || navigator.userLanguage;
 	}
 	else if (has('host-node')) {
-		systemLocale = global.process.env.LANG;
+		systemLocale = process.env.LANG;
 	}
 	return normalizeLocale(systemLocale);
 })();

@@ -47,16 +47,16 @@ registerSuite({
 		},
 
 		'assert unsupported locale'() {
-			return loadCldrData('bogus').then(() => {
+			return loadCldrData('un-SU-pported').then(() => {
 				throw Error('Test should not pass with unsupported locale.');
 			}, (error) => {
-				assert.strictEqual(error.message, 'No CLDR data for locale: bogus.');
+				assert.strictEqual(error.message, 'No CLDR data for locale: un-SU-pported.');
 			});
 		},
 
 		'assert fallback used when locale not supported'() {
-			return loadCldrData('bogus', 'en').then((result: CldrDataResponse) => {
-				const first = (<any> result['bogus'][0]).main;
+			return loadCldrData('un-SU-pported', 'en').then((result: CldrDataResponse) => {
+				const first = (<any> result['un-SU-pported'][0]).main;
 				assert(first['en'], 'Data for fallback are returned.');
 			}, (error) => {
 				throw new Error('Test should not fail when a supported fallback locale is provided.');

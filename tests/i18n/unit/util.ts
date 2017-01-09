@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { generateLocales, normalizeLocale } from '../../src/util';
+import { generateLocales, normalizeLocale, validateLocale } from '../../src/util';
 
 registerSuite({
 	name: 'util',
@@ -34,5 +34,33 @@ registerSuite({
 		assert.strictEqual(normalizeLocale('en-.UTF8'), 'en', 'Trailing hyphens are removed.');
 		assert.strictEqual(normalizeLocale('en_'), 'en', 'Trailing underscores are removed.');
 		assert.strictEqual(normalizeLocale('en_.UTF8'), 'en', 'Trailing underscores are removed.');
+
+		const validLocales = [ 'de', 'de-', 'deu', 'deu-', 'de-DE', 'de-DE-', 'deu-DE', 'deu-DE-', 'de-DE-bavarian',
+			'de-DE-bavarian-', 'deu-DE-bavarian', 'deu-DE-bavarian-', 'en-001', 'en-x-custom_value' ];
+		const invalidLocales = [ 'd', 'deut', 'de2', '@!4' ];
+
+		validLocales.forEach((locale: string) => {
+			assert.doesNotThrow(() => {
+				normalizeLocale(locale);
+			});
+		});
+		invalidLocales.forEach((locale: string) => {
+			assert.throws(() => {
+				normalizeLocale(locale);
+			}, Error, `${locale} is not a valid locale.`);
+		});
+	},
+
+	validateLocale() {
+		const validLocales = [ 'de', 'deu', 'de-DE', 'deu-DE', 'de-DE-bavarian', 'deu-DE-bavarian',
+			'en-001', 'en-x-custom_value' ];
+		const invalidLocales = [ 'd', 'deut', 'de2', '@!4' ];
+
+		validLocales.forEach((locale: string) => {
+			assert.isTrue(validateLocale(locale));
+		});
+		invalidLocales.forEach((locale: string) => {
+			assert.isFalse(validateLocale(locale));
+		});
 	}
 });
