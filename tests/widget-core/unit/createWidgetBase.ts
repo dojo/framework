@@ -79,35 +79,35 @@ registerSuite({
 	},
 	diffProperties: {
 		'no updated properties'() {
-			const widgetBase = createWidgetBase({ properties: <any> { id: 'id', foo: 'bar' }});
-			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' });
+			const properties = { id: 'id', foo: 'bar' };
+			const widgetBase = createWidgetBase();
+			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' }, properties);
 			assert.lengthOf(updatedKeys, 0);
 		},
 		'updated properties'() {
-			const widgetBase = createWidgetBase({ properties: <any> { id: 'id', foo: 'bar' }});
-			widgetBase.properties = <any> { id: 'id', foo: 'baz' };
-			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' });
+			const widgetBase = createWidgetBase();
+			const properties = { id: 'id', foo: 'baz' };
+			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' }, properties);
 			assert.lengthOf(updatedKeys, 1);
 		},
 		'new properties'() {
-			const widgetBase = createWidgetBase({ properties: <any> { id: 'id', foo: 'bar' }});
-			widgetBase.properties = <any> { id: 'id', foo: 'bar', bar: 'baz' };
-			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' });
+			const widgetBase = createWidgetBase();
+			const properties = { id: 'id', foo: 'bar', bar: 'baz' };
+			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' }, properties);
 			assert.lengthOf(updatedKeys, 1);
 		},
 		'updated / new properties with falsy values'() {
-			const widgetBase = createWidgetBase({ properties: <any> { id: 'id', foo: 'bar' }});
-			widgetBase.properties = <any> { id: 'id', foo: '', bar: null, baz: 0, qux: false };
-			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' });
+			const widgetBase = createWidgetBase();
+			const properties = { id: 'id', foo: '', bar: null, baz: 0, qux: false };
+			const updatedKeys = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' }, properties);
 			assert.lengthOf(updatedKeys, 4);
 			assert.deepEqual(updatedKeys, [ 'foo', 'bar', 'baz', 'qux']);
 		}
 	},
-	applyChangedProperties() {
-		const widgetBase = createWidgetBase({ properties: { id: 'id' } });
-		widgetBase.applyChangedProperties({}, <any> { foo: 'bar' });
+	onPropertiesChanged() {
+		const widgetBase = createWidgetBase();
+		widgetBase.onPropertiesChanged(<any> { foo: 'bar' }, [ 'foo' ]);
 		assert.equal((<any> widgetBase.state).foo, 'bar');
-		assert.equal(widgetBase.state.id, 'id');
 	},
 	getChildrenNodes: {
 		'getChildrenNodes with no ChildNodeRenderers'() {
@@ -484,17 +484,12 @@ registerSuite({
 			};
 
 			const myWidget = createWidgetBase({ properties });
-			myWidget.__render__();
 			assert.deepEqual((<any> myWidget.state).items, [ 'a', 'b' ]);
 			properties.items.push('c');
-			myWidget.properties = properties;
-			myWidget.invalidate();
-			myWidget.__render__();
+			myWidget.setProperties(properties);
 			assert.deepEqual((<any> myWidget.state).items , [ 'a', 'b', 'c' ]);
 			properties.items.push('d');
-			myWidget.properties = properties;
-			myWidget.invalidate();
-			myWidget.__render__();
+			myWidget.setProperties(properties);
 			assert.deepEqual((<any> myWidget.state).items , [ 'a', 'b', 'c', 'd' ]);
 		},
 		'__render__ with internally updated array state'() {
