@@ -77,9 +77,9 @@ registerSuite({
 				[ { key1: null, id: 1 }, { key1: null, id: 2 }, { key1: null, id: 3 } ]);
 		},
 		'sort with partially null property value': function() {
-			const list = [ { key1: null, id: 1 }, { key1: 'a', id: 2 }, { key1: null, id: 3 } ];
-			assert.deepEqual(createSort<{ key1: null | string; id: number }>('key1').apply(list),
-				[ { key1: null, id: 1 }, { key1: null, id: 3 }, { key1: 'a', id: 2 } ]);
+			const list = [ { key1: null, id: 1 }, { key1: 'a', id: 2 }, { key1: undefined, id: 3 } ];
+			assert.deepEqual(createSort<{ key1: undefined | null | string; id: number }>('key1').apply(list),
+				[ { key1: undefined, id: 3 }, { key1: null, id: 1 }, { key1: 'a', id: 2 } ]);
 		},
 		'sort with undefined property value': function() {
 			const sameKeyList = getSimpleList().map( function({ id }) { return {
@@ -124,6 +124,11 @@ registerSuite({
 			assert.throws(function() {
 				sort.toString();
 			}, /Cannot parse this sort type to an RQL query string/);
+		},
+
+		'Should print JSON pointer.'(this: any) {
+			const result = createSort<SimpleObj>(createJsonPointer('key1', 'key2')).toString();
+			assert.strictEqual(result, 'Sort(key1/key2, +)');
 		}
 	}
 });

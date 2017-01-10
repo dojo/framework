@@ -1,5 +1,5 @@
 import { Query, QueryType } from './interfaces';
-import createJsonPointer, { JsonPointer, navigate } from '../patch/createJsonPointer';
+import { JsonPointer, navigate } from '../patch/createJsonPointer';
 
 export interface Sort<T> extends Query<T> {
 	readonly comparatorOrProperty: ((a: T, b: T) => number) | string | JsonPointer;
@@ -20,17 +20,19 @@ function createSort<T>(
 	else {
 		let pointer: JsonPointer;
 		if (typeof comparatorOrProperty === 'string') {
-			pointer = createJsonPointer(comparatorOrProperty);
+			comparator = function(a: T, b: T) {
+				return sortValue((<any> a)[comparatorOrProperty], (<any> b)[comparatorOrProperty], Boolean(descending));
+			};
 		}
 		else {
 			pointer = <JsonPointer> comparatorOrProperty;
+			comparator = function(a: T, b: T) {
+				return sortValue(navigate(pointer, a), navigate(pointer, b), Boolean(descending));
+			};
 		}
-		comparator = function(a: T, b: T) {
-			return sortValue(navigate(pointer, a), navigate(pointer, b));
-		};
 	}
 
-	if (descending) {
+	if (descending && isFunction) {
 		comparator = flip(comparator);
 	}
 	return {
@@ -60,25 +62,19 @@ function serialize(sort: Sort<any>) {
 	return `Sort(${sort.comparatorOrProperty}, ${sort.descending ? '-' : '+'})`;
 }
 // the `a == null` check returns `true` when a is `null` or `undefined`.
-function sortValue(a: any, b: any) {
+function sortValue(a: any, b: any, descending: boolean) {
 	let comparison: number;
-	if (a == null && b == null) {
+	a != null && (a = a.valueOf());
+	b != null && (b = b.valueOf());
+	if (a === b) {
 		comparison = 0;
-	}
-	else if (a == null && b != null) {
-		comparison = -1;
-	}
-	else if (b == null && a != null) {
-		comparison = 1;
-	}
-	else if (a < b) {
-		comparison = -1;
-	}
-	else if (a > b) {
-		comparison = 1;
 	}
 	else {
-		comparison = 0;
+		// undefined < null < defined
+		const isALessThanB = typeof a === 'undefined' ||
+			a === null && typeof b !== 'undefined' ||
+			b != null && a < b;
+		comparison = descending === isALessThanB ? 1 : -1;
 	}
 	return comparison;
 }
