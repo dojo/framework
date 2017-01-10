@@ -664,7 +664,9 @@ registerSuite({
 				return Promise.reject(Error('Patch failed'));
 			},
 			fetch() {
-				return Promise.reject(Error('Fetch failed'));
+				const rejected = Promise.reject(Error('Fetch failed'));
+				(<any> rejected).totalLength = Promise.resolve(0);
+				return rejected;
 			}
 		};
 		const observableStore = createObservableStore({

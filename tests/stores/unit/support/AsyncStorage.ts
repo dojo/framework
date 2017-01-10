@@ -35,16 +35,20 @@ const createAsyncStorage = createInMemoryStorage.mixin({
 				return function(this: any, ...args: any[]) {
 					let resolveTotalLength: (totalLength: number) => void;
 					let rejectTotalLength: (error: any) => void;
-					const totalLength = new Promise((reject, resolve) => {
+					const totalLength = new Promise((resolve, reject) => {
 						resolveTotalLength = resolve;
 						rejectTotalLength = reject;
 					});
 					const returnPromise = delayed.bind(this, ...args)();
 					returnPromise.totalLength = totalLength;
-					returnPromise.then((result: any) => {
-						result.totalLength.then(resolveTotalLength, rejectTotalLength);
-						return result;
-					});
+					delayed.bind(this)().then(
+						(fullResults: any) => {
+							resolveTotalLength(fullResults.length);
+						},
+						(error: any) => {
+							rejectTotalLength(error);
+						}
+					);
 					return returnPromise;
 				};
 			},
