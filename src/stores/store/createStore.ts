@@ -228,7 +228,9 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 	};
 	instanceStateMap.set(instance, instanceState);
 	if (data) {
-		instanceState.initialAddPromise = instance.add(data).then(undefined, () => {});
+		instanceState.initialAddPromise = instance.add(data).catch((error) => {
+			console.error(error);
+		});
 	}
 
 });

@@ -494,12 +494,13 @@ registerSuite({
 		},
 		'failed initial add should not prevent subsequent operations'(this: any) {
 			let fail = true;
+			const stub = sinon.stub(console, 'error');
 			const asyncStorage = createAsyncStorage
 				.around('add', function(add: () => Promise<ItemType>) {
 					return function(this: any) {
 						if (fail) {
 							fail = false;
-							return Promise.reject(Error('Error'));
+							return Promise.reject(Error('error'));
 						}
 						else {
 							return add.apply(this, arguments);
@@ -514,6 +515,9 @@ registerSuite({
 
 			return store.add(data).then(function() {
 				return store.get(['item-1', 'item-2', 'item-3']).then(function(items) {
+					assert.isTrue(stub.calledOnce);
+					assert.equal('error', stub.args[0][0].message, 'Didn\'t log expected error');
+					stub.restore();
 					assert.isFalse(fail, 'Didn\'t fail for first operation');
 					assert.deepEqual(items, data, 'Didn\'t retrieve items from add following failed initial add');
 				});

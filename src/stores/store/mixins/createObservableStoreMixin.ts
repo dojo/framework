@@ -578,16 +578,20 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 				 */
 				fetch(this: ObservableStore<T, O, U>, result: Promise<T[]>, query?: Query<T>) {
 					if (!query) {
-						result.then((data) => {
-							const state = instanceStateMap.get(this);
-							if (result !== state.initialFetch) {
-								sendUpdates(this, data);
-							}
-							else {
-								state.localData = data;
-								state.localIndex = buildIndex(this.identify(data));
-							}
-						});
+						result.then(
+							(data) => {
+								const state = instanceStateMap.get(this);
+								if (result !== state.initialFetch) {
+									sendUpdates(this, data);
+								}
+								else {
+									state.localData = data;
+									state.localIndex = buildIndex(this.identify(data));
+								}
+							},
+							// Ignore errors here, they should be handled by the caller not observers
+							() => {}
+						);
 					}
 					return result;
 				},
@@ -599,11 +603,15 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 				 * @returns {StoreObservable<T, any>}
 				 */
 				put(this: ObservableStore<T, O, U>, result: StoreObservable<T, any>) {
-					result.then((updatedItems: T[]) => {
-						const state = instanceStateMap.get(this);
-						notifyItemObservers(updatedItems, [], state, this);
-						sendUpdatesOrFetch(state, this, updatedItems, [], []);
-					});
+					result.then(
+						(updatedItems: T[]) => {
+							const state = instanceStateMap.get(this);
+							notifyItemObservers(updatedItems, [], state, this);
+							sendUpdatesOrFetch(state, this, updatedItems, [], []);
+						},
+						// Ignore errors here, they should be handled by the caller not observers
+						() => {}
+					);
 					return result;
 				},
 
@@ -614,11 +622,15 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 				 * @returns {StoreObservable<T, any>}
 				 */
 				patch(this: ObservableStore<T, O, U>, result: StoreObservable<T, U>) {
-					result.then((updatedItems: T[]) => {
-						const state = instanceStateMap.get(this);
-						notifyItemObservers(updatedItems, [], state, this);
-						sendUpdatesOrFetch(state, this, updatedItems, [], []);
-					});
+					result.then(
+						(updatedItems: T[]) => {
+							const state = instanceStateMap.get(this);
+							notifyItemObservers(updatedItems, [], state, this);
+							sendUpdatesOrFetch(state, this, updatedItems, [], []);
+						},
+						// Ignore errors here, they should be handled by the caller not observers
+						() => {}
+					);
 					return result;
 				},
 
@@ -634,12 +646,16 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 				add(this: ObservableStore<T, O, U>, result: StoreObservable<T, U>) {
 					const isFirstAdd = !instanceStateMap.get(this);
 
-					result.then((addedItems: T[]) => {
-						const state = instanceStateMap.get(this);
-						if (!isFirstAdd || !state.fetchAroundUpdates) {
-							sendUpdatesOrFetch(state, this, [], addedItems, []);
-						}
-					});
+					result.then(
+						(addedItems: T[]) => {
+							const state = instanceStateMap.get(this);
+							if (!isFirstAdd || !state.fetchAroundUpdates) {
+								sendUpdatesOrFetch(state, this, [], addedItems, []);
+							}
+						},
+						// Ignore errors here, they should be handled by the caller not observers
+						() => {}
+					);
 					return result;
 				},
 
@@ -657,27 +673,31 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 				 * @returns {StoreObservable<string, any>}
 				 */
 				delete(this: ObservableStore<T, O, U>, result: StoreObservable<string, any>, ids: string | string[]) {
-					result.then((deleted: string[]) => {
-						const state = instanceStateMap.get(this);
-						notifyItemObservers(null, deleted, state, this);
-						deleted.forEach(function(id: string) {
-							if (state.itemObservers.has(id)) {
-								state.itemObservers.get(id)!.forEach(function(observerOrEntry) {
-									if (isObserver(observerOrEntry)) {
-										observerOrEntry.complete();
-									}
-									else {
-										observerOrEntry.observes.delete(id);
-										if (!observerOrEntry.observes.size) {
-											observerOrEntry.observer.complete();
+					result.then(
+						(deleted: string[]) => {
+							const state = instanceStateMap.get(this);
+							notifyItemObservers(null, deleted, state, this);
+							deleted.forEach(function(id: string) {
+								if (state.itemObservers.has(id)) {
+									state.itemObservers.get(id)!.forEach(function(observerOrEntry) {
+										if (isObserver(observerOrEntry)) {
+											observerOrEntry.complete();
 										}
-									}
-								});
-								state.itemObservers.delete(id);
-							}
-						});
-						sendUpdatesOrFetch(state, this, [], [], deleted);
-					});
+										else {
+											observerOrEntry.observes.delete(id);
+											if (!observerOrEntry.observes.size) {
+												observerOrEntry.observer.complete();
+											}
+										}
+									});
+									state.itemObservers.delete(id);
+								}
+							});
+							sendUpdatesOrFetch(state, this, [], [], deleted);
+						},
+						// Ignore errors here, they should be handled by the caller not observers
+						() => {}
+					);
 					return result;
 				}
 			}

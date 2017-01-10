@@ -8,6 +8,7 @@ import { CrudOptions, UpdateResults } from '../../../../src/store/createStore';
 import createAsyncStorage from '../../support/AsyncStorage';
 import createInMemoryStorage from '../../../../src/storage/createInMemoryStorage';
 import Set from 'dojo-shim/Set';
+import Promise from 'dojo-shim/Promise';
 
 function getStoreAndDfd(test: any) {
 	const dfd = test.async(1000);
@@ -647,6 +648,70 @@ registerSuite({
 			}
 		};
 	})(),
+
+	'ignore errors in observable mixin but propagate back to caller'(this: any) {
+		const failingStorage: any = {
+			add() {
+				return Promise.reject(Error('Add failed'));
+			},
+			delete() {
+				return Promise.reject(Error('Delete failed'));
+			},
+			put() {
+				return Promise.reject(Error('Put failed'));
+			},
+			patch() {
+				return Promise.reject(Error('Patch failed'));
+			},
+			fetch() {
+				return Promise.reject(Error('Fetch failed'));
+			}
+		};
+		const observableStore = createObservableStore({
+			storage: failingStorage
+		});
+
+		return observableStore.add(createData()).then(
+			() => {
+				throw Error('Promise should not have resolved for add');
+			},
+			(error) => {
+				assert.equal('Add failed', error.message, 'Wrong error message');
+				return observableStore.delete('1');
+			}
+		).then(
+			() => {
+				throw Error('Promise should not have resolved for delete');
+			},
+			(error) => {
+				assert.equal('Delete failed', error.message, 'Wrong error message');
+				return observableStore.put(createData());
+			}
+		).then(
+			() => {
+				throw Error('Promise should not have resolved for put');
+			},
+			(error) => {
+				assert.equal('Put failed', error.message, 'Wrong error message');
+				return observableStore.patch(patches);
+			}
+		).then(
+			() => {
+				throw Error('Promise should not have resolved for patch');
+			},
+			(error) => {
+				assert.equal('Patch failed', error.message, 'Wrong error message');
+				return observableStore.fetch();
+			}
+		).then(
+			() => {
+				throw Error('Promise should not have resolved for fetch');
+			},
+			(error) => {
+				assert.equal('Fetch failed', error.message, 'Wrong error message');
+			}
+		);
+	},
 
 	'async storage': {
 		'filtered subcollection async operations should be done in the order specified by the user.'(this: any) {
