@@ -9,6 +9,7 @@ import createSort, { Sort } from '../query/createSort';
 import createCompoundQuery from '../query/createCompoundQuery';
 import Promise from 'dojo-shim/Promise';
 import Map from 'dojo-shim/Map';
+import Set from 'dojo-shim/Set';
 import WeakMap from 'dojo-shim/WeakMap';
 import { debounce } from 'dojo-core/util';
 import { isFilter, isSort } from './mixins/createQueryTransformMixin';
@@ -107,7 +108,11 @@ export interface QueryTransformState<T, S extends ObservableStore<any, any, any>
 	/**
 	 * Updates ready to be send after the next fetch
 	 */
-	queuedUpdates: StoreDelta<T>[];
+	queuedUpdate?: StoreDelta<T>;
+	/**
+	 * Keeps track of new item IDs as updates are being queued
+	 */
+	currentUpdateIndex: Set<string>;
 	/**
 	 * Promise tracking the initial fetch if we are tracking and are not fetchingAroundUpdates
 	 */
@@ -437,7 +442,7 @@ function queryAndTransformData<T>(
  * updates. If updates are processed in a batch, an item might be added in one, and then removed in a later update. The
  * newly added item will not yet be represented in the local data because the update needs to be localized before it
  * can be used to update the local data. A single map can be passed as the currentUpdateIndex in multiple calls to
- * localizeUpdate, and can then server as a signal that even though a deleted ID isn't in the local index it is still
+ * localizeUpdate, and can then serve as a signal that even though a deleted ID isn't in the local index it is still
  * a relevant update
  * @param state
  * @param update
@@ -449,14 +454,14 @@ function localizeUpdate<T, S extends ObservableStore<T, any, any>>(
 	state: QueryTransformState<T, S>,
 	update: StoreDelta<T>,
 	instance?: MappedQueryTransformResult<T, any>,
-	currentUpdateIndex?: Map<string, any>
+	currentUpdateIndex?: Set<string>
 ) {
 
 	// Don't apply range queries, sorts, etc. to adds and updates, because those don't make sense in that context
 	const adds = queryAndTransformData(state.queriesAndTransformations, update.adds,  undefined, undefined, true, true);
 	const updates = queryAndTransformData(state.queriesAndTransformations, update.updates, instance, state, true, true);
 	if (instance && currentUpdateIndex) {
-		instance.identify(adds.concat(updates)).map((id) => currentUpdateIndex.set(id, null));
+		instance.identify(adds.concat(updates)).map((id) => currentUpdateIndex.add(id));
 	}
 	const deletes = update.deletes.filter((id) =>
 		state.localIndex.has(id) || currentUpdateIndex && currentUpdateIndex.has(id)
@@ -560,7 +565,13 @@ export const createQueryTransformResult: QueryTransformResultFactory = compose<Q
 								state.localIndex = newIndex;
 							}
 							else {
-								state.queuedUpdates.push(update);
+								// Combine batched updates, use `currentUpdateIndex` to make sure deletes of items added and then deleted within
+								// the span of the queued updates are not lost. These will be cancelled out by mergeDeltas, but both need
+								// to be there to properly get cancelled out, otherwise the delete gets removed and the add survives, resulting
+								// in an incorrect update
+								update = localizeUpdate(state, update, mapped, state.currentUpdateIndex);
+								state.queuedUpdate = state.queuedUpdate ?
+									mergeDeltas(mapped, state.queuedUpdate, update) : update;
 								// Unfortunately if we have a non-incremental query and we are tracking, we will need to fetch
 								// after each update. This is debounced to avoid rapidly issuing fetch requests in the case that a
 								// series of updates are received in a short amount of time.
@@ -658,21 +669,15 @@ export const createQueryTransformResult: QueryTransformResultFactory = compose<Q
 
 		const mapped: MappedQueryTransformResult<any, any> | undefined = isMapped(this) ?
 			this as MappedQueryTransformResult<any, any> : undefined;
-		const updateIndex = new Map<string, any>();
-		// Combine batched updates, use `updateIndex` to make sure deletes of items added and then deleted within
-		// the span of the queued updates are not lost. These will be cancelled out by mergeDeltas, but both need
-		// to be there to property get cancelled out, otherwise the delete gets removed and the add survives, resulting
-		// in an incorrect update
-		let nextUpdate: StoreDelta<any> = (state.queuedUpdates.length && mapped) ? mergeDeltas(
-			mapped,
-			state.queuedUpdates.splice(0).map((update) => localizeUpdate(state, update, mapped, updateIndex))
-		) : {
+		let nextUpdate: StoreDelta<any> = (state.queuedUpdate && mapped) ? state.queuedUpdate : {
 			adds: [],
 			updates: [],
 			deletes: [],
 			beforeAll: [],
 			afterAll: []
 		};
+		state.currentUpdateIndex.clear();
+		state.queuedUpdate = undefined;
 
 		const resultsPromise = state.source.fetch(firstQuery).then((newData: any[]) => {
 			// If this is mapped or there is no parent query we should apply the query transform result's own queries
@@ -787,10 +792,10 @@ export const createQueryTransformResult: QueryTransformResultFactory = compose<Q
 		queriesAndTransformations: options.queriesAndTransformations,
 		isTracking: options.isTracking,
 		trackingFetchDelay: options.trackingFetchDelay,
+		currentUpdateIndex: new Set<string>(),
 		fetchAndSendUpdates: debounce((instance: QueryTransformResult<any, any>) => {
 			instance.fetch();
 		}, options.trackingFetchDelay || 20),
-		queuedUpdates: [],
 		fetchAroundUpdates: options.fetchAroundUpdates
 	};
 	instanceStateMap.set(instance, state);

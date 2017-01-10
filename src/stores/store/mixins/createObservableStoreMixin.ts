@@ -46,21 +46,15 @@ export interface StoreDelta<T> {
  * 	- Checks for adds followed by deletes and removes both
  * 	- Checks for updates followed by deletes and removes the update
  * @param instance The instance that can identify these items
- * @param deltas The deltas to merge
+ * @param currentUpdate The current store delta
+ * @param newUpdate The new update to merge
  * @returns The merged delta
  */
 export function mergeDeltas<T>(
 	instance: { identify(items: T | T[]): string[] },
-	deltas: StoreDelta<T>[]
+	currentUpdate: StoreDelta<T>,
+	newUpdate: StoreDelta<T>
 ): StoreDelta<T> {
-	const head = deltas[0] || {
-			updates: [],
-			adds: [],
-			deletes: [],
-			beforeAll: [],
-			afterAll: []
-		};
-
 	/**
 	 * Takes the last instance of an item repeated in the list
 	 * @param items Added or updated items
@@ -169,22 +163,18 @@ export function mergeDeltas<T>(
 		};
 	}
 
-	if (deltas[1]) {
-		const tail = mergeDeltas(instance, deltas.slice(1));
-		const { oldDeletes, newAdds, newUpdates } = convertReplacementToUpdate(head.deletes, tail.adds, tail.updates);
-		const oldUpdates = removeOutdatedItems(tail.deletes, head.updates);
-		const { newDeletes, oldAdds } = removeCancellingUpdates(tail.deletes, head.adds);
-		return {
-			updates: takeLastItem([ ...oldUpdates, ...newUpdates ]),
-			adds: takeLastItem([ ...oldAdds, ...newAdds ]),
-			deletes: takeLastId([ ...oldDeletes, ...newDeletes ]),
-			beforeAll: head.beforeAll,
-			afterAll: tail.afterAll
-		};
-	}
-	else {
-		return head;
-	}
+	const { oldDeletes, newAdds, newUpdates } = convertReplacementToUpdate(
+		currentUpdate.deletes, newUpdate.adds, newUpdate.updates
+	);
+	const oldUpdates = removeOutdatedItems(newUpdate.deletes, currentUpdate.updates);
+	const { newDeletes, oldAdds } = removeCancellingUpdates(newUpdate.deletes, currentUpdate.adds);
+	return {
+		updates: takeLastItem([ ...oldUpdates, ...newUpdates ]),
+		adds: takeLastItem([ ...oldAdds, ...newAdds ]),
+		deletes: takeLastId([ ...oldDeletes, ...newDeletes ]),
+		beforeAll: currentUpdate.beforeAll,
+		afterAll: newUpdate.afterAll
+	};
 }
 
 /**
@@ -259,7 +249,7 @@ export interface ObservableStoreState<T> {
 	/**
 	 * Updates currently waiting to be merged and sent
 	 */
-	queuedUpdates: StoreDelta<T>[];
+	queuedUpdate?: StoreDelta<T>;
 	/**
 	 * The latest local data
 	 */
@@ -357,7 +347,14 @@ function sendUpdates<T, O extends CrudOptions, U extends UpdateResults<T>>(
 	after?: T[]
 ) {
 	const state = instanceStateMap.get(store);
-	const storeDelta = mergeDeltas(store, state.queuedUpdates.splice(0));
+	const storeDelta = state.queuedUpdate || {
+			updates: [],
+			adds: [],
+			deletes: [],
+			beforeAll: [],
+			afterAll: []
+		};
+	state.queuedUpdate = undefined;
 	after = after || addUpdateDelete(store, state, state.localData, storeDelta);
 
 	storeDelta.beforeAll = state.localData;
@@ -472,13 +469,14 @@ function sendUpdatesOrFetch<T, O extends CrudOptions, U extends UpdateResults<T>
 	adds: T[],
 	deletes: string[]
 ) {
-	state.queuedUpdates.push({
+	const newUpdate = {
 		updates: updates,
 		adds: adds,
 		deletes: deletes,
 		beforeAll: [],
 		afterAll: []
-	});
+	};
+	state.queuedUpdate = state.queuedUpdate ? mergeDeltas(store, state.queuedUpdate, newUpdate) : newUpdate;
 	if (state.fetchAroundUpdates) {
 		state.fetchAndSendUpdates(store);
 	}
@@ -732,7 +730,6 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 				itemObservers: itemObservers,
 				observers: [],
 				storeObservable: storeObservable,
-				queuedUpdates: [],
 				localData: [],
 				localIndex: new Map<string, number>()
 			};
