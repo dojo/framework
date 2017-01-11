@@ -57,7 +57,7 @@ export default function getGlobalize(locale?: string) {
  * @param args
  * An object containing any locale, options, value, or unit required by the underlying Globalize.js method.
  *
- * @return]
+ * @return
  * The value returned by the underlying Globalize.js method.
  */
 export function globalizeDelegator<O, R>(method: string, args: DelegatorOptions<O>): R;

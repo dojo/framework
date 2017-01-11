@@ -36,23 +36,21 @@ export interface CldrDataResponse {
 }
 
 /**
- * @private
  * The paths for all locale-specific CLDR data required by the i18n ecosystem.
  */
-const localeDataPaths = [
+export const localeCldrPaths = Object.freeze([
 	'cldr-data/main/{locale}/numbers',
 	'cldr-data/main/{locale}/currencies',
 	'cldr-data/main/{locale}/ca-gregorian',
 	'cldr-data/main/{locale}/timeZoneNames',
 	'cldr-data/main/{locale}/dateFields',
 	'cldr-data/main/{locale}/units'
-];
+]);
 
 /**
- * @private
  * The paths for all supplemental CLDR data required by the i18n ecosystem.
  */
-const cldrDataPaths = [
+export const supplementalCldrPaths = Object.freeze([
 	'cldr-data/supplemental/likelySubtags',
 	'cldr-data/supplemental/numberingSystems',
 	'cldr-data/supplemental/plurals',
@@ -60,7 +58,7 @@ const cldrDataPaths = [
 	'cldr-data/supplemental/currencyData',
 	'cldr-data/supplemental/timeData',
 	'cldr-data/supplemental/weekData'
-];
+]);
 
 /**
  * @private
@@ -72,7 +70,7 @@ const cldrDataPaths = [
  * @return
  * A promise to the CLDR data for each path.
  */
-const getJson: (paths: string[]) => Promise<CldrData[]> = (function () {
+const getJson: (paths: ReadonlyArray<string>) => Promise<CldrData[]> = (function () {
 	if (has('host-node')) {
 		return function (paths: string[]): Promise<{}[]> {
 			paths = paths.map(path => path + '.json');
@@ -122,20 +120,19 @@ function getNextSupportedLocale(locale: string): string | void {
 }
 
 /**
- * @private
  * Load all supplemental data required by the i18n ecosystem. Note that data are loaded once and cached thereafter.
  *
  * @return
  * A promise to the supplemental CLDR data.
  */
-const loadSupplemental = (function () {
+export const loadSupplementalData = (function () {
 	let supplementalPromise: Promise<CldrData[]>;
 	return function (): Promise<CldrData[]> {
 		if (supplementalPromise) {
 			return supplementalPromise;
 		}
 
-		supplementalPromise = getJson(cldrDataPaths).then((data: CldrData[]) => {
+		supplementalPromise = getJson(supplementalCldrPaths).then((data: CldrData[]) => {
 			Globalize.load(...data);
 			return Object.freeze(data.map((item) => Object.freeze(item)));
 		});
@@ -144,7 +141,6 @@ const loadSupplemental = (function () {
 })();
 
 /**
- * @private
  * Load all locale-specific data required by the i18n ecosystem. Note that data are loaded once and cached thereafter.
  *
  * @param {locale}
@@ -153,7 +149,7 @@ const loadSupplemental = (function () {
  * @return
  * A promise to the locale-specific CLDR data.
  */
-const loadLocaleData = (function () {
+export const loadLocaleData = (function () {
 	const loadedLocaleMap = new Map<string, Promise<CldrData[]>>();
 	return function (locale: string, fallback?: string): Promise<CldrData[]> {
 		let dataPromise = loadedLocaleMap.get(locale);
@@ -171,7 +167,7 @@ const loadLocaleData = (function () {
 			return Promise.reject(new Error(`No CLDR data for locale: ${locale}.`));
 		}
 
-		dataPromise = getJson(localeDataPaths.map((path) => path.replace('{locale}', available)))
+		dataPromise = getJson(localeCldrPaths.map((path) => path.replace('{locale}', available)))
 			.then((data: CldrData[]) => {
 				Globalize.load(...data);
 				return Object.freeze(data.map((item) => Object.freeze(item)));
@@ -201,7 +197,7 @@ export default function loadCldrData(locales: string[]): Promise<CldrDataRespons
 export default function loadCldrData(locale: string, fallback?: string): Promise<CldrDataResponse>;
 export default function loadCldrData(locales: any, fallback?: string): Promise<CldrDataResponse> {
 	locales = Array.isArray(locales) ? locales : [ locales ];
-	return Promise.all([ loadSupplemental() ].concat(locales.map((locale: string) => {
+	return Promise.all([ loadSupplementalData() ].concat(locales.map((locale: string) => {
 		return locales.length === 1 ? loadLocaleData(locale, fallback) : loadLocaleData(locale);
 	}))).then((data) => {
 		return data.reduce((result: CldrDataResponse, values: CldrData[], i: number) => {
