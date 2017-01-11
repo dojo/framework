@@ -128,7 +128,7 @@ registerSuite({
 			assert.lengthOf(updatedKeys, 1);
 			assert.deepEqual(updatedKeys, [ 'obj' ]);
 		},
-		'ignore functions'() {
+		'do not ignore functions'() {
 			const properties: any = {
 				id: 'id',
 				myFunc: () => {}
@@ -137,7 +137,7 @@ registerSuite({
 			(<any> updatedProperties).myFunc = () => {};
 
 			const updatedKeys = shallowPropertyComparisonMixin.mixin.diffProperties(properties, updatedProperties);
-			assert.lengthOf(updatedKeys, 0);
+			assert.lengthOf(updatedKeys, 1);
 		},
 		'test compatibility with shallowPropertyComparisonMixin'() {
 			const properties = {

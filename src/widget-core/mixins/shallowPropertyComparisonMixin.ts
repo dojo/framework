@@ -34,28 +34,26 @@ const shallowPropertyComparisonMixin: { mixin: PropertyComparison<WidgetProperti
 				let isEqual = true;
 				if (previousProperties.hasOwnProperty(key)) {
 					const previousValue = (<any> previousProperties)[key];
-					if (!(typeof value === 'function')) {
-						if (Array.isArray(value) && Array.isArray(previousValue)) {
-							if (value.length !== previousValue.length) {
-								isEqual = false;
-							}
-							else {
-								isEqual = value.every((item: any, index: number) => {
-									if (isObject(item)) {
-										return shallowCompare(item, previousValue[index]);
-									}
-									else {
-										return item === previousValue[index];
-									}
-								});
-							}
-						}
-						else if (isObject(value) && isObject(previousValue)) {
-							isEqual = shallowCompare(value, previousValue);
+					if (Array.isArray(value) && Array.isArray(previousValue)) {
+						if (value.length !== previousValue.length) {
+							isEqual = false;
 						}
 						else {
-							isEqual = value === previousValue;
+							isEqual = value.every((item: any, index: number) => {
+								if (isObject(item)) {
+									return shallowCompare(item, previousValue[index]);
+								}
+								else {
+									return item === previousValue[index];
+								}
+							});
 						}
+					}
+					else if (isObject(value) && isObject(previousValue)) {
+						isEqual = shallowCompare(value, previousValue);
+					}
+					else {
+						isEqual = value === previousValue;
 					}
 				}
 				else {

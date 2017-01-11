@@ -95,8 +95,9 @@ registerSuite({
 	},
 	onPropertiesChanged() {
 		const widgetBase = createWidgetBase();
-		widgetBase.onPropertiesChanged(<any> { foo: 'bar' }, [ 'foo' ]);
+		widgetBase.onPropertiesChanged(<any> { foo: 'bar', myFunction: () => {} }, [ 'foo', 'myFunction' ]);
 		assert.equal((<any> widgetBase.state).foo, 'bar');
+		assert.isUndefined((<any> widgetBase.state).myFunction);
 	},
 	getChildrenNodes: {
 		'getChildrenNodes with no ChildNodeRenderers'() {

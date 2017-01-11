@@ -218,10 +218,13 @@ const createWidget: WidgetFactory = createStateful
 			},
 
 			onPropertiesChanged: function(this: Widget<WidgetState, WidgetProperties>, properties: WidgetProperties, changedPropertyKeys: string[]): void {
-				const state = changedPropertyKeys.reduce((state, key) => {
-					(<any> state)[key] = (<any> properties)[key];
+				const state = changedPropertyKeys.reduce((state: any, key) => {
+					const property = (<any> properties)[key];
+					if (!(typeof property === 'function')) {
+						state[key] = property;
+					}
 					return state;
-				}, <WidgetProperties> {});
+				}, {});
 				this.setState(state);
 			},
 
