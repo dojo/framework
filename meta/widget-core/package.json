@@ -44,6 +44,7 @@
     "codecov.io": "0.1.6",
     "dojo-interfaces": ">=2.0.0-alpha.9",
     "dojo-loader": ">=2.0.0-beta.7",
+    "dojo-stores": "^2.0.0-alpha.7",
     "dts-generator": "~1.7.0",
     "glob": "^7.0.6",
     "grunt": "^1.0.1",

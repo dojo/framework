@@ -66,6 +66,7 @@ export const loaderOptions = {
 		{ name: 'dojo-compose', location: 'node_modules/dojo-compose' },
 		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
 		{ name: 'dojo-has', location: 'node_modules/dojo-has' },
+		{ name: 'dojo-stores', location: 'node_modules/dojo-stores' },
 		{ name: 'dojo-i18n', location: 'node_modules/dojo-i18n' },
 		{ name: 'dojo-shim', location: 'node_modules/dojo-shim' },
 		{ name: 'globalize', location: 'node_modules/globalize/dist' },
