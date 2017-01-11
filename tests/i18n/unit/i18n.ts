@@ -29,7 +29,7 @@ registerSuite({
 		}
 
 		invalidate();
-		return switchLocale('');
+		return switchLocale(systemLocale);
 	},
 
 	systemLocale() {

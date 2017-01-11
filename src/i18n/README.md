@@ -228,7 +228,74 @@ i18n(bundle, 'en').then(() => {
 
 ### Date and number formatting.
 
-This is currently not provided, but will be added in the near future.
+As with the message formatting capabilities, `dojo-i18n` relies on Globalize.js to provide locale-specific formatting for dates, times, currencies, numbers, and units. The formatters themselves are essentially light wrappers around their Globalize.js counterparts, which helps maintain consistency with the Dojo 2 ecosystem and prevents the need to work with the `Globalize` object directly. Unlike the message formatters, the date, number, and unit formatters are not cached, as they have a more complex set of options. As such, executing the various "get formatter" methods multiple times with the same inputs does not return the exact same function object.
+
+`dojo-i18n` groups the various formatters accordingly: date and time formatters (`dojo-i18n/date`); number, currency, and pluralization formatters (`dojo-i18n/number`); and unit formatters (`dojo-i18n/unit`). Each method corresponds to a Globalize.js method (see below), and each method follows the same basic format: the last argument is an optional locale, and the penultimate argument is the method options. If specifying a locale but no options, pass `null` as the `options` argument. If no locale is provided, then the current (`i18n.locale`) is assumed.
+
+**Note**: for convenience, these methods are synchronous, but require that all CLDR data have been loaded (see above under "Loading CLDR data").
+
+```typescript
+import { formatDate, getDateFormatter, formatRelativeTime } from 'dojo-i18n/date';
+import { formatCurrency, getCurrencyFormatter } from 'dojo-i18n/number';
+import { formatUnit, getUnitFormatter } from 'dojo-i18n/unit';
+
+const date = new Date(1815, 11, 10, 11, 27);
+
+// Assume the current locale is "en"
+const enDateFormatter = getDateFormatter({ datetime: 'medium' });
+enDateFormatter(date); // Dec 10, 1815, 11:27:00 AM
+formatDate(date, { date: 'short' }); // 12/10/15
+
+const frDateFormatter = getDateFormatter({ datetime: 'medium' }, 'fr');
+frDateFormatter(date); // 10 déc. 1815 à 11:27:00
+formatDate(date, { date: 'short' }, 'fr'); // 10/12/1815
+
+formatRelativeTime(-1, 'week'); // "last week"
+formatRelativeTime(-1, 'week', { form: 'short' }); // "last wk."
+formatRelativeTime(-3, 'week', null, 'fr'); // "il y a 3 semaines"
+formatRelativeTime(-3, 'week', { form: 'short' }, 'fr'); // "il y a 3 sem."
+
+const enCurrencyFormatter = getCurrencyFormatter('USD', { style: 'code' });
+enCurrencyFormatter(1234.56); // "1,234.56 USD"
+formatCurrency(12345.56, 'USD', { style: 'code' }); // "1,234.56 USD"
+
+const frCurrencyFormatter = getCurrencyFormatter('EUR', { style: 'code' }, 'fr');
+frCurrencyFormatter(1234.56); // "1 234,56 EUR"
+formatCurrency(12345.56, 'EUR', { style: 'code' }, 'fr'); // "1 234,56 EUR"
+
+const enUnitFormatter = getUnitFormatter('feet', { form: 'narrow' });
+enUnitFormatter(5280); // 5,280′
+formatUnit(5280, 'feet', { form: 'narrow' }); // 5,280′
+
+const frUnitFormatter = getUnitFormatter('meter', null, 'fr');
+frUnitFormatter(1000); // 1 000 mètres'
+formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
+```
+
+**`dojo-i18n/date` methods:**
+
+- `formatDate` => [`Globalize.formatDate`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-formatter.md)
+- `formatRelativeTime` => [`Globalize.formatRelativeTime`](https://github.com/globalizejs/globalize/blob/master/doc/api/relative-time/relative-time-formatter.md)
+- `getDateFormatter` => [`Globalize.dateFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-formatter.md)
+- `getDateParser` => [`Globalize.dateParser`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-parser.md)
+- `getRelativeTimeFormatter` => [`Globalize.relativeTimeFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/relative-time/relative-time-formatter.md)
+- `parseDate` => [`Globalize.parseDate`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-parser.md)
+
+**`dojo-i18n/number` methods:**
+
+- `formatCurrency` => [`Globalize.formatCurrency`](https://github.com/globalizejs/globalize/blob/master/doc/api/currency/currency-formatter.md)
+- `formatNumber` => [`Globalize.formatNumber`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-formatter.md)
+- `getCurrencyFormatter` => [`Globalize.currencyFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/currency/currency-formatter.md)
+- `getNumberFormatter` => [`Globalize.numberFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-formatter.md)
+- `getNumberParser` => [`Globalize.numberParser`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-parser.md)
+- `getPluralGenerator` => [`Globalize.pluralGenerator`](https://github.com/globalizejs/globalize/blob/master/doc/api/plural/plural-generator.md)
+- `parseNumber` => [`Globalize.parseNumber`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-parser.md)
+- `pluralize` => [`Globalize.plural`](https://github.com/globalizejs/globalize/blob/master/doc/api/plural/plural-generator.md)
+
+**`dojo-i18n/number` methods:**
+
+- `formatUnit` => [`Globalize.formatUnit`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
+- `getUnitFormatter` => [`Globalize.unitFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
 
 ## How do I use this package?
 

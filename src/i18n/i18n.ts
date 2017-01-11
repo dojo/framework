@@ -10,7 +10,7 @@ import Observable, { Observer, Subscription, SubscriptionObserver } from 'dojo-s
 import Promise from 'dojo-shim/Promise';
 import * as Globalize from 'globalize/dist/globalize/message';
 import loadCldrData from './cldr/load';
-import { generateLocales, normalizeLocale } from './util';
+import { generateLocales, normalizeLocale } from './util/main';
 
 /**
  * A default bundle used as basis for loading locale-specific bundles.

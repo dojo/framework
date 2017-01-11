@@ -1,9 +1,9 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { generateLocales, normalizeLocale, validateLocale } from '../../src/util';
+import { generateLocales, normalizeLocale, validateLocale } from '../../../src/util/main';
 
 registerSuite({
-	name: 'util',
+	name: 'util/main',
 
 	generateLocales() {
 		assert.sameMembers(generateLocales('en'), [ 'en' ]);

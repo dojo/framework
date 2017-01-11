@@ -8,7 +8,7 @@ import has from 'dojo-has/has';
 import Promise from 'dojo-shim/Promise';
 import * as Globalize from 'globalize';
 import supportedMain from './locales';
-import { generateLocales } from '../util';
+import { generateLocales } from '../util/main';
 
 declare const require: Require;
 declare const define: {
