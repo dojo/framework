@@ -9,7 +9,6 @@ import { EventedListener, Stateful, StatefulOptions } from 'dojo-interfaces/base
 import { EventTargettedObject, EventTypedObject, Handle, StylesMap } from 'dojo-interfaces/core';
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
 import { ComposeFactory } from 'dojo-compose/compose';
-import { VNodeEvented, VNodeEventedOptions } from './mixins/createVNodeEvented';
 
 /**
  * A function that is called to return top level node
@@ -112,7 +111,7 @@ export interface WNode {
 
 export type DNode = HNode | WNode | string | null;
 
-export type Widget<S extends WidgetState, P extends WidgetProperties> = Stateful<S> & WidgetMixin<P> & WidgetOverloads<P> & VNodeEvented;
+export type Widget<S extends WidgetState, P extends WidgetProperties> = Stateful<S> & WidgetMixin<P> & WidgetOverloads<P>
 
 export interface WidgetFactory extends ComposeFactory<Widget<WidgetState, WidgetProperties>, WidgetOptions<WidgetState, WidgetProperties>> {}
 
@@ -240,7 +239,7 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	readonly registry: FactoryRegistryInterface;
 }
 
-export interface WidgetOptions<S extends WidgetState, P extends WidgetProperties> extends StatefulOptions<S>, VNodeEventedOptions {
+export interface WidgetOptions<S extends WidgetState, P extends WidgetProperties> extends StatefulOptions<S> {
 	/**
 	 * Properties used to affect internal widget state
 	 */

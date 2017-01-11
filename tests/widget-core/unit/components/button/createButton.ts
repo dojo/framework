@@ -58,5 +58,17 @@ registerSuite({
 		});
 		vnode = <VNode> button.__render__();
 		assert.isTrue(vnode.properties!['disabled']);
+	},
+	onClick() {
+		let onClickCount = 0;
+		const onClick = function() {
+			onClickCount++;
+		};
+		const button = createButton({ properties: { onClick }});
+		button.onClick();
+		assert.equal(onClickCount, 1);
+		button.setProperties({});
+		button.onClick();
+		assert.equal(onClickCount, 1);
 	}
 });

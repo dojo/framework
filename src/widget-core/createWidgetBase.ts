@@ -19,7 +19,6 @@ import Promise from 'dojo-shim/Promise';
 import Map from 'dojo-shim/Map';
 import { v, registry } from './d';
 import FactoryRegistry from './FactoryRegistry';
-import createVNodeEvented from './mixins/createVNodeEvented';
 import shallowPropertyComparisonMixin from './mixins/shallowPropertyComparisonMixin';
 
 interface WidgetInternalState {
@@ -141,7 +140,6 @@ function formatTagNameAndClasses(tagName: string, classes: string[]) {
 }
 
 const createWidget: WidgetFactory = createStateful
-	.mixin(createVNodeEvented)
 	.mixin<WidgetMixin<WidgetProperties>, WidgetOptions<WidgetState, WidgetProperties>>({
 		mixin: {
 			properties: {},

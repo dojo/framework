@@ -10,11 +10,14 @@ export interface ButtonState extends WidgetState, FormFieldMixinState<string> {
 
 export interface ButtonProperties extends WidgetProperties {
 	label?: string;
+	onClick?(event: MouseEvent): void;
 }
 
 export interface ButtonOptions extends WidgetOptions<ButtonState, ButtonProperties>, FormFieldMixinOptions<any, ButtonState> { }
 
-export type Button = Widget<ButtonState, ButtonProperties> & FormFieldMixin<string, ButtonState>;
+export type Button = Widget<ButtonState, ButtonProperties> & FormFieldMixin<string, ButtonState> & {
+	onClick(event?: MouseEvent): void;
+};
 
 export interface ButtonFactory extends ComposeFactory<Button, ButtonOptions> { }
 
@@ -22,9 +25,12 @@ const createButton: ButtonFactory = createWidgetBase
 	.mixin(createFormFieldMixin)
 	.mixin({
 		mixin: {
+			onClick(this: Button, event: MouseEvent) {
+				this.properties.onClick && this.properties.onClick(event);
+			},
 			nodeAttributes: [
 				function(this: Button): VNodeProperties {
-					return { innerHTML: this.state.label };
+					return { innerHTML: this.state.label, onclick: this.onClick };
 				}
 			],
 			tagName: 'button',
