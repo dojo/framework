@@ -17,23 +17,23 @@ export const registry = new FactoryRegistry();
 
 export function w<P extends WidgetProperties, S extends WidgetState, W extends Widget<S, P>, O extends WidgetOptions<S, P>>(
 	factory: ComposeFactory<W, O> | string,
-	options: O
+	properties: P
 ): WNode;
 export function w<P extends WidgetProperties, S extends WidgetState, W extends Widget<S, P>, O extends WidgetOptions<S, P>>(
 	factory: ComposeFactory<W, O> | string,
-	options: O,
+	properties: P,
 	children?: DNode[]
 ): WNode;
 export function w<P extends WidgetProperties, S extends WidgetState, W extends Widget<S, P>, O extends WidgetOptions<S, P>>(
 	factory: ComposeFactory<W, O> | string,
-	options: O,
+	properties: P,
 	children: DNode[] = []
 ): WNode {
 
 	return {
 		children,
 		factory,
-		options
+		properties
 	};
 }
 

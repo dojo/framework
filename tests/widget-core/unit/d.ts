@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { WidgetOptions, WidgetState, WidgetProperties } from './../../src/interfaces';
+import { WidgetProperties } from './../../src/interfaces';
 import createWidgetBase from '../../src/createWidgetBase';
 import { v, w, registry } from '../../src/d';
 import FactoryRegistry from './../../src/FactoryRegistry';
@@ -18,23 +18,23 @@ registerSuite({
 	},
 	w: {
 		'create WNode wrapper'() {
-			const options: WidgetOptions<WidgetState, WidgetProperties> = { tagName: 'header', properties: { id: 'id', classes: [ 'world' ] }};
-			const dNode = w(createWidgetBase, options);
+			const properties: WidgetProperties = { id: 'id', classes: [ 'world' ] };
+			const dNode = w(createWidgetBase, properties);
 			assert.deepEqual(dNode.factory, createWidgetBase);
-			assert.deepEqual(dNode.options, { tagName: 'header', properties: { id: 'id', classes: [ 'world' ]} });
+			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
 		},
 		'create WNode wrapper using a factory label'() {
 			registry.define('my-widget', createWidgetBase);
-			const options: WidgetOptions<WidgetState, WidgetProperties> = { tagName: 'header', properties: { id: 'id', classes: [ 'world' ] }};
-			const dNode = w('my-widget', options);
+			const properties: WidgetProperties = { id: 'id', classes: [ 'world' ] };
+			const dNode = w('my-widget', properties);
 			assert.deepEqual(dNode.factory, 'my-widget');
-			assert.deepEqual(dNode.options, { tagName: 'header', properties: { id: 'id', classes: [ 'world' ] } });
+			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ] });
 		},
 		'create WNode wrapper with children'() {
-			const options: WidgetOptions<WidgetState, WidgetProperties> = { tagName: 'header', properties: { id: 'id', classes: [ 'world' ] }};
-			const dNode = w(createWidgetBase, options, [ w(createWidgetBase, options) ]);
+			const properties: WidgetProperties = { id: 'id', classes: [ 'world' ] };
+			const dNode = w(createWidgetBase, properties, [ w(createWidgetBase, properties) ]);
 			assert.deepEqual(dNode.factory, createWidgetBase);
-			assert.deepEqual(dNode.options, { tagName: 'header', properties: { id: 'id', classes: [ 'world' ] } });
+			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ] });
 			assert.lengthOf(dNode.children, 1);
 		}
 	},
