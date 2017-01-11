@@ -1,4 +1,4 @@
-import { ArrayLike } from 'dojo-interfaces/shim';
+import { ArrayLike } from './interfaces';
 import has from './support/has';
 import { wrapNative } from './support/util';
 import { forOf, isArrayLike, isIterable, Iterable } from './iterator';

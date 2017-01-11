@@ -1,4 +1,3 @@
-import { Handle } from 'dojo-interfaces/core';
 import global from './global';
 import has from './has';
 
@@ -10,6 +9,10 @@ export interface QueueItem {
 interface PostMessageEvent extends Event {
 	readonly source: any;
 	readonly data: string;
+}
+
+export interface Handle {
+	destroy(): void;
 }
 
 /**

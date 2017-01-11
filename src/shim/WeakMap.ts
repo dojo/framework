@@ -1,4 +1,4 @@
-import { ArrayLike } from 'dojo-interfaces/shim';
+import { ArrayLike } from './interfaces';
 import { hasClass } from './support/decorators';
 import global from './support/global';
 import { forOf, Iterable } from './iterator';

@@ -1,5 +1,5 @@
-import { Thenable } from 'dojo-interfaces/shim';
-export { Thenable } from 'dojo-interfaces/shim';
+import { Thenable } from '../../src/interfaces';
+export { Thenable } from '../../src/interfaces';
 
 export function isEventuallyRejected<T>(promise: Thenable<T>): Thenable<boolean> {
 	return promise.then<any>(function () {

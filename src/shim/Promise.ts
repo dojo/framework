@@ -1,4 +1,4 @@
-import { Thenable } from 'dojo-interfaces/shim';
+import { Thenable } from './interfaces';
 import global from './support/global';
 import { queueMicroTask } from './support/queue';
 import { forOf, Iterable } from './iterator';
