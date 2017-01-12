@@ -39,7 +39,7 @@ export interface FilterDescriptor {
 
 export type FilterArrayEntry = FilterDescriptor | BooleanOp | FilterArray;
 
-interface FilterArray extends Array<FilterArrayEntry> {}
+export interface FilterArray extends Array<FilterArrayEntry> {}
 
 export interface SimpleFilter<T> extends Query<T> {
 	readonly filterType: FilterType;
