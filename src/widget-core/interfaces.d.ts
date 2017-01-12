@@ -249,6 +249,7 @@ export interface WidgetOptions<S extends WidgetState, P extends WidgetProperties
 }
 
 export interface WidgetProperties {
+	[index: string]: any;
 	id?: string;
 	classes?: string[];
 	preventDefaultBind?: boolean;
