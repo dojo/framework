@@ -110,14 +110,45 @@ registerSuite({
 				[ { key1: 'b', id: 1 }, { key1: 'c', id: 2 }, { key1: 'a', id: 3 } ]);
 		}
 	},
+	'sort with multiple properties': {
+		'with no descending argument': function() {
+			assert.deepEqual(
+				createSort<any>(['key1', 'key2']).apply(
+					[ { key1: 2, key2: 2}, { key1: 2, key2: 1}, { key1: 1, key2: 2 }, { key1: 1, key2: 1} ]
+				),
+				[ { key1: 1, key2: 1}, { key1: 1, key2: 2 },  { key1: 2, key2: 1}, { key1: 2, key2: 2} ],
+				'Didn\'t sort properly with multiple properties'
+			);
+		},
+
+		'with one descending argument': function() {
+			assert.deepEqual(
+				createSort<any>(['key1', 'key2'], true).apply(
+					[ { key1: 1, key2: 1}, { key1: 1, key2: 2 },  { key1: 2, key2: 1}, { key1: 2, key2: 2} ]
+				),
+				[ { key1: 2, key2: 2}, { key1: 2, key2: 1}, { key1: 1, key2: 2 }, { key1: 1, key2: 1} ],
+				'Didn\'t sort properly with multiple properties with a single descending argument'
+			);
+		},
+
+		'with descending array': function() {
+			assert.deepEqual(
+				createSort<any>(['key1', 'key2'], [ true, false ]).apply(
+					[ { key1: 1, key2: 2}, { key1: 1, key2: 1 },  { key1: 2, key2: 2}, { key1: 2, key2: 1} ]
+				),
+				[ { key1: 2, key2: 1}, { key1: 2, key2: 2}, { key1: 1, key2: 1 }, { key1: 1, key2: 2} ],
+				'Didn\'t sort properly with multiple properties with multiple descending arguments'
+			);
+		}
+	},
 	'toString': {
 		'Should print plus sign when sort order is ascending.'(this: any) {
 			const result = createSort<SimpleObj>('key1').toString();
-			assert.strictEqual(result, 'Sort(key1, +)');
+			assert.strictEqual(result, 'sort(+key1)');
 		},
 		'Should print minus sign when sort order is decending.'(this: any) {
 			const result = createSort<SimpleObj>('key1', true).toString();
-			assert.strictEqual(result, 'Sort(key1, -)');
+			assert.strictEqual(result, 'sort(-key1)');
 		},
 		'Should throw an error when toString is called on a comparator based sort.'(this: any) {
 			const sort = createSort<SimpleObj>(function(a, b) { return 0; });
@@ -128,7 +159,7 @@ registerSuite({
 
 		'Should print JSON pointer.'(this: any) {
 			const result = createSort<SimpleObj>(createJsonPointer('key1', 'key2')).toString();
-			assert.strictEqual(result, 'Sort(key1/key2, +)');
+			assert.strictEqual(result, 'sort(+key1/key2)');
 		}
 	}
 });

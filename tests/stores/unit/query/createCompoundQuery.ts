@@ -78,11 +78,11 @@ registerSuite({
 		} )
 			.withQuery( createSort('id', true) );
 
-		assert.strictEqual( query.toString(), 'lt(value, 3)&Sort(id, -)' );
+		assert.strictEqual( query.toString(), 'lt(value, 3)&sort(-id)' );
 	},
 
 	'Should be able to differentiate a CompoundQuery from other queries'(this: any) {
-		const compundQuery = createCompoundQuery();
+		const compoundQuery = createCompoundQuery();
 		const sort = createSort('any');
 		const filter = createFilter();
 		const range = createRange(0, 10);
@@ -91,7 +91,7 @@ registerSuite({
 		assert.isFalse(isCompoundQuery(filter), 'Returned true for non-compound query');
 		assert.isFalse(isCompoundQuery(range), 'Returned true for non-compound query');
 		assert.isFalse(isCompoundQuery(undefined), 'Returned true for non-compound query');
-		assert.isTrue(isCompoundQuery(compundQuery), 'Returned false for compound query');
+		assert.isTrue(isCompoundQuery(compoundQuery), 'Returned false for compound query');
 	},
 
 	'Should return an empty string when serializing an empty compound query'(this: any) {

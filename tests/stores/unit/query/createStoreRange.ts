@@ -25,6 +25,9 @@ registerSuite({
 		assert.deepEqual(createRange<ItemType>(lastIndx, 3).apply(data), [data[lastIndx]]);
 	},
 	'Should have a toString that describes its properties.'() {
-		assert.strictEqual(createRange<ItemType>(1, 2).toString(), 'range(1, 2)');
+		assert.strictEqual(createRange<ItemType>(1, 2).toString(), 'limit(2,1)');
+	},
+	'Should exclude start if it is 0.'() {
+		assert.strictEqual(createRange<any>(0, 2).toString(), 'limit(2)');
 	}
 });

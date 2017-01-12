@@ -5,7 +5,7 @@ export interface StoreRange<T> extends Query<T> {
 }
 
 function serializeRange(range: StoreRange<any>): string {
-	return `range(${range.start}, ${range.count})`;
+	return `limit(${range.count}${range.start ? ',' + range.start : ''})`;
 }
 
 function createRange<T>(start: number, count: number, serializer?: (range: StoreRange<T>) => string): StoreRange<T> {
