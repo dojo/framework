@@ -13,9 +13,9 @@ registerSuite({
 				name: 'baz'
 			}
 		});
-		assert.strictEqual(button.state.id, 'foo');
-		assert.strictEqual(button.state.label, 'bar');
-		assert.strictEqual(button.state.name, 'baz');
+		assert.strictEqual(button.properties.id, 'foo');
+		assert.strictEqual(button.properties.label, 'bar');
+		assert.strictEqual(button.properties.name, 'baz');
 	},
 	render() {
 		const button = createButton({

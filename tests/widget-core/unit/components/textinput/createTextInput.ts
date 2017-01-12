@@ -11,8 +11,8 @@ registerSuite({
 				name: 'baz'
 			}
 		});
-		assert.strictEqual(textInput.state.id, 'foo');
-		assert.strictEqual(textInput.state.name, 'baz');
+		assert.strictEqual(textInput.properties.id, 'foo');
+		assert.strictEqual(textInput.properties.name, 'baz');
 	},
 	nodeAttributes() {
 		const textInput = createTextInput();

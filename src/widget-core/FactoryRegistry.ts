@@ -2,7 +2,7 @@ import { isComposeFactory } from 'dojo-compose/compose';
 import Promise from 'dojo-shim/Promise';
 import Map from 'dojo-shim/Map';
 import {
-	WidgetFactory,
+	WidgetBaseFactory,
 	FactoryRegistryInterface,
 	FactoryRegistryItem,
 	WidgetFactoryFunction
@@ -26,7 +26,7 @@ export default class FactoryRegistry implements FactoryRegistryInterface {
 		this.registry.set(factoryLabel, registryItem);
 	}
 
-	get(factoryLabel: string): WidgetFactory | Promise<WidgetFactory> | null {
+	get(factoryLabel: string): WidgetBaseFactory | Promise<WidgetBaseFactory> | null {
 		if (!this.has(factoryLabel)) {
 			return null;
 		}

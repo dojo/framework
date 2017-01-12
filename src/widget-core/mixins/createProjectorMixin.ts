@@ -96,7 +96,7 @@ interface ProjectorData {
 	afterCreate?: () => void;
 }
 
-export type Projector = Widget<WidgetState, WidgetProperties> & ProjectorMixin;
+export type Projector = Widget<WidgetProperties> & ProjectorMixin;
 
 export interface ProjectorMixinFactory extends ComposeFactory<ProjectorMixin, ProjectorOptions> {}
 

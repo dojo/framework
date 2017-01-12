@@ -14,14 +14,14 @@ import { ComposeFactory } from 'dojo-compose/compose';
  * A function that is called to return top level node
  */
 export interface NodeFunction {
-	(this: Widget<WidgetState, WidgetProperties>): DNode;
+	(this: Widget<WidgetProperties>): DNode;
 }
 
 /**
  * A function that is called when collecting the children nodes on render.
  */
 export interface ChildNodeFunction {
-	(this: Widget<WidgetState, WidgetProperties>): DNode[];
+	(this: Widget<WidgetProperties>): DNode[];
 }
 
 /**
@@ -55,9 +55,9 @@ export interface NodeAttributeFunction<T> {
 	(this: T, attributes: VNodeProperties): VNodeProperties;
 }
 
-export type WidgetFactoryFunction = () => Promise<WidgetFactory>
+export type WidgetFactoryFunction = () => Promise<WidgetBaseFactory>
 
-export type FactoryRegistryItem = WidgetFactory | Promise<WidgetFactory> | WidgetFactoryFunction
+export type FactoryRegistryItem = WidgetBaseFactory | Promise<WidgetBaseFactory> | WidgetFactoryFunction
 
 /**
  * Factory Registry
@@ -72,7 +72,7 @@ export interface FactoryRegistryInterface {
 	/**
 	 * Return the registered FactoryRegistryItem for the label.
 	 */
-	get(factoryLabel: string): WidgetFactory | Promise<WidgetFactory> | null;
+	get(factoryLabel: string): WidgetBaseFactory | Promise<WidgetBaseFactory> | null;
 
 	/**
 	 * Check if the factory label has already been used to define a FactoryRegistryItem.
@@ -89,14 +89,14 @@ export interface HNode {
 	/**
 	 * render function that wraps returns VNode
 	 */
-	render<T>(options?: { bind: T }): VNode;
+	render<T>(options?: { bind?: T }): VNode;
 }
 
 export interface WNode {
 	/**
 	 * Factory to create a widget
 	 */
-	factory: WidgetFactory | string;
+	factory: WidgetBaseFactory | string;
 
 	/**
 	 * Options used to create factory a widget
@@ -111,9 +111,9 @@ export interface WNode {
 
 export type DNode = HNode | WNode | string | null;
 
-export type Widget<S extends WidgetState, P extends WidgetProperties> = Stateful<S> & WidgetMixin<P> & WidgetOverloads<P>
+export type Widget<P extends WidgetProperties> = Stateful<WidgetState> & WidgetMixin<P> & WidgetOverloads<P>
 
-export interface WidgetFactory extends ComposeFactory<Widget<WidgetState, WidgetProperties>, WidgetOptions<WidgetState, WidgetProperties>> {}
+export interface WidgetBaseFactory extends ComposeFactory<Widget<WidgetProperties>, WidgetOptions<WidgetState, WidgetProperties>> {}
 
 export interface WidgetOverloads<P extends WidgetProperties> {
 	/**
@@ -122,14 +122,14 @@ export interface WidgetOverloads<P extends WidgetProperties> {
 	 * @param type The event type to listen for
 	 * @param listener The listener to call when the event is emitted
 	 */
-	on(type: 'invalidated', listener: EventedListener<Widget<WidgetState, P>, EventTargettedObject<Widget<WidgetState, P>>>): Handle;
+	on(type: 'invalidated', listener: EventedListener<Widget<P>, EventTargettedObject<Widget<P>>>): Handle;
 	/**
 	 * Attach a listener to the properties changed event, which is emitted when a difference in properties passed occurs
 	 *
 	 * @param type The event type to listen for
 	 * @param listener The listener to call when the event is emitted
 	 */
-	on(type: 'properties:changed', listener: EventedListener<Widget<WidgetState, P>, PropertiesChangeEvent<Widget<WidgetState, P>, P>>): Handle;
+	on(type: 'properties:changed', listener: EventedListener<Widget<P>, PropertiesChangeEvent<Widget<P>, P>>): Handle;
 }
 
 export interface PropertyComparison<P extends WidgetProperties> {
@@ -183,12 +183,12 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	/*
 	 * set properties on the widget
 	 */
-	setProperties(this: Widget<WidgetState, WidgetProperties>, properties: P): void;
+	setProperties(this: Widget<WidgetProperties>, properties: P): void;
 
 	/**
 	 * Called when the properties have changed
 	 */
-	onPropertiesChanged(this: Widget<WidgetState, WidgetProperties>, properties: P, changedPropertyKeys: string[]): void;
+	onPropertiesChanged(this: Widget<WidgetProperties>, properties: P, changedPropertyKeys: string[]): void;
 
 	/**
 	 * The ID of the widget, which gets automatically rendered in the VNode property `data-widget-id` when
@@ -210,7 +210,7 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	 * making it easy for mixins to alter the behaviour of the render process without needing to override or aspect
 	 * the `getNodeAttributes` method.
 	 */
-	nodeAttributes: NodeAttributeFunction<Widget<WidgetState, WidgetProperties>>[];
+	nodeAttributes: NodeAttributeFunction<Widget<WidgetProperties>>[];
 
 	/**
 	 * Render the widget, returing the virtual DOM node that represents this widget.
@@ -251,6 +251,7 @@ export interface WidgetOptions<S extends WidgetState, P extends WidgetProperties
 export interface WidgetProperties {
 	id?: string;
 	classes?: string[];
+	preventDefaultBind?: boolean;
 }
 
 export interface WidgetState extends State {
@@ -271,3 +272,5 @@ export interface WidgetState extends State {
 	 */
 	styles?: StylesMap;
 }
+
+export interface WidgetFactory<W extends Widget<P>, P extends WidgetProperties> extends ComposeFactory<W, WidgetOptions<WidgetState, P>> {}

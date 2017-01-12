@@ -55,7 +55,7 @@ interface I18nVNodeProperties extends VNodeProperties {
 	dir: string | null;
 }
 
-export type I18nWidget<M extends Messages, P extends I18nProperties> = I18nMixin<M> & Widget<WidgetState, I18nProperties>;
+export type I18nWidget<M extends Messages, P extends I18nProperties> = I18nMixin<M> & Widget<I18nProperties>;
 
 export type LocalizedMessages<T extends Messages> = T & {
 	/**

@@ -1,4 +1,3 @@
-import { ComposeFactory } from 'dojo-compose/compose';
 import { assign } from 'dojo-core/lang';
 import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
 import { h } from 'maquette';
@@ -7,28 +6,16 @@ import {
 	HNode,
 	WNode,
 	Widget,
-	WidgetOptions,
-	WidgetState,
-	WidgetProperties
+	WidgetProperties,
+	WidgetFactory
 } from './interfaces';
 import FactoryRegistry from './FactoryRegistry';
 
 export const registry = new FactoryRegistry();
 
-export function w<P extends WidgetProperties, S extends WidgetState, W extends Widget<S, P>, O extends WidgetOptions<S, P>>(
-	factory: ComposeFactory<W, O> | string,
-	properties: P
-): WNode;
-export function w<P extends WidgetProperties, S extends WidgetState, W extends Widget<S, P>, O extends WidgetOptions<S, P>>(
-	factory: ComposeFactory<W, O> | string,
-	properties: P,
-	children?: DNode[]
-): WNode;
-export function w<P extends WidgetProperties, S extends WidgetState, W extends Widget<S, P>, O extends WidgetOptions<S, P>>(
-	factory: ComposeFactory<W, O> | string,
-	properties: P,
-	children: DNode[] = []
-): WNode {
+export function w<P extends WidgetProperties>(factory: WidgetFactory<Widget<P>, P> | string, properties: P): WNode;
+export function w<P extends WidgetProperties>(factory: WidgetFactory<Widget<P>, P> | string, properties: P, children?: DNode[]): WNode;
+export function w<P extends WidgetProperties>(factory: WidgetFactory<Widget<P>, P> | string, properties: P, children: DNode[] = []): WNode {
 
 	return {
 		children,
