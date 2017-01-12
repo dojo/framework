@@ -11,6 +11,10 @@ const externalStateWithProperties = compose({
 	properties: <any> {},
 	diffProperties(this: any, previousProperties: any, newProperties: any) { },
 	applyChangedProperties(this: any) { }
+}, (instance, options: any) => {
+	if (options) {
+		instance.properties = options.properties;
+	}
 }).mixin(externalState);
 
 registerSuite({
@@ -25,29 +29,18 @@ registerSuite({
 	},
 	observe: {
 		'throw error if `id` property is not passed'() {
-			const externalStateMixin = externalStateWithProperties();
-
-			externalStateMixin.properties = {
-				externalState: store
-			};
-			assert.throws(() => externalStateMixin.observe(), Error);
+			assert.throws(() => externalStateWithProperties(<any> { externalState: store }), Error);
 		},
 		'throw error if `externalState` property is not passed'() {
-			const externalStateMixin = externalStateWithProperties();
-
-			externalStateMixin.properties = {
-				id: '1'
-			};
-			assert.throws(() => externalStateMixin.observe(), Error);
+			assert.throws(() => externalStateWithProperties(<any> { id: '1' }), Error);
 		},
 		observe() {
-			const externalStateMixin = externalStateWithProperties();
-			let stateChangeCount = 0;
 			const properties = {
 				id: '1',
 				externalState: store
 			};
-			externalStateMixin.properties = properties;
+			const externalStateMixin = externalStateWithProperties({ properties });
+			let stateChangeCount = 0;
 
 			const promise = new Promise((resolve, reject) => {
 				externalStateMixin.on('state:changed', ({ state }: any) => {
@@ -68,12 +61,7 @@ registerSuite({
 			return promise;
 		},
 		'throws error if observe called with a different id'() {
-			const externalStateMixin = externalStateWithProperties();
-
-			externalStateMixin.properties = {
-				id: '1',
-				externalState: store
-			};
+			const externalStateMixin = externalStateWithProperties({ properties: { id: '1', externalState: store } });
 
 			externalStateMixin.observe();
 			externalStateMixin.properties.id = '2';
@@ -82,12 +70,7 @@ registerSuite({
 		}
 	},
 	getState() {
-		const externalStateMixin = externalStateWithProperties();
-
-		externalStateMixin.properties = {
-			id: '1',
-			externalState: store
-		};
+		const externalStateMixin = externalStateWithProperties({ properties: { id: '1', externalState: store } });
 
 		const promise = new Promise((resolve, reject) => {
 			externalStateMixin.on('state:changed', () => {
@@ -105,13 +88,8 @@ registerSuite({
 		return promise;
 	},
 	setState() {
-		const externalStateMixin = externalStateWithProperties();
+		const externalStateMixin = externalStateWithProperties({ properties: { id: '1', externalState: store } });
 		let intialStateChange = true;
-
-		externalStateMixin.properties = {
-			id: '1',
-			externalState: store
-		};
 
 		const promise = new Promise((resolve, reject) => {
 			externalStateMixin.on('state:changed', () => {
@@ -137,12 +115,7 @@ registerSuite({
 	},
 	'on "properties:changed" event': {
 		'initial properties'() {
-			const externalStateMixin = externalStateWithProperties();
-
-			externalStateMixin.properties = {
-				id: '1',
-				externalState: store
-			};
+			const externalStateMixin = externalStateWithProperties({ properties: { id: '1', externalState: store } });
 
 			const promise = new Promise((resolve, reject) => {
 				externalStateMixin.on('state:changed', () => {
@@ -155,22 +128,17 @@ registerSuite({
 				});
 			});
 
-			externalStateMixin.emit({
-				type: 'properties:changed'
-			});
 			return promise;
 		},
 
 		'call destroy on observe handle if externalState has been updated.'() {
-			const externalStateMixin = externalStateWithProperties();
-			const newStore = createObservableStore({ data: [ { id: '1', foo: 'bar' } ]});
-			let intialStateChange = true;
 			const initialProperties = {
 				id: '1',
 				externalState: store
 			};
-
-			externalStateMixin.properties = initialProperties;
+			const externalStateMixin = externalStateWithProperties({ properties: initialProperties });
+			const newStore = createObservableStore({ data: [ { id: '1', foo: 'bar' } ]});
+			let intialStateChange = true;
 
 			const promise = new Promise((resolve, reject) => {
 				externalStateMixin.on('state:changed', ({ target }: any) => {
@@ -210,15 +178,12 @@ registerSuite({
 			return promise;
 		},
 		'call destroy on observe handle if id has been updated.'() {
-			const externalStateMixin = externalStateWithProperties();
-			let intialStateChange = true;
 			const initialProperties = {
 				id: '1',
 				externalState: store
 			};
-
-			externalStateMixin.properties = initialProperties;
-
+			const externalStateMixin = externalStateWithProperties({ properties: initialProperties });
+			let intialStateChange = true;
 			const promise = new Promise((resolve, reject) => {
 				externalStateMixin.on('state:changed', ({ target }: any) => {
 					try {
