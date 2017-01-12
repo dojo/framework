@@ -23,8 +23,7 @@
   },
   "peerDependencies": {
     "dojo-has": ">=2.0.0-alpha.6",
-    "dojo-shim": ">=2.0.0-alpha.4",
-    "dojo-streams": ">=2.0.0-alpha.1"
+    "dojo-shim": ">=2.0.0-alpha.4"
   },
   "devDependencies": {
     "@types/benchmark": "~1.0.0",

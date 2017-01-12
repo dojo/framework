@@ -4,11 +4,7 @@ import { Handle } from 'dojo-interfaces/core';
 import * as http from 'http';
 import * as https from 'https';
 import { createHandle } from '../lang';
-import { RequestError, RequestOptions, Response, ResponsePromise } from '../request';
-import ReadableNodeStreamSource from 'dojo-streams/adapters/ReadableNodeStreamSource';
-import WritableNodeStreamSink from 'dojo-streams/adapters/WritableNodeStreamSink';
-import ReadableStream from 'dojo-streams/ReadableStream';
-import WritableStream from 'dojo-streams/WritableStream';
+import { RequestOptions, Response, ResponsePromise } from '../request';
 import * as urlUtil from 'url';
 import { generateRequestUrl } from './util';
 
@@ -63,7 +59,6 @@ export interface NodeRequestOptions<T> extends RequestOptions {
 	};
 	streamData?: boolean;
 	streamEncoding?: string;
-	streamTarget?: WritableStream<T>;
 	redirectOptions?: {
 		limit?: number;
 		count?: number;
@@ -271,28 +266,6 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 			}
 
 			options.streamEncoding && nativeResponse.setEncoding(options.streamEncoding);
-			if (options.streamTarget) {
-				const responseSource = new ReadableNodeStreamSource(nativeResponse);
-				const responseReadableStream = new ReadableStream(responseSource);
-
-				responseReadableStream.pipeTo(<any> options.streamTarget)
-					.then(
-						function () {
-							resolve(response);
-						},
-						function (error: RequestError<T>) {
-							if (options.streamTarget) {
-								// abort the stream, swallowing any errors,
-								// (because we've already got an error, and we can't catch this one)
-								options.streamTarget.abort(error).catch(() => {
-								});
-							}
-							request.abort();
-							error.response = response;
-							reject(error);
-						}
-					);
-			}
 
 			let data: any[];
 			let loaded: number;
@@ -316,34 +289,14 @@ export default function node<T>(url: string, options: NodeRequestOptions<T> = {}
 					response.data = <any> (options.streamEncoding ? data.join('') : Buffer.concat(data, loaded));
 				}
 
-				// If using a streamTarget, wait for it to finish in case it throws an error
-				if (!options.streamTarget) {
-					resolve(response);
-				}
-				else {
-					options.streamTarget.close().catch(() => {
-					});
-				}
+				resolve(response);
 			});
 		});
 
 		request.once('error', reject);
 
 		if (options.data) {
-			if (options.data instanceof ReadableStream) {
-				const requestSink = new WritableNodeStreamSink(request);
-				const writableRequest = new WritableStream(requestSink);
-				options.data.pipeTo(writableRequest)
-					.catch(function (error: RequestError<T>) {
-						error.response = response;
-						writableRequest.abort(error).catch(() => {
-						});
-						reject(error);
-					});
-			}
-			else {
-				request.end(options.data);
-			}
+			request.end(options.data);
 		}
 		else {
 			request.end();

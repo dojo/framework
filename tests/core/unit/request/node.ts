@@ -1,13 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as DojoPromise from 'intern/dojo/Promise';
-import Promise from 'dojo-shim/Promise';
 import RequestTimeoutError from '../../../src/request/errors/RequestTimeoutError';
 import { default as nodeRequest, NodeRequestOptions } from '../../../src/request/node';
-import ArraySink from 'dojo-streams/ArraySink';
-import ReadableStream, { Source } from 'dojo-streams/ReadableStream';
-import ReadableStreamController from 'dojo-streams/ReadableStreamController';
-import WritableStream from 'dojo-streams/WritableStream';
 import { createServer } from 'http';
 import { parse } from 'url';
 
@@ -16,21 +11,6 @@ const serverUrl = 'http://localhost:' + serverPort;
 let server: any;
 let proxy: any;
 let requestData: string;
-
-class BaseStringSource implements Source<string> {
-
-	start(controller: ReadableStreamController<string>): Promise<void> {
-		return Promise.resolve();
-	}
-
-	pull(controller: ReadableStreamController<string>): Promise<void> {
-		return Promise.resolve();
-	}
-
-	cancel(reason?: any): Promise<void> {
-		return Promise.resolve();
-	}
-}
 
 interface DummyResponse {
 	body?: string;
@@ -214,15 +194,6 @@ function getAuthRequestUrl(dataKey: string, user: string = 'user', password: str
 	return requestUrl.slice(0, 7) + user + ':' + password + '@' + requestUrl.slice(7);
 }
 
-class ErrorableStream<T> extends WritableStream<T> {
-	write(chunk: T): Promise<void> {
-		const error = new Error('test');
-		this._error(error);
-
-		return Promise.reject(error);
-	}
-}
-
 registerSuite({
 	name: 'request/node',
 
@@ -287,45 +258,6 @@ registerSuite({
 
 	'request options': {
 		data: {
-			stream(this: any): void {
-				const dfd = this.async();
-				const source = new BaseStringSource();
-				source.start = function (controller: ReadableStreamController<string>): Promise<void> {
-					controller.enqueue('{ "test": "1" }');
-					controller.close();
-					return Promise.resolve();
-				};
-
-				nodeRequest(getRequestUrl('postStream'), {
-					data: new ReadableStream(source),
-					method: 'POST'
-				}).then(
-					dfd.callback(function (response: any) {
-						assert.deepEqual(requestData, { test: '1' });
-					}),
-					dfd.reject.bind(dfd)
-				);
-			},
-
-			'stream error'(this: any): void {
-				const dfd = this.async();
-				const source = new BaseStringSource();
-				source.start = function (controller: ReadableStreamController<string>): Promise<void> {
-					return Promise.reject(new Error('test'));
-				};
-
-				nodeRequest(getRequestUrl('postStream'), {
-					data: new ReadableStream(source),
-					method: 'POST'
-				}).then(
-					dfd.resolve.bind(dfd),
-					dfd.callback(function (error: any) {
-						const url = serverUrl + '/?dataKey=postStream';
-						assert.strictEqual(error.message, '[POST ' + url + '] test');
-					})
-				);
-			},
-
 			'string'(this: any): void {
 				const dfd = this.async();
 				nodeRequest(getRequestUrl('foo.json'), {
@@ -448,35 +380,6 @@ registerSuite({
 				}),
 				dfd.reject.bind(dfd)
 			);
-		},
-
-		streamTarget: {
-			success(this: any): void {
-				const dfd = this.async();
-				const sink = new ArraySink();
-				const stream = new WritableStream(sink);
-				nodeRequest(getRequestUrl('foo.json'), {
-					streamTarget: stream
-				}).then(
-					dfd.callback(function (response: any) {
-						assert.deepEqual(JSON.parse(<string> sink.chunks[0]), { foo: 'bar' });
-					}),
-					dfd.reject.bind(dfd)
-				);
-			},
-
-			error(this: any): void {
-				const dfd = this.async();
-				const stream = new ErrorableStream<string>(new ArraySink());
-				nodeRequest(getRequestUrl('foo.json'), {
-					streamTarget: stream
-				}).then(
-					dfd.resolve.bind(dfd),
-					dfd.callback(function (error: any): void {
-						assert.instanceOf(error, Error);
-					})
-				);
-			}
 		},
 
 		'"timeout"'(this: any): void {
