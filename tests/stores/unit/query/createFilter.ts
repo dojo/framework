@@ -260,6 +260,102 @@ registerSuite({
 		}
 	},
 
+	'from objects': {
+		'nested'() {
+			const individualFilter = {
+				filterType: FilterType.EqualTo,
+				value: 5,
+				path: createJsonPointer('key', 'key2')
+			};
+			const pickFirstItem = [
+				{
+					filterType: FilterType.LessThanOrEqualTo,
+					value: 5,
+					path: createJsonPointer('key', 'key2')
+				},
+				BooleanOp.And,
+				{
+					filterType: FilterType.EqualTo,
+					value: 'item-1',
+					path: 'id'
+				},
+				BooleanOp.Or,
+				{
+					filterType: FilterType.GreaterThanOrEqualTo,
+					value: 5,
+					path: createJsonPointer('key', 'key2')
+				},
+				{
+					filterType: FilterType.EqualTo,
+					value: 'item-1',
+					path: 'id'
+				},
+				BooleanOp.Or,
+				{
+					filterType: FilterType.GreaterThan,
+					value: 5,
+					path: createJsonPointer('key', 'key2')
+				},
+				{
+					filterType: FilterType.EqualTo,
+					value: 'item-1',
+					path: 'id'
+				}
+			];
+
+			const pickAllItems = [
+				{
+					filterType: FilterType.LessThan,
+					value: 100,
+					path: createJsonPointer('key', 'key2')
+				}
+			];
+
+			const pickNoItems = [
+				{
+					filterType: FilterType.GreaterThan,
+					value: 100,
+					path: createJsonPointer('key', 'key2')
+				}
+			];
+
+			const pickLastItem = [
+				{
+					filterType: FilterType.EqualTo,
+					value: '3',
+					path: 'id'
+				}
+			];
+
+			assert.deepEqual(createFilter(pickFirstItem).apply(nestedList), [ nestedList[0] ], 'Should pick first item');
+			assert.deepEqual(createFilter(pickAllItems).apply(nestedList), nestedList, 'Should pick all items');
+			assert.deepEqual(createFilter(pickNoItems).apply(nestedList), [], 'Should pick no items');
+			assert.deepEqual(createFilter(pickLastItem).apply(nestedList), [ nestedList[2] ], 'Should pick last item');
+			assert.deepEqual(
+				createFilter([ pickFirstItem, BooleanOp.And, pickLastItem ]).apply(nestedList),
+				[],
+				'Shouldn\'t pick any items'
+			);
+			assert.deepEqual(
+				createFilter([ pickFirstItem, BooleanOp.Or, pickLastItem ]).apply(nestedList),
+				[ nestedList[0], nestedList[2] ],
+				'Should have picked first and last item'
+			);
+
+			assert.deepEqual(
+				createFilter(
+					[ pickFirstItem, BooleanOp.Or, [ pickAllItems, BooleanOp.And, pickNoItems ], BooleanOp.Or, pickLastItem ]
+				).apply(nestedList),
+				[ nestedList[0], nestedList[2] ],
+				'Should have picked first and last item'
+			);
+
+			assert.deepEqual(
+				createFilter(individualFilter).apply(nestedList), [ nestedList[0] ], 'Should have picked first item'
+			);
+		}
+	},
+
 	'serializing': {
 		'simple - no path': {
 			'empty filter': function() {
@@ -447,7 +543,7 @@ registerSuite({
 			return 'Return any item where' + recursivelySerialize(filter);
 		}
 
-		assert.strictEqual(createFilter(serializeFilter)
+		assert.strictEqual(createFilter(undefined, serializeFilter)
 			.greaterThan('key', 3)
 			.lessThan('key', 5)
 			.or()

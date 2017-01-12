@@ -26,7 +26,20 @@ export const enum BooleanOp {
 	Or
 }
 
-export type FilterChainMember<T> = (SimpleFilter<T> | BooleanOp);
+function isBooleanOp(op: any): op is BooleanOp {
+	return op === BooleanOp.And || op === BooleanOp.Or;
+}
+export type FilterChainMember<T> = SimpleFilter<T> | BooleanOp;
+
+export interface FilterDescriptor {
+	readonly filterType: FilterType;
+	readonly path: ObjectPointer;
+	readonly value: any;
+}
+
+export type FilterArrayEntry = FilterDescriptor | BooleanOp | FilterArray;
+
+interface FilterArray extends Array<FilterArrayEntry> {}
 
 export interface SimpleFilter<T> extends Query<T> {
 	readonly filterType: FilterType;
@@ -35,6 +48,7 @@ export interface SimpleFilter<T> extends Query<T> {
 	readonly path?: ObjectPointer;
 	readonly value?: any;
 }
+
 export interface BooleanFilter<T> extends SimpleFilter<T> {
 	lessThan(path: ObjectPointer, value: number): Filter<T>;
 	lessThanOrEqualTo(path: ObjectPointer, value: number): Filter<T>;
@@ -63,9 +77,42 @@ function isFilter<T>(filterOrFunction: FilterChainMember<T>): filterOrFunction i
 	return typeof filterOrFunction !== 'function'  && (<any> filterOrFunction).apply;
 }
 
-function createFilter<T>(serializer?: (filter: Filter<T>) => string): Filter<T> {
-	// var subFilters: NestedFilter<T> = subFilters || [];
+function createFilterOrReturnOp<T>(descriptorOrOp: FilterDescriptor | BooleanOp) {
+	if (isBooleanOp(descriptorOrOp)) {
+		return descriptorOrOp;
+	}
+	else {
+		return createComparator<T>(
+			descriptorOrOp.filterType,
+			descriptorOrOp.value,
+			descriptorOrOp.path
+		);
+	}
+}
+
+function createFilter<T>(filterDescriptors?: FilterDescriptor | FilterArray, serializer?: (filter: Filter<T>) => string): Filter<T> {
 	let filters: FilterChainMember<T>[] = [];
+	if (filterDescriptors) {
+		if (Array.isArray(filterDescriptors)) {
+			filters = filterDescriptors.map((descriptorChainMember) => {
+				if (Array.isArray(descriptorChainMember)) {
+					return createFilter<T>(descriptorChainMember);
+				}
+				else {
+					return createFilterOrReturnOp<T>(descriptorChainMember);
+				}
+			});
+		}
+		else {
+			filters.push(
+				createComparator<T>(
+					filterDescriptors.filterType,
+					filterDescriptors.value,
+					filterDescriptors.path
+				)
+			);
+		}
+	}
 
 	return createFilterHelper(filters, serializer || serializeFilter);
 }
