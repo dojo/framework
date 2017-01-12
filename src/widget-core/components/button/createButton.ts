@@ -10,6 +10,7 @@ export interface ButtonState extends WidgetState, FormFieldMixinState<string> {
 
 export interface ButtonProperties extends WidgetProperties {
 	label?: string;
+	name?: string;
 	onClick?(event: MouseEvent): void;
 }
 

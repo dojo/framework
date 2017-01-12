@@ -501,7 +501,7 @@ registerSuite({
 		},
 		'__render__() and invalidate()'() {
 			const widgetBase = createWidgetBase({
-				properties: { id: 'foo', label: 'foo' }
+				properties: <any> { id: 'foo', label: 'foo' }
 			});
 			const result1 = <VNode> widgetBase.__render__();
 			const result2 = <VNode> widgetBase.__render__();
