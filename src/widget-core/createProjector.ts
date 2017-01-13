@@ -1,4 +1,4 @@
-import { ComposeFactory } from 'dojo-compose/compose';
+import { ComposeFactory } from '@dojo/compose/compose';
 import createWidgetBase from './createWidgetBase';
 import createProjectorMixin, { Projector, ProjectorOptions } from './mixins/createProjectorMixin';
 

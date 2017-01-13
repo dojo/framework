@@ -4,11 +4,11 @@
  * Additional features and functionality are added to widgets by compositing mixins onto these
  * bases.
  */
-import Promise from 'dojo-shim/Promise';
-import { EventedListener, Stateful, StatefulOptions, State } from 'dojo-interfaces/bases';
-import { EventTargettedObject, EventTypedObject, Handle, StylesMap } from 'dojo-interfaces/core';
-import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
-import { ComposeFactory } from 'dojo-compose/compose';
+import Promise from '@dojo/shim/Promise';
+import { EventedListener, Stateful, StatefulOptions, State } from '@dojo/interfaces/bases';
+import { EventTargettedObject, EventTypedObject, Handle, StylesMap } from '@dojo/interfaces/core';
+import { VNode, VNodeProperties } from '@dojo/interfaces/vdom';
+import { ComposeFactory } from '@dojo/compose/compose';
 
 /**
  * A function that is called to return top level node

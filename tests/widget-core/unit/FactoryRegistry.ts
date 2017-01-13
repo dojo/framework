@@ -1,6 +1,6 @@
 import FactoryRegistry from './../../src/FactoryRegistry';
 import createWidgetBase from './../../src/createWidgetBase';
-import Promise from 'dojo-shim/Promise';
+import Promise from '@dojo/shim/Promise';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 

@@ -1,7 +1,7 @@
 /* tslint:disable:interface-name */
-import compose, { ComposeFactory } from 'dojo-compose/compose';
-import { assign } from 'dojo-core/lang';
-import i18n, { Bundle, formatMessage, getCachedMessages, Messages, observeLocale } from 'dojo-i18n/i18n';
+import compose, { ComposeFactory } from '@dojo/compose/compose';
+import { assign } from '@dojo/core/lang';
+import i18n, { Bundle, formatMessage, getCachedMessages, Messages, observeLocale } from '@dojo/i18n/i18n';
 import { VNodeProperties } from 'maquette';
 import { NodeAttributeFunction, Widget, WidgetOptions, WidgetProperties, WidgetState } from '../interfaces';
 
@@ -32,7 +32,7 @@ export interface I18nFactory extends ComposeFactory<I18nMixin<Messages>, WidgetO
 
 export interface I18nProperties extends WidgetProperties {
 	/**
-	 * The locale for the widget. Is not specified, then the root locale (as determined by `dojo-i18n`) is assumed.
+	 * The locale for the widget. Is not specified, then the root locale (as determined by `@dojo/i18n`) is assumed.
 	 * If specified, the widget's node will have a `data-locale` property set to the locale, in order to facilitate
 	 * styling localized components if the use case arises.
 	 */

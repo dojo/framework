@@ -1,5 +1,5 @@
-import { isComposeFactory } from 'dojo-compose/compose';
-import createStateful from 'dojo-compose/bases/createStateful';
+import { isComposeFactory } from '@dojo/compose/compose';
+import createStateful from '@dojo/compose/bases/createStateful';
 import {
 	DNode,
 	PropertiesChangeEvent,
@@ -12,11 +12,11 @@ import {
 	WidgetBaseFactory,
 	FactoryRegistryItem
 } from './interfaces';
-import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
-import { assign } from 'dojo-core/lang';
-import WeakMap from 'dojo-shim/WeakMap';
-import Promise from 'dojo-shim/Promise';
-import Map from 'dojo-shim/Map';
+import { VNode, VNodeProperties } from '@dojo/interfaces/vdom';
+import { assign } from '@dojo/core/lang';
+import WeakMap from '@dojo/shim/WeakMap';
+import Promise from '@dojo/shim/Promise';
+import Map from '@dojo/shim/Map';
 import { v, registry } from './d';
 import FactoryRegistry from './FactoryRegistry';
 import shallowPropertyComparisonMixin from './mixins/shallowPropertyComparisonMixin';

@@ -1,12 +1,12 @@
-import { Handle } from 'dojo-interfaces/core';
-import { ObservablePatchableStore } from 'dojo-interfaces/abilities';
-import WeakMap from 'dojo-shim/WeakMap';
-import { includes } from 'dojo-shim/array';
-import { assign } from 'dojo-core/lang';
+import { Handle } from '@dojo/interfaces/core';
+import { ObservablePatchableStore } from '@dojo/interfaces/abilities';
+import WeakMap from '@dojo/shim/WeakMap';
+import { includes } from '@dojo/shim/array';
+import { assign } from '@dojo/core/lang';
 import { PropertiesChangeEvent } from './../interfaces';
-import { State, StatefulMixin } from 'dojo-interfaces/bases';
-import createEvented from 'dojo-compose/bases/createEvented';
-import { ComposeFactory } from 'dojo-compose/compose';
+import { State, StatefulMixin } from '@dojo/interfaces/bases';
+import createEvented from '@dojo/compose/bases/createEvented';
+import { ComposeFactory } from '@dojo/compose/compose';
 
 /**
  * Properties required for the external state mixin

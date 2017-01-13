@@ -1,5 +1,5 @@
-import { assign } from 'dojo-core/lang';
-import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
+import { assign } from '@dojo/core/lang';
+import { VNode, VNodeProperties } from '@dojo/interfaces/vdom';
 import { h } from 'maquette';
 import {
 	DNode,

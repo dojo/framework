@@ -1,9 +1,9 @@
-import global from 'dojo-core/global';
-import compose, { ComposeFactory } from 'dojo-compose/compose';
-import { EventTargettedObject, Handle } from 'dojo-interfaces/core';
-import { VNode, VNodeProperties } from 'dojo-interfaces/vdom';
-import Promise from 'dojo-shim/Promise';
-import WeakMap from 'dojo-shim/WeakMap';
+import global from '@dojo/core/global';
+import compose, { ComposeFactory } from '@dojo/compose/compose';
+import { EventTargettedObject, Handle } from '@dojo/interfaces/core';
+import { VNode, VNodeProperties } from '@dojo/interfaces/vdom';
+import Promise from '@dojo/shim/Promise';
+import WeakMap from '@dojo/shim/WeakMap';
 import { createProjector as createMaquetteProjector, Projector as MaquetteProjector } from 'maquette';
 import { Widget, WidgetState, WidgetOptions, WidgetProperties } from '../interfaces';
 /**

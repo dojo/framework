@@ -1,4 +1,4 @@
-import { VNodeProperties } from 'dojo-interfaces/vdom';
+import { VNodeProperties } from '@dojo/interfaces/vdom';
 import createWidgetBase from '../../createWidgetBase';
 import { Widget, WidgetProperties, WidgetFactory } from './../../interfaces';
 import createFormFieldMixin, { FormFieldMixin } from '../../mixins/createFormFieldMixin';

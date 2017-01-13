@@ -1,6 +1,6 @@
-import { isComposeFactory } from 'dojo-compose/compose';
-import Promise from 'dojo-shim/Promise';
-import Map from 'dojo-shim/Map';
+import { isComposeFactory } from '@dojo/compose/compose';
+import Promise from '@dojo/shim/Promise';
+import Map from '@dojo/shim/Map';
 import {
 	WidgetBaseFactory,
 	FactoryRegistryInterface,

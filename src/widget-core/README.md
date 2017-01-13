@@ -1,14 +1,14 @@
-# dojo-widgets
+# @dojo/widgets
 
 [![Build Status](https://travis-ci.org/dojo/widgets.svg?branch=master)](https://travis-ci.org/dojo/widgets)
 [![codecov](https://codecov.io/gh/dojo/widgets/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/widgets)
-[![npm version](https://badge.fury.io/js/dojo-widgets.svg)](http://badge.fury.io/js/dojo-widgets)
+[![npm version](https://badge.fury.io/js/@dojo/widgets.svg)](http://badge.fury.io/js/@dojo/widgets)
 
 A core widget library for Dojo.
 
 **WARNING** This is *alpha* software. It is not yet production ready, so you should use at your own risk.
 
-For more background on dojo-widgets, there is a document describing the [widgeting system](https://github.com/dojo/meta/blob/master/documents/Widget-System.md).
+For more background on @dojo/widgets, there is a document describing the [widgeting system](https://github.com/dojo/meta/blob/master/documents/Widget-System.md).
 
 - [Usage](#usage)
 - [Features](#features)
@@ -21,7 +21,7 @@ For more background on dojo-widgets, there is a document describing the [widgeti
     - [Event Handlers](#event-handlers)
     - [Projector](#projector)
     - [Internationalization](#internationalization)
-    - [Dojo Widget Components](#dojo-widget-components)
+    - [Dojo Widget Components](#@dojo/widget-components)
 - [How Do I Contribute?](#how-do-i-contribute)
     - [Installation](#installation)
     - [Testing](#testing)
@@ -29,32 +29,32 @@ For more background on dojo-widgets, there is a document describing the [widgeti
 
 ## Usage
 
-To use dojo-widgets in a project install the package along with the required peer dependencies.
+To use @dojo/widgets in a project install the package along with the required peer dependencies.
 
 ```shell
-npm install dojo-widgets
+npm install @dojo/widgets
 
 # peer dependencies
-npm install dojo-has
-npm install dojo-shim
-npm install dojo-core
-npm install dojo-compose
+npm install @dojo/has
+npm install @dojo/shim
+npm install @dojo/core
+npm install @dojo/compose
 ```
 
-To use dojo-widgets, import the module in the project. For more details see [features](#features) below.
+To use @dojo/widgets, import the module in the project. For more details see [features](#features) below.
 
 ```ts
-import createButton from 'dojo-widgets/components/button/createButton';
+import createButton from '@dojo/widgets/components/button/createButton';
 ```
 
 or use the [dojo cli](https://github.com/dojo/cli-create-app) to create a complete Dojo skeleton application.
 
 ## Features
 
-dojo-widgets are based on a virtual DOM implementation named [Maquette](http://maquettejs.org/) as well as some foundational classes
-provided in [dojo-compose](https://github.com/dojo/compose).
+@dojo/widgets are based on a virtual DOM implementation named [Maquette](http://maquettejs.org/) as well as some foundational classes
+provided in [@dojo/compose](https://github.com/dojo/compose).
 
-The smallest `dojo-widgets` example looks like this:
+The smallest `@dojo/widgets` example looks like this:
 
 ```ts
 const projector = createProjector();
@@ -70,12 +70,12 @@ These are some of the **important** principles to keep in mind when developing w
  
 1. the widget *render* function should **never** be overridden
 2. with the exception of the top level projector you should **never** have to deal with widget instances.
-3. hyperscript should **always** be written using the dojo-widgets `v` helper function.
+3. hyperscript should **always** be written using the @dojo/widgets `v` helper function.
 4. `state` should **never** be set outside of the widget instance.
 
 ### Base Widget
 
-The class `createWidgetBase` provides all base dojo-widgets functionality including caching and widget lifecycle management. It can be used directly or extended to create custom widgets.
+The class `createWidgetBase` provides all base @dojo/widgets functionality including caching and widget lifecycle management. It can be used directly or extended to create custom widgets.
 
 #### Widget API
 
@@ -111,7 +111,7 @@ As a convenience, all event handlers are automatically bound to the widget insta
 To create a basic widget `createWidgetBase` can be used directly by importing the class.
 
 ```ts
-import createWidgetBase from 'dojo-widgets/createWidgetBase';
+import createWidgetBase from '@dojo/widgets/createWidgetBase';
 
 const myBasicWidget = createWidgetBase();
 ```
@@ -124,7 +124,7 @@ The widget creates the following DOM element:
 The following example demonstrates how `id`, `classes` and `styles` are applied to the generated DOM.
 
 ```ts
-import createWidgetBase from 'dojo-widgets/createWidgetBase';
+import createWidgetBase from '@dojo/widgets/createWidgetBase';
 
 const myBasicWidget = createWidgetBase({
     properties: {
@@ -168,13 +168,13 @@ When creating custom widgets, you use the `v` and `w` functions from the `d` mod
 It is imported by:
 
 ```ts
-import { v, w } from 'dojo-widgets/d';
+import { v, w } from '@dojo/widgets/d';
 ```
 
-The argument and return types are available from `dojo-widgets/interfaces` as follows:
+The argument and return types are available from `@dojo/widgets/interfaces` as follows:
 
 ```ts
-import { DNode, HNode, WNode } from 'dojo-widgets/interfaces';
+import { DNode, HNode, WNode } from '@dojo/widgets/interfaces';
 ```
 
 ##### `v`
@@ -226,7 +226,7 @@ The d module exports a global `registry` to be used to define a factory label ag
 This enables consumers to specify a `string` label when authoring widgets using the `w` function (see below) and allows the factory to resolve asyncronously (for example if the module had not been loaded).
 
 ```ts
-import { registry } from 'dojo-widgets/d';
+import { registry } from '@dojo/widgets/d';
 import createMyWidget from './createMyWidget';
 
 // registers the widget factory that will be available immediately
@@ -245,7 +245,7 @@ registry.define('my-widget-3', () => Promise.resolve(createMyWidget));
 It is recommmended to use the factory registry when defining widgets using `w` in order to support lazy factory resolution when required. Example of registering a function that returns a `Promise` that resolves to a `Factory`.
 
 ```ts
-import load from 'dojo-core/load';
+import load from '@dojo/core/load';
 
 registry.define('my-widget', () => {
 	return load(require, './createMyWidget')
@@ -255,15 +255,15 @@ registry.define('my-widget', () => {
 
 ##### `w`
 
-`w` is an abstraction layer for dojo-widgets that enables dojo 2's lazy instantiation, instance management and caching.
+`w` is an abstraction layer for @dojo/widgets that enables dojo 2's lazy instantiation, instance management and caching.
 
-Creates a dojo-widget using the `factory` and `options`.
+Creates a @dojo/widget using the `factory` and `options`.
 
 ```ts
 w(factory: string | ComposeFactory<W, O>, options: O): WNode[];
 ```
 
-Creates a dojo-widget using the `factory`, `options` and `children`
+Creates a @dojo/widget using the `factory`, `options` and `children`
 
 ```ts
 w(factory: string | ComposeFactory<W, O>, options: O, children: (DNode | null)[]): WNode[];
@@ -282,10 +282,10 @@ To create custom reusable widgets you can extend `createWidgetBase`.
 A simple widget with no children such as a `label` widget can be created like this:
 
 ```ts
-import { ComposeFactory } from 'dojo-compose/compose';
-import { VNodeProperties } from 'dojo-interfaces/vdom';
-import { Widget, WidgetOptions, WidgetState } from 'dojo-widgets/interfaces';
-import createWidgetBase from 'dojo-widgets/createWidgetBase';
+import { ComposeFactory } from '@dojo/compose/compose';
+import { VNodeProperties } from '@dojo/interfaces/vdom';
+import { Widget, WidgetOptions, WidgetState } from '@dojo/widgets/interfaces';
+import createWidgetBase from '@dojo/widgets/createWidgetBase';
 
 interface LabelState extends WidgetState {
     label?: string;
@@ -321,10 +321,10 @@ const label = createLabelWidget({ state: { label: 'I am a label' }});
 To create structured widgets override the `getChildrenNodes` function.
 
 ```ts
-import { ComposeFactory } from 'dojo-compose/compose';
-import { DNode, Widget, WidgetOptions, WidgetState } from 'dojo-widgets/interfaces';
-import createWidgetBase from 'dojo-widgets/createWidgetBase';
-import { v } from 'dojo-widgets/d';
+import { ComposeFactory } from '@dojo/compose/compose';
+import { DNode, Widget, WidgetOptions, WidgetState } from '@dojo/widgets/interfaces';
+import createWidgetBase from '@dojo/widgets/createWidgetBase';
+import { v } from '@dojo/widgets/d';
 
 interface ListItem {
     name: string;
@@ -424,11 +424,11 @@ In order to attach the `createProjector` to the page call either `.append`, `.me
 Instantiating `createProjector` directly:
 
 ```ts
-import { DNode } from 'dojo-widgets/interfaces';
-import { w } from 'dojo-widgets/d';
-import createProjector, { Projector } from 'dojo-widgets/createProjector';
-import createButton from 'dojo-widgets/components/button/createButton';
-import createTextInput from 'dojo-widgets/components/textinput/createTextInput';
+import { DNode } from '@dojo/widgets/interfaces';
+import { w } from '@dojo/widgets/d';
+import createProjector, { Projector } from '@dojo/widgets/createProjector';
+import createButton from '@dojo/widgets/components/button/createButton';
+import createTextInput from '@dojo/widgets/components/textinput/createTextInput';
 
 const projector = createProjector();
 
@@ -445,11 +445,11 @@ projector.append().then(() => {
 Using the `createProjector` as a base for a root widget:
 
 ```ts
-import { DNode } from 'dojo-widgets/interfaces';
-import { w } from 'dojo-widgets/d';
-import createProjector, { Projector } from 'dojo-widgets/createProjector';
-import createButton from 'dojo-widgets/components/button/createButton';
-import createTextInput from 'dojo-widgets/components/textinput/createTextInput';
+import { DNode } from '@dojo/widgets/interfaces';
+import { w } from '@dojo/widgets/d';
+import createProjector, { Projector } from '@dojo/widgets/createProjector';
+import createButton from '@dojo/widgets/components/button/createButton';
+import createTextInput from '@dojo/widgets/components/textinput/createTextInput';
 
 const createApp = createProjector.mixin({
 	mixin: {
@@ -480,7 +480,7 @@ app.append().then(() => {
 
 ### Internationalization
 
-Widgets can be internationalized by mixing in `dojo-widgets/mixins/createI18nMixin`. [Message bundles](https://github.com/dojo/i18n) are localized by passing them to `localizeBundle`. If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then the default messages are returned and the widget will be invalidated once the locale-specific messages have been loaded. Each widget can have its own locale by setting its `state.locale`; if no locale is set, then the default locale as set by [`dojo-i18n`](https://github.com/dojo/i18n) is assumed.
+Widgets can be internationalized by mixing in `@dojo/widgets/mixins/createI18nMixin`. [Message bundles](https://github.com/dojo/i18n) are localized by passing them to `localizeBundle`. If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then the default messages are returned and the widget will be invalidated once the locale-specific messages have been loaded. Each widget can have its own locale by setting its `state.locale`; if no locale is set, then the default locale as set by [`@dojo/i18n`](https://github.com/dojo/i18n) is assumed.
 
 ```typescript
 const createI18nWidget = createWidgetBase

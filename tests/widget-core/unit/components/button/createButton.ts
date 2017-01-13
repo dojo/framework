@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { VNode } from 'dojo-interfaces/vdom';
+import { VNode } from '@dojo/interfaces/vdom';
 import createButton from '../../../../src/components/button/createButton';
 
 registerSuite({

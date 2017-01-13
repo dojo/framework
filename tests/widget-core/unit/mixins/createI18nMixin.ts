@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import i18n, { invalidate, switchLocale, systemLocale } from 'dojo-i18n/i18n';
+import i18n, { invalidate, switchLocale, systemLocale } from '@dojo/i18n/i18n';
 import * as sinon from 'sinon';
 import createI18nMixin from '../../../src/mixins/createI18nMixin';
 import createWidgetBase from '../../../src/createWidgetBase';

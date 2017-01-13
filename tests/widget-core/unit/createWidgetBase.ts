@@ -1,9 +1,9 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Promise from 'dojo-shim/Promise';
+import Promise from '@dojo/shim/Promise';
 import createWidgetBase from '../../src/createWidgetBase';
 import { DNode, HNode, WidgetProperties } from './../../src/interfaces';
-import { VNode } from 'dojo-interfaces/vdom';
+import { VNode } from '@dojo/interfaces/vdom';
 import { v, w, registry } from '../../src/d';
 import { stub } from 'sinon';
 

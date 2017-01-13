@@ -12,7 +12,7 @@ export const proxyUrl = 'http://localhost:9000/';
 export const capabilities = {
 	'browserstack.debug': false,
 	project: 'Dojo 2',
-	name: 'dojo-widgets'
+	name: '@dojo/widgets'
 };
 
 // Browsers to run integration testing against. Note that version numbers must be strings if used with Sauce
@@ -48,8 +48,8 @@ export const initialBaseUrl: string | null = (function () {
 // The desired AMD loader to use when running unit tests (client.html/client.js). Omit to use the default Dojo
 // loader
 export const loaders = {
-	'host-browser': 'node_modules/dojo-loader/loader.js',
-	'host-node': 'dojo-loader'
+	'host-browser': 'node_modules/@dojo/loader/loader.js',
+	'host-node': '@dojo/loader'
 };
 
 // Configuration options for the module loader; any AMD configuration options supported by the specified AMD loader
@@ -63,12 +63,7 @@ export const loaderOptions = {
 		{ name: 'cldr-data', location: 'node_modules/cldr-data' },
 		{ name: 'cldrjs', location: 'node_modules/cldrjs' },
 		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
-		{ name: 'dojo-compose', location: 'node_modules/dojo-compose' },
-		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
-		{ name: 'dojo-has', location: 'node_modules/dojo-has' },
-		{ name: 'dojo-stores', location: 'node_modules/dojo-stores' },
-		{ name: 'dojo-i18n', location: 'node_modules/dojo-i18n' },
-		{ name: 'dojo-shim', location: 'node_modules/dojo-shim' },
+		{ name: '@dojo', location: 'node_modules/@dojo' },
 		{ name: 'globalize', location: 'node_modules/globalize', main: 'dist/globalize' },
 		{ name: 'immutable', location: 'node_modules/immutable/dist', main: 'immutable' },
 		{ name: 'maquette', location: 'node_modules/maquette/dist', main: 'maquette' },

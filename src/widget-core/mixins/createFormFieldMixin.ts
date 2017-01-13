@@ -1,10 +1,10 @@
-import { VNodeProperties } from 'dojo-interfaces/vdom';
-import { ComposeFactory } from 'dojo-compose/compose';
-import createStateful from 'dojo-compose/bases/createStateful';
-import createCancelableEvent from 'dojo-compose/bases/createCancelableEvent';
-import { EventTargettedObject, EventCancelableObject, Handle } from 'dojo-interfaces/core';
-import { EventedListener, Stateful, StatefulOptions } from 'dojo-interfaces/bases';
-import { assign } from 'dojo-core/lang';
+import { VNodeProperties } from '@dojo/interfaces/vdom';
+import { ComposeFactory } from '@dojo/compose/compose';
+import createStateful from '@dojo/compose/bases/createStateful';
+import createCancelableEvent from '@dojo/compose/bases/createCancelableEvent';
+import { EventTargettedObject, EventCancelableObject, Handle } from '@dojo/interfaces/core';
+import { EventedListener, Stateful, StatefulOptions } from '@dojo/interfaces/bases';
+import { assign } from '@dojo/core/lang';
 import { NodeAttributeFunction } from './../interfaces';
 
 export interface FormFieldMixinOptions<V, S extends FormFieldMixinState<V>> extends StatefulOptions<S> {

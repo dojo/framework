@@ -1,8 +1,8 @@
-import { VNodeProperties } from 'dojo-interfaces/vdom';
-import compose, { ComposeFactory } from 'dojo-compose/compose';
+import { VNodeProperties } from '@dojo/interfaces/vdom';
+import compose, { ComposeFactory } from '@dojo/compose/compose';
 import { NodeAttributeFunction } from './../interfaces';
-import createStateful from 'dojo-compose/bases/createStateful';
-import { Stateful, StatefulOptions } from 'dojo-interfaces/bases';
+import createStateful from '@dojo/compose/bases/createStateful';
+import { Stateful, StatefulOptions } from '@dojo/interfaces/bases';
 
 export type CssTransitionMixinState = {
 	/**

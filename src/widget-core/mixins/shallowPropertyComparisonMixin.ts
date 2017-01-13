@@ -1,6 +1,6 @@
-import { entries } from 'dojo-shim/object';
+import { entries } from '@dojo/shim/object';
 import { WidgetProperties, PropertyComparison } from './../interfaces';
-import { deepAssign } from 'dojo-core/lang';
+import { deepAssign } from '@dojo/core/lang';
 
 /**
  * Determine if the value is an Object
