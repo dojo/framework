@@ -1,7 +1,7 @@
 import createInMemoryStorage from '../../../src/storage/createInMemoryStorage';
-import Promise from 'dojo-shim/Promise';
-import WeakMap from 'dojo-shim/WeakMap';
-import { delay } from 'dojo-core/async/timing';
+import Promise from '@dojo/shim/Promise';
+import WeakMap from '@dojo/shim/WeakMap';
+import { delay } from '@dojo/core/async/timing';
 
 export interface Identity<T> {
 	(value: T): Promise<T>;

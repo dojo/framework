@@ -1,17 +1,17 @@
 import { ObservableStore, ItemUpdate, StoreDelta, mergeDeltas, buildIndex } from './mixins/createObservableStoreMixin';
 import { Query, QueryType } from '../query/interfaces';
-import { Observable, Observer } from 'dojo-core/Observable';
+import { Observable, Observer } from '@dojo/core/Observable';
 import { Patch } from '../patch/createPatch';
-import compose, { ComposeFactory } from 'dojo-compose/compose';
+import compose, { ComposeFactory } from '@dojo/compose/compose';
 import createFilter, { Filter } from '../query/createFilter';
 import createRange, { StoreRange } from '../query/createStoreRange';
 import createSort, { Sort } from '../query/createSort';
 import createCompoundQuery from '../query/createCompoundQuery';
-import Promise from 'dojo-shim/Promise';
-import Map from 'dojo-shim/Map';
-import Set from 'dojo-shim/Set';
-import WeakMap from 'dojo-shim/WeakMap';
-import { debounce } from 'dojo-core/util';
+import Promise from '@dojo/shim/Promise';
+import Map from '@dojo/shim/Map';
+import Set from '@dojo/shim/Set';
+import WeakMap from '@dojo/shim/WeakMap';
+import { debounce } from '@dojo/core/util';
 import { isFilter, isSort } from './mixins/createQueryTransformMixin';
 
 export interface TrackableStoreDelta<T> extends StoreDelta<T> {

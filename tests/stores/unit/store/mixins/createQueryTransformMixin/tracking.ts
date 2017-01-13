@@ -6,7 +6,7 @@ import { CrudOptions } from '../../../../../src/store/createStore';
 import { UpdateResults } from '../../../../../src/store/createStore';
 import { QueryStore, createQueryStore } from '../../../../../src/store/mixins/createQueryTransformMixin';
 import { TrackableStoreDelta, MappedQueryTransformResult } from '../../../../../src/store/createQueryTransformResult';
-import Promise from 'dojo-shim/Promise';
+import Promise from '@dojo/shim/Promise';
 import createFilter from '../../../../../src/query/createFilter';
 
 registerSuite(function() {

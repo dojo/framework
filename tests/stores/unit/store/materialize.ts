@@ -6,7 +6,7 @@ import { createQueryStore } from '../../../src/store/mixins/createQueryTransform
 import { createObservableStore, StoreDelta } from '../../../src/store/mixins/createObservableStoreMixin';
 import materialize from '../../../src/store/materialize';
 import { CrudOptions, Store } from '../../../src/store/createStore';
-import { delay } from 'dojo-core/async/timing';
+import { delay } from '@dojo/core/async/timing';
 
 type TransformedObject = {
 	_value: number;

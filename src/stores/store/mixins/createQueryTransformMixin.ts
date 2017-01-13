@@ -3,11 +3,11 @@ import createFilter, { Filter } from '../../query/createFilter';
 import createRange, { StoreRange } from '../../query/createStoreRange';
 import { StoreOptions, CrudOptions, UpdateResults } from '../createStore';
 import createSort, { Sort } from '../../query/createSort';
-import { ComposeMixinDescriptor, ComposeFactory } from 'dojo-compose/compose';
+import { ComposeMixinDescriptor, ComposeFactory } from '@dojo/compose/compose';
 import { ObservableStore, createObservableStore, ObservableStoreOptions } from './createObservableStoreMixin';
 import { Patch } from '../../patch/createPatch';
 import createMappedQueryTransformResult, { QueryTransformResult, MappedQueryTransformResult, createQueryTransformResult } from '../createQueryTransformResult';
-import WeakMap from 'dojo-shim/WeakMap';
+import WeakMap from '@dojo/shim/WeakMap';
 
 export interface QueryTransformMixin<T, S extends ObservableStore<T, any, any>> {
 	/**

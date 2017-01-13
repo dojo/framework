@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import { createData, patches } from '../../../support/createData';
 import { createQueryStore } from '../../../../../src/store/mixins/createQueryTransformMixin';
 import createFilter from '../../../../../src/query/createFilter';
-import Set from 'dojo-shim/Set';
+import Set from '@dojo/shim/Set';
 
 function getStoreAndDfd(test: any, useAsync = true) {
 	const dfd = useAsync ? test.async(1000) : null;

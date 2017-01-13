@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import createStore, { StoreOperation, StoreOptions, CrudOptions, Store, UpdateResults} from '../../../../src/store/createStore';
 import createTransactionMixin, { TransactionStore } from '../../../../src/store/mixins/createTransactionMixin';
 import { createData, ItemType, createUpdates, patches, patchedItems } from '../../support/createData';
-import { ComposeFactory } from 'dojo-compose/compose';
+import { ComposeFactory } from '@dojo/compose/compose';
 import createAsyncStorage from '../../support/AsyncStorage';
 
 interface TransactionStoreFactory extends ComposeFactory<TransactionStore<{}, {}, any, any>, any> {

@@ -1,12 +1,12 @@
 import { Query } from '../query/interfaces';
 import { StoreOperation, CrudOptions, StoreOptions, UpdateResults } from '../store/createStore';
-import compose, { ComposeFactory } from 'dojo-compose/compose';
-import Promise from 'dojo-shim/Promise';
-import WeakMap from 'dojo-shim/WeakMap';
-import Map from 'dojo-shim/Map';
+import compose, { ComposeFactory } from '@dojo/compose/compose';
+import Promise from '@dojo/shim/Promise';
+import WeakMap from '@dojo/shim/WeakMap';
+import Map from '@dojo/shim/Map';
 import { Patch } from '../patch/createPatch';
-import { duplicate } from 'dojo-core/lang';
-import uuid from 'dojo-core/uuid';
+import { duplicate } from '@dojo/core/lang';
+import uuid from '@dojo/core/uuid';
 
 export interface FetchResult<T> extends Promise<T[]> {
 	totalLength: Promise<number>;

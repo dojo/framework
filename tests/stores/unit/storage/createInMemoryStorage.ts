@@ -1,8 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Set from 'dojo-shim/Set';
+import Set from '@dojo/shim/Set';
 import createInMemoryStorage from '../../../src/storage/createInMemoryStorage';
-import Promise from 'dojo-shim/Promise';
+import Promise from '@dojo/shim/Promise';
 import { StoreOperation } from '../../../src/store/createStore';
 import createFilter from '../../../src/query/createFilter';
 import createSort from '../../../src/query/createSort';

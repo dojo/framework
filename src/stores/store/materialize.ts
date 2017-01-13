@@ -1,4 +1,4 @@
-import { Handle } from 'dojo-core/interfaces';
+import { Handle } from '@dojo/core/interfaces';
 import { MappedQueryTransformResult, QueryTransformResult, TrackableStoreDelta } from './createQueryTransformResult';
 import { StoreDelta } from './mixins/createObservableStoreMixin';
 import { Store } from './createStore';

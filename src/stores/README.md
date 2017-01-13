@@ -1,9 +1,9 @@
-# dojo-stores
+# @dojo/stores
 
 [![Build Status](https://travis-ci.org/dojo/stores.svg?branch=master)](https://travis-ci.org/dojo/stores)
 [![codecov.io](http://codecov.io/gh/dojo/stores/branch/master/graph/badge.svg)](http://codecov.io/gh/dojo/stores/branch/master)
 
-This library provides a data store, and several mixins built using [dojo-compose](https://github.com/dojo/compose) and TypeScript. The mixins provide additional functionality and APIs that can be added to the base store dynamically.
+This library provides a data store, and several mixins built using [@dojo/compose](https://github.com/dojo/compose) and TypeScript. The mixins provide additional functionality and APIs that can be added to the base store dynamically.
 
 **WARNING** This is *alpha* software. It is not yet production ready, so you should use at your own risk.
 
@@ -172,7 +172,7 @@ If the `fetchAroundUpdates` property is set to `true` in the options when creati
 
 Example usage
 ```typescript
-import { createObservableStore } from 'dojo-stores/store/mixins/createObservableStoreMixin';
+import { createObservableStore } from '@dojo/stores/store/mixins/createObservableStoreMixin';
 
 const observableStore = createObservableStore({
 	data: [{ id: '1', value: 1 }]
@@ -315,7 +315,7 @@ When `transform()` is called without an `idTransform`, the resulting `QueryTrans
 
 Example Usage
 ```typescript
-import { createQueryStore } from 'dojo-stores/store/mixins/createQueryTransformMixin';
+import { createQueryStore } from '@dojo/stores/store/mixins/createQueryTransformMixin';
 
 const data = [
 		{ id: '1', value: 1 },

@@ -1,5 +1,5 @@
-import WeakMap from 'dojo-shim/WeakMap';
-import compose, { ComposeFactory } from 'dojo-compose/compose';
+import WeakMap from '@dojo/shim/WeakMap';
+import compose, { ComposeFactory } from '@dojo/compose/compose';
 import { Query, QueryType } from './interfaces';
 
 export interface CompoundQuery<T> extends Query<T> {

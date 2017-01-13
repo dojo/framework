@@ -7,8 +7,8 @@ import { ItemType, createData, createUpdates, patches, patchedItems } from '../.
 import { CrudOptions, UpdateResults } from '../../../../src/store/createStore';
 import createAsyncStorage from '../../support/AsyncStorage';
 import createInMemoryStorage from '../../../../src/storage/createInMemoryStorage';
-import Set from 'dojo-shim/Set';
-import Promise from 'dojo-shim/Promise';
+import Set from '@dojo/shim/Set';
+import Promise from '@dojo/shim/Promise';
 
 function getStoreAndDfd(test: any) {
 	const dfd = test.async(1000);

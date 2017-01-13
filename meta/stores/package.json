@@ -1,5 +1,5 @@
 {
-  "name": "dojo-stores",
+  "name": "@dojo/stores",
   "version": "2.0.0-pre",
   "description": "A new data store in TypeScript",
   "engines": {
@@ -15,17 +15,17 @@
     "prepublish": "grunt peerDepInstall",
     "test": "grunt test"
   },
-  "typings": "./dist/umd/dojo-stores.d.ts",
+  "typings": "./dist/umd/@dojo/stores.d.ts",
   "peerDependencies": {
-    "dojo-compose": ">=2.0.0-beta.18",
-    "dojo-core": ">=2.0.0-alpha.17",
-    "dojo-shim": ">=2.0.0-alpha.3",
-    "dojo-has": ">=2.0.0-alpha.3"
+    "@dojo/compose": "2.0.0-beta.21",
+    "@dojo/core": "2.0.0-alpha.20",
+    "@dojo/shim": "2.0.0-beta.8",
+    "@dojo/has": "2.0.0-alpha.7"
   },
   "devDependencies": {
     "codecov.io": "0.1.6",
-    "dojo-interfaces": ">=2.0.0-alpha.4",
-    "dojo-loader": ">=2.0.0-beta.7",
+    "@dojo/interfaces": "2.0.0-alpha.11",
+    "@dojo/loader": "2.0.0-beta.9",
     "dts-generator": "~1.7.0",
     "glob": "^7.0.6",
     "grunt": "~1.0.1",

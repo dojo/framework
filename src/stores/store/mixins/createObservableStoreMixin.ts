@@ -1,14 +1,14 @@
 import createStore, { CrudOptions, Store, StoreOptions, UpdateResults } from '../createStore';
-import { Observable, Observer } from 'dojo-core/Observable';
-import WeakMap from 'dojo-shim/WeakMap';
-import Map from 'dojo-shim/Map';
-import Set from 'dojo-shim/Set';
-import Promise from 'dojo-shim/Promise';
+import { Observable, Observer } from '@dojo/core/Observable';
+import WeakMap from '@dojo/shim/WeakMap';
+import Map from '@dojo/shim/Map';
+import Set from '@dojo/shim/Set';
+import Promise from '@dojo/shim/Promise';
 import { StoreObservable } from '../createStoreObservable';
-import { ComposeFactory, ComposeMixinDescriptor } from 'dojo-compose/compose';
-import { after } from 'dojo-compose/aspect';
+import { ComposeFactory, ComposeMixinDescriptor } from '@dojo/compose/compose';
+import { after } from '@dojo/compose/aspect';
 import { Query } from '../../query/interfaces';
-import { debounce } from 'dojo-core/util';
+import { debounce } from '@dojo/core/util';
 
 export interface StoreDelta<T> {
 	/**
