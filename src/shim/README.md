@@ -1,8 +1,8 @@
-# dojo-shim
+# @dojo/shim
 
 [![Build Status](https://travis-ci.org/dojo/shim.svg?branch=master)](https://travis-ci.org/dojo/shim)
 [![codecov](https://codecov.io/gh/dojo/shim/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/shim)
-[![npm version](https://badge.fury.io/js/dojo-shim.svg)](http://badge.fury.io/js/dojo-shim)
+[![npm version](https://badge.fury.io/js/@dojo/shim.svg)](http://badge.fury.io/js/@dojo/shim)
 
 This package provides functional shims for ECMAScript.
 
@@ -23,12 +23,12 @@ TODO: Add sections on features of this package
 
 #### Map
 
-The [`dojo-shim/Map` class](docs/Map.md) is an implementation of the ES2015 Map specification
+The [`@dojo/shim/Map` class](docs/Map.md) is an implementation of the ES2015 Map specification
 without iterators for use in older browsers.
 
 #### WeakMap
 
-The `dojo-shim/WeakMap` class is an implementation of the ES2015 WeakMap specification
+The `@dojo/shim/WeakMap` class is an implementation of the ES2015 WeakMap specification
 without iterators for use in older browsers. The main difference between WeakMap and Map
 is that WeakMap's keys can only be objects and that the store has a weak reference
 to the key/value pair. This allows for the garbage collector to remove pairs.

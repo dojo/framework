@@ -12,7 +12,7 @@ export const proxyUrl = 'http://localhost:9000/';
 export const capabilities = {
 	'browserstack.debug': false,
 	project: 'Dojo 2',
-	name: 'dojo-shim'
+	name: '@dojo/shim'
 };
 
 // Browsers to run integration testing against. Note that version numbers must be strings if used with Sauce
@@ -45,8 +45,8 @@ export const initialBaseUrl: string | null = (function () {
 // The desired AMD loader to use when running unit tests (client.html/client.js). Omit to use the default Dojo
 // loader
 export const loaders = {
-	'host-browser': 'node_modules/dojo-loader/loader.js',
-	'host-node': 'dojo-loader'
+	'host-browser': 'node_modules/@dojo/loader/loader.js',
+	'host-node': '@dojo/loader'
 };
 
 // Configuration options for the module loader; any AMD configuration options supported by the specified AMD loader
@@ -57,7 +57,7 @@ export const loaderOptions = {
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' },
 		{ name: 'dojo', location: 'node_modules/intern/node_modules/dojo' },
-		{ name: 'dojo-has', location: 'node_modules/dojo-has' }
+		{ name: '@dojo', location: 'node_modules/@dojo' }
 	]
 };
 
