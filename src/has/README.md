@@ -1,8 +1,8 @@
-# dojo-has
+# @dojo/has
 
 [![Build Status](https://travis-ci.org/dojo/has.svg?branch=master)](https://travis-ci.org/dojo/has)
 [![codecov](https://codecov.io/gh/dojo/has/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/has)
-[![npm version](https://badge.fury.io/js/dojo-has.svg)](http://badge.fury.io/js/dojo-has)
+[![npm version](https://badge.fury.io/js/@dojo/has.svg)](http://badge.fury.io/js/@dojo/has)
 
 A feature detection library.
 
@@ -24,7 +24,7 @@ The `has()` module is the default export of the main module of the package:
 For example:
 
 ```typescript
-import has from 'dojo-has';
+import has from '@dojo/has';
 
 if (has('host-browser')) {
 	/* Browser Related Code */
@@ -63,7 +63,7 @@ requested from `has()`, or a thenable (an object with a `then` method, like a Pr
 An example of adding a feature:
 
 ```typescript
-import { add } from 'dojo-has';
+import { add } from '@dojo/has';
 
 add('my-feature', true);
 add('my-lazy-feature', () => {
@@ -90,7 +90,7 @@ add('my-feature', false, true);
 The module also has an `exists()` function which returns `true` if the feature flag has been added to `has()`:
 
 ```typescript
-import { exists, add } from 'dojo-has';
+import { exists, add } from '@dojo/has';
 
 if (!exists('my-feature')) {
 	add('my-feature', false);
@@ -102,13 +102,13 @@ proper value can be returned.
 
 ### Conditional Module Loading
 
-When using an AMD loader that supports loader plugins (such as [`dojo-loader`](https://github.com/dojo/loader)) then
-`dojo-has` can be used to conditionally load modules or substitute one module for another.  The module ID is specified
+When using an AMD loader that supports loader plugins (such as [`@dojo/loader`](https://github.com/dojo/loader)) then
+`@dojo/has` can be used to conditionally load modules or substitute one module for another.  The module ID is specified
 using the plugin syntax followed by the feature flag and a ternary operator of what to do if the feature is *truthy*
 or *falsey*:
 
 ```typescript
-import foo from 'dojo-has!host-browser?foo/browser:foo/node';
+import foo from '@dojo/has!host-browser?foo/browser:foo/node';
 
 /* foo is now the default export from either `foo/browser` or `foo/node` */
 ```
@@ -121,7 +121,7 @@ have to make a global declaration of the module that is in the scope of the proj
 full MID you will be importing:
 
 ```typescript
-declare module 'dojo-has!host-browser?foo/browser:foo/node' {
+declare module '@dojo/has!host-browser?foo/browser:foo/node' {
 	export * from 'foo/browser'; /* Assumes that foo/browser and foo/node have the same shape */
 }
 ```
