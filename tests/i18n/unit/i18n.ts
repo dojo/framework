@@ -1,6 +1,6 @@
-import global from 'dojo-core/global';
-import has from 'dojo-core/has';
-import Promise from 'dojo-shim/Promise';
+import global from '@dojo/core/global';
+import has from '@dojo/core/has';
+import Promise from '@dojo/shim/Promise';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';

@@ -1,5 +1,5 @@
-import { around } from 'dojo-core/aspect';
-import { padStart } from 'dojo-shim/string';
+import { around } from '@dojo/core/aspect';
+import { padStart } from '@dojo/shim/string';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import loadCldrData from '../../src/cldr/load';

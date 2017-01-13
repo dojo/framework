@@ -1,4 +1,4 @@
-import request from 'dojo-core/request';
+import request from '@dojo/core/request';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';

@@ -1,4 +1,4 @@
-import Promise from 'dojo-shim/Promise';
+import Promise from '@dojo/shim/Promise';
 import * as Globalize from 'globalize/dist/globalize';
 import {
 	CldrData,

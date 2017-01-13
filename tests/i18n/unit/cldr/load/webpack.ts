@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import global from 'dojo-core/global';
+import global from '@dojo/core/global';
 import * as sinon from 'sinon';
 import { CldrDataResponse } from '../../../../src/cldr/load';
 import * as cldrLoad from '../../../../src/cldr/load';
