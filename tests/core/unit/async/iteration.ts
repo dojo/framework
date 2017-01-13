@@ -1,8 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as iteration from '../../../src/async/iteration';
-import { ShimIterator } from 'dojo-shim/iterator';
-import Promise from 'dojo-shim/Promise';
+import { ShimIterator } from '@dojo/shim/iterator';
+import Promise from '@dojo/shim/Promise';
 import { isEventuallyRejected, throwImmediatly } from '../../support/util';
 
 interface ResolveFunc<T> {

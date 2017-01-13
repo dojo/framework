@@ -2,8 +2,8 @@ import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 import has from '../../src/has';
 import load from '../../src/load';
-import Promise from 'dojo-shim/Promise';
-import { RootRequire } from 'dojo-interfaces/loader';
+import Promise from '@dojo/shim/Promise';
+import { RootRequire } from '@dojo/interfaces/loader';
 import global from '../../src/global';
 
 declare const require: RootRequire;
@@ -18,7 +18,7 @@ const suite: any = {
 	'global load'(this: any) {
 		const def = this.async(5000);
 
-		load('src/has', 'dojo-shim/Promise').then(def.callback(function ([ hasModule, promiseModule ]: [ any, any ]) {
+		load('src/has', '@dojo/shim/Promise').then(def.callback(function ([ hasModule, promiseModule ]: [ any, any ]) {
 			assert.strictEqual(hasModule.default, has);
 			assert.strictEqual(promiseModule.default, Promise);
 		}));

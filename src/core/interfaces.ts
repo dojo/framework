@@ -1,5 +1,5 @@
-/* DEPRECATED: These interfaces are deprecated and have been moved to dojo-interfaces/core.d.ts
- * They are only provided here to make the transistion to dojo-interfaces easier */
+/* DEPRECATED: These interfaces are deprecated and have been moved to @dojo/interfaces/core.d.ts
+ * They are only provided here to make the transistion to @dojo/interfaces easier */
 
 /**
  * The base event object, which provides a `type` property

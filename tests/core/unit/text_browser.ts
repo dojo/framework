@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as text from '../../src/text';
-import { RootRequire } from 'dojo-interfaces/loader';
+import { RootRequire } from '@dojo/interfaces/loader';
 
 declare const require: RootRequire;
 

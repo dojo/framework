@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import has from '../../../src/has';
-import Promise from 'dojo-shim/Promise';
+import Promise from '@dojo/shim/Promise';
 import fetchRequest from '../../../src/request/fetch';
 import UrlSearchParams from '../../../src/UrlSearchParams';
 

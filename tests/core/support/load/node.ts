@@ -1,5 +1,5 @@
 import load from '../../../src/load';
-import { Require } from 'dojo-interfaces/loader';
+import { Require } from '@dojo/interfaces/loader';
 
 declare const require: Require;
 

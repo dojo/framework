@@ -1,8 +1,8 @@
-import Map from 'dojo-shim/Map';
-import WeakMap from 'dojo-shim/WeakMap';
-import { Iterable, IterableIterator } from 'dojo-shim/iterator';
-import { Handle } from 'dojo-interfaces/core';
-import 'dojo-shim/Symbol';
+import Map from '@dojo/shim/Map';
+import WeakMap from '@dojo/shim/WeakMap';
+import { Iterable, IterableIterator } from '@dojo/shim/iterator';
+import { Handle } from '@dojo/interfaces/core';
+import '@dojo/shim/Symbol';
 import List from './List';
 
 const noop = () => { };

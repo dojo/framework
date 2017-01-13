@@ -1,8 +1,8 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 import List from '../../src/List';
-import { forOf } from 'dojo-shim/iterator';
-import Set from 'dojo-shim/Set';
+import { forOf } from '@dojo/shim/iterator';
+import Set from '@dojo/shim/Set';
 
 registerSuite(function () {
 	function listWith<T>(...items: T[]): List<T> {

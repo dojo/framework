@@ -1,4 +1,4 @@
-import Promise from 'dojo-shim/Promise';
+import Promise from '@dojo/shim/Promise';
 
 interface ModuleIdMap {
 	[path: string]: { id: number; lazy: boolean };
@@ -78,7 +78,7 @@ function getBasePath(context: () => string): string {
 }
 
 /**
- * A webpack-specific function that replaces `dojo-core/load` in its builds. In order for a module to be loaded,
+ * A webpack-specific function that replaces `@dojo/core/load` in its builds. In order for a module to be loaded,
  * it must first be included in a webpack chunk, whether that chunk is included in the main build, or lazy-loaded.
  * Note that this module is not intended for direct use, but rather is intended for use by a webpack plugin
  * that sets the module ID map used to translate resolved module paths to webpack module IDs.

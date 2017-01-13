@@ -1,6 +1,6 @@
-import { Iterable, forOf, isIterable, isArrayLike } from 'dojo-shim/iterator';
-import Promise, { Executor } from 'dojo-shim/Promise';
-import { Thenable } from 'dojo-shim/interfaces';
+import { Iterable, forOf, isIterable, isArrayLike } from '@dojo/shim/iterator';
+import Promise, { Executor } from '@dojo/shim/Promise';
+import { Thenable } from '@dojo/shim/interfaces';
 
 /**
  * Take a list of values, and if any are ExtensiblePromise objects, insert the wrapped Promise in its place,

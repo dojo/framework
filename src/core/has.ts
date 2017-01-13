@@ -1,7 +1,7 @@
 import global from './global';
-import has, { add } from 'dojo-shim/support/has';
+import has, { add } from '@dojo/shim/support/has';
 
-export * from 'dojo-shim/support/has';
+export * from '@dojo/shim/support/has';
 export default has;
 
 add('object-assign', typeof global.Object.assign === 'function');

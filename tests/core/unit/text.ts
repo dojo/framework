@@ -4,7 +4,7 @@ import has from '../../src/has';
 import * as text from '../../src/text';
 import { stub } from 'sinon';
 import 'intern/dojo/has!host-node?./text_node:./text_browser';
-import { RootRequire } from 'dojo-interfaces/loader';
+import { RootRequire } from '@dojo/interfaces/loader';
 
 declare const require: RootRequire;
 

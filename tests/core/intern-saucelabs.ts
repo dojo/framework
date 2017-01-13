@@ -2,7 +2,7 @@ export * from './intern';
 
 export const capabilities = {
 	project: 'Dojo 2',
-	name: 'dojo-core',
+	name: '@dojo/core',
 	fixSessionCapabilities: false
 };
 

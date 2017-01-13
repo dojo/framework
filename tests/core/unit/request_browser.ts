@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import request from '../../src/request';
-import { Require } from 'dojo-interfaces/loader';
+import { Require } from '@dojo/interfaces/loader';
 
 declare const require: Require;
 

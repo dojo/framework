@@ -1,8 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Promise from 'dojo-shim/Promise';
-import { Thenable } from 'dojo-shim/interfaces';
-import { ShimIterator } from 'dojo-shim/iterator';
+import Promise from '@dojo/shim/Promise';
+import { Thenable } from '@dojo/shim/interfaces';
+import { ShimIterator } from '@dojo/shim/iterator';
 import Task, { State, isTask } from '../../../src/async/Task';
 
 let suite = {

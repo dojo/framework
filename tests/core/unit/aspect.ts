@@ -4,8 +4,8 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
 import * as aspect from '../../src/aspect';
-import { Handle } from 'dojo-interfaces/core';
-import Map from 'dojo-shim/Map';
+import { Handle } from '@dojo/interfaces/core';
+import Map from '@dojo/shim/Map';
 
 const slice = Array.prototype.slice;
 let obj: any;

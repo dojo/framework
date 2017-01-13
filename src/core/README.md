@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/dojo/core.svg?branch=master)](https://travis-ci.org/dojo/core)
 [![codecov.io](https://codecov.io/github/dojo/core/coverage.svg?branch=master)](https://codecov.io/github/dojo/core?branch=master)
-[![npm version](https://badge.fury.io/js/dojo-core.svg)](https://badge.fury.io/js/dojo-core)
+[![npm version](https://badge.fury.io/js/@dojo/core.svg)](https://badge.fury.io/js/@dojo/core)
 
 This package provides a set of language helpers, utility functions, and classes for writing TypeScript applications.
 It includes APIs for feature detection, asynchronous operations, basic event handling,
@@ -48,7 +48,7 @@ This will run the grunt 'dev' task.
 ### Feature Detection
 
 Using the latest Web technologies isn't always as straightforward as developers would like due to differing support
-across platforms. [`dojo-core/has`](docs/has.md) provides a simple feature detection API that makes it easy to
+across platforms. [`@dojo/core/has`](docs/has.md) provides a simple feature detection API that makes it easy to
 detect which platforms support which features.
 
 ### Language Utilities
@@ -58,48 +58,48 @@ on methods in the ES2015 proposal; others are additional APIs for commonly-perfo
 
 #### array
 
-The [`dojo-core/array` module](docs/array.md) contains analogues to some of the ES2015 Array APIs.
+The [`@dojo/core/array` module](docs/array.md) contains analogues to some of the ES2015 Array APIs.
 
 #### lang
 
-The [`dojo-core/lang` module](docs/lang.md) contains various utility functions for tasks such as copying objects
+The [`@dojo/core/lang` module](docs/lang.md) contains various utility functions for tasks such as copying objects
 and creating late-bound or partially applied functions.
 
 #### math
 
-The [`dojo-core/math` module](docs/math.md) contains analogues to a number of ES2015 APIs, including many trigonometric and logarithmic
+The [`@dojo/core/math` module](docs/math.md) contains analogues to a number of ES2015 APIs, including many trigonometric and logarithmic
 functions.
 
 #### string
 
-The [`dojo-core/stringExtras` module](docs/stringExtras.md) contains various string functions that are not available as part of the ES2015 String APIs.
+The [`@dojo/core/stringExtras` module](docs/stringExtras.md) contains various string functions that are not available as part of the ES2015 String APIs.
 
 #### UrlSearchParams
 
-The [`dojo-core/UrlSearchParams` class](docs/UrlSearchParams.md) can be used to parse and generate URL query strings.
+The [`@dojo/core/UrlSearchParams` class](docs/UrlSearchParams.md) can be used to parse and generate URL query strings.
 
 #### Event handling
 
-The [`dojo-core/on` module](docs/on.md) contains methods to handle events across types of listeners.  It also includes methods to handle different event use cases including only firing
+The [`@dojo/core/on` module](docs/on.md) contains methods to handle events across types of listeners.  It also includes methods to handle different event use cases including only firing
 once and pauseable events.
 
 #### HTTP requests
 
-The [`dojo-core/request` module](docs/request.md) contains methods to simplify making http requests. It can handle
+The [`@dojo/core/request` module](docs/request.md) contains methods to simplify making http requests. It can handle
 making requests in both node and the browser through the same methods.
 
 ### Promises and Asynchronous Operations
 
 #### Promise
 
-The `dojo-core/Promise` class is an implementation of the ES2015 Promise API that also includes static state
+The `@dojo/core/Promise` class is an implementation of the ES2015 Promise API that also includes static state
 inspection and a `finally` method for cleanup actions.
 
-`dojo-core/async` contains a number of classes and utility modules to simplify working with asynchronous operations.
+`@dojo/core/async` contains a number of classes and utility modules to simplify working with asynchronous operations.
 
 #### Task
 
-The `dojo-core/async/Task` class is an extension of `dojo-core/Promise` that provides cancelation support.
+The `@dojo/core/async/Task` class is an extension of `@dojo/core/Promise` that provides cancelation support.
 
 ## How do I contribute?
 

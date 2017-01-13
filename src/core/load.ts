@@ -1,5 +1,5 @@
-import Promise from 'dojo-shim/Promise';
-import { Require } from 'dojo-interfaces/loader';
+import Promise from '@dojo/shim/Promise';
+import { Require } from '@dojo/interfaces/loader';
 
 declare const require: Require;
 

@@ -1,7 +1,7 @@
-import * as array from 'dojo-shim/array';
-import { isArrayLike, Iterable } from 'dojo-shim/iterator';
-import Promise from 'dojo-shim/Promise';
-import { Thenable } from 'dojo-shim/interfaces';
+import * as array from '@dojo/shim/array';
+import { isArrayLike, Iterable } from '@dojo/shim/iterator';
+import Promise from '@dojo/shim/Promise';
+import { Thenable } from '@dojo/shim/interfaces';
 
 type ValuesAndResults<T, U> = { values: T[] | undefined; results: U[] | undefined; }
 

@@ -1,5 +1,5 @@
 import Promise from './ExtensiblePromise';
-import { Thenable } from 'dojo-shim/interfaces';
+import { Thenable } from '@dojo/shim/interfaces';
 
 /**
  * Used for delaying a Promise chain for a specific number of milliseconds.

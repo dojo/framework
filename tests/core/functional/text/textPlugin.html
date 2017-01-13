@@ -6,15 +6,14 @@
 	</head>
 
 	<body>
-		<script src="../../../../node_modules/dojo-loader/loader.js"></script>
+		<script src="../../../../node_modules/@dojo/loader/loader.js"></script>
 		<script>
 			require.config({
 				baseUrl: '../../../../',
 				packages: [
 					{ name: 'src', location: '_build/src' },
 					{ name: 'tests', location: '_build/tests' },
-					{ name: 'dojo-has', location: 'node_modules/dojo-has' },
-					{ name: 'dojo-shim', location: 'node_modules/dojo-shim' }
+					{ name: '@dojo', location: 'node_modules/@dojo' }
 				]
 			});
 			require([

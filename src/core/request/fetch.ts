@@ -1,4 +1,4 @@
-import Promise from 'dojo-shim/Promise';
+import Promise from '@dojo/shim/Promise';
 import RequestTimeoutError from './errors/RequestTimeoutError';
 import Task from '../async/Task';
 import { Handle } from '../interfaces';

@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Symbol from 'dojo-shim/Symbol';
-import { from as arrayFrom } from 'dojo-shim/array';
+import Symbol from '@dojo/shim/Symbol';
+import { from as arrayFrom } from '@dojo/shim/array';
 
 import IdentityRegistry from '../../src/IdentityRegistry';
 

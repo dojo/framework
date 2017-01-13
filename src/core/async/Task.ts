@@ -1,7 +1,7 @@
-import { Thenable } from 'dojo-shim/interfaces';
-import { Executor } from 'dojo-shim/Promise';
+import { Thenable } from '@dojo/shim/interfaces';
+import { Executor } from '@dojo/shim/Promise';
 import ExtensiblePromise, { ListOfPromises, DictionaryOfPromises } from './ExtensiblePromise';
-import { Iterable } from 'dojo-shim/iterator';
+import { Iterable } from '@dojo/shim/iterator';
 
 /**
  * Describe the internal state of a task.

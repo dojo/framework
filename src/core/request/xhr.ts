@@ -2,7 +2,7 @@ import Task from '../async/Task';
 import RequestTimeoutError from './errors/RequestTimeoutError';
 import global from '../global';
 import has from '../has';
-import { Handle } from 'dojo-interfaces/core';
+import { Handle } from '@dojo/interfaces/core';
 import { createTimer } from '../util';
 import { RequestOptions, Response, ResponsePromise } from '../request';
 import { generateRequestUrl } from './util';
