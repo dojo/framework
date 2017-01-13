@@ -2,9 +2,9 @@ import {
 	Evented,
 	EventedOptions,
 	EventedListener
-} from 'dojo-interfaces/bases';
-import { EventTargettedObject } from 'dojo-interfaces/core';
-import { Handle } from 'dojo-core/interfaces';
+} from '@dojo/interfaces/bases';
+import { EventTargettedObject } from '@dojo/interfaces/core';
+import { Handle } from '@dojo/core/interfaces';
 
 export { BrowserHistory } from './_alias-ambient-history';
 

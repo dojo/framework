@@ -1,8 +1,8 @@
-import compose, { ComposeFactory } from 'dojo-compose/compose';
-import createEvented from 'dojo-compose/bases/createEvented';
-import global from 'dojo-core/global';
-import on from 'dojo-core/on';
-import WeakMap from 'dojo-shim/WeakMap';
+import compose, { ComposeFactory } from '@dojo/compose/compose';
+import createEvented from '@dojo/compose/bases/createEvented';
+import global from '@dojo/core/global';
+import on from '@dojo/core/on';
+import WeakMap from '@dojo/shim/WeakMap';
 
 import { BrowserHistory, History, HistoryOptions } from './interfaces';
 

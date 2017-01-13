@@ -12,31 +12,31 @@ registerSuite({
 	name: 'main',
 
 	'#createRoute': {
-		'is the same as dojo-routing/createRoute'() {
+		'is the same as @dojo/routing/createRoute'() {
 			assert.strictEqual(main.createRoute, createRoute);
 		}
 	},
 
 	'#createRouter': {
-		'is the same as dojo-routing/createRouter'() {
+		'is the same as @dojo/routing/createRouter'() {
 			assert.strictEqual(main.createRouter, createRouter);
 		}
 	},
 
 	'#history.createHashHistory': {
-		'is the same as dojo-routing/history/createHashHistory'() {
+		'is the same as @dojo/routing/history/createHashHistory'() {
 			assert.strictEqual(main.history.createHashHistory, createHashHistory);
 		}
 	},
 
 	'#history.createMemoryHistory': {
-		'is the same as dojo-routing/history/createMemoryHistory'() {
+		'is the same as @dojo/routing/history/createMemoryHistory'() {
 			assert.strictEqual(main.history.createMemoryHistory, createMemoryHistory);
 		}
 	},
 
 	'#history.createStateHistory': {
-		'is the same as dojo-routing/history/createStateHistory'() {
+		'is the same as @dojo/routing/history/createStateHistory'() {
 			assert.strictEqual(main.history.createStateHistory, createStateHistory);
 		}
 	}

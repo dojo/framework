@@ -1,5 +1,5 @@
-import Task from 'dojo-core/async/Task';
-import Promise from 'dojo-shim/Promise';
+import Task from '@dojo/core/async/Task';
+import Promise from '@dojo/shim/Promise';
 import { beforeEach, suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 import { stub, spy } from 'sinon';

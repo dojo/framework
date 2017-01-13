@@ -1,4 +1,4 @@
-import UrlSearchParams from 'dojo-core/UrlSearchParams';
+import UrlSearchParams from '@dojo/core/UrlSearchParams';
 
 export interface ParsedPath {
 	/**

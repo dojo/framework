@@ -1,8 +1,8 @@
-import compose, { ComposeFactory } from 'dojo-compose/compose';
-import UrlSearchParams from 'dojo-core/UrlSearchParams';
-import { Hash } from 'dojo-core/interfaces';
-import WeakMap from 'dojo-shim/WeakMap';
-import { Thenable } from 'dojo-shim/interfaces';
+import compose, { ComposeFactory } from '@dojo/compose/compose';
+import UrlSearchParams from '@dojo/core/UrlSearchParams';
+import { Hash } from '@dojo/core/interfaces';
+import WeakMap from '@dojo/shim/WeakMap';
+import { Thenable } from '@dojo/shim/interfaces';
 
 import { DefaultParameters, Context, Parameters, Request } from './interfaces';
 import { findRouter, hasBeenAppended, LinkParams } from './createRouter';

@@ -1,4 +1,4 @@
-import UrlSearchParams from 'dojo-core/UrlSearchParams';
+import UrlSearchParams from '@dojo/core/UrlSearchParams';
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 import { stub } from 'sinon';

@@ -1,6 +1,6 @@
-import compose, { ComposeFactory } from 'dojo-compose/compose';
-import createEvented from 'dojo-compose/bases/createEvented';
-import WeakMap from 'dojo-shim/WeakMap';
+import compose, { ComposeFactory } from '@dojo/compose/compose';
+import createEvented from '@dojo/compose/bases/createEvented';
+import WeakMap from '@dojo/shim/WeakMap';
 
 import { History, HistoryOptions } from './interfaces';
 

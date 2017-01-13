@@ -1,20 +1,20 @@
-import compose, { ComposeFactory } from 'dojo-compose/compose';
-import createEvented from 'dojo-compose/bases/createEvented';
+import compose, { ComposeFactory } from '@dojo/compose/compose';
+import createEvented from '@dojo/compose/bases/createEvented';
 import {
 	Evented,
 	EventedOptions,
 	EventedListener
-} from 'dojo-interfaces/bases';
-import { EventTargettedObject, EventErrorObject } from 'dojo-interfaces/core';
-import { Handle, Hash } from 'dojo-core/interfaces';
+} from '@dojo/interfaces/bases';
+import { EventTargettedObject, EventErrorObject } from '@dojo/interfaces/core';
+import { Handle, Hash } from '@dojo/core/interfaces';
 
-import Task from 'dojo-core/async/Task';
-import { pausable, PausableHandle } from 'dojo-core/on';
-import UrlSearchParams from 'dojo-core/UrlSearchParams';
-import { includes } from 'dojo-shim/array';
-import { Thenable } from 'dojo-shim/interfaces';
-import Promise from 'dojo-shim/Promise';
-import WeakMap from 'dojo-shim/WeakMap';
+import Task from '@dojo/core/async/Task';
+import { pausable, PausableHandle } from '@dojo/core/on';
+import UrlSearchParams from '@dojo/core/UrlSearchParams';
+import { includes } from '@dojo/shim/array';
+import { Thenable } from '@dojo/shim/interfaces';
+import Promise from '@dojo/shim/Promise';
+import WeakMap from '@dojo/shim/WeakMap';
 
 import { Route, SearchParams, Selection } from './createRoute';
 import { Context, Parameters, Request } from './interfaces';
@@ -577,6 +577,7 @@ const createRouter: RouterFactory<Context> = compose.mixin(createEvented, {
 						history.replace(redirect);
 						redirecting = false;
 					}
+					return dispatchResult;
 				});
 			};
 

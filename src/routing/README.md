@@ -1,8 +1,8 @@
-# dojo-routing
+# @dojo/routing
 
 [![Build Status](https://travis-ci.org/dojo/routing.svg?branch=master)](https://travis-ci.org/dojo/routing)
 [![codecov.io](https://codecov.io/github/dojo/routing/coverage.svg?branch=master)](https://codecov.io/github/dojo/routing?branch=master)
-[![npm version](https://badge.fury.io/js/dojo-routing.svg)](https://badge.fury.io/js/dojo-routing)
+[![npm version](https://badge.fury.io/js/@dojo/routing.svg)](https://badge.fury.io/js/@dojo/routing)
 
 A routing library for Dojo 2 applications.
 
@@ -21,7 +21,7 @@ The examples below are provided in TypeScript syntax. The package does work unde
 ### Creating a router
 
 ```ts
-import createRouter from 'dojo-routing/createRouter';
+import createRouter from '@dojo/routing/createRouter';
 
 const router = createRouter();
 ```
@@ -31,7 +31,7 @@ const router = createRouter();
 With the `router` from the previous example:
 
 ```ts
-import createRoute from 'dojo-routing/createRoute';
+import createRoute from '@dojo/routing/createRoute';
 
 router.append(createRoute({ path: '/' }));
 router.append(createRoute({ path: '/about' }));
@@ -55,7 +55,7 @@ Routes can only be appended to a router once.
 The router doesn't track navigation events by itself. Changed paths need to be dispatched by application code. Context must be provided, this is made available to the matched routes.
 
 ```ts
-import { Context } from 'dojo-routing/interfaces';
+import { Context } from '@dojo/routing/interfaces';
 
 interface AppContext extends Context {
 	someKey: string;
@@ -68,7 +68,7 @@ const context: AppContext = {
 router.dispatch(context, '/about');
 ```
 
-Route selection starts in a future turn. An async Task is returned (see [`dojo-core`](https://github.com/dojo/core)) which is resolved with a result object. The object has a `success` property which is `false` if no route was selected, or dispatch was canceled. It's `true` otherwise.
+Route selection starts in a future turn. An async Task is returned (see [`@dojo/core`](https://github.com/dojo/core)) which is resolved with a result object. The object has a `success` property which is `false` if no route was selected, or dispatch was canceled. It's `true` otherwise.
 
 An optional `redirect` property may be present, in case one of the matched routes requested a redirect. The value of the `redirect` property is the new path. It may be an empty string. No routes are executed when a redirect is returned, instead you're expected to change the path and call `dispatch()` again.
 
@@ -79,7 +79,7 @@ You can cancel the task in case a new navigation event occurs.
 The following creates a simple route. The `exec()` function is called when the route is executed.
 
 ```ts
-import createRoute from 'dojo-routing/createRoute';
+import createRoute from '@dojo/routing/createRoute';
 
 const route = createRoute({
 	path: '/',
@@ -117,7 +117,7 @@ You may return a thenable in order to [capture errors](#capturing-errors). Route
 Routes can be appended to other routes:
 
 ```ts
-import createRoute from 'dojo-routing/createRoute';
+import createRoute from '@dojo/routing/createRoute';
 
 const posts = createRoute({
 	path: '/posts',
@@ -178,8 +178,8 @@ You may return a thenable in order to [capture errors](#capturing-errors). Route
 You can extract pathname segments. These will be added to the `params` object of the `request`:
 
 ```ts
-import createRoute from 'dojo-routing/createRoute';
-import { DefaultParameters } from 'dojo-routing/interfaces';
+import createRoute from '@dojo/routing/createRoute';
+import { DefaultParameters } from '@dojo/routing/interfaces';
 
 createRoute({
 	path: '/posts/{id}',
@@ -196,8 +196,8 @@ Parameter names must not be repeated in the route's path. They can't contain `{`
 You can customize the `params` object:
 
 ```ts
-import createRoute, { Route } from 'dojo-routing/createRoute';
-import { Parameters } from 'dojo-routing/interfaces';
+import createRoute, { Route } from '@dojo/routing/createRoute';
+import { Parameters } from '@dojo/routing/interfaces';
 
 interface MyParams extends Parameters {
 	id: number;
@@ -247,8 +247,8 @@ This also prevents any nested routes from being selected.
 Each route's path may include a search component. Name parameters to extract them into the `params` object:
 
 ```ts
-import createRoute from 'dojo-routing/createRoute';
-import { DefaultParameters } from 'dojo-routing/interfaces';
+import createRoute from '@dojo/routing/createRoute';
+import { DefaultParameters } from '@dojo/routing/interfaces';
 
 createRoute({
 	path: '/posts/{id}?{comment}',
@@ -287,8 +287,8 @@ createRoute({
 By default the `params` object will contain the *first* occurrence of each query parameter. However if you specify a `params()` function you'll get access to *all* values:
 
 ```ts
-import createRoute, { Route } from 'dojo-routing/createRoute';
-import { Parameters } from 'dojo-routing/interfaces';
+import createRoute, { Route } from '@dojo/routing/createRoute';
+import { Parameters } from '@dojo/routing/interfaces';
 
 interface MyParams extends Parameters {
 	id: number;
@@ -315,7 +315,7 @@ const route: Route<MyParams> = createRoute({
 });
 ```
 
-`searchParams` is a `UrlSearchParams` instance from [`dojo-core`](https://github.com/dojo/core).
+`searchParams` is a `UrlSearchParams` instance from [`@dojo/core`](https://github.com/dojo/core).
 
 ### Preventing routes from being selected
 
@@ -514,7 +514,7 @@ This library ships with three history managers. They share the same interface bu
 The recommended manager uses `pushState()` and `replaceState()` to [add or modify history entries](https://developer.mozilla.org/en-US/docs/Web/API/History_API#Adding_and_modifying_history_entries). This requires server-side support to work well:
 
 ```ts
-import createStateHistory from 'dojo-routing/history/createStateHistory';
+import createStateHistory from '@dojo/routing/history/createStateHistory';
 
 const history = createStateHistory();
 ```
@@ -562,7 +562,7 @@ You may specify the base with or without a trailing slash.
 The hash-based manager uses the fragment identifier to store navigation state. This makes it a better fit for applications that are served as a static HTML file:
 
 ```ts
-import createHashHistory from 'dojo-routing/history/createHashHistory';
+import createHashHistory from '@dojo/routing/history/createHashHistory';
 
 const history = createHashHistory();
 ```
@@ -576,7 +576,7 @@ Path strings are stored in the fragment identifier. `history.current` returns th
 Finally there is a memory-backed manager. This isn't very useful in browsers but can be helpful when writing tests.:
 
 ```ts
-import createMemoryHistory from 'dojo-routing/history/createMemoryHistory';
+import createMemoryHistory from '@dojo/routing/history/createMemoryHistory';
 
 const history = createMemoryHistory();
 ```
