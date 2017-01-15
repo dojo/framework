@@ -252,7 +252,6 @@ export interface WidgetProperties {
 	[index: string]: any;
 	id?: string;
 	classes?: string[];
-	preventDefaultBind?: boolean;
 }
 
 export interface WidgetState extends State {
