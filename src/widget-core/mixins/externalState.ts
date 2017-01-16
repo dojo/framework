@@ -37,7 +37,7 @@ export interface ExternalStateMixin extends StatefulMixin<State> {
  * External State
  */
 export interface ExternalState extends ExternalStateMixin {
-	properties: ExternalStateProperties;
+	readonly properties: ExternalStateProperties;
 }
 
 /**

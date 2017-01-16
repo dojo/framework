@@ -28,6 +28,7 @@ interface WidgetInternalState {
 	cachedVNode?: VNode | string;
 	factoryRegistry: FactoryRegistry;
 	initializedFactoryMap: Map<string, Promise<WidgetBaseFactory>>;
+	properties: WidgetProperties;
 	previousProperties: WidgetProperties;
 	historicChildrenMap: Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>;
 	currentChildrenMap: Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>;
@@ -142,7 +143,10 @@ function formatTagNameAndClasses(tagName: string, classes: string[]) {
 const createWidget: WidgetBaseFactory = createStateful
 	.mixin<WidgetMixin<WidgetProperties>, WidgetOptions<WidgetState, WidgetProperties>>({
 		mixin: {
-			properties: {},
+			get properties(this: Widget<WidgetProperties>): WidgetProperties {
+				const { properties } = widgetInternalStateMap.get(this);
+				return properties;
+			},
 
 			classes: [],
 
@@ -197,7 +201,7 @@ const createWidget: WidgetBaseFactory = createStateful
 			setProperties(this: Widget<WidgetProperties>, properties: WidgetProperties) {
 				const internalState = widgetInternalStateMap.get(this);
 				const changedPropertyKeys = this.diffProperties(internalState.previousProperties, properties);
-				this.properties = this.assignProperties(internalState.previousProperties, properties, changedPropertyKeys);
+				internalState.properties = this.assignProperties(internalState.previousProperties, properties, changedPropertyKeys);
 				if (changedPropertyKeys.length) {
 					this.emit({
 						type: 'properties:changed',
@@ -275,6 +279,7 @@ const createWidget: WidgetBaseFactory = createStateful
 			widgetInternalStateMap.set(instance, {
 				dirty: true,
 				widgetClasses: [],
+				properties: {},
 				previousProperties: {},
 				factoryRegistry: new FactoryRegistry(),
 				initializedFactoryMap: new Map<string, Promise<WidgetBaseFactory>>(),
