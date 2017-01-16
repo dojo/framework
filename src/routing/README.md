@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/dojo/routing.svg?branch=master)](https://travis-ci.org/dojo/routing)
 [![codecov.io](https://codecov.io/github/dojo/routing/coverage.svg?branch=master)](https://codecov.io/github/dojo/routing?branch=master)
-[![npm version](https://badge.fury.io/js/@dojo/routing.svg)](https://badge.fury.io/js/@dojo/routing)
+[![npm version](https://badge.fury.io/js/%40dojo%2Frouting.svg)](https://badge.fury.io/js/%40dojo%2Frouting)
 
 A routing library for Dojo 2 applications.
 
