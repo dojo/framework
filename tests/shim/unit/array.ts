@@ -7,7 +7,7 @@ import 'src/Symbol';
 
 function mixin(destination: any, source: any): any {
 	for (let key in source) {
-		destination[key] = source[key];
+		(<any> destination)[key] = source[key];
 	}
 	return destination;
 }
