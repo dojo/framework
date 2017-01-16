@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/dojo/stores.svg?branch=master)](https://travis-ci.org/dojo/stores)
 [![codecov.io](http://codecov.io/gh/dojo/stores/branch/master/graph/badge.svg)](http://codecov.io/gh/dojo/stores/branch/master)
+[![npm version](https://badge.fury.io/js/%40dojo%2Fstores.svg)](https://badge.fury.io/js/%40dojo%2Fstores)
 
 This library provides a data store, and several mixins built using [@dojo/compose](https://github.com/dojo/compose) and TypeScript. The mixins provide additional functionality and APIs that can be added to the base store dynamically.
 
