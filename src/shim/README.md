@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/dojo/shim.svg?branch=master)](https://travis-ci.org/dojo/shim)
 [![codecov](https://codecov.io/gh/dojo/shim/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/shim)
-[![npm version](https://badge.fury.io/js/@dojo/shim.svg)](http://badge.fury.io/js/@dojo/shim)
+[![npm version](https://badge.fury.io/js/%40dojo%2Fshim.svg)](https://badge.fury.io/js/%40dojo%2Fshim)
 
 This package provides functional shims for ECMAScript.
 
