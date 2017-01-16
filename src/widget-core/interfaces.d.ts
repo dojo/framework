@@ -140,7 +140,7 @@ export interface PropertyComparison<P extends WidgetProperties> {
 	/**
 	 * Construct properties object for this.properties
 	 */
-	assignProperties<S>(this: S, previousProperties: P, newProperties: P, changedPropertyKeys: string[]): P;
+	assignProperties<S>(this: S, previousProperties: P, newProperties: P, changedPropertyKeys: string[]): Partial<P>;
 }
 
 export interface WidgetMixin<P extends WidgetProperties> extends PropertyComparison<P> {
