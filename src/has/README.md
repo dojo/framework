@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/dojo/has.svg?branch=master)](https://travis-ci.org/dojo/has)
 [![codecov](https://codecov.io/gh/dojo/has/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/has)
-[![npm version](https://badge.fury.io/js/@dojo/has.svg)](http://badge.fury.io/js/@dojo/has)
+[![npm version](https://badge.fury.io/js/%40dojo%2Fhas.svg)](https://badge.fury.io/js/%40dojo%2Fhas)
 
 A feature detection library.
 
