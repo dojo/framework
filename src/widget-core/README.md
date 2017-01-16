@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/dojo/widgets.svg?branch=master)](https://travis-ci.org/dojo/widgets)
 [![codecov](https://codecov.io/gh/dojo/widgets/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/widgets)
-[![npm version](https://badge.fury.io/js/@dojo/widgets.svg)](http://badge.fury.io/js/@dojo/widgets)
+[![npm version](https://badge.fury.io/js/%40dojo%2Fwidgets.svg)](https://badge.fury.io/js/%40dojo%2Fwidgets)
 
 A core widget library for Dojo.
 
