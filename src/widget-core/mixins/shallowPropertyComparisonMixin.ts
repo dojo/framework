@@ -1,5 +1,5 @@
 import { entries } from '@dojo/shim/object';
-import { WidgetProperties, PropertyComparison, PropertiesChangedRecord } from './../interfaces';
+import { WidgetProperties, PropertyComparison, PropertiesChangeRecord } from './../interfaces';
 import { deepAssign } from '@dojo/core/lang';
 
 /**
@@ -28,7 +28,7 @@ function shallowCompare(from: any, to: any) {
  */
 const shallowPropertyComparisonMixin: { mixin: PropertyComparison<WidgetProperties> } = {
 	mixin: {
-		diffProperties<S>(this: S, previousProperties: WidgetProperties, newProperties: WidgetProperties): PropertiesChangedRecord<WidgetProperties> {
+		diffProperties<S>(this: S, previousProperties: WidgetProperties, newProperties: WidgetProperties): PropertiesChangeRecord<WidgetProperties> {
 			const changedKeys: string[] = [];
 
 			entries(newProperties).forEach(([key, value]) => {

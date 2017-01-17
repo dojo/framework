@@ -11,7 +11,8 @@ import {
 	WidgetProperties,
 	WidgetBaseFactory,
 	FactoryRegistryItem,
-	PropertiesChangedRecord
+	PropertiesChangeRecord,
+	PropertyChangeRecord
 } from './interfaces';
 import { VNode, VNodeProperties } from '@dojo/interfaces/vdom';
 import { assign } from '@dojo/core/lang';
@@ -33,12 +34,15 @@ interface WidgetInternalState {
 	previousProperties: WidgetProperties;
 	historicChildrenMap: Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>;
 	currentChildrenMap: Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>;
+	diffPropertyFunctionMap: Map<string, string>;
 };
 
 /**
  * Internal state map for widget instances
  */
 const widgetInternalStateMap = new WeakMap<Widget<WidgetProperties>, WidgetInternalState>();
+
+const propertyFunctionNameRegex = /^diffProperty(.*)/;
 
 function isWNode(child: DNode): child is WNode {
 	return Boolean(child && (<WNode> child).factory !== undefined);
@@ -201,20 +205,44 @@ const createWidget: WidgetBaseFactory = createStateful
 
 			setProperties(this: Widget<WidgetProperties>, properties: WidgetProperties) {
 				const internalState = widgetInternalStateMap.get(this);
-				const processedProperties = this.diffProperties(internalState.previousProperties, properties);
-				internalState.properties = processedProperties.properties;
-				if (processedProperties.changedKeys.length) {
+
+				const diffPropertyResults: { [index: string]: PropertyChangeRecord } = {};
+				const diffPropertyChangedKeys: string[] = [];
+
+				internalState.diffPropertyFunctionMap.forEach((property: string, diffFunctionName: string) => {
+					const previousProperty = internalState.previousProperties[property];
+					const newProperty = properties[property];
+					const result: PropertyChangeRecord = this[diffFunctionName](previousProperty, newProperty);
+
+					if (!result) {
+						return;
+					}
+
+					if (result.changed) {
+						diffPropertyChangedKeys.push(property);
+					}
+					delete properties[property];
+					delete internalState.previousProperties[property];
+					diffPropertyResults[property] = result.value;
+				});
+
+				const diffPropertiesResult = this.diffProperties(internalState.previousProperties, properties);
+				internalState.properties = assign(diffPropertiesResult.properties, diffPropertyResults);
+
+				const changedPropertyKeys = [...diffPropertiesResult.changedKeys, ...diffPropertyChangedKeys];
+
+				if (changedPropertyKeys.length) {
 					this.emit({
 						type: 'properties:changed',
 						target: this,
 						properties: this.properties,
-						changedPropertyKeys: processedProperties.changedKeys
+						changedPropertyKeys
 					});
 				}
 				internalState.previousProperties = this.properties;
 			},
 
-			diffProperties(this: Widget<WidgetProperties>, previousProperties: WidgetProperties, newProperties: WidgetProperties): PropertiesChangedRecord<WidgetProperties> {
+			diffProperties(this: Widget<WidgetProperties>, previousProperties: WidgetProperties, newProperties: WidgetProperties): PropertiesChangeRecord<WidgetProperties> {
 				return {
 					changedKeys: Object.keys(newProperties),
 					properties: assign({}, newProperties)
@@ -273,8 +301,16 @@ const createWidget: WidgetBaseFactory = createStateful
 		},
 		initialize(instance: Widget<WidgetProperties>, options: WidgetOptions<WidgetState, WidgetProperties> = {}) {
 			const { tagName, properties = {} } = options;
+			const diffPropertyFunctionMap = new Map<string, string>();
 
 			instance.tagName = tagName || instance.tagName;
+
+			Object.keys(Object.getPrototypeOf(instance)).forEach((attribute) => {
+				const match = attribute.match(propertyFunctionNameRegex);
+				if (match) {
+					diffPropertyFunctionMap.set(match[0], `${match[1].slice(0, 1).toLowerCase()}${match[1].slice(1)}`);
+				}
+			});
 
 			widgetInternalStateMap.set(instance, {
 				dirty: true,
@@ -285,6 +321,7 @@ const createWidget: WidgetBaseFactory = createStateful
 				initializedFactoryMap: new Map<string, Promise<WidgetBaseFactory>>(),
 				historicChildrenMap: new Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>(),
 				currentChildrenMap: new Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>(),
+				diffPropertyFunctionMap,
 				children: []
 			});
 

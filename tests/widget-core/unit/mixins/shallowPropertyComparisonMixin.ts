@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { PropertiesChangedRecord, WidgetProperties } from '../../../src/interfaces';
+import { WidgetProperties } from '../../../src/interfaces';
 import shallowPropertyComparisonMixin from '../../../src/mixins/shallowPropertyComparisonMixin';
 import createWidgetBase from './../../../src/createWidgetBase';
 
@@ -38,7 +38,7 @@ registerSuite({
 				otherItems: [ 'c', 'd']
 			};
 
-			let propertiesChanged: PropertiesChangedRecord<TestProperties> = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
+			let propertiesChanged = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
 			assert.lengthOf(propertiesChanged.changedKeys, 3);
 			assert.deepEqual(propertiesChanged.changedKeys, [ 'id', 'items', 'otherItems' ]);
 			properties.items[1] = 'c';
@@ -54,7 +54,7 @@ registerSuite({
 				otherItems: [ 'c', 'd']
 			};
 
-			let propertiesChanged: PropertiesChangedRecord<TestProperties> = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
+			let propertiesChanged = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
 			assert.lengthOf(propertiesChanged.changedKeys, 3);
 			assert.deepEqual(propertiesChanged.changedKeys, [ 'id', 'items', 'otherItems' ]);
 			properties.items.reverse();
@@ -71,7 +71,7 @@ registerSuite({
 				]
 			};
 
-			let propertiesChanged: PropertiesChangedRecord<TestProperties> = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
+			let propertiesChanged = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
 			assert.lengthOf(propertiesChanged.changedKeys, 2);
 			assert.deepEqual(propertiesChanged.changedKeys, [ 'id', 'items' ]);
 			properties.items[0].foo = 'foo';
@@ -88,7 +88,7 @@ registerSuite({
 				]
 			};
 
-			let propertiesChanged: PropertiesChangedRecord<TestProperties> = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
+			let propertiesChanged = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
 			assert.lengthOf(propertiesChanged.changedKeys, 2);
 			assert.deepEqual(propertiesChanged.changedKeys, [ 'id', 'items' ]);
 			properties.items!.pop();
@@ -105,7 +105,7 @@ registerSuite({
 				]
 			};
 
-			let propertiesChanged: PropertiesChangedRecord<TestProperties> = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
+			let propertiesChanged = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
 			assert.lengthOf(propertiesChanged.changedKeys, 2);
 			assert.deepEqual(propertiesChanged.changedKeys, [ 'id', 'items' ]);
 			properties.items[1] = { bar: 'foo' };
@@ -126,7 +126,7 @@ registerSuite({
 				}
 			};
 
-			let propertiesChanged: PropertiesChangedRecord<TestProperties> = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
+			let propertiesChanged = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
 			assert.lengthOf(propertiesChanged.changedKeys, 3);
 			assert.deepEqual(propertiesChanged.changedKeys, [ 'id', 'obj', 'otherObj' ]);
 			properties.obj.foo = 'foo';
@@ -147,7 +147,7 @@ registerSuite({
 				}
 			};
 
-			let propertiesChanged: PropertiesChangedRecord<TestProperties> = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
+			let propertiesChanged = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
 			assert.lengthOf(propertiesChanged.changedKeys, 3);
 			assert.deepEqual(propertiesChanged.changedKeys, [ 'id', 'obj', 'otherObj' ]);
 			properties.obj.bar = 'foo';
@@ -163,7 +163,7 @@ registerSuite({
 				myFunc: () => {}
 			};
 
-			let propertiesChanged: PropertiesChangedRecord<TestProperties> = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
+			let propertiesChanged = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
 			assert.lengthOf(propertiesChanged.changedKeys, 2);
 			assert.deepEqual(propertiesChanged.changedKeys, [ 'id', 'myFunc' ]);
 			properties.myFunc = () => {};
@@ -181,7 +181,7 @@ registerSuite({
 				]
 			};
 
-			let propertiesChanged: PropertiesChangedRecord<TestProperties> = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
+			let propertiesChanged = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
 			assert.lengthOf(propertiesChanged.changedKeys, 2);
 			assert.deepEqual(propertiesChanged.changedKeys, [ 'id', 'items' ]);
 			properties.items[0].foo = 'foo';

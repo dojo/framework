@@ -111,6 +111,11 @@ export interface WNode {
 
 export type DNode = HNode | WNode | string | null;
 
+export interface PropertyChangeRecord {
+	changed: boolean;
+	value: any;
+}
+
 export type Widget<P extends WidgetProperties> = Stateful<WidgetState> & WidgetMixin<P> & WidgetOverloads<P>
 
 export interface WidgetBaseFactory extends ComposeFactory<Widget<WidgetProperties>, WidgetOptions<WidgetState, WidgetProperties>> {}
@@ -132,7 +137,7 @@ export interface WidgetOverloads<P extends WidgetProperties> {
 	on(type: 'properties:changed', listener: EventedListener<Widget<P>, PropertiesChangeEvent<Widget<P>, P>>): Handle;
 }
 
-export interface PropertiesChangedRecord<P extends WidgetProperties> {
+export interface PropertiesChangeRecord<P extends WidgetProperties> {
 	changedKeys: string[];
 	properties: P;
 }
@@ -141,10 +146,16 @@ export interface PropertyComparison<P extends WidgetProperties> {
 	/**
 	 * Determine changed or new property keys on setProperties and assign them on return.
 	 */
-	diffProperties<S>(this: S, previousProperties: P, newProperties: P): PropertiesChangedRecord<P>;
+	diffProperties<S>(this: S, previousProperties: P, newProperties: P): PropertiesChangeRecord<P>;
 }
 
 export interface WidgetMixin<P extends WidgetProperties> extends PropertyComparison<P> {
+
+	/**
+	 * index key
+	 */
+	readonly [index: string]: any;
+
 	/**
 	 * Classes which are applied upon render.
 	 *
