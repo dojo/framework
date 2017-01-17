@@ -10,7 +10,8 @@ import {
 	WidgetOptions,
 	WidgetProperties,
 	WidgetBaseFactory,
-	FactoryRegistryItem
+	FactoryRegistryItem,
+	PropertiesChangedRecord
 } from './interfaces';
 import { VNode, VNodeProperties } from '@dojo/interfaces/vdom';
 import { assign } from '@dojo/core/lang';
@@ -200,25 +201,24 @@ const createWidget: WidgetBaseFactory = createStateful
 
 			setProperties(this: Widget<WidgetProperties>, properties: WidgetProperties) {
 				const internalState = widgetInternalStateMap.get(this);
-				const changedPropertyKeys = this.diffProperties(internalState.previousProperties, properties);
-				internalState.properties = this.assignProperties(internalState.previousProperties, properties, changedPropertyKeys);
-				if (changedPropertyKeys.length) {
+				const processedProperties = this.diffProperties(internalState.previousProperties, properties);
+				internalState.properties = processedProperties.properties;
+				if (processedProperties.changedKeys.length) {
 					this.emit({
 						type: 'properties:changed',
 						target: this,
 						properties: this.properties,
-						changedPropertyKeys
+						changedPropertyKeys: processedProperties.changedKeys
 					});
 				}
 				internalState.previousProperties = this.properties;
 			},
 
-			diffProperties(this: Widget<WidgetProperties>, previousProperties: WidgetProperties, newProperties: WidgetProperties): string[] {
-				return Object.keys(newProperties);
-			},
-
-			assignProperties(this: Widget<WidgetProperties>, previousProperties: WidgetProperties, newProperties: WidgetProperties, changedPropertyKeys: string[]): WidgetProperties {
-				return assign({}, newProperties);
+			diffProperties(this: Widget<WidgetProperties>, previousProperties: WidgetProperties, newProperties: WidgetProperties): PropertiesChangedRecord<WidgetProperties> {
+				return {
+					changedKeys: Object.keys(newProperties),
+					properties: assign({}, newProperties)
+				};
 			},
 
 			onPropertiesChanged: function(this: Widget<WidgetProperties>, properties: WidgetProperties, changedPropertyKeys: string[]): void {

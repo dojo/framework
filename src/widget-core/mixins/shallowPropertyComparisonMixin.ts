@@ -1,5 +1,5 @@
 import { entries } from '@dojo/shim/object';
-import { WidgetProperties, PropertyComparison } from './../interfaces';
+import { WidgetProperties, PropertyComparison, PropertiesChangedRecord } from './../interfaces';
 import { deepAssign } from '@dojo/core/lang';
 
 /**
@@ -17,7 +17,8 @@ function shallowCompare(from: any, to: any) {
 }
 
 /**
- * Mixin that overrides the `diffProperties` method providing a shallow comparison of attributes.
+ * Mixin that overrides the `processProperties` method providing a comparison of attributes that goes a level deeper for
+ * arrays and objects.
  *
  * For Objects, values for all `keys` are compared against the equivalent `key` on the `previousProperties`
  * attribute using `===`. If the `key` does not exists on the `previousProperties` attribute it is considered unequal.
@@ -27,8 +28,8 @@ function shallowCompare(from: any, to: any) {
  */
 const shallowPropertyComparisonMixin: { mixin: PropertyComparison<WidgetProperties> } = {
 	mixin: {
-		diffProperties<S>(this: S, previousProperties: WidgetProperties, newProperties: WidgetProperties): string[] {
-			const changedPropertyKeys: string[] = [];
+		diffProperties<S>(this: S, previousProperties: WidgetProperties, newProperties: WidgetProperties): PropertiesChangedRecord<WidgetProperties> {
+			const changedKeys: string[] = [];
 
 			entries(newProperties).forEach(([key, value]) => {
 				let isEqual = true;
@@ -60,13 +61,13 @@ const shallowPropertyComparisonMixin: { mixin: PropertyComparison<WidgetProperti
 					isEqual = false;
 				}
 				if (!isEqual) {
-					changedPropertyKeys.push(key);
+					changedKeys.push(key);
 				}
 			});
-			return changedPropertyKeys;
-		},
-		assignProperties<S>(this: S, previousProperties: WidgetProperties, newProperties: WidgetProperties, changedPropertyKeys: string[]): WidgetProperties {
-			return deepAssign({}, newProperties);
+			return {
+				changedKeys,
+				properties: deepAssign({}, newProperties)
+			};
 		}
 	}
 };
