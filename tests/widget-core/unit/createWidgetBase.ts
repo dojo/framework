@@ -6,6 +6,7 @@ import { DNode, HNode, WidgetProperties } from './../../src/interfaces';
 import { VNode } from '@dojo/interfaces/vdom';
 import { v, w, registry } from '../../src/d';
 import { stub } from 'sinon';
+import FactoryRegistry from './../../src/FactoryRegistry';
 
 registerSuite({
 	name: 'bases/createWidgetBase',
@@ -286,14 +287,15 @@ registerSuite({
 				.override({
 					tagName: 'header'
 			});
+			const registry = new FactoryRegistry();
+			registry.define('my-header', createHeader);
+
 			const createMyWidget = createWidgetBase.mixin({
 				mixin: {
+					registry,
 					getChildrenNodes: function(this: any): DNode[] {
 						return [ w('my-header', {}) ];
 					}
-				},
-				initialize(instance) {
-					instance.registry.define('my-header', createHeader);
 				}
 			});
 

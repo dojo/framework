@@ -9,8 +9,7 @@ let store: ObservableStore<{}, {}, any>;
 
 const externalStateWithProperties = compose({
 	properties: <any> {},
-	diffProperties(this: any, previousProperties: any, newProperties: any) { },
-	applyChangedProperties(this: any) { }
+	diffProperties(this: any, previousProperties: any, newProperties: any) {}
 }, (instance, options: any) => {
 	if (options) {
 		instance.properties = options.properties;

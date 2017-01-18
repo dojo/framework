@@ -19,7 +19,6 @@ import WeakMap from '@dojo/shim/WeakMap';
 import Promise from '@dojo/shim/Promise';
 import Map from '@dojo/shim/Map';
 import { v, registry, isWNode } from './d';
-import FactoryRegistry from './FactoryRegistry';
 import shallowPropertyComparisonMixin from './mixins/shallowPropertyComparisonMixin';
 
 interface WidgetInternalState {
@@ -27,7 +26,6 @@ interface WidgetInternalState {
 	dirty: boolean;
 	widgetClasses: string[];
 	cachedVNode?: VNode | string;
-	factoryRegistry: FactoryRegistry;
 	initializedFactoryMap: Map<string, Promise<WidgetBaseFactory>>;
 	properties: WidgetProperties;
 	previousProperties: WidgetProperties;
@@ -44,10 +42,9 @@ const widgetInternalStateMap = new WeakMap<Widget<WidgetProperties>, WidgetInter
 const propertyFunctionNameRegex = /^diffProperty(.*)/;
 
 function getFromRegistry(instance: Widget<WidgetProperties>, factoryLabel: string): FactoryRegistryItem | null {
-	if (instance.registry.has(factoryLabel)) {
+	if (instance.registry && instance.registry.has(factoryLabel)) {
 		return instance.registry.get(factoryLabel);
 	}
-
 	return registry.get(factoryLabel);
 }
 
@@ -125,7 +122,7 @@ function manageDetachedChildren(instance: Widget<WidgetProperties>): void {
 	const internalState = widgetInternalStateMap.get(instance);
 
 	internalState.historicChildrenMap.forEach((child, key) => {
-		if (!internalState.currentChildrenMap.has(key)) {
+		if (!internalState.currentChildrenMap.has(key) && internalState.historicChildrenMap.has(key)) {
 			internalState.historicChildrenMap.delete(key);
 			child.destroy();
 		}
@@ -288,9 +285,7 @@ const createWidget: WidgetBaseFactory = createStateful
 				return internalState.cachedVNode;
 			},
 
-			get registry(this: Widget<WidgetProperties>): FactoryRegistry {
-				return widgetInternalStateMap.get(this).factoryRegistry;
-			},
+			registry: undefined,
 
 			tagName: 'div'
 		},
@@ -312,7 +307,6 @@ const createWidget: WidgetBaseFactory = createStateful
 				widgetClasses: [],
 				properties: {},
 				previousProperties: {},
-				factoryRegistry: new FactoryRegistry(),
 				initializedFactoryMap: new Map<string, Promise<WidgetBaseFactory>>(),
 				historicChildrenMap: new Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>(),
 				currentChildrenMap: new Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>(),
