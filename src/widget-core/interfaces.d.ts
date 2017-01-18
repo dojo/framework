@@ -177,7 +177,12 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	/**
 	 * An array of children `DNode`s returned via `getChildrenNodes`
 	 */
-	children: DNode[];
+	readonly children: DNode[];
+
+	/**
+	 * Set children
+	 */
+	setChildren(children: DNode | DNode[]): void;
 
 	/**
 	 * Get the top level node and children when rendering the widget.

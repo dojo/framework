@@ -103,7 +103,7 @@ function dNodeToVNode(instance: Widget<WidgetProperties>, dNode: DNode): VNode |
 			instance.emit({ type: 'error', target: instance, error: new Error(errorMsg) });
 		}
 
-		child.children = children;
+		child.setChildren(children);
 		internalState.currentChildrenMap.set(childrenMapKey, child);
 
 		return child.__render__();
@@ -152,17 +152,17 @@ const createWidget: WidgetBaseFactory = createStateful
 				return v(tag, this.getNodeAttributes(), this.getChildrenNodes());
 			},
 
-			set children(this: Widget<WidgetProperties>, children: DNode[]) {
+			get children(this: Widget<WidgetProperties>) {
+				return widgetInternalStateMap.get(this).children;
+			},
+
+			setChildren(this: Widget<WidgetProperties>, children: DNode[]): void {
 				const internalState = widgetInternalStateMap.get(this);
 				internalState.children = children;
 				this.emit({
 					type: 'widget:children',
 					target: this
 				});
-			},
-
-			get children() {
-				return widgetInternalStateMap.get(this).children;
 			},
 
 			getChildrenNodes(this: Widget<WidgetProperties>): DNode[] {
