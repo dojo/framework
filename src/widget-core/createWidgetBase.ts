@@ -3,7 +3,6 @@ import createStateful from '@dojo/compose/bases/createStateful';
 import {
 	DNode,
 	PropertiesChangeEvent,
-	WNode,
 	Widget,
 	WidgetMixin,
 	WidgetState,
@@ -19,7 +18,7 @@ import { assign } from '@dojo/core/lang';
 import WeakMap from '@dojo/shim/WeakMap';
 import Promise from '@dojo/shim/Promise';
 import Map from '@dojo/shim/Map';
-import { v, registry } from './d';
+import { v, registry, isWNode } from './d';
 import FactoryRegistry from './FactoryRegistry';
 import shallowPropertyComparisonMixin from './mixins/shallowPropertyComparisonMixin';
 
@@ -43,10 +42,6 @@ interface WidgetInternalState {
 const widgetInternalStateMap = new WeakMap<Widget<WidgetProperties>, WidgetInternalState>();
 
 const propertyFunctionNameRegex = /^diffProperty(.*)/;
-
-function isWNode(child: DNode): child is WNode {
-	return Boolean(child && (<WNode> child).factory !== undefined);
-}
 
 function getFromRegistry(instance: Widget<WidgetProperties>, factoryLabel: string): FactoryRegistryItem | null {
 	if (instance.registry.has(factoryLabel)) {
