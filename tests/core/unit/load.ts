@@ -45,9 +45,17 @@ const suite: any = {
 			assert.deepEqual(a, 'A');
 			assert.deepEqual(b, { 'default': 'B', three: 3, four: 4 });
 		});
-	}
+	},
 
-	// TODO: once AMD error handling is figured out, add tests for the failure case
+	'error handling'() {
+		return load('some/bogus/nonexistent/thing').then(() => {
+			throw new Error('Should not resolve.');
+		}, (error: Error) => {
+			assert(error);
+			assert.isTrue(error.message.indexOf('some/bogus/nonexistent/thing') > -1,
+				'The error message contains the module id.');
+		});
+	}
 };
 
 if (has('host-node')) {

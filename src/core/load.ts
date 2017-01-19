@@ -62,9 +62,18 @@ const load: Load = (function (): Load {
 				moduleIds.unshift(contextualRequire);
 				contextualRequire = require;
 			}
-			return new Promise(function (resolve) {
-				// TODO: Error path once https://github.com/dojo/loader/issues/14 is figured out
+			return new Promise(function (resolve, reject) {
+				let errorHandle: { remove: () => void };
+
+				if (typeof contextualRequire.on === 'function') {
+					errorHandle = contextualRequire.on('error', (error: Error) => {
+						errorHandle.remove();
+						reject(error);
+					});
+				}
+
 				contextualRequire(moduleIds, function (...modules: any[]) {
+					errorHandle && errorHandle.remove();
 					resolve(modules);
 				});
 			});
