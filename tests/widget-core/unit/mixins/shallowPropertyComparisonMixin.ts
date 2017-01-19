@@ -173,6 +173,7 @@ registerSuite({
 			assert.lengthOf(propertiesChanged.changedKeys, 1);
 			assert.deepEqual(propertiesChanged.changedKeys, [ 'myFunc' ]);
 		},
+	'intergration tests': {
 		'test compatibility with shallowPropertyComparisonMixin'() {
 			const properties = {
 				id: 'id',
@@ -182,8 +183,6 @@ registerSuite({
 			};
 
 			let propertiesChanged = shallowPropertyComparisonMixin.mixin.diffProperties({}, properties);
-			assert.lengthOf(propertiesChanged.changedKeys, 2);
-			assert.deepEqual(propertiesChanged.changedKeys, [ 'id', 'items' ]);
 			properties.items[0].foo = 'foo';
 
 			const widgetBase = createWidgetBase.mixin(shallowPropertyComparisonMixin)({ properties });
@@ -191,5 +190,31 @@ registerSuite({
 
 			assert.lengthOf(propertiesChanged.changedKeys, 1);
 			assert.deepEqual(propertiesChanged.changedKeys, [ 'items' ]);
+		},
+		'no updated properties'() {
+			const properties = { id: 'id', foo: 'bar' };
+			const widgetBase = createWidgetBase.mixin(shallowPropertyComparisonMixin)({ properties });
+			const results = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' }, properties);
+			assert.lengthOf(results.changedKeys, 0);
+		},
+		'updated properties'() {
+			const properties = { id: 'id', foo: 'baz' };
+			const widgetBase = createWidgetBase.mixin(shallowPropertyComparisonMixin)({ properties });
+			const results = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' }, properties);
+			assert.lengthOf(results.changedKeys, 1);
+		},
+		'new properties'() {
+			const properties = { id: 'id', foo: 'bar', bar: 'baz' };
+			const widgetBase = createWidgetBase.mixin(shallowPropertyComparisonMixin)({ properties });
+			const results = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' }, properties);
+			assert.lengthOf(results.changedKeys, 1);
+		},
+		'updated / new properties with falsy values'() {
+			const properties = { id: 'id', foo: '', bar: null, baz: 0, qux: false };
+			const widgetBase = createWidgetBase.mixin(shallowPropertyComparisonMixin)({ properties });
+			const results = widgetBase.diffProperties(<any> { id: 'id', foo: 'bar' }, properties);
+			assert.lengthOf(results.changedKeys, 4);
+			assert.deepEqual(results.changedKeys, [ 'foo', 'bar', 'baz', 'qux']);
 		}
+	}
 });

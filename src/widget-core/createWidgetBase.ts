@@ -19,7 +19,6 @@ import WeakMap from '@dojo/shim/WeakMap';
 import Promise from '@dojo/shim/Promise';
 import Map from '@dojo/shim/Map';
 import { v, registry, isWNode } from './d';
-import shallowPropertyComparisonMixin from './mixins/shallowPropertyComparisonMixin';
 
 interface WidgetInternalState {
 	children: DNode[];
@@ -235,10 +234,14 @@ const createWidget: WidgetBaseFactory = createStateful
 			},
 
 			diffProperties(this: Widget<WidgetProperties>, previousProperties: WidgetProperties, newProperties: WidgetProperties): PropertiesChangeRecord<WidgetProperties> {
-				return {
-					changedKeys: Object.keys(newProperties),
-					properties: assign({}, newProperties)
-				};
+				const changedKeys = Object.keys(newProperties).reduce((changedPropertyKeys: string[], propertyKey: string): string[] => {
+					if (previousProperties[propertyKey] !== newProperties[propertyKey]) {
+						changedPropertyKeys.push(propertyKey);
+					}
+					return changedPropertyKeys;
+				}, []);
+
+				return { changedKeys, properties: assign({}, newProperties) };
 			},
 
 			onPropertiesChanged: function(this: Widget<WidgetProperties>, properties: WidgetProperties, changedPropertyKeys: string[]): void {
@@ -324,7 +327,6 @@ const createWidget: WidgetBaseFactory = createStateful
 
 			instance.setProperties(properties);
 		}
-	})
-	.mixin(shallowPropertyComparisonMixin);
+	});
 
 export default createWidget;
