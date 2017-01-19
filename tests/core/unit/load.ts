@@ -1,7 +1,7 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 import has from '../../src/has';
-import load from '../../src/load';
+import load, { useDefault } from '../../src/load';
 import Promise from '@dojo/shim/Promise';
 import { RootRequire } from '@dojo/interfaces/loader';
 import global from '../../src/global';
@@ -28,9 +28,23 @@ const suite: any = {
 		const def = this.async(5000);
 
 		load(require, '../support/load/a', '../support/load/b').then(def.callback(function ([ a, b ]: [ any, any ]) {
-			assert.deepEqual(a, { one: 1, two: 2 });
-			assert.deepEqual(b, { three: 3, four: 4 });
+			assert.deepEqual(a, { 'default': 'A', one: 1, two: 2 });
+			assert.deepEqual(b, { 'default': 'B', three: 3, four: 4 });
 		}));
+	},
+
+	'contextual load - all es 6 modules'() {
+		return load(require, '../support/load/a', '../support/load/b').then(useDefault).then(([ a, b ]: any[]) => {
+			assert.deepEqual(a, 'A');
+			assert.deepEqual(b, 'B');
+		});
+	},
+
+	'contextual load - single es 6 module'() {
+		return load(require, '../support/load/a', '../support/load/b').then(([ a, b ]) => [ useDefault(a), b ]).then(([ a, b ]: any[]) => {
+			assert.deepEqual(a, 'A');
+			assert.deepEqual(b, { 'default': 'B', three: 3, four: 4 });
+		});
 	}
 
 	// TODO: once AMD error handling is figured out, add tests for the failure case
@@ -73,8 +87,18 @@ if (has('host-node')) {
 
 			const result: Promise<any[]> = nodeRequire(path.join(buildDir, 'tests', 'support', 'load', 'node')).succeed;
 			result.then(def.callback(function ([ a, b ]: [ any, any ]) {
-				assert.deepEqual(a, { one: 1, two: 2 });
-				assert.deepEqual(b, { three: 3, four: 4 });
+				assert.deepEqual(a, { 'default': 'A', one: 1, two: 2 });
+				assert.deepEqual(b, { 'default': 'B', three: 3, four: 4 });
+			}));
+		},
+
+		'useDefault resolves es modules'(this: any) {
+			const def = this.async(5000);
+
+			const result: Promise<any[]> = nodeRequire(path.join(buildDir, 'tests', 'support', 'load', 'node')).succeedDefault;
+			result.then(def.callback(function ([ a, b ]: [ any, any ]) {
+				assert.deepEqual(a, 'A');
+				assert.deepEqual(b, 'B');
 			}));
 		},
 
