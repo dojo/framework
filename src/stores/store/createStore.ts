@@ -200,7 +200,7 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 			result.totalLength.then(resolveTotalLength, rejectTotalLength);
 			return result;
 		});
-		fetchResult.totalLength = totalLength;
+		fetchResult.totalLength = fetchResult.dataLength = totalLength;
 
 		return fetchResult;
 	},

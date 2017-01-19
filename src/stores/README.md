@@ -14,8 +14,8 @@ This library provides a data store, and several mixins built using [@dojo/compos
 
 The underlying `Storage` interface provides the basic CRUD functionality, and is leveraged to provide the `Store` interface, which is the interface intended to be consumed. This means that the basic `createStore` factory, which defaults to using the provided `createInMemoryStorage` can be repurposed to interact with any storage medium by providing an object implementing the simpler `Storage` interface at instantiation.
 ```typescript
-import createStore from store/createStore';
-import { Storage } from store/createInMemroyStorage';
+import createStore from 'store/createStore';
+import { Storage } from 'store/createInMemoryStorage';
 const myCustomStorage: Storage = {
   // Implement storage API
 }
@@ -56,7 +56,7 @@ delete(ids: string[] | string): StoreObservable<string, U>;
 ```
 Delete the item(s) with the provided IDs from the store
 ```typescript
-fetch(): Promise<T[]>;
+fetch(): FetchResult<T>;
 ```
 Returns a promise that will resolve to all of the data in the store
 ```typescript
@@ -277,7 +277,7 @@ export interface QueryTransformResult<T, S extends ObservableStore<any, any, any
 	get(ids: string | string[]): Promise<T[]>;
 	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryTransformResult<V, S>;
 	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): this;
-	fetch(query?: Query<T>): Promise<T[]>;
+	fetch(query?: Query<T>): FetchResult<T>;
 	source: S;
 }
 ```
@@ -376,6 +376,56 @@ filteredView.observe().subscribe((update) => {
 ```
 
 If the observer starts observing after the initial add is already resolved, the first update they receive will be the `subsequent update` in this example. Here the first update is provided to an observer that subscribes synchronously with the initialization of the store, but the initial add happens asynchronously and so is not yet resolved. For a tracked collection, the first update will contain the data form a `fetch` to the source.
+
+
+### Fetch Results
+
+Both the `Store` and `QueryTransformResult` interfaces return a type called a `FetchResult` from `fetch`.
+This is a `Promise` that resolves to the fetched data, but it also has two other properties: `totalLength` and `dataLength`.
+For both the `Store` and `QueryTransformResult`, `totalLength` is a `Promise` that resolves to the total number of items
+in the underlying `Storage`.
+
+For a `Store`, `dataLength` resolves to the same value as `totalLength`, and is only provided for consistency between the interfaces.
+
+For a `QueryTransformResult`, `dataLength` resolves to the number of items that match the `QueryTransformResult`'s
+queries. Note that in all cases, these values do not change if a query is passed to fetch.
+
+Example Usage
+```typescript
+import { createQueryStore } from '@dojo/stores/store/mixins/createQueryTransformMixin';
+const queryStore = createQueryStore({
+    data: [
+        { id: 'item-1', value: 1 },
+        { id: 'item-2', value: 2 },
+        { id: 'item-3', value: 3 }
+    ]
+});
+
+const withoutQuery = queryStore.fetch();
+// This filter will not change the value of dataLength or totalLength
+const withQuery = queryStore.fetch(createFilter<any>().lessThan('value', 2));
+
+Promise.all(
+    [ withoutQuery.totalLength, withoutQuery.dataLength, withQuery.totalLength, withQuery.dataLength ]
+).then((values) => {
+    // values[0] === values[1] === values[2] === values[3] === 3
+});
+
+const queryResult = queryStore.filter((item) => item.value < 3);
+const queryResultWithoutQuery = queryResult.fetch();
+// This filter will not change the value of dataLength or totalLength
+const queryResultsWithQuery = queryResult.fetch(createFilter<any>().lessThan('value', 2));
+Promise.all([
+    queryResultWithoutQuery.totalLength,
+    queryResultsWithQuery.totalLength,
+    queryResultWithoutQuery.dataLength,
+    queryResultsWithQuery.dataLength
+]).then((values) => {
+    // values[0] === values[1] === 3 The totalLength in both cases is still the total number of items
+    // values[2] === values[3] === 2 The dataLength in both cases is the number of items matching the
+    // result's queries
+});
+```
 
 ## How do I contribute?
 

@@ -488,6 +488,88 @@ registerSuite({
 		);
 	},
 
+	'totalLength and dataLength': {
+		'totalLength should return the total number of items in storage': {
+			'fetch all'(this: any) {
+				const queryStore = createQueryStore({
+					data: createData()
+				}).filter(() => false);
+				const fetchResult = queryStore.fetch();
+				return fetchResult.then((data) => {
+					assert.equal(0, data.length, 'Should not return any items for this query');
+					return fetchResult.totalLength.then((totalLength) => {
+						assert.equal(3, totalLength, 'Didn\'t return the correct totalLength');
+					});
+				});
+			},
+
+			'fetch with query'(this: any) {
+				const queryStore = createQueryStore({
+					data: createData()
+				}).filter(() => false);
+				const fetchResult = queryStore.fetch(createFilter<ItemType>().custom(() => false));
+				return fetchResult.then((data) => {
+					assert.equal(0, data.length, 'Should not return any items for this query');
+					return fetchResult.totalLength.then((totalLength) => {
+						assert.equal(3, totalLength, 'Didn\'t return the correct totalLength');
+					});
+				});
+			}
+		},
+
+		'dataLength should return the number of items matching the Query Transform result\'s own queries': {
+			'fetch all'(this: any) {
+				const queryStore = createQueryStore({
+					data: createData()
+				}).filter((item) => item.value < 3);
+				const fetchResult = queryStore.fetch();
+				return fetchResult.then((data) => {
+					assert.deepEqual(createData().slice(0, 2), data, 'Didn\'t return expected data');
+					return fetchResult.dataLength.then((dataLength) => {
+						assert.equal(2, dataLength, 'Didn\'t return the correct dataLength');
+					});
+				});
+			},
+
+			'fetch with query'(this: any) {
+				const queryStore = createQueryStore({
+					data: createData()
+				}).filter((item) => item.value < 3);
+				const fetchResult = queryStore.fetch(createFilter<ItemType>().custom((item) => item.value < 2));
+				return fetchResult.then((data) => {
+					assert.deepEqual(data, [ createData()[0] ], 'Didn\'t return expected data');
+					return fetchResult.dataLength.then((dataLength) => {
+						assert.equal(2, dataLength, 'Didn\'t return the correct dataLength');
+					});
+				});
+			},
+
+			'should be rejected if fetch errors'(this: any) {
+				const queryStore = createQueryStore({
+					storage: <any> {
+						fetch() {
+							const result = Promise.reject(Error('Fetch failed'));
+							(<any> result).totalLength = Promise.resolve(0);
+							return result;
+						}
+					}
+				});
+
+				const fetchResult = queryStore.filter(() => true).fetch();
+				// Handle the error on the fetch result itself to avoid warnings
+				fetchResult.then(undefined, () => {});
+				return fetchResult.dataLength.then(
+					() => {
+						throw Error('Data length should not have resolved');
+					},
+					(error: any) => {
+						assert.equal('Fetch failed', error.message);
+					}
+				);
+			}
+		}
+	},
+
 	'async storage': {
 		'filtered subcollection fetch should not return items when it is done before add.'(this: any) {
 			const { queryStore: store } = getStoreWithAsyncStorage(this, { put: 20, fetch: 10 }, false);

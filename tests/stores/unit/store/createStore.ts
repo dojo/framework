@@ -455,18 +455,22 @@ registerSuite({
 		}
 	},
 
-	'should have totalLength property on fetch results': {
+	'should have totalLength and dataLength properties on fetch results': {
 		'fetch all'(this: any) {
 			const { store } = getStoreAndDfd(this, undefined, false);
-			return store.fetch().totalLength.then((totalLength) => {
-				assert.equal(3, totalLength, 'Didn\'t return the correct total length');
+			const fetchResult = store.fetch();
+			return Promise.all([ fetchResult.totalLength, fetchResult.dataLength ]).then((lengths) => {
+				assert.equal(3, lengths[0], 'Didn\'t return the correct total length');
+				assert.equal(3, lengths[1], 'Didn\'t return the correct data length');
 			});
 		},
 
 		'filtered fetch'(this: any) {
 			const { store } = getStoreAndDfd(this, undefined, false);
-			return store.fetch(createFilter<any>().lessThan('value', 2)).totalLength.then((totalLength) => {
-				assert.equal(3, totalLength, 'Didn\'t return the correct total length');
+			const fetchResult = store.fetch(createFilter<any>().lessThan('value', 2));
+			return Promise.all([ fetchResult.totalLength, fetchResult.dataLength ]).then((lengths) => {
+				assert.equal(3, lengths[0], 'Didn\'t return the correct total length');
+				assert.equal(3, lengths[1], 'Didn\'t return the correct data length');
 			});
 		}
 	},

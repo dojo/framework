@@ -12,7 +12,8 @@ import Map from '@dojo/shim/Map';
 import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
 import { debounce } from '@dojo/core/util';
-import { isFilter, isSort } from './mixins/createQueryTransformMixin';
+import { isFilter, isSort, QueryTransformMixin } from './mixins/createQueryTransformMixin';
+import { FetchResult } from '../storage/createInMemoryStorage';
 
 export interface TrackableStoreDelta<T> extends StoreDelta<T> {
 	/**
@@ -66,7 +67,7 @@ function canUpdateInPlace(
 	);
 }
 
-export interface QueryTransformState<T, S extends ObservableStore<any, any, any>> {
+export interface QueryTransformState<T, S extends ObservableStore<any, any, any> & QueryTransformMixin<any, S>> {
 	/**
 	 * Queries and transformations for this query transform result
 	 */
@@ -137,7 +138,7 @@ export interface QueryTransformState<T, S extends ObservableStore<any, any, any>
 	inUpdate?: Promise<any>;
 }
 
-export interface QueryTransformOptions<T, S extends ObservableStore<any, any, any>> {
+export interface QueryTransformOptions<T, S extends ObservableStore<any, any, any> & QueryTransformMixin<any, S>> {
 	queriesAndTransformations: Array<Query<T> | TransformationDescriptor<T, any>>;
 	source: S;
 	isTracking?: boolean;
@@ -145,7 +146,7 @@ export interface QueryTransformOptions<T, S extends ObservableStore<any, any, an
 	fetchAroundUpdates: boolean;
 }
 
-export interface QueryTransformResult<T, S extends ObservableStore<any, any, any>> {
+export interface QueryTransformResult<T, S extends ObservableStore<any, any, any> & QueryTransformMixin<any, S>> {
 	query(query: Query<T>): this;
 	filter(filter: Filter<T>): this;
 	filter(test: (item: T) => boolean): this;
@@ -158,11 +159,11 @@ export interface QueryTransformResult<T, S extends ObservableStore<any, any, any
 	get(ids: string | string[]): Promise<T[]>;
 	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryTransformResult<V, S>;
 	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): MappedQueryTransformResult<V, S>;
-	fetch(query?: Query<T>): Promise<T[]>;
+	fetch(query?: Query<T>): FetchResult<T>;
 	source: S;
 }
 
-export interface MappedQueryTransformResult<T, S extends ObservableStore<any, any, any>> extends QueryTransformResult<T, S> {
+export interface MappedQueryTransformResult<T, S extends ObservableStore<any, any, any> & QueryTransformMixin<any, S>> extends QueryTransformResult<T, S> {
 	/**
 	 * Starts actively tracking this view, such that any time updates are made, this will fetch if necessary to make
 	 * sure it has the latest data.
@@ -180,7 +181,7 @@ export interface MappedQueryTransformResult<T, S extends ObservableStore<any, an
 	observe(ids: string[]): Observable<ItemUpdate<T>>;
 }
 
-export interface TrackedQueryTransformResult<T, S extends ObservableStore<any, any, any>> extends MappedQueryTransformResult<T, S> {
+export interface TrackedQueryTransformResult<T, S extends ObservableStore<any, any, any> & QueryTransformMixin<any, S>> extends MappedQueryTransformResult<T, S> {
 	/**
 	 * Create a new query transform result that is not tracking the source store but represents the same queries and
 	 * transforms
@@ -288,7 +289,7 @@ function transformItemUpdate<T, F>(
  * @param newIndex
  * @param update
  */
-function sendTrackedUpdate<T, S extends ObservableStore<any, any, any>>(
+function sendTrackedUpdate<T, S extends ObservableStore<any, any, any> & QueryTransformMixin<any, S>>(
 	state: QueryTransformState<T, S>,
 	instance: MappedQueryTransformResult<T, S>,
 	newData: T[],
@@ -364,7 +365,7 @@ function sendTrackedUpdate<T, S extends ObservableStore<any, any, any>>(
  * @param state
  * @param update
  */
-function sendUpdate<T, S extends ObservableStore<any, any, any>>(
+function sendUpdate<T, S extends ObservableStore<any, any, any> & QueryTransformMixin<any, S>>(
 	state: QueryTransformState<T, S>,
 	update: StoreDelta<T>
 ) {
@@ -450,7 +451,7 @@ function queryAndTransformData<T>(
  * @param currentUpdateIndex
  * @returns {{deletes: string[], adds: any[], updates: any[], beforeAll: any[], afterAll: any[]}}
  */
-function localizeUpdate<T, S extends ObservableStore<T, any, any>>(
+function localizeUpdate<T, S extends ObservableStore<T, any, any> & QueryTransformMixin<any, S>>(
 	state: QueryTransformState<T, S>,
 	update: StoreDelta<T>,
 	instance?: MappedQueryTransformResult<T, any>,
@@ -484,15 +485,15 @@ function localizeUpdate<T, S extends ObservableStore<T, any, any>>(
 const instanceStateMap = new WeakMap<QueryTransformResult<any, any>, QueryTransformState<any, any>>();
 
 export interface QueryTransformResultFactory extends ComposeFactory<QueryTransformResult<any, any>, QueryTransformState<any, any>> {
-	<T, S extends ObservableStore<any, any, any>>(options?: QueryTransformOptions<T, S>): QueryTransformResult<T, S>;
+	<T, S extends ObservableStore<any, any, any> & QueryTransformMixin<any, S>>(options?: QueryTransformOptions<T, S>): QueryTransformResult<T, S>;
 }
 
 export interface MappedQueryTransformResultFactory extends ComposeFactory<MappedQueryTransformResult<any, any>, QueryTransformState<any, any>> {
-	<T, S extends ObservableStore<any, any, any>>(options?: QueryTransformOptions<T, S>): MappedQueryTransformResult<T, S>;
+	<T, S extends ObservableStore<any, any, any> & QueryTransformMixin<any, S>>(options?: QueryTransformOptions<T, S>): MappedQueryTransformResult<T, S>;
 }
 
 export interface TrackedQueryTransformResultFactory extends ComposeFactory<TrackedQueryTransformResult<any, any>, QueryTransformState<any, any>> {
-	<T, S extends ObservableStore<any, any, any>>(options?: QueryTransformOptions<T, S>): TrackedQueryTransformResult<T, S>;
+	<T, S extends ObservableStore<any, any, any> & QueryTransformMixin<any, S>>(options?: QueryTransformOptions<T, S>): TrackedQueryTransformResult<T, S>;
 }
 
 export const createQueryTransformResult: QueryTransformResultFactory = compose<QueryTransformResult<any, any>, any>({
@@ -679,33 +680,52 @@ export const createQueryTransformResult: QueryTransformResultFactory = compose<Q
 		state.currentUpdateIndex.clear();
 		state.queuedUpdate = undefined;
 
-		const resultsPromise = state.source.fetch(firstQuery).then((newData: any[]) => {
-			// If this is mapped or there is no parent query we should apply the query transform result's own queries
-			// first so that the locally cached data can be properly updated
-			newData = queryAndTransformData(
-				(mapped || !query) ? queriesAndTransformations : [ ...queriesAndTransformations, query ],
-				newData
-			);
+		let resolveTotalLength: Function | undefined = undefined;
+		let rejectTotalLength: Function | undefined = undefined;
+		const totalLength = new Promise((resolve, reject) => {
+			resolveTotalLength = resolve;
+			rejectTotalLength = reject;
+		});
+		let resolveDataLength: Function;
+		let rejectDataLength: Function;
+		const dataLength = new Promise((resolve, reject) => {
+			resolveDataLength = resolve;
+			rejectDataLength = reject;
+		});
+		const fetchResult = state.source.fetch(firstQuery);
+		const resultsPromise = fetchResult.then(
+			(newData: any[]) => {
+				// We should apply the query transform result's own queries first so that the total size of the locally
+				// cached data can be determined
+				newData = queryAndTransformData(queriesAndTransformations, newData);
+				resolveDataLength(newData.length);
 
-			if (mapped) {
-				const ids = mapped.identify(newData);
-				const newIndex = buildIndex(ids);
-				// Update this way if this is not an initial fetch. If this is the initial fetch, then this
-				// data(or subsequent data) will already be provided to observers in the initial notification, so don't
-				// send a redundant one.
-				if (resultsPromise !== state.initialFetch) {
-					nextUpdate.beforeAll = state.localData;
-					nextUpdate.afterAll = newData;
-					sendTrackedUpdate(state, mapped, newData, newIndex, nextUpdate);
+				if (mapped) {
+					const ids = mapped.identify(newData);
+					const newIndex = buildIndex(ids);
+					// Update this way if this is not an initial fetch. If this is the initial fetch, then this
+					// data (or subsequent data) will already be provided to observers in the initial notification, so don't
+					// send a redundant one.
+					if (resultsPromise !== state.initialFetch) {
+						nextUpdate.beforeAll = state.localData;
+						nextUpdate.afterAll = newData;
+						sendTrackedUpdate(state, mapped, newData, newIndex, nextUpdate);
+					}
+					state.localIndex = newIndex;
+					state.localData = newData;
 				}
-				state.localIndex = newIndex;
-				state.localData = newData;
 				if (query) {
 					newData = query.apply(newData);
 				}
-			}
-			return newData;
-		});
+				return newData;
+			},
+			(error: any) => {
+				rejectDataLength(error);
+				throw error;
+			});
+		fetchResult.totalLength.then(resolveTotalLength, rejectTotalLength);
+		resultsPromise.dataLength = dataLength;
+		resultsPromise.totalLength = totalLength;
 
 		if (!state.initialFetch) {
 			state.initialFetch = resultsPromise;

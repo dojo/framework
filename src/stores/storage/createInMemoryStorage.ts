@@ -9,7 +9,15 @@ import { duplicate } from '@dojo/core/lang';
 import uuid from '@dojo/core/uuid';
 
 export interface FetchResult<T> extends Promise<T[]> {
+	/**
+	 * A Promise that resolves to the total number of items in the underlying storage.
+	 */
 	totalLength: Promise<number>;
+	/**
+	 * For a store, this is identical to totalLength. For a QueryTransformResult, this resolves to the number of items
+	 * that match the QueryTransformResult's queries
+	 */
+	dataLength: Promise<number>;
 }
 
 export interface Storage<T, O extends CrudOptions> {
@@ -111,7 +119,7 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 		const data = (query ? query.apply(fullData) : fullData).slice();
 		const returnPromise = state.returnsPromise.then(() => data);
 		state.returnsPromise = returnPromise;
-		(<any> returnPromise).totalLength = Promise.resolve(fullData.length);
+		(<any> returnPromise).totalLength = (<any> returnPromise).dataLength = Promise.resolve(fullData.length);
 		return returnPromise as FetchResult<{}>;
 	},
 

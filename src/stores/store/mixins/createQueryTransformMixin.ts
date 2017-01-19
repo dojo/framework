@@ -14,48 +14,48 @@ export interface QueryTransformMixin<T, S extends ObservableStore<T, any, any>> 
 	 * Creates a query transform result with the provided query
 	 * @param query
 	 */
-	query(query: Query<T>): MappedQueryTransformResult<T, S>;
+	query(query: Query<T>): MappedQueryTransformResult<T, S & QueryTransformMixin<T, S>>;
 	/**
 	 * Creates a query transform result with the provided filter
 	 * @param filter
 	 */
-	filter(filter: Filter<T>): MappedQueryTransformResult<T, S>;
+	filter(filter: Filter<T>): MappedQueryTransformResult<T, S & QueryTransformMixin<T, S>>;
 	/**
 	 * Creates a query transform result with a filter built from the provided test
 	 * @param test
 	 */
-	filter(test: (item: T) => boolean): MappedQueryTransformResult<T, S>;
+	filter(test: (item: T) => boolean): MappedQueryTransformResult<T, S & QueryTransformMixin<T, S>>;
 	/**
 	 * Creates a query transform result with the provided range
 	 * @param range
 	 */
-	range(range: StoreRange<T>): MappedQueryTransformResult<T, S>;
+	range(range: StoreRange<T>): MappedQueryTransformResult<T, S & QueryTransformMixin<T, S>>;
 	/**
 	 * Creates a query transform result with a range built based on the provided start and count
 	 * @param start
 	 * @param cound
 	 */
-	range(start: number, count: number): MappedQueryTransformResult<T, S>;
+	range(start: number, count: number): MappedQueryTransformResult<T, S & QueryTransformMixin<T, S>>;
 	/**
 	 * Creates a query transform result with the provided sort or a sort build from the provided comparator or a
 	 * comparator for the specified property
 	 * @param sort
 	 * @param descending
 	 */
-	sort(sort: Sort<T> | ((a: T, b: T) => number) | string, descending?: boolean): MappedQueryTransformResult<T, S>;
+	sort(sort: Sort<T> | ((a: T, b: T) => number) | string, descending?: boolean): MappedQueryTransformResult<T, S & QueryTransformMixin<T, S>>;
 	/**
 	 * Create a query transform result that cannot be tracked, and cannot send tracked updates. This is the case because
 	 * the resulting query transform result will have no way to identify items, making it impossible to determine
 	 * whether their position has shifted or differentiating between updates and adds
 	 * @param transformation
 	 */
-	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryTransformResult<V, S>;
+	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryTransformResult<V, S & QueryTransformMixin<T, S>>;
 	/**
 	 * Create a trackable query transform result with the specified transformation
 	 * @param transformation
 	 * @param idTransform
 	 */
-	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): MappedQueryTransformResult<V, S>;
+	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): MappedQueryTransformResult<V, S & QueryTransformMixin<T, S>>;
 }
 
 export interface QueryTransformState {
@@ -103,8 +103,8 @@ function createQueryTransformMixin<T, S extends ObservableStore<T, any, any>>():
 	StoreOptions<T, any>
 > {
 	const queryMixin: QueryTransformMixin<T, S> = {
-		query(this: S, query: Query<T>) {
-			return createMappedQueryTransformResult<T, S>({
+		query(this: QueryStore<T, S>, query: Query<T>) {
+			return createMappedQueryTransformResult<T, QueryStore<T, S>>({
 				source: this,
 				queriesAndTransformations: [ query ],
 				fetchAroundUpdates: instanceStateMap.get(this).fetchAroundUpdates
@@ -147,17 +147,17 @@ function createQueryTransformMixin<T, S extends ObservableStore<T, any, any>>():
 			return this.query(sort);
 		},
 
-		transform<V>(this: S, transformation: Patch<T, V> | ((item: T) => V), idTransform?: string | ((item: V) => string)): any {
+		transform<V>(this: QueryStore<T, S>, transformation: Patch<T, V> | ((item: T) => V), idTransform?: string | ((item: V) => string)): any {
 			const options = {
 				source: this,
 				queriesAndTransformations: [ { transformation: transformation, idTransform: idTransform} ],
 				fetchAroundUpdates: instanceStateMap.get(this).fetchAroundUpdates
 			};
 			if (idTransform) {
-				return createMappedQueryTransformResult<V, S>(options);
+				return createMappedQueryTransformResult<V, QueryStore<T, S>>(options);
 			}
 			else {
-				return createQueryTransformResult<V, S>(options);
+				return createQueryTransformResult<V, QueryStore<T, S>>(options);
 			}
 		}
 	};

@@ -14,7 +14,9 @@ registerSuite(function() {
 
 	function testFetchingQueryStore(
 		trackedCollection: QueryStore<ItemType, ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>>,
-		trackResult: MappedQueryTransformResult<ItemType, ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>>,
+		trackResult: MappedQueryTransformResult<
+			ItemType, QueryStore<ItemType, ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>>
+		>,
 		dfd: any,
 		isFetchingAroundUpdates = false
 	) {
@@ -90,7 +92,9 @@ registerSuite(function() {
 	}
 	function testFetchingQueryStoreWithDelayedOperations(
 		trackedCollection: QueryStore<ItemType, ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>>,
-		trackResult: MappedQueryTransformResult<ItemType, ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>>,
+		trackResult: MappedQueryTransformResult<
+			ItemType, QueryStore<ItemType, ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>>
+		>,
 		dfd: any
 	) {
 		return new Promise(function(resolve) {
