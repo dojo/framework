@@ -65,6 +65,9 @@ The [`@dojo/core/array` module](docs/array.md) contains analogues to some of the
 The [`@dojo/core/lang` module](docs/lang.md) contains various utility functions for tasks such as copying objects
 and creating late-bound or partially applied functions.
 
+### load
+The [`@dojo/core/load` module](docs/load.md) can be used to dynamically load modules, or other arbitrary resources via plugins.
+
 #### math
 
 The [`@dojo/core/math` module](docs/math.md) contains analogues to a number of ES2015 APIs, including many trigonometric and logarithmic

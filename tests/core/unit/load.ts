@@ -1,9 +1,11 @@
+import { RootRequire } from '@dojo/interfaces/loader';
+import Promise from '@dojo/shim/Promise';
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
+import * as sinon from 'sinon';
 import has from '../../src/has';
-import load, { useDefault } from '../../src/load';
-import Promise from '@dojo/shim/Promise';
-import { RootRequire } from '@dojo/interfaces/loader';
+import load, { isPlugin, useDefault } from '../../src/load';
+import mockPlugin from '../support/load/plugin-default';
 import global from '../../src/global';
 
 declare const require: RootRequire;
@@ -12,7 +14,47 @@ const suite: any = {
 	name: 'load',
 
 	before() {
-		return load('tests/support/load/a', 'tests/support/load/b');
+		return load('tests/support/load/a', 'tests/support/load/b', 'tests/support/load/c');
+	},
+
+	isPlugin() {
+		assert.isFalse(isPlugin(null));
+		assert.isFalse(isPlugin(2));
+		assert.isFalse(isPlugin([]));
+		assert.isFalse(isPlugin(/\s/));
+		assert.isFalse(isPlugin({}));
+		assert.isTrue(isPlugin({
+			load() {}
+		}));
+	},
+
+	useDefault: {
+		'single es6 module'() {
+			assert.strictEqual(useDefault({
+				'__esModule': true,
+				'default': 42
+			}), 42, 'The default export should be returned.');
+		},
+
+		'single non-es6 module'() {
+			const module = { value: 42 };
+			assert.deepEqual(useDefault(module), module, 'The module itself should be returned.');
+		},
+
+		'all es6 modules'() {
+			const modules = [ 42, 43 ].map((value: number) => {
+				return { '__esModule': true, 'default': value };
+			});
+			assert.sameMembers(useDefault(modules), [ 42, 43 ], 'The default export should be returned for all modules.');
+		},
+
+		'mixed module types'() {
+			const modules: any[] = [ 42, 43 ].map((value: number) => {
+				return { '__esModule': true, 'default': value };
+			});
+			modules.push({ value: 44 });
+			assert.sameDeepMembers(useDefault(modules), [ 42, 43, { value: 44 } ]);
+		}
 	},
 
 	'global load'(this: any) {
@@ -47,13 +89,72 @@ const suite: any = {
 		});
 	},
 
+	'load plugin': {
+		'without a resource id'(this: any) {
+			const dfd = this.async(5000);
+
+			load(require, '../support/load/plugin').then(dfd.callback(([ plugin ]: [ any ]) => {
+				assert.isFunction(plugin.load, 'No special behavior without a resource id.');
+			}));
+		},
+
+		'with a resource id'(this: any) {
+			const dfd = this.async(5000);
+			const resourceId = require.toUrl('some/resource');
+
+			load(require, '../support/load/plugin!some/resource').then(dfd.callback(([ value ]: [ any ]) => {
+				assert.strictEqual(value, resourceId, 'The plugin `load` should receive the resolved resource id.');
+			}));
+		},
+
+		'non-plugin with resource id'(this: any) {
+			const dfd = this.async(5000);
+
+			load(require, '../support/load/a!some/resource').then(dfd.callback(([ a ]: [ any ]) => {
+				assert.deepEqual(a, { one: 1, two: 2, 'default': 'A' }, 'The resource id should be ignored.');
+			}));
+		},
+
+		'default export used'(this: any) {
+			const dfd = this.async(5000);
+			sinon.spy(mockPlugin, 'load');
+
+			load(require, '../support/load/plugin-default!some/resource').then(dfd.callback(([ value ]: [ any ]) => {
+				assert.isTrue((<any> mockPlugin.load).calledWith('some/resource', load),
+					'Plugin `load` called with resource id and core `load`.');
+				assert.strictEqual(value, 'some/resource', 'The `load` on the default export should be used.');
+
+				(<any> mockPlugin.load).restore();
+			}), dfd.rejectOnError(() => {
+				(<any> mockPlugin.load).restore();
+			}));
+		},
+
+		'normalize method'(this: any) {
+			const dfd = this.async(5000);
+			sinon.spy(mockPlugin, 'normalize');
+
+			load(require, '../support/load/plugin-default!normalize').then(dfd.callback(([ value ]: [ any ]) => {
+				assert.strictEqual(value, 'path/to/normalized', 'The path should be passed to the `normalize` method.');
+				assert.isTrue((<any> mockPlugin.normalize).calledWith('normalize'),
+					'`normalize` called with resource id.');
+				assert.isFunction((<any> mockPlugin.normalize).firstCall.args[1],
+					'`normalize` called with resolver function.');
+
+				(<any> mockPlugin.normalize).restore();
+			}), dfd.rejectOnError(() => {
+				(<any> mockPlugin.normalize).restore();
+			}));
+		}
+	},
+
 	'error handling'() {
 		return load('some/bogus/nonexistent/thing').then(() => {
 			throw new Error('Should not resolve.');
 		}, (error: Error) => {
 			assert(error);
 			assert.isTrue(error.message.indexOf('some/bogus/nonexistent/thing') > -1,
-				'The error message contains the module id.');
+				'The error message should contain the module id.');
 		});
 	}
 };

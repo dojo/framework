@@ -1,4 +1,5 @@
 import Promise from '@dojo/shim/Promise';
+import { isPlugin, useDefault } from '../load';
 
 interface ModuleIdMap {
 	[path: string]: { id: number; lazy: boolean };
@@ -36,7 +37,7 @@ declare const __webpack_require__: WebpackRequire<any>;
  * The resolved absolute module path.
  */
 function resolveRelative(base: string, mid: string): string {
-	const isRelative = mid.match(/\.\//);
+	const isRelative = mid.match(/^\.+\//);
 	let result = base;
 
 	if (isRelative) {
@@ -104,16 +105,32 @@ export default function load(...args: any[]): Promise<any[]> {
 	const results = args.filter((mid: string | Function) => typeof mid === 'string')
 		.map((mid: string) => resolveRelative(base, mid))
 		.map((mid: string) => {
-			const moduleMeta = modules[mid];
+			let [ moduleId, pluginResourceId ] = mid.split('!');
+			const moduleMeta = modules[mid] || modules[moduleId];
 
 			if (!moduleMeta) {
 				return Promise.reject(new Error(`Missing module: ${mid}`));
 			}
 
-			return moduleMeta.lazy ?
-				new Promise((resolve) => req(moduleMeta.id)(resolve)) :
-				Promise.resolve(req(moduleMeta.id));
+			if (moduleMeta.lazy) {
+				return new Promise((resolve) => req(moduleMeta.id)(resolve));
+			}
+
+			const module = req(moduleMeta.id);
+			const defaultExport = module['default'] || module;
+
+			if (isPlugin(defaultExport)) {
+				pluginResourceId = typeof defaultExport.normalize === 'function' ?
+					defaultExport.normalize(pluginResourceId, (mid: string) => resolveRelative(base, mid)) :
+					resolveRelative(base, pluginResourceId);
+
+				return Promise.resolve(defaultExport.load(pluginResourceId, <any> load));
+			}
+
+			return Promise.resolve(module);
 		});
 
 	return Promise.all(results);
 }
+
+export { isPlugin, useDefault };

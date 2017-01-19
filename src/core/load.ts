@@ -20,6 +20,38 @@ export interface Load {
 	(...moduleIds: string[]): Promise<any[]>;
 }
 
+export interface LoadPlugin<T> {
+	/**
+	 * An optional method that normmalizes a resource id.
+	 *
+	 * @param resourceId
+	 * The raw resource id.
+	 *
+	 * @param resolver
+	 * A method that can resolve an id to an absolute path. Depending on the environment, this will
+	 * usually be either `require.toUrl` or `require.resolve`.
+	 */
+	normalize?: (resourceId: string, resolver: (resourceId: string) => string) => string;
+
+	/**
+	 * A method that loads the specified resource.
+	 *
+	 * @param resourceId
+	 * The id of the resource to load.
+	 *
+	 * @param load
+	 * The `load` method that was used to load and execute the plugin.
+	 *
+	 * @return
+	 * A promise that resolves to the loaded resource.
+	 */
+	load(resourceId: string, load: Load): Promise<T>;
+}
+
+export function isPlugin(value: any): value is LoadPlugin<any> {
+	return Boolean(value) && typeof value.load === 'function';
+}
+
 export function useDefault(modules: any[]): any[];
 export function useDefault(module: any): any;
 export function useDefault(modules: any | any[]): any[] | any {
@@ -38,43 +70,79 @@ export function useDefault(modules: any | any[]): any[] | any {
 }
 
 const load: Load = (function (): Load {
+	const resolver = typeof require.toUrl === 'function' ? require.toUrl :
+		typeof (<any> require).resolve === 'function' ? (<any> require).resolve :
+		(resourceId: string) => resourceId;
+
+	function pluginLoad(moduleIds: string[], load: Load, loader: (modulesIds: string[]) => Promise<any>) {
+		const pluginResourceIds: string[] = [];
+		moduleIds = moduleIds.map((id: string, i: number) => {
+			const parts = id.split('!');
+			pluginResourceIds[i] = parts[1];
+			return parts[0];
+		});
+
+		return loader(moduleIds).then((modules: any[]) => {
+			pluginResourceIds.forEach((resourceId: string, i: number) => {
+				if (typeof resourceId === 'string') {
+					const module = modules[i];
+					const defaultExport = module['default'] || module;
+
+					if (isPlugin(defaultExport)) {
+						resourceId = typeof defaultExport.normalize === 'function' ?
+							defaultExport.normalize(resourceId, resolver) :
+							resolver(resourceId);
+
+						modules[i] = defaultExport.load(resourceId, load);
+					}
+				}
+			});
+
+			return Promise.all(modules);
+		});
+	}
+
 	if (typeof module === 'object' && typeof module.exports === 'object') {
-		return function (contextualRequire: any, ...moduleIds: string[]): Promise<any[]> {
+		return function load(contextualRequire: any, ...moduleIds: string[]): Promise<any[]> {
 			if (typeof contextualRequire === 'string') {
 				moduleIds.unshift(contextualRequire);
 				contextualRequire = require;
 			}
-			return new Promise(function (resolve, reject) {
+
+			return pluginLoad(moduleIds, load, (moduleIds: string[]) => {
 				try {
-					resolve(moduleIds.map(function (moduleId): any {
-						return contextualRequire(moduleId);
+					return Promise.resolve(moduleIds.map(function (moduleId): any {
+						return contextualRequire(moduleId.split('!')[0]);
 					}));
 				}
 				catch (error) {
-					reject(error);
+					return Promise.reject(error);
 				}
 			});
 		};
 	}
 	else if (typeof define === 'function' && define.amd) {
-		return function (contextualRequire: any, ...moduleIds: string[]): Promise<any[]> {
+		return function load(contextualRequire: any, ...moduleIds: string[]): Promise<any[]> {
 			if (typeof contextualRequire === 'string') {
 				moduleIds.unshift(contextualRequire);
 				contextualRequire = require;
 			}
-			return new Promise(function (resolve, reject) {
-				let errorHandle: { remove: () => void };
 
-				if (typeof contextualRequire.on === 'function') {
-					errorHandle = contextualRequire.on('error', (error: Error) => {
-						errorHandle.remove();
-						reject(error);
+			return pluginLoad(moduleIds, load, (moduleIds: string[]) => {
+				return new Promise(function (resolve, reject) {
+					let errorHandle: { remove: () => void };
+
+					if (typeof contextualRequire.on === 'function') {
+						errorHandle = contextualRequire.on('error', (error: Error) => {
+							errorHandle.remove();
+							reject(error);
+						});
+					}
+
+					contextualRequire(moduleIds, function (...modules: any[]) {
+						errorHandle && errorHandle.remove();
+						resolve(modules);
 					});
-				}
-
-				contextualRequire(moduleIds, function (...modules: any[]) {
-					errorHandle && errorHandle.remove();
-					resolve(modules);
 				});
 			});
 		};

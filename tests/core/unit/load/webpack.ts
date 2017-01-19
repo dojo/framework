@@ -1,7 +1,8 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
+import * as sinon from 'sinon';
 import global from '../../../src/global';
-import load from '../../../src/load/webpack';
+import load, { isPlugin, useDefault } from '../../../src/load/webpack';
 
 interface WebpackModules {
 	[id: number]: any;
@@ -53,8 +54,21 @@ registerSuite({
 			'/other': {
 				value: 'The quick brown fox jumped over the lazy dog.'
 			},
-			'bundle!lazy': function (callback: (value: any) => any) {
+			'bundle!lazy'(callback: (value: any) => any) {
 				callback({ value: 'lazy loaded' });
+			},
+			'plugin!normalize': {
+				normalize: sinon.stub().returns('normalized/path/to/resource'),
+				load: sinon.spy()
+			},
+			'plugin!resource/id': {
+				load: sinon.spy()
+			},
+			'plugin!./resource/id': {
+				load: sinon.spy()
+			},
+			'parent/plugin!./resource/id': {
+				load: sinon.spy()
 			}
 		});
 	},
@@ -63,7 +77,12 @@ registerSuite({
 		setModules();
 	},
 
-	'without __modules'() {
+	api() {
+		assert.isFunction(isPlugin, '`isPlugin` should be re-exported.');
+		assert.isFunction(useDefault, '`useDefault` should be re-exported.');
+	},
+
+	'without __modules__'() {
 		setModules();
 		return load('non-existent/module').then(() => {
 			throw new Error('Should not resolve.');
@@ -140,5 +159,55 @@ registerSuite({
 		}, (error: Error) => {
 			throw new Error(`Promise should not reject\n${error.message}`);
 		});
+	},
+
+	'plugin modules': {
+		'with normalize method'() {
+			const mid = 'plugin!normalize';
+			return load(mid).then(() => {
+				const module = webpackModules[global.__modules__[mid].id];
+				assert.isTrue(module.normalize.calledWith('normalize'));
+				assert.strictEqual(module.normalize.args[0][1]('normalize'), 'normalize',
+					'`normalize` should be passed an identity resolver.');
+				assert.isTrue(module.load.calledWith('normalized/path/to/resource', load));
+			}, (error: Error) => {
+				throw new Error(`Promise should not reject\n${error.message}`);
+			});
+		},
+
+		'without normalize method': {
+			'with a context method'() {
+				const mid = 'plugin!./resource/id';
+				const context = () => 'parent/sibling';
+				return load(context, mid).then(() => {
+					const module = webpackModules[global.__modules__[mid].id];
+					assert.isTrue(module.load.calledWith('parent/resource/id'));
+				}, (error: Error) => {
+					throw new Error(`Promise should not reject\n${error.message}`);
+				});
+			},
+
+			'without a context method': {
+				'with a relative ID'() {
+					const mid = 'plugin!./resource/id';
+					return load(mid).then(() => {
+						const module = webpackModules[global.__modules__[mid].id];
+						assert.isTrue(module.load.calledWith('/resource/id'));
+					}, (error: Error) => {
+						throw new Error(`Promise should not reject\n${error.message}`);
+					});
+				},
+
+				'without a relative ID'() {
+					const mid = 'plugin!resource/id';
+					return load(mid).then(() => {
+						const module = webpackModules[global.__modules__[mid].id];
+						assert.isTrue(module.load.calledWith('resource/id'));
+					}, (error: Error) => {
+						throw new Error(`Promise should not reject\n${error.message}`);
+					});
+				}
+			}
+		}
 	}
 });
