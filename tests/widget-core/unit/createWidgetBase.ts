@@ -61,7 +61,7 @@ registerSuite({
 		assert.deepEqual(nodeAttributes.classes, { bar: true });
 		assert.strictEqual(Object.keys(nodeAttributes).length, 4);
 
-		widgetBase.setState({ 'id': 'foo', classes: ['foo'] });
+		widgetBase.setProperties({ 'id': 'foo', classes: ['foo'] });
 
 		nodeAttributes = widgetBase.getNodeAttributes();
 
@@ -152,12 +152,6 @@ registerSuite({
 
 			widgetBase.setProperties({ foo: 'baz' });
 		}
-	},
-	onPropertiesChanged() {
-		const widgetBase = createWidgetBase();
-		widgetBase.onPropertiesChanged(<any> { foo: 'bar', myFunction: () => {} }, [ 'foo', 'myFunction' ]);
-		assert.equal((<any> widgetBase.state).foo, 'bar');
-		assert.isUndefined((<any> widgetBase.state).myFunction);
 	},
 	getChildrenNodes: {
 		'getChildrenNodes with no ChildNodeRenderers'() {
@@ -418,9 +412,9 @@ registerSuite({
 				.mixin({
 					mixin: {
 						getChildrenNodes: function(this: any): (DNode | null)[] {
-							const properties: WidgetProperties = this.state.classes ? { classes: this.state.classes } : {};
+							const properties: WidgetProperties = this.properties.classes ? { classes: this.properties.classes } : {};
 							return [
-								this.state.hide ? null : w(testChildWidget, properties)
+								this.properties.hide ? null : w(testChildWidget, properties)
 							];
 						}
 					}
@@ -442,7 +436,7 @@ registerSuite({
 			const secondRenderChild: any = secondRenderResult.children && secondRenderResult.children[0];
 			assert.strictEqual(secondRenderChild.vnodeSelector, 'footer');
 
-			widgetBase.setState({ 'classes': ['test-class'] });
+			widgetBase.setProperties({ 'classes': ['test-class'] });
 			widgetBase.invalidate();
 			const thirdRenderResult = <VNode> widgetBase.__render__();
 			assert.strictEqual(countWidgetCreated, 1);
@@ -452,7 +446,7 @@ registerSuite({
 			assert.strictEqual(thirdRenderChild.vnodeSelector, 'footer');
 			assert.isTrue(thirdRenderChild.properties.classes['test-class']);
 
-			widgetBase.setState(<any> { hide: true });
+			widgetBase.setProperties(<any> { hide: true });
 			widgetBase.invalidate();
 
 			const forthRenderResult = <VNode> widgetBase.__render__();
@@ -460,7 +454,7 @@ registerSuite({
 			assert.strictEqual(countWidgetDestroyed, 1);
 			assert.lengthOf(forthRenderResult.children, 0);
 
-			widgetBase.setState(<any> { hide: false });
+			widgetBase.setProperties(<any> { hide: false });
 			widgetBase.invalidate();
 
 			const lastRenderResult = <VNode> widgetBase.__render__();
@@ -494,7 +488,7 @@ registerSuite({
 				mixin: {
 					nodeAttributes: [
 						function(this: any): any {
-							const { state: { foo, bar } } = this;
+							const { properties: { foo, bar } } = this;
 
 							return { foo, bar };
 						}
@@ -538,13 +532,13 @@ registerSuite({
 			};
 
 			const myWidget = createWidgetBase({ properties });
-			assert.deepEqual((<any> myWidget.state).items, [ 'a', 'b' ]);
+			assert.deepEqual((<any> myWidget.properties).items, [ 'a', 'b' ]);
 			properties.items.push('c');
 			myWidget.setProperties(properties);
-			assert.deepEqual((<any> myWidget.state).items , [ 'a', 'b' ]);
-			properties.items = [...properties.items];
+			assert.deepEqual((<any> myWidget.properties).items , [ 'a', 'b', 'c' ]);
+			properties.items.push('d');
 			myWidget.setProperties(properties);
-			assert.deepEqual((<any> myWidget.state).items , [ 'a', 'b', 'c' ]);
+			assert.deepEqual((<any> myWidget.properties).items , [ 'a', 'b', 'c', 'd' ]);
 		},
 		'__render__ with internally updated array state'() {
 			const properties = {
@@ -555,10 +549,10 @@ registerSuite({
 
 			const myWidget = createWidgetBase({ properties });
 			myWidget.__render__();
-			assert.deepEqual((<any> myWidget.state).items, [ 'a', 'b' ]);
-			myWidget.setState(<any> { items: [ 'a', 'b', 'c'] });
+			assert.deepEqual((<any> myWidget.properties).items, [ 'a', 'b' ]);
+			myWidget.setProperties(<any> { items: [ 'a', 'b', 'c'] });
 			myWidget.__render__();
-			assert.deepEqual((<any> myWidget.state).items , [ 'a', 'b', 'c' ]);
+			assert.deepEqual((<any> myWidget.properties).items , [ 'a', 'b', 'c' ]);
 		},
 		'__render__() and invalidate()'() {
 			const widgetBase = createWidgetBase({
@@ -568,7 +562,6 @@ registerSuite({
 			const result2 = <VNode> widgetBase.__render__();
 			widgetBase.invalidate();
 			widgetBase.invalidate();
-			widgetBase.setState({});
 			const result3 = widgetBase.__render__();
 			const result4 = widgetBase.__render__();
 			assert.strictEqual(result1, result2);

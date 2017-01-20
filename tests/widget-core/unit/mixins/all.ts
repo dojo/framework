@@ -6,3 +6,4 @@ import './shallowPropertyComparisonMixin';
 import './externalState';
 import './themeable';
 import './registryMixin';
+import './internalState';

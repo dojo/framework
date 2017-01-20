@@ -1,11 +1,10 @@
 import { isComposeFactory } from '@dojo/compose/compose';
-import createStateful from '@dojo/compose/bases/createStateful';
+import createEvented from '@dojo/compose/bases/createEvented';
 import {
 	DNode,
 	PropertiesChangeEvent,
 	Widget,
 	WidgetMixin,
-	WidgetState,
 	WidgetOptions,
 	WidgetProperties,
 	WidgetBaseFactory,
@@ -136,8 +135,8 @@ function formatTagNameAndClasses(tagName: string, classes: string[]) {
 	return tagName;
 }
 
-const createWidget: WidgetBaseFactory = createStateful
-	.mixin<WidgetMixin<WidgetProperties>, WidgetOptions<WidgetState, WidgetProperties>>({
+const createWidget: WidgetBaseFactory = createEvented
+	.mixin<WidgetMixin<WidgetProperties>, WidgetOptions<WidgetProperties>>({
 		mixin: {
 			get properties(this: Widget<WidgetProperties>): WidgetProperties {
 				const { properties } = widgetInternalStateMap.get(this);
@@ -244,30 +243,19 @@ const createWidget: WidgetBaseFactory = createStateful
 				return { changedKeys, properties: assign({}, newProperties) };
 			},
 
-			onPropertiesChanged: function(this: Widget<WidgetProperties>, properties: WidgetProperties, changedPropertyKeys: string[]): void {
-				const state = changedPropertyKeys.reduce((state: any, key) => {
-					const property = (<any> properties)[key];
-					if (!(typeof property === 'function')) {
-						state[key] = property;
-					}
-					return state;
-				}, {});
-				this.setState(state);
-			},
-
 			nodeAttributes: [
 				function (this: Widget<WidgetProperties>): VNodeProperties {
-					const baseIdProp = this.state && this.state.id ? { 'data-widget-id': this.state.id } : {};
-					const { styles = {} } = this.state || {};
+					const baseIdProp = this.properties && this.properties.id ? { 'data-widget-id': this.properties.id } : {};
+					const { styles = {} } = this.properties || {};
 					const classes: { [index: string]: boolean; } = {};
 
 					const internalState = widgetInternalStateMap.get(this);
 
 					internalState.widgetClasses.forEach((c) => classes[c] = false);
 
-					if (this.state && this.state.classes) {
-						this.state.classes.forEach((c) => classes[c] = true);
-						internalState.widgetClasses =  this.state.classes;
+					if (this.properties && this.properties.classes) {
+						this.properties.classes.forEach((c) => classes[c] = true);
+						internalState.widgetClasses =  this.properties.classes;
 					}
 
 					return assign(baseIdProp, { key: this, classes, styles });
@@ -292,7 +280,7 @@ const createWidget: WidgetBaseFactory = createStateful
 
 			tagName: 'div'
 		},
-		initialize(instance: Widget<WidgetProperties>, options: WidgetOptions<WidgetState, WidgetProperties> = {}) {
+		initialize(instance: Widget<WidgetProperties>, options: WidgetOptions<WidgetProperties> = {}) {
 			const { tagName, properties = {} } = options;
 			const diffPropertyFunctionMap = new Map<string, string>();
 
@@ -318,10 +306,6 @@ const createWidget: WidgetBaseFactory = createStateful
 			});
 
 			instance.own(instance.on('properties:changed', (evt: PropertiesChangeEvent<Widget<WidgetProperties>, WidgetProperties>) => {
-				instance.onPropertiesChanged(evt.properties, evt.changedPropertyKeys);
-			}));
-
-			instance.own(instance.on('state:changed', () => {
 				instance.invalidate();
 			}));
 

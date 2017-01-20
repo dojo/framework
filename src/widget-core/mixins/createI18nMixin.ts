@@ -3,7 +3,7 @@ import compose, { ComposeFactory } from '@dojo/compose/compose';
 import { assign } from '@dojo/core/lang';
 import i18n, { Bundle, formatMessage, getCachedMessages, Messages, observeLocale } from '@dojo/i18n/i18n';
 import { VNodeProperties } from 'maquette';
-import { NodeAttributeFunction, Widget, WidgetOptions, WidgetProperties, WidgetState } from '../interfaces';
+import { NodeAttributeFunction, Widget, WidgetOptions, WidgetProperties } from '../interfaces';
 
 export interface I18nMixin<M extends Messages> {
 	/**
@@ -28,7 +28,7 @@ export interface I18nMixin<M extends Messages> {
 	localizeBundle(bundle: Bundle<M>): LocalizedMessages<M>;
 }
 
-export interface I18nFactory extends ComposeFactory<I18nMixin<Messages>, WidgetOptions<WidgetState, I18nProperties>> {}
+export interface I18nFactory extends ComposeFactory<I18nMixin<Messages>, WidgetOptions<I18nProperties>> {}
 
 export interface I18nProperties extends WidgetProperties {
 	/**
@@ -101,7 +101,7 @@ function getLocaleMessages(instance: I18nWidget<Messages, I18nProperties>, bundl
 	});
 }
 
-const createI18nMixin: I18nFactory = compose<I18nMixin<Messages>, WidgetOptions<WidgetState, I18nProperties>>({
+const createI18nMixin: I18nFactory = compose<I18nMixin<Messages>, WidgetOptions<I18nProperties>>({
 	nodeAttributes: [
 		function (this: I18nWidget<Messages, I18nProperties>, attributes: VNodeProperties): VNodeProperties {
 			const vNodeProperties = {

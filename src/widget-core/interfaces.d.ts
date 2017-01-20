@@ -5,8 +5,8 @@
  * bases.
  */
 import Promise from '@dojo/shim/Promise';
-import { EventedListener, Stateful, StatefulOptions, State } from '@dojo/interfaces/bases';
-import { EventTargettedObject, EventTypedObject, Handle, StylesMap } from '@dojo/interfaces/core';
+import { EventedListener, Evented, EventedOptions } from '@dojo/interfaces/bases';
+import { EventTargettedObject, EventTypedObject, Handle } from '@dojo/interfaces/core';
 import { VNode, VNodeProperties } from '@dojo/interfaces/vdom';
 import { ComposeFactory } from '@dojo/compose/compose';
 
@@ -126,9 +126,9 @@ export interface PropertyChangeRecord {
 	value: any;
 }
 
-export type Widget<P extends WidgetProperties> = Stateful<WidgetState> & WidgetMixin<P> & WidgetOverloads<P>
+export type Widget<P extends WidgetProperties> = Evented & WidgetMixin<P> & WidgetOverloads<P>
 
-export interface WidgetBaseFactory extends ComposeFactory<Widget<WidgetProperties>, WidgetOptions<WidgetState, WidgetProperties>> {}
+export interface WidgetBaseFactory extends ComposeFactory<Widget<WidgetProperties>, WidgetOptions<WidgetProperties>> { }
 
 export interface WidgetOverloads<P extends WidgetProperties> {
 	/**
@@ -213,11 +213,6 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	setProperties(this: Widget<WidgetProperties>, properties: P): void;
 
 	/**
-	 * Called when the properties have changed
-	 */
-	onPropertiesChanged(this: Widget<WidgetProperties>, properties: P, changedPropertyKeys: string[]): void;
-
-	/**
 	 * The ID of the widget, which gets automatically rendered in the VNode property `data-widget-id` when
 	 * rendered.
 	 */
@@ -266,7 +261,7 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	registry: FactoryRegistryInterface | undefined;
 }
 
-export interface WidgetOptions<S extends WidgetState, P extends WidgetProperties> extends StatefulOptions<S> {
+export interface WidgetOptions<P extends WidgetProperties> extends EventedOptions {
 	/**
 	 * Properties used to affect internal widget state
 	 */
@@ -281,23 +276,4 @@ export interface WidgetProperties {
 	classes?: string[];
 }
 
-export interface WidgetState extends State {
-	/**
-	 * Any classes that should be mixed into the widget's VNode upon render.
-	 *
-	 * Any classes expressed in state will be additive to those provided in the widget's `.classes` property
-	 */
-	classes?: string[];
-
-	/**
-	 * The ID of the widget
-	 */
-	id?: string;
-
-	/**
-	 * Any inline styles which should be mixed into the widget's VNode upon render.
-	 */
-	styles?: StylesMap;
-}
-
-export interface WidgetFactory<W extends Widget<P>, P extends WidgetProperties> extends ComposeFactory<W, WidgetOptions<WidgetState, P>> {}
+export interface WidgetFactory<W extends Widget<P>, P extends WidgetProperties> extends ComposeFactory<W, WidgetOptions<P>> {}
