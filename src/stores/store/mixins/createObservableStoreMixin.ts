@@ -263,12 +263,6 @@ export interface ObservableStoreState<T> {
 	 * updates, since `localData` will be out of date as soon as the fetch completes.
 	 */
 	initialFetch?: Promise<any>;
-
-	/**
-	 * Tracks whether the mixin is currently sending an update, so that items observers are not removed from the
-	 * collection is one unsubscribes while they're being iterated through
-	 */
-	inUpdate?: Promise<any>;
 }
 
 export interface ObservableStore<T, O extends CrudOptions, U extends UpdateResults<T>> extends
@@ -362,14 +356,15 @@ function sendUpdates<T, O extends CrudOptions, U extends UpdateResults<T>>(
 	state.localData = after;
 	state.localIndex = buildIndex(store.identify(after));
 
-	let resolveInUpdate: Function | undefined = undefined;
-	state.inUpdate = new Promise((resolve) => {
-		resolveInUpdate = resolve;
-	});
 	state.observers.forEach(function(observer) {
-		observer.next(storeDelta);
+		observer.next({
+			updates: storeDelta.updates.slice(),
+			adds: storeDelta.adds.slice(),
+			deletes: storeDelta.deletes.slice(),
+			beforeAll: storeDelta.beforeAll.slice(),
+			afterAll: storeDelta.afterAll.slice()
+		});
 	});
-	resolveInUpdate!();
 }
 
 /**
@@ -715,7 +710,7 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 							deletes: [],
 							adds: [],
 							beforeAll: [],
-							afterAll: state.localData
+							afterAll: state.localData.slice()
 						});
 					});
 				}
@@ -725,21 +720,16 @@ function createObservableStoreMixin<T, O extends CrudOptions, U extends UpdateRe
 						deletes: [],
 						adds: [],
 						beforeAll: [],
-						afterAll: state.localData
+						afterAll: state.localData.slice()
 					});
 				}
 				return () => {
 					function remove(observer: Observer<StoreDelta<any>>) {
 						state.observers.splice(state.observers.indexOf(observer), 1);
 					}
-					if (state.inUpdate) {
-						state.inUpdate.then(() => {
-							remove(observer);
-						});
-					}
-					else {
+					setTimeout(() => {
 						remove(observer);
-					}
+					});
 				};
 			}.bind(instance));
 			const state: ObservableStoreState<T> = {

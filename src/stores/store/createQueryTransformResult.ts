@@ -134,8 +134,6 @@ export interface QueryTransformState<T, S extends ObservableStore<any, any, any>
 	 * Handle to the subscription to the source store
 	 */
 	sourceHandle?: Promise<{ unsubscribe: Function }>;
-
-	inUpdate?: Promise<any>;
 }
 
 export interface QueryTransformOptions<T, S extends ObservableStore<any, any, any> & QueryTransformMixin<any, S>> {
@@ -375,14 +373,29 @@ function sendUpdate<T, S extends ObservableStore<any, any, any> & QueryTransform
 				update.movedInTracked.length || update.addedToTracked.length || update.removedFromTracked.length
 			)
 	)) {
-		let resolveInUpdate: Function | undefined = undefined;
-		state.inUpdate = new Promise((resolve) => {
-			resolveInUpdate = resolve;
-		});
 		state.observers.forEach(function(observer) {
-			observer.next(update);
+			if (isTracked(update)) {
+				observer.next({
+					updates: update.updates.slice(),
+					adds: update.adds.slice(),
+					deletes: update.deletes.slice(),
+					afterAll: update.afterAll.slice(),
+					beforeAll: update.beforeAll.slice(),
+					movedInTracked: update.movedInTracked.slice(),
+					removedFromTracked: update.removedFromTracked.slice(),
+					addedToTracked: update.addedToTracked.slice()
+				} as TrackableStoreDelta<T>);
+			}
+			else {
+				observer.next({
+					updates: update.updates.slice(),
+					adds: update.adds.slice(),
+					deletes: update.deletes.slice(),
+					afterAll: update.afterAll.slice(),
+					beforeAll: update.beforeAll.slice()
+				});
+			}
 		});
-		resolveInUpdate!();
 	}
 }
 
@@ -759,10 +772,10 @@ export const createQueryTransformResult: QueryTransformResultFactory = compose<Q
 					updates: [],
 					deletes: [],
 					adds: [],
-					addedToTracked: addedToTracked,
+					addedToTracked: addedToTracked.slice(),
 					removedFromTracked: [],
 					movedInTracked: [],
-					afterAll: state.localData,
+					afterAll: state.localData.slice(),
 					beforeAll: []
 				};
 				observer.next(trackedDelta);
@@ -774,7 +787,7 @@ export const createQueryTransformResult: QueryTransformResultFactory = compose<Q
 				adds: [],
 				deletes: [],
 				beforeAll: [],
-				afterAll: state.localData
+				afterAll: state.localData.slice()
 			});
 		}
 		return () => {
@@ -784,19 +797,17 @@ export const createQueryTransformResult: QueryTransformResultFactory = compose<Q
 					state.sourceHandle.then((subscription) => {
 						if (!state.observers.length) {
 							subscription.unsubscribe();
+							state.sourceHandle = undefined;
 						}
 
 					});
 				}
 			}
-			if (state.inUpdate) {
-				state.inUpdate.then(() => {
-					remove(observer);
-				});
-			}
-			else {
+			// Do the actual removal on the next tick so that
+			// we don't remove items from the array while we're iterating through it.
+			setTimeout(() => {
 				remove(observer);
-			}
+			});
 		};
 	});
 

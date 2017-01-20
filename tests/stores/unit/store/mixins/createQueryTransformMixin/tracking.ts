@@ -327,7 +327,7 @@ registerSuite(function() {
 					.track();
 				testFetchingQueryStore(trackableQueryStore, trackedCollection, dfd, true).then(dfd.resolve);
 			},
-			'releaseed with range query can\'t should only filter "afterAll"'(this: any) {
+			'released with range query should only filter "afterAll"'(this: any) {
 				const dfd = this.async(1000);
 				const trackableQueryStore = createQueryStore<ItemType>();
 				const untrackedCollection = trackableQueryStore.range(0, 1).track().release();
@@ -417,7 +417,7 @@ registerSuite(function() {
 			}
 		},
 
-		'should be able to track a store without a noop query': function(this: any) {
+		'should be able to track a store with a query': function(this: any) {
 			const dfd = this.async(1000);
 			let firstUpdate = true;
 			const data = createData();

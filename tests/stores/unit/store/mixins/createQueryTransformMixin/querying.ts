@@ -9,7 +9,7 @@ import createAsyncStorage from '../../../support/AsyncStorage';
 import { createQueryStore } from '../../../../../src/store/mixins/createQueryTransformMixin';
 import { diff } from '../../../../../src/patch/createPatch';
 import Promise from '@dojo/shim/Promise';
-import {createQueryTransformResult} from '../../../../../src/store/createQueryTransformResult';
+import { createQueryTransformResult } from '../../../../../src/store/createQueryTransformResult';
 
 function getStoreAndDfd(test: any, useAsync = true) {
 	const dfd = useAsync ? test.async(1000) : null;
@@ -378,29 +378,31 @@ registerSuite({
 		const filteredView = queryStore.filter((item) => item.value > 1);
 		filteredView.observe().subscribe(() => {
 		}).unsubscribe();
+		setTimeout(() => {
+			let ignoreFirst = true;
+			const newObject = {
+				id: 'new',
+				value: 10,
+				nestedProperty: {
+					value: 10
+				}
+			};
+			filteredView.observe().subscribe((delta) => {
+				if (ignoreFirst) {
+					ignoreFirst = false;
+					return;
+				}
 
-		let ignoreFirst = 2;
-		const newObject = {
-			id: 'new',
-			value: 10,
-			nestedProperty: {
-				value: 10
-			}
-		};
-		filteredView.observe().subscribe((delta) => {
-			if (ignoreFirst) {
-				ignoreFirst--;
-				return;
-			}
+				try {
+					assert.deepEqual(delta.adds, [ newObject ], 'Observable not functioning properly after unsubscribing');
+					dfd.resolve();
+				} catch (error) {
+					dfd.reject(error);
+				}
+			});
+			queryStore.add(newObject);
+		}, 100);
 
-			try {
-				assert.deepEqual(delta.adds, [ newObject ], 'Observable not functioning properly after unsubscribing');
-				dfd.resolve();
-			} catch (error) {
-				dfd.reject(error);
-			}
-		});
-		queryStore.add(newObject);
 	},
 
 	'unsubscribing with another subscriber'(this: any) {
@@ -410,23 +412,6 @@ registerSuite({
 		});
 		const dfd = this.async();
 		const filteredView = queryStore.filter((item) => item.value > 1);
-		let ignoreFirst = 2;
-		filteredView.observe().subscribe((delta) => {
-			if (ignoreFirst) {
-				ignoreFirst--;
-				return;
-			}
-
-			try {
-				assert.deepEqual(delta.adds, [ newObject ], 'Observable not functioning properly after unsubscribing');
-				dfd.resolve();
-			} catch (error) {
-				dfd.reject(error);
-			}
-		});
-		filteredView.observe().subscribe(() => {
-		}).unsubscribe();
-
 		const newObject = {
 			id: 'new',
 			value: 10,
@@ -434,7 +419,28 @@ registerSuite({
 				value: 10
 			}
 		};
-		queryStore.add(newObject);
+		let ignoreFirst = true;
+		filteredView.observe().subscribe(() => {
+		}).unsubscribe();
+		setTimeout(() => {
+			filteredView.observe().subscribe((delta) => {
+				if (ignoreFirst) {
+					ignoreFirst = false;
+					return;
+				}
+
+				try {
+					assert.deepEqual(delta.adds, [ newObject ], 'Observable not functioning properly after unsubscribing');
+					dfd.resolve();
+				} catch (error) {
+					dfd.reject(error);
+				}
+			});
+			setTimeout(() => {
+				queryStore.add(newObject);
+			});
+		});
+
 	},
 
 	'unsubscribing in update'(this: any) {
@@ -568,6 +574,52 @@ registerSuite({
 				);
 			}
 		}
+	},
+
+	'should continue to report correct data after multiple updates'(this: any) {
+		const dfd = this.async();
+		const queryStore = createQueryStore({
+			data: createData()
+		});
+
+		let updateCount = 0;
+		const updates = [
+			{
+				id: 'item-1',
+				value: 3,
+				nestedProperty: {
+					value: 3
+				}
+			},
+			{
+				id: 'item-1',
+				value: 4,
+				nestedProperty: {
+					value: 3
+				}
+			}
+		];
+		const sorted = queryStore.sort('value');
+
+		const data = createData();
+		sorted.observe().subscribe(dfd.rejectOnError(({ afterAll }: any) => {
+			switch (updateCount) {
+				case 0:
+				case 1:
+					break;
+				case 2:
+					assert.deepEqual(afterAll, [ data[1], updates[0], data[2] ], 'Wrong first update');
+					break;
+				case 3:
+					assert.deepEqual(afterAll, [ data[1], data[2], updates[1] ], 'Wrong second update');
+					dfd.resolve();
+					break;
+			}
+			updateCount++;
+		}));
+		queryStore.put(updates[0]).then(() => {
+			queryStore.put(updates[1]);
+		});
 	},
 
 	'async storage': {
