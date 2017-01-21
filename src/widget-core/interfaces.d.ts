@@ -205,7 +205,7 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	/**
 	 * Properties passed to affect state
 	 */
-	readonly properties: Partial<P>;
+	readonly properties: Readonly<Partial<P>>;
 
 	/*
 	 * set properties on the widget
