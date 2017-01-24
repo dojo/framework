@@ -1,8 +1,8 @@
-# @dojo/widgets
+# @dojo/widget-core
 
-[![Build Status](https://travis-ci.org/dojo/widgets.svg?branch=master)](https://travis-ci.org/dojo/widgets)
-[![codecov](https://codecov.io/gh/dojo/widgets/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/widgets)
-[![npm version](https://badge.fury.io/js/%40dojo%2Fwidgets.svg)](https://badge.fury.io/js/%40dojo%2Fwidgets)
+[![Build Status](https://travis-ci.org/dojo/widget-core.svg?branch=master)](https://travis-ci.org/dojo/widget-core)
+[![codecov](https://codecov.io/gh/dojo/widget-core/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/widget-core)
+[![npm version](https://badge.fury.io/js/%40dojo%2Fwidget-core.svg)](https://badge.fury.io/js/%40dojo%2Fwidget-core)
 
 This repo provides users with the ability to write their own Dojo 2 widgets.
 
@@ -38,10 +38,10 @@ We also provide a suite of pre-built widgets to use in your applications: [(@doj
 
 ## Usage
 
-To use @dojo/widgets, install the package along with its required peer dependencies:
+To use @dojo/widget-core, install the package along with its required peer dependencies:
 
 ```shell
-npm install @dojo/widgets
+npm install @dojo/widget-core
 
 # peer dependencies
 npm install @dojo/has
@@ -57,7 +57,7 @@ You can also use the [dojo cli](https://github.com/dojo/cli) to create a complet
 ## Features
 
 Constructing your own widgets (Custom widgets) is simple and straightforward.
-The smallest `@dojo/widgets` example looks like this:
+The smallest `@dojo/widget-core` example looks like this:
 
 ```ts
 const createMyWidget = createWidgetBase.extend({
@@ -79,7 +79,7 @@ This code renders a `h1` element onto the page, that says "Hello, Dojo!".
 All widgets in Dojo 2 are designed using key reactive architecture concepts.
 These concepts include unidirectional data flow, inversion of control and property passing.
 
-Dojo 2's widget suite is built using the [@dojo/compose](https://github.com/dojo/compose) composition library.
+Dojo 2's widget-core is built using the [@dojo/compose](https://github.com/dojo/compose) composition library.
 This library provides the ability to construct and manipulate traits and mixins.
 
 We also make use of a VirtualDOM (VDOM) in Dojo 2.
@@ -96,16 +96,16 @@ This function allows Dojo 2 to manage lazy hyperscript creation and element cach
  `w` creates Dojo 2 widgets or custom widget.
 This function provides support for lazy widget instantiation, instance management and caching.
 
-The `v` & `w` functions are available from the `@dojo/widgets/d` package.
+The `v` & `w` functions are available from the `@dojo/widget-core/d` package.
 
 ```ts
-import { v, w } from '@dojo/widgets/d';
+import { v, w } from '@dojo/widget-core/d';
 ```
 
-The argument and return types for `v` and `w` are available from `@dojo/widgets/interfaces`, and are as follows:
+The argument and return types for `v` and `w` are available from `@dojo/widget-core/interfaces`, and are as follows:
 
 ```ts
-import { DNode, HNode, WNode } from '@dojo/widgets/interfaces';
+import { DNode, HNode, WNode } from '@dojo/widget-core/interfaces';
 ```
 
 #### `v`
@@ -176,10 +176,10 @@ The widget registry allows you to lazy instantiate widgets.
 The `createWidgetBase` class provides the functionality needed to create Custom Widgets.
 This functionality includes caching and widget lifecycle management.
 
-The `createWidgetBase` class is available from the `@dojo/widgets/createWidgetBase` package.
+The `createWidgetBase` class is available from the `@dojo/widget-core/createWidgetBase` package.
 
 ```ts
-import { createWidgetBase } from '@dojo/widgets/createWidgetBase';
+import { createWidgetBase } from '@dojo/widget-core/createWidgetBase';
 ```
 
 **All** widgets should extend from this class.
@@ -351,7 +351,7 @@ The registry provides the ability to define a label against a `WidgetFactory`, a
 A global widget registry is exported from the `d.ts` class.
 
 ```ts
-import { registry } from '@dojo/widgets/d';
+import { registry } from '@dojo/widget-core/d';
 import createMyWidget from './createMyWidget';
 
 // registers the widget factory that will be available immediately
@@ -386,7 +386,7 @@ registry.define('my-widget', () => {
 
 #### Internationalization (i18n)
 
-Widgets can be internationalized by mixing in `@dojo/widgets/mixins/createI18nMixin`.
+Widgets can be internationalized by mixing in `@dojo/widget-core/mixins/createI18nMixin`.
 [Message bundles](https://github.com/dojo/i18n) are localized by passing them to `localizeBundle`. 
 
 If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then the default messages are returned.
@@ -441,7 +441,7 @@ These are some of the **important** principles to keep in mind when creating and
  
 1. the widget *`__render__`* function should **never** be overridden
 2. except for projectors you should **never** need to deal directly with widget instances.
-3. hyperscript should **always** be written using the @dojo/widgets `v` helper function.
+3. hyperscript should **always** be written using the @dojo/widget-core `v` helper function.
 4. **never** set state outside of a widget instance.
 5. **never** update `properties` within a widget instance.
 
@@ -453,8 +453,8 @@ A simple widget with no children, such as a `label` widget, can be created like 
 
 ```ts
 import { VNodeProperties } from '@dojo/interfaces/vdom';
-import { Widget, WidgetFactory, WidgetProperties } from '@dojo/widgets/interfaces';
-import createWidgetBase from '@dojo/widgets/createWidgetBase';
+import { Widget, WidgetFactory, WidgetProperties } from '@dojo/widget-core/interfaces';
+import createWidgetBase from '@dojo/widget-core/createWidgetBase';
 
 export interface LabelProperties extends WidgetProperties {
     content: string;
@@ -483,9 +483,9 @@ export default createLabelWidget;
 To create structured widgets, override the `getChildrenNodes` function:
 
 ```ts
-import { DNode, Widget, WidgetFactory, WidgetProperties } from '@dojo/widgets/interfaces';
-import createWidgetBase from '@dojo/widgets/createWidgetBase';
-import { v } from '@dojo/widgets/d';
+import { DNode, Widget, WidgetFactory, WidgetProperties } from '@dojo/widget-core/interfaces';
+import createWidgetBase from '@dojo/widget-core/createWidgetBase';
+import { v } from '@dojo/widget-core/d';
 
 export interface ListItem {
     name: string;

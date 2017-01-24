@@ -1,11 +1,11 @@
 {
-  "name": "@dojo/widgets",
+  "name": "@dojo/widget-core",
   "version": "2.0.0-pre",
   "description": "A core widget library for Dojo 2",
   "private": true,
   "homepage": "http://dojotoolkit.org",
   "bugs": {
-    "url": "https://github.com/dojo/widgets/issues"
+    "url": "https://github.com/dojo/widget-core/issues"
   },
   "license": "BSD-3-Clause",
   "main": "main.js",
@@ -16,7 +16,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/dojo/widgets.git"
+    "url": "https://github.com/dojo/widget-core.git"
   },
   "scripts": {
     "prepublish": "grunt peerDepInstall",

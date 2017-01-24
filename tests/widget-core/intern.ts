@@ -12,7 +12,7 @@ export const proxyUrl = 'http://localhost:9000/';
 export const capabilities = {
 	'browserstack.debug': false,
 	project: 'Dojo 2',
-	name: '@dojo/widgets'
+	name: '@dojo/widget-core'
 };
 
 // Browsers to run integration testing against. Note that version numbers must be strings if used with Sauce
