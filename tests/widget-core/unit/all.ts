@@ -4,5 +4,4 @@ import './d';
 import './integrations';
 import './main';
 import './FactoryRegistry';
-import './components/all';
 import './mixins/all';

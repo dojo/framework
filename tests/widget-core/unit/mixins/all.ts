@@ -1,5 +1,5 @@
 import './createCssTransitionMixin';
-import './createFormFieldMixin';
+import './createFormLabelMixin';
 import './createI18nMixin';
 import './createProjectorMixin';
 import './shallowPropertyComparisonMixin';

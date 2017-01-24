@@ -5,7 +5,6 @@ import * as main from '../../src/main';
 registerSuite({
 	name: 'main',
 	'validate api'() {
-		assert.isFunction(main.createButton);
-		assert.isFunction(main.createTextInput);
+		assert.isFunction(main.createWidgetBase);
 	}
 });

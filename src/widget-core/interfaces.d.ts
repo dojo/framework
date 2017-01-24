@@ -277,3 +277,7 @@ export interface WidgetProperties {
 }
 
 export interface WidgetFactory<W extends Widget<P>, P extends WidgetProperties> extends ComposeFactory<W, WidgetOptions<P>> {}
+
+export interface TypedTargetEvent<T extends EventTarget> extends Event {
+	target: T;
+}
