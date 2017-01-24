@@ -35,7 +35,7 @@ Once downloaded, you can compile the TypesScript files by first installing the p
 npm install
 ```
 
-The by running this command:
+Then by running this command:
 
 ```
 grunt dev
@@ -115,7 +115,7 @@ Dojo core's continuous integration tests use the [BrowserStack](http://www.brows
 
 ## Licensing information
 
-© 2004–2016 Dojo Foundation & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© 2004–2017 JS Foundation & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
 Some string functions (`codePointAt`, `fromCodePoint`, and `repeat`) adopted from polyfills by Mathias Bynens,
 under the [MIT](http://opensource.org/licenses/MIT) license.
