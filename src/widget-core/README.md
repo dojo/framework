@@ -92,7 +92,7 @@ These functions express structures that will be passed to the VDOM.
 
 `v` creates nodes that represent DOM tags, e.g. `div`, `header` etc.
 This function allows Dojo 2 to manage lazy hyperscript creation and element caching.
-  
+
  `w` creates Dojo 2 widgets or custom widget.
 This function provides support for lazy widget instantiation, instance management and caching.
 
@@ -202,7 +202,7 @@ Properties passed to the `w` function represent the public API for a widget.
 The properties lifecycle starts when properties are passed to the widget.
 The properties lifecycle is performed in the widgets `setProperties` function.
 This function uses the widget instance's `diffProperties` function to determine whether any of the properties have changed since the last render cycle.
-By default `diffProperties` provides a shallow comparison of the previous properties and new properties. 
+By default `diffProperties` provides a shallow comparison of the previous properties and new properties.
 
 The `diffProperties` function is also responsible for creating a copy (the default implementation uses`Object.assign({}, newProperties)` of all changed properties.
 The depth of the returned diff is equal to the depth used during the equality comparison.
@@ -215,7 +215,7 @@ The depth of the returned diff is equal to the depth used during the equality co
 
 Included in `createWidgetBase` is functionality to support targeting a specific property with a custom comparison function.
 This is done by adding a function to the widget class with `diffProperty` prefixed to the property name.
- 
+
 e.g. for a property `foo` you would add a function called `diffPropertyFoo`
 (the casing of the comparison function name is unimportant).
 
@@ -233,7 +233,7 @@ const createMyWidget = createWidgetBase.mixin({
 
 If a property has a custom diff function then that property is excluded from those passed to the `diffProperties` function.
 
-##### The 'properties:changed' event 
+##### The 'properties:changed' event
 
 When `diffProperties` has completed, the results are used to update the properties on the widget instance.
 If any properties were changed, then the `properties:changed` event is emitted.
@@ -270,7 +270,7 @@ Any widget can be converted into a projector simply by mixing in the `createProj
 createMyWidget.mixin(createProjectorMixin)
 ```
 
-Projectors behave in the same way as any other widget **except** that they need to be manually instantiated and managed outside of the standard widget lifecycle. 
+Projectors behave in the same way as any other widget **except** that they need to be manually instantiated and managed outside of the standard widget lifecycle.
 
 There are 3 ways that a projector widget can be added to the DOM - `.append`, `.merge` or `.replace`, depending on the type of attachment required.
 
@@ -304,7 +304,7 @@ const createMyWidget: MyWidgetFactory = createWidgetBase.mixin({
 		},
 		getChildrenNodes(this: MyWidget): DNode[] {
 			const { state: { selected } } = this;
-			
+
 			return [
 				v('input', { type: 'checkbox', onclick: this.onClick }),
 				v('input', { type: 'text', disabled: this.state.selected })
@@ -367,7 +367,7 @@ registry.define('my-widget-2', Promise.resolve(createMyWidget));
 registry.define('my-widget-3', () => Promise.resolve(createMyWidget));
 ```
 
-It is recommended to use the factory registry when defining widgets with [`w`](#w--d), to support lazy factory resolution. 
+It is recommended to use the factory registry when defining widgets with [`w`](#w--d), to support lazy factory resolution.
 
 Example of registering a function that returns a `Promise` that resolves to a `Factory`.
 
@@ -382,17 +382,147 @@ registry.define('my-widget', () => {
 
 #### Theming
 
-// To be completed
+##### Overview
+
+Widgets are themed using `css-modules` and the `themeable` mixin. Each widget must implement a .css file that contains all the css classes that will be used to style it. The baseTheme is the css API for the Widget: baseTheme css classes can be overridden by external themes. Further customisation of specific Custom Widget classes can be achieved by passing overrideClasses into the widget.
+The `themeable` mixin provides any themes passed into the widget via this.theme.which controls the classNames which can be applied to it. These classNames can be replaced by themeClasses and can be supplemented with overrideClasses. Theme classes are acquired by calling `instance.theme.<themeClass>`.
+
+##### Authoring a baseTheme
+
+A base theme is authored using `css-modules` and `cssnext`. The baseTheme `css` file should be located in a `styles` folder within the Widget's package directory.
+The `typed-css-modules` [cli](https://github.com/Quramy/typed-css-modules#cli) should be used in `watch` mode in order to generate typings for typescript usage.
+
+```
+tabPanel
+├── createTabPanel.ts
+└── styles
+    └── tabPanel.css
+```
+
+The `baseTheme` must contain a complete set of all of the classes you wish to apply to a widget as all theme and override classes are limited by the classnames made available here.
+Classnames are locally scoped as part of the build but must be unique within the widget framework such that they can be themed and overridden.
+
+```  css
+/* tabpanel.css */
+.tabPanelTabs {
+	background: red;
+}
+
+.tabPanelTab {
+	background: blue;
+}
+```
+
+##### Applying a baseTheme
+
+To apply a base theme a widget must use the `themeable` mixin and import it's `baseTheme`.
+
+``` typescript
+import * as baseTheme from './styles/tabpanel';
+```
+
+Theme classes to be applied to a widgets VDOM are acquired using `this.theme.<themeClass>`.
+The `themeableMixin` takes a generic to determine the typings for the returned `theme` classes.
+
+``` typescript
+interface ThemeableMixin<P> extends Evented {
+	theme: AppliedClasses<P>;
+}
+
+interface ThemeableProperties {
+	theme?: {};
+	overrideClasses?: {};
+}
+
+interface Themeable<P> extends ThemeableMixin<P> {
+	baseTheme: P;
+	properties: ThemeableProperties;
+}
+```
+
+Basic usage:
+
+``` typescript
+/* tabpanel.ts */
+import * as baseTheme from './styles/tabpanel';
+import themeableMixin, { Themeable } from '../mixins/themeable';
+
+export type TabPanel = Widget<WidgetProperties> & Themeable<typeof baseTheme>;
+export interface TabPanelFactory extends WidgetFactory<TabPanel, WidgetProperties> {}
+
+const createTabPanel: TabPanelFactory = createWidgetBase.mixin(themeableMixin).mixin({
+	mixin: {
+		baseTheme,
+		getChildrenNodes: function (this: TabPanel): DNode[] {
+			return [
+				v(`ul`, { classes: this.theme.tabPanelTabs }, [
+					v('li', { classes: this.theme.tabPanelTab }, [ 'tab1' ])
+					// ...
+				]);
+			];
+		}
+	}
+});
+```
+
+##### Applying a theme
+
+Themeable widgets include an optional `theme` property which can be set to pass in a theme. Theme classes will override `baseTheme` classes. When a `theme` property is set or changed, the widgets `theme` classes will be regenerated and the widget invalidated such that it is redrawn. Themes are used to apply consistent styling across the widget code base.
+
+Usage Extending on the previous `tabPanel` example.
+
+``` css
+/* customTheme.css */
+.tabPanelTabs {
+	background: green;
+}
+
+.notATabClass {
+	// this class will not be available in `instance.theme` as
+	// it is not part of the baseTheme
+	background: yellow;
+}
+```
+
+Import the theme and pass it to the widget via it's `properties`. The theme classes will be automatically mixed into the widget and available via `this.theme`.
+
+``` typescript
+import * as customTheme from './themes/customTheme';
+
+w(createTabPanel, { theme: customTheme });
+// Resulting widget will have green tabs instead of baseTheme red.
+```
+
+The theme can be applied to individual widgets or to a project and prop passed down to it's children.
+
+##### Overriding theme classes
+
+As we are using `css-modules` to scope widget css classes, the generated class names cannot be used to target specific nodes and apply custom styling to them. Instead you must use the `overrideClasses` property to pass your generated classes to the widget. This will only effect one instance of a widget and will be applied on top of, rather than instead of theme classes.
+
+``` css
+/* tabPanelOverrides.css */
+.tabPanelTabs {
+	font-weight: bold;
+}
+```
+
+``` typescript
+import * as tabPanelOverrides from './overrides/tabPanelOverrides';
+
+w(createTabPanel, { overrideClasses: tabPanelOverrides });
+// Resulting widget will still have baseTheme red tabs,
+// but will have font-weight: bold; applied also.
+```
 
 #### Internationalization (i18n)
 
 Widgets can be internationalized by mixing in `@dojo/widget-core/mixins/createI18nMixin`.
-[Message bundles](https://github.com/dojo/i18n) are localized by passing them to `localizeBundle`. 
+[Message bundles](https://github.com/dojo/i18n) are localized by passing them to `localizeBundle`.
 
 If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then the default messages are returned.
 The widget will be invalidated once the locale-specific messages have been loaded.
 
-Each widget can have its own locale by setting its `state.locale`. 
+Each widget can have its own locale by setting its `state.locale`.
 If no locale is set, then the default locale, as set by [`@dojo/i18n`](https://github.com/dojo/i18n), is assumed.
 
 ```ts
@@ -438,7 +568,7 @@ const widget = createI18nWidget({
 ### Key Principles
 
 These are some of the **important** principles to keep in mind when creating and using widgets:
- 
+
 1. the widget *`__render__`* function should **never** be overridden
 2. except for projectors you should **never** need to deal directly with widget instances.
 3. hyperscript should **always** be written using the @dojo/widget-core `v` helper function.
