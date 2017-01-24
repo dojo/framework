@@ -156,7 +156,7 @@ export interface PropertyComparison<P extends WidgetProperties> {
 	/**
 	 * Determine changed or new property keys on setProperties and assign them on return.
 	 */
-	diffProperties<S>(this: S, previousProperties: P, newProperties: P): PropertiesChangeRecord<P>;
+	diffProperties<S>(this: S, previousProperties: P, newProperties: P): PropertiesChangeRecord<Partial<P>>;
 }
 
 export interface WidgetMixin<P extends WidgetProperties> extends PropertyComparison<P> {
