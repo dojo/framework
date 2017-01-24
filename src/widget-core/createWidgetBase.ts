@@ -19,6 +19,12 @@ import Promise from '@dojo/shim/Promise';
 import Map from '@dojo/shim/Map';
 import { v, registry, isWNode } from './d';
 
+interface WidgetCacheWrapper {
+	child: Widget<WidgetProperties>;
+	factory: WidgetBaseFactory;
+	used: boolean;
+}
+
 interface WidgetInternalState {
 	children: DNode[];
 	dirty: boolean;
@@ -27,8 +33,7 @@ interface WidgetInternalState {
 	initializedFactoryMap: Map<string, Promise<WidgetBaseFactory>>;
 	properties: WidgetProperties;
 	previousProperties: WidgetProperties;
-	historicChildrenMap: Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>;
-	currentChildrenMap: Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>;
+	cachedChildrenMap: Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, WidgetCacheWrapper[]>;
 	diffPropertyFunctionMap: Map<string, string>;
 };
 
@@ -79,31 +84,39 @@ function dNodeToVNode(instance: Widget<WidgetProperties>, dNode: DNode): VNode |
 		}
 
 		const childrenMapKey = id || factory;
-		const cachedChild = internalState.historicChildrenMap.get(childrenMapKey);
+		let cachedChildren = internalState.cachedChildrenMap.get(childrenMapKey) || [];
+		let cachedChild: WidgetCacheWrapper | undefined;
+		cachedChildren.some((cachedChildWrapper) => {
+			if (cachedChildWrapper.factory === factory && !cachedChildWrapper.used) {
+				cachedChild = cachedChildWrapper;
+				return true;
+			}
+			return false;
+		});
 
 		if (cachedChild) {
-			child = cachedChild;
+			child = cachedChild.child;
 			if (properties) {
 				child.setProperties(properties);
 			}
+			cachedChild.used = true;
 		}
 		else {
 			child = factory({ properties });
 			child.own(child.on('invalidated', () => {
 				instance.invalidate();
 			}));
-			internalState.historicChildrenMap.set(childrenMapKey, child);
+			cachedChildren = [...cachedChildren, { child, factory, used: true }];
+			internalState.cachedChildrenMap.set(childrenMapKey, cachedChildren);
 			instance.own(child);
 		}
-		if (!id && internalState.currentChildrenMap.has(factory)) {
-			const errorMsg = 'must provide unique keys when using the same widget factory multiple times';
-			console.error(errorMsg);
+		if (!id && cachedChildren.length > 1) {
+			const errorMsg = 'It is recommended to provide unique keys when using the same widget factory multiple times';
+			console.warn(errorMsg);
 			instance.emit({ type: 'error', target: instance, error: new Error(errorMsg) });
 		}
 
 		child.setChildren(children);
-		internalState.currentChildrenMap.set(childrenMapKey, child);
-
 		return child.__render__();
 	}
 
@@ -119,13 +132,17 @@ function dNodeToVNode(instance: Widget<WidgetProperties>, dNode: DNode): VNode |
 function manageDetachedChildren(instance: Widget<WidgetProperties>): void {
 	const internalState = widgetInternalStateMap.get(instance);
 
-	internalState.historicChildrenMap.forEach((child, key) => {
-		if (!internalState.currentChildrenMap.has(key) && internalState.historicChildrenMap.has(key)) {
-			internalState.historicChildrenMap.delete(key);
-			child.destroy();
-		}
+	internalState.cachedChildrenMap.forEach((cachedChildren, key) => {
+		const filterCachedChildren = cachedChildren.filter((cachedChild) => {
+			if (cachedChild.used) {
+				cachedChild.used = false;
+				return true;
+			}
+			cachedChild.child.destroy();
+			return false;
+		});
+		internalState.cachedChildrenMap.set(key, filterCachedChildren);
 	});
-	internalState.currentChildrenMap.clear();
 }
 
 function formatTagNameAndClasses(tagName: string, classes: string[]) {
@@ -299,8 +316,7 @@ const createWidget: WidgetBaseFactory = createEvented
 				properties: {},
 				previousProperties: {},
 				initializedFactoryMap: new Map<string, Promise<WidgetBaseFactory>>(),
-				historicChildrenMap: new Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>(),
-				currentChildrenMap: new Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, Widget<WidgetProperties>>(),
+				cachedChildrenMap: new Map<string | Promise<WidgetBaseFactory> | WidgetBaseFactory, WidgetCacheWrapper[]>(),
 				diffPropertyFunctionMap,
 				children: []
 			});
