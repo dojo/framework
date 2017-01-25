@@ -9,6 +9,7 @@ let store: ObservableStore<{}, {}, any>;
 
 const storeMixinWithProperties = compose({
 	properties: <any> {},
+	invalidate() {},
 	diffProperties(this: any, previousProperties: any, newProperties: any) {}
 }, (instance, options: any) => {
 	if (options) {
@@ -156,6 +157,19 @@ registerSuite({
 			storeMixin.observe();
 			assert.throws(() => storeMixin.setState({ foo: 'baz', baz: 'qux' }), Error);
 		}
+	},
+	'on "state:changed event'() {
+		let invalidateCalled = false;
+		const storeMixin = storeMixinWithProperties.mixin({
+			mixin: {
+				invalidate(): void {
+					invalidateCalled = true;
+				}
+			}
+		})({ properties: { id: '1', store } });
+
+		storeMixin.emit({ type: 'state:changed' });
+		assert.isTrue(invalidateCalled);
 	},
 	'on "properties:changed" event': {
 		'initial properties'() {

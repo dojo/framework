@@ -50,6 +50,7 @@ export interface StoreMixinApi extends StatefulMixin<State> {
  */
 export interface StoreMixin extends StoreMixinApi {
 	readonly properties: StoreMixinProperties;
+	invalidate(): void;
 }
 
 /**
@@ -159,6 +160,9 @@ const storeMixinFactory: StoreMixinFactory = createEvented.mixin({
 	initialize(instance: StoreMixin) {
 		instance.own(instance.on('properties:changed', (evt: PropertiesChangeEvent<StoreMixin, StoreMixinProperties>) => {
 			onPropertiesChanged(instance, evt.properties, evt.changedPropertyKeys);
+		}));
+		instance.own(instance.on(stateChangedEventType, () => {
+			instance.invalidate();
 		}));
 		stateMap.set(instance, { state: Object.create(null) });
 		instance.observe();
