@@ -124,7 +124,7 @@ const storeMixinFactory: StoreMixinFactory = createEvented.mixin({
 			const observer = id ? store.observe(id) : store.observe();
 			const subscription = observer.subscribe(
 				(state) => {
-					replaceState(this, state['afterAll'] ? state['afterAll'] : state);
+					replaceState(this, state['afterAll'] ? { data: state['afterAll'] } : state);
 				},
 				(err) => {
 					throw err;

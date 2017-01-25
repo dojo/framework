@@ -127,17 +127,17 @@ registerSuite({
 						if (intialStateChange) {
 							intialStateChange = false;
 							assert.isOk(storeMixin.state);
-							assert.lengthOf(storeMixin.state, 2);
-							assert.deepEqual(storeMixin.state, [
+							assert.lengthOf(storeMixin.state['data'], 2);
+							assert.deepEqual(storeMixin.state, { data: [
 								{ id: '1', foo: 'bar'}, { id: '2', foo: 'bar' }
-							]);
+							] });
 						}
 						else {
 							assert.isOk(storeMixin.state);
-							assert.lengthOf(storeMixin.state, 2);
-							assert.deepEqual(storeMixin.state, [
+							assert.lengthOf(storeMixin.state['data'], 2);
+							assert.deepEqual(storeMixin.state, { data: [
 								{ id: '1', foo: 'baz', baz: 'qux'}, { id: '2', foo: 'bar' }
-							]);
+							]});
 							resolve();
 						}
 					} catch (err) {
