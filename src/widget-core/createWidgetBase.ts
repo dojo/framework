@@ -60,7 +60,7 @@ function dNodeToVNode(instance: Widget<WidgetProperties>, dNode: DNode): VNode |
 
 	if (isWNode(dNode)) {
 		const { children, properties } = dNode;
-		const { id } = properties;
+		const { key } = properties;
 
 		let { factory } = dNode;
 		let child: Widget<WidgetProperties>;
@@ -83,7 +83,7 @@ function dNodeToVNode(instance: Widget<WidgetProperties>, dNode: DNode): VNode |
 			}
 		}
 
-		const childrenMapKey = id || factory;
+		const childrenMapKey = key || factory;
 		let cachedChildren = internalState.cachedChildrenMap.get(childrenMapKey) || [];
 		let cachedChild: WidgetCacheWrapper | undefined;
 		cachedChildren.some((cachedChildWrapper) => {
@@ -110,8 +110,8 @@ function dNodeToVNode(instance: Widget<WidgetProperties>, dNode: DNode): VNode |
 			internalState.cachedChildrenMap.set(childrenMapKey, cachedChildren);
 			instance.own(child);
 		}
-		if (!id && cachedChildren.length > 1) {
-			const errorMsg = 'It is recommended to provide unique keys when using the same widget factory multiple times';
+		if (!key && cachedChildren.length > 1) {
+			const errorMsg = 'It is recommended to provide a unique `key` property when using the same widget factory multiple times';
 			console.warn(errorMsg);
 			instance.emit({ type: 'error', target: instance, error: new Error(errorMsg) });
 		}

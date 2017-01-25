@@ -465,7 +465,7 @@ registerSuite({
 			assert.strictEqual(lastRenderChild.vnodeSelector, 'footer');
 		},
 		'render with multiple children of the same type without an id'() {
-
+			const warnMsg = 'It is recommended to provide a unique `key` property when using the same widget factory multiple times';
 			const createWidgetOne = createWidgetBase.mixin({});
 			const createWidgetTwo = createWidgetBase.mixin({});
 
@@ -485,11 +485,11 @@ registerSuite({
 			const consoleStub = stub(console, 'warn');
 			widgetBase.__render__();
 			assert.isTrue(consoleStub.calledOnce);
-			assert.isTrue(consoleStub.calledWith('It is recommended to provide unique keys when using the same widget factory multiple times'));
+			assert.isTrue(consoleStub.calledWith(warnMsg));
 			widgetBase.invalidate();
 			widgetBase.__render__();
 			assert.isTrue(consoleStub.calledThrice);
-			assert.isTrue(consoleStub.calledWith('It is recommended to provide unique keys when using the same widget factory multiple times'));
+			assert.isTrue(consoleStub.calledWith(warnMsg));
 			consoleStub.restore();
 		},
 		'render with updated properties'() {
@@ -616,7 +616,7 @@ registerSuite({
 
 			assert.equal(childWidgetInstantiatedCount, 5);
 		},
-		'support updating factories for children with an `id`'() {
+		'support updating factories for children with an `key`'() {
 			let renderWidgetOne = true;
 			let widgetOneInstantiated = false;
 			let widgetTwoInstantiated = false;
@@ -634,7 +634,7 @@ registerSuite({
 				mixin: {
 					getChildrenNodes(): DNode[] {
 						return [
-							renderWidgetOne ? w(createWidgetOne, { id: '1' }) : w(createWidgetTwo, { id: '1' })
+							renderWidgetOne ? w(createWidgetOne, { key: '1' }) : w(createWidgetTwo, { key: '1' })
 						];
 					}
 				}

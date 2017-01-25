@@ -273,6 +273,7 @@ export interface WidgetOptions<P extends WidgetProperties> extends EventedOption
 export interface WidgetProperties {
 	[index: string]: any;
 	id?: string;
+	key?: string;
 	classes?: string[];
 }
 
