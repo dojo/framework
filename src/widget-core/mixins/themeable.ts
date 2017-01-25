@@ -19,7 +19,7 @@ export type CSSModuleClassNames = {
  * The object returned by getClasses.
  */
 export type AppliedClasses<T> = {
-	[P in keyof T]?: CSSModuleClassNames;
+	[P in keyof T]: CSSModuleClassNames;
 };
 
 type StringIndexedObject = { [key: string]: string; };
@@ -42,27 +42,27 @@ export interface ThemeableOptions {
 /**
  * Themeable Mixin
  */
-export interface ThemeableMixin<P> extends Evented {
-	theme: AppliedClasses<P>;
+export interface ThemeableMixin<T> extends Evented {
+	theme: AppliedClasses<T>;
 }
 
 /**
  * Themeable
  */
-export interface Themeable<P> extends ThemeableMixin<P> {
-	baseTheme: P;
+export interface Themeable<T> extends ThemeableMixin<T> {
+	baseTheme: T;
 	properties: ThemeableProperties;
 }
 
 /**
  * Compose Themeable Factory interface
  */
-export interface ThemeableFactory extends ComposeFactory<ThemeableMixin<{}>, ThemeableOptions> {}
+export interface ThemeableFactory extends ComposeFactory<ThemeableMixin<any>, ThemeableOptions> {}
 
 /**
  * Private map for the widgets themeClasses.
  */
-const themeClassesMap = new WeakMap<ThemeableMixin<{}>, AppliedClasses<any>>();
+const themeClassesMap = new WeakMap<Themeable<any>, AppliedClasses<any>>();
 
 function addClassNameToCSSModuleClassNames(cssModuleClassNames: CSSModuleClassNames, classList: StringIndexedObject, className: string) {
 	if (classList.hasOwnProperty(className)) {
@@ -95,7 +95,7 @@ function negatePreviousClasses<T>(previousClasses: AppliedClasses<T>, newClasses
 	}, <AppliedClasses<T>> {});
 }
 
-function generateThemeClasses<I, T>(instance: Themeable<I>, baseTheme: T, theme: {} = {}, overrideClasses: {} = {}) {
+function generateThemeClasses<T>(instance: Themeable<T>, baseTheme: T, theme: {} = {}, overrideClasses: {} = {}) {
 	return Object.keys(baseTheme).reduce((newAppliedClasses, className: keyof T) => {
 		const newCSSModuleClassNames: CSSModuleClassNames = {};
 		const themeClassSource = theme.hasOwnProperty(className) ? theme : baseTheme;
@@ -108,7 +108,7 @@ function generateThemeClasses<I, T>(instance: Themeable<I>, baseTheme: T, theme:
 	}, <AppliedClasses<T>> {});
 }
 
-function updateThemeClassesMap<I, T>(instance: Themeable<I>, newThemeClasses: AppliedClasses<T>) {
+function updateThemeClassesMap<T>(instance: Themeable<T>, newThemeClasses: AppliedClasses<T>) {
 	if (themeClassesMap.has(instance)) {
 		const previousThemeClasses = themeClassesMap.get(instance);
 		themeClassesMap.set(instance, negatePreviousClasses(previousThemeClasses, newThemeClasses));
@@ -117,7 +117,7 @@ function updateThemeClassesMap<I, T>(instance: Themeable<I>, newThemeClasses: Ap
 	}
 }
 
-function onPropertiesChanged<I>(instance: Themeable<I>, { theme, overrideClasses }: ThemeableProperties, changedPropertyKeys: string[]) {
+function onPropertiesChanged<T>(instance: Themeable<T>, { theme, overrideClasses }: ThemeableProperties, changedPropertyKeys: string[]) {
 	const themeChanged = includes(changedPropertyKeys, 'theme');
 	const overrideClassesChanged = includes(changedPropertyKeys, 'overrideClasses');
 
@@ -136,8 +136,8 @@ const themeableFactory: ThemeableFactory = createEvented.mixin({
 			return themeClassesMap.get(this);
 		}
 	},
-	initialize<I>(instance: Themeable<I>) {
-		instance.own(instance.on('properties:changed', (evt: PropertiesChangeEvent<ThemeableMixin<I>, ThemeableProperties>) => {
+	initialize<T>(instance: Themeable<T>) {
+		instance.own(instance.on('properties:changed', (evt: PropertiesChangeEvent<ThemeableMixin<T>, ThemeableProperties>) => {
 			onPropertiesChanged(instance, evt.properties, evt.changedPropertyKeys);
 		}));
 		onPropertiesChanged(instance, instance.properties, [ 'theme' ]);
