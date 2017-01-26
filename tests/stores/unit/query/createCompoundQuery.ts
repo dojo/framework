@@ -4,7 +4,7 @@ import createCompoundQuery from '../../../src/query/createCompoundQuery';
 import { QueryType } from '../../../src/query/interfaces';
 import createSort from '../../../src/query/createSort';
 import createRange from '../../../src/query/createStoreRange';
-import { createData } from '../support/createData';
+import { createData, ItemType } from '../support/createData';
 import createFilter from '../../../src/query/createFilter';
 import { isCompoundQuery } from '../../../src/query/createCompoundQuery';
 
@@ -17,7 +17,7 @@ registerSuite({
 	'Should create a CompoundQuery from a filter.'() {
 		const data = createData();
 		const query = createCompoundQuery( {
-			query: createFilter().lessThan('value', 2)
+			query: createFilter<{ value: number }>().lessThan('value', 2)
 		} );
 		assert.deepEqual(query.apply(data), [data[0]]);
 	},
@@ -25,7 +25,7 @@ registerSuite({
 		const data = createData();
 		const _data = createData();
 		const query = createCompoundQuery( {
-			query: createSort('id', true)
+			query: createSort<ItemType>('id', true)
 		} );
 		assert.deepEqual(query.apply(data), [_data[2], _data[1], _data[0]]);
 	},
@@ -40,9 +40,9 @@ registerSuite({
 		const data = createData();
 		const _data = createData();
 		const query = createCompoundQuery( {
-			query: createFilter().lessThan('value', 3)
+			query: createFilter<{ value: number }>().lessThan('value', 3)
 		} )
-			.withQuery( createSort('id', true) );
+			.withQuery( createSort<ItemType>('id', true) );
 
 		assert.deepEqual(query.apply(data), [_data[1], _data[0]]);
 	},
@@ -50,10 +50,10 @@ registerSuite({
 		const data = createData();
 		const _data = createData();
 		const query = createCompoundQuery( {
-			query: createFilter().lessThan('value', 3)
+			query: createFilter<{ value: number }>().lessThan('value', 3)
 		} )
-			.withQuery( createSort('id', true) )
-			.withQuery( createRange(1, 1) );
+			.withQuery( createSort<ItemType>('id', true) )
+			.withQuery( createRange<ItemType>(1, 1) );
 
 		assert.deepEqual(query.apply(data), [_data[0]]);
 	},
@@ -61,12 +61,12 @@ registerSuite({
 		const data = createData();
 		const _data = createData();
 		const query1 = createCompoundQuery({
-			query: createSort('id', true)
+			query: createSort<ItemType>('id', true)
 		})
-			.withQuery( createRange(1, 1) );
+			.withQuery( createRange<ItemType>(1, 1) );
 
 		const query = createCompoundQuery( {
-			query: createFilter().lessThan('value', 3)
+			query: createFilter<{ value: number }>().lessThan('value', 3)
 		} )
 			.withQuery(query1);
 
@@ -74,16 +74,16 @@ registerSuite({
 	},
 	'Should have a toString that describes its properties'() {
 		const query = createCompoundQuery( {
-			query: createFilter().lessThan('value', 3)
+			query: createFilter<{ value: number }>().lessThan('value', 3)
 		} )
-			.withQuery( createSort('id', true) );
+			.withQuery( createSort<ItemType>('id', true) );
 
 		assert.strictEqual( query.toString(), 'lt(value, 3)&sort(-id)' );
 	},
 
 	'Should be able to differentiate a CompoundQuery from other queries'(this: any) {
 		const compoundQuery = createCompoundQuery();
-		const sort = createSort('any');
+		const sort = createSort<any>('any');
 		const filter = createFilter();
 		const range = createRange(0, 10);
 
@@ -101,7 +101,7 @@ registerSuite({
 	'Should be able to identify whether this compound query is incremental'(this: any) {
 		const incrementalQuery = createCompoundQuery()
 			.withQuery(createFilter())
-			.withQuery(createSort('any'))
+			.withQuery(createSort<any>('any'))
 			.withQuery({
 				queryType: QueryType.Filter,
 				toString() {
@@ -124,7 +124,7 @@ registerSuite({
 	'Should be able to return array of queries'(this: any) {
 		const queries = [
 			createFilter(),
-			createSort('any'),
+			createSort<any>('any'),
 			createRange(0, 10)
 		];
 

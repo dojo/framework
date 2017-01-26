@@ -150,10 +150,10 @@ registerSuite({
 		'Should fetch queried items when a query is provided.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			const query = createCompoundQuery( {
-				query: createFilter().lessThan('value', 3)
+				query: createFilter<ItemType>().lessThan('value', 3)
 			} )
-				.withQuery( createSort('id', true) )
-				.withQuery( createRange(1, 1) );
+				.withQuery( createSort<ItemType>('id', true) )
+				.withQuery( createRange<ItemType>(1, 1) );
 
 			storage.add(data);
 			storage.fetch(query).then(function(items) {

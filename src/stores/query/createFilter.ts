@@ -3,7 +3,7 @@ import { isEqual } from '../utils';
 import { Query, QueryType } from './interfaces';
 
 export type FilterFunction<T> = (data: T[]) => T[];
-export type ObjectPointer = JsonPointer | string;
+export type ObjectPointer<T> = JsonPointer | keyof T | '';
 
 export const enum FilterType {
 	LessThan,
@@ -31,38 +31,38 @@ function isBooleanOp(op: any): op is BooleanOp {
 }
 export type FilterChainMember<T> = SimpleFilter<T> | BooleanOp;
 
-export interface FilterDescriptor {
+export interface FilterDescriptor<T> {
 	readonly filterType: FilterType;
-	readonly path: ObjectPointer;
+	readonly path: ObjectPointer<T>;
 	readonly value: any;
 }
 
-export type FilterArrayEntry = FilterDescriptor | BooleanOp | FilterArray;
+export type FilterArrayEntry<T> = FilterDescriptor<T> | BooleanOp | FilterArray<T>;
 
-export interface FilterArray extends Array<FilterArrayEntry> {}
+export interface FilterArray<T> extends Array<FilterArrayEntry<T>> {}
 
 export interface SimpleFilter<T> extends Query<T> {
 	readonly filterType: FilterType;
 	readonly test: (item: T) => boolean;
 	readonly filterChain?: FilterChainMember<T>[];
-	readonly path?: ObjectPointer;
+	readonly path?: ObjectPointer<T>;
 	readonly value?: any;
 }
 
 export interface BooleanFilter<T> extends SimpleFilter<T> {
-	lessThan(path: ObjectPointer, value: number): Filter<T>;
-	lessThanOrEqualTo(path: ObjectPointer, value: number): Filter<T>;
-	greaterThan(path: ObjectPointer, value: number): Filter<T>;
-	greaterThanOrEqualTo(path: ObjectPointer, value: number): Filter<T>;
-	matches(path: ObjectPointer, test: RegExp): Filter<T>;
-	in<U>(path: ObjectPointer, value: U[]): Filter<T>;
-	contains<U>(path: ObjectPointer, value: U): Filter<T>;
-	equalTo<U>(path: ObjectPointer, value: U): Filter<T>;
-	deepEqualTo<U extends {}>(path: ObjectPointer, value: U): Filter<T>;
-	deepEqualTo<U>(path: ObjectPointer, value: U[]): Filter<T>;
-	notEqualTo<U>(path: ObjectPointer, value: U): Filter<T>;
-	notDeepEqualTo<U extends {}>(path: ObjectPointer, value: U): Filter<T>;
-	notDeepEqualTo<U>(path: ObjectPointer, value: U[]): Filter<T>;
+	lessThan(path: ObjectPointer<T>, value: number): Filter<T>;
+	lessThanOrEqualTo(path: ObjectPointer<T>, value: number): Filter<T>;
+	greaterThan(path: ObjectPointer<T>, value: number): Filter<T>;
+	greaterThanOrEqualTo(path: ObjectPointer<T>, value: number): Filter<T>;
+	matches(path: ObjectPointer<T>, test: RegExp): Filter<T>;
+	in<U>(path: ObjectPointer<T>, value: U[]): Filter<T>;
+	contains<U>(path: ObjectPointer<T>, value: U): Filter<T>;
+	equalTo<U>(path: ObjectPointer<T>, value: U): Filter<T>;
+	deepEqualTo<U extends {}>(path: ObjectPointer<T>, value: U): Filter<T>;
+	deepEqualTo<U>(path: ObjectPointer<T>, value: U[]): Filter<T>;
+	notEqualTo<U>(path: ObjectPointer<T>, value: U): Filter<T>;
+	notDeepEqualTo<U extends {}>(path: ObjectPointer<T>, value: U): Filter<T>;
+	notDeepEqualTo<U>(path: ObjectPointer<T>, value: U[]): Filter<T>;
 	custom(test: (item: T) => boolean): Filter<T>;
 }
 
@@ -77,7 +77,7 @@ function isFilter<T>(filterOrFunction: FilterChainMember<T>): filterOrFunction i
 	return typeof filterOrFunction !== 'function'  && (<any> filterOrFunction).apply;
 }
 
-function createFilterOrReturnOp<T>(descriptorOrOp: FilterDescriptor | BooleanOp) {
+function createFilterOrReturnOp<T>(descriptorOrOp: FilterDescriptor<T> | BooleanOp) {
 	if (isBooleanOp(descriptorOrOp)) {
 		return descriptorOrOp;
 	}
@@ -90,7 +90,7 @@ function createFilterOrReturnOp<T>(descriptorOrOp: FilterDescriptor | BooleanOp)
 	}
 }
 
-function createFilter<T>(filterDescriptors?: FilterDescriptor | FilterArray, serializer?: (filter: Filter<T>) => string): Filter<T> {
+function createFilter<T>(filterDescriptors?: FilterDescriptor<T> | FilterArray<T>, serializer?: (filter: Filter<T>) => string): Filter<T> {
 	let filters: FilterChainMember<T>[] = [];
 	if (filterDescriptors) {
 		if (Array.isArray(filterDescriptors)) {
@@ -123,7 +123,7 @@ function createFilterHelper<T>(filters: FilterChainMember<T>[], serializer: (fil
 	// Small helpers to abstract common operations for building comparator filters
 	// The main helper delegates to the factory, adding and AND operation before the next filter,
 	// because by default each filter in a chain will be ANDed with the previous.
-	function comparatorFilterHelper(filterType: FilterType, value: any, path?: ObjectPointer): Filter<T> {
+	function comparatorFilterHelper(filterType: FilterType, value: any, path?: ObjectPointer<T>): Filter<T> {
 		path = path || createJsonPointer();
 		const needsOperator = filters.length > 0 &&
 			(filters[filters.length - 1] !== BooleanOp.And && filters[filters.length - 1] !== BooleanOp.Or);
@@ -164,37 +164,37 @@ function createFilterHelper<T>(filters: FilterChainMember<T>[], serializer: (fil
 			}
 			return createFilterHelper(newFilters, serializer);
 		},
-		lessThan(path: ObjectPointer, value: number) {
+		lessThan(path: ObjectPointer<T>, value: number) {
 			return comparatorFilterHelper(FilterType.LessThan, value, path);
 		},
-		lessThanOrEqualTo(path: ObjectPointer, value: number) {
+		lessThanOrEqualTo(path: ObjectPointer<T>, value: number) {
 			return comparatorFilterHelper(FilterType.LessThanOrEqualTo, value, path);
 		},
-		greaterThan(path: ObjectPointer, value: number) {
+		greaterThan(path: ObjectPointer<T>, value: number) {
 			return comparatorFilterHelper(FilterType.GreaterThan, value, path);
 		},
-		greaterThanOrEqualTo(path: ObjectPointer, value: number) {
+		greaterThanOrEqualTo(path: ObjectPointer<T>, value: number) {
 			return comparatorFilterHelper(FilterType.GreaterThanOrEqualTo, value, path);
 		},
-		matches(path: ObjectPointer, value: RegExp) {
+		matches(path: ObjectPointer<T>, value: RegExp) {
 			return comparatorFilterHelper(FilterType.Matches, value, path);
 		},
-		'in': function(path: ObjectPointer, value: any) {
+		'in': function(path: ObjectPointer<T>, value: any) {
 			return comparatorFilterHelper(FilterType.In, value, path);
 		},
-		contains(path: ObjectPointer, value: any) {
+		contains(path: ObjectPointer<T>, value: any) {
 			return comparatorFilterHelper(FilterType.Contains, value, path);
 		},
-		equalTo(path: ObjectPointer, value: any) {
+		equalTo(path: ObjectPointer<T>, value: any) {
 			return comparatorFilterHelper(FilterType.EqualTo, value, path);
 		},
-		deepEqualTo(path: ObjectPointer, value: any) {
+		deepEqualTo(path: ObjectPointer<T>, value: any) {
 			return comparatorFilterHelper(FilterType.DeepEqualTo, value, path);
 		},
-		notEqualTo(path: ObjectPointer, value: any) {
+		notEqualTo(path: ObjectPointer<T>, value: any) {
 			return comparatorFilterHelper(FilterType.NotEqualTo, value, path);
 		},
-		notDeepEqualTo(path: ObjectPointer, value: any) {
+		notDeepEqualTo(path: ObjectPointer<T>, value: any) {
 			return comparatorFilterHelper(FilterType.NotDeepEqualTo, value, path);
 		},
 		custom(test: (item: T) => boolean) {
@@ -239,7 +239,7 @@ function applyFilterChain<T>(item: T, filterChain: FilterChainMember<T>[]): bool
 	});
 }
 
-function createComparator<T>(operator: FilterType, value: any, path: ObjectPointer): SimpleFilter<T> {
+function createComparator<T>(operator: FilterType, value: any, path: ObjectPointer<T>): SimpleFilter<T> {
 	path = typeof path === 'string' ? createJsonPointer(path) : path;
 	let test: (property: any) => boolean;
 	const filterType: FilterType = operator;

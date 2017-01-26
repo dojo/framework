@@ -625,7 +625,7 @@ registerSuite({
 	'async storage': {
 		'filtered subcollection fetch should not return items when it is done before add.'(this: any) {
 			const { queryStore: store } = getStoreWithAsyncStorage(this, { put: 20, fetch: 10 }, false);
-			const subcollection = store.filter(createFilter().greaterThanOrEqualTo('value', 2));
+			const subcollection = store.filter(createFilter<ItemType>().greaterThanOrEqualTo('value', 2));
 
 			store.add(createData());
 			return subcollection.fetch().then(function(storeData) {
