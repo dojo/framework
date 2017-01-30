@@ -4,7 +4,7 @@ import * as assert from 'intern/chai!assert';
 import registryMixin from '../../../src/mixins/registryMixin';
 import FactoryRegistry from '../../../src/FactoryRegistry';
 import createWidgetBase from '../../../src/createWidgetBase';
-import { w } from '../../../src/d';
+import { w, v } from '../../../src/d';
 import { DNode } from '../../../src/interfaces';
 import { VNode } from '@dojo/interfaces/vdom';
 
@@ -72,8 +72,16 @@ registerSuite({
 					}
 				}
 			});
-			const createHeader = createWidgetBase.override({ tagName: 'header' });
-			const createSpan = createWidgetBase.override({ tagName: 'span' });
+			const createHeader = createWidgetBase.override({
+				render() {
+					return v('header');
+				}
+			});
+			const createSpan = createWidgetBase.override({
+				render() {
+					return v('span');
+				}
+			});
 
 			const registry = new FactoryRegistry();
 			registry.define('test', createHeader);

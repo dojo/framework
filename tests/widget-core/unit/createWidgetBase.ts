@@ -13,7 +13,6 @@ registerSuite({
 	api() {
 		const widgetBase = createWidgetBase();
 		assert(widgetBase);
-		assert.isFunction(widgetBase.getNodeAttributes);
 		assert.isFunction(widgetBase.getChildrenNodes);
 		assert.isFunction(widgetBase.invalidate);
 	},
@@ -31,41 +30,10 @@ registerSuite({
 		assert.strictEqual(widget.children[0], expectedChild);
 		assert.isTrue(childrenEventEmitted);
 	},
-	tagName: {
-		'Applies default tagName'() {
+	'Applies div as default tag'() {
 			const widget = createWidgetBase();
-			assert.deepEqual(widget.tagName, 'div');
 			const renderedWidget = <VNode> widget.__render__();
 			assert.deepEqual(renderedWidget.vnodeSelector, 'div');
-		},
-		'Applies overridden tagName'() {
-			const widget = createWidgetBase.override({ tagName: 'header' })();
-			assert.deepEqual(widget.tagName, 'header');
-			const renderedWidget = <VNode> widget.__render__();
-			assert.deepEqual(renderedWidget.vnodeSelector, 'header');
-		}
-		},
-		'Applies classes to tagName'() {
-			const widget = createWidgetBase.override({ tagName: 'header', classes: [ 'class-one', 'classTwo' ] })();
-			const renderedWidget = <VNode> widget.__render__();
-			assert.deepEqual(renderedWidget.vnodeSelector, 'header.class-one.classTwo');
-	},
-	'getNodeAttributes()'() {
-		const widgetBase = createWidgetBase({
-			properties: { id: 'foo', classes: [ 'bar' ] }
-		});
-
-		let nodeAttributes = widgetBase.getNodeAttributes();
-
-		assert.strictEqual(nodeAttributes['data-widget-id'], 'foo');
-		assert.deepEqual(nodeAttributes.classes, { bar: true });
-		assert.strictEqual(Object.keys(nodeAttributes).length, 4);
-
-		widgetBase.setProperties({ 'id': 'foo', classes: ['foo'] });
-
-		nodeAttributes = widgetBase.getNodeAttributes();
-
-		assert.deepEqual(nodeAttributes.classes, { foo: true, bar: false });
 	},
 	diffProperties: {
 		'no updated properties'() {
@@ -203,14 +171,16 @@ registerSuite({
 				.mixin({
 					mixin: {
 						getChildrenNodes: function(): DNode[] {
-							return [ w('my-header', {}) ];
+							return [ w('my-header', <any> undefined) ];
 						}
 					}
 				});
 
 			const createHeader = createWidgetBase
 				.override({
-					tagName: 'header'
+					render() {
+						return v('header');
+					}
 				});
 
 			let invalidateCount = 0;
@@ -258,7 +228,9 @@ registerSuite({
 
 			const createHeader = createWidgetBase
 				.override({
-					tagName: 'header'
+					render() {
+						return v('header');
+					}
 				});
 
 			const myWidget = createMyWidget();
@@ -279,7 +251,9 @@ registerSuite({
 		'render using scoped factory registry'() {
 			const createHeader = createWidgetBase
 				.override({
-					tagName: 'header'
+					render() {
+						return v('header');
+					}
 			});
 			const registry = new FactoryRegistry();
 			registry.define('my-header', createHeader);
@@ -394,7 +368,9 @@ registerSuite({
 			let countWidgetDestroyed = 0;
 			const testChildWidget = createWidgetBase.mixin({
 				mixin: {
-					tagName: 'footer'
+					render(this: any) {
+						return v('footer', this.children);
+					}
 				},
 				aspectAdvice: {
 					before: {
@@ -436,23 +412,13 @@ registerSuite({
 			const secondRenderChild: any = secondRenderResult.children && secondRenderResult.children[0];
 			assert.strictEqual(secondRenderChild.vnodeSelector, 'footer');
 
-			widgetBase.setProperties({ 'classes': ['test-class'] });
-			widgetBase.invalidate();
-			const thirdRenderResult = <VNode> widgetBase.__render__();
-			assert.strictEqual(countWidgetCreated, 1);
-			assert.strictEqual(countWidgetDestroyed, 0);
-			assert.lengthOf(thirdRenderResult.children, 1);
-			const thirdRenderChild: any = thirdRenderResult.children && thirdRenderResult.children[0];
-			assert.strictEqual(thirdRenderChild.vnodeSelector, 'footer');
-			assert.isTrue(thirdRenderChild.properties.classes['test-class']);
-
 			widgetBase.setProperties(<any> { hide: true });
 			widgetBase.invalidate();
 
-			const forthRenderResult = <VNode> widgetBase.__render__();
+			const thirdRenderResult = <VNode> widgetBase.__render__();
 			assert.strictEqual(countWidgetCreated, 1);
 			assert.strictEqual(countWidgetDestroyed, 1);
-			assert.lengthOf(forthRenderResult.children, 0);
+			assert.lengthOf(thirdRenderResult.children, 0);
 
 			widgetBase.setProperties(<any> { hide: false });
 			widgetBase.invalidate();
@@ -492,48 +458,6 @@ registerSuite({
 			assert.isTrue(consoleStub.calledWith(warnMsg));
 			consoleStub.restore();
 		},
-		'render with updated properties'() {
-			let renderCount = 0;
-			const createMyWidget = createWidgetBase.mixin({
-				mixin: {
-					nodeAttributes: [
-						function(this: any): any {
-							const { properties: { foo, bar } } = this;
-
-							return { foo, bar };
-						}
-					]
-				}
-			});
-			const widgetBase = createWidgetBase
-				.mixin({
-					mixin: {
-						getChildrenNodes: function(): DNode[] {
-							const properties: WidgetProperties & { foo: string, bar?: string } = { foo: 'bar' };
-
-							if (renderCount === 1) {
-								properties!.bar = 'baz';
-								properties!.foo = 'baz';
-							}
-
-							renderCount++;
-
-							return [
-								w(createMyWidget, <WidgetProperties> properties)
-							];
-						}
-					}
-				})();
-
-			let result = <VNode> widgetBase.__render__();
-			assert.isUndefined(result!.children![0].properties!['bar']);
-			assert.equal(result!.children![0].properties!['foo'], 'bar');
-
-			widgetBase.invalidate();
-			result = <VNode> widgetBase.__render__();
-			assert.equal(result!.children![0].properties!['foo'], 'baz');
-			assert.equal(result!.children![0].properties!['bar'], 'baz');
-		},
 		'__render__ with updated array properties'() {
 			const properties = {
 				items: [
@@ -571,7 +495,6 @@ registerSuite({
 			const result1 = <VNode> widgetBase.__render__();
 			const result2 = <VNode> widgetBase.__render__();
 			widgetBase.invalidate();
-			widgetBase.invalidate();
 			const result3 = widgetBase.__render__();
 			const result4 = widgetBase.__render__();
 			assert.strictEqual(result1, result2);
@@ -581,7 +504,6 @@ registerSuite({
 			assert.deepEqual(result1, result3);
 			assert.deepEqual(result2, result4);
 			assert.strictEqual(result1.vnodeSelector, 'div');
-			assert.strictEqual(result1.properties!['data-widget-id'], 'foo');
 		},
 		'render multiple child widgets using the same factory'() {
 			let childWidgetInstantiatedCount = 0;
@@ -681,5 +603,40 @@ registerSuite({
 		widgetBase.__render__();
 		widgetBase.invalidate();
 		assert.strictEqual(count, 1);
+	},
+	'child invalidation invalidates parent'() {
+		let childInvalidate = () => {};
+		let childInvalidateCalled = false;
+		let parentInvalidateCalled = false;
+
+		const testChildWidget = createWidgetBase.mixin({
+			initialize(instance: any) {
+				childInvalidate = () => {
+					childInvalidateCalled = true;
+					instance.invalidate();
+				};
+			}
+		});
+
+		const widget = createWidgetBase
+			.mixin({
+				mixin: {
+					getChildrenNodes: function(): any {
+						return [ w(testChildWidget, {}) ];
+					}
+				},
+				aspectAdvice: {
+					after: {
+						invalidate() {
+							parentInvalidateCalled = true;
+						}
+					}
+				}
+			})();
+
+		widget.__render__();
+		childInvalidate();
+		assert.isTrue(childInvalidateCalled);
+		assert.isTrue(parentInvalidateCalled);
 	}
 });

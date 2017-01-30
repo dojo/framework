@@ -1,4 +1,3 @@
-import './createCssTransitionMixin';
 import './createFormLabelMixin';
 import './createI18nMixin';
 import './createProjectorMixin';

@@ -28,19 +28,6 @@ export interface PropertiesChangeEvent<T, P extends WidgetProperties> extends Ev
 	target: T;
 }
 
-/**
- * A function that is called when collecting the node attributes on render, accepting the current map of
- * attributes and returning a set of VNode properties that should mixed into the current attributes.
- */
-export interface NodeAttributeFunction<T> {
-	/**
-	 * A function which can return additional VNodeProperties which are
-	 *
-	 * @param attributes The current VNodeProperties that will be part of the render
-	 */
-	(this: T, attributes: VNodeProperties): VNodeProperties;
-}
-
 export type WidgetFactoryFunction = () => Promise<WidgetBaseFactory>
 
 export type FactoryRegistryItem = WidgetBaseFactory | Promise<WidgetBaseFactory> | WidgetFactoryFunction
@@ -163,14 +150,6 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	readonly [index: string]: any;
 
 	/**
-	 * Classes which are applied upon render.
-	 *
-	 * This property is intended for "static" classes.  Classes which are aligned to the instance should be
-	 * stored in the instances state object.
-	 */
-	readonly classes: string[];
-
-	/**
 	 * An array of children `DNode`s returned via `getChildrenNodes`
 	 */
 	readonly children: DNode[];
@@ -189,14 +168,6 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	 * Generate the children nodes when rendering the widget.
 	 */
 	getChildrenNodes(): DNode[];
-
-	/**
-	 * Generate the node attributes when rendering the widget.
-	 *
-	 * Mixins should not override or aspect this method, but instead provide a function as part of the
-	 * `nodeAttributes` property, which will automatically get called by this method upon render.
-	 */
-	getNodeAttributes(): VNodeProperties;
 
 	/**
 	 * Properties passed to affect state
@@ -223,12 +194,10 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	invalidate(): void;
 
 	/**
-	 * An array of functions that return a map of VNodeProperties which should be mixed into the final
-	 * properties used when rendering this widget.  These are intended to be "static" and bund to the class,
-	 * making it easy for mixins to alter the behaviour of the render process without needing to override or aspect
-	 * the `getNodeAttributes` method.
+	 * Public render function that defines the widget structure using DNode and HNodes. Must return
+	 * a single top element.
 	 */
-	nodeAttributes: NodeAttributeFunction<Widget<WidgetProperties>>[];
+	render(): DNode;
 
 	/**
 	 * Public render function that defines the widget structure using DNode and HNodes. Must return
@@ -246,14 +215,6 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	__render__(): VNode | string | null;
 
 	/**
-	 * The tagName (selector) that should be used when rendering the node.
-	 *
-	 * If there is logic that is required to determine this value on render, a mixin should consider overriding
-	 * this property with a getter.
-	 */
-	tagName: string;
-
-	/**
 	 * The specific Factory Registry on the widget if passed
 	 */
 	registry: FactoryRegistryInterface | undefined;
@@ -264,8 +225,6 @@ export interface WidgetOptions<P extends WidgetProperties> extends EventedOption
 	 * Properties used to affect internal widget state
 	 */
 	properties?: P;
-
-	tagName?: string;
 }
 
 export interface WidgetProperties {

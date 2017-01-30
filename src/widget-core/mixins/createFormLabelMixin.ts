@@ -1,16 +1,7 @@
-import { VNodeProperties } from '@dojo/interfaces/vdom';
-import { ComposeFactory } from '@dojo/compose/compose';
+import compose from '@dojo/compose/compose';
 import { assign } from '@dojo/core/lang';
-import { Evented } from '@dojo/interfaces/bases';
-import createEvented from '@dojo/compose/bases/createEvented';
-import {
-	DNode,
-	Widget,
-	WidgetOptions,
-	WidgetProperties,
-	PropertiesChangeEvent
-} from './../interfaces';
-import { v } from '../d';
+import { DNode } from './../interfaces';
+import { v, isHNode } from '../d';
 
 /**
  * Label settings for form label text content, position (before or after), and visibility
@@ -24,7 +15,13 @@ export interface LabelProperties {
 /**
  * Form Label Properties
  */
-export interface FormLabelMixinProperties extends WidgetProperties {
+export interface FormLabelMixinProperties {
+
+	/**
+	 * Index type
+	 */
+	[index: string]: any;
+
 	/**
 	 * The form widget's name
 	 */
@@ -99,22 +96,15 @@ export interface FormLabelMixinProperties extends WidgetProperties {
 /**
  * Form Label Mixin
  */
-export interface FormLabelMixin extends Evented {
-	/**
-	 * A function that generates node attribtues for the child form field
-	 */
-	getFormFieldNodeAttributes: () => VNodeProperties;
-}
+export interface FormLabelMixin {}
 
 /**
  * Form Label
  */
-export type FormLabel = Widget<FormLabelMixinProperties> & FormLabelMixin;
-
-/**
- * Form Label Factory interface
- */
-export interface FormLabelMixinFactory extends ComposeFactory<FormLabelMixin, WidgetOptions<FormLabelMixinProperties>> {}
+export type FormLabel = FormLabelMixin & {
+	type: string;
+	properties: FormLabelMixinProperties;
+};
 
 /**
  * Default settings for form labels
@@ -125,78 +115,69 @@ const labelDefaults = {
 	hidden: false
 };
 
-const createFormLabelMixin: FormLabelMixinFactory = createEvented.mixin({
-	mixin: {
-		getFormFieldNodeAttributes(this: FormLabel): VNodeProperties {
-			const { properties, type } = this;
-			const attributeKeys = Object.keys(properties);
+/**
+ * Allowed attributes for a11y
+ */
+const allowedAttributes = ['checked', 'describedBy', 'disabled', 'invalid', 'maxLength', 'minLength', 'multiple', 'name', 'placeholder', 'readOnly', 'required', 'type', 'value'];
 
-			if (type) {
-				attributeKeys.push('type');
-			}
+function getFormFieldA11yAttributes(instance: FormLabel) {
+	const { properties, type } = instance;
+	const attributeKeys = Object.keys(properties);
 
-			const allowedAttributes = ['checked', 'describedBy', 'disabled', 'invalid', 'maxLength', 'minLength', 'multiple', 'name', 'placeholder', 'readOnly', 'required', 'type', 'value'];
-			const nodeAttributes: any = {};
+	if (type) {
+		attributeKeys.push('type');
+	}
 
-			for (const key of allowedAttributes) {
+	const nodeAttributes: any = {};
 
-				if (attributeKeys.indexOf(key) === -1) {
-					continue;
-				}
-				else if (key === 'type') {
-					nodeAttributes.type = type;
-				}
-				else if (key === 'readOnly' && properties.readOnly) {
-					nodeAttributes.readonly = 'readonly';
-					nodeAttributes['aria-readonly'] = true;
-				}
-				else if (key === 'invalid') {
-					nodeAttributes['aria-invalid'] = properties.invalid;
-				}
-				else if (key === 'describedBy') {
-					nodeAttributes['aria-describedby'] = properties.describedBy;
-				}
-				else if ((key === 'maxLength' || key === 'minLength' || key === 'checked') && typeof properties[key] !== 'string') {
-					nodeAttributes[key.toLowerCase()] = '' + properties[key];
-				}
-				else {
-					nodeAttributes[key.toLowerCase()] = properties[key];
-				}
-			}
+	for (const key of allowedAttributes) {
 
-			return nodeAttributes;
+		if (attributeKeys.indexOf(key) === -1) {
+			continue;
 		}
-	},
-
-	initialize(instance: any) {
-		instance.own(instance.on('properties:changed', (evt: PropertiesChangeEvent<FormLabelMixin, FormLabelMixinProperties>) => {
-			instance.tagName = evt.properties.label ? 'label' : 'div';
-		}));
-
-		if (instance.properties && instance.properties.label) {
-			instance.tagName = 'label';
+		else if (key === 'type') {
+			nodeAttributes.type = type;
+		}
+		else if (key === 'readOnly' && properties.readOnly) {
+			nodeAttributes.readonly = 'readonly';
+			nodeAttributes['aria-readonly'] = true;
+		}
+		else if (key === 'invalid') {
+			nodeAttributes['aria-invalid'] = properties.invalid;
+		}
+		else if (key === 'describedBy') {
+			nodeAttributes['aria-describedby'] = properties.describedBy;
+		}
+		else if ((key === 'maxLength' || key === 'minLength' || key === 'checked') && typeof properties[key] !== 'string') {
+			nodeAttributes[key.toLowerCase()] = '' + properties[key];
+		}
+		else {
+			nodeAttributes[key.toLowerCase()] = properties[key];
 		}
 	}
-})
+
+	return nodeAttributes;
+}
+
+const createFormLabelMixin = compose<FormLabelMixin, {}>({})
 .aspect({
 	after: {
-		getChildrenNodes(this: FormLabel, result: DNode[]): DNode[] {
-			let { label } = this.properties;
-			const inputAttributes = this.getFormFieldNodeAttributes();
-			const children = [
-				v(this.tagName, inputAttributes, result)
-			];
+		render(this: FormLabel, result: DNode): DNode {
+			if (isHNode(result)) {
+				assign(result.properties, getFormFieldA11yAttributes(this));
+			}
 
-			if (label) {
-				// convert string label to object
-				if (typeof label === 'string') {
-					label = assign({}, labelDefaults, { content: label });
+			if (this.properties.label) {
+				const children = [ result ];
+				let label: LabelProperties;
+
+				if (typeof this.properties.label === 'string') {
+					label = assign({}, labelDefaults, { content: this.properties.label });
 				}
 				else {
-					label = assign({}, labelDefaults, label);
+					label = assign({}, labelDefaults, this.properties.label);
 				}
 
-				// add label text
 				if (label.content.length > 0) {
 					children.push(v('span', {
 						innerHTML: label.content,
@@ -204,13 +185,14 @@ const createFormLabelMixin: FormLabelMixinFactory = createEvented.mixin({
 					}));
 				}
 
-				// set correct order
 				if (label.position === 'before') {
 					children.reverse();
 				}
+
+				result = v('label', children);
 			}
 
-			return children;
+			return result;
 		}
 	}
 });

@@ -1,7 +1,7 @@
 import global from '@dojo/core/global';
 import compose, { ComposeFactory } from '@dojo/compose/compose';
 import { EventTargettedObject, Handle } from '@dojo/interfaces/core';
-import { VNode, VNodeProperties } from '@dojo/interfaces/vdom';
+import { VNode } from '@dojo/interfaces/vdom';
 import Promise from '@dojo/shim/Promise';
 import WeakMap from '@dojo/shim/WeakMap';
 import { createProjector as createMaquetteProjector, Projector as MaquetteProjector } from 'maquette';
@@ -206,20 +206,17 @@ const createProjectorMixin: ProjectorMixinFactory = compose<ProjectorMixin, Proj
 		return projectorData && projectorData.state;
 	}
 }).mixin({
-	mixin: {
-		nodeAttributes: [
-			function (this: Projector): VNodeProperties {
-				const { afterCreate } = projectorDataMap.get(this);
-				return { afterCreate };
-			}
-		]
-	},
 	aspectAdvice: {
 		after: {
 			__render__(this: Projector, result: VNode | string | null) {
 				if (typeof result === 'string' || result === null) {
 					throw new Error('Must provide a VNode at the root of a projector');
 				}
+				const { afterCreate } = projectorDataMap.get(this);
+				if (result.properties) {
+					result.properties.afterCreate = afterCreate;
+				}
+
 				return result;
 			}
 		}

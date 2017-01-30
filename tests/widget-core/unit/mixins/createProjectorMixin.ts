@@ -64,6 +64,27 @@ registerSuite({
 			assert.equal(error.message, 'Must provide a VNode at the root of a projector');
 		}
 	},
+	'render does not attach after create when there are no properties'() {
+
+		const projector = createWidgetBase.mixin({
+			mixin: {
+				render() {
+					return v('div', <any> null);
+				}
+			},
+			aspectAdvice: {
+				after: {
+					__render__(results) {
+						results.properties = undefined;
+						return results;
+					}
+				}
+			}
+		}).mixin(createProjectorMixin)();
+
+		const vnode  = <any> projector.__render__();
+		assert.isUndefined(vnode.properties);
+	},
 	'attach to projector': {
 		'append'() {
 			const childNodeLength = document.body.childNodes.length;
@@ -80,9 +101,13 @@ registerSuite({
 			});
 		},
 		'replace'() {
-			const projector = createTestWidget({
-				tagName: 'body'
-			});
+			const projector = createTestWidget.mixin({
+				mixin: {
+					render(this: any) {
+						return v('body', this.children);
+					}
+				}
+			})();
 
 			projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 

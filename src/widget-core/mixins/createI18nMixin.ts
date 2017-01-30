@@ -3,17 +3,10 @@ import compose, { ComposeFactory } from '@dojo/compose/compose';
 import { assign } from '@dojo/core/lang';
 import i18n, { Bundle, formatMessage, getCachedMessages, Messages, observeLocale } from '@dojo/i18n/i18n';
 import { VNodeProperties } from 'maquette';
-import { NodeAttributeFunction, Widget, WidgetOptions, WidgetProperties } from '../interfaces';
+import { DNode, Widget, WidgetOptions, WidgetProperties } from '../interfaces';
+import { isHNode } from '../d';
 
 export interface I18nMixin<M extends Messages> {
-	/**
-	 * An array of node attribute functions which return additional attributes that should be mixed into
-	 * the final VNode during a render call. In this particular case, the node's `dir` attribute is optionally
-	 * set when `state.rtl` is a boolean, and the node's `data-locale` attribute is set when `state.locale` is
-	 * not empty.
-	 */
-	nodeAttributes: NodeAttributeFunction<I18nWidget<M, I18nProperties>>[];
-
 	/**
 	 * Return the cached messages for the specified bundle for the current locale, assuming they have already
 	 * benn loaded. If the locale-specific messages have not been loaded, they are fetched and the widget state
@@ -102,26 +95,6 @@ function getLocaleMessages(instance: I18nWidget<Messages, I18nProperties>, bundl
 }
 
 const createI18nMixin: I18nFactory = compose<I18nMixin<Messages>, WidgetOptions<I18nProperties>>({
-	nodeAttributes: [
-		function (this: I18nWidget<Messages, I18nProperties>, attributes: VNodeProperties): VNodeProperties {
-			const vNodeProperties = {
-				'data-locale': null,
-				dir: null
-			} as I18nVNodeProperties;
-			const { locale, rtl } = this.properties;
-
-			if (typeof rtl === 'boolean') {
-				vNodeProperties['dir'] = rtl ? 'rtl' : 'ltr';
-			}
-
-			if (locale) {
-				vNodeProperties['data-locale'] = locale;
-			}
-
-			return vNodeProperties;
-		}
-	],
-
 	localizeBundle(this: I18nWidget<Messages, I18nProperties>, bundle: Bundle<Messages>): LocalizedMessages<Messages> {
 		const { locale } = this.properties;
 		const messages = getLocaleMessages(this, bundle) || bundle.messages;
@@ -145,6 +118,28 @@ const createI18nMixin: I18nFactory = compose<I18nMixin<Messages>, WidgetOptions<
 			subscription.unsubscribe();
 		}
 	});
+}).aspect({
+	after: {
+		render(this: I18nWidget<Messages, I18nProperties>, result: DNode): DNode {
+			if (isHNode(result)) {
+				const { locale, rtl } = this.properties;
+				const vNodeProperties: I18nVNodeProperties = {
+					'data-locale': null,
+					dir: null
+				};
+
+				if (typeof rtl === 'boolean') {
+					vNodeProperties['dir'] = rtl ? 'rtl' : 'ltr';
+				}
+				if (locale) {
+					vNodeProperties['data-locale'] = locale;
+				}
+
+				assign(result.properties, vNodeProperties);
+			}
+			return result;
+		}
+	}
 });
 
 export default createI18nMixin;

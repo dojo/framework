@@ -2,12 +2,14 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import i18n, { invalidate, switchLocale, systemLocale } from '@dojo/i18n/i18n';
 import * as sinon from 'sinon';
-import createI18nMixin from '../../../src/mixins/createI18nMixin';
+import createI18nMixin, { I18nWidget, I18nProperties } from '../../../src/mixins/createI18nMixin';
+import { Widget, WidgetProperties } from './../../../src/interfaces';
 import createWidgetBase from '../../../src/createWidgetBase';
+import { w, isHNode, isWNode } from './../../../src/d';
 import bundle from '../../support/nls/greetings';
 
 const createLocalized = createWidgetBase.mixin(createI18nMixin);
-let localized: any;
+let localized: Widget<WidgetProperties & I18nProperties> & I18nWidget<any, I18nProperties>;
 
 registerSuite({
 	name: 'mixins/createI18nMixin',
@@ -18,7 +20,7 @@ registerSuite({
 
 			if (localized) {
 				localized.destroy();
-				localized = null;
+				localized = <any> null;
 			}
 		});
 	},
@@ -103,22 +105,47 @@ registerSuite({
 			});
 		}
 	},
+	'does not decorate properties for wNode'() {
+		const createExtendedLocalized = createLocalized.override({
+			render() {
+				return w(createLocalized, {});
+			}
+		});
 
+		localized = createExtendedLocalized({
+			properties: { locale: 'ar-JO' }
+		});
+
+		const result = localized.render();
+		assert.isOk(result);
+		assert.isTrue(isWNode(result));
+		if (isWNode(result)) {
+			assert.isUndefined(result.properties['data-locale']);
+		}
+	},
 	'`properties.locale` updates the widget node\'s `data-locale` property': {
 		'when non-empty'() {
 			localized = createLocalized({
 				properties: { locale: 'ar-JO' }
 			});
-			const attributes = localized.nodeAttributes.slice(-1)[0].call(localized, {});
 
-			assert.strictEqual(attributes['data-locale'], 'ar-JO');
+			const result = localized.render();
+			assert.isOk(result);
+			assert.isTrue(isHNode(result));
+			if (isHNode(result)) {
+				assert.strictEqual(result.properties['data-locale'], 'ar-JO');
+			}
 		},
 
 		'when empty'() {
 			localized = createLocalized();
-			const attributes = localized.nodeAttributes.slice(-1)[0].call(localized, {});
 
-			assert.isNull(attributes['data-locale']);
+			const result = localized.render();
+			assert.isOk(result);
+			assert.isTrue(isHNode(result));
+			if (isHNode(result)) {
+				assert.isNull(result.properties['data-locale']);
+			}
 		}
 	},
 
@@ -127,25 +154,37 @@ registerSuite({
 			localized = createLocalized({
 				properties: { rtl: true }
 			});
-			const attributes = localized.nodeAttributes.slice(-1)[0].call(localized, {});
 
-			assert.strictEqual(attributes.dir, 'rtl');
+			const result = localized.render();
+			assert.isOk(result);
+			assert.isTrue(isHNode(result));
+			if (isHNode(result)) {
+				assert.strictEqual(result.properties['dir'], 'rtl');
+			}
 		},
 
 		'The `dir` attribute is "ltr" when false'() {
 			localized = createLocalized({
 				properties: { rtl: false }
 			});
-			const attributes = localized.nodeAttributes.slice(-1)[0].call(localized, {});
 
-			assert.strictEqual(attributes.dir, 'ltr');
+			const result = localized.render();
+			assert.isOk(result);
+			assert.isTrue(isHNode(result));
+			if (isHNode(result)) {
+				assert.strictEqual(result.properties['dir'], 'ltr');
+			}
 		},
 
 		'The `dir` attribute is not set when not a boolean.'() {
 			localized = createLocalized();
-			const attributes = localized.nodeAttributes.slice(-1)[0].call(localized, {});
 
-			assert.isNull(attributes.dir);
+			const result = localized.render();
+			assert.isOk(result);
+			assert.isTrue(isHNode(result));
+			if (isHNode(result)) {
+				assert.isNull(result.properties['dir']);
+			}
 		}
 	}
 });
