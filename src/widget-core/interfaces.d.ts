@@ -11,20 +11,6 @@ import { VNode, VNodeProperties } from '@dojo/interfaces/vdom';
 import { ComposeFactory } from '@dojo/compose/compose';
 
 /**
- * A function that is called to return top level node
- */
-export interface NodeFunction {
-	(this: Widget<WidgetProperties>): DNode;
-}
-
-/**
- * A function that is called when collecting the children nodes on render.
- */
-export interface ChildNodeFunction {
-	(this: Widget<WidgetProperties>): DNode[];
-}
-
-/**
  * the event emitted on properties:changed
  */
 export interface PropertiesChangeEvent<T, P extends WidgetProperties> extends EventTypedObject<'properties:changed'> {
@@ -187,12 +173,12 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	/**
 	 * Get the top level node and children when rendering the widget.
 	 */
-	getNode: NodeFunction;
+	getNode(): DNode;
 
 	/**
 	 * Generate the children nodes when rendering the widget.
 	 */
-	getChildrenNodes: ChildNodeFunction;
+	getChildrenNodes(): DNode[];
 
 	/**
 	 * Generate the node attributes when rendering the widget.
@@ -235,15 +221,17 @@ export interface WidgetMixin<P extends WidgetProperties> extends PropertyCompari
 	nodeAttributes: NodeAttributeFunction<Widget<WidgetProperties>>[];
 
 	/**
+	 * Public render function that defines the widget structure using DNode and HNodes. Must return
+	 * a single top element.
+	 */
+	render(): DNode;
+
+	/**
 	 * Render the widget, returing the virtual DOM node that represents this widget.
 	 *
 	 * It is not intended that mixins will override or aspect this method, as the render process is decomposed to
 	 * allow easier modification of behaviour of the render process.  The base implementatin intelligently caches
 	 * its render and essentially provides the following return for the method:
-	 *
-	 * ```typescript
-	 * return h(this.tagName, this.getNodeAttributes(), this.getChildrenNodes());
-	 * ```
 	 */
 	__render__(): VNode | string | null;
 
@@ -277,7 +265,7 @@ export interface WidgetProperties {
 	classes?: string[];
 }
 
-export interface WidgetFactory<W extends Widget<P>, P extends WidgetProperties> extends ComposeFactory<W, WidgetOptions<P>> {}
+export interface WidgetFactory<W extends WidgetMixin<P>, P extends WidgetProperties> extends ComposeFactory<W, WidgetOptions<P>> {}
 
 export interface TypedTargetEvent<T extends EventTarget> extends Event {
 	target: T;
