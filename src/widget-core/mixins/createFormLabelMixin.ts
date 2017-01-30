@@ -1,4 +1,4 @@
-import compose from '@dojo/compose/compose';
+import compose, { ComposeFactory } from '@dojo/compose/compose';
 import { assign } from '@dojo/core/lang';
 import { DNode } from './../interfaces';
 import { v, isHNode } from '../d';
@@ -158,6 +158,11 @@ function getFormFieldA11yAttributes(instance: FormLabel) {
 
 	return nodeAttributes;
 }
+
+/**
+ * FormLabalMixinFactory
+ */
+export interface FormLabelMixinFactory extends ComposeFactory<FormLabelMixin, {}> {}
 
 const createFormLabelMixin = compose<FormLabelMixin, {}>({})
 .aspect({
