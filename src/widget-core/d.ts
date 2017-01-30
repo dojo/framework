@@ -36,6 +36,32 @@ export function isHNode(child: DNode): child is HNode {
 	return Boolean(child && (typeof child !== 'string') && child.type === HNODE);
 }
 
+/**
+ * Generic decorate function for DNodes. The nodes are modified in place based on the provided predicate
+ * and modifier functions.
+ *
+ * The children of each node are flattened and added to the array for decoration.
+ *
+ * If no predicate is supplied then the modifier will be executed on all nodes.
+ */
+export function decorate(dNodes: DNode, modifier: (dNode: DNode) => void, predicate?: (dNode: DNode) => boolean): DNode;
+export function decorate(dNodes: DNode[], modifier: (dNode: DNode) => void, predicate?: (dNode: DNode) => boolean): DNode[];
+export function decorate(dNodes: DNode | DNode[], modifier: (dNode: DNode) => void, predicate?: (dNode: DNode) => boolean): DNode | DNode[] {
+	let nodes = Array.isArray(dNodes) ? [ ...dNodes ] : [ dNodes ];
+	while (nodes.length) {
+		const node = nodes.pop();
+		if (node) {
+			if (!predicate || predicate(node)) {
+				modifier(node);
+			}
+			if ((isWNode(node) || isHNode(node)) && node.children) {
+				nodes = [ ...nodes, ...node.children ];
+			}
+		}
+	}
+	return dNodes;
+}
+
 export const registry = new FactoryRegistry();
 
 export function w<P extends WidgetProperties>(factory: WidgetFactory<Widget<P>, P> | string, properties: P): WNode;
@@ -54,16 +80,18 @@ export function v(tag: string, properties: VNodeProperties, children?: DNode[]):
 export function v(tag: string, children: DNode[]): HNode;
 export function v(tag: string): HNode;
 export function v(tag: string, propertiesOrChildren: VNodeProperties = {}, children: DNode[] = []): HNode {
+		let properties = propertiesOrChildren;
 
 		if (Array.isArray(propertiesOrChildren)) {
 			children = propertiesOrChildren;
-			propertiesOrChildren = {};
+			properties = {};
 		}
 
 		return {
 			children,
-			render<T>(this: { children: VNode[] }, options: { bind?: T } = { }) {
-				return h(tag, assign(options, propertiesOrChildren), this.children);
+			properties,
+			render<T>(this: { vNodes: VNode[], properties: VNodeProperties }, options: { bind?: T } = { }) {
+				return h(tag, assign(options, this.properties), this.vNodes);
 			},
 			type: HNODE
 		};

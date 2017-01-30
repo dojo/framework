@@ -67,15 +67,25 @@ export interface FactoryRegistryInterface {
 }
 
 export interface HNode {
+
+	/**
+	 * Array of processed VNode children.
+	 */
+	vNodes?: (string | VNode | null)[];
 	/**
 	 * Specified children
 	 */
-	children: (DNode | (VNode | string))[];
+	children: (DNode | string)[];
 
 	/**
 	 * render function that wraps returns VNode
 	 */
 	render<T>(options?: { bind?: T }): VNode;
+
+	/**
+	 * The properties used to create the VNode
+	 */
+	properties: VNodeProperties;
 
 	/**
 	 * The type of node
