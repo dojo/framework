@@ -26,6 +26,11 @@ We also provide a suite of pre-built widgets to use in your applications: [(@doj
         - [Widget Registry](#widget-registry)
         - [Theming](#theming)
         - [Internationalization](#internationalization-i18n)
+        - [Web Components](#web-components)
+        	- [Attributes](#attributes)
+        	- [Properties](#properties)
+        	- [Events](#events)
+        	- [Initialization](#initialization)
     - [Key Principles](#key-principles)
     - [Examples](#examples)
         - [Example Label Widget](#example-label-widget)
@@ -564,6 +569,145 @@ const widget = createI18nWidget({
 	locale: 'fr'
 });
 ```
+
+#### Web Components
+
+Custom Widgets can be turned into [Custom Elements](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) with
+minimal extra effort.
+
+Just create a `CustomElementDescriptor` factory and use the build tooling to do the rest of the work,
+
+```ts
+import { CustomElementDescriptor } from '@dojo/widget-core/customElements';
+
+export default function createCustomElement(): CustomElementDescriptor {
+	return {
+	   attributes: [
+		   {
+			   attributeName: 'label'
+		   }
+	   ],
+	   events: [
+		   {
+			   propertyName: 'onChange',
+			   name: 'change'
+		   }
+	   ]
+   };
+};
+```
+
+##### Attributes
+
+You can explicitly map widget properties to DOM node attributes with the `attributes` array.
+
+```ts
+{
+    attributes: [
+        {
+            attributeName: 'label'
+        },
+        {
+            attributeName: 'placeholder',
+            propertyName: 'placeHolder'
+        },
+        {
+            attributeName: 'delete-on-focus',
+            propertyName: 'deleteOnFocus',
+            value: value => Boolean(value || 0)
+        }
+    ]
+}
+```
+
+* `attributeName` refers to the attribute that will set on the DOM element, so, `<text-widget label="test" />`.
+* `propertyName` refers to the property on the widget to set, and if not set, defaults to the `attributeName`.
+* `value` lets you specify a transformation function on the attribute value. This function should return the value that
+will be set on the widget's property.
+
+Adding an attribute to the element will automatically add a corresponding property to the element as well.
+
+```ts
+// as an attribute
+textWidget.setAttribute('label', 'First Name');
+
+// as a property
+textWidget.label = 'First Name';
+```
+
+##### Properties
+
+You can map DOM element properties to widget properties,
+
+```ts
+{
+    properties: [
+        {
+            propertyName: 'placeholder',
+            widgetPropertyName: 'placeHolder'
+        }
+    ]
+}
+
+// ...
+
+textWidget.placeholder = 'Enter first name';
+```
+
+* `propertyName` is the name of the property on the DOM element
+* `widgetPropertyName` is the name of the property on the widget. If unspecified, `propertyName` is used instead.
+* `getValue`, if specified, will be called with the widget's property value as an argument. The returned value is returned as the DOM element property value.
+* `setValue`, if specified, is called with the DOM elements property value. The returned value is used for the widget property's value.
+
+##### Events
+
+Some widgets have function properties, like events, that need to be exposed to your element. You can use the
+`events` array to map widget properties to DOM events.
+
+```ts
+{
+    events: [
+        {
+            propertyName: 'onChange',
+            eventName: 'change'
+        }
+    ]
+}
+```
+
+This will add a property to `onChange` that will emit the `change` custom event. You can listen like any other
+DOM event,
+
+```ts
+textWidget.addEventListener('change', function (event) {
+    // do something
+});
+```
+
+##### Initialization
+
+Custom logic can be performed after properties/attributes have been defined but before the projector is created. This
+allows you full control over your widget, allowing you to add custom properties, event handlers, work with child nodes, etc.
+The initialization function is run from the context of the HTML element.
+
+```ts
+{
+    initialization(properties) {
+        const footer = this.getElementsByTagName('footer');
+        if (footer) {
+            properties.footer = footer;
+        }
+
+        const header = this.getElementsByTagName('header');
+        if (header) {
+            properties.header = header;
+        }
+    }
+}
+```
+
+It should be noted that children nodes are removed from the DOM when widget instantiation happens, and added as children
+to the widget instance.
 
 ### Key Principles
 
