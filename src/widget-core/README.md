@@ -66,12 +66,9 @@ The smallest `@dojo/widget-core` example looks like this:
 
 ```ts
 const createMyWidget = createWidgetBase.extend({
-	tagName: 'h1',
-	nodeAttributes: [
-		function() {
-			return { innerHTML: 'Hello, Dojo!' };
-		}
-	]
+   render(): DNode {
+       return v('h1', { innerHTML: 'Hello, Dojo!' });
+   }
 });
 
 createMyWidget.mixin(createProjectorMixin)().append();
@@ -193,9 +190,7 @@ import { createWidgetBase } from '@dojo/widget-core/createWidgetBase';
 
 |Function|Description|Default Behaviour|
 |---|---|---|
-|getNode|Returns the top level node of a widget|Returns a `HNode` with the widgets `tagName`, the result of `this.getNodeAttributes` and `this.children`|
-|getChildrenNodes|Returns the child node structure of a widget|Returns the widgets children `DNode` array|
-|nodeAttributes|An array of functions that return VNodeProperties to be applied to the top level node|Returns attributes for `data-widget-id`, `classes` and `styles` using the widget's specified `properties` (`id`, `classes`, `styles`) at the time of render|
+|render|Returns the DNode structure of the widget|Returns a `div` HNode with children of `this.children`.
 |diffProperties|Diffs the current properties against the previous properties and returns an object with the changed keys and new properties|Performs a shallow comparison previous and current properties, copies the properties using `Object.assign` and returns the resulting `PropertiesChangeRecord`.|
 
 #### The 'properties' lifecycle
@@ -294,7 +289,7 @@ createWidgetProjector().append(() => {
 #### Event Handling
 
 The recommended pattern for custom event handlers is to declare them on the widget class and reference the function using `this`.
-Event handlers are most commonly called from the `getChildrenNodes` function or a `nodeAttributes` function.
+Event handlers are most commonly called from `render`.
 
 Event handlers can be internal logic encapsulated within a widget or delegate to a function passed into the widget via `properties`.
 For convenience event handlers are automatically bound to the scope of their enclosing widget.
@@ -302,18 +297,20 @@ For convenience event handlers are automatically bound to the scope of their enc
 *internally defined handler*
 
 ```ts
-const createMyWidget: MyWidgetFactory = createWidgetBase.mixin({
+const createMyWidget: MyWidgetFactory = createWidgetBase
+.mixin(internalStateMixin)
+.mixin({
 	mixin: {
 		onClick: function (this: MyWidget): void {
 			this.setState(!this.state.selected);
 		},
-		getChildrenNodes(this: MyWidget): DNode[] {
+		render(this: MyWidget): DNode {
 			const { state: { selected } } = this;
 
-			return [
+			return v('div', [
 				v('input', { type: 'checkbox', onclick: this.onClick }),
 				v('input', { type: 'text', disabled: this.state.selected })
-			];
+			]);
 		}
 	}
 });
@@ -339,11 +336,10 @@ import { specialClick } from './mySpecialFunctions';
 
 const createMyWidget: MyWidgetFactory = createWidgetBase.mixin({
 	mixin: {
-		getChildrenNodes(this: MyWidget): DNode[] {
+		render(this: MyWidget): DNode {
 			const { properties: { specialClick } } = this;
-			return [
-				w(createChildWidget, { onClick: specialClick.bind(this) })
-			]
+
+			return	w(createChildWidget, { onClick: specialClick.bind(this) });
 		}
 	}
 });
@@ -458,13 +454,11 @@ export interface TabPanelFactory extends WidgetFactory<TabPanel, WidgetPropertie
 const createTabPanel: TabPanelFactory = createWidgetBase.mixin(themeableMixin).mixin({
 	mixin: {
 		baseTheme,
-		getChildrenNodes: function (this: TabPanel): DNode[] {
-			return [
-				v(`ul`, { classes: this.theme.tabPanelTabs }, [
+		render: function (this: TabPanel): DNode[] {
+			return
+				v('ul', { classes: this.theme.tabPanelTabs }, [
 					v('li', { classes: this.theme.tabPanelTab }, [ 'tab1' ])
-					// ...
 				]);
-			];
 		}
 	}
 });
@@ -527,7 +521,7 @@ Widgets can be internationalized by mixing in `@dojo/widget-core/mixins/createI1
 If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then the default messages are returned.
 The widget will be invalidated once the locale-specific messages have been loaded.
 
-Each widget can have its own locale by setting its `state.locale`.
+Each widget can have its own locale by passing a property - `properties.locale`.
 If no locale is set, then the default locale, as set by [`@dojo/i18n`](https://github.com/dojo/i18n), is assumed.
 
 ```ts
@@ -535,22 +529,14 @@ const createI18nWidget = createWidgetBase
 	.mixin(createI18nMixin)
 	.mixin({
 		mixin: {
-			nodeAttributes: [
-				function (attributes: VNodeProperties): VNodeProperties {
-					// Load the `greetings` messages for the current locale.
-					const messages = this.localizeBundle(greetings);
-					return { title: messages.hello };
-				}
-			],
-
-			getChildrenNodes: function () {
+			render: function () {
 				// Load the "greetings" messages for the current locale. If the locale-specific
 				// messages have not been loaded yet, then the default messages are returned,
 				// and the widget will be invalidated once the locale-specific messages have
 				// loaded.
 				const messages = this.localizeBundle(greetingsBundle);
 
-				return [
+				return v('div', { title: messages.hello }, [
 					w(createLabel, {
 						// Passing a message string to a child widget.						label: messages.purchaseItems
 					}),
@@ -558,7 +544,7 @@ const createI18nWidget = createWidgetBase
 						// Passing a formatted message string to a child widget.
 						label: messages.format('itemCount', { count: 2 })
 					})
-				];
+				]);
 			}
 		}
 	});
@@ -740,12 +726,9 @@ export interface LabelFactory extends WidgetFactory<Label, LabelProperties> {}
 
 const createLabelWidget: LabelFactory = createWidgetBase.mixin({
     mixin: {
-        tagName: 'label',
-        nodeAttributes: [
-            function(this: Label): VNodeProperties {
-                return { innerHTML: this.properties.content };
-            }
-        ]
+        render(this: Label): DNode {
+            return v('label', { innerHTML: this.properties.content });
+        }
     }
 });
 
@@ -753,8 +736,6 @@ export default createLabelWidget;
 ```
 
 #### Example List Widget
-
-To create structured widgets, override the `getChildrenNodes` function:
 
 ```ts
 import { DNode, Widget, WidgetFactory, WidgetProperties } from '@dojo/widget-core/interfaces';
@@ -784,11 +765,11 @@ function listItem(item: ListItem, itemNumber: number): DNode {
 
 const createListWidget: ListFactory = createWidgetBase.mixin({
 	mixin: {
-		getChildrenNodes: function (this: List): DNode[] {
+		render: function (this: List): DNode {
 			const { properties: { items = [] } } = this;
 			const listItems = items.map(listItem);
 
-			return [ v('ul', listItems) ];
+			return v('ul', listItems);
 		}
 	}
 });
