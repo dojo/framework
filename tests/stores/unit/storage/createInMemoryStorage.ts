@@ -24,7 +24,7 @@ registerSuite({
 			const storage = createInMemoryStorage({
 				idProperty: 'custId',
 				idFunction: function(item: ItemType) {
-					return item.nestedProperty.value;
+					return String(item.nestedProperty.value);
 				}
 			});
 			const data = createData();
@@ -36,10 +36,10 @@ registerSuite({
 		'Should identify by idFunction if idProperty doesn\'t exist.'(this: any) {
 			const storage = createInMemoryStorage({
 				idFunction: function(item: ItemType) {
-					return item.nestedProperty.value;
+					return String(item.nestedProperty.value);
 				}
 			});
-			assert.deepEqual(storage.identify(createData()), [3, 2, 1]);
+			assert.deepEqual(storage.identify(createData()), ['3', '2', '1']);
 		},
 		'Should default to `id` property if neither idProperty nor idFunction exists.'(this: any) {
 			const storage = createInMemoryStorage();
@@ -168,7 +168,6 @@ registerSuite({
 			storage.add(data);
 			storage.delete(['item-1', 'item-3']).then(function(result) {
 				assert.deepEqual(result.successfulData, [ 'item-1', 'item-3' ]);
-				// TODO (not implemented yet) assert.deepEqual(result.currentItems, createData()[1]);
 			}).then(dfd.resolve);
 		},
 		'Should return a result of type Delete.'(this: any) {
@@ -214,22 +213,6 @@ registerSuite({
 			storage.add(data);
 			storage.patch(patches).then(function(result) {
 				assert.deepEqual(result.type, StoreOperation.Patch);
-			}).then(dfd.resolve);
-		}
-	},
-
-	'isUpdate': {
-		'Should return `isUpdate=false` when item doesn\'t exist.'(this: any) {
-			const { dfd, storage, data } = getStorageAndDfd(this);
-			storage.isUpdate(data[0]).then(function(result) {
-				assert.isFalse(result.isUpdate);
-			}).then(dfd.resolve);
-		},
-		'Should return `isUpdate=true` when item exists.'(this: any) {
-			const { dfd, storage, data } = getStorageAndDfd(this);
-			storage.add(data);
-			storage.isUpdate(data[0]).then(function(result) {
-				assert.isTrue(result.isUpdate);
 			}).then(dfd.resolve);
 		}
 	}

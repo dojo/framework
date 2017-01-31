@@ -6,6 +6,7 @@ import './query/createSort';
 import './query/createStoreRange';
 import './query/createCompoundQuery';
 import './storage/createInMemoryStorage';
+import './storage/createIndexedDBStorage';
 import './store/createStore';
 import './store/mixins/createObservableStoreMixin';
 import './store/mixins/createTransactionMixin';

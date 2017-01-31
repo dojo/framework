@@ -29,7 +29,6 @@ export interface Storage<T, O extends CrudOptions> {
 	add(items: T[], options?: O): Promise<UpdateResults<T>>;
 	delete(ids: string[]): Promise<UpdateResults<T>>;
 	patch(updates: { id: string; patch: Patch<T, T> }[], options?: O): Promise<UpdateResults<T>>;
-	isUpdate(item: T): Promise<{ isUpdate: boolean; item: T, id: string }>;
 }
 
 export interface InMemoryStorageState<T> {
@@ -42,11 +41,7 @@ export interface InMemoryStorageState<T> {
 
 const instanceStateMap = new WeakMap<Storage<{}, {}>, InMemoryStorageState<{}>>();
 
-export interface StorageFactory extends ComposeFactory<Storage<{}, {}>, StoreOptions<{}, CrudOptions>> {
-	<T extends {}, O extends CrudOptions>(options?: O): Storage<T, O>;
-}
-
-export interface InMemoryStorageFactory extends StorageFactory {
+export interface InMemoryStorageFactory extends ComposeFactory<Storage<{}, CrudOptions>, StoreOptions<{}, CrudOptions>> {
 	<T>(options?: StoreOptions<T, CrudOptions>): Storage<T, CrudOptions>;
 }
 
@@ -234,17 +229,6 @@ const createInMemoryStorage: InMemoryStorageFactory = compose<Storage<IdObject, 
 		} catch (error) {
 			return Promise.reject(error);
 		}
-	},
-
-	isUpdate(this: Storage<{}, {}>, item: {}): Promise<{ isUpdate: boolean; item: {}; id: string }> {
-		const state = instanceStateMap.get(this);
-		const id = this.identify([ item ])[0];
-		const isUpdate = state.index.has(id);
-		return Promise.resolve({
-			id: id,
-			item: item,
-			isUpdate: isUpdate
-		});
 	}
 }, <T, O>(instance: Storage<T, O>, options?: StoreOptions<T, CrudOptions>) => {
 	options = options || {};

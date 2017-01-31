@@ -240,7 +240,7 @@ function applyFilterChain<T>(item: T, filterChain: FilterChainMember<T>[]): bool
 }
 
 function createComparator<T>(operator: FilterType, value: any, path: ObjectPointer<T>): SimpleFilter<T> {
-	path = typeof path === 'string' ? createJsonPointer(path) : path;
+	const jsonPointer = typeof path === 'string' ? createJsonPointer(path) : path as JsonPointer;
 	let test: (property: any) => boolean;
 	const filterType: FilterType = operator;
 	let operatorString: string;
@@ -324,7 +324,7 @@ function createComparator<T>(operator: FilterType, value: any, path: ObjectPoint
 	}
 	return {
 		test(item: T) {
-			let propertyValue: any = navigate(<JsonPointer> path, item);
+			let propertyValue: any = navigate(jsonPointer, item);
 			return test(propertyValue);
 		},
 		apply(this: Filter<T>, data: T[]) {
@@ -334,7 +334,7 @@ function createComparator<T>(operator: FilterType, value: any, path: ObjectPoint
 			if (!operatorString) {
 				throw Error('Cannot parse this filter type to an RQL query string');
 			}
-			return `${operatorString}(${path.toString()}, ${JSON.stringify(value)})`;
+			return `${operatorString}(${jsonPointer.toString()}, ${JSON.stringify(value)})`;
 		},
 		path: path,
 		value: value,

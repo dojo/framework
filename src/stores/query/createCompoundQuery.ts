@@ -4,7 +4,7 @@ import { Query, QueryType } from './interfaces';
 
 export interface CompoundQuery<T> extends Query<T> {
 	withQuery(query: Query<T>): CompoundQuery<T>;
-	queries: Query<T>[];
+	readonly queries: Query<T>[];
 }
 
 export interface QueryOptions<T> {
