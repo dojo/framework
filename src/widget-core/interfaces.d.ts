@@ -232,6 +232,7 @@ export interface WidgetProperties {
 	id?: string;
 	key?: string;
 	classes?: string[];
+	bind?: any;
 }
 
 export interface WidgetFactory<W extends WidgetMixin<P>, P extends WidgetProperties> extends ComposeFactory<W, WidgetOptions<P>> {}
