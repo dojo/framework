@@ -7,22 +7,27 @@ import { ComposeFactory } from '@dojo/compose/compose';
 import { assign } from '@dojo/core/lang';
 
 /**
- * A representation of the css-module class names
- * to be applied where each class in appliedClasses
- * is used.
+ * A representation of the css class names to be applied and
+ * removed.
  */
-export type CSSModuleClassNames = {
+export type ClassNameFlags = {
 	[key: string]: boolean;
 }
 
 /**
- * The object returned by getClasses.
+ * A lookup object for available class names
  */
-export type AppliedClasses<T> = {
-	[P in keyof T]: CSSModuleClassNames;
-};
+export type ClassNames = {
+	[key: string]: string;
+}
 
-type StringIndexedObject = { [key: string]: string; };
+/**
+ * The object returned by getClasses required by maquette for
+ * adding / removing classes. They are flagged to true / false.
+ */
+export type ClassNameFlagsMap = {
+	[key: string]: ClassNameFlags;
+}
 
 /**
  * Properties required for the themeable mixin
@@ -40,91 +45,137 @@ export interface ThemeableOptions {
 }
 
 /**
+ * Returned by classes function.
+ */
+export interface ClassesFunctionChain {
+	/**
+	 * The classes to be returned when get() is called
+	 */
+	classes: ClassNameFlags;
+	/**
+	 * Function to pass fixed class names that bypass the theming
+	 * process
+	 */
+	fixed: (...classes: string[]) => ClassesFunctionChain;
+	/**
+	 * Finalize function to return the generated class names
+	 */
+	get: () => ClassNameFlags;
+}
+
+/**
  * Themeable Mixin
  */
-export interface ThemeableMixin<T> extends Evented {
-	theme: AppliedClasses<T>;
+export interface ThemeableMixin extends Evented {
+	classes: (...classNames: string[]) => ClassesFunctionChain;
 }
 
 /**
  * Themeable
  */
-export interface Themeable<T> extends ThemeableMixin<T> {
-	baseTheme: T;
+export interface Themeable extends ThemeableMixin {
+	baseClasses: BaseClasses;
 	properties: ThemeableProperties;
+}
+
+/**
+ * BaseClasses to be passed as this.baseClasses. The path string is used to
+ * perform a lookup against any theme that has been set.
+ */
+export interface BaseClasses {
+	classes: ClassNames;
+	key: string;
 }
 
 /**
  * Compose Themeable Factory interface
  */
-export interface ThemeableFactory extends ComposeFactory<ThemeableMixin<any>, ThemeableOptions> {}
+export interface ThemeableFactory extends ComposeFactory<ThemeableMixin, ThemeableOptions> {}
+
+type StringIndexedObject = { [key: string]: string; };
 
 /**
- * Private map for the widgets themeClasses.
+ * Map containing lookups for available css module class names.
+ * Responding object contains each css module class name that applies
+ * with a boolean set to true.
  */
-const themeClassesMap = new WeakMap<Themeable<any>, AppliedClasses<any>>();
+const generatedClassNameMap = new WeakMap<Themeable, ClassNameFlagsMap>();
 
-function addClassNameToCSSModuleClassNames(cssModuleClassNames: CSSModuleClassNames, classList: StringIndexedObject, className: string) {
-	if (classList.hasOwnProperty(className)) {
-		// split out the classname because css-module composition combines class names with a space
-		const generatedClassNames: string[] = classList[className].split(' ');
-		generatedClassNames.forEach((generatedClassName) => {
-			cssModuleClassNames[generatedClassName] = true;
-		});
-	}
+/**
+ * Map containing a reverse lookup for all the class names provided in the
+ * widget's baseClasses.
+ */
+const baseClassesReverseLookupMap = new WeakMap<Themeable, ClassNames>();
+
+/**
+ * Map containing every class name that has been applied to the widget.
+ * Responding object consists of each class name with a boolean set to false.
+ */
+const allClassNamesMap = new WeakMap<Themeable, ClassNameFlags>();
+
+function appendToAllClassNames(instance: Themeable, classNames: string[]) {
+	const negativeClassFlags = createClassNameObject(classNames, false);
+	const currentNegativeClassFlags = allClassNamesMap.get(instance);
+	allClassNamesMap.set(instance, assign({}, currentNegativeClassFlags, negativeClassFlags));
 }
 
-function negatePreviousClasses<T>(previousClasses: AppliedClasses<T>, newClasses: AppliedClasses<T>) {
-	return Object.keys(previousClasses).reduce((newAppliedClasses, className: keyof T) => {
-		const oldCSSModuleClassNames = <CSSModuleClassNames> previousClasses[className];
-
-		const negatedCSSModuleClassNames = Object.keys(oldCSSModuleClassNames).reduce((newCSSModuleClassNames, oldCSSModuleClassName) => {
-			const currentClassNameFlag = oldCSSModuleClassNames[oldCSSModuleClassName];
-			// If it's true it needs to be negated and passed along, If it's false,
-			// don't return it as maquette will already have removed it.
-			if (currentClassNameFlag) {
-				newCSSModuleClassNames[oldCSSModuleClassName] = false;
-			}
-			return newCSSModuleClassNames;
-		}, <CSSModuleClassNames> {});
-
-		const calculatedClassNameMap = assign({}, negatedCSSModuleClassNames, newClasses[className]);
-		newAppliedClasses[className] = calculatedClassNameMap;
-
-		return newAppliedClasses;
-	}, <AppliedClasses<T>> {});
+function createClassNameObject(classNames: string[], applied: boolean) {
+	return classNames.reduce((flaggedClassNames: ClassNameFlags, className) => {
+		flaggedClassNames[className] = applied;
+		return flaggedClassNames;
+	}, {});
 }
 
-function generateThemeClasses<T>(instance: Themeable<T>, baseTheme: T, theme: {} = {}, overrideClasses: {} = {}) {
-	return Object.keys(baseTheme).reduce((newAppliedClasses, className: keyof T) => {
-		const newCSSModuleClassNames: CSSModuleClassNames = {};
-		const themeClassSource = theme.hasOwnProperty(className) ? theme : baseTheme;
+function generateThemeClasses(instance: Themeable, { classes: baseClassesClasses, key }: BaseClasses, theme: any = {}, overrideClasses: any = {}) {
+	let allClasses: string[] = [];
+	const sourceThemeClasses = theme.hasOwnProperty(key) ? assign({}, baseClassesClasses, theme[key]) : baseClassesClasses;
 
-		addClassNameToCSSModuleClassNames(newCSSModuleClassNames, themeClassSource, className);
-		overrideClasses && addClassNameToCSSModuleClassNames(newCSSModuleClassNames, overrideClasses, className);
-		newAppliedClasses[className] = newCSSModuleClassNames;
+	const themeClasses = Object.keys(baseClassesClasses).reduce((newAppliedClassNames, className: string) => {
+		let cssClassNames = sourceThemeClasses[className].split(' ');
 
-		return newAppliedClasses;
-	}, <AppliedClasses<T>> {});
+		if (overrideClasses.hasOwnProperty(className)) {
+			cssClassNames = [...cssClassNames, ...overrideClasses[className].split(' ')];
+		}
+
+		allClasses = [...allClasses, ...cssClassNames];
+
+		newAppliedClassNames[className] = createClassNameObject(cssClassNames, true);
+
+		return newAppliedClassNames;
+	}, <ClassNameFlagsMap> {});
+
+	appendToAllClassNames(instance, allClasses);
+
+	return themeClasses;
 }
 
-function updateThemeClassesMap<T>(instance: Themeable<T>, newThemeClasses: AppliedClasses<T>) {
-	if (themeClassesMap.has(instance)) {
-		const previousThemeClasses = themeClassesMap.get(instance);
-		themeClassesMap.set(instance, negatePreviousClasses(previousThemeClasses, newThemeClasses));
-	} else {
-		themeClassesMap.set(instance, newThemeClasses);
-	}
-}
-
-function onPropertiesChanged<T>(instance: Themeable<T>, { theme, overrideClasses }: ThemeableProperties, changedPropertyKeys: string[]) {
+function onPropertiesChanged(instance: Themeable, { theme, overrideClasses }: ThemeableProperties, changedPropertyKeys: string[]) {
 	const themeChanged = includes(changedPropertyKeys, 'theme');
 	const overrideClassesChanged = includes(changedPropertyKeys, 'overrideClasses');
 
 	if (themeChanged || overrideClassesChanged) {
-		const themeClasses = generateThemeClasses(instance, instance.baseTheme, theme, overrideClasses);
-		updateThemeClassesMap(instance, themeClasses);
+		const themeClasses = generateThemeClasses(instance, instance.baseClasses, theme, overrideClasses);
+		generatedClassNameMap.set(instance, themeClasses);
 	}
+}
+
+function createBaseClassesLookup({ classes }: BaseClasses): ClassNames {
+	return Object.keys(classes).reduce((currentClassNames, key: string) => {
+		currentClassNames[classes[key]] = key;
+		return currentClassNames;
+	}, <ClassNames> {});
+}
+
+function splitClassStrings(classes: string[]): string[] {
+	return classes.reduce((splitClasses: string[], className) => {
+		if (className.indexOf(' ') > -1) {
+			splitClasses.push(...className.split(' '));
+		}
+		else {
+			splitClasses.push(className);
+		}
+		return splitClasses;
+	}, []);
 }
 
 /**
@@ -132,15 +183,46 @@ function onPropertiesChanged<T>(instance: Themeable<T>, { theme, overrideClasses
  */
 const themeableFactory: ThemeableFactory = createEvented.mixin({
 	mixin: {
-		get theme(this: Themeable<any>): AppliedClasses<any> {
-			return themeClassesMap.get(this);
+		classes(this: Themeable, ...classNames: string[]) {
+			const cssModuleClassNames = generatedClassNameMap.get(this);
+			const baseClassesReverseLookup = baseClassesReverseLookupMap.get(this);
+
+			const appliedClasses = classNames.reduce((currentCSSModuleClassNames, className) => {
+				const classNameKey = baseClassesReverseLookup[className];
+				if (cssModuleClassNames.hasOwnProperty(classNameKey)) {
+					assign(currentCSSModuleClassNames, cssModuleClassNames[classNameKey]);
+				}
+				else {
+					console.warn(`Class name: ${className} and lookup key: ${classNameKey} not from baseClasses, use chained 'fixed' method instead`);
+				}
+				return currentCSSModuleClassNames;
+			}, {});
+
+			const responseClasses = assign({}, allClassNamesMap.get(this), appliedClasses);
+			const instance = this;
+
+			const classesResponseChain: ClassesFunctionChain = {
+				classes: responseClasses,
+				fixed(this: ClassesFunctionChain, ...classes: string[]) {
+					const splitClasses = splitClassStrings(classes);
+					assign(this.classes, createClassNameObject(splitClasses, true));
+					appendToAllClassNames(instance, splitClasses);
+					return this;
+				},
+				get(this: ClassesFunctionChain) {
+					return this.classes;
+				}
+			};
+
+			return classesResponseChain;
 		}
 	},
-	initialize<T>(instance: Themeable<T>) {
-		instance.own(instance.on('properties:changed', (evt: PropertiesChangeEvent<ThemeableMixin<T>, ThemeableProperties>) => {
+	initialize(instance: Themeable) {
+		instance.own(instance.on('properties:changed', (evt: PropertiesChangeEvent<ThemeableMixin, ThemeableProperties>) => {
 			onPropertiesChanged(instance, evt.properties, evt.changedPropertyKeys);
 		}));
 		onPropertiesChanged(instance, instance.properties, [ 'theme' ]);
+		baseClassesReverseLookupMap.set(instance, createBaseClassesLookup(instance.baseClasses));
 	}
 });
 

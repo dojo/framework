@@ -381,12 +381,13 @@ registry.define('my-widget', () => {
 });
 ```
 
+
 #### Theming
 
 ##### Overview
 
-Widgets are themed using `css-modules` and the `themeable` mixin. Each widget must implement a .css file that contains all the css classes that will be used to style it. The baseTheme is the css API for the Widget: baseTheme css classes can be overridden by external themes. Further customisation of specific Custom Widget classes can be achieved by passing overrideClasses into the widget.
-The `themeable` mixin provides any themes passed into the widget via this.theme.which controls the classNames which can be applied to it. These classNames can be replaced by themeClasses and can be supplemented with overrideClasses. Theme classes are acquired by calling `instance.theme.<themeClass>`.
+Widgets are themed using `css-modules` and the `themeable` mixin. Each widget must implement a .css file that contains all the css classes that will be used to style it. The baseClasses object is the css API for the Widget: baseClasses css classes can be overridden by external themes. Further customisation of specific Custom Widget classes can be achieved by passing overrideClasses into the widget.
+The `themeable` mixin provides a `classes` function that controls the classes to be applied to each node. Classes from the `baseClasses` object passed to the `classes` function can be themed and overridden. To create fixed classes that cannot be changed the chained `fixed` function can be used.
 
 ##### Authoring a baseTheme
 
@@ -400,64 +401,47 @@ tabPanel
     └── tabPanel.css
 ```
 
-The `baseTheme` must contain a complete set of all of the classes you wish to apply to a widget as all theme and override classes are limited by the classnames made available here.
-Classnames are locally scoped as part of the build but must be unique within the widget framework such that they can be themed and overridden.
+The `baseClasses` css must contain a complete set of all of the classes you wish to apply to a widget as all theme and override classes are limited by the classnames made available here.
+Classnames are locally scoped as part of the build. A theme `key` is generated at build time to located each classes themes when a theme is set.
 
 ```  css
 /* tabpanel.css */
-.tabPanelTabs {
+.root {
 	background: red;
 }
 
-.tabPanelTab {
+.tab {
 	background: blue;
 }
 ```
 
-##### Applying a baseTheme
+##### Applying baseClasses
 
-To apply a base theme a widget must use the `themeable` mixin and import it's `baseTheme`.
-
-``` typescript
-import * as baseTheme from './styles/tabpanel';
-```
-
-Theme classes to be applied to a widgets VDOM are acquired using `this.theme.<themeClass>`.
-The `themeableMixin` takes a generic to determine the typings for the returned `theme` classes.
+To apply baseClasses a widget must use the `themeable` mixin and import it's `baseClasses` object.
 
 ``` typescript
-interface ThemeableMixin<P> extends Evented {
-	theme: AppliedClasses<P>;
-}
-
-interface ThemeableProperties {
-	theme?: {};
-	overrideClasses?: {};
-}
-
-interface Themeable<P> extends ThemeableMixin<P> {
-	baseTheme: P;
-	properties: ThemeableProperties;
-}
+import baseClasses from './styles/tabpanel';
 ```
+Theme classes to be applied to a widgets VDOM are acquired using `this.classes(<themeClass>)`.
 
 Basic usage:
 
 ``` typescript
 /* tabpanel.ts */
-import * as baseTheme from './styles/tabpanel';
+import baseClasses from './styles/tabpanel';
 import themeableMixin, { Themeable } from '../mixins/themeable';
 
-export type TabPanel = Widget<WidgetProperties> & Themeable<typeof baseTheme>;
+export type TabPanel = Widget<WidgetProperties> & Themeable;
 export interface TabPanelFactory extends WidgetFactory<TabPanel, WidgetProperties> {}
 
 const createTabPanel: TabPanelFactory = createWidgetBase.mixin(themeableMixin).mixin({
 	mixin: {
-		baseTheme,
+		baseClasses,
 		render: function (this: TabPanel): DNode[] {
+			const { root, tab } = baseClasses.classes;
 			return
-				v('ul', { classes: this.theme.tabPanelTabs }, [
-					v('li', { classes: this.theme.tabPanelTab }, [ 'tab1' ])
+				v('ul', { classes: this.classes(root).get() }, [
+					v('li', { classes: this.classes(tab).get() }, [ 'tab1' ])
 				]);
 		}
 	}
@@ -466,24 +450,18 @@ const createTabPanel: TabPanelFactory = createWidgetBase.mixin(themeableMixin).m
 
 ##### Applying a theme
 
-Themeable widgets include an optional `theme` property which can be set to pass in a theme. Theme classes will override `baseTheme` classes. When a `theme` property is set or changed, the widgets `theme` classes will be regenerated and the widget invalidated such that it is redrawn. Themes are used to apply consistent styling across the widget code base.
+Themeable widgets include an optional `theme` property which can be set to pass in a theme. Theme classes will override `baseClasses`. When a `theme` property is set or changed, the widgets `theme` classes will be regenerated and the widget invalidated such that it is redrawn. Themes are used to apply consistent styling across the widget code base.
 
 Usage Extending on the previous `tabPanel` example.
 
 ``` css
-/* customTheme.css */
-.tabPanelTabs {
+/* customTheme/tabPanel.css */
+.tabs {
 	background: green;
-}
-
-.notATabClass {
-	// this class will not be available in `instance.theme` as
-	// it is not part of the baseTheme
-	background: yellow;
 }
 ```
 
-Import the theme and pass it to the widget via it's `properties`. The theme classes will be automatically mixed into the widget and available via `this.theme`.
+Import the theme and pass it to the widget via it's `properties`. The theme classes will be automatically mixed into the widget and available via `this.classes`.
 
 ``` typescript
 import * as customTheme from './themes/customTheme';
@@ -500,7 +478,7 @@ As we are using `css-modules` to scope widget css classes, the generated class n
 
 ``` css
 /* tabPanelOverrides.css */
-.tabPanelTabs {
+.tabs {
 	font-weight: bold;
 }
 ```
@@ -512,6 +490,35 @@ w(createTabPanel, { overrideClasses: tabPanelOverrides });
 // Resulting widget will still have baseTheme red tabs,
 // but will have font-weight: bold; applied also.
 ```
+
+##### Applying fixed classes
+
+The `this.classes` function returns a chained `fixed` function that can be used to set non-themeable classes on a node. This allows a widget author to apply classes to a widget that cannot be overridden.
+
+``` typescript
+/* tabpanel.ts */
+import baseClasses from './styles/tabpanel';
+import themeableMixin, { Themeable } from '../mixins/themeable';
+
+export type TabPanel = Widget<WidgetProperties> & Themeable;
+export interface TabPanelFactory extends WidgetFactory<TabPanel, WidgetProperties> {}
+
+const createTabPanel: TabPanelFactory = createWidgetBase.mixin(themeableMixin).mixin({
+	mixin: {
+		baseClasses,
+		render: function (this: TabPanel): DNode[] {
+			const { root, tab } = baseClasses.classes;
+			return
+				v(`ul`, { classes: this.classes(root).get() }, [
+					v('li', { classes: this.classes().fixed(tab).get() }, [ 'tab1' ])
+					// ...
+				]);
+		}
+	}
+});
+```
+
+In the above example, the `root` class is still themeable, but the `tab` class is applied using `.fixed()` so it will not be themeable. The classes passed to `.fixed()` can be any string and do not need to originate from `baseClasses` like the `.classes()` parameters must do.
 
 #### Internationalization (i18n)
 
