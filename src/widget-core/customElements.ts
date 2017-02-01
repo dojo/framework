@@ -5,6 +5,8 @@ import createDomWrapper from './util/createDomWrapper';
 import { assign } from '@dojo/core/lang';
 import { Projector } from './mixins/createProjectorMixin';
 import { from as arrayFrom } from '@dojo/shim/array';
+import global from '@dojo/core/global';
+
 /**
  * @type CustomElementAttributeDescriptor
  *
@@ -129,6 +131,23 @@ function getWidgetPropertyFromAttribute(attributeName: string, attributeValue: s
 	return [ propertyName, value ];
 }
 
+let customEventClass = global.CustomEvent;
+
+if (typeof customEventClass !== 'function') {
+	const customEvent = function (event: string, params: any) {
+		params = params || { bubbles: false, cancelable: false, detail: undefined };
+		const evt = document.createEvent('CustomEvent');
+		evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+		return evt;
+	};
+
+	if (global.Event) {
+		customEvent.prototype = global.Event.prototype;
+	}
+
+	customEventClass = customEvent;
+}
+
 /**
  * Called by HTMLElement subclass to initialize itself with the appropriate attributes/properties/events.
  *
@@ -195,7 +214,7 @@ export function initializeElement(element: CustomElement) {
 		const { propertyName, eventName } = event;
 
 		initialProperties[ propertyName ] = (event: any) => {
-			element.dispatchEvent(new CustomEvent(eventName, {
+			element.dispatchEvent(new customEventClass(eventName, {
 				bubbles: false,
 				detail: event
 			}));

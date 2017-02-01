@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="https://rawgit.com/webcomponents/custom-elements/master/custom-elements.min.js"></script>
+	<script src="https://rawgit.com/webcomponents/custom-elements/master/src/native-shim.js"></script>
+	<script src="../../../../../node_modules/@dojo/loader/loader.js"></script>
+</head>
+<body>
+<test-button id="testButton" label="hello" label-suffix="world"></test-button>
+
+<no-attributes id="noAttributes" label="hello" label-suffix="world"></no-attributes>
+
+<script>
+	window.buttonClicked = false;
+	window.ready = false;
+
+	require.config({
+		packages: [
+			{ name: '@dojo', location: '../../../../../node_modules/@dojo' },
+			{ name: 'maquette', location: '../../../../../node_modules/maquette/dist', main: 'maquette' }
+		]
+	});
+
+	require(['./registerCustomElement'], function() {
+		window.ready = true;
+
+		document.getElementById('testButton').addEventListener('button-click', function() {
+			window.buttonClicked = true;
+		});
+
+		document.getElementById('noAttributes').buttonLabel = 'Test';
+	});
+</script>
+</body>
+</html>
