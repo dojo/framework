@@ -40,6 +40,7 @@
     "@types/grunt": "0.4.*",
     "@types/jsdom": "2.0.*",
     "@types/sinon": "^1.16.31",
+    "@webcomponents/custom-elements": "^1.0.0-alpha.3",
     "codecov.io": "0.1.6",
     "dts-generator": "~1.7.0",
     "glob": "^7.0.6",
