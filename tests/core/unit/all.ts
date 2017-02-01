@@ -27,3 +27,4 @@ import './UrlSearchParams';
 import './DateObject';
 import './uuid';
 import './util';
+import './has';

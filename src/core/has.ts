@@ -23,3 +23,7 @@ add('xhr2-blob', function () {
 	request.abort();
 	return request.responseType === 'blob';
 });
+
+add('node-buffer', 'Buffer' in global && typeof global.Buffer === 'function');
+
+add('fetch', 'fetch' in global && typeof global.fetch === 'function');

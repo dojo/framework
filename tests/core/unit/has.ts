@@ -1,10 +1,10 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import has from '../../../src/request/has';
-import global from '../../../src/global';
+import has from '../../src/has';
+import global from '../../src/global';
 
 registerSuite({
-	name: 'request/has',
+	name: 'has',
 	'has("node-buffer")': function() {
 		const value = has('node-buffer');
 		if (has('host-node')) {
