@@ -381,7 +381,6 @@ registry.define('my-widget', () => {
 });
 ```
 
-
 #### Theming
 
 ##### Overview
@@ -420,7 +419,7 @@ Classnames are locally scoped as part of the build. A theme `key` is generated a
 To apply baseClasses a widget must use the `themeable` mixin and import it's `baseClasses` object.
 
 ``` typescript
-import baseClasses from './styles/tabpanel';
+import * as baseClasses from './styles/tabpanel.css';
 ```
 Theme classes to be applied to a widgets VDOM are acquired using `this.classes(<themeClass>)`.
 
@@ -428,7 +427,7 @@ Basic usage:
 
 ``` typescript
 /* tabpanel.ts */
-import baseClasses from './styles/tabpanel';
+import * as baseClasses from './styles/tabpanel.css';
 import themeableMixin, { Themeable } from '../mixins/themeable';
 
 export type TabPanel = Widget<WidgetProperties> & Themeable;
@@ -437,11 +436,12 @@ export interface TabPanelFactory extends WidgetFactory<TabPanel, WidgetPropertie
 const createTabPanel: TabPanelFactory = createWidgetBase.mixin(themeableMixin).mixin({
 	mixin: {
 		baseClasses,
-		render: function (this: TabPanel): DNode[] {
-			const { root, tab } = baseClasses.classes;
+		render: function (this: TabPanel) {
+			const { root, tab } = baseClasses;
 			return
-				v('ul', { classes: this.classes(root).get() }, [
+				v(`ul`, { classes: this.classes(root).get() }, [
 					v('li', { classes: this.classes(tab).get() }, [ 'tab1' ])
+					// ...
 				]);
 		}
 	}
@@ -464,7 +464,7 @@ Usage Extending on the previous `tabPanel` example.
 Import the theme and pass it to the widget via it's `properties`. The theme classes will be automatically mixed into the widget and available via `this.classes`.
 
 ``` typescript
-import * as customTheme from './themes/customTheme';
+import * as customTheme from './themes/customTheme.css';
 
 w(createTabPanel, { theme: customTheme });
 // Resulting widget will have green tabs instead of baseTheme red.
@@ -484,7 +484,7 @@ As we are using `css-modules` to scope widget css classes, the generated class n
 ```
 
 ``` typescript
-import * as tabPanelOverrides from './overrides/tabPanelOverrides';
+import * as tabPanelOverrides from './overrides/tabPanelOverrides.css';
 
 w(createTabPanel, { overrideClasses: tabPanelOverrides });
 // Resulting widget will still have baseTheme red tabs,
@@ -497,7 +497,7 @@ The `this.classes` function returns a chained `fixed` function that can be used 
 
 ``` typescript
 /* tabpanel.ts */
-import baseClasses from './styles/tabpanel';
+import * as baseClasses from './styles/tabpanel.css';
 import themeableMixin, { Themeable } from '../mixins/themeable';
 
 export type TabPanel = Widget<WidgetProperties> & Themeable;
@@ -506,8 +506,8 @@ export interface TabPanelFactory extends WidgetFactory<TabPanel, WidgetPropertie
 const createTabPanel: TabPanelFactory = createWidgetBase.mixin(themeableMixin).mixin({
 	mixin: {
 		baseClasses,
-		render: function (this: TabPanel): DNode[] {
-			const { root, tab } = baseClasses.classes;
+		render: function (this: TabPanel) {
+			const { root, tab } = baseClasses;
 			return
 				v(`ul`, { classes: this.classes(root).get() }, [
 					v('li', { classes: this.classes().fixed(tab).get() }, [ 'tab1' ])
