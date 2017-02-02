@@ -2,8 +2,8 @@ import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 import * as Suite from 'intern/lib/Suite';
 import * as Command from 'leadfoot/Command';
-import * as pollUntil from 'leadfoot/helpers/pollUntil';
 import { Require } from '@dojo/interfaces/loader';
+import pollUntil = require('leadfoot/helpers/pollUntil');
 
 declare const require: Require;
 
