@@ -58,6 +58,11 @@ export interface FormLabelMixinProperties {
 	describedBy?: string;
 
 	/**
+	 * ID of a form element associated with the form field
+	 */
+	formId?: string;
+
+	/**
 	 * Indicates the value entered in the form field is invalid
 	 */
 	invalid?: boolean;
@@ -118,7 +123,7 @@ const labelDefaults = {
 /**
  * Allowed attributes for a11y
  */
-const allowedAttributes = ['checked', 'describedBy', 'disabled', 'invalid', 'maxLength', 'minLength', 'multiple', 'name', 'placeholder', 'readOnly', 'required', 'type', 'value'];
+const allowedFormFieldAttributes = ['checked', 'describedBy', 'disabled', 'invalid', 'maxLength', 'minLength', 'multiple', 'name', 'placeholder', 'readOnly', 'required', 'type', 'value'];
 
 function getFormFieldA11yAttributes(instance: FormLabel) {
 	const { properties, type } = instance;
@@ -130,7 +135,7 @@ function getFormFieldA11yAttributes(instance: FormLabel) {
 
 	const nodeAttributes: any = {};
 
-	for (const key of allowedAttributes) {
+	for (const key of allowedFormFieldAttributes) {
 
 		if (attributeKeys.indexOf(key) === -1) {
 			continue;
@@ -168,8 +173,14 @@ const createFormLabelMixin = compose<FormLabelMixin, {}>({})
 .aspect({
 	after: {
 		render(this: FormLabel, result: DNode): DNode {
+			const labelNodeAttributes: any = {};
 			if (isHNode(result)) {
 				assign(result.properties, getFormFieldA11yAttributes(this));
+
+				// move classes to label node
+				const { classes } = result.properties;
+				const { formId } = this.properties;
+				assign(labelNodeAttributes, { classes, 'form': formId });
 			}
 
 			if (this.properties.label) {
@@ -194,7 +205,7 @@ const createFormLabelMixin = compose<FormLabelMixin, {}>({})
 					children.reverse();
 				}
 
-				result = v('label', children);
+				result = v('label', labelNodeAttributes, children);
 			}
 
 			return result;

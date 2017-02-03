@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { VNode } from '@dojo/interfaces/vdom';
-import { w } from './../../../src/d';
+import { v, w } from './../../../src/d';
 import createWidgetBase from '../../../src/createWidgetBase';
 import createFormLabelMixin from '../../../src/mixins/createFormLabelMixin';
 
@@ -74,6 +74,28 @@ registerSuite({
 			assert.strictEqual(vnode.vnodeSelector, 'div');
 			assert.isUndefined(vnode.properties!['value']);
 			assert.isUndefined(vnode.properties!['maxlength']);
+		},
+		'label properties'() {
+			const inputWithClasses = createWidgetBase.override({
+				render(this: any) {
+					return v('input', { classes: this.properties.classes });
+				}
+			});
+			const formField = inputWithClasses.mixin(createFormLabelMixin)({
+				properties: {
+					label: 'foo',
+					value: 'bar',
+					maxLength: 100,
+					formId: 'baz',
+					classes: { 'qux': true }
+				}
+			});
+			let vnode = <VNode> formField.__render__();
+
+			assert.strictEqual(vnode.children![0].properties!['value'], 'bar');
+			assert.strictEqual(vnode.children![0].properties!['maxlength'], '100');
+			assert.strictEqual(vnode.properties!['form'], 'baz');
+			assert.isTrue(vnode.properties!.classes!['qux'], 'Classes should be set on the label node');
 		}
 	},
 	'type'() {
