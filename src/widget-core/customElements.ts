@@ -240,9 +240,9 @@ export function initializeElement(element: CustomElement) {
 	});
 
 	const widgetInstance: Projector = element.getWidgetFactory().mixin(createProjectorMixin)({
-		root: element
+		root: element,
+		properties: initialProperties
 	});
-	widgetInstance.setProperties(initialProperties);
 	widgetInstance.setChildren(children);
 	element.setWidgetInstance(widgetInstance);
 
