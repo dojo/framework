@@ -316,11 +316,8 @@ export default class Promise<T> implements Thenable<T> {
 	 *     value.bar === 'bar'; // true
 	 * });
 	 */
-	static all<T>(iterable: (T | Thenable<T>)[]): Promise<T[]>;
-	static all<T>(iterable: T | Thenable<T>): Promise<T[]>;
-	static all<T>(iterable: Iterable<(T | Thenable<T>)>): Promise<T[]>;
 	/* istanbul ignore next */
-	static all<T>(iterable: T | Thenable<T> | Iterable<(T | Thenable<T>)>): Promise<T[]> {
+	static all<T>(iterable: (T | Thenable<T>)[] | Iterable<(T | Thenable<T>)>): Promise<T[]> {
 		throw new Error();
 	};
 
@@ -420,9 +417,7 @@ declare global {
 		 *     value.bar === 'bar'; // true
 		 * });
 		 */
-		static all<T>(iterable: (T | Thenable<T>)[]): Promise<T[]>;
-		static all<T>(iterable: T | Thenable<T>): Promise<T[]>;
-		static all<T>(iterable: Iterable<(T | Thenable<T>)>): Promise<T[]>;
+		static all<T>(iterable: (T | Thenable<T>)[] | Iterable<(T | Thenable<T>)>): Promise<T[]>;
 
 		/**
 		 * Converts an iterable object containing promises into a single promise that resolves or rejects as soon as one of
