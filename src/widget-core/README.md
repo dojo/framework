@@ -565,30 +565,72 @@ const widget = createI18nWidget({
 
 #### Web Components
 
-Custom Widgets can be turned into [Custom Elements](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) with
+Widgets can be turned into [Custom Elements](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) with
 minimal extra effort.
 
 Just create a `CustomElementDescriptor` factory and use the build tooling to do the rest of the work,
 
 ```ts
 import { CustomElementDescriptor } from '@dojo/widget-core/customElements';
+import createMyWidget from './path/to/createMyWidget';
 
 export default function createCustomElement(): CustomElementDescriptor {
 	return {
-	   attributes: [
-		   {
-			   attributeName: 'label'
-		   }
-	   ],
-	   events: [
-		   {
-			   propertyName: 'onChange',
-			   name: 'change'
-		   }
-	   ]
+		tagName: 'my-widget',
+		widgetFactory: createMyWidget,
+	   	attributes: [
+		   	{
+			   	attributeName: 'label'
+		   	}
+	   	],
+	   	events: [
+		   	{
+			   	propertyName: 'onChange',
+			   	name: 'change'
+		   	}
+	   	]
    };
 };
 ```
+
+By convention, this file should be named `createMyWidgetElement.ts`.
+
+To build your custom element, use [dojo cli](https://github.com/dojo/cli),
+
+```bash
+$ dojo build --element=/path/to/createMyWidget.ts
+```
+
+This will generate the following files,
+
+* `dist/my-widget/my-widget.html` - HTML import file that includes all widget dependencies. This is the only file you need to import into your HTML page to use your widget.
+* `dist/my-widget/my-widget.js` - A compiled version of your widget.
+* `dist/my-widget/my-widget.css` - The CSS for your widget
+* `dist/my-widget/widget-core.js` - A shared base widget library. Keeping this separate means that you can include multiple HTML imports and the browser will not re-request this shared file.
+
+Using your widget would be a simple matter of importing the HTML import,
+
+```html
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- this will include all JS and CSS used by your widget -->
+		<link rel="import" href="/path/to/my-widget.html" />
+	</head>
+	<body>
+		<!-- this will actually create your widget -->
+		<my-widget></my-widget>
+	</body>
+</html>
+```
+
+##### Tag Name
+ 
+Your widget will be registered with the browser using the provided tag name. The tag name **must** have a `-` in it.
+
+##### Widget Factory
+
+A factory that will return the widget that you want wrapped as a custom element.
 
 ##### Attributes
 
