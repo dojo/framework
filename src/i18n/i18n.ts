@@ -63,7 +63,7 @@ export interface Messages {
 }
 
 const PATH_SEPARATOR: string = has('host-node') ? require('path').sep : '/';
-const VALID_PATH_PATTERN = new RegExp(PATH_SEPARATOR + '[^' + PATH_SEPARATOR + ']+$');
+const VALID_PATH_PATTERN = new RegExp(`\\${PATH_SEPARATOR}[^\\${PATH_SEPARATOR}]+\$`);
 const bundleMap = new Map<string, Map<string, Messages>>();
 const formatterMap = new Map<string, MessageFormatter>();
 const localeProducer = createEvented();
@@ -206,7 +206,7 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
 		bundleMap.set(bundlePath, new Map<string, Messages>());
 		Globalize.loadMessages({
 			root: {
-				[bundlePath.replace(/\//g, '-')]: bundle.messages
+				[bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}`, 'g'), '-')]: bundle.messages
 			}
 		});
 	}
@@ -246,7 +246,7 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
  * The message formatter.
  */
 export function getMessageFormatter(bundlePath: string, key: string, locale?: string): MessageFormatter {
-	const normalized = bundlePath.replace(/\//g, '-').replace(/-$/, '');
+	const normalized = bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}`, 'g'), '-').replace(/-$/, '');
 	locale = normalizeLocale(locale || getRootLocale());
 	const formatterKey = `${locale}:${bundlePath}:${key}`;
 	let formatter = formatterMap.get(formatterKey);
@@ -279,7 +279,7 @@ export function getMessageFormatter(bundlePath: string, key: string, locale?: st
  */
 function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Promise<T> {
 	const { bundlePath, locales, messages } = bundle;
-	const path = bundlePath.replace(/\/$/, '');
+	const path = bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}\$`), '');
 	const currentLocale = locale ? normalizeLocale(locale) : getRootLocale();
 
 	try {
@@ -305,7 +305,7 @@ function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Promise<T
 			localeCache.set(currentLocale, <T> Object.freeze(localeMessages));
 			Globalize.loadMessages({
 				[currentLocale]: {
-					[bundlePath.replace(/\//g, '-')]: localeMessages
+					[bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}`, 'g'), '-')]: localeMessages
 				}
 			});
 
