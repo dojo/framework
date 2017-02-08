@@ -2,11 +2,11 @@ import global from '@dojo/core/global';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { spy } from 'sinon';
-import createProjectorMixin, { ProjectorState } from '../../../src/mixins/createProjectorMixin';
-import createWidgetBase from '../../../src/createWidgetBase';
+import { ProjectorMixin, ProjectorState, ProjectorProperties } from '../../../src/mixins/Projector';
+import { WidgetBase } from '../../../src/WidgetBase';
 import { v } from '../../../src/d';
 
-const createTestWidget = createWidgetBase.mixin(createProjectorMixin);
+class TestWidget extends ProjectorMixin(WidgetBase)<ProjectorProperties> {}
 
 registerSuite({
 	name: 'mixins/projectorMixin',
@@ -14,7 +14,7 @@ registerSuite({
 	'construct projector with css transitions'() {
 		global.cssTransitions = {};
 		try {
-			createTestWidget({ cssTransitions: true });
+			new TestWidget({ cssTransitions: true });
 		}
 		catch (err) {
 			assert.fail(null, null, 'Projector should be created without throwing an error');
@@ -24,7 +24,7 @@ registerSuite({
 	'construting projector configured for css transitions throws when css-transitions script is not loaded.'() {
 		global.cssTransitions = undefined;
 		try {
-			createTestWidget({ cssTransitions: true });
+			new TestWidget({ cssTransitions: true });
 			assert.fail();
 		}
 		catch (err) {
@@ -33,11 +33,11 @@ registerSuite({
 		}
 	},
 	'render throws an error for null result'() {
-		const projector = createTestWidget.override({
-			getNode() {
+		const projector = new class extends TestWidget {
+			render() {
 				return null;
 			}
-		})();
+		}({});
 
 		try {
 			projector.__render__();
@@ -49,11 +49,11 @@ registerSuite({
 		}
 	},
 	'render throws an error for string result'() {
-		const projector = createTestWidget.override({
-			getNode() {
+		const projector = new class extends TestWidget {
+			render() {
 				return '';
 			}
-		})();
+		}({});
 
 		try {
 			projector.__render__();
@@ -65,22 +65,17 @@ registerSuite({
 		}
 	},
 	'render does not attach after create when there are no properties'() {
-
-		const projector = createWidgetBase.mixin({
-			mixin: {
-				render() {
-					return v('div', <any> null);
-				}
-			},
-			aspectAdvice: {
-				after: {
-					__render__(results) {
-						results.properties = undefined;
-						return results;
-					}
-				}
+		const projector = new class extends TestWidget {
+			render() {
+				return v('div', <any> null);
 			}
-		}).mixin(createProjectorMixin)();
+
+			__render__() {
+				const results: any = super.__render__();
+				results.properties = undefined;
+				return results;
+			}
+		}({});
 
 		const vnode  = <any> projector.__render__();
 		assert.isUndefined(vnode.properties);
@@ -88,7 +83,7 @@ registerSuite({
 	'attach to projector': {
 		'append'() {
 			const childNodeLength = document.body.childNodes.length;
-			const projector = createTestWidget();
+			const projector = new TestWidget({});
 
 			projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
@@ -101,13 +96,11 @@ registerSuite({
 			});
 		},
 		'replace'() {
-			const projector = createTestWidget.mixin({
-				mixin: {
-					render(this: any) {
-						return v('body', this.children);
-					}
+			const projector = new class extends TestWidget {
+				render() {
+					return v('body', this.children);
 				}
-			})();
+			}({});
 
 			projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
@@ -120,7 +113,7 @@ registerSuite({
 		},
 		'merge'() {
 			const childNodeLength = document.body.childNodes.length;
-			const projector = createTestWidget();
+			const projector = new TestWidget({});
 
 			projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
@@ -135,9 +128,7 @@ registerSuite({
 	'attach event'() {
 		const root = document.createElement('div');
 		document.body.appendChild(root);
-		const projector = createTestWidget({
-			root
-		});
+		const projector = new TestWidget({ root });
 
 		projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
@@ -154,14 +145,14 @@ registerSuite({
 		});
 	},
 	'get root'() {
-		const projector = createTestWidget();
+		const projector = new TestWidget({});
 		const root = document.createElement('div');
 		assert.equal(projector.root, document.body);
 		projector.root = root;
 		assert.equal(projector.root, root);
 	},
 	'get projector state'() {
-		const projector = createTestWidget();
+		const projector = new TestWidget({});
 
 		assert.equal(projector.projectorState, ProjectorState.Detached);
 		return projector.append().then(() => {
@@ -172,7 +163,7 @@ registerSuite({
 
 	},
 	'destroy'() {
-		const projector = createTestWidget();
+		const projector: any = new TestWidget({});
 		const maquetteProjectorStopSpy = spy(projector.projector, 'stop');
 		const maquetteProjectorDetachSpy = spy(projector.projector, 'detach');
 
@@ -190,19 +181,19 @@ registerSuite({
 
 	},
 	'invalidate on setting children'() {
-		const projector = createTestWidget();
+		const projector = new TestWidget({});
 		let called = false;
 
 		projector.on('invalidated', () => {
 			called = true;
 		});
 
-		projector.setChildren(v('div'));
+		projector.setChildren([ v('div') ]);
 
 		assert.isTrue(called);
 	},
 	'invalidate before attached'() {
-		const projector = createTestWidget();
+		const projector: any = new TestWidget({});
 		const maquetteProjectorSpy = spy(projector.projector, 'scheduleRender');
 		let called = false;
 
@@ -216,7 +207,7 @@ registerSuite({
 		assert.isFalse(called);
 	},
 	'invalidate after attached'() {
-		const projector = createTestWidget();
+		const projector: any = new TestWidget({});
 		const maquetteProjectorSpy = spy(projector.projector, 'scheduleRender');
 		let called = false;
 
@@ -232,12 +223,12 @@ registerSuite({
 	},
 	'reattach'() {
 		const root = document.createElement('div');
-		const projector = createTestWidget({ root });
+		const projector = new TestWidget({ root });
 		const promise = projector.append();
 		assert.strictEqual(promise, projector.append(), 'same promise should be returned');
 	},
 	'setRoot throws when already attached'() {
-		const projector = createTestWidget();
+		const projector = new TestWidget({});
 		const div = document.createElement('div');
 		projector.root = div;
 		return projector.append().then((handle) => {

@@ -1,9 +1,8 @@
 import { w } from './d';
-import { WidgetProperties, WidgetFactory, Widget, DNode } from './interfaces';
-import createProjectorMixin from './mixins/createProjectorMixin';
-import createDomWrapper from './util/createDomWrapper';
+import { WidgetProperties, WidgetConstructor, WidgetBase, DNode } from './WidgetBase';
+import { ProjectorMixin } from './mixins/Projector';
+import { DomWrapper } from './util/DomWrapper';
 import { assign } from '@dojo/core/lang';
-import { Projector } from './mixins/createProjectorMixin';
 import { from as arrayFrom } from '@dojo/shim/array';
 import global from '@dojo/core/global';
 
@@ -81,7 +80,7 @@ export interface CustomElementDescriptor {
 	/**
 	 * Widget factory that will create the widget
 	 */
-	widgetFactory: WidgetFactory<any, any>;
+	widgetFactory: WidgetConstructor;
 
 	/**
 	 * List of attributes on the custom element to map to widget properties
@@ -115,10 +114,10 @@ export interface CustomElementDescriptor {
  * @property                                setWidgetInstance   Set the widget instance for this element
  */
 export interface CustomElement extends HTMLElement {
-	getWidgetFactory(): WidgetFactory<any, any>;
+	getWidgetFactory(): WidgetConstructor;
 	getDescriptor(): CustomElementDescriptor;
-	getWidgetInstance(): Widget<any>;
-	setWidgetInstance(instance: Widget<any>): void;
+	getWidgetInstance(): WidgetBase<any>;
+	setWidgetInstance(instance: WidgetBase<any>): void;
 }
 
 function getWidgetPropertyFromAttribute(attributeName: string, attributeValue: string | null, descriptor: CustomElementAttributeDescriptor): [ string, any ] {
@@ -225,7 +224,7 @@ export function initializeElement(element: CustomElement) {
 	let children: DNode[] = [];
 
 	arrayFrom(element.children).forEach((childNode: HTMLElement, index: number) => {
-		children.push(w(createDomWrapper, {
+		children.push(w(DomWrapper, {
 			key: `child-${index}`,
 			domNode: childNode
 		}));
@@ -239,10 +238,9 @@ export function initializeElement(element: CustomElement) {
 		element.removeChild(childNode);
 	});
 
-	const widgetInstance: Projector = element.getWidgetFactory().mixin(createProjectorMixin)({
-		root: element,
-		properties: initialProperties
-	});
+	const projector = ProjectorMixin(element.getWidgetFactory());
+
+	const widgetInstance = new projector(assign(initialProperties, { root: element }));
 	widgetInstance.setChildren(children);
 	element.setWidgetInstance(widgetInstance);
 

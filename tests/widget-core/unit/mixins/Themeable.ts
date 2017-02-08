@@ -1,11 +1,9 @@
-import compose from '@dojo/compose/compose';
 import { VNode } from '@dojo/interfaces/vdom';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import themeable, { Themeable } from '../../../src/mixins/themeable';
-import createWidgetBase from '../../../src/createWidgetBase';
+import { ThemeableMixin, theme, ThemeableProperties } from '../../../src/mixins/Themeable';
+import { WidgetBase } from '../../../src/WidgetBase';
 import { v } from '../../../src/d';
-import { Widget, WidgetProperties, DNode } from '../../../src/interfaces';
 import { stub, SinonStub } from 'sinon';
 
 const baseClasses = {
@@ -40,16 +38,10 @@ const overrideClasses2 = {
 	class1: 'override2Class1'
 };
 
-const themeableFactory = compose({
-	properties: <any> {},
-	baseClasses
-}, (instance, options: any) => {
-	if (options) {
-		instance.properties = options.properties;
-	}
-}).mixin(themeable);
+@theme(baseClasses)
+class Test extends ThemeableMixin(WidgetBase)<ThemeableProperties> { }
 
-let themeableInstance: Themeable;
+let themeableInstance: Test;
 let consoleStub: SinonStub;
 
 registerSuite({
@@ -62,7 +54,7 @@ registerSuite({
 			consoleStub.restore();
 		},
 		'should return baseClasses flagged classes via the classes function'() {
-			themeableInstance = themeableFactory();
+			themeableInstance = new Test({});
 			const { class1, class2 } = baseClasses;
 			const flaggedClasses = themeableInstance.classes(class1, class2).get();
 			assert.deepEqual(flaggedClasses, {
@@ -73,7 +65,7 @@ registerSuite({
 			assert.isFalse(consoleStub.called);
 		},
 		'should return negated classes for those that are not passed'() {
-			themeableInstance = themeableFactory();
+			themeableInstance = new Test({});
 			const { class1 } = baseClasses;
 			const flaggedClasses = themeableInstance.classes(class1).get();
 			assert.deepEqual(flaggedClasses, {
@@ -84,7 +76,7 @@ registerSuite({
 			assert.isFalse(consoleStub.called);
 		},
 		'should ignore any new classes that do not exist in the baseClasses and show console error'() {
-			themeableInstance = themeableFactory();
+			themeableInstance = new Test({});
 			const { class1 } = baseClasses;
 			const newClassName = 'newClassName';
 			const flaggedClasses = themeableInstance.classes(class1, newClassName).get();
@@ -98,9 +90,7 @@ registerSuite({
 			assert.isTrue(consoleStub.firstCall.args[0].indexOf(newClassName) > -1);
 		},
 		'should split adjoined classes into multiple classes'() {
-			themeableInstance = themeableFactory({
-				properties: { theme: testTheme3 }
-			});
+			themeableInstance = new Test({ theme: testTheme3 });
 
 			const { class1, class2 } = baseClasses;
 			const flaggedClasses = themeableInstance.classes(class1, class2).get();
@@ -111,9 +101,7 @@ registerSuite({
 			});
 		},
 		'should remove adjoined classes when they are no longer provided'() {
-			themeableInstance = themeableFactory({
-				properties: { theme: testTheme3 }
-			});
+			themeableInstance = new Test({ theme: testTheme3 });
 
 			themeableInstance.emit({
 				type: 'properties:changed',
@@ -135,7 +123,7 @@ registerSuite({
 	},
 	'classes.fixed chained function': {
 		'should work without any classes passed to first function'() {
-			themeableInstance = themeableFactory();
+			themeableInstance = new Test({});
 			const fixedClassName = 'fixedClassName';
 			const flaggedClasses = themeableInstance.classes().fixed(fixedClassName).get();
 			assert.deepEqual(flaggedClasses, {
@@ -145,7 +133,7 @@ registerSuite({
 			});
 		},
 		'should pass through new classes'() {
-			themeableInstance = themeableFactory();
+			themeableInstance = new Test({});
 			const { class1 } = baseClasses;
 			const fixedClassName = 'fixedClassName';
 			const flaggedClasses = themeableInstance.classes(class1).fixed(fixedClassName).get();
@@ -156,7 +144,7 @@ registerSuite({
 			});
 		},
 		'should negate any new classes that are not requested on second call'() {
-			themeableInstance = themeableFactory();
+			themeableInstance = new Test({});
 			const { class1 } = baseClasses;
 			const fixedClassName = 'fixedClassName';
 			const flaggedClassesFirstCall = themeableInstance.classes(class1).fixed(fixedClassName).get();
@@ -174,7 +162,7 @@ registerSuite({
 			}, `${fixedClassName} should be false on second call`);
 		},
 		'should split adjoined fixed classes into multiple classes'() {
-			themeableInstance = themeableFactory();
+			themeableInstance = new Test({});
 			const { class1 } = baseClasses;
 			const adjoinedClassName = 'adjoinedClassName1 adjoinedClassName2';
 			const flaggedClasses = themeableInstance.classes(class1).fixed(adjoinedClassName).get();
@@ -186,7 +174,7 @@ registerSuite({
 			});
 		},
 		'should remove adjoined fixed classes when they are no longer provided'() {
-			themeableInstance = themeableFactory();
+			themeableInstance = new Test({});
 			const { class1 } = baseClasses;
 			const adjoinedClassName = 'adjoinedClassName1 adjoinedClassName2';
 			const flaggedClassesFirstCall = themeableInstance.classes(class1).fixed(adjoinedClassName).get();
@@ -208,9 +196,7 @@ registerSuite({
 	},
 	'setting a theme': {
 		'should override basetheme classes with theme classes'() {
-			themeableInstance = themeableFactory({
-				properties: { theme: testTheme1 }
-			});
+			themeableInstance = new Test({ theme: testTheme1 });
 			const { class1, class2 } = baseClasses;
 			const flaggedClasses = themeableInstance.classes(class1, class2).get();
 			assert.deepEqual(flaggedClasses, {
@@ -219,9 +205,7 @@ registerSuite({
 			});
 		},
 		'should negate old theme class when a new theme is set'() {
-			themeableInstance = themeableFactory({
-				properties: { theme: testTheme1 }
-			});
+			themeableInstance = new Test({ theme: testTheme1 });
 			themeableInstance.emit({
 				type: 'properties:changed',
 				properties: {
@@ -239,9 +223,7 @@ registerSuite({
 			});
 		},
 		'will not regenerate theme classes if theme changed property is not set'() {
-			themeableInstance = themeableFactory({
-				properties: { theme: testTheme1 }
-			});
+			themeableInstance = new Test({ theme: testTheme1 });
 			themeableInstance.emit({
 				type: 'properties:changed',
 				properties: {
@@ -260,9 +242,7 @@ registerSuite({
 	},
 	'setting override classes': {
 		'should supplement basetheme classes with override classes'() {
-			themeableInstance = themeableFactory({
-				properties: { overrideClasses: overrideClasses1 }
-			});
+			themeableInstance = new Test({ overrideClasses: overrideClasses1 });
 			const { class1, class2 } = baseClasses;
 			const flaggedClasses = themeableInstance.classes(class1, class2).get();
 			assert.deepEqual(flaggedClasses, {
@@ -272,9 +252,7 @@ registerSuite({
 			});
 		},
 		'should set override classes to false when they are changed'() {
-			themeableInstance = themeableFactory({
-				properties: { overrideClasses: overrideClasses1 }
-			});
+			themeableInstance = new Test({ overrideClasses: overrideClasses1 });
 			themeableInstance.emit({
 				type: 'properties:changed',
 				properties: {
@@ -295,24 +273,23 @@ registerSuite({
 	},
 	'integration': {
 		'should work as mixin to createWidgetBase'() {
-			type ThemeableWidget = Widget<WidgetProperties> & Themeable;
-
 			const fixedClassName = 'fixedClassName';
-			const createThemeableWidget = createWidgetBase.mixin(themeable).mixin({
-				mixin: {
-					baseClasses,
-					getChildrenNodes(this: ThemeableWidget ): DNode[] {
-						const { class1 } = baseClasses;
-						return [
-							v('div', { classes: this.classes(class1).fixed(fixedClassName).get() })
-						];
-					}
-				}
-			});
 
-			const themeableWidget: ThemeableWidget = createThemeableWidget({
-				properties: { theme: testTheme1 }
-			});
+			class IntegrationTest extends Test {
+				constructor(options: any) {
+					options.baseClasses = baseClasses;
+					super(options);
+				}
+
+				render() {
+					const { class1 } = baseClasses;
+					return v('div', [
+						v('div', { classes: this.classes(class1).fixed(fixedClassName).get() })
+					]);
+				}
+			}
+
+			const themeableWidget: any = new IntegrationTest({ theme: testTheme1 });
 
 			const result = <VNode> themeableWidget.__render__();
 			assert.deepEqual(result.children![0].properties!.classes, {

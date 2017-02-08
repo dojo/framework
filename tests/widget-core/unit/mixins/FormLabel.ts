@@ -2,26 +2,24 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { VNode } from '@dojo/interfaces/vdom';
 import { v, w } from './../../../src/d';
-import createWidgetBase from '../../../src/createWidgetBase';
-import createFormLabelMixin from '../../../src/mixins/createFormLabelMixin';
+import { WidgetBase } from '../../../src/WidgetBase';
+import { FormLabelMixin, FormLabelMixinProperties } from '../../../src/mixins/FormLabel';
 
-const formLabelWidget = createWidgetBase.mixin(createFormLabelMixin);
+class FormLabelWidget extends FormLabelMixin(WidgetBase)<FormLabelMixinProperties> { }
 
 registerSuite({
 	name: 'mixins/createFormLabelMixin',
 	construction() {
-		const formLabelMixin = createFormLabelMixin();
+		const formLabelMixin: any = new FormLabelWidget({});
 
 		assert.isDefined(formLabelMixin);
 	},
 	getFormFieldNodeAttributes: {
 		'for HNode'() {
-			const formField = formLabelWidget({
-				properties: {
-					value: 'foo',
-					maxLength: 100,
-					randomProp: 'qux'
-				}
+			const formField: any = new FormLabelWidget(<any> {
+				value: 'foo',
+				maxLength: 100,
+				randomProp: 'qux'
 			});
 
 			let vnode = <VNode> formField.__render__();
@@ -55,18 +53,16 @@ registerSuite({
 			assert.strictEqual(vnode.properties!['aria-describedby'], 'qux');
 		},
 		'for WNode'() {
-			const createExtendedFormField = formLabelWidget.override({
+			class ExtendedFormField extends FormLabelWidget {
 				render() {
-					return w(formLabelWidget, {});
+					return w(FormLabelWidget, {});
 				}
-			});
+			};
 
-			const formField = createExtendedFormField({
-				properties: {
-					value: 'foo',
-					maxLength: 100,
-					randomProp: 'qux'
-				}
+			const formField: any = new ExtendedFormField(<any> {
+				value: 'foo',
+				maxLength: 100,
+				randomProp: 'qux'
 			});
 
 			let vnode = <VNode> formField.__render__();
@@ -76,19 +72,17 @@ registerSuite({
 			assert.isUndefined(vnode.properties!['maxlength']);
 		},
 		'label properties'() {
-			const inputWithClasses = createWidgetBase.override({
-				render(this: any) {
-					return v('input', { classes: this.properties.classes });
+			class ExtendedFormField extends FormLabelWidget {
+				render() {
+					return v('input', { classes: { 'qux': true } });
 				}
-			});
-			const formField = inputWithClasses.mixin(createFormLabelMixin)({
-				properties: {
-					label: 'foo',
-					value: 'bar',
-					maxLength: 100,
-					formId: 'baz',
-					classes: { 'qux': true }
-				}
+			};
+
+			const formField: any = new ExtendedFormField({
+				label: 'foo',
+				value: 'bar',
+				maxLength: 100,
+				formId: 'baz'
 			});
 			let vnode = <VNode> formField.__render__();
 
@@ -99,7 +93,7 @@ registerSuite({
 		}
 	},
 	'type'() {
-		const formField: any = formLabelWidget();
+		const formField: any = new FormLabelWidget({});
 		formField.type = 'foo';
 
 		const vnode = <VNode> formField.__render__();
@@ -108,10 +102,8 @@ registerSuite({
 	},
 	'label': {
 		'string label'() {
-			const formField = formLabelWidget({
-				properties: {
-					label: 'bar'
-				}
+			const formField: any = new FormLabelWidget({
+				label: 'bar'
 			});
 			const vnode = <VNode> formField.__render__();
 
@@ -120,13 +112,11 @@ registerSuite({
 			assert.strictEqual(vnode.children![1].properties!.innerHTML, 'bar');
 		},
 		'label options'() {
-			const formField = formLabelWidget({
-				properties: {
-					label: {
-						content: 'bar',
-						position: 'before',
-						hidden: true
-					}
+			const formField: any = new FormLabelWidget({
+				label: {
+					content: 'bar',
+					position: 'before',
+					hidden: true
 				}
 			});
 			let vnode = <VNode> formField.__render__();
@@ -147,14 +137,14 @@ registerSuite({
 			assert.lengthOf(vnode.children, 1);
 		},
 		'no label'() {
-			const formField = formLabelWidget();
+			const formField: any = new FormLabelWidget({});
 			const vnode = <VNode> formField.__render__();
 
 			assert.strictEqual(vnode.vnodeSelector, 'div');
 			assert.lengthOf(vnode.children, 0);
 		},
 		'changing label'() {
-			const formField = formLabelWidget();
+			const formField: any = new FormLabelWidget({});
 			let vnode = <VNode> formField.__render__();
 
 			assert.strictEqual(vnode.vnodeSelector, 'div');

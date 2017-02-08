@@ -1,5 +1,5 @@
 import FactoryRegistry from './../../src/FactoryRegistry';
-import createWidgetBase from './../../src/createWidgetBase';
+import { WidgetBase } from './../../src/WidgetBase';
 import Promise from '@dojo/shim/Promise';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
@@ -16,25 +16,25 @@ registerSuite({
 	'has'() {
 		const factoryRegistry = new FactoryRegistry();
 		assert.isFalse(factoryRegistry.has('my-widget'));
-		factoryRegistry.define('my-widget', createWidgetBase);
+		factoryRegistry.define('my-widget', WidgetBase);
 		assert.isTrue(factoryRegistry.has('my-widget'));
 	},
 	define: {
 		'able to define factories and lazy factories'() {
 			const lazyFactory = () => {
-				return Promise.resolve(createWidgetBase);
+				return Promise.resolve(WidgetBase);
 			};
 			const factoryRegistry = new FactoryRegistry();
-			factoryRegistry.define('my-widget', createWidgetBase);
+			factoryRegistry.define('my-widget', WidgetBase);
 			factoryRegistry.define('my-lazy-widget', lazyFactory);
 			assert.isTrue(factoryRegistry.has('my-widget'));
 			assert.isTrue(factoryRegistry.has('my-lazy-widget'));
 		},
 		'throw an error using a previously registered factory label'() {
 			const factoryRegistry = new FactoryRegistry();
-			factoryRegistry.define('my-widget', createWidgetBase);
+			factoryRegistry.define('my-widget', WidgetBase);
 			try {
-				factoryRegistry.define('my-widget', createWidgetBase);
+				factoryRegistry.define('my-widget', WidgetBase);
 				assert.fail();
 			}
 			catch (error) {
@@ -46,9 +46,9 @@ registerSuite({
 	get: {
 		'get a registered factory'() {
 			const factoryRegistry = new FactoryRegistry();
-			factoryRegistry.define('my-widget', createWidgetBase);
+			factoryRegistry.define('my-widget', WidgetBase);
 			const factory = factoryRegistry.get('my-widget');
-			assert.strictEqual(factory, createWidgetBase);
+			assert.strictEqual(factory, WidgetBase);
 		},
 		'throws an error if factory has not been registered.'() {
 			const factoryRegistry = new FactoryRegistry();
@@ -67,10 +67,10 @@ registerSuite({
 			const factoryRegistry = new FactoryRegistry();
 			factoryRegistry.define('my-widget', lazyFactory);
 			factoryRegistry.get('my-widget');
-			resolveFunction(createWidgetBase);
+			resolveFunction(WidgetBase);
 			return promise.then(() => {
 				const factory = factoryRegistry.get('my-widget');
-				assert.strictEqual(factory, createWidgetBase);
+				assert.strictEqual(factory, WidgetBase);
 			});
 		},
 		'throws error from rejected promise'() {

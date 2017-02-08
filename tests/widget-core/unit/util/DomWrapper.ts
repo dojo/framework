@@ -1,10 +1,10 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { isHNode } from '../../../src/d';
-import { HNode, Widget } from '../../../src/interfaces';
-import createDomWrapper from '../../../src/util/createDomWrapper';
+import { WidgetBase, HNode } from './../../../src/WidgetBase';
+import { DomWrapper } from '../../../src/util/DomWrapper';
 
-function callCreate(widget: Widget<any>, includeUpdate = false) {
+function callCreate(widget: WidgetBase<any>, includeUpdate = false) {
 	const hNode: HNode = <HNode> widget.render();
 
 	assert.isTrue(isHNode(hNode));
@@ -15,7 +15,7 @@ function callCreate(widget: Widget<any>, includeUpdate = false) {
 		assert.isFunction(hNode.properties.afterUpdate);
 	}
 
-	widget.__render__();
+	(<any> widget).__render__();
 	(<any> hNode.properties).afterCreate.call(widget);
 
 	if (includeUpdate) {
@@ -24,7 +24,7 @@ function callCreate(widget: Widget<any>, includeUpdate = false) {
 }
 
 registerSuite({
-	name: 'createDomWrapper',
+	name: 'DomWrapper',
 
 	'DOM element is added as a child'() {
 		let mock = {};
@@ -38,18 +38,12 @@ registerSuite({
 			}
 		};
 
-		let domWrapper = createDomWrapper.mixin({
-			mixin: {
-				__render__() {
-					return <any> {
-						domNode: parentNode
-					};
-				}
-			}
-		})();
-		domWrapper.setProperties({
-			domNode: <any> mock
-		});
+		let domWrapper: any = new DomWrapper({ domNode: <any> mock });
+
+		domWrapper.dirty = false;
+		domWrapper.cachedVNode = {
+			domNode: parentNode
+		};
 
 		callCreate(domWrapper);
 
@@ -66,48 +60,33 @@ registerSuite({
 			}
 		};
 
-		let domWrapper = createDomWrapper.mixin({
-			mixin: {
-				__render__() {
-					return <any> {
-						domNode: null
-					};
-				}
-			}
-		})();
-		domWrapper.setProperties({
-			domNode: <any> 'test'
-		});
+		let domWrapper: any = new DomWrapper({ domNode: <any> 'test' });
+
+		domWrapper.dirty = false;
+		domWrapper.cachedVNode = {
+			domNode: null
+		};
 
 		callCreate(domWrapper);
 	},
 
 	'Nothing bad happens if there if node is a string'() {
-		let domWrapper = createDomWrapper.mixin({
-			mixin: {
-				__render__() {
-					return 'test';
-				}
-			}
-		})();
+		let domWrapper: any = new DomWrapper({ domNode: <any> 'test' });
 
-		domWrapper.setProperties({
-			domNode: <any> 'test'
-		});
+		domWrapper.dirty = false;
+		domWrapper.cachedVNode = {
+			domNode: 'test'
+		};
 
 		callCreate(domWrapper);
 	},
 
 	'updates with no renders don\'t do anything'() {
-		let domWrapper = createDomWrapper.mixin({
-			mixin: {
-				__render__() {
-					return <any> {
-						domNode: null
-					};
-				}
-			}
-		})();
+		let domWrapper: any = new DomWrapper({ domNode: <any> undefined });
+		domWrapper.dirty = false;
+		domWrapper.cachedVNode = {
+			domNode: null
+		};
 
 		callCreate(domWrapper, true);
 	},
@@ -121,27 +100,21 @@ registerSuite({
 			}
 		};
 
-		let domWrapper = createDomWrapper.mixin({
-			mixin: {
-				__render__() {
-					return <any> {
-						domNode: parentNode
-					};
-				}
-			}
-		})();
+		let domWrapper: any = new DomWrapper({ domNode: <any> undefined });
+		domWrapper.dirty = false;
+		domWrapper.cachedVNode = {
+			domNode: parentNode
+		};
 
 		callCreate(domWrapper, true);
 	},
 
 	'render aspect is ok if we dont return an hnode'() {
-		let domWrapper = createDomWrapper.mixin({
-			mixin: {
-				render() {
-					return 'test';
-				}
-			}
-		})();
+		let domWrapper: any = new DomWrapper({ domNode: <any> undefined });
+		domWrapper.dirty = false;
+		domWrapper.cachedVNode = {
+			domNode: 'test'
+		};
 
 		domWrapper.render();
 	}

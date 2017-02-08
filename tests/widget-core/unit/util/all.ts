@@ -1,1 +1,1 @@
-import './createDomWrapper';
+import './DomWrapper';

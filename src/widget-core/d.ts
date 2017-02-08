@@ -6,10 +6,9 @@ import {
 	DNode,
 	HNode,
 	WNode,
-	Widget,
 	WidgetProperties,
-	WidgetFactory
-} from './interfaces';
+	WidgetBase
+} from './WidgetBase';
 import FactoryRegistry from './FactoryRegistry';
 
 /**
@@ -37,6 +36,11 @@ export function isHNode(child: DNode): child is HNode {
 }
 
 /**
+ * Widget Base Constructor type with a generic for Widget Properties
+ */
+export type WidgetBaseConstructor<P extends WidgetProperties> = new (properties: P) => WidgetBase<P>
+
+/**
  * Generic decorate function for DNodes. The nodes are modified in place based on the provided predicate
  * and modifier functions.
  *
@@ -62,11 +66,17 @@ export function decorate(dNodes: DNode | DNode[], modifier: (dNode: DNode) => vo
 	return dNodes;
 }
 
+/**
+ * Global factory registry instance
+ */
 export const registry = new FactoryRegistry();
 
-export function w<P extends WidgetProperties>(factory: WidgetFactory<Widget<P>, P> | string, properties: P): WNode;
-export function w<P extends WidgetProperties>(factory: WidgetFactory<Widget<P>, P> | string, properties: P, children?: DNode[]): WNode;
-export function w<P extends WidgetProperties>(factory: WidgetFactory<Widget<P>, P> | string, properties: P, children: DNode[] = []): WNode {
+/**
+ * Wrapper function for calls to create a widget.
+ */
+export function w<P extends WidgetProperties>(factory: WidgetBaseConstructor<P> | string, properties: P): WNode;
+export function w<P extends WidgetProperties>(factory: WidgetBaseConstructor<P> | string, properties: P, children?: DNode[]): WNode;
+export function w<P extends WidgetProperties>(factory: WidgetBaseConstructor<P> | string, properties: P, children: DNode[] = []): WNode {
 
 	return {
 		children,
@@ -76,6 +86,9 @@ export function w<P extends WidgetProperties>(factory: WidgetFactory<Widget<P>, 
 	};
 }
 
+/**
+ * Wrapper function for calls to create hyperscript, lazily executes the hyperscript creation
+ */
 export function v(tag: string, properties: VNodeProperties, children?: DNode[]): HNode;
 export function v(tag: string, children: DNode[]): HNode;
 export function v(tag: string): HNode;

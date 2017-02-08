@@ -1,7 +1,9 @@
-import compose, { ComposeFactory } from '@dojo/compose/compose';
 import { assign } from '@dojo/core/lang';
-import { DNode } from './../interfaces';
 import { v, isHNode } from '../d';
+import {
+	DNode,
+	WidgetConstructor
+} from '../WidgetBase';
 
 /**
  * Label settings for form label text content, position (before or after), and visibility
@@ -16,11 +18,6 @@ export interface LabelProperties {
  * Form Label Properties
  */
 export interface FormLabelMixinProperties {
-
-	/**
-	 * Index type
-	 */
-	[index: string]: any;
 
 	/**
 	 * The form widget's name
@@ -99,19 +96,6 @@ export interface FormLabelMixinProperties {
 }
 
 /**
- * Form Label Mixin
- */
-export interface FormLabelMixin {}
-
-/**
- * Form Label
- */
-export type FormLabel = FormLabelMixin & {
-	type: string;
-	properties: FormLabelMixinProperties;
-};
-
-/**
  * Default settings for form labels
  */
 const labelDefaults = {
@@ -125,57 +109,17 @@ const labelDefaults = {
  */
 const allowedFormFieldAttributes = ['checked', 'describedBy', 'disabled', 'invalid', 'maxLength', 'minLength', 'multiple', 'name', 'placeholder', 'readOnly', 'required', 'type', 'value'];
 
-function getFormFieldA11yAttributes(instance: FormLabel) {
-	const { properties, type } = instance;
-	const attributeKeys = Object.keys(properties);
+export function FormLabelMixin<T extends WidgetConstructor>(base: T): T {
+	return class extends base {
 
-	if (type) {
-		attributeKeys.push('type');
-	}
+		properties: FormLabelMixinProperties;
 
-	const nodeAttributes: any = {};
+		type: string;
 
-	for (const key of allowedFormFieldAttributes) {
-
-		if (attributeKeys.indexOf(key) === -1) {
-			continue;
-		}
-		else if (key === 'type') {
-			nodeAttributes.type = type;
-		}
-		else if (key === 'readOnly' && properties.readOnly) {
-			nodeAttributes.readonly = 'readonly';
-			nodeAttributes['aria-readonly'] = true;
-		}
-		else if (key === 'invalid') {
-			nodeAttributes['aria-invalid'] = properties.invalid;
-		}
-		else if (key === 'describedBy') {
-			nodeAttributes['aria-describedby'] = properties.describedBy;
-		}
-		else if ((key === 'maxLength' || key === 'minLength' || key === 'checked') && typeof properties[key] !== 'string') {
-			nodeAttributes[key.toLowerCase()] = '' + properties[key];
-		}
-		else {
-			nodeAttributes[key.toLowerCase()] = properties[key];
-		}
-	}
-
-	return nodeAttributes;
-}
-
-/**
- * FormLabalMixinFactory
- */
-export interface FormLabelMixinFactory extends ComposeFactory<FormLabelMixin, {}> {}
-
-const createFormLabelMixin = compose<FormLabelMixin, {}>({})
-.aspect({
-	after: {
-		render(this: FormLabel, result: DNode): DNode {
+		renderDecoratorFormLabel(result: DNode): DNode {
 			const labelNodeAttributes: any = {};
 			if (isHNode(result)) {
-				assign(result.properties, getFormFieldA11yAttributes(this));
+				assign(result.properties, this.getFormFieldA11yAttributes());
 
 				// move classes to label node
 				const { classes } = result.properties;
@@ -210,7 +154,44 @@ const createFormLabelMixin = compose<FormLabelMixin, {}>({})
 
 			return result;
 		}
-	}
-});
 
-export default createFormLabelMixin;
+		private getFormFieldA11yAttributes() {
+			const { properties, type } = this;
+			const attributeKeys = Object.keys(properties);
+
+			if (type) {
+				attributeKeys.push('type');
+			}
+
+			const nodeAttributes: any = {};
+
+			for (const key of allowedFormFieldAttributes) {
+
+				if (attributeKeys.indexOf(key) === -1) {
+					continue;
+				}
+				else if (key === 'type') {
+					nodeAttributes.type = type;
+				}
+				else if (key === 'readOnly' && properties.readOnly) {
+					nodeAttributes.readonly = 'readonly';
+					nodeAttributes['aria-readonly'] = true;
+				}
+				else if (key === 'invalid') {
+					nodeAttributes['aria-invalid'] = properties.invalid;
+				}
+				else if (key === 'describedBy') {
+					nodeAttributes['aria-describedby'] = properties.describedBy;
+				}
+				else if ((key === 'maxLength' || key === 'minLength' || key === 'checked') && typeof properties[key] !== 'string') {
+					nodeAttributes[key.toLowerCase()] = '' + properties[key];
+				}
+				else {
+					nodeAttributes[key.toLowerCase()] = (<any> properties)[key];
+				}
+			}
+
+			return nodeAttributes;
+		}
+	};
+}

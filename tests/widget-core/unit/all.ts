@@ -1,9 +1,8 @@
-import './createProjector'; // projector should load before integrations, because it loads a shim
-import './createWidgetBase';
+import 'dojo/has!host-node?../support/loadJsdom';
+import './WidgetBase';
+import './FactoryRegistry';
 import './customElements';
 import './d';
-import './integrations';
-import './main';
-import './FactoryRegistry';
+import './bases/all';
 import './mixins/all';
 import './util/all';

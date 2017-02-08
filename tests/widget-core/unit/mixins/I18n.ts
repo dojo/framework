@@ -2,17 +2,18 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import i18n, { invalidate, switchLocale, systemLocale } from '@dojo/i18n/i18n';
 import * as sinon from 'sinon';
-import createI18nMixin, { I18nWidget, I18nProperties } from '../../../src/mixins/createI18nMixin';
-import { Widget, WidgetProperties } from './../../../src/interfaces';
-import createWidgetBase from '../../../src/createWidgetBase';
-import { w, isHNode, isWNode } from './../../../src/d';
+import { VNode } from '@dojo/interfaces/vdom';
+import { I18nMixin, I18nProperties } from '../../../src/mixins/I18n';
+import { WidgetBase } from '../../../src/WidgetBase';
+import { w } from './../../../src/d';
 import bundle from '../../support/nls/greetings';
 
-const createLocalized = createWidgetBase.mixin(createI18nMixin);
-let localized: Widget<WidgetProperties & I18nProperties> & I18nWidget<any, I18nProperties>;
+class Localized extends I18nMixin(WidgetBase)<I18nProperties> {}
+
+let localized: any;
 
 registerSuite({
-	name: 'mixins/createI18nMixin',
+	name: 'mixins/I18nMixin',
 
 	afterEach() {
 		return switchLocale(systemLocale).then(() => {
@@ -26,7 +27,7 @@ registerSuite({
 	},
 
 	api() {
-		const localized = createLocalized();
+		const localized = new Localized({});
 		assert(localized);
 		assert.isFunction(localized.localizeBundle);
 	},
@@ -34,7 +35,7 @@ registerSuite({
 	'.localizeBundle()': {
 		'Returns default messages when locale bundle not loaded'() {
 			return switchLocale('fr').then(() => {
-				localized = createLocalized();
+				localized = new Localized({});
 				const messages = localized.localizeBundle(bundle);
 
 				assert.strictEqual(messages.hello, 'Hello');
@@ -43,11 +44,7 @@ registerSuite({
 		},
 
 		'Uses `properties.locale` when available'() {
-			localized = createLocalized({
-				properties: {
-					locale: 'fr'
-				}
-			});
+			localized = new Localized({ locale: 'fr' });
 			return i18n(bundle, 'fr').then(() => {
 				const messages = localized.localizeBundle(bundle);
 				assert.strictEqual(messages.hello, 'Bonjour');
@@ -57,7 +54,7 @@ registerSuite({
 
 		'Uses default locale when no locale is set'() {
 			return switchLocale('fr').then(() => {
-				localized = createLocalized();
+				localized = new Localized({});
 				return i18n(bundle, 'fr').then(() => {
 					const messages = localized.localizeBundle(bundle);
 					assert.strictEqual(messages.hello, 'Bonjour');
@@ -67,7 +64,7 @@ registerSuite({
 		},
 
 		'Returns an object with a `format` method'() {
-			localized = createLocalized();
+			localized = new Localized({});
 			let messages = localized.localizeBundle(bundle);
 
 			assert.isFunction(messages.format);
@@ -84,7 +81,7 @@ registerSuite({
 
 	'root locale switching': {
 		'Updates when no `locale` property is set'() {
-			localized = createLocalized();
+			localized = new Localized({});
 			sinon.spy(localized, 'invalidate');
 
 			return switchLocale('fr').then(() => {
@@ -93,10 +90,8 @@ registerSuite({
 		},
 
 		'Does not update when `locale` property is set'() {
-			localized = createLocalized({
-				properties: {
+			localized = new Localized({
 					locale: 'en'
-				}
 			});
 			sinon.spy(localized, 'invalidate');
 
@@ -106,85 +101,59 @@ registerSuite({
 		}
 	},
 	'does not decorate properties for wNode'() {
-		const createExtendedLocalized = createLocalized.override({
+		class LocalizedExtended extends Localized {
 			render() {
-				return w(createLocalized, {});
+				return w(Localized, {});
 			}
-		});
-
-		localized = createExtendedLocalized({
-			properties: { locale: 'ar-JO' }
-		});
-
-		const result = localized.render();
-		assert.isOk(result);
-		assert.isTrue(isWNode(result));
-		if (isWNode(result)) {
-			assert.isUndefined(result.properties['data-locale']);
 		}
+
+		localized = new LocalizedExtended({locale: 'ar-JO'});
+
+		const result = <VNode> localized.__render__();
+		assert.isOk(result);
+		assert.isNull(result.properties!['data-locale']);
 	},
 	'`properties.locale` updates the widget node\'s `data-locale` property': {
 		'when non-empty'() {
-			localized = createLocalized({
-				properties: { locale: 'ar-JO' }
-			});
+			localized = new Localized({locale: 'ar-JO'});
 
-			const result = localized.render();
+			const result = <VNode> localized.__render__();
 			assert.isOk(result);
-			assert.isTrue(isHNode(result));
-			if (isHNode(result)) {
-				assert.strictEqual(result.properties['data-locale'], 'ar-JO');
-			}
+			assert.strictEqual(result.properties!['data-locale'], 'ar-JO');
 		},
 
 		'when empty'() {
-			localized = createLocalized();
+			localized = new Localized({});
 
-			const result = localized.render();
+			const result = localized.__render__();
 			assert.isOk(result);
-			assert.isTrue(isHNode(result));
-			if (isHNode(result)) {
-				assert.isNull(result.properties['data-locale']);
-			}
+			assert.isNull(result.properties!['data-locale']);
 		}
 	},
 
 	'`properties.rtl`': {
 		'The `dir` attribute is "rtl" when true'() {
-			localized = createLocalized({
-				properties: { rtl: true }
-			});
+			localized = new Localized({ rtl: true });
 
-			const result = localized.render();
+			const result = localized.__render__();
 			assert.isOk(result);
-			assert.isTrue(isHNode(result));
-			if (isHNode(result)) {
-				assert.strictEqual(result.properties['dir'], 'rtl');
-			}
+			assert.strictEqual(result.properties!['dir'], 'rtl');
 		},
 
 		'The `dir` attribute is "ltr" when false'() {
-			localized = createLocalized({
-				properties: { rtl: false }
-			});
+			localized = new Localized({ rtl: false });
 
-			const result = localized.render();
+			const result = localized.__render__();
 			assert.isOk(result);
-			assert.isTrue(isHNode(result));
-			if (isHNode(result)) {
-				assert.strictEqual(result.properties['dir'], 'ltr');
-			}
+			assert.strictEqual(result.properties!['dir'], 'ltr');
 		},
 
 		'The `dir` attribute is not set when not a boolean.'() {
-			localized = createLocalized();
+			localized = new Localized({});
 
-			const result = localized.render();
+			const result = localized.__render__();
 			assert.isOk(result);
-			assert.isTrue(isHNode(result));
-			if (isHNode(result)) {
-				assert.isNull(result.properties['dir']);
-			}
+			assert.isNull(result.properties!['dir']);
 		}
 	}
 });

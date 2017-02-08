@@ -1,6 +1,5 @@
-import createWidgetBase from '../../../src/createWidgetBase';
+import { WidgetBase, WidgetProperties } from '../../../src/WidgetBase';
 import { v } from '../../../src/d';
-import { WidgetProperties, Widget } from '../../../src/interfaces';
 import registerCustomElement from '../../../src/registerCustomElement';
 
 interface TestButtonProperties extends WidgetProperties {
@@ -9,33 +8,27 @@ interface TestButtonProperties extends WidgetProperties {
 	onClick: () => void;
 }
 
-type TestButton = Widget<TestButtonProperties> & {
-	onClick: () => void;
-};
-
-const createTestButton = createWidgetBase.mixin({
-	mixin: {
-		onClick(this: TestButton) {
-			this.properties.onClick && this.properties.onClick();
-		},
-
-		render(this: TestButton) {
-			const { onClick : onclick } = this;
-			const { label = '', suffix = '' } = this.properties;
-
-			return v('button', {
-				onclick
-			}, [
-				label + ((suffix !== '') ? (' ' + suffix) : '')
-			]);
-		}
+class TestButton extends WidgetBase<TestButtonProperties> {
+	onClick(this: TestButton) {
+		this.properties.onClick && this.properties.onClick();
 	}
-});
+
+	render(this: TestButton) {
+		const { onClick : onclick } = this;
+		const { label = '', suffix = '' } = this.properties;
+
+		return v('button', {
+			onclick
+		}, [
+			label + ((suffix !== '') ? (' ' + suffix) : '')
+		]);
+	}
+}
 
 registerCustomElement(function () {
 	return {
 		tagName: 'test-button',
-		widgetFactory: createTestButton,
+		widgetFactory: TestButton,
 		attributes: [
 			{
 				attributeName: 'label'
@@ -57,7 +50,7 @@ registerCustomElement(function () {
 registerCustomElement(function () {
 	return {
 		tagName: 'no-attributes',
-		widgetFactory: createTestButton,
+		widgetFactory: TestButton,
 		properties: [
 			{
 				propertyName: 'buttonLabel',
