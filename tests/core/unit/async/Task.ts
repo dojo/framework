@@ -242,6 +242,17 @@ let suite = {
 			setTimeout(dfd.callback(() => {
 				assert.equal(callCount, 1);
 			}), 100);
+		},
+
+		'finally does not change the resolve value'(this: any) {
+			const dfd = this.async();
+			let task = new Task((resolve) => {
+				setTimeout(resolve.bind(null, 'test'), 10);
+			});
+			task = task.finally(() => 'changed');
+			task.then(dfd.callback((value: string) => {
+				assert.strictEqual(value, 'test');
+			}));
 		}
 	},
 

@@ -88,7 +88,7 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	/**
 	 * The finally callback for this Task (if it was created by a call to `finally`).
 	 */
-	private _finally: () => void | Thenable<any>;
+	private _finally: () => void;
 
 	/**
 	 * The state of the task
@@ -203,10 +203,11 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	/**
 	 * Allows for cleanup actions to be performed after resolution of a Promise.
 	 */
-	finally(callback: () => void | Thenable<any>): Task<T> {
+	finally(callback: () => void): Task<T> {
 		// if this task is already canceled, call the task
 		if (this._state === State.Canceled) {
-			return Task.resolve(callback());
+			callback();
+			return this;
 		}
 
 		const task = this.then<any>(
