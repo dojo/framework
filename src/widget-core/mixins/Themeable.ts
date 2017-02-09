@@ -46,7 +46,7 @@ export interface ClassesFunctionChain {
 	 * Function to pass fixed class names that bypass the theming
 	 * process
 	 */
-	fixed: (...classes: string[]) => ClassesFunctionChain;
+	fixed: (...classes: (string | null)[]) => ClassesFunctionChain;
 	/**
 	 * Finalize function to return the generated class names
 	 */
@@ -69,7 +69,7 @@ export interface ThemeablMixin {
 	 * @param ...classNames an array of class names
 	 * @returns a function chain to `get` or process more classes using `fixed`
 	 */
-	classes(...classNames: string[]): ClassesFunctionChain;
+	classes(...classNames: (string | null)[]): ClassesFunctionChain;
 }
 
 /**
@@ -124,26 +124,28 @@ export function ThemeableMixin<T extends WidgetConstructor>(base: T): Constructo
 			this.baseClassesReverseLookup = this.createBaseClassesLookup(this.baseClasses);
 		}
 
-		public classes(...classNames: string[]): ClassesFunctionChain {
-
-			const appliedClasses = classNames.reduce((currentCSSModuleClassNames, className) => {
-				const classNameKey = this.baseClassesReverseLookup[className];
-				if (this.generatedClassName.hasOwnProperty(classNameKey)) {
-					assign(currentCSSModuleClassNames, this.generatedClassName[classNameKey]);
-				}
-				else {
-					console.warn(`Class name: ${className} and lookup key: ${classNameKey} not from baseClasses, use chained 'fixed' method instead`);
-				}
-				return currentCSSModuleClassNames;
-			}, {});
+		public classes(...classNames: (string | null)[]): ClassesFunctionChain {
+			const appliedClasses = classNames
+				.filter((className) => className !== null)
+				.reduce((currentCSSModuleClassNames, className: string) => {
+					const classNameKey = this.baseClassesReverseLookup[className];
+					if (this.generatedClassName.hasOwnProperty(classNameKey)) {
+						assign(currentCSSModuleClassNames, this.generatedClassName[classNameKey]);
+					}
+					else {
+						console.warn(`Class name: ${className} and lookup key: ${classNameKey} not from baseClasses, use chained 'fixed' method instead`);
+					}
+					return currentCSSModuleClassNames;
+				}, {});
 
 			const responseClasses = assign({}, this.allClasses, appliedClasses);
 			const themeable = this;
 
 			const classesResponseChain: ClassesFunctionChain = {
 				classes: responseClasses,
-				fixed(this: ClassesFunctionChain, ...classes: string[]) {
-					const splitClasses = themeable.splitClassStrings(classes);
+				fixed(this: ClassesFunctionChain, ...classNames: (string | null)[]) {
+					const filteredClassNames = <string[]> classNames.filter((className) => className !== null);
+					const splitClasses = themeable.splitClassStrings(filteredClassNames);
 					assign(this.classes, themeable.createClassNameObject(splitClasses, true));
 					themeable.appendToAllClassNames(splitClasses);
 					return this;

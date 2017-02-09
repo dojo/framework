@@ -119,6 +119,17 @@ registerSuite({
 				testTheme3AdjoinedClass1: false,
 				[ baseClasses.class2 ]: true
 			});
+		},
+		'should filter out null params passed to classes function'() {
+			themeableInstance = new Test({});
+			const { class1, class2 } = baseClasses;
+			const flaggedClasses = themeableInstance.classes(class1, class2, null).get();
+			assert.deepEqual(flaggedClasses, {
+				[ baseClasses.class1 ]: true,
+				[ baseClasses.class2 ]: true
+			});
+
+			assert.isFalse(consoleStub.called);
 		}
 	},
 	'classes.fixed chained function': {
@@ -139,6 +150,16 @@ registerSuite({
 			const flaggedClasses = themeableInstance.classes(class1).fixed(fixedClassName).get();
 			assert.deepEqual(flaggedClasses, {
 				[ baseClasses.class1 ]: true,
+				[ baseClasses.class2 ]: false,
+				[ fixedClassName ]: true
+			});
+		},
+		'should filter out null params passed to fixed function'() {
+			themeableInstance = new Test({});
+			const fixedClassName = 'fixedClassName';
+			const flaggedClasses = themeableInstance.classes().fixed(fixedClassName, null).get();
+			assert.deepEqual(flaggedClasses, {
+				[ baseClasses.class1 ]: false,
 				[ baseClasses.class2 ]: false,
 				[ fixedClassName ]: true
 			});
