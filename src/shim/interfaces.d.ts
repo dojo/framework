@@ -10,3 +10,10 @@ export interface ArrayLike<T> {
 	length: number;
 	[n: number]: T;
 }
+
+export interface Handle {
+	/**
+	 * Perform the destruction/cleanup logic associated with this handle
+	 */
+	destroy(): void;
+}

@@ -135,6 +135,8 @@ add('setimmediate', typeof global.setImmediate !== 'undefined');
 add('postmessage', typeof postMessage === 'function');
 add('microtasks', () => has('es6-promise') || has('host-node') || has('dom-mutationobserver'));
 
+add('raf', typeof requestAnimationFrame === 'function');
+
 /* DOM Features */
 
 add('dom-mutationobserver', () => has('host-browser') && Boolean(global.MutationObserver || global.WebKitMutationObserver));

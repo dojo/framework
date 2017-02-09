@@ -1,6 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { queueTask, queueMicroTask } from '../../../src/support/queue';
+import has from '../../../src/support/has';
+import { queueTask, queueAnimationTask, queueMicroTask } from '../../../src/support/queue';
 
 registerSuite({
 	name: 'queue functions',
@@ -53,6 +54,62 @@ registerSuite({
 		}), 100);
 	},
 
+	'.queueAnimationTask()': function (this: any) {
+		if (!has('host-browser')) {
+			this.skip('browser required.');
+		}
+
+		const dfd = this.async(5000);
+		const parts: string[] = [];
+
+		function a() {
+			queueAnimationTask(function () {
+				parts.push('queueAnimationTask 1');
+			});
+			parts.push('start');
+			queueAnimationTask(function () {
+				parts.push('queueAnimationTask 2');
+			});
+		}
+		function b() {
+			parts.push('end');
+		}
+		function c() {
+			a();
+			b();
+		}
+
+		c();
+		setTimeout(dfd.callback(function () {
+			assert.equal(parts.join(','), 'start,end,queueAnimationTask 1,queueAnimationTask 2',
+				'queueAnimationTasks should be executed to the beginning of the next loop.');
+		}), 300);
+	},
+
+	'.queueAnimationTask() => handle.destroy()': function (this: any) {
+		if (!has('host-browser')) {
+			this.skip('browser required.');
+		}
+
+		const dfd = this.async(5000);
+		let parts: string[];
+
+		function test() {
+			parts = [];
+
+			parts.push('start');
+			queueAnimationTask(function () {
+				parts.push('queueAnimationTask');
+			}).destroy();
+			parts.push('end');
+		}
+
+		test();
+		setTimeout(dfd.callback(function () {
+			assert.equal(parts.join(','), 'start,end');
+		}), 100);
+	},
+
 	'.queueMicroTask()': function (this: any) {
 		const dfd = this.async(5000);
 		const parts: string[] = [];
@@ -60,6 +117,9 @@ registerSuite({
 		function a() {
 			queueTask(function () {
 				parts.push('queueTask 1');
+			});
+			queueAnimationTask(function () {
+				parts.push('queueAnimationTask 1');
 			});
 			queueMicroTask(function () {
 				parts.push('queueMicroTask');
