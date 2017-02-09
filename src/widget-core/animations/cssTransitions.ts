@@ -1,7 +1,7 @@
 let browserSpecificTransitionEndEventName = '';
 let browserSpecificAnimationEndEventName = '';
 
-interface VNodeProperties {
+export interface VNodeProperties {
 	enterAnimationActive?: string;
 	exitAnimationActive?: string;
 }
