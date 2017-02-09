@@ -8,7 +8,7 @@ registerSuite({
 	'Basic Operations.': {
 		'Add operation should add property and value to the target.'(this: any) {
 			const target = {};
-			const operation = createOperation(OperationType.Add, ['prop1'], 1);
+			const operation = createOperation(OperationType.Add, ['prop1'], undefined, 1);
 			const result = operation.apply(target);
 
 			assert.deepEqual(result, { prop1: 1 });
@@ -24,7 +24,7 @@ registerSuite({
 
 		'Replace operation should replace property value of the target.'(this: any) {
 			const target = { prop1: 1 };
-			const operation = createOperation(OperationType.Replace, ['prop1'], 2);
+			const operation = createOperation(OperationType.Replace, ['prop1'], undefined, 2);
 			const result = operation.apply(target);
 
 			assert.deepEqual(result, { prop1: 2});
@@ -32,7 +32,7 @@ registerSuite({
 
 		'Replace operation should treat "undefined" normally.'(this: any) {
 			const target = { prop1: undefined };
-			const operation = createOperation(OperationType.Replace, ['prop1'], 2);
+			const operation = createOperation(OperationType.Replace, ['prop1'], undefined, 2);
 			const result = operation.apply(target);
 
 			assert.deepEqual(result, { prop1: 2});
@@ -40,7 +40,7 @@ registerSuite({
 
 		'Replace operation should throw an error when target property is missing.'(this: any) {
 			const target = {};
-			const operation = createOperation(OperationType.Replace, ['prop1'], 2);
+			const operation = createOperation(OperationType.Replace, ['prop1'], undefined, 2);
 			assert.throws(function() {
 				operation.apply(target);
 			}, /Cannot replace undefined path/);
@@ -49,7 +49,7 @@ registerSuite({
 	'Copy and Move Operation.': {
 		'Copy operation should copy property over to the new property of the target.'(this: any) {
 			const target = { prop1: 1 };
-			const operation = createOperation(OperationType.Copy, ['prop2'], null, ['prop1']);
+			const operation = createOperation(OperationType.Copy, ['prop2'], ['prop1']);
 			const result = operation.apply(target);
 
 			assert.deepEqual(result, { prop1: 1, prop2: 1});
@@ -57,7 +57,7 @@ registerSuite({
 
 		'Copy operation should treat "undefined" normally.'(this: any) {
 			const target = { prop1: undefined };
-			const operation = createOperation(OperationType.Copy, ['prop2'], null, ['prop1']);
+			const operation = createOperation(OperationType.Copy, ['prop2'], ['prop1']);
 			const result = operation.apply(target);
 
 			assert.deepEqual(result, { prop1: undefined, prop2: undefined});
@@ -65,13 +65,13 @@ registerSuite({
 
 		'Copy operation should throw an error when fromPath is missing.'(this: any) {
 			assert.throws(function() {
-				createOperation(OperationType.Copy, ['any'], null, <any> null);
+				createOperation(OperationType.Copy, ['any'], <any> null);
 			}, /From value is required/);
 		},
 
 		'Copy operation should throw an error when source property is missing.'(this: any) {
 			const target = {};
-			const operation = createOperation(OperationType.Copy, ['prop2'], null, ['prop1']);
+			const operation = createOperation(OperationType.Copy, ['prop2'], ['prop1']);
 			assert.throws(function() {
 				operation.apply(target);
 			}, /Cannot move from undefined path/);
@@ -80,7 +80,7 @@ registerSuite({
 
 		'Move operation should move property over to the new target.'(this: any) {
 			const target = { prop1: 1 };
-			const operation = createOperation(OperationType.Move, ['prop2'], null, ['prop1']);
+			const operation = createOperation(OperationType.Move, ['prop2'], ['prop1']);
 			const result = operation.apply(target);
 
 			assert.deepEqual(result, { prop2: 1});
@@ -88,7 +88,7 @@ registerSuite({
 
 		'Move operation should treat "undefined" normally.'(this: any) {
 			const target = { prop1: undefined };
-			const operation = createOperation(OperationType.Move, ['prop2'], null, ['prop1']);
+			const operation = createOperation(OperationType.Move, ['prop2'], ['prop1']);
 			const result = operation.apply(target);
 
 			assert.deepEqual(result, { prop2: undefined});
@@ -96,13 +96,13 @@ registerSuite({
 
 		'Move operation should throw an error when fromPath is missing.'(this: any) {
 			assert.throws(function() {
-				createOperation(OperationType.Move, ['any'], null, <any> null);
+				createOperation(OperationType.Move, ['any'], <any> null);
 			}, /From value is required/);
 		},
 
 		'Move operation should throw an error when source property is missing.'(this: any) {
 			const target = {};
-			const operation = createOperation(OperationType.Move, ['prop2'], null, ['prop1']);
+			const operation = createOperation(OperationType.Move, ['prop2'], ['prop1']);
 			assert.throws(function() {
 				operation.apply(target);
 			}, /Cannot move from undefined path/);
@@ -112,35 +112,35 @@ registerSuite({
 	'Test Operations.': {
 		'Test operation should return true when testing property value matches given value.'(this: any) {
 			const target = { prop1: 1 };
-			const operation = createOperation(OperationType.Test, ['prop1'], 1);
+			const operation = createOperation(OperationType.Test, ['prop1'], undefined, 1);
 			const result = operation.apply(target);
 
 			assert.isTrue(result);
 		},
 		'Test operation should return false when testing property value doesn\'t match given value.'(this: any) {
 			const target = { prop1: 1 };
-			const operation = createOperation(OperationType.Test, ['prop1'], 2);
+			const operation = createOperation(OperationType.Test, ['prop1'], undefined, 2);
 			const result = operation.apply(target);
 
 			assert.isNotTrue(result);
 		}
 	},
 	'Should throw an error when target is null.'(this: any) {
-		const operation = createOperation(OperationType.Add, ['prop1'], 1);
+		const operation = createOperation(OperationType.Add, ['prop1'], undefined, 1);
 		assert.throws(function() {
 			operation.apply(<any> null);
 		}, /Invalid path/);
 	},
 	'Should throw an error when path is not found.'(this: any) {
 		const target = {};
-		const operation = createOperation(OperationType.Add, ['prop1', 'prop2'], 1);
+		const operation = createOperation(OperationType.Add, ['prop1', 'prop2'], undefined, 1);
 		assert.throws(function() {
 			operation.apply(target);
 		}, /Invalid path/);
 	},
 	'Should have a toString that describes the operation details.'(this: any) {
 
-		const operation = createOperation(OperationType.Copy, ['prop1'], null, ['prop2']);
+		const operation = createOperation(OperationType.Copy, ['prop1'], ['prop2']);
 		assert.strictEqual(operation.toString(), '{"op":"copy","path":"prop1","from":"prop2"}');
 	}
 });

@@ -7,7 +7,7 @@ import createRange from '../../../../../src/query/createStoreRange';
 import createSort from '../../../../../src/query/createSort';
 import createAsyncStorage from '../../../support/AsyncStorage';
 import { createQueryStore } from '../../../../../src/store/mixins/createQueryTransformMixin';
-import { diff } from '../../../../../src/patch/createPatch';
+import { diff } from '../../../../../src/patch/Patch';
 import Promise from '@dojo/shim/Promise';
 import { createQueryTransformResult } from '../../../../../src/store/createQueryTransformResult';
 

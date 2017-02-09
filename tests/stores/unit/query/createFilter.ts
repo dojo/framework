@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import createFilter, {Filter, FilterType, BooleanOp, SimpleFilter, FilterArray} from '../../../src/query/createFilter';
-import createJsonPointer from '../../../src/patch/createJsonPointer';
+import JsonPointer from '../../../src/patch/JsonPointer';
 
 type SimpleObject = { key: number; id: string };
 type NestedObject = { key: { key2: number }; id: string};
@@ -135,60 +135,60 @@ registerSuite({
 
 		'with json path': {
 			'less than': function() {
-				assert.deepEqual(createFilter<NestedObject>().lessThan(createJsonPointer('key', 'key2'), 5).apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().lessThan(new JsonPointer('key', 'key2'), 5).apply(nestedList),
 					[ { key: { key2: 4 }, id: '3' } ], 'Less than with JSON path');
 			},
 
 			'less than or equal to': function() {
-				assert.deepEqual(createFilter<NestedObject>().lessThanOrEqualTo(createJsonPointer('key', 'key2'), 5).apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().lessThanOrEqualTo(new JsonPointer('key', 'key2'), 5).apply(nestedList),
 					[ { key: { key2: 5 }, id: 'item-1' }, { key: { key2: 4 }, id: '3' } ], 'Less than or equal to with JSON path');
 			},
 
 			'greater than': function() {
-				assert.deepEqual(createFilter<NestedObject>().greaterThan(createJsonPointer('key', 'key2'), 5).apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().greaterThan(new JsonPointer('key', 'key2'), 5).apply(nestedList),
 					[ { key: { key2: 7 }, id: '2' } ], 'Greater than with JSON path');
 			},
 
 			'greater than or equal to': function() {
-				assert.deepEqual(createFilter<NestedObject>().greaterThanOrEqualTo(createJsonPointer('key', 'key2'), 5).apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().greaterThanOrEqualTo(new JsonPointer('key', 'key2'), 5).apply(nestedList),
 				[ { key: { key2: 5 }, id: 'item-1' }, { key: { key2: 7 }, id: '2' }], 'Greater than or equal to with JSON path');
 			},
 
 			'matches': function() {
-				assert.deepEqual(createFilter<NestedObject>().matches(createJsonPointer('id'), /[12]/).apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().matches(new JsonPointer('id'), /[12]/).apply(nestedList),
 				[ { key: { key2: 5 }, id: 'item-1' }, { key: { key2: 7 }, id: '2' } ], 'Matches with JSON path');
 			},
 
 			'in': function() {
-				assert.deepEqual(createFilter<NestedObject>().in(createJsonPointer('key', 'key2'), [7, 4]).apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().in(new JsonPointer('key', 'key2'), [7, 4]).apply(nestedList),
 					nestedList.slice(1), 'In with JSON path');
 			},
 
 			'contains': function() {
-				assert.deepEqual(createFilter<NestedObject>().contains(createJsonPointer('key'), 'key2').apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().contains(new JsonPointer('key'), 'key2').apply(nestedList),
 					nestedList, 'Contains with JSON path');
 
-				assert.deepEqual(createFilter<NestedObject>().contains(createJsonPointer('key'), 'key1').apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().contains(new JsonPointer('key'), 'key1').apply(nestedList),
 					[], 'Contains with JSON path');
 			},
 
 			'equalTo': function() {
-				assert.deepEqual(createFilter<NestedObject>().equalTo(createJsonPointer('key', 'key2'), 5).apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().equalTo(new JsonPointer('key', 'key2'), 5).apply(nestedList),
 					[{key: { key2: 5 }, id: 'item-1'}], 'Equal to with json path');
 			},
 
 			'notEqualTo': function() {
-				assert.deepEqual(createFilter<NestedObject>().notEqualTo(createJsonPointer('key', 'key2'), 5).apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().notEqualTo(new JsonPointer('key', 'key2'), 5).apply(nestedList),
 					[ { key: { key2: 7 }, id: '2' }, { key: { key2: 4 }, id: '3' } ], 'Not equal to with json path');
 			},
 
 			'deepEqualTo': function() {
-				assert.deepEqual(createFilter<NestedObject>().deepEqualTo(createJsonPointer('key', 'key2'), 5).apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().deepEqualTo(new JsonPointer('key', 'key2'), 5).apply(nestedList),
 					[ nestedList[0] ], 'Deep equal with JSON path');
 			},
 
 			'notDeepEqualTo': function() {
-				assert.deepEqual(createFilter<NestedObject>().notDeepEqualTo(createJsonPointer('key', 'key2'), 5).apply(nestedList),
+				assert.deepEqual(createFilter<NestedObject>().notDeepEqualTo(new JsonPointer('key', 'key2'), 5).apply(nestedList),
 					nestedList.slice(1), 'Not deep equal with JSON path');
 			}
 		},
@@ -233,17 +233,17 @@ registerSuite({
 
 		'nested'() {
 			const pickFirstItem = createFilter<NestedObject>()
-				.lessThanOrEqualTo(createJsonPointer('key', 'key2'), 5)
+				.lessThanOrEqualTo(new JsonPointer('key', 'key2'), 5)
 				.and()
 				.equalTo('id', 'item-1')
 				.or()
-				.greaterThanOrEqualTo(createJsonPointer('key', 'key2'), 5)
+				.greaterThanOrEqualTo(new JsonPointer('key', 'key2'), 5)
 				.equalTo('id', 'item-1')
 				.or()
-				.greaterThan(createJsonPointer('key', 'key2'), 5)
+				.greaterThan(new JsonPointer('key', 'key2'), 5)
 				.equalTo('id', 'item-1');
-			const pickAllItems = createFilter<NestedObject>().lessThan(createJsonPointer('key', 'key2'), 100);
-			const pickNoItems = createFilter<NestedObject>().greaterThan(createJsonPointer('key', 'key2'), 100);
+			const pickAllItems = createFilter<NestedObject>().lessThan(new JsonPointer('key', 'key2'), 100);
+			const pickNoItems = createFilter<NestedObject>().greaterThan(new JsonPointer('key', 'key2'), 100);
 
 			const pickLastItem = createFilter<NestedObject>().equalTo('id', '3');
 
@@ -265,13 +265,13 @@ registerSuite({
 			const individualFilter = {
 				filterType: FilterType.EqualTo,
 				value: 5,
-				path: createJsonPointer('key', 'key2')
+				path: new JsonPointer('key', 'key2')
 			};
 			const pickFirstItem: FilterArray<NestedObject> = [
 				{
 					filterType: FilterType.LessThanOrEqualTo,
 					value: 5,
-					path: createJsonPointer('key', 'key2')
+					path: new JsonPointer('key', 'key2')
 				},
 				BooleanOp.And,
 				{
@@ -283,7 +283,7 @@ registerSuite({
 				{
 					filterType: FilterType.GreaterThanOrEqualTo,
 					value: 5,
-					path: createJsonPointer('key', 'key2')
+					path: new JsonPointer('key', 'key2')
 				},
 				{
 					filterType: FilterType.EqualTo,
@@ -294,7 +294,7 @@ registerSuite({
 				{
 					filterType: FilterType.GreaterThan,
 					value: 5,
-					path: createJsonPointer('key', 'key2')
+					path: new JsonPointer('key', 'key2')
 				},
 				{
 					filterType: FilterType.EqualTo,
@@ -307,7 +307,7 @@ registerSuite({
 				{
 					filterType: FilterType.LessThan,
 					value: 100,
-					path: createJsonPointer('key', 'key2')
+					path: new JsonPointer('key', 'key2')
 				}
 			];
 
@@ -315,7 +315,7 @@ registerSuite({
 				{
 					filterType: FilterType.GreaterThan,
 					value: 100,
-					path: createJsonPointer('key', 'key2')
+					path: new JsonPointer('key', 'key2')
 				}
 			];
 
@@ -423,57 +423,57 @@ registerSuite({
 
 		'simple - path': {
 			'less than': function() {
-				assert.strictEqual(createFilter().lessThan(createJsonPointer('key', 'key2'), 3).toString(),
+				assert.strictEqual(createFilter().lessThan(new JsonPointer('key', 'key2'), 3).toString(),
 					'lt(key/key2, 3)', 'Didn\'t properly serialize less than');
 			},
 
 			'greater than': function() {
-				assert.strictEqual(createFilter().greaterThan(createJsonPointer('key', 'key2'), 3).toString(),
+				assert.strictEqual(createFilter().greaterThan(new JsonPointer('key', 'key2'), 3).toString(),
 					'gt(key/key2, 3)', 'Didn\'t properly serialize greater than');
 			},
 
 			'equals': function() {
-				assert.strictEqual(createFilter().equalTo(createJsonPointer('key', 'key2'), 'value').toString(),
+				assert.strictEqual(createFilter().equalTo(new JsonPointer('key', 'key2'), 'value').toString(),
 					'eq(key/key2, "value")', 'Didn\'t properly serialize equals');
 			},
 
 			'deep equals': function() {
-				assert.strictEqual(createFilter().deepEqualTo(createJsonPointer('key', 'key2'), 'value').toString(),
+				assert.strictEqual(createFilter().deepEqualTo(new JsonPointer('key', 'key2'), 'value').toString(),
 					'eq(key/key2, "value")', 'Didn\'t properly serialize deep equals');
 			},
 
 			'in': function() {
-				assert.strictEqual(createFilter().in(createJsonPointer('key', 'key2'), [ 1, 2, 3 ]).toString(),
+				assert.strictEqual(createFilter().in(new JsonPointer('key', 'key2'), [ 1, 2, 3 ]).toString(),
 					'in(key/key2, [1,2,3])', 'Didn\'t properly serialize in');
 			},
 
 			'contains': function() {
-				assert.strictEqual(createFilter().contains(createJsonPointer('key', 'key2'), 'value').toString(),
+				assert.strictEqual(createFilter().contains(new JsonPointer('key', 'key2'), 'value').toString(),
 					'contains(key/key2, "value")', 'Didn\'t properly serialize contains');
 			},
 
 			'not equal': function() {
-				assert.strictEqual(createFilter().notEqualTo(createJsonPointer('key', 'key2'), 'value').toString(),
+				assert.strictEqual(createFilter().notEqualTo(new JsonPointer('key', 'key2'), 'value').toString(),
 					'ne(key/key2, "value")', 'Didn\'t properly serialize not equal');
 			},
 
 			'not deep equal': function() {
-				assert.strictEqual(createFilter().notDeepEqualTo(createJsonPointer('key', 'key2'), 'value').toString(),
+				assert.strictEqual(createFilter().notDeepEqualTo(new JsonPointer('key', 'key2'), 'value').toString(),
 					'ne(key/key2, "value")', 'Didn\'t properly serialize not deep equal');
 			},
 
 			'less than or equal to': function() {
-				assert.strictEqual(createFilter().lessThanOrEqualTo(createJsonPointer('key', 'key2'), 3).toString(),
+				assert.strictEqual(createFilter().lessThanOrEqualTo(new JsonPointer('key', 'key2'), 3).toString(),
 					'lte(key/key2, 3)', 'Didn\'t properly serialize less than or equal to');
 			},
 
 			'greater than or equal to': function() {
-				assert.strictEqual(createFilter().greaterThanOrEqualTo(createJsonPointer('key', 'key2'), 3).toString(),
+				assert.strictEqual(createFilter().greaterThanOrEqualTo(new JsonPointer('key', 'key2'), 3).toString(),
 					'gte(key/key2, 3)', 'Didn\'t properly serialize greater than or equal to');
 			},
 
 			'matches': function() {
-				assert.throws(() => (createFilter().matches(createJsonPointer('key', 'key2'), /test/).toString()), 'Cannot parse this filter type to an RQL query string');
+				assert.throws(() => (createFilter().matches(new JsonPointer('key', 'key2'), /test/).toString()), 'Cannot parse this filter type to an RQL query string');
 			}
 		},
 

@@ -56,7 +56,8 @@ export const loaderOptions = {
 		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
 		{ name: '@dojo', location: 'node_modules/@dojo' },
 		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' },
-		{ name: 'rxjs', location: 'node_modules/@reactivex/rxjs/dist/amd', main: 'Rx.js' }
+		{ name: 'rxjs', location: 'node_modules/@reactivex/rxjs/dist/amd', main: 'Rx.js' },
+		{ name: 'immutable', location: 'node_modules/immutable/dist', main: 'immutable.js' }
 	]
 };
 

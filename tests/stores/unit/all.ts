@@ -1,12 +1,12 @@
-import './patch/createPatch';
+import './patch/Patch';
 import './patch/createOperation';
-import './patch/createJsonPointer';
+import './patch/JsonPointer';
 import './query/createFilter';
 import './query/createSort';
 import './query/createStoreRange';
-import './query/createCompoundQuery';
-import './storage/createInMemoryStorage';
-import './storage/createIndexedDBStorage';
+import './query/CompoundQuery';
+import './storage/InMemoryStorage';
+import './storage/IndexedDBStorage';
 import './store/createStore';
 import './store/mixins/createObservableStoreMixin';
 import './store/mixins/createTransactionMixin';

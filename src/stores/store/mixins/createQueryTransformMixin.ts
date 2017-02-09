@@ -5,7 +5,7 @@ import { StoreOptions, CrudOptions, UpdateResults } from '../createStore';
 import createSort, { Sort } from '../../query/createSort';
 import { ComposeMixinDescriptor, ComposeFactory } from '@dojo/compose/compose';
 import { ObservableStore, createObservableStore, ObservableStoreOptions } from './createObservableStoreMixin';
-import { Patch } from '../../patch/createPatch';
+import Patch from '../../patch/Patch';
 import createMappedQueryTransformResult, { QueryTransformResult, MappedQueryTransformResult, createQueryTransformResult } from '../createQueryTransformResult';
 import WeakMap from '@dojo/shim/WeakMap';
 

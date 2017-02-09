@@ -1,18 +1,18 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import Set from '@dojo/shim/Set';
-import createInMemoryStorage from '../../../src/storage/createInMemoryStorage';
+import InMemoryStorage from '../../../src/storage/InMemoryStorage';
 import Promise from '@dojo/shim/Promise';
 import { StoreOperation } from '../../../src/store/createStore';
 import createFilter from '../../../src/query/createFilter';
 import createSort from '../../../src/query/createSort';
 import createRange from '../../../src/query/createStoreRange';
-import createCompoundQuery from '../../../src/query/createCompoundQuery';
+import CompoundQuery from '../../../src/query/CompoundQuery';
 import { createData, createUpdates, ItemType, patches } from '../support/createData';
 
 function getStorageAndDfd(test: any, option = {}) {
 	const dfd = test.async(1000);
-	const storage = createInMemoryStorage( option );
+	const storage = new InMemoryStorage(option);
 
 	return { dfd, storage, data: createData() };
 }
@@ -21,20 +21,21 @@ registerSuite({
 	name: 'createInMemoryStorage',
 	'identify': {
 		'Should identify by idProperty if exists.'(this: any) {
-			const storage = createInMemoryStorage({
+			const storage = new InMemoryStorage<ItemType & { custId: string }>({
 				idProperty: 'custId',
 				idFunction: function(item: ItemType) {
 					return String(item.nestedProperty.value);
 				}
 			});
-			const data = createData();
-			data.forEach( function(item, indx) {
-				(item as any).custId = item.id + '-CID';
+			const data = createData().map<ItemType & { custId: string }>((item) => {
+				const newItem = { ...item };
+				(newItem as any).custId = item.id + '-CID';
+				return newItem as any;
 			});
 			assert.deepEqual(storage.identify(data), ['item-1-CID', 'item-2-CID', 'item-3-CID']);
 		},
 		'Should identify by idFunction if idProperty doesn\'t exist.'(this: any) {
-			const storage = createInMemoryStorage({
+			const storage = new InMemoryStorage({
 				idFunction: function(item: ItemType) {
 					return String(item.nestedProperty.value);
 				}
@@ -42,17 +43,17 @@ registerSuite({
 			assert.deepEqual(storage.identify(createData()), ['3', '2', '1']);
 		},
 		'Should default to `id` property if neither idProperty nor idFunction exists.'(this: any) {
-			const storage = createInMemoryStorage();
+			const storage = new InMemoryStorage();
 			assert.deepEqual(storage.identify(createData()), ['item-1', 'item-2', 'item-3']);
 		},
 		'Should accept identifying a single item.'(this: any) {
-			const storage = createInMemoryStorage();
+			const storage = new InMemoryStorage();
 			assert.deepEqual(storage.identify(createData()[2]), ['item-3']);
 		}
 	},
 
 	'createId'() {
-		const storage = createInMemoryStorage();
+		const storage = new InMemoryStorage();
 		const ids: Promise<string>[] = [];
 		const generateNIds = 1000; // reduced to 1,000 since IE 11 took minutes to run 100,000
 		for (let i = 0; i < generateNIds; i++) {
@@ -149,7 +150,7 @@ registerSuite({
 		},
 		'Should fetch queried items when a query is provided.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
-			const query = createCompoundQuery( {
+			const query = new CompoundQuery( {
 				query: createFilter<ItemType>().lessThan('value', 3)
 			} )
 				.withQuery( createSort<ItemType>('id', true) )

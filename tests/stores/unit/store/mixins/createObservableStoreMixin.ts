@@ -6,7 +6,7 @@ import {
 import { ItemType, createData, createUpdates, patches, patchedItems } from '../../support/createData';
 import { CrudOptions, UpdateResults } from '../../../../src/store/createStore';
 import createAsyncStorage from '../../support/AsyncStorage';
-import createInMemoryStorage from '../../../../src/storage/createInMemoryStorage';
+import InMemoryStorage from '../../../../src/storage/InMemoryStorage';
 import Set from '@dojo/shim/Set';
 import Promise from '@dojo/shim/Promise';
 
@@ -544,7 +544,7 @@ registerSuite({
 
 			'deleting ID not in local cache'(this: any) {
 				const dfd = this.async(1000);
-				const preLoadedStorage = createInMemoryStorage();
+				const preLoadedStorage = new InMemoryStorage();
 				preLoadedStorage.add(createData());
 				const store = createObservableStore({
 					storage: preLoadedStorage

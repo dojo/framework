@@ -1,11 +1,6 @@
 import { shouldRecurseInto, isEqual } from '../utils';
 import createOperation,  { Operation, OperationType } from './createOperation';
-import createJsonPointer, { JsonPointer } from './createJsonPointer';
-export interface Patch<T, U> {
-	operations: Operation[];
-	apply(target: T): U;
-	toString(): String;
-}
+import JsonPointer from './JsonPointer';
 
 export type PatchMapEntry<T, U> = { id: string; patch: Patch<T, U> };
 
@@ -13,7 +8,7 @@ function _diff(to: any, from: any, startingPath?: JsonPointer): Operation[] {
 	if (!shouldRecurseInto(from) || !shouldRecurseInto(to)) {
 		return [];
 	}
-	const path = startingPath || createJsonPointer();
+	const path = startingPath || new JsonPointer();
 	const fromKeys = Object.keys(from);
 	const toKeys = Object.keys(to);
 	const operations: Operation[] = [];
@@ -27,14 +22,14 @@ function _diff(to: any, from: any, startingPath?: JsonPointer): Operation[] {
 				operations.push(..._diff(to[key], from[key], path.push(key)));
 			}
 			else {
-				operations.push(createOperation(OperationType.Replace, path.push(key), to[key], undefined, from[key]));
+				operations.push(createOperation(OperationType.Replace, path.push(key), undefined, to[key], from[key]));
 			}
 		}
 	});
 
 	toKeys.forEach(function(key) {
 		if (!(key in from) && (key in to)) {
-			operations.push(createOperation(OperationType.Add, path.push(key), to[key]));
+			operations.push(createOperation(OperationType.Add, path.push(key), undefined, to[key]));
 		}
 	});
 
@@ -44,25 +39,25 @@ function _diff(to: any, from: any, startingPath?: JsonPointer): Operation[] {
 export function diff<T>(to: T): Patch<any, T>;
 export function diff<T, U>(to: U, from: T): Patch<T, U>;
 export function diff(to: any, from: any = {}) {
-	return createPatch(_diff(to, from));
+	return new Patch(_diff(to, from));
 }
 
-function createPatch(operations: Operation[]) {
-	return {
-		operations: operations,
-		apply(this: Patch<any, any>, target: any) {
-			return this.operations.reduce((prev: any, next: Operation) => next.apply(prev), target);
-		},
-		toString(this: Patch<any, any>) {
-			return '[' + this.operations.reduce((prev: string, next: Operation) => {
-					if (prev) {
-						return prev + ',' + next.toString();
-					}
-					else {
-						return next.toString();
-					}
-				}, '') + ']';
-		}
-	};
+export default class Patch<T, U> {
+	operations: Operation[];
+	apply(target: T): U {
+		return this.operations.reduce((prev: any, next: Operation) => next.apply(prev), target);
+	}
+	toString() {
+		return '[' + this.operations.reduce((prev: string, next: Operation) => {
+				if (prev) {
+					return prev + ',' + next.toString();
+				}
+				else {
+					return next.toString();
+				}
+			}, '') + ']';
+	}
+	constructor(operations: Operation[]) {
+		this.operations = operations;
+	}
 }
-export default createPatch;

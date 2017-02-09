@@ -7,12 +7,12 @@ import Set from '@dojo/shim/Set';
 import Promise from '@dojo/shim/Promise';
 import createRange from '../../../src/query/createStoreRange';
 import createFilter from '../../../src/query/createFilter';
-import createJsonPointer from '../../../src/patch/createJsonPointer';
-import createPatch, { Patch } from '../../../src/patch/createPatch';
+import JsonPointer from '../../../src/patch/JsonPointer';
+import Patch from '../../../src/patch/Patch';
 import createSort from '../../../src/query/createSort';
 import createOperation, { OperationType } from '../../../src/patch/createOperation';
-import createCompoundQuery from '../../../src/query/createCompoundQuery';
-import createInMemoryStorage from '../../../src/storage/createInMemoryStorage';
+import CompoundQuery from '../../../src/query/CompoundQuery';
+import InMemoryStorage from '../../../src/storage/InMemoryStorage';
 import { createData, ItemType, createUpdates, patches, patchedItems } from '../support/createData';
 import createAsyncStorage from '../support/AsyncStorage';
 
@@ -193,8 +193,8 @@ registerSuite({
 
 			'should fail when patch is not applicable.'(this: any) {
 				const { dfd, store } = getStoreAndDfd(this);
-				const operation = createOperation(OperationType.Replace, ['prop1'], 2);
-				const patch = createPatch([operation]);
+				const operation = createOperation(OperationType.Replace, ['prop1'], undefined, 2);
+				const patch = new Patch([operation]);
 
 				store.patch({ id: 'item-1', patch }).then(
 					dfd.rejectOnError(function () {
@@ -227,7 +227,7 @@ registerSuite({
 			'should fail when storage deletion fails.'(this: any) {
 				const dfd = this.async(1000);
 
-				const storage = createInMemoryStorage();
+				const storage = new InMemoryStorage();
 				sinon.stub(storage, 'delete').returns(Promise.reject(Error('failed')));
 				const store = createStore({ storage });
 
@@ -288,12 +288,12 @@ registerSuite({
 			const { store, data } = getStoreAndDfd(this, undefined, false);
 
 			return store.fetch(
-				createCompoundQuery({
+				new CompoundQuery({
 					query: createFilter<ItemType>()
-						.deepEqualTo(createJsonPointer('nestedProperty', 'value'), 2)
+						.deepEqualTo(new JsonPointer('nestedProperty', 'value'), 2)
 						.or()
-						.deepEqualTo(createJsonPointer('nestedProperty', 'value'), 3)
-				}).withQuery(createSort<ItemType>(createJsonPointer('nestedProperty', 'value')))
+						.deepEqualTo(new JsonPointer('nestedProperty', 'value'), 3)
+				}).withQuery(createSort<ItemType>(new JsonPointer('nestedProperty', 'value')))
 			)
 				.then(function(fetchedData) {
 					assert.deepEqual(fetchedData, [ data[1], data[0] ], 'Data fetched with queries was incorrect');
@@ -338,8 +338,8 @@ registerSuite({
 			data: data
 		});
 
-		assert.deepEqual(store.identify(updates[0]), [2, 3, 4], 'Should have used value property as the id');
-		assert.deepEqual(idFunctionStore.identify(data), ['item-1-id', 'item-2-id', 'item-3-id'], 'Should have used id function to create item ids');
+		assert.deepEqual(store.identify(updates[0]), [ '2', '3', '4' ], 'Should have used value property as the id');
+		assert.deepEqual(idFunctionStore.identify(data), [ 'item-1-id', 'item-2-id', 'item-3-id' ], 'Should have used id function to create item ids');
 	},
 
 	'should execute calls in order in which they are called'(this: any) {

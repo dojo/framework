@@ -5,9 +5,9 @@ import Map from '@dojo/shim/Map';
 import { duplicate } from '@dojo/core/lang';
 import compose, { ComposeFactory } from '@dojo/compose/compose';
 import { Observer, Observable } from '@dojo/core/Observable';
-import { diff, Patch, PatchMapEntry } from '../patch/createPatch';
+import Patch, { diff, PatchMapEntry } from '../patch/Patch';
 import _createStoreObservable, { StoreObservable } from './createStoreObservable';
-import createInMemoryStorage, { Storage, FetchResult } from '../storage/createInMemoryStorage';
+import InMemoryStorage, { Storage, FetchResult } from '../storage/InMemoryStorage';
 
 export const enum StoreOperation {
 	Add,
@@ -18,7 +18,7 @@ export const enum StoreOperation {
 
 export interface StoreOptions<T, O extends CrudOptions> {
 	data?: T[];
-	idProperty?: string;
+	idProperty?: keyof T;
 	idFunction?: (item: T) => string;
 	storage?: Storage<T, O>;
 }
@@ -223,7 +223,7 @@ const createStore: StoreFactory = compose<Store<{}, {}, any>, StoreOptions<{}, {
 	const data: T[] | undefined = options.data;
 	options.data = undefined;
 	const instanceState: BaseStoreState<T, O, UpdateResults<T>> = {
-		storage: options.storage || createInMemoryStorage(options),
+		storage: options.storage || new InMemoryStorage(options),
 		initialAddPromise: Promise.resolve()
 	};
 	instanceStateMap.set(instance, instanceState);

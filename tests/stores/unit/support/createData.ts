@@ -1,4 +1,4 @@
-import { Patch, diff } from '../../../src/patch/createPatch';
+import Patch, { diff } from '../../../src/patch/Patch';
 
 export interface ItemType {
 	id: string;

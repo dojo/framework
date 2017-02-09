@@ -133,7 +133,8 @@ registerSuite(function(){
 				.delete(data[0].id)
 				.commit()
 				.then(function() {
-					return transactionStore.fetch().then(function(data) {
+					// TODO - remove any type on data
+					return transactionStore.fetch().then(function(data: any[]) {
 						assert.deepEqual(data, [ updates[0][1], updates[0][2] ],
 									'Transaction didn\'t properly resolve after all operations completed');
 					});

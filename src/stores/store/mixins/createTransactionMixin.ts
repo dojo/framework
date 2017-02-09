@@ -1,6 +1,6 @@
 import { Store, CrudOptions, UpdateResults } from '../createStore';
 import createStoreObservable, { StoreObservable } from '../createStoreObservable';
-import { Patch } from '../../patch/createPatch';
+import Patch from '../../patch/Patch';
 import Map from '@dojo/shim/Map';
 import WeakMap from '@dojo/shim/WeakMap';
 import { Observable } from '@dojo/core/Observable';

@@ -1,29 +1,27 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
-import createIndexedDBStorage, {
-	createRequestPromise, getTransactionAndObjectStore
-} from '../../../src/storage/createIndexedDBStorage';
+import IndexedDBStorage, { createRequestPromise } from '../../../src/storage/IndexedDBStorage';
 import Promise from '@dojo/shim/Promise';
 import { StoreOperation, CrudOptions } from '../../../src/store/createStore';
 import createFilter from '../../../src/query/createFilter';
 import createSort from '../../../src/query/createSort';
 import createRange from '../../../src/query/createStoreRange';
-import createCompoundQuery from '../../../src/query/createCompoundQuery';
+import CompoundQuery from '../../../src/query/CompoundQuery';
 import { createData, createUpdates, ItemType, patches } from '../support/createData';
-import { Storage } from '../../../src/storage/createInMemoryStorage';
+import { Storage } from '../../../src/storage/InMemoryStorage';
 import {QueryType, Query} from '../../../src/query/interfaces';
-import createJsonPointer from '../../../src/patch/createJsonPointer';
+import JsonPointer from '../../../src/patch/JsonPointer';
 import {BooleanOp} from '../../../src/query/createFilter';
 
 registerSuite((function(){
 	const isIndexedDbAvailable = typeof indexedDB !== 'undefined';
-	const storage: Storage<ItemType, CrudOptions> = isIndexedDbAvailable ? createIndexedDBStorage<ItemType>({
+	const storage: Storage<ItemType, CrudOptions> = isIndexedDbAvailable ? new IndexedDBStorage<ItemType>({
 		dbName: 'test-db'
 	}) : <any> null;
 
 	return {
-		name: 'createIndexedDBStorage',
+		name: 'IndexedDBStorage',
 
 		setup(this: any) {
 			if (!isIndexedDbAvailable) {
@@ -135,7 +133,7 @@ registerSuite((function(){
 			},
 			'Should fetch queried items when a query is provided.'(this: any) {
 				const data = createData();
-				const query = createCompoundQuery({
+				const query = new CompoundQuery({
 						query: createFilter<ItemType>().lessThan('value', 3)
 					})
 					.withQuery(createSort<ItemType>('id', true))
@@ -163,7 +161,7 @@ registerSuite((function(){
 			},
 			'queries after non-incremental query'(this: any) {
 				const data = createData();
-				const query = createCompoundQuery({
+				const query = new CompoundQuery({
 						query: createRange<ItemType>(0, 3)
 					})
 					.withQuery(createFilter<ItemType>().greaterThan('value', 1))
@@ -175,7 +173,7 @@ registerSuite((function(){
 			},
 			'queries around non-incremental query'(this: any) {
 				const data = createData();
-				const query = createCompoundQuery({
+				const query = new CompoundQuery({
 						query: createFilter<ItemType>().greaterThan('value', 1)
 					})
 					.withQuery(createRange<ItemType>(0, 2))
@@ -196,7 +194,7 @@ registerSuite((function(){
 
 			'incremental compound query'(this: any) {
 				const data = createData();
-				const query = createCompoundQuery<ItemType>({
+				const query = new CompoundQuery<ItemType>({
 						query: createFilter<any>().custom(() => true)
 					})
 					.withQuery(createFilter<any>().custom((item) => item.value === 3));
@@ -207,8 +205,8 @@ registerSuite((function(){
 
 			'nested compound queries'(this: any) {
 				const data = createData();
-				const query = createCompoundQuery<ItemType>({
-					query: createCompoundQuery({
+				const query = new CompoundQuery<ItemType>({
+					query: new CompoundQuery({
 						query: createFilter<ItemType>().custom((item) => item.value === 1)
 					})
 				});
@@ -221,10 +219,10 @@ registerSuite((function(){
 			'redundant filters should not be called'(this: any) {
 				const data = createData();
 				const spy = sinon.spy();
-				const query = createCompoundQuery({
+				const query = new CompoundQuery({
 						query: createFilter<ItemType>().custom((item) => false)
 					})
-					.withQuery(createCompoundQuery<ItemType>({
+					.withQuery(new CompoundQuery<ItemType>({
 						query: {
 							queryType: QueryType.Filter,
 							apply: spy,
@@ -295,7 +293,7 @@ registerSuite((function(){
 				const dfd = this.async(1000);
 				const request = indexedDB.deleteDatabase('another-test-db-1');
 				request.onsuccess = request.onerror = () => {
-					createIndexedDBStorage<ItemType>({
+					new IndexedDBStorage<ItemType>({
 						dbName: 'another-test-db-1',
 						indices: {
 							value: true
@@ -315,7 +313,7 @@ registerSuite((function(){
 				const dfd = this.async(1000);
 				const request = indexedDB.deleteDatabase('another-test-db-2');
 				request.onsuccess = request.onerror = () => {
-					createIndexedDBStorage<ItemType>({
+					new IndexedDBStorage<ItemType>({
 						dbName: 'another-test-db-2',
 						indices: {
 							value: true
@@ -327,7 +325,7 @@ registerSuite((function(){
 						};
 						setTimeout(dfd.rejectOnError(() => {
 							assert.doesNotThrow(() => {
-								createIndexedDBStorage<ItemType>({
+								new IndexedDBStorage<ItemType>({
 									dbName: 'another-test-db-2',
 									version: 10,
 									indices: {
@@ -353,17 +351,17 @@ registerSuite((function(){
 					createFilter<any>().lessThanOrEqualTo('value', 2),
 					createFilter<any>().lessThan('value', 2),
 					// With JSON Pointer
-					createFilter<any>().equalTo(createJsonPointer('value'), 1),
-					createFilter<any>().greaterThanOrEqualTo(createJsonPointer('value'), 2),
-					createFilter<any>().greaterThan(createJsonPointer('value'), 2),
-					createFilter<any>().lessThanOrEqualTo(createJsonPointer('value'), 2),
-					createFilter<any>().lessThan(createJsonPointer('value'), 2)
+					createFilter<any>().equalTo(new JsonPointer('value'), 1),
+					createFilter<any>().greaterThanOrEqualTo(new JsonPointer('value'), 2),
+					createFilter<any>().greaterThan(new JsonPointer('value'), 2),
+					createFilter<any>().lessThanOrEqualTo(new JsonPointer('value'), 2),
+					createFilter<any>().lessThan(new JsonPointer('value'), 2)
 				];
 				queries.forEach((query) => {
 					query.apply = spy;
 				});
 				request.onsuccess = request.onerror = () => {
-					const storage = createIndexedDBStorage<ItemType>({
+					const storage = new IndexedDBStorage<ItemType>({
 						dbName: 'another-test-db-3',
 						indices: {
 							value: true
@@ -405,7 +403,7 @@ registerSuite((function(){
 					query.apply = spy;
 				});
 				request.onsuccess = request.onerror = () => {
-					const storage = createIndexedDBStorage<ItemType>({
+					const storage = new IndexedDBStorage<ItemType>({
 						dbName: 'another-test-db-4',
 						indices: {
 							value: true
@@ -439,7 +437,7 @@ registerSuite((function(){
 					createFilter<any>().lessThan('value', 4).greaterThan('value', 0).equalTo('value', 2)
 				];
 				request.onsuccess = request.onerror = () => {
-					const storage = createIndexedDBStorage<ItemType>({
+					const storage = new IndexedDBStorage<ItemType>({
 						dbName: 'another-test-db-5',
 						indices: {
 							value: true
@@ -483,7 +481,7 @@ registerSuite((function(){
 					};
 					request.onsuccess = () => {
 						db.close();
-						const newStorage = createIndexedDBStorage<ItemType>({
+						const newStorage = new IndexedDBStorage<ItemType>({
 							dbName: dbName,
 							objectStoreName: storeName,
 							version: 10
@@ -512,7 +510,7 @@ registerSuite((function(){
 				return requestStub;
 			});
 
-			createIndexedDBStorage({
+			new IndexedDBStorage({
 				dbName: 'test-db'
 			}).add(createData()).then(
 				() => {
@@ -533,7 +531,7 @@ registerSuite((function(){
 			const dfd = this.async();
 			const data = createData();
 			request.onsuccess = request.onerror = () => {
-				const storage = createIndexedDBStorage();
+				const storage = new IndexedDBStorage();
 				storage.add(data).then(() => {
 					storage.fetch().then(dfd.callback((fetchedData: ItemType[]) => {
 						assert.deepEqual(fetchedData, data, 'Didn\'t use default database and store data');
@@ -581,7 +579,7 @@ registerSuite((function(){
 				filterStartingWithBooleanOp
 			];
 			request.onsuccess = request.onerror = () => {
-				const storage = createIndexedDBStorage<ItemType>({
+				const storage = new IndexedDBStorage<ItemType>({
 					dbName: 'another-test-db-6',
 					indices: {
 						value: true
@@ -603,7 +601,13 @@ registerSuite((function(){
 
 		'should throw an error if database doesn\'t exist when trying to create a transaction'(this: any) {
 			assert.throws(() => {
-				getTransactionAndObjectStore(<any> {});
+				class TestGetTransactionThrows extends IndexedDBStorage<any> {
+					constructor() {
+						try { super(); } catch (ignore) { }
+						this.getTransactionAndObjectStore();
+					}
+				}
+				new TestGetTransactionThrows();
 			}, 'Can\'t create transaction because database does not exist');
 		}
 	};

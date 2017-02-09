@@ -1,4 +1,4 @@
-import createJsonPointer, { JsonPointer, navigate } from '../patch/createJsonPointer';
+import JsonPointer, { navigate } from '../patch/JsonPointer';
 import { isEqual } from '../utils';
 import { Query, QueryType } from './interfaces';
 
@@ -124,7 +124,7 @@ function createFilterHelper<T>(filters: FilterChainMember<T>[], serializer: (fil
 	// The main helper delegates to the factory, adding and AND operation before the next filter,
 	// because by default each filter in a chain will be ANDed with the previous.
 	function comparatorFilterHelper(filterType: FilterType, value: any, path?: ObjectPointer<T>): Filter<T> {
-		path = path || createJsonPointer();
+		path = path || new JsonPointer();
 		const needsOperator = filters.length > 0 &&
 			(filters[filters.length - 1] !== BooleanOp.And && filters[filters.length - 1] !== BooleanOp.Or);
 		const newFilters = needsOperator ? [ ...filters, BooleanOp.And, createComparator<T>(filterType, value, path) ] :
@@ -240,7 +240,7 @@ function applyFilterChain<T>(item: T, filterChain: FilterChainMember<T>[]): bool
 }
 
 function createComparator<T>(operator: FilterType, value: any, path: ObjectPointer<T>): SimpleFilter<T> {
-	const jsonPointer = typeof path === 'string' ? createJsonPointer(path) : path as JsonPointer;
+	const jsonPointer = typeof path === 'string' ? new JsonPointer(path) : path as JsonPointer;
 	let test: (property: any) => boolean;
 	const filterType: FilterType = operator;
 	let operatorString: string;

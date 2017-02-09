@@ -1,5 +1,5 @@
 import { isEqual } from '../utils';
-import createJsonPointer, { JsonPointer } from './createJsonPointer';
+import JsonPointer from './JsonPointer';
 export const enum OperationType {
 	Add,
 	Remove,
@@ -23,7 +23,7 @@ export interface Add extends Operation {
 function navigatePath(target: any, path: JsonPointer) {
 	let currentPath = '';
 	let lastSegment = '';
-	const pathSegments = path.segments();
+	const pathSegments = path.segments;
 	pathSegments.forEach(
 		function(segment, index) {
 			currentPath += `/${segment}`;
@@ -120,7 +120,7 @@ export interface Test extends Operation {
 
 function getPath(path: JsonPointer | string[]) {
 	if (Array.isArray(path)) {
-		return createJsonPointer(...path);
+		return new JsonPointer(...path);
 	}
 	else {
 		return path;
@@ -140,7 +140,13 @@ function toString(this: Operation & { value?: any, from?: any } ) {
 
 	return JSON.stringify(jsonObj);
 }
-function createOperation(type: OperationType, path: JsonPointer | string[], value?: any, from?: JsonPointer | string[], oldValue?: any): Operation {
+function createOperation(type: OperationType.Add, path: JsonPointer | string[], from?: JsonPointer | string[], value?: any, oldValue?: any): Add;
+function createOperation(type: OperationType.Remove, path: JsonPointer | string[], from?: JsonPointer | string[], value?: any, oldValue?: any): Remove;
+function createOperation(type: OperationType.Replace, path: JsonPointer | string[], from?: JsonPointer | string[], value?: any, oldValue?: any): Replace;
+function createOperation(type: OperationType.Test, path: JsonPointer | string[], from?: JsonPointer | string[], value?: any, oldValue?: any): Test;
+function createOperation(type: OperationType.Move, path: JsonPointer | string[], from: JsonPointer | string[], value?: any, oldValue?: any): Move;
+function createOperation(type: OperationType.Copy, path: JsonPointer | string[], from: JsonPointer | string[], value?: any, oldValue?: any): Copy;
+function createOperation(type: OperationType, path: JsonPointer | string[], from?: JsonPointer | string[], value?: any, oldValue?: any): Operation {
 	switch (type) {
 		case OperationType.Add:
 			return <Add> {

@@ -1,11 +1,9 @@
-import createInMemoryStorage from '../../../src/storage/createInMemoryStorage';
+import InMemoryStorage from '../../../src/storage/InMemoryStorage';
+import Map from '@dojo/shim/Map';
 import Promise from '@dojo/shim/Promise';
 import WeakMap from '@dojo/shim/WeakMap';
 import { delay } from '@dojo/core/async/timing';
-
-export interface Identity<T> {
-	(value: T): Promise<T>;
-}
+import compose from '@dojo/compose/compose';
 
 const instanceStateMap = new WeakMap<{}, any>();
 
@@ -21,7 +19,15 @@ function delayOperation(operation: Function, operationName: string) {
 	};
 }
 
-const createAsyncStorage = createInMemoryStorage.mixin({
+const createAsyncStorage = compose(InMemoryStorage).mixin({
+	initialize(instance: any, options: any = {}) {
+		instance.data = [];
+		instance.index = new Map<string, number>();
+		instance.idProperty = options.idProperty;
+		instance.idFunction = options.idFunction;
+		instance.returnsPromise = Promise.resolve();
+	}
+}).mixin({
 	initialize(instance, asyncOptions = {}) {
 		instanceStateMap.set(instance, asyncOptions);
 	},
