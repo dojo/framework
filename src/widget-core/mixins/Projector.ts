@@ -1,9 +1,9 @@
-import global from '@dojo/core/global';
 import Promise from '@dojo/shim/Promise';
 import { createProjector as createMaquetteProjector, Projector as MaquetteProjector } from 'maquette';
 import { EventTargettedObject, Handle } from '@dojo/interfaces/core';
 import { WidgetConstructor, WidgetProperties } from './../WidgetBase';
 import { Constructor } from './../interfaces';
+import cssTransitions from '../animations/cssTransitions';
 
 /**
  * Represents the state of the projector
@@ -34,8 +34,6 @@ export interface AttachOptions {
 export interface ProjectorProperties extends WidgetProperties {
 
 	root?: Element;
-
-	cssTransitions?: boolean;
 }
 
 export interface Projector {
@@ -81,17 +79,10 @@ export function ProjectorMixin<T extends WidgetConstructor>(base: T): T & Constr
 		constructor(...args: any[]) {
 			super(...args);
 			const [ properties ] = args;
-			const { root = document.body, cssTransitions = false }  = properties;
-			const maquetteProjectorOptions: { transitions?: any } = {};
-
-			if (cssTransitions) {
-				if (global.cssTransitions) {
-					maquetteProjectorOptions.transitions = global.cssTransitions;
-				}
-				else {
-					throw new Error('Unable to create projector with css transitions enabled. Is the \'css-transition.js\' script loaded in the page?');
-				}
-			}
+			const { root = document.body }  = properties;
+			const maquetteProjectorOptions = {
+				transitions: cssTransitions
+			};
 
 			this.own(this.on('widget:children', this.invalidate));
 			this.own(this.on('invalidated', this.scheduleRender));
