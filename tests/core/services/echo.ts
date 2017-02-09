@@ -116,7 +116,7 @@ export function start(port?: number): any {
 				}
 			}
 
-			new Promise(function (resolve: any, reject: any) {
+			new Promise<string>(function (resolve: any, reject: any) {
 				if (request.data && typeof request.data.then === 'function') {
 					request.data.then(function (data: any) {
 							resolve(JSON.stringify(data));

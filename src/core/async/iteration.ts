@@ -199,7 +199,7 @@ export function findIndex<T>(items: Iterable<T | Promise<T>> | (T | Thenable<T>)
  */
 export function map<T, U>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Mapper<T, U>): Promise<U[]> {
 	return processValuesAndCallback<T, U>(items, callback)
-			.then<U[]>(function (result) {
+			.then<U | U[] | null>(function (result) {
 				return result ? result.results : null;
 			});
 }

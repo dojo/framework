@@ -17,7 +17,6 @@ import './Observable';
 import './on/all';
 import './MatchRegistry';
 import './MultiMap';
-import './queue';
 import './request';
 import './request/all';
 import './Scheduler';

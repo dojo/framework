@@ -6,8 +6,6 @@ export default has;
 
 add('object-assign', typeof global.Object.assign === 'function');
 
-add('raf', typeof requestAnimationFrame === 'function');
-
 add('arraybuffer', typeof global.ArrayBuffer !== 'undefined');
 add('formdata', typeof global.FormData !== 'undefined');
 add('xhr', typeof global.XMLHttpRequest !== 'undefined');
