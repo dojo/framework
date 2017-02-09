@@ -453,7 +453,8 @@ export class WidgetBase<P extends WidgetProperties> extends Evented {
 					return null;
 				}
 				else if (item === null) {
-					throw new Error();
+					console.warn(`Unable to render unknown widget factory ${factory}`);
+					return null;
 				}
 				factory = item;
 			}
