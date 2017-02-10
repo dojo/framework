@@ -404,5 +404,46 @@ registerSuite({
 		await waitFor(() => {
 			return document.getElementById('test-element') === null;
 		}, 'Element never got removed');
+	},
+	'afterCreate can be overriden'() {
+		let afterCreateCalled = false;
+
+		function afterCreate(this: any, element: any, projectorOptions: any, vNodeSelector: any, properties: any, children: any) {
+			afterCreateCalled = true;
+
+			assert.isNotNull(element);
+			assert.isNotNull(projectorOptions);
+			assert.isNotNull(vNodeSelector);
+			assert.isNotNull(properties);
+			assert.isNotNull(children);
+			assert.strictEqual(this, projector);
+		}
+
+		const root = document.createElement('div');
+		document.body.appendChild(root);
+
+		const projector = new (class extends TestWidget {
+			root = root;
+
+			render() {
+				return v('span', {
+					innerHTML: 'hello world',
+					afterCreate
+				});
+			}
+		})({});
+
+		// we check if the attached event fires because we need to know if
+		// the projector's afterCreate method is called, and that is where
+		// this event is dispatched
+		let eventFired = false;
+		projector.on('projector:attached', () => {
+			eventFired = true;
+		});
+
+		return projector.append().then(() => {
+			assert.isTrue(afterCreateCalled);
+			assert.isTrue(eventFired);
+		});
 	}
 });

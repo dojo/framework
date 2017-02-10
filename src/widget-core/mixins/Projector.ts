@@ -1,8 +1,8 @@
+import { EventTargettedObject, Handle } from '@dojo/interfaces/core';
 import Promise from '@dojo/shim/Promise';
 import { createProjector as createMaquetteProjector, Projector as MaquetteProjector } from 'maquette';
-import { EventTargettedObject, Handle } from '@dojo/interfaces/core';
-import { Constructor, WidgetProperties } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
+import { Constructor, WidgetProperties } from './../interfaces';
 import cssTransitions from '../animations/cssTransitions';
 
 /**
@@ -73,7 +73,8 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 		private _root: Element;
 		private attachPromise: Promise<Handle>;
 		private attachHandle: Handle;
-		private afterCreate: () => void;
+		private afterCreate: (...args: any[]) => void;
+		private originalAfterCreate?: () => void;
 
 		constructor(...args: any[]) {
 			super(...args);
@@ -134,6 +135,10 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			}
 			const { afterCreate } = this;
 			if (result.properties) {
+				if (result.properties.afterCreate) {
+					this.originalAfterCreate = <any> result.properties.afterCreate;
+				}
+
 				result.properties.afterCreate = afterCreate;
 			}
 
@@ -174,7 +179,12 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			});
 
 			this.attachPromise = new Promise((resolve, reject) => {
-				this.afterCreate = () => {
+				this.afterCreate = (...args: any[]) => {
+					if (this.originalAfterCreate) {
+						const [ , , , properties ] = args;
+						this.originalAfterCreate.apply(properties.bind || properties, args);
+					}
+
 					this.emit({
 						type: 'projector:attached',
 						target: this
