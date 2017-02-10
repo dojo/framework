@@ -1,139 +1,27 @@
-import { VNode, VNodeProperties } from '@dojo/interfaces/vdom';
+import { VNode } from '@dojo/interfaces/vdom';
 import { assign } from '@dojo/core/lang';
 import WeakMap from '@dojo/shim/WeakMap';
 import Promise from '@dojo/shim/Promise';
 import Map from '@dojo/shim/Map';
 import Set from '@dojo/shim/Set';
-import { EventTypedObject } from '@dojo/interfaces/core';
 import { Evented } from './bases/Evented';
+import {
+	DNode,
+	WidgetConstructor,
+	WidgetProperties,
+	WidgetBaseInterface,
+	PropertyChangeRecord,
+	PropertiesChangeRecord,
+	PropertiesChangeEvent
+} from './interfaces';
 import { v, registry, isWNode } from './d';
-import FactoryRegistry from './FactoryRegistry';
-
-/**
- * Base widget properties
- */
-export interface WidgetProperties {
-
-	/**
-	 * id for a widget
-	 */
-	id?: string;
-
-	/**
-	 * The key for a widget. Used to differentiate uniquely identify child widgets for
-	 * rendering and instance management
-	 */
-	key?: string;
-
-	/**
-	 * The scope to bind all function properties
-	 */
-	bind?: any;
-}
-
-/**
- * Wrapper for v
- */
-export interface HNode {
-	/**
-	 * Array of processed VNode children.
-	 */
-	vNodes?: (string | VNode | null)[];
-	/**
-	 * Specified children
-	 */
-	children: (DNode | string)[];
-
-	/**
-	 * render function that wraps returns VNode
-	 */
-	render<T>(options?: { bind?: T }): VNode;
-
-	/**
-	 * The properties used to create the VNode
-	 */
-	properties: VNodeProperties;
-
-	/**
-	 * The type of node
-	 */
-	type: symbol;
-}
-
-/**
- * Wrapper for `w`
- */
-export interface WNode {
-	/**
-	 * Factory to create a widget
-	 */
-	factory: WidgetConstructor | string;
-
-	/**
-	 * Options used to create factory a widget
-	 */
-	properties: WidgetProperties;
-
-	/**
-	 * DNode children
-	 */
-	children: DNode[];
-
-	/**
-	 * The type of node
-	 */
-	type: symbol;
-}
-
-/**
- * union type for all possible return types from render
- */
-export type DNode = HNode | WNode | string | null;
-
-/**
- * the event emitted on properties:changed
- */
-export interface PropertiesChangeEvent<T, P extends WidgetProperties> extends EventTypedObject<'properties:changed'> {
-	/**
-	 * the full set of properties
-	 */
-	properties: P;
-	/**
-	 * the changed properties between setProperty calls
-	 */
-	changedPropertyKeys: string[];
-	/**
-	 * the target (this)
-	 */
-	target: T;
-}
-
-/**
- * Propeerty Change record for specific property diff functions
- */
-export interface PropertyChangeRecord {
-	changed: boolean;
-	value: any;
-}
-
-/**
- * Properties changed record, return for diffProperties
- */
-export interface PropertiesChangeRecord<P extends WidgetProperties> {
-	changedKeys: string[];
-	properties: P;
-}
-
-/**
- * WidgetBase constructor type
- */
-export type WidgetConstructor = new (...args: any[]) => WidgetBase<WidgetProperties>;
+import FactoryRegistry, { WIDGET_BASE_TYPE } from './FactoryRegistry';
 
 /**
  * Widget cache wrapper for instance management
  */
 interface WidgetCacheWrapper {
-	child: WidgetBase<WidgetProperties>;
+	child: WidgetBaseInterface<WidgetProperties>;
 	factory: WidgetConstructor;
 	used: boolean;
 }
@@ -151,7 +39,12 @@ const decoratorFunctionNameRegex = /^renderDecorator.*/;
 /**
  * Main widget base for all widgets to extend
  */
-export class WidgetBase<P extends WidgetProperties> extends Evented {
+export class WidgetBase<P extends WidgetProperties> extends Evented implements WidgetBaseInterface<P> {
+
+	/**
+	 * static identifier
+	 */
+	static _type: symbol = WIDGET_BASE_TYPE;
 
 	/**
 	 * children array
@@ -245,28 +138,14 @@ export class WidgetBase<P extends WidgetProperties> extends Evented {
 		this.setProperties(properties);
 	}
 
-	/**
-	 * return the widget's id from properties
-	 */
 	public get id(): string | undefined {
 		return this._properties.id;
 	}
 
-	/**
-	 * Return readonly widget properties
-	 */
 	public get properties(): Readonly<P> {
 		return this._properties;
 	}
 
-	/**
-	 * Sets the properties for the widget. Responsible for calling the diffing functions for the properties against the
-	 * previous properties. Runs though any registered specific property diff functions collecting the results and then
-	 * runs the remainder through the catch all diff function. The aggregate of the two sets of the results is then
-	 * set as the widgets properties
-	 *
-	 * @param properties The new widget properties
-	 */
 	public setProperties(properties: P & { [index: string]: any }): void {
 		const diffPropertyResults: { [index: string]: PropertyChangeRecord } = {};
 		const diffPropertyChangedKeys: string[] = [];
@@ -307,16 +186,10 @@ export class WidgetBase<P extends WidgetProperties> extends Evented {
 		this.previousProperties = this.properties;
 	}
 
-	/**
-	 * Returns the widgets children
-	 */
 	public get children(): DNode[] {
 		return this._children;
 	}
 
-	/**
-	 * Sets the widgets children
-	 */
 	public setChildren(children: DNode[]): void {
 		this._children = children;
 		this.emit({
@@ -325,13 +198,6 @@ export class WidgetBase<P extends WidgetProperties> extends Evented {
 		});
 	}
 
-	/**
-	 * The default diff function for properties, also responsible for cloning the properties.
-	 *
-	 * @param previousProperties The widgets previous properties
-	 * @param newProperties The widgets new properties
-	 * @returns A properties change record for the the diff
-	 */
 	public diffProperties(previousProperties: P & { [index: string]: any }, newProperties: P & { [index: string]: any }): PropertiesChangeRecord<P> {
 		const changedKeys = Object.keys(newProperties).reduce((changedPropertyKeys: string[], propertyKey: string): string[] => {
 			if (previousProperties[propertyKey] !== newProperties[propertyKey]) {
@@ -343,18 +209,10 @@ export class WidgetBase<P extends WidgetProperties> extends Evented {
 		return { changedKeys, properties: assign({}, newProperties) };
 	}
 
-	/**
-	 * Default render, returns a `div` with widgets children
-	 *
-	 * @returns the DNode for the widget
-	 */
 	public render(): DNode {
 		return v('div', {}, this.children);
 	}
 
-	/**
-	 * Main internal function for dealing with widget rendering
-	 */
 	public __render__(): VNode | string | null {
 		if (this.dirty || !this.cachedVNode) {
 			let dNode = this.render();
@@ -373,9 +231,6 @@ export class WidgetBase<P extends WidgetProperties> extends Evented {
 		return this.cachedVNode;
 	}
 
-	/**
-	 * invalidate the widget
-	 */
 	public invalidate(): void {
 		this.dirty = true;
 		this.emit({
@@ -437,7 +292,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented {
 			const { key } = properties;
 
 			let { factory } = dNode;
-			let child: WidgetBase<WidgetProperties>;
+			let child: WidgetBaseInterface<WidgetProperties>;
 
 			if (typeof factory === 'string') {
 				const item = this.getFromRegistry(factory);

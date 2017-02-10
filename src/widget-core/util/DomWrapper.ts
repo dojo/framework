@@ -1,4 +1,5 @@
-import { DNode, WidgetBase, WidgetProperties } from './../WidgetBase';
+import { WidgetBase } from './../WidgetBase';
+import { DNode, WidgetProperties } from './../interfaces';
 import { isHNode } from '../d';
 import { assign } from '@dojo/core/lang';
 import { VNode } from '@dojo/interfaces/vdom';

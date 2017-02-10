@@ -2,8 +2,8 @@
 import { assign } from '@dojo/core/lang';
 import i18n, { Bundle, formatMessage, getCachedMessages, Messages, observeLocale } from '@dojo/i18n/i18n';
 import { VNodeProperties } from '@dojo/interfaces/vdom';
-import { DNode, WidgetConstructor, WidgetProperties } from './../WidgetBase';
-import { Constructor } from './../interfaces';
+import { Constructor, DNode, WidgetProperties } from './../interfaces';
+import { WidgetBase } from './../WidgetBase';
 import { isHNode } from './../d';
 
 export interface I18nProperties extends WidgetProperties {
@@ -65,7 +65,7 @@ export interface I18n {
 	localizeBundle<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T>;
 }
 
-export function I18nMixin<T extends WidgetConstructor>(base: T): T & Constructor<I18n> {
+export function I18nMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<I18n> {
 	return class extends base {
 		properties: I18nProperties;
 

@@ -1,10 +1,11 @@
-import { w } from './d';
-import { WidgetProperties, WidgetConstructor, WidgetBase, DNode } from './WidgetBase';
-import { ProjectorMixin } from './mixins/Projector';
-import { DomWrapper } from './util/DomWrapper';
 import { assign } from '@dojo/core/lang';
 import { from as arrayFrom } from '@dojo/shim/array';
 import global from '@dojo/core/global';
+import { WidgetBaseInterface, WidgetProperties, Constructor, DNode } from './interfaces';
+import { WidgetBase } from './WidgetBase';
+import { w } from './d';
+import { ProjectorMixin } from './mixins/Projector';
+import { DomWrapper } from './util/DomWrapper';
 
 /**
  * @type CustomElementAttributeDescriptor
@@ -80,7 +81,7 @@ export interface CustomElementDescriptor {
 	/**
 	 * Widget factory that will create the widget
 	 */
-	widgetFactory: WidgetConstructor;
+	widgetFactory: Constructor<WidgetBase<WidgetProperties>>;
 
 	/**
 	 * List of attributes on the custom element to map to widget properties
@@ -114,10 +115,10 @@ export interface CustomElementDescriptor {
  * @property                                setWidgetInstance   Set the widget instance for this element
  */
 export interface CustomElement extends HTMLElement {
-	getWidgetFactory(): WidgetConstructor;
+	getWidgetFactory(): Constructor<WidgetBase<WidgetProperties>>;
 	getDescriptor(): CustomElementDescriptor;
-	getWidgetInstance(): WidgetBase<any>;
-	setWidgetInstance(instance: WidgetBase<any>): void;
+	getWidgetInstance(): WidgetBaseInterface<any>;
+	setWidgetInstance(instance: WidgetBaseInterface<any>): void;
 }
 
 function getWidgetPropertyFromAttribute(attributeName: string, attributeValue: string | null, descriptor: CustomElementAttributeDescriptor): [ string, any ] {

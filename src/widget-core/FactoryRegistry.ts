@@ -1,6 +1,7 @@
 import Promise from '@dojo/shim/Promise';
 import Map from '@dojo/shim/Map';
-import { WidgetBase, WidgetConstructor } from './WidgetBase';
+import Symbol from '@dojo/shim/Symbol';
+import { WidgetConstructor } from './interfaces';
 
 /**
  * A function the returns a Promise<WidgetConstructor>
@@ -11,6 +12,11 @@ export type WidgetFactoryFunction = () => Promise<WidgetConstructor>
  * Factory Registry Item - Either WidgetConsructor, Promise for a WidgetConstructor or WidgetFactoryFunction
  */
 export type FactoryRegistryItem = WidgetConstructor | Promise<WidgetConstructor> | WidgetFactoryFunction
+
+/**
+ * Widget base symbol type
+ */
+export const WIDGET_BASE_TYPE = Symbol('Widget Base');
 
 /**
  * Factory Registry Interface
@@ -49,7 +55,7 @@ export interface FactoryRegistryInterface {
  * @returns true/false indicating is the item is a WidgetConstructor
  */
 export function isWidgetBaseConstructor(item: any): item is WidgetConstructor {
-	return WidgetBase.isPrototypeOf(item) || item === WidgetBase;
+	return Boolean(item && item._type === WIDGET_BASE_TYPE);
 }
 
 /**

@@ -1,7 +1,7 @@
 import { includes } from '@dojo/shim/array';
 import { assign } from '@dojo/core/lang';
-import { PropertiesChangeEvent, WidgetConstructor, WidgetProperties } from './../WidgetBase';
-import { Constructor } from './../interfaces';
+import { Constructor, PropertiesChangeEvent, WidgetProperties } from './../interfaces';
+import { WidgetBase } from './../WidgetBase';
 
 /**
  * A representation of the css class names to be applied and
@@ -84,7 +84,7 @@ export function theme (theme: {}) {
 /**
  * Function for returns a class decoratied with with Themeable functionality
  */
-export function ThemeableMixin<T extends WidgetConstructor>(base: T): Constructor<ThemeablMixin> & T {
+export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): Constructor<ThemeablMixin> & T {
 	return class extends base {
 
 		/**

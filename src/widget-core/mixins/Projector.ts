@@ -1,8 +1,8 @@
 import Promise from '@dojo/shim/Promise';
 import { createProjector as createMaquetteProjector, Projector as MaquetteProjector } from 'maquette';
 import { EventTargettedObject, Handle } from '@dojo/interfaces/core';
-import { WidgetConstructor, WidgetProperties } from './../WidgetBase';
-import { Constructor } from './../interfaces';
+import { Constructor, WidgetProperties } from './../interfaces';
+import { WidgetBase } from './../WidgetBase';
 import cssTransitions from '../animations/cssTransitions';
 
 /**
@@ -64,7 +64,7 @@ export interface Projector {
 	readonly projectorState: ProjectorState;
 }
 
-export function ProjectorMixin<T extends WidgetConstructor>(base: T): T & Constructor<Projector> {
+export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<Projector> {
 	return class extends base {
 
 		public properties: ProjectorProperties;

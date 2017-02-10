@@ -1,17 +1,18 @@
 import { includes } from '@dojo/shim/array';
 import FactoryRegistry from '../FactoryRegistry';
+import { WidgetBase } from './../WidgetBase';
 import {
 	PropertyChangeRecord,
 	PropertiesChangeEvent,
-	WidgetConstructor,
+	Constructor,
 	WidgetProperties
-} from '../WidgetBase';
+} from '../interfaces';
 
 export interface RegistryMixinProperties extends WidgetProperties {
 	registry: FactoryRegistry;
 }
 
-export function RegistryMixin<T extends WidgetConstructor>(base: T): T {
+export function RegistryMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T {
 	return class extends base {
 		properties: RegistryMixinProperties;
 

@@ -1,7 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { assign } from '@dojo/core/lang';
-import { WidgetBase, DNode, HNode } from '../../src/WidgetBase';
+import { DNode, HNode } from '../../src/interfaces';
+import { WidgetBase } from '../../src/WidgetBase';
 import { v, w, decorate, registry, WNODE, HNODE, isWNode, isHNode } from '../../src/d';
 import FactoryRegistry from './../../src/FactoryRegistry';
 

@@ -1,4 +1,5 @@
-import { WidgetBase, WidgetProperties } from '../../../src/WidgetBase';
+import { WidgetBase } from '../../../src/WidgetBase';
+import { WidgetProperties } from '../../../src/interfaces';
 import { v } from '../../../src/d';
 import registerCustomElement from '../../../src/registerCustomElement';
 

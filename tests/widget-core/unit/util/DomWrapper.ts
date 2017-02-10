@@ -1,7 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { isHNode } from '../../../src/d';
-import { WidgetBase, HNode } from './../../../src/WidgetBase';
+import { HNode } from './../../../src/interfaces';
+import { WidgetBase } from './../../../src/WidgetBase';
 import { DomWrapper } from '../../../src/util/DomWrapper';
 
 function callCreate(widget: WidgetBase<any>, includeUpdate = false) {

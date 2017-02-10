@@ -1,5 +1,6 @@
 import { initializeElement, CustomElementDescriptor, handleAttributeChanged } from './customElements';
-import { WidgetConstructor, WidgetBase } from './WidgetBase';
+import { Constructor, WidgetProperties } from './interfaces';
+import { WidgetBase } from './WidgetBase';
 
 declare namespace customElements {
 	function define(name: string, constructor: any): void;
@@ -42,7 +43,7 @@ export function registerCustomElement(descriptorFactory: CustomElementDescriptor
 			widgetInstance = widget;
 		}
 
-		getWidgetFactory(): WidgetConstructor {
+		getWidgetFactory(): Constructor<WidgetBase<WidgetProperties>> {
 			return this.getDescriptor().widgetFactory;
 		}
 
