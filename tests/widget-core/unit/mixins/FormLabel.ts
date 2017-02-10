@@ -92,14 +92,6 @@ registerSuite({
 			assert.isTrue(vnode.properties!.classes!['qux'], 'Classes should be set on the label node');
 		}
 	},
-	'type'() {
-		const formField: any = new FormLabelWidget({});
-		formField.type = 'foo';
-
-		const vnode = <VNode> formField.__render__();
-
-		assert.strictEqual(vnode.properties!['type'], 'foo');
-	},
 	'label': {
 		'string label'() {
 			const formField: any = new FormLabelWidget({

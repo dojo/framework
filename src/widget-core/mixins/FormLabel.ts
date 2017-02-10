@@ -32,11 +32,6 @@ export interface FormLabelMixinProperties {
 	value?: string;
 
 	/**
-	 * The type of the form field (equates to the `type` attribute in the DOM)
-	 */
-	type?: string;
-
-	/**
 	 * Prevents the user from interacting with the form field
 	 */
 	disabled?: boolean;
@@ -109,14 +104,12 @@ const labelDefaults = {
 /**
  * Allowed attributes for a11y
  */
-const allowedFormFieldAttributes = ['checked', 'describedBy', 'disabled', 'invalid', 'maxLength', 'minLength', 'multiple', 'name', 'placeholder', 'readOnly', 'required', 'type', 'value'];
+const allowedFormFieldAttributes = ['checked', 'describedBy', 'disabled', 'invalid', 'maxLength', 'minLength', 'multiple', 'name', 'placeholder', 'readOnly', 'required', 'value'];
 
 export function FormLabelMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T {
 	return class extends base {
 
 		properties: FormLabelMixinProperties;
-
-		type: string;
 
 		renderDecoratorFormLabel(result: DNode): DNode {
 			const labelNodeAttributes: any = {};
@@ -158,12 +151,8 @@ export function FormLabelMixin<T extends Constructor<WidgetBase<WidgetProperties
 		}
 
 		private getFormFieldA11yAttributes() {
-			const { properties, type } = this;
+			const { properties } = this;
 			const attributeKeys = Object.keys(properties);
-
-			if (type) {
-				attributeKeys.push('type');
-			}
 
 			const nodeAttributes: any = {};
 
@@ -171,9 +160,6 @@ export function FormLabelMixin<T extends Constructor<WidgetBase<WidgetProperties
 
 				if (attributeKeys.indexOf(key) === -1) {
 					continue;
-				}
-				else if (key === 'type') {
-					nodeAttributes.type = type;
 				}
 				else if (key === 'readOnly' && properties.readOnly) {
 					nodeAttributes.readonly = 'readonly';
