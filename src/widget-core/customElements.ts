@@ -241,11 +241,11 @@ export function initializeElement(element: CustomElement) {
 
 	const projector = ProjectorMixin(element.getWidgetFactory());
 
-	const widgetInstance = new projector(assign(initialProperties, { root: element }));
+	const widgetInstance = new projector(initialProperties);
 	widgetInstance.setChildren(children);
 	element.setWidgetInstance(widgetInstance);
 
-	widgetInstance.append();
+	widgetInstance.append(element);
 }
 
 /**

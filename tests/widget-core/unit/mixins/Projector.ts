@@ -4,10 +4,10 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { spy } from 'sinon';
 import { v } from '../../../src/d';
-import { ProjectorMixin, ProjectorState, ProjectorProperties } from '../../../src/mixins/Projector';
+import { ProjectorMixin, ProjectorState } from '../../../src/mixins/Projector';
 import { WidgetBase } from '../../../src/WidgetBase';
 
-class TestWidget extends ProjectorMixin(WidgetBase)<ProjectorProperties> {}
+class TestWidget extends ProjectorMixin(WidgetBase)<any> {}
 
 function dispatchEvent(element: Element, eventType: string) {
 	try {
@@ -150,7 +150,7 @@ registerSuite({
 	'attach event'() {
 		const root = document.createElement('div');
 		document.body.appendChild(root);
-		const projector = new TestWidget({ root });
+		const projector = new TestWidget({});
 
 		projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
@@ -162,7 +162,7 @@ registerSuite({
 			assert.strictEqual((<HTMLElement> root.firstChild).tagName.toLowerCase(), 'div');
 			assert.strictEqual((<HTMLElement> root.firstChild).innerHTML, '<h2>foo</h2>');
 		});
-		return projector.append().then(() => {
+		return projector.append(root).then(() => {
 			assert.isTrue(eventFired);
 		});
 	},
@@ -245,8 +245,8 @@ registerSuite({
 	},
 	'reattach'() {
 		const root = document.createElement('div');
-		const projector = new TestWidget({ root });
-		const promise = projector.append();
+		const projector = new TestWidget({});
+		const promise = projector.append(root);
 		assert.strictEqual(promise, projector.append(), 'same promise should be returned');
 	},
 	'setRoot throws when already attached'() {

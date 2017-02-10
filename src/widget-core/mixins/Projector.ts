@@ -29,10 +29,10 @@ export interface AttachOptions {
 	 * replace the root.
 	 */
 	type: AttachType;
-}
 
-export interface ProjectorProperties extends WidgetProperties {
-
+	/**
+	 * Element to attach the projector.
+	 */
 	root?: Element;
 }
 
@@ -41,17 +41,17 @@ export interface Projector {
 	/**
 	 * Append the projector to the root.
 	 */
-	append(): Promise<Handle>;
+	append(root?: Element): Promise<Handle>;
 
 	/**
 	 * Merge the projector onto the root.
 	 */
-	merge(): Promise<Handle>;
+	merge(root?: Element): Promise<Handle>;
 
 	/**
 	 * Replace the root with the projector node.
 	 */
-	replace(): Promise<Handle>;
+	replace(root?: Element): Promise<Handle>;
 
 	/**
 	 * Root element to attach the projector
@@ -67,7 +67,6 @@ export interface Projector {
 export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<Projector> {
 	return class extends base {
 
-		public properties: ProjectorProperties;
 		public projectorState: ProjectorState;
 		private readonly projector: MaquetteProjector;
 
@@ -78,8 +77,6 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 
 		constructor(...args: any[]) {
 			super(...args);
-			const [ properties ] = args;
-			const { root = document.body }  = properties;
 			const maquetteProjectorOptions = {
 				transitions: cssTransitions
 			};
@@ -88,29 +85,32 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			this.own(this.on('invalidated', this.scheduleRender));
 
 			this.projector = createMaquetteProjector(maquetteProjectorOptions);
-			this.root = root;
+			this.root = document.body;
 			this.projectorState = ProjectorState.Detached;
 		}
 
-		append() {
+		append(root?: Element) {
 			const options = {
-				type: AttachType.Append
+				type: AttachType.Append,
+				root
 			};
 
 			return this.attach(options);
 		}
 
-		merge() {
+		merge(root?: Element) {
 			const options = {
-				type: AttachType.Merge
+				type: AttachType.Merge,
+				root
 			};
 
 			return this.attach(options);
 		}
 
-		replace() {
+		replace(root?: Element) {
 			const options = {
-				type: AttachType.Replace
+				type: AttachType.Replace,
+				root
 			};
 
 			return this.attach(options);
@@ -151,8 +151,11 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			}
 		}
 
-		private attach({ type }: AttachOptions) {
+		private attach({ type, root }: AttachOptions) {
 			const render = this.__render__.bind(this);
+			if (root) {
+				this.root = root;
+			}
 
 			if (this.projectorState === ProjectorState.Attached) {
 				return this.attachPromise || Promise.resolve({});
