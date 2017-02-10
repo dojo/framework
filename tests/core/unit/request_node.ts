@@ -1,9 +1,12 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as DojoPromise from 'intern/dojo/Promise';
-import request, { RequestOptions } from '../../src/request';
+import request from '../../src/request';
+import node from '../../src/request/providers/node';
 import { createServer } from 'http';
 import { parse } from 'url';
+
+request.setDefaultProvider(node);
 
 let handle: any;
 
@@ -62,36 +65,34 @@ registerSuite({
 
 	'.get': {
 		'simple request'(this: any) {
-			const dfd = this.async();
-			request.get(getRequestUrl('foo.json'))
-				.then(
-					dfd.callback(function (response: any) {
-						assert.equal(String(response.data), JSON.stringify({ foo: 'bar' }));
-					}),
-					dfd.reject.bind(dfd)
-				);
+			return request.get(getRequestUrl('foo.json'))
+				.then(response => {
+					return response.text();
+				}).then(text => {
+					assert.equal(String(text), JSON.stringify({ foo: 'bar' }));
+				});
 		},
 
 		'custom headers'(this: any) {
-			const dfd = this.async();
-			const options: RequestOptions = { headers: { 'Content-Type': 'application/json' } };
-			request.get(getRequestUrl('foo.json'), options)
+			const options = { headers: { 'Content-Type': 'application/json' } };
+			return request.get(getRequestUrl('foo.json'), options)
 				.then(
-					dfd.callback(function (response: any) {
-						assert.equal(String(response.data), JSON.stringify({ foo: 'bar' }));
-						assert.notProperty(nodeRequest.headers, 'Content-Type', 'expected header to be normalized');
-						assert.propertyVal(nodeRequest.headers, 'content-type', 'application/json');
-					}),
-					dfd.reject.bind(dfd)
+					response => {
+						return response.text().then(text => {
+							assert.equal(String(text), JSON.stringify({ foo: 'bar' }));
+							assert.equal(response.headers.get('content-type'), 'application/json');
+						});
+					}
 				);
 		}
 	},
 
 	'JSON responseType filter'() {
-		return request.get(getRequestUrl('foo.json'), { responseType: 'json' })
-			.then(function(response: any) {
-				assert.deepEqual(response.data, { foo: 'bar' });
-			})
-		;
+		return request.get(getRequestUrl('foo.json'))
+			.then(response => {
+				return response.json();
+			}).then(json => {
+				assert.deepEqual(json, { foo: 'bar' });
+			});
 	}
 });

@@ -1,6 +1,6 @@
 import Promise from '@dojo/shim/Promise';
 import has from './has';
-import request, { Response } from './request';
+import request from './request';
 import { Config, Require } from '@dojo/interfaces/loader';
 
 declare const require: Require;
@@ -29,8 +29,10 @@ let getText: (url: string, callback: (value: string) => void) => void;
 
 if (has('host-browser')) {
 	getText = function(url: string, callback: (value: string | null) => void): void {
-		request(url).then(function(response: Response<string>) {
-			callback(response.data);
+		request(url).then(response => {
+			response.text().then(data => {
+				callback(data);
+			});
 		});
 	};
 }

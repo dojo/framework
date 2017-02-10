@@ -1,10 +1,12 @@
+import { createServer } from 'http';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as DojoPromise from 'intern/dojo/Promise';
-import RequestTimeoutError from '../../../src/request/errors/RequestTimeoutError';
-import { default as nodeRequest, NodeRequestOptions } from '../../../src/request/node';
-import { createServer } from 'http';
 import { parse } from 'url';
+import * as zlib from 'zlib';
+import { Response } from '../../../src/request/interfaces';
+import { default as nodeRequest, NodeResponse } from '../../../src/request/providers/node';
+import TimeoutError from '../../../src/request/TimeoutError';
 
 const serverPort = 8124;
 const serverUrl = 'http://localhost:' + serverPort;
@@ -13,7 +15,7 @@ let proxy: any;
 let requestData: string;
 
 interface DummyResponse {
-	body?: string;
+	body?: string | ((callback: Function) => void);
 	headers?: { [key: string]: string };
 	statusCode?: number;
 }
@@ -35,6 +37,12 @@ interface RedirectTestData {
 const responseData: { [url: string]: DummyResponse } = {
 	'foo.json': {
 		body: JSON.stringify({ foo: 'bar' })
+	},
+	'cookies': {
+		body: JSON.stringify({ foo: 'bar' }),
+		headers: {
+			'Set-cookie': 'one'
+		}
 	},
 	invalidJson: {
 		body: '<not>JSON</not>'
@@ -113,6 +121,76 @@ const responseData: { [url: string]: DummyResponse } = {
 		statusCode: 301,
 		body: JSON.stringify('beginning to redirect'),
 		headers: {}
+	},
+	'relative-redirect': {
+		statusCode: 301,
+		body: JSON.stringify('beginning redirect'),
+		headers: {
+			'Location': '/redirect-success'
+		}
+	},
+	'protocolless-redirect': {
+		statusCode: 301,
+		body: JSON.stringify('beginning redirect'),
+		headers: {
+			'Location': getRequestUrl('redirect-success').replace('http:', '')
+		}
+	},
+	'gzip-compressed': {
+		statusCode: 200,
+		body: function (callback: any) {
+			zlib.gzip(new Buffer(JSON.stringify({ 'test': true }), 'utf8'), function (err: any, result: any) {
+				callback(result);
+			});
+		},
+		headers: {
+			'Content-Encoding': 'gzip'
+		}
+	},
+	'deflate-compressed': {
+		statusCode: 200,
+		body: function (callback: any) {
+			zlib.deflate(new Buffer(JSON.stringify({ 'test': true }), 'utf8'), function (err: any, result: any) {
+				callback(result);
+			});
+		},
+		headers: {
+			'Content-Encoding': 'deflate'
+		}
+	},
+	'gzip-deflate-compressed': {
+		statusCode: 200,
+		body: function (callback: any) {
+			zlib.gzip(new Buffer(JSON.stringify({ 'test': true }), 'utf8'), (err: any, result: any) => {
+				zlib.deflate(result, function (err: any, result: any) {
+					callback(result);
+				});
+			});
+		},
+		headers: {
+			'Content-Encoding': 'gzip, deflate'
+		}
+	},
+	'gzip-invalid': {
+		statusCode: 200,
+		body: 'hello',
+		headers: {
+			'Content-Encoding': 'gzip'
+		}
+	},
+	'deflate-invalid': {
+		statusCode: 200,
+		body: 'hello',
+		headers: {
+			'Content-Encoding': 'deflate'
+		}
+	},
+	'gzip-deflate-invalid': {
+		statusCode: 200,
+		body: 'hello',
+		headers: {
+			'Content-Encoding': 'gzip, deflate'
+		}
 	}
 };
 
@@ -134,43 +212,45 @@ function buildRedirectTests(methods: RedirectTestData[]) {
 			let error: any = null;
 
 			return nodeRequest(getRequestUrl(details.url), {
-				responseType: 'json',
 				method: method,
 				followRedirects: followRedirects,
 				redirectOptions: {
 					keepOriginalMethod
 				}
-			})
-			.then((response: any) => {
-				if (details.callback) {
-					details.callback(response);
+			}).then((response?: Response) => {
+				if (response) {
+					return response.text().then((text: string) => {
+						if (details.callback) {
+							details.callback(response);
+						}
+
+						assert.deepPropertyVal(response, 'requestOptions.method', expectedMethod);
+						assert.equal(response.url, expectedPage);
+
+						if (details.expectedCount !== undefined) {
+							const { redirectOptions: { count: redirectCount = 0 } = {} } = (<NodeResponse> response).requestOptions;
+
+							assert.equal(redirectCount, details.expectedCount);
+						}
+
+						if (details.expectedData !== undefined) {
+							if (text === null) {
+								assert.isNull(details.expectedData);
+							}
+							else {
+								let data = JSON.parse(text);
+								assert.deepEqual(data, details.expectedData);
+							}
+						}
+					});
 				}
-
-				assert.deepPropertyVal(response, 'requestOptions.method', expectedMethod);
-				assert.equal(response.url, expectedPage);
-
-				if (details.expectedCount !== undefined) {
-					const { redirectOptions: { count: redirectCount = 0 } = {} } = <NodeRequestOptions<string>> response.requestOptions;
-
-					assert.equal(redirectCount, details.expectedCount);
-				}
-
-				if (details.expectedData !== undefined) {
-					if (response.data === null) {
-						assert.isNull(details.expectedData);
-					} else {
-						let data = JSON.parse(response.data.toString());
-						assert.deepEqual(data, details.expectedData);
-					}
-				}
-			})
-			.catch((e) => {
+			}).catch((e: Error) => {
 				error = e;
-			})
-			.finally(() => {
+			}).finally(() => {
 				if (details.expectedToError) {
 					assert.isNotNull(error, 'Expected an error to occur but none did');
-				} else if (error) {
+				}
+				else if (error) {
 					throw error;
 				}
 			});
@@ -186,7 +266,7 @@ function getResponseData(request: any): DummyResponse {
 }
 
 function getRequestUrl(dataKey: string): string {
-	return serverUrl + '?dataKey=' + dataKey;
+	return serverUrl + '/?dataKey=' + dataKey;
 }
 
 function getAuthRequestUrl(dataKey: string, user: string = 'user', password: string = 'password'): string {
@@ -217,9 +297,16 @@ registerSuite({
 
 				response.writeHead(statusCode, headers);
 
-				response.write(new Buffer(body, 'utf8'));
-
-				response.end();
+				if (typeof body === 'function') {
+					body(function (result: Buffer) {
+						response.write(result);
+						response.end();
+					});
+				}
+				else {
+					response.write(new Buffer(body, 'utf8'));
+					response.end();
+				}
 			});
 		});
 
@@ -257,20 +344,55 @@ registerSuite({
 	},
 
 	'request options': {
-		data: {
+		body: {
 			'string'(this: any): void {
 				const dfd = this.async();
 				nodeRequest(getRequestUrl('foo.json'), {
-					data: '{ "foo": "bar" }',
+					body: '{ "foo": "bar" }',
 					method: 'POST'
 				}).then(
-					dfd.callback(function (response: any) {
+					dfd.callback(function () {
 						assert.deepEqual(requestData, { foo: 'bar' });
 					}),
 					dfd.reject.bind(dfd)
 				);
+			},
+			'buffer'() {
+				return nodeRequest(getRequestUrl('foo.json'), {
+					body: Buffer.from('{ "foo": "bar" }', 'utf8'),
+					method: 'POST'
+				}).then(() => {
+					assert.deepEqual(requestData, { foo: 'bar' });
+				});
 			}
 		},
+
+		'content encoding': (function (compressionTypes) {
+			const suites: { [key: string]: any } = {};
+
+			compressionTypes.map(type => {
+				suites[ type ] = {
+					'gets decoded'() {
+						return nodeRequest(getRequestUrl(`${type}-compressed`)).then(response => {
+							return response.json();
+						}).then(obj => {
+							assert.deepEqual(obj, { test: true });
+						});
+					},
+					'errors are caught'() {
+						return nodeRequest(getRequestUrl(`${type}-invalid`)).then(response => {
+							return response.json();
+						}).then(() => {
+							assert.fail('Should not have succeeded');
+						}, (error) => {
+							assert.isNotNull(error);
+						});
+					}
+				};
+			});
+
+			return suites;
+		})([ 'gzip', 'deflate', 'gzip-deflate' ]),
 
 		proxy(this: any): void {
 			const dfd = this.async();
@@ -282,7 +404,7 @@ registerSuite({
 					const request = response.nativeResponse.req;
 
 					assert.strictEqual(request.path, url);
-					assert.strictEqual(request._headers['proxy-authorization'],
+					assert.strictEqual(request._headers[ 'proxy-authorization' ],
 						'Basic ' + new Buffer('username:password').toString('base64'));
 					assert.strictEqual(request._headers.host, serverUrl.slice(7));
 				}),
@@ -342,7 +464,7 @@ registerSuite({
 				nodeRequest(getAuthRequestUrl('foo.json'), { timeout: 1 })
 					.then(
 						dfd.resolve.bind(dfd),
-						dfd.callback(function (error: RequestTimeoutError<any>): void {
+						dfd.callback(function (error: TimeoutError): void {
 							assert.notInclude(error.message, 'user:password');
 							assert.include(error.message, '(redacted)');
 						})
@@ -359,9 +481,9 @@ registerSuite({
 					timeout: 100
 				}
 			}).then(
-				dfd.callback(function (response: any) {
+				dfd.callback(function (response: NodeResponse) {
 					// TODO: Is it even possible to test this?
-					const socketOptions = response.requestOptions.socketOptions;
+					const socketOptions = response.requestOptions.socketOptions || {};
 					assert.strictEqual(socketOptions.keepAlive, 100);
 					assert.strictEqual(socketOptions.noDelay, true);
 					assert.strictEqual(socketOptions.timeout, 100);
@@ -374,10 +496,12 @@ registerSuite({
 			const dfd = this.async();
 			nodeRequest(getRequestUrl('foo.json'), {
 				streamEncoding: 'utf8'
-			}).then(
-				dfd.callback(function (response: any) {
-					assert.deepEqual(JSON.parse(response.data), { foo: 'bar' });
-				}),
+			}).then((response: NodeResponse) => {
+					response.json().then(dfd.callback(function (json: any) {
+							assert.deepEqual(json, { foo: 'bar' });
+						})
+					);
+				},
 				dfd.reject.bind(dfd)
 			);
 		},
@@ -388,7 +512,7 @@ registerSuite({
 				.then(
 					dfd.resolve.bind(dfd),
 					dfd.callback(function (error: Error): void {
-						assert.strictEqual(error.name, 'RequestTimeoutError');
+						assert.strictEqual(error.name, 'TimeoutError');
 					})
 				);
 		}
@@ -402,8 +526,8 @@ registerSuite({
 					someThingCrAzY: 'some-arbitrary-value'
 				}
 			}).then(
-				dfd.callback(function (response: any) {
-					const header: any = response.nativeResponse.req._header;
+				dfd.callback(function (response: NodeResponse) {
+					const header: any = (<any> response.nativeResponse).req._header;
 
 					assert.notInclude(header, 'somethingcrazy: some-arbitrary-value');
 					assert.include(header, 'someThingCrAzY: some-arbitrary-value');
@@ -441,28 +565,41 @@ registerSuite({
 			});
 		},
 
-		'response headers': {
-			'before response'(this: any): void {
-				const dfd = this.async();
-				nodeRequest(getRequestUrl('foo.json'), { timeout: 1 })
-					.then(
-						dfd.resolve.bind(dfd),
-						dfd.callback(function (error: RequestTimeoutError<any>): void {
-							assert.strictEqual(error.response.getHeader('content-type'), null);
-						})
-					);
-			},
+		'compression headers are present by default'() {
+			return nodeRequest(getRequestUrl('foo.json')).then((response: any) => {
+				const header: any = response.nativeResponse.req._header;
+				assert.include(header, 'Accept-Encoding: gzip, deflate');
+			});
+		},
 
+		'compression headers can be turned off'() {
+			return nodeRequest(getRequestUrl('foo.json'), {
+				acceptCompression: false
+			}).then((response: any) => {
+				const header: any = response.nativeResponse.req._header;
+				assert.notInclude(header, 'Accept-Encoding:');
+			});
+		},
+
+		'response headers': {
 			'after response'(this: any): void {
 				const dfd = this.async();
 				nodeRequest(getRequestUrl('foo.json'))
 					.then(
-						dfd.callback(function (response: any): void {
-							assert.strictEqual(response.getHeader('content-type'), 'application/json');
+						dfd.callback(function (response: Response): void {
+							assert.strictEqual(response.headers.get('content-type'), 'application/json');
 						}),
 						dfd.reject.bind(dfd)
 					);
 			}
+		},
+
+		'set cookie makes separate headers'() {
+			return nodeRequest(getRequestUrl('cookies')).then((response: any) => {
+				assert.deepEqual(response.headers.getAll('set-cookie'), [
+					'one'
+				]);
+			});
 		}
 	},
 
@@ -471,11 +608,50 @@ registerSuite({
 			const dfd = this.async();
 			nodeRequest(getRequestUrl('foo.json'))
 				.then(
-					dfd.callback(function (response: any): void {
-						assert.strictEqual(response.statusCode, 200);
+					dfd.callback(function (response: Response): void {
+						assert.strictEqual(response.status, 200);
 					}),
 					dfd.reject.bind(dfd)
 				);
+		},
+
+		'data cannot be used twice'() {
+			return nodeRequest(getRequestUrl('foo.json')).then((response?: Response) => {
+				if (response) {
+					assert.isFalse(response.bodyUsed);
+
+					return response.json().then(() => {
+						assert.isTrue(response.bodyUsed);
+
+						return response.json().then(() => {
+							throw new Error('should not have succeeded');
+						}, () => {
+							return true;
+						});
+					});
+				}
+			});
+		},
+
+		'response types': {
+			'arrayBuffer'() {
+				return nodeRequest(getRequestUrl('foo.json')).then((response: any) => {
+					return response.arrayBuffer().then((arrayBuffer: any) => {
+						assert.isAbove(arrayBuffer.byteLength, 0);
+						assert.isAbove(arrayBuffer.length, 0);
+					});
+				});
+			},
+
+			'blob'() {
+				return nodeRequest(getRequestUrl('foo.json')).then((response: any) => {
+					return response.blob().then((blob: any) => {
+						assert.fail('should not have succeeded');
+					}, () => {
+						return true;
+					});
+				});
+			}
 		}
 	},
 
@@ -865,6 +1041,19 @@ registerSuite({
 					url: '301-redirect',
 					expectedCount: 0,
 					followRedirects: false
+				}
+			]),
+
+			'Relative redirect urls': buildRedirectTests([
+				{
+					method: 'GET',
+					url: 'relative-redirect',
+					expectedPage: 'redirect-success'
+				},
+				{
+					method: 'GET',
+					url: 'protocolless-redirect',
+					expectedPage: 'redirect-success'
 				}
 			])
 		}

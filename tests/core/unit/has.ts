@@ -1,7 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import has from '../../src/has';
-import global from '../../src/global';
 
 registerSuite({
 	name: 'has',
@@ -13,8 +12,5 @@ registerSuite({
 		else {
 			assert.notOk(value, 'Should be false running under node');
 		}
-	},
-	'has("fetch")'() {
-		assert.equal(has('fetch'), 'fetch' in global);
 	}
 });
