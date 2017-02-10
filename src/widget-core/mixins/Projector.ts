@@ -199,3 +199,5 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 		}
 	};
 }
+
+export default Projector;

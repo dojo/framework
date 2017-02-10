@@ -145,3 +145,5 @@ export function I18nMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(b
 		}
 	};
 }
+
+export default I18nMixin;

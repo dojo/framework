@@ -60,7 +60,7 @@ const THEME_KEY = ' _key';
 /**
  * Interface for the ThemeableMixin
  */
-export interface ThemeablMixin {
+export interface ThemeableMixinInterface {
 
 	/**
 	 * Processes all the possible classes for the instance with setting the passed class names to
@@ -84,7 +84,7 @@ export function theme (theme: {}) {
 /**
  * Function for returns a class decoratied with with Themeable functionality
  */
-export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): Constructor<ThemeablMixin> & T {
+export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): Constructor<ThemeableMixinInterface> & T {
 	return class extends base {
 
 		/**
@@ -239,3 +239,5 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 		}
 	};
 }
+
+export default ThemeableMixin;

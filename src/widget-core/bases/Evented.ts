@@ -147,3 +147,5 @@ export class Evented extends Destroyable {
 		}
 	}
 }
+
+export default Evented;

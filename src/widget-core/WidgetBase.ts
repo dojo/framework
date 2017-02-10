@@ -379,3 +379,5 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		});
 	}
 }
+
+export default WidgetBase;

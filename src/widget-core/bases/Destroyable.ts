@@ -61,3 +61,5 @@ export class Destroyable {
 		});
 	}
 }
+
+export default Destroyable;

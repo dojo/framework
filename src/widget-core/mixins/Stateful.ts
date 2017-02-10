@@ -61,3 +61,5 @@ export function StatefulMixin<T extends Constructor<WidgetBase<WidgetProperties>
 		}
 	};
 }
+
+export default StatefulMixin;

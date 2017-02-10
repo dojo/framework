@@ -66,3 +66,5 @@ export class DomWrapper extends WidgetBase<DomWrapperProperties> {
 		return vNode;
 	}
 }
+
+export default DomWrapper;

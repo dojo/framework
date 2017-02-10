@@ -197,3 +197,5 @@ export function FormLabelMixin<T extends Constructor<WidgetBase<WidgetProperties
 		}
 	};
 }
+
+export default FormLabelMixin;

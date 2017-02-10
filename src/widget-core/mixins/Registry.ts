@@ -37,3 +37,5 @@ export function RegistryMixin<T extends Constructor<WidgetBase<WidgetProperties>
 		}
 	};
 }
+
+export default RegistryMixin;
