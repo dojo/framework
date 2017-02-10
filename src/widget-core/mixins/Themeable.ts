@@ -82,6 +82,52 @@ export function theme (theme: {}) {
 }
 
 /**
+ * Split class strings containing spaces into separate array entries.
+ * ie. ['class1 class2', 'class3] -> ['class1', 'class2', 'class3'];
+ *
+ * @param classes The array of class strings to split.
+ * @return the complete classes array including any split classes.
+ */
+function splitClassStrings(classes: string[]): string[] {
+	return classes.reduce((splitClasses: string[], className) => {
+		if (className.indexOf(' ') > -1) {
+			splitClasses.push(...className.split(' '));
+		}
+		else {
+			splitClasses.push(className);
+		}
+		return splitClasses;
+	}, []);
+}
+
+/**
+ * Returns the class object map based on the class names and whether they are
+ * active.
+ *
+ * @param className an array of string class names
+ * @param applied indicates is the class is applied
+ */
+function createClassNameObject(classNames: string[], applied: boolean) {
+	return classNames.reduce((flaggedClassNames: ClassNameFlags, className) => {
+		flaggedClassNames[className] = applied;
+		return flaggedClassNames;
+	}, {});
+}
+
+/**
+ * Creates a reverse lookup for the classes passed in via the `theme` function.
+ *
+ * @param classes The baseClasses object
+ * @requires
+ */
+function createBaseClassesLookup(classes: BaseClasses): ClassNames {
+	return Object.keys(classes).reduce((currentClassNames, key: string) => {
+		currentClassNames[classes[key]] = key;
+		return currentClassNames;
+	}, <ClassNames> {});
+}
+
+/**
  * Function for returns a class decoratied with with Themeable functionality
  */
 export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): Constructor<ThemeableMixinInterface> & T {
@@ -110,7 +156,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 		/**
 		 * Generated class name map
 		 */
-		private generatedClassName: ClassNameFlagsMap;
+		private generatedClassNames: ClassNameFlagsMap;
 
 		/**
 		 * @constructor
@@ -121,16 +167,27 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 				this.onPropertiesChanged(evt.properties, evt.changedPropertyKeys);
 			}));
 			this.onPropertiesChanged(this.properties, [ 'theme' ]);
-			this.baseClassesReverseLookup = this.createBaseClassesLookup(this.baseClasses);
+			this.baseClassesReverseLookup = createBaseClassesLookup(this.baseClasses);
 		}
 
+		/**
+		 * Function used to add themeable classes to a widget. Returns a chained function 'fixed'
+		 * that can be used to pass non-themeable classes to a widget. Filters out any null
+		 * values passed.
+		 *
+		 * @param classNames the classes to be added to the domNode. These classes must come from
+		 * the baseClasses passed into the @theme decorator.
+		 * @return A function chain continaing the 'fixed' function and a 'get' finaliser function.
+		 * Class names passed to the 'fixed' function can be any string.
+		 *
+		 */
 		public classes(...classNames: (string | null)[]): ClassesFunctionChain {
 			const appliedClasses = classNames
 				.filter((className) => className !== null)
 				.reduce((currentCSSModuleClassNames, className: string) => {
 					const classNameKey = this.baseClassesReverseLookup[className];
-					if (this.generatedClassName.hasOwnProperty(classNameKey)) {
-						assign(currentCSSModuleClassNames, this.generatedClassName[classNameKey]);
+					if (this.generatedClassNames.hasOwnProperty(classNameKey)) {
+						assign(currentCSSModuleClassNames, this.generatedClassNames[classNameKey]);
 					}
 					else {
 						console.warn(`Class name: ${className} and lookup key: ${classNameKey} not from baseClasses, use chained 'fixed' method instead`);
@@ -145,8 +202,8 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 				classes: responseClasses,
 				fixed(this: ClassesFunctionChain, ...classNames: (string | null)[]) {
 					const filteredClassNames = <string[]> classNames.filter((className) => className !== null);
-					const splitClasses = themeable.splitClassStrings(filteredClassNames);
-					assign(this.classes, themeable.createClassNameObject(splitClasses, true));
+					const splitClasses = splitClassStrings(filteredClassNames);
+					assign(this.classes, createClassNameObject(splitClasses, true));
 					themeable.appendToAllClassNames(splitClasses);
 					return this;
 				},
@@ -164,25 +221,19 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 		 * @param classNames an array of string class names
 		 */
 		private appendToAllClassNames(classNames: string[]): void {
-			const negativeClassFlags = this.createClassNameObject(classNames, false);
+			const negativeClassFlags = createClassNameObject(classNames, false);
 			this.allClasses = assign({}, this.allClasses, negativeClassFlags);
 		}
 
 		/**
-		 * Returns the class object map based on the class names and whether they are
-		 * active.
+		 * Function to generate theme classes, triggered when theme or overrideClasses properties are changed.
 		 *
-		 * @param className an array of string class names
-		 * @param applied indicates is the class is applied
+		 * @param baseClassses the baseClasses object passed in via the @theme decorator.
+		 * @param theme The current theme
+		 * @param overrideClasses Any override classes that may have been set
+		 * @returns An object containing a complete set of class names with boolean values.
 		 */
-		private createClassNameObject(classNames: string[], applied: boolean) {
-			return classNames.reduce((flaggedClassNames: ClassNameFlags, className) => {
-				flaggedClassNames[className] = applied;
-				return flaggedClassNames;
-			}, {});
-		}
-
-		private generateThemeClasses(baseClasses: BaseClasses, theme: any = {}, overrideClasses: any = {}) {
+		private generateThemeClasses(baseClasses: BaseClasses, theme: any = {}, overrideClasses: any = {}): ClassNameFlagsMap {
 			let allClasses: string[] = [];
 			const themeKey = baseClasses[THEME_KEY];
 			const sourceThemeClasses = themeKey && theme.hasOwnProperty(themeKey) ? assign({}, baseClasses, theme[themeKey]) : baseClasses;
@@ -200,7 +251,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 
 				allClasses = [...allClasses, ...cssClassNames];
 
-				newAppliedClassNames[className] = this.createClassNameObject(cssClassNames, true);
+				newAppliedClassNames[className] = createClassNameObject(cssClassNames, true);
 
 				return newAppliedClassNames;
 			}, <ClassNameFlagsMap> {});
@@ -210,32 +261,20 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 			return themeClasses;
 		}
 
+		/**
+		 * Function fired when properties are changed on the widget.
+		 *
+		 * @param theme The theme property
+		 * @param overrideClasses The overrideClasses property
+		 * @param changedPropertyKeys Array of properties that have changed
+		 */
 		private onPropertiesChanged({ theme, overrideClasses }: ThemeableProperties, changedPropertyKeys: string[]) {
 			const themeChanged = includes(changedPropertyKeys, 'theme');
 			const overrideClassesChanged = includes(changedPropertyKeys, 'overrideClasses');
 
 			if (themeChanged || overrideClassesChanged) {
-				this.generatedClassName = this.generateThemeClasses(this.baseClasses, theme, overrideClasses);
+				this.generatedClassNames = this.generateThemeClasses(this.baseClasses, theme, overrideClasses);
 			}
-		}
-
-		private createBaseClassesLookup(classes: BaseClasses): ClassNames {
-			return Object.keys(classes).reduce((currentClassNames, key: string) => {
-				currentClassNames[classes[key]] = key;
-				return currentClassNames;
-			}, <ClassNames> {});
-		}
-
-		private splitClassStrings(classes: string[]): string[] {
-			return classes.reduce((splitClasses: string[], className) => {
-				if (className.indexOf(' ') > -1) {
-					splitClasses.push(...className.split(' '));
-				}
-				else {
-					splitClasses.push(className);
-				}
-				return splitClasses;
-			}, []);
 		}
 	};
 }
