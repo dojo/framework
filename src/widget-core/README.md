@@ -32,9 +32,6 @@ We also provide a suite of pre-built widgets to use in your applications: [(@doj
         	- [Events](#events)
         	- [Initialization](#initialization)
     - [Key Principles](#key-principles)
-    - [Examples](#examples)
-        - [Example Label Widget](#example-label-widget)
-        - [Example List Widget](#example-list-widget)
     - [API](#api)
 - [How Do I Contribute?](#how-do-i-contribute)
     - [Installation](#installation)
@@ -65,13 +62,16 @@ Constructing your own widgets (Custom widgets) is simple and straightforward.
 The smallest `@dojo/widget-core` example looks like this:
 
 ```ts
-const createMyWidget = createWidgetBase.extend({
-   render(): DNode {
+class MyWidget extends WidgetBase<WidgetProperties> {
+	render() {
        return v('h1', { innerHTML: 'Hello, Dojo!' });
-   }
-});
+	}
+}
 
-createMyWidget.mixin(createProjectorMixin)().append();
+const Projector = ProjectorMixin(MyWidget);
+const projector = new Projector({});
+
+projector.append(root);
 ```
 
 This code renders a `h1` element onto the page, that says "Hello, Dojo!".
@@ -81,8 +81,7 @@ This code renders a `h1` element onto the page, that says "Hello, Dojo!".
 All widgets in Dojo 2 are designed using key reactive architecture concepts.
 These concepts include unidirectional data flow, inversion of control and property passing.
 
-Dojo 2's widget-core is built using the [@dojo/compose](https://github.com/dojo/compose) composition library.
-This library provides the ability to construct and manipulate traits and mixins.
+Dojo 2's widget-core is built with Typescript, leveraging Class mixins to construct and manipulate traits and mixins.
 
 We also make use of a VirtualDOM (VDOM) in Dojo 2.
 In order to interact with our VDOM, you need to pass it [HyperScript](https://github.com/dominictarr/hyperscript).
@@ -175,13 +174,13 @@ The widget registry allows you to lazy instantiate widgets.
 
 ### Writing Custom Widgets
 
-The `createWidgetBase` class provides the functionality needed to create Custom Widgets.
+The `WidgetBase` class provides the functionality needed to create Custom Widgets.
 This functionality includes caching and widget lifecycle management.
 
-The `createWidgetBase` class is available from the `@dojo/widget-core/createWidgetBase` package.
+The `WidgetBase` class is available from the `@dojo/widget-core/WidgetBase ` package.
 
 ```ts
-import { createWidgetBase } from '@dojo/widget-core/createWidgetBase';
+import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 ```
 
 **All** widgets should extend from this class.
@@ -213,7 +212,7 @@ The depth of the returned diff is equal to the depth used during the equality co
 
 ##### Custom property diff control
 
-Included in `createWidgetBase` is functionality to support targeting a specific property with a custom comparison function.
+Included in `WidgetBase` is functionality to support targeting a specific property with a custom comparison function.
 This is done by adding a function to the widget class with `diffProperty` prefixed to the property name.
 
 e.g. for a property `foo` you would add a function called `diffPropertyFoo`
@@ -221,14 +220,12 @@ e.g. for a property `foo` you would add a function called `diffPropertyFoo`
 
 ```ts
 
-const createMyWidget = createWidgetBase.mixin({
-	mixin: {
-		diffPropertyFoo(this: MyWidget, previousProperty: MyComplexObject, newProperty: MyComplexObject) {
+class MyWidget extends WidgetBase<WidgetProperties> {
+	diffPropertyFoo(previousProperty: MyComplexObject, newProperty: MyComplexObject) {
 			// can perfom complex comparison logic here between the two property values
-			// or even use externally stored state to assist the comparison.
-		}
+			// or even use externally stored state to assist the comparison
 	}
-});
+}
 ```
 
 If a property has a custom diff function then that property is excluded from those passed to the `diffProperties` function.
@@ -264,10 +261,10 @@ Finally once all the attached events have been processed, the properties lifecyc
 #### Projector
 
 Projector is a term used to describe a widget that will be attached to a DOM element, also known as a root widget.
-Any widget can be converted into a projector simply by mixing in the `createProjectorMixin` mixin.
+Any widget can be converted into a projector simply by mixing in the `ProjectMixin` mixin.
 
 ```ts
-createMyWidget.mixin(createProjectorMixin)
+const MyProjector = ProjectorMixin(MyWidget);
 ```
 
 Projectors behave in the same way as any other widget **except** that they need to be manually instantiated and managed outside of the standard widget lifecycle.
@@ -279,11 +276,10 @@ There are 3 ways that a projector widget can be added to the DOM - `.append`, `.
  - replace - Replace the projector's `root` node with the widget
 
 ```ts
-const createWidgetProjector = createMyWidget.mixin(createProjectorMixin);
+const MyProjector = ProjectorMixin(MyWidget);
 
-createWidgetProjector().append(() => {
-	// appended
-});
+const myProjector = new MyProjector({})
+myProjector.append(root);
 ```
 
 #### Event Handling
@@ -297,36 +293,30 @@ For convenience event handlers are automatically bound to the scope of their enc
 *internally defined handler*
 
 ```ts
-const createMyWidget: MyWidgetFactory = createWidgetBase
-.mixin(internalStateMixin)
-.mixin({
-	mixin: {
-		onClick: function (this: MyWidget): void {
-			this.setState(!this.state.selected);
-		},
-		render(this: MyWidget): DNode {
-			const { state: { selected } } = this;
-
-			return v('div', [
-				v('input', { type: 'checkbox', onclick: this.onClick }),
-				v('input', { type: 'text', disabled: this.state.selected })
-			]);
-		}
+class MyWidget extends WidgetBase<WidgetProperties> {
+	private selected: boolean;
+	
+	onClick() {
+		this.selected = !this.selected;
 	}
-});
+	
+	render(this: MyWidget): DNode {
+		return v('div', [
+			v('input', { type: 'checkbox', onclick: this.onClick }),
+			v('input', { type: 'text', disabled: this.selected })
+		]);
+	}
+}
 ```
 
 *Handler passed via properties*
 
 ```ts
-const createMyWidget: MyWidgetFactory = createWidgetBase.mixin({
-	mixin: {
-		onClick: function (this: MyWidget): void {
-			this.properties.mySpecialFunction();
-		}
-		...
+class MyWidget extends WidgetBase<WidgetProperties> {
+	onClick: function (): void {
+		this.properties.mySpecialFunction();
 	}
-});
+}
 ```
 
 *Binding a function passed to child widget*
@@ -334,15 +324,11 @@ const createMyWidget: MyWidgetFactory = createWidgetBase.mixin({
 ```ts
 import { specialClick } from './mySpecialFunctions';
 
-const createMyWidget: MyWidgetFactory = createWidgetBase.mixin({
-	mixin: {
-		render(this: MyWidget): DNode {
-			const { properties: { specialClick } } = this;
-
-			return	w(createChildWidget, { onClick: specialClick.bind(this) });
-		}
+class MyWidget extends WidgetBase<WidgetProperties> {
+	render() {
+		return	w(createChildWidget, { onClick: specialClick });
 	}
-});
+}
 ```
 
 #### Widget Registry
@@ -353,19 +339,19 @@ A global widget registry is exported from the `d.ts` class.
 
 ```ts
 import { registry } from '@dojo/widget-core/d';
-import createMyWidget from './createMyWidget';
+import MyWidget from './MyWidget';
 
 // registers the widget factory that will be available immediately
-registry.define('my-widget-1', createMyWidget);
+registry.define('my-widget-1', MyWidget);
 
 // registers a promise that is resolving to a widget factory and will be
 // available as soon as the promise resolves.
-registry.define('my-widget-2', Promise.resolve(createMyWidget));
+registry.define('my-widget-2', Promise.resolve(MyWidget));
 
 // registers a function that will be lazily executed the first time the factory
 // label is used within a widget render pipeline. The widget will be available
 // as soon as the promise is resolved after the initial get.
-registry.define('my-widget-3', () => Promise.resolve(createMyWidget));
+registry.define('my-widget-3', () => Promise.resolve(MyWidget));
 ```
 
 It is recommended to use the factory registry when defining widgets with [`w`](#w--d), to support lazy factory resolution.
@@ -376,8 +362,8 @@ Example of registering a function that returns a `Promise` that resolves to a `F
 import load from '@dojo/core/load';
 
 registry.define('my-widget', () => {
-	return load(require, './createMyWidget')
-		.then(([ createMyWidget ]) => createMyWidget.default);
+	return load(require, './MyWidget')
+		.then(([ MyWidget ]) => MyWidget.default);
 });
 ```
 
@@ -385,8 +371,8 @@ registry.define('my-widget', () => {
 
 ##### Overview
 
-Widgets are themed using `css-modules` and the `themeable` mixin. Each widget must implement a .css file that contains all the css classes that will be used to style it. The baseClasses object is the css API for the Widget: baseClasses css classes can be overridden by external themes. Further customisation of specific Custom Widget classes can be achieved by passing overrideClasses into the widget.
-The `themeable` mixin provides a `classes` function that controls the classes to be applied to each node. Classes from the `baseClasses` object passed to the `classes` function can be themed and overridden. To create fixed classes that cannot be changed the chained `fixed` function can be used.
+Widgets are themed using `css-modules` and the `Themeable` mixin. Each widget must implement a .css file that contains all the css classes that will be used to style it. The baseClasses object is the css API for the Widget: baseClasses css classes can be overridden by external themes. Further customisation of specific Custom Widget classes can be achieved by passing overrideClasses into the widget.
+The `Themeable` mixin provides a `classes` function that controls the classes to be applied to each node. Classes from the base `css` object passed to the `classes` function can be themed and overridden. To create fixed classes that cannot be changed the chained `fixed` function can be used.
 
 ##### Authoring a baseTheme
 
@@ -414,38 +400,43 @@ Classnames are locally scoped as part of the build. A theme `key` is generated a
 }
 ```
 
-##### Applying baseClasses
+##### Registering baseClasses
 
-To apply baseClasses a widget must use the `themeable` mixin and import it's `baseClasses` object.
+To apply baseClasses a widget must use `ThemeableMixin` and the `theme` decorator from `mixins/Themeable` to register the base classes.
 
-``` typescript
+```typescript
+import { WidgetProperties } from '@dojo/widget-core/interfaces';
+import { WidgetBase } from '@dojo/widget-core/WidgetBase';
+import { ThemeableMixin, theme } from '@dojo/widget-core/mixins/Themeable';
 import * as baseClasses from './styles/tabpanel.css';
+
+@theme(baseClasses)
+class MyThemeableWidget extends ThemeableMixin(WidgetBase)<WidgetProperties> {
+	// ...
+}
 ```
-Theme classes to be applied to a widgets VDOM are acquired using `this.classes(<themeClass>)`.
 
 Basic usage:
 
 ``` typescript
-/* tabpanel.ts */
+import { WidgetProperties } from '@dojo/widget-core/interfaces';
+import { WidgetBase } from '@dojo/widget-core/WidgetBase';
+import { ThemeableMixin, ThemeableMixinProperties, theme } from '@dojo/widget-core/mixins/Themeable';
 import * as baseClasses from './styles/tabpanel.css';
-import themeableMixin, { Themeable } from '../mixins/themeable';
 
-export type TabPanel = Widget<WidgetProperties> & Themeable;
-export interface TabPanelFactory extends WidgetFactory<TabPanel, WidgetProperties> {}
+interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableMixinProperties;
 
-const createTabPanel: TabPanelFactory = createWidgetBase.mixin(themeableMixin).mixin({
-	mixin: {
-		baseClasses,
-		render: function (this: TabPanel) {
-			const { root, tab } = baseClasses;
-			return
-				v(`ul`, { classes: this.classes(root).get() }, [
-					v('li', { classes: this.classes(tab).get() }, [ 'tab1' ])
-					// ...
-				]);
-		}
+@theme(baseClasses)
+class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProperties> {
+	render: function () {
+		const { root, tab } = baseClasses;
+		return
+			v(`ul`, { classes: this.classes(root).get() }, [
+				v('li', { classes: this.classes(tab).get() }, [ 'tab1' ])
+				// ...
+			]);
 	}
-});
+}
 ```
 
 ##### Applying a theme
@@ -463,11 +454,17 @@ Usage Extending on the previous `tabPanel` example.
 
 Import the theme and pass it to the widget via it's `properties`. The theme classes will be automatically mixed into the widget and available via `this.classes`.
 
-``` typescript
+```typescript
 import * as customTheme from './themes/customTheme.css';
 
-w(createTabPanel, { theme: customTheme });
-// Resulting widget will have green tabs instead of baseTheme red.
+interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableMixinProperties;
+
+class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProperties> {
+	render: function () {
+		// Resulting widget will have green tabs instead of baseTheme red.
+		return w(createTabPanel, { theme: customTheme });
+	}
+}
 ```
 
 The theme can be applied to individual widgets or to a project and prop passed down to it's children.
@@ -483,12 +480,18 @@ As we are using `css-modules` to scope widget css classes, the generated class n
 }
 ```
 
-``` typescript
-import * as tabPanelOverrides from './overrides/tabPanelOverrides.css';
+```typescript
+import * as myOverrides from './overrides/myOverrides.css';
 
-w(createTabPanel, { overrideClasses: tabPanelOverrides });
-// Resulting widget will still have baseTheme red tabs,
-// but will have font-weight: bold; applied also.
+interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableMixinProperties;
+
+class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProperties> {
+	render: function () {
+		// Resulting widget will still have baseTheme red tabs,
+		// but will have font-weight: bold; applied also
+		return w(createTabPanel, { overrideClasses: myOverrides });
+	}
+}
 ```
 
 ##### Applying fixed classes
@@ -496,33 +499,31 @@ w(createTabPanel, { overrideClasses: tabPanelOverrides });
 The `this.classes` function returns a chained `fixed` function that can be used to set non-themeable classes on a node. This allows a widget author to apply classes to a widget that cannot be overridden.
 
 ``` typescript
-/* tabpanel.ts */
+import { WidgetProperties } from '@dojo/widget-core/interfaces';
+import { WidgetBase } from '@dojo/widget-core/WidgetBase';
+import { ThemeableMixin, ThemeableMixinProperties, theme } from '@dojo/widget-core/mixins/Themeable';
 import * as baseClasses from './styles/tabpanel.css';
-import themeableMixin, { Themeable } from '../mixins/themeable';
 
-export type TabPanel = Widget<WidgetProperties> & Themeable;
-export interface TabPanelFactory extends WidgetFactory<TabPanel, WidgetProperties> {}
+interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableMixinProperties;
 
-const createTabPanel: TabPanelFactory = createWidgetBase.mixin(themeableMixin).mixin({
-	mixin: {
-		baseClasses,
-		render: function (this: TabPanel) {
-			const { root, tab } = baseClasses;
-			return
-				v(`ul`, { classes: this.classes(root).get() }, [
-					v('li', { classes: this.classes().fixed(tab).get() }, [ 'tab1' ])
-					// ...
-				]);
-		}
+@theme(baseClasses)
+class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProperties> {
+	render: function () {
+		const { root, tab } = baseClasses;
+		return
+			v(`ul`, { classes: this.classes(root).get() }, [
+				v('li', { classes: this.classes().fixed(tab).get() }, [ 'tab1' ])
+				// ...
+			]);
 	}
-});
+}
 ```
 
 In the above example, the `root` class is still themeable, but the `tab` class is applied using `.fixed()` so it will not be themeable. The classes passed to `.fixed()` can be any string and do not need to originate from `baseClasses` like the `.classes()` parameters must do.
 
 #### Internationalization (i18n)
 
-Widgets can be internationalized by mixing in `@dojo/widget-core/mixins/createI18nMixin`.
+Widgets can be internationalized by mixing in `@dojo/widget-core/mixins/I18n`.
 [Message bundles](https://github.com/dojo/i18n) are localized by passing them to `localizeBundle`.
 
 If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then the default messages are returned.
@@ -532,35 +533,25 @@ Each widget can have its own locale by passing a property - `properties.locale`.
 If no locale is set, then the default locale, as set by [`@dojo/i18n`](https://github.com/dojo/i18n), is assumed.
 
 ```ts
-const createI18nWidget = createWidgetBase
-	.mixin(createI18nMixin)
-	.mixin({
-		mixin: {
-			render: function () {
-				// Load the "greetings" messages for the current locale. If the locale-specific
-				// messages have not been loaded yet, then the default messages are returned,
-				// and the widget will be invalidated once the locale-specific messages have
-				// loaded.
-				const messages = this.localizeBundle(greetingsBundle);
+class I18nWidget extends I18nMixin(WidgetBase)<I18nWidgetProperties> {
+	render: function () {
+		// Load the "greetings" messages for the current locale. If the locale-specific
+		// messages have not been loaded yet, then the default messages are returned,
+		// and the widget will be invalidated once the locale-specific messages have
+		// loaded.
+		const messages = this.localizeBundle(greetingsBundle);
 
-				return v('div', { title: messages.hello }, [
-					w(createLabel, {
-						// Passing a message string to a child widget.						label: messages.purchaseItems
-					}),
-					w(createButton, {
-						// Passing a formatted message string to a child widget.
-						label: messages.format('itemCount', { count: 2 })
-					})
-				]);
-			}
-		}
-	});
-
-const widget = createI18nWidget({
-	// Set the locale for the widget and all of its children. Any child can
-	// still set its own locale.
-	locale: 'fr'
-});
+		return v('div', { title: messages.hello }, [
+			w(createLabel, {
+				// Passing a message string to a child widget.				label: messages.purchaseItems
+			}),
+			w(createButton, {
+				// Passing a formatted message string to a child widget.
+				label: messages.format('itemCount', { count: 2 })
+			})
+		]);
+	}
+}
 ```
 
 #### Web Components
@@ -572,12 +563,12 @@ Just create a `CustomElementDescriptor` factory and use the build tooling to do 
 
 ```ts
 import { CustomElementDescriptor } from '@dojo/widget-core/customElements';
-import createMyWidget from './path/to/createMyWidget';
+import MyWidget from './path/to/MyWidget';
 
 export default function createCustomElement(): CustomElementDescriptor {
 	return {
 		tagName: 'my-widget',
-		widgetFactory: createMyWidget,
+		widgetFactory: MyWidget,
 	   	attributes: [
 		   	{
 			   	attributeName: 'label'
@@ -630,7 +621,7 @@ Your widget will be registered with the browser using the provided tag name. The
 
 ##### Widget Factory
 
-A factory that will return the widget that you want wrapped as a custom element.
+A widget class that you want wrapped as a custom element.
 
 ##### Attributes
 
@@ -753,78 +744,6 @@ These are some of the **important** principles to keep in mind when creating and
 3. hyperscript should **always** be written using the @dojo/widget-core `v` helper function.
 4. **never** set state outside of a widget instance.
 5. **never** update `properties` within a widget instance.
-
-### Examples
-
-#### Example Label Widget
-
-A simple widget with no children, such as a `label` widget, can be created like this:
-
-```ts
-import { VNodeProperties } from '@dojo/interfaces/vdom';
-import { Widget, WidgetFactory, WidgetProperties } from '@dojo/widget-core/interfaces';
-import createWidgetBase from '@dojo/widget-core/createWidgetBase';
-
-export interface LabelProperties extends WidgetProperties {
-    content: string;
-}
-
-export type Label = Widget<LabelProperties>
-
-export interface LabelFactory extends WidgetFactory<Label, LabelProperties> {}
-
-const createLabelWidget: LabelFactory = createWidgetBase.mixin({
-    mixin: {
-        render(this: Label): DNode {
-            return v('label', { innerHTML: this.properties.content });
-        }
-    }
-});
-
-export default createLabelWidget;
-```
-
-#### Example List Widget
-
-```ts
-import { DNode, Widget, WidgetFactory, WidgetProperties } from '@dojo/widget-core/interfaces';
-import createWidgetBase from '@dojo/widget-core/createWidgetBase';
-import { v } from '@dojo/widget-core/d';
-
-export interface ListItem {
-    name: string;
-}
-
-export interface ListProperties extends WidgetProperties {
-    items?: ListItem[];
-}
-
-export type List = Widget<ListProperties>;
-
-export interface ListFactory extends WidgetFactory<List, ListProperties> {}
-
-function isEven(value: number) {
-    return value % 2 === 0;
-}
-
-function listItem(item: ListItem, itemNumber: number): DNode {
-    const classes = isEven(itemNumber) ? {} : { 'odd-row': true };
-    return v('li', { innerHTML: item.name, classes });
-}
-
-const createListWidget: ListFactory = createWidgetBase.mixin({
-	mixin: {
-		render: function (this: List): DNode {
-			const { properties: { items = [] } } = this;
-			const listItems = items.map(listItem);
-
-			return v('ul', listItems);
-		}
-	}
-});
-
-export default createListWidget;
-```
 
 ### API
 
