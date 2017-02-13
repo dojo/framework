@@ -36,7 +36,7 @@ export interface AttachOptions {
 	root?: Element;
 }
 
-export interface Projector {
+export interface ProjectorMixin {
 
 	/**
 	 * Append the projector to the root.
@@ -64,7 +64,7 @@ export interface Projector {
 	readonly projectorState: ProjectorState;
 }
 
-export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<Projector> {
+export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<ProjectorMixin> {
 	return class extends base {
 
 		public projectorState: ProjectorState;
@@ -210,4 +210,4 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 	};
 }
 
-export default Projector;
+export default ProjectorMixin;

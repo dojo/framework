@@ -60,7 +60,7 @@ const THEME_KEY = ' _key';
 /**
  * Interface for the ThemeableMixin
  */
-export interface ThemeableMixinInterface {
+export interface ThemeableMixin {
 
 	/**
 	 * Processes all the possible classes for the instance with setting the passed class names to
@@ -130,7 +130,7 @@ function createBaseClassesLookup(classes: BaseClasses): ClassNames {
 /**
  * Function for returns a class decoratied with with Themeable functionality
  */
-export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): Constructor<ThemeableMixinInterface> & T {
+export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<ThemeableMixin> {
 	return class extends base {
 
 		/**

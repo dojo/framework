@@ -50,7 +50,7 @@ export type LocalizedMessages<T extends Messages> = T & {
 /**
  * interface for I18n functionality
  */
-export interface I18n {
+export interface I18nMixin {
 	/**
 	 * Return the cached messages for the specified bundle for the current locale, assuming they have already
 	 * benn loaded. If the locale-specific messages have not been loaded, they are fetched and the widget state
@@ -65,7 +65,7 @@ export interface I18n {
 	localizeBundle<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T>;
 }
 
-export function I18nMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<I18n> {
+export function I18nMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<I18nMixin> {
 	return class extends base {
 		properties: I18nProperties;
 
