@@ -9,8 +9,7 @@ import { isHNode } from './../d';
 export interface I18nProperties extends WidgetProperties {
 	/**
 	 * The locale for the widget. Is not specified, then the root locale (as determined by `@dojo/i18n`) is assumed.
-	 * If specified, the widget's node will have a `data-locale` property set to the locale, in order to facilitate
-	 * styling localized components if the use case arises.
+	 * If specified, the widget's node will have a `lang` property set to the locale.
 	 */
 	locale?: string;
 
@@ -27,8 +26,8 @@ export interface I18nProperties extends WidgetProperties {
  * An internal helper interface for defining locale and text direction attributes on widget nodes.
  */
 interface I18nVNodeProperties extends VNodeProperties {
-	'data-locale': string | null;
 	dir: string | null;
+	lang: string | null;
 }
 
 export type LocalizedMessages<T extends Messages> = T & {
@@ -100,15 +99,15 @@ export function I18nMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(b
 			if (isHNode(result)) {
 				const { locale, rtl } = this.properties;
 				const vNodeProperties: I18nVNodeProperties = {
-					'data-locale': null,
-					dir: null
+					dir: null,
+					lang: null
 				};
 
 				if (typeof rtl === 'boolean') {
 					vNodeProperties['dir'] = rtl ? 'rtl' : 'ltr';
 				}
 				if (locale) {
-					vNodeProperties['data-locale'] = locale;
+					vNodeProperties['lang'] = locale;
 				}
 
 				assign(result.properties, vNodeProperties);

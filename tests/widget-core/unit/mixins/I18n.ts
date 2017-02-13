@@ -111,15 +111,15 @@ registerSuite({
 
 		const result = <VNode> localized.__render__();
 		assert.isOk(result);
-		assert.isNull(result.properties!['data-locale']);
+		assert.isNull(result.properties!['lang']);
 	},
-	'`properties.locale` updates the widget node\'s `data-locale` property': {
+	'`properties.locale` updates the widget node\'s `lang` property': {
 		'when non-empty'() {
 			localized = new Localized({locale: 'ar-JO'});
 
 			const result = <VNode> localized.__render__();
 			assert.isOk(result);
-			assert.strictEqual(result.properties!['data-locale'], 'ar-JO');
+			assert.strictEqual(result.properties!['lang'], 'ar-JO');
 		},
 
 		'when empty'() {
@@ -127,7 +127,7 @@ registerSuite({
 
 			const result = localized.__render__();
 			assert.isOk(result);
-			assert.isNull(result.properties!['data-locale']);
+			assert.isNull(result.properties!['lang']);
 		}
 	},
 
