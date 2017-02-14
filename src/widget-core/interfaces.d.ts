@@ -62,11 +62,6 @@ export type SubmitEventHandler = EventHandler;
 export interface WidgetProperties {
 
 	/**
-	 * id for a widget
-	 */
-	id?: string;
-
-	/**
 	 * The key for a widget. Used to differentiate uniquely identify child widgets for
 	 * rendering and instance management
 	 */
@@ -190,11 +185,6 @@ export interface WidgetBaseInterface<P extends WidgetProperties> extends Evented
 	 * Widget properties
 	 */
 	readonly properties: P;
-
-	/**
-	 * Widget id
-	 */
-	readonly id: string | undefined;
 
 	/**
 	 * Returns the widget's children

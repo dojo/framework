@@ -749,26 +749,6 @@ registerSuite({
 			assert.isTrue(widgetTwoInstantiated);
 		}
 	},
-	'id': {
-		'in properties'() {
-			const widgetBase = new WidgetBase({
-					id: 'foo'
-			});
-
-			assert.strictEqual(widgetBase.id, 'foo');
-		},
-		'not in properties'() {
-			const widgetBase = new WidgetBase({});
-
-			assert.isUndefined(widgetBase.id);
-		},
-		'is read only'() {
-			const widgetBase = new WidgetBase({});
-			assert.throws(() => {
-				(<any> widgetBase).id = 'foo'; /* .id is readonly, so TypeScript will prevent mutation */
-			});
-		}
-	},
 	'invalidate emits invalidated event'() {
 		const widgetBase = new WidgetBase({});
 		let count = 0;

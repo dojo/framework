@@ -138,10 +138,6 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		this.setProperties(properties);
 	}
 
-	public get id(): string | undefined {
-		return this._properties.id;
-	}
-
 	public get properties(): Readonly<P> {
 		return this._properties;
 	}
