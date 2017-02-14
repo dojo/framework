@@ -3,6 +3,7 @@ import './async/iteration';
 import './async/ExtensiblePromise';
 import './async/Task';
 import './async/timing';
+import './Destroyable';
 import './Evented';
 import './encoding';
 import './global';

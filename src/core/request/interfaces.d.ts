@@ -1,8 +1,9 @@
-import Task from '../async/Task';
-import UrlSearchParams from '../UrlSearchParams';
-import { ParamList } from '../UrlSearchParams';
+import { EventedListenerOrArray } from '@dojo/interfaces/bases';
 import { Handle } from '@dojo/interfaces/core';
 import { IterableIterator } from '@dojo/shim/iterator';
+import Task from '../async/Task';
+import { BaseEventedEvents, Evented } from '../Evented';
+import UrlSearchParams, { ParamList } from '../UrlSearchParams';
 
 export interface Body {
 	readonly bodyUsed: boolean;
@@ -29,6 +30,7 @@ export interface Headers {
 
 interface ResponseEvent {
 	response: Response;
+	target: any;
 }
 
 export interface DataEvent extends ResponseEvent {
@@ -65,6 +67,13 @@ export interface RequestOptions {
 	query?: string | ParamList;
 }
 
+export interface ResponseEvents extends BaseEventedEvents {
+	(type: 'data', handler: EventedListenerOrArray<Evented, DataEvent>): Handle;
+	(type: 'end', handler: EventedListenerOrArray<Evented, EndEvent>): Handle;
+	(type: 'progress', handler: EventedListenerOrArray<Evented, ProgressEvent>): Handle;
+	(type: 'start', handler: EventedListenerOrArray<Evented, StartEvent>): Handle;
+}
+
 export interface Response extends Body {
 	readonly headers: Headers;
 	readonly ok: boolean;
@@ -72,8 +81,5 @@ export interface Response extends Body {
 	readonly statusText: string;
 	readonly url: string;
 
-	on(type: 'data', fn: (event?: DataEvent) => void): Handle;
-	on(type: 'end', fn: (event?: EndEvent) => void): Handle;
-	on(type: 'progress', fn: (event?: ProgressEvent) => void): Handle;
-	on(type: 'start', fn: (event?: StartEvent) => void): Handle;
+	on: ResponseEvents;
 }

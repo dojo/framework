@@ -3,7 +3,8 @@ import * as assert from 'intern/chai!assert';
 import QueuingEvented from '../../src/QueuingEvented';
 
 interface CustomEvent {
-	type: string;
+	type: 'test';
+	target: any;
 	value: number;
 }
 
@@ -15,10 +16,11 @@ registerSuite({
 			let listenerCallCount = 0;
 
 			evented.emit({
-				type: 'test'
+				type: 'test',
+				value: 1
 			});
 
-			evented.on('test', function (actualEvent: CustomEvent) {
+			evented.on('test', function () {
 				listenerCallCount++;
 			});
 
@@ -37,8 +39,8 @@ registerSuite({
 				});
 			}
 
-			evented.on('test', function (actualEvent: CustomEvent) {
-				expectedValues.push(actualEvent.value);
+			evented.on('test', function (event: CustomEvent) {
+				expectedValues.push(event.value);
 			});
 
 			assert.deepEqual(expectedValues, [ 6, 7, 8, 9, 10 ]);

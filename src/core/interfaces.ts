@@ -2,27 +2,6 @@
  * They are only provided here to make the transistion to @dojo/interfaces easier */
 
 /**
- * The base event object, which provides a `type` property
- */
-export interface EventObject {
-	/**
-	 * The type of the event
-	 */
-	readonly type: string;
-}
-
-/**
- * Used through the toolkit as a consistent API to manage how callers can "cleanup"
- * when doing a function.
- */
-export interface Handle {
-	/**
-	 * Perform the destruction/cleanup logic associated with this handle
-	 */
-	destroy(): void;
-}
-
-/**
  * A general interface that can be used to renference a general index map of values of a particular type
  */
 export interface Hash<T> {
