@@ -39,7 +39,8 @@ registerSuite({
 			}
 		};
 
-		let domWrapper: any = new DomWrapper({ domNode: <any> mock });
+		let domWrapper: any = new DomWrapper();
+		domWrapper.setProperties({ domNode: <any> mock });
 
 		domWrapper.dirty = false;
 		domWrapper.cachedVNode = {
@@ -61,7 +62,8 @@ registerSuite({
 			}
 		};
 
-		let domWrapper: any = new DomWrapper({ domNode: <any> 'test' });
+		let domWrapper: any = new DomWrapper();
+		domWrapper.setProperties({ domNode: <any> 'test' });
 
 		domWrapper.dirty = false;
 		domWrapper.cachedVNode = {
@@ -72,7 +74,8 @@ registerSuite({
 	},
 
 	'Nothing bad happens if there if node is a string'() {
-		let domWrapper: any = new DomWrapper({ domNode: <any> 'test' });
+		let domWrapper: any = new DomWrapper();
+		domWrapper.setProperties({ domNode: <any> 'test' });
 
 		domWrapper.dirty = false;
 		domWrapper.cachedVNode = {
@@ -83,7 +86,8 @@ registerSuite({
 	},
 
 	'updates with no renders don\'t do anything'() {
-		let domWrapper: any = new DomWrapper({ domNode: <any> undefined });
+		let domWrapper: any = new DomWrapper();
+		domWrapper.setProperties({ domNode: <any> undefined });
 		domWrapper.dirty = false;
 		domWrapper.cachedVNode = {
 			domNode: null
@@ -101,7 +105,8 @@ registerSuite({
 			}
 		};
 
-		let domWrapper: any = new DomWrapper({ domNode: <any> undefined });
+		let domWrapper: any = new DomWrapper();
+		domWrapper.setProperties({ domNode: <any> undefined });
 		domWrapper.dirty = false;
 		domWrapper.cachedVNode = {
 			domNode: parentNode
@@ -111,7 +116,8 @@ registerSuite({
 	},
 
 	'render aspect is ok if we dont return an hnode'() {
-		let domWrapper: any = new DomWrapper({ domNode: <any> undefined });
+		let domWrapper: any = new DomWrapper();
+		domWrapper.setProperties({ domNode: <any> undefined });
 		domWrapper.dirty = false;
 		domWrapper.cachedVNode = {
 			domNode: 'test'

@@ -103,9 +103,8 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 
 	/**
 	 * @constructor
-	 * @param options widget options for construction
 	 */
-	constructor(properties: P) {
+	constructor() {
 		super({});
 
 		this._children = [];
@@ -134,15 +133,13 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		this.own(this.on('properties:changed', (evt: PropertiesChangeEvent<WidgetBase<WidgetProperties>, WidgetProperties>) => {
 			this.invalidate();
 		}));
-
-		this.setProperties(properties);
 	}
 
 	public get properties(): Readonly<P> {
 		return this._properties;
 	}
 
-	public setProperties(properties: P & { [index: string]: any }): void {
+	public setProperties(properties: P): void {
 		const diffPropertyResults: { [index: string]: PropertyChangeRecord } = {};
 		const diffPropertyChangedKeys: string[] = [];
 
@@ -150,7 +147,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 
 		this.diffPropertyFunctionMap.forEach((property: string, diffFunctionName: string) => {
 			const previousProperty = this.previousProperties[property];
-			const newProperty = properties[property];
+			const newProperty = (<any> properties)[property];
 			const self: { [index: string]: any } = this;
 			const result: PropertyChangeRecord = self[diffFunctionName](previousProperty, newProperty);
 
@@ -161,7 +158,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 			if (result.changed) {
 				diffPropertyChangedKeys.push(property);
 			}
-			delete properties[property];
+			delete (<any> properties)[property];
 			delete this.previousProperties[property];
 			diffPropertyResults[property] = result.value;
 		});
@@ -331,7 +328,8 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 				cachedChild.used = true;
 			}
 			else {
-				child = new factory(properties);
+				child = new factory();
+				child.setProperties(properties);
 				child.own(child.on('invalidated', () => {
 					this.invalidate();
 				}));

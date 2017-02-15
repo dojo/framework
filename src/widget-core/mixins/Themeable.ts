@@ -130,18 +130,13 @@ function createBaseClassesLookup(classes: BaseClasses): ClassNames {
 /**
  * Function for returns a class decoratied with with Themeable functionality
  */
-export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<ThemeableMixin> {
+export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeableProperties>>>(base: T): T & Constructor<ThemeableMixin> {
 	return class extends base {
-
-		/**
-		 * Properties for Themeable functionality
-		 */
-		public properties: ThemeableProperties;
 
 		/**
 		 * The Themeable baseClasses
 		 */
-		public baseClasses: {};
+		private baseClasses: {};
 
 		/**
 		 * All classes ever seen by the instance
@@ -159,15 +154,18 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 		private generatedClassNames: ClassNameFlagsMap;
 
 		/**
+		 * Indicates if classes meta data need to be calculated.
+		 */
+		private recalculateClasses: boolean = true;
+
+		/**
 		 * @constructor
 		 */
 		constructor(...args: any[]) {
 			super(...args);
 			this.own(this.on('properties:changed', (evt: PropertiesChangeEvent<this, ThemeableProperties>) => {
-				this.onPropertiesChanged(evt.properties, evt.changedPropertyKeys);
+				this.onPropertiesChanged(evt.changedPropertyKeys);
 			}));
-			this.onPropertiesChanged(this.properties, [ 'theme' ]);
-			this.baseClassesReverseLookup = createBaseClassesLookup(this.baseClasses);
 		}
 
 		/**
@@ -182,6 +180,10 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 		 *
 		 */
 		public classes(...classNames: (string | null)[]): ClassesFunctionChain {
+			if (this.recalculateClasses) {
+				this.calculateClasses();
+			}
+
 			const appliedClasses = classNames
 				.filter((className) => className !== null)
 				.reduce((currentCSSModuleClassNames, className: string) => {
@@ -231,9 +233,8 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 		 * @param baseClassses the baseClasses object passed in via the @theme decorator.
 		 * @param theme The current theme
 		 * @param overrideClasses Any override classes that may have been set
-		 * @returns An object containing a complete set of class names with boolean values.
 		 */
-		private generateThemeClasses(baseClasses: BaseClasses, theme: any = {}, overrideClasses: any = {}): ClassNameFlagsMap {
+		private generateThemeClasses(baseClasses: BaseClasses, theme: any, overrideClasses: any): void {
 			let allClasses: string[] = [];
 			const themeKey = baseClasses[THEME_KEY];
 			const sourceThemeClasses = themeKey && theme.hasOwnProperty(themeKey) ? assign({}, baseClasses, theme[themeKey]) : baseClasses;
@@ -258,7 +259,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 
 			this.appendToAllClassNames(allClasses);
 
-			return themeClasses;
+			this.generatedClassNames = themeClasses;
 		}
 
 		/**
@@ -268,13 +269,23 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<WidgetProperties
 		 * @param overrideClasses The overrideClasses property
 		 * @param changedPropertyKeys Array of properties that have changed
 		 */
-		private onPropertiesChanged({ theme, overrideClasses }: ThemeableProperties, changedPropertyKeys: string[]) {
+		private onPropertiesChanged(changedPropertyKeys: string[]) {
 			const themeChanged = includes(changedPropertyKeys, 'theme');
 			const overrideClassesChanged = includes(changedPropertyKeys, 'overrideClasses');
 
 			if (themeChanged || overrideClassesChanged) {
-				this.generatedClassNames = this.generateThemeClasses(this.baseClasses, theme, overrideClasses);
+				this.recalculateClasses = true;
 			}
+		}
+
+		/**
+		 * Initialize the reverse look up map and the generatedThemeClasses.
+		 */
+		private calculateClasses(): void {
+			const { theme = {}, overrideClasses = {} } = this.properties;
+			this.baseClassesReverseLookup = createBaseClassesLookup(this.baseClasses);
+			this.generateThemeClasses(this.baseClasses, theme , overrideClasses);
+			this.recalculateClasses = false;
 		}
 	};
 }

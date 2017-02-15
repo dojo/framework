@@ -59,7 +59,7 @@ registerSuite({
 			render() {
 				return null;
 			}
-		}({});
+		}();
 
 		try {
 			projector.__render__();
@@ -75,7 +75,7 @@ registerSuite({
 			render() {
 				return '';
 			}
-		}({});
+		}();
 
 		try {
 			projector.__render__();
@@ -97,7 +97,7 @@ registerSuite({
 				results.properties = undefined;
 				return results;
 			}
-		}({});
+		}();
 
 		const vnode  = <any> projector.__render__();
 		assert.isUndefined(vnode.properties);
@@ -105,7 +105,7 @@ registerSuite({
 	'attach to projector': {
 		'append'() {
 			const childNodeLength = document.body.childNodes.length;
-			const projector = new TestWidget({});
+			const projector = new TestWidget();
 
 			projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
@@ -122,7 +122,7 @@ registerSuite({
 				render() {
 					return v('body', this.children);
 				}
-			}({});
+			}();
 
 			projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
@@ -135,7 +135,7 @@ registerSuite({
 		},
 		'merge'() {
 			const childNodeLength = document.body.childNodes.length;
-			const projector = new TestWidget({});
+			const projector = new TestWidget();
 
 			projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
@@ -150,7 +150,7 @@ registerSuite({
 	'attach event'() {
 		const root = document.createElement('div');
 		document.body.appendChild(root);
-		const projector = new TestWidget({});
+		const projector = new TestWidget();
 
 		projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
@@ -167,14 +167,14 @@ registerSuite({
 		});
 	},
 	'get root'() {
-		const projector = new TestWidget({});
+		const projector = new TestWidget();
 		const root = document.createElement('div');
 		assert.equal(projector.root, document.body);
 		projector.root = root;
 		assert.equal(projector.root, root);
 	},
 	'get projector state'() {
-		const projector = new TestWidget({});
+		const projector = new TestWidget();
 
 		assert.equal(projector.projectorState, ProjectorState.Detached);
 		return projector.append().then(() => {
@@ -185,7 +185,7 @@ registerSuite({
 
 	},
 	'destroy'() {
-		const projector: any = new TestWidget({});
+		const projector: any = new TestWidget();
 		const maquetteProjectorStopSpy = spy(projector.projector, 'stop');
 		const maquetteProjectorDetachSpy = spy(projector.projector, 'detach');
 
@@ -203,7 +203,7 @@ registerSuite({
 
 	},
 	'invalidate on setting children'() {
-		const projector = new TestWidget({});
+		const projector = new TestWidget();
 		let called = false;
 
 		projector.on('invalidated', () => {
@@ -215,7 +215,7 @@ registerSuite({
 		assert.isTrue(called);
 	},
 	'invalidate before attached'() {
-		const projector: any = new TestWidget({});
+		const projector: any = new TestWidget();
 		const maquetteProjectorSpy = spy(projector.projector, 'scheduleRender');
 		let called = false;
 
@@ -229,7 +229,7 @@ registerSuite({
 		assert.isFalse(called);
 	},
 	'invalidate after attached'() {
-		const projector: any = new TestWidget({});
+		const projector: any = new TestWidget();
 		const maquetteProjectorSpy = spy(projector.projector, 'scheduleRender');
 		let called = false;
 
@@ -245,12 +245,12 @@ registerSuite({
 	},
 	'reattach'() {
 		const root = document.createElement('div');
-		const projector = new TestWidget({});
+		const projector = new TestWidget();
 		const promise = projector.append(root);
 		assert.strictEqual(promise, projector.append(), 'same promise should be returned');
 	},
 	'setRoot throws when already attached'() {
-		const projector = new TestWidget({});
+		const projector = new TestWidget();
 		const div = document.createElement('div');
 		projector.root = div;
 		return projector.append().then((handle) => {
@@ -274,7 +274,7 @@ registerSuite({
 			}
 		}
 
-		const projector = new TestProjector({});
+		const projector = new TestProjector();
 
 		await projector.append();
 
@@ -323,7 +323,7 @@ registerSuite({
 			}
 		}
 
-		const projector = new TestProjector({});
+		const projector = new TestProjector();
 
 		await projector.append();
 
@@ -381,7 +381,7 @@ registerSuite({
 			}
 		}
 
-		const projector = new TestProjector({});
+		const projector = new TestProjector();
 
 		await projector.append();
 
@@ -431,7 +431,7 @@ registerSuite({
 					afterCreate
 				});
 			}
-		})({});
+		})();
 
 		// we check if the attached event fires because we need to know if
 		// the projector's afterCreate method is called, and that is where

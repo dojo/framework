@@ -27,7 +27,7 @@ registerSuite({
 	},
 
 	api() {
-		const localized = new Localized({});
+		const localized = new Localized();
 		assert(localized);
 		assert.isFunction(localized.localizeBundle);
 	},
@@ -35,7 +35,7 @@ registerSuite({
 	'.localizeBundle()': {
 		'Returns default messages when locale bundle not loaded'() {
 			return switchLocale('fr').then(() => {
-				localized = new Localized({});
+				localized = new Localized();
 				const messages = localized.localizeBundle(bundle);
 
 				assert.strictEqual(messages.hello, 'Hello');
@@ -44,7 +44,8 @@ registerSuite({
 		},
 
 		'Uses `properties.locale` when available'() {
-			localized = new Localized({ locale: 'fr' });
+			localized = new Localized();
+			localized.setProperties({ locale: 'fr' });
 			return i18n(bundle, 'fr').then(() => {
 				const messages = localized.localizeBundle(bundle);
 				assert.strictEqual(messages.hello, 'Bonjour');
@@ -54,7 +55,7 @@ registerSuite({
 
 		'Uses default locale when no locale is set'() {
 			return switchLocale('fr').then(() => {
-				localized = new Localized({});
+				localized = new Localized();
 				return i18n(bundle, 'fr').then(() => {
 					const messages = localized.localizeBundle(bundle);
 					assert.strictEqual(messages.hello, 'Bonjour');
@@ -64,7 +65,7 @@ registerSuite({
 		},
 
 		'Returns an object with a `format` method'() {
-			localized = new Localized({});
+			localized = new Localized();
 			let messages = localized.localizeBundle(bundle);
 
 			assert.isFunction(messages.format);
@@ -81,7 +82,7 @@ registerSuite({
 
 	'root locale switching': {
 		'Updates when no `locale` property is set'() {
-			localized = new Localized({});
+			localized = new Localized();
 			sinon.spy(localized, 'invalidate');
 
 			return switchLocale('fr').then(() => {
@@ -90,9 +91,8 @@ registerSuite({
 		},
 
 		'Does not update when `locale` property is set'() {
-			localized = new Localized({
-					locale: 'en'
-			});
+			localized = new Localized();
+			localized.setProperties({ locale: 'en' });
 			sinon.spy(localized, 'invalidate');
 
 			return switchLocale('fr').then(() => {
@@ -107,7 +107,8 @@ registerSuite({
 			}
 		}
 
-		localized = new LocalizedExtended({locale: 'ar-JO'});
+		localized = new LocalizedExtended();
+		localized.setProperties({locale: 'ar-JO'});
 
 		const result = <VNode> localized.__render__();
 		assert.isOk(result);
@@ -115,7 +116,8 @@ registerSuite({
 	},
 	'`properties.locale` updates the widget node\'s `lang` property': {
 		'when non-empty'() {
-			localized = new Localized({locale: 'ar-JO'});
+			localized = new Localized();
+			localized.setProperties({locale: 'ar-JO'});
 
 			const result = <VNode> localized.__render__();
 			assert.isOk(result);
@@ -123,7 +125,7 @@ registerSuite({
 		},
 
 		'when empty'() {
-			localized = new Localized({});
+			localized = new Localized();
 
 			const result = localized.__render__();
 			assert.isOk(result);
@@ -133,7 +135,8 @@ registerSuite({
 
 	'`properties.rtl`': {
 		'The `dir` attribute is "rtl" when true'() {
-			localized = new Localized({ rtl: true });
+			localized = new Localized();
+			localized.setProperties({ rtl: true });
 
 			const result = localized.__render__();
 			assert.isOk(result);
@@ -141,7 +144,8 @@ registerSuite({
 		},
 
 		'The `dir` attribute is "ltr" when false'() {
-			localized = new Localized({ rtl: false });
+			localized = new Localized();
+			localized.setProperties({ rtl: false });
 
 			const result = localized.__render__();
 			assert.isOk(result);
@@ -149,7 +153,7 @@ registerSuite({
 		},
 
 		'The `dir` attribute is not set when not a boolean.'() {
-			localized = new Localized({});
+			localized = new Localized();
 
 			const result = localized.__render__();
 			assert.isOk(result);

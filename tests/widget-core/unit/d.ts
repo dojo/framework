@@ -110,7 +110,7 @@ registerSuite({
 	},
 	decorator: {
 		'modifies only nodes that match predicate'() {
-			const testWidget = new TestWidget({});
+			const testWidget = new TestWidget();
 			const predicate = (node: DNode): boolean => {
 				return isWNode(node);
 			};
@@ -135,7 +135,7 @@ registerSuite({
 			}
 		},
 		'modifies no node when predicate not matched'() {
-			const testWidget = new TestWidget({});
+			const testWidget = new TestWidget();
 			const predicate = (node: DNode): boolean => {
 				return false;
 			};
@@ -160,7 +160,7 @@ registerSuite({
 			}
 		},
 		'applies modifier to all nodes when no predicate supplied'() {
-			const testWidget = new TestWidget({});
+			const testWidget = new TestWidget();
 			const modifier = (node: DNode): void => {
 				if (isWNode(node)) {
 					(<any> node.properties)['decorated'] = true;
@@ -184,7 +184,7 @@ registerSuite({
 			}
 		},
 		'cannot replace or modify actual node'() {
-			const testWidget = new TestWidget({});
+			const testWidget = new TestWidget();
 			const magicNode = v('magic');
 			const modifier = (node: DNode): void => {
 				if (node === null) {

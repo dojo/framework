@@ -8,11 +8,11 @@ class Test extends StatefulMixin(WidgetBase)<any> { }
 registerSuite({
 	name: 'mixins/StatefulMixin',
 	creation() {
-		const stateful = new Test({});
+		const stateful = new Test();
 		assert.deepEqual(stateful.state, {}, 'stateful should have empty state');
 	},
 	'get and set state'() {
-		const stateful = new Test({});
+		const stateful = new Test();
 		const state = {
 			foo: 'bar'
 		};
@@ -21,7 +21,7 @@ registerSuite({
 		assert.deepEqual(stateful.state, state);
 	},
 	'partially update state'() {
-		const stateful = new Test({});
+		const stateful = new Test();
 		const state = {
 			foo: 'bar'
 		};
@@ -35,7 +35,7 @@ registerSuite({
 		assert.deepEqual(stateful.state, { foo: 'bar', baz: 'qux' });
 	},
 	'emits `state:changed` event on state update'() {
-		const stateful = new Test({});
+		const stateful = new Test();
 		const state = {
 			foo: 'bar'
 		};
@@ -57,7 +57,7 @@ registerSuite({
 				super.invalidate();
 				invalidateCalled = true;
 			}
-		}({});
+		}();
 		stateful.setState({});
 		assert.isTrue(invalidateCalled);
 	}
