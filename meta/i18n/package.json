@@ -19,13 +19,12 @@
   },
   "peerDependencies": {
     "@dojo/compose": "2.0.0-beta.21",
-    "@dojo/core": "2.0.0-alpha.20",
+    "@dojo/core": "2.0.0-alpha.24",
     "@dojo/has": "2.0.0-alpha.7",
-    "@dojo/shim": "2.0.0-beta.8"
+    "@dojo/shim": "2.0.0-beta.9"
   },
   "devDependencies": {
     "@types/chai": "~3.4.0",
-    "@types/es6-shim": "~0.31.0",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
     "@types/sinon": "^1.16.31",

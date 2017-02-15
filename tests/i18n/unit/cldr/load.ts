@@ -1,8 +1,14 @@
-import request from '@dojo/core/request';
+import coreRequest from '@dojo/core/request';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
 import loadCldrData, { CldrDataResponse } from '../../../src/cldr/load';
+
+const request = {
+	get(url: string, options: any) {
+		return coreRequest.get(url, options);
+	}
+};
 
 registerSuite({
 	name: 'cldr/load',
