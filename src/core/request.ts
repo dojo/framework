@@ -1,6 +1,7 @@
+import has from '@dojo/has/has';
 import Task from './async/Task';
-import ProviderRegistry from './request/ProviderRegistry';
 import { RequestOptions, Response, Provider } from './request/interfaces';
+import ProviderRegistry from './request/ProviderRegistry';
 import xhr from './request/providers/xhr';
 
 export const providerRegistry = new ProviderRegistry();
@@ -41,6 +42,11 @@ Object.defineProperty(request, 'setDefaultProvider', {
 });
 
 providerRegistry.setDefaultProvider(xhr);
+
+if (has('host-node')) {
+	let nodeProvider = require('./request/providers/node').default;
+	providerRegistry.setDefaultProvider(nodeProvider);
+}
 
 export default request;
 export * from './request/interfaces';
