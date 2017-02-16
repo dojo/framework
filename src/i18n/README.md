@@ -4,7 +4,7 @@
 [![codecov.io](http://codecov.io/github/dojo/i18n/coverage.svg?branch=master)](http://codecov.io/github/dojo/i18n?branch=master)
 [![npm version](https://badge.fury.io/js/%40dojo%2Fi18n.svg)](https://badge.fury.io/js/%40dojo%2Fi18n)
 
-An internationalization library that provides locale-specific message loading, and support for locale-specific message, date, and number formatting. To support locale-specific formatters, `@dojo/i18n` utilizes the most up-to-date [CLDR data](http://cldr.unicode.org) from [The Unicode Consortium](http://unicode.org).
+An internationalization library that provides locale-specific message loading, and support for locale-specific message, date, and number formatting.
 
 **WARNING** This is _alpha_ software. It is not yet production ready, so you should use at your own risk.
 
@@ -96,7 +96,7 @@ The current locale can be accessed via the read-only property `i18n.locale`, whi
 
 ### Changing the Root Locale and Observing Locale Changes
 
-The `switchLocale` method changes the root locale, and returns a promise that resolves when all CLDR data have loaded for the specified locale. All [`Observers`](https://github.com/dojo/shim) registered with `observeLocale` will be notified of locale changes, or notified of errors if the associated CLDR data could not be loaded (no `complete` method is currently used when switching locales).
+The `switchLocale` method changes the root locale and notifies all [`Observers`](https://github.com/dojo/shim) registered with `observeLocale` (no `error` or `complete` methods are currently used when switching locales).
 
 ```typescript
 import i18n, { observeLocale, switchLocale } from '@dojo/i18n/i18n';
@@ -106,66 +106,85 @@ import bundle from 'nls/bundle';
 observeLocale({
 	next(locale: string) {
 		// handle locale change...
-	},
-
-	error(error: Error) {
-		// handle error...
 	}
 });
 
-// Change the locale to German. If the CLDR are properly loaded, then the registered
-// observer's `next` method will be called with the new locale. Otherwise, its `error`
-// method will be called with an error object.
-switchLocale('de').then(() => {
-	// ...
+// Change the locale to German. The registered observer's `next` method will be called
+// with the new locale.
+switchLocale('de');
 
-	// The locale is again switched to German, but since the current root locale is
-	// already German, registered observers will not be notified.
-	return switchLocale('de');
-});
+// The locale is again switched to German, but since the current root locale is
+// already German, registered observers will not be notified.
+switchLocale('de');
 ```
 
 ### Loading CLDR data
 
-Since `@dojo/i18n` automatically loads all CLDR data for the root locale, the CLDR JSON files need to be loaded manually only for additional locales used in isolated components (e.g., widgets). To load additional files manually, use the `loadCldrData` method exported by `@dojo/i18n/cldr/load`:
+Given the very large size of the [Unicode CLDR data](http://cldr.unicode.org), it is not included as a dependency of `@dojo/i18n`. For applications that use `@dojo/i18n` only for selecting unformatted, locale-specific messages, this is not a concern. However, if using the [ICU-formatted messages](http://userguide.icu-project.org/formatparse/messages) or any of the other formatters provided by `@dojo/i18n` (see below), applications must explicitly load any required CLDR data via the `loadCldrData` method exported by `@dojo/i18n/cldr/load`. `loadCldrData` accepts either an object of CLDR data, or an array of URLs to CLDR JSON files. All CLDR data MUST match the format used by the [Unicode CLDR JSON](https://github.com/unicode-cldr/cldr-json) files. Supplemental data MUST be nested within a top-level `supplemental` object, and locale-specific data MUST be nested under locale objects within a top-level `main` object:
 
 ```
-import loadCldrData, { CldrDataResponse } from '@dojo/i18n/cldr/load';
+import loadCldrData from '@dojo/i18n/cldr/load';
 
-// Load data for a single locale:
-loadCldrData('ar-IQ').then((data: CldrDataResponse) => {
-	console.log(data['ar-IQ']);
+// Using a CLDR data object.
+loadCldrData({
+	"supplemental": {
+		"likelySubtags": { ... }
+	},
+	"main": {
+		"en": {
+			"numbers": { ... }
+		}
+	}
 });
 
-// Load data for a single locale with a fallback in case the locale is unsupported.
-// The fallback's data are stored on the original locale in the response.
-loadCldrData('made-UP', 'en').then((data: CldrDataResponse) => {
-	console.log(data['made-UP']);
-});
-
-// Load data for multiple locales (note that a fallback cannot be used in this scenario):
-loadCldrData([ 'en', 'en-GB' ]).then((data: CldrDataResponse) => {
-	console.log(data['en']);
-	console.log(data['en-GB']);
-});
-
-// The underlying promise rejects with an unsupported locale and no valid fallback:
-loadCldrData('made-UP').catch((error: Error) => {
-	console.log(error.message); // "No CLDR data for locale: made-UP."
-});
+// Using an array of URLs
+loadCldrData([
+	'cldr-data/supplemental/likelySubtags.json',
+	'cldr-data/main/en/numbers.json'
+]);
 ```
 
-`switchLocale` handles loading data for new locales, but when first starting the i18n ecosystem, either `switchLocale(defaultLocale)` or the `ready` method can be used:
+`@dojo/i18n` requires the following CLDR data:
 
-```typescript
-import { ready } from '@dojo/i18n/i18n';
+For ICU message formatting:
 
-ready().then(() => {
-	// All CLDR data have been loaded for the root locale.
-});
-```
+* `supplemental/likelySubtags`
 
-### Custom message formatting (e.g., pluralization)
+For date/time formatting:
+
+* `main/{locale}/ca-gregorian`
+* `main/{locale}/dateFields`
+* `main/{locale}/numbers`
+* `main/{locale}/timeZoneNames`
+* `supplemental/likelySubtags`
+* `supplemental/numberingSystems`
+* `supplemental/ordinals`
+* `supplemental/plurals`
+* `supplemental/timeData`
+* `supplemental/weekData`
+
+For number/currency formatting:
+
+* `main/{locale}/currencies`
+* `main/{locale}/numbers`
+* `supplemental/currencyData`
+* `supplemental/likelySubtags`
+* `supplemental/numberingSystems`
+* `supplemental/ordinals`
+* `supplemental/plurals`
+
+For unit formatting:
+
+* `main/{locale}/numbers`
+* `main/{locale}/units`
+* `supplemental/likelySubtags`
+* `supplemental/numberingSystems`
+* `supplemental/ordinals`
+* `supplemental/plurals`
+
+### ICU Message Formatting
+
+**Note**: This feature requires CLDR data (see above).
 
 `@dojo/i18n` relies on [Globalize.js](https://github.com/jquery/globalize/blob/master/doc/api/message/message-formatter.md) for [ICU message formatting](http://userguide.icu-project.org/formatparse/messages), and as such all of the features offered by Globalize.js are available through `@dojo/i18n`. The `i18n` module exposes two methods that handle message formatting: 1) `formatMessage`, which directly returns a formatted message based on its inputs, and 2) `getMessageFormatter`, which returns a method dedicated to formatting a single message.
 
@@ -232,11 +251,11 @@ i18n(bundle, 'en').then(() => {
 
 ### Date and number formatting.
 
+**Note**: This feature requires CLDR data (see above).
+
 As with the message formatting capabilities, `@dojo/i18n` relies on Globalize.js to provide locale-specific formatting for dates, times, currencies, numbers, and units. The formatters themselves are essentially light wrappers around their Globalize.js counterparts, which helps maintain consistency with the Dojo 2 ecosystem and prevents the need to work with the `Globalize` object directly. Unlike the message formatters, the date, number, and unit formatters are not cached, as they have a more complex set of options. As such, executing the various "get formatter" methods multiple times with the same inputs does not return the exact same function object.
 
 `@dojo/i18n` groups the various formatters accordingly: date and time formatters (`@dojo/i18n/date`); number, currency, and pluralization formatters (`@dojo/i18n/number`); and unit formatters (`@dojo/i18n/unit`). Each method corresponds to a Globalize.js method (see below), and each method follows the same basic format: the last argument is an optional locale, and the penultimate argument is the method options. If specifying a locale but no options, pass `null` as the `options` argument. If no locale is provided, then the current (`i18n.locale`) is assumed.
-
-**Note**: for convenience, these methods are synchronous, but require that all CLDR data have been loaded (see above under "Loading CLDR data").
 
 ```typescript
 import { formatDate, getDateFormatter, formatRelativeTime } from '@dojo/i18n/date';
@@ -296,7 +315,7 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 - `parseNumber` => [`Globalize.parseNumber`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-parser.md)
 - `pluralize` => [`Globalize.plural`](https://github.com/globalizejs/globalize/blob/master/doc/api/plural/plural-generator.md)
 
-**`@dojo/i18n/number` methods:**
+**`@dojo/i18n/unit` methods:**
 
 - `formatUnit` => [`Globalize.formatUnit`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
 - `getUnitFormatter` => [`Globalize.unitFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)

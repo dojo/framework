@@ -2,7 +2,7 @@ import { around } from '@dojo/core/aspect';
 import { padStart } from '@dojo/shim/string';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import loadCldrData from '../../src/cldr/load';
+import { fetchCldrData } from '../support/util';
 import {
 	DateLength,
 	formatDate,
@@ -111,13 +111,13 @@ registerSuite({
 
 	setup() {
 		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
-		return switchLocale('en').then(() => {
-			return loadCldrData('fr');
+		return fetchCldrData([ 'en', 'fr' ]).then(() => {
+			switchLocale('en');
 		});
 	},
 
 	teardown() {
-		return switchLocale(systemLocale);
+		switchLocale(systemLocale);
 	},
 
 	getDateFormatter: {

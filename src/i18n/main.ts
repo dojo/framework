@@ -19,7 +19,6 @@ import i18n, {
 	invalidate,
 	MessageFormatter,
 	Messages,
-	ready,
 	switchLocale,
 	systemLocale
 } from './i18n';
@@ -94,7 +93,6 @@ export {
 	PluralGroup,
 	pluralize,
 	PluralTypeOption,
-	ready,
 	RelativeTimeFormatterOptions,
 	RelativeTimeLength,
 	RoundNumberOption,

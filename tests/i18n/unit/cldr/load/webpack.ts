@@ -1,96 +1,72 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import global from '@dojo/core/global';
-import * as sinon from 'sinon';
-import { CldrDataResponse } from '../../../../src/cldr/load';
-import * as cldrLoad from '../../../../src/cldr/load';
+import * as coreLoad from '../../../../src/cldr/load';
 import loadCldrData, {
-	loadLocaleData,
-	loadSupplementalData,
-	localeCldrPaths,
-	supplementalCldrPaths
+	CldrData,
+	isLoaded,
+	mainPackages,
+	reset,
+	supplementalPackages
 } from '../../../../src/cldr/load/webpack';
 
-let cldrData: CldrDataResponse;
+let cldrData: CldrData | null;
 
 registerSuite({
 	name: 'cldr/load/webpack',
 
 	setup() {
-		return cldrLoad.default([ 'en', 'fr' ]).then((data: CldrDataResponse) => {
-			cldrData = data;
-			global.__cldrData__ = data;
-		});
+		cldrData = {
+			main: {
+				yue: {
+					numbers: {}
+				}
+			},
+
+			supplemental: {
+				likelySubtags: {}
+			}
+		};
+		global.__cldrData__ = cldrData;
 	},
 
 	afterEach() {
-		const loadLocaleData = <any> cldrLoad.loadLocaleData;
-		if (typeof loadLocaleData.restore === 'function') {
-			loadLocaleData.restore();
-		}
+		reset();
+	},
+
+	teardown() {
+		cldrData = null;
 	},
 
 	api() {
-		assert.isFunction(loadCldrData);
-		assert.isFunction(loadLocaleData);
-		assert.isFunction(loadSupplementalData);
-		assert.isArray(localeCldrPaths);
-		assert.isArray(supplementalCldrPaths);
+		assert.strictEqual(mainPackages, coreLoad.mainPackages);
+		assert.strictEqual(supplementalPackages, coreLoad.supplementalPackages);
 	},
 
-	'assert unloaded locale'() {
-		sinon.spy(cldrLoad, 'loadLocaleData');
-		return loadCldrData('ar').then((data: CldrDataResponse) => {
-			assert.isTrue((<any> cldrLoad.loadLocaleData).calledWith('ar'),
-				'Unloaded locales are loaded from the server.');
-			assert.isArray(data['ar'], 'Unloaded locale data included in response.');
-
-			return loadCldrData('es', 'it').then((data: CldrDataResponse) => {
-				assert.isTrue((<any> cldrLoad.loadLocaleData).calledWith('es', 'it'),
-					'Fallback passed to `loadLocaleData`.');
-				assert.isArray(data['es'], 'Unloaded locale data included in response.');
-				assert.isArray(data.supplemental, 'Supplemental data included in response.');
-			});
-		});
+	isLoaded() {
+		assert.isTrue(isLoaded('main'));
+		assert.isTrue(isLoaded('supplemental'));
+		assert.isTrue(isLoaded('main', 'yue'));
+		assert.isTrue(isLoaded('main', 'yue', 'numbers'));
+		assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
 	},
 
-	'cached locales': {
-		'assert single locale'() {
-			sinon.spy(cldrLoad, 'loadLocaleData');
-			return loadCldrData('fr').then((data: CldrDataResponse) => {
-				assert.isFalse((<any> cldrLoad.loadLocaleData).called, 'Cached locales not reloaded from server.');
-				assert.deepEqual(data, {
-					supplemental: cldrData.supplemental,
-					fr: cldrData['fr']
-				}, 'Cached data are returned.');
+	loadCldrData: {
+		'with a list of data URLs'() {
+			return loadCldrData([ 'cldr-data/supplemental/currencyData' ]).then(() => {
+				assert.isFalse(isLoaded('supplemental', 'currencyData'),
+					'The webpack load should ignore URLs.');
 			});
 		},
 
-		'assert multiple locales'() {
-			sinon.spy(cldrLoad, 'loadLocaleData');
-			return loadCldrData([ 'en', 'fr' ]).then((data: CldrDataResponse) => {
-				assert.isFalse((<any> cldrLoad.loadLocaleData).called, 'Cached locales not reloaded from server.');
-				assert.deepEqual(data, cldrData, 'Cached data are returned.');
-			});
-		},
-
-		'assert fallback loaded from cache'() {
-			sinon.spy(cldrLoad, 'loadLocaleData');
-			return loadCldrData('es', 'fr').then((data: CldrDataResponse) => {
-				assert.isFalse((<any> cldrLoad.loadLocaleData).called, 'Cached locales not reloaded from server.');
-				// assert.isArray(data['fr'], cldrData, 'Cached data are returned.');
+		'with a CLDR data object'() {
+			return loadCldrData({
+				main: {
+					tzm: {}
+				}
+			}).then(() => {
+				assert.isTrue(isLoaded('main', 'tzm'), 'CLDR data objects should be loaded.');
 			});
 		}
-	},
-
-	'assert both cached and uncached localed'() {
-		sinon.spy(cldrLoad, 'loadLocaleData');
-		return loadCldrData([ 'ar', 'fr' ]).then((data: CldrDataResponse) => {
-			assert.isTrue((<any> cldrLoad.loadLocaleData).calledWith('ar'),
-				'Unloaded locales are loaded from the server.');
-			assert.isArray(data['ar'], 'Unloaded locale data included in response.');
-			assert.isArray(data['fr'], 'Cached locale data included in response.');
-			assert.isArray(data.supplemental, 'Supplemental data included in response.');
-		});
 	}
 });

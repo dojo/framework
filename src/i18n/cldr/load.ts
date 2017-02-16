@@ -4,65 +4,103 @@ import load from '@dojo/core/load';
 import coreRequest from '@dojo/core/request';
 import has from '@dojo/has/has';
 import { Require } from '@dojo/interfaces/loader';
-import Map from '@dojo/shim/Map';
 import Promise from '@dojo/shim/Promise';
 import * as Globalize from 'globalize';
-import { generateLocales } from '../util/main';
-import supportedMain from './locales';
+import supportedLocales from './locales';
+import { generateLocales, validateLocale } from '../util/main';
 
 declare const require: Require;
-declare const define: {
-	(...args: any[]): any;
-	amd: any;
-};
 
-/**
- * Describes the form of an individual CLDR data object.
- */
 export interface CldrData {
-	[key: string]: any;
+	main?: LocaleData;
+	supplemental?: any;
 }
 
-export interface CldrDataResponse {
-	/**
-	 * An array of the supplemental CLDR data required by the i18n ecosystem.
-	 */
-	supplemental: CldrData[];
+export type CldrGroup = 'main' | 'supplemental';
 
-	/**
-	 * An array of locale-specific CLDR data.
-	 */
-	[locale: string]: CldrData[];
+export interface LocaleData {
+	[locale: string]: any;
 }
 
 /**
- * The paths for all locale-specific CLDR data required by the i18n ecosystem.
+ * A list of all required CLDR packages for an individual locale.
  */
-export const localeCldrPaths = Object.freeze([
-	'cldr-data/main/{locale}/numbers',
-	'cldr-data/main/{locale}/currencies',
-	'cldr-data/main/{locale}/ca-gregorian',
-	'cldr-data/main/{locale}/timeZoneNames',
-	'cldr-data/main/{locale}/dateFields',
-	'cldr-data/main/{locale}/units'
+export const mainPackages = Object.freeze([
+	'dates/calendars/gregorian',
+	'dates/fields',
+	'dates/timeZoneNames',
+	'numbers',
+	'numbers/currencies',
+	'units'
 ]);
 
 /**
- * The paths for all supplemental CLDR data required by the i18n ecosystem.
+ * A list of all required CLDR supplement packages.
  */
-export const supplementalCldrPaths = Object.freeze([
-	'cldr-data/supplemental/likelySubtags',
-	'cldr-data/supplemental/numberingSystems',
-	'cldr-data/supplemental/plurals',
-	'cldr-data/supplemental/ordinals',
-	'cldr-data/supplemental/currencyData',
-	'cldr-data/supplemental/timeData',
-	'cldr-data/supplemental/weekData'
+export const supplementalPackages = Object.freeze([
+	'currencyData',
+	'likelySubtags',
+	'numberingSystems',
+	'plurals-type-cardinal',
+	'plurals-type-ordinal',
+	'timeData',
+	'weekData'
 ]);
 
 /**
  * @private
- * Load the CLDR JSON files at the specified paths. Note that the paths should not include an extension (i.e., ".json").
+ * A simple map containing boolean flags indicating whether a particular CLDR package has been loaded.
+ */
+const loadCache = {
+	main: Object.create(null),
+	supplemental: generateSupplementalCache()
+};
+
+/**
+ * @private
+ * Generate the locale-specific data cache from a list of keys. Nested objects will be generated from
+ * slash-separated strings.
+ *
+ * @param cache
+ * An empty locale cache object.
+ *
+ * @param keys
+ * The list of keys.
+ */
+function generateLocaleCache(cache: any, keys: ReadonlyArray<string>) {
+	return keys.reduce((tree: any, key: string) => {
+		const parts = key.split('/');
+
+		if (parts.length === 1) {
+			tree[key] = false;
+			return tree;
+		}
+
+		parts.reduce((tree: any, key: string, i: number) => {
+			if (typeof tree[key] !== 'object') {
+				tree[key] = i === parts.length - 1 ? false : Object.create(null);
+			}
+			return tree[key];
+		}, tree);
+
+		return tree;
+	}, cache);
+}
+
+/**
+ * @private
+ * Generate the supplemental data cache.
+ */
+function generateSupplementalCache() {
+	return supplementalPackages.reduce((map: any, key: string) => {
+		map[key] = false;
+		return map;
+	}, Object.create(null));
+}
+
+/**
+ * @private
+ * Load the CLDR JSON files at the specified paths.
  *
  * @param {paths}
  * The JSON paths.
@@ -70,10 +108,9 @@ export const supplementalCldrPaths = Object.freeze([
  * @return
  * A promise to the CLDR data for each path.
  */
-const getJson: (paths: ReadonlyArray<string>) => Promise<CldrData[]> = (function () {
+const getJson: (paths: string[]) => Promise<CldrData[]> = (function () {
 	if (has('host-node')) {
 		return function (paths: string[]): Promise<{}[]> {
-			paths = paths.map(path => path + '.json');
 			return load(require, ...paths);
 		};
 	}
@@ -84,7 +121,7 @@ const getJson: (paths: ReadonlyArray<string>) => Promise<CldrData[]> = (function
 				path = require.toUrl(path);
 			}
 
-			return <Promise<CldrData>> coreRequest.get(`${path}.json`)
+			return <Promise<CldrData>> coreRequest.get(path)
 				.then(response => response.json())
 				.then((data: CldrData) => {
 					return data;
@@ -95,125 +132,169 @@ const getJson: (paths: ReadonlyArray<string>) => Promise<CldrData[]> = (function
 
 /**
  * @private
- * Return the most specific locale for which there are CLDR data.
+ * Recursively determine whether a list of packages have been loaded for the specified CLDR group.
  *
- * For example, the following values are returned for their corresponding locales.
- * en-US => en // there is no "en-US" directory
- * en-US-POSIX => en-US-POSIX
- * ar-JO => ar-JO
- * made-up => undefined
+ * @param group
+ * The CLDR group object (e.g., the supplemental data, or a specific locale group)
  *
- * @param {locale}
- * The required locale.
+ * @param args
+ * A list of keys to recursively check from left to right. For example, if [ "en", "numbers" ],
+ * then `group.en.numbers` must exist for the test to pass.
  *
  * @return
- * The next available supported locale, or undefined if none is found.
+ * `true` if the deepest value exists; `false` otherwise.
  */
-function getNextSupportedLocale(locale: string): string | void {
-	const options = generateLocales(locale);
-
-	for (let i = options.length - 1; i >= 0; i--) {
-		const option = options[i];
-
-		if (supportedMain.indexOf(option) > -1) {
-			return option;
-		}
-	}
+function isLoadedForGroup(group: any, args: string[]) {
+	return args.every((arg: string) => {
+		const next = group[arg];
+		group = next;
+		return Boolean(next);
+	});
 }
 
 /**
- * Load all supplemental data required by the i18n ecosystem. Note that data are loaded once and cached thereafter.
+ * @private
+ * Recursively flag as loaded all recognized keys on the provided CLDR data object.
  *
- * @return
- * A promise to the supplemental CLDR data.
+ * @param cache
+ * The load cache (either the entire object, or a nested segment of it).
+ *
+ * @param localeData
+ * The CLDR data object being loaded (either the entire object, or a nested segment of it).
  */
-export const loadSupplementalData = (function () {
-	let supplementalPromise: Promise<CldrData[]>;
-	return function (): Promise<CldrData[]> {
-		if (supplementalPromise) {
-			return supplementalPromise;
-		}
+function registerLocaleData(cache: any, localeData: any) {
+	Object.keys(localeData).forEach((key: string) => {
+		if (key in cache) {
+			const value = cache[key];
 
-		supplementalPromise = getJson(supplementalCldrPaths).then((data: CldrData[]) => {
-			Globalize.load(...data);
-			return Object.freeze(data.map((item) => Object.freeze(item)));
-		});
-		return supplementalPromise;
-	};
-})();
-
-/**
- * Load all locale-specific data required by the i18n ecosystem. Note that data are loaded once and cached thereafter.
- *
- * @param {locale}
- * The required locale.
- *
- * @return
- * A promise to the locale-specific CLDR data.
- */
-export const loadLocaleData = (function () {
-	const loadedLocaleMap = new Map<string, Promise<CldrData[]>>();
-	return function (locale: string, fallback?: string): Promise<CldrData[]> {
-		let dataPromise = loadedLocaleMap.get(locale);
-
-		if (dataPromise) {
-			return dataPromise;
-		}
-
-		const available = getNextSupportedLocale(locale);
-		if (!available) {
-			if (fallback && fallback !== locale) {
-				return loadLocaleData(fallback);
-			}
-
-			return Promise.reject(new Error(`No CLDR data for locale: ${locale}.`));
-		}
-
-		dataPromise = getJson(localeCldrPaths.map((path) => path.replace('{locale}', available)))
-			.then((data: CldrData[]) => {
-				Globalize.load(...data);
-				return Object.freeze(data.map((item) => Object.freeze(item)));
-			});
-
-		loadedLocaleMap.set(locale, dataPromise);
-		return dataPromise;
-	};
-})();
-
-/**
- * Load all supplemental CLDR data, as well as all CLDR data specific to the provided locale(s). If a single locale is
- * provided, then an optional fallback can also be provided; if the specified locale is not supported, then the data
- * for the fallback will be loaded instead.
- *
- * @param {locales}
- * The required locale or list of locales.
- *
- * @param {fallback}
- * An optional fallback locale to be used in the event that the first locale is unsupported (i.e., has no
- * corresponding CLDR data). Note that a fallback can only be used when a single locale is provided.
- *
- * @return
- * A promise to the CLDR data, separated into supplemental and locale-specific collections.
- */
-export default function loadCldrData(locales: string[]): Promise<CldrDataResponse>;
-export default function loadCldrData(locale: string, fallback?: string): Promise<CldrDataResponse>;
-export default function loadCldrData(locales: any, fallback?: string): Promise<CldrDataResponse> {
-	locales = Array.isArray(locales) ? locales : [ locales ];
-	return Promise.all([ loadSupplementalData() ].concat(locales.map((locale: string) => {
-		return locales.length === 1 ? loadLocaleData(locale, fallback) : loadLocaleData(locale);
-	}))).then((data) => {
-		return data.reduce((result: CldrDataResponse, values: CldrData[], i: number) => {
-			if (i === 0) {
-				result['supplemental'] = values;
+			if (typeof value === 'boolean') {
+				cache[key] = true;
 			}
 			else {
-				const locale = locales[i - 1];
-				result[locale] = values;
+				registerLocaleData(value, localeData[key]);
 			}
-
-			return result;
-		}, {} as CldrDataResponse);
-	}, (error) => {
-		throw error;
+		}
 	});
+}
+
+/**
+ * @private
+ * Flag all supplied CLDR packages for a specific locale as loaded.
+ *
+ * @param data
+ * The `main` locale data.
+ */
+function registerMain(data?: LocaleData) {
+	if (!data) {
+		return;
+	}
+
+	Object.keys(data).forEach((locale: string) => {
+		if (supportedLocales.indexOf(locale) < 0) {
+			return;
+		}
+
+		let loadedData = loadCache.main[locale];
+		if (!loadedData) {
+			loadedData = loadCache.main[locale] = generateLocaleCache(Object.create(null), mainPackages);
+		}
+
+		registerLocaleData(loadedData, data[locale]);
+	});
+}
+
+/**
+ * @private
+ * Flag all supplied CLDR supplemental packages as loaded.
+ *
+ * @param data
+ * The supplemental data.
+ */
+function registerSupplemental(data?: any) {
+	if (!data) {
+		return;
+	}
+
+	const supplemental = loadCache.supplemental;
+	Object.keys(data).forEach((key: string) => {
+		if (key in supplemental) {
+			supplemental[key] = true;
+		}
+	});
+}
+
+/**
+ * Determine whether a particular CLDR package has been loaded.
+ *
+ * Example: to check that `supplemental.likelySubtags` has been loaded, `isLoaded` would be called as
+ * `isLoaded('supplemental', 'likelySubtags')`.
+ *
+ * @param groupName
+ * The group to check; either "main" or "supplemental".
+ *
+ * @param ...args
+ * Any remaining keys in the path to the desired package.
+ *
+ * @return
+ * `true` if the deepest value exists; `false` otherwise.
+ */
+export function isLoaded(groupName: CldrGroup, ...args: string[]) {
+	let group: any = loadCache[groupName];
+
+	if (groupName === 'main' && args.length > 0) {
+		const locale = args[0];
+
+		if (!validateLocale(locale)) {
+			return false;
+		}
+
+		args = args.slice(1);
+		return generateLocales(locale).some((locale: string) => {
+			const next = group[locale];
+			return next ? isLoadedForGroup(next, args) : false;
+		});
+	}
+
+	return isLoadedForGroup(group, args);
+}
+
+/**
+ * Load the specified CLDR data with the i18n ecosystem.
+ *
+ * @param data
+ * Either a data object to load directly, or an array of URLs to CLDR data objects. Note that the response for
+ * dynamically-loaded data must satisfy the `CldrData` interface.
+ *
+ * @return
+ * A promise that resolves once all data have been loaded and registered.
+ */
+export default function loadCldrData(data: CldrData | string[]): Promise<void> {
+	if (Array.isArray(data)) {
+		return getJson(data).then((result: CldrData[]) => {
+			result.forEach(loadCldrData);
+		});
+	}
+
+	registerMain(data.main);
+	registerSupplemental(data.supplemental);
+	Globalize.load(data);
+
+	return Promise.resolve();
+}
+
+/**
+ * Clear the load cache, either the entire cache for the specified group. After calling this method,
+ * `isLoaded` will return false for keys within the specified group(s).
+ *
+ * @param group
+ * An optional group name. If not provided, then both the "main" and "supplemental" caches will be cleared.
+ */
+export function reset(group?: CldrGroup) {
+	if (group !== 'supplemental') {
+		loadCache.main = Object.create(null);
+	}
+
+	if (group !== 'main') {
+		loadCache.supplemental = generateSupplementalCache();
+	}
 }

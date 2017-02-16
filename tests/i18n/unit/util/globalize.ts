@@ -2,7 +2,7 @@ import * as Globalize from 'globalize';
 import 'globalize/dist/globalize/date';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import loadCldrData from '../../../src/cldr/load';
+import { fetchCldrData } from '../../support/util';
 import { DateFormatter, DateFormatterOptions, RelativeTimeFormatterOptions } from '../../../src/date';
 import { switchLocale, systemLocale } from '../../../src/i18n';
 import getGlobalize, { globalizeDelegator } from '../../../src/util/globalize';
@@ -12,13 +12,13 @@ registerSuite({
 
 	setup() {
 		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
-		return switchLocale('en').then(() => {
-			return loadCldrData('fr');
+		return fetchCldrData([ 'en', 'fr' ]).then(() => {
+			switchLocale('en');
 		});
 	},
 
 	teardown() {
-		return switchLocale(systemLocale);
+		switchLocale(systemLocale);
 	},
 
 	getGlobalize() {

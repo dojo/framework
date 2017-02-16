@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import loadCldrData from '../../src/cldr/load';
+import { fetchCldrData } from '../support/util';
 import {
 	formatCurrency,
 	formatNumber,
@@ -18,8 +18,8 @@ registerSuite({
 
 	setup() {
 		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
-		return switchLocale('en').then(() => {
-			return loadCldrData('fr');
+		return fetchCldrData([ 'en', 'fr' ]).then(() => {
+			switchLocale('en');
 		});
 	},
 

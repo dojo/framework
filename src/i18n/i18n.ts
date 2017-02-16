@@ -1,5 +1,6 @@
 /* tslint:disable:interface-name */
-import createEvented from '@dojo/compose/bases/createEvented';
+import compose from '@dojo/compose/compose';
+import eventedMixin from '@dojo/compose/bases/eventedMixin';
 import has from '@dojo/core/has';
 import global from '@dojo/core/global';
 import { assign } from '@dojo/core/lang';
@@ -9,7 +10,7 @@ import Map from '@dojo/shim/Map';
 import Observable, { Observer, Subscription, SubscriptionObserver } from '@dojo/shim/Observable';
 import Promise from '@dojo/shim/Promise';
 import * as Globalize from 'globalize/dist/globalize/message';
-import loadCldrData from './cldr/load';
+import { isLoaded } from './cldr/load';
 import { generateLocales, normalizeLocale } from './util/main';
 
 /**
@@ -66,7 +67,7 @@ const PATH_SEPARATOR: string = has('host-node') ? require('path').sep : '/';
 const VALID_PATH_PATTERN = new RegExp(`\\${PATH_SEPARATOR}[^\\${PATH_SEPARATOR}]+\$`);
 const bundleMap = new Map<string, Map<string, Messages>>();
 const formatterMap = new Map<string, MessageFormatter>();
-const localeProducer = createEvented();
+const localeProducer = compose({}).mixin(eventedMixin)();
 let rootLocale: string;
 
 /**
@@ -291,13 +292,11 @@ function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Promise<T
 
 	const cachedMessages = getCachedMessages(bundle, currentLocale);
 	if (cachedMessages) {
-		return loadCldrData(currentLocale).then(() => cachedMessages);
+		return Promise.resolve(cachedMessages);
 	}
 
 	const localePaths = resolveLocalePaths(path, currentLocale, locales);
-	return loadCldrData(currentLocale).then(() => {
-		return loadLocaleBundles(localePaths);
-	}).then((bundles: T[]): T => {
+	return loadLocaleBundles(localePaths).then((bundles: T[]): T => {
 		return bundles.reduce((previous: T, partial: T): T => {
 			const localeMessages: T = assign({}, previous, partial);
 			const localeCache = bundleMap.get(bundlePath) as Map<string, Messages>;
@@ -351,9 +350,6 @@ export const observeLocale = (function () {
 		const handles: Handle[] = [
 			localeProducer.on('change', (event) => {
 				observer.next(event.target as string);
-			}),
-			localeProducer.on('error', (event: ErrorEvent) => {
-				observer.error(event.error);
 			})
 		];
 
@@ -370,36 +366,22 @@ export const observeLocale = (function () {
 })();
 
 /**
- * Return a promise that resolves when all CLDR data for the current locale have been loaded.
- *
- * @return
- * A promise that resolves when all data required for the current locale have loaded.
- */
-export function ready(): Promise<void> {
-	const locale = getRootLocale();
-	return loadCldrData(locale).then(() => {
-		Globalize.locale(locale);
-	});
-}
-
-/**
  * Change the root locale, and notify any registered observers.
  *
  * @param locale
  * The new locale.
  */
-export function switchLocale(locale: string): Promise<void> {
+export function switchLocale(locale: string): void {
 	const previous = rootLocale;
 	rootLocale = locale ? normalizeLocale(locale) : '';
 
-	return ready().then(() => {
-		if (previous !== rootLocale) {
-			localeProducer.emit({ type: 'change', target: rootLocale });
+	if (previous !== rootLocale) {
+		if (isLoaded('supplemental', 'likelySubtags')) {
+			Globalize.locale(rootLocale);
 		}
-	}, (error: Error) => {
-		rootLocale = previous;
-		localeProducer.emit({ type: 'error', error: error });
-	});
+
+		localeProducer.emit({ type: 'change', target: rootLocale });
+	}
 }
 
 /**
