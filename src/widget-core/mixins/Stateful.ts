@@ -20,7 +20,7 @@ export interface StatefulMixin {
 	readonly state: State;
 
 	/**
-	 * Set the inernal state. Accepts a partial and mixes on top of existing.
+	 * Set the internal state. Accepts a partial and mixes on top of the existing state.
 	 * To clear a key it needs to be specifically set to undefined.
 	 *
 	 * @param state state to mix over the stored state

@@ -32,7 +32,7 @@ interface WidgetCacheWrapper {
 const propertyFunctionNameRegex = /^diffProperty(.*)/;
 
 /**
- * Regular express to find render decorator functions
+ * Regular expression to find render decorator functions
  */
 const decoratorFunctionNameRegex = /^renderDecorator.*/;
 
@@ -52,7 +52,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	private  _children: DNode[];
 
 	/**
-	 * marker indicating is the widget requires a render
+	 * marker indicating if the widget requires a render
 	 */
 	private dirty: boolean;
 
@@ -82,7 +82,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	private cachedChildrenMap: Map<string | Promise<WidgetConstructor> | WidgetConstructor, WidgetCacheWrapper[]>;
 
 	/**
-	 * map of specific property diff functiona
+	 * map of specific property diff functions
 	 */
 	private diffPropertyFunctionMap: Map<string, string>;
 
@@ -92,7 +92,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	private renderDecorators: Set<string>;
 
 	/**
-	 * Map of functions properies for the bound function
+	 * Map of functions properties for the bound function
 	 */
 	private bindFunctionPropertyMap: WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>;
 

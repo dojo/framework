@@ -52,7 +52,7 @@ export interface EventedOptions {
 const regexMap = new Map<string, RegExp>();
 
 /**
- * Determines is the event type glob has been matched
+ * Determines if the event type glob has been matched
  *
  * @returns boolean that indicates if the glob is matched
  */
@@ -96,7 +96,7 @@ export class Evented extends Destroyable {
 	}
 
 	/**
-	 * Emits the event objet for the specified type
+	 * Emits the event object for the specified type
 	 *
 	 * @param event the event to emit
 	 */
@@ -109,7 +109,7 @@ export class Evented extends Destroyable {
 	}
 
 	/**
-	 * Regsister a callback for a specific event type
+	 * Register a callback for a specific event type
 	 *
 	 * @param listeners map of listeners
 	 */

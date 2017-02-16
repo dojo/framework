@@ -2,14 +2,14 @@ import { Handle } from '@dojo/interfaces/core';
 import Promise from '@dojo/shim/Promise';
 
 /**
- * No operation function to replace own once instance is destoryed
+ * No operation function to replace own once instance is destroyed
  */
 function noop(): Promise<boolean> {
 	return Promise.resolve(false);
 };
 
 /**
- * No op function used to replace own, once instance has been destoryed
+ * No op function used to replace own, once instance has been destroyed
  */
 function destroyed(): never {
 	throw new Error('Call made to destroyed method');
@@ -46,7 +46,7 @@ export class Destroyable {
 	}
 
 	/**
-	 * Destrpys all handers registered for the instance
+	 * Destroys all handlers registered for the instance
 	 *
 	 * @returns {Promise<any} a promise that resolves once all handles have been destroyed
 	 */

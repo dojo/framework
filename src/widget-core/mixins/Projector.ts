@@ -25,7 +25,7 @@ export enum AttachType {
 export interface AttachOptions {
 
 	/**
-	 * If `'append'` it will append to the root. If `'merge'` it will merge with the root. If `'replace'` it will
+	 * If `'append'` it will appended to the root. If `'merge'` it will merged with the root. If `'replace'` it will
 	 * replace the root.
 	 */
 	type: AttachType;

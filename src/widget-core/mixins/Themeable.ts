@@ -128,7 +128,7 @@ function createBaseClassesLookup(classes: BaseClasses): ClassNames {
 }
 
 /**
- * Function for returns a class decoratied with with Themeable functionality
+ * Function that returns a class decorated with with Themeable functionality
  */
 export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeableProperties>>>(base: T): T & Constructor<ThemeableMixin> {
 	return class extends base {
@@ -230,7 +230,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		/**
 		 * Function to generate theme classes, triggered when theme or overrideClasses properties are changed.
 		 *
-		 * @param baseClassses the baseClasses object passed in via the @theme decorator.
+		 * @param baseClasses the baseClasses object passed in via the @theme decorator.
 		 * @param theme The current theme
 		 * @param overrideClasses Any override classes that may have been set
 		 */

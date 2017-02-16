@@ -8,7 +8,7 @@ import { isHNode } from './../d';
 
 export interface I18nProperties extends WidgetProperties {
 	/**
-	 * The locale for the widget. Is not specified, then the root locale (as determined by `@dojo/i18n`) is assumed.
+	 * The locale for the widget. If not specified, then the root locale (as determined by `@dojo/i18n`) is assumed.
 	 * If specified, the widget's node will have a `lang` property set to the locale.
 	 */
 	locale?: string;
@@ -52,7 +52,7 @@ export type LocalizedMessages<T extends Messages> = T & {
 export interface I18nMixin {
 	/**
 	 * Return the cached messages for the specified bundle for the current locale, assuming they have already
-	 * benn loaded. If the locale-specific messages have not been loaded, they are fetched and the widget state
+	 * been loaded. If the locale-specific messages have not been loaded, they are fetched and the widget state
 	 * is updated.
 	 *
 	 * @param bundle
@@ -119,9 +119,6 @@ export function I18nMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(b
 		 * @private
 		 * Return the cached dictionary for the specified bundle and locale, if it exists. If the requested dictionary does not
 		 * exist, then load it and update the instance's state with the appropriate messages.
-		 *
-		 * @param instance
-		 * The widget instance.
 		 *
 		 * @param bundle
 		 * The bundle for which to load a locale-specific dictionary.

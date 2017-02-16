@@ -52,7 +52,7 @@ export interface FactoryRegistryInterface {
  * Checks is the item is a subclass of WidgetBase (or a WidgetBase)
  *
  * @param item the item to check
- * @returns true/false indicating is the item is a WidgetConstructor
+ * @returns true/false indicating if the item is a WidgetConstructor
  */
 export function isWidgetBaseConstructor(item: any): item is WidgetConstructor {
 	return Boolean(item && item._type === WIDGET_BASE_TYPE);

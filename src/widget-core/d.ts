@@ -12,12 +12,12 @@ import {
 import FactoryRegistry from './FactoryRegistry';
 
 /**
- * The symbol intifier for a WNode type
+ * The symbol identifier for a WNode type
  */
 export const WNODE = Symbol('Identifier for a WNode.');
 
 /**
- * The symbol intifier for a HNode type
+ * The symbol identifier for a HNode type
  */
 export const HNODE = Symbol('Identifier for a HNode.');
 
@@ -29,7 +29,7 @@ export function isWNode(child: DNode): child is WNode {
 }
 
 /**
- * Helper function that returns true if the `DNode` is a `Node` using the `type` property
+ * Helper function that returns true if the `DNode` is a `HNode` using the `type` property
  */
 export function isHNode(child: DNode): child is HNode {
 	return Boolean(child && (typeof child !== 'string') && child.type === HNODE);
