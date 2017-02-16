@@ -1,3 +1,4 @@
+import Map from '@dojo/shim/Map';
 import { includes } from '@dojo/shim/array';
 import { assign } from '@dojo/core/lang';
 import { Constructor, PropertiesChangeEvent, WidgetProperties } from './../interfaces';
@@ -19,19 +20,11 @@ export type ClassNames = {
 }
 
 /**
- * The object returned by getClasses required by maquette for
- * adding / removing classes. They are flagged to true / false.
- */
-export type ClassNameFlagsMap = {
-	[key: string]: ClassNameFlags;
-}
-
-/**
  * Properties required for the themeable mixin
  */
 export interface ThemeableProperties extends WidgetProperties {
-	theme?: {};
-	overrideClasses?: {};
+	theme?: any;
+	overrideClasses?: any;
 }
 
 /**
@@ -136,12 +129,12 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		/**
 		 * The Themeable baseClasses
 		 */
-		private baseClasses: {};
+		private baseClasses: BaseClasses;
 
 		/**
 		 * All classes ever seen by the instance
 		 */
-		private allClasses: ClassNameFlags;
+		private allClasses: ClassNameFlags = {};
 
 		/**
 		 * Reverse lookup of the base classes
@@ -149,14 +142,19 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		private baseClassesReverseLookup: ClassNames;
 
 		/**
-		 * Generated class name map
-		 */
-		private generatedClassNames: ClassNameFlagsMap;
-
-		/**
 		 * Indicates if classes meta data need to be calculated.
 		 */
 		private recalculateClasses: boolean = true;
+
+		/**
+		 * Map of registered classes
+		 */
+		private registeredClassesMap: Map<string, ClassNameFlags> = new Map<string, ClassNameFlags>();
+
+		/**
+		 * Loaded theme
+		 */
+		private theme: ClassNames = {};
 
 		/**
 		 * @constructor
@@ -181,27 +179,26 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		 */
 		public classes(...classNames: (string | null)[]): ClassesFunctionChain {
 			if (this.recalculateClasses) {
-				this.calculateClasses();
+				this.recalculateThemeClasses();
 			}
 
 			const appliedClasses = classNames
 				.filter((className) => className !== null)
-				.reduce((currentCSSModuleClassNames, className: string) => {
-					const classNameKey = this.baseClassesReverseLookup[className];
-					if (this.generatedClassNames.hasOwnProperty(classNameKey)) {
-						assign(currentCSSModuleClassNames, this.generatedClassNames[classNameKey]);
+				.reduce((appliedClasses: {}, className: string) => {
+					if (!this.baseClassesReverseLookup[className]) {
+						console.warn(`Class name: ${className} is not from baseClasses, use chained 'fixed' method instead`);
+						return appliedClasses;
 					}
-					else {
-						console.warn(`Class name: ${className} and lookup key: ${classNameKey} not from baseClasses, use chained 'fixed' method instead`);
+					className = this.baseClassesReverseLookup[className];
+					if (!this.registeredClassesMap.has(className)) {
+						this.registerThemeClass(className);
 					}
-					return currentCSSModuleClassNames;
+					return assign(appliedClasses, this.registeredClassesMap.get(className));
 				}, {});
 
-			const responseClasses = assign({}, this.allClasses, appliedClasses);
 			const themeable = this;
-
 			const classesResponseChain: ClassesFunctionChain = {
-				classes: responseClasses,
+				classes: assign({}, this.allClasses, appliedClasses),
 				fixed(this: ClassesFunctionChain, ...classNames: (string | null)[]) {
 					const filteredClassNames = <string[]> classNames.filter((className) => className !== null);
 					const splitClasses = splitClassStrings(filteredClassNames);
@@ -228,38 +225,35 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		}
 
 		/**
-		 * Function to generate theme classes, triggered when theme or overrideClasses properties are changed.
+		 * Register the classes object for the class name and adds the class to the instances `allClasses` object.
 		 *
-		 * @param baseClasses the baseClasses object passed in via the @theme decorator.
-		 * @param theme The current theme
-		 * @param overrideClasses Any override classes that may have been set
+		 * @param className the name of the class to register.
 		 */
-		private generateThemeClasses(baseClasses: BaseClasses, theme: any, overrideClasses: any): void {
-			let allClasses: string[] = [];
-			const themeKey = baseClasses[THEME_KEY];
-			const sourceThemeClasses = themeKey && theme.hasOwnProperty(themeKey) ? assign({}, baseClasses, theme[themeKey]) : baseClasses;
+		private registerThemeClass(className: string) {
+			const { properties: { overrideClasses = {} } } = this;
+			const themeClass = this.theme[className] ? this.theme[className] : this.baseClasses[className];
+			const overrideClassNames = overrideClasses[className] ? overrideClasses[className].split(' ') : [];
+			const cssClassNames = themeClass.split(' ').concat(overrideClassNames);
+			const classesObject = cssClassNames.reduce((classesObject, cssClassName) => {
+				classesObject[cssClassName] = true;
+				this.allClasses[cssClassName] = false;
+				return classesObject;
+			}, <any> {});
+			this.registeredClassesMap.set(className, classesObject);
+		}
 
-			const themeClasses = Object.keys(baseClasses).reduce((newAppliedClassNames, className: string) => {
-				if (className === THEME_KEY) {
-					return newAppliedClassNames;
-				}
-
-				let cssClassNames = sourceThemeClasses[className].split(' ');
-
-				if (overrideClasses.hasOwnProperty(className)) {
-					cssClassNames = [...cssClassNames, ...overrideClasses[className].split(' ')];
-				}
-
-				allClasses = [...allClasses, ...cssClassNames];
-
-				newAppliedClassNames[className] = createClassNameObject(cssClassNames, true);
-
-				return newAppliedClassNames;
-			}, <ClassNameFlagsMap> {});
-
-			this.appendToAllClassNames(allClasses);
-
-			this.generatedClassNames = themeClasses;
+		/**
+		 * Recalculate registered classes for current theme.
+		 */
+		private recalculateThemeClasses() {
+			const { properties: { theme = {} } } = this;
+			const themeKey = this.baseClasses[THEME_KEY];
+			this.baseClassesReverseLookup = createBaseClassesLookup(this.baseClasses);
+			this.theme = theme[themeKey] || {};
+			this.registeredClassesMap.forEach((value, key) => {
+				this.registerThemeClass(key);
+			});
+			this.recalculateClasses = false;
 		}
 
 		/**
@@ -276,16 +270,6 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 			if (themeChanged || overrideClassesChanged) {
 				this.recalculateClasses = true;
 			}
-		}
-
-		/**
-		 * Initialize the reverse look up map and the generatedThemeClasses.
-		 */
-		private calculateClasses(): void {
-			const { theme = {}, overrideClasses = {} } = this.properties;
-			this.baseClassesReverseLookup = createBaseClassesLookup(this.baseClasses);
-			this.generateThemeClasses(this.baseClasses, theme , overrideClasses);
-			this.recalculateClasses = false;
 		}
 	};
 }
