@@ -197,5 +197,5 @@ or
 
 The original Dojo 1 `has()` API was based upon Peter Higgin's [has.js](https://github.com/phiggins42/has.js/).
 
-© 2016 Dojo Foundation & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
