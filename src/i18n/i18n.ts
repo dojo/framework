@@ -1,6 +1,5 @@
 /* tslint:disable:interface-name */
-import compose from '@dojo/compose/compose';
-import eventedMixin from '@dojo/compose/bases/eventedMixin';
+import Evented from '@dojo/core/Evented';
 import has from '@dojo/core/has';
 import global from '@dojo/core/global';
 import { assign } from '@dojo/core/lang';
@@ -67,7 +66,7 @@ const PATH_SEPARATOR: string = has('host-node') ? require('path').sep : '/';
 const VALID_PATH_PATTERN = new RegExp(`\\${PATH_SEPARATOR}[^\\${PATH_SEPARATOR}]+\$`);
 const bundleMap = new Map<string, Map<string, Messages>>();
 const formatterMap = new Map<string, MessageFormatter>();
-const localeProducer = compose({}).mixin(eventedMixin)();
+const localeProducer = new Evented({});
 let rootLocale: string;
 
 /**
@@ -348,8 +347,8 @@ export function invalidate(bundlePath?: string) {
 export const observeLocale = (function () {
 	const localeSource = new Observable<string>((observer: SubscriptionObserver<string>) => {
 		const handles: Handle[] = [
-			localeProducer.on('change', (event) => {
-				observer.next(event.target as string);
+			localeProducer.on('change', (event: any) => {
+				observer.next(event.target);
 			})
 		];
 
