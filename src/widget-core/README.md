@@ -141,7 +141,7 @@ v(tag: string, children: (DNode | null)[]): HNode[];
 The following code renders an element with the `tag`, `properties` and `children`.
 
 ```ts
-v(tag: string, properties: VNodeProperties, children?: (DNode | null)[]): HNode[];
+v(tag: string, properties: VirtualDomProperties, children?: (DNode | null)[]): HNode[];
 ```
 
 As well as interacting with the VDOM by passing it HyperScript, you can also pass it Dojo 2 Widgets or Custom Widgets using the `w` function.
