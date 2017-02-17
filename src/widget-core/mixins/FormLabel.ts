@@ -5,7 +5,7 @@ import {
 	Constructor,
 	WidgetProperties
 } from '../interfaces';
-import { WidgetBase } from './../WidgetBase';
+import { WidgetBase, afterRender } from './../WidgetBase';
 
 /**
  * Label settings for form label text content, position (before or after), and visibility
@@ -107,11 +107,12 @@ const labelDefaults = {
 const allowedFormFieldAttributes = ['checked', 'describedBy', 'disabled', 'invalid', 'maxLength', 'minLength', 'multiple', 'name', 'placeholder', 'readOnly', 'required', 'value'];
 
 export function FormLabelMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T {
-	return class extends base {
+	class FormLabel extends base {
 
 		properties: FormLabelMixinProperties;
 
-		renderDecoratorFormLabel(result: DNode): DNode {
+		@afterRender
+		renderDecorator(result: DNode): DNode {
 			const labelNodeAttributes: any = {};
 			if (isHNode(result)) {
 				assign(result.properties, this.getFormFieldA11yAttributes());
@@ -182,6 +183,8 @@ export function FormLabelMixin<T extends Constructor<WidgetBase<WidgetProperties
 			return nodeAttributes;
 		}
 	};
+
+	return FormLabel;
 }
 
 export default FormLabelMixin;

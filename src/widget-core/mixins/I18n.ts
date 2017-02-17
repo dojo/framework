@@ -3,7 +3,7 @@ import { assign } from '@dojo/core/lang';
 import i18n, { Bundle, formatMessage, getCachedMessages, Messages, observeLocale } from '@dojo/i18n/i18n';
 import { VNodeProperties } from '@dojo/interfaces/vdom';
 import { Constructor, DNode, WidgetProperties } from './../interfaces';
-import { WidgetBase } from './../WidgetBase';
+import { WidgetBase, afterRender } from './../WidgetBase';
 import { isHNode } from './../d';
 
 export interface I18nProperties extends WidgetProperties {
@@ -65,7 +65,7 @@ export interface I18nMixin {
 }
 
 export function I18nMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<I18nMixin> {
-	return class extends base {
+	class I18n extends base {
 		properties: I18nProperties;
 
 		constructor(...args: any[]) {
@@ -95,7 +95,8 @@ export function I18nMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(b
 			}), messages) as LocalizedMessages<T>;
 		}
 
-		renderDecoratorI18n(result: DNode): DNode {
+		@afterRender
+		renderDecorator(result: DNode): DNode {
 			if (isHNode(result)) {
 				const { locale, rtl } = this.properties;
 				const vNodeProperties: I18nVNodeProperties = {
@@ -140,6 +141,8 @@ export function I18nMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(b
 			});
 		}
 	};
+
+	return I18n;
 }
 
 export default I18nMixin;

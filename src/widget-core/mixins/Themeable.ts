@@ -70,7 +70,7 @@ export interface ThemeableMixin {
  */
 export function theme (theme: {}) {
 	return function(constructor: Function) {
-		constructor.prototype.baseClasses = theme;
+		constructor.prototype.addDecorator('baseClasses', theme);
 	};
 }
 
@@ -247,6 +247,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		 */
 		private recalculateThemeClasses() {
 			const { properties: { theme = {} } } = this;
+			this.baseClasses = (this.getDecorator('baseClasses') || [])[0];
 			const themeKey = this.baseClasses[THEME_KEY];
 			this.baseClassesReverseLookup = createBaseClassesLookup(this.baseClasses);
 			this.theme = theme[themeKey] || {};
@@ -259,8 +260,6 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		/**
 		 * Function fired when properties are changed on the widget.
 		 *
-		 * @param theme The theme property
-		 * @param overrideClasses The overrideClasses property
 		 * @param changedPropertyKeys Array of properties that have changed
 		 */
 		private onPropertiesChanged(changedPropertyKeys: string[]) {

@@ -212,18 +212,34 @@ The depth of the returned diff is equal to the depth used during the equality co
 
 ##### Custom property diff control
 
-Included in `WidgetBase` is functionality to support targeting a specific property with a custom comparison function.
-This is done by adding a function to the widget class with `diffProperty` prefixed to the property name.
+Included in `WidgetBase` is functionality to support targeting a specific property with a custom comparison function using a decorator `diffProperty`. For non-decorator environments the functions need to be registered in the constructor using the `addDecorator` API with `diffProperty` as the key.
 
-e.g. for a property `foo` you would add a function called `diffPropertyFoo`
-(the casing of the comparison function name is unimportant).
+e.g. for a property `foo` you would add a function to the widget class and either use the decorator function or register the decorator in the `constructor`.
+
+*using the `diffProperty` decorator*
 
 ```ts
-
 class MyWidget extends WidgetBase<WidgetProperties> {
-	diffPropertyFoo(previousProperty: MyComplexObject, newProperty: MyComplexObject) {
+
+	@diffProperty('foo')
+	myComplexDiffFunction(previousProperty: MyComplexObject, newProperty: MyComplexObject) {
 			// can perfom complex comparison logic here between the two property values
 			// or even use externally stored state to assist the comparison
+	}
+}
+```
+
+*registering the `diffProperty` function in the constructor*
+
+```ts
+class MyWidget extends WidgetBase<WidgetProperties> {
+
+	constructor() {
+		super();
+		this.addDecorator('diffProperty', { propertyName: 'foo', diffFunction: this.customFooDiff });
+	}
+
+	customFooDiff(previousProperty: MyComplexObject, newProperty: MyComplexObject) {
 	}
 }
 ```
@@ -257,6 +273,40 @@ this.on('properties:changed', (evt: PropertiesChangedEvent<MyWidget, MyPropertie
 Finally once all the attached events have been processed, the properties lifecycle is complete and the finalized widget properties are available during the render cycle functions.
 
 <!-- render lifecycle goes here -->
+
+##### AfterRender
+
+Occassionally in a mixin or base widget class it my be required to provide logic that needs to be executed using the result of a widgets `render`. `WidgetBase` supports registering functions that opererate as an after aspect to the `render` function using a provided decorator `afterRender` or in non decorator environments using the `addDecorator` API with `afterRender` as the key.
+
+*Using the `afterRender` decorator*
+
+```ts
+class MyBaseClass extends WidgetBase<WidgetProperties> {
+	@afterRender
+	myAfterRender(result: DNode): DNode {
+		// do something with the result
+		return result;
+	}
+}
+```
+
+*Using the `addDecorator` API*
+
+```ts
+class MyBaseClass extends WidgetBase<WidgetProperties> {
+	constructor() {
+		super();
+		this.addDecorator('afterRender', this.myOtherAfterRender);
+	}
+	
+	myOtherAfterRender(result: DNode): DNode {
+		// do something with the result
+		return result;
+	}
+}
+```
+
+***Note:*** `afterRender` functions are executed in the order that they are specified from the super class up to the final class. Usage of the `afterRender` decorator and `addDecorator` API should not be mixed.
 
 #### Projector
 

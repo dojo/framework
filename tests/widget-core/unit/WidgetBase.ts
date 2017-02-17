@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import Promise from '@dojo/shim/Promise';
 import { DNode } from '../../src/interfaces';
-import { WidgetBase } from '../../src/WidgetBase';
+import { WidgetBase, diffProperty, afterRender } from '../../src/WidgetBase';
 import { VNode } from '@dojo/interfaces/vdom';
 import { v, w, registry } from '../../src/d';
 import { stub } from 'sinon';
@@ -62,11 +62,13 @@ registerSuite({
 			assert.deepEqual(result.changedKeys, [ 'foo', 'bar', 'baz', 'qux']);
 		}
 	},
-	setProperties: {
-		'call diff property functions if available'() {
+	diffProperty: {
+		decorator() {
 			let callCount = 0;
 
 			class TestWidget extends WidgetBase<any> {
+
+				@diffProperty('foo')
 				diffPropertyFoo(this: any, previousProperty: any, newProperty: any): any {
 					callCount++;
 					assert.equal(newProperty, 'bar');
@@ -82,8 +84,37 @@ registerSuite({
 
 			assert.equal(callCount, 1);
 		},
+		'non decorator'() {
+			let callCount = 0;
+
+			class TestWidget extends WidgetBase<any> {
+
+				constructor() {
+					super();
+					this.addDecorator('diffProperty', { propertyName: 'foo', diffFunction: this.diffPropertyFoo });
+				}
+
+				diffPropertyFoo(this: any, previousProperty: any, newProperty: any): any {
+					callCount++;
+					assert.equal(newProperty, 'bar');
+					return {
+						changed: false,
+						value: newProperty
+					};
+				}
+			}
+
+			const testWidget = new TestWidget();
+			testWidget.setProperties({ foo: 'bar' });
+
+			assert.equal(callCount, 1);
+		}
+	},
+	setProperties: {
 		'result from diff property override diff and assign'() {
 			class TestWidget extends WidgetBase<any> {
+
+				@diffProperty('foo')
 				diffPropertyFoo(this: any, previousProperty: any, newProperty: any): any {
 					return {
 						changed: true,
@@ -91,6 +122,7 @@ registerSuite({
 					};
 				}
 
+				@diffProperty('baz')
 				diffPropertyBaz(this: any, previousProperty: any, newProperty: any): any {
 					return {
 						changed: false,
@@ -111,6 +143,8 @@ registerSuite({
 		},
 		'uses base diff when an individual property diff returns null'() {
 			class TestWidget extends WidgetBase<any> {
+
+				@diffProperty('foo')
 				diffPropertyFoo(this: any, previousProperty: any, newProperty: any): any {
 					return null;
 				}
@@ -319,6 +353,73 @@ registerSuite({
 			} catch (e) {
 				assert.strictEqual(testWidget.count, 0);
 			}
+		}
+	},
+	afterRender: {
+		decorator() {
+			let afterRenderCount = 1;
+			class TestWidget extends WidgetBase<any> {
+				@afterRender
+				firstAfterRender(result: DNode): DNode {
+					assert.strictEqual(afterRenderCount++, 1);
+					return result;
+				}
+				@afterRender
+				secondAfterRender(result: DNode): DNode {
+					assert.strictEqual(afterRenderCount++, 2);
+					return result;
+				}
+			}
+
+			class ExtendedTestWidget extends TestWidget {
+				@afterRender
+				thirdAfterRender(result: DNode): DNode {
+					assert.strictEqual(afterRenderCount, 3);
+					return result;
+				}
+			}
+
+			const widget = new ExtendedTestWidget();
+			widget.__render__();
+			assert.strictEqual(afterRenderCount, 3);
+		},
+		'non decorator'() {
+			let afterRenderCount = 1;
+			class TestWidget extends WidgetBase<any> {
+
+				constructor() {
+					super();
+					this.addDecorator('afterRender', this.firstAfterRender);
+					this.addDecorator('afterRender', [ this.secondAfterRender ]);
+				}
+
+				firstAfterRender(result: DNode): DNode {
+					assert.strictEqual(afterRenderCount++, 1);
+					return result;
+				}
+
+				secondAfterRender(result: DNode): DNode {
+					assert.strictEqual(afterRenderCount++, 2);
+					return result;
+				}
+			}
+
+			class ExtendedTestWidget extends TestWidget {
+
+				constructor() {
+					super();
+					this.addDecorator('afterRender', this.thirdAfterRender);
+				}
+
+				thirdAfterRender(result: DNode): DNode {
+					assert.strictEqual(afterRenderCount, 3);
+					return result;
+				}
+			}
+
+			const widget = new ExtendedTestWidget();
+			widget.__render__();
+			assert.strictEqual(afterRenderCount, 3);
 		}
 	},
 	render: {
