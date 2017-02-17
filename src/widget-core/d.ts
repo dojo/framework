@@ -1,11 +1,12 @@
 import { assign } from '@dojo/core/lang';
-import { VNode, VNodeProperties } from '@dojo/interfaces/vdom';
+import { VNode } from '@dojo/interfaces/vdom';
 import Symbol from '@dojo/shim/Symbol';
 import { h } from 'maquette';
 import {
 	DNode,
 	HNode,
 	WNode,
+	VirtualDomProperties,
 	WidgetProperties,
 	WidgetBaseConstructor
 } from './interfaces';
@@ -84,10 +85,10 @@ export function w<P extends WidgetProperties>(factory: WidgetBaseConstructor<P> 
 /**
  * Wrapper function for calls to create hyperscript, lazily executes the hyperscript creation
  */
-export function v(tag: string, properties: VNodeProperties, children?: DNode[]): HNode;
+export function v(tag: string, properties: VirtualDomProperties, children?: DNode[]): HNode;
 export function v(tag: string, children: DNode[]): HNode;
 export function v(tag: string): HNode;
-export function v(tag: string, propertiesOrChildren: VNodeProperties = {}, children: DNode[] = []): HNode {
+export function v(tag: string, propertiesOrChildren: VirtualDomProperties = {}, children: DNode[] = []): HNode {
 		let properties = propertiesOrChildren;
 
 		if (Array.isArray(propertiesOrChildren)) {
@@ -98,8 +99,18 @@ export function v(tag: string, propertiesOrChildren: VNodeProperties = {}, child
 		return {
 			children,
 			properties,
-			render<T>(this: { vNodes: VNode[], properties: VNodeProperties }, options: { bind?: T } = { }) {
-				return h(tag, assign(options, this.properties), this.vNodes);
+			render<T>(this: { vNodes: VNode[], properties: VirtualDomProperties }, options: { bind?: T } = { }) {
+				let properties = this.properties;
+
+				if (this.properties) {
+					let { classes } = this.properties;
+					if (typeof classes === 'function') {
+						classes = classes();
+						properties = assign(this.properties, { classes });
+					}
+				}
+
+				return h(tag, assign(options, properties), this.vNodes);
 			},
 			type: HNODE
 		};

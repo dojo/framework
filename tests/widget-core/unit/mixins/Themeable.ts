@@ -99,6 +99,17 @@ registerSuite({
 			});
 
 			assert.isFalse(consoleStub.called);
+		},
+		'can invoke result instead of using .get()'() {
+			themeableInstance = new Test();
+			const { class1, class2 } = baseClasses;
+			const flaggedClasses = themeableInstance.classes(class1, class2)();
+			assert.deepEqual(flaggedClasses, {
+				[ baseClasses.class1 ]: true,
+				[ baseClasses.class2 ]: true
+			});
+
+			assert.isFalse(consoleStub.called);
 		}
 	},
 	'classes.fixed chained function': {
@@ -174,6 +185,14 @@ registerSuite({
 				'adjoinedClassName1': false,
 				'adjoinedClassName2': false
 			}, `adjoiend class names should be false on second call`);
+		},
+		'can invoke result instead of using .get()'() {
+			themeableInstance = new Test();
+			const fixedClassName = 'fixedClassName';
+			const flaggedClasses = themeableInstance.classes().fixed(fixedClassName)();
+			assert.deepEqual(flaggedClasses, {
+				[ fixedClassName ]: true
+			});
 		}
 	},
 	'setting a theme': {
@@ -260,7 +279,7 @@ registerSuite({
 				render() {
 					const { class1 } = baseClasses;
 					return v('div', [
-						v('div', { classes: this.classes(class1).fixed(fixedClassName).get() })
+						v('div', { classes: this.classes(class1).fixed(fixedClassName) })
 					]);
 				}
 			}
