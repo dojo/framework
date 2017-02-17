@@ -19,10 +19,14 @@ global.document = doc;
 /* Assign a global window as well */
 global.window = doc.defaultView;
 
-/* Polyfill requestAnimationFrame */
+/* Polyfill requestAnimationFrame - this can never be called an *actual* polyfill */
 global.requestAnimationFrame = (cb: (...args: any[]) => {}) => {
 	setImmediate(cb);
+	// return something at least!
+	return true;
 };
+
+global.cancelAnimationFrame = () => {};
 
 export default doc;
 

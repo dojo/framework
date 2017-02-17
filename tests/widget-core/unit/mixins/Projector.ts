@@ -4,8 +4,9 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { spy } from 'sinon';
 import { v } from '../../../src/d';
-import { ProjectorMixin, ProjectorState } from '../../../src/mixins/Projector';
+import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projector';
 import { WidgetBase } from '../../../src/WidgetBase';
+import global from '@dojo/core/global';
 
 class TestWidget extends ProjectorMixin(WidgetBase)<any> {}
 
@@ -51,8 +52,21 @@ async function waitFor(callback: () => boolean, message: string = 'timed out wai
 	});
 }
 
+let rafSpy: any;
+let cancelRafSpy: any;
+
 registerSuite({
 	name: 'mixins/projectorMixin',
+
+	beforeEach() {
+		rafSpy = spy(global, 'requestAnimationFrame');
+		cancelRafSpy = spy(global, 'cancelAnimationFrame');
+	},
+
+	afterEach() {
+		rafSpy.restore();
+		cancelRafSpy.restore();
+	},
 
 	'render throws an error for null result'() {
 		const projector = new class extends TestWidget {
@@ -173,32 +187,57 @@ registerSuite({
 		projector.root = root;
 		assert.equal(projector.root, root);
 	},
+	'pause'() {
+		const projector = new TestWidget();
+		let called = false;
+		projector.on('render:scheduled', () => {
+			called = true;
+		});
+		return projector.append().then(() => {
+			projector.pause();
+			projector.scheduleRender();
+			assert.isFalse(called);
+		});
+	},
+	'pause cancels animation frame if scheduled'() {
+		const projector = new TestWidget();
+
+		return projector.append().then(() => {
+			projector.scheduleRender();
+			projector.pause();
+			assert.isTrue(cancelRafSpy.called);
+		});
+	},
+	'resume'() {
+		const projector = new TestWidget();
+		spy(projector, 'scheduleRender');
+		assert.isFalse((<any> projector.scheduleRender).called);
+		projector.resume();
+		assert.isTrue((<any> projector.scheduleRender).called);
+	},
 	'get projector state'() {
 		const projector = new TestWidget();
 
-		assert.equal(projector.projectorState, ProjectorState.Detached);
+		assert.equal(projector.projectorState, ProjectorAttachState.Detached);
 		return projector.append().then(() => {
-			assert.equal(projector.projectorState, ProjectorState.Attached);
+			assert.equal(projector.projectorState, ProjectorAttachState.Attached);
 			projector.destroy();
-			assert.equal(projector.projectorState, ProjectorState.Detached);
+			assert.equal(projector.projectorState, ProjectorAttachState.Detached);
 		});
 
 	},
 	'destroy'() {
 		const projector: any = new TestWidget();
-		const maquetteProjectorStopSpy = spy(projector.projector, 'stop');
-		const maquetteProjectorDetachSpy = spy(projector.projector, 'detach');
+		const maquetteProjectorStopSpy = spy(projector, 'pause');
 
 		return projector.append().then(() => {
 			projector.destroy();
 
 			assert.isTrue(maquetteProjectorStopSpy.calledOnce);
-			assert.isTrue(maquetteProjectorDetachSpy.calledOnce);
 
 			projector.destroy();
 
 			assert.isTrue(maquetteProjectorStopSpy.calledOnce);
-			assert.isTrue(maquetteProjectorDetachSpy.calledOnce);
 		});
 
 	},
@@ -216,7 +255,6 @@ registerSuite({
 	},
 	'invalidate before attached'() {
 		const projector: any = new TestWidget();
-		const maquetteProjectorSpy = spy(projector.projector, 'scheduleRender');
 		let called = false;
 
 		projector.on('render:scheduled', () => {
@@ -225,12 +263,10 @@ registerSuite({
 
 		projector.invalidate();
 
-		assert.isFalse(maquetteProjectorSpy.called);
 		assert.isFalse(called);
 	},
 	'invalidate after attached'() {
 		const projector: any = new TestWidget();
-		const maquetteProjectorSpy = spy(projector.projector, 'scheduleRender');
 		let called = false;
 
 		projector.on('render:scheduled', () => {
@@ -239,7 +275,6 @@ registerSuite({
 
 		return projector.append().then(() => {
 			projector.invalidate();
-			assert.isTrue(maquetteProjectorSpy.called);
 			assert.isTrue(called);
 		});
 	},
@@ -257,6 +292,27 @@ registerSuite({
 			assert.throws(() => {
 				projector.root = document.body;
 			}, Error, 'already attached');
+		});
+	},
+	'can attach an event'() {
+		let domNode: any;
+		let domEvent: any;
+		const onclick = (evt: any) => {
+			domEvent = evt;
+		};
+		const afterCreate = (node: Node) => {
+			domNode = node;
+		};
+		const Projector = class extends TestWidget {
+			render() {
+				return v('div', { onclick, afterCreate });
+			}
+		};
+
+		const projector = new Projector();
+		return projector.append().then(() => {
+			domNode.click();
+			assert.instanceOf(domEvent, global.window.MouseEvent);
 		});
 	},
 	async '-active gets appended to enter/exit animations by default'(this: any) {
