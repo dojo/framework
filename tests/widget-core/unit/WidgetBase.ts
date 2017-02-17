@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import Promise from '@dojo/shim/Promise';
 import { DNode } from '../../src/interfaces';
-import { WidgetBase, diffProperty, afterRender } from '../../src/WidgetBase';
+import { WidgetBase, diffProperty, afterRender, onPropertiesChanged } from '../../src/WidgetBase';
 import { VNode } from '@dojo/interfaces/vdom';
 import { v, w, registry } from '../../src/d';
 import { stub } from 'sinon';
@@ -420,6 +420,69 @@ registerSuite({
 			const widget = new ExtendedTestWidget();
 			widget.__render__();
 			assert.strictEqual(afterRenderCount, 3);
+		}
+	},
+	'properties:changed event': {
+		decorator() {
+			let onPropertiesChangedCount = 1;
+			class TestWidget extends WidgetBase<any> {
+				invalidate() {
+					assert.strictEqual(onPropertiesChangedCount++, 1);
+				}
+				@onPropertiesChanged
+				firstOnPropertiesChanged() {
+					assert.strictEqual(onPropertiesChangedCount++, 2);
+				}
+				@onPropertiesChanged
+				secondOnPropertiesChanged() {
+					assert.strictEqual(onPropertiesChangedCount++, 3);
+				}
+			}
+
+			class ExtendedTestWidget extends TestWidget {
+				@onPropertiesChanged
+				thirdOnPropertiesChanged() {
+					assert.strictEqual(onPropertiesChangedCount, 4);
+				}
+			}
+
+			const widget = new ExtendedTestWidget();
+			widget.emit({ type: 'properties:changed' });
+			assert.strictEqual(onPropertiesChangedCount, 4);
+		},
+		'non decorator'() {
+
+			let onPropertiesChangedCount = 1;
+			class TestWidget extends WidgetBase<any> {
+				constructor() {
+					super();
+					this.addDecorator('onPropertiesChanged', this.firstOnPropertiesChanged);
+					this.addDecorator('onPropertiesChanged', this.secondOnPropertiesChanged);
+				}
+				invalidate() {
+					assert.strictEqual(onPropertiesChangedCount++, 1);
+				}
+				firstOnPropertiesChanged() {
+					assert.strictEqual(onPropertiesChangedCount++, 2);
+				}
+				secondOnPropertiesChanged() {
+					assert.strictEqual(onPropertiesChangedCount++, 3);
+				}
+			}
+
+			class ExtendedTestWidget extends TestWidget {
+				constructor() {
+					super();
+					this.addDecorator('onPropertiesChanged', this.thirdOnPropertiesChanged);
+				}
+				thirdOnPropertiesChanged() {
+					assert.strictEqual(onPropertiesChangedCount, 4);
+				}
+			}
+
+			const widget = new ExtendedTestWidget();
+			widget.emit({ type: 'properties:changed' });
+			assert.strictEqual(onPropertiesChangedCount, 4);
 		}
 	},
 	render: {

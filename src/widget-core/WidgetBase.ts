@@ -53,6 +53,13 @@ export function diffProperty(propertyName: string) {
 }
 
 /**
+ * Decorator used to register listeners to the `properties:changed` event.
+ */
+export function onPropertiesChanged(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+	target.addDecorator('onPropertiesChanged', target[propertyKey]);
+}
+
+/**
  * Main widget base for all widgets to extend
  */
 export class WidgetBase<P extends WidgetProperties> extends Evented implements WidgetBaseInterface<P> {
@@ -139,6 +146,11 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 
 		this.own(this.on('properties:changed', (evt: PropertiesChangeEvent<WidgetBase<WidgetProperties>, WidgetProperties>) => {
 			this.invalidate();
+
+			const propertiesChangedListeners = this.getDecorator('onPropertiesChanged') || [];
+			propertiesChangedListeners.forEach((propertiesChangedFunction) => {
+				propertiesChangedFunction.call(this, evt);
+			});
 		}));
 	}
 

@@ -1,8 +1,8 @@
 import Map from '@dojo/shim/Map';
 import { includes } from '@dojo/shim/array';
 import { assign } from '@dojo/core/lang';
-import { Constructor, PropertiesChangeEvent, WidgetProperties } from './../interfaces';
-import { WidgetBase } from './../WidgetBase';
+import { Constructor, WidgetProperties, PropertiesChangeEvent } from './../interfaces';
+import { WidgetBase, onPropertiesChanged } from './../WidgetBase';
 
 /**
  * A representation of the css class names to be applied and
@@ -124,7 +124,7 @@ function createBaseClassesLookup(classes: BaseClasses): ClassNames {
  * Function that returns a class decorated with with Themeable functionality
  */
 export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeableProperties>>>(base: T): T & Constructor<ThemeableMixin> {
-	return class extends base {
+	class Themeable extends base {
 
 		/**
 		 * The Themeable baseClasses
@@ -155,16 +155,6 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		 * Loaded theme
 		 */
 		private theme: ClassNames = {};
-
-		/**
-		 * @constructor
-		 */
-		constructor(...args: any[]) {
-			super(...args);
-			this.own(this.on('properties:changed', (evt: PropertiesChangeEvent<this, ThemeableProperties>) => {
-				this.onPropertiesChanged(evt.changedPropertyKeys);
-			}));
-		}
 
 		/**
 		 * Function used to add themeable classes to a widget. Returns a chained function 'fixed'
@@ -262,7 +252,8 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		 *
 		 * @param changedPropertyKeys Array of properties that have changed
 		 */
-		private onPropertiesChanged(changedPropertyKeys: string[]) {
+		@onPropertiesChanged
+		protected onPropertiesChanged({ changedPropertyKeys }: PropertiesChangeEvent<this, ThemeableProperties>) {
 			const themeChanged = includes(changedPropertyKeys, 'theme');
 			const overrideClassesChanged = includes(changedPropertyKeys, 'overrideClasses');
 
@@ -271,6 +262,8 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 			}
 		}
 	};
+
+	return Themeable;
 }
 
 export default ThemeableMixin;

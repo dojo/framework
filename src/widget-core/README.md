@@ -249,14 +249,36 @@ If a property has a custom diff function then that property is excluded from tho
 ##### The 'properties:changed' event
 
 When `diffProperties` has completed, the results are used to update the properties on the widget instance.
-If any properties were changed, then the `properties:changed` event is emitted.
+If any properties were changed, then the `properties:changed` event is emitted. 
 
-*Attaching*
+Attaching a listener to the event is exposed via a decorator `@onPropertiesChanged`.
+
+*using the `onPropertiesChanged ` decorator*
 
 ```ts
-this.on('properties:changed', (evt: PropertiesChangedEvent<MyWidget, MyProperties>) {
-	// do something
-});
+class MyWidget extends WidgetBase<WidgetProperties> {
+
+	@onPropertiesChanged
+	myPropChangedListener(evt: PropertiesChangeEvent<this, WidgetProperties>) {
+		// do something
+	}
+}
+```
+
+*registering the `onPropertiesChanged ` function in the constructor*
+
+```ts
+class MyWidget extends WidgetBase<WidgetProperties> {
+
+	constructor() {
+		super();
+		this.addDecorator('onPropertiesChanged', this.myPropChangedListener)
+	}
+
+	myPropChangedListener(evt: PropertiesChangeEvent<this, WidgetProperties>) {
+		// do something
+	}
+}
 ```
 
 *Example event payload*
