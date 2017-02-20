@@ -1,14 +1,12 @@
-import compose from '@dojo/compose/compose';
-import { Evented } from '@dojo/interfaces/bases';
-import createEvented from '@dojo/compose/bases/createEvented';
+import { Evented } from '@dojo/core/Evented';
 import { emit } from '@dojo/core/on';
 import Promise from '@dojo/shim/Promise';
 import { afterEach, beforeEach, suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 
-import createHashHistory from '../../../src/history/createHashHistory';
+import HashHistory from '../../../src/history/HashHistory';
 
-suite('createHashHistory', () => {
+suite('HashHistory', () => {
 	// Mask the globals so tests are forced to explicitly reference the
 	// correct window.
 	/* tslint:disable */
@@ -32,26 +30,26 @@ suite('createHashHistory', () => {
 
 	test('initializes current path to current location', () => {
 		sandbox.contentWindow.location.hash = '/foo';
-		assert.equal(createHashHistory({ window: sandbox.contentWindow }).current, '/foo');
+		assert.equal(new HashHistory({ window: sandbox.contentWindow }).current, '/foo');
 	});
 
 	test('location defers to the global object', () => {
-		assert.equal(createHashHistory().current, window.location.hash.slice(1));
+		assert.equal(new HashHistory().current, window.location.hash.slice(1));
 	});
 
 	test('prefixes the path with a #', () => {
-		assert.equal(createHashHistory().prefix('/foo'), '#/foo');
+		assert.equal(new HashHistory().prefix('/foo'), '#/foo');
 	});
 
 	test('update path', () => {
-		const history = createHashHistory({ window: sandbox.contentWindow });
+		const history = new HashHistory({ window: sandbox.contentWindow });
 		history.set('/foo');
 		assert.equal(history.current, '/foo');
 		assert.equal(sandbox.contentWindow.location.hash, '#/foo');
 	});
 
 	test('emits change when path is updated', () => {
-		const history = createHashHistory({ window: sandbox.contentWindow });
+		const history = new HashHistory({ window: sandbox.contentWindow });
 		let emittedValues: string[] = [];
 		history.on('change', ({ value }) => {
 			emittedValues.push(value);
@@ -67,7 +65,7 @@ suite('createHashHistory', () => {
 
 	test('does not emit change if path is set to the current value', () => {
 		sandbox.contentWindow.location.hash = '/foo';
-		const history = createHashHistory({ window: sandbox.contentWindow });
+		const history = new HashHistory({ window: sandbox.contentWindow });
 		let emittedValues: string[] = [];
 		history.on('change', ({ value }) => {
 			emittedValues.push(value);
@@ -77,14 +75,14 @@ suite('createHashHistory', () => {
 	});
 
 	test('replace path', () => {
-		const history = createHashHistory({ window: sandbox.contentWindow });
+		const history = new HashHistory({ window: sandbox.contentWindow });
 		history.replace('/foo');
 		assert.equal(history.current, '/foo');
 		assert.equal(sandbox.contentWindow.location.hash, '#/foo');
 	});
 
 	test('emits change when path is replaced', () => {
-		const history = createHashHistory({ window: sandbox.contentWindow });
+		const history = new HashHistory({ window: sandbox.contentWindow });
 		let emittedValues: string[] = [];
 		history.on('change', ({ value }) => {
 			emittedValues.push(value);
@@ -100,7 +98,7 @@ suite('createHashHistory', () => {
 
 	test('does not emit change if path is replaced with the current value', () => {
 		sandbox.contentWindow.location.hash = '/foo';
-		const history = createHashHistory({ window: sandbox.contentWindow });
+		const history = new HashHistory({ window: sandbox.contentWindow });
 		let emittedValues: string[] = [];
 		history.on('change', ({ value }) => {
 			emittedValues.push(value);
@@ -113,7 +111,7 @@ suite('createHashHistory', () => {
 		const { length } = sandbox.contentWindow.history;
 		assert.isTrue(length < 49, 'Too many history entries to run this test. Please open a new browser window');
 
-		const history = createHashHistory({ window: sandbox.contentWindow });
+		const history = new HashHistory({ window: sandbox.contentWindow });
 		history.replace('/baz');
 		assert.equal(sandbox.contentWindow.history.length, length);
 	});
@@ -123,12 +121,14 @@ suite('createHashHistory', () => {
 
 		beforeEach(() => {
 			const { location } = sandbox.contentWindow;
-			const createFauxWindow = compose(<Window> { location }).mixin(createEvented);
-			window = createFauxWindow();
+			const createFauxWindow = class extends Evented {
+				location = location;
+			};
+			window = <any> new createFauxWindow();
 		});
 
 		test('handles hashchange', () => {
-			const history = createHashHistory({ window });
+			const history = new HashHistory({ window });
 
 			let emittedValue = '';
 			history.on('change', ({ value }) => {
@@ -143,7 +143,7 @@ suite('createHashHistory', () => {
 		});
 
 		test('stops listening to hashchange when destroyed', () => {
-			const history = createHashHistory({ window });
+			const history = new HashHistory({ window });
 			assert.equal(history.current, '');
 
 			history.destroy();

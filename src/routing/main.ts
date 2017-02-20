@@ -1,17 +1,15 @@
-import createRoute from './createRoute';
-export { createRoute };
+import Route from './Route';
+export { Route };
 
-import createRouter from './createRouter';
-export { createRouter };
+import Router from './Router';
+export { Router };
 
-import createHashHistory, { HashHistoryFactory } from './history/createHashHistory';
-import createMemoryHistory, { MemoryHistoryFactory } from './history/createMemoryHistory';
-import createStateHistory, { StateHistoryFactory } from './history/createStateHistory';
+import HashHistory from './history/HashHistory';
+import MemoryHistory from './history/MemoryHistory';
+import StateHistory from './history/StateHistory';
 
 export const history = {
-	createHashHistory,
-	createMemoryHistory,
-	createStateHistory
+	HashHistory,
+	MemoryHistory,
+	StateHistory
 };
-
-export { HashHistoryFactory, MemoryHistoryFactory, StateHistoryFactory };

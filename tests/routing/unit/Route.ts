@@ -2,21 +2,21 @@ import UrlSearchParams from '@dojo/core/UrlSearchParams';
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 import { stub } from 'sinon';
-
-import createRoute from '../../src/createRoute';
-import createRouter from '../../src/createRouter';
-import { deconstruct as deconstructPath } from '../../src/lib/path';
 import { DefaultParameters, Context, Parameters } from '../../src/interfaces';
+import { deconstruct as deconstructPath } from '../../src/lib/path';
 
-suite('createRoute', () => {
+import Route from '../../src/Route';
+import Router from '../../src/Router';
+
+suite('Route', () => {
 	test('can create route without options', () => {
 		assert.doesNotThrow(() => {
-			createRoute();
+			new Route();
 		});
 	});
 
 	test('a route is not matched if guard() returns false', () => {
-		const route = createRoute({
+		const route = new Route({
 			guard () {
 				return false;
 			}
@@ -29,7 +29,7 @@ suite('createRoute', () => {
 	test('guard() receives the context', () => {
 		const context: Context = {};
 		let received: Context = <any> undefined;
-		const route = createRoute({
+		const route = new Route({
 			guard ({ context }) {
 				received = context;
 				return true;
@@ -42,34 +42,34 @@ suite('createRoute', () => {
 
 	test('path must not contain #', () => {
 		assert.throws(() => {
-			createRoute({ path: '/foo#' });
+			new Route({ path: '/foo#' });
 		}, TypeError, 'Path must not contain \'#\'');
 	});
 
 	test('path segments cannot contain &', () => {
 		assert.throws(() => {
-			createRoute({ path: '/&/bar' });
+			new Route({ path: '/&/bar' });
 		}, TypeError, 'Path segment must not contain \'&\'');
 	});
 
 	test('path segments cannot be empty', () => {
 		assert.throws(() => {
-			createRoute({ path: '/foo//bar' });
+			new Route({ path: '/foo//bar' });
 		}, TypeError, 'Path segment must not be empty');
 	});
 
 	test('path must contain at least one segment', () => {
 		assert.throws(() => {
-			createRoute({ path: '?{query}' });
+			new Route({ path: '?{query}' });
 		}, TypeError, 'Path must contain at least one segment');
 
 		assert.throws(() => {
-			createRoute({ path: '/?{query}' });
+			new Route({ path: '/?{query}' });
 		}, TypeError, 'Path must contain at least one segment');
 	});
 
 	test('path parameters are extracted', () => {
-		const route = createRoute<DefaultParameters>({
+		const route = new Route<Context, DefaultParameters>({
 			path: '/{foo}/{bar}?{baz}&{qux}'
 		});
 
@@ -88,7 +88,7 @@ suite('createRoute', () => {
 	});
 
 	test('search parameters are optional', () => {
-		const route = createRoute<DefaultParameters>({
+		const route = new Route<Context, DefaultParameters>({
 			path: '/{foo}/{bar}?{baz}&{qux}'
 		});
 
@@ -106,7 +106,7 @@ suite('createRoute', () => {
 	});
 
 	test('only the first search parameter value is extracted', () => {
-		const route = createRoute<DefaultParameters>({
+		const route = new Route<Context, DefaultParameters>({
 			path: '/{foo}/{bar}?{baz}&{qux}'
 		});
 
@@ -125,79 +125,79 @@ suite('createRoute', () => {
 
 	test('path parameters cannot contain {, & or :', () => {
 		assert.throws(() => {
-			createRoute({ path: '/{{}' });
+			new Route({ path: '/{{}' });
 		}, TypeError, 'Parameter name must not contain \'{\', \'&\' or \':\'');
 
 		assert.throws(() => {
-			createRoute({ path: '/{&}' });
+			new Route({ path: '/{&}' });
 		}, TypeError, 'Parameter name must not contain \'{\', \'&\' or \':\'');
 
 		assert.throws(() => {
-			createRoute({ path: '/{:}' });
+			new Route({ path: '/{:}' });
 		}, TypeError, 'Parameter name must not contain \'{\', \'&\' or \':\'');
 	});
 
 	test('path parameters must be named', () => {
 		assert.throws(() => {
-			createRoute({ path: '/{}/' });
+			new Route({ path: '/{}/' });
 		}, TypeError, 'Parameter must have a name');
 	});
 
 	test('path parameters must be closed', () => {
 		assert.throws(() => {
-			createRoute({ path: '/{foo/' });
+			new Route({ path: '/{foo/' });
 		}, TypeError, 'Parameter name must be followed by \'}\', got \'/\'');
 	});
 
 	test('path parameters must be separated by /', () => {
 		assert.throws(() => {
-			createRoute({ path: '/{foo}{bar}' });
+			new Route({ path: '/{foo}{bar}' });
 		}, TypeError, 'Parameter must be followed by \'/\' or \'?\', got \'{\'');
 	});
 
 	test('search parameters must be separated by &', () => {
 		assert.throws(() => {
-			createRoute({ path: '/segment?{foo}{bar}' });
+			new Route({ path: '/segment?{foo}{bar}' });
 		}, TypeError, 'Search parameter must be followed by \'&\', got \'{\'');
 	});
 
 	test('search component must only contain parameters', () => {
 		assert.throws(() => {
-			createRoute({ path: '/segment?foo=bar' });
+			new Route({ path: '/segment?foo=bar' });
 		}, TypeError, 'Expected parameter in search component, got \'foo=bar\'');
 
 		assert.throws(() => {
-			createRoute({ path: '/segment?{foo}&/bar' });
+			new Route({ path: '/segment?{foo}&/bar' });
 		}, TypeError, 'Expected parameter in search component, got \'/\'');
 
 		assert.throws(() => {
-			createRoute({ path: '/segment?{foo}&?bar' });
+			new Route({ path: '/segment?{foo}&?bar' });
 		}, TypeError, 'Expected parameter in search component, got \'?\'');
 
 		assert.throws(() => {
-			createRoute({ path: '/segment?{foo}&&bar' });
+			new Route({ path: '/segment?{foo}&&bar' });
 		}, TypeError, 'Expected parameter in search component, got \'&\'');
 	});
 
 	test('path parameters must have unique names', () => {
 		assert.throws(() => {
-			createRoute({ path: '/{foo}/{foo}' });
+			new Route({ path: '/{foo}/{foo}' });
 		}, TypeError, 'Parameter must have a unique name, got \'foo\'');
 
 		assert.throws(() => {
-			createRoute({ path: '/{foo}?{foo}' });
+			new Route({ path: '/{foo}?{foo}' });
 		}, TypeError, 'Parameter must have a unique name, got \'foo\'');
 		assert.throws(() => {
-			createRoute({ path: '/segment?{foo}&{foo}' });
+			new Route({ path: '/segment?{foo}&{foo}' });
 		}, TypeError, 'Parameter must have a unique name, got \'foo\'');
 
 		assert.throws(() => {
-			createRoute({ path: '/segment?{foo}&{foo}' });
+			new Route({ path: '/segment?{foo}&{foo}' });
 		}, TypeError, 'Parameter must have a unique name, got \'foo\'');
 	});
 
 	test('deconstructed path can be accessed and is deeply frozen', () => {
-		const { path } = createRoute({ path: '/foo/{bar}?{baz}' });
+		const { path } = new Route({ path: '/foo/{bar}?{baz}' });
 		assert.isTrue(Object.isFrozen(path));
 
 		const { expectedSegments, leadingSlash, parameters, searchParameters, trailingSlash } = path;
@@ -221,7 +221,7 @@ suite('createRoute', () => {
 
 	test('guard() receives the extracted parameters', () => {
 		let received: Parameters = <any> undefined;
-		const route = createRoute<DefaultParameters>({
+		const route = new Route({
 			path: '/{foo}/{bar}?{baz}&{qux}',
 			guard ({ params }) {
 				received = params;
@@ -242,7 +242,7 @@ suite('createRoute', () => {
 			upper: string;
 			barIsQux: boolean;
 		}
-		const route = createRoute<Customized>({
+		const route = new Route<Context, Customized>({
 			path: '/{foo}/{bar}',
 			params (fromPath) {
 				const [foo, bar] = fromPath;
@@ -270,7 +270,7 @@ suite('createRoute', () => {
 			fooArr: string[];
 			barIsQux: boolean;
 		}
-		const route = createRoute<Customized>({
+		const route = new Route<Context, Customized>({
 			path: '/segment?{foo}&{bar}',
 			params (fromPath, searchParams) {
 				return {
@@ -294,7 +294,7 @@ suite('createRoute', () => {
 
 	test('parameter extraction cannot be customized if the path doesn\'t contain parameters', () => {
 		assert.throws(() => {
-			createRoute({
+			new Route({
 				path: '/foo/bar',
 				params () {
 					return {};
@@ -304,7 +304,7 @@ suite('createRoute', () => {
 	});
 
 	test('parameter extraction can cause a route not to match', () => {
-		const route = createRoute({
+		const route = new Route({
 			path: '/{foo}',
 			params () {
 				return <any> null;
@@ -316,7 +316,7 @@ suite('createRoute', () => {
 	});
 
 	test('without a path, is selected for zero segments', () => {
-		const route = createRoute();
+		const route = new Route();
 		const selections = route.select({} as Context, [], false, new UrlSearchParams());
 		if (typeof selections === 'string') {
 			throw new TypeError('Unexpected result');
@@ -327,13 +327,13 @@ suite('createRoute', () => {
 	});
 
 	test('without a path or nested routes, is not selected for segments', () => {
-		const route = createRoute();
+		const route = new Route();
 		const selections = route.select({} as Context, ['foo'], false, new UrlSearchParams());
 		assert.lengthOf(selections, 0);
 	});
 
 	test('with a path, is selected if segments match', () => {
-		const route = createRoute({ path: '/foo/bar' });
+		const route = new Route({ path: '/foo/bar' });
 		const selections = route.select({} as Context, ['foo', 'bar'], false, new UrlSearchParams());
 		if (typeof selections === 'string') {
 			throw new TypeError('Unexpected result');
@@ -345,22 +345,22 @@ suite('createRoute', () => {
 
 	test('with a path, is not selected if segments do not match', () => {
 		{
-			const route = createRoute({ path: '/foo/bar' });
+			const route = new Route({ path: '/foo/bar' });
 			const selections = route.select({} as Context, ['baz', 'qux'], false, new UrlSearchParams());
 			assert.lengthOf(selections, 0);
 		}
 
 		{
-			const route = createRoute({ path: '/foo/bar' });
+			const route = new Route({ path: '/foo/bar' });
 			const selections = route.select({} as Context, ['foo'], false, new UrlSearchParams());
 			assert.lengthOf(selections, 0);
 		}
 	});
 
 	test('selects nested routes', () => {
-		const root = createRoute({ path: '/foo' });
-		const deep = createRoute({ path: '/bar' });
-		const deeper = createRoute({ path: '/baz' });
+		const root = new Route({ path: '/foo' });
+		const deep = new Route({ path: '/bar' });
+		const deeper = new Route({ path: '/baz' });
 		root.append(deep);
 		deep.append(deeper);
 
@@ -378,10 +378,10 @@ suite('createRoute', () => {
 
 	test('selects nested routes in order of registration', () => {
 		{
-			const root = createRoute({ path: '/foo' });
-			const deep = createRoute({ path: '/bar' });
-			const altDeep = createRoute({ path: '/bar/baz' });
-			const deeper = createRoute({ path: '/baz' });
+			const root = new Route({ path: '/foo' });
+			const deep = new Route({ path: '/bar' });
+			const altDeep = new Route({ path: '/bar/baz' });
+			const deeper = new Route({ path: '/baz' });
 			root.append(deep);
 			root.append(altDeep);
 			deep.append(deeper);
@@ -391,10 +391,10 @@ suite('createRoute', () => {
 		}
 
 		{
-			const root = createRoute({ path: '/foo' });
-			const deep = createRoute({ path: '/bar' });
-			const altDeep = createRoute({ path: '/bar/baz' });
-			const deeper = createRoute({ path: '/baz' });
+			const root = new Route({ path: '/foo' });
+			const deep = new Route({ path: '/bar' });
+			const altDeep = new Route({ path: '/bar/baz' });
+			const deeper = new Route({ path: '/baz' });
 			root.append(altDeep);
 			root.append(deep);
 			deep.append(deeper);
@@ -405,9 +405,9 @@ suite('createRoute', () => {
 	});
 
 	test('leading slashes are irrelevant', () => {
-		const root = createRoute({ path: 'foo' });
-		const deep = createRoute({ path: '/bar' });
-		const deeper = createRoute({ path: 'baz' });
+		const root = new Route({ path: 'foo' });
+		const deep = new Route({ path: '/bar' });
+		const deeper = new Route({ path: 'baz' });
 		root.append(deep);
 		deep.append(deeper);
 
@@ -417,9 +417,9 @@ suite('createRoute', () => {
 
 	test('if present in route, there must be a trailing slash when selecting', () => {
 		[true, false].forEach(withSlash => {
-			const root = createRoute({ path: '/foo/' });
-			const deep = createRoute({ path: '/bar/' });
-			const deeper = createRoute({ path: '/baz/' });
+			const root = new Route({ path: '/foo/' });
+			const deep = new Route({ path: '/bar/' });
+			const deeper = new Route({ path: '/baz/' });
 			root.append(deep);
 			deep.append(deeper);
 
@@ -430,9 +430,9 @@ suite('createRoute', () => {
 
 	test('if not present in route, there must not be a trailing slash when selecting', () => {
 		[true, false].forEach(withSlash => {
-			const root = createRoute({ path: '/foo/' });
-			const deep = createRoute({ path: '/bar/' });
-			const deeper = createRoute({ path: '/baz' });
+			const root = new Route({ path: '/foo/' });
+			const deep = new Route({ path: '/bar/' });
+			const deeper = new Route({ path: '/baz' });
 			root.append(deep);
 			deep.append(deeper);
 
@@ -443,9 +443,9 @@ suite('createRoute', () => {
 
 	test('routes can be configured to ignore trailing slash discrepancies', () => {
 		[true, false].forEach(withSlash => {
-			const root = createRoute({ path: '/foo/' });
-			const deep = createRoute({ path: '/bar/' });
-			const deeper = createRoute({
+			const root = new Route({ path: '/foo/' });
+			const deep = new Route({ path: '/bar/' });
+			const deeper = new Route({
 				path: `/baz${withSlash ? '' : '/'}`,
 				trailingSlashMustMatch: false
 			});
@@ -458,8 +458,8 @@ suite('createRoute', () => {
 	});
 
 	test('all segments must match for a route hierarchy to be selected', () => {
-		const root = createRoute({ path: 'foo' });
-		const deep = createRoute({ path: '/bar' });
+		const root = new Route({ path: 'foo' });
+		const deep = new Route({ path: '/bar' });
 		root.append(deep);
 
 		const selections = root.select({} as Context, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
@@ -467,9 +467,9 @@ suite('createRoute', () => {
 	});
 
 	test('selections contain expected properties', () => {
-		const root = createRoute({ path: '/foo/{param}?{foo}' });
-		const deep = createRoute({ path: '/bar/{param}?{bar}' });
-		const deeper = createRoute({ path: '/baz/{param}?{foo}&{baz}' });
+		const root = new Route({ path: '/foo/{param}?{foo}' });
+		const deep = new Route({ path: '/bar/{param}?{bar}' });
+		const deeper = new Route({ path: '/baz/{param}?{foo}&{baz}' });
 		root.append(deep);
 		deep.append(deeper);
 
@@ -503,8 +503,8 @@ suite('createRoute', () => {
 	});
 
 	test('guards can request redirects by returning path strings', () => {
-		const root = createRoute({ path: '/root' });
-		const deep = createRoute({
+		const root = new Route({ path: '/root' });
+		const deep = new Route({
 			path: '/deep',
 			guard() {
 				return '/shallow';
@@ -516,8 +516,8 @@ suite('createRoute', () => {
 	});
 
 	test('guards can request redirects by returning empty path strings', () => {
-		const root = createRoute({ path: '/root' });
-		const deep = createRoute({
+		const root = new Route({ path: '/root' });
+		const deep = new Route({
 			path: '/deep',
 			guard() {
 				return '';
@@ -530,14 +530,14 @@ suite('createRoute', () => {
 
 	test('guard() is not called unnecessarily', () => {
 		let called: string[];
-		const root = createRoute({
+		const root = new Route({
 			path: '/root',
 			guard () {
 				called.push('root');
 				return true;
 			}
 		});
-		const deep = createRoute({
+		const deep = new Route({
 			path: '/deep',
 			guard () {
 				called.push('deep');
@@ -560,9 +560,9 @@ suite('createRoute', () => {
 	});
 
 	test('can append several routes at once', () => {
-		const root = createRoute({ path: '/foo' });
-		const deep = createRoute({ path: '/bar' });
-		const altDeep = createRoute({ path: '/bar/baz' });
+		const root = new Route({ path: '/foo' });
+		const deep = new Route({ path: '/bar' });
+		const altDeep = new Route({ path: '/bar/baz' });
 		root.append([altDeep, deep]);
 
 		const selections = root.select({} as Context, ['foo', 'bar', 'baz'], false, new UrlSearchParams());
@@ -570,9 +570,9 @@ suite('createRoute', () => {
 	});
 
 	test('routes can only be appended once', () => {
-		const foo = createRoute({ path: '/foo' });
-		const bar = createRoute({ path: '/bar' });
-		const baz = createRoute({ path: '/baz' });
+		const foo = new Route({ path: '/foo' });
+		const bar = new Route({ path: '/bar' });
+		const baz = new Route({ path: '/baz' });
 
 		foo.append(bar);
 		assert.throws(() => {
@@ -587,8 +587,8 @@ suite('createRoute', () => {
 	});
 
 	test('link() throws if the route has not been appended to a router', () => {
-		const foo = createRoute();
-		const bar = createRoute();
+		const foo = new Route();
+		const bar = new Route();
 		foo.append(bar);
 
 		assert.throws(() => {
@@ -600,9 +600,9 @@ suite('createRoute', () => {
 	});
 
 	test('link() forwards to link() on router', () => {
-		const router = createRouter();
-		const foo = createRoute();
-		const bar = createRoute();
+		const router = new Router();
+		const foo = new Route();
+		const bar = new Route();
 		foo.append(bar);
 		router.append(foo);
 
@@ -630,11 +630,11 @@ suite('createRoute', () => {
 	});
 
 	// This test is mostly there to verify the typings at compile time.
-	test('createRoute() takes a Context type', () => {
+	test('Route() takes a Context type', () => {
 		interface Refined extends Context {
 			refined: boolean;
 		}
-		const route = createRoute<Refined, any>({
+		const route = new Route<Refined, any>({
 			path: '/foo',
 			exec({ context }) {
 				assert.isTrue(context.refined);
