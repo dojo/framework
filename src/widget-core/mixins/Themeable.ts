@@ -173,19 +173,24 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 				this.recalculateThemeClasses();
 			}
 
-			const appliedClasses = classNames
-				.filter((className) => className !== null)
-				.reduce((appliedClasses: {}, className: string) => {
-					if (!this.baseClassesReverseLookup[className]) {
-						console.warn(`Class name: ${className} is not from baseClasses, use chained 'fixed' method instead`);
-						return appliedClasses;
-					}
-					className = this.baseClassesReverseLookup[className];
-					if (!this.registeredClassesMap.has(className)) {
-						this.registerThemeClass(className);
-					}
-					return assign(appliedClasses, this.registeredClassesMap.get(className));
-				}, {});
+			const appliedClasses = {};
+
+			for (let i = 0; i < classNames.length; i++) {
+				let className = classNames[i];
+				if (className === null) {
+					break;
+				}
+
+				if (!this.baseClassesReverseLookup[className]) {
+					console.warn(`Class name: ${className} is not from baseClasses, use chained 'fixed' method instead`);
+					break;
+				}
+				className = this.baseClassesReverseLookup[className];
+				if (!this.registeredClassesMap.has(className)) {
+					this.registerThemeClass(className);
+				}
+				assign(appliedClasses, this.registeredClassesMap.get(className));
+			}
 
 			const themeable = this;
 			function classesGetter(this: ClassesFunctionChain) {
