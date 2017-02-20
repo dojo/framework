@@ -60,10 +60,10 @@ export const loaderOptions = {
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' },
 		{ name: 'node_modules', location: '_build/node_modules' },
-		{ name: 'cldr-data', location: 'node_modules/cldr-data' },
-		{ name: 'cldrjs', location: 'node_modules/cldrjs' },
 		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
 		{ name: '@dojo', location: 'node_modules/@dojo' },
+		{ name: 'cldr-data', location: 'node_modules/cldr-data' },
+		{ name: 'cldrjs', location: 'node_modules/cldrjs' },
 		{ name: 'globalize', location: 'node_modules/globalize', main: 'dist/globalize' },
 		{ name: 'maquette', location: 'node_modules/maquette/dist', main: 'maquette' },
 		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' }

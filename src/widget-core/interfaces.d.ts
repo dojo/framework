@@ -1,6 +1,6 @@
 import { VNode, VNodeProperties, ProjectionOptions } from '@dojo/interfaces/vdom';
 import { EventTypedObject } from '@dojo/interfaces/core';
-import { Evented } from './bases/Evented';
+import { Evented } from '@dojo/core/Evented';
 
 /**
  * Generic constructor type

@@ -1,10 +1,13 @@
-import { VNode } from '@dojo/interfaces/vdom';
+import { Evented, BaseEventedEvents } from '@dojo/core/Evented';
 import { assign } from '@dojo/core/lang';
-import WeakMap from '@dojo/shim/WeakMap';
-import Promise from '@dojo/shim/Promise';
+import { EventedListenerOrArray } from '@dojo/interfaces/bases';
+import { VNode } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
+import Promise from '@dojo/shim/Promise';
 import Set from '@dojo/shim/Set';
-import { Evented } from './bases/Evented';
+import WeakMap from '@dojo/shim/WeakMap';
+import { v, registry, isWNode } from './d';
+import FactoryRegistry, { WIDGET_BASE_TYPE } from './FactoryRegistry';
 import {
 	DNode,
 	WidgetConstructor,
@@ -14,8 +17,7 @@ import {
 	PropertiesChangeRecord,
 	PropertiesChangeEvent
 } from './interfaces';
-import { v, registry, isWNode } from './d';
-import FactoryRegistry, { WIDGET_BASE_TYPE } from './FactoryRegistry';
+import { Handle } from '@dojo/interfaces/core';
 
 /**
  * Widget cache wrapper for instance management
@@ -32,6 +34,10 @@ interface WidgetCacheWrapper {
 interface DiffPropertyConfig {
 	propertyName: string;
 	diffFunction: Function;
+}
+
+export interface WidgetBaseEvents<P extends WidgetProperties> extends BaseEventedEvents {
+	(type: 'properties:changed', handler: EventedListenerOrArray<WidgetBase<P>, PropertiesChangeEvent<WidgetBase<P>, P>>): Handle;
 }
 
 /**
@@ -83,6 +89,8 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	 * cachedVNode from previous render
 	 */
 	private cachedVNode?: VNode | string;
+
+	on: WidgetBaseEvents<P>;
 
 	/**
 	 * internal widget properties
@@ -144,7 +152,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		this.renderDecorators = new Set<string>();
 		this.bindFunctionPropertyMap = new WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>();
 
-		this.own(this.on('properties:changed', (evt: PropertiesChangeEvent<WidgetBase<WidgetProperties>, WidgetProperties>) => {
+		this.own(this.on('properties:changed', (evt) => {
 			this.invalidate();
 
 			const propertiesChangedListeners = this.getDecorator('onPropertiesChanged') || [];
