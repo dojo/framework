@@ -23,7 +23,6 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/compose": "2.0.0-beta.21",
     "@dojo/core": "2.0.0-alpha.24",
     "@dojo/has": "2.0.0-alpha.7",
     "@dojo/i18n": "2.0.0-alpha.6",
@@ -33,7 +32,6 @@
   "devDependencies": {
     "@dojo/interfaces": "2.0.0-alpha.11",
     "@dojo/loader": "2.0.0-beta.9",
-    "@dojo/stores": "2.0.0-alpha.9",
     "@types/chai": "3.4.*",
     "@types/glob": "5.0.*",
     "@types/grunt": "0.4.*",
@@ -41,7 +39,6 @@
     "@types/sinon": "^1.16.31",
     "@webcomponents/custom-elements": "^1.0.0-alpha.3",
     "codecov.io": "0.1.6",
-    "dts-generator": "~1.7.0",
     "glob": "^7.0.6",
     "grunt": "^1.0.1",
     "grunt-contrib-clean": "^1.0.0",
@@ -60,12 +57,5 @@
     "sinon": "^1.17.6",
     "tslint": "^3.11.0",
     "typescript": "rc"
-  },
-  "dependencies": {
-    "@dojo/compose": "2.0.0-beta.21",
-    "@dojo/core": "2.0.0-alpha.24",
-    "@dojo/has": "2.0.0-alpha.7",
-    "@dojo/i18n": "2.0.0-alpha.6",
-    "@dojo/shim": "2.0.0-beta.9"
   }
 }
