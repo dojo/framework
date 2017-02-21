@@ -249,7 +249,7 @@ If a property has a custom diff function then that property is excluded from tho
 ##### The 'properties:changed' event
 
 When `diffProperties` has completed, the results are used to update the properties on the widget instance.
-If any properties were changed, then the `properties:changed` event is emitted. 
+If any properties were changed, then the `properties:changed` event is emitted.
 
 Attaching a listener to the event is exposed via a decorator `@onPropertiesChanged`.
 
@@ -320,7 +320,7 @@ class MyBaseClass extends WidgetBase<WidgetProperties> {
 		super();
 		this.addDecorator('afterRender', this.myOtherAfterRender);
 	}
-	
+
 	myOtherAfterRender(result: DNode): DNode {
 		// do something with the result
 		return result;
@@ -367,11 +367,11 @@ For convenience event handlers are automatically bound to the scope of their enc
 ```ts
 class MyWidget extends WidgetBase<WidgetProperties> {
 	private selected: boolean;
-	
+
 	onClick() {
 		this.selected = !this.selected;
 	}
-	
+
 	render(this: MyWidget): DNode {
 		return v('div', [
 			v('input', { type: 'checkbox', onclick: this.onClick }),
@@ -503,8 +503,8 @@ class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProp
 	render: function () {
 		const { root, tab } = baseClasses;
 		return
-			v(`ul`, { classes: this.classes(root).get() }, [
-				v('li', { classes: this.classes(tab).get() }, [ 'tab1' ])
+			v(`ul`, { classes: this.classes(root) }, [
+				v('li', { classes: this.classes(tab) }, [ 'tab1' ])
 				// ...
 			]);
 	}
@@ -583,8 +583,8 @@ class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProp
 	render: function () {
 		const { root, tab } = baseClasses;
 		return
-			v(`ul`, { classes: this.classes(root).get() }, [
-				v('li', { classes: this.classes().fixed(tab).get() }, [ 'tab1' ])
+			v(`ul`, { classes: this.classes(root) }, [
+				v('li', { classes: this.classes().fixed(tab) }, [ 'tab1' ])
 				// ...
 			]);
 	}
@@ -688,7 +688,7 @@ Using your widget would be a simple matter of importing the HTML import,
 ```
 
 ##### Tag Name
- 
+
 Your widget will be registered with the browser using the provided tag name. The tag name **must** have a `-` in it.
 
 ##### Widget Factory
