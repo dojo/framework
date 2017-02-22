@@ -1,6 +1,6 @@
 import { includes } from '@dojo/shim/array';
 import FactoryRegistry from '../FactoryRegistry';
-import { WidgetBase, onPropertiesChanged } from './../WidgetBase';
+import { WidgetBase, onPropertiesChanged, diffProperty } from './../WidgetBase';
 import {
 	PropertyChangeRecord,
 	PropertiesChangeEvent,
@@ -14,6 +14,8 @@ export interface RegistryMixinProperties extends WidgetProperties {
 
 export function RegistryMixin<T extends Constructor<WidgetBase<RegistryMixinProperties>>>(base: T): T {
 	class Registry extends base {
+
+		@diffProperty('registry')
 		public diffPropertyRegistry(previousValue: FactoryRegistry, value: FactoryRegistry): PropertyChangeRecord {
 			return {
 				changed: previousValue !== value,

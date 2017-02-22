@@ -5,6 +5,7 @@ import FactoryRegistry from '../../../src/FactoryRegistry';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { w, v } from '../../../src/d';
 import { VNode } from '@dojo/interfaces/vdom';
+import { spy } from 'sinon';
 
 class TestWithRegistry extends RegistryMixin(WidgetBase)<RegistryMixinProperties> {}
 
@@ -36,7 +37,7 @@ registerSuite({
 			});
 			assert.equal(instance.registry, newRegistry);
 		},
-		'different property passed on property change should not affect registy'() {
+		'different property passed on property change should not affect registry'() {
 			const registry = new FactoryRegistry();
 			const instance: any = new TestWithRegistry();
 			instance.setProperties({ registry });
@@ -48,6 +49,14 @@ registerSuite({
 				changedPropertyKeys: [ 'foo' ]
 			});
 			assert.equal(instance.registry, registry);
+		},
+		'is excluded from the catch all diffProperties function'() {
+			const registry = new FactoryRegistry();
+			const instance: any = new TestWithRegistry();
+			const diffProps = spy(instance, 'diffProperties');
+			instance.setProperties({ registry });
+			const [ , props ] = diffProps.firstCall.args;
+			assert.deepEqual(props, {});
 		}
 	},
 	integration: {
