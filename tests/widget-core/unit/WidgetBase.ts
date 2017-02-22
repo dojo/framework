@@ -738,6 +738,9 @@ registerSuite({
 					const properties = this.properties.classes ? { classes: this.properties.classes } : {};
 
 					return v('div', [
+						this.properties.hide ? null : w(TestChildWidget, properties),
+						this.properties.hide ? null : w(TestChildWidget, properties),
+						this.properties.hide ? null : w(TestChildWidget, properties),
 						this.properties.hide ? null : w(TestChildWidget, properties)
 					]);
 				}
@@ -745,18 +748,18 @@ registerSuite({
 
 			const widget: any = new TestWidget();
 			const firstRenderResult = <VNode> widget.__render__();
-			assert.strictEqual(countWidgetCreated, 1);
+			assert.strictEqual(countWidgetCreated, 4);
 			assert.strictEqual(countWidgetDestroyed, 0);
-			assert.lengthOf(firstRenderResult.children, 1);
+			assert.lengthOf(firstRenderResult.children, 4);
 			const firstRenderChild: any = firstRenderResult.children && firstRenderResult.children[0];
 			assert.strictEqual(firstRenderChild.vnodeSelector, 'footer');
 
 			widget.invalidate();
 
 			const secondRenderResult = <VNode> widget.__render__();
-			assert.strictEqual(countWidgetCreated, 1);
+			assert.strictEqual(countWidgetCreated, 4);
 			assert.strictEqual(countWidgetDestroyed, 0);
-			assert.lengthOf(secondRenderResult.children, 1);
+			assert.lengthOf(secondRenderResult.children, 4);
 			const secondRenderChild: any = secondRenderResult.children && secondRenderResult.children[0];
 			assert.strictEqual(secondRenderChild.vnodeSelector, 'footer');
 
@@ -764,17 +767,17 @@ registerSuite({
 			widget.invalidate();
 
 			const thirdRenderResult = <VNode> widget.__render__();
-			assert.strictEqual(countWidgetCreated, 1);
-			assert.strictEqual(countWidgetDestroyed, 1);
+			assert.strictEqual(countWidgetCreated, 4);
+			assert.strictEqual(countWidgetDestroyed, 4);
 			assert.lengthOf(thirdRenderResult.children, 0);
 
 			widget.setProperties(<any> { hide: false });
 			widget.invalidate();
 
 			const lastRenderResult = <VNode> widget.__render__();
-			assert.strictEqual(countWidgetCreated, 2);
-			assert.strictEqual(countWidgetDestroyed, 1);
-			assert.lengthOf(lastRenderResult.children, 1);
+			assert.strictEqual(countWidgetCreated, 8);
+			assert.strictEqual(countWidgetDestroyed, 4);
+			assert.lengthOf(lastRenderResult.children, 4);
 			const lastRenderChild: any = lastRenderResult.children && lastRenderResult.children[0];
 			assert.strictEqual(lastRenderChild.vnodeSelector, 'footer');
 		},

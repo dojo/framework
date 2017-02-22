@@ -92,7 +92,7 @@ registerSuite({
 		'should filter out null params passed to classes function'() {
 			themeableInstance = new Test();
 			const { class1, class2 } = baseClasses;
-			const flaggedClasses = themeableInstance.classes(class1, class2, null).get();
+			const flaggedClasses = themeableInstance.classes(class1, null, class2, null).get();
 			assert.deepEqual(flaggedClasses, {
 				[ baseClasses.class1 ]: true,
 				[ baseClasses.class2 ]: true
