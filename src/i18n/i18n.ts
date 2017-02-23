@@ -376,6 +376,11 @@ export function switchLocale(locale: string): void {
 
 	if (previous !== rootLocale) {
 		if (isLoaded('supplemental', 'likelySubtags')) {
+			Globalize.load({
+				main: {
+					[rootLocale]: {}
+				}
+			});
 			Globalize.locale(rootLocale);
 		}
 
