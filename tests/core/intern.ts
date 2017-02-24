@@ -75,7 +75,8 @@ export const loaderOptions = {
 		{ name: 'tests', location: '_build/tests' },
 		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
 		{ name: '@dojo', location: 'node_modules/@dojo' },
-		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' }
+		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' },
+		{ name: 'grunt-dojo2', location: 'node_modules/grunt-dojo2'}
 	]
 };
 
