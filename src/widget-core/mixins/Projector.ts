@@ -193,10 +193,12 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			return result;
 		}
 
-		private eventHandlerInterceptor(propertyName: string, eventHandler: Function, domNode: Node, properties: VNodeProperties) {
-			return function(this: Node, ...args: any[]) {
-				return eventHandler.apply(properties.bind || this, args);
-			};
+		private eventHandlerInterceptor(propertyName: string, eventHandler: Function, domNode: Element, properties: VNodeProperties) {
+			// remove "on" from event name
+			const eventName = propertyName.substr(2);
+			domNode.addEventListener(eventName, (...args: any[]) => {
+				eventHandler.apply(properties.bind || this, args);
+			});
 		}
 
 		private doRender() {
