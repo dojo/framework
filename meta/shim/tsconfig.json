@@ -4,6 +4,13 @@
 		"declaration": false,
 		"experimentalDecorators": true,
 		"module": "umd",
+		"lib": [
+			"dom",
+			"es5",
+			"es2015.iterable",
+			"es2015.symbol",
+			"es2015.symbol.wellknown"
+		],
 		"noImplicitAny": true,
 		"outDir": "_build/",
 		"baseUrl": "node_modules",
@@ -12,7 +19,8 @@
 		"target": "es5",
 		"moduleResolution": "node",
 		"strictNullChecks": true,
-		"noImplicitThis": true
+		"noImplicitThis": true,
+		"types": [ "intern" ]
 	},
 	"include": [
 		"./typings/index.d.ts",

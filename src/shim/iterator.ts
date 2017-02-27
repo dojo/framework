@@ -123,7 +123,7 @@ export function forOf<T>(iterable: Iterable<T> | ArrayLike<T> | string, callback
 	}
 
 	/* We need to handle iteration of double byte strings properly */
-	if (!isIterable(iterable) && typeof iterable === 'string') {
+	if (isArrayLike(iterable) && typeof iterable === 'string') {
 		const l = iterable.length;
 		for (let i = 0; i < l; ++i) {
 			let char = iterable[i];

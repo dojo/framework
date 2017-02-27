@@ -2,6 +2,12 @@ import has from './support/has';
 import global from './support/global';
 import { getValueDescriptor } from './support/util';
 
+declare global {
+	interface SymbolConstructor {
+		observable: symbol;
+	}
+}
+
 export namespace Shim {
 	/* tslint:disable-next-line:variable-name */
 	let Symbol: SymbolConstructor;
@@ -138,8 +144,8 @@ export namespace Shim {
 	defineProperty(Symbol.prototype, <any> Symbol.toPrimitive, getValueDescriptor(function (this: Symbol) { return validateSymbol(this); }));
 	defineProperty(Symbol.prototype, <any> Symbol.toStringTag, getValueDescriptor('Symbol', false, false, true));
 
-	defineProperty(InternalSymbol.prototype, <any> Symbol.toPrimitive, getValueDescriptor(Symbol.prototype[Symbol.toPrimitive], false, false, true));
-	defineProperty(InternalSymbol.prototype, <any> Symbol.toStringTag, getValueDescriptor(Symbol.prototype[Symbol.toStringTag], false, false, true));
+	defineProperty(InternalSymbol.prototype, <any> Symbol.toPrimitive, getValueDescriptor((<any> Symbol).prototype[Symbol.toPrimitive], false, false, true));
+	defineProperty(InternalSymbol.prototype, <any> Symbol.toStringTag, getValueDescriptor((<any> Symbol).prototype[Symbol.toStringTag], false, false, true));
 
 	/* tslint:disable-next-line:variable-name */
 	export const Exposed = Symbol;

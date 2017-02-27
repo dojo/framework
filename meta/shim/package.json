@@ -21,11 +21,11 @@
     "@dojo/has": "2.0.0-alpha.7"
   },
   "devDependencies": {
+    "@dojo/loader": "2.0.0-beta.9",
     "@types/chai": "~3.4.0",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
     "@types/node": "~6.0.49",
-    "@dojo/loader": "2.0.0-beta.9",
     "grunt": "~1.0.1",
     "grunt-dojo2": ">=2.0.0-beta.22",
     "intern": "^3.4.1",
