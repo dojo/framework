@@ -10,7 +10,8 @@
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
-		"target": "es5"
+		"target": "es5",
+		"types": [ "intern" ]
 	},
 	"include": [
 		"./typings/index.d.ts",
