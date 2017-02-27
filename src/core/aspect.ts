@@ -233,7 +233,7 @@ function getDispatcherObject(target: Targetable, methodName: string): Dispatcher
 			}
 
 			let after = dispatcher.after;
-			while (after && after.id && after.id < executionId) {
+			while (after && after.id !== undefined && after.id < executionId) {
 				if (after.advice) {
 					if (after.receiveArguments) {
 						let newResults = after.advice.apply(this, args);
