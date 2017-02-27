@@ -2,8 +2,5 @@
 	"name": "dojo-routing",
 	"globalDependencies": {
 		"symbol-shim": "github:dojo/typings/custom/symbol-shim/symbol-shim.d.ts#003aa24b3448804a2c59e9a1d9740ca56e067e79"
-	},
-	"globalDevDependencies": {
-		"dojo2-dev": "github:dojo/typings/custom/dev/dev.d.ts#288d3a9868194f0e1ad6687371dffd1d96cb39a1"
 	}
 }

@@ -1,5 +1,4 @@
 {
-	"version": "2.0.3",
 	"compilerOptions": {
 		"declaration": false,
 		"module": "umd",
@@ -10,7 +9,8 @@
 		"removeComments": false,
 		"sourceMap": true,
 		"strictNullChecks": true,
-		"target": "es5"
+		"target": "es5",
+		"types": [ "intern" ]
 	},
 	"include": [
 		"./src/**/*.ts",
