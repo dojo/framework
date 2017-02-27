@@ -315,7 +315,9 @@ export default function node(url: string, options: NodeRequestOptions = {}): Tas
 
 			if ('keepAlive' in options.socketOptions) {
 				const initialDelay: number | undefined = options.socketOptions.keepAlive;
-				request.setSocketKeepAlive(initialDelay >= 0, initialDelay);
+				if (initialDelay !== undefined) {
+					request.setSocketKeepAlive(initialDelay >= 0, initialDelay);
+				}
 			}
 		}
 
@@ -548,7 +550,7 @@ export default function node(url: string, options: NodeRequestOptions = {}): Tas
 			request.end();
 		}
 
-		if (options.timeout > 0 && options.timeout !== Infinity) {
+		if (options.timeout && options.timeout > 0 && options.timeout !== Infinity) {
 			timeoutHandle = createTimer(() => {
 				timeoutReject && timeoutReject(new TimeoutError('The request timed out'));
 			}, options.timeout);

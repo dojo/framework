@@ -257,7 +257,7 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Task<
 		request.responseType = 'blob';
 	}
 
-	if (options.timeout > 0 && options.timeout !== Infinity) {
+	if (options.timeout && options.timeout > 0 && options.timeout !== Infinity) {
 		timeoutHandle = createTimer(() => {
 			// Reject first, since aborting will also fire onreadystatechange which would reject with a
 			// less specific error.  (This is also why we set up our own timeout rather than using
