@@ -66,6 +66,7 @@ export const loaderOptions = {
 		{ name: 'cldrjs', location: 'node_modules/cldrjs' },
 		{ name: 'globalize', location: 'node_modules/globalize', main: 'dist/globalize' },
 		{ name: 'maquette', location: 'node_modules/maquette/dist', main: 'maquette' },
+		{ name: 'grunt-dojo2', location: 'node_modules/grunt-dojo2'},
 		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' }
 	],
 	map: {
