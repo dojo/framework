@@ -56,6 +56,6 @@
     "remap-istanbul": "^0.6.4",
     "sinon": "^1.17.6",
     "tslint": "^3.11.0",
-    "typescript": "rc"
+    "typescript": "~2.2.1"
   }
 }
