@@ -172,7 +172,7 @@ export function FormLabelMixin<T extends Constructor<WidgetBase<WidgetProperties
 				else if (key === 'describedBy') {
 					nodeAttributes['aria-describedby'] = properties.describedBy;
 				}
-				else if ((key === 'maxLength' || key === 'minLength' || key === 'checked') && typeof properties[key] !== 'string') {
+				else if ((key === 'maxLength' || key === 'minLength') && typeof properties[key] !== 'string') {
 					nodeAttributes[key.toLowerCase()] = '' + properties[key];
 				}
 				else {
