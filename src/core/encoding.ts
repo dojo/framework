@@ -30,7 +30,7 @@ function validateUtf8EncodedCodePoint(codePoint: number): void {
 	}
 }
 
-export type ByteBuffer = Uint8Array | Buffer | number[];
+export type ByteBuffer = Uint16Array | Uint8Array | Buffer | number[];
 
 export interface Codec {
 	encode(data: string): number[];

@@ -1,6 +1,5 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as DojoPromise from 'intern/dojo/Promise';
 import request from '../../src/request';
 import node from '../../src/request/providers/node';
 import { createServer } from 'http';
@@ -22,8 +21,8 @@ let getRequestUrl = function (dataKey: string): string {
 registerSuite({
 	name: 'request_node',
 
-	setup() {
-		const dfd = new DojoPromise.Deferred();
+	setup(this: any) {
+		const dfd = this.async();
 		const responseData: { [name: string]: any } = {
 			'foo.json': new Buffer(JSON.stringify({ foo: 'bar' }), 'utf8'),
 			invalidJson: new Buffer('<not>JSON</not>', 'utf8')

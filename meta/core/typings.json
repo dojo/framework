@@ -1,10 +1,6 @@
 {
 	"name": "dojo-core",
-	"globalDependencies": {
-		"symbol-shim": "github:dojo/typings/custom/symbol-shim/symbol-shim.d.ts#003aa24b3448804a2c59e9a1d9740ca56e067e79"
-	},
 	"globalDevDependencies": {
-		"http-proxy": "github:dojo/typings/custom/http-proxy/http-proxy.d.ts#208e87898cd7a7d65a6f63db4a45846cd7220476",
-		"dojo2-dev": "github:dojo/typings/custom/dev/dev.d.ts#288d3a9868194f0e1ad6687371dffd1d96cb39a1"
+		"http-proxy": "github:dojo/typings/custom/http-proxy/http-proxy.d.ts#208e87898cd7a7d65a6f63db4a45846cd7220476"
 	}
 }

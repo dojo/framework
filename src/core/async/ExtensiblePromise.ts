@@ -1,6 +1,7 @@
 import { Iterable, forOf, isIterable, isArrayLike } from '@dojo/shim/iterator';
 import Promise, { Executor } from '@dojo/shim/Promise';
 import { Thenable } from '@dojo/shim/interfaces';
+import '@dojo/shim/Symbol';
 
 /**
  * Take a list of values, and if any are ExtensiblePromise objects, insert the wrapped Promise in its place,
@@ -167,4 +168,6 @@ export default class ExtensiblePromise<T> {
 
 		return new (<{ new(executor: Executor<U>): any }> this.constructor)(e);
 	}
+
+	readonly [Symbol.toStringTag]: 'Promise';
 }

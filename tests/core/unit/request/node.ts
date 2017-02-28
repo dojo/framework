@@ -1,7 +1,6 @@
 import { createServer } from 'http';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as DojoPromise from 'intern/dojo/Promise';
 import { parse } from 'url';
 import * as zlib from 'zlib';
 import { Response } from '../../../src/request/interfaces';
@@ -277,8 +276,8 @@ function getAuthRequestUrl(dataKey: string, user: string = 'user', password: str
 registerSuite({
 	name: 'request/node',
 
-	setup() {
-		const dfd = new DojoPromise.Deferred();
+	setup(this: any) {
+		const dfd = this.async();
 
 		server = createServer(function (request, response) {
 			const { statusCode = 200, headers = {}, body = '{}' } = getResponseData(request);
