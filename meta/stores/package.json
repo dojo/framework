@@ -3,7 +3,6 @@
   "version": "2.0.0-pre",
   "description": "A new data store in TypeScript",
   "engines": {
-    "node": "^6.0.0",
     "npm": "^3.0.0"
   },
   "repository": {
@@ -15,12 +14,11 @@
     "prepublish": "grunt peerDepInstall",
     "test": "grunt test"
   },
-  "typings": "./dist/umd/@dojo/stores.d.ts",
   "peerDependencies": {
-    "@dojo/compose": "2.0.0-beta.21",
-    "@dojo/core": "2.0.0-alpha.20",
-    "@dojo/has": "2.0.0-alpha.7",
-    "@dojo/shim": "2.0.0-beta.8"
+    "@dojo/compose": "2.0.0-beta.24",
+    "@dojo/core": "2.0.0-alpha.25",
+    "@dojo/has": "2.0.0-alpha.8",
+    "@dojo/shim": "2.0.0-beta.10"
   },
   "devDependencies": {
     "@dojo/interfaces": "2.0.0-alpha.11",
@@ -32,10 +30,9 @@
     "@types/node": "^6.0.46",
     "@types/sinon": "^1.16.35",
     "codecov.io": "0.1.6",
-    "dts-generator": "~1.7.0",
     "glob": "^7.0.6",
     "grunt": "~1.0.1",
-    "grunt-dojo2": ">=2.0.0-beta.30",
+    "grunt-dojo2": ">=2.0.0-beta.33",
     "intern": "~3.4.1",
     "istanbul": "^0.4.5",
     "sinon": "^1.17.6",
