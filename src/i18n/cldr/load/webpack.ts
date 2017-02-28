@@ -25,7 +25,7 @@ async function loadInjectedData() {
 /**
  * A webpack-specific function used to load CLDR data from a preset cache.
  */
-export default function loadCldrData(data: CldrData | string[]): Promise<void> {
+export default function loadCldrData(data: CldrData | string[]): P<void> {
 	if (Array.isArray(data)) {
 		return P.resolve();
 	}
