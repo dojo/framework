@@ -13,6 +13,32 @@ step.  The `has` module is also capable of allowing conditional loading of modul
 
 **WARNING** This is *beta* software.  While we do not anticipate significant changes to the API at this stage, we may feel the need to do so.  This is not yet production ready, so you should use at your own risk.
 
+- [Usage](#usage)
+- [Features](#features)
+    - [Feature Branching](#feature-branching)
+	- [Included Features](#included-features)
+	- [Adding a Feature Test/Feature Detection](#adding-a-feature-testfeature-detection)
+	- [Conditional Module Loading](#conditional-module-loading)
+	- [Static Features](#static-features)
+
+## Usage
+
+To use `@dojo/has`, simply install the package:
+
+```bash
+npm install @dojo/has
+```
+
+and import it into your application,
+
+```typescript
+import has from '@dojo/has';
+
+if (has('some-feature')) {
+	/* use some feature */
+}
+```
+
 ## Features
 
 ### Feature Branching
@@ -162,14 +188,16 @@ window.DojoHasEnvironment = {
 This function will be run once when the module is loaded and the values returned from the function will be used as the
 static features.
 
-## How do I use this package?
-
-TODO: Add appropriate usage and instruction guidelines
-
 ## How do I contribute?
 
 We appreciate your interest!  Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme) for the
 Contributing Guidelines and Style Guide.
+
+## Installation
+
+To start working with this package, clone the repository and run `npm install`.
+
+In order to build the project run `grunt dev` or `grunt dist`.
 
 ## Testing
 
