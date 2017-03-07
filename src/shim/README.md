@@ -15,9 +15,38 @@ off of the global `Symbol` object in order to ensure that the correct symbol is 
 
 **WARNING** This is *beta* software.  While we do not anticipate significant changes to the API at this stage, we may feel the need to do so.  This is not yet production ready, so you should use at your own risk.
 
+## Usage
+
+To use `@dojo/shim`, install the package along with its required peer dependencies:
+
+```bash
+npm install @dojo/shim
+
+# peer dependencies
+npm install @dojo/has
+```
+
 ## Features
 
-TODO: Add sections on features of this package
+Many of the features in this package will fallback to a native implementation if one is available.
+
+- [Array](#array-methods)
+- [Data Structures](#data-structures)
+    - [Map](#map)
+    - [Set](#set)
+    - [WeakMap](#weakmap)
+- [Iterators](#iterators)
+- [Math](#math)
+- [Number](#number)
+- [Object](#object)
+- [Observables](#observables)
+- [Promises](#promises)
+- [String](#string)
+- [Symbols](#symbols)
+
+### Array Methods
+
+[`@dojo/shim/array`](docs/array.md) provides implementations of many array utilities.
 
 ### Data Structures
 
@@ -25,6 +54,27 @@ TODO: Add sections on features of this package
 
 The [`@dojo/shim/Map` class](docs/Map.md) is an implementation of the ES2015 Map specification
 without iterators for use in older browsers.
+
+#### Set
+
+The `@dojo/shim/Set` class is an implementation of the [ES2015 Set specification](http://www.ecma-international.org/ecma-262/6.0/#sec-set-objects).  A Set is used to a collection of unique values.
+
+```typescript
+import Set from '@dojo/shim/Set';
+
+const values = new Set<string>();
+values.add('one');
+values.add('two');
+values.add('one');
+
+values.forEach((value) => {
+    console.log(value);
+});
+
+// output:
+// one
+// two
+```
 
 #### WeakMap
 
@@ -35,17 +85,62 @@ to the key/value pair. This allows for the garbage collector to remove pairs.
 
 Look at [Map](docs/Map.md) for more information on how to use WeakMap.
 
+### Iterators
 
-## How do I use this package?
+The `@dojo/shim/iterator` module is an implementation of the [ES2015 Iterator specification](http://www.ecma-international.org/ecma-262/6.0/#sec-iteration).
 
-TODO: Add appropriate usage and instruction guidelines
+### Math
+
+The [`@dojo/shim/math`](docs/math.md) module provides implementations for many math methods.
+
+### Number
+
+The `dojo/shim/number` module provides implementations for several `Number` methods.
+
+* `isNaN`
+* `isFinite`
+* `isInteger`
+* `isSafeInteger`
+
+### Object
+
+The `dojo/shim/object` provides implementations of `Object` methods.
+
+* is
+* getOwnPropertySymbols
+* getOwnPropertyNames
+* getOwnPropertyDescriptor
+* values
+* entries
+
+### Observables
+
+The [`@dojo/shim/Observable`](docs/Observable.md) class is an implementation of the proposed [Observable specification](https://tc39.github.io/proposal-observable/).  Observables are further extended in [`@dojo/core/Observable`](https://github.com/dojo/core/blob/master/src/Observable.ts).
+
+### Promises
+
+[`@dojo/shim/Promise`](docs/Promise.md) is an implementation of the [ES2015 Promise specification](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects).
+
+### String
+
+The [`@dojo/shim/string`](docs/string.md) module contains `String` methods.
+
+### Symbols
+
+`@dojo/shim/Symbol` provides an implementation of the [ES2015 Symbol specification](http://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) for environments that do not natively support `Symbol`.
 
 ## How do I contribute?
 
 We appreciate your interest!  Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme) for the
 Contributing Guidelines and Style Guide.
 
-## Testing
+### Installation
+
+To start working with this package, clone the repository and run `npm install`.
+
+In order to build the project run `grunt dev` or `grunt dist`.
+
+### Testing
 
 Test cases MUST be written using [Intern](https://theintern.github.io) using the Object test interface and Assert assertion interface.
 
@@ -68,10 +163,6 @@ or
 `grunt test:saucelabs`
 
 ## Licensing information
-
-TODO: If third-party code was used to write this library, make a list of project names and licenses here
-
-* [Third-party lib one](https//github.com/foo/bar) ([New BSD](http://opensource.org/licenses/BSD-3-Clause))
 
 © [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
