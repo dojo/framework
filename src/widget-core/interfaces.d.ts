@@ -137,6 +137,17 @@ export interface VirtualDomProperties {
 	 */
 	readonly styles?: { [index: string]: string | null | undefined };
 
+	// Pointer Events
+	onpointermove?(ev?: PointerEvent): boolean | void;
+	onpointerdown?(ev?: PointerEvent): boolean | void;
+	onpointerup?(ev?: PointerEvent): boolean | void;
+	onpointerover?(ev?: PointerEvent): boolean | void;
+	onpointerout?(ev?: PointerEvent): boolean | void;
+	onpointerenter?(ev?: PointerEvent): boolean | void;
+	onpointerleave?(ev?: PointerEvent): boolean | void;
+	onpointercancel?(ev?: PointerEvent): boolean | void;
+	// For Pointer Event Polyfill see: https://github.com/jquery/PEP
+	readonly 'touch-action'?: string;
 	// From Element
 	ontouchcancel?(ev?: TouchEvent): boolean | void;
 	ontouchend?(ev?: TouchEvent): boolean | void;
