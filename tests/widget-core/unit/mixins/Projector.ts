@@ -241,6 +241,18 @@ registerSuite({
 		});
 
 	},
+	'invalidate on properties:changed'() {
+		const projector = new TestWidget();
+		let called = false;
+
+		projector.on('invalidated', () => {
+			called = true;
+		});
+
+		projector.setProperties({ foo: 'hello' });
+
+		assert.isTrue(called);
+	},
 	'invalidate on setting children'() {
 		const projector = new TestWidget();
 		let called = false;

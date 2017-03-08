@@ -263,7 +263,7 @@ export interface WNode {
 	/**
 	 * DNode children
 	 */
-	children: DNode[];
+	children?: DNode[];
 
 	/**
 	 * The type of node

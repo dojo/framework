@@ -72,7 +72,7 @@ export const registry = new FactoryRegistry();
  */
 export function w<P extends WidgetProperties>(factory: WidgetBaseConstructor<P> | string, properties: P): WNode;
 export function w<P extends WidgetProperties>(factory: WidgetBaseConstructor<P> | string, properties: P, children?: DNode[]): WNode;
-export function w<P extends WidgetProperties>(factory: WidgetBaseConstructor<P> | string, properties: P, children: DNode[] = []): WNode {
+export function w<P extends WidgetProperties>(factory: WidgetBaseConstructor<P> | string, properties: P, children?: DNode[]): WNode {
 
 	return {
 		children,

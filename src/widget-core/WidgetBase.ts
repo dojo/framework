@@ -153,7 +153,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		this.bindFunctionPropertyMap = new WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>();
 
 		this.own(this.on('properties:changed', (evt) => {
-			this.invalidate();
+			this.dirty = true;
 
 			const propertiesChangedListeners = this.getDecorator('onPropertiesChanged') || [];
 			propertiesChangedListeners.forEach((propertiesChangedFunction) => {
@@ -212,6 +212,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	}
 
 	public setChildren(children: DNode[]): void {
+		this.dirty = true;
 		this._children = children;
 		this.emit({
 			type: 'widget:children',
@@ -236,6 +237,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 
 	public __render__(): VNode | string | null {
 		if (this.dirty || !this.cachedVNode) {
+			this.dirty = false;
 			let dNode = this.render();
 			const afterRenders = this.getDecorator('afterRender') || [];
 			afterRenders.forEach((afterRenderFunction: Function) => {
@@ -246,7 +248,6 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 			if (widget) {
 				this.cachedVNode = widget;
 			}
-			this.dirty = false;
 			return widget;
 		}
 		return this.cachedVNode;
@@ -400,7 +401,9 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 				this.emit({ type: 'error', target: this, error: new Error(errorMsg) });
 			}
 
-			child.setChildren(children);
+			if (Array.isArray(children)) {
+				child.setChildren(children);
+			}
 			return child.__render__();
 		}
 

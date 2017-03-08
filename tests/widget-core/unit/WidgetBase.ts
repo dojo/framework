@@ -5,7 +5,7 @@ import { DNode } from '../../src/interfaces';
 import { WidgetBase, diffProperty, afterRender, onPropertiesChanged } from '../../src/WidgetBase';
 import { VNode } from '@dojo/interfaces/vdom';
 import { v, w, registry } from '../../src/d';
-import { stub } from 'sinon';
+import { stub, spy } from 'sinon';
 import FactoryRegistry from './../../src/FactoryRegistry';
 
 registerSuite({
@@ -426,29 +426,26 @@ registerSuite({
 		decorator() {
 			let onPropertiesChangedCount = 1;
 			class TestWidget extends WidgetBase<any> {
-				invalidate() {
+				@onPropertiesChanged
+				firstOnPropertiesChanged() {
 					assert.strictEqual(onPropertiesChangedCount++, 1);
 				}
 				@onPropertiesChanged
-				firstOnPropertiesChanged() {
-					assert.strictEqual(onPropertiesChangedCount++, 2);
-				}
-				@onPropertiesChanged
 				secondOnPropertiesChanged() {
-					assert.strictEqual(onPropertiesChangedCount++, 3);
+					assert.strictEqual(onPropertiesChangedCount++, 2);
 				}
 			}
 
 			class ExtendedTestWidget extends TestWidget {
 				@onPropertiesChanged
 				thirdOnPropertiesChanged() {
-					assert.strictEqual(onPropertiesChangedCount, 4);
+					assert.strictEqual(onPropertiesChangedCount, 3);
 				}
 			}
 
 			const widget = new ExtendedTestWidget();
 			widget.emit({ type: 'properties:changed' });
-			assert.strictEqual(onPropertiesChangedCount, 4);
+			assert.strictEqual(onPropertiesChangedCount, 3);
 		},
 		'non decorator'() {
 
@@ -459,14 +456,11 @@ registerSuite({
 					this.addDecorator('onPropertiesChanged', this.firstOnPropertiesChanged);
 					this.addDecorator('onPropertiesChanged', this.secondOnPropertiesChanged);
 				}
-				invalidate() {
+				firstOnPropertiesChanged() {
 					assert.strictEqual(onPropertiesChangedCount++, 1);
 				}
-				firstOnPropertiesChanged() {
-					assert.strictEqual(onPropertiesChangedCount++, 2);
-				}
 				secondOnPropertiesChanged() {
-					assert.strictEqual(onPropertiesChangedCount++, 3);
+					assert.strictEqual(onPropertiesChangedCount++, 2);
 				}
 			}
 
@@ -476,13 +470,13 @@ registerSuite({
 					this.addDecorator('onPropertiesChanged', this.thirdOnPropertiesChanged);
 				}
 				thirdOnPropertiesChanged() {
-					assert.strictEqual(onPropertiesChangedCount, 4);
+					assert.strictEqual(onPropertiesChangedCount, 3);
 				}
 			}
 
 			const widget = new ExtendedTestWidget();
 			widget.emit({ type: 'properties:changed' });
-			assert.strictEqual(onPropertiesChangedCount, 4);
+			assert.strictEqual(onPropertiesChangedCount, 3);
 		}
 	},
 	render: {
@@ -966,5 +960,66 @@ registerSuite({
 		childInvalidate();
 		assert.isTrue(childInvalidateCalled);
 		assert.isTrue(parentInvalidateCalled);
+	},
+	'setting children should mark the enclosing widget as dirty'() {
+		let foo = 0;
+		class FooWidget extends WidgetBase<any> {
+			render() {
+				foo = this.properties.foo;
+				return v('div', []);
+			}
+		}
+
+		class ContainerWidget extends WidgetBase<any> {
+			render() {
+				return v('div', {}, this.children);
+			}
+		}
+
+		class TestWidget extends WidgetBase<any> {
+			private foo = 0;
+
+			render() {
+				this.foo++;
+				return w(ContainerWidget, {}, [
+					w(FooWidget, { foo: this.foo })
+				]);
+			}
+		}
+
+		const widget: any = new TestWidget();
+		widget.__render__();
+		assert.equal(foo, 1);
+		widget.invalidate();
+		widget.__render__();
+		assert.equal(foo, 2);
+	},
+	'properties:changed should mark as dirty but not invalidate'() {
+		let foo = 0;
+
+		class FooWidget extends WidgetBase<any> {
+			render() {
+				foo = this.properties.foo;
+				return v('div', []);
+			}
+		}
+
+		class TestWidget extends WidgetBase<any> {
+			private foo = 0;
+
+			render() {
+				this.foo++;
+				return w(FooWidget, { foo: this.foo });
+			}
+		}
+
+		const widget: any = new TestWidget();
+		const invalidateSpy = spy(widget, 'invalidate');
+		widget.__render__();
+		assert.equal(foo, 1);
+		widget.invalidate();
+		widget.__render__();
+		assert.equal(foo, 2);
+		assert.equal(invalidateSpy.callCount, 1);
 	}
 });
