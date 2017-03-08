@@ -10,40 +10,33 @@ and making HTTP requests.
 
 **WARNING** This is *beta* software.  While we do not anticipate significant changes to the API at this stage, we may feel the need to do so.  This is not yet production ready, so you should use at your own risk.
 
-## Installation
-
-This package is currently in Beta with a initial stable release scheduled for later this year. You can download
-the Beta by cloning or downloading this repository.
-
 ## Usage
 
-### TypeScript
+To use `@dojo/core`, install the package along with its required peer dependencies:
 
-To access modules use after cloning or downloading the repository, you can reference it by:
+```bash
+npm install @dojo/core
 
-```ts
-import * as lang from 'src/lang'; // this imports all exports of the module as the object lang
-
-import { lateBind, mixin } from 'src/lang'; // this imports lateBind and mixin from the module
+# peer dependencies
+npm install @dojo/has
+npm install @dojo/shim
 ```
-
-### Compile To JavaScript
-
-Once downloaded, you can compile the TypesScript files by first installing the project dependencies with:
-
-```
-npm install
-```
-
-Then by running this command:
-
-```
-grunt dev
-```
-
-This will run the grunt 'dev' task.
 
 ## Features
+
+- [Feature Detection](#feature-detection)
+- [Language Utilities](#language-utilities)
+  - [array](#array)
+  - [lang](#lang)
+  - [load](#load)
+  - [math](#math)
+  - [string](#string)
+- [UrlSearchParams](#urlsearchparams)
+- [Event Handling](#event-handling)
+- [HTTP Requests](#http-requests)
+- [Promises and Asynchronous Operations](#promises-and-asynchronous-operations)
+  - [Promise](#promise)
+  - [Task](#task)
 
 ### Feature Detection
 
@@ -104,14 +97,38 @@ inspection and a `finally` method for cleanup actions.
 
 The `@dojo/core/async/Task` class is an extension of `@dojo/core/Promise` that provides cancelation support.
 
-## How do I contribute?
+## How Do I Contribute?
 
 We appreciate your interest! Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme)
 for the Contributing Guidelines and Style Guide.
 
-Dojo core's continuous integration tests use the [BrowserStack](http://www.browserstack.com) cloud.
+### Installation
 
-[![BrowserStack](resources/BrowserStackLogo.png)](http://www.browserstack.com)
+To start working with this package, clone the repository and run `npm install`.
+
+In order to build the project run `grunt dev` or `grunt dist`.
+
+### Testing
+
+Test cases MUST be written using [Intern](https://theintern.github.io) using the Object test interface and Assert assertion interface.
+
+90% branch coverage MUST be provided for all code submitted to this repository, as reported by istanbul’s combined coverage results for all supported platforms.
+
+To test locally in node run:
+
+`grunt test`
+
+To test against browsers with a local selenium server run:
+
+`grunt test:local`
+
+To test against BrowserStack or Sauce Labs run:
+
+`grunt test:browserstack`
+
+or
+
+`grunt test:saucelabs`
 
 ## Licensing information
 
