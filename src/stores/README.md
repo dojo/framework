@@ -8,6 +8,36 @@ This library provides a data store, and several mixins built using [@dojo/compos
 
 **WARNING** This is *alpha* software. It is not yet production ready, so you should use at your own risk.
 
+- [Usage](#usage)
+- [Features](#features)
+  - [Storage](#storage)
+  - [Store](#store)
+    - [Basic Usage](#basic-usage)
+    - [Store Observable](#store-observable)
+  - [createObservableStoreMixin](#createobservablestoremixin)
+    - [Observing the store](#observing-the-store)
+  - [createQueryTransformMixin](#createquerytransformmixin)
+    - [MappedQueryTransformResult](#mappedquerytransformresult)
+  - [Fetch Results](#fetch-results)
+- [How do I contribute?](#how-do-i-contribute)
+  - [Installation](#installation)
+  - [Testing](#testing)
+- [Licensing information](#licensing-information)
+
+## Usage
+
+To use `@dojo/stores`, install the package along with its required peer dependencies:
+
+```bash
+npm install @dojo/stores
+
+# peer dependencies
+npm install @dojo/compose
+npm install @dojo/core
+npm install @dojo/has
+npm install @dojo/shim
+```
+
 ## Features
 
 ### Storage
@@ -432,7 +462,13 @@ Promise.all([
 We appreciate your interest!  Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme) for the
 Contributing Guidelines and Style Guide.
 
-## Testing
+### Installation
+
+To start working with this package, clone the repository and run `npm install`.
+
+In order to build the project run `grunt dev` or `grunt dist`.
+
+### Testing
 
 Test cases MUST be written using [Intern](https://theintern.github.io) using the Object test interface and Assert assertion interface.
 
