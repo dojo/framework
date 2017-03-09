@@ -8,11 +8,47 @@ A routing library for Dojo 2 applications.
 
 **WARNING** This is *alpha* software. It is not yet production ready, so you should use at your own risk.
 
-Dojo 2 applications consist of widgets, stores and actions. Stores provide data to widgets, widgets call actions, and actions mutate data in stores. An application factory will materialize the necessary widgets and connect them to stores, thus forming the application.
-
-This routing library lets you construct route hierarchies that are matched against URLs. Each selected route can tell the application factory to materialize a different set of  widgets and influence the state of those widgets.
+This routing library lets you construct route hierarchies that are matched against URLs. Each selected route can tell the application to materialize a different set of widgets and influence the state of those widgets.
 
 History managers are included. The recommended manager uses `pushState()` and `replaceState()` to [add or modify history entries](https://developer.mozilla.org/en-US/docs/Web/API/History_API#Adding_and_modifying_history_entries). This requires server-side support to work well. The hash-based manager uses the fragment identifier, so can work for static HTML pages. A memory-backed manager is provided for debugging purposes.
+
+ - [Features](#features)
+   - [Creating a router](#creating-a-router)
+   - [Appending routes](#appending-routes)
+   - [Dispatching paths](#dispatching-paths)
+   - [Creating routes](#creating-routes)
+   - [Route hierarchies](#route-hierarchies)
+     - [Index routes](#index-routes)
+   - [Named parameters](#named-parameters)
+     - [Extract pathname segments](#extract-pathname-segments)
+     - [Extract query parameters](#extract-query-parameters)
+   - [Preventing routes from being selected](#preventing-routes-from-being-selected)
+   - [Fallback routes](#fallback-routes)
+   - [Preventing dispatches altogether](#preventing-dispatches-altogether)
+   - [Selecting routes even if trailing slashes don't match](#selecting-routes-even-if-trailing-slashes-dont-match)
+   - [Repeated slashes](#repeated-slashes)
+   - [Link generation](#link-generation)
+   - [History management](#history-management)
+     - [Using `pushState()` and friends](#using-pushstate-and-friends)
+       - [Specifying a base pathname](#specifying-a-base-pathname)
+     - [Fragment identifiers](#fragment-identifiers)
+     - [Memory-only](#memory-only)
+   - [Making the router aware of the history manager](#making-the-router-aware-of-the-history-manager)
+     - [Automatic routing and clever linking through `start()`](#automatic-routing-and-clever-linking-through-start)
+   - [Capturing errors](#capturing-errors)
+
+## Usage
+
+To use `@dojo/routing`, install the package along with its required peer dependencies:
+
+```bash
+npm install @dojo/routing
+
+# peer dependencies
+npm install @dojo/core
+npm install @dojo/has
+npm install @dojo/shim
+```
 
 ## Features
 
@@ -21,9 +57,9 @@ The examples below are provided in TypeScript syntax. The package does work unde
 ### Creating a router
 
 ```ts
-import createRouter from '@dojo/routing/createRouter';
+import Router from '@dojo/routing/Router';
 
-const router = createRouter();
+const router = new Router();
 ```
 
 ### Appending routes
@@ -31,10 +67,10 @@ const router = createRouter();
 With the `router` from the previous example:
 
 ```ts
-import createRoute from '@dojo/routing/createRoute';
+import Route from '@dojo/routing/Route';
 
-router.append(createRoute({ path: '/' }));
-router.append(createRoute({ path: '/about' }));
+router.append(new Route({ path: '/' }));
+router.append(new Route({ path: '/about' }));
 ```
 
 These routes won't (yet) do anything.
@@ -43,8 +79,8 @@ You can append multiple routes at once:
 
 ```ts
 router.append([
-	createRoute({ path: '/' }),
-	createRoute({ path: '/about' })
+	new Route({ path: '/' }),
+	new Route({ path: '/about' })
 ]);
 ```
 
@@ -79,9 +115,9 @@ You can cancel the task in case a new navigation event occurs.
 The following creates a simple route. The `exec()` function is called when the route is executed.
 
 ```ts
-import createRoute from '@dojo/routing/createRoute';
+import Route from '@dojo/routing/Route';
 
-const route = createRoute({
+const route = new Route({
 	path: '/',
 	exec (request) {
 		// Do stuff
@@ -92,7 +128,7 @@ const route = createRoute({
 Note that `path` defaults to `/`, so the above is equivalent to:
 
 ```ts
-const route = createRoute({
+const route = new Route({
 	exec (request) {
 		// Do stuff
 	}
@@ -102,7 +138,7 @@ const route = createRoute({
 The context provided in the `router.dispatch()` call is available as `request.context`:
 
 ```ts
-const route = createRoute({
+const route = new Route({
 	exec (request) {
 		const context: AppContext = request.context;
 		// Do stuff
@@ -117,16 +153,16 @@ You may return a thenable in order to [capture errors](#capturing-errors). Route
 Routes can be appended to other routes:
 
 ```ts
-import createRoute from '@dojo/routing/createRoute';
+import Route from '@dojo/routing/Route';
 
-const posts = createRoute({
+const posts = new Route({
 	path: '/posts',
 	exec (request) {
 		// Do stuff
 	}
 });
 
-const create = createRoute({
+const create = new Route({
 	path: 'new',
 	exec (request) {
 		// Do stuff
@@ -145,7 +181,7 @@ Like `Router#append()` you can append multiple routes at once by passing an arra
 ```ts
 posts.append([
 	create,
-	createRoute({ path: 'other' })
+	new Route({ path: 'other' })
 ]);
 ```
 
@@ -158,7 +194,7 @@ Starting the path of a nested route with a leading slash will not make it absolu
 The `posts` route in the above example is executed for both `/posts` and `/posts/new` paths. You can handle `/posts` paths specifically by specifying an `index` method:
 
 ```ts
-const posts = createRoute({
+const posts = new Route({
 	path: '/posts',
 	exec (request) {
 		// Do stuff for /posts/new
@@ -178,10 +214,10 @@ You may return a thenable in order to [capture errors](#capturing-errors). Route
 You can extract pathname segments. These will be added to the `params` object of the `request`:
 
 ```ts
-import createRoute from '@dojo/routing/createRoute';
+import new Route from '@dojo/routing/Route';
 import { DefaultParameters } from '@dojo/routing/interfaces';
 
-createRoute({
+new Route({
 	path: '/posts/{id}',
 	exec (request) {
 		const params: DefaultParameters = request.params;
@@ -196,14 +232,14 @@ Parameter names must not be repeated in the route's path. They can't contain `{`
 You can customize the `params` object:
 
 ```ts
-import createRoute, { Route } from '@dojo/routing/createRoute';
+import Route from '@dojo/routing/Route';
 import { Parameters } from '@dojo/routing/interfaces';
 
 interface MyParams extends Parameters {
 	id: number;
 }
 
-const route: Route<MyParams> = createRoute({
+const route = new Route<MyParams>({
 	path: '/posts/{id}',
 	params ([id]) {
 		return {
@@ -222,7 +258,7 @@ The `params()` function receives an array with string values for the extracted p
 You can prevent the route from being selected by returning `null` from the `params()` function:
 
 ```ts
-const route: Route<MyParams> = createRoute({
+const route = new Route<MyParams>({
 	path: '/posts/{id}',
 	params ([id]) {
 		if (!/^\d+$/.test(id)) {
@@ -247,10 +283,10 @@ This also prevents any nested routes from being selected.
 Each route's path may include a search component. Name parameters to extract them into the `params` object:
 
 ```ts
-import createRoute from '@dojo/routing/createRoute';
+import Route from '@dojo/routing/Route';
 import { DefaultParameters } from '@dojo/routing/interfaces';
 
-createRoute({
+new Route({
 	path: '/posts/{id}?{comment}',
 	exec (request) {
 		const params: DefaultParameters = request.params;
@@ -267,11 +303,11 @@ Named query parameters do not have to be present in a path for the route to be s
 You cannot specify expected values or other non-named parameters:
 
 ```ts
-createRoute({
+new Route({
 	path: '/posts/{id}?{comment}=yes' // Illegal!
 });
 
-createRoute({
+new Route({
 	path: '/posts/{id}?{comment}&foo=bar' // Illegal!
 });
 ```
@@ -279,7 +315,7 @@ createRoute({
 You can extract multiple parameters though:
 
 ```ts
-createRoute({
+new Route({
 	path: '/posts/{id}?{comment}&{foo}'
 });
 ```
@@ -287,7 +323,7 @@ createRoute({
 By default the `params` object will contain the *first* occurrence of each query parameter. However if you specify a `params()` function you'll get access to *all* values:
 
 ```ts
-import createRoute, { Route } from '@dojo/routing/createRoute';
+import Route from '@dojo/routing/Route';
 import { Parameters } from '@dojo/routing/interfaces';
 
 interface MyParams extends Parameters {
@@ -295,7 +331,7 @@ interface MyParams extends Parameters {
 	comments: number[];
 }
 
-const route: Route<MyParams> = createRoute({
+const route = new Route<MyParams>({
 	path: '/posts/{id}?{comments}',
 	params ([id], searchParams) {
 		let comments: number[] = [];
@@ -324,7 +360,7 @@ You already know you can return `null` from a `params()` function to stop that r
 You can use a `guard()` function to decide whether a particular route (and any nested routes) should be selected. It receives the same `request` object as `exec()` functions:
 
 ```ts
-createRoute({
+new Route({
 	path: '/posts',
 	guard (request) {
 		return false; // Don't select this route
@@ -339,7 +375,7 @@ createRoute({
 Sometimes paths are dispatched that don't match any routes. You can specify a `fallback()` function at the router level:
 
 ```ts
-const router = createRouter({
+const router = new Route({
 	fallback (request) {
 		// Trigger a "not found" UI state here
 	}
@@ -351,14 +387,14 @@ The `request` object will have a context, but no extracted parameters.
 You can also use `fallback()` functions in a route hierarchy. The `fallback()` of the deepest route that matched the path will be called:
 
 ```ts
-const posts = createRoute({
+const posts = new Route({
 	path: '/posts',
 	exec () {
 		// Do something
 	}
 });
 
-const byId = createRoute({
+const byId = new Route({
 	path: '{id}',
 	exec () {
 		// Do something
@@ -368,7 +404,7 @@ const byId = createRoute({
 	}
 });
 
-const edit = createRoute({
+const edit = new Route({
 	path: 'edit',
 	exec () {
 		// Do something
@@ -388,7 +424,7 @@ You may return a thenable in order to [capture errors](#capturing-errors). Route
 You may want to prevent new routes from executing until the user has completed a certain task. You can listen to the `navstart` event emitted by the router to cancel or defer dispatches:
 
 ```ts
-const router = createRouter();
+const router = new Router();
 
 router.on('navstart', event => {
 	// Determine whether to cancel the dispatch
@@ -412,17 +448,17 @@ If the dispatched path ends with a `/`, a  route hierarchy can only be selected 
 This behavior can be disabled on a per-route basis by setting the `trailingSlashMustMatch` option to `false`:
 
 ```ts
-const posts = createRoute({
+const posts = new Route({
 	path: '/posts'
 });
-consts byId = createRoute({
+consts byId = new Route({
 	path: '{id}',
 	trailingSlashMustMatch: false
 });
 
 posts.append(byId);
 
-const router = createRouter();
+const router = new Router();
 router.append(posts);
 ```
 
@@ -435,7 +471,7 @@ Note that it's irrelevant whether any intermediate routes' paths end with a `/`.
 You cannot create routes with repeated slashes:
 
 ```ts
-createRoute({
+new Route({
 	path: '/foo//bar'
 }); // Throws!
 ```
@@ -443,8 +479,8 @@ createRoute({
 However repeated slashes are ignored when dispatching:
 
 ```ts
-const router = createRouter();
-router.append(createRoute({
+const router = new Router();
+router.append(new Route({
 	path: '/foo/bar'
 }));
 
@@ -456,8 +492,8 @@ router.dispatch(context, '//foo///bar'); // Selects the /foo/bar route
 The router can generate links for a given route:
 
 ```ts
-const router = createRouter();
-const blog = createRoute({ path: '/blog' });
+const router = new Router();
+const blog = new Route({ path: '/blog' });
 router.append(blog);
 
 router.link(blog) === '/blog';
@@ -466,7 +502,7 @@ router.link(blog) === '/blog';
 This also works with parameters:
 
 ```ts
-const show = createRoute({ path: '/{id}' });
+const show = new Route({ path: '/{id}' });
 blog.append(show);
 
 router.link(show, { id: '5' }) === '/blog/5';
@@ -475,7 +511,7 @@ router.link(show, { id: '5' }) === '/blog/5';
 And query parameters:
 
 ```ts
-const show = createRoute({ path: '/{id}?{highlight}' });
+const show = new Route({ path: '/{id}?{highlight}' });
 blog.append(show);
 
 router.link(show, { id: '5', highlight: '40' }) === '/blog/5?highlight=40';
@@ -486,8 +522,8 @@ router.link(show, { id: '5', highlight: [ '40', '55' ] }) === '/blog/5?highlight
 Note that if routes share the same parameter name they'll receive the same value:
 
 ```ts
-const category = createRoute({ path: '/categories/{id}' });
-const post = createRoute({ path: '/posts/{id}' });
+const category = new Route({ path: '/categories/{id}' });
+const post = new Route({ path: '/posts/{id}' });
 blog.append(category);
 category.append(post);
 
@@ -497,9 +533,9 @@ router.link(post, { id: '5' }) === '/blog/categories/5/posts/5';
 You can also generate links without having a reference to the router:
 
 ```ts
-const router = createRouter();
-const blog = createRoute({ path: '/blog' });
-const show = createRoute({ path: '/{id}' });
+const router = new Router();
+const blog = new Route({ path: '/blog' });
+const show = new Route({ path: '/{id}' });
 blog.append(show);
 
 show.link({ id: '5' }) === '/blog/5';
@@ -514,9 +550,9 @@ This library ships with three history managers. They share the same interface bu
 The recommended manager uses `pushState()` and `replaceState()` to [add or modify history entries](https://developer.mozilla.org/en-US/docs/Web/API/History_API#Adding_and_modifying_history_entries). This requires server-side support to work well:
 
 ```ts
-import createStateHistory from '@dojo/routing/history/createStateHistory';
+import StateHistory from '@dojo/routing/history/StateHistory';
 
-const history = createStateHistory();
+const history = new StateHistory();
 ```
 
 This assumes the global object is a browser `window` object. It'll access `window.location` and `window.history`, as well as add an event listener for the `popstate` event.
@@ -524,7 +560,7 @@ This assumes the global object is a browser `window` object. It'll access `windo
 You can provide an explicit `window` object:
 
 ```ts
-const history = createStateHistory({ window: myWindowObject });
+const history = new StateHistory({ window: myWindowObject });
 ```
 
 This is mostly useful for testing purposes.
@@ -550,7 +586,7 @@ Applications should call `Router#dispatch()` with this value as the path.
 A base pathname can be provided when creating the history manager:
 
 ```ts
-const history = createStateHistory({ base: '/myapp' });
+const history = new StateHistory({ base: '/myapp' });
 ```
 
 In this example, if the browser's location is `/myapp/index`, the path available at `history.current` and the `change` event value will be `/index`. When calling `history.set()` and `history.replace()` with say `/settings`, the browser's location will be changed to `/myapp/settings`.
@@ -562,12 +598,12 @@ You may specify the base with or without a trailing slash.
 The hash-based manager uses the fragment identifier to store navigation state. This makes it a better fit for applications that are served as a static HTML file:
 
 ```ts
-import createHashHistory from '@dojo/routing/history/createHashHistory';
+import HashHistory from '@dojo/routing/history/HashHistory';
 
-const history = createHashHistory();
+const history = new HashHistory();
 ```
 
-The `history` object has the same `current` getter and `set()` and `replace()` methods. The `createHashHistory()` factory too assumes the global object is a browser `window` object, but an explicit object can be provided. It'll access `window.history` and add an event listener for the `hashchange` event.
+The `history` object has the same `current` getter and `set()` and `replace()` methods. The `HashHistory` class assumes the global object is a browser `window` object, but an explicit object can be provided. It'll access `window.history` and add an event listener for the `hashchange` event.
 
 Path strings are stored in the fragment identifier. `history.current` returns the current path, without a `#` prefix. The same goes for the `value` property of the `change` event object.
 
@@ -576,20 +612,20 @@ Path strings are stored in the fragment identifier. `history.current` returns th
 Finally there is a memory-backed manager. This isn't very useful in browsers but can be helpful when writing tests.:
 
 ```ts
-import createMemoryHistory from '@dojo/routing/history/createMemoryHistory';
+import MemoryHistory from '@dojo/routing/history/MemoryHistory';
 
-const history = createMemoryHistory();
+const history = new MemoryHistory();
 ```
 
-The `createMemoryHistory()` factory accepts a `path` option. It defaults to the empty string.
+The `MemoryHistory` class accepts a `path` option. It defaults to the empty string.
 
 ### Making the router aware of the history manager
 
 In browser-based applications it is desirable for the router to be aware of the history manager. This is why you can provide the history manager when creating the router:
 
 ```ts
-const history = createStateHistory();
-const router = createRouter({ history });
+const history = new StateHistory();
+const router = new Router({ history });
 ```
 
 Now instead of using `history.set()` and `history.replace()` you can use `router.setPath()` and `router.replacePath()`.
@@ -599,7 +635,7 @@ Now instead of using `history.set()` and `history.replace()` you can use `router
 You could manually wire a history manager's `change` event to a `Router#dispatch()`, but that's a bit cumbersome. Instead if you provided the history manager when creating the router, you can use the `start()` method to make the router observe the history manager:
 
 ```ts
-const router = createRouter({ history: createStateHistory() });
+const router = new Router({ history: new StateHistory() });
 router.start();
 ```
 
@@ -616,32 +652,32 @@ As an added benefit, when you use `start()` it ensures the previous dispatch is 
 The context for these dispatches defaults to an empty object. A new object is used for every dispatch. You can configure the context when creating the router:
 
 ```ts
-const router = createRouter({
+const router = new Router({
 	context: { someKey: 'someValue' },
-	history: createStateHistory()
+	history: new StateHistory()
 });
 ```
 
 Provide a function if you want a new context for every dispatch:
 
 ```ts
-const router = createRouter({
+const router = new Router({
 	context() {
 		return { someKey: 'someValue' };
 	},
-	history: createStateHistory()
+	history: new StateHistory()
 });
 ```
 
 `link()` can use the currently selected routes when generating a new link. For instance given this router:
 
 ```ts
-const history = createStateHistory();
-const router = createRouter({ history });
+const history = new StateHistory();
+const router = new Router({ history });
 
-const blog = createRoute({ path: '/blog' });
-const show = createRoute({ path: '/{id}' });
-const edit = createRoute({ path: '/edit' });
+const blog = new Route({ path: '/blog' });
+const show = new Route({ path: '/{id}' });
+const edit = new Route({ path: '/edit' });
 
 router.append(blog);
 blog.append(show);
@@ -660,16 +696,18 @@ Calling `dispatch()` directly will prevent the router from tracking selected rou
 
 Errors that occur during dispatch are emitted under the `error` event. The event object contains the error as well as the context and path used for the dispatch.
 
-## How do I use this package?
-
-TODO: Add appropriate usage and instruction guidelines
-
 ## How do I contribute?
 
 We appreciate your interest!  Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme) for the
 Contributing Guidelines and Style Guide.
 
-## Testing
+### Installation
+
+To start working with this package, clone the repository and run `npm install`.
+
+In order to build the project run `grunt dev` or `grunt dist`.
+
+### Testing
 
 Test cases MUST be written using [Intern](https://theintern.github.io) using the Object test interface and Assert assertion interface.
 
