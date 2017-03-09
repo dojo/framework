@@ -48,5 +48,8 @@
     "sinon": "^1.17.6",
     "tslint": "^3.11.0",
     "typescript": "~2.2.1"
+  },
+  "dependencies": {
+    "pepjs": "^0.4.2"
   }
 }

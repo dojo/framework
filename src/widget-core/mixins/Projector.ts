@@ -5,6 +5,7 @@ import { dom, Projection, ProjectionOptions, VNodeProperties } from 'maquette';
 import { WidgetBase } from './../WidgetBase';
 import { Constructor, WidgetProperties } from './../interfaces';
 import cssTransitions from '../animations/cssTransitions';
+import 'pepjs';
 
 /**
  * Represents the attach state of the projector

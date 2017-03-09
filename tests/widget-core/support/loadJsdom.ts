@@ -19,6 +19,9 @@ global.document = doc;
 /* Assign a global window as well */
 global.window = doc.defaultView;
 
+/* Needed for Pointer Event Polyfill's incorrect Element detection */
+global.Element = function() {};
+
 /* Polyfill requestAnimationFrame - this can never be called an *actual* polyfill */
 global.requestAnimationFrame = (cb: (...args: any[]) => {}) => {
 	setImmediate(cb);
