@@ -1,4 +1,4 @@
-import { Query, QueryType } from './interfaces';
+import { Query, QueryType } from '../interfaces';
 
 export interface QueryOptions<T> {
 	query?: Query<T>;

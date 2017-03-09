@@ -2,8 +2,6 @@ import { shouldRecurseInto, isEqual } from '../utils';
 import createOperation,  { Operation, OperationType } from './createOperation';
 import JsonPointer from './JsonPointer';
 
-export type PatchMapEntry<T, U> = { id: string; patch: Patch<T, U> };
-
 function _diff(to: any, from: any, startingPath?: JsonPointer): Operation[] {
 	if (!shouldRecurseInto(from) || !shouldRecurseInto(to)) {
 		return [];

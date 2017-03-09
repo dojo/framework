@@ -2,11 +2,12 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
 import { createData, ItemType, createUpdates } from '../support/createData';
-import { createQueryStore } from '../../../src/store/mixins/createQueryTransformMixin';
-import { createObservableStore, StoreDelta } from '../../../src/store/mixins/createObservableStoreMixin';
+import QueryStore from '../../../src/store/QueryableStore';
+import ObservableStore, { StoreDelta } from '../../../src/store/ObservableStore';
 import materialize from '../../../src/store/materialize';
-import { CrudOptions, Store } from '../../../src/store/createStore';
+import { Store } from '../../../src/interfaces';
 import { delay } from '@dojo/core/async/timing';
+import { QueryResultInterface } from '../../../src/store/QueryResult';
 
 type TransformedObject = {
 	_value: number;
@@ -21,14 +22,14 @@ registerSuite({
 
 	'Should apply updates to target store'(this: any) {
 		const dfd = this.async();
-		const targetStore = createObservableStore<TransformedObject, CrudOptions>({
+		const targetStore = new ObservableStore<TransformedObject>({
 			idProperty: '_id'
 		});
-		const trackableQueryStore = createQueryStore({
+		const trackableQueryStore = new QueryStore({
 			data: createData()
 		});
 		const trackedCollection = trackableQueryStore
-			.transform((item) => ({
+			.transform<TransformedObject>((item) => ({
 				_value: item.value,
 				_nestedProperty: {
 					_value: item.nestedProperty.value
@@ -74,16 +75,18 @@ registerSuite({
 			}
 		}));
 
-		materialize({ source: trackedCollection, target: targetStore });
+		materialize<
+			TransformedObject, QueryResultInterface<TransformedObject, any>, Store<TransformedObject, any, any>
+		>({ source: trackedCollection, target: targetStore });
 		trackableQueryStore.delete('item-2');
 	},
 
 	'Should stop applying updates after destroying handle'(this: any) {
 		const dfd = this.async();
-		const targetStore = createObservableStore<TransformedObject, CrudOptions>({
+		const targetStore = new ObservableStore<TransformedObject>({
 			idProperty: '_id'
 		});
-		const trackableQueryStore = createQueryStore({
+		const trackableQueryStore = new QueryStore({
 			data: createData()
 		});
 		const trackedCollection = trackableQueryStore
@@ -135,15 +138,17 @@ registerSuite({
 			}
 		}));
 
-		const handle = materialize({ source: trackedCollection, target: targetStore });
+		const handle = materialize<
+			TransformedObject, QueryResultInterface<TransformedObject, any>, Store<TransformedObject, any, any>
+		>({ source: trackedCollection, target: targetStore });
 	},
 
 	'Should use apply function if provided'(this: any) {
 		const dfd = this.async();
-		const targetStore = createObservableStore<TransformedObject, CrudOptions>({
+		const targetStore = new ObservableStore<TransformedObject>({
 			idProperty: '_id'
 		});
-		const trackableQueryStore = createQueryStore({
+		const trackableQueryStore = new QueryStore({
 			data: createData()
 		});
 		const trackedCollection = trackableQueryStore
@@ -170,7 +175,9 @@ registerSuite({
 		}));
 
 		let initialUpdateFromSource = false;
-		materialize({
+		materialize<
+			TransformedObject, QueryResultInterface<TransformedObject, any>, Store<TransformedObject, any, any>
+		>({
 			source: trackedCollection,
 			target: targetStore,
 			apply: dfd.rejectOnError((target: Store<any, any, any>, { afterAll, deletes }: StoreDelta<any>, source: any) => {
@@ -205,8 +212,8 @@ registerSuite({
 
 	'Shouldn\'t make any updates if initial update is empty'(this: any) {
 		const dfd = this.async(1000);
-		const targetStore = createQueryStore<ItemType>();
-		const trackableQueryStore = createQueryStore<ItemType>();
+		const targetStore = new QueryStore<ItemType>();
+		const trackableQueryStore = new QueryStore<ItemType>();
 		const trackedCollection = trackableQueryStore.filter(() => true).track();
 
 		targetStore.add = dfd.reject.bind(dfd, Error('Shouldn\'t have called add on targetStore'));
@@ -220,8 +227,8 @@ registerSuite({
 	},
 
 	'Should add new items to targetStore'(this: any) {
-		const targetStore = createQueryStore<ItemType>();
-		const trackableQueryStore = createQueryStore<ItemType>();
+		const targetStore = new QueryStore<ItemType>();
+		const trackableQueryStore = new QueryStore<ItemType>();
 		const trackedCollection = trackableQueryStore.filter(() => true).track();
 
 		const spy = sinon.spy(targetStore, 'add');
@@ -240,8 +247,8 @@ registerSuite({
 	},
 
 	'Should update items in target store'(this: any) {
-		const targetStore = createQueryStore<ItemType>();
-		const trackableQueryStore = createQueryStore<ItemType>();
+		const targetStore = new QueryStore<ItemType>();
+		const trackableQueryStore = new QueryStore<ItemType>();
 		const trackedCollection = trackableQueryStore.filter(() => true).track();
 
 		const spy = sinon.spy(targetStore, 'put');

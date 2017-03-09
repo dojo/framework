@@ -3,16 +3,15 @@ import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
 import IndexedDBStorage, { createRequestPromise } from '../../../src/storage/IndexedDBStorage';
 import Promise from '@dojo/shim/Promise';
-import { StoreOperation, CrudOptions } from '../../../src/store/createStore';
+import { StoreOperation, CrudOptions } from '../../../src/interfaces';
 import createFilter from '../../../src/query/createFilter';
 import createSort from '../../../src/query/createSort';
 import createRange from '../../../src/query/createStoreRange';
 import CompoundQuery from '../../../src/query/CompoundQuery';
 import { createData, createUpdates, ItemType, patches } from '../support/createData';
-import { Storage } from '../../../src/storage/InMemoryStorage';
-import {QueryType, Query} from '../../../src/query/interfaces';
+import { QueryType, Query, Storage } from '../../../src/interfaces';
 import JsonPointer from '../../../src/patch/JsonPointer';
-import {BooleanOp} from '../../../src/query/createFilter';
+import { BooleanOp } from '../../../src/query/createFilter';
 
 registerSuite((function(){
 	const isIndexedDbAvailable = typeof indexedDB !== 'undefined';

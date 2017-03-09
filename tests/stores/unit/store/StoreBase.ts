@@ -1,10 +1,10 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
-import createStore, { StoreOperation } from '../../../src/store/createStore';
 import Map from '@dojo/shim/Map';
-import Set from '@dojo/shim/Set';
 import Promise from '@dojo/shim/Promise';
+import Set from '@dojo/shim/Set';
+import StoreBase from '../../../src/store/StoreBase';
 import createRange from '../../../src/query/createStoreRange';
 import createFilter from '../../../src/query/createFilter';
 import JsonPointer from '../../../src/patch/JsonPointer';
@@ -14,20 +14,21 @@ import createOperation, { OperationType } from '../../../src/patch/createOperati
 import CompoundQuery from '../../../src/query/CompoundQuery';
 import InMemoryStorage from '../../../src/storage/InMemoryStorage';
 import { createData, ItemType, createUpdates, patches, patchedItems } from '../support/createData';
-import createAsyncStorage from '../support/AsyncStorage';
+import AsyncStorage from '../support/AsyncStorage';
+import { StoreOperation, CrudOptions } from '../../../src/interfaces';
 
 function getStoreAndDfd(test: any, data = createData(), useAsync = true) {
 	const dfd = useAsync ? test.async(1000) : null;
-	const store = createStore( { data: data } );
-	const emptyStore = createStore();
+	const store = new StoreBase( { data: data } );
+	const emptyStore = new StoreBase();
 
 	return { dfd, store, emptyStore, data: createData() };
 }
 
 function getStoreWithAsyncStorage(test: any, asyncOptions?: {}, useAsync = true) {
 	const dfd = useAsync ? test.async(1000) : null;
-	const asyncStorage = createAsyncStorage(asyncOptions);
-	const store = createStore({ storage: asyncStorage });
+	const asyncStorage = new AsyncStorage(asyncOptions);
+	const store = new StoreBase({ storage: asyncStorage });
 
 	return { dfd, store, asyncStorage };
 }
@@ -37,7 +38,7 @@ const ids = createData().map(function(item) {
 });
 
 registerSuite({
-	name: 'createStore',
+	name: 'StoreBase',
 
 	'initialize store'(this: any) {
 		const { store, data } = getStoreAndDfd(this, createData(), false);
@@ -170,12 +171,33 @@ registerSuite({
 				});
 			},
 
-			'should allow patching with an array of items'(this: any) {
+			'should allow patching with an array of items - if default id property is used'(this: any) {
 				const { dfd, store } = getStoreAndDfd(this);
 				store.patch(createUpdates()[0]);
 				store.fetch().then(function(data) {
 					assert.deepEqual(data, createUpdates()[0], 'Should have patched objects based on provided items');
 				}).then(dfd.resolve);
+			},
+
+			'should use id property to identify patches'(this: any) {
+				type IdProp = { idProp: string; value: number }
+				const data: IdProp[] = [
+					{ idProp: 'item-1', value: 1 }, { idProp: 'item-2', value: 2 }, { idProp: 'item-3', value: 3 }
+				];
+				const store = new StoreBase({
+					data: data,
+					idProperty: 'idProp'
+				});
+
+				return store.patch([ { id: 'item-1', value: 2} ])
+					.then(() => store.fetch())
+					.then((data) => {
+						assert.deepEqual(data, [
+							{ idProp: 'item-1', value: 2 },
+							{ idProp: 'item-2', value: 2 },
+							{ idProp: 'item-3', value: 3 }
+						], 'Didn\'t patch record properly');
+					});
 			},
 
 			'should allow patching with an object and id in options'(this: any) {
@@ -229,7 +251,7 @@ registerSuite({
 
 				const storage = new InMemoryStorage();
 				sinon.stub(storage, 'delete').returns(Promise.reject(Error('failed')));
-				const store = createStore({ storage });
+				const store = new StoreBase({ storage });
 
 				store.delete(ids[0]).then(
 					dfd.rejectOnError(function () {
@@ -329,11 +351,11 @@ registerSuite({
 	'should allow a property or function to be specified as the id': function(this: any) {
 		const data = createData();
 		const updates = createUpdates();
-		const store = createStore({
+		const store = new StoreBase({
 			data: updates[0],
 			idProperty: 'value'
 		});
-		const idFunctionStore = createStore({
+		const idFunctionStore = new StoreBase({
 			idFunction: (item: ItemType) => item.id + '-id',
 			data: data
 		});
@@ -380,7 +402,7 @@ registerSuite({
 
 	'should generate unique ids': function(this: any) {
 		const ids: Promise<string>[] = [];
-		const store =  createStore();
+		const store =  new StoreBase();
 		const generateNIds = 1000; // reduced to 1,000 since IE 11 took minutes to run 100,000
 		for (let i = 0; i < generateNIds; i++) {
 			ids.push(store.createId());
@@ -401,7 +423,7 @@ registerSuite({
 
 		'use catch': function(this: any) {
 			const { dfd, data } = getStoreAndDfd(this);
-			const store = createStore({
+			const store = new StoreBase({
 				data: [ data[0], data[1] ]
 			});
 			const catchSpy = sinon.spy();
@@ -413,7 +435,7 @@ registerSuite({
 
 		'add with conflicts should fail': function(this: any) {
 			const { dfd,  data } = getStoreAndDfd(this);
-			const store = createStore({
+			const store = new StoreBase({
 				data: [ data[0], data[1] ]
 			});
 			store.add(data).then(dfd.reject, dfd.resolve);
@@ -428,7 +450,7 @@ registerSuite({
 
 		'put with conflicts should override': function(this: any) {
 			const {  data } = getStoreAndDfd(this, undefined, false);
-			const store = createStore({
+			const store = new StoreBase({
 				data: [ data[0], data[1] ]
 			});
 			return store.put(data).then(function(result) {
@@ -477,7 +499,7 @@ registerSuite({
 
 	'async storage': {
 		'async operation should not be done immediately.'(this: any) {
-			const{ store } = getStoreWithAsyncStorage(this, { put: 50}, false);
+			const { store } = getStoreWithAsyncStorage(this, { put: 25 }, false);
 
 			const start = Date.now();
 			return store.add(createData()).then(function() {
@@ -486,8 +508,8 @@ registerSuite({
 			});
 		},
 		'should complete initial add before subsequent operations'(this: any) {
-			const asyncStorage = createAsyncStorage();
-			const store = createStore({
+			const asyncStorage = new AsyncStorage();
+			const store = new StoreBase({
 				storage: asyncStorage,
 				data: createData()
 			});
@@ -499,20 +521,19 @@ registerSuite({
 		'failed initial add should not prevent subsequent operations'(this: any) {
 			let fail = true;
 			const stub = sinon.stub(console, 'error');
-			const asyncStorage = createAsyncStorage
-				.around('add', function(add: () => Promise<ItemType>) {
-					return function(this: any) {
-						if (fail) {
-							fail = false;
-							return Promise.reject(Error('error'));
-						}
-						else {
-							return add.apply(this, arguments);
-						}
-					};
-				})();
+			const asyncStorage = new (class extends AsyncStorage<any> {
+				add(items: any[], options?: CrudOptions): any {
+					if (fail) {
+						fail = false;
+						return Promise.reject(Error('error'));
+					}
+					else {
+						return super.add(items, options);
+					}
+				}
+			})();
 			const data = createData();
-			const store = createStore({
+			const store = new StoreBase({
 				storage: asyncStorage,
 				data: data
 			});

@@ -1,6 +1,6 @@
-import InMemoryStorage, { FetchResult } from './InMemoryStorage';
-import { StoreOptions, CrudOptions, StoreOperation, UpdateResults } from '../store/createStore';
-import {Query, QueryType} from '../query/interfaces';
+import InMemoryStorage from './InMemoryStorage';
+import { StoreOptions, CrudOptions, StoreOperation, UpdateResults, FetchResult } from '../interfaces';
+import {Query, QueryType} from '../interfaces';
 import Set from '@dojo/shim/Set';
 import Promise from '@dojo/shim/Promise';
 import Patch from '../patch/Patch';

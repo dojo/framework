@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import Set from '@dojo/shim/Set';
 import InMemoryStorage from '../../../src/storage/InMemoryStorage';
 import Promise from '@dojo/shim/Promise';
-import { StoreOperation } from '../../../src/store/createStore';
+import { StoreOperation } from '../../../src/interfaces';
 import createFilter from '../../../src/query/createFilter';
 import createSort from '../../../src/query/createSort';
 import createRange from '../../../src/query/createStoreRange';
@@ -18,7 +18,7 @@ function getStorageAndDfd(test: any, option = {}) {
 }
 
 registerSuite({
-	name: 'createInMemoryStorage',
+	name: 'InMemoryStorage',
 	'identify': {
 		'Should identify by idProperty if exists.'(this: any) {
 			const storage = new InMemoryStorage<ItemType & { custId: string }>({

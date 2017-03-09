@@ -1,23 +1,23 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { createData, patches } from '../../../support/createData';
-import { createQueryStore } from '../../../../../src/store/mixins/createQueryTransformMixin';
-import createFilter from '../../../../../src/query/createFilter';
+import { createData, patches } from '../../support/createData';
+import QueryStore from '../../../../src/store/QueryableStore';
+import createFilter from '../../../../src/query/createFilter';
 import Set from '@dojo/shim/Set';
 
 function getStoreAndDfd(test: any, useAsync = true) {
 	const dfd = useAsync ? test.async(1000) : null;
-	const queryStore = createQueryStore({
+	const queryStore = new QueryStore({
 		data: createData()
 	});
 
-	const emptyStore = createQueryStore();
+	const emptyStore = new QueryStore();
 
 	return { dfd, queryStore, emptyStore };
 }
 
 registerSuite({
-	name: 'Query-Transform Mixin - Transform',
+	name: 'Queryable Store - Transform',
 	'single transformations'(this: any) {
 		const { queryStore } = getStoreAndDfd(this, false);
 

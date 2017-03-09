@@ -1,4 +1,4 @@
-import { Query, QueryType } from './interfaces';
+import { Query, QueryType } from '../interfaces';
 import JsonPointer, { navigate } from '../patch/JsonPointer';
 
 export type SortParameter<T> = ((a: T, b: T) => number) | keyof T | JsonPointer;

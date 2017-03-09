@@ -1,4 +1,4 @@
-import { Query, QueryType } from './interfaces';
+import { Query, QueryType } from '../interfaces';
 export interface StoreRange<T> extends Query<T> {
 	readonly start: number;
 	readonly count: number;

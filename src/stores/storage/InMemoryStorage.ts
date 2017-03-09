@@ -1,33 +1,10 @@
-import { Query } from '../query/interfaces';
-import { StoreOperation, CrudOptions, StoreOptions, UpdateResults } from '../store/createStore';
+import { Query, FetchResult } from '../interfaces';
+import { StoreOperation, CrudOptions, StoreOptions, UpdateResults, Storage } from '../interfaces';
 import Promise from '@dojo/shim/Promise';
 import Map from '@dojo/shim/Map';
 import Patch from '../patch/Patch';
 import { duplicate } from '@dojo/core/lang';
 import uuid from '@dojo/core/uuid';
-
-export interface FetchResult<T> extends Promise<T[]> {
-	/**
-	 * A Promise that resolves to the total number of items in the underlying storage.
-	 */
-	totalLength: Promise<number>;
-	/**
-	 * For a store, this is identical to totalLength. For a QueryTransformResult, this resolves to the number of items
-	 * that match the QueryTransformResult's queries
-	 */
-	dataLength: Promise<number>;
-}
-
-export interface Storage<T, O extends CrudOptions> {
-	identify(items: T[]|T): string[];
-	createId(): Promise<string>;
-	fetch(query?: Query<T>): FetchResult<T>;
-	get(ids: string[]): Promise<T[]>;
-	put(items: T[], options?: O): Promise<UpdateResults<T>>;
-	add(items: T[], options?: O): Promise<UpdateResults<T>>;
-	delete(ids: string[]): Promise<UpdateResults<T>>;
-	patch(updates: { id: string; patch: Patch<T, T> }[], options?: O): Promise<UpdateResults<T>>;
-}
 
 export default class InMemoryStorage<T> implements Storage<T, CrudOptions> {
 	private idProperty?: keyof T;

@@ -1,80 +1,65 @@
 import InMemoryStorage from '../../../src/storage/InMemoryStorage';
-import Map from '@dojo/shim/Map';
 import Promise from '@dojo/shim/Promise';
-import WeakMap from '@dojo/shim/WeakMap';
 import { delay } from '@dojo/core/async/timing';
-import compose from '@dojo/compose/compose';
-
-const instanceStateMap = new WeakMap<{}, any>();
+import { Query, FetchResult, CrudOptions } from '../../../src/interfaces';
+import Patch from '../../../src/patch/Patch';
 
 function getRandomInt(max = 100) {
 	return Math.floor(Math.random() * max);
 }
 
-function delayOperation(operation: Function, operationName: string) {
-	return function(this: any, ...args: any[]) {
-		const state = instanceStateMap.get(this);
-		const milliseconds = state[operationName] || getRandomInt();
-		return delay(milliseconds)(operation.bind(this, ...args));
-	};
+export default class AsyncStorage<T> extends InMemoryStorage<T> {
+	timing: { [ index: string ]: number | undefined };
+
+	constructor(options?: any) {
+		super(options);
+		this.timing = options || {};
+	}
+
+	get(ids: string[]): Promise<T[]> {
+		return delay(this.timing['get'] || getRandomInt())(() => super.get(ids));
+	}
+
+	createId() {
+		return delay(this.timing['createId'] || getRandomInt())(() => super.createId());
+	}
+
+	put(items: T[], options?: CrudOptions) {
+		return delay(this.timing['put'] || getRandomInt())(() => super.put(items, options));
+	}
+
+	add(items: T[], options?: CrudOptions) {
+		return delay(this.timing['put'] || getRandomInt())(() => super.add(items, options));
+	}
+
+	delete(ids: string[]) {
+		return delay(this.timing['delete'] || getRandomInt())(() => super.delete(ids));
+	}
+
+	patch(updates: { id: string; patch: Patch<T, T> }[]) {
+		return delay(this.timing['patch'] || getRandomInt())(() => super.patch(updates));
+	}
+
+	fetch(query?: Query<T>) {
+		let totalLengthResolve: () => void;
+		let totalLengthReject: () => void;
+		let fetchResultResolve: () => void;
+		let fetchResultReject: () => void;
+		const totalLengthPromise = new Promise((resolve, reject) => {
+			totalLengthResolve = resolve;
+			totalLengthReject = reject;
+		});
+		const fetchResult: FetchResult<T> = <any> new Promise((resolve, reject) => {
+			fetchResultResolve = resolve;
+			fetchResultReject = reject;
+		});
+		fetchResult.totalLength = fetchResult.dataLength = totalLengthPromise;
+		setTimeout(() => {
+			const result = super.fetch();
+			result.then(fetchResultResolve, fetchResultReject);
+			result.totalLength.then(totalLengthResolve, totalLengthReject);
+		}, this.timing['fetch'] || getRandomInt());
+
+		return fetchResult;
+	}
 }
-
-const createAsyncStorage = compose(InMemoryStorage).mixin({
-	initialize(instance: any, options: any = {}) {
-		instance.data = [];
-		instance.index = new Map<string, number>();
-		instance.idProperty = options.idProperty;
-		instance.idFunction = options.idFunction;
-		instance.returnsPromise = Promise.resolve();
-	}
-}).mixin({
-	initialize(instance, asyncOptions = {}) {
-		instanceStateMap.set(instance, asyncOptions);
-	},
-	aspectAdvice: {
-		around: {
-			createId(createId: Function) {
-				return delayOperation(createId, 'createId');
-			},
-			fetch(fetch: Function) {
-				const delayed =  delayOperation(fetch, 'fetch');
-				return function(this: any, ...args: any[]) {
-					let resolveTotalLength: (totalLength: number) => void;
-					let rejectTotalLength: (error: any) => void;
-					const totalLength = new Promise((resolve, reject) => {
-						resolveTotalLength = resolve;
-						rejectTotalLength = reject;
-					});
-					const returnPromise = delayed.bind(this, ...args)();
-					returnPromise.totalLength = returnPromise.dataLength = totalLength;
-					delayed.bind(this)().then(
-						(fullResults: any) => {
-							resolveTotalLength(fullResults.length);
-						},
-						(error: any) => {
-							rejectTotalLength(error);
-						}
-					);
-					return returnPromise;
-				};
-			},
-			get(get: Function) {
-				return delayOperation(get, 'get');
-			},
-			add(add: Function) {
-				return delayOperation(add, 'put');
-			},
-			put(put: Function) {
-				return delayOperation(put, 'put');
-			},
-			delete(_delete: Function) {
-				return delayOperation(_delete, 'delete');
-			},
-			patch(patch: Function) {
-				return delayOperation(patch, 'patch');
-			}
-		}
-
-	}
-});
-export default createAsyncStorage;

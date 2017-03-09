@@ -1,22 +1,17 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { createData, ItemType, createUpdates } from '../../../support/createData';
-import { ObservableStore } from '../../../../../src/store/mixins/createObservableStoreMixin';
-import { CrudOptions } from '../../../../../src/store/createStore';
-import { UpdateResults } from '../../../../../src/store/createStore';
-import { QueryStore, createQueryStore } from '../../../../../src/store/mixins/createQueryTransformMixin';
-import { TrackableStoreDelta, MappedQueryTransformResult } from '../../../../../src/store/createQueryTransformResult';
+import { createData, ItemType, createUpdates } from '../../support/createData';
+import createFilter from '../../../../src/query/createFilter';
+import QueryStore from '../../../../src/store/QueryableStore';
+import { TrackableStoreDelta, MappedQueryResultInterface } from '../../../../src/store/QueryResult';
 import Promise from '@dojo/shim/Promise';
-import createFilter from '../../../../../src/query/createFilter';
 
 registerSuite(function() {
-	let trackableQueryStore: QueryStore<ItemType, ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>>;
+	let trackableQueryStore: QueryStore<ItemType>;
 
 	function testFetchingQueryStore(
-		trackedCollection: QueryStore<ItemType, ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>>,
-		trackResult: MappedQueryTransformResult<
-			ItemType, QueryStore<ItemType, ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>>
-		>,
+		trackedCollection: QueryStore<ItemType>,
+		trackResult: MappedQueryResultInterface<ItemType, QueryStore<ItemType>>,
 		dfd: any,
 		isFetchingAroundUpdates = false
 	) {
@@ -91,10 +86,8 @@ registerSuite(function() {
 		});
 	}
 	function testFetchingQueryStoreWithDelayedOperations(
-		trackedCollection: QueryStore<ItemType, ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>>,
-		trackResult: MappedQueryTransformResult<
-			ItemType, QueryStore<ItemType, ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>>>
-		>,
+		trackedCollection: QueryStore<ItemType>,
+		trackResult: MappedQueryResultInterface<ItemType, QueryStore<ItemType>>,
 		dfd: any
 	) {
 		return new Promise(function(resolve) {
@@ -189,9 +182,9 @@ registerSuite(function() {
 	}
 
 	return {
-		name: 'Query-Transform Mixin - Tracking',
+		name: 'Queryable Store - Tracking',
 		beforeEach: function() {
-			trackableQueryStore = createQueryStore({
+			trackableQueryStore = new QueryStore({
 				data: createData()
 			});
 		},
@@ -314,7 +307,7 @@ registerSuite(function() {
 		'tracking with a range query': {
 			'full range'(this: any) {
 				const dfd = this.async(1000);
-				trackableQueryStore = createQueryStore({
+				trackableQueryStore = new QueryStore({
 					data: createData(),
 					fetchAroundUpdates: true
 				});
@@ -329,7 +322,7 @@ registerSuite(function() {
 			},
 			'released with range query should only filter "afterAll"'(this: any) {
 				const dfd = this.async(1000);
-				const trackableQueryStore = createQueryStore<ItemType>();
+				const trackableQueryStore = new QueryStore<ItemType>();
 				const untrackedCollection = trackableQueryStore.range(0, 1).track().release();
 				const data = createData();
 
@@ -349,7 +342,7 @@ registerSuite(function() {
 			},
 			'full range - delay between operations'(this: any) {
 				const dfd = this.async(5000);
-				trackableQueryStore = createQueryStore({
+				trackableQueryStore = new QueryStore({
 					data: createData()
 				});
 				const trackedCollection = trackableQueryStore
@@ -363,7 +356,7 @@ registerSuite(function() {
 			},
 			'full range, not initially fetching around updates'(this: any) {
 				const dfd = this.async(1000);
-				trackableQueryStore = createQueryStore({
+				trackableQueryStore = new QueryStore({
 					data: createData()
 				});
 				const trackedCollection = trackableQueryStore
@@ -377,7 +370,7 @@ registerSuite(function() {
 			},
 			'item pushed into collection'(this: any)	{
 				const dfd = this.async(1000);
-				trackableQueryStore = createQueryStore({
+				trackableQueryStore = new QueryStore({
 					data: createData()
 				});
 				const trackedCollection = trackableQueryStore
@@ -488,7 +481,7 @@ registerSuite(function() {
 
 		'add data after initialization': function(this: any) {
 			const dfd = this.async(1000);
-			trackableQueryStore = createQueryStore<ItemType>();
+			trackableQueryStore = new QueryStore<ItemType>();
 			let ignoreFirst = true;
 			trackableQueryStore.query(createFilter<ItemType>().custom(() => true)).track().observe().subscribe(update => {
 				if (ignoreFirst) {
@@ -507,7 +500,7 @@ registerSuite(function() {
 
 		'should receive a notification of initial data': function(this: any) {
 			const dfd = this.async(1000);
-			trackableQueryStore = createQueryStore({
+			trackableQueryStore = new QueryStore({
 				data: createData()
 			});
 			trackableQueryStore
@@ -581,7 +574,7 @@ registerSuite(function() {
 			const dfd = this.async(1000);
 			const data = createData();
 			const updates = createUpdates()[0];
-			const trackableQueryStore = createQueryStore<ItemType>();
+			const trackableQueryStore = new QueryStore<ItemType>();
 			const trackedCollection = trackableQueryStore
 				.filter(function(item: ItemType) {
 					return item.value > 1;

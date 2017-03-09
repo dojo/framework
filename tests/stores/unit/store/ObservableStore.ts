@@ -1,20 +1,18 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import {
-	createObservableStore, ObservableStore, StoreDelta, ItemUpdate
-} from '../../../../src/store/mixins/createObservableStoreMixin';
-import { ItemType, createData, createUpdates, patches, patchedItems } from '../../support/createData';
-import { CrudOptions, UpdateResults } from '../../../../src/store/createStore';
-import createAsyncStorage from '../../support/AsyncStorage';
-import InMemoryStorage from '../../../../src/storage/InMemoryStorage';
+import ObservableStore, { ObservableStoreInterface, StoreDelta, ItemUpdate } from '../../../src/store/ObservableStore';
+import { ItemType, createData, createUpdates, patches, patchedItems } from '../support/createData';
+import { CrudOptions, UpdateResults } from '../../../src/interfaces';
+import AsyncStorage from '../support/AsyncStorage';
+import InMemoryStorage from '../../../src/storage/InMemoryStorage';
 import Set from '@dojo/shim/Set';
 import Promise from '@dojo/shim/Promise';
 
 function getStoreAndDfd(test: any) {
 	const dfd = test.async(1000);
-	const observableStore: ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>> = createObservableStore( { data: createData() } );
-	const emptyObservableStore = createObservableStore();
-	const fetchingObservableStore: ObservableStore<ItemType, CrudOptions, UpdateResults<ItemType>> = createObservableStore( {
+	const observableStore: ObservableStoreInterface<ItemType, CrudOptions, UpdateResults<ItemType>> = new ObservableStore({ data: createData() } );
+	const emptyObservableStore = new ObservableStore();
+	const fetchingObservableStore: ObservableStoreInterface<ItemType, CrudOptions, UpdateResults<ItemType>> = new ObservableStore( {
 		data: createData(),
 		fetchAroundUpdates: true
 	});
@@ -23,14 +21,14 @@ function getStoreAndDfd(test: any) {
 }
 function getStoreWithAsyncStorage(test: any, asyncOptions?: {}, useAsync = true) {
 	const dfd = useAsync ? test.async(1000) : null;
-	const asyncStorage = createAsyncStorage(asyncOptions);
-	const observableStore = createObservableStore({ storage: asyncStorage });
+	const asyncStorage = new AsyncStorage(asyncOptions);
+	const observableStore = new ObservableStore({ storage: asyncStorage });
 
 	return { dfd, observableStore, asyncStorage };
 }
 
 registerSuite({
-	name: 'observableStoreMixin',
+	name: 'ObservableStore',
 
 	'with basic store': (function() {
 		const ids = createData().map(function(item) {
@@ -235,7 +233,7 @@ registerSuite({
 
 					add(this: any) {
 						const { dfd, data } = getStoreAndDfd(this);
-						const fetchingObservableStore = createObservableStore({
+						const fetchingObservableStore = new ObservableStore({
 							fetchAroundUpdates: true
 						});
 						let ignoreFirst = true;
@@ -529,7 +527,7 @@ registerSuite({
 
 			'when operation fails in an ordered store, the error should be sent the observable way.'(this: any) {
 				const dfd = this.async(1000);
-				const store = createObservableStore({
+				const store = new ObservableStore({
 					data: createData()
 				});
 
@@ -546,7 +544,7 @@ registerSuite({
 				const dfd = this.async(1000);
 				const preLoadedStorage = new InMemoryStorage();
 				preLoadedStorage.add(createData());
-				const store = createObservableStore({
+				const store = new ObservableStore({
 					storage: preLoadedStorage
 				});
 
@@ -570,7 +568,7 @@ registerSuite({
 			},
 
 			'unsubscribing and resubscribing'(this: any) {
-				const store = createObservableStore({
+				const store = new ObservableStore({
 					fetchAroundUpdates: true,
 					data: createData()
 				});
@@ -604,7 +602,7 @@ registerSuite({
 			},
 
 			'unsubscribing in update'(this: any) {
-				const store = createObservableStore({
+				const store = new ObservableStore({
 					fetchAroundUpdates: true,
 					data: createData()
 				});
@@ -669,7 +667,7 @@ registerSuite({
 				return rejected;
 			}
 		};
-		const observableStore = createObservableStore({
+		const observableStore = new ObservableStore({
 			storage: failingStorage
 		});
 
@@ -740,7 +738,7 @@ registerSuite({
 			const data = createData();
 
 			let ignoreFirst = true;
-			observableStore.observe().subscribe((update: StoreDelta<ItemType>) => {
+			observableStore.observe().subscribe((update) => {
 				if (ignoreFirst) {
 					ignoreFirst = false;
 					return;
@@ -787,7 +785,7 @@ registerSuite({
 		},
 		'should be able to observe with initial items'(this: any) {
 			const { dfd, asyncStorage } = getStoreWithAsyncStorage(this, { put: 50, get: 10 });
-			const observableStore = createObservableStore({ storage: asyncStorage, data: createData() });
+			const observableStore = new ObservableStore({ storage: asyncStorage, data: createData() });
 			const data = createData();
 
 			observableStore.observe('item-1').subscribe(function(update: ItemType) {

@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import CompoundQuery  from '../../../src/query/CompoundQuery';
-import { QueryType } from '../../../src/query/interfaces';
+import { QueryType } from '../../../src/interfaces';
 import createSort from '../../../src/query/createSort';
 import createRange from '../../../src/query/createStoreRange';
 import { createData, ItemType } from '../support/createData';

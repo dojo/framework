@@ -1,21 +1,21 @@
 import { Handle } from '@dojo/interfaces/core';
-import { MappedQueryTransformResult, QueryTransformResult, TrackableStoreDelta } from './createQueryTransformResult';
-import { StoreDelta } from './mixins/createObservableStoreMixin';
-import { Store } from './createStore';
+import { MappedQueryResultInterface, QueryResultInterface, TrackableStoreDelta } from './QueryResult';
+import { StoreDelta } from './ObservableStore';
+import { Store } from '../interfaces';
 
-export interface Materialization<I, S extends QueryTransformResult<I, any>, T extends Store<I, any, any>> {
+export interface Materialization<I, S extends QueryResultInterface<I, any>, T extends Store<I, any, any>> {
 	source: S;
 	target: T;
 	apply?(target: T, update: StoreDelta<I>, source: S): void;
 }
 
 export interface MappedMaterialization<
-	I, S extends MappedQueryTransformResult<I, any>, T extends Store<I, any, any>
+	I, S extends MappedQueryResultInterface<I, any>, T extends Store<I, any, any>
 > extends Materialization<I, S, T> {
 	apply?(target: T, update: TrackableStoreDelta<I>, source: S): void;
 }
 
-export default function materialize<I, S extends QueryTransformResult<I, any>, T extends Store<I, any, any>>(
+export default function materialize<I, S extends QueryResultInterface<I, any>, T extends Store<I, any, any>>(
 	{ source, target, apply }: Materialization<I, S, T>
 ): Handle {
 	let initialUpdate = true;

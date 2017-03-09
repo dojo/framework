@@ -1,36 +1,37 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
-import { createData, ItemType, patches, createUpdates } from '../../../support/createData';
-import createFilter from '../../../../../src/query/createFilter';
-import createRange from '../../../../../src/query/createStoreRange';
-import createSort from '../../../../../src/query/createSort';
-import createAsyncStorage from '../../../support/AsyncStorage';
-import { createQueryStore } from '../../../../../src/store/mixins/createQueryTransformMixin';
-import { diff } from '../../../../../src/patch/Patch';
+import { createData, ItemType, patches, createUpdates } from '../../support/createData';
+import createFilter from '../../../../src/query/createFilter';
+import createRange from '../../../../src/query/createStoreRange';
+import createSort from '../../../../src/query/createSort';
+import AsyncStorage from '../../support/AsyncStorage';
+import QueryStore from '../../../../src/store/QueryableStore';
+import { QueryResult }  from '../../../../src/store/QueryResult';
+import { diff } from '../../../../src/patch/Patch';
 import Promise from '@dojo/shim/Promise';
-import { createQueryTransformResult } from '../../../../../src/store/createQueryTransformResult';
+import { CrudOptions } from '../../../../src/interfaces';
 
 function getStoreAndDfd(test: any, useAsync = true) {
 	const dfd = useAsync ? test.async(1000) : null;
-	const queryStore = createQueryStore({
+	const queryStore = new QueryStore({
 		data: createData()
 	});
 
-	const emptyStore = createQueryStore();
+	const emptyStore = new QueryStore();
 
 	return { dfd, queryStore, emptyStore };
 }
 function getStoreWithAsyncStorage(test: any, asyncOptions?: {}, useAsync = true) {
 	const dfd = useAsync ? test.async(1000) : null;
-	const asyncStorage = createAsyncStorage(asyncOptions);
-	const queryStore = createQueryStore({ storage: asyncStorage });
+	const asyncStorage = new AsyncStorage(asyncOptions);
+	const queryStore = new QueryStore({ storage: asyncStorage });
 
 	return { dfd, queryStore, asyncStorage };
 }
 
 registerSuite({
-	name: 'Query-Transform Mixin - Querying',
+	name: 'Queryable Store - Querying',
 	'single query': function(this: any) {
 		const { queryStore } = getStoreAndDfd(this, false);
 
@@ -136,7 +137,7 @@ registerSuite({
 
 	'should be notified of changes in parent collection on items in query or just moved from query'(this: any) {
 		const dfd = this.async(2000);
-		const store = createQueryStore<ItemType>();
+		const store = new QueryStore<ItemType>();
 		const data = createData();
 		const updates = createUpdates();
 		const calls: Array<() => any> = [
@@ -173,7 +174,7 @@ registerSuite({
 
 	'shouldn\'t get notifications for updates outside of query'(this: any) {
 		const dfd = this.async(2000);
-		const store = createQueryStore<{ id: string, value: number }>();
+		const store = new QueryStore<{ id: string, value: number }>();
 		const filteredView = store.filter(createFilter<any>().lessThan('value', 5));
 
 		let ignoreFirst = true;
@@ -221,7 +222,7 @@ registerSuite({
 
 	'notification for item deleted from initial data'(this: any) {
 		const dfd = this.async(1000);
-		const store = createQueryStore({
+		const store = new QueryStore({
 			data: createData()
 		});
 		const data = createData();
@@ -273,7 +274,7 @@ registerSuite({
 	'notification on item deleted from initial data after fetch'(this: any) {
 		const dfd = this.async(1000);
 		const data = createData();
-		const store = createQueryStore({
+		const store = new QueryStore({
 			data: data
 		});
 		const filtered = store.filter(createFilter<any>().greaterThan('value', 0));
@@ -370,7 +371,7 @@ registerSuite({
 	},
 
 	'unsubscribing and resubscribing'(this: any) {
-		const queryStore = createQueryStore({
+		const queryStore = new QueryStore({
 			fetchAroundUpdates: true,
 			data: createData()
 		});
@@ -406,7 +407,7 @@ registerSuite({
 	},
 
 	'unsubscribing with another subscriber'(this: any) {
-		const queryStore = createQueryStore({
+		const queryStore = new QueryStore({
 			fetchAroundUpdates: true,
 			data: createData()
 		});
@@ -444,7 +445,7 @@ registerSuite({
 	},
 
 	'unsubscribing in update'(this: any) {
-		const store = createQueryStore({
+		const store = new QueryStore({
 			fetchAroundUpdates: true,
 			data: createData()
 		});
@@ -490,14 +491,14 @@ registerSuite({
 
 	'should throw if created without a source'(this: any) {
 		assert.throw(
-			() => createQueryTransformResult(), 'Query Transform result cannot be created without providing a source store'
+			() => new QueryResult(), 'Query Transform result cannot be created without providing a source store'
 		);
 	},
 
 	'totalLength and dataLength': {
 		'totalLength should return the total number of items in storage': {
 			'fetch all'(this: any) {
-				const queryStore = createQueryStore({
+				const queryStore = new QueryStore({
 					data: createData()
 				}).filter(() => false);
 				const fetchResult = queryStore.fetch();
@@ -510,7 +511,7 @@ registerSuite({
 			},
 
 			'fetch with query'(this: any) {
-				const queryStore = createQueryStore({
+				const queryStore = new QueryStore({
 					data: createData()
 				}).filter(() => false);
 				const fetchResult = queryStore.fetch(createFilter<ItemType>().custom(() => false));
@@ -525,7 +526,7 @@ registerSuite({
 
 		'dataLength should return the number of items matching the Query Transform result\'s own queries': {
 			'fetch all'(this: any) {
-				const queryStore = createQueryStore({
+				const queryStore = new QueryStore({
 					data: createData()
 				}).filter((item) => item.value < 3);
 				const fetchResult = queryStore.fetch();
@@ -538,7 +539,7 @@ registerSuite({
 			},
 
 			'fetch with query'(this: any) {
-				const queryStore = createQueryStore({
+				const queryStore = new QueryStore({
 					data: createData()
 				}).filter((item) => item.value < 3);
 				const fetchResult = queryStore.fetch(createFilter<ItemType>().custom((item) => item.value < 2));
@@ -551,7 +552,7 @@ registerSuite({
 			},
 
 			'should be rejected if fetch errors'(this: any) {
-				const queryStore = createQueryStore({
+				const queryStore = new QueryStore({
 					storage: <any> {
 						fetch() {
 							const result = Promise.reject(Error('Fetch failed'));
@@ -578,7 +579,7 @@ registerSuite({
 
 	'should continue to report correct data after multiple updates'(this: any) {
 		const dfd = this.async();
-		const queryStore = createQueryStore({
+		const queryStore = new QueryStore({
 			data: createData()
 		});
 
@@ -624,7 +625,7 @@ registerSuite({
 
 	'async storage': {
 		'filtered subcollection fetch should not return items when it is done before add.'(this: any) {
-			const { queryStore: store } = getStoreWithAsyncStorage(this, { put: 20, fetch: 10 }, false);
+			const { queryStore: store } = getStoreWithAsyncStorage(this, { put: 25, fetch: 1 }, false);
 			const subcollection = store.filter(createFilter<ItemType>().greaterThanOrEqualTo('value', 2));
 
 			store.add(createData());
@@ -633,8 +634,8 @@ registerSuite({
 			});
 		},
 		'should complete initial add before subsequent operations'(this: any) {
-			const asyncStorage = createAsyncStorage();
-			const store = createQueryStore({
+			const asyncStorage = new AsyncStorage();
+			const store = new QueryStore({
 				storage: asyncStorage,
 				data: createData()
 			});
@@ -646,20 +647,19 @@ registerSuite({
 		'failed initial add should not prevent subsequent operations'(this: any) {
 			let fail = true;
 			const stub = sinon.stub(console, 'error');
-			const asyncStorage = createAsyncStorage
-				.around('add', function(add: () => Promise<ItemType>) {
-					return function(this: any) {
-						if (fail) {
-							fail = false;
-							return Promise.reject(Error('error'));
-						}
-						else {
-							return add.apply(this, arguments);
-						}
-					};
-				})();
+			const asyncStorage = new (class extends AsyncStorage<any> {
+				add(items: any[], options?: CrudOptions): any {
+					if (fail) {
+						fail = false;
+						return Promise.reject(Error('error'));
+					}
+					else {
+						return super.add(items, options);
+					}
+				}
+			})();
 			const data = createData();
-			const store = createQueryStore({
+			const store = new QueryStore({
 				storage: asyncStorage,
 				data: data
 			});

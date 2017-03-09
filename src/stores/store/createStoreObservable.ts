@@ -1,16 +1,10 @@
 import Promise from '@dojo/shim/Promise';
 import { Thenable } from '@dojo/interfaces/shim';
-import { Subscribable, Observable } from '@dojo/core/Observable';
+import { Observable } from '@dojo/core/Observable';
 import global from '@dojo/core/global';
+import { StoreObservable } from '../interfaces';
 
 global.Rx = { config: { Promise } };
-
-/**
- * Adds a then method to the observable for those consumers of the store API who
- * only want to know about the end result of an operation, and don't want to deal with
- * any recoverable failures.
- */
-export type StoreObservable<T, U> = Subscribable<U> & Promise<T[]>
 
 export default function createStoreObservable<T, U>(observable: Observable<U>, transform: (data: U) => T[]): StoreObservable<T, U> {
 	// Cast to any because the signatures of catch between the Observable and Promise interfaces are not
