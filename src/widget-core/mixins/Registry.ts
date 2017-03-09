@@ -1,5 +1,5 @@
 import { includes } from '@dojo/shim/array';
-import FactoryRegistry from '../FactoryRegistry';
+import WidgetRegistry from '../WidgetRegistry';
 import { WidgetBase, onPropertiesChanged, diffProperty } from './../WidgetBase';
 import {
 	PropertyChangeRecord,
@@ -9,14 +9,14 @@ import {
 } from '../interfaces';
 
 export interface RegistryMixinProperties extends WidgetProperties {
-	registry: FactoryRegistry;
+	registry: WidgetRegistry;
 }
 
 export function RegistryMixin<T extends Constructor<WidgetBase<RegistryMixinProperties>>>(base: T): T {
 	class Registry extends base {
 
 		@diffProperty('registry')
-		public diffPropertyRegistry(previousValue: FactoryRegistry, value: FactoryRegistry): PropertyChangeRecord {
+		public diffPropertyRegistry(previousValue: WidgetRegistry, value: WidgetRegistry): PropertyChangeRecord {
 			return {
 				changed: previousValue !== value,
 				value: value

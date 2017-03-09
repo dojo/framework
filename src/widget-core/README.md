@@ -148,28 +148,28 @@ As well as interacting with the VDOM by passing it HyperScript, you can also pas
 
 #### `w`
 
-The following code creates a widget using the `factory` and `properties`.
+The following code creates a widget using the `widgetConstructor` and `properties`.
 
 ```ts
-w<P extends WidgetProperties>(factory: string | WidgetFactory<Widget<P>, P>, properties: P): WNode[];
+w<P extends WidgetProperties>(widgetConstructor: string | WidgetBaseConstructor<P>, properties: P): WNode[];
 ```
 
-The following code creates a widget using the `factory`, `properties` and `children`
+The following code creates a widget using the `widgetConstructor`, `properties` and `children`
 
 ```ts
-w<P extends WidgetProperties>(factory: string | WidgetFactory<Widget<P>, P>, properties: P, children: (DNode | null)[]): WNode[];
+w<P extends WidgetProperties>(widgetConstructor: string | WidgetBaseConstructor<P>, properties: P, children: (DNode | null)[]): WNode[];
 ```
 Example `w` constructs:
 
 ```ts
-w(createFactory, properties);
-w(createFactory, properties, children);
+w(WidgetClass, properties);
+w(WidgetClass, properties, children);
 
-w('my-factory', properties);
-w('my-factory', properties, children);
+w('my-widget', properties);
+w('my-widget', properties, children);
 ```
 
-The example above that uses a string for the `factory`, is taking advantage of our [widget registry](#widget-registry) functionality.
+The example above that uses a string for the `widgetConstructor `, is taking advantage of our [widget registry](#widget-registry) functionality.
 The widget registry allows you to lazy instantiate widgets.
 
 ### Writing Custom Widgets
@@ -405,7 +405,7 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 
 #### Widget Registry
 
-The registry provides the ability to define a label against a `WidgetFactory`, a `Promise<WidgetFactory>` or a function that when executed returns a `Promise<WidgetFactory>`.
+The registry provides the ability to define a label against a `WidgetRegistryItem`. A `WidgetRegistryItem` is either a `WidgetConstructor` a `Promise<WidgetConstructor>` or a function that when executed returns a `Promise<WidgetConstructor>`.
 
 A global widget registry is exported from the `d.ts` class.
 
@@ -413,22 +413,22 @@ A global widget registry is exported from the `d.ts` class.
 import { registry } from '@dojo/widget-core/d';
 import MyWidget from './MyWidget';
 
-// registers the widget factory that will be available immediately
+// registers the widget that will be available immediately
 registry.define('my-widget-1', MyWidget);
 
-// registers a promise that is resolving to a widget factory and will be
+// registers a promise that is resolving to a widget and will be
 // available as soon as the promise resolves.
 registry.define('my-widget-2', Promise.resolve(MyWidget));
 
-// registers a function that will be lazily executed the first time the factory
+// registers a function that will be lazily executed the first time the
 // label is used within a widget render pipeline. The widget will be available
 // as soon as the promise is resolved after the initial get.
 registry.define('my-widget-3', () => Promise.resolve(MyWidget));
 ```
 
-It is recommended to use the factory registry when defining widgets with [`w`](#w--d), to support lazy factory resolution.
+It is recommended to use the widget registry when defining widgets with [`w`](#w--d), to support lazy widget resolution.
 
-Example of registering a function that returns a `Promise` that resolves to a `Factory`.
+Example of registering a function that returns a `Promise` that resolves to a `widget`.
 
 ```ts
 import load from '@dojo/core/load';
@@ -640,7 +640,7 @@ import MyWidget from './path/to/MyWidget';
 export default function createCustomElement(): CustomElementDescriptor {
 	return {
 		tagName: 'my-widget',
-		widgetFactory: MyWidget,
+		widgetConstructor: MyWidget,
 	   	attributes: [
 		   	{
 			   	attributeName: 'label'
@@ -691,7 +691,7 @@ Using your widget would be a simple matter of importing the HTML import,
 
 Your widget will be registered with the browser using the provided tag name. The tag name **must** have a `-` in it.
 
-##### Widget Factory
+##### Widget Constructor
 
 A widget class that you want wrapped as a custom element.
 

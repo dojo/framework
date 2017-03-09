@@ -6,7 +6,7 @@ import { WidgetBase, diffProperty, afterRender, onPropertiesChanged } from '../.
 import { VNode } from '@dojo/interfaces/vdom';
 import { v, w, registry } from '../../src/d';
 import { stub, spy } from 'sinon';
-import FactoryRegistry from './../../src/FactoryRegistry';
+import WidgetRegistry from './../../src/WidgetRegistry';
 
 registerSuite({
 	name: 'WidgetBase',
@@ -595,7 +595,7 @@ registerSuite({
 			let result = <VNode> myWidget.__render__();
 			assert.lengthOf(result.children, 0);
 			assert.isTrue(consoleStub.calledOnce);
-			assert.isTrue(consoleStub.calledWith(`Unable to render unknown widget factory ${factory}`));
+			assert.isTrue(consoleStub.calledWith(`Unable to render unknown widget constructor ${factory}`));
 			consoleStub.restore();
 		},
 		'render using scoped factory registry'() {
@@ -605,7 +605,7 @@ registerSuite({
 				}
 			}
 
-			const registry = new FactoryRegistry();
+			const registry = new WidgetRegistry();
 			registry.define('my-header', TestHeaderWidget);
 
 			class TestWidget extends WidgetBase<any> {
@@ -776,7 +776,7 @@ registerSuite({
 			assert.strictEqual(lastRenderChild.vnodeSelector, 'footer');
 		},
 		'render with multiple children of the same type without an id'() {
-			const warnMsg = 'It is recommended to provide a unique `key` property when using the same widget factory multiple times';
+			const warnMsg = 'It is recommended to provide a unique `key` property when using the same widget multiple times';
 			class TestWidgetOne extends WidgetBase<any> {}
 			class TestWidgetTwo extends WidgetBase<any> {}
 

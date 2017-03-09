@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { RegistryMixin, RegistryMixinProperties } from '../../../src/mixins/Registry';
-import FactoryRegistry from '../../../src/FactoryRegistry';
+import WidgetRegistry from '../../../src/WidgetRegistry';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { w, v } from '../../../src/d';
 import { VNode } from '@dojo/interfaces/vdom';
@@ -13,7 +13,7 @@ registerSuite({
 	name: 'mixins/RegistryMixin',
 	property: {
 		'passed registry is available via getter'() {
-			const registry = new FactoryRegistry();
+			const registry = new WidgetRegistry();
 			const instance: any = new TestWithRegistry();
 			instance.setProperties({ registry });
 			assert.equal(instance.registry, registry);
@@ -24,8 +24,8 @@ registerSuite({
 			assert.equal(instance.registry, undefined);
 		},
 		'passed registry updated on property change'() {
-			const registry = new FactoryRegistry();
-			const newRegistry = new FactoryRegistry();
+			const registry = new WidgetRegistry();
+			const newRegistry = new WidgetRegistry();
 			const instance: any = new TestWithRegistry();
 			instance.setProperties({ registry });
 			assert.equal(instance.registry, registry);
@@ -38,7 +38,7 @@ registerSuite({
 			assert.equal(instance.registry, newRegistry);
 		},
 		'different property passed on property change should not affect registry'() {
-			const registry = new FactoryRegistry();
+			const registry = new WidgetRegistry();
 			const instance: any = new TestWithRegistry();
 			instance.setProperties({ registry });
 			assert.equal(instance.registry, registry);
@@ -51,7 +51,7 @@ registerSuite({
 			assert.equal(instance.registry, registry);
 		},
 		'is excluded from the catch all diffProperties function'() {
-			const registry = new FactoryRegistry();
+			const registry = new WidgetRegistry();
 			const instance: any = new TestWithRegistry();
 			const diffProps = spy(instance, 'diffProperties');
 			instance.setProperties({ registry });
@@ -79,7 +79,7 @@ registerSuite({
 				}
 			}
 
-			const registry = new FactoryRegistry();
+			const registry = new WidgetRegistry();
 			registry.define('test', Header);
 
 			const instance: any = new IntegrationTest();
@@ -89,7 +89,7 @@ registerSuite({
 			assert.lengthOf(result.children, 1);
 			assert.strictEqual(result.children![0].vnodeSelector, 'header');
 
-			const newRegistry = new FactoryRegistry();
+			const newRegistry = new WidgetRegistry();
 			newRegistry.define('test', Span);
 
 			instance.setProperties({ registry: newRegistry });

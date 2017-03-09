@@ -10,7 +10,7 @@ import {
 	WidgetProperties,
 	WidgetBaseConstructor
 } from './interfaces';
-import FactoryRegistry from './FactoryRegistry';
+import WidgetRegistry from './WidgetRegistry';
 
 /**
  * The symbol identifier for a WNode type
@@ -63,20 +63,20 @@ export function decorate(dNodes: DNode | DNode[], modifier: (dNode: DNode) => vo
 }
 
 /**
- * Global factory registry instance
+ * Global widget registry instance
  */
-export const registry = new FactoryRegistry();
+export const registry = new WidgetRegistry();
 
 /**
  * Wrapper function for calls to create a widget.
  */
-export function w<P extends WidgetProperties>(factory: WidgetBaseConstructor<P> | string, properties: P): WNode;
-export function w<P extends WidgetProperties>(factory: WidgetBaseConstructor<P> | string, properties: P, children?: DNode[]): WNode;
-export function w<P extends WidgetProperties>(factory: WidgetBaseConstructor<P> | string, properties: P, children?: DNode[]): WNode {
+export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, properties: P): WNode;
+export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, properties: P, children?: DNode[]): WNode;
+export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, properties: P, children?: DNode[]): WNode {
 
 	return {
 		children,
-		factory,
+		widgetConstructor,
 		properties,
 		type: WNODE
 	};

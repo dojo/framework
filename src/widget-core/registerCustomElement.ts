@@ -43,8 +43,8 @@ export function registerCustomElement(descriptorFactory: CustomElementDescriptor
 			widgetInstance = widget;
 		}
 
-		getWidgetFactory(): Constructor<WidgetBase<WidgetProperties>> {
-			return this.getDescriptor().widgetFactory;
+		getWidgetConstructor(): Constructor<WidgetBase<WidgetProperties>> {
+			return this.getDescriptor().widgetConstructor;
 		}
 
 		getDescriptor(): CustomElementDescriptor {

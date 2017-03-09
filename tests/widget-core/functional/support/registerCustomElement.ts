@@ -29,7 +29,7 @@ class TestButton extends WidgetBase<TestButtonProperties> {
 registerCustomElement(function () {
 	return {
 		tagName: 'test-button',
-		widgetFactory: TestButton,
+		widgetConstructor: TestButton,
 		attributes: [
 			{
 				attributeName: 'label'
@@ -51,7 +51,7 @@ registerCustomElement(function () {
 registerCustomElement(function () {
 	return {
 		tagName: 'no-attributes',
-		widgetFactory: TestButton,
+		widgetConstructor: TestButton,
 		properties: [
 			{
 				propertyName: 'buttonLabel',

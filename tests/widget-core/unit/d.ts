@@ -4,9 +4,9 @@ import { assign } from '@dojo/core/lang';
 import { DNode, HNode } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
 import { v, w, decorate, registry, WNODE, HNODE, isWNode, isHNode } from '../../src/d';
-import FactoryRegistry from './../../src/FactoryRegistry';
+import WidgetRegistry from './../../src/WidgetRegistry';
 
-class TestFactoryRegistry extends FactoryRegistry {
+class TestFactoryRegistry extends WidgetRegistry {
 	clear(this: any) {
 		this.registry.clear();
 	}
@@ -36,7 +36,7 @@ registerSuite({
 		'create WNode wrapper'() {
 			const properties: any = { id: 'id', classes: [ 'world' ] };
 			const dNode = w(WidgetBase, properties);
-			assert.deepEqual(dNode.factory, WidgetBase);
+			assert.deepEqual(dNode.widgetConstructor, WidgetBase);
 			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
 			assert.equal(dNode.type, WNODE);
 			assert.isTrue(isWNode(dNode));
@@ -46,7 +46,7 @@ registerSuite({
 			registry.define('my-widget', WidgetBase);
 			const properties: any = { id: 'id', classes: [ 'world' ] };
 			const dNode = w('my-widget', properties);
-			assert.deepEqual(dNode.factory, 'my-widget');
+			assert.deepEqual(dNode.widgetConstructor, 'my-widget');
 			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ] });
 			assert.equal(dNode.type, WNODE);
 			assert.isTrue(isWNode(dNode));
@@ -55,7 +55,7 @@ registerSuite({
 		'create WNode wrapper with children'() {
 			const properties: any = { id: 'id', classes: [ 'world' ] };
 			const dNode = w(WidgetBase, properties, [ w(WidgetBase, properties) ]);
-			assert.deepEqual(dNode.factory, WidgetBase);
+			assert.deepEqual(dNode.widgetConstructor, WidgetBase);
 			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ] });
 			assert.lengthOf(dNode.children, 1);
 			assert.equal(dNode.type, WNODE);

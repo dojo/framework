@@ -65,12 +65,12 @@ export interface CustomElementInitializer {
  *
  * Describes a custom element.
  *
- * @property    {string}                                tagName         The tag name to register this widget under. Tag names must contain a "-"
- * @property    {WidgetFactory}                         widgetFactory   A widget factory that will return the widget to be wrapped in a custom element
- * @property    {CustomElementAttributeDescriptor[]?}   attributes      A list of attributes to define on this element
- * @property    {CustomElementPropertyDescriptor[]?}    properties      A list of properties to define on this element
- * @property    {CustomElementEventDescriptor[]?}       events          A list of events to expose on this element
- * @property    {CustomElementInitializer?}             initialization  A method to run to set custom properties on the wrapped widget
+ * @property    {string}                                tagName         	The tag name to register this widget under. Tag names must contain a "-"
+ * @property    {WidgetConstructor}                     widgetConstructor   A widget Constructor that will return the widget to be wrapped in a custom element
+ * @property    {CustomElementAttributeDescriptor[]?}   attributes     		A list of attributes to define on this element
+ * @property    {CustomElementPropertyDescriptor[]?}    properties      	A list of properties to define on this element
+ * @property    {CustomElementEventDescriptor[]?}       events          	A list of events to expose on this element
+ * @property    {CustomElementInitializer?}             initialization  	A method to run to set custom properties on the wrapped widget
  */
 export interface CustomElementDescriptor {
 	/**
@@ -79,9 +79,9 @@ export interface CustomElementDescriptor {
 	tagName: string;
 
 	/**
-	 * Widget factory that will create the widget
+	 * Widget constructor that will create the widget
 	 */
-	widgetFactory: Constructor<WidgetBase<WidgetProperties>>;
+	widgetConstructor: Constructor<WidgetBase<WidgetProperties>>;
 
 	/**
 	 * List of attributes on the custom element to map to widget properties
@@ -107,15 +107,15 @@ export interface CustomElementDescriptor {
 /**
  * @type CustomElement
  *
- * A custom element extends upon a regular HTMLElement but adds fields for describing and wrapping a widget factory.
+ * A custom element extends upon a regular HTMLElement but adds fields for describing and wrapping a widget constructor.
  *
- * @property    {WidgetFactory}             getWidgetFactory    Return the widget factory for this element
- * @property    {CustomElementDescriptor}   getDescriptor       Return the element descriptor for this element
- * @property    {Widget}                    getWidgetInstance   Return the widget instance that this element wraps
- * @property                                setWidgetInstance   Set the widget instance for this element
+ * @property    {WidgetConstructor}			getWidgetConstructor	Return the widget constructor for this element
+ * @property    {CustomElementDescriptor}	getDescriptor       	Return the element descriptor for this element
+ * @property    {Widget}					getWidgetInstance   	Return the widget instance that this element wraps
+ * @property								setWidgetInstance   	Set the widget instance for this element
  */
 export interface CustomElement extends HTMLElement {
-	getWidgetFactory(): Constructor<WidgetBase<WidgetProperties>>;
+	getWidgetConstructor(): Constructor<WidgetBase<WidgetProperties>>;
 	getDescriptor(): CustomElementDescriptor;
 	getWidgetInstance(): WidgetBaseInterface<any>;
 	setWidgetInstance(instance: WidgetBaseInterface<any>): void;
@@ -239,7 +239,7 @@ export function initializeElement(element: CustomElement) {
 		element.removeChild(childNode);
 	});
 
-	const projector = ProjectorMixin(element.getWidgetFactory());
+	const projector = ProjectorMixin(element.getWidgetConstructor());
 
 	const widgetInstance = new projector();
 	widgetInstance.setProperties(initialProperties);

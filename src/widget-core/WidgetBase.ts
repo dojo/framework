@@ -7,7 +7,7 @@ import Promise from '@dojo/shim/Promise';
 import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
 import { v, registry, isWNode } from './d';
-import FactoryRegistry, { WIDGET_BASE_TYPE } from './FactoryRegistry';
+import WidgetRegistry, { WIDGET_BASE_TYPE } from './WidgetRegistry';
 import {
 	DNode,
 	WidgetConstructor,
@@ -24,7 +24,7 @@ import { Handle } from '@dojo/interfaces/core';
  */
 interface WidgetCacheWrapper {
 	child: WidgetBaseInterface<WidgetProperties>;
-	factory: WidgetConstructor;
+	widgetConstructor: WidgetConstructor;
 	used: boolean;
 }
 
@@ -103,9 +103,9 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	private previousProperties: P & { [index: string]: any };
 
 	/**
-	 * Map of factory promises
+	 * Map constructor labels to widget constructor
 	 */
-	private initializedFactoryMap: Map<string, Promise<WidgetConstructor>>;
+	private initializedConstructorMap: Map<string, Promise<WidgetConstructor>>;
 
 	/**
 	 * cached chldren map for instance management
@@ -133,9 +133,9 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	private _decorators: Map<string, any[]>;
 
 	/**
-	 * Internal factory registry
+	 * Internal widget registry
 	 */
-	protected registry: FactoryRegistry | undefined;
+	protected registry: WidgetRegistry | undefined;
 
 	/**
 	 * @constructor
@@ -146,7 +146,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		this._children = [];
 		this._properties = <P> {};
 		this.previousProperties = <P> {};
-		this.initializedFactoryMap = new Map<string, Promise<WidgetConstructor>>();
+		this.initializedConstructorMap = new Map<string, Promise<WidgetConstructor>>();
 		this.cachedChildrenMap = new Map<string | Promise<WidgetConstructor> | WidgetConstructor, WidgetCacheWrapper[]>();
 		this.diffPropertyFunctionMap = new Map<string, string>();
 		this.renderDecorators = new Set<string>();
@@ -314,16 +314,16 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	}
 
 	/**
-	 * Returns the factory from the registry for the specified label. First checks a local registry passed via
-	 * properties, if no local registry or the factory is not found fallback to the global registry
+	 * Returns the constructor from the registry for the specified label. First checks a local registry passed via
+	 * properties, if no local registry or the constructor is not found fallback to the global registry
 	 *
-	 * @param factoryLabel the label to look up in the registry
+	 * @param widgetLabel the label to look up in the registry
 	 */
-	private getFromRegistry(factoryLabel: string): Promise<WidgetConstructor> | WidgetConstructor | null {
-		if (this.registry && this.registry.has(factoryLabel)) {
-			return this.registry.get(factoryLabel);
+	private getFromRegistry(widgetLabel: string): Promise<WidgetConstructor> | WidgetConstructor | null {
+		if (this.registry && this.registry.has(widgetLabel)) {
+			return this.registry.get(widgetLabel);
 		}
-		return registry.get(factoryLabel);
+		return registry.get(widgetLabel);
 	}
 
 	/**
@@ -342,34 +342,34 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 			const { children, properties = {} } = dNode;
 			const { key } = properties;
 
-			let { factory } = dNode;
+			let { widgetConstructor } = dNode;
 			let child: WidgetBaseInterface<WidgetProperties>;
 
-			if (typeof factory === 'string') {
-				const item = this.getFromRegistry(factory);
+			if (typeof widgetConstructor === 'string') {
+				const item = this.getFromRegistry(widgetConstructor);
 
 				if (item instanceof Promise) {
-					if (item && !this.initializedFactoryMap.has(factory)) {
-						const promise = item.then((factory) => {
+					if (item && !this.initializedConstructorMap.has(widgetConstructor)) {
+						const promise = item.then((ctor) => {
 							this.invalidate();
-							return factory;
+							return ctor;
 						});
-						this.initializedFactoryMap.set(factory, promise);
+						this.initializedConstructorMap.set(widgetConstructor, promise);
 					}
 					return null;
 				}
 				else if (item === null) {
-					console.warn(`Unable to render unknown widget factory ${factory}`);
+					console.warn(`Unable to render unknown widget constructor ${widgetConstructor}`);
 					return null;
 				}
-				factory = item;
+				widgetConstructor = item;
 			}
 
-			const childrenMapKey = key || factory;
+			const childrenMapKey = key || widgetConstructor;
 			let cachedChildren = this.cachedChildrenMap.get(childrenMapKey) || [];
 			let cachedChild: WidgetCacheWrapper | undefined;
 			cachedChildren.some((cachedChildWrapper) => {
-				if (cachedChildWrapper.factory === factory && !cachedChildWrapper.used) {
+				if (cachedChildWrapper.widgetConstructor === widgetConstructor && !cachedChildWrapper.used) {
 					cachedChild = cachedChildWrapper;
 					return true;
 				}
@@ -386,17 +386,17 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 				cachedChild.used = true;
 			}
 			else {
-				child = new factory();
+				child = new widgetConstructor();
 				child.setProperties(properties);
 				child.own(child.on('invalidated', () => {
 					this.invalidate();
 				}));
-				cachedChildren = [...cachedChildren, { child, factory, used: true }];
+				cachedChildren = [...cachedChildren, { child, widgetConstructor, used: true }];
 				this.cachedChildrenMap.set(childrenMapKey, cachedChildren);
 				this.own(child);
 			}
 			if (!key && cachedChildren.length > 1) {
-				const errorMsg = 'It is recommended to provide a unique `key` property when using the same widget factory multiple times';
+				const errorMsg = 'It is recommended to provide a unique `key` property when using the same widget multiple times';
 				console.warn(errorMsg);
 				this.emit({ type: 'error', target: this, error: new Error(errorMsg) });
 			}

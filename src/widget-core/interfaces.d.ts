@@ -262,12 +262,12 @@ export interface HNode {
  */
 export interface WNode {
 	/**
-	 * Factory to create a widget
+	 * Constructor to create a widget or string constructor label
 	 */
-	factory: WidgetConstructor | string;
+	widgetConstructor: WidgetConstructor | string;
 
 	/**
-	 * Options used to create factory a widget
+	 * Properties to set against a widget instance
 	 */
 	properties: WidgetProperties;
 
