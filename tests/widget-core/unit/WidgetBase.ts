@@ -1,11 +1,11 @@
+import { VNode } from '@dojo/interfaces/vdom';
+import Promise from '@dojo/shim/Promise';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Promise from '@dojo/shim/Promise';
+import { stub, spy } from 'sinon';
+import { v, w, registry } from '../../src/d';
 import { DNode } from '../../src/interfaces';
 import { WidgetBase, diffProperty, afterRender, onPropertiesChanged } from '../../src/WidgetBase';
-import { VNode } from '@dojo/interfaces/vdom';
-import { v, w, registry } from '../../src/d';
-import { stub, spy } from 'sinon';
 import WidgetRegistry from './../../src/WidgetRegistry';
 
 registerSuite({
@@ -1021,5 +1021,57 @@ registerSuite({
 		widget.__render__();
 		assert.equal(foo, 2);
 		assert.equal(invalidateSpy.callCount, 1);
+	},
+	'decorators are cached'() {
+		class TestWidget extends WidgetBase<any> {
+			@afterRender
+			running(result: DNode): DNode {
+				return result;
+			}
+
+			render() {
+				return v('div');
+			}
+		}
+
+		const widget = new TestWidget();
+		const decoratorSpy = spy(widget, '_buildDecoratorList');
+
+		widget.__render__();
+
+		// first call calls the method
+		assert.equal(decoratorSpy.callCount, 1);
+
+		widget.invalidate();
+
+		widget.__render__();
+
+		// second call is cached
+		assert.equal(decoratorSpy.callCount, 1);
+	},
+	'decorators applied to subclasses are not applied to base classes'() {
+		class TestWidget extends WidgetBase<any> {
+			@afterRender
+			firstRender(result: DNode): DNode {
+				return result;
+			}
+
+			getAfterRenders(): Function[] {
+				return this.getDecorator('afterRender');
+			}
+		}
+
+		class TestWidget2 extends TestWidget {
+			@afterRender
+			secondRender(result: DNode): DNode {
+				return result;
+			}
+		}
+
+		const testWidget = new TestWidget();
+		const testWidget2 = new TestWidget2();
+
+		assert.equal(testWidget.getAfterRenders().length, 1);
+		assert.equal(testWidget2.getAfterRenders().length, 2);
 	}
 });

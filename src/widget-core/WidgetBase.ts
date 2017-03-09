@@ -1,13 +1,13 @@
 import { Evented, BaseEventedEvents } from '@dojo/core/Evented';
 import { assign } from '@dojo/core/lang';
 import { EventedListenerOrArray } from '@dojo/interfaces/bases';
+import { Handle } from '@dojo/interfaces/core';
 import { VNode } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
 import Promise from '@dojo/shim/Promise';
 import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
 import { v, registry, isWNode } from './d';
-import WidgetRegistry, { WIDGET_BASE_TYPE } from './WidgetRegistry';
 import {
 	DNode,
 	WidgetConstructor,
@@ -17,7 +17,7 @@ import {
 	PropertiesChangeRecord,
 	PropertiesChangeEvent
 } from './interfaces';
-import { Handle } from '@dojo/interfaces/core';
+import WidgetRegistry, { WIDGET_BASE_TYPE } from './WidgetRegistry';
 
 /**
  * Widget cache wrapper for instance management
@@ -39,6 +39,8 @@ interface DiffPropertyConfig {
 export interface WidgetBaseEvents<P extends WidgetProperties> extends BaseEventedEvents {
 	(type: 'properties:changed', handler: EventedListenerOrArray<WidgetBase<P>, PropertiesChangeEvent<WidgetBase<P>, P>>): Handle;
 }
+
+const decoratorMap = new Map<Function, Map<string, any[]>>();
 
 /**
  * Decorator that can be used to register a function to run as an aspect to `render`
@@ -117,6 +119,8 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	 */
 	private diffPropertyFunctionMap: Map<string, string>;
 
+	private _decoratorCache: Map<string, any[]>;
+
 	/**
 	 * set of render decorators
 	 */
@@ -126,11 +130,6 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	 * Map of functions properties for the bound function
 	 */
 	private bindFunctionPropertyMap: WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>;
-
-	/**
-	 * A generic property bag for decorators
-	 */
-	private _decorators: Map<string, any[]>;
 
 	/**
 	 * Internal widget registry
@@ -144,6 +143,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		super({});
 
 		this._children = [];
+		this._decoratorCache = new Map<string, any[]>();
 		this._properties = <P> {};
 		this.previousProperties = <P> {};
 		this.initializedConstructorMap = new Map<string, Promise<WidgetConstructor>>();
@@ -292,25 +292,68 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	 */
 	protected addDecorator(decoratorKey: string, value: any): void {
 		value = Array.isArray(value) ? value : [ value ];
-		if (!this._decorators) {
-			this._decorators = new Map<string, any[]>();
+
+		let decoratorList = decoratorMap.get(this.constructor);
+		if (!decoratorList) {
+			decoratorList = new Map<string, any[]>();
+			decoratorMap.set(this.constructor, decoratorList);
 		}
 
-		const currentValue = this._decorators.get(decoratorKey) || [];
-		this._decorators.set(decoratorKey, [ ...currentValue, ...value ]);
+		let specificDecoratorList = decoratorList.get(decoratorKey);
+		if (!specificDecoratorList) {
+			specificDecoratorList = [];
+			decoratorList.set(decoratorKey, specificDecoratorList);
+		}
+
+		specificDecoratorList.push(...value);
+	}
+
+	/**
+	 * Function to build the list of decorators from the global decorator map.
+	 *
+	 * @param decoratorKey  The key of the decorator
+	 * @return An array of decorator values
+	 * @private
+	 */
+	private _buildDecoratorList(decoratorKey: string): any[] {
+		const allDecorators = [];
+
+		let constructor = this.constructor;
+
+		while (constructor) {
+			const instanceMap = decoratorMap.get(constructor);
+			if (instanceMap) {
+				const decorators = instanceMap.get(decoratorKey);
+
+				if (decorators) {
+					allDecorators.unshift(...decorators);
+				}
+			}
+
+			constructor = Object.getPrototypeOf(constructor);
+		}
+
+		return allDecorators;
 	}
 
 	/**
 	 * Function to retrieve decorator values
 	 *
 	 * @param decoratorKey The key of the decorator
-	 * @returns An array of decorator values or undefined
+	 * @returns An array of decorator values
 	 */
-	protected getDecorator(decoratorKey: string): any[] | undefined {
-		if (this._decorators) {
-			return this._decorators.get(decoratorKey);
+	protected getDecorator(decoratorKey: string): any[] {
+		let allDecorators = this._decoratorCache.get(decoratorKey);
+
+		if (allDecorators !== undefined) {
+			return allDecorators;
 		}
-		return undefined;
+
+		allDecorators = this._buildDecoratorList(decoratorKey);
+
+		this._decoratorCache.set(decoratorKey, allDecorators);
+
+		return allDecorators;
 	}
 
 	/**
