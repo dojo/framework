@@ -8,6 +8,43 @@ An internationalization library that provides locale-specific message loading, a
 
 **WARNING** This is _alpha_ software. It is not yet production ready, so you should use at your own risk.
 
+- [Usage](#usage)
+- [Features](#features)
+  - [Message Bundle Loading](#message-bundle-loading)
+  - [Determining the Current Locale](#determining-the-current-locale)
+  - [Changing the Root Locale and Observing Locale Changes](#changing-the-root-locale-and-observering-locale-changes)
+  - [Loading CLDR data](#loading-cldr-data)
+  - [ICU Message Formatting](#icu-message-formatting)
+  - [Date and number formatting](#date-and-number-formatting)
+- [How do I contribute?](#how-do-i-contribute)
+  - [Installation](#installation)
+  - [Testing](#testing)
+- [Licensing information](#licensing-information)
+
+## Usage
+
+To use `@dojo/i18n`, install the package along with its required peer dependencies:
+
+```bash
+npm install @dojo/i18n
+
+# peer dependencies
+npm install @dojo/core
+npm install @dojo/has
+npm install @dojo/shim
+```
+
+With TypeScript or ES6 modules, you would generally want to just import the @dojo/i18n/i18n module:
+
+```typescript
+import i18n, { Messages } from '@dojo/i18n/i18n';
+import messageBundle from 'path/to/bundle';
+
+i18n(messageBundle, 'fr').then((messages: Messages) => {
+	// locale-specific messages ready to use...
+});
+```
+
 ## Features
 
 The examples below are provided in TypeScript syntax. The package does work under JavaScript, but for clarity, the examples will only include one syntax.
@@ -320,33 +357,18 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 - `formatUnit` => [`Globalize.formatUnit`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
 - `getUnitFormatter` => [`Globalize.unitFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
 
-## How do I use this package?
-
-The easiest way to use this package is to install it via npm:
-
-```
-$ npm install @dojo/i18n
-```
-
-In addition, you can clone this repository and use the Grunt build scripts to manage the package.
-
-Using under TypeScript or ES6 modules, you would generally want to just import the @dojo/i18n/i18n module:
-
-```typescript
-import i18n, { Messages } from '@dojo/i18n/i18n';
-import messageBundle from 'path/to/bundle';
-
-i18n(messageBundle, 'fr').then((messages: Messages) => {
-	// locale-specific messages ready to use...
-});
-```
-
 ## How do I contribute?
 
 We appreciate your interest!  Please see the [Guidelines Repository](https://github.com/dojo/guidelines#readme) for the
 Contributing Guidelines and Style Guide.
 
-## Testing
+### Installation
+
+To start working with this package, clone the repository and run `npm install`.
+
+In order to build the project run `grunt dev` or `grunt dist`.
+
+### Testing
 
 Test cases MUST be written using Intern using the Object test interface and Assert assertion interface.
 
@@ -354,7 +376,7 @@ Test cases MUST be written using Intern using the Object test interface and Asse
 
 ## Licensing information
 
-* [Third-party lib one](https//github.com/foo/bar) ([New BSD](http://opensource.org/licenses/BSD-3-Clause))
+* [Globalize.js](https://github.com/globalizejs/globalize) ([MIT](http://spdx.org/licenses/MIT))
 
-© 2004–2015 Dojo Foundation & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© 2017 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
