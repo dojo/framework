@@ -19,7 +19,7 @@ export interface LabelProperties {
 /**
  * Form Label Properties
  */
-export interface FormLabelMixinProperties {
+export interface FormLabelMixinProperties extends WidgetProperties {
 
 	/**
 	 * The form widget's name
@@ -106,13 +106,11 @@ const labelDefaults = {
  */
 const allowedFormFieldAttributes = ['checked', 'describedBy', 'disabled', 'invalid', 'maxLength', 'minLength', 'multiple', 'name', 'placeholder', 'readOnly', 'required', 'value'];
 
-export function FormLabelMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T {
+export function FormLabelMixin<T extends Constructor<WidgetBase<FormLabelMixinProperties>>>(base: T): T {
 	class FormLabel extends base {
 
-		properties: FormLabelMixinProperties;
-
 		@afterRender
-		renderDecorator(result: DNode): DNode {
+		protected renderDecorator(result: DNode): DNode {
 			const labelNodeAttributes: any = {};
 			if (isHNode(result)) {
 				assign(result.properties, this.getFormFieldA11yAttributes());

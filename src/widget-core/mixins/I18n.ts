@@ -64,9 +64,8 @@ export interface I18nMixin {
 	localizeBundle<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T>;
 }
 
-export function I18nMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<I18nMixin> {
+export function I18nMixin<T extends Constructor<WidgetBase<I18nProperties>>>(base: T): T & Constructor<I18nMixin> {
 	class I18n extends base {
-		properties: I18nProperties;
 
 		constructor(...args: any[]) {
 			super(...args);
@@ -96,7 +95,7 @@ export function I18nMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(b
 		}
 
 		@afterRender
-		renderDecorator(result: DNode): DNode {
+		protected renderDecorator(result: DNode): DNode {
 			if (isHNode(result)) {
 				const { locale, rtl } = this.properties;
 				const vNodeProperties: I18nVNodeProperties = {

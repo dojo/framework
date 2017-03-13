@@ -13,7 +13,8 @@ registerSuite({
 	api() {
 		const widgetBase = new WidgetBase();
 		assert(widgetBase);
-		assert.isFunction(widgetBase.render);
+		assert.isFunction(widgetBase.__render__);
+		assert.isFunction(widgetBase.diffProperties);
 		assert.isFunction(widgetBase.invalidate);
 	},
 	children() {

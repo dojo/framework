@@ -6,7 +6,7 @@ import { WidgetBase } from './../../../src/WidgetBase';
 import { DomWrapper } from '../../../src/util/DomWrapper';
 
 function callCreate(widget: WidgetBase<any>, includeUpdate = false) {
-	const hNode: HNode = <HNode> widget.render();
+	const hNode: HNode = <HNode> (<any> widget).render();
 
 	assert.isTrue(isHNode(hNode));
 
@@ -42,14 +42,14 @@ registerSuite({
 		let domWrapper: any = new DomWrapper();
 		domWrapper.setProperties({ domNode: <any> mock });
 
-		domWrapper.dirty = false;
-		domWrapper.cachedVNode = {
+		domWrapper._dirty = false;
+		domWrapper._cachedVNode = {
 			domNode: parentNode
 		};
 
 		callCreate(domWrapper);
 
-		assert.equal(domWrapper.properties.domNode, mock);
+		assert.equal(domWrapper._properties.domNode, mock);
 		assert.equal(parentNode.child, mock);
 	},
 
@@ -65,8 +65,8 @@ registerSuite({
 		let domWrapper: any = new DomWrapper();
 		domWrapper.setProperties({ domNode: <any> 'test' });
 
-		domWrapper.dirty = false;
-		domWrapper.cachedVNode = {
+		domWrapper._dirty = false;
+		domWrapper._cachedVNode = {
 			domNode: null
 		};
 
@@ -77,8 +77,8 @@ registerSuite({
 		let domWrapper: any = new DomWrapper();
 		domWrapper.setProperties({ domNode: <any> 'test' });
 
-		domWrapper.dirty = false;
-		domWrapper.cachedVNode = {
+		domWrapper._dirty = false;
+		domWrapper._cachedVNode = {
 			domNode: 'test'
 		};
 
@@ -88,8 +88,8 @@ registerSuite({
 	'updates with no renders don\'t do anything'() {
 		let domWrapper: any = new DomWrapper();
 		domWrapper.setProperties({ domNode: <any> undefined });
-		domWrapper.dirty = false;
-		domWrapper.cachedVNode = {
+		domWrapper._dirty = false;
+		domWrapper._cachedVNode = {
 			domNode: null
 		};
 
@@ -107,8 +107,8 @@ registerSuite({
 
 		let domWrapper: any = new DomWrapper();
 		domWrapper.setProperties({ domNode: <any> undefined });
-		domWrapper.dirty = false;
-		domWrapper.cachedVNode = {
+		domWrapper._dirty = false;
+		domWrapper._cachedVNode = {
 			domNode: parentNode
 		};
 
@@ -118,8 +118,8 @@ registerSuite({
 	'render aspect is ok if we dont return an hnode'() {
 		let domWrapper: any = new DomWrapper();
 		domWrapper.setProperties({ domNode: <any> undefined });
-		domWrapper.dirty = false;
-		domWrapper.cachedVNode = {
+		domWrapper._dirty = false;
+		domWrapper._cachedVNode = {
 			domNode: 'test'
 		};
 

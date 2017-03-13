@@ -46,11 +46,11 @@ export function StatefulMixin<T extends Constructor<WidgetBase<WidgetProperties>
 			}));
 		}
 
-		get state(): State {
+		public get state(): State {
 			return this._state;
 		}
 
-		setState(state: Partial<State>): void {
+		public setState(state: Partial<State>): void {
 			this._state = deepAssign({}, this._state, state);
 			const eventObject = {
 				type: stateChangedEventType,

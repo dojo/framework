@@ -371,13 +371,6 @@ export interface WidgetBaseInterface<P extends WidgetProperties> extends Evented
 	diffProperties(previousProperties: P & { [index: string]: any }, newProperties: P & { [index: string]: any }): PropertiesChangeRecord<P>;
 
 	/**
-	 * Default render, returns a `div` with widget's children
-	 *
-	 * @returns the DNode for the widget
-	 */
-	render(): DNode;
-
-	/**
 	 * Main internal function for dealing with widget rendering
 	 */
 	__render__(): VNode | string | null;

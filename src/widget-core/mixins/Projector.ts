@@ -114,27 +114,27 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 		public projectorState: ProjectorAttachState;
 
 		private _root: Element;
-		private attachPromise: Promise<Handle>;
-		private attachHandle: Handle;
-		private afterCreate: (...args: any[]) => void;
-		private originalAfterCreate?: () => void;
-		private projectionOptions: ProjectionOptions;
-		private projection: Projection | undefined;
-		private scheduled: number | undefined;
-		private paused: boolean;
-		private boundDoRender: FrameRequestCallback;
-		private boundRender: Function;
+		private _attachPromise: Promise<Handle>;
+		private _attachHandle: Handle;
+		private _afterCreate: (...args: any[]) => void;
+		private _originalAfterCreate?: () => void;
+		private _projectionOptions: ProjectionOptions;
+		private _projection: Projection | undefined;
+		private _scheduled: number | undefined;
+		private _paused: boolean;
+		private _boundDoRender: FrameRequestCallback;
+		private _boundRender: Function;
 
 		constructor(...args: any[]) {
 			super(...args);
 
-			this.projectionOptions = {
+			this._projectionOptions = {
 				transitions: cssTransitions,
 				eventHandlerInterceptor: this.eventHandlerInterceptor.bind(this)
 			};
 
-			this.boundDoRender = this.doRender.bind(this);
-			this.boundRender = this.__render__.bind(this);
+			this._boundDoRender = this.doRender.bind(this);
+			this._boundRender = this.__render__.bind(this);
 
 			this.own(this.on('widget:children', this.invalidate));
 			this.own(this.on('properties:changed', this.invalidate));
@@ -144,7 +144,7 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			this.projectorState = ProjectorAttachState.Detached;
 		}
 
-		append(root?: Element) {
+		public append(root?: Element) {
 			const options = {
 				type: AttachType.Append,
 				root
@@ -153,7 +153,7 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			return this.attach(options);
 		}
 
-		merge(root?: Element) {
+		public merge(root?: Element) {
 			const options = {
 				type: AttachType.Merge,
 				root
@@ -162,7 +162,7 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			return this.attach(options);
 		}
 
-		replace(root?: Element) {
+		public replace(root?: Element) {
 			const options = {
 				type: AttachType.Replace,
 				root
@@ -171,52 +171,52 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			return this.attach(options);
 		}
 
-		pause() {
-			if (this.scheduled) {
-				global.cancelAnimationFrame(this.scheduled);
-				this.scheduled = undefined;
+		public pause() {
+			if (this._scheduled) {
+				global.cancelAnimationFrame(this._scheduled);
+				this._scheduled = undefined;
 			}
-			this.paused = true;
+			this._paused = true;
 		}
 
-		resume() {
-			this.paused = false;
+		public resume() {
+			this._paused = false;
 			this.scheduleRender();
 		}
 
-		scheduleRender() {
-			if (this.projectorState === ProjectorAttachState.Attached && !this.scheduled && !this.paused) {
+		public scheduleRender() {
+			if (this.projectorState === ProjectorAttachState.Attached && !this._scheduled && !this._paused) {
 				this.emit({
 					type: 'render:scheduled',
 					target: this
 				});
-				this.scheduled = global.requestAnimationFrame(this.boundDoRender);
+				this._scheduled = global.requestAnimationFrame(this._boundDoRender);
 			}
 		}
 
-		set root(root: Element) {
+		public set root(root: Element) {
 			if (this.projectorState === ProjectorAttachState.Attached) {
 				throw new Error('Projector already attached, cannot change root element');
 			}
 			this._root = root;
 		}
 
-		get root(): Element {
+		public get root(): Element {
 			return this._root;
 		}
 
-		__render__() {
+		public __render__() {
 			const result = super.__render__();
 			if (typeof result === 'string' || result === null) {
 				throw new Error('Must provide a VNode at the root of a projector');
 			}
-			const { afterCreate } = this;
+			const { _afterCreate } = this;
 			if (result.properties) {
 				if (result.properties.afterCreate) {
-					this.originalAfterCreate = <any> result.properties.afterCreate;
+					this._originalAfterCreate = <any> result.properties.afterCreate;
 				}
 
-				result.properties.afterCreate = afterCreate;
+				result.properties.afterCreate = _afterCreate;
 			}
 
 			return result;
@@ -238,10 +238,10 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 		}
 
 		private doRender() {
-			this.scheduled = undefined;
+			this._scheduled = undefined;
 
-			if (this.projection) {
-				this.projection.update(this.boundRender());
+			if (this._projection) {
+				this._projection.update(this._boundRender());
 			}
 		}
 
@@ -251,50 +251,50 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			}
 
 			if (this.projectorState === ProjectorAttachState.Attached) {
-				return this.attachPromise || Promise.resolve({});
+				return this._attachPromise || Promise.resolve({});
 			}
 
 			this.projectorState = ProjectorAttachState.Attached;
 
-			this.attachHandle = this.own({
+			this._attachHandle = this.own({
 				destroy: () => {
 					if (this.projectorState === ProjectorAttachState.Attached) {
 						this.pause();
-						this.projection = undefined;
+						this._projection = undefined;
 						this.projectorState = ProjectorAttachState.Detached;
 					}
-					this.attachHandle = { destroy() { } };
+					this._attachHandle = { destroy() { } };
 				}
 			});
 
-			this.attachPromise = new Promise((resolve, reject) => {
-				this.afterCreate = (...args: any[]) => {
-					if (this.originalAfterCreate) {
+			this._attachPromise = new Promise((resolve, reject) => {
+				this._afterCreate = (...args: any[]) => {
+					if (this._originalAfterCreate) {
 						const [ , , , properties ] = args;
-						this.originalAfterCreate.apply(properties.bind || properties, args);
+						this._originalAfterCreate.apply(properties.bind || properties, args);
 					}
 
 					this.emit({
 						type: 'projector:attached',
 						target: this
 					});
-					resolve(this.attachHandle);
+					resolve(this._attachHandle);
 				};
 			});
 
 			switch (type) {
 				case AttachType.Append:
-					this.projection = dom.append(this.root, this.boundRender(), this.projectionOptions);
+					this._projection = dom.append(this.root, this._boundRender(), this._projectionOptions);
 				break;
 				case AttachType.Merge:
-					this.projection = dom.merge(this.root, this.boundRender(), this.projectionOptions);
+					this._projection = dom.merge(this.root, this._boundRender(), this._projectionOptions);
 				break;
 				case AttachType.Replace:
-					this.projection = dom.replace(this.root, this.boundRender(), this.projectionOptions);
+					this._projection = dom.replace(this.root, this._boundRender(), this._projectionOptions);
 				break;
 			}
 
-			return this.attachPromise;
+			return this._attachPromise;
 		}
 	};
 }
