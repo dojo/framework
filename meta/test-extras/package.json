@@ -1,0 +1,45 @@
+{
+  "name": "@dojo/intern-helper",
+  "version": "2.0.0-pre",
+  "description": "A set of modules to help with testing Dojo 2 with Intern",
+  "engines": {
+    "npm": "^3.10.0 || ^4.0.0",
+    "node": "^6.0.0 || ^7.0.0"
+  },
+  "private": true,
+  "homepage": "http://dojotoolkit.org",
+  "bugs": {
+    "url": "https://github.com/dojo/intern-helper/issues"
+  },
+  "license": "BSD-3-Clause",
+  "main": "main.js",
+  "files": [
+    "dist",
+    "src",
+    "typings.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dojo/intern-helper.git"
+  },
+  "scripts": {
+    "prepublish": "grunt peerDepInstall",
+    "test": "grunt test"
+  },
+  "peerDependencies": {
+    "intern": "^3.4.1"
+  },
+  "devDependencies": {
+    "@dojo/interfaces": ">=2.0.0-alpha.11",
+    "@dojo/loader": ">=2.0.0-beta.9",
+    "@types/chai": "3.4.*",
+    "@types/glob": "5.0.*",
+    "@types/grunt": "0.4.*",
+    "@types/sinon": "^1.16.31",
+    "grunt": "~1.0.1",
+    "grunt-dojo2": ">=2.0.0-beta.34",
+    "intern": "^3.4.1",
+    "tslint": "^3.15.0",
+    "typescript": "~2.2.1"
+  }
+}
