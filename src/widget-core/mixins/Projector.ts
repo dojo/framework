@@ -81,6 +81,33 @@ export interface ProjectorMixin {
 	readonly projectorState: ProjectorAttachState;
 }
 
+const eventHandlers = [
+	'ontouchcancel',
+	'ontouchend',
+	'ontouchmove',
+	'ontouchstart',
+	'onblur',
+	'onchange',
+	'onclick',
+	'ondblclick',
+	'onfocus',
+	'oninput',
+	'onkeydown',
+	'onkeypress',
+	'onkeyup',
+	'onload',
+	'onmousedown',
+	'onmouseenter',
+	'onmouseleave',
+	'onmousemove',
+	'onmouseout',
+	'onmouseover',
+	'onmouseup',
+	'onmousewheel',
+	'onscroll',
+	'onsubmit'
+];
+
 export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<ProjectorMixin> {
 	return class extends base {
 
@@ -196,11 +223,18 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 		}
 
 		private eventHandlerInterceptor(propertyName: string, eventHandler: Function, domNode: Element, properties: VNodeProperties) {
-			// remove "on" from event name
-			const eventName = propertyName.substr(2);
-			domNode.addEventListener(eventName, (...args: any[]) => {
-				eventHandler.apply(properties.bind || this, args);
-			});
+			if (eventHandlers.indexOf(propertyName) > -1) {
+				return function(this: Node, ...args: any[]) {
+					return eventHandler.apply(properties.bind || this, args);
+				};
+			}
+			else {
+				// remove "on" from event name
+				const eventName = propertyName.substr(2);
+				domNode.addEventListener(eventName, (...args: any[]) => {
+					eventHandler.apply(properties.bind || this, args);
+				});
+			}
 		}
 
 		private doRender() {

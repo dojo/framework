@@ -8,6 +8,8 @@ import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projec
 import { WidgetBase } from '../../../src/WidgetBase';
 import global from '@dojo/core/global';
 
+const Event = global.window.Event;
+
 class TestWidget extends ProjectorMixin(WidgetBase)<any> {}
 
 function dispatchEvent(element: Element, eventType: string) {
@@ -306,10 +308,10 @@ registerSuite({
 			}, Error, 'already attached');
 		});
 	},
-	'can attach an event'() {
+	'can attach an event handler'() {
 		let domNode: any;
 		let domEvent: any;
-		const onclick = (evt: any) => {
+		const oninput = (evt: any) => {
 			domEvent = evt;
 		};
 		const afterCreate = (node: Node) => {
@@ -317,14 +319,35 @@ registerSuite({
 		};
 		const Projector = class extends TestWidget {
 			render() {
-				return v('div', { onclick, afterCreate });
+				return v('div', { oninput, afterCreate });
 			}
 		};
 
 		const projector = new Projector();
 		return projector.append().then(() => {
-			domNode.click();
-			assert.instanceOf(domEvent, global.window.MouseEvent);
+			dispatchEvent(domNode, 'input');
+			assert.instanceOf(domEvent, Event);
+		});
+	},
+	'can attach an event listener'() {
+		let domNode: any;
+		let domEvent: any;
+		const onpointermove = (evt: any) => {
+			domEvent = evt;
+		};
+		const afterCreate = (node: Node) => {
+			domNode = node;
+		};
+		const Projector = class extends TestWidget {
+			render() {
+				return v('div', { onpointermove, afterCreate });
+			}
+		};
+
+		const projector = new Projector();
+		return projector.append().then(() => {
+			dispatchEvent(domNode, 'pointermove');
+			assert.instanceOf(domEvent, Event);
 		});
 	},
 	async '-active gets appended to enter/exit animations by default'(this: any) {
