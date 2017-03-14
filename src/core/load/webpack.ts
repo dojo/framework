@@ -1,5 +1,5 @@
 import Promise from '@dojo/shim/Promise';
-import { isPlugin, useDefault } from '../load';
+import { isPlugin, useDefault } from './util';
 
 interface ModuleIdMap {
 	[path: string]: { id: number; lazy: boolean };

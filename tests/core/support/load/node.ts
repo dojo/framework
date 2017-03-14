@@ -1,4 +1,5 @@
-import load, { useDefault } from '../../../src/load';
+import load from '../../../src/load';
+import { useDefault } from '../../../src/load/util';
 import { Require } from '@dojo/interfaces/loader';
 
 declare const require: Require;

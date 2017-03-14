@@ -2,6 +2,7 @@ import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 import * as sinon from 'sinon';
 import global from '../../../src/global';
+import { isPlugin as utilIsPlugin, useDefault as utilUseDefault } from '../../../src/load/util';
 import load, { isPlugin, useDefault } from '../../../src/load/webpack';
 
 interface WebpackModules {
@@ -78,8 +79,8 @@ registerSuite({
 	},
 
 	api() {
-		assert.isFunction(isPlugin, '`isPlugin` should be re-exported.');
-		assert.isFunction(useDefault, '`useDefault` should be re-exported.');
+		assert.strictEqual(isPlugin, utilIsPlugin, '`isPlugin` should be re-exported.');
+		assert.strictEqual(useDefault, utilUseDefault, '`useDefault` should be re-exported.');
 	},
 
 	'without __modules__'() {

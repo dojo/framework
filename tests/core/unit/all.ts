@@ -12,6 +12,7 @@ import './instrument';
 import './lang';
 import './List';
 import './load';
+import './load/util';
 import './load/webpack';
 import './main';
 import './Observable';
