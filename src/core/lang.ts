@@ -40,12 +40,15 @@ interface MixinArgs<T extends {}, U extends {}> {
 	inherited: boolean;
 	sources: (U | null | undefined)[];
 	target: T;
+	copied?: any[];
 }
 
 function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
 	const deep = kwArgs.deep;
 	const inherited = kwArgs.inherited;
-	const target = kwArgs.target;
+	const target: any = kwArgs.target;
+	const copied = kwArgs.copied || [];
+	const copiedClone = [ ...copied ];
 
 	for (let source of kwArgs.sources) {
 		if (source === null || source === undefined) {
@@ -53,23 +56,29 @@ function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
 		}
 		for (let key in source) {
 			if (inherited || hasOwnProperty.call(source, key)) {
-				let value: any = (<any> source)[key];
+				let value: any = source[key];
+
+				if (copiedClone.indexOf(value) !== -1) {
+					continue;
+				}
 
 				if (deep) {
 					if (Array.isArray(value)) {
 						value = copyArray(value, inherited);
 					}
 					else if (shouldDeepCopyObject(value)) {
+						const targetValue: any = target[key] || {};
+						copied.push(source);
 						value = _mixin({
 							deep: true,
 							inherited: inherited,
-							sources: <U[]> [ value ],
-							target: {}
+							sources: [ value ],
+							target: targetValue,
+							copied
 						});
 					}
 				}
-
-				(<any> target)[key] = value;
+				target[key] = value;
 			}
 		}
 	}

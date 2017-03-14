@@ -139,6 +139,78 @@ registerSuite({
 		assert.notStrictEqual(assignedObject.c.e, source.c.e, 'deepAssign should perform a deep copy');
 	},
 
+	'.deepAssign() merges nested object on to the target'() {
+		const target = {
+			apple: 0,
+			banana: {
+				weight: 52,
+				price: 100,
+				details: {
+					colour: 'brown', texture: 'soft'
+				}
+			},
+			cherry: 97
+		};
+
+		const source = {
+			banana: { price: 200, details: { colour: 'yellow' } },
+			durian: 100
+		};
+
+		const assignedObject = lang.deepAssign(target, source);
+		assert.deepEqual(assignedObject, {
+			apple: 0,
+			banana: { weight: 52, price: 200, details: { colour: 'yellow', texture: 'soft' } },
+			cherry: 97,
+			durian: 100
+		});
+	},
+
+	'.deepAssign() objects with circular references'() {
+		const target: any = {
+			nested: {
+				baz: 'foo',
+				qux: 'baz'
+			}
+		};
+
+		target.cyclical = target;
+
+		const source: any = {
+			nested: {
+				foo: 'bar',
+				bar: 'baz',
+				baz: 'qux'
+			}
+		};
+		source.cyclical = source;
+
+		const assignedObject = lang.deepAssign(target, source);
+		assert.deepEqual(assignedObject.nested, { foo: 'bar', bar: 'baz', baz: 'qux', qux: 'baz' });
+	},
+
+	'.deepAssign with a source with two properties holding the same reference'() {
+		const target: any = {};
+
+		const foo = {
+			foo: 'bar'
+		};
+
+		const source: any = {
+			bar: foo,
+			baz: foo,
+			qux: {
+				foo,
+				bar: {
+					foo
+				}
+			}
+		};
+
+		const assignedObject = lang.deepAssign(target, source);
+		assert.deepEqual(assignedObject, { bar: { foo: 'bar' }, baz: { foo: 'bar' }, qux: { foo: { foo: 'bar' }, bar: { foo: { foo: 'bar' } } } });
+	},
+
 	'.mixin()'() {
 		const source: {
 			a: number,
@@ -239,6 +311,59 @@ registerSuite({
 		assert.notStrictEqual(mixedObject.nested.b, source.nested.b, 'deepMixin should perform a deep copy');
 		assert.notStrictEqual(mixedObject.nested.b[1], source.nested.b[1], 'deepMixin should perform a deep copy');
 		assert.notStrictEqual(mixedObject.nested.b[2], source.nested.b[2], 'deepMixin should perform a deep copy');
+	},
+
+	'.deepMixin() merges nested object on to the target'() {
+		const target = Object.create({
+			apple: 0,
+			banana: {
+				weight: 52,
+				price: 100,
+				details: {
+					colour: 'brown', texture: 'soft'
+				}
+			},
+			cherry: 97
+		});
+
+		const source = Object.create({
+			banana: { price: 200, details: { colour: 'yellow' } },
+			durian: 100
+		});
+
+		const assignedObject = lang.deepMixin(target, source);
+		assert.deepEqual(assignedObject, {
+			apple: 0,
+			banana: { weight: 52, price: 200, details: { colour: 'yellow', texture: 'soft' } },
+			cherry: 97,
+			durian: 100
+		});
+	},
+
+	'.deepMixin() objects with circular references'() {
+		let target: any = {
+			nested: {
+				baz: 'foo',
+				qux: 'baz'
+			}
+		};
+
+		target.cyclical = target;
+
+		target = Object.create(target);
+
+		let source: any = {
+			nested: {
+				foo: 'bar',
+				bar: 'baz',
+				baz: 'qux'
+			}
+		};
+		source.cyclical = source;
+		source = Object.create(source);
+
+		const assignedObject = lang.deepMixin(target, source);
+		assert.deepEqual(assignedObject.nested, { foo: 'bar', bar: 'baz', baz: 'qux', qux: 'baz' });
 	},
 
 	'.create()'() {
