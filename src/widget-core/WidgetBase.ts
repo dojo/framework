@@ -2,12 +2,12 @@ import { Evented, BaseEventedEvents } from '@dojo/core/Evented';
 import { assign } from '@dojo/core/lang';
 import { EventedListenerOrArray } from '@dojo/interfaces/bases';
 import { Handle } from '@dojo/interfaces/core';
-import { VNode } from '@dojo/interfaces/vdom';
+import { VNode, ProjectionOptions, VNodeProperties } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
 import Promise from '@dojo/shim/Promise';
 import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
-import { v, registry, isWNode } from './d';
+import { v, registry, isWNode, isHNode, decorate } from './d';
 import {
 	DNode,
 	WidgetConstructor,
@@ -15,7 +15,8 @@ import {
 	WidgetBaseInterface,
 	PropertyChangeRecord,
 	PropertiesChangeRecord,
-	PropertiesChangeEvent
+	PropertiesChangeEvent,
+	HNode
 } from './interfaces';
 import WidgetRegistry, { WIDGET_BASE_TYPE } from './WidgetRegistry';
 
@@ -65,6 +66,13 @@ export function diffProperty(propertyName: string) {
  */
 export function onPropertiesChanged(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
 	target.addDecorator('onPropertiesChanged', target[propertyKey]);
+}
+
+/**
+ * Function that identifies DNodes that are HNodes with key properties.
+ */
+function isHNodeWithKey(node: DNode): node is HNode {
+	return isHNode(node) && (node.properties != null) && (node.properties.key != null);
 }
 
 /**
@@ -163,6 +171,61 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 				propertiesChangedFunction.call(this, evt);
 			});
 		}));
+	}
+
+	/**
+	 * A render decorator that registers vnode callbacks for 'afterCreate' and
+	 * 'afterUpdate' that will in turn call lifecycle methods onElementCreated and onElementUpdated.
+	 */
+	@afterRender
+	protected attachLifecycleCallbacks (node: DNode) {
+		// Create vnode afterCreate and afterUpdate callback functions that will only be set on nodes
+		// with "key" properties.
+
+		decorate(node, (node: HNode) => {
+			node.properties.afterCreate = this.afterCreateCallback;
+			node.properties.afterUpdate = this.afterUpdateCallback;
+		}, isHNodeWithKey);
+
+		return node;
+	}
+
+	/**
+	 * vnode afterCreate callback that calls the onElementCreated lifecycle method.
+	 */
+	private afterCreateCallback(element: Element, projectionOptions: ProjectionOptions, vnodeSelector: string,
+		properties: VNodeProperties, children: VNode[]): void {
+		this.onElementCreated(element, String(properties.key));
+	}
+
+	/**
+	 * vnode afterUpdate callback that calls the onElementUpdated lifecycle method.
+	 */
+	private afterUpdateCallback(element: Element, projectionOptions: ProjectionOptions, vnodeSelector: string,
+		properties: VNodeProperties, children: VNode[]): void {
+		this.onElementUpdated(element, String(properties.key));
+	}
+
+	/**
+	 * Widget lifecycle method that is called whenever a dom node is created for a vnode.
+	 * Override this method to access the dom nodes that were inserted into the dom.
+	 * @param element The dom node represented by the vdom node.
+	 * @param key The vdom node's key.
+	 */
+	protected onElementCreated(element: Element, key: string): void {
+		// Do nothing by default.
+	}
+
+	/**
+	 * Widget lifecycle method that is called whenever a dom node that is associated with a vnode is updated.
+	 * Note: this method is dependant on the Maquette afterUpdate callback which is called if a dom
+	 * node might have been updated.  Maquette does not guarantee the dom node was updated.
+	 * Override this method to access the dom node.
+	 * @param element The dom node represented by the vdom node.
+	 * @param key The vdom node's key.
+	 */
+	protected onElementUpdated(element: Element, key: string): void {
+		// Do nothing by default.
 	}
 
 	public get properties(): Readonly<P> {

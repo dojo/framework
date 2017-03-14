@@ -1072,7 +1072,7 @@ registerSuite({
 		const testWidget = new TestWidget();
 		const testWidget2 = new TestWidget2();
 
-		assert.equal(testWidget.getAfterRenders().length, 1);
-		assert.equal(testWidget2.getAfterRenders().length, 2);
+		assert.equal(testWidget.getAfterRenders().length, 2);
+		assert.equal(testWidget2.getAfterRenders().length, 3);
 	}
 });

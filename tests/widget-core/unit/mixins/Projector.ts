@@ -7,6 +7,7 @@ import { v } from '../../../src/d';
 import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projector';
 import { WidgetBase } from '../../../src/WidgetBase';
 import global from '@dojo/core/global';
+import { waitFor } from '../waitFor';
 
 const Event = global.window.Event;
 
@@ -28,30 +29,6 @@ function sendAnimationEndEvents(element: Element) {
 	dispatchEvent(element, 'webkitAnimationEnd');
 	dispatchEvent(element, 'transitionend');
 	dispatchEvent(element, 'animationend');
-}
-
-async function waitFor(callback: () => boolean, message: string = 'timed out waiting for something to happen', timeout = 1000) {
-	const startTime = (new Date()).valueOf() / 1000;
-
-	return new Promise((resolve, reject) => {
-		function check() {
-			const now = (new Date().valueOf()) / 1000;
-
-			if (now - startTime > timeout) {
-				reject(new Error(message));
-				return;
-			}
-
-			if (callback()) {
-				resolve();
-			}
-			else {
-				setTimeout(check, 10);
-			}
-		}
-
-		check();
-	});
 }
 
 let rafSpy: any;
