@@ -52,6 +52,27 @@ export type RelativeTimeFormatterOptions = {
 	form?: RelativeTimeLength;
 }
 
+// Globalize.js incorrectly handles timezone offsets when parsing date strings.
+// This is resolved with https://github.com/globalizejs/globalize/pull/693, and
+// will be included with the next release. Until then, the following workaround
+// is needed.
+const TODAY_OFFSET = new Date().getTimezoneOffset();
+function fixParsedDate(date: Date, optionsOrLocale?: DateFormatterOptions | string): Date {
+	if (!date || !optionsOrLocale || typeof optionsOrLocale === 'string') {
+		return date;
+	}
+
+	const offset = date.getTimezoneOffset();
+	const { datetime } = optionsOrLocale;
+
+	if (offset === TODAY_OFFSET || (datetime !== 'long' && datetime !== 'full')) {
+		return date;
+	}
+
+	date.setMinutes(date.getMinutes() - (offset - TODAY_OFFSET));
+	return date;
+}
+
 /**
  * Format a date according to the specified options for the specified or current locale.
  *
@@ -142,10 +163,14 @@ export function getDateFormatter(optionsOrLocale?: DateFormatterOptions | string
 export function getDateParser(options?: DateFormatterOptions, locale?: string): DateParser;
 export function getDateParser(locale?: string): DateParser;
 export function getDateParser(optionsOrLocale?: DateFormatterOptions | string, locale?: string): DateParser {
-	return globalizeDelegator<DateFormatterOptions, DateParser>('dateParser', {
+	const parser = globalizeDelegator<DateFormatterOptions, DateParser>('dateParser', {
 		locale,
 		optionsOrLocale
 	});
+
+	return function (dateString: string): Date {
+		return fixParsedDate(parser(dateString), optionsOrLocale);
+	};
 }
 
 /**
@@ -193,9 +218,11 @@ export function getRelativeTimeFormatter(unit: string, optionsOrLocale?: Relativ
 export function parseDate(value: string, options?: DateFormatterOptions, locale?: string): Date;
 export function parseDate(value: string, locale?: string): Date;
 export function parseDate(value: string, optionsOrLocale?: DateFormatterOptions | string, locale?: string): Date {
-	return globalizeDelegator<string, DateFormatterOptions, Date>('parseDate', {
+	const date = globalizeDelegator<string, DateFormatterOptions, Date>('parseDate', {
 		locale,
 		optionsOrLocale,
 		value
 	});
+
+	return fixParsedDate(date, optionsOrLocale);
 }
