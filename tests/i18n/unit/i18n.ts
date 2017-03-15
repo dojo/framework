@@ -22,6 +22,13 @@ import partyBundle from '../support/mocks/common/party';
 registerSuite({
 	name: 'i18n',
 
+	setup() {
+		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
+		return fetchCldrData([ 'en', 'fr' ]).then(() => {
+			switchLocale('en');
+		});
+	},
+
 	afterEach() {
 		const loadCldrData = <any> cldrLoad.default;
 		if (typeof loadCldrData.restore === 'function') {

@@ -1,7 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import global from '@dojo/core/global';
-import * as coreLoad from '../../../../src/cldr/load';
 import loadCldrData, {
 	CldrData,
 	isLoaded,
@@ -9,6 +8,11 @@ import loadCldrData, {
 	reset,
 	supplementalPackages
 } from '../../../../src/cldr/load/webpack';
+import {
+	mainPackages as utilMainPackages,
+	reset as utilReset,
+	supplementalPackages as utilSupplementalPackages
+} from '../../../../src/cldr/load/default';
 
 let cldrData: CldrData | null;
 
@@ -39,8 +43,9 @@ registerSuite({
 	},
 
 	api() {
-		assert.strictEqual(mainPackages, coreLoad.mainPackages);
-		assert.strictEqual(supplementalPackages, coreLoad.supplementalPackages);
+		assert.strictEqual(mainPackages, utilMainPackages, 'mainPackages should be re-exported');
+		assert.strictEqual(reset, utilReset, 'reset should be re-exported');
+		assert.strictEqual(supplementalPackages, utilSupplementalPackages, 'supplementalPackages should be re-exported');
 	},
 
 	isLoaded() {
