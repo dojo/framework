@@ -5,6 +5,7 @@
 *.js.map
 !/*.js
 dist
+deploy_key
 node_modules
 /typings/**
 bower_components
@@ -14,3 +15,4 @@ html-report
 coverage-final.lcov
 coverage-unmapped.json
 /_build
+/_apidoc

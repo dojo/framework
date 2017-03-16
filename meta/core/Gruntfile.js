@@ -4,6 +4,11 @@ module.exports = function (grunt) {
 			options: {
 				main: 'dojo-core/main'
 			}
+		},
+		typedoc: {
+			options: {
+				ignoreCompilerErrors: true, // Remove this once compile errors are resolved
+			}
 		}
 	});
 };
