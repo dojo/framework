@@ -6,6 +6,8 @@
 !/*.js
 !/tasks/*.js
 dist
+deploy_key
+/_apidoc
 _build
 node_modules
 bower_components
