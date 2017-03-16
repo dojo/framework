@@ -13,10 +13,10 @@ addons:
   apt:
     packages:
     - openssl
-  before_install:
-  - if [ ${TRAVIS_BRANCH-""} == "master" ] && [ -n ${encrypted_12c8071d2874_key-""} ]; then openssl aes-256-cbc -K
-    $encrypted_12c8071d2874_key -iv $encrypted_12c8071d2874_iv
-    -in deploy_key.enc -out deploy_key -d; fi
+before_install:
+- if [ ${TRAVIS_BRANCH-""} == "master" ] && [ -n ${encrypted_12c8071d2874_key-""} ]; then openssl aes-256-cbc -K
+  $encrypted_12c8071d2874_key -iv $encrypted_12c8071d2874_iv
+  -in deploy_key.enc -out deploy_key -d; fi
 install:
 - travis_retry npm install grunt-cli
 - travis_retry npm install
