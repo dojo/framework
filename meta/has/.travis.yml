@@ -8,6 +8,10 @@ env:
   - SAUCE_ACCESS_KEY: e92610e3-834e-4bec-a3b5-6f7b9d874601
   - BROWSERSTACK_USERNAME: dtktestaccount1
   - BROWSERSTACK_ACCESS_KEY: mG2qbEFJCZY2qLsM7yfx
+before_install:
+- if [ ${TRAVIS_BRANCH-""} == "master" ] && [ -n ${encrypted_12c8071d2874_key-""}
+  ]; then openssl aes-256-cbc -K $encrypted_12c8071d2874_key -iv $encrypted_12c8071d2874_iv
+  -in deploy_key.enc -out deploy_key -d; fi
 install:
 - travis_retry npm install grunt-cli
 - travis_retry npm install
@@ -18,7 +22,10 @@ script:
 - grunt remapIstanbul:ci
 - grunt uploadCoverage
 - grunt dist
+- grunt doc
 notifications:
   slack:
     secure: mys3cAqs3gJ7HxLVhXMScDOZXCSdLsuVeMpAQXJ92/LxcMIS0wtIwaTqDox/n/U4tkhNEb1R3gJyEXBxeCu117umxX/aVNsR9HuZTXC+SjECwlPaan/qZkw7hSwqfwhEiGW4A8FGCA5OD+sq20ARpLZ718JrqzIYfSotpuJSHVg5OlfaCQIE3MdlpGjwJ0ZCxpsrVXVTmgFtxCmv8qmV24DcTnEQFmiXJftHhgi/npU/XdPAkdnjbS//iiWxV1vHiQagt0sVW3hxma5jzOaSHkiQQsJGNYCDCdLhzma3DDJoDS4sfznPMT08AQfSEzQiFhDIhNfJYVSbYjNbUq1O3xTSq83Lvdc/hQ1bLsYk7ZFqhWpRprijS6pYe/yp0TwlruzqTa5/a3qduCnc+ooMg72m1NxpUHiZG1NhD/IVz+ycEVt8P6yQpytXUsGiRGecmFJW0A0BrfrVcg7Ekwsr6Rmzxh4uKyXuOW7zTT3tn4CM1Q2fBZNXnQ9RlU7AIS3hiBIkv2SS89fuUrgTMEL9qDXF7zB4E9nc4mwvBM2YLHsdgiF+WSA1EERLxsYo9Ea3vtOUyjoi9A5EGKwHq7VAYEbEQfWYoDtIepSMmWCGjtDr3KI8oMdojkZdY0CrG7xGgruOX5QQQY6BEKTcgpW+ccVqjR5zB0Q8IZ04qhC5F+0=
     on_success: change
+    rooms:
+      secure: RFH8SWinOqyUDDTsf/zrOERxHwo1mkOxMowmJu5OPQSIyyeVQmbqT+oOx41GaZoCPOP9jk1sXm3JaB6E5yfdLNLiizh6oocWyoebZ+T8jAiwBW0n76vYUyeCjC3xQVkjVDWIVc0N0/OMIeGzv0uOpd9Y7icX6q6UAU5ULSaqd8/L625LQIElDfobERdJFtWWoinaF29Vc6EX+zi84n1TG2gZcMHV6ohQ1rpCjfSMtlB/LhRIVied0JmI98v4XplEBRRiOtyymzJ/I908yCfwhotszK88ewHKkoHVy/THn4byOL0nq1CEXIxlDML1lGM7lUSxVWOBMX3UCfvQgmwIg4C90yjNJQU4QkurE2UdeXkWHqAEk54j6rrK3Zh5bYDXgQCY/PZUBZnxbzwuBD5LHQKLx9LXwdCwLZmIFeFXUgnW7FXF0uyccCwQ4cg5jFDHbGSG1V7jFxVRol5fol+XJ5MrYi/pKQXNogVrWLmLuTdHeppJJRXHr7dT5pKbkVkKxbwFI8bK3z0QCzOBZoCWOLV/wdRQyzzmRBZytYv2fgBFuv6Adg70E44PdHJROm91zffhsunooeNQe+mYLzB7vMY7TlJ4ZrURMnbKumo78ONU/ud/KN7mRPx4AyAgvarYqC/tSZ9WTiHHxsULfk/yUsSMb/EX0vqCBOPXFeBYlIE=

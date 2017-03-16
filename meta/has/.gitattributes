@@ -18,3 +18,4 @@ LICENSE text
 *.jar binary
 *.zip binary
 *.psd binary
+*.enc binary

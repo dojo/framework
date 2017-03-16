@@ -2,9 +2,11 @@
 *.js.map
 !/*.js
 !/tasks/*.js
+/_apidoc
 /_build
 /bower_components
 /dist
+deploy_key
 /html-report
 /node_modules
 /typings
