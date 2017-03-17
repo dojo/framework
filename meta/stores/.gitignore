@@ -22,3 +22,5 @@ html-report
 .idea/
 .vscode/
 yarn.lock
+/_apidoc
+deploy_key
