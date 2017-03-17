@@ -5,8 +5,8 @@ import * as assert from 'intern/chai!assert';
 import { stub, spy } from 'sinon';
 import { v, w, registry } from '../../src/d';
 import { DNode } from '../../src/interfaces';
-import { WidgetBase, diffProperty, afterRender, onPropertiesChanged } from '../../src/WidgetBase';
 import WidgetRegistry from './../../src/WidgetRegistry';
+import { WidgetBase, diffProperty, DiffType, afterRender, onPropertiesChanged } from '../../src/WidgetBase';
 
 registerSuite({
 	name: 'WidgetBase',
@@ -64,6 +64,30 @@ registerSuite({
 		}
 	},
 	diffProperty: {
+		'decorator at class level'() {
+				let callCount = 0;
+				let value;
+
+				@diffProperty('foo', DiffType.CUSTOM, (previousProperty: any, newProperty: any) => {
+					callCount++;
+					return {
+						changed: true,
+						value: 'new-value'
+					};
+				})
+				class TestWidget extends WidgetBase<any> {
+					render() {
+						value = this.properties.foo;
+						return 'foo';
+					}
+				}
+
+				const testWidget = new TestWidget();
+				testWidget.setProperties({ foo: 'bar' });
+				testWidget.__render__();
+				assert.equal(callCount, 1);
+				assert.equal(value, 'new-value');
+		},
 		decorator() {
 			let callCount = 0;
 
@@ -92,7 +116,11 @@ registerSuite({
 
 				constructor() {
 					super();
-					this.addDecorator('diffProperty', { propertyName: 'foo', diffFunction: this.diffPropertyFoo });
+					this.addDecorator('diffProperty', {
+						propertyName: 'foo',
+						diffType: DiffType.CUSTOM,
+						diffFunction: this.diffPropertyFoo
+					});
 				}
 
 				diffPropertyFoo(this: any, previousProperty: any, newProperty: any): any {
@@ -165,24 +193,6 @@ registerSuite({
 			});
 
 			widget.setProperties({ foo: 'bar', baz: 'bar' });
-		},
-		'uses base diff when an individual property diff returns null'() {
-			class TestWidget extends WidgetBase<any> {
-
-				@diffProperty('foo')
-				diffPropertyFoo(this: any, previousProperty: any, newProperty: any): any {
-					return null;
-				}
-			}
-
-			const widget: any = new TestWidget();
-			widget.setProperties({ foo: 'bar' });
-
-			widget.on('properties:changed', (event: any) => {
-				assert.include(event.changedPropertyKeys, 'foo');
-			});
-
-			widget.setProperties({ foo: 'baz' });
 		},
 		'widgets function properties are bound to the parent by default'() {
 			class TestChildWidget extends WidgetBase<any> {

@@ -8,6 +8,7 @@ import Promise from '@dojo/shim/Promise';
 import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
 import { v, registry, isWNode, isHNode, decorate } from './d';
+import diff, { DiffType } from './diff';
 import {
 	DNode,
 	WidgetConstructor,
@@ -19,6 +20,8 @@ import {
 	HNode
 } from './interfaces';
 import WidgetRegistry, { WIDGET_BASE_TYPE } from './WidgetRegistry';
+
+export { DiffType };
 
 /**
  * Widget cache wrapper for instance management
@@ -34,7 +37,8 @@ interface WidgetCacheWrapper {
  */
 interface DiffPropertyConfig {
 	propertyName: string;
-	diffFunction: Function;
+	diffType: DiffType;
+	diffFunction?<P>(previousProperty: P, newProperty: P): PropertyChangeRecord;
 }
 
 export interface WidgetBaseEvents<P extends WidgetProperties> extends BaseEventedEvents {
@@ -55,9 +59,14 @@ export function afterRender(target: any, propertyKey: string, descriptor: Proper
  *
  * @param propertyName The name of the property of which the diff function is applied
  */
-export function diffProperty(propertyName: string) {
-	return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-		target.addDecorator('diffProperty', { propertyName, diffFunction: target[propertyKey] });
+export function diffProperty(propertyName: string, diffType = DiffType.CUSTOM, diffFunction?: Function) {
+	return function (target: any, propertyKey?: string, descriptor?: PropertyDescriptor) {
+		if (diffType === DiffType.CUSTOM && propertyKey && descriptor) {
+			target.addDecorator('diffProperty', { propertyName, diffType, diffFunction: target[propertyKey] });
+		}
+		else if (diffType && !propertyKey && !descriptor) {
+			target.prototype.addDecorator('diffProperty', { propertyName, diffType, diffFunction });
+		}
 	};
 }
 
@@ -240,21 +249,26 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 
 		const registeredDiffPropertyConfigs: DiffPropertyConfig[] = this.getDecorator('diffProperty') || [];
 
-		registeredDiffPropertyConfigs.forEach(({ propertyName, diffFunction }) => {
+		registeredDiffPropertyConfigs.forEach(({ propertyName, diffFunction, diffType }) => {
+
 			const previousProperty = this._previousProperties[propertyName];
 			const newProperty = (<any> properties)[propertyName];
-			const result: PropertyChangeRecord = diffFunction(previousProperty, newProperty);
+			const meta = {
+				diffFunction: diffFunction,
+				scope: this
+			};
 
-			if (!result) {
-				return;
-			}
+			const result = diff(propertyName, diffType, previousProperty, newProperty, meta);
+
+			diffPropertyResults[propertyName] = result.value;
 
 			if (result.changed) {
 				diffPropertyChangedKeys.push(propertyName);
 			}
+
+			// always remove the property from further processing;
 			delete (<any> properties)[propertyName];
 			delete this._previousProperties[propertyName];
-			diffPropertyResults[propertyName] = result.value;
 		});
 
 		const diffPropertiesResult = this.diffProperties(this._previousProperties, properties);
