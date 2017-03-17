@@ -8,6 +8,10 @@ env:
   - SAUCE_ACCESS_KEY: e92610e3-834e-4bec-a3b5-6f7b9d874601
   - BROWSERSTACK_USERNAME: dtktestaccount1
   - BROWSERSTACK_ACCESS_KEY: mG2qbEFJCZY2qLsM7yfx
+before_install:
+- if [ ${TRAVIS_BRANCH-""} == "master" ] && [ -n ${encrypted_12c8071d2874_key-""}
+  ]; then openssl aes-256-cbc -K $encrypted_12c8071d2874_key -iv $encrypted_12c8071d2874_iv
+  -in deploy_key.enc -out deploy_key -d; fi
 install:
 - travis_retry npm install grunt-cli
 - travis_retry npm install
@@ -17,6 +21,7 @@ script:
 - grunt intern:saucelabs --combined
 - grunt remapIstanbul:ci
 - grunt uploadCoverage
+- grunt doc
 notifications:
   slack:
     secure: SUW1XF8Nggc5m+Xw3U7qaMFM9Tfn0NmvZePI84K9INDlLx+YxVZouteKN0XW9WsgJbI0ZiJE0CthJRS/twcjW4hO/LaizXYbqQaC+3pEUGajgYL1rbpqr0BfKmPKplvR/LbbTMo/GfUOOmU5F5ajWh1HWadHp1Dj/GSPzms97FLq0Xs0bWe/saX17v69V+36X7jyIrWPdQ3nVH284bbLMKnlNQ7t0LuPD748m1neLGNdQTC2R7P2eFoRS5hR61qY4m2my96wH2PndVbt1HuTW2S61wAX3DCQ+5a21bTnv+VCawvhlEZq3/zgr9w0M7WAeFqbdA7gwvaAV3N80JAdvwX60Wfw4rfwADTwj/KAAgF3dbc4iYTwUunCjZKydgUn1WWIG2sLBb0u2GfXAWINOWeDm2tZPPFx9nB/8Fjxnasp85F9TXxhyMXkybKaV0hf57rjaGTDXkl3PxzFTOnpakZU/+Gv68UhO+VwDjuQakBuCg43xV9jrVHWZ941LP13bBhNh2u3UKJafrBQLf6SchbQyx8/iWwLgHNuHpskKjoHIo/bOTqFaHHo6o4UHnT5KeLdXLvyxM5pg7UyYHrT1T4kUzbVQtWGCba5EI+H3A11RLwKjKir4utdMsZgkJ8+ORNW499OOlk8Hfs2tGs/EbH9yxGTWzLEJWiu5LWJt5Y=
