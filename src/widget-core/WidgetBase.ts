@@ -335,20 +335,24 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	 */
 	protected addDecorator(decoratorKey: string, value: any): void {
 		value = Array.isArray(value) ? value : [ value ];
+		if (this.hasOwnProperty('constructor')) {
+			let decoratorList = decoratorMap.get(this.constructor);
+			if (!decoratorList) {
+				decoratorList = new Map<string, any[]>();
+				decoratorMap.set(this.constructor, decoratorList);
+			}
 
-		let decoratorList = decoratorMap.get(this.constructor);
-		if (!decoratorList) {
-			decoratorList = new Map<string, any[]>();
-			decoratorMap.set(this.constructor, decoratorList);
+			let specificDecoratorList = decoratorList.get(decoratorKey);
+			if (!specificDecoratorList) {
+				specificDecoratorList = [];
+				decoratorList.set(decoratorKey, specificDecoratorList);
+			}
+			specificDecoratorList.push(...value);
 		}
-
-		let specificDecoratorList = decoratorList.get(decoratorKey);
-		if (!specificDecoratorList) {
-			specificDecoratorList = [];
-			decoratorList.set(decoratorKey, specificDecoratorList);
+		else {
+			const decorators = this._decoratorCache.get(decoratorKey) || [];
+			this._decoratorCache.set(decoratorKey, [ ...decorators, ...value ]);
 		}
-
-		specificDecoratorList.push(...value);
 	}
 
 	/**

@@ -109,6 +109,30 @@ registerSuite({
 			testWidget.setProperties({ foo: 'bar' });
 
 			assert.equal(callCount, 1);
+		},
+		'decorators can be applied at instance level'() {
+			let renderCallCount = 0;
+
+			class TestWidget extends WidgetBase<any> {
+				constructor() {
+					super();
+
+					this.addDecorator('afterRender', (node: DNode) => {
+						renderCallCount++;
+						return node;
+					});
+				}
+
+				render() {
+					return v('div');
+				}
+			}
+
+			new TestWidget();
+			const widget2 = new TestWidget();
+			widget2.__render__();
+
+			assert.equal(renderCallCount, 1);
 		}
 	},
 	setProperties: {
