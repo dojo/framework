@@ -1,5 +1,9 @@
 module.exports = function (grunt) {
 	require('grunt-dojo2').initConfig(grunt, {
-		/* any custom configuration goes here */
+		typedoc: {
+			options: {
+				ignoreCompilerErrors: true // Remove this once compile errors are resolved
+			}
+		}
 	});
 };
