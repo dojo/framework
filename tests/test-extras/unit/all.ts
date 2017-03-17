@@ -1,1 +1,2 @@
+import './ClientErrorCollector';
 import './main';

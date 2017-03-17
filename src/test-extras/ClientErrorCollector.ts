@@ -39,6 +39,7 @@ export default class ClientErrorCollector {
 						switch (result.error.name) {
 						case 'EvalError':
 							e = new EvalError(result.error.message);
+							break;
 						case 'RangeError':
 							e = new RangeError(result.error.message);
 							break;
@@ -101,35 +102,27 @@ export default class ClientErrorCollector {
 				if (window.onerror) {
 					oldonerror = (<any> window)[CLIENT_OLD_ONERROR_KEY] = window.onerror;
 				}
-				window.onerror = function (message, source, lineno, colno, error) {
-					const errorObj: ClientError = {
-						message: message,
-						source: source,
-						lineno: lineno,
-						colno: colno
-					};
 
-					if (error) {
-						errorObj.error = {
-							message: error.message,
-							name: error.name,
-							stack: error.stack
-						};
-					}
+				function errorListener(evt: ErrorEvent) {
+					const { message, filename, lineno, colno, error = {} } = evt;
+					const { stack = '', name = 'Error' } = error;
+					errorStack.push({
+						message,
+						source: filename,
+						lineno,
+						colno,
+						error: {
+							message: error.message || message,
+							name,
+							stack
+						}
+					});
+				}
 
-					errorStack.push(errorObj);
+				window.addEventListener('error', errorListener);
 
-					if (oldonerror) {
-						oldonerror.call(undefined, message, source, lineno, colno, error);
-					}
-				};
 				(<any> window)['__intern_error_helper_finish'] = function () {
-					if (typeof (<any> window)[CLIENT_OLD_ONERROR_KEY] !== 'undefined') {
-						window.onerror = (<any> window)[CLIENT_OLD_ONERROR_KEY];
-					}
-					else {
-						delete window.onerror;
-					}
+					window.removeEventListener('error', errorListener);
 					const errorStack = (<any> window)[CLIENT_ERROR_STACK_KEY];
 					delete (<any> window)[CLIENT_ERROR_STACK_KEY];
 					return JSON.stringify(errorStack);

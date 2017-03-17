@@ -28,7 +28,7 @@ registerSuite({
 				assert.isNumber(result.lineno);
 				assert.isObject(result.error);
 				if (result.error) {
-					assert.strictEqual(result.error.message, 'Ooops...');
+					assert.include(result.error.message, 'Ooops...');
 					assert.strictEqual(result.error.name, 'Error');
 				}
 			});
