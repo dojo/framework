@@ -81,7 +81,7 @@ This code renders a `h1` element onto the page, that says "Hello, Dojo!".
 All widgets in Dojo 2 are designed using key reactive architecture concepts.
 These concepts include unidirectional data flow, inversion of control and property passing.
 
-Dojo 2's widget-core is built with Typescript, leveraging Class mixins to construct and manipulate traits and mixins.
+Dojo 2's widget-core is built with TypeScript, leveraging Class mixins to construct and manipulate traits and mixins.
 
 We also make use of a VirtualDOM (VDOM) in Dojo 2.
 In order to interact with our VDOM, you need to pass it [HyperScript](https://github.com/dominictarr/hyperscript).
@@ -170,7 +170,7 @@ w('my-widget', properties, children);
 ```
 
 The example above that uses a string for the `widgetConstructor `, is taking advantage of our [widget registry](#widget-registry) functionality.
-The widget registry allows you to lazy instantiate widgets.
+The widget registry allows for the lazy instantiation of widgets.
 
 ### Writing Custom Widgets
 
@@ -190,7 +190,7 @@ import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 |Function|Description|Default Behaviour|
 |---|---|---|
 |render|Returns the DNode structure of the widget|Returns a `div` HNode with children of `this.children`.
-|diffProperties|Diffs the current properties against the previous properties and returns an object with the changed keys and new properties|Performs a shallow comparison previous and current properties, copies the properties using `Object.assign` and returns the resulting `PropertiesChangeRecord`.|
+|diffProperties|Diffs the current properties against the previous properties and returns an object with the changed keys and new properties|Performs a shallow comparison between the previous and current properties, copies the properties using `Object.assign` and returns the resulting `PropertiesChangeRecord`.|
 
 #### The 'properties' lifecycle
 
@@ -208,11 +208,11 @@ The depth of the returned diff is equal to the depth used during the equality co
 
 <!-- add example of 'depth' -->
 
-**Note** If a widget's properties contain complex data structures that you need to diff, then the `diffProperties` function will need to be overridden.
+**Note:** If a widget's properties contain complex data structures that you need to diff, then the `diffProperties` function will need to be overridden.
 
 ##### Custom property diff control
 
-Included in `WidgetBase` is functionality to support targeting a specific property with a custom comparison function using a decorator `diffProperty`. For non-decorator environments the functions need to be registered in the constructor using the `addDecorator` API with `diffProperty` as the key.
+Included in `WidgetBase` is functionality to support targeting a specific property with a custom comparison function using a decorator `diffProperty`. For non-decorator environments (Either JavaScript/ES6 or a TypeScript project that does not have the experimental decorators configuration set to true in the `tsconfig`), the functions need to be registered in the constructor using the `addDecorator` API with `diffProperty` as the key.
 
 e.g. for a property `foo` you would add a function to the widget class and either use the decorator function or register the decorator in the `constructor`.
 
@@ -244,7 +244,7 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 }
 ```
 
-If a property has a custom diff function then that property is excluded from those passed to the `diffProperties` function.
+If a property has a custom diff function then that property is excluded from those passed to the default `diffProperties` function.
 
 ##### The 'properties:changed' event
 
@@ -292,13 +292,15 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 }
 ```
 
+`changedKeyValues` represents a list of keys in the `properties` key/value pairs where the values have changed.
+
 Finally once all the attached events have been processed, the properties lifecycle is complete and the finalized widget properties are available during the render cycle functions.
 
-<!-- render lifecycle goes here -->
+<!-- TODO: render lifecycle goes here -->
 
 ##### AfterRender
 
-Occassionally in a mixin or base widget class it my be required to provide logic that needs to be executed using the result of a widgets `render`. `WidgetBase` supports registering functions that opererate as an after aspect to the `render` function using a provided decorator `afterRender` or in non decorator environments using the `addDecorator` API with `afterRender` as the key.
+Occassionally, in a mixin or base widget class, it my be required to provide logic that needs to be executed using the result of a widget's `render`. `WidgetBase` supports registering functions that opererate as an after aspect to the `render` function using a provided decorator `afterRender` or in non-decorator environments using the `addDecorator` API with `afterRender` as the key.
 
 *Using the `afterRender` decorator*
 
@@ -343,9 +345,9 @@ Projectors behave in the same way as any other widget **except** that they need 
 
 There are 3 ways that a projector widget can be added to the DOM - `.append`, `.merge` or `.replace`, depending on the type of attachment required.
 
- - append  - Creates the widget as a child to the projector's `root` node
- - merge   - Merges the widget with the projector's `root` node
- - replace - Replace the projector's `root` node with the widget
+ - `append`  - Creates the widget as a child to the projector's `root` node
+ - `merge`   - Merges the widget with the projector's `root` node
+ - `replace` - Replace the projector's `root` node with the widget
 
 ```ts
 const MyProjector = ProjectorMixin(MyWidget);
@@ -391,7 +393,7 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 }
 ```
 
-*Binding a function passed to child widget*
+*Binding a function passed to a child widget*
 
 ```ts
 import { specialClick } from './mySpecialFunctions';
@@ -405,9 +407,9 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 
 #### Widget Registry
 
-The registry provides the ability to define a label against a `WidgetRegistryItem`. A `WidgetRegistryItem` is either a `WidgetConstructor` a `Promise<WidgetConstructor>` or a function that when executed returns a `Promise<WidgetConstructor>`.
+The widget registry provides the ability to define a label against a `WidgetRegistryItem`. A `WidgetRegistryItem` is either a `WidgetConstructor` a `Promise<WidgetConstructor>` or a function that when executed returns a `Promise<WidgetConstructor>`.
 
-A global widget registry is exported from the `d.ts` class.
+A global widget registry is exported from the `d` module.
 
 ```ts
 import { registry } from '@dojo/widget-core/d';
@@ -443,13 +445,13 @@ registry.define('my-widget', () => {
 
 ##### Overview
 
-Widgets are themed using `css-modules` and the `Themeable` mixin. Each widget must implement a .css file that contains all the css classes that will be used to style it. The baseClasses object is the css API for the Widget: baseClasses css classes can be overridden by external themes. Further customisation of specific Custom Widget classes can be achieved by passing overrideClasses into the widget.
-The `Themeable` mixin provides a `classes` function that controls the classes to be applied to each node. Classes from the base `css` object passed to the `classes` function can be themed and overridden. To create fixed classes that cannot be changed the chained `fixed` function can be used.
+Widgets are themed using `css-modules` and the `Themeable` mixin. Each widget must implement a .css file that contains all the css classes that will be used to style it. The `baseClasses` object is the css API for the Widget: `baseClasses` css classes can be overridden by external themes. Further customization of specific Custom Widget classes can be achieved by passing `overrideClasses` into the widget.
+The `Themeable` mixin provides a `classes` function that controls the classes to be applied to each node. Classes from the base `css` object passed to the `classes` function can be themed and overridden. To create fixed classes that cannot be changed, the chained `fixed` function can be used.
 
-##### Authoring a baseTheme
+##### Authoring a Base Theme
 
-A base theme is authored using `css-modules` and `cssnext`. The baseTheme `css` file should be located in a `styles` folder within the Widget's package directory.
-The `typed-css-modules` [cli](https://github.com/Quramy/typed-css-modules#cli) should be used in `watch` mode in order to generate typings for typescript usage.
+A base theme is authored using `css-modules` and `cssnext`. The base theme `css` file should be located in a `styles` folder within the Widget's package directory.
+The `typed-css-modules` [cli](https://github.com/Quramy/typed-css-modules#cli) should be used in `watch` mode in order to generate typings for TypeScript usage. This is automatically included within the `dojo build -w` command from `dojo-cli`.
 
 ```
 tabPanel
@@ -459,9 +461,9 @@ tabPanel
 ```
 
 The `baseClasses` css must contain a complete set of all of the classes you wish to apply to a widget as all theme and override classes are limited by the classnames made available here.
-Classnames are locally scoped as part of the build. A theme `key` is generated at build time to located each classes themes when a theme is set.
+Classnames are locally scoped as part of building a Dojo application. A theme `key` is generated at build time to locate the themes for each class where a theme is set.
 
-```  css
+```css
 /* tabpanel.css */
 .root {
 	background: red;
@@ -472,11 +474,11 @@ Classnames are locally scoped as part of the build. A theme `key` is generated a
 }
 ```
 
-##### Registering baseClasses
+##### Registering `baseClasses`
 
-To apply baseClasses a widget must use `ThemeableMixin` and the `theme` decorator from `mixins/Themeable` to register the base classes.
+To apply `baseClasses` a widget must use `ThemeableMixin` and the `theme` decorator from `mixins/Themeable` to register the `baseClasses`.
 
-```typescript
+```ts
 import { WidgetProperties } from '@dojo/widget-core/interfaces';
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { ThemeableMixin, theme } from '@dojo/widget-core/mixins/Themeable';
@@ -490,7 +492,7 @@ class MyThemeableWidget extends ThemeableMixin(WidgetBase)<WidgetProperties> {
 
 Basic usage:
 
-``` typescript
+```ts
 import { WidgetProperties } from '@dojo/widget-core/interfaces';
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { ThemeableMixin, ThemeableMixinProperties, theme } from '@dojo/widget-core/mixins/Themeable';
@@ -511,9 +513,9 @@ class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProp
 }
 ```
 
-##### Applying a theme
+##### Applying a Theme
 
-Themeable widgets include an optional `theme` property which can be set to pass in a theme. Theme classes will override `baseClasses`. When a `theme` property is set or changed, the widgets `theme` classes will be regenerated and the widget invalidated such that it is redrawn. Themes are used to apply consistent styling across the widget code base.
+Themeable widgets include an optional `theme` property which can be set to pass in a theme. Theme classes will override `baseClasses`. When a `theme` property is set or changed, the widgets `theme` classes will be regenerated and the widget invalidated such that it is redrawn. Themes are used to apply consistent styling across the widget codebase.
 
 Usage Extending on the previous `tabPanel` example.
 
@@ -524,9 +526,9 @@ Usage Extending on the previous `tabPanel` example.
 }
 ```
 
-Import the theme and pass it to the widget via it's `properties`. The theme classes will be automatically mixed into the widget and available via `this.classes`.
+Import the theme and pass it to the widget via its `properties`. The theme classes will be automatically mixed into the widget and available via `this.classes`.
 
-```typescript
+```ts
 import * as customTheme from './themes/customTheme.css';
 
 interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableMixinProperties;
@@ -539,20 +541,20 @@ class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProp
 }
 ```
 
-The theme can be applied to individual widgets or to a project and prop passed down to it's children.
+The theme can be applied to individual widgets or to a project and property passed down to its children.
 
-##### Overriding theme classes
+##### Overriding Theme Classes
 
-As we are using `css-modules` to scope widget css classes, the generated class names cannot be used to target specific nodes and apply custom styling to them. Instead you must use the `overrideClasses` property to pass your generated classes to the widget. This will only effect one instance of a widget and will be applied on top of, rather than instead of theme classes.
+As we are using `css-modules` to scope widget css classes, the generated class names cannot be used to target specific nodes and apply custom styling to them. Instead you must use the `overrideClasses` property to pass your generated classes to the widget. This will only effect one instance of a widget and will be applied on top of, rather than instead of, theme classes.
 
-``` css
+```css
 /* tabPanelOverrides.css */
 .tabs {
 	font-weight: bold;
 }
 ```
 
-```typescript
+```ts
 import * as myOverrides from './overrides/myOverrides.css';
 
 interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableMixinProperties;
@@ -566,11 +568,11 @@ class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProp
 }
 ```
 
-##### Applying fixed classes
+##### Applying Fixed Classes
 
 The `this.classes` function returns a chained `fixed` function that can be used to set non-themeable classes on a node. This allows a widget author to apply classes to a widget that cannot be overridden.
 
-``` typescript
+``` ts
 import { WidgetProperties } from '@dojo/widget-core/interfaces';
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { ThemeableMixin, ThemeableMixinProperties, theme } from '@dojo/widget-core/mixins/Themeable';
@@ -591,7 +593,7 @@ class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProp
 }
 ```
 
-In the above example, the `root` class is still themeable, but the `tab` class is applied using `.fixed()` so it will not be themeable. The classes passed to `.fixed()` can be any string and do not need to originate from `baseClasses` like the `.classes()` parameters must do.
+In the above example, the `root` class is still themeable, but the `tab` class is applied using `.fixed()` so it will not be themeable. The classes passed to `.fixed()` can be any string, and unlike the `.classes()` parameters, `fixed()` css classes do not need to originate from `baseClasses`.
 
 #### Internationalization (i18n)
 
@@ -615,7 +617,8 @@ class I18nWidget extends I18nMixin(WidgetBase)<I18nWidgetProperties> {
 
 		return v('div', { title: messages.hello }, [
 			w(createLabel, {
-				// Passing a message string to a child widget.				label: messages.purchaseItems
+				// Passing a message string to a child widget.
+				label: messages.purchaseItems
 			}),
 			w(createButton, {
 				// Passing a formatted message string to a child widget.
@@ -631,7 +634,7 @@ class I18nWidget extends I18nMixin(WidgetBase)<I18nWidgetProperties> {
 Widgets can be turned into [Custom Elements](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) with
 minimal extra effort.
 
-Just create a `CustomElementDescriptor` factory and use the build tooling to do the rest of the work,
+Just create a `CustomElementDescriptor` factory and use the `@dojo/cli` build tooling to do the rest of the work,
 
 ```ts
 import { CustomElementDescriptor } from '@dojo/widget-core/customElements';
@@ -658,20 +661,20 @@ export default function createCustomElement(): CustomElementDescriptor {
 
 By convention, this file should be named `createMyWidgetElement.ts`.
 
-To build your custom element, use [dojo cli](https://github.com/dojo/cli),
+To build your custom element, use [@dojo/cli](https://github.com/dojo/cli),
 
 ```bash
 $ dojo build --element=/path/to/createMyWidget.ts
 ```
 
-This will generate the following files,
+This will generate the following files:
 
 * `dist/my-widget/my-widget.html` - HTML import file that includes all widget dependencies. This is the only file you need to import into your HTML page to use your widget.
 * `dist/my-widget/my-widget.js` - A compiled version of your widget.
 * `dist/my-widget/my-widget.css` - The CSS for your widget
-* `dist/my-widget/widget-core.js` - A shared base widget library. Keeping this separate means that you can include multiple HTML imports and the browser will not re-request this shared file.
+* `dist/my-widget/widget-core.js` - A shared base widget library. Keeping this separate means that you can include HTML imports for multiple Dojo widgets and the applicartion environment will not re-request this shared file for each widget.
 
-Using your widget would be a simple matter of importing the HTML import,
+Using your widget would be a simple matter of importing the HTML import:
 
 ```html
 <!DOCTYPE html>
@@ -718,12 +721,12 @@ You can explicitly map widget properties to DOM node attributes with the `attrib
 }
 ```
 
-* `attributeName` refers to the attribute that will set on the DOM element, so, `<text-widget label="test" />`.
-* `propertyName` refers to the property on the widget to set, and if not set, defaults to the `attributeName`.
-* `value` lets you specify a transformation function on the attribute value. This function should return the value that
+* `attributeName` - the attribute that will set on the DOM element, e.g. `<text-widget label="test" />`.
+* `propertyName` - the property on the widget to set; if not set, it defaults to the `attributeName`.
+* `value` - specify a transformation function on the attribute value. This function should return the value that
 will be set on the widget's property.
 
-Adding an attribute to the element will automatically add a corresponding property to the element as well.
+Adding an attribute to the element will also automatically add a corresponding property to the element.
 
 ```ts
 // as an attribute
@@ -752,10 +755,10 @@ You can map DOM element properties to widget properties,
 textWidget.placeholder = 'Enter first name';
 ```
 
-* `propertyName` is the name of the property on the DOM element
-* `widgetPropertyName` is the name of the property on the widget. If unspecified, `propertyName` is used instead.
-* `getValue`, if specified, will be called with the widget's property value as an argument. The returned value is returned as the DOM element property value.
-* `setValue`, if specified, is called with the DOM elements property value. The returned value is used for the widget property's value.
+* `propertyName` - name of the property on the DOM element
+* `widgetPropertyName` - name of the property on the widget; if unspecified, `propertyName` is used instead
+* `getValue` - if specified, will be called with the widget's property value as an argument. The returned value is returned as the DOM element property value.
+* `setValue` - if specified, is called with the DOM elements property value. The returned value is used for the widget property's value.
 
 ##### Events
 
@@ -804,22 +807,22 @@ The initialization function is run from the context of the HTML element.
 }
 ```
 
-It should be noted that children nodes are removed from the DOM when widget instantiation happens, and added as children
+It should be noted that children nodes are removed from the DOM when widget instantiation occurs, and added as children
 to the widget instance.
 
 ### Key Principles
 
 These are some of the **important** principles to keep in mind when creating and using widgets:
 
-1. the widget *`__render__`* function should **never** be overridden
-2. except for projectors you should **never** need to deal directly with widget instances.
-3. hyperscript should **always** be written using the @dojo/widget-core `v` helper function.
-4. **never** set state outside of a widget instance.
-5. **never** update `properties` within a widget instance.
+1. The widget *`__render__`* function should **never** be overridden
+2. Except for projectors, you should **never** need to deal directly with widget instances
+3. Hyperscript should **always** be written using the @dojo/widget-core `v` helper function
+4. **Never** set state outside of a widget instance
+5. **Never** update `properties` within a widget instance
 
 ### API
 
-// add link to generated API docs.
+<!-- TODO: add link to generated API docs. -->
 
 ## How Do I Contribute?
 
@@ -830,13 +833,13 @@ Contributing Guidelines and Style Guide.
 
 To start working with this package, clone the repository and run `npm install`.
 
-In order to build the project run `grunt dev` or `grunt dist`.
+In order to build the project, run `grunt dev` or `grunt dist`.
 
 ### Testing
 
 Test cases MUST be written using [Intern](https://theintern.github.io) using the Object test interface and Assert assertion interface.
 
-90% branch coverage MUST be provided for all code submitted to this repository, as reported by istanbul’s combined coverage results for all supported platforms.
+90% branch coverage MUST be provided for all code submitted to this repository, as reported by Istanbul’s combined coverage results for all supported platforms.
 
 To test locally in node run:
 
