@@ -3,7 +3,6 @@ export * from './customElements';
 export * from './d';
 export * from './WidgetRegistry';
 export * from './interfaces';
-export * from './mixins/FormLabel'
 export * from './mixins/I18n';
 export * from './mixins/Projector';
 export * from './mixins/Registry';
