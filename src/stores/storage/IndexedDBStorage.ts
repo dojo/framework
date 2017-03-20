@@ -9,7 +9,7 @@ import { Filter, FilterType, FilterChainMember, BooleanOp, SimpleFilter } from '
 
 export type Indices<T> = {
 	[ P in keyof T ]?: any;
-}
+};
 
 export interface IndexedDBOptions<T, O extends CrudOptions> extends StoreOptions<T, O> {
 	/**

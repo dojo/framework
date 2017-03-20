@@ -36,7 +36,7 @@ export interface UpdateResults<T> {
  * only want to know about the end result of an operation, and don't want to deal with
  * any recoverable failures.
  */
-export type StoreObservable<T, U> = Subscribable<U> & Promise<T[]>
+export type StoreObservable<T, U> = Subscribable<U> & Promise<T[]>;
 
 export interface Storage<T, O extends CrudOptions> {
 	identify(items: T[]|T): string[];

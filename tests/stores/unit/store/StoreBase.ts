@@ -180,7 +180,7 @@ registerSuite({
 			},
 
 			'should use id property to identify patches'(this: any) {
-				type IdProp = { idProp: string; value: number }
+				type IdProp = { idProp: string; value: number };
 				const data: IdProp[] = [
 					{ idProp: 'item-1', value: 1 }, { idProp: 'item-2', value: 2 }, { idProp: 'item-3', value: 3 }
 				];
