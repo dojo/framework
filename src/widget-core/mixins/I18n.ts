@@ -44,7 +44,7 @@ export type LocalizedMessages<T extends Messages> = T & {
 	 * The formatted string.
 	 */
 	format(key: string, options?: any): string;
-}
+};
 
 /**
  * interface for I18n functionality

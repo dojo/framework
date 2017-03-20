@@ -3,9 +3,9 @@ import Map from '@dojo/shim/Map';
 import Symbol from '@dojo/shim/Symbol';
 import { WidgetConstructor } from './interfaces';
 
-export type WidgetConstructorFunction = () => Promise<WidgetConstructor>
+export type WidgetConstructorFunction = () => Promise<WidgetConstructor>;
 
-export type WidgetRegistryItem = WidgetConstructor | Promise<WidgetConstructor> | WidgetConstructorFunction
+export type WidgetRegistryItem = WidgetConstructor | Promise<WidgetConstructor> | WidgetConstructorFunction;
 
 /**
  * Widget base symbol type

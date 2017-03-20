@@ -11,7 +11,7 @@ class TesterWidget extends WidgetBase<WidgetProperties> {
 	public lifeCycleUpdated: Array<{key: string, element: Element}> = [];
 
 	protected vnode: HNode;
-	public modify: boolean = false;
+	public modify = false;
 
 	protected onElementCreated(element: Element, key: string): void {
 		this.lifeCycleCreated.push({

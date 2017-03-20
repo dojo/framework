@@ -10,14 +10,14 @@ import { WidgetBase, onPropertiesChanged } from './../WidgetBase';
  */
 export type ClassNameFlags = {
 	[key: string]: boolean;
-}
+};
 
 /**
  * A lookup object for available class names
  */
 export type ClassNames = {
 	[key: string]: string;
-}
+};
 
 /**
  * Properties required for the themeable mixin
@@ -145,7 +145,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		/**
 		 * Indicates if classes meta data need to be calculated.
 		 */
-		private _recalculateClasses: boolean = true;
+		private _recalculateClasses = true;
 
 		/**
 		 * Map of registered classes

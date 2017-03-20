@@ -58,7 +58,7 @@ export type SubmitEventHandler = EventHandler;
 
 export type ClassesFunction = () => {
 	[index: string]: boolean | null | undefined;
-}
+};
 
 export interface VirtualDomProperties {
 	/**

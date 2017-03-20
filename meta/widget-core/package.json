@@ -41,12 +41,11 @@
     "codecov.io": "0.1.6",
     "glob": "^7.0.6",
     "grunt": "^1.0.1",
-    "grunt-dojo2": ">=2.0.0-beta.33",
+    "grunt-dojo2": ">=2.0.0-beta.36",
     "intern": "^3.4.1",
     "istanbul": "^0.4.5",
     "jsdom": "^9.5.0",
     "sinon": "^1.17.6",
-    "tslint": "^3.11.0",
     "typescript": "~2.2.1"
   },
   "dependencies": {
