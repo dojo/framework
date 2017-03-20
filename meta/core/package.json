@@ -36,12 +36,15 @@
     "benchmark": "^1.0.0",
     "formidable": "1.0.17",
     "grunt": "^1.0.1",
-    "grunt-dojo2": ">=2.0.0-beta.27",
+    "grunt-dojo2": ">=2.0.0-beta.36",
     "http-proxy": "0.10.3",
     "intern": "^3.4.1",
     "istanbul": "0.4.3",
     "sinon": "~1.17.6",
-    "tslint": "^3.15.1",
     "typescript": "~2.2.1"
+  },
+  "dependencies": {
+    "grunt-tslint": "^4.0.1",
+    "tslint": "^4.5.1"
   }
 }

@@ -228,5 +228,5 @@ export default class MultiMap<T> implements Map<any[], T> {
 		return this.entries();
 	}
 
-	[Symbol.toStringTag]: string = 'MultiMap';
+	[Symbol.toStringTag] = 'MultiMap';
 }

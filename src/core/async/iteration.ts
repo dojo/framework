@@ -3,7 +3,7 @@ import { isArrayLike, Iterable } from '@dojo/shim/iterator';
 import Promise from '@dojo/shim/Promise';
 import { Thenable } from '@dojo/shim/interfaces';
 
-type ValuesAndResults<T, U> = { values: T[] | undefined; results: U[] | undefined; }
+type ValuesAndResults<T, U> = { values: T[] | undefined; results: U[] | undefined; };
 
 /**
  * Processes all items and then applies the callback to each item and eventually returns an object containing the

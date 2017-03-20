@@ -9,11 +9,11 @@ let handle: any;
 
 function mockProvider(url: string, options: RequestOptions): Task<Response> {
 	return Task.resolve(new class extends Response {
-		bodyUsed: boolean = false;
+		bodyUsed = false;
 		headers: Headers = new Headers();
-		ok: boolean = true;
-		status: number = 200;
-		statusText: string = 'OK';
+		ok = true;
+		status = 200;
+		statusText = 'OK';
 		url: string = url;
 		requestOptions = options;
 

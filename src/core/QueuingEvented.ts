@@ -13,7 +13,7 @@ export default class QueuingEvented extends Evented {
 	private _queue: Map<string, EventObject[]>;
 	private _originalOn: (...args: any[]) => Handle;
 
-	maxEvents: number = 0;
+	maxEvents = 0;
 
 	constructor() {
 		super();
