@@ -35,11 +35,10 @@
     "@types/grunt": "~0.4.0",
     "@types/sinon": "~1.16.0",
     "grunt": "~1.0.1",
-    "grunt-dojo2": ">=2.0.0-beta.33",
+    "grunt-dojo2": ">=2.0.0-beta.36",
     "intern": "^3.4.1",
     "istanbul": "^0.4.5",
     "sinon": "^1.17.4",
-    "tslint": "^3.15.1",
     "typescript": "~2.2.1"
   }
 }
