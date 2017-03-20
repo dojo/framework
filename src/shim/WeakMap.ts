@@ -127,7 +127,7 @@ module Shim {
 			return this;
 		}
 
-		[Symbol.toStringTag]: string = 'WeakMap';
+		[Symbol.toStringTag] = 'WeakMap';
 	}
 }
 
@@ -145,5 +145,5 @@ export default class WeakMap<K, V> {
 	/* istanbul ignore next */
 	set(key: K, value?: V): WeakMap<K, V> { throw new Error(); }
 	/* istanbul ignore next */
-	[Symbol.toStringTag]: string = 'WeakMap';
+	[Symbol.toStringTag] = 'WeakMap';
 }

@@ -274,7 +274,7 @@ module Shim {
 
 		then: <U>(onFulfilled?: (value: T) => (U | Thenable<U>), onRejected?: (reason: any) => (U | Thenable<U>)) => Promise<U>;
 
-		[Symbol.toStringTag]: string = 'Promise';
+		[Symbol.toStringTag] = 'Promise';
 	}
 }
 

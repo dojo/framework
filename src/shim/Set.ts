@@ -68,7 +68,7 @@ export namespace Shim {
 			return new ShimIterator(this._setData);
 		};
 
-		[Symbol.toStringTag]: string = 'Set';
+		[Symbol.toStringTag] = 'Set';
 	}
 }
 
@@ -98,5 +98,5 @@ export default class Set<T> {
 	/* istanbul ignore next */
 	[Symbol.iterator](): IterableIterator<T> { throw new Error('Abstract method'); };
 	/* istanbul ignore next */
-	[Symbol.toStringTag]: string = 'Set';
+	[Symbol.toStringTag] = 'Set';
 }

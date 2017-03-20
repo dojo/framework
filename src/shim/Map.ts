@@ -163,7 +163,7 @@ export namespace Shim {
 			return this.entries();
 		}
 
-		[Symbol.toStringTag]: string = 'Map';
+		[Symbol.toStringTag] = 'Map';
 	}
 }
 
@@ -195,5 +195,5 @@ export default class Map<K, V> {
 	/* istanbul ignore next */
 	[Symbol.iterator](): IterableIterator<[K, V]> { throw new Error('Abstract method'); };
 	/* istanbul ignore next */
-	[Symbol.toStringTag]: string = 'Map';
+	[Symbol.toStringTag] = 'Map';
 }
