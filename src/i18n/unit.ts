@@ -15,7 +15,7 @@ export type UnitFormatterOptions = {
 	 * numberFormatter: [Function] a number formatter function. Defaults to Globalize .numberFormatter() for the current locale using the default options.
 	 */
 	numberFormatter?: NumberFormatterOptions;
-}
+};
 
 /**
  * Return a string formatted for the specified number, unit, and options/locale.

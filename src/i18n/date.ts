@@ -36,7 +36,7 @@ export type DateFormatterOptions = {
 	 * One of the following String values: full, long, medium, or short, eg. { datetime: "full" }
 	 */
 	datetime?: DateLength;
-}
+};
 
 export interface DateParser {
 	/**
@@ -50,7 +50,7 @@ export type RelativeTimeFormatterOptions = {
 	 * eg. "short" or "narrow". Or falsy for default long form
 	 */
 	form?: RelativeTimeLength;
-}
+};
 
 // Globalize.js incorrectly handles timezone offsets when parsing date strings.
 // This is resolved with https://github.com/globalizejs/globalize/pull/693, and

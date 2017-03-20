@@ -67,7 +67,7 @@ export type CurrencyFormatterOptions = CommonNumberFormatterOptions & {
 	 * symbol (default), accounting, code or name.
 	 */
 	style?: CurrencyStyleOption;
-}
+};
 
 export interface NumberFormatter {
 	/**
@@ -81,7 +81,7 @@ export type NumberFormatterOptions = CommonNumberFormatterOptions & {
 	 * decimal (default), or percent
 	 */
 	style?: NumberStyleOption;
-}
+};
 
 export interface NumberParser {
 	/**
@@ -95,14 +95,14 @@ export type NumberParserOptions = {
 	 * decimal (default), or percent.
 	 */
 	style?: NumberStyleOption;
-}
+};
 
 export type PluralGeneratorOptions = {
 	/**
 	 * cardinal (default), or ordinal.
 	 */
 	type?: PluralTypeOption;
-}
+};
 
 /**
  * Format a number as the specified currency, according to the specified configuration and or locale.
