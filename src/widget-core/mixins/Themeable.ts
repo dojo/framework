@@ -1,5 +1,5 @@
 import Map from '@dojo/shim/Map';
-import { includes } from '@dojo/shim/array';
+import { includes, find } from '@dojo/shim/array';
 import { assign } from '@dojo/core/lang';
 import { Constructor, WidgetProperties, PropertiesChangeEvent } from './../interfaces';
 import { WidgetBase, onPropertiesChanged } from './../WidgetBase';
@@ -47,7 +47,7 @@ export interface ClassesFunctionChain {
 	get: () => ClassNameFlags;
 }
 
-type BaseClasses = { [key: string]: string; };
+type ThemeClasses = { [key: string]: string; };
 
 const THEME_KEY = ' _key';
 
@@ -71,7 +71,7 @@ export interface ThemeableMixin {
  */
 export function theme (theme: {}) {
 	return function(constructor: Function) {
-		constructor.prototype.addDecorator('baseClasses', theme);
+		constructor.prototype.addDecorator('baseThemeClasses', theme);
 	};
 }
 
@@ -114,9 +114,11 @@ function createClassNameObject(classNames: string[], applied: boolean) {
  * @param classes The baseClasses object
  * @requires
  */
-function createBaseClassesLookup(classes: BaseClasses): ClassNames {
-	return Object.keys(classes).reduce((currentClassNames, key: string) => {
-		currentClassNames[classes[key]] = key;
+function createThemeClassesLookup(classes: ThemeClasses[]): ClassNames {
+	return classes.reduce((currentClassNames, baseClass) => {
+		Object.keys(baseClass).forEach((key: string) => {
+			currentClassNames[baseClass[key]] = key;
+		});
 		return currentClassNames;
 	}, <ClassNames> {});
 }
@@ -130,7 +132,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		/**
 		 * The Themeable baseClasses
 		 */
-		private _baseClasses: BaseClasses;
+		private _registeredBaseThemes: ThemeClasses[];
 
 		/**
 		 * All classes ever seen by the instance
@@ -138,9 +140,9 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		private _allClasses: ClassNameFlags = {};
 
 		/**
-		 * Reverse lookup of the base classes
+		 * Reverse lookup of the theme classes
 		 */
-		private _baseClassesReverseLookup: ClassNames;
+		private _baseThemeClassesReverseLookup: ClassNames;
 
 		/**
 		 * Indicates if classes meta data need to be calculated.
@@ -176,11 +178,11 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 			const appliedClasses = classNames
 				.filter((className) => className !== null)
 				.reduce((appliedClasses: {}, className: string) => {
-					if (!this._baseClassesReverseLookup[className]) {
-						console.warn(`Class name: ${className} is not from baseClasses, use chained 'fixed' method instead`);
+					if (!this._baseThemeClassesReverseLookup[className]) {
+						console.warn(`Class name: ${className} not found, use chained 'fixed' method instead`);
 						return appliedClasses;
 					}
-					className = this._baseClassesReverseLookup[className];
+					className = this._baseThemeClassesReverseLookup[className];
 					if (!this._registeredClassesMap.has(className)) {
 						this.registerThemeClass(className);
 					}
@@ -238,7 +240,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		 */
 		private registerThemeClass(className: string) {
 			const { properties: { overrideClasses = {} } } = this;
-			const themeClass = this._theme[className] ? this._theme[className] : this._baseClasses[className];
+			const themeClass = this._theme[className] ? this._theme[className] : this.getBaseThemeClass(className);
 			const overrideClassNames = overrideClasses[className] ? overrideClasses[className].split(' ') : [];
 			const cssClassNames = themeClass.split(' ').concat(overrideClassNames);
 			const classesObject = cssClassNames.reduce((classesObject, cssClassName) => {
@@ -254,14 +256,65 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		 */
 		private recalculateThemeClasses() {
 			const { properties: { theme = {} } } = this;
-			this._baseClasses = (this.getDecorator('baseClasses') || [])[0];
-			const themeKey = this._baseClasses[THEME_KEY];
-			this._baseClassesReverseLookup = createBaseClassesLookup(this._baseClasses);
-			this._theme = theme[themeKey] || {};
+			if (!this._registeredBaseThemes) {
+				this._registeredBaseThemes = [ ...this.getDecorator('baseThemeClasses') ].reverse();
+				this.checkForDuplicates();
+			}
+			const registeredBaseThemeKeys = this._registeredBaseThemes.map((registeredBaseThemeClasses) => {
+				return registeredBaseThemeClasses[THEME_KEY];
+			});
+
+			this._baseThemeClassesReverseLookup = createThemeClassesLookup(this._registeredBaseThemes);
+			this._theme = registeredBaseThemeKeys.reduce((baseTheme, themeKey) => {
+				return assign(baseTheme, theme[themeKey]);
+			}, {});
+
 			this._registeredClassesMap.forEach((value, key) => {
 				this.registerThemeClass(key);
 			});
 			this._recalculateClasses = false;
+		}
+
+		/**
+		 * Find the base theme class for the class name
+		 */
+		private getBaseThemeClass(className: string): string {
+			const registeredBaseTheme = find(this._registeredBaseThemes, (registeredBaseThemeClasses) => {
+				return Boolean(registeredBaseThemeClasses[className]);
+			});
+			return registeredBaseTheme[className] || '';
+		}
+
+		/**
+		 * Check for duplicates across the registered base themes.
+		 */
+		private checkForDuplicates(): void {
+			this._registeredBaseThemes.forEach((registeredBaseThemeClasses, index) => {
+				Object.keys(registeredBaseThemeClasses).some((key) => {
+					return this.isDuplicate(key, registeredBaseThemeClasses);
+				});
+			});
+		}
+
+		/**
+		 * Search for classname in other base themes
+		 */
+		private isDuplicate(key: string, originatingBaseTheme: ThemeClasses): boolean {
+			let duplicate = false;
+			if (key !== THEME_KEY) {
+				for (let i = 0; i < this._registeredBaseThemes.length; i++) {
+					if (originatingBaseTheme === this._registeredBaseThemes[i]) {
+						continue;
+					}
+					if (this._registeredBaseThemes[i][key]) {
+						console.warn(`Duplicate base theme class key '${key}' detected, this could cause unexpected results`);
+						duplicate = true;
+						break;
+					}
+				}
+				return duplicate;
+			}
+			return duplicate;
 		}
 	};
 
