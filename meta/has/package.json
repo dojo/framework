@@ -3,7 +3,7 @@
   "version": "2.0.0-pre",
   "description": "A feature detection library",
   "engines": {
-    "npm": "~3.10.0"
+    "npm": ">=3.0.0"
   },
   "homepage": "http://dojotoolkit.org",
   "bugs": {
