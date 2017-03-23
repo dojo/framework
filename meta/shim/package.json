@@ -9,6 +9,9 @@
   "license": "BSD-3-Clause",
   "main": "main.js",
   "private": true,
+  "engines": {
+    "npm": ">=3.0.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/dojo/shim.git"
