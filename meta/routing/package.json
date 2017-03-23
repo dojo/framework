@@ -14,6 +14,9 @@
     "src",
     "typings.json"
   ],
+  "engines": {
+    "npm": ">=3.0.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/dojo/routing.git"
