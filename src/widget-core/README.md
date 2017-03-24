@@ -8,7 +8,7 @@ This repo provides users with the ability to write their own Dojo 2 widgets.
 
 We also provide a suite of pre-built widgets to use in your applications: [(@dojo/widgets)](https://github.com/dojo/widgets).
 
-**WARNING** This is *alpha* software. It is not yet production ready, so you should use at your own risk.
+**WARNING** This is _beta_ software. While we do not anticipate significant changes to the API at this stage, we may feel the need to do so. This is not yet production ready, so you should use at your own risk.
 
 - [Usage](#usage)
 - [Features](#features)
