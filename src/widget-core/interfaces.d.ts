@@ -252,6 +252,11 @@ export interface HNode {
 	properties: VirtualDomProperties;
 
 	/**
+	 * The tagname used to create the VNode
+	 */
+	tag: string;
+
+	/**
 	 * The type of node
 	 */
 	type: symbol;

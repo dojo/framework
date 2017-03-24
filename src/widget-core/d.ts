@@ -97,6 +97,7 @@ export function v(tag: string, propertiesOrChildren: VirtualDomProperties = {}, 
 		}
 
 		return {
+			tag,
 			children,
 			properties,
 			render<T>(this: { vNodes: VNode[], properties: VirtualDomProperties }, options: { bind?: T } = { }) {

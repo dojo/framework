@@ -68,6 +68,7 @@ registerSuite({
 			const hNode = v('div');
 			assert.isFunction(hNode.render);
 			assert.lengthOf(hNode.children, 0);
+			assert.equal(hNode.tag, 'div');
 			assert.equal(hNode.type, HNODE);
 			assert.isTrue(isHNode(hNode));
 			assert.isFalse(isWNode(hNode));
