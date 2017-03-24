@@ -6,7 +6,7 @@
 
 A routing library for Dojo 2 applications.
 
-**WARNING** This is *alpha* software. It is not yet production ready, so you should use at your own risk.
+**WARNING** This is _beta_ software. While we do not anticipate significant changes to the API at this stage, we may feel the need to do so. This is not yet production ready, so you should use at your own risk.
 
 This routing library lets you construct route hierarchies that are matched against URLs. Each selected route can tell the application to materialize a different set of widgets and influence the state of those widgets.
 
