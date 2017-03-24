@@ -26,13 +26,13 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/core": "2.0.0-alpha.26",
-    "@dojo/has": "2.0.0-alpha.8",
-    "@dojo/shim": "2.0.0-beta.10"
+    "@dojo/core": "^2.0.0-alpha.26",
+    "@dojo/has": "^2.0.0-alpha.8",
+    "@dojo/shim": "^2.0.0-beta.10"
   },
   "devDependencies": {
-    "@dojo/interfaces": "2.0.0-alpha.11",
-    "@dojo/loader": "2.0.0-beta.9",
+    "@dojo/interfaces": "^2.0.0-alpha.11",
+    "@dojo/loader": "^2.0.0-beta.9",
     "@types/chai": "~3.4.0",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
