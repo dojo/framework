@@ -2,7 +2,6 @@ import { around } from '@dojo/core/aspect';
 import { padStart } from '@dojo/shim/string';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { fetchCldrData } from '../support/util';
 import {
 	DateLength,
 	formatDate,
@@ -13,15 +12,16 @@ import {
 	parseDate
 } from '../../src/date';
 import { switchLocale, systemLocale } from '../../src/i18n';
+import { fetchCldrData } from '../support/util';
 
 function getOffsets(date: Date) {
 	const offset = date.getTimezoneOffset();
 	const longOffset = Math.round(offset / 60);
-	const fullHourOffset = padStart(String(longOffset), 2, '0');
+	const fullHourOffset = padStart(String(Math.abs(longOffset)), 2, '0');
 	const fullSecondOffset = padStart(String(offset % 60), 2, '0');
 	const fullOffset = `${fullHourOffset}:${fullSecondOffset}`;
 
-	return [ longOffset, fullOffset ];
+	return [ longOffset < 0 ? -1 : 1, Math.abs(longOffset), fullOffset ];
 }
 
 function getTimezoneDate(date: Date, offset: number = 0): Date {
@@ -31,11 +31,11 @@ function getTimezoneDate(date: Date, offset: number = 0): Date {
 }
 
 function getTimezones(date: Date, standard: string = 'GMT') {
-	const [ longOffset, fullOffset ] = getOffsets(date);
-	const fullSeparator = String.fromCharCode(standard === 'UTC' ? 8722 : 45);
+	const [ sign, longOffset, fullOffset ] = getOffsets(date);
+	const fullSeparator = (sign < 0) ? '+' : String.fromCharCode(standard === 'UTC' ? 8722 : 45);
 	const zeroPattern = /^[0:]+$/;
 	return [
-		`${standard}${longOffset ? '-' + longOffset : ''}`,
+		`${standard}${longOffset ? ((sign < 0) ? '+' : '-') + longOffset : ''}`,
 		`${standard}${zeroPattern.test(fullOffset as string) ? '' : fullSeparator + fullOffset}`
 	];
 }

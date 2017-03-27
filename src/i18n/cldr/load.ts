@@ -58,16 +58,14 @@ const getJson: (paths: string[]) => Promise<CldrData[]> = (function () {
  * @return
  * A promise that resolves once all data have been loaded and registered.
  */
-export default function loadCldrData(data: CldrData | string[]): Promise<void> {
+export default function loadCldrData(data: CldrData | string[]) {
 	if (Array.isArray(data)) {
 		return getJson(data).then((result: CldrData[]) => {
 			result.forEach(baseLoad);
 		});
 	}
 
-	baseLoad(data);
-
-	return Promise.resolve();
+	return baseLoad(data);
 }
 
 export {

@@ -6,7 +6,7 @@ import baseLoad, {
 	mainPackages,
 	reset,
 	supplementalPackages
-} from '../load';
+} from './default';
 
 declare const __cldrData__: CldrData;
 

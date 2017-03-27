@@ -1,5 +1,6 @@
 // required for Globalize/Cldr to properly resolve locales in the browser.
 import 'cldrjs/dist/cldr/unresolved';
+import Promise from '@dojo/shim/Promise';
 import * as Globalize from 'globalize';
 import supportedLocales from '../locales';
 import { generateLocales, validateLocale } from '../../util/main';
@@ -225,10 +226,11 @@ export function isLoaded(groupName: CldrGroup, ...args: string[]) {
  * @param data
  * A data object containing `main` and/or `supplemental` objects with CLDR data.
  */
-export default function loadCldrData(data: CldrData) {
+export default function loadCldrData(data: CldrData): Promise<void> {
 	registerMain(data.main);
 	registerSupplemental(data.supplemental);
 	Globalize.load(data);
+	return Promise.resolve();
 }
 
 /**
