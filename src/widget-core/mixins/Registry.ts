@@ -23,7 +23,7 @@ export function RegistryMixin<T extends Constructor<WidgetBase<RegistryMixinProp
 			};
 		}
 
-		@onPropertiesChanged
+		@onPropertiesChanged()
 		protected onPropertiesChanged(evt: PropertiesChangeEvent<this, RegistryMixinProperties>) {
 			if (includes(evt.changedPropertyKeys, 'registry')) {
 				this.registry = evt.properties.registry;

@@ -1,8 +1,8 @@
-import Map from '@dojo/shim/Map';
-import { includes, find } from '@dojo/shim/array';
 import { assign } from '@dojo/core/lang';
+import { includes, find } from '@dojo/shim/array';
+import Map from '@dojo/shim/Map';
 import { Constructor, WidgetProperties, PropertiesChangeEvent } from './../interfaces';
-import { WidgetBase, onPropertiesChanged } from './../WidgetBase';
+import { WidgetBase, onPropertiesChanged, handleDecorator } from './../WidgetBase';
 
 /**
  * A representation of the css class names to be applied and
@@ -70,9 +70,9 @@ export interface ThemeableMixin {
  * Decorator for base css classes
  */
 export function theme (theme: {}) {
-	return function(constructor: Function) {
-		constructor.prototype.addDecorator('baseThemeClasses', theme);
-	};
+	return handleDecorator((target) => {
+		target.addDecorator('baseThemeClasses', theme);
+	});
 }
 
 /**
@@ -213,7 +213,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		 *
 		 * @param changedPropertyKeys Array of properties that have changed
 		 */
-		@onPropertiesChanged
+		@onPropertiesChanged()
 		protected onPropertiesChanged({ changedPropertyKeys }: PropertiesChangeEvent<this, ThemeableProperties>) {
 			const themeChanged = includes(changedPropertyKeys, 'theme');
 			const overrideClassesChanged = includes(changedPropertyKeys, 'overrideClasses');

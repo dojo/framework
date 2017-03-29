@@ -50,31 +50,57 @@ const decoratorMap = new Map<Function, Map<string, any[]>>();
 /**
  * Decorator that can be used to register a function to run as an aspect to `render`
  */
-export function afterRender(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-	target.addDecorator('afterRender', target[propertyKey]);
+export function afterRender(method: Function): (target: any) => void;
+export function afterRender(): (target: any, propertyKey: string) => void;
+export function afterRender(method?: Function) {
+	return handleDecorator((target, propertyKey) => {
+		target.addDecorator('afterRender', propertyKey ? target[propertyKey] : method);
+	});
 }
 
 /**
  * Decorator that can be used to register a function as a specific property diff
  *
- * @param propertyName The name of the property of which the diff function is applied
+ * @param propertyName  The name of the property of which the diff function is applied
+ * @param diffType      The diff type, default is DiffType.AUTO.
+ * @param diffFunction  A diff function to run if diffType if DiffType.CUSTOM
  */
-export function diffProperty(propertyName: string, diffType = DiffType.CUSTOM, diffFunction?: Function) {
-	return function (target: any, propertyKey?: string, descriptor?: PropertyDescriptor) {
-		if (diffType === DiffType.CUSTOM && propertyKey && descriptor) {
-			target.addDecorator('diffProperty', { propertyName, diffType, diffFunction: target[propertyKey] });
-		}
-		else if (diffType && !propertyKey && !descriptor) {
-			target.prototype.addDecorator('diffProperty', { propertyName, diffType, diffFunction });
-		}
-	};
+export function diffProperty(propertyName: string, diffType = DiffType.AUTO, diffFunction?: Function) {
+	return handleDecorator((target, propertyKey) => {
+		target.addDecorator('diffProperty', {
+			propertyName,
+			diffType: propertyKey ? DiffType.CUSTOM : diffType,
+			diffFunction: propertyKey ? target[propertyKey] : diffFunction
+		});
+	});
 }
 
 /**
  * Decorator used to register listeners to the `properties:changed` event.
  */
-export function onPropertiesChanged(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-	target.addDecorator('onPropertiesChanged', target[propertyKey]);
+export function onPropertiesChanged(method: Function): (target: any) => void;
+export function onPropertiesChanged(): (target: any, propertyKey: any) => void;
+export function onPropertiesChanged(method?: Function) {
+	return handleDecorator((target, propertyKey) => {
+		target.addDecorator('onPropertiesChanged', propertyKey ? target[propertyKey] : method);
+	});
+}
+
+/**
+ * Generic decorator handler to take care of whether or not the decorator was called at the class level
+ * or the method level.
+ *
+ * @param handler
+ */
+export function handleDecorator(handler: (target: any, propertyKey?: string) => void) {
+	return function (target: any, propertyKey?: string, descriptor?: PropertyDescriptor) {
+		if (typeof target === 'function') {
+			handler(target.prototype, undefined);
+		}
+		else {
+			handler(target, propertyKey);
+		}
+	};
 }
 
 /**
@@ -186,7 +212,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	 * A render decorator that registers vnode callbacks for 'afterCreate' and
 	 * 'afterUpdate' that will in turn call lifecycle methods onElementCreated and onElementUpdated.
 	 */
-	@afterRender
+	@afterRender()
 	protected attachLifecycleCallbacks (node: DNode) {
 		// Create vnode afterCreate and afterUpdate callback functions that will only be set on nodes
 		// with "key" properties.

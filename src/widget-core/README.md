@@ -212,7 +212,7 @@ The depth of the returned diff is equal to the depth used during the equality co
 
 ##### Custom property diff control
 
-Included in `WidgetBase` is functionality to support targeting a specific property with a custom comparison function using a decorator `diffProperty`. For non-decorator environments (Either JavaScript/ES6 or a TypeScript project that does not have the experimental decorators configuration set to true in the `tsconfig`), the functions need to be registered in the constructor using the `addDecorator` API with `diffProperty` as the key.
+Included in `WidgetBase` is functionality to support targeting a specific property with a custom comparison function using a decorator `diffProperty`. For non-decorator environments (Either JavaScript/ES6 or a TypeScript project that does not have the experimental decorators configuration set to true in the `tsconfig`), the decorator functions can be called directly from the constructor.
 
 e.g. for a property `foo` you would add a function to the widget class and either use the decorator function or register the decorator in the `constructor`.
 
@@ -236,7 +236,7 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 
 	constructor() {
 		super();
-		this.addDecorator('diffProperty', { propertyName: 'foo', diffFunction: this.customFooDiff });
+		diffProperty('foo', DiffType.CUSTOM, this.customFooDiff)(this);
 	}
 
 	customFooDiff(previousProperty: MyComplexObject, newProperty: MyComplexObject) {
@@ -272,7 +272,7 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 
 	constructor() {
 		super();
-		this.addDecorator('onPropertiesChanged', this.myPropChangedListener)
+		onPropertiesChanged(this.myPropChangedListener)(this);
 	}
 
 	myPropChangedListener(evt: PropertiesChangeEvent<this, WidgetProperties>) {
@@ -300,7 +300,7 @@ Finally once all the attached events have been processed, the properties lifecyc
 
 ##### AfterRender
 
-Occassionally, in a mixin or base widget class, it my be required to provide logic that needs to be executed using the result of a widget's `render`. `WidgetBase` supports registering functions that opererate as an after aspect to the `render` function using a provided decorator `afterRender` or in non-decorator environments using the `addDecorator` API with `afterRender` as the key.
+Occassionally, in a mixin or base widget class, it my be required to provide logic that needs to be executed using the result of a widget's `render`. `WidgetBase` supports registering functions that opererate as an after aspect to the `render` function using a provided decorator `afterRender` or in non-decorator environments by calling the decorator method directly.
 
 *Using the `afterRender` decorator*
 
@@ -314,13 +314,13 @@ class MyBaseClass extends WidgetBase<WidgetProperties> {
 }
 ```
 
-*Using the `addDecorator` API*
+*Without using decorators*
 
 ```ts
 class MyBaseClass extends WidgetBase<WidgetProperties> {
 	constructor() {
 		super();
-		this.addDecorator('afterRender', this.myOtherAfterRender);
+		afterRender(this.myOtherAfterRender)(this);
 	}
 
 	myOtherAfterRender(result: DNode): DNode {
@@ -330,7 +330,7 @@ class MyBaseClass extends WidgetBase<WidgetProperties> {
 }
 ```
 
-***Note:*** `afterRender` functions are executed in the order that they are specified from the super class up to the final class. Usage of the `afterRender` decorator and `addDecorator` API should not be mixed.
+***Note:*** `afterRender` functions are executed in the order that they are specified from the super class up to the final class.
 
 #### Projector
 

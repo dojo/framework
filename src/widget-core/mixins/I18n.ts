@@ -94,7 +94,7 @@ export function I18nMixin<T extends Constructor<WidgetBase<I18nProperties>>>(bas
 			}), messages) as LocalizedMessages<T>;
 		}
 
-		@afterRender
+		@afterRender()
 		protected renderDecorator(result: DNode): DNode {
 			if (isHNode(result)) {
 				const { locale, rtl } = this.properties;

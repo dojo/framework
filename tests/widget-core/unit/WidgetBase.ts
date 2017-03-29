@@ -5,8 +5,8 @@ import * as assert from 'intern/chai!assert';
 import { stub, spy } from 'sinon';
 import { v, w, registry } from '../../src/d';
 import { DNode } from '../../src/interfaces';
-import WidgetRegistry from './../../src/WidgetRegistry';
 import { WidgetBase, diffProperty, DiffType, afterRender, onPropertiesChanged } from '../../src/WidgetBase';
+import WidgetRegistry from './../../src/WidgetRegistry';
 
 registerSuite({
 	name: 'WidgetBase',
@@ -116,11 +116,7 @@ registerSuite({
 
 				constructor() {
 					super();
-					this.addDecorator('diffProperty', {
-						propertyName: 'foo',
-						diffType: DiffType.CUSTOM,
-						diffFunction: this.diffPropertyFoo
-					});
+					diffProperty('foo', DiffType.CUSTOM, this.diffPropertyFoo)(this);
 				}
 
 				diffPropertyFoo(this: any, previousProperty: any, newProperty: any): any {
@@ -145,10 +141,10 @@ registerSuite({
 				constructor() {
 					super();
 
-					this.addDecorator('afterRender', (node: DNode) => {
+					afterRender((node: DNode) => {
 						renderCallCount++;
 						return node;
-					});
+					})(this);
 				}
 
 				render() {
@@ -394,12 +390,13 @@ registerSuite({
 		decorator() {
 			let afterRenderCount = 1;
 			class TestWidget extends WidgetBase<any> {
-				@afterRender
+				@afterRender()
 				firstAfterRender(result: DNode): DNode {
 					assert.strictEqual(afterRenderCount++, 1);
 					return result;
 				}
-				@afterRender
+
+				@afterRender()
 				secondAfterRender(result: DNode): DNode {
 					assert.strictEqual(afterRenderCount++, 2);
 					return result;
@@ -407,7 +404,7 @@ registerSuite({
 			}
 
 			class ExtendedTestWidget extends TestWidget {
-				@afterRender
+				@afterRender()
 				thirdAfterRender(result: DNode): DNode {
 					assert.strictEqual(afterRenderCount, 3);
 					return result;
@@ -424,8 +421,8 @@ registerSuite({
 
 				constructor() {
 					super();
-					this.addDecorator('afterRender', this.firstAfterRender);
-					this.addDecorator('afterRender', [ this.secondAfterRender ]);
+					afterRender()(this, 'firstAfterRender');
+					afterRender()(this, 'secondAfterRender');
 				}
 
 				firstAfterRender(result: DNode): DNode {
@@ -443,7 +440,7 @@ registerSuite({
 
 				constructor() {
 					super();
-					this.addDecorator('afterRender', this.thirdAfterRender);
+					afterRender(this.thirdAfterRender)(this);
 				}
 
 				thirdAfterRender(result: DNode): DNode {
@@ -455,24 +452,59 @@ registerSuite({
 			const widget = new ExtendedTestWidget();
 			widget.__render__();
 			assert.strictEqual(afterRenderCount, 3);
+		},
+		'class level decorator'() {
+			let afterRenderCount = 0;
+
+			@afterRender(function (node: any) {
+				afterRenderCount++;
+				return node;
+			})
+			class TestWidget extends WidgetBase<any> {
+			}
+
+			const widget = new TestWidget();
+			widget.__render__();
+			assert.strictEqual(afterRenderCount, 1);
+		},
+		'class level without decorator'() {
+			let afterRenderCount = 0;
+
+			function afterRenderFn(node: any) {
+				afterRenderCount++;
+
+				return node;
+			}
+
+			class TestWidget extends WidgetBase<any> {
+				constructor() {
+					super();
+					afterRender(afterRenderFn)(this);
+				}
+			}
+
+			const widget = new TestWidget();
+			widget.__render__();
+			assert.strictEqual(afterRenderCount, 1);
 		}
 	},
 	'properties:changed event': {
 		decorator() {
 			let onPropertiesChangedCount = 1;
 			class TestWidget extends WidgetBase<any> {
-				@onPropertiesChanged
+				@onPropertiesChanged()
 				firstOnPropertiesChanged() {
 					assert.strictEqual(onPropertiesChangedCount++, 1);
 				}
-				@onPropertiesChanged
+
+				@onPropertiesChanged()
 				secondOnPropertiesChanged() {
 					assert.strictEqual(onPropertiesChangedCount++, 2);
 				}
 			}
 
 			class ExtendedTestWidget extends TestWidget {
-				@onPropertiesChanged
+				@onPropertiesChanged()
 				thirdOnPropertiesChanged() {
 					assert.strictEqual(onPropertiesChangedCount, 3);
 				}
@@ -488,8 +520,8 @@ registerSuite({
 			class TestWidget extends WidgetBase<any> {
 				constructor() {
 					super();
-					this.addDecorator('onPropertiesChanged', this.firstOnPropertiesChanged);
-					this.addDecorator('onPropertiesChanged', this.secondOnPropertiesChanged);
+					onPropertiesChanged(this.firstOnPropertiesChanged)(this);
+					onPropertiesChanged(this.secondOnPropertiesChanged)(this);
 				}
 				firstOnPropertiesChanged() {
 					assert.strictEqual(onPropertiesChangedCount++, 1);
@@ -502,7 +534,7 @@ registerSuite({
 			class ExtendedTestWidget extends TestWidget {
 				constructor() {
 					super();
-					this.addDecorator('onPropertiesChanged', this.thirdOnPropertiesChanged);
+					onPropertiesChanged(this.thirdOnPropertiesChanged)(this);
 				}
 				thirdOnPropertiesChanged() {
 					assert.strictEqual(onPropertiesChangedCount, 3);
@@ -512,6 +544,43 @@ registerSuite({
 			const widget = new ExtendedTestWidget();
 			widget.emit({ type: 'properties:changed' });
 			assert.strictEqual(onPropertiesChangedCount, 3);
+		},
+
+		'class level decorator'() {
+			let called = 0;
+
+			@onPropertiesChanged(function () {
+				called++;
+			})
+			class TestWidget extends WidgetBase<any> {
+			}
+
+			const widget = new TestWidget();
+			widget.setProperties({
+				test: true
+			});
+			assert.strictEqual(called, 1);
+		},
+
+		'extendable'() {
+			let called = false;
+
+function PropertyLogger() {
+	return onPropertiesChanged(function() {
+		called = true;
+	});
+}
+
+@PropertyLogger()
+class TestWidget extends WidgetBase<any> {
+}
+
+const widget = new TestWidget();
+widget.setProperties({
+	test: true
+});
+
+			assert.strictEqual(called, true);
 		}
 	},
 	render: {
@@ -1059,7 +1128,7 @@ registerSuite({
 	},
 	'decorators are cached'() {
 		class TestWidget extends WidgetBase<any> {
-			@afterRender
+			@afterRender()
 			running(result: DNode): DNode {
 				return result;
 			}
@@ -1086,7 +1155,7 @@ registerSuite({
 	},
 	'decorators applied to subclasses are not applied to base classes'() {
 		class TestWidget extends WidgetBase<any> {
-			@afterRender
+			@afterRender()
 			firstRender(result: DNode): DNode {
 				return result;
 			}
@@ -1097,7 +1166,7 @@ registerSuite({
 		}
 
 		class TestWidget2 extends TestWidget {
-			@afterRender
+			@afterRender()
 			secondRender(result: DNode): DNode {
 				return result;
 			}
