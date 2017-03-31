@@ -5,7 +5,7 @@ import * as assert from 'intern/chai!assert';
 import { stub, spy } from 'sinon';
 import { v, w, registry } from '../../src/d';
 import { DNode } from '../../src/interfaces';
-import { WidgetBase, diffProperty, DiffType, afterRender, onPropertiesChanged } from '../../src/WidgetBase';
+import { WidgetBase, diffProperty, DiffType, afterRender, beforeRender, onPropertiesChanged } from '../../src/WidgetBase';
 import WidgetRegistry from './../../src/WidgetRegistry';
 
 registerSuite({
@@ -384,6 +384,66 @@ registerSuite({
 			} catch (e) {
 				assert.strictEqual(testWidget.count, 0);
 			}
+		}
+	},
+	beforeRender: {
+		decorator() {
+			let beforeRenderCount = 1;
+			type RenderFunction = () => DNode;
+			class TestWidget extends WidgetBase<any> {
+				@beforeRender()
+				firstAfterRender(renderFunction: RenderFunction): RenderFunction {
+					assert.strictEqual(beforeRenderCount++, 1);
+					return () => {
+						const rendered = renderFunction();
+						return v('bar', [ rendered ]);
+					};
+				}
+
+				@beforeRender()
+				secondAfterRender(renderFunction: RenderFunction): RenderFunction {
+					assert.strictEqual(beforeRenderCount++, 2);
+					return () => {
+						const rendered = renderFunction();
+						return v('qux', [ rendered ]);
+					};
+				}
+			}
+
+			class ExtendedTestWidget extends TestWidget {
+				@beforeRender()
+				thirdAfterRender(renderFunction: RenderFunction): RenderFunction {
+					assert.strictEqual(beforeRenderCount, 3);
+					return renderFunction;
+				}
+
+				render() {
+					return v('foo', []);
+				}
+			}
+
+			const widget = new ExtendedTestWidget();
+			const qux = <any> widget.__render__();
+			assert.equal(qux.vnodeSelector, 'qux');
+			const bar = qux.children[0];
+			assert.equal(bar.vnodeSelector, 'bar');
+			const foo = bar.children[0];
+			assert.equal(foo.vnodeSelector, 'foo');
+			assert.strictEqual(beforeRenderCount, 3);
+		},
+		'class level decorator'() {
+			let beforeRenderCount = 0;
+
+			@beforeRender(function (node: any) {
+				beforeRenderCount++;
+				return node;
+			})
+			class TestWidget extends WidgetBase<any> {
+			}
+
+			const widget = new TestWidget();
+			widget.__render__();
+			assert.strictEqual(beforeRenderCount, 1);
 		}
 	},
 	afterRender: {
@@ -1136,19 +1196,21 @@ widget.setProperties({
 			render() {
 				return v('div');
 			}
+
+			callGetDecorator(decoratorKey: string) {
+				return this.getDecorator(decoratorKey);
+			}
 		}
 
 		const widget = new TestWidget();
 		const decoratorSpy = spy(widget, '_buildDecoratorList');
 
-		widget.__render__();
+		widget.callGetDecorator('afterRender');
 
 		// first call calls the method
 		assert.equal(decoratorSpy.callCount, 1);
 
-		widget.invalidate();
-
-		widget.__render__();
+		widget.callGetDecorator('afterRender');
 
 		// second call is cached
 		assert.equal(decoratorSpy.callCount, 1);
