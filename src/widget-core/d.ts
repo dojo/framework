@@ -96,22 +96,21 @@ export function v(tag: string, propertiesOrChildren: VirtualDomProperties = {}, 
 			properties = {};
 		}
 
+		if (properties) {
+			let { classes } = properties;
+			if (typeof classes === 'function') {
+				classes = classes();
+				properties = assign(properties, { classes });
+			}
+		}
+
 		return {
 			tag,
 			children,
 			properties,
 			render<T>(this: { vNodes: VNode[], properties: VirtualDomProperties }, options: { bind?: T } = { }) {
-				let properties = this.properties;
 
-				if (this.properties) {
-					let { classes } = this.properties;
-					if (typeof classes === 'function') {
-						classes = classes();
-						properties = assign(this.properties, { classes });
-					}
-				}
-
-				return h(tag, assign(options, properties), this.vNodes);
+				return h(tag, assign(options, this.properties), this.vNodes);
 			},
 			type: HNODE
 		};

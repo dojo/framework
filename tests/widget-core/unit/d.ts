@@ -113,9 +113,7 @@ registerSuite({
 				return { foo: true };
 			};
 			const hNode = v('div', { classes });
-			assert.isFunction(hNode.properties.classes);
-			const result = hNode.render();
-			assert.deepEqual(result.properties, {
+			assert.deepEqual(hNode.properties, {
 				classes: {
 					foo: true
 				}
