@@ -1,11 +1,10 @@
-import { Handle } from '@dojo/interfaces/core';
 import global from '@dojo/core/global';
-import Promise from '@dojo/shim/Promise';
+import { Handle } from '@dojo/interfaces/core';
 import { dom, Projection, ProjectionOptions, VNodeProperties } from 'maquette';
-import { WidgetBase } from './../WidgetBase';
-import { Constructor, WidgetProperties } from './../interfaces';
-import cssTransitions from '../animations/cssTransitions';
 import 'pepjs';
+import cssTransitions from '../animations/cssTransitions';
+import { Constructor, WidgetProperties } from './../interfaces';
+import { WidgetBase } from './../WidgetBase';
 
 /**
  * Represents the attach state of the projector
@@ -43,17 +42,17 @@ export interface ProjectorMixin {
 	/**
 	 * Append the projector to the root.
 	 */
-	append(root?: Element): Promise<Handle>;
+	append(root?: Element): Handle;
 
 	/**
 	 * Merge the projector onto the root.
 	 */
-	merge(root?: Element): Promise<Handle>;
+	merge(root?: Element): Handle;
 
 	/**
 	 * Replace the root with the projector node.
 	 */
-	replace(root?: Element): Promise<Handle>;
+	replace(root?: Element): Handle;
 
 	/**
 	 * Pause the projector.
@@ -114,10 +113,7 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 		public projectorState: ProjectorAttachState;
 
 		private _root: Element;
-		private _attachPromise: Promise<Handle>;
 		private _attachHandle: Handle;
-		private _afterCreate: (...args: any[]) => void;
-		private _originalAfterCreate?: () => void;
 		private _projectionOptions: ProjectionOptions;
 		private _projection: Projection | undefined;
 		private _scheduled: number | undefined;
@@ -210,14 +206,6 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			if (typeof result === 'string' || result === null) {
 				throw new Error('Must provide a VNode at the root of a projector');
 			}
-			const { _afterCreate } = this;
-			if (result.properties) {
-				if (result.properties.afterCreate) {
-					this._originalAfterCreate = <any> result.properties.afterCreate;
-				}
-
-				result.properties.afterCreate = _afterCreate;
-			}
 
 			return result;
 		}
@@ -245,13 +233,13 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 			}
 		}
 
-		private attach({ type, root }: AttachOptions) {
+		private attach({ type, root }: AttachOptions): Handle {
 			if (root) {
 				this.root = root;
 			}
 
 			if (this.projectorState === ProjectorAttachState.Attached) {
-				return this._attachPromise || Promise.resolve({});
+				return this._attachHandle;
 			}
 
 			this.projectorState = ProjectorAttachState.Attached;
@@ -267,21 +255,6 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 				}
 			});
 
-			this._attachPromise = new Promise((resolve, reject) => {
-				this._afterCreate = (...args: any[]) => {
-					if (this._originalAfterCreate) {
-						const [ , , , properties ] = args;
-						this._originalAfterCreate.apply(properties.bind || properties, args);
-					}
-
-					this.emit({
-						type: 'projector:attached',
-						target: this
-					});
-					resolve(this._attachHandle);
-				};
-			});
-
 			switch (type) {
 				case AttachType.Append:
 					this._projection = dom.append(this.root, this._boundRender(), this._projectionOptions);
@@ -294,7 +267,7 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 				break;
 			}
 
-			return this._attachPromise;
+			return this._attachHandle;
 		}
 	};
 }

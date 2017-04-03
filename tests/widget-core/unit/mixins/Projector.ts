@@ -1,12 +1,12 @@
-import '@dojo/shim/Promise';
+import global from '@dojo/core/global';
 import has from '@dojo/has/has';
+import '@dojo/shim/Promise';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { spy } from 'sinon';
 import { v } from '../../../src/d';
 import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projector';
 import { WidgetBase } from '../../../src/WidgetBase';
-import global from '@dojo/core/global';
 import { waitFor } from '../waitFor';
 
 const Event = global.window.Event;
@@ -102,13 +102,13 @@ registerSuite({
 
 			projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
-			return projector.append().then((attachHandle) => {
-				assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
-				const child = <HTMLElement> document.body.lastChild;
-				assert.strictEqual(child.innerHTML, '<h2>foo</h2>');
-				assert.strictEqual(child.tagName.toLowerCase(), 'div');
-				assert.strictEqual(( <HTMLElement> child.firstChild).tagName.toLowerCase(), 'h2');
-			});
+			projector.append();
+
+			assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
+			const child = <HTMLElement> document.body.lastChild;
+			assert.strictEqual(child.innerHTML, '<h2>foo</h2>');
+			assert.strictEqual(child.tagName.toLowerCase(), 'div');
+			assert.strictEqual(( <HTMLElement> child.firstChild).tagName.toLowerCase(), 'h2');
 		},
 		'replace'() {
 			const projector = new class extends TestWidget {
@@ -119,12 +119,12 @@ registerSuite({
 
 			projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
-			return projector.replace().then((attachHandle) => {
-				assert.strictEqual(document.body.childNodes.length, 1, 'child should have been added');
-				const child = <HTMLElement> document.body.lastChild;
-				assert.strictEqual(child.innerHTML, 'foo');
-				assert.strictEqual(child.tagName.toLowerCase(), 'h2');
-			});
+			projector.replace();
+
+			assert.strictEqual(document.body.childNodes.length, 1, 'child should have been added');
+			const child = <HTMLElement> document.body.lastChild;
+			assert.strictEqual(child.innerHTML, 'foo');
+			assert.strictEqual(child.tagName.toLowerCase(), 'h2');
 		},
 		'merge'() {
 			const childNodeLength = document.body.childNodes.length;
@@ -132,32 +132,13 @@ registerSuite({
 
 			projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
-			return projector.merge().then((attachHandle) => {
-				assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
-				const child = <HTMLElement> document.body.lastChild;
-				assert.strictEqual(child.innerHTML, 'foo');
-				assert.strictEqual(child.tagName.toLowerCase(), 'h2');
-			});
+			projector.merge();
+
+			assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
+			const child = <HTMLElement> document.body.lastChild;
+			assert.strictEqual(child.innerHTML, 'foo');
+			assert.strictEqual(child.tagName.toLowerCase(), 'h2');
 		}
-	},
-	'attach event'() {
-		const root = document.createElement('div');
-		document.body.appendChild(root);
-		const projector = new TestWidget();
-
-		projector.setChildren([ v('h2', [ 'foo' ] ) ]);
-
-		assert.strictEqual(root.childNodes.length, 0, 'there should be no children');
-		let eventFired = false;
-		projector.on('projector:attached', () => {
-			eventFired = true;
-			assert.strictEqual(root.childNodes.length, 1, 'a child should be added');
-			assert.strictEqual((<HTMLElement> root.firstChild).tagName.toLowerCase(), 'div');
-			assert.strictEqual((<HTMLElement> root.firstChild).innerHTML, '<h2>foo</h2>');
-		});
-		return projector.append(root).then(() => {
-			assert.isTrue(eventFired);
-		});
 	},
 	'get root'() {
 		const projector = new TestWidget();
@@ -172,20 +153,21 @@ registerSuite({
 		projector.on('render:scheduled', () => {
 			called = true;
 		});
-		return projector.append().then(() => {
-			projector.pause();
-			projector.scheduleRender();
-			assert.isFalse(called);
-		});
+
+		projector.append();
+
+		projector.pause();
+		projector.scheduleRender();
+		assert.isFalse(called);
 	},
 	'pause cancels animation frame if scheduled'() {
 		const projector = new TestWidget();
 
-		return projector.append().then(() => {
-			projector.scheduleRender();
-			projector.pause();
-			assert.isTrue(cancelRafSpy.called);
-		});
+		projector.append();
+
+		projector.scheduleRender();
+		projector.pause();
+		assert.isTrue(cancelRafSpy.called);
 	},
 	'resume'() {
 		const projector = new TestWidget();
@@ -198,27 +180,23 @@ registerSuite({
 		const projector = new TestWidget();
 
 		assert.equal(projector.projectorState, ProjectorAttachState.Detached);
-		return projector.append().then(() => {
-			assert.equal(projector.projectorState, ProjectorAttachState.Attached);
-			projector.destroy();
-			assert.equal(projector.projectorState, ProjectorAttachState.Detached);
-		});
-
+		projector.append();
+		assert.equal(projector.projectorState, ProjectorAttachState.Attached);
+		projector.destroy();
+		assert.equal(projector.projectorState, ProjectorAttachState.Detached);
 	},
 	'destroy'() {
 		const projector: any = new TestWidget();
 		const maquetteProjectorStopSpy = spy(projector, 'pause');
 
-		return projector.append().then(() => {
-			projector.destroy();
+		projector.append();
+		projector.destroy();
 
-			assert.isTrue(maquetteProjectorStopSpy.calledOnce);
+		assert.isTrue(maquetteProjectorStopSpy.calledOnce);
 
-			projector.destroy();
+		projector.destroy();
 
-			assert.isTrue(maquetteProjectorStopSpy.calledOnce);
-		});
-
+		assert.isTrue(maquetteProjectorStopSpy.calledOnce);
 	},
 	'invalidate on properties:changed'() {
 		const projector = new TestWidget();
@@ -264,10 +242,9 @@ registerSuite({
 			called = true;
 		});
 
-		return projector.append().then(() => {
-			projector.invalidate();
-			assert.isTrue(called);
-		});
+		projector.append();
+		projector.invalidate();
+		assert.isTrue(called);
 	},
 	'reattach'() {
 		const root = document.createElement('div');
@@ -279,11 +256,10 @@ registerSuite({
 		const projector = new TestWidget();
 		const div = document.createElement('div');
 		projector.root = div;
-		return projector.append().then((handle) => {
-			assert.throws(() => {
-				projector.root = document.body;
-			}, Error, 'already attached');
-		});
+		projector.append();
+		assert.throws(() => {
+			projector.root = document.body;
+		}, Error, 'already attached');
 	},
 	'can attach an event handler'() {
 		let domNode: any;
@@ -301,10 +277,9 @@ registerSuite({
 		};
 
 		const projector = new Projector();
-		return projector.append().then(() => {
-			dispatchEvent(domNode, 'input');
-			assert.instanceOf(domEvent, Event);
-		});
+		projector.append();
+		dispatchEvent(domNode, 'input');
+		assert.instanceOf(domEvent, Event);
 	},
 	'can attach an event listener'() {
 		let domNode: any;
@@ -322,10 +297,9 @@ registerSuite({
 		};
 
 		const projector = new Projector();
-		return projector.append().then(() => {
-			dispatchEvent(domNode, 'pointermove');
-			assert.instanceOf(domEvent, Event);
-		});
+		projector.append();
+		dispatchEvent(domNode, 'pointermove');
+		assert.instanceOf(domEvent, Event);
 	},
 	async '-active gets appended to enter/exit animations by default'(this: any) {
 		if (!has('host-browser')) {
@@ -501,17 +475,7 @@ registerSuite({
 			}
 		})();
 
-		// we check if the attached event fires because we need to know if
-		// the projector's afterCreate method is called, and that is where
-		// this event is dispatched
-		let eventFired = false;
-		projector.on('projector:attached', () => {
-			eventFired = true;
-		});
-
-		return projector.append().then(() => {
-			assert.isTrue(afterCreateCalled);
-			assert.isTrue(eventFired);
-		});
+		projector.append();
+		assert.isTrue(afterCreateCalled);
 	}
 });

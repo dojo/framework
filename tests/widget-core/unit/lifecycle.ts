@@ -1,9 +1,9 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { WidgetBase } from '../../src/WidgetBase';
 import { v } from '../../src/d';
-import { ProjectorMixin } from '../../src/mixins/Projector';
 import { WidgetProperties, HNode } from '../../src/interfaces';
+import { ProjectorMixin } from '../../src/mixins/Projector';
+import { WidgetBase } from '../../src/WidgetBase';
 import { waitFor } from './waitFor';
 
 class TesterWidget extends WidgetBase<WidgetProperties> {
@@ -147,35 +147,32 @@ registerSuite({
 	'on create'() {
 		const Projector = ProjectorMixin(WidgetA);
 		const projector = new Projector();
-		return projector.append(root).then((handle) => {
-			assert.strictEqual(projector.lifeCycleCreated.length, 2);
-			assert.strictEqual(projector.lifeCycleUpdated.length, 0);
-			handle.destroy();
-		});
+		const handle = projector.append(root);
+		assert.strictEqual(projector.lifeCycleCreated.length, 2);
+		assert.strictEqual(projector.lifeCycleUpdated.length, 0);
+		handle.destroy();
 	},
 
 	'on create order'() {
 		const Projector = ProjectorMixin(WidgetA);
 		const projector = new Projector();
-		return projector.append(root).then((handle) => {
-			assert.strictEqual(projector.lifeCycleCreated[0].key, 'div2');
-			assert.strictEqual(projector.lifeCycleCreated[1].key, 'div1');
-			handle.destroy();
-		});
+		const handle = projector.append(root);
+		assert.strictEqual(projector.lifeCycleCreated[0].key, 'div2');
+		assert.strictEqual(projector.lifeCycleCreated[1].key, 'div1');
+		handle.destroy();
 	},
 
 	'on create with afterCreate'() {
 		const Projector = ProjectorMixin(WidgetB);
 		const projector = new Projector();
-		return projector.append(root).then((handle) => {
-			assert.strictEqual(projector.lifeCycleCreated.length, 2);
-			// afterCreateCounter will be 1 because the other two afterCreate callbacks will be replaced in
-			// WidgetBase.
-			assert.strictEqual(afterCreateCounter, 1);
-			assert.strictEqual(afterUpdateCounter, 0);
-			assert.strictEqual(projector.lifeCycleUpdated.length, 0);
-			handle.destroy();
-		});
+		const handle = projector.append(root);
+		assert.strictEqual(projector.lifeCycleCreated.length, 2);
+		// afterCreateCounter will be 1 because the other two afterCreate callbacks will be replaced in
+		// WidgetBase.
+		assert.strictEqual(afterCreateCounter, 1);
+		assert.strictEqual(afterUpdateCounter, 0);
+		assert.strictEqual(projector.lifeCycleUpdated.length, 0);
+		handle.destroy();
 	},
 
 	async 'on update'() {
@@ -251,11 +248,10 @@ registerSuite({
 
 		const Projector = ProjectorMixin(DuplicateKeys);
 		const projector = new Projector();
-		return projector.append(root).then((handle) => {
-			assert.strictEqual(projector.lifeCycleCreated.length, 2, 'Unexpected number of created nodes.');
-			assert.strictEqual(projector.lifeCycleCreated[0].element.tagName, 'SPAN');
-			assert.strictEqual(projector.lifeCycleCreated[1].element.tagName, 'DIV');
-			handle.destroy();
-		});
+		const handle = projector.append(root);
+		assert.strictEqual(projector.lifeCycleCreated.length, 2, 'Unexpected number of created nodes.');
+		assert.strictEqual(projector.lifeCycleCreated[0].element.tagName, 'SPAN');
+		assert.strictEqual(projector.lifeCycleCreated[1].element.tagName, 'DIV');
+		handle.destroy();
 	}
 });
