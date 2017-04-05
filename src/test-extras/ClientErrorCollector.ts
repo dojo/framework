@@ -14,7 +14,7 @@ export interface ClientError {
 
 export default class ClientErrorCollector {
 	private _remote: Command<void>;
-	private _inited: boolean = false;
+	private _inited = false;
 
 	/**
 	 * Create a new instance of a client error collector

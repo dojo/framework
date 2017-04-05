@@ -1,3 +1,7 @@
+import ClientErrorCollector from './ClientErrorCollector';
+import assertRender from './support/assertRender';
+
 export {
-	/* provide the public API here */
+	assertRender,
+	ClientErrorCollector
 };
