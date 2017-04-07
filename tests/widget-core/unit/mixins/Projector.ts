@@ -149,16 +149,12 @@ registerSuite({
 	},
 	'pause'() {
 		const projector = new TestWidget();
-		let called = false;
-		projector.on('render:scheduled', () => {
-			called = true;
-		});
 
 		projector.append();
 
 		projector.pause();
 		projector.scheduleRender();
-		assert.isFalse(called);
+		assert.isFalse(rafSpy.called);
 	},
 	'pause cancels animation frame if scheduled'() {
 		const projector = new TestWidget();
@@ -224,27 +220,17 @@ registerSuite({
 	},
 	'invalidate before attached'() {
 		const projector: any = new TestWidget();
-		let called = false;
-
-		projector.on('render:scheduled', () => {
-			called = true;
-		});
 
 		projector.invalidate();
 
-		assert.isFalse(called);
+		assert.isFalse(rafSpy.called);
 	},
 	'invalidate after attached'() {
 		const projector: any = new TestWidget();
-		let called = false;
-
-		projector.on('render:scheduled', () => {
-			called = true;
-		});
 
 		projector.append();
 		projector.invalidate();
-		assert.isTrue(called);
+		assert.isTrue(rafSpy.called);
 	},
 	'reattach'() {
 		const root = document.createElement('div');

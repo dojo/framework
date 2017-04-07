@@ -182,10 +182,6 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 
 		public scheduleRender() {
 			if (this.projectorState === ProjectorAttachState.Attached && !this._scheduled && !this._paused) {
-				this.emit({
-					type: 'render:scheduled',
-					target: this
-				});
 				this._scheduled = global.requestAnimationFrame(this._boundDoRender);
 			}
 		}
