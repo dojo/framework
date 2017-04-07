@@ -200,36 +200,61 @@ Properties passed to the `w` function represent the public API for a widget.
 
 The properties lifecycle starts when properties are passed to the widget.
 The properties lifecycle is performed in the widgets `setProperties` function.
-This function uses the widget instance's `diffProperties` function to determine whether any of the properties have changed since the last render cycle.
-By default `diffProperties` provides a shallow comparison of the previous properties and new properties.
+Properties are differenced using `DiffType.AUTO`.
 
-The `diffProperties` function is also responsible for creating a copy (the default implementation uses`Object.assign({}, newProperties)` of all changed properties.
-The depth of the returned diff is equal to the depth used during the equality comparison.
-
-<!-- add example of 'depth' -->
-
-**Note:** If a widget's properties contain complex data structures that you need to diff, then the `diffProperties` function will need to be overridden.
+**Note:** If a widget's properties contain complex data structures that you need to diff, then individual control is required using the `diffProperty` decorator.
 
 ##### Custom property diff control
 
-Included in `WidgetBase` is functionality to support targeting a specific property with a custom comparison function using a decorator `diffProperty`. For non-decorator environments (Either JavaScript/ES6 or a TypeScript project that does not have the experimental decorators configuration set to true in the `tsconfig`), the decorator functions can be called directly from the constructor.
+You can control individual property differencing by using the `@diffProperty` decorator. Properties with a `diffProperty` decorator **will be excluded from automatic differencing**.
 
-e.g. for a property `foo` you would add a function to the widget class and either use the decorator function or register the decorator in the `constructor`.
+###### At the class level
 
-*using the `diffProperty` decorator*
+`@diffProperty(propertyName, diffType)` can be applied at the class level if you want to use a pre-defined diff function.
 
-```ts
+```typescript
+@diffProperty('title', DiffType.REFERENCE)
+class MyWidget extends WidgetBase<MyProperties> {
+}
+```
+
+The following diff functions are provided:
+
+| Type                 | Description                                                                       |
+| -------------------- | ----------------------------------------------------------------------------------|
+| `DiffType.ALWAYS`    | Always report a property as changed.                                              |
+| `DiffType.AUTO`      | Ignore functions, shallow compare objects, and reference compare all other values.|
+| `DiffType.CUSTOM`    | Provide a custom diffing function.                                                |
+| `DiffType.IGNORE`    | Never report a property as changed.                                               |
+| `DiffType.REFERENCE` | Compare values by reference (`old === new`)                                       |
+| `DiffType.SHALLOW`   | Treat the values as objects and compare their immediate values by reference.      |
+
+`DiffType.CUSTOM` is unique in that it takes a third parameter, the diff function. This function has the following signature:
+
+```
+(previousValue: any, newValue: any) => {
+  changed: boolean;
+  value: any;
+}
+```
+
+###### At the method level
+
+You can also provide `DiffType.CUSTOM` diff functions by applying a decorator at the method level.
+
+```typescript
 class MyWidget extends WidgetBase<WidgetProperties> {
-
 	@diffProperty('foo')
-	myComplexDiffFunction(previousProperty: MyComplexObject, newProperty: MyComplexObject) {
-			// can perfom complex comparison logic here between the two property values
-			// or even use externally stored state to assist the comparison
+	myComplexDiffFunction(previousValue: MyComplexObject, newValue: MyComplexObject) {
+		return {
+		  changed: true,
+		  value: newValue
+		};
 	}
 }
 ```
 
-*registering the `diffProperty` function in the constructor*
+For non-decorator environments (Either JavaScript/ES6 or a TypeScript project that does not have the experimental decorators configuration set to true in the `tsconfig`), the functions need to be registered in the constructor using the `addDecorator` API with `diffProperty` as the key.
 
 ```ts
 class MyWidget extends WidgetBase<WidgetProperties> {
@@ -244,12 +269,25 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 }
 ```
 
-If a property has a custom diff function then that property is excluded from those passed to the default `diffProperties` function.
+If a property has a custom diff function then that property is excluded from the default property diff.
 
 ##### The 'properties:changed' event
 
 When `diffProperties` has completed, the results are used to update the properties on the widget instance.
-If any properties were changed, then the `properties:changed` event is emitted.
+If any properties were changed, then the `properties:changed` event is emitted. If the new properties do **not** contain keys from the previous properties, the properties are marked as changed.
+
+```typescript
+// set the initial properties
+$widget->setProperties({
+	foo: true,
+	bar: true
+});
+
+// properties:changed will include the "bar" property
+$widget->setProperties({
+	foo: true
+});
+```
 
 Attaching a listener to the event is exposed via a decorator `@onPropertiesChanged`.
 

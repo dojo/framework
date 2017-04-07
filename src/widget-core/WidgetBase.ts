@@ -1,5 +1,4 @@
 import { Evented, BaseEventedEvents } from '@dojo/core/Evented';
-import { assign } from '@dojo/core/lang';
 import { EventedListenerOrArray } from '@dojo/interfaces/bases';
 import { Handle } from '@dojo/interfaces/core';
 import { VNode, ProjectionOptions, VNodeProperties } from '@dojo/interfaces/vdom';
@@ -15,7 +14,6 @@ import {
 	WidgetProperties,
 	WidgetBaseInterface,
 	PropertyChangeRecord,
-	PropertiesChangeRecord,
 	PropertiesChangeEvent,
 	HNode
 } from './interfaces';
@@ -124,6 +122,7 @@ function isHNodeWithKey(node: DNode): node is HNode {
 /**
  * Main widget base for all widgets to extend
  */
+@diffProperty('bind', DiffType.REFERENCE)
 export class WidgetBase<P extends WidgetProperties> extends Evented implements WidgetBaseInterface<P> {
 
 	/**
@@ -181,6 +180,9 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	 */
 	private _diffPropertyFunctionMap: Map<string, string>;
 
+	/**
+	 * map of decorators that are applied to this widget
+	 */
 	private _decoratorCache: Map<string, any[]>;
 
 	/**
@@ -279,46 +281,73 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	}
 
 	public setProperties(properties: P): void {
-		const diffPropertyResults: { [index: string]: PropertyChangeRecord } = {};
+		const diffPropertyResults: { [index: string]: any } = {};
 		const diffPropertyChangedKeys: string[] = [];
 
 		this.bindFunctionProperties(properties);
 
 		const registeredDiffPropertyConfigs: DiffPropertyConfig[] = this.getDecorator('diffProperty');
 
-		registeredDiffPropertyConfigs.forEach(({ propertyName, diffFunction, diffType }) => {
+		const allProperties = [...Object.keys(this._previousProperties), ...Object.keys(properties)].filter((value, index, self) => {
+			return self.indexOf(value) === index;
+		});
 
-			const previousProperty = this._previousProperties[propertyName];
-			const newProperty = (<any> properties)[propertyName];
-			const meta = {
-				diffFunction: diffFunction,
-				scope: this
+		const propertyDiffHandlers = allProperties.reduce((diffFunctions: any, propertyName) => {
+			diffFunctions[propertyName] = [
+				...registeredDiffPropertyConfigs.filter(value => {
+					return value.propertyName === propertyName;
+				})
+			];
+
+			return diffFunctions;
+		}, {});
+
+		allProperties.forEach(propertyName => {
+			const previousValue = this._previousProperties[propertyName];
+			const newValue = (<any> properties)[propertyName];
+			const diffHandlers = propertyDiffHandlers[propertyName];
+			let result: PropertyChangeRecord = {
+				changed: false,
+				value: newValue
 			};
 
-			const result = diff(propertyName, diffType, previousProperty, newProperty, meta);
+			if (diffHandlers.length) {
+				for (let i = 0; i < diffHandlers.length; i++) {
+					const { diffFunction, diffType } = diffHandlers[i];
 
-			diffPropertyResults[propertyName] = result.value;
+					const meta = {
+						diffFunction: diffFunction,
+						scope: this
+					};
+
+					result = diff(propertyName, diffType, previousValue, newValue, meta);
+
+					if (result.changed) {
+						break;
+					}
+				}
+			}
+			else {
+				result = diff(propertyName, DiffType.AUTO, previousValue, newValue);
+			}
+
+			if (propertyName in properties) {
+				diffPropertyResults[propertyName] = result.value;
+			}
 
 			if (result.changed) {
 				diffPropertyChangedKeys.push(propertyName);
 			}
-
-			// always remove the property from further processing;
-			delete (<any> properties)[propertyName];
-			delete this._previousProperties[propertyName];
 		});
 
-		const diffPropertiesResult = this.diffProperties(this._previousProperties, properties);
-		this._properties = assign(diffPropertiesResult.properties, diffPropertyResults);
+		this._properties = <P> diffPropertyResults;
 
-		const changedPropertyKeys = [...diffPropertiesResult.changedKeys, ...diffPropertyChangedKeys];
-
-		if (changedPropertyKeys.length) {
+		if (diffPropertyChangedKeys.length) {
 			this.emit({
 				type: 'properties:changed',
 				target: this,
 				properties: this.properties,
-				changedPropertyKeys
+				changedPropertyKeys: diffPropertyChangedKeys
 			});
 		}
 		this._previousProperties = this.properties;
@@ -335,17 +364,6 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 			type: 'widget:children',
 			target: this
 		});
-	}
-
-	public diffProperties(previousProperties: P & { [index: string]: any }, newProperties: P & { [index: string]: any }): PropertiesChangeRecord<P> {
-		const changedKeys = Object.keys(newProperties).reduce((changedPropertyKeys: string[], propertyKey: string): string[] => {
-			if (previousProperties[propertyKey] !== newProperties[propertyKey]) {
-				changedPropertyKeys.push(propertyKey);
-			}
-			return changedPropertyKeys;
-		}, []);
-
-		return { changedKeys, properties: assign({}, newProperties) };
 	}
 
 	public __render__(): VNode | string | null {

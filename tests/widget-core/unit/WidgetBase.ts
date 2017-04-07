@@ -14,7 +14,6 @@ registerSuite({
 		const widgetBase = new WidgetBase();
 		assert(widgetBase);
 		assert.isFunction(widgetBase.__render__);
-		assert.isFunction(widgetBase.diffProperties);
 		assert.isFunction(widgetBase.invalidate);
 	},
 	children() {
@@ -38,29 +37,45 @@ registerSuite({
 	},
 	diffProperties: {
 		'no updated properties'() {
-			const properties = { id: 'id', foo: 'bar' };
 			const widgetBase = new WidgetBase();
-			const result = widgetBase.diffProperties({ id: 'id', foo: 'bar' }, properties);
-			assert.lengthOf(result.changedKeys, 0);
+			widgetBase.setProperties({ id: 'id', foo: 'bar' });
+
+			widgetBase.on('properties:changed', result => {
+				assert.lengthOf(result.changedPropertyKeys, 0);
+			});
+
+			widgetBase.setProperties({ id: 'id', foo: 'bar' });
 		},
 		'updated properties'() {
 			const widgetBase = new WidgetBase();
-			const properties = { id: 'id', foo: 'baz' };
-			const result = widgetBase.diffProperties({ id: 'id', foo: 'bar' }, properties);
-			assert.lengthOf(result.changedKeys, 1);
+			widgetBase.setProperties({ id: 'id', foo: 'bar' });
+
+			widgetBase.on('properties:changed', result => {
+				assert.lengthOf(result.changedPropertyKeys, 1);
+			});
+
+			widgetBase.setProperties({ id: 'id', foo: 'baz' });
 		},
 		'new properties'() {
 			const widgetBase = new WidgetBase();
-			const properties = { id: 'id', foo: 'bar', bar: 'baz' };
-			const result = widgetBase.diffProperties({ id: 'id', foo: 'bar' }, properties);
-			assert.lengthOf(result.changedKeys, 1);
+			widgetBase.setProperties({ id: 'id', foo: 'bar' });
+
+			widgetBase.on('properties:changed', result => {
+				assert.lengthOf(result.changedPropertyKeys, 1);
+			});
+
+			widgetBase.setProperties({ id: 'id', foo: 'bar', bar: 'baz' });
 		},
 		'updated / new properties with falsy values'() {
 			const widgetBase = new WidgetBase();
-			const properties = { id: 'id', foo: '', bar: null, baz: 0, qux: false };
-			const result = widgetBase.diffProperties({ id: 'id', foo: 'bar' }, properties);
-			assert.lengthOf(result.changedKeys, 4);
-			assert.deepEqual(result.changedKeys, [ 'foo', 'bar', 'baz', 'qux']);
+			widgetBase.setProperties({ id: 'id', foo: 'bar' });
+
+			widgetBase.on('properties:changed', result => {
+				assert.lengthOf(result.changedPropertyKeys, 4);
+				assert.deepEqual(result.changedPropertyKeys, ['foo', 'bar', 'baz', 'qux']);
+			});
+
+			widgetBase.setProperties({ id: 'id', foo: '', bar: null, baz: 0, qux: false });
 		}
 	},
 	diffProperty: {
@@ -157,6 +172,80 @@ registerSuite({
 			widget2.__render__();
 
 			assert.equal(renderCallCount, 1);
+		},
+		'multiple decorators on the same method cause the first matching decorator to win'() {
+			const calls: string[] = [];
+
+			class TestWidget extends WidgetBase<any> {
+				@diffProperty('prop')
+				ignoreProp(previousValue: any, newValue: any) {
+					calls.push('ignore');
+
+					return {
+						changed: false,
+						value: newValue
+					};
+				}
+			}
+
+			class SubWidget extends TestWidget {
+				@diffProperty('prop')
+				alwaysProp(previousValue: any, newValue: any) {
+					calls.push('always');
+
+					return {
+						changed: true,
+						value: newValue
+					};
+				}
+			}
+
+			const widget = new SubWidget();
+			widget.setProperties({
+				prop: true
+			});
+
+			assert.deepEqual(calls, ['ignore', 'always']);
+		},
+
+		'diffProperty properties are excluded from catch-all'() {
+			class TestWidget extends WidgetBase<any> {
+				@diffProperty('prop')
+				ignoreProp(previousValue: any, newValue: any) {
+					return {
+						changed: false,
+						value: newValue
+					};
+				}
+			}
+
+			const widget = new TestWidget();
+			widget.on('properties:changed', result => {
+				assert.deepEqual(result.changedPropertyKeys, ['anotherProp']);
+			});
+
+			widget.setProperties({
+				prop: true,
+				anotherProp: true
+			});
+		},
+
+		'properties that are deleted dont get returned'() {
+			const widget = new WidgetBase<any>();
+			widget.setProperties({
+				a: 1,
+				b: 2,
+				c: 3
+			});
+
+			assert.deepEqual(widget.properties, { a: 1, b: 2, c: 3 });
+
+			widget.setProperties({
+				a: 4,
+				c: 5
+			});
+
+			assert.deepEqual(widget.properties, { a: 4, c: 5 });
 		}
 	},
 	setProperties: {

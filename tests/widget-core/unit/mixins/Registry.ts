@@ -1,11 +1,10 @@
+import { VNode } from '@dojo/interfaces/vdom';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { RegistryMixin, RegistryMixinProperties } from '../../../src/mixins/Registry';
-import WidgetRegistry from '../../../src/WidgetRegistry';
-import { WidgetBase } from '../../../src/WidgetBase';
 import { w, v } from '../../../src/d';
-import { VNode } from '@dojo/interfaces/vdom';
-import { spy } from 'sinon';
+import { RegistryMixin, RegistryMixinProperties } from '../../../src/mixins/Registry';
+import { WidgetBase } from '../../../src/WidgetBase';
+import WidgetRegistry from '../../../src/WidgetRegistry';
 
 class TestWithRegistry extends RegistryMixin(WidgetBase)<RegistryMixinProperties> {}
 
@@ -49,14 +48,6 @@ registerSuite({
 				changedPropertyKeys: [ 'foo' ]
 			});
 			assert.equal(instance.registry, registry);
-		},
-		'is excluded from the catch all diffProperties function'() {
-			const registry = new WidgetRegistry();
-			const instance: any = new TestWithRegistry();
-			const diffProps = spy(instance, 'diffProperties');
-			instance.setProperties({ registry });
-			const [ , props ] = diffProps.firstCall.args;
-			assert.deepEqual(props, {});
 		}
 	},
 	integration: {

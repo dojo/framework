@@ -1,6 +1,6 @@
-import { VNode, VNodeProperties, ProjectionOptions } from '@dojo/interfaces/vdom';
-import { EventTypedObject } from '@dojo/interfaces/core';
 import { Evented } from '@dojo/core/Evented';
+import { EventTypedObject } from '@dojo/interfaces/core';
+import { VNode, VNodeProperties, ProjectionOptions } from '@dojo/interfaces/vdom';
 
 /**
  * Generic constructor type
@@ -365,15 +365,6 @@ export interface WidgetBaseInterface<P extends WidgetProperties> extends Evented
 	 * Sets the widget's children
 	 */
 	setChildren(children: DNode[]): void;
-
-	/**
-	 * The default diff function for properties, also responsible for cloning the properties.
-	 *
-	 * @param previousProperties The widget's previous properties
-	 * @param newProperties The widget's new properties
-	 * @returns A properties change record for the the diff
-	 */
-	diffProperties(previousProperties: P & { [index: string]: any }, newProperties: P & { [index: string]: any }): PropertiesChangeRecord<P>;
 
 	/**
 	 * Main internal function for dealing with widget rendering
