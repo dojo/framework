@@ -1,1 +1,1 @@
-import './ClientErrorCollector';
+import './intern/all';

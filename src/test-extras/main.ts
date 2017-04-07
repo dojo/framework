@@ -1,4 +1,4 @@
-import ClientErrorCollector from './ClientErrorCollector';
+import ClientErrorCollector from './intern/ClientErrorCollector';
 import assertRender from './support/assertRender';
 
 export {

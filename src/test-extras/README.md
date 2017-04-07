@@ -1,8 +1,8 @@
-# @dojo/intern-helper
+# @dojo/test-extras
 
-[![Build Status](https://travis-ci.org/dojo/intern-helper.svg?branch=master)](https://travis-ci.org/dojo/intern-helper)
-[![codecov](https://codecov.io/gh/dojo/intern-helper/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/intern-helper)
-[![npm version](https://badge.fury.io/js/%40dojo%2Fintern-helper.svg)](http://badge.fury.io/js/%40dojo%2Fintern-helper)
+[![Build Status](https://travis-ci.org/dojo/test-extras.svg?branch=master)](https://travis-ci.org/dojo/test-extras)
+[![codecov](https://codecov.io/gh/dojo/test-extras/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/test-extras)
+[![npm version](https://badge.fury.io/js/%40dojo%2Ftest-extras.svg)](http://badge.fury.io/js/%40dojo%2Ftest-extras)
 
 A package that contains various modules to make it easier to test Dojo 2 with Intern.
 
@@ -20,7 +20,7 @@ way:
 
 ```typescript
 import { v } from '@dojo/widget-core/d';
-import assertRender from '@dojo/intern-helper/support/assertRender';
+import assertRender from '@dojo/test-extras/support/assertRender';
 
 function someRenderFunction () {
   return v('div', { styles: { 'color': 'blue' } }, [ 'Hello World!' ]);
@@ -63,7 +63,7 @@ were no errors, or rejects with the first error collecte.  For example:
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 import * as Suite from 'intern/lib/Suite';
-import ClientErrorCollector from '@dojo/intern-helper/ClientErrorCollector';
+import ClientErrorCollector from '@dojo/test-extras/intern/ClientErrorCollector';
 
 registerSuite({
   name: 'Test',

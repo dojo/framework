@@ -3,7 +3,7 @@ import * as registerSuite from 'intern!object';
 import * as Suite from 'intern/lib/Suite';
 import * as Command from 'leadfoot/Command';
 import { Require } from '@dojo/interfaces/loader';
-import ClientErrorCollector from '../../src/ClientErrorCollector';
+import ClientErrorCollector from '../../../src/intern/ClientErrorCollector';
 
 declare const require: Require;
 
@@ -23,7 +23,7 @@ registerSuite({
 				assert.strictEqual(results.length, 1, 'Should have a single element');
 				const [ result ] = results;
 				assert.include(result.message, 'Ooops...', 'Should contain the correct error name');
-				assert.include((<any> result.source), 'tests/functional/ClientErrorCollector.html', 'Should be from the correct source');
+				assert.include((<any> result.source), 'tests/functional/intern/ClientErrorCollector.html', 'Should be from the correct source');
 				assert.isNumber(result.colno);
 				assert.isNumber(result.lineno);
 				assert.isObject(result.error);

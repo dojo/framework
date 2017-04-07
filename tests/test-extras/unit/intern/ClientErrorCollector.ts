@@ -1,7 +1,6 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
-import ClientErrorCollector from '../../src/ClientErrorCollector';
-// import * as Promise from 'dojo/Promise';
+import ClientErrorCollector from '../../../src/intern/ClientErrorCollector';
 import * as Command from 'leadfoot/Command';
 
 let resultString = '';

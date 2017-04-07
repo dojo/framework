@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as main from '../../src/main';
 import assertRender from '../../src/support/assertRender';
-import ClientErrorCollector from '../../src/ClientErrorCollector';
+import ClientErrorCollector from '../../src/intern/ClientErrorCollector';
 
 registerSuite({
 	name: 'main',
