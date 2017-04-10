@@ -2,6 +2,7 @@
 	"version": "2.1.5",
 	"compilerOptions": {
 		"declaration": false,
+		"experimentalDecorators": true,
 		"module": "umd",
 		"moduleResolution": "node",
 		"noImplicitAny": true,

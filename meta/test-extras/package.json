@@ -36,7 +36,8 @@
     "maquette": "2.4.3"
   },
   "dependencies": {
-    "jsdom": "^9.12.0"
+    "jsdom": "^9.12.0",
+    "pepjs": "^0.4.2"
   },
   "devDependencies": {
     "@dojo/interfaces": "beta1",
