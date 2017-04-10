@@ -239,7 +239,7 @@ export interface HNode {
 	/**
 	 * Specified children
 	 */
-	children: (DNode | string)[];
+	children: DNode[];
 
 	/**
 	 * render function that wraps returns VNode
@@ -279,7 +279,7 @@ export interface WNode {
 	/**
 	 * DNode children
 	 */
-	children?: DNode[];
+	children: DNode[];
 
 	/**
 	 * The type of node

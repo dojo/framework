@@ -70,9 +70,19 @@ export const registry = new WidgetRegistry();
 /**
  * Wrapper function for calls to create a widget.
  */
-export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, properties: P): WNode;
 export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, properties: P, children?: DNode[]): WNode;
-export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, properties: P, children?: DNode[]): WNode {
+export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, properties: P): WNode;
+export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string): WNode;
+export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, propertiesOrChildren: P | DNode[] = <P> {}, children: DNode[] = []): WNode {
+		let properties: P;
+
+	if (Array.isArray(propertiesOrChildren)) {
+		children = propertiesOrChildren;
+		properties = <P> {};
+	}
+	else {
+		properties = propertiesOrChildren;
+	}
 
 	return {
 		children,
@@ -88,8 +98,8 @@ export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConst
 export function v(tag: string, properties: VirtualDomProperties, children?: DNode[]): HNode;
 export function v(tag: string, children: DNode[]): HNode;
 export function v(tag: string): HNode;
-export function v(tag: string, propertiesOrChildren: VirtualDomProperties = {}, children: DNode[] = []): HNode {
-		let properties = propertiesOrChildren;
+export function v(tag: string, propertiesOrChildren: VirtualDomProperties | DNode[] = {}, children: DNode[] = []): HNode {
+		let properties: VirtualDomProperties = propertiesOrChildren;
 
 		if (Array.isArray(propertiesOrChildren)) {
 			children = propertiesOrChildren;
