@@ -4,7 +4,7 @@
 [![codecov.io](http://codecov.io/gh/dojo/stores/branch/master/graph/badge.svg)](http://codecov.io/gh/dojo/stores/branch/master)
 [![npm version](https://badge.fury.io/js/%40dojo%2Fstores.svg)](https://badge.fury.io/js/%40dojo%2Fstores)
 
-This library provides a data store, and several mixins built using [@dojo/compose](https://github.com/dojo/compose) and TypeScript. The mixins provide additional functionality and APIs that can be added to the base store dynamically.
+This library provides a basic data store, as well as extensions that provide the ability to query and observe the store.
 
 **WARNING** This is *alpha* software. It is not yet production ready, so you should use at your own risk.
 
@@ -14,10 +14,10 @@ This library provides a data store, and several mixins built using [@dojo/compos
   - [Store](#store)
     - [Basic Usage](#basic-usage)
     - [Store Observable](#store-observable)
-  - [createObservableStoreMixin](#createobservablestoremixin)
+  - [ObservableStore](#observablestore)
     - [Observing the store](#observing-the-store)
-  - [createQueryTransformMixin](#createquerytransformmixin)
-    - [MappedQueryTransformResult](#mappedquerytransformresult)
+  - [QueryableStore](#queryablestore)
+    - [MappedQueryResult](#mappedqueryresult)
   - [Fetch Results](#fetch-results)
 - [How do I contribute?](#how-do-i-contribute)
   - [Installation](#installation)
@@ -42,14 +42,14 @@ npm install @dojo/shim
 
 ### Storage
 
-The underlying `Storage` interface provides the basic CRUD functionality, and is leveraged to provide the `Store` interface, which is the interface intended to be consumed. This means that the basic `createStore` factory, which defaults to using the provided `createInMemoryStorage` can be repurposed to interact with any storage medium by providing an object implementing the simpler `Storage` interface at instantiation.
+The underlying `Storage` interface provides the basic CRUD functionality, and is leveraged to provide the `Store` interface, which is the interface intended to be consumed. This allows the `StoreBase`, `ObservableStore`, and `QueryableStore` classes to be repurposed to interact with any storage medium by providing an object implementing the simpler `Storage` interface at instantiation. By default these classes all use the `InMemoryStorage` implementation.
 ```typescript
-import createStore from 'store/createStore';
-import { Storage } from 'store/createInMemoryStorage';
+import StoreBase from 'store/StoreBase';
+import { Storage } from 'store/interfaces';
 const myCustomStorage: Storage = {
   // Implement storage API
 }
-const myCustomStore = createStore({
+const myCustomStore = new StoreBase({
   storage: myCustomStorage
 });
 ```
@@ -58,17 +58,21 @@ const myCustomStore = createStore({
 
 The `Store` interface provides basic CRUD operations, methods to retrieve records, and methods to create IDs. 
 ```typescript
-get(ids: string[] | string): Promise<T[]>;
+get(ids: string[]): Promise<T[]>;
+get(id: string): Promise<T | undefined>;
+get(ids: string | string[]): Promise<T | undefined | T[]>;
 ```
 Retrieves store items associated with the provided ID or IDs. Will return undefined for any items that don't exist in the store.
 ```typescript
-identify(items: T[] | T): string[];
+identify(items: T[]): string[];
+identify(items: T): string;
+identify(items: T | T[]): string | string[];
 ```
-Returns the IDs for the passed in items. By default the store will look for an `id` property on an item, if another property should be used, the `idProperty` can be specified when creating the store. The `idFunction` property can be provided if a more complicated, composite ID needs to be generated.
+Returns the IDs for the passed in items. By default the store will look for an `id` property on an item, if another property should be used, the `idProperty` can be specified when creating the store. The `idFunction` property can be provided if a more complicated or composite ID is needed.
 ```typescript
 createId(): Promise<string>;
 ```
-Generates a new ID. The default implementation of `createId` involves incrementing an internally stored integer every time it is called.
+Generates a new ID. The default implementation of `createId` leverages  [@dojo/core/uuid](https://github.com/dojo/core/blob/master/src/uuid.ts)
 ```typescript
 add(items: T[] | T, options?: O): StoreObservable<T, U>;
 ```
@@ -86,14 +90,9 @@ delete(ids: string[] | string): StoreObservable<string, U>;
 ```
 Delete the item(s) with the provided IDs from the store
 ```typescript
-fetch(): FetchResult<T>;
+fetch(query?: Query<T>): FetchResult<T>;
 ```
-Returns a promise that will resolve to all of the data in the store
-```typescript
-fetch<U>(query: Query<T, U>): Promise<U[]>;
-```
-Returns a promise to the data matching the provided `Query` in the store.
-
+Returns a promise that will resolve to the data in the store that matches the query if one is provided, and all data otherwise
 #### Basic Usage
 
 ```typescript
@@ -117,8 +116,8 @@ store.put([
 ]);
 // These won't compile, because they don't match
 // the item type. The item type was inferred by the data argument
-// in the createStore initialization options, but it can also be
-// specified explicitly(i.e. createStore<TypeOfData, CrudOptions>();)
+// in the StoreBase initialization options, but it can also be
+// specified explicitly(i.e. new StoreBase<TypeOfData>();)
 // store.put({ id: '5', value: '' });
 // store.add('5');
 store.patch({ id: '2', patch: diff(
@@ -152,12 +151,12 @@ interface UpdateResults<T> {
 
 The built in store will only populate the `type` and `successfulData` properties, but this provides an extension point for store implementations to provide more details about the results of the operation, report results incrementally, or allow for the operation to be retried in the case of recoverable errors(e.g. data conflicts or network errors).
 
-### createObservableStoreMixin
+### ObservableStore
 
 This store provides an API for observing the store itself, or specific items within the store.
 
 ```typescript
-export interface ObservableStoreMixin<T> {
+export interface ObservableStoreInterface<T, O extends CrudOptions, U extends UpdateResults<T>> extends Store<T, O, U> {
 	/**
 	 * Observe the entire store, receiving deltas indicating the changes to the store.
 	 * When observing, an initial update will be sent with the last known state of the store in the `afterAll` property.
@@ -203,9 +202,9 @@ If the `fetchAroundUpdates` property is set to `true` in the options when creati
 
 Example usage
 ```typescript
-import { createObservableStore } from '@dojo/stores/store/mixins/createObservableStoreMixin';
+import ObservableStore from '@dojo/stores/store/ObservableStore';
 
-const observableStore = createObservableStore({
+const observableStore = new ObservableStore({
 	data: [{ id: '1', value: 1 }]
 });
 
@@ -236,65 +235,65 @@ observableStore.observe([ 'itemId', 'otherItemId' ]).subscribe(function() {
 
 ```
 
-### createQueryTransformMixin
+### QueryableStore
 
-This mixin provides the ability to filter, sort, select a range of, transform, or query for items using a custom query function. 
+This store provides the ability to filter, sort, select a range of, transform, or query for items using a custom query function. 
 ```typescript
-export interface QueryTransformMixin<T, S extends ObservableStore<T, any, any>> {
+export interface QueryableStoreInterface<T, O extends CrudOptions, U extends UpdateResults<T>> extends ObservableStoreInterface<T, O, U> {
 	/**
 	 * Creates a query transform result with the provided query
 	 * @param query
 	 */
-	query(query: Query<T>): MappedQueryTransformResult<T, S>;
+	query(query: Query<T>): MappedQueryResultInterface<T, this>;
 	/**
 	 * Creates a query transform result with the provided filter
 	 * @param filter
 	 */
-	filter(filter: Filter<T>): MappedQueryTransformResult<T, S>;
+	filter(filter: Filter<T>): MappedQueryResultInterface<T, this>;
 	/**
 	 * Creates a query transform result with a filter built from the provided test
 	 * @param test
 	 */
-	filter(test: (item: T) => boolean): MappedQueryTransformResult<T, S>;
+	filter(test: (item: T) => boolean): MappedQueryResultInterface<T, this>;
 	/**
 	 * Creates a query transform result with the provided range
 	 * @param range
 	 */
-	range(range: StoreRange<T>): MappedQueryTransformResult<T, S>;
+	range(range: StoreRange<T>): MappedQueryResultInterface<T, this>;
 	/**
 	 * Creates a query transform result with a range built based on the provided start and count
 	 * @param start
 	 * @param cound
 	 */
-	range(start: number, count: number): MappedQueryTransformResult<T, S>;
+	range(start: number, count: number): MappedQueryResultInterface<T, this>;
 	/**
 	 * Creates a query transform result with the provided sort or a sort build from the provided comparator or a
 	 * comparator for the specified property
 	 * @param sort
 	 * @param descending
 	 */
-	sort(sort: Sort<T> | ((a: T, b: T) => number) | string, descending?: boolean): MappedQueryTransformResult<T, S>;
+	sort(sort: Sort<T> | ((a: T, b: T) => number) | keyof T, descending?: boolean): MappedQueryResultInterface<T, this>;
 	/**
 	 * Create a query transform result that cannot be tracked, and cannot send tracked updates. This is the case because
 	 * the resulting query transform result will have no way to identify items, making it impossible to determine
 	 * whether their position has shifted or differentiating between updates and adds
 	 * @param transformation
 	 */
-	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryTransformResult<V, S>;
+	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryResultInterface<V, this>;
 	/**
 	 * Create a trackable query transform result with the specified transformation
 	 * @param transformation
 	 * @param idTransform
 	 */
-	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): MappedQueryTransformResult<V, S>;
+	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): MappedQueryResultInterface<V, this>;
 }
 ```
 
 
-The result of querying or transforming will be a read only `QueryTransformResult`.
+The return value of a call to query or transform will be an instance of the `QueryResult` interface.
 
 ```typescript
-export interface QueryTransformResult<T, S extends ObservableStore<any, any, any>> {
+export interface QueryResultInterface<T, S extends QueryableStoreInterface<any, any, any>> {
 	query(query: Query<T>): this;
 	filter(filter: Filter<T>): this;
 	filter(test: (item: T) => boolean): this;
@@ -305,19 +304,19 @@ export interface QueryTransformResult<T, S extends ObservableStore<any, any, any
 	observe(id: string): Observable<T>;
 	observe(ids: string[]): Observable<ItemUpdate<T>>;
 	get(ids: string | string[]): Promise<T[]>;
-	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryTransformResult<V, S>;
-	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): this;
+	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryResultInterface<V, S>;
+	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): MappedQueryResult<V, S>;
 	fetch(query?: Query<T>): FetchResult<T>;
 	source: S;
 }
 ```
 
-The `QueryTransformResult` can be further queried or transformed, as well as observed, and has a reference to the source store if updates need to be performed on the original data.
+The `QueryResult` can be further queried or transformed, as well as observed, and has a reference to the source store if updates need to be performed on the original data.
 
-The observation API for the `QueryTransformResult` is very similar to the store's with a few changes.
+The observation API for the `QueryResult` is very similar to the store's, with a few changes.
 
 #### MappedQueryTransformResult
-Unless the transform method is called without an idTransform, the result of any queries to a store with the createQueryTransformMixin will be a `MappedQueryTransformResult`, which includes additional data in its `StoreDelta` updates, and provides a `track()` method. The `StoreDelta` interface is extended by the `TrackedStoreDelta` interface which the `MappedQueryTransformResult` provides to observers. This augments the interface by providing data indicating the current and previous indices of items that have been moved within, added to, or removed from, the view represented by the `MappedQueryTransformResult`. Unlike `updates`, `deletes`, and `adds`, these properties are not related to specific operations, but instead just represent changes in the position of items within the collection. 
+Unless the transform method is called without an `idTransform`, the result of any queries to a `QueryableStore` will be a `MappedQueryResult`, which includes additional data in its `StoreDelta` updates, and provides a `track()` method. The `StoreDelta` interface is extended by the `TrackedStoreDelta` interface which the `MappedQueryResult` provides to observers. This augments the interface by providing data indicating the current and previous indices of items that have been moved within, added to, or removed from, the view represented by the `MappedQueryResult`. Unlike `updates`, `deletes`, and `adds`, these properties are not related to specific operations, but instead just represent changes in the position of items within the collection. 
 
 ```typescript
 export interface TrackableStoreDelta<T> extends StoreDelta<T> {
@@ -340,20 +339,20 @@ export interface TrackableStoreDelta<T> extends StoreDelta<T> {
 
 ```
 
-As with the observable store mixin, the locally tracked data in a `MappedQueryTransformResult` has the potential to become out of sync with the underlying storage. If the source `ObservableStore` has `fetchAroundUpdates` set to true, then any query transform results produced from it will only send up to date information to observers. If the source is not fetching around updates, the `track()` method provided as part of the `MappedQueryTransformResult` interface can be used to create a copy of a `QueryTransformResult` that will fetch after any updates from its source to make sure it has the latest data. `track()` produces a `TrackedQueryTransformResult`, which has a `release()` method that provides a new, non-tracked query transform result.
+As with the `ObservableStore`, the locally tracked data in a `MappedQueryResult` has the potential to become out of sync with the underlying storage. If the source `ObservableStore` has `fetchAroundUpdates` set to true, then any query transform results produced from it will only send up to date information to observers. If the source is not fetching around updates, the `track()` method provided as part of the `MappedQueryResult` interface can be used to create a copy of a `QueryResult` that will fetch after any updates from its source to make sure it has the latest data. `track()` produces a `TrackedQueryResult`, which has a `release()` method that provides a new, non-tracked query transform result.
 
-When `transform()` is called without an `idTransform`, the resulting `QueryTransformResult` has no way of determining the ID of a transformed item, and so it cannot tell whether changes from the source store represent updates or additions, and cannot keep an index to easily track the position of items within the store. As a result, a `QueryTransformResult` created this way will not contain positional information in its updates to observers, and cannot be tracked.
+When `transform()` is called without an `idTransform`, the resulting `QueryResult` has no way of determining the ID of a transformed item, and so it cannot tell whether changes from the source store represent updates or additions, and cannot keep an index to easily track the position of items within the store. As a result, a `QueryResult` created this way will not contain positional information in its updates to observers, and cannot be tracked.
 
 Example Usage
 ```typescript
-import { createQueryStore } from '@dojo/stores/store/mixins/createQueryTransformMixin';
+import QueryableStore from '@dojo/stores/store/QueryableStore';
 
 const data = [
 		{ id: '1', value: 1 },
 		{ id: '2', value: 2 },
 		{ id: '3', value: 3 }
  	];
-const queryStore = createQueryStore({
+const queryStore = new QueryableStore({
 	data: data
 });
 
@@ -405,25 +404,25 @@ filteredView.observe().subscribe((update) => {
 
 ```
 
-If the observer starts observing after the initial add is already resolved, the first update they receive will be the `subsequent update` in this example. Here the first update is provided to an observer that subscribes synchronously with the initialization of the store, but the initial add happens asynchronously and so is not yet resolved. For a tracked collection, the first update will contain the data form a `fetch` to the source.
+If the observer starts observing after the initial add is already resolved, the first update they receive will be the `subsequent update` in this example. Here the first update is provided to an observer that subscribes synchronously with the initialization of the store, but the initial add happens asynchronously and so is not yet resolved. For a tracked collection, the first update will contain the data from a `fetch` to the source.
 
 
 ### Fetch Results
 
-Both the `Store` and `QueryTransformResult` interfaces return a type called a `FetchResult` from `fetch`.
+Both the `Store` and `QueryResult` interfaces return a type called a `FetchResult` from `fetch`.
 This is a `Promise` that resolves to the fetched data, but it also has two other properties: `totalLength` and `dataLength`.
-For both the `Store` and `QueryTransformResult`, `totalLength` is a `Promise` that resolves to the total number of items
+For both the `Store` and `QueryResult`, `totalLength` is a `Promise` that resolves to the total number of items
 in the underlying `Storage`.
 
 For a `Store`, `dataLength` resolves to the same value as `totalLength`, and is only provided for consistency between the interfaces.
 
-For a `QueryTransformResult`, `dataLength` resolves to the number of items that match the `QueryTransformResult`'s
+For a `QueryResult`, `dataLength` resolves to the number of items that match the `QueryResult`'s
 queries. Note that in all cases, these values do not change if a query is passed to fetch.
 
 Example Usage
 ```typescript
-import { createQueryStore } from '@dojo/stores/store/mixins/createQueryTransformMixin';
-const queryStore = createQueryStore({
+import QueryableStore from '@dojo/stores/store/QueryableStore';
+const queryStore = new QueryableStore({
     data: [
         { id: 'item-1', value: 1 },
         { id: 'item-2', value: 2 },
