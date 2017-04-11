@@ -17,7 +17,7 @@ add('blob', function () {
 	}
 
 	const request = new XMLHttpRequest();
-	request.open('GET', '/', true);
+	request.open('GET', '/foo', true);
 	request.responseType = 'blob';
 	request.abort();
 	return request.responseType === 'blob';
