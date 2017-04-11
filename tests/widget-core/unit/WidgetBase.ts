@@ -6,7 +6,7 @@ import { stub, spy } from 'sinon';
 import { v, w, registry } from '../../src/d';
 import { DNode } from '../../src/interfaces';
 import { WidgetBase, diffProperty, DiffType, afterRender, beforeRender, onPropertiesChanged } from '../../src/WidgetBase';
-import WidgetRegistry from './../../src/WidgetRegistry';
+import WidgetRegistry, { WIDGET_BASE_TYPE } from './../../src/WidgetRegistry';
 
 registerSuite({
 	name: 'WidgetBase',
@@ -473,6 +473,31 @@ registerSuite({
 			} catch (e) {
 				assert.strictEqual(testWidget.count, 0);
 			}
+		},
+		'widget constructors are not bound'() {
+			const widgetConstructorSpy: any = function(this: any) {
+				this.functionIsBound = true;
+			};
+			widgetConstructorSpy._type = WIDGET_BASE_TYPE;
+
+			class TestWidget extends WidgetBase<any> {
+				functionIsBound = false;
+
+				public callWidgetSpy() {
+					this.properties.widgetConstructorSpy();
+				}
+			}
+
+			const testWidget = new TestWidget();
+			const properties = {
+				bind: testWidget,
+				widgetConstructorSpy,
+				functionIsBound: false
+			};
+			testWidget.setProperties(properties);
+			testWidget.callWidgetSpy();
+			assert.isFalse(testWidget.functionIsBound);
+			assert.isTrue(testWidget.properties.functionIsBound);
 		}
 	},
 	beforeRender: {

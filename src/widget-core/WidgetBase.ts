@@ -17,7 +17,7 @@ import {
 	PropertiesChangeEvent,
 	HNode
 } from './interfaces';
-import WidgetRegistry, { WIDGET_BASE_TYPE } from './WidgetRegistry';
+import WidgetRegistry, { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './WidgetRegistry';
 
 export { DiffType };
 
@@ -486,7 +486,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 			const property = properties[propertyKey];
 			const bind = properties.bind;
 
-			if (typeof property === 'function') {
+			if (typeof property === 'function' && !isWidgetBaseConstructor(property)) {
 				const bindInfo = this._bindFunctionPropertyMap.get(property) || {};
 				let { boundFunc, scope } = bindInfo;
 
