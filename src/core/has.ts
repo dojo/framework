@@ -16,8 +16,8 @@ add('blob', function () {
 		return false;
 	}
 
-	const request = new XMLHttpRequest();
-	request.open('GET', '/foo', true);
+	const request = new global.XMLHttpRequest();
+	request.open('GET', 'http://www.google.com', true);
 	request.responseType = 'blob';
 	request.abort();
 	return request.responseType === 'blob';
