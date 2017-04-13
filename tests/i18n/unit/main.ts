@@ -24,6 +24,7 @@ import i18n, {
 	parseDate,
 	parseNumber,
 	pluralize,
+	setLocaleMessages,
 	switchLocale,
 	systemLocale
 } from '../../src/main';
@@ -56,6 +57,7 @@ registerSuite({
 		assert.isFunction(parseDate, 'parseDate is exported.');
 		assert.isFunction(parseNumber, 'parseNumber is exported.');
 		assert.isFunction(pluralize, 'pluralize is exported.');
+		assert.isFunction(setLocaleMessages, 'setLocaleMessages is exported.');
 		assert.isFunction(switchLocale, 'switchLocale is exported.');
 		assert.isString(systemLocale, 'systemLocale is exported.');
 	}

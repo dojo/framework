@@ -1,5 +1,6 @@
 import global from '@dojo/core/global';
 import has from '@dojo/core/has';
+import { assign } from '@dojo/core/lang';
 import * as Globalize from 'globalize';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
@@ -13,6 +14,7 @@ import i18n, {
 	invalidate,
 	Messages,
 	observeLocale,
+	setLocaleMessages,
 	switchLocale,
 	systemLocale
 } from '../../src/i18n';
@@ -119,6 +121,15 @@ registerSuite({
 		'assert unsupported locale'(this: any) {
 			const cached = getCachedMessages(bundle, 'un-SU-pported');
 			assert.deepEqual(cached, bundle.messages, 'Default messages returned for unsupported locale.');
+		},
+
+		'assert unsupported locale added with `setLocaleMessages`'() {
+			const messages = { hello: 'Oy' };
+			setLocaleMessages(bundle, messages, 'en-GB');
+
+			const cached = getCachedMessages(bundle, 'en-GB');
+			assert.deepEqual(cached, assign({}, bundle.messages, messages),
+				'Messages added with `setLocaleMessages` are returned.');
 		},
 
 		'assert most specific supported locale returned'() {
@@ -319,6 +330,29 @@ registerSuite({
 
 			assert.isFalse(observer.next.called, '`observer.next` not called after unsubscribe.');
 		}
+	},
+
+	setLocaleMessages() {
+		sinon.stub(Globalize, 'loadMessages');
+		const french = { hello: 'Bonjour', goodbye: 'Au revoir' };
+		const czech = { hello: 'Ahoj', goodbye: 'Ahoj' };
+
+		setLocaleMessages(bundle, french, 'fr');
+		setLocaleMessages(bundle, czech, 'cz');
+
+		const path = '..-_build-tests-support-mocks-common-main';
+		const first = (<any> Globalize).loadMessages.args[0][0].fr[path];
+		const second = (<any> Globalize).loadMessages.args[1][0].cz[path];
+
+		assert.isFrozen(first, 'locale messages should be frozen');
+		assert.isFrozen(second, 'locale messages should be frozen');
+
+		assert.deepEqual(getCachedMessages(bundle, 'fr'), assign({}, french, <any> { helloReply: 'Hello' }),
+			'Default messages should be included where not overridden');
+		assert.deepEqual(getCachedMessages(bundle, 'cz'), assign({}, czech, <any> { helloReply: 'Hello' }),
+			'Default messages should be included where not overridden');
+
+		(<any> Globalize).loadMessages.restore();
 	},
 
 	switchLocale: {

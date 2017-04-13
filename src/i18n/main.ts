@@ -19,6 +19,7 @@ import i18n, {
 	invalidate,
 	MessageFormatter,
 	Messages,
+	setLocaleMessages,
 	switchLocale,
 	systemLocale
 } from './i18n';
@@ -96,6 +97,7 @@ export {
 	RelativeTimeFormatterOptions,
 	RelativeTimeLength,
 	RoundNumberOption,
+	setLocaleMessages,
 	switchLocale,
 	systemLocale,
 	UnitFormatterOptions,

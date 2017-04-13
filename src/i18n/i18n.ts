@@ -114,6 +114,39 @@ function getSupportedLocales(locale: string, supported: string[] = []): string[]
 
 /**
  * @private
+ * Inject messages for the specified locale into the i18n system.
+ *
+ * @param bundlePath
+ * The bundle path
+ *
+ * @param messages
+ * The messages to inject
+ *
+ * @param locale
+ * An optional locale. If not specified, then it is assumed that the messages are the defaults for the given
+ * bundle path.
+ */
+function loadMessages<T extends Messages> (bundlePath: string, messages: T, locale?: string) {
+	let cached = bundleMap.get(bundlePath);
+
+	if (!cached) {
+		cached = new Map<string, Messages>();
+		bundleMap.set(bundlePath, cached);
+	}
+
+	if (locale) {
+		cached.set(locale, messages);
+	}
+
+	Globalize.loadMessages({
+		[locale || 'root']: {
+			[bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}`, 'g'), '-')]: messages
+		}
+	});
+}
+
+/**
+ * @private
  * Return a list of locale path bundles for a target locale.
  *
  * @param path
@@ -187,7 +220,9 @@ export function formatMessage(bundlePath: string, key: string, options: any, loc
 
 /**
  * Return the cached messages for the specified bundle and locale. If messages have not been previously loaded for the
- * specified locale, no value will be returned.
+ * specified locale, no value will be returned. If messages for the specified locale were added via
+ * `setLocaleMessages`, then those messages will be returned regardless of whether the locale is listed in the bundle's
+ * `locales` array.
  *
  * @param bundle
  * The default bundle that is used to determine where the locale-specific bundles are located.
@@ -198,21 +233,22 @@ export function formatMessage(bundlePath: string, key: string, options: any, loc
  * @return The cached messages object, if it exists.
  */
 export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale: string): T | void {
-	const { bundlePath, locales } = bundle;
+	const { bundlePath, locales, messages } = bundle;
 	const cached = bundleMap.get(bundlePath);
-	const supportedLocales = getSupportedLocales(locale, bundle.locales);
 
 	if (!cached) {
-		bundleMap.set(bundlePath, new Map<string, Messages>());
-		Globalize.loadMessages({
-			root: {
-				[bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}`, 'g'), '-')]: bundle.messages
-			}
-		});
+		loadMessages(bundlePath, messages);
+	}
+	else {
+		const localeMessages = cached.get(locale);
+		if (localeMessages) {
+			return localeMessages as T;
+		}
 	}
 
+	const supportedLocales = getSupportedLocales(locale, locales);
 	if (!supportedLocales.length) {
-		return bundle.messages;
+		return messages;
 	}
 
 	if (cached) {
@@ -298,15 +334,7 @@ function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Promise<T
 	return loadLocaleBundles(localePaths).then((bundles: T[]): T => {
 		return bundles.reduce((previous: T, partial: T): T => {
 			const localeMessages: T = assign({}, previous, partial);
-			const localeCache = bundleMap.get(bundlePath) as Map<string, Messages>;
-
-			localeCache.set(currentLocale, <T> Object.freeze(localeMessages));
-			Globalize.loadMessages({
-				[currentLocale]: {
-					[bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}`, 'g'), '-')]: localeMessages
-				}
-			});
-
+			loadMessages(bundlePath, <T> Object.freeze(localeMessages), currentLocale);
 			return localeMessages;
 		}, messages);
 	});
@@ -363,6 +391,23 @@ export const observeLocale = (function () {
 		return localeSource.subscribe(observer);
 	};
 })();
+
+/**
+ * Pre-load locale-specific messages into the i18n system.
+ *
+ * @param bundle
+ * The default bundle that is used to merge locale-specific messages with the default messages.
+ *
+ * @param messages
+ * The messages to cache.
+ *
+ * @param locale
+ * The locale for the messages
+ */
+export function setLocaleMessages<T extends Messages>(bundle: Bundle<T>, localeMessages: T, locale: string): void {
+	const messages: T = assign({}, bundle.messages, localeMessages);
+	loadMessages(bundle.bundlePath, <T> Object.freeze(messages), locale);
+}
 
 /**
  * Change the root locale, and notify any registered observers.

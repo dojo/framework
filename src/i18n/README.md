@@ -94,6 +94,18 @@ i18n(bundle, 'fr').then(function (messages: Messages) {
 
 If an unsupported locale is passed to `i18n`, then the default messages are returned. Further, any messages not provided by the locale-specific bundle will also fall back to their defaults. As such, the default bundle should contain _all_ message keys used by any of the locale-specific bundles.
 
+Alternatively, locale messages can be manually loaded by passing them to `setLocaleMessages`. This is useful for pre-caching locale-specific messages so that an additional HTTP request is not sent to load them. Locale-specific messages are merged with the default messages, so partial message bundles are acceptable:
+
+```
+const partialMessages = { hello: 'Ahoj' };
+setLocaleMessages(bundle, partialMessages, 'cz');
+
+i18n(bundle, 'cz').then((messages) => {
+	console.log(messages.hello); // "Ahoj"
+	console.log(messages.goodbye); // "Goodbye" (defaults are used when not overridden)
+});
+```
+
 Once locale dictionaries for a bundle have been loaded, they are cached and can be accessed synchronously via `getCachedMessages`:
 
 ```
