@@ -1,6 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import has from '@dojo/has/has';
+import global from '@dojo/core/global';
 import doc from '../../../src/support/loadJsdom';
 
 registerSuite({
@@ -17,6 +18,15 @@ registerSuite({
 		}
 		assert(window, 'window should be global');
 		assert.strictEqual(window, document.defaultView, 'window should equal document.defaultView');
+	},
+
+	'global.window is defined'() {
+		assert(global.window, 'window should be defined in global');
+		assert.strictEqual(global.window, window, 'global window should equal window');
+	},
+
+	'window has a reference to itself'(this: any) {
+		assert.strictEqual(window, window.window, 'window should have a reference to itself');
 	},
 
 	'transition should be patched'(this: any) {
