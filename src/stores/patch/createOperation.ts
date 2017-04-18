@@ -1,5 +1,6 @@
-import { isEqual } from '../utils';
 import JsonPointer from './JsonPointer';
+import { isEqual } from '../utils';
+
 export const enum OperationType {
 	Add,
 	Remove,
@@ -12,8 +13,8 @@ export const enum OperationType {
 export interface Operation {
 	op: string;
 	path: JsonPointer;
-	toString(): string;
 	apply(target: any): any;
+	toString(): string;
 }
 
 export interface Add extends Operation {
@@ -25,7 +26,7 @@ function navigatePath(target: any, path: JsonPointer) {
 	let lastSegment = '';
 	const pathSegments = path.segments;
 	pathSegments.forEach(
-		function(segment, index) {
+		(segment, index) => {
 			currentPath += `/${segment}`;
 			if (!target) {
 				throw new Error(`Invalid path: ${currentPath} doesn't exist in target`);
@@ -102,8 +103,8 @@ function test(this: Test, target: any) {
 export interface Remove extends Operation {}
 
 export interface Replace extends Operation {
-	value: any;
 	oldValue: any;
+	value: any;
 }
 
 export interface Move extends Operation {

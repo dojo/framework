@@ -13,7 +13,7 @@ import { QueryType, Query, Storage } from '../../../src/interfaces';
 import JsonPointer from '../../../src/patch/JsonPointer';
 import { BooleanOp } from '../../../src/query/createFilter';
 
-registerSuite((function(){
+registerSuite((() => {
 	const isIndexedDbAvailable = typeof indexedDB !== 'undefined';
 	const storage: Storage<ItemType, CrudOptions> = isIndexedDbAvailable ? new IndexedDBStorage<ItemType>({
 		dbName: 'test-db'
@@ -38,37 +38,43 @@ registerSuite((function(){
 		'add': {
 			'Should add new items into storage.'(this: any) {
 				const data = createData();
-				return storage.add(data).then((result) => {
-					assert.deepEqual(result.successfulData, data);
-				});
+				return storage.add(data)
+					.then((result) => {
+						assert.deepEqual(result.successfulData, data);
+					});
 			},
 			'Should return a result of type Add.'(this: any) {
-				return storage.add(createData()).then((result) => {
-					assert.deepEqual(result.type, StoreOperation.Add);
-				});
+				return storage.add(createData())
+					.then((result) => {
+						assert.deepEqual(result.type, StoreOperation.Add);
+					});
 			},
 			'Should not allow adding existing items by default.'(this: any) {
 				const data = createData();
-				return storage.add(data).then(() => storage.add(data).catch(function(error) {
-					assert.ok(error, 'Should have thrown an error when adding an existing item');
-				}));
+				return storage.add(data)
+					.then(() => storage.add(data)
+						.catch((error) => {
+							assert.ok(error, 'Should have thrown an error when adding an existing item');
+						})
+					);
 			},
 			'Should default rejectOverwrite to true when options are provided and it is not specified'(this: any) {
 				const data = createData();
-				return storage.add(data, {}).then(() => storage.add(data).catch(function(error) {
-					assert.ok(error, 'Should have thrown an error when adding an existing item');
-				}));
+				return storage.add(data, {})
+					.then(() => storage.add(data)
+						.catch((error) => {
+							assert.ok(error, 'Should have thrown an error when adding an existing item');
+						})
+					);
 			},
 			'Should allow adding existing items when rejectOverwrite is set to false.'(this: any) {
 				const data = createData();
-				return storage.add(data).then(
-					() => storage.add(
-							data, { rejectOverwrite: false }
-						)
+				return storage.add(data)
+					.then(() => storage.add(data, { rejectOverwrite: false })
 						.then(result => {
 							assert.deepEqual(result.successfulData, data);
 						})
-				);
+					);
 			}
 		},
 
@@ -82,53 +88,68 @@ registerSuite((function(){
 
 			'Should put new items into storage.'(this: any) {
 				const data = createData();
-				return storage.put(data).then((result) => {
-					assert.deepEqual(result.successfulData, data);
-				});
+				return storage.put(data)
+					.then((result) => {
+						assert.deepEqual(result.successfulData, data);
+					});
 			},
 			'Should return a result of type Put.'(this: any) {
-				return storage.put(createData()).then((result) => {
-					assert.deepEqual(result.type, StoreOperation.Put);
-				});
+				return storage.put(createData())
+					.then((result) => {
+						assert.deepEqual(result.type, StoreOperation.Put);
+					});
 			},
 			'Should allow adding existing items by default.'(this: any) {
 				const updates = createUpdates();
 
 				storage.put(createData());
-				return storage.put(updates[0]).then((result) => {
-					assert.deepEqual(result.successfulData, updates[0]);
-				});
+				return storage.put(updates[0])
+					.then((result) => {
+						assert.deepEqual(result.successfulData, updates[0]);
+					});
 			}
 		},
 
 		'get': {
 			'Should get single item.'(this: any) {
 				const data = createData();
-				return storage.add(data).then(() => storage.get([ 'item-1' ]).then((items) => {
-					assert.deepEqual(items, [ createData()[0] ]);
-				}));
+				return storage.add(data)
+					.then(() => storage.get(['item-1'])
+						.then((items) => {
+							assert.deepEqual(items, [createData()[0]]);
+						})
+					);
 			},
 			'Should get multiple items.'(this: any) {
 				const data = createData();
-				return storage.add(data).then(() => storage.get(['item-1', 'item-3']).then((items) => {
-					assert.deepEqual(items, [ data[0], data[2] ]);
-				}));
+				return storage.add(data)
+					.then(() => storage.get(['item-1', 'item-3'])
+						.then((items) => {
+							assert.deepEqual(items, [data[0], data[2]]);
+						})
+					);
 			},
 			'Should only get existing items back.'(this: any) {
 				const data = createData();
 				const nonexistentId = '4';
-				return storage.add(data).then(() => storage.get(['item-1', 'item-3', nonexistentId]).then((items) => {
-					assert.deepEqual(items, [data[0], data[2]]);
-				}));
+				return storage.add(data)
+					.then(() => storage.get(['item-1', 'item-3', nonexistentId])
+						.then((items) => {
+							assert.deepEqual(items, [data[0], data[2]]);
+						})
+					);
 			}
 		},
 
 		'fetch': {
 			'Should fetch all the items when query is not provided.'(this: any) {
 				const data = createData();
-				return storage.add(data).then(() => storage.fetch().then((items) => {
-					assert.deepEqual(items, data);
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch()
+						.then((items) => {
+							assert.deepEqual(items, data);
+						})
+					);
 			},
 			'Should fetch queried items when a query is provided.'(this: any) {
 				const data = createData();
@@ -138,25 +159,34 @@ registerSuite((function(){
 					.withQuery(createSort<ItemType>('id', true))
 					.withQuery(createRange<ItemType>(1, 1));
 
-				return storage.add(data).then(() => storage.fetch(query).then((items) => {
-					assert.deepEqual(items, [ data[0] ]);
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch(query)
+						.then((items) => {
+							assert.deepEqual(items, [data[0]]);
+						})
+					);
 			},
 			'incremental query'(this: any) {
 				const data = createData();
 				const query = createFilter<ItemType>()
 					.equalTo('id', 'item-1');
 
-				return storage.add(data).then(() => storage.fetch(query).then((items) => {
-					assert.deepEqual(items, [ data[0] ]);
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch(query)
+						.then((items) => {
+							assert.deepEqual(items, [data[0]]);
+						})
+					);
 			},
 			'incremental query(not a filter)'(this: any) {
 				const data = createData();
 
-				return storage.add(data).then(() => storage.fetch(createSort<ItemType>('value', true)).then((items) => {
-					assert.deepEqual(items, data.reverse());
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch(createSort<ItemType>('value', true))
+						.then((items) => {
+							assert.deepEqual(items, data.reverse());
+						})
+					);
 			},
 			'queries after non-incremental query'(this: any) {
 				const data = createData();
@@ -166,9 +196,12 @@ registerSuite((function(){
 					.withQuery(createFilter<ItemType>().greaterThan('value', 1))
 					.withQuery(createFilter<ItemType>().lessThan('value',  3));
 
-				return storage.add(data).then(() => storage.fetch(query).then((items) => {
-					assert.deepEqual(items, [ data[1] ]);
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch(query)
+						.then((items) => {
+							assert.deepEqual(items, [data[1]]);
+						})
+					);
 			},
 			'queries around non-incremental query'(this: any) {
 				const data = createData();
@@ -178,17 +211,23 @@ registerSuite((function(){
 					.withQuery(createRange<ItemType>(0, 2))
 					.withQuery(createFilter<ItemType>().lessThan('value',  3));
 
-				return storage.add(data).then(() => storage.fetch(query).then((items) => {
-					assert.deepEqual(items, [ data[1] ]);
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch(query)
+						.then((items) => {
+							assert.deepEqual(items, [data[1]]);
+						})
+					);
 			},
 			'non-incremental query'(this: any) {
 				const data = createData();
 				const query = createRange<ItemType>(0, 2);
 
-				return storage.add(data).then(() => storage.fetch(query).then((items) => {
-					assert.deepEqual(items, [ data[0], data[1] ]);
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch(query)
+						.then((items) => {
+							assert.deepEqual(items, [data[0], data[1]]);
+						})
+					);
 			},
 
 			'incremental compound query'(this: any) {
@@ -197,9 +236,12 @@ registerSuite((function(){
 						query: createFilter<any>().custom(() => true)
 					})
 					.withQuery(createFilter<any>().custom((item) => item.value === 3));
-				return storage.add(data).then(() => storage.fetch(query).then((items) => {
-					assert.deepEqual(items, [ data[2] ], 'Didn\'t properly filter items');
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch(query)
+						.then((items) => {
+							assert.deepEqual(items, [data[2]], 'Didn\'t properly filter items');
+						})
+					);
 			},
 
 			'nested compound queries'(this: any) {
@@ -210,9 +252,12 @@ registerSuite((function(){
 					})
 				});
 
-				return storage.add(data).then(() => storage.fetch(query).then((items) => {
-					assert.deepEqual(items, [ data[0] ], 'Didn\'t property apply nested compund query');
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch(query)
+						.then((items) => {
+							assert.deepEqual(items, [data[0]], 'Didn\'t property apply nested compund query');
+						})
+					);
 			},
 
 			'redundant filters should not be called'(this: any) {
@@ -232,33 +277,45 @@ registerSuite((function(){
 						}
 					}));
 
-				return storage.add(data).then(() => storage.fetch(query).then((items) => {
-					assert.strictEqual(items.length, 0, 'Shouldn\'t have returned any items');
-					assert.isFalse(spy.called, 'Should not have called redundant query');
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch(query)
+						.then((items) => {
+							assert.strictEqual(items.length, 0, 'Shouldn\'t have returned any items');
+							assert.isFalse(spy.called, 'Should not have called redundant query');
+						})
+					);
 			}
 		},
 
 		'delete': {
 			'Should delete items from storage.'(this: any) {
 				const data = createData();
-				return storage.add(data).then(() => storage.delete(['item-1', 'item-3']).then((result) => {
-					assert.deepEqual(result.successfulData, ['item-1', 'item-3']);
-				}));
+				return storage.add(data)
+					.then(() => storage.delete(['item-1', 'item-3'])
+						.then((result) => {
+							assert.deepEqual(result.successfulData, ['item-1', 'item-3']);
+						})
+					);
 			},
 			'Should return a result of type Delete.'(this: any) {
 				const data = createData();
 
-				return storage.add(data).then(() => storage.delete(['item-1', 'item-3']).then((result) => {
-					assert.deepEqual(result.type, StoreOperation.Delete);
-				}));
+				return storage.add(data)
+					.then(() => storage.delete(['item-1', 'item-3'])
+						.then((result) => {
+							assert.deepEqual(result.type, StoreOperation.Delete);
+						})
+					);
 			},
 			'Should return ids even when deleting non-existing items.'(this: any) {
 				const data = createData();
 
-				return storage.add(data).then(() => storage.delete(['4']).then((result) => {
-					assert.deepEqual(result.successfulData, ['4']);
-				}));
+				return storage.add(data)
+					.then(() => storage.delete(['4'])
+						.then((result) => {
+							assert.deepEqual(result.successfulData, ['4']);
+						})
+					);
 			}
 		},
 
@@ -273,17 +330,23 @@ registerSuite((function(){
 					}
 				}));
 
-				return storage.add(data).then(() => storage.patch(patches).then((result) => {
-					assert.deepEqual(result.successfulData, expectedItems);
-				}));
+				return storage.add(data)
+					.then(() => storage.patch(patches)
+						.then((result) => {
+							assert.deepEqual(result.successfulData, expectedItems);
+						})
+					);
 			},
 
 			'Should return a result of type Patch.'(this: any) {
 				const data = createData();
 
-				return storage.add(data).then(() => storage.patch(patches).then((result) => {
-					assert.deepEqual(result.type, StoreOperation.Patch);
-				}));
+				return storage.add(data)
+					.then(() => storage.patch(patches)
+						.then((result) => {
+							assert.deepEqual(result.type, StoreOperation.Patch);
+						})
+					);
 			}
 		},
 
@@ -367,24 +430,60 @@ registerSuite((function(){
 						}
 					});
 
-					storage.add(createData()).then(() => {
-						Promise.all(queries.map((query) => storage.fetch(query))).then(dfd.callback((results: ItemType[][]) => {
-							assert.isFalse(spy.called, 'Should not have called spy for any of the queries');
-							const data = createData();
-							assert.deepEqual(results[0], [ data[0] ], 'First query should have returned first item');
-							assert.deepEqual(results[1], data.slice(1), 'Second query should have returned last two items');
-							assert.deepEqual(results[2], [ data[2] ], 'Third query should have returned last item');
-							assert.deepEqual(results[3], data.slice(0, 2), 'Fourth query should have returned first two items');
-							assert.deepEqual(results[4], [ data[0] ], 'Last query should have returned first item');
+					storage.add(createData())
+						.then(() => {
+							Promise.all(queries.map((query) => storage.fetch(query)))
+								.then(dfd.callback((results: ItemType[][]) => {
+									assert.isFalse(
+										spy.called, 'Should not have called spy for any of the queries'
+									);
+									const data = createData();
+									assert.deepEqual(
+										results[0], [data[0]], 'First query should have returned first item'
+									);
+									assert.deepEqual(
+										results[1], data.slice(1), 'Second query should have returned last two items'
+									);
+									assert.deepEqual(
+										results[2], [data[2]], 'Third query should have returned last item'
+									);
+									assert.deepEqual(
+										results[3],
+										data.slice(0, 2),
+										'Fourth query should have returned first two items'
+									);
+									assert.deepEqual(
+										results[4], [data[0]], 'Last query should have returned first item'
+									);
 
-							// With JSON Pointers
-							assert.deepEqual(results[5], [ data[0] ], 'First query should have returned first item(JSON Pointer)');
-							assert.deepEqual(results[6], data.slice(1), 'Second query should have returned last two items(JSON Pointer)');
-							assert.deepEqual(results[7], [ data[2] ], 'Third query should have returned last item(JSON Pointer)');
-							assert.deepEqual(results[8], data.slice(0, 2), 'Fourth query should have returned first two items(JSON Pointer)');
-							assert.deepEqual(results[9], [ data[0] ], 'Last query should have returned first item(JSON Pointer)');
-						}));
-					});
+									// With JSON Pointers
+									assert.deepEqual(
+										results[5],
+										[data[0]],
+										'First query should have returned first item(JSON Pointer)'
+									);
+									assert.deepEqual(
+										results[6],
+										data.slice(1),
+										'Second query should have returned last two items(JSON Pointer)'
+									);
+									assert.deepEqual(
+										results[7],
+										[data[2]],
+										'Third query should have returned last item(JSON Pointer)'
+									);
+									assert.deepEqual(
+										results[8],
+										data.slice(0, 2),
+										'Fourth query should have returned first two items(JSON Pointer)'
+									);
+									assert.deepEqual(
+										results[9],
+										[data[0]],
+										'Last query should have returned first item(JSON Pointer)'
+									);
+								}));
+						});
 				};
 			},
 
@@ -409,16 +508,18 @@ registerSuite((function(){
 						}
 					});
 
-					storage.add(createData()).then(() => {
-						Promise.all(queries.map((query) => storage.fetch(query))).then(dfd.callback((results: ItemType[][]) => {
-							assert.isFalse(spy.called, 'Should not have called spy for any of the queries');
-							const data = createData();
-							assert.deepEqual(results[0], [ data[1] ], 'First query should have returned second item');
-							assert.deepEqual(results[1], [ data[1] ], 'Second query should have returned second item');
-							assert.deepEqual(results[2], [ data[1] ], 'Third query should have returned second item');
-							assert.deepEqual(results[3], [ data[1] ], 'Fourth query should have returned second item');
-						}));
-					});
+					storage.add(createData())
+						.then(() => {
+							Promise.all(queries.map((query) => storage.fetch(query)))
+								.then(dfd.callback((results: ItemType[][]) => {
+									assert.isFalse(spy.called, 'Should not have called spy for any of the queries');
+									const data = createData();
+									assert.deepEqual(results[0], [data[1]], 'First query should have returned second item');
+									assert.deepEqual(results[1], [data[1]], 'Second query should have returned second item');
+									assert.deepEqual(results[2], [data[1]], 'Third query should have returned second item');
+									assert.deepEqual(results[3], [data[1]], 'Fourth query should have returned second item');
+								}));
+						});
 				};
 			},
 
@@ -432,7 +533,10 @@ registerSuite((function(){
 						.greaterThan('value', 1)
 						.lessThan('value', 3),
 					createFilter<any>().greaterThan('value', 1).lessThan('value', 4).notEqualTo('value', 3),
-					createFilter<any>().lessThanOrEqualTo('value', 3).greaterThanOrEqualTo('value', 1).equalTo('value', 2),
+					createFilter<any>()
+						.lessThanOrEqualTo('value', 3)
+						.greaterThanOrEqualTo('value', 1)
+						.equalTo('value', 2),
 					createFilter<any>().lessThan('value', 4).greaterThan('value', 0).equalTo('value', 2)
 				];
 				request.onsuccess = request.onerror = () => {
@@ -443,15 +547,17 @@ registerSuite((function(){
 						}
 					});
 
-					storage.add(createData()).then(() => {
-						Promise.all(queries.map((query) => storage.fetch(query))).then(dfd.callback((results: ItemType[][]) => {
-							const data = createData();
-							assert.deepEqual(results[0], [ data[1] ], 'First query should have returned second item');
-							assert.deepEqual(results[1], [ data[1] ], 'Second query should have returned second item');
-							assert.deepEqual(results[2], [ data[1] ], 'Third query should have returned second item');
-							assert.deepEqual(results[3], [ data[1] ], 'Fourth query should have returned second item');
-						}));
-					});
+					storage.add(createData())
+						.then(() => {
+							Promise.all(queries.map((query) => storage.fetch(query)))
+								.then(dfd.callback((results: ItemType[][]) => {
+									const data = createData();
+									assert.deepEqual(results[0], [data[1]], 'First query should have returned second item');
+									assert.deepEqual(results[1], [data[1]], 'Second query should have returned second item');
+									assert.deepEqual(results[2], [data[1]], 'Third query should have returned second item');
+									assert.deepEqual(results[3], [data[1]], 'Fourth query should have returned second item');
+								}));
+						});
 				};
 			}
 		},
@@ -486,9 +592,10 @@ registerSuite((function(){
 							version: 10
 						});
 
-						return newStorage.fetch().then(dfd.callback((data: ItemType[]) => {
-							assert.deepEqual(data, [ item ], 'Shouldn\'t have deleted data');
-						}), dfd.reject);
+						return newStorage.fetch()
+							.then(dfd.callback((data: ItemType[]) => {
+								assert.deepEqual(data, [item], 'Shouldn\'t have deleted data');
+							}), dfd.reject);
 					};
 				};
 
@@ -510,19 +617,18 @@ registerSuite((function(){
 			});
 
 			new IndexedDBStorage({
-				dbName: 'test-db'
-			}).add(createData()).then(
-				() => {
+					dbName: 'test-db'
+				})
+				.add(createData())
+				.then(() => {
 					stub.restore();
 					dfd.reject('Should have failed');
-				},
-				dfd.callback((error: any) => {
+				}, dfd.callback((error: any) => {
 					stub.restore();
 					assert.strictEqual(
 						error.message, 'Failed to open database', 'Should have failed with DB error message'
 					);
-				})
-			);
+				}));
 		},
 
 		'should use a default db name if none is provided'(this: any) {
@@ -531,29 +637,37 @@ registerSuite((function(){
 			const data = createData();
 			request.onsuccess = request.onerror = () => {
 				const storage = new IndexedDBStorage();
-				storage.add(data).then(() => {
-					storage.fetch().then(dfd.callback((fetchedData: ItemType[]) => {
-						assert.deepEqual(fetchedData, data, 'Didn\'t use default database and store data');
-					}), dfd.reject);
-				}, dfd.reject);
+				storage.add(data)
+					.then(() => {
+						storage.fetch()
+							.then(dfd.callback((fetchedData: ItemType[]) => {
+								assert.deepEqual(fetchedData, data, 'Didn\'t use default database and store data');
+							}), dfd.reject);
+					}, dfd.reject);
 			};
 		},
 
 		'should have totalLength property on fetch results': {
 			'fetch all'(this: any) {
 				const data = createData();
-				return storage.add(data).then(() => storage.fetch().totalLength.then((totalLength) => {
-					assert.equal(3, totalLength, 'Didn\'t return the correct total length');
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch()
+						.totalLength
+						.then((totalLength) => {
+							assert.equal(3, totalLength, 'Didn\'t return the correct total length');
+						})
+					);
 			},
 
 			'filtered fetch'(this: any) {
 				const data = createData();
-				return storage.add(data).then(() => storage.fetch(
-					createFilter<any>().lessThan('value', 2)
-				).totalLength.then((totalLength) => {
-					assert.equal(3, totalLength, 'Didn\'t return the correct total length');
-				}));
+				return storage.add(data)
+					.then(() => storage.fetch(createFilter<any>().lessThan('value', 2))
+						.totalLength
+						.then((totalLength) => {
+							assert.equal(3, totalLength, 'Didn\'t return the correct total length');
+						})
+					);
 			}
 		},
 
@@ -585,16 +699,18 @@ registerSuite((function(){
 					}
 				});
 
-				storage.add(createData()).then(() => {
-					Promise.all(queries.map((query) => storage.fetch(query))).then(dfd.callback((results: ItemType[][]) => {
-						const data = createData();
-						assert.deepEqual(results[0], [ data[2] ], 'First query should have returned last item');
-						assert.deepEqual(results[1], [ data[1] ], 'Second query should have returned second item');
-						assert.deepEqual(results[2], [ data[2] ], 'Third query should have returned last item');
-						assert.deepEqual(results[3], [ data[1] ], 'Fourth query should have returned second item');
-						assert.deepEqual(results[4], data, 'Fourth query should have returned all items');
-					}));
-				});
+				storage.add(createData())
+					.then(() => {
+						Promise.all(queries.map((query) => storage.fetch(query)))
+							.then(dfd.callback((results: ItemType[][]) => {
+								const data = createData();
+								assert.deepEqual(results[0], [data[2]], 'First query should have returned last item');
+								assert.deepEqual(results[1], [data[1]], 'Second query should have returned second item');
+								assert.deepEqual(results[2], [data[2]], 'Third query should have returned last item');
+								assert.deepEqual(results[3], [data[1]], 'Fourth query should have returned second item');
+								assert.deepEqual(results[4], data, 'Fourth query should have returned all items');
+							}));
+					});
 			};
 		},
 
@@ -603,7 +719,7 @@ registerSuite((function(){
 				class TestGetTransactionThrows extends IndexedDBStorage<any> {
 					constructor() {
 						try { super(); } catch (ignore) { }
-						this.getTransactionAndObjectStore();
+						this._getTransactionAndObjectStore();
 					}
 				}
 				new TestGetTransactionThrows();

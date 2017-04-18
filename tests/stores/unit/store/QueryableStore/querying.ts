@@ -32,42 +32,44 @@ function getStoreWithAsyncStorage(test: any, asyncOptions?: {}, useAsync = true)
 
 registerSuite({
 	name: 'Queryable Store - Querying',
-	'single query': function(this: any) {
+	'single query'(this: any) {
 		const { queryStore } = getStoreAndDfd(this, false);
 
-		return queryStore.filter(function(item: ItemType) {
-			return String(item.id) === 'item-1';
-		}).fetch().then(function(items) {
-			assert.deepEqual(items, [ createData()[0] ], 'Didn\'t filter items propertly');
-		});
+		return queryStore.filter((item: ItemType) => String(item.id) === 'item-1')
+			.fetch()
+			.then((items) => {
+				assert.deepEqual(items, [createData()[0]], 'Didn\'t filter items propertly');
+			});
 	},
 
-	'nested queries': function(this: any) {
+	'nested queries'(this: any) {
 		const { queryStore } = getStoreAndDfd(this, false);
 
-		return queryStore.filter(function(item) {
-			return String(item.id) === 'item-1' || String(item.id) === 'item-2';
-		}).filter(function(item: ItemType) {
-			return String(item.id) === 'item-2';
-		}).fetch().then(function(items) {
-			assert.deepEqual(items, [ createData()[1] ], 'Didn\'t filter items properly with nested query');
-		});
+		return queryStore.filter((item) => String(item.id) === 'item-1' || String(item.id) === 'item-2')
+			.filter((item: ItemType) => String(item.id) === 'item-2')
+			.fetch()
+			.then((items) => {
+				assert.deepEqual(items, [createData()[1]], 'Didn\'t filter items properly with nested query');
+			});
 	},
 
 	'get'(this: any) {
 		const { queryStore } = getStoreAndDfd(this, false);
 
-		return queryStore.filter((item) => item.value > 1).get('item-1').then((item) => {
-			assert.isUndefined(item, 'Shouldn\'t have returned item');
-		});
+		return queryStore.filter((item) => item.value > 1).get('item-1')
+			.then((item) => {
+				assert.isUndefined(item, 'Shouldn\'t have returned item');
+			});
 	},
 
 	'get multiple items'(this: any) {
 		const { queryStore } = getStoreAndDfd(this, false);
 
-		return queryStore.filter((item) => item.value > 1).get(['item-1', 'item-2']).then((items) => {
-			assert.deepEqual(items, [], 'Shouldn\'t have returned items before they are added to local storage');
-		});
+		return queryStore.filter((item) => item.value > 1)
+			.get(['item-1', 'item-2'])
+			.then((items) => {
+				assert.deepEqual(items, [], 'Shouldn\'t have returned items before they are added to local storage');
+			});
 	},
 
 	'get with initial fetch'(this: any) {
@@ -75,12 +77,14 @@ registerSuite({
 
 		const queriedView = queryStore.filter((item) => item.value > 1);
 		queriedView.fetch();
-		return queriedView.get('item-1').then((item) => {
-			assert.isUndefined(item, 'Shouldn\'t have returned filtered item with updated collection');
-			return queriedView.get('item-2').then((item) => {
-				assert.deepEqual(item, createData()[1], 'Should have returned item in filtered collection');
+		return queriedView.get('item-1')
+			.then((item) => {
+				assert.isUndefined(item, 'Shouldn\'t have returned filtered item with updated collection');
+				return queriedView.get('item-2')
+					.then((item) => {
+						assert.deepEqual(item, createData()[1], 'Should have returned item in filtered collection');
+					});
 			});
-		});
 	},
 
 	'get multiple items with initial fetch'(this: any) {
@@ -88,9 +92,10 @@ registerSuite({
 
 		const queriedView = queryStore.filter((item) => item.value > 1);
 		queriedView.fetch();
-		return queriedView.get(['item-1', 'item-2']).then((items) => {
-			assert.deepEqual(items, [ createData()[1] ], 'Should only return item in filtered collection');
-		});
+		return queriedView.get(['item-1', 'item-2'])
+			.then((items) => {
+				assert.deepEqual(items, [createData()[1]], 'Should only return item in filtered collection');
+			});
 	},
 
 	'accessing source'(this: any) {
@@ -106,23 +111,27 @@ registerSuite({
 
 		queryStore.filter((item) => true).source.add(newItem);
 
-		return queryStore.filter((item) => item.value < 100).fetch().then((data) => {
-			assert.deepEqual(data, [
-				...createData(),
-				newItem
-			], 'Didn\'t properly add item to source store');
-		});
+		return queryStore.filter((item) => item.value < 100)
+			.fetch()
+			.then((data) => {
+				assert.deepEqual(data, [
+					...createData(),
+					newItem
+				], 'Didn\'t properly add item to source store');
+			});
 	},
 
-	'fetch with query and nested queries': function(this: any) {
+	'fetch with query and nested queries'(this: any) {
 		const { dfd, queryStore } = getStoreAndDfd(this);
-		queryStore.filter(function(item: ItemType) {
-			return Boolean(item.id);
-		}).filter(function(item: ItemType) {
-			return String(item.id) === 'item-2' || String(item.id) === 'item-1';
-		}).fetch(createFilter<ItemType>().equalTo('id', 'item-1')).then(function(items) {
-			assert.deepEqual(items, [ createData()[0] ], 'Didn\'t filter items properly with nested query and query in fetch');
-		}).then(dfd.resolve);
+		queryStore.filter((item: ItemType) => Boolean(item.id))
+			.filter((item: ItemType) => String(item.id) === 'item-2' || String(item.id) === 'item-1')
+			.fetch(createFilter<ItemType>().equalTo('id', 'item-1'))
+			.then((items) => {
+				assert.deepEqual(
+					items, [createData()[0]], 'Didn\'t filter items properly with nested query and query in fetch'
+				);
+			})
+			.then(dfd.resolve);
 	},
 
 	'should retrieve source collection\'s data with queries'(this: any) {
@@ -130,8 +139,9 @@ registerSuite({
 		return queryStore
 			.filter(createFilter<ItemType>().lessThan('value', 3))
 			.sort('value', true)
-			.fetch().then(function(fetchedData) {
-				assert.deepEqual(fetchedData, [ createData()[1], createData()[0] ]);
+			.fetch()
+			.then((fetchedData) => {
+				assert.deepEqual(fetchedData, [createData()[1], createData()[0]]);
 			});
 	},
 
@@ -157,7 +167,7 @@ registerSuite({
 			() => store.delete(data[0].id)
 		];
 		const subCollection = store.filter(createFilter<ItemType>().lessThanOrEqualTo('value', 3));
-		subCollection.observe().subscribe(function() {
+		subCollection.observe().subscribe(() => {
 			let nextCall: (() => any) | undefined = calls.shift();
 			if (nextCall) {
 				nextCall();
@@ -178,7 +188,7 @@ registerSuite({
 		const filteredView = store.filter(createFilter<any>().lessThan('value', 5));
 
 		let ignoreFirst = true;
-		filteredView.observe().subscribe(function() {
+		filteredView.observe().subscribe(() => {
 			if (ignoreFirst) {
 				ignoreFirst = false;
 				return;
@@ -228,7 +238,7 @@ registerSuite({
 		const data = createData();
 		const filtered = store.filter(createFilter<any>().greaterThan('value', 0));
 		let ignoreFirst = 2;
-		filtered.observe().subscribe(function(update) {
+		filtered.observe().subscribe((update) => {
 			if (ignoreFirst) {
 				ignoreFirst--;
 				return;
@@ -319,17 +329,19 @@ registerSuite({
 			}
 			dfd.resolve();
 		});
-		filtered.fetch().then(() => {
-			store.delete('item-1');
-		});
+		filtered.fetch()
+			.then(() => {
+				store.delete('item-1');
+			});
 	},
 
 	'should allow fetch with sort on a sorted store'(this: any) {
 		const { queryStore } = getStoreAndDfd(this, false);
 		const data = createData();
 
-		return queryStore.sort(createSort<ItemType>('id', true)).fetch(createSort<ItemType>('id', false))
-			.then(function(fetchedData) {
+		return queryStore.sort(createSort<ItemType>('id', true))
+			.fetch(createSort<ItemType>('id', false))
+			.then((fetchedData) => {
 				assert.deepEqual(fetchedData, [ data[0], data[1], data[2] ], 'Data fetched with sort was incorrect');
 			});
 	},
@@ -338,8 +350,9 @@ registerSuite({
 		const { queryStore } = getStoreAndDfd(this, false);
 		const data = createData();
 
-		return queryStore.filter(createFilter<ItemType>().greaterThanOrEqualTo('value', 2)).fetch(createFilter<ItemType>().lessThan('value', 3))
-			.then(function(fetchedData: ItemType[]) {
+		return queryStore.filter(createFilter<ItemType>().greaterThanOrEqualTo('value', 2))
+			.fetch(createFilter<ItemType>().lessThan('value', 3))
+			.then((fetchedData: ItemType[]) => {
 				assert.deepEqual(fetchedData, [ data[1] ], 'Data fetched with filter was incorrect');
 			});
 	},
@@ -348,8 +361,9 @@ registerSuite({
 		const { queryStore } = getStoreAndDfd(this, false);
 		const data = createData();
 
-		return queryStore.range(1, 2).fetch(createRange<ItemType>(1, 1))
-			.then(function(fetchedData: ItemType[]) {
+		return queryStore.range(1, 2)
+			.fetch(createRange<ItemType>(1, 1))
+			.then((fetchedData: ItemType[]) => {
 				assert.deepEqual(fetchedData, [ data[2] ], 'Data fetched with range was incorrect');
 			});
 	},
@@ -358,14 +372,14 @@ registerSuite({
 		const { queryStore } = getStoreAndDfd(this, false);
 		const data = createData();
 
-		return queryStore
-			.range(createRange<ItemType>(0, 3))
+		return queryStore.range(createRange<ItemType>(0, 3))
 			.filter(createFilter<ItemType>().greaterThanOrEqualTo('value', 2))
 			.filter( (item) => item.value >= 2 )
 			.sort( createSort<ItemType>('id', true) )
 			.range(createRange<ItemType>(1, 1))
 			.range(0, 1)
-			.fetch().then(function(fetchedData: ItemType[]) {
+			.fetch()
+			.then((fetchedData: ItemType[]) => {
 				assert.deepEqual(fetchedData, [ data[1] ], 'Data fetched with multiple queries was incorrect');
 			});
 	},
@@ -565,14 +579,11 @@ registerSuite({
 				const fetchResult = queryStore.filter(() => true).fetch();
 				// Handle the error on the fetch result itself to avoid warnings
 				fetchResult.then(undefined, () => {});
-				return fetchResult.dataLength.then(
-					() => {
-						throw Error('Data length should not have resolved');
-					},
-					(error: any) => {
-						assert.equal('Fetch failed', error.message);
-					}
-				);
+				return fetchResult.dataLength.then(() => {
+					throw Error('Data length should not have resolved');
+				}, (error: any) => {
+					assert.equal('Fetch failed', error.message);
+				});
 			}
 		}
 	},
@@ -618,9 +629,10 @@ registerSuite({
 			}
 			updateCount++;
 		}));
-		queryStore.put(updates[0]).then(() => {
-			queryStore.put(updates[1]);
-		});
+		queryStore.put(updates[0])
+			.then(() => {
+				queryStore.put(updates[1]);
+			});
 	},
 
 	'async storage': {
@@ -629,9 +641,10 @@ registerSuite({
 			const subcollection = store.filter(createFilter<ItemType>().greaterThanOrEqualTo('value', 2));
 
 			store.add(createData());
-			return subcollection.fetch().then(function(storeData) {
-				assert.lengthOf(storeData, 0, 'should not have retrieved items');
-			});
+			return subcollection.fetch()
+				.then((storeData) => {
+					assert.lengthOf(storeData, 0, 'should not have retrieved items');
+				});
 		},
 		'should complete initial add before subsequent operations'(this: any) {
 			const asyncStorage = new AsyncStorage();
@@ -640,9 +653,10 @@ registerSuite({
 				data: createData()
 			});
 
-			return store.get(['item-1', 'item-2', 'item-3']).then(function(items: ItemType[]) {
-				assert.deepEqual(items, createData(), 'Didn\'t retrieve items from async add');
-			});
+			return store.get(['item-1', 'item-2', 'item-3'])
+				.then((items: ItemType[]) => {
+					assert.deepEqual(items, createData(), 'Didn\'t retrieve items from async add');
+				});
 		},
 		'failed initial add should not prevent subsequent operations'(this: any) {
 			let fail = true;
@@ -664,15 +678,16 @@ registerSuite({
 				data: data
 			});
 
-			return store.add(data).then(function() {
-				return store.get(['item-1', 'item-2', 'item-3']).then(function(items) {
-					assert.isTrue(stub.called, 'Didn\'t log error for failed add');
-					assert.equal('error', stub.args[0][0].message, 'Didn\'t log expected error');
-					stub.restore();
-					assert.isFalse(fail, 'Didn\'t fail for first operation');
-					assert.deepEqual(items, data, 'Didn\'t retrieve items from add following failed initial add');
-				});
-			});
+			return store.add(data)
+				.then(() => store.get(['item-1', 'item-2', 'item-3'])
+					.then((items) => {
+						assert.isTrue(stub.called, 'Didn\'t log error for failed add');
+						assert.equal('error', stub.args[0][0].message, 'Didn\'t log expected error');
+						stub.restore();
+						assert.isFalse(fail, 'Didn\'t fail for first operation');
+						assert.deepEqual(items, data, 'Didn\'t retrieve items from add following failed initial add');
+					})
+				);
 		}
 	}
 });

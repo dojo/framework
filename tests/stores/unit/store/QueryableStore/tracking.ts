@@ -6,7 +6,7 @@ import QueryStore from '../../../../src/store/QueryableStore';
 import { TrackableStoreDelta, MappedQueryResultInterface } from '../../../../src/store/QueryResult';
 import Promise from '@dojo/shim/Promise';
 
-registerSuite(function() {
+registerSuite(() => {
 	let trackableQueryStore: QueryStore<ItemType>;
 
 	function testFetchingQueryStore(
@@ -15,12 +15,12 @@ registerSuite(function() {
 		dfd: any,
 		isFetchingAroundUpdates = false
 	) {
-		return new Promise(function(resolve) {
+		return new Promise((resolve) => {
 			let ignoreFirst = true;
 			trackResult
 				.track()
 				.observe()
-				.subscribe(function(update) {
+				.subscribe((update) => {
 					try {
 						if (ignoreFirst) {
 							ignoreFirst = false;
@@ -90,7 +90,7 @@ registerSuite(function() {
 		trackResult: MappedQueryResultInterface<ItemType, QueryStore<ItemType>>,
 		dfd: any
 	) {
-		return new Promise(function(resolve) {
+		return new Promise((resolve) => {
 			let notifiedOnDelete = false;
 			let notifiedOnAddition = false;
 			let notifiedOnUpdateIntoCollection = false;
@@ -100,7 +100,7 @@ registerSuite(function() {
 			trackResult
 				.track()
 				.observe()
-				.subscribe(function(update) {
+				.subscribe((update) => {
 					try {
 						if (ignoreFirst) {
 							ignoreFirst = false;
@@ -183,7 +183,7 @@ registerSuite(function() {
 
 	return {
 		name: 'Queryable Store - Tracking',
-		beforeEach: function() {
+		beforeEach() {
 			trackableQueryStore = new QueryStore({
 				data: createData()
 			});
@@ -193,9 +193,7 @@ registerSuite(function() {
 			'put()'(this: any) {
 				const dfd = this.async(1000);
 				const trackedCollection = trackableQueryStore
-					.filter(function(item) {
-						return item.value > 1;
-					})
+					.filter((item) => item.value > 1)
 					.sort('value')
 					.track();
 
@@ -231,18 +229,16 @@ registerSuite(function() {
 			}
 		},
 
-		'not tracking or fetching with simple queries': function(this: any) {
+		'not tracking or fetching with simple queries'(this: any) {
 			const dfd = this.async(1000);
 			const trackedCollection = trackableQueryStore
-				.filter(function(item) {
-					return item.value > 1;
-				})
+				.filter((item) => item.value > 1)
 				.sort('value')
 				.track();
 
 			let ignoreFirst = true;
 
-			trackedCollection.observe().subscribe(function(update) {
+			trackedCollection.observe().subscribe((update) => {
 				try {
 					if (ignoreFirst) {
 						ignoreFirst = false;
@@ -312,9 +308,7 @@ registerSuite(function() {
 					fetchAroundUpdates: true
 				});
 				const trackedCollection = trackableQueryStore
-					.filter(function(item) {
-						return item.value > 1;
-					})
+					.filter((item) => item.value > 1)
 					.sort('value')
 					.range(0, 100)
 					.track();
@@ -346,13 +340,12 @@ registerSuite(function() {
 					data: createData()
 				});
 				const trackedCollection = trackableQueryStore
-					.filter(function(item) {
-						return item.value > 1;
-					})
+					.filter((item) => item.value > 1)
 					.sort('value')
 					.range(0, 100)
 					.track();
-				testFetchingQueryStoreWithDelayedOperations(trackableQueryStore, trackedCollection, dfd).then(dfd.resolve);
+				testFetchingQueryStoreWithDelayedOperations(trackableQueryStore, trackedCollection, dfd)
+					.then(dfd.resolve);
 			},
 			'full range, not initially fetching around updates'(this: any) {
 				const dfd = this.async(1000);
@@ -360,9 +353,7 @@ registerSuite(function() {
 					data: createData()
 				});
 				const trackedCollection = trackableQueryStore
-					.filter(function(item) {
-						return item.value > 1;
-					})
+					.filter((item) => item.value > 1)
 					.sort('value')
 					.range(0, 100)
 					.track();
@@ -379,7 +370,7 @@ registerSuite(function() {
 					.track();
 
 				let ignoreFirst = true;
-				trackedCollection.observe().subscribe(function(update) {
+				trackedCollection.observe().subscribe((update) => {
 					if (ignoreFirst) {
 						ignoreFirst = false;
 						return;
@@ -410,7 +401,7 @@ registerSuite(function() {
 			}
 		},
 
-		'should be able to track a store with a query': function(this: any) {
+		'should be able to track a store with a query'(this: any) {
 			const dfd = this.async(1000);
 			let firstUpdate = true;
 			const data = createData();
@@ -479,7 +470,7 @@ registerSuite(function() {
 			trackableQueryStore.add(createData()[0]);
 		},
 
-		'add data after initialization': function(this: any) {
+		'add data after initialization'(this: any) {
 			const dfd = this.async(1000);
 			trackableQueryStore = new QueryStore<ItemType>();
 			let ignoreFirst = true;
@@ -498,7 +489,7 @@ registerSuite(function() {
 			trackableQueryStore.add(createData());
 		},
 
-		'should receive a notification of initial data': function(this: any) {
+		'should receive a notification of initial data'(this: any) {
 			const dfd = this.async(1000);
 			trackableQueryStore = new QueryStore({
 				data: createData()
@@ -534,40 +525,39 @@ registerSuite(function() {
 			const dfd = this.async(1000);
 			const data = createData();
 
-			trackableQueryStore.delete(data.map((item) => item.id)).then(() => {
-				const trackedCollection = trackableQueryStore
-					.filter(function(item: ItemType) {
-						return item.value > 1;
-					})
-					.sort('value')
-					.track();
+			trackableQueryStore.delete(data.map((item) => item.id))
+				.then(() => {
+					const trackedCollection = trackableQueryStore.filter((item: ItemType) => item.value > 1)
+						.sort('value')
+						.track();
 
-				let ignoreFirst = true;
-				trackedCollection.observe().subscribe(function(update: any) {
-					if (ignoreFirst) {
-						ignoreFirst = false;
-						return;
-					}
+					let ignoreFirst = true;
+					trackedCollection.observe()
+						.subscribe((update: any) => {
+							if (ignoreFirst) {
+								ignoreFirst = false;
+								return;
+							}
 
-					try {
-						assert.deepEqual(update, {
-							adds: [ data[2] ],
-							updates: [],
-							deletes: [],
-							movedInTracked: [],
-							removedFromTracked: [],
-							addedToTracked: [ { id: 'item-3', index: 0, item: data[2] } ],
-							beforeAll: [],
-							afterAll: [ data[2] ]
-						}, 'Should have cancelled out delete and add, and filtered out the other non-tracked delete');
-						dfd.resolve();
-					} catch (error) {
-						dfd.reject(error);
-					}
+							try {
+								assert.deepEqual(update, {
+									adds: [data[2]],
+									updates: [],
+									deletes: [],
+									movedInTracked: [],
+									removedFromTracked: [],
+									addedToTracked: [{ id: 'item-3', index: 0, item: data[2] }],
+									beforeAll: [],
+									afterAll: [data[2]]
+								}, 'Should have cancelled out delete and add, and filtered out the other non-tracked delete');
+								dfd.resolve();
+							} catch (error) {
+								dfd.reject(error);
+							}
+						});
+					trackableQueryStore.add(createData());
+					trackableQueryStore.delete(['item-1', 'item-2']);
 				});
-				trackableQueryStore.add(createData());
-				trackableQueryStore.delete(['item-1', 'item-2']);
-			});
 		},
 
 		'should not receive same update data twice'(this: any) {
@@ -575,46 +565,45 @@ registerSuite(function() {
 			const data = createData();
 			const updates = createUpdates()[0];
 			const trackableQueryStore = new QueryStore<ItemType>();
-			const trackedCollection = trackableQueryStore
-				.filter(function(item: ItemType) {
-					return item.value > 1;
-				})
-				.sort('value')
-				.track();
+			const trackedCollection = trackableQueryStore.filter((item) => item.value > 1).sort('value').track();
 
 			let ignoreFirst = true;
 			let add = true;
-			trackedCollection.observe().subscribe(dfd.rejectOnError(({ adds, updates, addedToTracked, movedInTracked}: TrackableStoreDelta<ItemType>) => {
-				if (ignoreFirst) {
-					ignoreFirst = false;
-					return;
-				}
+			trackedCollection.observe()
+				.subscribe(dfd.rejectOnError(
+					({ adds, updates, addedToTracked, movedInTracked }: TrackableStoreDelta<ItemType>) => {
+						if (ignoreFirst) {
+							ignoreFirst = false;
+							return;
+						}
 
-				if (add) {
-					assert.deepEqual(adds, data.slice(1), 'Should have included adds');
-					assert.deepEqual(addedToTracked, data.slice(1).map((item, index) => ({
-						id: item.id, item: item, index: index
-					})), 'Should have included items added to tracked');
-					add = false;
-				}
-				else {
-					assert.strictEqual(adds.length, 0, 'Shouldn\'t have included any adds');
-					assert.deepEqual(updates, updates, 'Should have included updates');
-					assert.deepEqual(addedToTracked, [ updates[0] ].map((item, index) => ({
-						id: item.id, item: item, index: 0
-					})), 'Should have included items added to tracked');
-					assert.deepEqual(movedInTracked, updates.slice(1).map((item, index) => ({
-						id: item.id, item: item, previousIndex: index, index: index + 1
-					})), 'Should have included items moved in tracked');
-					dfd.resolve();
-				}
-			}));
+						if (add) {
+							assert.deepEqual(adds, data.slice(1), 'Should have included adds');
+							assert.deepEqual(addedToTracked, data.slice(1).map((item, index) => ({
+								id: item.id, item: item, index: index
+							})), 'Should have included items added to tracked');
+							add = false;
+						}
+						else {
+							assert.strictEqual(adds.length, 0, 'Shouldn\'t have included any adds');
+							assert.deepEqual(updates, updates, 'Should have included updates');
+							assert.deepEqual(addedToTracked, [updates[0]].map((item, index) => ({
+								id: item.id, item: item, index: 0
+							})), 'Should have included items added to tracked');
+							assert.deepEqual(movedInTracked, updates.slice(1).map((item, index) => ({
+								id: item.id, item: item, previousIndex: index, index: index + 1
+							})), 'Should have included items moved in tracked');
+							dfd.resolve();
+						}
+					}
+				));
 
-			trackableQueryStore.add(data).then(() => {
-				setTimeout(() => {
-					trackableQueryStore.put(updates);
-				}, 50);
-			});
+			trackableQueryStore.add(data)
+				.then(() => {
+					setTimeout(() => {
+						trackableQueryStore.put(updates);
+					}, 50);
+				});
 		}
 	};
 });

@@ -47,71 +47,62 @@ registerSuite({
 	name: 'sort',
 
 	'sort with property': {
-		'sort in default order': function() {
+		'sort in default order'() {
 			assert.deepEqual(createSort<SimpleObj>('key1').apply(getSimpleList()),
 				[ { key1: 'a', id: 3 }, { key1: 'b', id: 1 }, { key1: 'c', id: 2 } ]);
 		},
-		'sort in ascending order': function() {
+		'sort in ascending order'() {
 			assert.deepEqual(createSort<SimpleObj>('key1', false).apply(getSimpleList()),
 				[ { key1: 'a', id: 3 }, { key1: 'b', id: 1 }, { key1: 'c', id: 2 } ]);
 		},
-		'sort in decending order': function() {
+		'sort in decending order'() {
 			assert.deepEqual(createSort<SimpleObj>('key1', true).apply(getSimpleList()),
 				[ { key1: 'c', id: 2 }, { key1: 'b', id: 1 }, { key1: 'a', id: 3 } ]);
 		},
 
-		'sort with same order': function() {
-			const sameKeyList = getSimpleList().map( function({ id }) { return {
-				id,
-				key1: 'd'
-			}; } );
+		'sort with same order'() {
+			const sameKeyList = getSimpleList().map(({ id }) => ({ id, key1: 'd' }));
 			assert.deepEqual(createSort<SimpleObj>('key1', true).apply(sameKeyList),
 				[ { key1: 'd', id: 1 }, { key1: 'd', id: 2 }, { key1: 'd', id: 3 } ]);
 		},
-		'sort with null property value': function() {
-			const sameKeyList = getSimpleList().map( function({ id }) { return {
-				id,
-				key1: null
-			}; } );
+		'sort with null property value'() {
+			const sameKeyList = getSimpleList().map(({ id }) => ({ id, key1: null }));
 			assert.deepEqual(createSort<{ key1: null; id: number }>('key1', true).apply(sameKeyList),
 				[ { key1: null, id: 1 }, { key1: null, id: 2 }, { key1: null, id: 3 } ]);
 		},
-		'sort with partially null property value': function() {
+		'sort with partially null property value'() {
 			const list = [ { key1: null, id: 1 }, { key1: 'a', id: 2 }, { key1: undefined, id: 3 } ];
 			assert.deepEqual(createSort<{ key1: undefined | null | string; id: number }>('key1').apply(list),
 				[ { key1: undefined, id: 3 }, { key1: null, id: 1 }, { key1: 'a', id: 2 } ]);
 		},
-		'sort with undefined property value': function() {
-			const sameKeyList = getSimpleList().map( function({ id }) { return {
-				id,
-				key1: undefined
-			}; } );
+		'sort with undefined property value'() {
+			const sameKeyList = getSimpleList().map(({ id }) => ({ id, key1: undefined }));
 			assert.deepEqual(createSort<{ key1: undefined; id: number }>('key1', true).apply(sameKeyList),
 				[ { key1: undefined, id: 1 }, { key1: undefined, id: 2 }, { key1: undefined, id: 3 } ]);
 		}
 	},
 	'sort with json path': {
-		'sort with one path': function() {
+		'sort with one path'() {
 			assert.deepEqual(createSort<SimpleObj>(new JsonPointer('key1')).apply(getSimpleList()),
 				[ { key1: 'a', id: 3 }, { key1: 'b', id: 1 }, { key1: 'c', id: 2 } ]);
 		},
-		'sort with multiple paths': function() {
+		'sort with multiple paths'() {
 			assert.deepEqual(createSort<NestedObj>(new JsonPointer('key1', 'key2')).apply(nestedList),
 				[ { key1: { key2: 'a' }, id: 3 }, { key1: { key2: 'b' }, id: 1 }, { key1: { key2: 'c' }, id: 2 } ]);
 		}
 	},
 	'sort with comparator': {
-		'sort with default order': function() {
+		'sort with default order'() {
 			assert.deepEqual(createSort<SimpleObj>((a, b) => b.id - a.id).apply(getSimpleList()),
 				[ { key1: 'a', id: 3 }, { key1: 'c', id: 2 }, { key1: 'b', id: 1 } ]);
 		},
-		'sort with flipped order': function() {
+		'sort with flipped order'() {
 			assert.deepEqual(createSort<SimpleObj>((a, b) => b.id - a.id, true).apply(getSimpleList()),
 				[ { key1: 'b', id: 1 }, { key1: 'c', id: 2 }, { key1: 'a', id: 3 } ]);
 		}
 	},
 	'sort with multiple properties': {
-		'with no descending argument': function() {
+		'with no descending argument'() {
 			assert.deepEqual(
 				createSort<any>(['key1', 'key2']).apply(
 					[ { key1: 2, key2: 2}, { key1: 2, key2: 1}, { key1: 1, key2: 2 }, { key1: 1, key2: 1} ]
@@ -121,7 +112,7 @@ registerSuite({
 			);
 		},
 
-		'with one descending argument': function() {
+		'with one descending argument'() {
 			assert.deepEqual(
 				createSort<any>(['key1', 'key2'], true).apply(
 					[ { key1: 1, key2: 1}, { key1: 1, key2: 2 },  { key1: 2, key2: 1}, { key1: 2, key2: 2} ]
@@ -131,7 +122,7 @@ registerSuite({
 			);
 		},
 
-		'with descending array': function() {
+		'with descending array'() {
 			assert.deepEqual(
 				createSort<any>(['key1', 'key2'], [ true, false ]).apply(
 					[ { key1: 1, key2: 2}, { key1: 1, key2: 1 },  { key1: 2, key2: 2}, { key1: 2, key2: 1} ]
@@ -151,8 +142,8 @@ registerSuite({
 			assert.strictEqual(result, 'sort(-key1)');
 		},
 		'Should throw an error when toString is called on a comparator based sort.'(this: any) {
-			const sort = createSort<SimpleObj>(function(a, b) { return 0; });
-			assert.throws(function() {
+			const sort = createSort<SimpleObj>(() => 0);
+			assert.throws(() => {
 				sort.toString();
 			}, /Cannot parse this sort type to an RQL query string/);
 		},

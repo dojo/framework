@@ -28,46 +28,38 @@ export function createData(): ItemType[] {
 
 export function createUpdates(): ItemType[][] {
 	return [
-		createData().map(function ({ id, value, nestedProperty: { value: nestedValue } }) {
-			return {
-				id: id,
-				value: value + 1,
-				nestedProperty: {
-					value: nestedValue
-				}
-			};
-		}),
-		createData().map(function ({ id, value, nestedProperty: { value: nestedValue } }) {
-			return {
-				id: id,
-				value: value + 1,
-				nestedProperty: {
-					value: nestedValue + 1
-				}
-			};
-		})
+		createData().map(({ id, value, nestedProperty: { value: nestedValue } }) => ({
+			id: id,
+			value: value + 1,
+			nestedProperty: {
+				value: nestedValue
+			}
+		})),
+		createData().map(({ id, value, nestedProperty: { value: nestedValue } }) => ({
+			id: id,
+			value: value + 1,
+			nestedProperty: {
+				value: nestedValue + 1
+			}
+		}))
 	];
 }
 export const patches: { id: string; patch: Patch<ItemType, ItemType> }[] =
-	createData().map(function ({ id, value, nestedProperty: { value: nestedValue } }, index) {
-		return {
+	createData().map(({ id, value, nestedProperty: { value: nestedValue } }, index) => ({
+		id: id,
+		patch: diff<ItemType, ItemType>({
 			id: id,
-			patch: diff<ItemType, ItemType>({
-				id: id,
-				value: value + 2,
-				nestedProperty: {
-					value: nestedValue + 2
-				}
-			}, createData()[index])
-		};
-	});
+			value: value + 2,
+			nestedProperty: {
+				value: nestedValue + 2
+			}
+		}, createData()[index])
+	}));
 
-export const patchedItems: ItemType[] = createData().map(function({ id, value, nestedProperty: { value: nestedValue } }) {
-	return {
-		id,
-		value: value + 2,
-		nestedProperty: {
-			value: nestedValue + 2
-		}
-	};
-});
+export const patchedItems: ItemType[] = createData().map(({ id, value, nestedProperty: { value: nestedValue } }) => ({
+	id,
+	value: value + 2,
+	nestedProperty: {
+		value: nestedValue + 2
+	}
+}));

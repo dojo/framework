@@ -30,10 +30,8 @@ function getStoreWithAsyncStorage(test: any, asyncOptions?: {}, useAsync = true)
 registerSuite({
 	name: 'ObservableStore',
 
-	'with basic store': (function() {
-		const ids = createData().map(function(item) {
-			return item.id;
-		});
+	'with basic store': (() => {
+		const ids = createData().map((item) => item.id);
 		return {
 			'should be able to observe the whole store': {
 				'initial updates'(this: any) {
@@ -290,7 +288,7 @@ registerSuite({
 						const { dfd, observableStore } = getStoreAndDfd(this);
 						const updatedItem = createUpdates()[0][0];
 						let firstUpdate = true;
-						observableStore.observe(ids[0]).subscribe(function(update: ItemType) {
+						observableStore.observe(ids[0]).subscribe((update: ItemType) => {
 							try {
 								if (firstUpdate) {
 									firstUpdate = false;
@@ -310,7 +308,7 @@ registerSuite({
 						const { dfd, observableStore } = getStoreAndDfd(this);
 						const patch = patches[0];
 						let firstUpdate = true;
-						observableStore.observe(ids[0]).subscribe(function(update: ItemType) {
+						observableStore.observe(ids[0]).subscribe((update: ItemType) => {
 							if (firstUpdate) {
 								firstUpdate = false;
 								assert.deepEqual(update, createData()[0], 'Didn\'t send the initial notification for item');
@@ -327,7 +325,7 @@ registerSuite({
 						const { dfd, observableStore } = getStoreAndDfd(this);
 						let updatePassed = false;
 						let firstUpdate = true;
-						observableStore.observe(ids[0]).subscribe(function(update: ItemType) {
+						observableStore.observe(ids[0]).subscribe((update: ItemType) => {
 							try {
 								if (firstUpdate) {
 									firstUpdate = false;
@@ -340,7 +338,7 @@ registerSuite({
 							} catch (error) {
 								dfd.reject(error);
 							}
-						}, undefined, dfd.callback(function() {
+						}, undefined, dfd.callback(() => {
 							assert.isTrue(updatePassed, 'Should have updated before completing');
 						}));
 						observableStore.delete(ids[0]);
@@ -366,7 +364,7 @@ registerSuite({
 					observableStore.observe(ids[0]).subscribe(next);
 					observableStore.put(updatedItem);
 				},
-				'observing multiple ids': function(this: any) {
+				'observing multiple ids'(this: any) {
 					const { dfd, observableStore } = getStoreAndDfd(this);
 					const data = createData();
 
@@ -382,7 +380,7 @@ registerSuite({
 					let firstDelete = false;
 					let secondDelete = false;
 					let thirdDelete = false;
-					observableStore.observe(ids).subscribe(function(update: ItemUpdate<ItemType>) {
+					observableStore.observe(ids).subscribe((update: ItemUpdate<ItemType>) => {
 						try {
 							if (initialUpdate < 3) {
 								if (initialUpdate !== 1) {
@@ -442,10 +440,10 @@ registerSuite({
 						} catch (error) {
 							dfd.reject(error);
 						}
-					}, undefined, dfd.callback(function() {
+					}, undefined, dfd.callback(() => {
 						assert.isTrue(
 							putUpdate && patchUpdate && firstDelete && secondDelete && thirdDelete,
-							'Didn\'t send all updates before completing observable'
+							'Didn\'t send all updates before completing _observable'
 						);
 					}));
 					observableStore.put(put);
@@ -499,9 +497,9 @@ registerSuite({
 				const { dfd, observableStore, data } = getStoreAndDfd(this);
 				const idNotExist = '4';
 
-				observableStore.observe(idNotExist).subscribe(function success() {
+				observableStore.observe(idNotExist).subscribe(() => {
 					dfd.reject(new Error('Should not call success callback.'));
-				}, function error() {
+				}, () => {
 					dfd.resolve();
 				});
 			},
@@ -510,8 +508,8 @@ registerSuite({
 				const idNotExist = '4';
 				const idExisting = 'item-2';
 				observableStore.observe([idExisting, idNotExist]).subscribe(
-					function success() {},
-					dfd.callback(function(error: Error) {
+					() => {},
+					dfd.callback((error: Error) => {
 						assert.isTrue(error.message.indexOf(idExisting) === -1, `${idExisting} should not be included in the error message`);
 						assert.isTrue(error.message.indexOf(idNotExist) !== -1, `${idNotExist} should be included in the error message`);
 					}));
@@ -520,7 +518,7 @@ registerSuite({
 				const { dfd, observableStore, data } = getStoreAndDfd(this);
 				const updates = createUpdates();
 				observableStore.put(updates[0][0]);
-				observableStore.put(updates[1][0]).subscribe(dfd.callback(function(result: UpdateResults<ItemType>) {
+				observableStore.put(updates[1][0]).subscribe(dfd.callback((result: UpdateResults<ItemType>) => {
 					assert.deepEqual(result.successfulData[0], updates[1][0], 'Should have taken the second update');
 				}));
 			},
@@ -533,10 +531,13 @@ registerSuite({
 
 				const updates = createUpdates();
 
-				store.add(updates[0][2]).then(
-					dfd.reject,
-					dfd.callback(function (error: Error) {
-						assert.equal(error.message, 'Objects already exist in store', 'Didn\'t reject with appropriate error message');
+				store.add(updates[0][2])
+					.then(dfd.reject, dfd.callback((error: Error) => {
+						assert.equal(
+							error.message,
+							'Objects already exist in store',
+							'Didn\'t reject with appropriate error message'
+						);
 					}));
 			},
 
@@ -671,46 +672,36 @@ registerSuite({
 			storage: failingStorage
 		});
 
-		return observableStore.add(createData()).then(
-			() => {
+		return observableStore.add(createData())
+			.then(() => {
 				throw Error('Promise should not have resolved for add');
-			},
-			(error) => {
+			}, (error) => {
 				assert.equal('Add failed', error.message, 'Wrong error message');
 				return observableStore.delete('1');
-			}
-		).then(
-			() => {
+			})
+			.then(() => {
 				throw Error('Promise should not have resolved for delete');
-			},
-			(error) => {
+			}, (error) => {
 				assert.equal('Delete failed', error.message, 'Wrong error message');
 				return observableStore.put(createData());
-			}
-		).then(
-			() => {
+			})
+			.then(() => {
 				throw Error('Promise should not have resolved for put');
-			},
-			(error) => {
+			}, (error) => {
 				assert.equal('Put failed', error.message, 'Wrong error message');
 				return observableStore.patch(patches);
-			}
-		).then(
-			() => {
+			})
+			.then(() => {
 				throw Error('Promise should not have resolved for patch');
-			},
-			(error) => {
+			}, (error) => {
 				assert.equal('Patch failed', error.message, 'Wrong error message');
 				return observableStore.fetch();
-			}
-		).then(
-			() => {
+			})
+			.then(() => {
 				throw Error('Promise should not have resolved for fetch');
-			},
-			(error) => {
+			}, (error) => {
 				assert.equal('Fetch failed', error.message, 'Wrong error message');
-			}
-		);
+			});
 	},
 
 	'async storage': {
@@ -719,18 +710,22 @@ registerSuite({
 			const data = createData();
 			const updates = createUpdates();
 
-			return observableStore.add(createData()).then(function(result) {
-				assert.deepEqual(result, data, 'Should have returned all added items');
-				return observableStore.put(updates[0]);
-			}).then(function(result) {
-				assert.deepEqual(result, updates[0], 'Should have returned all updated items');
-				return observableStore.delete(['item-2']);
-			}).then(function(result) {
-				assert.deepEqual(result, ['item-2'], 'Should have returned all deleted ids');
-				return observableStore.fetch();
-			}).then(function(result) {
-				assert.deepEqual(result, [ updates[0][0], updates[0][2] ], 'Should have returned all filtered items');
-			});
+			return observableStore.add(createData())
+				.then((result) => {
+					assert.deepEqual(result, data, 'Should have returned all added items');
+					return observableStore.put(updates[0]);
+				})
+				.then((result) => {
+					assert.deepEqual(result, updates[0], 'Should have returned all updated items');
+					return observableStore.delete(['item-2']);
+				})
+				.then((result) => {
+					assert.deepEqual(result, ['item-2'], 'Should have returned all deleted ids');
+					return observableStore.fetch();
+				})
+				.then((result) => {
+					assert.deepEqual(result, [updates[0][0], updates[0][2]], 'Should have returned all filtered items');
+				});
 		},
 
 		'should be able to observe the whole store'(this: any) {
@@ -764,31 +759,33 @@ registerSuite({
 			const updatedItem = createUpdates()[0][0];
 			let firstUpdate = true;
 
-			observableStore.add(data[0]).then(function() {
-				observableStore.observe('item-1').subscribe(function(update: ItemType) {
-					try {
-						if (firstUpdate) {
-							firstUpdate = false;
-							assert.deepEqual(update, createUpdates()[0][0], 'Didn\'t send the updated item in the initial notification');
-							setTimeout(dfd.resolve, 100);
-						}
-						else {
-							throw Error('Should not have received a second update');
-						}
-					} catch (error) {
-						dfd.reject(error);
-					}
-				});
+			observableStore.add(data[0])
+				.then(() => {
+					observableStore.observe('item-1')
+						.subscribe((update: ItemType) => {
+							try {
+								if (firstUpdate) {
+									firstUpdate = false;
+									assert.deepEqual(update, createUpdates()[0][0], 'Didn\'t send the updated item in the initial notification');
+									setTimeout(dfd.resolve, 100);
+								}
+								else {
+									throw Error('Should not have received a second update');
+								}
+							} catch (error) {
+								dfd.reject(error);
+							}
+						});
 
-				observableStore.put(updatedItem);
-			});
+					observableStore.put(updatedItem);
+				});
 		},
 		'should be able to observe with initial items'(this: any) {
 			const { dfd, asyncStorage } = getStoreWithAsyncStorage(this, { put: 50, get: 10 });
 			const observableStore = new ObservableStore({ storage: asyncStorage, data: createData() });
 			const data = createData();
 
-			observableStore.observe('item-1').subscribe(function(update: ItemType) {
+			observableStore.observe('item-1').subscribe((update: ItemType) => {
 				try {
 					assert.deepEqual(update, data[0], 'Didn\'t send the initial notification for item');
 					dfd.resolve();
@@ -799,23 +796,25 @@ registerSuite({
 		},
 		'should only send one update if all items were updated before get finished'(this: any) {
 			const { dfd, observableStore } = getStoreWithAsyncStorage(this, { put: 10, get: 80 });
-			observableStore.add(createData()).then(() => {
-				const updates = createUpdates()[0];
-				const numbersFound = new Set<string>();
-				let updatesReceived = 0;
-				observableStore.observe([ 'item-1', 'item-2', 'item-3' ]).subscribe(dfd.rejectOnError(({ id, item }: ItemUpdate<ItemType>) => {
-					assert.deepEqual(item, updates[Number(id[id.length - 1]) - 1], 'Didn\'t receive correct initial update for item one');
-					updatesReceived++;
-					numbersFound.add(id);
-					if (numbersFound.size === 3) {
-						setTimeout(dfd.resolve, 100);
-					}
-					else if (updatesReceived >= 3) {
-						dfd.reject(Error('Shouldn\'t have received any more updates'));
-					}
-				}));
-				observableStore.put(updates);
-			});
+			observableStore.add(createData())
+				.then(() => {
+					const updates = createUpdates()[0];
+					const numbersFound = new Set<string>();
+					let updatesReceived = 0;
+					observableStore.observe(['item-1', 'item-2', 'item-3'])
+						.subscribe(dfd.rejectOnError(({ id, item }: ItemUpdate<ItemType>) => {
+							assert.deepEqual(item, updates[Number(id[id.length - 1]) - 1], 'Didn\'t receive correct initial update for item one');
+							updatesReceived++;
+							numbersFound.add(id);
+							if (numbersFound.size === 3) {
+								setTimeout(dfd.resolve, 100);
+							}
+							else if (updatesReceived >= 3) {
+								dfd.reject(Error('Shouldn\'t have received any more updates'));
+							}
+						}));
+					observableStore.put(updates);
+				});
 		}
 	}
 });

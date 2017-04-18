@@ -1,6 +1,6 @@
-import { shouldRecurseInto, isEqual } from '../utils';
 import createOperation,  { Operation, OperationType } from './createOperation';
 import JsonPointer from './JsonPointer';
+import { shouldRecurseInto, isEqual } from '../utils';
 
 function _diff(to: any, from: any, startingPath?: JsonPointer): Operation[] {
 	if (!shouldRecurseInto(from) || !shouldRecurseInto(to)) {
@@ -11,7 +11,7 @@ function _diff(to: any, from: any, startingPath?: JsonPointer): Operation[] {
 	const toKeys = Object.keys(to);
 	const operations: Operation[] = [];
 
-	fromKeys.forEach(function(key) {
+	fromKeys.forEach((key) => {
 		if (!isEqual(from[key], to[key])) {
 			if ((key in from) && !(key in to)) {
 				operations.push(createOperation(OperationType.Remove, path.push(key)));
@@ -25,7 +25,7 @@ function _diff(to: any, from: any, startingPath?: JsonPointer): Operation[] {
 		}
 	});
 
-	toKeys.forEach(function(key) {
+	toKeys.forEach((key) => {
 		if (!(key in from) && (key in to)) {
 			operations.push(createOperation(OperationType.Add, path.push(key), undefined, to[key]));
 		}
@@ -41,21 +41,23 @@ export function diff(to: any, from: any = {}) {
 }
 
 export default class Patch<T, U> {
-	operations: Operation[];
+	public readonly operations: Operation[];
+
+	constructor(operations: Operation[]) {
+		this.operations = operations;
+	}
+
 	apply(target: T): U {
 		return this.operations.reduce((prev: any, next: Operation) => next.apply(prev), target);
 	}
+
 	toString() {
 		return '[' + this.operations.reduce((prev: string, next: Operation) => {
-				if (prev) {
-					return prev + ',' + next.toString();
-				}
-				else {
-					return next.toString();
-				}
-			}, '') + ']';
-	}
-	constructor(operations: Operation[]) {
-		this.operations = operations;
+			if (prev) {
+				return prev + ',' + next.toString();
+			}
+
+			return next.toString();
+		}, '') + ']';
 	}
 }

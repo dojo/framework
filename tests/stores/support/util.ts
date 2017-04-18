@@ -6,9 +6,9 @@ export interface Thenable<T> {
 }
 
 export function isEventuallyRejected<T>(promise: Thenable<T>): Thenable<boolean> {
-	return promise.then<any>(function () {
+	return promise.then<any>(() => {
 		throw new Error('unexpected code path');
-	}, function () {
+	}, () => {
 		return true; // expect rejection
 	});
 }

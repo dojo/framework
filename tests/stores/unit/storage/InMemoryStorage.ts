@@ -23,9 +23,7 @@ registerSuite({
 		'Should identify by idProperty if exists.'(this: any) {
 			const storage = new InMemoryStorage<ItemType & { custId: string }>({
 				idProperty: 'custId',
-				idFunction: function(item: ItemType) {
-					return String(item.nestedProperty.value);
-				}
+				idFunction: (item: ItemType) => String(item.nestedProperty.value)
 			});
 			const data = createData().map<ItemType & { custId: string }>((item) => {
 				const newItem = { ...item };
@@ -36,9 +34,7 @@ registerSuite({
 		},
 		'Should identify by idFunction if idProperty doesn\'t exist.'(this: any) {
 			const storage = new InMemoryStorage({
-				idFunction: function(item: ItemType) {
-					return String(item.nestedProperty.value);
-				}
+				idFunction: (item: ItemType) => String(item.nestedProperty.value)
 			});
 			assert.deepEqual(storage.identify(createData()), ['3', '2', '1']);
 		},
@@ -59,31 +55,36 @@ registerSuite({
 		for (let i = 0; i < generateNIds; i++) {
 			ids.push(storage.createId());
 		}
-		Promise.all(ids).then(function(ids) {
-			assert.equal(new Set(ids).size, generateNIds, 'Not all generated IDs were unique');
-		});
+		Promise.all(ids)
+			.then((ids) => {
+				assert.equal(new Set(ids).size, generateNIds, 'Not all generated IDs were unique');
+			});
 	},
 
 	'add': {
 		'Should add new items into storage.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 
-			storage.add(data).then(function(result) {
-				assert.deepEqual(result.successfulData, createData());
-			}).then(dfd.resolve);
+			storage.add(data)
+				.then((result) => {
+					assert.deepEqual(result.successfulData, createData());
+				})
+				.then(dfd.resolve);
 		},
 		'Should return a result of type Add.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 
-			storage.add(data).then(function(result) {
-				assert.deepEqual(result.type, StoreOperation.Add);
-			}).then(dfd.resolve);
+			storage.add(data)
+				.then((result) => {
+					assert.deepEqual(result.type, StoreOperation.Add);
+				})
+				.then(dfd.resolve);
 		},
 		'Should not allow adding existing items by default.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 
 			storage.add(data);
-			storage.add(data).catch(dfd.callback(function (error: Error) {
+			storage.add(data).catch(dfd.callback((error: Error) => {
 				assert.strictEqual(error.message, 'Objects already exist in store');
 			}));
 		}
@@ -93,25 +94,30 @@ registerSuite({
 		'Should put new items into storage.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 
-			storage.put(data).then(function(result) {
-				assert.deepEqual(result.successfulData, createData());
-			}).then(dfd.resolve);
+			return storage.put(data)
+				.then((result) => {
+					assert.deepEqual(result.successfulData, createData());
+				});
 		},
 		'Should return a result of type Put.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 
-			storage.put(data).then(function(result) {
-				assert.deepEqual(result.type, StoreOperation.Put);
-			}).then(dfd.resolve);
+			storage.put(data)
+				.then((result) => {
+					assert.deepEqual(result.type, StoreOperation.Put);
+				})
+				.then(dfd.resolve);
 		},
 		'Should allow adding existing items by default.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			const updates = createUpdates();
 
 			storage.put(data);
-			storage.put(updates[0]).then(function (result) {
-				assert.deepEqual(result.successfulData, updates[0]);
-			}).then(dfd.resolve);
+			storage.put(updates[0])
+				.then((result) => {
+					assert.deepEqual(result.successfulData, updates[0]);
+				})
+				.then(dfd.resolve);
 		}
 	},
 
@@ -119,24 +125,30 @@ registerSuite({
 		'Should get single item.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			storage.add(data);
-			storage.get(['item-1']).then(function(items) {
-				assert.deepEqual(items, [data[0]]);
-			}).then(dfd.resolve);
+			storage.get(['item-1'])
+				.then((items) => {
+					assert.deepEqual(items, [data[0]]);
+				})
+				.then(dfd.resolve);
 		},
 		'Should get multiple items.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			storage.add(data);
-			storage.get(['item-1', 'item-3']).then(function(items) {
-				assert.deepEqual(items, [ data[0], data[2] ]);
-			}).then(dfd.resolve);
+			storage.get(['item-1', 'item-3'])
+				.then((items) => {
+					assert.deepEqual(items, [data[0], data[2]]);
+				})
+				.then(dfd.resolve);
 		},
 		'Should only get existing items back.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			storage.add(data);
 			const idNotExist = '4';
-			storage.get(['item-1', 'item-3', idNotExist]).then(function(items) {
-				assert.deepEqual(items, [ data[0], data[2] ]);
-			}).then(dfd.resolve);
+			storage.get(['item-1', 'item-3', idNotExist])
+				.then((items) => {
+					assert.deepEqual(items, [data[0], data[2]]);
+				})
+				.then(dfd.resolve);
 		}
 	},
 
@@ -144,9 +156,11 @@ registerSuite({
 		'Should fetch all the items when query is not provided.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			storage.add(data);
-			storage.fetch().then(function(items) {
-				assert.deepEqual(items, data);
-			}).then(dfd.resolve);
+			storage.fetch()
+				.then((items) => {
+					assert.deepEqual(items, data);
+				})
+				.then(dfd.resolve);
 		},
 		'Should fetch queried items when a query is provided.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
@@ -157,9 +171,11 @@ registerSuite({
 				.withQuery( createRange<ItemType>(1, 1) );
 
 			storage.add(data);
-			storage.fetch(query).then(function(items) {
-				assert.deepEqual(items, [createData()[0]]);
-			}).then(dfd.resolve);
+			storage.fetch(query)
+				.then((items) => {
+					assert.deepEqual(items, [createData()[0]]);
+				})
+				.then(dfd.resolve);
 		}
 	},
 
@@ -167,54 +183,62 @@ registerSuite({
 		'Should delete items from storage.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 			storage.add(data);
-			storage.delete(['item-1', 'item-3']).then(function(result) {
-				assert.deepEqual(result.successfulData, [ 'item-1', 'item-3' ]);
-			}).then(dfd.resolve);
+			storage.delete(['item-1', 'item-3'])
+				.then((result) => {
+					assert.deepEqual(result.successfulData, ['item-1', 'item-3']);
+				})
+				.then(dfd.resolve);
 		},
 		'Should return a result of type Delete.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 
 			storage.add(data);
-			storage.delete(['item-1', 'item-3']).then(function(result) {
-				assert.deepEqual(result.type, StoreOperation.Delete);
-			}).then(dfd.resolve);
+			storage.delete(['item-1', 'item-3'])
+				.then((result) => {
+					assert.deepEqual(result.type, StoreOperation.Delete);
+				})
+				.then(dfd.resolve);
 		},
 		'Should return empty array when deleting non-existing items.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 
 			storage.add(data);
-			storage.delete(['4']).then(function(result) {
-				assert.lengthOf(result.successfulData, 0);
-			}).then(dfd.resolve);
+			storage.delete(['4'])
+				.then((result) => {
+					assert.lengthOf(result.successfulData, 0);
+				})
+				.then(dfd.resolve);
 		}
 	},
 
 	'patch': {
 		'Should return patched/updated items.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
-			const expectedItems = data.map(function( {id, value, nestedProperty: { value: nestedValue }} ) {
-				return {
-					id,
-					value: value + 2,
-					nestedProperty: {
-						value: nestedValue + 2
-					}
-				};
-			});
+			const expectedItems = data.map(({ id, value, nestedProperty: { value: nestedValue } }) => ({
+				id,
+				value: value + 2,
+				nestedProperty: {
+					value: nestedValue + 2
+				}
+			}));
 
 			storage.add(data);
-			storage.patch(patches).then(function(result) {
-				assert.deepEqual(result.successfulData, expectedItems);
-			}).then(dfd.resolve);
+			storage.patch(patches)
+				.then((result) => {
+					assert.deepEqual(result.successfulData, expectedItems);
+				})
+				.then(dfd.resolve);
 		},
 
 		'Should return a result of type Patch.'(this: any) {
 			const { dfd, storage, data } = getStorageAndDfd(this);
 
 			storage.add(data);
-			storage.patch(patches).then(function(result) {
-				assert.deepEqual(result.type, StoreOperation.Patch);
-			}).then(dfd.resolve);
+			storage.patch(patches)
+				.then((result) => {
+					assert.deepEqual(result.type, StoreOperation.Patch);
+				})
+				.then(dfd.resolve);
 		}
 	}
 });

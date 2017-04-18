@@ -1,7 +1,5 @@
 export function navigate(path: JsonPointer, target: any) {
-	return path.segments.reduce(function(prev: any, next: string) {
-		return prev ? prev[next] : prev;
-	}, target);
+	return path.segments.reduce((prev: any, next: string) => prev ? prev[next] : prev, target);
 }
 
 function decode(segment: string) {
@@ -13,15 +11,22 @@ function encode(segment: string) {
 }
 
 function toString(...segments: string[]): string {
-	return segments.reduce(function(prev, next) {
-		return prev + '/' + encode(next);
-	});
+	return segments.reduce((prev, next) => prev + '/' + encode(next));
 }
 
 export default class JsonPointer {
 	private _segments: string[];
+
 	get segments() {
 		return this._segments.map((segment) => decode(segment));
+	}
+
+	constructor(...segments: string[]) {
+		this._segments = segments;
+	}
+
+	pop() {
+		return new JsonPointer(...this._segments.slice(0, this._segments.length - 1));
 	}
 
 	push(segment: string) {
@@ -30,12 +35,5 @@ export default class JsonPointer {
 
 	toString() {
 		return toString(...this._segments);
-	}
-
-	pop() {
-		return new JsonPointer(...this._segments.slice(0, this._segments.length - 1));
-	}
-	constructor(...segments: string[]) {
-		this._segments = segments;
 	}
 }

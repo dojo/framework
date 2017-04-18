@@ -1,8 +1,7 @@
-import InMemoryStorage from './InMemoryStorage';
-import { StoreOptions, CrudOptions, StoreOperation, UpdateResults, FetchResult } from '../interfaces';
-import {Query, QueryType} from '../interfaces';
-import Set from '@dojo/shim/Set';
 import Promise from '@dojo/shim/Promise';
+import Set from '@dojo/shim/Set';
+import InMemoryStorage from './InMemoryStorage';
+import { StoreOptions, CrudOptions, StoreOperation, UpdateResults, FetchResult, Query, QueryType } from '../interfaces';
 import Patch from '../patch/Patch';
 import CompoundQuery from '../query/CompoundQuery';
 import { Filter, FilterType, FilterChainMember, BooleanOp, SimpleFilter } from '../query/createFilter';
@@ -17,37 +16,42 @@ export interface IndexedDBOptions<T, O extends CrudOptions> extends StoreOptions
 	 * with other existing databases
 	 */
 	dbName?: string;
+
+	/**
+	 * Indicates which properties to create an index for
+	 */
+	indices?: Indices<T>;
+
 	/**
 	 * The name of the object store in which items should be stored. If not provided this will default
 	 * to 'items'
 	 */
 	objectStoreName?: string;
+
 	/**
 	 * The version of the database if it already exists but the object store needs to be created. If this
 	 * is creating a new database, or accessing an existing database that already has an objectStore for
 	 * items, then this is not required.
 	 */
 	version?: number;
-	/**
-	 * Indicates which properties to create an index for
-	 */
-	indices?: Indices<T>;
-
 }
 
 export interface IndexQueryDescriptor {
 	/**
-	 * Key range to use for the query
+	 * Indicates whether the first of two filters was used.
 	 */
-	keyRange?: IDBKeyRange;
+	firstFilterUsed?: boolean;
+
 	/**
 	 * The index to query against
 	 */
 	index?: IDBIndex;
+
 	/**
-	 * Indicates whether the first of two filters was used.
+	 * Key range to use for the query
 	 */
-	firstFilterUsed?: boolean;
+	keyRange?: IDBKeyRange;
+
 	/**
 	 * Indicates whether the second of two filters was used
 	 */
@@ -62,8 +66,8 @@ export interface IndexQueryDescriptor {
  * cursor has completed iterating over the available items and a candidate set of data has been constructed.
  */
 interface DividedQuery<T> {
-	initialFilters: SimpleFilter<T>[];
 	initialQueries: Query<T>[];
+	initialFilters: SimpleFilter<T>[];
 	inMemoryQuery?: Query<T>;
 }
 
@@ -71,10 +75,10 @@ interface DividedQuery<T> {
  * Describes the properties of an IDBKeyRange
  */
 interface KeyRangeDescriptor {
-	upperBound?: any;
 	lowerBound?: any;
-	upperInclusive?: boolean;
 	lowerInclusive?: boolean;
+	upperBound?: any;
+	upperInclusive?: boolean;
 }
 
 /**
@@ -310,31 +314,32 @@ function divideQuery<T>(query?: Query<T>): DividedQuery<T>  {
 
 export default class IndexedDBStorage<T> extends InMemoryStorage<T> {
 	/**
-	 * The name of the database
+	 * The database
 	 */
-	private dbName: string;
-
-	/**
-	 * The name of the object store in which items are stored
-	 */
-	private objectStoreName: string;
+	private _db: IDBDatabase;
 
 	/**
 	 * A promise that resolves when the database is finished initializing. Subsequent operations will be delayed until
 	 * this promise resolves. If initialization fails, any subsequent operations will return an appropriate error as
 	 * well.
 	 */
-	private dbInitializationPromise: Promise<any>;
+	private _dbInitializationPromise: Promise<any>;
 
 	/**
-	 * The database
+	 * The name of the database
 	 */
-	private db: IDBDatabase;
+	private _dbName: string;
 
 	/**
 	 * Indices used for better query performance
 	 */
-	private indices: Set<string>;
+	private _indices = new Set<string>();
+
+	/**
+	 * The name of the object store in which items are stored
+	 */
+	private _objectStoreName: string;
+
 	constructor(options: IndexedDBOptions<T, CrudOptions> = {}) {
 		super(options);
 		let resolveInitialPromise: Function;
@@ -343,32 +348,31 @@ export default class IndexedDBStorage<T> extends InMemoryStorage<T> {
 			resolveInitialPromise = resolve;
 			rejectInitialPromise = reject;
 		});
-		this.dbName = options.dbName || 'store-database';
-		this.objectStoreName = options.objectStoreName || 'items';
-		this.dbInitializationPromise = initializationPromise;
-		this.indices = new Set<keyof T>();
+		this._dbName = options.dbName || 'store-database';
+		this._objectStoreName = options.objectStoreName || 'items';
+		this._dbInitializationPromise = initializationPromise;
 
 		// IE doesn't respond well to passing an undefined version, so check whether it was provided before opening
 		// the connection
-		const request = options.version ? indexedDB.open(this.dbName, options.version) : indexedDB.open(this.dbName);
+		const request = options.version ? indexedDB.open(this._dbName, options.version) : indexedDB.open(this._dbName);
 		let upgrading = false;
 
 		request.onupgradeneeded = (event: any) => {
 			upgrading = true;
 			const db = event.target.result;
-			this.db = db;
+			this._db = db;
 
 			let objectStore: IDBObjectStore;
-			if (!db.objectStoreNames.contains(this.objectStoreName)) {
-				objectStore = db.createObjectStore(this.objectStoreName);
+			if (!db.objectStoreNames.contains(this._objectStoreName)) {
+				objectStore = db.createObjectStore(this._objectStoreName);
 			}
 			else {
-				objectStore = request.transaction.objectStore(this.objectStoreName);
+				objectStore = request.transaction.objectStore(this._objectStoreName);
 			}
 			const indices = options && options.indices;
 			if (indices) {
 				Object.keys(indices).forEach((index) => {
-					this.indices.add(index);
+					this._indices.add(index);
 					if (!objectStore.indexNames.contains(index)) {
 						objectStore.createIndex(index, index);
 					}
@@ -379,7 +383,7 @@ export default class IndexedDBStorage<T> extends InMemoryStorage<T> {
 
 		createRequestPromise(request).then(
 			(db) => {
-				this.db = db;
+				this._db = db;
 				resolveInitialPromise(db);
 				return db;
 			},
@@ -390,20 +394,51 @@ export default class IndexedDBStorage<T> extends InMemoryStorage<T> {
 	}
 
 	/**
+	 * Creates a cursor request based on the provided filters, and object store.
+	 * Potentially modifies initialFilters depending on whether some filters can be used to generate an IDBKeyRange to apply
+	 * to the DB
+	 * @param initialFilters
+	 * @param objectStore
+	 * @returns {IDBRequest}
+	 */
+	protected _createCursorRequest(initialFilters: SimpleFilter<T>[], objectStore: IDBObjectStore) {
+		const filterChain = initialFilters[0] && initialFilters[0].filterChain;
+		let { firstFilter, secondFilter } = getFilters(filterChain);
+		if (filterChain && !filterChain.length) {
+			initialFilters.shift();
+		}
+		let { keyRange, index, firstFilterUsed, secondFilterUsed } = this._getKeyRangeAndIndex(
+			objectStore, firstFilter, secondFilter
+		);
+		if (!secondFilterUsed && secondFilter) {
+			initialFilters.unshift(secondFilter);
+		}
+		if (!firstFilterUsed && firstFilter) {
+			initialFilters.unshift(firstFilter);
+		}
+		if (keyRange && index) {
+			return index.openCursor(keyRange);
+		}
+		else {
+			return objectStore.openCursor();
+		}
+	}
+
+	/**
 	 * Determines whether the provided filter can be applied as a query on an indexed property in the object
 	 * store, and if so applies it and returns . Otherwise returns undefined
 	 * @param objectStore The object store to retrieve an index from
 	 * @param filter The first filter to use to generate a key range
 	 * @param secondFilter An additional filter to use to generate a key range
 	 */
-	protected getKeyRangeAndIndex(
+	protected _getKeyRangeAndIndex(
 		objectStore: IDBObjectStore, filter?: SimpleFilter<any>, secondFilter?: SimpleFilter<any>
 	): IndexQueryDescriptor {
 		const valueOne = filter && filter.value;
 		if (filter && typeof valueOne !== 'undefined') {
 			const pathOne = getKey(filter);
 			if (pathOne) {
-				if (this.indices.has(pathOne) && objectStore.indexNames.contains(pathOne)) {
+				if (this._indices.has(pathOne) && objectStore.indexNames.contains(pathOne)) {
 					const index = objectStore.index(pathOne);
 					if (filter.filterType === FilterType.EqualTo) {
 						return { keyRange: IDBKeyRange.only(filter.value), index, firstFilterUsed: true };
@@ -430,17 +465,17 @@ export default class IndexedDBStorage<T> extends InMemoryStorage<T> {
 
 	/**
 	 * Creates a new transaction, and returns a promise that will resolve when that transaction is completed, and a reference
-	 * to the object store specified by the objectStoreName property. Provides a read only transaction
+	 * to the object store specified by the _objectStoreName property. Provides a read only transaction
 	 * unless write access is required.
 	 * @param needsWriteAccess Whether this request requires write access.
 	 */
-	protected getTransactionAndObjectStore<T>(needsWriteAccess?: boolean) {
-		const db = this.db;
+	protected _getTransactionAndObjectStore<T>(needsWriteAccess?: boolean) {
+		const db = this._db;
 		if (!db) {
 			throw Error('Can\'t create transaction because database does not exist');
 		}
 		const transaction = needsWriteAccess ?
-			db.transaction(this.objectStoreName, 'readwrite') : db.transaction(this.objectStoreName);
+			db.transaction(this._objectStoreName, 'readwrite') : db.transaction(this._objectStoreName);
 		const transactionPromise = new Promise((resolve, reject) => {
 			transaction.oncomplete = () => {
 				resolve();
@@ -449,38 +484,29 @@ export default class IndexedDBStorage<T> extends InMemoryStorage<T> {
 				reject(event.target.error);
 			};
 		});
-		return { transactionPromise, objectStore: transaction.objectStore(this.objectStoreName) };
+		return { transactionPromise, objectStore: transaction.objectStore(this._objectStoreName) };
 	}
 
-	/**
-	 * Creates a cursor request based on the provided filters, and object store.
-	 * Potentially modifies initialFilters depending on whether some filters can be used to generate an IDBKeyRange to apply
-	 * to the DB
-	 * @param initialFilters
-	 * @param objectStore
-	 * @returns {IDBRequest}
-	 */
-	protected createCursorRequest(initialFilters: SimpleFilter<T>[], objectStore: IDBObjectStore) {
-		const filterChain = initialFilters[0] && initialFilters[0].filterChain;
-		let { firstFilter, secondFilter } = getFilters(filterChain);
-		if (filterChain && !filterChain.length) {
-			initialFilters.shift();
-		}
-		let { keyRange, index, firstFilterUsed, secondFilterUsed } = this.getKeyRangeAndIndex(
-			objectStore, firstFilter, secondFilter
-		);
-		if (!secondFilterUsed && secondFilter) {
-			initialFilters.unshift(secondFilter);
-		}
-		if (!firstFilterUsed && firstFilter) {
-			initialFilters.unshift(firstFilter);
-		}
-		if (keyRange && index) {
-			return index.openCursor(keyRange);
-		}
-		else {
-			return objectStore.openCursor();
-		}
+	add(items: T[], { rejectOverwrite = true, id }: CrudOptions = { rejectOverwrite: true } ): Promise<UpdateResults<T>> {
+		return this.put(items, { rejectOverwrite, id })
+			.then((results) => {
+				results.type = StoreOperation.Add;
+				return results;
+			});
+	}
+
+	delete(ids: string[]): Promise<UpdateResults<T>> {
+		return this._dbInitializationPromise.then(() => {
+			const { transactionPromise, objectStore } = this._getTransactionAndObjectStore(true);
+			return Promise.all(ids.map((id) => createRequestPromise(
+					objectStore.delete(id), transactionPromise
+				)
+				.then(() => id)))
+				.then((ids) => ({
+					type: StoreOperation.Delete,
+					successfulData: ids
+				}));
+		});
 	}
 
 	fetch(query?: Query<T>): FetchResult<T> {
@@ -490,10 +516,10 @@ export default class IndexedDBStorage<T> extends InMemoryStorage<T> {
 			resolveTotalLength = resolve;
 			rejectTotalLength = reject;
 		});
-		const fetchResult: FetchResult<T> = <any> this.dbInitializationPromise.then(
+		const fetchResult: FetchResult<T> = <any> this._dbInitializationPromise.then(
 			() => {
 				return new Promise((resolve) => {
-					const { objectStore } = this.getTransactionAndObjectStore();
+					const { objectStore } = this._getTransactionAndObjectStore();
 					const request = objectStore.count();
 					const totalLengthPromise = createRequestPromise(request);
 					totalLengthPromise.then(() => {
@@ -502,7 +528,7 @@ export default class IndexedDBStorage<T> extends InMemoryStorage<T> {
 					let items: T[] = [];
 					const { initialQueries, initialFilters, inMemoryQuery } = divideQuery(query);
 
-					this.createCursorRequest(initialFilters, objectStore).onsuccess = (event: any) => {
+					this._createCursorRequest(initialFilters, objectStore).onsuccess = (event: any) => {
 						const cursor = event.target.result;
 						if (cursor) {
 							// Apply filters and if the new item is not filtered, apply other
@@ -533,75 +559,50 @@ export default class IndexedDBStorage<T> extends InMemoryStorage<T> {
 	}
 
 	get(ids: string[]): Promise<T[]> {
-		return this.dbInitializationPromise.then(() => {
-			const { objectStore } = this.getTransactionAndObjectStore();
+		return this._dbInitializationPromise.then(() => {
+			const { objectStore } = this._getTransactionAndObjectStore();
 			return Promise.all(ids.map((id) => {
-				const request = objectStore.get(id);
-				return createRequestPromise(request).then(function() {
-					return request.result;
-				});
-			}))
+					const request = objectStore.get(id);
+					return createRequestPromise(request).then(() => request.result);
+				}))
 				.then((data) => data.filter((item) => Boolean(item)));
 		});
 	}
 
-	put(items: T[], options?: CrudOptions): Promise<UpdateResults<T>> {
-		return this.dbInitializationPromise.then(() => {
-			const { transactionPromise, objectStore } = this.getTransactionAndObjectStore(true);
-			const rejectOverwrite = options && options.rejectOverwrite;
-			const ids = this.identify(items);
-			return Promise.all(items.map((item, index) => {
-				const id = ids[index];
-				return createRequestPromise(
-					rejectOverwrite ? objectStore.add(item, id) : objectStore.put(item, id), transactionPromise
-				)
-					.then(() => item);
-			}))
+	patch(updates: { id: string; patch: Patch<T, T> }[]): Promise<UpdateResults<T>> {
+		return this._dbInitializationPromise.then(() => {
+			const { transactionPromise, objectStore } = this._getTransactionAndObjectStore(false);
+			return Promise.all(updates.map((update) =>
+					createRequestPromise(objectStore.get(update.id), transactionPromise).then((item) => {
+						const { transactionPromise, objectStore } = this._getTransactionAndObjectStore(true);
+						const updated = update.patch.apply(item);
+						return createRequestPromise(
+								objectStore.put(updated, update.id), transactionPromise
+							)
+							.then(() => updated);
+					})
+				))
 				.then((updatedItems) => ({
-					type: StoreOperation.Put,
+					type: StoreOperation.Patch,
 					successfulData: updatedItems
 				}));
 		});
 	}
 
-	add(items: T[], { rejectOverwrite = true, id }: CrudOptions = { rejectOverwrite: true } ): Promise<UpdateResults<T>> {
-		return this.put(items, { rejectOverwrite, id }).then((results) => {
-			results.type = StoreOperation.Add;
-			return results;
-		});
-	}
-
-	delete(ids: string[]): Promise<UpdateResults<T>> {
-		return this.dbInitializationPromise.then(() => {
-			const { transactionPromise, objectStore } = this.getTransactionAndObjectStore(true);
-			return Promise.all(ids.map((id) => createRequestPromise(
-				objectStore.delete(id), transactionPromise
-			)
-				.then(() => id)))
-				.then((ids) => ({
-					type: StoreOperation.Delete,
-					successfulData: ids
-				}));
-		});
-	}
-
-	patch(updates: { id: string; patch: Patch<T, T> }[]): Promise<UpdateResults<T>> {
-		return this.dbInitializationPromise.then(() => {
-			const { transactionPromise, objectStore } = this.getTransactionAndObjectStore(false);
-			return Promise.all(updates.map(
-				(update) => createRequestPromise(objectStore.get(update.id), transactionPromise).then(
-					(item) => {
-						const { transactionPromise, objectStore } = this.getTransactionAndObjectStore(true);
-						const updated = update.patch.apply(item);
-						return createRequestPromise(
-							objectStore.put(updated, update.id), transactionPromise
+	put(items: T[], options?: CrudOptions): Promise<UpdateResults<T>> {
+		return this._dbInitializationPromise.then(() => {
+			const { transactionPromise, objectStore } = this._getTransactionAndObjectStore(true);
+			const rejectOverwrite = options && options.rejectOverwrite;
+			const ids = this.identify(items);
+			return Promise.all(items.map((item, index) => {
+					const id = ids[index];
+					return createRequestPromise(
+							rejectOverwrite ? objectStore.add(item, id) : objectStore.put(item, id), transactionPromise
 						)
-							.then(() => updated);
-					}
-				)
-			))
+						.then(() => item);
+				}))
 				.then((updatedItems) => ({
-					type: StoreOperation.Patch,
+					type: StoreOperation.Put,
 					successfulData: updatedItems
 				}));
 		});

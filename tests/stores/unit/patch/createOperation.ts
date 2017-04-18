@@ -41,7 +41,7 @@ registerSuite({
 		'Replace operation should throw an error when target property is missing.'(this: any) {
 			const target = {};
 			const operation = createOperation(OperationType.Replace, ['prop1'], undefined, 2);
-			assert.throws(function() {
+			assert.throws(() => {
 				operation.apply(target);
 			}, /Cannot replace undefined path/);
 		}
@@ -64,7 +64,7 @@ registerSuite({
 		},
 
 		'Copy operation should throw an error when fromPath is missing.'(this: any) {
-			assert.throws(function() {
+			assert.throws(() => {
 				createOperation(OperationType.Copy, ['any'], <any> null);
 			}, /From value is required/);
 		},
@@ -72,7 +72,7 @@ registerSuite({
 		'Copy operation should throw an error when source property is missing.'(this: any) {
 			const target = {};
 			const operation = createOperation(OperationType.Copy, ['prop2'], ['prop1']);
-			assert.throws(function() {
+			assert.throws(() => {
 				operation.apply(target);
 			}, /Cannot move from undefined path/);
 
@@ -95,7 +95,7 @@ registerSuite({
 		},
 
 		'Move operation should throw an error when fromPath is missing.'(this: any) {
-			assert.throws(function() {
+			assert.throws(() => {
 				createOperation(OperationType.Move, ['any'], <any> null);
 			}, /From value is required/);
 		},
@@ -103,7 +103,7 @@ registerSuite({
 		'Move operation should throw an error when source property is missing.'(this: any) {
 			const target = {};
 			const operation = createOperation(OperationType.Move, ['prop2'], ['prop1']);
-			assert.throws(function() {
+			assert.throws(() => {
 				operation.apply(target);
 			}, /Cannot move from undefined path/);
 
@@ -127,14 +127,14 @@ registerSuite({
 	},
 	'Should throw an error when target is null.'(this: any) {
 		const operation = createOperation(OperationType.Add, ['prop1'], undefined, 1);
-		assert.throws(function() {
+		assert.throws(() => {
 			operation.apply(<any> null);
 		}, /Invalid path/);
 	},
 	'Should throw an error when path is not found.'(this: any) {
 		const target = {};
 		const operation = createOperation(OperationType.Add, ['prop1', 'prop2'], undefined, 1);
-		assert.throws(function() {
+		assert.throws(() => {
 			operation.apply(target);
 		}, /Invalid path/);
 	},

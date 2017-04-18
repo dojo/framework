@@ -3,8 +3,8 @@ import JsonPointer, { navigate } from '../patch/JsonPointer';
 
 export type SortParameter<T> = ((a: T, b: T) => number) | keyof T | JsonPointer;
 export interface Sort<T> extends Query<T> {
-	readonly sortParameters: SortParameter<T>[];
 	readonly descending?: boolean[];
+	readonly sortParameters: SortParameter<T>[];
 }
 
 function isDescending(descending: boolean[] | undefined, index: number) {
@@ -25,7 +25,8 @@ function createSort<T>(
 	serializer?: (sort: Sort<T>) => string): Sort<T> {
 
 	let anyAreFunction = false;
-	const sortParameterArray: SortParameter<T>[] = Array.isArray(comparatorOrProperty) ? comparatorOrProperty : [ comparatorOrProperty ];
+	const sortParameterArray: SortParameter<T>[] = Array.isArray(comparatorOrProperty) ?
+		comparatorOrProperty : [ comparatorOrProperty ];
 	const descendingArray: boolean[] | undefined = descending ?
 		(Array.isArray(descending) ? descending : [ descending ]) : undefined;
 	const comparators: ((a: T, b: T) => number)[] = sortParameterArray.map((comparatorOrProperty, index) => {
@@ -45,9 +46,7 @@ function createSort<T>(
 			}
 			else {
 				pointer = <JsonPointer> comparatorOrProperty;
-				comparator = function(a: T, b: T) {
-					return sortValue(navigate(pointer, a), navigate(pointer, b), Boolean(descending));
-				};
+				comparator = (a: T, b: T) => sortValue(navigate(pointer, a), navigate(pointer, b), Boolean(descending));
 			}
 		}
 
@@ -77,9 +76,7 @@ function createSort<T>(
 }
 
 function flip<T>(comparator: (a: T, b: T) => number) {
-	return function(a: T, b: T) {
-		return -1 * comparator(a, b);
-	};
+	return (a: T, b: T) => -1 * comparator(a, b);
 }
 
 function serialize(sort: Sort<any>) {

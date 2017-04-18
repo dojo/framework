@@ -1,35 +1,39 @@
-import StoreBase from './StoreBase';
+import { after } from '@dojo/core/aspect';
 import { Observable, Observer } from '@dojo/core/Observable';
-import Map from '@dojo/shim/Map';
-import Set from '@dojo/shim/Set';
-import Promise from '@dojo/shim/Promise';
-import { CrudOptions, Store, StoreOptions, UpdateResults, Query, PatchArgument } from '../interfaces';
 import { debounce } from '@dojo/core/util';
-import { after } from 'dojo/aspect';
+import Map from '@dojo/shim/Map';
+import Promise from '@dojo/shim/Promise';
+import Set from '@dojo/shim/Set';
+import { CrudOptions, Store, StoreOptions, UpdateResults, Query, PatchArgument } from '../interfaces';
+import StoreBase from './StoreBase';
 
 export interface StoreDelta<T> {
-	/**
-	 * Items updated since the last delta
-	 */
-	updates: T[];
-	/**
-	 * The IDs of any deleted items
-	 */
-	deletes: string[];
 	/**
 	 * New items added since the last delta
 	 */
 	adds: T[];
-	/**
-	 * The state of the store before any of these updates.
-	 */
-	beforeAll: T[];
+
 	/**
 	 * The state of the store after all of these updates.  Doesn't necessarily
 	 * reflect the current state of the underlying Storage, as it updates the local
 	 * storage based on the known updates if fetchAroundUpdates is false
 	 */
 	afterAll: T[];
+
+	/**
+	 * The state of the store before any of these updates.
+	 */
+	beforeAll: T[];
+
+	/**
+	 * The IDs of any deleted items
+	 */
+	deletes: string[];
+
+	/**
+	 * Items updated since the last delta
+	 */
+	updates: T[];
 }
 
 /**
@@ -60,12 +64,14 @@ export function mergeDeltas<T>(
 	function takeLastItem(items: T[]): T[] {
 		const found: { [ index: string ]: boolean} = {};
 		const ids = instance.identify(items);
-		return items.reverse().filter((_, index) => {
-			const id = ids[index];
-			const exists = Boolean(found[id]);
-			found[id] = true;
-			return !exists;
-		}).reverse();
+		return items.reverse()
+			.filter((_, index) => {
+				const id = ids[index];
+				const exists = Boolean(found[id]);
+				found[id] = true;
+				return !exists;
+			})
+			.reverse();
 	}
 
 	/**
@@ -75,11 +81,13 @@ export function mergeDeltas<T>(
 	 */
 	function takeLastId(ids: string[]): string[] {
 		const found: { [ index: string ]: boolean} = {};
-		return ids.reverse().filter((id) => {
-			const exists = Boolean(found[id]);
-			found[id] = true;
-			return !exists;
-		}).reverse();
+		return ids.reverse()
+			.filter((id) => {
+				const exists = Boolean(found[id]);
+				found[id] = true;
+				return !exists;
+			})
+			.reverse();
 	}
 
 	/**
@@ -140,10 +148,11 @@ export function mergeDeltas<T>(
 		}, new Map<string, any>());
 		const addIds = instance.identify(newAdds);
 		const updateIds = instance.identify(newUpdates);
-		const adds = addIds.concat(updateIds).reduce((prev, next) => {
-			prev.set(next, null);
-			return prev;
-		}, new Map<string, any>());
+		const adds = addIds.concat(updateIds)
+			.reduce((prev, next) => {
+				prev.set(next, null);
+				return prev;
+			}, new Map<string, any>());
 		const updatedUpdates = newUpdates.slice();
 		return {
 			oldDeletes: oldDeletes.filter((id) => !adds.has(id)),
@@ -166,11 +175,11 @@ export function mergeDeltas<T>(
 	const oldUpdates = removeOutdatedItems(newUpdate.deletes, currentUpdate.updates);
 	const { newDeletes, oldAdds } = removeCancellingUpdates(newUpdate.deletes, currentUpdate.adds);
 	return {
-		updates: takeLastItem([ ...oldUpdates, ...newUpdates ]),
 		adds: takeLastItem([ ...oldAdds, ...newAdds ]),
-		deletes: takeLastId([ ...oldDeletes, ...newDeletes ]),
+		afterAll: newUpdate.afterAll,
 		beforeAll: currentUpdate.beforeAll,
-		afterAll: newUpdate.afterAll
+		deletes: takeLastId([ ...oldDeletes, ...newDeletes ]),
+		updates: takeLastItem([ ...oldUpdates, ...newUpdates ])
 	};
 }
 
@@ -193,7 +202,7 @@ export interface ObservableStoreInterface<T, O extends CrudOptions, U extends Up
 	 */
 	observe(): Observable<StoreDelta<T>>;
 	/**
-	 * Receives the current state of the item with the specified ID whenever it is updated. This observable will be
+	 * Receives the current state of the item with the specified ID whenever it is updated. This _observable will be
 	 * completed if the item is deleted
 	 * @param id The ID of the item to observe
 	 */
@@ -201,7 +210,7 @@ export interface ObservableStoreInterface<T, O extends CrudOptions, U extends Up
 	/**
 	 * Receives the current state of the items in an `ItemUpdate` object whenever they are updated. When any of the
 	 * items are deleted an `ItemUpdate` with the item's ID and no item property will be sent out. When all of the
-	 * observed items are deleted the observable will be completed.
+	 * observed items are deleted the _observable will be completed.
 	 * @param ids - The IDS of the items to observe
 	 */
 	observe(ids: string[]): Observable<ItemUpdate<T>>;
@@ -254,75 +263,78 @@ function isObserver<T>(observer: Observer<T> | ObserverSetEntry<T>): observer is
 }
 
 class ObservableStore<T> extends StoreBase<T> implements ObservableStoreInterface<T, CrudOptions, UpdateResults<T>> {
-	protected fetchAroundUpdates: boolean;
 	/**
 	 * A debounced function called to fetch the latest data and send updates to observers after each crud operation,
 	 * if fetchAroundUpdates is true.
 	 */
-	private fetchAndSendUpdates: (store: ObservableStoreInterface<T, CrudOptions, UpdateResults<T>>) => void;
-	/**
-	 * Maps item IDs to observers for that item, or sets of observers. For Single item observers this is a one-to-many
-	 * relationship. For `ObserverSetEntries`, this is a many to many relationship, each item can be observed as a part
-	 * of many sets, and each set is linked to all of the items within it.
-	 */
-	private itemObservers: Map<string, (Observer<T> | ObserverSetEntry<T>)[]>;
-	/**
-	 * All the observers of the store
-	 */
-	private observers: Observer<StoreDelta<T>>[];
-	/**
-	 * The single observable provided to all observers of the store
-	 */
-	private storeObservable: Observable<StoreDelta<T>>;
-	/**
-	 * Updates currently waiting to be merged and sent
-	 */
-	private queuedUpdate?: StoreDelta<T>;
-	/**
-	 * The latest local data
-	 */
-	private localData: T[];
-	/**
-	 * Maps item IDs to indices in `localData`
-	 */
-	private localIndex: Map<string, number>;
-	/**
-	 * When `fetchAroundUpdates` is true, this promise is used to wait for the first fetch before sending out initial
-	 * updates, since `localData` will be out of date as soon as the fetch completes.
-	 */
-	private initialFetch?: Promise<T[]>;
+	private _fetchAndSendUpdates: (store: ObservableStoreInterface<T, CrudOptions, UpdateResults<T>>) => void;
 
 	/**
 	 * Flag indicating that data was passed in the constructor, and we should ignore the first add
 	 *
 	 */
-	private ignoreFirstAdd: boolean;
+	private _ignoreFirstAdd: boolean;
+
+	/**
+	 * When `fetchAroundUpdates` is true, this promise is used to wait for the first fetch before sending out initial
+	 * updates, since `localData` will be out of date as soon as the fetch completes.
+	 */
+	private _initialFetch?: Promise<T[]>;
+
+	/**
+	 * Maps item IDs to observers for that item, or sets of observers. For Single item observers this is a one-to-many
+	 * relationship. For `ObserverSetEntries`, this is a many to many relationship, each item can be observed as a part
+	 * of many sets, and each set is linked to all of the items within it.
+	 */
+	private _itemObservers = new Map<string, (Observer<T> | ObserverSetEntry<T>)[]>();
+
+	/**
+	 * The latest local data
+	 */
+	private _localData: T[] = [];
+
+	/**
+	 * Maps item IDs to indices in `localData`
+	 */
+	private _localIndex = new Map<string, number>();
+
+	/**
+	 * All the observers of the store
+	 */
+	private _observers: Observer<StoreDelta<T>>[] = [];
+
+	/**
+	 * The single _observable provided to all observers of the store
+	 */
+	private _storeObservable: Observable<StoreDelta<T>>;
+
+	/**
+	 * Updates currently waiting to be merged and sent
+	 */
+	private _queuedUpdate?: StoreDelta<T>;
+
+	protected _fetchAroundUpdates: boolean;
 	constructor(options?: ObservableStoreOptions<T, CrudOptions>) {
 		super(options);
 		options = options || {};
-		this.fetchAroundUpdates = Boolean(options.fetchAroundUpdates);
-		this.fetchAndSendUpdates = debounce((store: ObservableStore<T>) => {
+		this._fetchAroundUpdates = Boolean(options.fetchAroundUpdates);
+		this._fetchAndSendUpdates = debounce((store: ObservableStore<T>) => {
 			store.fetch();
 		}, options.fetchAroundUpdateDebounce || 20);
-		this.observers = [];
-		this.localData = [];
-		this.ignoreFirstAdd = Boolean(options.data);
-		this.localIndex = new Map<string, number>();
+		this._ignoreFirstAdd = Boolean(options.data);
 		if (options.fetchAroundUpdates) {
-			this.initialFetch = this.fetch();
+			this._initialFetch = this.fetch();
 		}
-		this.itemObservers = new Map<string, (Observer<T> | ObserverSetEntry<T>)[]>();
-
-		this.storeObservable = new Observable<StoreDelta<T>>((observer: Observer<StoreDelta<T>>) => {
-			this.observers.push(observer);
-			if (this.initialFetch) {
-				this.initialFetch.then(() => {
+		this._storeObservable = new Observable<StoreDelta<T>>((observer: Observer<StoreDelta<T>>) => {
+			this._observers.push(observer);
+			if (this._initialFetch) {
+				this._initialFetch.then(() => {
 					observer.next({
 						updates: [],
 						deletes: [],
 						adds: [],
 						beforeAll: [],
-						afterAll: this.localData.slice()
+						afterAll: this._localData.slice()
 					});
 				});
 			}
@@ -332,242 +344,17 @@ class ObservableStore<T> extends StoreBase<T> implements ObservableStoreInterfac
 					deletes: [],
 					adds: [],
 					beforeAll: [],
-					afterAll: this.localData.slice()
+					afterAll: this._localData.slice()
 				});
 			}
 			return () => {
 				const remove = (observer: Observer<StoreDelta<T>>) => {
-					this.observers.splice(this.observers.indexOf(observer), 1);
+					this._observers.splice(this._observers.indexOf(observer), 1);
 				};
 				setTimeout(() => {
 					remove(observer);
 				});
 			};
-		});
-	}
-
-	observe(): Observable<StoreDelta<T>>;
-	observe(id: string): Observable<T>;
-	observe(ids: string[]): Observable<ItemUpdate<T>>;
-	observe(idOrIds?: string | string[]): Observable<StoreDelta<T>> | Observable<T> | Observable<ItemUpdate<T>> {
-		if (idOrIds) {
-			if (Array.isArray(idOrIds)) {
-				const ids = <string[]> idOrIds;
-
-				const idSet = new Set<string>(ids);
-				return new Observable<ItemUpdate<T>>((observer: Observer<ItemUpdate<T>>) => {
-					const observerEntry: ObserverSetEntry<T> = {
-						observes: idSet,
-						observer: observer
-					};
-					ids.forEach((id: string) => {
-						if (this.itemObservers.has(id)) {
-							this.itemObservers.get(id)!.push(observerEntry);
-						}
-						else {
-							this.itemObservers.set(id, [observerEntry]);
-						}
-					});
-					const foundIds = new Set<string>();
-					after(observer, 'next', (result: any, args: IArguments) => {
-						const itemUpdate: ItemUpdate<T> = args[0];
-						foundIds.add(itemUpdate.id);
-						return result;
-					});
-
-					this.get(ids).then((items: T[]) => {
-						if (foundIds.size !== ids.length) {
-							const retrievedIdSet = new Set<string>(this.identify(items));
-							let missingItemIds = ids.filter(id => !retrievedIdSet.has(id));
-
-							if (retrievedIdSet.size !== idSet.size || missingItemIds.length) {
-								observer.error(new Error(`ID(s) "${missingItemIds}" not found in store`));
-							}
-							else {
-								items.forEach((item, index) => observer.next({
-									item: item,
-									id: ids[index]
-								}));
-							}
-						}
-					});
-				});
-			}
-			const id = <string> idOrIds;
-			return new Observable<any>((observer: Observer<any>) => {
-				this.get(id).then((item: any) => {
-					if (!item) {
-						observer.error(new Error(`ID "${id}" not found in store`));
-					}
-					else {
-						if (this.itemObservers.has(id)) {
-							this.itemObservers.get(id)!.push(observer);
-						}
-						else {
-							this.itemObservers.set(id, [ observer ]);
-						}
-						observer.next(item);
-					}
-				});
-			});
-		}
-		return this.storeObservable;
-	}
-
-	/**
-	 * After fetching, sends updates if no query was used. If a custom query was used then the data retrieved
-	 * is not indicative of the local data and can't be used. We shouldn't apply the query locally because we
-	 * have no knowledge of the underlying storage implementation or the amount of data and it may be too much
-	 * data to retrieve or update in memory. If this is the initialFetch, don't update since that update
-	 * will be sent to each subscriber at the time of subscription. If we're not sending updates, still set
-	 * the local data and index to the newly retrieved data.
-	 */
-	fetch(query?: Query<T>) {
-		const result = super.fetch(query);
-		if (!query) {
-			result.then(
-				(data) => {
-					if (result !== this.initialFetch) {
-						this.sendUpdates(data);
-					}
-					else {
-						this.localData = data;
-						this.localIndex = buildIndex(this.identify(data));
-					}
-				},
-				// Ignore errors here, they should be handled by the caller not observers
-				() => {}
-			);
-		}
-		return result;
-	}
-
-	/**
-	 * After the put is completed, notify the item observers, and then either queue a fetch to send updates
-	 * if fetchAroundUpdates is true, or just send updates if not.
-	 */
-	put(items: T | T[]) {
-		const result = super.put(items);
-		result.then(
-			(updatedItems: T[]) => {
-				this.notifyItemObservers(updatedItems, []);
-				this.sendUpdatesOrFetch(updatedItems, [], []);
-			},
-			// Ignore errors here, they should be handled by the caller not observers
-			() => {}
-		);
-		return result;
-	}
-
-	/**
-	 * After the patch is completed, notify the item observers, and then either queue a fetch to send updates
-	 * if fetchAroundUpdates is true, or just send updates if not.
-	 */
-	patch(updates: PatchArgument<T>, options?: CrudOptions) {
-		const result = super.patch(updates, options);
-		result.then(
-			(updatedItems: T[]) => {
-				this.notifyItemObservers(updatedItems, []);
-				this.sendUpdatesOrFetch(updatedItems, [], []);
-			},
-			// Ignore errors here, they should be handled by the caller not observers
-			() => {}
-		);
-		return result;
-	}
-
-	/**
-	 * After the add is completed notify observers. If this is the initial add AND we are fetching around
-	 * updates, then the first update to subscribers will already contain this data, since the initial fetch
-	 * is performed after the initial add. In this case we do not need to send an update. We can tell this
-	 * is the first add because it'll be triggered in the StoreBase base before the state is created for
-	 * this instance in the mixin's initializer
-	 */
-	add(items: T[] | T, options?: CrudOptions) {
-		const result = super.add(items, options);
-		result.then(
-			(addedItems: T[]) => {
-				if (!this.ignoreFirstAdd || !this.fetchAroundUpdates) {
-					this.sendUpdatesOrFetch([], addedItems, []);
-				}
-				this.ignoreFirstAdd = false;
-			},
-			// Ignore errors here, they should be handled by the caller not observers
-			() => {}
-		);
-		return result;
-	}
-
-	/**
-	 * After the items are deleted, notify item set observers of the deletion of one of the items they are
-	 * observing, and then complete any observables that need to be completed.
-	 * Completing observables is dones as follows
-	 * 	- For observers of a single item, just complete the observer
-	 * 	- For observers of a set of items
-	 * 		- Remove the deleted ID of this item from the set of observed IDs
-	 * 		- If there are now no observed IDs for the set, complete the observable
-	 * 	- Remove the item observer entry for the deleted ID
-	 */
-	delete(ids: string[] | string) {
-		const result = super.delete(ids);
-		result.then(
-			(deleted: string[]) => {
-				this.notifyItemObservers(null, deleted);
-				deleted.forEach((id: string) => {
-					if (this.itemObservers.has(id)) {
-						this.itemObservers.get(id)!.forEach((observerOrEntry) => {
-							if (isObserver(observerOrEntry)) {
-								observerOrEntry.complete();
-							}
-							else {
-								observerOrEntry.observes.delete(id);
-								if (!observerOrEntry.observes.size) {
-									observerOrEntry.observer.complete();
-								}
-							}
-						});
-						this.itemObservers.delete(id);
-					}
-				});
-				this.sendUpdatesOrFetch([], [], deleted);
-			},
-			// Ignore errors here, they should be handled by the caller not observers
-			() => {}
-		);
-		return result;
-	}
-
-	/**
-	 * Merges the latest queued updates, updates the local data and index based on the latest data,
-	 * sends out updates to observers, and then removes observers that unsubscribed during the update process from the list
-	 * of observers. If after is provided, it is assumed that that is the latest data for the store, if it is not provided
-	 * the local data is updated according to the merged delta and that is used as the new local data.
-	 * @param after - Optional array of items containing the latest data for the store.
-	 */
-	private sendUpdates(after?: T[]) {
-		const storeDelta = this.queuedUpdate || {
-				updates: [],
-				adds: [],
-				deletes: [],
-				beforeAll: [],
-				afterAll: []
-			};
-		this.queuedUpdate = undefined;
-		after = after || this.addUpdateDelete(storeDelta);
-
-		storeDelta.beforeAll = this.localData;
-		storeDelta.afterAll = after;
-		this.localData = after;
-		this.localIndex = buildIndex(this.identify(after));
-
-		this.observers.forEach((observer) => {
-			observer.next({
-				updates: storeDelta.updates.slice(),
-				adds: storeDelta.adds.slice(),
-				deletes: storeDelta.deletes.slice(),
-				beforeAll: storeDelta.beforeAll.slice(),
-				afterAll: storeDelta.afterAll.slice()
-			});
 		});
 	}
 
@@ -577,15 +364,15 @@ class ObservableStore<T> extends StoreBase<T> implements ObservableStoreInterfac
 	 * @param update
 	 * @returns A new collection with the modifications specified by the update
 	 */
-	private addUpdateDelete(update: StoreDelta<T>) {
-		const newData = this.localData.slice();
+	private _addUpdateDelete(update: StoreDelta<T>) {
+		const newData = this._localData.slice();
 		update.adds.forEach((item) => {
 			newData.push(item);
 		});
 
 		this.identify(update.updates).forEach((id, index) => {
-			if (this.localIndex.has(id)) {
-				newData[this.localIndex.get(id)!] = update.updates[index];
+			if (this._localIndex.has(id)) {
+				newData[this._localIndex.get(id)!] = update.updates[index];
 			}
 			else {
 				newData.push(update.updates[index]);
@@ -593,8 +380,8 @@ class ObservableStore<T> extends StoreBase<T> implements ObservableStoreInterfac
 		});
 
 		update.deletes.sort().reverse().forEach((id) => {
-			if (this.localIndex.has(id)) {
-				newData.splice(this.localIndex.get(id)!, 1);
+			if (this._localIndex.has(id)) {
+				newData.splice(this._localIndex.get(id)!, 1);
 			}
 		});
 
@@ -602,6 +389,7 @@ class ObservableStore<T> extends StoreBase<T> implements ObservableStoreInterfac
 	}
 
 	/**
+	 *
 	 * Iterates through the provided items and/or IDs and notifies observers. If items is provided, then the
 	 * observers for that item, and the observers for sets of items that include that are updated. If items is null, then
 	 * these are delete notifications for observers of multiple items. In this case, no update is sent to individual
@@ -611,10 +399,10 @@ class ObservableStore<T> extends StoreBase<T> implements ObservableStoreInterfac
 	 * @param items Items to send updates for, or null if these are delete notifications for item set observers
 	 * @param ids - IDs of the items, should be in the same order as items
 	 */
-	private notifyItemObservers(items: T[] | null, ids: string[]) {
+	private _notifyItemObservers(items: T[] | null, ids: string[]) {
 		const notify = (id: string, after?: any) => {
-			if (this.itemObservers.has(id)) {
-				this.itemObservers.get(id)!.map((observerOrEntry): Observer<ItemUpdate<T>> | null => {
+			if (this._itemObservers.has(id)) {
+				this._itemObservers.get(id)!.map((observerOrEntry): Observer<ItemUpdate<T>> | null => {
 					if (isObserverEntry(observerOrEntry)) {
 						return observerOrEntry.observer;
 					}
@@ -630,7 +418,7 @@ class ObservableStore<T> extends StoreBase<T> implements ObservableStoreInterfac
 					});
 				});
 				if (after) {
-					this.itemObservers.get(id)!.map((observerOrEntry): Observer<T> | null => {
+					this._itemObservers.get(id)!.map((observerOrEntry): Observer<T> | null => {
 						if (isObserver(observerOrEntry)) {
 							return observerOrEntry;
 						}
@@ -659,27 +447,254 @@ class ObservableStore<T> extends StoreBase<T> implements ObservableStoreInterfac
 	}
 
 	/**
+	 * Merges the latest queued updates, updates the local data and index based on the latest data,
+	 * sends out updates to observers, and then removes observers that unsubscribed during the update process from the list
+	 * of observers. If after is provided, it is assumed that that is the latest data for the store, if it is not provided
+	 * the local data is updated according to the merged delta and that is used as the new local data.
+	 * @param after - Optional array of items containing the latest data for the store.
+	 */
+	private _sendUpdates(after?: T[]) {
+		const storeDelta = this._queuedUpdate || {
+				updates: [],
+				adds: [],
+				deletes: [],
+				beforeAll: [],
+				afterAll: []
+			};
+		this._queuedUpdate = undefined;
+		after = after || this._addUpdateDelete(storeDelta);
+
+		storeDelta.beforeAll = this._localData;
+		storeDelta.afterAll = after;
+		this._localData = after;
+		this._localIndex = buildIndex(this.identify(after));
+
+		this._observers.forEach((observer) => {
+			observer.next({
+				updates: storeDelta.updates.slice(),
+				adds: storeDelta.adds.slice(),
+				deletes: storeDelta.deletes.slice(),
+				beforeAll: storeDelta.beforeAll.slice(),
+				afterAll: storeDelta.afterAll.slice()
+			});
+		});
+	}
+
+	/**
 	 * Queues the appropriate update and then either starts up a fetch or just triggers sending the updates depending
-	 * on the `fetchAroundUpdates` property
+	 * on the `fetchAroundUpdates` flag
 	 * @param updates Updated items
 	 * @param adds Added items
 	 * @param deletes Deleted IDs
 	 */
-	private sendUpdatesOrFetch(updates: T[], adds: T[], deletes: string[]) {
+	private _sendUpdatesOrFetch(updates: T[], adds: T[], deletes: string[]) {
 		const newUpdate = {
-			updates: updates,
 			adds: adds,
-			deletes: deletes,
+			afterAll: [],
 			beforeAll: [],
-			afterAll: []
+			deletes: deletes,
+			updates: updates
 		};
-		this.queuedUpdate = this.queuedUpdate ? mergeDeltas(this, this.queuedUpdate, newUpdate) : newUpdate;
-		if (this.fetchAroundUpdates) {
-			this.fetchAndSendUpdates(this);
+		this._queuedUpdate = this._queuedUpdate ? mergeDeltas(this, this._queuedUpdate, newUpdate) : newUpdate;
+		if (this._fetchAroundUpdates) {
+			this._fetchAndSendUpdates(this);
 		}
 		else {
-			this.sendUpdates();
+			this._sendUpdates();
 		}
+	}
+
+	/**
+	 * After the add is completed notify observers. If this is the initial add AND we are fetching around
+	 * updates, then the first update to subscribers will already contain this data, since the initial fetch
+	 * is performed after the initial add. In this case we do not need to send an update. We can tell this
+	 * is the first add because it'll be triggered in the StoreBase base before the state is created for
+	 * this instance in the mixin's initializer
+	 */
+	add(items: T[] | T, options?: CrudOptions) {
+		const result = super.add(items, options);
+		result.then(
+			(addedItems: T[]) => {
+				if (!this._ignoreFirstAdd || !this._fetchAroundUpdates) {
+					this._sendUpdatesOrFetch([], addedItems, []);
+				}
+				this._ignoreFirstAdd = false;
+			},
+			// Ignore errors here, they should be handled by the caller not observers
+			() => {}
+		);
+		return result;
+	}
+
+	/**
+	 * After the items are deleted, notify item set observers of the deletion of one of the items they are
+	 * observing, and then complete any observables that need to be completed.
+	 * Completing observables is dones as follows
+	 * 	- For observers of a single item, just complete the observer
+	 * 	- For observers of a set of items
+	 * 		- Remove the deleted ID of this item from the set of observed IDs
+	 * 		- If there are now no observed IDs for the set, complete the _observable
+	 * 	- Remove the item observer entry for the deleted ID
+	 */
+	delete(ids: string[] | string) {
+		const result = super.delete(ids);
+		result.then(
+			(deleted: string[]) => {
+				this._notifyItemObservers(null, deleted);
+				deleted.forEach((id: string) => {
+					if (this._itemObservers.has(id)) {
+						this._itemObservers.get(id)!.forEach((observerOrEntry) => {
+							if (isObserver(observerOrEntry)) {
+								observerOrEntry.complete();
+							}
+							else {
+								observerOrEntry.observes.delete(id);
+								if (!observerOrEntry.observes.size) {
+									observerOrEntry.observer.complete();
+								}
+							}
+						});
+						this._itemObservers.delete(id);
+					}
+				});
+				this._sendUpdatesOrFetch([], [], deleted);
+			},
+			// Ignore errors here, they should be handled by the caller not observers
+			() => {}
+		);
+		return result;
+	}
+
+	/**
+	 * After fetching, sends updates if no query was used. If a custom query was used then the data retrieved
+	 * is not indicative of the local data and can't be used. We shouldn't apply the query locally because we
+	 * have no knowledge of the underlying storage implementation or the amount of data and it may be too much
+	 * data to retrieve or update in memory. If this is the initialFetch, don't update since that update
+	 * will be sent to each subscriber at the time of subscription. If we're not sending updates, still set
+	 * the local data and index to the newly retrieved data.
+	 */
+	fetch(query?: Query<T>) {
+		const result = super.fetch(query);
+		if (!query) {
+			result.then(
+				(data) => {
+					if (result !== this._initialFetch) {
+						this._sendUpdates(data);
+					}
+					else {
+						this._localData = data;
+						this._localIndex = buildIndex(this.identify(data));
+					}
+				},
+				// Ignore errors here, they should be handled by the caller not observers
+				() => {}
+			);
+		}
+		return result;
+	}
+
+	observe(): Observable<StoreDelta<T>>;
+	observe(id: string): Observable<T>;
+	observe(ids: string[]): Observable<ItemUpdate<T>>;
+	observe(idOrIds?: string | string[]): Observable<StoreDelta<T>> | Observable<T> | Observable<ItemUpdate<T>> {
+		if (idOrIds) {
+			if (Array.isArray(idOrIds)) {
+				const ids = <string[]> idOrIds;
+
+				const idSet = new Set<string>(ids);
+				return new Observable<ItemUpdate<T>>((observer: Observer<ItemUpdate<T>>) => {
+					const observerEntry: ObserverSetEntry<T> = {
+						observes: idSet,
+						observer: observer
+					};
+					ids.forEach((id: string) => {
+						if (this._itemObservers.has(id)) {
+							this._itemObservers.get(id)!.push(observerEntry);
+						}
+						else {
+							this._itemObservers.set(id, [observerEntry]);
+						}
+					});
+					const foundIds = new Set<string>();
+					after(observer, 'next', (result: any, args: IArguments) => {
+						const itemUpdate: ItemUpdate<T> = args[0];
+						foundIds.add(itemUpdate.id);
+						return result;
+					});
+
+					this.get(ids)
+						.then((items: T[]) => {
+							if (foundIds.size !== ids.length) {
+								const retrievedIdSet = new Set<string>(this.identify(items));
+								let missingItemIds = ids.filter(id => !retrievedIdSet.has(id));
+
+								if (retrievedIdSet.size !== idSet.size || missingItemIds.length) {
+									observer.error(new Error(`ID(s) "${missingItemIds}" not found in store`));
+								}
+								else {
+									items.forEach((item, index) => observer.next({
+										item: item,
+										id: ids[index]
+									}));
+								}
+							}
+						});
+				});
+			}
+			const id = <string> idOrIds;
+			return new Observable<any>((observer: Observer<any>) => {
+				this.get(id)
+					.then((item: any) => {
+						if (!item) {
+							observer.error(new Error(`ID "${id}" not found in store`));
+						}
+						else {
+							if (this._itemObservers.has(id)) {
+								this._itemObservers.get(id)!.push(observer);
+							}
+							else {
+								this._itemObservers.set(id, [ observer ]);
+							}
+							observer.next(item);
+						}
+					});
+			});
+		}
+		return this._storeObservable;
+	}
+
+	/**
+	 * After the patch is completed, notify the item observers, and then either queue a fetch to send updates
+	 * if fetchAroundUpdates is true, or just send updates if not.
+	 */
+	patch(updates: PatchArgument<T>, options?: CrudOptions) {
+		const result = super.patch(updates, options);
+		result.then(
+			(updatedItems: T[]) => {
+				this._notifyItemObservers(updatedItems, []);
+				this._sendUpdatesOrFetch(updatedItems, [], []);
+			},
+			// Ignore errors here, they should be handled by the caller not observers
+			() => {}
+		);
+		return result;
+	}
+
+	/**
+	 * After the put is completed, notify the item observers, and then either queue a fetch to send updates
+	 * if fetchAroundUpdates is true, or just send updates if not.
+	 */
+	put(items: T | T[]) {
+		const result = super.put(items);
+		result.then(
+			(updatedItems: T[]) => {
+				this._notifyItemObservers(updatedItems, []);
+				this._sendUpdatesOrFetch(updatedItems, [], []);
+			},
+			// Ignore errors here, they should be handled by the caller not observers
+			() => {}
+		);
+		return result;
 	}
 }
 

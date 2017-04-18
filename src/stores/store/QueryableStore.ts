@@ -1,42 +1,45 @@
 import { Query, QueryType, CrudOptions, UpdateResults } from '../interfaces';
-import createFilter, { Filter } from '../query/createFilter';
-import createRange, { StoreRange } from '../query/createStoreRange';
-import createSort, { Sort } from '../query/createSort';
-import Patch from '../patch/Patch';
-import {
-	MappedQueryResult, QueryResultInterface, MappedQueryResultInterface, QueryResult
-} from './QueryResult';
 import ObservableStore, { ObservableStoreInterface } from './ObservableStore';
+import Patch from '../patch/Patch';
+import createFilter, { Filter } from '../query/createFilter';
+import createSort, { Sort } from '../query/createSort';
+import createRange, { StoreRange } from '../query/createStoreRange';
+import { MappedQueryResult, QueryResultInterface, MappedQueryResultInterface, QueryResult } from './QueryResult';
 
 export interface QueryableStoreInterface<
 	T, O extends CrudOptions, U extends UpdateResults<T>
 > extends ObservableStoreInterface<T, O, U> {
 	/**
-	 * Creates a query transform result with the provided query
-	 * @param query
-	 */
-	query(query: Query<T>): MappedQueryResultInterface<T, this>;
-	/**
 	 * Creates a query transform result with the provided filter
 	 * @param filter
 	 */
 	filter(filter: Filter<T>): MappedQueryResultInterface<T, this>;
+
 	/**
 	 * Creates a query transform result with a filter built from the provided test
 	 * @param test
 	 */
 	filter(test: (item: T) => boolean): MappedQueryResultInterface<T, this>;
+
+	/**
+	 * Creates a query transform result with the provided query
+	 * @param query
+	 */
+	query(query: Query<T>): MappedQueryResultInterface<T, this>;
+
 	/**
 	 * Creates a query transform result with the provided range
 	 * @param range
 	 */
 	range(range: StoreRange<T>): MappedQueryResultInterface<T, this>;
+
 	/**
 	 * Creates a query transform result with a range built based on the provided start and count
 	 * @param start
 	 * @param cound
 	 */
 	range(start: number, count: number): MappedQueryResultInterface<T, this>;
+
 	/**
 	 * Creates a query transform result with the provided sort or a sort build from the provided comparator or a
 	 * comparator for the specified property
@@ -44,6 +47,7 @@ export interface QueryableStoreInterface<
 	 * @param descending
 	 */
 	sort(sort: Sort<T> | ((a: T, b: T) => number) | keyof T, descending?: boolean): MappedQueryResultInterface<T, this>;
+
 	/**
 	 * Create a query transform result that cannot be tracked, and cannot send tracked updates. This is the case because
 	 * the resulting query transform result will have no way to identify items, making it impossible to determine
@@ -51,6 +55,7 @@ export interface QueryableStoreInterface<
 	 * @param transformation
 	 */
 	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryResultInterface<V, this>;
+
 	/**
 	 * Create a trackable query transform result with the specified transformation
 	 * @param transformation
@@ -81,14 +86,6 @@ export function isSort<T>(sortOrComparator: Sort<T> | ((a: T, b: T) => number) |
 }
 
 class QueryableStore<T> extends ObservableStore<T> implements QueryableStoreInterface<T, CrudOptions, UpdateResults<T>> {
-	query(query: Query<T>): MappedQueryResultInterface<T, this> {
-		return new MappedQueryResult<T, this>({
-			source: this,
-			queriesAndTransformations: [ query ],
-			fetchAroundUpdates: this.fetchAroundUpdates
-		});
-	}
-
 	filter(filterOrTest: Filter<T> | ((item: T) => boolean)) {
 		let filter: Filter<T>;
 		if (isFilter(filterOrTest)) {
@@ -99,6 +96,14 @@ class QueryableStore<T> extends ObservableStore<T> implements QueryableStoreInte
 		}
 
 		return this.query(filter);
+	}
+
+	query(query: Query<T>): MappedQueryResultInterface<T, this> {
+		return new MappedQueryResult<T, this>({
+			source: this,
+			queriesAndTransformations: [ query ],
+			fetchAroundUpdates: this._fetchAroundUpdates
+		});
 	}
 
 	range(rangeOrStart: StoreRange<T> | number, count?: number) {
@@ -135,7 +140,7 @@ class QueryableStore<T> extends ObservableStore<T> implements QueryableStoreInte
 		const options = {
 			source: this,
 			queriesAndTransformations: [ { transformation: transformation, idTransform: idTransform} ],
-			fetchAroundUpdates: this.fetchAroundUpdates
+			fetchAroundUpdates: this._fetchAroundUpdates
 		};
 		if (idTransform) {
 			return new MappedQueryResult<V, this>(options);

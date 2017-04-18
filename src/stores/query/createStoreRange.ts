@@ -1,7 +1,8 @@
 import { Query, QueryType } from '../interfaces';
+
 export interface StoreRange<T> extends Query<T> {
-	readonly start: number;
 	readonly count: number;
+	readonly start: number;
 }
 
 function serializeRange(range: StoreRange<any>): string {
@@ -10,16 +11,16 @@ function serializeRange(range: StoreRange<any>): string {
 
 function createRange<T>(start: number, count: number, serializer?: (range: StoreRange<T>) => string): StoreRange<T> {
 	return {
+		count: count,
+		incremental: false,
+		queryType: QueryType.Range,
+		start: start,
 		apply(data: T[]) {
 			return data.slice(start, start + count);
 		},
-		queryType: QueryType.Range,
 		toString(this: StoreRange<T>, rangeSerializer?: ((query: Query<T>) => string) | ((range: StoreRange<T>) => string) ) {
 			return (rangeSerializer || serializer || serializeRange)(this);
-		},
-		start: start,
-		count: count,
-		incremental: false
+		}
 	};
 }
 

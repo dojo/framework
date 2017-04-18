@@ -36,9 +36,7 @@ registerSuite({
 				},
 				_id: item.id
 			}), '_id')
-			.filter(function(item) {
-				return item._value > 1;
-			})
+			.filter((item) => item._value > 1)
 			.range(0, 100)
 			.track();
 
@@ -97,9 +95,7 @@ registerSuite({
 				},
 				_id: item.id
 			}), '_id')
-			.filter(function(item) {
-				return item._value > 1;
-			})
+			.filter((item) => item._value > 1)
 			.range(0, 100)
 			.track();
 
@@ -159,9 +155,7 @@ registerSuite({
 				},
 				_id: item.id
 			}), '_id')
-			.filter(function(item) {
-				return item._value > 1;
-			})
+			.filter((item) => item._value > 1)
 			.range(0, 100)
 			.track();
 

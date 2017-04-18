@@ -1,14 +1,15 @@
+import { duplicate } from '@dojo/core/lang';
+import { Observer, Observable } from '@dojo/core/Observable';
+import Map from '@dojo/shim/Map';
+import Promise from '@dojo/shim/Promise';
+import _createStoreObservable from './createStoreObservable';
 import {
 	Storage, Query, CrudOptions, UpdateResults, Store, StoreOptions, PatchArgument, FetchResult, PatchMapEntry,
 	StoreObservable
 } from '../interfaces';
-import Promise from '@dojo/shim/Promise';
-import Map from '@dojo/shim/Map';
-import { duplicate } from '@dojo/core/lang';
-import { Observer, Observable } from '@dojo/core/Observable';
 import Patch, { diff } from '../patch/Patch';
-import _createStoreObservable from './createStoreObservable';
 import InMemoryStorage from '../storage/InMemoryStorage';
+
 function isPatchArray(patches: any[]): patches is { id: string; patch: Patch<any, any>}[] {
 	return isPatch(patches[0]);
 }
@@ -23,64 +24,94 @@ function isPatch(patchObj: any): patchObj is {id: string; patch: Patch<any, any>
 function createStoreObservable(storeResultsPromise: Promise<UpdateResults<{}>>) {
 
 	return _createStoreObservable(
-		new Observable<UpdateResults<{}>>(function subscribe(observer: Observer<UpdateResults<{}>>) {
+		new Observable<UpdateResults<{}>>((observer: Observer<UpdateResults<{}>>) => {
 			storeResultsPromise
-				.then(function(results) {
+				.then((results) => {
 					observer.next(results);
 					observer.complete();
-				}, function(error) {
+				}, (error) => {
 					observer.error(error);
 				});
 		}),
-		function(results: UpdateResults<{}>) {
-			return results.successfulData;
-		}
+		(results: UpdateResults<{}>) => results.successfulData
 	);
 }
 
 export default class StoreBase<T> implements Store<T, CrudOptions, UpdateResults<T>> {
-	private storage: Storage<T, CrudOptions>;
-	private initialAddPromise: Promise<any>;
+	private _initialAddPromise: Promise<any> = Promise.resolve();
+	private _storage: Storage<T, CrudOptions>;
+
 	constructor(options?: StoreOptions<T, CrudOptions>) {
 		if (!options) {
 			options = {};
 		}
 		const data: T[] | undefined = options.data;
-		this.storage = options.storage || new InMemoryStorage(options);
-		this.initialAddPromise = Promise.resolve();
+		this._storage = options.storage || new InMemoryStorage(options);
 		if (data) {
-			this.initialAddPromise = this.add(data).catch((error) => {
+			this._initialAddPromise = this.add(data).catch((error) => {
 				console.error(error);
 			});
 		}
 	}
 
+	add(items: T[] | T, options?: CrudOptions): StoreObservable<T, UpdateResults<T>> {
+		const storeResultsPromise = this._initialAddPromise.then(() => {
+			return this._storage.add(Array.isArray(items) ? items : [ items ], options);
+		});
+		return createStoreObservable(storeResultsPromise);
+	}
+
+	createId() {
+		return this._storage.createId();
+	}
+
+	delete(ids: string | string[]): StoreObservable<String, UpdateResults<T>> {
+		const storeResultsPromise = this._initialAddPromise.then(() => {
+			return this._storage.delete(Array.isArray(ids) ? ids : [ ids ]);
+		});
+
+		return createStoreObservable(storeResultsPromise);
+	}
+
+	fetch(query?: Query<T>) {
+		let resolveTotalLength: (totalLength: number) => void;
+		let rejectTotalLength: (error: any) => void;
+		const totalLength = new Promise((resolve, reject) => {
+			resolveTotalLength = resolve;
+			rejectTotalLength = reject;
+		});
+		const fetchResult: FetchResult<T> = <any> this._initialAddPromise.then(() => {
+			const result = this._storage.fetch(query);
+			result.totalLength.then(resolveTotalLength, rejectTotalLength);
+			return result;
+		});
+		fetchResult.totalLength = fetchResult.dataLength = totalLength;
+
+		return fetchResult;
+	}
+
 	get(ids: string[]): Promise<T[]>;
 	get(id: string): Promise<T | undefined>;
 	get(ids: string[] | string): Promise<T[] | T | undefined> {
-		return this.initialAddPromise.then<T[] | T | undefined>(() => {
+		return this._initialAddPromise.then<T[] | T | undefined>(() => {
 			if (Array.isArray(ids)) {
-				return this.storage.get(ids).then((items) => items.filter((item) => Boolean(item)));
+				return this._storage.get(ids).then((items) => items.filter((item) => Boolean(item)));
 			}
 			else {
-				return this.storage.get([ids]).then(items => items[0]);
+				return this._storage.get([ids]).then(items => items[0]);
 			}
 		});
 	}
 
-	add(items: T[] | T, options?: CrudOptions): StoreObservable<T, UpdateResults<T>> {
-		const storeResultsPromise = this.initialAddPromise.then(() => {
-			return this.storage.add(Array.isArray(items) ? items : [ items ], options);
-		});
-		return createStoreObservable(storeResultsPromise);
-	}
-
-	put(items: T[] | T, options?: CrudOptions): StoreObservable<T, UpdateResults<T>> {
-		const storeResultsPromise = this.initialAddPromise.then(() => {
-			return this.storage.put(Array.isArray(items) ? items : [ items ], options);
-		});
-
-		return createStoreObservable(storeResultsPromise);
+	identify(items: T[]): string[];
+	identify(items: T): string;
+	identify(items: T | T[]): string | string[] {
+		if (Array.isArray(items)) {
+			return this._storage.identify(items);
+		}
+		else {
+			return this._storage.identify([items])[0];
+		}
 	}
 
 	patch(updates: PatchArgument<T>, options?: CrudOptions): StoreObservable<T, UpdateResults<T>> {
@@ -98,12 +129,12 @@ export default class StoreBase<T> implements Store<T, CrudOptions, UpdateResults
 			}
 		}
 		else if (updates instanceof Map) {
-			updates.forEach(function(value, key) {
+			updates.forEach((value, key) =>
 				patchEntries.push({
 					id: key,
 					patch: value
-				});
-			});
+				})
+			);
 		}
 		else if (isPatch(updates)) {
 			patchEntries = [ updates ];
@@ -118,50 +149,18 @@ export default class StoreBase<T> implements Store<T, CrudOptions, UpdateResults
 			patchEntries = [ { id: id, patch: diff(dupe) }];
 		}
 
-		const storeResultsPromise = this.initialAddPromise.then(() => {
-			return this.storage.patch(patchEntries);
+		const storeResultsPromise = this._initialAddPromise.then(() => {
+			return this._storage.patch(patchEntries);
 		});
 
 		return createStoreObservable(storeResultsPromise);
 	}
 
-	delete(ids: string | string[]): StoreObservable<String, UpdateResults<T>> {
-		const storeResultsPromise = this.initialAddPromise.then(() => {
-			return this.storage.delete(Array.isArray(ids) ? ids : [ ids ]);
+	put(items: T[] | T, options?: CrudOptions): StoreObservable<T, UpdateResults<T>> {
+		const storeResultsPromise = this._initialAddPromise.then(() => {
+			return this._storage.put(Array.isArray(items) ? items : [ items ], options);
 		});
 
 		return createStoreObservable(storeResultsPromise);
-	}
-
-	fetch(query?: Query<T>) {
-		let resolveTotalLength: (totalLength: number) => void;
-		let rejectTotalLength: (error: any) => void;
-		const totalLength = new Promise((resolve, reject) => {
-			resolveTotalLength = resolve;
-			rejectTotalLength = reject;
-		});
-		const fetchResult: FetchResult<T> = <any> this.initialAddPromise.then(() => {
-			const result = this.storage.fetch(query);
-			result.totalLength.then(resolveTotalLength, rejectTotalLength);
-			return result;
-		});
-		fetchResult.totalLength = fetchResult.dataLength = totalLength;
-
-		return fetchResult;
-	}
-
-	identify(items: T[]): string[];
-	identify(items: T): string;
-	identify(items: T | T[]): string | string[] {
-		if (Array.isArray(items)) {
-			return this.storage.identify(items);
-		}
-		else {
-			return this.storage.identify([items])[0];
-		}
-	}
-
-	createId() {
-		return this.storage.createId();
 	}
 }
