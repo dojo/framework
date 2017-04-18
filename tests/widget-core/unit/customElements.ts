@@ -172,7 +172,7 @@ registerSuite({
 			});
 
 			initializeElement(element);
-			element.getWidgetInstance().setProperties({
+			element.getWidgetInstance().__setProperties__({
 				a: 'test'
 			});
 
@@ -194,7 +194,7 @@ registerSuite({
 			});
 
 			initializeElement(element);
-			element.getWidgetInstance().setProperties({
+			element.getWidgetInstance().__setProperties__({
 				test: 'test'
 			});
 
@@ -215,7 +215,7 @@ registerSuite({
 			});
 
 			initializeElement(element);
-			element.getWidgetInstance().setProperties({
+			element.getWidgetInstance().__setProperties__({
 				a: 4
 			});
 

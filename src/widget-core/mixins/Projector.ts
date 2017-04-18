@@ -3,7 +3,7 @@ import { Handle } from '@dojo/interfaces/core';
 import { dom, Projection, ProjectionOptions, VNodeProperties } from 'maquette';
 import 'pepjs';
 import cssTransitions from '../animations/cssTransitions';
-import { Constructor, WidgetProperties } from './../interfaces';
+import { Constructor, DNode, WidgetProperties } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
 
 /**
@@ -37,7 +37,7 @@ export interface AttachOptions {
 	root?: Element;
 }
 
-export interface ProjectorMixin {
+export interface ProjectorMixin<P extends WidgetProperties> {
 
 	/**
 	 * Append the projector to the root.
@@ -68,6 +68,21 @@ export interface ProjectorMixin {
 	 * Schedule a render.
 	 */
 	scheduleRender(): void;
+
+	/**
+	 * Sets the properties for the widget. Responsible for calling the diffing functions for the properties against the
+	 * previous properties. Runs though any registered specific property diff functions collecting the results and then
+	 * runs the remainder through the catch all diff function. The aggregate of the two sets of the results is then
+	 * set as the widget's properties
+	 *
+	 * @param properties The new widget properties
+	 */
+	setProperties(properties: P & { [index: string]: any }): void;
+
+	/**
+	 * Sets the widget's children
+	 */
+	setChildren(children: DNode[]): void;
 
 	/**
 	 * Root element to attach the projector
@@ -107,7 +122,7 @@ const eventHandlers = [
 	'onsubmit'
 ];
 
-export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<ProjectorMixin> {
+export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(base: T): T & Constructor<ProjectorMixin<P>> {
 	return class extends base {
 
 		public projectorState: ProjectorAttachState;
@@ -195,6 +210,14 @@ export function ProjectorMixin<T extends Constructor<WidgetBase<WidgetProperties
 
 		public get root(): Element {
 			return this._root;
+		}
+
+		public setChildren(children: DNode[]): void {
+			super.__setChildren__(children);
+		}
+
+		public setProperties(properties: P & { [index: string]: any }): void {
+			super.__setProperties__(properties);
 		}
 
 		public __render__() {

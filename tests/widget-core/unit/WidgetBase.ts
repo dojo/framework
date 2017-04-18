@@ -25,7 +25,7 @@ registerSuite({
 		});
 
 		assert.lengthOf(widget.children, 0);
-		widget.setChildren([expectedChild]);
+		widget.__setChildren__([expectedChild]);
 		assert.lengthOf(widget.children, 1);
 		assert.strictEqual(widget.children[0], expectedChild);
 		assert.isTrue(childrenEventEmitted);
@@ -38,44 +38,44 @@ registerSuite({
 	diffProperties: {
 		'no updated properties'() {
 			const widgetBase = new WidgetBase();
-			widgetBase.setProperties({ id: 'id', foo: 'bar' });
+			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
 
 			widgetBase.on('properties:changed', result => {
 				assert.lengthOf(result.changedPropertyKeys, 0);
 			});
 
-			widgetBase.setProperties({ id: 'id', foo: 'bar' });
+			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
 		},
 		'updated properties'() {
 			const widgetBase = new WidgetBase();
-			widgetBase.setProperties({ id: 'id', foo: 'bar' });
+			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
 
 			widgetBase.on('properties:changed', result => {
 				assert.lengthOf(result.changedPropertyKeys, 1);
 			});
 
-			widgetBase.setProperties({ id: 'id', foo: 'baz' });
+			widgetBase.__setProperties__({ id: 'id', foo: 'baz' });
 		},
 		'new properties'() {
 			const widgetBase = new WidgetBase();
-			widgetBase.setProperties({ id: 'id', foo: 'bar' });
+			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
 
 			widgetBase.on('properties:changed', result => {
 				assert.lengthOf(result.changedPropertyKeys, 1);
 			});
 
-			widgetBase.setProperties({ id: 'id', foo: 'bar', bar: 'baz' });
+			widgetBase.__setProperties__({ id: 'id', foo: 'bar', bar: 'baz' });
 		},
 		'updated / new properties with falsy values'() {
 			const widgetBase = new WidgetBase();
-			widgetBase.setProperties({ id: 'id', foo: 'bar' });
+			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
 
 			widgetBase.on('properties:changed', result => {
 				assert.lengthOf(result.changedPropertyKeys, 4);
 				assert.deepEqual(result.changedPropertyKeys, ['foo', 'bar', 'baz', 'qux']);
 			});
 
-			widgetBase.setProperties({ id: 'id', foo: '', bar: null, baz: 0, qux: false });
+			widgetBase.__setProperties__({ id: 'id', foo: '', bar: null, baz: 0, qux: false });
 		}
 	},
 	diffProperty: {
@@ -98,7 +98,7 @@ registerSuite({
 				}
 
 				const testWidget = new TestWidget();
-				testWidget.setProperties({ foo: 'bar' });
+				testWidget.__setProperties__({ foo: 'bar' });
 				testWidget.__render__();
 				assert.equal(callCount, 1);
 				assert.equal(value, 'new-value');
@@ -120,7 +120,7 @@ registerSuite({
 			}
 
 			const testWidget = new TestWidget();
-			testWidget.setProperties({ foo: 'bar' });
+			testWidget.__setProperties__({ foo: 'bar' });
 
 			assert.equal(callCount, 1);
 		},
@@ -145,7 +145,7 @@ registerSuite({
 			}
 
 			const testWidget = new TestWidget();
-			testWidget.setProperties({ foo: 'bar' });
+			testWidget.__setProperties__({ foo: 'bar' });
 
 			assert.equal(callCount, 1);
 		},
@@ -201,7 +201,7 @@ registerSuite({
 			}
 
 			const widget = new SubWidget();
-			widget.setProperties({
+			widget.__setProperties__({
 				prop: true
 			});
 
@@ -224,7 +224,7 @@ registerSuite({
 				assert.deepEqual(result.changedPropertyKeys, ['anotherProp']);
 			});
 
-			widget.setProperties({
+			widget.__setProperties__({
 				prop: true,
 				anotherProp: true
 			});
@@ -232,7 +232,7 @@ registerSuite({
 
 		'properties that are deleted dont get returned'() {
 			const widget = new WidgetBase<any>();
-			widget.setProperties({
+			widget.__setProperties__({
 				a: 1,
 				b: 2,
 				c: 3
@@ -240,7 +240,7 @@ registerSuite({
 
 			assert.deepEqual(widget.properties, { a: 1, b: 2, c: 3 });
 
-			widget.setProperties({
+			widget.__setProperties__({
 				a: 4,
 				c: 5
 			});
@@ -270,14 +270,14 @@ registerSuite({
 			}
 
 			const widget = new TestWidget();
-			widget.setProperties({ foo: 'bar', baz: 'qux' });
+			widget.__setProperties__({ foo: 'bar', baz: 'qux' });
 
 			widget.on('properties:changed', (event: any) => {
 				assert.include(event.changedPropertyKeys, 'foo');
 				assert.notInclude(event.changedPropertyKeys, 'baz');
 			});
 
-			widget.setProperties({ foo: 'bar', baz: 'bar' });
+			widget.__setProperties__({ foo: 'bar', baz: 'bar' });
 		},
 		'widgets function properties are bound to the parent by default'() {
 			class TestChildWidget extends WidgetBase<any> {
@@ -494,7 +494,7 @@ registerSuite({
 				widgetConstructorSpy,
 				functionIsBound: false
 			};
-			testWidget.setProperties(properties);
+			testWidget.__setProperties__(properties);
 			testWidget.callWidgetSpy();
 			assert.isFalse(testWidget.functionIsBound);
 			assert.isTrue(testWidget.properties.functionIsBound);
@@ -730,7 +730,7 @@ registerSuite({
 			}
 
 			const widget = new TestWidget();
-			widget.setProperties({
+			widget.__setProperties__({
 				test: true
 			});
 			assert.strictEqual(called, 1);
@@ -750,7 +750,7 @@ class TestWidget extends WidgetBase<any> {
 }
 
 const widget = new TestWidget();
-widget.setProperties({
+widget.__setProperties__({
 	test: true
 });
 
@@ -1035,7 +1035,7 @@ widget.setProperties({
 			const secondRenderChild: any = secondRenderResult.children && secondRenderResult.children[0];
 			assert.strictEqual(secondRenderChild.vnodeSelector, 'footer');
 
-			widget.setProperties(<any> { hide: true });
+			widget.__setProperties__(<any> { hide: true });
 			widget.invalidate();
 
 			const thirdRenderResult = <VNode> widget.__render__();
@@ -1043,7 +1043,7 @@ widget.setProperties({
 			assert.strictEqual(countWidgetDestroyed, 4);
 			assert.lengthOf(thirdRenderResult.children, 0);
 
-			widget.setProperties(<any> { hide: false });
+			widget.__setProperties__(<any> { hide: false });
 			widget.invalidate();
 
 			const lastRenderResult = <VNode> widget.__render__();
@@ -1087,13 +1087,13 @@ widget.setProperties({
 			};
 
 			const myWidget = new WidgetBase<any>();
-			myWidget.setProperties(properties);
+			myWidget.__setProperties__(properties);
 			assert.deepEqual((<any> myWidget.properties).items, [ 'a', 'b' ]);
 			properties.items.push('c');
-			myWidget.setProperties(properties);
+			myWidget.__setProperties__(properties);
 			assert.deepEqual((<any> myWidget.properties).items , [ 'a', 'b', 'c' ]);
 			properties.items.push('d');
-			myWidget.setProperties(properties);
+			myWidget.__setProperties__(properties);
 			assert.deepEqual((<any> myWidget.properties).items , [ 'a', 'b', 'c', 'd' ]);
 		},
 		'__render__ with internally updated array state'() {
@@ -1104,16 +1104,16 @@ widget.setProperties({
 			};
 
 			const myWidget: any = new WidgetBase();
-			myWidget.setProperties(properties);
+			myWidget.__setProperties__(properties);
 			myWidget.__render__();
 			assert.deepEqual((<any> myWidget.properties).items, [ 'a', 'b' ]);
-			myWidget.setProperties(<any> { items: [ 'a', 'b', 'c'] });
+			myWidget.__setProperties__(<any> { items: [ 'a', 'b', 'c'] });
 			myWidget.__render__();
 			assert.deepEqual((<any> myWidget.properties).items , [ 'a', 'b', 'c' ]);
 		},
 		'__render__() and invalidate()'() {
 			const widgetBase: any = new WidgetBase();
-			widgetBase.setProperties({ id: 'foo', label: 'foo' });
+			widgetBase.__setProperties__({ id: 'foo', label: 'foo' });
 			const result1 = <VNode> widgetBase.__render__();
 			const result2 = <VNode> widgetBase.__render__();
 			widgetBase.invalidate();

@@ -176,7 +176,7 @@ export function initializeElement(element: CustomElement) {
 			},
 			set(value: any) {
 				const [ propertyName, propertyValue ] = getWidgetPropertyFromAttribute(attribute.attributeName, value, attribute);
-				element.getWidgetInstance().setProperties(assign({}, element.getWidgetInstance().properties, {
+				element.getWidgetInstance().__setProperties__(assign({}, element.getWidgetInstance().properties, {
 					[propertyName]: propertyValue
 				}));
 			}
@@ -196,7 +196,7 @@ export function initializeElement(element: CustomElement) {
 			},
 
 			set(value: any) {
-				element.getWidgetInstance().setProperties(assign(
+				element.getWidgetInstance().__setProperties__(assign(
 					{},
 					element.getWidgetInstance().properties,
 					{ [widgetPropertyName]: setValue ? setValue(value) : value }
@@ -242,8 +242,8 @@ export function initializeElement(element: CustomElement) {
 	const projector = ProjectorMixin(element.getWidgetConstructor());
 
 	const widgetInstance = new projector();
-	widgetInstance.setProperties(initialProperties);
-	widgetInstance.setChildren(children);
+	widgetInstance.__setProperties__(initialProperties);
+	widgetInstance.__setChildren__(children);
 	element.setWidgetInstance(widgetInstance);
 
 	widgetInstance.append(element);
@@ -263,7 +263,7 @@ export function handleAttributeChanged(element: CustomElement, name: string, new
 	attributes.forEach((attribute) => {
 		if (attribute.attributeName === name) {
 			const [ propertyName, propertyValue ] = getWidgetPropertyFromAttribute(name, newValue, attribute);
-			element.getWidgetInstance().setProperties(assign(
+			element.getWidgetInstance().__setProperties__(assign(
 				{},
 				element.getWidgetInstance().properties,
 				{ [propertyName]: propertyValue }

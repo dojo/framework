@@ -111,7 +111,7 @@ registerSuite({
 		},
 		'should split adjoined classes into multiple classes'() {
 			themeableInstance = new TestWidget();
-			themeableInstance.setProperties({ theme: testTheme3 });
+			themeableInstance.__setProperties__({ theme: testTheme3 });
 			const { class1, class2 } = baseThemeClasses1;
 			const flaggedClasses = themeableInstance.classes(class1, class2).get();
 			assert.deepEqual(flaggedClasses, {
@@ -123,9 +123,9 @@ registerSuite({
 		'should remove adjoined classes when they are no longer provided'() {
 			const { class1, class2 } = baseThemeClasses1;
 			themeableInstance = new TestWidget();
-			themeableInstance.setProperties({ theme: testTheme3 });
+			themeableInstance.__setProperties__({ theme: testTheme3 });
 			let flaggedClasses = themeableInstance.classes(class1, class2).get();
-			themeableInstance.setProperties({ theme: testTheme1 });
+			themeableInstance.__setProperties__({ theme: testTheme1 });
 			flaggedClasses = themeableInstance.classes(class1, class2).get();
 			assert.deepEqual(flaggedClasses, {
 				[ testTheme1.testPath1.class1 ]: true,
@@ -243,7 +243,7 @@ registerSuite({
 	'setting a theme': {
 		'should override basetheme classes with theme classes'() {
 			themeableInstance = new TestWidget();
-			themeableInstance.setProperties({ theme: testTheme1 });
+			themeableInstance.__setProperties__({ theme: testTheme1 });
 			const { class1, class2 } = baseThemeClasses1;
 			const flaggedClasses = themeableInstance.classes(class1, class2).get();
 			assert.deepEqual(flaggedClasses, {
@@ -254,9 +254,9 @@ registerSuite({
 		'should negate old theme class when a new theme is set'() {
 			const { class1, class2 } = baseThemeClasses1;
 			themeableInstance = new TestWidget();
-			themeableInstance.setProperties({ theme: testTheme1 });
+			themeableInstance.__setProperties__({ theme: testTheme1 });
 			themeableInstance.classes(class1).get();
-			themeableInstance.setProperties({ theme: testTheme2 });
+			themeableInstance.__setProperties__({ theme: testTheme2 });
 
 			const flaggedClasses = themeableInstance.classes(class1, class2).get();
 			assert.deepEqual(flaggedClasses, {
@@ -267,7 +267,7 @@ registerSuite({
 		},
 		'will not regenerate theme classes if theme changed property is not set'() {
 			themeableInstance = new TestWidget();
-			themeableInstance.setProperties({ theme: testTheme1 });
+			themeableInstance.__setProperties__({ theme: testTheme1 });
 			themeableInstance.emit({
 				type: 'properties:changed',
 				properties: {
@@ -287,7 +287,7 @@ registerSuite({
 	'setting override classes': {
 		'should supplement basetheme classes with override classes'() {
 			themeableInstance = new TestWidget();
-			themeableInstance.setProperties({ overrideClasses: overrideClasses1 });
+			themeableInstance.__setProperties__({ overrideClasses: overrideClasses1 });
 			const { class1, class2 } = baseThemeClasses1;
 			const flaggedClasses = themeableInstance.classes(class1, class2).get();
 			assert.deepEqual(flaggedClasses, {
@@ -299,9 +299,9 @@ registerSuite({
 		'should set override classes to false when they are changed'() {
 			const { class1, class2 } = baseThemeClasses1;
 			themeableInstance = new TestWidget();
-			themeableInstance.setProperties({ overrideClasses: overrideClasses1 });
+			themeableInstance.__setProperties__({ overrideClasses: overrideClasses1 });
 			themeableInstance.classes(class1, class2).get();
-			themeableInstance.setProperties({ overrideClasses: overrideClasses2 });
+			themeableInstance.__setProperties__({ overrideClasses: overrideClasses2 });
 			const flaggedClasses = themeableInstance.classes(class1, class2).get();
 			assert.deepEqual(flaggedClasses, {
 				[ baseThemeClasses1.class1 ]: true,
@@ -407,7 +407,7 @@ registerSuite({
 			}
 
 			const themeableWidget: any = new IntegrationTest();
-			themeableWidget.setProperties({ theme: testTheme1 });
+			themeableWidget.__setProperties__({ theme: testTheme1 });
 
 			const result = <VNode> themeableWidget.__render__();
 			assert.deepEqual(result.children![0].properties!.classes, {
@@ -415,7 +415,7 @@ registerSuite({
 				[ fixedClassName ]: true
 			});
 
-			themeableWidget.setProperties({ theme: testTheme2 });
+			themeableWidget.__setProperties__({ theme: testTheme2 });
 
 			const result2 = <VNode> themeableWidget.__render__();
 			assert.deepEqual(result2.children![0].properties!.classes, {

@@ -14,19 +14,19 @@ registerSuite({
 		'passed registry is available via getter'() {
 			const registry = new WidgetRegistry();
 			const instance: any = new TestWithRegistry();
-			instance.setProperties({ registry });
+			instance.__setProperties__({ registry });
 			assert.equal(instance.registry, registry);
 		},
 		'no passed registry, nothing available via getter'() {
 			const instance: any = new TestWithRegistry();
-			instance.setProperties(<any> {});
+			instance.__setProperties__(<any> {});
 			assert.equal(instance.registry, undefined);
 		},
 		'passed registry updated on property change'() {
 			const registry = new WidgetRegistry();
 			const newRegistry = new WidgetRegistry();
 			const instance: any = new TestWithRegistry();
-			instance.setProperties({ registry });
+			instance.__setProperties__({ registry });
 			assert.equal(instance.registry, registry);
 			instance.emit({
 				type: 'properties:changed',
@@ -39,7 +39,7 @@ registerSuite({
 		'different property passed on property change should not affect registry'() {
 			const registry = new WidgetRegistry();
 			const instance: any = new TestWithRegistry();
-			instance.setProperties({ registry });
+			instance.__setProperties__({ registry });
 			assert.equal(instance.registry, registry);
 			instance.emit({
 				type: 'properties:changed',
@@ -74,7 +74,7 @@ registerSuite({
 			registry.define('test', Header);
 
 			const instance: any = new IntegrationTest();
-			instance.setProperties({ registry });
+			instance.__setProperties__({ registry });
 
 			let result = <VNode> instance.__render__();
 			assert.lengthOf(result.children, 1);
@@ -83,7 +83,7 @@ registerSuite({
 			const newRegistry = new WidgetRegistry();
 			newRegistry.define('test', Span);
 
-			instance.setProperties({ registry: newRegistry });
+			instance.__setProperties__({ registry: newRegistry });
 
 			result = <VNode> instance.__render__();
 			assert.lengthOf(result.children, 1);

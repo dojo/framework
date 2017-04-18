@@ -280,7 +280,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		return this._properties;
 	}
 
-	public setProperties(properties: P): void {
+	public __setProperties__(properties: P): void {
 		const diffPropertyResults: { [index: string]: any } = {};
 		const diffPropertyChangedKeys: string[] = [];
 
@@ -357,7 +357,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		return this._children;
 	}
 
-	public setChildren(children: DNode[]): void {
+	public __setChildren__(children: DNode[]): void {
 		this._dirty = true;
 		this._children = children;
 		this.emit({
@@ -568,12 +568,12 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 
 			if (cachedChild) {
 				child = cachedChild.child;
-				child.setProperties(properties);
+				child.__setProperties__(properties);
 				cachedChild.used = true;
 			}
 			else {
 				child = new widgetConstructor();
-				child.setProperties(properties);
+				child.__setProperties__(properties);
 				child.own(child.on('invalidated', () => {
 					this.invalidate();
 				}));
@@ -588,7 +588,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 			}
 
 			if (Array.isArray(children)) {
-				child.setChildren(children);
+				child.__setChildren__(children);
 			}
 			return child.__render__();
 		}

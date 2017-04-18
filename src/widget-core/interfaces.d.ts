@@ -359,12 +359,12 @@ export interface WidgetBaseInterface<P extends WidgetProperties> extends Evented
 	 *
 	 * @param properties The new widget properties
 	 */
-	setProperties(properties: P & { [index: string]: any }): void;
+	__setProperties__(properties: P & { [index: string]: any }): void;
 
 	/**
 	 * Sets the widget's children
 	 */
-	setChildren(children: DNode[]): void;
+	__setChildren__(children: DNode[]): void;
 
 	/**
 	 * Main internal function for dealing with widget rendering
