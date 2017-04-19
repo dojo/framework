@@ -9,8 +9,8 @@ import { stub, SinonStub } from 'sinon';
 import * as baseThemeClasses1 from './../../support/styles/testWidget1.css';
 import * as baseThemeClasses2 from './../../support/styles/testWidget2.css';
 import * as baseThemeClasses3 from './../../support/styles/baseTheme3.css';
-import * as overrideClasses1 from './../../support/styles/overrideClasses1.css';
-import * as overrideClasses2 from './../../support/styles/overrideClasses2.css';
+import * as extraClasses1 from './../../support/styles/extraClasses1.css';
+import * as extraClasses2 from './../../support/styles/extraClasses2.css';
 import testTheme1 from './../../support/styles/theme1.css';
 import testTheme2 from './../../support/styles/theme2.css';
 import testTheme3 from './../../support/styles/theme3.css';
@@ -287,26 +287,26 @@ registerSuite({
 	'setting override classes': {
 		'should supplement basetheme classes with override classes'() {
 			themeableInstance = new TestWidget();
-			themeableInstance.__setProperties__({ overrideClasses: overrideClasses1 });
+			themeableInstance.__setProperties__({ extraClasses: extraClasses1 });
 			const { class1, class2 } = baseThemeClasses1;
 			const flaggedClasses = themeableInstance.classes(class1, class2).get();
 			assert.deepEqual(flaggedClasses, {
 				[ baseThemeClasses1.class1 ]: true,
-				[ overrideClasses1.class1 ]: true,
+				[ extraClasses1.class1 ]: true,
 				[ baseThemeClasses1.class2 ]: true
 			});
 		},
 		'should set override classes to false when they are changed'() {
 			const { class1, class2 } = baseThemeClasses1;
 			themeableInstance = new TestWidget();
-			themeableInstance.__setProperties__({ overrideClasses: overrideClasses1 });
+			themeableInstance.__setProperties__({ extraClasses: extraClasses1 });
 			themeableInstance.classes(class1, class2).get();
-			themeableInstance.__setProperties__({ overrideClasses: overrideClasses2 });
+			themeableInstance.__setProperties__({ extraClasses: extraClasses2 });
 			const flaggedClasses = themeableInstance.classes(class1, class2).get();
 			assert.deepEqual(flaggedClasses, {
 				[ baseThemeClasses1.class1 ]: true,
-				[ overrideClasses1.class1 ]: false,
-				[ overrideClasses2.class1 ]: true,
+				[ extraClasses1.class1 ]: false,
+				[ extraClasses2.class1 ]: true,
 				[ baseThemeClasses1.class2 ]: true
 			});
 		}

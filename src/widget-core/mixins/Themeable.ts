@@ -24,7 +24,7 @@ export type ClassNames = {
  */
 export interface ThemeableProperties extends WidgetProperties {
 	theme?: any;
-	overrideClasses?: any;
+	extraClasses?: any;
 }
 
 /**
@@ -216,9 +216,9 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		@onPropertiesChanged()
 		protected onPropertiesChanged({ changedPropertyKeys }: PropertiesChangeEvent<this, ThemeableProperties>) {
 			const themeChanged = includes(changedPropertyKeys, 'theme');
-			const overrideClassesChanged = includes(changedPropertyKeys, 'overrideClasses');
+			const extraClassesChanged = includes(changedPropertyKeys, 'extraClasses');
 
-			if (themeChanged || overrideClassesChanged) {
+			if (themeChanged || extraClassesChanged) {
 				this._recalculateClasses = true;
 			}
 		}
@@ -239,10 +239,10 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		 * @param className the name of the class to register.
 		 */
 		private registerThemeClass(className: string) {
-			const { properties: { overrideClasses = {} } } = this;
+			const { properties: { extraClasses = {} } } = this;
 			const themeClass = this._theme[className] ? this._theme[className] : this.getBaseThemeClass(className);
-			const overrideClassNames = overrideClasses[className] ? overrideClasses[className].split(' ') : [];
-			const cssClassNames = themeClass.split(' ').concat(overrideClassNames);
+			const extraClassNames = extraClasses[className] ? extraClasses[className].split(' ') : [];
+			const cssClassNames = themeClass.split(' ').concat(extraClassNames);
 			const classesObject = cssClassNames.reduce((classesObject, cssClassName) => {
 				classesObject[cssClassName] = true;
 				this._allClasses[cssClassName] = false;
