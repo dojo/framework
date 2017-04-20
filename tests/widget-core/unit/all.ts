@@ -8,3 +8,4 @@ import './mixins/all';
 import './util/all';
 import './main';
 import './diff';
+import './RegistryHandler';

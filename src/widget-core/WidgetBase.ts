@@ -17,7 +17,8 @@ import {
 	PropertiesChangeEvent,
 	HNode
 } from './interfaces';
-import WidgetRegistry, { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './WidgetRegistry';
+import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './WidgetRegistry';
+import RegistryHandler from './RegistryHandler';
 
 export { DiffType };
 
@@ -136,11 +137,6 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	public on: WidgetBaseEvents<P>;
 
 	/**
-	 * Internal widget registry
-	 */
-	protected registry: WidgetRegistry | undefined;
-
-	/**
 	 * children array
 	 */
 	private _children: DNode[];
@@ -166,11 +162,6 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	private _previousProperties: P & { [index: string]: any };
 
 	/**
-	 * Map constructor labels to widget constructor
-	 */
-	private _initializedConstructorMap: Map<string, Promise<WidgetConstructor>>;
-
-	/**
 	 * cached chldren map for instance management
 	 */
 	private _cachedChildrenMap: Map<string | Promise<WidgetConstructor> | WidgetConstructor, WidgetCacheWrapper[]>;
@@ -190,6 +181,8 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	 */
 	private _renderDecorators: Set<string>;
 
+	private _registries: any;
+
 	/**
 	 * Map of functions properties for the bound function
 	 */
@@ -205,11 +198,15 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		this._decoratorCache = new Map<string, any[]>();
 		this._properties = <P> {};
 		this._previousProperties = <P> {};
-		this._initializedConstructorMap = new Map<string, Promise<WidgetConstructor>>();
 		this._cachedChildrenMap = new Map<string | Promise<WidgetConstructor> | WidgetConstructor, WidgetCacheWrapper[]>();
 		this._diffPropertyFunctionMap = new Map<string, string>();
 		this._renderDecorators = new Set<string>();
 		this._bindFunctionPropertyMap = new WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>();
+		this._registries = new RegistryHandler();
+		this._registries.add(registry);
+		this.own(this._registries);
+
+		this.own(this._registries.on('invalidate', this.invalidate.bind(this)));
 
 		this.own(this.on('properties:changed', (evt) => {
 			this._dirty = true;
@@ -499,17 +496,8 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		});
 	}
 
-	/**
-	 * Returns the constructor from the registry for the specified label. First checks a local registry passed via
-	 * properties, if no local registry or the constructor is not found fallback to the global registry
-	 *
-	 * @param widgetLabel the label to look up in the registry
-	 */
-	private getFromRegistry(widgetLabel: string): Promise<WidgetConstructor> | WidgetConstructor | null {
-		if (this.registry && this.registry.has(widgetLabel)) {
-			return this.registry.get(widgetLabel);
-		}
-		return registry.get(widgetLabel);
+	protected get registries() {
+		return this._registries;
 	}
 
 	/**
@@ -532,23 +520,11 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 			let child: WidgetBaseInterface<WidgetProperties>;
 
 			if (typeof widgetConstructor === 'string') {
-				const item = this.getFromRegistry(widgetConstructor);
-
-				if (item instanceof Promise) {
-					if (item && !this._initializedConstructorMap.has(widgetConstructor)) {
-						const promise = item.then((ctor) => {
-							this.invalidate();
-							return ctor;
-						});
-						this._initializedConstructorMap.set(widgetConstructor, promise);
-					}
+				const item = this._registries.get(widgetConstructor);
+				if (item === null) {
 					return null;
 				}
-				else if (item === null) {
-					console.warn(`Unable to render unknown widget constructor ${widgetConstructor}`);
-					return null;
-				}
-				widgetConstructor = item;
+				widgetConstructor = <WidgetConstructor> item;
 			}
 
 			const childrenMapKey = key || widgetConstructor;

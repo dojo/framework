@@ -5,49 +5,51 @@ import { w, v } from '../../../src/d';
 import { RegistryMixin, RegistryMixinProperties } from '../../../src/mixins/Registry';
 import { WidgetBase } from '../../../src/WidgetBase';
 import WidgetRegistry from '../../../src/WidgetRegistry';
+import { spy } from 'sinon';
 
-class TestWithRegistry extends RegistryMixin(WidgetBase)<RegistryMixinProperties> {}
+class TestWithRegistry extends RegistryMixin(WidgetBase)<RegistryMixinProperties> {
+	private _changedKeys: string[];
+	constructor() {
+		super();
+		this.on('properties:changed', (evt) => {
+			this._changedKeys = evt.changedPropertyKeys;
+		});
+	}
+	__setProperties__(properties: any) {
+		this._changedKeys = [];
+		super.__setProperties__(properties);
+	}
+	getChangedKeys() {
+		return this._changedKeys;
+	}
+	getRegistries() {
+		return this.registries;
+	}
+}
 
 registerSuite({
 	name: 'mixins/RegistryMixin',
 	property: {
-		'passed registry is available via getter'() {
+		'adds registry and marks as changed when no previous registry'() {
+			const widget = new TestWithRegistry();
 			const registry = new WidgetRegistry();
-			const instance: any = new TestWithRegistry();
-			instance.__setProperties__({ registry });
-			assert.equal(instance.registry, registry);
+			const add = spy(widget.getRegistries(), 'add');
+			widget.__setProperties__({ registry });
+			assert.isTrue(add.calledWith(registry));
+			assert.deepEqual(widget.getChangedKeys(), [ 'registry' ]);
 		},
-		'no passed registry, nothing available via getter'() {
-			const instance: any = new TestWithRegistry();
-			instance.__setProperties__(<any> {});
-			assert.equal(instance.registry, undefined);
-		},
-		'passed registry updated on property change'() {
+		'replaces registry and marks as changed when different to previous registry'() {
+			const widget = new TestWithRegistry();
 			const registry = new WidgetRegistry();
+
+			widget.__setProperties__({ registry });
+
+			const replace = spy(widget.getRegistries(), 'replace');
 			const newRegistry = new WidgetRegistry();
-			const instance: any = new TestWithRegistry();
-			instance.__setProperties__({ registry });
-			assert.equal(instance.registry, registry);
-			instance.emit({
-				type: 'properties:changed',
-				target: instance,
-				properties: { registry: newRegistry },
-				changedPropertyKeys: [ 'registry' ]
-			});
-			assert.equal(instance.registry, newRegistry);
-		},
-		'different property passed on property change should not affect registry'() {
-			const registry = new WidgetRegistry();
-			const instance: any = new TestWithRegistry();
-			instance.__setProperties__({ registry });
-			assert.equal(instance.registry, registry);
-			instance.emit({
-				type: 'properties:changed',
-				target: instance,
-				properties: { foo: true },
-				changedPropertyKeys: [ 'foo' ]
-			});
-			assert.equal(instance.registry, registry);
+
+			widget.__setProperties__({ registry: newRegistry });
+			assert.isTrue(replace.calledWith(registry, newRegistry));
+			assert.deepEqual(widget.getChangedKeys(), [ 'registry' ]);
 		}
 	},
 	integration: {

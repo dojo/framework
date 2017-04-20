@@ -772,6 +772,61 @@ widget.__setProperties__({
 			assert.lengthOf(result.children, 1);
 			assert.strictEqual(result.children && result.children[0].vnodeSelector, 'header');
 		},
+		'lazily defined widget in registry renders when ready'() {
+			class TestWidget extends WidgetBase<any> {
+				render() {
+					return v('div', [
+						w('my-header3', <any> undefined)
+					]);
+				}
+			}
+
+			class TestHeaderWidget extends WidgetBase<any> {
+				render() {
+					return v('header');
+				}
+			}
+			const myWidget: any = new TestWidget();
+			let result = <VNode> myWidget.__render__();
+			assert.lengthOf(result.children, 0);
+			registry.define('my-header3', TestHeaderWidget);
+			result = myWidget.__render__();
+			assert.lengthOf(result.children, 1);
+		},
+		'locally defined widget in registry eventually replaces global one'() {
+			const localRegistry = new WidgetRegistry();
+
+			class TestWidget extends WidgetBase<any> {
+				constructor() {
+					super();
+					this.registries.add(localRegistry);
+				}
+				render() {
+					return v('div', [
+						w('my-header4', <any> undefined)
+					]);
+				}
+			}
+
+			class TestHeaderWidget extends WidgetBase<any> {
+				render() {
+					return v('global-header');
+				}
+			}
+
+			class TestHeaderLocalWidget extends WidgetBase<any> {
+				render() {
+					return v('local-header');
+				}
+			}
+			registry.define('my-header4', TestHeaderWidget);
+			const myWidget: any = new TestWidget();
+			let result = <any> myWidget.__render__();
+			assert.equal(result.children[0].vnodeSelector, 'global-header');
+			localRegistry.define('my-header4', TestHeaderLocalWidget);
+			result = <any> myWidget.__render__();
+			assert.equal(result.children[0].vnodeSelector, 'local-header');
+		},
 		'async factories only initialise once'() {
 			let resolveFunction: any;
 			const loadFunction = () => {
@@ -858,24 +913,6 @@ widget.__setProperties__({
 				});
 			});
 		},
-		'warn for unknown factory registry'() {
-			const factory = 'unknown-entry';
-			class TestWidget extends WidgetBase<any> {
-				render() {
-					return v('div', [
-						w(factory, {})
-					]);
-				}
-			}
-
-			const myWidget: any = new TestWidget();
-			const consoleStub = stub(console, 'warn');
-			let result = <VNode> myWidget.__render__();
-			assert.lengthOf(result.children, 0);
-			assert.isTrue(consoleStub.calledOnce);
-			assert.isTrue(consoleStub.calledWith(`Unable to render unknown widget constructor ${factory}`));
-			consoleStub.restore();
-		},
 		'render using scoped factory registry'() {
 			class TestHeaderWidget extends WidgetBase<any> {
 				render() {
@@ -889,7 +926,7 @@ widget.__setProperties__({
 			class TestWidget extends WidgetBase<any> {
 				constructor() {
 					super();
-					this.registry = registry;
+					this.registries.add(registry);
 				}
 
 				render() {
