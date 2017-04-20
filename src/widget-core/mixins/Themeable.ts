@@ -33,9 +33,13 @@ export interface ThemeableProperties extends WidgetProperties {
 export interface ClassesFunctionChain {
 	(): ClassNameFlags;
 	/**
-	 * The classes to be returned when get() is called
+	 * The theme classes to be returned when get() is called
 	 */
-	classes: ClassNameFlags;
+	classes: string[];
+	/**
+	 * The fixed classes to be returned when get() is called
+	 */
+	fixedClasses: string[];
 	/**
 	 * Function to pass fixed class names that bypass the theming
 	 * process
@@ -175,7 +179,31 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 				this.recalculateThemeClasses();
 			}
 
-			const appliedClasses = classNames
+			const themeable = this;
+			function classesGetter(this: ClassesFunctionChain) {
+				const themeClasses = themeable.getThemeClasses(this.classes);
+				const fixedClasses = themeable.getFixedClasses(this.fixedClasses);
+				return assign({}, themeable._allClasses, themeClasses, fixedClasses);
+			}
+			const classesFunctionChain = {
+				classes: classNames,
+				fixedClasses: [],
+				fixed(this: ClassesFunctionChain, ...classNames: (string | null)[]) {
+					const filteredClassNames = <string[]> classNames.filter((className) => className !== null);
+					this.fixedClasses.push(...filteredClassNames);
+					return this;
+				},
+				get: classesGetter
+			};
+
+			return assign(classesGetter.bind(classesFunctionChain), classesFunctionChain);
+		}
+
+		/**
+		 * Get theme class object from classNames
+		 */
+		private getThemeClasses(classNames: string[]): ClassNameFlags  {
+			return classNames
 				.filter((className) => className !== null)
 				.reduce((appliedClasses: {}, className: string) => {
 					if (!this._baseThemeClassesReverseLookup[className]) {
@@ -188,24 +216,15 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 					}
 					return assign(appliedClasses, this._registeredClassesMap.get(className));
 				}, {});
+		}
 
-			const themeable = this;
-			function classesGetter(this: ClassesFunctionChain) {
-				return this.classes;
-			}
-			const classesFunctionChain = {
-				classes: assign({}, this._allClasses, appliedClasses),
-				fixed(this: ClassesFunctionChain, ...classNames: (string | null)[]) {
-					const filteredClassNames = <string[]> classNames.filter((className) => className !== null);
-					const splitClasses = splitClassStrings(filteredClassNames);
-					assign(this.classes, createClassNameObject(splitClasses, true));
-					themeable.appendToAllClassNames(splitClasses);
-					return this;
-				},
-				get: classesGetter
-			};
-
-			return assign(classesGetter.bind(classesFunctionChain), classesFunctionChain);
+		/**
+		 * Get fixed class object from classNames
+		 */
+		private getFixedClasses(classNames: string[]): ClassNameFlags {
+			const splitClasses = splitClassStrings(classNames);
+			this.appendToAllClassNames(splitClasses);
+			return createClassNameObject(splitClasses, true);
 		}
 
 		/**

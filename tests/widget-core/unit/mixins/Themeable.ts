@@ -155,6 +155,23 @@ registerSuite({
 			});
 
 			assert.isFalse(consoleStub.called);
+		},
+		'class function is lazily evaluated'() {
+			themeableInstance = new TestWidget();
+			const { class1, class2 } = baseThemeClasses1;
+			const firstClasses = themeableInstance.classes(class1);
+			const secondClasses = themeableInstance.classes(class2);
+
+			assert.deepEqual(secondClasses(), {
+				[ baseThemeClasses1.class2 ]: true
+			});
+
+			assert.deepEqual(firstClasses(), {
+				[ baseThemeClasses1.class1 ]: true,
+				[ baseThemeClasses1.class2 ]: false
+			});
+
+			assert.isFalse(consoleStub.called);
 		}
 	},
 	'classes.fixed chained function': {
