@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import { createServer } from 'http';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
@@ -12,6 +13,8 @@ const serverUrl = 'http://localhost:' + serverPort;
 let server: any;
 let proxy: any;
 let requestData: string;
+
+const blobFileSize = fs.statSync('tests/support/data/blob.gif').size;
 
 interface DummyResponse {
 	body?: string | ((callback: Function) => void);
@@ -189,6 +192,12 @@ const responseData: { [url: string]: DummyResponse } = {
 		body: 'hello',
 		headers: {
 			'Content-Encoding': 'gzip, deflate'
+		}
+	},
+	'blob.gif': {
+		statusCode: 200,
+		body: function (callback: any) {
+			callback(fs.readFileSync('tests/support/data/blob.gif'));
 		}
 	}
 };
@@ -633,11 +642,18 @@ registerSuite({
 		},
 
 		'response types': {
-			'arrayBuffer'() {
+			'arrayBuffer with binary content'() {
+				return nodeRequest(getRequestUrl('blob.gif')).then((response: any) => {
+					return response.arrayBuffer().then((arrayBuffer: any) => {
+						assert.strictEqual(arrayBuffer.byteLength, blobFileSize);
+					});
+				});
+			},
+
+			'arrayBuffer with text content'() {
 				return nodeRequest(getRequestUrl('foo.json')).then((response: any) => {
 					return response.arrayBuffer().then((arrayBuffer: any) => {
-						assert.isAbove(arrayBuffer.byteLength, 0);
-						assert.isAbove(arrayBuffer.length, 0);
+						assert.strictEqual(arrayBuffer.byteLength, JSON.stringify({ foo: 'bar' }).length);
 					});
 				});
 			},

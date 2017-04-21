@@ -88,7 +88,7 @@ interface HttpsOptions extends Options {
 interface RequestData {
 	task: Task<http.IncomingMessage>;
 	buffer: any[];
-	data: string;
+	data: Buffer;
 	size: number;
 	used: boolean;
 	nativeResponse: http.IncomingMessage;
@@ -172,12 +172,7 @@ export class NodeResponse extends Response {
 	arrayBuffer(): Task<ArrayBuffer> {
 		return <any> getDataTask(this).then(data => {
 			if (data) {
-				if (<any> data.data instanceof Buffer) {
-					return data.data;
-				}
-				else {
-					return Buffer.from(data.data, 'utf8');
-				}
+				return data.data;
 			}
 
 			return new Buffer([]);
@@ -471,9 +466,9 @@ export default function node(url: string, options: NodeRequestOptions = {}): Tas
 							 content, so do undo the encoding we have to start at the end and work backwards.
 							 */
 							if (contentEncodings.length) {
-								const encoding = contentEncodings.pop()!.trim();
+								const encoding = contentEncodings.pop()!.trim().toLowerCase();
 
-								if (encoding === '' || encoding === 'identity') {
+								if (encoding === '' || encoding === 'none' || encoding === 'identity') {
 									// do nothing, response stream is as-is
 									handleEncoding();
 								}
@@ -502,7 +497,7 @@ export default function node(url: string, options: NodeRequestOptions = {}): Tas
 								}
 							}
 							else {
-								data.data = String(dataAsBuffer);
+								data.data = dataAsBuffer;
 
 								response.emit({
 									type: 'end',
@@ -523,7 +518,7 @@ export default function node(url: string, options: NodeRequestOptions = {}): Tas
 			const data: RequestData = {
 				task,
 				buffer: [],
-				data: '',
+				data: Buffer.alloc(0),
 				size: 0,
 				used: false,
 				url: url,
