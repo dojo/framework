@@ -24,6 +24,7 @@ We also provide a suite of pre-built widgets to use in your applications: [(@doj
         - [Projector](#projector)
         - [Event Handling](#event-handling)
         - [Widget Registry](#widget-registry)
+        - [Injecting State](#injecting-state)
         - [Theming](#theming)
         - [Internationalization](#internationalization-i18n)
         - [Web Components](#web-components)
@@ -49,7 +50,6 @@ npm install @dojo/widget-core
 npm install @dojo/has
 npm install @dojo/shim
 npm install @dojo/core
-npm install @dojo/compose
 npm install @dojo/i18n
 npm install maquette
 ```
@@ -64,12 +64,12 @@ The smallest `@dojo/widget-core` example looks like this:
 ```ts
 class MyWidget extends WidgetBase<WidgetProperties> {
 	render() {
-       return v('h1', { innerHTML: 'Hello, Dojo!' });
+       return v('h1', [ 'Hello, Dojo!' ]);
 	}
 }
 
 const Projector = ProjectorMixin(MyWidget);
-const projector = new Projector({});
+const projector = new Projector();
 
 projector.append(root);
 ```
@@ -117,36 +117,27 @@ The following code creates an element with the specified `tag`
 v(tag: string): HNode[];
 ```
 
-where `tag` is in the form: element.className(s)#id, e.g.
-
-```
-h2                  (produces <h2></h2>)
-h2.foo              (produces <h2 class="foo"></h2>)
-h2.foo.bar          (produces <h2 class="foo bar"></h2>)
-h2.foo.bar#baz      (produces <h2 class="foo bar" id="baz"></h2>)
-h2#baz              (produces <h2 id="baz"></h2>)
-```
-
-`classNames` should be delimited by a period (`.`).
-
-**Please note**, both the `classes` and `id` portions of the `tag` are optional.
-
-
 The following code renders an element with the `tag` and `children`.
 
 ```ts
-v(tag: string, children: (DNode | null)[]): HNode[];
+v(tag: string, children: DNode[]): HNode[];
 ```
 
 The following code renders an element with the `tag`, `properties` and `children`.
 
 ```ts
-v(tag: string, properties: VirtualDomProperties, children?: (DNode | null)[]): HNode[];
+v(tag: string, properties: VirtualDomProperties, children?: DNode[]): HNode[];
 ```
 
 As well as interacting with the VDOM by passing it HyperScript, you can also pass it Dojo 2 Widgets or Custom Widgets using the `w` function.
 
 #### `w`
+
+The following code creates a widget using the `widgetConstructor`.
+
+```ts
+w<P extends WidgetProperties>(widgetConstructor: string | WidgetBaseConstructor<P>): WNode[];
+```
 
 The following code creates a widget using the `widgetConstructor` and `properties`.
 
@@ -154,23 +145,33 @@ The following code creates a widget using the `widgetConstructor` and `propertie
 w<P extends WidgetProperties>(widgetConstructor: string | WidgetBaseConstructor<P>, properties: P): WNode[];
 ```
 
+The following code creates a widget using the `widgetConstructor` and `children`.
+
+```ts
+w<P extends WidgetProperties>(widgetConstructor: string | WidgetBaseConstructor<P>, children: DNode[]): WNode[];
+```
+
 The following code creates a widget using the `widgetConstructor`, `properties` and `children`
 
 ```ts
-w<P extends WidgetProperties>(widgetConstructor: string | WidgetBaseConstructor<P>, properties: P, children: (DNode | null)[]): WNode[];
+w<P extends WidgetProperties>(widgetConstructor: string | WidgetBaseConstructor<P>, properties: P, children: DNode[]): WNode[];
 ```
 Example `w` constructs:
 
 ```ts
+w(WidgetClass);
 w(WidgetClass, properties);
+w(WidgetClass, children);
 w(WidgetClass, properties, children);
 
+w('my-widget');
 w('my-widget', properties);
+w('my-widget', children);
 w('my-widget', properties, children);
 ```
 
-The example above that uses a string for the `widgetConstructor `, is taking advantage of our [widget registry](#widget-registry) functionality.
-The widget registry allows for the lazy instantiation of widgets.
+The example above that uses a string for the `widgetConstructor `, is taking advantage of the [widget registry](#widget-registry) functionality.
+The widget registry allows for the lazy loading of widgets.
 
 ### Writing Custom Widgets
 
@@ -184,13 +185,6 @@ import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 ```
 
 **All** widgets should extend from this class.
-
-#### Public API
-
-|Function|Description|Default Behaviour|
-|---|---|---|
-|render|Returns the DNode structure of the widget|Returns a `div` HNode with children of `this.children`.
-|diffProperties|Diffs the current properties against the previous properties and returns an object with the changed keys and new properties|Performs a shallow comparison between the previous and current properties, copies the properties using `Object.assign` and returns the resulting `PropertiesChangeRecord`.|
 
 #### The 'properties' lifecycle
 
@@ -291,8 +285,6 @@ $widget->setProperties({
 
 Attaching a listener to the event is exposed via a decorator `@onPropertiesChanged`.
 
-*using the `onPropertiesChanged ` decorator*
-
 ```ts
 class MyWidget extends WidgetBase<WidgetProperties> {
 
@@ -303,7 +295,7 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 }
 ```
 
-*registering the `onPropertiesChanged ` function in the constructor*
+For non decorator environments the listener can be registered using the `onPropertiesChanged ` function in the constructor.
 
 ```ts
 class MyWidget extends WidgetBase<WidgetProperties> {
@@ -319,7 +311,7 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 }
 ```
 
-*Example event payload*
+Example event payload
 
 ```ts
 {
@@ -336,11 +328,51 @@ Finally once all the attached events have been processed, the properties lifecyc
 
 <!-- TODO: render lifecycle goes here -->
 
+Occasionally, in a mixin or base widget class, it my be required to provide logic that needs to be executed before or after a widget's `render` call. These lifecycle hooks are supported in `WidgetBase` and operate as before and after aspects. 
+
+The functionality is provided by the `beforeRender` and `afterRender` decorators.
+
+***Note:*** Both the `beforeRender` and `afterRender` functions are executed in the order that they are specified from the super class up to the final class.
+
+##### BeforeRender
+
+The `beforeRender` call receives the widget's `render` function, `properties` and `children` and is expected to return a function that satisfies the `render` API. The `properties` and `children` are passed to enable them to be manipulated or decorated prior to the `render` being called. 
+
+This is the only time in the widget lifecycle that exposes either of these attributes to be manipulated outside of the property system.
+
+```ts
+class MyBaseClass extends WidgetBase<WidgetProperties> {
+	@beforeRender
+	myBeforeRender(renderFunc: () => DNode, properties: any, children: DNode[]): () => DNode {
+		// decorate/manipulate properties or children.
+		properties.extraAttribute = 'foo';
+		// Return or replace the `render` function
+		return () => {
+			return v('my-replaced-attribute');
+		};
+	}
+}
+```
+
+And using the `beforeRender` function for non decorator environments:
+
+```ts
+class MyBaseClass extends WidgetBase<WidgetProperties> {
+	constructor() {
+		super();
+		beforeRender(this. myOtherBeforeRender)(this);
+	}
+
+	myOtherBeforeRender(renderFunc: () => DNode, properties: any, children: DNode[]): () => DNode {
+		// do something with the result
+		return renderFunc;
+	}
+}
+```
+
 ##### AfterRender
 
-Occassionally, in a mixin or base widget class, it my be required to provide logic that needs to be executed using the result of a widget's `render`. `WidgetBase` supports registering functions that opererate as an after aspect to the `render` function using a provided decorator `afterRender` or in non-decorator environments by calling the decorator method directly.
-
-*Using the `afterRender` decorator*
+The `afterRender` call receives the returned `DNode`s from a widget's `render` call, so that the nodes can decorated, manipulated or even swapped.
 
 ```ts
 class MyBaseClass extends WidgetBase<WidgetProperties> {
@@ -352,7 +384,7 @@ class MyBaseClass extends WidgetBase<WidgetProperties> {
 }
 ```
 
-*Without using decorators*
+And using the `afterRender` function for non decorator environments:
 
 ```ts
 class MyBaseClass extends WidgetBase<WidgetProperties> {
@@ -367,8 +399,6 @@ class MyBaseClass extends WidgetBase<WidgetProperties> {
 	}
 }
 ```
-
-***Note:*** `afterRender` functions are executed in the order that they are specified from the super class up to the final class.
 
 #### Projector
 
@@ -425,7 +455,7 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 
 ```ts
 class MyWidget extends WidgetBase<WidgetProperties> {
-	onClick: function (): void {
+	onClick(): void {
 		this.properties.mySpecialFunction();
 	}
 }
@@ -477,6 +507,89 @@ registry.define('my-widget', () => {
 	return load(require, './MyWidget')
 		.then(([ MyWidget ]) => MyWidget.default);
 });
+```
+
+#### Injecting State
+
+Working with larger widget structures, it can quickly become tiresome and complex to pass all the required properties down the tree. Needing to pass all required properties also means widgets often need to be aware of properties that are only needed for ensuring their propagation to child widgets.
+
+Dojo 2 provides a mechanism to inject state directly to parts of the widget tree; this is done by defining an `Injector` in the `registry` and passing a context object that will source the state that is to be injected.
+
+```ts
+import { Injector, BaseInjector } from '@dojo/widget-core/Injector';
+
+const myStateContext = {
+	theme: 'solid'
+};
+
+registry.define('state', Injector(BaseInjector, myStateContext));
+```
+
+To use the injected state, create a `beforeRender` method that returns a render function which creates a `w` reference to the registry item like any other widget and pass the properties required by the `InjectorProperties` interface.
+
+```ts
+beforeRender(renderFunc: () => DNode, properties: any, children: any): DNode {
+	return () => {
+		return w('state', {
+			render: renderFunc,
+			getProperties(context: any, properties: any): any {
+				return context;
+			},
+			properties,
+			getChildren(context: any, children: DNode[]): DNode[] {
+				return [];
+			},
+			children
+		});
+	};
+}
+```
+
+This will inject the values of `myState` as properties to the widget, as the returned object from `getProperties` is mixed over the widget's existing properties. 
+
+For convenience, Dojo 2 provides a mixin called `Container` that will decorate a widget with the above `beforeRender` implementation. Using the `Container` mixin enables any view widget to have state injected without coupling the widget to always have state injected. This means the widget can also be used as a normal widget with properties being passed from its parent.
+
+
+```ts
+import { MyViewWidget } from './MyViewWidget';
+import { Container } from '@dojo/widget-core/Container';
+
+function getProperties(context: any, properties: any): any {
+	return context;
+}
+
+const MyViewWidgetContainer = Container(MyViewWidget, 'state', { getProperties });
+```
+
+**Note:** that both the `getProperties` and `getChildren` functions do not need to be provided, if the functions are not defined the default mappers will be used that return an empty object and an empty array respectively.
+
+There may be times when the default `BaseInjector` doesn't fully meet your needs. For example if the context contains a reference to an eventable instance, you may want to add an event listener in the `Injector` to perform some logic, perhaps invalidate the widget. 
+
+To do this the `BaseInjector` can be extended easily to add the extra logic required.
+
+```ts
+interface MyContext {
+	eventeableInstance: Evented;
+	bar: number;
+}
+
+class MyInjector extends BaseInjector<MyContext> {
+	constructor(context: MyContext) {
+		super(context);
+		const { eventeableInstance } = context;
+		eventeableInstance.on('change', () => {
+			this.invalidate();
+		});
+	}
+
+	protected toInject(): any {
+		const { eventeableInstance, bar } = this.context;
+		return {
+			eventeableInstance,
+			bar
+		};
+	}
+}
 ```
 
 #### Theming
@@ -852,7 +965,7 @@ to the widget instance.
 
 These are some of the **important** principles to keep in mind when creating and using widgets:
 
-1. The widget *`__render__`* function should **never** be overridden
+1. The widget's *`__render__`*, *`__setProperties__`*, *`__setChildren__`* functions should **never** be called or overridden
 2. Except for projectors, you should **never** need to deal directly with widget instances
 3. Hyperscript should **always** be written using the @dojo/widget-core `v` helper function
 4. **Never** set state outside of a widget instance
@@ -860,7 +973,7 @@ These are some of the **important** principles to keep in mind when creating and
 
 ### API
 
-<!-- TODO: add link to generated API docs. -->
+[API Documentation](http://dojo.io/api/widget-core/v2.0.0-alpha.28/)
 
 ## How Do I Contribute?
 
