@@ -368,7 +368,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 			this._dirty = false;
 			const beforeRenders = this.getDecorator('beforeRender');
 			const render = beforeRenders.reduce((render, beforeRenderFunction) => {
-				return beforeRenderFunction.call(this, render);
+				return beforeRenderFunction.call(this, render, this._properties, this._children);
 			}, this.render.bind(this));
 			let dNode = render();
 			const afterRenders = this.getDecorator('afterRender');

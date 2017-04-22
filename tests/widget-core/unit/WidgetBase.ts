@@ -506,44 +506,61 @@ registerSuite({
 			type RenderFunction = () => DNode;
 			class TestWidget extends WidgetBase<any> {
 				@beforeRender()
-				firstAfterRender(renderFunction: RenderFunction): RenderFunction {
+				firstAfterRender(renderFunction: RenderFunction, properties: any, children: DNode[]): RenderFunction {
 					assert.strictEqual(beforeRenderCount++, 1);
 					return () => {
 						const rendered = renderFunction();
-						return v('bar', [ rendered ]);
+						const clonedProperties = { ...properties };
+						return v('bar', clonedProperties, [ rendered, ...children ]);
 					};
 				}
 
 				@beforeRender()
-				secondAfterRender(renderFunction: RenderFunction): RenderFunction {
+				secondAfterRender(renderFunction: RenderFunction, properties: any, children: DNode[]): RenderFunction {
 					assert.strictEqual(beforeRenderCount++, 2);
 					return () => {
 						const rendered = renderFunction();
-						return v('qux', [ rendered ]);
+						properties.bar = 'foo';
+						return v('qux', properties, [ rendered ]);
 					};
 				}
 			}
 
 			class ExtendedTestWidget extends TestWidget {
 				@beforeRender()
-				thirdAfterRender(renderFunction: RenderFunction): RenderFunction {
+				thirdAfterRender(renderFunction: RenderFunction, properties: any, children: DNode[]): RenderFunction {
 					assert.strictEqual(beforeRenderCount, 3);
 					return renderFunction;
 				}
 
 				render() {
-					return v('foo', []);
+					return v('foo', this.children);
 				}
 			}
 
 			const widget = new ExtendedTestWidget();
-			const qux = <any> widget.__render__();
+			widget.__setChildren__([v('baz', { baz: 'qux' })]);
+			widget.__setProperties__({ foo: 'bar' });
+			const qux: any = widget.__render__();
 			assert.equal(qux.vnodeSelector, 'qux');
+			assert.deepEqual(qux.properties, { bind: widget, bar: 'foo', foo: 'bar' });
+			assert.lengthOf(qux.children, 1);
 			const bar = qux.children[0];
 			assert.equal(bar.vnodeSelector, 'bar');
+			assert.deepEqual(bar.properties, { bind: widget, foo: 'bar' });
+			assert.lengthOf(bar.children, 2);
 			const foo = bar.children[0];
 			assert.equal(foo.vnodeSelector, 'foo');
-			assert.strictEqual(beforeRenderCount, 3);
+			assert.deepEqual(foo.properties, { bind: widget });
+			assert.lengthOf(foo.children, 1);
+			const baz1 = foo.children[0];
+			assert.equal(baz1.vnodeSelector, 'baz');
+			assert.deepEqual(baz1.properties, { bind: widget, baz: 'qux' });
+			assert.lengthOf(baz1.children, 0);
+			const baz2 = bar.children[1];
+			assert.equal(baz2.vnodeSelector, 'baz');
+			assert.deepEqual(baz2.properties, { bind: widget, baz: 'qux' });
+			assert.lengthOf(baz2.children, 0);
 		},
 		'class level decorator'() {
 			let beforeRenderCount = 0;
