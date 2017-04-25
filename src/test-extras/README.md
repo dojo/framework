@@ -454,6 +454,21 @@ additional virtual DOM to be rendered (e.g. a `w()`/`WNode` which has a widget c
 the will not be compared.  If those comparisons are important, then walking the `DNode` structure and comparing the results
 using `assertRender()` would need to be done.
 
+#### Options
+
+`assertRender()` takes an optional `options` argument, which is an overload passed as the third argument, in the format of
+`assertRender(actual, expected, options, message)`.  The options can take any of the following properties:
+
+|Property|Default|Description|
+|--------|-------|-----------|
+|`allowFunctionValues`|`true`|When diffing properties that have a value of function, as long as both properties are of `typeof ==='function'` then they will be considered equal.  This defaults to `true` because renders cannot be compared based on function equality.|
+|`isHNode`|`@dojo/widget-core/d.isHNode`|A replacement type guard that returns `true` if a node is an `HNode`, otherwise `false`|
+|`isWNode`|`@dojo/widget-core/d.isWNode`|A replacement type guard that returns `true` if a node is an `WNode`, otherwise `false`|
+|`ignoreProperties`| |When comparing, properties that should be ignored, whether in the `actual` or `expected` render.  This can be an array of strings, an array of regular expressions, or it can be a callback function which takes the arguments of `property, a, b` where `property` is the string name of the propery being compared and `a` is the object from the `actual` and `b` is the object from the `expected` being compared.  The function should return `true` if the property should be ignored or `false` if it should be compared.|
+|`ignorePropertyValues`|`[ 'bind' ]`|When comparing, properties that should have their values ignored.  The comparison will simply be made on the presence, or lack of, the property in the `actual` and `expected` render.  This can be an array of strings, an array of regular expressions, or it can be a callback function which takes the arguments of `property, a, b` where `property` is the string name of the propery being compared and `a` is the object from the `actual` and `b` is the object from the `expected` being compared.  The function should return `true` if the property value should be ignored or `false` if it should be compared.|
+
+`options` is specifically designed for advanced use cases and generally the defaults should be sufficient for most use cases.
+
 ### ClientErrorCollector
 
 `ClientErrorCollector` is a class that will collect errors from a remote session with Intern.  This is typically used with
