@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/dojo/core.svg?branch=master)](https://travis-ci.org/dojo/core)
 [![codecov.io](https://codecov.io/github/dojo/core/coverage.svg?branch=master)](https://codecov.io/github/dojo/core?branch=master)
 [![npm version](https://badge.fury.io/js/%40dojo%2Fcore.svg)](https://badge.fury.io/js/%40dojo%2Fcore)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fdojo%2Fcore.svg?type=shield)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fdojo%2Fcore?ref=badge_shield)
 
 This package provides a set of language helpers, utility functions, and classes for writing TypeScript applications.
 It includes APIs for feature detection, asynchronous operations, basic event handling,
@@ -138,3 +139,5 @@ Some string functions (`codePointAt`, `fromCodePoint`, and `repeat`) adopted fro
 under the [MIT](http://opensource.org/licenses/MIT) license.
 
 See [LICENSE](LICENSE) for details.
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fdojo%2Fcore.svg?type=large)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fdojo%2Fcore?ref=badge_large)
