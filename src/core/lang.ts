@@ -87,7 +87,10 @@ function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
 }
 
 interface ObjectAssignConstructor extends ObjectConstructor {
-	assign<T extends {}, U extends {}>(target: T, ...sources: (U | null | undefined)[]): T&U;
+	assign<T, U>(target: T, source: U): T & U;
+	assign<T, U1, U2>(target: T, source1: U1, source2: U2): T & U1 & U2;
+	assign<T, U1, U2, U3>(target: T, source1: U1, source2: U2, source3: U3): T & U1 & U2 & U3;
+	assign(target: any, ...sources: any[]): any;
 }
 
 /**
@@ -99,7 +102,7 @@ interface ObjectAssignConstructor extends ObjectConstructor {
  */
 export const assign = has('object-assign') ?
 	(<ObjectAssignConstructor> Object).assign :
-	function<T extends {}, U extends {}> (target: T, ...sources: (U | null | undefined)[]): T&U {
+	function (target: any, ...sources: any[]): any {
 		return _mixin({
 			deep: false,
 			inherited: false,

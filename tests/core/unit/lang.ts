@@ -57,7 +57,7 @@ registerSuite({
 			property2: 'value2'
 		};
 
-		lang.assign<typeof object, typeof source1 | typeof source3>(object, source1, <any> null, source3);
+		lang.assign(object, source1, <any> null, source3);
 
 		assert.deepEqual(object, {
 			property1: 'value1',
@@ -97,6 +97,32 @@ registerSuite({
 		const alsoAssigned: {} & ({ a: number, b: number } | { c: number, d: number }) = lang.assign(object, source1, source2, source3);
 
 		assert(alsoAssigned);
+	},
+
+	'.assign() with different types of sources'() {
+		const baseObject = {
+			foo: 'foo'
+		};
+
+		const assignedObject = lang.assign({}, baseObject, { bar: 'bar' });
+		assert.strictEqual(assignedObject.bar, 'bar');
+		assert.strictEqual(assignedObject.foo, 'foo');
+	},
+	'.assign() with a source whose type is a subset of another'() {
+		type FooBar = {
+			foo: string;
+			bar: string;
+		};
+		const foobar = {
+			foo: 'foo',
+			bar: 'bar'
+		};
+		const bar = {
+			bar: 'baz'
+		};
+		const assignedObject = lang.assign({}, foobar, bar);
+		assert.strictEqual(assignedObject.foo, 'foo');
+		assert.strictEqual(assignedObject.bar, 'baz');
 	},
 
 	'.deepAssign()'() {
