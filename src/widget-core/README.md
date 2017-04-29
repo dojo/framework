@@ -328,7 +328,7 @@ Finally once all the attached events have been processed, the properties lifecyc
 
 <!-- TODO: render lifecycle goes here -->
 
-Occasionally, in a mixin or base widget class, it my be required to provide logic that needs to be executed before or after a widget's `render` call. These lifecycle hooks are supported in `WidgetBase` and operate as before and after aspects. 
+Occasionally, in a mixin or base widget class, it my be required to provide logic that needs to be executed before or after a widget's `render` call. These lifecycle hooks are supported in `WidgetBase` and operate as before and after aspects.
 
 The functionality is provided by the `beforeRender` and `afterRender` decorators.
 
@@ -336,7 +336,7 @@ The functionality is provided by the `beforeRender` and `afterRender` decorators
 
 ##### BeforeRender
 
-The `beforeRender` call receives the widget's `render` function, `properties` and `children` and is expected to return a function that satisfies the `render` API. The `properties` and `children` are passed to enable them to be manipulated or decorated prior to the `render` being called. 
+The `beforeRender` call receives the widget's `render` function, `properties` and `children` and is expected to return a function that satisfies the `render` API. The `properties` and `children` are passed to enable them to be manipulated or decorated prior to the `render` being called.
 
 This is the only time in the widget lifecycle that exposes either of these attributes to be manipulated outside of the property system.
 
@@ -545,7 +545,7 @@ beforeRender(renderFunc: () => DNode, properties: any, children: any): DNode {
 }
 ```
 
-This will inject the values of `myState` as properties to the widget, as the returned object from `getProperties` is mixed over the widget's existing properties. 
+This will inject the values of `myState` as properties to the widget, as the returned object from `getProperties` is mixed over the widget's existing properties.
 
 For convenience, Dojo 2 provides a mixin called `Container` that will decorate a widget with the above `beforeRender` implementation. Using the `Container` mixin enables any view widget to have state injected without coupling the widget to always have state injected. This means the widget can also be used as a normal widget with properties being passed from its parent.
 
@@ -563,7 +563,7 @@ const MyViewWidgetContainer = Container(MyViewWidget, 'state', { getProperties }
 
 **Note:** that both the `getProperties` and `getChildren` functions do not need to be provided, if the functions are not defined the default mappers will be used that return an empty object and an empty array respectively.
 
-There may be times when the default `BaseInjector` doesn't fully meet your needs. For example if the context contains a reference to an eventable instance, you may want to add an event listener in the `Injector` to perform some logic, perhaps invalidate the widget. 
+There may be times when the default `BaseInjector` doesn't fully meet your needs. For example if the context contains a reference to an eventable instance, you may want to add an event listener in the `Injector` to perform some logic, perhaps invalidate the widget.
 
 To do this the `BaseInjector` can be extended easily to add the extra logic required.
 
@@ -596,7 +596,7 @@ class MyInjector extends BaseInjector<MyContext> {
 
 ##### Overview
 
-Widgets are themed using `css-modules` and the `Themeable` mixin. Each widget must implement a .css file that contains all the css classes that will be used to style it. The `baseClasses` object is the css API for the Widget: `baseClasses` css classes can be overridden by external themes. Further customization of specific Custom Widget classes can be achieved by passing `overrideClasses` into the widget.
+Widgets are themed using `css-modules` and the `Themeable` mixin. Each widget must implement a .css file that contains all the css classes that will be used to style it. The `baseClasses` object is the css API for the Widget: `baseClasses` css classes can be overridden by external themes. Further customization of specific Custom Widget classes can be achieved by passing `extraClasses` into the widget.
 The `Themeable` mixin provides a `classes` function that controls the classes to be applied to each node. Classes from the base `css` object passed to the `classes` function can be themed and overridden. To create fixed classes that cannot be changed, the chained `fixed` function can be used.
 
 ##### Authoring a Base Theme
@@ -611,7 +611,7 @@ tabPanel
     └── tabPanel.css
 ```
 
-The `baseClasses` css must contain a complete set of all of the classes you wish to apply to a widget as all theme and override classes are limited by the classnames made available here.
+The `baseClasses` css must contain a complete set of all of the classes you wish to apply to a widget as all theme and extra classes are limited by the classnames made available here.
 Classnames are locally scoped as part of building a Dojo application. A theme `key` is generated at build time to locate the themes for each class where a theme is set.
 
 ```css
@@ -696,17 +696,17 @@ The theme can be applied to individual widgets or to a project and property pass
 
 ##### Overriding Theme Classes
 
-As we are using `css-modules` to scope widget css classes, the generated class names cannot be used to target specific nodes and apply custom styling to them. Instead you must use the `overrideClasses` property to pass your generated classes to the widget. This will only effect one instance of a widget and will be applied on top of, rather than instead of, theme classes.
+As we are using `css-modules` to scope widget css classes, the generated class names cannot be used to target specific nodes and apply custom styling to them. Instead you must use the `extraClasses` property to pass your generated classes to the widget. This will only effect one instance of a widget and will be applied on top of, rather than instead of, theme classes.
 
 ```css
-/* tabPanelOverrides.css */
+/* tabPaneExtras.css */
 .tabs {
 	font-weight: bold;
 }
 ```
 
 ```ts
-import * as myOverrides from './overrides/myOverrides.css';
+import * as myExtras from './extras/myExtras.css';
 
 interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableMixinProperties;
 
@@ -714,7 +714,7 @@ class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProp
 	render: function () {
 		// Resulting widget will still have baseTheme red tabs,
 		// but will have font-weight: bold; applied also
-		return w(createTabPanel, { overrideClasses: myOverrides });
+		return w(createTabPanel, { extraClasses: myExtras });
 	}
 }
 ```
