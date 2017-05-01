@@ -35,6 +35,13 @@ export interface Bundle<T extends Messages> {
 	readonly messages: T;
 }
 
+/**
+ * Options object passed to message formatters and used for token replacement.
+ */
+export interface FormatOptions {
+	[key: string]: any;
+}
+
 export interface I18n<T extends Messages> {
 	(bundle: Bundle<T>, locale?: string): Promise<T>;
 
@@ -52,7 +59,7 @@ interface LocaleModule<T extends Messages> {
  * Describes a compiled ICU message formatter function.
  */
 export interface MessageFormatter {
-	(options?: any): string;
+	(options?: FormatOptions): string;
 }
 
 /**
@@ -63,11 +70,59 @@ export interface Messages {
 }
 
 const PATH_SEPARATOR: string = has('host-node') ? require('path').sep : '/';
+const TOKEN_PATTERN = /\{([a-z0-9_]+)\}/gi;
 const VALID_PATH_PATTERN = new RegExp(`\\${PATH_SEPARATOR}[^\\${PATH_SEPARATOR}]+\$`);
 const bundleMap = new Map<string, Map<string, Messages>>();
 const formatterMap = new Map<string, MessageFormatter>();
 const localeProducer = new Evented({});
 let rootLocale: string;
+
+/**
+ * @private
+ * Return a function that formats an ICU-style message, and takes an optional value for token replacement.
+ *
+ * Usage:
+ * const formatter = getMessageFormatter(bundlePath, 'guestInfo', 'fr');
+ * const message = formatter({
+ *   host: 'Miles',
+ *   gender: 'male',
+ *   guest: 'Oscar',
+ *   guestCount: '15'
+ * });
+ *
+ * @param bundlePath
+ * The message's bundle path.
+ *
+ * @param key
+ * The message's key.
+ *
+ * @param locale
+ * An optional locale for the formatter. If no locale is supplied, or if the locale is not supported, the
+ * default locale is used.
+ *
+ * @return
+ * The message formatter.
+ */
+function getIcuMessageFormatter(bundlePath: string, key: string, locale?: string): MessageFormatter {
+	const normalized = bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}`, 'g'), '-').replace(/-$/, '');
+	locale = normalizeLocale(locale || getRootLocale());
+	const formatterKey = `${locale}:${bundlePath}:${key}`;
+	let formatter = formatterMap.get(formatterKey);
+
+	if (formatter) {
+		return formatter;
+	}
+
+	const globalize = locale !== getRootLocale() ? new Globalize(normalizeLocale(locale)) : Globalize;
+	formatter = globalize.messageFormatter(`${normalized}/${key}`);
+
+	const cached = bundleMap.get(bundlePath);
+	if (cached && cached.get(locale)) {
+		formatterMap.set(formatterKey, formatter);
+	}
+
+	return formatter;
+}
 
 /**
  * @private
@@ -126,7 +181,7 @@ function getSupportedLocales(locale: string, supported: string[] = []): string[]
  * An optional locale. If not specified, then it is assumed that the messages are the defaults for the given
  * bundle path.
  */
-function loadMessages<T extends Messages> (bundlePath: string, messages: T, locale?: string) {
+function loadMessages<T extends Messages> (bundlePath: string, messages: T, locale: string = 'root') {
 	let cached = bundleMap.get(bundlePath);
 
 	if (!cached) {
@@ -134,12 +189,9 @@ function loadMessages<T extends Messages> (bundlePath: string, messages: T, loca
 		bundleMap.set(bundlePath, cached);
 	}
 
-	if (locale) {
-		cached.set(locale, messages);
-	}
-
+	cached.set(locale, messages);
 	Globalize.loadMessages({
-		[locale || 'root']: {
+		[locale]: {
 			[bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}`, 'g'), '-')]: messages
 		}
 	});
@@ -190,7 +242,10 @@ function validatePath(path: string): void {
 }
 
 /**
- * Return a message formatted according to the ICU message format pattern.
+ * Return a formatted message.
+ *
+ * If both the "supplemental/likelySubtags" and "supplemental/plurals-type-cardinal" CLDR data have been loaded, then
+ * the ICU message format is supported. Otherwise, a simple token-replacement mechanism is used.
  *
  * Usage:
  * formatMessage(bundle.bundlePath, 'guestInfo', {
@@ -214,8 +269,8 @@ function validatePath(path: string): void {
  * @return
  * The formatted message.
  */
-export function formatMessage(bundlePath: string, key: string, options: any, locale?: string): string {
-	return getMessageFormatter(bundlePath, key, locale)(options || {});
+export function formatMessage(bundlePath: string, key: string, options?: FormatOptions, locale?: string): string {
+	return getMessageFormatter(bundlePath, key, locale)(options);
 }
 
 /**
@@ -259,6 +314,10 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
 /**
  * Return a function that formats a specific message, and takes an optional value for token replacement.
  *
+ * If both the "supplemental/likelySubtags" and "supplemental/plurals-type-cardinal" CLDR data have been loaded, then
+ * the returned function will have ICU message format support. Otherwise, the returned function will perform a simple
+ * token replacement on the message string.
+ *
  * Usage:
  * const formatter = getMessageFormatter(bundlePath, 'guestInfo', 'fr');
  * const message = formatter({
@@ -282,24 +341,28 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
  * The message formatter.
  */
 export function getMessageFormatter(bundlePath: string, key: string, locale?: string): MessageFormatter {
-	const normalized = bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}`, 'g'), '-').replace(/-$/, '');
-	locale = normalizeLocale(locale || getRootLocale());
-	const formatterKey = `${locale}:${bundlePath}:${key}`;
-	let formatter = formatterMap.get(formatterKey);
-
-	if (formatter) {
-		return formatter;
+	if (isLoaded('supplemental', 'likelySubtags') && isLoaded('supplemental', 'plurals-type-cardinal')) {
+		return getIcuMessageFormatter(bundlePath, key, locale);
 	}
-
-	const globalize = locale !== getRootLocale() ? new Globalize(normalizeLocale(locale)) : Globalize;
-	formatter = globalize.messageFormatter(`${normalized}/${key}`);
 
 	const cached = bundleMap.get(bundlePath);
-	if (cached && cached.get(locale)) {
-		formatterMap.set(formatterKey, formatter);
+	const messages = cached && cached.get(locale || 'root');
+
+	if (!messages) {
+		throw new Error(`The bundle "${bundlePath}" has not been registered.`);
 	}
 
-	return formatter;
+	return function (options: FormatOptions = Object.create(null)) {
+		return messages[key].replace(TOKEN_PATTERN, (token: string, property: string) => {
+			const value = options[property];
+
+			if (typeof value === 'undefined') {
+				throw new Error(`Missing property ${property}`);
+			}
+
+			return value;
+		});
+	};
 }
 
 /**

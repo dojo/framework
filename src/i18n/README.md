@@ -198,6 +198,7 @@ loadCldrData([
 For ICU message formatting:
 
 * `supplemental/likelySubtags`
+* `supplemental/plurals`
 
 For date/time formatting:
 
@@ -231,11 +232,39 @@ For unit formatting:
 * `supplemental/ordinals`
 * `supplemental/plurals`
 
-### ICU Message Formatting
+### Message Formatting
+
+The `i18n` module exposes two methods that handle message formatting: 1) `formatMessage`, which directly returns a formatted message based on its inputs, and 2) `getMessageFormatter`, which returns a method dedicated to formatting a single message.
+
+`@dojo/i18n` supports the ICU message format (see below), but that requires CLDR data and is not something that every application requires. As such, if the `supplemental/likeSubtags` and `supplemental/plurals` data are not loaded, then both `formatMessage` and `getMessageFormatter` will perform simple token replacement. For example, given the `guestInfo` message `{host} invites {guest} to the party.`, an object with `host` and `guest` properties can be provided to a formatter without the need to load CLDR data:
+
+```typescript
+import i18n, { formatMessage, getMessageFormatter } from '@dojo/i18n/i18n';
+import bundle from 'nls/main';
+
+i18n(bundle, 'en').then(() => {
+	const formatter = getMessageFormatter(bundle.bundlePath, 'guestInfo', 'en');
+	let message = formatter({
+		host: 'Margaret Mead',
+		guest: 'Laura Nader'
+	});
+	console.log(message); // "Margaret Mead invites Laura Nader to the party."
+
+	// Note that `formatMessage` is essentially a convenience wrapper around `getMessageFormatter`.
+	message = formatMessage(bundle.bundlePath, 'guestInfo', {
+		host: 'Marshall Sahlins',
+		gender: 'male',
+		guest: 'Bronisław Malinowski'
+	}, 'en');
+	console.log(message); // "Marshall Sahlins invites Bronisław Malinowski to the party."
+});
+```
+
+#### ICU Message Formatting
 
 **Note**: This feature requires CLDR data (see above).
 
-`@dojo/i18n` relies on [Globalize.js](https://github.com/jquery/globalize/blob/master/doc/api/message/message-formatter.md) for [ICU message formatting](http://userguide.icu-project.org/formatparse/messages), and as such all of the features offered by Globalize.js are available through `@dojo/i18n`. The `i18n` module exposes two methods that handle message formatting: 1) `formatMessage`, which directly returns a formatted message based on its inputs, and 2) `getMessageFormatter`, which returns a method dedicated to formatting a single message.
+`@dojo/i18n` relies on [Globalize.js](https://github.com/jquery/globalize/blob/master/doc/api/message/message-formatter.md) for [ICU message formatting](http://userguide.icu-project.org/formatparse/messages), and as such all of the features offered by Globalize.js are available through `@dojo/i18n`.
 
 As an example, suppose there is a locale bundle with a `guestInfo` message:
 

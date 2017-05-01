@@ -56,50 +56,91 @@ registerSuite({
 	},
 
 	formatMessage: {
-		'assert without a locale'() {
-			return i18n(partyBundle).then(() => {
-				let formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
-					host: 'Nita',
-					guestCount: 0
-				});
-				assert.strictEqual(formatted, 'Nita does not give a party.');
+		'without CLDR data': {
+			setup() {
+				cldrLoad.reset();
+			},
 
-				formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
-					host: 'Nita',
-					gender: 'female',
-					guestCount: 1,
-					guest: 'Bryan'
-				});
-				assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
+			teardown() {
+				return fetchCldrData([ 'en', 'fr' ]);
+			},
 
-				formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
-					host: 'Nita',
-					gender: 'female',
-					guestCount: 2,
-					guest: 'Bryan'
-				});
-				assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
+			'assert without loaded messages'() {
+				assert.throws(() => {
+					formatMessage('path/to/make-believe', 'messageKey');
+				}, Error, 'The bundle "path/to/make-believe" has not been registered.');
+			},
 
-				formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
-					host: 'Nita',
-					gender: 'female',
-					guestCount: 42,
-					guest: 'Bryan'
+			'assert tokens replaced'() {
+				return i18n(partyBundle).then(() => {
+					const formatted = formatMessage(partyBundle.bundlePath, 'simpleGuestInfo', {
+						host: 'Nita',
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
+
+					assert.throws(() => {
+						formatMessage(partyBundle.bundlePath, 'simpleGuestInfo', {
+							host: 'Nita'
+						});
+					}, Error, 'Missing property guest');
 				});
-				assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
-			});
+			},
+
+			'assert message without tokens'() {
+				return i18n(bundle).then(() => {
+					const formatted = formatMessage(bundle.bundlePath, 'hello');
+					assert.strictEqual(formatted, 'Hello');
+				});
+			}
 		},
 
-		'assert supported locale'() {
-			return i18n(bundle, 'ar').then(() => {
-				assert.strictEqual(formatMessage(bundle.bundlePath, 'hello', null, 'ar'), 'السلام عليكم');
-			});
-		},
+		'with CLDR data': {
+			'assert without a locale'() {
+				return i18n(partyBundle).then(() => {
+					let formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+						host: 'Nita',
+						guestCount: 0
+					});
+					assert.strictEqual(formatted, 'Nita does not host a party.');
 
-		'assert unsupported locale'() {
-			return i18n(bundle, 'fr').then(() => {
-				assert.strictEqual(formatMessage(bundle.bundlePath, 'hello', null, 'fr'), 'Hello');
-			});
+					formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 1,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
+
+					formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 2,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
+
+					formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 42,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
+				});
+			},
+
+			'assert supported locale'() {
+				return i18n(bundle, 'ar').then(() => {
+					assert.strictEqual(formatMessage(bundle.bundlePath, 'hello', {}, 'ar'), 'السلام عليكم');
+				});
+			},
+
+			'assert unsupported locale'() {
+				return i18n(bundle, 'fr').then(() => {
+					assert.strictEqual(formatMessage(bundle.bundlePath, 'hello', {}, 'fr'), 'Hello');
+				});
+			}
 		}
 	},
 
@@ -142,53 +183,95 @@ registerSuite({
 	},
 
 	getMessageFormatter: {
-		'assert without a locale'() {
-			return i18n(partyBundle).then(() => {
-				const formatter = getMessageFormatter(partyBundle.bundlePath, 'guestInfo');
-				let formatted = formatter({
-					host: 'Nita',
-					guestCount: 0
-				});
-				assert.strictEqual(formatted, 'Nita does not give a party.');
+		'without CLDR data': {
+			setup() {
+				cldrLoad.reset();
+			},
 
-				formatted = formatter({
-					host: 'Nita',
-					gender: 'female',
-					guestCount: 1,
-					guest: 'Bryan'
-				});
-				assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
+			teardown() {
+				return fetchCldrData([ 'en', 'fr' ]);
+			},
 
-				formatted = formatter({
-					host: 'Nita',
-					gender: 'female',
-					guestCount: 2,
-					guest: 'Bryan'
-				});
-				assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
+			'assert without loaded messages'() {
+				assert.throws(() => {
+					getMessageFormatter('path/to/make-believe', 'messageKey')();
+				}, Error, 'The bundle "path/to/make-believe" has not been registered.');
+			},
 
-				formatted = formatter({
-					host: 'Nita',
-					gender: 'female',
-					guestCount: 42,
-					guest: 'Bryan'
+			'assert tokens replaced'() {
+				return i18n(partyBundle).then(() => {
+					const formatter = getMessageFormatter(partyBundle.bundlePath, 'simpleGuestInfo');
+					const formatted = formatter({
+						host: 'Nita',
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
+
+					assert.throws(() => {
+						formatter({
+							host: 'Nita'
+						});
+					}, Error, 'Missing property guest');
 				});
-				assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
-			});
+			},
+
+			'assert message without tokens'() {
+				return i18n(bundle).then(() => {
+					const formatter = getMessageFormatter(bundle.bundlePath, 'hello');
+					assert.strictEqual(formatter(), 'Hello');
+				});
+			}
 		},
 
-		'assert supported locale'() {
-			return i18n(bundle, 'ar').then(() => {
-				const formatter = getMessageFormatter(bundle.bundlePath, 'hello', 'ar');
-				assert.strictEqual(formatter(), 'السلام عليكم');
-			});
-		},
+		'with CLDR data': {
+			'assert without a locale'() {
+				return i18n(partyBundle).then(() => {
+					const formatter = getMessageFormatter(partyBundle.bundlePath, 'guestInfo');
+					let formatted = formatter({
+						host: 'Nita',
+						guestCount: 0
+					});
+					assert.strictEqual(formatted, 'Nita does not host a party.');
 
-		'assert unsupported locale'() {
-			return i18n(bundle, 'fr').then(() => {
-				const formatter = getMessageFormatter(bundle.bundlePath, 'hello', 'fr');
-				assert.strictEqual(formatter(), 'Hello');
-			});
+					formatted = formatter({
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 1,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
+
+					formatted = formatter({
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 2,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
+
+					formatted = formatter({
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 42,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
+				});
+			},
+
+			'assert supported locale'() {
+				return i18n(bundle, 'ar').then(() => {
+					const formatter = getMessageFormatter(bundle.bundlePath, 'hello', 'ar');
+					assert.strictEqual(formatter(), 'السلام عليكم');
+				});
+			},
+
+			'assert unsupported locale'() {
+				return i18n(bundle, 'fr').then(() => {
+					const formatter = getMessageFormatter(bundle.bundlePath, 'hello', 'fr');
+					assert.strictEqual(formatter(), 'Hello');
+				});
+			}
 		}
 	},
 
