@@ -1,4 +1,6 @@
 import global from '@dojo/core/global';
+import { add as hasAdd, exists } from '@dojo/has/has';
+import { VirtualConsole } from 'jsdom';
 
 /* In order to have the tests work under Node.js, we need to load JSDom and polyfill
  * requestAnimationFrame */
@@ -10,31 +12,44 @@ declare global {
 	}
 }
 
+/**
+ * If `jsdom` loads, this is a reference to the virtual console for the global `window` and `document`
+ */
+export let virtualConsole: VirtualConsole | undefined;
+
 /* Create a basic document */
 let doc: Document;
 
 if (!('document' in global)) {
 	const jsdom = require('jsdom'); /* Only attempt to load JSDOM to avoid using a loader plugin */
 
-	doc = jsdom.jsdom(`
+	/* create a virtual console and direct it to the global `console` */
+	virtualConsole = new jsdom.VirtualConsole() as VirtualConsole;
+	virtualConsole.sendTo(console);
+
+	/* Create a new jsdom instance */
+	const dom = new jsdom.JSDOM(`
 		<!DOCTYPE html>
 		<html>
 		<head></head>
 		<body></body>
 		<html>
 	`, {
-		/* direct the console of the document to the NodeJS console */
-		virtualConsole: jsdom.createVirtualConsole().sendTo(console)
+		virtualConsole,
+		runScripts: 'dangerously'
 	});
 
-	/* Assign it to the global namespace */
-	global.document = doc;
+	/* Assign a global window */
+	global.window = dom.window;
 
-	/* Assign a global window as well */
-	global.window = doc.defaultView;
+	/* Assign a global document */
+	doc = global.document = global.window.document;
+
+	/* Assign a global DocParser */
+	global.DOMParser = global.window.DOMParser;
 
 	/* Needed for Pointer Event Polyfill's incorrect Element detection */
-	global.Element = function() {};
+	global.Element = global.window.Element;
 
 	/* Patch feature detection of CSS Animations */
 	Object.defineProperty(
@@ -51,9 +66,15 @@ if (!('document' in global)) {
 	};
 
 	global.cancelAnimationFrame = () => {};
+
+	hasAdd('jsdom', true);
 }
 else {
 	doc = document;
+	/* istanbul ignore else */
+	if (!exists('jsdom')) {
+		hasAdd('jsdom', false);
+	}
 }
 
 export default doc;

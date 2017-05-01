@@ -66,7 +66,7 @@ registerSuite({
 			widget.destroy();
 		},
 
-		'support custom event listners on rendering'() {
+		'support custom event listeners on rendering'() {
 			let called = false;
 
 			class CustomEventWidget extends WidgetBase<WidgetProperties> {
@@ -105,9 +105,9 @@ registerSuite({
 
 			const widget = harness(MisboundWidget);
 			widget.sendEvent('click');
-			assert.isTrue(clickCalled, 'event listner should have been called');
+			assert.isTrue(clickCalled, '"click" event listener should have been called');
 			widget.sendEvent('foo');
-			assert.isTrue(fooCalled, 'event listner should have been called');
+			assert.isTrue(fooCalled, '"foo" event listener should have been called');
 			widget.destroy();
 		},
 
@@ -391,7 +391,7 @@ registerSuite({
 	},
 
 	'.listener': {
-		'listner stub is present and returns true'() {
+		'listener stub is present and returns true'() {
 			const widget = harness(MockWidget);
 			assert.isFunction(widget.listener, 'listener should be a function');
 			assert.isTrue(widget.listener(), 'listener should return `true`');

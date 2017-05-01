@@ -25,6 +25,14 @@ registerSuite({
 		assert.strictEqual(global.window, window, 'global window should equal window');
 	},
 
+	'global.Element is defined'() {
+		assert(global.Element, 'there should be a globally defined Element');
+	},
+
+	'global.DOMParser is defined'() {
+		assert(global.DOMParser, 'there should be a globally defined DOMParser');
+	},
+
 	'window has a reference to itself'(this: any) {
 		assert.strictEqual(window, window.window, 'window should have a reference to itself');
 	},
@@ -51,5 +59,9 @@ registerSuite({
 			this.skip('Not a NodeJS Environment');
 		}
 		assert.isFunction(cancelAnimationFrame);
+	},
+
+	'has flag is set properly'() {
+		assert[has('host-node') ? 'isTrue' : 'isFalse'](has('jsdom'), 'should have proper flag set for "jsdom"');
 	}
 });
