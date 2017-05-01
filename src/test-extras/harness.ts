@@ -1,15 +1,16 @@
 import 'pepjs';
 
 import Evented from '@dojo/core/Evented';
-import { assign, createHandle } from '@dojo/core/lang';
+import { createHandle } from '@dojo/core/lang';
 import { VNode } from '@dojo/interfaces/vdom';
 import { includes } from '@dojo/shim/array';
-import { Constructor, DNode, HNode, VirtualDomProperties, WidgetBaseInterface, WidgetProperties, WNode } from '@dojo/widget-core/interfaces';
-import { decorate, isHNode, isWNode, v, w } from '@dojo/widget-core/d';
+import { Constructor, DNode, WidgetBaseInterface, WidgetProperties, WNode } from '@dojo/widget-core/interfaces';
+import { decorate, isWNode, v, w } from '@dojo/widget-core/d';
 import WidgetBase, { afterRender } from '@dojo/widget-core/WidgetBase';
 import cssTransitions from '@dojo/widget-core/animations/cssTransitions';
 import { dom, Projection, ProjectionOptions, VNodeProperties } from 'maquette';
 import assertRender from './support/assertRender';
+import callListener, { CallListenerOptions } from './support/callListener';
 import sendEvent, { SendEventOptions } from './support/sendEvent';
 
 const ROOT_CUSTOM_ELEMENT_NAME = 'test--harness';
@@ -284,6 +285,19 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 	}
 
 	/**
+	 * Call a listener on a target node of the virtual DOM.
+	 * @param method The method to call on the target node
+	 * @param options A map of options that effect the behavior of `callListener`
+	 */
+	public callListener(method: string, options?: CallListenerOptions): void {
+		const render = this.getRender();
+		if (typeof render !== 'object' || render === null) {
+			throw new TypeError('Widget is not rendering an HNode or WNode');
+		}
+		callListener(render, method, options);
+	}
+
+	/**
 	 * Provide a set of classes that should be returned as a map.  It is stateful in that previous classes
 	 * will be negated in future calls.  Use `.resetClasses()` to clear the cache of classes.
 	 * @param classes A rest argument of classes to be returned as a map
@@ -357,7 +371,7 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 
 	/**
 	 * Dispatch an event to the root DOM element of the rendered harnessed widget.  You can use the options to change the
-	 * event class, provide additional event properties, or select a different target.
+	 * event class, provide additional event properties, or select a different `target`.
 	 *
 	 * By default, the event class is `CustomEvent` and `bubbles` and `cancelable` are both `true` on events dispatched by
 	 * the harness.
@@ -397,97 +411,4 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
  */
 export default function harness<P extends WidgetProperties, W extends Constructor<WidgetBaseInterface<P>>>(widgetConstructor: W, projectionRoot?: HTMLElement): Harness<P, W> {
 	return new Harness<P, W>(widgetConstructor, projectionRoot);
-}
-
-/* Helper functions */
-
-export function assignChildProperties(target: WNode | HNode, index: number | string, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
-	const node = resolveChild(target, index);
-	if (!(isWNode(node) || isHNode(node))) {
-		throw new TypeError(`Index of "${index}" is not resolving to a valid target`);
-	}
-	assignProperties(node, properties);
-	return target;
-}
-
-export function assignProperties(target: HNode, properties: VirtualDomProperties): HNode;
-export function assignProperties(target: WNode, properties: WidgetProperties): WNode;
-export function assignProperties(target: WNode | HNode, properties: WidgetProperties | VirtualDomProperties): WNode | HNode;
-export function assignProperties(target: WNode | HNode, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
-	assign(target.properties, properties);
-	return target;
-}
-
-/**
- * Replace a child of DNode.
- *
- * *NOTE:* The replacement modify the passed `target` and does not return a new instance of the `DNode`.
- * @param target The DNode to replace a child element on
- * @param index A number of the index of a child, or a string with comma seperated indexes that would nagivate
- * @param replacement The DNode to be replaced
- */
-export function replaceChild(target: WNode | HNode, index: number | string, replacement: DNode): WNode | HNode {
-	/* TODO: Combine with resolveChild */
-	if (typeof index === 'number') {
-		if (!target.children) {
-			target.children = [];
-		}
-		target.children[index] = replacement;
-	}
-	else {
-		const indexes = index.split(',').map(Number);
-		const lastIndex = indexes.pop()!;
-		const resolvedTarget = indexes.reduce((target, idx) => {
-			if (!(isWNode(target) || isHNode(target)) || !target.children) {
-				throw new TypeError(`Index of "${index}" is not resolving to a valid target`);
-			}
-			return target.children[idx];
-		}, <DNode> target);
-		if (!(isWNode(resolvedTarget) || isHNode(resolvedTarget))) {
-			throw new TypeError(`Index of "${index}" is not resolving to a valid target`);
-		}
-		if (!resolvedTarget.children) {
-			resolvedTarget.children = [];
-		}
-		resolvedTarget.children[lastIndex] = replacement;
-	}
-	return target;
-}
-
-function resolveChild(target: WNode | HNode, index: number | string): DNode {
-	if (typeof index === 'number') {
-		if (!target.children) {
-			throw new TypeError(`Index of "${index}" is not resolving to a valid target`);
-		}
-		return target.children[index];
-	}
-	const indexes = index.split(',').map(Number);
-	const lastIndex = indexes.pop()!;
-	const resolvedTarget = indexes.reduce((target, idx) => {
-		if (!(isWNode(target) || isHNode(target)) || !target.children) {
-			throw new TypeError(`Index of "${index}" is not resolving to a valid target`);
-		}
-		return target.children[idx];
-	}, <DNode> target);
-	if (!(isWNode(resolvedTarget) || isHNode(resolvedTarget)) || !resolvedTarget.children) {
-		throw new TypeError(`Index of "${index}" is not resolving to a valid target`);
-	}
-	return resolvedTarget.children[lastIndex];
-}
-
-export function replaceChildProperties(target: WNode | HNode, index: number | string, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
-	const node = resolveChild(target, index);
-	if (!(isWNode(node) || isHNode(node))) {
-		throw new TypeError(`Index of "${index}" is not resolving to a valid target`);
-	}
-	replaceProperties(node, properties);
-	return target;
-}
-
-export function replaceProperties(target: HNode, properties: VirtualDomProperties): HNode;
-export function replaceProperties(target: WNode, properties: WidgetProperties): WNode;
-export function replaceProperties(target: WNode | HNode, properties: WidgetProperties | VirtualDomProperties): WNode | HNode;
-export function replaceProperties(target: WNode | HNode, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
-	target.properties = properties;
-	return target;
 }

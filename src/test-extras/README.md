@@ -78,6 +78,42 @@ Since it would require widget's to break their encapsulation to expose their lis
 render to have a reference to the actual listener.  It only compares if the property exists and that both the actual and expected
 values are of `typeof === 'function'`.
 
+#### .callListener()
+
+When working with virtual DOM, it is a common pattern to mix in protected or private listeners to properties of the virtual DOM,
+either to supply event listeners to DOM events or deal with higher order widget _events_.  `.callListener()` is designed to make it
+easier to be able to invoke these listeners for testing.
+
+_Note:_ This should not be used as a substitute for `.sendEvent()` where DOM events are dispatched to the DOM and follow the
+bubbling and canceling supported by the DOM.  You can easily get false positives in your units if you are not using `.sendEvent()`
+when dealing with DOM events.  This is mainly designed for calling listeners on sub-widgets of which the harness widget is setting
+the listener in the properties of the sub-widget.
+
+The function takes up to two arguments.  The first is a string value of the `method` that is expected to be in the properties.
+The second is an optional argument of `options`.
+
+_Note:_ Unlike when sending events, there is no _magical_ prepending of `'on'` to finding the listener property to call.  Therefore if
+the `method` in the properties is `'onClick'` the argument passed as `method` should be `'onClick'`.
+
+The options are all optional and are:
+
+|Option|Default|Description|
+|------|-------|-----------|
+|`args`|`undefined`|An array of arguments to pass the listener when called.|
+|`index`|`undefined`|Instead of calling the listener on the `node` argument, resolve the listener by index.  This can be either a number or a string of numbers deliminated by a comma (e.g. `"0,1,2"` which would target the 3rd child of the 2nd child of the 1st child of `node`).
+|`key`|`undefined`|Locate that target based on the `key` property of the nodes.  This is useful when wanting to target a _named_ sub-widget of a rendered widget.|
+|`target`|`undefined`|Instead of using `node`, use `target` instead.  This can be used if you have a complex render and you want to supply the target directly.|
+|`thisArg`|determined by `widget-core`|Normally, the rendering of the virtual DOM by `widget-core` will automatically resolving binding and passing of `thisArg` will have no effect on the `this` of the listener.  It is preserved here for compatability with `support/callListener` where sometimes this needs to be supplied.|
+
+An example:
+
+```typescript
+widget.callListener('onClick', {
+    args: [ event ],
+    key: 'left'
+});
+```
+
 #### .classes()
 
 Returns a value to be passed as a classes property of a `v()` or `w()` call that adds classes in the same way they would be added
@@ -275,13 +311,120 @@ widget.setProperties({
 widget.expectRender(v('div', { classes.widget(css.root, css.open) }));
 ```
 
-### Virtual DOM Helper Functions
+### intern/ClientErrorCollector
+
+`ClientErrorCollector` is a class that will collect errors from a remote session with Intern.  This is typically used with
+functional tests, when there might be client error messages which are not effecting the functionality of the test, but are
+undesired.
+
+Typical usage would be to create an instance of the `ClientErrorCollector` providing the remote session, `.init()` the collector
+which will install the collection script on the remote client, run whatever additional tests are desired, and then call `.finish()`
+which will resolve with any errors that were collected or call `.assertNoErrors()`.  `.assertNoErrors()` either resolves if there
+were no errors, or rejects with the first error collecte.  For example:
+
+```typescript
+import * as assert from 'intern/chai!assert';
+import * as registerSuite from 'intern!object';
+import * as Suite from 'intern/lib/Suite';
+import ClientErrorCollector from '@dojo/test-extras/intern/ClientErrorCollector';
+
+registerSuite({
+  name: 'Test',
+
+  'functional testing'(this: Suite) {
+    const collector = new ClientErrorCollector(this.remote);
+    return this.remote
+      .get('SomeTest.html')
+      .then(() => collector.init())
+      .execute(() => {
+        /* some test code */
+      })
+      .then(() => collector.assertNoErrors());
+  }
+});
+```
+
+### support/assertRender()
+
+`assertRender()` is an assertion function that throws when there is a discrepency between an actual Dojo virtual DOM (`DNode`)
+and the expected Dojo virtual DOM.
+
+Typically, this would be used with the Dojo virtual DOM functions `v()` and `w()` provided in `@dojo/widget-core/d` in the following
+way:
+
+```typescript
+import { v } from '@dojo/widget-core/d';
+import assertRender from '@dojo/test-extras/support/assertRender';
+
+function someRenderFunction () {
+  return v('div', { styles: { 'color': 'blue' } }, [ 'Hello World!' ]);
+}
+
+assertRender(someRenderFunction(), v('div', {
+    styles: {
+      'color': 'blue'
+    }
+  }, [ 'Hello World!' ]), 'renders should match');
+```
+
+There are some important things to note about how `assertRender()` compares `DNode`s.
+
+First, on function values of the properties of a `DNode`, their equality is simply compared on the presence of the value and that
+both actual and expected values are `typeof` functions.  This is because it challenging to gain the direct reference of a
+function, like an event handler.  If there is a mismatch between the presence of the property or the type of the value,
+`asserRender()` will throw.
+
+Second, widget constructors (in `WNode`s/generated by `w()`) are compared by strict equality.  They can be strings (if using the widget
+registry), but the actual constructor functions will not be resolved.
+
+Third, `DNode`s will not be rendered when comparing.  Simply their children will be walked, but if a `DNode`'s rendering causes
+additional virtual DOM to be rendered (e.g. a `w()`/`WNode` which has a widget constructor that renders additional widgets),
+the will not be compared.  If those comparisons are important, then walking the `DNode` structure and comparing the results
+using `assertRender()` would need to be done.
+
+### support/callListener
+
+When working with virtual DOM, it is a common pattern to mix in protected or private listeners to properties of the virtual DOM,
+either to supply event listeners to DOM events or deal with higher order widget _events_.  `callListener` is a module which exports
+a single default function to make calling these when testing easier.
+
+The function takes up to three arguments.  The first is the `target` that you want to call the listener on, the second is a string
+value of the `method` that is expected to be in the properties.  The third is an optional argument of `options`.
+
+_Note:_ Unlike when sending events, there is no _magical_ prepending of `'on'` to finding the listener property to call.  Therefore if
+the `method` in the properties is `'onClick'` the argument passed as `method` should be `'onClick'`.
+
+The options are all optional and are:
+
+|Option|Default|Description|
+|------|-------|-----------|
+|`args`|`undefined`|An array of arguments to pass the listener when called.|
+|`index`|`undefined`|Instead of calling the listener on the `node` argument, resolve the listener by index.  This can be either a number or a string of numbers deliminated by a comma (e.g. `"0,1,2"` which would target the 3rd child of the 2nd child of the 1st child of `node`).
+|`key`|`undefined`|Locate that target based on the `key` property of the nodes.  This is useful when wanting to target a _named_ sub-widget of a rendered widget.|
+|`target`|`undefined`|Instead of using `node`, use `target` instead.  This is designed for supporting integration into other APIs and is not useful by itself.|
+|`thisArg`|`properties.bind` or `undefined`|By default, the resolved listener will be called with a `this` of `undefined` or the resolved node's `properties.bind` if specified.  Alternatively you can supply a `thisArg` to provide a different `this` when calling.|
+
+An example:
+
+```typescript
+const node = v('div', { key: 'root' }, [
+    w('sub-widget', { key: 'left', onClick: listener }, [ 'content' ]),
+    w('sub-widget', { key: 'right', onClick: listener }, [ 'content' ])
+]);
+
+callListener(node, 'onClick', {
+    args: [ event ],
+    key: 'left'
+});
+```
+
+### support/d
 
 In testing expected virtual DOM, it can be overly verbose to regenerate your virtual DOM every time you have changed the conditions
-that might effect the render.  Therefore the `harness` module contains some additional helper functions which can be used to manipulate
+that might effect the render.  Therefore the `support/d` module contains some helper functions which can be used to manipulate
 virtual DOM once it has been generated by the `v()` and `w()` virtual DOM functions.
 
-#### assignChildProperties
+#### assignChildProperties()
 
 Shallowly assigns properties of a `WNode` or `HNode` indicated by an index.  The index can be a number, or it can be a string of numbers
 seperated by commas to target a deeper child.  For example:
@@ -298,7 +441,7 @@ const expected = v('div', [
 assignChildProperties(expected, '0,2', { classes: widget.classes(css.highlight) });
 ```
 
-#### assignProperties
+#### assignProperties()
 
 Shallowly assigns properties to a `WNode` or `HNode`.  For example:
 
@@ -313,7 +456,48 @@ assignProperties(expected, {
 });
 ```
 
-#### replaceChild
+### findIndex()
+
+Returns a node identified by the supplied `index`.  The first argument is the _root_ virtual DOM node (`WNode` or `HNode`) and the
+second argument is the `index` being searched for.  Indexes can be either numbers, or a string of comma deliminated numbers which
+specify the deeper index.  For example a string of `0,1,2` would get the third child of the second child of the first child of the
+_root_.  If resolved, the function will return the `DNode`, otherwise it returns `undefined`.
+
+An example:
+
+```typescript
+const vdom = const expected = v('div', [
+    v('ol', { type: 'I' }, [
+        v('li', { value: 3 }, [ 'foo' ]),
+        v('li', { }, [ 'bar' ]),
+        v('li', { }, [ 'baz' ])
+    ])
+]);
+
+findIndex(vdom, '0,0,0'); // returns 'foo'
+```
+
+### findKey()
+
+Returns a node identified by the supplied `key`.  The first argument is the _root_ virutal DOM node (`WNode` or `HNode`) and the
+second argument is the `key` being searched for.  If found, the function will return the `WNode` or `HNode`, otherwise it returns
+`undefined`.
+
+An example:
+
+```typescript
+const vdom = const expected = v('div', [
+    v('ol', { type: 'I' }, [
+        v('li', { key: 'foo' }, [ 'foo' ]),
+        v('li', { }, [ 'bar' ]),
+        v('li', { }, [ 'baz' ])
+    ])
+]);
+
+findKey(vdom, 'foo'); // returns `v('li', { key: 'foo' }, [ 'foo' ])`
+```
+
+#### replaceChild()
 
 Replaces a child in a `WNode` or `HNode` with another, specified by an index.  The index can be either a number, or a string of
 numbers seperated by commas to target a deeper child.  If the target child does not have any children, a child array will be created
@@ -335,7 +519,7 @@ replaceChild(expected, '0,0,0', 'qat');
 replaceChild(expected, '0,2', v('span'));
 ```
 
-#### replaceChildProperties
+#### replaceChildProperties()
 
 Replace a map of properties on a child specified by the index.  The index can be eitehr a number, or a string of numbers
 seperated by commas to target a deeper child.  Different than `assignChildProperties` which *mixes-in* properties, this is a
@@ -356,7 +540,7 @@ assignChildProperties(expected, '0,2', {
 });
 ```
 
-#### replaceProperties
+#### replaceProperties()
 
 Replaces properties on a `WNode` or `HNode`.  For example:
 
@@ -372,7 +556,24 @@ assignProperties(expected, {
 });
 ```
 
-### sendEvent()
+### support/loadJsdom
+
+`loadJsdom` is a module which will attempt to load `jsdom` in environments where there appears to be no global `document` object
+(e.g. NodeJS).  If it detects `jsdom` needs to be loaded, it will create a global `document` and `window` as well as provide a
+couple of key shims/polyfills to support certain feature detections needed by Dojo 2.
+
+The module's default export is a reference to `document`, either the created one, or the one that is already there.  It will
+essentially be a "noop" if it is running in a browser environment, so it is safe to load without knowing what sort of environment
+you are running in.
+
+Typical usage would be to load the module before starting any client unit tests that need a browser environment:
+
+```typescript
+import '@dojo/intern-helper/support/loadJsdom';
+import 'testModule';
+```
+
+### support/sendEvent()
 
 Dispatch an event to a specified DOM element.  The first argument is the target, the second argument is the type of the event to
 dispatch to the target.  The third is an optional object of additional options:
@@ -414,109 +615,6 @@ sendEvent(div, 'touchend', {
         changedTouches: [ { screenX: 150 } ]
     }
 });
-```
-
-### assertRender()
-
-`assertRender()` is an assertion function that throws when there is a discrepency between an actual Dojo virtual DOM (`DNode`)
-and the expected Dojo virtual DOM.
-
-Typically, this would be used with the Dojo virtual DOM functions `v()` and `w()` provided in `@dojo/widget-core/d` in the following
-way:
-
-```typescript
-import { v } from '@dojo/widget-core/d';
-import assertRender from '@dojo/test-extras/support/assertRender';
-
-function someRenderFunction () {
-  return v('div', { styles: { 'color': 'blue' } }, [ 'Hello World!' ]);
-}
-
-assertRender(someRenderFunction(), v('div', {
-    styles: {
-      'color': 'blue'
-    }
-  }, [ 'Hello World!' ]), 'renders should match');
-```
-
-There are some important things to note about how `assertRender()` compares `DNode`s.
-
-First, on function values of the properties of a `DNode`, their equality is simply compared on the presence of the value and that
-both actual and expected values are `typeof` functions.  This is because it challenging to gain the direct reference of a
-function, like an event handler.  If there is a mismatch between the presence of the property or the type of the value,
-`asserRender()` will throw.
-
-Second, widget constructors (in `WNode`s/generated by `w()`) are compared by strict equality.  They can be strings (if using the widget
-registry), but the actual constructor functions will not be resolved.
-
-Third, `DNode`s will not be rendered when comparing.  Simply their children will be walked, but if a `DNode`'s rendering causes
-additional virtual DOM to be rendered (e.g. a `w()`/`WNode` which has a widget constructor that renders additional widgets),
-the will not be compared.  If those comparisons are important, then walking the `DNode` structure and comparing the results
-using `assertRender()` would need to be done.
-
-#### Options
-
-`assertRender()` takes an optional `options` argument, which is an overload passed as the third argument, in the format of
-`assertRender(actual, expected, options, message)`.  The options can take any of the following properties:
-
-|Property|Default|Description|
-|--------|-------|-----------|
-|`allowFunctionValues`|`true`|When diffing properties that have a value of function, as long as both properties are of `typeof ==='function'` then they will be considered equal.  This defaults to `true` because renders cannot be compared based on function equality.|
-|`isHNode`|`@dojo/widget-core/d.isHNode`|A replacement type guard that returns `true` if a node is an `HNode`, otherwise `false`|
-|`isWNode`|`@dojo/widget-core/d.isWNode`|A replacement type guard that returns `true` if a node is an `WNode`, otherwise `false`|
-|`ignoreProperties`| |When comparing, properties that should be ignored, whether in the `actual` or `expected` render.  This can be an array of strings, an array of regular expressions, or it can be a callback function which takes the arguments of `property, a, b` where `property` is the string name of the propery being compared and `a` is the object from the `actual` and `b` is the object from the `expected` being compared.  The function should return `true` if the property should be ignored or `false` if it should be compared.|
-|`ignorePropertyValues`|`[ 'bind' ]`|When comparing, properties that should have their values ignored.  The comparison will simply be made on the presence, or lack of, the property in the `actual` and `expected` render.  This can be an array of strings, an array of regular expressions, or it can be a callback function which takes the arguments of `property, a, b` where `property` is the string name of the propery being compared and `a` is the object from the `actual` and `b` is the object from the `expected` being compared.  The function should return `true` if the property value should be ignored or `false` if it should be compared.|
-
-`options` is specifically designed for advanced use cases and generally the defaults should be sufficient for most use cases.
-
-### ClientErrorCollector
-
-`ClientErrorCollector` is a class that will collect errors from a remote session with Intern.  This is typically used with
-functional tests, when there might be client error messages which are not effecting the functionality of the test, but are
-undesired.
-
-Typical usage would be to create an instance of the `ClientErrorCollector` providing the remote session, `.init()` the collector
-which will install the collection script on the remote client, run whatever additional tests are desired, and then call `.finish()`
-which will resolve with any errors that were collected or call `.assertNoErrors()`.  `.assertNoErrors()` either resolves if there
-were no errors, or rejects with the first error collecte.  For example:
-
-```typescript
-import * as assert from 'intern/chai!assert';
-import * as registerSuite from 'intern!object';
-import * as Suite from 'intern/lib/Suite';
-import ClientErrorCollector from '@dojo/test-extras/intern/ClientErrorCollector';
-
-registerSuite({
-  name: 'Test',
-
-  'functional testing'(this: Suite) {
-    const collector = new ClientErrorCollector(this.remote);
-    return this.remote
-      .get('SomeTest.html')
-      .then(() => collector.init())
-      .execute(() => {
-        /* some test code */
-      })
-      .then(() => collector.assertNoErrors());
-  }
-});
-```
-
-### loadJsdom
-
-`loadJsdom` is a module which will attempt to load `jsdom` in environments where there appears to be no global `document` object
-(e.g. NodeJS).  If it detects `jsdom` needs to be loaded, it will create a global `document` and `window` as well as provide a
-couple of key shims/polyfills to support certain feature detections needed by Dojo 2.
-
-The module's default export is a reference to `document`, either the created one, or the one that is already there.  It will
-essentially be a "noop" if it is running in a browser environment, so it is safe to load without knowing what sort of environment
-you are running in.
-
-Typical usage would be to load the module before starting any client unit tests that need a browser environment:
-
-```typescript
-import '@dojo/intern-helper/support/loadJsdom';
-import 'testModule';
 ```
 
 ## How do I contribute?

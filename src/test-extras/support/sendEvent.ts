@@ -91,7 +91,7 @@ export interface EventInitializer {
  * @param type The event type to dispatch
  * @param options A map of options to configure the event
  */
-export default function sendEvent<I extends EventInit>(target: Element, type: string, options?: SendEventOptions<I>) {
+export default function sendEvent<I extends EventInit>(target: Element, type: string, options?: SendEventOptions<I>): void {
 
 	function dispatchEvent(target: Element, event: Event) {
 		let error: Error | undefined;

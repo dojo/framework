@@ -1,10 +1,12 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as main from '../../src/main';
-import harness, { assignChildProperties, assignProperties, replaceChild, replaceChildProperties, replaceProperties } from '../../src/harness';
+import harness from '../../src/harness';
 import assertRender from '../../src/support/assertRender';
+import callListener from '../../src/support/callListener';
 import sendEvent from '../../src/support/sendEvent';
 import ClientErrorCollector from '../../src/intern/ClientErrorCollector';
+import { assignChildProperties, assignProperties, findIndex, findKey, replaceChild, replaceChildProperties, replaceProperties } from '../../src/support/d';
 
 registerSuite({
 	name: 'main',
@@ -21,8 +23,17 @@ registerSuite({
 		assert.isFunction(main.assignProperties);
 		assert.strictEqual(main.assignProperties, assignProperties);
 
+		assert.isFunction(main.callListener);
+		assert.strictEqual(main.callListener, callListener);
+
 		assert.isFunction(main.ClientErrorCollector);
 		assert.strictEqual(main.ClientErrorCollector, ClientErrorCollector);
+
+		assert.isFunction(main.findIndex);
+		assert.strictEqual(main.findIndex, findIndex);
+
+		assert.isFunction(main.findKey);
+		assert.strictEqual(main.findKey, findKey);
 
 		assert.isFunction(main.harness);
 		assert.strictEqual(main.harness, harness);
@@ -38,5 +49,7 @@ registerSuite({
 
 		assert.isFunction(main.sendEvent);
 		assert.strictEqual(main.sendEvent, sendEvent);
+
+		assert.strictEqual(Object.keys(main).length, 12, 'should have 12 exports');
 	}
 });

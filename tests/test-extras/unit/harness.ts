@@ -1,6 +1,6 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
-import harness, { assignChildProperties, assignProperties, replaceChild, replaceChildProperties, replaceProperties } from '../../src/harness';
+import harness from '../../src/harness';
 
 import { v, w } from '@dojo/widget-core/d';
 import { WidgetProperties } from '@dojo/widget-core/interfaces';
@@ -126,7 +126,7 @@ registerSuite({
 
 		'bad render throws'() {
 			class NullWidget extends WidgetBase<WidgetProperties> {
-				render () {
+				render() {
 					return null;
 				}
 			}
@@ -239,7 +239,7 @@ registerSuite({
 	'.setChildren()': {
 		'set children are in render'() {
 			class ParentWidget extends WidgetBase<WidgetProperties> {
-				render () {
+				render() {
 					return v('div', {}, this.children);
 				}
 			}
@@ -361,6 +361,139 @@ registerSuite({
 		}
 	},
 
+	'.callListener()': {
+		'defaults'() {
+			let rootClick = 0;
+			let firstClick = 0;
+			let secondClick = 0;
+			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return v('div', {
+						onclick() {
+							rootClick++;
+						}
+					}, [
+						w(MockWidget, { bind: this, onClick() { firstClick++; }, key: 'first' }),
+						w('widget', { bind: this, onClick() { secondClick++; }, key: 'second' })
+					]);
+				}
+			}
+
+			const widget = harness(ComplexSubWidget);
+			widget.callListener('onclick');
+			assert.strictEqual(rootClick, 1);
+			assert.strictEqual(firstClick, 0);
+			assert.strictEqual(secondClick, 0);
+		},
+
+		'by key'() {
+			let rootClick = 0;
+			let firstClick = 0;
+			let secondClick = 0;
+			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return v('div', {
+						onclick() {
+							rootClick++;
+						}
+					}, [
+						w(MockWidget, { bind: this, onClick() { firstClick++; }, key: 'first' }),
+						w('widget', { bind: this, onClick() { secondClick++; }, key: 'second' })
+					]);
+				}
+			}
+
+			const widget = harness(ComplexSubWidget);
+			widget.callListener('onClick', { key: 'first' });
+			assert.strictEqual(rootClick, 0);
+			assert.strictEqual(firstClick, 1);
+			assert.strictEqual(secondClick, 0);
+		},
+
+		'by index'() {
+			let rootClick = 0;
+			let firstClick = 0;
+			let secondClick = 0;
+			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return v('div', {
+						onclick() {
+							rootClick++;
+						}
+					}, [
+						w(MockWidget, { bind: this, onClick() { firstClick++; }, key: 'first' }),
+						w('widget', { bind: this, onClick() { secondClick++; }, key: 'second' })
+					]);
+				}
+			}
+
+			const widget = harness(ComplexSubWidget);
+			widget.callListener('onClick', { index: 1 });
+			assert.strictEqual(rootClick, 0);
+			assert.strictEqual(firstClick, 0);
+			assert.strictEqual(secondClick, 1);
+		},
+
+		'properties.bind'() {
+			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return v('div', { }, [
+						w(MockWidget, { bind: this, onClick(this: any) {
+							assert.instanceOf(this, ComplexSubWidget, 'should call with bound scope');
+						}, key: 'first' })
+					]);
+				}
+			}
+
+			const widget = harness(ComplexSubWidget);
+			widget.callListener('onClick', { key: 'first' });
+		},
+
+		'with args'() {
+			const event = {};
+			class BasicWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return v('div', {
+						onclick(e) {
+							assert.strictEqual(e, event);
+						}
+					});
+				}
+			}
+
+			const widget = harness(BasicWidget);
+			widget.callListener('onclick', {
+				args: [ event ]
+			});
+		},
+
+		'widget renders string'() {
+			class StringWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return 'foo';
+				}
+			}
+
+			const widget = harness(StringWidget);
+			assert.throws(() => {
+				widget.callListener('onclick');
+			}, TypeError, 'Widget is not rendering an HNode or WNode');
+		},
+
+		'widget renders null'() {
+			class NullWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return null;
+				}
+			}
+
+			const widget = harness(NullWidget);
+			assert.throws(() => {
+				widget.callListener('onclick');
+			}, TypeError, 'Widget is not rendering an HNode or WNode');
+		}
+	},
+
 	'.getDom()'() {
 		const widget = harness(MockWidget);
 		const dom = widget.getDom();
@@ -396,198 +529,6 @@ registerSuite({
 			assert.isFunction(widget.listener, 'listener should be a function');
 			assert.isTrue(widget.listener(), 'listener should return `true`');
 			widget.destroy();
-		}
-	},
-
-	'assignChildProperties()': {
-		'by index'() {
-			const actual = v('div', {}, [ null, v('a', { href: '#link' }) ]);
-
-			assertRender(actual, v('div', {}, [ null, v('a', { href: '#link' }) ]));
-
-			assignChildProperties(actual, 1, { target: '_blank' });
-
-			assertRender(actual, v('div', {}, [ null, v('a', { href: '#link', target: '_blank' }) ]));
-		},
-
-		'does not resolve'() {
-			const actual = v('div', {}, [ null, v('a', { href: '#link' }) ]);
-
-			assert.throws(() => {
-				assignChildProperties(actual, 0, { target: '_blank' });
-			}, TypeError, 'Index of "0" is not resolving to a valid target');
-		}
-	},
-
-	'assignProperties()': {
-		'basic'() {
-			const actual = v('div', { styles: { 'color': 'blue' } }, [ null, v('a', { href: '#link' }) ]);
-
-			assertRender(actual, v('div', { styles: { 'color': 'blue' } }, [ null, v('a', { href: '#link' }) ]));
-
-			assignProperties(actual, { styles: { 'font-weight': 'bold' } });
-
-			assertRender(actual, v('div', { styles: { 'font-weight': 'bold' } }, [ null, v('a', { href: '#link' }) ]));
-		}
-	},
-
-	'replaceChild()': {
-		'by index'() {
-			const actual = v('div', {}, [ null, v('a', { href: '#link' }) ]);
-
-			assertRender(actual, v('div', {}, [ null, v('a', { href: '#link' }) ]));
-
-			replaceChild(actual, 0, v('dfn'));
-
-			assertRender(actual, v('div', {}, [ v('dfn'), v('a', { href: '#link' }) ]));
-		},
-
-		'by string index'() {
-			const actual = v('div', {}, [ null, v('a', { href: '#link' }) ]);
-
-			assertRender(actual, v('div', {}, [ null, v('a', { href: '#link' }) ]));
-
-			replaceChild(actual, '0', v('dfn'));
-
-			assertRender(actual, v('div', {}, [ v('dfn'), v('a', { href: '#link' }) ]));
-		},
-
-		'no children'() {
-			const actual = w('widget', {});
-
-			assertRender(actual, w('widget', {}));
-
-			replaceChild(actual, 0, v('span'));
-
-			assertRender(actual, w('widget', {}, [ v('span') ]));
-		},
-
-		'by string deep index'() {
-			const actual = v('div', {}, [ v('span', {}, [ 'foobar' ]), v('a', { href: '#link' }) ]);
-
-			assertRender(actual, v('div', {}, [ v('span', {}, [ 'foobar' ]), v('a', { href: '#link' }) ]));
-
-			replaceChild(actual, '0,0', 'baz');
-
-			assertRender(actual, v('div', {}, [ v('span', {}, [ 'baz' ]), v('a', { href: '#link' }) ]));
-		},
-
-		'final item missing children'() {
-			const actual = v('div', [ v('span', [ w('widget', { }) ]) ]);
-
-			assertRender(actual, v('div', [ v('span', [ w('widget', { }) ]) ]));
-
-			replaceChild(actual, '0,0,0', 'foo');
-
-			assertRender(actual, v('div', [ v('span', [ w('widget', { }, [ 'foo' ]) ]) ]));
-		},
-
-		'string index resolving to a non child node throws'() {
-			const actual = v('div', {}, [ v('span', {}, [ 'foobar' ]), v('a', { href: '#link' }) ]);
-
-			assert.throws(() => {
-				replaceChild(actual, '0,0,0', 'bar');
-			}, TypeError, 'Index of "0,0,0" is not resolving to a valid target');
-		},
-
-		'string index resolve to an earlier non child node throws'() {
-			const actual = v('div', {}, [ v('span', {}, [ 'foobar' ]), v('a', { href: '#link' }) ]);
-
-			assert.throws(() => {
-				replaceChild(actual, '3,0,0', 'bar');
-			}, TypeError, 'Index of "3,0,0" is not resolving to a valid target');
-		}
-	},
-
-	'replaceChildProperties()': {
-		'by index'() {
-			const actual = v('div', {}, [ null, v('a', { href: '#link' }) ]);
-
-			assertRender(actual, v('div', {}, [ null, v('a', { href: '#link' }) ]));
-
-			replaceChildProperties(actual, 1, { target: '_blank' });
-
-			assertRender(actual, v('div', {}, [ null, v('a', { target: '_blank' }) ]));
-		},
-
-		'throws when final child can\'t have properties'() {
-			const actual = v('div', {}, [ null, v('a', { href: '#link' }) ]);
-
-			assertRender(actual, v('div', {}, [ null, v('a', { href: '#link' }) ]));
-
-			assert.throws(() => {
-				replaceChildProperties(actual, 0, { target: '_blank' });
-			}, TypeError, 'Index of "0" is not resolving to a valid target');
-		}
-	},
-
-	'replaceProperties()': {
-		'basic'() {
-			const actual = v('div', { styles: { 'color': 'blue' } }, [ null, v('a', { href: '#link' }) ]);
-
-			assertRender(actual, v('div', { styles: { 'color': 'blue' } }, [ null, v('a', { href: '#link' }) ]));
-
-			replaceProperties(actual, { classes: { 'foo': true } });
-
-			assertRender(actual, v('div', { classes: { 'foo': true } }, [ null, v('a', { href: '#link' }) ]));
-		}
-	},
-
-	'non-exported resolveChild()': {
-		'by string index'() {
-			const actual = v('div', {}, [ null, v('a', { href: '#link' }) ]);
-
-			assertRender(actual, v('div', {}, [ null, v('a', { href: '#link' }) ]));
-
-			assignChildProperties(actual, '1', { target: '_blank' });
-
-			assertRender(actual, v('div', {}, [ null, v('a', { href: '#link', target: '_blank' }) ]));
-		},
-
-		'no children throws'() {
-			const actual = w('widget', {});
-
-			assertRender(actual, w('widget', {}));
-
-			assert.throws(() => {
-				assignChildProperties(actual, 0, { foo: 'bar' });
-			}, TypeError, 'Index of "0" is not resolving to a valid target');
-		},
-
-		'by string deep index'() {
-			const actual = v('div', {}, [ v('span', {}, [ v('a', { href: '#link' }) ]) ]);
-
-			assertRender(actual, v('div', {}, [ v('span', {}, [ v('a', { href: '#link' }) ]) ]));
-
-			assignChildProperties(actual, '0,0', { target: '_blank' });
-
-			assertRender(actual, v('div', {}, [ v('span', {}, [ v('a', { href: '#link', target: '_blank' }) ]) ]));
-		},
-
-		'final item missing children throws'() {
-			const actual = v('div', [ v('span', [ w('widget', { }) ]) ]);
-
-			assertRender(actual, v('div', [ v('span', [ w('widget', { }) ]) ]));
-
-			assert.throws(() => {
-				assignChildProperties(actual, '0,0,0', { foo: 'bar' });
-			}, TypeError, 'Index of "0,0,0" is not resolving to a valid target');
-		},
-
-		'string index resolving to a non child node throws'() {
-			const actual = v('div', {}, [ v('span', {}, [ 'foobar' ]), v('a', { href: '#link' }) ]);
-
-			assert.throws(() => {
-				assignChildProperties(actual, '0,0,0', { foo: 'bar' });
-			}, TypeError, 'Index of "0,0,0" is not resolving to a valid target');
-		},
-
-		'string index resolve to an earlier non child node throws'() {
-			const actual = v('div', {}, [ v('span', {}, [ 'foobar' ]), v('a', { href: '#link' }) ]);
-
-			assert.throws(() => {
-				assignChildProperties(actual, '3,0,0', { foo: 'bar' });
-			}, TypeError, 'Index of "3,0,0" is not resolving to a valid target');
 		}
 	}
 });
