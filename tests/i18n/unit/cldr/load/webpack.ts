@@ -72,6 +72,16 @@ registerSuite({
 			}).then(() => {
 				assert.isTrue(isLoaded('main', 'tzm'), 'CLDR data objects should be loaded.');
 			});
+		},
+
+		'with a require function'() {
+			return loadCldrData(() => {}, {
+				main: {
+					af: {}
+				}
+			}).then(() => {
+				assert.isTrue(isLoaded('main', 'af'), 'Require functions should be ignored.');
+			});
 		}
 	}
 });

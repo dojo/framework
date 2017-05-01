@@ -25,13 +25,17 @@ async function loadInjectedData() {
 /**
  * A webpack-specific function used to load CLDR data from a preset cache.
  */
-export default function loadCldrData(data: CldrData | string[]): P<void> {
+export default function loadCldrData(contextRequire: Function, data: CldrData | string[]): P<void>;
+export default function loadCldrData(data: CldrData | string[]): P<void>;
+export default function loadCldrData(dataOrRequire: Function | CldrData | string[], data?: CldrData | string[]): P<void> {
+	data = typeof dataOrRequire === 'function' ? data : dataOrRequire;
+
 	if (Array.isArray(data)) {
 		return P.resolve();
 	}
 
 	loadInjectedData();
-	return baseLoad(data);
+	return baseLoad(data as CldrData);
 }
 
 /**

@@ -1,5 +1,7 @@
+import has from '@dojo/has/has';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import * as sinon from 'sinon';
 import loadCldrData, {
 	isLoaded,
 	mainPackages,
@@ -45,6 +47,26 @@ registerSuite({
 				}
 			}).then(() => {
 				assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
+			});
+		},
+
+		'with a require function'() {
+			assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
+
+			const path = 'cldr-data/supplemental/likelySubtags.json';
+
+			if (has('host-browser')) {
+				sinon.spy(require, 'toUrl');
+			}
+
+			return loadCldrData(require, [ path ]).then(() => {
+				if (has('host-browser')) {
+					assert.isTrue((<any> require).toUrl.calledWith(path));
+					(<any> require).toUrl.restore();
+				}
+				assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
+			}, () => {
+				has('host-browser') && (<any> require).toUrl.restore();
 			});
 		}
 	}
