@@ -181,7 +181,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	 */
 	private _renderDecorators: Set<string>;
 
-	private _registries: any;
+	private _registries: RegistryHandler;
 
 	/**
 	 * Map of functions properties for the bound function
@@ -496,7 +496,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		});
 	}
 
-	protected get registries() {
+	protected get registries(): RegistryHandler {
 		return this._registries;
 	}
 
