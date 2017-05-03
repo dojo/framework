@@ -70,19 +70,7 @@ export const registry = new WidgetRegistry();
 /**
  * Wrapper function for calls to create a widget.
  */
-export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, properties: P, children?: DNode[]): WNode;
-export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, children: DNode[]): WNode;
-export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string): WNode;
-export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, propertiesOrChildren: P | DNode[] = <P> {}, children: DNode[] = []): WNode {
-		let properties: P;
-
-	if (Array.isArray(propertiesOrChildren)) {
-		children = propertiesOrChildren;
-		properties = <P> {};
-	}
-	else {
-		properties = propertiesOrChildren;
-	}
+export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, properties: WidgetProperties & P, children: DNode[] = []): WNode {
 
 	return {
 		children,
