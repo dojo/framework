@@ -15,6 +15,7 @@
 		"moduleResolution": "node",
 		"noImplicitAny": true,
 		"noImplicitThis": true,
+		"noUnusedLocals": true,
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,

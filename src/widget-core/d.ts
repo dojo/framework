@@ -3,12 +3,13 @@ import { VNode } from '@dojo/interfaces/vdom';
 import Symbol from '@dojo/shim/Symbol';
 import { h } from 'maquette';
 import {
+	Constructor,
 	DNode,
 	HNode,
 	WNode,
 	VirtualDomProperties,
-	WidgetProperties,
-	WidgetBaseConstructor
+	WidgetBaseInterface,
+	DefaultWidgetBaseInterface
 } from './interfaces';
 import WidgetRegistry from './WidgetRegistry';
 
@@ -25,7 +26,7 @@ export const HNODE = Symbol('Identifier for a HNode.');
 /**
  * Helper function that returns true if the `DNode` is a `WNode` using the `type` property
  */
-export function isWNode(child: DNode): child is WNode {
+export function isWNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface>(child: DNode<W>): child is WNode<W> {
 	return Boolean(child && (typeof child !== 'string') && child.type === WNODE);
 }
 
@@ -70,7 +71,7 @@ export const registry = new WidgetRegistry();
 /**
  * Wrapper function for calls to create a widget.
  */
-export function w<P extends WidgetProperties>(widgetConstructor: WidgetBaseConstructor<P> | string, properties: WidgetProperties & P, children: DNode[] = []): WNode {
+export function w<W extends WidgetBaseInterface>(widgetConstructor: Constructor<W> | string, properties: W['properties'], children: W['children'] = []): WNode<W> {
 
 	return {
 		children,

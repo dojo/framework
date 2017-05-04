@@ -12,7 +12,7 @@ import { WidgetBase } from './../WidgetBase';
 export enum ProjectorAttachState {
 	Attached = 1,
 	Detached
-};
+}
 
 /**
  * Attach type for the projector
@@ -21,7 +21,7 @@ export enum AttachType {
 	Append = 1,
 	Merge = 2,
 	Replace = 3
-};
+}
 
 export interface AttachOptions {
 

@@ -335,7 +335,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 			}
 			return duplicate;
 		}
-	};
+	}
 
 	return Themeable;
 }

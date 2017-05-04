@@ -1,22 +1,25 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { assign } from '@dojo/core/lang';
-import { DNode, HNode, WidgetProperties } from '../../src/interfaces';
+import { DNode, HNode, WNode, WidgetProperties } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
 import { v, w, decorate, registry, WNODE, HNODE, isWNode, isHNode } from '../../src/d';
-import WidgetRegistry from './../../src/WidgetRegistry';
 
-class TestFactoryRegistry extends WidgetRegistry {
-	clear(this: any) {
-		this.registry.clear();
-	}
+interface ChildProperties extends WidgetProperties {
+	myChildProperty: string;
 }
 
 interface TestProperties extends WidgetProperties {
-	mand: boolean;
+	required: boolean;
 }
 
-class TestWidget extends WidgetBase<TestProperties> {
+class TestChildWidget extends WidgetBase<ChildProperties> {
+	render() {
+		return v('div');
+	}
+}
+
+class TestWidget extends WidgetBase<TestProperties, WNode<TestChildWidget>> {
 	render() {
 		return v('outernode', { type: 'mytype' }, [
 			v('child-one'),
@@ -29,7 +32,7 @@ class TestWidget extends WidgetBase<TestProperties> {
 			w(WidgetBase, { myProperty: true })
 		]);
 	}
-};
+}
 
 registerSuite({
 	name: 'd',
@@ -57,24 +60,42 @@ registerSuite({
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isHNode(dNode));
 		},
-		'create WNode wrapper using constructor with properties and children'() {
-			const properties = { mand: true };
-			const dNode = w(TestWidget, properties, [ w(WidgetBase, properties) ]);
+		'create WNode wrapper using constructor with children'() {
+			const dNode = w(TestWidget, { required: true }, [ w(TestChildWidget, { myChildProperty: '' }) ]);
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, TestWidget);
-			assert.deepEqual(dNode.properties, { mand: true });
+			assert.lengthOf(dNode.children, 1);
+			assert.isTrue(isWNode(dNode));
+			assert.isFalse(isHNode(dNode));
+		},
+		'create WNode wrapper using constructor with VNode children'() {
+			const dNode = w(TestChildWidget, { myChildProperty: '' }, [ v('div') ]);
+
+			assert.equal(dNode.type, WNODE);
+			assert.deepEqual(dNode.widgetConstructor, TestChildWidget);
+			assert.lengthOf(dNode.children, 1);
+			assert.isTrue(isWNode(dNode));
+			assert.isFalse(isHNode(dNode));
+		},
+		'create WNode wrapper using constructor with properties and children'() {
+			const properties: any = { id: 'id', classes: [ 'world' ] };
+			const dNode = w(WidgetBase, properties, [ w(WidgetBase, properties) ]);
+
+			assert.equal(dNode.type, WNODE);
+			assert.deepEqual(dNode.widgetConstructor, WidgetBase);
+			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isHNode(dNode));
 		},
 		'create WNode wrapper using label with properties and children'() {
-			const properties = { mand: false };
-			const dNode = w<TestProperties>('my-widget', properties, [ w(WidgetBase, properties) ]);
+			const properties: any = { id: 'id', classes: [ 'world' ] };
+			const dNode = w('my-widget', properties, [ w(WidgetBase, properties) ]);
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, 'my-widget');
-			assert.deepEqual(dNode.properties, { mand: false });
+			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isHNode(dNode));

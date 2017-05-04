@@ -139,7 +139,7 @@ export function I18nMixin<T extends Constructor<WidgetBase<I18nProperties>>>(bas
 				this.invalidate();
 			});
 		}
-	};
+	}
 
 	return I18n;
 }

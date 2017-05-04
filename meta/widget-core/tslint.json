@@ -30,7 +30,6 @@
 		"no-switch-case-fall-through": false,
 		"no-trailing-whitespace": true,
 		"no-unused-expression": false,
-		"no-unused-variable": true,
 		"no-use-before-declare": false,
 		"no-var-keyword": true,
 		"no-var-requires": false,
@@ -58,7 +57,6 @@
 			"property-declaration": "onespace",
 			"variable-declaration": "onespace"
 		} ],
-		"use-strict": false,
 		"variable-name": [ true, "check-format", "allow-leading-underscore", "ban-keywords", "allow-pascal-case" ],
 		"whitespace": [ true, "check-branch", "check-decl", "check-operator", "check-module", "check-separator", "check-type", "check-typecast" ]
 	}

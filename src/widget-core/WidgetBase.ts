@@ -10,7 +10,7 @@ import { v, registry, isWNode, isHNode, decorate } from './d';
 import diff, { DiffType } from './diff';
 import {
 	DNode,
-	WidgetConstructor,
+	WidgetBaseConstructor,
 	WidgetProperties,
 	WidgetBaseInterface,
 	PropertyChangeRecord,
@@ -27,7 +27,7 @@ export { DiffType };
  */
 interface WidgetCacheWrapper {
 	child: WidgetBaseInterface<WidgetProperties>;
-	widgetConstructor: WidgetConstructor;
+	widgetConstructor: WidgetBaseConstructor;
 	used: boolean;
 }
 
@@ -124,7 +124,7 @@ function isHNodeWithKey(node: DNode): node is HNode {
  * Main widget base for all widgets to extend
  */
 @diffProperty('bind', DiffType.REFERENCE)
-export class WidgetBase<P extends WidgetProperties> extends Evented implements WidgetBaseInterface<P> {
+export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends DNode = DNode> extends Evented implements WidgetBaseInterface<P, C> {
 
 	/**
 	 * static identifier
@@ -139,7 +139,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	/**
 	 * children array
 	 */
-	private _children: DNode[];
+	private _children: (C | null)[];
 
 	/**
 	 * marker indicating if the widget requires a render
@@ -164,7 +164,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	/**
 	 * cached chldren map for instance management
 	 */
-	private _cachedChildrenMap: Map<string | Promise<WidgetConstructor> | WidgetConstructor, WidgetCacheWrapper[]>;
+	private _cachedChildrenMap: Map<string | Promise<WidgetBaseConstructor> | WidgetBaseConstructor, WidgetCacheWrapper[]>;
 
 	/**
 	 * map of specific property diff functions
@@ -198,7 +198,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		this._decoratorCache = new Map<string, any[]>();
 		this._properties = <P> {};
 		this._previousProperties = <P> {};
-		this._cachedChildrenMap = new Map<string | Promise<WidgetConstructor> | WidgetConstructor, WidgetCacheWrapper[]>();
+		this._cachedChildrenMap = new Map<string | Promise<WidgetBaseConstructor> | WidgetBaseConstructor, WidgetCacheWrapper[]>();
 		this._diffPropertyFunctionMap = new Map<string, string>();
 		this._renderDecorators = new Set<string>();
 		this._bindFunctionPropertyMap = new WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>();
@@ -223,7 +223,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 	 * 'afterUpdate' that will in turn call lifecycle methods onElementCreated and onElementUpdated.
 	 */
 	@afterRender()
-	protected attachLifecycleCallbacks (node: DNode) {
+	protected attachLifecycleCallbacks (node: DNode): DNode {
 		// Create vnode afterCreate and afterUpdate callback functions that will only be set on nodes
 		// with "key" properties.
 
@@ -350,11 +350,11 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 		this._previousProperties = this.properties;
 	}
 
-	public get children(): DNode[] {
+	public get children(): (C | null)[] {
 		return this._children;
 	}
 
-	public __setChildren__(children: DNode[]): void {
+	public __setChildren__(children: (C | null)[]): void {
 		this._dirty = true;
 		this._children = children;
 		this.emit({
@@ -524,7 +524,7 @@ export class WidgetBase<P extends WidgetProperties> extends Evented implements W
 				if (item === null) {
 					return null;
 				}
-				widgetConstructor = <WidgetConstructor> item;
+				widgetConstructor = <WidgetBaseConstructor> item;
 			}
 
 			const childrenMapKey = key || widgetConstructor;

@@ -33,28 +33,6 @@ class StackedTestWidget extends ThemeableMixin(WidgetBase)<ThemeableProperties> 
 @theme(baseThemeClasses1)
 class DuplicateThemeClassWidget extends ThemeableMixin(WidgetBase)<ThemeableProperties> { }
 
-class NonDecoratorTestWidget extends ThemeableMixin(WidgetBase)<ThemeableProperties> {
-	constructor() {
-		super();
-		theme(baseThemeClasses1)(this);
-	}
-}
-
-class NonDecoratorSubClassTestWidget extends NonDecoratorTestWidget {
-	constructor() {
-		super();
-		theme(baseThemeClasses2)(this);
-	}
-}
-
-class NonDecoratorStackedTestWidget extends ThemeableMixin(WidgetBase)<ThemeableProperties> {
-	constructor() {
-		super();
-		theme(baseThemeClasses1)(this);
-		theme(baseThemeClasses2)(this);
-	}
-}
-
 class NonDecoratorDuplicateThemeClassWidget extends ThemeableMixin(WidgetBase)<ThemeableProperties> {
 	constructor() {
 		super();

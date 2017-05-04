@@ -4,9 +4,19 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { stub, spy } from 'sinon';
 import { v, w, registry } from '../../src/d';
-import { DNode } from '../../src/interfaces';
+import { DNode, WidgetProperties } from '../../src/interfaces';
 import { WidgetBase, diffProperty, DiffType, afterRender, beforeRender, onPropertiesChanged } from '../../src/WidgetBase';
 import WidgetRegistry, { WIDGET_BASE_TYPE } from './../../src/WidgetRegistry';
+
+interface TestProperties extends WidgetProperties {
+	id: string;
+	foo: string;
+	bar?: null | string;
+	baz?: number;
+	qux?: boolean;
+}
+
+class TestWidget extends WidgetBase<TestProperties> {}
 
 registerSuite({
 	name: 'WidgetBase',
@@ -37,7 +47,7 @@ registerSuite({
 	},
 	diffProperties: {
 		'no updated properties'() {
-			const widgetBase = new WidgetBase();
+			const widgetBase = new TestWidget();
 			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
 
 			widgetBase.on('properties:changed', result => {
@@ -47,7 +57,7 @@ registerSuite({
 			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
 		},
 		'updated properties'() {
-			const widgetBase = new WidgetBase();
+			const widgetBase = new TestWidget();
 			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
 
 			widgetBase.on('properties:changed', result => {
@@ -57,7 +67,7 @@ registerSuite({
 			widgetBase.__setProperties__({ id: 'id', foo: 'baz' });
 		},
 		'new properties'() {
-			const widgetBase = new WidgetBase();
+			const widgetBase = new TestWidget();
 			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
 
 			widgetBase.on('properties:changed', result => {
@@ -67,7 +77,7 @@ registerSuite({
 			widgetBase.__setProperties__({ id: 'id', foo: 'bar', bar: 'baz' });
 		},
 		'updated / new properties with falsy values'() {
-			const widgetBase = new WidgetBase();
+			const widgetBase = new TestWidget();
 			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
 
 			widgetBase.on('properties:changed', result => {

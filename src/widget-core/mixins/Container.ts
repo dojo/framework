@@ -1,7 +1,7 @@
 import { WidgetBase, beforeRender } from './../WidgetBase';
 import { w } from './../d';
 import { Constructor, DNode, WidgetProperties } from './../interfaces';
-import { GetProperties, GetChildren, InjectorProperties } from './../Injector';
+import { GetProperties, GetChildren, BaseInjector } from './../Injector';
 
 /**
  * The binding mappers for properties and children
@@ -38,7 +38,7 @@ export function Container<P extends WidgetProperties, T extends Constructor<Widg
 		@beforeRender()
 		protected beforeRender(renderFunc: Function, properties: P, children: DNode[]) {
 			return () => {
-				return w<InjectorProperties>(name, {
+				return w<BaseInjector<any>>(name, {
 					render: super.render,
 					getProperties,
 					properties,

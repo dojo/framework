@@ -29,7 +29,7 @@ export function RegistryMixin<T extends Constructor<WidgetBase<RegistryMixinProp
 				value: value
 			};
 		}
-	};
+	}
 	return Registry;
 }
 

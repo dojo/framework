@@ -61,7 +61,7 @@ export function Injector<C, T extends Constructor<BaseInjector<C>>>(Base: T, con
 
 			return render();
 		}
-	};
+	}
 	return Injector;
 }
 
