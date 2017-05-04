@@ -346,7 +346,7 @@ export function getMessageFormatter(bundlePath: string, key: string, locale?: st
 	}
 
 	const cached = bundleMap.get(bundlePath);
-	const messages = cached && cached.get(locale || 'root');
+	const messages = cached ? (cached.get(locale || getRootLocale()) || cached.get('root')) : null;
 
 	if (!messages) {
 		throw new Error(`The bundle "${bundlePath}" has not been registered.`);

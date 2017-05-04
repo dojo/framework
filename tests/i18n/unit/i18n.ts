@@ -92,6 +92,14 @@ registerSuite({
 					const formatted = formatMessage(bundle.bundlePath, 'hello');
 					assert.strictEqual(formatted, 'Hello');
 				});
+			},
+
+			'assert default locale used'() {
+				switchLocale('ar');
+				return i18n(bundle, 'ar').then(() => {
+					const formatted = formatMessage(bundle.bundlePath, 'hello');
+					assert.strictEqual(formatted, 'السلام عليكم');
+				});
 			}
 		},
 
