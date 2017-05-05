@@ -31,7 +31,7 @@
     "@dojo/has": "beta1",
     "@dojo/i18n": "beta1",
     "@dojo/shim": "beta1",
-    "@dojo/widget-core": "latest",
+    "@dojo/widget-core": "beta1",
     "intern": "^3.4.3",
     "maquette": "2.4.3"
   },
