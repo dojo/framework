@@ -75,10 +75,19 @@ export default function assertRender(actual: DNode, expected: DNode, options?: A
 		});
 	}
 
-	if (localIsHNode(actual) && localIsHNode(expected)) {
-		if (actual.tag !== expected.tag) {
-			/* The tags do not match */
-			throwAssertionError(actual.tag, expected.tag, message);
+	if ((localIsHNode(actual) && localIsHNode(expected)) || (localIsWNode(actual) && localIsWNode(expected))) {
+		if (localIsHNode(actual) && localIsHNode(expected)) {
+			if (actual.tag !== expected.tag) {
+				/* The tags do not match */
+				throwAssertionError(actual.tag, expected.tag, message);
+			}
+		}
+		/* istanbul ignore else: not being tracked by TypeScript properly */
+		else if (localIsWNode(actual) && localIsWNode(expected)) {
+			if (actual.widgetConstructor !== expected.widgetConstructor) {
+				/* The WNode does not share the same constructor */
+				throwAssertionError(actual.widgetConstructor, expected.widgetConstructor, message);
+			}
 		}
 		const delta = diff(actual.properties, expected.properties, diffOptions);
 		if (delta.length) {
@@ -87,25 +96,6 @@ export default function assertRender(actual: DNode, expected: DNode, options?: A
 		}
 		/* We need to assert the children match */
 		assertChildren(actual.children, expected.children);
-	}
-	else if (localIsWNode(actual) && localIsWNode(expected)) {
-		if (actual.widgetConstructor !== expected.widgetConstructor) {
-			/* The WNode does not share the same constructor */
-			throwAssertionError(actual.widgetConstructor, expected.widgetConstructor, message);
-		}
-		const delta = diff(actual.properties, expected.properties, diffOptions);
-		if (delta.length) {
-			/* There are differences in the properties between the two nodes */
-			throwAssertionError(actual.properties, expected.properties, message);
-		}
-		if (actual.children && expected.children) {
-			/* We need to assert the children match */
-			assertChildren(actual.children, expected.children);
-		}
-		else if (actual.children || expected.children) {
-			/* One WNode has children, but the other doesn't */
-			throwAssertionError(actual.children, expected.children, message);
-		}
 	}
 	else if (typeof actual === 'string' && typeof expected === 'string') {
 		/* Both DNodes are strings */
