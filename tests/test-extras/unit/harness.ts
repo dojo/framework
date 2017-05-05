@@ -1,10 +1,12 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 import harness from '../../src/harness';
+import { compareProperty } from '../../src/support/d';
 
 import { v, w } from '@dojo/widget-core/d';
 import { WidgetProperties } from '@dojo/widget-core/interfaces';
 import WidgetBase from '@dojo/widget-core/WidgetBase';
+import AssertionError from '../../src/support/AssertionError';
 import assertRender from '../../src/support/assertRender';
 
 const hasFunctionName = (() => {
@@ -22,6 +24,34 @@ interface MockWidgetProperties extends WidgetProperties {
 class MockWidget extends WidgetBase<MockWidgetProperties> {
 	render() {
 		return v('div.foo');
+	}
+}
+
+class MockRegistry {
+	tag: string;
+}
+
+interface RegistryWidgetProperties extends WidgetProperties {
+	registry: MockRegistry;
+}
+
+class RegistryWidgetChild extends WidgetBase<RegistryWidgetProperties> {
+	render() {
+		return v('span');
+	}
+}
+
+class RegisterChildWidget extends WidgetBase<WidgetProperties & { tag: string; }> {
+	render() {
+		const registry = new MockRegistry();
+		registry.tag = this.properties.tag;
+		return v('div', {
+			key: 'wrapper'
+		}, [ w(RegistryWidgetChild, {
+			bind: this,
+			key: 'child',
+			registry
+		}) ]);
 	}
 }
 
@@ -186,6 +216,65 @@ registerSuite({
 				widget.expectRender(null);
 			}, Error, 'An expected render did not occur.');
 			widget.destroy();
+		},
+
+		'with comparison': {
+			'widget render - properties match'() {
+				const widget = harness(RegisterChildWidget);
+				widget.setProperties({
+					tag: 'foo'
+				});
+				let called = false;
+				const compareRegistry = compareProperty((value: MockRegistry, name, properties: RegistryWidgetProperties) => {
+					called = true;
+					assert.instanceOf(value, MockRegistry);
+					assert.strictEqual(name, 'registry');
+					assert.strictEqual(properties.key, 'child');
+					assert.isDefined(properties.bind);
+					return value.tag === 'foo';
+				});
+				widget.expectRender(v('div', { afterCreate: widget.listener, afterUpdate: widget.listener, key: 'wrapper' }, [
+					w<any>(RegistryWidgetChild, { bind: true, key: 'child', registry: compareRegistry })
+				]));
+				assert.isTrue(called, 'comparer should have been called');
+			},
+
+			'widget render - properties do not match'() {
+				const widget = harness(RegisterChildWidget);
+				widget.setProperties({
+					tag: 'bar'
+				});
+				let called = false;
+				const compareRegistry = compareProperty((value: MockRegistry) => {
+					called = true;
+					return value.tag === 'foo';
+				});
+				assert.throws(() => {
+					widget.expectRender(v('div', { afterCreate: widget.listener, afterUpdate: widget.listener, key: 'wrapper' }, [
+						w<any>(RegistryWidgetChild, { bind: true, key: 'child', registry: compareRegistry })
+					]));
+				}, AssertionError, 'The value of property "registry" is unexpected.');
+				assert.isTrue(called, 'comparer should have been called');
+			},
+
+			'widget render - primative value compare'() {
+				let uuid = 0;
+				class IDWidget extends WidgetBase<WidgetProperties> {
+					private _id = '_id' + ++uuid;
+
+					render() {
+						return v('div', { id: this._id });
+					}
+				}
+				const widget = harness(IDWidget);
+				let called = false;
+				const compareId = compareProperty((value: string) => {
+					called = true;
+					return value === `_id${uuid}`;
+				});
+				widget.expectRender(v('div', { id: compareId as any }));
+				assert.isTrue(called, 'comparer should have been called');
+			}
 		}
 	},
 

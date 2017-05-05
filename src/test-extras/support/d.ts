@@ -1,6 +1,8 @@
 import { assign } from '@dojo/core/lang';
 import { DNode, HNode, VirtualDomProperties, WidgetProperties, WNode } from '@dojo/widget-core/interfaces';
 import { isHNode, isWNode } from '@dojo/widget-core/d';
+import AssertionError from './AssertionError';
+import { CustomDiff } from './compare';
 
 export function isVirtualDomPropertiesWithClasses(value: any): value is VirtualDomProperties {
 	return Boolean(value && value.classes);
@@ -24,6 +26,20 @@ export function assignProperties(target: WNode | HNode, properties: WidgetProper
 	}
 	assign(target.properties, properties);
 	return target;
+}
+
+/**
+ * Creates a function which, when placed in an expected render, will call the `callback`.  If the `callback` returns `true`, the value
+ * of the property is considered equal, otherwise it is considerd not equal and the expected render will fail.
+ * @param callback A function that is invoked when comparing the property value
+ */
+export function compareProperty<T>(callback: (value: T, name: string, parent: WidgetProperties | VirtualDomProperties) => boolean): CustomDiff<T> {
+	function differ(value: T, name: string, parent: WidgetProperties | VirtualDomProperties) {
+		if (!callback(value, name, parent)) {
+			throw new AssertionError(`The value of property "${name}" is unexpected.`, {}, differ);
+		}
+	}
+	return new CustomDiff(differ);
 }
 
 /**

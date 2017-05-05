@@ -3,6 +3,7 @@ import * as registerSuite from 'intern!object';
 import {
 	assignChildProperties,
 	assignProperties,
+	compareProperty,
 	findIndex,
 	findKey,
 	replaceChild,
@@ -11,6 +12,7 @@ import {
 } from '../../../src/support/d';
 
 import { v, w } from '@dojo/widget-core/d';
+import AssertionError from '../../../src/support/AssertionError';
 import assertRender from '../../../src/support/assertRender';
 
 registerSuite({
@@ -56,6 +58,33 @@ registerSuite({
 			}});
 
 			assertRender(actual, v('div', { styles: { 'color': 'blue' }, classes: { testClass: true } }, [ null, v('a', { href: '#link' }) ]));
+		}
+	},
+
+	'compareProperty()': {
+		'equals'() {
+			let called = false;
+			const obj = {};
+			const compareString = compareProperty((value: string, name, parent) => {
+				assert.strictEqual(name, 'bar');
+				assert.strictEqual(parent, obj);
+				called = true;
+				return value === 'foo';
+			});
+			assert.isUndefined(compareString.diff('foo', 'bar', obj));
+			assert.isTrue(called);
+		},
+
+		'unequal'() {
+			let called = false;
+			const compareNothing = compareProperty(() => {
+				called = true;
+				return false;
+			});
+			assert.throws(() => {
+				compareNothing.diff('foo', 'bar', {});
+			}, AssertionError, 'The value of property "bar" is unexpected.');
+			assert.isTrue(called);
 		}
 	},
 

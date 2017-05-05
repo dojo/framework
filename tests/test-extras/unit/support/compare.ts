@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { diff, patch } from '../../../src/support/compare';
+import { createConstructRecord, diff, patch, CustomDiff } from '../../../src/support/compare';
 
 registerSuite({
 	name: 'compare',
@@ -289,6 +289,100 @@ registerSuite({
 						type: 'add'
 					}
 				]);
+			},
+
+			'complex objects': {
+				'b object differ is called'() {
+					let called = false;
+					const a = {
+						foo: /foo/
+					};
+					const customDiff = new CustomDiff((value: RegExp, name, parent) => {
+						called = true;
+						assert.instanceOf(value, RegExp, 'value should be a regualar expression');
+						assert.strictEqual(name, 'foo', 'name should equal "foo"');
+						assert.strictEqual(parent, a, 'correct parent should be passed');
+					});
+					const patchRecords = diff(a, { foo: customDiff });
+					assert.isTrue(called, 'object differ should have been called');
+					assert.deepEqual(patchRecords, [], 'should have found no differences');
+				},
+
+				'a object differ is called'() {
+					let called = false;
+					const b = { foo: /foo/ };
+					const customDiff = new CustomDiff((value: RegExp, name, parent) => {
+						called = true;
+						assert.instanceOf(value, RegExp, 'value should be a regualar expression');
+						assert.strictEqual(name, 'foo', 'name should equal "foo"');
+						assert.strictEqual(parent, b, 'correct parent should be passed');
+					});
+					const a = {
+						foo: customDiff
+					};
+					const patchRecords = diff(a, b);
+					assert.isTrue(called, 'object differ should have been called');
+					assert.deepEqual(patchRecords, [], 'should have found no differences');
+				},
+
+				'difference'() {
+					const a = {
+						foo: /foo/
+					};
+					const customDiff = new CustomDiff(() => {
+						return createConstructRecord(RegExp);
+					});
+					const patchRecords = diff(a, { foo: customDiff });
+					assert.deepEqual(patchRecords, [
+						{ Ctor: RegExp, name: 'foo' }
+					], 'should have expected patch records');
+				},
+
+				'difference with arguments'() {
+					const a = {
+						foo: /foo/
+					};
+					const customDiff = new CustomDiff(() => {
+						return createConstructRecord(RegExp, [ '/bar/' ]);
+					});
+					const patchRecords = diff(a, { foo: customDiff });
+					assert.deepEqual(patchRecords, [
+						{ args: [ '/bar/' ], Ctor: RegExp, name: 'foo' }
+					], 'should have expected patch records');
+				},
+
+				'difference with descriptor'() {
+					const a = {
+						foo: /foo/
+					};
+					const customDiff = new CustomDiff(() => {
+						return createConstructRecord(RegExp, undefined, { writable: true });
+					});
+					const patchRecords = diff(a, { foo: customDiff });
+					assert.deepEqual(patchRecords, [
+						{ Ctor: RegExp, descriptor: { writable: true },  name: 'foo' }
+					], 'should have expected patch records');
+				},
+
+				'deleted property'() {
+					const customDiff = new CustomDiff(() => {
+						return createConstructRecord(RegExp);
+					});
+					const patchRecords = diff({ }, { foo: customDiff });
+					assert.deepEqual(patchRecords, [
+						{ name: 'foo', type: 'delete' }
+					], 'should have expected patch records');
+				},
+
+				'added property'() {
+					const customDiff = new CustomDiff(() => {
+						return createConstructRecord(RegExp);
+					});
+					const patchRecords = diff({ foo: customDiff }, { });
+					assert.deepEqual(patchRecords, [
+						{ Ctor: RegExp, name: 'foo' }
+					], 'should have expected patch records');
+				}
 			},
 
 			'ignored properties': {
@@ -1662,6 +1756,103 @@ registerSuite({
 				assert.deepEqual(result, {
 					foo: 'bar'
 				});
+			}
+		},
+
+		'plain object with construct records': {
+			'basic property construct'() {
+				const result = patch({}, [
+					{ args: [ 'foo' ], Ctor: RegExp, name: 'foo' }
+				]);
+
+				assert.instanceOf(result.foo, RegExp, 'should be a regular expression');
+				assert.strictEqual(result.foo.toString(), '/foo/', 'should have a pattern of foo');
+			},
+
+			'property construct with descriptor'() {
+				const result = patch({}, [
+					{ args: [ 'foo' ], Ctor: RegExp, name: 'foo', descriptor: { writable: false, enumerable: false, configurable: false } },
+					{ args: [ 'foo' ], Ctor: RegExp, name: 'bar' }
+				]);
+
+				const descriptorFoo = Object.getOwnPropertyDescriptor(result, 'foo');
+				const descriptorBar = Object.getOwnPropertyDescriptor(result, 'bar');
+				assert.isFalse(descriptorFoo.writable);
+				assert.isFalse(descriptorFoo.enumerable);
+				assert.isFalse(descriptorFoo.configurable);
+				assert.instanceOf(descriptorFoo.value, RegExp);
+				assert.isTrue(descriptorBar.writable);
+				assert.isTrue(descriptorBar.enumerable);
+				assert.isTrue(descriptorBar.configurable);
+				assert.instanceOf(descriptorBar.value, RegExp);
+			},
+
+			'with property records'() {
+				class Foo {
+					foo: number;
+					bar: string;
+				}
+
+				const result = patch({}, [
+					{ Ctor: Foo, name: 'foo', propertyRecords:
+						[
+							{
+								descriptor: { configurable: true, enumerable: true, value: 1, writable: true },
+								name: 'foo',
+								type: 'add'
+							}, {
+								descriptor: { configurable: true, enumerable: true, value: 'baz', writable: true },
+								name: 'bar',
+								type: 'add'
+							}
+						]
+					}
+				]);
+
+				assert.instanceOf(result.foo, Foo, 'should be instance of Foo');
+				assert.strictEqual(result.foo.foo, 1, 'should have set property value');
+				assert.strictEqual(result.foo.bar, 'baz', 'should have set property value');
+			},
+
+			'with construct property records'() {
+				class Foo {
+					foo?: Foo;
+				}
+
+				const result = patch({}, [
+					{ Ctor: Foo, name: 'foo', propertyRecords: [
+							{
+								Ctor: Foo,
+								name: 'foo'
+							}
+						]
+					}
+				]);
+
+				assert.instanceOf(result.foo, Foo);
+				assert.instanceOf(result.foo.foo, Foo);
+			},
+
+			'plain object has complex property'() {
+				const result = patch({
+					foo: []
+				}, [
+					{
+						descriptor: { configurable: true, enumerable: true, value: { }, writable: true },
+						name: 'foo',
+						type: 'update',
+						valueRecords: [
+							{
+								args: [ 'foo' ],
+								Ctor: RegExp,
+								name: 'bar'
+							}
+						]
+					}
+				]);
+
+				assert.instanceOf(result.foo.bar, RegExp);
+				assert.strictEqual(result.foo.bar.toString(), '/foo/');
 			}
 		},
 
