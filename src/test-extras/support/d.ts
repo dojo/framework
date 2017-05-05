@@ -73,20 +73,32 @@ export function replaceChild(target: WNode | HNode, index: number | string, repl
 }
 
 function hasChildren(value: any): value is WNode | HNode {
-	return value && typeof value === 'object' && 'children' in value;
+	return value && typeof value === 'object' && value !== null;
 }
 
+/**
+ * Find a virtual DOM node (`WNode` or `HNode`) based on it having a matching `key` property.
+ *
+ * The function returns `undefined` if no node was found, otherwise it returns the node.  *NOTE* it will return the first node
+ * matching the supplied `key`, but will `console.warn` if more than one node was found.
+ */
 export function findKey(target: WNode | HNode, key: string | object): WNode | HNode | undefined {
 	if (target.properties.key === key) {
 		return target;
 	}
 	let found: WNode | HNode | undefined;
 	target.children
-		.some((child) => {
+		.forEach((child) => {
 			if (hasChildren(child)) {
-				return Boolean(found = findKey(child, key));
+				if (found) {
+					if (findKey(child, key)) {
+						console.warn(`Duplicate key of "${key}" found.`);
+					}
+				}
+				else {
+					found = findKey(child, key);
+				}
 			}
-			return false;
 		});
 	return found;
 }

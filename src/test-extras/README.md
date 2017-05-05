@@ -241,10 +241,11 @@ of the widget's rendered DOM.  The second is an optional object literal of addit
 
 |Option|Description|
 |------|-----------|
-|eventClass|A string that matches the class of event to use (e.g. `MouseEvent`).  By default, `CustomEvent` is used.|
-|eventInit|Any properties that should be part of initialising the event.  Note that `bubbles` and `cancelable` are `true` by default, which is different then if you were creating events directly.|
-|selector|A string selector to be applied to the root DOM element of the rendered widget.  This is intended to make it easy to sub-select a part of the widget's rendered DOM for targetting the event.|
-|target|By default, the widget's render root element is used.  This property subtitutes a specific target to dispatch the event to.|
+|`eventClass`|A string that matches the class of event to use (e.g. `MouseEvent`).  By default, `CustomEvent` is used.|
+|`eventInit`|Any properties that should be part of initialising the event.  Note that `bubbles` and `cancelable` are `true` by default, which is different then if you were creating events directly.|
+|`key`|A virtual DOM `key` that identifies the DOM node to dispatch an event to.  Makes it easy to select a part of the widget's rendered DOM for targetting the event.|
+|`selector`|A string selector to be applied to the root DOM element of the rendered widget.  Makes it easy to sub-select a part of the widget's rendered DOM for targetting the event.|
+|`target`|By default, the widget's render root element is used.  This property subtitutes a specific target to dispatch the event to.|
 
 Using event classes other than `CustomEvent` can sometimes be challenging, as cross browser support is sometimes difficult to acheive.
 In most use cases, assuming the widget is not expecting an event of a particular class, custom events should be fine.

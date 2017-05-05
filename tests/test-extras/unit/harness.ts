@@ -6,6 +6,7 @@ import { compareProperty } from '../../src/support/d';
 import { v, w } from '@dojo/widget-core/d';
 import { WidgetProperties } from '@dojo/widget-core/interfaces';
 import WidgetBase from '@dojo/widget-core/WidgetBase';
+import { stub } from 'sinon';
 import AssertionError from '../../src/support/AssertionError';
 import assertRender from '../../src/support/assertRender';
 
@@ -446,6 +447,114 @@ registerSuite({
 			});
 
 			assert.strictEqual(clickCount, 1);
+
+			widget.destroy();
+		},
+
+		'with key'() {
+			let clickCount = 0;
+			let target: any;
+
+			class ButtonWidget extends WidgetBase<WidgetProperties> {
+				private _tag = 'foo';
+
+				protected onClick(e: MouseEvent): boolean {
+					clickCount++;
+					e.preventDefault();
+					if ('CustomEvent' in window) {
+						assert.instanceOf(e, window['CustomEvent'], 'should be of class custom event');
+					}
+					assert.strictEqual(e.type, 'click', 'should be type of "click"');
+					assert.strictEqual(e.target, target, 'the target should be the rendered dom firstchild');
+					assert.strictEqual(this._tag, 'foo', '"this" should be an instance of the class');
+					return true;
+				}
+
+				render() {
+					return v('div', { key: 'wrap', onclick: this.onClick }, [ v('button', { key: 'button' }) ]);
+				}
+			}
+
+			const widget = harness(ButtonWidget);
+
+			assert.strictEqual(clickCount, 0);
+
+			target = widget.getDom().firstChild;
+
+			widget.sendEvent('click', {
+				key: 'button'
+			});
+
+			assert.strictEqual(clickCount, 1);
+
+			widget.destroy();
+		},
+
+		'with key not found'() {
+			class ButtonWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return v('div', { key: 'wrap' }, [ v('button', { key: 'button' }), 'foo', 'bar' ]);
+				}
+			}
+
+			const widget = harness(ButtonWidget);
+
+			assert.throws(() => {
+				widget.sendEvent('click', {
+					key: 'foo'
+				});
+			}, Error, 'Could not find key of "foo" to sendEvent');
+
+			widget.destroy();
+		},
+
+		'with duplicate key'() {
+			class DuplicateKeyWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return v('div', { key: 'foo' }, [
+						'foo',
+						v('span', { key: 'parent1' }, [
+							v('i', { key: 'icon', id: 'i1' }, [ 'bar' ]),
+							'bar'
+						]),
+						v('span', { key: 'parent2' }, [
+							v('i', { key: 'super-icon', id: 'i1' }, [ 'bar' ]),
+							'bar'
+						]),
+						v('span', { key: 'parent3' }, [
+							v('i', { key: 'icon', id: 'i2' }, [ 'bar' ])
+						])
+					]);
+				}
+			}
+
+			const warnStub = stub(console, 'warn');
+
+			const widget = harness(DuplicateKeyWidget);
+			widget.sendEvent('click', {
+				key: 'icon'
+			});
+			assert.strictEqual(warnStub.callCount, 1, 'should have been called once');
+			assert.strictEqual(warnStub.lastCall.args[0], 'Duplicate key of "icon" found.', 'should have logged duplicate key');
+
+			warnStub.restore();
+		},
+
+		'text only widget'() {
+			/* this is done for full code coverage */
+			class TextOnlyWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return 'text';
+				}
+			}
+
+			const widget = harness(TextOnlyWidget);
+
+			assert.throws(() => {
+				widget.sendEvent('click', {
+					key: 'foo'
+				});
+			}, Error, 'Could not find key of "foo" to sendEvent');
 
 			widget.destroy();
 		}

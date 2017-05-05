@@ -50,6 +50,7 @@
     "grunt": "~1.0.1",
     "grunt-dojo2": "beta1",
     "intern": "^3.4.3",
-    "typescript": "~2.3.2"
+    "sinon": "^2.2.0",
+    "typescript": "^2.3.2"
   }
 }

@@ -1,5 +1,6 @@
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
+import { stub } from 'sinon';
 import {
 	assignChildProperties,
 	assignProperties,
@@ -213,12 +214,32 @@ registerSuite({
 		},
 
 		'value is WNode'() {
-			const vnode = v('div', { key: 'bar' }, [
-					w('widget', { key: 'baz' }),
-					w('widget', { key: 'foo' }, [ 'foo' ])
+			const vnode = w<any>('widget', {
+					onClick() { }
+				}, [
+					w<any>('sub-widget', { key: 'foo', onClick() { } }),
+					w<any>('sub-widget', { key: 'bar', onClick() { } })
 				]);
 
-			assertRender(findKey(vnode, 'foo')!, w('widget', { key: 'foo' }, [ 'foo' ]), 'should find widget');
+			assertRender(findKey(vnode, 'foo')!, w<any>('sub-widget', { key: 'foo', onClick() { } }), 'should find widget');
+		},
+
+		'duplicate keys warn'() {
+			const warnStub = stub(console, 'warn');
+
+			const fixture = v('div', { key: 'foo' }, [
+				v('span', { key: 'parent1' }, [
+					v('i', { key: 'icon', id: 'i1' })
+				]),
+				v('span', { key: 'parent2' }, [
+					v('i', { key: 'icon', id: 'i2' })
+				])
+			]);
+
+			assertRender(findKey(fixture, 'icon')!, v('i', { key: 'icon', id: 'i1' }), 'should find first key');
+			assert.strictEqual(warnStub.callCount, 1, 'should have been called once');
+			assert.strictEqual(warnStub.lastCall.args[0], 'Duplicate key of "icon" found.', 'should have logged duplicate key');
+			warnStub.restore();
 		}
 	},
 

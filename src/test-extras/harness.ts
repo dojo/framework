@@ -47,6 +47,32 @@ const EVENT_HANDLERS = [
 ];
 
 /**
+ * An internal function which finds a VNode based on `key`
+ * @param target The VNode to search
+ * @param key The key to find
+ */
+function findVNodebyKey(target: VNode, key: string | object): VNode | undefined {
+	if (typeof target === 'object' && target.properties && target.properties.key === key) {
+		return target;
+	}
+	let found: VNode | undefined;
+	if (typeof target === 'object' && target.children) {
+		target.children
+			.forEach((child) => {
+				if (found) {
+					if (findVNodebyKey(child, key)) {
+						console.warn(`Duplicate key of "${key}" found.`);
+					}
+				}
+				else {
+					found = findVNodebyKey(child, key);
+				}
+			});
+	}
+	return found;
+}
+
+/**
  * Decorate a `DNode` where any `WNode`s are replaced with stubbed widgets
  * @param target The `DNode` to decorate with stubbed widgets
  */
@@ -169,6 +195,14 @@ class WidgetHarness<P extends WidgetProperties, W extends Constructor<WidgetBase
 }
 
 export interface HarnessSendEventOptions<I extends EventInit> extends SendEventOptions<I> {
+	/**
+	 * Find the target node by `key`
+	 */
+	key?: any;
+
+	/**
+	 * Provide an alternative target instead of the root DOM node
+	 */
 	target?: Element;
 }
 
@@ -198,13 +232,14 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 
 	private _children: DNode[] | undefined;
 	private _classes: string[] = [];
+	private _currentRender: VNode;
 	private _projection: Projection | undefined;
 	private _projectionOptions: ProjectionOptions;
 	private _projectionRoot: HTMLElement;
 	private _properties: P;
 
 	private _render = () => { /* using a lambda property here creates a bound function */
-		this._projection && this._projection.update(this._widgetHarnessRender() as VNode);
+		this._projection && this._projection.update(this._currentRender = this._widgetHarnessRender() as VNode);
 	}
 
 	private _root: HTMLElement | undefined;
@@ -249,7 +284,7 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 		this.own(this._widgetHarness.on('properties:changed', this._widgetHarness.invalidate));
 		this.own(this._widgetHarness.on('invalidated', this._render));
 
-		this._projection = dom.append(this._projectionRoot, this._widgetHarnessRender() as VNode, this._projectionOptions);
+		this._projection = dom.append(this._projectionRoot, this._currentRender = this._widgetHarnessRender() as VNode, this._projectionOptions);
 		this._attached = true;
 		return this._attached;
 	}
@@ -382,8 +417,17 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 	 *                        node to target, or provide the event initialisation properties
 	 */
 	public sendEvent<I extends EventInit>(type: string, options: HarnessSendEventOptions<I> = {}): this {
-		const { target = this.getDom() } = options;
-		sendEvent(target, type, options);
+		let { target = this.getDom(), key, ...sendOptions } = options;
+		if (key) {
+			const vnode = findVNodebyKey(this._currentRender, key);
+			if (vnode && vnode.domNode) {
+				target = vnode.domNode as Element;
+			}
+			else {
+				throw new Error(`Could not find key of "${key}" to sendEvent`);
+			}
+		}
+		sendEvent(target, type, sendOptions);
 		return this;
 	}
 
