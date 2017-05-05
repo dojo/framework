@@ -367,7 +367,7 @@ registerSuite({
 	'options': {
 		'isWNode'() {
 			let called = false;
-			assertRender(w(MockWidget), w(MockWidget), {
+			assertRender(w(MockWidget, {}), w(MockWidget, {}), {
 				isWNode(node: any): node is WNode {
 					called = true;
 					return true;

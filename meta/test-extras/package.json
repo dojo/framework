@@ -31,7 +31,7 @@
     "@dojo/has": "beta1",
     "@dojo/i18n": "beta1",
     "@dojo/shim": "beta1",
-    "@dojo/widget-core": "beta1",
+    "@dojo/widget-core": "latest",
     "intern": "^3.4.3",
     "maquette": "2.4.3"
   },
@@ -50,6 +50,6 @@
     "grunt": "~1.0.1",
     "grunt-dojo2": "beta1",
     "intern": "^3.4.3",
-    "typescript": "~2.2.1"
+    "typescript": "~2.3.2"
   }
 }

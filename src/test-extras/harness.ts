@@ -4,7 +4,7 @@ import Evented from '@dojo/core/Evented';
 import { createHandle } from '@dojo/core/lang';
 import { VNode } from '@dojo/interfaces/vdom';
 import { includes } from '@dojo/shim/array';
-import { Constructor, DNode, WidgetBaseInterface, WidgetProperties, WNode } from '@dojo/widget-core/interfaces';
+import { ClassesFunction, Constructor, DNode, WidgetBaseInterface, WidgetProperties, WNode } from '@dojo/widget-core/interfaces';
 import { decorate, isWNode, v, w } from '@dojo/widget-core/d';
 import WidgetBase, { afterRender } from '@dojo/widget-core/WidgetBase';
 import cssTransitions from '@dojo/widget-core/animations/cssTransitions';
@@ -271,10 +271,10 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 
 	private _invalidate(): void {
 		if (this._properties) {
-			this._widgetHarness.setProperties(this._properties);
+			this._widgetHarness.__setProperties__(this._properties);
 		}
 		if (this._children) {
-			this._widgetHarness.setChildren(this._children);
+			this._widgetHarness.__setChildren__(this._children);
 		}
 		if (!this._attached) {
 			this._attach();
@@ -302,25 +302,27 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 	 * will be negated in future calls.  Use `.resetClasses()` to clear the cache of classes.
 	 * @param classes A rest argument of classes to be returned as a map
 	 */
-	public classes(...classes: (string | null)[]): { [className: string ]: boolean } {
-		const result: { [className: string]: boolean } = {};
+	public classes(...classes: (string | null)[]): ClassesFunction {
+		return (): { [className: string ]: boolean } => {
+			const result: { [className: string]: boolean } = {};
 
-		this._classes.reduce((result, className) => {
-			result[className] = false;
-			return result;
-		}, result);
+			this._classes.reduce((result, className) => {
+				result[className] = false;
+				return result;
+			}, result);
 
-		classes.reduce((result, className) => {
-			if (className) {
-				result[className] = true;
-				if (!includes(this._classes, className)) {
-					this._classes.push(className);
+			classes.reduce((result, className) => {
+				if (className) {
+					result[className] = true;
+					if (!includes(this._classes, className)) {
+						this._classes.push(className);
+					}
 				}
-			}
-			return result;
-		}, result);
+				return result;
+			}, result);
 
-		return result;
+			return result;
+		};
 	}
 
 	/**

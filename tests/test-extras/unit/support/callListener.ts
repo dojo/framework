@@ -9,7 +9,7 @@ registerSuite({
 
 	'should call listener'() {
 		let count = 0;
-		const vnode = w('widget', {
+		const vnode = w<any>('widget', {
 			onClick(this: any, ...args: any[]) {
 				count++;
 				assert.isUndefined(this, 'should have called with undefined this');
@@ -22,7 +22,7 @@ registerSuite({
 
 	'should call based on bind'() {
 		const bind = {};
-		const vnode = w('widget', {
+		const vnode = w<any>('widget', {
 			bind,
 			onClick(this: any) {
 				assert.strictEqual(this, bind, 'should have called with properties.bind');
@@ -33,7 +33,7 @@ registerSuite({
 
 	'should call based on thisArg'() {
 		const thisArg = {};
-		const vnode = w('widget', {
+		const vnode = w<any>('widget', {
 			bind: {},
 			onClick(this: any) {
 				assert.strictEqual(this, thisArg, 'should have called with thisArg');
@@ -46,7 +46,7 @@ registerSuite({
 
 	'should pass args when specified'() {
 		const args = [ 1, 2, 3 ];
-		const vnode = w('widget', {
+		const vnode = w<any>('widget', {
 			onClick(...calledArgs: any[]) {
 				assert.deepEqual(calledArgs, args);
 			}
@@ -58,13 +58,13 @@ registerSuite({
 
 	'should target target when passed'() {
 		let targetCount = 0;
-		const target = w('widget', {
+		const target = w<any>('widget', {
 			onClick() {
 				targetCount++;
 			}
 		});
 		let count = 0;
-		const vnode = w('widget', {
+		const vnode = w<any>('widget', {
 			onClick() {
 				count++;
 			}
@@ -79,13 +79,13 @@ registerSuite({
 	'should target key when passed'() {
 		let keyCount = 0;
 		let count = 0;
-		const vnode = w('widget', {
+		const vnode = w<any>('widget', {
 			onClick() {
 				count++;
 			}
 		}, [
-			w('sub-widget', { key: 'foo', onClick() { keyCount++; } }),
-			w('sub-widget', { key: 'bar', onClick() { count++; } })
+			w<any>('sub-widget', { key: 'foo', onClick() { keyCount++; } }),
+			w<any>('sub-widget', { key: 'bar', onClick() { count++; } })
 		]);
 		callListener(vnode, 'onClick', {
 			key: 'foo'
@@ -102,8 +102,8 @@ registerSuite({
 				count++;
 			}
 		}, [
-			w('sub-widget', { key: 'foo', onClick() { indexCount++; } }),
-			w('sub-widget', { key: 'bar', onClick() { count++; } })
+			w<any>('sub-widget', { key: 'foo', onClick() { indexCount++; } }),
+			w<any>('sub-widget', { key: 'bar', onClick() { count++; } })
 		]);
 		callListener(vnode, 'onClick', {
 			index: 0
@@ -125,7 +125,7 @@ registerSuite({
 
 	'error conditions': {
 		'method is not found'() {
-			const vnode = w('widget', { onClick() { } });
+			const vnode = w<any>('widget', { onClick() { } });
 			assert.throws(() => {
 				callListener(vnode, 'onFoo');
 			}, TypeError, 'Cannot resolve listener: "onFoo"');
@@ -133,8 +133,8 @@ registerSuite({
 
 		'key is not found'() {
 			const vnode = v('div', {}, [
-				w('sub-widget', { key: 'foo', onClick() { } }),
-				w('sub-widget', { key: 'bar', onClick() { } })
+				w<any>('sub-widget', { key: 'foo', onClick() { } }),
+				w<any>('sub-widget', { key: 'bar', onClick() { } })
 			]);
 			assert.throws(() => {
 				callListener(vnode, 'onClick', { key: 'baz' });
@@ -143,8 +143,8 @@ registerSuite({
 
 		'index is not found'() {
 			const vnode = v('div', {}, [
-				w('sub-widget', { key: 'foo', onClick() { } }),
-				w('sub-widget', { key: 'bar', onClick() { } })
+				w<any>('sub-widget', { key: 'foo', onClick() { } }),
+				w<any>('sub-widget', { key: 'bar', onClick() { } })
 			]);
 			assert.throws(() => {
 				callListener(vnode, 'onClick', { index: 2 });

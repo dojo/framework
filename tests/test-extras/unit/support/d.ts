@@ -45,6 +45,17 @@ registerSuite({
 			assignProperties(actual, { styles: { 'font-weight': 'bold' } });
 
 			assertRender(actual, v('div', { styles: { 'font-weight': 'bold' } }, [ null, v('a', { href: '#link' }) ]));
+		},
+		'with class function'() {
+			const actual = v('div', { styles: { 'color': 'blue' } }, [ null, v('a', { href: '#link' }) ]);
+
+			assertRender(actual, v('div', { styles: { 'color': 'blue' } }, [ null, v('a', { href: '#link' }) ]));
+
+			assignProperties(actual, { classes: () => {
+				return { testClass: true };
+			}});
+
+			assertRender(actual, v('div', { styles: { 'color': 'blue' }, classes: { testClass: true } }, [ null, v('a', { href: '#link' }) ]));
 		}
 	},
 
