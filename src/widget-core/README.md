@@ -16,6 +16,7 @@ We also provide a suite of pre-built widgets to use in your applications: [(@doj
     - [`v` & `w`](#v--w)
         - [`v`](#v)
         - [`w`](#w)
+    - [tsx](#tsx)
     - [Writing custom widgets](#writing-custom-widgets)
         - [Public API](#public-api)
         - [The 'properties' lifecycle](#the-properties-lifecycle)
@@ -172,6 +173,51 @@ w('my-widget', properties, children);
 
 The example above that uses a string for the `widgetConstructor `, is taking advantage of the [widget registry](#widget-registry) functionality.
 The widget registry allows for the lazy loading of widgets.
+
+### tsx
+
+In additional to the programatic functions `v` and `w`, widget-core optionally supports the use of the `jsx` syntax known as [`tsx`](https://www.typescriptlang.org/docs/handbook/jsx.html) in TypeScript.
+
+To start to use `jsx` in your project the widgets need to be named with a `.tsx` extension and some configuration is required in the project's `tsconfig.json`:
+
+Add the configuration options for `jsx`:
+
+```
+"jsx": "react",
+"jsxFactory": "tsx",
+```
+
+Include `.tsx` files in the project:
+
+```
+ "include": [
+ 	"./src/**/*.ts",
+ 	"./src/**/*.tsx"
+ ]
+```
+
+Once the project is configured, `tsx` can be used in a widget's `render` function simply by importing the `tsx` function as `import { tsx } from '@dojo/widget-core/tsx';`
+
+```tsx
+class MyWidgetWithTsx extends WidgetBase<MyProperties> {
+	protected render(): DNode {
+		const { clear, properties: { completed, count, activeCount, activeFilter } } = this;
+	
+		return (
+			<footer classes={this.classes(css.footer)}>
+				<span classes={this.classes(css.count)}>
+					<strong>{`${activeCount}`}</strong>
+					<span>{`${count}`}</span>
+				</span>
+				<TodoFilter activeFilter={activeFilter} />
+				{ completed ? ( <button onclick={clear} /> ) : ( null ) }
+			</footer>
+		);
+	}
+}
+```
+
+**Note:** Unfortunately `tsx` is not directly used within the module so will report as an unused import so would be needed to be ignored by linters.
 
 ### Writing Custom Widgets
 
