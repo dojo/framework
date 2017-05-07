@@ -4,7 +4,10 @@ import { debounce } from '@dojo/core/util';
 import Map from '@dojo/shim/Map';
 import Promise from '@dojo/shim/Promise';
 import Set from '@dojo/shim/Set';
-import { CrudOptions, Store, StoreOptions, UpdateResults, Query, PatchArgument } from '../interfaces';
+import {
+	CrudOptions, Store, StoreOptions, UpdateResults, Query, PatchArgument, StoreObservable,
+	FetchResult
+} from '../interfaces';
 import StoreBase from './StoreBase';
 
 export interface StoreDelta<T> {
@@ -511,7 +514,7 @@ class ObservableStore<T> extends StoreBase<T> implements ObservableStoreInterfac
 	 * is the first add because it'll be triggered in the StoreBase base before the state is created for
 	 * this instance in the mixin's initializer
 	 */
-	add(items: T[] | T, options?: CrudOptions) {
+	add(items: T[] | T, options?: CrudOptions): StoreObservable<T, UpdateResults<T>> {
 		const result = super.add(items, options);
 		result.then(
 			(addedItems: T[]) => {
@@ -573,7 +576,7 @@ class ObservableStore<T> extends StoreBase<T> implements ObservableStoreInterfac
 	 * will be sent to each subscriber at the time of subscription. If we're not sending updates, still set
 	 * the local data and index to the newly retrieved data.
 	 */
-	fetch(query?: Query<T>) {
+	fetch(query?: Query<T>): FetchResult<T> {
 		const result = super.fetch(query);
 		if (!query) {
 			result.then(
