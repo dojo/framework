@@ -6,21 +6,23 @@ registerSuite({
 	name: 'registerCustomElement',
 
 	'custom elements are registered'(this: any) {
-		if (this.remote.session.capabilities.browserName === 'internet explorer' && this.remote.session.capabilities.version === '10') {
-			this.skip('not compatible with IE 10');
+		if (this.remote.session.capabilities.browser === 'iPhone' && this.remote.session.capabilities.version === '9.1') {
+			this.skip('not compatible with iOS 9.1');
 		}
 
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
+			.setFindTimeout(1000)
 			.findByCssSelector('test-button > button');
 	},
 	'custom element initial properties are set correctly'(this: any) {
-		if (this.remote.session.capabilities.browserName === 'internet explorer' && this.remote.session.capabilities.version === '10') {
-			this.skip('not compatible with IE 10');
+		if (this.remote.session.capabilities.browser === 'iPhone' && this.remote.session.capabilities.version === '9.1') {
+			this.skip('not compatible with iOS 9.1');
 		}
 
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
+			.setFindTimeout(1000)
 			.findByCssSelector('test-button > button')
 			.then((element: any) => {
 				return element.getVisibleText();
@@ -30,12 +32,13 @@ registerSuite({
 			});
 	},
 	'custom element event handlers are registered'(this: any) {
-		if (this.remote.session.capabilities.browserName === 'internet explorer' && this.remote.session.capabilities.version === '10') {
-			this.skip('not compatible with IE 10');
+		if (this.remote.session.capabilities.browser === 'iPhone' && this.remote.session.capabilities.version === '9.1') {
+			this.skip('not compatible with iOS 9.1');
 		}
 
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
+			.setFindTimeout(1000)
 			.findByCssSelector('test-button > button')
 			.click()
 			.end()
@@ -45,12 +48,13 @@ registerSuite({
 			});
 	},
 	'setting custom element attribute updates properties'(this: any) {
-		if (this.remote.session.capabilities.browserName === 'internet explorer' && this.remote.session.capabilities.version === '10') {
-			this.skip('not compatible with IE 10');
+		if (this.remote.session.capabilities.browser === 'iPhone' && this.remote.session.capabilities.version === '9.1') {
+			this.skip('not compatible with iOS 9.1');
 		}
 
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
+			.setFindTimeout(1000)
 			.findByCssSelector('test-button > button')
 			.end()
 			.execute('document.querySelector("test-button").setAttribute("label", "greetings")')
@@ -59,12 +63,13 @@ registerSuite({
 			}, undefined, 1000), undefined);
 	},
 	'setting custom element properties updates widget'(this: any) {
-		if (this.remote.session.capabilities.browserName === 'internet explorer' && this.remote.session.capabilities.version === '10') {
-			this.skip('not compatible with IE 10');
+		if (this.remote.session.capabilities.browser === 'iPhone' && this.remote.session.capabilities.version === '9.1') {
+			this.skip('not compatible with iOS 9.1');
 		}
 
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
+			.setFindTimeout(1000)
 			.findByCssSelector('no-attributes > button')
 			.end()
 			.execute('document.querySelector("no-attributes").buttonLabel = "greetings"')
