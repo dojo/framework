@@ -33,6 +33,6 @@
     "grunt-dojo2": "beta1",
     "intern": "^3.4.1",
     "istanbul": "^0.4.3",
-    "typescript": "~2.2.1"
+    "typescript": "~2.3.2"
   }
 }
