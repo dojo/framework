@@ -41,6 +41,6 @@
     "intern": "^3.4.1",
     "istanbul": "0.4.3",
     "sinon": "~1.17.6",
-    "typescript": "~2.2.1"
+    "typescript": "~2.3.2"
   }
 }
