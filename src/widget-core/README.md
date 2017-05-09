@@ -406,7 +406,7 @@ And using the `beforeRender` function for non decorator environments:
 class MyBaseClass extends WidgetBase<WidgetProperties> {
 	constructor() {
 		super();
-		beforeRender(this. myOtherBeforeRender)(this);
+		beforeRender(this.myOtherBeforeRender)(this);
 	}
 
 	myOtherBeforeRender(renderFunc: () => DNode, properties: any, children: DNode[]): () => DNode {
