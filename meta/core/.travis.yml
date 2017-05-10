@@ -26,7 +26,7 @@ script:
 - grunt intern:saucelabs --combined
 - grunt remapIstanbul:ci
 - grunt uploadCoverage
-- grunt doc
+- if [ "$TRAVIS_BRANCH" = "master" ]; then grunt doc; fi
 notifications:
   slack:
     secure: ZuM/LrujGyUs8r/KGYtxaqRHNVyAMhQi+nrbfhxxqrfXqfFoikMqwGSlY4728MvOEj3ptJhcqjxHTp+rnajXTHkEXJ6y7yfIGekd5523dGVooESIu6oFjmh0iIVxJWLhxQ+DwABRYX0FsPAIMZCCVuK/0EM6Pw00uPwiPjmeRkylV+lUkEoWkuKCTxuaBDgY4ITDGprDVGmtJRQp7Weov4IOlfGLVdoupVd1AmXq5OyvpW4fVtBKR+aph0jAqSVOMFIas77njKKoSPzxGtqf1110MQ1QJc7yTY6J6XFZEPpv15cRjo/LRZFx3xf/hwAufxnZR0L1bxvuVG9mfn4q8m1Wgq6JyoWfg+DC12KSfo9Y2MJCIi/mAh5NkiP6wzsryhnQVLDKlnN5P611DuxeImsxYXMoZMqoZ/eT2djdm2PkJCwGilCRM1aTU2dfqpwbdM4aD88FzCfICigNuaIXhzinDrrBQtIn6EoRkqw0T1lplMxeG+lt2SLpcPsZmtjNVrFqb8lNQPm1RWOuo9toCPYeKnIBZt3wzTuEoj27nTVarNLQK1S74IyP8kKvnjtEeUGD0/a4ow9FnUCnARNfSx62ksB5sJV5DV4zi5tzuowTZsvyUM6tpt1U3SiKEIDIteurdS1G7vCNArucvP5cxCVqYbrgaFdRmJMEwvrAqXc=
