@@ -892,6 +892,28 @@ widget.__setProperties__({
 			result = myWidget.__render__();
 			assert.lengthOf(result.children, 1);
 		},
+		'lazily defined widget using a symbol in registry renders when ready'() {
+			const myHeader = Symbol();
+			class TestWidget extends WidgetBase<any> {
+				render() {
+					return v('div', [
+						w(myHeader, <any> undefined)
+					]);
+				}
+			}
+
+			class TestHeaderWidget extends WidgetBase<any> {
+				render() {
+					return v('header');
+				}
+			}
+			const myWidget: any = new TestWidget();
+			let result = <VNode> myWidget.__render__();
+			assert.lengthOf(result.children, 0);
+			registry.define(myHeader, TestHeaderWidget);
+			result = myWidget.__render__();
+			assert.lengthOf(result.children, 1);
+		},
 		'locally defined widget in registry eventually replaces global one'() {
 			const localRegistry = new WidgetRegistry();
 

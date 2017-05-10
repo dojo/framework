@@ -4,11 +4,16 @@ import RegistryHandler from '../../src/RegistryHandler';
 import WidgetRegistry from '../../src/WidgetRegistry';
 import { WidgetBase } from '../../src/WidgetBase';
 
+const foo = Symbol();
+const bar = Symbol();
+
 const registry = new WidgetRegistry();
 registry.define('foo', WidgetBase);
+registry.define(foo, WidgetBase);
 
 const registryB = new WidgetRegistry();
 registryB.define('bar', WidgetBase);
+registryB.define(bar, WidgetBase);
 
 registerSuite({
 	name: 'RegistryHandler',
@@ -55,6 +60,8 @@ registerSuite({
 		registryHandler.add(registryB);
 		assert.isTrue(registryHandler.has('foo'));
 		assert.isTrue(registryHandler.has('bar'));
+		assert.isTrue(registryHandler.has(foo));
+		assert.isTrue(registryHandler.has(bar));
 	},
 	'get'() {
 		const promise = new Promise((resolve) => {
@@ -68,5 +75,63 @@ registerSuite({
 		return promise.then(() => {
 			assert.equal(registryHandler.get('baz'), WidgetBase);
 		});
+	},
+	'get with symbol label'() {
+		const baz = Symbol();
+		const promise = new Promise((resolve) => {
+			setTimeout(() => {
+				resolve(WidgetBase);
+			}, 1);
+		});
+		const registryHandler = new RegistryHandler();
+		registryHandler.add(registry);
+		registry.define(baz, promise);
+		return promise.then(() => {
+			assert.equal(registryHandler.get(baz), WidgetBase);
+		});
+	},
+	'invalidates once registry emits loaded event'() {
+		const baz = Symbol();
+		let promise: Promise<any> = Promise.resolve();
+		let invalidateCalled = false;
+		const lazyWidget = () => {
+			promise = new Promise((resolve) => {
+				setTimeout(() => {
+					resolve(WidgetBase);
+				}, 1);
+			});
+			return promise;
+		};
+		const registryHandler = new RegistryHandler();
+		registryHandler.on('invalidate', () => {
+			invalidateCalled = true;
+		});
+
+		registryHandler.add(registry);
+		registry.define(baz, lazyWidget);
+		registryHandler.get(baz);
+		return promise.then(() => {
+			assert.isTrue(invalidateCalled);
+		});
+	},
+	'noop when event action is not `loaded`'() {
+		const baz = Symbol();
+		let invalidateCalled = false;
+		let promise: Promise<any> = Promise.resolve();
+		const lazyWidget: any = () => {
+			promise = new Promise((resolve) => {
+			});
+			return promise;
+		};
+		const registryHandler = new RegistryHandler();
+		registryHandler.on('invalidate', () => {
+			invalidateCalled = true;
+		});
+
+		registryHandler.add(registry);
+		registry.define(baz, lazyWidget);
+		registryHandler.get(baz);
+		registry.emit({ type: baz, action: 'other' });
+		assert.isFalse(invalidateCalled);
 	}
 });

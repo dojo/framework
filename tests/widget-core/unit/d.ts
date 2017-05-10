@@ -89,12 +89,24 @@ registerSuite({
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isHNode(dNode));
 		},
-		'create WNode wrapper using label with properties and children'() {
+		'create WNode wrapper using string label with properties and children'() {
 			const properties: any = { id: 'id', classes: [ 'world' ] };
 			const dNode = w('my-widget', properties, [ w(WidgetBase, properties) ]);
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, 'my-widget');
+			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
+			assert.lengthOf(dNode.children, 1);
+			assert.isTrue(isWNode(dNode));
+			assert.isFalse(isHNode(dNode));
+		},
+		'create WNode wrapper using symbol label with properties and children'() {
+			const properties: any = { id: 'id', classes: [ 'world' ] };
+			const symbolLabel = Symbol();
+
+			const dNode = w(symbolLabel, properties, [ w(WidgetBase, properties) ]);
+			assert.equal(dNode.type, WNODE);
+			assert.strictEqual(dNode.widgetConstructor, symbolLabel);
 			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));

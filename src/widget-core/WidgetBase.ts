@@ -15,6 +15,7 @@ import {
 	WidgetBaseInterface,
 	PropertyChangeRecord,
 	PropertiesChangeEvent,
+	RegistryLabel,
 	HNode
 } from './interfaces';
 import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './WidgetRegistry';
@@ -170,7 +171,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	/**
 	 * cached chldren map for instance management
 	 */
-	private _cachedChildrenMap: Map<string | Promise<WidgetBaseConstructor> | WidgetBaseConstructor, WidgetCacheWrapper[]>;
+	private _cachedChildrenMap: Map<RegistryLabel | Promise<WidgetBaseConstructor> | WidgetBaseConstructor, WidgetCacheWrapper[]>;
 
 	/**
 	 * map of specific property diff functions
@@ -536,7 +537,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 			let { widgetConstructor } = dNode;
 			let child: WidgetBaseInterface<WidgetProperties>;
 
-			if (typeof widgetConstructor === 'string') {
+			if (!isWidgetBaseConstructor(widgetConstructor)) {
 				const item = this._registries.get(widgetConstructor);
 				if (item === null) {
 					return null;
