@@ -29,6 +29,7 @@ function createFakeElement(attributes: any, descriptor: CustomElementDescriptor)
 		getEvents() {
 			return events;
 		},
+		ownerDocument: global.document,
 		removeChild(child: any) {
 			removedChildren.push(child);
 		},
