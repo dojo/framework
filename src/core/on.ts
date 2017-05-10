@@ -1,6 +1,6 @@
-import { Handle, EventObject } from '@dojo/interfaces/core';
+import { Handle } from '@dojo/interfaces/core';
 import { createHandle, createCompositeHandle } from './lang';
-import Evented from './Evented';
+import Evented, { EventObject } from './Evented';
 
 export interface EventCallback {
 	(event: EventObject): void;

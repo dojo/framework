@@ -1,6 +1,6 @@
 import { Actionable } from '@dojo/interfaces/abilities';
-import { EventedListener, EventedListenerOrArray, EventedListenersMap, EventedCallback } from '@dojo/interfaces/bases';
-import { EventObject, EventTargettedObject, EventErrorObject, Handle } from '@dojo/interfaces/core';
+import { EventedListener, EventedListenerOrArray, EventedListenersMap } from '@dojo/interfaces/bases';
+import { EventTargettedObject, EventErrorObject, Handle } from '@dojo/interfaces/core';
 import Map from '@dojo/shim/Map';
 import { on as aspectOn } from './aspect';
 import { Destroyable } from './Destroyable';
@@ -37,6 +37,25 @@ function handlesArraytoHandle(handles: Handle[]): Handle {
 }
 
 /**
+ * The base event object, which provides a `type` property
+ */
+export interface EventObject {
+	/**
+	 * The type of the event
+	 */
+	readonly type: string | symbol;
+}
+
+export interface EventedCallback<E extends EventObject> {
+	/**
+	 * A callback that takes an `event` argument
+	 *
+	 * @param event The event object
+	 */
+	(event: E): boolean | void;
+}
+
+/**
  * Interface for Evented constructor options
  */
 export interface EventedOptions {
@@ -58,7 +77,7 @@ export interface BaseEventedEvents {
 	 * @param type the type of the event
 	 * @param listener the listener to attach
 	 */
-	(type: string, listener: EventedListenerOrArray<Evented, EventTargettedObject<Evented>>): Handle;
+	(type: string | symbol, listener: EventedListenerOrArray<Evented, EventTargettedObject<Evented>>): Handle;
 
 	/**
 	 * @param type the type for `error`
@@ -81,8 +100,8 @@ const regexMap = new Map<string, RegExp>();
  *
  * @returns boolean that indicates if the glob is matched
  */
-export function isGlobMatch(globString: string, targetString: string): boolean {
-	if (globString.indexOf('*') !== -1) {
+export function isGlobMatch(globString: string | symbol, targetString: string | symbol): boolean {
+	if (typeof targetString === 'string' && typeof globString === 'string' && globString.indexOf('*') !== -1) {
 		let regex: RegExp;
 		if (regexMap.has(globString)) {
 			regex = regexMap.get(globString)!;

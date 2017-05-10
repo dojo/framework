@@ -1,6 +1,6 @@
-import { EventObject, Handle } from '@dojo/interfaces/core';
+import { Handle } from '@dojo/interfaces/core';
 import Map from '@dojo/shim/Map';
-import Evented, { isGlobMatch } from './Evented';
+import Evented, { isGlobMatch, EventObject } from './Evented';
 
 /**
  * An implementation of the Evented class that queues up events when no listeners are
@@ -10,7 +10,7 @@ import Evented, { isGlobMatch } from './Evented';
  * @property maxEvents  The number of events to queue before old events are discarded. If zero (default), an unlimited number of events is queued.
  */
 export default class QueuingEvented extends Evented {
-	private _queue: Map<string, EventObject[]>;
+	private _queue: Map<string | symbol, EventObject[]>;
 	private _originalOn: (...args: any[]) => Handle;
 
 	maxEvents = 0;

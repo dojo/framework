@@ -81,6 +81,26 @@ registerSuite({
 
 			assert.deepEqual(eventStack, [ 'foo' ]);
 		},
+		'on() with Symbol type'() {
+			const foo = Symbol();
+			const bar = Symbol();
+			const eventStack: string[] = [];
+			const evented = new Evented({});
+			const handle = evented.on(foo, (event) => {
+				eventStack.push(event.type);
+			});
+
+			evented.emit({ type: foo });
+			evented.emit({ type: bar });
+			evented.emit({ type: 'bar' });
+
+			handle.destroy();
+
+			evented.emit({ type: foo });
+			evented.emit({ type: 'bar' });
+
+			assert.deepEqual(eventStack, [ foo ]);
+		},
 		'listener on creation, plus on'() {
 			const eventStack: string[] = [];
 			const evented = new Evented({
