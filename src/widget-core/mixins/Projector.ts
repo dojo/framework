@@ -148,7 +148,9 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(base: T)
 			this._boundRender = this.__render__.bind(this);
 
 			this.own(this.on('widget:children', this.invalidate));
-			this.own(this.on('properties:changed', this.invalidate));
+			this.own(this.on('properties:changed', () => {
+				this.scheduleRender();
+			}));
 			this.own(this.on('invalidated', this.scheduleRender));
 
 			this.root = document.body;

@@ -194,17 +194,11 @@ registerSuite({
 
 		assert.isTrue(maquetteProjectorStopSpy.calledOnce);
 	},
-	'invalidate on properties:changed'() {
+	'scheduleRender on properties:changed'() {
 		const projector = new TestWidget();
-		let called = false;
-
-		projector.on('invalidated', () => {
-			called = true;
-		});
-
+		const scheduleRender = spy(projector, 'scheduleRender');
 		projector.setProperties({ foo: 'hello' });
-
-		assert.isTrue(called);
+		assert.isTrue(scheduleRender.called);
 	},
 	'invalidate on setting children'() {
 		const projector = new TestWidget();

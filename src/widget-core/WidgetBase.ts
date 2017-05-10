@@ -31,6 +31,12 @@ interface WidgetCacheWrapper {
 	used: boolean;
 }
 
+enum WidgetRenderState {
+	IDLE = 1,
+	PROPERTIES,
+	RENDER
+}
+
 /**
  * Diff property configuration
  */
@@ -188,6 +194,8 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	 */
 	private _bindFunctionPropertyMap: WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>;
 
+	private _renderState: WidgetRenderState = WidgetRenderState.IDLE;
+
 	/**
 	 * @constructor
 	 */
@@ -278,6 +286,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	}
 
 	public __setProperties__(properties: P): void {
+		this._renderState = WidgetRenderState.PROPERTIES;
 		const diffPropertyResults: { [index: string]: any } = {};
 		const diffPropertyChangedKeys: string[] = [];
 
@@ -364,6 +373,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	}
 
 	public __render__(): VNode | string | null {
+		this._renderState = WidgetRenderState.RENDER;
 		if (this._dirty || !this._cachedVNode) {
 			this._dirty = false;
 			const beforeRenders = this.getDecorator('beforeRender');
@@ -380,17 +390,24 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 			if (widget) {
 				this._cachedVNode = widget;
 			}
+			this._renderState = WidgetRenderState.IDLE;
 			return widget;
 		}
+		this._renderState = WidgetRenderState.IDLE;
 		return this._cachedVNode;
 	}
 
 	public invalidate(): void {
-		this._dirty = true;
-		this.emit({
-			type: 'invalidated',
-			target: this
-		});
+		if (this._renderState === WidgetRenderState.IDLE) {
+			this._dirty = true;
+			this.emit({
+				type: 'invalidated',
+				target: this
+			});
+		}
+		else if (this._renderState === WidgetRenderState.PROPERTIES) {
+			this._dirty = true;
+		}
 	}
 
 	protected render(): DNode {

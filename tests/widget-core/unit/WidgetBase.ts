@@ -40,6 +40,78 @@ registerSuite({
 		assert.strictEqual(widget.children[0], expectedChild);
 		assert.isTrue(childrenEventEmitted);
 	},
+	'invalidate': {
+		'should emit event and mark as dirty when invalidating during idle'() {
+			let invalidateCalled = false;
+			let renderCount = 0;
+			class Foo extends WidgetBase {
+				render() {
+					renderCount++;
+					return v('div', [ 'hello world ' ]);
+				}
+			}
+
+			const foo = new Foo();
+			foo.on('invalidated', () => {
+				invalidateCalled = true;
+			});
+			foo.__render__();
+			assert.equal(renderCount, 1);
+			foo.invalidate();
+			foo.__render__();
+			assert.equal(renderCount, 2);
+			assert.isTrue(invalidateCalled);
+		},
+		'should not emit event but mark as dirty when invalidating during property diff'() {
+			let invalidateCalled = false;
+			let renderCount = 0;
+			class Foo extends WidgetBase<{ bar: string }> {
+				@diffProperty('bar')
+				barDiff() {
+					this.invalidate();
+					return {
+						changed: false
+					};
+				}
+				render() {
+					renderCount++;
+					return v('div', [ 'hello world ' ]);
+				}
+			}
+
+			const foo = new Foo();
+			foo.on('invalidated', () => {
+				invalidateCalled = true;
+			});
+			foo.__render__();
+			assert.equal(renderCount, 1);
+			foo.__setProperties__({ bar: 'qux' });
+			foo.__render__();
+			assert.equal(renderCount, 2);
+			assert.isFalse(invalidateCalled);
+		},
+		'should not emit event or mark as dirty when invalidating during render'() {
+			let invalidateCalled = false;
+			let renderCount = 0;
+			class Foo extends WidgetBase {
+				render() {
+					this.invalidate();
+					renderCount++;
+					return v('div', [ 'hello world ' ]);
+				}
+			}
+
+			const foo = new Foo();
+			foo.on('invalidated', () => {
+				invalidateCalled = true;
+			});
+			foo.__render__();
+			assert.equal(renderCount, 1);
+			foo.__render__();
+			assert.equal(renderCount, 1);
+			assert.isFalse(invalidateCalled);
+		}
+	},
 	'Applies div as default tag'() {
 			const widget = new WidgetBase();
 			const renderedWidget = <VNode> (<any> widget).__render__();
@@ -1257,17 +1329,6 @@ widget.__setProperties__({
 			myWidget.__render__();
 			assert.isTrue(widgetTwoInstantiated);
 		}
-	},
-	'invalidate emits invalidated event'() {
-		const widgetBase = new WidgetBase();
-		let count = 0;
-		widgetBase.on('invalidated', function() {
-			console.log('invalid');
-			count++;
-		});
-		(<any> widgetBase).__render__();
-		widgetBase.invalidate();
-		assert.strictEqual(count, 1);
 	},
 	'child invalidation invalidates parent'() {
 		let childInvalidate = () => {};
