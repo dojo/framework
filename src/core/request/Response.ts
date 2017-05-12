@@ -1,15 +1,15 @@
 import Promise from '@dojo/shim/Promise';
 import Task from '../async/Task';
-import QueuingEvented from '../QueuingEvented';
 import Headers from './Headers';
 import { Response as ResponseInterface, RequestOptions } from './interfaces';
+import Observable from '../Observable';
 
 export interface ResponseData {
 	task: Task<any>;
 	used: boolean;
 }
 
-abstract class Response extends QueuingEvented implements ResponseInterface {
+abstract class Response implements ResponseInterface {
 	abstract readonly headers: Headers;
 	abstract readonly ok: boolean;
 	abstract readonly status: number;
@@ -17,6 +17,9 @@ abstract class Response extends QueuingEvented implements ResponseInterface {
 	abstract readonly url: string;
 	abstract readonly bodyUsed: boolean;
 	readonly requestOptions: RequestOptions;
+
+	abstract readonly download: Observable<number>;
+	abstract readonly data: Observable<any>;
 
 	json<T>(): Task<T> {
 		return <any> this.text().then(JSON.parse);

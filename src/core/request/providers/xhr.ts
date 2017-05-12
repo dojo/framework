@@ -6,10 +6,12 @@ import global from '../../global';
 import has from '../../has';
 import { createTimer } from '../../util';
 import Headers from '../Headers';
-import { RequestOptions } from '../interfaces';
+import { RequestOptions, UploadObservableTask } from '../interfaces';
 import Response, { getArrayBufferFromBlob, getTextFromBlob } from '../Response';
 import TimeoutError from '../TimeoutError';
 import { generateRequestUrl } from '../util';
+import Observable from '../../Observable';
+import SubscriptionPool from '../SubscriptionPool';
 
 /**
  * Request options specific to an XHR request
@@ -24,6 +26,8 @@ interface RequestData {
 	requestOptions: XhrRequestOptions;
 	nativeResponse: XMLHttpRequest;
 	url: string;
+	downloadObservable: Observable<number>;
+	dataObservable: Observable<any>;
 }
 
 const dataMap = new WeakMap<XhrResponse, RequestData>();
@@ -63,6 +67,14 @@ export class XhrResponse extends Response {
 
 	get url(): string {
 		return dataMap.get(this).url;
+	}
+
+	get download(): Observable<number> {
+		return dataMap.get(this).downloadObservable;
+	}
+
+	get data(): Observable<any> {
+		return dataMap.get(this).dataObservable;
 	}
 
 	constructor(request: XMLHttpRequest) {
@@ -155,7 +167,7 @@ function setOnError(request: XMLHttpRequest, reject: Function) {
 	});
 }
 
-export default function xhr(url: string, options: XhrRequestOptions = {}): Task<Response> {
+export default function xhr(url: string, options: XhrRequestOptions = {}): UploadObservableTask<Response> {
 	const request = new XMLHttpRequest();
 	const requestUrl = generateRequestUrl(url, options);
 
@@ -178,7 +190,7 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Task<
 	let timeoutHandle: Handle;
 	let timeoutReject: Function;
 
-	const task = new Task<Response>((resolve, reject) => {
+	const task = <UploadObservableTask<Response>> new Task<Response>((resolve, reject) => {
 		timeoutReject = reject;
 
 		request.onreadystatechange = function () {
@@ -189,6 +201,9 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Task<
 			if (request.readyState === 2) {
 				const response = new XhrResponse(request);
 
+				const downloadSubscriptionPool = new SubscriptionPool<number>();
+				const dataSubscriptionPool = new SubscriptionPool<any>();
+
 				const task = new Task<XMLHttpRequest>((resolve, reject) => {
 					timeoutReject = reject;
 
@@ -197,42 +212,26 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Task<
 							return;
 						}
 
-						response.emit({
-							type: 'progress',
-							response,
-							totalBytesDownloaded: event.loaded
-						});
+						downloadSubscriptionPool.next(event.loaded);
 					};
 
 					request.onreadystatechange = function () {
 						if (isAborted) {
 							return;
 						}
+
 						if (request.readyState === 4) {
 							request.onreadystatechange = noop;
 							timeoutHandle && timeoutHandle.destroy();
 
-							response.emit({
-								type: 'data',
-								response,
-								chunk: request.response
-							});
-
-							response.emit({
-								type: 'end',
-								response
-							});
+							dataSubscriptionPool.next(request.response);
+							dataSubscriptionPool.complete();
 
 							resolve(request);
 						}
 					};
 
 					setOnError(request, reject);
-
-					response.emit({
-						type: 'start',
-						response
-					});
 				}, abort);
 
 				dataMap.set(response, {
@@ -240,7 +239,9 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Task<
 					used: false,
 					nativeResponse: request,
 					requestOptions: options,
-					url: requestUrl
+					url: requestUrl,
+					downloadObservable: new Observable<number>(observer => downloadSubscriptionPool.add(observer)),
+					dataObservable: new Observable<any>(observer => dataSubscriptionPool.add(observer))
 				});
 
 				resolve(response);
@@ -296,6 +297,13 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Task<
 			request.onreadystatechange = noop;
 			timeoutHandle && timeoutHandle.destroy();
 		}
+	});
+
+	const uploadObserverPool = new SubscriptionPool<number>();
+	task.upload = new Observable<number>(observer => uploadObserverPool.add(observer));
+
+	request.upload.addEventListener('progress', event => {
+		uploadObserverPool.next(event.loaded);
 	});
 
 	request.send(options.body || null);

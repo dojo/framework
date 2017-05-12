@@ -3,12 +3,14 @@ import * as assert from 'intern/chai!assert';
 import Task from '../../src/async/Task';
 import request, { providerRegistry, Response, Headers, RequestOptions } from '../../src/request';
 import 'intern/dojo/has!host-node?./request_node:./request_browser';
+import { UploadObservableTask } from '../../src/request/interfaces';
+import Observable from '../../src/Observable';
 
 const mockData = '{ "foo": "bar" }';
 let handle: any;
 
-function mockProvider(url: string, options: RequestOptions): Task<Response> {
-	return Task.resolve(new class extends Response {
+function mockProvider(url: string, options: RequestOptions): UploadObservableTask<Response> {
+	const task = <UploadObservableTask<Response>> Task.resolve(new class extends Response {
 		bodyUsed = false;
 		headers: Headers = new Headers();
 		ok = true;
@@ -16,6 +18,9 @@ function mockProvider(url: string, options: RequestOptions): Task<Response> {
 		statusText = 'OK';
 		url: string = url;
 		requestOptions = options;
+
+		download = new Observable<number>(() => {});
+		data = new Observable<number>(() => {});
 
 		arrayBuffer(): Task<ArrayBuffer> {
 			return Task.resolve(<any> null);
@@ -33,6 +38,11 @@ function mockProvider(url: string, options: RequestOptions): Task<Response> {
 			return Task.resolve(mockData);
 		}
 	});
+
+	task.upload = new Observable<number>(() => {
+	});
+
+	return task;
 }
 
 registerSuite({
@@ -71,8 +81,11 @@ registerSuite({
 			});
 		},
 		'post'() {
-			return request.post('test.html').then(response => {
+			return request.post('test.html', {
+				body: 'some body'
+			}).then(response => {
 				assert.equal((<any> response).requestOptions.method, 'POST');
+				assert.equal((<any> response).requestOptions.body, 'some body');
 			});
 		},
 		'put'() {

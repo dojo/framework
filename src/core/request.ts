@@ -1,6 +1,6 @@
 import has from '@dojo/has/has';
 import Task from './async/Task';
-import { RequestOptions, Response, Provider } from './request/interfaces';
+import { RequestOptions, Response, Provider, UploadObservableTask } from './request/interfaces';
 import ProviderRegistry from './request/ProviderRegistry';
 import xhr from './request/providers/xhr';
 
@@ -12,8 +12,8 @@ const request: {
 	get(url: string, options?: RequestOptions): Task<Response>;
 	head(url: string, options?: RequestOptions): Task<Response>;
 	options(url: string, options?: RequestOptions): Task<Response>;
-	post(url: string, options?: RequestOptions): Task<Response>;
-	put(url: string, options?: RequestOptions): Task<Response>;
+	post(url: string, options?: RequestOptions): UploadObservableTask<Response>;
+	put(url: string, options?: RequestOptions): UploadObservableTask<Response>;
 
 	setDefaultProvider(provider: Provider): void;
 } = <any> function request(url: string, options: RequestOptions = {}): Task<Response> {
@@ -25,12 +25,22 @@ const request: {
 	}
 };
 
-[ 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT' ].forEach(method => {
+[ 'DELETE', 'GET', 'HEAD', 'OPTIONS' ].forEach(method => {
 	Object.defineProperty(request, method.toLowerCase(), {
 		value(url: string, options: RequestOptions = {}): Task<Response> {
 			options = Object.create(options);
 			options.method = method;
 			return request(url, options);
+		}
+	});
+});
+
+[ 'POST', 'PUT' ].forEach(method => {
+	Object.defineProperty(request, method.toLowerCase(), {
+		value(url: string, options: RequestOptions = {}): UploadObservableTask<Response> {
+			options = Object.create(options);
+			options.method = method;
+			return <UploadObservableTask<Response>> request(url, options);
 		}
 	});
 });

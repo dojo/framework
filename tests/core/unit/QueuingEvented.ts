@@ -59,6 +59,21 @@ registerSuite({
 			});
 
 			assert.strictEqual(listenerCallCount, 1);
+		},
+
+		'events have glob matching'() {
+			const evented = new QueuingEvented();
+			let listenerCallCount = 0;
+
+			evented.emit({
+				type: 'test'
+			});
+
+			evented.on('t*', function () {
+				listenerCallCount++;
+			});
+
+			assert.strictEqual(listenerCallCount, 1);
 		}
 	}
 );

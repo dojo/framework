@@ -4,7 +4,7 @@ import * as assert from 'intern/chai!assert';
 import * as dojo1xhr from 'dojo/request/xhr';
 
 import xhrRequest from '../../../src/request/providers/xhr';
-import { Response, StartEvent, EndEvent, DataEvent, ProgressEvent } from '../../../src/request/interfaces';
+import { Response } from '../../../src/request/interfaces';
 import UrlSearchParams from '../../../src/UrlSearchParams';
 import has from '@dojo/has/has';
 import { XhrResponse } from '../../../src/request/providers/xhr';
@@ -115,6 +115,28 @@ registerSuite({
 			}).then(function (response: any) {
 				assert.strictEqual(response.requestOptions.user, 'user');
 				assert.strictEqual(response.requestOptions.password, 'password');
+			});
+		},
+
+		'upload monitoring'(this: any) {
+			if (!echoServerAvailable) {
+				this.skip('No echo server available');
+			}
+
+			let events: number[] = [];
+
+			const req = xhrRequest('/__echo/post', {
+				method: 'POST',
+				body: '12345'
+			});
+
+			req.upload.subscribe(totalBytesUploaded => {
+				events.push(totalBytesUploaded);
+			});
+
+			return req.then(res => {
+				assert.isTrue(events.length > 0, 'was expecting at least one monitor event');
+				assert.equal(events[events.length - 1], 5);
 			});
 		},
 
@@ -494,42 +516,6 @@ registerSuite({
 		},
 
 		'response progress': {
-			'start event'(this: any) {
-				if (!echoServerAvailable) {
-					this.skip('No echo server available');
-				}
-
-				let startCalled = false;
-
-				return xhrRequest('/__echo/foo.json').then((response: any) => {
-					response.on('start', (event: StartEvent) => {
-						startCalled = true;
-					});
-
-					return response.text().then(() => {
-						assert.isTrue(startCalled);
-					});
-				});
-			},
-
-			'end event'(this: any) {
-				if (!echoServerAvailable) {
-					this.skip('No echo server available');
-				}
-
-				let endCalled = false;
-
-				return xhrRequest('/__echo/foo.json').then((response: any) => {
-					response.on('end', (event: EndEvent) => {
-						endCalled = true;
-					});
-
-					return response.text().then(() => {
-						assert.isTrue(endCalled);
-					});
-				});
-			},
-
 			'data event'(this: any) {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
@@ -537,9 +523,9 @@ registerSuite({
 
 				let timesCalled = 0;
 
-				return xhrRequest('/__echo/foo.json').then((response: any) => {
-					response.on('data', (event: DataEvent) => {
-						assert.isNotNull(event.chunk);
+				return xhrRequest('/__echo/foo.json').then(response => {
+					response.data.subscribe(chunk => {
+						assert.isNotNull(chunk);
 						timesCalled++;
 					});
 
@@ -549,20 +535,20 @@ registerSuite({
 				});
 			},
 
-			'progress event'(this: any) {
+			'download event'(this: any) {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
 				}
 
-				let progressEvents: number[] = [];
+				let downloadEvents: number[] = [];
 
-				return xhrRequest('/__echo/foo.json').then((response: any) => {
-					response.on('progress', (event: ProgressEvent) => {
-						progressEvents.push(event.totalBytesDownloaded);
+				return xhrRequest('/__echo/foo.json').then(response => {
+					response.download.subscribe(totalBytesDownloaded => {
+						downloadEvents.push(totalBytesDownloaded);
 					});
 
 					return response.text().then(() => {
-						assert.isTrue(progressEvents.length > 0);
+						assert.isTrue(downloadEvents.length > 0);
 					});
 				});
 			}

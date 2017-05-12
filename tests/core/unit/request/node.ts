@@ -270,6 +270,15 @@ function buildRedirectTests(methods: RedirectTestData[]) {
 
 function getResponseData(request: any): DummyResponse {
 	const urlInfo = parse(request.url, true);
+
+	if (urlInfo.query.dataKey === 'echo') {
+		return {
+			body: JSON.stringify({
+				headers: request.headers
+			})
+		};
+	}
+
 	return responseData[ urlInfo.query.dataKey ] || {};
 }
 
@@ -370,6 +379,17 @@ registerSuite({
 					body: Buffer.from('{ "foo": "bar" }', 'utf8'),
 					method: 'POST'
 				}).then(() => {
+					assert.deepEqual(requestData, { foo: 'bar' });
+				});
+			}
+		},
+
+		bodyStream: {
+			'stream is read'(this: any) {
+				return nodeRequest(getRequestUrl('echo'), {
+					method: 'POST',
+					bodyStream: fs.createReadStream('tests/support/data/foo.json')
+				}).then(res => res.json()).then(json => {
 					assert.deepEqual(requestData, { foo: 'bar' });
 				});
 			}
@@ -523,6 +543,69 @@ registerSuite({
 						assert.strictEqual(error.name, 'TimeoutError');
 					})
 				);
+		},
+		'upload monitoriting': {
+			'with a stream'(this: any) {
+				let events: number[] = [];
+
+				const req = nodeRequest(getRequestUrl('foo.json'), {
+					method: 'POST',
+					bodyStream: fs.createReadStream('tests/support/data/foo.json')
+				});
+
+				req.upload.subscribe(totalBytesUploaded => {
+					events.push(totalBytesUploaded);
+				});
+
+				return req.then(res => {
+					assert.isTrue(events.length > 0, 'was expecting at least one monitor event');
+					assert.equal(events[events.length - 1], 17);
+				});
+			},
+			'without a stream'(this: any) {
+				let events: number[] = [];
+
+				const req = nodeRequest(getRequestUrl('foo.json'), {
+					method: 'POST',
+					body: '{ "foo": "bar" }\n'
+				});
+
+				req.upload.subscribe(totalBytesUploaded => {
+					events.push(totalBytesUploaded);
+				});
+
+				return req.then(res => {
+					assert.isTrue(events.length > 0, 'was expecting at least one monitor event');
+					assert.equal(events[events.length - 1], 17);
+				});
+			}
+		},
+		'download events'() {
+			let downloadEvents: number[] = [];
+
+			return nodeRequest(getRequestUrl('foo.json')).then(response => {
+				response.download.subscribe(totalBytesDownloaded => {
+					downloadEvents.push(totalBytesDownloaded);
+				});
+
+				return response.text().then(() => {
+					assert.isTrue(downloadEvents.length > 0);
+				});
+			});
+		},
+
+		'data events'() {
+			let data: number[] = [];
+
+			return nodeRequest(getRequestUrl('foo.json')).then(response => {
+				response.data.subscribe(chunk => {
+					data.push(chunk);
+				});
+
+				return response.text().then(() => {
+					assert.isTrue(data.length > 0);
+				});
+			});
 		}
 	},
 
