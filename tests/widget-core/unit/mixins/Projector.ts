@@ -110,18 +110,99 @@ registerSuite({
 			assert.strictEqual(child.innerHTML, 'foo');
 			assert.strictEqual(child.tagName.toLowerCase(), 'h2');
 		},
-		'merge'() {
-			const childNodeLength = document.body.childNodes.length;
-			const projector = new TestWidget();
+		'merge': {
+			'standard'() {
+				const div = document.createElement('div');
+				document.body.appendChild(div);
+				const projector = new TestWidget();
 
-			projector.setChildren([ v('h2', [ 'foo' ] ) ]);
+				projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
-			projector.merge();
+				projector.merge(div);
 
-			assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
-			const child = <HTMLElement> document.body.lastChild;
-			assert.strictEqual(child.innerHTML, 'foo');
-			assert.strictEqual(child.tagName.toLowerCase(), 'h2');
+				assert.strictEqual(div.childNodes.length, 1, 'child should have been added');
+				const child = <HTMLElement> div.lastChild;
+				assert.strictEqual(child.innerHTML, 'foo');
+				assert.strictEqual(child.tagName.toLowerCase(), 'h2');
+				document.body.removeChild(div);
+			},
+			'pre rendered DOM used'() {
+				const iframe = document.createElement('iframe');
+				document.body.appendChild(iframe);
+				iframe.contentDocument.write(`
+					<div class="foo">
+						<label for="baz">Select Me:</label>
+						<select type="text" name="baz" id="baz" disabled="disabled">
+							<option value="foo">label foo</option>
+							<option value="bar" selected="">label bar</option>
+							<option value="baz">label baz</option>
+						</select>
+						<button type="button" disabled="disabled">Click Me!</button>
+					</div>`);
+				iframe.contentDocument.close();
+				const root = iframe.contentDocument.body.firstChild as HTMLElement;
+				const childElementCount = root.childElementCount;
+				const select = root.childNodes[3] as HTMLSelectElement;
+				const button = root.childNodes[5] as HTMLButtonElement;
+				assert.strictEqual((root.childNodes[3] as HTMLSelectElement).value, 'bar', 'bar should be selected');
+				const onchangeListener = spy();
+				const onclickListener = spy();
+				const projector = new class extends TestWidget {
+					render() {
+						return v('div', {
+							classes: { foo: true, bar: true }
+						}, [
+							v('label', {
+								for: 'baz'
+							}, [ 'Select Me:' ]),
+							v('select', {
+								type: 'text',
+								name: 'baz',
+								id: 'baz',
+								disabled: false,
+								onchange: onchangeListener
+							}, [
+								v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
+								v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
+								v('option', { value: 'baz', selected: false }, [ 'label baz' ])
+							]),
+							v('button', {
+								type: 'button',
+								disabled: false,
+								onclick: onclickListener
+							}, [ 'Click Me!' ])
+						]);
+					}
+				}();
+				projector.merge(root);
+				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
+				assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
+				assert.strictEqual(select, root.childNodes[3], 'should have been reused');
+				assert.strictEqual(button, root.childNodes[5], 'should have been reused');
+				assert.isFalse(select.disabled, 'select should be enabled');
+				assert.isFalse(button.disabled, 'button shound be enabled');
+
+				assert.strictEqual(select.value, 'foo', 'foo should be selected');
+				assert.strictEqual(select.children.length, 3, 'should have 3 children');
+
+				assert.isFalse(onchangeListener.called, 'onchangeListener should not have been called');
+				assert.isFalse(onclickListener.called, 'onclickListener should not have been called');
+
+				const changeEvent = document.createEvent('Event');
+				changeEvent.initEvent('change', true, true);
+				select.onchange(changeEvent); // firefox doesn't like to dispatch this event, either due to trust issues or
+											  // that firefox doesn't generally dispatch this event until the element is blurred
+											  // which is different than other browsers.  Either way this is not material to testing
+											  // the functionality of this test, so calling the listener directly.
+				assert.isTrue(onchangeListener.called, 'onchangeListener should have been called');
+
+				const clickEvent = document.createEvent('CustomEvent');
+				clickEvent.initEvent('click', true, true);
+				button.dispatchEvent(clickEvent);
+				assert.isTrue(onclickListener.called, 'onclickListener should have been called');
+
+				document.body.removeChild(iframe);
+			}
 		}
 	},
 	'get root'() {

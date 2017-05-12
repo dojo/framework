@@ -29,8 +29,7 @@
     "@dojo/core": "beta1",
     "@dojo/has": "beta1",
     "@dojo/i18n": "beta1",
-    "@dojo/shim": "beta1",
-    "maquette": "2.4.3"
+    "@dojo/shim": "beta1"
   },
   "devDependencies": {
     "@dojo/interfaces": "beta1",
@@ -54,6 +53,7 @@
     "typescript": "~2.3.2"
   },
   "dependencies": {
+    "maquette": "~2.5.0",
     "pepjs": "^0.4.2"
   }
 }

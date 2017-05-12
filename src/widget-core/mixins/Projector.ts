@@ -1,5 +1,6 @@
 import global from '@dojo/core/global';
 import { Handle } from '@dojo/interfaces/core';
+import { VNode } from '@dojo/interfaces/vdom';
 import { dom, Projection, ProjectionOptions, VNodeProperties } from 'maquette';
 import 'pepjs';
 import cssTransitions from '../animations/cssTransitions';
@@ -46,6 +47,10 @@ export interface ProjectorMixin<P extends WidgetProperties> {
 
 	/**
 	 * Merge the projector onto the root.
+	 *
+	 * The `root` and any of its `children` will be re-used.  Any excess DOM nodes will be ignored and any missing DOM nodes
+	 * will be created.
+	 * @param root The root element that the root virtual DOM node will be merged with.  Defaults to `document.body`.
 	 */
 	merge(root?: Element): Handle;
 
@@ -121,6 +126,22 @@ const eventHandlers = [
 	'onscroll',
 	'onsubmit'
 ];
+
+/**
+ * Internal function that maps existing DOM Elements to virtual DOM nodes.
+ *
+ * The funtion does not presume DOM will be there.  It does assume that if a DOM `Element` exists that the `VNode`s are in
+ * the same DOM order as the `Element`s.  If a DOM Element does not exist, it will set the `vnode.domNode` to `null` and
+ * not descend further into the `VNode` children which will cause the maquette projection to create the Element anew.
+ * @param vnode The virtual DOM node
+ * @param domNode The Element, if any, to set on the virtual DOM node
+ */
+function setDomNodes(vnode: VNode, domNode: Element | null = null) {
+	vnode.domNode = domNode;
+	if (vnode.children && domNode) {
+		vnode.children.forEach((child, i) => setDomNodes(child, domNode.children[i]));
+	}
+}
 
 export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(base: T): T & Constructor<ProjectorMixin<P>> {
 	return class extends base {
@@ -281,7 +302,9 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(base: T)
 					this._projection = dom.append(this.root, this._boundRender(), this._projectionOptions);
 				break;
 				case AttachType.Merge:
-					this._projection = dom.merge(this.root, this._boundRender(), this._projectionOptions);
+					const vnode: VNode = this._boundRender();
+					setDomNodes(vnode, this.root);
+					this._projection = dom.merge(this.root, vnode, this._projectionOptions);
 				break;
 				case AttachType.Replace:
 					this._projection = dom.replace(this.root, this._boundRender(), this._projectionOptions);
