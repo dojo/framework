@@ -692,10 +692,10 @@ Basic usage:
 ```ts
 import { WidgetProperties } from '@dojo/widget-core/interfaces';
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { ThemeableMixin, ThemeableMixinProperties, theme } from '@dojo/widget-core/mixins/Themeable';
+import { ThemeableMixin, ThemeableProperties, theme } from '@dojo/widget-core/mixins/Themeable';
 import * as baseClasses from './styles/tabpanel.css';
 
-interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableMixinProperties;
+interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableProperties;
 
 @theme(baseClasses)
 class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProperties> {
@@ -728,7 +728,7 @@ Import the theme and pass it to the widget via its `properties`. The theme class
 ```ts
 import * as customTheme from './themes/customTheme.css';
 
-interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableMixinProperties;
+interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableProperties;
 
 class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProperties> {
 	render: function () {
@@ -754,7 +754,7 @@ As we are using `css-modules` to scope widget css classes, the generated class n
 ```ts
 import * as myExtras from './extras/myExtras.css';
 
-interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableMixinProperties;
+interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableProperties;
 
 class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProperties> {
 	render: function () {
@@ -772,10 +772,10 @@ The `this.classes` function returns a chained `fixed` function that can be used 
 ``` ts
 import { WidgetProperties } from '@dojo/widget-core/interfaces';
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { ThemeableMixin, ThemeableMixinProperties, theme } from '@dojo/widget-core/mixins/Themeable';
+import { ThemeableMixin, ThemeableProperties, theme } from '@dojo/widget-core/mixins/Themeable';
 import * as baseClasses from './styles/tabpanel.css';
 
-interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableMixinProperties;
+interface MyThemeableWidgetProperties extends WidgetProperties, ThemeableProperties;
 
 @theme(baseClasses)
 class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProperties> {
