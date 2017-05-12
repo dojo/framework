@@ -2,24 +2,30 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import pollUntil = require('intern/dojo/node!leadfoot/helpers/pollUntil');
 
+let skip: boolean;
+
 registerSuite({
 	name: 'registerCustomElement',
-
-	'custom elements are registered'(this: any) {
-		if (this.remote.session.capabilities.browser === 'iPhone' && this.remote.session.capabilities.version === '9.1') {
-			this.skip('not compatible with iOS 9.1');
+	beforeEach(this: any) {
+		const { browserName, browser, version } = this.remote.session.capabilities;
+		skip = false;
+		if ((browser === 'iPhone' && version === '9.1') || (browserName === 'safari' && version === '9.1.3')) {
+			skip = true;
 		}
-
+	},
+	'custom elements are registered'(this: any) {
+		if (skip) {
+			this.skip('not compatible with iOS 9.1 or Safari 9.1');
+		}
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
 			.setFindTimeout(1000)
 			.findByCssSelector('test-button > button');
 	},
 	'custom element initial properties are set correctly'(this: any) {
-		if (this.remote.session.capabilities.browser === 'iPhone' && this.remote.session.capabilities.version === '9.1') {
-			this.skip('not compatible with iOS 9.1');
+		if (skip) {
+			this.skip('not compatible with iOS 9.1 or Safari 9.1');
 		}
-
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
 			.setFindTimeout(1000)
@@ -32,10 +38,9 @@ registerSuite({
 			});
 	},
 	'custom element event handlers are registered'(this: any) {
-		if (this.remote.session.capabilities.browser === 'iPhone' && this.remote.session.capabilities.version === '9.1') {
-			this.skip('not compatible with iOS 9.1');
+		if (skip) {
+			this.skip('not compatible with iOS 9.1 or Safari 9.1');
 		}
-
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
 			.setFindTimeout(1000)
@@ -48,10 +53,9 @@ registerSuite({
 			});
 	},
 	'setting custom element attribute updates properties'(this: any) {
-		if (this.remote.session.capabilities.browser === 'iPhone' && this.remote.session.capabilities.version === '9.1') {
-			this.skip('not compatible with iOS 9.1');
+		if (skip) {
+			this.skip('not compatible with iOS 9.1 or Safari 9.1');
 		}
-
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
 			.setFindTimeout(1000)
@@ -63,10 +67,9 @@ registerSuite({
 			}, undefined, 1000), undefined);
 	},
 	'setting custom element properties updates widget'(this: any) {
-		if (this.remote.session.capabilities.browser === 'iPhone' && this.remote.session.capabilities.version === '9.1') {
-			this.skip('not compatible with iOS 9.1');
+		if (skip) {
+			this.skip('not compatible with iOS 9.1 or Safari 9.1');
 		}
-
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
 			.setFindTimeout(1000)
