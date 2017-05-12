@@ -392,94 +392,6 @@ registerSuite({
 			testWidget.__render__();
 			assert.strictEqual(testWidget.count, 2);
 		},
-		'widget function properties can be bound to a custom scope'() {
-			class TestChildWidget extends WidgetBase<any> {
-				render() {
-					this.properties.foo();
-					return v('div');
-				}
-			}
-
-			const foo = {
-				count: 0,
-				foo(this: any) {
-					this.count += 1;
-				}
-			};
-
-			class TestWidget extends WidgetBase<any> {
-				count: number;
-				constructor() {
-					super();
-					this.count = 0;
-				}
-
-				foo() {
-					this.count++;
-				}
-
-				render(): DNode {
-					return w(TestChildWidget, {
-						foo: foo.foo,
-						bar: Math.random(),
-						bind: foo
-					});
-				}
-			}
-
-			const testWidget: any = new TestWidget();
-			testWidget.__render__();
-			assert.strictEqual(foo.count, 1);
-			testWidget.invalidate();
-			testWidget.__render__();
-			assert.strictEqual(foo.count, 2);
-		},
-		'widget function properties can have different bound scopes'() {
-			class TestChildWidget extends WidgetBase<any> {
-				render() {
-					this.properties.foo();
-					return v('div');
-				}
-			}
-
-			const foo = {
-				count: 0,
-				foo(this: any) {
-					this.count += 1;
-				}
-			};
-
-			class TestWidget extends WidgetBase<any> {
-				count: number;
-
-				foo(this: any) {
-					this.count++;
-				}
-
-				constructor() {
-					super();
-					this.count = 0;
-				}
-
-				render(): DNode {
-					const bind = this.count ? foo : this;
-					return w(TestChildWidget, {
-						foo: this.foo,
-						bar: Math.random(),
-						bind
-					});
-				}
-			}
-
-			const testWidget: any = new TestWidget();
-			testWidget.__render__();
-			assert.strictEqual(foo.count, 0);
-			assert.strictEqual(testWidget.count, 1);
-			testWidget.invalidate();
-			testWidget.__render__();
-			assert.strictEqual(foo.count, 1);
-			assert.strictEqual(testWidget.count, 1);
-		},
 		'widget function properties do not get re-bound when nested'() {
 			class TestChildWidget extends WidgetBase<any> {
 				render() {
@@ -520,42 +432,6 @@ registerSuite({
 			testWidget.__render__();
 			assert.strictEqual(testWidget.count, 2);
 		},
-		'widget function properties can be un-bound'() {
-			class TestChildWidget extends WidgetBase<any> {
-				render() {
-					this.properties.foo();
-					return v('div');
-				}
-			}
-
-			class TestWidget extends WidgetBase<any> {
-				count: number;
-
-				foo(this: any) {
-					this.count++;
-				}
-
-				constructor() {
-					super();
-					this.count = 0;
-				}
-
-				render(): DNode {
-					return w(TestChildWidget, {
-						foo: this.foo,
-						bar: Math.random(),
-						bind: undefined
-					});
-				}
-			}
-
-			const testWidget: any = new TestWidget();
-			try {
-				testWidget.__render__();
-			} catch (e) {
-				assert.strictEqual(testWidget.count, 0);
-			}
-		},
 		'widget constructors are not bound'() {
 			const widgetConstructorSpy: any = function(this: any) {
 				this.functionIsBound = true;
@@ -572,7 +448,6 @@ registerSuite({
 
 			const testWidget = new TestWidget();
 			const properties = {
-				bind: testWidget,
 				widgetConstructorSpy,
 				functionIsBound: false
 			};
@@ -1110,25 +985,6 @@ widget.__setProperties__({
 			assert.strictEqual(result.children![0].properties!.bind, widget);
 			assert.strictEqual(result.children![0].children![0].properties!.bind, widget);
 		},
-		'bind does not get overriden when specifically configured for the element'() {
-			const customThis = {};
-			class TestWidget extends WidgetBase<any> {
-				render() {
-					return v('div', [
-						v('header', { bind: customThis }, [
-							v('section')
-						])
-					]);
-				}
-			}
-
-			const widget: any = new TestWidget();
-			const result = <VNode> widget.__render__();
-			assert.lengthOf(result.children, 1);
-			assert.strictEqual(result.properties!.bind, widget);
-			assert.strictEqual(result.children![0].properties!.bind, customThis);
-			assert.strictEqual(result.children![0].children![0].properties!.bind, widget);
-		},
 		'render with multiple text node children'() {
 			class TestWidget extends WidgetBase<any> {
 				render() {
@@ -1498,7 +1354,7 @@ widget.__setProperties__({
 		const testWidget = new TestWidget();
 		const testWidget2 = new TestWidget2();
 
-		assert.equal(testWidget.getAfterRenders().length, 2);
-		assert.equal(testWidget2.getAfterRenders().length, 3);
+		assert.equal(testWidget.getAfterRenders().length, 3);
+		assert.equal(testWidget2.getAfterRenders().length, 4);
 	}
 });

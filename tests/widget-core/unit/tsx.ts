@@ -15,7 +15,6 @@ registerSuite({
 		// These will always be undefined but show the type inference of properties.
 		registryWrapper.properties = {};
 		assert.isUndefined(registryWrapper.properties.key);
-		assert.isUndefined(registryWrapper.properties.bind);
 	},
 	tsx: {
 		'tsx generate a HNode'() {

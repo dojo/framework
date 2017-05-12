@@ -1,7 +1,7 @@
 import { assign } from '@dojo/core/lang';
 import { VNode } from '@dojo/interfaces/vdom';
 import Symbol from '@dojo/shim/Symbol';
-import { h } from 'maquette';
+import { h, VNodeProperties } from 'maquette';
 import {
 	Constructor,
 	DNode,
@@ -108,9 +108,9 @@ export function v(tag: string, propertiesOrChildren: VirtualDomProperties | DNod
 			tag,
 			children,
 			properties,
-			render<T>(this: { vNodes: VNode[], properties: VirtualDomProperties }, options: { bind?: T } = { }) {
+			render(this: { vNodes: VNode[], properties: VNodeProperties }) {
 
-				return h(tag, assign(options, this.properties), this.vNodes);
+				return h(tag, this.properties, this.vNodes);
 			},
 			type: HNODE
 		};

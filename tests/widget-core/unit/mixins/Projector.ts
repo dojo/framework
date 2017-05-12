@@ -79,22 +79,6 @@ registerSuite({
 			assert.equal(error.message, 'Must provide a VNode at the root of a projector');
 		}
 	},
-	'render does not attach after create when there are no properties'() {
-		const projector = new class extends TestWidget {
-			render() {
-				return v('div', <any> null);
-			}
-
-			__render__() {
-				const results: any = super.__render__();
-				results.properties = undefined;
-				return results;
-			}
-		}();
-
-		const vnode  = <any> projector.__render__();
-		assert.isUndefined(vnode.properties);
-	},
 	'attach to projector': {
 		'append'() {
 			const childNodeLength = document.body.childNodes.length;

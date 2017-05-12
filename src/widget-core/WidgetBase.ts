@@ -16,7 +16,8 @@ import {
 	PropertyChangeRecord,
 	PropertiesChangeEvent,
 	RegistryLabel,
-	HNode
+	HNode,
+	WNode
 } from './interfaces';
 import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './WidgetRegistry';
 import RegistryHandler from './RegistryHandler';
@@ -30,6 +31,17 @@ interface WidgetCacheWrapper {
 	child: WidgetBaseInterface<WidgetProperties>;
 	widgetConstructor: WidgetBaseConstructor;
 	used: boolean;
+}
+
+interface InternalWNode extends WNode {
+	properties: {
+		bind: any;
+	};
+}
+interface InternalHNode extends HNode {
+	properties: {
+		bind: any;
+	};
 }
 
 enum WidgetRenderState {
@@ -241,6 +253,17 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 			node.properties.afterUpdate = this.afterUpdateCallback;
 		}, isHNodeWithKey);
 
+		return node;
+	}
+
+	@afterRender()
+	protected decorateBind(node: DNode): DNode {
+		decorate(node, (node: InternalWNode | InternalHNode) => {
+			const { properties = {} }: { properties: { bind?: any } } = node;
+			if (!properties.bind) {
+				properties.bind = this;
+			}
+		}, (node: DNode) => { return isHNode(node) || isWNode(node); });
 		return node;
 	}
 
@@ -556,10 +579,6 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 				return false;
 			});
 
-			if (!properties.hasOwnProperty('bind')) {
-				properties.bind = this;
-			}
-
 			if (cachedChild) {
 				child = cachedChild.child;
 				child.__setProperties__(properties);
@@ -593,7 +612,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 			return this.dNodeToVNode(child);
 		});
 
-		return dNode.render({ bind: this });
+		return dNode.render();
 	}
 
 	/**

@@ -113,12 +113,9 @@ export interface VirtualDomProperties {
 	afterUpdate?(element: Element, projectionOptions: ProjectionOptions, vnodeSelector: string, properties: VNodeProperties,
 	children: VNode[]): void;
 	/**
-	 * When specified, the event handlers will be invoked with 'this' pointing to the value.
-	 * This is useful when using the prototype/class based implementation of Components.
-	 *
-	 * When no [[key]] is present, this object is also used to uniquely identify a DOM node.
+	 * Bind should not be defined.
 	 */
-	readonly bind?: Object;
+	readonly bind?: void;
 	/**
 	 * Used to uniquely identify a DOM node among siblings.
 	 * A key is required when there are more children with the same selector and these children are added or removed dynamically.
@@ -226,11 +223,6 @@ export interface WidgetProperties {
 	 * rendering and instance management
 	 */
 	key?: string;
-
-	/**
-	 * The scope to bind all function properties
-	 */
-	bind?: any;
 }
 
 /**
