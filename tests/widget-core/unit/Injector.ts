@@ -2,12 +2,18 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import Injector, { BaseInjector } from './../../src/Injector';
 import { DNode } from './../../src/interfaces';
+import { WidgetBase } from './../../src/WidgetBase';
+import { v, w } from './../../src/d';
 
 class TestInjector<C> extends BaseInjector<C> {
 	public render() {
 		return super.render();
 	}
 }
+
+const bind = {
+	foo: 'bar'
+};
 
 registerSuite({
 	name: 'Injector',
@@ -19,13 +25,30 @@ registerSuite({
 		const testProperties = {
 			qux: 'baz'
 		};
+
+		class TestWidget extends WidgetBase<any> {
+			render() {
+				return v('div', { testFunction: this.properties.testFunction });
+			}
+		}
+
+		function testFunction(this: any) {
+			assert.strictEqual(this, bind);
+		}
+
 		const testChildren: DNode[] = [ 'child' ];
-		const render = (): DNode => { return 'Called Render'; };
+		const render = (): DNode => { return v('div', {}, [
+				w(TestWidget, { testFunction }),
+				v('span'),
+				v('div')
+			]);
+		};
 		const InjectorWidget = Injector(TestInjector, context);
 
 		const injector = new InjectorWidget<any>();
 		injector.__setProperties__({
 			render,
+			bind,
 			properties: testProperties,
 			getProperties: (inject: any, properties: any): any => {
 				assert.deepEqual(inject, context);
@@ -40,10 +63,13 @@ registerSuite({
 			}
 		});
 
-		const renderedNode = injector.render();
+		const renderedNode: any = injector.__render__();
 		assert.deepEqual(testProperties, { qux: 'baz' });
 		assert.deepEqual(testChildren, [ 'child' ]);
-		assert.strictEqual(renderedNode, 'Called Render');
+		assert.deepEqual(renderedNode.properties, { bind });
+		assert.deepEqual(renderedNode.children[1].properties, { bind });
+		assert.deepEqual(renderedNode.children[2].properties, { bind });
+		renderedNode.children[0].properties.testFunction();
 	},
 	'injector ignores constructor arguments'() {
 		const context = {
@@ -59,6 +85,7 @@ registerSuite({
 
 		const injector = new InjectorWidget<any>();
 		injector.__setProperties__({
+			bind,
 			render,
 			properties: testProperties,
 			getProperties: (inject: any, properties: any): any => {
@@ -93,6 +120,7 @@ registerSuite({
 
 		const injector = new InjectorWidget<any>();
 		injector.__setProperties__({
+			bind,
 			render,
 			properties: testProperties,
 			getProperties: (inject: any, properties: any): any => {
@@ -130,6 +158,7 @@ registerSuite({
 
 		const injector = new InjectorWidget<any>();
 		injector.__setProperties__({
+			bind,
 			render,
 			properties: testProperties,
 			getProperties: (inject: any, properties: any): any => {
@@ -160,6 +189,7 @@ registerSuite({
 
 		const injector = new InjectorWidget<any>();
 		injector.__setProperties__({
+			bind,
 			render,
 			properties: testProperties,
 			getProperties: (inject: any, properties: any): any => {

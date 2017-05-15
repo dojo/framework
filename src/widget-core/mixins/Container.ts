@@ -39,6 +39,7 @@ export function Container<P extends WidgetProperties, T extends Constructor<Widg
 		protected beforeRender(renderFunc: Function, properties: P, children: DNode[]) {
 			return () => {
 				return w<BaseInjector<any>>(name, {
+					bind: this,
 					render: super.render,
 					getProperties,
 					properties,

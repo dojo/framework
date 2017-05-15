@@ -33,12 +33,12 @@ interface WidgetCacheWrapper {
 	used: boolean;
 }
 
-interface InternalWNode extends WNode {
+export interface InternalWNode extends WNode {
 	properties: {
 		bind: any;
 	};
 }
-interface InternalHNode extends HNode {
+export interface InternalHNode extends HNode {
 	properties: {
 		bind: any;
 	};
