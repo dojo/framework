@@ -6,7 +6,7 @@ import * as assert from 'intern/chai!assert';
 import { spy } from 'sinon';
 import { v } from '../../../src/d';
 import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projector';
-import { WidgetBase } from '../../../src/WidgetBase';
+import { beforeRender, WidgetBase } from '../../../src/WidgetBase';
 import { waitFor } from '../waitFor';
 
 const Event = global.window.Event;
@@ -264,6 +264,29 @@ registerSuite({
 		const scheduleRender = spy(projector, 'scheduleRender');
 		projector.setProperties({ foo: 'hello' });
 		assert.isTrue(scheduleRender.called);
+	},
+	'properties are reset to original state on render'() {
+		const testProperties = {
+			foo: 'bar'
+		};
+		const testChildren = [ v('div') ];
+		class TestWidget extends ProjectorMixin(WidgetBase) {
+
+			@beforeRender()
+			protected updateProperties(renderFunc: any, props: any, children: any) {
+				assert.deepEqual(props, testProperties);
+				assert.deepEqual(children, testChildren);
+				props.bar = 'foo';
+				children.push(v('span'));
+				return renderFunc;
+			}
+		}
+		const projector = new TestWidget();
+		projector.setProperties(testProperties);
+		projector.setChildren(testChildren);
+		projector.__render__();
+		projector.invalidate();
+		projector.__render__();
 	},
 	'invalidate on setting children'() {
 		const projector = new TestWidget();

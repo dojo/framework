@@ -1,3 +1,4 @@
+import { assign } from '@dojo/core/lang';
 import global from '@dojo/core/global';
 import { Handle } from '@dojo/interfaces/core';
 import { VNode } from '@dojo/interfaces/vdom';
@@ -144,7 +145,7 @@ function setDomNodes(vnode: VNode, domNode: Element | null = null) {
 }
 
 export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(base: T): T & Constructor<ProjectorMixin<P>> {
-	return class extends base {
+	class Projector extends base {
 
 		public projectorState: ProjectorAttachState;
 
@@ -156,6 +157,8 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(base: T)
 		private _paused: boolean;
 		private _boundDoRender: FrameRequestCallback;
 		private _boundRender: Function;
+		private _projectorChildren: DNode[];
+		private _projectorProperties: P;
 
 		constructor(...args: any[]) {
 			super(...args);
@@ -236,14 +239,22 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(base: T)
 		}
 
 		public setChildren(children: DNode[]): void {
+			this._projectorChildren = [ ...children ];
 			super.__setChildren__(children);
 		}
 
 		public setProperties(properties: P & { [index: string]: any }): void {
+			this._projectorProperties = assign({}, properties);
 			super.__setProperties__(properties);
 		}
 
 		public __render__() {
+			if (this._projectorChildren) {
+				this.setChildren(this._projectorChildren);
+			}
+			if (this._projectorProperties) {
+				this.setProperties(this._projectorProperties);
+			}
 			const result = super.__render__();
 			if (typeof result === 'string' || result === null) {
 				throw new Error('Must provide a VNode at the root of a projector');
@@ -313,7 +324,9 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(base: T)
 
 			return this._attachHandle;
 		}
-	};
+	}
+
+	return Projector;
 }
 
 export default ProjectorMixin;
