@@ -37,7 +37,7 @@ function throwAssertionError(actual: any, expected: any, message?: string): neve
  */
 const defaultDiffOptions: DiffOptions = {
 	allowFunctionValues: true,
-	ignorePropertyValues: [ 'bind' ]
+	ignoreProperties: [ 'bind' ]
 };
 
 /**

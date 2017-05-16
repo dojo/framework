@@ -305,32 +305,12 @@ registerSuite({
 			}, AssertionError, 'Render unexpected');
 		},
 
-		'bind value ignored'() {
+		'bind property ignored'() {
 			const bind = new MockWidget();
 			assertRender(
 				w(MockWidget, { bind }),
-				w(MockWidget, { bind: true })
+				w(MockWidget, { })
 			);
-		},
-
-		'bind extra'() {
-			const bind = new MockWidget();
-			assert.throws(() => {
-				assertRender(
-					w(MockWidget, { bind }),
-					w(MockWidget, { })
-				);
-			});
-		},
-
-		'bind missing'() {
-			const bind = new MockWidget();
-			assert.throws(() => {
-				assertRender(
-					w(MockWidget, { }),
-					w(MockWidget, { bind })
-				);
-			});
 		}
 	},
 
@@ -416,7 +396,7 @@ registerSuite({
 				const bind = new MockWidget();
 				assert.throws(() => {
 					assertRender(w(MockWidget, { bind }), w(MockWidget, { bind: true }), {
-						ignorePropertyValues: [ 'foo' ]
+						ignoreProperties: [ 'foo' ]
 					});
 				}, TypeError, 'Value of property named "bind" from first argument is not a primative, plain Object, or Array.');
 			}

@@ -190,14 +190,14 @@ registerSuite({
 
 		'WNode children render - matches'() {
 			const widget = harness(SubWidget);
-			widget.expectRender(v('div', { }, [ w(MockWidget, { bind: true, key: 'first' }), w('widget', { bind: true, key: 'second' }) ]));
+			widget.expectRender(v('div', { }, [ w(MockWidget, { key: 'first' }), w('widget', { key: 'second' }) ]));
 			widget.destroy();
 		},
 
 		'WNode children render - does not match'() {
 			const widget = harness(SubWidget);
 			assert.throws(() => {
-				widget.expectRender(v('div', { }, [ w(MockWidget, { key: 'first' }), w('widget', { bind: true, key: 'second' }) ]));
+				widget.expectRender(v('div', { }, [ w(MockWidget, { key: 'fist' }), w('widget', { key: 'second' }) ]));
 			});
 			widget.destroy();
 		},
