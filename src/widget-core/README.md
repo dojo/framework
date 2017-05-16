@@ -740,6 +740,38 @@ class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProp
 
 The theme can be applied to individual widgets or to a project and property passed down to its children.
 
+##### Injecting a theme
+
+The theming system supports injecting a theme that is configured externally to the usual mechanism of passing properties down the widget tree.
+
+This is done using a `ThemeInjectorContext` instance that is passed to the `Injector` mixin along with the `ThemeInjector` class. Once the theme injector is defined in the registry, the `theme` can be changed by calling the `ThemeInjectorContext#set(theme: any)` API on the instance of the injector context.
+
+```ts
+// Create the singleton injector context
+const themeInjectorContext = new ThemeInjectorContext(myTheme);
+
+// Create the base ThemeInjector using the singleton context and the Injector mixin
+const ThemeInjectorBase = Injector<ThemeInjectorContext, Constructor<ThemeInjector>>(ThemeInjector, themeInjectorContext);
+
+// Define the created ThemeInjector against the static key exported from `Themeable`
+registry.define(INJECTED_THEME_KEY, ThemeInjectorBase);
+```
+
+Once this theme injector is defined, any themeable widgets without an explicit `theme` property will be controlled via the theme set within the `themeInjectorContext`. To change the theme simply call `themeInjectorContext.set(myNewTheme);` and all widgets that are using the injected theme will be updated to the new theme.
+
+To make this even easier, `Themeable` exports a helper function wraps the behavior defined above and returns the context, with a parameter for the `theme` and an optional `registry` for the injector to be defined. If a `registry` is not provided then the global `registry` is used.
+
+```ts
+// Uses global registry
+const context = registerThemeInjector(myTheme);
+
+// Setting the theme
+context.set(myNewTheme);
+
+// Uses the user defined registry
+const context = registryThemeInjector(myTheme, myRegistry);
+```
+
 ##### Overriding Theme Classes
 
 As we are using `css-modules` to scope widget css classes, the generated class names cannot be used to target specific nodes and apply custom styling to them. Instead you must use the `extraClasses` property to pass your generated classes to the widget. This will only effect one instance of a widget and will be applied on top of, rather than instead of, theme classes.

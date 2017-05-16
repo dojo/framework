@@ -1,27 +1,7 @@
 import { WidgetBase, beforeRender } from './../WidgetBase';
 import { w } from './../d';
 import { Constructor, DNode, WidgetProperties } from './../interfaces';
-import { GetProperties, GetChildren, BaseInjector } from './../Injector';
-
-/**
- * The binding mappers for properties and children
- */
-export interface Mappers {
-	getProperties: GetProperties;
-	getChildren: GetChildren;
-}
-
-/**
- * Default noop Mappers for the container.
- */
-const defaultMappers: Mappers = {
-	getProperties(inject: any, properties: any): any {
-		return {};
-	},
-	getChildren(inject: any, children: DNode[]): DNode[] {
-		return [];
-	}
-};
+import { defaultMappers, BaseInjector } from './../Injector';
 
 /**
  * Given the registered name of an Injector entry with property and child binding mappers, the
@@ -36,11 +16,11 @@ export function Container<P extends WidgetProperties, T extends Constructor<Widg
 
 	class Container extends Base {
 		@beforeRender()
-		protected beforeRender(renderFunc: Function, properties: P, children: DNode[]) {
+		protected beforeRender(renderFunc: () => DNode, properties: P, children: DNode[]) {
 			return () => {
 				return w<BaseInjector<any>>(name, {
 					bind: this,
-					render: super.render,
+					render: renderFunc,
 					getProperties,
 					properties,
 					getChildren,

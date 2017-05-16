@@ -15,12 +15,32 @@ export interface GetChildren {
 	<C>(inject: C, children: DNode[]): DNode[];
 }
 
+/**
+ * The binding mappers for properties and children.
+ */
+export interface Mappers {
+	getProperties: GetProperties;
+	getChildren: GetChildren;
+}
+
+/**
+ * Default noop Mappers for the container.
+ */
+export const defaultMappers: Mappers = {
+	getProperties(inject: any, properties: any): any {
+		return Object.create(null);
+	},
+	getChildren(inject: any, children: DNode[]): DNode[] {
+		return [];
+	}
+};
+
 export interface InjectorProperties extends WidgetProperties {
 	bind: any;
 	render(): DNode;
-	getProperties: GetProperties;
+	getProperties?: GetProperties;
 	properties: WidgetProperties;
-	getChildren: GetChildren;
+	getChildren?: GetChildren;
 	children: DNode[];
 }
 
@@ -65,9 +85,9 @@ export function Injector<C, T extends Constructor<BaseInjector<C>>>(Base: T, con
 			const {
 				render,
 				properties,
-				getProperties,
+				getProperties = defaultMappers.getProperties,
 				children,
-				getChildren
+				getChildren = defaultMappers.getChildren
 			} = this.properties;
 			const injectedChildren = getChildren(this.toInject(), children);
 

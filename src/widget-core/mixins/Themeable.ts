@@ -1,8 +1,12 @@
 import { assign } from '@dojo/core/lang';
+import { Evented } from '@dojo/core/Evented';
 import { includes, find } from '@dojo/shim/array';
 import Map from '@dojo/shim/Map';
-import { Constructor, WidgetProperties, PropertiesChangeEvent } from './../interfaces';
-import { WidgetBase, onPropertiesChanged, handleDecorator } from './../WidgetBase';
+import { Constructor, DNode, WidgetProperties, PropertiesChangeEvent } from './../interfaces';
+import { w, registry } from './../d';
+import { WidgetRegistry } from './../WidgetRegistry';
+import { BaseInjector, Injector } from './../Injector';
+import { beforeRender, WidgetBase, onPropertiesChanged, handleDecorator } from './../WidgetBase';
 
 /**
  * A representation of the css class names to be applied and
@@ -23,6 +27,7 @@ export type ClassNames = {
  * Properties required for the themeable mixin
  */
 export interface ThemeableProperties extends WidgetProperties {
+	injectedTheme?: any;
 	theme?: any;
 	extraClasses?: any;
 }
@@ -54,6 +59,8 @@ export interface ClassesFunctionChain {
 type ThemeClasses = { [key: string]: string; };
 
 const THEME_KEY = ' _key';
+
+export const INJECTED_THEME_KEY = Symbol('theme');
 
 /**
  * Interface for the ThemeableMixin
@@ -128,6 +135,67 @@ function createThemeClassesLookup(classes: ThemeClasses[]): ClassNames {
 }
 
 /**
+ * The class for the theme injector context, used to control the theme once the
+ * theme injector has been defined in the registry.
+ */
+export class ThemeInjectorContext extends Evented {
+
+	private _theme: any;
+
+	/**
+	 * @param theme optional theme to initialize the context
+	 */
+	constructor(theme?: any) {
+		super({});
+		this._theme = theme;
+	}
+
+	/**
+	 * @param theme the theme object to set
+	 */
+	public set(theme: any) {
+		this._theme = theme;
+		this.emit({ type: 'invalidate' });
+	}
+
+	/**
+	 * Return the current theme
+	 */
+	public get theme(): any {
+		return this._theme;
+	}
+}
+
+/**
+ * Custom `ThemeInjector` class that listens to the `invalidate` event
+ * from the context to `invalidate` any widgets the have had a theme
+ * injected.
+ */
+export class ThemeInjector extends BaseInjector<ThemeInjectorContext> {
+	constructor(context: ThemeInjectorContext) {
+		super(context);
+		this.own(context.on('invalidate', this.invalidate.bind(this)));
+	}
+}
+
+/**
+ * Convenience function that is given a theme and an optional registry, the theme
+ * injector is defined against the registry, returning the theme context.
+ *
+ * @param theme the theme to set
+ * @param themeRegistry registry to define the theme injector against. Defaults
+ * to the global registry
+ *
+ * @returns the theme context instance used to set the theme
+ */
+export function registerThemeInjector(theme: any, themeRegistry: WidgetRegistry = registry): ThemeInjectorContext {
+	const themeInjectorContext = new ThemeInjectorContext(theme);
+	const ThemeInjectorBase = Injector(ThemeInjector, themeInjectorContext);
+	themeRegistry.define(INJECTED_THEME_KEY, ThemeInjectorBase);
+	return themeInjectorContext;
+}
+
+/**
  * Function that returns a class decorated with with Themeable functionality
  */
 export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeableProperties>>>(base: T): T & Constructor<ThemeableMixin> {
@@ -197,6 +265,28 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 			};
 
 			return assign(classesGetter.bind(classesFunctionChain), classesFunctionChain);
+		}
+
+		@beforeRender()
+		protected injectTheme(renderFunc: () => DNode, properties: ThemeableProperties, children: DNode[]): () => DNode {
+			return () => {
+				const hasInjectedTheme = this.registries.has(INJECTED_THEME_KEY);
+				if (hasInjectedTheme) {
+					return w<ThemeInjector>(INJECTED_THEME_KEY, {
+						bind: this,
+						render: renderFunc,
+						getProperties: (inject: ThemeInjectorContext, properties: ThemeableProperties): ThemeableProperties => {
+							if (!properties.theme && this._theme !== properties.injectedTheme) {
+								this._recalculateClasses = true;
+							}
+							return { injectedTheme: inject.theme };
+						},
+						properties,
+						children
+					});
+				}
+				return renderFunc();
+			};
 		}
 
 		/**
@@ -274,7 +364,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeablePropert
 		 * Recalculate registered classes for current theme.
 		 */
 		private recalculateThemeClasses() {
-			const { properties: { theme = {} } } = this;
+			const { properties: { injectedTheme = {}, theme = injectedTheme } } = this;
 			if (!this._registeredBaseThemes) {
 				this._registeredBaseThemes = [ ...this.getDecorator('baseThemeClasses') ].reverse();
 				this.checkForDuplicates();

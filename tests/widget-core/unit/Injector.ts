@@ -71,6 +71,31 @@ registerSuite({
 		assert.deepEqual(renderedNode.children[2].properties, { bind });
 		renderedNode.children[0].properties.testFunction();
 	},
+	'uses default mappers'() {
+		const context = {
+			foo: 1,
+			bar: '2'
+		};
+		const testProperties = {
+			qux: 'baz'
+		};
+		const testChildren: DNode[] = [ 'child' ];
+		const render = (): DNode => { return 'Called Render'; };
+		const InjectorWidget = Injector(TestInjector, context);
+
+		const injector = new InjectorWidget<any>();
+		injector.__setProperties__({
+			bind: context,
+			render,
+			properties: testProperties,
+			children: testChildren
+		});
+
+		const renderedNode = injector.render();
+		assert.deepEqual(testProperties, { qux: 'baz' });
+		assert.deepEqual(testChildren, [ 'child' ]);
+		assert.strictEqual(renderedNode, 'Called Render');
+	},
 	'injector ignores constructor arguments'() {
 		const context = {
 			foo: 1,
