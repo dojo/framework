@@ -388,12 +388,14 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	}
 
 	public __setChildren__(children: (C | null)[]): void {
-		this._dirty = true;
-		this._children = children;
-		this.emit({
-			type: 'widget:children',
-			target: this
-		});
+		if (this._children.length || children.length) {
+			this._dirty = true;
+			this._children = children;
+			this.emit({
+				type: 'widget:children',
+				target: this
+			});
+		}
 	}
 
 	public __render__(): VNode | string | null {
@@ -600,9 +602,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 				this.emit({ type: 'error', target: this, error: new Error(errorMsg) });
 			}
 
-			if (Array.isArray(children)) {
-				child.__setChildren__(children);
-			}
+			child.__setChildren__(children);
 			return child.__render__();
 		}
 

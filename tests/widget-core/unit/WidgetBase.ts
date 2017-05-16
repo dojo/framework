@@ -1275,6 +1275,28 @@ widget.__setProperties__({
 		widget.__render__();
 		assert.equal(foo, 2);
 	},
+	'widget should not be marked as dirty if previous and current children are empty'() {
+		let foo = 0;
+		class FooWidget extends WidgetBase<any> {
+			render() {
+				foo++;
+				return v('div');
+			}
+		}
+
+		class TestWidget extends WidgetBase<any> {
+			render() {
+				return w(FooWidget, { key: '1' });
+			}
+		}
+
+		const widget: any = new TestWidget();
+		widget.__render__();
+		assert.equal(foo, 1);
+		widget.invalidate();
+		widget.__render__();
+		assert.equal(foo, 1);
+	},
 	'properties:changed should mark as dirty but not invalidate'() {
 		let foo = 0;
 
