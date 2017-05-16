@@ -134,40 +134,24 @@ As well as interacting with the VDOM by passing it HyperScript, you can also pas
 
 #### `w`
 
-The following code creates a widget using the `widgetConstructor`.
-
-```ts
-w<P extends WidgetProperties>(widgetConstructor: string | WidgetBaseConstructor<P>): WNode[];
-```
-
 The following code creates a widget using the `widgetConstructor` and `properties`.
 
 ```ts
-w<P extends WidgetProperties>(widgetConstructor: string | WidgetBaseConstructor<P>, properties: P): WNode[];
-```
-
-The following code creates a widget using the `widgetConstructor` and `children`.
-
-```ts
-w<P extends WidgetProperties>(widgetConstructor: string | WidgetBaseConstructor<P>, children: DNode[]): WNode[];
+w<W extends WidgetBaseInterface>(widgetConstructor: W | RegistryLabel, properties: W['properties']): WNode<W>;
 ```
 
 The following code creates a widget using the `widgetConstructor`, `properties` and `children`
 
 ```ts
-w<P extends WidgetProperties>(widgetConstructor: string | WidgetBaseConstructor<P>, properties: P, children: DNode[]): WNode[];
+w<W extends WidgetBaseInterface>(widgetConstructor: W | RegistryLabel, properties: W['properties'], children: W['children']): WNode<W>;
 ```
 Example `w` constructs:
 
 ```ts
-w(WidgetClass);
 w(WidgetClass, properties);
-w(WidgetClass, children);
 w(WidgetClass, properties, children);
 
-w('my-widget');
 w('my-widget', properties);
-w('my-widget', children);
 w('my-widget', properties, children);
 ```
 
@@ -466,7 +450,7 @@ There are 3 ways that a projector widget can be added to the DOM - `.append`, `.
 ```ts
 const MyProjector = ProjectorMixin(MyWidget);
 
-const myProjector = new MyProjector({})
+const myProjector = new MyProjector()
 myProjector.append(root);
 ```
 
@@ -514,14 +498,20 @@ import { specialClick } from './mySpecialFunctions';
 
 class MyWidget extends WidgetBase<WidgetProperties> {
 	render() {
-		return	w(createChildWidget, { onClick: specialClick });
+		return	w(ChildWidget, { onClick: specialClick });
 	}
 }
 ```
 
 #### Widget Registry
 
-The widget registry provides the ability to define a label against a `WidgetRegistryItem`. A `WidgetRegistryItem` is either a `WidgetConstructor` a `Promise<WidgetConstructor>` or a function that when executed returns a `Promise<WidgetConstructor>`.
+The widget registry provides the ability to define a `string` or `symbol` as a label for a `WidgetRegistryItem`. 
+
+The `WidgetRegistryItem`, can be one of the following types:
+
+1. `WidgetConstructor`
+2. `Promise<WidgetConstructor>`
+3. `() => Promise<WidgetConstructor>`
 
 A global widget registry is exported from the `d` module.
 
@@ -702,7 +692,7 @@ class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProp
 	render: function () {
 		const { root, tab } = baseClasses;
 		return
-			v(`ul`, { classes: this.classes(root) }, [
+			v('ul', { classes: this.classes(root) }, [
 				v('li', { classes: this.classes(tab) }, [ 'tab1' ])
 				// ...
 			]);
@@ -733,7 +723,7 @@ interface MyThemeableWidgetProperties extends WidgetProperties, ThemeablePropert
 class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProperties> {
 	render: function () {
 		// Resulting widget will have green tabs instead of baseTheme red.
-		return w(createTabPanel, { theme: customTheme });
+		return w(TabPanel, { theme: customTheme });
 	}
 }
 ```
@@ -792,7 +782,7 @@ class MyThemeableWidget extends ThemeableMixin(WidgetBase)<MyThemeableWidgetProp
 	render: function () {
 		// Resulting widget will still have baseTheme red tabs,
 		// but will have font-weight: bold; applied also
-		return w(createTabPanel, { extraClasses: myExtras });
+		return w(TabPanel, { extraClasses: myExtras });
 	}
 }
 ```
@@ -845,11 +835,11 @@ class I18nWidget extends I18nMixin(WidgetBase)<I18nWidgetProperties> {
 		const messages = this.localizeBundle(greetingsBundle);
 
 		return v('div', { title: messages.hello }, [
-			w(createLabel, {
+			w(Label, {
 				// Passing a message string to a child widget.
 				label: messages.purchaseItems
 			}),
-			w(createButton, {
+			w(Button, {
 				// Passing a formatted message string to a child widget.
 				label: messages.format('itemCount', { count: 2 })
 			})
