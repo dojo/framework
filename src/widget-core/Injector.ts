@@ -1,6 +1,7 @@
 import { assign } from '@dojo/core/lang';
-import { afterRender, WidgetBase, InternalWNode, InternalHNode } from './WidgetBase';
+import { diffProperty, afterRender, WidgetBase, InternalWNode, InternalHNode } from './WidgetBase';
 import { decorate, isHNode, isWNode } from './d';
+import { DiffType } from './diff';
 import {
 	Constructor,
 	DNode,
@@ -64,6 +65,7 @@ export class BaseInjector<C> extends WidgetBase<InjectorProperties> {
  */
 export function Injector<C, T extends Constructor<BaseInjector<C>>>(Base: T, context: C): T {
 
+	@diffProperty('render', DiffType.ALWAYS)
 	class Injector extends Base {
 
 		constructor(...args: any[]) {

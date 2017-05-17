@@ -234,5 +234,41 @@ registerSuite({
 		assert.deepEqual(testProperties, { qux: 'baz' });
 		assert.deepEqual(testChildren, [ 'child' ]);
 		assert.strictEqual(renderedNode, 'Called Render');
+	},
+	'render property is always considered changed'() {
+		const testProperties = {
+			qux: 'baz'
+		};
+		let rendered = 0;
+		const testChildren: DNode[] = [ 'child' ];
+		const render = (): DNode => {
+			rendered++;
+			return 'Called Render';
+		};
+		const InjectorWidget = Injector(TestInjector, undefined);
+		const properties = {
+			bind,
+			render,
+			properties: testProperties,
+			getProperties: (inject: any, properties: any): any => {
+				assert.deepEqual(inject, {});
+				assert.deepEqual(properties, testProperties);
+				return {};
+			},
+			children: testChildren,
+			getChildren: (inject: any, children: DNode[]): DNode[] => {
+				assert.deepEqual(inject, {});
+				assert.deepEqual(children, testChildren);
+				return [];
+			}
+		};
+
+		const injector = new InjectorWidget<any>();
+		injector.__setProperties__(properties);
+		injector.__render__();
+		assert.strictEqual(rendered, 1);
+		injector.__setProperties__(properties);
+		injector.__render__();
+		assert.strictEqual(rendered, 2);
 	}
 });
