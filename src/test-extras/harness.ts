@@ -99,8 +99,8 @@ interface StubWidgetProperties extends WidgetProperties {
 
 class StubWidget extends WidgetBase<StubWidgetProperties> {
 	render(): DNode {
-		const { bind, _stubTag: tag, _widgetName: widgetName } = this.properties;
-		return v(tag, { bind, [WIDGET_STUB_NAME_PROPERTY]: widgetName }, this.children);
+		const { _stubTag: tag, _widgetName: widgetName } = this.properties;
+		return v(tag, { [WIDGET_STUB_NAME_PROPERTY]: widgetName }, this.children);
 	}
 }
 
@@ -316,6 +316,7 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 		}
 		else {
 			this._widgetHarness.invalidate();
+			this._render();
 		}
 	}
 

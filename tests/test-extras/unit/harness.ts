@@ -49,7 +49,6 @@ class RegisterChildWidget extends WidgetBase<WidgetProperties & { tag: string; }
 		return v('div', {
 			key: 'wrapper'
 		}, [ w(RegistryWidgetChild, {
-			bind: this,
 			key: 'child',
 			registry
 		}) ]);
@@ -58,7 +57,7 @@ class RegisterChildWidget extends WidgetBase<WidgetProperties & { tag: string; }
 
 class SubWidget extends WidgetBase<WidgetProperties> {
 	render() {
-		return v('div', { }, [ w(MockWidget, { bind: this, key: 'first' }), w('widget', { bind: this, key: 'second' }) ]);
+		return v('div', { }, [ w(MockWidget, { key: 'first' }), w('widget', { key: 'second' }) ]);
 	}
 }
 
@@ -231,11 +230,10 @@ registerSuite({
 					assert.instanceOf(value, MockRegistry);
 					assert.strictEqual(name, 'registry');
 					assert.strictEqual(properties.key, 'child');
-					assert.isDefined(properties.bind);
 					return value.tag === 'foo';
 				});
 				widget.expectRender(v('div', { afterCreate: widget.listener, afterUpdate: widget.listener, key: 'wrapper' }, [
-					w<any>(RegistryWidgetChild, { bind: true, key: 'child', registry: compareRegistry })
+					w<any>(RegistryWidgetChild, { key: 'child', registry: compareRegistry })
 				]));
 				assert.isTrue(called, 'comparer should have been called');
 			},
@@ -252,7 +250,7 @@ registerSuite({
 				});
 				assert.throws(() => {
 					widget.expectRender(v('div', { afterCreate: widget.listener, afterUpdate: widget.listener, key: 'wrapper' }, [
-						w<any>(RegistryWidgetChild, { bind: true, key: 'child', registry: compareRegistry })
+						w<any>(RegistryWidgetChild, { key: 'child', registry: compareRegistry })
 					]));
 				}, AssertionError, 'The value of property "registry" is unexpected.');
 				assert.isTrue(called, 'comparer should have been called');
@@ -357,18 +355,18 @@ registerSuite({
 			class DynamicWidget extends WidgetBase<DynamicWidgetProperties> {
 				render() {
 					return this.properties.flag ?
-						v('div', { }, [ w(MockWidget, { bind: this, key: 'first' }), w(MockWidget, { bind: this, key: 'second' }) ]) :
-						v('div', { }, [ w(MockWidget, { bind: this, key: 'first' }) ]);
+						v('div', { }, [ w(MockWidget, { key: 'first' }), w(MockWidget, { key: 'second' }) ]) :
+						v('div', { }, [ w(MockWidget, { key: 'first' }) ]);
 				}
 			}
 
 			const widget = harness(DynamicWidget);
 
 			widget.setProperties({ flag: false });
-			widget.expectRender(v('div', { }, [ w(MockWidget, { bind: true, key: 'first' }) ]));
+			widget.expectRender(v('div', { }, [ w(MockWidget, { key: 'first' }) ]));
 
 			widget.setProperties({ flag: true });
-			widget.expectRender(v('div', { }, [ w(MockWidget, { bind: true, key: 'first' }), w(MockWidget, { bind: true, key: 'second' }) ]));
+			widget.expectRender(v('div', { }, [ w(MockWidget, { key: 'first' }), w(MockWidget, { key: 'second' }) ]));
 
 			widget.destroy();
 		}
@@ -572,8 +570,8 @@ registerSuite({
 							rootClick++;
 						}
 					}, [
-						w(MockWidget, { bind: this, onClick() { firstClick++; }, key: 'first' }),
-						w<MockWidget>('widget', { bind: this, onClick() { secondClick++; }, key: 'second' })
+						w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
+						w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
 					]);
 				}
 			}
@@ -596,8 +594,8 @@ registerSuite({
 							rootClick++;
 						}
 					}, [
-						w(MockWidget, { bind: this, onClick() { firstClick++; }, key: 'first' }),
-						w<MockWidget>('widget', { bind: this, onClick() { secondClick++; }, key: 'second' })
+						w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
+						w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
 					]);
 				}
 			}
@@ -620,8 +618,8 @@ registerSuite({
 							rootClick++;
 						}
 					}, [
-						w(MockWidget, { bind: this, onClick() { firstClick++; }, key: 'first' }),
-						w<MockWidget>('widget', { bind: this, onClick() { secondClick++; }, key: 'second' })
+						w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
+						w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
 					]);
 				}
 			}
@@ -637,7 +635,7 @@ registerSuite({
 			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
 				render() {
 					return v('div', { }, [
-						w(MockWidget, { bind: this, onClick(this: any) {
+						w(MockWidget, { onClick(this: any) {
 							assert.instanceOf(this, ComplexSubWidget, 'should call with bound scope');
 						}, key: 'first' })
 					]);

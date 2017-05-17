@@ -308,7 +308,7 @@ registerSuite({
 		'bind property ignored'() {
 			const bind = new MockWidget();
 			assertRender(
-				w(MockWidget, { bind }),
+				w(MockWidget, <any> { bind }),
 				w(MockWidget, { })
 			);
 		}
@@ -395,7 +395,7 @@ registerSuite({
 			'overrides defaults'() {
 				const bind = new MockWidget();
 				assert.throws(() => {
-					assertRender(w(MockWidget, { bind }), w(MockWidget, { bind: true }), {
+					assertRender(w<any>(MockWidget, { bind }), w<any>(MockWidget, { bind: true }), {
 						ignoreProperties: [ 'foo' ]
 					});
 				}, TypeError, 'Value of property named "bind" from first argument is not a primative, plain Object, or Array.');
