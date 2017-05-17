@@ -2,7 +2,7 @@ import { VNode } from '@dojo/interfaces/vdom';
 import Promise from '@dojo/shim/Promise';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { stub, spy } from 'sinon';
+import { stub, spy, SinonStub } from 'sinon';
 import { v, w, registry } from '../../src/d';
 import { DNode, WidgetProperties } from '../../src/interfaces';
 import { WidgetBase, diffProperty, DiffType, afterRender, beforeRender, onPropertiesChanged } from '../../src/WidgetBase';
@@ -18,8 +18,16 @@ interface TestProperties extends WidgetProperties {
 
 class TestWidget extends WidgetBase<TestProperties> {}
 
+let consoleStub: SinonStub;
+
 registerSuite({
 	name: 'WidgetBase',
+	beforeEach() {
+		consoleStub = stub(console, 'warn');
+	},
+	afterEach() {
+		consoleStub.restore();
+	},
 	api() {
 		const widgetBase = new WidgetBase();
 		assert(widgetBase);
@@ -1068,9 +1076,14 @@ widget.__setProperties__({
 			assert.strictEqual(lastRenderChild.vnodeSelector, 'footer');
 		},
 		'render with multiple children of the same type without an id'() {
-			const warnMsg = 'It is recommended to provide a unique `key` property when using the same widget multiple times';
 			class TestWidgetOne extends WidgetBase<any> {}
 			class TestWidgetTwo extends WidgetBase<any> {}
+			const widgetName = (<any> TestWidgetTwo).name;
+			let warnMsg = 'It is recommended to provide a unique \'key\' property when using the same widget multiple times';
+
+			if (widgetName) {
+				warnMsg = `It is recommended to provide a unique 'key' property when using the same widget (${widgetName}) multiple times`;
+			}
 
 			class TestWidget extends WidgetBase<any> {
 				render() {
@@ -1083,7 +1096,6 @@ widget.__setProperties__({
 			}
 
 			const widget: any = new TestWidget();
-			const consoleStub = stub(console, 'warn');
 			widget.__render__();
 			assert.isTrue(consoleStub.calledOnce);
 			assert.isTrue(consoleStub.calledWith(warnMsg));
@@ -1091,7 +1103,6 @@ widget.__setProperties__({
 			widget.__render__();
 			assert.isTrue(consoleStub.calledThrice);
 			assert.isTrue(consoleStub.calledWith(warnMsg));
-			consoleStub.restore();
 		},
 		'__render__ with updated array properties'() {
 			const properties = {
