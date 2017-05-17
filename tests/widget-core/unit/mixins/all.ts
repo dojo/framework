@@ -1,4 +1,3 @@
-import './Container';
 import './Themeable';
 import './Projector';
 import './Stateful';
