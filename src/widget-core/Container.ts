@@ -6,11 +6,12 @@ import { defaultMappers, BaseInjector, Mappers } from './Injector';
 export function Container<W extends WidgetBaseInterface>(
 	component: Constructor<W> | RegistryLabel,
 	name: RegistryLabel,
-	{
+	mappers: Partial<Mappers> = defaultMappers
+): Constructor<WidgetBase<W['properties']>> {
+	const {
 		getProperties = defaultMappers.getProperties,
 		getChildren = defaultMappers.getChildren
-	}: Partial<Mappers> = defaultMappers
-): Constructor<WidgetBase<W['properties']>> {
+	} = mappers;
 
 	return class extends WidgetBase<any> {
 		protected render(): DNode {
