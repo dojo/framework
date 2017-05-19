@@ -291,6 +291,18 @@ function getAuthRequestUrl(dataKey: string, user: string = 'user', password: str
 	return requestUrl.slice(0, 7) + user + ':' + password + '@' + requestUrl.slice(7);
 }
 
+function assertBasicAuthentication(options: { user?: string, password?: string }, expectedAuth: string, dfd: any) {
+	nodeRequest(getRequestUrl('foo.json'), options).then(
+		dfd.callback(function (response: any) {
+			const actual: string = response.nativeResponse.req._headers.authorization;
+			const expected = `Basic ${ new Buffer(expectedAuth).toString('base64') }`;
+
+			assert.strictEqual(actual, expected);
+		}),
+		dfd.reject.bind(dfd)
+	);
+}
+
 registerSuite({
 	name: 'request/node',
 
@@ -442,49 +454,35 @@ registerSuite({
 
 		'user and password': {
 			both(this: any): void {
-				const dfd = this.async();
-				nodeRequest(getRequestUrl('foo.json'), {
-					user: 'user name',
-					password: 'pass word'
-				}).then(
-					dfd.callback(function (response: any) {
-						const actual: string = response.nativeResponse.req._headers.authorization;
-						const expected: string = 'Basic ' + new Buffer('user%20name:pass%20word').toString('base64');
-
-						assert.strictEqual(actual, expected);
-					}),
-					dfd.reject.bind(dfd)
-				);
+				const user = 'user name';
+				const password = 'pass word';
+				assertBasicAuthentication({
+					user,
+					password
+				}, `${ user }:${ password }`, this.async());
 			},
 
 			'user only'(this: any): void {
-				const dfd = this.async();
-				nodeRequest(getRequestUrl('foo.json'), {
-					user: 'user name'
-				}).then(
-					dfd.callback(function (response: any) {
-						const actual: string = response.nativeResponse.req._headers.authorization;
-						const expected: string = 'Basic ' + new Buffer('user%20name:').toString('base64');
-
-						assert.strictEqual(actual, expected);
-					}),
-					dfd.reject.bind(dfd)
-				);
+				const user = 'user name';
+				assertBasicAuthentication({
+					user
+				}, `${ user }:`, this.async());
 			},
 
 			'password only'(this: any): void {
-				const dfd = this.async();
-				nodeRequest(getRequestUrl('foo.json'), {
-					password: 'pass word'
-				}).then(
-					dfd.callback(function (response: any) {
-						const actual: string = response.nativeResponse.req._headers.authorization;
-						const expected: string = 'Basic ' + new Buffer(':pass%20word').toString('base64');
+				const password = 'pass word';
+				assertBasicAuthentication({
+					password
+				}, `:${ password }`, this.async());
+			},
 
-						assert.strictEqual(actual, expected);
-					}),
-					dfd.reject.bind(dfd)
-				);
+			'special characters'(this: any): void {
+				const user = '$pecialUser';
+				const password = '__!passW@rd';
+				assertBasicAuthentication({
+					user,
+					password
+				}, `${ user }:${ password }`, this.async());
 			},
 
 			error(this: any): void {
