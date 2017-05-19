@@ -4,6 +4,9 @@ import { initializeElement, handleAttributeChanged, CustomElementDescriptor } fr
 import { WidgetBase } from '../../src/WidgetBase';
 import global from '@dojo/core/global';
 import { assign } from '@dojo/core/lang';
+import * as projector from '../../src/mixins/Projector';
+import * as sinon from 'sinon';
+import { v } from '../../src/d';
 
 function createFakeElement(attributes: any, descriptor: CustomElementDescriptor): any {
 	let widgetInstance: WidgetBase<any> | null;
@@ -316,5 +319,50 @@ registerSuite({
 
 			assert.strictEqual(element.getWidgetInstance().properties.prop1, 'test');
 		}
+	},
+
+	'appender': function () {
+		let sandbox: any;
+
+		return {
+			'beforeEach'() {
+				sandbox = sinon.sandbox.create();
+			},
+
+			afterEach() {
+				sandbox.restore();
+			},
+
+			'appender is returned as a function'(this: any) {
+				let rendered = false;
+
+				const appendStub = sandbox.stub();
+
+				sandbox.stub(projector, 'ProjectorMixin', function () {
+					return {
+						append: appendStub
+					};
+				});
+
+				let element = createFakeElement({}, {
+					tagName: 'test',
+					widgetConstructor: class extends WidgetBase<any> {
+						render() {
+							rendered = true;
+							return v('div');
+						}
+					}
+				});
+
+				const appender = initializeElement(element);
+
+				assert.isFalse(rendered);
+				assert.isFunction(appender);
+
+				appender();
+
+				assert.isTrue(appendStub.called);
+			}
+		};
 	}
 });

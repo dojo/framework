@@ -246,7 +246,9 @@ export function initializeElement(element: CustomElement) {
 	widgetInstance.__setChildren__(children);
 	element.setWidgetInstance(widgetInstance);
 
-	widgetInstance.append(element);
+	return function() {
+		widgetInstance.append(element);
+	};
 }
 
 /**

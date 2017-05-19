@@ -25,10 +25,20 @@ export function registerCustomElement(descriptorFactory: CustomElementDescriptor
 	let widgetInstance: WidgetBase<any>;
 
 	customElements.define(descriptor.tagName, class extends HTMLElement {
+		private _isAppended = false;
+		private _appender: Function;
+
 		constructor() {
 			super();
 
-			initializeElement(this);
+			this._appender = initializeElement(this);
+		}
+
+		connectedCallback() {
+			if (!this._isAppended) {
+				this._appender();
+				this._isAppended = true;
+			}
 		}
 
 		attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {

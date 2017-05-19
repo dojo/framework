@@ -79,5 +79,31 @@ registerSuite({
 			.then(pollUntil<any>(function () {
 				return (<any> document).querySelector('no-attributes > button').innerHTML === 'greetings';
 			}, undefined, 1000), undefined);
+	},
+	'creating elements manually works'(this: any) {
+		if (skip) {
+			this.skip('not compatible with iOS 9.1 or Safari 9.1');
+		}
+		return this.remote
+			.get((<any> require).toUrl('./support/registerCustomElement.html'))
+			.setFindTimeout(1000)
+			.findByCssSelector('#manualButton > button')
+			.end()
+			.then(pollUntil<any>(function () {
+				return (<any> document).querySelector('#manualButton > button').innerHTML === 'manual';
+			}, undefined, 1000), undefined);
+	},
+	'elements readded to the DOM are only initialized once'(this: any) {
+		if (skip) {
+			this.skip('not compatible with iOS 9.1 or Safari 9.1');
+		}
+		return this.remote
+			.get((<any> require).toUrl('./support/registerCustomElement.html'))
+			.setFindTimeout(1000)
+			.findByCssSelector('#reinitButton > button')
+			.end()
+			.then(pollUntil<any>(function () {
+				return (<any> document).querySelector('#reinitButton > button').innerHTML === 'test';
+			}, undefined, 1000), undefined);
 	}
 });
