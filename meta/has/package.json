@@ -5,7 +5,7 @@
   "engines": {
     "npm": ">=3.0.0"
   },
-  "homepage": "http://dojotoolkit.org",
+  "homepage": "https://dojo.io",
   "bugs": {
     "url": "https://github.com/dojo/has/issues"
   },
@@ -24,9 +24,9 @@
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
     "@types/sinon": "~1.16.0",
-    "@dojo/loader": "beta1",
+    "@dojo/loader": "next",
     "grunt": "~1.0.1",
-    "grunt-dojo2": "beta1",
+    "grunt-dojo2": "latest",
     "intern": "~3.4.1",
     "sinon": "^1.17.4",
     "typescript": "~2.3.2"
