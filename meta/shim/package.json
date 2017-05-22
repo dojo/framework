@@ -2,7 +2,7 @@
   "name": "@dojo/shim",
   "version": "2.0.0-pre",
   "description": "Modules that provide modular fills of ES6+ functionality",
-  "homepage": "http://dojotoolkit.org",
+  "homepage": "https://dojo.io",
   "bugs": {
     "url": "https://github.com/dojo/shim/issues"
   },
@@ -21,16 +21,16 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/has": "beta1"
+    "@dojo/has": "next"
   },
   "devDependencies": {
-    "@dojo/loader": "beta1",
+    "@dojo/loader": "next",
     "@types/chai": "~3.4.0",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
     "@types/node": "~6.0.49",
     "grunt": "~1.0.1",
-    "grunt-dojo2": "beta1",
+    "grunt-dojo2": "latest",
     "intern": "^3.4.1",
     "istanbul": "^0.4.3",
     "typescript": "~2.3.2"
