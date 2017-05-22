@@ -5,7 +5,7 @@
   "engines": {
     "npm": ">=3.0.0"
   },
-  "homepage": "http://dojotoolkit.org",
+  "homepage": "https://dojo.io",
   "bugs": {
     "url": "https://github.com/dojo/core/issues"
   },
@@ -21,12 +21,12 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/has": "beta1",
-    "@dojo/shim": "beta1"
+    "@dojo/has": "next",
+    "@dojo/shim": "next"
   },
   "devDependencies": {
-    "@dojo/interfaces": "beta1",
-    "@dojo/loader": "beta1",
+    "@dojo/interfaces": "next",
+    "@dojo/loader": "next",
     "@types/benchmark": "~1.0.0",
     "@types/chai": "~3.4.0",
     "@types/formidable": "~1.0.0",
@@ -36,7 +36,7 @@
     "benchmark": "^1.0.0",
     "formidable": "1.0.17",
     "grunt": "^1.0.1",
-    "grunt-dojo2": "beta1",
+    "grunt-dojo2": "latest",
     "http-proxy": "0.10.3",
     "intern": "^3.4.1",
     "istanbul": "0.4.3",
