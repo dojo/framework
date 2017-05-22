@@ -3,7 +3,7 @@
   "version": "2.0.0-pre",
   "description": "A core widget library for Dojo 2",
   "private": true,
-  "homepage": "http://dojotoolkit.org",
+  "homepage": "https://dojo.io",
   "bugs": {
     "url": "https://github.com/dojo/widget-core/issues"
   },
@@ -26,14 +26,14 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/core": "beta1",
-    "@dojo/has": "beta1",
-    "@dojo/i18n": "beta1",
-    "@dojo/shim": "beta1"
+    "@dojo/core": "next",
+    "@dojo/has": "next",
+    "@dojo/i18n": "next",
+    "@dojo/shim": "next"
   },
   "devDependencies": {
-    "@dojo/interfaces": "beta1",
-    "@dojo/loader": "beta1",
+    "@dojo/interfaces": "next",
+    "@dojo/loader": "next",
     "@types/chai": "3.4.*",
     "@types/glob": "5.0.*",
     "@types/grunt": "0.4.*",
@@ -43,7 +43,7 @@
     "codecov.io": "0.1.6",
     "glob": "^7.0.6",
     "grunt": "^1.0.1",
-    "grunt-dojo2": "beta1",
+    "grunt-dojo2": "latest",
     "grunt-tslint": "^5.0.1",
     "intern": "^3.4.1",
     "istanbul": "^0.4.5",
