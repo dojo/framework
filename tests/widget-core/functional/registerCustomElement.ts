@@ -20,7 +20,7 @@ registerSuite({
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
 			.setFindTimeout(1000)
-			.findByCssSelector('test-button > button');
+			.findById('testButton');
 	},
 	'custom element initial properties are set correctly'(this: any) {
 		if (skip) {
@@ -29,7 +29,7 @@ registerSuite({
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
 			.setFindTimeout(1000)
-			.findByCssSelector('test-button > button')
+			.findById('testButton')
 			.then((element: any) => {
 				return element.getVisibleText();
 			})
@@ -44,12 +44,27 @@ registerSuite({
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
 			.setFindTimeout(1000)
-			.findByCssSelector('test-button > button')
+			.findByCssSelector('#testButton > button')
 			.click()
 			.end()
 			.execute('return window.buttonClicked')
 			.then((buttonClicked: boolean) => {
 				assert.isTrue(buttonClicked);
+			});
+	},
+	'updates the correct instance when multiple or the same custom elements are used'(this: any) {
+		if (skip) {
+			this.skip('not compatible with iOS 9.1 or Safari 9.1');
+		}
+		return this.remote
+			.get((<any> require).toUrl('./support/registerCustomElement.html'))
+			.setFindTimeout(1000)
+			.findById('testButton-2')
+			.then((element: any) => {
+				return element.getVisibleText();
+			})
+			.then((text: string) => {
+				assert.strictEqual(text, 'Worlds hello');
 			});
 	},
 	'setting custom element attribute updates properties'(this: any) {
@@ -59,7 +74,7 @@ registerSuite({
 		return this.remote
 			.get((<any> require).toUrl('./support/registerCustomElement.html'))
 			.setFindTimeout(1000)
-			.findByCssSelector('test-button > button')
+			.findById('testButton')
 			.end()
 			.execute('document.querySelector("test-button").setAttribute("label", "greetings")')
 			.then(pollUntil<any>(function () {

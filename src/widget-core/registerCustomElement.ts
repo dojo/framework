@@ -22,11 +22,11 @@ export interface CustomElementDescriptorFactory {
  */
 export function registerCustomElement(descriptorFactory: CustomElementDescriptorFactory) {
 	const descriptor = descriptorFactory();
-	let widgetInstance: WidgetBase<any>;
 
 	customElements.define(descriptor.tagName, class extends HTMLElement {
 		private _isAppended = false;
 		private _appender: Function;
+		private _widgetInstance: WidgetBase;
 
 		constructor() {
 			super();
@@ -46,11 +46,11 @@ export function registerCustomElement(descriptorFactory: CustomElementDescriptor
 		}
 
 		getWidgetInstance(): WidgetBase<any> {
-			return widgetInstance;
+			return this._widgetInstance;
 		}
 
 		setWidgetInstance(widget: WidgetBase<any>): void {
-			widgetInstance = widget;
+			this._widgetInstance = widget;
 		}
 
 		getWidgetConstructor(): Constructor<WidgetBase<WidgetProperties>> {

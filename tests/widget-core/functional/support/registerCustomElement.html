@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<script src="../../../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
-	<script src="../../../../../node_modules/@webcomponents/custom-elements/src/native-shim.js"></script>
-	<script src="../../../../../node_modules/@dojo/loader/loader.js"></script>
+	<script src="../../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+	<script src="../../../../node_modules/@webcomponents/custom-elements/src/native-shim.js"></script>
+	<script src="../../../../node_modules/@dojo/loader/loader.js"></script>
 </head>
 <body>
+<test-button id="testButton-2" label="world" label-suffix="hello"></test-button>
 <test-button id="testButton" label="hello" label-suffix="world"></test-button>
 
 <no-attributes id="noAttributes" label="hello" label-suffix="world"></no-attributes>
@@ -16,9 +17,9 @@
 
 	require.config({
 		packages: [
-			{ name: '@dojo', location: '../../../../../node_modules/@dojo' },
-			{ name: 'maquette', location: '../../../../../node_modules/maquette/dist', main: 'maquette' },
-			{ name: 'pepjs', location: '../../../../../node_modules/pepjs/dist', main: 'pep' }
+			{ name: '@dojo', location: '../../../../node_modules/@dojo' },
+			{ name: 'maquette', location: '../../../../node_modules/maquette/dist', main: 'maquette' },
+			{ name: 'pepjs', location: '../../../../node_modules/pepjs/dist', main: 'pep' }
 		]
 	});
 
@@ -30,6 +31,7 @@
 		});
 
 		document.getElementById('noAttributes').buttonLabel = 'Test';
+		document.getElementById('testButton-2').label = 'Worlds';
 
 		var el = document.createElement('test-button');
 		el.id = 'manualButton';
