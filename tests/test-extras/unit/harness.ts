@@ -218,6 +218,29 @@ registerSuite({
 			widget.destroy();
 		},
 
+		'self invalidation does not break render'() {
+			let called = false;
+			class SelfInvalidateWidget extends WidgetBase {
+				onClick = () => {
+					called = true;
+					this.invalidate();
+				}
+
+				render() {
+					return v('div', {
+						onClick: this.onClick
+					});
+				}
+			}
+
+			const widget = harness(SelfInvalidateWidget);
+			widget.callListener('onClick');
+			assert.isTrue(called);
+			widget.expectRender(v('div', {
+				onClick: widget.listener
+			}));
+		},
+
 		'with comparison': {
 			'widget render - properties match'() {
 				const widget = harness(RegisterChildWidget);

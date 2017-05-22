@@ -282,7 +282,6 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 
 		this.own(this._widgetHarness.on('widget:children', this._widgetHarness.invalidate));
 		this.own(this._widgetHarness.on('properties:changed', this._widgetHarness.invalidate));
-		this.own(this._widgetHarness.on('invalidated', this._render));
 
 		this._projection = dom.append(this._projectionRoot, this._currentRender = this._widgetHarnessRender() as VNode, this._projectionOptions);
 		this._attached = true;
