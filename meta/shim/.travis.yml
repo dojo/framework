@@ -6,8 +6,8 @@ env:
   global:
   - SAUCE_USERNAME: dojo2-ts-ci
   - SAUCE_ACCESS_KEY: e92610e3-834e-4bec-a3b5-6f7b9d874601
-  - BROWSERSTACK_USERNAME: dtktestaccount1
-  - BROWSERSTACK_ACCESS_KEY: mG2qbEFJCZY2qLsM7yfx
+  - BROWSERSTACK_USERNAME: dylanschiemann2
+  - BROWSERSTACK_ACCESS_KEY: 2upt88qsxsqqeukQvecu
 before_install:
 - if [ ${TRAVIS_BRANCH-""} == "master" ] && [ -n ${encrypted_12c8071d2874_key-""}
   ]; then openssl aes-256-cbc -K $encrypted_12c8071d2874_key -iv $encrypted_12c8071d2874_iv
@@ -18,7 +18,7 @@ install:
 script:
 - grunt
 - grunt intern:node --combined
-- grunt intern:saucelabs --combined
+- grunt intern:browserstack --combined
 - grunt remapIstanbul:ci
 - grunt uploadCoverage
 - grunt doc

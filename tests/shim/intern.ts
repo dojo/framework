@@ -19,17 +19,18 @@ export const capabilities = {
 // OnDemand. Options that will be permutated are browserName, version, platform, and platformVersion; any other
 // capabilities options specified for an environment will be copied as-is
 export const environments = [
-	{ browserName: 'internet explorer', version: [ '10', '11' ], platform: 'WINDOWS' },
-	{ browserName: 'microsoftedge', platform: 'WINDOWS'},
+	{ browserName: 'internet explorer', version: '11' },
+	{ browserName: 'edge' },
 	{ browserName: 'firefox', platform: 'WINDOWS' },
 	{ browserName: 'chrome', platform: 'WINDOWS' },
-	{ browserName: 'safari', version: '9', platform: 'MAC' },
-	{ browserName: 'iPhone', platform: 'MAC', device: 'iPhone 6S' },
-	{ browserName: 'android', platform: 'ANDROID', device: 'Samsung Galaxy S5' }
+	// Issue with iphone 9.1 compatability, commented out for move to
+	// browserstack and issue raised.https://github.com/dojo/shim/issues/96
+	// { browserName: 'iPhone', version: '9.1' },
+	{ browserName: 'safari', version: '9.1', platform: 'MAC' }
 ];
 
 // Maximum number of simultaneous integration tests that should be executed on the remote WebDriver service
-export const maxConcurrency = 2;
+export const maxConcurrency = 5;
 
 // Name of the tunnel class to use for WebDriver tests
 export const tunnel = 'BrowserStackTunnel';
