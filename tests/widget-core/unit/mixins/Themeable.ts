@@ -6,11 +6,9 @@ import {
 	theme,
 	ThemeableProperties,
 	INJECTED_THEME_KEY,
-	ThemeInjector,
-	ThemeInjectorContext,
 	registerThemeInjector
 } from '../../../src/mixins/Themeable';
-import { Injector } from './../../../src/Injector';
+import { BaseInjector, Context, Injector } from './../../../src/Injector';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { WidgetRegistry } from '../../../src/WidgetRegistry';
 import { WidgetProperties } from '../../../src/interfaces';
@@ -401,8 +399,8 @@ registerSuite({
 	},
 	'injecting a theme': {
 		'theme can be injected by defining a ThemeInjector with registry'() {
-			const themeInjectorContext = new ThemeInjectorContext(testTheme1);
-			const InjectorBase = Injector(ThemeInjector, themeInjectorContext);
+			const themeInjectorContext = new Context(testTheme1);
+			const InjectorBase = Injector(BaseInjector, themeInjectorContext);
 			testRegistry.define(INJECTED_THEME_KEY, InjectorBase);
 			class InjectedTheme extends TestWidget {
 				render() {
@@ -415,8 +413,8 @@ registerSuite({
 			assert.deepEqual(vNode.properties.classes, { theme1Class1: true });
 		},
 		'theme will not be injected if a theme has been passed via a property'() {
-			const themeInjectorContext = new ThemeInjectorContext(testTheme1);
-			const InjectorBase = Injector(ThemeInjector, themeInjectorContext);
+			const themeInjectorContext = new Context(testTheme1);
+			const InjectorBase = Injector(BaseInjector, themeInjectorContext);
 			testRegistry.define(INJECTED_THEME_KEY, InjectorBase);
 			class InjectedTheme extends TestWidget {
 				render() {

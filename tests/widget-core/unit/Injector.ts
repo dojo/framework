@@ -1,11 +1,11 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Injector, { BaseInjector } from './../../src/Injector';
+import Injector, { BaseInjector, Context } from './../../src/Injector';
 import { DNode } from './../../src/interfaces';
 import { WidgetBase } from './../../src/WidgetBase';
 import { v, w } from './../../src/d';
 
-class TestInjector<C> extends BaseInjector<C> {
+class TestInjector extends BaseInjector {
 	public render() {
 		return super.render();
 	}
@@ -18,10 +18,10 @@ const bind = {
 registerSuite({
 	name: 'Injector',
 	injector() {
-		const context = {
+		const context = new Context({
 			foo: 1,
 			bar: '2'
-		};
+		});
 		const testProperties = {
 			qux: 'baz'
 		};
@@ -45,7 +45,7 @@ registerSuite({
 		};
 		const InjectorWidget = Injector(TestInjector, context);
 
-		const injector = new InjectorWidget<any>();
+		const injector = new InjectorWidget();
 		injector.__setProperties__({
 			render,
 			bind,
@@ -72,10 +72,10 @@ registerSuite({
 		renderedNode.children[0].properties.testFunction();
 	},
 	'uses default mappers'() {
-		const context = {
+		const context = new Context({
 			foo: 1,
 			bar: '2'
-		};
+		});
 		const testProperties = {
 			qux: 'baz'
 		};
@@ -83,7 +83,7 @@ registerSuite({
 		const render = (): DNode => { return 'Called Render'; };
 		const InjectorWidget = Injector(TestInjector, context);
 
-		const injector = new InjectorWidget<any>();
+		const injector = new InjectorWidget();
 		injector.__setProperties__({
 			bind: context,
 			render,
@@ -97,10 +97,10 @@ registerSuite({
 		assert.strictEqual(renderedNode, 'Called Render');
 	},
 	'injector ignores constructor arguments'() {
-		const context = {
+		const context = new Context({
 			foo: 1,
 			bar: '2'
-		};
+		});
 		const testProperties = {
 			qux: 'baz'
 		};
@@ -108,7 +108,7 @@ registerSuite({
 		const render = (): DNode => { return 'Called Render'; };
 		const InjectorWidget = Injector(TestInjector, context);
 
-		const injector = new InjectorWidget<any>();
+		const injector = new InjectorWidget();
 		injector.__setProperties__({
 			bind,
 			render,
@@ -132,10 +132,10 @@ registerSuite({
 		assert.strictEqual(renderedNode, 'Called Render');
 	},
 	'injector mixes return of getProperties over properties'() {
-		const context = {
+		const context = new Context({
 			foo: 1,
 			bar: '2'
-		};
+		});
 		const testProperties = {
 			qux: 'baz'
 		};
@@ -143,7 +143,7 @@ registerSuite({
 		const render = (): DNode => { return 'Called Render'; };
 		const InjectorWidget = Injector(TestInjector, context);
 
-		const injector = new InjectorWidget<any>();
+		const injector = new InjectorWidget();
 		injector.__setProperties__({
 			bind,
 			render,
@@ -170,10 +170,10 @@ registerSuite({
 		assert.strictEqual(renderedNode, 'Called Render');
 	},
 	'injector adds return of getChildren to children'() {
-		const context = {
+		const context = new Context({
 			foo: 1,
 			bar: '2'
-		};
+		});
 		const testProperties = {
 			qux: 'baz'
 		};
@@ -181,7 +181,7 @@ registerSuite({
 		const render = (): DNode => { return 'Called Render'; };
 		const InjectorWidget = Injector(TestInjector, context);
 
-		const injector = new InjectorWidget<any>();
+		const injector = new InjectorWidget();
 		injector.__setProperties__({
 			bind,
 			render,
@@ -210,9 +210,9 @@ registerSuite({
 		};
 		const testChildren: DNode[] = [ 'child' ];
 		const render = (): DNode => { return 'Called Render'; };
-		const InjectorWidget = Injector(TestInjector, undefined);
+		const InjectorWidget = Injector(TestInjector, <any> undefined);
 
-		const injector = new InjectorWidget<any>();
+		const injector = new InjectorWidget();
 		injector.__setProperties__({
 			bind,
 			render,
@@ -245,30 +245,42 @@ registerSuite({
 			rendered++;
 			return 'Called Render';
 		};
-		const InjectorWidget = Injector(TestInjector, undefined);
+		const InjectorWidget = Injector(TestInjector, new Context());
 		const properties = {
 			bind,
 			render,
 			properties: testProperties,
-			getProperties: (inject: any, properties: any): any => {
-				assert.deepEqual(inject, {});
+			getProperties: (inject: Context, properties: any): any => {
+				assert.deepEqual(inject.get(), {});
 				assert.deepEqual(properties, testProperties);
 				return {};
 			},
 			children: testChildren,
-			getChildren: (inject: any, children: DNode[]): DNode[] => {
-				assert.deepEqual(inject, {});
+			getChildren: (inject: Context, children: DNode[]): DNode[] => {
+				assert.deepEqual(inject.get(), {});
 				assert.deepEqual(children, testChildren);
 				return [];
 			}
 		};
 
-		const injector = new InjectorWidget<any>();
+		const injector = new InjectorWidget();
 		injector.__setProperties__(properties);
 		injector.__render__();
 		assert.strictEqual(rendered, 1);
 		injector.__setProperties__(properties);
 		injector.__render__();
 		assert.strictEqual(rendered, 2);
+	},
+	'Injector invalidates when the context is set'() {
+		let invalidated = false;
+		const context = new Context();
+
+		const InjectorWidget = Injector(TestInjector, context);
+		const injector = new InjectorWidget();
+		injector.on('invalidated', () => {
+			invalidated = true;
+		});
+		context.set({});
+		assert.isTrue(invalidated);
 	}
 });

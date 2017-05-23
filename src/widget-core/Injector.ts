@@ -1,4 +1,5 @@
 import { assign } from '@dojo/core/lang';
+import { Evented } from '@dojo/core/Evented';
 import { diffProperty, afterRender, WidgetBase, InternalWNode, InternalHNode } from './WidgetBase';
 import { decorate, isHNode, isWNode } from './d';
 import { DiffType } from './diff';
@@ -36,6 +37,29 @@ export const defaultMappers: Mappers = {
 	}
 };
 
+/**
+ * Base context class that extends Evented and
+ * returns the context using `.get()`.
+ */
+export class Context<T = any> extends Evented {
+
+	private _context: T;
+
+	constructor(context: T = <T> {}) {
+		super({});
+		this._context = context;
+	}
+
+	public get(): T {
+		return this._context;
+	}
+
+	public set(context: T): void {
+		this._context = context;
+		this.emit({ type: 'invalidate' });
+	}
+}
+
 export interface InjectorProperties extends WidgetProperties {
 	bind: any;
 	render(): DNode;
@@ -45,17 +69,20 @@ export interface InjectorProperties extends WidgetProperties {
 	children: DNode[];
 }
 
-export class BaseInjector<C> extends WidgetBase<InjectorProperties> {
+export class BaseInjector<C extends Evented = Context> extends WidgetBase<InjectorProperties> {
 
-	private _context: C;
+	protected context: C = <C> {};
 
-	constructor(context: C = <C> {}) {
+	constructor(context?: C) {
 		super();
-		this._context = context;
+		if (context) {
+			this.context = context;
+			this.context.on('invalidate', this.invalidate.bind(this));
+		}
 	}
 
 	public toInject(): C {
-		return this._context;
+		return this.context;
 	}
 }
 
@@ -63,7 +90,7 @@ export class BaseInjector<C> extends WidgetBase<InjectorProperties> {
  * Mixin that extends the supplied Injector class with the proxy `render` and passing the provided to `context` to the Injector
  * class via the constructor.
  */
-export function Injector<C, T extends Constructor<BaseInjector<C>>>(Base: T, context: C): T {
+export function Injector<C extends Evented, T extends Constructor<BaseInjector<C>>>(Base: T, context: C): T {
 
 	@diffProperty('render', DiffType.ALWAYS)
 	class Injector extends Base {
