@@ -23,6 +23,7 @@ We also provide a suite of pre-built widgets to use in your applications: [(@doj
             - [Custom property diff control](#custom-property-diff-control)
             - [The `properties:changed` event](#the-propertieschanged-event)
         - [Projector](#projector)
+		  - [Server Side Rendering](#server-side-rendering)
         - [Event Handling](#event-handling)
         - [Widget Registry](#widget-registry)
         - [Injecting State](#injecting-state)
@@ -186,7 +187,7 @@ Once the project is configured, `tsx` can be used in a widget's `render` functio
 class MyWidgetWithTsx extends WidgetBase<MyProperties> {
 	protected render(): DNode {
 		const { clear, properties: { completed, count, activeCount, activeFilter } } = this;
-	
+
 		return (
 			<footer classes={this.classes(css.footer)}>
 				<span classes={this.classes(css.count)}>
@@ -441,17 +442,56 @@ const MyProjector = ProjectorMixin(MyWidget);
 
 Projectors behave in the same way as any other widget **except** that they need to be manually instantiated and managed outside of the standard widget lifecycle.
 
-There are 3 ways that a projector widget can be added to the DOM - `.append`, `.merge` or `.replace`, depending on the type of attachment required.
+There are 3 ways that a projector widget can be added to the DOM - `.append`, `.merge`, `.replace`, or `.sandbox`, depending on the type of attachment required.
 
  - `append`  - Creates the widget as a child to the projector's `root` node
  - `merge`   - Merges the widget with the projector's `root` node
  - `replace` - Replace the projector's `root` node with the widget
+ - `sandbox` - Create a document fragment as the projector's `root` node
 
 ```ts
 const MyProjector = ProjectorMixin(MyWidget);
 
 const myProjector = new MyProjector()
 myProjector.append(root);
+```
+
+##### Server Side Rendering
+
+The `Projector` provides several features which facilitate server side rendering and progressive enhancement.  For rendering on the server, there are the methods `.sandbox()` and `.toHtml()`.
+
+###### .sandbox()
+
+`.sandbox()` does two things.  It creates the `root` of the projector as a `DocumentFragment`.  This ensures that the rendering of the projector does not interfere with the `document`.  In order to server side render, you still need something like `jsdom` though in order to provide the functionality needed to generate the DOM structure which will be shipped to the browser.  Also, when the projector is attached it will render synchronously.  Usually the projector renders asyncronously to ensure that renders have a minimal impact on the user experience, helping eliminate _jank_.  This can cause problems though in that when exporting the HTML, the projector needs to be in a _known_ render state. `.sandbox()` takes a single optional argument which is a `Document`.  If none is supplied, then the global `document` will be used.
+
+An example using [`jsdom`](https://github.com/tmpvar/jsdom):
+
+```ts
+import { JSDOM } from 'jsdom';
+import ProjectorMixin from '@dojo/widget-core/mixins/Projector';
+import App from './widgets/App';
+
+const dom = new JSDOM('', { runScripts: 'dangerously' });
+const projector = new (ProjectorMixin(App))();
+const projector.sandbox(dom.window.document);
+```
+
+###### .toHtml()
+
+`.toHtml()` returns a string which represents the current render of the `Projector`.  While it can be used with any attachment mode, it is most effective when using `.sandbox()`, as this mode operates synronously, ensuring that the string returned accuretly represents the current rendered DOM structure.  Building on the example from above:
+
+```ts
+import { JSDOM } from 'jsdom';
+import ProjectorMixin from '@dojo/widget-core/mixins/Projector';
+import App from './widgets/App';
+
+const dom = new JSDOM('', { runScripts: 'dangerously' });
+const projector = new (ProjectorMixin(App))();
+const projector.sandbox(dom.window.document);
+
+/* set any App properties/children/state */
+const html = projector.toHtml();
+/* `html` contains the rendered HTML */
 ```
 
 #### Event Handling

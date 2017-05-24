@@ -94,6 +94,51 @@ registerSuite({
 			assert.strictEqual(child.tagName.toLowerCase(), 'div');
 			assert.strictEqual(( <HTMLElement> child.firstChild).tagName.toLowerCase(), 'h2');
 		},
+		'sandbox': {
+			'attaching'() {
+				const childNodeLength = document.body.childNodes.length;
+				const projector = new TestWidget();
+				projector.setChildren([ v('h2', [ 'foo' ]) ]);
+
+				projector.sandbox();
+
+				assert.strictEqual(document.body.childNodes.length, childNodeLength, 'No nodes should be added to body');
+				assert.instanceOf(projector.root, global.window.DocumentFragment, 'the root should be a document fragment');
+				const child = projector.root.firstChild as HTMLElement;
+				assert.strictEqual(child.innerHTML, '<h2>foo</h2>');
+				assert.strictEqual(child.tagName.toLocaleLowerCase(), 'div');
+				assert.strictEqual((child.firstChild as HTMLElement).tagName.toLocaleLowerCase(), 'h2');
+
+				projector.destroy();
+				assert.strictEqual(projector.root, document.body, 'Root should be reverted to document.body');
+			},
+			'operates synchronously'() {
+				let count = 0;
+				const projector = new class extends TestWidget {
+					render () {
+						count++;
+						return v('div', [ String(count) ]);
+					}
+				}();
+
+				projector.sandbox();
+				assert.strictEqual(count, 1, 'render should have been called once');
+				assert.strictEqual(projector.root.firstChild!.textContent, '1', 'should have rendered "1"');
+				projector.invalidate();
+				assert.strictEqual(count, 2, 'render should have been called synchronously');
+				assert.strictEqual(projector.root.firstChild!.textContent, '2', 'should have rendered "2"');
+				projector.destroy();
+			},
+			'accepts other documents'() {
+				const doc = {
+					createDocumentFragment: spy(() => document.createDocumentFragment())
+				} as any;
+				const projector = new TestWidget();
+				projector.sandbox(doc);
+				assert.isTrue(doc.createDocumentFragment.called, 'createDocumentFragment should have been called');
+				projector.destroy();
+			}
+		},
 		'replace'() {
 			const projector = new class extends TestWidget {
 				render() {
@@ -246,6 +291,47 @@ registerSuite({
 		projector.destroy();
 		assert.equal(projector.projectorState, ProjectorAttachState.Detached);
 	},
+	'toHtml()': {
+		'appended'() {
+			const projector = new TestWidget();
+			projector.setChildren([ v('h2', [ 'foo' ]) ]);
+
+			projector.append();
+			assert.strictEqual(projector.toHtml(), `<div><h2>foo</h2></div>`);
+			assert.strictEqual(projector.toHtml(), (projector.root.lastChild as Element).outerHTML);
+			projector.destroy();
+		},
+		'replaced'() {
+			const div = document.createElement('div');
+			document.body.appendChild(div);
+
+			const projector = new TestWidget();
+			projector.setChildren([ v('h2', [ 'foo' ]) ]);
+
+			projector.replace(div);
+			assert.strictEqual(projector.toHtml(), `<div><h2>foo</h2></div>`);
+			assert.strictEqual(projector.toHtml(), (document.body.lastChild as Element).outerHTML);
+			projector.destroy();
+		},
+		'merged'() {
+			const div = document.createElement('div');
+			document.body.appendChild(div);
+
+			const projector = new TestWidget();
+			projector.setChildren([ v('h2', [ 'foo' ]) ]);
+
+			projector.merge(div);
+			assert.strictEqual(projector.toHtml(), `<div><h2>foo</h2></div>`);
+			assert.strictEqual(projector.toHtml(), (projector.root as Element).outerHTML);
+			projector.destroy();
+		},
+		'not attached throws'() {
+			const projector = new TestWidget();
+			assert.throws(() => {
+				projector.toHtml();
+			}, Error, 'Projector is not attached, cannot return an HTML string of projection.');
+		}
+	},
 	'destroy'() {
 		const projector: any = new TestWidget();
 		const maquetteProjectorStopSpy = spy(projector, 'pause');
@@ -328,6 +414,13 @@ registerSuite({
 		assert.throws(() => {
 			projector.root = document.body;
 		}, Error, 'already attached');
+	},
+	'sandbox throws when already attached'() {
+		const projector = new TestWidget();
+		projector.append();
+		assert.throws(() => {
+			projector.sandbox();
+		}, Error, 'Projector already attached, cannot create sandbox');
 	},
 	'can attach an event handler'() {
 		let domNode: any;
