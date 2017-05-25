@@ -1,70 +1,31 @@
 import { WidgetBase } from './../WidgetBase';
-import { DNode, WidgetProperties } from './../interfaces';
-import { isHNode } from '../d';
-import { assign } from '@dojo/core/lang';
+import { WidgetProperties, VirtualDomProperties } from './../interfaces';
+import { v } from './../d';
 import { VNode } from '@dojo/interfaces/vdom';
+import { Constructor } from '../interfaces';
 
-export interface DomWrapperProperties extends WidgetProperties {
-	domNode: Node;
-}
+export function DomWrapper(domNode: Element): Constructor<WidgetBase<VirtualDomProperties & WidgetProperties>> {
+	return class extends WidgetBase<VirtualDomProperties & WidgetProperties> {
+		private _vNode: VNode;
+		private _firstRender = true;
 
-export class DomWrapper extends WidgetBase<DomWrapperProperties> {
-
-	private _vNode: VNode | undefined;
-
-	public afterCreate() {
-		this.handleDomInsertion(this.properties.domNode);
-	}
-
-	public afterUpdate() {
-		this.handleDomInsertion(this.properties.domNode);
-	}
-
-	public __render__() {
-		const vNode = super.__render__();
-		if (vNode && typeof vNode !== 'string') {
-			if (!this._vNode) {
-				this._vNode = vNode;
-			}
-		}
-		else {
-			this._vNode = undefined;
+		protected onElementCreated(element: Element, key: string) {
+			element.parentNode && element.parentNode.replaceChild(domNode, element);
+			this._vNode.domNode = domNode;
+			this._firstRender = false;
+			this.invalidate();
 		}
 
-		return vNode;
-	}
-
-	protected render(): DNode {
-		const dNode = super.render();
-		if (isHNode(dNode)) {
-			const { afterCreate, afterUpdate } = this;
-
-			assign(dNode.properties, {
-				afterCreate,
-				afterUpdate
-			});
+		public __render__() {
+			this._vNode = super.__render__() as VNode;
+			return this._vNode;
 		}
 
-		return dNode;
-	}
-
-	private handleDomInsertion(newNode: Node | null | undefined) {
-		let notNullNode = newNode;
-
-		if (!notNullNode) {
-			notNullNode = document.createElement('div'); // placeholder element
+		protected render() {
+			const properties = this._firstRender ? {} : this.properties;
+			return v(domNode.tagName, { ...properties, key: 'root' });
 		}
-
-		if (this._vNode) {
-			// replace the vNode domElement with our new element...
-			if (this._vNode.domNode && this._vNode.domNode.parentNode) {
-				this._vNode.domNode.parentNode.replaceChild(notNullNode, this._vNode.domNode);
-			}
-
-			// and update the reference to our vnode
-			this._vNode.domNode = notNullNode;
-		}
-	}
+	};
 }
 
 export default DomWrapper;

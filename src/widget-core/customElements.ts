@@ -5,7 +5,7 @@ import { WidgetBaseInterface, WidgetProperties, Constructor, DNode } from './int
 import { WidgetBase } from './WidgetBase';
 import { w } from './d';
 import { ProjectorMixin } from './mixins/Projector';
-import { DomWrapper } from './util/DomWrapper';
+import DomWrapper from './util/DomWrapper';
 
 /**
  * @type CustomElementAttributeDescriptor
@@ -225,9 +225,9 @@ export function initializeElement(element: CustomElement) {
 	let children: DNode[] = [];
 
 	arrayFrom(element.children).forEach((childNode: HTMLElement, index: number) => {
-		children.push(w(DomWrapper, {
-			key: `child-${index}`,
-			domNode: childNode
+		const DomElement = DomWrapper(childNode);
+		children.push(w(DomElement, {
+			key: `child-${index}`
 		}));
 	});
 
