@@ -4,7 +4,12 @@ import { v, registry } from '../../src/d';
 import { WidgetBase } from '../../src/WidgetBase';
 import { Container } from './../../src/Container';
 
-class TestWidget extends WidgetBase<any> {
+interface TestWidgetProperties {
+	foo: string;
+	boo: number;
+}
+
+class TestWidget extends WidgetBase<TestWidgetProperties> {
 	render() {
 		return v('test', this.properties);
 	}

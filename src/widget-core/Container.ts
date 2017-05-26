@@ -1,5 +1,5 @@
 import { WidgetBase } from './WidgetBase';
-import { Constructor, DNode, WidgetBaseInterface, RegistryLabel } from './interfaces';
+import { Constructor, DNode, WidgetBaseInterface, RegistryLabel, WidgetProperties } from './interfaces';
 import { w } from './d';
 import { defaultMappers, BaseInjector, Mappers } from './Injector';
 
@@ -7,7 +7,7 @@ export function Container<W extends WidgetBaseInterface>(
 	component: Constructor<W> | RegistryLabel,
 	name: RegistryLabel,
 	mappers: Partial<Mappers> = defaultMappers
-): Constructor<WidgetBase<W['properties']>> {
+): Constructor<WidgetBase<Partial<W['properties']> & WidgetProperties>> {
 	const {
 		getProperties = defaultMappers.getProperties,
 		getChildren = defaultMappers.getChildren
