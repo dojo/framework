@@ -1,10 +1,15 @@
 import { WidgetBase } from './../WidgetBase';
-import { WidgetProperties, VirtualDomProperties } from './../interfaces';
+import { WidgetProperties, VirtualDomProperties, Constructor } from './../interfaces';
 import { v } from './../d';
 import { VNode } from '@dojo/interfaces/vdom';
-import { Constructor } from '../interfaces';
 
-export function DomWrapper(domNode: Element): Constructor<WidgetBase<VirtualDomProperties & WidgetProperties>> {
+export interface DomWrapperOptions {
+	onAttached?(): void;
+}
+
+export type DomWrapper = Constructor<WidgetBase<VirtualDomProperties & WidgetProperties>>;
+
+export function DomWrapper(domNode: Element, options: DomWrapperOptions = {}): DomWrapper {
 	return class extends WidgetBase<VirtualDomProperties & WidgetProperties> {
 		private _vNode: VNode;
 		private _firstRender = true;
@@ -13,6 +18,7 @@ export function DomWrapper(domNode: Element): Constructor<WidgetBase<VirtualDomP
 			element.parentNode && element.parentNode.replaceChild(domNode, element);
 			this._vNode.domNode = domNode;
 			this._firstRender = false;
+			options.onAttached && options.onAttached();
 			this.invalidate();
 		}
 
