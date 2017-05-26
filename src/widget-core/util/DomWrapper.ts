@@ -22,7 +22,8 @@ export function DomWrapper(domNode: Element): Constructor<WidgetBase<VirtualDomP
 		}
 
 		protected render() {
-			const properties = this._firstRender ? {} : this.properties;
+			const properties = this._firstRender ? {} as any : this.properties;
+			properties.bind && delete properties.bind;
 			return v(domNode.tagName, { ...properties, key: 'root' });
 		}
 	};

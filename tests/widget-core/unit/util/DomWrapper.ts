@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import { WidgetBase } from './../../../src/WidgetBase';
-import { w } from './../../../src/d';
+import { v, w } from './../../../src/d';
 import { DomWrapper } from '../../../src/util/DomWrapper';
 import global from '@dojo/core/global';
 import { stub } from 'sinon';
@@ -35,7 +35,9 @@ registerSuite({
 		const DomNode = DomWrapper(domNode);
 		class Foo extends WidgetBase {
 			render() {
-				return w(DomNode, { id: 'foo', extra: { foo: 'bar' } });
+				return v('div', [
+					w(DomNode, { id: 'foo', extra: { foo: 'bar' } })
+				]);
 			}
 		}
 		const Projector = ProjectorMixin(Foo);
