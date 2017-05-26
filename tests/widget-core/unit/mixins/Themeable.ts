@@ -53,7 +53,7 @@ class NonDecoratorDuplicateThemeClassWidget extends ThemeableMixin(WidgetBase)<T
 	}
 }
 
-let themeableInstance: TestWidget;
+let themeableInstance: any;
 let consoleStub: SinonStub;
 
 registerSuite({

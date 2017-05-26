@@ -74,6 +74,8 @@ export interface ThemeableMixin {
 	 * @returns a function chain to `get` or process more classes using `fixed`
 	 */
 	classes(...classNames: (string | null)[]): ClassesFunctionChain;
+
+	properties: ThemeableProperties;
 }
 
 /**
@@ -153,8 +155,10 @@ export function registerThemeInjector(theme: any, themeRegistry: WidgetRegistry 
 /**
  * Function that returns a class decorated with with Themeable functionality
  */
-export function ThemeableMixin<T extends Constructor<WidgetBase<ThemeableProperties>>>(base: T): T & Constructor<ThemeableMixin> {
+export function ThemeableMixin<T extends Constructor<WidgetBase<any>>>(base: T): T & Constructor<ThemeableMixin> {
 	class Themeable extends base {
+
+		public properties: ThemeableProperties;
 
 		/**
 		 * The Themeable baseClasses

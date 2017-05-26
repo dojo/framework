@@ -62,10 +62,14 @@ export interface I18nMixin {
 	 * The localized messages, along with a `format` method for formatting ICU-formatted templates.
 	 */
 	localizeBundle<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T>;
+
+	properties: I18nProperties;
 }
 
-export function I18nMixin<T extends Constructor<WidgetBase<I18nProperties>>>(base: T): T & Constructor<I18nMixin> {
+export function I18nMixin<T extends Constructor<WidgetBase<any>>>(base: T): T & Constructor<I18nMixin> {
 	class I18n extends base {
+
+		public properties: I18nProperties;
 
 		constructor(...args: any[]) {
 			super(...args);

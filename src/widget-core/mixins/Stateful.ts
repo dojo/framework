@@ -1,5 +1,5 @@
 import { deepAssign } from '@dojo/core/lang';
-import { Constructor, WidgetProperties } from './../interfaces';
+import { Constructor } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
 
 /**
@@ -33,7 +33,7 @@ export interface StatefulMixin {
  */
 const stateChangedEventType = 'state:changed';
 
-export function StatefulMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T): T & Constructor<StatefulMixin> {
+export function StatefulMixin<T extends Constructor<WidgetBase<any>>>(base: T): T & Constructor<StatefulMixin> {
 	return class extends base {
 
 		private _state: State;

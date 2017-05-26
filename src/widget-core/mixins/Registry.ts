@@ -1,16 +1,16 @@
 import WidgetRegistry from '../WidgetRegistry';
 import { WidgetBase, diffProperty } from './../WidgetBase';
-import {
-	PropertyChangeRecord,
-	Constructor,
-	WidgetProperties
-} from '../interfaces';
+import { PropertyChangeRecord, Constructor } from '../interfaces';
 
-export interface RegistryMixinProperties extends WidgetProperties {
-	registry: WidgetRegistry;
+export interface RegistryMixinProperties {
+	registry?: WidgetRegistry;
 }
 
-export function RegistryMixin<T extends Constructor<WidgetBase<RegistryMixinProperties>>>(base: T): T {
+export interface RegistryMixin {
+	properties: RegistryMixinProperties;
+}
+
+export function RegistryMixin<T extends Constructor<WidgetBase<any>>>(base: T): T & Constructor<RegistryMixin> {
 	class Registry extends base {
 
 		@diffProperty('registry')
