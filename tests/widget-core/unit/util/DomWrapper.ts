@@ -6,6 +6,7 @@ import global from '@dojo/core/global';
 import { stub } from 'sinon';
 import * as assert from 'intern/chai!assert';
 import ProjectorMixin from '../../../src/mixins/Projector';
+import { ThemeableMixin, theme } from '../../../src/mixins/Themeable';
 
 let rAF: any;
 let projector: any;
@@ -51,8 +52,56 @@ registerSuite({
 		assert.equal(domNode.getAttribute('original'), 'woop');
 		assert.equal(domNode.getAttribute('id'), 'foo');
 		assert.deepEqual(domNode.extra, { foo: 'bar' });
-	},
 
+	},
+	'supports events'() {
+		const domNode: any = document.createElement('custom-element');
+		const root = document.createElement('div');
+		let clicked = false;
+
+		const DomNode = DomWrapper(domNode);
+		class Foo extends WidgetBase {
+			_onClick() {
+				clicked = true;
+			}
+			render() {
+				return w(DomNode, { onclick: this._onClick });
+			}
+		}
+		const Projector = ProjectorMixin(Foo);
+		projector = new Projector();
+		projector.append(root);
+		resolveRAF();
+		domNode.click();
+		assert.isTrue(clicked);
+	},
+	'supports classes and styles'() {
+		const domNode: any = document.createElement('custom-element');
+		const root = document.createElement('div');
+
+		const DomNode = DomWrapper(domNode);
+		const myTheme = {
+			class1: 'classFoo'
+		};
+
+		@theme(myTheme)
+		class Foo extends ThemeableMixin(WidgetBase) {
+			render() {
+				return w(DomNode, {
+					styles: {
+						color: 'red'
+					},
+					classes: this.classes(myTheme.class1)
+				});
+			}
+		}
+		const Projector = ProjectorMixin(Foo);
+		projector = new Projector();
+		projector.append(root);
+		resolveRAF();
+		assert.isTrue(domNode.classList.contains('classFoo'));
+		assert.equal(domNode.style.color, 'red');
+	},
 	'onAttached'() {
 		let attached = false;
 		const domNode: any = document.createElement('custom-element');

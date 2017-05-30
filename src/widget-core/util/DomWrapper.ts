@@ -7,30 +7,27 @@ export interface DomWrapperOptions {
 	onAttached?(): void;
 }
 
-export type DomWrapper = Constructor<WidgetBase<VirtualDomProperties & WidgetProperties>>;
+export type DomWrapperProperties = VirtualDomProperties & WidgetProperties;
+
+export type DomWrapper = Constructor<WidgetBase<DomWrapperProperties>>;
 
 export function DomWrapper(domNode: Element, options: DomWrapperOptions = {}): DomWrapper {
-	return class extends WidgetBase<VirtualDomProperties & WidgetProperties> {
-		private _vNode: VNode;
-		private _firstRender = true;
+	return class extends WidgetBase<DomWrapperProperties> {
 
 		protected onElementCreated(element: Element, key: string) {
-			element.parentNode && element.parentNode.replaceChild(domNode, element);
-			this._vNode.domNode = domNode;
-			this._firstRender = false;
 			options.onAttached && options.onAttached();
-			this.invalidate();
 		}
 
 		public __render__() {
-			this._vNode = super.__render__() as VNode;
-			return this._vNode;
+			const vNode = super.__render__() as VNode;
+			vNode.domNode = domNode;
+			return vNode;
 		}
 
 		protected render() {
-			const properties = this._firstRender ? {} as any : this.properties;
-			properties.bind && delete properties.bind;
-			return v(domNode.tagName, { ...properties, key: 'root' });
+			const properties = { ...this.properties, key: 'root' };
+			delete properties.bind;
+			return v(domNode.tagName, properties);
 		}
 	};
 }
