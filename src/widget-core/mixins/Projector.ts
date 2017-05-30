@@ -175,6 +175,8 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		private _boundRender: Function;
 		private _projectorChildren: DNode[];
 		private _projectorProperties: P;
+		private _rootTagName: string;
+		private _attachType: AttachType;
 
 		constructor(...args: any[]) {
 			super(...args);
@@ -294,18 +296,45 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			return this._projection.domNode.outerHTML;
 		}
 
-		public __render__() {
+		public __render__(): VNode {
 			if (this._projectorChildren) {
 				this.setChildren(this._projectorChildren);
 			}
 			if (this._projectorProperties) {
 				this.setProperties(this._projectorProperties);
 			}
-			const result = super.__render__();
+			let result = super.__render__();
 			if (typeof result === 'string' || result === null) {
-				throw new Error('Must provide a VNode at the root of a projector');
+				if (!this._rootTagName) {
+					this._rootTagName = 'span';
+				}
+
+				result = {
+					domNode: null,
+					vnodeSelector: this._rootTagName,
+					properties: {},
+					children: undefined,
+					text: result === null ? undefined : result
+				};
+			}
+			else if (!this._rootTagName) {
+				this._rootTagName = result.vnodeSelector;
 			}
 
+			if (this._rootTagName !== result.vnodeSelector) {
+				if (this._attachType === AttachType.Merge) {
+					assign(result, { vnodeSelector: this._rootTagName });
+				}
+				else {
+					result = {
+						domNode: null,
+						vnodeSelector: this._rootTagName,
+						properties: {},
+						children: [ result ],
+						text: undefined
+					};
+				}
+			}
 			return result;
 		}
 
@@ -333,6 +362,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		}
 
 		private attach({ type, root }: AttachOptions): Handle {
+			this._attachType = type;
 			if (root) {
 				this.root = root;
 			}
@@ -359,6 +389,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 					this._projection = dom.append(this.root, this._boundRender(), this._projectionOptions);
 				break;
 				case AttachType.Merge:
+					this._rootTagName = this._root.tagName.toLowerCase();
 					const vnode: VNode = this._boundRender();
 					setDomNodes(vnode, this.root);
 					this._projection = dom.merge(this.root, vnode, this._projectionOptions);
