@@ -61,7 +61,7 @@ export class Context<T = any> extends Evented {
 }
 
 export interface InjectorProperties extends WidgetProperties {
-	bind: any;
+	scope: any;
 	render(): DNode;
 	getProperties?: GetProperties;
 	properties: WidgetProperties;
@@ -101,10 +101,10 @@ export function Injector<C extends Evented, T extends Constructor<BaseInjector<C
 
 		@afterRender()
 		protected decoratateBind(node: DNode) {
-			const { bind } = this.properties;
+			const { scope } = this.properties;
 			decorate(node, (node: InternalHNode | InternalWNode) => {
 				const { properties } = node;
-				properties.bind = bind;
+				properties.bind = scope;
 			}, (node: DNode) => { return isHNode(node) || isWNode(node); });
 
 			return node;

@@ -48,7 +48,7 @@ registerSuite({
 		const injector = new InjectorWidget();
 		injector.__setProperties__({
 			render,
-			bind,
+			scope: bind,
 			properties: testProperties,
 			getProperties: (inject: any, properties: any): any => {
 				assert.deepEqual(inject, context);
@@ -85,7 +85,7 @@ registerSuite({
 
 		const injector = new InjectorWidget();
 		injector.__setProperties__({
-			bind: context,
+			scope: context,
 			render,
 			properties: testProperties,
 			children: testChildren
@@ -110,7 +110,7 @@ registerSuite({
 
 		const injector = new InjectorWidget();
 		injector.__setProperties__({
-			bind,
+			scope: bind,
 			render,
 			properties: testProperties,
 			getProperties: (inject: any, properties: any): any => {
@@ -145,7 +145,7 @@ registerSuite({
 
 		const injector = new InjectorWidget();
 		injector.__setProperties__({
-			bind,
+			scope: bind,
 			render,
 			properties: testProperties,
 			getProperties: (inject: any, properties: any): any => {
@@ -183,7 +183,7 @@ registerSuite({
 
 		const injector = new InjectorWidget();
 		injector.__setProperties__({
-			bind,
+			scope: bind,
 			render,
 			properties: testProperties,
 			getProperties: (inject: any, properties: any): any => {
@@ -214,7 +214,7 @@ registerSuite({
 
 		const injector = new InjectorWidget();
 		injector.__setProperties__({
-			bind,
+			scope: bind,
 			render,
 			properties: testProperties,
 			getProperties: (inject: any, properties: any): any => {
@@ -247,7 +247,7 @@ registerSuite({
 		};
 		const InjectorWidget = Injector(TestInjector, new Context());
 		const properties = {
-			bind,
+			scope: bind,
 			render,
 			properties: testProperties,
 			getProperties: (inject: Context, properties: any): any => {

@@ -309,12 +309,13 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		return this._properties;
 	}
 
-	public __setProperties__(properties: P): void {
+	public __setProperties__(originalProperties: P): void {
+		const { bind, ...properties } = <any> originalProperties;
 		this._renderState = WidgetRenderState.PROPERTIES;
 		const diffPropertyResults: { [index: string]: any } = {};
 		const diffPropertyChangedKeys: string[] = [];
 
-		this.bindFunctionProperties(properties);
+		this.bindFunctionProperties(properties, bind);
 
 		const registeredDiffPropertyConfigs: DiffPropertyConfig[] = this.getDecorator('diffProperty');
 
@@ -521,10 +522,9 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	 *
 	 * @param properties properties to check for functions
 	 */
-	private bindFunctionProperties(properties: P & { [index: string]: any }): void {
+	private bindFunctionProperties(properties: any, bind: any): void {
 		Object.keys(properties).forEach((propertyKey) => {
 			const property = properties[propertyKey];
-			const bind = properties.bind;
 
 			if (typeof property === 'function' && !isWidgetBaseConstructor(property)) {
 				const bindInfo = this._bindFunctionPropertyMap.get(property) || {};

@@ -20,7 +20,7 @@ export function Container<W extends WidgetBaseInterface>(
 			const { properties, children } = this;
 
 			return w<BaseInjector<any>>(name, {
-				bind: this,
+				scope: this,
 				render: () => w(component, properties, children),
 				getProperties,
 				properties,

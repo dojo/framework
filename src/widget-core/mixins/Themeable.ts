@@ -232,7 +232,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<any>>>(base: T):
 				const hasInjectedTheme = this.registries.has(INJECTED_THEME_KEY);
 				if (hasInjectedTheme) {
 					return w<BaseInjector>(INJECTED_THEME_KEY, {
-						bind: this,
+						scope: this,
 						render: renderFunc,
 						getProperties: (inject: Context, properties: ThemeableProperties): ThemeableProperties => {
 							if (!properties.theme && this._theme !== properties.injectedTheme) {
