@@ -34,6 +34,24 @@ registerSuite({
 		assert.isFunction(widgetBase.__render__);
 		assert.isFunction(widgetBase.invalidate);
 	},
+	'deprecated api warning'() {
+		class TestWidgetOne extends WidgetBase<any> {
+			onElementUpdated(element: Element, key: string) {
+
+			}
+			onElementCreated(element: Element, key: string) {
+
+			}
+		}
+		class TestWidgetTwo extends WidgetBase<any> {}
+
+		const name = (<any> TestWidgetOne).name || 'unknown';
+		new TestWidgetOne();
+		new TestWidgetTwo();
+		assert.isTrue(consoleStub.calledTwice);
+		assert.isTrue(consoleStub.firstCall.calledWith(`Usage of 'onElementedCreated' has been deprecated and will be removed in a future version, see https://github.com/dojo/widget-core/issues/559 for details (${name})`));
+		assert.isTrue(consoleStub.secondCall.calledWith(`Usage of 'onElementUpdated' has been deprecated and will be removed in a future version, see https://github.com/dojo/widget-core/issues/559 for details (${name})`));
+	},
 	children() {
 		let childrenEventEmitted = false;
 		const expectedChild = v('div');

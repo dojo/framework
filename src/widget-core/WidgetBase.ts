@@ -237,6 +237,8 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 				propertiesChangedFunction.call(this, evt);
 			});
 		}));
+
+		this._checkOnElementUsage();
 	}
 
 	/**
@@ -642,6 +644,16 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 			});
 			this._cachedChildrenMap.set(key, filterCachedChildren);
 		});
+	}
+
+	private _checkOnElementUsage() {
+		const name = (<any> this).constructor.name || 'unknown';
+		if (this.onElementCreated !== WidgetBase.prototype.onElementCreated) {
+			console.warn(`Usage of 'onElementedCreated' has been deprecated and will be removed in a future version, see https://github.com/dojo/widget-core/issues/559 for details (${name})`);
+		}
+		if (this.onElementUpdated !== WidgetBase.prototype.onElementUpdated) {
+			console.warn(`Usage of 'onElementUpdated' has been deprecated and will be removed in a future version, see https://github.com/dojo/widget-core/issues/559 for details (${name})`);
+		}
 	}
 }
 
