@@ -232,7 +232,7 @@ export interface HNode {
 	/**
 	 * Array of processed VNode children.
 	 */
-	vNodes?: (string | VNode | null)[];
+	vNodes?: ((string | VNode | null)[] |string | VNode | null)[];
 	/**
 	 * Specified children
 	 */
@@ -367,7 +367,7 @@ export interface WidgetBaseInterface<
 	/**
 	 * Main internal function for dealing with widget rendering
 	 */
-	__render__(): VNode | string | null;
+	__render__(): (VNode | string | null)[] | VNode | string | null;
 
 	/**
 	 * invalidate the widget

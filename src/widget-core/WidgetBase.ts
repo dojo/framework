@@ -168,7 +168,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	/**
 	 * cachedVNode from previous render
 	 */
-	private _cachedVNode?: VNode | string;
+	private _cachedVNode?: (VNode | string | null)[] | VNode | string;
 
 	/**
 	 * internal widget properties
@@ -244,7 +244,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	 * 'afterUpdate' that will in turn call lifecycle methods onElementCreated and onElementUpdated.
 	 */
 	@afterRender()
-	protected attachLifecycleCallbacks (node: DNode): DNode {
+	protected attachLifecycleCallbacks (node: DNode | DNode[]): DNode | DNode[] {
 		// Create vnode afterCreate and afterUpdate callback functions that will only be set on nodes
 		// with "key" properties.
 
@@ -257,7 +257,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	}
 
 	@afterRender()
-	protected decorateBind(node: DNode): DNode {
+	protected decorateBind(node: DNode | DNode[]): DNode | DNode[] {
 		decorate(node, (node: InternalWNode | InternalHNode) => {
 			const { properties = {} }: { properties: { bind?: any } } = node;
 			if (!properties.bind) {
@@ -398,7 +398,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		}
 	}
 
-	public __render__(): VNode | string | null {
+	public __render__(): (VNode | string | null)[] | VNode | string | null {
 		this._renderState = WidgetRenderState.RENDER;
 		if (this._dirty || !this._cachedVNode) {
 			this._dirty = false;
@@ -436,7 +436,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		}
 	}
 
-	protected render(): DNode {
+	protected render(): DNode | DNode[] {
 		return v('div', {}, this.children);
 	}
 
@@ -549,10 +549,16 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	 * @param dNode the dnode to process
 	 * @returns a VNode, string or null
 	 */
-	private dNodeToVNode(dNode: DNode): VNode | string | null {
+	private dNodeToVNode(dNode: DNode): VNode | string | null;
+	private dNodeToVNode(dNode: DNode[]): (VNode | string | null)[];
+	private dNodeToVNode(dNode: DNode | DNode[]): (VNode | string | null)[] | VNode | string | null {
 
 		if (typeof dNode === 'string' || dNode === null) {
 			return dNode;
+		}
+
+		if (Array.isArray(dNode)) {
+			return dNode.map((node) => this.dNodeToVNode(node));
 		}
 
 		if (isWNode(dNode)) {

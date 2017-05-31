@@ -975,6 +975,31 @@ widget.__setProperties__({
 			assert.isUndefined(result.children);
 			assert.equal(result.text, 'I am a text node');
 		},
+		'render returns array'() {
+			class TestChildWidget extends WidgetBase {
+				render() {
+					return [
+						v('div', [ 'text' ]),
+						v('span', { key: 'span' })
+					];
+				}
+			}
+
+			class TestWidget extends WidgetBase {
+				render() {
+					return v('div', [ w(TestChildWidget, {}) ]);
+				}
+			}
+
+			const widget = new TestWidget();
+			const result: any = widget.__render__();
+			assert.strictEqual(result.vnodeSelector, 'div');
+			assert.lengthOf(result.children, 2);
+			assert.strictEqual(result.children![0].vnodeSelector, 'div');
+			assert.strictEqual(result.children![0].text, 'text');
+			assert.strictEqual(result.children![1].vnodeSelector, 'span');
+			assert.strictEqual(result.children![1].properties.key, 'span');
+		},
 		'instance gets passed to VNodeProperties as bind to widget and all children'() {
 			class TestWidget extends WidgetBase<any> {
 				render() {
