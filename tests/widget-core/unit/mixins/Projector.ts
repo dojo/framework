@@ -488,9 +488,9 @@ registerSuite({
 				const changeEvent = document.createEvent('Event');
 				changeEvent.initEvent('change', true, true);
 				select.onchange(changeEvent); // firefox doesn't like to dispatch this event, either due to trust issues or
-											  // that firefox doesn't generally dispatch this event until the element is blurred
-											  // which is different than other browsers.  Either way this is not material to testing
-											  // the functionality of this test, so calling the listener directly.
+											// that firefox doesn't generally dispatch this event until the element is blurred
+											// which is different than other browsers.  Either way this is not material to testing
+											// the functionality of this test, so calling the listener directly.
 				assert.isTrue(onchangeListener.called, 'onchangeListener should have been called');
 
 				const clickEvent = document.createEvent('CustomEvent');
