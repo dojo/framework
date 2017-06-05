@@ -90,6 +90,25 @@ registerSuite({
 			assert.equal(registryHandler.get(baz), WidgetBase);
 		});
 	},
+	'get passing generic to specify widget type'() {
+		class TestWidget extends WidgetBase<{foo: string}> {}
+		const promise = new Promise((resolve) => {
+			setTimeout(() => {
+				resolve(TestWidget);
+			}, 1);
+		});
+		const registryHandler = new RegistryHandler();
+		registryHandler.add(registry);
+		registry.define('baz-1', promise);
+		return promise.then(() => {
+			const RegistryWidget = registryHandler.get<TestWidget>('baz-1');
+			assert.equal(RegistryWidget, TestWidget);
+			const widget = new RegistryWidget!();
+
+			// demonstrate registry widget is typed as TestWidget
+			widget.__setProperties__({ foo: 'baz' });
+		});
+	},
 	'invalidates once registry emits loaded event'() {
 		const baz = Symbol();
 		let promise: Promise<any> = Promise.resolve();

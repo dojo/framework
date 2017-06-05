@@ -3,7 +3,7 @@ import Map from '@dojo/shim/Map';
 import Symbol from '@dojo/shim/Symbol';
 import { Handle } from '@dojo/interfaces/core';
 import Evented, { EventObject, BaseEventedEvents } from '@dojo/core/Evented';
-import { WidgetBaseConstructor, RegistryLabel } from './interfaces';
+import { WidgetBaseConstructor, WidgetBaseInterface, Constructor, RegistryLabel } from './interfaces';
 
 export type WidgetBaseConstructorFunction = () => Promise<WidgetBaseConstructor>;
 
@@ -45,7 +45,7 @@ export interface WidgetRegistry {
 	 * @param widgetLabel The label of the widget to return
 	 * @returns The WidgetRegistryItem for the widgetLabel, `null` if no entry exists
 	 */
-	get(widgetLabel: RegistryLabel): WidgetBaseConstructor | null;
+	get<T extends WidgetBaseInterface = WidgetBaseInterface>(widgetLabel: RegistryLabel): Constructor<T> | null;
 
 	/**
 	 * Returns a boolean if an entry for the label exists
@@ -62,7 +62,7 @@ export interface WidgetRegistry {
  * @param item the item to check
  * @returns true/false indicating if the item is a WidgetBaseConstructor
  */
-export function isWidgetBaseConstructor(item: any): item is WidgetBaseConstructor {
+export function isWidgetBaseConstructor<T extends WidgetBaseInterface>(item: any): item is Constructor<T> {
 	return Boolean(item && item._type === WIDGET_BASE_TYPE);
 }
 
@@ -113,14 +113,14 @@ export class WidgetRegistry extends Evented implements WidgetRegistry {
 		}
 	}
 
-	get(widgetLabel: RegistryLabel): WidgetBaseConstructor | null {
+	get<T extends WidgetBaseInterface = WidgetBaseInterface>(widgetLabel: RegistryLabel): Constructor<T> | null {
 		if (!this.has(widgetLabel)) {
 			return null;
 		}
 
 		const item = this.registry.get(widgetLabel);
 
-		if (isWidgetBaseConstructor(item)) {
+		if (isWidgetBaseConstructor<T>(item)) {
 			return item;
 		}
 

@@ -74,6 +74,16 @@ registerSuite({
 			const factory = factoryRegistry.get(symbolLabel);
 			assert.strictEqual(factory, WidgetBase);
 		},
+		'get allows a generic to passed that defines the type of registry item'() {
+			class TestWidget extends WidgetBase<{foo: string}> {}
+			const factoryRegistry = new WidgetRegistry();
+			factoryRegistry.define('test-widget', TestWidget);
+			const RegistryTestWidget = factoryRegistry.get<TestWidget>('test-widget');
+			assert.isNotNull(RegistryTestWidget);
+			const widget = new RegistryTestWidget!();
+			// demontrates the design time typing
+			widget.__setProperties__({ foo: 'bar' });
+		},
 		'throws an error if factory has not been registered.'() {
 			const factoryRegistry = new WidgetRegistry();
 			const item = factoryRegistry.get('my-widget');
