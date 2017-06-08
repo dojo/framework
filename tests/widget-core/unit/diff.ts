@@ -1,6 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import diff, { DiffType } from '../../src/diff';
+import WidgetBase from '../../src/WidgetBase';
 import { stub } from 'sinon';
 
 registerSuite({
@@ -97,6 +98,13 @@ registerSuite({
 		}
 	},
 	'DiffType.AUTO': {
+		'widget constructor'() {
+			class Foo extends WidgetBase {}
+			class Bar extends WidgetBase {}
+			let result = diff('myProperty', DiffType.AUTO, Foo, Bar);
+			assert.equal(result.value, Bar);
+			assert.isTrue(result.changed);
+		},
 		'function'() {
 			const foo = () => {};
 			const bar = () => {};

@@ -1,4 +1,5 @@
 import { PropertyChangeRecord } from './interfaces';
+import { WIDGET_BASE_TYPE } from './WidgetRegistry';
 
 export const enum DiffType {
 	CUSTOM = 1,
@@ -95,7 +96,12 @@ export default function diff(propertyName: string, diffDiffType: DiffType, previ
 		break;
 		case DiffType.AUTO:
 			if (typeof newProperty === 'function') {
-				result = ignore(previousProperty, newProperty);
+				if (newProperty._type === WIDGET_BASE_TYPE) {
+					result = reference(previousProperty, newProperty);
+				}
+				else {
+					result = ignore(previousProperty, newProperty);
+				}
 			}
 			else if (isObjectOrArray(newProperty)) {
 				result = shallow(previousProperty, newProperty);
