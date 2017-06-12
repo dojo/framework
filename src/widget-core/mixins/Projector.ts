@@ -3,11 +3,12 @@ import global from '@dojo/core/global';
 import { createHandle } from '@dojo/core/lang';
 import { Handle } from '@dojo/interfaces/core';
 import { VNode } from '@dojo/interfaces/vdom';
-import { h, dom, Projection, ProjectionOptions, VNodeProperties } from 'maquette';
+import { h, dom, Projection, ProjectionOptions } from 'maquette';
 import 'pepjs';
 import cssTransitions from '../animations/cssTransitions';
 import { Constructor, DNode, WidgetProperties } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
+import eventHandlerInterceptor from '../util/eventHandlerInterceptor';
 
 /**
  * Represents the attach state of the projector
@@ -116,33 +117,6 @@ export interface ProjectorMixin<P extends WidgetProperties> {
 	readonly projectorState: ProjectorAttachState;
 }
 
-const eventHandlers = [
-	'ontouchcancel',
-	'ontouchend',
-	'ontouchmove',
-	'ontouchstart',
-	'onblur',
-	'onchange',
-	'onclick',
-	'ondblclick',
-	'onfocus',
-	'oninput',
-	'onkeydown',
-	'onkeypress',
-	'onkeyup',
-	'onload',
-	'onmousedown',
-	'onmouseenter',
-	'onmouseleave',
-	'onmousemove',
-	'onmouseout',
-	'onmouseover',
-	'onmouseup',
-	'onmousewheel',
-	'onscroll',
-	'onsubmit'
-];
-
 /**
  * Internal function that maps existing DOM Elements to virtual DOM nodes.
  *
@@ -183,7 +157,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 
 			this._projectionOptions = {
 				transitions: cssTransitions,
-				eventHandlerInterceptor: this.eventHandlerInterceptor.bind(this)
+				eventHandlerInterceptor: eventHandlerInterceptor.bind(this)
 			};
 
 			this._boundDoRender = this.doRender.bind(this);
@@ -325,21 +299,6 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 				}
 			}
 			return result;
-		}
-
-		private eventHandlerInterceptor(propertyName: string, eventHandler: Function, domNode: Element, properties: VNodeProperties) {
-			if (eventHandlers.indexOf(propertyName) > -1) {
-				return function(this: Node, ...args: any[]) {
-					return eventHandler.apply(properties.bind || this, args);
-				};
-			}
-			else {
-				// remove "on" from event name
-				const eventName = propertyName.substr(2);
-				domNode.addEventListener(eventName, (...args: any[]) => {
-					eventHandler.apply(properties.bind || this, args);
-				});
-			}
 		}
 
 		private doRender() {
