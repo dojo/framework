@@ -17,10 +17,12 @@ import {
 	PropertiesChangeEvent,
 	RegistryLabel,
 	HNode,
-	WNode
+	WNode,
+	WidgetMetaConstructor
 } from './interfaces';
-import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './WidgetRegistry';
+import MetaBase from './meta/Base';
 import RegistryHandler from './RegistryHandler';
+import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './WidgetRegistry';
 
 export { DiffType };
 
@@ -209,6 +211,12 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 
 	private _renderState: WidgetRenderState = WidgetRenderState.IDLE;
 
+	private _metaMap = new WeakMap<WidgetMetaConstructor<any>, MetaBase>();
+
+	private _nodeMap = new Map<string, HTMLElement>();
+
+	private _requiredNodes = new Set<string>();
+
 	/**
 	 * @constructor
 	 */
@@ -241,6 +249,47 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		this._checkOnElementUsage();
 	}
 
+	protected meta<T extends MetaBase>(MetaType: WidgetMetaConstructor<T>): T {
+		let cached = this._metaMap.get(MetaType);
+		if (!cached) {
+			cached = new MetaType({
+				nodes: this._nodeMap,
+				requiredNodes: this._requiredNodes,
+				invalidate: this.invalidate.bind(this)
+			});
+			this._metaMap.set(MetaType, cached);
+		}
+
+		return cached as T;
+	}
+
+	/**
+	 * A render decorator that verifies nodes required in
+	 * 'meta' calls in this render,
+	 */
+	@beforeRender()
+	protected verifyRequiredNodes(renderFunc: () => DNode, properties: WidgetProperties, children: DNode[]): () => DNode {
+		return () => {
+			this._requiredNodes.forEach((element, key) => {
+				if (!this._nodeMap.has(key)) {
+					throw new Error(`Required node ${key} not found`);
+				}
+			});
+			this._requiredNodes.clear();
+			return renderFunc();
+		};
+	}
+
+	/**
+	 * A render decorator that clears the node map used
+	 * by 'meta' calls in this render.
+	 */
+	@afterRender()
+	clearNodeMap(node: DNode | DNode[]): DNode | DNode[] {
+		this._nodeMap.clear();
+		return node;
+	}
+
 	/**
 	 * A render decorator that registers vnode callbacks for 'afterCreate' and
 	 * 'afterUpdate' that will in turn call lifecycle methods onElementCreated and onElementUpdated.
@@ -265,7 +314,9 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 			if (!properties.bind) {
 				properties.bind = this;
 			}
-		}, (node: DNode) => { return isHNode(node) || isWNode(node); });
+		}, (node: DNode) => {
+			return isHNode(node) || isWNode(node);
+		});
 		return node;
 	}
 
@@ -274,6 +325,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	 */
 	private afterCreateCallback(element: Element, projectionOptions: ProjectionOptions, vnodeSelector: string,
 		properties: VNodeProperties, children: VNode[]): void {
+		this._setNode(element, properties);
 		this.onElementCreated(element, String(properties.key));
 	}
 
@@ -282,6 +334,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	 */
 	private afterUpdateCallback(element: Element, projectionOptions: ProjectionOptions, vnodeSelector: string,
 		properties: VNodeProperties, children: VNode[]): void {
+		this._setNode(element, properties);
 		this.onElementUpdated(element, String(properties.key));
 	}
 
@@ -305,6 +358,10 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	 */
 	protected onElementUpdated(element: Element, key: string): void {
 		// Do nothing by default.
+	}
+
+	private _setNode(element: Element, properties: VNodeProperties): void {
+		this._nodeMap.set(String(properties.key), <HTMLElement> element);
 	}
 
 	public get properties(): Readonly<P> {

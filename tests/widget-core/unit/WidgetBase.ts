@@ -5,7 +5,14 @@ import * as assert from 'intern/chai!assert';
 import { stub, spy, SinonStub } from 'sinon';
 import { v, w, registry } from '../../src/d';
 import { DNode, WidgetProperties } from '../../src/interfaces';
-import { WidgetBase, diffProperty, DiffType, afterRender, beforeRender, onPropertiesChanged } from '../../src/WidgetBase';
+import {
+	WidgetBase,
+	diffProperty,
+	DiffType,
+	afterRender,
+	beforeRender,
+	onPropertiesChanged
+} from '../../src/WidgetBase';
 import WidgetRegistry, { WIDGET_BASE_TYPE } from './../../src/WidgetRegistry';
 
 interface TestProperties extends WidgetProperties {
@@ -1430,7 +1437,7 @@ widget.__setProperties__({
 		const testWidget = new TestWidget();
 		const testWidget2 = new TestWidget2();
 
-		assert.equal(testWidget.getAfterRenders().length, 3);
-		assert.equal(testWidget2.getAfterRenders().length, 4);
+		assert.equal(testWidget.getAfterRenders().length, 4);
+		assert.equal(testWidget2.getAfterRenders().length, 5);
 	}
 });

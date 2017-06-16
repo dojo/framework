@@ -12,3 +12,4 @@ import './diff';
 import './RegistryHandler';
 import './Injector';
 import './tsx';
+import './meta/all';

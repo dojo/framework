@@ -1,6 +1,8 @@
 import { Evented } from '@dojo/core/Evented';
 import { EventTypedObject } from '@dojo/interfaces/core';
 import { VNode, VNodeProperties, ProjectionOptions } from '@dojo/interfaces/vdom';
+import Map from '@dojo/shim/Map';
+import Set from '@dojo/shim/Set';
 
 /**
  * Generic constructor type
@@ -373,4 +375,20 @@ export interface WidgetBaseInterface<
 	 * invalidate the widget
 	 */
 	invalidate(): void;
+}
+
+/**
+ * Meta Base constructor type
+ */
+export interface WidgetMetaConstructor<T> {
+	new (properties: WidgetMetaProperties): T;
+}
+
+/**
+ * Properties passed to meta Base constructors
+ */
+export interface WidgetMetaProperties {
+	nodes: Map<string, HTMLElement>;
+	requiredNodes: Set<string>;
+	invalidate: () => void;
 }

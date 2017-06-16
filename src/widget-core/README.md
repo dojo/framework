@@ -30,10 +30,11 @@ We also provide a suite of pre-built widgets to use in your applications: [(@doj
         - [Theming](#theming)
         - [Internationalization](#internationalization-i18n)
         - [Web Components](#web-components)
-        	- [Attributes](#attributes)
-        	- [Properties](#properties)
-        	- [Events](#events)
-        	- [Initialization](#initialization)
+            - [Attributes](#attributes)
+            - [Properties](#properties)
+            - [Events](#events)
+            - [Initialization](#initialization)
+        - [Meta](#meta)
     - [Key Principles](#key-principles)
     - [API](#api)
 - [How Do I Contribute?](#how-do-i-contribute)
@@ -1068,6 +1069,87 @@ The initialization function is run from the context of the HTML element.
 
 It should be noted that children nodes are removed from the DOM when widget instantiation occurs, and added as children
 to the widget instance.
+
+#### Meta
+
+Widget meta is used to access additional information about the widget, usually information only available through the rendered DOM element - for example, the dimensions of an HTML node. You can access and respond to meta data during a widget's render operation.
+
+```typescript
+class TestWidget extends WidgetBase<WidgetProperties> {
+    render() {
+        const dimensions = this.meta(Dimensions).get('root');
+
+        return v('div', {
+            key: 'root',
+            innerHTML: `Width: ${dimensions.width}`
+        });
+    }
+}
+```
+
+If an HTML node is required to calculate the meta information, a sensible default will be returned and your widget will be automatically re-rendered to provide more accurate information.
+
+##### Implementing Custom Meta
+
+You can create your own meta if you need access to DOM nodes.
+
+```typescript
+import MetaBase from "@dojo/widget-core/meta/Base";
+
+class HtmlMeta extends MetaBase {
+    get(key: string): string {
+        this.requireNode(key);
+        const node = this.nodes.get(key);
+        return node ? node.innerHTML : '';
+    }
+}
+```
+
+And you can use it like:
+
+```typescript
+class MyWidget extends WidgetBase<WidgetProperties> {
+    // ...
+    render() {
+        // run your meta
+        const html = this.meta(HtmlMeta).get('comment');
+
+        return v('div', { key: 'root', innerHTML: html });
+    }
+    // ...
+}
+```
+
+Meta classes are provided with a few hooks into the widget, passed to the constructor:
+
+* `nodes` - A map of `key` strings to DOM elements. Only `v` nodes rendered with `key` properties are stored.
+* `requireNode` - A method that accept a `key` string to inform the widget it needs a rendered DOM element corresponding to that key. If one is available, it will be returned immediately. If not, the widget will be re-rendered and if the node does not exist on the next render, an error will be thrown.
+* `invalidate` - A method that will invalidate the widget.
+
+Extending the base class found in `meta/Base` will automatically add these hooks to the class instance as well as providing a `has` method:
+
+* `has(key: string)` - A method that returns `true` if the DOM element with the passed key exists in the rendered DOM.
+
+Meta classes that require extra options should accept them in their methods.
+
+```typescript
+import MetaBase from "@dojo/widget-core/meta/Base";
+
+interface IsTallMetaOptions {
+    minHeight: number;
+}
+
+class IsTallMeta extends MetaBase {
+    isTall(key: string, { minHeight }: IsTallMetaOptions = { minHeight: 300 }): boolean {
+        this.requireNode(key);
+        const node = this.nodes.get(key);
+        if (node) {
+            return node.offsetHeight >= minHeight;
+        }
+        return false;
+    }
+}
+```
 
 ### Key Principles
 
