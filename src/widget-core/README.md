@@ -1089,6 +1089,41 @@ class TestWidget extends WidgetBase<WidgetProperties> {
 
 If an HTML node is required to calculate the meta information, a sensible default will be returned and your widget will be automatically re-rendered to provide more accurate information.
 
+###### Dimensions
+
+The `Dimensions` meta provides size/position information about a node.
+
+```
+const dimensions = this.meta(Dimensions).get('root');
+```
+
+In this simple snippet, `dimensions` would be an object containing `offset`, `position`, `scroll`, and `size` objects.
+
+The following fields are provided:
+
+| Property         | Source                                |
+| -----------------| ------------------------------------- |
+| `position.bottom`| `node.getBoundingClientRect().bottom` |
+| `position.left`  | `node.getBoundingClientRect().left`   |
+| `position.right` | `node.getBoundingClientRect().right`  |
+| `position.top`   | `node.getBoundingClientRect().top`    |
+| `size.width`     | `node.getBoundingClientRect().width`  |
+| `size.height`    | `node.getBoundingClientRect().height` |
+| `scroll.left`    | `node.scrollLeft`                     |
+| `scroll.top`     | `node.scrollTop`                      |
+| `scroll.height`  | `node.scrollHeight`                   |
+| `scroll.width`   | `node.scrollWidth`                    |
+| `offset.left`    | `node.offsetLeft`                     |
+| `offset.top`     | `node.offsetTop`                      |
+| `offset.width`   | `node.offsetWidth`                    |
+| `offset.height`  | `node.offsetHeight`                   |
+
+If the node has not yet been rendered, all values will contain `0`. If you need more information about whether or not the node has been rendered you can use the `has` method:
+
+```
+const hasRootBeenRendered = this.meta(Dimensions).has('root');
+```
+
 ##### Implementing Custom Meta
 
 You can create your own meta if you need access to DOM nodes.
