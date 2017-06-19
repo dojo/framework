@@ -1,7 +1,7 @@
 import { assign } from '@dojo/core/lang';
 import { includes, find } from '@dojo/shim/array';
 import Map from '@dojo/shim/Map';
-import { Constructor, DNode, WidgetProperties, PropertiesChangeEvent } from './../interfaces';
+import { ClassesFunction, Constructor, DNode, WidgetProperties, PropertiesChangeEvent } from './../interfaces';
 import { w, registry } from './../d';
 import { WidgetRegistry } from './../WidgetRegistry';
 import { BaseInjector, Context, Injector } from './../Injector';
@@ -52,7 +52,7 @@ export interface ClassesFunctionChain {
 	/**
 	 * Finalize function to return the generated class names
 	 */
-	get: () => ClassNameFlags;
+	get: ClassesFunction;
 }
 
 type ThemeClasses = { [key: string]: string; };
