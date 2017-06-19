@@ -47,7 +47,10 @@ export class HashHistory extends HistoryBase implements History {
 	}
 
 	prefix(path: string) {
-		return `#${path}`;
+		if (path[0] !== '#') {
+			return `#${path}`;
+		}
+		return path;
 	}
 
 	set(path: string) {

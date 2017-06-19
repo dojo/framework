@@ -28,7 +28,8 @@
   "peerDependencies": {
     "@dojo/core": "next",
     "@dojo/has": "next",
-    "@dojo/shim": "next"
+    "@dojo/shim": "next",
+    "@dojo/widget-core": "next"
   },
   "devDependencies": {
     "@dojo/interfaces": "next",

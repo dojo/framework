@@ -13,6 +13,15 @@ import { findRouter, hasBeenAppended, LinkParams } from './Router';
 export type SearchParams = Hash<string[]>;
 
 /**
+ * The type of match for a route
+ */
+export enum MatchType {
+	INDEX = 0,
+	PARTIAL,
+	ERROR
+}
+
+/**
  * Describes whether a route matched.
  */
 export interface MatchResult<P> {
@@ -63,6 +72,11 @@ export interface Selection {
 	path: DeconstructedPath;
 
 	/**
+	 * The selected outlet
+	 */
+	outlet: string | undefined;
+
+	/**
 	 * The extracted parameters.
 	 */
 	params: Parameters;
@@ -82,17 +96,27 @@ export interface Selection {
 	 * The selected route.
 	 */
 	route: Route<Context, Parameters>;
+
+	/**
+	 * The selection type
+	 */
+	type: MatchType;
 }
 
 /**
  * The options for the route.
  */
-export interface RouteOptions<C, P> {
+export interface RouteOptions<C, P extends Parameters> {
 	/**
 	 * Path the route matches against. Pathname segments may be named, same for query parameters. Leading slashes are
 	 * ignored. Defaults to `/`.
 	 */
 	path?: string;
+
+	/**
+	 * The outlet associated with the path
+	 */
+	outlet?: string;
 
 	/**
 	 * If the `path` option contains a trailing slash (in the pathname component), the route will only match against
@@ -140,6 +164,11 @@ export interface RouteOptions<C, P> {
 	 * @return If `null` prevents the route from being selected, else the value for the `params` object.
 	 */
 	params?(fromPathname: string[], searchParams: UrlSearchParams): null | P;
+
+	/**
+	 * Default params to use when generating a link.
+	 */
+	defaultParams?: null | P;
 }
 
 // Store parent relationships in a separate map, since it's the parent that adds entries to this map. Parents shouldn't
@@ -166,6 +195,7 @@ function computeDefaultParams(parameters: string[], searchParameters: string[], 
 
 export class Route<C extends Context, P extends Parameters> {
 	private _path: DeconstructedPath;
+	private _outlet: string | undefined;
 	private _routes: Route<Context, Parameters>[];
 	private _trailingSlashMustMatch: boolean;
 	private _computeParams: (fromPathname: string[], searchParams: UrlSearchParams) => null | P | DefaultParameters;
@@ -173,6 +203,7 @@ export class Route<C extends Context, P extends Parameters> {
 	private _fallback?: Handler;
 	private _guard: ((request: Request<C, P | DefaultParameters>) => string | boolean) | undefined;
 	private _index?: Handler;
+	private _defaultParams: P;
 
 	get parent() {
 		return parentMap.get(this);
@@ -182,8 +213,16 @@ export class Route<C extends Context, P extends Parameters> {
 		return this._path;
 	}
 
+	get outlet() {
+		return this._outlet;
+	}
+
+	get defaultParams(): P {
+		return this._defaultParams;
+	}
+
 	constructor(options: RouteOptions<C, P> = {}) {
-		const { exec, fallback, guard, index, params: computeParams, path, trailingSlashMustMatch = true } = options;
+		const { exec, fallback, guard, index, params: computeParams, path, outlet, trailingSlashMustMatch = true, defaultParams = {} } = options;
 
 		if (path && /#/.test(path)) {
 			throw new TypeError('Path must not contain \'#\'');
@@ -210,7 +249,9 @@ export class Route<C extends Context, P extends Parameters> {
 		this._guard = guard;
 		this._index = index;
 		this._path = deconstructedPath;
+		this._outlet = outlet;
 		this._routes = [];
+		this._defaultParams = <P> defaultParams;
 		this._trailingSlashMustMatch = trailingSlashMustMatch;
 	}
 
@@ -275,7 +316,7 @@ export class Route<C extends Context, P extends Parameters> {
 		const matchResult = this.match(segments, hasTrailingSlash, searchParams);
 
 		// Return early if possible.
-		if (!matchResult || matchResult.hasRemaining && this._routes.length === 0 && !this._fallback) {
+		if (!matchResult || matchResult.hasRemaining && this._routes.length === 0 && !this._fallback && !this._outlet) {
 			return [];
 		}
 
@@ -291,6 +332,7 @@ export class Route<C extends Context, P extends Parameters> {
 		}
 
 		let handler = this._exec;
+		let type: MatchType = MatchType.PARTIAL;
 		let redirect: string | undefined;
 		let remainingSelection: Selection[] | undefined;
 		let selected = false;
@@ -312,14 +354,16 @@ export class Route<C extends Context, P extends Parameters> {
 			});
 
 			// No remaining segments matched, only select this route if a fallback handler was specified.
-			if (!selected && this._fallback) {
+			if (!selected && (this._outlet || this._fallback)) {
+				type = MatchType.ERROR;
 				selected = true;
-				handler = this._fallback;
+				handler = this._fallback || noop;
 			}
 		}
 		// Select this route, configure the index handler if specified.
 		else {
 			selected = true;
+			type = MatchType.INDEX;
 			if (this._index) {
 				handler = this._index;
 			}
@@ -339,10 +383,12 @@ export class Route<C extends Context, P extends Parameters> {
 			// think no routes were selected.
 			handler: handler || noop,
 			path: this.path,
+			outlet: this.outlet,
 			params,
 			rawPathValues,
 			rawSearchParams,
-			route: this
+			route: this,
+			type
 		};
 		return remainingSelection ? [ selection, ...remainingSelection ] : [ selection ];
 	}

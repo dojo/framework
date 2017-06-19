@@ -6,7 +6,7 @@ import { stub, spy } from 'sinon';
 import MemoryHistory from '../../src/history/MemoryHistory';
 import { DefaultParameters, Context, Request, Parameters } from '../../src/interfaces';
 
-import Route from '../../src/Route';
+import Route, { MatchType } from '../../src/Route';
 import Router, { DispatchResult, ErrorEvent, NavigationStartEvent } from '../../src/Router';
 
 suite('Router', () => {
@@ -301,6 +301,191 @@ suite('Router', () => {
 		});
 	});
 
+	test('register routing configuration', () => {
+		const config = [
+			{
+				path: 'foo',
+				outlet: 'another-name',
+				children: [
+					{
+						path: 'bar',
+						children: [
+							{
+								path: 'qux'
+							}
+						]
+					}
+				]
+
+			}
+		];
+
+		const router = new Router({ config });
+		return router.dispatch({}, '/foo/bar/qux').then((dispatchResult) => {
+			assert.isTrue(dispatchResult.success);
+			assert.isTrue(router.hasOutlet('another-name'));
+			assert.isTrue(router.hasOutlet('bar'));
+			assert.isTrue(router.hasOutlet('qux'));
+		});
+	});
+
+	test('register routing configuration from a starting outlet', () => {
+		const config = [
+			{
+				path: 'foo',
+				outlet: 'another-name',
+				children: [
+					{
+						path: 'bar',
+						children: [
+							{
+								path: 'qux'
+							}
+						]
+					}
+				]
+
+			}
+		];
+
+		const router = new Router({ config });
+
+		router.register([{ path: 'baz' }], 'qux');
+		return router.dispatch({}, '/foo/bar/qux/baz').then((dispatchResult) => {
+			assert.isTrue(dispatchResult.success);
+			assert.isTrue(router.hasOutlet('another-name'));
+			assert.isTrue(router.hasOutlet('bar'));
+			assert.isTrue(router.hasOutlet('qux'));
+			assert.isTrue(router.hasOutlet('baz'));
+		});
+	});
+
+	test('register routing configuration from a starting an unknown outlet appends to the router', () => {
+		const config = [
+			{
+				path: 'foo',
+				outlet: 'another-name',
+				children: [
+					{
+						path: 'bar',
+						children: [
+							{
+								path: 'qux'
+							}
+						]
+					}
+				]
+
+			}
+		];
+
+		const router = new Router({ config });
+
+		router.register([{ path: 'baz' }], 'fake');
+		return router.dispatch({}, '/baz').then((dispatchResult) => {
+			assert.isTrue(dispatchResult.success);
+			assert.isTrue(router.hasOutlet('baz'));
+		});
+	});
+
+	test('router registers "errorOutlet" for unsuccessful dispatches', () => {
+		const config = [
+			{
+				path: 'foo'
+			}
+		];
+
+		const router = new Router({ config });
+
+		return router.dispatch({}, '/foo/bar').then((dispatchResult) => {
+			assert.isTrue(dispatchResult.success);
+			assert.isTrue(router.hasOutlet('errorOutlet'));
+			assert.isTrue(router.hasOutlet('foo'));
+
+			const fooOutletContext = router.getOutlet('foo');
+			assert.deepEqual(fooOutletContext, {
+				location: 'foo',
+				params: {},
+				type: MatchType.ERROR
+			});
+		});
+	});
+
+	test('params are added to the outlet context', () => {
+		const config = [
+			{
+				path: 'foo/{foo}',
+				outlet: 'another-name',
+				children: [
+					{
+						path: 'bar/{bar}',
+						children: [
+							{
+								path: 'qux/{qux}'
+							}
+						]
+					}
+				]
+
+			}
+		];
+
+		const router = new Router({ config });
+
+		return router.dispatch({}, '/foo/foo/bar/bar/qux/qux').then((dispatchResult) => {
+			assert.isTrue(dispatchResult.success);
+			assert.isTrue(router.hasOutlet('another-name'));
+			assert.isTrue(router.hasOutlet('bar/{bar}'));
+			assert.isTrue(router.hasOutlet('qux/{qux}'));
+
+			const fooOutletContext = router.getOutlet('another-name');
+			const barOutletContext = router.getOutlet('bar/{bar}');
+			const quxOutletContext = router.getOutlet('qux/{qux}');
+
+			assert.deepEqual(fooOutletContext, {
+				location: 'foo/foo',
+				params: {
+					foo: 'foo'
+				},
+				type: MatchType.PARTIAL
+			});
+			assert.deepEqual(barOutletContext, {
+				location: 'foo/foo/bar/bar',
+				params: {
+					bar: 'bar'
+				},
+				type: MatchType.PARTIAL
+			});
+			assert.deepEqual(quxOutletContext, {
+				location: 'foo/foo/bar/bar/qux/qux',
+				params: {
+					qux: 'qux'
+				},
+				type: MatchType.INDEX
+			});
+		});
+	});
+
+	test('register() throws error if more than one default route is attempted to be registered', () => {
+		const config = [
+			{
+				path: 'foo',
+				defaultRoute: true
+			},
+			{
+				path: 'bar',
+				defaultRoute: true
+			}
+		];
+		try {
+			new Router({ config });
+			assert.fail('Should throw an error if multiple default routes are configured.');
+		}
+		catch (err) {
+			// do nothing expected error
+		}
+	});
+
 	test('router can be created with a fallback route', () => {
 		let received: Request<Context, Parameters>;
 
@@ -583,6 +768,26 @@ suite('Router', () => {
 
 		router.start({ dispatchCurrent: true });
 		assert.isTrue(dispatch.calledWith({}, '/foo'));
+	});
+
+	test('start() falls back to default route if dispatching current route is not successful', () => {
+		const history = new MemoryHistory({ path: '/foo' });
+		const config = [
+			{
+				path: 'bar',
+				defaultRoute: true
+			}
+		];
+		const router = new Router({ history, config });
+		const task = Promise.resolve({ success: false });
+		const dispatch = stub(router, 'dispatch').returns(task);
+		const setPath = stub(router, 'setPath');
+
+		router.start({ dispatchCurrent: true });
+		assert.isTrue(dispatch.firstCall.calledWith({}, '/foo'));
+		return task.then(() => {}).then(() => {
+			assert.isTrue(setPath.firstCall.calledWith('bar'));
+		});
 	});
 
 	test('start() can be configured not to immediately dispatch for the current history value', () => {
@@ -1063,6 +1268,101 @@ suite('Router', () => {
 			.catch((err) => {
 				assert.equal(err.message, 'Cannot generate link, missing parameter \'foo\'');
 			});
+	});
+
+	test('link() generated for a registered outlet', () => {
+		const config = [
+			{
+				path: 'foo',
+				outlet: 'foo',
+				children: [
+					{
+						path: 'bar',
+						outlet: 'bar'
+					}
+				]
+			}
+		];
+		const router = new Router({ config });
+		const link = router.link('bar');
+		assert.strictEqual(link, 'foo/bar');
+	});
+
+	test('link() generated for a registered outlet uses passed params argument', () => {
+		const config = [
+			{
+				path: 'foo/{foo}',
+				outlet: 'foo',
+				children: [
+					{
+						path: 'bar',
+						outlet: 'bar'
+					}
+				]
+			}
+		];
+		const router = new Router({ config });
+		const link = router.link('bar', { foo: 'custom' });
+		assert.strictEqual(link, 'foo/custom/bar');
+	});
+
+	test('link() generated for a registered outlet uses default params', () => {
+		const config = [
+			{
+				path: 'foo',
+				outlet: 'foo',
+				children: [
+					{
+						path: 'bar/{bar}',
+						outlet: 'bar',
+						defaultParams: {
+							bar: 'baz'
+						}
+					}
+				]
+			}
+		];
+
+		const router = new Router({ config });
+		const link = router.link('bar');
+		assert.strictEqual(link, 'foo/bar/baz');
+	});
+
+	test('link() generated for a registered outlet falls back to global default params', () => {
+		const config = [
+			{
+				path: 'foo/{foo}?{query}',
+				outlet: 'foo',
+				defaultParams: {
+					foo: 'qux',
+					query: 'query'
+				},
+				children: [
+					{
+						path: 'bar/{bar}',
+						outlet: 'bar',
+						defaultParams: {
+							bar: 'baz'
+						}
+					}
+				]
+			}
+		];
+
+		const router = new Router({ config });
+		const link = router.link('bar');
+		assert.strictEqual(link, 'foo/qux/bar/baz?query=query');
+	});
+
+	test('link() throws an error if outlet has not been registered', () => {
+		const router = new Router({});
+		try {
+			router.link('bar');
+			assert.fail('Link should throw an error if outlet has not been registered');
+		}
+		catch (e) {
+			// do nothing
+		}
 	});
 
 	suite('dispatch errors are emitted', () => {

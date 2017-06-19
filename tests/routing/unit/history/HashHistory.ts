@@ -41,6 +41,10 @@ suite('HashHistory', () => {
 		assert.equal(new HashHistory().prefix('/foo'), '#/foo');
 	});
 
+	test('does not prefixe the path when it already starts with a #', () => {
+		assert.equal(new HashHistory().prefix('#/foo'), '#/foo');
+	});
+
 	test('update path', () => {
 		const history = new HashHistory({ window: sandbox.contentWindow });
 		history.set('/foo');

@@ -58,6 +58,7 @@ export const loaderOptions = {
 		{ name: 'dojo', location: 'node_modules/intern/browser_modules/dojo' },
 		{ name: '@dojo', location: 'node_modules/@dojo' },
 		{ name: 'grunt-dojo2', location: 'node_modules/grunt-dojo2'},
+		{ name: 'maquette', location: 'node_modules/maquette/dist', main: 'maquette' },
 		{ name: 'sinon', location: 'node_modules/sinon/pkg', main: 'sinon' }
 	]
 };
@@ -69,4 +70,4 @@ export const suites = [ 'tests/unit/all' ];
 export const functionalSuites = [ 'tests/functional/all' ];
 
 // A regular expression matching URLs to files that should not be included in code coverage analysis
-export const excludeInstrumentation = /(?:node_modules|bower_components|tests)[\/\\]/;
+export const excludeInstrumentation = /(?:node_modules|examples|bower_components|tests)[\/\\]/;
