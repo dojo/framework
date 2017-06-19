@@ -9,11 +9,14 @@ import WeakMap from '@dojo/shim/WeakMap';
 import { decorate, isHNode, isWNode, registry, v } from './d';
 import diff, { DiffType } from './diff';
 import {
+	AfterRender,
+	BeforeRender,
 	DNode,
 	HNode,
 	PropertyChangeRecord,
 	PropertiesChangeEvent,
 	RegistryLabel,
+	Render,
 	WidgetMetaConstructor,
 	WidgetBaseConstructor,
 	WidgetBaseInterface,
@@ -472,15 +475,9 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		this._renderState = WidgetRenderState.RENDER;
 		if (this._dirty || !this._cachedVNode) {
 			this._dirty = false;
-			const beforeRenders = this.getDecorator('beforeRender');
-			const render = beforeRenders.reduce((render, beforeRenderFunction) => {
-				return beforeRenderFunction.call(this, render, this._properties, this._children);
-			}, this.render.bind(this));
+			const render = this._runBeforeRenders();
 			let dNode = render();
-			const afterRenders = this.getDecorator('afterRender');
-			afterRenders.forEach((afterRenderFunction: Function) => {
-				dNode = afterRenderFunction.call(this, dNode);
-			});
+			dNode = this._runAfterRenders(dNode);
 			const widget = this._dNodeToVNode(dNode);
 			this._manageDetachedChildren();
 			if (widget) {
@@ -611,6 +608,40 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	}
 
 	/**
+	 * Run all registered before renders and return the updated render method
+	 */
+	private _runBeforeRenders(): Render {
+		const beforeRenders = this.getDecorator('beforeRender');
+
+		return beforeRenders.reduce((render: Render, beforeRenderFunction: BeforeRender) => {
+			const updatedRender = beforeRenderFunction.call(this, render, this._properties, this._children);
+			if (!updatedRender) {
+				console.warn('Render function not returned from beforeRender, using previous render');
+				return render;
+			}
+			return updatedRender;
+		}, this.render.bind(this));
+	}
+
+	/**
+	 * Run all registered after renders and return the decorated DNodes
+	 *
+	 * @param dNode The DNodes to run through the after renders
+	 */
+	private _runAfterRenders(dNode: DNode | DNode[]): DNode | DNode[] {
+		const afterRenders = this.getDecorator('afterRender');
+
+		return afterRenders.reduce((dNode: DNode | DNode[], afterRenderFunction: AfterRender) => {
+			const updatedDNode = afterRenderFunction.call(this, dNode);
+			if (!updatedDNode) {
+				console.warn('DNodes not returned from afterRender, using existing dNodes');
+				return dNode;
+			}
+			return updatedDNode;
+		}, dNode);
+	}
+
+	/**
 	 * Process a structure of DNodes into VNodes, string or null. `null` results are filtered.
 	 *
 	 * @param dNode the dnode to process
@@ -618,6 +649,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	 */
 	private _dNodeToVNode(dNode: DNode): VNode | string | null;
 	private _dNodeToVNode(dNode: DNode[]): (VNode | string | null)[];
+	private _dNodeToVNode(dNode: DNode | DNode[]): (VNode | string | null)[] | VNode | string | null;
 	private _dNodeToVNode(dNode: DNode | DNode[]): (VNode | string | null)[] | VNode | string | null {
 
 		if (typeof dNode === 'string' || dNode === null) {

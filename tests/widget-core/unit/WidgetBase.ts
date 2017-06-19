@@ -4,7 +4,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { stub, spy, SinonStub } from 'sinon';
 import { v, w, registry } from '../../src/d';
-import { DNode, WidgetProperties } from '../../src/interfaces';
+import { DNode, Render, WidgetProperties } from '../../src/interfaces';
 import {
 	WidgetBase,
 	diffProperty,
@@ -558,9 +558,9 @@ registerSuite({
 		'class level decorator'() {
 			let beforeRenderCount = 0;
 
-			@beforeRender(function (node: any) {
+			@beforeRender(function (renderFunc: Render) {
 				beforeRenderCount++;
-				return node;
+				return renderFunc;
 			})
 			class TestWidget extends WidgetBase<any> {
 			}
@@ -568,6 +568,23 @@ registerSuite({
 			const widget = new TestWidget();
 			widget.__render__();
 			assert.strictEqual(beforeRenderCount, 1);
+		},
+		'Use previous render function when a beforeRender does not return a function'() {
+			class TestWidget extends WidgetBase {
+				@beforeRender()
+				protected firstBeforeRender(renderFunc: Render) {
+					return () => 'first render';
+				}
+
+				@beforeRender()
+				protected secondBeforeRender(renderFunc: Render) { }
+			}
+
+			const widget = new TestWidget();
+			const vNode = <VNode> widget.__render__();
+			assert.strictEqual(vNode, 'first render');
+			assert.isTrue(consoleStub.calledOnce);
+			assert.isTrue(consoleStub.calledWith('Render function not returned from beforeRender, using previous render'));
 		}
 	},
 	afterRender: {
@@ -670,6 +687,23 @@ registerSuite({
 			const widget = new TestWidget();
 			widget.__render__();
 			assert.strictEqual(afterRenderCount, 1);
+		},
+		'Use previous DNodes when an afterRender does not return DNodes'() {
+			class TestWidget extends WidgetBase {
+				@afterRender()
+				protected firstBeforeRender(dNode: DNode | DNode[]) {
+					return 'first render';
+				}
+
+				@afterRender()
+				protected secondBeforeRender(dNode: DNode | DNode[]) { }
+			}
+
+			const widget = new TestWidget();
+			const vNode = <VNode> widget.__render__();
+			assert.strictEqual(vNode, 'first render');
+			assert.isTrue(consoleStub.calledOnce);
+			assert.isTrue(consoleStub.calledWith('DNodes not returned from afterRender, using existing dNodes'));
 		}
 	},
 	'properties:changed event': {

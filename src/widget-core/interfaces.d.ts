@@ -386,3 +386,21 @@ export interface WidgetMetaProperties {
 	requiredNodes: Set<string>;
 	invalidate: () => void;
 }
+
+export interface Render {
+	(): DNode | DNode[];
+}
+
+/**
+ * Interface for beforeRender function
+ */
+export interface BeforeRender {
+	(renderFunc: Render, properties: WidgetProperties, children: DNode[]): Render | undefined;
+}
+
+/**
+ * Interface for afterRender function
+ */
+export interface AfterRender {
+	(dNode: DNode | DNode []): DNode | DNode[];
+}
