@@ -3,7 +3,7 @@ import global from '@dojo/core/global';
 import { createHandle } from '@dojo/core/lang';
 import { Handle } from '@dojo/interfaces/core';
 import { VNode } from '@dojo/interfaces/vdom';
-import { h, dom, Projection, ProjectionOptions } from 'maquette';
+import { dom, h, Projection, ProjectionOptions } from 'maquette';
 import 'pepjs';
 import cssTransitions from '../animations/cssTransitions';
 import { Constructor, DNode, WidgetProperties } from './../interfaces';
@@ -120,7 +120,7 @@ export interface ProjectorMixin<P extends WidgetProperties> {
 /**
  * Internal function that maps existing DOM Elements to virtual DOM nodes.
  *
- * The funtion does not presume DOM will be there.  It does assume that if a DOM `Element` exists that the `VNode`s are in
+ * The function does not presume DOM will be there.  It does assume that if a DOM `Element` exists that the `VNode`s are in
  * the same DOM order as the `Element`s.  If a DOM Element does not exist, it will set the `vnode.domNode` to `null` and
  * not descend further into the `VNode` children which will cause the maquette projection to create the Element anew.
  * @param vnode The virtual DOM node
@@ -160,7 +160,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 				eventHandlerInterceptor: eventHandlerInterceptor.bind(this)
 			};
 
-			this._boundDoRender = this.doRender.bind(this);
+			this._boundDoRender = this._doRender.bind(this);
 			this._boundRender = this.__render__.bind(this);
 
 			this.own(this.on('widget:children', this.invalidate));
@@ -179,7 +179,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 				root
 			};
 
-			return this.attach(options);
+			return this._attach(options);
 		}
 
 		public merge(root?: Element) {
@@ -188,7 +188,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 				root
 			};
 
-			return this.attach(options);
+			return this._attach(options);
 		}
 
 		public replace(root?: Element) {
@@ -197,7 +197,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 				root
 			};
 
-			return this.attach(options);
+			return this._attach(options);
 		}
 
 		public pause() {
@@ -246,7 +246,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			this.own(createHandle(() => {
 				this._root = previousRoot;
 			}));
-			return this.attach({
+			return this._attach({
 				/* DocumentFragment is not assignable to Element, but provides everything needed to work */
 				root: doc.createDocumentFragment() as any,
 				type: AttachType.Append
@@ -301,7 +301,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			return result;
 		}
 
-		private doRender() {
+		private _doRender() {
 			this._scheduled = undefined;
 
 			if (this._projection) {
@@ -309,7 +309,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			}
 		}
 
-		private attach({ type, root }: AttachOptions): Handle {
+		private _attach({ type, root }: AttachOptions): Handle {
 			this._attachType = type;
 			if (root) {
 				this.root = root;

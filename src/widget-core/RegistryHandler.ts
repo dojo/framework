@@ -1,15 +1,15 @@
 import { Evented } from '@dojo/core/Evented';
 import { Constructor, RegistryLabel, WidgetBaseInterface } from './interfaces';
-import WidgetRegistry, { WidgetRegistryEventObject } from './WidgetRegistry';
+import { WidgetRegistry, WidgetRegistryEventObject } from './WidgetRegistry';
 
 export default class RegistryHandler extends Evented {
 	private _registries: { handle?: any, registry: WidgetRegistry }[] = [];
 
-	add(registry: WidgetRegistry) {
+	public add(registry: WidgetRegistry) {
 		this._registries.unshift({ registry });
 	}
 
-	remove(registry: WidgetRegistry): boolean {
+	public remove(registry: WidgetRegistry): boolean {
 		return this._registries.some((registryWrapper, i) => {
 			if (registryWrapper.registry === registry) {
 				registry.destroy();
@@ -20,7 +20,7 @@ export default class RegistryHandler extends Evented {
 		});
 	}
 
-	replace(original: WidgetRegistry, replacement: WidgetRegistry): boolean {
+	public replace(original: WidgetRegistry, replacement: WidgetRegistry): boolean {
 		return this._registries.some((registryWrapper, i) => {
 			if (registryWrapper.registry === original) {
 				original.destroy();
@@ -31,13 +31,13 @@ export default class RegistryHandler extends Evented {
 		});
 	}
 
-	has(widgetLabel: RegistryLabel): boolean {
+	public has(widgetLabel: RegistryLabel): boolean {
 		return this._registries.some((registryWrapper) => {
 			return registryWrapper.registry.has(widgetLabel);
 		});
 	}
 
-	get<T extends WidgetBaseInterface = WidgetBaseInterface>(widgetLabel: RegistryLabel): Constructor<T> | null {
+	public get<T extends WidgetBaseInterface = WidgetBaseInterface>(widgetLabel: RegistryLabel): Constructor<T> | null {
 		for (let i = 0; i < this._registries.length; i++) {
 			const registryWrapper = this._registries[i];
 			const item = registryWrapper.registry.get<T>(widgetLabel);

@@ -1,24 +1,24 @@
-import { Evented, BaseEventedEvents } from '@dojo/core/Evented';
+import { BaseEventedEvents, Evented } from '@dojo/core/Evented';
 import { EventedListenerOrArray } from '@dojo/interfaces/bases';
 import { Handle } from '@dojo/interfaces/core';
-import { VNode, ProjectionOptions, VNodeProperties } from '@dojo/interfaces/vdom';
+import { ProjectionOptions, VNode, VNodeProperties } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
 import Promise from '@dojo/shim/Promise';
 import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
-import { v, registry, isWNode, isHNode, decorate } from './d';
+import { decorate, isHNode, isWNode, registry, v } from './d';
 import diff, { DiffType } from './diff';
 import {
 	DNode,
-	WidgetBaseConstructor,
-	WidgetProperties,
-	WidgetBaseInterface,
+	HNode,
 	PropertyChangeRecord,
 	PropertiesChangeEvent,
 	RegistryLabel,
-	HNode,
-	WNode,
-	WidgetMetaConstructor
+	WidgetMetaConstructor,
+	WidgetBaseConstructor,
+	WidgetBaseInterface,
+	WidgetProperties,
+	WNode
 } from './interfaces';
 import MetaBase from './meta/Base';
 import RegistryHandler from './RegistryHandler';
@@ -300,8 +300,8 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		// with "key" properties.
 
 		decorate(node, (node: HNode) => {
-			node.properties.afterCreate = this.afterCreateCallback;
-			node.properties.afterUpdate = this.afterUpdateCallback;
+			node.properties.afterCreate = this._afterCreateCallback;
+			node.properties.afterUpdate = this._afterUpdateCallback;
 		}, isHNodeWithKey);
 
 		return node;
@@ -323,8 +323,13 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	/**
 	 * vnode afterCreate callback that calls the onElementCreated lifecycle method.
 	 */
-	private afterCreateCallback(element: Element, projectionOptions: ProjectionOptions, vnodeSelector: string,
-		properties: VNodeProperties, children: VNode[]): void {
+	private _afterCreateCallback(
+		element: Element,
+		projectionOptions: ProjectionOptions,
+		vnodeSelector: string,
+		properties: VNodeProperties,
+		children: VNode[]
+	): void {
 		this._setNode(element, properties);
 		this.onElementCreated(element, String(properties.key));
 	}
@@ -332,8 +337,13 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	/**
 	 * vnode afterUpdate callback that calls the onElementUpdated lifecycle method.
 	 */
-	private afterUpdateCallback(element: Element, projectionOptions: ProjectionOptions, vnodeSelector: string,
-		properties: VNodeProperties, children: VNode[]): void {
+	private _afterUpdateCallback(
+		element: Element,
+		projectionOptions: ProjectionOptions,
+		vnodeSelector: string,
+		properties: VNodeProperties,
+		children: VNode[]
+	): void {
 		this._setNode(element, properties);
 		this.onElementUpdated(element, String(properties.key));
 	}
@@ -374,7 +384,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		const diffPropertyResults: { [index: string]: any } = {};
 		const diffPropertyChangedKeys: string[] = [];
 
-		this.bindFunctionProperties(properties, bind);
+		this._bindFunctionProperties(properties, bind);
 
 		const registeredDiffPropertyConfigs: DiffPropertyConfig[] = this.getDecorator('diffProperty');
 
@@ -471,8 +481,8 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 			afterRenders.forEach((afterRenderFunction: Function) => {
 				dNode = afterRenderFunction.call(this, dNode);
 			});
-			const widget = this.dNodeToVNode(dNode);
-			this.manageDetachedChildren();
+			const widget = this._dNodeToVNode(dNode);
+			this._manageDetachedChildren();
 			if (widget) {
 				this._cachedVNode = widget;
 			}
@@ -483,7 +493,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		return this._cachedVNode;
 	}
 
-	public invalidate(): void {
+	protected invalidate(): void {
 		if (this._renderState === WidgetRenderState.IDLE) {
 			this._dirty = true;
 			this.emit({
@@ -570,9 +580,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		}
 
 		allDecorators = this._buildDecoratorList(decoratorKey);
-
 		this._decoratorCache.set(decoratorKey, allDecorators);
-
 		return allDecorators;
 	}
 
@@ -581,7 +589,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	 *
 	 * @param properties properties to check for functions
 	 */
-	private bindFunctionProperties(properties: any, bind: any): void {
+	private _bindFunctionProperties(properties: any, bind: any): void {
 		Object.keys(properties).forEach((propertyKey) => {
 			const property = properties[propertyKey];
 
@@ -608,16 +616,16 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	 * @param dNode the dnode to process
 	 * @returns a VNode, string or null
 	 */
-	private dNodeToVNode(dNode: DNode): VNode | string | null;
-	private dNodeToVNode(dNode: DNode[]): (VNode | string | null)[];
-	private dNodeToVNode(dNode: DNode | DNode[]): (VNode | string | null)[] | VNode | string | null {
+	private _dNodeToVNode(dNode: DNode): VNode | string | null;
+	private _dNodeToVNode(dNode: DNode[]): (VNode | string | null)[];
+	private _dNodeToVNode(dNode: DNode | DNode[]): (VNode | string | null)[] | VNode | string | null {
 
 		if (typeof dNode === 'string' || dNode === null) {
 			return dNode;
 		}
 
 		if (Array.isArray(dNode)) {
-			return dNode.map((node) => this.dNodeToVNode(node));
+			return dNode.map((node) => this._dNodeToVNode(node));
 		}
 
 		if (isWNode(dNode)) {
@@ -680,7 +688,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		dNode.vNodes = dNode.children
 		.filter((child) => child !== null)
 		.map((child: DNode) => {
-			return this.dNodeToVNode(child);
+			return this._dNodeToVNode(child);
 		});
 
 		return dNode.render();
@@ -689,7 +697,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	/**
 	 * Manage widget instances after render processing
 	 */
-	private manageDetachedChildren(): void {
+	private _manageDetachedChildren(): void {
 		this._cachedChildrenMap.forEach((cachedChildren, key) => {
 			const filterCachedChildren = cachedChildren.filter((cachedChild) => {
 				if (cachedChild.used) {
@@ -706,7 +714,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	private _checkOnElementUsage() {
 		const name = (<any> this).constructor.name || 'unknown';
 		if (this.onElementCreated !== WidgetBase.prototype.onElementCreated) {
-			console.warn(`Usage of 'onElementedCreated' has been deprecated and will be removed in a future version, see https://github.com/dojo/widget-core/issues/559 for details (${name})`);
+			console.warn(`Usage of 'onElementCreated' has been deprecated and will be removed in a future version, see https://github.com/dojo/widget-core/issues/559 for details (${name})`);
 		}
 		if (this.onElementUpdated !== WidgetBase.prototype.onElementUpdated) {
 			console.warn(`Usage of 'onElementUpdated' has been deprecated and will be removed in a future version, see https://github.com/dojo/widget-core/issues/559 for details (${name})`);

@@ -33,8 +33,8 @@ export interface StatefulMixin {
  */
 const stateChangedEventType = 'state:changed';
 
-export function StatefulMixin<T extends Constructor<WidgetBase<any>>>(base: T): T & Constructor<StatefulMixin> {
-	return class extends base {
+export function StatefulMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & Constructor<StatefulMixin> {
+	return class extends Base {
 
 		private _state: State;
 

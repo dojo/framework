@@ -1,7 +1,7 @@
 import { assign } from '@dojo/core/lang';
 import { from as arrayFrom } from '@dojo/shim/array';
 import global from '@dojo/core/global';
-import { WidgetBaseInterface, WidgetProperties, Constructor, DNode } from './interfaces';
+import { Constructor, DNode, WidgetBaseInterface, WidgetProperties } from './interfaces';
 import { WidgetBase } from './WidgetBase';
 import { w } from './d';
 import { ProjectorMixin } from './mixins/Projector';
@@ -12,9 +12,9 @@ import DomWrapper from './util/DomWrapper';
  *
  * Describes a custom element attribute
  *
- * @property {string}       attributeName   The name of the attribute on the DOM element
- * @property {string?}      propertyName    The name of the property on the widget
- * @property {Function?}    value           A function that takes a string or null value, and returns a new value. The widget's property will be set to the new value.
+ * @property attributeName   The name of the attribute on the DOM element
+ * @property propertyName    The name of the property on the widget
+ * @property value           A function that takes a string or null value, and returns a new value. The widget's property will be set to the new value.
  */
 export interface CustomElementAttributeDescriptor {
 	attributeName: string;
@@ -27,10 +27,10 @@ export interface CustomElementAttributeDescriptor {
  *
  * Describes a widget property exposed via a custom element
  *
- * @property {string}       propertyName        The name of the property on the DOM element
- * @property {string?}      widgetPropertyName  The name of the property on the widget
- * @property {Function?}    getValue            A transformation function on the widget's property value
- * @property {Function?}    setValue            A transformation function on the DOM elements property value
+ * @property propertyName        The name of the property on the DOM element
+ * @property widgetPropertyName  The name of the property on the widget
+ * @property getValue            A transformation function on the widget's property value
+ * @property setValue            A transformation function on the DOM elements property value
  */
 export interface CustomElementPropertyDescriptor {
 	propertyName: string;
@@ -44,8 +44,8 @@ export interface CustomElementPropertyDescriptor {
  *
  * Describes a custom element event
  *
- * @property    {string}    propertyName    The name of the property on the widget that takes a function
- * @property    {string}    eventName       The type of the event to emit (it will be a CustomEvent object of this type)
+ * @property propertyName    The name of the property on the widget that takes a function
+ * @property eventName       The type of the event to emit (it will be a CustomEvent object of this type)
  */
 export interface CustomElementEventDescriptor {
 	propertyName: string;
@@ -53,7 +53,7 @@ export interface CustomElementEventDescriptor {
 }
 
 /**
- * Defines a custom element intializing function. Passes in initial properties so they can be extended
+ * Defines a custom element initializing function. Passes in initial properties so they can be extended
  * by the initializer.
  */
 export interface CustomElementInitializer {
@@ -65,12 +65,12 @@ export interface CustomElementInitializer {
  *
  * Describes a custom element.
  *
- * @property    {string}                                tagName         	The tag name to register this widget under. Tag names must contain a "-"
- * @property    {WidgetConstructor}                     widgetConstructor   A widget Constructor that will return the widget to be wrapped in a custom element
- * @property    {CustomElementAttributeDescriptor[]?}   attributes     		A list of attributes to define on this element
- * @property    {CustomElementPropertyDescriptor[]?}    properties      	A list of properties to define on this element
- * @property    {CustomElementEventDescriptor[]?}       events          	A list of events to expose on this element
- * @property    {CustomElementInitializer?}             initialization  	A method to run to set custom properties on the wrapped widget
+ * @property tagName             The tag name to register this widget under. Tag names must contain a "-"
+ * @property widgetConstructor   widget Constructor that will return the widget to be wrapped in a custom element
+ * @property attributes          A list of attributes to define on this element
+ * @property properties          A list of properties to define on this element
+ * @property events              A list of events to expose on this element
+ * @property initialization      A method to run to set custom properties on the wrapped widget
  */
 export interface CustomElementDescriptor {
 	/**
@@ -109,10 +109,10 @@ export interface CustomElementDescriptor {
  *
  * A custom element extends upon a regular HTMLElement but adds fields for describing and wrapping a widget constructor.
  *
- * @property    {WidgetConstructor}			getWidgetConstructor	Return the widget constructor for this element
- * @property    {CustomElementDescriptor}	getDescriptor       	Return the element descriptor for this element
- * @property    {Widget}					getWidgetInstance   	Return the widget instance that this element wraps
- * @property								setWidgetInstance   	Set the widget instance for this element
+ * @property getWidgetConstructor Return the widget constructor for this element
+ * @property getDescriptor        Return the element descriptor for this element
+ * @property getWidgetInstance    Return the widget instance that this element wraps
+ * @property setWidgetInstance    Set the widget instance for this element
  */
 export interface CustomElement extends HTMLElement {
 	getWidgetConstructor(): Constructor<WidgetBase<WidgetProperties>>;
@@ -151,7 +151,7 @@ if (typeof customEventClass !== 'function') {
 /**
  * Called by HTMLElement subclass to initialize itself with the appropriate attributes/properties/events.
  *
- * @param {CustomElement} element
+ * @param element The element to initialize.
  */
 export function initializeElement(element: CustomElement) {
 	let initialProperties: any = {};
@@ -254,10 +254,10 @@ export function initializeElement(element: CustomElement) {
 /**
  * Called by HTMLElement subclass when an HTML attribute has changed.
  *
- * @param {CustomElement}   element     The element whose attributes are being watched
- * @param {string}          name        The name of the attribute
- * @param {string?}         newValue    The new value of the attribute
- * @param {string?}         oldValue    The old value of the attribute
+ * @param element     The element whose attributes are being watched
+ * @param name        The name of the attribute
+ * @param newValue    The new value of the attribute
+ * @param oldValue    The old value of the attribute
  */
 export function handleAttributeChanged(element: CustomElement, name: string, newValue: string | null, oldValue: string | null) {
 	const attributes = element.getDescriptor().attributes || [];

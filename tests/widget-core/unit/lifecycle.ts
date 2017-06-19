@@ -26,6 +26,10 @@ class TesterWidget extends WidgetBase<WidgetProperties> {
 			element: element
 		});
 	}
+
+	public callInvalidate() {
+		this.invalidate();
+	}
 }
 
 /**
@@ -184,7 +188,7 @@ registerSuite({
 		projector.lifeCycleCreated = [];
 
 		projector.modify = true;
-		projector.invalidate();
+		projector.callInvalidate();
 
 		await waitFor((): boolean => {
 			return document.getElementById('addition') != null;
@@ -204,7 +208,7 @@ registerSuite({
 		afterCreateCounter = 0;
 
 		projector.modify = true;
-		projector.invalidate();
+		projector.callInvalidate();
 
 		await waitFor((): boolean => {
 			return document.getElementById('addition') != null;
@@ -216,7 +220,7 @@ registerSuite({
 		assert.strictEqual(afterUpdateCounter, 1);  // afterUpdate callback is replaced in WidgetBase.
 	},
 
-	async 'basic widget that always rerenders'() {
+	async 'basic widget that always re-renders'() {
 		const Projector = ProjectorMixin(WidgetC);
 		const projector = new Projector();
 		await projector.append(root);
@@ -226,7 +230,7 @@ registerSuite({
 
 		projector.lifeCycleCreated = [];
 		projector.modify = true;
-		projector.invalidate();
+		projector.callInvalidate();
 
 		await waitFor((): boolean => {
 			return document.getElementById('addition') != null;

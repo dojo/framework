@@ -19,7 +19,6 @@ export interface TypedTargetEvent<T extends EventTarget> extends Event {
 /*
  These are the event handlers exposed by Maquette.
  */
-
 export type EventHandlerResult = boolean | void;
 
 export interface EventHandler {
@@ -370,11 +369,6 @@ export interface WidgetBaseInterface<
 	 * Main internal function for dealing with widget rendering
 	 */
 	__render__(): (VNode | string | null)[] | VNode | string | null;
-
-	/**
-	 * invalidate the widget
-	 */
-	invalidate(): void;
 }
 
 /**

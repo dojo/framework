@@ -1,4 +1,8 @@
-import { initializeElement, CustomElementDescriptor, handleAttributeChanged } from './customElements';
+import {
+	CustomElementDescriptor,
+	handleAttributeChanged,
+	initializeElement
+} from './customElements';
 import { Constructor, WidgetProperties } from './interfaces';
 import { WidgetBase } from './WidgetBase';
 
@@ -34,30 +38,30 @@ export function registerCustomElement(descriptorFactory: CustomElementDescriptor
 			this._appender = initializeElement(this);
 		}
 
-		connectedCallback() {
+		public connectedCallback() {
 			if (!this._isAppended) {
 				this._appender();
 				this._isAppended = true;
 			}
 		}
 
-		attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
+		public attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
 			handleAttributeChanged(this, name, newValue, oldValue);
 		}
 
-		getWidgetInstance(): WidgetBase<any> {
+		public getWidgetInstance(): WidgetBase<any> {
 			return this._widgetInstance;
 		}
 
-		setWidgetInstance(widget: WidgetBase<any>): void {
+		public setWidgetInstance(widget: WidgetBase<any>): void {
 			this._widgetInstance = widget;
 		}
 
-		getWidgetConstructor(): Constructor<WidgetBase<WidgetProperties>> {
+		public getWidgetConstructor(): Constructor<WidgetBase<WidgetProperties>> {
 			return this.getDescriptor().widgetConstructor;
 		}
 
-		getDescriptor(): CustomElementDescriptor {
+		public getDescriptor(): CustomElementDescriptor {
 			return descriptor;
 		}
 

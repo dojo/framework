@@ -1,9 +1,15 @@
 /* tslint:disable:interface-name */
 import { assign } from '@dojo/core/lang';
-import i18n, { Bundle, formatMessage, getCachedMessages, Messages, observeLocale } from '@dojo/i18n/i18n';
+import i18n, {
+	Bundle,
+	formatMessage,
+	getCachedMessages,
+	Messages,
+	observeLocale
+} from '@dojo/i18n/i18n';
 import { VNodeProperties } from '@dojo/interfaces/vdom';
 import { Constructor, DNode, WidgetProperties } from './../interfaces';
-import { WidgetBase, afterRender } from './../WidgetBase';
+import { afterRender, WidgetBase } from './../WidgetBase';
 import { isHNode } from './../d';
 
 export interface I18nProperties extends WidgetProperties {
@@ -66,8 +72,8 @@ export interface I18nMixin {
 	properties: I18nProperties;
 }
 
-export function I18nMixin<T extends Constructor<WidgetBase<any>>>(base: T): T & Constructor<I18nMixin> {
-	class I18n extends base {
+export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & Constructor<I18nMixin> {
+	class I18n extends Base {
 
 		public properties: I18nProperties;
 
@@ -89,7 +95,7 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(base: T): T & 
 
 		public localizeBundle<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T> {
 			const { locale } = this.properties;
-			const messages = this.getLocaleMessages(bundle) || bundle.messages;
+			const messages = this._getLocaleMessages(bundle) || bundle.messages;
 
 			return assign(Object.create({
 				format(key: string, options?: any) {
@@ -130,7 +136,7 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(base: T): T & 
 		 * @return
 		 * The locale-specific dictionary, if it has already been loaded and cached.
 		 */
-		private getLocaleMessages(bundle: Bundle<Messages>): Messages | void {
+		private _getLocaleMessages(bundle: Bundle<Messages>): Messages | void {
 			const { properties } = this;
 			const locale = properties.locale || i18n.locale;
 			const localeMessages = getCachedMessages(bundle, locale);

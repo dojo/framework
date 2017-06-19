@@ -1,6 +1,12 @@
 import { assign } from '@dojo/core/lang';
 import { Evented } from '@dojo/core/Evented';
-import { diffProperty, afterRender, WidgetBase, InternalWNode, InternalHNode } from './WidgetBase';
+import {
+	afterRender,
+	diffProperty,
+	InternalWNode,
+	InternalHNode,
+	WidgetBase
+} from './WidgetBase';
 import { decorate, isHNode, isWNode } from './d';
 import { DiffType } from './diff';
 import {
@@ -100,7 +106,7 @@ export function Injector<C extends Evented, T extends Constructor<BaseInjector<C
 		}
 
 		@afterRender()
-		protected decoratateBind(node: DNode) {
+		protected decorateBind(node: DNode): DNode {
 			const { scope } = this.properties;
 			decorate(node, (node: InternalHNode | InternalWNode) => {
 				const { properties } = node;

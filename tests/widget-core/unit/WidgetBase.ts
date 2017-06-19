@@ -39,7 +39,6 @@ registerSuite({
 		const widgetBase = new WidgetBase();
 		assert(widgetBase);
 		assert.isFunction(widgetBase.__render__);
-		assert.isFunction(widgetBase.invalidate);
 	},
 	'deprecated api warning'() {
 		class TestWidgetOne extends WidgetBase<any> {
@@ -56,7 +55,7 @@ registerSuite({
 		new TestWidgetOne();
 		new TestWidgetTwo();
 		assert.isTrue(consoleStub.calledTwice);
-		assert.isTrue(consoleStub.firstCall.calledWith(`Usage of 'onElementedCreated' has been deprecated and will be removed in a future version, see https://github.com/dojo/widget-core/issues/559 for details (${name})`));
+		assert.isTrue(consoleStub.firstCall.calledWith(`Usage of 'onElementCreated' has been deprecated and will be removed in a future version, see https://github.com/dojo/widget-core/issues/559 for details (${name})`));
 		assert.isTrue(consoleStub.secondCall.calledWith(`Usage of 'onElementUpdated' has been deprecated and will be removed in a future version, see https://github.com/dojo/widget-core/issues/559 for details (${name})`));
 	},
 	children() {
@@ -82,6 +81,10 @@ registerSuite({
 					renderCount++;
 					return v('div', [ 'hello world ' ]);
 				}
+
+				callInvalidate() {
+					this.invalidate();
+				}
 			}
 
 			const foo = new Foo();
@@ -90,7 +93,7 @@ registerSuite({
 			});
 			foo.__render__();
 			assert.equal(renderCount, 1);
-			foo.invalidate();
+			foo.callInvalidate();
 			foo.__render__();
 			assert.equal(renderCount, 2);
 			assert.isTrue(invalidateCalled);

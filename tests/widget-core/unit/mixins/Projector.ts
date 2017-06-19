@@ -12,11 +12,15 @@ import { waitFor } from '../waitFor';
 
 const Event = global.window.Event;
 
-class TestWidget extends ProjectorMixin(WidgetBase)<any> {}
+class BaseTestWidget extends ProjectorMixin(WidgetBase) {
+		public callInvalidate() {
+		this.invalidate();
+	}
+}
 
 let result: any;
 
-class MyWidget extends ProjectorMixin(WidgetBase)<any> {
+class MyWidget extends BaseTestWidget {
 	render() {
 		return result;
 	}
@@ -42,7 +46,7 @@ function sendAnimationEndEvents(element: Element) {
 
 let rafSpy: any;
 let cancelRafSpy: any;
-let projector: TestWidget | MyWidget;
+let projector: BaseTestWidget | MyWidget;
 
 registerSuite({
 	name: 'mixins/projectorMixin',
@@ -65,7 +69,7 @@ registerSuite({
 		'append': {
 			'standard'() {
 				const childNodeLength = document.body.childNodes.length;
-				projector = new TestWidget();
+				projector = new BaseTestWidget();
 
 				projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
@@ -88,7 +92,7 @@ registerSuite({
 				assert.isUndefined(vnode.children);
 
 				result = v('div', [ 'other text' ]);
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'span');
 				assert.isUndefined(vnode.text);
@@ -96,7 +100,7 @@ registerSuite({
 				assert.equal(vnode.children![0].vnodeSelector, 'div');
 				assert.equal(vnode.children![0].text, 'other text');
 			},
-			'string root node after an intial render'() {
+			'string root node after an initial render'() {
 				result = v('div', [ 'my string' ]);
 				projector = new MyWidget();
 
@@ -107,7 +111,7 @@ registerSuite({
 				assert.isUndefined(vnode.children);
 
 				result = 'other text';
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'div');
 				assert.equal(vnode.text, 'other text');
@@ -124,7 +128,7 @@ registerSuite({
 				assert.lengthOf(vnode.children, 0);
 
 				result = v('div', [ 'other text' ]);
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'span');
 				assert.isUndefined(vnode.text);
@@ -133,7 +137,7 @@ registerSuite({
 				assert.equal(vnode.children![0].text, 'other text');
 
 			},
-			'null root node after an intial render'() {
+			'null root node after an initial render'() {
 				result = v('h2', [ 'my string' ]);
 				projector = new MyWidget();
 
@@ -144,7 +148,7 @@ registerSuite({
 				assert.isUndefined(vnode.children);
 
 				result = null;
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'h2');
 				assert.isUndefined(vnode.text);
@@ -165,7 +169,7 @@ registerSuite({
 		'sandbox': {
 			'attaching'() {
 				const childNodeLength = document.body.childNodes.length;
-				projector = new TestWidget();
+				projector = new BaseTestWidget();
 				projector.setChildren([ v('h2', [ 'foo' ]) ]);
 
 				projector.sandbox();
@@ -182,7 +186,7 @@ registerSuite({
 			},
 			'operates synchronously'() {
 				let count = 0;
-				const projector = new class extends TestWidget {
+				const projector = new class extends BaseTestWidget {
 					render () {
 						count++;
 						return v('div', [ String(count) ]);
@@ -192,7 +196,7 @@ registerSuite({
 				projector.sandbox();
 				assert.strictEqual(count, 1, 'render should have been called once');
 				assert.strictEqual(projector.root.firstChild!.textContent, '1', 'should have rendered "1"');
-				projector.invalidate();
+				projector.callInvalidate();
 				assert.strictEqual(count, 2, 'render should have been called synchronously');
 				assert.strictEqual(projector.root.firstChild!.textContent, '2', 'should have rendered "2"');
 				projector.destroy();
@@ -201,7 +205,7 @@ registerSuite({
 				const doc = {
 					createDocumentFragment: spy(() => document.createDocumentFragment())
 				} as any;
-				const projector = new TestWidget();
+				const projector = new BaseTestWidget();
 				projector.sandbox(doc);
 				assert.isTrue(doc.createDocumentFragment.called, 'createDocumentFragment should have been called');
 				projector.destroy();
@@ -209,7 +213,7 @@ registerSuite({
 		},
 		'replace': {
 			'standard'() {
-				const projector = new class extends TestWidget {
+				const projector = new class extends BaseTestWidget {
 					render() {
 						return v('body', this.children);
 					}
@@ -237,7 +241,7 @@ registerSuite({
 				assert.isUndefined(vnode.children);
 
 				result = v('div', [ 'other text' ]);
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'span');
 				assert.isUndefined(vnode.text);
@@ -245,7 +249,7 @@ registerSuite({
 				assert.equal(vnode.children![0].vnodeSelector, 'div');
 				assert.equal(vnode.children![0].text, 'other text');
 			},
-			'string root node after an intial render'() {
+			'string root node after an initial render'() {
 				const root = document.createElement('my-app');
 				document.body.appendChild(root);
 				result = v('div', [ 'my string' ]);
@@ -258,7 +262,7 @@ registerSuite({
 				assert.isUndefined(vnode.children);
 
 				result = 'other text';
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'div');
 				assert.equal(vnode.text, 'other text');
@@ -277,7 +281,7 @@ registerSuite({
 				assert.lengthOf(vnode.children, 0);
 
 				result = v('div', [ 'other text' ]);
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'span');
 				assert.isUndefined(vnode.text);
@@ -286,7 +290,7 @@ registerSuite({
 				assert.equal(vnode.children![0].text, 'other text');
 
 			},
-			'null root node after an intial render'() {
+			'null root node after an initial render'() {
 				const root = document.createElement('my-app');
 				document.body.appendChild(root);
 				result = v('h2', [ 'my string' ]);
@@ -299,7 +303,7 @@ registerSuite({
 				assert.isUndefined(vnode.children);
 
 				result = null;
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'h2');
 				assert.isUndefined(vnode.text);
@@ -323,7 +327,7 @@ registerSuite({
 			'standard'() {
 				const div = document.createElement('div');
 				document.body.appendChild(div);
-				const projector = new TestWidget();
+				const projector = new BaseTestWidget();
 
 				projector.setChildren([ v('h2', [ 'foo' ] ) ]);
 
@@ -348,12 +352,12 @@ registerSuite({
 				assert.isUndefined(vnode.children);
 
 				result = v('div', [ 'other text' ]);
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'my-app');
 				assert.equal(vnode.text, 'other text');
 			},
-			'string root node after an intial render'() {
+			'string root node after an initial render'() {
 				const root = document.createElement('my-app');
 				document.body.appendChild(root);
 				result = v('div', [ 'my string' ]);
@@ -366,7 +370,7 @@ registerSuite({
 				assert.isUndefined(vnode.children);
 
 				result = 'other text';
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'my-app');
 				assert.equal(vnode.text, 'other text');
@@ -385,13 +389,13 @@ registerSuite({
 				assert.lengthOf(vnode.children, 0);
 
 				result = v('div', [ 'other text' ]);
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'my-app');
 				assert.equal(vnode.text, 'other text');
 				assert.isUndefined(vnode.children);
 			},
-			'null root node after an intial render'() {
+			'null root node after an initial render'() {
 				const root = document.createElement('my-app');
 				document.body.appendChild(root);
 				result = v('h2', [ 'my string' ]);
@@ -404,7 +408,7 @@ registerSuite({
 				assert.isUndefined(vnode.children);
 
 				result = null;
-				projector.invalidate();
+				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'my-app');
 				assert.isUndefined(vnode.text);
@@ -444,7 +448,7 @@ registerSuite({
 				assert.strictEqual((root.childNodes[3] as HTMLSelectElement).value, 'bar', 'bar should be selected');
 				const onchangeListener = spy();
 				const onclickListener = spy();
-				const projector = new class extends TestWidget {
+				const projector = new class extends BaseTestWidget {
 					render() {
 						return v('div', {
 							classes: { foo: true, bar: true }
@@ -503,14 +507,14 @@ registerSuite({
 		}
 	},
 	'get root'() {
-		const projector = new TestWidget();
+		const projector = new BaseTestWidget();
 		const root = document.createElement('div');
 		assert.equal(projector.root, document.body);
 		projector.root = root;
 		assert.equal(projector.root, root);
 	},
 	'pause'() {
-		const projector = new TestWidget();
+		const projector = new BaseTestWidget();
 
 		projector.append();
 
@@ -519,7 +523,7 @@ registerSuite({
 		assert.isFalse(rafSpy.called);
 	},
 	'pause cancels animation frame if scheduled'() {
-		const projector = new TestWidget();
+		const projector = new BaseTestWidget();
 
 		projector.append();
 
@@ -528,14 +532,14 @@ registerSuite({
 		assert.isTrue(cancelRafSpy.called);
 	},
 	'resume'() {
-		const projector = new TestWidget();
+		const projector = new BaseTestWidget();
 		spy(projector, 'scheduleRender');
 		assert.isFalse((<any> projector.scheduleRender).called);
 		projector.resume();
 		assert.isTrue((<any> projector.scheduleRender).called);
 	},
 	'get projector state'() {
-		const projector = new TestWidget();
+		const projector = new BaseTestWidget();
 
 		assert.equal(projector.projectorState, ProjectorAttachState.Detached);
 		projector.append();
@@ -545,7 +549,7 @@ registerSuite({
 	},
 	'toHtml()': {
 		'appended'() {
-			const projector = new TestWidget();
+			const projector = new BaseTestWidget();
 			projector.setChildren([ v('h2', [ 'foo' ]) ]);
 
 			projector.append();
@@ -557,7 +561,7 @@ registerSuite({
 			const div = document.createElement('div');
 			document.body.appendChild(div);
 
-			const projector = new TestWidget();
+			const projector = new BaseTestWidget();
 			projector.setChildren([ v('h2', [ 'foo' ]) ]);
 
 			projector.replace(div);
@@ -569,7 +573,7 @@ registerSuite({
 			const div = document.createElement('div');
 			document.body.appendChild(div);
 
-			const projector = new TestWidget();
+			const projector = new BaseTestWidget();
 			projector.setChildren([ v('h2', [ 'foo' ]) ]);
 
 			projector.merge(div);
@@ -578,14 +582,14 @@ registerSuite({
 			projector.destroy();
 		},
 		'not attached throws'() {
-			const projector = new TestWidget();
+			const projector = new BaseTestWidget();
 			assert.throws(() => {
 				projector.toHtml();
 			}, Error, 'Projector is not attached, cannot return an HTML string of projection.');
 		}
 	},
 	'destroy'() {
-		const projector: any = new TestWidget();
+		const projector = new BaseTestWidget();
 		const maquetteProjectorStopSpy = spy(projector, 'pause');
 
 		projector.append();
@@ -598,7 +602,7 @@ registerSuite({
 		assert.isTrue(maquetteProjectorStopSpy.calledOnce);
 	},
 	'scheduleRender on properties:changed'() {
-		const projector = new TestWidget();
+		const projector = new BaseTestWidget();
 		const scheduleRender = spy(projector, 'scheduleRender');
 		projector.setProperties({ foo: 'hello' });
 		assert.isTrue(scheduleRender.called);
@@ -608,7 +612,7 @@ registerSuite({
 			foo: 'bar'
 		};
 		const testChildren = [ v('div') ];
-		class TestWidget extends ProjectorMixin(WidgetBase) {
+		class TestWidget extends BaseTestWidget {
 
 			@beforeRender()
 			protected updateProperties(renderFunc: any, props: any, children: any) {
@@ -623,11 +627,11 @@ registerSuite({
 		projector.setProperties(testProperties);
 		projector.setChildren(testChildren);
 		projector.__render__();
-		projector.invalidate();
+		projector.callInvalidate();
 		projector.__render__();
 	},
 	'invalidate on setting children'() {
-		const projector = new TestWidget();
+		const projector = new BaseTestWidget();
 		let called = false;
 
 		projector.on('invalidated', () => {
@@ -639,14 +643,14 @@ registerSuite({
 		assert.isTrue(called);
 	},
 	'invalidate before attached'() {
-		const projector: any = new TestWidget();
+		const projector: any = new BaseTestWidget();
 
 		projector.invalidate();
 
 		assert.isFalse(rafSpy.called);
 	},
 	'invalidate after attached'() {
-		const projector: any = new TestWidget();
+		const projector: any = new BaseTestWidget();
 
 		projector.append();
 		projector.invalidate();
@@ -654,12 +658,12 @@ registerSuite({
 	},
 	'reattach'() {
 		const root = document.createElement('div');
-		const projector = new TestWidget();
+		const projector = new BaseTestWidget();
 		const promise = projector.append(root);
 		assert.strictEqual(promise, projector.append(), 'same promise should be returned');
 	},
 	'setRoot throws when already attached'() {
-		const projector = new TestWidget();
+		const projector = new BaseTestWidget();
 		const div = document.createElement('div');
 		projector.root = div;
 		projector.append();
@@ -668,7 +672,7 @@ registerSuite({
 		}, Error, 'already attached');
 	},
 	'sandbox throws when already attached'() {
-		const projector = new TestWidget();
+		const projector = new BaseTestWidget();
 		projector.append();
 		assert.throws(() => {
 			projector.sandbox();
@@ -683,7 +687,7 @@ registerSuite({
 		const afterCreate = (node: Node) => {
 			domNode = node;
 		};
-		const Projector = class extends TestWidget {
+		const Projector = class extends BaseTestWidget {
 			render() {
 				return v('div', { oninput, afterCreate });
 			}
@@ -703,7 +707,7 @@ registerSuite({
 		const afterCreate = (node: Node) => {
 			domNode = node;
 		};
-		const Projector = class extends TestWidget {
+		const Projector = class extends BaseTestWidget {
 			render() {
 				return v('div', { onpointermove, afterCreate });
 			}
@@ -721,7 +725,7 @@ registerSuite({
 
 		let children: any[] = [];
 
-		class TestProjector extends ProjectorMixin(WidgetBase)<{}> {
+		class TestProjector extends BaseTestWidget {
 			root = document.body;
 
 			render() {
@@ -739,7 +743,7 @@ registerSuite({
 			exitAnimation: 'fade-out'
 		}));
 
-		projector.invalidate();
+		projector.callInvalidate();
 
 		await waitFor(() => {
 			return document.getElementById('test-element') !== null;
@@ -755,7 +759,7 @@ registerSuite({
 		sendAnimationEndEvents(domNode);
 
 		children = [];
-		projector.invalidate();
+		projector.callInvalidate();
 
 		await waitFor(() => {
 			return domNode.classList.contains('fade-out') && domNode.classList.contains('fade-out-active');
@@ -770,7 +774,7 @@ registerSuite({
 
 		let children: any[] = [];
 
-		class TestProjector extends ProjectorMixin(WidgetBase)<{}> {
+		class TestProjector extends BaseTestWidget {
 			root = document.body;
 
 			render() {
@@ -790,7 +794,7 @@ registerSuite({
 			exitAnimationActive: 'active-fade-out'
 		}));
 
-		projector.invalidate();
+		projector.callInvalidate();
 
 		await waitFor(() => {
 			return document.getElementById('test-element') !== null;
@@ -806,7 +810,7 @@ registerSuite({
 		sendAnimationEndEvents(domNode);
 
 		children = [];
-		projector.invalidate();
+		projector.callInvalidate();
 
 		await waitFor(() => {
 			return domNode.classList.contains('fade-out') && domNode.classList.contains('active-fade-out');
@@ -828,7 +832,7 @@ registerSuite({
 			})
 		];
 
-		class TestProjector extends ProjectorMixin(WidgetBase)<{}> {
+		class TestProjector extends BaseTestWidget {
 			root = document.body;
 
 			render() {
@@ -847,7 +851,7 @@ registerSuite({
 		const domNode = document.getElementById('test-element')!;
 
 		children = [];
-		projector.invalidate();
+		projector.callInvalidate();
 
 		await waitFor(() => {
 			return domNode.classList.contains('fade-out') && domNode.classList.contains('fade-out-active');
@@ -860,7 +864,7 @@ registerSuite({
 			return document.getElementById('test-element') === null;
 		}, 'Element never got removed');
 	},
-	'afterCreate can be overriden'() {
+	'afterCreate can be overridden'() {
 		let afterCreateCalled = false;
 
 		function afterCreate(this: any, element: any, projectorOptions: any, vNodeSelector: any, properties: any, children: any) {
@@ -877,7 +881,7 @@ registerSuite({
 		const root = document.createElement('div');
 		document.body.appendChild(root);
 
-		const projector = new (class extends TestWidget {
+		const projector = new (class extends BaseTestWidget {
 			root = root;
 
 			render() {

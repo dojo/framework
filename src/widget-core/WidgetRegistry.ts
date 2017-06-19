@@ -2,8 +2,8 @@ import Promise from '@dojo/shim/Promise';
 import Map from '@dojo/shim/Map';
 import Symbol from '@dojo/shim/Symbol';
 import { Handle } from '@dojo/interfaces/core';
-import Evented, { EventObject, BaseEventedEvents } from '@dojo/core/Evented';
-import { WidgetBaseConstructor, WidgetBaseInterface, Constructor, RegistryLabel } from './interfaces';
+import { BaseEventedEvents, Evented, EventObject } from '@dojo/core/Evented';
+import { Constructor, RegistryLabel, WidgetBaseConstructor, WidgetBaseInterface } from './interfaces';
 
 export type WidgetBaseConstructorFunction = () => Promise<WidgetBaseConstructor>;
 
@@ -71,12 +71,12 @@ export function isWidgetBaseConstructor<T extends WidgetBaseInterface>(item: any
  */
 export class WidgetRegistry extends Evented implements WidgetRegistry {
 
-	on: WidgetRegistryEvents;
+	public on: WidgetRegistryEvents;
 
 	/**
 	 * internal map of labels and WidgetRegistryItem
 	 */
-	private registry: Map<RegistryLabel, WidgetRegistryItem> = new Map<RegistryLabel, WidgetRegistryItem>();
+	private _registry: Map<RegistryLabel, WidgetRegistryItem> = new Map<RegistryLabel, WidgetRegistryItem>();
 
 	/**
 	 * Emit loaded event for registry label
@@ -88,20 +88,20 @@ export class WidgetRegistry extends Evented implements WidgetRegistry {
 		});
 	}
 
-	has(widgetLabel: RegistryLabel): boolean {
-		return this.registry.has(widgetLabel);
+	public has(widgetLabel: RegistryLabel): boolean {
+		return this._registry.has(widgetLabel);
 	}
 
-	define(widgetLabel: RegistryLabel, item: WidgetRegistryItem): void {
-		if (this.registry.has(widgetLabel)) {
+	public define(widgetLabel: RegistryLabel, item: WidgetRegistryItem): void {
+		if (this._registry.has(widgetLabel)) {
 			throw new Error(`widget has already been registered for '${widgetLabel.toString()}'`);
 		}
 
-		this.registry.set(widgetLabel, item);
+		this._registry.set(widgetLabel, item);
 
 		if (item instanceof Promise) {
 			item.then((widgetCtor) => {
-				this.registry.set(widgetLabel, widgetCtor);
+				this._registry.set(widgetLabel, widgetCtor);
 				this.emitLoadedEvent(widgetLabel);
 				return widgetCtor;
 			}, (error) => {
@@ -113,12 +113,12 @@ export class WidgetRegistry extends Evented implements WidgetRegistry {
 		}
 	}
 
-	get<T extends WidgetBaseInterface = WidgetBaseInterface>(widgetLabel: RegistryLabel): Constructor<T> | null {
+	public get<T extends WidgetBaseInterface = WidgetBaseInterface>(widgetLabel: RegistryLabel): Constructor<T> | null {
 		if (!this.has(widgetLabel)) {
 			return null;
 		}
 
-		const item = this.registry.get(widgetLabel);
+		const item = this._registry.get(widgetLabel);
 
 		if (isWidgetBaseConstructor<T>(item)) {
 			return item;
@@ -129,10 +129,10 @@ export class WidgetRegistry extends Evented implements WidgetRegistry {
 		}
 
 		const promise = (<WidgetBaseConstructorFunction> item)();
-		this.registry.set(widgetLabel, promise);
+		this._registry.set(widgetLabel, promise);
 
 		promise.then((widgetCtor) => {
-			this.registry.set(widgetLabel, widgetCtor);
+			this._registry.set(widgetLabel, widgetCtor);
 			this.emitLoadedEvent(widgetLabel);
 			return widgetCtor;
 		}, (error) => {

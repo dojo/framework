@@ -4,15 +4,15 @@ import Symbol from '@dojo/shim/Symbol';
 import { h, VNodeProperties } from 'maquette';
 import {
 	Constructor,
+	DefaultWidgetBaseInterface,
 	DNode,
 	HNode,
-	WNode,
+	RegistryLabel,
 	VirtualDomProperties,
 	WidgetBaseInterface,
-	RegistryLabel,
-	DefaultWidgetBaseInterface
+	WNode
 } from './interfaces';
-import WidgetRegistry from './WidgetRegistry';
+import { WidgetRegistry } from './WidgetRegistry';
 
 /**
  * The symbol identifier for a WNode type
