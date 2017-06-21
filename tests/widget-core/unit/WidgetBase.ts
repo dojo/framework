@@ -1120,9 +1120,9 @@ widget.__setProperties__({
 
 					return v('div', [
 						this.properties.hide ? null : w(TestChildWidget, properties),
+						this.properties.hide ? undefined : w(TestChildWidget, properties),
 						this.properties.hide ? null : w(TestChildWidget, properties),
-						this.properties.hide ? null : w(TestChildWidget, properties),
-						this.properties.hide ? null : w(TestChildWidget, properties)
+						this.properties.hide ? undefined : w(TestChildWidget, properties)
 					]);
 				}
 			}

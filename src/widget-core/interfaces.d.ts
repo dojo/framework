@@ -227,13 +227,18 @@ export interface WidgetProperties {
 }
 
 /**
+ * Virtual DOM Node type
+ */
+export type VirtualDomNode = VNode | string | null | undefined;
+
+/**
  * Wrapper for v
  */
 export interface HNode {
 	/**
 	 * Array of processed VNode children.
 	 */
-	vNodes?: ((string | VNode | null)[] |string | VNode | null)[];
+	vNodes?: (VirtualDomNode[] | VirtualDomNode)[];
 	/**
 	 * Specified children
 	 */
@@ -288,7 +293,7 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 /**
  * union type for all possible return types from render
  */
-export type DNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = HNode | WNode<W> | string | null;
+export type DNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = HNode | WNode<W> | string | null | undefined;
 
 /**
  * the event emitted on properties:changed
@@ -368,9 +373,8 @@ export interface WidgetBaseInterface<
 	/**
 	 * Main internal function for dealing with widget rendering
 	 */
-	__render__(): (VNode | string | null)[] | VNode | string | null;
+	__render__(): VirtualDomNode | VirtualDomNode[];
 }
-
 /**
  * Meta Base constructor type
  */

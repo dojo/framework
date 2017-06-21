@@ -279,7 +279,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			}
 			let result = super.__render__();
 
-			if (Array.isArray(result) || typeof result === 'string' || result === null) {
+			if (Array.isArray(result) || typeof result === 'string' || result === null || result === undefined) {
 				if (!this._rootTagName) {
 					this._rootTagName = 'span';
 				}

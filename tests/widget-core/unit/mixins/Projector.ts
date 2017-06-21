@@ -13,7 +13,7 @@ import { waitFor } from '../waitFor';
 const Event = global.window.Event;
 
 class BaseTestWidget extends ProjectorMixin(WidgetBase) {
-		public callInvalidate() {
+	public callInvalidate() {
 		this.invalidate();
 	}
 }
@@ -148,6 +148,43 @@ registerSuite({
 				assert.isUndefined(vnode.children);
 
 				result = null;
+				projector.callInvalidate();
+				vnode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'h2');
+				assert.isUndefined(vnode.text);
+				assert.lengthOf(vnode.children, 0);
+			},
+			'undefined root node'() {
+				result = undefined;
+				projector = new MyWidget();
+
+				projector.append();
+				let vnode: VNode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'span');
+				assert.isUndefined(vnode.text);
+				assert.lengthOf(vnode.children, 0);
+
+				result = v('div', [ 'other text' ]);
+				projector.callInvalidate();
+				vnode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'span');
+				assert.isUndefined(vnode.text);
+				assert.lengthOf(vnode.children, 1);
+				assert.equal(vnode.children![0].vnodeSelector, 'div');
+				assert.equal(vnode.children![0].text, 'other text');
+
+			},
+			'undefined root node after an initial render'() {
+				result = v('h2', [ 'my string' ]);
+				projector = new MyWidget();
+
+				projector.append();
+				let vnode: VNode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'h2');
+				assert.equal(vnode.text, 'my string');
+				assert.isUndefined(vnode.children);
+
+				result = undefined;
 				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'h2');
@@ -309,6 +346,47 @@ registerSuite({
 				assert.isUndefined(vnode.text);
 				assert.lengthOf(vnode.children, 0);
 			},
+			'undefined root node'() {
+				const root = document.createElement('my-app');
+				document.body.appendChild(root);
+				result = undefined;
+				projector = new MyWidget();
+
+				projector.replace(root);
+				let vnode: VNode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'span');
+				assert.isUndefined(vnode.text);
+				assert.lengthOf(vnode.children, 0);
+
+				result = v('div', [ 'other text' ]);
+				projector.callInvalidate();
+				vnode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'span');
+				assert.isUndefined(vnode.text);
+				assert.lengthOf(vnode.children, 1);
+				assert.equal(vnode.children![0].vnodeSelector, 'div');
+				assert.equal(vnode.children![0].text, 'other text');
+
+			},
+			'undefined root node after an initial render'() {
+				const root = document.createElement('my-app');
+				document.body.appendChild(root);
+				result = v('h2', [ 'my string' ]);
+				projector = new MyWidget();
+
+				projector.replace(root);
+				let vnode: VNode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'h2');
+				assert.equal(vnode.text, 'my string');
+				assert.isUndefined(vnode.children);
+
+				result = undefined;
+				projector.callInvalidate();
+				vnode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'h2');
+				assert.isUndefined(vnode.text);
+				assert.lengthOf(vnode.children, 0);
+			},
 			'array root node'() {
 				const root = document.createElement('my-app');
 				document.body.appendChild(root);
@@ -408,6 +486,44 @@ registerSuite({
 				assert.isUndefined(vnode.children);
 
 				result = null;
+				projector.callInvalidate();
+				vnode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'my-app');
+				assert.isUndefined(vnode.text);
+				assert.lengthOf(vnode.children, 0);
+			},
+			'undefined root node'() {
+				const root = document.createElement('my-app');
+				document.body.appendChild(root);
+				result = undefined;
+				projector = new MyWidget();
+
+				projector.merge(root);
+				let vnode: VNode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'my-app');
+				assert.isUndefined(vnode.text);
+				assert.lengthOf(vnode.children, 0);
+
+				result = v('div', [ 'other text' ]);
+				projector.callInvalidate();
+				vnode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'my-app');
+				assert.equal(vnode.text, 'other text');
+				assert.isUndefined(vnode.children);
+			},
+			'undefined root node after an initial render'() {
+				const root = document.createElement('my-app');
+				document.body.appendChild(root);
+				result = v('h2', [ 'my string' ]);
+				projector = new MyWidget();
+
+				projector.merge(root);
+				let vnode: VNode = projector.__render__() as VNode;
+				assert.equal(vnode.vnodeSelector, 'my-app');
+				assert.equal(vnode.text, 'my string');
+				assert.isUndefined(vnode.children);
+
+				result = undefined;
 				projector.callInvalidate();
 				vnode = projector.__render__() as VNode;
 				assert.equal(vnode.vnodeSelector, 'my-app');

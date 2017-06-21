@@ -1,7 +1,7 @@
 import { BaseEventedEvents, Evented } from '@dojo/core/Evented';
 import { EventedListenerOrArray } from '@dojo/interfaces/bases';
 import { Handle } from '@dojo/interfaces/core';
-import { ProjectionOptions, VNode, VNodeProperties } from '@dojo/interfaces/vdom';
+import { ProjectionOptions, VNodeProperties } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
 import Promise from '@dojo/shim/Promise';
 import Set from '@dojo/shim/Set';
@@ -17,6 +17,7 @@ import {
 	PropertiesChangeEvent,
 	RegistryLabel,
 	Render,
+	VirtualDomNode,
 	WidgetMetaConstructor,
 	WidgetBaseConstructor,
 	WidgetBaseInterface,
@@ -173,7 +174,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	/**
 	 * cachedVNode from previous render
 	 */
-	private _cachedVNode?: (VNode | string | null)[] | VNode | string;
+	private _cachedVNode?: VirtualDomNode | VirtualDomNode[];
 
 	/**
 	 * internal widget properties
@@ -330,8 +331,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		element: Element,
 		projectionOptions: ProjectionOptions,
 		vnodeSelector: string,
-		properties: VNodeProperties,
-		children: VNode[]
+		properties: VNodeProperties
 	): void {
 		this._setNode(element, properties);
 		this.onElementCreated(element, String(properties.key));
@@ -344,8 +344,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		element: Element,
 		projectionOptions: ProjectionOptions,
 		vnodeSelector: string,
-		properties: VNodeProperties,
-		children: VNode[]
+		properties: VNodeProperties
 	): void {
 		this._setNode(element, properties);
 		this.onElementUpdated(element, String(properties.key));
@@ -471,7 +470,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		}
 	}
 
-	public __render__(): (VNode | string | null)[] | VNode | string | null {
+	public __render__(): VirtualDomNode | VirtualDomNode[] {
 		this._renderState = WidgetRenderState.RENDER;
 		if (this._dirty || !this._cachedVNode) {
 			this._dirty = false;
@@ -647,12 +646,11 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	 * @param dNode the dnode to process
 	 * @returns a VNode, string or null
 	 */
-	private _dNodeToVNode(dNode: DNode): VNode | string | null;
-	private _dNodeToVNode(dNode: DNode[]): (VNode | string | null)[];
-	private _dNodeToVNode(dNode: DNode | DNode[]): (VNode | string | null)[] | VNode | string | null;
-	private _dNodeToVNode(dNode: DNode | DNode[]): (VNode | string | null)[] | VNode | string | null {
-
-		if (typeof dNode === 'string' || dNode === null) {
+	private _dNodeToVNode(dNode: DNode): VirtualDomNode;
+	private _dNodeToVNode(dNode: DNode[]): VirtualDomNode[];
+	private _dNodeToVNode(dNode: DNode | DNode[]): VirtualDomNode | VirtualDomNode[];
+	private _dNodeToVNode(dNode: DNode | DNode[]): VirtualDomNode | VirtualDomNode[] {
+		if (typeof dNode === 'string' || dNode === null || dNode === undefined) {
 			return dNode;
 		}
 
@@ -718,7 +716,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		}
 
 		dNode.vNodes = dNode.children
-		.filter((child) => child !== null)
+		.filter((child) => child !== null && child !== undefined)
 		.map((child: DNode) => {
 			return this._dNodeToVNode(child);
 		});
