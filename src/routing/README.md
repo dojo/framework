@@ -92,7 +92,7 @@ Example usage of `FooOutlet`, where the widget will only be rendered when the ro
 class App extends WidgetBase {
 	protected render(): DNode {
 		return v('div', [
-			w(MyViewWidget, {})
+			w(FooOutlet, {})
 		]);
 	}
 }
