@@ -81,7 +81,7 @@ registerSuite({
 			const RegistryTestWidget = factoryRegistry.get<TestWidget>('test-widget');
 			assert.isNotNull(RegistryTestWidget);
 			const widget = new RegistryTestWidget!();
-			// demontrates the design time typing
+			// demonstrates the design time typing
 			widget.__setProperties__({ foo: 'bar' });
 		},
 		'throws an error if factory has not been registered.'() {

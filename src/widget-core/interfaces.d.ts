@@ -342,13 +342,13 @@ export interface DefaultWidgetBaseInterface extends WidgetBaseInterface<WidgetPr
  * The interface for WidgetBase
  */
 export interface WidgetBaseInterface<
-	P extends WidgetProperties = WidgetProperties,
+	P = WidgetProperties,
 	C extends DNode = DNode<DefaultWidgetBaseInterface>> extends Evented {
 
 	/**
 	 * Widget properties
 	 */
-	readonly properties: P;
+	readonly properties: P & WidgetProperties;
 
 	/**
 	 * Returns the widget's children

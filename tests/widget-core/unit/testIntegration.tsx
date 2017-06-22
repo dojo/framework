@@ -1,10 +1,10 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { WidgetBase } from '../../src/WidgetBase';
-import { fromRegistry, registry } from '../../src/d';
+import { registry } from '../../src/d';
 import { WidgetProperties } from '../../src/interfaces';
 import { VNode } from '@dojo/interfaces/vdom';
-import * as tsx from './../../src/tsx';
+import { fromRegistry } from './../../src/tsx';
 
 registerSuite({
 	name: 'tsx',

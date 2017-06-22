@@ -21,8 +21,7 @@ import {
 	WidgetMetaConstructor,
 	WidgetBaseConstructor,
 	WidgetBaseInterface,
-	WidgetProperties,
-	WNode
+	WidgetProperties
 } from './interfaces';
 import MetaBase from './meta/Base';
 import RegistryHandler from './RegistryHandler';
@@ -37,17 +36,6 @@ interface WidgetCacheWrapper {
 	child: WidgetBaseInterface<WidgetProperties>;
 	widgetConstructor: WidgetBaseConstructor;
 	used: boolean;
-}
-
-export interface InternalWNode extends WNode {
-	properties: {
-		bind: any;
-	};
-}
-export interface InternalHNode extends HNode {
-	properties: {
-		bind: any;
-	};
 }
 
 enum WidgetRenderState {
@@ -149,7 +137,7 @@ function isHNodeWithKey(node: DNode): node is HNode {
  * Main widget base for all widgets to extend
  */
 @diffProperty('bind', DiffType.REFERENCE)
-export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends DNode = DNode> extends Evented implements WidgetBaseInterface<P, C> {
+export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends Evented implements WidgetBaseInterface<P, C> {
 
 	/**
 	 * static identifier
@@ -179,7 +167,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 	/**
 	 * internal widget properties
 	 */
-	private  _properties: P;
+	private  _properties: P & WidgetProperties;
 
 	/**
 	 * properties from the previous render
@@ -313,7 +301,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 
 	@afterRender()
 	protected decorateBind(node: DNode | DNode[]): DNode | DNode[] {
-		decorate(node, (node: InternalWNode | InternalHNode) => {
+		decorate(node, (node: any) => {
 			const { properties = {} }: { properties: { bind?: any } } = node;
 			if (!properties.bind) {
 				properties.bind = this;
@@ -376,7 +364,7 @@ export class WidgetBase<P extends WidgetProperties = WidgetProperties, C extends
 		this._nodeMap.set(String(properties.key), <HTMLElement> element);
 	}
 
-	public get properties(): Readonly<P> {
+	public get properties(): Readonly<P> & Readonly<WidgetProperties> {
 		return this._properties;
 	}
 

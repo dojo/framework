@@ -4,7 +4,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { stub, spy, SinonStub } from 'sinon';
 import { v, w, registry } from '../../src/d';
-import { DNode, Render, WidgetProperties } from '../../src/interfaces';
+import { Constructor, DNode, Render } from '../../src/interfaces';
 import {
 	WidgetBase,
 	diffProperty,
@@ -15,7 +15,7 @@ import {
 } from '../../src/WidgetBase';
 import WidgetRegistry, { WIDGET_BASE_TYPE } from './../../src/WidgetRegistry';
 
-interface TestProperties extends WidgetProperties {
+interface TestProperties {
 	id: string;
 	foo: string;
 	bar?: null | string;
@@ -896,7 +896,7 @@ widget.__setProperties__({
 		'async factories only initialise once'() {
 			let resolveFunction: any;
 			const loadFunction = () => {
-				return new Promise((resolve) => {
+				return new Promise<Constructor<WidgetBase>>((resolve) => {
 					resolveFunction = resolve;
 				});
 			};
@@ -944,7 +944,7 @@ widget.__setProperties__({
 		'render with async factory'() {
 			let resolveFunction: any;
 			const loadFunction = () => {
-				return new Promise((resolve) => {
+				return new Promise<Constructor<WidgetBase>>((resolve) => {
 					resolveFunction = resolve;
 				});
 			};

@@ -3,8 +3,6 @@ import { Evented } from '@dojo/core/Evented';
 import {
 	afterRender,
 	diffProperty,
-	InternalWNode,
-	InternalHNode,
 	WidgetBase
 } from './WidgetBase';
 import { decorate, isHNode, isWNode } from './d';
@@ -70,7 +68,7 @@ export interface InjectorProperties extends WidgetProperties {
 	scope: any;
 	render(): DNode;
 	getProperties?: GetProperties;
-	properties: WidgetProperties;
+	properties: any;
 	getChildren?: GetChildren;
 	children: DNode[];
 }
@@ -108,7 +106,7 @@ export function Injector<C extends Evented, T extends Constructor<BaseInjector<C
 		@afterRender()
 		protected decorateBind(node: DNode): DNode {
 			const { scope } = this.properties;
-			decorate(node, (node: InternalHNode | InternalWNode) => {
+			decorate(node, (node: any) => {
 				const { properties } = node;
 				properties.bind = scope;
 			}, (node: DNode) => { return isHNode(node) || isWNode(node); });
