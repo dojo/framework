@@ -321,12 +321,12 @@ export interface PropertyChangeRecord {
 	value: any;
 }
 
-/**
- * Properties changed record, return for diffProperties
- */
-export interface PropertiesChangeRecord<P extends WidgetProperties> {
-	changedKeys: string[];
-	properties: P;
+export interface DiffPropertyFunction {
+	<T>(previousProperty: T, newProperty: any): PropertyChangeRecord;
+}
+
+export interface DiffPropertyReaction {
+	(previousProperties: any, newProperties: any): void;
 }
 
 /**

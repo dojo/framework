@@ -1,11 +1,12 @@
 import { assign } from '@dojo/core/lang';
-import { includes, find } from '@dojo/shim/array';
+import { find } from '@dojo/shim/array';
 import Map from '@dojo/shim/Map';
-import { ClassesFunction, Constructor, DNode, WidgetProperties, PropertiesChangeEvent } from './../interfaces';
+import { ClassesFunction, Constructor, DNode, WidgetProperties } from './../interfaces';
 import { w, registry } from './../d';
 import { WidgetRegistry } from './../WidgetRegistry';
 import { BaseInjector, Context, Injector } from './../Injector';
-import { beforeRender, WidgetBase, onPropertiesChanged, handleDecorator } from './../WidgetBase';
+import { beforeRender, diffProperty, WidgetBase, handleDecorator } from './../WidgetBase';
+import { shallow } from './../diff';
 
 /**
  * A representation of the css class names to be applied and
@@ -249,18 +250,12 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<any>>>(Base: T):
 		}
 
 		/**
-		 * Function fired when properties are changed on the widget.
-		 *
-		 * @param changedPropertyKeys Array of properties that have changed
+		 * Function fired when `theme` or `extraClasses` are changed.
 		 */
-		@onPropertiesChanged()
-		protected onPropertiesChanged({ changedPropertyKeys }: PropertiesChangeEvent<this, ThemeableProperties>) {
-			const themeChanged = includes(changedPropertyKeys, 'theme');
-			const extraClassesChanged = includes(changedPropertyKeys, 'extraClasses');
-
-			if (themeChanged || extraClassesChanged) {
-				this._recalculateClasses = true;
-			}
+		@diffProperty('theme', shallow)
+		@diffProperty('extraClasses', shallow)
+		protected onPropertiesChanged() {
+			this._recalculateClasses = true;
 		}
 
 		/**

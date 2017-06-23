@@ -6,7 +6,7 @@ import {
 	WidgetBase
 } from './WidgetBase';
 import { decorate, isHNode, isWNode } from './d';
-import { DiffType } from './diff';
+import { always } from './diff';
 import {
 	Constructor,
 	DNode,
@@ -96,7 +96,7 @@ export class BaseInjector<C extends Evented = Context> extends WidgetBase<Inject
  */
 export function Injector<C extends Evented, T extends Constructor<BaseInjector<C>>>(Base: T, context: C): T {
 
-	@diffProperty('render', DiffType.ALWAYS)
+	@diffProperty('render', always)
 	class Injector extends Base {
 
 		constructor(...args: any[]) {
