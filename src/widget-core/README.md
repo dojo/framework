@@ -323,7 +323,7 @@ This is the only time in the widget lifecycle that exposes either of these attri
 
 ```ts
 class MyBaseClass extends WidgetBase<WidgetProperties> {
-	@beforeRender
+	@beforeRender()
 	myBeforeRender(renderFunc: () => DNode, properties: any, children: DNode[]): () => DNode {
 		// decorate/manipulate properties or children.
 		properties.extraAttribute = 'foo';
@@ -357,7 +357,7 @@ The `afterRender` call receives the returned `DNode`s from a widget's `render` c
 
 ```ts
 class MyBaseClass extends WidgetBase<WidgetProperties> {
-	@afterRender
+	@afterRender()
 	myAfterRender(result: DNode): DNode {
 		// do something with the result
 		return result;
