@@ -51,14 +51,14 @@ const defaultDiffOptions: DiffOptions = {
  * }, [ w(SubWidget, { open: true }) ]));
  * ```
  *
- * @param actual The actual rendered DNode to be asserted
- * @param expected The expected DNode to be asserted against the actual
+ * @param actual The actual rendered DNode or DNode Array to be asserted
+ * @param expected The expected DNode or DNode Array to be asserted against the actual
  * @param options A set of options that effect the behaviour of `assertRender`
  * @param message Any message to be part of an error thrown if actual and expected do not match
  */
-export default function assertRender(actual: DNode, expected: DNode, message?: string): void;
-export default function assertRender(actual: DNode, expected: DNode, options: AssertRenderOptions, message?: string): void;
-export default function assertRender(actual: DNode, expected: DNode, options?: AssertRenderOptions | string, message?: string): void {
+export default function assertRender(actual: DNode | DNode[], expected: DNode | DNode[], message?: string): void;
+export default function assertRender(actual: DNode | DNode[], expected: DNode | DNode[], options: AssertRenderOptions, message?: string): void;
+export default function assertRender(actual: DNode | DNode[], expected: DNode | DNode[], options?: AssertRenderOptions | string, message?: string): void {
 	if (typeof options === 'string') {
 		message = options;
 		options = undefined;
@@ -75,7 +75,13 @@ export default function assertRender(actual: DNode, expected: DNode, options?: A
 		});
 	}
 
-	if ((localIsHNode(actual) && localIsHNode(expected)) || (localIsWNode(actual) && localIsWNode(expected))) {
+	if (Array.isArray(actual) && Array.isArray(expected)) {
+		assertChildren(actual, expected);
+	}
+	else if (Array.isArray(actual) || Array.isArray(expected)) {
+		throwAssertionError(actual, expected, message);
+	}
+	else if ((localIsHNode(actual) && localIsHNode(expected)) || (localIsWNode(actual) && localIsWNode(expected))) {
 		if (localIsHNode(actual) && localIsHNode(expected)) {
 			if (actual.tag !== expected.tag) {
 				/* The tags do not match */

@@ -35,6 +35,31 @@ registerSuite({
 			);
 		},
 
+		'array HNodes equal'() {
+			assertRender(
+				[ v('div'), v('span') ],
+				[ v('div'), v('span') ]
+			);
+		},
+
+		'actual HNodes array and expected HNode not equal'() {
+			assert.throws(() => {
+				assertRender(
+					[ v('div'), v('span') ],
+					v('div')
+				);
+			}, AssertionError, 'Render unexpected');
+		},
+
+		'expected HNode and expected HNode array not equal'() {
+			assert.throws(() => {
+				assertRender(
+					v('div'),
+					[ v('div'), v('span') ]
+				);
+			}, AssertionError, 'Render unexpected');
+		},
+
 		'tag difference'() {
 			assert.throws(() => {
 				assertRender(v('div'), v('span'));
@@ -152,6 +177,13 @@ registerSuite({
 			assertRender(
 				w(MockWidget, {}),
 				w(MockWidget, {})
+			);
+		},
+
+		'WNode array equal'() {
+			assertRender(
+				[ w(MockWidget, {}) ],
+				[ w(MockWidget, {}) ]
 			);
 		},
 

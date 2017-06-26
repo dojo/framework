@@ -28,6 +28,14 @@ class MockWidget extends WidgetBase<MockWidgetProperties> {
 	}
 }
 
+class MockArrayWidget extends WidgetBase<MockWidgetProperties> {
+	render() {
+		return [
+			v('div.foo')
+		];
+	}
+}
+
 class MockRegistry {
 	tag: string;
 }
@@ -179,10 +187,72 @@ registerSuite({
 			widget.destroy();
 		},
 
+		'HNode render array - matches'() {
+			const widget = harness(MockArrayWidget);
+			widget.expectRender([ v('div.foo') ]);
+			widget.destroy();
+		},
+
+		'HNode render null - matches'() {
+			class MockWidget extends WidgetBase {
+				render() {
+					return null;
+				}
+			}
+			const widget = harness(MockWidget);
+			widget.expectRender(null);
+			widget.destroy();
+		},
+
+		'HNode render string - matches'() {
+			class MockWidget extends WidgetBase {
+				render() {
+					return 'string';
+				}
+			}
+			const widget = harness(MockWidget);
+			widget.expectRender('string');
+			widget.destroy();
+		},
+
 		'HNode render - does not match'() {
 			const widget = harness(MockWidget);
 			assert.throws(() => {
 				widget.expectRender(v('div.bar'));
+			});
+			widget.destroy();
+		},
+
+		'HNode render array - does not match'() {
+			const widget = harness(MockWidget);
+			assert.throws(() => {
+				widget.expectRender([ v('div.baz') ]);
+			});
+			widget.destroy();
+		},
+
+		'HNode render null - does not matches'() {
+			class MockWidget extends WidgetBase {
+				render() {
+					return null;
+				}
+			}
+			const widget = harness(MockWidget);
+			assert.throws(() => {
+				widget.expectRender([ v('div.baz') ]);
+			});
+			widget.destroy();
+		},
+
+		'HNode render string - does not matches'() {
+			class MockWidget extends WidgetBase {
+				render() {
+					return 'string';
+				}
+			}
+			const widget = harness(MockWidget);
+			assert.throws(() => {
+				widget.expectRender([ v('div.baz') ]);
 			});
 			widget.destroy();
 		},

@@ -125,7 +125,7 @@ function SpyRenderMixin<T extends Constructor<WidgetBaseInterface<WidgetProperti
 			target.actualRender(result);
 			return stubRender(result);
 		}
-	};
+	}
 
 	return SpyRender;
 }
@@ -150,7 +150,7 @@ class WidgetHarness<P extends WidgetProperties, W extends Constructor<WidgetBase
 	/**
 	 * What `DNode` that is expected on the next render
 	 */
-	public expectedRender: DNode | undefined;
+	public expectedRender: DNode | DNode[] | undefined;
 
 	/**
 	 * A reference to the previous render
@@ -366,7 +366,7 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 	 * @param expected The expected render (`DNode`)
 	 * @param message Any message to be part of an error that gets thrown if the actual and expected do not match
 	 */
-	public expectRender(expected: DNode, message?: string): this {
+	public expectRender(expected: DNode | DNode[], message?: string): this {
 		this._widgetHarness.expectedRender = expected;
 		this._widgetHarness.assertionMessage = message;
 		this._widgetHarness.didRender = false;
