@@ -272,24 +272,6 @@ registerSuite({
 				[ testTheme2.testPath1.class1 ]: true,
 				[ baseThemeClasses1.class2 ]: true
 			});
-		},
-		'will not regenerate theme classes if theme changed property is not set'() {
-			themeableInstance = new TestWidget();
-			themeableInstance.__setProperties__({ theme: testTheme1 });
-			themeableInstance.emit({
-				type: 'properties:changed',
-				properties: {
-					theme: testTheme2
-				},
-				changedPropertyKeys: [ 'id' ]
-			});
-
-			const { class1, class2 } = baseThemeClasses1;
-			const flaggedClasses = themeableInstance.classes(class1, class2).get();
-			assert.deepEqual(flaggedClasses, {
-				[ testTheme1.testPath1.class1 ]: true,
-				[ baseThemeClasses1.class2 ]: true
-			}, 'theme2 classes should not be present');
 		}
 	},
 	'setting override classes': {
@@ -439,15 +421,9 @@ registerSuite({
 		},
 		'setting the theme invalidates all "Themeable" widgets and the new theme is used'() {
 			const themeInjectorContext = registerThemeInjector(testTheme1, testRegistry);
-			let invalidateCallCount = 0;
 			class InjectedTheme extends TestWidget {
 				render() {
 					return v('div', { classes: this.classes(baseThemeClasses1.class1) });
-				}
-
-				invalidate() {
-					invalidateCallCount++;
-					super.invalidate();
 				}
 			}
 
@@ -466,19 +442,16 @@ registerSuite({
 			assert.lengthOf(vNode.children, 2);
 			assert.deepEqual(vNode.children[0].properties.classes, { theme1Class1: true });
 			assert.deepEqual(vNode.children[1].properties.classes, { theme1Class1: true });
-			assert.strictEqual(invalidateCallCount, 0);
 			themeInjectorContext.set(testTheme2);
 			vNode = testWidget.__render__();
 			assert.lengthOf(vNode.children, 2);
 			assert.deepEqual(vNode.children[0].properties.classes, { theme1Class1: false, theme2Class1: true });
 			assert.deepEqual(vNode.children[1].properties.classes, { theme1Class1: false, theme2Class1: true });
-			assert.strictEqual(invalidateCallCount, 2);
 			themeInjectorContext.set(testTheme1);
 			vNode = testWidget.__render__();
 			assert.lengthOf(vNode.children, 2);
 			assert.deepEqual(vNode.children[0].properties.classes, { theme2Class1: false, theme1Class1: true });
 			assert.deepEqual(vNode.children[1].properties.classes, { theme2Class1: false, theme1Class1: true });
-			assert.strictEqual(invalidateCallCount, 4);
 		},
 		'registerThemeInjector defaults to the global registry'() {
 			assert.isNull(registry.get(INJECTED_THEME_KEY));

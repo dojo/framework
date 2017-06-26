@@ -1,6 +1,4 @@
-import { BaseEventedEvents, Evented } from '@dojo/core/Evented';
-import { EventedListenerOrArray } from '@dojo/interfaces/bases';
-import { Handle } from '@dojo/interfaces/core';
+import { Evented } from '@dojo/core/Evented';
 import { ProjectionOptions, VNodeProperties } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
 import Promise from '@dojo/shim/Promise';
@@ -15,7 +13,6 @@ import {
 	DiffPropertyReaction,
 	DNode,
 	HNode,
-	PropertiesChangeEvent,
 	RegistryLabel,
 	Render,
 	VirtualDomNode,
@@ -40,6 +37,7 @@ interface WidgetCacheWrapper {
 enum WidgetRenderState {
 	IDLE = 1,
 	PROPERTIES,
+	CHILDREN,
 	RENDER
 }
 
@@ -52,10 +50,6 @@ interface ReactionFunctionArguments {
 interface ReactionFunctionConfig {
 	propertyName: string;
 	reaction: DiffPropertyReaction;
-}
-
-export interface WidgetBaseEvents<P extends WidgetProperties> extends BaseEventedEvents {
-	(type: 'properties:changed', handler: EventedListenerOrArray<WidgetBase<P>, PropertiesChangeEvent<WidgetBase<P>, P>>): Handle;
 }
 
 const decoratorMap = new Map<Function, Map<string, any[]>>();
@@ -135,11 +129,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	 * static identifier
 	 */
 	static _type: symbol = WIDGET_BASE_TYPE;
-
-	/**
-	 * on for the events defined for widget base
-	 */
-	public on: WidgetBaseEvents<P>;
 
 	/**
 	 * children array
@@ -382,8 +371,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		this._properties = diffPropertyResults;
 
 		if (changedPropertyKeys.length) {
-			this._dirty = true;
-			this.emit({ type: 'properties:changed', target: this });
+			this.invalidate();
 		}
 	}
 
@@ -392,13 +380,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	}
 
 	public __setChildren__(children: (C | null)[]): void {
+		this._renderState = WidgetRenderState.CHILDREN;
 		if (this._children.length || children.length) {
-			this._dirty = true;
 			this._children = children;
-			this.emit({
-				type: 'widget:children',
-				target: this
-			});
+			this.invalidate();
 		}
 	}
 
@@ -430,6 +415,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			});
 		}
 		else if (this._renderState === WidgetRenderState.PROPERTIES) {
+			this._dirty = true;
+		}
+		else if (this._renderState === WidgetRenderState.CHILDREN) {
 			this._dirty = true;
 		}
 	}

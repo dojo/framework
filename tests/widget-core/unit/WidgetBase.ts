@@ -22,8 +22,6 @@ interface TestProperties {
 	qux?: boolean;
 }
 
-class TestWidget extends WidgetBase<TestProperties> {}
-
 let consoleStub: SinonStub;
 
 registerSuite({
@@ -58,18 +56,13 @@ registerSuite({
 		assert.isTrue(consoleStub.secondCall.calledWith(`Usage of 'onElementUpdated' has been deprecated and will be removed in a future version, see https://github.com/dojo/widget-core/issues/559 for details (${name})`));
 	},
 	children() {
-		let childrenEventEmitted = false;
 		const expectedChild = v('div');
 		const widget = new WidgetBase();
-		widget.on('widget:children', () => {
-			childrenEventEmitted = true;
-		});
 
 		assert.lengthOf(widget.children, 0);
 		widget.__setChildren__([expectedChild]);
 		assert.lengthOf(widget.children, 1);
 		assert.strictEqual(widget.children[0], expectedChild);
-		assert.isTrue(childrenEventEmitted);
 	},
 	'invalidate': {
 		'should emit event and mark as dirty when invalidating during idle'() {
@@ -152,61 +145,10 @@ registerSuite({
 			const renderedWidget = <VNode> (<any> widget).__render__();
 			assert.deepEqual(renderedWidget.vnodeSelector, 'div');
 	},
-	diffProperties: {
-		'no updated properties'() {
-			let propertiesChanged = false;
-			const widgetBase = new TestWidget();
-			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
-
-			widgetBase.on('properties:changed', result => {
-				propertiesChanged = true;
-			});
-
-			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
-			assert.isFalse(propertiesChanged);
-		},
-		'updated properties'() {
-			let propertiesChanged = false;
-			const widgetBase = new TestWidget();
-			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
-
-			widgetBase.on('properties:changed', result => {
-				propertiesChanged = true;
-			});
-
-			widgetBase.__setProperties__({ id: 'id', foo: 'baz' });
-			assert.isTrue(propertiesChanged);
-		},
-		'new properties'() {
-			let propertiesChanged = false;
-			const widgetBase = new TestWidget();
-			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
-
-			widgetBase.on('properties:changed', result => {
-				propertiesChanged = true;
-			});
-
-			widgetBase.__setProperties__({ id: 'id', foo: 'bar', bar: 'baz' });
-			assert.isTrue(propertiesChanged);
-		},
-		'updated / new properties with falsy values'() {
-			let propertiesChanged = false;
-			const widgetBase = new TestWidget();
-			widgetBase.__setProperties__({ id: 'id', foo: 'bar' });
-
-			widgetBase.on('properties:changed', result => {
-				propertiesChanged = true;
-			});
-
-			widgetBase.__setProperties__({ id: 'id', foo: '', bar: null, baz: 0, qux: false });
-			assert.isTrue(propertiesChanged);
-		}
-	},
 	diffProperty: {
 		'decorator': {
 			'diff with no reaction'() {
 				let callCount = 0;
-				let propertiesChanged = false;
 				function diffFoo(previousProperty: any, newProperty: any) {
 					callCount++;
 					assert.equal(newProperty, 'bar');
@@ -221,13 +163,9 @@ registerSuite({
 				class TestWidget extends WidgetBase<TestProperties> {}
 
 				const testWidget = new TestWidget();
-				testWidget.on('properties:changed', () => {
-					propertiesChanged = true;
-				});
 
 				testWidget.__setProperties__({ id: '', foo: 'bar' });
 				assert.equal(callCount, 1);
-				assert.isTrue(propertiesChanged);
 			},
 			'diff with reaction': {
 				'reaction does not execute if no registered properties are changed'() {
@@ -392,8 +330,6 @@ registerSuite({
 			assert.equal(renderCallCount, 1);
 		},
 		'multiple default decorators on the same method cause the first matching decorator to win'() {
-			let propertiesChanged = false;
-
 			@diffProperty('foo', ignore)
 			class TestWidget extends WidgetBase<TestProperties> { }
 
@@ -401,14 +337,13 @@ registerSuite({
 			class SubWidget extends TestWidget { }
 
 			const widget = new SubWidget();
-			widget.on('properties:changed', () => {
-				propertiesChanged = true;
-			});
+			const vnode = widget.__render__();
+
 			widget.__setProperties__({
 				foo: 'bar'
 			});
 
-			assert.isTrue(propertiesChanged);
+			assert.notStrictEqual(vnode, widget.__render__());
 		},
 		'multiple custom decorators on the same method cause the first matching decorator to win'() {
 			const calls: string[] = [];
@@ -458,14 +393,13 @@ registerSuite({
 			class TestWidget extends WidgetBase<TestProperties> { }
 
 			const widget = new TestWidget();
-			widget.on('properties:changed', result => {
-				assert.fail('property should not be considered changed');
-			});
+			const vnode = widget.__render__();
 
 			widget.__setProperties__({
 				foo: '',
 				id: ''
 			});
+			assert.strictEqual(vnode, widget.__render__());
 		},
 
 		'properties that are deleted dont get returned'() {
@@ -1408,34 +1342,6 @@ registerSuite({
 		widget.invalidate();
 		widget.__render__();
 		assert.equal(foo, 1);
-	},
-	'properties:changed should mark as dirty but not invalidate'() {
-		let foo = 0;
-
-		class FooWidget extends WidgetBase<any> {
-			render() {
-				foo = this.properties.foo;
-				return v('div', []);
-			}
-		}
-
-		class TestWidget extends WidgetBase<any> {
-			private foo = 0;
-
-			render() {
-				this.foo++;
-				return w(FooWidget, { foo: this.foo });
-			}
-		}
-
-		const widget: any = new TestWidget();
-		const invalidateSpy = spy(widget, 'invalidate');
-		widget.__render__();
-		assert.equal(foo, 1);
-		widget.invalidate();
-		widget.__render__();
-		assert.equal(foo, 2);
-		assert.equal(invalidateSpy.callCount, 1);
 	},
 	'decorators are cached'() {
 		class TestWidget extends WidgetBase<any> {
