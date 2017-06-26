@@ -192,6 +192,10 @@ class WidgetHarness<P extends WidgetProperties, W extends Constructor<WidgetBase
 				[ w(_widgetConstructor, properties, children) ]
 			);
 	}
+
+	public invalidate(): void {
+		super.invalidate();
+	}
 }
 
 export interface HarnessSendEventOptions<I extends EventInit> extends SendEventOptions<I> {
@@ -279,9 +283,6 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 			this._projection = undefined;
 			this._attached = false;
 		}));
-
-		this.own(this._widgetHarness.on('widget:children', this._widgetHarness.invalidate));
-		this.own(this._widgetHarness.on('properties:changed', this._widgetHarness.invalidate));
 
 		this._projection = dom.append(this._projectionRoot, this._currentRender = this._widgetHarnessRender() as VNode, this._projectionOptions);
 		this._attached = true;
