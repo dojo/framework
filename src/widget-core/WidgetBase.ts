@@ -575,12 +575,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		const afterRenders = this.getDecorator('afterRender');
 
 		return afterRenders.reduce((dNode: DNode | DNode[], afterRenderFunction: AfterRender) => {
-			const updatedDNode = afterRenderFunction.call(this, dNode);
-			if (!updatedDNode) {
-				console.warn('DNodes not returned from afterRender, using existing dNodes');
-				return dNode;
-			}
-			return updatedDNode;
+			return  afterRenderFunction.call(this, dNode);
 		}, dNode);
 	}
 

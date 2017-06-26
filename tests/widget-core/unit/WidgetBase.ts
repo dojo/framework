@@ -711,23 +711,6 @@ registerSuite({
 			const widget = new TestWidget();
 			widget.__render__();
 			assert.strictEqual(afterRenderCount, 1);
-		},
-		'Use previous DNodes when an afterRender does not return DNodes'() {
-			class TestWidget extends WidgetBase {
-				@afterRender()
-				protected firstBeforeRender(dNode: DNode | DNode[]) {
-					return 'first render';
-				}
-
-				@afterRender()
-				protected secondBeforeRender(dNode: DNode | DNode[]) { }
-			}
-
-			const widget = new TestWidget();
-			const vNode = <VNode> widget.__render__();
-			assert.strictEqual(vNode, 'first render');
-			assert.isTrue(consoleStub.calledOnce);
-			assert.isTrue(consoleStub.calledWith('DNodes not returned from afterRender, using existing dNodes'));
 		}
 	},
 	'extendable'() {
