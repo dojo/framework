@@ -6,7 +6,6 @@ export * from './interfaces';
 export * from './mixins/I18n';
 export * from './mixins/Projector';
 export * from './mixins/Registry';
-export * from './mixins/Stateful';
 export * from './mixins/Themeable';
 export * from './registerCustomElement';
 export * from './util/DomWrapper';
