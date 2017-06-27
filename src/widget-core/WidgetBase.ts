@@ -233,18 +233,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 				}
 			});
 			this._requiredNodes.clear();
-			return renderFunc();
+			const dNodes = renderFunc();
+			this._nodeMap.clear();
+			return dNodes;
 		};
-	}
-
-	/**
-	 * A render decorator that clears the node map used
-	 * by 'meta' calls in this render.
-	 */
-	@afterRender()
-	clearNodeMap(node: DNode | DNode[]): DNode | DNode[] {
-		this._nodeMap.clear();
-		return node;
 	}
 
 	/**
@@ -546,7 +538,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		});
 	}
 
-	protected get registries(): RegistryHandler {
+	public get registries(): RegistryHandler {
 		return this._registries;
 	}
 
@@ -605,7 +597,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			let child: WidgetBaseInterface<WidgetProperties>;
 
 			if (!isWidgetBaseConstructor(widgetConstructor)) {
-				const item = this._registries.get(widgetConstructor);
+				const item = this.registries.get(widgetConstructor);
 				if (item === null) {
 					return null;
 				}

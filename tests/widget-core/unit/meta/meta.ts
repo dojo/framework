@@ -6,6 +6,9 @@ import { ProjectorMixin } from '../../../src/main';
 import { Base as MetaBase } from '../../../src/meta/Base';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { stub } from 'sinon';
+import { ThemeableMixin } from './../../../src/mixins/Themeable';
+
+class TestWidgetBase<P = any> extends ThemeableMixin(WidgetBase)<P> {}
 
 let rAF: any;
 
@@ -28,7 +31,7 @@ registerSuite({
 		class TestMeta extends MetaBase {
 		}
 
-		class TestWidget extends ProjectorMixin(WidgetBase)<any> {
+		class TestWidget extends ProjectorMixin(TestWidgetBase)<any> {
 			render() {
 				return v('div', {
 					innerHTML: 'hello world',
@@ -52,7 +55,7 @@ registerSuite({
 		class TestMeta extends MetaBase {
 		}
 
-		class TestWidget extends ProjectorMixin(WidgetBase) {
+		class TestWidget extends ProjectorMixin(TestWidgetBase) {
 			render() {
 				return v('div', {
 					innerHTML: 'hello world',
@@ -79,7 +82,7 @@ registerSuite({
 
 		let renders = 0;
 
-		class TestWidget extends ProjectorMixin(WidgetBase) {
+		class TestWidget extends ProjectorMixin(TestWidgetBase) {
 			nodes: any;
 
 			render() {
@@ -115,7 +118,7 @@ registerSuite({
 
 		let renders = 0;
 
-		class TestWidget extends ProjectorMixin(WidgetBase) {
+		class TestWidget extends ProjectorMixin(TestWidgetBase) {
 			nodes: any;
 
 			render() {
@@ -133,7 +136,7 @@ registerSuite({
 					}, [
 						test.has('name') ? v('div', {
 							innerHTML: '!',
-							key: 'exclmation'
+							key: 'exclamation'
 						}) : null
 					]) : null
 				]);
@@ -155,7 +158,7 @@ registerSuite({
 
 		let renders = 0;
 
-		class TestWidget extends ProjectorMixin(WidgetBase) {
+		class TestWidget extends ProjectorMixin(TestWidgetBase) {
 			nodes: any;
 
 			render() {

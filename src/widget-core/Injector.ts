@@ -12,6 +12,7 @@ import {
 	DNode,
 	WidgetProperties
 } from './interfaces';
+import RegistryHandler from './RegistryHandler';
 
 export interface GetProperties {
 	<C, P extends WidgetProperties>(inject: C, properties: P): any;
@@ -65,7 +66,7 @@ export class Context<T = any> extends Evented {
 }
 
 export interface InjectorProperties extends WidgetProperties {
-	scope: any;
+	scope: WidgetBase;
 	render(): DNode;
 	getProperties?: GetProperties;
 	properties: any;
@@ -130,6 +131,10 @@ export function Injector<C extends Evented, T extends Constructor<BaseInjector<C
 			}
 
 			return render();
+		}
+
+		public get registries(): RegistryHandler {
+			return this.properties.scope.registries;
 		}
 	}
 	return Injector;

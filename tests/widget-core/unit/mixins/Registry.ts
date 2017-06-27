@@ -6,8 +6,9 @@ import { RegistryMixin, RegistryMixinProperties } from '../../../src/mixins/Regi
 import { WidgetBase } from '../../../src/WidgetBase';
 import WidgetRegistry from '../../../src/WidgetRegistry';
 import { spy } from 'sinon';
+import { ThemeableMixin } from './../../../src/mixins/Themeable';
 
-class TestWithRegistry extends RegistryMixin(WidgetBase)<RegistryMixinProperties> {
+class TestWithRegistry extends RegistryMixin(ThemeableMixin(WidgetBase))<RegistryMixinProperties> {
 	private _changedKeys: string[];
 	constructor() {
 		super();

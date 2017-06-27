@@ -6,6 +6,7 @@ import { v } from '../../../src/d';
 import { ProjectorMixin } from '../../../src/main';
 import Dimensions from '../../../src/meta/Dimensions';
 import { WidgetBase } from '../../../src/WidgetBase';
+import { ThemeableMixin } from './../../../src/mixins/Themeable';
 
 let rAF: any;
 
@@ -30,7 +31,7 @@ registerSuite({
 	'dimensions are correctly configured'(this: any) {
 		const dimensions: any[] = [];
 
-		class TestWidget extends ProjectorMixin(WidgetBase)<any> {
+		class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase))<any> {
 			render() {
 				dimensions.push(this.meta(Dimensions).get('root'));
 				return v('div', {
@@ -77,7 +78,7 @@ registerSuite({
 	},
 
 	'dimensions has returns false for keys that dont exist'(this: any) {
-		class TestWidget extends ProjectorMixin(WidgetBase)<any> {
+		class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase))<any> {
 			render() {
 				this.meta(Dimensions);
 
@@ -103,7 +104,7 @@ registerSuite({
 	},
 
 	'dimensions has returns true for keys that exist'(this: any) {
-		class TestWidget extends ProjectorMixin(WidgetBase)<any> {
+		class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase))<any> {
 			render() {
 				this.meta(Dimensions);
 

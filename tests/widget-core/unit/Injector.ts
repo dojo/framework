@@ -11,9 +11,7 @@ class TestInjector extends BaseInjector {
 	}
 }
 
-const bind = {
-	foo: 'bar'
-};
+const bind = new WidgetBase();
 
 registerSuite({
 	name: 'Injector',
@@ -85,7 +83,7 @@ registerSuite({
 
 		const injector = new InjectorWidget();
 		injector.__setProperties__({
-			scope: context,
+			scope: bind,
 			render,
 			properties: testProperties,
 			children: testChildren
