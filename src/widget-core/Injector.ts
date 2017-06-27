@@ -15,11 +15,11 @@ import {
 import RegistryHandler from './RegistryHandler';
 
 export interface GetProperties {
-	<C, P extends WidgetProperties>(inject: C, properties: P): any;
+	<P extends WidgetProperties>(inject: any, properties: P): any;
 }
 
 export interface GetChildren {
-	<C>(inject: C, children: DNode[]): DNode[];
+	(inject: any, children: DNode[]): DNode[];
 }
 
 /**

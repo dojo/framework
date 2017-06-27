@@ -304,7 +304,7 @@ export interface PropertyChangeRecord {
 }
 
 export interface DiffPropertyFunction {
-	<T>(previousProperty: T, newProperty: any): PropertyChangeRecord;
+	(previousProperty: any, newProperty: any): PropertyChangeRecord;
 }
 
 export interface DiffPropertyReaction {
