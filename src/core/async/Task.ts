@@ -1,6 +1,6 @@
 import { Thenable } from '@dojo/shim/interfaces';
 import { Executor } from '@dojo/shim/Promise';
-import ExtensiblePromise, { ListOfPromises, DictionaryOfPromises } from './ExtensiblePromise';
+import ExtensiblePromise, { ListOfPromises, DictionaryOfPromises, unwrapPromises } from './ExtensiblePromise';
 import { Iterable } from '@dojo/shim/iterator';
 
 /**
@@ -40,18 +40,20 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	 * @param iterable    An iterable of values to resolve. These can be Promises, ExtensiblePromises, or other objects
 	 * @returns {Task}
 	 */
-	static race<F extends ExtensiblePromise<T>, T>(iterable: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): Task<T> {
-		return <Task<T>> super.race(iterable);
+	static race<T>(iterable: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): Task<T> {
+		return new this((resolve, reject) => {
+			Promise.race(unwrapPromises(iterable)).then(resolve, reject);
+		});
 	}
 
 	/**
 	 * Return a rejected promise wrapped in a Task
 	 *
-	 * @param {Error?} reason    The reason for the rejection
-	 * @returns {Task}
+	 * @param reason The reason for the rejection
+	 * @returns A task
 	 */
 	static reject<T>(reason?: Error): Task<T> {
-		return new this<T>((resolve, reject) => reject(reason));
+		return new this((resolve, reject) => reject(reason));
 	}
 
 	/**
@@ -59,20 +61,95 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	 *
 	 * @param value The value to resolve with
 	 *
-	 * @return {Task}
+	 * @return A task
 	 */
 	public static resolve(): Task<void>;
+
+	/**
+	 * Return a resolved task.
+	 *
+	 * @param value The value to resolve with
+	 *
+	 * @return A task
+	 */
 	public static resolve<T>(value: (T | Thenable<T>)): Task<T>;
+
+	/**
+	 * Return a resolved task.
+	 *
+	 * @param value The value to resolve with
+	 *
+	 * @return A task
+	 */
 	public static resolve<T>(value?: any): Task<T> {
 		return new this<T>((resolve, reject) => resolve(value));
 	}
 
+	/**
+	 * Return a ExtensiblePromise that resolves when all of the passed in objects have resolved. When used with a key/value
+	 * pair, the returned promise's argument is a key/value pair of the original keys with their resolved values.
+	 *
+	 * @example
+	 * ExtensiblePromise.all({ one: 1, two: 2 }).then(results => console.log(results));
+	 * // { one: 1, two: 2 }
+	 *
+	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
+	 * @returns An extensible promise
+	 */
 	static all<T>(iterable: DictionaryOfPromises<T>): Task<{ [key: string]: T }>;
+
+	/**
+	 * Return a ExtensiblePromise that resolves when all of the passed in objects have resolved. When used with a key/value
+	 * pair, the returned promise's argument is a key/value pair of the original keys with their resolved values.
+	 *
+	 * @example
+	 * ExtensiblePromise.all({ one: 1, two: 2 }).then(results => console.log(results));
+	 * // { one: 1, two: 2 }
+	 *
+	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
+	 * @returns An extensible promise
+	 */
 	static all<T>(iterable: (T | Thenable<T>)[]): Task<T[]>;
+
+	/**
+	 * Return a ExtensiblePromise that resolves when all of the passed in objects have resolved. When used with a key/value
+	 * pair, the returned promise's argument is a key/value pair of the original keys with their resolved values.
+	 *
+	 * @example
+	 * ExtensiblePromise.all({ one: 1, two: 2 }).then(results => console.log(results));
+	 * // { one: 1, two: 2 }
+	 *
+	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
+	 * @returns An extensible promise
+	 */
 	static all<T>(iterable: T | Thenable<T>): Task<T[]>;
+
+	/**
+	 * Return a ExtensiblePromise that resolves when all of the passed in objects have resolved. When used with a key/value
+	 * pair, the returned promise's argument is a key/value pair of the original keys with their resolved values.
+	 *
+	 * @example
+	 * ExtensiblePromise.all({ one: 1, two: 2 }).then(results => console.log(results));
+	 * // { one: 1, two: 2 }
+	 *
+	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
+	 * @returns An extensible promise
+	 */
 	static all<T>(iterable: ListOfPromises<T>): Task<T[]>;
+
+	/**
+	 * Return a ExtensiblePromise that resolves when all of the passed in objects have resolved. When used with a key/value
+	 * pair, the returned promise's argument is a key/value pair of the original keys with their resolved values.
+	 *
+	 * @example
+	 * ExtensiblePromise.all({ one: 1, two: 2 }).then(results => console.log(results));
+	 * // { one: 1, two: 2 }
+	 *
+	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
+	 * @returns An extensible promise
+	 */
 	static all<T>(iterable: DictionaryOfPromises<T> | ListOfPromises<T>): Task<any> {
-		return <Task<T>> super.all(iterable);
+		return super.all(iterable) as Task<any>;
 	}
 
 	/**
@@ -195,9 +272,8 @@ export default class Task<T> extends ExtensiblePromise<T> {
 		}
 	}
 
-	catch(onRejected: (reason: Error) => T | Thenable<T> | void): Task<T>;
-	catch<U>(onRejected: (reason: Error) => U | Thenable<U>): Task<U> {
-		return this.then(undefined, onRejected);
+	catch<TResult = never>(onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined): Task<T | TResult> {
+		return this.then(undefined, onRejected) as Task<T | TResult>;
 	}
 
 	/**
@@ -225,18 +301,15 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	/**
 	 * Adds a callback to be invoked when the Task resolves or is rejected.
 	 *
-	 * @param {Function} onFulfilled   A function to call to handle the resolution. The paramter to the function will be the resolved value, if any.
-	 * @param {Function} onRejected    A function to call to handle the error. The parameter to the function will be the caught error.
+	 * @param onFulfilled   A function to call to handle the resolution. The paramter to the function will be the resolved value, if any.
+	 * @param onRejected    A function to call to handle the error. The parameter to the function will be the caught error.
 	 *
-	 * @returns {ExtensiblePromise}
+	 * @returns A task
 	 */
-	then<U, V>(onFulfilled: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected: (reason: Error) => (V | Thenable<V>)): Task<U | V>;
-	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => void): Task<U>;
-	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => (U | Thenable<U>)): Task<U>;
-	then<U>(onFulfilled?: (value?: T) => U | Thenable<U>, onRejected?: (error: Error) => U | Thenable<U>): Task<U> {
+	then<TResult1 = T, TResult2 = never>(onFulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onRejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Task<TResult1 | TResult2> {
 		// FIXME
 		// tslint:disable-next-line:no-var-keyword
-		var task = <Task<U>> super.then<U>(
+		var task = super.then(
 			// Don't call the onFulfilled or onRejected handlers if this Task is canceled
 			function (value) {
 				if (task._state === State.Canceled) {
@@ -256,7 +329,7 @@ export default class Task<T> extends ExtensiblePromise<T> {
 				}
 				throw error;
 			}
-		);
+		) as Task<TResult1 | TResult2>;
 
 		task.canceler = () => {
 			// If task's parent (this) hasn't been resolved, cancel it; downward propagation will start at the first

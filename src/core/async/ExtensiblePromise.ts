@@ -10,7 +10,7 @@ import '@dojo/shim/Symbol';
  * @param iterable    The list of objects to iterate over
  * @returns {any[]}    The list of objects, as an array, with ExtensiblePromises being replaced by Promises.
  */
-function unwrapPromises(iterable: Iterable<any> | any[]): any[] {
+export function unwrapPromises(iterable: Iterable<any> | any[]): any[] {
 	const unwrapped: any[] = [];
 	forOf(iterable, function (item: any): void {
 		unwrapped.push(item instanceof ExtensiblePromise ? item._promise : item);
@@ -29,11 +29,19 @@ export default class ExtensiblePromise<T> {
 	/**
 	 * Return a rejected promise wrapped in an ExtensiblePromise
 	 *
-	 * @param {Error?} reason    The reason for the rejection
-	 * @returns {ExtensiblePromise}
+	 * @param reason    The reason for the rejection
+	 * @returns An extensible promise
 	 */
-	static reject<T>(reason?: Error): any {
-		return new this<T>((resolve, reject) => reject(reason));
+	static reject<T>(reason?: any): ExtensiblePromise<never>;
+
+	/**
+	 * Return a rejected promise wrapped in an ExtensiblePromise
+	 *
+	 * @param reason    The reason for the rejection
+	 * @returns An extensible promise
+	 */
+	static reject<T>(reason?: any): ExtensiblePromise<T> {
+		return new this((resolve, reject) => reject(reason));
 	}
 
 	/**
@@ -41,12 +49,20 @@ export default class ExtensiblePromise<T> {
 	 *
 	 * @param value The value to resolve the promise with
 	 *
-	 * @returns {ExtensiblePromise}
+	 * @returns An extensible promise
 	 */
-	static resolve<F extends ExtensiblePromise<void>>(): F;
-	static resolve<T, F extends ExtensiblePromise<T>>(value: (T | Thenable<T>)): F;
-	static resolve<T, F extends ExtensiblePromise<T>>(value?: any): F {
-		return <F> new this<T>((resolve, reject) => resolve(value));
+	static resolve<P extends ExtensiblePromise<void>>(): P;
+
+	/**
+	 * Return a resolved promise wrapped in an ExtensiblePromise
+	 *
+	 * @param value The value to resolve the promise with
+	 *
+	 * @returns An extensible promise
+	 */
+	static resolve<T, P extends ExtensiblePromise<T>>(value: T | PromiseLike<T>): P;
+	static resolve(value?: any | PromiseLike<any>): ExtensiblePromise<any> {
+		return new this((resolve, reject) => resolve(value));
 	}
 
 	/**
@@ -58,22 +74,70 @@ export default class ExtensiblePromise<T> {
 	 * // { one: 1, two: 2 }
 	 *
 	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
-	 * @returns {ExtensiblePromise}
+	 * @returns An extensible promise
 	 */
-	static all<F extends ExtensiblePromise<{ [key: string]: T }>, T>(iterable: DictionaryOfPromises<T>): F;
-	static all<F extends ExtensiblePromise<T[]>, T>(iterable: (T | Thenable<T>)[]): F;
-	static all<F extends ExtensiblePromise<T[]>, T>(iterable: T | Thenable<T>): F;
-	static all<F extends ExtensiblePromise<T[]>, T>(iterable: ListOfPromises<T>): F;
-	static all<F extends ExtensiblePromise<any>, T>(iterable: DictionaryOfPromises<T> | ListOfPromises<T>): F {
+	static all<T>(iterable: DictionaryOfPromises<T>): ExtensiblePromise<{ [key: string]: T }>;
+
+	/**
+	 * Return a ExtensiblePromise that resolves when all of the passed in objects have resolved. When used with a key/value
+	 * pair, the returned promise's argument is a key/value pair of the original keys with their resolved values.
+	 *
+	 * @example
+	 * ExtensiblePromise.all({ one: 1, two: 2 }).then(results => console.log(results));
+	 * // { one: 1, two: 2 }
+	 *
+	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
+	 * @returns An extensible promise
+	 */
+	static all<T>(iterable: (T | Thenable<T>)[]): ExtensiblePromise<T[]>;
+
+	/**
+	 * Return a ExtensiblePromise that resolves when all of the passed in objects have resolved. When used with a key/value
+	 * pair, the returned promise's argument is a key/value pair of the original keys with their resolved values.
+	 *
+	 * @example
+	 * ExtensiblePromise.all({ one: 1, two: 2 }).then(results => console.log(results));
+	 * // { one: 1, two: 2 }
+	 *
+	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
+	 * @returns An extensible promise
+	 */
+	static all<T>(iterable: T | Thenable<T>): ExtensiblePromise<T[]>;
+
+	/**
+	 * Return a ExtensiblePromise that resolves when all of the passed in objects have resolved. When used with a key/value
+	 * pair, the returned promise's argument is a key/value pair of the original keys with their resolved values.
+	 *
+	 * @example
+	 * ExtensiblePromise.all({ one: 1, two: 2 }).then(results => console.log(results));
+	 * // { one: 1, two: 2 }
+	 *
+	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
+	 * @returns An extensible promise
+	 */
+	static all<T>(iterable: ListOfPromises<T>): ExtensiblePromise<T[]>;
+
+	/**
+	 * Return a ExtensiblePromise that resolves when all of the passed in objects have resolved. When used with a key/value
+	 * pair, the returned promise's argument is a key/value pair of the original keys with their resolved values.
+	 *
+	 * @example
+	 * ExtensiblePromise.all({ one: 1, two: 2 }).then(results => console.log(results));
+	 * // { one: 1, two: 2 }
+	 *
+	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
+	 * @returns An extensible promise
+	 */
+	static all<T>(iterable: DictionaryOfPromises<T> | ListOfPromises<T>): ExtensiblePromise<T[] | { [key: string]: T }> {
 		if (!isArrayLike(iterable) && !isIterable(iterable)) {
 			const promiseKeys = Object.keys(iterable);
 
-			return <F> new this((resolve, reject) => {
-				Promise.all(promiseKeys.map(key => (<DictionaryOfPromises<T>> iterable)[ key ])).then((promiseResults: T[]) => {
-					const returnValue: {[_: string]: T} = {};
+			return new this((resolve, reject) => {
+				Promise.all(promiseKeys.map(key => iterable[key])).then((promiseResults: T[]) => {
+					const returnValue: { [key: string]: T} = {};
 
 					promiseResults.forEach((value: T, index: number) => {
-						returnValue[ promiseKeys[ index ] ] = value;
+						returnValue[promiseKeys[index]] = value;
 					});
 
 					resolve(returnValue);
@@ -81,7 +145,7 @@ export default class ExtensiblePromise<T> {
 			});
 		}
 
-		return <F> new this((resolve, reject) => {
+		return new this((resolve, reject) => {
 			Promise.all(unwrapPromises(<Iterable<T>> iterable)).then(resolve, reject);
 		});
 	}
@@ -92,8 +156,8 @@ export default class ExtensiblePromise<T> {
 	 * @param iterable    An iterable of values to resolve. These can be Promises, ExtensiblePromises, or other objects
 	 * @returns {ExtensiblePromise}
 	 */
-	static race<F extends ExtensiblePromise<T>, T>(iterable: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): F {
-		return <F> new this((resolve, reject) => {
+	static race<T>(iterable: Iterable<(T | PromiseLike<T>)> | (T | PromiseLike<T>)[]): ExtensiblePromise<T> {
+		return new this((resolve, reject) => {
 			Promise.race(unwrapPromises(iterable)).then(resolve, reject);
 		});
 	}
@@ -127,9 +191,8 @@ export default class ExtensiblePromise<T> {
 	 *
 	 * @returns {ExtensiblePromise}
 	 */
-	catch(onRejected: (reason: Error) => T | Thenable<T> | void): ExtensiblePromise<T>;
-	catch<U>(onRejected: (reason: Error) => U | Thenable<U>): ExtensiblePromise<U> {
-		return this.then<U>(undefined, onRejected);
+	catch<TResult = never>(onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): ExtensiblePromise<T | TResult> {
+		return this.then(undefined, onRejected);
 	}
 
 	/**
@@ -140,16 +203,17 @@ export default class ExtensiblePromise<T> {
 	 *
 	 * @returns {ExtensiblePromise}
 	 */
-	then<U, V>(onFulfilled: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected: (reason: Error) => (V | Thenable<V>)): ExtensiblePromise<U | V>;
-	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => void): ExtensiblePromise<U>;
-	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => (U | Thenable<U>)): ExtensiblePromise<U> {
-		const e: Executor<U> = (resolve, reject) => {
-			function handler(rejected: boolean, valueOrError: T | U | Error) {
-				const callback: ((value: T | U | Error) => (U | Thenable<U> | void)) | undefined = rejected ? onRejected : onFulfilled;
+	then<TResult1 = T, TResult2 = never>(
+		onFulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+		onRejected?: ((reason: any) => TResult2 | PromiseLike<TResult2> | void) | undefined | null
+	): ExtensiblePromise<TResult1 | TResult2> {
+		const executor: Executor<TResult1> = (resolve, reject) => {
+			function handler(rejected: boolean, valueOrError: T | TResult1 | Error) {
+				const callback: ((value: any) => any) | null | undefined = rejected ? onRejected : onFulfilled;
 
 				if (typeof callback === 'function') {
 					try {
-						resolve(<U> callback(<T> valueOrError));
+						resolve(callback(valueOrError));
 					}
 					catch (error) {
 						reject(error);
@@ -159,14 +223,14 @@ export default class ExtensiblePromise<T> {
 					reject(valueOrError);
 				}
 				else {
-					resolve(<U> valueOrError);
+					resolve(valueOrError as TResult1);
 				}
 			}
 
 			this._promise.then(handler.bind(null, false), handler.bind(null, true));
 		};
 
-		return new (<{ new(executor: Executor<U>): any }> this.constructor)(e);
+		return new (this.constructor as typeof ExtensiblePromise)(executor);
 	}
 
 	readonly [Symbol.toStringTag]: 'Promise';

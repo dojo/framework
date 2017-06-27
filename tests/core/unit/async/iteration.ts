@@ -336,7 +336,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 					const { step, initialIndex, callbackValues } = getExpectedSolution(this);
 					const values: string[] = 'hello'.split('');
 					const iterable = getIterable(useIterator, values);
-					const results = createTriggerablePromises(values.length);
+					const results = createTriggerablePromises<string>(values.length);
 					let previousIndex = initialIndex;
 					const promise = reduceMethod(iterable,
 						function (previous: string, value: string, index: number, array: string[]): Promise<string> {

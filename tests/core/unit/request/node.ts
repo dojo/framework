@@ -705,20 +705,18 @@ registerSuite({
 		},
 
 		'data cannot be used twice'() {
-			return nodeRequest(getRequestUrl('foo.json')).then((response?: Response) => {
-				if (response) {
-					assert.isFalse(response.bodyUsed);
+			return nodeRequest(getRequestUrl('foo.json')).then((response) => {
+				assert.isFalse(response.bodyUsed);
+
+				return response.json().then(() => {
+					assert.isTrue(response.bodyUsed);
 
 					return response.json().then(() => {
-						assert.isTrue(response.bodyUsed);
-
-						return response.json().then(() => {
-							throw new Error('should not have succeeded');
-						}, () => {
-							return true;
-						});
+						throw new Error('should not have succeeded');
+					}, () => {
+						return true;
 					});
-				}
+				});
 			});
 		},
 

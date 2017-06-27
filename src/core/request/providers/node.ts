@@ -162,18 +162,13 @@ export class NodeResponse extends Response {
 
 		const headers = this.headers = new Headers();
 		for (let key in response.headers) {
-			if (discardedDuplicates.has(key)) {
-				headers.append(key, response.headers[key]);
-			}
-			else if (key === 'set-cookie') {
-				(<string[]> response.headers[key]).forEach(value => {
+			const value = response.headers[key];
+			if (value) {
+				if (discardedDuplicates.has(key) && !Array.isArray(value)) {
 					headers.append(key, value);
-				});
-			}
-			else {
-				const values: string[] = response.headers[key].split(', ');
-				values.forEach(value => {
-					headers.append(key, value);
+				}
+				(Array.isArray(value) ? value : value.split(/\s*,\s*/)).forEach((v) => {
+					headers.append(key, v);
 				});
 			}
 		}

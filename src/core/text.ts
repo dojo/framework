@@ -25,7 +25,7 @@ function strip(text: string): string {
 /*
  * Host-specific method to retrieve text
  */
-let getText: (url: string, callback: (value: string) => void) => void;
+let getText: (url: string, callback: (value: string | null) => void) => void;
 
 if (has('host-browser')) {
 	getText = function(url: string, callback: (value: string | null) => void): void {
@@ -64,8 +64,8 @@ let textCache: { [key: string]: any; } = {};
  */
 let pending: { [key: string]: any; } = {};
 
-export function get(url: string): Promise <string> {
-	let promise = new Promise <string> (function (resolve, reject) {
+export function get(url: string): Promise <string | null> {
+	let promise = new Promise<string | null>(function (resolve, reject) {
 		getText(url, function (text) {
 			resolve(text);
 		});

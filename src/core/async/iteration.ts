@@ -3,6 +3,10 @@ import { isArrayLike, Iterable } from '@dojo/shim/iterator';
 import Promise from '@dojo/shim/Promise';
 import { Thenable } from '@dojo/shim/interfaces';
 
+function isThenable<T>(value: any): value is Thenable<T> {
+	return value && typeof value.then === 'function';
+}
+
 type ValuesAndResults<T, U> = { values: T[] | undefined; results: U[] | undefined; };
 
 /**
@@ -13,11 +17,11 @@ type ValuesAndResults<T, U> = { values: T[] | undefined; results: U[] | undefine
  * @return a list of objects holding the synchronous values and synchronous results.
  */
 function processValuesAndCallback<T, U>(items: Iterable<T | Promise<T>> | (T | Thenable<T>)[], callback: Mapper<T, U>): Promise<ValuesAndResults<T, U>> {
-	return Promise.all<T>(items)
+	return Promise.all(items)
 		.then(function (results) {
-			let pass: (U | Promise<U>)[] = Array.prototype.map.call(results, callback);
-			return Promise.all<U>(pass)
-				.then<ValuesAndResults<T, U>>(function (pass) {
+			const pass: (U | Promise<U>)[] = Array.prototype.map.call(results, callback);
+			return Promise.all(pass)
+				.then(function (pass) {
 					return { values: results, results: pass };
 				});
 		});
@@ -27,7 +31,7 @@ function processValuesAndCallback<T, U>(items: Iterable<T | Promise<T>> | (T | T
  * Finds the index of the next value in a sparse array-like object
  * @param list the sparse array-like object
  * @param offset the starting offset
- * @return {number} the offset of the next index with a value; or -1 if not found
+ * @return the offset of the next index with a value; or -1 if not found
  */
 function findNextValueIndex<T>(list: ArrayLike<T>, offset: number = -1): number {
 	offset++;
@@ -39,7 +43,7 @@ function findNextValueIndex<T>(list: ArrayLike<T>, offset: number = -1): number 
 	return -1;
 }
 
-function findLastValueIndex<T>(list: ArrayLike<T>, offset?: number): number {
+function findLastValueIndex(list: ArrayLike<any>, offset?: number): number {
 	offset = (offset === undefined ? list.length : offset) - 1;
 	for (; offset >= 0; offset--) {
 		if (offset in list) {
@@ -51,9 +55,9 @@ function findLastValueIndex<T>(list: ArrayLike<T>, offset?: number): number {
 
 function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any> | undefined, offset?: number) => number, items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
 	const hasInitialValue = arguments.length > 3;
-	return Promise.all<T>(items)
+	return Promise.all(items)
 		.then(function (results) {
-			return new Promise(function (resolve, reject) {
+			return new Promise<U>(function (resolve, reject) {
 				// As iterators do not have indices like `ArrayLike` objects, the results array
 				// is used to determine the next value.
 				const list = isArrayLike(items) ? items : results;
@@ -65,11 +69,11 @@ function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any> | undefined, o
 							if (currentValue) {
 								const result = callback(currentValue, results[i], i, results);
 
-								if ( (<Thenable<U>> result).then) {
-									(<Thenable<U>> result).then(next, reject);
+								if (isThenable(result)) {
+									result.then(next, reject);
 								}
 								else {
-									next(<U> result);
+									next(result);
 								}
 							}
 						}
@@ -99,7 +103,7 @@ function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any> | undefined, o
 }
 
 function testAndHaltOnCondition<T>(condition: boolean, items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Filterer<T>): Promise<boolean> {
-	return Promise.all<T>(items).then(function (results) {
+	return Promise.all(items).then(function (results) {
 		return new Promise<boolean>(function(resolve) {
 			let result: (boolean | Thenable<boolean>);
 			let pendingCount = 0;
@@ -109,9 +113,9 @@ function testAndHaltOnCondition<T>(condition: boolean, items: Iterable<T | Promi
 					if (result === condition) {
 						return resolve(result);
 					}
-					else if ((<Thenable<boolean>> result).then) {
+					else if (isThenable(result)) {
 						pendingCount++;
-						(<Thenable<boolean>> result).then(function (result) {
+						result.then(function (result) {
 							if (result === condition) {
 								resolve(result);
 							}
@@ -147,7 +151,7 @@ export function every<T>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], c
  * @return eventually returns a new array with only values that have passed
  */
 export function filter<T>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Filterer<T>): Promise<T[]> {
-	return processValuesAndCallback(items, callback).then<T[]>(function (result) {
+	return processValuesAndCallback(items, callback).then(function (result) {
 		let arr: T[] = [];
 		if (result && result.results && result.values) {
 			for (let i = 0; i < result.results.length; i++) {
@@ -164,9 +168,9 @@ export function filter<T>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], 
  * @param callback a synchronous/asynchronous test
  * @return a promise eventually containing the item or undefined if a match is not found
  */
-export function find<T>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Filterer<T>): Promise<T> {
-	const list: (T | Thenable<T>)[] = isArrayLike(items) ? items : <(T | Thenable<T>)[]> array.from(items);
-	return findIndex<T>(list, callback).then(function (i?: number): T | Thenable<T> | undefined {
+export function find<T>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Filterer<T>): Promise<T | undefined> {
+	const list = isArrayLike(items) ? items : array.from(items);
+	return findIndex(list, callback).then<T | undefined>(function (i) {
 		return i !== undefined && i >= 0 ? list[i] : undefined;
 	});
 }
@@ -179,7 +183,7 @@ export function find<T>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], ca
  */
 export function findIndex<T>(items: Iterable<T | Promise<T>> | (T | Thenable<T>)[], callback: Filterer<T>): Promise<number> {
 	// TODO we can improve this by returning immediately
-	return processValuesAndCallback(items, callback).then<number>(function (result: ValuesAndResults<T, boolean>) {
+	return processValuesAndCallback(items, callback).then(function (result: ValuesAndResults<T, boolean>) {
 		if (result && result.results) {
 			for (let i = 0; i < result.results.length; i++) {
 				if (result.results[i]) {
@@ -197,9 +201,9 @@ export function findIndex<T>(items: Iterable<T | Promise<T>> | (T | Thenable<T>)
  * @param callback a synchronous/asynchronous transform function
  * @return a promise eventually containing a collection of each transformed value
  */
-export function map<T, U>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Mapper<T, U>): Promise<U[]> {
-	return processValuesAndCallback<T, U>(items, callback)
-			.then<U | U[] | null>(function (result) {
+export function map<T, U>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Mapper<T, U>): Promise<U[] | null | undefined> {
+	return processValuesAndCallback(items, callback)
+			.then(function (result) {
 				return result ? result.results : null;
 			});
 }
@@ -212,23 +216,23 @@ export function map<T, U>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], 
  * @return a promise eventually containing a value that is the result of the reduction
  */
 export function reduce<T, U>(this: any, items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
-	let args: any[] = <any[]> array.from(arguments);
+	const args: any[] = <any[]> array.from(arguments);
 	args.unshift(findNextValueIndex);
 	return generalReduce.apply(this, args);
 }
 
 export function reduceRight<T, U>(this: any, items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
-	let args: any[] = <any[]> array.from(arguments);
+	const args: any[] = <any[]> array.from(arguments);
 	args.unshift(findLastValueIndex);
 	return generalReduce.apply(this, args);
 }
 
 export function series<T, U>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[], operation: Mapper<T, U>): Promise<U[]> {
-	return generalReduce(findNextValueIndex, items, function (previousValue: (Thenable<U> | U)[], currentValue: T, index: number, array: T[]) {
+	return generalReduce(findNextValueIndex, items, function (previousValue, currentValue: T, index: number, array: T[]) {
 		const result = operation(currentValue, index, array);
 
-		if ((<Thenable<U>> result).then) {
-			return (<Thenable<U>> result).then(function (value: U) {
+		if (isThenable(result)) {
+			return result.then(function (value) {
 				previousValue.push(value);
 				return previousValue;
 			});
@@ -236,11 +240,11 @@ export function series<T, U>(items: Iterable<T | Promise<T>> | (T | Promise<T>)[
 
 		previousValue.push(result);
 		return previousValue;
-	}, []);
+	}, [] as U[]);
 }
 
 export function some<T>(items: Iterable<T | Promise<T>> | Array<T | Promise<T>>, callback: Filterer<T>): Promise<boolean> {
-	return testAndHaltOnCondition<T>(true, items, callback);
+	return testAndHaltOnCondition(true, items, callback);
 }
 
 export interface Filterer<T> extends Mapper<T, boolean> {}

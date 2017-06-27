@@ -74,7 +74,7 @@ registerSuite({
 	'DelayedRejection': {
 		'is eventually rejected': function () {
 			const start = Date.now();
-			return new timing.DelayedRejection(101).then<any>(throwImmediatly, function (reason) {
+			return new timing.DelayedRejection(101).then(throwImmediatly, function (reason) {
 				assert.isUndefined(reason);
 				assert.isAbove(Date.now(), start + 99);
 				return true;
@@ -84,7 +84,7 @@ registerSuite({
 		'is eventually rejected with error': function () {
 			const start = Date.now();
 			const expectedError = new Error('boom!');
-			return new timing.DelayedRejection(101, expectedError).then<any>(throwImmediatly, function (reason) {
+			return new timing.DelayedRejection(101, expectedError).then(throwImmediatly, function (reason) {
 				assert.strictEqual(reason, expectedError);
 				assert.isAbove(Date.now(), start + 99);
 				return true;
