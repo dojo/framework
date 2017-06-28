@@ -1,5 +1,5 @@
 import { Thenable } from './interfaces';
-import global from './support/global';
+import global from './global';
 import { queueMicroTask } from './support/queue';
 import { forOf, Iterable } from './iterator';
 import './Symbol';

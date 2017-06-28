@@ -1,4 +1,4 @@
-import global from './global';
+import global from '../global';
 import has from '@dojo/has/has';
 import { add } from '@dojo/has/has';
 

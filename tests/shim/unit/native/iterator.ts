@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import has, { add as hasAdd } from '../../../src/support/has';
-import global from '../../../src/support/global';
+import global from '../../../src/global';
 
 hasAdd('es6-iterator', () => Boolean(global.Symbol && global.Symbol.iterator && global.Array.prototype[Symbol.iterator]));
 

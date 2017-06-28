@@ -1,10 +1,10 @@
 import './native/all';
 import './support/decorators';
-import './support/global';
 import './support/has';
 import './support/queue';
 import './support/util';
 import './array';
+import './global';
 import './iterator';
 import './main';
 import './Map';

@@ -1,6 +1,6 @@
 import { ArrayLike } from './interfaces';
 import { hasClass } from './support/decorators';
-import global from './support/global';
+import global from './global';
 import { forOf, IterableIterator, Iterable, ShimIterator } from './iterator';
 import './Symbol';
 

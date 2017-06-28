@@ -1,4 +1,4 @@
-import global from '../support/global';
+import global from '../global';
 import { getValueDescriptor } from '../support/util';
 
 /* tslint:disable-next-line:variable-name */

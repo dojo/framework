@@ -1,4 +1,4 @@
-import global from './global';
+import global from '../global';
 import has from './has';
 import { Handle } from '../interfaces';
 

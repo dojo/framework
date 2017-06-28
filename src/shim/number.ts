@@ -1,4 +1,4 @@
-import global from './support/global';
+import global from './global';
 
 /**
  * The smallest interval between two representable numbers.

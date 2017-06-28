@@ -1,6 +1,6 @@
 import { Iterable, forOf, isIterable, isArrayLike } from './iterator';
 import { hasClass } from './support/decorators';
-import global from './support/global';
+import global from './global';
 import './Symbol';
 
 /**

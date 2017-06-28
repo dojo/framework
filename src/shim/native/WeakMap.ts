@@ -1,4 +1,4 @@
-import global from '../support/global';
+import global from '../global';
 
 export interface WeakMap<K, V> {
 	clear(): void;

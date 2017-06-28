@@ -1,5 +1,5 @@
 import has from './support/has';
-import global from './support/global';
+import global from './global';
 import { getValueDescriptor } from './support/util';
 
 declare global {
