@@ -2,7 +2,7 @@ import { assign } from '@dojo/core/lang';
 import { isHNode, isWNode } from '@dojo/widget-core/d';
 import { DNode, HNode, WNode } from '@dojo/widget-core/interfaces';
 import AssertionError from './AssertionError';
-import { diff, DiffOptions } from './compare';
+import {diff, DiffOptions, getComparableObjects} from './compare';
 
 const RENDER_FAIL_MESSAGE = 'Render unexpected';
 
@@ -98,7 +98,8 @@ export default function assertRender(actual: DNode | DNode[], expected: DNode | 
 		const delta = diff(actual.properties, expected.properties, diffOptions);
 		if (delta.length) {
 			/* The properties do not match */
-			throwAssertionError(actual.properties, expected.properties, message);
+			const { comparableA, comparableB } = getComparableObjects(actual.properties, expected.properties, diffOptions);
+			throwAssertionError(comparableA, comparableB, message);
 		}
 		/* We need to assert the children match */
 		assertChildren(actual.children, expected.children);

@@ -544,6 +544,32 @@ registerSuite({
 
 					assert.deepEqual(patchRecords, [], 'should be no differences');
 					assert.deepEqual(propertyStack, [ 'foo', 'bar', 'baz' ]);
+				},
+
+				'function and ignored'() {
+					const propertyStack: string[] = [];
+
+					const a = {
+						foo: 'bar',
+						bar: 1,
+						baz: false
+					};
+
+					const b = {
+						foo: 'bar',
+						bar: 1,
+						baz: false
+					};
+
+					const patchRecords = diff(a, b, { ignoreProperties(name, first, second) {
+						propertyStack.push(name);
+						assert.strictEqual(first, a);
+						assert.strictEqual(second, b);
+						return true;
+					} });
+
+					assert.deepEqual(patchRecords, [], 'should be no differences');
+					assert.deepEqual(propertyStack, [ 'foo', 'bar', 'baz' ]);
 				}
 			},
 

@@ -1,5 +1,6 @@
 import { assign } from '@dojo/core/lang';
 import { keys } from '@dojo/shim/object';
+import Set from '@dojo/shim/Set';
 
 /* Assigning to local variables to improve minification and readability */
 
@@ -379,78 +380,65 @@ function diffArray(a: any[], b: any, options: DiffOptions): SpliceRecord[] {
  * @param options An options bag that allows configuration of the behaviour of `diffPlainObject()`
  */
 function diffPlainObject(a: any, b: any, options: DiffOptions): (ConstructRecord | PatchRecord)[] {
-	const { allowFunctionValues = false, ignoreProperties = [], ignorePropertyValues = [] } = options;
+	const { allowFunctionValues = false, ignorePropertyValues = [] } = options;
 	const patchRecords: (ConstructRecord | PatchRecord)[] = [];
-
-	function isIgnoredProperty(name: string) {
-		return Array.isArray(ignoreProperties) ? ignoreProperties.some((value) => {
-			return typeof value === 'string' ? name === value : value.test(name);
-		}) : ignoreProperties(name, a, b);
-	}
-
-	function isIgnoredPropertyValue(name: string) {
-		return Array.isArray(ignorePropertyValues) ? ignorePropertyValues.some((value) => {
-			return typeof value === 'string' ? name === value : value.test(name);
-		}) : ignorePropertyValues(name, a, b);
-	}
+	const { comparableA, comparableB } = getComparableObjects(a, b, options);
 
 	/* look for keys in a that are different from b */
-	keys(a).reduce((patchRecords, name) => {
-		if (!isIgnoredProperty(name)) {
-			const valueA = a[name];
-			const valueB = b[name];
-			const bHasOwnProperty = hasOwnProperty.call(b, name);
+	keys(comparableA).reduce((patchRecords, name) => {
+		const valueA = a[name];
+		const valueB = b[name];
+		const bHasOwnProperty = hasOwnProperty.call(comparableB, name);
 
-			if (bHasOwnProperty && (valueA === valueB ||
-				(allowFunctionValues && typeof valueA === 'function' && typeof valueB === 'function') ||
-				isIgnoredPropertyValue(name))) { /* not different */
-					/* when `allowFunctionValues` is true, functions are simply considered to be equal by `typeof` */
-					return patchRecords;
-			}
+		if (bHasOwnProperty && (valueA === valueB ||
+			(allowFunctionValues && typeof valueA === 'function' && typeof valueB === 'function'))) { /* not different */
+				/* when `allowFunctionValues` is true, functions are simply considered to be equal by `typeof` */
+				return patchRecords;
+		}
 
-			const type = bHasOwnProperty ? 'update' : 'add';
+		const type = bHasOwnProperty ? 'update' : 'add';
 
-			const isValueAArray = isArray(valueA);
-			const isValueAPlainObject = isPlainObject(valueA);
+		const isValueAArray = isArray(valueA);
+		const isValueAPlainObject = isPlainObject(valueA);
 
-			if ((isValueAArray || isValueAPlainObject) && !isIgnoredPropertyValue(name)) { /* non-primitive values we can diff */
-				/* this is a bit complicated, but essentially if valueA and valueB are both arrays or plain objects, then
-				* we can diff those two values, if not, then we need to use an empty array or an empty object and diff
-				* the valueA with that */
-				const value = (isValueAArray && isArray(valueB)) || (isValueAPlainObject && isPlainObject(valueB)) ?
-					valueB : isValueAArray ?
-						[] : objectCreate(null);
-				const valueRecords = diff(valueA, value, options);
-				if (valueRecords.length) { /* only add if there are changes */
-					patchRecords.push(createPatchRecord(type, name, createValuePropertyDescriptor(value), diff(valueA, value, options)));
-				}
+		if ((isValueAArray || isValueAPlainObject)) { /* non-primitive values we can diff */
+			/* this is a bit complicated, but essentially if valueA and valueB are both arrays or plain objects, then
+			* we can diff those two values, if not, then we need to use an empty array or an empty object and diff
+			* the valueA with that */
+			const value = (isValueAArray && isArray(valueB)) || (isValueAPlainObject && isPlainObject(valueB)) ?
+				valueB : isValueAArray ?
+					[] : objectCreate(null);
+			const valueRecords = diff(valueA, value, options);
+			if (valueRecords.length) { /* only add if there are changes */
+				patchRecords.push(createPatchRecord(type, name, createValuePropertyDescriptor(value), diff(valueA, value, options)));
 			}
-			else if (isCustomDiff(valueA) && !isCustomDiff(valueB)) { /* complex diff left hand */
-				const result = valueA.diff(valueB, name, b);
-				if (result) {
-					patchRecords.push(result);
-				}
+		}
+		else if (isCustomDiff(valueA) && !isCustomDiff(valueB)) { /* complex diff left hand */
+			const result = valueA.diff(valueB, name, b);
+			if (result) {
+				patchRecords.push(result);
 			}
-			else if (isCustomDiff(valueB)) { /* complex diff right hand */
-				const result = valueB.diff(valueA, name, a);
-				if (result) {
-					patchRecords.push(result);
-				}
+		}
+		else if (isCustomDiff(valueB)) { /* complex diff right hand */
+			const result = valueB.diff(valueA, name, a);
+			if (result) {
+				patchRecords.push(result);
 			}
-			else if (isPrimitive(valueA) || (allowFunctionValues && typeof valueA === 'function') || isIgnoredPropertyValue(name)) {
+		}
+		else if (isPrimitive(valueA) || (allowFunctionValues && typeof valueA === 'function') ||
+			isIgnoredPropertyValue(name, a, b, ignorePropertyValues)) {
 				/* primitive values, functions values if allowed, or ignored property values can just be copied */
 				patchRecords.push(createPatchRecord(type, name, createValuePropertyDescriptor(valueA)));
-			}
-			else {
-				throw new TypeError(`Value of property named "${name}" from first argument is not a primative, plain Object, or Array.`);
-			}
+		}
+		else {
+			throw new TypeError(`Value of property named "${name}" from first argument is not a primative, plain Object, or Array.`);
 		}
 		return patchRecords;
 	}, patchRecords);
 
 	/* look for keys in b that are not in a */
-	keys(b).reduce((patchRecords, name) => {
-		if (!hasOwnProperty.call(a, name) && !isIgnoredProperty(name)) {
+	keys(comparableB).reduce((patchRecords, name) => {
+		if (!hasOwnProperty.call(comparableA, name)) {
 			patchRecords.push(createPatchRecord('delete', name));
 		}
 		return patchRecords;
@@ -460,11 +448,59 @@ function diffPlainObject(a: any, b: any, options: DiffOptions): (ConstructRecord
 }
 
 /**
+ * Takes two plain objects to be compared, as well as options customizing the behavior of the comparison, and returns
+ * two new objects that contain only those properties that should be compared. If a property is ignored
+ * it will not be included in either returned object. If a property's value should be ignored it will be excluded
+ * if it is present in both objects.
+ * @param a The first object to compare
+ * @param b The second object to compare
+ * @param options An options bag indicating which properties should be ignored or have their values ignored, if any.
+ */
+export function getComparableObjects(a: any, b: any, options: DiffOptions) {
+	const { ignoreProperties = [], ignorePropertyValues = [] } = options;
+	const ignore = new Set<string>();
+	const keep = new Set<string>();
+
+	const isIgnoredProperty = Array.isArray(ignoreProperties) ? (name: string) => {
+		return ignoreProperties.some((value) => typeof value === 'string' ? name === value : value.test(name));
+	} : (name: string) => ignoreProperties(name, a, b);
+
+	const comparableA = keys(a).reduce((obj, name) => {
+		if (isIgnoredProperty(name) ||
+			hasOwnProperty.call(b, name) && isIgnoredPropertyValue(name, a, b, ignorePropertyValues)) {
+				ignore.add(name);
+				return obj;
+		}
+
+		keep.add(name);
+		obj[name] = a[name];
+		return obj;
+	}, {} as { [key: string]: any });
+
+	const comparableB = keys(b).reduce((obj, name) => {
+		if (ignore.has(name) || !keep.has(name) && isIgnoredProperty(name)) {
+			return obj;
+		}
+
+		obj[name] = b[name];
+		return obj;
+	}, {} as { [key: string]: any });
+
+	return { comparableA, comparableB, ignore };
+}
+
+/**
  * A guard that determines if the value is a `ConstructRecord`
  * @param value The value to check
  */
 function isConstructRecord(value: any): value is ConstructRecord {
 	return Boolean(value && typeof value === 'object' && value !== null && value.Ctor && value.name);
+}
+
+function isIgnoredPropertyValue(name: string, a: any, b: any, ignoredPropertyValues: (string | RegExp)[] | IgnorePropertyFunction) {
+	return Array.isArray(ignoredPropertyValues) ? ignoredPropertyValues.some((value) => {
+		return typeof value === 'string' ? name === value : value.test(name);
+	}) : ignoredPropertyValues(name, a, b);
 }
 
 /**
