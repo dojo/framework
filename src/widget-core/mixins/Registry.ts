@@ -16,9 +16,9 @@ export function RegistryMixin<T extends Constructor<WidgetBase<any>>>(Base: T): 
 
 		@diffProperty('registry', reference)
 		protected diffPropertyRegistry(previousProperties: any, newProperties: any): void {
-			const result = this.registries.replace(previousProperties.registry, newProperties.registry);
+			const result = this.getRegistries().replace(previousProperties.registry, newProperties.registry);
 			if (!result) {
-				this.registries.add(newProperties.registry);
+				this.getRegistries().add(newProperties.registry);
 			}
 		}
 	}

@@ -385,7 +385,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			this._dirty = false;
 			const render = this._runBeforeRenders();
 			let dNode = render();
-			dNode = this._runAfterRenders(dNode);
+			dNode = this.runAfterRenders(dNode);
 			const widget = this._dNodeToVNode(dNode);
 			this._manageDetachedChildren();
 			if (widget) {
@@ -538,7 +538,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		});
 	}
 
-	public get registries(): RegistryHandler {
+	protected getRegistries(): RegistryHandler {
 		return this._registries;
 	}
 
@@ -563,11 +563,11 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	 *
 	 * @param dNode The DNodes to run through the after renders
 	 */
-	private _runAfterRenders(dNode: DNode | DNode[]): DNode | DNode[] {
+	protected runAfterRenders(dNode: DNode | DNode[]): DNode | DNode[] {
 		const afterRenders = this.getDecorator('afterRender');
 
 		return afterRenders.reduce((dNode: DNode | DNode[], afterRenderFunction: AfterRender) => {
-			return  afterRenderFunction.call(this, dNode);
+			return afterRenderFunction.call(this, dNode);
 		}, dNode);
 	}
 
@@ -597,7 +597,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			let child: WidgetBaseInterface<WidgetProperties>;
 
 			if (!isWidgetBaseConstructor(widgetConstructor)) {
-				const item = this.registries.get(widgetConstructor);
+				const item = this.getRegistries().get(widgetConstructor);
 				if (item === null) {
 					return null;
 				}

@@ -1,7 +1,6 @@
 import { assign } from '@dojo/core/lang';
 import { Evented } from '@dojo/core/Evented';
 import {
-	afterRender,
 	diffProperty,
 	WidgetBase
 } from './WidgetBase';
@@ -67,7 +66,7 @@ export class Context<T = any> extends Evented {
 
 export interface InjectorProperties extends WidgetProperties {
 	scope: WidgetBase;
-	render(): DNode;
+	render(): DNode | DNode[];
 	getProperties?: GetProperties;
 	properties: any;
 	getChildren?: GetChildren;
@@ -104,8 +103,7 @@ export function Injector<C extends Evented, T extends Constructor<BaseInjector<C
 			super(context);
 		}
 
-		@afterRender()
-		protected decorateBind(node: DNode): DNode {
+		protected decorateBind(node: DNode | DNode[]): DNode | DNode[] {
 			const { scope } = this.properties;
 			decorate(node, (node: any) => {
 				const { properties } = node;
@@ -115,7 +113,7 @@ export function Injector<C extends Evented, T extends Constructor<BaseInjector<C
 			return node;
 		}
 
-		protected render(): DNode {
+		protected render(): DNode | DNode[] {
 			const {
 				render,
 				properties,
@@ -130,11 +128,15 @@ export function Injector<C extends Evented, T extends Constructor<BaseInjector<C
 				children.push(...injectedChildren);
 			}
 
-			return render();
+			return this.decorateBind(render());
 		}
 
-		public get registries(): RegistryHandler {
-			return this.properties.scope.registries;
+		protected getRegistries(): RegistryHandler {
+			return super.getRegistries.call(this.properties.scope);
+		}
+
+		protected runAfterRenders(dNode: DNode | DNode[]): DNode | DNode[] {
+			return super.runAfterRenders.call(this.properties.scope, dNode);
 		}
 	}
 	return Injector;

@@ -230,7 +230,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<any>>>(Base: T):
 		@beforeRender()
 		protected injectTheme(renderFunc: () => DNode, properties: ThemeableProperties, children: DNode[]): () => DNode {
 			return () => {
-				const hasInjectedTheme = this.registries.has(INJECTED_THEME_KEY);
+				const hasInjectedTheme = this.getRegistries().has(INJECTED_THEME_KEY);
 				if (hasInjectedTheme) {
 					return w<BaseInjector>(INJECTED_THEME_KEY, {
 						scope: this,

@@ -18,7 +18,7 @@ class TestWithRegistry extends RegistryMixin(ThemeableMixin(WidgetBase))<Registr
 		super.__setProperties__(properties);
 	}
 	getRegistries() {
-		return this.registries;
+		return super.getRegistries();
 	}
 }
 

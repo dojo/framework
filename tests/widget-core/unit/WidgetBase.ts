@@ -796,7 +796,7 @@ registerSuite({
 			class TestWidget extends WidgetBase<any> {
 				constructor() {
 					super();
-					this.registries.add(localRegistry);
+					this.getRegistries().add(localRegistry);
 				}
 				render() {
 					return v('div', [
@@ -923,7 +923,7 @@ registerSuite({
 			class TestWidget extends WidgetBase<any> {
 				constructor() {
 					super();
-					this.registries.add(registry);
+					this.getRegistries().add(registry);
 				}
 
 				render() {

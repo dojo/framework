@@ -8,8 +8,9 @@ import { WidgetBase } from '../../../src/WidgetBase';
 import bundle from '../../support/nls/greetings';
 import { fetchCldrData } from '../../support/util';
 import { w } from './../../../src/d';
+import { ThemeableMixin } from './../../../src/mixins/Themeable';
 
-class Localized extends I18nMixin(WidgetBase)<I18nProperties> {}
+class Localized extends I18nMixin(ThemeableMixin(WidgetBase))<I18nProperties> { }
 
 let localized: any;
 
