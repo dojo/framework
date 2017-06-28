@@ -175,7 +175,7 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 					const iterable = getIterable(useIterator, values);
 					const result = [ createTriggerablePromise() ];
 					const promise = findMethod(iterable, function (value, i) {
-						return result[i];
+						return result[i] as Promise<any>;
 					}).then(function (value) {
 						assert.strictEqual(value, expected);
 					});
@@ -190,7 +190,7 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 					const iterable = getIterable(useIterator, values);
 					const result = [ createTriggerablePromise() ];
 					const promise = findMethod(iterable, function (value, i) {
-						return result[i];
+						return result[i] as Promise<any>;
 					});
 
 					result[0].reject();
@@ -666,7 +666,7 @@ registerSuite({
 						const iterable = getIterable(useIterator, values);
 						const pass = [ createTriggerablePromise(), createTriggerablePromise(), createTriggerablePromise()];
 						const promise = iteration.filter(iterable, function (value, i) {
-							return pass[i];
+							return pass[i] as Promise<any>;
 						}).then(function (results) {
 							assert.deepEqual(results, [ 'hello', 'world' ]);
 						});
