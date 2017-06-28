@@ -1,20 +1,14 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { Thenable } from '../../src/interfaces';
-import Promise, { Executor } from '../../src/Promise';
-import { Iterable, ShimIterator } from '../../src/iterator';
+import Promise from '../../src/Promise';
+import { ShimIterator } from '../../src/iterator';
 import '../../src/Symbol';
 
-export interface PromiseType {
-	new <T>(executor: Executor<T>): Promise<T>;
-	all<T>(items: Iterable<T | Thenable<T>> | (T | Thenable<T>)[]): Promise<T>;
-	race<T>(items: Iterable<T | Thenable<T>> | (T | Thenable<T>)[]): Promise<T>;
-	reject<T>(reason: any): Promise<T>;
-	resolve<T>(value: (T | Thenable<T>)): Promise<T>;
-}
+type TypeUnderTest = typeof Promise;
 
 /* tslint:disable-next-line:variable-name */
-export function addPromiseTests(suite: any, Promise: PromiseType) {
+export function addPromiseTests(suite: any, Promise: TypeUnderTest) {
 	suite['.all'] = {
 		'empty array': function (this: any) {
 			let dfd = this.async();

@@ -16,7 +16,7 @@ export interface Executor<T> {
 	 * @param resolve The resolver callback of the promise
 	 * @param reject The rejector callback of the promise
 	 */
-	(resolve: (value?: T | Thenable<T>) => void, reject: (reason?: any) => void): void;
+	(resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void): void;
 }
 
 module Shim {
@@ -33,9 +33,9 @@ module Shim {
 	/**
 	 * Returns true if a given value has a `then` method.
 	 * @param {any} value The value to check if is Thenable
-	 * @returns {is Thenable<T>} A type guard if the value is thenable
+	 * @returns {is PromiseLike<T>} A type guard if the value is thenable
 	 */
-	export function isThenable<T>(value: any): value is Thenable<T> {
+	export function isThenable<T>(value: any): value is PromiseLike<T> {
 		return value && typeof value.then === 'function';
 	}
 
@@ -52,7 +52,7 @@ module Shim {
 	 * @borrows Promise#then as Promise#then
 	 */
 	export class Promise<T> implements Thenable<T> {
-		static all<T>(iterable: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): Promise<T[]> {
+		static all<T>(iterable: Iterable<(T | PromiseLike<T>)> | (T | PromiseLike<T>)[]): Promise<T[]> {
 			return new this(function (resolve, reject) {
 				const values: T[] = [];
 				let complete = 0;
@@ -72,7 +72,7 @@ module Shim {
 					resolve(values);
 				}
 
-				function processItem(index: number, item: (T | Thenable<T>)): void {
+				function processItem(index: number, item: (T | PromiseLike<T>)): void {
 					++total;
 					if (isThenable(item)) {
 						// If an item Promise rejects, this Promise is immediately rejected with the item
@@ -85,7 +85,7 @@ module Shim {
 				}
 
 				let i = 0;
-				forOf(iterable, function (value: T | Thenable<T>) {
+				forOf(iterable, function (value: T | PromiseLike<T>) {
 					processItem(i, value);
 					i++;
 				});
@@ -95,9 +95,9 @@ module Shim {
 			});
 		}
 
-		static race<T>(iterable: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): Promise<T[]> {
-			return new this(function (resolve, reject) {
-				forOf(iterable, function (item: T | Thenable<T>) {
+		static race<T>(iterable: Iterable<(T | PromiseLike<T>)> | (T | PromiseLike<T>)[]): Promise<T[]> {
+			return new this(function (resolve: (value?: any) => void, reject) {
+				forOf(iterable, function (item: T | PromiseLike<T>) {
 					if (item instanceof Promise) {
 						// If a Promise item rejects, this Promise is immediately rejected with the item
 						// Promise's rejection error.
@@ -117,7 +117,7 @@ module Shim {
 		}
 
 		static resolve(): Promise<void>;
-		static resolve<T>(value: (T | Thenable<T>)): Promise<T>;
+		static resolve<T>(value: (T | PromiseLike<T>)): Promise<T>;
 		static resolve<T>(value?: any): Promise<T> {
 			return new this(function (resolve) {
 				resolve(<T> value);
@@ -218,14 +218,14 @@ module Shim {
 				}
 			};
 
-			this.then = <U>(onFulfilled?: (value?: T) => (U | Promise<U>),
-							onRejected?: (reason?: any) => (U | Promise<U>)): Promise<U> => {
-				return new Promise<U>((resolve, reject) => {
+			this.then = <TResult1 = T, TResult2 = never>(onFulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+					onRejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2> => {
+				return new Promise((resolve, reject) => {
 					// whenFinished initially queues up callbacks for execution after the promise has settled. Once the
 					// promise has settled, whenFinished will schedule callbacks for execution on the next turn through the
 					// event loop.
 					whenFinished(() => {
-						const callback: ((value?: any) => any) | undefined = this.state === State.Rejected ? onRejected : onFulfilled;
+						const callback: ((value?: any) => any) | undefined | null = this.state === State.Rejected ? onRejected : onFulfilled;
 
 						if (typeof callback === 'function') {
 							try {
@@ -246,7 +246,7 @@ module Shim {
 			};
 
 			try {
-				(<Executor<T>> executor)(
+				executor(
 					resolve.bind(null, State.Fulfilled),
 					resolve.bind(null, State.Rejected)
 				);
@@ -256,8 +256,8 @@ module Shim {
 			}
 		}
 
-		catch<U>(onRejected: (reason: any) => (U | Thenable<U>)): Promise<U> {
-			return this.then<U>(undefined, onRejected);
+		catch<TResult = never>(onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult> {
+			return this.then(undefined, onRejected);
 		}
 
 		/**
@@ -272,14 +272,14 @@ module Shim {
 		 */
 		private resolvedValue: any;
 
-		then: <U>(onFulfilled?: (value: T) => (U | Thenable<U>), onRejected?: (reason: any) => (U | Thenable<U>)) => Promise<U>;
+		then: <TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null) => Promise<TResult1 | TResult2>;
 
 		[Symbol.toStringTag] = 'Promise';
 	}
 }
 
 @hasClass('es6-promise', global.Promise, Shim.Promise)
-export default class Promise<T> implements Thenable<T> {
+export default class Promise<T> implements PromiseLike<T> {
 	/**
 	 * Creates a new Promise.
 	 *
@@ -317,7 +317,7 @@ export default class Promise<T> implements Thenable<T> {
 	 * });
 	 */
 	/* istanbul ignore next */
-	static all<T>(iterable: (T | Thenable<T>)[] | Iterable<(T | Thenable<T>)>): Promise<T[]> {
+	static all<T>(iterable: (T | PromiseLike<T>)[] | Iterable<(T | PromiseLike<T>)>): Promise<T[]> {
 		throw new Error();
 	};
 
@@ -340,7 +340,7 @@ export default class Promise<T> implements Thenable<T> {
 	 * });
 	 */
 	/* istanbul ignore next */
-	static race<T>(iterable: Iterable<(T | Thenable<T>)> |  (T | Thenable<T>)[]): Promise<T> {
+	static race<T>(iterable: Iterable<(T | PromiseLike<T>)> |  (T | PromiseLike<T>)[]): Promise<T> {
 		throw new Error();
 	}
 
@@ -356,7 +356,7 @@ export default class Promise<T> implements Thenable<T> {
 	 * Creates a new promise that is resolved with the given value.
 	 */
 	static resolve(): Promise<void>;
-	static resolve<T>(value: (T | Thenable<T>)): Promise<T>;
+	static resolve<T>(value: (T | PromiseLike<T>)): Promise<T>;
 	/* istanbul ignore next */
 	static resolve<T>(value?: any): Promise<T> {
 		throw new Error();
@@ -365,16 +365,11 @@ export default class Promise<T> implements Thenable<T> {
 	/**
 	 * Adds a callback to the promise to be invoked when the asynchronous operation throws an error.
 	 */
-	catch(onRejected: (reason: Error) => T | Thenable<T> | void): Promise<T>;
-	/* istanbul ignore next */
-	catch<U>(onRejected: (reason: Error) => U | Thenable<U>): Promise<U> {
+	catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult> {
 		throw new Error();
 	}
 
-	then<U, V>(onFulfilled: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected: (reason: Error) => (V | Thenable<V>)): Promise<U | V>;
-	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => void): Promise<U>;
-	/* istanbul ignore next */
-	then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => (U | Thenable<U>)): Promise<U> {
+	then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2> {
 		throw new Error();
 	}
 }
@@ -382,7 +377,9 @@ export default class Promise<T> implements Thenable<T> {
 global.Promise = has('es6-promise') ? global.Promise : Shim.Promise;
 
 declare global {
-	class Promise<T> implements Thenable<T> {
+	interface PromiseConstructor {
+		readonly prototype: Promise<any>;
+
 		/**
 		 * Creates a new Promise.
 		 *
@@ -395,7 +392,7 @@ declare global {
 		 * The executor must call either the passed `resolve` function when the asynchronous operation has completed
 		 * successfully, or the `reject` function when the operation fails.
 		 */
-		constructor(executor: Executor<T>);
+		new <T>(executor: Executor<T>): Promise<T>;
 
 		/**
 		 * Converts an iterable object containing promises into a single promise that resolves to a new iterable object
@@ -417,7 +414,7 @@ declare global {
 		 *     value.bar === 'bar'; // true
 		 * });
 		 */
-		static all<T>(iterable: (T | Thenable<T>)[] | Iterable<(T | Thenable<T>)>): Promise<T[]>;
+		all<T>(iterable: (T | PromiseLike<T>)[] | Iterable<(T | PromiseLike<T>)>): Promise<T[]>;
 
 		/**
 		 * Converts an iterable object containing promises into a single promise that resolves or rejects as soon as one of
@@ -437,28 +434,29 @@ declare global {
 		 *     value === 'foo'; // true
 		 * });
 		 */
-		static race<T>(iterable: Iterable<(T | Thenable<T>)> |  (T | Thenable<T>)[]): Promise<T>;
+		race<T>(iterable: Iterable<(T | PromiseLike<T>)> |  (T | PromiseLike<T>)[]): Promise<T>;
 
 		/**
 		 * Creates a new promise that is rejected with the given error.
 		 */
-		static reject<T>(reason?: any): Promise<T>;
+		reject<T>(reason?: any): Promise<never>;
+
+		/**
+		 * Creates a new promise that is rejected with the given error.
+		 */
+		reject<T>(reason?: any): Promise<T>;
 
 		/**
 		 * Creates a new promise that is resolved with the given value.
 		 */
-		static resolve(): Promise<void>;
-		static resolve<T>(value: (T | Thenable<T>)): Promise<T>;
-		static resolve<T>(value?: any): Promise<T>;
+		resolve<T>(value: T | PromiseLike<T>): Promise<T>;
 
 		/**
-		 * Adds a callback to the promise to be invoked when the asynchronous operation throws an error.
+		 * Creates a new promise that is resolved with the given value.
 		 */
-		catch(onRejected: (reason: Error) => T | Thenable<T> | void): Promise<T>;
-		catch<U>(onRejected: (reason: Error) => U | Thenable<U>): Promise<U>;
-
-		then<U, V>(onFulfilled: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected: (reason: Error) => (V | Thenable<V>)): Promise<U | V>;
-		then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => void): Promise<U>;
-		then<U>(onFulfilled?: ((value: T) => (U | Thenable<U> | undefined)) | undefined, onRejected?: (reason: Error) => (U | Thenable<U>)): Promise<U>;
+		resolve(): Promise<void>;
 	}
+
+	/* tslint:disable:variable-name no-unused-variable */
+	const Promise: PromiseConstructor;
 }
