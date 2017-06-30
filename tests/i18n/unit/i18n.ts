@@ -49,7 +49,7 @@ registerSuite({
 			expected = navigator.language || navigator.userLanguage;
 		}
 		else if (has('host-node')) {
-			expected = process.env.LANG;
+			expected = process.env.LANG || expected;
 		}
 
 		assert.strictEqual(systemLocale, expected.replace(/^([^.]+).*/, '$1').replace(/_/g, '-'));

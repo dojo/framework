@@ -510,7 +510,7 @@ export const systemLocale: string = (function () {
 		systemLocale = navigator.language || navigator.userLanguage;
 	}
 	else if (has('host-node')) {
-		systemLocale = process.env.LANG;
+		systemLocale = process.env.LANG || systemLocale;
 	}
 	return normalizeLocale(systemLocale);
 })();
