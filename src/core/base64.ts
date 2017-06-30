@@ -1,4 +1,4 @@
-import global from './global';
+import global from '@dojo/shim/global';
 import has, { add as hasAdd } from '@dojo/has/has';
 
 hasAdd('btoa', 'btoa' in global);

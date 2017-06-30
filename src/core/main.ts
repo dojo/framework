@@ -1,7 +1,6 @@
 import * as aspect from './aspect';
 import DateObject from './DateObject';
 import Evented from './Evented';
-import global from './global';
 import IdentityRegistry from './IdentityRegistry';
 import * as lang from './lang';
 import * as base64 from './base64';
@@ -33,7 +32,6 @@ export {
 	DateObject,
 	emit,
 	Evented,
-	global,
 	IdentityRegistry,
 	lang,
 	load,

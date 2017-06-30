@@ -1,4 +1,5 @@
 import { RootRequire } from '@dojo/interfaces/loader';
+import global from '@dojo/shim/global';
 import Promise from '@dojo/shim/Promise';
 import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
@@ -7,7 +8,6 @@ import has from '../../src/has';
 import load, { isPlugin, useDefault } from '../../src/load';
 import { isPlugin as utilIsPlugin, useDefault as utilUseDefault } from '../../src/load/util';
 import mockPlugin from '../support/load/plugin-default';
-import global from '../../src/global';
 
 declare const require: RootRequire;
 

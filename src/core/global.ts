@@ -1,17 +1,10 @@
-const globalObject: any = (function (): any {
-	if (typeof window !== 'undefined') {
-		// Browsers
-		return window;
-	}
-	else if (typeof global !== 'undefined') {
-		// Node
-		return global;
-	}
-	else if (typeof self !== 'undefined') {
-		// Web workers
-		return self;
-	}
-	return {};
-})();
+import globalObject from '@dojo/shim/global';
+import { deprecated } from './instrument';
+
+deprecated({
+	message: 'has been replaced with @dojo/shim/global',
+	name: '@dojo/core/global',
+	url: 'https://github.com/dojo/core/issues/302'
+});
 
 export default globalObject;

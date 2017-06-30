@@ -1,8 +1,8 @@
 import { Handle } from '@dojo/interfaces/core';
+import global from '@dojo/shim/global';
 import { forOf } from '@dojo/shim/iterator';
 import WeakMap from '@dojo/shim/WeakMap';
 import Task, { State } from '../../async/Task';
-import global from '../../global';
 import has from '../../has';
 import { createTimer } from '../../util';
 import Headers from '../Headers';
