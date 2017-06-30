@@ -1,8 +1,10 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import Promise from '@dojo/shim/Promise';
 import RegistryHandler from '../../src/RegistryHandler';
 import WidgetRegistry from '../../src/WidgetRegistry';
 import { WidgetBase } from '../../src/WidgetBase';
+import { WidgetBaseConstructor } from './../../src/interfaces';
 
 const foo = Symbol();
 const bar = Symbol();
@@ -64,7 +66,7 @@ registerSuite({
 		assert.isTrue(registryHandler.has(bar));
 	},
 	'get'() {
-		const promise = new Promise((resolve) => {
+		const promise = new Promise<WidgetBaseConstructor>((resolve) => {
 			setTimeout(() => {
 				resolve(WidgetBase);
 			}, 1);
@@ -78,7 +80,7 @@ registerSuite({
 	},
 	'get with symbol label'() {
 		const baz = Symbol();
-		const promise = new Promise((resolve) => {
+		const promise = new Promise<WidgetBaseConstructor>((resolve) => {
 			setTimeout(() => {
 				resolve(WidgetBase);
 			}, 1);
@@ -92,7 +94,7 @@ registerSuite({
 	},
 	'get passing generic to specify widget type'() {
 		class TestWidget extends WidgetBase<{foo: string}> {}
-		const promise = new Promise((resolve) => {
+		const promise = new Promise<WidgetBaseConstructor>((resolve) => {
 			setTimeout(() => {
 				resolve(TestWidget);
 			}, 1);
@@ -111,7 +113,7 @@ registerSuite({
 	},
 	'invalidates once registry emits loaded event'() {
 		const baz = Symbol();
-		let promise: Promise<any> = Promise.resolve();
+		let promise: any = Promise.resolve();
 		let invalidateCalled = false;
 		const lazyWidget = () => {
 			promise = new Promise((resolve) => {

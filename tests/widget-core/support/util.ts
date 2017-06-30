@@ -1,3 +1,4 @@
+import Promise from '@dojo/shim/Promise';
 import loadCldrData from '@dojo/i18n/cldr/load';
 import { systemLocale } from '@dojo/i18n/i18n';
 import likelySubtags from './likelySubtags';
