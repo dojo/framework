@@ -121,6 +121,15 @@ registerSuite({
 			);
 		},
 
+		'string children unequal'() {
+			assert.throws(() => {
+				assertRender(
+					v('div', { }, [ 'foo' ]),
+					v('div', { }, [ 'bar' ])
+				);
+			}, 'AssertionError: Render unexpected: Expected "foo" to equal "bar"');
+		},
+
 		'missing child'() {
 			assert.throws(() => {
 				assertRender(

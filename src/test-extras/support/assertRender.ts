@@ -108,7 +108,7 @@ export default function assertRender(actual: DNode | DNode[], expected: DNode | 
 		/* Both DNodes are strings */
 		if (actual !== expected) {
 			/* The strings do not match */
-			throwAssertionError(actual, expected, message);
+			throwAssertionError(actual, expected, message || `Expected "${actual}" to equal "${expected}"`);
 		}
 	}
 	else if (!(actual === null && expected === null)) {
