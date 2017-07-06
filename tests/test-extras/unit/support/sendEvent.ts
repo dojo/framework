@@ -107,13 +107,13 @@ registerSuite({
 
 		target.addEventListener('deviceproximity', listener);
 
-		const eventInit = {
+		const eventInit: EventInit & { max: number, min: number, value: number } = {
 			max: 0,
 			min: 0,
 			value: 0
 		};
 
-		sendEvent(target, 'deviceproximity', {
+		sendEvent<typeof eventInit>(target, 'deviceproximity', {
 			eventClass: 'DeviceProximityEvent',
 			eventInit
 		});

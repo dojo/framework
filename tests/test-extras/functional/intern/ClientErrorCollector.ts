@@ -79,7 +79,7 @@ registerSuite({
 				.get(require.toUrl('./ClientErrorCollector.html'))
 				.then(() => collector.init())
 				.execute('__throw_an_error()', [])
-				.then<Command<undefined>>(() => {
+				.then<Command<any>>(() => {
 					return collector.assertNoErrors()
 						.catch((e: Error) => {
 							assert.instanceOf(e, Error);

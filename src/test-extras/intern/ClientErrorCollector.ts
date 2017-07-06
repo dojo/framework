@@ -29,7 +29,7 @@ export default class ClientErrorCollector {
 	 *
 	 * @param message The message to explain if the assertion fails
 	 */
-	assertNoErrors(message?: string): Command<undefined> {
+	assertNoErrors(message?: string): Command<any> {
 		return this.finish()
 			.then((results) => {
 				if (results && results.length) {
@@ -87,7 +87,7 @@ export default class ClientErrorCollector {
 	 * Initialise the client error collector by installing the collector on the remote client.  Execute `finish()`
 	 * or `assertNoErrors()` in order to remove the client error collector and uninstall the collector.
 	 */
-	init(): Command<undefined> {
+	init(): Command<any> {
 		if (this._inited) {
 			throw new Error('ClientErrorCollector already initialised.');
 		}
