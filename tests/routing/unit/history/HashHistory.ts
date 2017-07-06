@@ -78,6 +78,17 @@ suite('HashHistory', () => {
 		assert.lengthOf(emittedValues, 0);
 	});
 
+	test('does not emit change if path is set to the current value even with a hash', () => {
+		sandbox.contentWindow.location.hash = '/foo';
+		const history = new HashHistory({ window: sandbox.contentWindow });
+		let emittedValues: string[] = [];
+		history.on('change', ({ value }) => {
+			emittedValues.push(value);
+		});
+		history.set('#/foo');
+		assert.lengthOf(emittedValues, 0);
+	});
+
 	test('replace path', () => {
 		const history = new HashHistory({ window: sandbox.contentWindow });
 		history.replace('/foo');

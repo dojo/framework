@@ -10,25 +10,41 @@ export interface LinkProperties extends WidgetProperties, VirtualDomProperties {
 	isOutlet?: boolean;
 	params?: any;
 	routerKey?: string;
+	onClick?: (event: MouseEvent) => void;
 	to: string;
 }
 
 export class Link extends WidgetBase<LinkProperties> {
 
+	private _onClick(event: MouseEvent): void {
+		this.properties.onClick && this.properties.onClick(event);
+	}
+
 	@beforeRender()
 	protected withRouter(renderFunc: () => DNode, properties: any, children: any): () => DNode {
-		const { to, isOutlet = true, params = {}, routerKey = globalRouterKey, ...props } = properties;
+		const { to, isOutlet = true, params = {}, routerKey = globalRouterKey, onClick, ...props } = properties;
 		if (this.registries.get(routerKey)) {
 			return () => w<RouterInjector>(routerKey, {
 				scope: this,
 				render: renderFunc,
 				properties,
 				getProperties: (router: Router<any>, properties: LinkProperties) => {
-					if (!isOutlet) {
-						return properties;
-					}
+					const handleOnClick = (event: MouseEvent) => {
+						const { to } = this.properties;
+
+						if (onClick) {
+							onClick(event);
+						}
+
+						if (!event.defaultPrevented && event.button === 0 && !this.properties.target) {
+							event.preventDefault();
+							router.setPath(to);
+						}
+					};
+
 					return {
-						to: router.link(to, { ...router.getCurrentParams(), ...params }),
+						to: isOutlet ? router.link(to, { ...router.getCurrentParams(), ...params }) : to,
+						onClick: handleOnClick,
 						...props
 					};
 				},
@@ -40,7 +56,7 @@ export class Link extends WidgetBase<LinkProperties> {
 
 	protected render(): DNode {
 		const { to } = this.properties;
-		const props = { ...this.properties, to: undefined, isOutlet: undefined, params: undefined, routerKey: undefined };
+		const props = { ...this.properties, onclick: this._onClick, onClick: undefined, to: undefined, isOutlet: undefined, params: undefined, routerKey: undefined, router: undefined };
 		return v('a', { ...props, href: to }, this.children);
 	}
 }
