@@ -1,11 +1,11 @@
 import { beforeRender, WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { v, w } from '@dojo/widget-core/d';
-import { DNode, VirtualDomProperties, WidgetProperties } from '@dojo/widget-core/interfaces';
+import { DNode, VirtualDomProperties } from '@dojo/widget-core/interfaces';
 
 import { routerKey as globalRouterKey, RouterInjector } from './RouterInjector';
 import { Router } from './Router';
 
-export interface LinkProperties extends WidgetProperties, VirtualDomProperties {
+export interface LinkProperties extends VirtualDomProperties {
 	key?: string;
 	isOutlet?: boolean;
 	params?: any;
@@ -23,12 +23,12 @@ export class Link extends WidgetBase<LinkProperties> {
 	@beforeRender()
 	protected withRouter(renderFunc: () => DNode, properties: any, children: any): () => DNode {
 		const { to, isOutlet = true, params = {}, routerKey = globalRouterKey, onClick, ...props } = properties;
-		if (this.registries.get(routerKey)) {
+		if (this.getRegistries().get(routerKey)) {
 			return () => w<RouterInjector>(routerKey, {
 				scope: this,
 				render: renderFunc,
 				properties,
-				getProperties: (router: Router<any>, properties: LinkProperties) => {
+				getProperties: (router: Router<any>, properties: any): LinkProperties => {
 					const handleOnClick = (event: MouseEvent) => {
 						const { to } = this.properties;
 

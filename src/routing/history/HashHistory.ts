@@ -1,4 +1,4 @@
-import global from '@dojo/core/global';
+import global from '@dojo/shim/global';
 import on from '@dojo/core/on';
 import { HistoryBase } from './HistoryBase';
 import { History, HistoryOptions } from './interfaces';

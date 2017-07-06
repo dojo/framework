@@ -393,7 +393,7 @@ export class Router<C extends Context> extends Evented {
 		const { searchParams, segments, trailingSlash } = parsePath(path);
 		return new Task<DispatchResult>((resolve, reject) => {
 			// *Always* start dispatching in a future turn, even if there were no deferrals.
-			Promise.all(deferrals).then<DispatchResult>(
+			Promise.all(deferrals).then<DispatchResult, DispatchResult>(
 				() => {
 					// The cancel() function used in the NavigationStartEvent is reused as the Task canceler.
 					// Strictly speaking any navstart listener can cancel the dispatch asynchronously, as long as it

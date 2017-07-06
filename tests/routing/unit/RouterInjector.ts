@@ -62,6 +62,7 @@ class ErrorComponent extends WidgetBase {
 }
 
 let assertRender = (properties: any) => {};
+const scope = new WidgetBase();
 
 registerSuite({
 	name: 'RouterInjector',
@@ -78,7 +79,7 @@ registerSuite({
 		const injector = new TestRouterInjector(context);
 		injector.__setProperties__({
 			render: () => { return null; },
-			scope: {},
+			scope,
 			properties: {},
 			getProperties() {
 				return {};
@@ -93,7 +94,7 @@ registerSuite({
 		const injector = new TestRouterInjector(context);
 		injector.__setProperties__({
 			render: () => { return null; },
-			scope: {},
+			scope,
 			properties: {},
 			getProperties() {
 				return {
@@ -114,7 +115,7 @@ registerSuite({
 		const injector = new TestRouterInjector(context);
 		injector.__setProperties__({
 			render: () => { return null; },
-			scope: {},
+			scope,
 			properties: {},
 			getProperties() {
 				return {
@@ -140,7 +141,7 @@ registerSuite({
 				const injector = new TestRouterInjector(context);
 				injector.__setProperties__({
 					render: () => { return null; },
-					scope: {},
+					scope,
 					properties: {},
 					getProperties() {
 						return {};
@@ -160,7 +161,7 @@ registerSuite({
 				const injector = new TestRouterInjector(context);
 				injector.__setProperties__({
 					render: () => { return null; },
-					scope: {},
+					scope,
 					properties: {},
 					getProperties() {
 						return {
@@ -184,7 +185,7 @@ registerSuite({
 				const injector = new TestRouterInjector(context);
 				injector.__setProperties__({
 					render: () => { return null; },
-					scope: {},
+					scope,
 					properties: {},
 					getProperties() {
 						return {};
@@ -204,7 +205,7 @@ registerSuite({
 				const injector = new TestRouterInjector(context);
 				injector.__setProperties__({
 					render: () => { return null; },
-					scope: {},
+					scope,
 					properties: {},
 					getProperties() {
 						return {
@@ -226,7 +227,7 @@ registerSuite({
 				const injector = new TestRouterInjector(context);
 				injector.__setProperties__({
 					render: () => { return null; },
-					scope: {},
+					scope,
 					properties: {},
 					getProperties() {
 						return {
@@ -251,7 +252,7 @@ registerSuite({
 				const injector = new TestRouterInjector(context);
 				injector.__setProperties__({
 					render: () => { return null; },
-					scope: {},
+					scope,
 					properties: {},
 					getProperties() {
 						return {};
@@ -271,7 +272,7 @@ registerSuite({
 				const injector = new TestRouterInjector(context);
 				injector.__setProperties__({
 					render: () => { return null; },
-					scope: {},
+					scope,
 					properties: {},
 					getProperties() {
 						return {
@@ -293,7 +294,7 @@ registerSuite({
 				const injector = new TestRouterInjector(context);
 				injector.__setProperties__({
 					render: () => { return null; },
-					scope: {},
+					scope,
 					properties: {},
 					getProperties() {
 						return {
