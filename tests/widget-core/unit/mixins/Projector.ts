@@ -717,15 +717,28 @@ registerSuite({
 
 		assert.isTrue(maquetteProjectorStopSpy.calledOnce);
 	},
+	'setProperties guards against original property interface'() {
+		interface Props {
+			foo: string;
+		}
+
+		class TestClass extends WidgetBase<Props> {}
+		const ProjectorClass = ProjectorMixin(TestClass);
+		const projector = new ProjectorClass();
+		projector.setProperties({ foo: 'f' });
+		// Demonstrates the type guarding for widget properties
+
+		// projector.setProperties({ foo: true });
+	},
 	'scheduleRender on setting properties'() {
 		const projector = new BaseTestWidget();
 		const scheduleRender = spy(projector, 'scheduleRender');
-		projector.setProperties({ foo: 'hello' });
+		projector.setProperties({ key: 'hello' });
 		assert.isTrue(scheduleRender.called);
 	},
 	'properties are reset to original state on render'() {
 		const testProperties = {
-			foo: 'bar'
+			key: 'bar'
 		};
 		const testChildren = [ v('div') ];
 		class TestWidget extends BaseTestWidget {

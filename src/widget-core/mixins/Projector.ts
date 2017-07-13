@@ -6,7 +6,7 @@ import { VNode } from '@dojo/interfaces/vdom';
 import { dom, h, Projection, ProjectionOptions } from 'maquette';
 import 'pepjs';
 import cssTransitions from '../animations/cssTransitions';
-import { Constructor, DNode, WidgetProperties } from './../interfaces';
+import { Constructor, DNode } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
 import eventHandlerInterceptor from '../util/eventHandlerInterceptor';
 
@@ -41,7 +41,9 @@ export interface AttachOptions {
 	root?: Element;
 }
 
-export interface ProjectorMixin<P extends WidgetProperties> {
+export interface ProjectorMixin<P> {
+
+	readonly properties: Readonly<P>;
 
 	/**
 	 * Append the projector to the root.
@@ -94,7 +96,7 @@ export interface ProjectorMixin<P extends WidgetProperties> {
 	 *
 	 * @param properties The new widget properties
 	 */
-	setProperties(properties: P & { [index: string]: any }): void;
+	setProperties(properties: this['properties']): void;
 
 	/**
 	 * Sets the widget's children
@@ -148,7 +150,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		private _boundDoRender: () => void;
 		private _boundRender: Function;
 		private _projectorChildren: DNode[];
-		private _projectorProperties: P;
+		private _projectorProperties: this['properties'];
 		private _rootTagName: string;
 		private _attachType: AttachType;
 
@@ -253,7 +255,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			super.__setChildren__(children);
 		}
 
-		public setProperties(properties: P & { [index: string]: any }): void {
+		public setProperties(properties: this['properties']): void {
 			this._projectorProperties = assign({}, properties);
 			super.__setProperties__(properties);
 		}
