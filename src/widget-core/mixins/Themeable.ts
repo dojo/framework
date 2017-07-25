@@ -24,11 +24,18 @@ export type ClassNames = {
 };
 
 /**
+ * A lookup object for available widget classes names
+ */
+export interface Theme {
+	[key: string]: ClassNames;
+}
+
+/**
  * Properties required for the themeable mixin
  */
 export interface ThemeableProperties extends WidgetProperties {
 	injectedTheme?: any;
-	theme?: any;
+	theme?: Theme;
 	extraClasses?: any;
 }
 
