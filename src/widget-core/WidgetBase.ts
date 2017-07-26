@@ -1,7 +1,7 @@
 import { Evented } from '@dojo/core/Evented';
 import { ProjectionOptions, VNodeProperties } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
-import Promise from '@dojo/shim/Promise';
+import '@dojo/shim/Promise'; // Imported for side-effects
 import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
 import { decorate, isHNode, isWNode, registry, v } from './d';
@@ -51,6 +51,8 @@ interface ReactionFunctionConfig {
 	propertyName: string;
 	reaction: DiffPropertyReaction;
 }
+
+export type BoundFunctionData = { boundFunc: (...args: any[]) => any, scope: any };
 
 const decoratorMap = new Map<Function, Map<string, any[]>>();
 
@@ -175,7 +177,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	/**
 	 * Map of functions properties for the bound function
 	 */
-	private _bindFunctionPropertyMap: WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>;
+	private _bindFunctionPropertyMap: WeakMap<(...args: any[]) => any, BoundFunctionData>;
 
 	private _renderState: WidgetRenderState = WidgetRenderState.IDLE;
 
@@ -526,11 +528,11 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			const property = properties[propertyKey];
 
 			if (typeof property === 'function' && !isWidgetBaseConstructor(property)) {
-				const bindInfo = this._bindFunctionPropertyMap.get(property) || {};
+				const bindInfo: Partial<BoundFunctionData> = this._bindFunctionPropertyMap.get(property) || {};
 				let { boundFunc, scope } = bindInfo;
 
 				if (!boundFunc || scope !== bind) {
-					boundFunc = property.bind(bind);
+					boundFunc = property.bind(bind) as ((...args: any[]) => any);
 					this._bindFunctionPropertyMap.set(property, { boundFunc, scope: bind });
 				}
 				properties[propertyKey] = boundFunc;
