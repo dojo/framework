@@ -1,8 +1,5 @@
-import { Thenable } from '../../src/interfaces';
-export { Thenable } from '../../src/interfaces';
-
-export function isEventuallyRejected<T>(promise: Thenable<T>): Thenable<boolean> {
-	return promise.then<any>(function () {
+export function isEventuallyRejected<T>(promise: PromiseLike<T>): PromiseLike<boolean> {
+	return promise.then(function () {
 		throw new Error('unexpected code path');
 	}, function () {
 		return true; // expect rejection

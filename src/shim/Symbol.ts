@@ -8,29 +8,28 @@ declare global {
 	}
 }
 
-export namespace Shim {
-	/* tslint:disable-next-line:variable-name */
-	let Symbol: SymbolConstructor;
-	/* tslint:disable-next-line:variable-name */
-	let InternalSymbol: SymbolConstructor;
+export let Symbol: SymbolConstructor = global.Symbol;
+
+if (!has('es6-symbol')) {
+	/**
+	 * Throws if the value is not a symbol, used internally within the Shim
+	 * @param  {any}    value The value to check
+	 * @return {symbol}       Returns the symbol or throws
+	 */
+	const validateSymbol = function validateSymbol(value: any): symbol {
+		if (!isSymbol(value)) {
+			throw new TypeError(value + ' is not a symbol');
+		}
+		return value;
+	};
 
 	const defineProperties = Object.defineProperties;
-	const defineProperty = Object.defineProperty;
+	const defineProperty: (o: any, p: string | symbol, attributes: PropertyDescriptor & ThisType<any>) => any = Object.defineProperty;
 	const create = Object.create;
 
 	const objPrototype = Object.prototype;
 
-	interface GlobalSymbols {
-		[key: string]: symbol;
-	}
-
-	const globalSymbols: GlobalSymbols = {};
-
-	interface TypedPropertyDescriptor<T> extends PropertyDescriptor {
-		value?: T;
-		get? (): T;
-		set? (v: T): void;
-	}
+	const globalSymbols: { [key: string]: symbol } = {};
 
 	const getSymbolName = (function () {
 		const created = create(null);
@@ -58,14 +57,14 @@ export namespace Shim {
 		};
 	}());
 
-	InternalSymbol = function Symbol(this: any, description?: string|number): symbol {
+	const InternalSymbol = function Symbol(this: any, description?: string|number): symbol {
 		if (this instanceof InternalSymbol) {
 			throw new TypeError('TypeError: Symbol is not a constructor');
 		}
 		return Symbol(description);
-	} as SymbolConstructor;
+	};
 
-	Symbol = function Symbol(this: Symbol, description?: string|number): symbol {
+	Symbol = global.Symbol = function Symbol(this: Symbol, description?: string|number): symbol {
 		if (this instanceof Symbol) {
 			throw new TypeError('TypeError: Symbol is not a constructor');
 		}
@@ -76,27 +75,6 @@ export namespace Shim {
 			__name__: getValueDescriptor(getSymbolName(description))
 		});
 	} as SymbolConstructor;
-
-	/**
-	 * A custom guard function that determines if an object is a symbol or not
-	 * @param  {any}       value The value to check to see if it is a symbol or not
-	 * @return {is symbol}       Returns true if a symbol or not (and narrows the type guard)
-	 */
-	export function isSymbol(value: any): value is symbol {
-		return (value && ((typeof value === 'symbol') || (value['@@toStringTag'] === 'Symbol'))) || false;
-	}
-
-	/**
-	 * Throws if the value is not a symbol, used internally within the Shim
-	 * @param  {any}    value The value to check
-	 * @return {symbol}       Returns the symbol or throws
-	 */
-	function validateSymbol(value: any): symbol {
-		if (!isSymbol(value)) {
-			throw new TypeError(value + ' is not a symbol');
-		}
-		return value;
-	}
 
 	/* Decorate the Symbol function with the appropriate properties */
 	defineProperty(Symbol, 'for', getValueDescriptor(function (key: string): symbol {
@@ -141,29 +119,30 @@ export namespace Shim {
 		valueOf: getValueDescriptor(function (this: Symbol) { return validateSymbol(this); })
 	});
 
-	defineProperty(Symbol.prototype, <any> Symbol.toPrimitive, getValueDescriptor(function (this: Symbol) { return validateSymbol(this); }));
-	defineProperty(Symbol.prototype, <any> Symbol.toStringTag, getValueDescriptor('Symbol', false, false, true));
+	defineProperty(Symbol.prototype, Symbol.toPrimitive, getValueDescriptor(function (this: Symbol) { return validateSymbol(this); }));
+	defineProperty(Symbol.prototype, Symbol.toStringTag, getValueDescriptor('Symbol', false, false, true));
 
-	defineProperty(InternalSymbol.prototype, <any> Symbol.toPrimitive, getValueDescriptor((<any> Symbol).prototype[Symbol.toPrimitive], false, false, true));
-	defineProperty(InternalSymbol.prototype, <any> Symbol.toStringTag, getValueDescriptor((<any> Symbol).prototype[Symbol.toStringTag], false, false, true));
-
-	/* tslint:disable-next-line:variable-name */
-	export const Exposed = Symbol;
+	defineProperty(InternalSymbol.prototype, Symbol.toPrimitive, getValueDescriptor((<any> Symbol).prototype[Symbol.toPrimitive], false, false, true));
+	defineProperty(InternalSymbol.prototype, Symbol.toStringTag, getValueDescriptor((<any> Symbol).prototype[Symbol.toStringTag], false, false, true));
 }
 
-/* tslint:disable-next-line:variable-name */
-const SymbolShim: SymbolConstructor = has('es6-symbol') ? global.Symbol : global.Symbol = Shim.Exposed;
+/**
+ * A custom guard function that determines if an object is a symbol or not
+ * @param  {any}       value The value to check to see if it is a symbol or not
+ * @return {is symbol}       Returns true if a symbol or not (and narrows the type guard)
+ */
+export function isSymbol(value: any): value is symbol {
+	return (value && ((typeof value === 'symbol') || (value['@@toStringTag'] === 'Symbol'))) || false;
+}
 
 /**
  * Fill any missing well known symbols if the native Symbol is missing them
  */
 [ 'hasInstance', 'isConcatSpreadable', 'iterator', 'species', 'replace', 'search', 'split', 'match', 'toPrimitive',
 	'toStringTag', 'unscopables', 'observable' ].forEach((wellKnown) => {
-		if (!(<any> Symbol)[wellKnown]) {
+		if (!(Symbol as any)[wellKnown]) {
 			Object.defineProperty(Symbol, wellKnown, getValueDescriptor(Symbol.for(wellKnown), false, false));
 		}
 	});
 
-export const isSymbol = Shim.isSymbol;
-
-export default SymbolShim;
+export default Symbol;

@@ -22,8 +22,8 @@ export function getValueDescriptor<T>(value: T, enumerable: boolean = false, wri
  *
  * @param nativeFunction The source function to be wrapped
  */
-export function wrapNative(nativeFunction: Function): any {
-	return function (target: any, ...args: any[]) {
+export function wrapNative<T, U, R>(nativeFunction: (...args: U[]) => R): (target: T, ...args: U[]) => R {
+	return function (target: T, ...args: U[]): R {
 		return nativeFunction.apply(target, args);
 	};
 }

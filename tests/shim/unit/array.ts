@@ -79,7 +79,7 @@ function createNativeAndDojoArrayTests(feature: string, tests: {}) {
 registerSuite({
 	name: 'array',
 
-	'.from()': createNativeAndDojoArrayTests('es6-array-from', {
+	'.from()': createNativeAndDojoArrayTests('es6-array', {
 		'from undefined: throws': function () {
 			assert.throws(function () {
 				array.from(<any> undefined);
@@ -229,7 +229,7 @@ registerSuite({
 		}
 	}),
 
-	'.of()': createNativeAndDojoArrayTests('es6-array-of', {
+	'.of()': createNativeAndDojoArrayTests('es6-array', {
 		'empty arguments': function () {
 			assert.deepEqual(array.of(), []);
 		},
@@ -312,7 +312,7 @@ registerSuite({
 		}
 	}),
 
-	'#findIndex()': createNativeAndDojoArrayTests('es6-array-findindex', (function () {
+	'#findIndex()': createNativeAndDojoArrayTests('es6-array', (function () {
 		function callback(element: string) {
 			return element === 'goose';
 		}
@@ -357,7 +357,7 @@ registerSuite({
 		};
 	})()),
 
-	'#find()': createNativeAndDojoArrayTests('es6-array-find', (function () {
+	'#find()': createNativeAndDojoArrayTests('es6-array', (function () {
 		function callback(element: number) {
 			return element > 5;
 		}
@@ -375,7 +375,7 @@ registerSuite({
 		};
 	})()),
 
-	'#copyWithin()': createNativeAndDojoArrayTests('es6-array-copywithin', {
+	'#copyWithin()': createNativeAndDojoArrayTests('es6-array', {
 		'returns source array': function () {
 			let arr: any[] = [];
 			assert.equal(array.copyWithin(arr, 0, 0), arr);
@@ -461,7 +461,7 @@ registerSuite({
 		})()
 	}),
 
-	'#includes': createNativeAndDojoArrayTests('es7-array-includes', (function() {
+	'#includes': createNativeAndDojoArrayTests('es7-array', (function() {
 		let arr: number[];
 		return {
 			beforeEach() {
@@ -491,7 +491,7 @@ registerSuite({
 		};
 	})()),
 
-	'extension support': createDojoTests('es6-array-from', {
+	'extension support': createDojoTests('es6-array', {
 		'.from()': function () {
 			let actual = MyArray.from([ 1, 2, 3 ]);
 			assert.instanceOf(actual, MyArray);

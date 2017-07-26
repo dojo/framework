@@ -1,7 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as stringUtil from '../../src/string';
-import has from '../../src/support/has';
 
 registerSuite({
 	name: 'string functions',
@@ -68,15 +67,7 @@ registerSuite({
 		},
 
 		'position is Infinity, not included, or NaN'() {
-			/* For some reason, native implementations of endsWith do not treat `null`
-			 * and `NaN` like `Infinity` and `undefined`, so there are differences in
-			 * the results if we are offloading to native or not.
-			 * Tried to address the issues, but it is a difficult behaviour to replicate,
-			 * and since the behaviour is really an edge case, going to just test for the
-			 * two different behaviours anyways */
-			let counts = has('es6-string-endswith')
-				? [ Infinity, <any> undefined ]
-				: [ Infinity, <any> undefined, null, NaN ];
+			const counts = [ Infinity, undefined as any, null, NaN ];
 			for (let count of counts) {
 				assert.isTrue(stringUtil.endsWith('abc', '', count));
 				assert.isFalse(stringUtil.endsWith('abc', '\0', count));
@@ -85,18 +76,6 @@ registerSuite({
 				assert.isTrue(stringUtil.endsWith('abc', 'bc', count));
 				assert.isTrue(stringUtil.endsWith('abc', 'abc', count));
 				assert.isFalse(stringUtil.endsWith('abc', 'abcd', count));
-			}
-			if (has('es6-string-endswith')) {
-				counts = [ null, NaN ];
-				for (let count of counts) {
-					assert.isTrue(stringUtil.endsWith('abc', '', count));
-					assert.isFalse(stringUtil.endsWith('abc', '\0', count));
-					assert.isFalse(stringUtil.endsWith('abc', 'c', count));
-					assert.isFalse(stringUtil.endsWith('abc', 'b', count));
-					assert.isFalse(stringUtil.endsWith('abc', 'bc', count));
-					assert.isFalse(stringUtil.endsWith('abc', 'abc', count));
-					assert.isFalse(stringUtil.endsWith('abc', 'abcd', count));
-				}
 			}
 		},
 

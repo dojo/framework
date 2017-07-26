@@ -31,7 +31,7 @@ export function isNaN(value: any): boolean {
  * @param value The value to test
  * @return true if the value is finite, false if it is not
  */
-export function isFinite(value: any): boolean {
+export function isFinite(value: any): value is number {
 	return typeof value === 'number' && global.isFinite(value);
 }
 
@@ -41,7 +41,7 @@ export function isFinite(value: any): boolean {
  * @param value The value to test
  * @return true if the value is an integer, false if it is not
  */
-export function isInteger(value: any): boolean {
+export function isInteger(value: any): value is number {
 	return isFinite(value) && Math.floor(value) === value;
 }
 
@@ -55,6 +55,6 @@ export function isInteger(value: any): boolean {
  * @param value The value to test
  * @return true if the value is an integer, false if it is not
  */
-export function isSafeInteger(value: any): boolean {
+export function isSafeInteger(value: any): value is number {
 	return isInteger(value) && Math.abs(value) <= MAX_SAFE_INTEGER;
 }

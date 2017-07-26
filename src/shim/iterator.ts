@@ -1,4 +1,3 @@
-import { ArrayLike } from './interfaces';
 import { HIGH_SURROGATE_MIN, HIGH_SURROGATE_MAX } from './string';
 import './Symbol';
 
@@ -24,8 +23,7 @@ export interface IterableIterator<T> extends Iterator<T> {
 const staticDone: IteratorResult<any> = { done: true, value: undefined };
 
 /**
- * A class that provides "shims" an iterator interface on array like
- * objects.
+ * A class that _shims_ an iterator interface on array like objects.
  */
 export class ShimIterator<T> {
 	private _list: ArrayLike<T>;

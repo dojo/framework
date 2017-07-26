@@ -1,4 +1,3 @@
-import './native/all';
 import './support/decorators';
 import './support/has';
 import './support/queue';

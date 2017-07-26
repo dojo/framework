@@ -1,5 +1,26 @@
+import global from './global';
 import has from './support/has';
 import { wrapNative } from './support/util';
+
+export interface StringNormalize {
+	/**
+	 * Returns the String value result of normalizing the string into the normalization form
+	 * named by form as specified in Unicode Standard Annex #15, Unicode Normalization Forms.
+	 * @param target The target string
+	 * @param form Applicable values: "NFC", "NFD", "NFKC", or "NFKD", If not specified default
+	 * is "NFC"
+	 */
+	(target: string, form: 'NFC' | 'NFD' | 'NFKC' | 'NFKD'): string;
+
+	/**
+	 * Returns the String value result of normalizing the string into the normalization form
+	 * named by form as specified in Unicode Standard Annex #15, Unicode Normalization Forms.
+	 * @param target The target string
+	 * @param form Applicable values: "NFC", "NFD", "NFKC", or "NFKD", If not specified default
+	 * is "NFC"
+	 */
+	(target: string, form?: string): string;
+}
 
 /**
  * The minimum location of high surrogates
@@ -21,14 +42,124 @@ export const LOW_SURROGATE_MIN = 0xDC00;
  */
 export const LOW_SURROGATE_MAX = 0xDFFF;
 
-export namespace Shim {
+/* ES6 static methods */
+
+/**
+ * Return the String value whose elements are, in order, the elements in the List elements.
+ * If length is 0, the empty string is returned.
+ * @param codePoints The code points to generate the string
+ */
+export let fromCodePoint: (...codePoints: number[]) => string;
+
+/**
+ * `raw` is intended for use as a tag function of a Tagged Template String. When called
+ * as such the first argument will be a well formed template call site object and the rest
+ * parameter will contain the substitution values.
+ * @param template A well-formed template string call site representation.
+ * @param substitutions A set of substitution values.
+ */
+export let raw: (template: TemplateStringsArray, ...substitutions: any[]) => string;
+
+/* ES6 instance methods */
+
+/**
+ * Returns a nonnegative integer Number less than 1114112 (0x110000) that is the code point
+ * value of the UTF-16 encoded code point starting at the string element at position pos in
+ * the String resulting from converting this object to a String.
+ * If there is no element at that position, the result is undefined.
+ * If a valid UTF-16 surrogate pair does not begin at pos, the result is the code unit at pos.
+ */
+export let codePointAt: (target: string, pos?: number) => number | undefined;
+
+/**
+ * Returns true if the sequence of elements of searchString converted to a String is the
+ * same as the corresponding elements of this object (converted to a String) starting at
+ * endPosition – length(this). Otherwise returns false.
+ */
+export let endsWith: (target: string, searchString: string, endPosition?: number) => boolean;
+
+/**
+ * Returns true if searchString appears as a substring of the result of converting this
+ * object to a String, at one or more positions that are
+ * greater than or equal to position; otherwise, returns false.
+ * @param target The target string
+ * @param searchString search string
+ * @param position If position is undefined, 0 is assumed, so as to search all of the String.
+ */
+export let includes: (target: string, searchString: string, position?: number) => boolean;
+
+/**
+ * Returns the String value result of normalizing the string into the normalization form
+ * named by form as specified in Unicode Standard Annex #15, Unicode Normalization Forms.
+ * @param target The target string
+ * @param form Applicable values: "NFC", "NFD", "NFKC", or "NFKD", If not specified default
+ * is "NFC"
+ */
+export let normalize: StringNormalize;
+
+/**
+ * Returns a String value that is made from count copies appended together. If count is 0,
+ * T is the empty String is returned.
+ * @param count number of copies to append
+ */
+export let repeat: (target: string, count?: number) => string;
+
+/**
+ * Returns true if the sequence of elements of searchString converted to a String is the
+ * same as the corresponding elements of this object (converted to a String) starting at
+ * position. Otherwise returns false.
+ */
+export let startsWith: (target: string, searchString: string, position?: number) => boolean;
+
+/* ES7 instance methods */
+
+/**
+ * Pads the current string with a given string (possibly repeated) so that the resulting string reaches a given length.
+ * The padding is applied from the end (right) of the current string.
+ *
+ * @param target The target string
+ * @param maxLength The length of the resulting string once the current string has been padded.
+ *        If this parameter is smaller than the current string's length, the current string will be returned as it is.
+ *
+ * @param fillString The string to pad the current string with.
+ *        If this string is too long, it will be truncated and the left-most part will be applied.
+ *        The default value for this parameter is " " (U+0020).
+ */
+export let padEnd: (target: string, maxLength: number, fillString?: string) => string;
+
+/**
+ * Pads the current string with a given string (possibly repeated) so that the resulting string reaches a given length.
+ * The padding is applied from the start (left) of the current string.
+ *
+ * @param target The target string
+ * @param maxLength The length of the resulting string once the current string has been padded.
+ *        If this parameter is smaller than the current string's length, the current string will be returned as it is.
+ *
+ * @param fillString The string to pad the current string with.
+ *        If this string is too long, it will be truncated and the left-most part will be applied.
+ *        The default value for this parameter is " " (U+0020).
+ */
+export let padStart: (target: string, maxLength: number, fillString?: string) => string;
+
+if (has('es6-string') && has('es6-string-raw')) {
+	fromCodePoint = global.String.fromCodePoint;
+	raw = global.String.raw;
+
+	codePointAt = wrapNative(global.String.prototype.codePointAt);
+	endsWith = wrapNative(global.String.prototype.endsWith);
+	includes = wrapNative(global.String.prototype.includes);
+	normalize = wrapNative(global.String.prototype.normalize);
+	repeat = wrapNative(global.String.prototype.repeat);
+	startsWith = wrapNative(global.String.prototype.startsWith);
+}
+else {
 	/**
 	 * Validates that text is defined, and normalizes position (based on the given default if the input is NaN).
 	 * Used by startsWith, includes, and endsWith.
 	 *
 	 * @return Normalized position.
 	 */
-	function normalizeSubstringArgs(name: string, text: string, search: string, position: number,
+	const normalizeSubstringArgs = function(name: string, text: string, search: string, position: number,
 			isEnd: boolean = false): [ string, string, number ] {
 		if (text == null) {
 			throw new TypeError('string.' + name + ' requires a valid string to search against.');
@@ -37,25 +168,9 @@ export namespace Shim {
 		const length = text.length;
 		position = position !== position ? (isEnd ? length : 0) : position;
 		return [ text, String(search), Math.min(Math.max(position, 0), length) ];
-	}
+	};
 
-	export function raw(callSite: TemplateStringsArray, ...substitutions: any[]): string {
-		let rawStrings = callSite.raw;
-		let result = '';
-		let numSubstitutions = substitutions.length;
-
-		if (callSite == null || callSite.raw == null) {
-			throw new TypeError('string.raw requires a valid callSite object with a raw value');
-		}
-
-		for (let i = 0, length = rawStrings.length; i < length; i++) {
-			result += rawStrings[i] + (i < numSubstitutions && i < length - 1 ? substitutions[i] : '');
-		}
-
-		return result;
-	}
-
-	export function fromCodePoint(...codePoints: number[]): string {
+	fromCodePoint = function fromCodePoint(...codePoints: number[]): string {
 		// Adapted from https://github.com/mathiasbynens/String.fromCodePoint
 		const length = arguments.length;
 		if (!length) {
@@ -97,9 +212,25 @@ export namespace Shim {
 			}
 		}
 		return result;
-	}
+	};
 
-	export function codePointAt(text: string, position: number = 0): number | undefined {
+	raw = function raw(callSite: TemplateStringsArray, ...substitutions: any[]): string {
+		let rawStrings = callSite.raw;
+		let result = '';
+		let numSubstitutions = substitutions.length;
+
+		if (callSite == null || callSite.raw == null) {
+			throw new TypeError('string.raw requires a valid callSite object with a raw value');
+		}
+
+		for (let i = 0, length = rawStrings.length; i < length; i++) {
+			result += rawStrings[i] + (i < numSubstitutions && i < length - 1 ? substitutions[i] : '');
+		}
+
+		return result;
+	};
+
+	codePointAt = function codePointAt(text: string, position: number = 0): number | undefined {
 		// Adapted from https://github.com/mathiasbynens/String.prototype.codePointAt
 		if (text == null) {
 			throw new TypeError('string.codePointAt requries a valid string.');
@@ -124,11 +255,29 @@ export namespace Shim {
 			}
 		}
 		return first;
-	}
+	};
 
-	/* TODO: Missing normalize */
+	endsWith = function endsWith(text: string, search: string, endPosition?: number): boolean {
+		if (endPosition == null) {
+			endPosition = text.length;
+		}
 
-	export function repeat(text: string, count: number = 0): string {
+		[ text, search, endPosition ] = normalizeSubstringArgs('endsWith', text, search, endPosition, true);
+
+		const start = endPosition - search.length;
+		if (start < 0) {
+			return false;
+		}
+
+		return text.slice(start, endPosition) === search;
+	};
+
+	includes = function includes(text: string, search: string, position: number = 0): boolean {
+		[ text, search, position ] = normalizeSubstringArgs('includes', text, search, position);
+		return text.indexOf(search, position) !== -1;
+	};
+
+	repeat = function repeat(text: string, count: number = 0): string {
 		// Adapted from https://github.com/mathiasbynens/String.prototype.repeat
 		if (text == null) {
 			throw new TypeError('string.repeat requires a valid string.');
@@ -151,9 +300,9 @@ export namespace Shim {
 			count >>= 1;
 		}
 		return result;
-	}
+	};
 
-	export function startsWith(text: string, search: string, position: number = 0): boolean {
+	startsWith = function startsWith(text: string, search: string, position: number = 0): boolean {
 		search = String(search);
 		[ text, search, position ] = normalizeSubstringArgs('startsWith', text, search, position);
 
@@ -163,29 +312,15 @@ export namespace Shim {
 		}
 
 		return text.slice(position, end) === search;
-	}
+	};
+}
 
-	export function endsWith(text: string, search: string, endPosition?: number): boolean {
-		if (endPosition == null) {
-			endPosition = text.length;
-		}
-
-		[ text, search, endPosition ] = normalizeSubstringArgs('endsWith', text, search, endPosition, true);
-
-		const start = endPosition - search.length;
-		if (start < 0) {
-			return false;
-		}
-
-		return text.slice(start, endPosition) === search;
-	}
-
-	export function includes(text: string, search: string, position: number = 0): boolean {
-		[ text, search, position ] = normalizeSubstringArgs('includes', text, search, position);
-		return text.indexOf(search, position) !== -1;
-	}
-
-	export function padEnd(text: string, maxLength: number, fillString: string = ' '): string {
+if (has('es2017-string')) {
+	padEnd = wrapNative(global.String.prototype.padEnd);
+	padStart = wrapNative(global.String.prototype.padStart);
+}
+else {
+	padEnd = function padEnd(text: string, maxLength: number, fillString: string = ' '): string {
 		if (text === null || text === undefined) {
 			throw new TypeError('string.repeat requires a valid string.');
 		}
@@ -206,9 +341,9 @@ export namespace Shim {
 		}
 
 		return strText;
-	}
+	};
 
-	export function padStart(text: string, maxLength: number, fillString: string = ' '): string {
+	padStart = function padStart(text: string, maxLength: number, fillString: string = ' '): string {
 		if (text === null || text === undefined) {
 			throw new TypeError('string.repeat requires a valid string.');
 		}
@@ -229,122 +364,5 @@ export namespace Shim {
 		}
 
 		return strText;
-	}
-
-	/* TODO: Provide an iterator for a string to mimic [Symbol.iterator]? */
+	};
 }
-
-/**
- * A tag function for template strings to get the template string's raw string form.
- *
- * @param callSite Call site object (or a template string in TypeScript, which will transpile to one)
- * @param substitutions Values to substitute within the template string (TypeScript will generate these automatically)
- * @return String containing the raw template string with variables substituted
- *
- * @example
- * // Within TypeScript; logs 'The answer is:\\n42'
- * let answer = 42;
- * console.log(string.raw`The answer is:\n${answer}`);
- *
- * @example
- * // The same example as above, but directly specifying a JavaScript object and substitution
- * console.log(string.raw({ raw: [ 'The answer is:\\n', '' ] }, 42));
- */
-export const raw: (callSite: TemplateStringsArray, ...substitutions: any[]) => string = has('es6-string-raw')
-	? (<any> String).raw
-	: Shim.raw;
-
-/**
- * Returns the UTF-16 encoded code point value of a given position in a string.
- *
- * @param text The string containing the element whose code point is to be determined
- * @param position Position of an element within the string to retrieve the code point value from
- * @return A non-negative integer representing the UTF-16 encoded code point value
- */
-export const fromCodePoint: (...codePoints: number[]) => string = has('es6-string-fromcodepoint')
-	? (<any> String).fromCodePoint
-	: Shim.fromCodePoint;
-
-/**
- * Returns the UTF-16 encoded code point value of a given position in a string.
- *
- * @param text The string containing the element whose code point is to be determined
- * @param position Position of an element within the string to retrieve the code point value from
- * @return A non-negative integer representing the UTF-16 encoded code point value
- */
-export const codePointAt: (text: string, position?: number) => number = has('es6-string-codepointat')
-	? wrapNative((<any> String.prototype).codePointAt)
-	: Shim.codePointAt;
-
-/**
- * Returns a string containing the given string repeated the specified number of times.
- *
- * @param text The string to repeat
- * @param count The number of times to repeat the string
- * @return A string containing the input string repeated count times
- */
-export const repeat: (text: string, count?: number) => string = has('es6-string-repeat')
-	? wrapNative((<any> String.prototype).repeat)
-	: Shim.repeat;
-
-/**
- * Determines whether a string begins with the given substring (optionally starting from a given index).
- *
- * @param text The string to look for the search string within
- * @param search The string to search for
- * @param position The index to begin searching at
- * @return Boolean indicating if the search string was found at the beginning of the given string
- */
-export const startsWith: (text: string, search: string, position?: number) => boolean = has('es6-string-startswith')
-	? wrapNative((<any> String.prototype).startsWith)
-	: Shim.startsWith;
-
-/**
- * Determines whether a string ends with the given substring.
- *
- * @param text The string to look for the search string within
- * @param search The string to search for
- * @param endPosition The index searching should stop before (defaults to text.length)
- * @return Boolean indicating if the search string was found at the end of the given string
- */
-export const endsWith: (text: string, search: string, endPosition?: number) => boolean = has('es6-string-endswith')
-	? wrapNative((<any> String.prototype).endsWith)
-	: Shim.endsWith;
-
-/**
- * Determines whether a string includes the given substring (optionally starting from a given index).
- *
- * @param text The string to look for the search string within
- * @param search The string to search for
- * @param position The index to begin searching at
- * @return Boolean indicating if the search string was found within the given string
- */
-export const includes: (text: string, search: string, position?: number) => boolean = has('es6-string-includes')
-	? wrapNative((<any> String.prototype).includes)
-	: Shim.includes;
-
-/**
- * Pads the beginning of a string with a fill string until the string is a certain length.
- *
- * @param text          The string to pad
- * @param maxLength     The desired length of the string
- * @param fillString    The string to be repeated (fully or partially) until text is the maximum length
- *
- * @return A string that is at least the maximum length specified, padded in the front if necessary.
- */
-export const padStart: (text: string, maxLength: number, fillString?: string) => string = has('es6-string-padstart')
-	? wrapNative((<any> String.prototype).padStart)
-	: Shim.padStart;
-
-/**
- * Pads the end of a string with a fill string until the string is a certain length.
- *
- * @param text          The string to pad
- * @param maxLength     The desired length of the string
- * @param fillString    The string to be repeated (fully or partially) until text is the maximum length
- *
- * @return A string that is at least the maximum length specified, padded at the end if necessary.
- */
-export const padEnd: (text: string, maxLength: number, fillString?: string) => string = has('es6-string-padend')
-	? wrapNative((<any> String.prototype).padEnd)
-	: Shim.padEnd;

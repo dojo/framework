@@ -1,22 +1,89 @@
-import { ArrayLike } from './interfaces';
-import { hasClass } from './support/decorators';
 import global from './global';
 import { forOf, Iterable } from './iterator';
+import has from './support/has';
 import './Symbol';
 
-module Shim {
+export interface WeakMap<K extends object, V> {
+	/**
+	 * Remove a `key` from the map
+	 *
+	 * @param key The key to remove
+	 * @return `true` if the value was removed, otherwise `false`
+	 */
+	delete(key: K): boolean;
+
+	/**
+	 * Retrieve the value, based on the supplied `key`
+	 *
+	 * @param key The key to retrieve the `value` for
+	 * @return the `value` based on the `key` if found, otherwise `false`
+	 */
+	get(key: K): V | undefined;
+
+	/**
+	 * Determines if a `key` is present in the map
+	 *
+	 * @param key The `key` to check
+	 * @return `true` if the key is part of the map, otherwise `false`.
+	 */
+	has(key: K): boolean;
+
+	/**
+	 * Set a `value` for a particular `key`.
+	 *
+	 * @param key The `key` to set the `value` for
+	 * @param value The `value` to set
+	 * @return the instances
+	 */
+	set(key: K, value: V): this;
+
+	readonly [Symbol.toStringTag]: 'WeakMap';
+}
+
+export interface WeakMapConstructor {
+	/**
+	 * Create a new instance of a `WeakMap`
+	 *
+	 * @constructor
+	 */
+	new (): WeakMap<object, any>;
+
+	/**
+	 * Create a new instance of a `WeakMap`
+	 *
+	 * @constructor
+	 *
+	 * @param iterable An iterable that contains yields up key/value pair entries
+	 */
+	new <K extends object, V>(iterable?: [K, V][]): WeakMap<K, V>;
+
+	/**
+	 * Create a new instance of a `WeakMap`
+	 *
+	 * @constructor
+	 *
+	 * @param iterable An iterable that contains yields up key/value pair entries
+	 */
+	new <K extends object, V>(iterable: Iterable<[K, V]>): WeakMap<K, V>;
+
+	readonly prototype: WeakMap<object, any>;
+}
+
+export let WeakMap: WeakMapConstructor = global.WeakMap;
+
+interface Entry<K, V> {
+	key: K;
+	value: V;
+}
+
+if (!has('es6-weakmap')) {
 	const DELETED: any = {};
 
-	interface Entry<K, V> {
-		key: K;
-		value: V;
-	}
-
-	function getUID(): number {
+	const getUID = function getUID(): number {
 		return Math.floor(Math.random() * 100000000);
-	}
+	};
 
-	let generateName = (function () {
+	const generateName = (function () {
 		let startId = Math.floor(Date.now() % 100000000);
 
 		return function generateName(): string {
@@ -24,7 +91,7 @@ module Shim {
 		};
 	})();
 
-	export class WeakMap<K, V> {
+	WeakMap = class WeakMap<K, V> {
 		private readonly _name: string;
 		private readonly _frozenEntries: Entry<K, V>[];
 
@@ -104,7 +171,7 @@ module Shim {
 			return false;
 		}
 
-		set(key: any, value?: any): Shim.WeakMap<K, V> {
+		set(key: any, value?: any): this {
 			if (!key || (typeof key !== 'object' && typeof key !== 'function')) {
 				throw new TypeError('Invalid value used as weak map key');
 			}
@@ -127,23 +194,8 @@ module Shim {
 			return this;
 		}
 
-		[Symbol.toStringTag] = 'WeakMap';
-	}
+		[Symbol.toStringTag]: 'WeakMap' = 'WeakMap';
+	};
 }
 
-@hasClass('es6-weakmap', global.WeakMap, Shim.WeakMap)
-export default class WeakMap<K, V> {
-	/* istanbul ignore next */
-	constructor(iterable?: ArrayLike<[K, V]> | Iterable<[K, V]>) {}
-
-	/* istanbul ignore next */
-	delete(key: K): boolean { throw new Error(); }
-	/* istanbul ignore next */
-	get(key: K): V { throw new Error(); }
-	/* istanbul ignore next */
-	has(key: K): boolean { throw new Error(); }
-	/* istanbul ignore next */
-	set(key: K, value?: V): WeakMap<K, V> { throw new Error(); }
-	/* istanbul ignore next */
-	[Symbol.toStringTag] = 'WeakMap';
-}
+export default WeakMap;

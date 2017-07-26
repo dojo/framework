@@ -3,7 +3,6 @@ import global from './global';
 import { queueMicroTask } from './support/queue';
 import { forOf, Iterable } from './iterator';
 import './Symbol';
-import { hasClass } from './support/decorators';
 import has from './support/has';
 
 /**
@@ -19,42 +18,23 @@ export interface Executor<T> {
 	(resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void): void;
 }
 
-module Shim {
+export let ShimPromise: typeof Promise = global.Promise;
 
-	/**
-	 * The State enum represents the possible states of a promise.
-	 */
-	export const enum State {
+export const isThenable = function isThenable<T>(value: any): value is PromiseLike<T> {
+	return value && typeof value.then === 'function';
+};
+
+if (!has('es6-promise')) {
+	const enum State {
 		Fulfilled,
 		Pending,
 		Rejected
 	}
 
-	/**
-	 * Returns true if a given value has a `then` method.
-	 * @param {any} value The value to check if is Thenable
-	 * @returns {is PromiseLike<T>} A type guard if the value is thenable
-	 */
-	export function isThenable<T>(value: any): value is PromiseLike<T> {
-		return value && typeof value.then === 'function';
-	}
-
-	/**
-	 * Promise is a partial implementation of the ES2015 Promise specification. It relies on Promise to do some safety
-	 * checks such as verifying that a Promise isn't resolved with itself. This class is exported for testability, and is
-	 * not intended to be used directly.
-	 *
-	 * @borrows Promise.all as Promise.all
-	 * @borrows Promise.race as Promise.race
-	 * @borrows Promise.reject as Promise.reject
-	 * @borrows Promise.resolve as Promise.resolve
-	 * @borrows Promise#catch as Promise#catch
-	 * @borrows Promise#then as Promise#then
-	 */
-	export class Promise<T> implements Thenable<T> {
-		static all<T>(iterable: Iterable<(T | PromiseLike<T>)> | (T | PromiseLike<T>)[]): Promise<T[]> {
+	global.Promise = ShimPromise = class Promise<T> implements Thenable<T> {
+		static all(iterable: Iterable<(any | PromiseLike<any>)> | (any | PromiseLike<any>)[]): Promise<any> {
 			return new this(function (resolve, reject) {
-				const values: T[] = [];
+				const values: any[] = [];
 				let complete = 0;
 				let total = 0;
 				let populating = true;
@@ -72,7 +52,7 @@ module Shim {
 					resolve(values);
 				}
 
-				function processItem(index: number, item: (T | PromiseLike<T>)): void {
+				function processItem(index: number, item: any): void {
 					++total;
 					if (isThenable(item)) {
 						// If an item Promise rejects, this Promise is immediately rejected with the item
@@ -85,7 +65,7 @@ module Shim {
 				}
 
 				let i = 0;
-				forOf(iterable, function (value: T | PromiseLike<T>) {
+				forOf(iterable, function (value: any) {
 					processItem(i, value);
 					i++;
 				});
@@ -110,7 +90,7 @@ module Shim {
 			});
 		}
 
-		static reject<T>(reason?: any): Promise<T> {
+		static reject(reason?: any): Promise<never> {
 			return new this(function (resolve, reject) {
 				reject(reason);
 			});
@@ -123,6 +103,8 @@ module Shim {
 				resolve(<T> value);
 			});
 		}
+
+		static [Symbol.species]: PromiseConstructor = ShimPromise as PromiseConstructor;
 
 		/**
 		 * Creates a new Promise.
@@ -274,189 +256,8 @@ module Shim {
 
 		then: <TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null) => Promise<TResult1 | TResult2>;
 
-		[Symbol.toStringTag] = 'Promise';
-	}
-}
-
-@hasClass('es6-promise', global.Promise, Shim.Promise)
-export default class Promise<T> implements PromiseLike<T> {
-	/**
-	 * Creates a new Promise.
-	 *
-	 * @constructor
-	 *
-	 * @param executor
-	 * The executor function is called immediately when the Promise is instantiated. It is responsible for
-	 * starting the asynchronous operation when it is invoked.
-	 *
-	 * The executor must call either the passed `resolve` function when the asynchronous operation has completed
-	 * successfully, or the `reject` function when the operation fails.
-	 */
-	/* istanbul ignore next */
-	constructor(executor: Executor<T>) {
-	}
-
-	/**
-	 * Converts an iterable object containing promises into a single promise that resolves to a new iterable object
-	 * containing the fulfilled values of all the promises in the iterable, in the same order as the Promises in the
-	 * iterable. Iterable values that are not promises are converted to promises using Promise.resolve.
-	 *
-	 * @example
-	 * Promise.all([ Promise.resolve('foo'), 'bar' ]).then(function (value) {
-	 *     value[0] === 'foo'; // true
-	 *     value[1] === 'bar'; // true
-	 * });
-	 *
-	 * @example
-	 * Promise.all({
-	 *     foo: Promise.resolve('foo'),
-	 *     bar: 'bar'
-	 * }).then((value) => {
-	 *     value.foo === 'foo'; // true
-	 *     value.bar === 'bar'; // true
-	 * });
-	 */
-	/* istanbul ignore next */
-	static all<T>(iterable: (T | PromiseLike<T>)[] | Iterable<(T | PromiseLike<T>)>): Promise<T[]> {
-		throw new Error();
+		[Symbol.toStringTag]: 'Promise' = 'Promise';
 	};
-
-	/**
-	 * Converts an iterable object containing promises into a single promise that resolves or rejects as soon as one of
-	 * the promises in the iterable resolves or rejects, with the value of the resolved or rejected promise. Values in
-	 * the iterable that are not Promises are converted to Promises with Promise.resolve.
-	 *
-	 * @example
-	 * Promise.race([ Promise.resolve('foo'), Promise.resolve('bar') ]).then((value) => {
-	 *     value === 'foo'; // true
-	 * });
-	 *
-	 * @example
-	 * Promise.race({
-	 *     foo: Promise.resolve('foo'),
-	 *     bar: Promise.resolve('bar')
-	 * }).then((value) => {
-	 *     value === 'foo'; // true
-	 * });
-	 */
-	/* istanbul ignore next */
-	static race<T>(iterable: Iterable<(T | PromiseLike<T>)> |  (T | PromiseLike<T>)[]): Promise<T> {
-		throw new Error();
-	}
-
-	/**
-	 * Creates a new promise that is rejected with the given error.
-	 */
-	/* istanbul ignore next */
-	static reject<T>(reason?: any): Promise<any> {
-		throw new Error();
-	}
-
-	/**
-	 * Creates a new promise that is resolved with the given value.
-	 */
-	static resolve(): Promise<void>;
-	static resolve<T>(value: (T | PromiseLike<T>)): Promise<T>;
-	/* istanbul ignore next */
-	static resolve<T>(value?: any): Promise<T> {
-		throw new Error();
-	}
-
-	/**
-	 * Adds a callback to the promise to be invoked when the asynchronous operation throws an error.
-	 */
-	catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult> {
-		throw new Error();
-	}
-
-	then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2> {
-		throw new Error();
-	}
 }
 
-global.Promise = has('es6-promise') ? global.Promise : Shim.Promise;
-
-declare global {
-	interface PromiseConstructor {
-		readonly prototype: Promise<any>;
-
-		/**
-		 * Creates a new Promise.
-		 *
-		 * @constructor
-		 *
-		 * @param executor
-		 * The executor function is called immediately when the Promise is instantiated. It is responsible for
-		 * starting the asynchronous operation when it is invoked.
-		 *
-		 * The executor must call either the passed `resolve` function when the asynchronous operation has completed
-		 * successfully, or the `reject` function when the operation fails.
-		 */
-		new <T>(executor: Executor<T>): Promise<T>;
-
-		/**
-		 * Converts an iterable object containing promises into a single promise that resolves to a new iterable object
-		 * containing the fulfilled values of all the promises in the iterable, in the same order as the Promises in the
-		 * iterable. Iterable values that are not promises are converted to promises using Promise.resolve.
-		 *
-		 * @example
-		 * Promise.all([ Promise.resolve('foo'), 'bar' ]).then(function (value) {
-		 *     value[0] === 'foo'; // true
-		 *     value[1] === 'bar'; // true
-		 * });
-		 *
-		 * @example
-		 * Promise.all({
-		 *     foo: Promise.resolve('foo'),
-		 *     bar: 'bar'
-		 * }).then((value) => {
-		 *     value.foo === 'foo'; // true
-		 *     value.bar === 'bar'; // true
-		 * });
-		 */
-		all<T>(iterable: (T | PromiseLike<T>)[] | Iterable<(T | PromiseLike<T>)>): Promise<T[]>;
-
-		/**
-		 * Converts an iterable object containing promises into a single promise that resolves or rejects as soon as one of
-		 * the promises in the iterable resolves or rejects, with the value of the resolved or rejected promise. Values in
-		 * the iterable that are not Promises are converted to Promises with Promise.resolve.
-		 *
-		 * @example
-		 * Promise.race([ Promise.resolve('foo'), Promise.resolve('bar') ]).then((value) => {
-		 *     value === 'foo'; // true
-		 * });
-		 *
-		 * @example
-		 * Promise.race({
-		 *     foo: Promise.resolve('foo'),
-		 *     bar: Promise.resolve('bar')
-		 * }).then((value) => {
-		 *     value === 'foo'; // true
-		 * });
-		 */
-		race<T>(iterable: Iterable<(T | PromiseLike<T>)> |  (T | PromiseLike<T>)[]): Promise<T>;
-
-		/**
-		 * Creates a new promise that is rejected with the given error.
-		 */
-		reject<T>(reason?: any): Promise<never>;
-
-		/**
-		 * Creates a new promise that is rejected with the given error.
-		 */
-		reject<T>(reason?: any): Promise<T>;
-
-		/**
-		 * Creates a new promise that is resolved with the given value.
-		 */
-		resolve<T>(value: T | PromiseLike<T>): Promise<T>;
-
-		/**
-		 * Creates a new promise that is resolved with the given value.
-		 */
-		resolve(): Promise<void>;
-	}
-
-	/* tslint:disable:variable-name no-unused-variable */
-	const Promise: PromiseConstructor;
-}
+export default ShimPromise;
