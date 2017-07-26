@@ -111,7 +111,7 @@ const discardedDuplicates = new Set<string>([
 ]);
 
 function getDataTask(response: NodeResponse): Task<RequestData> {
-	const data = dataMap.get(response);
+	const data = dataMap.get(response)!;
 
 	if (data.used) {
 		return Task.reject<any>(new TypeError('Body already read'));
@@ -134,27 +134,27 @@ export class NodeResponse extends Response {
 	downloadBody = true;
 
 	get bodyUsed(): boolean {
-		return dataMap.get(this).used;
+		return dataMap.get(this)!.used;
 	}
 
 	get nativeResponse(): http.IncomingMessage {
-		return dataMap.get(this).nativeResponse;
+		return dataMap.get(this)!.nativeResponse;
 	}
 
 	get requestOptions(): NodeRequestOptions {
-		return dataMap.get(this).requestOptions;
+		return dataMap.get(this)!.requestOptions;
 	}
 
 	get url(): string {
-		return dataMap.get(this).url;
+		return dataMap.get(this)!.url;
 	}
 
 	get download(): Observable<number> {
-		return dataMap.get(this).downloadObservable;
+		return dataMap.get(this)!.downloadObservable;
 	}
 
 	get data(): Observable<any> {
-		return dataMap.get(this).dataObservable;
+		return dataMap.get(this)!.dataObservable;
 	}
 
 	constructor(response: http.IncomingMessage) {

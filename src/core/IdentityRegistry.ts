@@ -12,15 +12,15 @@ interface Entry<V> {
 	readonly value: V;
 }
 
-interface State<V> {
+interface State<V extends object> {
 	readonly entryMap: Map<Identity, Entry<V>>;
 	readonly idMap: WeakMap<V, Identity>;
 }
 
 const privateStateMap = new WeakMap<IdentityRegistry<any>, State<any>>();
 
-function getState<V>(instance: IdentityRegistry<V>): State<V> {
-	return privateStateMap.get(instance);
+function getState<V extends object>(instance: IdentityRegistry<V>): State<V> {
+	return privateStateMap.get(instance)!;
 }
 
 /**
@@ -31,7 +31,7 @@ export type Identity = string | symbol;
 /**
  * A registry of values, mapped by identities.
  */
-export default class IdentityRegistry<V extends Object> implements Iterable<[Identity, V]> {
+export default class IdentityRegistry<V extends object> implements Iterable<[Identity, V]> {
 	constructor() {
 		privateStateMap.set(this, {
 			entryMap: new Map<Identity, Entry<V>>(),
@@ -48,7 +48,7 @@ export default class IdentityRegistry<V extends Object> implements Iterable<[Ide
 	 * @return The value
 	 */
 	get(id: Identity): V {
-		const entry = getState<V>(this).entryMap.get(id);
+		const entry = getState(this).entryMap.get(id);
 		if (!entry) {
 			throw new Error(`Could not find a value for identity '${id.toString()}'`);
 		}
@@ -62,7 +62,7 @@ export default class IdentityRegistry<V extends Object> implements Iterable<[Ide
 	 * @return `true` if the value has been registered, `false` otherwise
 	 */
 	contains(value: V): boolean {
-		return getState<V>(this).idMap.has(value);
+		return getState(this).idMap.has(value);
 	}
 
 	/**
@@ -71,7 +71,7 @@ export default class IdentityRegistry<V extends Object> implements Iterable<[Ide
 	 * @return `true` if the value was removed, `false` otherwise
 	 */
 	delete(id: Identity): boolean {
-		const entry = getState<V>(this).entryMap.get(id);
+		const entry = getState(this).entryMap.get(id);
 		if (!entry) {
 			return false;
 		}
@@ -86,7 +86,7 @@ export default class IdentityRegistry<V extends Object> implements Iterable<[Ide
 	 * @return `true` if a value has been registered, `false` otherwise
 	 */
 	has(id: Identity): boolean {
-		return getState<V>(this).entryMap.has(id);
+		return getState(this).entryMap.has(id);
 	}
 
 	/**
@@ -97,12 +97,12 @@ export default class IdentityRegistry<V extends Object> implements Iterable<[Ide
 	 * @param value The value
 	 * @return The identifier otherwise
 	 */
-	identify(value: V): Identity {
+	identify(value: V): Identity | undefined {
 		if (!this.contains(value)) {
 			throw new Error('Could not identify non-registered value');
 		}
 
-		return getState<V>(this).idMap.get(value);
+		return getState(this).idMap.get(value);
 	}
 
 	/**
@@ -126,7 +126,7 @@ export default class IdentityRegistry<V extends Object> implements Iterable<[Ide
 
 		const existingId = this.contains(value) ? this.identify(value) : null;
 		if (existingId && existingId !== id) {
-			const str = (<Identity> existingId).toString();
+			const str = existingId.toString();
 			throw new Error(`The value has already been registered with a different identity (${str})`);
 		}
 
@@ -138,12 +138,12 @@ export default class IdentityRegistry<V extends Object> implements Iterable<[Ide
 		const handle = {
 			destroy: () => {
 				handle.destroy = noop;
-				getState<V>(this).entryMap.delete(id);
+				getState(this).entryMap.delete(id);
 			}
 		};
 
 		entryMap.set(id, { handle, value });
-		getState<V>(this).idMap.set(value, id);
+		getState(this).idMap.set(value, id);
 
 		return handle;
 	}
@@ -151,7 +151,7 @@ export default class IdentityRegistry<V extends Object> implements Iterable<[Ide
 	entries(): IterableIterator<[Identity, V]> {
 		const values = new List<[Identity, V]>();
 
-		getState<V>(this).entryMap.forEach((value: Entry<V>, key: Identity) => {
+		getState(this).entryMap.forEach((value: Entry<V>, key: Identity) => {
 			values.add([key, value.value]);
 		});
 
@@ -161,7 +161,7 @@ export default class IdentityRegistry<V extends Object> implements Iterable<[Ide
 	values(): IterableIterator<V> {
 		const values = new List<V>();
 
-		getState<V>(this).entryMap.forEach((value: Entry<V>, key: Identity) => {
+		getState(this).entryMap.forEach((value: Entry<V>, key: Identity) => {
 			values.add(value.value);
 		});
 
@@ -169,7 +169,7 @@ export default class IdentityRegistry<V extends Object> implements Iterable<[Ide
 	}
 
 	ids(): IterableIterator<Identity> {
-		return getState<V>(this).entryMap.keys();
+		return getState(this).entryMap.keys();
 	}
 
 	[Symbol.iterator](): IterableIterator<[Identity, V]> {

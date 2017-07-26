@@ -33,7 +33,7 @@ interface RequestData {
 const dataMap = new WeakMap<XhrResponse, RequestData>();
 
 function getDataTask(response: XhrResponse): Task<XMLHttpRequest> {
-	const data = dataMap.get(response);
+	const data = dataMap.get(response)!;
 
 	if (data.used) {
 		return Task.reject<any>(new TypeError('Body already read'));
@@ -54,27 +54,27 @@ export class XhrResponse extends Response {
 	readonly statusText: string;
 
 	get bodyUsed(): boolean {
-		return dataMap.get(this).used;
+		return dataMap.get(this)!.used;
 	}
 
 	get nativeResponse(): XMLHttpRequest {
-		return dataMap.get(this).nativeResponse;
+		return dataMap.get(this)!.nativeResponse;
 	}
 
 	get requestOptions(): XhrRequestOptions {
-		return dataMap.get(this).requestOptions;
+		return dataMap.get(this)!.requestOptions;
 	}
 
 	get url(): string {
-		return dataMap.get(this).url;
+		return dataMap.get(this)!.url;
 	}
 
 	get download(): Observable<number> {
-		return dataMap.get(this).downloadObservable;
+		return dataMap.get(this)!.downloadObservable;
 	}
 
 	get data(): Observable<any> {
-		return dataMap.get(this).dataObservable;
+		return dataMap.get(this)!.dataObservable;
 	}
 
 	constructor(request: XMLHttpRequest) {

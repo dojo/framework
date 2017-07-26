@@ -1,6 +1,5 @@
 import '@dojo/shim/Symbol';
 import Map from '@dojo/shim/Map';
-import { ArrayLike } from '@dojo/shim/interfaces';
 import { from as arrayFrom } from '@dojo/shim/array';
 import { forOf, Iterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
 
@@ -36,7 +35,7 @@ export default class MultiMap<T> implements Map<any[], T> {
 	 *
 	 * @return the multi map instance
 	 */
-	set(keys: any[], value: T): MultiMap<T> {
+	set(keys: any[], value: T): this {
 		let map = this._map;
 		let childMap;
 

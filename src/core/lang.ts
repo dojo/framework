@@ -1,5 +1,6 @@
-import has from './has';
 import { Handle } from '@dojo/interfaces/core';
+import { assign } from '@dojo/shim/object';
+export { assign } from '@dojo/shim/object';
 
 const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -92,24 +93,6 @@ interface ObjectAssignConstructor extends ObjectConstructor {
 	assign<T, U1, U2, U3>(target: T, source1: U1, source2: U2, source3: U3): T & U1 & U2 & U3;
 	assign(target: any, ...sources: any[]): any;
 }
-
-/**
- * Copies the values of all enumerable own properties of one or more source objects to the target object.
- *
- * @param target The target object to receive values from source objects
- * @param sources Any number of objects whose enumerable own properties will be copied to the target object
- * @return The modified target object
- */
-export const assign = has('object-assign') ?
-	(<ObjectAssignConstructor> Object).assign :
-	function (target: any, ...sources: any[]): any {
-		return _mixin({
-			deep: false,
-			inherited: false,
-			sources: sources,
-			target: target
-		});
-	};
 
 /**
  * Creates a new object from the given prototype, and copies all enumerable own properties of one or more
