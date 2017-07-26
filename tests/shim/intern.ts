@@ -23,6 +23,9 @@ export const environments = [
 	{ browserName: 'edge' },
 	{ browserName: 'firefox', platform: 'WINDOWS' },
 	{ browserName: 'chrome', platform: 'WINDOWS' },
+	// Chrome 31 has no Promise and a non-buggy MutationObserver
+	// so we can test our MutationObserver queue implementation
+	{ browserName: 'chrome', version: '31', platform: 'WINDOWS' },
 	// Issue with iphone 9.1 compatability, commented out for move to
 	// browserstack and issue raised.https://github.com/dojo/shim/issues/96
 	// { browserName: 'iPhone', version: '9.1' },

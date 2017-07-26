@@ -139,4 +139,21 @@ add('raf', typeof requestAnimationFrame === 'function');
 
 /* DOM Features */
 
-add('dom-mutationobserver', () => has('host-browser') && Boolean(global.MutationObserver || global.WebKitMutationObserver));
+add('dom-mutationobserver', () => {
+	if (has('host-browser') && Boolean(global.MutationObserver || global.WebKitMutationObserver)) {
+		// IE11 has an unreliable MutationObserver implementation where setProperty() does not
+		// generate a mutation event, observers can crash, and the queue does not drain
+		// reliably. The following feature test was adapted from
+		// https://gist.github.com/t10ko/4aceb8c71681fdb275e33efe5e576b14
+		const example = document.createElement('div');
+		/* tslint:disable-next-line:variable-name */
+		const HostMutationObserver = global.MutationObserver || global.WebKitMutationObserver;
+		const observer = new HostMutationObserver(function () {});
+		observer.observe(example, { attributes: true });
+
+		example.style.setProperty('display', 'block');
+
+		return Boolean(observer.takeRecords().length);
+	}
+	return false;
+});

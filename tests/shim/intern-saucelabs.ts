@@ -5,7 +5,10 @@ export const environments = [
 	/* Issues with SauceLabs and Edge ;-( */
 	// { browserName: 'microsoftedge', platform: 'Windows 10' },
 	{ browserName: 'firefox', version: '50', platform: 'Windows 7' },
-	{ browserName: 'chrome', platform: 'Windows 10' }
+	{ browserName: 'chrome', platform: 'Windows 10' },
+	// Chrome 31 has no Promise and a non-buggy MutationObserver
+	// so we can test our MutationObserver queue implementation
+	{ browserName: 'chrome', version: '31', platform: 'Windows 10' }
 	/* Issues with SauceLabs and Safari ;-( */
 	// { browserName: 'safari', version: '9', platform: 'OS X 10.11' },
 	// Issues with android running on saucelabs
