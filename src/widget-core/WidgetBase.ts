@@ -327,7 +327,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		return this._properties;
 	}
 
-	public __setProperties__(originalProperties: P): void {
+	public __setProperties__(originalProperties: this['properties']): void {
 		const { bind, ...properties } = originalProperties as any;
 		const changedPropertyKeys: string[] = [];
 		const allProperties = new Set([...Object.keys(properties), ...Object.keys(this._properties)]);

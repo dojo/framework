@@ -27,16 +27,16 @@ export type ClassNames = {
  * A lookup object for available widget classes names
  */
 export interface Theme {
-	[key: string]: ClassNames;
+	[key: string]: object;
 }
 
 /**
  * Properties required for the themeable mixin
  */
-export interface ThemeableProperties extends WidgetProperties {
+export interface ThemeableProperties<T = ClassNames> extends WidgetProperties {
 	injectedTheme?: any;
 	theme?: Theme;
-	extraClasses?: any;
+	extraClasses?: { [P in keyof T]?: string };
 }
 
 /**
@@ -63,8 +63,6 @@ export interface ClassesFunctionChain {
 	get: ClassesFunction;
 }
 
-type ThemeClasses = { [key: string]: string; };
-
 const THEME_KEY = ' _key';
 
 export const INJECTED_THEME_KEY = Symbol('theme');
@@ -72,7 +70,7 @@ export const INJECTED_THEME_KEY = Symbol('theme');
 /**
  * Interface for the ThemeableMixin
  */
-export interface ThemeableMixin {
+export interface ThemeableMixin<T = ClassNames> {
 
 	/**
 	 * Processes all the possible classes for the instance with setting the passed class names to
@@ -83,7 +81,7 @@ export interface ThemeableMixin {
 	 */
 	classes(...classNames: (string | null)[]): ClassesFunctionChain;
 
-	properties: ThemeableProperties;
+	properties: ThemeableProperties<T>;
 }
 
 /**
@@ -134,7 +132,7 @@ function createClassNameObject(classNames: string[], applied: boolean) {
  * @param classes The baseClasses object
  * @requires
  */
-function createThemeClassesLookup(classes: ThemeClasses[]): ClassNames {
+function createThemeClassesLookup(classes: ClassNames[]): ClassNames {
 	return classes.reduce((currentClassNames, baseClass) => {
 		Object.keys(baseClass).forEach((key: string) => {
 			currentClassNames[baseClass[key]] = key;
@@ -163,15 +161,15 @@ export function registerThemeInjector(theme: any, themeRegistry: WidgetRegistry 
 /**
  * Function that returns a class decorated with with Themeable functionality
  */
-export function ThemeableMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & Constructor<ThemeableMixin> {
+export function ThemeableMixin<E, T extends Constructor<WidgetBase<ThemeableProperties<E>>>>(Base: T): Constructor<ThemeableMixin<E>> & T {
 	class Themeable extends Base {
 
-		public properties: ThemeableProperties;
+		public properties: ThemeableProperties<E>;
 
 		/**
 		 * The Themeable baseClasses
 		 */
-		private _registeredBaseThemes: ThemeClasses[];
+		private _registeredBaseThemes: ClassNames[];
 
 		/**
 		 * All classes ever seen by the instance
@@ -235,14 +233,14 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<any>>>(Base: T):
 		}
 
 		@beforeRender()
-		protected injectTheme(renderFunc: () => DNode, properties: ThemeableProperties, children: DNode[]): () => DNode {
+		protected injectTheme(renderFunc: () => DNode, properties: ThemeableProperties<E>, children: DNode[]): () => DNode {
 			return () => {
 				const hasInjectedTheme = this.getRegistries().has(INJECTED_THEME_KEY);
 				if (hasInjectedTheme) {
 					return w<BaseInjector>(INJECTED_THEME_KEY, {
 						scope: this,
 						render: renderFunc,
-						getProperties: (inject: Context, properties: ThemeableProperties): ThemeableProperties => {
+						getProperties: (inject: Context, properties: ThemeableProperties<any>): ThemeableProperties<any>  => {
 							if (!properties.theme && this._theme !== properties.injectedTheme) {
 								this._recalculateClasses = true;
 							}
@@ -311,8 +309,9 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<any>>>(Base: T):
 		private _registerThemeClass(className: string) {
 			const { properties: { extraClasses = {} } } = this;
 			const themeClass = this._theme[className] ? this._theme[className] : this._getBaseThemeClass(className);
-			const extraClassNames = extraClasses[className] ? extraClasses[className].split(' ') : [];
-			const cssClassNames = themeClass.split(' ').concat(extraClassNames);
+			const extraClassesClassNames = extraClasses[className];
+			const extraClassesClassNamesArray = extraClassesClassNames ? extraClassesClassNames.split(' ') : [];
+			const cssClassNames = themeClass.split(' ').concat(extraClassesClassNamesArray);
 			const classesObject = cssClassNames.reduce((classesObject, cssClassName) => {
 				classesObject[cssClassName] = true;
 				this._allClasses[cssClassName] = false;
@@ -369,7 +368,7 @@ export function ThemeableMixin<T extends Constructor<WidgetBase<any>>>(Base: T):
 		/**
 		 * Search for the class name in other base themes
 		 */
-		private _isDuplicate(key: string, originatingBaseTheme: ThemeClasses): boolean {
+		private _isDuplicate(key: string, originatingBaseTheme: ClassNames): boolean {
 			let duplicate = false;
 			if (key !== THEME_KEY) {
 				for (let i = 0; i < this._registeredBaseThemes.length; i++) {
