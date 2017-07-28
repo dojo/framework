@@ -124,10 +124,10 @@ registerSuite({
 				[ baseThemeClasses1.class2 ]: true
 			});
 		},
-		'should filter out null params passed to classes function'() {
+		'should filter out falsy params passed to classes function'() {
 			const themeableInstance = new TestWidget();
 			const { class1, class2 } = baseThemeClasses1;
-			const flaggedClasses = themeableInstance.classes(class1, null, class2, null).get();
+			const flaggedClasses = themeableInstance.classes(class1, null, class2, null, '').get();
 			assert.deepEqual(flaggedClasses, {
 				[ baseThemeClasses1.class1 ]: true,
 				[ baseThemeClasses1.class2 ]: true

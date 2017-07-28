@@ -268,7 +268,7 @@ export function ThemeableMixin<E, T extends Constructor<WidgetBase<ThemeableProp
 		 */
 		private _getThemeClasses(classNames: string[]): ClassNameFlags  {
 			return classNames
-				.filter((className) => className !== null)
+				.filter((className) => !!className)
 				.reduce((appliedClasses: {}, className: string) => {
 					if (!this._baseThemeClassesReverseLookup[className]) {
 						console.warn(`Class name: ${className} not found, use chained 'fixed' method instead`);
