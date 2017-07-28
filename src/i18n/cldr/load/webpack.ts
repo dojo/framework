@@ -1,4 +1,4 @@
-import P from '@dojo/shim/Promise';
+import '@dojo/shim/Promise'; // imported for side effects
 import baseLoad, {
 	CldrData,
 	isLoaded as baseIsLoaded,
@@ -25,13 +25,13 @@ async function loadInjectedData() {
 /**
  * A webpack-specific function used to load CLDR data from a preset cache.
  */
-export default function loadCldrData(contextRequire: Function, data: CldrData | string[]): P<void>;
-export default function loadCldrData(data: CldrData | string[]): P<void>;
-export default function loadCldrData(dataOrRequire: Function | CldrData | string[], data?: CldrData | string[]): P<void> {
+export default function loadCldrData(contextRequire: Function, data: CldrData | string[]): Promise<void>;
+export default function loadCldrData(data: CldrData | string[]): Promise<void>;
+export default function loadCldrData(dataOrRequire: Function | CldrData | string[], data?: CldrData | string[]): Promise<void> {
 	data = typeof dataOrRequire === 'function' ? data : dataOrRequire;
 
 	if (Array.isArray(data)) {
-		return P.resolve();
+		return Promise.resolve();
 	}
 
 	loadInjectedData();
