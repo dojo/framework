@@ -26,7 +26,7 @@
     "@dojo/shim": "next"
   },
   "dependencies": {
-    "globalize": "^1.2.3"
+    "globalize": "1.3.0"
   },
   "devDependencies": {
     "@dojo/interfaces": "next",

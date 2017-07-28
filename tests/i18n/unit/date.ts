@@ -32,10 +32,11 @@ function getTimezoneDate(date: Date, offset: number = 0): Date {
 
 function getTimezones(date: Date, standard: string = 'GMT') {
 	const [ sign, longOffset, fullOffset ] = getOffsets(date);
-	const fullSeparator = (sign < 0) ? '+' : String.fromCharCode(standard === 'UTC' ? 8722 : 45);
+	const timeSeparator = standard === 'UTC' ? '\u2212' : '-';
+	const fullSeparator = (sign < 0) ? '+' : timeSeparator;
 	const zeroPattern = /^[0:]+$/;
 	return [
-		`${standard}${longOffset ? ((sign < 0) ? '+' : '-') + longOffset : ''}`,
+		`${standard}${longOffset ? ((sign < 0) ? '+' : timeSeparator) + longOffset : ''}`,
 		`${standard}${zeroPattern.test(fullOffset as string) ? '' : fullSeparator + fullOffset}`
 	];
 }
