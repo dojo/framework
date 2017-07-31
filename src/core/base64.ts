@@ -1,8 +1,8 @@
 import global from '@dojo/shim/global';
 import has, { add as hasAdd } from '@dojo/has/has';
 
-hasAdd('btoa', 'btoa' in global);
-hasAdd('atob', 'atob' in global);
+hasAdd('btoa', 'btoa' in global, true);
+hasAdd('atob', 'atob' in global, true);
 
 /**
  * Take a string encoded in base64 and decode it
