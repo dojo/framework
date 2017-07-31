@@ -16,7 +16,7 @@ add('es6-array', () => {
 		'find',
 		'copyWithin'
 	].every((key) => key in global.Array.prototype);
-});
+}, true);
 
 add('es6-array-fill', () => {
 	if ('fill' in global.Array.prototype) {
@@ -24,9 +24,9 @@ add('es6-array-fill', () => {
 		return (<any> [ 1 ]).fill(9, Number.POSITIVE_INFINITY)[0] === 1;
 	}
 	return false;
-});
+}, true);
 
-add('es7-array', () => 'includes' in global.Array.prototype);
+add('es7-array', () => 'includes' in global.Array.prototype, true);
 
 /* Map */
 add('es6-map', () => {
@@ -50,7 +50,7 @@ add('es6-map', () => {
 		}
 	}
 	return false;
-});
+}, true);
 
 /* Math */
 add('es6-math', () => {
@@ -72,7 +72,7 @@ add('es6-math', () => {
 		'cbrt',
 		'hypot'
 	].every((name) => typeof global.Math[name] === 'function');
-});
+}, true);
 
 add('es6-math-imul', () => {
 	if ('imul' in global.Math) {
@@ -80,7 +80,7 @@ add('es6-math-imul', () => {
 		return (<any> Math).imul(0xffffffff, 5) === -5;
 	}
 	return false;
-});
+}, true);
 
 /* Object */
 add('es6-object', () => {
@@ -90,7 +90,7 @@ add('es6-object', () => {
 		'getOwnPropertySymbols',
 		'setPrototypeOf'
 	].every((name) => typeof global.Object[name] === 'function');
-});
+}, true);
 
 add('es2017-object', () => {
 	return [
@@ -98,13 +98,13 @@ add('es2017-object', () => {
 		'entries',
 		'getOwnPropertyDescriptors'
 	].every((name) => typeof global.Object[name] === 'function');
-});
+}, true);
 
 /* Observable */
-add('es-observable', () => typeof global.Observable !== 'undefined');
+add('es-observable', () => typeof global.Observable !== 'undefined', true);
 
 /* Promise */
-add('es6-promise', () => typeof global.Promise !== 'undefined' && has('es6-symbol'));
+add('es6-promise', () => typeof global.Promise !== 'undefined' && has('es6-symbol'), true);
 
 /* Set */
 add('es6-set', () => {
@@ -114,7 +114,7 @@ add('es6-set', () => {
 		return set.has(1) && 'keys' in set && typeof set.keys === 'function' && has('es6-symbol');
 	}
 	return false;
-});
+}, true);
 
 /* String */
 add('es6-string', () => {
@@ -128,7 +128,7 @@ add('es6-string', () => {
 		'endsWith',
 		'includes'
 	].every((key) => typeof global.String.prototype[key] === 'function');
-});
+}, true);
 
 add('es6-string-raw', () => {
 	function getCallSite(callSite: TemplateStringsArray, ...substitutions: any[]) {
@@ -146,17 +146,17 @@ add('es6-string-raw', () => {
 	}
 
 	return false;
-});
+}, true);
 
 add('es2017-string', () => {
 	return [
 		'padStart',
 		'padEnd'
 	].every((key) => typeof global.String.prototype[key] === 'function');
-});
+}, true);
 
 /* Symbol */
-add('es6-symbol', () => typeof global.Symbol !== 'undefined' && typeof Symbol() === 'symbol');
+add('es6-symbol', () => typeof global.Symbol !== 'undefined' && typeof Symbol() === 'symbol', true);
 
 /* WeakMap */
 add('es6-weakmap', () => {
@@ -169,13 +169,13 @@ add('es6-weakmap', () => {
 		return map.get(key1) === 1 && map.set(key2, 2) === map && has('es6-symbol');
 	}
 	return false;
-});
+}, true);
 
 /* Miscellaneous features */
-add('microtasks', () => has('es6-promise') || has('host-node') || has('dom-mutationobserver'));
-add('postmessage', () => typeof global.postMessage === 'function');
-add('raf', () => typeof global.requestAnimationFrame === 'function');
-add('setimmediate', () => typeof global.setImmediate !== 'undefined');
+add('microtasks', () => has('es6-promise') || has('host-node') || has('dom-mutationobserver'), true);
+add('postmessage', () => typeof global.postMessage === 'function', true);
+add('raf', () => typeof global.requestAnimationFrame === 'function', true);
+add('setimmediate', () => typeof global.setImmediate !== 'undefined', true);
 
 /* DOM Features */
 
@@ -196,4 +196,4 @@ add('dom-mutationobserver', () => {
 		return Boolean(observer.takeRecords().length);
 	}
 	return false;
-});
+}, true);
