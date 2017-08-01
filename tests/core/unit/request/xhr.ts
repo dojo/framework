@@ -403,6 +403,18 @@ registerSuite({
 						}
 					});
 				});
+			},
+
+			'X-Requested-With headers can be disabled'(this: any) {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				const options = {includeRequestedWithHeader: false};
+				return xhrRequest('/__echo/default?norequestedwith', options).then(function (response: any) {
+					return response.json().then((data: any) => {
+						assert.isUndefined(data.headers['x-requested-with']);
+					});
+				});
 			}
 		}
 	},

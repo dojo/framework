@@ -35,14 +35,39 @@ export type Provider = (url: string, options?: RequestOptions) => UploadObservab
 export type ProviderTest = (url: string, options?: RequestOptions) => boolean | null;
 
 export interface RequestOptions {
+	/**
+	 * Enable cache busting (default false). Cache busting will make a new URL by appending a parameter to the
+	 * requested URL
+	 */
 	cacheBust?: boolean;
 	credentials?: 'omit' | 'same-origin' | 'include';
+	/**
+	 * Body to send along with the http request
+	 */
 	body?: Blob | BufferSource | FormData | UrlSearchParams | string;
+	/**
+	 * Headers to send along with the http request
+	 */
 	headers?: Headers | { [key: string]: string; };
+	/**
+	 * HTTP method
+	 */
 	method?: string;
+	/**
+	 * Password for HTTP authentication
+	 */
 	password?: string;
+	/**
+	 * Number of milliseconds before the request times out and is canceled
+	 */
 	timeout?: number;
+	/**
+	 * User for HTTP authentication
+	 */
 	user?: string;
+	/**
+	 * Optional query parameter(s) for the URL. The requested url will have these query parameters appended.
+	 */
 	query?: string | ParamList;
 }
 

@@ -17,7 +17,15 @@ import SubscriptionPool from '../SubscriptionPool';
  * Request options specific to an XHR request
  */
 export interface XhrRequestOptions extends RequestOptions {
+	/**
+	 * Controls whether or not the request is synchronous (blocks the main thread) or asynchronous (default).
+	 */
 	blockMainThread?: boolean;
+	/**
+	 * Controls whether or not the X-Requested-With header is added to the request (default true). Set to false to not
+	 * include the header.
+	 */
+	includeRequestedWithHeader?: boolean;
 }
 
 interface RequestData {
@@ -270,6 +278,7 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 
 	let hasContentTypeHeader = false;
 	let hasRequestedWithHeader = false;
+	const { includeRequestedWithHeader = true } = options;
 
 	if (options.headers) {
 		const requestHeaders = new Headers(options.headers);
@@ -282,7 +291,7 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 		});
 	}
 
-	if (!hasRequestedWithHeader) {
+	if (!hasRequestedWithHeader && includeRequestedWithHeader) {
 		request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 	}
 
