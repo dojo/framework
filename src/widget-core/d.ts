@@ -97,12 +97,10 @@ export function v(tag: string, propertiesOrChildren: VirtualDomProperties | DNod
 			properties = {};
 		}
 
-		if (properties) {
-			let { classes } = properties;
-			if (typeof classes === 'function') {
-				classes = classes();
-				properties = assign(properties, { classes });
-			}
+		let { classes } = properties;
+		if (typeof classes === 'function') {
+			classes = classes();
+			properties = assign(properties, { classes });
 		}
 
 		return {
@@ -110,7 +108,6 @@ export function v(tag: string, propertiesOrChildren: VirtualDomProperties | DNod
 			children,
 			properties,
 			render(this: { vNodes: VNode[], properties: VNodeProperties }) {
-
 				return h(tag, this.properties, this.vNodes);
 			},
 			type: HNODE

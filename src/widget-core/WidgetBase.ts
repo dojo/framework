@@ -4,15 +4,14 @@ import Map from '@dojo/shim/Map';
 import '@dojo/shim/Promise'; // Imported for side-effects
 import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
-import { decorate, isHNode, isWNode, registry, v } from './d';
-import { auto, reference } from './diff';
+import { isWNode, registry, v } from './d';
+import { auto } from './diff';
 import {
 	AfterRender,
 	BeforeRender,
 	DiffPropertyFunction,
 	DiffPropertyReaction,
 	DNode,
-	HNode,
 	RegistryLabel,
 	Render,
 	VirtualDomNode,
@@ -87,7 +86,8 @@ export function beforeRender(method?: Function) {
  */
 export function diffProperty(propertyName: string, diffFunction: DiffPropertyFunction, reactionFunction?: Function) {
 	return handleDecorator((target, propertyKey) => {
-		target.addDecorator(`diffProperty:${propertyName}`, diffFunction);
+		target.addDecorator(`diffProperty:${propertyName}`, diffFunction.bind(null));
+		target.addDecorator('registeredDiffProperty', propertyName);
 		if (reactionFunction || propertyKey) {
 			target.addDecorator('diffReaction', {
 				propertyName,
@@ -114,17 +114,11 @@ export function handleDecorator(handler: (target: any, propertyKey?: string) => 
 	};
 }
 
-/**
- * Function that identifies DNodes that are HNodes with key properties.
- */
-function isHNodeWithKey(node: DNode): node is HNode {
-	return isHNode(node) && (node.properties != null) && (node.properties.key != null);
-}
+const boundAuto = auto.bind(null);
 
 /**
  * Main widget base for all widgets to extend
  */
-@diffProperty('bind', reference)
 export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends Evented implements WidgetBaseInterface<P, C> {
 
 	/**
@@ -167,11 +161,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	 */
 	private _decoratorCache: Map<string, any[]>;
 
-	/**
-	 * set of render decorators
-	 */
-	private _renderDecorators: Set<string>;
-
 	private _registries: RegistryHandler;
 
 	/**
@@ -187,6 +176,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 	private _requiredNodes = new Set<string>();
 
+	private _boundRenderFunc: Render;
+
+	private _boundInvalidate: () => void;
+
 	/**
 	 * @constructor
 	 */
@@ -198,13 +191,14 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		this._properties = <P> {};
 		this._cachedChildrenMap = new Map<string | Promise<WidgetBaseConstructor> | WidgetBaseConstructor, WidgetCacheWrapper[]>();
 		this._diffPropertyFunctionMap = new Map<string, string>();
-		this._renderDecorators = new Set<string>();
 		this._bindFunctionPropertyMap = new WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>();
 		this._registries = new RegistryHandler();
 		this._registries.add(registry);
 		this.own(this._registries);
+		this._boundRenderFunc = this.render.bind(this);
+		this._boundInvalidate = this.invalidate.bind(this);
 
-		this.own(this._registries.on('invalidate', this.invalidate.bind(this)));
+		this.own(this._registries.on('invalidate', this._boundInvalidate));
 		this._checkOnElementUsage();
 	}
 
@@ -214,7 +208,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			cached = new MetaType({
 				nodes: this._nodeMap,
 				requiredNodes: this._requiredNodes,
-				invalidate: this.invalidate.bind(this)
+				invalidate: this._boundInvalidate
 			});
 			this._metaMap.set(MetaType, cached);
 		}
@@ -239,36 +233,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			this._nodeMap.clear();
 			return dNodes;
 		};
-	}
-
-	/**
-	 * A render decorator that registers vnode callbacks for 'afterCreate' and
-	 * 'afterUpdate' that will in turn call lifecycle methods onElementCreated and onElementUpdated.
-	 */
-	@afterRender()
-	protected attachLifecycleCallbacks (node: DNode | DNode[]): DNode | DNode[] {
-		// Create vnode afterCreate and afterUpdate callback functions that will only be set on nodes
-		// with "key" properties.
-
-		decorate(node, (node: HNode) => {
-			node.properties.afterCreate = this._afterCreateCallback;
-			node.properties.afterUpdate = this._afterUpdateCallback;
-		}, isHNodeWithKey);
-
-		return node;
-	}
-
-	@afterRender()
-	protected decorateBind(node: DNode | DNode[]): DNode | DNode[] {
-		decorate(node, (node: any) => {
-			const { properties = {} }: { properties: { bind?: any } } = node;
-			if (!properties.bind) {
-				properties.bind = this;
-			}
-		}, (node: DNode) => {
-			return isHNode(node) || isWNode(node);
-		});
-		return node;
 	}
 
 	/**
@@ -330,41 +294,57 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	public __setProperties__(originalProperties: this['properties']): void {
 		const { bind, ...properties } = originalProperties as any;
 		const changedPropertyKeys: string[] = [];
-		const allProperties = new Set([...Object.keys(properties), ...Object.keys(this._properties)]);
+		const allProperties = [ ...Object.keys(properties), ...Object.keys(this._properties) ];
+		const checkedProperties: string[] = [];
 		const diffPropertyResults: any = {};
+		const registeredDiffPropertyNames = this.getDecorator('registeredDiffProperty');
+		let runReactions = false;
 
 		this._renderState = WidgetRenderState.PROPERTIES;
-		this._bindFunctionProperties(properties, bind);
 
-		allProperties.forEach((propertyName) => {
-			const previousProperty = this._properties[propertyName];
-			const newProperty = properties[propertyName];
-			const diffFunctions: DiffPropertyFunction[] = this.getDecorator(`diffProperty:${propertyName}`);
-
-			if (diffFunctions.length === 0) {
-				diffFunctions.push(auto);
+		for (let i = 0; i < allProperties.length; i++) {
+			const propertyName = allProperties[i];
+			if (checkedProperties.indexOf(propertyName) > 0) {
+				continue;
 			}
-
-			diffFunctions.forEach((diffFunction) => {
-				const result = diffFunction.call(null, previousProperty, newProperty);
+			checkedProperties.push(propertyName);
+			const previousProperty = this._properties[propertyName];
+			const newProperty = this._bindFunctionProperty(properties[propertyName], bind);
+			if (registeredDiffPropertyNames.indexOf(propertyName) !== -1) {
+				runReactions = true;
+				const diffFunctions = this.getDecorator(`diffProperty:${propertyName}`);
+				for (let i = 0; i < diffFunctions.length; i++) {
+					const result = diffFunctions[i](previousProperty, newProperty);
+					if (result.changed && changedPropertyKeys.indexOf(propertyName) === -1) {
+						changedPropertyKeys.push(propertyName);
+					}
+					if (propertyName in properties) {
+						diffPropertyResults[propertyName] = result.value;
+					}
+				}
+			}
+			else {
+				const result = boundAuto(previousProperty, newProperty);
 				if (result.changed && changedPropertyKeys.indexOf(propertyName) === -1) {
 					changedPropertyKeys.push(propertyName);
 				}
 				if (propertyName in properties) {
 					diffPropertyResults[propertyName] = result.value;
 				}
-			});
-		});
-
-		this._mapDiffPropertyReactions(properties, changedPropertyKeys).forEach((args, reaction) => {
-			if (args.changed) {
-				reaction.call(this, args.previousProperties, args.newProperties);
 			}
-		});
+		}
+
+		if (runReactions) {
+			this._mapDiffPropertyReactions(properties, changedPropertyKeys).forEach((args, reaction) => {
+				if (args.changed) {
+					reaction.call(this, args.previousProperties, args.newProperties);
+				}
+			});
+		}
 
 		this._properties = diffPropertyResults;
 
-		if (changedPropertyKeys.length) {
+		if (changedPropertyKeys.length > 0) {
 			this.invalidate();
 		}
 	}
@@ -375,7 +355,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 	public __setChildren__(children: (C | null)[]): void {
 		this._renderState = WidgetRenderState.CHILDREN;
-		if (this._children.length || children.length) {
+		if (this._children.length > 0 || children.length > 0) {
 			this._children = children;
 			this.invalidate();
 		}
@@ -383,16 +363,14 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 	public __render__(): VirtualDomNode | VirtualDomNode[] {
 		this._renderState = WidgetRenderState.RENDER;
-		if (this._dirty || !this._cachedVNode) {
+		if (this._dirty === true || this._cachedVNode === undefined) {
 			this._dirty = false;
 			const render = this._runBeforeRenders();
 			let dNode = render();
 			dNode = this.runAfterRenders(dNode);
 			const widget = this._dNodeToVNode(dNode);
 			this._manageDetachedChildren();
-			if (widget) {
-				this._cachedVNode = widget;
-			}
+			this._cachedVNode = widget;
 			this._renderState = WidgetRenderState.IDLE;
 			return widget;
 		}
@@ -523,21 +501,18 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	 *
 	 * @param properties properties to check for functions
 	 */
-	private _bindFunctionProperties(properties: any, bind: any): void {
-		Object.keys(properties).forEach((propertyKey) => {
-			const property = properties[propertyKey];
+	private _bindFunctionProperty(property: any, bind: any): any {
+		if (typeof property === 'function' && isWidgetBaseConstructor(property) === false) {
+			const bindInfo: Partial<BoundFunctionData> = this._bindFunctionPropertyMap.get(property) || {};
+			let { boundFunc, scope } = bindInfo;
 
-			if (typeof property === 'function' && !isWidgetBaseConstructor(property)) {
-				const bindInfo: Partial<BoundFunctionData> = this._bindFunctionPropertyMap.get(property) || {};
-				let { boundFunc, scope } = bindInfo;
-
-				if (!boundFunc || scope !== bind) {
-					boundFunc = property.bind(bind) as ((...args: any[]) => any);
-					this._bindFunctionPropertyMap.set(property, { boundFunc, scope: bind });
-				}
-				properties[propertyKey] = boundFunc;
+			if (boundFunc === undefined || scope !== bind) {
+				boundFunc = property.bind(bind) as (...args: any[]) => any;
+				this._bindFunctionPropertyMap.set(property, { boundFunc, scope: bind });
 			}
-		});
+			return boundFunc;
+		}
+		return property;
 	}
 
 	protected getRegistries(): RegistryHandler {
@@ -550,14 +525,17 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	private _runBeforeRenders(): Render {
 		const beforeRenders = this.getDecorator('beforeRender');
 
-		return beforeRenders.reduce((render: Render, beforeRenderFunction: BeforeRender) => {
-			const updatedRender = beforeRenderFunction.call(this, render, this._properties, this._children);
-			if (!updatedRender) {
-				console.warn('Render function not returned from beforeRender, using previous render');
-				return render;
-			}
-			return updatedRender;
-		}, this.render.bind(this));
+		if (beforeRenders.length > 0) {
+			return beforeRenders.reduce((render: Render, beforeRenderFunction: BeforeRender) => {
+				const updatedRender = beforeRenderFunction.call(this, render, this._properties, this._children);
+				if (!updatedRender) {
+					console.warn('Render function not returned from beforeRender, using previous render');
+					return render;
+				}
+				return updatedRender;
+			}, this._boundRenderFunc);
+		}
+		return this._boundRenderFunc;
 	}
 
 	/**
@@ -568,9 +546,12 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	protected runAfterRenders(dNode: DNode | DNode[]): DNode | DNode[] {
 		const afterRenders = this.getDecorator('afterRender');
 
-		return afterRenders.reduce((dNode: DNode | DNode[], afterRenderFunction: AfterRender) => {
-			return afterRenderFunction.call(this, dNode);
-		}, dNode);
+		if (afterRenders.length > 0) {
+			return afterRenders.reduce((dNode: DNode | DNode[], afterRenderFunction: AfterRender) => {
+				return afterRenderFunction.call(this, dNode);
+			}, dNode);
+		}
+		return dNode;
 	}
 
 	/**
@@ -609,15 +590,20 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			const childrenMapKey = key || widgetConstructor;
 			let cachedChildren = this._cachedChildrenMap.get(childrenMapKey) || [];
 			let cachedChild: WidgetCacheWrapper | undefined;
-			cachedChildren.some((cachedChildWrapper) => {
-				if (cachedChildWrapper.widgetConstructor === widgetConstructor && !cachedChildWrapper.used) {
-					cachedChild = cachedChildWrapper;
-					return true;
-				}
-				return false;
-			});
 
-			if (cachedChild) {
+			for (let i = 0; i < cachedChildren.length; i++) {
+				const cachedChildWrapper = cachedChildren[i];
+				if (cachedChildWrapper.widgetConstructor === widgetConstructor && cachedChildWrapper.used === false) {
+					cachedChild = cachedChildWrapper;
+					break;
+				}
+			}
+
+			if ((<any> properties).bind === undefined) {
+				(<any> properties).bind = this;
+			}
+
+			if (cachedChild !== undefined) {
 				child = cachedChild.child;
 				child.__setProperties__(properties);
 				cachedChild.used = true;
@@ -625,9 +611,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			else {
 				child = new widgetConstructor();
 				child.__setProperties__(properties);
-				child.own(child.on('invalidated', () => {
-					this.invalidate();
-				}));
+				child.own(child.on('invalidated', this._boundInvalidate));
 				cachedChildren = [...cachedChildren, { child, widgetConstructor, used: true }];
 				this._cachedChildrenMap.set(childrenMapKey, cachedChildren);
 				this.own(child);
@@ -648,11 +632,23 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			return child.__render__();
 		}
 
-		dNode.vNodes = dNode.children
-		.filter((child) => child !== null && child !== undefined)
-		.map((child: DNode) => {
-			return this._dNodeToVNode(child);
-		});
+		if (dNode.properties.key !== undefined) {
+			dNode.properties.afterCreate = this._afterCreateCallback;
+			dNode.properties.afterUpdate = this._afterUpdateCallback;
+		}
+
+		if (dNode.properties.bind === undefined) {
+			(<any> dNode).properties.bind = this;
+		}
+
+		dNode.vNodes = [];
+		for (let i = 0; i < dNode.children.length; i++) {
+			const child = dNode.children[i];
+			if (child === null || child === undefined) {
+				continue;
+			}
+			dNode.vNodes.push(this._dNodeToVNode(child));
+		}
 
 		return dNode.render();
 	}
@@ -662,15 +658,17 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	 */
 	private _manageDetachedChildren(): void {
 		this._cachedChildrenMap.forEach((cachedChildren, key) => {
-			const filterCachedChildren = cachedChildren.filter((cachedChild) => {
-				if (cachedChild.used) {
-					cachedChild.used = false;
-					return true;
+			const filteredCacheChildren: WidgetCacheWrapper[] = [];
+			for (let i = 0; i < cachedChildren.length; i++) {
+				const cachedChild = cachedChildren[i];
+				if (cachedChild.used === false) {
+					cachedChild.child.destroy();
+					continue;
 				}
-				cachedChild.child.destroy();
-				return false;
-			});
-			this._cachedChildrenMap.set(key, filterCachedChildren);
+				cachedChild.used = false;
+				filteredCacheChildren.push(cachedChild);
+			}
+			this._cachedChildrenMap.set(key, filteredCacheChildren);
 		});
 	}
 
