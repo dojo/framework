@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import { WidgetBase } from './../../../src/WidgetBase';
 import { v, w } from './../../../src/d';
 import { DomWrapper } from '../../../src/util/DomWrapper';
-import global from '@dojo/core/global';
+import global from '@dojo/shim/global';
 import { stub } from 'sinon';
 import * as assert from 'intern/chai!assert';
 import ProjectorMixin from '../../../src/mixins/Projector';

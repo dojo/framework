@@ -1,6 +1,6 @@
 import { assign } from '@dojo/core/lang';
 import { from as arrayFrom } from '@dojo/shim/array';
-import global from '@dojo/core/global';
+import global from '@dojo/shim/global';
 import { Constructor, DNode, WidgetBaseInterface, WidgetProperties } from './interfaces';
 import { WidgetBase } from './WidgetBase';
 import { w } from './d';

@@ -1,4 +1,4 @@
-import global from '@dojo/core/global';
+import global from '@dojo/shim/global';
 import has from '@dojo/has/has';
 import '@dojo/shim/Promise';
 import { VNode } from '@dojo/interfaces/vdom';

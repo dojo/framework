@@ -1,5 +1,5 @@
 import { assign } from '@dojo/core/lang';
-import global from '@dojo/core/global';
+import global from '@dojo/shim/global';
 import { createHandle } from '@dojo/core/lang';
 import { Handle } from '@dojo/interfaces/core';
 import { VNode } from '@dojo/interfaces/vdom';

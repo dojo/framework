@@ -2,7 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { initializeElement, handleAttributeChanged, CustomElementDescriptor } from '../../src/customElements';
 import { WidgetBase } from '../../src/WidgetBase';
-import global from '@dojo/core/global';
+import global from '@dojo/shim/global';
 import { assign } from '@dojo/core/lang';
 import * as projector from '../../src/mixins/Projector';
 import * as sinon from 'sinon';

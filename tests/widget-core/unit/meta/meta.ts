@@ -1,4 +1,4 @@
-import global from '@dojo/core/global';
+import global from '@dojo/shim/global';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { v } from '../../../src/d';

@@ -1,4 +1,4 @@
-import global from '@dojo/core/global';
+import global from '@dojo/shim/global';
 import Map from '@dojo/shim/Map';
 import Set from '@dojo/shim/Set';
 import { WidgetMetaProperties } from '../interfaces';
