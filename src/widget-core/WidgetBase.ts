@@ -421,7 +421,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			specificDecoratorList.push(...value);
 		}
 		else {
-			const decorators = this._decoratorCache.get(decoratorKey) || [];
+			const decorators = this.getDecorator(decoratorKey);
 			this._decoratorCache.set(decoratorKey, [ ...decorators, ...value ]);
 		}
 	}

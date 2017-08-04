@@ -1379,5 +1379,24 @@ registerSuite({
 
 		assert.equal(testWidget.getAfterRenders().length, 1);
 		assert.equal(testWidget2.getAfterRenders().length, 2);
+	},
+	'decorator cache is populated when addDecorator is called after instantiation'() {
+		class TestWidget extends WidgetBase<any> {
+			constructor() {
+				super();
+
+				this.addDecorator('beforeRender', function() {});
+				this.addDecorator('afterRender', function() {});
+			}
+
+			getDecoratorCount(key: string): number {
+				return this.getDecorator(key).length;
+			}
+		}
+
+		const testWidget = new TestWidget();
+
+		assert.equal(testWidget.getDecoratorCount('beforeRender'), 2, 'beforeRender = 1 (existing) + 1');
+		assert.equal(testWidget.getDecoratorCount('afterRender'), 1, 'afterRender = 0 (existing) + 1');
 	}
 });
