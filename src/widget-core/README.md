@@ -28,7 +28,7 @@ widget-core is a library to create powerful, composable user interface widgets.
 	- [Advanced Properties](#advanced-properties)
 	- [Widget Registry](#widget-registry)
 	- [Render Lifecycle Hooks](#render-lifecycle-hooks)
-	- [DOM Wrapper](#dom-wrapper)
+	- [DOM Wrapper](#domwrapper)
 	- [Meta Configuration](#meta-configuration)
 	- [JSX Support](#jsx-support)
 	- [Web Components](#web-components)
