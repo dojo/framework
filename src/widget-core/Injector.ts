@@ -73,9 +73,20 @@ export interface InjectorProperties extends WidgetProperties {
 	children: DNode[];
 }
 
-export class BaseInjector<C extends Evented = Context> extends WidgetBase<InjectorProperties> {
+export interface Base<C = Context> {
+	toInject(): C;
+}
+
+export class Base<C = Context> extends WidgetBase<InjectorProperties> implements Base<C> {
 
 	protected context: C = <C> {};
+
+	public toInject(): C {
+		return this.context;
+	}
+}
+
+export class BaseInjector<C extends Evented = Context> extends Base<C> {
 
 	constructor(context?: C) {
 		super();
@@ -85,16 +96,13 @@ export class BaseInjector<C extends Evented = Context> extends WidgetBase<Inject
 		}
 	}
 
-	public toInject(): C {
-		return this.context;
-	}
 }
 
 /**
  * Mixin that extends the supplied Injector class with the proxy `render` and passing the provided to `context` to the Injector
  * class via the constructor.
  */
-export function Injector<C extends Evented, T extends Constructor<BaseInjector<C>>>(Base: T, context: C): T {
+export function Injector<C, T extends Constructor<Base<C>>>(Base: T, context: C): T {
 
 	@diffProperty('render', always)
 	class Injector extends Base {
