@@ -4,7 +4,7 @@ import Map from '@dojo/shim/Map';
 import '@dojo/shim/Promise'; // Imported for side-effects
 import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
-import { isWNode, registry, v } from './d';
+import { isWNode, registry, v, isHNode } from './d';
 import { auto } from './diff';
 import {
 	AfterRender,
@@ -368,6 +368,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			const render = this._runBeforeRenders();
 			let dNode = render();
 			dNode = this.runAfterRenders(dNode);
+			this._decorateNodes(dNode);
 			const widget = this._dNodeToVNode(dNode);
 			this._manageDetachedChildren();
 			this._cachedVNode = widget;
@@ -376,6 +377,27 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		}
 		this._renderState = WidgetRenderState.IDLE;
 		return this._cachedVNode;
+	}
+
+	private _decorateNodes(node: DNode | DNode[]) {
+		let nodes = Array.isArray(node) ? [ ...node ] : [ node ];
+		while (nodes.length) {
+			const node = nodes.pop();
+			if (isHNode(node)) {
+				if (node.properties.key) {
+					node.properties.afterCreate = this._afterCreateCallback;
+					node.properties.afterUpdate = this._afterUpdateCallback;
+				}
+			}
+			else if (!isWNode(node)) {
+				continue;
+			}
+			node.properties = node.properties || {};
+			if ((<any> node.properties).bind === undefined) {
+				(<any> node.properties).bind = this;
+			}
+			nodes = [ ...nodes, ...node.children ];
+		}
 	}
 
 	protected invalidate(): void {
@@ -599,10 +621,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 				}
 			}
 
-			if ((<any> properties).bind === undefined) {
-				(<any> properties).bind = this;
-			}
-
 			if (cachedChild !== undefined) {
 				child = cachedChild.child;
 				child.__setProperties__(properties);
@@ -630,15 +648,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 			child.__setChildren__(children);
 			return child.__render__();
-		}
-
-		if (dNode.properties.key !== undefined) {
-			dNode.properties.afterCreate = this._afterCreateCallback;
-			dNode.properties.afterUpdate = this._afterUpdateCallback;
-		}
-
-		if (dNode.properties.bind === undefined) {
-			(<any> dNode).properties.bind = this;
 		}
 
 		dNode.vNodes = [];

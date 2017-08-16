@@ -994,9 +994,11 @@ registerSuite({
 			assert.strictEqual(result.children![1].properties.key, 'span');
 		},
 		'instance gets passed to VNodeProperties as bind to widget and all children'() {
+
+			class InnerWidget extends WidgetBase {}
 			class TestWidget extends WidgetBase<any> {
 				render() {
-					return v('div', [
+					return w(InnerWidget, {}, [
 						v('header', [
 							v('section')
 						])
@@ -1007,9 +1009,12 @@ registerSuite({
 			const widget: any = new TestWidget();
 			const result = <VNode> widget.__render__();
 			assert.lengthOf(result.children, 1);
-			assert.strictEqual(result.properties!.bind, widget);
+			assert.notStrictEqual(result.properties!.bind, widget);
+			assert.instanceOf(result.properties!.bind, InnerWidget);
 			assert.strictEqual(result.children![0].properties!.bind, widget);
+			assert.instanceOf(result.children![0].properties!.bind, TestWidget);
 			assert.strictEqual(result.children![0].children![0].properties!.bind, widget);
+			assert.instanceOf(result.children![0].children![0].properties!.bind, TestWidget);
 		},
 		'render with multiple text node children'() {
 			class TestWidget extends WidgetBase<any> {
