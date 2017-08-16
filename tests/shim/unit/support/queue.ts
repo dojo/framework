@@ -1,7 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
+import global from '../../../src/global';
 import has from '../../../src/support/has';
-import { queueTask, queueAnimationTask, queueMicroTask } from '../../../src/support/queue';
+import { queueAnimationTask, queueMicroTask, queueTask } from '../../../src/support/queue';
 
 registerSuite({
 	name: 'queue functions',
@@ -145,7 +146,7 @@ registerSuite({
 			// executed. As a result, the following just tests that queueMicroTask executes its
 			// callbacks before either queueTask or queueAnimationTask.
 			assert.equal(actual.indexOf('start,end,queueMicroTask'), 0);
-		}), 300);
+		}), 1000);
 	},
 
 	'.queueMicroTask() => handle.destroy()': function (this: any) {
@@ -166,5 +167,51 @@ registerSuite({
 		setTimeout(dfd.callback(function () {
 			assert.equal(parts.join(','), 'start,end');
 		}), 100);
+	},
+
+	'web workers': {
+		'queue from webworker': function (this: any) {
+			if (global.Blob === undefined || global.Worker === undefined) {
+				this.skip('does not support blobs and/or web workers');
+				return;
+			}
+
+			const baseUrl = location.origin;
+			const dfd = this.async(10000);
+			const blob = new Blob([ `(function() { 
+self.addEventListener('message', function (event) {
+	if(event.data.baseUrl) {
+		var baseUrl = event.data.baseUrl;
+		importScripts(baseUrl + '/node_modules/@dojo/loader/loader.js');
+
+		require.config({
+			baseUrl: baseUrl,
+			packages: [
+				{ name: '@dojo', location: 'node_modules/@dojo' }
+			]
+		});
+		
+		require(['_build/src/support/queue'], function (queue) {
+			queue.queueTask(function() {
+				self.postMessage('success');
+			});
+		});
+	}
+});
+			})()` ], { type: 'application/javascript' });
+			const worker = new Worker(URL.createObjectURL(blob));
+			worker.addEventListener('error', (error) => {
+				dfd.reject(new Error(error.message));
+			});
+			worker.addEventListener('message', ({ data: result }) => {
+				if (result === 'success') {
+					dfd.resolve();
+				}
+			});
+
+			worker.postMessage({
+				baseUrl
+			});
+		}
 	}
 });
