@@ -224,6 +224,11 @@ export interface WidgetProperties {
 	 * rendering and instance management
 	 */
 	key?: string;
+
+	/**
+	 * Optional registry
+	 */
+	registry?: any;
 }
 
 /**

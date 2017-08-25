@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import { assign } from '@dojo/core/lang';
 import { DNode, HNode, WNode, WidgetProperties } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
-import { v, w, decorate, registry, WNODE, HNODE, isWNode, isHNode } from '../../src/d';
+import { v, w, decorate, WNODE, HNODE, isWNode, isHNode } from '../../src/d';
 
 interface ChildProperties extends WidgetProperties {
 	myChildProperty: string;
@@ -36,9 +36,6 @@ class TestWidget extends WidgetBase<TestProperties, WNode<TestChildWidget>> {
 
 registerSuite({
 	name: 'd',
-	'provides default factory registry'() {
-		assert.isObject(registry);
-	},
 	w: {
 		'create WNode wrapper using constructor with properties'() {
 			const properties: any = { id: 'id', classes: [ 'world' ] };

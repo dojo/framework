@@ -2,7 +2,7 @@ import { assign } from '@dojo/core/lang';
 import { find } from '@dojo/shim/array';
 import Map from '@dojo/shim/Map';
 import { ClassesFunction, Constructor, DNode, WidgetProperties } from './../interfaces';
-import { w, registry } from './../d';
+import { w } from './../d';
 import { WidgetRegistry } from './../WidgetRegistry';
 import { BaseInjector, Context, Injector } from './../Injector';
 import { beforeRender, diffProperty, WidgetBase, handleDecorator } from './../WidgetBase';
@@ -151,7 +151,7 @@ function createThemeClassesLookup(classes: ClassNames[]): ClassNames {
  *
  * @returns the theme context instance used to set the theme
  */
-export function registerThemeInjector(theme: any, themeRegistry: WidgetRegistry = registry): Context {
+export function registerThemeInjector(theme: any, themeRegistry: WidgetRegistry): Context {
 	const themeInjectorContext = new Context(theme);
 	const ThemeInjectorBase = Injector(BaseInjector, themeInjectorContext);
 	themeRegistry.define(INJECTED_THEME_KEY, ThemeInjectorBase);

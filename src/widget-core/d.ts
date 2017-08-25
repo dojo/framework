@@ -12,7 +12,6 @@ import {
 	WidgetBaseInterface,
 	WNode
 } from './interfaces';
-import { WidgetRegistry } from './WidgetRegistry';
 
 /**
  * The symbol identifier for a WNode type
@@ -64,11 +63,6 @@ export function decorate(dNodes: DNode | DNode[], modifier: (dNode: DNode) => vo
 	}
 	return dNodes;
 }
-
-/**
- * Global widget registry instance
- */
-export const registry = new WidgetRegistry();
 
 /**
  * Wrapper function for calls to create a widget.

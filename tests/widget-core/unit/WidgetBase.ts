@@ -3,7 +3,7 @@ import Promise from '@dojo/shim/Promise';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { stub, spy, SinonStub } from 'sinon';
-import { v, w, registry } from '../../src/d';
+import { v, w } from '../../src/d';
 import { Constructor, DNode, PropertyChangeRecord, Render } from '../../src/interfaces';
 import {
 	WidgetBase,
@@ -13,6 +13,7 @@ import {
 } from '../../src/WidgetBase';
 import { ignore, always, auto } from '../../src/diff';
 import WidgetRegistry, { WIDGET_BASE_TYPE } from './../../src/WidgetRegistry';
+import { ThemeableMixin } from './../../src/mixins/Themeable';
 
 interface TestProperties {
 	id?: string;
@@ -23,6 +24,10 @@ interface TestProperties {
 }
 
 let consoleStub: SinonStub;
+
+const registry = new WidgetRegistry();
+
+const ThemableWidgetBase = ThemeableMixin(WidgetBase);
 
 registerSuite({
 	name: 'WidgetBase',
@@ -762,6 +767,7 @@ registerSuite({
 				}
 			}
 			const myWidget: any = new TestWidget();
+			myWidget.__setProperties__({ registry });
 			let result = <VNode> myWidget.__render__();
 			assert.lengthOf(result.children, 0);
 			registry.define('my-header3', TestHeaderWidget);
@@ -784,6 +790,7 @@ registerSuite({
 				}
 			}
 			const myWidget: any = new TestWidget();
+			myWidget.__setProperties__({ registry });
 			let result = <VNode> myWidget.__render__();
 			assert.lengthOf(result.children, 0);
 			registry.define(myHeader, TestHeaderWidget);
@@ -796,6 +803,7 @@ registerSuite({
 			class TestWidget extends WidgetBase<any> {
 				constructor() {
 					super();
+					this.getRegistries().add(registry);
 					this.getRegistries().add(localRegistry);
 				}
 				render() {
@@ -817,7 +825,7 @@ registerSuite({
 				}
 			}
 			registry.define('my-header4', TestHeaderWidget);
-			const myWidget: any = new TestWidget();
+			const myWidget = new TestWidget();
 			let result = <any> myWidget.__render__();
 			assert.equal(result.children[0].vnodeSelector, 'global-header');
 			localRegistry.define('my-header4', TestHeaderLocalWidget);
@@ -834,6 +842,9 @@ registerSuite({
 			registry.define('my-header', loadFunction);
 
 			class TestWidget extends WidgetBase<any> {
+				public invalidate() {
+					super.invalidate();
+				}
 				render() {
 					return v('div', [
 						w('my-header', <any> undefined)
@@ -849,7 +860,8 @@ registerSuite({
 
 			let invalidateCount = 0;
 
-			const myWidget: any = new TestWidget();
+			const myWidget = new TestWidget();
+			myWidget.__setProperties__({ registry });
 			myWidget.on('invalidated', () => {
 				invalidateCount++;
 			});
@@ -884,7 +896,7 @@ registerSuite({
 			class TestWidget extends WidgetBase<any> {
 				render() {
 					return v('div', [
-						w('my-header1', <any> undefined)
+						w('my-header1', {})
 					]);
 				}
 			}
@@ -895,7 +907,8 @@ registerSuite({
 				}
 			}
 
-			const myWidget: any = new TestWidget();
+			const myWidget = new TestWidget();
+			myWidget.__setProperties__({ registry });
 
 			let result = <VNode> myWidget.__render__();
 			assert.lengthOf(result.children, 0);
@@ -1240,6 +1253,210 @@ registerSuite({
 			myWidget.invalidate();
 			myWidget.__render__();
 			assert.isTrue(widgetTwoInstantiated);
+		}
+	},
+	'registry': {
+		'creates and uses a default registry when defaultRegistry & registry properties are not passed'() {
+			class ChildRegistryWidget extends ThemableWidgetBase { }
+
+			class RegistryWidget extends ThemableWidgetBase {
+				getRegistries() {
+					return super.getRegistries();
+				}
+				getDefaultRegistry() {
+					return (<any> this)._defaultRegistry;
+				}
+				render() {
+					return w(ChildRegistryWidget, {});
+				}
+			}
+			const childPropertiesSpy = spy(ChildRegistryWidget.prototype, '__setProperties__');
+			const widget = new RegistryWidget();
+			widget.__render__();
+			const childWidgetProperties = childPropertiesSpy.firstCall.args[0];
+			assert.strictEqual(childWidgetProperties.defaultRegistry, widget.getDefaultRegistry());
+		},
+		'creates but does not use a default registry when defaultRegistry is passed'() {
+			class ChildRegistryWidget extends ThemableWidgetBase { }
+
+			class RegistryWidget extends ThemableWidgetBase {
+				getRegistries() {
+					return super.getRegistries();
+				}
+				getDefaultRegistry() {
+					return (<any> this)._defaultRegistry;
+				}
+				render() {
+					return w(ChildRegistryWidget, {});
+				}
+			}
+			const defaultRegistry = new WidgetRegistry();
+			const childPropertiesSpy = spy(ChildRegistryWidget.prototype, '__setProperties__');
+			const widget = new RegistryWidget();
+			(<any> widget).__setProperties__({ defaultRegistry });
+			widget.__render__();
+			const childWidgetProperties = childPropertiesSpy.firstCall.args[0];
+			assert.notStrictEqual(childWidgetProperties.defaultRegistry, widget.getDefaultRegistry());
+			assert.strictEqual(childWidgetProperties.defaultRegistry, defaultRegistry);
+		},
+		'Uses registry property as defaultRegistry when a defaultRegistry property is not passed'() {
+			class ChildRegistryWidget extends ThemableWidgetBase { }
+
+			class RegistryWidget extends ThemableWidgetBase {
+				getRegistries() {
+					return super.getRegistries();
+				}
+				getDefaultRegistry() {
+					return (<any> this)._defaultRegistry;
+				}
+				render() {
+					return w(ChildRegistryWidget, {});
+				}
+			}
+			const registry = new WidgetRegistry();
+			const childPropertiesSpy = spy(ChildRegistryWidget.prototype, '__setProperties__');
+			const widget = new RegistryWidget();
+			widget.__setProperties__({ registry });
+			widget.__render__();
+			const childWidgetProperties = childPropertiesSpy.firstCall.args[0];
+			assert.notStrictEqual(childWidgetProperties.defaultRegistry, widget.getDefaultRegistry());
+			assert.strictEqual(childWidgetProperties.defaultRegistry, registry);
+		},
+		'Passing a different registry will replace the previous registry'() {
+			class RegistryWidget extends ThemableWidgetBase {
+				getRegistries() {
+					return super.getRegistries();
+				}
+			}
+			const registryOne = new WidgetRegistry();
+			const registryTwo = new WidgetRegistry();
+			const widget = new RegistryWidget();
+			widget.__setProperties__({ registry: registryOne });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, registryOne);
+			widget.__setProperties__({ registry: registryTwo });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, registryTwo);
+		},
+		'Passing a different defaultRegistry will replace the previous defaultRegistry'() {
+			class RegistryWidget extends ThemableWidgetBase {
+				getRegistries() {
+					return super.getRegistries();
+				}
+			}
+			const registryOne = new WidgetRegistry();
+			const registryTwo = new WidgetRegistry();
+			const widget: any = new RegistryWidget();
+			widget.__setProperties__({ defaultRegistry: registryOne });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, registryOne);
+			widget.__setProperties__({ defaultRegistry: registryTwo });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, registryTwo);
+		},
+		'Widgets default registry is used if the defaultRegistry is not passed on a subsequent render'() {
+			class RegistryWidget extends ThemableWidgetBase {
+				getRegistries() {
+					return super.getRegistries();
+				}
+				getDefaultRegistry() {
+					return (<any> this)._defaultRegistry;
+				}
+			}
+			const defaultRegistry = new WidgetRegistry();
+			const widget: any = new RegistryWidget();
+			widget.__setProperties__({ defaultRegistry });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, defaultRegistry);
+			widget.__setProperties__({ });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, widget.getDefaultRegistry());
+		},
+		'Widgets registry property is promoted to defaultRegistry if defaultRegistry is received a subsequent render'() {
+			class RegistryWidget extends ThemableWidgetBase {
+				getRegistries() {
+					return super.getRegistries();
+				}
+				getDefaultRegistry() {
+					return (<any> this)._defaultRegistry;
+				}
+			}
+			const defaultRegistry = new WidgetRegistry();
+			const registry = new WidgetRegistry();
+			const widget: any = new RegistryWidget();
+			widget.__setProperties__({ defaultRegistry, registry });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, defaultRegistry);
+			widget.__setProperties__({ registry });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, registry);
+		},
+		'Registry replaces widgets defaultRegistry when passed'() {
+			class RegistryWidget extends ThemableWidgetBase {
+				getRegistries() {
+					return super.getRegistries();
+				}
+				getDefaultRegistry() {
+					return (<any> this)._defaultRegistry;
+				}
+			}
+			const registry = new WidgetRegistry();
+			const widget: any = new RegistryWidget();
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, widget.getDefaultRegistry());
+			widget.__setProperties__({ registry });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, registry);
+		},
+		'Widgets defaultRegistry is used when neither registry or defaultRegistry is passed on subsequent renders'() {
+			class RegistryWidget extends ThemableWidgetBase {
+				getRegistries() {
+					return super.getRegistries();
+				}
+				getDefaultRegistry() {
+					return (<any> this)._defaultRegistry;
+				}
+			}
+			const defaultRegistry = new WidgetRegistry();
+			const widget: any = new RegistryWidget();
+			widget.__setProperties__({ defaultRegistry });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, defaultRegistry);
+			widget.__setProperties__({});
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, widget.getDefaultRegistry());
+		},
+		'Can add widgets to the default widget registry'() {
+			class MyWidgetOne extends ThemableWidgetBase {}
+			class MyWidgetTwo extends ThemableWidgetBase {}
+			class RegistryWidget extends ThemableWidgetBase {
+				getRegistries() {
+					return super.getRegistries();
+				}
+				getDefaultRegistry() {
+					return (<any> this)._defaultRegistry;
+				}
+				@diffProperty('defaultRegistry', auto)
+				addItemsToDefaultRegistry() {
+					const defaultRegistry = this.getRegistries().defaultRegistry;
+					if (defaultRegistry) {
+						defaultRegistry.define('my-widget-1', MyWidgetOne);
+						defaultRegistry.define('my-widget-2', MyWidgetTwo);
+					}
+				}
+			}
+			const defaultRegistry = new WidgetRegistry();
+			const widget: any = new RegistryWidget();
+			widget.__setProperties__({ defaultRegistry });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, defaultRegistry);
+			assert.strictEqual(widget.getRegistries().defaultRegistry.get('my-widget-1'), MyWidgetOne);
+			assert.strictEqual(widget.getRegistries().defaultRegistry.get('my-widget-2'), MyWidgetTwo);
+			widget.__setProperties__({ });
+			widget.__render__();
+			assert.strictEqual(widget.getRegistries().defaultRegistry, widget.getDefaultRegistry());
+			assert.strictEqual(widget.getRegistries().defaultRegistry.get('my-widget-1'), MyWidgetOne);
+			assert.strictEqual(widget.getRegistries().defaultRegistry.get('my-widget-2'), MyWidgetTwo);
 		}
 	},
 	'child invalidation invalidates parent'() {

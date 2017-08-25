@@ -5,8 +5,13 @@ import { WidgetRegistry, WidgetRegistryEventObject } from './WidgetRegistry';
 export default class RegistryHandler extends Evented {
 	private _registries: { handle?: any, registry: WidgetRegistry }[] = [];
 
-	public add(registry: WidgetRegistry) {
-		this._registries.unshift({ registry });
+	public add(registry: WidgetRegistry, isDefault: boolean = false) {
+		if (isDefault) {
+			this._registries.push({ registry });
+		}
+		else {
+			this._registries.unshift({ registry });
+		}
 	}
 
 	public remove(registry: WidgetRegistry): boolean {
@@ -29,6 +34,12 @@ export default class RegistryHandler extends Evented {
 			}
 			return false;
 		});
+	}
+
+	public get defaultRegistry(): WidgetRegistry | undefined {
+		if (this._registries.length) {
+			return this._registries[this._registries.length - 1].registry;
+		}
 	}
 
 	public has(widgetLabel: RegistryLabel): boolean {

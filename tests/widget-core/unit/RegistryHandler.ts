@@ -19,11 +19,20 @@ registryB.define(bar, WidgetBase);
 
 registerSuite({
 	name: 'RegistryHandler',
-	'add'() {
-		const registryHandler = new RegistryHandler();
-		registryHandler.add(registry);
-		const widget = registry.get('foo');
-		assert.equal(widget, WidgetBase);
+	'add': {
+		'add standard registry'() {
+			const registryHandler = new RegistryHandler();
+			registryHandler.add(registry);
+			const widget = registry.get('foo');
+			assert.equal(widget, WidgetBase);
+		},
+		'add default registry'() {
+			const registryHandler = new RegistryHandler();
+			registryHandler.add(registry);
+			assert.equal(registryHandler.defaultRegistry, registry);
+			registryHandler.add(registryB, true);
+			assert.equal(registryHandler.defaultRegistry, registryB);
+		}
 	},
 	'remove': {
 		'existing'() {

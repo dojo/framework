@@ -1,8 +1,9 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { v, registry } from '../../src/d';
+import { v } from '../../src/d';
 import { WidgetBase } from '../../src/WidgetBase';
 import { Container } from './../../src/Container';
+import { WidgetRegistry } from './../../src/WidgetRegistry';
 
 interface TestWidgetProperties {
 	foo: string;
@@ -35,6 +36,7 @@ class StubInjector extends WidgetBase<any> {
 		return this.properties.render();
 	}
 }
+const registry = new WidgetRegistry();
 registry.define('test-state-1', StubInjector);
 registry.define('test-widget', TestWidget);
 
@@ -53,12 +55,12 @@ registerSuite({
 			assert.isFalse(propertiesCalled);
 			assert.deepEqual(calculatedProperties, {});
 			assert.deepEqual(calculatedChildren, []);
-			assert.deepEqual(properties.properties, { foo: 'bar' });
+			assert.deepEqual(properties.properties, { foo: 'bar', registry });
 			assert.deepEqual(properties.children, []);
 		};
 		const TestWidgetContainer = Container(TestWidget, 'test-state-1');
 		const widget = new TestWidgetContainer();
-		widget.__setProperties__({ foo: 'bar' });
+		widget.__setProperties__({ foo: 'bar', registry });
 		widget.__render__();
 	},
 	'container with no default mappers'() {
@@ -67,12 +69,12 @@ registerSuite({
 			properties.getProperties();
 			assert.isTrue(childrenCalled);
 			assert.isTrue(propertiesCalled);
-			assert.deepEqual(properties.properties, { foo: 'bar' });
+			assert.deepEqual(properties.properties, { foo: 'bar', registry });
 			assert.deepEqual(properties.children, []);
 		};
 		const TestWidgetContainer = Container(TestWidget, 'test-state-1', { getProperties, getChildren });
 		const widget = new TestWidgetContainer();
-		widget.__setProperties__({ foo: 'bar' });
+		widget.__setProperties__({ foo: 'bar', registry });
 		widget.__setChildren__([]);
 		widget.__render__();
 	},
@@ -84,13 +86,13 @@ registerSuite({
 			assert.isFalse(childrenCalled);
 			assert.isTrue(propertiesCalled);
 			assert.deepEqual(children, []);
-			assert.deepEqual(properties.properties, { foo: 'bar' });
+			assert.deepEqual(properties.properties, { foo: 'bar', registry });
 			assert.lengthOf(properties.children, 1);
 			assert.deepEqual(properties.children[0], child);
 		};
 		const TestWidgetContainer = Container(TestWidget, 'test-state-1', { getProperties });
 		const widget = new TestWidgetContainer();
-		widget.__setProperties__({ foo: 'bar' });
+		widget.__setProperties__({ foo: 'bar', registry });
 		widget.__setChildren__([ child ]);
 		widget.__render__();
 	},
@@ -101,12 +103,12 @@ registerSuite({
 			assert.isTrue(childrenCalled);
 			assert.isFalse(propertiesCalled);
 			assert.deepEqual(calculatedProperties, {});
-			assert.deepEqual(properties.properties, { foo: 'bar' });
+			assert.deepEqual(properties.properties, { foo: 'bar', registry });
 			assert.deepEqual(properties.children, []);
 		};
 		const TestWidgetContainer = Container(TestWidget, 'test-state-1', { getChildren });
 		const widget = new TestWidgetContainer();
-		widget.__setProperties__({ foo: 'bar' });
+		widget.__setProperties__({ foo: 'bar', registry });
 		widget.__render__();
 	},
 	'container for registry item'() {
@@ -117,12 +119,13 @@ registerSuite({
 			assert.isFalse(propertiesCalled);
 			assert.deepEqual(calculatedProperties, {});
 			assert.deepEqual(calculatedChildren, []);
-			assert.deepEqual(properties.properties, { foo: 'bar' });
+			assert.deepEqual(properties.properties, { foo: 'bar', registry });
 			assert.deepEqual(properties.children, []);
 		};
+
 		const TestWidgetContainer = Container<TestWidget>('test-widget', 'test-state-1');
 		const widget = new TestWidgetContainer();
-		widget.__setProperties__({ foo: 'bar' });
+		widget.__setProperties__({ foo: 'bar', registry });
 		const renderResult: any = widget.__render__();
 		assert.strictEqual(renderResult.vnodeSelector, 'test');
 	}

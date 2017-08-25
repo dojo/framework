@@ -11,7 +11,6 @@ import {
 	DNode,
 	WidgetProperties
 } from './interfaces';
-import RegistryHandler from './RegistryHandler';
 
 export interface GetProperties {
 	<P extends WidgetProperties>(inject: any, properties: P): any;
@@ -137,10 +136,6 @@ export function Injector<C, T extends Constructor<Base<C>>>(Base: T, context: C)
 			}
 
 			return this.decorateBind(render());
-		}
-
-		protected getRegistries(): RegistryHandler {
-			return super.getRegistries.call(this.properties.scope);
 		}
 
 		protected runAfterRenders(dNode: DNode | DNode[]): DNode | DNode[] {

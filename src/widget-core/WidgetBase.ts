@@ -4,8 +4,8 @@ import Map from '@dojo/shim/Map';
 import '@dojo/shim/Promise'; // Imported for side-effects
 import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
-import { isWNode, registry, v, isHNode } from './d';
-import { auto } from './diff';
+import { isWNode, v, isHNode } from './d';
+import { auto, reference } from './diff';
 import {
 	AfterRender,
 	BeforeRender,
@@ -22,7 +22,7 @@ import {
 } from './interfaces';
 import MetaBase from './meta/Base';
 import RegistryHandler from './RegistryHandler';
-import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './WidgetRegistry';
+import { isWidgetBaseConstructor, WIDGET_BASE_TYPE, WidgetRegistry } from './WidgetRegistry';
 
 /**
  * Widget cache wrapper for instance management
@@ -180,6 +180,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 	private _boundInvalidate: () => void;
 
+	private _defaultRegistry = new WidgetRegistry();
+
 	/**
 	 * @constructor
 	 */
@@ -193,7 +195,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		this._diffPropertyFunctionMap = new Map<string, string>();
 		this._bindFunctionPropertyMap = new WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>();
 		this._registries = new RegistryHandler();
-		this._registries.add(registry);
+		this._registries.add(this._defaultRegistry, true);
 		this.own(this._registries);
 		this._boundRenderFunc = this.render.bind(this);
 		this._boundInvalidate = this.invalidate.bind(this);
@@ -289,6 +291,35 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 	public get properties(): Readonly<P> & Readonly<WidgetProperties> {
 		return this._properties;
+	}
+
+	@diffProperty('registry', reference)
+	protected diffPropertyRegistry(previousProperties: any, newProperties: any): void {
+		const { _registries, _defaultRegistry } = this;
+		if (_registries.defaultRegistry === _defaultRegistry) {
+			_registries.remove(_defaultRegistry);
+		}
+		const result = _registries.replace(previousProperties.registry, newProperties.registry);
+		if (!result) {
+			_registries.add(newProperties.registry);
+		}
+	}
+
+	@diffProperty('defaultRegistry', reference)
+	protected diffPropertyDefaultRegistry(previousProperties: any, newProperties: any): void {
+		const { _registries, _defaultRegistry } = this;
+		if (newProperties.defaultRegistry === undefined) {
+			_registries.remove(previousProperties.defaultRegistry);
+			if (_registries.defaultRegistry === undefined) {
+				_registries.add(_defaultRegistry);
+			}
+		}
+		else {
+			const result = _registries.replace(previousProperties.defaultRegistry || _defaultRegistry, newProperties.defaultRegistry);
+			if (!result) {
+				_registries.add(newProperties.defaultRegistry, true);
+			}
+		}
 	}
 
 	public __setProperties__(originalProperties: this['properties']): void {
@@ -395,6 +426,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			node.properties = node.properties || {};
 			if ((<any> node.properties).bind === undefined) {
 				(<any> node.properties).bind = this;
+			}
+			if (isWNode(node)) {
+				(<any> node.properties).defaultRegistry = this._registries.defaultRegistry;
 			}
 			nodes = [ ...nodes, ...node.children ];
 		}

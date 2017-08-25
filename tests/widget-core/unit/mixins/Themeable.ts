@@ -11,9 +11,7 @@ import {
 import { BaseInjector, Context, Injector } from './../../../src/Injector';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { WidgetRegistry } from '../../../src/WidgetRegistry';
-import { WidgetProperties } from '../../../src/interfaces';
-import { RegistryMixin } from './../../../src/mixins/Registry';
-import { v, w, registry } from '../../../src/d';
+import { v, w } from '../../../src/d';
 import { stub, SinonStub } from 'sinon';
 
 import * as baseThemeClasses1 from './../../support/styles/testWidget1.css';
@@ -32,7 +30,7 @@ import testTheme3 from './../../support/styles/theme3.css';
 let testRegistry: WidgetRegistry;
 
 @theme(baseThemeClasses1)
-class TestWidget extends RegistryMixin(ThemeableMixin(WidgetBase))<ThemeableProperties<typeof baseThemeClasses1>> { }
+class TestWidget extends ThemeableMixin(WidgetBase)<ThemeableProperties<typeof baseThemeClasses1>> { }
 
 @theme(baseThemeClasses2)
 class SubClassTestWidget extends TestWidget { }
@@ -426,7 +424,7 @@ registerSuite({
 				}
 			}
 
-			class MultipleThemedWidgets extends RegistryMixin(WidgetBase)<WidgetProperties & { registry: any }> {
+			class MultipleThemedWidgets extends WidgetBase {
 				render() {
 					return v('div', [
 						w(InjectedTheme, { key: '1', registry: this.properties.registry }),
@@ -451,11 +449,6 @@ registerSuite({
 			assert.lengthOf(vNode.children, 2);
 			assert.deepEqual(vNode.children[0].properties.classes, { theme2Class1: false, theme1Class1: true });
 			assert.deepEqual(vNode.children[1].properties.classes, { theme2Class1: false, theme1Class1: true });
-		},
-		'registerThemeInjector defaults to the global registry'() {
-			assert.isNull(registry.get(INJECTED_THEME_KEY));
-			registerThemeInjector(testTheme1);
-			assert.isOk(registry.get(INJECTED_THEME_KEY));
 		}
 	},
 	'integration': {
