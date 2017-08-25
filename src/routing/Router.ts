@@ -1,221 +1,35 @@
-import Map from '@dojo/shim/Map';
-import { assign } from '@dojo/core/lang';
 import Task from '@dojo/core/async/Task';
-import Evented, { BaseEventedEvents } from '@dojo/core/Evented';
-import { Hash } from '@dojo/core/interfaces';
+import Evented from '@dojo/core/Evented';
+import { assign } from '@dojo/shim/object';
 import { pausable, PausableHandle } from '@dojo/core/on';
 import UrlSearchParams from '@dojo/core/UrlSearchParams';
-import { EventedOptions, EventedListener } from '@dojo/interfaces/bases';
-import { EventTargettedObject, EventErrorObject, Handle } from '@dojo/interfaces/core';
 import { includes } from '@dojo/shim/array';
 import { Thenable } from '@dojo/shim/interfaces';
+import Map from '@dojo/shim/Map';
 import Promise from '@dojo/shim/Promise';
-import WeakMap from '@dojo/shim/WeakMap';
 import { History, HistoryChangeEvent } from './history/interfaces';
-import { Context, Parameters, Request } from './interfaces';
+import {
+	Context,
+	DispatchResult,
+	ErrorEvent,
+	LinkParams,
+	MatchType,
+	NavigationStartEvent,
+	OutletContext,
+	Parameters,
+	Request,
+	RouteConfig,
+	RouteInterface,
+	RouterEvents,
+	RouterInterface,
+	RouterOptions,
+	SearchParams,
+	Selection,
+	StartOptions
+} from './interfaces';
 import { isNamedSegment, parse as parsePath } from './lib/path';
-
-import { Route, SearchParams, Selection, MatchType } from './Route';
-
-/**
- * An object to resume or cancel router dispatch.
- */
-export interface DispatchDeferral {
-	/**
-	 * Call to prevent a path from being dispatched.
-	 */
-	cancel(): void;
-
-	/**
-	 * Call to resume a path being dispatched.
-	 */
-	resume(): void;
-}
-
-/**
- * Event object that is emitted for the 'navstart' event.
- */
-export interface NavigationStartEvent extends EventTargettedObject<Router<Context>> {
-	/**
-	 * The path that has been navigated to.
-	 */
-	path: string;
-
-	/**
-	 * Call to prevent the path to be dispatched.
-	 */
-	cancel(): void;
-
-	/**
-	 * Call to defer dispatching of the path
-	 * @return an object which allows the caller to resume or cancel dispatch.
-	 */
-	defer(): DispatchDeferral;
-}
-
-/**
- * Event object that is emitted for the 'error' event.
- */
-export interface ErrorEvent<C extends Context> extends EventErrorObject<Router<C>> {
-	/**
-	 * The context that was being dispatched when the error occurred.
-	 */
-	context: C;
-
-	/**
-	 * The path that was being dispatched when the error occurred.
-	 */
-	path: string;
-}
-
-/**
- * Describes the result of a dispatch.
- */
-export interface DispatchResult {
-	/**
-	 * Whether a route requested a redirect to a different path.
-	 */
-	redirect?: string;
-
-	/**
-	 * False if dispatch was canceled (via the navstart event) or if no routes could be selected. True otherwise.
-	 */
-	success: boolean;
-}
-
-export type LinkParams = Hash<string | string[] | undefined>;
-
-export interface RouterEvents<C extends Context> extends BaseEventedEvents {
-	/**
-	 * Event emitted when dispatch is called, but before routes are selected.
-	 */
-	(type: 'navstart', listener: EventedListener<Router<C>, NavigationStartEvent>): Handle;
-
-	/**
-	 * Event emitted when errors occur during dispatch.
-	 *
-	 * Certain errors may reject the task returned when dispatching, but this task is not always accessible and may
-	 * hide errors if it's canceled.
-	 */
-	(type: 'error', listener: EventedListener<Router<C>, ErrorEvent<C>>): Handle;
-}
-
-/**
- * Config for registering routes
- */
-export interface RouteConfig {
-	/**
-	 * The path of the route
-	 */
-	path: string;
-
-	/**
-	 * The optional outlet associated to the path
-	 */
-	outlet?: string;
-
-	/**
-	 * Optional child route configuration
-	 */
-	children?: RouteConfig[];
-
-	/**
-	 * Default params used to generate a link
-	 */
-	defaultParams?: any;
-
-	/**
-	 * To be used as the default route on router start up
-	 * if the current route doesn't match
-	 */
-	defaultRoute?: boolean;
-}
-
-/**
- * The options for the router.
- */
-export interface RouterOptions<C extends Context> extends EventedOptions {
-	/**
-	 * A Context object to be used for all requests, or a function that provides such an object, called for each
-	 * dispatch.
-	 */
-	context?: C | (() => C);
-
-	/**
-	 * A handler called when no routes match the dispatch path.
-	 * @param request An object whose `context` property contains the dispatch context. No extracted parameters
-	 *   are available.
-	 */
-	fallback?: (request: Request<C, Parameters>) => void | Thenable<any>;
-
-	/**
-	 * The history manager. Routes will be dispatched in response to change events emitted by the manager.
-	 */
-	history?: History;
-
-	/**
-	 * Routing configuration to set up on router creation
-	 */
-	config?: RouteConfig[];
-}
-
-/**
- * The options for the router's start() method.
- */
-export interface StartOptions {
-	/**
-	 * Whether to immediately dispatch with the history's current value.
-	 */
-	dispatchCurrent: boolean;
-}
-
-/**
- * The outlet context
- */
-export interface OutletContext {
-	/**
-	 * The type of match for the outlet
-	 */
-	type: MatchType;
-
-	/**
-	 * The location of the route (link)
-	 */
-	location: string;
-
-	/**
-	 * The params for the specific outlet
-	 */
-	params: any;
-}
-
-const parentMap = new WeakMap<Route<Context, Parameters>, Router<Context>>();
-
-/**
- * Whether the route has been appended to another route or router.
- */
-export function hasBeenAppended(route: Route<Context, Parameters>): boolean {
-	return parentMap.has(route) || route.parent !== undefined;
-}
-
-/**
- * Finds the router whose route hierarchy the route has been appended to.
- *
- * Throws if the route was not appended to any router.
- */
-export function findRouter(route: Route<Context, Parameters>): Router<Context> {
-	while (route.parent) {
-		route = route.parent;
-	}
-
-	const router = parentMap.get(route);
-	if (!router) {
-		throw new Error('Cannot generate link for route that is not in the hierarchy');
-	}
-	else {
-		return router;
-	}
-}
+import { hasBeenAppended, parentMap } from './lib/router';
+import { Route } from './Route';
 
 export const errorOutlet = 'errorOutlet';
 
@@ -253,19 +67,19 @@ function catchRejection(router: Router<Context>, context: Context, path: string,
 	}
 }
 
-export class Router<C extends Context> extends Evented {
+export class Router<C extends Context> extends Evented implements RouterInterface<C> {
 	private _contextFactory: () => Context;
 	private _currentSelection: Selection[];
 	private _dispatchFromStart: boolean;
 	private _fallback?: (request: Request<Context, Parameters>) => void | Thenable<any>;
 	private _history?: History;
-	private _routes: Route<Context, Parameters>[];
+	private _routes: RouteInterface<Context, Parameters>[];
 	private _started?: boolean;
 	private _outletContextMap: Map<string, OutletContext> = new Map<string, OutletContext>();
-	private _outletRouteMap: Map<string, Route<any, any>> = new Map<string, Route<any, any>>();
+	private _outletRouteMap: Map<string, RouteInterface<any, any>> = new Map<string, RouteInterface<any, any>>();
 	private _currentParams: any = {};
 	private _defaultParams: any = {};
-	private _defaultRoute: Route<any, any>;
+	private _defaultRoute: RouteInterface<any, any>;
 
 	on: RouterEvents<C>;
 
@@ -306,8 +120,8 @@ export class Router<C extends Context> extends Evented {
 		}
 	}
 
-	register(config: RouteConfig[], from: string | Router<any> | Route<any, any> = this) {
-		let parent: Router<any> | Route<any, any>;
+	register(config: RouteConfig[], from: string | RouterInterface<any> | RouteInterface<any, any> = this) {
+		let parent: RouterInterface<any> | RouteInterface<any, any>;
 		if (typeof from === 'string') {
 			parent = this._outletRouteMap.get(from) || this;
 		}
@@ -338,8 +152,8 @@ export class Router<C extends Context> extends Evented {
 		});
 	}
 
-	append(add: Route<Context, Parameters> | Route<Context, Parameters>[]) {
-		const append = (route: Route<Context, Parameters>) => {
+	append(add: RouteInterface<Context, Parameters> | RouteInterface<Context, Parameters>[]) {
+		const append = (route: RouteInterface<Context, Parameters>) => {
 			if (hasBeenAppended(route)) {
 				throw new Error('Cannot append route that has already been appended');
 			}
@@ -473,8 +287,8 @@ export class Router<C extends Context> extends Evented {
 		}, cancel);
 	}
 
-	link(routeOrOutlet: Route<Context, Parameters> | string, params: LinkParams = {}): string {
-		let route: Route<Context, Parameters>;
+	link(routeOrOutlet: RouteInterface<Context, Parameters> | string, params: LinkParams = {}): string {
+		let route: RouteInterface<Context, Parameters>;
 		if (typeof routeOrOutlet === 'string') {
 			const item = this._outletRouteMap.get(routeOrOutlet);
 			if (item) {

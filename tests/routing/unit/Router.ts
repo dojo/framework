@@ -2,12 +2,21 @@ import Task from '@dojo/core/async/Task';
 import Promise from '@dojo/shim/Promise';
 import { beforeEach, suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
-import { stub, spy } from 'sinon';
+import { spy, stub } from 'sinon';
 import MemoryHistory from '../../src/history/MemoryHistory';
-import { DefaultParameters, Context, Request, Parameters } from '../../src/interfaces';
+import {
+	Context,
+	DefaultParameters,
+	DispatchResult,
+	ErrorEvent,
+	MatchType,
+	NavigationStartEvent,
+	Parameters,
+	Request
+} from '../../src/interfaces';
 
-import Route, { MatchType } from '../../src/Route';
-import Router, { DispatchResult, ErrorEvent, NavigationStartEvent } from '../../src/Router';
+import Route from '../../src/Route';
+import Router from '../../src/Router';
 
 suite('Router', () => {
 	test('dispatch() resolves to unsuccessful result if no route was executed', () => {

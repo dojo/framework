@@ -2,10 +2,10 @@ import UrlSearchParams from '@dojo/core/UrlSearchParams';
 import { suite, test } from 'intern!tdd';
 import * as assert from 'intern/chai!assert';
 import { stub } from 'sinon';
-import { DefaultParameters, Context, Parameters } from '../../src/interfaces';
+import { Context, DefaultParameters, MatchType, Parameters } from '../../src/interfaces';
 import { deconstruct as deconstructPath } from '../../src/lib/path';
 
-import Route, { MatchType } from '../../src/Route';
+import Route from '../../src/Route';
 import Router from '../../src/Router';
 
 suite('Route', () => {

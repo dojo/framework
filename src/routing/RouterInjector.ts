@@ -1,17 +1,16 @@
-import { beforeRender } from '@dojo/widget-core/WidgetBase';
-import { w, registry as globalRegistry } from '@dojo/widget-core/d';
-import { WidgetRegistry } from '@dojo/widget-core/WidgetRegistry';
-import { Injector, BaseInjector, InjectorProperties } from '@dojo/widget-core/Injector';
+import { registry as globalRegistry, w } from '@dojo/widget-core/d';
+import { BaseInjector, Injector, InjectorProperties } from '@dojo/widget-core/Injector';
 import { DNode, RegistryLabel } from '@dojo/widget-core/interfaces';
+import { beforeRender } from '@dojo/widget-core/WidgetBase';
+import { WidgetRegistry } from '@dojo/widget-core/WidgetRegistry';
 
 import HashHistory from './history/HashHistory';
 import { History } from './history/interfaces';
-import { Router, RouteConfig } from './Router';
-import { MatchType } from './Route';
-import { MapParamsOptions, OutletProperties } from './interfaces';
+import { MapParamsOptions, MatchType, OutletProperties, RouteConfig } from './interfaces';
+import { Router } from './Router';
 
 /**
- * Key for the router injetor
+ * Key for the router injector
  */
 export const routerKey = Symbol();
 

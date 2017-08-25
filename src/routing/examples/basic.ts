@@ -3,9 +3,8 @@ import { v, w } from '@dojo/widget-core/d';
 import { WidgetProperties, DNode } from '@dojo/widget-core/interfaces';
 
 import { Outlet } from './../Outlet';
-import { MatchType } from './../Route';
 import { Link } from './../Link';
-import { MapParamsOptions } from './../interfaces';
+import { MatchType, MapParamsOptions } from './../interfaces';
 
 export interface ChildProperties extends WidgetProperties {
 	name: string;

@@ -1,107 +1,21 @@
-import { Hash } from '@dojo/core/interfaces';
 import UrlSearchParams from '@dojo/core/UrlSearchParams';
 import { Thenable } from '@dojo/shim/interfaces';
 import WeakMap from '@dojo/shim/WeakMap';
-import { DefaultParameters, Context, Parameters, Request } from './interfaces';
-import { deconstruct as deconstructPath, match as matchPath, DeconstructedPath } from './lib/path';
-import { findRouter, hasBeenAppended, LinkParams } from './Router';
-
-/**
- * Hash object where keys are parameter names and keys are arrays of one or more
- * parameter values.
- */
-export type SearchParams = Hash<string[]>;
-
-/**
- * The type of match for a route
- */
-export enum MatchType {
-	INDEX = 0,
-	PARTIAL,
-	ERROR
-}
-
-/**
- * Describes whether a route matched.
- */
-export interface MatchResult<P> {
-	/**
-	 * Whether there are path segments that weren't matched by this route.
-	 */
-	hasRemaining: boolean;
-
-	/**
-	 * Position in the segments array that the remaining unmatched segments start.
-	 */
-	offset: number;
-
-	/**
-	 * Any extracted parameters. Only available if the route matched.
-	 */
-	params: P;
-
-	/**
-	 * Values for named segments in the path, in order of occurrence.
-	 */
-	rawPathValues: string[];
-
-	/**
-	 * Values for known named query parameters that were actually present in the
-	 * path.
-	 */
-	rawSearchParams: SearchParams;
-}
-
-/**
- * A request handler.
- */
-export type Handler = (request: Request<Context, Parameters>) => void | Thenable<any>;
-
-/**
- * Describes the selection of a particular route.
- */
-export interface Selection {
-	/**
-	 * Which handler should be called when the route is executed.
-	 */
-	handler: Handler;
-
-	/**
-	 * The selected path.
-	 */
-	path: DeconstructedPath;
-
-	/**
-	 * The selected outlet
-	 */
-	outlet: string | undefined;
-
-	/**
-	 * The extracted parameters.
-	 */
-	params: Parameters;
-
-	/**
-	 * Values for named segments in the path, in order of occurrence.
-	 */
-	rawPathValues: string[];
-
-	/**
-	 * Values for known named query parameters that were actually present in the
-	 * path.
-	 */
-	rawSearchParams: SearchParams;
-
-	/**
-	 * The selected route.
-	 */
-	route: Route<Context, Parameters>;
-
-	/**
-	 * The selection type
-	 */
-	type: MatchType;
-}
+import {
+	Context,
+	DefaultParameters,
+	Handler,
+	LinkParams,
+	MatchResult,
+	MatchType,
+	Parameters,
+	Request,
+	RouteInterface,
+	SearchParams,
+	Selection
+} from './interfaces';
+import { deconstruct as deconstructPath, DeconstructedPath, match as matchPath } from './lib/path';
+import { findRouter, hasBeenAppended } from './lib/router';
 
 /**
  * The options for the route.
@@ -193,7 +107,7 @@ function computeDefaultParams(parameters: string[], searchParameters: string[], 
 	return params;
 }
 
-export class Route<C extends Context, P extends Parameters> {
+export class Route<C extends Context, P extends Parameters> implements RouteInterface<C, P> {
 	private _path: DeconstructedPath;
 	private _outlet: string | undefined;
 	private _routes: Route<Context, Parameters>[];

@@ -2,7 +2,7 @@ import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { v, w } from '@dojo/widget-core/d';
 import { ProjectorMixin } from '@dojo/widget-core/mixins/Projector';
 
-import { RouteConfig } from './../Router';
+import { RouteConfig } from './../interfaces';
 import { registerRouterInjector } from './../RouterInjector';
 import { Link } from './../Link';
 import { BasicAppOutlet, BasicAppRouteConfig } from './basic';
