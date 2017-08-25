@@ -109,6 +109,11 @@ export interface ProjectorMixin<P> {
 	toHtml(): string;
 
 	/**
+	 * Indicates if the projectors is in async mode, configured to `true` by defaults.
+	 */
+	async: boolean;
+
+	/**
 	 * Root element to attach the projector
 	 */
 	root: Element;
@@ -230,6 +235,17 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 
 		public get root(): Element {
 			return this._root;
+		}
+
+		public get async(): boolean {
+			return this._async;
+		}
+
+		public set async(async: boolean) {
+			if (this.projectorState === ProjectorAttachState.Attached) {
+				throw new Error('Projector already attached, cannot change async mode');
+			}
+			this._async = async;
 		}
 
 		public sandbox(doc: Document = document): Handle {

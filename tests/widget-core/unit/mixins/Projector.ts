@@ -663,6 +663,21 @@ registerSuite({
 		projector.destroy();
 		assert.equal(projector.projectorState, ProjectorAttachState.Detached);
 	},
+	'async': {
+		'can set async mode on projector'() {
+			const projector = new BaseTestWidget();
+			assert.isTrue(projector.async);
+			projector.async = false;
+			assert.isFalse(projector.async);
+		},
+		'cannot set async mode on projector that is already attached'() {
+			const projector = new BaseTestWidget();
+			projector.append();
+			assert.throws(() => {
+				projector.async = false;
+			}, Error, 'Projector already attached, cannot change async mode');
+		}
+	},
 	'toHtml()': {
 		'appended'() {
 			const projector = new BaseTestWidget();
