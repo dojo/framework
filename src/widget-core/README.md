@@ -319,7 +319,7 @@ export const classNameTwo: string;
 
 **Important:** at runtime a JavaScript file is required to provide the processed CSS class names.
 
-The `ThemeableMixin` provides a method available on the instance `this.classes()` that consumes string class names and converts them into the expected class object when a widget is rendered. Classes that are passed to `this.classes()` are made available to be themed, as described in the [applying a theme](applying-a-theme) section.
+The `ThemeableMixin` provides a method available on the instance `this.classes()` that consumes string class names and converts them into the expected class object when a widget is rendered. Classes that are passed to `this.classes()` are made available to be themed, as described in the [applying a theme](#applying-a-theme) section.
 
 However, it is not always desirable to allow consumers to override styling that may be required for a widget to function correctly. These classes which should not be overridden are known as "fixed". Fixed classes are passed by using a chained function `this.classes().fixed()`.
 
