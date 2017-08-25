@@ -4,6 +4,7 @@ import './async/ExtensiblePromise';
 import './async/Task';
 import './async/timing';
 import './base64';
+import './compare';
 import './Destroyable';
 import './Evented';
 import './global';
