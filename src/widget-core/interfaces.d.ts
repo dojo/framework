@@ -7,7 +7,11 @@ import Set from '@dojo/shim/Set';
 /**
  * Generic constructor type
  */
-export type Constructor<T> = new (...args: any[]) => T;
+export interface Constructor<T> {
+	new (...args: any[]): T;
+	name?: string;
+	prototype: T;
+}
 
 /**
  * Typed target event
