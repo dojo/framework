@@ -1,6 +1,6 @@
 {
   "name": "@dojo/has",
-  "version": "2.0.0-pre",
+  "version": "2.0.0-beta2.3",
   "description": "A feature detection library",
   "engines": {
     "npm": ">=3.0.0"
