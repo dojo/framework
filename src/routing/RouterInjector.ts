@@ -1,7 +1,7 @@
-import { registry as globalRegistry, w } from '@dojo/widget-core/d';
 import { BaseInjector, Injector, InjectorProperties } from '@dojo/widget-core/Injector';
 import { DNode, RegistryLabel } from '@dojo/widget-core/interfaces';
 import { beforeRender } from '@dojo/widget-core/WidgetBase';
+import { w } from '@dojo/widget-core/d';
 import { WidgetRegistry } from '@dojo/widget-core/WidgetRegistry';
 
 import HashHistory from './history/HashHistory';
@@ -25,7 +25,7 @@ export const routerKey = Symbol();
  */
 export function registerRouterInjector(
 	config: RouteConfig[],
-	registry: WidgetRegistry = globalRegistry,
+	registry: WidgetRegistry,
 	history: History = new HashHistory(),
 	key: RegistryLabel = routerKey
 ): Router<any> {

@@ -12,7 +12,6 @@ export interface ChildProperties extends WidgetProperties {
 
 export class Child extends WidgetBase<ChildProperties> {
 	render(): DNode {
-		console.log('Child Render');
 		return v('div', [
 			v('h3', [ `ID: ${this.properties.name || 'this must be about'}` ])
 		]);

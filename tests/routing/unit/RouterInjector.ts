@@ -1,14 +1,13 @@
+import * as registerSuite from 'intern!object';
+import * as assert from 'intern/chai!assert';
 import { Evented } from '@dojo/core/Evented';
-import { registry } from '@dojo/widget-core/d';
 import { Constructor } from '@dojo/widget-core/interfaces';
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { WidgetRegistry } from '@dojo/widget-core/WidgetRegistry';
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
-import MemoryHistory from './../../src/history/MemoryHistory';
 
+import { RouterInjector, registerRouterInjector, routerKey } from './../../src/RouterInjector';
+import MemoryHistory from './../../src/history/MemoryHistory';
 import { MatchType } from './../../src/interfaces';
-import { registerRouterInjector, RouterInjector, routerKey } from './../../src/RouterInjector';
 
 class TestRouterInjector extends RouterInjector {
 	public invalidateCount = 0;
@@ -63,6 +62,7 @@ class ErrorComponent extends WidgetBase {
 
 let assertRender = (properties: any) => {};
 const scope = new WidgetBase();
+const registry = new WidgetRegistry();
 
 registerSuite({
 	name: 'RouterInjector',

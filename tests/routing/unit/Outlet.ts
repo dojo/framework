@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { registry } from '@dojo/widget-core/d';
+import { WidgetRegistry } from '@dojo/widget-core/WidgetRegistry';
 
 import { routerKey } from './../../src/RouterInjector';
 import { Outlet } from './../../src/Outlet';
@@ -45,6 +45,8 @@ class StubInjector extends WidgetBase<any> {
 		return this.properties.render();
 	}
 }
+
+const registry = new WidgetRegistry();
 registry.define(routerKey, StubInjector);
 
 registerSuite({
