@@ -21,10 +21,10 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/has": "next"
+    "@dojo/has": "beta2"
   },
   "devDependencies": {
-    "@dojo/loader": "next",
+    "@dojo/loader": "beta2",
     "@types/chai": "~3.4.0",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
