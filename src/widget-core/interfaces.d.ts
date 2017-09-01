@@ -1,8 +1,7 @@
+import { Destroyable } from '@dojo/core/Destroyable';
 import { Evented } from '@dojo/core/Evented';
-import { EventTypedObject } from '@dojo/interfaces/core';
 import { VNode, VNodeProperties, ProjectionOptions } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
-import Set from '@dojo/shim/Set';
 
 /**
  * Generic constructor type
@@ -366,10 +365,18 @@ export interface WidgetBaseInterface<
 	 */
 	__render__(): VirtualDomNode | VirtualDomNode[];
 }
+
+/**
+ * Meta Base type
+ */
+export interface WidgetMetaBase extends Destroyable {
+	has(key: string): boolean;
+}
+
 /**
  * Meta Base constructor type
  */
-export interface WidgetMetaConstructor<T> {
+export interface WidgetMetaConstructor<T extends WidgetMetaBase> {
 	new (properties: WidgetMetaProperties): T;
 }
 
@@ -378,8 +385,15 @@ export interface WidgetMetaConstructor<T> {
  */
 export interface WidgetMetaProperties {
 	nodes: Map<string, HTMLElement>;
-	requiredNodes: Set<string>;
+	requiredNodes: Map<string, ([ WidgetMetaBase, WidgetMetaRequiredNodeCallback ])[]>;
 	invalidate: () => void;
+}
+
+/**
+ * Callback when asking widget meta for a required node
+ */
+export interface WidgetMetaRequiredNodeCallback {
+	(node: HTMLElement): void;
 }
 
 export interface Render {

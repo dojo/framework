@@ -1,13 +1,12 @@
 import { Destroyable } from '@dojo/core/Destroyable';
 import global from '@dojo/shim/global';
 import Map from '@dojo/shim/Map';
-import Set from '@dojo/shim/Set';
-import { WidgetMetaProperties } from '../interfaces';
+import { WidgetMetaBase, WidgetMetaProperties, WidgetMetaRequiredNodeCallback } from '../interfaces';
 
-export class Base extends Destroyable {
+export class Base extends Destroyable implements WidgetMetaBase {
 	private _invalidate: () => void;
 	private _invalidating: number;
-	private _requiredNodes: Set<string>;
+	private _requiredNodes: Map<string, ([ WidgetMetaBase, WidgetMetaRequiredNodeCallback ])[]>;
 	protected nodes: Map<string, HTMLElement>;
 
 	constructor(properties: WidgetMetaProperties) {
@@ -20,7 +19,6 @@ export class Base extends Destroyable {
 	}
 
 	public has(key: string): boolean {
-		this.requireNode(key);
 		return this.nodes.has(key);
 	}
 
@@ -29,11 +27,18 @@ export class Base extends Destroyable {
 		this._invalidating = global.requestAnimationFrame(this._invalidate);
 	}
 
-	protected requireNode(key: string): void {
-		this._requiredNodes.add(key);
-
-		if (!this.nodes.has(key)) {
-			this.invalidate();
+	protected requireNode(key: string, callback?: WidgetMetaRequiredNodeCallback): void {
+		const node = this.nodes.get(key);
+		if (node) {
+			callback && callback.call(this, node);
+		}
+		else {
+			const callbacks = this._requiredNodes.get(key) || [];
+			callback && callbacks.push([ this, callback ]);
+			this._requiredNodes.set(key, callbacks);
+			if (!callback) {
+				this.invalidate();
+			}
 		}
 	}
 }

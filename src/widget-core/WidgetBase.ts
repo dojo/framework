@@ -2,7 +2,6 @@ import { Evented } from '@dojo/core/Evented';
 import { ProjectionOptions, VNodeProperties } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
 import '@dojo/shim/Promise'; // Imported for side-effects
-import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
 import { isWNode, v, isHNode } from './d';
 import { auto, reference } from './diff';
@@ -15,12 +14,13 @@ import {
 	RegistryLabel,
 	Render,
 	VirtualDomNode,
+	WidgetMetaBase,
 	WidgetMetaConstructor,
 	WidgetBaseConstructor,
 	WidgetBaseInterface,
-	WidgetProperties
+	WidgetProperties,
+	WidgetMetaRequiredNodeCallback
 } from './interfaces';
-import MetaBase from './meta/Base';
 import RegistryHandler from './RegistryHandler';
 import { isWidgetBaseConstructor, WIDGET_BASE_TYPE, WidgetRegistry } from './WidgetRegistry';
 
@@ -170,11 +170,11 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 	private _renderState: WidgetRenderState = WidgetRenderState.IDLE;
 
-	private _metaMap = new WeakMap<WidgetMetaConstructor<any>, MetaBase>();
+	private _metaMap = new WeakMap<WidgetMetaConstructor<any>, WidgetMetaBase>();
 
 	private _nodeMap = new Map<string, HTMLElement>();
 
-	private _requiredNodes = new Set<string>();
+	private _requiredNodes = new Map<string, ([ WidgetMetaBase, WidgetMetaRequiredNodeCallback ])[]>();
 
 	private _boundRenderFunc: Render;
 
@@ -210,7 +210,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		this._checkOnElementUsage();
 	}
 
-	protected meta<T extends MetaBase>(MetaType: WidgetMetaConstructor<T>): T {
+	protected meta<T extends WidgetMetaBase>(MetaType: WidgetMetaConstructor<T>): T {
 		let cached = this._metaMap.get(MetaType);
 		if (!cached) {
 			cached = new MetaType({
@@ -233,6 +233,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	protected verifyRequiredNodes(renderFunc: () => DNode, properties: WidgetProperties, children: DNode[]): () => DNode {
 		return () => {
 			this._requiredNodes.forEach((element, key) => {
+				/* istanbul ignore else: only checking for errors */
 				if (!this._nodeMap.has(key)) {
 					throw new Error(`Required node ${key} not found`);
 				}
@@ -293,7 +294,14 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	}
 
 	private _setNode(element: Element, properties: VNodeProperties): void {
-		this._nodeMap.set(String(properties.key), <HTMLElement> element);
+		const key = String(properties.key);
+		this._nodeMap.set(key, <HTMLElement> element);
+		const callbacks = this._requiredNodes.get(key);
+		if (callbacks) {
+			for (const [ meta, callback ] of callbacks) {
+				callback.call(meta, element);
+			}
+		}
 	}
 
 	public get properties(): Readonly<P> & Readonly<WidgetProperties> {
