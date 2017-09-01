@@ -197,6 +197,12 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		this._registries = new RegistryHandler();
 		this._registries.add(this._defaultRegistry, true);
 		this.own(this._registries);
+		this.own({
+			destroy: () => {
+				this._nodeMap.clear();
+				this._requiredNodes.clear();
+			}
+		});
 		this._boundRenderFunc = this.render.bind(this);
 		this._boundInvalidate = this.invalidate.bind(this);
 
@@ -213,6 +219,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 				invalidate: this._boundInvalidate
 			});
 			this._metaMap.set(MetaType, cached);
+			this.own(cached);
 		}
 
 		return cached as T;

@@ -1,15 +1,18 @@
+import { Destroyable } from '@dojo/core/Destroyable';
 import global from '@dojo/shim/global';
 import Map from '@dojo/shim/Map';
 import Set from '@dojo/shim/Set';
 import { WidgetMetaProperties } from '../interfaces';
 
-export class Base {
+export class Base extends Destroyable {
 	private _invalidate: () => void;
 	private _invalidating: number;
 	private _requiredNodes: Set<string>;
 	protected nodes: Map<string, HTMLElement>;
 
 	constructor(properties: WidgetMetaProperties) {
+		super();
+
 		this._invalidate = properties.invalidate;
 		this._requiredNodes = properties.requiredNodes;
 
