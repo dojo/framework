@@ -1,4 +1,4 @@
-import global from '@dojo/core/global';
+import global from '@dojo/shim/global';
 import { add as hasAdd, exists } from '@dojo/has/has';
 import { VirtualConsole } from 'jsdom';
 

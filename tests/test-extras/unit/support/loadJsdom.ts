@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import has from '@dojo/has/has';
-import global from '@dojo/core/global';
+import global from '@dojo/shim/global';
 import doc from '../../../src/support/loadJsdom';
 
 registerSuite({

@@ -325,7 +325,7 @@ registerSuite({
 					assert.strictEqual(properties.key, 'child');
 					return value.tag === 'foo';
 				});
-				widget.expectRender(v('div', { afterCreate: widget.listener, afterUpdate: widget.listener, key: 'wrapper' }, [
+				widget.expectRender(v('div', { key: 'wrapper' }, [
 					w<any>(RegistryWidgetChild, { key: 'child', registry: compareRegistry })
 				]));
 				assert.isTrue(called, 'comparer should have been called');
@@ -342,7 +342,7 @@ registerSuite({
 					return value.tag === 'foo';
 				});
 				assert.throws(() => {
-					widget.expectRender(v('div', { afterCreate: widget.listener, afterUpdate: widget.listener, key: 'wrapper' }, [
+					widget.expectRender(v('div', { key: 'wrapper' }, [
 						w<any>(RegistryWidgetChild, { key: 'child', registry: compareRegistry })
 					]));
 				}, AssertionError, 'The value of property "registry" is unexpected.');
