@@ -6,11 +6,7 @@ import Map from '@dojo/shim/Map';
 /**
  * Generic constructor type
  */
-export interface Constructor<T> {
-	new (...args: any[]): T;
-	name?: string;
-	prototype: T;
-}
+export type Constructor<T> = new (...args: any[]) => T;
 
 /**
  * Typed target event
