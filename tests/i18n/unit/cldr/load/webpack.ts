@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import global from '@dojo/core/global';
+import global from '@dojo/shim/global';
 import loadCldrData, {
 	CldrData,
 	isLoaded,

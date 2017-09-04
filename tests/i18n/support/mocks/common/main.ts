@@ -2,7 +2,8 @@ import has from '@dojo/core/has';
 
 const locales = [
 	'ar',
-	'ar-JO'
+	'ar-JO',
+	'es'
 ];
 
 // TODO: The default loader attempts to use the native Node.js `require` when running on Node. However, the Intern

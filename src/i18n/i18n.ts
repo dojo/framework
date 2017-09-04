@@ -1,10 +1,10 @@
 /* tslint:disable:interface-name */
 import Evented from '@dojo/core/Evented';
 import has from '@dojo/core/has';
-import global from '@dojo/core/global';
 import { assign } from '@dojo/core/lang';
-import load from '@dojo/core/load';
+import load, { useDefault } from '@dojo/core/load';
 import { Handle } from '@dojo/interfaces/core';
+import global from '@dojo/shim/global';
 import Map from '@dojo/shim/Map';
 import Observable, { Observer, Subscription, SubscriptionObserver } from '@dojo/shim/Observable';
 import Promise from '@dojo/shim/Promise';
@@ -130,9 +130,7 @@ function getIcuMessageFormatter(bundlePath: string, key: string, locale?: string
  */
 const loadLocaleBundles = (function () {
 	function mapMessages<T extends Messages>(modules: LocaleModule<T>[]): T[] {
-		return modules.map((localeModule: LocaleModule<T>): T => {
-			return localeModule.default as T;
-		});
+		return modules.map((localeModule: LocaleModule<T>): T => useDefault(localeModule));
 	}
 
 	return function<T extends Messages>(paths: string[]): Promise<T[]> {

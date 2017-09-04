@@ -1,6 +1,6 @@
-import global from '@dojo/core/global';
 import has from '@dojo/core/has';
 import { assign } from '@dojo/core/lang';
+import global from '@dojo/shim/global';
 import * as Globalize from 'globalize';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
@@ -361,6 +361,16 @@ registerSuite({
 					helloReply: 'Hello',
 					goodbye: 'Goodbye'
 				}, 'Default messages returned when bundle provides no locales.');
+			});
+		},
+
+		'assert no default export'() {
+			return i18n(bundle, 'es').then(function (messages: Messages) {
+				assert.deepEqual(messages, {
+					hello: 'Hola',
+					helloReply: 'Hola',
+					goodbye: 'Adiós'
+				}, 'The entire exported module should be used when no default is provided.');
 			});
 		},
 
