@@ -4,6 +4,7 @@ import AssertionError from '../../../src/support/AssertionError';
 import assertRender from '../../../src/support/assertRender';
 import { v, w } from '@dojo/widget-core/d';
 import WidgetBase from '@dojo/widget-core/WidgetBase';
+import { WidgetRegistry } from '@dojo/widget-core/WidgetRegistry';
 import { HNode, WidgetProperties, WNode } from '@dojo/widget-core/interfaces';
 
 interface MockWidgetProperties extends WidgetProperties {
@@ -350,6 +351,14 @@ registerSuite({
 			const bind = new MockWidget();
 			assertRender(
 				w(MockWidget, <any> { bind }),
+				w(MockWidget, { })
+			);
+		},
+
+		'defaultRegistry property ignored'() {
+			const defaultRegistry = new WidgetRegistry();
+			assertRender(
+				w(MockWidget, <any> { defaultRegistry }),
 				w(MockWidget, { })
 			);
 		}
