@@ -22,6 +22,7 @@ import * as extraClasses2 from './../../support/styles/extraClasses2.css';
 import testTheme1 from './../../support/styles/theme1.css';
 import testTheme2 from './../../support/styles/theme2.css';
 import testTheme3 from './../../support/styles/theme3.css';
+import createTestWidget from './../../support/createTestWidget';
 
 (<any> baseThemeClasses1)[' _key'] = 'testPath1';
 (<any> baseThemeClasses2)[' _key'] = 'testPath2';
@@ -386,8 +387,7 @@ registerSuite({
 					return v('div', { classes: this.classes(baseThemeClasses1.class1) });
 				}
 			}
-			const themeableInstance = new InjectedTheme();
-			themeableInstance.__setProperties__({ registry: testRegistry });
+			const themeableInstance = createTestWidget(InjectedTheme, { registry: testRegistry });
 			const vNode: any = themeableInstance.__render__();
 			assert.deepEqual(vNode.properties.classes, { theme1Class1: true });
 		},

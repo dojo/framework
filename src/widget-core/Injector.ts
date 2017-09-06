@@ -9,7 +9,9 @@ import { always } from './diff';
 import {
 	Constructor,
 	DNode,
-	WidgetProperties
+	HNode,
+	WidgetProperties,
+	WNode
 } from './interfaces';
 
 export interface GetProperties {
@@ -112,9 +114,13 @@ export function Injector<C, T extends Constructor<Base<C>>>(Base: T, context: C)
 
 		protected decorateBind(node: DNode | DNode[]): DNode | DNode[] {
 			const { scope } = this.properties;
-			decorate(node, (node: any) => {
-				const { properties } = node;
-				properties.bind = scope;
+			decorate(node, (node: WNode | HNode) => {
+				if (isHNode(node)) {
+					(<any> node.properties).bind = scope;
+				}
+				else {
+					node.coreProperties.bind = scope;
+				}
 			}, (node: DNode) => { return isHNode(node) || isWNode(node); });
 
 			return node;

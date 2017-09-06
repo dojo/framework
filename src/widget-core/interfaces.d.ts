@@ -231,6 +231,27 @@ export interface WidgetProperties {
 }
 
 /**
+ *
+ */
+interface CoreProperties {
+
+	/**
+	 * The user registry
+	 */
+	registry?: any;
+
+	/**
+	 * The default registry for the projection
+	 */
+	defaultRegistry?: any;
+
+	/**
+	 * The scope used to bind functions
+	 */
+	bind?: any;
+}
+
+/**
  * Virtual DOM Node type
  */
 export type VirtualDomNode = VNode | string | null | undefined;
@@ -282,6 +303,11 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 	 * Properties to set against a widget instance
 	 */
 	properties: W['properties'];
+
+	/**
+	 * Core properties that are used by the widget core system
+	 */
+	coreProperties: CoreProperties;
 
 	/**
 	 * DNode children
@@ -350,6 +376,13 @@ export interface WidgetBaseInterface<
 	 * @param properties The new widget properties
 	 */
 	__setProperties__(properties: P & { [index: string]: any }): void;
+
+	/**
+	 * Sets core properties on the widget.
+	 *
+	 * @param coreProperties The core properties
+	 */
+	__setCoreProperties__(coreProperties: CoreProperties): any;
 
 	/**
 	 * Sets the widget's children

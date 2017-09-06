@@ -5,6 +5,8 @@ import { WidgetBase } from '../../src/WidgetBase';
 import { Container } from './../../src/Container';
 import { WidgetRegistry } from './../../src/WidgetRegistry';
 
+import createTestWidget from './../support/createTestWidget';
+
 interface TestWidgetProperties {
 	foo: string;
 	boo: number;
@@ -36,6 +38,7 @@ class StubInjector extends WidgetBase<any> {
 		return this.properties.render();
 	}
 }
+
 const registry = new WidgetRegistry();
 registry.define('test-state-1', StubInjector);
 registry.define('test-widget', TestWidget);
@@ -119,13 +122,13 @@ registerSuite({
 			assert.isFalse(propertiesCalled);
 			assert.deepEqual(calculatedProperties, {});
 			assert.deepEqual(calculatedChildren, []);
-			assert.deepEqual(properties.properties, { foo: 'bar', registry });
+			assert.deepEqual(properties.properties, { foo: 'bar' });
 			assert.deepEqual(properties.children, []);
 		};
 
 		const TestWidgetContainer = Container<TestWidget>('test-widget', 'test-state-1');
-		const widget = new TestWidgetContainer();
-		widget.__setProperties__({ foo: 'bar', registry });
+		const widget = createTestWidget(TestWidgetContainer, { foo: 'bar' });
+		widget.__setCoreProperties__({ bind: this, registry });
 		const renderResult: any = widget.__render__();
 		assert.strictEqual(renderResult.vnodeSelector, 'test');
 	}

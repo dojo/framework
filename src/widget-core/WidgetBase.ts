@@ -4,10 +4,11 @@ import Map from '@dojo/shim/Map';
 import '@dojo/shim/Promise'; // Imported for side-effects
 import WeakMap from '@dojo/shim/WeakMap';
 import { isWNode, v, isHNode } from './d';
-import { auto, reference } from './diff';
+import { auto, ignore } from './diff';
 import {
 	AfterRender,
 	BeforeRender,
+	CoreProperties,
 	DiffPropertyFunction,
 	DiffPropertyReaction,
 	DNode,
@@ -119,6 +120,7 @@ const boundAuto = auto.bind(null);
 /**
  * Main widget base for all widgets to extend
  */
+@diffProperty('registry', ignore)
 export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends Evented implements WidgetBaseInterface<P, C> {
 
 	/**
@@ -145,6 +147,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	 * internal widget properties
 	 */
 	private _properties: P & WidgetProperties & { [index: string]: any };
+
+	private _coreProperties: CoreProperties = {} as CoreProperties;
 
 	/**
 	 * cached chldren map for instance management
@@ -308,37 +312,56 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		return this._properties;
 	}
 
-	@diffProperty('registry', reference)
-	protected diffPropertyRegistry(previousProperties: any, newProperties: any): void {
+	protected setRegistry(previousRegistry: WidgetRegistry | undefined, newRegistry: WidgetRegistry | undefined): void {
 		const { _registries, _defaultRegistry } = this;
-		if (_registries.defaultRegistry === _defaultRegistry) {
+
+		if (_registries.defaultRegistry === _defaultRegistry && newRegistry) {
 			_registries.remove(_defaultRegistry);
 		}
-		const result = _registries.replace(previousProperties.registry, newProperties.registry);
-		if (!result) {
-			_registries.add(newProperties.registry);
+
+		if (previousRegistry && newRegistry) {
+			_registries.replace(previousRegistry, newRegistry);
+		}
+		else if (newRegistry) {
+			_registries.add(newRegistry);
+		}
+		else if (previousRegistry) {
+			_registries.remove(previousRegistry);
 		}
 	}
 
-	@diffProperty('defaultRegistry', reference)
-	protected diffPropertyDefaultRegistry(previousProperties: any, newProperties: any): void {
+	protected setDefaultRegistry(previousRegistry: WidgetRegistry | undefined, newRegistry: WidgetRegistry | undefined): void {
 		const { _registries, _defaultRegistry } = this;
-		if (newProperties.defaultRegistry === undefined) {
-			_registries.remove(previousProperties.defaultRegistry);
+		if (newRegistry === undefined && previousRegistry) {
+			_registries.remove(previousRegistry);
 			if (_registries.defaultRegistry === undefined) {
 				_registries.add(_defaultRegistry);
 			}
 		}
-		else {
-			const result = _registries.replace(previousProperties.defaultRegistry || _defaultRegistry, newProperties.defaultRegistry);
+		else if (newRegistry) {
+			const result = _registries.replace(previousRegistry || _defaultRegistry, newRegistry);
 			if (!result) {
-				_registries.add(newProperties.defaultRegistry, true);
+				_registries.add(newRegistry, true);
 			}
 		}
 	}
 
-	public __setProperties__(originalProperties: this['properties']): void {
-		const { bind, ...properties } = originalProperties as any;
+	public __setCoreProperties__(coreProperties: CoreProperties) {
+		this._renderState = WidgetRenderState.PROPERTIES;
+		const { registry, defaultRegistry } = coreProperties;
+
+		if (this._coreProperties.registry !== registry) {
+			this.setRegistry(this._coreProperties.registry, registry);
+			this.invalidate();
+		}
+		if (this._coreProperties.defaultRegistry !== defaultRegistry) {
+			this.setDefaultRegistry(this._coreProperties.defaultRegistry, defaultRegistry);
+			this.invalidate();
+		}
+		this._coreProperties = coreProperties;
+	}
+
+	public __setProperties__(properties: this['properties']): void {
 		const changedPropertyKeys: string[] = [];
 		const allProperties = [ ...Object.keys(properties), ...Object.keys(this._properties) ];
 		const checkedProperties: string[] = [];
@@ -355,7 +378,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			}
 			checkedProperties.push(propertyName);
 			const previousProperty = this._properties[propertyName];
-			const newProperty = this._bindFunctionProperty(properties[propertyName], bind);
+			const newProperty = this._bindFunctionProperty((properties as any)[propertyName], this._coreProperties.bind);
 			if (registeredDiffPropertyNames.indexOf(propertyName) !== -1) {
 				runReactions = true;
 				const diffFunctions = this.getDecorator(`diffProperty:${propertyName}`);
@@ -429,24 +452,44 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		let nodes = Array.isArray(node) ? [ ...node ] : [ node ];
 		while (nodes.length) {
 			const node = nodes.pop();
-			if (isHNode(node)) {
-				if (node.properties.key) {
-					node.properties.afterCreate = this._afterCreateCallback;
-					node.properties.afterUpdate = this._afterUpdateCallback;
+			if (isHNode(node) || isWNode(node)) {
+				node.properties = node.properties || {};
+				if (isHNode(node)) {
+					if (node.properties.key) {
+						node.properties.afterCreate = this._afterCreateCallback;
+						node.properties.afterUpdate = this._afterUpdateCallback;
+					}
+					if (node.properties.bind === undefined) {
+						(<any> node.properties).bind = this;
+					}
 				}
+				else {
+					const { defaultRegistry, registry } = this.__getCoreProperties__(node.properties);
+					node.coreProperties = node.coreProperties || {};
+
+					if (node.coreProperties.bind === undefined) {
+						node.coreProperties.bind = this;
+					}
+					node.coreProperties.defaultRegistry = defaultRegistry;
+					node.coreProperties.registry = registry;
+				}
+				nodes = [ ...nodes, ...node.children ];
 			}
-			else if (!isWNode(node)) {
-				continue;
-			}
-			node.properties = node.properties || {};
-			if ((<any> node.properties).bind === undefined) {
-				(<any> node.properties).bind = this;
-			}
-			if (isWNode(node)) {
-				(<any> node.properties).defaultRegistry = this._registries.defaultRegistry;
-			}
-			nodes = [ ...nodes, ...node.children ];
 		}
+	}
+
+	protected __getCoreProperties__(properties: any): CoreProperties {
+		const {
+			registry
+		} = properties;
+		const {
+			defaultRegistry = this._registries.defaultRegistry
+		} = this._coreProperties;
+
+		return {
+			registry,
+			defaultRegistry
+		};
 	}
 
 	protected invalidate(): void {
@@ -644,7 +687,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		}
 
 		if (isWNode(dNode)) {
-			const { children, properties = {} } = dNode;
+			const { children, properties, coreProperties } = dNode;
 			const { key } = properties;
 
 			let { widgetConstructor } = dNode;
@@ -672,17 +715,17 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 			if (cachedChild !== undefined) {
 				child = cachedChild.child;
-				child.__setProperties__(properties);
 				cachedChild.used = true;
 			}
 			else {
 				child = new widgetConstructor();
-				child.__setProperties__(properties);
 				child.own(child.on('invalidated', this._boundInvalidate));
 				cachedChildren = [...cachedChildren, { child, widgetConstructor, used: true }];
 				this._cachedChildrenMap.set(childrenMapKey, cachedChildren);
 				this.own(child);
 			}
+			child.__setCoreProperties__(coreProperties);
+			child.__setProperties__(properties);
 			if (typeof childrenMapKey !== 'string' && cachedChildren.length > 1) {
 				const widgetName = (<any> childrenMapKey).name;
 				let errorMsg = 'It is recommended to provide a unique \'key\' property when using the same widget multiple times';
