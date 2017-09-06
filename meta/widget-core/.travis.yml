@@ -21,6 +21,7 @@ script:
 - grunt intern:browserstack --combined
 - grunt remapIstanbul:ci
 - grunt uploadCoverage
+- grunt dist
 - grunt doc
 notifications:
   slack:
