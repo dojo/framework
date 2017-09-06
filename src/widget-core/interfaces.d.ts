@@ -442,3 +442,10 @@ export interface BeforeRender {
 export interface AfterRender {
 	(dNode: DNode | DNode []): DNode | DNode[];
 }
+
+/**
+ * Interface for beforeProperties function
+ */
+export interface BeforeProperties<P = any> {
+	(properties: P): P;
+}

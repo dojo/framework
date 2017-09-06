@@ -7,6 +7,7 @@ import { isWNode, v, isHNode } from './d';
 import { auto, ignore } from './diff';
 import {
 	AfterRender,
+	BeforeProperties,
 	BeforeRender,
 	CoreProperties,
 	DiffPropertyFunction,
@@ -361,7 +362,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		this._coreProperties = coreProperties;
 	}
 
-	public __setProperties__(properties: this['properties']): void {
+	public __setProperties__(originalProperties: this['properties']): void {
+		const properties = this._runBeforeProperties(originalProperties);
 		const changedPropertyKeys: string[] = [];
 		const allProperties = [ ...Object.keys(properties), ...Object.keys(this._properties) ];
 		const checkedProperties: string[] = [];
@@ -378,7 +380,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			}
 			checkedProperties.push(propertyName);
 			const previousProperty = this._properties[propertyName];
-			const newProperty = this._bindFunctionProperty((properties as any)[propertyName], this._coreProperties.bind);
+			const newProperty = this._bindFunctionProperty(properties[propertyName], this._coreProperties.bind);
 			if (registeredDiffPropertyNames.indexOf(propertyName) !== -1) {
 				runReactions = true;
 				const diffFunctions = this.getDecorator(`diffProperty:${propertyName}`);
@@ -631,6 +633,16 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 	protected getRegistries(): RegistryHandler {
 		return this._registries;
+	}
+
+	private _runBeforeProperties(properties: any) {
+		const beforeProperties: BeforeProperties[] = this.getDecorator('beforeProperties');
+		if (beforeProperties.length > 0) {
+			return beforeProperties.reduce((properties, beforePropertiesFunction) => {
+				return { ...properties, ...beforePropertiesFunction(properties) };
+			}, { ...properties });
+		}
+		return properties;
 	}
 
 	/**
