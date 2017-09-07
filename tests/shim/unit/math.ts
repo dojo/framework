@@ -1,6 +1,7 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import * as math from '../../src/math';
+
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
 function assertIsNaN(...results: number[]) {
 	for (let result of results) {
@@ -8,9 +9,7 @@ function assertIsNaN(...results: number[]) {
 	}
 }
 
-registerSuite({
-		name: 'math',
-
+registerSuite('math', {
 		'.acosh()'() {
 			assertIsNaN(math.acosh(NaN), math.acosh(0), math.acosh(0.9999999), math.acosh(-0.001));
 			assert.strictEqual(math.acosh(Infinity), Infinity);

@@ -1,6 +1,7 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import * as numberUtil from '../../src/number';
+
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
 function testEdgeCases(op: (value: any) => boolean) {
 	assert.isFalse(op({}));
@@ -13,9 +14,7 @@ function testEdgeCases(op: (value: any) => boolean) {
 	assert.isFalse(op(-Infinity));
 }
 
-registerSuite({
-		name: 'number',
-
+registerSuite('number', {
 		'constants'() {
 			assert.isNumber(numberUtil.EPSILON);
 			assert.isNumber(numberUtil.MAX_SAFE_INTEGER);

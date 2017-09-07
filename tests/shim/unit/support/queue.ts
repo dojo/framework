@@ -1,13 +1,12 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
-import global from '../../../src/global';
 import has from '../../../src/support/has';
+import global from '../../../src/global';
 import { queueAnimationTask, queueMicroTask, queueTask } from '../../../src/support/queue';
 
-registerSuite({
-	name: 'queue functions',
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
-	'.queueTask()': function (this: any) {
+registerSuite('queue functions', {
+	'.queueTask()': function () {
 		const dfd = this.async(5000);
 		const parts: string[] = [];
 
@@ -35,7 +34,7 @@ registerSuite({
 		}), 300);
 	},
 
-	'.queueTask() => handle.destroy()': function (this: any) {
+	'.queueTask() => handle.destroy()': function () {
 		const dfd = this.async(5000);
 		let parts: string[];
 
@@ -55,7 +54,7 @@ registerSuite({
 		}), 100);
 	},
 
-	'.queueAnimationTask()': function (this: any) {
+	'.queueAnimationTask()': function () {
 		if (!has('host-browser')) {
 			this.skip('browser required.');
 		}
@@ -87,7 +86,7 @@ registerSuite({
 		}), 300);
 	},
 
-	'.queueAnimationTask() => handle.destroy()': function (this: any) {
+	'.queueAnimationTask() => handle.destroy()': function () {
 		if (!has('host-browser')) {
 			this.skip('browser required.');
 		}
@@ -111,7 +110,7 @@ registerSuite({
 		}), 100);
 	},
 
-	'.queueMicroTask()': function (this: any) {
+	'.queueMicroTask()': function () {
 		const dfd = this.async(5000);
 		const parts: string[] = [];
 
@@ -149,7 +148,7 @@ registerSuite({
 		}), 1000);
 	},
 
-	'.queueMicroTask() => handle.destroy()': function (this: any) {
+	'.queueMicroTask() => handle.destroy()': function () {
 		const dfd = this.async(5000);
 		let parts: string[];
 
@@ -170,7 +169,7 @@ registerSuite({
 	},
 
 	'web workers': {
-		'queue from webworker': function (this: any) {
+		'queue from webworker': function () {
 			if (global.Blob === undefined || global.Worker === undefined) {
 				this.skip('does not support blobs and/or web workers');
 				return;

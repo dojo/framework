@@ -1,10 +1,9 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import * as stringUtil from '../../src/string';
 
-registerSuite({
-	name: 'string functions',
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
+registerSuite('string functions', {
 	'.codePointAt()': {
 		'throws on undefined or null string'() {
 			assert.throws(function () {

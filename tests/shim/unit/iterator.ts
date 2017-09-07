@@ -1,11 +1,10 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import { forOf, get, ShimIterator } from '../../src/iterator';
 import '../../src/Symbol';
 
-registerSuite({
-	name: 'iterator',
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
+registerSuite('iterator', {
 	'forOf': {
 
 		'strings'() {

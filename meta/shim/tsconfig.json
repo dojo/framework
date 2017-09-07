@@ -21,7 +21,11 @@
 		"moduleResolution": "node",
 		"strictNullChecks": true,
 		"noImplicitThis": true,
-		"types": [ "intern" ]
+		"types": [ "intern" ],
+		"typeRoots": [
+			"./node_modules/@types",
+			"./node_modules/intern/types"
+		]
 	},
 	"include": [
 		"./typings/index.d.ts",

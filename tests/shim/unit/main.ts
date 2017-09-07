@@ -1,9 +1,9 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import * as main from '../../src/main';
 
-registerSuite({
-	name: 'main',
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
+registerSuite('main', {
 	'validate api'() {
 		assert(main);
 	}

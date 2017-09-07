@@ -1,12 +1,11 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import {
 	getValueDescriptor
 } from '../../../src/support/util';
 
-registerSuite({
-	name: 'util',
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
+registerSuite('util', {
 	'getValueDescriptor()'() {
 		assert.deepEqual(getValueDescriptor('foo'), <TypedPropertyDescriptor<string>> {
 			value: 'foo',

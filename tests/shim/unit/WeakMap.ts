@@ -1,13 +1,12 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import WeakMap from '../../src/WeakMap';
 import { ShimIterator } from '../../src/iterator';
 
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 interface Key {}
 
-registerSuite({
-	name: 'WeakMap',
-
+registerSuite('WeakMap', {
 	construction: {
 		'no arguments'() {
 			const map = new WeakMap();

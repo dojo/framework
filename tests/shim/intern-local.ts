@@ -1,11 +1,8 @@
 export * from './intern';
 
-export const tunnel = 'SeleniumTunnel';
+export const tunnel = 'selenium';
 export const tunnelOptions = {
-	hostname: 'localhost',
-	port: '4444'
+	drivers: [ 'chrome' ]
 };
 
-export const environments = [
-	{ browserName: 'chrome' }
-];
+export const environments = ['chrome'];

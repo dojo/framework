@@ -1,11 +1,10 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import Set from '../../src/Set';
 import { forOf, ShimIterator } from '../../src/iterator';
 
-registerSuite({
-	name: 'Set',
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
+registerSuite('Set', {
 	construction: {
 		'no arguments'() {
 			const set = new Set();

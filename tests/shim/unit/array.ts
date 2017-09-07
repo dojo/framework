@@ -1,9 +1,10 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import * as array from '../../src/array';
 import has, { add as hasAdd } from '../../src/support/has';
 import { Iterable, ShimIterator } from '../../src/iterator';
 import 'src/Symbol';
+
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
 function mixin(destination: any, source: any): any {
 	for (let key in source) {
@@ -76,9 +77,7 @@ function createNativeAndDojoArrayTests(feature: string, tests: {}) {
 	return allTests;
 }
 
-registerSuite({
-	name: 'array',
-
+registerSuite('array', {
 	'.from()': createNativeAndDojoArrayTests('es6-array', {
 		'from undefined: throws': function () {
 			assert.throws(function () {

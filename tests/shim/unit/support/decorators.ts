@@ -1,12 +1,12 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import {
 	hasClass
 } from '../../../src/support/decorators';
 import { add } from '../../../src/support/has';
 
-registerSuite({
-	name: 'decorators',
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
+registerSuite('decorators', {
 	'hasClass()': {
 		'feature = true'() {
 			class Fill {

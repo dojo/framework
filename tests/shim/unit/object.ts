@@ -1,12 +1,11 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import * as object from '../../src/object';
 import { assign } from '../../src/object';
 import 'src/Symbol';
 
-registerSuite({
-	name: 'object',
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
+registerSuite('object', {
 	'.assign()': {
 		'.assign()'() {
 			const source: {
