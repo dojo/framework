@@ -3,11 +3,10 @@ import * as assert from 'intern/chai!assert';
 
 import * as dojo1xhr from 'dojo/request/xhr';
 
-import xhrRequest from '../../../src/request/providers/xhr';
+import xhrRequest, { XhrResponse } from '../../../src/request/providers/xhr';
 import { Response } from '../../../src/request/interfaces';
 import UrlSearchParams from '../../../src/UrlSearchParams';
 import has from '@dojo/has/has';
-import { XhrResponse } from '../../../src/request/providers/xhr';
 import Promise from '@dojo/shim/Promise';
 
 let echoServerAvailable = false;
@@ -564,6 +563,60 @@ registerSuite({
 					});
 				});
 			}
+		}
+	},
+
+	'Web Workers': {
+		'from blob'(this: any) {
+			const testUrl = location.origin + '/__echo/foo.json';
+			const baseUrl = location.origin;
+			const dfd = this.async();
+
+			const blob = new Blob([ `(function() { 
+self.addEventListener('message', function (event) {
+	testXhr(event.data.baseUrl, event.data.testUrl);
+});
+
+function testXhr(baseUrl, testUrl) {
+	importScripts(baseUrl + '/node_modules/@dojo/loader/loader.js');
+	
+	require.config({
+		baseUrl: baseUrl,
+		packages: [
+			{ name: '@dojo', location: 'node_modules/@dojo' }
+		]
+	});
+
+	require(['_build/src/request/providers/xhr'], function (xhr) {
+		xhr.default(testUrl).then(function (response) {
+			return response.json();
+		}).then(function (json) {
+			self.postMessage({ status: 'success' });
+		}).catch(function (e) {
+			self.postMessage({ status: 'error', message: e.message });
+		});
+	});
+}
+			})()` ], { type: 'application/javascript' });
+			const worker = new Worker(URL.createObjectURL(blob));
+			worker.addEventListener('error', (error) => {
+				dfd.reject(error.message);
+			});
+			worker.addEventListener('message', ({ data: result }) => {
+				const { status } = result;
+
+				if (status === 'success') {
+					dfd.resolve();
+				}
+				else if (status === 'error') {
+					dfd.reject(result.message);
+				}
+			});
+
+			worker.postMessage({
+				baseUrl,
+				testUrl
+			});
 		}
 	}
 });
