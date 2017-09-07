@@ -15,23 +15,23 @@ widget-core is a library to create powerful, composable user interface widgets.
 
  - [Installation](#installation)
  - [Features](#features)
- 	- [Basic Widgets](#basic-widgets)
-		- [Rendering a Widget in the DOM](#rendering-a-widget-in-the-dom)
-		- [Widgets and Properties](#widgets-and-properties)
-		- [Composing Widgets](#composing-widgets)
-		- [Decomposing Widgets](#decomposing-widgets)
-	- [Mixins](#mixins)
-	- [Styling & Theming](#styling--theming)
-	- [Internationalization](#internationalization)
+     - [Basic Widgets](#basic-widgets)
+        - [Rendering a Widget in the DOM](#rendering-a-widget-in-the-dom)
+        - [Widgets and Properties](#widgets-and-properties)
+        - [Composing Widgets](#composing-widgets)
+        - [Decomposing Widgets](#decomposing-widgets)
+    - [Mixins](#mixins)
+    - [Styling & Theming](#styling--theming)
+    - [Internationalization](#internationalization)
 - [Key Principles](#key-principles)
 - [Advanced Concepts](#advanced-concepts)
-	- [Advanced Properties](#advanced-properties)
-	- [Widget Registry](#widget-registry)
-	- [Render Lifecycle Hooks](#render-lifecycle-hooks)
-	- [DOM Wrapper](#domwrapper)
-	- [Meta Configuration](#meta-configuration)
-	- [JSX Support](#jsx-support)
-	- [Web Components](#web-components)
+    - [Advanced Properties](#advanced-properties)
+    - [Widget Registry](#widget-registry)
+    - [Render Lifecycle Hooks](#render-lifecycle-hooks)
+    - [DOM Wrapper](#domwrapper)
+    - [Meta Configuration](#meta-configuration)
+    - [JSX Support](#jsx-support)
+    - [Web Components](#web-components)
 - [API](#api)
 - [How Do I Contribute?](#how-do-i-contribute)
     - [Setup Installation](#setup-installation)
@@ -74,9 +74,9 @@ The following returns the `HNode` example from above from the `render` function:
 
 ```ts
 class HelloDojo extends WidgetBase {
-	protected render(): DNode {
-		return v('div', [ 'Hello, Dojo 2!' ]);
-	}
+    protected render(): DNode {
+        return v('div', [ 'Hello, Dojo 2!' ]);
+    }
 }
 ```
 
@@ -117,15 +117,15 @@ Properties are available on the the widget instance, defined by an interface and
 
 ```ts
 interface MyProperties extends WidgetProperties {
-	name: string;
+    name: string;
 }
 
 class Hello extends WidgetBase<MyProperties> {
-	protected render(): DNode {
-		const { name } = this.properties;
+    protected render(): DNode {
+        const { name } = this.properties;
 
-		return v('div', [ `Hello, ${name}` ]);
-	}
+        return v('div', [ `Hello, ${name}` ]);
+    }
 }
 ```
 
@@ -141,13 +141,13 @@ Consider the previous `Hello` widget that we created:
 
 ```ts
 class App extends WidgetBase {
-	protected render(): DNode {
-		return v('div', [
-			w(Hello, { name: 'Bill' }),
-			w(Hello, { name: 'Bob' }),
-			w(Hello, { name: 'Flower pot men' })
-		]);
-	}
+    protected render(): DNode {
+        return v('div', [
+            w(Hello, { name: 'Bill' }),
+            w(Hello, { name: 'Bob' }),
+            w(Hello, { name: 'Flower pot men' })
+        ]);
+    }
 }
 ```
 
@@ -170,24 +170,24 @@ Consider the following `List` widget, which has a simple property interface of a
 
 ```ts
 interface ListProperties extends WidgetProperties {
-	items: {
-		id: string;
-		content: string;
-		highlighted: boolean;
-	};
+    items: {
+        id: string;
+        content: string;
+        highlighted: boolean;
+    };
 }
 
 class List extends WidgetBase<ListProperties> {
-	protected render() {
-		const { items } = this.properties;
+    protected render() {
+        const { items } = this.properties;
 
-		return v('ul', { classes: { list: true } }, items.map((item) => {
-			const { id, highlighted, content } = item;
-			const classes = highlighted ? { highlighted: true } : { highlighted: false };
+        return v('ul', { classes: { list: true } }, items.map((item) => {
+            const { id, highlighted, content } = item;
+            const classes = highlighted ? { highlighted: true } : { highlighted: false };
 
-			return v('li', { key: id, classes }, [ content ]);
-		});
-	}
+            return v('li', { key: id, classes }, [ content ]);
+        });
+    }
 }
 ```
 The `List` widget works as expected and displays the list in the browser but is difficult to reuse, modify, and/or extend.
@@ -198,12 +198,12 @@ To extend the `List` API with an event that needs to be called when an item is c
 
 ```ts
 interface ListProperties extends WidgetProperties {
-	items: {
-		id: string;
-		content: string;
-		highlighted: boolean;
-	};
-	onItemClick: (id: string) => void;
+    items: {
+        id: string;
+        content: string;
+        highlighted: boolean;
+    };
+    onItemClick: (id: string) => void;
 }
 ```
 
@@ -215,26 +215,26 @@ To resolve this, the list item can be extracted into a separate widget:
 
 ```ts
 interface ListItemProperties extends WidgetProperties {
-	id: string;
-	content: string;
-	highlighted: boolean;
-	onItemClick: (id: string) => void;
+    id: string;
+    content: string;
+    highlighted: boolean;
+    onItemClick: (id: string) => void;
 }
 
 class ListItem extends WidgetBase<ListItemProperties> {
 
-	protected onClick(event: MouseEvent) {
-		const { id } = this.properties;
+    protected onClick(event: MouseEvent) {
+        const { id } = this.properties;
 
-		this.properties.onItemClick(id);
-	}
+        this.properties.onItemClick(id);
+    }
 
-	protected render(): DNode {
-		const { id, content, highlighted } = this.properties;
-		const classes = highlighted ? { highlighted: true } : { highlighted: false };
+    protected render(): DNode {
+        const { id, content, highlighted } = this.properties;
+        const classes = highlighted ? { highlighted: true } : { highlighted: false };
 
-		return v('li', { key: id, classes, onclick: this.onClick }, [ content ]);
-	}
+        return v('li', { key: id, classes, onclick: this.onClick }, [ content ]);
+    }
 }
 ```
 
@@ -242,22 +242,22 @@ Using the `ListItem` we can simplify the `List` slightly and also add the `oncli
 
 ```ts
 interface ListProperties extends WidgetProperties {
-	items: {
-		id: string;
-		content: string;
-		highlighted: boolean;
-	};
-	onItemClick: (id: string) => void;
+    items: {
+        id: string;
+        content: string;
+        highlighted: boolean;
+    };
+    onItemClick: (id: string) => void;
 }
 
 class List extends WidgetBase<ListProperties> {
-	protected render() {
-		const { onItemClick, items } = this.properties;
+    protected render() {
+        const { onItemClick, items } = this.properties;
 
-		return v('ul', { classes: { list: true } }, items.map(({ id, content, highlighted }) => {
-			return w(ListItem, { key:id, content, highlighted, onItemClick });
-		});
-	}
+        return v('ul', { classes: { list: true } }, items.map(({ id, content, highlighted }) => {
+            return w(ListItem, { key:id, content, highlighted, onItemClick });
+        });
+    }
 }
 ```
 
@@ -274,27 +274,27 @@ Example mixin that adds method `setState` and `readonly` `state` property:
 ```ts
 // interface for the extended API
 interface StateMixin {
-	readonly state: Readonly<any>;
-	setState(state: any): void;
+    readonly state: Readonly<any>;
+    setState(state: any): void;
 }
 
 // function that accepts a class that extends `WidgetBase` and returns the extended class with the `StateMixin`
 // behavior
 function StateMixin<T extends new(...args: any[]) => WidgetBase>(Base: T): T & (new(...args: any[]) => StateMixin) {
-	return class extends Base {
-		private _state: any;
+    return class extends Base {
+        private _state: any;
 
-		public setState(state: any): void {
-			// shallow copy of the state
-			this._state = { ...this._state, ...state };
-			// invalidate the widget
-			this.invalidate();
-		}
+        public setState(state: any): void {
+            // shallow copy of the state
+            this._state = { ...this._state, ...state };
+            // invalidate the widget
+            this.invalidate();
+        }
 
-		public get state(): any {
-			return this._state;
-		}
-	};
+        public get state(): any {
+            return this._state;
+        }
+    };
 }
 ```
 
@@ -331,9 +331,9 @@ import { ThemeableMixin, theme } from '@dojo/widget-core/mixins/Themeable';
 
 @theme(css)
 export default class MyWidget extends ThemeableMixin(WidgetBase) {
-	protected render(): DNode {
-		return v('div', { classes: this.classes(css.root).fixed(css.rootFixed) });
-	}
+    protected render(): DNode {
+        return v('div', { classes: this.classes(css.root).fixed(css.rootFixed) });
+    }
 }
 ```
 
@@ -344,7 +344,7 @@ Themes are TypeScript modules that export an object that contains css-modules fi
 ```css
 /* myTheme/styles/myWidget.m.css */
 .root {
-	color: blue;
+    color: blue;
 }
 ```
 
@@ -353,7 +353,7 @@ Themes are TypeScript modules that export an object that contains css-modules fi
 import * as myWidget from './styles/myWidget.m.css';
 
 export default {
-	'myWidget': myWidget
+    'myWidget': myWidget
 }
 ```
 
@@ -369,7 +369,7 @@ import myTheme from './myTheme/theme';
 
 // ...
 render() {
-	return w(TabPanel, { theme: myTheme } });
+    return w(TabPanel, { theme: myTheme } });
 }
 ```
 
@@ -380,9 +380,9 @@ Sometimes you may need to apply positioning or layout styles to a child widget. 
 ```css
 /* app.m.css */
 .tabPanel {
-	position: absolute;
-	left: 50px;
-	top: 50px;
+    position: absolute;
+    left: 50px;
+    top: 50px;
 }
 ```
 
@@ -392,7 +392,7 @@ import * as appCss from './styles/app.m.css';
 
 // ...
 render() {
-	return w(TabPanel, { extraClasses: { 'root': appCss.tabPanel } });
+    return w(TabPanel, { extraClasses: { 'root': appCss.tabPanel } });
 }
 ```
 
@@ -412,24 +412,24 @@ If no locale is set, then the default locale, as set by [`@dojo/i18n`](https://g
 const MyWidgetBase = I18nMixin(WidgetBase);
 
 class I18nWidget extends MyWidgetBase<I18nWidgetProperties> {
-	render: function () {
-		// Load the "greetings" messages for the current locale. If the locale-specific
-		// messages have not been loaded yet, then the default messages are returned,
-		// and the widget will be invalidated once the locale-specific messages have
-		// loaded.
-		const messages = this.localizeBundle(greetingsBundle);
+    render: function () {
+        // Load the "greetings" messages for the current locale. If the locale-specific
+        // messages have not been loaded yet, then the default messages are returned,
+        // and the widget will be invalidated once the locale-specific messages have
+        // loaded.
+        const messages = this.localizeBundle(greetingsBundle);
 
-		return v('div', { title: messages.hello }, [
-			w(Label, {
-				// Passing a message string to a child widget.
-				label: messages.purchaseItems
-			}),
-			w(Button, {
-				// Passing a formatted message string to a child widget.
-				label: messages.format('itemCount', { count: 2 })
-			})
-		]);
-	}
+        return v('div', { title: messages.hello }, [
+            w(Label, {
+                // Passing a message string to a child widget.
+                label: messages.purchaseItems
+            }),
+            w(Button, {
+                // Passing a formatted message string to a child widget.
+                label: messages.format('itemCount', { count: 2 })
+            })
+        ]);
+    }
 }
 ```
 
@@ -473,10 +473,10 @@ class MyWidget extends WidgetBase<MyProperties> { }
 
 //custom diff function; A pure function with no side effects.
 function customDiff(previousProperty: string, newProperty: string): PropertyChangeRecord {
-	return {
-		changed: previousProperty !== newProperty,
-		value: newProperty
-	};
+    return {
+        changed: previousProperty !== newProperty,
+        value: newProperty
+    };
 }
 
 // using a custom diff function
@@ -493,10 +493,10 @@ A reaction function is registered using the `diffProperty` decorator on a widget
 ```ts
 class MyWidget extends WidgetBase<MyProperties> {
 
-	@diffProperty('title', auto)
-	protected onTitleChange(previousProperties: any, newProperties: any): void {
-		this._previousTitle = previousProperties.title;
-	}
+    @diffProperty('title', auto)
+    protected onTitleChange(previousProperties: any, newProperties: any): void {
+        this._previousTitle = previousProperties.title;
+    }
 }
 ```
 
@@ -505,11 +505,11 @@ class MyWidget extends WidgetBase<MyProperties> {
 ```ts
 class MyWidget extends WidgetBase<MyProperties> {
 
-	@diffProperty('title', auto)
-	@diffProperty('subtitle', auto)
-	protected onTitleOrSubtitleChange(previousProperties: any, newProperties: any): void {
-		this._titlesUpdated = true;
-	}
+    @diffProperty('title', auto)
+    @diffProperty('subtitle', auto)
+    protected onTitleOrSubtitleChange(previousProperties: any, newProperties: any): void {
+        this._titlesUpdated = true;
+    }
 }
 ```
 
@@ -518,14 +518,14 @@ For non-decorator environments (Either JavaScript/ES6 or a TypeScript project th
 ```ts
 class MyWidget extends WidgetBase<WidgetProperties> {
 
-	constructor() {
-		super();
-		diffProperty('foo', auto, this.diffFooReaction)(this);
-	}
+    constructor() {
+        super();
+        diffProperty('foo', auto, this.diffFooReaction)(this);
+    }
 
-	diffFooReaction(previousProperty: any, newProperty: any) {
-		// do something to reaction to a diff of foo
-	}
+    diffFooReaction(previousProperty: any, newProperty: any) {
+        // do something to reaction to a diff of foo
+    }
 }
 ```
 
@@ -549,15 +549,15 @@ This is the only time in the widget lifecycle that exposes either of these attri
 
 ```ts
 class MyBaseClass extends WidgetBase<WidgetProperties> {
-	@beforeRender()
-	myBeforeRender(renderFunc: () => DNode, properties: any, children: DNode[]): () => DNode {
-		// decorate/manipulate properties or children.
-		properties.extraAttribute = 'foo';
-		// Return or replace the `render` function
-		return () => {
-			return v('my-replaced-attribute');
-		};
-	}
+    @beforeRender()
+    myBeforeRender(renderFunc: () => DNode, properties: any, children: DNode[]): () => DNode {
+        // decorate/manipulate properties or children.
+        properties.extraAttribute = 'foo';
+        // Return or replace the `render` function
+        return () => {
+            return v('my-replaced-attribute');
+        };
+    }
 }
 ```
 
@@ -565,15 +565,15 @@ And using the `beforeRender` function for non decorator environments:
 
 ```ts
 class MyBaseClass extends WidgetBase<WidgetProperties> {
-	constructor() {
-		super();
-		beforeRender(this.myOtherBeforeRender)(this);
-	}
+    constructor() {
+        super();
+        beforeRender(this.myOtherBeforeRender)(this);
+    }
 
-	myOtherBeforeRender(renderFunc: () => DNode, properties: any, children: DNode[]): () => DNode {
-		// do something with the result
-		return renderFunc;
-	}
+    myOtherBeforeRender(renderFunc: () => DNode, properties: any, children: DNode[]): () => DNode {
+        // do something with the result
+        return renderFunc;
+    }
 }
 ```
 
@@ -583,11 +583,11 @@ The `afterRender` call receives the returned `DNode`s from a widget's `render` c
 
 ```ts
 class MyBaseClass extends WidgetBase<WidgetProperties> {
-	@afterRender()
-	myAfterRender(result: DNode): DNode {
-		// do something with the result
-		return result;
-	}
+    @afterRender()
+    myAfterRender(result: DNode): DNode {
+        // do something with the result
+        return result;
+    }
 }
 ```
 
@@ -595,15 +595,15 @@ And using the `afterRender` function for non decorator environments:
 
 ```ts
 class MyBaseClass extends WidgetBase<WidgetProperties> {
-	constructor() {
-		super();
-		afterRender(this.myOtherAfterRender)(this);
-	}
+    constructor() {
+        super();
+        afterRender(this.myOtherAfterRender)(this);
+    }
 
-	myOtherAfterRender(result: DNode): DNode {
-		// do something with the result
-		return result;
-	}
+    myOtherAfterRender(result: DNode): DNode {
+        // do something with the result
+        return result;
+    }
 }
 ```
 
@@ -682,7 +682,7 @@ If an HTML node is required to calculate the meta information, a sensible defaul
 
 The `Dimensions` meta provides size/position information about a node.
 
-```
+```ts
 const dimensions = this.meta(Dimensions).get('root');
 ```
 
@@ -709,8 +709,43 @@ The following fields are provided:
 
 If the node has not yet been rendered, all values will contain `0`. If you need more information about whether or not the node has been rendered you can use the `has` method:
 
-```
+```ts
 const hasRootBeenRendered = this.meta(Dimensions).has('root');
+```
+
+#### Matches
+
+The `Matches` meta determines if the target of a DOM event matches a particular virtual DOM key.
+
+```ts
+const matches = this.meta(Matches).get('root', evt);
+```
+
+This allows a widget to not have to _know_ anything about the real DOM when dealing with events that may have bubbled
+up from child DOM.  For example to determine if the containing node in the widget was clicked on, versus the child node,
+you would do something like this:
+
+```ts
+class TestWidget extends WidgetBase<WidgetProperties> {
+    private _onclick(evt: MouseEvent) {
+        if (this.meta(Matches).get('root', evt)) {
+            console.log('The root node was clicked on.');
+        }
+    }
+
+    render() {
+        const dimensions = this.meta(Matches).get('root');
+
+        return v('div', {
+            key: 'root'
+            onclick: this._onclick
+        }, [
+            v('div', {
+                innerHTML: 'Hello World'
+            })
+        ]);
+    }
+}
 ```
 
 ##### Implementing Custom Meta
@@ -792,8 +827,8 @@ Include `.tsx` files in the project:
 
 ```js
  "include": [
- 	"./src/**/*.ts",
- 	"./src/**/*.tsx"
+     "./src/**/*.ts",
+     "./src/**/*.tsx"
  ]
 ```
 
@@ -805,20 +840,20 @@ import { tsx } from '@dojo/widget-core/tsx';
 
 ```tsx
 class MyWidgetWithTsx extends WidgetBase<MyProperties> {
-	protected render(): DNode {
-		const { clear, properties: { completed, count, activeCount, activeFilter } } = this;
+    protected render(): DNode {
+        const { clear, properties: { completed, count, activeCount, activeFilter } } = this;
 
-		return (
-			<footer classes={this.classes(css.footer)}>
-				<span classes={this.classes(css.count)}>
-					<strong>{`${activeCount}`}</strong>
-					<span>{`${count}`}</span>
-				</span>
-				<TodoFilter activeFilter={activeFilter} />
-				{ completed ? ( <button onclick={clear} /> ) : ( null ) }
-			</footer>
-		);
-	}
+        return (
+            <footer classes={this.classes(css.footer)}>
+                <span classes={this.classes(css.count)}>
+                    <strong>{`${activeCount}`}</strong>
+                    <span>{`${count}`}</span>
+                </span>
+                <TodoFilter activeFilter={activeFilter} />
+                { completed ? ( <button onclick={clear} /> ) : ( null ) }
+            </footer>
+        );
+    }
 }
 ```
 
@@ -836,20 +871,20 @@ import { CustomElementDescriptor } from '@dojo/widget-core/customElements';
 import MyWidget from './path/to/MyWidget';
 
 export default function createCustomElement(): CustomElementDescriptor {
-	return {
-		tagName: 'my-widget',
-		widgetConstructor: MyWidget,
-	   	attributes: [
-		   	{
-			   	attributeName: 'label'
-		   	}
-	   	],
-	   	events: [
-		   	{
-			   	propertyName: 'onChange',
-			   	name: 'change'
-		   	}
-	   	]
+    return {
+        tagName: 'my-widget',
+        widgetConstructor: MyWidget,
+           attributes: [
+               {
+                   attributeName: 'label'
+               }
+           ],
+           events: [
+               {
+                   propertyName: 'onChange',
+                   name: 'change'
+               }
+           ]
    };
 };
 ```
@@ -874,14 +909,14 @@ Using your widget would be a simple matter of importing the HTML import:
 ```html
 <!DOCTYPE html>
 <html>
-	<head>
-		<!-- this will include all JS and CSS used by your widget -->
-		<link rel="import" href="/path/to/my-widget.html" />
-	</head>
-	<body>
-		<!-- this will actually create your widget -->
-		<my-widget></my-widget>
-	</body>
+    <head>
+        <!-- this will include all JS and CSS used by your widget -->
+        <link rel="import" href="/path/to/my-widget.html" />
+    </head>
+    <body>
+        <!-- this will actually create your widget -->
+        <my-widget></my-widget>
+    </body>
 </html>
 ```
 
