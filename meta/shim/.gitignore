@@ -15,3 +15,5 @@ coverage-unmapped.json
 npm-debug.log
 /_apidoc
 deploy_key
+coverage/
+coverage-final.lcov
