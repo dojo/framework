@@ -10,7 +10,7 @@ import {
 } from '../../../src/mixins/Themeable';
 import { BaseInjector, Context, Injector } from './../../../src/Injector';
 import { WidgetBase } from '../../../src/WidgetBase';
-import { WidgetRegistry } from '../../../src/WidgetRegistry';
+import { Registry } from '../../../src/Registry';
 import { v, w } from '../../../src/d';
 import { stub, SinonStub } from 'sinon';
 
@@ -28,7 +28,7 @@ import createTestWidget from './../../support/createTestWidget';
 (<any> baseThemeClasses2)[' _key'] = 'testPath2';
 (<any> baseThemeClasses3)[' _key'] = 'testPath3';
 
-let testRegistry: WidgetRegistry;
+let testRegistry: Registry;
 
 @theme(baseThemeClasses1)
 class TestWidget extends ThemeableMixin(WidgetBase)<ThemeableProperties<typeof baseThemeClasses1>> { }
@@ -57,7 +57,7 @@ let consoleStub: SinonStub;
 registerSuite({
 	name: 'themeManager',
 	beforeEach() {
-		testRegistry = new WidgetRegistry();
+		testRegistry = new Registry();
 		consoleStub = stub(console, 'warn');
 	},
 	afterEach() {

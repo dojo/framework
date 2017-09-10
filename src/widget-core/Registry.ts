@@ -7,43 +7,43 @@ import { Constructor, RegistryLabel, WidgetBaseConstructor, WidgetBaseInterface 
 
 export type WidgetBaseConstructorFunction = () => Promise<WidgetBaseConstructor>;
 
-export type WidgetRegistryItem = WidgetBaseConstructor | Promise<WidgetBaseConstructor> | WidgetBaseConstructorFunction;
+export type RegistryItem = WidgetBaseConstructor | Promise<WidgetBaseConstructor> | WidgetBaseConstructorFunction;
 
 /**
  * Widget base symbol type
  */
 export const WIDGET_BASE_TYPE = Symbol('Widget Base');
 
-export interface WidgetRegistryEventObject extends EventObject {
+export interface RegistryEventObject extends EventObject {
 	action: string;
 }
 
-export interface WidgetRegistryListener {
-	(event: WidgetRegistryEventObject): void;
+export interface RegistryListener {
+	(event: RegistryEventObject): void;
 }
 
-export interface WidgetRegistryEvents extends BaseEventedEvents {
-	(type: RegistryLabel, listener: WidgetRegistryListener | WidgetRegistryListener[]): Handle;
+export interface RegistryEvents extends BaseEventedEvents {
+	(type: RegistryLabel, listener: RegistryListener | RegistryListener[]): Handle;
 }
 
 /**
  * Widget Registry Interface
  */
-export interface WidgetRegistry {
+export interface Registry {
 
 	/**
-	 * define a WidgetRegistryItem for a specified label
+	 * define a RegistryItem for a specified label
 	 *
 	 * @param widgetLabel The label of the widget to register
 	 * @param registryItem The registry item to define
 	 */
-	define(widgetLabel: RegistryLabel, registryItem: WidgetRegistryItem): void;
+	define(widgetLabel: RegistryLabel, registryItem: RegistryItem): void;
 
 	/**
-	 * Return a WidgetRegistryItem for the given label, null if an entry doesn't exist
+	 * Return a RegistryItem for the given label, null if an entry doesn't exist
 	 *
 	 * @param widgetLabel The label of the widget to return
-	 * @returns The WidgetRegistryItem for the widgetLabel, `null` if no entry exists
+	 * @returns The RegistryItem for the widgetLabel, `null` if no entry exists
 	 */
 	get<T extends WidgetBaseInterface = WidgetBaseInterface>(widgetLabel: RegistryLabel): Constructor<T> | null;
 
@@ -67,16 +67,16 @@ export function isWidgetBaseConstructor<T extends WidgetBaseInterface>(item: any
 }
 
 /**
- * The WidgetRegistry implementation
+ * The Registry implementation
  */
-export class WidgetRegistry extends Evented implements WidgetRegistry {
+export class Registry extends Evented implements Registry {
 
-	public on: WidgetRegistryEvents;
+	public on: RegistryEvents;
 
 	/**
-	 * internal map of labels and WidgetRegistryItem
+	 * internal map of labels and RegistryItem
 	 */
-	private _registry: Map<RegistryLabel, WidgetRegistryItem> = new Map<RegistryLabel, WidgetRegistryItem>();
+	private _registry: Map<RegistryLabel, RegistryItem> = new Map<RegistryLabel, RegistryItem>();
 
 	/**
 	 * Emit loaded event for registry label
@@ -92,7 +92,7 @@ export class WidgetRegistry extends Evented implements WidgetRegistry {
 		return this._registry.has(widgetLabel);
 	}
 
-	public define(widgetLabel: RegistryLabel, item: WidgetRegistryItem): void {
+	public define(widgetLabel: RegistryLabel, item: RegistryItem): void {
 		if (this._registry.has(widgetLabel)) {
 			throw new Error(`widget has already been registered for '${widgetLabel.toString()}'`);
 		}
@@ -143,4 +143,4 @@ export class WidgetRegistry extends Evented implements WidgetRegistry {
 	}
 }
 
-export default WidgetRegistry;
+export default Registry;

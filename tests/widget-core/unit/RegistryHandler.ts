@@ -2,18 +2,18 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import Promise from '@dojo/shim/Promise';
 import RegistryHandler from '../../src/RegistryHandler';
-import WidgetRegistry from '../../src/WidgetRegistry';
+import Registry from '../../src/Registry';
 import { WidgetBase } from '../../src/WidgetBase';
 import { WidgetBaseConstructor } from './../../src/interfaces';
 
 const foo = Symbol();
 const bar = Symbol();
 
-const registry = new WidgetRegistry();
+const registry = new Registry();
 registry.define('foo', WidgetBase);
 registry.define(foo, WidgetBase);
 
-const registryB = new WidgetRegistry();
+const registryB = new Registry();
 registryB.define('bar', WidgetBase);
 registryB.define(bar, WidgetBase);
 

@@ -1,5 +1,5 @@
 import { PropertyChangeRecord } from './interfaces';
-import { WIDGET_BASE_TYPE } from './WidgetRegistry';
+import { WIDGET_BASE_TYPE } from './Registry';
 
 function isObjectOrArray(value: any): boolean {
 	return Object.prototype.toString.call(value) === '[object Object]' || Array.isArray(value);

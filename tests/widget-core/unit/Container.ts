@@ -3,7 +3,7 @@ import * as assert from 'intern/chai!assert';
 import { v } from '../../src/d';
 import { WidgetBase } from '../../src/WidgetBase';
 import { Container } from './../../src/Container';
-import { WidgetRegistry } from './../../src/WidgetRegistry';
+import { Registry } from './../../src/Registry';
 
 import createTestWidget from './../support/createTestWidget';
 
@@ -39,7 +39,7 @@ class StubInjector extends WidgetBase<any> {
 	}
 }
 
-const registry = new WidgetRegistry();
+const registry = new Registry();
 registry.define('test-state-1', StubInjector);
 registry.define('test-widget', TestWidget);
 

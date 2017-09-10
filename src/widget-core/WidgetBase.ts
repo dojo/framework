@@ -24,7 +24,7 @@ import {
 	WidgetMetaRequiredNodeCallback
 } from './interfaces';
 import RegistryHandler from './RegistryHandler';
-import { isWidgetBaseConstructor, WIDGET_BASE_TYPE, WidgetRegistry } from './WidgetRegistry';
+import { isWidgetBaseConstructor, WIDGET_BASE_TYPE, Registry } from './Registry';
 
 /**
  * Widget cache wrapper for instance management
@@ -185,7 +185,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 	private _boundInvalidate: () => void;
 
-	private _defaultRegistry = new WidgetRegistry();
+	private _defaultRegistry = new Registry();
 
 	/**
 	 * @constructor
@@ -313,7 +313,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		return this._properties;
 	}
 
-	protected setRegistry(previousRegistry: WidgetRegistry | undefined, newRegistry: WidgetRegistry | undefined): void {
+	protected setRegistry(previousRegistry: Registry | undefined, newRegistry: Registry | undefined): void {
 		const { _registries, _defaultRegistry } = this;
 
 		if (_registries.defaultRegistry === _defaultRegistry && newRegistry) {
@@ -331,7 +331,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		}
 	}
 
-	protected setDefaultRegistry(previousRegistry: WidgetRegistry | undefined, newRegistry: WidgetRegistry | undefined): void {
+	protected setDefaultRegistry(previousRegistry: Registry | undefined, newRegistry: Registry | undefined): void {
 		const { _registries, _defaultRegistry } = this;
 		if (newRegistry === undefined && previousRegistry) {
 			_registries.remove(previousRegistry);

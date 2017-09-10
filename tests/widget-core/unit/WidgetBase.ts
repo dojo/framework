@@ -12,7 +12,7 @@ import {
 	beforeRender
 } from '../../src/WidgetBase';
 import { ignore, always, auto } from '../../src/diff';
-import WidgetRegistry, { WIDGET_BASE_TYPE } from './../../src/WidgetRegistry';
+import Registry, { WIDGET_BASE_TYPE } from './../../src/Registry';
 import { ThemeableMixin } from './../../src/mixins/Themeable';
 import createTestWidget from './../support/createTestWidget';
 
@@ -26,7 +26,7 @@ interface TestProperties {
 
 let consoleStub: SinonStub;
 
-const registry = new WidgetRegistry();
+const registry = new Registry();
 
 const ThemableWidgetBase = ThemeableMixin(WidgetBase);
 
@@ -797,7 +797,7 @@ registerSuite({
 			assert.lengthOf(result.children, 1);
 		},
 		'locally defined widget in registry eventually replaces global one'() {
-			const localRegistry = new WidgetRegistry();
+			const localRegistry = new Registry();
 
 			class TestWidget extends WidgetBase<any> {
 				constructor() {
@@ -927,7 +927,7 @@ registerSuite({
 				}
 			}
 
-			const registry = new WidgetRegistry();
+			const registry = new Registry();
 			registry.define('my-header', TestHeaderWidget);
 
 			class TestWidget extends WidgetBase<any> {
@@ -1288,7 +1288,7 @@ registerSuite({
 					return w(ChildRegistryWidget, {});
 				}
 			}
-			const defaultRegistry = new WidgetRegistry();
+			const defaultRegistry = new Registry();
 			const childPropertiesSpy = spy(ChildRegistryWidget.prototype, '__setCoreProperties__');
 			const widget = new RegistryWidget();
 			(<any> widget).__setCoreProperties__({ bind: widget, defaultRegistry });
@@ -1311,7 +1311,7 @@ registerSuite({
 					return w(ChildRegistryWidget, {});
 				}
 			}
-			const registry = new WidgetRegistry();
+			const registry = new Registry();
 			const childPropertiesSpy = spy(ChildRegistryWidget.prototype, '__setCoreProperties__');
 			const widget = new RegistryWidget();
 			widget.__setCoreProperties__({ registry } as any);
@@ -1326,8 +1326,8 @@ registerSuite({
 					return super.getRegistries();
 				}
 			}
-			const registryOne = new WidgetRegistry();
-			const registryTwo = new WidgetRegistry();
+			const registryOne = new Registry();
+			const registryTwo = new Registry();
 			const widget = new RegistryWidget();
 			widget.__setCoreProperties__({ bind: widget, registry: registryOne });
 			widget.__render__();
@@ -1342,8 +1342,8 @@ registerSuite({
 					return super.getRegistries();
 				}
 			}
-			const registryOne = new WidgetRegistry();
-			const registryTwo = new WidgetRegistry();
+			const registryOne = new Registry();
+			const registryTwo = new Registry();
 			const widget = new RegistryWidget();
 			widget.__setCoreProperties__({ bind: widget, defaultRegistry: registryOne });
 			widget.__render__();
@@ -1361,7 +1361,7 @@ registerSuite({
 					return (<any> this)._defaultRegistry;
 				}
 			}
-			const defaultRegistry = new WidgetRegistry();
+			const defaultRegistry = new Registry();
 			const widget = new RegistryWidget();
 			widget.__setCoreProperties__({ bind: widget, defaultRegistry });
 			widget.__render__();
@@ -1379,8 +1379,8 @@ registerSuite({
 					return (<any> this)._defaultRegistry;
 				}
 			}
-			const defaultRegistry = new WidgetRegistry();
-			const registry = new WidgetRegistry();
+			const defaultRegistry = new Registry();
+			const registry = new Registry();
 			const widget = new RegistryWidget();
 			widget.__setCoreProperties__({ bind: widget, defaultRegistry, registry });
 			widget.__render__();
@@ -1398,7 +1398,7 @@ registerSuite({
 					return (<any> this)._defaultRegistry;
 				}
 			}
-			const registry = new WidgetRegistry();
+			const registry = new Registry();
 			const widget = new RegistryWidget();
 			widget.__render__();
 			assert.strictEqual(widget.getRegistries().defaultRegistry, widget.getDefaultRegistry());
@@ -1415,7 +1415,7 @@ registerSuite({
 					return (<any> this)._defaultRegistry;
 				}
 			}
-			const defaultRegistry = new WidgetRegistry();
+			const defaultRegistry = new Registry();
 			const widget = new RegistryWidget();
 			widget.__setCoreProperties__({ bind: widget, defaultRegistry });
 			widget.__render__();
@@ -1444,7 +1444,7 @@ registerSuite({
 					return w('test', {});
 				}
 			}
-			const registry = new WidgetRegistry();
+			const registry = new Registry();
 			registry.define('test', TestWidget);
 			const widget = new RegistryWidget();
 			widget.__setCoreProperties__({ bind: widget, registry });

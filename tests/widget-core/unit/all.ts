@@ -1,7 +1,7 @@
 import 'dojo/has!host-node?../support/loadJsdom';
 import './Container';
 import './WidgetBase';
-import './WidgetRegistry';
+import './Registry';
 import './lifecycle';
 import './customElements';
 import './d';

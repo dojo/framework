@@ -3,7 +3,7 @@ import { find } from '@dojo/shim/array';
 import Map from '@dojo/shim/Map';
 import { ClassesFunction, Constructor, DNode, WidgetProperties } from './../interfaces';
 import { w } from './../d';
-import { WidgetRegistry } from './../WidgetRegistry';
+import { Registry } from './../Registry';
 import { BaseInjector, Context, Injector } from './../Injector';
 import { beforeRender, diffProperty, WidgetBase, handleDecorator } from './../WidgetBase';
 import { shallow } from './../diff';
@@ -151,7 +151,7 @@ function createThemeClassesLookup(classes: ClassNames[]): ClassNames {
  *
  * @returns the theme context instance used to set the theme
  */
-export function registerThemeInjector(theme: any, themeRegistry: WidgetRegistry): Context {
+export function registerThemeInjector(theme: any, themeRegistry: Registry): Context {
 	const themeInjectorContext = new Context(theme);
 	const ThemeInjectorBase = Injector(BaseInjector, themeInjectorContext);
 	themeRegistry.define(INJECTED_THEME_KEY, ThemeInjectorBase);
