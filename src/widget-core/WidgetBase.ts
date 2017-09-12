@@ -631,7 +631,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		return property;
 	}
 
-	protected getRegistries(): RegistryHandler {
+	public get registries(): RegistryHandler {
 		return this._registries;
 	}
 
@@ -639,7 +639,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		const beforeProperties: BeforeProperties[] = this.getDecorator('beforeProperties');
 		if (beforeProperties.length > 0) {
 			return beforeProperties.reduce((properties, beforePropertiesFunction) => {
-				return { ...properties, ...beforePropertiesFunction(properties) };
+				return { ...properties, ...beforePropertiesFunction.call(this, properties) };
 			}, { ...properties });
 		}
 		return properties;
@@ -706,7 +706,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			let child: WidgetBaseInterface<WidgetProperties>;
 
 			if (!isWidgetBaseConstructor(widgetConstructor)) {
-				const item = this.getRegistries().get(widgetConstructor);
+				const item = this._registries.get(widgetConstructor);
 				if (item === null) {
 					return null;
 				}

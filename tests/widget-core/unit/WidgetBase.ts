@@ -802,8 +802,8 @@ registerSuite({
 			class TestWidget extends WidgetBase<any> {
 				constructor() {
 					super();
-					this.getRegistries().add(registry);
-					this.getRegistries().add(localRegistry);
+					this.registries.add(registry);
+					this.registries.add(localRegistry);
 				}
 				render() {
 					return v('div', [
@@ -933,7 +933,7 @@ registerSuite({
 			class TestWidget extends WidgetBase<any> {
 				constructor() {
 					super();
-					this.getRegistries().add(registry);
+					this.registries.add(registry);
 				}
 
 				render() {
@@ -1257,9 +1257,6 @@ registerSuite({
 			class ChildRegistryWidget extends ThemableWidgetBase { }
 
 			class RegistryWidget extends ThemableWidgetBase {
-				getRegistries() {
-					return super.getRegistries();
-				}
 				getDefaultRegistry() {
 					return (<any> this)._defaultRegistry;
 				}
@@ -1278,9 +1275,6 @@ registerSuite({
 			class ChildRegistryWidget extends ThemableWidgetBase { }
 
 			class RegistryWidget extends ThemableWidgetBase {
-				getRegistries() {
-					return super.getRegistries();
-				}
 				getDefaultRegistry() {
 					return (<any> this)._defaultRegistry;
 				}
@@ -1301,9 +1295,6 @@ registerSuite({
 			class ChildRegistryWidget extends ThemableWidgetBase { }
 
 			class RegistryWidget extends ThemableWidgetBase {
-				getRegistries() {
-					return super.getRegistries();
-				}
 				getDefaultRegistry() {
 					return (<any> this)._defaultRegistry;
 				}
@@ -1321,42 +1312,29 @@ registerSuite({
 			assert.strictEqual(childWidgetProperties.defaultRegistry, registry);
 		},
 		'Passing a different registry will replace the previous registry'() {
-			class RegistryWidget extends ThemableWidgetBase {
-				getRegistries() {
-					return super.getRegistries();
-				}
-			}
 			const registryOne = new Registry();
 			const registryTwo = new Registry();
-			const widget = new RegistryWidget();
+			const widget = new ThemableWidgetBase();
 			widget.__setCoreProperties__({ bind: widget, registry: registryOne });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, registryOne);
+			assert.strictEqual(widget.registries.defaultRegistry, registryOne);
 			widget.__setCoreProperties__({ bind: widget, registry: registryTwo });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, registryTwo);
+			assert.strictEqual(widget.registries.defaultRegistry, registryTwo);
 		},
 		'Passing a different defaultRegistry will replace the previous defaultRegistry'() {
-			class RegistryWidget extends ThemableWidgetBase {
-				getRegistries() {
-					return super.getRegistries();
-				}
-			}
 			const registryOne = new Registry();
 			const registryTwo = new Registry();
-			const widget = new RegistryWidget();
+			const widget = new ThemableWidgetBase();
 			widget.__setCoreProperties__({ bind: widget, defaultRegistry: registryOne });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, registryOne);
+			assert.strictEqual(widget.registries.defaultRegistry, registryOne);
 			widget.__setCoreProperties__({ bind: widget, defaultRegistry: registryTwo });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, registryTwo);
+			assert.strictEqual(widget.registries.defaultRegistry, registryTwo);
 		},
 		'Widgets default registry is used if the defaultRegistry is not passed on a subsequent render'() {
 			class RegistryWidget extends ThemableWidgetBase {
-				getRegistries() {
-					return super.getRegistries();
-				}
 				getDefaultRegistry() {
 					return (<any> this)._defaultRegistry;
 				}
@@ -1365,16 +1343,13 @@ registerSuite({
 			const widget = new RegistryWidget();
 			widget.__setCoreProperties__({ bind: widget, defaultRegistry });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, defaultRegistry);
+			assert.strictEqual(widget.registries.defaultRegistry, defaultRegistry);
 			widget.__setCoreProperties__({ bind: widget });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, widget.getDefaultRegistry());
+			assert.strictEqual(widget.registries.defaultRegistry, widget.getDefaultRegistry());
 		},
 		'Widgets registry property is promoted to defaultRegistry if defaultRegistry is received a subsequent render'() {
 			class RegistryWidget extends ThemableWidgetBase {
-				getRegistries() {
-					return super.getRegistries();
-				}
 				getDefaultRegistry() {
 					return (<any> this)._defaultRegistry;
 				}
@@ -1384,16 +1359,13 @@ registerSuite({
 			const widget = new RegistryWidget();
 			widget.__setCoreProperties__({ bind: widget, defaultRegistry, registry });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, defaultRegistry);
+			assert.strictEqual(widget.registries.defaultRegistry, defaultRegistry);
 			widget.__setCoreProperties__({ bind: widget, registry });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, registry);
+			assert.strictEqual(widget.registries.defaultRegistry, registry);
 		},
 		'Registry replaces widgets defaultRegistry when passed'() {
 			class RegistryWidget extends ThemableWidgetBase {
-				getRegistries() {
-					return super.getRegistries();
-				}
 				getDefaultRegistry() {
 					return (<any> this)._defaultRegistry;
 				}
@@ -1401,16 +1373,13 @@ registerSuite({
 			const registry = new Registry();
 			const widget = new RegistryWidget();
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, widget.getDefaultRegistry());
+			assert.strictEqual(widget.registries.defaultRegistry, widget.getDefaultRegistry());
 			widget.__setCoreProperties__({ bind: widget, registry });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, registry);
+			assert.strictEqual(widget.registries.defaultRegistry, registry);
 		},
 		'Widgets defaultRegistry is used when neither registry or defaultRegistry is passed on subsequent renders'() {
 			class RegistryWidget extends ThemableWidgetBase {
-				getRegistries() {
-					return super.getRegistries();
-				}
 				getDefaultRegistry() {
 					return (<any> this)._defaultRegistry;
 				}
@@ -1419,13 +1388,13 @@ registerSuite({
 			const widget = new RegistryWidget();
 			widget.__setCoreProperties__({ bind: widget, defaultRegistry });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, defaultRegistry);
+			assert.strictEqual(widget.registries.defaultRegistry, defaultRegistry);
 			widget.__setCoreProperties__({ bind: widget });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, widget.getDefaultRegistry());
+			assert.strictEqual(widget.registries.defaultRegistry, widget.getDefaultRegistry());
 			widget.__setCoreProperties__({ bind: widget, defaultRegistry: null });
 			widget.__render__();
-			assert.strictEqual(widget.getRegistries().defaultRegistry, widget.getDefaultRegistry());
+			assert.strictEqual(widget.registries.defaultRegistry, widget.getDefaultRegistry());
 		},
 		'Removes registry when not passed on subsequent renders'() {
 			class TestWidget extends WidgetBase {
@@ -1434,9 +1403,6 @@ registerSuite({
 				}
 			}
 			class RegistryWidget extends ThemableWidgetBase {
-				getRegistries() {
-					return super.getRegistries();
-				}
 				getDefaultRegistry() {
 					return (<any> this)._defaultRegistry;
 				}

@@ -1,40 +1,26 @@
 import { WidgetBase } from './WidgetBase';
-import {
-	Constructor,
-	DNode,
-	RegistryLabel,
-	WidgetBaseInterface,
-	WidgetProperties
-} from './interfaces';
+import { inject, GetProperties } from './decorators/inject';
+import { Constructor, DNode, RegistryLabel } from './interfaces';
 import { w } from './d';
-import { BaseInjector, defaultMappers, Mappers } from './Injector';
 
-export type Container<T extends WidgetBaseInterface> = Constructor<WidgetBase<Partial<T['properties']> & WidgetProperties>>;
+export type Container<T extends WidgetBase> = Constructor<WidgetBase<Partial<T['properties']>>>;
 
-export function Container<W extends WidgetBaseInterface>(
+export function Container<W extends WidgetBase> (
 	component: Constructor<W> | RegistryLabel,
 	name: RegistryLabel,
-	mappers: Partial<Mappers> = defaultMappers
+	{ getProperties }: { getProperties: GetProperties }
 ): Container<W> {
-	const {
-		getProperties = defaultMappers.getProperties,
-		getChildren = defaultMappers.getChildren
-	} = mappers;
-
-	return class extends WidgetBase<any> {
-		protected render(): DNode {
-			const { properties, children } = this;
-
-			return w<BaseInjector<any>>(name, {
-				scope: this,
-				render: () => w(component, properties, children),
-				getProperties,
-				properties,
-				getChildren,
-				children
-			});
+	@inject({ name, getProperties })
+	class WidgetContainer extends WidgetBase<Partial<W['properties']>> {
+		public __setProperties__(properties: Partial<W['properties']>): void {
+			super.__setProperties__(properties as any);
+			this.invalidate();
 		}
-	};
+		protected render(): DNode {
+			return w(component, this.properties, this.children);
+		}
+	}
+	return WidgetContainer;
 }
 
 export default Container;

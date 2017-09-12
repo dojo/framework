@@ -1,6 +1,6 @@
 import { WidgetBase } from './../../src/WidgetBase';
 import { w } from './../../src/d';
-import { Constructor, WidgetBaseInterface } from './../../src/interfaces';
+import { Constructor, VirtualDomNode, WidgetBaseInterface } from './../../src/interfaces';
 
 interface TestWidget<W extends WidgetBase> extends WidgetBaseInterface {
 	getWidgetUnderTest(): W;
@@ -8,6 +8,7 @@ interface TestWidget<W extends WidgetBase> extends WidgetBaseInterface {
 	setProperties(properties: W['properties']): void;
 	setChildren(children: W['children']): void;
 	invalidate(): void;
+	renderResult: VirtualDomNode | VirtualDomNode[];
 }
 
 function createTestWidget<W extends WidgetBase>(
@@ -18,6 +19,7 @@ function createTestWidget<W extends WidgetBase>(
 	const testWidget = new class extends WidgetBase implements TestWidget<W> {
 		private _testProperties: W['properties'] = properties;
 		private _testChildren: W['children'] = children || [];
+		private _renderResult: VirtualDomNode | VirtualDomNode[];
 
 		getAttribute(key: string): any {
 			return (<any> this)[key];
@@ -44,8 +46,19 @@ function createTestWidget<W extends WidgetBase>(
 		render() {
 			return w(component, this._testProperties, this._testChildren);
 		}
-	}();
 
+		get renderResult(): VirtualDomNode | VirtualDomNode[] {
+			return this._renderResult;
+		}
+
+		__render__() {
+			const render = super.__render__();
+			this._renderResult = render;
+			return render;
+
+		}
+	}();
+	testWidget.__render__();
 	return testWidget;
 }
 

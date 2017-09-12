@@ -8,7 +8,7 @@ import {
 	INJECTED_THEME_KEY,
 	registerThemeInjector
 } from '../../../src/mixins/Themeable';
-import { BaseInjector, Context, Injector } from './../../../src/Injector';
+import { Injector } from './../../../src/Injector';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { Registry } from '../../../src/Registry';
 import { v, w } from '../../../src/d';
@@ -379,9 +379,8 @@ registerSuite({
 	},
 	'injecting a theme': {
 		'theme can be injected by defining a ThemeInjector with registry'() {
-			const themeInjectorContext = new Context(testTheme1);
-			const InjectorBase = Injector(BaseInjector, themeInjectorContext);
-			testRegistry.define(INJECTED_THEME_KEY, InjectorBase);
+			const injector = new Injector(testTheme1);
+			testRegistry.defineInjector(INJECTED_THEME_KEY, injector);
 			class InjectedTheme extends TestWidget {
 				render() {
 					return v('div', { classes: this.classes(baseThemeClasses1.class1) });
@@ -392,17 +391,15 @@ registerSuite({
 			assert.deepEqual(vNode.properties.classes, { theme1Class1: true });
 		},
 		'theme will not be injected if a theme has been passed via a property'() {
-			const themeInjectorContext = new Context(testTheme1);
-			const InjectorBase = Injector(BaseInjector, themeInjectorContext);
-			testRegistry.define(INJECTED_THEME_KEY, InjectorBase);
+			const injector = new Injector(testTheme1);
+			testRegistry.defineInjector(INJECTED_THEME_KEY, injector);
 			class InjectedTheme extends TestWidget {
 				render() {
 					return v('div', { classes: this.classes(baseThemeClasses1.class1) });
 				}
 			}
-			const themeableInstance = new InjectedTheme();
-			themeableInstance.__setProperties__({ theme: testTheme2, registry: testRegistry });
-			const vNode: any = themeableInstance.__render__();
+			const themeableInstance = createTestWidget(InjectedTheme, { theme: testTheme2, registry: testRegistry });
+			const vNode: any = themeableInstance.renderResult;
 			assert.deepEqual(vNode.properties.classes, { theme2Class1: true });
 		},
 		'does not attempt to inject if the ThemeInjector has not been defined in the registry'() {

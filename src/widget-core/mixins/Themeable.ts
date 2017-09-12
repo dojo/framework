@@ -1,11 +1,11 @@
 import { assign } from '@dojo/core/lang';
 import { find } from '@dojo/shim/array';
 import Map from '@dojo/shim/Map';
-import { ClassesFunction, Constructor, DNode, WidgetProperties } from './../interfaces';
-import { w } from './../d';
+import { ClassesFunction, Constructor, WidgetProperties } from './../interfaces';
 import { Registry } from './../Registry';
-import { BaseInjector, Context, Injector } from './../Injector';
-import { beforeRender, diffProperty, WidgetBase, handleDecorator } from './../WidgetBase';
+import { Injector } from './../Injector';
+import { inject } from './../decorators/inject';
+import { diffProperty, WidgetBase, handleDecorator } from './../WidgetBase';
 import { shallow } from './../diff';
 
 /**
@@ -143,25 +143,32 @@ function createThemeClassesLookup(classes: ClassNames[]): ClassNames {
 
 /**
  * Convenience function that is given a theme and an optional registry, the theme
- * injector is defined against the registry, returning the theme context.
+ * injector is defined against the registry, returning the theme.
  *
  * @param theme the theme to set
  * @param themeRegistry registry to define the theme injector against. Defaults
  * to the global registry
  *
- * @returns the theme context instance used to set the theme
+ * @returns the theme injector used to set the theme
  */
-export function registerThemeInjector(theme: any, themeRegistry: Registry): Context {
-	const themeInjectorContext = new Context(theme);
-	const ThemeInjectorBase = Injector(BaseInjector, themeInjectorContext);
-	themeRegistry.define(INJECTED_THEME_KEY, ThemeInjectorBase);
-	return themeInjectorContext;
+export function registerThemeInjector(theme: any, themeRegistry: Registry): Injector {
+	const themeInjector = new Injector(theme);
+	themeRegistry.defineInjector(INJECTED_THEME_KEY, themeInjector);
+	return themeInjector;
 }
 
 /**
  * Function that returns a class decorated with with Themeable functionality
  */
 export function ThemeableMixin<E, T extends Constructor<WidgetBase<ThemeableProperties<E>>>>(Base: T): Constructor<ThemeableMixin<E>> & T {
+	@inject({
+		name: INJECTED_THEME_KEY,
+		getProperties: (theme: Theme, properties: ThemeableProperties): ThemeableProperties  => {
+		if (!properties.theme) {
+			return { theme };
+		}
+		return {};
+	}})
 	class Themeable extends Base {
 
 		public properties: ThemeableProperties<E>;
@@ -230,28 +237,6 @@ export function ThemeableMixin<E, T extends Constructor<WidgetBase<ThemeableProp
 			};
 
 			return assign(classesGetter.bind(classesFunctionChain), classesFunctionChain);
-		}
-
-		@beforeRender()
-		protected injectTheme(renderFunc: () => DNode, properties: ThemeableProperties<E>, children: DNode[]): () => DNode {
-			return () => {
-				const hasInjectedTheme = this.getRegistries().has(INJECTED_THEME_KEY);
-				if (hasInjectedTheme) {
-					return w<BaseInjector>(INJECTED_THEME_KEY, {
-						scope: this,
-						render: renderFunc,
-						getProperties: (inject: Context, properties: ThemeableProperties<any>): ThemeableProperties<any>  => {
-							if (!properties.theme && this._theme !== properties.injectedTheme) {
-								this._recalculateClasses = true;
-							}
-							return { injectedTheme: inject.get() };
-						},
-						properties,
-						children
-					});
-				}
-				return renderFunc();
-			};
 		}
 
 		/**

@@ -1,6 +1,7 @@
 import { Evented } from '@dojo/core/Evented';
 import { Constructor, RegistryLabel, WidgetBaseInterface } from './interfaces';
 import { Registry, RegistryEventObject } from './Registry';
+import { Injector } from './Injector';
 
 export default class RegistryHandler extends Evented {
 	private _registries: { handle?: any, registry: Registry }[] = [];
@@ -46,6 +47,14 @@ export default class RegistryHandler extends Evented {
 		return this._registries.some((registryWrapper) => {
 			return registryWrapper.registry.has(widgetLabel);
 		});
+	}
+
+	public getInjector<T extends Injector>(label: RegistryLabel): T | null {
+		for (let i = 0; i < this._registries.length; i++) {
+			const registryWrapper = this._registries[i];
+			return registryWrapper.registry.getInjector<T>(label);
+		}
+		return null;
 	}
 
 	public get<T extends WidgetBaseInterface = WidgetBaseInterface>(widgetLabel: RegistryLabel): Constructor<T> | null {
