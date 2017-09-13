@@ -485,7 +485,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			registry
 		} = properties;
 		const {
-			defaultRegistry = this._registries.defaultRegistry
+			defaultRegistry = registry || this._registries.defaultRegistry
 		} = this._coreProperties;
 
 		return {
