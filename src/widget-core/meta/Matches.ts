@@ -7,6 +7,6 @@ export default class Matches extends Base {
 	 * @param event The event object
 	 */
 	public get(key: string, event: Event): boolean {
-		return this.nodes.get(key) === event.target;
+		return this.getNode(key) === event.target;
 	}
 }

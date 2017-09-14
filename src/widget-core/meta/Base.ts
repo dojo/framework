@@ -1,45 +1,43 @@
 import { Destroyable } from '@dojo/core/Destroyable';
-import global from '@dojo/shim/global';
-import Map from '@dojo/shim/Map';
-import { WidgetMetaBase, WidgetMetaProperties, WidgetMetaRequiredNodeCallback } from '../interfaces';
+import Set from '@dojo/shim/Set';
+import { WidgetMetaBase, WidgetMetaProperties, NodeHandlerInterface } from '../interfaces';
 
 export class Base extends Destroyable implements WidgetMetaBase {
 	private _invalidate: () => void;
-	private _invalidating: number;
-	private _requiredNodes: Map<string, ([ WidgetMetaBase, WidgetMetaRequiredNodeCallback ])[]>;
-	protected nodes: Map<string, HTMLElement>;
+	protected nodeHandler: NodeHandlerInterface;
+
+	private _requestedNodeKeys = new Set<string>();
 
 	constructor(properties: WidgetMetaProperties) {
 		super();
 
 		this._invalidate = properties.invalidate;
-		this._requiredNodes = properties.requiredNodes;
-
-		this.nodes = properties.nodes;
+		this.nodeHandler = properties.nodeHandler;
 	}
 
 	public has(key: string): boolean {
-		return this.nodes.has(key);
+		return this.nodeHandler.has(key);
+	}
+
+	protected getNode(key: string): HTMLElement | undefined {
+		const node = this.nodeHandler.get(key);
+
+		if (!node && !this._requestedNodeKeys.has(key)) {
+			const handle = this.nodeHandler.on(key, () => {
+				handle.destroy();
+				this._requestedNodeKeys.delete(key);
+				this.invalidate();
+			});
+
+			this.own(handle);
+			this._requestedNodeKeys.add(key);
+		}
+
+		return node;
 	}
 
 	protected invalidate(): void {
-		global.cancelAnimationFrame(this._invalidating);
-		this._invalidating = global.requestAnimationFrame(this._invalidate);
-	}
-
-	protected requireNode(key: string, callback?: WidgetMetaRequiredNodeCallback): void {
-		const node = this.nodes.get(key);
-		if (node) {
-			callback && callback.call(this, node);
-		}
-		else {
-			const callbacks = this._requiredNodes.get(key) || [];
-			callback && callbacks.push([ this, callback ]);
-			this._requiredNodes.set(key, callbacks);
-			if (!callback) {
-				this.invalidate();
-			}
-		}
+		this._invalidate();
 	}
 }
 

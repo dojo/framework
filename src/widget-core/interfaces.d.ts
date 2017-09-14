@@ -1,7 +1,15 @@
 import { Destroyable } from '@dojo/core/Destroyable';
 import { Evented } from '@dojo/core/Evented';
-import { VNode, VNodeProperties, ProjectionOptions } from '@dojo/interfaces/vdom';
+import { EventTargettedObject } from '@dojo/interfaces/core';
+import { VNode, VNodeProperties, ProjectionOptions as MaquetteProjectionOptions } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
+
+/**
+ * Extended Dojo 2 projection options
+ */
+export interface ProjectionOptions extends MaquetteProjectionOptions {
+	nodeEvent: Evented;
+}
 
 /**
  * Generic constructor type
@@ -409,20 +417,21 @@ export interface WidgetMetaConstructor<T extends WidgetMetaBase> {
 	new (properties: WidgetMetaProperties): T;
 }
 
+export interface NodeHandlerInterface extends Evented {
+	get(key: string): HTMLElement | undefined;
+	has(key: string): boolean;
+	add(element: HTMLElement, properties: VNodeProperties): void;
+	addRoot(element: HTMLElement, properties: VNodeProperties): void;
+	addProjector(element: HTMLElement, properties: VNodeProperties): void;
+	clear(): void;
+}
+
 /**
  * Properties passed to meta Base constructors
  */
 export interface WidgetMetaProperties {
-	nodes: Map<string, HTMLElement>;
-	requiredNodes: Map<string, ([ WidgetMetaBase, WidgetMetaRequiredNodeCallback ])[]>;
 	invalidate: () => void;
-}
-
-/**
- * Callback when asking widget meta for a required node
- */
-export interface WidgetMetaRequiredNodeCallback {
-	(node: HTMLElement): void;
+	nodeHandler: NodeHandlerInterface;
 }
 
 export interface Render {

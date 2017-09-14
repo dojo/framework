@@ -566,7 +566,9 @@ registerSuite({
 			widget.__setProperties__({ foo: 'bar' });
 			const qux: any = widget.__render__();
 			assert.equal(qux.vnodeSelector, 'qux');
-			assert.deepEqual(qux.properties, { bind: widget, bar: 'foo', foo: 'bar' });
+			assert.deepEqual(qux.properties.bind, widget);
+			assert.equal(qux.properties.bar, 'foo');
+			assert.equal(qux.properties.foo, 'bar');
 			assert.lengthOf(qux.children, 1);
 			const bar = qux.children[0];
 			assert.equal(bar.vnodeSelector, 'bar');
@@ -1601,7 +1603,7 @@ registerSuite({
 
 		const testWidget = new TestWidget();
 
-		assert.equal(testWidget.getDecoratorCount('beforeRender'), 2, 'beforeRender = 1 (existing) + 1');
+		assert.equal(testWidget.getDecoratorCount('beforeRender'), 1, 'beforeRender = 0 (existing) + 1');
 		assert.equal(testWidget.getDecoratorCount('afterRender'), 1, 'afterRender = 0 (existing) + 1');
 	}
 });

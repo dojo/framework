@@ -49,10 +49,10 @@ const defaultDimensions = {
 };
 
 export class Dimensions extends Base {
-	public get(key: string): Readonly<DimensionResults> {
-		this.requireNode(key);
 
-		const node = this.nodes.get(key);
+	public get(key: string): Readonly<DimensionResults> {
+		const node = this.getNode(key);
+
 		if (!node) {
 			return deepAssign({}, defaultDimensions);
 		}

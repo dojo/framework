@@ -818,43 +818,39 @@ registerSuite({
 		}, Error, 'Projector already attached, cannot create sandbox');
 	},
 	'can attach an event handler'() {
-		let domNode: any;
 		let domEvent: any;
 		const oninput = (evt: any) => {
 			domEvent = evt;
 		};
-		const afterCreate = (node: Node) => {
-			domNode = node;
-		};
+
 		const Projector = class extends BaseTestWidget {
 			render() {
-				return v('div', { oninput, afterCreate });
+				return v('div', { oninput, id: 'handler-test-root' });
 			}
 		};
 
 		const projector = new Projector();
 		projector.append();
-		dispatchEvent(domNode, 'input');
+		const domNode = document.getElementById('handler-test-root');
+		dispatchEvent(domNode as HTMLElement, 'input');
 		assert.instanceOf(domEvent, Event);
 	},
 	'can attach an event listener'() {
-		let domNode: any;
 		let domEvent: any;
 		const onpointermove = (evt: any) => {
 			domEvent = evt;
 		};
-		const afterCreate = (node: Node) => {
-			domNode = node;
-		};
+
 		const Projector = class extends BaseTestWidget {
 			render() {
-				return v('div', { onpointermove, afterCreate });
+				return v('div', { onpointermove, id: 'listener-test-root' });
 			}
 		};
 
 		const projector = new Projector();
 		projector.append();
-		dispatchEvent(domNode, 'pointermove');
+		const domNode = document.getElementById('listener-test-root');
+		dispatchEvent(domNode as HTMLElement, 'pointermove');
 		assert.instanceOf(domEvent, Event);
 	},
 	async '-active gets appended to enter/exit animations by default'(this: any) {
@@ -1002,36 +998,5 @@ registerSuite({
 		await waitFor(() => {
 			return document.getElementById('test-element') === null;
 		}, 'Element never got removed');
-	},
-	'afterCreate can be overridden'() {
-		let afterCreateCalled = false;
-
-		function afterCreate(this: any, element: any, projectorOptions: any, vNodeSelector: any, properties: any, children: any) {
-			afterCreateCalled = true;
-
-			assert.isNotNull(element);
-			assert.isNotNull(projectorOptions);
-			assert.isNotNull(vNodeSelector);
-			assert.isNotNull(properties);
-			assert.isNotNull(children);
-			assert.strictEqual(this, projector);
-		}
-
-		const root = document.createElement('div');
-		document.body.appendChild(root);
-
-		const projector = new (class extends BaseTestWidget {
-			root = root;
-
-			render() {
-				return v('span', {
-					innerHTML: 'hello world',
-					afterCreate
-				});
-			}
-		})();
-
-		projector.append();
-		assert.isTrue(afterCreateCalled);
 	}
 });

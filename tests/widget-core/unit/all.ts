@@ -13,4 +13,5 @@ import './diff';
 import './RegistryHandler';
 import './Injector';
 import './tsx';
+import './NodeHandler';
 import './meta/all';
