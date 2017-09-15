@@ -4,11 +4,10 @@ import '@dojo/shim/Promise';
 import { VNode } from '@dojo/interfaces/vdom';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { spy } from 'sinon';
+import { spy, stub, SinonStub } from 'sinon';
 import { v } from '../../../src/d';
 import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projector';
 import { beforeRender, WidgetBase } from '../../../src/WidgetBase';
-import { waitFor } from '../waitFor';
 
 const Event = global.window.Event;
 
@@ -44,8 +43,8 @@ function sendAnimationEndEvents(element: Element) {
 	dispatchEvent(element, 'animationend');
 }
 
-let rafSpy: any;
-let cancelRafSpy: any;
+let rafStub: SinonStub;
+let cancelRafStub: SinonStub;
 let projector: BaseTestWidget | MyWidget;
 
 registerSuite({
@@ -53,8 +52,9 @@ registerSuite({
 
 	beforeEach() {
 		result = null;
-		rafSpy = spy(global, 'requestAnimationFrame');
-		cancelRafSpy = spy(global, 'cancelAnimationFrame');
+		rafStub = stub(global, 'requestAnimationFrame').returns(1);
+		rafStub.yields();
+		cancelRafStub = stub(global, 'cancelAnimationFrame');
 	},
 
 	afterEach() {
@@ -62,8 +62,8 @@ registerSuite({
 			projector.destroy();
 			projector = <any> undefined;
 		}
-		rafSpy.restore();
-		cancelRafSpy.restore();
+		rafStub.restore();
+		cancelRafStub.restore();
 	},
 	'attach to projector': {
 		'append': {
@@ -636,7 +636,7 @@ registerSuite({
 
 		projector.pause();
 		projector.scheduleRender();
-		assert.isFalse(rafSpy.called);
+		assert.isFalse(rafStub.called);
 	},
 	'pause cancels animation frame if scheduled'() {
 		const projector = new BaseTestWidget();
@@ -645,7 +645,7 @@ registerSuite({
 
 		projector.scheduleRender();
 		projector.pause();
-		assert.isTrue(cancelRafSpy.called);
+		assert.isTrue(cancelRafStub.called);
 	},
 	'resume'() {
 		const projector = new BaseTestWidget();
@@ -786,14 +786,14 @@ registerSuite({
 
 		projector.invalidate();
 
-		assert.isFalse(rafSpy.called);
+		assert.isFalse(rafStub.called);
 	},
 	'invalidate after attached'() {
 		const projector: any = new BaseTestWidget();
 
 		projector.append();
 		projector.invalidate();
-		assert.isTrue(rafSpy.called);
+		assert.isTrue(rafStub.called);
 	},
 	'reattach'() {
 		const root = document.createElement('div');
@@ -869,8 +869,8 @@ registerSuite({
 		}
 
 		const projector = new TestProjector();
-
-		await projector.append();
+		projector.async = false;
+		projector.append();
 
 		children.push(v('div', {
 			id: 'test-element',
@@ -880,25 +880,19 @@ registerSuite({
 
 		projector.callInvalidate();
 
-		await waitFor(() => {
-			return document.getElementById('test-element') !== null;
-		}, 'Element was never added');
-
 		const domNode = document.getElementById('test-element')!;
-
-		await waitFor(() => {
-			return domNode.classList.contains('fade-in') && domNode.classList.contains('fade-in-active');
-		}, 'fade-in classes never got added to element');
+		assert.isNotNull(domNode);
+		assert.isTrue(domNode.classList.contains('fade-in'));
+		assert.isTrue(domNode.classList.contains('fade-in-active'));
 
 		// manually fire the transition end events
-		sendAnimationEndEvents(domNode);
+		sendAnimationEndEvents(domNode!);
 
 		children = [];
 		projector.callInvalidate();
 
-		await waitFor(() => {
-			return domNode.classList.contains('fade-out') && domNode.classList.contains('fade-out-active');
-		}, 'fade-out classes never got added to element');
+		assert.isTrue(domNode.classList.contains('fade-out'));
+		assert.isTrue(domNode.classList.contains('fade-out-active'));
 
 		domNode.parentElement!.removeChild(domNode);
 	},
@@ -918,8 +912,8 @@ registerSuite({
 		}
 
 		const projector = new TestProjector();
-
-		await projector.append();
+		projector.async = false;
+		projector.append();
 
 		children.push(v('div', {
 			id: 'test-element',
@@ -931,15 +925,10 @@ registerSuite({
 
 		projector.callInvalidate();
 
-		await waitFor(() => {
-			return document.getElementById('test-element') !== null;
-		}, 'Element was never added');
-
 		const domNode = document.getElementById('test-element')!;
-
-		await waitFor(() => {
-			return domNode.classList.contains('fade-in') && domNode.classList.contains('active-fade-in');
-		}, 'fade-in classes never got added to element');
+		assert.isNotNull(domNode);
+		assert.isTrue(domNode.classList.contains('fade-in'));
+		assert.isTrue(domNode.classList.contains('active-fade-in'));
 
 		// manually fire the transition end events
 		sendAnimationEndEvents(domNode);
@@ -947,9 +936,8 @@ registerSuite({
 		children = [];
 		projector.callInvalidate();
 
-		await waitFor(() => {
-			return domNode.classList.contains('fade-out') && domNode.classList.contains('active-fade-out');
-		}, 'fade-out classes never got added to element');
+		assert.isTrue(domNode.classList.contains('fade-out'));
+		assert.isTrue(domNode.classList.contains('active-fade-out'));
 
 		domNode.parentElement!.removeChild(domNode);
 	},
@@ -976,27 +964,21 @@ registerSuite({
 		}
 
 		const projector = new TestProjector();
-
+		projector.async = false;
 		await projector.append();
 
-		await waitFor(() => {
-			return document.getElementById('test-element') !== null;
-		}, 'Element was never added');
-
 		const domNode = document.getElementById('test-element')!;
+		assert.isNotNull(domNode);
 
 		children = [];
 		projector.callInvalidate();
 
-		await waitFor(() => {
-			return domNode.classList.contains('fade-out') && domNode.classList.contains('fade-out-active');
-		}, 'fade-out classes never got added to element');
+		assert.isTrue(domNode.classList.contains('fade-out'));
+		assert.isTrue(domNode.classList.contains('fade-out-active'));
 
 		// manually fire the transition end events
 		sendAnimationEndEvents(domNode);
 
-		await waitFor(() => {
-			return document.getElementById('test-element') === null;
-		}, 'Element never got removed');
+		assert.isNull(document.getElementById('test-element'));
 	}
 });

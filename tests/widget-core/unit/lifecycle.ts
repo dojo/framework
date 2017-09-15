@@ -152,7 +152,7 @@ registerSuite({
 		const Projector = ProjectorMixin(WidgetA);
 		const projector = new Projector();
 		const handle = projector.append(root);
-		assert.strictEqual(projector.lifeCycleCreated.length, 2);
+		assert.strictEqual(projector.lifeCycleCreated.length, 3);
 		assert.strictEqual(projector.lifeCycleUpdated.length, 0);
 		handle.destroy();
 	},
@@ -162,7 +162,7 @@ registerSuite({
 		const projector = new Projector();
 		const handle = projector.append(root);
 		assert.strictEqual(projector.lifeCycleCreated[0].key, 'div2');
-		assert.strictEqual(projector.lifeCycleCreated[1].key, 'div1');
+		assert.strictEqual(projector.lifeCycleCreated[2].key, 'div1');
 		handle.destroy();
 	},
 
@@ -170,10 +170,10 @@ registerSuite({
 		const Projector = ProjectorMixin(WidgetB);
 		const projector = new Projector();
 		const handle = projector.append(root);
-		assert.strictEqual(projector.lifeCycleCreated.length, 2);
-		// afterCreateCounter will be 1 because the other two afterCreate callbacks will be replaced in
+		assert.strictEqual(projector.lifeCycleCreated.length, 3);
+		// afterCreateCounter will be 0 because all afterCreate callbacks will be replaced in
 		// WidgetBase.
-		assert.strictEqual(afterCreateCounter, 1);
+		assert.strictEqual(afterCreateCounter, 0);
 		assert.strictEqual(afterUpdateCounter, 0);
 		assert.strictEqual(projector.lifeCycleUpdated.length, 0);
 		handle.destroy();
@@ -195,7 +195,7 @@ registerSuite({
 		}, 'DOM update did not occur', 10);
 
 		assert.strictEqual(projector.lifeCycleCreated.length, 1, 'Unexpected number of created nodes.');
-		assert.strictEqual(projector.lifeCycleUpdated.length, 2, 'Unexpected number of updated nodes.');
+		assert.strictEqual(projector.lifeCycleUpdated.length, 3, 'Unexpected number of updated nodes.');
 	},
 
 	async 'on update with afterUpdate'() {
@@ -215,9 +215,9 @@ registerSuite({
 		}, 'DOM update did not occur', 10);
 
 		assert.strictEqual(projector.lifeCycleCreated.length, 1, 'Unexpected number of created nodes.');
-		assert.strictEqual(projector.lifeCycleUpdated.length, 2, 'Unexpected number of updated nodes.');
+		assert.strictEqual(projector.lifeCycleUpdated.length, 3, 'Unexpected number of updated nodes.');
 		assert.strictEqual(afterCreateCounter, 0);  // afterCreate callback is replaced in WidgetBase.
-		assert.strictEqual(afterUpdateCounter, 1);  // afterUpdate callback is replaced in WidgetBase.
+		assert.strictEqual(afterUpdateCounter, 0);  // afterUpdate callback is replaced in WidgetBase.
 	},
 
 	async 'basic widget that always re-renders'() {
