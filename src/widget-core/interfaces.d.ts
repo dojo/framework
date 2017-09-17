@@ -230,12 +230,24 @@ export interface WidgetProperties {
 	 * The key for a widget. Used to differentiate uniquely identify child widgets for
 	 * rendering and instance management
 	 */
-	key?: string;
+	key?: string | number;
 
 	/**
 	 * Optional registry
 	 */
 	registry?: any;
+}
+
+/**
+ * Widget properties that require a key
+ */
+export interface KeyedWidgetProperties extends WidgetProperties {
+
+	/**
+	 * The key for a widget. Used to differentiate uniquely identify child widgets for
+	 * rendering and instance management
+	 */
+	key: string | number;
 }
 
 /**
@@ -407,7 +419,7 @@ export interface WidgetBaseInterface<
  * Meta Base type
  */
 export interface WidgetMetaBase extends Destroyable {
-	has(key: string): boolean;
+	has(key: string | number): boolean;
 }
 
 /**
@@ -418,8 +430,8 @@ export interface WidgetMetaConstructor<T extends WidgetMetaBase> {
 }
 
 export interface NodeHandlerInterface extends Evented {
-	get(key: string): HTMLElement | undefined;
-	has(key: string): boolean;
+	get(key: string | number): HTMLElement | undefined;
+	has(key: string | number): boolean;
 	add(element: HTMLElement, properties: VNodeProperties): void;
 	addRoot(element: HTMLElement, properties: VNodeProperties): void;
 	addProjector(element: HTMLElement, properties: VNodeProperties): void;

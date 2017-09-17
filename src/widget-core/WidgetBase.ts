@@ -15,7 +15,6 @@ import {
 	DiffPropertyFunction,
 	DiffPropertyReaction,
 	DNode,
-	RegistryLabel,
 	Render,
 	VirtualDomNode,
 	WidgetMetaBase,
@@ -156,7 +155,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	/**
 	 * cached chldren map for instance management
 	 */
-	private _cachedChildrenMap: Map<RegistryLabel | Promise<WidgetBaseConstructor> | WidgetBaseConstructor, WidgetCacheWrapper[]>;
+	private _cachedChildrenMap: Map<string | number | Promise<WidgetBaseConstructor> | WidgetBaseConstructor, WidgetCacheWrapper[]>;
 
 	/**
 	 * map of specific property diff functions
