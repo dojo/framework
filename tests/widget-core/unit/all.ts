@@ -13,5 +13,6 @@ import './diff';
 import './RegistryHandler';
 import './Injector';
 import './tsx';
+import './tsxIntegration';
 import './NodeHandler';
 import './meta/all';

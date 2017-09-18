@@ -1,10 +1,12 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { WidgetBase } from '../../src/WidgetBase';
-import { registry } from '../../src/d';
+import { Registry } from '../../src/Registry';
 import { WidgetProperties } from '../../src/interfaces';
 import { VNode } from '@dojo/interfaces/vdom';
-import { fromRegistry } from './../../src/tsx';
+import { tsx, fromRegistry } from './../../src/tsx';
+
+const registry = new Registry();
 
 registerSuite({
 	name: 'tsx',
@@ -36,12 +38,16 @@ registerSuite({
 		}
 
 		const bar = new Bar();
+		bar.__setCoreProperties__({ registry });
+		bar.__setProperties__({ registry });
 		const barRender = bar.__render__() as VNode;
 		const barChild = barRender.children![0];
 		assert.equal(barRender.vnodeSelector, 'header');
 		assert.equal(barChild.text, 'world');
 
 		const qux = new Qux();
+		qux.__setCoreProperties__({ registry });
+		qux.__setProperties__({ registry });
 		const firstQuxRender = qux.__render__();
 		assert.equal(firstQuxRender, null);
 
