@@ -6,7 +6,7 @@ import '@dojo/shim/Promise'; // Imported for side-effects
 import WeakMap from '@dojo/shim/WeakMap';
 import { Handle } from '@dojo/interfaces/core';
 import { isWNode, v, isHNode } from './d';
-import { auto, ignore } from './diff';
+import { auto } from './diff';
 import {
 	AfterRender,
 	BeforeProperties,
@@ -122,7 +122,6 @@ const boundAuto = auto.bind(null);
 /**
  * Main widget base for all widgets to extend
  */
-@diffProperty('registry', ignore)
 export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends Evented implements WidgetBaseInterface<P, C> {
 
 	/**

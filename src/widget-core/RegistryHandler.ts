@@ -59,7 +59,7 @@ export class RegistryHandler extends Evented {
 			}
 			else if (registeredLabels.indexOf(label) === -1) {
 				const handle = registry.on(label, (event: RegistryEventObject) => {
-					if (event.action === 'loaded' && (this as any)[getFunctionName](label) === event.item) {
+					if (event.action === 'loaded' && (this as any)[getFunctionName](label, globalPrecedence) === event.item) {
 						this.emit({ type: 'invalidate' });
 					}
 				});
