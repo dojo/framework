@@ -1,79 +1,74 @@
+import { Map } from '@dojo/shim/Map';
 import { Evented } from '@dojo/core/Evented';
 import { Constructor, RegistryLabel, WidgetBaseInterface } from './interfaces';
-import { Registry, RegistryEventObject } from './Registry';
+import { Registry, RegistryEventObject, RegistryItem } from './Registry';
 import { Injector } from './Injector';
 
-export default class RegistryHandler extends Evented {
-	private _registries: { handle?: any, registry: Registry }[] = [];
+export class RegistryHandler extends Evented {
+	private _registry = new Registry();
+	private _baseRegistry: Registry;
+	private _registryWidgetLabelMap: Map<Registry, RegistryLabel[]> = new Map();
+	private _registryInjectorLabelMap: Map<Registry, RegistryLabel[]> = new Map();
 
-	public add(registry: Registry, isDefault: boolean = false) {
-		if (isDefault) {
-			this._registries.push({ registry });
-		}
-		else {
-			this._registries.unshift({ registry });
-		}
+	constructor() {
+		super();
+		this.own(this._registry);
 	}
 
-	public remove(registry: Registry): boolean {
-		return this._registries.some((registryWrapper, i) => {
-			if (registryWrapper.registry === registry) {
-				registry.destroy();
-				this._registries.splice(i, 1);
-				return true;
+	public set base(baseRegistry: Registry) {
+		this._registryWidgetLabelMap.delete(this._baseRegistry);
+		this._registryInjectorLabelMap.delete(this._baseRegistry);
+		this._baseRegistry = baseRegistry;
+	}
+
+	public define(label: RegistryLabel, widget: RegistryItem): void {
+		this._registry.define(label, widget);
+	}
+
+	public defineInjector(label: RegistryLabel, injector: Injector): void {
+		this._registry.defineInjector(label, injector);
+	}
+
+	public has(label: RegistryLabel): boolean {
+		return this._registry.has(label) || this._baseRegistry.has(label);
+	}
+
+	public hasInjector(label: RegistryLabel): boolean {
+		return this._registry.hasInjector(label) || this._baseRegistry.hasInjector(label);
+	}
+
+	public get<T extends WidgetBaseInterface = WidgetBaseInterface>(label: RegistryLabel, globalPrecedence: boolean = false): Constructor<T> | null {
+		return this._get(label, globalPrecedence, 'get', this._registryWidgetLabelMap);
+	}
+
+	public getInjector<T extends Injector>(label: RegistryLabel, globalPrecedence: boolean = false): T | null {
+		return this._get(label, globalPrecedence, 'getInjector', this._registryInjectorLabelMap);
+	}
+
+	private _get(label: RegistryLabel, globalPrecedence: boolean, getFunctionName: 'getInjector' | 'get', labelMap: Map<Registry, RegistryLabel[]>): any {
+		const registries = globalPrecedence ? [ this._baseRegistry, this._registry ] : [ this._registry, this._baseRegistry ];
+		for (let i = 0; i < registries.length; i++) {
+			const registry: any = registries[i];
+			if (!registry) {
+				continue;
 			}
-			return false;
-		});
-	}
-
-	public replace(original: Registry, replacement: Registry): boolean {
-		return this._registries.some((registryWrapper, i) => {
-			if (registryWrapper.registry === original) {
-				original.destroy();
-				registryWrapper.registry = replacement;
-				return true;
-			}
-			return false;
-		});
-	}
-
-	public get defaultRegistry(): Registry | undefined {
-		if (this._registries.length) {
-			return this._registries[this._registries.length - 1].registry;
-		}
-	}
-
-	public has(widgetLabel: RegistryLabel): boolean {
-		return this._registries.some((registryWrapper) => {
-			return registryWrapper.registry.has(widgetLabel);
-		});
-	}
-
-	public getInjector<T extends Injector>(label: RegistryLabel): T | null {
-		for (let i = 0; i < this._registries.length; i++) {
-			const registryWrapper = this._registries[i];
-			return registryWrapper.registry.getInjector<T>(label);
-		}
-		return null;
-	}
-
-	public get<T extends WidgetBaseInterface = WidgetBaseInterface>(widgetLabel: RegistryLabel): Constructor<T> | null {
-		for (let i = 0; i < this._registries.length; i++) {
-			const registryWrapper = this._registries[i];
-			const item = registryWrapper.registry.get<T>(widgetLabel);
+			const item = registry[getFunctionName](label);
+			const registeredLabels = labelMap.get(registry) || [];
 			if (item) {
 				return item;
 			}
-			else if (!registryWrapper.handle) {
-				registryWrapper.handle = registryWrapper.registry.on(widgetLabel, (event: RegistryEventObject) => {
-					if (event.action === 'loaded') {
+			else if (registeredLabels.indexOf(label) === -1) {
+				const handle = registry.on(label, (event: RegistryEventObject) => {
+					if (event.action === 'loaded' && (this as any)[getFunctionName](label) === event.item) {
 						this.emit({ type: 'invalidate' });
-						registryWrapper.handle.destroy();
-						registryWrapper.handle = undefined;
 					}
 				});
+				this.own(handle);
+				labelMap.set(registry, [ ...registeredLabels, label]);
 			}
 		}
 		return null;
 	}
 }
+
+export default RegistryHandler;

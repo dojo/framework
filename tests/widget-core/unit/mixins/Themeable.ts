@@ -399,7 +399,7 @@ registerSuite({
 				}
 			}
 			const themeableInstance = createTestWidget(InjectedTheme, { theme: testTheme2, registry: testRegistry });
-			const vNode: any = themeableInstance.renderResult;
+			const vNode: any = themeableInstance.__render__();
 			assert.deepEqual(vNode.properties.classes, { theme2Class1: true });
 		},
 		'does not attempt to inject if the ThemeInjector has not been defined in the registry'() {
@@ -424,14 +424,14 @@ registerSuite({
 			class MultipleThemedWidgets extends WidgetBase {
 				render() {
 					return v('div', [
-						w(InjectedTheme, { key: '1', registry: this.properties.registry }),
-						w(InjectedTheme, { key: '2', registry: this.properties.registry })
+						w(InjectedTheme, { key: '1' }),
+						w(InjectedTheme, { key: '2' })
 					]);
 				}
 			}
 
 			const testWidget = new MultipleThemedWidgets();
-			testWidget.__setProperties__({ registry: testRegistry });
+			testWidget.__setCoreProperties__({ bind: testWidget, baseRegistry: testRegistry });
 			let vNode: any = testWidget.__render__();
 			assert.lengthOf(vNode.children, 2);
 			assert.deepEqual(vNode.children[0].properties.classes, { theme1Class1: true });

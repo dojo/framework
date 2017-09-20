@@ -17,6 +17,7 @@ export const WIDGET_BASE_TYPE = Symbol('Widget Base');
 
 export interface RegistryEventObject extends EventObject {
 	action: string;
+	item: WidgetBaseConstructor | Injector;
 }
 
 export interface RegistryListener {
@@ -108,10 +109,11 @@ export class Registry extends Evented implements RegistryInterface {
 	/**
 	 * Emit loaded event for registry label
 	 */
-	private emitLoadedEvent(widgetLabel: RegistryLabel): void {
+	private emitLoadedEvent(widgetLabel: RegistryLabel, item: WidgetBaseConstructorFunction | WidgetBaseConstructor | Injector): void {
 		this.emit({
 			type: widgetLabel,
-			action: 'loaded'
+			action: 'loaded',
+			item
 		});
 	}
 
@@ -129,14 +131,14 @@ export class Registry extends Evented implements RegistryInterface {
 		if (item instanceof Promise) {
 			item.then((widgetCtor) => {
 				this._widgetRegistry.set(label, widgetCtor);
-				this.emitLoadedEvent(label);
+				this.emitLoadedEvent(label, widgetCtor);
 				return widgetCtor;
 			}, (error) => {
 				throw error;
 			});
 		}
 		else {
-			this.emitLoadedEvent(label);
+			this.emitLoadedEvent(label, item);
 		}
 	}
 
@@ -150,6 +152,7 @@ export class Registry extends Evented implements RegistryInterface {
 		}
 
 		this._injectorRegistry.set(label, item);
+		this.emitLoadedEvent(label, item);
 	}
 
 	public get<T extends WidgetBaseInterface = WidgetBaseInterface>(label: RegistryLabel): Constructor<T> | null {
@@ -172,7 +175,7 @@ export class Registry extends Evented implements RegistryInterface {
 
 		promise.then((widgetCtor) => {
 			this._widgetRegistry.set(label, widgetCtor);
-			this.emitLoadedEvent(label);
+			this.emitLoadedEvent(label, widgetCtor);
 			return widgetCtor;
 		}, (error) => {
 			throw error;

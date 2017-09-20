@@ -73,8 +73,7 @@ export function w<W extends WidgetBaseInterface>(widgetConstructor: Constructor<
 		children,
 		widgetConstructor,
 		properties,
-		type: WNODE,
-		coreProperties: {}
+		type: WNODE
 	};
 }
 

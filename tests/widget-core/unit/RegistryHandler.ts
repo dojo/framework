@@ -1,167 +1,266 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import Promise from '@dojo/shim/Promise';
 import RegistryHandler from '../../src/RegistryHandler';
 import Registry from '../../src/Registry';
 import { WidgetBase } from '../../src/WidgetBase';
-import { WidgetBaseConstructor } from './../../src/interfaces';
+import { Injector } from './../../src/Injector';
 
 const foo = Symbol();
 const bar = Symbol();
 
-const registry = new Registry();
-registry.define('foo', WidgetBase);
-registry.define(foo, WidgetBase);
+class GlobalWidget extends WidgetBase {}
+const globalInjector = new Injector({});
 
-const registryB = new Registry();
-registryB.define('bar', WidgetBase);
-registryB.define(bar, WidgetBase);
+const registry = new Registry();
+registry.define('foo', GlobalWidget);
+registry.define(foo, GlobalWidget);
+registry.defineInjector('foo', globalInjector);
+registry.defineInjector(foo, globalInjector);
+
+class LocalWidget extends WidgetBase {}
 
 registerSuite({
 	name: 'RegistryHandler',
-	'add': {
-		'add standard registry'() {
-			const registryHandler = new RegistryHandler();
-			registryHandler.add(registry);
-			const widget = registry.get('foo');
-			assert.equal(widget, WidgetBase);
+	widget: {
+		has: {
+			base() {
+				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
+				assert.isTrue(registryHandler.has('foo'));
+				assert.isTrue(registryHandler.has(foo));
+			},
+			local() {
+				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
+				registryHandler.define('bar', LocalWidget);
+				registryHandler.define(bar, LocalWidget);
+				assert.isTrue(registryHandler.has('bar'));
+				assert.isTrue(registryHandler.has(bar));
+			}
 		},
-		'add default registry'() {
-			const registryHandler = new RegistryHandler();
-			registryHandler.add(registry);
-			assert.equal(registryHandler.defaultRegistry, registry);
-			registryHandler.add(registryB, true);
-			assert.equal(registryHandler.defaultRegistry, registryB);
+		get: {
+			base() {
+				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
+				assert.equal(registryHandler.get('foo'), GlobalWidget);
+				assert.equal(registryHandler.get(foo), GlobalWidget);
+			},
+			local() {
+				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
+				registryHandler.define('foo', LocalWidget);
+				registryHandler.define(foo, LocalWidget);
+				assert.equal(registryHandler.get('foo'), LocalWidget);
+				assert.equal(registryHandler.get(foo), LocalWidget);
+			},
+			'with global precedence'() {
+				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
+				registryHandler.define('foo', LocalWidget);
+				registryHandler.define(foo, LocalWidget);
+				assert.equal(registryHandler.get('foo', true), GlobalWidget);
+				assert.equal(registryHandler.get(foo, true), GlobalWidget);
+			},
+			'invalidates when registry emits loaded event (only once)'() {
+				const registryHandler = new RegistryHandler();
+				const registry = new Registry();
+				registryHandler.base = registry;
+				let invalidateCount = 0;
+				registryHandler.on('invalidate', () => {
+					invalidateCount++;
+				});
+
+				registryHandler.get('global');
+				registryHandler.get('global');
+				registryHandler.get('global');
+				registry.define('global', GlobalWidget);
+				assert.strictEqual(invalidateCount, 1);
+			},
+			'invalidates when primary registry emits loaded event even when widget is loaded in secondary registry'() {
+				const registryHandler = new RegistryHandler();
+				const registry = new Registry();
+				registryHandler.base = registry;
+				let invalidateCount = 0;
+				registryHandler.on('invalidate', () => {
+					invalidateCount++;
+				});
+
+				registryHandler.get('global');
+				registryHandler.get('global');
+				registry.define('global', GlobalWidget);
+				assert.strictEqual(invalidateCount, 1);
+				registryHandler.define('global', LocalWidget);
+				assert.strictEqual(invalidateCount, 2);
+			},
+			'no loaded event listeners once the widget is fully loaded (into primary registry)'() {
+				const registryHandler = new RegistryHandler();
+				const registry = new Registry();
+				registryHandler.base = registry;
+				let invalidateCount = 0;
+				registryHandler.on('invalidate', () => {
+					invalidateCount++;
+				});
+
+				registryHandler.get('global');
+				registryHandler.define('global', LocalWidget);
+				assert.strictEqual(invalidateCount, 1);
+				registry.emit({ type: 'global', action: 'other' });
+				assert.strictEqual(invalidateCount, 1);
+			},
+			'no `invalidate` events emitted once the with registry with the highest precedence has loaded'() {
+				const registryHandler = new RegistryHandler();
+				const registry = new Registry();
+				registryHandler.base = registry;
+				let invalidateCount = 0;
+				registryHandler.on('invalidate', () => {
+					invalidateCount++;
+				});
+				registryHandler.get('widget');
+				registryHandler.define('widget', LocalWidget);
+				assert.strictEqual(invalidateCount, 1);
+				registry.define('widget', GlobalWidget);
+				assert.strictEqual(invalidateCount, 1);
+			},
+			'ignores unknown event actions'() {
+				const registryHandler = new RegistryHandler();
+				const registry = new Registry();
+				let invalidateCount = 0;
+				registryHandler.on('invalidate', () => {
+					invalidateCount++;
+				});
+
+				registryHandler.get('global');
+				registryHandler.base = registry;
+				registryHandler.get('global');
+				registry.emit({ type: 'global', action: 'other' });
+				assert.strictEqual(invalidateCount, 0);
+				registryHandler.get('global', true);
+				registry.emit({ type: 'global', action: 'other' });
+				assert.strictEqual(invalidateCount, 0);
+			}
 		}
 	},
-	'remove': {
-		'existing'() {
-			const registryHandler = new RegistryHandler();
-			registryHandler.add(registry);
-			assert.equal(registry.get('foo'), WidgetBase);
-			registryHandler.remove(registry);
-			assert.isNull(registryHandler.get('foo'));
+	injector: {
+		has: {
+			base() {
+				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
+				assert.isTrue(registryHandler.hasInjector('foo'));
+				assert.isTrue(registryHandler.hasInjector(foo));
+			},
+			local() {
+				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
+				const localInjector = new Injector({});
+				registryHandler.defineInjector('bar', localInjector);
+				registryHandler.defineInjector(bar, localInjector);
+				assert.isTrue(registryHandler.hasInjector('bar'));
+				assert.isTrue(registryHandler.hasInjector(bar));
+			}
 		},
-		'non-existing'() {
-			const registryHandler = new RegistryHandler();
-			registryHandler.add(registry);
-			assert.equal(registry.get('foo'), WidgetBase);
-			assert.isFalse(registryHandler.remove(registryB));
+		get: {
+			base() {
+				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
+				assert.equal(registryHandler.getInjector('foo'), globalInjector);
+				assert.equal(registryHandler.getInjector(foo), globalInjector);
+			},
+			local() {
+				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
+				const localInjector = new Injector({});
+				registryHandler.defineInjector('foo', localInjector);
+				registryHandler.defineInjector(foo, localInjector);
+				assert.equal(registryHandler.getInjector('foo'), localInjector);
+				assert.equal(registryHandler.getInjector(foo), localInjector);
+			},
+			'with global precedence'() {
+				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
+				const localInjector = new Injector({});
+				registryHandler.defineInjector('foo', localInjector);
+				registryHandler.defineInjector(foo, localInjector);
+				assert.equal(registryHandler.getInjector('foo', true), globalInjector);
+				assert.equal(registryHandler.getInjector(foo, true), globalInjector);
+			},
+			'invalidates when registry emits loaded event (only once)'() {
+				const registryHandler = new RegistryHandler();
+				const registry = new Registry();
+				registryHandler.base = registry;
+				let invalidateCount = 0;
+				registryHandler.on('invalidate', () => {
+					invalidateCount++;
+				});
+
+				registryHandler.getInjector('global');
+				registryHandler.getInjector('global');
+				registryHandler.getInjector('global');
+				registry.defineInjector('global', globalInjector);
+				assert.strictEqual(invalidateCount, 1);
+			},
+			'invalidates when primary registry emits loaded event even when widget is loaded in secondary registry'() {
+				const registryHandler = new RegistryHandler();
+				const registry = new Registry();
+				const localInjector = new Injector({});
+				registryHandler.base = registry;
+				let invalidateCount = 0;
+				registryHandler.on('invalidate', () => {
+					invalidateCount++;
+				});
+
+				registryHandler.getInjector('global');
+				registryHandler.getInjector('global');
+				registry.defineInjector('global', globalInjector);
+				assert.strictEqual(invalidateCount, 1);
+				registryHandler.defineInjector('global', localInjector);
+				assert.strictEqual(invalidateCount, 2);
+			},
+			'no loaded event listeners once the widget is fully loaded (into primary registry)'() {
+				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
+				const localInjector = new Injector({});
+				let invalidateCount = 0;
+				registryHandler.on('invalidate', () => {
+					invalidateCount++;
+				});
+
+				registryHandler.getInjector('global');
+				registryHandler.defineInjector('global', localInjector);
+				assert.strictEqual(invalidateCount, 1);
+				registry.emit({ type: 'global', action: 'other' });
+				assert.strictEqual(invalidateCount, 1);
+			},
+			'no `invalidate` events emitted once the with registry with the highest precedence has loaded'() {
+				const registryHandler = new RegistryHandler();
+				const registry = new Registry();
+				registryHandler.base = registry;
+				const localInjector = new Injector({});
+				let invalidateCount = 0;
+				registryHandler.on('invalidate', () => {
+					invalidateCount++;
+				});
+				registryHandler.getInjector('injector');
+				registryHandler.defineInjector('injector', localInjector);
+				assert.strictEqual(invalidateCount, 1);
+				registry.defineInjector('injector', globalInjector);
+				assert.strictEqual(invalidateCount, 1);
+			},
+			'ignores unknown event actions'() {
+				const registryHandler = new RegistryHandler();
+				const registry = new Registry();
+				registryHandler.base = registry;
+				let invalidateCount = 0;
+				registryHandler.on('invalidate', () => {
+					invalidateCount++;
+				});
+
+				registryHandler.getInjector('global');
+				registry.emit({ type: 'global', action: 'other' });
+				assert.strictEqual(invalidateCount, 0);
+				registryHandler.getInjector('global', true);
+				registry.emit({ type: 'global', action: 'other' });
+				assert.strictEqual(invalidateCount, 0);
+			}
 		}
-	},
-	'replace': {
-		'existing'() {
-			const registryHandler = new RegistryHandler();
-			registryHandler.add(registry);
-			assert.equal(registry.get('foo'), WidgetBase);
-			registryHandler.replace(registry, registryB);
-			assert.isNull(registryHandler.get('foo'));
-			assert.equal(registryHandler.get('bar'), WidgetBase);
-		},
-		'non-existing'() {
-			const registryHandler = new RegistryHandler();
-			registryHandler.add(registry);
-			assert.equal(registry.get('foo'), WidgetBase);
-			assert.isFalse(registryHandler.replace(registryB, registry));
-		}
-	},
-	'has'() {
-		const registryHandler = new RegistryHandler();
-		registryHandler.add(registry);
-		registryHandler.add(registryB);
-		assert.isTrue(registryHandler.has('foo'));
-		assert.isTrue(registryHandler.has('bar'));
-		assert.isTrue(registryHandler.has(foo));
-		assert.isTrue(registryHandler.has(bar));
-	},
-	'get'() {
-		const promise = new Promise<WidgetBaseConstructor>((resolve) => {
-			setTimeout(() => {
-				resolve(WidgetBase);
-			}, 1);
-		});
-		const registryHandler = new RegistryHandler();
-		registryHandler.add(registry);
-		registry.define('baz', promise);
-		return promise.then(() => {
-			assert.equal(registryHandler.get('baz'), WidgetBase);
-		});
-	},
-	'get with symbol label'() {
-		const baz = Symbol();
-		const promise = new Promise<WidgetBaseConstructor>((resolve) => {
-			setTimeout(() => {
-				resolve(WidgetBase);
-			}, 1);
-		});
-		const registryHandler = new RegistryHandler();
-		registryHandler.add(registry);
-		registry.define(baz, promise);
-		return promise.then(() => {
-			assert.equal(registryHandler.get(baz), WidgetBase);
-		});
-	},
-	'get passing generic to specify widget type'() {
-		class TestWidget extends WidgetBase<{foo: string}> {}
-		const promise = new Promise<WidgetBaseConstructor>((resolve) => {
-			setTimeout(() => {
-				resolve(TestWidget);
-			}, 1);
-		});
-		const registryHandler = new RegistryHandler();
-		registryHandler.add(registry);
-		registry.define('baz-1', promise);
-		return promise.then(() => {
-			const RegistryWidget = registryHandler.get<TestWidget>('baz-1');
-			assert.equal(RegistryWidget, TestWidget);
-			const widget = new RegistryWidget!();
-
-			// demonstrate registry widget is typed as TestWidget
-			widget.__setProperties__({ foo: 'baz' });
-		});
-	},
-	'invalidates once registry emits loaded event'() {
-		const baz = Symbol();
-		let promise: any = Promise.resolve();
-		let invalidateCalled = false;
-		const lazyWidget = () => {
-			promise = new Promise((resolve) => {
-				setTimeout(() => {
-					resolve(WidgetBase);
-				}, 1);
-			});
-			return promise;
-		};
-		const registryHandler = new RegistryHandler();
-		registryHandler.on('invalidate', () => {
-			invalidateCalled = true;
-		});
-
-		registryHandler.add(registry);
-		registry.define(baz, lazyWidget);
-		registryHandler.get(baz);
-		return promise.then(() => {
-			assert.isTrue(invalidateCalled);
-		});
-	},
-	'noop when event action is not `loaded`'() {
-		const baz = Symbol();
-		let invalidateCalled = false;
-		let promise: Promise<any> = Promise.resolve();
-		const lazyWidget: any = () => {
-			promise = new Promise((resolve) => {
-			});
-			return promise;
-		};
-		const registryHandler = new RegistryHandler();
-		registryHandler.on('invalidate', () => {
-			invalidateCalled = true;
-		});
-
-		registryHandler.add(registry);
-		registry.define(baz, lazyWidget);
-		registryHandler.get(baz);
-		registry.emit({ type: baz, action: 'other' });
-		assert.isFalse(invalidateCalled);
 	}
 });

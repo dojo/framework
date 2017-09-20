@@ -1,5 +1,6 @@
 import { WidgetBase } from './../../src/WidgetBase';
 import { w } from './../../src/d';
+import { Registry } from './../../src/Registry';
 import { Constructor, VirtualDomNode, WidgetBaseInterface } from './../../src/interfaces';
 
 interface TestWidget<W extends WidgetBase> extends WidgetBaseInterface {
@@ -13,11 +14,12 @@ interface TestWidget<W extends WidgetBase> extends WidgetBaseInterface {
 
 function createTestWidget<W extends WidgetBase>(
 	component: Constructor<W>,
-	properties: W['properties'],
+	properties: W['properties'] & { registry?: Registry },
 	children?: W['children']
 ): TestWidget<W> {
+	const { registry, ...props } = properties as any;
 	const testWidget = new class extends WidgetBase implements TestWidget<W> {
-		private _testProperties: W['properties'] = properties;
+		private _testProperties: W['properties'] = props;
 		private _testChildren: W['children'] = children || [];
 		private _renderResult: VirtualDomNode | VirtualDomNode[];
 
@@ -25,8 +27,10 @@ function createTestWidget<W extends WidgetBase>(
 			return (<any> this)[key];
 		}
 
-		setProperties(properties: W['properties']): void {
-			this._testProperties = properties;
+		setProperties(properties: W['properties'] & { registry: Registry }): void {
+			const { registry, ...props } = properties as any;
+			this._testProperties = props;
+			this.__setCoreProperties__({ baseRegistry: registry, bind: this });
 			this.invalidate();
 		}
 
@@ -50,14 +54,8 @@ function createTestWidget<W extends WidgetBase>(
 		get renderResult(): VirtualDomNode | VirtualDomNode[] {
 			return this._renderResult;
 		}
-
-		__render__() {
-			const render = super.__render__();
-			this._renderResult = render;
-			return render;
-
-		}
-	}();
+	};
+	testWidget.__setCoreProperties__({ baseRegistry: registry, bind: testWidget });
 	testWidget.__render__();
 	return testWidget;
 }

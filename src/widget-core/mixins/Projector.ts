@@ -10,6 +10,7 @@ import 'pepjs';
 import cssTransitions from '../animations/cssTransitions';
 import { Constructor, DNode } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
+import { Registry } from './../Registry';
 import eventHandlerInterceptor from '../util/eventHandlerInterceptor';
 
 /**
@@ -43,9 +44,13 @@ export interface AttachOptions {
 	root?: Element;
 }
 
+export interface ProjectorProperties {
+	registry?: Registry;
+}
+
 export interface ProjectorMixin<P> {
 
-	readonly properties: Readonly<P>;
+	readonly properties: Readonly<P> & Readonly<ProjectorProperties>;
 
 	/**
 	 * Append the projector to the root.
@@ -146,6 +151,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 	class Projector extends Base {
 
 		public projectorState: ProjectorAttachState;
+		public properties: Readonly<P> & Readonly<ProjectorProperties>;
 
 		private _root: Element;
 		private _async = true;
@@ -278,10 +284,16 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		}
 
 		public setProperties(properties: this['properties']): void {
-			const baseProperties = this.__getCoreProperties__(properties);
+			if (this._projectorProperties && this._projectorProperties.registry !== properties.registry) {
+				if (this._projectorProperties.registry) {
+					this._projectorProperties.registry.destroy();
+				}
+				if (properties.registry) {
+					this.own(properties.registry);
+				}
+			}
 			this._projectorProperties = assign({}, properties);
-
-			super.__setCoreProperties__(baseProperties);
+			super.__setCoreProperties__({ bind: this, baseRegistry: properties.registry });
 			super.__setProperties__(properties);
 		}
 

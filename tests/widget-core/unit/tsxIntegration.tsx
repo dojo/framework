@@ -38,7 +38,7 @@ registerSuite({
 		}
 
 		const bar = new Bar();
-		bar.__setCoreProperties__({ registry });
+		bar.__setCoreProperties__({ bind: bar, baseRegistry: registry });
 		bar.__setProperties__({ registry });
 		const barRender = bar.__render__() as VNode;
 		const barChild = barRender.children![0];
@@ -46,7 +46,7 @@ registerSuite({
 		assert.equal(barChild.text, 'world');
 
 		const qux = new Qux();
-		qux.__setCoreProperties__({ registry });
+		qux.__setCoreProperties__({ bind: qux, baseRegistry: registry });
 		qux.__setProperties__({ registry });
 		const firstQuxRender = qux.__render__();
 		assert.equal(firstQuxRender, null);

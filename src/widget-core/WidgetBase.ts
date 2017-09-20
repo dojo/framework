@@ -25,7 +25,7 @@ import {
 } from './interfaces';
 import RegistryHandler from './RegistryHandler';
 import NodeHandler from './NodeHandler';
-import { isWidgetBaseConstructor, WIDGET_BASE_TYPE, Registry } from './Registry';
+import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './Registry';
 
 /**
  * Widget cache wrapper for instance management
@@ -167,7 +167,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	 */
 	private _decoratorCache: Map<string, any[]>;
 
-	private _registries: RegistryHandler;
+	private _registry: RegistryHandler;
 
 	/**
 	 * Map of functions properties for the bound function
@@ -181,8 +181,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	private _boundRenderFunc: Render;
 
 	private _boundInvalidate: () => void;
-
-	private _defaultRegistry = new Registry();
 
 	private _nodeHandler: NodeHandler;
 
@@ -206,15 +204,14 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		this._cachedChildrenMap = new Map<string | Promise<WidgetBaseConstructor> | WidgetBaseConstructor, WidgetCacheWrapper[]>();
 		this._diffPropertyFunctionMap = new Map<string, string>();
 		this._bindFunctionPropertyMap = new WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>();
-		this._registries = new RegistryHandler();
+		this._registry = new RegistryHandler();
 		this._nodeHandler = new NodeHandler();
-		this._registries.add(this._defaultRegistry, true);
-		this.own(this._registries);
+		this.own(this._registry);
 		this.own(this._nodeHandler);
 		this._boundRenderFunc = this.render.bind(this);
 		this._boundInvalidate = this.invalidate.bind(this);
 
-		this.own(this._registries.on('invalidate', this._boundInvalidate));
+		this.own(this._registry.on('invalidate', this._boundInvalidate));
 		this._checkOnElementUsage();
 	}
 
@@ -309,50 +306,12 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		return this._properties;
 	}
 
-	protected setRegistry(previousRegistry: Registry | undefined, newRegistry: Registry | undefined): void {
-		const { _registries, _defaultRegistry } = this;
-
-		if (_registries.defaultRegistry === _defaultRegistry && newRegistry) {
-			_registries.remove(_defaultRegistry);
-		}
-
-		if (previousRegistry && newRegistry) {
-			_registries.replace(previousRegistry, newRegistry);
-		}
-		else if (newRegistry) {
-			_registries.add(newRegistry);
-		}
-		else if (previousRegistry) {
-			_registries.remove(previousRegistry);
-		}
-	}
-
-	protected setDefaultRegistry(previousRegistry: Registry | undefined, newRegistry: Registry | undefined): void {
-		const { _registries, _defaultRegistry } = this;
-		if (newRegistry === undefined && previousRegistry) {
-			_registries.remove(previousRegistry);
-			if (_registries.defaultRegistry === undefined) {
-				_registries.add(_defaultRegistry);
-			}
-		}
-		else if (newRegistry) {
-			const result = _registries.replace(previousRegistry || _defaultRegistry, newRegistry);
-			if (!result) {
-				_registries.add(newRegistry, true);
-			}
-		}
-	}
-
-	public __setCoreProperties__(coreProperties: CoreProperties) {
+	public __setCoreProperties__(coreProperties: CoreProperties): void {
 		this._renderState = WidgetRenderState.PROPERTIES;
-		const { registry, defaultRegistry } = coreProperties;
+		const { baseRegistry } = coreProperties;
 
-		if (this._coreProperties.registry !== registry) {
-			this.setRegistry(this._coreProperties.registry, registry);
-			this.invalidate();
-		}
-		if (this._coreProperties.defaultRegistry !== defaultRegistry) {
-			this.setDefaultRegistry(this._coreProperties.defaultRegistry, defaultRegistry);
+		if (this._coreProperties.baseRegistry !== baseRegistry) {
+			this._registry.base = baseRegistry;
 			this.invalidate();
 		}
 		this._coreProperties = coreProperties;
@@ -479,32 +438,14 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 					}
 				}
 				else {
-					const { defaultRegistry, registry } = this.__getCoreProperties__(node.properties);
-					node.coreProperties = node.coreProperties || {};
-
-					if (node.coreProperties.bind === undefined) {
-						node.coreProperties.bind = this;
-					}
-					node.coreProperties.defaultRegistry = defaultRegistry;
-					node.coreProperties.registry = registry;
+					node.coreProperties = {
+						bind: this,
+						baseRegistry: this._coreProperties.baseRegistry
+					};
 				}
 				nodes = [ ...nodes, ...node.children ];
 			}
 		}
-	}
-
-	protected __getCoreProperties__(properties: any): CoreProperties {
-		const {
-			registry
-		} = properties;
-		const {
-			defaultRegistry = registry || this._registries.defaultRegistry
-		} = this._coreProperties;
-
-		return {
-			registry,
-			defaultRegistry
-		};
 	}
 
 	protected invalidate(): void {
@@ -644,8 +585,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		return property;
 	}
 
-	public get registries(): RegistryHandler {
-		return this._registries;
+	public get registry(): RegistryHandler {
+		return this._registry;
 	}
 
 	private _runBeforeProperties(properties: any) {
@@ -719,7 +660,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			let child: WidgetBaseInterface<WidgetProperties>;
 
 			if (!isWidgetBaseConstructor(widgetConstructor)) {
-				const item = this._registries.get(widgetConstructor);
+				const item = this._registry.get(widgetConstructor);
 				if (item === null) {
 					return null;
 				}

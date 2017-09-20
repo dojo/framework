@@ -30,6 +30,7 @@ registerSuite({
 		@inject({ name: 'inject-one', getProperties })
 		class TestWidget extends WidgetBase<any> {}
 		const widget = createTestWidget(TestWidget, { registry });
+
 		assert.strictEqual(widget.getWidgetUnderTest().properties.foo, 'bar');
 	},
 	'multiple injectors'() {

@@ -1,6 +1,5 @@
 import global from '@dojo/shim/global';
 import has from '@dojo/has/has';
-import '@dojo/shim/Promise';
 import { VNode } from '@dojo/interfaces/vdom';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
@@ -8,6 +7,7 @@ import { spy, stub, SinonStub } from 'sinon';
 import { v } from '../../../src/d';
 import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projector';
 import { beforeRender, WidgetBase } from '../../../src/WidgetBase';
+import { Registry } from './../../../src/Registry';
 
 const Event = global.window.Event;
 
@@ -744,6 +744,25 @@ registerSuite({
 		// Demonstrates the type guarding for widget properties
 
 		// projector.setProperties({ foo: true });
+	},
+	'registry destroyed when a new registry is received'() {
+		let registryDestroyedCount = 0;
+		class TestRegistry extends Registry {
+			destroy(): Promise<any> {
+				registryDestroyedCount++;
+				return super.destroy();
+			}
+		}
+		const projector = new BaseTestWidget();
+		projector.setProperties({ registry: new TestRegistry() });
+		assert.strictEqual(registryDestroyedCount, 0);
+		projector.setProperties({ registry: new TestRegistry() });
+		assert.strictEqual(registryDestroyedCount, 1);
+		projector.setProperties({ registry: undefined });
+		assert.strictEqual(registryDestroyedCount, 2);
+		projector.setProperties({ registry: new TestRegistry() });
+		projector.destroy();
+		assert.strictEqual(registryDestroyedCount, 3);
 	},
 	'scheduleRender on setting properties'() {
 		const projector = new BaseTestWidget();

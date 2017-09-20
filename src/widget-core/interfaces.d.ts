@@ -231,11 +231,6 @@ export interface WidgetProperties {
 	 * rendering and instance management
 	 */
 	key?: string | number;
-
-	/**
-	 * Optional registry
-	 */
-	registry?: any;
 }
 
 /**
@@ -256,19 +251,14 @@ export interface KeyedWidgetProperties extends WidgetProperties {
 interface CoreProperties {
 
 	/**
-	 * The user registry
-	 */
-	registry?: any;
-
-	/**
 	 * The default registry for the projection
 	 */
-	defaultRegistry?: any;
+	baseRegistry: any;
 
 	/**
 	 * The scope used to bind functions
 	 */
-	bind?: any;
+	bind: any;
 }
 
 /**
@@ -327,7 +317,7 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 	/**
 	 * Core properties that are used by the widget core system
 	 */
-	coreProperties: CoreProperties;
+	coreProperties?: CoreProperties;
 
 	/**
 	 * DNode children
@@ -402,7 +392,7 @@ export interface WidgetBaseInterface<
 	 *
 	 * @param coreProperties The core properties
 	 */
-	__setCoreProperties__(coreProperties: CoreProperties): any;
+	__setCoreProperties__(coreProperties?: CoreProperties): any;
 
 	/**
 	 * Sets the widget's children
