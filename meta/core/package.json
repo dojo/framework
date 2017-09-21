@@ -21,12 +21,12 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/has": "beta2",
-    "@dojo/shim": "beta2"
+    "@dojo/has": "next",
+    "@dojo/shim": "next"
   },
   "devDependencies": {
-    "@dojo/interfaces": "beta2",
-    "@dojo/loader": "beta2",
+    "@dojo/interfaces": "next",
+    "@dojo/loader": "next",
     "@types/benchmark": "~1.0.0",
     "@types/chai": "~3.4.0",
     "@types/formidable": "~1.0.0",
