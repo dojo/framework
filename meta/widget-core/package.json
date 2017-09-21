@@ -26,14 +26,14 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/core": "beta2",
-    "@dojo/has": "beta2",
-    "@dojo/i18n": "beta2",
-    "@dojo/shim": "beta2"
+    "@dojo/core": "next",
+    "@dojo/has": "next",
+    "@dojo/i18n": "next",
+    "@dojo/shim": "next"
   },
   "devDependencies": {
-    "@dojo/interfaces": "beta2",
-    "@dojo/loader": "beta2",
+    "@dojo/interfaces": "next",
+    "@dojo/loader": "next",
     "@types/chai": "3.4.*",
     "@types/glob": "5.0.*",
     "@types/grunt": "0.4.*",
