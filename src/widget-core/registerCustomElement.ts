@@ -5,6 +5,7 @@ import {
 } from './customElements';
 import { Constructor, WidgetProperties } from './interfaces';
 import { WidgetBase } from './WidgetBase';
+import { ProjectorMixin } from './mixins/Projector';
 
 declare namespace customElements {
 	function define(name: string, constructor: any): void;
@@ -30,7 +31,7 @@ export function registerCustomElement(descriptorFactory: CustomElementDescriptor
 	customElements.define(descriptor.tagName, class extends HTMLElement {
 		private _isAppended = false;
 		private _appender: Function;
-		private _widgetInstance: WidgetBase;
+		private _widgetInstance: ProjectorMixin<any>;
 
 		constructor() {
 			super();
@@ -49,11 +50,11 @@ export function registerCustomElement(descriptorFactory: CustomElementDescriptor
 			handleAttributeChanged(this, name, newValue, oldValue);
 		}
 
-		public getWidgetInstance(): WidgetBase<any> {
+		public getWidgetInstance(): ProjectorMixin<any> {
 			return this._widgetInstance;
 		}
 
-		public setWidgetInstance(widget: WidgetBase<any>): void {
+		public setWidgetInstance(widget: ProjectorMixin<any>): void {
 			this._widgetInstance = widget;
 		}
 

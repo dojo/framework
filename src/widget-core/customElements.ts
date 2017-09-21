@@ -1,7 +1,7 @@
 import { assign } from '@dojo/core/lang';
 import { from as arrayFrom } from '@dojo/shim/array';
 import global from '@dojo/shim/global';
-import { Constructor, DNode, WidgetBaseInterface, WidgetProperties } from './interfaces';
+import { Constructor, DNode, WidgetProperties } from './interfaces';
 import { WidgetBase } from './WidgetBase';
 import { w } from './d';
 import { ProjectorMixin } from './mixins/Projector';
@@ -117,8 +117,8 @@ export interface CustomElementDescriptor {
 export interface CustomElement extends HTMLElement {
 	getWidgetConstructor(): Constructor<WidgetBase<WidgetProperties>>;
 	getDescriptor(): CustomElementDescriptor;
-	getWidgetInstance(): WidgetBaseInterface<any>;
-	setWidgetInstance(instance: WidgetBaseInterface<any>): void;
+	getWidgetInstance(): ProjectorMixin<any>;
+	setWidgetInstance(instance: ProjectorMixin<any>): void;
 }
 
 function getWidgetPropertyFromAttribute(attributeName: string, attributeValue: string | null, descriptor: CustomElementAttributeDescriptor): [ string, any ] {
@@ -176,7 +176,7 @@ export function initializeElement(element: CustomElement) {
 			},
 			set(value: any) {
 				const [ propertyName, propertyValue ] = getWidgetPropertyFromAttribute(attribute.attributeName, value, attribute);
-				element.getWidgetInstance().__setProperties__(assign({}, element.getWidgetInstance().properties, {
+				element.getWidgetInstance().setProperties(assign({}, element.getWidgetInstance().properties, {
 					[propertyName]: propertyValue
 				}));
 			}
@@ -196,7 +196,7 @@ export function initializeElement(element: CustomElement) {
 			},
 
 			set(value: any) {
-				element.getWidgetInstance().__setProperties__(assign(
+				element.getWidgetInstance().setProperties(assign(
 					{},
 					element.getWidgetInstance().properties,
 					{ [widgetPropertyName]: setValue ? setValue(value) : value }
@@ -265,7 +265,7 @@ export function handleAttributeChanged(element: CustomElement, name: string, new
 	attributes.forEach((attribute) => {
 		if (attribute.attributeName === name) {
 			const [ propertyName, propertyValue ] = getWidgetPropertyFromAttribute(name, newValue, attribute);
-			element.getWidgetInstance().__setProperties__(assign(
+			element.getWidgetInstance().setProperties(assign(
 				{},
 				element.getWidgetInstance().properties,
 				{ [propertyName]: propertyValue }
