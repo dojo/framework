@@ -22,7 +22,6 @@ import {
 	WidgetBaseInterface,
 	WidgetProperties
 } from './interfaces';
-import { diffProperty } from './decorators/diffProperty';
 import RegistryHandler from './RegistryHandler';
 import NodeHandler from './NodeHandler';
 import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './Registry';
