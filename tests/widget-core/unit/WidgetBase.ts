@@ -740,6 +740,20 @@ registerSuite({
 
 		assert.strictEqual(called, true);
 	},
+	changedPropertyKeys() {
+		class TestWidget extends WidgetBase<any> {}
+		const widget = new TestWidget();
+		widget.__setProperties__({ foo: true });
+		assert.deepEqual(widget.changedPropertyKeys, [ 'foo' ]);
+		widget.__setProperties__({ foo: true });
+		assert.deepEqual(widget.changedPropertyKeys, []);
+		widget.__setProperties__({ foo: true });
+		widget.__setProperties__({ foo: true, bar: true });
+		assert.deepEqual(widget.changedPropertyKeys, [ 'bar' ]);
+		const changedPropertyKeys = widget.changedPropertyKeys;
+		changedPropertyKeys.push('bad key');
+		assert.notDeepEqual(changedPropertyKeys, widget.changedPropertyKeys);
+	},
 	render: {
 		'render with non widget children'() {
 			class TestWidget extends WidgetBase<any> {

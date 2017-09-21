@@ -149,10 +149,18 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	 */
 	private _properties: P & WidgetProperties & { [index: string]: any };
 
+	/**
+	 * Array of property keys considered changed from the previous set properties
+	 */
+	private _changedPropertyKeys: string[] = [];
+
+	/**
+	 * Core properties widget base sets for all widget
+	 */
 	private _coreProperties: CoreProperties = {} as CoreProperties;
 
 	/**
-	 * cached chldren map for instance management
+	 * cached children map for instance management
 	 */
 	private _cachedChildrenMap: Map<string | number | Promise<WidgetBaseConstructor> | WidgetBaseConstructor, WidgetCacheWrapper[]>;
 
@@ -305,6 +313,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		return this._properties;
 	}
 
+	public get changedPropertyKeys(): string[] {
+		return [ ...this._changedPropertyKeys ];
+	}
+
 	public __setCoreProperties__(coreProperties: CoreProperties): void {
 		this._renderState = WidgetRenderState.PROPERTIES;
 		const { baseRegistry } = coreProperties;
@@ -368,6 +380,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		}
 
 		this._properties = diffPropertyResults;
+		this._changedPropertyKeys = changedPropertyKeys;
 
 		if (changedPropertyKeys.length > 0) {
 			this.invalidate();
