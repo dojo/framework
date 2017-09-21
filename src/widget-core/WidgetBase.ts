@@ -12,7 +12,6 @@ import {
 	BeforeProperties,
 	BeforeRender,
 	CoreProperties,
-	DiffPropertyFunction,
 	DiffPropertyReaction,
 	DNode,
 	Render,
@@ -23,6 +22,7 @@ import {
 	WidgetBaseInterface,
 	WidgetProperties
 } from './interfaces';
+import { diffProperty } from './decorators/diffProperty';
 import RegistryHandler from './RegistryHandler';
 import NodeHandler from './NodeHandler';
 import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './Registry';
@@ -57,66 +57,6 @@ interface ReactionFunctionConfig {
 export type BoundFunctionData = { boundFunc: (...args: any[]) => any, scope: any };
 
 const decoratorMap = new Map<Function, Map<string, any[]>>();
-
-/**
- * Decorator that can be used to register a function to run as an aspect to `render`
- */
-export function afterRender(method: Function): (target: any) => void;
-export function afterRender(): (target: any, propertyKey: string) => void;
-export function afterRender(method?: Function) {
-	return handleDecorator((target, propertyKey) => {
-		target.addDecorator('afterRender', propertyKey ? target[propertyKey] : method);
-	});
-}
-
-/**
- * Decorator that can be used to register a reducer function to run as an aspect before to `render`
- */
-export function beforeRender(method: Function): (target: any) => void;
-export function beforeRender(): (target: any, propertyKey: string) => void;
-export function beforeRender(method?: Function) {
-	return handleDecorator((target, propertyKey) => {
-		target.addDecorator('beforeRender', propertyKey ? target[propertyKey] : method);
-	});
-}
-
-/**
- * Decorator that can be used to register a function as a specific property diff
- *
- * @param propertyName  The name of the property of which the diff function is applied
- * @param diffType      The diff type, default is DiffType.AUTO.
- * @param diffFunction  A diff function to run if diffType if DiffType.CUSTOM
- */
-export function diffProperty(propertyName: string, diffFunction: DiffPropertyFunction, reactionFunction?: Function) {
-	return handleDecorator((target, propertyKey) => {
-		target.addDecorator(`diffProperty:${propertyName}`, diffFunction.bind(null));
-		target.addDecorator('registeredDiffProperty', propertyName);
-		if (reactionFunction || propertyKey) {
-			target.addDecorator('diffReaction', {
-				propertyName,
-				reaction: propertyKey ? target[propertyKey] : reactionFunction
-			});
-		}
-	});
-}
-
-/**
- * Generic decorator handler to take care of whether or not the decorator was called at the class level
- * or the method level.
- *
- * @param handler
- */
-export function handleDecorator(handler: (target: any, propertyKey?: string) => void) {
-	return function (target: any, propertyKey?: string, descriptor?: PropertyDescriptor) {
-		if (typeof target === 'function') {
-			handler(target.prototype, undefined);
-		}
-		else {
-			handler(target, propertyKey);
-		}
-	};
-}
-
 const boundAuto = auto.bind(null);
 
 /**

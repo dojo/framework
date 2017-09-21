@@ -1,7 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { v , w } from '../../src/d';
-import { diffProperty, WidgetBase } from '../../src/WidgetBase';
+import { WidgetBase } from '../../src/WidgetBase';
+import { diffProperty } from './../../src/decorators/diffProperty';
 import { always } from '../../src/diff';
 import { Container } from './../../src/Container';
 import { Registry } from './../../src/Registry';

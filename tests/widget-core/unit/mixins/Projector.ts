@@ -6,7 +6,8 @@ import * as assert from 'intern/chai!assert';
 import { spy, stub, SinonStub } from 'sinon';
 import { v } from '../../../src/d';
 import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projector';
-import { beforeRender, WidgetBase } from '../../../src/WidgetBase';
+import { WidgetBase } from '../../../src/WidgetBase';
+import { beforeRender } from './../../../src/decorators/beforeRender';
 import { Registry } from './../../../src/Registry';
 
 const Event = global.window.Event;

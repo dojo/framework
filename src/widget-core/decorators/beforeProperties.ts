@@ -1,4 +1,4 @@
-import { handleDecorator } from './../WidgetBase';
+import { handleDecorator } from './handleDecorator';
 import { BeforeProperties } from './../interfaces';
 
 /**

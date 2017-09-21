@@ -1,31 +1,25 @@
-import { VNode } from '@dojo/interfaces/vdom';
-import Promise from '@dojo/shim/Promise';
+
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { stub, spy, SinonStub } from 'sinon';
 import { v, w } from '../../src/d';
-import { Constructor, DNode, PropertyChangeRecord, Render } from '../../src/interfaces';
-import {
-	WidgetBase,
-	diffProperty,
-	afterRender,
-	beforeRender
-} from '../../src/WidgetBase';
-import { ignore, always, auto } from '../../src/diff';
+import { VNode } from '@dojo/interfaces/vdom';
+import { Constructor, DNode } from '../../src/interfaces';
+import { WidgetBase } from '../../src/WidgetBase';
 import Registry, { WIDGET_BASE_TYPE } from './../../src/Registry';
-import createTestWidget from './../support/createTestWidget';
 
-interface TestProperties {
-	id?: string;
-	foo: string;
-	bar?: null | string;
-	baz?: number;
-	qux?: boolean;
-}
+import { handleDecorator } from './../../src/decorators/handleDecorator';
+import createTestWidget from './../support/createTestWidget';
 
 let consoleStub: SinonStub;
 
 const registry = new Registry();
+
+function testDecorator(func?: Function) {
+	return handleDecorator((target, propertyKey) => {
+		target.addDecorator('test-decorator', func);
+	});
+}
 
 registerSuite({
 	name: 'WidgetBase',
@@ -79,12 +73,8 @@ registerSuite({
 			let invalidateCalled = false;
 			let renderCount = 0;
 			class Foo extends WidgetBase<{ bar: string }> {
-				@diffProperty('bar', auto)
-				barDiff() {
-					this.invalidate();
-					return {
-						changed: false
-					};
+				invalidate() {
+					super.invalidate();
 				}
 				render() {
 					renderCount++;
@@ -98,7 +88,9 @@ registerSuite({
 			});
 			foo.__render__();
 			assert.equal(renderCount, 1);
-			foo.__setProperties__({ bar: 'qux' });
+			foo.__setCoreProperties__({ bind: foo, baseRegistry: registry });
+			foo.invalidate();
+			foo.__setProperties__({ bar: '' });
 			foo.__render__();
 			assert.equal(renderCount, 2);
 			assert.isFalse(invalidateCalled);
@@ -129,281 +121,6 @@ registerSuite({
 			const widget = new WidgetBase();
 			const renderedWidget = <VNode> (<any> widget).__render__();
 			assert.deepEqual(renderedWidget.vnodeSelector, 'div');
-	},
-	diffProperty: {
-		'decorator': {
-			'diff with no reaction'() {
-				let callCount = 0;
-				function diffFoo(previousProperty: any, newProperty: any) {
-					callCount++;
-					assert.equal(newProperty, 'bar');
-					return {
-						changed: true,
-						value: newProperty
-					};
-				}
-
-				@diffProperty('foo', diffFoo)
-				@diffProperty('bar', diffFoo)
-				class TestWidget extends WidgetBase<TestProperties> {}
-
-				const testWidget = new TestWidget();
-
-				testWidget.__setProperties__({ id: '', foo: 'bar' });
-				assert.equal(callCount, 1);
-			},
-			'diff with reaction': {
-				'reaction does not execute if no registered properties are changed'() {
-					let callCount = 0;
-					function customDiff(previousProperty: any, newProperty: any) {
-						callCount++;
-						return {
-							changed: false,
-							value: newProperty
-						};
-					}
-
-					class TestWidget extends WidgetBase<TestProperties> {
-
-						reactionCalled = false;
-
-						@diffProperty('foo', customDiff)
-						@diffProperty('id', customDiff)
-						protected onFooOrBarChanged(): void {
-							this.reactionCalled = true;
-						}
-					}
-					const testWidget = new TestWidget();
-					testWidget.__setProperties__({ id: '', foo: 'bar' });
-					assert.strictEqual(callCount, 2);
-					assert.isFalse(testWidget.reactionCalled);
-				},
-				'reaction executed when at least one registered properties is changed'() {
-					let callCount = 0;
-					function customDiff(previousProperty: any, newProperty: any) {
-						callCount++;
-						return {
-							changed: newProperty === 'bar' ? true : false,
-							value: newProperty
-						};
-					}
-
-					class TestWidget extends WidgetBase<TestProperties> {
-
-						reactionCalled = false;
-
-						@diffProperty('foo', customDiff)
-						@diffProperty('id', customDiff)
-						protected onFooOrBarChanged(): void {
-							this.reactionCalled = true;
-						}
-					}
-					const testWidget = new TestWidget();
-					testWidget.__setProperties__({ id: '', foo: 'bar' });
-					assert.strictEqual(callCount, 2);
-					assert.isTrue(testWidget.reactionCalled);
-				}
-			}
-		},
-		'non decorator': {
-			'diff with no reaction'() {
-				let callCount = 0;
-
-				function diffPropertyFoo(previousProperty: string, newProperty: string): PropertyChangeRecord {
-					callCount++;
-					assert.equal(newProperty, 'bar');
-					return {
-						changed: false,
-						value: newProperty
-					};
-				}
-
-				class TestWidget extends WidgetBase<TestProperties> {
-					constructor() {
-						super();
-						diffProperty('foo', diffPropertyFoo)(this);
-					}
-				}
-
-				const testWidget = new TestWidget();
-				testWidget.__setProperties__({ id: '', foo: 'bar' });
-				assert.equal(callCount, 1);
-			},
-			'diff with reaction': {
-				'reaction does not execute if no registered properties are changed'() {
-					let callCount = 0;
-
-					function diffPropertyFoo(previousProperty: string, newProperty: string): PropertyChangeRecord {
-						callCount++;
-						assert.equal(newProperty, 'bar');
-						return {
-							changed: false,
-							value: newProperty
-						};
-					}
-
-					class TestWidget extends WidgetBase<TestProperties> {
-						reactionCalled = false;
-						constructor() {
-							super();
-							diffProperty('foo', diffPropertyFoo, this.onFooPropertyChanged)(this);
-						}
-
-						onFooPropertyChanged(previousProperties: any, newProperties: any): void {
-							this.reactionCalled = true;
-						}
-					}
-
-					const testWidget = new TestWidget();
-					testWidget.__setProperties__({ id: '', foo: 'bar' });
-					assert.equal(callCount, 1);
-					assert.isFalse(testWidget.reactionCalled);
-				},
-				'reaction executed when at least one registered properties is changed'() {
-					let callCount = 0;
-
-					function customDiffProperty(previousProperty: string, newProperty: string): PropertyChangeRecord {
-						callCount++;
-						return {
-							changed: newProperty === 'bar' ? true : false,
-							value: newProperty
-						};
-					}
-
-					class TestWidget extends WidgetBase<TestProperties> {
-						reactionCalled = false;
-						constructor() {
-							super();
-							diffProperty('foo', customDiffProperty, this.onPropertyChanged)(this);
-							diffProperty('id', customDiffProperty, this.onPropertyChanged)(this);
-						}
-
-						onPropertyChanged(previousProperties: any, newProperties: any): void {
-							this.reactionCalled = true;
-						}
-					}
-
-					const testWidget = new TestWidget();
-					testWidget.__setProperties__({ id: '', foo: 'bar' });
-					assert.equal(callCount, 2);
-					assert.isTrue(testWidget.reactionCalled);
-				}
-			}
-		},
-		'decorators can be applied at instance level'() {
-			let renderCallCount = 0;
-
-			class TestWidget extends WidgetBase<any> {
-				constructor() {
-					super();
-
-					afterRender((node: DNode) => {
-						renderCallCount++;
-						return node;
-					})(this);
-				}
-
-				render() {
-					return v('div');
-				}
-			}
-
-			new TestWidget();
-			const widget2 = new TestWidget();
-			widget2.__render__();
-
-			assert.equal(renderCallCount, 1);
-		},
-		'multiple default decorators on the same method cause the first matching decorator to win'() {
-			@diffProperty('foo', ignore)
-			class TestWidget extends WidgetBase<TestProperties> { }
-
-			@diffProperty('foo', always)
-			class SubWidget extends TestWidget { }
-
-			const widget = new SubWidget();
-			const vnode = widget.__render__();
-
-			widget.__setProperties__({
-				foo: 'bar'
-			});
-
-			assert.notStrictEqual(vnode, widget.__render__());
-		},
-		'multiple custom decorators on the same method cause the first matching decorator to win'() {
-			const calls: string[] = [];
-
-			function diff1(prevProp: any, newProp: any): PropertyChangeRecord {
-				calls.push('diff1');
-				return {
-					changed: false,
-					value: newProp
-				};
-			}
-
-			function diff2(prevProp: any, newProp: any): PropertyChangeRecord {
-				calls.push('diff2');
-				return {
-					changed: false,
-					value: newProp
-				};
-			}
-
-			@diffProperty('foo', diff1)
-			class TestWidget extends WidgetBase<TestProperties> { }
-
-			@diffProperty('foo', diff2)
-			class SubWidget extends TestWidget { }
-
-			const widget = new SubWidget();
-			widget.__setProperties__({
-				id: '',
-				foo: 'bar'
-			});
-
-			assert.deepEqual(calls, ['diff1', 'diff2']);
-			assert.strictEqual(calls[0], 'diff1');
-			assert.strictEqual(calls[1], 'diff2');
-		},
-
-		'diffProperty properties are excluded from catch-all'() {
-			function customDiff() {
-				return {
-					changed: false,
-					value: ''
-				};
-			}
-			@diffProperty('foo', customDiff)
-			@diffProperty('id', customDiff)
-			class TestWidget extends WidgetBase<TestProperties> { }
-
-			const widget = new TestWidget();
-			const vnode = widget.__render__();
-
-			widget.__setProperties__({
-				foo: '',
-				id: ''
-			});
-			assert.strictEqual(vnode, widget.__render__());
-		},
-
-		'properties that are deleted dont get returned'() {
-			const widget = new WidgetBase<any>();
-			widget.__setProperties__({
-				a: 1,
-				b: 2,
-				c: 3
-			});
-
-			assert.deepEqual(widget.properties, { a: 1, b: 2, c: 3 });
-
-			widget.__setProperties__({
-				a: 4,
-				c: 5
-			});
-
-			assert.deepEqual(widget.properties, { a: 4, c: 5 });
-		}
 	},
 	setProperties: {
 		'widgets function properties are bound to the parent by default'() {
@@ -502,212 +219,11 @@ registerSuite({
 			assert.isTrue(testWidget.properties.functionIsBound);
 		}
 	},
-	beforeRender: {
-		decorator() {
-			let beforeRenderCount = 1;
-			type RenderFunction = () => DNode;
-			class TestWidget extends WidgetBase<any> {
-				@beforeRender()
-				firstAfterRender(renderFunction: RenderFunction, properties: any, children: DNode[]): RenderFunction {
-					assert.strictEqual(beforeRenderCount++, 1);
-					return () => {
-						const rendered = renderFunction();
-						const clonedProperties = { ...properties };
-						return v('bar', clonedProperties, [ rendered, ...children ]);
-					};
-				}
-
-				@beforeRender()
-				secondAfterRender(renderFunction: RenderFunction, properties: any, children: DNode[]): RenderFunction {
-					assert.strictEqual(beforeRenderCount++, 2);
-					return () => {
-						const rendered = renderFunction();
-						properties.bar = 'foo';
-						return v('qux', properties, [ rendered ]);
-					};
-				}
-			}
-
-			class ExtendedTestWidget extends TestWidget {
-				@beforeRender()
-				thirdAfterRender(renderFunction: RenderFunction, properties: any, children: DNode[]): RenderFunction {
-					assert.strictEqual(beforeRenderCount, 3);
-					return renderFunction;
-				}
-
-				render() {
-					return v('foo', this.children);
-				}
-			}
-
-			const widget = new ExtendedTestWidget();
-			widget.__setChildren__([v('baz', { baz: 'qux' })]);
-			widget.__setProperties__({ foo: 'bar' });
-			const qux: any = widget.__render__();
-			assert.equal(qux.vnodeSelector, 'qux');
-			assert.deepEqual(qux.properties.bind, widget);
-			assert.equal(qux.properties.bar, 'foo');
-			assert.equal(qux.properties.foo, 'bar');
-			assert.lengthOf(qux.children, 1);
-			const bar = qux.children[0];
-			assert.equal(bar.vnodeSelector, 'bar');
-			assert.deepEqual(bar.properties.bind, widget);
-			assert.deepEqual(bar.properties.foo, 'bar');
-			assert.lengthOf(bar.children, 2);
-			const foo = bar.children[0];
-			assert.equal(foo.vnodeSelector, 'foo');
-			assert.deepEqual(foo.properties.bind, widget);
-			assert.lengthOf(foo.children, 1);
-			const baz1 = foo.children[0];
-			assert.equal(baz1.vnodeSelector, 'baz');
-			assert.deepEqual(baz1.properties.bind, widget);
-			assert.deepEqual(baz1.properties.baz, 'qux');
-			assert.lengthOf(baz1.children, 0);
-			const baz2 = bar.children[1];
-			assert.equal(baz2.vnodeSelector, 'baz');
-			assert.deepEqual(baz2.properties.bind, widget);
-			assert.deepEqual(baz2.properties.baz, 'qux');
-			assert.lengthOf(baz2.children, 0);
-		},
-		'class level decorator'() {
-			let beforeRenderCount = 0;
-
-			@beforeRender(function (renderFunc: Render) {
-				beforeRenderCount++;
-				return renderFunc;
-			})
-			class TestWidget extends WidgetBase<any> {
-			}
-
-			const widget = new TestWidget();
-			widget.__render__();
-			assert.strictEqual(beforeRenderCount, 1);
-		},
-		'Use previous render function when a beforeRender does not return a function'() {
-			class TestWidget extends WidgetBase {
-				@beforeRender()
-				protected firstBeforeRender(renderFunc: Render) {
-					return () => 'first render';
-				}
-
-				@beforeRender()
-				protected secondBeforeRender(renderFunc: Render) { }
-			}
-
-			const widget = new TestWidget();
-			const vNode = <VNode> widget.__render__();
-			assert.strictEqual(vNode, 'first render');
-			assert.isTrue(consoleStub.calledOnce);
-			assert.isTrue(consoleStub.calledWith('Render function not returned from beforeRender, using previous render'));
-		}
-	},
-	afterRender: {
-		decorator() {
-			let afterRenderCount = 1;
-			class TestWidget extends WidgetBase<any> {
-				@afterRender()
-				firstAfterRender(result: DNode): DNode {
-					assert.strictEqual(afterRenderCount++, 1);
-					return result;
-				}
-
-				@afterRender()
-				secondAfterRender(result: DNode): DNode {
-					assert.strictEqual(afterRenderCount++, 2);
-					return result;
-				}
-			}
-
-			class ExtendedTestWidget extends TestWidget {
-				@afterRender()
-				thirdAfterRender(result: DNode): DNode {
-					assert.strictEqual(afterRenderCount, 3);
-					return result;
-				}
-			}
-
-			const widget = new ExtendedTestWidget();
-			widget.__render__();
-			assert.strictEqual(afterRenderCount, 3);
-		},
-		'non decorator'() {
-			let afterRenderCount = 1;
-			class TestWidget extends WidgetBase<any> {
-
-				constructor() {
-					super();
-					afterRender()(this, 'firstAfterRender');
-					afterRender()(this, 'secondAfterRender');
-				}
-
-				firstAfterRender(result: DNode): DNode {
-					assert.strictEqual(afterRenderCount++, 1);
-					return result;
-				}
-
-				secondAfterRender(result: DNode): DNode {
-					assert.strictEqual(afterRenderCount++, 2);
-					return result;
-				}
-			}
-
-			class ExtendedTestWidget extends TestWidget {
-
-				constructor() {
-					super();
-					afterRender(this.thirdAfterRender)(this);
-				}
-
-				thirdAfterRender(result: DNode): DNode {
-					assert.strictEqual(afterRenderCount, 3);
-					return result;
-				}
-			}
-
-			const widget = new ExtendedTestWidget();
-			widget.__render__();
-			assert.strictEqual(afterRenderCount, 3);
-		},
-		'class level decorator'() {
-			let afterRenderCount = 0;
-
-			@afterRender(function (node: any) {
-				afterRenderCount++;
-				return node;
-			})
-			class TestWidget extends WidgetBase<any> {
-			}
-
-			const widget = new TestWidget();
-			widget.__render__();
-			assert.strictEqual(afterRenderCount, 1);
-		},
-		'class level without decorator'() {
-			let afterRenderCount = 0;
-
-			function afterRenderFn(node: any) {
-				afterRenderCount++;
-
-				return node;
-			}
-
-			class TestWidget extends WidgetBase<any> {
-				constructor() {
-					super();
-					afterRender(afterRenderFn)(this);
-				}
-			}
-
-			const widget = new TestWidget();
-			widget.__render__();
-			assert.strictEqual(afterRenderCount, 1);
-		}
-	},
 	'extendable'() {
 		let called = false;
 
 		function PropertyLogger() {
-			return afterRender(function(dNode: any) {
+			return testDecorator(function(dNode: any) {
 				called = true;
 				return dNode;
 			});
@@ -715,11 +231,14 @@ registerSuite({
 
 		@PropertyLogger()
 		class TestWidget extends WidgetBase {
+			public log() {
+				const testDecorators = this.getDecorator('test-decorator');
+				testDecorators[0]();
+			}
 		}
 
 		const widget = new TestWidget();
-		widget.__render__();
-
+		widget.log();
 		assert.strictEqual(called, true);
 	},
 	changedPropertyKeys() {
@@ -1348,12 +867,8 @@ registerSuite({
 		assert.equal(foo, 1);
 	},
 	'decorators are cached'() {
+		@testDecorator()
 		class TestWidget extends WidgetBase<any> {
-			@afterRender()
-			running(result: DNode): DNode {
-				return result;
-			}
-
 			render() {
 				return v('div');
 			}
@@ -1366,40 +881,31 @@ registerSuite({
 		const widget = new TestWidget();
 		const decoratorSpy = spy(widget, '_buildDecoratorList');
 
-		widget.callGetDecorator('afterRender');
+		widget.callGetDecorator('test-decorator');
 
 		// first call calls the method
 		assert.equal(decoratorSpy.callCount, 1);
-
-		widget.callGetDecorator('afterRender');
+		widget.callGetDecorator('test-decorator');
 
 		// second call is cached
 		assert.equal(decoratorSpy.callCount, 1);
 	},
 	'decorators applied to subclasses are not applied to base classes'() {
-		class TestWidget extends WidgetBase<any> {
-			@afterRender()
-			firstRender(result: DNode): DNode {
-				return result;
-			}
-
-			getAfterRenders(): Function[] {
-				return this.getDecorator('afterRender');
+		@testDecorator()
+		class TestWidget extends WidgetBase {
+			getTestDecorators(): Function[] {
+				return this.getDecorator('test-decorator');
 			}
 		}
 
-		class TestWidget2 extends TestWidget {
-			@afterRender()
-			secondRender(result: DNode): DNode {
-				return result;
-			}
-		}
+		@testDecorator()
+		class TestWidget2 extends TestWidget { }
 
 		const testWidget = new TestWidget();
 		const testWidget2 = new TestWidget2();
 
-		assert.equal(testWidget.getAfterRenders().length, 1);
-		assert.equal(testWidget2.getAfterRenders().length, 2);
+		assert.equal(testWidget.getTestDecorators().length, 1);
+		assert.equal(testWidget2.getTestDecorators().length, 2);
 	},
 	'decorator cache is populated when addDecorator is called after instantiation'() {
 		class TestWidget extends WidgetBase<any> {

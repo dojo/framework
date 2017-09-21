@@ -1,5 +1,6 @@
 import WeakMap from '@dojo/shim/WeakMap';
-import { handleDecorator, WidgetBase } from './../WidgetBase';
+import { WidgetBase } from './../WidgetBase';
+import { handleDecorator } from './handleDecorator';
 import { Injector } from './../Injector';
 import { beforeProperties } from './beforeProperties';
 import { RegistryLabel } from './../interfaces';
@@ -61,3 +62,5 @@ export function inject({ name, getProperties }: InjectConfig) {
 		})(target);
 	});
 }
+
+export default inject;

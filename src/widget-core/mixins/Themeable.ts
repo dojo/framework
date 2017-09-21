@@ -5,7 +5,9 @@ import { ClassesFunction, Constructor, WidgetProperties } from './../interfaces'
 import { Registry } from './../Registry';
 import { Injector } from './../Injector';
 import { inject } from './../decorators/inject';
-import { diffProperty, WidgetBase, handleDecorator } from './../WidgetBase';
+import { WidgetBase } from './../WidgetBase';
+import { handleDecorator } from './../decorators/handleDecorator';
+import { diffProperty } from './../decorators/diffProperty';
 import { shallow } from './../diff';
 
 /**

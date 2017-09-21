@@ -9,7 +9,8 @@ import i18n, {
 } from '@dojo/i18n/i18n';
 import { VNodeProperties } from '@dojo/interfaces/vdom';
 import { Constructor, DNode, WidgetProperties } from './../interfaces';
-import { afterRender, WidgetBase } from './../WidgetBase';
+import { WidgetBase } from './../WidgetBase';
+import { afterRender } from './../decorators/afterRender';
 import { isHNode } from './../d';
 
 export interface I18nProperties extends WidgetProperties {
