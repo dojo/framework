@@ -24,7 +24,7 @@
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
     "@types/sinon": "~1.16.0",
-    "@dojo/loader": "beta2",
+    "@dojo/loader": "next",
     "grunt": "~1.0.1",
     "grunt-dojo2": "latest",
     "intern": "~3.4.1",
