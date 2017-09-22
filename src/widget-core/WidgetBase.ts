@@ -379,7 +379,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			if (isHNode(node) || isWNode(node)) {
 				node.properties = node.properties || {};
 				if (isHNode(node)) {
-					if (rootNodes.indexOf(node) === -1 || node.properties.key) {
+					if (rootNodes.indexOf(node) !== -1 || node.properties.key) {
 						node.properties.afterCreate = this._afterCreateCallback;
 						node.properties.afterUpdate = this._afterUpdateCallback;
 					}

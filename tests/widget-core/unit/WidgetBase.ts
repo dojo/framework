@@ -1,4 +1,3 @@
-
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { stub, spy, SinonStub } from 'sinon';
@@ -254,6 +253,128 @@ registerSuite({
 		const changedPropertyKeys = widget.changedPropertyKeys;
 		changedPropertyKeys.push('bad key');
 		assert.notDeepEqual(changedPropertyKeys, widget.changedPropertyKeys);
+	},
+	'decorate rendered DNodes': {
+		'HNode': {
+			'single root node'() {
+				class TestWidget extends WidgetBase {
+					render() {
+						return v('div');
+					}
+				}
+				const widget = new TestWidget();
+				const result = widget.__render__() as VNode;
+				assert.strictEqual(result.properties!.bind, widget);
+				assert.isFunction(result.properties!.afterCreate);
+				assert.isFunction(result.properties!.afterUpdate);
+			},
+			'single root node with key'() {
+				class TestWidget extends WidgetBase {
+					render() {
+						return v('div', { key: '1' });
+					}
+				}
+				const widget = new TestWidget();
+				const result = widget.__render__() as VNode;
+				assert.strictEqual(result.properties!.bind, widget);
+				assert.isFunction(result.properties!.afterCreate);
+				assert.isFunction(result.properties!.afterUpdate);
+			},
+			'single root node with children'() {
+				class TestWidget extends WidgetBase {
+					render() {
+						return v('div', { key: '1' }, [
+							v('div'),
+							v('div', { key: '1' })
+						]);
+					}
+				}
+				const widget = new TestWidget();
+				const result = widget.__render__() as VNode;
+				assert.strictEqual(result.properties!.bind, widget);
+				assert.isFunction(result.properties!.afterCreate);
+				assert.isFunction(result.properties!.afterUpdate);
+
+				const childOne = result.children![0];
+				assert.strictEqual(childOne.properties!.bind, widget);
+				assert.isUndefined(childOne.properties!.afterCreate);
+				assert.isUndefined(childOne.properties!.afterUpdate);
+
+				const childTwo = result.children![1];
+				assert.strictEqual(childTwo.properties!.bind, widget);
+				assert.isFunction(childTwo.properties!.afterCreate);
+				assert.isFunction(childTwo.properties!.afterUpdate);
+			},
+			'Array root with mixed keys'() {
+				class TestWidget extends WidgetBase {
+					render() {
+						return [
+							v('div', { key: '1' }),
+							v('div'),
+							v('div', { key: '2' })
+						];
+
+					}
+				}
+				const widget = new TestWidget();
+				const results = widget.__render__() as VNode[];
+				for (let i = 0; i < results.length; i++) {
+					const result = results[i];
+					assert.strictEqual(result.properties!.bind, widget);
+					assert.isFunction(result.properties!.afterCreate);
+					assert.isFunction(result.properties!.afterUpdate);
+				}
+			},
+			'Array root with children'() {
+				class TestWidget extends WidgetBase {
+					render() {
+						return [
+							v('div', { key: '1' }, [
+								v('div')
+							]),
+							v('div', [
+								v('div', { key: '1' })
+							])
+						];
+
+					}
+				}
+				const widget = new TestWidget();
+				const results = widget.__render__() as VNode[];
+				const resultOne = results[0];
+				assert.strictEqual(resultOne.properties!.bind, widget);
+				assert.isFunction(resultOne.properties!.afterCreate);
+				assert.isFunction(resultOne.properties!.afterUpdate);
+				const resultOneChild = resultOne.children![0];
+				assert.strictEqual(resultOneChild.properties!.bind, widget);
+				assert.isUndefined(resultOneChild.properties!.afterCreate);
+				assert.isUndefined(resultOneChild.properties!.afterUpdate);
+				const resultTwo = results[1];
+				assert.strictEqual(resultTwo.properties!.bind, widget);
+				assert.isFunction(resultTwo.properties!.afterCreate);
+				assert.isFunction(resultTwo.properties!.afterUpdate);
+				const resultTwoChild = resultTwo.children![0];
+				assert.strictEqual(resultTwoChild.properties!.bind, widget);
+				assert.isFunction(resultTwoChild.properties!.afterCreate);
+				assert.isFunction(resultTwoChild.properties!.afterUpdate);
+			}
+		},
+		'WNode'() {
+			class ChildWidget extends WidgetBase {}
+			const setCorePropertiesSpy = spy(ChildWidget.prototype, '__setCoreProperties__');
+			class TestWidget extends WidgetBase {
+				render() {
+					return w(ChildWidget, {});
+				}
+			}
+			const widget = new TestWidget();
+			widget.__render__();
+			assert.isTrue(setCorePropertiesSpy.calledOnce);
+			assert.deepEqual(setCorePropertiesSpy.firstCall.args[0], {
+				bind: widget,
+				baseRegistry: undefined
+			});
+		}
 	},
 	render: {
 		'render with non widget children'() {

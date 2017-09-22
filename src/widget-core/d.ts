@@ -101,8 +101,8 @@ export function v(tag: string, propertiesOrChildren: VirtualDomProperties | DNod
 			tag,
 			children,
 			properties,
-			render(this: { vNodes: VNode[], properties: VNodeProperties }) {
-				return h(tag, this.properties, this.vNodes);
+			render(this: { tag: string, vNodes: VNode[], properties: VNodeProperties }) {
+				return h(this.tag, this.properties, this.vNodes);
 			},
 			type: HNODE
 		};

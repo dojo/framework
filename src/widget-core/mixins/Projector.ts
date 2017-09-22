@@ -5,11 +5,13 @@ import { Handle } from '@dojo/interfaces/core';
 import { Evented } from '@dojo/core/Evented';
 import { VNode } from '@dojo/interfaces/vdom';
 import { ProjectionOptions } from '../interfaces';
-import { dom, h, Projection } from 'maquette';
+import { dom, Projection } from 'maquette';
 import 'pepjs';
 import cssTransitions from '../animations/cssTransitions';
 import { Constructor, DNode } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
+import { afterRender } from './../decorators/afterRender';
+import { isHNode, v } from './../d';
 import { Registry } from './../Registry';
 import eventHandlerInterceptor from '../util/eventHandlerInterceptor';
 
@@ -313,6 +315,36 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			return this._projection.domNode.outerHTML;
 		}
 
+		@afterRender()
+		public afterRender(result: DNode) {
+			let node = result;
+			if (Array.isArray(result) || typeof result === 'string' || result === null || result === undefined) {
+				if (!this._rootTagName) {
+					this._rootTagName = 'span';
+				}
+
+				node = v(this._rootTagName);
+				node.children = Array.isArray(result) ? result : [ result ];
+			}
+			else if (isHNode(node) && !this._rootTagName) {
+				this._rootTagName = node.tag;
+			}
+
+			if (isHNode(node)) {
+				if (this._rootTagName !== node.tag) {
+					if (this._attachType === AttachType.Merge) {
+						node.tag = this._rootTagName;
+					}
+					else {
+						node = v(this._rootTagName);
+						node.children = Array.isArray(result) ? result : [ result ];
+					}
+				}
+			}
+
+			return node;
+		}
+
 		public __render__(): VNode {
 			if (this._projectorChildren) {
 				this.setChildren(this._projectorChildren);
@@ -320,28 +352,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			if (this._projectorProperties) {
 				this.setProperties(this._projectorProperties);
 			}
-			let result = super.__render__();
-
-			if (Array.isArray(result) || typeof result === 'string' || result === null || result === undefined) {
-				if (!this._rootTagName) {
-					this._rootTagName = 'span';
-				}
-
-				result = h(this._rootTagName, {}, result);
-			}
-			else if (!this._rootTagName) {
-				this._rootTagName = result.vnodeSelector;
-			}
-
-			if (this._rootTagName !== result.vnodeSelector) {
-				if (this._attachType === AttachType.Merge) {
-					assign(result, { vnodeSelector: this._rootTagName });
-				}
-				else {
-					result = h(this._rootTagName, {}, result);
-				}
-			}
-			return result;
+			return super.__render__() as VNode;
 		}
 
 		public invalidate(): void {
