@@ -30,6 +30,7 @@ global.requestAnimationFrame = (cb: (...args: any[]) => {}) => {
 };
 
 global.cancelAnimationFrame = () => {};
+global.IntersectionObserver = () => {};
 
 export default doc;
 
