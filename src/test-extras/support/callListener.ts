@@ -40,7 +40,7 @@ export interface CallListenerOptions {
  */
 export default function callListener(node: HNode | WNode, method: string, options: CallListenerOptions = {}): void {
 	const { args, index, key, target, thisArg } = options;
-	let resolvedTarget: { properties: { [prop: string]: any; } } | undefined;
+	let resolvedTarget: any;
 	if (target) {
 		resolvedTarget = target;
 	}
@@ -63,5 +63,6 @@ export default function callListener(node: HNode | WNode, method: string, option
 	if (!listener) {
 		throw new TypeError(`Cannot resolve listener: "${method}"`);
 	}
-	listener.apply(thisArg || resolvedTarget.properties.bind, args);
+	const bind = resolvedTarget.coreProperties ? resolvedTarget.coreProperties.bind : resolvedTarget.properties.bind;
+	listener.apply(thisArg || bind, args);
 }

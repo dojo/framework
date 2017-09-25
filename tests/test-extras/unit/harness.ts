@@ -793,7 +793,7 @@ registerSuite({
 
 	'.getRender()'() {
 		const widget = harness(MockWidget);
-		assertRender(widget.getRender(), v('div.foo'));
+		assertRender(widget.getRender(), v('div.foo', { afterCreate: widget.listener, afterUpdate: widget.listener }));
 		widget.destroy();
 	},
 

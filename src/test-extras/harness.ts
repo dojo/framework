@@ -4,11 +4,20 @@ import Evented from '@dojo/core/Evented';
 import { createHandle } from '@dojo/core/lang';
 import { VNode } from '@dojo/interfaces/vdom';
 import { includes } from '@dojo/shim/array';
-import { ClassesFunction, Constructor, DNode, WidgetBaseInterface, WidgetProperties, WNode } from '@dojo/widget-core/interfaces';
+import {
+	ClassesFunction,
+	Constructor,
+	DNode,
+	ProjectionOptions,
+	WidgetBaseInterface,
+	WidgetProperties,
+	WNode
+} from '@dojo/widget-core/interfaces';
 import { decorate, isWNode, v, w } from '@dojo/widget-core/d';
-import WidgetBase, { afterRender } from '@dojo/widget-core/WidgetBase';
+import WidgetBase from '@dojo/widget-core/WidgetBase';
+import { afterRender } from '@dojo/widget-core/decorators/afterRender';
 import cssTransitions from '@dojo/widget-core/animations/cssTransitions';
-import { dom, Projection, ProjectionOptions, VNodeProperties } from 'maquette';
+import { dom, Projection, VNodeProperties } from 'maquette';
 import assertRender from './support/assertRender';
 import callListener, { CallListenerOptions } from './support/callListener';
 import sendEvent, { SendEventOptions } from './support/sendEvent';
@@ -181,14 +190,18 @@ class WidgetHarness<P extends WidgetProperties, W extends Constructor<WidgetBase
 		}
 	}
 
+	protected onElementCreated(element: HTMLElement, key: string) {
+		this._afterCreate(element);
+	}
+
 	/**
 	 * Wrap the widget in a custom element
 	 */
 	render(): DNode {
-		const { _afterCreate: afterCreate, _id: id, _widgetConstructor, children, properties } = this;
+		const { _id: id, _widgetConstructor, children, properties } = this;
 		return v(
 				ROOT_CUSTOM_ELEMENT_NAME,
-				{ afterCreate, id },
+				{ id },
 				[ w(_widgetConstructor, properties, children) ]
 			);
 	}
@@ -269,7 +282,8 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 		this._projectionRoot = projectionRoot;
 		this._projectionOptions = {
 			transitions: cssTransitions,
-			eventHandlerInterceptor: this._eventHandlerInterceptor.bind(this._widgetHarness)
+			eventHandlerInterceptor: this._eventHandlerInterceptor.bind(this._widgetHarness),
+			nodeEvent: new Evented()
 		};
 
 		this.own(this._widgetHarness);

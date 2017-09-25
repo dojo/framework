@@ -27,11 +27,11 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/core": "beta2",
-    "@dojo/has": "beta2",
-    "@dojo/i18n": "beta2",
-    "@dojo/shim": "beta2",
-    "@dojo/widget-core": "beta2",
+    "@dojo/core": "next",
+    "@dojo/has": "next",
+    "@dojo/i18n": "next",
+    "@dojo/shim": "next",
+    "@dojo/widget-core": "next",
     "intern": "^3.4.3"
   },
   "dependencies": {
@@ -39,8 +39,8 @@
     "pepjs": "^0.4.2"
   },
   "devDependencies": {
-    "@dojo/interfaces": "beta2",
-    "@dojo/loader": "beta2",
+    "@dojo/interfaces": "next",
+    "@dojo/loader": "next",
     "@types/chai": "3.4.*",
     "@types/glob": "5.0.*",
     "@types/grunt": "0.4.*",
