@@ -1,7 +1,7 @@
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { v, w } from '@dojo/widget-core/d';
 import { ProjectorMixin } from '@dojo/widget-core/mixins/Projector';
-import { WidgetRegistry } from '@dojo/widget-core/WidgetRegistry';
+import { Registry } from '@dojo/widget-core/Registry';
 
 import { RouteConfig } from './../interfaces';
 import { registerRouterInjector } from './../RouterInjector';
@@ -16,7 +16,7 @@ const applicationRoutes: RouteConfig[] = [
 	AmbiguousMatchesRouteConfig
 ];
 
-const registry = new WidgetRegistry();
+const registry = new Registry();
 const router = registerRouterInjector(applicationRoutes, registry);
 
 const styles = { 'text-decoration': 'none', position: 'relative', display: 'block', 'line-height': '1.8', cursor: 'auto', color: 'inherit' };

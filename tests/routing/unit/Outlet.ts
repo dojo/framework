@@ -1,120 +1,157 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { WidgetRegistry } from '@dojo/widget-core/WidgetRegistry';
+import { v } from '@dojo/widget-core/d';
+import { Registry } from '@dojo/widget-core/Registry';
 
-import { routerKey } from './../../src/RouterInjector';
+import { registerRouterInjector } from './../../src/RouterInjector';
+import { MatchType } from './../../src/interfaces';
+import { MemoryHistory } from './../../src/history/MemoryHistory';
 import { Outlet } from './../../src/Outlet';
 
-interface ComponentWidgetProperties {
-	isComponent: boolean;
-}
+const registry = new Registry();
 
-interface IndexWidgetProperties {
-	isIndexComponent: boolean;
-}
-
-interface ErrorWidgetProperties {
-	isErrorComponent: boolean;
-}
-
-class ComponentWidget extends WidgetBase<ComponentWidgetProperties> {
+class MainWidget extends WidgetBase {
 	render() {
-		return 'Test Widget';
+		return 'Main';
 	}
 }
 
-class IndexWidget extends WidgetBase<IndexWidgetProperties> {
+class IndexWidget extends WidgetBase {
 	render() {
-		return 'Test Widget';
+		return 'Index';
 	}
 }
 
-class ErrorWidget extends WidgetBase<ErrorWidgetProperties> {
+class ErrorWidget extends WidgetBase {
 	render() {
-		return 'Test Widget';
+		return 'Error';
 	}
 }
 
-let assertRender = (properties: any) => {};
-let outlet: any;
-
-class StubInjector extends WidgetBase<any> {
+class ParamsWidget extends WidgetBase {
 	render() {
-		assertRender(this.properties);
-		return this.properties.render();
+		return v('div', this.properties, [ 'Params' ]);
 	}
 }
 
-const registry = new WidgetRegistry();
-registry.define(routerKey, StubInjector);
+const routerConfig = [
+	{
+		path: 'main',
+		children: [
+			{
+				path: 'next'
+			},
+			{
+				path: '{param}',
+				outlet: 'params'
+			}
+		]
+	}
+];
+const history = new MemoryHistory();
+const router = registerRouterInjector(routerConfig, registry, { history });
+const otherRouter = registerRouterInjector(routerConfig, registry, { history, key: 'router-key' });
+router.start();
+otherRouter.start();
 
 registerSuite({
 	name: 'Outlet',
-	beforeEach() {
-		assertRender = (properties: any) => {};
-		outlet = undefined;
-	},
-	'No router injector defined'() {
-		const TestOutlet = Outlet(ComponentWidget, 'test-outlet', () => {}, 'outletInjector');
-		outlet = new TestOutlet();
-		assert.isNull(outlet.__render__());
-	},
-	'Default mapper and router key'() {
-		assertRender = (properties: any) => {
-			assert.strictEqual(properties.scope, outlet);
-			const injectedProperties = properties.getProperties();
-			assert.strictEqual(injectedProperties.outlet, 'test-outlet');
-			assert.strictEqual(injectedProperties.mainComponent, ComponentWidget);
-			assert.isUndefined(injectedProperties.indexComponent);
-			assert.isUndefined(injectedProperties.errorComponent);
-			assert.deepEqual(injectedProperties.mapParams, undefined);
-		};
-		const TestOutlet = Outlet(ComponentWidget, 'test-outlet');
-		outlet = new TestOutlet();
-		outlet.__render__();
-	},
-	'main, index and error component'() {
-		assertRender = (properties: any) => {
-			assert.strictEqual(properties.scope, outlet);
-			const injectedProperties = properties.getProperties();
-			assert.strictEqual(injectedProperties.outlet, 'test-outlet');
-			assert.strictEqual(injectedProperties.mainComponent, ComponentWidget);
-			assert.strictEqual(injectedProperties.indexComponent, ComponentWidget);
-			assert.strictEqual(injectedProperties.errorComponent, ComponentWidget);
-		};
-		const TestOutlet = Outlet({
-			main: ComponentWidget,
-			index: ComponentWidget,
-			error: ComponentWidget
-		}, 'test-outlet');
+	'renders main widget given a partial path match'() {
+		const TestOutlet = Outlet(MainWidget, 'main');
 
-		outlet = new TestOutlet();
-		outlet.__render__();
+		return router.dispatch({}, '/main/next').then(() => {
+			const outlet = new TestOutlet();
+			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
+			outlet.__setProperties__({});
+			const vNode = outlet.__render__();
+			assert.strictEqual(vNode, 'Main');
+		});
 	},
-	'provide custom mapParams function'() {
-		assertRender = (properties: any) => {
-			assert.strictEqual(properties.scope, outlet);
-			const injectedProperties = properties.getProperties();
-			assert.strictEqual(injectedProperties.outlet, 'test-outlet');
-			assert.strictEqual(injectedProperties.mainComponent, ComponentWidget);
-			assert.deepEqual(injectedProperties.mapParams(), { custom: true });
-		};
-		const TestOutlet = Outlet(ComponentWidget, 'test-outlet', () => { return { custom: true }; });
-		outlet = new TestOutlet();
-		outlet.__render__();
-	},
-	'Outlet interface is intersection of all components'() {
+	'renders index widget given an exact path match'() {
 		const TestOutlet = Outlet({
-			main: ComponentWidget,
+			main: MainWidget,
 			index: IndexWidget,
 			error: ErrorWidget
-		}, 'test-outlet');
+		}, 'main');
 
-		let outlet = new TestOutlet();
-		// Tests for the property typings
-		assert.isUndefined(outlet.properties.isComponent);
-		assert.isUndefined(outlet.properties.isErrorComponent);
-		assert.isUndefined(outlet.properties.isIndexComponent);
+		return router.dispatch({}, '/main').then(() => {
+			const outlet = new TestOutlet();
+			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
+			outlet.__setProperties__({});
+			const vNode = outlet.__render__();
+			assert.strictEqual(vNode, 'Index');
+		});
+	},
+	'renders main widget given an exact path match and no index component'() {
+		const TestOutlet = Outlet({
+			main: MainWidget,
+			error: ErrorWidget
+		}, 'main');
+
+		return router.dispatch({}, '/main').then(() => {
+			const outlet = new TestOutlet();
+			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
+			outlet.__setProperties__({});
+			const vNode = outlet.__render__();
+			assert.strictEqual(vNode, 'Main');
+		});
+	},
+	'renders error widget given no path match and no index component'() {
+		const TestOutlet = Outlet({
+			main: MainWidget,
+			error: ErrorWidget
+		}, 'next');
+
+		return router.dispatch({}, '/main/next/other').then(() => {
+			const outlet = new TestOutlet();
+			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
+			outlet.__setProperties__({});
+			const vNode = outlet.__render__();
+			assert.strictEqual(vNode, 'Error');
+		});
+	},
+	'renders null given a partial path match and no main component'() {
+		const TestOutlet = Outlet({
+			index: IndexWidget,
+			error: ErrorWidget
+		}, 'main');
+
+		return router.dispatch({}, '/main/next').then(() => {
+			const outlet = new TestOutlet();
+			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
+			outlet.__setProperties__({});
+			const vNode = outlet.__render__();
+			assert.isNull(vNode);
+		});
+	},
+	'renders null when null outlet matches'() {
+		const TestOutlet = Outlet({
+			index: IndexWidget,
+			error: ErrorWidget
+		}, 'main');
+
+		return router.dispatch({}, '/other').then(() => {
+			const outlet = new TestOutlet();
+			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
+			outlet.__setProperties__({});
+			const vNode = outlet.__render__();
+			assert.isNull(vNode);
+		});
+	},
+	'params get passed to getProperties mapper and the returned object injected into widget as properties'() {
+		const TestOutlet = Outlet(ParamsWidget, 'params', (options) => { return options; }, 'router-key');
+
+		return router.dispatch({}, '/main/my-param').then(() => {
+			const outlet = new TestOutlet();
+			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
+			outlet.__setProperties__({});
+			const vNode: any = outlet.__render__();
+			assert.strictEqual(vNode.text, 'Params');
+			assert.strictEqual(vNode.properties.router, router);
+			assert.strictEqual(vNode.properties.location, 'main/my-param');
+			assert.deepEqual(vNode.properties.params, { param: 'my-param' });
+			assert.strictEqual(vNode.properties.type, MatchType.INDEX);
+		});
 	}
 });
