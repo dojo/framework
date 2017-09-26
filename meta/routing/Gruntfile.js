@@ -14,6 +14,11 @@ module.exports = function (grunt) {
 			options: {
 				ignoreCompilerErrors: true // Remove this once compile errors are resolved
 			}
+		},
+		ts: {
+			dist: {
+				exclude: ['tests/**/*.ts', 'src/examples/**/*.ts']
+			}
 		}
 	});
 
