@@ -40,15 +40,15 @@ class SubClassTestWidget extends TestWidget { }
 @theme(baseThemeClasses2)
 class StackedTestWidget extends ThemeableMixin(WidgetBase)<ThemeableProperties> { }
 
-@theme(baseThemeClasses3)
 @theme(baseThemeClasses1)
+@theme(baseThemeClasses3)
 class DuplicateThemeClassWidget extends ThemeableMixin(WidgetBase)<ThemeableProperties> { }
 
 class NonDecoratorDuplicateThemeClassWidget extends ThemeableMixin(WidgetBase)<ThemeableProperties> {
 	constructor() {
 		super();
-		theme(baseThemeClasses1)(this);
 		theme(baseThemeClasses3)(this);
+		theme(baseThemeClasses1)(this);
 	}
 }
 

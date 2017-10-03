@@ -313,7 +313,7 @@ export function ThemeableMixin<E, T extends Constructor<WidgetBase<ThemeableProp
 		private _recalculateThemeClasses() {
 			const { properties: { injectedTheme = {}, theme = injectedTheme } } = this;
 			if (!this._registeredBaseThemes) {
-				this._registeredBaseThemes = [ ...this.getDecorator('baseThemeClasses') ].reverse();
+				this._registeredBaseThemes = [ ...this.getDecorator('baseThemeClasses') ];
 				this._checkForDuplicates();
 			}
 			const registeredBaseThemeKeys = this._registeredBaseThemes.map((registeredBaseThemeClasses) => {
