@@ -26,8 +26,10 @@ widget-core is a library to create powerful, composable user interface widgets.
 - [Key Principles](#key-principles)
 - [Advanced Concepts](#advanced-concepts)
     - [Advanced Properties](#advanced-properties)
-    - [Widget Registry](#widget-registry)
+    - [Registry](#registry)
     - [Render Lifecycle Hooks](#render-lifecycle-hooks)
+    - [Containers](#containers--injectors)
+    - [Decorators](#decorators)
     - [DOM Wrapper](#domwrapper)
     - [Meta Configuration](#meta-configuration)
     - [JSX Support](#jsx-support)
@@ -74,7 +76,7 @@ The following returns the `HNode` example from above from the `render` function:
 
 ```ts
 class HelloDojo extends WidgetBase {
-    protected render(): DNode {
+    protected render() {
         return v('div', [ 'Hello, Dojo 2!' ]);
     }
 }
@@ -121,7 +123,7 @@ interface MyProperties extends WidgetProperties {
 }
 
 class Hello extends WidgetBase<MyProperties> {
-    protected render(): DNode {
+    protected render() {
         const { name } = this.properties;
 
         return v('div', [ `Hello, ${name}` ]);
@@ -141,7 +143,7 @@ Consider the previous `Hello` widget that we created:
 
 ```ts
 class App extends WidgetBase {
-    protected render(): DNode {
+    protected render() {
         return v('div', [
             w(Hello, { name: 'Bill' }),
             w(Hello, { name: 'Bob' }),
@@ -169,7 +171,7 @@ Splitting widgets into multiple smaller widgets is easy and helps to add extende
 Consider the following `List` widget, which has a simple property interface of an array of items consisting of `content: string` and `highlighted: boolean`.
 
 ```ts
-interface ListProperties extends WidgetProperties {
+interface ListProperties {
     items: {
         id: string;
         content: string;
@@ -197,7 +199,7 @@ The `List` widget works as expected and displays the list in the browser but is 
 To extend the `List` API with an event that needs to be called when an item is clicked with the item's `id`, we first update the properties interface:
 
 ```ts
-interface ListProperties extends WidgetProperties {
+interface ListProperties {
     items: {
         id: string;
         content: string;
@@ -214,7 +216,7 @@ This would mean a new function would be created every render but Dojo 2 does not
 To resolve this, the list item can be extracted into a separate widget:
 
 ```ts
-interface ListItemProperties extends WidgetProperties {
+interface ListItemProperties {
     id: string;
     content: string;
     highlighted: boolean;
@@ -229,7 +231,7 @@ class ListItem extends WidgetBase<ListItemProperties> {
         this.properties.onItemClick(id);
     }
 
-    protected render(): DNode {
+    protected render() {
         const { id, content, highlighted } = this.properties;
         const classes = highlighted ? { highlighted: true } : { highlighted: false };
 
@@ -241,7 +243,7 @@ class ListItem extends WidgetBase<ListItemProperties> {
 Using the `ListItem` we can simplify the `List` slightly and also add the `onclick` functionality that we required:
 
 ```ts
-interface ListProperties extends WidgetProperties {
+interface ListProperties {
     items: {
         id: string;
         content: string;
@@ -331,7 +333,7 @@ import { ThemeableMixin, theme } from '@dojo/widget-core/mixins/Themeable';
 
 @theme(css)
 export default class MyWidget extends ThemeableMixin(WidgetBase) {
-    protected render(): DNode {
+    protected render() {
         return v('div', { classes: this.classes(css.root).fixed(css.rootFixed) });
     }
 }
@@ -412,7 +414,7 @@ If no locale is set, then the default locale, as set by [`@dojo/i18n`](https://g
 const MyWidgetBase = I18nMixin(WidgetBase);
 
 class I18nWidget extends MyWidgetBase<I18nWidgetProperties> {
-    render: function () {
+    render() {
         // Load the "greetings" messages for the current locale. If the locale-specific
         // messages have not been loaded yet, then the default messages are returned,
         // and the widget will be invalidated once the locale-specific messages have
@@ -516,7 +518,7 @@ class MyWidget extends WidgetBase<MyProperties> {
 For non-decorator environments (Either JavaScript/ES6 or a TypeScript project that does not have the experimental decorators configuration set to true in the `tsconfig`), the functions need to be registered in the constructor using the `addDecorator` API with `diffProperty` as the key.
 
 ```ts
-class MyWidget extends WidgetBase<WidgetProperties> {
+class MyWidget extends WidgetBase {
 
     constructor() {
         super();
@@ -529,28 +531,86 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 }
 ```
 
-### Widget Registry
+### Registry
 
-TODO: Section
+The `Registry` provides a mechanism to define widgets and injectors (see the [`Containers & Injectors`](#containers--injectors) section), that can be dynamically/lazily loaded on request. Once the registry widget is loaded all widgets that need the newly loaded widget will be invalidated and re-rendered automatically.
 
-### Render Lifecycle Hooks
+A main registry can be provided to the `projector`, which will be automatically passed to all widgets within the tree (referred to as `baseRegistry`). Each widget also gets access to a private `Registry` instance that can be used to define registry items that are scoped to the widget. The locally defined registry items are considered a higher precedence than an item registered in the `baseRegistry`.
 
-Occasionally, in a mixin or base widget class, it my be required to provide logic that needs to be executed before or after a widget's `render` call. These lifecycle hooks are supported in `WidgetBase` and operate as before and after aspects.
+```ts
+import { Registry } from '@dojo/widget-core/Registry';
 
-The functionality is provided by the `beforeRender` and `afterRender` decorators.
+import { MyWidget } from './MyWidget';
+import { MyInjector } from './MyInjector';
 
-***Note:*** Both the `beforeRender` and `afterRender` functions are executed in the order that they are specified from the super class up to the final class.
+const registry = new Registry();
+registry.define('my-widget', MyWidget);
+registry.defineInjector('my-injector', MyInjector);
+// ... Mixin and create Projector ...
+
+projector.setProperties({ registry });
+```
+
+In some scenarios, it might be desirable to allow the `baseRegistry` to override an item defined in the local `registry`. Use true as the second argument of the registry.get function to override the local item.
+
+The following example sets a default loading indicator widget, but passes `true` when getting the widget from the `registry`. This allows a consumer to register an overriding loading indicator in the `baseRegistry`.
+
+```ts
+class MyWidget extends WidgetBase {
+    constructor() {
+        this.registry.define('loading', LoadingWidget);
+    }
+
+    render() {
+        if (this.properties) {
+            const LoadingWidget = this.registry.get('loading', true);
+            return w(LoadingWidget, {});
+        }
+        return w(MyActualChildWidget, {};)
+    }
+}
+```
+
+### Lifecycle Hooks
+
+Occasionally, in a mixin or a widget class, it my be required to provide logic that needs to be executed before properties are diffed using `beforeProperties` or either side of a widget's `render` call using `beforeRender` & `afterRender`.
+
+This functionality is provided by the `beforeProperties`, `beforeRender` and `afterRender` decorators that can be found in the `decorators` directory.
+
+***Note:*** All lifecycle functions are executed in the order that they are specified from the super class up to the final class.
+
+##### beforeProperties
+
+The `beforeProperties` lifecycle hook is called immediately before property diffing is executed. Functions registered for `beforeProperties` receive `properties` and are required to return any updated, changed `properties` that are mixed over (merged) the existing properties.
+
+As the lifecycle is executed before the property diffing is completed, any new or updated properties will be included in the diffing phase.
+
+An example that demonstrates adding an extra property based on the widgets current properties, using a function declared on the widget class `myBeforeProperties`:
+
+```ts
+class MyClass extends WidgetBase<MyClassProperties> {
+
+    @beforeProperties()
+    protected myBeforeProperties(properties: MyClassProperties): MyClassProperties {
+        if (properties.type = 'myType') {
+            return { extraProperty: 'foo' };
+        }
+        return {};
+    }
+}
+```
 
 ##### BeforeRender
 
-The `beforeRender` call receives the widget's `render` function, `properties` and `children` and is expected to return a function that satisfies the `render` API. The `properties` and `children` are passed to enable them to be manipulated or decorated prior to the `render` being called.
+The `beforeRender` lifecycle hook receives the widget's `render` function, `properties` and `children` and is expected to return a function that satisfies the `render` API. The `properties` and `children` are passed to enable them to be manipulated or decorated prior to `render` being called.
 
-This is the only time in the widget lifecycle that exposes either of these attributes to be manipulated outside of the property system.
+**Note:** When `properties` are changed during the `beforeRender` lifecycle, they do not go through the standard property diffing provided by `WidgetBase`. If the changes to the `properties` need to go through diffing, consider using the `beforeProperties` lifecycle hook.
 
 ```ts
-class MyBaseClass extends WidgetBase<WidgetProperties> {
+class MyClass extends WidgetBase {
+
     @beforeRender()
-    myBeforeRender(renderFunc: () => DNode, properties: any, children: DNode[]): () => DNode {
+    protected myBeforeRender(renderFunc: () => DNode, properties: any, children: DNode[]): () => DNode {
         // decorate/manipulate properties or children.
         properties.extraAttribute = 'foo';
         // Return or replace the `render` function
@@ -561,25 +621,9 @@ class MyBaseClass extends WidgetBase<WidgetProperties> {
 }
 ```
 
-And using the `beforeRender` function for non decorator environments:
-
-```ts
-class MyBaseClass extends WidgetBase<WidgetProperties> {
-    constructor() {
-        super();
-        beforeRender(this.myOtherBeforeRender)(this);
-    }
-
-    myOtherBeforeRender(renderFunc: () => DNode, properties: any, children: DNode[]): () => DNode {
-        // do something with the result
-        return renderFunc;
-    }
-}
-```
-
 ##### AfterRender
 
-The `afterRender` call receives the returned `DNode`s from a widget's `render` call, so that the nodes can decorated, manipulated or even swapped.
+The `afterRender` lifecycle hook receives the returned `DNode`s from a widget's `render` call, so that the nodes can be decorated, manipulated or swapped completely.
 
 ```ts
 class MyBaseClass extends WidgetBase<WidgetProperties> {
@@ -591,19 +635,68 @@ class MyBaseClass extends WidgetBase<WidgetProperties> {
 }
 ```
 
-And using the `afterRender` function for non decorator environments:
+### Containers & Injectors
+
+There is built in support for side-loading/injecting values into sections of the widget tree and mapping them to a widget's properties. This is achieved by registering a `@dojo/widget-core/Injector` instance against a `registry` that is available to your application (i.e. set on the projector instance, `projector.setProperties({ registry })`).
+
+Create an `Injector` instance and pass the `payload` that needs to be injected to the constructor:
 
 ```ts
-class MyBaseClass extends WidgetBase<WidgetProperties> {
-    constructor() {
-        super();
-        afterRender(this.myOtherAfterRender)(this);
-    }
+const injector = new Injector({ foo: 'baz' });
+registry.defineInjector('my-injector', injector);
+```
 
-    myOtherAfterRender(result: DNode): DNode {
-        // do something with the result
-        return result;
+To connect the registered `injector` to a widget, we can use the `Container` HOC (higher order component) provided by `widget-core`. The `Container` accepts a widget `constructor`, `injector` label and `getProperties` mapping function as arguments and returns a new class that returns the passed widget from its `render` function.
+
+`getProperties` receives the `payload` from an `injector` and `properties` from the container HOC component. These are used to map into the wrapped widgets properties.
+
+```ts
+import { Container } from '@dojo/widget-core/Container';
+import { MyWidget } from './MyWidget';
+
+function getProperties(payload: any, properties: any) {
+    return {
+        foo: payload.foo
+    };
+}
+
+export const MyWidgetContainer = Container(MyWidget, 'my-injector', getProperties);
+```
+
+The returned class from `Container` HOC is then used in place of the widget it wraps, the container assumes the properties type of the wrapped widget, however they all considered optional.
+
+```ts
+// import { MyWidget } from './MyWidget';
+import { MyWidgetContainer } from './MyWidgetContainer';
+
+interface AppProperties {
+    foo: string;
+}
+
+class App extends WidgetBase<AppProperties> {
+    render() {
+        return v('div', {}, [
+            // w(MyWidget, { foo: 'bar' })
+            w(MyWidgetContainer, {})
+        ]);
     }
+}
+```
+
+**Please Note:** Do not use container as the top level application widget, containers always `render` which means that you will find your application is calling `render` upon every request animation frame, even when there is no need for an additional `render`.
+
+### Decorators
+
+All core decorators provided by widget-core, can be used in non-decorator environments (Either JavaScript/ES6 or a TypeScript project that does not have the experimental decorators configuration set to true in the `tsconfig`) programmatically by calling them directly, usually within a Widget class' `constructor`.
+
+Example usages:
+
+```ts
+constructor() {
+    beforeProperties(this.myBeforeProperties)(this);
+    beforeRender(myBeforeRender)(this);
+    afterRender(this.myAfterRender)(this);
+    diffProperty('myProperty', this.myPropertyDiff)(this);
 }
 ```
 
@@ -619,7 +712,7 @@ The currently supported options:
 |-|-|
 |`onAttached`|A callback that is called when the wrapped DOM is flowed into the virtual DOM|
 
-For example, if we want to integrate a 3rd party library where we need to pass the component factory a _root_ element and then flow that into our virtual DOM.  In this situation we don't want to create the component until the widget is being flowed into the DOM, so `onAttached` is used to perform the creation of the component:
+For example, if we want to integrate a third-party library where we need to pass the component factory a _root_ element and then flow that into our virtual DOM.  In this situation we do not want to create the component until the widget is being flowed into the DOM, so `onAttached` is used to perform the creation of the component:
 
 ```ts
 import { w } from '@dojo/widget-core/d';
