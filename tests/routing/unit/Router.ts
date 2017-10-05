@@ -7,7 +7,6 @@ import MemoryHistory from '../../src/history/MemoryHistory';
 import {
 	Context,
 	DefaultParameters,
-	DispatchResult,
 	ErrorEvent,
 	MatchType,
 	NavigationStartEvent,
@@ -214,14 +213,33 @@ suite('Router', () => {
 		assert.strictEqual(received.target, router);
 	});
 
-	test('navstart listeners can synchronously cancel routing', () => {
+	test('navstart listeners can synchronously cancel routing before dispatch', () => {
 		const router = new Router();
 		router.append(new Route({ path: '/foo' }));
 		router.on('navstart', event => {
-			event.cancel();
+			event.cancel && event.cancel();
 		});
 
 		return router.dispatch({} as Context, '/foo').then((dispatchResult) => {
+			const { success } = dispatchResult || { success: false };
+			assert.isFalse(success);
+		});
+	});
+
+	test('navstart listeners can synchronously cancel routing after dispatch', () => {
+		let cancel: Function | undefined = undefined;
+		const router = new Router();
+		router.append(new Route({ path: '/foo' }));
+		router.on('navstart', event => {
+			if (event.cancel) {
+				cancel = event.cancel;
+			}
+		});
+
+		const promise = router.dispatch({} as Context, '/foo');
+		cancel && cancel();
+
+		return promise.then((dispatchResult) => {
 			const { success } = dispatchResult || { success: false };
 			assert.isFalse(success);
 		});
@@ -231,8 +249,10 @@ suite('Router', () => {
 		const router = new Router();
 		router.append(new Route({ path: '/foo' }));
 		router.on('navstart', event => {
-			const { cancel } = event.defer();
-			Promise.resolve().then(cancel);
+			if (event.defer) {
+				const { cancel } = event.defer();
+				Promise.resolve().then(cancel);
+			}
 		});
 
 		return router.dispatch({} as Context, '/foo').then((dispatchResult) => {
@@ -245,8 +265,10 @@ suite('Router', () => {
 		const router = new Router();
 		router.append(new Route({ path: '/foo' }));
 		router.on('navstart', event => {
-			const { resume } = event.defer();
-			Promise.resolve().then(resume);
+			if (event.defer) {
+				const { resume } = event.defer();
+				Promise.resolve().then(resume);
+			}
 		});
 
 		return router.dispatch({} as Context, '/foo').then((dispatchResult) => {
@@ -261,12 +283,16 @@ suite('Router', () => {
 
 		const resumers: {(): void}[] = [];
 		router.on('navstart', event => {
-			const { resume } = event.defer();
-			resumers.push(resume);
+			if (event.defer) {
+				const { resume } = event.defer();
+				resumers.push(resume);
+			}
 		});
 		router.on('navstart', event => {
-			const { resume } = event.defer();
-			resumers.push(resume);
+			if (event.defer) {
+				const { resume } = event.defer();
+				resumers.push(resume);
+			}
 		});
 
 		let dispatched: boolean | undefined = false;
@@ -302,7 +328,9 @@ suite('Router', () => {
 		router.on('navstart', event => {
 			const task = new Router().dispatch({} as Context, '/foo');
 			task.cancel();
-			event.defer().resume();
+			if (event.defer) {
+				event.defer().resume();
+			}
 		});
 
 		return new Promise(resolve => setTimeout(resolve, 10)).then(() => {
@@ -773,10 +801,11 @@ suite('Router', () => {
 	test('start() can immediately dispatch for the current history value', () => {
 		const history = new MemoryHistory({ path: '/foo' });
 		const router = new Router({ history });
-		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
 
+		router.on('navstart', (event) => {
+			assert.strictEqual(event.path, '/foo');
+		});
 		router.start({ dispatchCurrent: true });
-		assert.isTrue(dispatch.calledWith({}, '/foo'));
 	});
 
 	test('start() falls back to default route if dispatching current route is not successful', () => {
@@ -788,15 +817,14 @@ suite('Router', () => {
 			}
 		];
 		const router = new Router({ history, config });
-		const task = Promise.resolve({ success: false });
-		const dispatch = stub(router, 'dispatch').returns(task);
-		const setPath = stub(router, 'setPath');
+		const dispatchedPaths: string[] = [];
+
+		router.on('navstart', (event) => {
+			dispatchedPaths.push(event.path);
+		});
 
 		router.start({ dispatchCurrent: true });
-		assert.isTrue(dispatch.firstCall.calledWith({}, '/foo'));
-		return task.then(() => {}).then(() => {
-			assert.isTrue(setPath.firstCall.calledWith('bar'));
-		});
+		assert.deepEqual(dispatchedPaths, [ '/foo', 'bar' ]);
 	});
 
 	test('start() can be configured not to immediately dispatch for the current history value', () => {
@@ -811,10 +839,12 @@ suite('Router', () => {
 	test('start() dispatches immediately by default', () => {
 		const history = new MemoryHistory({ path: '/foo' });
 		const router = new Router({ history });
-		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
+
+		router.on('navstart', (event) => {
+			assert.strictEqual(event.path, '/foo');
+		});
 
 		router.start();
-		assert.isTrue(dispatch.calledOnce);
 	});
 
 	test('start() throws if already called', () => {
@@ -828,38 +858,6 @@ suite('Router', () => {
 		start();
 
 		assert.throws(start, /start can only be called once/);
-	});
-
-	test('start() ensures the previous dispatch is canceled', () => {
-		const history = new MemoryHistory({ path: '/foo' });
-		const router = new Router({ history });
-		router.on('navstart', ({ defer }) => {
-			// Defer the dispatch, so cancelation has effect.
-			defer();
-		});
-
-		const dispatch = spy(router, 'dispatch');
-		const assertCanceled = (task: Task<DispatchResult>) => {
-			return new Promise((resolve) => {
-				task.finally(resolve);
-			});
-		};
-
-		router.start();
-
-		assert.isTrue(dispatch.calledOnce);
-		// Need to create this promise before changing the history due to <https://github.com/dojo/core/issues/205>.
-		const assertionPromise = assertCanceled(dispatch.firstCall.returnValue);
-		history.set('/bar');
-		return assertionPromise
-			.then(() => {
-				assert.isTrue(dispatch.calledTwice);
-
-				// Need to create this promise before changing the history due to <https://github.com/dojo/core/issues/205>.
-				const assertionPromise = assertCanceled(dispatch.secondCall.returnValue);
-				history.set('/baz');
-				return assertionPromise;
-			});
 	});
 
 	test('start() replaces history if the dispatch requested a redirect', () => {
@@ -954,47 +952,51 @@ suite('Router', () => {
 	test('without a provided context, start() dispatches with an empty object as the context', () => {
 		const history = new MemoryHistory({ path: '/foo' });
 		const router = new Router({ history });
-		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
+		const contexts: Context[] = [];
 
+		router.on('navstart', (event) => {
+			contexts.push(event.context);
+		});
 		router.start();
-		const { args: [ initialContext ] } = dispatch.firstCall;
-		assert.deepEqual(initialContext, {});
 
+		assert.deepEqual(contexts[0], {});
 		history.set('/bar');
-		const { args: [ nextContext ] } = dispatch.secondCall;
-		assert.notStrictEqual(nextContext, initialContext);
-		assert.deepEqual(nextContext, {});
+
+		assert.notStrictEqual(contexts[0], contexts[1]);
+		assert.deepEqual(contexts[1], {});
 	});
 
 	test('with a provided context, start() dispatches with that object as the context', () => {
 		const context = {};
 		const history = new MemoryHistory({ path: '/foo' });
 		const router = new Router({ context, history });
-		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
+		const contexts: Context[] = [];
 
+		router.on('navstart', (event) => {
+			contexts.push(event.context);
+		});
 		router.start();
-		const { args: [ initialContext ] } = dispatch.firstCall;
-		assert.strictEqual(initialContext, context);
 
+		assert.strictEqual(contexts[0], context);
 		history.set('/bar');
-		const { args: [ nextContext ] } = dispatch.secondCall;
-		assert.strictEqual(nextContext, context);
+		assert.strictEqual(contexts[1], context);
 	});
 
 	test('with a provided context factory, start() dispatches with factory\'s value as the context', () => {
-		const contexts = [ { first: true }, { second: true } ];
-		const context = () => contexts.shift();
+		const expectedContexts = [ { first: true }, { second: true } ];
+		const context = () => expectedContexts.shift();
 		const history = new MemoryHistory({ path: '/foo' });
 		const router = new Router({ context, history });
-		const dispatch = stub(router, 'dispatch').returns(new Task(() => {}));
+		const contexts: Context[] = [];
+
+		router.on('navstart', (event) => {
+			contexts.push(event.context);
+		});
 
 		router.start();
-		const { args: [ initialContext ] } = dispatch.firstCall;
-		assert.deepEqual(initialContext, { first: true });
-
+		assert.deepEqual(contexts[0], { first: true });
 		history.set('/bar');
-		const { args: [ nextContext ] } = dispatch.secondCall;
-		assert.deepEqual(nextContext, { second: true });
+		assert.deepEqual(contexts[1], { second: true });
 	});
 
 	test('link() throws if route has not been appended', () => {

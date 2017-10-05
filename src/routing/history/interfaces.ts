@@ -40,6 +40,11 @@ export interface History extends Evented {
 	replace(path: string): void;
 
 	/**
+	 * Function that will normalize the path for the history manager
+	 */
+	normalizePath(path: string): string;
+
+	/**
 	 * Event emitted when the current value is changed, after the browser's history has
 	 * been updated.
 	 */

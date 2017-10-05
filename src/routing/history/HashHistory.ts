@@ -32,7 +32,7 @@ export class HashHistory extends HistoryBase implements History {
 		this._browserLocation = browserLocation;
 
 		this.own(on(window, 'hashchange', () => {
-			const path = this._normalizePath(browserLocation.hash);
+			const path = this.normalizePath(browserLocation.hash);
 
 			// Ignore hashchange for the current path. Guards against browsers firing hashchange when the history
 			// manager sets the hash.
@@ -53,7 +53,7 @@ export class HashHistory extends HistoryBase implements History {
 		return path;
 	}
 
-	private _normalizePath(path: string): string {
+	public normalizePath(path: string): string {
 		if (path[0] === '#') {
 			path = path.slice(1);
 		}
@@ -61,7 +61,7 @@ export class HashHistory extends HistoryBase implements History {
 	}
 
 	set(path: string) {
-		path = this._normalizePath(path);
+		path = this.normalizePath(path);
 		if (this._current === path) {
 			return;
 		}
@@ -75,7 +75,7 @@ export class HashHistory extends HistoryBase implements History {
 	}
 
 	replace(path: string) {
-		path = this._normalizePath(path);
+		path = this.normalizePath(path);
 		if (this._current === path) {
 			return;
 		}

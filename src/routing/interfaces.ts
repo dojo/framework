@@ -112,15 +112,20 @@ export interface NavigationStartEvent extends EventTargettedObject<RouterInterfa
 	path: string;
 
 	/**
+	 * The context for the route
+	 */
+	context: Context;
+
+	/**
 	 * Call to prevent the path to be dispatched.
 	 */
-	cancel(): void;
+	cancel?(): void;
 
 	/**
 	 * Call to defer dispatching of the path
 	 * @return an object which allows the caller to resume or cancel dispatch.
 	 */
-	defer(): DispatchDeferral;
+	defer?(): DispatchDeferral;
 }
 
 /**

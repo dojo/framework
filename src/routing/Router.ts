@@ -172,12 +172,87 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 		}
 	}
 
-	dispatch(context: Context, path: string): Task<DispatchResult> {
-		// Reset, any further calls can't have come from start(). This is necessary since the navstart listeners
-		// may call dispatch() themselves.
-		let dispatchFromStart = this._dispatchFromStart;
+	private _dispatch(context: Context, path: string, canceled: boolean = false, emit: boolean = true) {
+		if (canceled) {
+			return { success: false };
+		}
+
+		this._currentParams = {};
+		this._outletContextMap.clear();
+
+		if (emit) {
+			this.emit<NavigationStartEvent>({
+				context,
+				path,
+				target: this,
+				type: 'navstart'
+			});
+		}
+
+		const { searchParams, segments, trailingSlash } = parsePath(path);
+		const dispatchFromStart = this._dispatchFromStart;
 		this._dispatchFromStart = false;
 
+		let redirect: undefined | string;
+		const dispatched = this._routes.some((route) => {
+			const result = route.select(context, segments, trailingSlash, searchParams);
+
+			if (typeof result === 'string') {
+				redirect = result;
+				return true;
+			}
+			if (result.length === 0) {
+				return false;
+			}
+
+			// Update the selected routes after selecting new routes, but before invoking the handlers.
+			// This means the original value is available to guard() and params() functions, and the
+			// new value when the newly selected routes are executed.
+			//
+			// Reset selected routes if not dispatched from start().
+			this._currentSelection = dispatchFromStart ? result : [];
+
+			for (const { handler, params, outlet, type, route } of result) {
+				if (outlet) {
+					assign(this._currentParams, params);
+					const location = this.link(route, this._currentParams);
+					this._outletContextMap.set(outlet, { type, params, location });
+					if (type === MatchType.ERROR) {
+						this._outletContextMap.set(errorOutlet, { type: MatchType.PARTIAL, params, location });
+					}
+				}
+				catchRejection(this, context, path, handler({ context, params }));
+			}
+
+			return true;
+		});
+
+		// Reset the selected routes if the dispatch was unsuccessful, or if a redirect was requested.
+		if (!dispatched || redirect !== undefined) {
+			this._currentSelection = [];
+		}
+
+		if (!dispatched) {
+			this._outletContextMap.set(errorOutlet, {
+				type: MatchType.PARTIAL,
+				params: {},
+				location: this._history ? this._history.current : ''
+			});
+			if (this._fallback) {
+				catchRejection(this, context, path, this._fallback({ context, params: {} }));
+				return { success: false };
+			}
+		}
+
+		const result: DispatchResult = { success: dispatched };
+		if (redirect !== undefined) {
+			result.redirect = redirect;
+		}
+		return result;
+
+	}
+
+	dispatch(context: Context, path: string): Task<DispatchResult> {
 		let canceled = false;
 		const cancel = () => {
 			canceled = true;
@@ -188,6 +263,7 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 		this._currentParams = {};
 		this._outletContextMap.clear();
 		this.emit<NavigationStartEvent>({
+			context,
 			cancel,
 			defer () {
 				const { cancel, promise, resume } = createDeferral();
@@ -199,84 +275,17 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 			type: 'navstart'
 		});
 
-		// Synchronous cancelation.
+		// Synchronous cancellation.
 		if (canceled) {
 			return Task.resolve({ success: false });
 		}
 
-		const { searchParams, segments, trailingSlash } = parsePath(path);
 		return new Task<DispatchResult>((resolve, reject) => {
 			// *Always* start dispatching in a future turn, even if there were no deferrals.
 			Promise.all(deferrals).then<DispatchResult, DispatchResult>(
 				() => {
-					// The cancel() function used in the NavigationStartEvent is reused as the Task canceler.
-					// Strictly speaking any navstart listener can cancel the dispatch asynchronously, as long as it
-					// manages to do so before this turn.
-					if (canceled) {
-						return { success: false };
-					}
-
-					let redirect: undefined | string;
-					const dispatched = this._routes.some((route) => {
-						const result = route.select(context, segments, trailingSlash, searchParams);
-
-						if (typeof result === 'string') {
-							redirect = result;
-							return true;
-						}
-						if (result.length === 0) {
-							return false;
-						}
-
-						// Update the selected routes after selecting new routes, but before invoking the handlers.
-						// This means the original value is available to guard() and params() functions, and the
-						// new value when the newly selected routes are executed.
-						//
-						// Reset selected routes if not dispatched from start().
-						this._currentSelection = dispatchFromStart ? result : [];
-
-						for (const { handler, params, outlet, type, route } of result) {
-							if (outlet) {
-								if (params) {
-									assign(this._currentParams, params);
-								}
-								const location = this.link(route, this._currentParams);
-								this._outletContextMap.set(outlet, { type, params, location });
-								if (type === MatchType.ERROR) {
-									this._outletContextMap.set(errorOutlet, { type: MatchType.PARTIAL, params, location });
-								}
-							}
-							catchRejection(this, context, path, handler({ context, params }));
-						}
-
-						return true;
-					});
-
-					// Reset the selected routes if the dispatch was unsuccessful, or if a redirect was requested.
-					if (!dispatched || redirect !== undefined) {
-						this._currentSelection = [];
-					}
-
-					if (!dispatched) {
-						this._outletContextMap.set(errorOutlet, {
-							type: MatchType.PARTIAL,
-							params: {},
-							location: this._history ? this._history.current : ''
-						});
-						if (this._fallback) {
-							catchRejection(this, context, path, this._fallback({ context, params: {} }));
-							return { success: false };
-						}
-					}
-
-					const result: DispatchResult = { success: dispatched };
-					if (redirect !== undefined) {
-						result.redirect = redirect;
-					}
-					return result;
+					return this._dispatch(context, path, canceled, false);
 				},
-				// When deferrals are canceled their corresponding promise is rejected. Ensure the task resolves
-				// with `false` instead of being rejected too.
 				() => {
 					return { success: false };
 				}
@@ -504,11 +513,17 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 		this.own(listener);
 
 		if (dispatchCurrent) {
-			dispatch(this._history.current).then((dispatchResult: DispatchResult) => {
-				if (!dispatchResult.success && this._defaultRoute) {
-					this.setPath(this.link(this._defaultRoute));
-				}
-			});
+			const context = this._contextFactory();
+			const { success, redirect = undefined } = this._dispatch(context, this._history.current);
+			if (success && redirect) {
+				redirecting = true;
+				this._history!.replace(redirect);
+				redirecting = false;
+			}
+			else if (!success && this._defaultRoute) {
+				const normalizedPath = this._history.normalizePath(this.link(this._defaultRoute));
+				this._dispatch(context, normalizedPath);
+			}
 		}
 
 		return listener;

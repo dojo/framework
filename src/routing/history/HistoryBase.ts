@@ -9,6 +9,10 @@ export interface HistoryEvents extends BaseEventedEvents {
 
 export class HistoryBase extends Evented {
 	on: HistoryEvents;
+
+	public normalizePath(path: string): string {
+		return path;
+	}
 }
 
 export default HistoryBase;
