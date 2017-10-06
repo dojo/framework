@@ -242,8 +242,8 @@ export function initializeElement(element: CustomElement) {
 	const projector = ProjectorMixin(element.getWidgetConstructor());
 
 	const widgetInstance = new projector();
-	widgetInstance.__setProperties__(initialProperties);
-	widgetInstance.__setChildren__(children);
+	widgetInstance.setProperties(initialProperties);
+	widgetInstance.setChildren(children);
 	element.setWidgetInstance(widgetInstance);
 
 	return function() {
