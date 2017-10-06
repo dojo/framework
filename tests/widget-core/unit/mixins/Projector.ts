@@ -761,18 +761,14 @@ registerSuite({
 		projector.destroy();
 		assert.strictEqual(registryDestroyedCount, 3);
 	},
-	'scheduleRender on setting properties'() {
+	'scheduleRender on called on invalidate when projector is dirty'() {
 		const projector = new BaseTestWidget();
 		const scheduleRender = spy(projector, 'scheduleRender');
+		projector.append();
 		projector.setProperties({ key: 'hello' });
-		assert.isTrue(scheduleRender.called);
-	},
-	'scheduleRender not called on invalidate'() {
-		const projector = new BaseTestWidget();
-		const scheduleRender = spy(projector, 'scheduleRender');
-		projector.__setProperties__({});
-		projector.invalidate();
-		assert.isTrue(scheduleRender.notCalled);
+		assert.isTrue(scheduleRender.calledOnce);
+		projector.setProperties({ key: 'hello' });
+		assert.isTrue(scheduleRender.calledOnce);
 	},
 	'properties are reset to original state on render'() {
 		const testProperties = {
@@ -800,9 +796,15 @@ registerSuite({
 	'invalidate on setting children'() {
 		const projector = new BaseTestWidget();
 		const scheduleRender = spy(projector, 'scheduleRender');
-
+		projector.append();
+		projector.setChildren([]);
+		assert.isTrue(scheduleRender.notCalled);
 		projector.setChildren([ v('div') ]);
-		assert.isTrue(scheduleRender.called);
+		assert.isTrue(scheduleRender.calledOnce);
+		projector.setChildren([]);
+		assert.isTrue(scheduleRender.calledTwice);
+		projector.setChildren([]);
+		assert.isTrue(scheduleRender.calledTwice);
 	},
 	'invalidate before attached'() {
 		const projector: any = new BaseTestWidget();

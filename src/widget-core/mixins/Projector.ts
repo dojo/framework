@@ -169,8 +169,10 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		private _paused: boolean;
 		private _boundDoRender: () => void;
 		private _boundRender: Function;
-		private _projectorChildren: DNode[];
-		private _projectorProperties: this['properties'];
+		private _projectorChildren: DNode[] = [];
+		private _resetChildren = true;
+		private _projectorProperties: this['properties'] = {} as this['properties'];
+		private _resetProperties = true;
 		private _rootTagName: string;
 		private _attachType: AttachType;
 
@@ -288,12 +290,13 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		}
 
 		public setChildren(children: DNode[]): void {
+			this._resetChildren = false;
 			this._projectorChildren = [ ...children ];
-			super.__setChildren__(children);
-			this.emit({ type: 'invalidated' });
+			super.__setChildren__([ ...children ]);
 		}
 
 		public setProperties(properties: this['properties']): void {
+			this._resetProperties = false;
 			if (this._projectorProperties && this._projectorProperties.registry !== properties.registry) {
 				if (this._projectorProperties.registry) {
 					this._projectorProperties.registry.destroy();
@@ -305,7 +308,6 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			this._projectorProperties = assign({}, properties);
 			super.__setCoreProperties__({ bind: this, baseRegistry: properties.registry });
 			super.__setProperties__(properties);
-			this.emit({ type: 'invalidated' });
 		}
 
 		public toHtml(): string {
@@ -346,17 +348,20 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		}
 
 		public __render__(): VNode {
-			if (this._projectorChildren) {
+			if (this._resetChildren) {
 				this.setChildren(this._projectorChildren);
 			}
-			if (this._projectorProperties) {
+			if (this._resetProperties) {
 				this.setProperties(this._projectorProperties);
 			}
+			this._resetChildren = true;
+			this._resetProperties = true;
 			return super.__render__() as VNode;
 		}
 
 		public invalidate(): void {
 			super.invalidate();
+			this.scheduleRender();
 		}
 
 		private _doRender() {
