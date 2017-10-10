@@ -1,7 +1,7 @@
 {
 	"version": "2.0.2",
 	"compilerOptions": {
-		"declaration": false,
+		"declaration": true,
 		"experimentalDecorators": true,
 		"module": "umd",
 		"lib": [

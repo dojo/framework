@@ -7,7 +7,7 @@ import { Tests } from 'intern/lib/interfaces/object';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-type TypeUnderTest = typeof Promise;
+export type TypeUnderTest = typeof Promise;
 
 /* tslint:disable-next-line:variable-name */
 export function addPromiseTests(suite: any, Promise: TypeUnderTest) {
