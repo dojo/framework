@@ -14,26 +14,59 @@ export interface DragResults {
 	 * Is the DOM node currently in a drag state
 	 */
 	isDragging: boolean;
+
+	/**
+	 * A matrix of posistions that represent the start position for the current drag interaction
+	 */
+	start?: PositionMatrix;
 }
 
 interface NodeData {
 	dragResults: DragResults;
 	invalidate: () => void;
-	last: Position;
-	start: Position;
+	last: PositionMatrix;
+	start: PositionMatrix;
 }
 
+/**
+ * An x/y position structure
+ */
 export interface Position {
 	x: number;
 	y: number;
+}
+
+/**
+ * A matrix of x/y positions
+ */
+export interface PositionMatrix {
+	/**
+	 * Client x/y position
+	 */
+	client: Position;
+
+	/**
+	 * Offset x/y position
+	 */
+	offset: Position;
+
+	/**
+	 * Page x/y position
+	 */
+	page: Position;
+
+	/**
+	 * Screen x/y position
+	 */
+	screen: Position;
 }
 
 function createNodeData(invalidate: () => void): NodeData {
 	return {
 		dragResults: deepAssign({}, emptyResults),
 		invalidate,
-		last: createPosition(),
-		start: createPosition()
+		last: createPositionMatrix(),
+		start: createPositionMatrix()
 	};
 }
 
@@ -45,6 +78,18 @@ function createPosition(): Position {
 }
 
 /**
+ * Create an empty position matrix
+ */
+function createPositionMatrix(): PositionMatrix {
+	return {
+		client: { x: 0, y: 0 },
+		offset: { x: 0, y: 0 },
+		page: { x: 0, y: 0 },
+		screen: { x: 0, y: 0 }
+	};
+}
+
+/**
  * A frozen empty result object, frozen to ensure that no one downstream modifies it
  */
 const emptyResults = Object.freeze({
@@ -53,13 +98,27 @@ const emptyResults = Object.freeze({
 });
 
 /**
- * Return the x/y position for an event
+ * Return the x/y position matrix for an event
  * @param event The pointer event
  */
-function getPosition(event: PointerEvent): Position {
+function getPositionMatrix(event: PointerEvent): PositionMatrix {
 	return {
-		x: event.pageX,
-		y: event.pageY
+		client: {
+			x: event.clientX,
+			y: event.clientY
+		},
+		offset: {
+			x: event.offsetX,
+			y: event.offsetY
+		},
+		page: {
+			x: event.pageX,
+			y: event.pageY
+		},
+		screen: {
+			x: event.screenX,
+			y: event.screenY
+		}
 	};
 }
 
@@ -68,10 +127,10 @@ function getPosition(event: PointerEvent): Position {
  * @param start The first position
  * @param current The second position
  */
-function getDelta(start: Position, current: Position): Position {
+function getDelta(start: PositionMatrix, current: PositionMatrix): Position {
 	return {
-		x: current.x - start.x,
-		y: current.y - start.y
+		x: current.client.x - start.client.x,
+		y: current.client.y - start.client.y
 	};
 }
 
@@ -93,9 +152,10 @@ class DragController {
 		if (data) {
 			const { state, target } = data;
 			this._dragging = target;
-			state.dragResults.isDragging = true;
-			state.last = state.start = getPosition(e);
+			state.last = state.start = getPositionMatrix(e);
 			state.dragResults.delta = createPosition();
+			state.dragResults.start = deepAssign({}, state.start);
+			state.dragResults.isDragging = true;
 			state.invalidate();
 		} // else, we are ignoring the event
 	}
@@ -107,8 +167,11 @@ class DragController {
 		}
 		// state cannot be unset, using ! operator
 		const state = this._nodeMap.get(_dragging)!;
-		state.last = getPosition(e);
+		state.last = getPositionMatrix(e);
 		state.dragResults.delta = getDelta(state.start, state.last);
+		if (!state.dragResults.start) {
+			state.dragResults.start = deepAssign({}, state.start);
+		}
 		state.invalidate();
 	}
 
@@ -119,11 +182,12 @@ class DragController {
 		}
 		// state cannot be unset, using ! operator
 		const state = this._nodeMap.get(_dragging)!;
-		state.last = getPosition(e);
-		state.dragResults = {
-			delta: getDelta(state.start, state.last),
-			isDragging: false
-		};
+		state.last = getPositionMatrix(e);
+		state.dragResults.delta = getDelta(state.start, state.last);
+		if (!state.dragResults.start) {
+			state.dragResults.start = deepAssign({}, state.start);
+		}
+		state.dragResults.isDragging = false;
 		state.invalidate();
 		this._dragging = undefined;
 	}
@@ -145,11 +209,13 @@ class DragController {
 		}
 
 		const state = _nodeMap.get(node)!;
+		// shallow "clone" the results, so no downstream manipulation can occur
+		const dragResults = assign({}, state.dragResults);
 		// we are offering up an accurate delta, so we need to take the last event position and move it to the start so
 		// that our deltas are calculated from the last time they are read
 		state.start = state.last;
-		// shallow "clone" the results, so no downstream manipulation can occur
-		const dragResults = assign({}, state.dragResults);
+		// clear the start state
+		delete state.dragResults.start;
 
 		// reset the delta after we have read any last delta while not dragging
 		if (!dragResults.isDragging && dragResults.delta.x !== 0 && dragResults.delta.y !== 0) {
