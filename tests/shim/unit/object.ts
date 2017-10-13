@@ -1,6 +1,6 @@
 import * as object from '../../src/object';
 import { assign } from '../../src/object';
-import 'src/Symbol';
+import '../../src/Symbol';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

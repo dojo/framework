@@ -1,7 +1,7 @@
 import * as array from '../../src/array';
 import has, { add as hasAdd } from '../../src/support/has';
 import { Iterable, ShimIterator } from '../../src/iterator';
-import 'src/Symbol';
+import '../../src/Symbol';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

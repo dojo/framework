@@ -1,6 +1,5 @@
 import { forOf, isIterable, IterableIterator, ShimIterator } from '../../src/iterator';
 import Map from '../../src/Map';
-import { Tests } from 'intern/lib/interfaces/object';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
@@ -56,7 +55,7 @@ registerSuite('Map', {
 		}
 	},
 
-	'delete': <Tests> {
+	'delete': {
 		before() {
 			map = new Map([
 				[ 3, 'abc' ],
@@ -64,15 +63,17 @@ registerSuite('Map', {
 			]);
 		},
 
-		'key found'() {
-			assert.isTrue(map.delete(3));
-			assert.isUndefined(map.get(3));
-			assert.strictEqual(map.size, 1);
-			assert.strictEqual(map.get(4), 'def', 'Remaining key should not be affected by delete');
-		},
+		tests: {
+			'key found'() {
+				assert.isTrue(map.delete(3));
+				assert.isUndefined(map.get(3));
+				assert.strictEqual(map.size, 1);
+				assert.strictEqual(map.get(4), 'def', 'Remaining key should not be affected by delete');
+			},
 
-		'key not found'() {
-			assert.isFalse(map.delete('foo'));
+			'key not found'() {
+				assert.isFalse(map.delete('foo'));
+			}
 		}
 	},
 
@@ -101,7 +102,7 @@ registerSuite('Map', {
 		});
 	},
 
-	forEach: <Tests> {
+	forEach: {
 		before() {
 			function foo() {}
 			const object = Object.create(null);
@@ -117,24 +118,26 @@ registerSuite('Map', {
 			map = new Map<number, any>(mapArgs);
 		},
 
-		'callback arguments'() {
-			map.forEach(function (value, key, mapInstance) {
-				assert.lengthOf(arguments, 3);
-				assert.strictEqual(map.get(key), value);
-				assert.strictEqual(map, mapInstance);
-			});
-		},
+		tests: {
+			'callback arguments'() {
+				map.forEach(function (value, key, mapInstance) {
+					assert.lengthOf(arguments, 3);
+					assert.strictEqual(map.get(key), value);
+					assert.strictEqual(map, mapInstance);
+				});
+			},
 
-		'times executed'() {
-			let counter = 0;
-			map.forEach(function (key, value, mapInstance) {
-				counter++;
-			});
-			assert.strictEqual(counter, mapArgs.length);
+			'times executed'() {
+				let counter = 0;
+				map.forEach(function (key, value, mapInstance) {
+					counter++;
+				});
+				assert.strictEqual(counter, mapArgs.length);
+			}
 		}
 	},
 
-	get: <Tests> {
+	get: {
 		before() {
 			map = new Map([
 				[ 0, 'a' ],
@@ -143,31 +146,35 @@ registerSuite('Map', {
 			]);
 		},
 
-		'key found'() {
-			assert.strictEqual(map.get(0), 'a');
-			assert.strictEqual(map.get(8), 'b');
-			assert.strictEqual(map.get(NaN), 'c',
-				'Map should successfully retrieve an item with a key of NaN');
-		},
+		tests: {
+			'key found'() {
+				assert.strictEqual(map.get(0), 'a');
+				assert.strictEqual(map.get(8), 'b');
+				assert.strictEqual(map.get(NaN), 'c',
+					'Map should successfully retrieve an item with a key of NaN');
+			},
 
-		'key not found'() {
-			assert.isUndefined(map.get(3));
+			'key not found'() {
+				assert.isUndefined(map.get(3));
+			}
 		}
 	},
 
-	has: <Tests> {
+	has: {
 		before() {
 			map = new Map<number, string>([
 				[ 3, 'abc' ]
 			]);
 		},
 
-		'key found'() {
-			assert.isTrue(map.has(3));
-		},
+		tests: {
+			'key found'() {
+				assert.isTrue(map.has(3));
+			},
 
-		'key not found'() {
-			assert.isFalse(map.has(0));
+			'key not found'() {
+				assert.isFalse(map.has(0));
+			}
 		}
 	},
 

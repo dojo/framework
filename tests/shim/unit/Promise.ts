@@ -10,7 +10,7 @@ const { assert } = intern.getPlugin('chai');
 export type TypeUnderTest = typeof Promise;
 
 /* tslint:disable-next-line:variable-name */
-export function addPromiseTests(suite: any, Promise: TypeUnderTest) {
+export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeUnderTest) {
 	suite['.all'] = {
 		'empty array': function () {
 			let dfd = this.async();

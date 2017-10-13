@@ -14,18 +14,13 @@
 		],
 		"noImplicitAny": true,
 		"outDir": "_build/",
-		"baseUrl": "node_modules",
 		"removeComments": false,
 		"sourceMap": true,
 		"target": "es5",
 		"moduleResolution": "node",
 		"strictNullChecks": true,
 		"noImplicitThis": true,
-		"types": [ "intern" ],
-		"typeRoots": [
-			"./node_modules/@types",
-			"./node_modules/intern/types"
-		]
+		"types": [ "intern" ]
 	},
 	"include": [
 		"./typings/index.d.ts",

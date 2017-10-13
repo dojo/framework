@@ -2,37 +2,28 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import pollUntil from '@theintern/leadfoot/helpers/pollUntil';
 
-registerSuite('asyncAwait', {
-	'Async/Await with Bluebird'() {
-		return this.remote
-			.get((<any> require).toUrl('./bluebird.html'))
-			.then(pollUntil(function () {
-				return (<any> window).callbackValue;
-			}, undefined, 5000), undefined)
-			.then((callbackValue: number) => {
-				assert.equal(callbackValue, 42);
-			});
-	},
+registerSuite('asyncAwait', () => {
+	const poller = pollUntil(function () {
+		return (<any> window).callbackValue;
+	}, undefined, 5000);
 
-	'Async/Await with Dojo'() {
-		return this.remote
-			.get((<any> require).toUrl('./asyncAwait.html'))
-			.then(pollUntil(function () {
-				return (<any> window).callbackValue;
-			}, undefined, 5000), undefined)
-			.then((callbackValue: number) => {
-				assert.equal(callbackValue, 42);
-			});
-	},
+	return {
+		async 'Async/Await with Bluebird'() {
+			const result: number = await this.remote.get(`${__dirname}/bluebird.html`).then(poller);
 
-	'Async/Await with Bluebird and Dojo'() {
-		return this.remote
-			.get((<any> require).toUrl('./bluebirdAndDojo.html'))
-			.then(pollUntil(function () {
-				return (<any> window).callbackValue;
-			}, undefined, 5000), undefined)
-			.then((callbackValue: number) => {
-				assert.equal(callbackValue, 42);
-			});
-	}
+			assert.equal(result, 42);
+		},
+
+		async 'Async/Await with Dojo'() {
+			const result: number = await this.remote.get(`${__dirname}/asyncAwait.html`).then(poller);
+
+			assert.equal(result, 42);
+		},
+
+		async 'Async/Await with Bluebird and Dojo'() {
+			const result: number = await this.remote.get(`${__dirname}/bluebirdAndDojo.html`).then(poller);
+
+			assert.equal(result, 42);
+		}
+	};
 });

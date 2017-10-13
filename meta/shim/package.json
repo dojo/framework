@@ -31,7 +31,7 @@
     "@types/node": "~6.0.49",
     "grunt": "~1.0.1",
     "grunt-dojo2": "latest",
-    "intern": "4.0.0-alpha.14",
+    "intern": "~4.0.2",
     "istanbul": "^0.4.3",
     "typescript": "~2.4.1"
   }
