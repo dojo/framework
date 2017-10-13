@@ -50,7 +50,7 @@
     "jsdom": "^9.5.0",
     "sinon": "^1.17.6",
     "tslint": "^5.2.0",
-    "typescript": "~2.4.1"
+    "typescript": "~2.5.2"
   },
   "dependencies": {
     "intersection-observer": "^0.4.2",

@@ -223,7 +223,7 @@ export function ThemeableMixin<E, T extends Constructor<WidgetBase<ThemeableProp
 
 			const themeable = this;
 			function classesGetter(this: ClassesFunctionChain) {
-				const themeClasses = themeable._getThemeClasses(this.classes);
+				const themeClasses = themeable._getThemeClasses(this.classes as (keyof E)[]);
 				const fixedClasses = themeable._getFixedClasses(this.fixedClasses);
 				return assign({}, themeable._allClasses, themeClasses, fixedClasses);
 			}
@@ -253,7 +253,7 @@ export function ThemeableMixin<E, T extends Constructor<WidgetBase<ThemeableProp
 		/**
 		 * Get theme class object from classNames
 		 */
-		private _getThemeClasses(classNames: string[]): ClassNameFlags  {
+		private _getThemeClasses(classNames: (keyof E)[]): ClassNameFlags  {
 			return classNames
 				.filter((className) => !!className)
 				.reduce((appliedClasses: {}, className: string) => {
@@ -263,7 +263,7 @@ export function ThemeableMixin<E, T extends Constructor<WidgetBase<ThemeableProp
 					}
 					className = this._baseThemeClassesReverseLookup[className];
 					if (!this._registeredClassesMap.has(className)) {
-						this._registerThemeClass(className);
+						this._registerThemeClass(className as keyof E);
 					}
 					return assign(appliedClasses, this._registeredClassesMap.get(className));
 				}, {});
@@ -293,7 +293,7 @@ export function ThemeableMixin<E, T extends Constructor<WidgetBase<ThemeableProp
 		 *
 		 * @param className the name of the class to register.
 		 */
-		private _registerThemeClass(className: string) {
+		private _registerThemeClass(className: keyof E) {
 			const { properties: { extraClasses = {} } } = this;
 			const themeClass = this._theme[className] ? this._theme[className] : this._getBaseThemeClass(className);
 			const extraClassesClassNames = extraClasses[className];
@@ -325,7 +325,7 @@ export function ThemeableMixin<E, T extends Constructor<WidgetBase<ThemeableProp
 				return assign(baseTheme, theme[themeKey]);
 			}, {});
 
-			this._registeredClassesMap.forEach((value, key) => {
+			this._registeredClassesMap.forEach((value, key: keyof E) => {
 				this._registerThemeClass(key);
 			});
 			this._recalculateClasses = false;
