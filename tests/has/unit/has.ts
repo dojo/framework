@@ -1,5 +1,6 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import * as sinon from 'sinon';
 import has, {
 	testCache as hasCache,
@@ -32,10 +33,18 @@ let alreadyCached: { [ feature: string ]: boolean };
 let alreadyTest: { [ feature: string ]: boolean };
 const feature = 'feature';  // default feature name for lazy devs
 
-registerSuite({
-	name: 'has',
+const normalize: (id: string) => string = (<any> require).toAbsMid || ((id: string) => id);
+const undef: (id: string) => void = has('host-node') ?
+	(id: string) => {
+		const path = require('path');
+		delete require.cache[path.resolve(__dirname, id) + '.js'];
+	} :
+	(id: string) => {
+		(<any> require).undef((<any> require).toAbsMid(id));
+	};
 
-	setup() {
+registerSuite('has', {
+	before() {
 		alreadyCached = {};
 		Object.keys(hasCache).forEach(function (key) {
 			alreadyCached[key] = true;
@@ -60,365 +69,370 @@ registerSuite({
 		}
 	},
 
-	'has.cache': {
-		'basic true/false tests'() {
-			hasAdd('abc', true);
-			assert.isTrue(hasCache['abc']);
-			hasAdd('def', false);
-			assert.isFalse(hasCache['def']);
+	tests: {
+		'has.cache': {
+			'basic true/false tests'() {
+				hasAdd('abc', true);
+				assert.isTrue(hasCache['abc']);
+				hasAdd('def', false);
+				assert.isFalse(hasCache['def']);
 
-			delete hasCache['abc'];
-			assert.throws(() => {
-				has('abc');
-			}, TypeError, 'Attempt to detect unregistered has feature');
-		},
-
-		'deferred feature test should not populate cache until evaluated'() {
-			hasAdd('deferred-cache', function () {
-				return true;
-			});
-			assert.notProperty(hasCache, 'deferred-cache');
-			has('deferred-cache');
-			assert.property(hasCache, 'deferred-cache');
-		}
-	},
-
-	'has.add()': {
-		'basic tests with immediate values'() {
-			hasAdd('foo', true);
-			hasAdd('bar', false);
-
-			assert.isTrue(has('foo'));
-			assert.isFalse(has('bar'));
-		},
-
-		'deferred feature test evaluation'() {
-			const testMethod = sinon.stub().returns(true);
-			const feature = 'deferred-cache';
-			hasAdd(feature, testMethod);
-
-			assert.isTrue(hasExists(feature));
-			assert.isFalse(testMethod.called);
-
-			assert.isTrue(has(feature));
-			assert.isTrue(testMethod.called);
-
-			// ensure we only call the testMethod once
-			has(feature);
-			assert.isTrue(testMethod.calledOnce);
-		},
-
-		'tests should not coerce'() {
-			let answer = 42;
-
-			hasAdd('answer', answer);
-			assert.strictEqual(has('answer'), answer,
-				'has feature should report original uncoerced value');
-
-			hasAdd('answer-function', function () {
-				return answer;
-			});
-			assert.strictEqual(has('answer-function'), answer,
-				'deferred has feature test should report uncoerced value');
-		},
-
-		'null test should not throw'() {
-			assert.doesNotThrow(function () {
-				hasAdd('baz', <any> null);
-			}, TypeError);
-		},
-
-		'case should not matter'() {
-			hasAdd('APPLES', true);
-			assert.isTrue(has('apples'));
-		},
-
-		'feature is already defined; throws'() {
-			hasAdd(feature, true);
-			assert.throws(() => {
-				hasAdd(feature, false);
-			}, TypeError, 'exists and overwrite not true');
-		},
-
-		'works with thenable'(this: any) {
-			const dfd = this.async();
-
-			const thenable = {
-				then(resolve: (_: number) => void) {
-					setTimeout(() => {
-						resolve(5);
-					}, 10);
-
-					return thenable;
-				}
-			};
-
-			hasAdd('thenable', thenable);
-			assert.isFalse(has('thenable'));
-
-			setTimeout(dfd.callback(() => {
-				assert.equal(has('thenable'), 5);
-			}), 100);
-		},
-
-		'failed thenable removes itself from cache'(this: any) {
-			const dfd = this.async();
-
-			const thenable = {
-				then(_: (_: number) => void, reject: (_: Error) => void) {
-					setTimeout(() => {
-						reject(new Error('test error'));
-					}, 10);
-
-					return thenable;
-				}
-			};
-
-			hasAdd('thenable', thenable);
-			assert.isFalse(has('thenable'));
-
-			setTimeout(dfd.callback(() => {
+				delete hasCache['abc'];
 				assert.throws(() => {
-					has('thenable');
+					has('abc');
+				}, TypeError, 'Attempt to detect unregistered has feature');
+			},
+
+			'deferred feature test should not populate cache until evaluated'() {
+				hasAdd('deferred-cache', function () {
+					return true;
 				});
-			}), 100);
-		},
-
-		overwrite: {
-			'value with value'() {
-				hasAdd(feature, 'old');
-				hasAdd(feature, 'new', true);
-
-				assert.strictEqual(has(feature), 'new');
-			},
-
-			'value with test method'() {
-				hasAdd(feature, 'old');
-				hasAdd(feature, () => 'new', true);
-
-				assert.strictEqual(has(feature), 'new');
-			},
-
-			'test method with value'() {
-				hasAdd(feature, () => 'old');
-				hasAdd(feature, 'new', true);
-
-				assert.strictEqual(has(feature), 'new');
-			},
-
-			'test method with test method'() {
-				hasAdd(feature, () => 'old');
-				hasAdd(feature, () => 'new', true);
-
-				assert.strictEqual(has(feature), 'new');
+				assert.notProperty(hasCache, 'deferred-cache');
+				has('deferred-cache');
+				assert.property(hasCache, 'deferred-cache');
 			}
-		}
-	},
-
-	'has.exists()': {
-		'no test exists; returns false'() {
-			assert.isFalse(hasExists(feature));
 		},
 
-		'test value exists; returns true'() {
-			hasAdd(feature, true);
-			assert.isTrue(hasExists(feature));
-		},
+		'has.add()': {
+			'basic tests with immediate values'() {
+				hasAdd('foo', true);
+				hasAdd('bar', false);
 
-		'test method exists; returns true'() {
-			hasAdd(feature, () => true);
-			assert.isTrue(hasExists(feature));
-		},
+				assert.isTrue(has('foo'));
+				assert.isFalse(has('bar'));
+			},
 
-		'null test value counts as being defined'() {
-			hasAdd(feature, <any> null);
-			assert.isTrue(hasExists(feature));
-		},
+			'deferred feature test evaluation'() {
+				const testMethod = sinon.stub().returns(true);
+				const feature = 'deferred-cache';
+				hasAdd(feature, testMethod);
 
-		'exists with thenabale'(this: any) {
-			const dfd = this.async();
+				assert.isTrue(hasExists(feature));
+				assert.isFalse(testMethod.called);
 
-			const thenable = {
-				then(resolve: (_: number) => void) {
-					setTimeout(() => {
-						resolve(5);
-					}, 10);
+				assert.isTrue(has(feature));
+				assert.isTrue(testMethod.called);
 
-					return thenable;
+				// ensure we only call the testMethod once
+				has(feature);
+				assert.isTrue(testMethod.calledOnce);
+			},
+
+			'tests should not coerce'() {
+				let answer = 42;
+
+				hasAdd('answer', answer);
+				assert.strictEqual(has('answer'), answer,
+					'has feature should report original uncoerced value');
+
+				hasAdd('answer-function', function () {
+					return answer;
+				});
+				assert.strictEqual(has('answer-function'), answer,
+					'deferred has feature test should report uncoerced value');
+			},
+
+			'null test should not throw'() {
+				assert.doesNotThrow(function () {
+					hasAdd('baz', <any> null);
+				}, TypeError);
+			},
+
+			'case should not matter'() {
+				hasAdd('APPLES', true);
+				assert.isTrue(has('apples'));
+			},
+
+			'feature is already defined; throws'() {
+				hasAdd(feature, true);
+				assert.throws(() => {
+					hasAdd(feature, false);
+				}, TypeError, 'exists and overwrite not true');
+			},
+
+			'works with thenable'() {
+				const dfd = this.async();
+
+				const thenable = {
+					then(resolve: (_: number) => void) {
+						setTimeout(() => {
+							resolve(5);
+						}, 10);
+
+						return thenable;
+					}
+				};
+
+				hasAdd('thenable', thenable);
+				assert.isFalse(has('thenable'));
+
+				setTimeout(dfd.callback(() => {
+					assert.equal(has('thenable'), 5);
+				}), 100);
+			},
+
+			'failed thenable removes itself from cache'() {
+				const dfd = this.async();
+
+				const thenable = {
+					then(_: (_: number) => void, reject: (_: Error) => void) {
+						setTimeout(() => {
+							reject(new Error('test error'));
+						}, 10);
+
+						return thenable;
+					}
+				};
+
+				hasAdd('thenable', thenable);
+				assert.isFalse(has('thenable'));
+
+				setTimeout(dfd.callback(() => {
+					assert.throws(() => {
+						has('thenable');
+					});
+				}), 100);
+			},
+
+			overwrite: {
+				'value with value'() {
+					hasAdd(feature, 'old');
+					hasAdd(feature, 'new', true);
+
+					assert.strictEqual(has(feature), 'new');
+				},
+
+				'value with test method'() {
+					hasAdd(feature, 'old');
+					hasAdd(feature, () => 'new', true);
+
+					assert.strictEqual(has(feature), 'new');
+				},
+
+				'test method with value'() {
+					hasAdd(feature, () => 'old');
+					hasAdd(feature, 'new', true);
+
+					assert.strictEqual(has(feature), 'new');
+				},
+
+				'test method with test method'() {
+					hasAdd(feature, () => 'old');
+					hasAdd(feature, () => 'new', true);
+
+					assert.strictEqual(has(feature), 'new');
 				}
-			};
-
-			hasAdd('thenable', thenable);
-			assert.isFalse(hasExists('thenable'));
-
-			setTimeout(dfd.callback(() => {
-				assert.isTrue(hasExists('thenable'));
-			}), 100);
+			}
 		},
 
-		'case should not matter'() {
-			hasAdd('apples', true);
-			assert.isTrue(hasExists('APPLES'));
-		}
-	},
+		'has.exists()': {
+			'no test exists; returns false'() {
+				assert.isFalse(hasExists(feature));
+			},
 
-	'has loader tests': {
-		'both feature and no-feature modules provided'() {
-			hasAdd('abc', true);
-			hasAdd('def', false);
-			assert.strictEqual(hasNormalize('abc?intern:intern!object', (<any> require).toAbsMid), 'intern/main');
-			assert.strictEqual(hasNormalize('def?intern:intern!object', (<any> require).toAbsMid), 'intern!object');
+			'test value exists; returns true'() {
+				hasAdd(feature, true);
+				assert.isTrue(hasExists(feature));
+			},
+
+			'test method exists; returns true'() {
+				hasAdd(feature, () => true);
+				assert.isTrue(hasExists(feature));
+			},
+
+			'null test value counts as being defined'() {
+				hasAdd(feature, <any> null);
+				assert.isTrue(hasExists(feature));
+			},
+
+			'exists with thenabale'() {
+				const dfd = this.async();
+
+				const thenable = {
+					then(resolve: (_: number) => void) {
+						setTimeout(() => {
+							resolve(5);
+						}, 10);
+
+						return thenable;
+					}
+				};
+
+				hasAdd('thenable', thenable);
+				assert.isFalse(hasExists('thenable'));
+
+				setTimeout(dfd.callback(() => {
+					assert.isTrue(hasExists('thenable'));
+				}), 100);
+			},
+
+			'case should not matter'() {
+				hasAdd('apples', true);
+				assert.isTrue(hasExists('APPLES'));
+			}
 		},
 
-		'only feature module provided'() {
-			hasAdd('abc', true);
-			hasAdd('def', false);
-			assert.strictEqual(hasNormalize('abc?intern', (<any> require).toAbsMid), 'intern/main');
-			assert.isUndefined(hasNormalize('def?intern', (<any> require).toAbsMid));
+		'has loader tests': {
+			'both feature and no-feature modules provided'() {
+				hasAdd('abc', true);
+				hasAdd('def', false);
+				assert.strictEqual(hasNormalize('abc?intern:intern!object', normalize), 'intern');
+				assert.strictEqual(hasNormalize('def?intern:intern!object', normalize), 'intern!object');
+			},
+
+			'only feature module provided'() {
+				hasAdd('abc', true);
+				hasAdd('def', false);
+				assert.strictEqual(hasNormalize('abc?intern', normalize), 'intern');
+				assert.isUndefined(hasNormalize('def?intern', normalize));
+			},
+
+			'only no-feature module provided'() {
+				hasAdd('abc', true);
+				hasAdd('def', false);
+				assert.isNull(hasNormalize('abc?:intern', normalize));
+				assert.strictEqual(hasNormalize('def?:intern', normalize), 'intern');
+			},
+
+			'chained ternary test'() {
+				const expected1 = 'two';
+				const expected2 = 'one';
+				const expected3 = 'three';
+
+				hasAdd('abc', true);
+				hasAdd('def', false);
+
+				const actual1 = hasNormalize('abc?def?one:two:three', normalize);
+				const actual2 = hasNormalize('abc?abc?one:two:three', normalize);
+				const actual3 = hasNormalize('def?abc?one:two:three', normalize);
+
+				assert.strictEqual(expected1, actual1);
+				assert.strictEqual(expected2, actual2);
+				assert.strictEqual(expected3, actual3);
+			},
+
+			'custom has test'() {
+				const expectedHasFeatureModule = 'intern';
+				const expectedHasNoFeatureModule = 'intern!object';
+
+				hasAdd('abc', true);
+				hasAdd('def', false);
+
+				const actualHasFeatureModule = hasNormalize('abc?intern:intern!object', normalize);
+				const actualHasNoFeatureModule = hasNormalize('def?intern:intern!object', normalize);
+
+				assert.strictEqual(expectedHasFeatureModule, actualHasFeatureModule);
+				assert.strictEqual(expectedHasNoFeatureModule, actualHasNoFeatureModule);
+			},
+
+			'normalize method is called once'() {
+				const normalizeStub = sinon.stub();
+				const resourceId = 'abc?intern:intern!object';
+
+				hasAdd('abc', true);
+				hasNormalize(resourceId, normalizeStub);
+
+				assert.isTrue(normalizeStub.calledOnce);
+				assert.strictEqual(normalizeStub.lastCall.args[0], 'intern');
+			},
+
+			'load test resourceId provided'() {
+				const stubbedRequire = sinon.stub().callsArg(1);
+				const loadedStub = sinon.stub();
+				hasAdd('abc', true);
+				const resourceId = 'src/has!abc?intern:intern!object';
+
+				hasLoad(resourceId, <any> stubbedRequire, loadedStub);
+				assert.isTrue(stubbedRequire.calledOnce, 'Require should be called once');
+				assert.isTrue(loadedStub.calledOnce, 'Load stub should be called once');
+				assert.isTrue(loadedStub.calledAfter(stubbedRequire), 'Load stub should be called after require');
+				assert.strictEqual(stubbedRequire.firstCall.args[0][0], resourceId);
+				assert.strictEqual(stubbedRequire.firstCall.args[1], loadedStub);
+			},
+
+			'load test resourceId not provided'() {
+				const requireSpy = sinon.spy(require);
+				const loadedStub = sinon.stub();
+
+				hasLoad(<any> null, <any> require, loadedStub);
+				assert.isTrue(loadedStub.calledOnce);
+				assert.isFalse(requireSpy.calledOnce);
+			}
 		},
 
-		'only no-feature module provided'() {
-			hasAdd('abc', true);
-			hasAdd('def', false);
-			assert.isNull(hasNormalize('abc?:intern', (<any> require).toAbsMid));
-			assert.strictEqual(hasNormalize('def?:intern', (<any> require).toAbsMid), 'intern/main');
+		'built in feature flags': {
+			'debug'() {
+				assert.isTrue(hasExists('debug'));
+				assert.isTrue(has('debug'), 'Debug should default to true');
+			},
+			'host-browser'() {
+				assert.isTrue(hasExists('host-browser'));
+				assert.strictEqual(has('host-browser'), typeof document !== 'undefined' && typeof location !== 'undefined');
+			},
+			'host-node'() {
+				assert.isTrue(hasExists('host-node'));
+				assert.strictEqual(has('host-node'), (typeof process === 'object' && process.versions && process.versions.node) || undefined);
+			}
 		},
 
-		'chained ternary test'() {
-			const expected1 = 'two';
-			const expected2 = 'one';
-			const expected3 = 'three';
-
-			hasAdd('abc', true);
-			hasAdd('def', false);
-
-			const actual1 = hasNormalize('abc?def?one:two:three', (<any> require).toAbsMid);
-			const actual2 = hasNormalize('abc?abc?one:two:three', (<any> require).toAbsMid);
-			const actual3 = hasNormalize('def?abc?one:two:three', (<any> require).toAbsMid);
-
-			assert.strictEqual(expected1, actual1);
-			assert.strictEqual(expected2, actual2);
-			assert.strictEqual(expected3, actual3);
-		},
-
-		'custom has test'() {
-			const expectedHasFeatureModule = 'intern/main';
-			const expectedHasNoFeatureModule = 'intern!object';
-
-			hasAdd('abc', true);
-			hasAdd('def', false);
-
-			const actualHasFeatureModule = hasNormalize('abc?intern:intern!object', (<any> require).toAbsMid);
-			const actualHasNoFeatureModule = hasNormalize('def?intern:intern!object', (<any> require).toAbsMid);
-
-			assert.strictEqual(expectedHasFeatureModule, actualHasFeatureModule);
-			assert.strictEqual(expectedHasNoFeatureModule, actualHasNoFeatureModule);
-		},
-
-		'normalize method is called once'() {
-			const normalizeStub = sinon.stub();
-			const resourceId = 'abc?intern:intern!object';
-
-			hasAdd('abc', true);
-			hasNormalize(resourceId, normalizeStub);
-
-			assert.isTrue(normalizeStub.calledOnce);
-			assert.strictEqual(normalizeStub.lastCall.args[0], 'intern');
-		},
-
-		'load test resourceId provided'() {
-			const stubbedRequire = sinon.stub().callsArg(1);
-			const loadedStub = sinon.stub();
-			hasAdd('abc', true);
-			const resourceId = 'src/has!abc?intern:intern!object';
-
-			hasLoad(resourceId, <any> stubbedRequire, loadedStub);
-			assert.isTrue(stubbedRequire.calledOnce, 'Require should be called once');
-			assert.isTrue(loadedStub.calledOnce, 'Load stub should be called once');
-			assert.isTrue(loadedStub.calledAfter(stubbedRequire), 'Load stub should be called after require');
-			assert.strictEqual(stubbedRequire.firstCall.args[0][0], resourceId);
-			assert.strictEqual(stubbedRequire.firstCall.args[1], loadedStub);
-		},
-
-		'load test resourceId not provided'() {
-			const requireSpy = sinon.spy(require);
-			const loadedStub = sinon.stub();
-
-			hasLoad(<any> null, <any> require, loadedStub);
-			assert.isTrue(loadedStub.calledOnce);
-			assert.isFalse(requireSpy.calledOnce);
-		}
-	},
-
-	'built in feature flags': {
-		'debug'() {
-			assert.isTrue(hasExists('debug'));
-			assert.isTrue(has('debug'), 'Debug should default to true');
-		},
-		'host-browser'() {
-			assert.isTrue(hasExists('host-browser'));
-			assert.strictEqual(has('host-browser'), typeof document !== 'undefined' && typeof location !== 'undefined');
-		},
-		'host-node'() {
-			assert.isTrue(hasExists('host-node'));
-			assert.strictEqual(has('host-node'), (typeof process === 'object' && process.versions && process.versions.node) || undefined);
-		}
-	},
-
-	'static has features': {
-		'staticFeatures object'(this: any) {
-			const dfd = this.async();
-			(<any> require).undef('src/has');
-			globalScope.DojoHasEnvironment = {
-				staticFeatures: {
-					'foo': 1,
-					'bar': 'bar',
-					'baz': false
-				}
-			};
-			(<any> require)([ 'src/has' ], dfd.callback((mod: { default: typeof has }) => {
-				const h = mod.default;
-				assert(!('DojoHasEnvironment' in globalScope));
-				assert.strictEqual(h('foo'), 1);
-				assert.strictEqual(h('bar'), 'bar');
-				assert.isFalse(h('baz'));
-			}));
-		},
-		'staticFeatures function'(this: any) {
-			const dfd = this.async();
-			(<any> require).undef('src/has');
-			globalScope.DojoHasEnvironment = {
-				staticFeatures: function () {
-					return {
+		'static has features': {
+			'staticFeatures object'() {
+				const dfd = this.async();
+				undef('../../src/has');
+				globalScope.DojoHasEnvironment = {
+					staticFeatures: {
 						'foo': 1,
 						'bar': 'bar',
 						'baz': false
-					};
-				}
-			};
-			(<any> require)([ 'src/has' ], dfd.callback((mod: { default: typeof has }) => {
-				const h = mod.default;
-				assert(!('DojoHasEnvironment' in globalScope));
-				assert.strictEqual(h('foo'), 1);
-				assert.strictEqual(h('bar'), 'bar');
-				assert.isFalse(h('baz'));
-			}));
-		},
-		'can override run-time defined features'(this: any) {
-			const dfd = this.async();
-			(<any> require).undef('src/has');
-			globalScope.DojoHasEnvironment = {
-				staticFeatures: {
-					debug: false
-				}
-			};
-			(<any> require)([ 'src/has' ], dfd.callback((mod: { default: typeof has, add: typeof hasAdd }) => {
-				const h = mod.default;
-				const hAdd = mod.add;
-				assert.isFalse(h('debug'), 'Static features override "add()"');
-				hAdd('debug', true, true);
-				assert.isFalse(h('debug'), 'Static features cannot be overwritten');
-			}));
+					}
+				};
+				// tslint:disable-next-line
+				import('../../src/has').then(dfd.callback((mod: { default: typeof has }) => {
+					const h = mod.default;
+					assert(!('DojoHasEnvironment' in globalScope));
+					assert.strictEqual(h('foo'), 1);
+					assert.strictEqual(h('bar'), 'bar');
+					assert.isFalse(h('baz'));
+				}));
+			},
+			'staticFeatures function'() {
+				const dfd = this.async();
+				undef('../../src/has');
+				globalScope.DojoHasEnvironment = {
+					staticFeatures: function () {
+						return {
+							'foo': 1,
+							'bar': 'bar',
+							'baz': false
+						};
+					}
+				};
+				// tslint:disable-next-line
+				import('../../src/has').then(dfd.callback((mod: { default: typeof has }) => {
+					const h = mod.default;
+					assert(!('DojoHasEnvironment' in globalScope));
+					assert.strictEqual(h('foo'), 1);
+					assert.strictEqual(h('bar'), 'bar');
+					assert.isFalse(h('baz'));
+				}));
+			},
+			'can override run-time defined features'() {
+				const dfd = this.async();
+				undef('../../src/has');
+				globalScope.DojoHasEnvironment = {
+					staticFeatures: {
+						debug: false
+					}
+				};
+				// tslint:disable-next-line
+				import('../../src/has').then(dfd.callback((mod: { default: typeof has, add: typeof hasAdd }) => {
+					const h = mod.default;
+					const hAdd = mod.add;
+					assert.isFalse(h('debug'), 'Static features override "add()"');
+					hAdd('debug', true, true);
+					assert.isFalse(h('debug'), 'Static features cannot be overwritten');
+				}));
+			}
 		}
 	}
 });
