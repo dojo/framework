@@ -1,13 +1,12 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+import { Tests } from 'intern/lib/interfaces/object';
 import Promise from '@dojo/shim/Promise';
 import { Thenable } from '@dojo/shim/interfaces';
 import { ShimIterator } from '@dojo/shim/iterator';
 import Task, { State, isTask } from '../../../src/async/Task';
 
-let suite = {
-	name: 'Task',
-
+const suite: Tests = {
 	'isTask()'() {
 		const task = new Task((resolve) => resolve(), () => {
 		});
@@ -769,11 +768,15 @@ function addPromiseTests(suite: any, Promise: any) {
 			};
 
 			let calledAlready = false;
-			Promise.resolve(evilPromise).then(dfd.rejectOnError(function (value: number) {
+			const p = Promise.resolve(evilPromise).then(dfd.rejectOnError(function (value: number) {
 				assert.strictEqual(calledAlready, false, 'resolver should not have been called');
 				calledAlready = true;
 				assert.strictEqual(value, 1, 'resolver called with unexpected value');
-			})).then(dfd.resolve, dfd.reject);
+			}));
+
+			p.catch(dfd.reject.bind(dfd));
+
+			setTimeout(() => dfd.resolve(), 100);
 		}
 	};
 
@@ -818,4 +821,4 @@ function addPromiseTests(suite: any, Promise: any) {
 
 addPromiseTests(suite, Task);
 
-registerSuite(suite);
+registerSuite('Task', suite);

@@ -1,11 +1,9 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import SubscriptionPool from '../../../src/request/SubscriptionPool';
 import Observable from '../../../src/Observable';
 
-registerSuite({
-	name: 'SubscriptionPool',
-
+registerSuite('SubscriptionPool', {
 	'registers observers'(this: any) {
 		const dfd = this.async();
 

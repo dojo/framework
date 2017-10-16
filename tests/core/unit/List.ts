@@ -1,10 +1,10 @@
-import * as assert from 'intern/chai!assert';
-import * as registerSuite from 'intern!object';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import List from '../../src/List';
 import { forOf } from '@dojo/shim/iterator';
 import Set from '@dojo/shim/Set';
 
-registerSuite(function () {
+registerSuite('List', function () {
 	function listWith<T>(...items: T[]): List<T> {
 		const list = new List<T>();
 
@@ -16,8 +16,6 @@ registerSuite(function () {
 	}
 
 	return {
-		name: 'List',
-
 		'add'() {
 			const list = new List<number>();
 

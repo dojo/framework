@@ -17,17 +17,15 @@
  * Further discussion: https://github.com/dojo/core/issues/107
  */
 
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import * as sinon from 'sinon';
 import { Handle } from '@dojo/interfaces/core';
 import * as util from '../../src/util';
 
 const TIMEOUT = 3000;
 
-registerSuite({
-	name: 'utility functions',
-
+registerSuite('utility functions', {
 	createTimer: (function () {
 		let timer: Handle | null;
 
@@ -70,7 +68,7 @@ registerSuite({
 			const dfd = this.async(TIMEOUT);
 			// FIXME
 			var foo = {
-				bar: util.debounce(dfd.callback(function(this: any) {
+				bar: util.debounce(dfd.callback(function (this: any) {
 					assert.strictEqual(this, foo, 'Function should be executed with correct context');
 				}), 0)
 			};
@@ -126,7 +124,7 @@ registerSuite({
 			const dfd = this.async(TIMEOUT);
 			// FIXME
 			var foo = {
-				bar: util.throttle(dfd.callback(function(this: any) {
+				bar: util.throttle(dfd.callback(function (this: any) {
 					assert.strictEqual(this, foo, 'Function should be executed with correct context');
 				}), 0)
 			};
@@ -152,7 +150,7 @@ registerSuite({
 
 			let callCount = 0;
 			let cleared = false;
-			const throttledFunction = util.throttle(function (a: string) {
+			const throttledFunction = util.throttle(dfd.rejectOnError(function (a: string) {
 				callCount++;
 				assert.notStrictEqual(a, 'b', 'Second invocation should be throttled');
 				// Rounding errors?
@@ -167,7 +165,7 @@ registerSuite({
 					cleared = true;
 					dfd.resolve();
 				}
-			}, 25);
+			}), 25);
 
 			let runCount = 1;
 			let lastRunTick = 0;
@@ -219,7 +217,7 @@ registerSuite({
 			// FIXME
 			let callCount = 0;
 			let cleared = false;
-			const throttledFunction = util.throttle(function (a: string) {
+			const throttledFunction = util.throttle(dfd.rejectOnError(function (a: string) {
 				callCount++;
 				assert.notStrictEqual(a, 'b', 'Second invocation should be throttled');
 				// Rounding errors?
@@ -234,7 +232,7 @@ registerSuite({
 					cleared = true;
 					dfd.resolve();
 				}
-			}, 25);
+			}), 25);
 
 			let runCount = 1;
 			let lastRunTick = 0;

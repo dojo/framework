@@ -54,8 +54,10 @@ Object.defineProperty(request, 'setDefaultProvider', {
 providerRegistry.setDefaultProvider(xhr);
 
 if (has('host-node')) {
-	let nodeProvider = require('./request/providers/node').default;
-	providerRegistry.setDefaultProvider(nodeProvider);
+	// tslint:disable-next-line
+	import('./request/providers/node').then(node => {
+		providerRegistry.setDefaultProvider(node.default);
+	});
 }
 
 export default request;

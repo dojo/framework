@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import {
 	createConstructRecord,
 	CustomDiff,
@@ -7,9 +7,7 @@ import {
 	patch
 } from '../../src/compare';
 
-registerSuite({
-	name: 'compare',
-
+registerSuite('compare', {
 	diff: {
 		'plain object': {
 			'add property'() {

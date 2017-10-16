@@ -1,13 +1,11 @@
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import common from './common';
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import on, { emit } from '../../../src/on';
 import Evented from '../../../src/Evented';
-import 'dojo/has!host-node?./nodeOnly:./browserOnly';
 
-registerSuite({
-	name: 'events - Evented',
-
+registerSuite('events - Evented', {
 	'cannot target non-emitter': function () {
 		assert.throws(function () {
 			on(<any> {}, 'test', function () {});

@@ -1,10 +1,8 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import ExtensiblePromise from '../../../src/async/ExtensiblePromise';
 
-registerSuite({
-	name: 'ExtensiblePromise',
-
+registerSuite('ExtensiblePromise', {
 	'reject': function (this: any) {
 		let dfd = this.async();
 		ExtensiblePromise.reject().then(

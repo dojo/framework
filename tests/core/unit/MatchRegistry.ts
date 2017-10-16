@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import MatchRegistry from '../../src/MatchRegistry';
 
 function stringTest(value: string) {
@@ -8,9 +8,7 @@ function stringTest(value: string) {
 	};
 }
 
-registerSuite({
-	name: 'MatchRegistry',
-
+registerSuite('MatchRegistry', {
 	'#match'() {
 		const registry = new MatchRegistry<any>();
 		const handler = () => {};

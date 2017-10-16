@@ -1,10 +1,8 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import * as stringExtras from '../../src/stringExtras';
 
-registerSuite({
-	name: 'string functions',
-
+registerSuite('string functions', {
 	'.escapeRegExp()'() {
 		assert.strictEqual(stringExtras.escapeRegExp(''), '');
 		assert.strictEqual(stringExtras.escapeRegExp('[]{}()|/\\^$.*+?'), '\\[\\]\\{\\}\\(\\)\\|\\/\\\\\\^\\$\\.\\*\\+\\?');

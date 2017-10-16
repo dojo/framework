@@ -1,10 +1,9 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import uuid from '../../src/uuid';
 
-registerSuite({
-	name: 'uuid functions',
-
+registerSuite('uuid functions', {
 	'v4 uuid'() {
 		const firstId = uuid();
 

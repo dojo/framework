@@ -1,49 +1,42 @@
-import * as assert from 'intern/chai!assert';
-import * as registerSuite from 'intern!object';
-import * as Suite from 'intern/lib/Suite';
-import * as Command from 'leadfoot/Command';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+import Suite from 'intern/lib/Suite';
 import { Require } from '@dojo/interfaces/loader';
-import pollUntil = require('leadfoot/helpers/pollUntil');
+import pollUntil from '@theintern/leadfoot/helpers/pollUntil';
 
 declare const require: Require;
 
-function executeTest(suite: Suite, htmlTestPath: string, testFn: (result: any) => void, timeout = 10000): Command<any> {
-	return suite.remote
-		.get(require.toUrl(htmlTestPath))
-		.then(pollUntil<any>(function() {
-			return (<any> window).loaderTestResults;
-		}, undefined, timeout), undefined)
-		.then(testFn, function() {
-			throw new Error('loaderTestResult was not set.');
-		});
+async function executeTest(suite: Suite, htmlTestPath: string, timeout = 10000) {
+	try {
+		return await suite.remote.get(htmlTestPath).then(pollUntil(function () {
+			return (<any> window).loaderTestResults || null;
+		}, undefined, timeout));
+	}
+	catch (e) {
+		throw new Error('loaderTestResult was not set.');
+	}
 }
 
 const text = 'abc';
 
-registerSuite({
-	name: 'text plugin',
-
-	'correct text'(this: any) {
-		return executeTest(this, './textPlugin.html', function(results: any) {
-			assert.strictEqual(results.text, text);
-		});
+registerSuite('text plugin', {
+	async 'correct text'(this: any) {
+		const results = await executeTest(this, `${__dirname}/textPlugin.html`);
+		assert.strictEqual(results.text, text);
 	},
 
-	'strips XML'(this: any) {
-		return executeTest(this, './textPluginXML.html', function(results: any) {
-			assert.strictEqual(results.text, text);
-		});
+	async 'strips XML'(this: any) {
+		const results = await executeTest(this, `${__dirname}/textPluginXML.html`);
+		assert.strictEqual(results.text, text);
 	},
 
-	'strips HTML'(this: any) {
-		return executeTest(this, './textPluginHTML.html', function(results: any) {
-			assert.strictEqual(results.text, text);
-		});
+	async 'strips HTML'(this: any) {
+		const results = await executeTest(this, `${__dirname}/textPluginHTML.html`);
+		assert.strictEqual(results.text, text);
 	},
 
-	'strips empty file'(this: any) {
-		return executeTest(this, './textPluginEmpty.html', function(results: any) {
-			assert.strictEqual(results.text, '');
-		});
+	async 'strips empty file'(this: any) {
+		const results = await executeTest(this, `${__dirname}/textPluginEmpty.html`);
+		assert.strictEqual(results.text, '');
 	}
 });

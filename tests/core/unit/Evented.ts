@@ -1,9 +1,8 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import { Evented } from '../../src/Evented';
 
-registerSuite({
-	name: 'bases/Evented',
+registerSuite('Evented', {
 	creation() {
 		const evented = new Evented({});
 		assert(evented);

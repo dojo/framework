@@ -1,6 +1,0 @@
-{
-	"name": "dojo-core",
-	"globalDevDependencies": {
-		"http-proxy": "github:dojo/typings/custom/http-proxy/http-proxy.d.ts#208e87898cd7a7d65a6f63db4a45846cd7220476"
-	}
-}

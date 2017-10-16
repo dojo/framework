@@ -1,10 +1,8 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import UrlSearchParams from '../../src/UrlSearchParams';
 
-registerSuite({
-	name: 'UrlSearchParams',
-
+registerSuite('UrlSearchParams', {
 	construct: (function () {
 		function checkParams(params: UrlSearchParams) {
 			assert.deepEqual(params.getAll('foo'), [ 'bar', 'baz' ]);

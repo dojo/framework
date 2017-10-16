@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import QueuingEvented from '../../src/QueuingEvented';
 
 interface CustomEvent {
@@ -8,9 +8,7 @@ interface CustomEvent {
 	value: number;
 }
 
-registerSuite({
-		name: 'Evented',
-
+registerSuite('QueuingEvented', {
 		'events are queued for the first subscriber': function () {
 			const evented = new QueuingEvented();
 			let listenerCallCount = 0;

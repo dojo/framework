@@ -1,10 +1,8 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import * as base64 from '../../src/base64';
 
-registerSuite({
-	name: 'support/base64',
-
+registerSuite('support/base64', {
 	'encode()': {
 		'normal string'() {
 			assert.strictEqual(base64.encode('foo bar baz'), 'Zm9vIGJhciBiYXo=', 'should have encoded properly');

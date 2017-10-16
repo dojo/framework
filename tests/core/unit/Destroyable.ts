@@ -1,9 +1,8 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import { Destroyable } from '../../src/Destroyable';
 
-registerSuite({
-	name: 'bases/Destroyable',
+registerSuite('Destroyable', {
 	'own/destroy handle'() {
 		let count = 0;
 

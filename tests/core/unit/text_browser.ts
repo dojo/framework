@@ -1,18 +1,14 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import * as text from '../../src/text';
 import { RootRequire } from '@dojo/interfaces/loader';
 
 declare const require: RootRequire;
 
-const basePath = '../../_build/tests/support/data/';
-
-registerSuite({
-		name: 'text',
-
+registerSuite('text - browser', {
 		'load': {
 			'should return text'(this: any) {
-				text.load(basePath + 'textLoad.txt', require, this.async().callback((val: string) => {
+				text.load('../support/data/textLoad.txt', require, this.async().callback((val: string) => {
 					assert.strictEqual(val, 'test', 'Correct text should be returned');
 				}));
 			}

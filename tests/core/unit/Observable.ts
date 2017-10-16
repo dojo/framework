@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import Observable from '../../src/Observable';
 
 function asyncRange(start: number, end: number) {
@@ -20,9 +20,7 @@ function asyncRange(start: number, end: number) {
 	});
 }
 
-registerSuite({
-	name: 'Observable',
-
+registerSuite('Observable', {
 	'toPromise': {
 		'resolution with single'() {
 			return Observable.of(42).toPromise().then((value: number) => {

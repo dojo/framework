@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import request from '../../src/request';
 import node from '../../src/request/providers/node';
 import { createServer } from 'http';
@@ -18,10 +18,8 @@ let getRequestUrl = function (dataKey: string): string {
 	return serverUrl + '?dataKey=' + dataKey;
 };
 
-registerSuite({
-	name: 'request_node',
-
-	setup(this: any) {
+registerSuite('request node', {
+	before(this: any) {
 		const dfd = this.async();
 		const responseData: { [name: string]: any } = {
 			'foo.json': new Buffer(JSON.stringify({ foo: 'bar' }), 'utf8'),
@@ -45,13 +43,13 @@ registerSuite({
 			response.end();
 		});
 
-		server.on('listening', dfd.resolve);
+		server.on('listening', dfd.resolve.bind(dfd));
 		server.listen(serverPort);
 
 		return dfd.promise;
 	},
 
-	teardown() {
+	after() {
 		server.close();
 	},
 
@@ -62,36 +60,38 @@ registerSuite({
 		}
 	},
 
-	'.get': {
-		'simple request'(this: any) {
-			return request.get(getRequestUrl('foo.json'))
-				.then(response => {
-					return response.text();
-				}).then(text => {
-					assert.equal(String(text), JSON.stringify({ foo: 'bar' }));
-				});
+	tests: {
+		'.get': {
+			'simple request'(this: any) {
+				return request.get(getRequestUrl('foo.json'))
+					.then(response => {
+						return response.text();
+					}).then(text => {
+						assert.equal(String(text), JSON.stringify({ foo: 'bar' }));
+					});
+			},
+
+			'custom headers'(this: any) {
+				const options = { headers: { 'Content-Type': 'application/json' } };
+				return request.get(getRequestUrl('foo.json'), options)
+					.then(
+						response => {
+							return response.text().then(text => {
+								assert.equal(String(text), JSON.stringify({ foo: 'bar' }));
+								assert.equal(response.headers.get('content-type'), 'application/json');
+							});
+						}
+					);
+			}
 		},
 
-		'custom headers'(this: any) {
-			const options = { headers: { 'Content-Type': 'application/json' } };
-			return request.get(getRequestUrl('foo.json'), options)
-				.then(
-					response => {
-						return response.text().then(text => {
-							assert.equal(String(text), JSON.stringify({ foo: 'bar' }));
-							assert.equal(response.headers.get('content-type'), 'application/json');
-						});
-					}
-				);
+		'JSON responseType filter'() {
+			return request.get(getRequestUrl('foo.json'))
+				.then(response => {
+					return response.json();
+				}).then(json => {
+					assert.deepEqual(json, { foo: 'bar' });
+				});
 		}
-	},
-
-	'JSON responseType filter'() {
-		return request.get(getRequestUrl('foo.json'))
-			.then(response => {
-				return response.json();
-			}).then(json => {
-				assert.deepEqual(json, { foo: 'bar' });
-			});
 	}
 });

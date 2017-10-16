@@ -1,6 +1,6 @@
 import common from './common';
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import on, { emit } from '../../../src/on';
 import { EventObject } from '@dojo/interfaces/core';
 
@@ -20,9 +20,7 @@ interface DOMEvent extends EventObject {
 	preventDefault: Function;
 }
 
-registerSuite({
-	name: 'events - EventTarget',
-
+registerSuite('events - EventTarget', {
 	'common cases': common({
 		eventName: 'test',
 		createTarget: createTarget,

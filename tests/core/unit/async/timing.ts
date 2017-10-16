@@ -1,13 +1,11 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import * as timing from '../../../src/async/timing';
 import { throwImmediatly } from '../../support/util';
 import { isEventuallyRejected } from '../../support/util';
 import Promise from '@dojo/shim/Promise';
 
-registerSuite({
-	name: 'async/timing',
-
+registerSuite('async/timing', {
 	'delay()': {
 		'delay returning a value after the given timeout': function () {
 			return timing.delay(251)(Date.now()).then(function (start: number) {

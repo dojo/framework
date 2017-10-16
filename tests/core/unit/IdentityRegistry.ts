@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import Symbol from '@dojo/shim/Symbol';
 import { from as arrayFrom } from '@dojo/shim/array';
 
@@ -11,9 +11,7 @@ const idSymbol = Symbol('id');
 // Store the expected string due to <https://github.com/dojo/core/issues/170>.
 const idSymbolString = idSymbol.toString();
 
-registerSuite({
-	name: 'IdentityRegistry',
-
+registerSuite('IdentityRegistry', {
 	'#get': {
 		'string id was not registered'() {
 			const registry = new IdentityRegistry<Value>();

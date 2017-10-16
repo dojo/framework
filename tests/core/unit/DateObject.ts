@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import DateObject, { KwArgs, OperationKwArgs, DateProperties } from '../../src/DateObject';
 
 let date: Date;
@@ -18,9 +18,7 @@ function assertPropertiesEqual(left: DateProperties, right: DateProperties): voi
 	assert.strictEqual(left.dayOfWeek, right.dayOfWeek);
 }
 
-registerSuite({
-	name: 'DateObject',
-
+registerSuite('DateObject', {
 	'creation': function () {
 		const date = new Date();
 		let object = new DateObject();
@@ -51,169 +49,171 @@ registerSuite({
 			object = new DateObject(date);
 		},
 
-		'year': function () {
-			assert.strictEqual(object.year, date.getFullYear());
-			date.setFullYear(object.year = 1);
-			assert.strictEqual(object.year, date.getFullYear());
+		tests: {
+			'year': function () {
+				assert.strictEqual(object.year, date.getFullYear());
+				date.setFullYear(object.year = 1);
+				assert.strictEqual(object.year, date.getFullYear());
 
-			object = new DateObject({ year: 2005, month: 12, dayOfMonth: 27 });
-			object.year += 1;
-			assert.strictEqual(+object, +new Date(2006, 11, 27));
+				object = new DateObject({ year: 2005, month: 12, dayOfMonth: 27 });
+				object.year += 1;
+				assert.strictEqual(+object, +new Date(2006, 11, 27));
 
-			object = new DateObject({ year: 2005, month: 12, dayOfMonth: 27 });
-			object.year -= 1;
-			assert.strictEqual(+object, +new Date(2004, 11, 27));
+				object = new DateObject({ year: 2005, month: 12, dayOfMonth: 27 });
+				object.year -= 1;
+				assert.strictEqual(+object, +new Date(2004, 11, 27));
 
-			object = new DateObject({ year: 2000, month: 2, dayOfMonth: 29 });
-			object.year += 1;
-			assert.strictEqual(+object, +new Date(2001, 1, 28));
+				object = new DateObject({ year: 2000, month: 2, dayOfMonth: 29 });
+				object.year += 1;
+				assert.strictEqual(+object, +new Date(2001, 1, 28));
 
-			object = new DateObject({ year: 2000, month: 2, dayOfMonth: 29 });
-			object.year += 5;
-			assert.strictEqual(+object, +new Date(2005, 1, 28));
+				object = new DateObject({ year: 2000, month: 2, dayOfMonth: 29 });
+				object.year += 5;
+				assert.strictEqual(+object, +new Date(2005, 1, 28));
 
-			object = new DateObject({ year: 1900, month: 12, dayOfMonth: 31 });
-			object.year += 30;
-			assert.strictEqual(+object, +new Date(1930, 11, 31));
+				object = new DateObject({ year: 1900, month: 12, dayOfMonth: 31 });
+				object.year += 30;
+				assert.strictEqual(+object, +new Date(1930, 11, 31));
 
-			object = new DateObject({ year: 1995, month: 12, dayOfMonth: 31 });
-			object.year += 35;
-			assert.strictEqual(+object, +new Date(2030, 11, 31));
-		},
-
-		'month': function () {
-			assert.strictEqual(object.month, date.getMonth() + 1);
-			date.setMonth((object.month = 1) - 1);
-			assert.strictEqual(object.month, date.getMonth() + 1);
-
-			object = new DateObject({ year: 2000, month: 1, dayOfMonth: 1 });
-			object.month += 1;
-			assert.strictEqual(+object, +new Date(2000, 1, 1));
-
-			object = new DateObject({ year: 2000, month: 1, dayOfMonth: 31 });
-			object.month += 1;
-			assert.strictEqual(+object, +new Date(2000, 1, 29));
-
-			object = new DateObject({ year: 2000, month: 2, dayOfMonth: 29 });
-			object.month += 12;
-			assert.strictEqual(+object, +new Date(2001, 1, 28));
-		},
-
-		'dayOfMonth': function () {
-			assert.strictEqual(object.dayOfMonth, date.getDate());
-			date.setDate(object.dayOfMonth = 1);
-			assert.strictEqual(object.dayOfMonth, date.getDate());
-		},
-
-		'hours': function () {
-			assert.strictEqual(object.hours, date.getHours());
-			date.setHours(object.hours = 12);
-			assert.strictEqual(object.hours, date.getHours());
-		},
-
-		'minutes': function () {
-			assert.strictEqual(object.minutes, date.getMinutes());
-			date.setMinutes(object.minutes = 12);
-			assert.strictEqual(object.minutes, date.getMinutes());
-		},
-
-		'seconds': function () {
-			assert.strictEqual(object.seconds, date.getSeconds());
-			date.setSeconds(object.seconds = 12);
-			assert.strictEqual(object.seconds, date.getSeconds());
-		},
-
-		'milliseconds': function () {
-			assert.strictEqual(object.milliseconds, date.getMilliseconds());
-			date.setMilliseconds(object.milliseconds = 12);
-			assert.strictEqual(object.milliseconds, date.getMilliseconds());
-		},
-
-		'time': function () {
-			assert.strictEqual(object.time, +date);
-			date.setTime(object.time = 0);
-			assert.strictEqual(object.time, +date);
-		},
-
-		'dayOfWeek': function () {
-			assert.strictEqual(object.dayOfWeek, date.getDay());
-		},
-
-		'timezoneOffset': function () {
-			assert.strictEqual(object.timezoneOffset, date.getTimezoneOffset());
-		},
-
-		utc: {
-			'basic': function () {
-				const date = new Date(1979, 2, 20, 7, 20, 12, 123);
-				const obj = new DateObject(date);
-				const utc = obj.utc;
-
-				assertPropertiesEqual(obj.add(60000 * date.getTimezoneOffset()), utc);
+				object = new DateObject({ year: 1995, month: 12, dayOfMonth: 31 });
+				object.year += 35;
+				assert.strictEqual(+object, +new Date(2030, 11, 31));
 			},
 
-			'leap year': function () {
-				const date = new Date(2012, 1, 29, 7, 20, 12, 123);
-				const obj = new DateObject(date);
-				const utc = obj.utc;
+			'month': function () {
+				assert.strictEqual(object.month, date.getMonth() + 1);
+				date.setMonth((object.month = 1) - 1);
+				assert.strictEqual(object.month, date.getMonth() + 1);
 
-				assertPropertiesEqual(obj.add(60000 * date.getTimezoneOffset()), utc);
+				object = new DateObject({ year: 2000, month: 1, dayOfMonth: 1 });
+				object.month += 1;
+				assert.strictEqual(+object, +new Date(2000, 1, 1));
+
+				object = new DateObject({ year: 2000, month: 1, dayOfMonth: 31 });
+				object.month += 1;
+				assert.strictEqual(+object, +new Date(2000, 1, 29));
+
+				object = new DateObject({ year: 2000, month: 2, dayOfMonth: 29 });
+				object.month += 12;
+				assert.strictEqual(+object, +new Date(2001, 1, 28));
 			},
 
-			'setters': (function () {
-				function assertChange(property: string, dateProperty: string, value: number = 2) {
-					const date = new DateObject();
-					const time = date.time;
-					const expectedDate: any = new Date(time);
-					const initialValue = expectedDate[`getUTC${dateProperty}`]();
-					expectedDate[`setUTC${dateProperty}`](initialValue + value);
-					let expected: number = expectedDate[`getUTC${dateProperty}`]();
-					if (property === 'month') {
-						// Months are 0-indexed in Date and 1-indexed in DateObject
-						expected += 1;
+			'dayOfMonth': function () {
+				assert.strictEqual(object.dayOfMonth, date.getDate());
+				date.setDate(object.dayOfMonth = 1);
+				assert.strictEqual(object.dayOfMonth, date.getDate());
+			},
+
+			'hours': function () {
+				assert.strictEqual(object.hours, date.getHours());
+				date.setHours(object.hours = 12);
+				assert.strictEqual(object.hours, date.getHours());
+			},
+
+			'minutes': function () {
+				assert.strictEqual(object.minutes, date.getMinutes());
+				date.setMinutes(object.minutes = 12);
+				assert.strictEqual(object.minutes, date.getMinutes());
+			},
+
+			'seconds': function () {
+				assert.strictEqual(object.seconds, date.getSeconds());
+				date.setSeconds(object.seconds = 12);
+				assert.strictEqual(object.seconds, date.getSeconds());
+			},
+
+			'milliseconds': function () {
+				assert.strictEqual(object.milliseconds, date.getMilliseconds());
+				date.setMilliseconds(object.milliseconds = 12);
+				assert.strictEqual(object.milliseconds, date.getMilliseconds());
+			},
+
+			'time': function () {
+				assert.strictEqual(object.time, +date);
+				date.setTime(object.time = 0);
+				assert.strictEqual(object.time, +date);
+			},
+
+			'dayOfWeek': function () {
+				assert.strictEqual(object.dayOfWeek, date.getDay());
+			},
+
+			'timezoneOffset': function () {
+				assert.strictEqual(object.timezoneOffset, date.getTimezoneOffset());
+			},
+
+			utc: {
+				'basic': function () {
+					const date = new Date(1979, 2, 20, 7, 20, 12, 123);
+					const obj = new DateObject(date);
+					const utc = obj.utc;
+
+					assertPropertiesEqual(obj.add(60000 * date.getTimezoneOffset()), utc);
+				},
+
+				'leap year': function () {
+					const date = new Date(2012, 1, 29, 7, 20, 12, 123);
+					const obj = new DateObject(date);
+					const utc = obj.utc;
+
+					assertPropertiesEqual(obj.add(60000 * date.getTimezoneOffset()), utc);
+				},
+
+				'setters': (function () {
+					function assertChange(property: string, dateProperty: string, value: number = 2) {
+						const date = new DateObject();
+						const time = date.time;
+						const expectedDate: any = new Date(time);
+						const initialValue = expectedDate[`getUTC${dateProperty}`]();
+						expectedDate[`setUTC${dateProperty}`](initialValue + value);
+						let expected: number = expectedDate[`getUTC${dateProperty}`]();
+						if (property === 'month') {
+							// Months are 0-indexed in Date and 1-indexed in DateObject
+							expected += 1;
+						}
+						(<any> date.utc)[property] += value;
+
+						assert.strictEqual((<any> date.utc)[property], expected);
+						assert.notEqual(date.time, time);
 					}
-					(<any> date.utc)[property] += value;
 
-					assert.strictEqual((<any> date.utc)[property], expected);
-					assert.notEqual(date.time, time);
+					return {
+						'year': function () {
+							assertChange('year', 'FullYear');
+						},
+
+						'month': function () {
+							assertChange('month', 'Month');
+						},
+
+						'dayOfMonth': function () {
+							assertChange('dayOfMonth', 'Date');
+						},
+
+						'hours': function () {
+							assertChange('hours', 'Hours');
+						},
+
+						'minutes': function () {
+							assertChange('minutes', 'Minutes');
+						},
+
+						'seconds': function () {
+							assertChange('seconds', 'Seconds');
+						},
+
+						'milliseconds': function () {
+							assertChange('milliseconds', 'Milliseconds');
+						}
+					};
+				})(),
+
+				'toString': function () {
+					const milliseconds = Date.UTC(1979, 2, 20);
+					const expected = new Date(milliseconds);
+					const date = new DateObject(milliseconds);
+					assert.strictEqual(date.utc.toString(), expected.toUTCString());
 				}
-
-				return {
-					'year': function () {
-						assertChange('year', 'FullYear');
-					},
-
-					'month': function () {
-						assertChange('month', 'Month');
-					},
-
-					'dayOfMonth': function () {
-						assertChange('dayOfMonth', 'Date');
-					},
-
-					'hours': function () {
-						assertChange('hours', 'Hours');
-					},
-
-					'minutes': function () {
-						assertChange('minutes', 'Minutes');
-					},
-
-					'seconds': function () {
-						assertChange('seconds', 'Seconds');
-					},
-
-					'milliseconds': function () {
-						assertChange('milliseconds', 'Milliseconds');
-					}
-				};
-			})(),
-
-			'toString': function () {
-				const milliseconds = Date.UTC(1979, 2, 20);
-				const expected = new Date(milliseconds);
-				const date = new DateObject(milliseconds);
-				assert.strictEqual(date.utc.toString(), expected.toUTCString());
 			}
 		}
 	},

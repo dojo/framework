@@ -1,0 +1,125 @@
+{
+	"environments": [
+		{ "browserName": "node" }
+	],
+
+	"suites": [
+		"./_build/tests/unit/all.js"
+	],
+
+	"functionalSuites": [
+		"./_build/tests/functional/all.js"
+	],
+
+	"plugins": [
+		"./_build/tests/plugins/echo-service.js"
+	],
+
+	"browser": {
+		"loader": {
+			"script": "dojo2",
+			"options": {
+				"packages": [
+					{ "name": "src", "location": "_build/src" },
+					{ "name": "tests", "location": "_build/tests" },
+					{ "name": "@dojo", "location": "node_modules/@dojo" },
+					{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
+				]
+			}
+		},
+
+		"suites+": [
+			"./_build/tests/unit/all-browser.js"
+		]
+	},
+
+	"node": {
+		"suites+": [
+			"./_build/tests/unit/all-node.js"
+		]
+	},
+
+	"configs": {
+		"coverage": {
+			"coverage": [
+				"./_build/src/**/*.js"
+			]
+		},
+
+		"remoteCapabilities": {
+			"capabilities": {
+				"project": "Dojo 2",
+				"name": "@dojo/core",
+				"fixSessionCapabilities": false
+			}
+		},
+
+		"browserstack": {
+			"extends": [ "coverage", "remoteCapabilities" ],
+
+			"tunnel": "browserstack",
+			"capabilities+": {
+				"browserstack.debug": false
+			},
+
+			"environments+": [
+				{ "browserName": "internet explorer", "version": "11" },
+				{ "browserName": "edge" },
+				{ "browserName": "firefox", "platform": "WINDOWS" },
+				{ "browserName": "chrome", "platform": "WINDOWS" }
+			],
+
+			"maxConcurrency": 5
+		},
+
+		"node-loader": {
+			"extends": [ "coverage" ],
+
+			"node": {
+				"loader": {
+					"script": "dojo2",
+					"options": {
+						"packages": [
+							{ "name": "src", "location": "_build/src" },
+							{ "name": "tests", "location": "_build/tests" },
+							{ "name": "@dojo", "location": "node_modules/@dojo" },
+							{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
+						]
+					}
+				},
+				"suites+": [
+					"./_build/tests/unit/all-node-loader.js"
+				]
+			}
+		},
+
+		"local": {
+			"extends": [ "coverage", "remoteCapabilities" ],
+
+			"tunnel": "selenium",
+			"tunnelOptions": {
+				"hostname": "localhost",
+				"port": 4444
+			},
+
+			"environments+": [
+				{ "browserName": "chrome" }
+			]
+		},
+
+		"saucelabs": {
+			"extends": [ "coverage", "remoteCapabilities" ],
+
+			"tunnel": "saucelabs",
+			"tunnelOptions": {},
+
+			"defaultTimeout": 10000,
+			"environments+": [
+				{ "browserName": "internet explorer", "version": [ "11.0" ], "platform": "Windows 7" },
+				{ "browserName": "firefox", "version": "43", "platform": "Windows 10" },
+				{ "browserName": "chrome", "platform": "Windows 10" }
+			],
+			"maxConcurrency": 4
+		}
+	}
+}

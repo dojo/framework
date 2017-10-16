@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { createServer } from 'http';
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import { parse } from 'url';
 import * as zlib from 'zlib';
 import { Response } from '../../../src/request/interfaces';
@@ -232,7 +232,7 @@ function buildRedirectTests(methods: RedirectTestData[]) {
 							details.callback(response);
 						}
 
-						assert.deepPropertyVal(response, 'requestOptions.method', expectedMethod);
+						(assert as any).nestedPropertyVal(response, 'requestOptions.method', expectedMethod);
 						assert.equal(response.url, expectedPage);
 
 						if (details.expectedCount !== undefined) {
@@ -303,10 +303,8 @@ function assertBasicAuthentication(options: { user?: string, password?: string }
 	);
 }
 
-registerSuite({
-	name: 'request/node',
-
-	setup(this: any) {
+registerSuite('request/node', {
+	before(this: any) {
 		const dfd = this.async();
 
 		server = createServer(function (request, response) {
@@ -339,7 +337,7 @@ registerSuite({
 			});
 		});
 
-		server.on('listening', dfd.resolve);
+		server.on('listening', dfd.resolve.bind(dfd));
 		server.listen(serverPort);
 
 		proxy = createServer((request, response) => {
@@ -367,789 +365,791 @@ registerSuite({
 		return dfd.promise;
 	},
 
-	teardown() {
+	after() {
 		server.close();
 		proxy.close();
 	},
 
-	'request options': {
-		body: {
-			'string'(this: any): void {
-				const dfd = this.async();
-				nodeRequest(getRequestUrl('foo.json'), {
-					body: '{ "foo": "bar" }',
-					method: 'POST'
-				}).then(
-					dfd.callback(function () {
+	tests: {
+		'request options': {
+			body: {
+				'string'(this: any): void {
+					const dfd = this.async();
+					nodeRequest(getRequestUrl('foo.json'), {
+						body: '{ "foo": "bar" }',
+						method: 'POST'
+					}).then(
+						dfd.callback(function () {
+							assert.deepEqual(requestData, { foo: 'bar' });
+						}),
+						dfd.reject.bind(dfd)
+					);
+				},
+				'buffer'() {
+					return nodeRequest(getRequestUrl('foo.json'), {
+						body: Buffer.from('{ "foo": "bar" }', 'utf8'),
+						method: 'POST'
+					}).then(() => {
 						assert.deepEqual(requestData, { foo: 'bar' });
+					});
+				}
+			},
+
+			bodyStream: {
+				'stream is read'(this: any) {
+					return nodeRequest(getRequestUrl('echo'), {
+						method: 'POST',
+						bodyStream: fs.createReadStream('tests/support/data/foo.json')
+					}).then(res => res.json()).then(json => {
+						assert.deepEqual(requestData, { foo: 'bar' });
+					});
+				}
+			},
+
+			'content encoding': (function (compressionTypes) {
+				const suites: { [key: string]: any } = {};
+
+				compressionTypes.map(type => {
+					suites[ type ] = {
+						'gets decoded'() {
+							return nodeRequest(getRequestUrl(`${type}-compressed`)).then(response => {
+								return response.json();
+							}).then(obj => {
+								assert.deepEqual(obj, { test: true });
+							});
+						},
+						'errors are caught'() {
+							return nodeRequest(getRequestUrl(`${type}-invalid`)).then(response => {
+								return response.json();
+							}).then(() => {
+								assert.fail('Should not have succeeded');
+							}, (error) => {
+								assert.isNotNull(error);
+							});
+						}
+					};
+				});
+
+				return suites;
+			})([ 'gzip', 'deflate', 'gzip-deflate' ]),
+
+			proxy(this: any): void {
+				const dfd = this.async();
+				const url = getRequestUrl('foo.json');
+				nodeRequest(url, {
+					proxy: url.slice(0, 7) + 'username:password@' + url.slice(7)
+				}).then(
+					dfd.callback(function (response: any) {
+						const request = response.nativeResponse.req;
+
+						assert.strictEqual(request.path, url);
+						assert.strictEqual(request._headers[ 'proxy-authorization' ],
+							'Basic ' + new Buffer('username:password').toString('base64'));
+						assert.strictEqual(request._headers.host, serverUrl.slice(7));
 					}),
 					dfd.reject.bind(dfd)
 				);
 			},
-			'buffer'() {
-				return nodeRequest(getRequestUrl('foo.json'), {
-					body: Buffer.from('{ "foo": "bar" }', 'utf8'),
-					method: 'POST'
-				}).then(() => {
-					assert.deepEqual(requestData, { foo: 'bar' });
-				});
-			}
-		},
 
-		bodyStream: {
-			'stream is read'(this: any) {
-				return nodeRequest(getRequestUrl('echo'), {
-					method: 'POST',
-					bodyStream: fs.createReadStream('tests/support/data/foo.json')
-				}).then(res => res.json()).then(json => {
-					assert.deepEqual(requestData, { foo: 'bar' });
-				});
-			}
-		},
+			'user and password': {
+				both(this: any): void {
+					const user = 'user name';
+					const password = 'pass word';
+					assertBasicAuthentication({
+						user,
+						password
+					}, `${ user }:${ password }`, this.async());
+				},
 
-		'content encoding': (function (compressionTypes) {
-			const suites: { [key: string]: any } = {};
+				'user only'(this: any): void {
+					const user = 'user name';
+					assertBasicAuthentication({
+						user
+					}, `${ user }:`, this.async());
+				},
 
-			compressionTypes.map(type => {
-				suites[ type ] = {
-					'gets decoded'() {
-						return nodeRequest(getRequestUrl(`${type}-compressed`)).then(response => {
-							return response.json();
-						}).then(obj => {
-							assert.deepEqual(obj, { test: true });
-						});
-					},
-					'errors are caught'() {
-						return nodeRequest(getRequestUrl(`${type}-invalid`)).then(response => {
-							return response.json();
-						}).then(() => {
-							assert.fail('Should not have succeeded');
-						}, (error) => {
-							assert.isNotNull(error);
-						});
-					}
-				};
-			});
+				'password only'(this: any): void {
+					const password = 'pass word';
+					assertBasicAuthentication({
+						password
+					}, `:${ password }`, this.async());
+				},
 
-			return suites;
-		})([ 'gzip', 'deflate', 'gzip-deflate' ]),
+				'special characters'(this: any): void {
+					const user = '$pecialUser';
+					const password = '__!passW@rd';
+					assertBasicAuthentication({
+						user,
+						password
+					}, `${ user }:${ password }`, this.async());
+				},
 
-		proxy(this: any): void {
-			const dfd = this.async();
-			const url = getRequestUrl('foo.json');
-			nodeRequest(url, {
-				proxy: url.slice(0, 7) + 'username:password@' + url.slice(7)
-			}).then(
-				dfd.callback(function (response: any) {
-					const request = response.nativeResponse.req;
-
-					assert.strictEqual(request.path, url);
-					assert.strictEqual(request._headers[ 'proxy-authorization' ],
-						'Basic ' + new Buffer('username:password').toString('base64'));
-					assert.strictEqual(request._headers.host, serverUrl.slice(7));
-				}),
-				dfd.reject.bind(dfd)
-			);
-		},
-
-		'user and password': {
-			both(this: any): void {
-				const user = 'user name';
-				const password = 'pass word';
-				assertBasicAuthentication({
-					user,
-					password
-				}, `${ user }:${ password }`, this.async());
+				error(this: any): void {
+					const dfd = this.async();
+					nodeRequest(getAuthRequestUrl('foo.json'), { timeout: 1 })
+						.then(
+							dfd.resolve.bind(dfd),
+							dfd.callback(function (error: TimeoutError): void {
+								assert.notInclude(error.message, 'user:password');
+								assert.include(error.message, '(redacted)');
+							})
+						);
+				}
 			},
 
-			'user only'(this: any): void {
-				const user = 'user name';
-				assertBasicAuthentication({
-					user
-				}, `${ user }:`, this.async());
-			},
-
-			'password only'(this: any): void {
-				const password = 'pass word';
-				assertBasicAuthentication({
-					password
-				}, `:${ password }`, this.async());
-			},
-
-			'special characters'(this: any): void {
-				const user = '$pecialUser';
-				const password = '__!passW@rd';
-				assertBasicAuthentication({
-					user,
-					password
-				}, `${ user }:${ password }`, this.async());
-			},
-
-			error(this: any): void {
+			socketOptions(this: any): void {
 				const dfd = this.async();
-				nodeRequest(getAuthRequestUrl('foo.json'), { timeout: 1 })
+				nodeRequest(getRequestUrl('foo.json'), {
+					socketOptions: {
+						keepAlive: 100,
+						noDelay: true,
+						timeout: 100
+					}
+				}).then(
+					dfd.callback(function (response: NodeResponse) {
+						// TODO: Is it even possible to test this?
+						const socketOptions = response.requestOptions.socketOptions || {};
+						assert.strictEqual(socketOptions.keepAlive, 100);
+						assert.strictEqual(socketOptions.noDelay, true);
+						assert.strictEqual(socketOptions.timeout, 100);
+					}),
+					dfd.reject.bind(dfd)
+				);
+			},
+
+			streamEncoding(this: any): void {
+				const dfd = this.async();
+				nodeRequest(getRequestUrl('foo.json'), {
+					streamEncoding: 'utf8'
+				}).then((response: NodeResponse) => {
+						response.json().then(dfd.callback(function (json: any) {
+								assert.deepEqual(json, { foo: 'bar' });
+							})
+						);
+					},
+					dfd.reject.bind(dfd)
+				);
+			},
+
+			'"timeout"'(this: any): void {
+				const dfd = this.async();
+				nodeRequest(getRequestUrl('foo.json'), { timeout: 1 })
 					.then(
 						dfd.resolve.bind(dfd),
-						dfd.callback(function (error: TimeoutError): void {
-							assert.notInclude(error.message, 'user:password');
-							assert.include(error.message, '(redacted)');
+						dfd.callback(function (error: Error): void {
+							assert.strictEqual(error.name, 'TimeoutError');
 						})
 					);
-			}
-		},
+			},
+			'upload monitoriting': {
+				'with a stream'(this: any) {
+					let events: number[] = [];
 
-		socketOptions(this: any): void {
-			const dfd = this.async();
-			nodeRequest(getRequestUrl('foo.json'), {
-				socketOptions: {
-					keepAlive: 100,
-					noDelay: true,
-					timeout: 100
-				}
-			}).then(
-				dfd.callback(function (response: NodeResponse) {
-					// TODO: Is it even possible to test this?
-					const socketOptions = response.requestOptions.socketOptions || {};
-					assert.strictEqual(socketOptions.keepAlive, 100);
-					assert.strictEqual(socketOptions.noDelay, true);
-					assert.strictEqual(socketOptions.timeout, 100);
-				}),
-				dfd.reject.bind(dfd)
-			);
-		},
+					const req = nodeRequest(getRequestUrl('foo.json'), {
+						method: 'POST',
+						bodyStream: fs.createReadStream('tests/support/data/foo.json')
+					});
 
-		streamEncoding(this: any): void {
-			const dfd = this.async();
-			nodeRequest(getRequestUrl('foo.json'), {
-				streamEncoding: 'utf8'
-			}).then((response: NodeResponse) => {
-					response.json().then(dfd.callback(function (json: any) {
-							assert.deepEqual(json, { foo: 'bar' });
-						})
-					);
+					req.upload.subscribe(totalBytesUploaded => {
+						events.push(totalBytesUploaded);
+					});
+
+					return req.then(res => {
+						assert.isTrue(events.length > 0, 'was expecting at least one monitor event');
+						assert.equal(events[events.length - 1], 17);
+					});
 				},
-				dfd.reject.bind(dfd)
-			);
-		},
+				'without a stream'(this: any) {
+					let events: number[] = [];
 
-		'"timeout"'(this: any): void {
-			const dfd = this.async();
-			nodeRequest(getRequestUrl('foo.json'), { timeout: 1 })
-				.then(
-					dfd.resolve.bind(dfd),
-					dfd.callback(function (error: Error): void {
-						assert.strictEqual(error.name, 'TimeoutError');
-					})
-				);
-		},
-		'upload monitoriting': {
-			'with a stream'(this: any) {
-				let events: number[] = [];
+					const req = nodeRequest(getRequestUrl('foo.json'), {
+						method: 'POST',
+						body: '{ "foo": "bar" }\n'
+					});
 
-				const req = nodeRequest(getRequestUrl('foo.json'), {
-					method: 'POST',
-					bodyStream: fs.createReadStream('tests/support/data/foo.json')
-				});
+					req.upload.subscribe(totalBytesUploaded => {
+						events.push(totalBytesUploaded);
+					});
 
-				req.upload.subscribe(totalBytesUploaded => {
-					events.push(totalBytesUploaded);
-				});
+					return req.then(res => {
+						assert.isTrue(events.length > 0, 'was expecting at least one monitor event');
+						assert.equal(events[events.length - 1], 17);
+					});
+				}
+			},
+			'download events'() {
+				let downloadEvents: number[] = [];
 
-				return req.then(res => {
-					assert.isTrue(events.length > 0, 'was expecting at least one monitor event');
-					assert.equal(events[events.length - 1], 17);
+				return nodeRequest(getRequestUrl('foo.json')).then(response => {
+					response.download.subscribe(totalBytesDownloaded => {
+						downloadEvents.push(totalBytesDownloaded);
+					});
+
+					return response.text().then(() => {
+						assert.isTrue(downloadEvents.length > 0);
+					});
 				});
 			},
-			'without a stream'(this: any) {
-				let events: number[] = [];
 
-				const req = nodeRequest(getRequestUrl('foo.json'), {
-					method: 'POST',
-					body: '{ "foo": "bar" }\n'
-				});
+			'data events'() {
+				let data: number[] = [];
 
-				req.upload.subscribe(totalBytesUploaded => {
-					events.push(totalBytesUploaded);
-				});
+				return nodeRequest(getRequestUrl('foo.json')).then(response => {
+					response.data.subscribe(chunk => {
+						data.push(chunk);
+					});
 
-				return req.then(res => {
-					assert.isTrue(events.length > 0, 'was expecting at least one monitor event');
-					assert.equal(events[events.length - 1], 17);
+					return response.text().then(() => {
+						assert.isTrue(data.length > 0);
+					});
 				});
 			}
 		},
-		'download events'() {
-			let downloadEvents: number[] = [];
 
-			return nodeRequest(getRequestUrl('foo.json')).then(response => {
-				response.download.subscribe(totalBytesDownloaded => {
-					downloadEvents.push(totalBytesDownloaded);
+		headers: {
+			'request headers should not be normalized'(this: any): void {
+				const dfd = this.async();
+				nodeRequest(getRequestUrl('foo.json'), {
+					headers: {
+						someThingCrAzY: 'some-arbitrary-value'
+					}
+				}).then(
+					dfd.callback(function (response: NodeResponse) {
+						const header: any = (<any> response.nativeResponse).req._header;
+
+						assert.notInclude(header, 'somethingcrazy: some-arbitrary-value');
+						assert.include(header, 'someThingCrAzY: some-arbitrary-value');
+						assert.match(header, /dojo\/[^\s]+ Node\.js/);
+					}),
+					dfd.reject.bind(dfd)
+				);
+			},
+
+			'user agent should be added if its not there'(this: any): any {
+				return nodeRequest(getRequestUrl('foo.json'), {}).then((response: any) => {
+					const header: any = response.nativeResponse.req._header;
+
+					assert.include(header, 'user-agent:');
+
+					return nodeRequest(getRequestUrl('food.json'), {
+						headers: {
+							'user-agent': 'already exists'
+						}
+					});
+				}).then((response: any) => {
+					const header: any = response.nativeResponse.req._header;
+
+					assert.include(header, 'user-agent: already exists');
+
+					return nodeRequest(getRequestUrl('food.json'), {
+						headers: {
+							'uSeR-AgEnT': 'mIxEd CaSe'
+						}
+					});
+				}).then((response: any) => {
+					const header: any = response.nativeResponse.req._header;
+
+					assert.include(header, 'uSeR-AgEnT: mIxEd CaSe');
 				});
+			},
 
-				return response.text().then(() => {
-					assert.isTrue(downloadEvents.length > 0);
+			'compression headers are present by default'() {
+				return nodeRequest(getRequestUrl('foo.json')).then((response: any) => {
+					const header: any = response.nativeResponse.req._header;
+					assert.include(header, 'Accept-Encoding: gzip, deflate');
 				});
-			});
-		},
+			},
 
-		'data events'() {
-			let data: number[] = [];
-
-			return nodeRequest(getRequestUrl('foo.json')).then(response => {
-				response.data.subscribe(chunk => {
-					data.push(chunk);
+			'compression headers can be turned off'() {
+				return nodeRequest(getRequestUrl('foo.json'), {
+					acceptCompression: false
+				}).then((response: any) => {
+					const header: any = response.nativeResponse.req._header;
+					assert.notInclude(header, 'Accept-Encoding:');
 				});
+			},
 
-				return response.text().then(() => {
-					assert.isTrue(data.length > 0);
-				});
-			});
-		}
-	},
-
-	headers: {
-		'request headers should not be normalized'(this: any): void {
-			const dfd = this.async();
-			nodeRequest(getRequestUrl('foo.json'), {
-				headers: {
-					someThingCrAzY: 'some-arbitrary-value'
+			'response headers': {
+				'after response'(this: any): void {
+					const dfd = this.async();
+					nodeRequest(getRequestUrl('foo.json'))
+						.then(
+							dfd.callback(function (response: Response): void {
+								assert.strictEqual(response.headers.get('content-type'), 'application/json');
+							}),
+							dfd.reject.bind(dfd)
+						);
 				}
-			}).then(
-				dfd.callback(function (response: NodeResponse) {
-					const header: any = (<any> response.nativeResponse).req._header;
+			},
 
-					assert.notInclude(header, 'somethingcrazy: some-arbitrary-value');
-					assert.include(header, 'someThingCrAzY: some-arbitrary-value');
-					assert.match(header, /dojo\/[^\s]+ Node\.js/);
-				}),
-				dfd.reject.bind(dfd)
-			);
-		},
-
-		'user agent should be added if its not there'(this: any): any {
-			return nodeRequest(getRequestUrl('foo.json'), {}).then((response: any) => {
-				const header: any = response.nativeResponse.req._header;
-
-				assert.include(header, 'user-agent:');
-
-				return nodeRequest(getRequestUrl('food.json'), {
-					headers: {
-						'user-agent': 'already exists'
-					}
+			'set cookie makes separate headers'() {
+				return nodeRequest(getRequestUrl('cookies')).then((response: any) => {
+					assert.deepEqual(response.headers.getAll('set-cookie'), [
+						'one'
+					]);
 				});
-			}).then((response: any) => {
-				const header: any = response.nativeResponse.req._header;
-
-				assert.include(header, 'user-agent: already exists');
-
-				return nodeRequest(getRequestUrl('food.json'), {
-					headers: {
-						'uSeR-AgEnT': 'mIxEd CaSe'
-					}
-				});
-			}).then((response: any) => {
-				const header: any = response.nativeResponse.req._header;
-
-				assert.include(header, 'uSeR-AgEnT: mIxEd CaSe');
-			});
+			}
 		},
 
-		'compression headers are present by default'() {
-			return nodeRequest(getRequestUrl('foo.json')).then((response: any) => {
-				const header: any = response.nativeResponse.req._header;
-				assert.include(header, 'Accept-Encoding: gzip, deflate');
-			});
-		},
-
-		'compression headers can be turned off'() {
-			return nodeRequest(getRequestUrl('foo.json'), {
-				acceptCompression: false
-			}).then((response: any) => {
-				const header: any = response.nativeResponse.req._header;
-				assert.notInclude(header, 'Accept-Encoding:');
-			});
-		},
-
-		'response headers': {
-			'after response'(this: any): void {
+		'response object': {
+			properties(this: any): void {
 				const dfd = this.async();
 				nodeRequest(getRequestUrl('foo.json'))
 					.then(
 						dfd.callback(function (response: Response): void {
-							assert.strictEqual(response.headers.get('content-type'), 'application/json');
+							assert.strictEqual(response.status, 200);
 						}),
 						dfd.reject.bind(dfd)
 					);
-			}
-		},
+			},
 
-		'set cookie makes separate headers'() {
-			return nodeRequest(getRequestUrl('cookies')).then((response: any) => {
-				assert.deepEqual(response.headers.getAll('set-cookie'), [
-					'one'
-				]);
-			});
-		}
-	},
-
-	'response object': {
-		properties(this: any): void {
-			const dfd = this.async();
-			nodeRequest(getRequestUrl('foo.json'))
-				.then(
-					dfd.callback(function (response: Response): void {
-						assert.strictEqual(response.status, 200);
-					}),
-					dfd.reject.bind(dfd)
-				);
-		},
-
-		'data cannot be used twice'() {
-			return nodeRequest(getRequestUrl('foo.json')).then((response) => {
-				assert.isFalse(response.bodyUsed);
-
-				return response.json().then(() => {
-					assert.isTrue(response.bodyUsed);
+			'data cannot be used twice'() {
+				return nodeRequest(getRequestUrl('foo.json')).then((response) => {
+					assert.isFalse(response.bodyUsed);
 
 					return response.json().then(() => {
-						throw new Error('should not have succeeded');
-					}, () => {
-						return true;
+						assert.isTrue(response.bodyUsed);
+
+						return response.json().then(() => {
+							throw new Error('should not have succeeded');
+						}, () => {
+							return true;
+						});
 					});
 				});
-			});
+			},
+
+			'response types': {
+				'arrayBuffer with binary content'() {
+					return nodeRequest(getRequestUrl('blob.gif')).then((response: any) => {
+						return response.arrayBuffer().then((arrayBuffer: any) => {
+							assert.strictEqual(arrayBuffer.byteLength, blobFileSize);
+						});
+					});
+				},
+
+				'arrayBuffer with text content'() {
+					return nodeRequest(getRequestUrl('foo.json')).then((response: any) => {
+						return response.arrayBuffer().then((arrayBuffer: any) => {
+							assert.strictEqual(arrayBuffer.byteLength, JSON.stringify({ foo: 'bar' }).length);
+						});
+					});
+				},
+
+				'blob'() {
+					return nodeRequest(getRequestUrl('foo.json')).then((response: any) => {
+						return response.blob().then((blob: any) => {
+							assert.fail('should not have succeeded');
+						}, () => {
+							return true;
+						});
+					});
+				}
+			}
 		},
 
-		'response types': {
-			'arrayBuffer with binary content'() {
-				return nodeRequest(getRequestUrl('blob.gif')).then((response: any) => {
-					return response.arrayBuffer().then((arrayBuffer: any) => {
-						assert.strictEqual(arrayBuffer.byteLength, blobFileSize);
-					});
-				});
-			},
+		'status codes': {
+			'Redirects': {
+				'300 Multiple Choices': buildRedirectTests([
+					{
+						method: 'GET',
+						url: '300-redirect',
+						expectedCount: 0
+					},
+					{
+						method: 'POST',
+						url: '300-redirect',
+						expectedCount: 0
+					},
+					{
+						method: 'PUT',
+						url: '300-redirect',
+						expectedCount: 0
+					},
+					{
+						method: 'DELETE',
+						url: '300-redirect',
+						expectedCount: 0
+					},
+					{
+						method: 'HEAD',
+						url: '300-redirect',
+						expectedCount: 0
+					}
+				]),
+				'301 Moved Permanently': buildRedirectTests([
+					{
+						method: 'GET',
+						url: '301-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedData: { success: true }
+					},
+					{
+						method: 'HEAD',
+						url: '301-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1
+					},
+					{
+						method: 'POST',
+						url: '301-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'POST',
+						url: '301-redirect',
+						keepOriginalMethod: true,
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'POST',
+						expectedData: { success: true }
+					},
+					{
+						method: 'DELETE',
+						url: '301-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'DELETE',
+						url: '301-redirect',
+						keepOriginalMethod: true,
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'DELETE',
+						expectedData: { success: true }
+					},
+					{
+						method: 'PUT',
+						url: '301-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'PUT',
+						url: '301-redirect',
+						keepOriginalMethod: true,
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'PUT',
+						expectedData: { success: true }
+					}
+				]),
 
-			'arrayBuffer with text content'() {
-				return nodeRequest(getRequestUrl('foo.json')).then((response: any) => {
-					return response.arrayBuffer().then((arrayBuffer: any) => {
-						assert.strictEqual(arrayBuffer.byteLength, JSON.stringify({ foo: 'bar' }).length);
-					});
-				});
-			},
+				'302 Found': buildRedirectTests([
+					{
+						method: 'GET',
+						url: '302-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedData: { success: true }
+					},
+					{
+						method: 'HEAD',
+						url: '302-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1
+					},
+					{
+						method: 'POST',
+						url: '302-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'POST',
+						url: '302-redirect',
+						keepOriginalMethod: true,
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'POST',
+						expectedData: { success: true }
+					},
+					{
+						method: 'DELETE',
+						url: '302-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'DELETE',
+						url: '302-redirect',
+						keepOriginalMethod: true,
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'DELETE',
+						expectedData: { success: true }
+					},
+					{
+						method: 'PUT',
+						url: '302-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'PUT',
+						url: '302-redirect',
+						keepOriginalMethod: true,
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'PUT',
+						expectedData: { success: true }
+					}
+				]),
 
-			'blob'() {
-				return nodeRequest(getRequestUrl('foo.json')).then((response: any) => {
-					return response.blob().then((blob: any) => {
-						assert.fail('should not have succeeded');
-					}, () => {
-						return true;
+				'303 See Other': buildRedirectTests([
+					{
+						method: 'GET',
+						url: '303-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedData: { success: true }
+					},
+					{
+						method: 'HEAD',
+						url: '303-redirect',
+						expectedPage: 'redirect-success',
+						expectedMethod: 'GET',
+						expectedCount: 1
+					},
+					{
+						method: 'POST',
+						url: '303-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'POST',
+						url: '303-redirect',
+						keepOriginalMethod: true,
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'DELETE',
+						url: '303-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'DELETE',
+						url: '303-redirect',
+						keepOriginalMethod: true,
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'PUT',
+						url: '303-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'PUT',
+						url: '303-redirect',
+						keepOriginalMethod: true,
+						expectedPage: 'redirect-success',
+						expectedCount: 1,
+						expectedMethod: 'GET',
+						expectedData: { success: true }
+					},
+					{
+						method: 'GET',
+						title: 'Without redirect following',
+						url: '303-redirect',
+						expectedPage: '303-redirect',
+						expectedCount: 0,
+						expectedMethod: 'GET',
+						followRedirects: false
+					}
+				]),
+
+				'304 Not Modified': buildRedirectTests([
+					{
+						method: 'GET',
+						url: '304-redirect',
+						expectedPage: '304-redirect',
+						expectedCount: 0
+					},
+					{
+						method: 'HEAD',
+						url: '304-redirect',
+						expectedPage: '304-redirect',
+						expectedCount: 0
+					},
+					{
+						method: 'POST',
+						url: '304-redirect',
+						expectedPage: '304-redirect',
+						expectedCount: 0
+
+					},
+					{
+						method: 'PUT',
+						url: '304-redirect',
+						expectedPage: '304-redirect',
+						expectedCount: 0
+					},
+					{
+						method: 'DELETE',
+						url: '304-redirect',
+						expectedPage: '304-redirect',
+						expectedCount: 0
+					}
+				]),
+
+				'305 Use Proxy': buildRedirectTests([
+					{
+						method: 'GET',
+						url: '305-redirect',
+						expectedCount: 1,
+						callback: (response) => {
+							assert.equal(response.nativeResponse.headers[ 'proxy-agent' ], 'nodejs');
+						}
+					},
+					{
+						title: 'Without a location header',
+						method: 'GET',
+						url: '305-redirect-broken',
+						expectedToError: true
+					},
+					{
+						method: 'GET',
+						title: 'Without redirect following',
+						url: '305-redirect',
+						expectedPage: '305-redirect',
+						expectedCount: 0,
+						expectedMethod: 'GET',
+						followRedirects: false
+					}
+				]),
+
+				'306 Unused': buildRedirectTests([
+					{
+						method: 'GET',
+						url: '306-redirect',
+						expectedToError: true
+					}
+				]),
+
+				'307 Temporary Redirect': buildRedirectTests([
+					{
+						method: 'GET',
+						url: '307-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1
+					},
+					{
+						method: 'HEAD',
+						url: '307-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1
+					},
+					{
+						method: 'POST',
+						url: '307-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1
+
+					},
+					{
+						method: 'PUT',
+						url: '307-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1
+					},
+					{
+						method: 'DELETE',
+						url: '307-redirect',
+						expectedPage: 'redirect-success',
+						expectedCount: 1
+					},
+					{
+						method: 'GET',
+						title: 'Without redirect following',
+						url: '307-redirect',
+						expectedPage: '307-redirect',
+						expectedCount: 0,
+						expectedMethod: 'GET',
+						followRedirects: false
+					}
+				]),
+
+				'Infinite Redirects': function () {
+					let didError = false;
+
+					return nodeRequest(getRequestUrl('infinite-redirect'), {
+						redirectOptions: {
+							limit: 10
+						}
+					}).then((response) => {
+					}).catch(() => {
+						didError = true;
+					}).finally(() => {
+						assert.isTrue(didError, 'Expected an error to occur but none did');
 					});
-				});
+				},
+
+				'Sensible Defaults': function () {
+					return nodeRequest(getRequestUrl('301-redirect'), {}).then((response: any) => {
+						assert.equal(response.url, getRequestUrl('redirect-success'));
+					});
+				},
+
+				'Redirect with no header': buildRedirectTests([
+					{
+						method: 'GET',
+						url: 'broken-redirect',
+						expectedToError: true
+					}
+				]),
+
+				'Can turn off follow redirects': buildRedirectTests([
+					{
+						method: 'GET',
+						url: '301-redirect',
+						expectedCount: 0,
+						followRedirects: false
+					}
+				]),
+
+				'Relative redirect urls': buildRedirectTests([
+					{
+						method: 'GET',
+						url: 'relative-redirect',
+						expectedPage: 'redirect-success'
+					},
+					{
+						method: 'GET',
+						url: 'protocolless-redirect',
+						expectedPage: 'redirect-success'
+					}
+				])
 			}
-		}
-	},
-
-	'status codes': {
-		'Redirects': {
-			'300 Multiple Choices': buildRedirectTests([
-				{
-					method: 'GET',
-					url: '300-redirect',
-					expectedCount: 0
-				},
-				{
-					method: 'POST',
-					url: '300-redirect',
-					expectedCount: 0
-				},
-				{
-					method: 'PUT',
-					url: '300-redirect',
-					expectedCount: 0
-				},
-				{
-					method: 'DELETE',
-					url: '300-redirect',
-					expectedCount: 0
-				},
-				{
-					method: 'HEAD',
-					url: '300-redirect',
-					expectedCount: 0
-				}
-			]),
-			'301 Moved Permanently': buildRedirectTests([
-				{
-					method: 'GET',
-					url: '301-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedData: { success: true }
-				},
-				{
-					method: 'HEAD',
-					url: '301-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1
-				},
-				{
-					method: 'POST',
-					url: '301-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'POST',
-					url: '301-redirect',
-					keepOriginalMethod: true,
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'POST',
-					expectedData: { success: true }
-				},
-				{
-					method: 'DELETE',
-					url: '301-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'DELETE',
-					url: '301-redirect',
-					keepOriginalMethod: true,
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'DELETE',
-					expectedData: { success: true }
-				},
-				{
-					method: 'PUT',
-					url: '301-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'PUT',
-					url: '301-redirect',
-					keepOriginalMethod: true,
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'PUT',
-					expectedData: { success: true }
-				}
-			]),
-
-			'302 Found': buildRedirectTests([
-				{
-					method: 'GET',
-					url: '302-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedData: { success: true }
-				},
-				{
-					method: 'HEAD',
-					url: '302-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1
-				},
-				{
-					method: 'POST',
-					url: '302-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'POST',
-					url: '302-redirect',
-					keepOriginalMethod: true,
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'POST',
-					expectedData: { success: true }
-				},
-				{
-					method: 'DELETE',
-					url: '302-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'DELETE',
-					url: '302-redirect',
-					keepOriginalMethod: true,
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'DELETE',
-					expectedData: { success: true }
-				},
-				{
-					method: 'PUT',
-					url: '302-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'PUT',
-					url: '302-redirect',
-					keepOriginalMethod: true,
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'PUT',
-					expectedData: { success: true }
-				}
-			]),
-
-			'303 See Other': buildRedirectTests([
-				{
-					method: 'GET',
-					url: '303-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedData: { success: true }
-				},
-				{
-					method: 'HEAD',
-					url: '303-redirect',
-					expectedPage: 'redirect-success',
-					expectedMethod: 'GET',
-					expectedCount: 1
-				},
-				{
-					method: 'POST',
-					url: '303-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'POST',
-					url: '303-redirect',
-					keepOriginalMethod: true,
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'DELETE',
-					url: '303-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'DELETE',
-					url: '303-redirect',
-					keepOriginalMethod: true,
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'PUT',
-					url: '303-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'PUT',
-					url: '303-redirect',
-					keepOriginalMethod: true,
-					expectedPage: 'redirect-success',
-					expectedCount: 1,
-					expectedMethod: 'GET',
-					expectedData: { success: true }
-				},
-				{
-					method: 'GET',
-					title: 'Without redirect following',
-					url: '303-redirect',
-					expectedPage: '303-redirect',
-					expectedCount: 0,
-					expectedMethod: 'GET',
-					followRedirects: false
-				}
-			]),
-
-			'304 Not Modified': buildRedirectTests([
-				{
-					method: 'GET',
-					url: '304-redirect',
-					expectedPage: '304-redirect',
-					expectedCount: 0
-				},
-				{
-					method: 'HEAD',
-					url: '304-redirect',
-					expectedPage: '304-redirect',
-					expectedCount: 0
-				},
-				{
-					method: 'POST',
-					url: '304-redirect',
-					expectedPage: '304-redirect',
-					expectedCount: 0
-
-				},
-				{
-					method: 'PUT',
-					url: '304-redirect',
-					expectedPage: '304-redirect',
-					expectedCount: 0
-				},
-				{
-					method: 'DELETE',
-					url: '304-redirect',
-					expectedPage: '304-redirect',
-					expectedCount: 0
-				}
-			]),
-
-			'305 Use Proxy': buildRedirectTests([
-				{
-					method: 'GET',
-					url: '305-redirect',
-					expectedCount: 1,
-					callback: (response) => {
-						assert.equal(response.nativeResponse.headers[ 'proxy-agent' ], 'nodejs');
-					}
-				},
-				{
-					title: 'Without a location header',
-					method: 'GET',
-					url: '305-redirect-broken',
-					expectedToError: true
-				},
-				{
-					method: 'GET',
-					title: 'Without redirect following',
-					url: '305-redirect',
-					expectedPage: '305-redirect',
-					expectedCount: 0,
-					expectedMethod: 'GET',
-					followRedirects: false
-				}
-			]),
-
-			'306 Unused': buildRedirectTests([
-				{
-					method: 'GET',
-					url: '306-redirect',
-					expectedToError: true
-				}
-			]),
-
-			'307 Temporary Redirect': buildRedirectTests([
-				{
-					method: 'GET',
-					url: '307-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1
-				},
-				{
-					method: 'HEAD',
-					url: '307-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1
-				},
-				{
-					method: 'POST',
-					url: '307-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1
-
-				},
-				{
-					method: 'PUT',
-					url: '307-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1
-				},
-				{
-					method: 'DELETE',
-					url: '307-redirect',
-					expectedPage: 'redirect-success',
-					expectedCount: 1
-				},
-				{
-					method: 'GET',
-					title: 'Without redirect following',
-					url: '307-redirect',
-					expectedPage: '307-redirect',
-					expectedCount: 0,
-					expectedMethod: 'GET',
-					followRedirects: false
-				}
-			]),
-
-			'Infinite Redirects': function () {
-				let didError = false;
-
-				return nodeRequest(getRequestUrl('infinite-redirect'), {
-					redirectOptions: {
-						limit: 10
-					}
-				}).then((response) => {
-				}).catch(() => {
-					didError = true;
-				}).finally(() => {
-					assert.isTrue(didError, 'Expected an error to occur but none did');
-				});
-			},
-
-			'Sensible Defaults': function () {
-				return nodeRequest(getRequestUrl('301-redirect'), {}).then((response: any) => {
-					assert.equal(response.url, getRequestUrl('redirect-success'));
-				});
-			},
-
-			'Redirect with no header': buildRedirectTests([
-				{
-					method: 'GET',
-					url: 'broken-redirect',
-					expectedToError: true
-				}
-			]),
-
-			'Can turn off follow redirects': buildRedirectTests([
-				{
-					method: 'GET',
-					url: '301-redirect',
-					expectedCount: 0,
-					followRedirects: false
-				}
-			]),
-
-			'Relative redirect urls': buildRedirectTests([
-				{
-					method: 'GET',
-					url: 'relative-redirect',
-					expectedPage: 'redirect-success'
-				},
-				{
-					method: 'GET',
-					url: 'protocolless-redirect',
-					expectedPage: 'redirect-success'
-				}
-			])
 		}
 	}
 });

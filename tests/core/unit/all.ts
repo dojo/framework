@@ -25,9 +25,13 @@ import './request';
 import './request/all';
 import './Scheduler';
 import './stringExtras';
-import './text';
 import './UrlSearchParams';
 import './DateObject';
 import './uuid';
 import './util';
 import './has';
+
+if (typeof (<any> require).toUrl === 'function') {
+	// tslint:disable-next-line
+	import('./text');
+}
