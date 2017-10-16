@@ -20,17 +20,18 @@ export class Base extends Destroyable implements WidgetMetaBase {
 	}
 
 	protected getNode(key: string | number): HTMLElement | undefined {
-		const node = this.nodeHandler.get(key);
+		const stringKey = `${key}`;
+		const node = this.nodeHandler.get(stringKey);
 
-		if (!node && !this._requestedNodeKeys.has(key)) {
-			const handle = this.nodeHandler.on(`${key}`, () => {
+		if (!node && !this._requestedNodeKeys.has(stringKey)) {
+			const handle = this.nodeHandler.on(stringKey, () => {
 				handle.destroy();
-				this._requestedNodeKeys.delete(key);
+				this._requestedNodeKeys.delete(stringKey);
 				this.invalidate();
 			});
 
 			this.own(handle);
-			this._requestedNodeKeys.add(key);
+			this._requestedNodeKeys.add(stringKey);
 		}
 
 		return node;

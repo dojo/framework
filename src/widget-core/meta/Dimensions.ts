@@ -50,7 +50,7 @@ const defaultDimensions = {
 
 export class Dimensions extends Base {
 
-	public get(key: string): Readonly<DimensionResults> {
+	public get(key: string | number): Readonly<DimensionResults> {
 		const node = this.getNode(key);
 
 		if (!node) {

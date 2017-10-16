@@ -86,6 +86,19 @@ registerSuite({
 			assert.isTrue(onSpy.calledOnce);
 			assert.isTrue(onSpy.firstCall.calledWith('root'));
 		},
+		'intersections with number key'() {
+			const nodeHandler = new NodeHandler();
+			const onSpy = spy(nodeHandler, 'on');
+
+			const intersection = new Intersection({
+				invalidate: () => {},
+				nodeHandler
+			});
+
+			intersection.get(1234);
+			assert.isTrue(onSpy.calledOnce);
+			assert.isTrue(onSpy.firstCall.calledWith('1234'));
+		},
 		'intersection calls invalidate when node available'() {
 			const nodeHandler = new NodeHandler();
 			const onSpy = spy(nodeHandler, 'on');

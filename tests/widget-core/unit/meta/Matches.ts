@@ -65,6 +65,40 @@ registerSuite({
 		document.body.removeChild(div);
 	},
 
+	'node matches with number key'() {
+		const results: boolean[] = [];
+
+		class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			private _onclick(evt: MouseEvent) {
+				results.push(this.meta(Matches).get(1234, evt));
+			}
+
+			render() {
+				return v('div', {
+					innerHTML: 'hello world',
+					key: 1234,
+					onclick: this._onclick
+				});
+			}
+		}
+
+		const div = document.createElement('div');
+
+		document.body.appendChild(div);
+
+		const widget = new TestWidget();
+		widget.append(div);
+
+		resolveRAF();
+
+		sendEvent(div.firstChild as Element, 'click');
+
+		assert.deepEqual(results, [ true ], 'should have been called and the target matched');
+
+		widget.destroy();
+		document.body.removeChild(div);
+	},
+
 	'node does not match'() {
 		const results: boolean[] = [];
 

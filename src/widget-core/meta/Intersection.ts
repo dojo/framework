@@ -40,7 +40,7 @@ export class Intersection extends Base {
 	 * @param key The key to return the intersection meta for
 	 * @param options The options for the request
 	 */
-	public get(key: string, options: IntersectionGetOptions = {}): IntersectionResult {
+	public get(key: string | number, options: IntersectionGetOptions = {}): IntersectionResult {
 		let rootNode: HTMLElement | undefined;
 		if (options.root) {
 			rootNode = this.getNode(options.root);

@@ -6,7 +6,7 @@ export default class Matches extends Base {
 	 * @param key The virtual DOM key
 	 * @param event The event object
 	 */
-	public get(key: string, event: Event): boolean {
+	public get(key: string | number, event: Event): boolean {
 		return this.getNode(key) === event.target;
 	}
 }

@@ -232,7 +232,7 @@ const controller = new DragController();
 export class Drag extends Base {
 	private _boundInvalidate: () => void = this.invalidate.bind(this);
 
-	public get(key: string): Readonly<DragResults> {
+	public get(key: string | number): Readonly<DragResults> {
 		const node = this.getNode(key);
 
 		// if we don't have a reference to the node yet, return an empty set of results

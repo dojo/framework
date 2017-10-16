@@ -59,6 +59,16 @@ registerSuite({
 
 		assert.deepEqual(dimensions.get('foo'), defaultDimensions);
 	},
+	'Will accept a number key'() {
+		const nodeHandler = new NodeHandler();
+
+		const dimensions = new Dimensions({
+			invalidate: () => {},
+			nodeHandler
+		});
+
+		assert.deepEqual(dimensions.get(1234), defaultDimensions);
+	},
 	'Will create event listener for node if not yet loaded'() {
 		const nodeHandler = new NodeHandler();
 		const onSpy = spy(nodeHandler, 'on');
