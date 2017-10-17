@@ -1,7 +1,7 @@
 import Task from '@dojo/core/async/Task';
 import Promise from '@dojo/shim/Promise';
-import { beforeEach, suite, test } from 'intern!tdd';
-import * as assert from 'intern/chai!assert';
+const { beforeEach, suite, test } = intern.getInterface('tdd');
+const { assert } = intern.getPlugin('chai');
 import { spy, stub } from 'sinon';
 import MemoryHistory from '../../src/history/MemoryHistory';
 import {
@@ -853,7 +853,7 @@ suite('Router', () => {
 
 		function start() {
 			router.start();
-		};
+		}
 
 		start();
 
@@ -934,13 +934,13 @@ suite('Router', () => {
 		]);
 
 		router.start({ dispatchCurrent: false });
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			ok = resolve;
 			history.set('/to');
 		}).then(() => {
 			assert.equal(count, 20);
 			count = 0;
-			return new Promise((resolve, reject) => {
+			return new Promise((resolve) => {
 				ok = resolve;
 				history.set(history.current === '/to' ? '/and/fro' : '/to');
 			});
@@ -1133,7 +1133,7 @@ suite('Router', () => {
 		});
 		router.append(initial);
 
-		const ready = new Promise((resolve, reject) => {
+		const ready = new Promise((resolve) => {
 			const links: string[] = [];
 			const route = new Route({
 				path: '/{foo}',
@@ -1372,7 +1372,6 @@ suite('Router', () => {
 			assert.fail('Link should throw an error if outlet has not been registered');
 		}
 		catch (e) {
-			// do nothing
 		}
 	});
 

@@ -1,11 +1,11 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { afterEach, beforeEach, suite, test } = intern.getInterface('tdd');
+const { assert } = intern.getPlugin('chai');
 import { spy, SinonSpy } from 'sinon';
 
 import { Registry } from '@dojo/widget-core/Registry';
-import { registerRouterInjector } from './../../src/RouterInjector';
-import { Link } from './../../src/Link';
-import MemoryHistory from './../../src/history/MemoryHistory';
+import { registerRouterInjector } from '../../src/RouterInjector';
+import { Link } from '../../src/Link';
+import MemoryHistory from '../../src/history/MemoryHistory';
 
 const registry = new Registry();
 
@@ -31,39 +31,38 @@ function createMockEvent(isRightClick: boolean = false) {
 	};
 }
 
-registerSuite({
-	name: 'Link',
-	beforeEach() {
+suite('Link', () => {
+	beforeEach(function () {
 		routerSetPathSpy = spy(router, 'setPath');
-	},
-	afterEach() {
+	});
+	afterEach(function () {
 		routerSetPathSpy.restore();
-	},
-	'Generate link component for basic outlet'() {
+	});
+	test('Generate link component for basic outlet', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({ to: 'foo', registry });
 		const vNode: any = link.__render__();
 		assert.strictEqual(vNode.vnodeSelector, 'a');
 		assert.strictEqual(vNode.properties.href, 'foo');
-	},
-	'Generate link component for outlet with specified params'() {
+	});
+	test('Generate link component for outlet with specified params', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({ to: 'foo2', params: { foo: 'foo' }, registry });
 		const vNode: any = link.__render__();
 		assert.strictEqual(vNode.vnodeSelector, 'a');
 		assert.strictEqual(vNode.properties.href, 'foo/foo');
-	},
-	'Generate link component for fixed href'() {
+	});
+	test('Generate link component for fixed href', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({ to: '#foo/static', isOutlet: false, registry });
 		const vNode: any = link.__render__();
 		assert.strictEqual(vNode.vnodeSelector, 'a');
 		assert.strictEqual(vNode.properties.href, '#foo/static');
-	},
-	'Set router path on click'() {
+	});
+	test('Set router path on click', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({ to: '#foo/static', isOutlet: false, registry });
@@ -72,8 +71,8 @@ registerSuite({
 		assert.strictEqual(vNode.properties.href, '#foo/static');
 		vNode.properties.onclick.call(link, createMockEvent());
 		assert.isTrue(routerSetPathSpy.calledWith('#foo/static'));
-	},
-	'Custom onClick handler can prevent default'() {
+	});
+	test('Custom onClick handler can prevent default', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({
@@ -88,8 +87,8 @@ registerSuite({
 		assert.strictEqual(vNode.properties.href, 'foo');
 		vNode.properties.onclick.call(link, createMockEvent());
 		assert.isTrue(routerSetPathSpy.notCalled);
-	},
-	'Does not set router path when target attribute is set'() {
+	});
+	test('Does not set router path when target attribute is set', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({
@@ -102,8 +101,8 @@ registerSuite({
 		assert.strictEqual(vNode.properties.href, 'foo');
 		vNode.properties.onclick.call(link, createMockEvent());
 		assert.isTrue(routerSetPathSpy.notCalled);
-	},
-	'Does not set router path on right click'() {
+	});
+	test('Does not set router path on right click', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({
@@ -115,8 +114,8 @@ registerSuite({
 		assert.strictEqual(vNode.properties.href, 'foo');
 		vNode.properties.onclick.call(link, createMockEvent(true));
 		assert.isTrue(routerSetPathSpy.notCalled);
-	},
-	'throw error if the injected router cannot be found with the router key'() {
+	});
+	test('throw error if the injected router cannot be found with the router key', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({ to: '#foo/static', isOutlet: false, routerKey: 'fake-key' });
@@ -127,5 +126,5 @@ registerSuite({
 		catch (err) {
 			// nothing to see here
 		}
-	}
+	});
 });

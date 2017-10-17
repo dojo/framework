@@ -19,6 +19,9 @@ module.exports = function (grunt) {
 			dist: {
 				exclude: ['tests/**/*.ts', 'src/examples/**/*.ts']
 			}
+		},
+		intern: {
+			version: 4
 		}
 	});
 

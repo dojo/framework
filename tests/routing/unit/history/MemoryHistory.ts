@@ -1,5 +1,5 @@
-import { suite, test } from 'intern!tdd';
-import * as assert from 'intern/chai!assert';
+const { suite, test } = intern.getInterface('tdd');
+const { assert } = intern.getPlugin('chai');
 
 import MemoryHistory from '../../../src/history/MemoryHistory';
 

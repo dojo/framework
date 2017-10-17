@@ -1,6 +1,6 @@
 import UrlSearchParams from '@dojo/core/UrlSearchParams';
-import { suite, test } from 'intern!tdd';
-import * as assert from 'intern/chai!assert';
+const { suite, test } = intern.getInterface('tdd');
+const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 import { Context, DefaultParameters, MatchType, Parameters } from '../../src/interfaces';
 import { deconstruct as deconstructPath } from '../../src/lib/path';

@@ -1,8 +1,8 @@
 import { Evented } from '@dojo/core/Evented';
 import { emit } from '@dojo/core/on';
 import Promise from '@dojo/shim/Promise';
-import { afterEach, beforeEach, suite, test } from 'intern!tdd';
-import * as assert from 'intern/chai!assert';
+const { afterEach, beforeEach, suite, test } = intern.getInterface('tdd');
+const { assert } = intern.getPlugin('chai');
 
 import HashHistory from '../../../src/history/HashHistory';
 
@@ -14,12 +14,14 @@ suite('HashHistory', () => {
 	/* tslint:enable */
 
 	let sandbox: HTMLIFrameElement;
-	beforeEach(() => {
+	beforeEach(function () {
 		sandbox = document.createElement('iframe');
 		sandbox.src = '/tests/support/sandbox.html';
 		document.body.appendChild(sandbox);
-		return new Promise(resolve => {
-			sandbox.addEventListener('load', resolve);
+		return new Promise<void>(resolve => {
+			sandbox.addEventListener('load', function () {
+				resolve();
+			});
 		});
 	});
 
@@ -135,9 +137,9 @@ suite('HashHistory', () => {
 		let window: Window & Evented;
 
 		beforeEach(() => {
-			const { location } = sandbox.contentWindow;
+			const { location: contentWindowLocation } = sandbox.contentWindow;
 			const createFauxWindow = class extends Evented {
-				location = location;
+				location = contentWindowLocation;
 			};
 			window = <any> new createFauxWindow();
 		});
@@ -161,11 +163,12 @@ suite('HashHistory', () => {
 			const history = new HashHistory({ window });
 			assert.equal(history.current, '');
 
-			history.destroy();
-			sandbox.contentWindow.location.hash = '#/foo';
-			emit(window, { type: 'hashchange' });
+			return history.destroy().then(function () {
+				sandbox.contentWindow.location.hash = '#/foo';
+				emit(window, { type: 'hashchange' });
 
-			assert.equal(history.current, '');
+				assert.equal(history.current, '');
+			});
 		});
 	});
 });

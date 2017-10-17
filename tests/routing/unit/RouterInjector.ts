@@ -1,15 +1,15 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { suite, test } = intern.getInterface('tdd');
+const { assert } = intern.getPlugin('chai');
 import { Registry } from '@dojo/widget-core/Registry';
 import { Injector } from '@dojo/widget-core/Injector';
-import { registerRouterInjector, routerKey } from './../../src/RouterInjector';
-import { MemoryHistory } from './../../src/history/MemoryHistory';
+import { registerRouterInjector, routerKey } from '../../src/RouterInjector';
+import { MemoryHistory } from '../../src/history/MemoryHistory';
 
 const history = new MemoryHistory();
 
-registerSuite({
-	name: 'RouterInjector',
-	registerRouterInjector() {
+suite('RouterInjector', () => {
+
+	test('registerRouterInjector', () => {
 		let invalidateCalled = false;
 		const registry = new Registry();
 		const router = registerRouterInjector([ { path: 'path' } ], registry, { history });
@@ -21,8 +21,9 @@ registerSuite({
 		});
 		router.emit({ type: 'navstart' });
 		assert.isTrue(invalidateCalled);
-	},
-	'registerRouterInjector with custom key'() {
+	});
+
+	test('registerRouterInjector with custom key', () => {
 		let invalidateCalled = false;
 		const registry = new Registry();
 		const router = registerRouterInjector([ { path: 'path' } ], registry, { history, key: 'custom-key' });
@@ -35,12 +36,13 @@ registerSuite({
 		});
 		router.emit({ type: 'navstart' });
 		assert.isTrue(invalidateCalled);
-	},
-	'throws error if a second router is registered for the same key'() {
+	});
+
+	test('throws error if a second router is registered for the same key', () => {
 		const registry = new Registry();
 		registerRouterInjector([ { path: 'path' } ], registry, { history });
 		assert.throws(() => {
 			registerRouterInjector([ { path: 'path' } ], registry, { history });
 		}, Error, 'Router has already been defined');
-	}
+	});
 });

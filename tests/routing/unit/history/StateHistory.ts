@@ -1,8 +1,8 @@
 import { Evented } from '@dojo/core/Evented';
 import { emit } from '@dojo/core/on';
 import Promise from '@dojo/shim/Promise';
-import { afterEach, beforeEach, suite, test } from 'intern!tdd';
-import * as assert from 'intern/chai!assert';
+const { afterEach, beforeEach, suite, test } = intern.getInterface('tdd');
+const { assert } = intern.getPlugin('chai');
 
 import StateHistory from '../../../src/history/StateHistory';
 
@@ -15,12 +15,14 @@ suite('StateHistory', () => {
 	/* tslint:enable */
 
 	let sandbox: HTMLIFrameElement;
-	beforeEach(() => {
+	beforeEach(function () {
 		sandbox = document.createElement('iframe');
 		sandbox.src = '/tests/support/sandbox.html';
 		document.body.appendChild(sandbox);
-		return new Promise(resolve => {
-			sandbox.addEventListener('load', resolve);
+		return new Promise<void>(resolve => {
+			sandbox.addEventListener('load', function () {
+				resolve();
+			});
 		});
 	});
 
@@ -212,10 +214,10 @@ suite('StateHistory', () => {
 		let window: Window & Evented;
 
 		beforeEach(() => {
-			const { history, location } = sandbox.contentWindow;
+			const { history: contentWindowHistory, location: contentWindowLocation } = sandbox.contentWindow;
 			const createFauxWindow = class extends Evented {
-				location = location;
-				history = history;
+				location = contentWindowLocation;
+				history = contentWindowHistory;
 			};
 			window = <any> new createFauxWindow();
 		});
