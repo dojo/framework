@@ -1,5 +1,6 @@
-import * as assert from 'intern/chai!assert';
-import * as registerSuite from 'intern!object';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import { stub } from 'sinon';
 import {
 	assignChildProperties,
@@ -16,8 +17,7 @@ import { v, w } from '@dojo/widget-core/d';
 import AssertionError from '../../../src/support/AssertionError';
 import assertRender from '../../../src/support/assertRender';
 
-registerSuite({
-	name: 'support/virtualDom',
+registerSuite('support/virtualDom', {
 
 	'assignChildProperties()': {
 		'by index'() {

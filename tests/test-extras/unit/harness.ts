@@ -1,5 +1,6 @@
-import * as assert from 'intern/chai!assert';
-import * as registerSuite from 'intern!object';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import harness from '../../src/harness';
 import { compareProperty } from '../../src/support/d';
 
@@ -69,8 +70,7 @@ class SubWidget extends WidgetBase<WidgetProperties> {
 	}
 }
 
-registerSuite({
-	name: 'harness',
+registerSuite('harness', {
 
 	'rendering': {
 		'nodes are added during rendering and removed after destruction'() {
@@ -477,7 +477,7 @@ registerSuite({
 					clickCount++;
 					e.preventDefault();
 					if ('CustomEvent' in window) {
-						assert.instanceOf(e, window['CustomEvent'], 'should be of class custom event');
+						assert(e instanceof window['CustomEvent'], 'should be of class custom event');
 					}
 					assert.strictEqual(e.type, 'click', 'should be type of "click"');
 					assert.strictEqual(e.target, dom, 'the target should be the rendered dom');
@@ -514,7 +514,7 @@ registerSuite({
 					clickCount++;
 					e.preventDefault();
 					if ('CustomEvent' in window) {
-						assert.instanceOf(e, window['CustomEvent'], 'should be of class custom event');
+						assert(e instanceof window['CustomEvent'], 'should be of class custom event');
 					}
 					assert.strictEqual(e.type, 'click', 'should be type of "click"');
 					assert.strictEqual(e.target, target, 'the target should be the rendered dom firstchild');
@@ -553,7 +553,7 @@ registerSuite({
 					clickCount++;
 					e.preventDefault();
 					if ('CustomEvent' in window) {
-						assert.instanceOf(e, window['CustomEvent'], 'should be of class custom event');
+						assert(e instanceof window['CustomEvent'], 'should be of class custom event');
 					}
 					assert.strictEqual(e.type, 'click', 'should be type of "click"');
 					assert.strictEqual(e.target, target, 'the target should be the rendered dom firstchild');

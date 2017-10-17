@@ -1,20 +1,10 @@
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import has from '@dojo/has/has';
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import sendEvent from '../../../src/support/sendEvent';
 
-const hasCustomEventConstructor = (() => {
-	try {
-		new window.CustomEvent('foo');
-		return true;
-	}
-	catch (e) {
-		return false;
-	}
-})();
-
-registerSuite({
-	name: 'support/sendEvent',
+registerSuite('support/sendEvent', {
 
 	'custom event'() {
 		const target = document.createElement('div');
@@ -63,11 +53,11 @@ registerSuite({
 
 		function listener(evt: MouseEvent) {
 			assert.strictEqual(evt.type, 'click', 'event type should be "click"');
-			if (hasCustomEventConstructor) {
-				assert.instanceOf(evt, (<any> window).MouseEvent, 'event should be an instance of MouseEvent');
+			if (has('customevent-constructor')) {
+				assert(evt instanceof (<any> window).MouseEvent, 'event should be an instance of MouseEvent');
 			}
 			else {
-				assert.instanceOf(evt, (<any> window).CustomEvent, 'event should be an instance of MouseEvent');
+				assert.instanceOf(evt, window['CustomEvent'], 'event should be an instance of CustomEvent');
 			}
 			assert.strictEqual(evt.clientX, 50);
 			assert.strictEqual(evt.clientY, 50);

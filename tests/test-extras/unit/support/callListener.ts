@@ -1,11 +1,11 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import callListener from '../../../src/support/callListener';
 
 import { v, w } from '@dojo/widget-core/d';
 
-registerSuite({
-	name: 'support/callListener',
+registerSuite('support/callListener', {
 
 	'should call listener'() {
 		let count = 0;

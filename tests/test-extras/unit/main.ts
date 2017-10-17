@@ -1,5 +1,6 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import * as main from '../../src/main';
 import harness from '../../src/harness';
 import assertRender from '../../src/support/assertRender';
@@ -8,8 +9,7 @@ import sendEvent from '../../src/support/sendEvent';
 import ClientErrorCollector from '../../src/intern/ClientErrorCollector';
 import { assignChildProperties, assignProperties, findIndex, findKey, replaceChild, replaceChildProperties, replaceProperties } from '../../src/support/d';
 
-registerSuite({
-	name: 'main',
+registerSuite('main', {
 
 	'validate api'() {
 		assert(main);

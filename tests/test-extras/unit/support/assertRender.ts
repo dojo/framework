@@ -1,5 +1,6 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import AssertionError from '../../../src/support/AssertionError';
 import assertRender from '../../../src/support/assertRender';
 import { v, w } from '@dojo/widget-core/d';
@@ -24,8 +25,7 @@ class OtherWidget extends WidgetBase<MockWidgetProperties> {
 	}
 }
 
-registerSuite({
-	name: 'support/assertRender',
+registerSuite('support/assertRender', {
 
 	'v()': {
 		'tag equal'() {
@@ -127,7 +127,7 @@ registerSuite({
 					v('div', { }, [ 'foo' ]),
 					v('div', { }, [ 'bar' ])
 				);
-			}, 'AssertionError: Render unexpected: Expected "foo" to equal "bar"');
+			}, AssertionError, 'Render unexpected: Expected "foo" to equal "bar"');
 		},
 
 		'missing child'() {

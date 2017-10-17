@@ -1,11 +1,11 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import has from '@dojo/has/has';
 import global from '@dojo/shim/global';
 import doc from '../../../src/support/loadJsdom';
 
-registerSuite({
-	name: 'support/loadJsdom',
+registerSuite('support/loadJsdom', {
 
 	'document is global and matches export'() {
 		assert(document, 'document should be in the global scope');

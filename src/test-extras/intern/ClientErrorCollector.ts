@@ -1,4 +1,4 @@
-import * as Command from 'leadfoot/Command';
+import Command from '@theintern/leadfoot/Command';
 
 export interface ClientError {
 	message: string;

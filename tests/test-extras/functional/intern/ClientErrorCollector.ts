@@ -1,27 +1,26 @@
-import * as assert from 'intern/chai!assert';
-import * as registerSuite from 'intern!object';
-import * as Suite from 'intern/lib/Suite';
-import * as Command from 'leadfoot/Command';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
+import Command from '@theintern/leadfoot/Command';
 import { Require } from '@dojo/interfaces/loader';
 import ClientErrorCollector from '../../../src/intern/ClientErrorCollector';
 
 declare const require: Require;
 
-registerSuite({
-	name: 'ClientErrorCollector',
+registerSuite('ClientErrorCollector', {
 
-	'client errors are returned'(this: Suite) {
+	'client errors are returned'() {
 		const collector = new ClientErrorCollector(this.remote);
 
 		return this.remote
-			.get(require.toUrl('./ClientErrorCollector.html'))
+			.get(`${__dirname}/ClientErrorCollector.html`)
 			.then(() => collector.init())
 			.execute('__throw_an_error()', [])
 			.then(() => collector.finish())
 			.then((results) => {
 				assert.isArray(results, 'Results should be an array');
-				assert.strictEqual(results.length, 1, 'Should have a single element');
-				const [ result ] = results;
+				assert.strictEqual(results!.length, 1, 'Should have a single element');
+				const [ result ] = results!;
 				assert.include(result.message, 'Ooops...', 'Should contain the correct error name');
 				assert.include((<any> result.source), 'tests/functional/intern/ClientErrorCollector.html', 'Should be from the correct source');
 				assert.isNumber(result.colno);
@@ -34,49 +33,49 @@ registerSuite({
 			});
 	},
 
-	'all client errors are returned'(this: Suite) {
+	'all client errors are returned'() {
 		const collector = new ClientErrorCollector(this.remote);
 
 		return this.remote
-			.get(require.toUrl('./ClientErrorCollector.html'))
+			.get(`${__dirname}/ClientErrorCollector.html`)
 			.then(() => collector.init())
 			.execute('__throw_an_error()', [])
 			.execute('__throw_an_error()', [])
 			.then(() => collector.finish())
 			.then((results) => {
 				assert.isArray(results, 'Results should be an array');
-				assert.strictEqual(results.length, 2, 'Should have a single element');
+				assert.strictEqual(results!.length, 2, 'Should have a single element');
 			});
 	},
 
-	'no client errors are returned'(this: Suite) {
+	'no client errors are returned'() {
 		const collector = new ClientErrorCollector(this.remote);
 
 		return this.remote
-			.get(require.toUrl('./ClientErrorCollector.html'))
+			.get(`${__dirname}/ClientErrorCollector.html`)
 			.then(() => collector.init())
 			.then(() => collector.finish())
 			.then((results) => {
 				assert.isArray(results, 'Results should be an array');
-				assert.strictEqual(results.length, 0, 'Should have no elements');
+				assert.strictEqual(results!.length, 0, 'Should have no elements');
 			});
 	},
 
 	'assertNoErrors': {
-		'no errors'(this: Suite) {
+		'no errors'() {
 			const collector = new ClientErrorCollector(this.remote);
 
 			return this.remote
-				.get(require.toUrl('./ClientErrorCollector.html'))
+				.get(`${__dirname}/ClientErrorCollector.html`)
 				.then(() => collector.init())
 				.then(() => collector.assertNoErrors());
 		},
 
-		'throws on error'(this: Suite) {
+		'throws on error'() {
 			const collector = new ClientErrorCollector(this.remote);
 
 			return this.remote
-				.get(require.toUrl('./ClientErrorCollector.html'))
+				.get(`${__dirname}/ClientErrorCollector.html`)
 				.then(() => collector.init())
 				.execute('__throw_an_error()', [])
 				.then<Command<any>>(() => {

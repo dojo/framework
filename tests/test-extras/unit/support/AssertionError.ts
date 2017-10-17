@@ -1,9 +1,9 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import AssertionError from '../../../src/support/AssertionError';
 
-registerSuite({
-	name: 'support/AssertionError',
+registerSuite('support/AssertionError', {
 
 	'construction'() {
 		const err = new AssertionError();

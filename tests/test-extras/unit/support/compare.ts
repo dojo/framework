@@ -1,9 +1,9 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import { createConstructRecord, diff, patch, CustomDiff } from '../../../src/support/compare';
 
-registerSuite({
-	name: 'compare',
+registerSuite('compare', {
 
 	diff: {
 		'plain object': {

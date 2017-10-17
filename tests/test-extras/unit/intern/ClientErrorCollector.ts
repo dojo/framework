@@ -1,7 +1,8 @@
-import * as assert from 'intern/chai!assert';
-import * as registerSuite from 'intern!object';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
+
 import ClientErrorCollector from '../../../src/intern/ClientErrorCollector';
-import * as Command from 'leadfoot/Command';
+import Command from '@theintern/leadfoot/Command';
 
 let resultString = '';
 let lastResult: any;
@@ -22,9 +23,7 @@ const mockRemote: Command<void> = <any> {
 	}
 };
 
-registerSuite({
-	name: 'ClientErrorCollector',
-
+registerSuite('ClientErrorCollector', {
 	'init()': {
 		'invocation'() {
 			const collector = new ClientErrorCollector(mockRemote);
