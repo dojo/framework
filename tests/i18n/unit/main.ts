@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import i18n, {
 	formatCurrency,
 	formatDate,
@@ -29,9 +29,7 @@ import i18n, {
 	systemLocale
 } from '../../src/main';
 
-registerSuite({
-	name: 'main',
-
+registerSuite('main', {
 	i18n() {
 		assert.isFunction(formatCurrency, 'formatCurrency is exported.');
 		assert.isFunction(formatDate, 'formatDate is exported.');

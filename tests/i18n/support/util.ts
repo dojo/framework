@@ -1,4 +1,3 @@
-import Promise from '@dojo/shim/Promise';
 import loadCldrData, { isLoaded } from '../../src/cldr/load';
 
 /**
@@ -23,7 +22,7 @@ export function throwImmediatly() {
 /**
  * Load into Globalize.js all CLDR data for the specified locales.
  */
-export function fetchCldrData(locales: string | string[]): Promise<void[]> {
+export async function fetchCldrData(locales: string | string[]): Promise<void> {
 	locales = Array.isArray(locales) ? locales : [ locales ];
 
 	const promises = locales.map((locale: string) => {
@@ -49,5 +48,5 @@ export function fetchCldrData(locales: string | string[]): Promise<void[]> {
 		promises.push(loadCldrData(supplementalPaths));
 	}
 
-	return Promise.all(promises);
+	await Promise.all(promises);
 }

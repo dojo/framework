@@ -35,10 +35,10 @@
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
     "@types/sinon": "^1.16.31",
-    "cldr-data": "~30.0.2",
+    "cldr-data": "~31.0.2",
     "grunt": "^1.0.1",
     "grunt-dojo2": "latest",
-    "intern": "^3.4.1",
+    "intern": "^4.0.2",
     "sinon": "^1.17.6",
     "typescript": "~2.4.1"
   }

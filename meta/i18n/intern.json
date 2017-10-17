@@ -1,0 +1,87 @@
+{
+	"environments": [
+		{ "browserName": "node" }
+	],
+	"suites": [
+		"./_build/tests/unit/**/*.js"
+	],
+	"functionalSuites": [
+		"./_build/tests/functional/**/*.js"
+	],
+	"loader": {
+		"script": "dojo2",
+		"options": {
+			"packages": [
+				{ "name": "src", "location": "_build/src" },
+				{ "name": "tests", "location": "_build/tests" },
+				{ "name": "cldr-data", "location": "node_modules/cldr-data" },
+				{ "name": "cldrjs", "location": "node_modules/cldrjs" },
+				{ "name": "@dojo", "location": "node_modules/@dojo" },
+				{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" },
+				{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" },
+				{ "name": "grunt-dojo2", "location": "node_modules/grunt-dojo2" }
+			],
+			"map": {
+				"globalize": {
+					"cldr": "cldrjs/dist/cldr",
+					"cldr/event": "cldrjs/dist/cldr/event",
+					"cldr/supplemental": "cldrjs/dist/cldr/supplemental",
+					"cldr/unresolved": "cldrjs/dist/cldr/unresolved"
+				}
+			}
+		}
+	},
+	"configs": {
+		"coverage": {
+			"coverage": [
+				"./_build/src/**/*.js"
+			]
+		},
+		"remoteCapabilities": {
+			"project": "Dojo 2",
+			"name": "@dojo/i18n"
+		},
+		"local": {
+			"extends": [ "coverage" ],
+			"tunnel": "selenium",
+			"environments+": [
+				{ "browserName": "chrome" }
+			]
+		},
+		"browserstack": {
+			"extends": [ "coverage", "remoteCapabilities" ],
+
+			"tunnel": "browserstack",
+			"capabilities+": {
+				"browserstack.debug": false
+			},
+			"environments+": [
+				{ "browserName": "internet explorer", "version": "11" },
+				{ "browserName": "edge" },
+				{ "browserName": "firefox", "platform": "WINDOWS" },
+				{ "browserName": "chrome", "platform": "WINDOWS" },
+				{ "browserName": "safari", "version": "9.1", "platform": "MAC" }
+				// BrowserStack uses iOS 9.1 and some of the tests fail.  I looks like a missing locale problem
+				// { "browserName": "iPhone" }
+			]
+		},
+		"saucelabs": {
+			"extends": [ "coverage", "remoteCapabilities" ],
+
+			"tunnel": "saucelabs",
+			"capabilities+": {
+				"fixSessionCapabilities": false
+			},
+
+			"defaultTimeout": 10000,
+			"environments+": [
+				{ "browserName": "internet explorer", "version": [ "10.0", "11.0" ], "platform": "Windows 7" },
+				{ "browserName": "microsoftedge", "platform": "Windows 10" },
+				{ "browserName": "firefox", "platform": "Windows 10" },
+				{ "browserName": "chrome", "platform": "Windows 10" },
+				{ "browserName": "safari", "version": "9", "platform": "OS X 10.11" }
+			],
+			"maxConcurrency": 4
+		}
+	}
+}

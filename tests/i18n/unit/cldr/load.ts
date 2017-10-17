@@ -1,6 +1,7 @@
 import has from '@dojo/has/has';
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import * as sinon from 'sinon';
 import loadCldrData, {
 	isLoaded,
@@ -15,59 +16,61 @@ import {
 	supplementalPackages as utilSupplementalPackages
 } from '../../../src/cldr/load/default';
 
-registerSuite({
-	name: 'cldr/load',
+registerSuite('cldr/load', {
 
 	afterEach() {
 		reset();
 	},
 
-	api() {
-		assert.strictEqual(isLoaded, utilIsLoaded, 'isLoaded should be re-exported');
-		assert.strictEqual(mainPackages, utilMainPackages, 'mainPackages should be re-exported');
-		assert.strictEqual(reset, utilReset, 'reset should be re-exported');
-		assert.strictEqual(supplementalPackages, utilSupplementalPackages, 'supplementalPackages should be re-exported');
-	},
+	tests: {
 
-	loadCldrData: {
-		'with a list of data URLs'() {
-			assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
-
-			return loadCldrData([ 'cldr-data/supplemental/likelySubtags.json' ]).then(() => {
-				assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
-			});
+		api() {
+			assert.strictEqual(isLoaded, utilIsLoaded, 'isLoaded should be re-exported');
+			assert.strictEqual(mainPackages, utilMainPackages, 'mainPackages should be re-exported');
+			assert.strictEqual(reset, utilReset, 'reset should be re-exported');
+			assert.strictEqual(supplementalPackages, utilSupplementalPackages, 'supplementalPackages should be re-exported');
 		},
 
-		'with a CLDR data object'() {
-			assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
+		loadCldrData: {
+			'with a list of data URLs'() {
+				assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
 
-			return loadCldrData({
-				supplemental: {
-					likelySubtags: {}
-				}
-			}).then(() => {
-				assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
-			});
-		},
+				return loadCldrData([ 'cldr-data/supplemental/likelySubtags.json' ]).then(() => {
+					assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
+				});
+			},
 
-		'with a require function'() {
-			assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
+			'with a CLDR data object'() {
+				assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
 
-			const path = 'cldr-data/supplemental/likelySubtags.json';
+				return loadCldrData({
+					supplemental: {
+						likelySubtags: {}
+					}
+				}).then(() => {
+					assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
+				});
+			},
 
-			if (has('host-browser')) {
-				sinon.spy(require, 'toUrl');
-			}
+			'with a require function'() {
+				assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
 
-			return loadCldrData(require, [ path ]).then(() => {
+				const path = 'cldr-data/supplemental/likelySubtags.json';
+
 				if (has('host-browser')) {
-					assert.isTrue((<any> require).toUrl.calledWith(path));
-					(<any> require).toUrl.restore();
+					sinon.spy(require, 'toUrl');
 				}
-				assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
-			}, () => {
-				has('host-browser') && (<any> require).toUrl.restore();
-			});
+
+				return loadCldrData(require, [ path ]).then(() => {
+					if (has('host-browser')) {
+						assert.isTrue((<any> require).toUrl.calledWith(path));
+						(<any> require).toUrl.restore();
+					}
+					assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
+				}, () => {
+					has('host-browser') && (<any> require).toUrl.restore();
+				});
+			}
 		}
 	}
 });

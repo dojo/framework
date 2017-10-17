@@ -4,6 +4,9 @@ module.exports = function (grunt) {
 			options: {
 				ignoreCompilerErrors: true // Remove this once compile errors are resolved
 			}
+		},
+		intern: {
+			version: 4
 		}
 	});
 };

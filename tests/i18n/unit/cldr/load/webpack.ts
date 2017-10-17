@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import global from '@dojo/shim/global';
 import loadCldrData, {
 	CldrData,
@@ -16,10 +16,9 @@ import {
 
 let cldrData: CldrData | null;
 
-registerSuite({
-	name: 'cldr/load/webpack',
+registerSuite('cldr/load/webpack', {
 
-	setup() {
+	before() {
 		cldrData = {
 			main: {
 				yue: {
@@ -38,50 +37,54 @@ registerSuite({
 		reset();
 	},
 
-	teardown() {
+	after() {
 		cldrData = null;
 	},
 
-	api() {
-		assert.strictEqual(mainPackages, utilMainPackages, 'mainPackages should be re-exported');
-		assert.strictEqual(reset, utilReset, 'reset should be re-exported');
-		assert.strictEqual(supplementalPackages, utilSupplementalPackages, 'supplementalPackages should be re-exported');
-	},
+	tests: {
 
-	isLoaded() {
-		assert.isTrue(isLoaded('main'));
-		assert.isTrue(isLoaded('supplemental'));
-		assert.isTrue(isLoaded('main', 'yue'));
-		assert.isTrue(isLoaded('main', 'yue', 'numbers'));
-		assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
-	},
-
-	loadCldrData: {
-		'with a list of data URLs'() {
-			return loadCldrData([ 'cldr-data/supplemental/currencyData' ]).then(() => {
-				assert.isFalse(isLoaded('supplemental', 'currencyData'),
-					'The webpack load should ignore URLs.');
-			});
+		api() {
+			assert.strictEqual(mainPackages, utilMainPackages, 'mainPackages should be re-exported');
+			assert.strictEqual(reset, utilReset, 'reset should be re-exported');
+			assert.strictEqual(supplementalPackages, utilSupplementalPackages, 'supplementalPackages should be re-exported');
 		},
 
-		'with a CLDR data object'() {
-			return loadCldrData({
-				main: {
-					tzm: {}
-				}
-			}).then(() => {
-				assert.isTrue(isLoaded('main', 'tzm'), 'CLDR data objects should be loaded.');
-			});
+		isLoaded() {
+			assert.isTrue(isLoaded('main'));
+			assert.isTrue(isLoaded('supplemental'));
+			assert.isTrue(isLoaded('main', 'yue'));
+			assert.isTrue(isLoaded('main', 'yue', 'numbers'));
+			assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
 		},
 
-		'with a require function'() {
-			return loadCldrData(() => {}, {
-				main: {
-					af: {}
-				}
-			}).then(() => {
-				assert.isTrue(isLoaded('main', 'af'), 'Require functions should be ignored.');
-			});
+		loadCldrData: {
+			'with a list of data URLs'() {
+				return loadCldrData([ 'cldr-data/supplemental/currencyData' ]).then(() => {
+					assert.isFalse(isLoaded('supplemental', 'currencyData'),
+						'The webpack load should ignore URLs.');
+				});
+			},
+
+			'with a CLDR data object'() {
+				return loadCldrData({
+					main: {
+						tzm: {}
+					}
+				}).then(() => {
+					assert.isTrue(isLoaded('main', 'tzm'), 'CLDR data objects should be loaded.');
+				});
+			},
+
+			'with a require function'() {
+				return loadCldrData(() => {
+				}, {
+					main: {
+						af: {}
+					}
+				}).then(() => {
+					assert.isTrue(isLoaded('main', 'af'), 'Require functions should be ignored.');
+				});
+			}
 		}
 	}
 });
