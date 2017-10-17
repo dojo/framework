@@ -1,1 +1,2 @@
+import './Drag';
 import './registerCustomElement';

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Drag Test</title>
+</head>
+<body>
+	<script src="../../../../node_modules/@dojo/loader/loader.js"></script>
+	<script>
+		require.config({
+			packages: [
+				{ name: '@dojo', location: '../../../../node_modules/@dojo' },
+				{ name: 'maquette', location: '../../../../node_modules/maquette/dist', main: 'maquette' },
+				{ name: 'pepjs', location: '../../../../node_modules/pepjs/dist', main: 'pep' }
+			]
+		});
+
+		require([ './Drag' ], function () {});
+	</script>
+</body>
+</html>

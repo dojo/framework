@@ -134,6 +134,17 @@ function getDelta(start: PositionMatrix, current: PositionMatrix): Position {
 	};
 }
 
+/**
+ * Sets the `touch-action` on nodes so that PointerEvents are always emitted for the node
+ * @param node The node to init
+ */
+function initNode(node: HTMLElement): void {
+	// Ensure that the node has `touch-action` none
+	node.style.touchAction = 'none';
+	// PEP requires an attribute of `touch-action` to be set on the element
+	node.setAttribute('touch-action', 'none');
+}
+
 class DragController {
 	private _nodeMap = new WeakMap<HTMLElement, NodeData>();
 	private _dragging: HTMLElement | undefined = undefined;
@@ -147,12 +158,26 @@ class DragController {
 		}
 	}
 
-	private _onDragStart = (e: PointerEvent) => {
-		const data = this._getData(e.target as HTMLElement);
+	private _onDragStart = (event: PointerEvent) => {
+		const { _dragging } = this;
+		if (!event.isPrimary && _dragging) {
+			// we have a second touch going on here, while we are dragging, so we aren't really dragging, so we
+			// will close this down
+			const state = this._nodeMap.get(_dragging)!;
+			state.dragResults.isDragging = false;
+			state.invalidate();
+			this._dragging = undefined;
+			return;
+		}
+		if (event.button !== 0) {
+			// it isn't the primary button that is being clicked, so we will ignore this
+			return;
+		}
+		const data = this._getData(event.target as HTMLElement);
 		if (data) {
 			const { state, target } = data;
 			this._dragging = target;
-			state.last = state.start = getPositionMatrix(e);
+			state.last = state.start = getPositionMatrix(event);
 			state.dragResults.delta = createPosition();
 			state.dragResults.start = deepAssign({}, state.start);
 			state.dragResults.isDragging = true;
@@ -160,14 +185,14 @@ class DragController {
 		} // else, we are ignoring the event
 	}
 
-	private _onDrag = (e: PointerEvent) => {
+	private _onDrag = (event: PointerEvent) => {
 		const { _dragging } = this;
 		if (!_dragging) {
 			return;
 		}
 		// state cannot be unset, using ! operator
 		const state = this._nodeMap.get(_dragging)!;
-		state.last = getPositionMatrix(e);
+		state.last = getPositionMatrix(event);
 		state.dragResults.delta = getDelta(state.start, state.last);
 		if (!state.dragResults.start) {
 			state.dragResults.start = deepAssign({}, state.start);
@@ -175,14 +200,14 @@ class DragController {
 		state.invalidate();
 	}
 
-	private _onDragStop = (e: PointerEvent) => {
+	private _onDragStop = (event: PointerEvent) => {
 		const { _dragging } = this;
 		if (!_dragging) {
 			return;
 		}
 		// state cannot be unset, using ! operator
 		const state = this._nodeMap.get(_dragging)!;
-		state.last = getPositionMatrix(e);
+		state.last = getPositionMatrix(event);
 		state.dragResults.delta = getDelta(state.start, state.last);
 		if (!state.dragResults.start) {
 			state.dragResults.start = deepAssign({}, state.start);
@@ -202,9 +227,10 @@ class DragController {
 
 	public get(node: HTMLElement, invalidate: () => void): DragResults {
 		const { _nodeMap } = this;
-		// first time we see a node, we will initialize its state
+		// first time we see a node, we will initialize its state and properties
 		if (!_nodeMap.has(node)) {
 			_nodeMap.set(node, createNodeData(invalidate));
+			initNode(node);
 			return emptyResults;
 		}
 
@@ -214,14 +240,10 @@ class DragController {
 		// we are offering up an accurate delta, so we need to take the last event position and move it to the start so
 		// that our deltas are calculated from the last time they are read
 		state.start = state.last;
+		// reset the delta after we have read, as any future reads should have an empty delta
+		state.dragResults.delta = createPosition();
 		// clear the start state
 		delete state.dragResults.start;
-
-		// reset the delta after we have read any last delta while not dragging
-		if (!dragResults.isDragging && dragResults.delta.x !== 0 && dragResults.delta.y !== 0) {
-			// future reads of the delta will be blank
-			state.dragResults.delta = createPosition();
-		}
 
 		return dragResults;
 	}
