@@ -216,6 +216,45 @@ registerSuite({
 			testWidget.callWidgetSpy();
 			assert.isFalse(testWidget.functionIsBound);
 			assert.isTrue(testWidget.properties.functionIsBound);
+		},
+		'functions are bound to the creating parent not the containing widget'() {
+			class Foo extends WidgetBase<any> {
+				render() {
+					return v('div', {}, [
+						this.properties.label,
+						...this.children
+					]);
+				}
+			}
+
+			class Bar extends WidgetBase<any> {
+				render() {
+					return v('div', { onclick: this.properties.onClick });
+				}
+			}
+			class App extends WidgetBase {
+
+				public onClickCalled = false;
+
+				_onClick() {
+					this.onClickCalled = true;
+				}
+
+				render() {
+					return v('div', [
+						w(Foo, { label: 'foo' }, [
+							w(Bar, {
+								onClick: this._onClick
+							})
+						])
+					]);
+				}
+			}
+
+			const widget = new App();
+			const renderResult: any = widget.__render__();
+			renderResult.children[0].children[1].properties.onclick();
+			assert.isTrue(widget.onClickCalled);
 		}
 	},
 	'extendable'() {

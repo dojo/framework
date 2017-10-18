@@ -388,10 +388,12 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 					}
 				}
 				else {
-					node.coreProperties = {
-						bind: this,
-						baseRegistry: this._coreProperties.baseRegistry
-					};
+					if (!node.coreProperties) {
+						node.coreProperties = {
+							bind: this,
+							baseRegistry: this._coreProperties.baseRegistry
+						};
+					}
 				}
 				nodes = [ ...nodes, ...node.children ];
 			}
