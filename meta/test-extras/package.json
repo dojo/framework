@@ -7,7 +7,7 @@
     "node": "^6.0.0 || ^7.0.0"
   },
   "private": true,
-  "homepage": "http://dojotoolkit.org",
+  "homepage": "https://dojo.io",
   "bugs": {
     "url": "https://github.com/dojo/test-extras/issues"
   },
