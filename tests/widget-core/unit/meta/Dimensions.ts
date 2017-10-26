@@ -99,7 +99,7 @@ registerSuite({
 		const element = document.createElement('div');
 		const getRectSpy = spy(element, 'getBoundingClientRect');
 
-		nodeHandler.add(element, { key: 'foo' });
+		nodeHandler.add(element, 'foo');
 
 		resolveRAF();
 		assert.isTrue(invalidateStub.calledOnce);
@@ -127,7 +127,7 @@ registerSuite({
 			})
 		};
 
-		nodeHandler.add(element as any, { key: 'foo' });
+		nodeHandler.add(element as any, 'foo');
 
 		const dimensions = new Dimensions({
 			invalidate: () => {},

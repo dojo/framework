@@ -1,5 +1,5 @@
 import { includes } from '@dojo/shim/array';
-import { VNodeProperties } from 'maquette';
+import { VirtualDomProperties } from './../interfaces';
 import Projector from '../mixins/Projector';
 
 export const eventHandlers = [
@@ -25,7 +25,13 @@ export const eventHandlers = [
 	'onsubmit'
 ];
 
-export default function eventHandlerInterceptor(this: Projector<any>, propertyName: string, eventHandler: Function, domNode: Element, properties: VNodeProperties) {
+export default function eventHandlerInterceptor(
+	this: Projector<any>,
+	propertyName: string,
+	eventHandler: Function,
+	domNode: Element,
+	properties: VirtualDomProperties
+) {
 	if (includes(eventHandlers, propertyName)) {
 		return function(this: Node, ...args: any[]) {
 			return eventHandler.apply(properties.bind || this, args);

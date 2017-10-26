@@ -292,13 +292,7 @@ registerSuite({
 				parentNode: element
 			} ];
 
-			// so.. this is going to fail in maquette, since we don't have a DOM, but,
-			// it's ok because all of our code has already run by now
-			try {
-				initializeElement(element);
-			}
-			catch (e) {
-			}
+			initializeElement(element);
 
 			assert.lengthOf(element.removedChildren(), 1);
 			assert.lengthOf(element.getWidgetInstance().children, 1);

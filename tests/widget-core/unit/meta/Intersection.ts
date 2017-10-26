@@ -57,7 +57,7 @@ registerSuite({
 				nodeHandler
 			});
 			const element = document.createElement('div');
-			nodeHandler.add(element, { key: 'root' });
+			nodeHandler.add(element, 'root');
 
 			intersection.get('root');
 			const [ observer, callback ] = observers[0];
@@ -114,7 +114,7 @@ registerSuite({
 			assert.isTrue(onSpy.firstCall.calledWith('root'));
 
 			const element = document.createElement('div');
-			nodeHandler.add(element, { key: 'root' });
+			nodeHandler.add(element, 'root');
 			assert.isTrue(invalidateStub.calledOnce);
 			onSpy.reset();
 			intersection.get('root');
@@ -135,7 +135,7 @@ registerSuite({
 			assert.isTrue(onSpy.firstCall.calledWith('root'));
 
 			const element = document.createElement('div');
-			nodeHandler.add(element, { key: 'root' });
+			nodeHandler.add(element, 'root');
 
 			assert.isTrue(invalidateStub.calledOnce);
 
@@ -181,12 +181,12 @@ registerSuite({
 			assert.isTrue(onSpy.firstCall.calledWith('root'));
 
 			const element = document.createElement('div');
-			nodeHandler.add(element, { key: 'foo' });
+			nodeHandler.add(element, 'foo');
 
 			assert.isTrue(invalidateStub.notCalled);
 
 			const root = document.createElement('div');
-			nodeHandler.add(root, { key: 'root' });
+			nodeHandler.add(root, 'root');
 
 			assert.isTrue(invalidateStub.calledOnce);
 
@@ -216,8 +216,8 @@ registerSuite({
 			});
 
 			const root = document.createElement('div');
-			nodeHandler.add(root, { key: 'foo' });
-			nodeHandler.add(root, { key: 'root' });
+			nodeHandler.add(root, 'foo');
+			nodeHandler.add(root, 'root');
 			intersection.get('foo');
 			assert.lengthOf(observers, 1);
 			intersection.get('foo', { root: 'root'});

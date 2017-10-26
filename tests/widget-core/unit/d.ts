@@ -66,7 +66,7 @@ registerSuite({
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isHNode(dNode));
 		},
-		'create WNode wrapper using constructor with VNode children'() {
+		'create WNode wrapper using constructor with HNode children'() {
 			const dNode = w(TestChildWidget, { myChildProperty: '' }, [ v('div') ]);
 
 			assert.equal(dNode.type, WNODE);
@@ -113,27 +113,14 @@ registerSuite({
 	v: {
 		'create HNode wrapper'() {
 			const hNode = v('div');
-			assert.isFunction(hNode.render);
-			assert.lengthOf(hNode.children, 0);
+			assert.isUndefined(hNode.children);
 			assert.equal(hNode.tag, 'div');
-			assert.equal(hNode.type, HNODE);
-			assert.isTrue(isHNode(hNode));
-			assert.isFalse(isWNode(hNode));
-		},
-		'create HNode wrapper with options'() {
-			const hNode = v('div', { innerHTML: 'Hello World' });
-			assert.isFunction(hNode.render);
-			assert.lengthOf(hNode.children, 0);
-			const render = hNode.render();
-			assert.equal(render.vnodeSelector, 'div');
-			assert.equal(render.properties && render.properties.innerHTML, 'Hello World');
 			assert.equal(hNode.type, HNODE);
 			assert.isTrue(isHNode(hNode));
 			assert.isFalse(isWNode(hNode));
 		},
 		'create HNode wrapper with children'() {
 			const hNode = v('div', {}, [ v('div'), v('div') ]);
-			assert.isFunction(hNode.render);
 			assert.lengthOf(hNode.children, 2);
 			assert.equal(hNode.type, HNODE);
 			assert.isTrue(isHNode(hNode));
@@ -141,7 +128,6 @@ registerSuite({
 		},
 		'create HNode wrapper with children as options param'() {
 			const hNode = v('div', [ v('div'), v('div') ]);
-			assert.isFunction(hNode.render);
 			assert.lengthOf(hNode.children, 2);
 			assert.equal(hNode.type, HNODE);
 			assert.isTrue(isHNode(hNode));
@@ -149,7 +135,6 @@ registerSuite({
 		},
 		'create HNode wrapper with text node children'() {
 			const hNode = v('div', {}, [ 'This Text Node', 'That Text Node' ]);
-			assert.isFunction(hNode.render);
 			assert.lengthOf(hNode.children, 2);
 			assert.equal(hNode.type, HNODE);
 			assert.isTrue(isHNode(hNode));

@@ -16,18 +16,18 @@ registerSuite({
 		element = document.createElement('div');
 	},
 	'add populates nodehandler map'() {
-		nodeHandler.add(element, { key: 'foo' });
+		nodeHandler.add(element, 'foo');
 		assert.isTrue(nodeHandler.has('foo'));
 	},
 	'has returns undefined when element does not exist'() {
 		assert.isFalse(nodeHandler.has('foo'));
 	},
 	'get returns elements that have been added'() {
-		nodeHandler.add(element, { key: 'foo' });
+		nodeHandler.add(element, 'foo');
 		assert.equal(nodeHandler.get('foo'), element);
 	},
 	'clear removes nodes from map'() {
-		nodeHandler.add(element, { key: 'foo' });
+		nodeHandler.add(element, 'foo');
 		assert.isTrue(nodeHandler.has('foo'));
 		nodeHandler.clear();
 		assert.isFalse(nodeHandler.has('foo'));
@@ -43,21 +43,20 @@ registerSuite({
 			nodeHandler.on(NodeEventType.Projector, projectorStub);
 		},
 		'add emits event when element added'() {
-			nodeHandler.add(element, { key: 'foo' });
+			nodeHandler.add(element, 'foo');
 
 			assert.isTrue(elementStub.calledOnce);
 			assert.isTrue(widgetStub.notCalled);
 			assert.isTrue(projectorStub.notCalled);
 		},
-		'add root emits Widget and element event'() {
-			nodeHandler.addRoot(element, { key: 'foo' });
+		'add root emits Widget'() {
+			nodeHandler.addRoot(element, 'foo');
 
 			assert.isTrue(widgetStub.calledOnce);
-			assert.isTrue(elementStub.calledOnce);
 			assert.isTrue(projectorStub.notCalled);
 		},
 		'add root without a key emits Widget event only'() {
-			nodeHandler.addRoot(element, {});
+			nodeHandler.addRoot(element);
 
 			assert.isTrue(widgetStub.calledOnce);
 			assert.isTrue(elementStub.notCalled);

@@ -1,5 +1,4 @@
 import i18n, { invalidate, switchLocale, systemLocale } from '@dojo/i18n/i18n';
-import { VNode } from '@dojo/interfaces/vdom';
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import * as sinon from 'sinon';
@@ -115,16 +114,16 @@ registerSuite({
 		localized = new LocalizedExtended();
 		localized.__setProperties__({locale: 'ar-JO'});
 
-		const result = <VNode> localized.__render__();
+		const result = localized.__render__();
 		assert.isOk(result);
-		assert.isNull(result.properties!['lang']);
+		assert.isUndefined(result.properties!['lang']);
 	},
 	'`properties.locale` updates the widget node\'s `lang` property': {
 		'when non-empty'() {
 			localized = new Localized();
 			localized.__setProperties__({locale: 'ar-JO'});
 
-			const result = <VNode> localized.__render__();
+			const result = localized.__render__();
 			assert.isOk(result);
 			assert.strictEqual(result.properties!['lang'], 'ar-JO');
 		},

@@ -1,9 +1,8 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { stub, SinonStub } from 'sinon';
 
-import global from '@dojo/shim/global';
 import sendEvent from '../../support/sendEvent';
+import { createResolvers } from './../../support/util';
 import { v } from '../../../src/d';
 import { ProjectorMixin } from '../../../src/main';
 import { WidgetBase } from '../../../src/WidgetBase';
@@ -11,24 +10,17 @@ import { ThemeableMixin } from '../../../src/mixins/Themeable';
 
 import Matches from '../../../src/meta/Matches';
 
-let rAF: SinonStub;
-
-function resolveRAF() {
-	for (let i = 0; i < rAF.callCount; i++) {
-		rAF.getCall(i).args[0]();
-	}
-	rAF.reset();
-}
+const resolvers = createResolvers();
 
 registerSuite({
 	name: 'support/meta/Matches',
 
 	beforeEach() {
-		rAF = stub(global, 'requestAnimationFrame');
+		resolvers.stub();
 	},
 
 	afterEach() {
-		rAF.restore();
+		resolvers.restore();
 	},
 
 	'node matches'() {
@@ -55,7 +47,8 @@ registerSuite({
 		const widget = new TestWidget();
 		widget.append(div);
 
-		resolveRAF();
+		resolvers.resolve();
+		resolvers.resolve();
 
 		sendEvent(div.firstChild as Element, 'click');
 
@@ -89,7 +82,8 @@ registerSuite({
 		const widget = new TestWidget();
 		widget.append(div);
 
-		resolveRAF();
+		resolvers.resolve();
+		resolvers.resolve();
 
 		sendEvent(div.firstChild as Element, 'click');
 
@@ -127,7 +121,8 @@ registerSuite({
 		const widget = new TestWidget();
 		widget.append(div);
 
-		resolveRAF();
+		resolvers.resolve();
+		resolvers.resolve();
 
 		sendEvent(div.firstChild!.firstChild as Element, 'click', {
 			eventInit: {
@@ -173,7 +168,8 @@ registerSuite({
 		const widget = new TestWidget();
 		widget.append(div);
 
-		resolveRAF();
+		resolvers.resolve();
+		resolvers.resolve();
 
 		sendEvent(div.firstChild!.firstChild as Element, 'click', {
 			eventInit: {
@@ -181,7 +177,7 @@ registerSuite({
 			}
 		});
 
-		resolveRAF();
+		resolvers.resolve();
 
 		sendEvent(div.firstChild!.firstChild as Element, 'click', {
 			eventInit: {

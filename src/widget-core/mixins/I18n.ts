@@ -7,8 +7,7 @@ import i18n, {
 	Messages,
 	observeLocale
 } from '@dojo/i18n/i18n';
-import { VNodeProperties } from '@dojo/interfaces/vdom';
-import { Constructor, DNode, WidgetProperties } from './../interfaces';
+import { Constructor, DNode, WidgetProperties, VirtualDomProperties } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
 import { afterRender } from './../decorators/afterRender';
 import { isHNode } from './../d';
@@ -32,7 +31,7 @@ export interface I18nProperties extends WidgetProperties {
  * @private
  * An internal helper interface for defining locale and text direction attributes on widget nodes.
  */
-interface I18nVNodeProperties extends VNodeProperties {
+interface I18nVirtualDomProperties extends VirtualDomProperties {
 	dir: string | null;
 	lang: string | null;
 }
@@ -109,19 +108,19 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 		protected renderDecorator(result: DNode): DNode {
 			if (isHNode(result)) {
 				const { locale, rtl } = this.properties;
-				const vNodeProperties: I18nVNodeProperties = {
+				const properties: I18nVirtualDomProperties = {
 					dir: null,
 					lang: null
 				};
 
 				if (typeof rtl === 'boolean') {
-					vNodeProperties['dir'] = rtl ? 'rtl' : 'ltr';
+					properties['dir'] = rtl ? 'rtl' : 'ltr';
 				}
 				if (locale) {
-					vNodeProperties['lang'] = locale;
+					properties['lang'] = locale;
 				}
 
-				assign(result.properties, vNodeProperties);
+				assign(result.properties, properties);
 			}
 			return result;
 		}

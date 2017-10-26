@@ -59,7 +59,6 @@ export const loaderOptions = {
 		{ name: 'cldr-data', location: 'node_modules/cldr-data' },
 		{ name: 'cldrjs', location: 'node_modules/cldrjs' },
 		{ name: 'globalize', location: 'node_modules/globalize', main: 'dist/globalize' },
-		{ name: 'maquette', location: 'node_modules/maquette/dist', main: 'maquette' },
 		{ name: 'pepjs', location: 'node_modules/pepjs/dist', main: 'pep' },
 		{ name: 'intersection-observer', location: 'node_modules/intersection-observer', main: 'intersection-observer' },
 		{ name: 'grunt-dojo2', location: 'node_modules/grunt-dojo2'},

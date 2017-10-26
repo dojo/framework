@@ -1,14 +1,12 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import { v , w } from '../../src/d';
+import { v } from '../../src/d';
 import { WidgetBase } from '../../src/WidgetBase';
 import { diffProperty } from './../../src/decorators/diffProperty';
 import { always } from '../../src/diff';
 import { Container } from './../../src/Container';
 import { Registry } from './../../src/Registry';
 import { Injector } from './../../src/Injector';
-
-import createTestWidget from './../support/createTestWidget';
 
 interface TestWidgetProperties {
 	foo: string;
@@ -17,6 +15,7 @@ interface TestWidgetProperties {
 
 class TestWidget extends WidgetBase<TestWidgetProperties> {
 	render() {
+		assertRender(this.properties);
 		return v('test', this.properties);
 	}
 }
@@ -90,31 +89,29 @@ registerSuite({
 		};
 
 		const TestWidgetContainer = Container<TestWidget>('test-widget', 'test-state-1', { getProperties });
-		const widget = createTestWidget(TestWidgetContainer, { foo: 'bar', registry });
+		const widget = new TestWidgetContainer();
 		const renderResult: any = widget.__render__();
-		assert.strictEqual(renderResult.vnodeSelector, 'test');
+
+		assert.strictEqual(renderResult.widgetConstructor, 'test-widget');
 	},
 	'container always updates'() {
 		@diffProperty('foo', always)
 		class Child extends WidgetBase<{ foo: string }> {}
-		const ChildContainer = Container(Child, 'test-state-1', { getProperties });
+		let invalidatedCount = 0;
 
-		class Parent extends WidgetBase<any> {
-			render() {
-				const { foo } = this.properties;
-				return w(ChildContainer, { foo });
+		class ContainerClass extends Container(Child, 'test-state-1', { getProperties }) {
+			invalidate() {
+				invalidatedCount++;
+				super.invalidate();
 			}
-
 		}
-		const widget = new Parent();
+		const widget = new ContainerClass();
 		widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
 		widget.__setProperties__({ foo: 'bar'});
-		const renderResult = widget.__render__();
-		injector.set({ foo: 'bar' });
-		const injectorUpdatedRenderResult = widget.__render__();
-		assert.notStrictEqual(injectorUpdatedRenderResult, renderResult);
-		widget.__setProperties__({ foo: 'bar', bar: 'foo' });
-		const updatedRenderResult = widget.__render__();
-		assert.notStrictEqual(updatedRenderResult, injectorUpdatedRenderResult);
+		assert.strictEqual(invalidatedCount, 3);
+		widget.__setProperties__({ foo: 'bar'});
+		assert.strictEqual(invalidatedCount, 4);
+		widget.__setProperties__({ foo: 'bar'});
+		assert.strictEqual(invalidatedCount, 5);
 	}
 });

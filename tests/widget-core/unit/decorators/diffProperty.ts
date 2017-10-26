@@ -180,13 +180,13 @@ registerSuite({
 		class SubWidget extends TestWidget { }
 
 		const widget = new SubWidget();
-		const vnode = widget.__render__();
+		const renderResult = widget.__render__();
 
 		widget.__setProperties__({
 			foo: 'bar'
 		});
 
-		assert.notStrictEqual(vnode, widget.__render__());
+		assert.notStrictEqual(renderResult, widget.__render__());
 	},
 	'multiple custom decorators on the same method cause the first matching decorator to win'() {
 		const calls: string[] = [];
@@ -236,13 +236,13 @@ registerSuite({
 		class TestWidget extends WidgetBase<TestProperties> { }
 
 		const widget = new TestWidget();
-		const vnode = widget.__render__();
+		const renderResult = widget.__render__();
 
 		widget.__setProperties__({
 			foo: '',
 			id: ''
 		});
-		assert.strictEqual(vnode, widget.__render__());
+		assert.strictEqual(renderResult, widget.__render__());
 	},
 
 	'properties that are deleted dont get returned'() {

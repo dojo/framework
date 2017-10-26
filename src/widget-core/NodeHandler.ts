@@ -1,12 +1,11 @@
 import { Evented } from '@dojo/core/Evented';
-import { VNodeProperties } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
 import { NodeHandlerInterface } from './interfaces';
 
 /**
  * Enum to identify the type of event.
  * Listening to 'Projector' will notify when projector is created or updated
- * Listening to 'Widget' will notifiy when widget root is created or updated
+ * Listening to 'Widget' will notify when widget root is created or updated
  */
 export enum NodeEventType {
 	Projector = 'Projector',
@@ -25,17 +24,12 @@ export class NodeHandler extends Evented implements NodeHandlerInterface {
 		return this._nodeMap.has(key);
 	}
 
-	public add(element: HTMLElement, properties: VNodeProperties): void {
-		const key = String(properties.key);
+	public add(element: HTMLElement, key: string): void {
 		this._nodeMap.set(key, element);
 		this.emit({ type: key });
 	}
 
-	public addRoot(element: HTMLElement, properties: VNodeProperties): void {
-		if (properties && properties.key) {
-			this.add(element, properties);
-		}
-
+	public addRoot(element: HTMLElement, key?: string): void {
 		this.emit({ type: NodeEventType.Widget });
 	}
 

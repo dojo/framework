@@ -1,10 +1,7 @@
+import { VirtualDomProperties } from './../interfaces';
+
 let browserSpecificTransitionEndEventName = '';
 let browserSpecificAnimationEndEventName = '';
-
-export interface VNodeProperties {
-	enterAnimationActive?: string;
-	exitAnimationActive?: string;
-}
 
 function determineBrowserStyleNames(element: HTMLElement) {
 	if ('WebkitTransition' in element.style) {
@@ -47,7 +44,7 @@ function runAndCleanUp(element: HTMLElement, startAnimation: () => void, finishA
 	element.addEventListener(browserSpecificTransitionEndEventName, transitionEnd);
 }
 
-function exit(node: HTMLElement, properties: VNodeProperties, exitAnimation: string, removeNode: () => void) {
+function exit(node: HTMLElement, properties: VirtualDomProperties, exitAnimation: string, removeNode: () => void) {
 	const activeClass = properties.exitAnimationActive || `${exitAnimation}-active`;
 
 	runAndCleanUp(node, () => {
@@ -61,7 +58,7 @@ function exit(node: HTMLElement, properties: VNodeProperties, exitAnimation: str
 	});
 }
 
-function enter(node: HTMLElement, properties: VNodeProperties, enterAnimation: string) {
+function enter(node: HTMLElement, properties: VirtualDomProperties, enterAnimation: string) {
 	const activeClass = properties.enterAnimationActive || `${enterAnimation}-active`;
 
 	runAndCleanUp(node, () => {

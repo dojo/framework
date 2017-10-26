@@ -54,7 +54,6 @@
   },
   "dependencies": {
     "intersection-observer": "^0.4.2",
-    "maquette": "~2.5.1",
     "pepjs": "^0.4.2"
   }
 }

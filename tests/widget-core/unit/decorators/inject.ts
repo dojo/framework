@@ -7,8 +7,6 @@ import { Registry } from './../../../src/Registry';
 import { Injector } from './../../../src/Injector';
 import { WidgetProperties } from './../../../src/interfaces';
 
-import createTestWidget from './../../support/createTestWidget';
-
 let injectorOne = new Injector<any>({ foo: 'bar' });
 let injectorTwo = new Injector<any>({ bar: 'foo' });
 let registry: Registry;
@@ -29,9 +27,11 @@ registerSuite({
 
 		@inject({ name: 'inject-one', getProperties })
 		class TestWidget extends WidgetBase<any> {}
-		const widget = createTestWidget(TestWidget, { registry });
+		const widget = new TestWidget();
+		widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+		widget.__setProperties__({});
 
-		assert.strictEqual(widget.getWidgetUnderTest().properties.foo, 'bar');
+		assert.strictEqual(widget.properties.foo, 'bar');
 	},
 	'multiple injectors'() {
 		function getPropertiesOne(payload: any, properties: WidgetProperties): WidgetProperties {
@@ -44,9 +44,11 @@ registerSuite({
 		@inject({ name: 'inject-one', getProperties: getPropertiesOne })
 		@inject({ name: 'inject-two', getProperties: getPropertiesTwo })
 		class TestWidget extends WidgetBase<any> {}
-		const widget = createTestWidget(TestWidget, { registry });
-		assert.strictEqual(widget.getWidgetUnderTest().properties.foo, 'bar');
-		assert.strictEqual(widget.getWidgetUnderTest().properties.bar, 'foo');
+		const widget = new TestWidget();
+		widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+		widget.__setProperties__({});
+		assert.strictEqual(widget.properties.foo, 'bar');
+		assert.strictEqual(widget.properties.bar, 'foo');
 	},
 	'payload are only attached once'() {
 		let invalidateCount = 0;
@@ -56,9 +58,10 @@ registerSuite({
 
 		@inject({ name: 'inject-one', getProperties })
 		class TestWidget extends WidgetBase<any> {}
-		const widget = createTestWidget(TestWidget, { registry });
-		widget.getWidgetUnderTest().__setProperties__({});
-		widget.getWidgetUnderTest().on('invalidated', () => {
+		const widget = new TestWidget();
+		widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+		widget.__setProperties__({});
+		widget.on('invalidated', () => {
 			invalidateCount++;
 		});
 		injectorOne.set({});
@@ -79,8 +82,10 @@ registerSuite({
 				inject({ name: 'inject-two', getProperties: getPropertiesTwo })(this);
 			}
 		}
-		const widget = createTestWidget(TestWidget, { registry });
-		assert.strictEqual(widget.getWidgetUnderTest().properties.foo, 'bar');
-		assert.strictEqual(widget.getWidgetUnderTest().properties.bar, 'foo');
+		const widget = new TestWidget();
+		widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+		widget.__setProperties__({});
+		assert.strictEqual(widget.properties.foo, 'bar');
+		assert.strictEqual(widget.properties.bar, 'foo');
 	}
 });

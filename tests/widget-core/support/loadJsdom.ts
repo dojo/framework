@@ -29,6 +29,12 @@ global.requestAnimationFrame = (cb: (...args: any[]) => {}) => {
 	return true;
 };
 
+global.requestIdleCallback = (cb: (...args: any[]) => {}) => {
+	setImmediate(cb);
+	// return something at least!
+	return true;
+};
+
 global.cancelAnimationFrame = () => {};
 global.IntersectionObserver = () => {};
 

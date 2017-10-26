@@ -1,32 +1,25 @@
 import * as registerSuite from 'intern!object';
+import { createResolvers } from './../../support/util';
 import { WidgetBase } from './../../../src/WidgetBase';
 import { v, w } from './../../../src/d';
 import { DomWrapper } from '../../../src/util/DomWrapper';
-import global from '@dojo/shim/global';
-import { stub } from 'sinon';
 import * as assert from 'intern/chai!assert';
 import ProjectorMixin from '../../../src/mixins/Projector';
 import { ThemeableMixin, theme } from '../../../src/mixins/Themeable';
 
-let rAF: any;
 let projector: any;
 
-function resolveRAF() {
-	for (let i = 0; i < rAF.callCount; i++) {
-		rAF.getCall(0).args[0]();
-	}
-	rAF.reset();
-}
+const resolvers = createResolvers();
 
 registerSuite({
 	name: 'DomWrapper',
 
 	beforeEach() {
-		rAF = stub(global, 'requestAnimationFrame');
+		resolvers.stub();
 	},
 
 	afterEach() {
-		rAF.restore();
+		resolvers.restore();
 		projector && projector.destroy();
 	},
 
@@ -47,12 +40,12 @@ registerSuite({
 		projector = new Projector();
 		const root = document.createElement('div');
 		projector.append(root);
-		resolveRAF();
+		resolvers.resolve();
+		resolvers.resolve();
 		assert.equal(domNode.foo, 'blah');
 		assert.equal(domNode.getAttribute('original'), 'woop');
 		assert.equal(domNode.getAttribute('id'), 'foo');
 		assert.deepEqual(domNode.extra, { foo: 'bar' });
-
 	},
 	'supports events'() {
 		const domNode: any = document.createElement('custom-element');
@@ -71,7 +64,8 @@ registerSuite({
 		const Projector = ProjectorMixin(Foo);
 		projector = new Projector();
 		projector.append(root);
-		resolveRAF();
+		resolvers.resolve();
+		resolvers.resolve();
 		domNode.click();
 		assert.isTrue(clicked);
 	},
@@ -98,7 +92,8 @@ registerSuite({
 		const Projector = ProjectorMixin(Foo);
 		projector = new Projector();
 		projector.append(root);
-		resolveRAF();
+		resolvers.resolve();
+		resolvers.resolve();
 		assert.isTrue(domNode.classList.contains('classFoo'));
 		assert.equal(domNode.style.color, 'red');
 	},
@@ -121,7 +116,8 @@ registerSuite({
 		const Projector = ProjectorMixin(Foo);
 		projector = new Projector();
 		projector.append(root);
-		resolveRAF();
+		resolvers.resolve();
+		resolvers.resolve();
 		assert.isTrue(attached);
 	}
 });

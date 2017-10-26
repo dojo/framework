@@ -2,8 +2,7 @@ import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
 import { WidgetBase } from '../../src/WidgetBase';
 import { Registry } from '../../src/Registry';
-import { WidgetProperties } from '../../src/interfaces';
-import { VNode } from '@dojo/interfaces/vdom';
+import { WidgetProperties, WNode } from '../../src/interfaces';
 import { tsx, fromRegistry } from './../../src/tsx';
 
 const registry = new Registry();
@@ -40,21 +39,15 @@ registerSuite({
 		const bar = new Bar();
 		bar.__setCoreProperties__({ bind: bar, baseRegistry: registry });
 		bar.__setProperties__({ registry });
-		const barRender = bar.__render__() as VNode;
-		const barChild = barRender.children![0];
-		assert.equal(barRender.vnodeSelector, 'header');
-		assert.equal(barChild.text, 'world');
+		const barRender = bar.__render__() as WNode;
+		assert.deepEqual(barRender.properties, { hello: 'world' });
+		assert.strictEqual(barRender.widgetConstructor, Foo);
+		assert.lengthOf(barRender.children, 0);
 
 		const qux = new Qux();
 		qux.__setCoreProperties__({ bind: qux, baseRegistry: registry });
 		qux.__setProperties__({ registry });
-		const firstQuxRender = qux.__render__();
-		assert.equal(firstQuxRender, null);
-
-		registry.define('LazyFoo', Foo);
-		const secondQuxRender = qux.__render__() as VNode;
-		const secondQuxChild = secondQuxRender.children![0];
-		assert.equal(secondQuxRender.vnodeSelector, 'header');
-		assert.equal(secondQuxChild.text, 'cool');
+		const firstQuxRender = qux.__render__() as WNode;
+		assert.strictEqual(firstQuxRender.widgetConstructor, 'LazyFoo');
 	}
 });

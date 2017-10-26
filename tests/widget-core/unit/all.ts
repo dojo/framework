@@ -15,3 +15,4 @@ import './tsx';
 import './tsxIntegration';
 import './NodeHandler';
 import './meta/all';
+import './vdom';

@@ -1,15 +1,7 @@
 import { Destroyable } from '@dojo/core/Destroyable';
 import { Evented } from '@dojo/core/Evented';
 import { EventTargettedObject } from '@dojo/interfaces/core';
-import { VNode, VNodeProperties, ProjectionOptions as MaquetteProjectionOptions } from '@dojo/interfaces/vdom';
 import Map from '@dojo/shim/Map';
-
-/**
- * Extended Dojo 2 projection options
- */
-export interface ProjectionOptions extends MaquetteProjectionOptions {
-	nodeEvent: Evented;
-}
 
 /**
  * Generic constructor type
@@ -24,7 +16,7 @@ export interface TypedTargetEvent<T extends EventTarget> extends Event {
 }
 
 /*
- These are the event handlers exposed by Maquette.
+ These are the event handlers.
  */
 export type EventHandlerResult = boolean | void;
 
@@ -68,58 +60,55 @@ export type ClassesFunction = () => {
 	[index: string]: boolean | null | undefined;
 };
 
+export interface TransitionStrategy {
+	enter(element: Element, properties: VirtualDomProperties, enterAnimation: string): void;
+	exit(element: Element, properties: VirtualDomProperties, exitAnimation: string, removeElement: () => void): void;
+}
+
+export interface ProjectorOptions {
+	readonly transitions?: TransitionStrategy;
+	styleApplyer?(domNode: HTMLElement, styleName: string, value: string): void;
+}
+
+export interface ProjectionOptions extends ProjectorOptions {
+	readonly namespace?: string;
+	eventHandlerInterceptor?: (propertyName: string, eventHandler: Function, domNode: Node, properties: VirtualDomProperties) => Function | undefined;
+	afterRenderCallbacks: Function[];
+	merge: boolean;
+}
+
+export interface Projection {
+	readonly domNode: Element;
+	update(updatedDNode: DNode): void;
+}
+
 export interface VirtualDomProperties {
 	/**
 	 * The animation to perform when this node is added to an already existing parent.
 	 * When this value is a string, you must pass a `projectionOptions.transitions` object when creating the
 	 * projector using [[createProjector]].
-	 * {@link http://maquettejs.org/docs/animations.html|More about animations}.
 	 * @param element - Element that was just added to the DOM.
 	 * @param properties - The properties object that was supplied to the [[h]] method
 	 */
-	enterAnimation?: ((element: Element, properties?: VNodeProperties) => void) | string;
+	enterAnimation?: ((element: Element, properties?: VirtualDomProperties) => void) | string;
 	/**
 	 * The animation to perform when this node is removed while its parent remains.
 	 * When this value is a string, you must pass a `projectionOptions.transitions` object when creating the projector using [[createProjector]].
-	 * {@link http://maquettejs.org/docs/animations.html|More about animations}.
 	 * @param element - Element that ought to be removed from the DOM.
 	 * @param removeElement - Function that removes the element from the DOM.
 	 * This argument is provided purely for convenience.
 	 * You may use this function to remove the element when the animation is done.
-	 * @param properties - The properties object that was supplied to the [[h]] method that rendered this [[VNode]] the previous time.
+	 * @param properties - The properties object that was supplied to the [[v]] method that rendered this [[HNode]] the previous time.
 	 */
-	exitAnimation?: ((element: Element, removeElement: () => void, properties?: VNodeProperties) => void) | string;
+	exitAnimation?: ((element: Element, removeElement: () => void, properties?: VirtualDomProperties) => void) | string;
 	/**
 	 * The animation to perform when the properties of this node change.
 	 * This also includes attributes, styles, css classes. This callback is also invoked when node contains only text and that text changes.
-	 * {@link http://maquettejs.org/docs/animations.html|More about animations}.
 	 * @param element - Element that was modified in the DOM.
 	 * @param properties - The last properties object that was supplied to the [[h]] method
 	 * @param previousProperties - The previous properties object that was supplied to the [[h]] method
 	 */
-	updateAnimation?: (element: Element, properties?: VNodeProperties, previousProperties?: VNodeProperties) => void;
-	/**
-	 * Callback that is executed after this node is added to the DOM. Child nodes and properties have
-	 * already been applied.
-	 * @param element - The element that was added to the DOM.
-	 * @param projectionOptions - The projection options that were used, see [[createProjector]].
-	 * @param vnodeSelector - The selector passed to the [[h]] function.
-	 * @param properties - The properties passed to the [[h]] function.
-	 * @param children - The children that were created.
-	 */
-	afterCreate?(element: Element, projectionOptions: ProjectionOptions, vnodeSelector: string, properties: VNodeProperties,
-	children: VNode[]): void;
-	/**
-	 * Callback that is executed every time this node may have been updated. Child nodes and properties
-	 * have already been updated.
-	 * @param element - The element that may have been updated in the DOM.
-	 * @param projectionOptions - The projection options that were used, see [[createProjector]].
-	 * @param vnodeSelector - The selector passed to the [[h]] function.
-	 * @param properties - The properties passed to the [[h]] function.
-	 * @param children - The children for this node.
-	 */
-	afterUpdate?(element: Element, projectionOptions: ProjectionOptions, vnodeSelector: string, properties: VNodeProperties,
-	children: VNode[]): void;
+	updateAnimation?: (element: Element, properties?: VirtualDomProperties, previousProperties?: VirtualDomProperties) => void;
 	/**
 	 * Bind should not be defined.
 	 */
@@ -206,7 +195,7 @@ export interface VirtualDomProperties {
 	/**
 	 * Puts a non-interactive string of html inside the DOM node.
 	 *
-	 * Note: if you use innerHTML, maquette cannot protect you from XSS vulnerabilities and you must make sure that the innerHTML value is safe.
+	 * Note: if you use innerHTML, cannot protect you from XSS vulnerabilities and you must make sure that the innerHTML value is safe.
 	 */
 	readonly innerHTML?: string;
 
@@ -262,35 +251,21 @@ interface CoreProperties {
 }
 
 /**
- * Virtual DOM Node type
- */
-export type VirtualDomNode = VNode | string | null | undefined;
-
-/**
  * Wrapper for v
  */
 export interface HNode {
 	/**
-	 * Array of processed VNode children.
-	 */
-	vNodes?: (VirtualDomNode[] | VirtualDomNode)[];
-	/**
 	 * Specified children
 	 */
-	children: DNode[];
+	children?: DNode[];
 
 	/**
-	 * render function that wraps returns VNode
-	 */
-	render<T>(options?: { bind?: T }): VNode;
-
-	/**
-	 * The properties used to create the VNode
+	 * HNode properties
 	 */
 	properties: VirtualDomProperties;
 
 	/**
-	 * The tagname used to create the VNode
+	 * The tag of the HNode
 	 */
 	tag: string;
 
@@ -298,6 +273,11 @@ export interface HNode {
 	 * The type of node
 	 */
 	type: symbol;
+
+	/**
+	 * Text node string
+	 */
+	text?: string;
 }
 
 /**
@@ -315,14 +295,9 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 	properties: W['properties'];
 
 	/**
-	 * Core properties that are used by the widget core system
-	 */
-	coreProperties?: CoreProperties;
-
-	/**
 	 * DNode children
 	 */
-	children: W['children'];
+	children: DNode[];
 
 	/**
 	 * The type of node
@@ -333,7 +308,7 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 /**
  * union type for all possible return types from render
  */
-export type DNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = HNode | WNode<W> | string | null | undefined;
+export type DNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = HNode | WNode<W> | undefined | null | string;
 
 /**
  * Property Change record for specific property diff functions
@@ -358,14 +333,14 @@ export type WidgetBaseConstructor<
 	P extends WidgetProperties = WidgetProperties,
 	C extends DNode = DNode> = Constructor<WidgetBaseInterface<P, C>>;
 
-export interface DefaultWidgetBaseInterface extends WidgetBaseInterface<WidgetProperties, DNode<DefaultWidgetBaseInterface>> {}
+export interface DefaultWidgetBaseInterface extends WidgetBaseInterface<WidgetProperties, DNode> {}
 
 /**
  * The interface for WidgetBase
  */
 export interface WidgetBaseInterface<
 	P = WidgetProperties,
-	C extends DNode = DNode<DefaultWidgetBaseInterface>> extends Evented {
+	C extends DNode = DNode> extends Evented {
 
 	/**
 	 * Widget properties
@@ -402,7 +377,7 @@ export interface WidgetBaseInterface<
 	/**
 	 * Main internal function for dealing with widget rendering
 	 */
-	__render__(): VirtualDomNode | VirtualDomNode[];
+	__render__(): DNode | DNode[];
 }
 
 /**
@@ -422,9 +397,9 @@ export interface WidgetMetaConstructor<T extends WidgetMetaBase> {
 export interface NodeHandlerInterface extends Evented {
 	get(key: string | number): HTMLElement | undefined;
 	has(key: string | number): boolean;
-	add(element: HTMLElement, properties: VNodeProperties): void;
-	addRoot(element: HTMLElement, properties: VNodeProperties): void;
-	addProjector(element: HTMLElement, properties: VNodeProperties): void;
+	add(element: HTMLElement, key: string): void;
+	addRoot(element: HTMLElement, key: string): void;
+	addProjector(element: HTMLElement, properties: VirtualDomProperties): void;
 	clear(): void;
 }
 
