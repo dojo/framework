@@ -2,14 +2,18 @@ import 'pepjs';
 
 import Evented from '@dojo/core/Evented';
 import { createHandle } from '@dojo/core/lang';
+import { Handle } from '@dojo/interfaces/core';
 import { VNode } from '@dojo/interfaces/vdom';
 import { includes } from '@dojo/shim/array';
+import { assign } from '@dojo/shim/object';
+import WeakMap from '@dojo/shim/WeakMap';
 import {
 	ClassesFunction,
 	Constructor,
 	DNode,
 	ProjectionOptions,
-	WidgetBaseInterface,
+	WidgetMetaBase,
+	WidgetMetaConstructor,
 	WidgetProperties,
 	WNode
 } from '@dojo/widget-core/interfaces';
@@ -91,10 +95,10 @@ function stubRender(target: DNode): DNode {
 		(dNode: WNode) => {
 			const { widgetConstructor, properties } = dNode;
 			dNode.widgetConstructor = StubWidget;
-			(<StubWidgetProperties> properties)._stubTag = WIDGET_STUB_CUSTOM_ELEMENT;
-			(<StubWidgetProperties> properties)._widgetName = typeof widgetConstructor === 'string'
+			(properties as StubWidgetProperties)._stubTag = WIDGET_STUB_CUSTOM_ELEMENT;
+			(properties as StubWidgetProperties)._widgetName = typeof widgetConstructor === 'string'
 				? widgetConstructor
-				: (<any> widgetConstructor).name || '<Anonymous>';
+				: (widgetConstructor as any).name || '<Anonymous>';
 		},
 		(dNode) => isWNode(dNode)
 	);
@@ -113,20 +117,22 @@ class StubWidget extends WidgetBase<StubWidgetProperties> {
 	}
 }
 
-interface SpyRenderMixin {
+interface SpyWidgetMixin {
+	meta<T extends WidgetMetaBase>(provider: WidgetMetaConstructor<T>): T;
 	spyRender(result: DNode): DNode;
 }
 
 interface SpyTarget {
 	actualRender(actual: DNode): void;
+	decorateMeta<T extends WidgetMetaBase>(provider: T): T;
 }
 
 /**
- * A mixin that adds a spy to the render process
+ * A mixin that adds a spy to a widget
  * @param base The base class to add the render spy to
  * @param target An object with a property named `lastRender` which will be set to the result of the `render()` method
  */
-function SpyRenderMixin<T extends Constructor<WidgetBaseInterface<WidgetProperties>>>(base: T, target: SpyTarget): T & Constructor<SpyRenderMixin> {
+function SpyWidgetMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T, target: SpyTarget): T & Constructor<SpyWidgetMixin> {
 
 	class SpyRender extends base {
 		@afterRender()
@@ -134,19 +140,29 @@ function SpyRenderMixin<T extends Constructor<WidgetBaseInterface<WidgetProperti
 			target.actualRender(result);
 			return stubRender(result);
 		}
+
+		meta<U extends WidgetMetaBase>(provider: WidgetMetaConstructor<U>): U {
+			return target.decorateMeta(super.meta(provider));
+		}
 	}
 
 	return SpyRender;
+}
+
+interface MetaData {
+	handle: Handle;
+	mocks: Partial<WidgetMetaBase>;
 }
 
 /**
  * A private class that is used to actually render the widget and keep track of the last render by
  * the harnessed widget.
  */
-class WidgetHarness<P extends WidgetProperties, W extends Constructor<WidgetBaseInterface<P>>> extends WidgetBase<P> {
-	private _widgetConstructor: W;
+class WidgetHarness<W extends WidgetBase<WidgetProperties>> extends WidgetBase<W['properties']> {
 	private _afterCreate: (element: HTMLElement) => void;
 	private _id = ROOT_CUSTOM_ELEMENT_NAME + '-' + (++harnessId);
+	private _metaData: WeakMap<Constructor<WidgetMetaBase>, MetaData>;
+	private _widgetConstructor: Constructor<W>;
 
 	/**
 	 * A string that will be added to the AssertionError that is thrown if actual render does not match
@@ -167,18 +183,23 @@ class WidgetHarness<P extends WidgetProperties, W extends Constructor<WidgetBase
 	public lastRender: DNode | undefined;
 	public renderCount = 0;
 
-	constructor(widgetConstructor: W, afterCreate: (element: HTMLElement) => void) {
+	constructor(widgetConstructor: Constructor<W>, afterCreate: (element: HTMLElement) => void, metaData: WeakMap<Constructor<WidgetMetaBase>, MetaData>) {
 		super();
 
-		this._widgetConstructor = SpyRenderMixin(widgetConstructor, this);
+		this._widgetConstructor = SpyWidgetMixin(widgetConstructor, this);
 		this._afterCreate = afterCreate;
+		this._metaData = metaData;
+	}
+
+	protected onElementCreated(element: HTMLElement, key: string) {
+		this._afterCreate(element);
 	}
 
 	/**
 	 * Called by a harnessed widget's render spy, allowing potential assertion of the render
 	 * @param actual The render, just after `afterRender`
 	 */
-	actualRender(actual: DNode) {
+	public actualRender(actual: DNode) {
 		this.lastRender = actual;
 		this.didRender = true;
 		this.renderCount++;
@@ -190,24 +211,29 @@ class WidgetHarness<P extends WidgetProperties, W extends Constructor<WidgetBase
 		}
 	}
 
-	protected onElementCreated(element: HTMLElement, key: string) {
-		this._afterCreate(element);
+	/**
+	 * _Mixin_ the methods that are provided as part of the mock.
+	 * @param provider The instance of the meta provider associated with the harnessed widget
+	 */
+	public decorateMeta<T extends WidgetMetaBase>(provider: T): T {
+		const data = this._metaData.get(provider.constructor as WidgetMetaConstructor<T>);
+		return data ? assign(provider, data.mocks) : provider;
+	}
+
+	public invalidate(): void {
+		super.invalidate();
 	}
 
 	/**
 	 * Wrap the widget in a custom element
 	 */
-	render(): DNode {
+	public render(): DNode {
 		const { _id: id, _widgetConstructor, children, properties } = this;
 		return v(
 				ROOT_CUSTOM_ELEMENT_NAME,
 				{ id },
 				[ w(_widgetConstructor, properties, children) ]
 			);
-	}
-
-	public invalidate(): void {
-		super.invalidate();
 	}
 }
 
@@ -224,9 +250,24 @@ export interface HarnessSendEventOptions<I extends EventInit> extends SendEventO
 }
 
 /**
+ * Provides a run time context for methods of a meta mock.
+ */
+export type MetaMockContext<T extends WidgetMetaBase = WidgetMetaBase> = T & {
+	/**
+	 * Retrieve a reference to a node that is rendered in the DOM based on its key
+	 */
+	getNode(key: string | number): HTMLElement | undefined;
+
+	/**
+	 * Invalidate the widget.
+	 */
+	invalidate(): void;
+};
+
+/**
  * Harness a widget constructor, providing an API to interact with the widget for testing purposes.
  */
-export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBaseInterface<P>>> extends Evented {
+export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 	private _attached = false;
 
 	private _afterCreate = (element: HTMLElement) => { /* using a lambda property here creates a bound function */
@@ -250,17 +291,18 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 	private _children: DNode[] | undefined;
 	private _classes: string[] = [];
 	private _currentRender: VNode;
+	private _metaMap = new WeakMap<Constructor<WidgetMetaBase>, MetaData>();
 	private _projection: Projection | undefined;
 	private _projectionOptions: ProjectionOptions;
 	private _projectionRoot: HTMLElement;
-	private _properties: P;
+	private _properties: W['properties'];
 
 	private _render = () => { /* using a lambda property here creates a bound function */
 		this._projection && this._projection.update(this._currentRender = this._widgetHarnessRender() as VNode);
 	}
 
 	private _root: HTMLElement | undefined;
-	private _widgetHarness: WidgetHarness<P, W>;
+	private _widgetHarness: WidgetHarness<W>;
 	private _widgetHarnessRender: () => string | VNode | null;
 
 	/**
@@ -273,10 +315,10 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 	 * @param widgetConstructor The constructor function/class that should be harnessed
 	 * @param projectionRoot Where to append the harness.  Defaults to `document.body`
 	 */
-	constructor(widgetConstructor: W, projectionRoot: HTMLElement = document.body) {
+	constructor(widgetConstructor: Constructor<W>, projectionRoot: HTMLElement = document.body) {
 		super({});
 
-		this._widgetHarness = new WidgetHarness<P, W>(widgetConstructor, this._afterCreate);
+		this._widgetHarness = new WidgetHarness<W>(widgetConstructor, this._afterCreate, this._metaMap);
 		this._widgetHarnessRender = this._widgetHarness.__render__.bind(this._widgetHarness);
 
 		this._projectionRoot = projectionRoot;
@@ -320,7 +362,8 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 
 	private _invalidate(): void {
 		if (this._properties) {
-			this._widgetHarness.__setProperties__(this._properties);
+			// TODO: no need to coerce to any in 2.5.2
+			this._widgetHarness.__setProperties__(this._properties as any);
 		}
 		if (this._children) {
 			this._widgetHarness.__setChildren__(this._children);
@@ -414,6 +457,29 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 	}
 
 	/**
+	 * Provide a mock for a meta provider that will be used instead of source provider
+	 * @param provider The meta provider to mock
+	 * @param mocks A set of methods/properties to mock on the provider
+	 */
+	public mockMeta<T extends WidgetMetaBase>(provider: Constructor<T>, mocks: Partial<T>): Handle {
+		const { _metaMap } = this;
+		if (!_metaMap.has(provider)) {
+			_metaMap.set(provider, {
+				handle: createHandle(() => {
+					_metaMap.delete(provider);
+				}),
+				// TODO: no need to coerce in 2.5.2
+				mocks: mocks as any
+			});
+		}
+		else {
+			// TODO: no need to coerce in 2.5.2
+			_metaMap.get(provider)!.mocks = mocks as any;
+		}
+		return _metaMap.get(provider)!.handle;
+	}
+
+	/**
 	 * Clear any cached classes that have been cached via calls to `.classes()`
 	 */
 	public resetClasses(): this {
@@ -459,7 +525,7 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
 	 * Set the properties that will be passed to the harnessed widget on the next render
 	 * @param properties The properties to set
 	 */
-	public setProperties(properties: P): this {
+	public setProperties(properties: W['properties']): this {
 		this._properties = properties;
 		return this;
 	}
@@ -470,6 +536,6 @@ export class Harness<P extends WidgetProperties, W extends Constructor<WidgetBas
  * @param widgetConstructor The constructor function/class of widget that should be harnessed.
  * @param projectionRoot The root where the harness should append itself to the DOM.  Default to `document.body`
  */
-export default function harness<P extends WidgetProperties, W extends Constructor<WidgetBaseInterface<P>>>(widgetConstructor: W, projectionRoot?: HTMLElement): Harness<P, W> {
-	return new Harness<P, W>(widgetConstructor, projectionRoot);
+export default function harness<W extends WidgetBase<WidgetProperties>>(widgetConstructor: Constructor<W>, projectionRoot?: HTMLElement): Harness<W> {
+	return new Harness(widgetConstructor, projectionRoot);
 }

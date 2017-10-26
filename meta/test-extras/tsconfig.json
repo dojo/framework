@@ -1,5 +1,4 @@
 {
-	"version": "2.1.5",
 	"compilerOptions": {
 		"declaration": false,
 		"experimentalDecorators": true,
@@ -10,7 +9,7 @@
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
-		"strictNullChecks": true,
+		"strict": true,
 		"target": "es5",
 		"lib": [
 			"dom",

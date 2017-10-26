@@ -227,6 +227,57 @@ replaced with stubs of virtual DOM.
 
 Return the root node of the rendered DOM of the widget.  This allows introspection or manipulation of the actual DOM.
 
+#### .mockMeta()
+
+Allows for mocking of meta providers when testing a widget.  The method `.mockMeta()` takes two arguments, first the meta
+provider class and the second argument being a map of methods to mock on the provider when the harness widget is created.
+
+For example, to provide mocked `Dimensions` for a widget:
+
+```ts
+const widget = harness.widget(MyWidget);
+
+const rootDimensions = {
+    offset: { height: 100, left: 100, top: 100, width: 100 },
+    position: { bottom: 200, left: 100, right: 200, top: 100 },
+    scroll: { height: 100, left: 100, top: 100, width: 100 },
+    size: { width: 100, height: 100 }
+};
+const emptyDimensions = {
+    offset: { height: 0, left: 0, top: 0, width: 0 },
+    position: { bottom: 0, left: 0, right: 0, top: 0 },
+    scroll: { height: 0, left: 0, top: 0, width: 0 },
+    size: { width: 0, height: 0 }
+};
+
+const handle = widget.mockMeta(Dimensions, {
+    get(key: string | number) {
+        return key === 'root' ? rootDimensions : emptyDimensions;
+    }
+});
+```
+
+The handle returned from the `.mockMeta` function can be used to remove the mocks.
+
+To facilitate usage under TypeScript, there is a special context type (`MetaMockContext`) that is exported from the `harness` module.
+This is designed to represent the run-time context of the mock methods, which will allow access to `this.invalidate()` and
+`this.getNode()` which may be required to create an appropriate mock.
+
+For example, to invalidate a widget via the meta provider mock:
+
+```ts
+import harness, { MetaMockContext } from '@dojo/text-extras/harness';
+
+const widget = harness.widget(MyWidget);
+
+widget.mockMeta(Dimensions, {
+    get(this: MetaMockContext<Dimensions>, key: string | number) {
+        this.invalidate();
+        return {}
+    }
+})
+```
+
 #### .resetClasses()
 
 Reset the classes to "forget" any previously asserted classes.
@@ -298,7 +349,7 @@ widget.expectRender(v('ul', generateChildren()));
 
 #### .setProperties()
 
-Provide a map of properties to a widget. These are typically passed by an upstream widget by invoking 
+Provide a map of properties to a widget. These are typically passed by an upstream widget by invoking
 `w(WidgetClass, { ...properties })`.  For example:
 
 ```typescript

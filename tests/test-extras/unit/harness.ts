@@ -1,13 +1,14 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-import harness from '../../src/harness';
+import harness, { MetaMockContext } from '../../src/harness';
 import { compareProperty } from '../../src/support/d';
 
 import { v, w } from '@dojo/widget-core/d';
 import { WidgetProperties } from '@dojo/widget-core/interfaces';
 import WidgetBase from '@dojo/widget-core/WidgetBase';
 import { stub } from 'sinon';
+import NodeId from '../support/NodeId';
 import AssertionError from '../../src/support/AssertionError';
 import assertRender from '../../src/support/assertRender';
 
@@ -818,6 +819,132 @@ registerSuite('harness', {
 			const widget = harness(MockWidget);
 			assert.isFunction(widget.listener, 'listener should be a function');
 			assert.isTrue(widget.listener(), 'listener should return `true`');
+			widget.destroy();
+		}
+	},
+
+	'mocking meta': {
+		'mocking meta provides mock values'() {
+			const idStack: (string | undefined)[] = [];
+
+			class IdWidget extends WidgetBase {
+				render() {
+					idStack.push(this.meta(NodeId).get('foo'));
+					return v('div', {
+						key: 'foo',
+						id: 'foo'
+					}, [ 'Hello world' ]);
+				}
+			}
+
+			const widget = harness(IdWidget);
+
+			widget.getRender();
+
+			assert.deepEqual(idStack, [ undefined ]);
+
+			const handle = widget.mockMeta(NodeId, {
+				get(key: string | number) {
+					return 'qat';
+				}
+			});
+
+			widget.setProperties({
+				key: 'foo'
+			});
+
+			widget.getRender();
+
+			assert.deepEqual(idStack, [ undefined, 'qat' ]);
+
+			handle.destroy();
+			widget.setProperties({
+				key: 'bar'
+			});
+
+			widget.getRender();
+
+			assert.deepEqual(idStack, [ undefined, 'qat', undefined ]);
+
+			widget.destroy();
+		},
+
+		'mocked meta can invalidate widget'() {
+			class IdWidget extends WidgetBase {
+				render() {
+					const content = this.meta(NodeId).get('foo');
+					return v('div', {
+						key: 'foo',
+						id: 'foo'
+					}, [ content ? content : 'foo' ]);
+				}
+			}
+
+			const widget = harness(IdWidget);
+
+			widget.expectRender(v('div', {
+				key: 'foo',
+				id: 'foo'
+			}, [ 'foo' ]));
+
+			widget.mockMeta(NodeId, {
+				get(this: MetaMockContext<NodeId>, key: string | number) {
+					this.invalidate();
+					return 'qat';
+				}
+			});
+
+			widget.expectRender(v('div', {
+				key: 'foo',
+				id: 'foo'
+			}, [ 'qat' ]));
+
+			widget.destroy();
+		},
+
+		'resetting mocks overrides previous'() {
+			const idStack: (string | undefined)[] = [];
+
+			class IdWidget extends WidgetBase {
+				render() {
+					idStack.push(this.meta(NodeId).get('foo'));
+					return v('div', {
+						key: 'foo',
+						id: 'foo'
+					}, [ 'Hello world' ]);
+				}
+			}
+
+			const widget = harness(IdWidget);
+
+			const handle1 = widget.mockMeta(NodeId, {
+				get(key: string | number) {
+					return 'qat';
+				}
+			});
+
+			widget.getRender();
+
+			assert.deepEqual(idStack, [ 'qat' ]);
+
+			const handle2 = widget.mockMeta(NodeId, {
+				get(key: string | number) {
+					return 'baz';
+				}
+			});
+
+			assert.strictEqual(handle1, handle2);
+
+			widget.setProperties({
+				key: 'bar'
+			});
+
+			widget.getRender();
+
+			assert.deepEqual(idStack, [ 'qat', 'baz' ]);
+
+			handle1.destroy();
+
 			widget.destroy();
 		}
 	}
