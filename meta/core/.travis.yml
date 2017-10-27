@@ -22,7 +22,7 @@ install:
 - travis_retry npm install
 script:
 - grunt
-- grunt intern:browserstack
+- grunt intern:browserstack --test-reporter
 - grunt uploadCoverage
 - if [ "$TRAVIS_BRANCH" = "master" ]; then grunt doc; fi
 notifications:
