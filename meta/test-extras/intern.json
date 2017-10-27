@@ -1,4 +1,11 @@
 {
+	"capabilities": {
+		"project": "Dojo 2",
+		"name": "@dojo/test-extras",
+		"fixSessionCapabilities": false,
+		"browserstack.debug": false
+	},
+
 	"environments": [
 		{ "browserName": "node" }
 	],
@@ -27,28 +34,13 @@
 		}
 	},
 
+	"coverage": [
+		"./_build/src/**/*.js"
+	],
+
 	"configs": {
-		"coverage": {
-			"coverage": [
-				"./_build/src/**/*.js"
-			]
-		},
-
-		"remoteCapabilities": {
-			"capabilities": {
-				"project": "Dojo 2",
-				"name": "@dojo/test-extras",
-				"fixSessionCapabilities": false
-			}
-		},
-
 		"browserstack": {
-			"extends": [ "coverage", "remoteCapabilities" ],
-
 			"tunnel": "browserstack",
-			"capabilities+": {
-				"browserstack.debug": false
-			},
 
 			"environments+": [
 				{ "browserName": "internet explorer", "version": "11" },
@@ -63,8 +55,6 @@
 		},
 
 		"local": {
-			"extends": [ "coverage", "remoteCapabilities" ],
-
 			"tunnel": "selenium",
 			"tunnelOptions": {
 				"hostname": "localhost",
@@ -77,8 +67,6 @@
 		},
 
 		"saucelabs": {
-			"extends": [ "coverage", "remoteCapabilities" ],
-
 			"tunnel": "saucelabs",
 			"tunnelOptions": {},
 
