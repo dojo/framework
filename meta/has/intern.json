@@ -1,4 +1,11 @@
 {
+	"capabilities": {
+		"project": "Dojo 2",
+		"name": "@dojo/has",
+		"fixSessionCapabilities": false,
+		"browserstack.debug": false
+	},
+
 	"environments": [
 		{ "browserName": "node" }
 	],
@@ -19,8 +26,7 @@
 					{ "name": "src", "location": "_build/src" },
 					{ "name": "tests", "location": "_build/tests" },
 					{ "name": "@dojo", "location": "node_modules/@dojo" },
-					{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" },
-					{ "name": "grunt-dojo2", "location": "node_modules/grunt-dojo2"}
+					{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
 				]
 			}
 		}
@@ -29,28 +35,13 @@
 	"node": {
 	},
 
+	"coverage": [
+		"./_build/src/**/*.js"
+	],
+
 	"configs": {
-		"coverage": {
-			"coverage": [
-				"./_build/src/**/*.js"
-			]
-		},
-
-		"remoteCapabilities": {
-			"capabilities": {
-				"project": "Dojo 2",
-				"name": "@dojo/has",
-				"fixSessionCapabilities": false
-			}
-		},
-
 		"browserstack": {
-			"extends": [ "coverage", "remoteCapabilities" ],
-
 			"tunnel": "browserstack",
-			"capabilities+": {
-				"browserstack.debug": false
-			},
 
 			"environments+": [
 				{ "browserName": "internet explorer", "version": "11" },
@@ -65,8 +56,6 @@
 		},
 
 		"local": {
-			"extends": [ "coverage", "remoteCapabilities" ],
-
 			"tunnel": "selenium",
 			"tunnelOptions": {
 				"hostname": "localhost",
@@ -79,8 +68,6 @@
 		},
 
 		"saucelabs": {
-			"extends": [ "coverage", "remoteCapabilities" ],
-
 			"tunnel": "saucelabs",
 			"tunnelOptions": {},
 
