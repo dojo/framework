@@ -1,0 +1,85 @@
+{
+	"capabilities": {
+		"project": "Dojo 2",
+		"name": "@dojo/widget-core"
+	},
+	"environments": [
+		{ "browserName": "node" }
+	],
+	"suites": [
+		"./_build/tests/unit/all.js"
+	],
+	"functionalSuites": [
+		"./_build/tests/functional/all.js"
+	],
+	"loader": {
+		"script": "dojo2",
+		"options": {
+			"packages": [
+				{ "name": "src", "location": "_build/src" },
+				{ "name": "tests", "location": "_build/tests" },
+				{ "name": "@dojo", "location": "node_modules/@dojo" },
+				{ "name": "cldr-data", "location": "node_modules/cldr-data" },
+				{ "name": "cldrjs", "location": "node_modules/cldrjs" },
+				{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" },
+				{ "name": "pepjs", "location": "node_modules/pepjs/dist", "main": "pep" },
+				{ "name": "intersection-observer", "location": "node_modules/intersection-observer", "main": "intersection-observer" },
+				{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
+			],
+			"map": {
+				"globalize": {
+					"cldr": "cldrjs/dist/cldr",
+					"cldr/event": "cldrjs/dist/cldr/event",
+					"cldr/supplemental": "cldrjs/dist/cldr/supplemental",
+					"cldr/unresolved": "cldrjs/dist/cldr/unresolved"
+				}
+			}
+		}
+	},
+	"node" : {
+		"plugins": [
+			{
+				"script": "./_build/tests/support/loadJsdom.js",
+				"useLoader": true
+			}
+		]
+	},
+	"coverage": [
+		"./_build/src/**/*.js"
+	],
+	"configs": {
+		"local": {
+			"tunnel": "selenium",
+			"environments+": [
+				{ "browserName": "chrome" }
+			]
+		},
+		"browserstack": {
+			"tunnel": "browserstack",
+			"capabilities+": {
+				"browserstack.debug": false
+			},
+			"environments+": [
+				{ "browserName": "edge" },
+				{ "browserName": "chrome", "platform": "WINDOWS" },
+				{ "browserName": "firefox", "os": "WINDOWS", "os_version": "10" },
+				{ "browserName": "safari", "version": "9.1", "platform": "MAC" },
+				{ "browserName": "iPhone", "version": "9.1" }
+			]
+		},
+		"saucelabs": {
+			"tunnel": "saucelabs",
+			"capabilities+": {
+				"fixSessionCapabilities": false
+			},
+
+			"defaultTimeout": 10000,
+			"environments+": [
+				{ "browserName": "internet explorer", "version": [ "11.0" ], "platform": "Windows 7" },
+				{ "browserName": "firefox", "version": "43", "platform": "Windows 10" },
+				{ "browserName": "chrome", "platform": "Windows 10" }
+			],
+			"maxConcurrency": 4
+		}
+	}
+}

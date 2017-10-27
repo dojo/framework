@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, it } from 'intern!bdd';
-import * as assert from 'intern/chai!assert';
+const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
+const { assert } = intern.getPlugin('chai');
 import { match, spy, stub, SinonStub } from 'sinon';
 import { createResolvers } from './../support/util';
 

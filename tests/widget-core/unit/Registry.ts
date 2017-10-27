@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import Registry from './../../src/Registry';
 import { WidgetBase } from './../../src/WidgetBase';
 import Promise from '@dojo/shim/Promise';
@@ -7,8 +7,7 @@ import { Injector } from './../../src/Injector';
 
 const testInjector = new Injector({});
 
-registerSuite({
-	name: 'Registry',
+registerSuite('Registry', {
 	'api'() {
 		const factoryRegistry = new Registry();
 
@@ -97,57 +96,56 @@ registerSuite({
 				assert.isNull(item);
 			},
 			'replaces promise with result on resolution'() {
-				let resolveFunction: any;
-				const promise: any = new Promise((resolve) => {
+				let resolveFunction: (widget: typeof WidgetBase) => void;
+				const promise: Promise<any> = new Promise((resolve) => {
 					resolveFunction = resolve;
 				});
+
 				const factoryRegistry = new Registry();
 				factoryRegistry.define('my-widget', promise);
 				factoryRegistry.get('my-widget');
-				resolveFunction(WidgetBase);
+				resolveFunction!(WidgetBase);
+
 				return promise.then(() => {
 					const factory = factoryRegistry.get('my-widget');
 					assert.strictEqual(factory, WidgetBase);
 				});
 			},
 			'replaces promise created by function with result on resolution'() {
-				let resolveFunction: any;
-				let promise: any;
-				const lazyFactory = () => {
-					promise = new Promise((resolve) => {
-						resolveFunction = resolve;
-					});
-					return promise;
-				};
+				let resolveFunction: (widget: typeof WidgetBase) => void;
+				const promise: Promise<any> = new Promise((resolve) => {
+					resolveFunction = resolve;
+				});
+				const lazyFactory = () => promise;
+
 				const factoryRegistry = new Registry();
 				factoryRegistry.define('my-widget', lazyFactory);
 				factoryRegistry.get('my-widget');
-				resolveFunction(WidgetBase);
+				resolveFunction!(WidgetBase);
+
 				return promise.then(() => {
 					const factory = factoryRegistry.get('my-widget');
 					assert.strictEqual(factory, WidgetBase);
 				});
 			},
 			'throws error from rejected promise'() {
-				let promise: Promise<any> = Promise.resolve();
-				let rejectFunc: any;
-				const lazyFactory = (): any => {
-					promise = new Promise((resolve, reject) => {
-						rejectFunc = reject;
-					});
-					return promise;
-				};
-				const factoryRegistry = new Registry();
-				factoryRegistry.define('my-widget', lazyFactory);
-				factoryRegistry.get('my-widget');
-				rejectFunc(new Error('reject error'));
-				return promise.then(() => {
+				let rejectFunction: (error: Error) => void;
+				const promise: Promise<any> = new Promise((_resolve, reject) => {
+					rejectFunction = reject;
+				}).then(() => {
 					assert.fail();
-				},
-				(error) => {
+				}, (error) => {
 					assert.isTrue(error instanceof Error);
 					assert.equal(error.message, 'reject error');
 				});
+				const lazyFactory = () => promise;
+
+				const factoryRegistry = new Registry();
+				factoryRegistry.define('my-widget', lazyFactory);
+				factoryRegistry.get('my-widget');
+				rejectFunction!(new Error('reject error'));
+
+				return promise;
 			}
 		}
 	},

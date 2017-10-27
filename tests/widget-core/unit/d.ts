@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import { assign } from '@dojo/core/lang';
 import { DNode, HNode, WNode, WidgetProperties } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
@@ -34,8 +34,7 @@ class TestWidget extends WidgetBase<TestProperties, WNode<TestChildWidget>> {
 	}
 }
 
-registerSuite({
-	name: 'd',
+registerSuite('d', {
 	w: {
 		'create WNode wrapper using constructor with properties'() {
 			const properties: any = { id: 'id', classes: [ 'world' ] };

@@ -26,14 +26,14 @@ export function createResolvers() {
 
 	function resolveRAF() {
 		for (let i = 0; i < rAFStub.callCount; i++) {
-			rAFStub.getCall(0).args[0]();
+			rAFStub.getCall(i).args[0]();
 		}
 		rAFStub.reset();
 	}
 
 	function resolveRIC() {
 		for (let i = 0; i < rICStub.callCount; i++) {
-			rICStub.getCall(0).args[0]();
+			rICStub.getCall(i).args[0]();
 		}
 		rICStub.reset();
 	}

@@ -1,5 +1,5 @@
-import { describe, it } from 'intern!bdd';
-import * as assert from 'intern/chai!assert';
+const { describe, it } = intern.getInterface('bdd');
+const { assert } = intern.getPlugin('chai');
 import { spy } from 'sinon';
 
 import { WidgetBase } from './../../src/WidgetBase';

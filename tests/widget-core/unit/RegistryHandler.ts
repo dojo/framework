@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import RegistryHandler from '../../src/RegistryHandler';
 import Registry from '../../src/Registry';
 import { WidgetBase } from '../../src/WidgetBase';
@@ -19,8 +19,7 @@ registry.defineInjector(foo, globalInjector);
 
 class LocalWidget extends WidgetBase {}
 
-registerSuite({
-	name: 'RegistryHandler',
+registerSuite('RegistryHandler', {
 	widget: {
 		has: {
 			base() {

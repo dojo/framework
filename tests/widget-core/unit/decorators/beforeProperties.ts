@@ -1,12 +1,11 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
 import { beforeProperties } from './../../../src/decorators/beforeProperties';
 import { WidgetBase } from './../../../src/WidgetBase';
 import { WidgetProperties } from './../../../src/interfaces';
 
-registerSuite({
-	name: 'decorators/beforeProperties',
+registerSuite('decorators/beforeProperties', {
 	beforeProperties() {
 		function before(properties: WidgetProperties): WidgetProperties {
 			return { key: 'foo' };

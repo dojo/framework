@@ -1,10 +1,9 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import * as diff from '../../src/diff';
 import WidgetBase from '../../src/WidgetBase';
 
-registerSuite({
-	name: 'diff',
+registerSuite('diff', {
 	'always'() {
 		const foo = {};
 		const result = diff.always(foo, foo);

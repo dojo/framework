@@ -1,12 +1,11 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import { WidgetBase } from './../../src/WidgetBase';
 import { HNode, WidgetProperties, WNode } from '../../src/interfaces';
 import { tsx, fromRegistry, REGISTRY_ITEM } from '../../src/tsx';
 import { HNODE } from './../../src/d';
 
-registerSuite({
-	name: 'tsx',
+registerSuite('tsx', {
 	'create a registry wrapper'() {
 		const RegistryWrapper = fromRegistry<WidgetProperties>('tag');
 		assert.strictEqual((<any> RegistryWrapper).type, REGISTRY_ITEM);

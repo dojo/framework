@@ -1,5 +1,5 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import { WidgetBase } from '../../src/WidgetBase';
 import { Registry } from '../../src/Registry';
 import { WidgetProperties, WNode } from '../../src/interfaces';
@@ -7,8 +7,7 @@ import { tsx, fromRegistry } from './../../src/tsx';
 
 const registry = new Registry();
 
-registerSuite({
-	name: 'tsx',
+registerSuite('tsx integration', {
 	'can use tsx'() {
 		interface FooProperties extends WidgetProperties {
 			hello: string;

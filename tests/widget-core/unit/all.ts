@@ -1,4 +1,3 @@
-import 'dojo/has!host-node?../support/loadJsdom';
 import './Container';
 import './WidgetBase';
 import './Registry';

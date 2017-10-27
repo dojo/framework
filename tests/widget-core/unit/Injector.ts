@@ -1,10 +1,9 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
 import { Injector } from './../../src/Injector';
 
-registerSuite({
-	name: 'Injector',
+registerSuite('Injector', {
 	get() {
 		const payload = {};
 		const injector = new Injector(payload);

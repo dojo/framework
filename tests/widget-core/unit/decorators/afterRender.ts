@@ -1,12 +1,11 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 
 import { DNode } from './../../../src/interfaces';
 import { afterRender } from './../../../src/decorators/afterRender';
 import { WidgetBase } from './../../../src/WidgetBase';
 
-registerSuite({
-	name: 'decorators/afterRender',
+registerSuite('decorators/afterRender', {
 	decorator() {
 		let afterRenderCount = 1;
 		class TestWidget extends WidgetBase<any> {

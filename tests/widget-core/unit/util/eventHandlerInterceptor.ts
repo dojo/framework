@@ -1,10 +1,9 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
+const { registerSuite } = intern.getInterface('object');
+const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 import eventHandlerInterceptor from '../../../src/util/eventHandlerInterceptor';
 
-registerSuite({
-	name: 'util/eventHandlerInterceptor',
+registerSuite('util/eventHandlerInterceptor', {
 
 	'event is passed through with bind'() {
 		const addEventListener = stub();
