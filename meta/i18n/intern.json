@@ -1,4 +1,9 @@
 {
+	"capabilities": {
+		"project": "Dojo 2",
+		"name": "@dojo/i18n",
+		"browserstack.debug": false
+	},
 	"environments": [
 		{ "browserName": "node" }
 	],
@@ -18,8 +23,7 @@
 				{ "name": "cldrjs", "location": "node_modules/cldrjs" },
 				{ "name": "@dojo", "location": "node_modules/@dojo" },
 				{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" },
-				{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" },
-				{ "name": "grunt-dojo2", "location": "node_modules/grunt-dojo2" }
+				{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
 			],
 			"map": {
 				"globalize": {
@@ -31,48 +35,28 @@
 			}
 		}
 	},
+	"coverage": [
+		"./_build/src/**/*.js"
+	],
 	"configs": {
-		"coverage": {
-			"coverage": [
-				"./_build/src/**/*.js"
-			]
-		},
-		"remoteCapabilities": {
-			"project": "Dojo 2",
-			"name": "@dojo/i18n"
-		},
 		"local": {
-			"extends": [ "coverage" ],
 			"tunnel": "selenium",
 			"environments+": [
 				{ "browserName": "chrome" }
 			]
 		},
 		"browserstack": {
-			"extends": [ "coverage", "remoteCapabilities" ],
-
 			"tunnel": "browserstack",
-			"capabilities+": {
-				"browserstack.debug": false
-			},
 			"environments+": [
 				{ "browserName": "internet explorer", "version": "11" },
 				{ "browserName": "edge" },
 				{ "browserName": "firefox", "platform": "WINDOWS" },
 				{ "browserName": "chrome", "platform": "WINDOWS" },
 				{ "browserName": "safari", "version": "9.1", "platform": "MAC" }
-				// BrowserStack uses iOS 9.1 and some of the tests fail.  I looks like a missing locale problem
-				// { "browserName": "iPhone" }
 			]
 		},
 		"saucelabs": {
-			"extends": [ "coverage", "remoteCapabilities" ],
-
 			"tunnel": "saucelabs",
-			"capabilities+": {
-				"fixSessionCapabilities": false
-			},
-
 			"defaultTimeout": 10000,
 			"environments+": [
 				{ "browserName": "internet explorer", "version": [ "10.0", "11.0" ], "platform": "Windows 7" },
