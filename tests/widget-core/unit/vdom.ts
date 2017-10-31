@@ -34,20 +34,20 @@ class MainBar extends WidgetBase<any> {
 class MainFoo extends WidgetBase<any> {
 	render() {
 		const { show } = this.properties;
-		return v('div', { classes: { myClass: true }, foo: 'bar' }, [
-			v('h1', { classes: { myClass: true }, key: 'one' }, [ 'Hello Widget' ]),
-			show ? w(MainBar, { classes: { myClass: true }, key: 'first' }) : null,
+		return v('div', { classes: [ 'myClass' ], foo: 'bar' }, [
+			v('h1', { classes: [ 'myClass' ], key: 'one' }, [ 'Hello Widget' ]),
+			show ? w(MainBar, { classes: [ 'myClass' ], key: 'first' }) : null,
 			show ? w(MainBar, { key: 'second' }) : null,
 			show ? null : v('div', { key: 'three' }, ['me']),
 			`text node`,
-			v('h1', { key: 'two', classes: { myClass: true }, innerHTML: 'span' })
+			v('h1', { key: 'two', classes: [ 'myClass' ], innerHTML: 'span' })
 		]);
 	}
 }
 
 class TestWidget extends WidgetBase<any> {
 	render() {
-		return v('span', { classes: { myClass: true } }, [
+		return v('span', { classes: [ 'myClass' ] }, [
 			w(MainFoo, { show: this.properties.show })
 		]);
 	}
@@ -382,11 +382,12 @@ describe('vdom', () => {
 
 				render() {
 					this.myClass = !this.myClass;
+					const classes = this.myClass ? [ 'myClass' ] : [];
 
 					return [
-						v('div', { classes: { myClass: this.myClass } }, [ '1' ]),
+						v('div', { classes }, [ '1' ]),
 						v('div', {}, [ '2' ]),
-						v('div', { classes: { myClass: this.myClass } }, [ '3' ])
+						v('div', { classes: [ 'myClass' ] }, [ '3' ])
 					];
 				}
 			}
@@ -470,7 +471,8 @@ describe('vdom', () => {
 						return null;
 					}
 					this.myClass = !this.myClass;
-					return v('div', { key: '1', classes: { myClass: this.myClass }}, [
+					const classes = this.myClass ? [ 'myClass' ] : [];
+					return v('div', { key: '1', classes }, [
 						'content'
 					]);
 				}
@@ -847,42 +849,85 @@ describe('vdom', () => {
 		describe('classes', () => {
 
 			it('adds and removes classes', () => {
-				const projection = dom.create(v('div', { classes: { a: true, b: false } }), projectorStub);
+				const projection = dom.create(v('div', { classes: [ 'a' ] }), projectorStub);
 				const div = projection.domNode as HTMLDivElement;
 				assert.strictEqual(div.className, 'a');
-
-				projection.update(v('div', { classes: { a: true, b: true } }));
+				projection.update(v('div', { classes: [ 'a', 'b' ] }));
 				assert.strictEqual(div.className, 'a b');
 
-				projection.update(v('div', { classes: { a: false, b: true } }));
+				projection.update(v('div', { classes: [ 'b' ] }));
 				assert.strictEqual(div.className, 'b');
 			});
 
-			it('allows a constant class to be applied to make JSX workable', () => {
-				const projection = dom.create(v('div', { class: 'extra special' }), projectorStub);
-				assert.strictEqual(projection.domNode.outerHTML, '<div class="extra special"></div>');
-				projection.update(v('div', { class: 'extra special' }));
-				assert.throws(() => {
-					projection.update(v('div', { class: '' }));
-				}, Error);
+			it('should leave classes that are not controlled', () => {
+				const div = document.createElement('div');
+				div.className = 'c b';
+				const projection = dom.merge(div, v('div', { classes: [ 'a' ] }), projectorStub);
+				assert.strictEqual(div.className, 'c b a');
+				projection.update(v('div', { classes: [ 'a', 'b' ] }));
+				assert.strictEqual(div.className, 'c b a');
+
+				projection.update(v('div', { classes: [ 'b' ] }));
+				assert.strictEqual(div.className, 'c b');
+
+				projection.update(v('div'));
+				assert.strictEqual(div.className, 'c');
 			});
 
-			it('allows classes and class to be combined', () => {
-				const projection = dom.create(v('div', {
-					classes: { extra: true },
-					class: 'special' }
-				), projectorStub);
-				assert.strictEqual(projection.domNode.outerHTML, '<div class="extra special"></div>');
-				projection.update(v('div', { classes: { extra: false }, class: 'special' }));
-				assert.strictEqual(projection.domNode.outerHTML, '<div class="special"></div>');
+			it('supports null, undefined and zero length strings in classes', () => {
+				const div = document.createElement('div');
+				div.className = 'b';
+				const projection = dom.merge(div, v('div', { classes: [ 'b', null, null, null ] }), projectorStub);
+				assert.strictEqual(div.className, 'b');
+				projection.update(v('div', { classes: [ 'a' , null, undefined, '' ] }));
+				assert.strictEqual(div.className, 'a');
+
+				projection.update(v('div', { classes: [ 'a', null, undefined, '' ] }));
+				assert.strictEqual(div.className, 'a');
+				projection.update(v('div', { classes: [] }));
+				assert.strictEqual(div.className, '');
+				projection.update(v('div', { classes: [ 'a', null, undefined, '' ] }));
+				assert.strictEqual(div.className, 'a');
+				projection.update(v('div'));
+				assert.strictEqual(div.className, '');
 			});
 
-			it('helps to prevent mistakes when using className', () => {
-				assert.throws(() => {
-					dom.create(v('div', { className: 'special' }), projectorStub);
-				}, Error);
+			it('classes accepts a string', () => {
+				const div = document.createElement('div');
+				const projection = dom.merge(div, v('div', { classes: 'b' }), projectorStub);
+				assert.strictEqual(div.className, 'b');
+				projection.update(v('div', { classes: 'b' }));
+				assert.strictEqual(div.className, 'b');
+
+				projection.update(v('div', { classes: 'a' }));
+				assert.strictEqual(div.className, 'a');
+				projection.update(v('div'));
+				assert.strictEqual(div.className, '');
+				projection.update(v('div', { classes: null }));
+				assert.strictEqual(div.className, '');
+				projection.update(v('div'));
+				projection.update(v('div', { classes: 'a b' }));
+				assert.strictEqual(div.className, 'a b');
 			});
 
+			it('should split class names by space before applying/removing', () => {
+				const div = document.createElement('div');
+				const projection = dom.merge(div, v('div', { classes: 'a b' }), projectorStub);
+				assert.strictEqual(div.className, 'a b');
+				projection.update(v('div'));
+				assert.strictEqual(div.className, '');
+
+				projection.update(v('div', { classes: [ 'a b' ] }));
+				assert.strictEqual(div.className, 'a b');
+				projection.update(v('div'));
+				assert.strictEqual(div.className, '');
+			});
+
+			it('should accept null as a class', () => {
+				const div = document.createElement('div');
+				dom.merge(div, v('div', { classes: null }), projectorStub);
+				assert.strictEqual(div.className, '');
+			});
 		});
 
 		describe('styles', () => {
@@ -1399,7 +1444,7 @@ describe('vdom', () => {
 		class Foo extends WidgetBase {
 			render() {
 				return v('div', {
-					classes: { foo: true, bar: true }
+					classes: [ 'foo', 'bar' ]
 				}, [
 					v('label', {
 						for: 'baz'
@@ -1481,7 +1526,7 @@ describe('vdom', () => {
 		class Foo extends WidgetBase {
 			render() {
 				return v('div', {
-					classes: { foo: true, bar: true }
+					classes: [ 'foo', 'bar' ]
 				}, [
 					v('label', {
 						for: 'baz'
@@ -1574,7 +1619,7 @@ describe('vdom', () => {
 		class Foo extends WidgetBase {
 			render() {
 				return v('div', {
-					classes: { foo: true, bar: true }
+					classes: [ 'foo', 'bar' ]
 				}, [
 					v('label', {
 						for: 'baz'

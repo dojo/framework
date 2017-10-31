@@ -6,7 +6,7 @@ import { v } from '../../../src/d';
 import { ProjectorMixin } from '../../../src/main';
 import Drag, { DragResults } from '../../../src/meta/Drag';
 import { WidgetBase } from '../../../src/WidgetBase';
-import { ThemeableMixin } from '../../../src/mixins/Themeable';
+import { ThemedMixin } from '../../../src/mixins/Themed';
 
 const resolvers = createResolvers();
 
@@ -29,7 +29,7 @@ registerSuite('support/meta/Drag', {
 		'standard rendering'() {
 			const dragResults: DragResults[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('root'));
 					return v('div', {
@@ -61,7 +61,7 @@ registerSuite('support/meta/Drag', {
 		'standard rendering with a number key'() {
 			const dragResults: DragResults[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get(1234));
 					return v('div', {
@@ -90,7 +90,7 @@ registerSuite('support/meta/Drag', {
 		'pointer dragging a node'() {
 			const dragResults: DragResults[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('root'));
 					return v('div', {
@@ -189,7 +189,7 @@ registerSuite('support/meta/Drag', {
 		'delta should be culmative between renders'() {
 			const dragResults: DragResults[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('root'));
 					return v('div', {
@@ -316,7 +316,7 @@ registerSuite('support/meta/Drag', {
 		'render not done between drag and pointer up should be culmative'() {
 			const dragResults: DragResults[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('root'));
 					return v('div', {
@@ -437,7 +437,7 @@ registerSuite('support/meta/Drag', {
 		'movement ignored when start event missing'() {
 			const dragResults: DragResults[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('root'));
 					return v('div', {
@@ -505,7 +505,7 @@ registerSuite('support/meta/Drag', {
 		'dragging where descendent is target'() {
 			const dragResults: DragResults[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('root'));
 					return v('div', {
@@ -608,7 +608,7 @@ registerSuite('support/meta/Drag', {
 		'dragging untracked node should not report results'() {
 			const dragResults: DragResults[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('child2'));
 					return v('div', {
@@ -702,7 +702,7 @@ registerSuite('support/meta/Drag', {
 		'non-primary button node dragging should be ignored'() {
 			const dragResults: DragResults[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('root'));
 					return v('div', {
@@ -788,7 +788,7 @@ registerSuite('support/meta/Drag', {
 		'two finger touch should stop dragging'() {
 			const dragResults: DragResults[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('root'));
 					return v('div', {
@@ -900,7 +900,7 @@ registerSuite('support/meta/Drag', {
 		'other invalidation properly reports empty delta'() {
 			const dragResults: DragResults[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('root'));
 					return v('div', {

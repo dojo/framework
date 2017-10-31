@@ -1,1 +1,1 @@
-export const class1 = 'overridenBaseClass1';
+export const class1 = 'overriddenBaseClass1';

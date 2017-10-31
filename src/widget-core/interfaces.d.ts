@@ -56,10 +56,6 @@ export type MouseWheelEventHandler = (event?: MouseWheelEvent | WheelEvent) => E
 export type ScrollEventHandler = (event?: UIEvent) => EventHandlerResult;
 export type SubmitEventHandler = EventHandler;
 
-export type ClassesFunction = () => {
-	[index: string]: boolean | null | undefined;
-};
-
 export interface TransitionStrategy {
 	enter(element: Element, properties: VirtualDomProperties, enterAnimation: string): void;
 	exit(element: Element, properties: VirtualDomProperties, exitAnimation: string, removeElement: () => void): void;
@@ -123,9 +119,7 @@ export interface VirtualDomProperties {
 	 * An object literal like `{important:true}` which allows css classes, like `important` to be added and removed
 	 * dynamically. Can also take a function, that must return an object literal.
 	 */
-	readonly classes?: {
-		[index: string]: boolean | null | undefined;
-	} | ClassesFunction;
+	readonly classes?: string | null | (undefined | null | string)[];
 	/**
 	 * An object literal like `{height:'100px'}` which allows styles to be changed dynamically. All values must be strings.
 	 */

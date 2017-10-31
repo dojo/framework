@@ -1,4 +1,3 @@
-import { assign } from '@dojo/core/lang';
 import Symbol from '@dojo/shim/Symbol';
 import {
 	Constructor,
@@ -76,7 +75,7 @@ export function w<W extends WidgetBaseInterface>(widgetConstructor: Constructor<
 }
 
 /**
- * Wrapper function for calls to create hyperscript, lazily executes the hyperscript creation
+ * Wrapper function for calls to create HNodes.
  */
 export function v(tag: string, properties: VirtualDomProperties, children?: DNode[]): HNode;
 export function v(tag: string, children: undefined | DNode[]): HNode;
@@ -87,12 +86,6 @@ export function v(tag: string, propertiesOrChildren: VirtualDomProperties | DNod
 		if (Array.isArray(propertiesOrChildren)) {
 			children = propertiesOrChildren;
 			properties = {};
-		}
-
-		let { classes } = properties;
-		if (typeof classes === 'function') {
-			classes = classes();
-			properties = assign(properties, { classes });
 		}
 
 		return {

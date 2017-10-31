@@ -6,7 +6,7 @@ import { createResolvers } from './../../support/util';
 import { v } from '../../../src/d';
 import { ProjectorMixin } from '../../../src/main';
 import { WidgetBase } from '../../../src/WidgetBase';
-import { ThemeableMixin } from '../../../src/mixins/Themeable';
+import { ThemedMixin } from '../../../src/mixins/Themed';
 
 import Matches from '../../../src/meta/Matches';
 
@@ -26,7 +26,7 @@ registerSuite('support/meta/Matches', {
 		'node matches'() {
 			const results: boolean[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				private _onclick(evt: MouseEvent) {
 					results.push(this.meta(Matches).get('root', evt));
 				}
@@ -61,7 +61,7 @@ registerSuite('support/meta/Matches', {
 		'node matches with number key'() {
 			const results: boolean[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				private _onclick(evt: MouseEvent) {
 					results.push(this.meta(Matches).get(1234, evt));
 				}
@@ -96,7 +96,7 @@ registerSuite('support/meta/Matches', {
 		'node does not match'() {
 			const results: boolean[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				private _onclick(evt: MouseEvent) {
 					results.push(this.meta(Matches).get('root', evt));
 				}
@@ -139,7 +139,7 @@ registerSuite('support/meta/Matches', {
 		'node only exists on some renders'() {
 			const results: boolean[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemeableMixin(WidgetBase)) {
+			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				private _renderSecond = false;
 				private _onclick(evt: MouseEvent) {
 					results.push(this.meta(Matches).get('child1', evt));
