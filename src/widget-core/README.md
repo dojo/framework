@@ -183,9 +183,9 @@ class List extends WidgetBase<ListProperties> {
     protected render() {
         const { items } = this.properties;
 
-        return v('ul', { classes: { list: true } }, items.map((item) => {
+        return v('ul', { classes: 'list' }, items.map((item) => {
             const { id, highlighted, content } = item;
-            const classes = highlighted ? { highlighted: true } : { highlighted: false };
+            const classes = [ highlighted ? 'highlighted' : null ];
 
             return v('li', { key: id, classes }, [ content ]);
         });
@@ -233,7 +233,7 @@ class ListItem extends WidgetBase<ListItemProperties> {
 
     protected render() {
         const { id, content, highlighted } = this.properties;
-        const classes = highlighted ? { highlighted: true } : { highlighted: false };
+        const classes = [ highlighted ? 'highlighted' : null ];
 
         return v('li', { key: id, classes, onclick: this.onClick }, [ content ]);
     }
@@ -256,7 +256,7 @@ class List extends WidgetBase<ListProperties> {
     protected render() {
         const { onItemClick, items } = this.properties;
 
-        return v('ul', { classes: { list: true } }, items.map(({ id, content, highlighted }) => {
+        return v('ul', { classes: 'list' }, items.map(({ id, content, highlighted }) => {
             return w(ListItem, { key:id, content, highlighted, onItemClick });
         });
     }
@@ -300,15 +300,15 @@ function StateMixin<T extends new(...args: any[]) => WidgetBase>(Base: T): T & (
 }
 ```
 
-Examples of Dojo 2 mixins can be seen with `ThemeableMixin` and `I18nMixin` that are described in [Classes & theming](#classes--theming) and [Internationalization](#internationalization) sections.
+Examples of Dojo 2 mixins can be seen with `ThemedMixin` and `I18nMixin` that are described in [Classes & theming](#classes--theming) and [Internationalization](#internationalization) sections.
 
 ### Styling & Theming
 
 #### Overview
 
-Dojo 2 widget-core provides `ThemeableMixin` to decorate a widget with theming functionality and a `@theme` decorator to specify the classes available to the widget. Both `ThemeableMixin` and `@theme` are provided by `@dojo/widget-core/mixins/Themeable`.
+Dojo 2 widget-core provides `ThemedMixin` to decorate a widget with theming functionality and a `@theme` decorator to specify the classes available to the widget. Both `ThemedMixin` and `@theme` are provided by `@dojo/widget-core/mixins/Themed`.
 
-To specify the classes for a widget, an interface needs to be imported with named exports for each class and passed to the `@theme` decorator. Importing the interface provides IntelliSense / auto-complete for the class names and passing this via the `@theme` decorator informs the `ThemeableMixin` which classes can be themed.
+To specify the theme classes for a widget, an interface needs to be imported with named exports for each class and passed to the `@theme` decorator. Importing the interface provides IntelliSense / auto-complete for the class names and passing this via the `@theme` decorator informs the `ThemedMixin` which classes can be themed.
 
 <details><summary>Example css classes interface</summary>
 
@@ -321,9 +321,9 @@ export const classNameTwo: string;
 
 **Important:** at runtime a JavaScript file is required to provide the processed CSS class names.
 
-The `ThemeableMixin` provides a method available on the instance `this.classes()` that consumes string class names and converts them into the expected class object when a widget is rendered. Classes that are passed to `this.classes()` are made available to be themed, as described in the [applying a theme](#applying-a-theme) section.
+The `ThemedMixin` provides a method available on the instance `this.theme()` takes a single argument that is either a `string` class name or an array of `string` class names and returns the theme's equivalent class names as either a single string or array of strings.
 
-However, it is not always desirable to allow consumers to override styling that may be required for a widget to function correctly. These classes which should not be overridden are known as "fixed". Fixed classes are passed by using a chained function `this.classes().fixed()`.
+However, it is not always desirable to allow consumers to override styling that may be required for a widget to function correctly. These classes can be added directly to the `classes` array in `VirtualDomProperties`.
 
 The following example passes `css.root` that will be themeable and `css.rootFixed` that cannot be overridden.
 
@@ -334,10 +334,12 @@ import { ThemeableMixin, theme } from '@dojo/widget-core/mixins/Themeable';
 @theme(css)
 export default class MyWidget extends ThemeableMixin(WidgetBase) {
     protected render() {
-        return v('div', { classes: this.classes(css.root).fixed(css.rootFixed) });
+        return v('div', { classes: [ this.theme(css.root), css.rootFixed ] });
     }
 }
 ```
+
+If an array is passed to `this.theme` then an array will be returned. For example, `this.theme([ css.root, css.other ])` will return an array containing the theme's class names `[ 'themedRoot', 'themedOther' ]`.
 
 #### Writing a theme
 
@@ -398,7 +400,7 @@ render() {
 }
 ```
 
-In the above example, the tabPanel will receive its original `root` class in addition to the `appCss.tabPanel` class.
+In the above example, the tabPanel will receive its original `root` class in addition to the `appCss.tabPanel` class when used with `this.theme`.
 
 ### Internationalization
 
@@ -746,9 +748,7 @@ The properties which can be set on `DomWrapper` are the combination of the `Widg
 const div = document.createElement('div');
 const WrappedDiv = DomWrapper(div);
 const wNode = w(WrappedDiv, {
-    classes: {
-        'foo': true
-    }
+    classes: [ 'foo' ]
 });
 ```
 
@@ -932,13 +932,13 @@ import { tsx } from '@dojo/widget-core/tsx';
 ```
 
 ```tsx
-class MyWidgetWithTsx extends WidgetBase<MyProperties> {
+class MyWidgetWithTsx extends Themed(WidgetBase)<MyProperties> {
     protected render(): DNode {
         const { clear, properties: { completed, count, activeCount, activeFilter } } = this;
 
         return (
-            <footer classes={this.classes(css.footer)}>
-                <span classes={this.classes(css.count)}>
+            <footer classes={this.theme(css.footer)}>
+                <span classes={this.theme(css.count)}>
                     <strong>{`${activeCount}`}</strong>
                     <span>{`${count}`}</span>
                 </span>
