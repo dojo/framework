@@ -14,5 +14,5 @@ bower_components
 tests/typings/dist/
 /typings/**
 .baseDir.ts
-html-report
-coverage-unmapped.json
+/html-report
+coverage-final.lcov
