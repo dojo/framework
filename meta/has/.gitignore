@@ -13,5 +13,5 @@ deploy_key
 .baseDir.ts
 .tscache
 .tsconfig*.json
-coverage-unmapped.json
+coverage-final.lcov
 npm-debug.log
