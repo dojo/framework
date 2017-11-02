@@ -706,9 +706,6 @@ function createDom(
 }
 
 function updateDom(previous: any, dnode: InternalDNode, projectionOptions: ProjectionOptions, parentNode: Element, parentInstance: WidgetBase) {
-	if (previous === dnode) {
-		return false;
-	}
 	if (isWNode(dnode)) {
 		const { instance, rendered: previousRendered } = previous;
 		if (instance && previousRendered) {
@@ -730,6 +727,9 @@ function updateDom(previous: any, dnode: InternalDNode, projectionOptions: Proje
 		}
 	}
 	else {
+		if (previous === dnode) {
+			return false;
+		}
 		const domNode = previous.domNode!;
 		let textUpdated = false;
 		let updated = false;

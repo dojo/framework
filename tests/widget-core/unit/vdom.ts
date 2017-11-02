@@ -652,6 +652,45 @@ describe('vdom', () => {
 			assert.strictEqual(thirdTextNodeChild.data, '3');
 		});
 
+		it('Do not break early for the same WNode', () => {
+			class Foo extends WidgetBase<any> {
+				render() {
+					const children = this.children.map((child: any, index: number) => {
+						child.properties.selected = this.properties.selected === index;
+						return child;
+					});
+
+					return v('div', children);
+				}
+			}
+
+			class Bar extends WidgetBase<any> {
+				render() {
+					return v('div', [ this.properties.selected ? 'selected' : 'not selected' ]);
+				}
+			}
+
+			const widget = new Foo();
+			widget.__setChildren__([
+				w(Bar, { key: '1' }),
+				w(Bar, { key: '2' })
+			]);
+			widget.__setProperties__({ selected: 0 });
+			const projection = dom.create(widget.__render__(), widget);
+			const root = projection.domNode.childNodes[0];
+			assert.lengthOf(root.childNodes, 2);
+			let firstTextNode = root.childNodes[0].childNodes[0] as Text;
+			let secondTextNode = root.childNodes[1].childNodes[0] as Text;
+			assert.strictEqual(firstTextNode.data, 'selected');
+			assert.strictEqual(secondTextNode.data, 'not selected');
+			widget.__setProperties__({ selected: 1 });
+			projection.update(widget.__render__());
+			firstTextNode = root.childNodes[0].childNodes[0] as Text;
+			secondTextNode = root.childNodes[1].childNodes[0] as Text;
+			assert.strictEqual(firstTextNode.data, 'not selected');
+			assert.strictEqual(secondTextNode.data, 'selected');
+		});
+
 		it('should throw an error when attempting to merge an array of node', () => {
 			class Foo extends WidgetBase {
 				render() {
