@@ -103,11 +103,11 @@ registerSuite('ThemedMixin', {
 				flaggedClasses = ThemedInstance.theme([class1, class2]);
 				assert.deepEqual(flaggedClasses, [ testTheme1.testPath1.class1, baseThemeClasses1.class2 ]);
 			},
-			'should filter out falsy params passed to classes function'() {
+			'should return null and undefineds unprocessed'() {
 				const ThemedInstance = new TestWidget();
 				const { class1, class2 } = baseThemeClasses1;
-				const flaggedClasses = ThemedInstance.theme([class1, null, class2, null, '']);
-				assert.deepEqual(flaggedClasses,  [ class1, class2 ]);
+				const flaggedClasses = ThemedInstance.theme([ class1, null, class2, undefined ]);
+				assert.deepEqual(flaggedClasses,  [ class1, null, class2, undefined ]);
 				assert.isFalse(consoleStub.called);
 			}
 		},
@@ -123,11 +123,11 @@ registerSuite('ThemedMixin', {
 				const { class1, class2 } = baseThemeClasses1;
 				const ThemedInstance = new TestWidget();
 				ThemedInstance.__setProperties__({ theme: testTheme1 });
-				let themeClasses: (string | null)[] | string | null  = ThemedInstance.theme(class1);
-				assert.deepEqual(themeClasses, testTheme1.testPath1.class1);
+				const themeClass = ThemedInstance.theme(class1);
+				assert.deepEqual(themeClass, testTheme1.testPath1.class1);
 				ThemedInstance.__setProperties__({ theme: testTheme2 });
 
-				themeClasses = ThemedInstance.theme([class1, class2]);
+				const themeClasses = ThemedInstance.theme([class1, class2]);
 				assert.deepEqual(themeClasses, [ testTheme2.testPath1.class1, baseThemeClasses1.class2 ]);
 			}
 		},

@@ -1,4 +1,4 @@
-import { Constructor, WidgetProperties } from './../interfaces';
+import { Constructor, WidgetProperties, SupportedClassName } from './../interfaces';
 import { Registry } from './../Registry';
 import { Injector } from './../Injector';
 import { inject } from './../decorators/inject';
@@ -38,8 +38,8 @@ export const INJECTED_THEME_KEY = Symbol('theme');
  * Interface for the ThemedMixin
  */
 export interface ThemedMixin<T = ClassNames> {
-	theme(classes: string): string | null;
-	theme(classes: (string | null)[]): (null | string)[];
+	theme(classes: SupportedClassName): SupportedClassName;
+	theme(classes: SupportedClassName[]): SupportedClassName[];
 	properties: ThemedProperties<T>;
 }
 
@@ -124,14 +124,14 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		 */
 		private _theme: ClassNames = {};
 
-		public theme(classes: string): null | string;
-		public theme(classes: (string | null)[]): (null | string)[];
-		public theme(classes: (string | null)[] | string): null | string | (null | string)[] {
+		public theme(classes: SupportedClassName): SupportedClassName;
+		public theme(classes: SupportedClassName[]): SupportedClassName[];
+		public theme(classes: SupportedClassName | SupportedClassName[]): SupportedClassName | SupportedClassName[] {
 			if (this._recalculateClasses) {
 				this._recalculateThemeClasses();
 			}
 			if (Array.isArray(classes)) {
-				return this._getThemeClasses(classes);
+				return classes.map((className) => this._getThemeClass(className));
 			}
 			return this._getThemeClass(classes);
 		}
@@ -145,22 +145,11 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			this._recalculateClasses = true;
 		}
 
-		/**
-		 * Get theme class object from classNames
-		 */
-		private _getThemeClasses(classNames: (string | null)[]): (string | null)[]  {
-			let themeClasses: (string | null)[] = [];
-			for (let i = 0; i < classNames.length; i++) {
-				const className = classNames[i];
-				if (!className) {
-					continue;
-				}
-				themeClasses.push(this._getThemeClass(className));
+		private _getThemeClass(className: SupportedClassName): SupportedClassName {
+			if (className === undefined || className === null) {
+				return className;
 			}
-			return themeClasses;
-		}
 
-		private _getThemeClass(className: string): string | null {
 			const extraClasses = this.properties.extraClasses || {} as any;
 			const themeClassName = this._baseThemeClassesReverseLookup[className];
 			let resultClassNames: string[] = [];

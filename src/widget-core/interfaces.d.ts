@@ -81,6 +81,8 @@ export interface Projection {
 	update(updatedDNode: DNode | DNode[]): void;
 }
 
+export type SupportedClassName = string | null | undefined;
+
 export type DeferredVirtualProperties = (inserted: boolean) => VirtualDomProperties;
 
 export interface VirtualDomProperties {
@@ -121,10 +123,9 @@ export interface VirtualDomProperties {
 	 */
 	readonly key?: Object;
 	/**
-	 * An object literal like `{important:true}` which allows css classes, like `important` to be added and removed
-	 * dynamically. Can also take a function, that must return an object literal.
+	 * An array of supported class names to be added to classList on a DOM node
 	 */
-	readonly classes?: string | null | (undefined | null | string)[];
+	readonly classes?: SupportedClassName | SupportedClassName[];
 	/**
 	 * An object literal like `{height:'100px'}` which allows styles to be changed dynamically. All values must be strings.
 	 */
