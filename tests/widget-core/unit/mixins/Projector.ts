@@ -104,7 +104,7 @@ registerSuite('mixins/projectorMixin', {
 				projector.invalidate();
 				result = null;
 				renderedResult = projector.__render__() as HNode;
-				assert.strictEqual(renderedResult.tag, 'h1');
+				assert.strictEqual(renderedResult.tag, 'span');
 				assert.isNull(renderedResult.children![0]);
 			},
 			'undefined root node'() {
@@ -125,7 +125,7 @@ registerSuite('mixins/projectorMixin', {
 				projector.invalidate();
 				result = undefined;
 				renderedResult = projector.__render__() as HNode;
-				assert.strictEqual(renderedResult.tag, 'h1');
+				assert.strictEqual(renderedResult.tag, 'span');
 				assert.isUndefined(renderedResult.children![0]);
 			},
 			'array root node'() {
@@ -133,8 +133,7 @@ registerSuite('mixins/projectorMixin', {
 				projector = new MyWidget();
 
 				const renderedResult = projector.__render__() as HNode;
-				assert.strictEqual(renderedResult.tag, 'span');
-				assert.strictEqual(renderedResult.children, result);
+				assert.strictEqual(renderedResult, result);
 			}
 		},
 		'attach projector': {
@@ -286,26 +285,31 @@ registerSuite('mixins/projectorMixin', {
 				const projector = new BaseTestWidget();
 				projector.setChildren([ v('h2', [ 'foo' ]) ]);
 
-				projector.append();
+				const div = document.createElement('div');
+				projector.append(div);
 				assert.strictEqual(projector.toHtml(), `<div><h2>foo</h2></div>`);
 				assert.strictEqual(projector.toHtml(), (projector.root.lastChild as Element).outerHTML);
 				projector.destroy();
 			},
 			'replaced'() {
 				const div = document.createElement('div');
-				document.body.appendChild(div);
+				const root = document.createElement('div');
+				document.body.appendChild(root);
+				root.appendChild(div);
 
 				const projector = new BaseTestWidget();
 				projector.setChildren([ v('h2', [ 'foo' ]) ]);
 
 				projector.replace(div);
 				assert.strictEqual(projector.toHtml(), `<div><h2>foo</h2></div>`);
-				assert.strictEqual(projector.toHtml(), (document.body.lastChild as Element).outerHTML);
+				assert.strictEqual(projector.toHtml(), (root.lastChild as Element).outerHTML);
 				projector.destroy();
 			},
 			'merged'() {
+				const root = document.createElement('div');
 				const div = document.createElement('div');
-				document.body.appendChild(div);
+				document.body.appendChild(root);
+				root.appendChild(div);
 
 				const projector = new BaseTestWidget();
 				projector.setChildren([ v('h2', [ 'foo' ]) ]);

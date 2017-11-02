@@ -8,7 +8,7 @@ import cssTransitions from '../animations/cssTransitions';
 import { Constructor, DNode, Projection, ProjectionOptions } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
 import { afterRender } from './../decorators/afterRender';
-import { isHNode, v } from './../d';
+import { v } from './../d';
 import { Registry } from './../Registry';
 import eventHandlerInterceptor from '../util/eventHandlerInterceptor';
 import { dom } from './../vdom';
@@ -305,32 +305,14 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			if (this.projectorState !== ProjectorAttachState.Attached || !this._projection) {
 				throw new Error('Projector is not attached, cannot return an HTML string of projection.');
 			}
-			return this._projection.domNode.outerHTML;
+			return (this._projection.domNode.childNodes[0] as Element).outerHTML;
 		}
 
 		@afterRender()
 		public afterRender(result: DNode) {
 			let node = result;
-			if (Array.isArray(result) || typeof result === 'string' || result === null || result === undefined) {
-				if (!this._rootTagName) {
-					this._rootTagName = 'span';
-				}
-
-				node = v(this._rootTagName, {}, Array.isArray(result) ? result : [ result ]);
-			}
-			else if (isHNode(node) && !this._rootTagName) {
-				this._rootTagName = node.tag;
-			}
-
-			if (isHNode(node)) {
-				if (this._rootTagName !== node.tag) {
-					if (this._attachType === AttachType.Merge) {
-						node.tag = this._rootTagName;
-					}
-					else {
-						node = v(this._rootTagName, {}, Array.isArray(result) ? result : [ result ]);
-					}
-				}
+			if (typeof result === 'string' || result === null || result === undefined) {
+				node = v('span', {}, [ result ]);
 			}
 
 			return node;

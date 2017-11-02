@@ -20,6 +20,8 @@ const NAMESPACE_XLINK = NAMESPACE_W3 + '1999/xlink';
 
 const emptyArray: (InternalWNode | InternalHNode)[] = [];
 
+export type RenderResult = DNode<any> | DNode<any>[];
+
 export interface InternalWNode extends WNode<WidgetBase> {
 
 	/**
@@ -104,7 +106,7 @@ const missingTransition = function() {
 	throw new Error('Provide a transitions object to the projectionOptions to do animations');
 };
 
-const DEFAULT_PROJECTION_OPTIONS: ProjectionOptions = {
+const DEFAULT_PROJECTION_OPTIONS: Partial<ProjectionOptions> = {
 	namespace: undefined,
 	eventHandlerInterceptor: undefined,
 	styleApplyer: function(domNode: HTMLElement, styleName: string, value: string) {
@@ -456,7 +458,7 @@ function nodeToRemove(dnode: InternalDNode, transitions: TransitionStrategy, pro
 	}
 }
 
-function checkDistinguishable(childNodes: InternalDNode[], indexToCheck: number, parentDNode: InternalDNode, operation: string) {
+function checkDistinguishable(childNodes: InternalDNode[], indexToCheck: number, parentNode: Element, operation: string) {
 	const childNode = childNodes[indexToCheck];
 	if (isHNode(childNode) && childNode.tag === '') {
 		return; // Text nodes need not be distinguishable
@@ -480,11 +482,11 @@ function checkDistinguishable(childNodes: InternalDNode[], indexToCheck: number,
 					}
 					else {
 						if (operation === 'added') {
-							throw new Error((parentDNode as HNode).tag + ' had a ' + childNode.tag + ' child ' +
+							throw new Error(parentNode.tagName + ' had a ' + childNode.tag + ' child ' +
 								'added, but there is now more than one. You must add unique key properties to make them distinguishable.');
 						}
 						else {
-							throw new Error((parentDNode as HNode).tag + ' had a ' + childNode.tag + ' child ' +
+							throw new Error(parentNode.tagName + ' had a ' + childNode.tag + ' child ' +
 								'removed, but there were more than one. You must add unique key properties to make them distinguishable.');
 						}
 					}
@@ -495,8 +497,7 @@ function checkDistinguishable(childNodes: InternalDNode[], indexToCheck: number,
 }
 
 function updateChildren(
-	dnode: InternalDNode,
-	domNode: Node,
+	domNode: Element,
 	oldChildren: InternalDNode[],
 	newChildren: InternalDNode[],
 	parentInstance: WidgetBase,
@@ -525,7 +526,7 @@ function updateChildren(
 			if (findOldIndex >= 0) {
 				for (i = oldIndex; i < findOldIndex; i++) {
 					nodeToRemove(oldChildren[i], transitions, projectionOptions);
-					checkDistinguishable(oldChildren, i, dnode, 'removed');
+					checkDistinguishable(oldChildren, i, domNode, 'removed');
 				}
 				textUpdated = updateDom(oldChildren[findOldIndex], newChild, projectionOptions, domNode, parentInstance) || textUpdated;
 				oldIndex = findOldIndex + 1;
@@ -546,7 +547,7 @@ function updateChildren(
 
 				createDom(newChild, domNode, insertBefore, projectionOptions, parentInstance);
 				nodeAdded(newChild, transitions);
-				checkDistinguishable(newChildren, newIndex, dnode, 'added');
+				checkDistinguishable(newChildren, newIndex, domNode, 'added');
 			}
 		}
 		newIndex++;
@@ -555,7 +556,7 @@ function updateChildren(
 		// Remove child fragments
 		for (i = oldIndex; i < oldChildrenLength; i++) {
 			nodeToRemove(oldChildren[i], transitions, projectionOptions);
-			checkDistinguishable(oldChildren, i, dnode, 'removed');
+			checkDistinguishable(oldChildren, i, domNode, 'removed');
 		}
 	}
 	return textUpdated;
@@ -655,6 +656,12 @@ function createDom(
 		});
 	}
 	else {
+		if (projectionOptions.merge && projectionOptions.mergeElement !== undefined) {
+			domNode = dnode.domNode = projectionOptions.mergeElement;
+			projectionOptions.mergeElement = undefined;
+			initPropertiesAndChildren(domNode!, dnode, parentInstance, projectionOptions);
+			return;
+		}
 		const doc = parentNode.ownerDocument;
 		if (dnode.tag === '') {
 			if (dnode.domNode !== undefined) {
@@ -698,7 +705,7 @@ function createDom(
 	}
 }
 
-function updateDom(previous: any, dnode: InternalDNode, projectionOptions: ProjectionOptions, parentNode: Node, parentInstance: WidgetBase) {
+function updateDom(previous: any, dnode: InternalDNode, projectionOptions: ProjectionOptions, parentNode: Element, parentInstance: WidgetBase) {
 	if (previous === dnode) {
 		return false;
 	}
@@ -712,7 +719,7 @@ function updateDom(previous: any, dnode: InternalDNode, projectionOptions: Proje
 			const rendered = instance.__render__();
 			dnode.rendered = filterAndDecorateChildren(rendered, instance);
 			if (hasRenderChanged(previousRendered, rendered)) {
-				updateChildren(dnode, parentNode, previousRendered, dnode.rendered, instance, projectionOptions);
+				updateChildren(parentNode, previousRendered, dnode.rendered, instance, projectionOptions);
 				projectionOptions.afterRenderCallbacks.push(() => {
 					parentInstance.emit({ type: 'widget-updated' });
 				});
@@ -743,7 +750,7 @@ function updateDom(previous: any, dnode: InternalDNode, projectionOptions: Proje
 			if (previous.children !== dnode.children) {
 				const children = filterAndDecorateChildren(dnode.children, parentInstance);
 				dnode.children = children;
-				updated = updateChildren(dnode, domNode, previous.children, children, parentInstance, projectionOptions) || updated;
+				updated = updateChildren(domNode, previous.children, children, parentInstance, projectionOptions) || updated;
 			}
 
 			if (typeof dnode.deferredPropertiesCallback === 'function') {
@@ -811,30 +818,32 @@ function runAfterRenderCallbacks(projectionOptions: ProjectionOptions) {
 	}
 }
 
-function createProjection(dnode: InternalHNode, parentInstance: WidgetBase, projectionOptions: ProjectionOptions): Projection {
+function createProjection(dnode: InternalDNode | InternalDNode[], parentInstance: WidgetBase, projectionOptions: ProjectionOptions): Projection {
+	let projectionDNode = Array.isArray(dnode) ? dnode : [ dnode ];
 	return {
-		update: function(updatedHNode: HNode) {
-			if (dnode.tag !== updatedHNode.tag) {
-				throw new Error('The tag for the root HNode may not be changed. (consider using dom.merge and add one extra level to the virtual DOM)');
-			}
-			updatedHNode.children = filterAndDecorateChildren(updatedHNode.children, parentInstance);
-			updateDom(dnode, updatedHNode as InternalHNode, projectionOptions, dnode.domNode as Element, parentInstance);
+		update: function(updatedDNode: RenderResult) {
+			let domNode = projectionOptions.rootNode;
+
+			updatedDNode = filterAndDecorateChildren(updatedDNode, parentInstance);
+			updateChildren(domNode, projectionDNode, updatedDNode as InternalDNode[], parentInstance, projectionOptions);
 			projectionOptions.afterRenderCallbacks.push(() => {
 				parentInstance.emit({ type: 'widget-created' });
 			});
 			runDeferredRenderCallbacks(projectionOptions);
 			runAfterRenderCallbacks(projectionOptions);
-			dnode = updatedHNode as InternalHNode;
+			projectionDNode = updatedDNode as InternalDNode[];
 		},
-		domNode: dnode.domNode as Element
+		domNode: projectionOptions.rootNode
 	};
 }
 
 export const dom = {
-	create: function(hNode: HNode, instance: WidgetBase<any, any>, projectionOptions?: Partial<ProjectionOptions>): Projection {
+	create: function(dNode: RenderResult, instance: WidgetBase<any, any>, projectionOptions?: Partial<ProjectionOptions>): Projection {
 		const finalProjectorOptions = applyDefaultProjectionOptions(projectionOptions);
-		const decoratedNode = filterAndDecorateChildren(hNode, instance)[0] as InternalHNode;
-		createDom(decoratedNode, document.createElement('div'), undefined, finalProjectorOptions, instance);
+		const rootNode = document.createElement('div');
+		finalProjectorOptions.rootNode = rootNode;
+		const decoratedNode = filterAndDecorateChildren(dNode, instance);
+		addChildren(rootNode, decoratedNode, finalProjectorOptions, instance, undefined);
 		finalProjectorOptions.afterRenderCallbacks.push(() => {
 			instance.emit({ type: 'widget-created' });
 		});
@@ -842,10 +851,11 @@ export const dom = {
 		runAfterRenderCallbacks(finalProjectorOptions);
 		return createProjection(decoratedNode, instance, finalProjectorOptions);
 	},
-	append: function(parentNode: Element, hNode: HNode, instance: WidgetBase<any, any>, projectionOptions?: Partial<ProjectionOptions>): Projection {
+	append: function(parentNode: Element, dNode: RenderResult, instance: WidgetBase<any, any>, projectionOptions?: Partial<ProjectionOptions>): Projection {
 		const finalProjectorOptions = applyDefaultProjectionOptions(projectionOptions);
-		const decoratedNode = filterAndDecorateChildren(hNode, instance)[0] as InternalHNode;
-		createDom(decoratedNode, parentNode, undefined, finalProjectorOptions, instance);
+		finalProjectorOptions.rootNode = parentNode;
+		const decoratedNode = filterAndDecorateChildren(dNode, instance);
+		addChildren(parentNode, decoratedNode, finalProjectorOptions, instance, undefined);
 		finalProjectorOptions.afterRenderCallbacks.push(() => {
 			instance.emit({ type: 'widget-created' });
 		});
@@ -853,12 +863,17 @@ export const dom = {
 		runAfterRenderCallbacks(finalProjectorOptions);
 		return createProjection(decoratedNode, instance, finalProjectorOptions);
 	},
-	merge: function(element: Element, hNode: HNode, instance: WidgetBase<any, any>, projectionOptions?: Partial<ProjectionOptions>): Projection {
+	merge: function(element: Element, dNode: RenderResult, instance: WidgetBase<any, any>, projectionOptions?: Partial<ProjectionOptions>): Projection {
+		if (Array.isArray(dNode)) {
+			throw new Error('Unable to merge an array of nodes. (consider adding one extra level to the virtual DOM)');
+		}
 		const finalProjectorOptions = applyDefaultProjectionOptions(projectionOptions);
 		finalProjectorOptions.merge = true;
-		const decoratedNode = filterAndDecorateChildren(hNode, instance)[0] as InternalHNode;
-		decoratedNode.domNode = element;
-		initPropertiesAndChildren(element, decoratedNode, instance, finalProjectorOptions);
+		finalProjectorOptions.mergeElement = element;
+		finalProjectorOptions.rootNode = element.parentNode as Element;
+		const decoratedNode = filterAndDecorateChildren(dNode, instance)[0] as InternalHNode;
+
+		createDom(decoratedNode, finalProjectorOptions.rootNode, undefined, finalProjectorOptions, instance);
 		finalProjectorOptions.afterRenderCallbacks.push(() => {
 			instance.emit({ type: 'widget-created' });
 		});
@@ -866,9 +881,13 @@ export const dom = {
 		runAfterRenderCallbacks(finalProjectorOptions);
 		return createProjection(decoratedNode, instance, finalProjectorOptions);
 	},
-	replace: function(element: Element, hNode: HNode, instance: WidgetBase<any, any>, projectionOptions?: Partial<ProjectionOptions>): Projection {
+	replace: function(element: Element, dNode: RenderResult, instance: WidgetBase<any, any>, projectionOptions?: Partial<ProjectionOptions>): Projection {
+		if (Array.isArray(dNode)) {
+			throw new Error('Unable to replace a node with an array of nodes. (consider adding one extra level to the virtual DOM)');
+		}
 		const finalProjectorOptions = applyDefaultProjectionOptions(projectionOptions);
-		const decoratedNode = filterAndDecorateChildren(hNode, instance)[0] as InternalHNode;
+		const decoratedNode = filterAndDecorateChildren(dNode, instance)[0] as InternalHNode;
+		finalProjectorOptions.rootNode = element.parentNode! as Element;
 		createDom(decoratedNode, element.parentNode!, element, finalProjectorOptions, instance);
 		finalProjectorOptions.afterRenderCallbacks.push(() => {
 			instance.emit({ type: 'widget-created' });
