@@ -69,6 +69,7 @@ export interface ProjectorOptions {
 export interface ProjectionOptions extends ProjectorOptions {
 	readonly namespace?: string;
 	eventHandlerInterceptor?: (propertyName: string, eventHandler: Function, domNode: Node, properties: VirtualDomProperties) => Function | undefined;
+	deferredRenderCallbacks: Function [];
 	afterRenderCallbacks: Function[];
 	merge: boolean;
 }
@@ -77,6 +78,8 @@ export interface Projection {
 	readonly domNode: Element;
 	update(updatedDNode: DNode): void;
 }
+
+export type DeferredVirtualProperties = (inserted: boolean) => VirtualDomProperties;
 
 export interface VirtualDomProperties {
 	/**
@@ -257,6 +260,11 @@ export interface HNode {
 	 * HNode properties
 	 */
 	properties: VirtualDomProperties;
+
+	/**
+	 * Deferred callback for HNode properties
+	 */
+	deferredPropertiesCallback?: DeferredVirtualProperties;
 
 	/**
 	 * The tag of the HNode

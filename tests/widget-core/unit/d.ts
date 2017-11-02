@@ -138,6 +138,15 @@ registerSuite('d', {
 			assert.equal(hNode.type, HNODE);
 			assert.isTrue(isHNode(hNode));
 			assert.isFalse(isWNode(hNode));
+		},
+		'create HNode wrapper with deferred properties'() {
+			const props = () => {
+				return { a: 'a' };
+			};
+			const hNode = v('div', props);
+
+			assert.deepEqual(hNode.properties, {});
+			assert.strictEqual(hNode.deferredPropertiesCallback, props);
 		}
 	},
 	decorator: {

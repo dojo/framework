@@ -2,6 +2,7 @@ import Symbol from '@dojo/shim/Symbol';
 import {
 	Constructor,
 	DefaultWidgetBaseInterface,
+	DeferredVirtualProperties,
 	DNode,
 	HNode,
 	RegistryLabel,
@@ -77,19 +78,26 @@ export function w<W extends WidgetBaseInterface>(widgetConstructor: Constructor<
 /**
  * Wrapper function for calls to create HNodes.
  */
-export function v(tag: string, properties: VirtualDomProperties, children?: DNode[]): HNode;
+export function v(tag: string, properties: VirtualDomProperties | DeferredVirtualProperties, children?: DNode[]): HNode;
 export function v(tag: string, children: undefined | DNode[]): HNode;
 export function v(tag: string): HNode;
-export function v(tag: string, propertiesOrChildren: VirtualDomProperties | DNode[] = {}, children: undefined | DNode[] = undefined): HNode {
-		let properties: VirtualDomProperties = propertiesOrChildren;
+export function v(tag: string, propertiesOrChildren: VirtualDomProperties | DeferredVirtualProperties | DNode[] = {}, children: undefined | DNode[] = undefined): HNode {
+		let properties: VirtualDomProperties | DeferredVirtualProperties = propertiesOrChildren;
+		let deferredPropertiesCallback;
 
 		if (Array.isArray(propertiesOrChildren)) {
 			children = propertiesOrChildren;
 			properties = {};
 		}
 
+		if (typeof properties === 'function') {
+			deferredPropertiesCallback = properties;
+			properties = {};
+		}
+
 		return {
 			tag,
+			deferredPropertiesCallback,
 			children,
 			properties,
 			type: HNODE

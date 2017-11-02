@@ -1126,6 +1126,92 @@ describe('vdom', () => {
 
 	});
 
+	describe('deferred properties', () => {
+		it('can call a callback on render and on the next rAF for hnode properties', () => {
+			let deferredCallbackCount = 0;
+			let renderCount = 0;
+
+			const renderFunction = () => {
+				renderCount++;
+				const div = v('div', (inserted) => {
+					return {
+						inserted,
+						deferredCallbackCount: ++deferredCallbackCount
+					};
+				});
+				div.properties.renderCount = renderCount;
+				return div;
+			};
+
+			const projection = dom.create(renderFunction(), projectorStub, { eventHandlerInterceptor: noopEventHandlerInterceptor });
+			const element: any = projection.domNode;
+
+			assert.strictEqual(element.deferredCallbackCount, 1);
+			assert.strictEqual(element.renderCount, 1);
+			assert.isFalse(element.inserted);
+
+			// resolve the rAF so deferred properties will run
+			resolvers.resolve();
+
+			assert.strictEqual(element.deferredCallbackCount, 2);
+			assert.strictEqual(element.renderCount, 1);
+			assert.isTrue(element.inserted);
+
+			projection.update(renderFunction());
+
+			assert.strictEqual(element.deferredCallbackCount, 3);
+			assert.strictEqual(element.renderCount, 2);
+			assert.isTrue(element.inserted);
+
+			// resolve the rAF so deferred properties will run
+			resolvers.resolve();
+
+			assert.strictEqual(element.deferredCallbackCount, 4);
+			assert.strictEqual(element.renderCount, 2);
+			assert.isTrue(element.inserted);
+		});
+
+		it('should still allow properties to be decorated on a DNode', () => {
+			let foo = 'bar';
+
+			const renderFunction = () => {
+				const div = v('div', (inserted) => {
+					return {
+						foo: 'this should not override the decorated property',
+						another: 'property'
+					};
+				});
+				div.properties.foo = foo;
+				return div;
+			};
+
+			const projection = dom.create(renderFunction(), projectorStub, { eventHandlerInterceptor: noopEventHandlerInterceptor });
+			const element: any = projection.domNode;
+
+			assert.strictEqual(element.getAttribute('foo'), 'bar');
+			assert.strictEqual(element.getAttribute('another'), 'property');
+
+			// resolve the rAF so deferred properties will run
+			resolvers.resolve();
+
+			assert.strictEqual(element.getAttribute('foo'), 'bar');
+			assert.strictEqual(element.getAttribute('another'), 'property');
+
+			foo = 'qux';
+
+			projection.update(renderFunction());
+
+			assert.strictEqual(element.getAttribute('foo'), 'qux');
+			assert.strictEqual(element.getAttribute('another'), 'property');
+
+			// resolve the rAF so deferred properties will run
+			resolvers.resolve();
+
+			assert.strictEqual(element.getAttribute('foo'), 'qux');
+			assert.strictEqual(element.getAttribute('another'), 'property');
+		});
+	});
+
 	describe('children', () => {
 
 		it('can remove child nodes', () => {
