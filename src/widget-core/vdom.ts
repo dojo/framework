@@ -820,6 +820,7 @@ function runAfterRenderCallbacks(projectionOptions: ProjectionOptions) {
 
 function createProjection(dnode: InternalDNode | InternalDNode[], parentInstance: WidgetBase, projectionOptions: ProjectionOptions): Projection {
 	let projectionDNode = Array.isArray(dnode) ? dnode : [ dnode ];
+	projectionOptions.merge = false;
 	return {
 		update: function(updatedDNode: RenderResult) {
 			let domNode = projectionOptions.rootNode;
