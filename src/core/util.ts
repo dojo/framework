@@ -29,15 +29,15 @@ export function createTimer(callback: (...args: any[]) => void, delay?: number):
 export function debounce<T extends (this: any, ...args: any[]) => void>(callback: T, delay: number): T {
 	// node.d.ts clobbers setTimeout/clearTimeout with versions that return/receive NodeJS.Timer,
 	// but browsers return/receive a number
-	let timer: any;
+	let timer: Handle | null;
 
 	return <T> function () {
-		timer && clearTimeout(timer);
+		timer && timer.destroy();
 
 		let context = this;
 		let args: IArguments | null = arguments;
 
-		timer = setTimeout(function () {
+		timer = guaranteeMinimumTimeout(function () {
 			callback.apply(context, args);
 			args = context = timer = null;
 		}, delay);
@@ -62,7 +62,7 @@ export function throttle<T extends (this: any, ...args: any[]) => void>(callback
 		ran = true;
 
 		callback.apply(this, arguments);
-		setTimeout(function () {
+		guaranteeMinimumTimeout(function () {
 			ran = null;
 		}, delay);
 	};
@@ -89,9 +89,34 @@ export function throttleAfter<T extends (this: any, ...args: any[]) => void>(cal
 		let context = this;
 		let args: IArguments | null = arguments;
 
-		setTimeout(function () {
+		guaranteeMinimumTimeout(function () {
 			callback.apply(context, args);
 			args = context = ran = null;
 		}, delay);
 	};
+}
+
+export function guaranteeMinimumTimeout(callback: (...args: any[]) => void, delay?: number): Handle {
+	const startTime = Date.now();
+	let timerId: number | null;
+
+	function timeoutHandler() {
+		const delta = Date.now() - startTime;
+		if (delay == null || delta >= delay) {
+			callback();
+		} else {
+			// Cast setTimeout return value to fix TypeScript parsing bug.  Without it,
+			// it thinks we are using the Node version of setTimeout.
+			// Revisit this with the next TypeScript update.
+			// Set another timer for the mount of time that we came up short.
+			timerId = <any> setTimeout(timeoutHandler, delay - delta);
+		}
+	}
+	timerId = setTimeout(timeoutHandler, delay);
+	return createHandle(() => {
+		if (timerId != null) {
+			clearTimeout(timerId);
+			timerId = null;
+		}
+	});
 }
