@@ -382,7 +382,57 @@ function addPromiseTests(suite: any, Promise: any) {
 			Promise.all(iterable).then(dfd.callback(function (value: number[]) {
 				assert.notStrictEqual(value, iterable);
 			}));
-		}
+		},
+
+		'cancelable': (function () {
+			return {
+				'isIterable': function (this: any) {
+					// Make sure it checks whether each PromiseLike is cancelable
+					const promise = Promise.resolve();
+					promise.cancel = null;
+					const pending = [
+						promise,
+						new Task(() => {}),
+						new Task(() => {})
+					];
+
+					cancelTasks(pending).then(() => {
+						pending.forEach((task) => {
+							if (isTask(task)) {
+								assert.strictEqual(task.state, State.Canceled, 'Task should have Canceled state');
+							}
+						});
+					});
+				},
+				'isObject': function (this: any) {
+					// Make sure it checks whether each PromiseLike is cancelable
+					const promise = Promise.resolve();
+					promise.cancel = null;
+					const pending: { [ index: string ]: PromiseLike<any> } = {
+						foo: new Task(() => {}),
+						bar: new Task(() => {}),
+						promise
+					};
+
+					cancelTasks(pending).then(() => {
+						Object.keys(pending).forEach((key) => {
+							let task = pending[key];
+							if (isTask(task)) {
+								assert.strictEqual(task.state, State.Canceled, 'Task should have Canceled state');
+							}
+						});
+					});
+				}
+			};
+
+			function cancelTasks(pending: any) {
+				const tasks = Task.all(pending);
+
+				tasks.cancel();
+
+				return tasks;
+			}
+		})()
 	};
 
 	suite['.race'] = {

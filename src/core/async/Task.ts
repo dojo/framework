@@ -1,7 +1,7 @@
 import { Thenable } from '@dojo/shim/interfaces';
 import { Executor } from '@dojo/shim/Promise';
 import ExtensiblePromise, { ListOfPromises, DictionaryOfPromises, unwrapPromises } from './ExtensiblePromise';
-import { Iterable } from '@dojo/shim/iterator';
+import { Iterable, forOf, isIterable, isArrayLike } from '@dojo/shim/iterator';
 
 /**
  * Describe the internal state of a task.
@@ -149,7 +149,26 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	 * @returns An extensible promise
 	 */
 	static all<T>(iterable: DictionaryOfPromises<T> | ListOfPromises<T>): Task<any> {
-		return super.all(iterable) as Task<any>;
+		return new Task((resolve, reject) => {
+			super.all(iterable).then(resolve, reject);
+		}, () => {
+			if (isIterable(iterable) || isArrayLike(iterable)) {
+				forOf(iterable, (promiseLike: any) => {
+					if (isTask(promiseLike)) {
+						promiseLike.cancel();
+					}
+				});
+			}
+			else {
+				Object.keys(iterable).forEach((key: any) => {
+					const promiseLike = iterable[key];
+
+					if (isTask(promiseLike)) {
+						promiseLike.cancel();
+					}
+				});
+			}
+		});
 	}
 
 	/**
