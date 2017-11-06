@@ -349,6 +349,8 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 				}
 			});
 
+			this._projectionOptions = { ...this._projectionOptions, ...{ sync: !this._async } };
+
 			switch (type) {
 				case AttachType.Append:
 					this._projection = dom.append(this.root, this._boundRender(), this, this._projectionOptions);

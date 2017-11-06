@@ -2278,6 +2278,23 @@ describe('vdom', () => {
 
 	});
 
+	describe('sync mode', () => {
+
+		it('should run afterRenderCallbacks sync', () => {
+			const projection = dom.create(v('div', { key: '1' }), projectorStub, { sync: true });
+			assert.isTrue(projectorStub.emit.calledWith({ type: 'element-created', element: (projection.domNode.childNodes[0] as Element), key: '1' }));
+		});
+
+		it('should run defferedRenderCallbacks sync', () => {
+			let callCount = 0;
+			dom.create(v('div', () => {
+				callCount++;
+				return {};
+			}), projectorStub, { sync: true });
+			assert.strictEqual(callCount, 2);
+		});
+	});
+
 	describe('node callbacks', () => {
 
 		it('element-created not emitted for new nodes without a key', () => {

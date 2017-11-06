@@ -790,31 +790,47 @@ function addDeferredProperties(hnode: InternalHNode, projectionOptions: Projecti
 
 function runDeferredRenderCallbacks(projectionOptions: ProjectionOptions) {
 	if (projectionOptions.deferredRenderCallbacks.length) {
-		global.requestAnimationFrame(() => {
+		if (projectionOptions.sync) {
 			while (projectionOptions.deferredRenderCallbacks.length) {
 				const callback = projectionOptions.deferredRenderCallbacks.shift();
 				callback && callback();
 			}
-		});
+		}
+		else {
+			global.requestAnimationFrame(() => {
+				while (projectionOptions.deferredRenderCallbacks.length) {
+					const callback = projectionOptions.deferredRenderCallbacks.shift();
+					callback && callback();
+				}
+			});
+		}
 	}
 }
 
 function runAfterRenderCallbacks(projectionOptions: ProjectionOptions) {
-	if (global.requestIdleCallback) {
-		global.requestIdleCallback(() => {
-			while (projectionOptions.afterRenderCallbacks.length) {
-				const callback = projectionOptions.afterRenderCallbacks.shift();
-				callback && callback();
-			}
-		});
+	if (projectionOptions.sync) {
+		while (projectionOptions.afterRenderCallbacks.length) {
+			const callback = projectionOptions.afterRenderCallbacks.shift();
+			callback && callback();
+		}
 	}
 	else {
-		setTimeout(() => {
-			while (projectionOptions.afterRenderCallbacks.length) {
-				const callback = projectionOptions.afterRenderCallbacks.shift();
-				callback && callback();
-			}
-		});
+		if (global.requestIdleCallback) {
+			global.requestIdleCallback(() => {
+				while (projectionOptions.afterRenderCallbacks.length) {
+					const callback = projectionOptions.afterRenderCallbacks.shift();
+					callback && callback();
+				}
+			});
+		}
+		else {
+			setTimeout(() => {
+				while (projectionOptions.afterRenderCallbacks.length) {
+					const callback = projectionOptions.afterRenderCallbacks.shift();
+					callback && callback();
+				}
+			});
+		}
 	}
 }
 
