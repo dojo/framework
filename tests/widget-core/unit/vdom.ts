@@ -795,8 +795,8 @@ describe('vdom', () => {
 				destroy() {
 					fooDestroyed = true;
 					return super.destroy();
-
 				}
+
 				render() {
 					return v('div');
 				}
@@ -837,6 +837,48 @@ describe('vdom', () => {
 			resolvers.resolve();
 			assert.isTrue(fooDestroyed);
 			assert.isTrue(barCreated);
+		});
+
+		it('does not own child widgets', () => {
+			let fooDestroyed = false;
+			let barDestroyed = false;
+			class Foo extends WidgetBase {
+				destroy() {
+					fooDestroyed = true;
+					return super.destroy();
+				}
+			}
+
+			class Bar extends WidgetBase {
+				destroy() {
+					barDestroyed = true;
+					return super.destroy();
+				}
+
+				render() {
+					return v('div', [ w(Foo, {}) ]);
+				}
+			}
+
+			class Baz extends WidgetBase {
+				private _show = false;
+
+				render() {
+					this._show = !this._show;
+					return v('div', [
+						this._show ? w(Bar, {}) : null
+					]);
+				}
+			}
+
+			const widget = new Baz();
+			const projection = dom.create(widget.__render__(), widget);
+			resolvers.resolve();
+			widget.invalidate();
+			projection.update(widget.__render__());
+			resolvers.resolve();
+			assert.isTrue(barDestroyed);
+			assert.isFalse(fooDestroyed);
 		});
 
 		it('remove elements for embedded WNodes', () => {

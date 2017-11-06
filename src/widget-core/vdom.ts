@@ -363,7 +363,7 @@ export function filterAndDecorateChildren(children: undefined | DNode | DNode[],
 	}
 	children = Array.isArray(children) ? children : [ children ];
 
-	for (let i = 0; i < children.length;) {
+	for (let i = 0; i < children.length; ) {
 		const child = children[i] as InternalDNode;
 		if (child === undefined || child === null) {
 			children.splice(i, 1);
@@ -637,7 +637,6 @@ function createDom(
 			widgetConstructor = item;
 		}
 		const instance = new widgetConstructor();
-		parentInstance.own(instance);
 		instance.own(instance.on('invalidated', () => {
 			parentInstance.invalidate();
 		}));
