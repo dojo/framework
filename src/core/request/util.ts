@@ -8,10 +8,9 @@ import { forOf } from '@dojo/shim/iterator';
  * @param url The base URL.
  * @param options The RequestOptions used to generate the query string or cacheBust.
  */
-export function generateRequestUrl(url: string,
-		{ query, cacheBust }: RequestOptions = {}): string {
-	query = new UrlSearchParams(query).toString();
-	if (cacheBust) {
+export function generateRequestUrl(url: string, options: RequestOptions = {}): string {
+	let query = new UrlSearchParams(options.query).toString();
+	if (options.cacheBust) {
 		const bustString = String(Date.now());
 		query += query ? `&${bustString}` : bustString;
 	}
