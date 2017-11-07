@@ -221,32 +221,31 @@ export function initializeElement(element: CustomElement) {
 		};
 	});
 
-	// find children
-	let children: DNode[] = [];
-
-	arrayFrom(element.children).forEach((childNode: HTMLElement, index: number) => {
-		const DomElement = DomWrapper(childNode);
-		children.push(w(DomElement, {
-			key: `child-${index}`
-		}));
-	});
-
 	if (initialization) {
 		initialization.call(element, initialProperties);
 	}
 
-	arrayFrom(element.children).forEach((childNode: HTMLElement) => {
-		element.removeChild(childNode);
-	});
-
 	const projector = ProjectorMixin(element.getWidgetConstructor());
-
 	const widgetInstance = new projector();
+
 	widgetInstance.setProperties(initialProperties);
-	widgetInstance.setChildren(children);
 	element.setWidgetInstance(widgetInstance);
 
 	return function() {
+		// find children
+		let children: DNode[] = [];
+		let elementChildren = arrayFrom(element.children);
+		elementChildren.forEach((childNode: HTMLElement, index: number) => {
+			const DomElement = DomWrapper(childNode);
+			children.push(w(DomElement, {
+				key: `child-${index}`
+			}));
+		});
+		elementChildren.forEach((childNode: HTMLElement) => {
+			element.removeChild(childNode);
+		});
+
+		widgetInstance.setChildren(children);
 		widgetInstance.append(element);
 	};
 }

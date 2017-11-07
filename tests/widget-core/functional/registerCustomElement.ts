@@ -121,6 +121,52 @@ registerSuite('registerCustomElement', {
 				.then(pollUntil(function () {
 					return (<any> document).querySelector('#reinitButton > button').innerHTML === 'test';
 				}, undefined, 1000), undefined);
+		},
+		'declarative children should be wrapped as widgets'() {
+			if (skip) {
+				this.skip('not compatible with iOS 9.1 or Safari 9.1');
+			}
+			return this.remote
+				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.setFindTimeout(1000)
+				.findByCssSelector('#parent-element > div > child-wrapper#nested-parent > div > div')
+				.then((element: any) => {
+					return element.getVisibleText();
+				})
+				.then((text: string) => {
+					assert.strictEqual(text, 'nested child');
+				})
+				.end()
+				.findByCssSelector('#parent-element > div > div')
+				.then((element: any) => {
+					return element.getVisibleText();
+				})
+				.then((text: string) => {
+					assert.strictEqual(text, 'top level child');
+				});
+		},
+		'programmatically added children should be wrapped as widgets'() {
+			if (skip) {
+				this.skip('not compatible with iOS 9.1 or Safari 9.1');
+			}
+			return this.remote
+				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.setFindTimeout(1000)
+				.findByCssSelector('#dynamic-parent-element > div > child-wrapper > div > div')
+				.then((element: any) => {
+					return element.getVisibleText();
+				})
+				.then((text: string) => {
+					assert.strictEqual(text, 'programmatic nested child');
+				})
+				.end()
+				.findByCssSelector('#dynamic-parent-element > div > div')
+				.then((element: any) => {
+					return element.getVisibleText();
+				})
+				.then((text: string) => {
+					assert.strictEqual(text, 'programmatic top level child');
+				});
 		}
 	}
 });

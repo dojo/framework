@@ -26,6 +26,12 @@ class TestButton extends WidgetBase<TestButtonProperties> {
 	}
 }
 
+class ChildWrapper extends WidgetBase {
+	render() {
+		return v('div', {}, this.children);
+	}
+}
+
 registerCustomElement(function () {
 	return {
 		tagName: 'test-button',
@@ -64,5 +70,12 @@ registerCustomElement(function () {
 				eventName: 'button-click'
 			}
 		]
+	};
+});
+
+registerCustomElement(function () {
+	return {
+		tagName: 'child-wrapper',
+		widgetConstructor: ChildWrapper
 	};
 });
