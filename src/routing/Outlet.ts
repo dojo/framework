@@ -30,7 +30,7 @@ export type Outlet<
 
 export function Outlet<W extends WidgetBaseInterface, F extends WidgetBaseInterface, E extends WidgetBaseInterface>(
 	outletComponents: Component<W> | OutletComponents<W, F, E>,
-	outlet: string,
+	outlet: string | string[],
 	mapParams: MapParams = (options: MapParamsOptions) => {},
 	key: RegistryLabel = routerKey
 ): Outlet<W, F, E> {

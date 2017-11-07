@@ -155,6 +155,9 @@ const FooOutlet = Outlet(MyViewWidget, 'foo', (options: MapParamsOptions) {
 });
 ```
 
+
+When there are multiple matching outlets, the callback function receives all matching parameters merged into a single object.
+
 ##### Global Error Outlet
 
 Whenever a `MatchType.ERROR` occurs a global outlet is automatically added to the matched outlets called `errorOutlet`. This outlet can be used to render a widget for any unknown routes.
@@ -227,6 +230,8 @@ router.link('foo')
 ```
 
 A default route can be specified using the optional configuration property `defaultRoute`, which will be used if the current route does not match a registered route. Note there can only be one default route configured otherwise an error will be thrown.
+
+In the case that multiple outlets match, for example where a nested path has an exact match, and a parent path has a partial match, the deepest registered outlet is returned.
 
 #### Registering Additional Routes
 

@@ -439,8 +439,30 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 		return this._outletContextMap.has(outletId);
 	}
 
-	getOutlet(outletId: string): OutletContext | undefined {
-		return this._outletContextMap.get(outletId);
+	getOutlet(outletId: string | string[]): OutletContext | undefined {
+		const outletIds = Array.isArray(outletId) ? outletId : [ outletId ];
+		let matchingOutlet: OutletContext | undefined = undefined;
+		let matchingParams: Parameters = {};
+		let matchingLocation = '';
+
+		for (let i = 0; i < outletIds.length; i++) {
+			const outletContext = this._outletContextMap.get(outletIds[i]);
+
+			if (outletContext) {
+				const { params, location } = outletContext;
+				matchingParams = { ...matchingParams, ...params };
+
+				if (!matchingOutlet || matchingLocation.indexOf(location) === -1) {
+					matchingLocation = location;
+					matchingOutlet = {
+						...outletContext,
+						params: matchingParams
+					};
+				}
+			}
+		}
+
+		return matchingOutlet;
 	}
 
 	getCurrentParams(): Parameters {

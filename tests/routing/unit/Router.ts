@@ -1,9 +1,9 @@
 import Task from '@dojo/core/async/Task';
-import Promise from '@dojo/shim/Promise';
 const { beforeEach, suite, test } = intern.getInterface('tdd');
 const { assert } = intern.getPlugin('chai');
 import { spy, stub } from 'sinon';
 import MemoryHistory from '../../src/history/MemoryHistory';
+
 import {
 	Context,
 	DefaultParameters,
@@ -500,6 +500,107 @@ suite('Router', () => {
 				},
 				type: MatchType.INDEX
 			});
+		});
+	});
+
+	test('query for multiple outlets', async () => {
+		const config = [{
+			path: '/path-1',
+			outlet: 'outlet-id-1'
+		}, {
+			path: '/path-2',
+			outlet: 'outlet-id-2',
+			children: [{
+				path: '/nested-path',
+				outlet: 'outlet-id-3',
+				children: [{
+					path: '/nested-path',
+					outlet: 'outlet-id-4',
+					children: [{
+						path: '/nested-path',
+						outlet: 'outlet-id-5'
+					}]
+				}]
+			}]
+		}, {
+			path: '/path-3',
+			outlet: 'outlet-id-5'
+		}];
+
+		const router = new Router({ config });
+
+		await router.dispatch({}, '/path-2');
+
+		const noMatchResult = router.getOutlet(['no', 'outlet-id-1', '', ' ']);
+
+		assert.equal(noMatchResult, undefined);
+
+		const matchingResult = router.getOutlet(['true', 'outlet-id-2']);
+
+		assert.deepEqual(matchingResult, {
+			location: '/path-2',
+			type: MatchType.INDEX,
+			params: {}
+		});
+
+		const emptyInput = router.getOutlet([]);
+		assert.equal(emptyInput, undefined);
+
+		await router.dispatch({}, '/path-2/nested-path');
+
+		const multipleMatchingOutlets = router.getOutlet(['outlet-id-2', 'outlet-id-3']);
+
+		assert.deepEqual(multipleMatchingOutlets, {
+			location: '/path-2/nested-path',
+			type: MatchType.INDEX,
+			params: {}
+		});
+
+		await router.dispatch({}, '/path-2/nested-path/nested-path');
+
+		assert.deepEqual(router.getOutlet(['outlet-id-4']), {
+			location: '/path-2/nested-path/nested-path',
+			type: MatchType.INDEX,
+			params: {}
+		});
+
+		assert.deepEqual(router.getOutlet(['outlet-id-4', 'outlet-id-2']), {
+			location: '/path-2/nested-path/nested-path',
+			type: MatchType.INDEX,
+			params: {}
+		});
+	});
+
+	test('parameters are combined with multiple matching outlets', async () => {
+		const config = [{
+			path: '/path',
+			outlet: 'outlet-id-1',
+			children: [{
+				path: '/nested-path/{outlet-2-param}',
+				outlet: 'outlet-id-2',
+				children: [{
+					path: '/nested-path/{outlet-3-param}',
+					outlet: 'outlet-id-3',
+					children: [{
+						path: '/nested-path/{outlet-4-param}',
+						outlet: 'outlet-id-4'
+					}]
+				}]
+			}]
+		}];
+
+		const router = new Router({ config });
+
+		await router.dispatch({}, '/path/nested-path/param-2/nested-path/param-3/nested-path/param-4');
+
+		assert.deepEqual(router.getOutlet(['outlet-id-3', 'outlet-id-2', 'outlet-id-4']), {
+			location: '/path/nested-path/param-2/nested-path/param-3/nested-path/param-4',
+			type: MatchType.INDEX,
+			params: {
+				'outlet-2-param': 'param-2',
+				'outlet-3-param': 'param-3',
+				'outlet-4-param': 'param-4'
+			}
 		});
 	});
 
