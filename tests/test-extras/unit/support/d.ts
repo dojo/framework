@@ -54,11 +54,9 @@ registerSuite('support/virtualDom', {
 
 			assertRender(actual, v('div', { styles: { 'color': 'blue' } }, [ null, v('a', { href: '#link' }) ]));
 
-			assignProperties(actual, { classes: () => {
-				return { testClass: true };
-			}});
+			assignProperties(actual, { classes: [ 'testClass' ] });
 
-			assertRender(actual, v('div', { styles: { 'color': 'blue' }, classes: { testClass: true } }, [ null, v('a', { href: '#link' }) ]));
+			assertRender(actual, v('div', { styles: { 'color': 'blue' }, classes: [ 'testClass' ] }, [ null, v('a', { href: '#link' }) ]));
 		}
 	},
 
@@ -185,9 +183,9 @@ registerSuite('support/virtualDom', {
 
 			assertRender(actual, v('div', { styles: { 'color': 'blue' } }, [ null, v('a', { href: '#link' }) ]));
 
-			replaceProperties(actual, { classes: { 'foo': true } });
+			replaceProperties(actual, { classes: [ 'foo' ] });
 
-			assertRender(actual, v('div', { classes: { 'foo': true } }, [ null, v('a', { href: '#link' }) ]));
+			assertRender(actual, v('div', { classes: [ 'foo' ] }, [ null, v('a', { href: '#link' }) ]));
 		}
 	},
 

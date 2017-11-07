@@ -115,37 +115,41 @@ export default function sendEvent<I extends EventInit>(target: Element, type: st
 		eventInit = {} as EventInit,
 		selector = ''
 	} = options || {};
-	let event: CustomEvent;
-	assign(eventInit, {
-		bubbles: 'bubbles' in eventInit ? eventInit.bubbles : true,
-		cancelable: 'cancelable' in eventInit ? eventInit.cancelable : true
-	});
-	const { bubbles, cancelable, ...initProps } = eventInit;
-	if (has('customevent-constructor')) {
-		const ctorName = eventClass in window ? eventClass : 'CustomEvent';
-		event = new ((<any> window)[ctorName] as typeof CustomEvent)(type, eventInit);
-	}
-	else {
-		/* because the arity varies too greatly to be able to properly call all the event types, we will
-		 * only support CustomEvent for those platforms that don't support event constructors, which is
-		 * essentially IE11 */
-		event = document.createEvent('CustomEvent');
-		(event as CustomEvent).initCustomEvent(type, bubbles!, cancelable!, {});
-	}
-	try {
-		deepAssign(event, initProps);
-	}
-	catch (e) { /* swallowing assignment errors when trying to overwrite native event properties */ }
+	let dispatchTarget: Element | undefined;
 	if (selector) {
 		const selectorTarget = target.querySelector(selector);
 		if (selectorTarget) {
-			dispatchEvent(selectorTarget, event);
+			dispatchTarget = selectorTarget;
 		}
 		else {
 			throw new Error(`Cannot resolve to an element with selector "${selector}"`);
 		}
 	}
 	else {
-		dispatchEvent(target, event);
+		dispatchTarget = target;
+	}
+	if (dispatchTarget) {
+		let event: CustomEvent;
+		assign(eventInit, {
+			bubbles: 'bubbles' in eventInit ? eventInit.bubbles : true,
+			cancelable: 'cancelable' in eventInit ? eventInit.cancelable : true
+		});
+		const { bubbles, cancelable, ...initProps } = eventInit;
+		if (has('customevent-constructor')) {
+			const ctorName = eventClass in window ? eventClass : 'CustomEvent';
+			event = new ((<any> window)[ctorName] as typeof CustomEvent)(type, eventInit);
+		}
+		else {
+			/* because the arity varies too greatly to be able to properly call all the event types, we will
+			* only support CustomEvent for those platforms that don't support event constructors, which is
+			* essentially IE11 */
+			event = dispatchTarget.ownerDocument.createEvent('CustomEvent');
+			(event as CustomEvent).initCustomEvent(type, bubbles!, cancelable!, {});
+		}
+		try {
+			deepAssign(event, initProps);
+		}
+		catch (e) { /* swallowing assignment errors when trying to overwrite native event properties */ }
+		dispatchEvent(dispatchTarget, event);
 	}
 }

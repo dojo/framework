@@ -8,7 +8,6 @@ import ClientErrorCollector from '../../../src/intern/ClientErrorCollector';
 declare const require: Require;
 
 registerSuite('ClientErrorCollector', {
-
 	'client errors are returned'() {
 		const collector = new ClientErrorCollector(this.remote);
 

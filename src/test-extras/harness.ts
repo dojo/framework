@@ -3,28 +3,26 @@ import 'pepjs';
 import Evented from '@dojo/core/Evented';
 import { createHandle } from '@dojo/core/lang';
 import { Handle } from '@dojo/interfaces/core';
-import { VNode } from '@dojo/interfaces/vdom';
-import { includes } from '@dojo/shim/array';
 import { assign } from '@dojo/shim/object';
 import WeakMap from '@dojo/shim/WeakMap';
 import {
-	ClassesFunction,
 	Constructor,
 	DNode,
-	ProjectionOptions,
+	HNode,
 	WidgetMetaBase,
 	WidgetMetaConstructor,
 	WidgetProperties,
 	WNode
 } from '@dojo/widget-core/interfaces';
-import { decorate, isWNode, v, w } from '@dojo/widget-core/d';
+import { decorate, isHNode, isWNode, v, w } from '@dojo/widget-core/d';
 import WidgetBase from '@dojo/widget-core/WidgetBase';
 import { afterRender } from '@dojo/widget-core/decorators/afterRender';
-import cssTransitions from '@dojo/widget-core/animations/cssTransitions';
-import { dom, Projection, VNodeProperties } from 'maquette';
+import { ProjectorMixin } from '@dojo/widget-core/mixins/Projector';
 import assertRender from './support/assertRender';
 import callListener, { CallListenerOptions } from './support/callListener';
 import sendEvent, { SendEventOptions } from './support/sendEvent';
+
+/* tslint:disable:variable-name */
 
 const ROOT_CUSTOM_ELEMENT_NAME = 'test--harness';
 const WIDGET_STUB_CUSTOM_ELEMENT = 'test--widget-stub';
@@ -32,57 +30,32 @@ const WIDGET_STUB_NAME_PROPERTY = 'data--widget-name';
 
 let harnessId = 0;
 
-const EVENT_HANDLERS = [
-	'ontouchcancel',
-	'ontouchend',
-	'ontouchmove',
-	'ontouchstart',
-	'onblur',
-	'onchange',
-	'onclick',
-	'ondblclick',
-	'onfocus',
-	'oninput',
-	'onkeydown',
-	'onkeypress',
-	'onkeyup',
-	'onload',
-	'onmousedown',
-	'onmouseenter',
-	'onmouseleave',
-	'onmousemove',
-	'onmouseout',
-	'onmouseover',
-	'onmouseup',
-	'onmousewheel',
-	'onscroll',
-	'onsubmit'
-];
-
 /**
- * An internal function which finds a VNode based on `key`
- * @param target The VNode to search
- * @param key The key to find
+ * An internal function which finds a DNode base on a `key`
+ * @param target the root DNode to search
+ * @param key the key to match
  */
-function findVNodebyKey(target: VNode, key: string | object): VNode | undefined {
-	if (typeof target === 'object' && target.properties && target.properties.key === key) {
-		return target;
-	}
-	let found: VNode | undefined;
-	if (typeof target === 'object' && target.children) {
-		target.children
-			.forEach((child) => {
-				if (found) {
-					if (findVNodebyKey(child, key)) {
-						console.warn(`Duplicate key of "${key}" found.`);
+function findDNodeByKey(target: DNode, key: string | object): HNode | WNode | undefined {
+	if (target && typeof target === 'object') {
+		if (target && typeof target === 'object' && target.properties && target.properties.key === key) {
+			return target;
+		}
+		let found: HNode | WNode | undefined;
+		if (target.children) {
+			target.children
+				.forEach((child) => {
+					if (found) {
+						if (findDNodeByKey(child, key)) {
+							console.warn(`Duplicate key of "${key}" found.`);
+						}
 					}
-				}
-				else {
-					found = findVNodebyKey(child, key);
-				}
-			});
+					else {
+						found = findDNodeByKey(child, key);
+					}
+				});
+		}
+		return found;
 	}
-	return found;
 }
 
 /**
@@ -158,8 +131,7 @@ interface MetaData {
  * A private class that is used to actually render the widget and keep track of the last render by
  * the harnessed widget.
  */
-class WidgetHarness<W extends WidgetBase<WidgetProperties>> extends WidgetBase<W['properties']> {
-	private _afterCreate: (element: HTMLElement) => void;
+class WidgetHarness<W extends WidgetBase> extends WidgetBase {
 	private _id = ROOT_CUSTOM_ELEMENT_NAME + '-' + (++harnessId);
 	private _metaData: WeakMap<Constructor<WidgetMetaBase>, MetaData>;
 	private _widgetConstructor: Constructor<W>;
@@ -183,16 +155,10 @@ class WidgetHarness<W extends WidgetBase<WidgetProperties>> extends WidgetBase<W
 	public lastRender: DNode | undefined;
 	public renderCount = 0;
 
-	constructor(widgetConstructor: Constructor<W>, afterCreate: (element: HTMLElement) => void, metaData: WeakMap<Constructor<WidgetMetaBase>, MetaData>) {
+	constructor(widgetConstructor: Constructor<W>, metaData: WeakMap<Constructor<WidgetMetaBase>, MetaData>) {
 		super();
-
 		this._widgetConstructor = SpyWidgetMixin(widgetConstructor, this);
-		this._afterCreate = afterCreate;
 		this._metaData = metaData;
-	}
-
-	protected onElementCreated(element: HTMLElement, key: string) {
-		this._afterCreate(element);
 	}
 
 	/**
@@ -264,118 +230,53 @@ export type MetaMockContext<T extends WidgetMetaBase = WidgetMetaBase> = T & {
 	invalidate(): void;
 };
 
+type ProjectorWidgetHarness<W extends WidgetBase<WidgetProperties>> = ProjectorMixin<W['properties']> & WidgetHarness<W>;
+
+const ProjectorWidgetHarness = ProjectorMixin(WidgetHarness);
+
 /**
  * Harness a widget constructor, providing an API to interact with the widget for testing purposes.
  */
 export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
-	private _attached = false;
-
-	private _afterCreate = (element: HTMLElement) => { /* using a lambda property here creates a bound function */
-		/* istanbul ignore next: difficult to create test conditions */
-		if (this._root && this._root.parentNode) { /* just in case there was already a root node */
-			this._root.parentNode.removeChild(this._root);
-			this._root = undefined;
-		}
-
-		/* remove the element from the flow of the document upon destruction */
-		this.own(createHandle(() => {
-			if (element.parentNode) {
-				element.parentNode.removeChild(element);
-			}
-		}));
-
-		/* assign the element to the root of this document */
-		this._root = element;
-	}
-
-	private _children: DNode[] | undefined;
-	private _classes: string[] = [];
-	private _currentRender: VNode;
+	private _children: W['children'] | undefined;
 	private _metaMap = new WeakMap<Constructor<WidgetMetaBase>, MetaData>();
-	private _projection: Projection | undefined;
-	private _projectionOptions: ProjectionOptions;
-	private _projectionRoot: HTMLElement;
-	private _properties: W['properties'];
-
-	private _render = () => { /* using a lambda property here creates a bound function */
-		this._projection && this._projection.update(this._currentRender = this._widgetHarnessRender() as VNode);
-	}
-
+	private _projectorHandle: Handle | undefined;
+	private _properties: W['properties'] | undefined;
 	private _root: HTMLElement | undefined;
-	private _widgetHarness: WidgetHarness<W>;
-	private _widgetHarnessRender: () => string | VNode | null;
+	private _scheduleRender: () => void;
+	private _widgetHarness: ProjectorWidgetHarness<W>;
 
-	/**
-	 * A *stub* of an event handler/listener that can be used when creating expected virtual DOM
-	 */
-	public listener = () => true;
-
-	/**
-	 * Harness a widget constructor, providing an API to interact with the widget for testing purposes.
-	 * @param widgetConstructor The constructor function/class that should be harnessed
-	 * @param projectionRoot Where to append the harness.  Defaults to `document.body`
-	 */
-	constructor(widgetConstructor: Constructor<W>, projectionRoot: HTMLElement = document.body) {
-		super({});
-
-		this._widgetHarness = new WidgetHarness<W>(widgetConstructor, this._afterCreate, this._metaMap);
-		this._widgetHarnessRender = this._widgetHarness.__render__.bind(this._widgetHarness);
-
-		this._projectionRoot = projectionRoot;
-		this._projectionOptions = {
-			transitions: cssTransitions,
-			eventHandlerInterceptor: this._eventHandlerInterceptor.bind(this._widgetHarness),
-			nodeEvent: new Evented()
-		};
-
-		this.own(this._widgetHarness);
-	}
-
-	private _attach(): boolean {
-		this.own(createHandle(() => {
-			if (!this._attached) {
-				return;
-			}
-			this._projection = undefined;
-			this._attached = false;
-		}));
-
-		this._projection = dom.append(this._projectionRoot, this._currentRender = this._widgetHarnessRender() as VNode, this._projectionOptions);
-		this._attached = true;
-		return this._attached;
-	}
-
-	private _eventHandlerInterceptor(propertyName: string, eventHandler: Function, domNode: Element, properties: VNodeProperties) {
-		if (includes(EVENT_HANDLERS, propertyName)) {
-			return function(this: Node, ...args: any[]) {
-				return eventHandler.apply(properties.bind || this, args);
-			};
-		}
-		else {
-			// remove "on" from event name
-			const eventName = propertyName.substr(2);
-			domNode.addEventListener(eventName, (...args: any[]) => {
-				eventHandler.apply(properties.bind || this, args);
-			});
-		}
-	}
-
-	private _invalidate(): void {
+	private _invalidate() {
 		if (this._properties) {
-			// TODO: no need to coerce to any in 2.5.2
-			this._widgetHarness.__setProperties__(this._properties as any);
+			this._widgetHarness.setProperties(this._properties as any);
+			this._properties = undefined;
 		}
 		if (this._children) {
-			this._widgetHarness.__setChildren__(this._children);
+			this._widgetHarness.setChildren(this._children);
+			this._children = undefined;
 		}
-		if (!this._attached) {
-			this._attach();
+		if (!this._projectorHandle) {
+			this._widgetHarness.async = false;
+			this._projectorHandle = this._widgetHarness.append(this._root);
 		}
-		else {
-			this._widgetHarness.invalidate();
-			this._render();
-		}
+		this._scheduleRender();
 	}
+
+	constructor(widgetConstructor: Constructor<W>, root?: HTMLElement) {
+		super({});
+
+		const widgetHarness = this._widgetHarness = new ProjectorWidgetHarness(widgetConstructor, this._metaMap);
+		// we want to control when the render gets scheduled, so we will hijack the projects one
+		this._scheduleRender = widgetHarness.scheduleRender.bind(widgetHarness);
+		widgetHarness.scheduleRender = () => {};
+		this.own(widgetHarness);
+		this._root = root;
+	}
+
+	/**
+	 * Provides a reference to a function that can be used when creating an expected render value
+	 */
+	public listener = () => true;
 
 	/**
 	 * Call a listener on a target node of the virtual DOM.
@@ -388,34 +289,6 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 			throw new TypeError('Widget is not rendering an HNode or WNode');
 		}
 		callListener(render, method, options);
-	}
-
-	/**
-	 * Provide a set of classes that should be returned as a map.  It is stateful in that previous classes
-	 * will be negated in future calls.  Use `.resetClasses()` to clear the cache of classes.
-	 * @param classes A rest argument of classes to be returned as a map
-	 */
-	public classes(...classes: (string | null)[]): ClassesFunction {
-		return (): { [className: string ]: boolean } => {
-			const result: { [className: string]: boolean } = {};
-
-			this._classes.reduce((result, className) => {
-				result[className] = false;
-				return result;
-			}, result);
-
-			classes.reduce((result, className) => {
-				if (className) {
-					result[className] = true;
-					if (!includes(this._classes, className)) {
-						this._classes.push(className);
-					}
-				}
-				return result;
-			}, result);
-
-			return result;
-		};
 	}
 
 	/**
@@ -436,24 +309,16 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 	}
 
 	/**
-	 * Refresh the render and return the last render's root `DNode`.
-	 */
-	public getRender(): DNode {
-		this._invalidate();
-		return this._widgetHarness.lastRender!;
-	}
-
-	/**
 	 * Get the root element of the harnessed widget.  This will refresh the render.
 	 */
 	public getDom(): HTMLElement {
-		if (!this._attached) {
+		if (!this._projectorHandle) {
 			this._invalidate();
 		}
-		if (!(this._root && this._root.firstChild)) {
+		if (!(this._widgetHarness.lastRender) || !(this._widgetHarness.lastRender as any).domNode) {
 			throw new Error('No root node has been rendered');
 		}
-		return <HTMLElement> this._root.firstChild;
+		return (this._widgetHarness.lastRender as any).domNode as HTMLElement;
 	}
 
 	/**
@@ -480,11 +345,11 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 	}
 
 	/**
-	 * Clear any cached classes that have been cached via calls to `.classes()`
+	 * Refresh the render and return the last render's root `DNode`.
 	 */
-	public resetClasses(): this {
-		this._classes = [];
-		return this;
+	public getRender(): DNode {
+		this._invalidate();
+		return this._widgetHarness.lastRender;
 	}
 
 	/**
@@ -500,9 +365,9 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 	public sendEvent<I extends EventInit>(type: string, options: HarnessSendEventOptions<I> = {}): this {
 		let { target = this.getDom(), key, ...sendOptions } = options;
 		if (key) {
-			const vnode = findVNodebyKey(this._currentRender, key);
-			if (vnode && vnode.domNode) {
-				target = vnode.domNode as Element;
+			const dnode = findDNodeByKey(this._widgetHarness.lastRender, key);
+			if (isHNode(dnode)) {
+				target = (dnode as any).domNode as Element;
 			}
 			else {
 				throw new Error(`Could not find key of "${key}" to sendEvent`);
@@ -516,7 +381,7 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 	 * Set the children that will be used when rendering the harnessed widget
 	 * @param children The children to be set on the harnessed widget
 	 */
-	public setChildren(children: DNode[]): this {
+	public setChildren(children: W['children']): this {
 		this._children = children;
 		return this;
 	}
@@ -534,8 +399,8 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 /**
  * Harness a widget class for testing purposes, returning an API to interact with the harness widget class.
  * @param widgetConstructor The constructor function/class of widget that should be harnessed.
- * @param projectionRoot The root where the harness should append itself to the DOM.  Default to `document.body`
+ * @param root The root where the harness should append itself to the DOM.  Defaults to `document.body`
  */
-export default function harness<W extends WidgetBase<WidgetProperties>>(widgetConstructor: Constructor<W>, projectionRoot?: HTMLElement): Harness<W> {
-	return new Harness(widgetConstructor, projectionRoot);
+export default function harness<W extends WidgetBase<WidgetProperties>>(widgetConstructor: Constructor<W>, root?: HTMLElement): Harness<W> {
+	return new Harness(widgetConstructor, root);
 }

@@ -26,14 +26,14 @@ interface MockWidgetProperties extends WidgetProperties {
 
 class MockWidget extends WidgetBase<MockWidgetProperties> {
 	render() {
-		return v('div.foo');
+		return v('div', { classes: [ 'foo' ] });
 	}
 }
 
 class MockArrayWidget extends WidgetBase<MockWidgetProperties> {
 	render() {
 		return [
-			v('div.foo')
+			v('div', { classes: [ 'foo' ] })
 		];
 	}
 }
@@ -74,19 +74,25 @@ class SubWidget extends WidgetBase<WidgetProperties> {
 registerSuite('harness', {
 
 	'rendering': {
-		'nodes are added during rendering and removed after destruction'() {
+		'nodes are added during rendering'() {
 			const widget = harness(MockWidget);
-			const bodyChildCount = document.body.childElementCount;
 			const dom = widget.getDom();
-			assert.strictEqual(document.body.childElementCount, bodyChildCount + 1, 'body should have an extra node');
 			const parentElement = dom.parentElement!;
 			assert.strictEqual(parentElement.tagName, 'TEST--HARNESS');
 			assert.include(parentElement.getAttribute('id')!, 'test--harness-');
 			assert.strictEqual(parentElement.childElementCount, 1, 'harness should only have one child element');
-			assert.strictEqual(parentElement.parentElement, document.body, 'harness root should be child of document.body');
 			widget.destroy();
-			assert.strictEqual(document.body.childElementCount, bodyChildCount, 'body should have had a child removed');
-			assert.isNull(parentElement.parentElement, 'harness root should no longer be a child of the document.body');
+		},
+
+		'harness can have a different root'() {
+			const div = document.createElement('div');
+			document.body.appendChild(div);
+
+			const widget = harness(MockWidget, div);
+			const parentElement = widget.getDom().parentElement!;
+			assert.strictEqual(parentElement.parentElement, div, 'the root of the harness should be a child of the div');
+			widget.destroy();
+			document.body.removeChild(div); /* cleanup after test */
 		},
 
 		'WNodes are stubbed'() {
@@ -151,19 +157,6 @@ registerSuite('harness', {
 			widget.destroy();
 		},
 
-		'harness can have a different root'() {
-			const div = document.createElement('div');
-			document.body.appendChild(div);
-
-			const widget = harness(MockWidget, div);
-			const parentElement = widget.getDom().parentElement!;
-			assert.strictEqual(parentElement.parentElement, div, 'the root of the harness should be a child of the div');
-			widget.destroy();
-			assert.isNull(parentElement.parentElement, 'should be removed from div');
-			assert.isNull(div.firstChild, 'should not have a child anymore');
-			document.body.removeChild(div); /* cleanup after test */
-		},
-
 		'bad render throws'() {
 			class NullWidget extends WidgetBase<WidgetProperties> {
 				render() {
@@ -184,13 +177,13 @@ registerSuite('harness', {
 	'.expectRender()': {
 		'HNode render - matches'() {
 			const widget = harness(MockWidget);
-			widget.expectRender(v('div.foo'));
+			widget.expectRender(v('div', { classes: [ 'foo' ] }));
 			widget.destroy();
 		},
 
 		'HNode render array - matches'() {
 			const widget = harness(MockArrayWidget);
-			widget.expectRender([ v('div.foo') ]);
+			widget.expectRender([ v('div', { classes: [ 'foo' ] }) ]);
 			widget.destroy();
 		},
 
@@ -219,7 +212,7 @@ registerSuite('harness', {
 		'HNode render - does not match'() {
 			const widget = harness(MockWidget);
 			assert.throws(() => {
-				widget.expectRender(v('div.bar'));
+				widget.expectRender(v('div', { classes: [ 'bar' ] }));
 			});
 			widget.destroy();
 		},
@@ -227,7 +220,7 @@ registerSuite('harness', {
 		'HNode render array - does not match'() {
 			const widget = harness(MockWidget);
 			assert.throws(() => {
-				widget.expectRender([ v('div.baz') ]);
+				widget.expectRender([ v('div', { classes: [ 'baz' ] }) ]);
 			});
 			widget.destroy();
 		},
@@ -240,7 +233,7 @@ registerSuite('harness', {
 			}
 			const widget = harness(MockWidget);
 			assert.throws(() => {
-				widget.expectRender([ v('div.baz') ]);
+				widget.expectRender([ v('div', { classes: [ 'baz' ] }) ]);
 			});
 			widget.destroy();
 		},
@@ -253,7 +246,7 @@ registerSuite('harness', {
 			}
 			const widget = harness(MockWidget);
 			assert.throws(() => {
-				widget.expectRender([ v('div.baz') ]);
+				widget.expectRender([ v('div', { classes: [ 'baz' ] }) ]);
 			});
 			widget.destroy();
 		},
@@ -282,7 +275,7 @@ registerSuite('harness', {
 				__render__() { }
 			}
 
-			const widget = harness(<any> BrokenRender);
+			const widget = harness(BrokenRender as any);
 			assert.throws(() => {
 				widget.expectRender(null);
 			}, Error, 'An expected render did not occur.');
@@ -369,54 +362,6 @@ registerSuite('harness', {
 				assert.isTrue(called, 'comparer should have been called');
 			}
 		}
-	},
-
-	'.classes()': {
-		'are additive'() {
-			const widget = harness(MockWidget);
-
-			assert.deepEqual(widget.classes('foo', 'bar')(), {
-				foo: true,
-				bar: true
-			});
-
-			assert.deepEqual(widget.classes('baz', 'bar')(), {
-				foo: false,
-				baz: true,
-				bar: true
-			});
-
-			widget.destroy();
-		},
-
-		'handles null values'() {
-			const widget = harness(MockWidget);
-
-			assert.deepEqual(widget.classes('baz', null, 'bar')(), {
-				baz: true,
-				bar: true
-			});
-
-			widget.destroy();
-		}
-	},
-
-	'.resetClasses()'() {
-		const widget = harness(MockWidget);
-
-		assert.deepEqual(widget.classes('foo', 'bar')(), {
-			foo: true,
-			bar: true
-		});
-
-		widget.resetClasses();
-
-		assert.deepEqual(widget.classes('baz', 'bar')(), {
-			baz: true,
-			bar: true
-		});
-
-		widget.destroy();
 	},
 
 	'.setChildren()': {
@@ -646,7 +591,7 @@ registerSuite('harness', {
 				widget.sendEvent('click', {
 					key: 'foo'
 				});
-			}, Error, 'Could not find key of "foo" to sendEvent');
+			}, Error, 'No root node has been rendered');
 
 			widget.destroy();
 		}
@@ -793,8 +738,13 @@ registerSuite('harness', {
 	},
 
 	'.getRender()'() {
-		const widget = harness(MockWidget);
-		assertRender(widget.getRender(), v('div.foo', { afterCreate: widget.listener, afterUpdate: widget.listener }));
+		class ChildTextWidget extends WidgetBase {
+			render() {
+				return v('div', {}, [ 'foo' ]);
+			}
+		}
+		const widget = harness(ChildTextWidget);
+		assertRender(widget.getRender(), v('div', {}, [ 'foo' ]));
 		widget.destroy();
 	},
 
@@ -841,7 +791,7 @@ registerSuite('harness', {
 
 			widget.getRender();
 
-			assert.deepEqual(idStack, [ undefined ]);
+			assert.deepEqual(idStack, [ undefined, 'foo' ]);
 
 			const handle = widget.mockMeta(NodeId, {
 				get(key: string | number) {
@@ -855,7 +805,7 @@ registerSuite('harness', {
 
 			widget.getRender();
 
-			assert.deepEqual(idStack, [ undefined, 'qat' ]);
+			assert.deepEqual(idStack, [ undefined, 'foo', 'qat' ]);
 
 			handle.destroy();
 			widget.setProperties({
@@ -864,13 +814,13 @@ registerSuite('harness', {
 
 			widget.getRender();
 
-			assert.deepEqual(idStack, [ undefined, 'qat', undefined ]);
+			assert.deepEqual(idStack, [ undefined, 'foo', 'qat', undefined ]);
 
 			widget.destroy();
 		},
 
 		'mocked meta can invalidate widget'() {
-			class IdWidget extends WidgetBase {
+			class IdWidget extends WidgetBase<{ flush: boolean }> {
 				render() {
 					const content = this.meta(NodeId).get('foo');
 					return v('div', {
@@ -893,6 +843,8 @@ registerSuite('harness', {
 					return 'qat';
 				}
 			});
+
+			widget.setProperties({ flush: true });
 
 			widget.expectRender(v('div', {
 				key: 'foo',

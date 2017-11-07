@@ -114,6 +114,24 @@ registerSuite('support/assertRender', {
 			);
 		},
 
+		'missing children'() {
+			assert.throws(() => {
+				assertRender(
+					v('div', {}),
+					v('div', {}, [])
+				);
+			}, AssertionError, 'Render unexpected: Expected children');
+		},
+
+		'unepxected children'() {
+			assert.throws(() => {
+				assertRender(
+					v('div', {}, []),
+					v('div', {})
+				);
+			}, AssertionError, 'Render unexpected: Unxpected children');
+		},
+
 		'string children equal'() {
 			assertRender(
 				v('div', { }, [ 'foo' ]),
@@ -127,7 +145,27 @@ registerSuite('support/assertRender', {
 					v('div', { }, [ 'foo' ]),
 					v('div', { }, [ 'bar' ])
 				);
-			}, AssertionError, 'Render unexpected: Expected "foo" to equal "bar"');
+			}, AssertionError, 'Render unexpected: Unexpected string values');
+		},
+
+		'rendered string child equal'() {
+			const actual = v('div', { }, [ v('', { })] );
+			(actual.children![0] as any).text = 'foo';
+			assertRender(
+				actual,
+				v('div', { }, [ 'foo' ])
+			);
+		},
+
+		'rendered string child not equal'() {
+			const actual = v('div', { }, [ v('', { })] );
+			(actual.children![0] as any).text = 'foo';
+			assert.throws(() => {
+				assertRender(
+					actual,
+					v('div', { }, [ 'bar' ])
+				);
+			}, AssertionError, 'Render unexpected: Expected text differs from rendered text: [0]');
 		},
 
 		'missing child'() {
@@ -161,7 +199,7 @@ registerSuite('support/assertRender', {
 					v('div', { }, [ v('span', {}, [ 'foo' ]) ]),
 					v('div', { }, [ v('i', {}, [ 'foo' ]) ])
 				);
-			}, AssertionError, 'Render unexpected');
+			}, AssertionError, 'Render unexpected: Tags do not match: [0]');
 		},
 
 		'WNode children equal'() {
@@ -382,7 +420,10 @@ registerSuite('support/assertRender', {
 	'throws with message'() {
 		assert.throws(() => {
 			assertRender(null, 'bar', 'foo');
-		}, AssertionError, 'Render unexpected: foo');
+		}, AssertionError, 'Render unexpected: DNode type mismatch, expected "string" actual "null": foo');
+		assert.throws(() => {
+			assertRender('bar', null, 'foo');
+		}, AssertionError, 'Render unexpected: DNode type mismatch, expected "null" actual "string": foo');
 	},
 
 	'options': {

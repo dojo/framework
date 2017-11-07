@@ -49,10 +49,10 @@ registerSuite({
     basic() {
         const widget = harness(MyWidget);
 
-        widget.expectRender(v('div', { classes: widget.classes(css.root) }, [
+        widget.expectRender(v('div', { classes: css.root }, [
           w('child', {
             key: 'first-child',
-            classes: widget.classes(css.child)
+            classes: css.child
           })
         ]), 'should render as expected');
 
@@ -115,74 +115,6 @@ widget.callListener('onClick', {
 });
 ```
 
-#### .classes()
-
-Returns a value to be passed as a classes property of a `v()` or `w()` call that adds classes in the same way they would be added
-to a virtual DOM node.  For example:
-
-```typescript
-widget.expectRender(v('div', {
-    classes: widget.classes(css.root)
-}, [
-    v('div', {
-        classes: widget.classes(css.child)
-    });
-]));
-```
-
-When rendering, in order to ensure that classes are persisted from render to render, the widget instance will keep the map of
-classes stateful. This means that if classes are removed, instead of being dropped from the map, they are set to `false`.  This ensures
-that the virtual DOM engine adds and removes classes appropriately.  The `.classes()` method mimics this behaviour for you.
-
-It is important to note though, that between the first and second render of a widget that map will expand.  That means
-classes will need to be updated in your expected render.  For example, this would likely fail:
-
-```typescript
-const expected = v('div', {
-    classes: widget.classes(css.root)
-}, [
-    v('div', {
-        classes: widget.classes(css.child)
-    });
-]);
-
-widget.expectRender(expected);
-
-widget.setProperties({
-  foo: 'bar'
-});
-
-widget.expectRender(expected);
-```
-
-In order to avoid this, you should always generate your expected new classes, or use some of the helper functions that are part of the
-`harness` module to update the classes. Also _note_ that the order of the assign operations must be from children up to the parent. For example:
-
-```typescript
-const expected = v('div', {
-    classes: widget.classes(css.root)
-}, [
-    v('div', {
-        classes: widget.classes(css.child)
-    });
-]);
-
-widget.expectRender(expected);
-
-widget.setProperties({
-    foo: 'bar'
-});
-
-assignChildProperties(expected, '0', {
-    classes: widget.classes(css.child)
-});
-assignProperties(expected, {
-    classes: widget.classes(css.root)
-});
-
-widget.expectRender(expected);
-```
-
 #### .destroy()
 
 Cleans up the `harness` instance and removes the harness and other rendered DOM from the DOM.  You should *always* call `.destroy()`.
@@ -211,7 +143,7 @@ widget.setProperties({
 widget.setChildren('some text');
 
 widget.expectRender(v('div', {
-    classes: widget.classes(css.root, css.open),
+    classes: [ css.root, css.open ],
     onclick: widget.listener
 }, [ 'some text' ]));
 ```
@@ -277,10 +209,6 @@ widget.mockMeta(Dimensions, {
     }
 })
 ```
-
-#### .resetClasses()
-
-Reset the classes to "forget" any previously asserted classes.
 
 #### .sendEvent()
 
@@ -357,7 +285,7 @@ widget.setProperties({
     open: true
 });
 
-widget.expectRender(v('div', { classes: widget.classes(css.root, css.open) }));
+widget.expectRender(v('div', { classes: [ css.root, css.open ] }));
 ```
 
 ### intern/ClientErrorCollector
@@ -491,7 +419,7 @@ const expected = v('div', [
     ])
 ]);
 
-assignChildProperties(expected, '0,2', { classes: widget.classes(css.highlight) });
+assignChildProperties(expected, '0,2', { classes: css.highlight });
 ```
 
 #### assignProperties()
@@ -500,12 +428,12 @@ Shallowly assigns properties to a `WNode` or `HNode`.  For example:
 
 ```typescript
 const expected = v('div', {
-    classes: widget.classes(css.root),
+    classes: css.root,
     onclick: widget.listener
 }, [ 'content' ]);
 
 assignProperties(expected, {
-    classes: widget.classes(css.root, css.open)
+    classes: [ css.root, css.open ]
 });
 ```
 
@@ -616,7 +544,7 @@ const expected = v('div', [
 ]);
 
 assignChildProperties(expected, '0,2', {
-    classes: widget.classes(css.highlight)
+    classes: css.highlight
     value: '6'
 });
 ```
@@ -627,12 +555,12 @@ Replaces properties on a `WNode` or `HNode`.  For example:
 
 ```typescript
 const expected = v('div', {
-    classes: widget.classes(css.root),
+    classes: css.root,
     onclick: widget.listener
 }, [ 'content' ]);
 
 assignProperties(expected, {
-    classes: widget.classes(css.root, css.open),
+    classes: [ css.root, css.open ],
     onclick: widget.listener
 });
 ```
