@@ -1,10 +1,12 @@
 {
 	"compilerOptions": {
 		"declaration": false,
+		"experimentalDecorators": true,
 		"lib": [
 			"dom",
 			"es5",
 			"es2015.iterable",
+			"es2015.promise",
 			"es2015.symbol",
 			"es2015.symbol.wellknown"
 		],
@@ -12,15 +14,15 @@
 		"moduleResolution": "node",
 		"noImplicitAny": true,
 		"noImplicitThis": true,
-		"strictNullChecks": true,
+		"noUnusedLocals": true,
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
+		"strictNullChecks": true,
 		"target": "es5",
 		"types": [ "intern" ]
 	},
 	"include": [
-		"./typings/index.d.ts",
 		"./src/**/*.ts",
 		"./tests/**/*.ts"
 	]

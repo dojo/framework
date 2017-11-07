@@ -1,28 +1,12 @@
 # @dojo/stores
 
 [![Build Status](https://travis-ci.org/dojo/stores.svg?branch=master)](https://travis-ci.org/dojo/stores)
-[![codecov.io](http://codecov.io/gh/dojo/stores/branch/master/graph/badge.svg)](http://codecov.io/gh/dojo/stores/branch/master)
+[![codecov.io](https://codecov.io/gh/dojo/stores/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/stores/branch/master)
 [![npm version](https://badge.fury.io/js/%40dojo%2Fstores.svg)](https://badge.fury.io/js/%40dojo%2Fstores)
 
-This library provides a basic data store, as well as extensions that provide the ability to query and observe the store.
+This library provides an application store designed to complement @dojo/widgets and @dojo/widget-core or any other reactive application.
 
 **WARNING** This is *alpha* software. It is not yet production ready, so you should use at your own risk.
-
-- [Usage](#usage)
-- [Features](#features)
-  - [Storage](#storage)
-  - [Store](#store)
-    - [Basic Usage](#basic-usage)
-    - [Store Observable](#store-observable)
-  - [ObservableStore](#observablestore)
-    - [Observing the store](#observing-the-store)
-  - [QueryableStore](#queryablestore)
-    - [MappedQueryResult](#mappedqueryresult)
-  - [Fetch Results](#fetch-results)
-- [How do I contribute?](#how-do-i-contribute)
-  - [Installation](#installation)
-  - [Testing](#testing)
-- [Licensing information](#licensing-information)
 
 ## Usage
 
@@ -32,7 +16,6 @@ To use `@dojo/stores`, install the package along with its required peer dependen
 npm install @dojo/stores
 
 # peer dependencies
-npm install @dojo/compose
 npm install @dojo/core
 npm install @dojo/has
 npm install @dojo/shim
@@ -40,420 +23,347 @@ npm install @dojo/shim
 
 ## Features
 
-### Storage
+ * Application state store designed to work with a reactive component architecture
+ * Out of the box support for asynchronous commands
+ * All state operations are recorded per process and undoable via a process callback
+ * Supports the optimistic pattern with that can be rolled back on a failure
+ * Fully serializable operations and state
 
-The underlying `Storage` interface provides the basic CRUD functionality, and is leveraged to provide the `Store` interface, which is the interface intended to be consumed. This allows the `StoreBase`, `ObservableStore`, and `QueryableStore` classes to be repurposed to interact with any storage medium by providing an object implementing the simpler `Storage` interface at instantiation. By default these classes all use the `InMemoryStorage` implementation.
-```typescript
-import StoreBase from 'store/StoreBase';
-import { Storage } from 'store/interfaces';
-const myCustomStorage: Storage = {
-  // Implement storage API
+## Overview
+
+Dojo 2 stores is a predictable, consistent state container for Javascript applications with inspiration from Redux and Flux architectures. However Dojo 2 stores aims to provide more built in support for common patterns such as asynchronous behaviors, undo support and **more**!
+
+Managing state can become difficult to coordinate when an application becomes complicated with multiple views, widgets, components and models. With each of these attempting to update attributes of state at varying points within the application lifecycle things can get **confusing**. When state changes are hard to understand and/or non-deterministic it becomes increasingly difficult to identify and reproduce bug or add new features.
+
+Dojo 2 stores provides a centralized store is designed to be the **single source of truth** for an application and operates using uni-directional data flow. This means all application data follows the same lifecycle, ensuring the application logic is predictable and easy to understand.
+
+## Basics
+
+To work with the Dojo 2 store there are three core but simple concepts - Operations, Commands and Processes.
+
+ * `Operation`
+   * Granular instructions to manipulate state based on JSON Patch
+ * `Command`
+   * Simple functions that ultimately return operations needed to perform the required state change
+ * `Process`
+   * A function that to execute a group of commands that usually represent a complete application behavior
+
+### Operations
+
+Operations are the raw instructions the store uses to make modifications to the state. The operations are based on the JSON Patch and JSON Pointer specifications that have been customized specifically for Dojo 2 stores, primarily to prevent access to the state's root.
+
+Each operation is a simple object which contains instructions with the `OperationType`, `path` and optionally the `value` (depending on operation).
+
+```ts
+const operations = [
+	{ op: OperationType.ADD, path: new JsonPointer('/foo'), value: 'foo' },
+	{ op: OperationType.REPLACE, path: new JsonPointer('/bar'), value: 'bar' },
+	{ op: OperationType.REMOVE, path: new JsonPointer('/qux') },
+];
+```
+
+Dojo 2 stores provides a helper package that can generate `PatchOperation` objects from `@dojo/stores/state/operations`:
+
+* `add`     - Returns a `PatchOperation` of type `OperationType.ADD` for the `path` and `value`
+* `remove`  - Returns a `PatchOperation` of type `OperationType.REMOVE` for the `path`
+* `replace` - Returns a `PatchOperation` of type `OperationType.REPLACE` for the `path` and `value`
+
+### Commands
+
+Commands are simply functions which are called internally by the store when executing a `Process` and return an array of `PatchOperations` that tells the `store` what state changes needs to be performed.
+
+Each command is passed a `CommandRequest` which provides a `get` function for access to the stores state and a `payload` object which contains the an array of arguments that the process executor was called with.
+
+The `get` function returns back state for a given "path" or "selector", for example `get('/my/deep/state')` or `get('/my/array/item/9')`.
+
+```ts
+function addTodoCommand({ get, payload }: CommandRequest) {
+	const todos = get('/todos');
+	const operations = [
+		{ op: OperationType.ADD, path: `/todos/${todos.length}`, value: payload[0] }
+	];
+
+	return operations;
 }
-const myCustomStore = new StoreBase({
-  storage: myCustomStorage
-});
-```
 
-### Store
-
-The `Store` interface provides basic CRUD operations, methods to retrieve records, and methods to create IDs. 
-```typescript
-get(ids: string[]): Promise<T[]>;
-get(id: string): Promise<T | undefined>;
-get(ids: string | string[]): Promise<T | undefined | T[]>;
-```
-Retrieves store items associated with the provided ID or IDs. Will return undefined for any items that don't exist in the store.
-```typescript
-identify(items: T[]): string[];
-identify(items: T): string;
-identify(items: T | T[]): string | string[];
-```
-Returns the IDs for the passed in items. By default the store will look for an `id` property on an item, if another property should be used, the `idProperty` can be specified when creating the store. The `idFunction` property can be provided if a more complicated or composite ID is needed.
-```typescript
-createId(): Promise<string>;
-```
-Generates a new ID. The default implementation of `createId` leverages  [@dojo/core/uuid](https://github.com/dojo/core/blob/master/src/uuid.ts)
-```typescript
-add(items: T[] | T, options?: O): StoreObservable<T, U>;
-```
-Adds the item(s) to the store, failing if they already exist, unless the `rejectOverwrite` property is set to `false`. For the default store implementation `rejectOverwrite` is the only option used by the store.
-```typescript
-put(items: T[] | T, options?: O): StoreObservable<T, U>;
-```
-Adds or overwrites the specified items in the store. If overwrites should not be allowed, `rejectOverwrite` should be set to `true` in the provided options.
-```typescript
-patch(updates: PatchArgument<T>, options?: O): StoreObservable<T, U>;
-```
-Updates the item(s) indicated by PatchArgument in place in the store. The `Patch` interface is based on the [JSON Patch spec](https://tools.ietf.org/html/rfc6902), and can be serialized(not fully tested) to a format compliant with an HTTP patch request
-```typescript
-delete(ids: string[] | string): StoreObservable<string, U>;
-```
-Delete the item(s) with the provided IDs from the store
-```typescript
-fetch(query?: Query<T>): FetchResult<T>;
-```
-Returns a promise that will resolve to the data in the store that matches the query if one is provided, and all data otherwise
-#### Basic Usage
-
-```typescript
-store.fetch().then(function(storeData) {
-	// storeData = data;
-});
-store.delete('1').then(function(deleted) {
-	// deleted = [ '1' ]
-});
-store.delete([ '2', '3' ]).then(function(deleted) {
-	// delete = [ '2', '3' ]
-});
-store.add([
-	{ id: '1', value: 2 },
-	{ id: '2', value: 3 },
-	{ id: '3', value: 4 }
-]);
-store.put([
-	{ id: '1', value: 5 },
-	{ id: '4', value: 4 }
-]);
-// These won't compile, because they don't match
-// the item type. The item type was inferred by the data argument
-// in the StoreBase initialization options, but it can also be
-// specified explicitly(i.e. new StoreBase<TypeOfData>();)
-// store.put({ id: '5', value: '' });
-// store.add('5');
-store.patch({ id: '2', patch: diff(
-	{ id: '2', value: 3 },
-	{ id: '2', value: 10 }
-)});
-store.fetch().then(function(data) {
-	// data =  [
-	// 	 { id: '1', value: 5 },
-	//	 { id: '2', value: 10 },
-	//	 { id: '3', value: 4 },
-	//	 { id: '4', value: 4 }
-	// ]);
-});
-```
-
-#### Store Observable
-
-The return type of the CRUD methods on the `Store` interface is a `StoreObservable`. This type extends `Promise`. `then` returns the final results of the operation to the callback provided if it is successful, and passes any errors that occurred to the error callback otherwise.
-
-But it is also observable. By default any subscribers will get exactly one `UpdateResults` object or an error before being completed.
-
-```typescript
-interface UpdateResults<T> {
-	currentItems?: T[];
-	failedData?: CrudArgument<T>[];
-	successfulData: T[] | string[];
-	type: StoreOperation;
+function calculateCountsCommand({ get }: CommandRequest) {
+	const todos = get('/todos');
+	const completedTodos = todos.filter((todo: any) => todo.completed);
+	const operations = [
+		{ op: OperationType.REPLACE, path: '/activeCount', value: todos.length - completedTodos.length },
+		{ op: OperationType.REPLACE, path: '/completedCount', value: completedTodos.length }
+	];
+	return operations;
 }
 ```
 
-The built in store will only populate the `type` and `successfulData` properties, but this provides an extension point for store implementations to provide more details about the results of the operation, report results incrementally, or allow for the operation to be retried in the case of recoverable errors(e.g. data conflicts or network errors).
+ *Important:* Access to state root is not permitted and will throw an error, for example `get('/')`. This applies for `Operations` also, it is not possible to create an operation that will update the state root.
 
-### ObservableStore
+ ##### Asynchronous Commands
 
-This store provides an API for observing the store itself, or specific items within the store.
+Commands support asynchronous behavior out of the box simply by returning a `Promise<PatchOperation[]>`.
 
-```typescript
-export interface ObservableStoreInterface<T, O extends CrudOptions, U extends UpdateResults<T>> extends Store<T, O, U> {
-	/**
-	 * Observe the entire store, receiving deltas indicating the changes to the store.
-	 * When observing, an initial update will be sent with the last known state of the store in the `afterAll` property.
-	 * If fetchAroundUpdates is true, the store's local data will by synchronized with the underlying Storage.
-	 * If fetchAroundUpdates is not true, then the data will be the result of locally applying updates to the data
-	 * retrieved from the last fetch.
-	 */
-	observe(): Observable<StoreDelta<T>>;
-	/**
-	 * Receives the current state of the item with the specified ID whenever it is updated. This observable will be
-	 * completed if the item is deleted
-	 * @param id The ID of the item to observe
-	 */
-	observe(id: string): Observable<T>;
-	/**
-	 * Receives the current state of the items in an `ItemUpdate` object whenever they are updated. When any of the
-	 * items are deleted an `ItemUpdate` with the item's ID and no item property will be sent out. When all of the
-	 * observed items are deleted the observable will be completed.
-	 * @param ids - The IDS of the items to observe
-	 */
-	observe(ids: string[]): Observable<ItemUpdate<T>>;
+```ts
+async function postTodoCommand({ get, payload: [ id ] }: CommandRequest): Promise<PatchOperation[]> {
+	const response = await fetch('/todos');
+	if (!response.ok) {
+		throw new Error('Unable to post todo');
+	}
+	const json = await response.json();
+	const todos = get('/todos');
+	const index = findIndex(todos, byId(id));
+	// success
+	return [
+		replace(`/todos/${index}`, { ...todos[index], loading: false, id: data.uuid
+	];
+}
+```
+
+### Processes
+
+A `Process` is the construct used to execute commands against a `store` instance in order to make changes to the application state. `Processes` are created using the `createProcess` factory function that accepts an array of commands and an optional callback that can be used command to manage errors thrown from a command. The optional callback receives an `error` object and a `result` object. The `error` object contains the `error` stack and the command that caused the error. The `result` object contains the `payload` passed to the process, a function to undo the operations of the `process` and a function to execute an additional `process`.
+
+The array of `Commands` that are executed in sequence by the store until the last Command is completed or a `Command` throws an error, these processes often represent an application behavior. For example adding a todo in a simple todo application which will be made up with multiple discreet commands.
+
+A simple `process` to add a todo and recalculate the todo count:
+
+```ts
+const addTodoProcess = createProcess([ addTodoCommand, calculateCountCommand ]);
+```
+
+A `callback` can be provided which will be called when an error occurs or the process is successfully completed:
+
+
+```ts
+function addTodoProcessCallback(error, result) {
+	if (error) {
+		// do something with the error
+		// possibly run the `undo` function from result to rollback the changes up to the
+		// error
+		result.undo();
+	}
+	// possible additional state changes by running another process using result.executor(otherProcess)
 }
 
-interface StoreDelta<T> {
-	updates: T[];
-	deletes: string[];
-	adds: T[];
-	beforeAll: T[];
-	afterAll: T[];
+const addTodoProcess = createProcess([ addTodoCommand, calculateCountCommand ], addTodoProcessCallback);
+```
+
+The `Process` creates a deferred executor by passing the `store` instance `addTodoProcess(store)` which can be executed immediately by passing the `payload` `addTodoProcess(store)(arg1, arg2)` or more often passed to your widgets and used to initiate state changes on user interactions. The `payload` arguments passed to the `executor` are passed to each of the `Process`'s commands in a `payload` argument
+
+```ts
+const addTodoExecutor = addTodoProcess(store);
+
+addTodoExecutor('arguments', 'get', 'passed', 'here');
+```
+
+### Initial State
+
+Initial state can be defined on store creation by executing a `Process` after the store has been instantiated.
+
+```ts
+// Command that creates the basic initial state
+function initialStateCommand() {
+	return [
+		add('/todos', []),
+		add('/currentTodo', ''),
+		add('/activeCount', 0),
+		add('/completedCount', 0)
+	]);
 }
 
-interface ItemUpdate<T> {
-	item?: T;
+const initialStateProcess = createProcess([ initialStateCommand ]);
+
+// creates the store, initializes the state and runs the `getTodosProcess`.
+const store = createStore();
+initialStateProcess(store)();
+// if a process contains an async command, like fetching initial data from a remote service the return promise can be used
+// to control the flow.
+getTodosProcess(store)().then(() => {
+	// do things once the todos have been fetched.
+});
+```
+
+## How does this differ from Redux
+
+Although Dojo 2 stores is a big atom state store, you never get access to the entire state object. To access the sections of state that are needed we use pointers to return the slice of state that is needed i.e. `path/to/state`. State is never directly updated by the user, with state changes only being processed by the operations returned by commands.
+
+There is no concept of `reducers`, meaning that there is no confusion about where logic needs to reside between `reducers` and  `actions`. `Commands` are the only place that state logic resides and return `operations` that dictate what `state` changes are required and processed internally by the `store`.
+
+Additionally means that there is no need to coordinate `actions` and `reducers` using a string action key, commands are simple function references that can be reused in multiple `processes`.
+
+## Advanced
+
+### Subscribing to store changes
+
+In order to be notified when changes occur within the store's state, simply register to the stores `.on()` for a type of `invalidate` passing the function to be called.
+
+```ts
+store.on('invalidate', () => {
+	// do something when the store's state has been updated.
+});
+```
+
+### Undo Processes
+
+The store records undo operations for every `Command`, grouped by it's `Process`. The `undo` function is passed as part of the `result` argument in the `Process` callback.
+
+```ts
+function processCallback(error, result) {
+	result.undo();
+}
+```
+
+The `undo` function will rollback all the operations that were performed by the `process`.
+
+**Note:** Each undo operation has an associated `test` operation to ensure that the store is in the expected state to successfully run the undo operation, if the test fails then an error is thrown and no changes are performed.
+
+### Transforming Executor Arguments
+
+An optional `transformer` can be passed to the `createExecutor` function that will be used to parse the arguments passed to the executor.
+
+```ts
+function transformer(...payload: any[]): any {
+	return { id: uuid(), value: payload[0] };
+}
+
+const executor = process(state, transformer);
+
+executor('id');
+```
+
+Each `Command` will be passed the result of the transformer as the `payload` for example: `{ id: 'UUID-VALUE', value }`
+
+### Typing with `store.get`
+
+All access to the internal store state is restricted through `store.get`, the function that is passed to each `Command` when they are executed. It is possible to specify the expected type of the data by passing a generic to `get`.
+
+```ts
+interface Todo {
 	id: string;
-}
-```
-
-#### Observing the store
-
-When observing the whole store, an initial update will be received that contains the current data in the store in the `afterAll` property, and subsequent updates will represent the changes in the store since the last update.
-
-If the `fetchAroundUpdates` property is set to `true` in the options when creating the store, then the data in the store will be kept up to date with the underlying storage, and any updates will represent the latest data from the storage. If `fetchAroundUpdates` is `false` or not specified, then the local data will be modified in place according to the updates indicated by the `StoreDelta`, but it may become out of sync with the underlying storage. In this case, when fetching manually, the local data will be synced again. An update is sent after a `fetch`, and the update following a fetch may contain new items in the `afterAll` property that are not represented by the `updates`, `adds`, and `deletes` of the `StoreDelta` when `fetchAroundUpdates` is `false` and the store is out of sync with its storage.
-
-Example usage
-```typescript
-import ObservableStore from '@dojo/stores/store/ObservableStore';
-
-const observableStore = new ObservableStore({
-	data: [{ id: '1', value: 1 }]
-});
-
-observableStore.observe().subscribe(function(update) {
-	// update = {
-	// 	 updates: [ any items updated since last notification ],
-	// 	 deletes: [ any items deleted since last notification ],
-	// 	 beforeAll: [ Empty for the first update, previous state for following updates],
-	// 	 afterAll: [ Current state of the sotre ],
-	// 	 adds: [ any items added since last notification ]
-	// }
-});
-
-observableStore.observe('itemId').subscribe(function(update) {
-	// update will be the item itself
-}, undefined, function() {
-	// completion callback will be called if the item is deleted
-});
-
-observableStore.observe([ 'itemId', 'otherItemId' ]).subscribe(function() {
-	// update = {
-	//   item: The updated or null if the item was deleted,
-	//   id: The id of the item
-	// }
-}, undefined, function() {
-	// completion callback will be called if all items are deleted
-});
-
-```
-
-### QueryableStore
-
-This store provides the ability to filter, sort, select a range of, transform, or query for items using a custom query function. 
-```typescript
-export interface QueryableStoreInterface<T, O extends CrudOptions, U extends UpdateResults<T>> extends ObservableStoreInterface<T, O, U> {
-	/**
-	 * Creates a query transform result with the provided query
-	 * @param query
-	 */
-	query(query: Query<T>): MappedQueryResultInterface<T, this>;
-	/**
-	 * Creates a query transform result with the provided filter
-	 * @param filter
-	 */
-	filter(filter: Filter<T>): MappedQueryResultInterface<T, this>;
-	/**
-	 * Creates a query transform result with a filter built from the provided test
-	 * @param test
-	 */
-	filter(test: (item: T) => boolean): MappedQueryResultInterface<T, this>;
-	/**
-	 * Creates a query transform result with the provided range
-	 * @param range
-	 */
-	range(range: StoreRange<T>): MappedQueryResultInterface<T, this>;
-	/**
-	 * Creates a query transform result with a range built based on the provided start and count
-	 * @param start
-	 * @param cound
-	 */
-	range(start: number, count: number): MappedQueryResultInterface<T, this>;
-	/**
-	 * Creates a query transform result with the provided sort or a sort build from the provided comparator or a
-	 * comparator for the specified property
-	 * @param sort
-	 * @param descending
-	 */
-	sort(sort: Sort<T> | ((a: T, b: T) => number) | keyof T, descending?: boolean): MappedQueryResultInterface<T, this>;
-	/**
-	 * Create a query transform result that cannot be tracked, and cannot send tracked updates. This is the case because
-	 * the resulting query transform result will have no way to identify items, making it impossible to determine
-	 * whether their position has shifted or differentiating between updates and adds
-	 * @param transformation
-	 */
-	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryResultInterface<V, this>;
-	/**
-	 * Create a trackable query transform result with the specified transformation
-	 * @param transformation
-	 * @param idTransform
-	 */
-	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): MappedQueryResultInterface<V, this>;
-}
-```
-
-
-The return value of a call to query or transform will be an instance of the `QueryResult` interface.
-
-```typescript
-export interface QueryResultInterface<T, S extends QueryableStoreInterface<any, any, any>> {
-	query(query: Query<T>): this;
-	filter(filter: Filter<T>): this;
-	filter(test: (item: T) => boolean): this;
-	range(range: StoreRange<T>): this;
-	range(start: number, count: number): this;
-	sort(sort: Sort<T> | ((a: T, b: T) => number) | string, descending?: boolean): this;
-	observe(): Observable<StoreDelta<T>>;
-	observe(id: string): Observable<T>;
-	observe(ids: string[]): Observable<ItemUpdate<T>>;
-	get(ids: string | string[]): Promise<T[]>;
-	transform<V>(transformation: Patch<T, V> | ((item: T) => V)): QueryResultInterface<V, S>;
-	transform<V>(transformation: Patch<T, V> | ((item: T) => V), idTransform: string | ((item: V) => string)): MappedQueryResult<V, S>;
-	fetch(query?: Query<T>): FetchResult<T>;
-	source: S;
-}
-```
-
-The `QueryResult` can be further queried or transformed, as well as observed, and has a reference to the source store if updates need to be performed on the original data.
-
-The observation API for the `QueryResult` is very similar to the store's, with a few changes.
-
-#### MappedQueryTransformResult
-Unless the transform method is called without an `idTransform`, the result of any queries to a `QueryableStore` will be a `MappedQueryResult`, which includes additional data in its `StoreDelta` updates, and provides a `track()` method. The `StoreDelta` interface is extended by the `TrackedStoreDelta` interface which the `MappedQueryResult` provides to observers. This augments the interface by providing data indicating the current and previous indices of items that have been moved within, added to, or removed from, the view represented by the `MappedQueryResult`. Unlike `updates`, `deletes`, and `adds`, these properties are not related to specific operations, but instead just represent changes in the position of items within the collection. 
-
-```typescript
-export interface TrackableStoreDelta<T> extends StoreDelta<T> {
-	/**
-	 * Contains info for any items that were formerly in the tracked collection and are now not, regardless of how
-	 * those items were removed
-	 */
-	removedFromTracked: { item: T; id: string; previousIndex: number; }[];
-	/**
-	 * Contains info for any items that are now in the tracked collection and formerly were not, regardless of how
-	 * those items were added
-	 */
-	addedToTracked: { item: T; id: string; index: number; }[];
-	/**
-	 * Contains info were previously and still are in the tracked collection but have changed position, regardless of
-	 * how the items were moved.
-	 */
-	movedInTracked: { item: T; id: string; previousIndex: number; index: number }[];
+	label: string;
+	completed: boolean;
 }
 
+// Will return an array typed as Todo items
+const todos = store.get<Todo[]>('/todos');
 ```
 
-As with the `ObservableStore`, the locally tracked data in a `MappedQueryResult` has the potential to become out of sync with the underlying storage. If the source `ObservableStore` has `fetchAroundUpdates` set to true, then any query transform results produced from it will only send up to date information to observers. If the source is not fetching around updates, the `track()` method provided as part of the `MappedQueryResult` interface can be used to create a copy of a `QueryResult` that will fetch after any updates from its source to make sure it has the latest data. `track()` produces a `TrackedQueryResult`, which has a `release()` method that provides a new, non-tracked query transform result.
+### Optimistic Update Pattern
 
-When `transform()` is called without an `idTransform`, the resulting `QueryResult` has no way of determining the ID of a transformed item, and so it cannot tell whether changes from the source store represent updates or additions, and cannot keep an index to easily track the position of items within the store. As a result, a `QueryResult` created this way will not contain positional information in its updates to observers, and cannot be tracked.
+Optimistic updating can be used to build a responsive UI despite interactions that might take some time to respond, for example saving to a remote resource.
 
-Example Usage
-```typescript
-import QueryableStore from '@dojo/stores/store/QueryableStore';
+In the case of adding a todo item for instance, with optimistic updating we can immediately add the todo before we even make a request to the server and avoid having an unnatural waiting period or loading indicator. When the server responds we can then reconcile the outcome based on whether it is successful or not.
 
-const data = [
-		{ id: '1', value: 1 },
-		{ id: '2', value: 2 },
-		{ id: '3', value: 3 }
- 	];
-const queryStore = new QueryableStore({
-	data: data
-});
+In the success scenario, we might need to update the added Todo item with an id that was provided in the response from the server, and change the color of the Todo item to green to indicate it was successfully saved.
 
-const filteredView = queryStore.filter((item) => item.value > 1);
-filteredView.fetch().then((data) => {
-	// data = [ { id: '2', value: 2 }, { id: '3', value: 3 } ]
-});
+In the error scenario, it might be that we want to show a notification to say the request failed, and turn the Todo item red, with a "retry" button. It's even possible to revert/undo the adding of the Todo item or anything else that happened in the process.
 
-filteredView.observe().subscribe((update) => {
-	/*
-		initial update = {
-			deletes: [],
-			adds: [],
-			updates: [],
-			addedToTracked: [],
-			removedFromTracked: [],
-			movedInTracked: [],
-			beforeAll: [],
-			afterAll: []
-		}
+```ts
+const handleAddTodoErrorProcess = createProcess([ () => [ add('/failed', true) ]; ]);
 
-		subsequent update = {
-			deletes: [],
-			adds: data,
-			updates: [],
-			addedToTracked: [
-				{
-					id: '1',
-					item: data[0],
-					index: 0
-				},
-				{
-					id: '2',
-					item: data[1],
-					index: 1
-				},
-				{
-					id: '3',
-					item: data[2],
-					index: 2
-				}
-			],
-			beforeAll: [],
-			afterAll: []
-		};
+function addTodoCallback(error, result) {
+	if (error) {
+		result.undo();
+		result.executor(handleAddTodoErrorProcess);
+	}
+}
 
-	*/
-});
-
+const addTodoProcess = createProcess([
+		addTodoCommand,
+		calculateCountsCommand,
+		postTodoCommand,
+		calculateCountsCommand
+	],
+	addTodoCallback);
 ```
 
-If the observer starts observing after the initial add is already resolved, the first update they receive will be the `subsequent update` in this example. Here the first update is provided to an observer that subscribes synchronously with the initialization of the store, but the initial add happens asynchronously and so is not yet resolved. For a tracked collection, the first update will contain the data from a `fetch` to the source.
+* `addTodoCommand`: Adds the new todo into the application state
+* `calculateCountsCommand`: Recalculates the count of completed and active todo items
+* `postTodoCommand`: posts the todo item to a remote service and using the process callback we can make changes if there is a failure
+  * on failure: the previous two commands are reverted and the `failed` state field is set to `true`
+  * on success: Returns operations that update the todo item `id` field with the value received from the remote service
+* `calculateCountsCommand`: Runs again after the success of `postTodoCommand`
 
+To support "pessimistic" updates to the application state, i.e. wait until a remote service call has been completed before changing the application state simply put the async command before the application store update. This can be useful when performing a deletion of resource, when it can be surprising if item is removed from the UI "optimistically" only for it to reappear back if the remote service call fails.
 
-### Fetch Results
+```ts
+function byId(id: string) {
+	return (item: any) => id === item.id;
+}
 
-Both the `Store` and `QueryResult` interfaces return a type called a `FetchResult` from `fetch`.
-This is a `Promise` that resolves to the fetched data, but it also has two other properties: `totalLength` and `dataLength`.
-For both the `Store` and `QueryResult`, `totalLength` is a `Promise` that resolves to the total number of items
-in the underlying `Storage`.
+async function deleteTodoCommand({ get, payload: [ id ] }: CommandRequest) {
+    const { todo, index } = find(get('/todos'), byId(id))
+    await fetch(`/todo/${todo.id}`, { method: 'DELETE' } );
+    return [ remove(`/todos/${index}`) ];
+}
 
-For a `Store`, `dataLength` resolves to the same value as `totalLength`, and is only provided for consistency between the interfaces.
+const deleteTodoProcess = createProcess([ deleteTodoCommand, calculateCountsCommand ]);
+```
 
-For a `QueryResult`, `dataLength` resolves to the number of items that match the `QueryResult`'s
-queries. Note that in all cases, these values do not change if a query is passed to fetch.
+*Note:* The process requires the counts to be recalculated after successfully deleting a todo, the process above shows how easily commands can be shared and reused.
 
-Example Usage
-```typescript
-import QueryableStore from '@dojo/stores/store/QueryableStore';
-const queryStore = new QueryableStore({
-    data: [
-        { id: 'item-1', value: 1 },
-        { id: 'item-2', value: 2 },
-        { id: 'item-3', value: 3 }
-    ]
-});
+### Executing concurrent commands
 
-const withoutQuery = queryStore.fetch();
-// This filter will not change the value of dataLength or totalLength
-const withQuery = queryStore.fetch(createFilter<any>().lessThan('value', 2));
+A `Process` supports multiple commands to be executed concurrently by specifying the commands in an array when creating the process:
 
-Promise.all(
-    [ withoutQuery.totalLength, withoutQuery.dataLength, withQuery.totalLength, withQuery.dataLength ]
-).then((values) => {
-    // values[0] === values[1] === values[2] === values[3] === 3
-});
+```ts
+const myProcess = createProcess([ commandOne, [ concurrentCommandOne, concurrentCommandTwo ], commandTwo ]);
+```
 
-const queryResult = queryStore.filter((item) => item.value < 3);
-const queryResultWithoutQuery = queryResult.fetch();
-// This filter will not change the value of dataLength or totalLength
-const queryResultsWithQuery = queryResult.fetch(createFilter<any>().lessThan('value', 2));
-Promise.all([
-    queryResultWithoutQuery.totalLength,
-    queryResultsWithQuery.totalLength,
-    queryResultWithoutQuery.dataLength,
-    queryResultsWithQuery.dataLength
-]).then((values) => {
-    // values[0] === values[1] === 3 The totalLength in both cases is still the total number of items
-    // values[2] === values[3] === 2 The dataLength in both cases is the number of items matching the
-    // result's queries
-});
+In this example, `commandOne` is executed, then both `concurrentCommandOne` and `concurrentCommandTwo` are executed concurrently. Once all of the concurrent commands are completed the results are applied in order before continuing with the process and executing `commandTwo`.
+
+**Note:** Concurrent commands are always assumed to be asynchronous and resolved using `Promise.all`.
+
+### Decorating Processes
+
+The `Process` callback provides a hook to apply generic/global functionality across multiple or all processes used within an application. This is done using higher order functions that wrap the process' local `callback` using the error and result payload to decorate or perform an action for all processes it used for.
+
+Dojo 2 stores provides a simple `UndoManager` that collects the undo function for each process onto a single stack and exposes an `undoer` function that can be used to undo the last `process` executed. If the local `undo` function is called then it will be automatically removed from the managers stack.
+
+```ts
+import { createProcess } from '@dojo/stores/process';
+import { createUndoManager } from '@dojo/stores/extras';
+
+const { undoCollector, undoer } = createUndoManager();
+// if the process doesn't need a local callback, the collector can be used without.
+const myProcess = createProcess([ commandOne, commandTwo ], undoCollector());
+const myOtherProcess = createProcess([ commandThree, commandFour ], undoCollector());
+
+// running `undeor` will undo the last process executed, that had registered the `collector` as a callback.
+undoer();
+```
+
+Decorating `callbacks` can composed together to combine multiple units of functionality, such that in the example below `myProcess` would run the `error` and `result` through the `collector`, `logger` and then `snapshot` callbacks.
+
+```ts
+const myProcess = createProcess([ commandOne, commandTwo ], collector(logger(snapshot())));
+```
+
+#### Decorating Multiple Process
+
+Specifying a `callback` decorator on an individual process explicitly works for targeted behavior but can become cumbersome when the decorator needs to be applied across multiple processes throughout the application.
+
+The `createProcessWith` higher order function can be used to specify `callback` decorators that need to be applied across multiple `processes`. The function accepts an array of `callback` decorators and returns a new `createProcess` factory function that will automatically apply the decorators to any process that it creates.
+
+```ts
+const customCreateProcess = createProcessWith([ undoCollector, logger ]);
+
+// `myProcess` will automatically be decorated with the `undoCollector` and `logger` callback decorators.
+const myProcess = customCreateProcess([ commandOne, commandTwo ]);
+```
+
+An additional helper function `createCallbackDecorator` can be used to turn a simple `ProcessCallback` into a decorator that ensures passed callback is executed after the decorating `callback` has been run.
+
+```ts
+const myCallback = (error: ProcessError, result: ProcessResult) => {
+	// do things with the outcome from the process
+};
+
+// turns the callback into a callback decorator
+const myCallbackDecorator = createCallbackDecorator(myCallback);
+
+// use the callback decorator as normal
+const myProcess = createProcess([ commandOne ], myCallbackDecorator());
 ```
 
 ## How do I contribute?
