@@ -21,6 +21,7 @@ widget-core is a library to create powerful, composable user interface widgets.
         - [Composing Widgets](#composing-widgets)
         - [Decomposing Widgets](#decomposing-widgets)
     - [Mixins](#mixins)
+    - [Animation](#animation)
     - [Styling & Theming](#styling--theming)
     - [Internationalization](#internationalization)
 - [Key Principles](#key-principles)
@@ -301,6 +302,140 @@ function StateMixin<T extends new(...args: any[]) => WidgetBase>(Base: T): T & (
 ```
 
 Examples of Dojo 2 mixins can be seen with `ThemedMixin` and `I18nMixin` that are described in [Classes & theming](#classes--theming) and [Internationalization](#internationalization) sections.
+
+### Animation
+
+Dojo 2 widget-core provides a `WebAnimation` meta to apply web animations to VNodes.
+
+To specify the web animations pass an `AnimationProperties` object to the `WebAnimation` meta along with the key of the node you wish to animate. This can be a single animation or an array or animations.
+
+#### Basic Example
+
+```ts
+export default class AnimatedWidget extends WidgetBase {
+    protected render() {
+        const animate = {
+            id: 'rootAnimation',
+            effects: [
+                { height: '10px' },
+                { height: '100px' }
+            ],
+            controls: {
+                play: true
+            }
+        };
+
+        this.meta(WebAnimation).animate('root', animate);
+
+        return v('div', {
+            key: 'root'
+        });
+    }
+}
+```
+
+`controls` and `timing` are optional properties and are used to setup and control the animation. The `timing` property can only be set once, but the `controls` can be changed to stop / start / reverse etc... the web animation.
+
+#### Changing Animation
+
+Animations can be changed on each widget render in a reactive pattern, for example changing the animation from `slideUp` to `slideDown` on a title pane depending of if the titlepane is open or not.
+
+```ts
+export default class AnimatedWidget extends WidgetBase {
+    private _open = false;
+
+    protected render() {
+        const animate = this._open ? {
+            id: 'upAnimation',
+            effects: [
+                { height: '100px' },
+                { height: '0px' }
+            ],
+            controls: {
+                play: true
+            }
+        } : {
+            id: 'downAnimation',
+            effects: [
+                { height: '0px' },
+                { height: '100px' }
+            ],
+            controls: {
+                play: true
+            }
+        };
+
+        this.meta(WebAnimation).animate('root', animate);
+
+        return v('div', {
+            key: 'root'
+        })
+    }
+}
+```
+
+#### Passing an effects function
+
+An `effects` function can be passed to the animation and evaluated at render time. This allows you to create programatic effects such as those depending on measurements from the `Dimensions` `Meta`.
+
+```ts
+export default class AnimatedWidget extends WidgetBase {
+    private _getEffect() {
+        const { scroll } = this.meta(Dimensions).get('content');
+
+        return [
+            { height: '0px' },
+            { height: `${scroll.height}px` }
+        ];
+    }
+
+    protected render() {
+        const animate = {
+            id: 'upAnimation',
+            effects: this._getEffect(),
+            controls: {
+                play: true
+            }
+        };
+
+        this.meta(WebAnimation).animate('root', animate);
+
+        return v('div', {
+            key: 'root'
+        })
+    }
+}
+```
+
+#### Get animation info
+
+The `WebAnimation` meta provides a `get` function that can be used to retrieve information about an animation via it's `id`.
+This info contains the currentTime, playState, playbackRate and startTime of the animation. If no animation is found or the animation has been cleared this will return undefined.
+
+```ts
+export default class AnimatedWidget extends WidgetBase {
+    protected render() {
+        const animate = {
+            id: 'rootAnimation',
+            effects: [
+                { height: '10px' },
+                { height: '100px' }
+            ],
+            controls: {
+                play: true
+            }
+        };
+
+        this.meta(WebAnimation).animate('root', animate);
+
+        const info = this.meta(WebAnimation).get('rootAnimation');
+
+        return v('div', {
+            key: 'root'
+        });
+    }
+}
+```
 
 ### Styling & Theming
 

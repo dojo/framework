@@ -9,6 +9,7 @@ import { ProjectorMixin } from '../../../src/main';
 import { WidgetBase } from '../../../src/WidgetBase';
 
 const resolvers = createResolvers();
+const bindInstance = new WidgetBase();
 
 registerSuite('meta base', {
 	beforeEach() {
@@ -25,7 +26,8 @@ registerSuite('meta base', {
 			nodeHandler.add(element, 'foo');
 			const meta = new MetaBase({
 				invalidate: () => {},
-				nodeHandler
+				nodeHandler,
+				bind: bindInstance
 			});
 
 			assert.isTrue(meta.has('foo'));
@@ -45,7 +47,8 @@ registerSuite('meta base', {
 
 			const meta = new MyMeta({
 				invalidate,
-				nodeHandler
+				nodeHandler,
+				bind: bindInstance
 			});
 
 			const node = meta.callGetNode('foo');
@@ -64,7 +67,8 @@ registerSuite('meta base', {
 
 			const meta = new MyMeta({
 				invalidate,
-				nodeHandler
+				nodeHandler,
+				bind: bindInstance
 			});
 
 			meta.callGetNode('foo');
@@ -84,7 +88,8 @@ registerSuite('meta base', {
 
 			const meta = new MyMeta({
 				invalidate,
-				nodeHandler
+				nodeHandler,
+				bind: bindInstance
 			});
 
 			meta.callGetNode('foo');
@@ -116,7 +121,8 @@ registerSuite('meta base', {
 
 			const meta = new MyMeta({
 				invalidate,
-				nodeHandler
+				nodeHandler,
+				bind: bindInstance
 			});
 
 			meta.callGetNode('foo');
@@ -139,7 +145,8 @@ registerSuite('meta base', {
 
 			const meta = new MyMeta({
 				invalidate,
-				nodeHandler
+				nodeHandler,
+				bind: bindInstance
 			});
 
 			meta.callInvalidate();

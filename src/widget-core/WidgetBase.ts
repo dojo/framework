@@ -106,7 +106,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 	private _renderState: WidgetRenderState = WidgetRenderState.IDLE;
 
-	private _metaMap = new WeakMap<WidgetMetaConstructor<any>, WidgetMetaBase>();
+	private _metaMap = new Map<WidgetMetaConstructor<any>, WidgetMetaBase>();
 
 	private _boundRenderFunc: Render;
 
@@ -155,7 +155,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		if (!cached) {
 			cached = new MetaType({
 				invalidate: this._boundInvalidate,
-				nodeHandler: this._nodeHandler
+				nodeHandler: this._nodeHandler,
+				bind: this
 			});
 			this._metaMap.set(MetaType, cached);
 			this.own(cached);
@@ -474,6 +475,11 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 				return afterRenderFunction.call(this, dNode);
 			}, dNode);
 		}
+
+		this._metaMap.forEach(meta => {
+			meta.afterRender();
+		});
+
 		return dNode;
 	}
 }

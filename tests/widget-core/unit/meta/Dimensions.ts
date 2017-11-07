@@ -4,8 +4,10 @@ import global from '@dojo/shim/global';
 import { stub, spy } from 'sinon';
 import Dimensions from '../../../src/meta/Dimensions';
 import NodeHandler from '../../../src/NodeHandler';
+import WidgetBase from '../../../src/WidgetBase';
 
 let rAF: any;
+const bindInstance = new WidgetBase();
 const defaultDimensions = {
 	offset: {
 		height: 0,
@@ -54,7 +56,8 @@ registerSuite('meta - Dimensions', {
 
 			const dimensions = new Dimensions({
 				invalidate: () => {},
-				nodeHandler
+				nodeHandler,
+				bind: bindInstance
 			});
 
 			assert.deepEqual(dimensions.get('foo'), defaultDimensions);
@@ -64,7 +67,8 @@ registerSuite('meta - Dimensions', {
 
 			const dimensions = new Dimensions({
 				invalidate: () => {},
-				nodeHandler
+				nodeHandler,
+				bind: bindInstance
 			});
 
 			assert.deepEqual(dimensions.get(1234), defaultDimensions);
@@ -75,7 +79,8 @@ registerSuite('meta - Dimensions', {
 
 			const dimensions = new Dimensions({
 				invalidate: () => {},
-				nodeHandler
+				nodeHandler,
+				bind: bindInstance
 			});
 
 			dimensions.get('foo');
@@ -89,7 +94,8 @@ registerSuite('meta - Dimensions', {
 
 			const dimensions = new Dimensions({
 				invalidate: invalidateStub,
-				nodeHandler
+				nodeHandler,
+				bind: bindInstance
 			});
 
 			dimensions.get('foo');
@@ -131,7 +137,8 @@ registerSuite('meta - Dimensions', {
 
 			const dimensions = new Dimensions({
 				invalidate: () => {},
-				nodeHandler
+				nodeHandler,
+				bind: bindInstance
 			});
 
 			assert.deepEqual(dimensions.get('foo'), {

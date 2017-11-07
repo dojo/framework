@@ -24,7 +24,8 @@
 				{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" },
 				{ "name": "pepjs", "location": "node_modules/pepjs/dist", "main": "pep" },
 				{ "name": "intersection-observer", "location": "node_modules/intersection-observer", "main": "intersection-observer" },
-				{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
+				{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" },
+				{ "name": "web-animations-js", "location": "node_modules/web-animations-js" }
 			],
 			"map": {
 				"globalize": {

@@ -4,9 +4,11 @@ import global from '@dojo/shim/global';
 import { stub, spy } from 'sinon';
 import Intersection from '../../../src/meta/Intersection';
 import { NodeHandler } from './../../../src/NodeHandler';
+import WidgetBase from '../../../src/WidgetBase';
 
 let intersectionObserver: any;
 const observers: ([ object, Function ])[] = [];
+const bindInstance = new WidgetBase();
 
 registerSuite('meta - Intersection', {
 
@@ -33,7 +35,8 @@ registerSuite('meta - Intersection', {
 
 				const intersection = new Intersection({
 					invalidate: () => {},
-					nodeHandler
+					nodeHandler,
+					bind: bindInstance
 				});
 
 				const hasIntersectionInfo = intersection.has('root');
@@ -44,7 +47,8 @@ registerSuite('meta - Intersection', {
 
 				const intersection = new Intersection({
 					invalidate: () => {},
-					nodeHandler
+					nodeHandler,
+					bind: bindInstance
 				});
 
 				const hasIntersectionInfo = intersection.has('root', { root: 'root' });
@@ -55,7 +59,8 @@ registerSuite('meta - Intersection', {
 
 				const intersection = new Intersection({
 					invalidate: () => {},
-					nodeHandler
+					nodeHandler,
+					bind: bindInstance
 				});
 				const element = document.createElement('div');
 				nodeHandler.add(element, 'root');
@@ -80,7 +85,8 @@ registerSuite('meta - Intersection', {
 
 				const intersection = new Intersection({
 					invalidate: () => {},
-					nodeHandler
+					nodeHandler,
+					bind: bindInstance
 				});
 
 				intersection.get('root');
@@ -93,7 +99,8 @@ registerSuite('meta - Intersection', {
 
 				const intersection = new Intersection({
 					invalidate: () => {},
-					nodeHandler
+					nodeHandler,
+					bind: bindInstance
 				});
 
 				intersection.get(1234);
@@ -107,7 +114,8 @@ registerSuite('meta - Intersection', {
 
 				const intersection = new Intersection({
 					invalidate: invalidateStub,
-					nodeHandler
+					nodeHandler,
+					bind: bindInstance
 				});
 
 				intersection.get('root');
@@ -128,7 +136,8 @@ registerSuite('meta - Intersection', {
 
 				const intersection = new Intersection({
 					invalidate: invalidateStub,
-					nodeHandler
+					nodeHandler,
+					bind: bindInstance
 				});
 
 				intersection.get('root');
@@ -174,7 +183,8 @@ registerSuite('meta - Intersection', {
 
 				const intersection = new Intersection({
 					invalidate: invalidateStub,
-					nodeHandler
+					nodeHandler,
+					bind: bindInstance
 				});
 
 				intersection.get('foo', { root: 'root' });
@@ -213,7 +223,8 @@ registerSuite('meta - Intersection', {
 				const nodeHandler = new NodeHandler();
 				const intersection = new Intersection({
 					invalidate: () => {},
-					nodeHandler
+					nodeHandler,
+					bind: bindInstance
 				});
 
 				const root = document.createElement('div');
