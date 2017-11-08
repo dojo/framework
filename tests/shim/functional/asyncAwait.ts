@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import pollUntil from '@theintern/leadfoot/helpers/pollUntil';
 
 registerSuite('asyncAwait', () => {
-	const poller = pollUntil(function () {
+	const poller = pollUntil<number>(function () {
 		return (<any> window).callbackValue;
 	}, undefined, 5000);
 

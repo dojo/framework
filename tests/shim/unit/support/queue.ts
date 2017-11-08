@@ -175,9 +175,10 @@ registerSuite('queue functions', {
 				return;
 			}
 
-			const baseUrl = location.origin;
-			const dfd = this.async(10000);
-			const blob = new Blob([ `(function() { 
+			try {
+				const baseUrl = location.origin;
+				const dfd = this.async(10000);
+				const blob = new Blob([ `(function() {
 self.addEventListener('message', function (event) {
 	if(event.data.baseUrl) {
 		var baseUrl = event.data.baseUrl;
@@ -189,7 +190,7 @@ self.addEventListener('message', function (event) {
 				{ name: '@dojo', location: 'node_modules/@dojo' }
 			]
 		});
-		
+
 		require(['_build/src/support/queue'], function (queue) {
 			queue.queueTask(function() {
 				self.postMessage('success');
@@ -197,20 +198,25 @@ self.addEventListener('message', function (event) {
 		});
 	}
 });
-			})()` ], { type: 'application/javascript' });
-			const worker = new Worker(URL.createObjectURL(blob));
-			worker.addEventListener('error', (error) => {
-				dfd.reject(new Error(error.message));
-			});
-			worker.addEventListener('message', ({ data: result }) => {
-				if (result === 'success') {
-					dfd.resolve();
-				}
-			});
+})()` ], { type: 'application/javascript' });
+				const worker = new Worker(URL.createObjectURL(blob));
+				worker.addEventListener('error', (error) => {
+					dfd.reject(new Error(error.message));
+				});
+				worker.addEventListener('message', ({ data: result }) => {
+					if (result === 'success') {
+						dfd.resolve();
+					}
+				});
 
-			worker.postMessage({
-				baseUrl
-			});
+				worker.postMessage({
+					baseUrl
+				});
+			}
+			catch (e) {
+				// IE11 on Winodws 8.1 encounters a security error.
+				this.skip('does not support blobs and/or web workers');
+			}
 		}
 	}
 });
