@@ -2,7 +2,7 @@ const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { match, spy, stub, SinonStub } from 'sinon';
 import { createResolvers } from './../support/util';
-import global from '@dojo/shim/global';
+import sendEvent from './../support/sendEvent';
 
 import { dom, InternalHNode, InternalWNode } from '../../src/vdom';
 import { v, w } from '../../src/d';
@@ -13,8 +13,6 @@ import { Registry } from '../../src/Registry';
 let consoleStub: SinonStub;
 
 const resolvers = createResolvers();
-
-const Event = global.window.Event;
 
 const projectorStub: any = {
 	on: stub(),
@@ -237,7 +235,7 @@ describe('vdom', () => {
 			assert.lengthOf(fooDiv.childNodes, 1);
 			assert.strictEqual(fooDiv.childNodes[0], fooTextNode);
 			assert.strictEqual(fooTextNode.data, 'first');
-			fooDiv.dispatchEvent(new Event('click'));
+			sendEvent(fooDiv, 'click');
 			projection.update(widget.__render__() as HNode);
 			assert.lengthOf(root.childNodes, 1);
 			assert.strictEqual(root.childNodes[0], barDiv);
@@ -287,10 +285,10 @@ describe('vdom', () => {
 				widget.__render__() as HNode,
 				widget
 			);
-			projection.domNode.childNodes[0].dispatchEvent(new Event('click'));
-			projection.domNode.childNodes[0].childNodes[0].dispatchEvent(new Event('click'));
-			projection.domNode.childNodes[0].childNodes[0].childNodes[0].dispatchEvent(new Event('click'));
-			projection.domNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0].dispatchEvent(new Event('click'));
+			sendEvent(projection.domNode.childNodes[0], 'click', { eventInit: { bubbles: false } });
+			sendEvent(projection.domNode.childNodes[0].childNodes[0], 'click', { eventInit: { bubbles: false } });
+			sendEvent(projection.domNode.childNodes[0].childNodes[0].childNodes[0], 'click', { eventInit: { bubbles: false } });
+			sendEvent(projection.domNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0], 'click', { eventInit: { bubbles: false } });
 			assert.strictEqual(widget.onClickCount, 4);
 		});
 
@@ -1294,7 +1292,7 @@ describe('vdom', () => {
 			// expect(link.getAttribute('disabled')).to.be.null;
 
 			// What JSDom does:
-			assert.isNull(link.disabled);
+			assert.isFalse(!!link.disabled);
 		});
 
 		it('updates properties', () => {
@@ -1411,6 +1409,13 @@ describe('vdom', () => {
 				dom.merge(div, v('div', { classes: null }), projectorStub);
 				assert.strictEqual(div.className, '');
 			});
+
+			it('can add and remove multiple classes in IE11', () => {
+				const projection = dom.create(v('div', { classes: 'a b c d' }), projectorStub);
+				const root = projection.domNode.childNodes[0] as HTMLElement;
+				assert.strictEqual(root.className, 'a b c d');
+				projection.update(v('div', { classes: 'a b' }));
+			});
 		});
 
 		describe('styles', () => {
@@ -1512,11 +1517,11 @@ describe('vdom', () => {
 			assert.strictEqual(inputElement.value, model);
 
 			inputElement.value = '4';
-			inputElement.dispatchEvent(new Event('input'));
+			sendEvent(inputElement, 'input');
 			projection.update(renderFunction());
 
 			inputElement.value = '4,';
-			inputElement.dispatchEvent(new Event('input'));
+			sendEvent(inputElement, 'input');
 			projection.update(renderFunction());
 
 			assert.strictEqual(inputElement.value, '4.');
@@ -1638,8 +1643,8 @@ describe('vdom', () => {
 				return v('div', { onclick });
 			};
 			const projection = dom.create(renderFunction(), projectorStub);
-			const element: Node = projection.domNode.childNodes[0];
-			element.dispatchEvent(new Event('click'));
+			const element = projection.domNode.childNodes[0] as Element;
+			sendEvent(element, 'click');
 			assert.isTrue(onclick.called);
 		});
 
@@ -1650,13 +1655,13 @@ describe('vdom', () => {
 				return v('div', { onclick: updated ? onclickSecond : onclickFirst });
 			};
 			const projection = dom.create(renderFunction(), projectorStub);
-			const element: Node = projection.domNode.childNodes[0];
-			element.dispatchEvent(new Event('click'));
+			const element = projection.domNode.childNodes[0] as Element;
+			sendEvent(element, 'click');
 			assert.strictEqual(onclickFirst.callCount, 1);
 
 			projection.update(renderFunction(true));
 
-			element.dispatchEvent(new Event('click'));
+			sendEvent(element, 'click');
 			assert.strictEqual(onclickFirst.callCount, 1);
 			assert.strictEqual(onclickSecond.callCount, 1);
 		});
@@ -1668,17 +1673,17 @@ describe('vdom', () => {
 				return v('div', props);
 			};
 			const projection = dom.create(renderFunction(), projectorStub);
-			const element: Node = projection.domNode.childNodes[0];
-			element.dispatchEvent(new Event('click'));
+			const element = projection.domNode.childNodes[0] as Element;
+			sendEvent(element, 'click');
 			assert.strictEqual(onclick.callCount, 1);
 
 			projection.update(renderFunction(true));
 
-			element.dispatchEvent(new Event('click'));
+			sendEvent(element, 'click');
 			assert.strictEqual(onclick.callCount, 1);
 
 			projection.update(renderFunction());
-			element.dispatchEvent(new Event('click'));
+			sendEvent(element, 'click');
 			assert.strictEqual(onclick.callCount, 2);
 		});
 
@@ -1693,13 +1698,13 @@ describe('vdom', () => {
 			assert.strictEqual(inputElement.value, typedKeys);
 
 			inputElement.value = 'ab';
-			inputElement.dispatchEvent(new Event('input'));
+			sendEvent(inputElement, 'input');
 			assert.strictEqual(typedKeys, 'ab');
 			projection.update(renderFunction());
 			assert.strictEqual(inputElement.value, 'ab');
 
 			inputElement.value = 'abc';
-			inputElement.dispatchEvent(new Event('input'));
+			sendEvent(inputElement, 'input');
 			assert.strictEqual(typedKeys, 'ab');
 			projection.update(renderFunction());
 			assert.strictEqual(inputElement.value, 'ab');
@@ -1720,7 +1725,7 @@ describe('vdom', () => {
 
 			// Normal behavior
 			inputElement.value = 'a';
-			inputElement.dispatchEvent(new Event('input'));
+			sendEvent(inputElement, 'input');
 			assert.strictEqual(typedKeys, 'a');
 			projection.update(renderFunction());
 
@@ -1729,7 +1734,7 @@ describe('vdom', () => {
 			projection.update(renderFunction());
 			assert.strictEqual(typedKeys, 'a');
 			assert.strictEqual(inputElement.value, 'ab');
-			inputElement.dispatchEvent(new Event('input'));
+			sendEvent(inputElement, 'input');
 			assert.strictEqual(typedKeys, 'ab');
 			projection.update(renderFunction());
 		});

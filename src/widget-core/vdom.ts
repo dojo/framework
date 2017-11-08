@@ -6,6 +6,7 @@ import {
 	WNode,
 	ProjectionOptions,
 	Projection,
+	SupportedClassName,
 	TransitionStrategy,
 	VirtualDomProperties
 } from './interfaces';
@@ -151,6 +152,24 @@ function updateEvents(
 	projectionOptions.nodeMap.set(domNode, eventMap);
 }
 
+function addClasses(domNode: Node, classes: SupportedClassName) {
+	if (classes) {
+		const classNames = classes.split(' ');
+		for (let i = 0; i < classNames.length; i++) {
+			(domNode as Element).classList.add(classNames[i]);
+		}
+	}
+}
+
+function removeClasses(domNode: Node, classes: SupportedClassName) {
+	if (classes) {
+		const classNames = classes.split(' ');
+		for (let i = 0; i < classNames.length; i++) {
+			(domNode as Element).classList.remove(classNames[i]);
+		}
+	}
+}
+
 function setProperties(domNode: Node, properties: VirtualDomProperties, projectionOptions: ProjectionOptions) {
 	const propNames = Object.keys(properties);
 	const propCount = propNames.length;
@@ -164,9 +183,7 @@ function setProperties(domNode: Node, properties: VirtualDomProperties, projecti
 			}
 			else {
 				for (let i = 0; i < currentClasses.length; i++) {
-					if (currentClasses[i]) {
-						(domNode as Element).classList.add(...currentClasses[i].split(' '));
-					}
+					addClasses(domNode, currentClasses[i]);
 				}
 			}
 		}
@@ -233,14 +250,11 @@ function updateProperties(
 	if (propNames.indexOf('classes') === -1 && previousProperties.classes) {
 		if (Array.isArray(previousProperties.classes)) {
 			for (let i = 0; i < previousProperties.classes.length; i++) {
-				const previousClassName = previousProperties.classes[i];
-				if (previousClassName) {
-					(domNode as Element).classList.remove(...previousClassName.split(' '));
-				}
+				removeClasses(domNode, previousProperties.classes[i]);
 			}
 		}
 		else {
-			(domNode as Element).classList.remove(...previousProperties.classes.split(' '));
+			removeClasses(domNode, previousProperties.classes);
 		}
 	}
 
@@ -256,10 +270,7 @@ function updateProperties(
 			if (previousClasses && previousClasses.length > 0) {
 				if (!propValue || propValue.length === 0) {
 					for (let i = 0; i < previousClasses.length; i++) {
-						const previousClassName = previousClasses[i];
-						if (previousClassName) {
-							(domNode as Element).classList.remove(...previousClassName.split(' '));
-						}
+						removeClasses(domNode, previousClasses[i]);
 					}
 				}
 				else {
@@ -269,7 +280,7 @@ function updateProperties(
 						if (previousClassName) {
 							const classIndex = newClasses.indexOf(previousClassName);
 							if (classIndex === -1) {
-								(domNode as Element).classList.remove(...previousClassName.split(' '));
+								removeClasses(domNode, previousClassName);
 							}
 							else {
 								newClasses.splice(classIndex, 1);
@@ -277,18 +288,13 @@ function updateProperties(
 						}
 					}
 					for (let i = 0; i < newClasses.length; i++) {
-						const newClassName = newClasses[i];
-						if (newClassName) {
-							(domNode as Element).classList.add(...newClassName.split(' '));
-						}
+						addClasses(domNode, newClasses[i]);
 					}
 				}
 			}
 			else {
 				for (let i = 0; i < currentClasses.length; i++) {
-					if (currentClasses[i]) {
-						(domNode as Element).classList.add(...currentClasses[i].split(' '));
-					}
+					addClasses(domNode, currentClasses[i]);
 				}
 			}
 		}

@@ -103,6 +103,7 @@ registerSuite('meta - Dimensions', {
 			assert.isTrue(onSpy.firstCall.calledWith('foo'));
 
 			const element = document.createElement('div');
+			document.body.appendChild(element);
 			const getRectSpy = spy(element, 'getBoundingClientRect');
 
 			nodeHandler.add(element, 'foo');
@@ -115,6 +116,7 @@ registerSuite('meta - Dimensions', {
 
 			assert.isFalse(onSpy.called);
 			assert.isTrue(getRectSpy.calledOnce);
+			document.body.removeChild(element);
 		},
 		'Will return element dimensions if node is loaded'() {
 			const nodeHandler = new NodeHandler();
