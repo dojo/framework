@@ -8,7 +8,7 @@ declare const require: Require;
 
 async function executeTest(suite: Suite, htmlTestPath: string, timeout = 10000) {
 	try {
-		return await suite.remote.get(htmlTestPath).then(pollUntil(function () {
+		return await suite.remote.get(htmlTestPath).then(pollUntil<{ text: string; }>(function () {
 			return (<any> window).loaderTestResults || null;
 		}, undefined, timeout));
 	}
