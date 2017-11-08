@@ -27,7 +27,7 @@
     "@dojo/loader": "~0.1.0",
     "grunt": "~1.0.1",
     "grunt-dojo2": "latest",
-    "intern": "~4.0.2",
+    "intern": "~4.1.0",
     "sinon": "^1.17.4",
     "typescript": "~2.4.1"
   }
