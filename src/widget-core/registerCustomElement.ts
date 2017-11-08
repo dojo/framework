@@ -1,4 +1,5 @@
 import {
+	customEventClass,
 	CustomElementDescriptor,
 	handleAttributeChanged,
 	initializeElement
@@ -43,6 +44,9 @@ export function registerCustomElement(descriptorFactory: CustomElementDescriptor
 			if (!this._isAppended) {
 				this._appender();
 				this._isAppended = true;
+				this.dispatchEvent(new customEventClass('connected', {
+					bubbles: false
+				}));
 			}
 		}
 

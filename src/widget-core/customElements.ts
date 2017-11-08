@@ -131,7 +131,7 @@ function getWidgetPropertyFromAttribute(attributeName: string, attributeValue: s
 	return [ propertyName, value ];
 }
 
-let customEventClass = global.CustomEvent;
+export let customEventClass = global.CustomEvent;
 
 if (typeof customEventClass !== 'function') {
 	const customEvent = function (event: string, params: any) {

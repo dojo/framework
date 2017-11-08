@@ -53,6 +53,21 @@ registerSuite('registerCustomElement', {
 					assert.isTrue(buttonClicked);
 				});
 		},
+		'custom elements emit event on connection'() {
+			if (skip) {
+				this.skip('not compatible with iOS 9.1 or Safari 9.1');
+			}
+			return this.remote
+				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.setFindTimeout(1000)
+				.findByCssSelector('#testButton > button')
+				.click()
+				.end()
+				.execute('return window.connectedEvent')
+				.then((connectedEvent: boolean) => {
+					assert.isTrue(connectedEvent);
+				});
+		},
 		'updates the correct instance when multiple or the same custom elements are used'() {
 			if (skip) {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');

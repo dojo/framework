@@ -20,12 +20,17 @@
 <script>
 	window.buttonClicked = false;
 	window.ready = false;
+	window.connectedEvent = false;
 
 	require.config({
 		packages: [
 			{ name: '@dojo', location: '../../../../node_modules/@dojo' },
 			{ name: 'pepjs', location: '../../../../node_modules/pepjs/dist', main: 'pep' }
 		]
+	});
+
+	document.getElementById('testButton').addEventListener('connected', function() {
+		window.connectedEvent = true;
 	});
 
 	require(['./registerCustomElement'], function() {
