@@ -30,7 +30,7 @@
     "glob": "^7.0.6",
     "grunt": "~1.0.1",
     "grunt-dojo2": "latest",
-    "intern": "~4.0.2",
+    "intern": "~4.1.0",
     "sinon": "^1.17.6",
     "typescript": "~2.5.2"
   }
