@@ -53,9 +53,9 @@ export class Intersection extends Base {
 			return defaultIntersection;
 		}
 
-		let details = this._getDetails(options);
-		if (!details) {
-			details = this._createDetails(options, rootNode);
+		let details = this._getDetails(options) || this._createDetails(options, rootNode);
+		if (!details.entries.get(node)) {
+			details.entries.set(node, defaultIntersection);
 			details.observer.observe(node);
 		}
 
