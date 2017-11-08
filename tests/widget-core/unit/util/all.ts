@@ -1,2 +1,1 @@
 import './DomWrapper';
-import './eventHandlerInterceptor';

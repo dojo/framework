@@ -2,23 +2,19 @@ const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { match, spy, stub, SinonStub } from 'sinon';
 import { createResolvers } from './../support/util';
+import global from '@dojo/shim/global';
 
 import { dom, InternalHNode, InternalWNode } from '../../src/vdom';
 import { v, w } from '../../src/d';
 import { HNode } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
 import { Registry } from '../../src/Registry';
-import eventHandlerInterceptor from '../../src/util/eventHandlerInterceptor';
 
 let consoleStub: SinonStub;
 
 const resolvers = createResolvers();
 
-const noopEventHandlerInterceptor = (propertyName: string, functionPropertyArgument: Function) => {
-	return function(this: Node) {
-		return functionPropertyArgument.apply(this, arguments);
-	};
-};
+const Event = global.window.Event;
 
 const projectorStub: any = {
 	on: stub(),
@@ -222,8 +218,7 @@ describe('vdom', () => {
 			const widget = new Baz();
 			const projection = dom.create(
 				widget.__render__() as HNode,
-				widget,
-				{ eventHandlerInterceptor: eventHandlerInterceptor.bind(widget) }
+				widget
 			);
 
 			const root = (projection.domNode.childNodes[0] as Element) as HTMLElement;
@@ -242,7 +237,7 @@ describe('vdom', () => {
 			assert.lengthOf(fooDiv.childNodes, 1);
 			assert.strictEqual(fooDiv.childNodes[0], fooTextNode);
 			assert.strictEqual(fooTextNode.data, 'first');
-			fooDiv.onclick({} as any);
+			fooDiv.dispatchEvent(new Event('click'));
 			projection.update(widget.__render__() as HNode);
 			assert.lengthOf(root.childNodes, 1);
 			assert.strictEqual(root.childNodes[0], barDiv);
@@ -290,13 +285,12 @@ describe('vdom', () => {
 			const widget = new App();
 			const projection: any = dom.create(
 				widget.__render__() as HNode,
-				widget,
-				{ eventHandlerInterceptor: eventHandlerInterceptor.bind(widget) }
+				widget
 			);
-			projection.domNode.childNodes[0].onclick();
-			projection.domNode.childNodes[0].childNodes[0].onclick();
-			projection.domNode.childNodes[0].childNodes[0].childNodes[0].onclick();
-			projection.domNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0].onclick();
+			projection.domNode.childNodes[0].dispatchEvent(new Event('click'));
+			projection.domNode.childNodes[0].childNodes[0].dispatchEvent(new Event('click'));
+			projection.domNode.childNodes[0].childNodes[0].childNodes[0].dispatchEvent(new Event('click'));
+			projection.domNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0].dispatchEvent(new Event('click'));
 			assert.strictEqual(widget.onClickCount, 4);
 		});
 
@@ -971,7 +965,6 @@ describe('vdom', () => {
 				const select = root.childNodes[1] as HTMLSelectElement;
 				const button = root.childNodes[2] as HTMLButtonElement;
 				assert.strictEqual(select.value, 'bar', 'bar should be selected');
-				const onchangeListener = spy();
 				const onclickListener = spy();
 				class Foo extends WidgetBase {
 					render() {
@@ -985,8 +978,7 @@ describe('vdom', () => {
 								type: 'text',
 								name: 'baz',
 								id: 'baz',
-								disabled: false,
-								onchange: onchangeListener
+								disabled: false
 							}, [
 								v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
 								v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
@@ -1018,16 +1010,7 @@ describe('vdom', () => {
 				assert.strictEqual(select.value, 'foo', 'foo should be selected');
 				assert.strictEqual(select.children.length, 3, 'should have 3 children');
 
-				assert.isFalse(onchangeListener.called, 'onchangeListener should not have been called');
 				assert.isFalse(onclickListener.called, 'onclickListener should not have been called');
-
-				const changeEvent = document.createEvent('Event');
-				changeEvent.initEvent('change', true, true);
-				select.onchange(changeEvent); // firefox doesn't like to dispatch this event, either due to trust issues or
-											// that firefox doesn't generally dispatch this event until the element is blurred
-											// which is different than other browsers.  Either way this is not material to testing
-											// the functionality of this test, so calling the listener directly.
-				assert.isTrue(onchangeListener.called, 'onchangeListener should have been called');
 
 				const clickEvent = document.createEvent('CustomEvent');
 				clickEvent.initEvent('click', true, true);
@@ -1050,7 +1033,6 @@ describe('vdom', () => {
 				const span = root.childNodes[3] as HTMLElement;
 				const div = root.childNodes[4] as HTMLElement;
 				assert.strictEqual(select.value, 'bar', 'bar should be selected');
-				const onchangeListener = spy();
 				const onclickListener = spy();
 
 				class Button extends WidgetBase {
@@ -1073,8 +1055,7 @@ describe('vdom', () => {
 								type: 'text',
 								name: 'baz',
 								id: 'baz',
-								disabled: false,
-								onchange: onchangeListener
+								disabled: false
 							}, [
 								v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
 								v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
@@ -1105,16 +1086,7 @@ describe('vdom', () => {
 				assert.strictEqual(select.value, 'foo', 'foo should be selected');
 				assert.strictEqual(select.children.length, 3, 'should have 3 children');
 
-				assert.isFalse(onchangeListener.called, 'onchangeListener should not have been called');
 				assert.isFalse(onclickListener.called, 'onclickListener should not have been called');
-
-				const changeEvent = document.createEvent('Event');
-				changeEvent.initEvent('change', true, true);
-				select.onchange(changeEvent); // firefox doesn't like to dispatch this event, either due to trust issues or
-											// that firefox doesn't generally dispatch this event until the element is blurred
-											// which is different than other browsers.  Either way this is not material to testing
-											// the functionality of this test, so calling the listener directly.
-				assert.isTrue(onchangeListener.called, 'onchangeListener should have been called');
 
 				const clickEvent = document.createEvent('CustomEvent');
 				clickEvent.initEvent('click', true, true);
@@ -1148,7 +1120,6 @@ describe('vdom', () => {
 				const span = root.childNodes[7] as HTMLElement;
 				const div = root.childNodes[9] as HTMLElement;
 				assert.strictEqual(select.value, 'bar', 'bar should be selected');
-				const onchangeListener = spy();
 				const onclickListener = spy();
 
 				class Button extends WidgetBase {
@@ -1171,8 +1142,7 @@ describe('vdom', () => {
 								type: 'text',
 								name: 'baz',
 								id: 'baz',
-								disabled: false,
-								onchange: onchangeListener
+								disabled: false
 							}, [
 								v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
 								v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
@@ -1203,16 +1173,7 @@ describe('vdom', () => {
 				assert.strictEqual(select.value, 'foo', 'foo should be selected');
 				assert.strictEqual(select.children.length, 3, 'should have 3 children');
 
-				assert.isFalse(onchangeListener.called, 'onchangeListener should not have been called');
 				assert.isFalse(onclickListener.called, 'onclickListener should not have been called');
-
-				const changeEvent = document.createEvent('Event');
-				changeEvent.initEvent('change', true, true);
-				select.onchange(changeEvent); // firefox doesn't like to dispatch this event, either due to trust issues or
-											// that firefox doesn't generally dispatch this event until the element is blurred
-											// which is different than other browsers.  Either way this is not material to testing
-											// the functionality of this test, so calling the listener directly.
-				assert.isTrue(onchangeListener.called, 'onchangeListener should have been called');
 
 				const clickEvent = document.createEvent('CustomEvent');
 				clickEvent.initEvent('click', true, true);
@@ -1500,71 +1461,6 @@ describe('vdom', () => {
 
 		});
 
-		describe('event handlers', () => {
-
-			it('allows one to correct the value while being typed', () => {
-				let typedKeys = '';
-				const handleInput = (evt: any) => {
-					typedKeys = evt.target.value.substr(0, 2);
-				};
-				const renderFunction = () => v('input', { value: typedKeys, oninput: handleInput });
-				const projection = dom.create(renderFunction(), projectorStub, { eventHandlerInterceptor: noopEventHandlerInterceptor });
-				const inputElement = (projection.domNode.childNodes[0] as Element) as HTMLInputElement;
-				assert.strictEqual(inputElement.value, typedKeys);
-
-				inputElement.value = 'ab';
-				inputElement.oninput({ target: inputElement } as any);
-				assert.strictEqual(typedKeys, 'ab');
-				projection.update(renderFunction());
-				assert.strictEqual(inputElement.value, 'ab');
-
-				inputElement.value = 'abc';
-				inputElement.oninput({ target: inputElement } as any);
-				assert.strictEqual(typedKeys, 'ab');
-				projection.update(renderFunction());
-				assert.strictEqual(inputElement.value, 'ab');
-			});
-
-			it('does not undo keystrokes, even if a browser runs an animationFrame between changing the value property and running oninput', () => {
-				// Crazy internet explorer behavior
-				let typedKeys = '';
-				const handleInput = (evt: Event) => {
-					typedKeys = (evt.target as HTMLInputElement).value;
-				};
-
-				const renderFunction = () => v('input', { value: typedKeys, oninput: handleInput });
-
-				const projection = dom.create(renderFunction(), projectorStub, { eventHandlerInterceptor: noopEventHandlerInterceptor });
-				const inputElement = ((projection.domNode.childNodes[0] as Element) as HTMLInputElement);
-				assert.strictEqual(inputElement.value, typedKeys);
-
-				// Normal behavior
-				inputElement.value = 'a';
-				inputElement.oninput({ target: inputElement } as any);
-				assert.strictEqual(typedKeys, 'a');
-				projection.update(renderFunction());
-
-				// Crazy behavior
-				inputElement.value = 'ab';
-				projection.update(renderFunction());
-				assert.strictEqual(typedKeys, 'a');
-				assert.strictEqual(inputElement.value, 'ab');
-				inputElement.oninput({ target: inputElement } as any);
-				assert.strictEqual(typedKeys, 'ab');
-				projection.update(renderFunction());
-			});
-
-			it('does not allow event handlers to be updated, for performance reasons', () => {
-				const handler1 = () => undefined as void;
-				const handler2 = () => undefined as void;
-				const projection = dom.create(v('button', { onclick: handler1 }), projectorStub);
-				assert.throws(() => {
-					projection.update(v('button', { onclick: handler2 }));
-				});
-			});
-
-		});
-
 		it('updates the value property', () => {
 			let typedKeys = '';
 			const handleInput = (evt: Event) => {
@@ -1572,7 +1468,7 @@ describe('vdom', () => {
 			};
 
 			const renderFunction = () => v('input', { value: typedKeys, oninput: handleInput });
-			const projection = dom.create(renderFunction(), projectorStub, { eventHandlerInterceptor: noopEventHandlerInterceptor });
+			const projection = dom.create(renderFunction(), projectorStub);
 			const inputElement = ((projection.domNode.childNodes[0] as Element) as HTMLInputElement);
 			assert.strictEqual(inputElement.value, typedKeys);
 			typedKeys = 'value1';
@@ -1588,7 +1484,7 @@ describe('vdom', () => {
 
 			const renderFunction = () => v('input', { value: typedKeys, oninput: handleInput });
 
-			const projection = dom.create(renderFunction(), projectorStub, { eventHandlerInterceptor: noopEventHandlerInterceptor });
+			const projection = dom.create(renderFunction(), projectorStub);
 			const inputElement = ((projection.domNode.childNodes[0] as Element) as HTMLInputElement);
 			assert.strictEqual(inputElement.value, typedKeys);
 
@@ -1610,17 +1506,17 @@ describe('vdom', () => {
 			};
 
 			const renderFunction = () => v('input', { value: model, oninput: handleInput });
-			const projection = dom.create(renderFunction(), projectorStub, { eventHandlerInterceptor: noopEventHandlerInterceptor });
+			const projection = dom.create(renderFunction(), projectorStub);
 
 			const inputElement = ((projection.domNode.childNodes[0] as Element) as HTMLInputElement);
 			assert.strictEqual(inputElement.value, model);
 
 			inputElement.value = '4';
-			inputElement.oninput({target: inputElement} as any as Event);
+			inputElement.dispatchEvent(new Event('input'));
 			projection.update(renderFunction());
 
 			inputElement.value = '4,';
-			inputElement.oninput({target: inputElement} as any as Event);
+			inputElement.dispatchEvent(new Event('input'));
 			projection.update(renderFunction());
 
 			assert.strictEqual(inputElement.value, '4.');
@@ -1635,7 +1531,7 @@ describe('vdom', () => {
 			let role: string | undefined = 'button';
 			const renderFunction = () => v('div', { role: role });
 
-			const projection = dom.create(renderFunction(), projectorStub, { eventHandlerInterceptor: noopEventHandlerInterceptor });
+			const projection = dom.create(renderFunction(), projectorStub);
 			const element = (projection.domNode.childNodes[0] as Element);
 
 			assert.property(element.attributes, 'role');
@@ -1665,7 +1561,7 @@ describe('vdom', () => {
 				return div;
 			};
 
-			const projection = dom.create(renderFunction(), projectorStub, { eventHandlerInterceptor: noopEventHandlerInterceptor });
+			const projection = dom.create(renderFunction(), projectorStub);
 			const element: any = projection.domNode.childNodes[0];
 
 			assert.strictEqual(element.deferredCallbackCount, 1);
@@ -1707,7 +1603,7 @@ describe('vdom', () => {
 				return div;
 			};
 
-			const projection = dom.create(renderFunction(), projectorStub, { eventHandlerInterceptor: noopEventHandlerInterceptor });
+			const projection = dom.create(renderFunction(), projectorStub);
 			const element: any = projection.domNode.childNodes[0];
 
 			assert.strictEqual(element.getAttribute('foo'), 'bar');
@@ -1731,6 +1627,111 @@ describe('vdom', () => {
 
 			assert.strictEqual(element.getAttribute('foo'), 'qux');
 			assert.strictEqual(element.getAttribute('another'), 'property');
+		});
+	});
+
+	describe('events', () => {
+
+		it('should add an event listener', () => {
+			const onclick = stub();
+			const renderFunction = () => {
+				return v('div', { onclick });
+			};
+			const projection = dom.create(renderFunction(), projectorStub);
+			const element: Node = projection.domNode.childNodes[0];
+			element.dispatchEvent(new Event('click'));
+			assert.isTrue(onclick.called);
+		});
+
+		it('should be able to change event listener', () => {
+			const onclickFirst = stub();
+			const onclickSecond = stub();
+			const renderFunction = (updated?: boolean) => {
+				return v('div', { onclick: updated ? onclickSecond : onclickFirst });
+			};
+			const projection = dom.create(renderFunction(), projectorStub);
+			const element: Node = projection.domNode.childNodes[0];
+			element.dispatchEvent(new Event('click'));
+			assert.strictEqual(onclickFirst.callCount, 1);
+
+			projection.update(renderFunction(true));
+
+			element.dispatchEvent(new Event('click'));
+			assert.strictEqual(onclickFirst.callCount, 1);
+			assert.strictEqual(onclickSecond.callCount, 1);
+		});
+
+		it('should be able to drop an event listener across renders', () => {
+			const onclick = stub();
+			const renderFunction = (updated?: boolean) => {
+				const props = updated ? {} : { onclick };
+				return v('div', props);
+			};
+			const projection = dom.create(renderFunction(), projectorStub);
+			const element: Node = projection.domNode.childNodes[0];
+			element.dispatchEvent(new Event('click'));
+			assert.strictEqual(onclick.callCount, 1);
+
+			projection.update(renderFunction(true));
+
+			element.dispatchEvent(new Event('click'));
+			assert.strictEqual(onclick.callCount, 1);
+
+			projection.update(renderFunction());
+			element.dispatchEvent(new Event('click'));
+			assert.strictEqual(onclick.callCount, 2);
+		});
+
+		it('allows one to correct the value while being typed', () => {
+			let typedKeys = '';
+			const handleInput = (evt: any) => {
+				typedKeys = evt.target.value.substr(0, 2);
+			};
+			const renderFunction = () => v('input', { value: typedKeys, oninput: handleInput });
+			const projection = dom.create(renderFunction(), projectorStub);
+			const inputElement = (projection.domNode.childNodes[0] as Element) as HTMLInputElement;
+			assert.strictEqual(inputElement.value, typedKeys);
+
+			inputElement.value = 'ab';
+			inputElement.dispatchEvent(new Event('input'));
+			assert.strictEqual(typedKeys, 'ab');
+			projection.update(renderFunction());
+			assert.strictEqual(inputElement.value, 'ab');
+
+			inputElement.value = 'abc';
+			inputElement.dispatchEvent(new Event('input'));
+			assert.strictEqual(typedKeys, 'ab');
+			projection.update(renderFunction());
+			assert.strictEqual(inputElement.value, 'ab');
+		});
+
+		it('does not undo keystrokes, even if a browser runs an animationFrame between changing the value property and running oninput', () => {
+			// Crazy internet explorer behavior
+			let typedKeys = '';
+			const handleInput = (evt: Event) => {
+				typedKeys = (evt.target as HTMLInputElement).value;
+			};
+
+			const renderFunction = () => v('input', { value: typedKeys, oninput: handleInput });
+
+			const projection = dom.create(renderFunction(), projectorStub);
+			const inputElement = ((projection.domNode.childNodes[0] as Element) as HTMLInputElement);
+			assert.strictEqual(inputElement.value, typedKeys);
+
+			// Normal behavior
+			inputElement.value = 'a';
+			inputElement.dispatchEvent(new Event('input'));
+			assert.strictEqual(typedKeys, 'a');
+			projection.update(renderFunction());
+
+			// Crazy behavior
+			inputElement.value = 'ab';
+			projection.update(renderFunction());
+			assert.strictEqual(typedKeys, 'a');
+			assert.strictEqual(inputElement.value, 'ab');
+			inputElement.dispatchEvent(new Event('input'));
+			assert.strictEqual(typedKeys, 'ab');
+			projection.update(renderFunction());
 		});
 	});
 
@@ -2049,7 +2050,6 @@ describe('vdom', () => {
 			const select = root.childNodes[1] as HTMLSelectElement;
 			const button = root.childNodes[2] as HTMLButtonElement;
 			assert.strictEqual(select.value, 'bar', 'bar should be selected');
-			const onchangeListener = spy();
 			const onclickListener = spy();
 			class Foo extends WidgetBase {
 				render() {
@@ -2063,8 +2063,7 @@ describe('vdom', () => {
 							type: 'text',
 							name: 'baz',
 							id: 'baz',
-							disabled: false,
-							onchange: onchangeListener
+							disabled: false
 						}, [
 							v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
 							v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
@@ -2090,16 +2089,7 @@ describe('vdom', () => {
 			assert.strictEqual(select.value, 'foo', 'foo should be selected');
 			assert.strictEqual(select.children.length, 3, 'should have 3 children');
 
-			assert.isFalse(onchangeListener.called, 'onchangeListener should not have been called');
 			assert.isFalse(onclickListener.called, 'onclickListener should not have been called');
-
-			const changeEvent = document.createEvent('Event');
-			changeEvent.initEvent('change', true, true);
-			select.onchange(changeEvent); // firefox doesn't like to dispatch this event, either due to trust issues or
-										// that firefox doesn't generally dispatch this event until the element is blurred
-										// which is different than other browsers.  Either way this is not material to testing
-										// the functionality of this test, so calling the listener directly.
-			assert.isTrue(onchangeListener.called, 'onchangeListener should have been called');
 
 			const clickEvent = document.createEvent('CustomEvent');
 			clickEvent.initEvent('click', true, true);
@@ -2122,7 +2112,6 @@ describe('vdom', () => {
 			const span = root.childNodes[3] as HTMLElement;
 			const div = root.childNodes[4] as HTMLElement;
 			assert.strictEqual(select.value, 'bar', 'bar should be selected');
-			const onchangeListener = spy();
 			const onclickListener = spy();
 
 			class Button extends WidgetBase {
@@ -2145,8 +2134,7 @@ describe('vdom', () => {
 							type: 'text',
 							name: 'baz',
 							id: 'baz',
-							disabled: false,
-							onchange: onchangeListener
+							disabled: false
 						}, [
 							v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
 							v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
@@ -2172,16 +2160,7 @@ describe('vdom', () => {
 			assert.strictEqual(select.value, 'foo', 'foo should be selected');
 			assert.strictEqual(select.children.length, 3, 'should have 3 children');
 
-			assert.isFalse(onchangeListener.called, 'onchangeListener should not have been called');
 			assert.isFalse(onclickListener.called, 'onclickListener should not have been called');
-
-			const changeEvent = document.createEvent('Event');
-			changeEvent.initEvent('change', true, true);
-			select.onchange(changeEvent); // firefox doesn't like to dispatch this event, either due to trust issues or
-										// that firefox doesn't generally dispatch this event until the element is blurred
-										// which is different than other browsers.  Either way this is not material to testing
-										// the functionality of this test, so calling the listener directly.
-			assert.isTrue(onchangeListener.called, 'onchangeListener should have been called');
 
 			const clickEvent = document.createEvent('CustomEvent');
 			clickEvent.initEvent('click', true, true);
@@ -2215,7 +2194,6 @@ describe('vdom', () => {
 			const span = root.childNodes[7] as HTMLElement;
 			const div = root.childNodes[9] as HTMLElement;
 			assert.strictEqual(select.value, 'bar', 'bar should be selected');
-			const onchangeListener = spy();
 			const onclickListener = spy();
 
 			class Button extends WidgetBase {
@@ -2238,8 +2216,7 @@ describe('vdom', () => {
 							type: 'text',
 							name: 'baz',
 							id: 'baz',
-							disabled: false,
-							onchange: onchangeListener
+							disabled: false
 						}, [
 							v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
 							v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
@@ -2265,16 +2242,7 @@ describe('vdom', () => {
 			assert.strictEqual(select.value, 'foo', 'foo should be selected');
 			assert.strictEqual(select.children.length, 3, 'should have 3 children');
 
-			assert.isFalse(onchangeListener.called, 'onchangeListener should not have been called');
 			assert.isFalse(onclickListener.called, 'onclickListener should not have been called');
-
-			const changeEvent = document.createEvent('Event');
-			changeEvent.initEvent('change', true, true);
-			select.onchange(changeEvent); // firefox doesn't like to dispatch this event, either due to trust issues or
-										// that firefox doesn't generally dispatch this event until the element is blurred
-										// which is different than other browsers.  Either way this is not material to testing
-										// the functionality of this test, so calling the listener directly.
-			assert.isTrue(onchangeListener.called, 'onchangeListener should have been called');
 
 			const clickEvent = document.createEvent('CustomEvent');
 			clickEvent.initEvent('click', true, true);

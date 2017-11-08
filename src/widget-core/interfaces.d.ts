@@ -2,6 +2,7 @@ import { Destroyable } from '@dojo/core/Destroyable';
 import { Evented } from '@dojo/core/Evented';
 import { EventTargettedObject } from '@dojo/interfaces/core';
 import Map from '@dojo/shim/Map';
+import WeakMap from '@dojo/shim/WeakMap';
 
 /**
  * Generic constructor type
@@ -67,13 +68,13 @@ export interface ProjectorOptions {
 }
 
 export interface ProjectionOptions extends ProjectorOptions {
-	readonly namespace?: string;
-	eventHandlerInterceptor?: (propertyName: string, eventHandler: Function, domNode: Node, properties: VirtualDomProperties) => Function | undefined;
+	namespace?: string;
 	deferredRenderCallbacks: Function [];
 	afterRenderCallbacks: Function[];
 	merge: boolean;
 	sync: boolean;
 	mergeElement?: Element;
+	nodeMap: WeakMap<Node, WeakMap<Function, EventListener>>;
 	rootNode: Element;
 }
 

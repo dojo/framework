@@ -10,7 +10,6 @@ import { WidgetBase } from './../WidgetBase';
 import { afterRender } from './../decorators/afterRender';
 import { v } from './../d';
 import { Registry } from './../Registry';
-import eventHandlerInterceptor from '../util/eventHandlerInterceptor';
 import { dom } from './../vdom';
 
 /**
@@ -163,8 +162,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			this.own(nodeEvent);
 
 			this._projectionOptions = {
-				transitions: cssTransitions,
-				eventHandlerInterceptor: eventHandlerInterceptor.bind(this)
+				transitions: cssTransitions
 			};
 
 			this._boundDoRender = this._doRender.bind(this);
