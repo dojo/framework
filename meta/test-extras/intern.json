@@ -14,10 +14,6 @@
 		"./_build/tests/unit/all.js"
 	],
 
-	"functionalSuites": [
-		"./_build/tests/functional/all.js"
-	],
-
 	"browser": {
 		"loader": {
 			"script": "dojo2",

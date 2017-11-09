@@ -6,7 +6,6 @@ import harness from '../../src/harness';
 import assertRender from '../../src/support/assertRender';
 import callListener from '../../src/support/callListener';
 import sendEvent from '../../src/support/sendEvent';
-import ClientErrorCollector from '../../src/intern/ClientErrorCollector';
 import { assignChildProperties, assignProperties, findIndex, findKey, replaceChild, replaceChildProperties, replaceProperties } from '../../src/support/d';
 
 registerSuite('main', {
@@ -25,9 +24,6 @@ registerSuite('main', {
 
 		assert.isFunction(main.callListener);
 		assert.strictEqual(main.callListener, callListener);
-
-		assert.isFunction(main.ClientErrorCollector);
-		assert.strictEqual(main.ClientErrorCollector, ClientErrorCollector);
 
 		assert.isFunction(main.findIndex);
 		assert.strictEqual(main.findIndex, findIndex);
@@ -50,6 +46,6 @@ registerSuite('main', {
 		assert.isFunction(main.sendEvent);
 		assert.strictEqual(main.sendEvent, sendEvent);
 
-		assert.strictEqual(Object.keys(main).length, 12, 'should have 12 exports');
+		assert.strictEqual(Object.keys(main).length, 11, 'should have 11 exports');
 	}
 });
