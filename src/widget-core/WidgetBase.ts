@@ -105,7 +105,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 	private _renderState: WidgetRenderState = WidgetRenderState.IDLE;
 
-	private _metaMap = new Map<WidgetMetaConstructor<any>, WidgetMetaBase>();
+	private _metaMap: Map<WidgetMetaConstructor<any>, WidgetMetaBase>;
 
 	private _boundRenderFunc: Render;
 
@@ -123,11 +123,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		this._decoratorCache = new Map<string, any[]>();
 		this._properties = <P> {};
 		this.nodeHandler = new NodeHandler();
-		this._bindFunctionPropertyMap = new WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>();
-		this._registry = new RegistryHandler();
 		this._boundRenderFunc = this.render.bind(this);
 		this._boundInvalidate = this.invalidate.bind(this);
-		this._registry.on('invalidate', this._boundInvalidate);
 	}
 
 	public set parentInvalidator(invalidator: Function) {
@@ -140,6 +137,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	protected meta<T extends WidgetMetaBase>(MetaType: WidgetMetaConstructor<T>): T {
+		if (this._metaMap === undefined) {
+			this._metaMap = new Map<WidgetMetaConstructor<any>, WidgetMetaBase>();
+		}
 		let cached = this._metaMap.get(MetaType);
 		if (!cached) {
 			cached = new MetaType({
@@ -191,6 +191,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		const { baseRegistry } = coreProperties;
 
 		if (this._coreProperties.baseRegistry !== baseRegistry) {
+			if (this._registry === undefined) {
+				this._registry = new RegistryHandler();
+				this._registry.on('invalidate', this._boundInvalidate);
+			}
 			this._registry.base = baseRegistry;
 			this.invalidate();
 		}
@@ -421,6 +425,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 */
 	private _bindFunctionProperty(property: any, bind: any): any {
 		if (typeof property === 'function' && isWidgetBaseConstructor(property) === false) {
+			if (this._bindFunctionPropertyMap === undefined) {
+				this._bindFunctionPropertyMap = new WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>();
+			}
 			const bindInfo: Partial<BoundFunctionData> = this._bindFunctionPropertyMap.get(property) || {};
 			let { boundFunc, scope } = bindInfo;
 
@@ -434,6 +441,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	public get registry(): RegistryHandler {
+		if (this._registry === undefined) {
+			this._registry = new RegistryHandler();
+			this._registry.on('invalidate', this._boundInvalidate);
+		}
 		return this._registry;
 	}
 
@@ -480,9 +491,11 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			}, dNode);
 		}
 
-		this._metaMap.forEach((meta) => {
-			meta.afterRender();
-		});
+		if (this._metaMap !== undefined) {
+			this._metaMap.forEach((meta) => {
+				meta.afterRender();
+			});
+		}
 
 		return dNode;
 	}
