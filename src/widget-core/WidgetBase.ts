@@ -70,6 +70,11 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	private _dirty: boolean;
 
 	/**
+	 * Indicates if it is the initial set properties cycle
+	 */
+	private _initialProperties = true;
+
+	/**
 	 * internal widget properties
 	 */
 	private _properties: P & WidgetProperties & { [index: string]: any };
@@ -189,28 +194,41 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 	public __setProperties__(originalProperties: this['properties']): void {
 		const properties = this._runBeforeProperties(originalProperties);
-		const changedPropertyKeys: string[] = [];
-		const allProperties = [ ...Object.keys(properties), ...Object.keys(this._properties) ];
-		const checkedProperties: string[] = [];
-		const diffPropertyResults: any = {};
 		const registeredDiffPropertyNames = this.getDecorator('registeredDiffProperty');
-		let runReactions = false;
+		const changedPropertyKeys: string[] = [];
+		const propertyNames = Object.keys(properties);
 
-		this._renderState = WidgetRenderState.PROPERTIES;
+		if (this._initialProperties === false || registeredDiffPropertyNames.length !== 0) {
+			const allProperties = [ ...propertyNames, ...Object.keys(this._properties) ];
+			const checkedProperties: string[] = [];
+			const diffPropertyResults: any = {};
+			let runReactions = false;
 
-		for (let i = 0; i < allProperties.length; i++) {
-			const propertyName = allProperties[i];
-			if (checkedProperties.indexOf(propertyName) > 0) {
-				continue;
-			}
-			checkedProperties.push(propertyName);
-			const previousProperty = this._properties[propertyName];
-			const newProperty = this._bindFunctionProperty(properties[propertyName], this._coreProperties.bind);
-			if (registeredDiffPropertyNames.indexOf(propertyName) !== -1) {
-				runReactions = true;
-				const diffFunctions = this.getDecorator(`diffProperty:${propertyName}`);
-				for (let i = 0; i < diffFunctions.length; i++) {
-					const result = diffFunctions[i](previousProperty, newProperty);
+			this._renderState = WidgetRenderState.PROPERTIES;
+
+			for (let i = 0; i < allProperties.length; i++) {
+				const propertyName = allProperties[i];
+				if (checkedProperties.indexOf(propertyName) > 0) {
+					continue;
+				}
+				checkedProperties.push(propertyName);
+				const previousProperty = this._properties[propertyName];
+				const newProperty = this._bindFunctionProperty(properties[propertyName], this._coreProperties.bind);
+				if (registeredDiffPropertyNames.indexOf(propertyName) !== -1) {
+					runReactions = true;
+					const diffFunctions = this.getDecorator(`diffProperty:${propertyName}`);
+					for (let i = 0; i < diffFunctions.length; i++) {
+						const result = diffFunctions[i](previousProperty, newProperty);
+						if (result.changed && changedPropertyKeys.indexOf(propertyName) === -1) {
+							changedPropertyKeys.push(propertyName);
+						}
+						if (propertyName in properties) {
+							diffPropertyResults[propertyName] = result.value;
+						}
+					}
+				}
+				else {
+					const result = boundAuto(previousProperty, newProperty);
 					if (result.changed && changedPropertyKeys.indexOf(propertyName) === -1) {
 						changedPropertyKeys.push(propertyName);
 					}
@@ -219,29 +237,33 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 					}
 				}
 			}
-			else {
-				const result = boundAuto(previousProperty, newProperty);
-				if (result.changed && changedPropertyKeys.indexOf(propertyName) === -1) {
+
+			if (runReactions) {
+				this._mapDiffPropertyReactions(properties, changedPropertyKeys).forEach((args, reaction) => {
+					if (args.changed) {
+						reaction.call(this, args.previousProperties, args.newProperties);
+					}
+				});
+			}
+			this._properties = diffPropertyResults;
+			this._changedPropertyKeys = changedPropertyKeys;
+		}
+		else {
+			this._initialProperties = false;
+			for (let i = 0; i < propertyNames.length; i++) {
+				const propertyName = propertyNames[i];
+				if (typeof properties[propertyName] === 'function') {
+					properties[propertyName] = this._bindFunctionProperty(properties[propertyName], this._coreProperties.bind);
+				}
+				else {
 					changedPropertyKeys.push(propertyName);
 				}
-				if (propertyName in properties) {
-					diffPropertyResults[propertyName] = result.value;
-				}
 			}
+			this._changedPropertyKeys = changedPropertyKeys;
+			this._properties = { ...properties };
 		}
 
-		if (runReactions) {
-			this._mapDiffPropertyReactions(properties, changedPropertyKeys).forEach((args, reaction) => {
-				if (args.changed) {
-					reaction.call(this, args.previousProperties, args.newProperties);
-				}
-			});
-		}
-
-		this._properties = diffPropertyResults;
-		this._changedPropertyKeys = changedPropertyKeys;
-
-		if (changedPropertyKeys.length > 0) {
+		if (this._changedPropertyKeys.length > 0) {
 			this.invalidate();
 		}
 	}
