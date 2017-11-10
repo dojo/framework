@@ -163,7 +163,9 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		constructor(...args: any[]) {
 			super(...args);
 
-			this.parentInvalidate = this.scheduleRender.bind(this);
+			this.parentInvalidator = () => {
+				this.scheduleRender();
+			};
 			this._projectionOptions = {
 				transitions: cssTransitions
 			};
@@ -218,6 +220,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			if (this.projectorState === ProjectorAttachState.Attached) {
 				this.__setProperties__(this._projectorProperties);
 				this.__setChildren__(this._projectorChildren);
+				(this as any)._renderState = 1;
 				if (!this._scheduled && !this._paused) {
 					if (this._async) {
 						this._scheduled = global.requestAnimationFrame(this._boundDoRender);

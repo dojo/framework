@@ -456,8 +456,8 @@ describe('vdom', () => {
 
 				private myClass = false;
 
-				constructor(invalidate: Function) {
-					super(invalidate);
+				constructor() {
+					super();
 					fooInvalidate = this.invalidate.bind(this);
 				}
 

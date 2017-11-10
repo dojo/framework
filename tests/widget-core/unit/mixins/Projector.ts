@@ -230,6 +230,18 @@ registerSuite('mixins/projectorMixin', {
 			projector.root = root;
 			assert.equal(projector.root, root);
 		},
+		'scheduleRender'() {
+			rafStub.restore();
+			rafStub = stub(global, 'requestAnimationFrame').returns(1);
+			const projector = new BaseTestWidget();
+			const scheduleRenderStub = spy(projector, 'scheduleRender');
+			projector.append();
+			assert.isTrue(scheduleRenderStub.notCalled);
+			projector.invalidate();
+			assert.isTrue(scheduleRenderStub.calledOnce);
+			projector.invalidate();
+			assert.isTrue(scheduleRenderStub.calledTwice);
+		},
 		'pause'() {
 			const projector = new BaseTestWidget();
 

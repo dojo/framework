@@ -113,16 +113,12 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 	public readonly nodeHandler: NodeHandler = new NodeHandler();
 
-	protected parentInvalidate: Function;
+	private _parentInvalidator: Function;
 
 	/**
 	 * @constructor
 	 */
-	constructor(invalidate?: Function) {
-		if (invalidate) {
-			this.parentInvalidate = invalidate;
-		}
-
+	constructor() {
 		this._children = [];
 		this._decoratorCache = new Map<string, any[]>();
 		this._properties = <P> {};
@@ -132,6 +128,15 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		this._boundRenderFunc = this.render.bind(this);
 		this._boundInvalidate = this.invalidate.bind(this);
 		this._registry.on('invalidate', this._boundInvalidate);
+	}
+
+	public set parentInvalidator(invalidator: Function) {
+		if (this._parentInvalidator === undefined) {
+			this._parentInvalidator = invalidator;
+		}
+		else {
+			console.warn('Unable to update parent invalidator after it has been set');
+		}
 	}
 
 	protected meta<T extends WidgetMetaBase>(MetaType: WidgetMetaConstructor<T>): T {
@@ -197,14 +202,13 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		const registeredDiffPropertyNames = this.getDecorator('registeredDiffProperty');
 		const changedPropertyKeys: string[] = [];
 		const propertyNames = Object.keys(properties);
+		this._renderState = WidgetRenderState.PROPERTIES;
 
 		if (this._initialProperties === false || registeredDiffPropertyNames.length !== 0) {
 			const allProperties = [ ...propertyNames, ...Object.keys(this._properties) ];
 			const checkedProperties: string[] = [];
 			const diffPropertyResults: any = {};
 			let runReactions = false;
-
-			this._renderState = WidgetRenderState.PROPERTIES;
 
 			for (let i = 0; i < allProperties.length; i++) {
 				const propertyName = allProperties[i];
@@ -296,8 +300,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	public invalidate(): void {
 		if (this._renderState === WidgetRenderState.IDLE) {
 			this._dirty = true;
-			if (this.parentInvalidate) {
-				this.parentInvalidate();
+			if (this._parentInvalidator) {
+				this._parentInvalidator();
 			}
 		}
 		else if (this._renderState === WidgetRenderState.PROPERTIES) {

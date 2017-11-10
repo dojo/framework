@@ -665,8 +665,9 @@ function createDom(
 			}
 			widgetConstructor = item;
 		}
-		const instance = new widgetConstructor(parentInstance.invalidate.bind(parentInstance));
+		const instance = new widgetConstructor();
 		dnode.instance = instance;
+		instance.parentInvalidator = parentInstance.invalidate.bind(parentInstance);
 		instance.__setCoreProperties__(dnode.coreProperties);
 		instance.__setChildren__(dnode.children);
 		instance.__setProperties__(dnode.properties);

@@ -1,6 +1,6 @@
-const { describe, it } = intern.getInterface('bdd');
+const { describe, it, beforeEach, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import { spy } from 'sinon';
+import { spy, stub, SinonStub } from 'sinon';
 
 import { WidgetBase } from './../../src/WidgetBase';
 import { v } from './../../src/d';
@@ -56,7 +56,17 @@ function testDecorator(func?: Function) {
 	});
 }
 
+let consoleStub: SinonStub;
+
 describe('WidgetBase', () => {
+
+	beforeEach(() => {
+		consoleStub = stub(console, 'warn');
+	});
+
+	afterEach(() => {
+		consoleStub.restore();
+	});
 
 	it('default render returns a `div` with the current widgets children', () => {
 		const widget = new BaseTestWidget();
@@ -66,6 +76,25 @@ describe('WidgetBase', () => {
 		assert.deepEqual(renderResult.properties, {});
 		assert.lengthOf(renderResult.children, 1);
 		assert.strictEqual(renderResult.children![0], 'child');
+	});
+
+	it('parentInvalidator gets called when the widget is invalidated', () => {
+		const child = new BaseTestWidget();
+		const parent = new BaseTestWidget();
+		const parentInvalidatorSpy = stub(parent, 'invalidate');
+		child.parentInvalidator = () => parent.invalidate();
+		child.invalidate();
+		assert.isTrue(parentInvalidatorSpy.calledOnce);
+		child.invalidate();
+		assert.isTrue(parentInvalidatorSpy.calledTwice);
+	});
+
+	it('warns when setting the parentInvalidator if it has already been set', () => {
+		const child = new BaseTestWidget();
+		const parent = new BaseTestWidget();
+		child.parentInvalidator = () => parent.invalidate();
+		child.parentInvalidator = () => parent.invalidate();
+		assert.isTrue(consoleStub.calledWith('Unable to update parent invalidator after it has been set'));
 	});
 
 	describe('__render__', () => {
