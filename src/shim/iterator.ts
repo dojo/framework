@@ -1,4 +1,3 @@
-import { HIGH_SURROGATE_MIN, HIGH_SURROGATE_MAX } from './string';
 import './Symbol';
 
 export interface IteratorResult<T> {
@@ -8,7 +7,9 @@ export interface IteratorResult<T> {
 
 export interface Iterator<T> {
 	next(value?: any): IteratorResult<T>;
+
 	return?(value?: any): IteratorResult<T>;
+
 	throw?(e?: any): IteratorResult<T>;
 }
 
@@ -32,7 +33,7 @@ export class ShimIterator<T> {
 
 	constructor(list: ArrayLike<T> | Iterable<T>) {
 		if (isIterable(list)) {
-			this._nativeIterator = list[Symbol.iterator]();
+			this._nativeIterator = list[ Symbol.iterator ]();
 		}
 		else {
 			this._list = list;
@@ -52,7 +53,7 @@ export class ShimIterator<T> {
 		if (++this._nextIndex < this._list.length) {
 			return {
 				done: false,
-				value: this._list[this._nextIndex]
+				value: this._list[ this._nextIndex ]
 			};
 		}
 		return staticDone;
@@ -69,7 +70,7 @@ export class ShimIterator<T> {
  * @param value The value to type guard against
  */
 export function isIterable(value: any): value is Iterable<any> {
-	return value && typeof value[Symbol.iterator] === 'function';
+	return value && typeof value[ Symbol.iterator ] === 'function';
 }
 
 /**
@@ -79,76 +80,4 @@ export function isIterable(value: any): value is Iterable<any> {
  */
 export function isArrayLike(value: any): value is ArrayLike<any> {
 	return value && typeof value.length === 'number';
-}
-
-/**
- * Returns the iterator for an object
- *
- * @param iterable The iterable object to return the iterator for
- */
-export function get<T>(iterable: Iterable<T> | ArrayLike<T>): Iterator<T> | undefined {
-	if (isIterable(iterable)) {
-		return iterable[Symbol.iterator]();
-	}
-	else if (isArrayLike(iterable)) {
-		return new ShimIterator(iterable);
-	}
-};
-
-export interface ForOfCallback<T> {
-	/**
-	 * A callback function for a forOf() iteration
-	 *
-	 * @param value The current value
-	 * @param object The object being iterated over
-	 * @param doBreak A function, if called, will stop the iteration
-	 */
-	(value: T, object: Iterable<T> | ArrayLike<T> | string, doBreak: () => void): void;
-}
-
-/**
- * Shims the functionality of `for ... of` blocks
- *
- * @param iterable The object the provides an interator interface
- * @param callback The callback which will be called for each item of the iterable
- * @param thisArg Optional scope to pass the callback
- */
-export function forOf<T>(iterable: Iterable<T> | ArrayLike<T> | string, callback: ForOfCallback<T>, thisArg?: any): void {
-	let broken = false;
-
-	function doBreak() {
-		broken = true;
-	}
-
-	/* We need to handle iteration of double byte strings properly */
-	if (isArrayLike(iterable) && typeof iterable === 'string') {
-		const l = iterable.length;
-		for (let i = 0; i < l; ++i) {
-			let char = iterable[i];
-			if ((i + 1) < l) {
-				const code = char.charCodeAt(0);
-				if ((code >= HIGH_SURROGATE_MIN) && (code <= HIGH_SURROGATE_MAX)) {
-					char += iterable[++i];
-				}
-			}
-			callback.call(thisArg, char, iterable, doBreak);
-			if (broken) {
-				return;
-			}
-		}
-	}
-	else {
-		const iterator = get(iterable);
-		if (iterator) {
-			let result = iterator.next();
-
-			while (!result.done) {
-				callback.call(thisArg, result.value, iterable, doBreak);
-				if (broken) {
-					return;
-				}
-				result = iterator.next();
-			}
-		}
-	}
 }

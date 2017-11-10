@@ -7,7 +7,6 @@
 
 <body>
 <script src="../../src/util/amd.js"></script>
-<script src="https://cdn.jsdelivr.net/bluebird/latest/bluebird.core.min.js"></script>
 <script src="../../../node_modules/@dojo/loader/loader.js"></script>
 <script>
 	require.config(shimAmdDependencies({
@@ -15,11 +14,12 @@
 	}));
 	require([
 		'_build/src/main',
-		'_build/tests/functional/nativePromise'
-	], function(unused, main) {
-		main.default(function(value) {
-			window.callbackValue = value;
-		});
+		'_build/src/browser'
+	], function() {
+		window.results = {
+			pointerEvents: typeof(PointerEvent) !== 'undefined',
+			intersectionObserver: typeof(IntersectionObserver) !== 'undefined'
+		};
 	});
 </script>
 </body>

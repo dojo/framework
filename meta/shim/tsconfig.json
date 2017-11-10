@@ -12,6 +12,7 @@
 			"es2015.symbol",
 			"es2015.symbol.wellknown"
 		],
+		"downlevelIteration": true,
 		"noImplicitAny": true,
 		"outDir": "_build/",
 		"removeComments": false,
@@ -20,6 +21,7 @@
 		"moduleResolution": "node",
 		"strictNullChecks": true,
 		"noImplicitThis": true,
+		"noEmitHelpers": true,
 		"types": [ "intern" ]
 	},
 	"include": [

@@ -1,4 +1,4 @@
-import { forOf, isIterable, IterableIterator, ShimIterator } from '../../src/iterator';
+import { isIterable, IterableIterator, ShimIterator } from '../../src/iterator';
 import Map from '../../src/Map';
 
 const { registerSuite } = intern.getInterface('object');
@@ -95,11 +95,11 @@ registerSuite('Map', {
 		assert.isTrue(isIterable(entries), 'Returns an iterable.');
 
 		let i = 0;
-		forOf(entries, function (value: [ number, any ]): void {
+		for (const value of entries) {
 			assert.strictEqual(value[0], mapArgs[i][0]);
 			assert.strictEqual(value[1], mapArgs[i][1]);
 			i++;
-		});
+		}
 	},
 
 	forEach: {
@@ -189,10 +189,10 @@ registerSuite('Map', {
 		assert.isTrue(isIterable(keys), 'Returns an iterable.');
 
 		let i = 0;
-		forOf(keys, function (value: number): void {
+		for (const value of keys) {
 			assert.strictEqual(value, mapArgs[i][0]);
 			i++;
-		});
+		}
 	},
 
 	set: {
@@ -273,9 +273,9 @@ registerSuite('Map', {
 		assert.isTrue(isIterable(values), 'Returns an iterable.');
 
 		let i = 0;
-		forOf(values, function (value: any): void {
+		for (const value of values) {
 			assert.strictEqual(value, mapArgs[i][1]);
 			i++;
-		});
+		}
 	}
 });

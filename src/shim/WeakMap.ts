@@ -1,5 +1,5 @@
 import global from './global';
-import { forOf, Iterable } from './iterator';
+import { Iterable } from './iterator';
 import has from './support/has';
 import './Symbol';
 
@@ -103,7 +103,9 @@ if (!has('es6-weakmap')) {
 			this._frozenEntries = [];
 
 			if (iterable) {
-				forOf(iterable, ([ key, value ]: [K, V]) => this.set(key, value));
+				for (const [key, value] of iterable) {
+					this.set(key, value);
+				}
 			}
 		}
 

@@ -1,5 +1,5 @@
 import global from './global';
-import { forOf, IterableIterator, Iterable, ShimIterator } from './iterator';
+import { IterableIterator, Iterable, ShimIterator } from './iterator';
 import has from './support/has';
 import './Symbol';
 
@@ -110,7 +110,9 @@ if (!has('es6-set')) {
 
 		constructor(iterable?: ArrayLike<T> | Iterable<T>) {
 			if (iterable) {
-				forOf(iterable, (value) => this.add(value));
+				for (const value of iterable) {
+					this.add(value);
+				}
 			}
 		};
 

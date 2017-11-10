@@ -1,5 +1,5 @@
 import Set from '../../src/Set';
-import { forOf, ShimIterator } from '../../src/iterator';
+import { ShimIterator } from '../../src/iterator';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
@@ -50,7 +50,9 @@ registerSuite('Set', {
 		const source = [1, 2, 3];
 		const set = new Set(source);
 		const results: number[] = [];
-		forOf(set, (value) => results.push(value));
+		for (const value of set) {
+			results.push(value);
+		}
 		assert.deepEqual(results, source, 'results should match source');
 	},
 
@@ -58,7 +60,9 @@ registerSuite('Set', {
 		const source = [1, 2, 3];
 		const set = new Set(source);
 		const results: number[] = [];
-		forOf(set.values(), (value) => results.push(value));
+		for (const value of set.values()) {
+			results.push(value);
+		}
 		assert.deepEqual(results, source, 'results should match source');
 	},
 
@@ -66,14 +70,18 @@ registerSuite('Set', {
 		const source = [1, 2, 3];
 		const set = new Set(source);
 		const results: number[] = [];
-		forOf(set.keys(), (value) => results.push(value));
+		for (const value of set.keys()) {
+			results.push(value);
+		}
 		assert.deepEqual(results, source, 'results should match source');
 	},
 
 	'.entries()'() {
 		const set = new Set([1, 2, 3]);
 		const results: [number, number][] = [];
-		forOf(set.entries(), (value) => results.push(value));
+		for (const value of set.entries()) {
+			results.push(value);
+		}
 		assert.deepEqual(results, [[1, 1], [2, 2], [3, 3]], 'results should match expected');
 	},
 
