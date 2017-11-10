@@ -19,7 +19,7 @@ registerSuite('DomWrapper', {
 
 	afterEach() {
 		resolvers.restore();
-		projector && projector.destroy();
+		projector = undefined;
 	},
 
 	tests: {

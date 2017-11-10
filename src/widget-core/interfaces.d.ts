@@ -397,7 +397,7 @@ export interface DefaultWidgetBaseInterface extends WidgetBaseInterface<WidgetPr
  */
 export interface WidgetBaseInterface<
 	P = WidgetProperties,
-	C extends DNode = DNode> extends Evented {
+	C extends DNode = DNode> {
 
 	/**
 	 * Widget properties

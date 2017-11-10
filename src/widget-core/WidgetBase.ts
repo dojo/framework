@@ -1,5 +1,4 @@
 import { EventTypedObject } from '@dojo/interfaces/core';
-import { Evented } from '@dojo/core/Evented';
 import Map from '@dojo/shim/Map';
 import WeakMap from '@dojo/shim/WeakMap';
 import { v } from './d';
@@ -53,7 +52,7 @@ const boundAuto = auto.bind(null);
 /**
  * Main widget base for all widgets to extend
  */
-export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends Evented implements WidgetBaseInterface<P, C> {
+export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implements WidgetBaseInterface<P, C> {
 
 	/**
 	 * static identifier
@@ -88,11 +87,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	private _cachedDNode: DNode | DNode[];
 
 	/**
-	 * map of specific property diff functions
-	 */
-	private _diffPropertyFunctionMap: Map<string, string>;
-
-	/**
 	 * map of decorators that are applied to this widget
 	 */
 	private _decoratorCache: Map<string, any[]>;
@@ -112,42 +106,27 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 
 	private _boundInvalidate: () => void;
 
-	private _nodeHandler: NodeHandler;
+	public readonly nodeHandler: NodeHandler = new NodeHandler();
+
+	protected parentInvalidate: Function;
 
 	/**
 	 * @constructor
 	 */
-	constructor() {
-		super({});
+	constructor(invalidate?: Function) {
+		if (invalidate) {
+			this.parentInvalidate = invalidate;
+		}
 
 		this._children = [];
 		this._decoratorCache = new Map<string, any[]>();
 		this._properties = <P> {};
-		this._diffPropertyFunctionMap = new Map<string, string>();
+		this.nodeHandler = new NodeHandler();
 		this._bindFunctionPropertyMap = new WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>();
 		this._registry = new RegistryHandler();
-		this._nodeHandler = new NodeHandler();
-		this.own(this._registry);
-		this.own(this._nodeHandler);
 		this._boundRenderFunc = this.render.bind(this);
 		this._boundInvalidate = this.invalidate.bind(this);
-		this.own(this.on({
-			'element-created': ({ key, element }: WidgetAndElementEvent) => {
-				this._nodeHandler.add(element, `${key}`);
-				this.onElementCreated(element, key);
-			},
-			'element-updated': ({ key, element }: WidgetAndElementEvent) => {
-				this._nodeHandler.add(element, `${key}`);
-				this.onElementUpdated(element, key);
-			},
-			'widget-created': ({ element }: WidgetAndElementEvent) => {
-				this._nodeHandler.addRoot(element, undefined);
-			},
-			'widget-updated': ({ element }: WidgetAndElementEvent) => {
-				this._nodeHandler.addRoot(element, undefined);
-			}
-		}));
-		this.own(this._registry.on('invalidate', this._boundInvalidate));
+		this._registry.on('invalidate', this._boundInvalidate);
 	}
 
 	protected meta<T extends WidgetMetaBase>(MetaType: WidgetMetaConstructor<T>): T {
@@ -155,11 +134,11 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 		if (!cached) {
 			cached = new MetaType({
 				invalidate: this._boundInvalidate,
-				nodeHandler: this._nodeHandler,
+				nodeHandler: this.nodeHandler,
 				bind: this
 			});
 			this._metaMap.set(MetaType, cached);
-			this.own(cached);
+			cached;
 		}
 
 		return cached as T;
@@ -171,7 +150,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	 * @param element The dom node represented by the vdom node.
 	 * @param key The vdom node's key.
 	 */
-	protected onElementCreated(element: Element, key: string): void {
+	public onElementCreated(element: Element, key: string): void {
 		// Do nothing by default.
 	}
 
@@ -181,7 +160,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	 * @param element The dom node represented by the vdom node.
 	 * @param key The vdom node's key.
 	 */
-	protected onElementUpdated(element: Element, key: string): void {
+	public onElementUpdated(element: Element, key: string): void {
 		// Do nothing by default.
 	}
 
@@ -286,7 +265,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			const render = this._runBeforeRenders();
 			let dNode = render();
 			this._cachedDNode = this.runAfterRenders(dNode);
-			this._nodeHandler.clear();
+			this.nodeHandler.clear();
 		}
 		this._renderState = WidgetRenderState.IDLE;
 		return this._cachedDNode;
@@ -295,10 +274,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 	public invalidate(): void {
 		if (this._renderState === WidgetRenderState.IDLE) {
 			this._dirty = true;
-			this.emit({
-				type: 'invalidated',
-				target: this
-			});
+			if (this.parentInvalidate) {
+				this.parentInvalidate();
+			}
 		}
 		else if (this._renderState === WidgetRenderState.PROPERTIES) {
 			this._dirty = true;
@@ -476,7 +454,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> extends E
 			}, dNode);
 		}
 
-		this._metaMap.forEach(meta => {
+		this._metaMap.forEach((meta) => {
 			meta.afterRender();
 		});
 

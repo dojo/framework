@@ -29,7 +29,7 @@ export class NodeHandler extends Evented implements NodeHandlerInterface {
 		this.emit({ type: key });
 	}
 
-	public addRoot(element: HTMLElement, key?: string): void {
+	public addRoot(): void {
 		this.emit({ type: NodeEventType.Widget });
 	}
 

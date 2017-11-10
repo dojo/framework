@@ -51,23 +51,6 @@ registerSuite('decorators/inject', {
 			assert.strictEqual(widget.properties.foo, 'bar');
 			assert.strictEqual(widget.properties.bar, 'foo');
 		},
-		'payload are only attached once'() {
-			let invalidateCount = 0;
-			function getProperties(payload: any, properties: WidgetProperties): WidgetProperties {
-				return payload;
-			}
-
-			@inject({ name: 'inject-one', getProperties })
-			class TestWidget extends WidgetBase<any> {}
-			const widget = new TestWidget();
-			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
-			widget.__setProperties__({});
-			widget.on('invalidated', () => {
-				invalidateCount++;
-			});
-			injectorOne.set({});
-			assert.strictEqual(invalidateCount, 1);
-		},
 		'programmatic registration'() {
 			function getPropertiesOne(payload: any, properties: WidgetProperties): WidgetProperties {
 				return payload;

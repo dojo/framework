@@ -15,8 +15,12 @@ let consoleStub: SinonStub;
 const resolvers = createResolvers();
 
 const projectorStub: any = {
-	on: stub(),
-	emit: stub()
+	nodeHandler: {
+		add: stub(),
+		addRoot: stub()
+	},
+	onElementCreated: stub(),
+	onElementUpdated: stub()
 };
 
 class MainBar extends WidgetBase<any> {
@@ -49,8 +53,8 @@ class TestWidget extends WidgetBase<any> {
 
 describe('vdom', () => {
 	beforeEach(() => {
-		projectorStub.on.reset();
-		projectorStub.emit.reset();
+		projectorStub.nodeHandler.add.reset();
+		projectorStub.nodeHandler.addRoot.reset();
 		consoleStub = stub(console, 'warn');
 		resolvers.stub();
 	});
@@ -452,8 +456,8 @@ describe('vdom', () => {
 
 				private myClass = false;
 
-				constructor() {
-					super();
+				constructor(invalidate: Function) {
+					super(invalidate);
 					fooInvalidate = this.invalidate.bind(this);
 				}
 
@@ -719,74 +723,14 @@ describe('vdom', () => {
 			}, Error, 'Unable to replace a node with an array of nodes. (consider adding one extra level to the virtual DOM)');
 		});
 
-		it('should destroy widgets when they are no longer required', () => {
-			let fooDestroyedCount = 0;
-
-			class Foo extends WidgetBase {
-				destroy() {
-					fooDestroyedCount++;
-					return super.destroy();
-				}
-				render() {
-					return null;
-				}
-			}
-
-			class Bar extends WidgetBase {
-				private _count = 20;
-
-				set count(value: number) {
-					this._count = value;
-					this.invalidate();
-
-				}
-
-				render() {
-					const children: any[] = [];
-					for (let i = 0; i < this._count; i++) {
-						children.push(w(Foo, { key: i}));
-					}
-
-					return v('div', children);
-				}
-			}
-
-			const widget = new Bar();
-			const projection = dom.create(widget.__render__() as HNode, widget);
-			resolvers.resolve();
-			widget.count = 10;
-			projection.update(widget.__render__() as HNode);
-			resolvers.resolve();
-			assert.strictEqual(fooDestroyedCount, 10);
-			fooDestroyedCount = 0;
-			widget.count = 10;
-			projection.update(widget.__render__() as HNode);
-			resolvers.resolve();
-			assert.strictEqual(fooDestroyedCount, 0);
-			widget.count = 20;
-			projection.update(widget.__render__() as HNode);
-			resolvers.resolve();
-			assert.strictEqual(fooDestroyedCount, 0);
-			widget.count = 0;
-			projection.update(widget.__render__() as HNode);
-			resolvers.resolve();
-			assert.strictEqual(fooDestroyedCount, 20);
-		});
-
-		it('destroys existing widget and uses new widget when widget changes', () => {
-			let fooDestroyed = false;
+		it('removes existing widget and uses new widget when widget changes', () => {
 			let fooCreated = false;
-			let barCreated = false;
+			let barCreatedCount = 0;
 			class Foo extends WidgetBase {
 
 				constructor() {
 					super();
 					fooCreated = true;
-				}
-
-				destroy() {
-					fooDestroyed = true;
-					return super.destroy();
 				}
 
 				render() {
@@ -797,7 +741,7 @@ describe('vdom', () => {
 			class Bar extends WidgetBase {
 				constructor() {
 					super();
-					barCreated = true;
+					barCreatedCount++;
 				}
 
 				render() {
@@ -815,7 +759,8 @@ describe('vdom', () => {
 
 				render() {
 					return v('div', [
-						this._foo ? w(Foo, {}) : w(Bar, {})
+						this._foo ? w(Foo, {}) : w(Bar, {}),
+						this._foo ? w(Bar, { key: '1' }) : w(Bar, { key: '2' })
 					]);
 				}
 			}
@@ -827,50 +772,7 @@ describe('vdom', () => {
 			widget.foo = false;
 			projection.update(widget.__render__() as HNode);
 			resolvers.resolve();
-			assert.isTrue(fooDestroyed);
-			assert.isTrue(barCreated);
-		});
-
-		it('does not own child widgets', () => {
-			let fooDestroyed = false;
-			let barDestroyed = false;
-			class Foo extends WidgetBase {
-				destroy() {
-					fooDestroyed = true;
-					return super.destroy();
-				}
-			}
-
-			class Bar extends WidgetBase {
-				destroy() {
-					barDestroyed = true;
-					return super.destroy();
-				}
-
-				render() {
-					return v('div', [ w(Foo, {}) ]);
-				}
-			}
-
-			class Baz extends WidgetBase {
-				private _show = false;
-
-				render() {
-					this._show = !this._show;
-					return v('div', [
-						this._show ? w(Bar, {}) : null
-					]);
-				}
-			}
-
-			const widget = new Baz();
-			const projection = dom.create(widget.__render__(), widget);
-			resolvers.resolve();
-			widget.invalidate();
-			projection.update(widget.__render__());
-			resolvers.resolve();
-			assert.isTrue(barDestroyed);
-			assert.isFalse(fooDestroyed);
+			assert.strictEqual(barCreatedCount, 3);
 		});
 
 		it('remove elements for embedded WNodes', () => {
@@ -2297,7 +2199,7 @@ describe('vdom', () => {
 
 		it('should run afterRenderCallbacks sync', () => {
 			const projection = dom.create(v('div', { key: '1' }), projectorStub, { sync: true });
-			assert.isTrue(projectorStub.emit.calledWith({ type: 'element-created', element: (projection.domNode.childNodes[0] as Element), key: '1' }));
+			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '1' ));
 		});
 
 		it('should run defferedRenderCallbacks sync', () => {
@@ -2312,46 +2214,69 @@ describe('vdom', () => {
 
 	describe('node callbacks', () => {
 
-		it('element-created not emitted for new nodes without a key', () => {
-			dom.create(v('div'), projectorStub);
-			resolvers.resolve();
-			assert.isTrue(projectorStub.emit.neverCalledWith({ type: 'element-created' }));
-		});
-
-		it('element-created emitted for new nodes with a key', () => {
-			const projection = dom.create(v('div', { key: '1' }), projectorStub);
-			resolvers.resolve();
-			assert.isTrue(projectorStub.emit.calledWith({ type: 'element-created', element: (projection.domNode.childNodes[0] as Element), key: '1' }));
-		});
-
-		it('element-created emitted for new nodes with a key of 0', () => {
-			const projection = dom.create(v('div', { key: 0 }), projectorStub);
-			resolvers.resolve();
-			assert.isTrue(projectorStub.emit.calledWith({ type: 'element-created', element: (projection.domNode.childNodes[0] as Element), key: 0 }));
-		});
-
-		it('element-updated not emitted for updated nodes without a key', () => {
+		it('element not added to node handler for nodes without a key', () => {
 			const projection = dom.create(v('div'), projectorStub);
 			resolvers.resolve();
 			projection.update(v('div'));
 			resolvers.resolve();
-			assert.isTrue(projectorStub.emit.neverCalledWith({ type: 'element-updated' }));
+			assert.isTrue(projectorStub.nodeHandler.add.notCalled);
 		});
 
-		it('element-updated emitted for updated nodes with a key', () => {
+		it('element added on create to node handler for nodes with a key', () => {
 			const projection = dom.create(v('div', { key: '1' }), projectorStub);
-			resolvers.resolve();
+			assert.isTrue(projectorStub.nodeHandler.add.called);
+			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '1' ));
+			projectorStub.nodeHandler.add.reset();
 			projection.update(v('div', { key: '1' }));
-			resolvers.resolve();
-			assert.isTrue(projectorStub.emit.calledWith({ type: 'element-updated', element: (projection.domNode.childNodes[0] as Element), key: '1' }));
+			assert.isTrue(projectorStub.nodeHandler.add.called);
+			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '1' ));
 		});
 
-		it('element-updated emitted for updated nodes with a key of 0', () => {
+		it('element added on update to node handler for nodes with a key of 0', () => {
+			const projection = dom.create(v('div', { key: 0 }), projectorStub);
+			assert.isTrue(projectorStub.nodeHandler.add.called);
+			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '0' ));
+			projectorStub.nodeHandler.add.reset();
+			projection.update(v('div', { key: 0 }));
+			assert.isTrue(projectorStub.nodeHandler.add.called);
+			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '0' ));
+		});
+
+		it('on element created and updated callbacks are called for nodes with keys', () => {
 			const projection = dom.create(v('div', { key: 0 }), projectorStub);
 			resolvers.resolve();
+			assert.isTrue(projectorStub.onElementCreated.called);
+			assert.isTrue(projectorStub.onElementCreated.calledWith(projection.domNode.childNodes[0] as Element, 0 ));
 			projection.update(v('div', { key: 0 }));
 			resolvers.resolve();
-			assert.isTrue(projectorStub.emit.calledWith({ type: 'element-updated', element: (projection.domNode.childNodes[0] as Element), key: 0 }));
+			assert.isTrue(projectorStub.onElementUpdated.called);
+			assert.isTrue(projectorStub.onElementUpdated.calledWith(projection.domNode.childNodes[0] as Element, 0 ));
+		});
+
+		it('addRoot called on node handler for created widgets with a zero key', () => {
+			const widget = new WidgetBase();
+			widget.__setProperties__({ key: 0 });
+
+			const projection = dom.create(widget.__render__(), projectorStub);
+			assert.isTrue(projectorStub.nodeHandler.addRoot.called);
+			projectorStub.nodeHandler.addRoot.reset();
+			widget.invalidate();
+			projection.update(widget.__render__());
+			assert.isTrue(projectorStub.nodeHandler.addRoot.called);
+			projectorStub.nodeHandler.addRoot.reset();
+		});
+
+		it('addRoot called on node handler for updated widgets with key', () => {
+			const widget = new WidgetBase();
+			widget.__setProperties__({ key: '1' });
+
+			const projection = dom.create(widget.__render__(), projectorStub);
+			assert.isTrue(projectorStub.nodeHandler.addRoot.called);
+			projectorStub.nodeHandler.addRoot.reset();
+			widget.invalidate();
+			projection.update(widget.__render__());
+			assert.isTrue(projectorStub.nodeHandler.addRoot.called);
+			projectorStub.nodeHandler.addRoot.reset();
 		});
 
 	});

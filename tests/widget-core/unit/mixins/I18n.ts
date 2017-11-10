@@ -24,7 +24,6 @@ registerSuite('mixins/I18nMixin', {
 		switchLocale(systemLocale);
 
 		if (localized) {
-			localized.destroy();
 			localized = <any> null;
 		}
 	},

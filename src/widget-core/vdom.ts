@@ -453,8 +453,7 @@ function nodeAdded(dnode: InternalDNode, transitions: TransitionStrategy) {
 
 function nodeToRemove(dnode: InternalDNode, transitions: TransitionStrategy, projectionOptions: ProjectionOptions) {
 	if (isWNode(dnode)) {
-		projectionOptions.afterRenderCallbacks.push(dnode.instance.destroy.bind(dnode.instance));
-		const rendered = dnode.rendered || emptyArray ;
+		const rendered = dnode.rendered || emptyArray;
 		for (let i = 0; i < rendered.length; i++) {
 			const child = rendered[i];
 			if (isHNode(child)) {
@@ -640,8 +639,9 @@ function initPropertiesAndChildren(
 	}
 	setProperties(domNode, dnode.properties, projectionOptions);
 	if (dnode.properties.key !== null && dnode.properties.key !== undefined) {
+		parentInstance.nodeHandler.add(domNode as HTMLElement, `${dnode.properties.key}`);
 		projectionOptions.afterRenderCallbacks.push(() => {
-			parentInstance.emit({ type: 'element-created', key: dnode.properties.key, element: domNode });
+			parentInstance.onElementCreated(domNode as HTMLElement, dnode.properties.key as any);
 		});
 	}
 	dnode.inserted = true;
@@ -665,10 +665,7 @@ function createDom(
 			}
 			widgetConstructor = item;
 		}
-		const instance = new widgetConstructor();
-		instance.own(instance.on('invalidated', () => {
-			parentInstance.invalidate();
-		}));
+		const instance = new widgetConstructor(parentInstance.invalidate.bind(parentInstance));
 		dnode.instance = instance;
 		instance.__setCoreProperties__(dnode.coreProperties);
 		instance.__setChildren__(dnode.children);
@@ -679,9 +676,7 @@ function createDom(
 			dnode.rendered = filteredRendered;
 			addChildren(parentNode, filteredRendered, projectionOptions, instance as WidgetBase, insertBefore, childNodes);
 		}
-		projectionOptions.afterRenderCallbacks.push(() => {
-			parentInstance.emit({ type: 'widget-created' });
-		});
+		instance.nodeHandler.addRoot();
 	}
 	else {
 		if (projectionOptions.merge && projectionOptions.mergeElement !== undefined) {
@@ -745,9 +740,7 @@ function updateDom(previous: any, dnode: InternalDNode, projectionOptions: Proje
 			dnode.rendered = filterAndDecorateChildren(rendered, instance);
 			if (hasRenderChanged(previousRendered, rendered)) {
 				updateChildren(parentNode, previousRendered, dnode.rendered, instance, projectionOptions);
-				projectionOptions.afterRenderCallbacks.push(() => {
-					parentInstance.emit({ type: 'widget-updated' });
-				});
+				instance.nodeHandler.addRoot();
 			}
 		}
 		else {
@@ -788,8 +781,9 @@ function updateDom(previous: any, dnode: InternalDNode, projectionOptions: Proje
 			updated = updateProperties(domNode, previous.properties, dnode.properties, projectionOptions) || updated;
 
 			if (dnode.properties.key !== null && dnode.properties.key !== undefined) {
+				parentInstance.nodeHandler.add(domNode, `${dnode.properties.key}`);
 				projectionOptions.afterRenderCallbacks.push(() => {
-					parentInstance.emit({ type: 'element-updated', key: dnode.properties.key, element: domNode });
+					parentInstance.onElementUpdated(domNode as HTMLElement, dnode.properties.key as any);
 				});
 			}
 		}
@@ -871,9 +865,7 @@ function createProjection(dnode: InternalDNode | InternalDNode[], parentInstance
 
 			updatedDNode = filterAndDecorateChildren(updatedDNode, parentInstance);
 			updateChildren(domNode, projectionDNode, updatedDNode as InternalDNode[], parentInstance, projectionOptions);
-			projectionOptions.afterRenderCallbacks.push(() => {
-				parentInstance.emit({ type: 'widget-created' });
-			});
+			parentInstance.nodeHandler.addRoot();
 			runDeferredRenderCallbacks(projectionOptions);
 			runAfterRenderCallbacks(projectionOptions);
 			projectionDNode = updatedDNode as InternalDNode[];
@@ -889,9 +881,7 @@ export const dom = {
 		finalProjectorOptions.rootNode = rootNode;
 		const decoratedNode = filterAndDecorateChildren(dNode, instance);
 		addChildren(rootNode, decoratedNode, finalProjectorOptions, instance, undefined);
-		finalProjectorOptions.afterRenderCallbacks.push(() => {
-			instance.emit({ type: 'widget-created' });
-		});
+		instance.nodeHandler.addRoot();
 		runDeferredRenderCallbacks(finalProjectorOptions);
 		runAfterRenderCallbacks(finalProjectorOptions);
 		return createProjection(decoratedNode, instance, finalProjectorOptions);
@@ -901,9 +891,7 @@ export const dom = {
 		finalProjectorOptions.rootNode = parentNode;
 		const decoratedNode = filterAndDecorateChildren(dNode, instance);
 		addChildren(parentNode, decoratedNode, finalProjectorOptions, instance, undefined);
-		finalProjectorOptions.afterRenderCallbacks.push(() => {
-			instance.emit({ type: 'widget-created' });
-		});
+		instance.nodeHandler.addRoot();
 		runDeferredRenderCallbacks(finalProjectorOptions);
 		runAfterRenderCallbacks(finalProjectorOptions);
 		return createProjection(decoratedNode, instance, finalProjectorOptions);
@@ -919,9 +907,7 @@ export const dom = {
 		const decoratedNode = filterAndDecorateChildren(dNode, instance)[0] as InternalHNode;
 
 		createDom(decoratedNode, finalProjectorOptions.rootNode, undefined, finalProjectorOptions, instance);
-		finalProjectorOptions.afterRenderCallbacks.push(() => {
-			instance.emit({ type: 'widget-created' });
-		});
+		instance.nodeHandler.addRoot();
 		runDeferredRenderCallbacks(finalProjectorOptions);
 		runAfterRenderCallbacks(finalProjectorOptions);
 		return createProjection(decoratedNode, instance, finalProjectorOptions);
@@ -934,9 +920,7 @@ export const dom = {
 		const decoratedNode = filterAndDecorateChildren(dNode, instance)[0] as InternalHNode;
 		finalProjectorOptions.rootNode = element.parentNode! as Element;
 		createDom(decoratedNode, element.parentNode!, element, finalProjectorOptions, instance);
-		finalProjectorOptions.afterRenderCallbacks.push(() => {
-			instance.emit({ type: 'widget-created' });
-		});
+		instance.nodeHandler.addRoot();
 		runDeferredRenderCallbacks(finalProjectorOptions);
 		runAfterRenderCallbacks(finalProjectorOptions);
 		element.parentNode!.removeChild(element);

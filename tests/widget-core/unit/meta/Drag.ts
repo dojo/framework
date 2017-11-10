@@ -54,7 +54,6 @@ registerSuite('support/meta/Drag', {
 			assert.strictEqual((div.firstChild as HTMLElement).getAttribute('touch-action'), 'none', 'Should have set touch-action attribute to none');
 			assert.strictEqual((div.firstChild as HTMLElement).style.touchAction, 'none', 'Should have set touch-action type to none');
 
-			widget.destroy();
 			document.body.removeChild(div);
 		},
 
@@ -83,7 +82,6 @@ registerSuite('support/meta/Drag', {
 
 			assert.deepEqual(dragResults, [ emptyResults, emptyResults ], 'should have been called twice, both empty results');
 
-			widget.destroy();
 			document.body.removeChild(div);
 		},
 
@@ -182,7 +180,6 @@ registerSuite('support/meta/Drag', {
 				}
 			], 'the stack of should represent a drag state');
 
-			widget.destroy();
 			document.body.removeChild(div);
 		},
 
@@ -309,7 +306,6 @@ registerSuite('support/meta/Drag', {
 				}
 			], 'the stack of should represent a drag state');
 
-			widget.destroy();
 			document.body.removeChild(div);
 		},
 
@@ -430,7 +426,6 @@ registerSuite('support/meta/Drag', {
 				}
 			], 'the stack of should represent a drag state');
 
-			widget.destroy();
 			document.body.removeChild(div);
 		},
 
@@ -498,7 +493,6 @@ registerSuite('support/meta/Drag', {
 				emptyResults
 			], 'the widget does not invalidate on ignored events');
 
-			widget.destroy();
 			document.body.removeChild(div);
 		},
 
@@ -601,7 +595,6 @@ registerSuite('support/meta/Drag', {
 				}
 			], 'dragging should be attributed to parent node');
 
-			widget.destroy();
 			document.body.removeChild(div);
 		},
 
@@ -695,7 +688,6 @@ registerSuite('support/meta/Drag', {
 				emptyResults
 			], 'there should be no drag results');
 
-			widget.destroy();
 			document.body.removeChild(div);
 		},
 
@@ -781,7 +773,6 @@ registerSuite('support/meta/Drag', {
 				emptyResults
 			], 'the stack of should represent a drag state');
 
-			widget.destroy();
 			document.body.removeChild(div);
 		},
 
@@ -893,7 +884,6 @@ registerSuite('support/meta/Drag', {
 				}
 			], 'the stack of should represent a drag state');
 
-			widget.destroy();
 			document.body.removeChild(div);
 		},
 
@@ -999,7 +989,6 @@ registerSuite('support/meta/Drag', {
 				}
 			], 'the stack of should represent a drag state');
 
-			widget.destroy();
 			document.body.removeChild(div);
 		}
 	}

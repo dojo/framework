@@ -8,7 +8,6 @@ import { v } from '../../../src/d';
 import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projector';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { beforeRender } from './../../../src/decorators/beforeRender';
-import { Registry } from './../../../src/Registry';
 import { HNode } from './../../../src/interfaces';
 
 const Event = global.window.Event;
@@ -351,25 +350,6 @@ registerSuite('mixins/projectorMixin', {
 			// Demonstrates the type guarding for widget properties
 
 			// projector.setProperties({ foo: true });
-		},
-		'registry destroyed when a new registry is received'() {
-			let registryDestroyedCount = 0;
-			class TestRegistry extends Registry {
-				destroy(): Promise<any> {
-					registryDestroyedCount++;
-					return super.destroy();
-				}
-			}
-			const projector = new BaseTestWidget();
-			projector.setProperties({ registry: new TestRegistry() });
-			assert.strictEqual(registryDestroyedCount, 0);
-			projector.setProperties({ registry: new TestRegistry() });
-			assert.strictEqual(registryDestroyedCount, 1);
-			projector.setProperties({ registry: undefined });
-			assert.strictEqual(registryDestroyedCount, 2);
-			projector.setProperties({ registry: new TestRegistry() });
-			projector.destroy();
-			assert.strictEqual(registryDestroyedCount, 3);
 		},
 		'properties are reset to original state on render'() {
 			const testProperties = {

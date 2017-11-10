@@ -277,21 +277,21 @@ describe('WidgetBase', () => {
 		});
 
 		it('elements are added to node handler on create', () => {
-			const element = {};
+			const element = {} as any;
 			const key = '1';
 			const widget = new BaseTestWidget();
 			const meta = widget.meta(TestMeta);
-			widget.emit({ type: 'element-created', element, key });
+			widget.nodeHandler.add(element, key);
 			assert.isTrue(meta.has(key));
 			assert.strictEqual(meta.get(key), element);
 		});
 
 		it('elements are added to node handler on update', () => {
-			const element = {};
+			const element = {} as any;
 			const key = '1';
 			const widget = new BaseTestWidget();
 			const meta = widget.meta(TestMeta);
-			widget.emit({ type: 'element-updated', element, key });
+			widget.nodeHandler.add(element, key);
 			assert.isTrue(meta.has(key));
 			assert.strictEqual(meta.get(key), element);
 		});
@@ -300,7 +300,7 @@ describe('WidgetBase', () => {
 			const widget = new BaseTestWidget();
 			const meta = widget.meta(TestMeta);
 
-			widget.emit({ type: 'widget-created' });
+			widget.nodeHandler.addRoot();
 			assert.isTrue(meta.widgetEvent);
 		});
 
@@ -308,31 +308,9 @@ describe('WidgetBase', () => {
 			const widget = new BaseTestWidget();
 			const meta = widget.meta(TestMeta);
 
-			widget.emit({ type: 'widget-updated' });
+			widget.nodeHandler.addRoot();
 			assert.isTrue(meta.widgetEvent);
 		});
-	});
-
-	describe('onElementCreated called on `element-created` event', () => {
-		class TestWidget extends BaseTestWidget {
-			onElementCreated(element: any, key: any) {
-				assert.strictEqual(element, 'element');
-				assert.strictEqual(key, 'key');
-			}
-		}
-		const widget = new TestWidget();
-		widget.emit({ type: 'element-created', key: 'key', element: 'element' });
-	});
-
-	describe('onElementUpdated called on `element-updated` event', () => {
-		class TestWidget extends BaseTestWidget {
-			onElementUpdated(element: any, key: any) {
-				assert.strictEqual(element, 'element');
-				assert.strictEqual(key, 'key');
-			}
-		}
-		const widget = new TestWidget();
-		widget.emit({ type: 'element-updated', key: 'key', element: 'element' });
 	});
 
 	describe('decorators', () => {

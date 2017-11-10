@@ -79,16 +79,11 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 
 		constructor(...args: any[]) {
 			super(...args);
-			const subscription = observeLocale({
+			observeLocale({
 				next: () => {
 					if (!this.properties.locale) {
 						this.invalidate();
 					}
-				}
-			});
-			this.own({
-				destroy() {
-					subscription.unsubscribe();
 				}
 			});
 		}

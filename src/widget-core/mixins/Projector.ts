@@ -2,7 +2,6 @@ import { assign } from '@dojo/core/lang';
 import global from '@dojo/shim/global';
 import { createHandle } from '@dojo/core/lang';
 import { Handle } from '@dojo/interfaces/core';
-import { Evented } from '@dojo/core/Evented';
 import 'pepjs';
 import cssTransitions from '../animations/cssTransitions';
 import { Constructor, DNode, Projection, ProjectionOptions } from './../interfaces';
@@ -87,7 +86,7 @@ export interface ProjectorMixin<P> {
 	 * The `Projector` creates a `DocumentFragment` which replaces any other `root` that has been set.
 	 * @param doc The `Document` to use, which defaults to the global `document`.
 	 */
-	sandbox(doc?: Document): Handle;
+	sandbox(doc?: Document): void;
 
 	/**
 	 * Schedule a render.
@@ -133,6 +132,11 @@ export interface ProjectorMixin<P> {
 	 * Exposes invalidate for projector instances
 	 */
 	invalidate(): void;
+
+	/**
+	 * Runs registered destroy handles
+	 */
+	destroy(): void;
 }
 
 export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T): T & Constructor<ProjectorMixin<P>> {
@@ -154,28 +158,23 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		private _projectorProperties: this['properties'] = {} as this['properties'];
 		private _rootTagName: string;
 		private _attachType: AttachType;
+		private _handles: Function[] = [];
 
 		constructor(...args: any[]) {
 			super(...args);
 
-			const nodeEvent = new Evented();
-			this.own(nodeEvent);
-
+			this.parentInvalidate = this.scheduleRender.bind(this);
 			this._projectionOptions = {
 				transitions: cssTransitions
 			};
 
 			this._boundDoRender = this._doRender.bind(this);
 			this._boundRender = this.__render__.bind(this);
-			this.own(this.on('invalidated', () => {
-				this.scheduleRender();
-			}));
-
 			this.root = document.body;
 			this.projectorState = ProjectorAttachState.Detached;
 		}
 
-		public append(root?: Element) {
+		public append(root?: Element): Handle  {
 			const options = {
 				type: AttachType.Append,
 				root
@@ -184,7 +183,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			return this._attach(options);
 		}
 
-		public merge(root?: Element) {
+		public merge(root?: Element): Handle {
 			const options = {
 				type: AttachType.Merge,
 				root
@@ -193,7 +192,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			return this._attach(options);
 		}
 
-		public replace(root?: Element) {
+		public replace(root?: Element): Handle  {
 			const options = {
 				type: AttachType.Replace,
 				root
@@ -252,7 +251,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			this._async = async;
 		}
 
-		public sandbox(doc: Document = document): Handle {
+		public sandbox(doc: Document = document): void {
 			if (this.projectorState === ProjectorAttachState.Attached) {
 				throw new Error('Projector already attached, cannot create sandbox');
 			}
@@ -260,10 +259,11 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			const previousRoot = this.root;
 
 			/* free up the document fragment for GC */
-			this.own(createHandle(() => {
+			this.own(() => {
 				this._root = previousRoot;
-			}));
-			return this._attach({
+			});
+
+			this._attach({
 				/* DocumentFragment is not assignable to Element, but provides everything needed to work */
 				root: doc.createDocumentFragment() as any,
 				type: AttachType.Append
@@ -289,9 +289,6 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			if (this._projectorProperties && this._projectorProperties.registry !== properties.registry) {
 				if (this._projectorProperties.registry) {
 					this._projectorProperties.registry.destroy();
-				}
-				if (properties.registry) {
-					this.own(properties.registry);
 				}
 			}
 			this._projectorProperties = assign({}, properties);
@@ -324,6 +321,19 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			}
 		}
 
+		private own(handle: Function): void {
+			this._handles.push(handle);
+		}
+
+		public destroy() {
+			while (this._handles.length > 0) {
+				const handle = this._handles.pop();
+				if (handle) {
+					handle();
+				}
+			}
+		}
+
 		private _attach({ type, root }: AttachOptions): Handle {
 			this._attachType = type;
 			if (root) {
@@ -336,16 +346,16 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 
 			this.projectorState = ProjectorAttachState.Attached;
 
-			this._attachHandle = this.own({
-				destroy: () => {
-					if (this.projectorState === ProjectorAttachState.Attached) {
-						this.pause();
-						this._projection = undefined;
-						this.projectorState = ProjectorAttachState.Detached;
-					}
-					this._attachHandle = { destroy() { } };
+			const handle = () => {
+				if (this.projectorState === ProjectorAttachState.Attached) {
+					this.pause();
+					this._projection = undefined;
+					this.projectorState = ProjectorAttachState.Detached;
 				}
-			});
+			};
+
+			this.own(handle);
+			this._attachHandle = createHandle(handle);
 
 			this._projectionOptions = { ...this._projectionOptions, ...{ sync: !this._async } };
 

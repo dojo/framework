@@ -53,7 +53,7 @@ export function inject({ name, getProperties }: InjectConfig) {
 				}
 				if (registeredInjectors.indexOf(injector) === -1) {
 					injector.on('invalidate', () => {
-						this.emit({ type: 'invalidated', target: this });
+						this.invalidate();
 					});
 					registeredInjectors.push(injector);
 				}
