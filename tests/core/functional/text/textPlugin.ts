@@ -6,7 +6,7 @@ import pollUntil from '@theintern/leadfoot/helpers/pollUntil';
 
 declare const require: Require;
 
-async function executeTest(suite: Suite, htmlTestPath: string, timeout = 10000) {
+async function executeTest(suite: Suite, htmlTestPath: string, timeout = 10000): Promise<any> {
 	try {
 		return await suite.remote.get(htmlTestPath).then(pollUntil<{ text: string; }>(function () {
 			return (<any> window).loaderTestResults || null;
