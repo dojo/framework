@@ -1,12 +1,14 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { initializeElement, handleAttributeChanged, CustomElementDescriptor } from '../../src/customElements';
+import { ChildrenType, initializeElement, DomToWidgetWrapper, handleAttributeChanged, CustomElementDescriptor } from '../../src/customElements';
 import { WidgetBase } from '../../src/WidgetBase';
 import global from '@dojo/shim/global';
 import { assign } from '@dojo/core/lang';
 import * as projector from '../../src/mixins/Projector';
 import * as sinon from 'sinon';
+import sendEvent from './../support/sendEvent';
 import { v } from '../../src/d';
+import { InternalHNode } from '../../src/vdom';
 import { Constructor } from '../../src/interfaces';
 import ProjectorMixin from '../../src/mixins/Projector';
 
@@ -290,21 +292,71 @@ registerSuite('customElements', {
 	},
 
 	'children': {
-		'children get wrapped in dom wrappers'() {
+		'element children get wrapped in DomWrapper'() {
+			if (!(WidgetBase as any).name) {
+				this.skip();
+			}
 			let element = createFakeElement({}, {
 				tagName: 'test',
-				widgetConstructor: WidgetBase
+				widgetConstructor: WidgetBase,
+				childrenType: ChildrenType.ELEMENT
 			});
 			element.children = [ {
 				key: 'test',
-				parentNode: element
+				parentNode: element,
+				addEventListener() {}
 			} ];
 
 			initializeElement(element)();
 
 			assert.lengthOf(element.removedChildren(), 1);
 			assert.lengthOf(element.getWidgetInstance().children, 1);
+			assert.strictEqual(element.getWidgetInstance().children[0].widgetConstructor.name, 'DomWrapper');
+		},
+
+		'widget children get wrapped in DomToWidgetWrapper'() {
+			if (!(WidgetBase as any).name) {
+				this.skip();
+			}
+			let element = createFakeElement({}, {
+				tagName: 'test',
+				widgetConstructor: WidgetBase
+			});
+			element.children = [ {
+				key: 'test',
+				parentNode: element,
+				addEventListener() {}
+			} ];
+
+			initializeElement(element)();
+
+			assert.lengthOf(element.removedChildren(), 1);
+			assert.lengthOf(element.getWidgetInstance().children, 1);
+			assert.strictEqual(element.getWidgetInstance().children[0].widgetConstructor.name, 'DomToWidgetWrapper');
 		}
+	},
+
+	DomToWidgetWrapper() {
+		const widgetInstance = new (projector.ProjectorMixin(WidgetBase))();
+		const div: any = document.createElement('div');
+		div.getWidgetInstance = () => {
+			return widgetInstance;
+		};
+		const Wrapper = DomToWidgetWrapper(div);
+		const widget = new Wrapper();
+		widget.__setProperties__({ foo: 'bar' });
+		const invalidateSpy = sinon.spy(widget, 'invalidate');
+		const renderResult = widget.__render__() as InternalHNode;
+		assert.strictEqual(renderResult.tag, 'DIV');
+		assert.strictEqual(renderResult.domNode, div);
+		assert.deepEqual(renderResult.properties, { });
+		assert.deepEqual(widget.properties, { foo: 'bar' });
+		assert.deepEqual(widgetInstance.properties, { });
+		assert.isTrue(invalidateSpy.notCalled);
+		sendEvent(div, 'connected');
+		assert.isTrue(invalidateSpy.calledOnce);
+		widget.__render__() as InternalHNode;
+		assert.deepEqual(widgetInstance.properties, { key: 'root', foo: 'bar' });
 	},
 
 	'initialization': {

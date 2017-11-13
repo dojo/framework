@@ -1,11 +1,12 @@
 import { assign } from '@dojo/core/lang';
 import { from as arrayFrom } from '@dojo/shim/array';
 import global from '@dojo/shim/global';
-import { Constructor, DNode, WidgetProperties } from './interfaces';
+import { Constructor, DNode, HNode, VirtualDomProperties, WidgetProperties } from './interfaces';
 import { WidgetBase } from './WidgetBase';
-import { w } from './d';
+import { v, w } from './d';
+import { DomWrapper } from './util/DomWrapper';
 import { ProjectorMixin } from './mixins/Projector';
-import DomWrapper from './util/DomWrapper';
+import { InternalHNode } from './vdom';
 
 /**
  * @type CustomElementAttributeDescriptor
@@ -60,6 +61,11 @@ export interface CustomElementInitializer {
 	(properties: WidgetProperties): void;
 }
 
+export enum ChildrenType {
+	DOJO = 'DOJO',
+	ELEMENT = 'ELEMENT'
+}
+
 /**
  * @type CustomElementDescriptor
  *
@@ -102,6 +108,11 @@ export interface CustomElementDescriptor {
 	 * Initialization function called before the widget is created (for custom property setting)
 	 */
 	initialization?: CustomElementInitializer;
+
+	/**
+	 * The type of children that the custom element accepts
+	 */
+	childrenType?: ChildrenType;
 }
 
 /**
@@ -119,6 +130,54 @@ export interface CustomElement extends HTMLElement {
 	getDescriptor(): CustomElementDescriptor;
 	getWidgetInstance(): ProjectorMixin<any>;
 	setWidgetInstance(instance: ProjectorMixin<any>): void;
+}
+
+/**
+ * Properties for DomToWidgetWrapper
+ */
+export type DomToWidgetWrapperProperties = VirtualDomProperties & WidgetProperties;
+
+/**
+ * DomToWidgetWrapper type
+ */
+export type DomToWidgetWrapper = Constructor<WidgetBase<DomToWidgetWrapperProperties>>;
+
+/**
+ * DomToWidgetWrapper HOC
+ *
+ * @param domNode The dom node to wrap
+ */
+export function DomToWidgetWrapper(domNode: CustomElement): DomToWidgetWrapper {
+
+	return class DomToWidgetWrapper extends WidgetBase<DomToWidgetWrapperProperties> {
+
+		private _widgetInstance: ProjectorMixin<any>;
+
+		constructor() {
+			super();
+			domNode.addEventListener('connected', () => {
+				this._widgetInstance = domNode.getWidgetInstance();
+				this.invalidate();
+			});
+		}
+
+		public __render__(): HNode {
+			const vNode = super.__render__() as InternalHNode;
+			vNode.domNode = domNode;
+			return vNode;
+		}
+
+		protected render(): DNode {
+			if (this._widgetInstance) {
+				this._widgetInstance.setProperties({
+					key: 'root',
+					...this._widgetInstance.properties,
+					...this.properties
+				});
+			}
+			return v(domNode.tagName, {});
+		}
+	};
 }
 
 function getWidgetPropertyFromAttribute(attributeName: string, attributeValue: string | null, descriptor: CustomElementAttributeDescriptor): [ string, any ] {
@@ -156,7 +215,13 @@ if (typeof customEventClass !== 'function') {
 export function initializeElement(element: CustomElement) {
 	let initialProperties: any = {};
 
-	const { attributes = [], events = [], properties = [], initialization } = element.getDescriptor();
+	const {
+		childrenType = ChildrenType.DOJO,
+		attributes = [],
+		events = [],
+		properties = [],
+		initialization
+	} = element.getDescriptor();
 
 	attributes.forEach(attribute => {
 		const attributeName = attribute.attributeName;
@@ -232,14 +297,17 @@ export function initializeElement(element: CustomElement) {
 	element.setWidgetInstance(widgetInstance);
 
 	return function() {
-		// find children
 		let children: DNode[] = [];
 		let elementChildren = arrayFrom(element.children);
-		elementChildren.forEach((childNode: HTMLElement, index: number) => {
-			const DomElement = DomWrapper(childNode);
-			children.push(w(DomElement, {
-				key: `child-${index}`
-			}));
+
+		elementChildren.forEach((childNode: CustomElement, index: number) => {
+			const properties = { key: `child-${index}` };
+			if (childrenType === ChildrenType.DOJO) {
+				children.push(w(DomToWidgetWrapper(childNode), properties));
+			}
+			else {
+				children.push(w(DomWrapper(childNode), properties));
+			}
 		});
 		elementChildren.forEach((childNode: HTMLElement) => {
 			element.removeChild(childNode);
