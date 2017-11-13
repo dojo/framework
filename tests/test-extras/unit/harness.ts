@@ -343,7 +343,7 @@ registerSuite('harness', {
 				assert.isTrue(called, 'comparer should have been called');
 			},
 
-			'widget render - primative value compare'() {
+			'widget render - primitive value compare'() {
 				let uuid = 0;
 				class IDWidget extends WidgetBase<WidgetProperties> {
 					private _id = '_id' + ++uuid;
@@ -360,6 +360,34 @@ registerSuite('harness', {
 				});
 				widget.expectRender(v('div', { id: compareId as any }));
 				assert.isTrue(called, 'comparer should have been called');
+			},
+			'widget render - object value compare'() {
+				class ObjectWidget extends WidgetBase<WidgetProperties> {
+					render() {
+						return v('div', { object: { value: 3 } });
+					}
+				}
+				const widget = harness(ObjectWidget);
+				const comparisonStub = stub().callsFake((object: { value: number }) => {
+					return object.value === 3;
+				});
+				const compareId = compareProperty(comparisonStub);
+				widget.expectRender(v('div', { object: compareId as any }));
+				assert.isTrue(comparisonStub.calledOnce, 'comparer should have been called');
+			},
+			'widget render - array value compare'() {
+				class ArrayWidget extends WidgetBase<WidgetProperties> {
+					render() {
+						return v('div', { array: [ 3 ] });
+					}
+				}
+				const widget = harness(ArrayWidget);
+				const comparisonStub = stub().callsFake((array: number[]) => {
+					return array.length === 1 && array[0] === 3;
+				});
+				const compareId = compareProperty(comparisonStub);
+				widget.expectRender(v('div', { array : compareId as any }));
+				assert.isTrue(comparisonStub.calledOnce, 'comparer should have been called');
 			}
 		}
 	},

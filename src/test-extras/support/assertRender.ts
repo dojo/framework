@@ -1,8 +1,10 @@
 import { assign } from '@dojo/core/lang';
+import Set from '@dojo/shim/Set';
 import { isHNode, isWNode } from '@dojo/widget-core/d';
-import { DNode, HNode, WNode } from '@dojo/widget-core/interfaces';
+import { DNode, HNode, WNode, SupportedClassName } from '@dojo/widget-core/interfaces';
 import AssertionError from './AssertionError';
-import {diff, DiffOptions, getComparableObjects} from './compare';
+import { diff, DiffOptions, getComparableObjects, isCustomDiff } from './compare';
+import { compareProperty } from './d';
 
 const RENDER_FAIL_MESSAGE = 'Render unexpected';
 
@@ -139,6 +141,27 @@ export default function assertRender(actual: DNode | DNode[], expected: DNode | 
 				/* The WNode does not share the same constructor */
 				throwAssertionError(actual.widgetConstructor, expected.widgetConstructor, `WNodes do not share constructor`, message);
 			}
+		}
+		/* Inject a custom comparator for class names */
+		const expectedClasses: SupportedClassName | SupportedClassName[] = expected.properties && (expected.properties as any).classes;
+		if (expectedClasses && !isCustomDiff(expectedClasses)) {
+			(expected.properties as any).classes = compareProperty((value: SupportedClassName | SupportedClassName[]) => {
+				const expectedValue = typeof expectedClasses === 'string' ? [ expectedClasses ] : expectedClasses;
+				value = (typeof value === 'string' ? [ value ] : value) || [];
+				const expectedSet = new Set(expectedValue.filter(expectedClass => Boolean(expectedClass)));
+				const actualSet = new Set(value.filter(actualClass => Boolean(actualClass)));
+
+				if (expectedSet.size !== actualSet.size) {
+					return false;
+				}
+
+				let allMatch = true;
+				actualSet.forEach(actualClass => {
+					allMatch = allMatch && expectedSet.has(actualClass);
+				});
+				return allMatch;
+			}
+);
 		}
 		const delta = diff(actual.properties, expected.properties, diffOptions);
 		if (delta.length) {

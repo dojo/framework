@@ -376,7 +376,7 @@ function diffArray(a: any[], b: any, options: DiffOptions): SpliceRecord[] {
  * describe the differences
  *
  * @param a The first plain object to compare to
- * @param b The second plain bject to compare to
+ * @param b The second plain object to compare to
  * @param options An options bag that allows configuration of the behaviour of `diffPlainObject()`
  */
 function diffPlainObject(a: any, b: any, options: DiffOptions): (ConstructRecord | PatchRecord)[] {
@@ -400,20 +400,7 @@ function diffPlainObject(a: any, b: any, options: DiffOptions): (ConstructRecord
 
 		const isValueAArray = isArray(valueA);
 		const isValueAPlainObject = isPlainObject(valueA);
-
-		if ((isValueAArray || isValueAPlainObject)) { /* non-primitive values we can diff */
-			/* this is a bit complicated, but essentially if valueA and valueB are both arrays or plain objects, then
-			* we can diff those two values, if not, then we need to use an empty array or an empty object and diff
-			* the valueA with that */
-			const value = (isValueAArray && isArray(valueB)) || (isValueAPlainObject && isPlainObject(valueB)) ?
-				valueB : isValueAArray ?
-					[] : objectCreate(null);
-			const valueRecords = diff(valueA, value, options);
-			if (valueRecords.length) { /* only add if there are changes */
-				patchRecords.push(createPatchRecord(type, name, createValuePropertyDescriptor(value), diff(valueA, value, options)));
-			}
-		}
-		else if (isCustomDiff(valueA) && !isCustomDiff(valueB)) { /* complex diff left hand */
+		if (isCustomDiff(valueA) && !isCustomDiff(valueB)) { /* complex diff left hand */
 			const result = valueA.diff(valueB, name, b);
 			if (result) {
 				patchRecords.push(result);
@@ -423,6 +410,18 @@ function diffPlainObject(a: any, b: any, options: DiffOptions): (ConstructRecord
 			const result = valueB.diff(valueA, name, a);
 			if (result) {
 				patchRecords.push(result);
+			}
+		}
+		else if ((isValueAArray || isValueAPlainObject)) { /* non-primitive values we can diff */
+			/* this is a bit complicated, but essentially if valueA and valueB are both arrays or plain objects, then
+			* we can diff those two values, if not, then we need to use an empty array or an empty object and diff
+			* the valueA with that */
+			const value = (isValueAArray && isArray(valueB)) || (isValueAPlainObject && isPlainObject(valueB)) ?
+				valueB : isValueAArray ?
+					[] : objectCreate(null);
+			const valueRecords = diff(valueA, value, options);
+			if (valueRecords.length) { /* only add if there are changes */
+				patchRecords.push(createPatchRecord(type, name, createValuePropertyDescriptor(value), diff(valueA, value, options)));
 			}
 		}
 		else if (isPrimitive(valueA) || (allowFunctionValues && typeof valueA === 'function') ||
@@ -490,6 +489,14 @@ export function getComparableObjects(a: any, b: any, options: DiffOptions) {
 }
 
 /**
+ * A guard that determines if the value is a `CustomDiff`
+ * @param value The value to check
+ */
+export function isCustomDiff<T>(value: any): value is CustomDiff<T> {
+	return typeof value === 'object' && value instanceof CustomDiff;
+}
+
+/**
  * A guard that determines if the value is a `ConstructRecord`
  * @param value The value to check
  */
@@ -548,14 +555,6 @@ function isPrimitive(value: any): value is (string | number | boolean | undefine
 		typeofValue === 'string' ||
 		typeofValue === 'number' ||
 		typeofValue === 'boolean';
-}
-
-/**
- * A guard that determines if the value is a `CustomDiff`
- * @param value The value to check
- */
-function isCustomDiff<T>(value: any): value is CustomDiff<T> {
-	return typeof value === 'object' && value instanceof CustomDiff;
 }
 
 /**

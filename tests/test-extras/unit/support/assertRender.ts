@@ -5,9 +5,10 @@ import AssertionError from '../../../src/support/AssertionError';
 import assertRender from '../../../src/support/assertRender';
 import { v, w } from '@dojo/widget-core/d';
 import WidgetBase from '@dojo/widget-core/WidgetBase';
-import { HNode, WidgetProperties, WNode } from '@dojo/widget-core/interfaces';
+import { HNode, SupportedClassName, WidgetProperties, WNode } from '@dojo/widget-core/interfaces';
 
 interface MockWidgetProperties extends WidgetProperties {
+	classes?: SupportedClassName | SupportedClassName[];
 	foo?: string;
 	bar?: number;
 	baz?: () => void;
@@ -123,7 +124,7 @@ registerSuite('support/assertRender', {
 			}, AssertionError, 'Render unexpected: Expected children');
 		},
 
-		'unepxected children'() {
+		'unexpected children'() {
 			assert.throws(() => {
 				assertRender(
 					v('div', {}, []),
@@ -216,6 +217,49 @@ registerSuite('support/assertRender', {
 					v('div', { }, [ v('span', {}, [ w(MockWidget, { foo: 'baz', baz() { } }) ]) ])
 				);
 			}, AssertionError, 'Render unexpected');
+		},
+
+		'compare unique classes only'() {
+			assertRender(
+				v('div', { classes: [ 'foo', null, 'bar' ] }),
+				v('div',  { classes: [ null,  'bar', 'foo', undefined ] })
+			);
+
+			assertRender(
+				v('div', { classes: null }),
+				v('div', { classes: [] })
+			);
+
+			assertRender(
+				v('div', { classes: 'foo' }),
+				v('div', { classes: [ 'foo' ] })
+			);
+
+			assertRender(
+				v('div', { classes: 'foo' }),
+				v('div', { classes: 'foo' })
+			);
+
+			assert.throws(() => {
+				assertRender(
+					v('div', { classes: 'foo' }),
+					v('div', { classes: [ 'bar' ] })
+				);
+			}, AssertionError, 'The value of property "classes" is unexpected.');
+
+			assert.throws(() => {
+				assertRender(
+					v('div', { classes: [ 'foo', null, 'bar' ] }),
+					v('div',  { classes: [ 'foo',  null, 'baz' ] })
+				);
+			}, AssertionError, 'The value of property "classes" is unexpected.');
+
+			assert.throws(() => {
+				assertRender(
+					v('div', { classes: [ 'foo', 'bar', 'baz' ] }),
+					v('div', { classes: [ 'foo', 'bar' ] })
+				);
+			}, AssertionError, 'The value of property "classes" is unexpected.');
 		}
 	},
 
@@ -390,6 +434,49 @@ registerSuite('support/assertRender', {
 				w(MockWidget, <any> { bind }),
 				w(MockWidget, { })
 			);
+		},
+
+		'compare unique classes only'() {
+			assertRender(
+				w(MockWidget, { classes: [ 'foo', null, 'bar' ] }),
+				w(MockWidget,  { classes: [ null,  'bar', 'foo', undefined ] })
+			);
+
+			assertRender(
+				w(MockWidget, { classes: null }),
+				w(MockWidget, { classes: [] })
+			);
+
+			assertRender(
+				w(MockWidget, { classes: 'foo' }),
+				w(MockWidget, { classes: [ 'foo' ] })
+			);
+
+			assertRender(
+				w(MockWidget, { classes: 'foo' }),
+				w(MockWidget, { classes: 'foo' })
+			);
+
+			assert.throws(() => {
+				assertRender(
+					w(MockWidget, { classes: 'foo' }),
+					w(MockWidget, { classes: [ 'bar' ] })
+				);
+			}, AssertionError, 'The value of property "classes" is unexpected.');
+
+			assert.throws(() => {
+				assertRender(
+					w(MockWidget, { classes: [ 'foo', null, 'bar' ] }),
+					w(MockWidget,  { classes: [ 'foo',  null, 'baz' ] })
+				);
+			}, AssertionError, 'The value of property "classes" is unexpected.');
+
+			assert.throws(() => {
+				assertRender(
+					w(MockWidget, { classes: [ 'foo', 'bar', 'baz' ] }),
+					w(MockWidget, { classes: [ 'foo', 'bar' ] })
+				);
+			}, AssertionError, 'The value of property "classes" is unexpected.');
 		}
 	},
 

@@ -23,7 +23,7 @@ export function assignProperties(target: WNode | HNode, properties: WidgetProper
 
 /**
  * Creates a function which, when placed in an expected render, will call the `callback`.  If the `callback` returns `true`, the value
- * of the property is considered equal, otherwise it is considerd not equal and the expected render will fail.
+ * of the property is considered equal, otherwise it is considered not equal and the expected render will fail.
  * @param callback A function that is invoked when comparing the property value
  */
 export function compareProperty<T>(callback: (value: T, name: string, parent: WidgetProperties | VirtualDomProperties) => boolean): CustomDiff<T> {
@@ -40,7 +40,7 @@ export function compareProperty<T>(callback: (value: T, name: string, parent: Wi
  *
  * *NOTE:* The replacement modifies the passed `target` and does not return a new instance of the `DNode`.
  * @param target The DNode to replace a child element on
- * @param index A number of the index of a child, or a string with comma seperated indexes that would nagivate
+ * @param index A number of the index of a child, or a string with comma separated indexes that would nagivate
  * @param replacement The DNode to be replaced
  */
 export function replaceChild(target: WNode | HNode, index: number | string, replacement: DNode): WNode | HNode {
