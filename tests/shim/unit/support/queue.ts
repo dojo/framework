@@ -182,14 +182,11 @@ registerSuite('queue functions', {
 self.addEventListener('message', function (event) {
 	if(event.data.baseUrl) {
 		var baseUrl = event.data.baseUrl;
-		importScripts(baseUrl + '/node_modules/@dojo/loader/loader.js');
+		importScripts(baseUrl + '/_build/src/util/amd.js', baseUrl + '/node_modules/@dojo/loader/loader.js');
 
-		require.config({
-			baseUrl: baseUrl,
-			packages: [
-				{ name: '@dojo', location: 'node_modules/@dojo' }
-			]
-		});
+		require.config(shimAmdDependencies({
+			baseUrl: baseUrl
+		}));
 
 		require(['_build/src/support/queue'], function (queue) {
 			queue.queueTask(function() {

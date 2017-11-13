@@ -41,6 +41,3 @@ import * as tslib from 'tslib';
 		}
 	};
 };
-
-// load typescript helpers
-import 'tslib';
