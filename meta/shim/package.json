@@ -1,6 +1,6 @@
 {
   "name": "@dojo/shim",
-  "version": "0.2.2",
+  "version": "0.2.3-pre",
   "description": "Modules that provide modular fills of ES6+ functionality",
   "homepage": "https://dojo.io",
   "bugs": {
