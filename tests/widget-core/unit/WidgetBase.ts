@@ -11,6 +11,7 @@ import { diffProperty } from './../../src/decorators/diffProperty';
 import { Registry } from './../../src/Registry';
 import { Base } from './../../src/meta/Base';
 import { NodeEventType } from './../../src/NodeHandler';
+import { widgetInstanceMap } from './../../src/vdom';
 
 interface TestProperties {
 	foo?: string;
@@ -81,20 +82,21 @@ describe('WidgetBase', () => {
 	it('parentInvalidator gets called when the widget is invalidated', () => {
 		const child = new BaseTestWidget();
 		const parent = new BaseTestWidget();
-		const parentInvalidatorSpy = stub(parent, 'invalidate');
-		child.parentInvalidator = () => parent.invalidate();
+		const parentInvalidateSpy = stub(parent, 'invalidate');
+		const instanceData = widgetInstanceMap.get(child)!;
+		instanceData.parentInvalidate = () => parent.invalidate();
 		child.invalidate();
-		assert.isTrue(parentInvalidatorSpy.calledOnce);
+		assert.isTrue(parentInvalidateSpy.calledOnce);
 		child.invalidate();
-		assert.isTrue(parentInvalidatorSpy.calledTwice);
+		assert.isTrue(parentInvalidateSpy.calledTwice);
 	});
 
-	it('warns when setting the parentInvalidator if it has already been set', () => {
+	it('updated core properties available on instance data', () => {
 		const child = new BaseTestWidget();
-		const parent = new BaseTestWidget();
-		child.parentInvalidator = () => parent.invalidate();
-		child.parentInvalidator = () => parent.invalidate();
-		assert.isTrue(consoleStub.calledWith('Unable to update parent invalidator after it has been set'));
+		const instanceData = widgetInstanceMap.get(child)!;
+		assert.deepEqual(instanceData.coreProperties, {});
+		child.__setCoreProperties__({ bind: child, baseRegistry: 'base' });
+		assert.deepEqual(instanceData.coreProperties, { bind: child, baseRegistry: 'base' });
 	});
 
 	describe('__render__', () => {
@@ -310,7 +312,8 @@ describe('WidgetBase', () => {
 			const key = '1';
 			const widget = new BaseTestWidget();
 			const meta = widget.meta(TestMeta);
-			widget.nodeHandler.add(element, key);
+			const instanceData = widgetInstanceMap.get(widget)!;
+			instanceData.nodeHandler.add(element, key);
 			assert.isTrue(meta.has(key));
 			assert.strictEqual(meta.get(key), element);
 		});
@@ -320,7 +323,8 @@ describe('WidgetBase', () => {
 			const key = '1';
 			const widget = new BaseTestWidget();
 			const meta = widget.meta(TestMeta);
-			widget.nodeHandler.add(element, key);
+			const instanceData = widgetInstanceMap.get(widget)!;
+			instanceData.nodeHandler.add(element, key);
 			assert.isTrue(meta.has(key));
 			assert.strictEqual(meta.get(key), element);
 		});
@@ -328,16 +332,18 @@ describe('WidgetBase', () => {
 		it('root added to node handler on widget create', () => {
 			const widget = new BaseTestWidget();
 			const meta = widget.meta(TestMeta);
+			const instanceData = widgetInstanceMap.get(widget)!;
 
-			widget.nodeHandler.addRoot();
+			instanceData.nodeHandler.addRoot();
 			assert.isTrue(meta.widgetEvent);
 		});
 
 		it('root added to node handler on widget update', () => {
 			const widget = new BaseTestWidget();
 			const meta = widget.meta(TestMeta);
+			const instanceData = widgetInstanceMap.get(widget)!;
 
-			widget.nodeHandler.addRoot();
+			instanceData.nodeHandler.addRoot();
 			assert.isTrue(meta.widgetEvent);
 		});
 	});

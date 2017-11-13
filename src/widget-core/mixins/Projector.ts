@@ -9,7 +9,7 @@ import { WidgetBase } from './../WidgetBase';
 import { afterRender } from './../decorators/afterRender';
 import { v } from './../d';
 import { Registry } from './../Registry';
-import { dom } from './../vdom';
+import { dom, widgetInstanceMap } from './../vdom';
 
 /**
  * Represents the attach state of the projector
@@ -163,7 +163,9 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		constructor(...args: any[]) {
 			super(...args);
 
-			this.parentInvalidator = () => {
+			const instanceData = widgetInstanceMap.get(this)!;
+
+			instanceData.parentInvalidate = () => {
 				this.scheduleRender();
 			};
 			this._projectionOptions = {

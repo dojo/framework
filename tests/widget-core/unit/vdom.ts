@@ -4,7 +4,7 @@ import { match, spy, stub, SinonStub } from 'sinon';
 import { createResolvers } from './../support/util';
 import sendEvent from './../support/sendEvent';
 
-import { dom, InternalHNode, InternalWNode } from '../../src/vdom';
+import { dom, InternalHNode, InternalWNode, widgetInstanceMap } from '../../src/vdom';
 import { v, w } from '../../src/d';
 import { HNode } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
@@ -22,6 +22,8 @@ const projectorStub: any = {
 	onElementCreated: stub(),
 	onElementUpdated: stub()
 };
+
+widgetInstanceMap.set(projectorStub, projectorStub);
 
 class MainBar extends WidgetBase<any> {
 	render() {

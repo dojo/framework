@@ -18,6 +18,7 @@ import {
 } from './interfaces';
 import RegistryHandler from './RegistryHandler';
 import NodeHandler from './NodeHandler';
+import { widgetInstanceMap } from './vdom';
 import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './Registry';
 
 enum WidgetRenderState {
@@ -65,11 +66,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	private _children: (C | null)[];
 
 	/**
-	 * marker indicating if the widget requires a render
-	 */
-	private _dirty: boolean;
-
-	/**
 	 * Indicates if it is the initial set properties cycle
 	 */
 	private _initialProperties = true;
@@ -83,11 +79,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 * Array of property keys considered changed from the previous set properties
 	 */
 	private _changedPropertyKeys: string[] = [];
-
-	/**
-	 * Core properties widget base sets for all widget
-	 */
-	private _coreProperties: CoreProperties = {} as CoreProperties;
 
 	private _cachedDNode: DNode | DNode[];
 
@@ -111,9 +102,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 	private _boundInvalidate: () => void;
 
-	public readonly nodeHandler: NodeHandler = new NodeHandler();
-
-	private _parentInvalidator: Function;
+	private _nodeHandler: NodeHandler = new NodeHandler();
 
 	/**
 	 * @constructor
@@ -122,18 +111,24 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		this._children = [];
 		this._decoratorCache = new Map<string, any[]>();
 		this._properties = <P> {};
-		this.nodeHandler = new NodeHandler();
 		this._boundRenderFunc = this.render.bind(this);
 		this._boundInvalidate = this.invalidate.bind(this);
-	}
 
-	public set parentInvalidator(invalidator: Function) {
-		if (this._parentInvalidator === undefined) {
-			this._parentInvalidator = invalidator;
-		}
-		else {
-			console.warn('Unable to update parent invalidator after it has been set');
-		}
+		widgetInstanceMap.set(this, {
+			dirty: true,
+			onElementCreated: (element: HTMLElement, key: string) => {
+				this.onElementCreated(element, key);
+			},
+			onElementUpdated: (element: HTMLElement, key: string) => {
+				this.onElementUpdated(element, key);
+			},
+			nodeHandler: this._nodeHandler,
+			registry: () => {
+				return this.registry;
+			},
+			coreProperties: {} as CoreProperties,
+			invalidate: this._boundInvalidate
+		});
 	}
 
 	protected meta<T extends WidgetMetaBase>(MetaType: WidgetMetaConstructor<T>): T {
@@ -144,7 +139,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		if (!cached) {
 			cached = new MetaType({
 				invalidate: this._boundInvalidate,
-				nodeHandler: this.nodeHandler,
+				nodeHandler: this._nodeHandler,
 				bind: this
 			});
 			this._metaMap.set(MetaType, cached);
@@ -160,7 +155,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 * @param element The dom node represented by the vdom node.
 	 * @param key The vdom node's key.
 	 */
-	public onElementCreated(element: Element, key: string): void {
+	protected onElementCreated(element: Element, key: string): void {
 		// Do nothing by default.
 	}
 
@@ -170,7 +165,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 * @param element The dom node represented by the vdom node.
 	 * @param key The vdom node's key.
 	 */
-	public onElementUpdated(element: Element, key: string): void {
+	protected onElementUpdated(element: Element, key: string): void {
 		// Do nothing by default.
 	}
 
@@ -182,15 +177,12 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		return [ ...this._changedPropertyKeys ];
 	}
 
-	public get coreProperties(): CoreProperties {
-		return this._coreProperties;
-	}
-
 	public __setCoreProperties__(coreProperties: CoreProperties): void {
 		this._renderState = WidgetRenderState.PROPERTIES;
 		const { baseRegistry } = coreProperties;
+		const instanceData = widgetInstanceMap.get(this)!;
 
-		if (this._coreProperties.baseRegistry !== baseRegistry) {
+		if (instanceData.coreProperties.baseRegistry !== baseRegistry) {
 			if (this._registry === undefined) {
 				this._registry = new RegistryHandler();
 				this._registry.on('invalidate', this._boundInvalidate);
@@ -198,7 +190,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			this._registry.base = baseRegistry;
 			this.invalidate();
 		}
-		this._coreProperties = coreProperties;
+		instanceData.coreProperties = coreProperties;
 	}
 
 	public __setProperties__(originalProperties: this['properties']): void {
@@ -206,6 +198,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		const registeredDiffPropertyNames = this.getDecorator('registeredDiffProperty');
 		const changedPropertyKeys: string[] = [];
 		const propertyNames = Object.keys(properties);
+		const instanceData = widgetInstanceMap.get(this)!;
 		this._renderState = WidgetRenderState.PROPERTIES;
 
 		if (this._initialProperties === false || registeredDiffPropertyNames.length !== 0) {
@@ -221,7 +214,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				}
 				checkedProperties.push(propertyName);
 				const previousProperty = this._properties[propertyName];
-				const newProperty = this._bindFunctionProperty(properties[propertyName], this._coreProperties.bind);
+				const newProperty = this._bindFunctionProperty(properties[propertyName], instanceData.coreProperties.bind);
 				if (registeredDiffPropertyNames.indexOf(propertyName) !== -1) {
 					runReactions = true;
 					const diffFunctions = this.getDecorator(`diffProperty:${propertyName}`);
@@ -261,7 +254,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			for (let i = 0; i < propertyNames.length; i++) {
 				const propertyName = propertyNames[i];
 				if (typeof properties[propertyName] === 'function') {
-					properties[propertyName] = this._bindFunctionProperty(properties[propertyName], this._coreProperties.bind);
+					properties[propertyName] = this._bindFunctionProperty(properties[propertyName], instanceData.coreProperties.bind);
 				}
 				else {
 					changedPropertyKeys.push(propertyName);
@@ -289,30 +282,32 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	public __render__(): DNode | DNode[] {
+		const instanceData = widgetInstanceMap.get(this)!;
 		this._renderState = WidgetRenderState.RENDER;
-		if (this._dirty || this._cachedDNode === undefined) {
-			this._dirty = false;
+		if (instanceData.dirty || this._cachedDNode === undefined) {
+			instanceData.dirty = false;
 			const render = this._runBeforeRenders();
 			let dNode = render();
 			this._cachedDNode = this.runAfterRenders(dNode);
-			this.nodeHandler.clear();
+			this._nodeHandler.clear();
 		}
 		this._renderState = WidgetRenderState.IDLE;
 		return this._cachedDNode;
 	}
 
 	public invalidate(): void {
+		const instanceData = widgetInstanceMap.get(this)!;
 		if (this._renderState === WidgetRenderState.IDLE) {
-			this._dirty = true;
-			if (this._parentInvalidator) {
-				this._parentInvalidator();
+			instanceData.dirty = true;
+			if (instanceData.parentInvalidate) {
+				instanceData.parentInvalidate();
 			}
 		}
 		else if (this._renderState === WidgetRenderState.PROPERTIES) {
-			this._dirty = true;
+			instanceData.dirty = true;
 		}
 		else if (this._renderState === WidgetRenderState.CHILDREN) {
-			this._dirty = true;
+			instanceData.dirty = true;
 		}
 	}
 
