@@ -1,4 +1,4 @@
-import { forOf, isIterable, isArrayLike } from '@dojo/shim/iterator';
+import { isArrayLike, isIterable } from '@dojo/shim/iterator';
 import { Load } from '../load';
 
 export interface LoadPlugin<T> {
@@ -39,9 +39,9 @@ export function useDefault(modules: any | any[]): any[] | any {
 	if (isIterable(modules) || isArrayLike(modules)) {
 		let processedModules: any[] = [];
 
-		forOf(modules, (module) => {
+		for (const module of modules) {
 			processedModules.push((module.__esModule && module.default) ? module.default : module);
-		});
+		}
 
 		return processedModules;
 	}

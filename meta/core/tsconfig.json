@@ -19,7 +19,9 @@
 		"sourceMap": true,
 		"strictNullChecks": true,
 		"target": "es5",
-		"types": [ "intern" ]
+		"types": [ "intern" ],
+		"noEmitHelpers": true,
+		"downlevelIteration": true
 	},
 	"include": [
 		"./src/**/*.ts",

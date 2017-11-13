@@ -1,6 +1,5 @@
-import { RequestOptions } from './interfaces';
+import {RequestOptions} from './interfaces';
 import UrlSearchParams from '../UrlSearchParams';
-import { forOf } from '@dojo/shim/iterator';
 
 /**
  * Returns a URL formatted with optional query string and cache-busting segments.
@@ -21,9 +20,9 @@ export function generateRequestUrl(url: string, options: RequestOptions = {}): s
 export function getStringFromFormData(formData: any): string {
 	const fields: string[] = [];
 
-	forOf(formData.keys(), (key: string) => {
+	for (const key of formData.keys()) {
 		fields.push(encodeURIComponent(key) + '=' + encodeURIComponent(formData.get(key)));
-	});
+	}
 
 	return fields.join('&');
 }

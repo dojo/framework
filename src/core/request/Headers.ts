@@ -1,5 +1,5 @@
 import { Headers as HeadersInterface } from './interfaces';
-import { IterableIterator, forOf, ShimIterator } from '@dojo/shim/iterator';
+import { IterableIterator, ShimIterator } from '@dojo/shim/iterator';
 import Map from '@dojo/shim/Map';
 
 function isHeadersLike(object: any): object is HeadersInterface {
@@ -15,9 +15,9 @@ export default class Headers implements HeadersInterface {
 				this.map = new Map(headers.map);
 			}
 			else if (isHeadersLike(headers)) {
-				forOf(headers, ([key, value]) => {
+				for (const [key, value] of headers) {
 					this.append(key, value);
-				});
+				}
 			}
 			else {
 				for (let key in headers) {
@@ -44,11 +44,11 @@ export default class Headers implements HeadersInterface {
 
 	entries(): IterableIterator<[string, string]> {
 		const entries: [string, string][] = [];
-		forOf(this.map.entries(), ([key, values]) => {
+		for (const [key, values] of this.map.entries()) {
 			values.forEach(value => {
 				entries.push([key, value]);
 			});
-		});
+		}
 		return new ShimIterator(entries);
 	}
 
@@ -88,9 +88,9 @@ export default class Headers implements HeadersInterface {
 
 	values(): IterableIterator<string> {
 		const values: string[] = [];
-		forOf(this.map.values(), value => {
+		for (const value of this.map.values()) {
 			values.push(...value);
-		});
+		}
 		return new ShimIterator(values);
 	}
 

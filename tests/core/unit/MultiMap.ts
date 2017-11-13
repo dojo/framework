@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import MultiMap from '../../src/MultiMap';
-import { forOf, isIterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
+import {isIterable, IterableIterator, ShimIterator} from '@dojo/shim/iterator';
 
 let map: MultiMap<any>;
 function foo() {}
@@ -104,13 +104,13 @@ registerSuite('Map', {
 		assert.isTrue(isIterable(entries), 'Returns an iterable.');
 
 		let i = 0;
-		forOf(entries, function (value: [ any[], any ]): void {
+		for (const value of entries) {
 			value[0].forEach((key, index) => {
 				assert.strictEqual(key, mapArgs[i][0][index]);
 			});
 			assert.strictEqual(value[1], mapArgs[i][1]);
 			i++;
-		});
+		}
 	},
 
 	'Symbol iterator'() {
@@ -120,13 +120,13 @@ registerSuite('Map', {
 		assert.isTrue(isIterable(entries), 'Returns an iterable.');
 
 		let i = 0;
-		forOf(entries, function (value: [ any[], any ]): void {
+		for (const value of entries) {
 			value[0].forEach((key, index) => {
 				assert.strictEqual(key, mapArgs[i][0][index]);
 			});
 			assert.strictEqual(value[1], mapArgs[i][1]);
 			i++;
-		});
+		}
 	},
 
 	forEach: {
@@ -193,12 +193,12 @@ registerSuite('Map', {
 		assert.isTrue(isIterable(keys), 'Returns an iterable.');
 
 		let i = 0;
-		forOf(keys, function (value: any[]): void {
+		for (const value of keys) {
 			value.forEach((key, index) => {
 				assert.strictEqual(key, mapArgs[i][0][index]);
 			});
 			i++;
-		});
+		}
 	},
 
 	set: {
@@ -240,9 +240,9 @@ registerSuite('Map', {
 		assert.isTrue(isIterable(values), 'Returns an iterable.');
 
 		let i = 0;
-		forOf(values, function (value: any): void {
+		for (const value of values) {
 			assert.strictEqual(value, mapArgs[i][1]);
 			i++;
-		});
+		}
 	}
 });

@@ -578,16 +578,13 @@ self.addEventListener('message', function (event) {
 });
 
 function testXhr(baseUrl, testUrl) {
-	importScripts(baseUrl + '/node_modules/@dojo/loader/loader.js');
+	importScripts(baseUrl + '/node_modules/@dojo/loader/loader.js', baseUrl + '/node_modules/@dojo/shim/util/amd.js');
 
-	require.config({
-		baseUrl: baseUrl,
-		packages: [
-			{ name: '@dojo', location: 'node_modules/@dojo' }
-		]
-	});
+	require.config(shimAmdDependencies({
+		baseUrl: baseUrl
+	}));
 
-	require(['_build/src/request/providers/xhr'], function (xhr) {
+	require(['@dojo/shim/main', '_build/src/request/providers/xhr'], function (_, xhr) {
 		xhr.default(testUrl).then(function (response) {
 			return response.json();
 		}).then(function (json) {

@@ -22,7 +22,7 @@
   },
   "peerDependencies": {
     "@dojo/has": "~0.1.0",
-    "@dojo/shim": "~0.1.0"
+    "@dojo/shim": "~0.2.1"
   },
   "devDependencies": {
     "@dojo/interfaces": "~0.1.0",

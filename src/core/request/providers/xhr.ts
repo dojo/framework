@@ -1,6 +1,5 @@
 import { Handle } from '@dojo/interfaces/core';
 import global from '@dojo/shim/global';
-import { forOf } from '@dojo/shim/iterator';
 import WeakMap from '@dojo/shim/WeakMap';
 import Task, { State } from '../../async/Task';
 import has from '../../has';
@@ -286,9 +285,9 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 		hasRequestedWithHeader = requestHeaders.has('x-requested-with');
 		hasContentTypeHeader = requestHeaders.has('content-type');
 
-		forOf(requestHeaders, ([key, value]) => {
+		for (const [key, value] of requestHeaders) {
 			request.setRequestHeader(key, value);
-		});
+		}
 	}
 
 	if (!hasRequestedWithHeader && includeRequestedWithHeader) {

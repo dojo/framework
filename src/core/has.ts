@@ -53,4 +53,4 @@ self.addEventListener('message', function () {
 		// IE11 on Winodws 8.1 encounters a security error.
 		resolve(false);
 	}
-}));
+}), true);

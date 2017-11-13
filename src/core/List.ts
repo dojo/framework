@@ -1,4 +1,4 @@
-import { forOf, Iterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
+import { Iterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
 import WeakMap from '@dojo/shim/WeakMap';
 
 const listItems: WeakMap<List<any>, any[]> = new WeakMap<List<any>, any[]>();
@@ -20,9 +20,9 @@ export default class List<T> {
 		listItems.set(this, []);
 
 		if (source) {
-			forOf(source, (item: T) => {
+			for (const item of source) {
 				this.add(item);
-			});
+			}
 		}
 	}
 

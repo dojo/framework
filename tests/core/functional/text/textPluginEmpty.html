@@ -6,22 +6,24 @@
 	</head>
 
 	<body>
+		<script src="../../../../node_modules/@dojo/shim/util/amd.js"></script>
 		<script src="../../../../node_modules/@dojo/loader/loader.js"></script>
 		<script>
-			require.config({
+			require.config(shimAmdDependencies({
 				baseUrl: '../../../../',
 				packages: [
 					{ name: 'src', location: '_build/src' },
-					{ name: 'tests', location: '_build/tests' },
-					{ name: '@dojo', location: 'node_modules/@dojo' }
+					{ name: 'tests', location: '_build/tests' }
 				]
-			});
-			require([
-				'src/text!./_build/tests/support/data/stripEmpty.xml!strip'
-			], function (result) {
-				window.loaderTestResults = {
-					text: result
-				};
+			}));
+			require(['@dojo/shim/main'], function () {
+				require([
+					'src/text!./_build/tests/support/data/stripEmpty.xml!strip'
+				], function (result) {
+					window.loaderTestResults = {
+						text: result
+					};
+				});
 			});
 		</script>
 	</body>

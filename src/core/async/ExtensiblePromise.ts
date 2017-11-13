@@ -1,4 +1,4 @@
-import { Iterable, forOf, isIterable, isArrayLike } from '@dojo/shim/iterator';
+import { Iterable, isIterable, isArrayLike } from '@dojo/shim/iterator';
 import Promise, { Executor } from '@dojo/shim/Promise';
 import { Thenable } from '@dojo/shim/interfaces';
 import '@dojo/shim/Symbol';
@@ -12,9 +12,9 @@ import '@dojo/shim/Symbol';
  */
 export function unwrapPromises(iterable: Iterable<any> | any[]): any[] {
 	const unwrapped: any[] = [];
-	forOf(iterable, function (item: any): void {
+	for (const item of iterable) {
 		unwrapped.push(item instanceof ExtensiblePromise ? item._promise : item);
-	});
+	}
 	return unwrapped;
 }
 
