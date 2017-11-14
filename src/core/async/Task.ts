@@ -152,7 +152,16 @@ export default class Task<T> extends ExtensiblePromise<T> {
 		return new Task((resolve, reject) => {
 			super.all(iterable).then(resolve, reject);
 		}, () => {
-			if (isIterable(iterable) || isArrayLike(iterable)) {
+			if (isArrayLike(iterable)) {
+				for (let i = 0; i < iterable.length; i++) {
+					const promiseLike = iterable[i];
+
+					if (isTask(promiseLike)) {
+						promiseLike.cancel();
+					}
+				}
+			}
+			else if (isIterable(iterable)) {
 				for (const promiseLike of iterable) {
 					if (isTask(promiseLike)) {
 						promiseLike.cancel();

@@ -11,7 +11,10 @@ export type ParamList = Hash<string | string[]>;
  */
 function parseQueryString(input: string): ParamList {
 	const query: Hash<string[]> = {};
-	for (const entry of input.split('&')) {
+	const splits = input.split('&');
+
+	for (let i = 0; i < splits.length; i++) {
+		const entry = splits[i];
 		const indexOfFirstEquals = entry.indexOf('=');
 		let key: string;
 		let value = '';
@@ -19,7 +22,8 @@ function parseQueryString(input: string): ParamList {
 		if (indexOfFirstEquals >= 0) {
 			key = entry.slice(0, indexOfFirstEquals);
 			value = entry.slice(indexOfFirstEquals + 1);
-		} else {
+		}
+		else {
 			key = entry;
 		}
 
@@ -30,7 +34,7 @@ function parseQueryString(input: string): ParamList {
 			query[key].push(value);
 		}
 		else {
-			query[key] = [ value ];
+			query[key] = [value];
 		}
 	}
 	return query;
@@ -186,8 +190,8 @@ export default class UrlSearchParams {
 			const values = this._list[key];
 			if (values) {
 				const encodedKey = encodeURIComponent(key);
-				for (const value of values) {
-					query.push(encodedKey + (value ? ('=' + encodeURIComponent(value)) : ''));
+				for (let i = 0; i < values.length; i++) {
+					query.push(encodedKey + (values[i] ? ('=' + encodeURIComponent(values[i])) : ''));
 				}
 			}
 		}

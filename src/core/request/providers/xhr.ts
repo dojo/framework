@@ -3,14 +3,14 @@ import global from '@dojo/shim/global';
 import WeakMap from '@dojo/shim/WeakMap';
 import Task, { State } from '../../async/Task';
 import has from '../../has';
+import Observable from '../../Observable';
 import { createTimer } from '../../util';
 import Headers from '../Headers';
 import { RequestOptions, UploadObservableTask } from '../interfaces';
 import Response, { getArrayBufferFromBlob, getTextFromBlob } from '../Response';
+import SubscriptionPool from '../SubscriptionPool';
 import TimeoutError from '../TimeoutError';
 import { generateRequestUrl } from '../util';
-import Observable from '../../Observable';
-import SubscriptionPool from '../SubscriptionPool';
 
 /**
  * Request options specific to an XHR request
@@ -91,8 +91,10 @@ export class XhrResponse extends Response {
 
 		const responseHeaders = request.getAllResponseHeaders();
 		if (responseHeaders) {
-			for (let line of responseHeaders.split(/\r\n/g)) {
-				const match = line.match(/^(.*?): (.*)$/);
+			const lines = responseHeaders.split(/\r\n/g);
+
+			for (let i = 0; i < lines.length; i++) {
+				const match = lines[i].match(/^(.*?): (.*)$/);
 				if (match) {
 					headers.append(match[1], match[2]);
 				}

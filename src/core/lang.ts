@@ -1,5 +1,6 @@
 import { Handle } from '@dojo/interfaces/core';
 import { assign } from '@dojo/shim/object';
+
 export { assign } from '@dojo/shim/object';
 
 const slice = Array.prototype.slice;
@@ -22,7 +23,7 @@ function shouldDeepCopyObject(value: any): value is Object {
 function copyArray<T>(array: T[], inherited: boolean): T[] {
 	return array.map(function (item: T): T {
 		if (Array.isArray(item)) {
-			return  <any> copyArray(<any> item, inherited);
+			return <any> copyArray(<any> item, inherited);
 		}
 
 		return !shouldDeepCopyObject(item) ?
@@ -51,7 +52,9 @@ function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
 	const copied = kwArgs.copied || [];
 	const copiedClone = [ ...copied ];
 
-	for (let source of kwArgs.sources) {
+	for (let i = 0; i < kwArgs.sources.length; i++) {
+		const source = kwArgs.sources[i];
+
 		if (source === null || source === undefined) {
 			continue;
 		}
@@ -279,8 +282,8 @@ export function createHandle(destructor: () => void): Handle {
  */
 export function createCompositeHandle(...handles: Handle[]): Handle {
 	return createHandle(function () {
-		for (let handle of handles) {
-			handle.destroy();
+		for (let i = 0; i < handles.length; i++) {
+			handles[i].destroy();
 		}
 	});
 }

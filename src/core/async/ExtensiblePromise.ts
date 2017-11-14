@@ -1,6 +1,6 @@
-import { Iterable, isIterable, isArrayLike } from '@dojo/shim/iterator';
-import Promise, { Executor } from '@dojo/shim/Promise';
 import { Thenable } from '@dojo/shim/interfaces';
+import { isArrayLike, isIterable, Iterable } from '@dojo/shim/iterator';
+import Promise, { Executor } from '@dojo/shim/Promise';
 import '@dojo/shim/Symbol';
 
 /**
@@ -12,9 +12,19 @@ import '@dojo/shim/Symbol';
  */
 export function unwrapPromises(iterable: Iterable<any> | any[]): any[] {
 	const unwrapped: any[] = [];
-	for (const item of iterable) {
-		unwrapped.push(item instanceof ExtensiblePromise ? item._promise : item);
+
+	if (isArrayLike(iterable)) {
+		for (let i = 0; i < iterable.length; i++) {
+			const item = iterable[i];
+			unwrapped.push(item instanceof ExtensiblePromise ? item._promise : item);
+		}
 	}
+	else {
+		for (const item of iterable) {
+			unwrapped.push(item instanceof ExtensiblePromise ? item._promise : item);
+		}
+	}
+
 	return unwrapped;
 }
 

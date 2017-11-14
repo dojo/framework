@@ -1,14 +1,14 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import List from '../../src/List';
 import Set from '@dojo/shim/Set';
+import List from '../../src/List';
 
 registerSuite('List', function () {
 	function listWith<T>(...items: T[]): List<T> {
 		const list = new List<T>();
 
-		for (let item of items) {
-			list.add(item);
+		for (let i = 0; i < items.length; i++) {
+			list.add(items[i]);
 		}
 
 		return list;

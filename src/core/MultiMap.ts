@@ -1,7 +1,7 @@
-import '@dojo/shim/Symbol';
-import Map from '@dojo/shim/Map';
 import { from as arrayFrom } from '@dojo/shim/array';
-import { Iterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
+import { isArrayLike, isIterable, Iterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
+import Map from '@dojo/shim/Map';
+import '@dojo/shim/Symbol';
 
 /**
  * A map implmentation that supports multiple keys for specific value.
@@ -21,8 +21,16 @@ export default class MultiMap<T> implements Map<any[], T> {
 		this._map = new Map<any, any>();
 		this._key = Symbol();
 		if (iterable) {
-			for (const value of iterable) {
-				this.set(value[0], value[1]);
+			if (isArrayLike(iterable)) {
+				for (let i = 0; i < iterable.length; i++) {
+					const value = iterable[i];
+					this.set(value[0], value[1]);
+				}
+			}
+			else if (isIterable(iterable)) {
+				for (const value of iterable) {
+					this.set(value[0], value[1]);
+				}
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-import { Iterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
+import { isArrayLike, isIterable, Iterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
 import WeakMap from '@dojo/shim/WeakMap';
 
 const listItems: WeakMap<List<any>, any[]> = new WeakMap<List<any>, any[]>();
@@ -20,8 +20,15 @@ export default class List<T> {
 		listItems.set(this, []);
 
 		if (source) {
-			for (const item of source) {
-				this.add(item);
+			if (isArrayLike(source)) {
+				for (let i = 0; i < source.length; i++) {
+					this.add(source[i]);
+				}
+			}
+			else if (isIterable(source)) {
+				for (const item of source) {
+					this.add(item);
+				}
 			}
 		}
 	}

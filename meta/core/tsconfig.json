@@ -20,7 +20,7 @@
 		"strictNullChecks": true,
 		"target": "es5",
 		"types": [ "intern" ],
-		"noEmitHelpers": true,
+		"importHelpers": true,
 		"downlevelIteration": true
 	},
 	"include": [
