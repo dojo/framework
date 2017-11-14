@@ -1,6 +1,6 @@
 {
   "name": "@dojo/core",
-  "version": "0.2.1-pre",
+  "version": "0.2.1",
   "description": "Basic utilites for common TypeScript development",
   "engines": {
     "npm": ">=3.0.0"
