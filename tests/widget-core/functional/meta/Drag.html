@@ -4,16 +4,16 @@
 	<title>Drag Test</title>
 </head>
 <body>
+	<script src="../../../../node_modules/@dojo/shim/util/amd.js"></script>
 	<script src="../../../../node_modules/@dojo/loader/loader.js"></script>
 	<script>
-		require.config({
-			packages: [
-				{ name: '@dojo', location: '../../../../node_modules/@dojo' },
-				{ name: 'pepjs', location: '../../../../node_modules/pepjs/dist', main: 'pep' }
-			]
-		});
+		require.config(shimAmdDependencies({
+			baseUrl: '../../../../'
+		}));
 
-		require([ './Drag' ], function () {});
+		require(['@dojo/shim/main'], function () {
+			require([ '_build/tests/functional/meta/Drag' ], function () {});
+		});
 	</script>
 </body>
 </html>

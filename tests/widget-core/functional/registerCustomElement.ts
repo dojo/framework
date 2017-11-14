@@ -19,7 +19,7 @@ registerSuite('registerCustomElement', {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');
 			}
 			return this.remote
-				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.get('_build/tests/functional/support/registerCustomElement.html')
 				.setFindTimeout(1000)
 				.findById('testButton');
 		},
@@ -28,7 +28,7 @@ registerSuite('registerCustomElement', {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');
 			}
 			return this.remote
-				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.get('_build/tests/functional/support/registerCustomElement.html')
 				.setFindTimeout(1000)
 				.findById('testButton')
 				.then((element: any) => {
@@ -43,7 +43,7 @@ registerSuite('registerCustomElement', {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');
 			}
 			return this.remote
-				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.get('_build/tests/functional/support/registerCustomElement.html')
 				.setFindTimeout(1000)
 				.findByCssSelector('#testButton > button')
 				.click()
@@ -58,7 +58,7 @@ registerSuite('registerCustomElement', {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');
 			}
 			return this.remote
-				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.get('_build/tests/functional/support/registerCustomElement.html')
 				.setFindTimeout(1000)
 				.findByCssSelector('#testButton > button')
 				.click()
@@ -73,7 +73,7 @@ registerSuite('registerCustomElement', {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');
 			}
 			return this.remote
-				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.get('_build/tests/functional/support/registerCustomElement.html')
 				.setFindTimeout(1000)
 				.findById('testButton-2')
 				.then((element: any) => {
@@ -88,7 +88,7 @@ registerSuite('registerCustomElement', {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');
 			}
 			return this.remote
-				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.get('_build/tests/functional/support/registerCustomElement.html')
 				.setFindTimeout(1000)
 				.findById('testButton')
 				.end()
@@ -102,7 +102,7 @@ registerSuite('registerCustomElement', {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');
 			}
 			return this.remote
-				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.get('_build/tests/functional/support/registerCustomElement.html')
 				.setFindTimeout(1000)
 				.findByCssSelector('no-attributes > button')
 				.end()
@@ -116,7 +116,7 @@ registerSuite('registerCustomElement', {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');
 			}
 			return this.remote
-				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.get('_build/tests/functional/support/registerCustomElement.html')
 				.setFindTimeout(1000)
 				.findByCssSelector('#manualButton > button')
 				.end()
@@ -129,7 +129,7 @@ registerSuite('registerCustomElement', {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');
 			}
 			return this.remote
-				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.get('_build/tests/functional/support/registerCustomElement.html')
 				.setFindTimeout(1000)
 				.findByCssSelector('#reinitButton > button')
 				.end()
@@ -142,7 +142,7 @@ registerSuite('registerCustomElement', {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');
 			}
 			return this.remote
-				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.get('_build/tests/functional/support/registerCustomElement.html')
 				.setFindTimeout(1000)
 				.findByCssSelector('#parent-element > div > child-wrapper#nested-parent > div > div')
 				.then((element: any) => {
@@ -165,7 +165,7 @@ registerSuite('registerCustomElement', {
 				this.skip('not compatible with iOS 9.1 or Safari 9.1');
 			}
 			return this.remote
-				.get((<any> require).toUrl('./support/registerCustomElement.html'))
+				.get('_build/tests/functional/support/registerCustomElement.html')
 				.setFindTimeout(1000)
 				.findByCssSelector('#dynamic-parent-element > div > child-wrapper > div > div')
 				.then((element: any) => {

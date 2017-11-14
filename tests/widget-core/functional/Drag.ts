@@ -9,7 +9,7 @@ registerSuite('Drag', {
 			this.skip('Not touch enabled device');
 		}
 		return this.remote
-			.get((<any> require).toUrl('./meta/Drag.html'))
+			.get('_build/tests/functional/meta/Drag.html')
 			.setFindTimeout(5000)
 			.findById('results')
 			.pressFinger(50, 50)
@@ -46,7 +46,7 @@ registerSuite('Drag', {
 			this.skip('Dragging is not working on Internet Explorer.');
 		}
 		return this.remote
-			.get((<any> require).toUrl('./meta/Drag.html'))
+			.get('_build/tests/functional/meta/Drag.html')
 			.setFindTimeout(5000)
 			.findById('results')
 			.moveMouseTo(50, 50)

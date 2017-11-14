@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<script src="../../../../node_modules/@dojo/shim/util/amd.js"></script>
 	<script src="../../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
 	<script src="../../../../node_modules/@webcomponents/custom-elements/src/native-shim.js"></script>
 	<script src="../../../../node_modules/@dojo/loader/loader.js"></script>
@@ -22,53 +23,52 @@
 	window.ready = false;
 	window.connectedEvent = false;
 
-	require.config({
-		packages: [
-			{ name: '@dojo', location: '../../../../node_modules/@dojo' },
-			{ name: 'pepjs', location: '../../../../node_modules/pepjs/dist', main: 'pep' }
-		]
-	});
+	require.config(shimAmdDependencies({
+		baseUrl: '../../../../'
+	}));
 
 	document.getElementById('testButton').addEventListener('connected', function() {
 		window.connectedEvent = true;
 	});
 
-	require(['./registerCustomElement'], function() {
-		window.ready = true;
+	require(['@dojo/shim/main'], function() {
+		require(['_build/tests/functional/support/registerCustomElement'], function () {
+			window.ready = true;
 
-		document.getElementById('testButton').addEventListener('button-click', function() {
-			window.buttonClicked = true;
+			document.getElementById('testButton').addEventListener('button-click', function() {
+				window.buttonClicked = true;
+			});
+
+			document.getElementById('noAttributes').buttonLabel = 'Test';
+			document.getElementById('testButton-2').label = 'Worlds';
+
+			var el = document.createElement('test-button');
+			el.id = 'manualButton';
+			el.label = 'manual';
+			document.body.appendChild(el);
+
+			var reinitButton = document.createElement("test-button");
+			reinitButton.id = "reinitButton";
+			reinitButton.label = "test";
+			reinitButton.appendChild(document.createElement('div'));
+			document.body.appendChild(reinitButton);
+			document.body.removeChild(reinitButton);
+			document.body.appendChild(reinitButton);
+
+			var dynamicChildren = document.createElement('child-wrapper');
+			var nestedParent = document.createElement('child-wrapper');
+			var topLevelChild = document.createElement('div');
+			var nestedChild = document.createElement('div');
+			dynamicChildren.id = 'dynamic-parent-element';
+			nestedParent.appendChild(nestedChild);
+			dynamicChildren.appendChild(nestedParent);
+			dynamicChildren.appendChild(topLevelChild);
+			topLevelChild.textContent = 'programmatic top level child';
+			nestedChild.textContent = 'programmatic nested child';
+			document.body.appendChild(dynamicChildren);
+			document.body.removeChild(dynamicChildren);
+			document.body.appendChild(dynamicChildren);
 		});
-
-		document.getElementById('noAttributes').buttonLabel = 'Test';
-		document.getElementById('testButton-2').label = 'Worlds';
-
-		var el = document.createElement('test-button');
-		el.id = 'manualButton';
-		el.label = 'manual';
-		document.body.appendChild(el);
-
-		var reinitButton = document.createElement("test-button");
-		reinitButton.id = "reinitButton";
-		reinitButton.label = "test";
-		reinitButton.appendChild(document.createElement('div'));
-		document.body.appendChild(reinitButton);
-		document.body.removeChild(reinitButton);
-		document.body.appendChild(reinitButton);
-
-		var dynamicChildren = document.createElement('child-wrapper');
-		var nestedParent = document.createElement('child-wrapper');
-		var topLevelChild = document.createElement('div');
-		var nestedChild = document.createElement('div');
-		dynamicChildren.id = 'dynamic-parent-element';
-		nestedParent.appendChild(nestedChild);
-		dynamicChildren.appendChild(nestedParent);
-		dynamicChildren.appendChild(topLevelChild);
-		topLevelChild.textContent = 'programmatic top level child';
-		nestedChild.textContent = 'programmatic nested child';
-		document.body.appendChild(dynamicChildren);
-		document.body.removeChild(dynamicChildren);
-		document.body.appendChild(dynamicChildren);
 	});
 </script>
 </body>

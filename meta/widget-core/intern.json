@@ -1,5 +1,5 @@
 {
-	"capabilities": {
+	"capabilities+": {
 		"project": "Dojo 2",
 		"name": "@dojo/widget-core"
 	},
@@ -12,27 +12,25 @@
 	"functionalSuites": [
 		"./_build/tests/functional/all.js"
 	],
-	"loader": {
-		"script": "dojo2",
-		"options": {
-			"packages": [
-				{ "name": "src", "location": "_build/src" },
-				{ "name": "tests", "location": "_build/tests" },
-				{ "name": "@dojo", "location": "node_modules/@dojo" },
-				{ "name": "cldr-data", "location": "node_modules/cldr-data" },
-				{ "name": "cldrjs", "location": "node_modules/cldrjs" },
-				{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" },
-				{ "name": "pepjs", "location": "node_modules/pepjs/dist", "main": "pep" },
-				{ "name": "intersection-observer", "location": "node_modules/intersection-observer", "main": "intersection-observer" },
-				{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" },
-				{ "name": "web-animations-js", "location": "node_modules/web-animations-js" }
-			],
-			"map": {
-				"globalize": {
-					"cldr": "cldrjs/dist/cldr",
-					"cldr/event": "cldrjs/dist/cldr/event",
-					"cldr/supplemental": "cldrjs/dist/cldr/supplemental",
-					"cldr/unresolved": "cldrjs/dist/cldr/unresolved"
+	"browser": {
+		"loader": {
+			"script": "./node_modules/grunt-dojo2/lib/intern/internLoader.js",
+			"options": {
+				"packages": [
+					{ "name": "src", "location": "_build/src" },
+					{ "name": "tests", "location": "_build/tests" },
+					{ "name": "cldr-data", "location": "node_modules/cldr-data" },
+					{ "name": "cldrjs", "location": "node_modules/cldrjs" },
+					{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" },
+					{ "name": "web-animations-js", "location": "node_modules/web-animations-js" }
+				],
+				"map": {
+					"globalize": {
+						"cldr": "cldrjs/dist/cldr",
+						"cldr/event": "cldrjs/dist/cldr/event",
+						"cldr/supplemental": "cldrjs/dist/cldr/supplemental",
+						"cldr/unresolved": "cldrjs/dist/cldr/unresolved"
+					}
 				}
 			}
 		}
