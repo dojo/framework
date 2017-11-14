@@ -1,5 +1,5 @@
 {
-	"capabilities": {
+	"capabilities+": {
 		"project": "Dojo 2",
 		"name": "@dojo/core",
 		"fixSessionCapabilities": false,
@@ -23,6 +23,7 @@
 	],
 
 	"browser": {
+		"loader": "./node_modules/grunt-dojo2/lib/intern/internLoader.js",
 		"suites+": [
 			"./_build/tests/unit/all-browser.js"
 		]
