@@ -4,12 +4,15 @@ const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 import {
 	assignChildProperties,
+	assignChildPropertiesByKey,
 	assignProperties,
 	compareProperty,
 	findIndex,
 	findKey,
 	replaceChild,
+	replaceChildByKey,
 	replaceChildProperties,
+	replaceChildPropertiesByKey,
 	replaceProperties
 } from '../../../src/support/d';
 
@@ -36,6 +39,57 @@ registerSuite('support/virtualDom', {
 			assert.throws(() => {
 				assignChildProperties(actual, 0, { target: '_blank' });
 			}, TypeError, 'Index of "0" is not resolving to a valid target');
+		}
+	},
+
+	'assignChildPropertiesByKey()': {
+		'by string key'() {
+			const actual = v('div', { key: 'a' }, [ null, v('a', { key: 'b', href: '#link' }) ]);
+
+			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key: 'b', href: '#link' }) ]));
+
+			assignChildPropertiesByKey(actual, 'b', { target: '_blank' });
+
+			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key: 'b', href: '#link', target: '_blank' }) ]));
+		},
+
+		'by object key'() {
+			const key = {};
+			const actual = v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]);
+
+			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]));
+
+			assignChildPropertiesByKey(actual, key, { target: '_blank' });
+
+			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key, href: '#link', target: '_blank' }) ]));
+		},
+
+		'does not resolve - string'() {
+			const actual = v('div', {}, [ v('a', { href: '#link' }) ]);
+
+			assert.throws(() => {
+				assignChildPropertiesByKey(actual, 'a', { target: '_blank' });
+			}, TypeError, 'Key of "a" is not resolving to a valid target');
+		},
+
+		'does not resolve - object'() {
+			const actual = v('div', {}, [ v('a', { href: '#link' }) ]);
+
+			assert.throws(() => {
+				assignChildPropertiesByKey(actual, {}, { target: '_blank' });
+			}, TypeError, 'Key of "{}" is not resolving to a valid target');
+		},
+
+		'duplicate key'() {
+			const actual = v('div', {}, [ v('a', { key: 'a' }), v('a', { key: 'a', href: '#link' }) ]);
+			const warnStub = stub(console, 'warn');
+
+			assignChildPropertiesByKey(actual, 'a', { target: '_blank' });
+			warnStub.restore();
+
+			assertRender(actual,  v('div', {}, [ v('a', { target: '_blank', key: 'a' }), v('a', { key: 'a', href: '#link' }) ]));
+			assert.isTrue(warnStub.calledOnce);
+			assert.deepEqual(warnStub.args, [ [ 'Duplicate key of "a" found.' ] ]);
 		}
 	},
 
@@ -155,6 +209,74 @@ registerSuite('support/virtualDom', {
 		}
 	},
 
+	'replaceChildByKey()': {
+		'by key'() {
+			const actual = v('div', { key: 'a' }, [ null, v('a', { key: 'b', href: '#link' }) ]);
+
+			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key: 'b', href: '#link' }) ]));
+
+			replaceChildByKey(actual, 'b', v('dfn'));
+
+			assertRender(actual, v('div', { key: 'a' }, [ null, v('dfn') ]), 'Didnt render correct vdom');
+		},
+
+		'by object key'() {
+			const key = {};
+			const actual = v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]);
+
+			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]));
+
+			replaceChildByKey(actual, key, v('dfn'));
+
+			assertRender(actual, v('div', { key: 'a' }, [ null,  v('dfn') ]));
+		},
+
+		'nested child'() {
+			const actual = v('div', { key: 'a' }, [ v('div', {}, [ v('div', { key: 'b' }) ]), v('a', { href: '#link' }) ]);
+
+			assertRender(actual, v('div', { key: 'a' }, [ v('div', {}, [ v('div', { key: 'b' }) ]), v('a', { href: '#link' }) ]));
+
+			replaceChildByKey(actual, 'b', 'baz');
+
+			assertRender(actual, v('div', { key: 'a' }, [ v('div', {}, [ 'baz' ]), v('a', { href: '#link' }) ]));
+		},
+
+		'duplicate key'() {
+			const actual = v('div', {}, [ v('a', { key: 'a' }), v('a', { key: 'a', href: '#link' }) ]);
+			const warnStub = stub(console, 'warn');
+
+			replaceChildByKey(actual, 'a', 'foo');
+			warnStub.restore();
+			assertRender(actual, v('div', {}, [ 'foo', v('a', { key: 'a', href: '#link' }) ]));
+			assert.isTrue(warnStub.calledOnce);
+			assert.isTrue(warnStub.calledWith('Duplicate key of "a" found.'));
+		},
+
+		'string key resolving to a non child node throws'() {
+			const actual = v('div', {}, [ v('span', {}, [ 'foobar' ]), v('a', { href: '#link' }) ]);
+
+			assert.throws(() => {
+				replaceChildByKey(actual, 'a', 'bar');
+			}, TypeError, 'Key of "a" is not resolving to a valid target');
+		},
+
+		'object key resolve to a non child node throws'() {
+			const actual = v('div', {}, [ v('span', {}, [ 'foobar' ]), v('a', { href: '#link' }) ]);
+
+			assert.throws(() => {
+				replaceChildByKey(actual, {}, 'bar');
+			}, TypeError, 'Key of "{}" is not resolving to a valid target');
+		},
+
+		'no children - should throw'() {
+			const actual = v('div', {});
+
+			assert.throws(() => {
+				replaceChildByKey(actual, 'key', 'foo');
+			}, TypeError, 'Target does not have children.');
+		}
+	},
+
 	'replaceChildProperties()': {
 		'by index'() {
 			const actual = v('div', {}, [ null, v('a', { href: '#link' }) ]);
@@ -175,6 +297,57 @@ registerSuite('support/virtualDom', {
 				replaceChildProperties(actual, 0, { target: '_blank' });
 			}, TypeError, 'Index of "0" is not resolving to a valid target');
 		}
+	},
+
+	'replaceChildPropertiesByKey()': {
+		'by string key'() {
+			const actual = v('div', { key: 'a' }, [ null, v('a', { key: 'b', href: '#link' }) ]);
+
+			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key: 'b', href: '#link' }) ]));
+
+			replaceChildPropertiesByKey(actual, 'b', { key: 'b', target: '_blank' });
+
+			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key: 'b', target: '_blank' }) ]));
+		},
+
+		'by object key'() {
+			const key = {};
+			const actual = v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]);
+
+			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]));
+
+			replaceChildPropertiesByKey(actual, key, { key, target: '_blank' });
+
+			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key, target: '_blank' }) ]));
+		},
+
+		'duplicate key'() {
+			const actual = v('div', {}, [ v('a', { key: 'a' }), v('a', { key: 'a', href: '#link' }) ]);
+			const warnStub = stub(console, 'warn');
+
+			replaceChildPropertiesByKey(actual, 'a', { key: 'a', prop: 'b' });
+			warnStub.restore();
+			assertRender(actual, v('div', {}, [ v('a', { key: 'a', prop: 'b' }), v('a', { key: 'a', href: '#link' }) ]));
+			assert.isTrue(warnStub.calledOnce);
+			assert.isTrue(warnStub.calledWith('Duplicate key of "a" found.'));
+		},
+
+		'string key resolving to a non child node throws'() {
+			const actual = v('div', {}, [ v('span', {}, [ 'foobar' ]), v('a', { href: '#link' }) ]);
+
+			assert.throws(() => {
+				replaceChildPropertiesByKey(actual, 'a', {});
+			}, TypeError, 'Key of "a" is not resolving to a valid target');
+		},
+
+		'object key resolve to a non child node throws'() {
+			const actual = v('div', {}, [ v('span', {}, [ 'foobar' ]), v('a', { href: '#link' }) ]);
+
+			assert.throws(() => {
+				replaceChildPropertiesByKey(actual, {}, {});
+			}, TypeError, 'Key of "{}" is not resolving to a valid target');
+		}
+
 	},
 
 	'replaceProperties()': {
@@ -222,7 +395,7 @@ registerSuite('support/virtualDom', {
 			assertRender(findKey(vnode, 'foo')!, w<any>('sub-widget', { key: 'foo', onClick() { } }), 'should find widget');
 		},
 
-		'duplicate keys warn'() {
+		'duplicate string keys warn'() {
 			const warnStub = stub(console, 'warn');
 
 			const fixture = v('div', { key: 'foo' }, [
@@ -238,6 +411,25 @@ registerSuite('support/virtualDom', {
 			assert.strictEqual(warnStub.callCount, 1, 'should have been called once');
 			assert.strictEqual(warnStub.lastCall.args[0], 'Duplicate key of "icon" found.', 'should have logged duplicate key');
 			warnStub.restore();
+		},
+
+		'duplicate object keys warn'() {
+			const warnStub = stub(console, 'warn');
+			const key = {};
+
+			const fixture = v('div', { key: 'foo' }, [
+				v('span', { key: 'parent1' }, [
+					v('i', { key, id: 'i1' })
+				]),
+				v('span', { key: 'parent2' }, [
+					v('i', { key, id: 'i2' })
+				])
+			]);
+
+			assertRender(findKey(fixture, key)!, v('i', { key, id: 'i1' }), 'should find first key');
+			assert.strictEqual(warnStub.callCount, 1, 'should have been called once');
+			assert.strictEqual(warnStub.lastCall.args[0], 'Duplicate key of "{}" found.', 'should have logged duplicate key');
+			warnStub.restore();
 		}
 	},
 
@@ -248,8 +440,8 @@ registerSuite('support/virtualDom', {
 		},
 
 		'no children returns undefined'() {
-			const actual = w('widget', {});
-			assert.isUndefined(findIndex(actual, 0));
+			assert.isUndefined(findIndex(v('div', {}), 0));
+			assert.isUndefined(findIndex(w('widget', {}), 0));
 		},
 
 		'by string deep index'() {

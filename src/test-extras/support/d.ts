@@ -4,13 +4,30 @@ import { isHNode, isWNode } from '@dojo/widget-core/d';
 import AssertionError from './AssertionError';
 import { CustomDiff } from './compare';
 
-export function assignChildProperties(target: WNode | HNode, index: number | string, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
-	const node = findIndex(target, index);
+type FoundNodeInfo<T extends DNode = DNode> = { found?: T, parent?: WNode | HNode | undefined, index?: number };
+
+function  assignChildPropertiesByKeyOrIndex(
+	target: WNode | HNode,
+	keyOrIndex: string | number | object,
+	properties: WidgetProperties | VirtualDomProperties,
+	byKey?: boolean
+) {
+	const { found: node } = findByKeyOrIndex(target, keyOrIndex, byKey);
+
 	if (!node || !(isWNode(node) || isHNode(node))) {
-		throw new TypeError(`Index of "${index}" is not resolving to a valid target`);
+		const keyOrIndexString = typeof keyOrIndex === 'object' ? JSON.stringify(keyOrIndex) : keyOrIndex;
+		throw new TypeError(`${(byKey || typeof keyOrIndex === 'object') ? 'Key' : 'Index'} of "${keyOrIndexString}" is not resolving to a valid target`);
 	}
 	assignProperties(node, properties);
 	return target;
+}
+
+export function assignChildProperties(target: WNode | HNode, index: number | string, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
+	return assignChildPropertiesByKeyOrIndex(target, index,  properties);
+}
+
+export function  assignChildPropertiesByKey(target: WNode | HNode,  key: string | object, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
+	return assignChildPropertiesByKeyOrIndex(target, key, properties, true);
 }
 
 export function assignProperties(target: HNode, properties: VirtualDomProperties): HNode;
@@ -35,81 +52,106 @@ export function compareProperty<T>(callback: (value: T, name: string, parent: Wi
 	return new CustomDiff(differ);
 }
 
+function replaceChildByKeyOrIndex(
+	target: WNode | HNode,
+	indexOrKey: number | string | object,
+	replacement: DNode,
+	byKey = false
+): WNode | HNode {
+	if (!target.children) {
+		throw new TypeError('Target does not have children.');
+	}
+
+	const { parent, index } = findByKeyOrIndex(target, indexOrKey, byKey);
+
+	if (!parent || typeof index === 'undefined' || !parent.children) {
+		if (byKey || typeof indexOrKey === 'object') {
+			throw new TypeError(`Key of "${typeof indexOrKey === 'object' ? JSON.stringify(indexOrKey) : indexOrKey}" is not resolving to a valid target`);
+		}
+		else {
+			throw new TypeError(`Index of "${indexOrKey}" is not resolving to a valid target`);
+		}
+	}
+	else {
+		parent.children[index] = replacement;
+	}
+
+	return target;
+}
+
+/**
+ * Finds the child of the target that has the provided key, and replaces it with the provided node.
+ *
+ * *NOTE:* The replacement modifies the passed `target` and does not return a new instance of the `DNode`.
+ * @param target The DNode to replace a child element on
+ * @param key The key of the node to replace
+ * @param replacement The DNode that replaces the found node
+ * @returns {WNode | HNode}
+ */
+export function replaceChildByKey(target: WNode | HNode, key: string | object, replacement: DNode): WNode | HNode {
+	return replaceChildByKeyOrIndex(target, key, replacement, true);
+}
+
 /**
  * Replace a child of DNode.
  *
  * *NOTE:* The replacement modifies the passed `target` and does not return a new instance of the `DNode`.
  * @param target The DNode to replace a child element on
- * @param index A number of the index of a child, or a string with comma separated indexes that would nagivate
+ * @param index A number of the index of a child, or a string with comma separated indexes that would navigate
  * @param replacement The DNode to be replaced
  */
 export function replaceChild(target: WNode | HNode, index: number | string, replacement: DNode): WNode | HNode {
-	/* TODO: [Combine with findIndex](https://github.com/dojo/test-extras/issues/28) */
-	if (!target.children) {
-		throw new TypeError('Target does not have children.');
-	}
-	if (typeof index === 'number') {
-		target.children[index] = replacement;
-	}
-	else {
-		const indexes = index.split(',').map(Number);
-		const lastIndex = indexes.pop()!;
-		const resolvedTarget = indexes.reduce((target, idx) => {
-			if (!(isWNode(target) || isHNode(target)) || !target.children) {
-				throw new TypeError(`Index of "${index}" is not resolving to a valid target`);
-			}
-			return target.children[idx];
-		}, <DNode> target);
-		if (!(isWNode(resolvedTarget) || isHNode(resolvedTarget)) || !resolvedTarget.children) {
-			throw new TypeError(`Index of "${index}" is not resolving to a valid target`);
-		}
-		resolvedTarget.children[lastIndex] = replacement;
-	}
-	return target;
+	return replaceChildByKeyOrIndex(target, index, replacement);
 }
 
-function hasChildren(value: any): value is WNode | HNode {
+function isNode(value: any): value is WNode | HNode {
 	return value && typeof value === 'object' && value !== null;
 }
 
-/**
- * Find a virtual DOM node (`WNode` or `HNode`) based on it having a matching `key` property.
- *
- * The function returns `undefined` if no node was found, otherwise it returns the node.  *NOTE* it will return the first node
- * matching the supplied `key`, but will `console.warn` if more than one node was found.
- */
-export function findKey(target: WNode | HNode, key: string | object): WNode | HNode | undefined {
+function findByKeyOrIndex(target: WNode | HNode, keyOrIndex: string | number | object, byKey = false) {
+	if (byKey || typeof keyOrIndex === 'object') {
+		return findByKey(target,  keyOrIndex);
+	}
+	else {
+		return findByIndex(target, keyOrIndex);
+	}
+}
+
+function findByKey(
+	target: WNode | HNode,
+	key: string | object | number,
+	parent?: WNode | HNode,
+	index?: number
+): FoundNodeInfo<WNode | HNode> {
 	if (target.properties.key === key) {
-		return target;
+		return { parent, found: target, index };
 	}
 	if (!target.children) {
-		return undefined;
+		return {};
 	}
-	let found: WNode | HNode | undefined;
+	let found: FoundNodeInfo<WNode | HNode> | undefined;
 	target.children
-		.forEach((child) => {
-			if (hasChildren(child)) {
+		.forEach((child, index) => {
+			if (isNode(child)) {
 				if (found) {
-					if (findKey(child, key)) {
-						console.warn(`Duplicate key of "${key}" found.`);
+					if (findByKey(child, key, target, index).found) {
+						console.warn(`Duplicate key of "${typeof key === 'object' ? JSON.stringify(key) : key }" found.`);
 					}
 				}
 				else {
-					found = findKey(child, key);
+					found = findByKey(child, key, target, index);
 				}
 			}
 		});
-	return found;
+	return found || {};
 }
 
-/**
- * Return a `DNode` that is identified by supplied index
- * @param target The target `WNode` or `HNode` to resolve the index for
- * @param index A number or a string indicating the child index
- */
-export function findIndex(target: WNode | HNode, index: number | string): DNode | undefined {
+function  findByIndex(
+	target: WNode | HNode,
+	index: number | string
+): FoundNodeInfo {
 	if (typeof index === 'number') {
-		return target.children ? target.children[index] : undefined;
+		return target.children  ? { parent: target, found: target.children[index], index } : {};
 	}
 	const indexes = index.split(',').map(Number);
 	const lastIndex = indexes.pop()!;
@@ -120,18 +162,59 @@ export function findIndex(target: WNode | HNode, index: number | string): DNode 
 		return target.children[idx];
 	}, target);
 	if (!(isWNode(resolvedTarget) || isHNode(resolvedTarget)) || !resolvedTarget.children) {
-		return;
+		return {};
 	}
-	return resolvedTarget.children[lastIndex];
+	return { parent: resolvedTarget, found: resolvedTarget.children[lastIndex], index: lastIndex };
+}
+
+/**
+ * Find a virtual DOM node (`WNode` or `HNode`) based on it having a matching `key` property.
+ *
+ * The function returns `undefined` if no node was found, otherwise it returns the node.  *NOTE* it will return the first node
+ * matching the supplied `key`, but will `console.warn` if more than one node was found.
+ */
+export function findKey(target: WNode | HNode, key: string | object): WNode | HNode | undefined {
+	const { found } = findByKey(target, key);
+	return found;
+}
+
+/**
+ * Return a `DNode` that is identified by supplied index
+ * @param target The target `WNode` or `HNode` to resolve the index for
+ * @param index A number or a string indicating the child index
+ */
+export function findIndex(target: WNode | HNode, index: number | string): DNode | undefined {
+	const { found } = findByIndex(target, index);
+	return found;
+}
+
+function replaceChildPropertiesByKeyOrIndex(
+	target: WNode | HNode,
+	indexOrKey: number | string | object,
+	properties: WidgetProperties | VirtualDomProperties,
+	byKey = false
+): WNode | HNode {
+	const { found } = findByKeyOrIndex(target, indexOrKey, byKey);
+
+	if (!found || !(isWNode(found) || isHNode(found))) {
+		if (byKey || typeof indexOrKey === 'object') {
+			throw new TypeError(`Key of "${typeof indexOrKey === 'object' ? JSON.stringify(indexOrKey) : indexOrKey}" is not resolving to a valid target`);
+		}
+		else {
+			throw new TypeError(`Index of "${indexOrKey}" is not resolving to a valid target`);
+		}
+	}
+
+	replaceProperties(found,  properties);
+	return target;
 }
 
 export function replaceChildProperties(target: WNode | HNode, index: number | string, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
-	const node = findIndex(target, index);
-	if (!node || !(isWNode(node) || isHNode(node))) {
-		throw new TypeError(`Index of "${index}" is not resolving to a valid target`);
-	}
-	replaceProperties(node, properties);
-	return target;
+	return replaceChildPropertiesByKeyOrIndex(target, index, properties);
+}
+
+export function  replaceChildPropertiesByKey(target: WNode | HNode, key: string | object, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
+	return replaceChildPropertiesByKeyOrIndex(target, key,  properties, true);
 }
 
 export function replaceProperties(target: HNode, properties: VirtualDomProperties): HNode;

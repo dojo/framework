@@ -422,6 +422,22 @@ const expected = v('div', [
 assignChildProperties(expected, '0,2', { classes: css.highlight });
 ```
 
+#### assignChildPropertiesByKey()
+
+Shallowly assigns properties of a `WNode` or `HNode` specified by its key. For example:
+
+```typescript
+const expected = v('div', [
+    v('ol', { type: 'I' }, [
+        v('li', { key: 'a', value: '3' }, [ 'foo' ]),
+        v('li', { }, [ 'bar' ]),
+        v('li', { }, [ 'baz' ])
+    ])
+]);
+
+assignChildPropertiesByKey(expected, 'a', { classes: css.highlight });
+```
+
 #### assignProperties()
 
 Shallowly assigns properties to a `WNode` or `HNode`.  For example:
@@ -528,6 +544,26 @@ replaceChild(expected, '0,0,0', 'qat');
 replaceChild(expected, '0,2', v('span'));
 ```
 
+#### replaceChildByKey()
+
+Replaces a child in a `WNode` or `HNode` with another, specified by a unique key. If more than one child has the same key,
+a warning will be logged but the first node found will be replaced.
+
+An example:
+
+```typescript
+const expected = v('div', [
+    v('ol', { type: 'I' }, [
+        v('li', { key: 'a', value: '3' }, [ 'foo' ]),
+        v('li', { key: 'b' }, [ 'bar' ]),
+        v('li', { }, [ 'baz' ])
+    ])
+]);
+
+replaceChildByKey(expected, 'a', 'qat');
+replaceChildByKey(expected, 'b', v('span'));
+```
+
 #### replaceChildProperties()
 
 Replace a map of properties on a child specified by the index.  The index can be either a number, or a string of numbers
@@ -543,8 +579,29 @@ const expected = v('div', [
     ])
 ]);
 
-assignChildProperties(expected, '0,2', {
+replaceChildProperties(expected, '0,2', {
     classes: css.highlight
+    value: '6'
+});
+```
+
+#### replaceChildPropertiesByKey()
+
+Replace a map of properties on a child specified by the key. Different than `assignChildPropertiesByKey` which *mixes-in* properties, this is a
+wholesale replacement. Since all properties are replaced, the key will be lost if not provided as part of the updated properties. For example:
+
+```typescript
+const expected = v('div', [
+    v('ol', { type: 'I' }, [
+        v('li', { value: '3' }, [ 'foo' ]),
+        v('li', { key: 'b' }, [ 'bar' ]),
+        v('li', { }, [ 'baz' ])
+    ])
+]);
+
+replaceChildPropertiesByKey(expected, 'b', {
+	key: 'b',
+    classes: css.highlight,
     value: '6'
 });
 ```
