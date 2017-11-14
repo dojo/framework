@@ -8,7 +8,7 @@ const locales = [
 
 const hasHostNode = has('host-node');
 const pathSeparator = hasHostNode ? require('path').sep : '/';
-const bundlePath = `tests${pathSeparator}support${pathSeparator}mocks${pathSeparator}common${pathSeparator}main`;
+const bundlePath = hasHostNode ? `${__dirname}${pathSeparator}main` : '_build/tests/support/mocks/common/main';
 
 const messages = {
 	hello: 'Hello',

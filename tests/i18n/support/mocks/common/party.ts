@@ -5,7 +5,7 @@ import has from '@dojo/core/has';
 // this case, `node_modules/@dojo/loader/loader.min.js'. Is there a better, less hacky way to handle this?
 const hasHostNode = has('host-node');
 const pathSeparator = hasHostNode ? require('path').sep : '/';
-const basePath = hasHostNode ? `..${pathSeparator}_build${pathSeparator}` : '';
+const basePath = hasHostNode ? require('path').resolve(__dirname, '../../../../') : `_/build/`;
 const bundlePath = `${basePath}tests${pathSeparator}support${pathSeparator}mocks${pathSeparator}common${pathSeparator}party`;
 
 const messages = {

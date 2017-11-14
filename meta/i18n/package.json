@@ -21,9 +21,9 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/core": "~0.1.0",
+    "@dojo/core": "~0.2.1",
     "@dojo/has": "~0.1.0",
-    "@dojo/shim": "~0.1.0"
+    "@dojo/shim": "~0.2.2"
   },
   "dependencies": {
     "globalize": "1.3.0"

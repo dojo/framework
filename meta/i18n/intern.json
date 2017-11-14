@@ -13,31 +13,29 @@
 	"functionalSuites": [
 		"./_build/tests/functional/**/*.js"
 	],
-	"loader": {
-		"script": "dojo2",
-		"options": {
-			"packages": [
-				{ "name": "src", "location": "_build/src" },
-				{ "name": "tests", "location": "_build/tests" },
-				{ "name": "cldr-data", "location": "node_modules/cldr-data" },
-				{ "name": "cldrjs", "location": "node_modules/cldrjs" },
-				{ "name": "@dojo", "location": "node_modules/@dojo" },
-				{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" },
-				{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
-			],
-			"map": {
-				"globalize": {
-					"cldr": "cldrjs/dist/cldr",
-					"cldr/event": "cldrjs/dist/cldr/event",
-					"cldr/supplemental": "cldrjs/dist/cldr/supplemental",
-					"cldr/unresolved": "cldrjs/dist/cldr/unresolved"
+	"coverage": [
+		"./_build/src/**/*.js"
+	],
+	"browser": {
+		"loader": {
+			"script": "./node_modules/grunt-dojo2/lib/intern/internLoader.js",
+			"options": {
+				"packages": [
+					{ "name": "cldr-data", "location": "node_modules/cldr-data" },
+					{ "name": "cldrjs", "location": "node_modules/cldrjs" },
+					{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" }
+				],
+				"map": {
+					"globalize": {
+						"cldr": "cldrjs/dist/cldr",
+						"cldr/event": "cldrjs/dist/cldr/event",
+						"cldr/supplemental": "cldrjs/dist/cldr/supplemental",
+						"cldr/unresolved": "cldrjs/dist/cldr/unresolved"
+					}
 				}
 			}
 		}
 	},
-	"coverage": [
-		"./_build/src/**/*.js"
-	],
 	"configs": {
 		"local": {
 			"tunnel": "selenium",
