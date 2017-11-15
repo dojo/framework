@@ -10,6 +10,8 @@
 		"removeComments": false,
 		"sourceMap": true,
 		"strict": true,
+		"importHelpers": true,
+		"downlevelIteration": true,
 		"target": "es5",
 		"lib": [
 			"dom",
