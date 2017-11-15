@@ -29,7 +29,7 @@
     "@dojo/core": "~0.2.1",
     "@dojo/has": "~0.1.0",
     "@dojo/shim": "~0.2.2",
-    "@dojo/widget-core": "~0.1.0"
+    "@dojo/widget-core": "~0.2.0"
   },
   "devDependencies": {
     "@dojo/interfaces": "~0.1.0",
@@ -42,6 +42,6 @@
     "grunt-dojo2": "latest",
     "intern": "~4.1.0",
     "sinon": "^1.17.4",
-    "typescript": "~2.4.1"
+    "typescript": "~2.5.3"
   }
 }

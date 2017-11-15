@@ -3,6 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { v } from '@dojo/widget-core/d';
 import { Registry } from '@dojo/widget-core/Registry';
+import { WNode } from '@dojo/widget-core/interfaces';
 
 import { registerRouterInjector } from '../../src/RouterInjector';
 import { MatchType } from '../../src/interfaces';
@@ -64,8 +65,8 @@ suite('Outlet', () => {
 			const outlet = new TestOutlet();
 			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
 			outlet.__setProperties__({});
-			const vNode = outlet.__render__();
-			assert.strictEqual(vNode, 'Main');
+			const dNode = outlet.__render__() as WNode;
+			assert.strictEqual(dNode.widgetConstructor, MainWidget);
 		});
 	});
 	test('renders index widget given an exact path match', () => {
@@ -79,8 +80,8 @@ suite('Outlet', () => {
 			const outlet = new TestOutlet();
 			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
 			outlet.__setProperties__({});
-			const vNode = outlet.__render__();
-			assert.strictEqual(vNode, 'Index');
+			const dNode = outlet.__render__() as WNode;
+			assert.strictEqual(dNode.widgetConstructor, IndexWidget);
 		});
 	});
 	test('renders main widget given an exact path match and no index component', () => {
@@ -93,8 +94,8 @@ suite('Outlet', () => {
 			const outlet = new TestOutlet();
 			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
 			outlet.__setProperties__({});
-			const vNode = outlet.__render__();
-			assert.strictEqual(vNode, 'Main');
+			const dNode = outlet.__render__() as WNode;
+			assert.strictEqual(dNode.widgetConstructor, MainWidget);
 		});
 	});
 	test('renders error widget given no path match and no index component', () => {
@@ -107,8 +108,8 @@ suite('Outlet', () => {
 			const outlet = new TestOutlet();
 			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
 			outlet.__setProperties__({});
-			const vNode = outlet.__render__();
-			assert.strictEqual(vNode, 'Error');
+			const dNode = outlet.__render__() as WNode;
+			assert.strictEqual(dNode.widgetConstructor, ErrorWidget);
 		});
 	});
 	test('renders null given a partial path match and no main component', () => {
@@ -121,8 +122,8 @@ suite('Outlet', () => {
 			const outlet = new TestOutlet();
 			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
 			outlet.__setProperties__({});
-			const vNode = outlet.__render__();
-			assert.isNull(vNode);
+			const dNode = outlet.__render__();
+			assert.isNull(dNode);
 		});
 	});
 	test('renders null when null outlet matches', () => {
@@ -135,8 +136,8 @@ suite('Outlet', () => {
 			const outlet = new TestOutlet();
 			outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
 			outlet.__setProperties__({});
-			const vNode = outlet.__render__();
-			assert.isNull(vNode);
+			const dNode = outlet.__render__();
+			assert.isNull(dNode);
 		});
 	});
 	test('params get passed to getProperties mapper and the returned object injected into widget as properties',
@@ -149,12 +150,11 @@ suite('Outlet', () => {
 				const outlet = new TestOutlet();
 				outlet.__setCoreProperties__({ bind: outlet, baseRegistry: registry });
 				outlet.__setProperties__({});
-				const vNode: any = outlet.__render__();
-				assert.strictEqual(vNode.text, 'Params');
-				assert.strictEqual(vNode.properties.router, router);
-				assert.strictEqual(vNode.properties.location, 'main/my-param');
-				assert.deepEqual(vNode.properties.params, { param: 'my-param' });
-				assert.strictEqual(vNode.properties.type, MatchType.INDEX);
+				const dNode: any = outlet.__render__();
+				assert.strictEqual(dNode.properties.router, router);
+				assert.strictEqual(dNode.properties.location, 'main/my-param');
+				assert.deepEqual(dNode.properties.params, { param: 'my-param' });
+				assert.strictEqual(dNode.properties.type, MatchType.INDEX);
 			});
 		});
 });

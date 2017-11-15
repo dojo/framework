@@ -42,34 +42,34 @@ suite('Link', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({ to: 'foo', registry });
-		const vNode: any = link.__render__();
-		assert.strictEqual(vNode.vnodeSelector, 'a');
-		assert.strictEqual(vNode.properties.href, 'foo');
+		const dNode: any = link.__render__();
+		assert.strictEqual(dNode.tag, 'a');
+		assert.strictEqual(dNode.properties.href, 'foo');
 	});
 	test('Generate link component for outlet with specified params', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({ to: 'foo2', params: { foo: 'foo' }, registry });
-		const vNode: any = link.__render__();
-		assert.strictEqual(vNode.vnodeSelector, 'a');
-		assert.strictEqual(vNode.properties.href, 'foo/foo');
+		const dNode: any = link.__render__();
+		assert.strictEqual(dNode.tag, 'a');
+		assert.strictEqual(dNode.properties.href, 'foo/foo');
 	});
 	test('Generate link component for fixed href', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({ to: '#foo/static', isOutlet: false, registry });
-		const vNode: any = link.__render__();
-		assert.strictEqual(vNode.vnodeSelector, 'a');
-		assert.strictEqual(vNode.properties.href, '#foo/static');
+		const dNode: any = link.__render__();
+		assert.strictEqual(dNode.tag, 'a');
+		assert.strictEqual(dNode.properties.href, '#foo/static');
 	});
 	test('Set router path on click', () => {
 		const link = new Link();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({ to: '#foo/static', isOutlet: false, registry });
-		const vNode: any = link.__render__();
-		assert.strictEqual(vNode.vnodeSelector, 'a');
-		assert.strictEqual(vNode.properties.href, '#foo/static');
-		vNode.properties.onclick.call(link, createMockEvent());
+		const dNode: any = link.__render__();
+		assert.strictEqual(dNode.tag, 'a');
+		assert.strictEqual(dNode.properties.href, '#foo/static');
+		dNode.properties.onclick.call(link, createMockEvent());
 		assert.isTrue(routerSetPathSpy.calledWith('#foo/static'));
 	});
 	test('Custom onClick handler can prevent default', () => {
@@ -82,10 +82,10 @@ suite('Link', () => {
 				event.preventDefault();
 			}
 		});
-		const vNode: any = link.__render__();
-		assert.strictEqual(vNode.vnodeSelector, 'a');
-		assert.strictEqual(vNode.properties.href, 'foo');
-		vNode.properties.onclick.call(link, createMockEvent());
+		const dNode: any = link.__render__();
+		assert.strictEqual(dNode.tag, 'a');
+		assert.strictEqual(dNode.properties.href, 'foo');
+		dNode.properties.onclick.call(link, createMockEvent());
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 	test('Does not set router path when target attribute is set', () => {
@@ -96,10 +96,10 @@ suite('Link', () => {
 			registry,
 			target: '_blank'
 		});
-		const vNode: any = link.__render__();
-		assert.strictEqual(vNode.vnodeSelector, 'a');
-		assert.strictEqual(vNode.properties.href, 'foo');
-		vNode.properties.onclick.call(link, createMockEvent());
+		const dNode: any = link.__render__();
+		assert.strictEqual(dNode.tag, 'a');
+		assert.strictEqual(dNode.properties.href, 'foo');
+		dNode.properties.onclick.call(link, createMockEvent());
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 	test('Does not set router path on right click', () => {
@@ -109,10 +109,10 @@ suite('Link', () => {
 			to: 'foo',
 			registry
 		});
-		const vNode: any = link.__render__();
-		assert.strictEqual(vNode.vnodeSelector, 'a');
-		assert.strictEqual(vNode.properties.href, 'foo');
-		vNode.properties.onclick.call(link, createMockEvent(true));
+		const dNode: any = link.__render__();
+		assert.strictEqual(dNode.tag, 'a');
+		assert.strictEqual(dNode.properties.href, 'foo');
+		dNode.properties.onclick.call(link, createMockEvent(true));
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 	test('throw error if the injected router cannot be found with the router key', () => {
