@@ -122,6 +122,12 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			onElementUpdated: (element: HTMLElement, key: string) => {
 				this.onElementUpdated(element, key);
 			},
+			onAttach: (): void => {
+				this.onAttach();
+			},
+			onDetach: (): void => {
+				this.onDetach();
+			},
 			nodeHandler: this._nodeHandler,
 			registry: () => {
 				return this.registry;
@@ -166,6 +172,14 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 * @param key The vdom node's key.
 	 */
 	protected onElementUpdated(element: Element, key: string): void {
+		// Do nothing by default.
+	}
+
+	protected onAttach(): void {
+		// Do nothing by default.
+	}
+
+	protected onDetach(): void {
 		// Do nothing by default.
 	}
 

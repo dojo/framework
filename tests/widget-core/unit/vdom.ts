@@ -20,7 +20,9 @@ const projectorStub: any = {
 		addRoot: stub()
 	},
 	onElementCreated: stub(),
-	onElementUpdated: stub()
+	onElementUpdated: stub(),
+	onAttach: stub(),
+	onDetach: stub()
 };
 
 widgetInstanceMap.set(projectorStub, projectorStub);
@@ -57,6 +59,10 @@ describe('vdom', () => {
 	beforeEach(() => {
 		projectorStub.nodeHandler.add.reset();
 		projectorStub.nodeHandler.addRoot.reset();
+		projectorStub.onElementCreated.reset();
+		projectorStub.onElementUpdated.reset();
+		projectorStub.onAttach.reset();
+		projectorStub.onDetach.reset();
 		consoleStub = stub(console, 'warn');
 		resolvers.stub();
 	});
@@ -775,6 +781,143 @@ describe('vdom', () => {
 			projection.update(widget.__render__() as HNode);
 			resolvers.resolve();
 			assert.strictEqual(barCreatedCount, 3);
+		});
+
+		it('calls onAttach when widget is rendered', () => {
+			let onAttachCallCount = 0;
+			class Foo extends WidgetBase {
+				onAttach() {
+					onAttachCallCount++;
+				}
+			}
+			const widget = new Foo();
+			const projection = dom.create(widget.__render__(), widget);
+			resolvers.resolve();
+			assert.strictEqual(onAttachCallCount, 1);
+			widget.invalidate();
+			projection.update(widget.__render__());
+			resolvers.resolve();
+			assert.strictEqual(onAttachCallCount, 1);
+		});
+
+		it('calls onDetach when widget is removed', () => {
+			let fooAttachCount = 0;
+			let fooDetachCount = 0;
+			let barAttachCount = 0;
+			let barDetachCount = 0;
+			let bazAttachCount = 0;
+			let bazDetachCount = 0;
+			let quxAttachCount = 0;
+			let quxDetachCount = 0;
+
+			class Qux extends WidgetBase {
+				onAttach() {
+					quxAttachCount++;
+				}
+
+				onDetach() {
+					quxDetachCount++;
+				}
+			}
+
+			class Foo extends WidgetBase {
+				onAttach() {
+					fooAttachCount++;
+				}
+
+				onDetach() {
+					fooDetachCount++;
+				}
+
+				render() {
+					return [
+						w(Qux, {}),
+						v('div', [
+							w(Qux, {})
+						])
+					];
+				}
+			}
+
+			class Bar extends WidgetBase {
+				onAttach() {
+					barAttachCount++;
+				}
+
+				onDetach() {
+					barDetachCount++;
+				}
+			}
+
+			class FooBar extends WidgetBase {
+
+			}
+
+			class Baz extends WidgetBase {
+				private _foo = false;
+
+				onAttach() {
+					bazAttachCount++;
+				}
+
+				onDetach() {
+					bazDetachCount++;
+				}
+
+				render() {
+					this._foo = !this._foo;
+					return v('div', [
+						w(FooBar, {}),
+						this._foo ? w(Foo, {}) : null,
+						w(FooBar, {}),
+						this._foo ? w(Foo, {}) : w(Bar, {})
+					]);
+				}
+			}
+			const widget = new Baz();
+			const projection = dom.create(widget.__render__(), widget);
+			resolvers.resolve();
+			assert.strictEqual(bazAttachCount, 1);
+			assert.strictEqual(bazDetachCount, 0);
+			assert.strictEqual(fooAttachCount, 2);
+			assert.strictEqual(fooDetachCount, 0);
+			assert.strictEqual(barAttachCount, 0);
+			assert.strictEqual(barDetachCount, 0);
+			assert.strictEqual(quxAttachCount, 4);
+			assert.strictEqual(quxDetachCount, 0);
+			widget.invalidate();
+			projection.update(widget.__render__());
+			resolvers.resolve();
+			assert.strictEqual(bazAttachCount, 1);
+			assert.strictEqual(bazDetachCount, 0);
+			assert.strictEqual(fooAttachCount, 2);
+			assert.strictEqual(fooDetachCount, 2);
+			assert.strictEqual(barAttachCount, 1);
+			assert.strictEqual(barDetachCount, 0);
+			assert.strictEqual(quxAttachCount, 4);
+			assert.strictEqual(quxDetachCount, 4);
+			widget.invalidate();
+			projection.update(widget.__render__());
+			resolvers.resolve();
+			assert.strictEqual(bazAttachCount, 1);
+			assert.strictEqual(bazDetachCount, 0);
+			assert.strictEqual(fooAttachCount, 4);
+			assert.strictEqual(fooDetachCount, 2);
+			assert.strictEqual(barAttachCount, 1);
+			assert.strictEqual(barDetachCount, 1);
+			assert.strictEqual(quxAttachCount, 8);
+			assert.strictEqual(quxDetachCount, 4);
+			widget.invalidate();
+			projection.update(widget.__render__());
+			resolvers.resolve();
+			assert.strictEqual(bazAttachCount, 1);
+			assert.strictEqual(bazDetachCount, 0);
+			assert.strictEqual(fooAttachCount, 4);
+			assert.strictEqual(fooDetachCount, 4);
+			assert.strictEqual(barAttachCount, 2);
+			assert.strictEqual(barDetachCount, 1);
+			assert.strictEqual(quxAttachCount, 8);
+			assert.strictEqual(quxDetachCount, 8);
 		});
 
 		it('remove elements for embedded WNodes', () => {

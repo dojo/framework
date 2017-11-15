@@ -28,7 +28,8 @@ widget-core is a library to create powerful, composable user interface widgets.
 - [Advanced Concepts](#advanced-concepts)
     - [Advanced Properties](#advanced-properties)
     - [Registry](#registry)
-    - [Render Lifecycle Hooks](#render-lifecycle-hooks)
+    - [Decorator Lifecycle Hooks](#decorator-lifecycle-hooks)
+    - [Method Lifecycle Hooks](#method-lifecycle-hooks)
     - [Containers](#containers--injectors)
     - [Decorators](#decorators)
     - [DOM Wrapper](#domwrapper)
@@ -708,7 +709,7 @@ class MyWidget extends WidgetBase {
 }
 ```
 
-### Lifecycle Hooks
+### Decorator Lifecycle Hooks
 
 Occasionally, in a mixin or a widget class, it my be required to provide logic that needs to be executed before properties are diffed using `beforeProperties` or either side of a widget's `render` call using `beforeRender` & `afterRender`.
 
@@ -768,6 +769,34 @@ class MyBaseClass extends WidgetBase<WidgetProperties> {
     myAfterRender(result: DNode): DNode {
         // do something with the result
         return result;
+    }
+}
+```
+
+### Method Lifecycle Hooks
+
+These lifecycle hooks are used by overriding methods in a widget class. Currently `onAttach` and `onDetach` are supported and provide callbacks for when a widget has been first attached and removed (destroyed) from the virtual dom.
+
+#### onAttach
+
+`onAttach` is called once when a widget is first rendered and attached to the DOM.
+
+```ts
+class MyClass extends WidgetBase {
+    onAttach() {
+        // do things when attached to the DOM
+    }
+}
+```
+
+#### onDetach
+
+`onDetach` is called when a widget is removed from the widget tree and therefore the DOM. `onDetach` is called recursively down the tree to ensure that even if a widget at the top of the tree is removed all the child widgets `onDetach` callbacks are fired.
+
+```ts
+class MyClass extends WidgetBase {
+    onDetach() {
+        // do things when removed from the DOM
     }
 }
 ```
