@@ -19,6 +19,8 @@
 		"removeComments": false,
 		"sourceMap": true,
 		"strictNullChecks": true,
+		"importHelpers": true,
+		"downlevelIteration": true,
 		"target": "es5",
 		"types": [ "intern" ]
 	},

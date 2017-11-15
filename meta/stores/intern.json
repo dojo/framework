@@ -1,5 +1,5 @@
 {
-	"capabilities": {
+	"capabilities+": {
 		"project": "Dojo 2",
 		"name": "@dojo/stores"
 	},
@@ -12,15 +12,15 @@
 	"functionalSuites": [
 		"./_build/tests/functional/all.js"
 	],
-	"loader": {
-		"script": "dojo2",
-		"options": {
-			"packages": [
-				{ "name": "src", "location": "_build/src" },
-				{ "name": "tests", "location": "_build/tests" },
-				{ "name": "@dojo", "location": "node_modules/@dojo" },
-				{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
-			]
+	"browser": {
+		"loader": {
+			"script": "./node_modules/grunt-dojo2/lib/intern/internLoader.js",
+			"options": {
+				"packages": [
+					{ "name": "src", "location": "_build/src" },
+					{ "name": "tests", "location": "_build/tests" }
+				]
+			}
 		}
 	},
 	"coverage": [
