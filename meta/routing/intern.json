@@ -1,5 +1,5 @@
 {
-	"capabilities": {
+	"capabilities+": {
 		"browserstack.debug": false,
 		"project": "Dojo 2",
 		"name": "@dojo/routing"
@@ -15,15 +15,13 @@
 			"./_build/tests/unit/all.js"
 		],
 		"loader": {
-			"script": "dojo2",
+			"script": "./node_modules/grunt-dojo2/lib/intern/internLoader.js",
 			"options": {
 				"packages": [
 					{ "name": "src", "location": "_build/src" },
 					{ "name": "tests", "location": "_build/tests" },
 					{ "name": "dojo", "location": "node_modules/intern/browser_modules/dojo" },
-					{ "name": "@dojo", "location": "node_modules/@dojo" },
-					{ "name": "maquette", "location": "node_modules/maquette/dist", "main": "maquette" },
-					{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
+					{ "name": "maquette", "location": "node_modules/maquette/dist", "main": "maquette" }
 				]
 			}
 		}

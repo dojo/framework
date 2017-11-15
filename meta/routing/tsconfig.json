@@ -16,6 +16,8 @@
 		"moduleResolution": "node",
 		"noImplicitAny": true,
 		"noImplicitThis": true,
+		"importHelpers": true,
+		"downlevelIteration": true,
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
