@@ -377,6 +377,7 @@ registerSuite('support/virtualDom', {
 
 		'key is in child'() {
 			assertRender(findKey(v('div', { key: 'bar' }, [ v('span', { key: 'foo' }), 'foo', null ]), 'foo')!, v('span', { key: 'foo' }), 'should find child node');
+			assertRender(findKey(v('div', { key: 'bar' }, [ v('span', { key: 'foo' }), v('span', { key: 'baz' }), 'foo', null ]), 'baz')!, v('span', { key: 'baz' }), 'should find child node');
 		},
 
 		'key is object'() {
@@ -426,7 +427,13 @@ registerSuite('support/virtualDom', {
 				])
 			]);
 
+			const noDuplicates = v('div', { key: 'foo' }, [
+				v('span', { key: 'parent1' }),
+				v('span', { key: 'parent2' })
+			]);
+
 			assertRender(findKey(fixture, key)!, v('i', { key, id: 'i1' }), 'should find first key');
+			assertRender(findKey(noDuplicates, 'parent2')!, v('span', { key: 'parent2' }), 'should find key');
 			assert.strictEqual(warnStub.callCount, 1, 'should have been called once');
 			assert.strictEqual(warnStub.lastCall.args[0], 'Duplicate key of "{}" found.', 'should have logged duplicate key');
 			warnStub.restore();

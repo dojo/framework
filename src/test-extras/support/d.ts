@@ -129,21 +129,21 @@ function findByKey(
 	if (!target.children) {
 		return {};
 	}
-	let found: FoundNodeInfo<WNode | HNode> | undefined;
+	let nodeInfo: FoundNodeInfo<WNode | HNode> | undefined;
 	target.children
 		.forEach((child, index) => {
 			if (isNode(child)) {
-				if (found) {
+				if (nodeInfo && nodeInfo.found) {
 					if (findByKey(child, key, target, index).found) {
 						console.warn(`Duplicate key of "${typeof key === 'object' ? JSON.stringify(key) : key }" found.`);
 					}
 				}
 				else {
-					found = findByKey(child, key, target, index);
+					nodeInfo = findByKey(child, key, target, index);
 				}
 			}
 		});
-	return found || {};
+	return nodeInfo || {};
 }
 
 function  findByIndex(
