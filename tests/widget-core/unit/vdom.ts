@@ -516,6 +516,72 @@ describe('vdom', () => {
 			assert.lengthOf(fooDiv.childNodes, 1);
 		});
 
+		it('Should insert nodes at correct position the previous widget returned null', () => {
+			class Foo extends WidgetBase {
+				render() {
+					return v('div', [ 'foo' ]);
+				}
+			}
+
+			class Bar extends WidgetBase {
+				render() {
+					return v('div', [ 'bar' ]);
+				}
+			}
+
+			class Baz extends WidgetBase<any> {
+				render() {
+					const { widget = 'default' } = this.properties;
+					return v('div', [
+						v('div', [ 'first' ]),
+						w(widget, {}),
+						w(widget, {}),
+						v('div', [ 'second' ]),
+						w(widget, {})
+					]);
+				}
+			}
+
+			const baseRegistry = new Registry();
+			baseRegistry.define('foo', Foo);
+			baseRegistry.define('bar', Bar);
+			const widget = new Baz();
+			widget.__setCoreProperties__({ bind: widget, baseRegistry });
+			const projection = dom.create(widget.__render__(), widget);
+			const root: any = projection.domNode.childNodes[0];
+			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
+			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'second');
+			widget.__setProperties__({ widget: 'other' });
+			projection.update(widget.__render__());
+			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
+			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'second');
+			widget.__setProperties__({ widget: 'foo' });
+			projection.update(widget.__render__());
+			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
+			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'foo');
+			assert.strictEqual(root.childNodes[2].childNodes[0].data, 'foo');
+			assert.strictEqual(root.childNodes[3].childNodes[0].data, 'second');
+			assert.strictEqual(root.childNodes[4].childNodes[0].data, 'foo');
+			widget.__setProperties__({ widget: 'bar' });
+			projection.update(widget.__render__());
+			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
+			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'bar');
+			assert.strictEqual(root.childNodes[2].childNodes[0].data, 'bar');
+			assert.strictEqual(root.childNodes[3].childNodes[0].data, 'second');
+			assert.strictEqual(root.childNodes[4].childNodes[0].data, 'bar');
+			widget.__setProperties__({ widget: 'other' });
+			projection.update(widget.__render__());
+			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
+			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'second');
+			widget.__setProperties__({ widget: 'bar' });
+			projection.update(widget.__render__());
+			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
+			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'bar');
+			assert.strictEqual(root.childNodes[2].childNodes[0].data, 'bar');
+			assert.strictEqual(root.childNodes[3].childNodes[0].data, 'second');
+			assert.strictEqual(root.childNodes[4].childNodes[0].data, 'bar');
+		});
+
 		it('should allow a widget returned from render', () => {
 
 			class Bar extends WidgetBase<any> {

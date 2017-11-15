@@ -602,9 +602,19 @@ function updateChildren(
 				let insertBefore: Node | undefined = undefined;
 				let child: InternalDNode = oldChildren[oldIndex];
 				if (child) {
+					let nextIndex = oldIndex + 1;
 					while (insertBefore === undefined) {
 						if (isWNode(child)) {
-							child = child.rendered[0];
+							if (child.rendered) {
+								child = child.rendered[0];
+							}
+							else if (oldChildren[nextIndex]) {
+								child = oldChildren[nextIndex];
+								nextIndex++;
+							}
+							else {
+								break;
+							}
 						}
 						else {
 							insertBefore = child.domNode;
