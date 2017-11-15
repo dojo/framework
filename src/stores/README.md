@@ -26,16 +26,16 @@ npm install @dojo/shim
  * Application state store designed to work with a reactive component architecture
  * Out of the box support for asynchronous commands
  * All state operations are recorded per process and undoable via a process callback
- * Supports the optimistic pattern with that can be rolled back on a failure
+ * Supports the optimistic pattern with the ability to roll back on a failure
  * Fully serializable operations and state
 
 ## Overview
 
 Dojo 2 stores is a predictable, consistent state container for Javascript applications with inspiration from Redux and Flux architectures. However Dojo 2 stores aims to provide more built in support for common patterns such as asynchronous behaviors, undo support and **more**!
 
-Managing state can become difficult to coordinate when an application becomes complicated with multiple views, widgets, components and models. With each of these attempting to update attributes of state at varying points within the application lifecycle things can get **confusing**. When state changes are hard to understand and/or non-deterministic it becomes increasingly difficult to identify and reproduce bug or add new features.
+Managing state can become difficult to coordinate when an application becomes complicated with multiple views, widgets, components and models. With each of these attempting to update attributes of state at varying points within the application lifecycle things can get **confusing**. When state changes are hard to understand and/or non-deterministic it becomes increasingly difficult to identify and reproduce bugs or add new features.
 
-Dojo 2 stores provides a centralized store is designed to be the **single source of truth** for an application and operates using uni-directional data flow. This means all application data follows the same lifecycle, ensuring the application logic is predictable and easy to understand.
+Dojo 2 stores provides a centralized store, designed to be the **single source of truth** for an application. It operates using uni-directional data flow. This means all application data follows the same lifecycle, ensuring the application logic is predictable and easy to understand.
 
 ## Basics
 
@@ -46,7 +46,7 @@ To work with the Dojo 2 store there are three core but simple concepts - Operati
  * `Command`
    * Simple functions that ultimately return operations needed to perform the required state change
  * `Process`
-   * A function that to execute a group of commands that usually represent a complete application behavior
+   * A function that executes a group of commands that usually represent a complete application behavior
 
 ### Operations
 
@@ -72,7 +72,7 @@ Dojo 2 stores provides a helper package that can generate `PatchOperation` objec
 
 Commands are simply functions which are called internally by the store when executing a `Process` and return an array of `PatchOperations` that tells the `store` what state changes needs to be performed.
 
-Each command is passed a `CommandRequest` which provides a `get` function for access to the stores state and a `payload` object which contains the an array of arguments that the process executor was called with.
+Each command is passed a `CommandRequest` which provides a `get` function for access to the stores state and a `payload` object which contains an array of the arguments that the process executor was called with.
 
 The `get` function returns back state for a given "path" or "selector", for example `get('/my/deep/state')` or `get('/my/array/item/9')`.
 
@@ -121,9 +121,9 @@ async function postTodoCommand({ get, payload: [ id ] }: CommandRequest): Promis
 
 ### Processes
 
-A `Process` is the construct used to execute commands against a `store` instance in order to make changes to the application state. `Processes` are created using the `createProcess` factory function that accepts an array of commands and an optional callback that can be used command to manage errors thrown from a command. The optional callback receives an `error` object and a `result` object. The `error` object contains the `error` stack and the command that caused the error. The `result` object contains the `payload` passed to the process, a function to undo the operations of the `process` and a function to execute an additional `process`.
+A `Process` is the construct used to execute commands against a `store` instance in order to make changes to the application state. `Processes` are created using the `createProcess` factory function that accepts an array of commands and an optional callback that can be used to manage errors thrown from a command. The optional callback receives an `error` object and a `result` object. The `error` object contains the `error` stack and the command that caused the error. The `result` object contains the `payload` passed to the process, a function to undo the operations of the `process` and a function to execute an additional `process`.
 
-The array of `Commands` that are executed in sequence by the store until the last Command is completed or a `Command` throws an error, these processes often represent an application behavior. For example adding a todo in a simple todo application which will be made up with multiple discreet commands.
+The array of `Commands` are executed in sequence by the store until the last Command is completed or a `Command` throws an error. These processes often represent an application behavior. For example adding a todo in a simple todo application which will be made up with multiple discreet commands.
 
 A simple `process` to add a todo and recalculate the todo count:
 
@@ -189,7 +189,7 @@ Although Dojo 2 stores is a big atom state store, you never get access to the en
 
 There is no concept of `reducers`, meaning that there is no confusion about where logic needs to reside between `reducers` and  `actions`. `Commands` are the only place that state logic resides and return `operations` that dictate what `state` changes are required and processed internally by the `store`.
 
-Additionally means that there is no need to coordinate `actions` and `reducers` using a string action key, commands are simple function references that can be reused in multiple `processes`.
+Additionally, this means that there is no need to coordinate `actions` and `reducers` using a string action key. Commands are simple function references that can be reused in multiple `processes`.
 
 ## Advanced
 
@@ -205,7 +205,7 @@ store.on('invalidate', () => {
 
 ### Undo Processes
 
-The store records undo operations for every `Command`, grouped by it's `Process`. The `undo` function is passed as part of the `result` argument in the `Process` callback.
+The store records undo operations for every `Command`, grouped by its `Process`. The `undo` function is passed as part of the `result` argument in the `Process` callback.
 
 ```ts
 function processCallback(error, result) {
@@ -304,7 +304,7 @@ const deleteTodoProcess = createProcess([ deleteTodoCommand, calculateCountsComm
 
 ### Executing concurrent commands
 
-A `Process` supports multiple commands to be executed concurrently by specifying the commands in an array when creating the process:
+A `Process` supports concurrent execution of multiple commands by specifying the commands in an array when creating the process:
 
 ```ts
 const myProcess = createProcess([ commandOne, [ concurrentCommandOne, concurrentCommandTwo ], commandTwo ]);
@@ -316,7 +316,7 @@ In this example, `commandOne` is executed, then both `concurrentCommandOne` and 
 
 ### Decorating Processes
 
-The `Process` callback provides a hook to apply generic/global functionality across multiple or all processes used within an application. This is done using higher order functions that wrap the process' local `callback` using the error and result payload to decorate or perform an action for all processes it used for.
+The `Process` callback provides a hook to apply generic/global functionality across multiple or all processes used within an application. This is done using higher order functions that wrap the process' local `callback` using the error and result payload to decorate or perform an action for all processes it is used for.
 
 Dojo 2 stores provides a simple `UndoManager` that collects the undo function for each process onto a single stack and exposes an `undoer` function that can be used to undo the last `process` executed. If the local `undo` function is called then it will be automatically removed from the managers stack.
 
@@ -333,13 +333,13 @@ const myOtherProcess = createProcess([ commandThree, commandFour ], undoCollecto
 undoer();
 ```
 
-Decorating `callbacks` can composed together to combine multiple units of functionality, such that in the example below `myProcess` would run the `error` and `result` through the `collector`, `logger` and then `snapshot` callbacks.
+`callback` decorators can be composed together to combine multiple units of functionality, such that in the example below `myProcess` would run the `error` and `result` through the `collector`, `logger` and then `snapshot` callbacks.
 
 ```ts
 const myProcess = createProcess([ commandOne, commandTwo ], collector(logger(snapshot())));
 ```
 
-#### Decorating Multiple Process
+#### Decorating Multiple Processes
 
 Specifying a `callback` decorator on an individual process explicitly works for targeted behavior but can become cumbersome when the decorator needs to be applied across multiple processes throughout the application.
 
@@ -352,7 +352,7 @@ const customCreateProcess = createProcessWith([ undoCollector, logger ]);
 const myProcess = customCreateProcess([ commandOne, commandTwo ]);
 ```
 
-An additional helper function `createCallbackDecorator` can be used to turn a simple `ProcessCallback` into a decorator that ensures passed callback is executed after the decorating `callback` has been run.
+An additional helper function `createCallbackDecorator` can be used to turn a simple `ProcessCallback` into a decorator that ensures the passed callback is executed after the decorating `callback` has been run.
 
 ```ts
 const myCallback = (error: ProcessError, result: ProcessResult) => {
