@@ -849,8 +849,6 @@ class App extends WidgetBase<AppProperties> {
 }
 ```
 
-**Please Note:** Do not use container as the top level application widget, containers always `render` which means that you will find your application is calling `render` upon every request animation frame, even when there is no need for an additional `render`.
-
 ### Decorators
 
 All core decorators provided by widget-core, can be used in non-decorator environments (Either JavaScript/ES6 or a TypeScript project that does not have the experimental decorators configuration set to true in the `tsconfig`) programmatically by calling them directly, usually within a Widget class' `constructor`.
