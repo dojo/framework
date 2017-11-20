@@ -22,7 +22,10 @@ const projectorStub: any = {
 	onElementCreated: stub(),
 	onElementUpdated: stub(),
 	onAttach: stub(),
-	onDetach: stub()
+	onDetach: stub(),
+	constructor: {
+		name: 'projectorStub'
+	}
 };
 
 widgetInstanceMap.set(projectorStub, projectorStub);
@@ -1031,13 +1034,6 @@ describe('vdom', () => {
 				}
 			}
 
-			const widgetName = (Foo as any).name;
-			let errorMsg = 'It is recommended to provide a unique \'key\' property when using the same widget multiple times as siblings';
-
-			if (widgetName) {
-				errorMsg = `It is recommended to provide a unique 'key' property when using the same widget (${widgetName}) multiple times as siblings`;
-			}
-
 			class Baz extends WidgetBase {
 
 				show = false;
@@ -1054,13 +1050,19 @@ describe('vdom', () => {
 				}
 			}
 
+			const widgetName = (Foo as any).name || 'unknown';
+			const parentName = (Baz as any).name || 'unknown';
+
+			const errorMsg = `A widget (${parentName}) has had a child addded or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${widgetName}) multiple times as siblings`;
+
 			const widget = new Baz();
 			const projection = dom.create(widget.__render__() as HNode, widget);
 			assert.isTrue(consoleStub.notCalled);
 			widget.invalidate();
 			widget.show = true;
 			projection.update(widget.__render__() as HNode);
-			assert.isTrue(consoleStub.calledTwice);
+			resolvers.resolve();
+			assert.isTrue(consoleStub.calledOnce);
 			assert.isTrue(consoleStub.calledWith(errorMsg));
 		});
 
@@ -2072,31 +2074,51 @@ describe('vdom', () => {
 		});
 
 		it('will throw an error when vdom is not sure which node is added', () => {
+			const widgetName = 'span';
+			const parentName = projectorStub.constructor.name || 'unknown';
+			const errorMsg = `A widget (${parentName}) has had a child addded or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${widgetName}) multiple times as siblings`;
+
 			const projection = dom.create(v('div', [
 				v('span', [ 'a' ]),
 				v('span', [ 'c' ])
 			]), projectorStub);
-			assert.throws(() => {
-				projection.update(v('div', [
-					v('span', [ 'a' ]),
-					v('span', [ 'b' ]),
-					v('span', [ 'c' ])
-				]));
-			});
+
+			assert.isTrue(consoleStub.notCalled);
+
+			projection.update(v('div', [
+				v('span', [ 'a' ]),
+				v('span', [ 'b' ]),
+				v('span', [ 'c' ])
+			]));
+
+			resolvers.resolve();
+
+			assert.isTrue(consoleStub.calledOnce);
+			assert.isTrue(consoleStub.calledWith(errorMsg));
 		});
 
 		it('will throw an error when vdom is not sure which node is removed', () => {
+			const widgetName = 'span';
+			const parentName = projectorStub.constructor.name || 'unknown';
+			const errorMsg = `A widget (${parentName}) has had a child addded or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${widgetName}) multiple times as siblings`;
+
 			const projection = dom.create(v('div', [
 				v('span', [ 'a' ]),
 				v('span', [ 'b' ]),
 				v('span', [ 'c' ])
 			]), projectorStub);
-			assert.throws(() => {
-				projection.update(v('div', [
-					v('span', [ 'a' ]),
-					v('span', [ 'c' ])
-				]));
-			});
+
+			assert.isTrue(consoleStub.notCalled);
+
+			projection.update(v('div', [
+				v('span', [ 'a' ]),
+				v('span', [ 'c' ])
+			]));
+
+			resolvers.resolve();
+
+			assert.isTrue(consoleStub.calledOnce);
+			assert.isTrue(consoleStub.calledWith(errorMsg));
 		});
 
 		it('allows a contentEditable tag to be altered', () => {
