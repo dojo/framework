@@ -455,16 +455,6 @@ export function filterAndDecorateChildren(children: undefined | DNode | DNode[],
 	return children as InternalDNode[];
 }
 
-function hasRenderChanged(previousRendered: InternalDNode[], rendered: InternalDNode | InternalDNode[]): boolean {
-	const arrayRender = Array.isArray(rendered);
-	if (arrayRender) {
-		return previousRendered !== rendered;
-	}
-	else {
-		return Array.isArray(previousRendered) && previousRendered[0] !== rendered;
-	}
-}
-
 function nodeAdded(dnode: InternalDNode, transitions: TransitionStrategy) {
 	if (isHNode(dnode) && dnode.properties) {
 		const enterAnimation = dnode.properties.enterAnimation;
@@ -807,12 +797,15 @@ function updateDom(previous: any, dnode: InternalDNode, projectionOptions: Proje
 			instance.__setChildren__(dnode.children);
 			instance.__setProperties__(dnode.properties);
 			dnode.instance = instance;
-			const rendered = instance.__render__();
-			dnode.rendered = filterAndDecorateChildren(rendered, instance);
-			if (hasRenderChanged(previousRendered, rendered)) {
+			if (instanceData.dirty === true) {
+				const rendered = instance.__render__();
+				dnode.rendered = filterAndDecorateChildren(rendered, instance);
 				updateChildren(parentHNode, previousRendered, dnode.rendered, instance, projectionOptions);
-				instanceData.nodeHandler.addRoot();
 			}
+			else {
+				dnode.rendered = previousRendered;
+			}
+			instanceData.nodeHandler.addRoot();
 		}
 		else {
 			createDom(dnode, parentHNode, undefined, projectionOptions, parentInstance);

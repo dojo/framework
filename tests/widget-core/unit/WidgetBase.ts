@@ -113,22 +113,6 @@ describe('WidgetBase', () => {
 			assert.lengthOf(renderResult.children, 1);
 			assert.strictEqual(renderResult.children![0], 'child');
 		});
-
-		it('returns cached DNode when widget is ', () => {
-			class TestWidget extends BaseTestWidget {
-				render() {
-					return v('my-app', [ 'child' ]);
-				}
-			}
-			const widget = new TestWidget();
-			const renderResult = widget.__render__();
-			const secondRenderResult = widget.__render__();
-			assert.strictEqual(secondRenderResult, renderResult);
-			widget.invalidate();
-			const thirdRenderResult = widget.__render__();
-			assert.notStrictEqual(thirdRenderResult, secondRenderResult);
-		});
-
 	});
 
 	describe('__setProperties__', () => {

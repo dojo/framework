@@ -5,6 +5,7 @@ import { PropertyChangeRecord } from './../../../src/interfaces';
 import { always, ignore } from './../../../src/diff';
 import { diffProperty } from './../../../src/decorators/diffProperty';
 import { WidgetBase } from './../../../src/WidgetBase';
+import { widgetInstanceMap } from './../../../src/vdom';
 
 interface TestProperties {
 	id?: string;
@@ -235,13 +236,12 @@ registerSuite('decorators/diffProperty', {
 		class TestWidget extends WidgetBase<TestProperties> { }
 
 		const widget = new TestWidget();
-		const renderResult = widget.__render__();
-
+		widget.__render__();
 		widget.__setProperties__({
 			foo: '',
 			id: ''
 		});
-		assert.strictEqual(renderResult, widget.__render__());
+		assert.isFalse(widgetInstanceMap.get(widget)!.dirty);
 	},
 
 	'properties that are deleted dont get returned'() {

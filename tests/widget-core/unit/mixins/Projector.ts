@@ -82,7 +82,7 @@ registerSuite('mixins/projectorMixin', {
 
 				result = 'my string';
 				renderedResult = projector.__render__() as HNode;
-				assert.strictEqual(renderedResult.tag, 'h1');
+				assert.strictEqual(renderedResult.tag, 'span');
 				assert.strictEqual(renderedResult.children![0], 'my string');
 			},
 			'null root node'() {

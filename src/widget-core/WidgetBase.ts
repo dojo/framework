@@ -80,8 +80,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 */
 	private _changedPropertyKeys: string[] = [];
 
-	private _cachedDNode: DNode | DNode[];
-
 	/**
 	 * map of decorators that are applied to this widget
 	 */
@@ -296,17 +294,15 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	public __render__(): DNode | DNode[] {
-		const instanceData = widgetInstanceMap.get(this)!;
 		this._renderState = WidgetRenderState.RENDER;
-		if (instanceData.dirty || this._cachedDNode === undefined) {
-			instanceData.dirty = false;
-			const render = this._runBeforeRenders();
-			let dNode = render();
-			this._cachedDNode = this.runAfterRenders(dNode);
-			this._nodeHandler.clear();
-		}
+		const instanceData = widgetInstanceMap.get(this)!;
+		instanceData.dirty = false;
+		const render = this._runBeforeRenders();
+		let dNode = render();
+		dNode = this.runAfterRenders(dNode);
+		this._nodeHandler.clear();
 		this._renderState = WidgetRenderState.IDLE;
-		return this._cachedDNode;
+		return dNode;
 	}
 
 	public invalidate(): void {
