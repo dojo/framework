@@ -37,15 +37,18 @@ class SubClassTestWidget extends TestWidget { }
 @theme(baseThemeClasses2)
 class StackedTestWidget extends ThemedMixin(WidgetBase)<ThemedProperties> { }
 
-@theme(baseThemeClasses1)
 @theme(baseThemeClasses3)
+@theme(baseThemeClasses1)
 class DuplicateThemeClassWidget extends ThemedMixin(WidgetBase)<ThemedProperties> { }
+
+@theme(baseThemeClasses3)
+class ExtendedThemeClassWidget extends TestWidget { }
 
 class NonDecoratorDuplicateThemeClassWidget extends ThemedMixin(WidgetBase)<ThemedProperties> {
 	constructor() {
 		super();
-		theme(baseThemeClasses3)(this);
 		theme(baseThemeClasses1)(this);
+		theme(baseThemeClasses3)(this);
 	}
 }
 
@@ -188,6 +191,13 @@ registerSuite('ThemedMixin', {
 					const flaggedClasses = ThemedInstance.theme([class1, class2]);
 					assert.deepEqual(flaggedClasses, [ duplicateClass1, class2 ]);
 				}
+			},
+			'extension'() {
+				const { class1, class2 } = baseThemeClasses1;
+				const { class1: duplicateClass1 } = baseThemeClasses3;
+				const ThemedInstance = new ExtendedThemeClassWidget();
+				const flaggedClasses = ThemedInstance.theme([class1, class2]);
+				assert.deepEqual(flaggedClasses, [ duplicateClass1, class2 ]);
 			}
 		},
 		'injecting a theme': {

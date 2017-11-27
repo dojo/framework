@@ -178,7 +178,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 				this._registeredBaseTheme = baseThemes.reduce((finalBaseTheme, baseTheme) => {
 					const { [THEME_KEY]: key, ...classes }  = baseTheme;
 					this._registeredBaseThemeKeys.push(key);
-					return { ...classes, ...finalBaseTheme };
+					return { ...finalBaseTheme, ...classes };
 				}, {});
 				this._baseThemeClassesReverseLookup = createThemeClassesLookup(baseThemes);
 			}
