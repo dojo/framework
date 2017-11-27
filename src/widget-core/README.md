@@ -1331,6 +1331,14 @@ or
 
 `grunt test:saucelabs`
 
+### Benchmarks
+
+To run the JavaScript benchmarks, run:
+
+`npm run benchmark`
+
+The benchmarking setup relies heavily on [js-framework-benchmark](https://github.com/krausest/js-framework-benchmark) from GitHub.
+
 ## Licensing Information
 
 © 2017 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.

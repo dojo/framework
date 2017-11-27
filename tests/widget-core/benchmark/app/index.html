@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>dojo2-v0.2.0-keyed</title>
+	<link href="../css/currentStyle.css" rel="stylesheet"/>
+</head>
+<body>
+	<div id="main"></div>
+	<script src="../../../../node_modules/@dojo/shim/util/amd.js"></script>
+	<script src="../../../../node_modules/@dojo/loader/loader.js"></script>
+	<script>
+		require.config(shimAmdDependencies({
+			baseUrl: '../../../../',
+			packages: [
+				{ name: '@dojo', location: '../../../../node_modules/@dojo' }
+			]
+		}));
+
+		require(['@dojo/shim/main'], function() {
+			require([ '_build/tests/benchmark/app/main' ], function () {});
+		});
+	</script>
+</body>
+</html>
