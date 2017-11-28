@@ -968,6 +968,75 @@ If the node has not yet been rendered, all values will contain `0`. If you need 
 const hasRootBeenRendered = this.meta(Dimensions).has('root');
 ```
 
+#### Drag
+
+The `Drag` meta allow a consuming widget to determine if its nodes are being dragged and by how much.  The meta provider abstracts away the need of dealing with modelling specific mouse, pointer, and touch events to create a drag state.
+
+```ts
+const dragResult = this.meta(Drag).get('root');
+```
+
+The drag information returned contains the following properties:
+
+|Property|Description|
+|-|-|
+|`delta`|An `x`/`y` position that contains the number of pixels the pointer has moved since the last read of the drag state.|
+|`isDragging`|If the pointer is currently _active_ in dragging the identified node.|
+|`start`|A position object that contains `x`/`y` positions for `client`, `offset`, `page`, and `screen` that provides the start positions that the `delta` movement refers to.  *Note* that `offset` and `page` are not supprted by all browsers and the meta provider does nothing to normalize this data, it simply copies it from the underlying events.|
+
+One common use case it to create a draggable node within a container:
+
+```ts
+interface ExampleWidget extends WidgetBaseProperties {
+    height: number;
+    top: number;
+    onScroll?(delta: number): void;
+}
+
+class VerticalScrollBar extends WidgetBase {
+    protected render() {
+        const { height, top, onScroll } = this.properties;
+        const dragResult = this.meta(Drag).get('slider');
+        onScroll && onScroll(dragResult.delta.y);
+        return v('div', {
+            classes: [ css.root, dragResult.isDragging ? css.dragging : null ],
+            key: 'root'
+        }, [
+            v('div', {
+                classes: [ css.slider ],
+                key: 'slider',
+                styles: {
+                    height: `${height}px`,
+                    top: `${top}px`
+                }
+            })
+        ])
+    }
+}
+
+class VerticalScrollBarController extends WidgetBase {
+    private _top: 0;
+    private _onScroll(delta: number) {
+        this._top += delta;
+        if (this._top < 0) {
+            this._top = 0;
+        }
+        this.invalidate();
+    }
+
+    protected render() {
+        return w(VerticalScrollBar, {
+            top: this._top,
+            width: 10,
+            onScroll: this._onScroll
+        });
+    }
+}
+```
+
+As can be seen in the above code, the meta provider simply provides information which the widgets can react to.  The implementation
+needs to react to these changes.
+
 #### Matches
 
 The `Matches` meta determines if the target of a DOM event matches a particular virtual DOM key.
