@@ -11,7 +11,7 @@ registerSuite('Polyfills', {
 	'Polyfills'() {
 		return this.remote
 			.get('/_build/tests/functional/polyfills.html')
-			.then(pollUntil(function () {
+			.then(pollUntil<{ pointerEvents: boolean; intersectionObserver: boolean; }>(function () {
 				return (<any> window).results;
 			}, undefined, 5000), undefined)
 			.then((results: CallbackResults) => {

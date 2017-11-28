@@ -13,19 +13,16 @@
 			"es2015.symbol.wellknown"
 		],
 		"downlevelIteration": true,
-		"noImplicitAny": true,
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
 		"target": "es5",
 		"moduleResolution": "node",
-		"strictNullChecks": true,
-		"noImplicitThis": true,
+		"strict": true,
 		"importHelpers": true,
 		"types": [ "intern" ]
 	},
 	"include": [
-		"./typings/index.d.ts",
 		"./src/**/*.ts",
 		"./tests/**/*.ts"
 	]

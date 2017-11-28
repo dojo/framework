@@ -218,15 +218,17 @@ registerSuite('string functions', {
 			assert.strictEqual(stringUtil.raw`The answer is:\n${answer}`, 'The answer is:\\n42',
 				'stringUtil.raw applied to template string should result in expected value');
 
-			function getCallSite(callSite: TemplateStringsArray, ...substitutions: any[]) {
-				return callSite;
+			function getCallSite(callSite: TemplateStringsArray, ...substitutions: any[]): TemplateStringsArray {
+				const result = [ ...callSite ];
+				(result as any).raw = callSite.raw;
+				return result as any;
 			}
 
 			let callSite = getCallSite`The answer is:\n${answer}`;
 			assert.strictEqual(stringUtil.raw(callSite), 'The answer is:\\n',
 				'stringUtil.raw applied with insufficient arguments should result in no substitution');
 
-			(<any> callSite).raw = [ 'The answer is:\\n' ];
+			(callSite as any).raw = [ 'The answer is:\\n' ];
 			assert.strictEqual(stringUtil.raw(callSite, 42), 'The answer is:\\n',
 				'stringUtil.raw applied with insufficient raw fragments should result in truncation before substitution');
 		}

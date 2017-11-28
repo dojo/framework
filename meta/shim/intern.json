@@ -1,5 +1,5 @@
 {
-	"capabilities": {
+	"capabilities+": {
 		"project": "Dojo 2",
 		"name": "@dojo/shim",
 		"fixSessionCapabilities": false,

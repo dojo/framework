@@ -24,7 +24,7 @@ if (!has('es6-symbol')) {
 	};
 
 	const defineProperties = Object.defineProperties;
-	const defineProperty: (o: any, p: string | symbol, attributes: PropertyDescriptor & ThisType<any>) => any = Object.defineProperty;
+	const defineProperty: (o: any, p: string | symbol, attributes: PropertyDescriptor & ThisType<any>) => any = Object.defineProperty as any;
 	const create = Object.create;
 
 	const objPrototype = Object.prototype;
