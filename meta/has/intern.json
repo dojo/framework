@@ -1,5 +1,5 @@
 {
-	"capabilities": {
+	"capabilities+": {
 		"project": "Dojo 2",
 		"name": "@dojo/has",
 		"fixSessionCapabilities": false,
@@ -44,7 +44,7 @@
 			"tunnel": "browserstack",
 
 			"environments+": [
-				{ "browserName": "internet explorer", "version": "11" },
+				{ "browserName": "internet explorer", "version": "11", "os": "WINDOWS", "os_version": [ "8.1", "10" ] },
 				{ "browserName": "edge" },
 				{ "browserName": "firefox", "platform": "WINDOWS" },
 				{ "browserName": "chrome", "platform": "WINDOWS" },

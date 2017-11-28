@@ -3,17 +3,14 @@ import { Require, Config } from './loader';
 /**
  * The valid return types from a feature test
  */
-export type FeatureTestResult = boolean | string | number | undefined;
+export type FeatureTestResult = boolean | string | number | undefined | void;
 
 /**
  * A function that tests for a feature and returns a result
  */
 export type FeatureTest = () => FeatureTestResult;
 
-export type FeatureTestThenable = {
-	then<U>(onFulfilled?: (value: FeatureTestResult) => U | FeatureTestThenable, onRejected?: (error: any) => U | FeatureTestThenable): FeatureTestThenable;
-	then<U>(onFulfilled?: (value: FeatureTestResult) => U | FeatureTestThenable, onRejected?: (error: any) => void): FeatureTestThenable;
-};
+export type FeatureTestThenable = PromiseLike<FeatureTestResult>;
 
 function isFeatureTestThenable(value: any): value is FeatureTestThenable {
 	return value && value.then;
@@ -33,7 +30,7 @@ export const testFunctions: { [feature: string]: FeatureTest } = {};
  * A cache of unresolved thenables (probably promises)
  * @type {{}}
  */
-const testThenables: { [feature: string]: FeatureTestThenable} = {};
+const testThenables: { [feature: string]: FeatureTestThenable } = {};
 
 export interface StaticHasFeatures {
 	[ feature: string ]: FeatureTestResult;

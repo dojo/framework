@@ -33,14 +33,14 @@ let alreadyCached: { [ feature: string ]: boolean };
 let alreadyTest: { [ feature: string ]: boolean };
 const feature = 'feature';  // default feature name for lazy devs
 
-const normalize: (id: string) => string = (<any> require).toAbsMid || ((id: string) => id);
+const normalize: (id: string) => string = (require as any).toAbsMid || ((id: string) => id);
 const undef: (id: string) => void = has('host-node') ?
 	(id: string) => {
 		const path = require('path');
 		delete require.cache[path.resolve(__dirname, id) + '.js'];
 	} :
 	(id: string) => {
-		(<any> require).undef((<any> require).toAbsMid(id));
+		(require as any).undef((require as any).toAbsMid(id));
 	};
 
 registerSuite('has', {
@@ -134,7 +134,7 @@ registerSuite('has', {
 
 			'null test should not throw'() {
 				assert.doesNotThrow(function () {
-					hasAdd('baz', <any> null);
+					hasAdd('baz', null as any);
 				}, TypeError);
 			},
 
@@ -153,13 +153,13 @@ registerSuite('has', {
 			'works with thenable'() {
 				const dfd = this.async();
 
-				const thenable = {
-					then(resolve: (_: number) => void) {
+				const thenable: PromiseLike<number> = {
+					then(resolve?: ((_: number) => void) | null) {
 						setTimeout(() => {
-							resolve(5);
+							resolve!(5);
 						}, 10);
 
-						return thenable;
+						return thenable as any;
 					}
 				};
 
@@ -174,13 +174,13 @@ registerSuite('has', {
 			'failed thenable removes itself from cache'() {
 				const dfd = this.async();
 
-				const thenable = {
-					then(_: (_: number) => void, reject: (_: Error) => void) {
+				const thenable: PromiseLike<number> = {
+					then(_?: ((_: number) => void) | null, reject?: ((_: Error) => void) | null) {
 						setTimeout(() => {
-							reject(new Error('test error'));
+							reject!(new Error('test error'));
 						}, 10);
 
-						return thenable;
+						return thenable as any;
 					}
 				};
 
@@ -241,20 +241,20 @@ registerSuite('has', {
 			},
 
 			'null test value counts as being defined'() {
-				hasAdd(feature, <any> null);
+				hasAdd(feature, null as any);
 				assert.isTrue(hasExists(feature));
 			},
 
 			'exists with thenabale'() {
 				const dfd = this.async();
 
-				const thenable = {
-					then(resolve: (_: number) => void) {
+				const thenable: PromiseLike<number> = {
+					then(resolve?: ((_: number) => void) | null) {
 						setTimeout(() => {
-							resolve(5);
+							resolve!(5);
 						}, 10);
 
-						return thenable;
+						return thenable as any;
 					}
 				};
 
@@ -342,7 +342,7 @@ registerSuite('has', {
 				hasAdd('abc', true);
 				const resourceId = 'src/has!abc?intern:intern!object';
 
-				hasLoad(resourceId, <any> stubbedRequire, loadedStub);
+				hasLoad(resourceId, stubbedRequire as any, loadedStub);
 				assert.isTrue(stubbedRequire.calledOnce, 'Require should be called once');
 				assert.isTrue(loadedStub.calledOnce, 'Load stub should be called once');
 				assert.isTrue(loadedStub.calledAfter(stubbedRequire), 'Load stub should be called after require');
@@ -354,7 +354,7 @@ registerSuite('has', {
 				const requireSpy = sinon.spy(require);
 				const loadedStub = sinon.stub();
 
-				hasLoad(<any> null, <any> require, loadedStub);
+				hasLoad(null as any, require as any, loadedStub);
 				assert.isTrue(loadedStub.calledOnce);
 				assert.isFalse(requireSpy.calledOnce);
 			}
