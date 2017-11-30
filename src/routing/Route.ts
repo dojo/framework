@@ -1,5 +1,4 @@
 import UrlSearchParams from '@dojo/core/UrlSearchParams';
-import { Thenable } from '@dojo/shim/interfaces';
 import WeakMap from '@dojo/shim/WeakMap';
 import {
 	Context,
@@ -20,7 +19,7 @@ import { findRouter, hasBeenAppended } from './lib/router';
 /**
  * The options for the route.
  */
-export interface RouteOptions<C, P extends Parameters> {
+export interface RouteOptions<C extends Context, P extends Parameters> {
 	/**
 	 * Path the route matches against. Pathname segments may be named, same for query parameters. Leading slashes are
 	 * ignored. Defaults to `/`.
@@ -44,7 +43,7 @@ export interface RouteOptions<C, P extends Parameters> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	exec?(request: Request<C, P>): void | Thenable<any>;
+	exec?(request: Request<C, P>): void | PromiseLike<any>;
 
 	/**
 	 * If specified, causes the route to be selected if there are no nested routes that match the remainder of
@@ -52,7 +51,7 @@ export interface RouteOptions<C, P extends Parameters> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	fallback?(request: Request<C, P>): void | Thenable<any>;
+	fallback?(request: Request<C, P>): void | PromiseLike<any>;
 
 	/**
 	 * Callback used to determine whether the route should be selected after it's been matched.
@@ -69,7 +68,7 @@ export interface RouteOptions<C, P extends Parameters> {
 	 * @param request An object whose `context` property contains the dispatch context. Extracted parameters are
 	 *   available under `params`.
 	 */
-	index?(request: Request<C, P>): void | Thenable<any>;
+	index?(request: Request<C, P>): void | PromiseLike<any>;
 
 	/**
 	 * Callback used for constructing the `params` object from extracted parameters, and validating the parameters.
@@ -113,14 +112,14 @@ export class Route<C extends Context, P extends Parameters> implements RouteInte
 	private _routes: Route<Context, Parameters>[];
 	private _trailingSlashMustMatch: boolean;
 	private _computeParams: (fromPathname: string[], searchParams: UrlSearchParams) => null | P | DefaultParameters;
-	private _exec?: Handler;
-	private _fallback?: Handler;
-	private _guard: ((request: Request<C, P | DefaultParameters>) => string | boolean) | undefined;
-	private _index?: Handler;
+	private _exec?: Handler<C, P>;
+	private _fallback?: Handler<C, P>;
+	private _guard?: (request: Request<C, P>) => string | boolean;
+	private _index?: Handler<C, P>;
 	private _defaultParams: P;
 
-	get parent() {
-		return parentMap.get(this);
+	get parent(this: Route<Context, Parameters>): Route<C, P> {
+		return parentMap.get(this) as any;
 	}
 
 	get path(this: Route<C, P>) {
@@ -176,7 +175,7 @@ export class Route<C extends Context, P extends Parameters> implements RouteInte
 			}
 
 			this._routes.push(route);
-			parentMap.set(route, this);
+			parentMap.set(route, this as any);
 		};
 
 		if (Array.isArray(add)) {
@@ -236,7 +235,7 @@ export class Route<C extends Context, P extends Parameters> implements RouteInte
 
 		const { params } = matchResult;
 		if (this._guard) {
-			const guardResult = this._guard({ context, params });
+			const guardResult = this._guard({ context, params: params as P });
 			if (typeof guardResult === 'string') {
 				return guardResult;
 			}

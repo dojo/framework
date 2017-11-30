@@ -211,11 +211,11 @@ suite('StateHistory', () => {
 	});
 
 	suite('popstate', () => {
-		let window: Window & Evented;
+		let window: Window & Evented<{}>;
 
 		beforeEach(() => {
 			const { history: contentWindowHistory, location: contentWindowLocation } = sandbox.contentWindow;
-			const createFauxWindow = class extends Evented {
+			const createFauxWindow = class extends Evented<{}> {
 				location = contentWindowLocation;
 				history = contentWindowHistory;
 			};

@@ -24,7 +24,7 @@ export class HashHistory extends HistoryBase implements History {
 	}
 
 	constructor({ window }: HashHistoryOptions = { window: global }) {
-		super({});
+		super();
 
 		const { location: browserLocation } = window;
 
@@ -40,6 +40,7 @@ export class HashHistory extends HistoryBase implements History {
 				this._current = path;
 				this.emit({
 					type: 'change',
+					target: this,
 					value: path
 				});
 			}
@@ -70,6 +71,7 @@ export class HashHistory extends HistoryBase implements History {
 		this._browserLocation.hash = this.prefix(path);
 		this.emit({
 			type: 'change',
+			target: this,
 			value: path
 		});
 	}
@@ -87,6 +89,7 @@ export class HashHistory extends HistoryBase implements History {
 
 		this.emit({
 			type: 'change',
+			target: this,
 			value: path
 		});
 	}

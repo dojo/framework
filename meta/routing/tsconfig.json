@@ -1,8 +1,10 @@
 {
 	"compilerOptions": {
 		"declaration": false,
+		"downlevelIteration": true,
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
+		"importHelpers": true,
 		"lib": [
 			"dom",
 			"es5",
@@ -14,25 +16,15 @@
 		],
 		"module": "umd",
 		"moduleResolution": "node",
-		"noImplicitAny": true,
-		"noImplicitThis": true,
-		"importHelpers": true,
-		"downlevelIteration": true,
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
-		"strictNullChecks": true,
+		"strict": true,
 		"target": "es5",
 		"types": [ "intern" ]
 	},
 	"include": [
 		"./src/**/*.ts",
-		"./tests/**/*.ts",
-		"./typings/index.d.ts"
-	],
-	"exclude": [
-		"_build",
-		"dist",
-		"node_modules"
+		"./tests/**/*.ts"
 	]
 }

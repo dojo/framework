@@ -201,7 +201,7 @@ suite('Router', () => {
 	});
 
 	test('dispatch() emits navstart event', () => {
-		const router = new Router();
+		const router = new Router<any>();
 
 		let received: NavigationStartEvent = null!;
 		router.on('navstart', event => {

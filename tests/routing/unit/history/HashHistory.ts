@@ -134,11 +134,11 @@ suite('HashHistory', () => {
 	});
 
 	suite('hashchange', () => {
-		let window: Window & Evented;
+		let window: Window & Evented<{}>;
 
 		beforeEach(() => {
 			const { location: contentWindowLocation } = sandbox.contentWindow;
-			const createFauxWindow = class extends Evented {
+			const createFauxWindow = class extends Evented<{}> {
 				location = contentWindowLocation;
 			};
 			window = <any> new createFauxWindow();

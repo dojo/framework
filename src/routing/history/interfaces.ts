@@ -1,20 +1,24 @@
 import { Evented } from '@dojo/core/Evented';
-import { EventedOptions, EventedListenerOrArray, EventedListenersMap } from '@dojo/interfaces/bases';
-import { EventTargettedObject, Handle } from '@dojo/interfaces/core';
+import { EventObject } from '@dojo/core/interfaces';
 
 export { BrowserHistory } from './_alias-ambient-history';
 
 /**
  * Event object that is emitted for the 'change' event.
  */
-export interface HistoryChangeEvent extends EventTargettedObject<History> {
+export interface HistoryChangeEvent extends EventObject<'change'> {
+	target: History;
 	/**
 	 * The new (current) value of the history. This is a path string.
 	 */
 	value: string;
 }
 
-export interface History extends Evented {
+export interface HistoryEventMap {
+	change: HistoryChangeEvent;
+}
+
+export interface History extends Evented<HistoryEventMap> {
 	/**
 	 * Get the current value. This is a path string.
 	 *
@@ -43,14 +47,6 @@ export interface History extends Evented {
 	 * Function that will normalize the path for the history manager
 	 */
 	normalizePath(path: string): string;
-
-	/**
-	 * Event emitted when the current value is changed, after the browser's history has
-	 * been updated.
-	 */
-	on(type: 'change', listener: EventedListenerOrArray<History, HistoryChangeEvent>): Handle;
-	on<T>(type: string, listener: EventedListenerOrArray<T, EventTargettedObject<T>>): Handle;
-	on<T>(listeners: EventedListenersMap<T>): Handle;
 }
 
-export interface HistoryOptions extends EventedOptions {}
+export interface HistoryOptions {}

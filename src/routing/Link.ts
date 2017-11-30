@@ -49,7 +49,7 @@ export class BaseLink extends WidgetBase<LinkProperties> {
 
 export function createLink(routerKey: any): Constructor<BaseLink> {
 	@inject({ name: routerKey, getProperties })
-	class Link extends BaseLink {};
+	class Link extends BaseLink {}
 	return Link;
 }
 

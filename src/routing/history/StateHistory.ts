@@ -60,7 +60,7 @@ export class StateHistory extends HistoryBase implements History {
 
 		this._current = value;
 		this._browserHistory.pushState({}, '', this.prefix(path));
-		this.emit({ type: 'change', value });
+		this.emit({ type: 'change', target: this, value });
 	}
 
 	replace(path: string) {
@@ -71,11 +71,11 @@ export class StateHistory extends HistoryBase implements History {
 
 		this._current = value;
 		this._browserHistory.replaceState({}, '', this.prefix(path));
-		this.emit({ type: 'change', value });
+		this.emit({ type: 'change', target: this, value });
 	}
 
 	constructor({ base = '/', window }: StateHistoryOptions = { window: global }) {
-		super({});
+		super();
 
 		if (base !== '/') {
 			if (/#/.test(base)) {
@@ -102,6 +102,7 @@ export class StateHistory extends HistoryBase implements History {
 				this._current = path;
 				this.emit({
 					type: 'change',
+					target: this,
 					value: path
 				});
 			}

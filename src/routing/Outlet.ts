@@ -39,7 +39,7 @@ export function Outlet<W extends WidgetBaseInterface, F extends WidgetBaseInterf
 	const errorComponent = isComponent(outletComponents) ? undefined : outletComponents.error;
 	function getProperties(this: WidgetBase, router: Router<any>, properties: any) {
 		return { router };
-	};
+	}
 
 	@inject({ name: routerKey, getProperties })
 	class OutletComponent extends WidgetBase<Partial<W['properties']> & { router: Router<any> }, null> {

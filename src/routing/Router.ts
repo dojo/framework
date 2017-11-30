@@ -4,25 +4,22 @@ import { assign } from '@dojo/shim/object';
 import { pausable, PausableHandle } from '@dojo/core/on';
 import UrlSearchParams from '@dojo/core/UrlSearchParams';
 import { includes } from '@dojo/shim/array';
-import { Thenable } from '@dojo/shim/interfaces';
 import Map from '@dojo/shim/Map';
 import Promise from '@dojo/shim/Promise';
-import { History, HistoryChangeEvent } from './history/interfaces';
+import { History } from './history/interfaces';
 import {
 	Context,
 	DispatchResult,
-	ErrorEvent,
 	LinkParams,
 	MatchType,
-	NavigationStartEvent,
 	OutletContext,
 	Parameters,
 	Request,
 	RouteConfig,
 	RouteInterface,
-	RouterEvents,
 	RouterInterface,
 	RouterOptions,
+	RouterEventMap,
 	SearchParams,
 	Selection,
 	StartOptions
@@ -49,8 +46,8 @@ function createDeferral() {
 	return { cancel, promise, resume };
 }
 
-function reportError(router: Router<Context>, context: Context, path: string, error: any) {
-	router.emit<ErrorEvent<Context>>({
+function reportError<C extends Context>(router: Router<C>, context: C, path: string, error: any) {
+	router.emit({
 		context,
 		error,
 		path,
@@ -59,7 +56,7 @@ function reportError(router: Router<Context>, context: Context, path: string, er
 	});
 }
 
-function catchRejection(router: Router<Context>, context: Context, path: string, thenable: void | Thenable<any>) {
+function catchRejection<C extends Context>(router: Router<C>, context: C, path: string, thenable: void | PromiseLike<any>) {
 	if (thenable) {
 		Promise.resolve(thenable).catch((error) => {
 			reportError(router, context, path, error);
@@ -67,11 +64,11 @@ function catchRejection(router: Router<Context>, context: Context, path: string,
 	}
 }
 
-export class Router<C extends Context> extends Evented implements RouterInterface<C> {
-	private _contextFactory: () => Context;
+export class Router<C extends Context, M extends RouterEventMap<C> = RouterEventMap<C>> extends Evented<M> implements RouterInterface<C> {
+	private _contextFactory: () => C;
 	private _currentSelection: Selection[];
 	private _dispatchFromStart: boolean;
-	private _fallback?: (request: Request<Context, Parameters>) => void | Thenable<any>;
+	private _fallback?: (request: Request<any, any>) => void | PromiseLike<any>;
 	private _history?: History;
 	private _routes: RouteInterface<Context, Parameters>[];
 	private _started?: boolean;
@@ -81,10 +78,8 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 	private _defaultParams: any = {};
 	private _defaultRoute: RouteInterface<any, any>;
 
-	on: RouterEvents<C>;
-
 	constructor(options: RouterOptions<C> = { }) {
-		super({});
+		super();
 		const { context, fallback, history, config } = options;
 
 		let contextFactory: () => C;
@@ -159,7 +154,7 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 			}
 
 			this._routes.push(route);
-			parentMap.set(route, this);
+			parentMap.set(route, this as any);
 		};
 
 		if (Array.isArray(add)) {
@@ -172,7 +167,7 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 		}
 	}
 
-	private _dispatch(context: Context, path: string, canceled: boolean = false, emit: boolean = true) {
+	private _dispatch(context: C, path: string, canceled: boolean = false, emit: boolean = true) {
 		if (canceled) {
 			return { success: false };
 		}
@@ -181,7 +176,7 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 		this._outletContextMap.clear();
 
 		if (emit) {
-			this.emit<NavigationStartEvent>({
+			this.emit({
 				context,
 				path,
 				target: this,
@@ -221,7 +216,7 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 						this._outletContextMap.set(errorOutlet, { type: MatchType.PARTIAL, params, location });
 					}
 				}
-				catchRejection(this, context, path, handler({ context, params }));
+				catchRejection<C>(this, context, path, handler({ context, params }));
 			}
 
 			return true;
@@ -252,7 +247,7 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 
 	}
 
-	dispatch(context: Context, path: string): Task<DispatchResult> {
+	dispatch(context: C, path: string): Task<DispatchResult> {
 		let canceled = false;
 		const cancel = () => {
 			canceled = true;
@@ -262,7 +257,7 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 
 		this._currentParams = {};
 		this._outletContextMap.clear();
-		this.emit<NavigationStartEvent>({
+		this.emit({
 			context,
 			cancel,
 			defer () {
@@ -529,7 +524,7 @@ export class Router<C extends Context> extends Evented implements RouterInterfac
 			return lastDispatch;
 		};
 
-		const listener = pausable(this._history, 'change', (event: HistoryChangeEvent) => {
+		const listener = pausable(this._history, 'change', (event) => {
 			dispatch(event.value);
 		});
 		this.own(listener);

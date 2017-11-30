@@ -22,7 +22,7 @@ export class MemoryHistory extends HistoryBase implements History {
 	}
 
 	constructor({ path: current }: MemoryHistoryOptions = { path: '' }) {
-		super({});
+		super();
 		this._current = current;
 	}
 
@@ -38,6 +38,7 @@ export class MemoryHistory extends HistoryBase implements History {
 		this._current = path;
 		this.emit({
 			type: 'change',
+			target: this,
 			value: path
 		});
 	}

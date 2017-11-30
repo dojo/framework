@@ -1,10 +1,8 @@
 import Task from '@dojo/core/async/Task';
-import Evented, { BaseEventedEvents } from '@dojo/core/Evented';
+import Evented from '@dojo/core/Evented';
 import { PausableHandle } from '@dojo/core/on';
 import UrlSearchParams from '@dojo/core/UrlSearchParams';
-import { EventedListener, EventedOptions } from '@dojo/interfaces/bases';
-import { EventErrorObject, EventTargettedObject, Handle, Hash } from '@dojo/interfaces/core';
-import { Thenable } from '@dojo/interfaces/shim';
+import { EventObject, EventErrorObject, Hash } from '@dojo/core/interfaces';
 import { Constructor, RegistryLabel, WidgetBaseInterface } from '@dojo/widget-core/interfaces';
 import { History } from './history/interfaces';
 import { DeconstructedPath } from './lib/path';
@@ -105,7 +103,8 @@ export interface DispatchDeferral {
 /**
  * Event object that is emitted for the 'navstart' event.
  */
-export interface NavigationStartEvent extends EventTargettedObject<RouterInterface<Context>> {
+export interface NavigationStartEvent extends EventObject<'navstart'> {
+	target: RouterInterface<Context>;
 	/**
 	 * The path that has been navigated to.
 	 */
@@ -131,7 +130,9 @@ export interface NavigationStartEvent extends EventTargettedObject<RouterInterfa
 /**
  * Event object that is emitted for the 'error' event.
  */
-export interface ErrorEvent<C extends Context> extends EventErrorObject<RouterInterface<C>> {
+export interface ErrorEvent<C extends Context> extends EventErrorObject<'error'> {
+	target: RouterInterface<C>;
+
 	/**
 	 * The context that was being dispatched when the error occurred.
 	 */
@@ -141,21 +142,6 @@ export interface ErrorEvent<C extends Context> extends EventErrorObject<RouterIn
 	 * The path that was being dispatched when the error occurred.
 	 */
 	path: string;
-}
-
-export interface RouterEvents<C extends Context> extends BaseEventedEvents {
-	/**
-	 * Event emitted when dispatch is called, but before routes are selected.
-	 */
-	(type: 'navstart', listener: EventedListener<RouterInterface<C>, NavigationStartEvent>): Handle;
-
-	/**
-	 * Event emitted when errors occur during dispatch.
-	 *
-	 * Certain errors may reject the task returned when dispatching, but this task is not always accessible and may
-	 * hide errors if it's canceled.
-	 */
-	(type: 'error', listener: EventedListener<RouterInterface<C>, ErrorEvent<C>>): Handle;
 }
 
 /**
@@ -209,7 +195,7 @@ export type LinkParams = Hash<string | string[] | undefined>;
 /**
  * The options for the router.
  */
-export interface RouterOptions<C extends Context> extends EventedOptions {
+export interface RouterOptions<C extends Context> {
 	/**
 	 * A Context object to be used for all requests, or a function that provides such an object, called for each
 	 * dispatch.
@@ -221,7 +207,7 @@ export interface RouterOptions<C extends Context> extends EventedOptions {
 	 * @param request An object whose `context` property contains the dispatch context. No extracted parameters
 	 *   are available.
 	 */
-	fallback?: (request: Request<C, Parameters>) => void | Thenable<any>;
+	fallback?: (request: Request<C, Parameters>) => void | PromiseLike<any>;
 
 	/**
 	 * The history manager. Routes will be dispatched in response to change events emitted by the manager.
@@ -264,9 +250,12 @@ export interface OutletContext {
 	params: any;
 }
 
-export interface RouterInterface<C extends Context> extends Evented {
-	on: RouterEvents<C>;
+export interface RouterEventMap<C> {
+	navstart: NavigationStartEvent;
+	error: ErrorEvent<C>;
+}
 
+export interface RouterInterface<C extends Context> extends Evented<RouterEventMap<C>> {
 	register(config: RouteConfig[], from: string | RouterInterface<any> | RouteInterface<any, any>): void;
 
 	append(add: RouteInterface<Context, Parameters> | RouteInterface<Context, Parameters>[]): void;
@@ -337,7 +326,7 @@ export enum MatchType {
 /**
  * A request handler.
  */
-export type Handler = (request: Request<Context, Parameters>) => void | Thenable<any>;
+export type Handler<C extends Context, P extends Parameters> = (request: Request<C, P>) => void | PromiseLike<any>;
 
 /**
  * Describes the selection of a particular route.
@@ -346,7 +335,7 @@ export interface Selection {
 	/**
 	 * Which handler should be called when the route is executed.
 	 */
-	handler: Handler;
+	handler: Handler<any, any>;
 
 	/**
 	 * The selected path.
