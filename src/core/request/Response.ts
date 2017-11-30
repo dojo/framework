@@ -1,7 +1,6 @@
 import Promise from '@dojo/shim/Promise';
 import Task from '../async/Task';
-import Headers from './Headers';
-import { Response as ResponseInterface, RequestOptions } from './interfaces';
+import { Headers, Response as ResponseInterface, RequestOptions } from './interfaces';
 import Observable from '../Observable';
 
 export interface ResponseData {

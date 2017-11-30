@@ -1,4 +1,4 @@
-import { Hash } from '@dojo/interfaces/core';
+import { Hash } from './interfaces';
 import { duplicate } from './lang';
 
 /**

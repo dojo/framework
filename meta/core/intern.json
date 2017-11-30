@@ -44,11 +44,11 @@
 			"tunnel": "browserstack",
 
 			"environments+": [
-				{ "browserName": "internet explorer", "version": "11", "os": "WINDOWS", "os_version": "8.1"},
-				{ "browserName": "internet explorer", "version": "11", "os": "WINDOWS", "os_version": "10"},
+				{ "browserName": "internet explorer", "version": "11", "os": "WINDOWS", "os_version": [ "8.1", "10" ] },
 				{ "browserName": "edge" },
 				{ "browserName": "firefox", "platform": "WINDOWS" },
-				{ "browserName": "chrome", "platform": "WINDOWS" }
+				{ "browserName": "chrome", "platform": "WINDOWS" },
+				{ "browserName": "safari", "version": "10.1", "platform": "MAC" }
 			],
 
 			"maxConcurrency": 5
@@ -56,17 +56,7 @@
 
 		"node-loader": {
 			"node": {
-				"loader": {
-					"script": "dojo2",
-					"options": {
-						"packages": [
-							{ "name": "src", "location": "_build/src" },
-							{ "name": "tests", "location": "_build/tests" },
-							{ "name": "@dojo", "location": "node_modules/@dojo" },
-							{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
-						]
-					}
-				},
+				"loader": "./node_modules/grunt-dojo2/lib/intern/internLoader.js",
 				"suites+": [
 					"./_build/tests/unit/all-node-loader.js"
 				]

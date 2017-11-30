@@ -77,6 +77,7 @@ export interface Response extends Body {
 	readonly status: number;
 	readonly statusText: string;
 	readonly url: string;
+	readonly requestOptions: RequestOptions;
 
 	readonly download: Observable<number>;
 	readonly data: Observable<any>;

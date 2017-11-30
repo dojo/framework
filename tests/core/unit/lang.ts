@@ -319,7 +319,7 @@ registerSuite('lang functions', {
 
 		assert.strictEqual(Object.getPrototypeOf(object), prototype);
 		assert.strictEqual(object.b, mixin.b);
-		assert.isTrue(Object.getOwnPropertyDescriptor(object, 'd').writable);
+		assert.isTrue(Object.getOwnPropertyDescriptor(object, 'd')!.writable);
 		assert.isUndefined(object.e);
 		assert.isUndefined(object.lorem);
 		assert.throw(function () {

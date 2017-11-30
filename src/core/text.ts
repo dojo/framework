@@ -1,7 +1,8 @@
 import Promise from '@dojo/shim/Promise';
 import has from './has';
 import request from './request';
-import { Config, Require } from '@dojo/interfaces/loader';
+import { NodeRequire, Require as AmdRequire, Config } from '@dojo/interfaces/loader';
+import { Require, isAmdRequire } from './load';
 
 declare const require: Require;
 
@@ -37,7 +38,7 @@ if (has('host-browser')) {
 	};
 }
 else if (has('host-node')) {
-	let fs = (<any> require).nodeRequire ? (<any> require).nodeRequire('fs') : require('fs');
+	let fs = isAmdRequire(require) && require.nodeRequire ? require.nodeRequire('fs') : (<NodeRequire> require)('fs');
 	getText = function(url: string, callback: (value: string) => void): void {
 		fs.readFile(url, { encoding: 'utf8' }, function(error: Error, data: string): void {
 			if (error) {
@@ -81,7 +82,7 @@ export function normalize(id: string, toAbsMid: (moduleId: string) => string): s
 	return (/^\./.test(url) ? toAbsMid(url) : url) + (parts[1] ? '!' + parts[1] : '');
 }
 
-export function load(id: string, require: Require, load: (value?: any) => void, config?: Config): void {
+export function load(id: string, require: AmdRequire, load: (value?: any) => void, config?: Config): void {
 	let parts = id.split('!');
 	let stripFlag = parts.length > 1;
 	let mid = parts[0];
@@ -104,10 +105,10 @@ export function load(id: string, require: Require, load: (value?: any) => void, 
 			pending[url].push(finish);
 		} else {
 			let pendingList = pending[url] = [finish];
-			getText(url, function(value: string) {
+			getText(url, function(value) {
 				textCache[mid] = textCache[url] = value;
 				for (let i = 0; i < pendingList.length; ) {
-					pendingList[i++](value);
+					pendingList[i++](value || '');
 				}
 				delete pending[url];
 			});

@@ -146,7 +146,7 @@ function findTests(findMethod: (items: any[], callback: iteration.Filterer<any>)
 
 				'mixed synchronous and asynchronous values': function (this: any) {
 					const expected: any = getExpectedSolution(this);
-					const values = [ createTriggerablePromise(), 'hello', createTriggerablePromise() ];
+					const values: [ ControlledPromise<string>, string, ControlledPromise<string> ] = [ createTriggerablePromise(), 'hello', createTriggerablePromise() ];
 					const iterable = getIterable(useIterator, values);
 					const promise = findMethod(iterable, helloWorldTest).then(function (result) {
 						assert.strictEqual(result, expected);
@@ -411,7 +411,7 @@ function reduceTests(reduceMethod: (items: (any | Promise<any>)[], callback: ite
 		'array-like value': arrayLikeTests,
 		'iterator value': getTests(true)
 	};
-};
+}
 
 function haltImmediatelyTests(haltingMethod: (items: (any | Promise<any>)[], callback: iteration.Filterer<any>) => Promise<boolean>, solutions: any): Tests {
 	function getParameters(test: any): any {

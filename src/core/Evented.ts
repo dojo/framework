@@ -1,26 +1,7 @@
-import { Actionable } from '@dojo/interfaces/abilities';
-import { EventedListener, EventedListenerOrArray, EventedListenersMap } from '@dojo/interfaces/bases';
-import { EventTargettedObject, EventErrorObject, Handle } from '@dojo/interfaces/core';
 import Map from '@dojo/shim/Map';
+import { Handle, EventType, EventObject } from './interfaces';
 import { on as aspectOn } from './aspect';
 import { Destroyable } from './Destroyable';
-
-/**
- * Determines is the value is Actionable (has a `.do` function)
- *
- * @param value the value to check
- * @returns boolean indicating is the value is Actionable
- */
-function isActionable(value: any): value is Actionable<any, any> {
-	return Boolean(value && typeof value.do === 'function');
-}
-
-/**
- * Resolve listeners.
- */
-function resolveListener<T, E extends EventTargettedObject<T>>(listener: EventedListener<T, E>): EventedCallback<E> {
-	return isActionable(listener) ? (event: E) => listener.do({ event }) : listener;
-}
 
 /**
  * Handles an array of handles
@@ -34,60 +15,6 @@ function handlesArraytoHandle(handles: Handle[]): Handle {
 			handles.forEach((handle) => handle.destroy());
 		}
 	};
-}
-
-/**
- * The base event object, which provides a `type` property
- */
-export interface EventObject {
-	/**
-	 * The type of the event
-	 */
-	readonly type: string | symbol;
-}
-
-export interface EventedCallback<E extends EventObject> {
-	/**
-	 * A callback that takes an `event` argument
-	 *
-	 * @param event The event object
-	 */
-	(event: E): boolean | void;
-}
-
-/**
- * Interface for Evented constructor options
- */
-export interface EventedOptions {
-	/**
-	 * Optional listeners to add
-	 */
-	listeners?: EventedListenersMap<any>;
-}
-
-export interface BaseEventedEvents {
-	/**
-	 * Regsister a callback for a specific event type
-	 *
-	 * @param listeners map of listeners
-	 */
-	(listeners: EventedListenersMap<Evented>): Handle;
-
-	/**
-	 * @param type the type of the event
-	 * @param listener the listener to attach
-	 */
-	(type: string | symbol, listener: EventedListenerOrArray<Evented, EventTargettedObject<Evented>>): Handle;
-
-	/**
-	 * @param type the type for `error`
-	 * @param listener the listener to attach
-	 */
-	(type: 'error', listener: EventedListenerOrArray<Evented, EventErrorObject<Evented>>): Handle;
-}
-
-export interface Evented {
-	on: BaseEventedEvents;
 }
 
 /**
@@ -117,36 +44,50 @@ export function isGlobMatch(globString: string | symbol, targetString: string | 
 	}
 }
 
+export type EventedCallback<T = EventType, E extends EventObject<T> = EventObject<T>> = {
+	/**
+	 * A callback that takes an `event` argument
+	 *
+	 * @param event The event object
+	 */
+
+	(event: E): boolean | void;
+};
+
+/**
+ * A type which is either a targeted event listener or an array of listeners
+ * @template T The type of target for the events
+ * @template E The event type for the events
+ */
+export type EventedCallbackOrArray<T = EventType, E extends EventObject<T> = EventObject<T>> = EventedCallback<T, E> | EventedCallback<T, E>[];
+
 /**
  * Event Class
  */
-export class Evented extends Destroyable implements Evented {
+export class Evented<M extends {} = {}, T = EventType, O extends EventObject<T> = EventObject<T>> extends Destroyable {
+
+	// The following member is purely so TypeScript remembers the type of `M` when extending so
+	// that the utilities in `on.ts` will work
+	// https://github.com/Microsoft/TypeScript/issues/20348
+	// tslint:disable-next-line
+	protected __typeMap__?: M;
 
 	/**
 	 * map of listeners keyed by event type
 	 */
-	protected listenersMap: Map<string, EventedCallback<EventObject>> = new Map<string, EventedCallback<EventObject>>();
-
-	/**
-	 * @constructor
-	 * @param options The constructor argurments
-	 */
-	constructor(options: EventedOptions = {}) {
-		super();
-		const { listeners } = options;
-		if (listeners) {
-			this.own(this.on(listeners));
-		}
-	}
+	protected listenersMap: Map<T | keyof M, EventedCallback<T, O> | EventedCallback<keyof M, M[keyof M]>> = new Map();
 
 	/**
 	 * Emits the event objet for the specified type
 	 *
 	 * @param event the event to emit
 	 */
-	emit<E extends EventObject>(event: E): void {
+	emit<K extends keyof M>(event: M[K]): void;
+	emit(event: O): void;
+	emit(event: any): void {
 		this.listenersMap.forEach((method, type) => {
-			if (isGlobMatch(type, event.type)) {
+			// Since `type` is generic, the compiler doesn't know what type it is and `isGlobMatch` requires `string | symbol`
+			if (isGlobMatch(type as any, event.type)) {
 				method.call(this, event);
 			}
 		});
@@ -170,26 +111,17 @@ export class Evented extends Destroyable implements Evented {
 	 *
 	 * @return {any}
 	 */
-	on: BaseEventedEvents = function (this: Evented, ...args: any[]) {
-		if (args.length === 2) {
-			const [ type, listeners ] = <[ string, EventedListenerOrArray<any, EventTargettedObject<any>>]> args;
-			if (Array.isArray(listeners)) {
-				const handles = listeners.map((listener) => aspectOn(this.listenersMap, type, resolveListener(listener)));
-				return handlesArraytoHandle(handles);
-			}
-			else {
-				return aspectOn(this.listenersMap, type, resolveListener(listeners));
-			}
-		}
-		else if (args.length === 1) {
-			const [ listenerMapArg ] = <[EventedListenersMap<any>]> args;
-			const handles = Object.keys(listenerMapArg).map((type) => this.on(type, listenerMapArg[type]));
+	on<K extends keyof M>(type: K, listener: EventedCallbackOrArray<K, M[K]>): Handle;
+	on(type: T, listener: EventedCallbackOrArray<T, O>): Handle;
+	on(type: any, listener: EventedCallbackOrArray<any, any>): Handle {
+		if (Array.isArray(listener)) {
+			const handles = listener.map((listener) => aspectOn(this.listenersMap, type, listener));
 			return handlesArraytoHandle(handles);
 		}
 		else {
-			throw new TypeError('Invalid arguments');
+			return aspectOn(this.listenersMap, type, listener);
 		}
-	};
+	}
 }
 
 export default Evented;

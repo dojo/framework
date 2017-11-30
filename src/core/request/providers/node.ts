@@ -1,4 +1,4 @@
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from '../../interfaces';
 import Set from '@dojo/shim/Set';
 import WeakMap from '@dojo/shim/WeakMap';
 import * as http from 'http';
@@ -323,7 +323,7 @@ export function getAuth(proxyAuth: string | undefined, options: NodeRequestOptio
 	return undefined;
 }
 
-export default function node(url: string, options: NodeRequestOptions = {}): UploadObservableTask<Response> {
+export default function node(url: string, options: NodeRequestOptions = {}): UploadObservableTask<NodeResponse> {
 	const parsedUrl = urlUtil.parse(options.proxy || url);
 
 	const requestOptions: HttpsOptions = {
@@ -377,7 +377,7 @@ export default function node(url: string, options: NodeRequestOptions = {}): Upl
 
 	const uploadObserverPool = new SubscriptionPool<number>();
 
-	const requestTask = <UploadObservableTask<Response>> new Task<Response>((resolve, reject) => {
+	const requestTask = <UploadObservableTask<NodeResponse>> new Task<NodeResponse>((resolve, reject) => {
 		let timeoutHandle: Handle;
 		let timeoutReject: Function = reject;
 
@@ -545,7 +545,7 @@ export default function node(url: string, options: NodeRequestOptions = {}): Upl
 									handleEncoding();
 								}
 								else if (encoding === 'gzip') {
-									zlib.gunzip(dataAsBuffer, function (err: Error, result: Buffer) {
+									zlib.gunzip(dataAsBuffer, function (err: Error | null, result: Buffer) {
 										if (err) {
 											reject(err);
 										}
@@ -555,7 +555,7 @@ export default function node(url: string, options: NodeRequestOptions = {}): Upl
 									});
 								}
 								else if (encoding === 'deflate') {
-									zlib.inflate(dataAsBuffer, function (err: Error, result: Buffer) {
+									zlib.inflate(dataAsBuffer, function (err: Error | null, result: Buffer) {
 										if (err) {
 											reject(err);
 										}

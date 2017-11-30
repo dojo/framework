@@ -1,4 +1,4 @@
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from './interfaces';
 import WeakMap from '@dojo/shim/WeakMap';
 import { createHandle } from './lang';
 
@@ -26,7 +26,7 @@ export interface Indexable {
 /**
  * The types of objects or maps where advice can be applied
  */
-export type Targetable = MapLike<string, any> | Indexable;
+export type Targetable = MapLike<string | symbol, any> | Indexable;
 
 type AdviceType = 'before' | 'after' | 'around';
 
@@ -210,7 +210,7 @@ function adviseJoinPoint<F extends GenericFunction<T>, T>(this: any, joinPoint: 
  * @param methodName The name of the method that the dispatcher should be resolved for
  * @return The dispatcher
  */
-function getDispatcherObject(target: Targetable, methodName: string): Dispatcher {
+function getDispatcherObject(target: Targetable, methodName: string | symbol): Dispatcher {
 	const existing = isMapLike(target) ? target.get(methodName) : target && target[methodName];
 	let dispatcher: Dispatcher;
 
@@ -345,7 +345,7 @@ function afterJoinPoint<F extends GenericFunction<T>, T>(joinPoint: F, advice: J
  * @param advice Advising function which will receive the original method's return value and arguments object
  * @return A handle which will remove the aspect when destroy is called
  */
-function afterObject(target: Targetable, methodName: string, advice: (originalReturn: any, originalArgs: IArguments) => any): Handle {
+function afterObject(target: Targetable, methodName: string | symbol, advice: (originalReturn: any, originalArgs: IArguments) => any): Handle {
 	return adviseObject(getDispatcherObject(target, methodName), 'after', advice);
 }
 
@@ -359,7 +359,7 @@ function afterObject(target: Targetable, methodName: string, advice: (originalRe
  * @param advice Advising function which will receive the original method's return value and arguments object
  * @return A handle which will remove the aspect when destroy is called
  */
-export function after(target: Targetable, methodName: string, advice: (originalReturn: any, originalArgs: IArguments) => any): Handle;
+export function after(target: Targetable, methodName: string | symbol, advice: (originalReturn: any, originalArgs: IArguments) => any): Handle;
 /**
  * Apply advice *after* the supplied joinPoint (function)
  *
@@ -367,12 +367,12 @@ export function after(target: Targetable, methodName: string, advice: (originalR
  * @param advice The after advice
  */
 export function after<F extends GenericFunction<T>, T>(joinPoint: F, advice: JoinPointAfterAdvice<T>): F;
-export function after<F extends GenericFunction<T>, T>(joinPointOrTarget: F | Targetable, methodNameOrAdvice: string | JoinPointAfterAdvice<T>, objectAdvice?: (originalReturn: any, originalArgs: IArguments) => any): Handle | F {
+export function after<F extends GenericFunction<T>, T>(joinPointOrTarget: F | Targetable, methodNameOrAdvice: string | symbol | JoinPointAfterAdvice<T>, objectAdvice?: (originalReturn: any, originalArgs: IArguments) => any): Handle | F {
 	if (typeof joinPointOrTarget === 'function') {
 		return afterJoinPoint(joinPointOrTarget, <JoinPointAfterAdvice<T>> methodNameOrAdvice);
 	}
 	else {
-		return afterObject(joinPointOrTarget, <string> methodNameOrAdvice, objectAdvice!);
+		return afterObject(joinPointOrTarget, <string | symbol> methodNameOrAdvice, objectAdvice!);
 	}
 }
 
@@ -394,7 +394,7 @@ export function aroundJoinPoint<F extends GenericFunction<T>, T>(joinPoint: F, a
  * @param advice Advising function which will receive the original function
  * @return A handle which will remove the aspect when destroy is called
  */
-export function aroundObject(target: Targetable, methodName: string, advice: ((previous: Function) => Function)): Handle {
+export function aroundObject(target: Targetable, methodName: string | symbol, advice: ((previous: Function) => Function)): Handle {
 	let dispatcher: Dispatcher | undefined = getDispatcherObject(target, methodName);
 	let previous = dispatcher.around;
 	let advised: Function | undefined;
@@ -425,7 +425,7 @@ export function aroundObject(target: Targetable, methodName: string, advice: ((p
  * @param advice Advising function which will receive the original function
  * @return A handle which will remove the aspect when destroy is called
  */
-export function around(target: Targetable, methodName: string, advice: ((previous: Function) => Function)): Handle;
+export function around(target: Targetable, methodName: string | symbol, advice: ((previous: Function) => Function)): Handle;
 /**
  * Apply advice *around* the supplied joinPoint (function)
  *
@@ -433,12 +433,12 @@ export function around(target: Targetable, methodName: string, advice: ((previou
  * @param advice The around advice
  */
 export function around<F extends GenericFunction<T>, T>(joinPoint: F, advice: JoinPointAroundAdvice<T>): F;
-export function around<F extends GenericFunction<T>, T>(joinPointOrTarget: F | Targetable, methodNameOrAdvice: string | JoinPointAroundAdvice<T>, objectAdvice?: ((previous: Function) => Function)): Handle | F {
+export function around<F extends GenericFunction<T>, T>(joinPointOrTarget: F | Targetable, methodNameOrAdvice: string | symbol | JoinPointAroundAdvice<T>, objectAdvice?: ((previous: Function) => Function)): Handle | F {
 	if (typeof joinPointOrTarget === 'function') {
 		return aroundJoinPoint(joinPointOrTarget, <JoinPointAroundAdvice<T>> methodNameOrAdvice);
 	}
 	else {
-		return aroundObject(joinPointOrTarget, <string> methodNameOrAdvice, objectAdvice!);
+		return aroundObject(joinPointOrTarget, <string | symbol> methodNameOrAdvice, objectAdvice!);
 	}
 }
 
@@ -460,7 +460,7 @@ export function beforeJoinPoint<F extends GenericFunction<any>>(joinPoint: F, ad
  * @param advice Advising function which will receive the same arguments as the original, and may return new arguments
  * @return A handle which will remove the aspect when destroy is called
  */
-export function beforeObject(target: Targetable, methodName: string, advice: (...originalArgs: any[]) => any[] | void): Handle {
+export function beforeObject(target: Targetable, methodName: string | symbol, advice: (...originalArgs: any[]) => any[] | void): Handle {
 	return adviseObject(getDispatcherObject(target, methodName), 'before', advice);
 }
 
@@ -472,7 +472,7 @@ export function beforeObject(target: Targetable, methodName: string, advice: (..
  * @param advice Advising function which will receive the same arguments as the original, and may return new arguments
  * @return A handle which will remove the aspect when destroy is called
  */
-export function before(target: Targetable, methodName: string, advice: (...originalArgs: any[]) => any[] | void): Handle;
+export function before(target: Targetable, methodName: string | symbol, advice: (...originalArgs: any[]) => any[] | void): Handle;
 /**
  * Apply advice *before* the supplied joinPoint (function)
  *
@@ -480,12 +480,12 @@ export function before(target: Targetable, methodName: string, advice: (...origi
  * @param advice The before advice
  */
 export function before<F extends GenericFunction<any>>(joinPoint: F, advice: JoinPointBeforeAdvice): F;
-export function before<F extends GenericFunction<T>, T>(joinPointOrTarget: F | Targetable, methodNameOrAdvice: string | JoinPointBeforeAdvice, objectAdvice?: ((...originalArgs: any[]) => any[] | void)): Handle | F {
+export function before<F extends GenericFunction<T>, T>(joinPointOrTarget: F | Targetable, methodNameOrAdvice: string | symbol | JoinPointBeforeAdvice, objectAdvice?: ((...originalArgs: any[]) => any[] | void)): Handle | F {
 	if (typeof joinPointOrTarget === 'function') {
 		return beforeJoinPoint(joinPointOrTarget, <JoinPointBeforeAdvice> methodNameOrAdvice);
 	}
 	else {
-		return beforeObject(joinPointOrTarget, <string> methodNameOrAdvice, objectAdvice!);
+		return beforeObject(joinPointOrTarget, <string | symbol> methodNameOrAdvice, objectAdvice!);
 	}
 }
 
@@ -499,6 +499,6 @@ export function before<F extends GenericFunction<T>, T>(joinPointOrTarget: F | T
  * @param advice Advising function which will receive the same arguments as the original method
  * @return A handle which will remove the aspect when destroy is called
  */
-export function on(target: Targetable, methodName: string, advice: (...originalArgs: any[]) => any): Handle {
+export function on(target: Targetable, methodName: string | symbol, advice: (...originalArgs: any[]) => any): Handle {
 	return adviseObject(getDispatcherObject(target, methodName), 'after', advice, true);
 }

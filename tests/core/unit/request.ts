@@ -1,22 +1,22 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import Task from '../../src/async/Task';
-import request, { providerRegistry, Response, Headers, RequestOptions } from '../../src/request';
-import { UploadObservableTask } from '../../src/request/interfaces';
+import request, { providerRegistry, Response, Headers, RequestOptions, UploadObservableTask } from '../../src/request';
+import ResponseClass from '../../src/request/Response';
 import Observable from '../../src/Observable';
 
 const mockData = '{ "foo": "bar" }';
 let handle: any;
 
-function mockProvider(url: string, options: RequestOptions): UploadObservableTask<Response> {
-	const task = <UploadObservableTask<Response>> Task.resolve(new class extends Response {
+function mockProvider(url: string, options?: RequestOptions): UploadObservableTask<Response> {
+	const task: UploadObservableTask<Response> = <any> Task.resolve(new class extends ResponseClass {
 		bodyUsed = false;
 		headers: Headers = new Headers();
 		ok = true;
 		status = 200;
 		statusText = 'OK';
 		url: string = url;
-		requestOptions = options;
+		requestOptions = options || {};
 
 		download = new Observable<number>(() => {});
 		data = new Observable<number>(() => {});
@@ -61,35 +61,35 @@ registerSuite('request', {
 			tests: {
 				'get'() {
 					return request.get('test.html').then(response => {
-						assert.equal((<any> response).requestOptions.method, 'GET');
+						assert.equal(response.requestOptions.method, 'GET');
 					});
 				},
 				'delete'() {
 					return request.delete('test.html').then(response => {
-						assert.equal((<any> response).requestOptions.method, 'DELETE');
+						assert.equal(response.requestOptions.method, 'DELETE');
 					});
 				},
 				'head'() {
 					return request.head('test.html').then(response => {
-						assert.equal((<any> response).requestOptions.method, 'HEAD');
+						assert.equal(response.requestOptions.method, 'HEAD');
 					});
 				},
 				'options'() {
 					return request.options('test.html').then(response => {
-						assert.equal((<any> response).requestOptions.method, 'OPTIONS');
+						assert.equal(response.requestOptions.method, 'OPTIONS');
 					});
 				},
 				'post'() {
 					return request.post('test.html', {
 						body: 'some body'
 					}).then(response => {
-						assert.equal((<any> response).requestOptions.method, 'POST');
-						assert.equal((<any> response).requestOptions.body, 'some body');
+						assert.equal(response.requestOptions.method, 'POST');
+						assert.equal(response.requestOptions.body, 'some body');
 					});
 				},
 				'put'() {
 					return request.put('test.html').then(response => {
-						assert.equal((<any> response).requestOptions.method, 'PUT');
+						assert.equal(response.requestOptions.method, 'PUT');
 					});
 				}
 			}
@@ -142,9 +142,9 @@ registerSuite('request', {
 
 			tests: {
 				'JSON matching'() {
-					return request.get('arbitrary.html').then(function (response: any) {
-						return response.json();
-					}).then((json: any) => {
+					return request.get('arbitrary.html').then(function (response) {
+						return response.json<{ foo: string; }>();
+					}).then((json) => {
 						assert.deepEqual(json, { foo: 'bar' }, 'JSON parsing should be automatically provided.');
 					});
 				}

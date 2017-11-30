@@ -1,6 +1,11 @@
 import Promise from './ExtensiblePromise';
 import { Thenable } from '@dojo/shim/interfaces';
 
+export type IdentityValue<T> = T | (() => T | Thenable<T>);
+export interface Identity<T> {
+	(value?: IdentityValue<T>): Promise<T>;
+}
+
 /**
  * Used for delaying a Promise chain for a specific number of milliseconds.
  *
@@ -8,17 +13,13 @@ import { Thenable } from '@dojo/shim/interfaces';
  * @return {function (value: T | (() => T | Thenable<T>)): Promise<T>} a function producing a promise that eventually returns the value or executes the value function passed to it; usable with Thenable.then()
  */
 export function delay<T>(milliseconds: number): Identity<T> {
-	return function (value?: T | (() => T | Thenable<T>)): Promise<T> {
+	return function (value?: IdentityValue<T>): Promise<T> {
 		return new Promise(function (resolve) {
 			setTimeout(function () {
 				resolve(typeof value === 'function' ? value() : value);
 			}, milliseconds);
 		});
 	};
-}
-
-export interface Identity<T> {
-	(value?: T | (() => T | Thenable<T>)): Promise<T>;
 }
 
 /**
@@ -30,9 +31,12 @@ export interface Identity<T> {
  */
 export function timeout<T>(milliseconds: number, reason: Error): Identity<T> {
 	const start = Date.now();
-	return function (value: T): Promise<T> {
+	return function (value?: IdentityValue<T>): Promise<T> {
 		if (Date.now() - milliseconds > start) {
 			return Promise.reject<T>(reason);
+		}
+		if (typeof value === 'function') {
+			return Promise.resolve(value());
 		}
 		return Promise.resolve(value);
 	};
@@ -57,4 +61,4 @@ export class DelayedRejection extends Promise<any> {
 			}, milliseconds);
 		});
 	}
-};
+}

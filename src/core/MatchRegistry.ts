@@ -1,4 +1,4 @@
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from './interfaces';
 
 /**
  * An entry in a MatchRegistry. Each Entry contains a test to determine whether the Entry is applicable, and a value for

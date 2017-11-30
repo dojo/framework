@@ -1,4 +1,4 @@
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from './interfaces';
 import { QueueItem, queueTask } from './queue';
 
 function getQueueHandle(item: QueueItem): Handle {

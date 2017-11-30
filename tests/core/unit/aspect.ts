@@ -2,15 +2,17 @@
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
+
 import * as sinon from 'sinon';
 import * as aspect from '../../src/aspect';
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from '../../src/interfaces';
 import Map from '@dojo/shim/Map';
+import { ObjectSuiteDescriptor } from 'intern/lib/interfaces/object';
 
 const slice = Array.prototype.slice;
 let obj: any;
 let methodSpy: any;
-let map: Map<string, (...args: any[]) => any>;
+let map: Map<string | symbol, (...args: any[]) => any>;
 
 function createBeforeSpy() {
 	return sinon.spy(function (a: number) {
@@ -18,14 +20,13 @@ function createBeforeSpy() {
 	});
 }
 
-registerSuite('aspect', {
-	'with indexable objects': {
-
+function indexableTests(property: string | symbol): ObjectSuiteDescriptor {
+	return {
 		beforeEach() {
 			methodSpy = sinon.spy(function (a: number) {
 				return a + 1;
 			});
-			obj = { method: methodSpy };
+			obj = { [property]: methodSpy };
 		},
 
 		tests: {
@@ -33,9 +34,9 @@ registerSuite('aspect', {
 				'return value passed as arguments'() {
 					let aspectSpy = createBeforeSpy();
 
-					aspect.before(obj, 'method', aspectSpy);
+					aspect.before(obj, property, aspectSpy);
 
-					obj.method(0);
+					obj[property](0);
 					assert.isTrue(aspectSpy.calledBefore(methodSpy));
 					assert.isTrue(aspectSpy.calledOnce);
 					assert.isTrue(methodSpy.calledOnce);
@@ -48,16 +49,16 @@ registerSuite('aspect', {
 					let receivedArgs: string[] = [];
 					let beforeCalled = false;
 					let obj = {
-						method: function (...args: string[]) {
+						[property]: function (...args: string[]) {
 							receivedArgs = args;
 						}
 					};
 
-					aspect.before(obj, 'method', function () {
+					aspect.before(obj, property, function () {
 						beforeCalled = true;
 					});
 
-					obj.method('foo', 'bar');
+					obj[property]('foo', 'bar');
 
 					assert.isTrue(beforeCalled,
 						'Before advice should be called before original function');
@@ -69,10 +70,10 @@ registerSuite('aspect', {
 					const aspectSpy1 = createBeforeSpy();
 					const aspectSpy2 = createBeforeSpy();
 
-					aspect.before(obj, 'method', aspectSpy1);
-					aspect.before(obj, 'method', aspectSpy2);
+					aspect.before(obj, property, aspectSpy1);
+					aspect.before(obj, property, aspectSpy2);
 
-					obj.method(5);
+					obj[property](5);
 					assert.isTrue(aspectSpy2.calledBefore(aspectSpy1));
 					assert.isTrue(aspectSpy1.calledBefore(methodSpy));
 					assert.strictEqual(aspectSpy2.lastCall.args[0], 5);
@@ -84,19 +85,19 @@ registerSuite('aspect', {
 				'multiple aspect.before() with removal inside handler'() {
 					let count = 0;
 
-					const handle1 = aspect.before(obj, 'method', function () {
+					const handle1 = aspect.before(obj, property, function () {
 						count++;
 					});
 
 					// FIXME: TDZ
-					var handle2 = aspect.before(obj, 'method', function () {
+					var handle2 = aspect.before(obj, property, function () {
 						handle2.destroy();
 						handle1.destroy();
 						count++;
 					});
 
 					assert.doesNotThrow(function () {
-						obj.method();
+						obj[property]();
 					});
 					assert.strictEqual(count, 1, 'Only one advising function should be called');
 				}
@@ -107,8 +108,8 @@ registerSuite('aspect', {
 					const expected = 'override!';
 					const aspectSpy = sinon.stub().returns(expected);
 
-					aspect.after(obj, 'method', aspectSpy);
-					assert.strictEqual(obj.method(0), expected);
+					aspect.after(obj, property, aspectSpy);
+					assert.strictEqual(obj[property](0), expected);
 					assert.isTrue(aspectSpy.calledAfter(methodSpy));
 				},
 
@@ -116,10 +117,10 @@ registerSuite('aspect', {
 					const aspectStub1 = sinon.stub();
 					const aspectStub2 = sinon.stub();
 
-					aspect.after(obj, 'method', aspectStub1);
-					aspect.after(obj, 'method', aspectStub2);
+					aspect.after(obj, property, aspectStub1);
+					aspect.after(obj, property, aspectStub2);
 
-					obj.method(0);
+					obj[property](0);
 					assert.isTrue(aspectStub1.calledAfter(methodSpy));
 					assert.isTrue(aspectStub2.calledAfter(aspectStub1));
 				},
@@ -130,18 +131,18 @@ registerSuite('aspect', {
 					let handle2: Handle;
 
 					// FIXME: TDZ
-					var handle1 = aspect.after(obj, 'method', function () {
+					var handle1 = aspect.after(obj, property, function () {
 						handle1.destroy();
 						handle2.destroy();
 						count++;
 					});
 
-					handle2 = aspect.after(obj, 'method', function () {
+					handle2 = aspect.after(obj, property, function () {
 						count++;
 					});
 
 					assert.doesNotThrow(function () {
-						obj.method();
+						obj[property]();
 					});
 					assert.strictEqual(count, 1, 'Only one advising function should be called');
 				},
@@ -150,8 +151,8 @@ registerSuite('aspect', {
 					const expected = 'expected';
 					const aspectStub = sinon.stub().returns(expected);
 
-					aspect.after(obj, 'method', aspectStub);
-					assert.strictEqual(obj.method(0), expected);
+					aspect.after(obj, property, aspectStub);
+					assert.strictEqual(obj[property](0), expected);
 					assert.isTrue(aspectStub.calledAfter(methodSpy));
 					assert.strictEqual(aspectStub.lastCall.args[0], 1);
 					assert.deepEqual(slice.call(aspectStub.lastCall.args[1]), methodSpy.lastCall.args);
@@ -164,9 +165,9 @@ registerSuite('aspect', {
 					const aroundFunction = sinon.stub().returns(expected);
 					const aspectStub = sinon.stub().returns(aroundFunction);
 
-					aspect.around(obj, 'method', aspectStub);
+					aspect.around(obj, property, aspectStub);
 
-					assert.strictEqual(obj.method(0), expected);
+					assert.strictEqual(obj[property](0), expected);
 					assert.isTrue(aspectStub.calledOnce);
 					assert.isTrue(aroundFunction.calledOnce);
 					assert.strictEqual(aroundFunction.firstCall.args[0], 0);
@@ -183,9 +184,9 @@ registerSuite('aspect', {
 				'advising function returns undefined, returns original result'() {
 					const aspectStub = sinon.stub();
 
-					aspect.on(obj, 'method', aspectStub);
+					aspect.on(obj, property, aspectStub);
 
-					assert.strictEqual(obj.method(0), 1);
+					assert.strictEqual(obj[property](0), 1);
 
 					assert.deepEqual(aspectStub.lastCall.args, methodSpy.lastCall.args);
 					assert.isTrue(methodSpy.calledOnce);
@@ -196,9 +197,9 @@ registerSuite('aspect', {
 				'advising function returns defined values, returns advising function result'() {
 					const aspectStub = sinon.stub().returns(2);
 
-					aspect.on(obj, 'method', aspectStub);
+					aspect.on(obj, property, aspectStub);
 
-					assert.strictEqual(obj.method(0), 2);
+					assert.strictEqual(obj[property](0), 2);
 					assert.deepEqual(aspectStub.lastCall.args, methodSpy.lastCall.args);
 					assert.isTrue(methodSpy.calledOnce);
 					assert.isTrue(aspectStub.calledOnce);
@@ -210,11 +211,11 @@ registerSuite('aspect', {
 					const aspectStub2 = sinon.stub();
 					const aspectStub3 = sinon.stub().returns(6);
 
-					aspect.on(obj, 'method', aspectStub1);
-					aspect.on(obj, 'method', aspectStub2);
-					aspect.on(obj, 'method', aspectStub3);
+					aspect.on(obj, property, aspectStub1);
+					aspect.on(obj, property, aspectStub2);
+					aspect.on(obj, property, aspectStub3);
 
-					assert.strictEqual(obj.method(0), 6);
+					assert.strictEqual(obj[property](0), 6);
 
 					assert.deepEqual(aspectStub1.lastCall.args, methodSpy.lastCall.args);
 					assert.deepEqual(aspectStub2.lastCall.args, methodSpy.lastCall.args);
@@ -232,14 +233,14 @@ registerSuite('aspect', {
 			'handle.destroy()': {
 				'prevents aspect from being called'() {
 					const aspectSpy = createBeforeSpy();
-					const handle = aspect.before(obj, 'method', aspectSpy);
+					const handle = aspect.before(obj, property, aspectSpy);
 
-					obj.method(0);
-					assert.notEqual(obj.method, methodSpy);
+					obj[property](0);
+					assert.notEqual(obj[property], methodSpy);
 
 					handle.destroy();
-					obj.method(1);
-					assert.notEqual(obj.method, methodSpy);
+					obj[property](1);
+					assert.notEqual(obj[property], methodSpy);
 					assert.isTrue(methodSpy.calledTwice);
 					assert.isTrue(aspectSpy.calledOnce);
 				},
@@ -247,12 +248,12 @@ registerSuite('aspect', {
 				'can remove an aspect from the middle of a list'() {
 					const aspectSpy1 = createBeforeSpy();
 					const aspectSpy2 = createBeforeSpy();
-					const handle = aspect.before(obj, 'method', aspectSpy1);
+					const handle = aspect.before(obj, property, aspectSpy1);
 
-					aspect.before(obj, 'method', aspectSpy2);
+					aspect.before(obj, property, aspectSpy2);
 					handle.destroy();
 
-					obj.method(0);
+					obj[property](0);
 					assert.isTrue(methodSpy.called);
 					assert.isTrue(aspectSpy2.called);
 					assert.isFalse(aspectSpy1.called);
@@ -261,36 +262,37 @@ registerSuite('aspect', {
 				'removing a aspect stub'() {
 					const obj: any = {};
 					const aspectSpy = sinon.stub();
-					aspect.before(obj, 'method', sinon.stub());
-					const handle = aspect.before(obj, 'method', aspectSpy);
+					aspect.before(obj, property, sinon.stub());
+					const handle = aspect.before(obj, property, aspectSpy);
 
 					handle.destroy();
-					obj.method(0);
+					obj[property](0);
 					assert.isFalse(aspectSpy.called);
 				},
 
 				'removing the first of multiple aspects'() {
 					const aroundFunction = sinon.stub();
 					const aspectStub = sinon.stub().returns(aroundFunction);
-					const handle = aspect.around(obj, 'method', aspectStub);
+					const handle = aspect.around(obj, property, aspectStub);
 
 					handle.destroy();
-					obj.method(0);
+					obj[property](0);
 					assert.isTrue(aspectStub.calledOnce);
 					assert.isTrue(methodSpy.calledOnce);
 					assert.isFalse(aroundFunction.called);
 				}
 			}
 		}
-	},
+	};
+}
 
-	'with maps': {
-
+function mapTests(property: string | symbol): ObjectSuiteDescriptor {
+	return {
 		beforeEach() {
 			methodSpy = sinon.spy(function (a: number) {
 				return a + 1;
 			});
-			map = new Map([ [ 'method', methodSpy ] ]);
+			map = new Map([ [ property, methodSpy ] ]);
 		},
 
 		tests: {
@@ -298,9 +300,9 @@ registerSuite('aspect', {
 				'return value passed as arguments'() {
 					let aspectSpy = createBeforeSpy();
 
-					aspect.before(map, 'method', aspectSpy);
+					aspect.before(map, property, aspectSpy);
 
-					const method = map.get('method');
+					const method = map.get(property);
 					method && method(0);
 					assert.isTrue(aspectSpy.calledBefore(methodSpy));
 					assert.isTrue(aspectSpy.calledOnce);
@@ -313,15 +315,15 @@ registerSuite('aspect', {
 				'no return value from advising function'() {
 					let receivedArgs: string[] = [];
 					let beforeCalled = false;
-					map = new Map([ [ 'method', function (...args: string[]) {
+					map = new Map([ [ property, function (...args: string[]) {
 							receivedArgs = args;
 						} ] ]);
 
-					aspect.before(map, 'method', function () {
+					aspect.before(map, property, function () {
 						beforeCalled = true;
 					});
 
-					const method = map.get('method');
+					const method = map.get(property);
 					method && method('foo', 'bar');
 
 					assert.isTrue(beforeCalled,
@@ -334,10 +336,10 @@ registerSuite('aspect', {
 					const aspectSpy1 = createBeforeSpy();
 					const aspectSpy2 = createBeforeSpy();
 
-					aspect.before(map, 'method', aspectSpy1);
-					aspect.before(map, 'method', aspectSpy2);
+					aspect.before(map, property, aspectSpy1);
+					aspect.before(map, property, aspectSpy2);
 
-					const method = map.get('method');
+					const method = map.get(property);
 					method && method(5);
 					assert.isTrue(aspectSpy2.calledBefore(aspectSpy1));
 					assert.isTrue(aspectSpy1.calledBefore(methodSpy));
@@ -350,19 +352,19 @@ registerSuite('aspect', {
 				'multiple aspect.before() with removal inside handler'() {
 					let count = 0;
 
-					const handle1 = aspect.before(map, 'method', function () {
+					const handle1 = aspect.before(map, property, function () {
 						count++;
 					});
 
 					// FIXME: TDZ
-					var handle2 = aspect.before(map, 'method', function () {
+					var handle2 = aspect.before(map, property, function () {
 						handle2.destroy();
 						handle1.destroy();
 						count++;
 					});
 
 					assert.doesNotThrow(function () {
-						const method = map.get('method');
+						const method = map.get(property);
 						method && method();
 					});
 					assert.strictEqual(count, 1, 'Only one advising function should be called');
@@ -374,8 +376,8 @@ registerSuite('aspect', {
 					const expected = 'override!';
 					const aspectSpy = sinon.stub().returns(expected);
 
-					aspect.after(map, 'method', aspectSpy);
-					const method = map.get('method');
+					aspect.after(map, property, aspectSpy);
+					const method = map.get(property);
 					assert.strictEqual(method && method(0), expected);
 					assert.isTrue(aspectSpy.calledAfter(methodSpy));
 				},
@@ -384,10 +386,10 @@ registerSuite('aspect', {
 					const aspectStub1 = sinon.stub();
 					const aspectStub2 = sinon.stub();
 
-					aspect.after(map, 'method', aspectStub1);
-					aspect.after(map, 'method', aspectStub2);
+					aspect.after(map, property, aspectStub1);
+					aspect.after(map, property, aspectStub2);
 
-					const method = map.get('method');
+					const method = map.get(property);
 					method && method(0);
 					assert.isTrue(aspectStub1.calledAfter(methodSpy));
 					assert.isTrue(aspectStub2.calledAfter(aspectStub1));
@@ -399,18 +401,18 @@ registerSuite('aspect', {
 					let handle2: Handle;
 
 					// FIXME: TDZ
-					var handle1 = aspect.after(map, 'method', function () {
+					var handle1 = aspect.after(map, property, function () {
 						handle1.destroy();
 						handle2.destroy();
 						count++;
 					});
 
-					handle2 = aspect.after(map, 'method', function () {
+					handle2 = aspect.after(map, property, function () {
 						count++;
 					});
 
 					assert.doesNotThrow(function () {
-						const method = map.get('method');
+						const method = map.get(property);
 						method && method();
 					});
 					assert.strictEqual(count, 1, 'Only one advising function should be called');
@@ -420,8 +422,8 @@ registerSuite('aspect', {
 					const expected = 'expected';
 					const aspectStub = sinon.stub().returns(expected);
 
-					aspect.after(map, 'method', aspectStub);
-					const method = map.get('method');
+					aspect.after(map, property, aspectStub);
+					const method = map.get(property);
 					assert.strictEqual(method && method(0), expected);
 					assert.isTrue(aspectStub.calledAfter(methodSpy));
 					assert.strictEqual(aspectStub.lastCall.args[0], 1);
@@ -435,9 +437,9 @@ registerSuite('aspect', {
 					const aroundFunction = sinon.stub().returns(expected);
 					const aspectStub = sinon.stub().returns(aroundFunction);
 
-					aspect.around(map, 'method', aspectStub);
+					aspect.around(map, property, aspectStub);
 
-					const method = map.get('method');
+					const method = map.get(property);
 					assert.strictEqual(method && method(0), expected);
 					assert.isTrue(aspectStub.calledOnce);
 					assert.isTrue(aroundFunction.calledOnce);
@@ -455,9 +457,9 @@ registerSuite('aspect', {
 				'advising function returns undefined, returns original result'() {
 					const aspectStub = sinon.stub();
 
-					aspect.on(map, 'method', aspectStub);
+					aspect.on(map, property, aspectStub);
 
-					const method = map.get('method');
+					const method = map.get(property);
 					assert.strictEqual(method && method(0), 1);
 
 					assert.deepEqual(aspectStub.lastCall.args, methodSpy.lastCall.args);
@@ -469,9 +471,9 @@ registerSuite('aspect', {
 				'advising function returns defined values, returns advising function result'() {
 					const aspectStub = sinon.stub().returns(2);
 
-					aspect.on(map, 'method', aspectStub);
+					aspect.on(map, property, aspectStub);
 
-					const method = map.get('method');
+					const method = map.get(property);
 					assert.strictEqual(method && method(0), 2);
 					assert.deepEqual(aspectStub.lastCall.args, methodSpy.lastCall.args);
 					assert.isTrue(methodSpy.calledOnce);
@@ -484,11 +486,11 @@ registerSuite('aspect', {
 					const aspectStub2 = sinon.stub();
 					const aspectStub3 = sinon.stub().returns(6);
 
-					aspect.on(map, 'method', aspectStub1);
-					aspect.on(map, 'method', aspectStub2);
-					aspect.on(map, 'method', aspectStub3);
+					aspect.on(map, property, aspectStub1);
+					aspect.on(map, property, aspectStub2);
+					aspect.on(map, property, aspectStub3);
 
-					const method = map.get('method');
+					const method = map.get(property);
 					assert.strictEqual(method && method(0), 6);
 
 					assert.deepEqual(aspectStub1.lastCall.args, methodSpy.lastCall.args);
@@ -507,16 +509,16 @@ registerSuite('aspect', {
 			'handle.destroy()': {
 				'prevents aspect from being called'() {
 					const aspectSpy = createBeforeSpy();
-					const handle = aspect.before(map, 'method', aspectSpy);
+					const handle = aspect.before(map, property, aspectSpy);
 
-					let method = map.get('method');
+					let method = map.get(property);
 					method && method(0);
-					assert.notEqual(map.get('method'), methodSpy);
+					assert.notEqual(map.get(property), methodSpy);
 
 					handle.destroy();
-					method = map.get('method');
+					method = map.get(property);
 					method && method(1);
-					assert.notEqual(map.get('method'), methodSpy);
+					assert.notEqual(map.get(property), methodSpy);
 					assert.isTrue(methodSpy.calledTwice);
 					assert.isTrue(aspectSpy.calledOnce);
 				},
@@ -524,12 +526,12 @@ registerSuite('aspect', {
 				'can remove an aspect from the middle of a list'() {
 					const aspectSpy1 = createBeforeSpy();
 					const aspectSpy2 = createBeforeSpy();
-					const handle = aspect.before(map, 'method', aspectSpy1);
+					const handle = aspect.before(map, property, aspectSpy1);
 
-					aspect.before(map, 'method', aspectSpy2);
+					aspect.before(map, property, aspectSpy2);
 					handle.destroy();
 
-					const method = map.get('method');
+					const method = map.get(property);
 					method && method(0);
 					assert.isTrue(methodSpy.called);
 					assert.isTrue(aspectSpy2.called);
@@ -539,11 +541,11 @@ registerSuite('aspect', {
 				'removing a aspect stub'() {
 					const map = new Map();
 					const aspectSpy = sinon.stub();
-					aspect.before(map, 'method', sinon.stub());
-					const handle = aspect.before(map, 'method', aspectSpy);
+					aspect.before(map, property, sinon.stub());
+					const handle = aspect.before(map, property, aspectSpy);
 
 					handle.destroy();
-					const method: any = map.get('method');
+					const method: any = map.get(property);
 					method && method(0);
 					assert.isFalse(aspectSpy.called);
 				},
@@ -551,10 +553,10 @@ registerSuite('aspect', {
 				'removing the first of multiple aspects'() {
 					const aroundFunction = sinon.stub();
 					const aspectStub = sinon.stub().returns(aroundFunction);
-					const handle = aspect.around(map, 'method', aspectStub);
+					const handle = aspect.around(map, property, aspectStub);
 
 					handle.destroy();
-					const method = map.get('method');
+					const method = map.get(property);
 					method && method(0);
 					assert.isTrue(aspectStub.calledOnce);
 					assert.isTrue(methodSpy.calledOnce);
@@ -562,6 +564,18 @@ registerSuite('aspect', {
 				}
 			}
 		}
+	};
+}
+
+registerSuite('aspect', {
+	'with indexable objects': {
+		'string properties': indexableTests('method'),
+		'symbol properties': indexableTests(Symbol())
+	},
+
+	'with maps': {
+		'string indexes': mapTests('method'),
+		'symbol indexes': mapTests(Symbol())
 	},
 	'join points': {
 		'before advice': {

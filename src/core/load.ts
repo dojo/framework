@@ -1,28 +1,29 @@
 import Promise from '@dojo/shim/Promise';
-import { Require } from '@dojo/interfaces/loader';
+import { Require as AmdRequire, Define as AmdDefine, NodeRequire } from '@dojo/interfaces/loader';
 import { isPlugin, useDefault } from './load/util';
 
-declare const require: Require;
-
-declare const define: {
-	(...args: any[]): any;
-	amd: any;
-};
-
-export interface NodeRequire {
-	(moduleId: string): any;
-}
-
-export type Require = Require | NodeRequire;
+export type Require = AmdRequire | NodeRequire;
 
 export interface Load {
 	(require: Require, ...moduleIds: string[]): Promise<any[]>;
 	(...moduleIds: string[]): Promise<any[]>;
 }
 
+declare const require: Require;
+
+declare const define: AmdDefine;
+
+export function isAmdRequire(object: any): object is AmdRequire {
+	return typeof object.toUrl === 'function';
+}
+
+export function isNodeRequire(object: any): object is NodeRequire {
+	return typeof object.resolve === 'function';
+}
+
 const load: Load = (function (): Load {
-	const resolver = typeof require.toUrl === 'function' ? require.toUrl :
-		typeof (<any> require).resolve === 'function' ? (<any> require).resolve :
+	const resolver = isAmdRequire(require) ? require.toUrl :
+		isNodeRequire(require) ? require.resolve :
 		(resourceId: string) => resourceId;
 
 	function pluginLoad(moduleIds: string[], load: Load, loader: (modulesIds: string[]) => Promise<any>) {
@@ -109,4 +110,4 @@ export default load;
 export {
 	isPlugin,
 	useDefault
-}
+};

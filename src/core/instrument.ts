@@ -75,10 +75,11 @@ export function deprecatedAdvice(options?: DeprecatedOptions): (...args: any[]) 
  * @param options Provide options which change the display of the message
  */
 export function deprecatedDecorator(options?: DeprecatedOptions): MethodDecorator {
-	return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+	return function(target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
 		if (has('debug')) {
 			const { value: originalFn } = descriptor;
 			options = options || {};
+			propertyKey = String(propertyKey);
 			/* IE 10/11 don't have the name property on functions */
 			options.name = target.constructor.name ? `${target.constructor.name}#${propertyKey}` : propertyKey;
 			descriptor.value = function(...args: any[]) {

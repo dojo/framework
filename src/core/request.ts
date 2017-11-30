@@ -64,4 +64,4 @@ export default request;
 export * from './request/interfaces';
 export { default as Headers } from './request/Headers';
 export { default as TimeoutError } from './request/TimeoutError';
-export { default as Response, ResponseData } from './request/Response';
+export { ResponseData } from './request/Response';

@@ -20,7 +20,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import * as sinon from 'sinon';
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from '../../src/interfaces';
 import * as util from '../../src/util';
 
 const TIMEOUT = 3000;

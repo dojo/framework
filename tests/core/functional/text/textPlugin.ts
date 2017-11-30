@@ -1,14 +1,14 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import Suite from 'intern/lib/Suite';
-import { Require } from '@dojo/interfaces/loader';
+import Test from 'intern/lib/Test';
+import { Require } from '../../../src/load';
 import pollUntil from '@theintern/leadfoot/helpers/pollUntil';
 
 declare const require: Require;
 
-async function executeTest(suite: Suite, htmlTestPath: string, timeout = 10000): Promise<any> {
+async function executeTest(test: Test, htmlTestPath: string, timeout = 10000) {
 	try {
-		return await suite.remote.get(htmlTestPath).then(pollUntil<{ text: string; }>(function () {
+		return await test.remote.get(htmlTestPath).then(pollUntil<{ text: string; }>(function () {
 			return (<any> window).loaderTestResults || null;
 		}, undefined, timeout));
 	}
@@ -20,7 +20,7 @@ async function executeTest(suite: Suite, htmlTestPath: string, timeout = 10000):
 const text = 'abc';
 
 registerSuite('text plugin', {
-	async 'correct text'(this: any) {
+	async 'correct text'() {
 		const results = await executeTest(this, `${__dirname}/textPlugin.html`);
 		assert.strictEqual(results.text, text);
 	},

@@ -1,4 +1,4 @@
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from './interfaces';
 import { createHandle } from './lang';
 
 /**

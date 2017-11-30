@@ -1,4 +1,4 @@
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from '../../interfaces';
 import global from '@dojo/shim/global';
 import WeakMap from '@dojo/shim/WeakMap';
 import Task, { State } from '../../async/Task';
@@ -176,7 +176,7 @@ function setOnError(request: XMLHttpRequest, reject: Function) {
 	});
 }
 
-export default function xhr(url: string, options: XhrRequestOptions = {}): UploadObservableTask<Response> {
+export default function xhr(url: string, options: XhrRequestOptions = {}): UploadObservableTask<XhrResponse> {
 	const request = new XMLHttpRequest();
 	const requestUrl = generateRequestUrl(url, options);
 
@@ -199,7 +199,7 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 	let timeoutHandle: Handle;
 	let timeoutReject: Function;
 
-	const task = <UploadObservableTask<Response>> new Task<Response>((resolve, reject) => {
+	const task = <UploadObservableTask<XhrResponse>> new Task<XhrResponse>((resolve, reject) => {
 		timeoutReject = reject;
 
 		request.onreadystatechange = function () {

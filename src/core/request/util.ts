@@ -1,4 +1,4 @@
-import {RequestOptions} from './interfaces';
+import { RequestOptions } from './interfaces';
 import UrlSearchParams from '../UrlSearchParams';
 
 /**

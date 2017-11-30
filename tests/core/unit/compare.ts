@@ -1806,14 +1806,14 @@ registerSuite('compare', {
 
 				const descriptorFoo = Object.getOwnPropertyDescriptor(result, 'foo');
 				const descriptorBar = Object.getOwnPropertyDescriptor(result, 'bar');
-				assert.isFalse(descriptorFoo.writable);
-				assert.isFalse(descriptorFoo.enumerable);
-				assert.isFalse(descriptorFoo.configurable);
-				assert.instanceOf(descriptorFoo.value, RegExp);
-				assert.isTrue(descriptorBar.writable);
-				assert.isTrue(descriptorBar.enumerable);
-				assert.isTrue(descriptorBar.configurable);
-				assert.instanceOf(descriptorBar.value, RegExp);
+				assert.isFalse(descriptorFoo!.writable);
+				assert.isFalse(descriptorFoo!.enumerable);
+				assert.isFalse(descriptorFoo!.configurable);
+				assert.instanceOf(descriptorFoo!.value, RegExp);
+				assert.isTrue(descriptorBar!.writable);
+				assert.isTrue(descriptorBar!.enumerable);
+				assert.isTrue(descriptorBar!.configurable);
+				assert.instanceOf(descriptorBar!.value, RegExp);
 			},
 
 			'with property records'() {

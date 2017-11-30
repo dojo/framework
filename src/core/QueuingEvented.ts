@@ -1,6 +1,6 @@
-import { Handle } from '@dojo/interfaces/core';
+import { Handle, EventObject, EventType } from './interfaces';
 import Map from '@dojo/shim/Map';
-import Evented, { isGlobMatch, EventObject } from './Evented';
+import Evented, { isGlobMatch, EventedCallbackOrArray } from './Evented';
 
 /**
  * An implementation of the Evented class that queues up events when no listeners are
@@ -9,40 +9,27 @@ import Evented, { isGlobMatch, EventObject } from './Evented';
  *
  * @property maxEvents  The number of events to queue before old events are discarded. If zero (default), an unlimited number of events is queued.
  */
-export default class QueuingEvented extends Evented {
+class QueuingEvented<M extends {} = {}, T = EventType, O extends EventObject<T> = EventObject<T>> extends Evented<M, T, O> {
 	private _queue: Map<string | symbol, EventObject[]>;
-	private _originalOn: (...args: any[]) => Handle;
 
 	maxEvents = 0;
 
 	constructor() {
 		super();
 
-		this._queue = new Map<string, EventObject[]>();
-		this._originalOn = this.on;
-		this.on = function (this: QueuingEvented, ...args: any[]): Handle {
-			let handle = this._originalOn(...args);
-
-			this.listenersMap.forEach((method, listenerType) => {
-				this._queue.forEach((events, queuedType) => {
-					if (isGlobMatch(listenerType, queuedType)) {
-						events.forEach((event) => this.emit(event));
-						this._queue.delete(queuedType);
-					}
-				});
-			});
-
-			return handle;
-		};
+		this._queue = new Map();
 	}
 
-	emit<E extends EventObject>(event: E): void {
+	emit<K extends keyof M>(event: M[K]): void;
+	emit(event: O): void;
+	emit(event: any): void {
 		super.emit(event);
 
 		let hasMatch = false;
 
 		this.listenersMap.forEach((method, type) => {
-			if (isGlobMatch(type, event.type)) {
+			// Since `type` is generic, the compiler doesn't know what type it is and `isGlobMatch` requires `string | symbol`
+			if (isGlobMatch(type as any, event.type)) {
 				hasMatch = true;
 			}
 		});
@@ -64,4 +51,23 @@ export default class QueuingEvented extends Evented {
 			}
 		}
 	}
+
+	on<K extends keyof M>(type: K, listener: EventedCallbackOrArray<K, M[K]>): Handle;
+	on(type: T, listener: EventedCallbackOrArray<T, O>): Handle;
+	on(type: any, listener: EventedCallbackOrArray<any, any>): Handle {
+		let handle = super.on(type, listener);
+
+		this.listenersMap.forEach((method, listenerType) => {
+			this._queue.forEach((events, queuedType) => {
+				if (isGlobMatch(listenerType as any, queuedType)) {
+					events.forEach((event) => this.emit(event));
+					this._queue.delete(queuedType);
+				}
+			});
+		});
+
+		return handle;
+	}
 }
+
+export default QueuingEvented;

@@ -1,4 +1,4 @@
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from './interfaces';
 import { assign } from '@dojo/shim/object';
 
 export { assign } from '@dojo/shim/object';

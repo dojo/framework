@@ -53,7 +53,7 @@ function findLastValueIndex(list: ArrayLike<any>, offset?: number): number {
 	return -1;
 }
 
-function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any> | undefined, offset?: number) => number, items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
+function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any>, offset?: number) => number, items: Iterable<T | Promise<T>> | (T | Promise<T>)[], callback: Reducer<T, U>, initialValue?: U): Promise<U> {
 	const hasInitialValue = arguments.length > 3;
 	return Promise.all(items)
 		.then(function (results) {
@@ -81,7 +81,7 @@ function generalReduce<T, U>(findNextIndex: (list: ArrayLike<any> | undefined, o
 					else {
 						resolve(currentValue);
 					}
-				};
+				}
 
 				let value: U | undefined;
 				if (hasInitialValue) {

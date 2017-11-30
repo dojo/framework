@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import MultiMap from '../../src/MultiMap';
-import {isIterable, IterableIterator, ShimIterator} from '@dojo/shim/iterator';
+import { isIterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
 
 let map: MultiMap<any>;
 function foo() {}

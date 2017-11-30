@@ -1,9 +1,9 @@
-import { Handle } from '@dojo/interfaces/core';
+import { Handle, EventObject } from './interfaces';
 import { createHandle, createCompositeHandle } from './lang';
-import Evented, { EventObject } from './Evented';
+import Evented from './Evented';
 
-export interface EventCallback {
-	(event: EventObject): void;
+export interface EventCallback<O = EventObject<string>> {
+	(event: O): void;
 }
 
 export interface EventEmitter {
@@ -23,8 +23,10 @@ interface DOMEventObject extends EventObject {
  * @return Boolean indicating if preventDefault was called on the event object (only relevant for DOM events;
  *     always false for other event emitters)
  */
-export function emit<T extends EventObject>(target: Evented | EventTarget | EventEmitter, event: T | EventObject): boolean;
-export function emit<T extends EventObject>(target: any, event: T | EventObject): boolean {
+export function emit<M, T, O extends EventObject<T> = EventObject<T>, K extends keyof M = keyof M>(target: Evented<M, T, O>, event: M[K]): boolean;
+export function emit<T, O extends EventObject<T> = EventObject<T>>(target: Evented<any, T, O>, event: O): boolean;
+export function emit<O extends EventObject<string> = EventObject<string>>(target: EventTarget | EventEmitter, event: O): boolean;
+export function emit(target: any, event: EventObject<any>): boolean {
 	if (
 		target.dispatchEvent && /* includes window and document */
 			((target.ownerDocument && target.ownerDocument.createEvent) || /* matches nodes */
@@ -71,8 +73,10 @@ export function emit<T extends EventObject>(target: any, event: T | EventObject)
  * @param capture Whether the listener should be registered in the capture phase (DOM events only)
  * @return A handle which will remove the listener when destroy is called
  */
+export default function on<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(target: Evented<M, T, O>, type: K | K[], listener: EventCallback<M[K]>): Handle;
+export default function on<T, O extends EventObject<T> = EventObject<T>>(target: Evented<any, T, O>, type: T | T[], listener: EventCallback<O>): Handle;
+export default function on(target: EventEmitter, type: string | string[], listener: EventCallback): Handle;
 export default function on(target: EventTarget, type: string | string[], listener: EventCallback, capture?: boolean): Handle;
-export default function on(target: EventEmitter | Evented, type: string | string[], listener: EventCallback): Handle;
 export default function on(target: any, type: any, listener: any, capture?: boolean): Handle {
 	if (Array.isArray(type)) {
 		let handles: Handle[] = type.map(function (type: string): Handle {
@@ -120,8 +124,10 @@ export default function on(target: any, type: any, listener: any, capture?: bool
  * @param capture Whether the listener should be registered in the capture phase (DOM events only)
  * @return A handle which will remove the listener when destroy is called
  */
+export function once<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(target: Evented<M, T, O>, type: K | K[], listener: EventCallback<M[K]>): Handle;
+export function once<T, O extends EventObject<T> = EventObject<T>>(target: Evented<any, T, O>, type: T | T[], listener: EventCallback<O>): Handle;
 export function once(target: EventTarget, type: string | string[], listener: EventCallback, capture?: boolean): Handle;
-export function once(target: EventEmitter | Evented, type: string | string[], listener: EventCallback): Handle;
+export function once(target: EventEmitter, type: string | string[], listener: EventCallback): Handle;
 export function once(target: any, type: any, listener: any, capture?: boolean): Handle {
 	// FIXME
 	// tslint:disable-next-line:no-var-keyword
@@ -146,8 +152,10 @@ export interface PausableHandle extends Handle {
  * @param capture Whether the listener should be registered in the capture phase (DOM events only)
  * @return A handle with additional pause and resume methods; the listener will never fire when paused
  */
+export function pausable<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(target: Evented<M, T, O>, type: K | K[], listener: EventCallback<M[K]>): PausableHandle;
+export function pausable<T, O extends EventObject<T> = EventObject<T>>(target: Evented<any, T, O>, type: T | T[], listener: EventCallback<O>): PausableHandle;
 export function pausable(target: EventTarget, type: string | string[], listener: EventCallback, capture?: boolean): PausableHandle;
-export function pausable(target: EventEmitter | Evented, type: string | string[], listener: EventCallback): PausableHandle;
+export function pausable(target: EventEmitter, type: string | string[], listener: EventCallback): PausableHandle;
 export function pausable(target: any, type: any, listener: any, capture?: boolean): PausableHandle {
 	let paused: boolean;
 
