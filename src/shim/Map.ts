@@ -1,4 +1,4 @@
-import { Iterable, IterableIterator, ShimIterator } from './iterator';
+import { isArrayLike, Iterable, IterableIterator, ShimIterator } from './iterator';
 import global from './global';
 import { is as objectIs } from './object';
 import has from './support/has';
@@ -144,10 +144,18 @@ if (!has('es6-map')) {
 
 		static [Symbol.species] = Map;
 
-		constructor(iterable?: ArrayLike<[K, V]> | Iterable<[K, V]>) {
+		constructor(iterable?: ArrayLike<[ K, V ]> | Iterable<[ K, V ]>) {
 			if (iterable) {
-				for (const value of iterable) {
-					this.set(value[0], value[1]);
+				if (isArrayLike(iterable)) {
+					for (let i = 0; i < iterable.length; i++) {
+						const value = iterable[ i ];
+						this.set(value[0], value[1]);
+					}
+				}
+				else {
+					for (const value of iterable) {
+						this.set(value[0], value[1]);
+					}
 				}
 			}
 		}

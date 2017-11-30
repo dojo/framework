@@ -201,14 +201,21 @@ else {
 
 		// if this is an array and the normalized length is 0, just return an empty array. this prevents a problem
 		// with the iteration on IE when using a NaN array length.
-		if (isArrayLike(arrayLike) && length === 0) {
-			return [];
-		}
+		if (isArrayLike(arrayLike)) {
+			if (length === 0) {
+				return [];
+			}
 
-		let i = 0;
-		for (const value of arrayLike) {
-			array[i] = mapFunction ? mapFunction(value, i) : value;
-			i++;
+			for (let i = 0; i < arrayLike.length; i++) {
+				array[i] = mapFunction ? mapFunction(arrayLike[i], i) : arrayLike[i];
+			}
+		}
+		else {
+			let i = 0;
+			for (const value of arrayLike) {
+				array[i] = mapFunction ? mapFunction(value, i) : value;
+				i++;
+			}
 		}
 
 		if ((<any> arrayLike).length !== undefined) {

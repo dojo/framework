@@ -1,5 +1,5 @@
 import global from './global';
-import { Iterable } from './iterator';
+import { isArrayLike, Iterable } from './iterator';
 import has from './support/has';
 import './Symbol';
 
@@ -103,8 +103,16 @@ if (!has('es6-weakmap')) {
 			this._frozenEntries = [];
 
 			if (iterable) {
-				for (const [key, value] of iterable) {
-					this.set(key, value);
+				if (isArrayLike(iterable)) {
+					for (let i = 0; i < iterable.length; i++) {
+						const item = iterable[i];
+						this.set(item[0], item[1]);
+					}
+				}
+				else {
+					for (const [ key, value ] of iterable) {
+						this.set(key, value);
+					}
 				}
 			}
 		}

@@ -1,5 +1,5 @@
 import global from './global';
-import { Iterable, isIterable, isArrayLike } from './iterator';
+import { isArrayLike, isIterable, Iterable } from './iterator';
 import has from './support/has';
 import './Symbol';
 
@@ -483,8 +483,15 @@ if (!has('es-observable')) {
 				}
 				else if (isIterable(item) || isArrayLike(item)) {
 					return new constructor((observer: SubscriptionObserver<U>) => {
-						for (const o of item) {
-							observer.next(o);
+						if (isArrayLike(item)) {
+							for (let i = 0; i < item.length; i++) {
+								observer.next(item[i]);
+							}
+						}
+						else {
+							for (const o of item) {
+								observer.next(o);
+							}
 						}
 						observer.complete();
 					});
