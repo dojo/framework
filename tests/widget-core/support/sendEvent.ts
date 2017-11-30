@@ -125,7 +125,7 @@ export default function sendEvent<I extends EventInit>(target: Element, type: st
 	const { bubbles, cancelable, ...initProps } = eventInit;
 	if (has('customevent-constructor')) {
 		const ctorName = eventClass in window ? eventClass : 'CustomEvent';
-		event = new ((<any> window)[ctorName] as typeof CustomEvent)(type, eventInit);
+		event = new ((window as any)[ctorName] as typeof CustomEvent)(type, eventInit);
 	}
 	else {
 		/* because the arity varies too greatly to be able to properly call all the event types, we will

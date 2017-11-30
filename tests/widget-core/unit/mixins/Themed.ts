@@ -21,9 +21,9 @@ import testTheme1 from './../../support/styles/theme1.css';
 import testTheme2 from './../../support/styles/theme2.css';
 import testTheme3 from './../../support/styles/theme3.css';
 
-(<any> baseThemeClasses1)[' _key'] = 'testPath1';
-(<any> baseThemeClasses2)[' _key'] = 'testPath2';
-(<any> baseThemeClasses3)[' _key'] = 'testPath3';
+(baseThemeClasses1 as any)[' _key'] = 'testPath1';
+(baseThemeClasses2 as any)[' _key'] = 'testPath2';
+(baseThemeClasses3 as any)[' _key'] = 'testPath3';
 
 let testRegistry: Registry;
 

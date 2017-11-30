@@ -1,7 +1,7 @@
 import { assign } from '@dojo/core/lang';
 import global from '@dojo/shim/global';
 import { createHandle } from '@dojo/core/lang';
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from '@dojo/core/interfaces';
 import 'pepjs';
 import cssTransitions from '../animations/cssTransitions';
 import { Constructor, DNode, Projection, ProjectionOptions } from './../interfaces';
@@ -156,8 +156,6 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		private _boundRender: Function;
 		private _projectorChildren: DNode[] = [];
 		private _projectorProperties: this['properties'] = {} as this['properties'];
-		private _rootTagName: string;
-		private _attachType: AttachType;
 		private _handles: Function[] = [];
 
 		constructor(...args: any[]) {
@@ -340,7 +338,6 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		}
 
 		private _attach({ type, root }: AttachOptions): Handle {
-			this._attachType = type;
 			if (root) {
 				this.root = root;
 			}
@@ -369,7 +366,6 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 					this._projection = dom.append(this.root, this._boundRender(), this, this._projectionOptions);
 				break;
 				case AttachType.Merge:
-					this._rootTagName = this._root.tagName.toLowerCase();
 					this._projection = dom.merge(this.root, this._boundRender(), this , this._projectionOptions);
 				break;
 				case AttachType.Replace:

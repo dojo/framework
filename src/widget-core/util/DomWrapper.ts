@@ -20,7 +20,7 @@ export function DomWrapper(domNode: Element, options: DomWrapperOptions = {}): D
 			return hNode;
 		}
 
-		protected onElementCreated(element: Element, key: string) {
+		protected onElementCreated(element: Element, key: string | number) {
 			options.onAttached && options.onAttached();
 		}
 

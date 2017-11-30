@@ -1,10 +1,15 @@
 import { Map } from '@dojo/shim/Map';
 import { Evented } from '@dojo/core/Evented';
+import { EventObject } from '@dojo/core/interfaces';
 import { Constructor, RegistryLabel, WidgetBaseInterface } from './interfaces';
 import { Registry, RegistryEventObject, RegistryItem } from './Registry';
 import { Injector } from './Injector';
 
-export class RegistryHandler extends Evented {
+export interface RegistryHandlerEventMap {
+	invalidate: EventObject<'invalidate'>;
+}
+
+export class RegistryHandler extends Evented<RegistryHandlerEventMap> {
 	private _registry = new Registry();
 	private _baseRegistry: Registry;
 	private _registryWidgetLabelMap: Map<Registry, RegistryLabel[]> = new Map();

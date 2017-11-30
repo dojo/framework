@@ -298,7 +298,7 @@ export function initializeElement(element: CustomElement) {
 
 	return function() {
 		let children: DNode[] = [];
-		let elementChildren = arrayFrom(element.children);
+		let elementChildren = arrayFrom(element.children) as CustomElement[];
 
 		elementChildren.forEach((childNode: CustomElement, index: number) => {
 			const properties = { key: `child-${index}` };
@@ -309,7 +309,7 @@ export function initializeElement(element: CustomElement) {
 				children.push(w(DomWrapper(childNode), properties));
 			}
 		});
-		elementChildren.forEach((childNode: HTMLElement) => {
+		elementChildren.forEach((childNode: Element) => {
 			element.removeChild(childNode);
 		});
 

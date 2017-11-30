@@ -292,7 +292,7 @@ describe('WidgetBase', () => {
 		});
 
 		it('elements are added to node handler on create', () => {
-			const element = {} as any;
+			const element = {} as Element;
 			const key = '1';
 			const widget = new BaseTestWidget();
 			const meta = widget.meta(TestMeta);
@@ -303,7 +303,7 @@ describe('WidgetBase', () => {
 		});
 
 		it('elements are added to node handler on update', () => {
-			const element = {} as any;
+			const element = {} as Element;
 			const key = '1';
 			const widget = new BaseTestWidget();
 			const meta = widget.meta(TestMeta);

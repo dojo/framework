@@ -43,7 +43,7 @@ export class Intersection extends Base {
 	public get(key: string | number, options: IntersectionGetOptions = {}): IntersectionResult {
 		let rootNode: HTMLElement | undefined;
 		if (options.root) {
-			rootNode = this.getNode(options.root);
+			rootNode = this.getNode(options.root) as HTMLElement;
 			if (!rootNode) {
 				return defaultIntersection;
 			}

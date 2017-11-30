@@ -51,7 +51,7 @@ const defaultDimensions = {
 export class Dimensions extends Base {
 
 	public get(key: string | number): Readonly<DimensionResults> {
-		const node = this.getNode(key);
+		const node = this.getNode(key) as HTMLElement;
 
 		if (!node) {
 			return deepAssign({}, defaultDimensions);

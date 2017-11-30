@@ -152,59 +152,52 @@ registerSuite('d', {
 	decorator: {
 		'modifies only nodes that match predicate'() {
 			const testWidget = new TestWidget();
-			const predicate = (node: DNode): boolean => {
-				return isWNode(node);
+			const modifier = (node: WNode): void => {
+				(node.properties as any)['decorated'] = true;
 			};
-			const modifier = (node: DNode): void => {
-				if (isWNode(node)) {
-					(<any> node.properties)['decorated'] = true;
-				}
-			};
-			const node = <HNode> testWidget.render();
+			const node = testWidget.render();
 			assert.isOk(node);
-			decorate(node, modifier, predicate);
+			decorate(node, modifier, isWNode);
 			if (node) {
 				const children = <any[]> node.children;
-				assert.isUndefined(children![0].properties['decorated']);
-				assert.isUndefined(children![1].properties['decorated']);
-				assert.isUndefined(children![2].properties['decorated']);
-				assert.isUndefined(children![3].properties['decorated']);
-				assert.strictEqual(children![4], 'my text');
-				assert.isNull(children![5]);
-				assert.isTrue(children![6].properties['decorated']);
-				assert.isTrue(children![7].properties['decorated']);
+				assert.isUndefined(children[0].properties['decorated']);
+				assert.isUndefined(children[1].properties['decorated']);
+				assert.isUndefined(children[2].properties['decorated']);
+				assert.isUndefined(children[3].properties['decorated']);
+				assert.strictEqual(children[4], 'my text');
+				assert.isNull(children[5]);
+				assert.isTrue(children[6].properties['decorated']);
+				assert.isTrue(children[7].properties['decorated']);
 			}
 		},
 		'modifies no node when predicate not matched'() {
 			const testWidget = new TestWidget();
-			const predicate = (node: DNode): boolean => {
+			const predicate = (node: DNode): node is WNode => {
 				return false;
 			};
-			const modifier = (node: DNode): void => {
-				if (isWNode(node)) {
-					(<any> node.properties)['decorated'] = true;
-				}
+			const modifier = (node: WNode): void => {
+				(node.properties as any)['decorated'] = true;
 			};
-			const node = <HNode> testWidget.render();
+			const node = testWidget.render();
 			assert.isOk(node);
 			decorate(node, modifier, predicate);
 			if (node) {
-				const children = <any[]> node.children;
-				assert.isUndefined(children![0].properties['decorated']);
-				assert.isUndefined(children![1].properties['decorated']);
-				assert.isUndefined(children![2].properties['decorated']);
-				assert.isUndefined(children![3].properties['decorated']);
-				assert.strictEqual(children![4], 'my text');
-				assert.isNull(children![5]);
-				assert.isUndefined(children![6].properties['decorated']);
-				assert.isUndefined(children![7].properties['decorated']);
+				const children = node.children as any[];
+				assert.isUndefined(children[0].properties['decorated']);
+				assert.isUndefined(children[1].properties['decorated']);
+				assert.isUndefined(children[2].properties['decorated']);
+				assert.isUndefined(children[3].properties['decorated']);
+				assert.strictEqual(children[4], 'my text');
+				assert.isNull(children[5]);
+				assert.isUndefined(children[6].properties['decorated']);
+				assert.isUndefined(children[7].properties['decorated']);
 			}
 		},
 		'applies modifier to all nodes when no predicate supplied'() {
 			const testWidget = new TestWidget();
 			const modifier = (node: DNode): void => {
 				if (isWNode(node)) {
-					(<any> node.properties)['decorated'] = true;
+					(node.properties as any)['decorated'] = true;
 				}
 				else if (isHNode(node)) {
 					assign(node.properties, { id: 'id' });

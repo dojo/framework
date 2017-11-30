@@ -255,7 +255,7 @@ export class Drag extends Base {
 	private _boundInvalidate: () => void = this.invalidate.bind(this);
 
 	public get(key: string | number): Readonly<DragResults> {
-		const node = this.getNode(key);
+		const node = this.getNode(key) as HTMLElement;
 
 		// if we don't have a reference to the node yet, return an empty set of results
 		if (!node) {

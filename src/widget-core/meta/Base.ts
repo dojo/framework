@@ -24,7 +24,7 @@ export class Base extends Destroyable implements WidgetMetaBase {
 		return this.nodeHandler.has(key);
 	}
 
-	protected getNode(key: string | number): HTMLElement | undefined {
+	protected getNode(key: string | number): Element | undefined {
 		const stringKey = `${key}`;
 		const node = this.nodeHandler.get(stringKey);
 

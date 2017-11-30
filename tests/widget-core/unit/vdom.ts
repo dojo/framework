@@ -1677,7 +1677,7 @@ describe('vdom', () => {
 						deferredCallbackCount: ++deferredCallbackCount
 					};
 				});
-				div.properties.renderCount = renderCount;
+				(div.properties as any).renderCount = renderCount;
 				return div;
 			};
 
@@ -1719,7 +1719,7 @@ describe('vdom', () => {
 						another: 'property'
 					};
 				});
-				div.properties.foo = foo;
+				(div.properties as any).foo = foo;
 				return div;
 			};
 
@@ -1937,7 +1937,7 @@ describe('vdom', () => {
 
 		it('can distinguish between falsy keys when replacing', () => {
 			const projection = dom.create(v('div', [
-				v('span', { key: false }),
+				v('span', { key: false as any }),
 				v('span', { key: null as any }),
 				v('span', { key: '' }),
 				v('span', {})
@@ -1989,7 +1989,7 @@ describe('vdom', () => {
 		it('can distinguish between falsy keys when deleting', () => {
 			const projection = dom.create(v('div', [
 				v('span', { key: 0 }),
-				v('span', { key: false }),
+				v('span', { key: false as any }),
 				v('span', { key: null as any })
 			]), projectorStub);
 

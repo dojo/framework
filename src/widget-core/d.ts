@@ -43,9 +43,10 @@ export function isHNode(child: DNode): child is HNode {
  *
  * If no predicate is supplied then the modifier will be executed on all nodes.
  */
-export function decorate(dNodes: DNode, modifier: (dNode: DNode) => void, predicate?: (dNode: DNode) => boolean): DNode;
-export function decorate(dNodes: DNode[], modifier: (dNode: DNode) => void, predicate?: (dNode: DNode) => boolean): DNode[];
-export function decorate(dNodes: DNode | DNode[], modifier: (dNode: DNode) => void, predicate?: (dNode: DNode) => boolean): DNode | DNode[];
+export function decorate<T extends DNode>(dNodes: DNode, modifier: (dNode: T) => void, predicate: (dNode: DNode) => dNode is T): DNode;
+export function decorate<T extends DNode>(dNodes: DNode[], modifier: (dNode: T) => void, predicate: (dNode: DNode) => dNode is T): DNode[];
+export function decorate(dNodes: DNode, modifier: (dNode: DNode) => void): DNode;
+export function decorate(dNodes: DNode[], modifier: (dNode: DNode) => void): DNode[];
 export function decorate(dNodes: DNode | DNode[], modifier: (dNode: DNode) => void, predicate?: (dNode: DNode) => boolean): DNode | DNode[] {
 	let nodes = Array.isArray(dNodes) ? [ ...dNodes ] : [ dNodes ];
 	while (nodes.length) {

@@ -1,6 +1,6 @@
 {
   "name": "@dojo/widget-core",
-  "version": "0.3.1-pre",
+  "version": "0.4.0-pre",
   "description": "A core widget library for Dojo 2",
   "private": true,
   "homepage": "https://dojo.io",
@@ -27,14 +27,14 @@
     "benchmark": "./run-benchmark.sh"
   },
   "peerDependencies": {
-    "@dojo/core": "~0.2.1",
-    "@dojo/has": "~0.1.0",
-    "@dojo/i18n": "~0.2.0",
-    "@dojo/shim": "~0.2.2"
+    "@dojo/core": "~0.3.0",
+    "@dojo/has": "~0.1.1",
+    "@dojo/shim": "~0.2.3",
+    "@dojo/i18n": "~0.3.0"
   },
   "devDependencies": {
-    "@dojo/interfaces": "~0.1.0",
-    "@dojo/loader": "~0.1.0",
+    "@dojo/interfaces": "~0.2.0",
+    "@dojo/loader": "~0.1.1",
     "@types/chai": "3.4.*",
     "@types/glob": "5.0.*",
     "@types/grunt": "0.4.*",
@@ -60,7 +60,7 @@
     "serve": "^6.4.1",
     "sinon": "^1.17.6",
     "tslint": "^5.2.0",
-    "typescript": "~2.5.2"
+    "typescript": "~2.6.1"
   },
   "dependencies": {
     "intersection-observer": "^0.4.2",

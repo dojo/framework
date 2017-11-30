@@ -1,6 +1,6 @@
 import { Destroyable } from '@dojo/core/Destroyable';
 import { Evented } from '@dojo/core/Evented';
-import { EventTargettedObject } from '@dojo/interfaces/core';
+import { EventObject, EventType } from '@dojo/core/interfaces';
 import Map from '@dojo/shim/Map';
 import WeakMap from '@dojo/shim/WeakMap';
 
@@ -12,7 +12,7 @@ export type Constructor<T> = new (...args: any[]) => T;
 /**
  * Typed target event
  */
-export interface TypedTargetEvent<T extends EventTarget> extends Event {
+export interface TypedTargetEvent<T extends EventTarget, Y extends EventType = EventType> extends EventObject<Y> {
 	target: T;
 }
 
@@ -173,7 +173,7 @@ export interface VirtualDomProperties {
 	 * A key is required when there are more children with the same selector and these children are added or removed dynamically.
 	 * NOTE: this does not have to be a string or number, a [[Component]] Object for instance is also possible.
 	 */
-	readonly key?: Object;
+	readonly key?: string | number;
 	/**
 	 * An array of supported class names to be added to classList on a DOM node
 	 */
@@ -453,11 +453,11 @@ export interface WidgetMetaConstructor<T extends WidgetMetaBase> {
 }
 
 export interface NodeHandlerInterface extends Evented {
-	get(key: string | number): HTMLElement | undefined;
+	get(key: string | number): Element | undefined;
 	has(key: string | number): boolean;
-	add(element: HTMLElement, key: string): void;
-	addRoot(element: HTMLElement, key: string): void;
-	addProjector(element: HTMLElement, properties: VirtualDomProperties): void;
+	add(element: Element, key: string): void;
+	addRoot(element: Element, key: string): void;
+	addProjector(element: Element, properties: VirtualDomProperties): void;
 	clear(): void;
 }
 

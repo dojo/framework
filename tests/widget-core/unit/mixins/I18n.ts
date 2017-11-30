@@ -24,7 +24,7 @@ registerSuite('mixins/I18nMixin', {
 		switchLocale(systemLocale);
 
 		if (localized) {
-			localized = <any> null;
+			localized = null;
 		}
 	},
 
@@ -90,7 +90,7 @@ registerSuite('mixins/I18nMixin', {
 
 				switchLocale('fr');
 
-				assert.isTrue((<any> localized).invalidate.called, 'Widget invalidated.');
+				assert.isTrue(localized.invalidate.called, 'Widget invalidated.');
 			},
 
 			'Does not update when `locale` property is set'() {
@@ -100,7 +100,7 @@ registerSuite('mixins/I18nMixin', {
 
 				switchLocale('fr');
 
-				assert.isFalse((<any> localized).invalidate.called, 'Widget not invalidated.');
+				assert.isFalse(localized.invalidate.called, 'Widget not invalidated.');
 			}
 		},
 		'does not decorate properties for wNode'() {

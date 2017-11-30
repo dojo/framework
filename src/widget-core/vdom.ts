@@ -169,25 +169,25 @@ function updateEvents(
 	projectionOptions.nodeMap.set(domNode, eventMap);
 }
 
-function addClasses(domNode: Node, classes: SupportedClassName) {
+function addClasses(domNode: Element, classes: SupportedClassName) {
 	if (classes) {
 		const classNames = classes.split(' ');
 		for (let i = 0; i < classNames.length; i++) {
-			(domNode as Element).classList.add(classNames[i]);
+			domNode.classList.add(classNames[i]);
 		}
 	}
 }
 
-function removeClasses(domNode: Node, classes: SupportedClassName) {
+function removeClasses(domNode: Element, classes: SupportedClassName) {
 	if (classes) {
 		const classNames = classes.split(' ');
 		for (let i = 0; i < classNames.length; i++) {
-			(domNode as Element).classList.remove(classNames[i]);
+			domNode.classList.remove(classNames[i]);
 		}
 	}
 }
 
-function setProperties(domNode: Node, properties: VirtualDomProperties, projectionOptions: ProjectionOptions) {
+function setProperties(domNode: Element, properties: VirtualDomProperties, projectionOptions: ProjectionOptions) {
 	const propNames = Object.keys(properties);
 	const propCount = propNames.length;
 	for (let i = 0; i < propCount; i++) {
@@ -200,7 +200,7 @@ function setProperties(domNode: Node, properties: VirtualDomProperties, projecti
 			}
 			else {
 				for (let i = 0; i < currentClasses.length; i++) {
-					addClasses(domNode, currentClasses[i]);
+					addClasses(domNode as Element, currentClasses[i]);
 				}
 			}
 		}
@@ -237,7 +237,7 @@ function setProperties(domNode: Node, properties: VirtualDomProperties, projecti
 }
 
 function removeOrphanedEvents(
-	domNode: Node,
+	domNode: Element,
 	previousProperties: VirtualDomProperties,
 	properties: VirtualDomProperties,
 	projectionOptions: ProjectionOptions
@@ -256,7 +256,7 @@ function removeOrphanedEvents(
 }
 
 function updateProperties(
-	domNode: Node,
+	domNode: Element,
 	previousProperties: VirtualDomProperties,
 	properties: VirtualDomProperties,
 	projectionOptions: ProjectionOptions
@@ -362,13 +362,13 @@ function updateProperties(
 				}
 				else if (type === 'string' && propName !== 'innerHTML') {
 					if (projectionOptions.namespace === NAMESPACE_SVG && propName === 'href') {
-						(domNode as Element).setAttributeNS(NAMESPACE_XLINK, propName, propValue);
+						domNode.setAttributeNS(NAMESPACE_XLINK, propName, propValue);
 					}
 					else if (propName === 'role' && propValue === '') {
-						(domNode as any).removeAttribute(propName);
+						domNode.removeAttribute(propName);
 					}
 					else {
-						(domNode as Element).setAttribute(propName, propValue);
+						domNode.setAttribute(propName, propValue);
 					}
 				}
 				else {
@@ -595,7 +595,7 @@ function updateChildren(
 				oldIndex = findOldIndex + 1;
 			}
 			else {
-				let insertBefore: Node | undefined = undefined;
+				let insertBefore: Element | Text | undefined = undefined;
 				let child: InternalDNode = oldChildren[oldIndex];
 				if (child) {
 					let nextIndex = oldIndex + 1;
@@ -648,15 +648,15 @@ function addChildren(
 	children: InternalDNode[] | undefined,
 	projectionOptions: ProjectionOptions,
 	parentInstance: DefaultWidgetBaseInterface,
-	insertBefore: undefined | Node = undefined,
-	childNodes?: Node[]
+	insertBefore: Element | Text | undefined = undefined,
+	childNodes?: (Element | Text)[]
 ) {
 	if (children === undefined) {
 		return;
 	}
 
 	if (projectionOptions.merge && childNodes === undefined) {
-		childNodes = arrayFrom(parentHNode.domNode!.childNodes);
+		childNodes = arrayFrom(parentHNode.domNode!.childNodes) as (Element | Text)[];
 	}
 
 	for (let i = 0; i < children.length; i++) {
@@ -664,9 +664,9 @@ function addChildren(
 
 		if (isHNode(child)) {
 			if (projectionOptions.merge && childNodes) {
-				let domElement: HTMLElement | undefined = undefined;
+				let domElement: Element | undefined = undefined;
 				while (child.domNode === undefined && childNodes.length > 0) {
-					domElement = childNodes.shift() as HTMLElement;
+					domElement = childNodes.shift() as Element;
 					if (domElement && domElement.tagName === (child.tag.toUpperCase() || undefined)) {
 						child.domNode = domElement;
 					}
@@ -681,7 +681,7 @@ function addChildren(
 }
 
 function initPropertiesAndChildren(
-	domNode: Node,
+	domNode: Element,
 	dnode: InternalHNode,
 	parentInstance: DefaultWidgetBaseInterface,
 	projectionOptions: ProjectionOptions
@@ -695,7 +695,7 @@ function initPropertiesAndChildren(
 		const instanceData = widgetInstanceMap.get(parentInstance)!;
 		instanceData.nodeHandler.add(domNode as HTMLElement, `${dnode.properties.key}`);
 		projectionOptions.afterRenderCallbacks.push(() => {
-			instanceData.onElementCreated(domNode as HTMLElement, dnode.properties.key as any);
+			instanceData.onElementCreated(domNode as HTMLElement, dnode.properties.key!);
 		});
 	}
 	dnode.inserted = true;
@@ -704,12 +704,12 @@ function initPropertiesAndChildren(
 function createDom(
 	dnode: InternalDNode,
 	parentHNode: InternalHNode,
-	insertBefore: Node | undefined,
+	insertBefore: Element | Text | undefined,
 	projectionOptions: ProjectionOptions,
 	parentInstance: DefaultWidgetBaseInterface,
-	childNodes?: Node[]
+	childNodes?: (Element | Text)[]
 ) {
-	let domNode: Node | undefined;
+	let domNode: Element | Text | undefined;
 	if (isWNode(dnode)) {
 		let { widgetConstructor } = dnode;
 		const parentInstanceData = widgetInstanceMap.get(parentInstance)!;
@@ -783,7 +783,7 @@ function createDom(
 			else if (domNode!.parentNode !== parentHNode.domNode!) {
 				parentHNode.domNode!.appendChild(domNode);
 			}
-			initPropertiesAndChildren(domNode!, dnode, parentInstance, projectionOptions);
+			initPropertiesAndChildren(domNode! as Element, dnode, parentInstance, projectionOptions);
 		}
 	}
 }
@@ -848,7 +848,7 @@ function updateDom(previous: any, dnode: InternalDNode, projectionOptions: Proje
 				const instanceData = widgetInstanceMap.get(parentInstance)!;
 				instanceData.nodeHandler.add(domNode, `${dnode.properties.key}`);
 				projectionOptions.afterRenderCallbacks.push(() => {
-					instanceData.onElementUpdated(domNode as HTMLElement, dnode.properties.key as any);
+					instanceData.onElementUpdated(domNode as HTMLElement, dnode.properties.key!);
 				});
 			}
 		}
@@ -869,7 +869,7 @@ function addDeferredProperties(hnode: InternalHNode, projectionOptions: Projecti
 			...hnode.deferredPropertiesCallback!(!!hnode.inserted),
 			...hnode.decoratedDeferredProperties
 		};
-		updateProperties(hnode.domNode!, hnode.properties, properties, projectionOptions);
+		updateProperties(hnode.domNode! as Element, hnode.properties, properties, projectionOptions);
 		hnode.properties = properties;
 	});
 }

@@ -84,7 +84,7 @@ export class WebAnimations extends Base {
 	}
 
 	animate(key: string, animateProperties: AnimationProperties | AnimationProperties[]) {
-		const node = this.getNode(key);
+		const node = this.getNode(key) as HTMLElement;
 
 		if (node) {
 			if (!Array.isArray(animateProperties)) {

@@ -1,6 +1,13 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { DragResults } from '../../src/meta/Drag';
+import Test from 'intern/lib/Test';
+
+function getPage(test: Test) {
+	return test.remote
+		.get('_build/tests/functional/meta/Drag.html')
+		.setFindTimeout(5000);
+}
 
 registerSuite('Drag', {
 
@@ -8,9 +15,7 @@ registerSuite('Drag', {
 		if (!this.remote.session.capabilities.touchEnabled) {
 			this.skip('Not touch enabled device');
 		}
-		return this.remote
-			.get('_build/tests/functional/meta/Drag.html')
-			.setFindTimeout(5000)
+		return getPage(this)
 			.findById('results')
 			.pressFinger(50, 50)
 			.sleep(100)
@@ -45,9 +50,7 @@ registerSuite('Drag', {
 		if (browserName === 'internet explorer') {
 			this.skip('Dragging is not working on Internet Explorer.');
 		}
-		return this.remote
-			.get('_build/tests/functional/meta/Drag.html')
-			.setFindTimeout(5000)
+		return getPage(this)
 			.findById('results')
 			.moveMouseTo(50, 50)
 			.pressMouseButton()
@@ -63,7 +66,7 @@ registerSuite('Drag', {
 			.releaseMouseButton()
 			.sleep(50)
 			.getVisibleText()
-			.then((text: string) => {
+			.then((text) => {
 				const result: DragResults = JSON.parse(text);
 				assert.isFalse(result.isDragging, 'should be no longer dragging');
 				assert.deepEqual(result.delta, { x: 0, y: 0 }, 'should have dragged expected distance');

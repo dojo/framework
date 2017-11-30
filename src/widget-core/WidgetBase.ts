@@ -1,4 +1,3 @@
-import { EventTypedObject } from '@dojo/interfaces/core';
 import Map from '@dojo/shim/Map';
 import WeakMap from '@dojo/shim/WeakMap';
 import { v } from './d';
@@ -37,12 +36,6 @@ interface ReactionFunctionArguments {
 interface ReactionFunctionConfig {
 	propertyName: string;
 	reaction: DiffPropertyReaction;
-}
-
-export interface WidgetAndElementEvent extends EventTypedObject<'properties:changed'> {
-	key: string;
-	element: HTMLElement;
-	target: WidgetBase;
 }
 
 export type BoundFunctionData = { boundFunc: (...args: any[]) => any, scope: any };
@@ -147,7 +140,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				bind: this
 			});
 			this._metaMap.set(MetaType, cached);
-			cached;
 		}
 
 		return cached as T;
@@ -159,7 +151,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 * @param element The dom node represented by the vdom node.
 	 * @param key The vdom node's key.
 	 */
-	protected onElementCreated(element: Element, key: string): void {
+	protected onElementCreated(element: Element, key: string | number): void {
 		// Do nothing by default.
 	}
 
@@ -169,7 +161,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 * @param element The dom node represented by the vdom node.
 	 * @param key The vdom node's key.
 	 */
-	protected onElementUpdated(element: Element, key: string): void {
+	protected onElementUpdated(element: Element, key: string | number): void {
 		// Do nothing by default.
 	}
 
@@ -215,7 +207,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 		if (this._initialProperties === false || registeredDiffPropertyNames.length !== 0) {
 			const allProperties = [ ...propertyNames, ...Object.keys(this._properties) ];
-			const checkedProperties: string[] = [];
+			const checkedProperties: (string | number)[] = [];
 			const diffPropertyResults: any = {};
 			let runReactions = false;
 
