@@ -3,7 +3,6 @@ import { padStart } from '@dojo/shim/string';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import {
-	DateLength,
 	formatDate,
 	formatRelativeTime,
 	getDateFormatter,
@@ -41,7 +40,30 @@ function getTimezones(date: Date, standard: string = 'GMT') {
 	];
 }
 
-function getDateOptions(type: string, timezoneOffset?: number) {
+interface DateOptions {
+	short: string;
+	medium: string;
+	long: string;
+	full: string;
+}
+
+interface SkeletonOptions {
+	GyMMMd: string;
+}
+
+interface DateOptionsTypes {
+	date: DateOptions;
+	datetime: DateOptions;
+	skeleton: SkeletonOptions;
+	time: DateOptions;
+}
+
+type DateOptionsKeys = keyof DateOptionsTypes;
+
+function getDateOptions<T extends DateOptionsKeys>(type: T, timezoneOffset?: number): [
+	DateOptionsTypes[T],
+	DateOptionsTypes[T]
+] {
 	const date = getTimezoneDate(new Date(1815, 11, 10, 11, 27), timezoneOffset);
 	const [ gmtLong, gmtFull ] = getTimezones(date);
 	const [ utcLong, utcFull ] = getTimezones(date, 'UTC');
@@ -101,10 +123,14 @@ function getDateOptions(type: string, timezoneOffset?: number) {
 		}
 	};
 
-	const enValues = (<any> values)[ 'en' ][ type ];
-	const frValues = (<any> values)[ 'fr' ][ type ];
+	const enValues = values[ 'en' ][ type ];
+	const frValues = values[ 'fr' ][ type ];
 
 	return [ enValues, frValues ];
+}
+
+function getKeys<T extends DateOptionsKeys>(object: SkeletonOptions | DateOptions, key: T): Array<keyof DateOptionsTypes[T]> {
+	return <any> Object.keys(object);
 }
 
 registerSuite('date', {
@@ -135,17 +161,17 @@ registerSuite('date', {
 			},
 
 			'with options': (function () {
-				function getAssertion(type: string, timezoneOffset?: number) {
+				function getAssertion<T extends DateOptionsKeys>(type: T, timezoneOffset?: number) {
 					const date = getTimezoneDate(new Date(1815, 11, 10, 11, 27), timezoneOffset);
 					return function () {
 						const [ enValues, frValues ] = getDateOptions(type, timezoneOffset);
 
-						Object.keys(enValues).forEach((key: DateLength) => {
+						getKeys(enValues, type).forEach(key => {
 							const formatter = getDateFormatter({ [type]: key });
 							assert.strictEqual(formatter(date), enValues[ key ]);
 						});
 
-						Object.keys(frValues).forEach((key: DateLength) => {
+						getKeys(frValues, type).forEach(key => {
 							const formatter = getDateFormatter({ [type]: key }, 'fr');
 							assert.strictEqual(formatter(date), frValues[ key ]);
 						});
@@ -187,7 +213,7 @@ registerSuite('date', {
 					const date = new Date(1815, 11, 10);
 					const [ enValues, frValues ] = getDateOptions('date');
 
-					Object.keys(enValues).forEach((key: DateLength) => {
+					getKeys(enValues, 'date').forEach((key) => {
 						// The expected "short" year format in English is the last two digits,
 						// with the current century assumed.
 						const expected = key === 'short' ? new Date(2015, 11, 10) : date;
@@ -197,7 +223,7 @@ registerSuite('date', {
 						);
 					});
 
-					Object.keys(frValues).forEach((key: DateLength) => {
+					getKeys(frValues, 'date').forEach((key) => {
 						assert.strictEqual(
 							getDateParser({ date: key }, 'fr')(frValues[ key ]).toISOString(),
 							date.toISOString()
@@ -227,15 +253,15 @@ registerSuite('date', {
 						full: `11:27:00 ${utcFull}`
 					};
 
-					Object.keys(enValues).forEach((key: DateLength) => {
+					getKeys(enValues, 'time').forEach((key) => {
 						assert.strictEqual(
-							getDateParser({ time: key })((<any> enValues)[ key ]).toISOString(),
+							getDateParser({ time: key })(enValues[ key ]).toISOString(),
 							expected.toISOString()
 						);
 					});
-					Object.keys(frValues).forEach((key: DateLength) => {
+					getKeys(frValues, 'time').forEach((key) => {
 						assert.strictEqual(
-							getDateParser({ time: key }, 'fr')((<any> frValues)[ key ]).toISOString(),
+							getDateParser({ time: key }, 'fr')(frValues[ key ]).toISOString(),
 							expected.toISOString()
 						);
 					});
@@ -258,15 +284,15 @@ registerSuite('date', {
 						full: `dimanche 10 décembre 2015 à 11:27:00 ${utcFull}`
 					};
 
-					Object.keys(enValues).forEach((key: DateLength) => {
+					getKeys(enValues, 'datetime').forEach((key) => {
 						assert.strictEqual(
-							getDateParser({ datetime: key })((<any> enValues)[ key ]).toISOString(),
+							getDateParser({ datetime: key })(enValues[ key ]).toISOString(),
 							expected.toISOString()
 						);
 					});
-					Object.keys(frValues).forEach((key: DateLength) => {
+					getKeys(frValues, 'datetime').forEach((key) => {
 						assert.strictEqual(
-							getDateParser({ datetime: key }, 'fr')((<any> frValues)[ key ]).toISOString(),
+							getDateParser({ datetime: key }, 'fr')(frValues[ key ]).toISOString(),
 							expected.toISOString()
 						);
 					});
@@ -276,12 +302,12 @@ registerSuite('date', {
 					const expected = new Date(1815, 11, 10).toISOString();
 					const [ enValues, frValues ] = getDateOptions('skeleton');
 
-					Object.keys(enValues).forEach((key) => {
+					getKeys(enValues, 'skeleton').forEach((key) => {
 						const parser = getDateParser({ skeleton: 'GyMMMd' });
 						assert.strictEqual(parser(enValues[ key ]).toISOString(), expected);
 					});
 
-					Object.keys(enValues).forEach((key) => {
+					getKeys(enValues, 'skeleton').forEach((key) => {
 						const parser = getDateParser({ skeleton: 'GyMMMd' }, 'fr');
 						assert.strictEqual(parser(frValues[ key ]).toISOString(), expected);
 					});
@@ -299,17 +325,17 @@ registerSuite('date', {
 			},
 
 			'assert options': (function () {
-				function getAssertion(type: string, timezoneOffset?: number) {
+				function getAssertion<T extends DateOptionsKeys>(type: T, timezoneOffset?: number) {
 					const date = getTimezoneDate(new Date(1815, 11, 10, 11, 27), timezoneOffset);
 
 					return function () {
 						const [ enValues, frValues ] = getDateOptions(type, timezoneOffset);
 
-						Object.keys(enValues).forEach((key: DateLength) => {
-							assert.strictEqual(formatDate(date, { [type]: key }), (<any> enValues)[ key ]);
+						getKeys(enValues, type).forEach((key) => {
+							assert.strictEqual(formatDate(date, { [type]: key }), enValues[ key ]);
 						});
-						Object.keys(frValues).forEach((key: DateLength) => {
-							assert.strictEqual(formatDate(date, { [type]: key }, 'fr'), (<any> frValues)[ key ]);
+						getKeys(frValues, type).forEach((key) => {
+							assert.strictEqual(formatDate(date, { [type]: key }, 'fr'), frValues[ key ]);
 						});
 					};
 				}
@@ -390,7 +416,7 @@ registerSuite('date', {
 					const date = new Date(1815, 11, 10);
 					const [ enValues, frValues ] = getDateOptions('date');
 
-					Object.keys(enValues).forEach((key: DateLength) => {
+					getKeys(enValues, 'date').forEach((key) => {
 						// The expected "short" year format in English is the last two digits,
 						// with the current century assumed.
 						const expected = key === 'short' ? new Date(2015, 11, 10) : date;
@@ -400,7 +426,7 @@ registerSuite('date', {
 						);
 					});
 
-					Object.keys(frValues).forEach((key: DateLength) => {
+					getKeys(frValues, 'date').forEach((key) => {
 						assert.strictEqual(
 							parseDate(frValues[ key ], { date: key }, 'fr').toISOString(),
 							date.toISOString()
@@ -430,13 +456,13 @@ registerSuite('date', {
 						full: `11:27:00 ${utcFull}`
 					};
 
-					Object.keys(enValues).forEach((key: DateLength) => {
+					getKeys(enValues, 'time').forEach((key) => {
 						assert.strictEqual(
 							parseDate((<any> enValues)[ key ], { time: key }).toISOString(),
 							expected.toISOString()
 						);
 					});
-					Object.keys(frValues).forEach((key: DateLength) => {
+					getKeys(frValues, 'time').forEach((key) => {
 						assert.strictEqual(
 							parseDate((<any> frValues)[ key ], { time: key }, 'fr').toISOString(),
 							expected.toISOString()
@@ -461,13 +487,13 @@ registerSuite('date', {
 						full: `dimanche 10 décembre 2015 à 11:27:00 ${utcFull}`
 					};
 
-					Object.keys(enValues).forEach((key: DateLength) => {
+					getKeys(enValues, 'datetime').forEach((key) => {
 						assert.strictEqual(
 							parseDate((<any> enValues)[ key ], { datetime: key }).toISOString(),
 							expected.toISOString()
 						);
 					});
-					Object.keys(frValues).forEach((key: DateLength) => {
+					getKeys(frValues, 'datetime').forEach((key) => {
 						assert.strictEqual(
 							parseDate((<any> frValues)[ key ], { datetime: key }, 'fr').toISOString(),
 							expected.toISOString()
@@ -479,11 +505,11 @@ registerSuite('date', {
 					const expected = new Date(1815, 11, 10).toISOString();
 					const [ enValues, frValues ] = getDateOptions('skeleton');
 
-					Object.keys(enValues).forEach((key) => {
+					getKeys(enValues, 'skeleton').forEach((key) => {
 						assert.strictEqual(parseDate(enValues[ key ], { skeleton: 'GyMMMd' }).toISOString(), expected);
 					});
 
-					Object.keys(enValues).forEach((key) => {
+					getKeys(enValues, 'skeleton').forEach((key) => {
 						assert.strictEqual(parseDate(frValues[ key ], { skeleton: 'GyMMMd' }, 'fr').toISOString(), expected);
 					});
 				}

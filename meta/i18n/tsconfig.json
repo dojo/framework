@@ -9,6 +9,7 @@
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
+		"strict": true,
 		"target": "es5",
 		"moduleResolution": "node",
 		"downlevelIteration": true,

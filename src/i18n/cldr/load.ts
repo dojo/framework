@@ -1,7 +1,6 @@
-import load from '@dojo/core/load';
+import load, { Require } from '@dojo/core/load';
 import coreRequest from '@dojo/core/request';
 import has from '@dojo/has/has';
-import { Require } from '@dojo/interfaces/loader';
 import Promise from '@dojo/shim/Promise';
 
 import baseLoad, {

@@ -1,6 +1,6 @@
 import 'globalize';
 import 'globalize/dist/globalize/unit';
-import { NumberFormatter, NumberFormatterOptions } from './number';
+import { NumberFormatter } from './number';
 import { globalizeDelegator } from './util/globalize';
 
 export type UnitLength = 'long' | 'narrow' | 'short';
@@ -14,7 +14,7 @@ export type UnitFormatterOptions = {
 	/**
 	 * numberFormatter: [Function] a number formatter function. Defaults to Globalize .numberFormatter() for the current locale using the default options.
 	 */
-	numberFormatter?: NumberFormatterOptions;
+	numberFormatter?: NumberFormatter;
 };
 
 /**

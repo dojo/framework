@@ -3,7 +3,7 @@ import Evented from '@dojo/core/Evented';
 import has from '@dojo/core/has';
 import { assign } from '@dojo/core/lang';
 import load, { useDefault } from '@dojo/core/load';
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from '@dojo/core/interfaces';
 import global from '@dojo/shim/global';
 import Map from '@dojo/shim/Map';
 import Observable, { Observer, Subscription, SubscriptionObserver } from '@dojo/shim/Observable';
@@ -74,7 +74,7 @@ const TOKEN_PATTERN = /\{([a-z0-9_]+)\}/gi;
 const VALID_PATH_PATTERN = new RegExp(`\\${PATH_SEPARATOR}[^\\${PATH_SEPARATOR}]+\$`);
 const bundleMap = new Map<string, Map<string, Messages>>();
 const formatterMap = new Map<string, MessageFormatter>();
-const localeProducer = new Evented({});
+const localeProducer = new Evented();
 let rootLocale: string;
 
 /**
@@ -392,7 +392,7 @@ function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Promise<T
 	}
 
 	const localePaths = resolveLocalePaths(path, currentLocale, locales);
-	return loadLocaleBundles(localePaths).then((bundles: T[]): T => {
+	return loadLocaleBundles<T>(localePaths).then((bundles: T[]): T => {
 		return bundles.reduce((previous: T, partial: T): T => {
 			const localeMessages: T = assign({}, previous, partial);
 			loadMessages(bundlePath, <T> Object.freeze(localeMessages), currentLocale);
