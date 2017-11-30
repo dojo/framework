@@ -6,6 +6,7 @@ import { OperationType, PatchOperation } from './../../src/state/Patch';
 import {
 	CommandRequest,
 	createCallbackDecorator,
+	createCommandFactory,
 	createProcess,
 	createProcessFactoryWith,
 	ProcessCallback,
@@ -60,8 +61,8 @@ describe('process', () => {
 		const process = createProcess([ testCommandFactory('foo'), testCommandFactory('foo/bar') ]);
 		const processExecutor = process(store);
 		processExecutor();
-		const foo = store.get('/foo');
-		const foobar = store.get('/foo/bar');
+		const foo = store.get(store.path('foo'));
+		const foobar = store.get(store.path('foo', 'bar'));
 		assert.deepEqual(foo, { bar: 'foo/bar' });
 		assert.strictEqual(foobar, 'foo/bar');
 	});
@@ -70,15 +71,15 @@ describe('process', () => {
 		const process = createProcess([ testCommandFactory('foo'), testAsyncCommandFactory('bar'), testCommandFactory('foo/bar') ]);
 		const processExecutor = process(store);
 		const promise = processExecutor();
-		const foo = store.get('/foo');
-		const bar = store.get('/bar');
+		const foo = store.get(store.path('foo'));
+		const bar = store.get(store.path('bar'));
 		assert.strictEqual(foo, 'foo');
 		assert.isUndefined(bar);
 		promiseResolver();
 		return promise.then(() => {
-			const foo = store.get('/foo');
-			const bar = store.get('/bar');
-			const foobar = store.get('/foo/bar');
+			const foo = store.get(store.path('foo'));
+			const bar = store.get(store.path('bar'));
+			const foobar = store.get(store.path('foo', 'bar'));
 			assert.deepEqual(foo, { bar: 'foo/bar' });
 			assert.strictEqual(bar, 'bar');
 			assert.strictEqual(foobar, 'foo/bar');
@@ -98,14 +99,14 @@ describe('process', () => {
 		const promise = processExecutor();
 		promiseResolvers[0]();
 		return promises[0].then(() => {
-			const bar = store.get('/bar');
-			const baz = store.get('/baz');
+			const bar = store.get(store.path('bar'));
+			const baz = store.get(store.path('baz'));
 			assert.isUndefined(bar);
 			assert.isUndefined(baz);
 			promiseResolver();
 			return promise.then(() => {
-				const bar = store.get('/bar');
-				const baz = store.get('/baz');
+				const bar = store.get(store.path('bar'));
+				const baz = store.get(store.path('baz'));
 				assert.strictEqual(bar, 'bar');
 				assert.strictEqual(baz, 'baz');
 			});
@@ -120,9 +121,9 @@ describe('process', () => {
 		]);
 		const processExecutor = process(store);
 		processExecutor('payload');
-		const foo = store.get('/foo');
-		const bar = store.get('/bar');
-		const baz = store.get('/baz');
+		const foo = store.get(store.path('foo'));
+		const bar = store.get(store.path('bar'));
+		const baz = store.get(store.path('baz'));
 		assert.strictEqual(foo, 'payload');
 		assert.strictEqual(bar, 'payload');
 		assert.strictEqual(baz, 'payload');
@@ -136,12 +137,24 @@ describe('process', () => {
 		]);
 		const processExecutor = process(store, () => 'changed');
 		processExecutor('payload');
-		const foo = store.get('/foo');
-		const bar = store.get('/bar');
-		const baz = store.get('/baz');
+		const foo = store.get(store.path('foo'));
+		const bar = store.get(store.path('bar'));
+		const baz = store.get(store.path('baz'));
 		assert.strictEqual(foo, 'changed');
 		assert.strictEqual(bar, 'changed');
 		assert.strictEqual(baz, 'changed');
+	});
+
+	it('provides a command factory', () => {
+		const createCommand = createCommandFactory<{ foo: string }>();
+
+		const command = createCommand(({ get, path }) => {
+			// get(path('bar')); shouldn't compile
+			get(path('foo'));
+			return [];
+		});
+
+		assert.equal(typeof command, 'function');
 	});
 
 	it('can provide a callback that gets called on process completion', () => {
@@ -167,10 +180,10 @@ describe('process', () => {
 		const extraProcess = createProcess([ testCommandFactory('bar') ]);
 		const process = createProcess([ testCommandFactory('foo') ], (error, result) => {
 			assert.isNull(error);
-			let bar = store.get('/bar');
+			let bar = store.get(store.path('bar'));
 			assert.isUndefined(bar);
 			result.executor(extraProcess);
-			bar = store.get('/bar');
+			bar = store.get(store.path('bar'));
 			assert.strictEqual(bar, 'bar');
 		});
 		const processExecutor = process(store);
@@ -179,10 +192,10 @@ describe('process', () => {
 
 	it('process can be undone using the undo function provided via the callback', () => {
 		const process = createProcess([ testCommandFactory('foo') ], (error, result) => {
-			let foo = store.get('/foo');
+			let foo = store.get(store.path('foo'));
 			assert.strictEqual(foo, 'foo');
 			result.undo();
-			foo = store.get('/foo');
+			foo = store.get(store.path('foo'));
 			assert.isUndefined(foo);
 		});
 		const processExecutor = process(store);
@@ -203,9 +216,9 @@ describe('process', () => {
 			results.push('callback two');
 		};
 
-		const logPointerCallback = (error: ProcessError, result: ProcessResult): void => {
+		const logPointerCallback = (error: ProcessError, result: ProcessResult<{ logs: string[][] }>): void => {
 			const paths = result.operations.map(operation => operation.path.path);
-			const logs = result.get<string[][]>('/logs') || [];
+			const logs = result.get(store.path('logs')) || [];
 
 			result.apply([
 				{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }
@@ -224,13 +237,13 @@ describe('process', () => {
 		assert.lengthOf(results, 2);
 		assert.strictEqual(results[0], 'callback two');
 		assert.strictEqual(results[1], 'callback one');
-		assert.deepEqual(store.get('/logs'), [ [ '/foo', '/bar' ] ]);
+		assert.deepEqual(store.get(store.path('logs')), [ [ '/foo', '/bar' ] ]);
 		executor();
 		assert.lengthOf(results, 4);
 		assert.strictEqual(results[0], 'callback two');
 		assert.strictEqual(results[1], 'callback one');
 		assert.strictEqual(results[2], 'callback two');
 		assert.strictEqual(results[3], 'callback one');
-		assert.deepEqual(store.get('/logs'), [ [ '/foo', '/bar' ], [ '/foo', '/bar' ] ]);
+		assert.deepEqual(store.get(store.path('logs')), [ [ '/foo', '/bar' ], [ '/foo', '/bar' ] ]);
 	});
 });

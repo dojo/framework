@@ -72,4 +72,12 @@ describe('state/Pointer', () => {
 		assert.deepEqual(target.segment, 'qux');
 	});
 
+	it('should handle a path with no leading slash', () => {
+		const pointer = new Pointer('foo/bar/qux');
+		const target = walk(pointer.segments, {}, false);
+
+		assert.deepEqual(target.object, { foo: { bar: {} } });
+		assert.deepEqual(target.target, {});
+		assert.deepEqual(target.segment, 'qux');
+	});
 });

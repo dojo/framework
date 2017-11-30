@@ -7,35 +7,35 @@ export enum OperationType {
 	TEST = 'test'
 }
 
-export interface BaseOperation {
+export interface BaseOperation<T = any, U = any> {
 	op: OperationType;
-	path: Pointer;
+	path: Pointer<T, U>;
 }
 
-export interface AddPatchOperation<T = any> extends BaseOperation {
+export interface AddPatchOperation<T = any, U = any> extends BaseOperation<T, U> {
 	op: OperationType.ADD;
-	value: T;
+	value: U;
 }
 
-export interface RemovePatchOperation extends BaseOperation {
+export interface RemovePatchOperation<T = any, U = any> extends BaseOperation<T, U> {
 	op: OperationType.REMOVE;
 }
 
-export interface ReplacePatchOperation<T = any> extends BaseOperation {
+export interface ReplacePatchOperation<T = any, U = any> extends BaseOperation<T, U> {
 	op: OperationType.REPLACE;
-	value: T;
+	value: U;
 }
 
-export interface TestPatchOperation<T = any> extends BaseOperation {
+export interface TestPatchOperation<T = any, U = any> extends BaseOperation<T, U> {
 	op: OperationType.TEST;
-	value: T;
+	value: U;
 }
 
-export type PatchOperation = AddPatchOperation | RemovePatchOperation | ReplacePatchOperation | TestPatchOperation;
+export type PatchOperation<T = any, U = any> = AddPatchOperation<T, U> | RemovePatchOperation<T, U> | ReplacePatchOperation<T, U> | TestPatchOperation<T, U>;
 
-export interface PatchResult {
-	object: any;
-	undoOperations: PatchOperation[];
+export interface PatchResult<T = any, U = any> {
+	object: T;
+	undoOperations: PatchOperation<T, U>[];
 }
 
 function add(pointerTarget: PointerTarget, value: any): any {
@@ -125,15 +125,15 @@ function inverse(operation: PatchOperation, state: any): any[] {
 	}
 }
 
-export class Patch {
-	private _operations: PatchOperation[];
+export class Patch<T = any> {
+	private _operations: PatchOperation<T>[];
 
-	constructor(operations: PatchOperation | PatchOperation[]) {
+	constructor(operations: PatchOperation<T> | PatchOperation<T>[]) {
 		this._operations = Array.isArray(operations) ? operations : [ operations ];
 	}
 
-	public apply(object: any): PatchResult {
-		let undoOperations: PatchOperation[] = [];
+	public apply(object: any): PatchResult<T> {
+		let undoOperations: PatchOperation<T>[] = [];
 		const patchedObject = this._operations.reduce((patchedObject, next) => {
 			let object;
 			const pointerTarget = walk(next.path.segments, patchedObject);

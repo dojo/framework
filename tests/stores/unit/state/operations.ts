@@ -8,7 +8,7 @@ import { Pointer } from './../../../src/state/Pointer';
 describe('state/operations', () => {
 
 	it('add()', () => {
-		const result = operations.add('/test', 'test');
+		const result = operations.add({ path: '/test', state: null, value: null }, 'test');
 		assert.deepEqual(result, {
 			op: OperationType.ADD,
 			path: new Pointer('/test'),
@@ -17,7 +17,7 @@ describe('state/operations', () => {
 	});
 
 	it('remove()', () => {
-		const result = operations.remove('/test');
+		const result = operations.remove({ path:  '/test', state: null, value: null });
 		assert.deepEqual(result, {
 			op: OperationType.REMOVE,
 			path: new Pointer('/test')
@@ -25,7 +25,7 @@ describe('state/operations', () => {
 	});
 
 	it('replace()', () => {
-		const result = operations.replace('/test', 'test');
+		const result = operations.replace({ path: '/test', state: null, value: null }, 'test');
 		assert.deepEqual(result, {
 			op: OperationType.REPLACE,
 			path: new Pointer('/test'),
@@ -34,7 +34,7 @@ describe('state/operations', () => {
 	});
 
 	it('test()', () => {
-		const result = operations.test('/test', 'test');
+		const result = operations.test({ path: '/test', state: null, value: null }, 'test');
 		assert.deepEqual(result, {
 			op: OperationType.TEST,
 			path: new Pointer('/test'),

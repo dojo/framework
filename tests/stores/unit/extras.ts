@@ -7,8 +7,8 @@ import { Pointer } from './../../src/state/Pointer';
 import { createUndoManager } from './../../src/extras';
 import { Store } from './../../src/Store';
 
-function incrementCounter({ get }: CommandRequest): PatchOperation[] {
-	let counter = get<number>('/counter') || 0;
+function incrementCounter({ get, path }: CommandRequest<{ counter: number }>): PatchOperation[] {
+	let counter = get(path('counter')) || 0;
 	return [
 		{ op: OperationType.REPLACE, path: new Pointer('/counter'), value: ++counter }
 	];
@@ -25,15 +25,15 @@ describe('extras', () => {
 		}));
 		const executor = incrementCounterProcess(store);
 		executor();
-		assert.strictEqual(store.get('/counter'), 1);
+		assert.strictEqual(store.get(store.path('counter')), 1);
 		executor();
-		assert.strictEqual(store.get('/counter'), 2);
+		assert.strictEqual(store.get(store.path('counter')), 2);
 		executor();
-		assert.strictEqual(store.get('/counter'), 3);
+		assert.strictEqual(store.get(store.path('counter')), 3);
 		localUndoStack[2]();
-		assert.strictEqual(store.get('/counter'), 2);
+		assert.strictEqual(store.get(store.path('counter')), 2);
 		undoer();
-		assert.strictEqual(store.get('/counter'), 1);
+		assert.strictEqual(store.get(store.path('counter')), 1);
 	});
 
 	it('undo has no effect if there are no undo functions on the stack', () => {
@@ -43,7 +43,7 @@ describe('extras', () => {
 		const executor = incrementCounterProcess(store);
 		executor();
 		undoer();
-		assert.strictEqual(store.get('/counter'), 1);
+		assert.strictEqual(store.get(store.path('counter')), 1);
 	});
 
 	it('local undo throws an error if global undo has already been executed', () => {
@@ -55,7 +55,7 @@ describe('extras', () => {
 		}));
 		const executor = incrementCounterProcess(store);
 		executor();
-		assert.strictEqual(store.get('/counter'), 1);
+		assert.strictEqual(store.get(store.path('counter')), 1);
 		undoer();
 		assert.throws(() => {
 			localUndo && localUndo();

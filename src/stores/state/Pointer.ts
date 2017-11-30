@@ -57,7 +57,7 @@ export function walk(segments: string[], object: any, clone = true): PointerTarg
 	}, pointerTarget);
 }
 
-export class Pointer {
+export class Pointer<T = any, U = any> {
 	private readonly _segments: string[];
 
 	constructor(segments: string | string[]) {
@@ -65,7 +65,7 @@ export class Pointer {
 			this._segments = segments;
 		}
 		else {
-			this._segments = segments.split('/');
+			this._segments = (segments[0] === '/' ? segments : `/${segments}`).split('/') ;
 			this._segments.shift();
 		}
 		if (segments.length === 0 || (segments.length === 1 && (segments[0] === '/') || segments[0] === '')) {
@@ -82,7 +82,7 @@ export class Pointer {
 		return `/${this._segments.map(encode).join('/')}`;
 	}
 
-	get(object: any): any {
+	get(object: T): U {
 		const pointerTarget: PointerTarget = walk(this.segments, object, false);
 		return pointerTarget.target[pointerTarget.segment];
 	}

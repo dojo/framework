@@ -1,20 +1,27 @@
 import { isThenable } from '@dojo/shim/Promise';
 import { PatchOperation } from './state/Patch';
-import { Store } from './Store';
+import { State, Store } from './Store';
 
 /**
  * The arguments passed to a `Command`
  */
-export interface CommandRequest {
-	get<T = any>(pointer: string): T;
+export interface CommandRequest<T = any> extends State<T> {
 	payload: any[];
+}
+
+/**
+ * A command factory interface. Returns the passed command. This provides a way to automatically infer and/or
+ * verify the type of multiple commands without explicitly specifying the generic for each command
+ */
+export interface CommandFactory<T = any> {
+	(command: Command<T>): Command<T>;
 }
 
 /**
  * Command that returns patch operations based on the command request
  */
-export interface Command {
-	(request?: CommandRequest): Promise<PatchOperation[]> | PatchOperation[];
+export interface Command<T = any> {
+	(request: CommandRequest<T>): Promise<PatchOperation<T>[]> | PatchOperation<T>[];
 }
 
 /**
@@ -28,26 +35,25 @@ export interface Transformer {
  * A process that returns an executor using a Store and Transformer
  */
 export interface Process<T = any> {
-	(store: Store, transformer?: Transformer): ProcessExecutor<T>;
+	(store: Store<T>, transformer?: Transformer): ProcessExecutor<T>;
 }
 
 /**
  * Represents an error from a ProcessExecutor
  */
-export interface ProcessError {
+export interface ProcessError<T = any> {
 	error: Error;
-	command?: Command[] | Command;
+	command?: Command<T>[] | Command<T>;
 }
 
 /**
  * Represents a successful result from a ProcessExecutor
  */
-export interface ProcessResult {
-	executor: (process: Process, payload?: any, payloadTransformer?: Transformer) => Promise<ProcessResult | ProcessError>;
+export interface ProcessResult<T = any> extends State<T> {
+	executor: (process: Process<T>, payload?: any, payloadTransformer?: Transformer) => Promise<ProcessResult<T> | ProcessError<T>>;
 	undo: Undo;
-	operations: PatchOperation[];
-	apply: (operations: PatchOperation[], invalidate?: boolean) => PatchOperation[];
-	get: <T>(pointer: string) => T;
+	operations: PatchOperation<T>[];
+	apply: (operations: PatchOperation<T>[], invalidate?: boolean) => PatchOperation<T>[];
 	payload: any;
 }
 
@@ -55,14 +61,14 @@ export interface ProcessResult {
  * Runs a process for the given arguments.
  */
 export interface ProcessExecutor<T = any> {
-	(payload?: T): Promise<ProcessResult | ProcessError>;
+	(payload?: T): Promise<ProcessResult<T> | ProcessError<T>>;
 }
 
 /**
  * Callback for a process, returns an error as the first argument
  */
-export interface ProcessCallback {
-	(error: ProcessError | null, result: ProcessResult): void;
+export interface ProcessCallback<T = any> {
+	(error: ProcessError<T> | null, result: ProcessResult<T>): void;
 }
 
 /**
@@ -83,7 +89,14 @@ export interface ProcessCallbackDecorator {
  * CreateProcess factory interface
  */
 export interface CreateProcess {
-	(commands: (Command[] | Command)[], callback?: ProcessCallback): Process;
+	<T>(commands: (Command<T>[] | Command<T>)[], callback?: ProcessCallback<T>): Process<T>;
+}
+
+/**
+ * Creates a command factory with the specified type
+ */
+export function createCommandFactory<T>(): CommandFactory<T> {
+	return (command) => command;
 }
 
 /**
@@ -92,9 +105,9 @@ export interface CreateProcess {
  * @param commands The commands for the process
  * @param callback Callback called after the process is completed
  */
-export function createProcess<T>(commands: (Command[] | Command)[], callback?: ProcessCallback): Process {
-	return (store: Store, transformer?: Transformer): ProcessExecutor<T> => {
-		const { apply, get } = store;
+export function createProcess<T>(commands: (Command<T>[] | Command<T>)[], callback?: ProcessCallback): Process<T> {
+	return (store: Store<T>, transformer?: Transformer): ProcessExecutor<T> => {
+		const { apply, get, path, at } = store;
 		function executor(process: Process, payload?: any, payloadTransformer?: Transformer): Promise<ProcessResult | ProcessError> {
 			return process(store, payloadTransformer)(payload);
 		}
@@ -114,11 +127,11 @@ export function createProcess<T>(commands: (Command[] | Command)[], callback?: P
 				while (command) {
 					let results = [];
 					if (Array.isArray(command)) {
-						results = command.map((commandFunction) => commandFunction({ get: store.get, payload }));
+						results = command.map((commandFunction) => commandFunction({ at, get, path, payload }));
 						results = await Promise.all(results);
 					}
 					else {
-						let result = command({ get: store.get, payload });
+						let result = command({ at, get, path, payload });
 						if (isThenable(result)) {
 							result = await result;
 						}
@@ -138,8 +151,8 @@ export function createProcess<T>(commands: (Command[] | Command)[], callback?: P
 				error = { error: e, command };
 			}
 
-			callback && callback(error, { operations, undo, apply, get, executor, payload });
-			return Promise.resolve({ error, operations, undo, apply, get, executor, payload });
+			callback && callback(error, { operations, undo, apply, at, get, path, executor, payload });
+			return Promise.resolve({ error, operations, undo, apply, at, get, path, executor, payload });
 		};
 	};
 }

@@ -10,7 +10,7 @@ describe('state/Patch', () => {
 	describe('add', () => {
 
 		it('value to new path', () => {
-			const patch = new Patch(ops.add('/test', 'test'));
+			const patch = new Patch(ops.add({ path: 'test', state: null, value: null }, 'test'));
 			const obj = {};
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
@@ -22,7 +22,7 @@ describe('state/Patch', () => {
 		});
 
 		it('value to new nested path', () => {
-			const patch = new Patch(ops.add('/foo/bar/qux', 'test'));
+			const patch = new Patch(ops.add({ path: '/foo/bar/qux', state: null, value: null }, 'test'));
 			const obj = {};
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
@@ -34,7 +34,7 @@ describe('state/Patch', () => {
 		});
 
 		it('value to existing path', () => {
-			const patch = new Patch(ops.add('/test', 'test'));
+			const patch = new Patch(ops.add({ path: '/test', state: null, value: null }, 'test'));
 			const obj = { test: true };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
@@ -46,7 +46,7 @@ describe('state/Patch', () => {
 		});
 
 		it('value to array index path', () => {
-			const patch = new Patch(ops.add('/test/0', 'test'));
+			const patch = new Patch(ops.add({ path: '/test/0', state: null, value: null }, 'test'));
 			const obj = { test: [] };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
@@ -62,7 +62,7 @@ describe('state/Patch', () => {
 	describe('replace', () => {
 
 		it('new path', () => {
-			const patch = new Patch(ops.replace('/test', 'test'));
+			const patch = new Patch(ops.replace({ path: '/test', state: null, value: null }, 'test'));
 			const obj = {};
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
@@ -74,7 +74,7 @@ describe('state/Patch', () => {
 		});
 
 		it('value to new nested path', () => {
-			const patch = new Patch(ops.replace('/foo/bar/qux', 'test'));
+			const patch = new Patch(ops.replace({ path: '/foo/bar/qux', state: null, value: null }, 'test'));
 			const obj = {};
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
@@ -86,7 +86,7 @@ describe('state/Patch', () => {
 		});
 
 		it('existing path', () => {
-			const patch = new Patch(ops.replace('/test', 'test'));
+			const patch = new Patch(ops.replace({ path: '/test', state: null, value: null }, 'test'));
 			const obj = { test: true };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
@@ -98,7 +98,7 @@ describe('state/Patch', () => {
 		});
 
 		it('array index path', () => {
-			const patch = new Patch(ops.replace('/test/1', 'test'));
+			const patch = new Patch(ops.replace({ path: '/test/1', state: null, value: null }, 'test'));
 			const obj = { test: [ 'test', 'foo' ] };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
@@ -114,7 +114,7 @@ describe('state/Patch', () => {
 	describe('remove', () => {
 
 		it('new path', () => {
-			const patch = new Patch(ops.remove('/test'));
+			const patch = new Patch(ops.remove({ path:  '/test', state: null, value: null }));
 			const obj = { other: true };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
@@ -125,7 +125,7 @@ describe('state/Patch', () => {
 		});
 
 		it('existing path', () => {
-			const patch = new Patch(ops.remove('/test'));
+			const patch = new Patch(ops.remove({ path:  '/test', state: null, value: null }));
 			const obj = { test: true };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
@@ -136,7 +136,7 @@ describe('state/Patch', () => {
 		});
 
 		it('array index path', () => {
-			const patch = new Patch(ops.remove('/test/1'));
+			const patch = new Patch(ops.remove({ path: '/test/1', state: null, value: null }));
 			const obj = { test: [ 'test', 'foo' ] };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
@@ -151,14 +151,14 @@ describe('state/Patch', () => {
 	describe('test', () => {
 
 		it('success', () => {
-			const patch = new Patch(ops.test('/test', 'test'));
+			const patch = new Patch(ops.test({ path: '/test', state: null, value: null }, 'test'));
 			const obj = { test: 'test' };
 			const result = patch.apply(obj);
 			assert.strictEqual(result.object, obj);
 		});
 
 		it('failure', () => {
-			const patch = new Patch(ops.test('/test', true));
+			const patch = new Patch(ops.test({ path: '/test', state: null, value: null }, true));
 			const obj = { test: 'test' };
 			assert.throws(() => {
 				patch.apply(obj);
@@ -166,7 +166,7 @@ describe('state/Patch', () => {
 		});
 
 		it('nested path', () => {
-			const patch = new Patch(ops.test('/foo/0/bar/baz/0/qux', true));
+			const patch = new Patch(ops.test({ path: '/foo/0/bar/baz/0/qux', state: null, value: null }, true));
 			const obj = {
 				foo: [ {
 					bar: {
@@ -181,7 +181,7 @@ describe('state/Patch', () => {
 		});
 
 		it('complex value', () => {
-			const patch = new Patch(ops.test('/foo', [ {
+			const patch = new Patch(ops.test({ path: '/foo', state: null, value: null }, [ {
 				bar: {
 					baz: [{
 						qux: true
@@ -202,7 +202,7 @@ describe('state/Patch', () => {
 		});
 
 		it('no value', () => {
-			const patch = new Patch(ops.test('/test', 'test'));
+			const patch = new Patch(ops.test({ path: '/test', state: null, value: null }, 'test'));
 			const obj = { test: 'test' };
 			const result = patch.apply(obj);
 			assert.strictEqual(result.object, obj);
