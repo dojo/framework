@@ -55,7 +55,7 @@ if (!('document' in global)) {
 	Object.defineProperty(
 		window.CSSStyleDeclaration.prototype,
 		'transition',
-		Object.getOwnPropertyDescriptor((<any> window).CSSStyleDeclaration.prototype, 'webkitTransition')
+		Object.getOwnPropertyDescriptor((<any> window).CSSStyleDeclaration.prototype, 'webkitTransition')!
 	);
 
 	/* Polyfill requestAnimationFrame - this can never be called an *actual* polyfill */

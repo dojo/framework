@@ -1801,8 +1801,8 @@ registerSuite('compare', {
 					{ args: [ 'foo' ], Ctor: RegExp, name: 'bar' }
 				]);
 
-				const descriptorFoo = Object.getOwnPropertyDescriptor(result, 'foo');
-				const descriptorBar = Object.getOwnPropertyDescriptor(result, 'bar');
+				const descriptorFoo = Object.getOwnPropertyDescriptor(result, 'foo')!;
+				const descriptorBar = Object.getOwnPropertyDescriptor(result, 'bar')!;
 				assert.isFalse(descriptorFoo.writable);
 				assert.isFalse(descriptorFoo.enumerable);
 				assert.isFalse(descriptorFoo.configurable);

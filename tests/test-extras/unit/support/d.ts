@@ -54,7 +54,7 @@ registerSuite('support/virtualDom', {
 		},
 
 		'by object key'() {
-			const key = {};
+			const key: any = {};
 			const actual = v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]);
 
 			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]));
@@ -221,7 +221,7 @@ registerSuite('support/virtualDom', {
 		},
 
 		'by object key'() {
-			const key = {};
+			const key: any = {};
 			const actual = v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]);
 
 			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]));
@@ -311,7 +311,7 @@ registerSuite('support/virtualDom', {
 		},
 
 		'by object key'() {
-			const key = {};
+			const key: any = {};
 			const actual = v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]);
 
 			assertRender(actual, v('div', { key: 'a' }, [ null, v('a', { key, href: '#link' }) ]));
@@ -382,7 +382,7 @@ registerSuite('support/virtualDom', {
 
 		'key is object'() {
 			const obj = {};
-			assertRender(findKey(v('div', { key: 'bar' }, [ v('span', { key: obj }), 'foo', null ]), obj)!, v('span', { key: obj }), 'should find child node');
+			assertRender(findKey(v('div', { key: 'bar' }, [ v('span', { key: obj } as any), 'foo', null ]), obj)!, v('span', { key: obj } as any), 'should find child node');
 		},
 
 		'value is WNode'() {
@@ -416,7 +416,7 @@ registerSuite('support/virtualDom', {
 
 		'duplicate object keys warn'() {
 			const warnStub = stub(console, 'warn');
-			const key = {};
+			const key: any = {};
 
 			const fixture = v('div', { key: 'foo' }, [
 				v('span', { key: 'parent1' }, [

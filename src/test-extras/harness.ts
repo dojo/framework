@@ -2,7 +2,7 @@ import 'pepjs';
 
 import Evented from '@dojo/core/Evented';
 import { createHandle } from '@dojo/core/lang';
-import { Handle } from '@dojo/interfaces/core';
+import { Handle } from '@dojo/core/interfaces';
 import { assign } from '@dojo/shim/object';
 import WeakMap from '@dojo/shim/WeakMap';
 import {
@@ -73,7 +73,7 @@ function stubRender(target: DNode): DNode {
 				? widgetConstructor
 				: (widgetConstructor as any).name || '<Anonymous>';
 		},
-		(dNode) => isWNode(dNode)
+		isWNode
 	);
 	return target;
 }
@@ -263,7 +263,7 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 	}
 
 	constructor(widgetConstructor: Constructor<W>, root?: HTMLElement) {
-		super({});
+		super();
 
 		const widgetHarness = this._widgetHarness = new ProjectorWidgetHarness(widgetConstructor, this._metaMap);
 		// we want to control when the render gets scheduled, so we will hijack the projects one

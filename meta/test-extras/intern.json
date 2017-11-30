@@ -20,8 +20,7 @@
 			"options": {
 				"packages": [
 					{ "name": "src", "location": "_build/src" },
-					{ "name": "tests", "location": "_build/tests" },
-					{ "name": "maquette", "location": "node_modules/maquette/dist", "main": "maquette" }
+					{ "name": "tests", "location": "_build/tests" }
 				]
 			}
 		}

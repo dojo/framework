@@ -43,13 +43,13 @@ export function assignProperties(target: WNode | HNode, properties: WidgetProper
  * of the property is considered equal, otherwise it is considered not equal and the expected render will fail.
  * @param callback A function that is invoked when comparing the property value
  */
-export function compareProperty<T>(callback: (value: T, name: string, parent: WidgetProperties | VirtualDomProperties) => boolean): CustomDiff<T> {
-	function differ(value: T, name: string, parent: WidgetProperties | VirtualDomProperties) {
+export function compareProperty<T>(callback: (value: T, name: string | number, parent: WidgetProperties | VirtualDomProperties) => boolean): CustomDiff<T> {
+	function differ(value: T, name: string | number, parent: WidgetProperties | VirtualDomProperties) {
 		if (!callback(value, name, parent)) {
 			throw new AssertionError(`The value of property "${name}" is unexpected.`, {}, differ);
 		}
 	}
-	return new CustomDiff(differ);
+	return new CustomDiff<T>(differ);
 }
 
 function replaceChildByKeyOrIndex(

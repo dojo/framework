@@ -5,7 +5,7 @@ import harness, { MetaMockContext } from '../../src/harness';
 import { compareProperty } from '../../src/support/d';
 
 import { v, w } from '@dojo/widget-core/d';
-import { WidgetProperties } from '@dojo/widget-core/interfaces';
+import { WidgetProperties, VirtualDomProperties } from '@dojo/widget-core/interfaces';
 import WidgetBase from '@dojo/widget-core/WidgetBase';
 import { stub } from 'sinon';
 import NodeId from '../support/NodeId';
@@ -312,7 +312,7 @@ registerSuite('harness', {
 					tag: 'foo'
 				});
 				let called = false;
-				const compareRegistry = compareProperty((value: MockRegistry, name, properties: RegistryWidgetProperties) => {
+				const compareRegistry = compareProperty((value: MockRegistry, name, properties: RegistryWidgetProperties | VirtualDomProperties) => {
 					called = true;
 					assert.instanceOf(value, MockRegistry);
 					assert.strictEqual(name, 'registry');

@@ -10,7 +10,7 @@ registerSuite('support/sendEvent', {
 		const target = document.createElement('div');
 		document.body.appendChild(target);
 
-		function listener(evt: CustomEvent) {
+		function listener(evt: Event) {
 			assert.strictEqual(evt.type, 'foo', 'event type should be "foo"');
 			assert.isTrue(evt.bubbles, 'event should bubble by default');
 			assert.isTrue(evt.cancelable, 'event should be cancelable by default');
@@ -28,7 +28,7 @@ registerSuite('support/sendEvent', {
 		const target = document.createElement('div');
 		document.body.appendChild(target);
 
-		function listener(evt: CustomEvent) {
+		function listener(evt: Event) {
 			assert.property(evt, 'preventDefault', 'preventDefault should be included');
 			assert.isFalse(evt.bubbles, 'event should not bubble');
 			assert.isFalse(evt.cancelable, 'event not be cancelable');
@@ -119,7 +119,7 @@ registerSuite('support/sendEvent', {
 			throw new Error('Wrong listener called');
 		}
 
-		function listener(evt: CustomEvent) {
+		function listener(evt: Event) {
 			assert.strictEqual(evt.target, button);
 
 			button.removeEventListener('foo', listener);
