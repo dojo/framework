@@ -23,7 +23,7 @@ export function createUndoManager(): UndoManager {
 
 	return {
 		undoCollector: (callback?: any): ProcessCallback => {
-			return (error: ProcessError, result: ProcessResult): void => {
+			return (error: ProcessError | null, result: ProcessResult): void => {
 				const { undo } = result;
 				undoStack.push(undo);
 

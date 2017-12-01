@@ -206,17 +206,17 @@ describe('process', () => {
 		let results: string[] = [];
 
 		const callbackDecorator = (callback?: ProcessCallback) => {
-			return (error: ProcessError, result: ProcessResult): void => {
+			return (error: ProcessError | null, result: ProcessResult): void => {
 				results.push('callback one');
 				callback && callback(error, result);
 			};
 		};
 
-		const callbackTwo = (error: ProcessError, result: ProcessResult): void => {
+		const callbackTwo = (error: ProcessError | null, result: ProcessResult): void => {
 			results.push('callback two');
 		};
 
-		const logPointerCallback = (error: ProcessError, result: ProcessResult<{ logs: string[][] }>): void => {
+		const logPointerCallback = (error: ProcessError | null, result: ProcessResult<{ logs: string[][] }>): void => {
 			const paths = result.operations.map(operation => operation.path.path);
 			const logs = result.get(store.path('logs')) || [];
 

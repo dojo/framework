@@ -1,6 +1,6 @@
 {
   "name": "@dojo/stores",
-  "version": "0.1.1-pre",
+  "version": "0.2.0-pre",
   "description": "Application data store for Dojo 2",
   "homepage": "https://dojo.io",
   "engines": {
@@ -16,13 +16,13 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/core": "~0.2.1",
-    "@dojo/has": "~0.1.0",
-    "@dojo/shim": "~0.2.2"
+    "@dojo/core": "~0.3.0",
+    "@dojo/has": "~0.1.1",
+    "@dojo/shim": "~0.2.3"
   },
   "devDependencies": {
-    "@dojo/interfaces": "~0.1.0",
-    "@dojo/loader": "~0.1.0",
+    "@dojo/interfaces": "~0.2.0",
+    "@dojo/loader": "~0.1.1",
     "@types/chai": "~3.4.0",
     "@types/grunt": "~0.4.0",
     "@types/sinon": "^1.16.35",
@@ -32,6 +32,6 @@
     "grunt-dojo2": "latest",
     "intern": "~4.1.0",
     "sinon": "^1.17.6",
-    "typescript": "~2.5.2"
+    "typescript": "~2.6.1"
   }
 }

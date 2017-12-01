@@ -176,7 +176,7 @@ export function createProcessFactoryWith(callbackDecorators: ProcessCallbackDeco
  */
 export function createCallbackDecorator(processCallback: ProcessCallback): ProcessCallbackDecorator {
 	return (previousCallback?: ProcessCallback): ProcessCallback => {
-		return (error: ProcessError, result: ProcessResult): void => {
+		return (error: ProcessError | null, result: ProcessResult): void => {
 			processCallback(error, result);
 			previousCallback && previousCallback(error, result);
 		};
