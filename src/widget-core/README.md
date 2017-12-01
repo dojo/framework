@@ -36,7 +36,6 @@ widget-core is a library to create powerful, composable user interface widgets.
     - [Meta Configuration](#meta-configuration)
     - [JSX Support](#jsx-support)
     - [Web Components](#web-components)
-- [API](#api)
 - [How Do I Contribute?](#how-do-i-contribute)
     - [Setup Installation](#setup-installation)
     - [Testing](#testing)
@@ -1269,10 +1268,6 @@ The initialization function is run from the context of the HTML element.
 ```
 
 It should be noted that children nodes are removed from the DOM when attached, and added as children to the widget instance.
-
-## API
-
-[API Documentation](https://dojo.io/api/widget-core/v2.0.0-beta1.6/)
 
 ## How Do I Contribute?
 
