@@ -1183,145 +1183,50 @@ class MyWidgetWithTsx extends Themed(WidgetBase)<MyProperties> {
 Widgets can be turned into [Custom Elements](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) with
 minimal extra effort.
 
-Just create a `CustomElementDescriptor` factory and use the `@dojo/cli` build tooling to do the rest of the work,
+The `customElement` decorator can be used to annotate the widget class
+that should be converted to a custom element,
 
-```ts
-import { CustomElementDescriptor } from '@dojo/widget-core/customElements';
-import MyWidget from './path/to/MyWidget';
+```typescript
+interface MyWidgetProperties {
+	onClick: (event: Event) => void;
+	foo: string;
+	bar: string;
+}
 
-export default function createCustomElement(): CustomElementDescriptor {
-    return {
-        tagName: 'my-widget',
-        widgetConstructor: MyWidget,
-           attributes: [
-               {
-                   attributeName: 'label'
-               }
-           ],
-           events: [
-               {
-                   propertyName: 'onChange',
-                   name: 'change'
-               }
-           ]
-   };
-};
+@customElement<MyWidgetProperties>({
+	tag: 'my-widget',
+	attribute: [ 'foo', 'bar' ],
+	events: [ 'onClick' ]
+})
+class MyWidget extends WidgetBase<MyWidgetProperties> {
+// ...
+}
 ```
 
-By convention, this file should be named `createMyWidgetElement.ts`.
-
-To build your custom element, use [@dojo/cli](https://github.com/dojo/cli),
-
-```bash
-$ dojo build --element=/path/to/createMyWidget.ts
-```
-
-This will generate the following files:
-
-* `dist/my-widget/my-widget.html` - HTML import file that includes all widget dependencies. This is the only file you need to import into your HTML page to use your widget.
-* `dist/my-widget/my-widget.js` - A compiled version of your widget.
-* `dist/my-widget/my-widget.css` - The CSS for your widget
-* `dist/my-widget/widget-core.js` - A shared base widget library. Keeping this separate means that you can include HTML imports for multiple Dojo widgets and the applicartion environment will not re-request this shared file for each widget.
-
-Using your widget would be a simple matter of importing the HTML import:
-
-```html
-<!DOCTYPE html>
-<html>
-    <head>
-        <!-- this will include all JS and CSS used by your widget -->
-        <link rel="import" href="/path/to/my-widget.html" />
-    </head>
-    <body>
-        <!-- this will actually create your widget -->
-        <my-widget></my-widget>
-    </body>
-</html>
-```
-
-##### Tag Name
-
-Your widget will be registered with the browser using the provided tag name. The tag name **must** have a `-` in it.
-
-##### Widget Constructor
-
-A widget class that you want wrapped as a custom element.
+No additional steps are required. The custom element
+can be used in your application automatically. The decorator can be provided
+with configuration options to modify the functionality of the custom
+element.
 
 ##### Attributes
 
-You can explicitly map widget properties to DOM node attributes with the `attributes` array.
-
-```ts
-{
-    attributes: [
-        {
-            attributeName: 'label'
-        },
-        {
-            attributeName: 'placeholder',
-            propertyName: 'placeHolder'
-        },
-        {
-            attributeName: 'delete-on-focus',
-            propertyName: 'deleteOnFocus',
-            value: value => Boolean(value || 0)
-        }
-    ]
-}
-```
-
-* `attributeName` - the attribute that will set on the DOM element, e.g. `<text-widget label="test" />`.
-* `propertyName` - the property on the widget to set; if not set, it defaults to the `attributeName`.
-* `value` - specify a transformation function on the attribute value. This function should return the value that
-will be set on the widget's property.
-
-Adding an attribute to the element will also automatically add a corresponding property to the element.
-
-```ts
-// as an attribute
-textWidget.setAttribute('label', 'First Name');
-
-// as a property
-textWidget.label = 'First Name';
-```
+An array of attribute names that should be set as properties on the widget.
+The attribute name should be the same as the corresponding property on the widget.
 
 ##### Properties
 
-You can map DOM element properties to widget properties,
-
-```ts
-{
-    properties: [
-        {
-            propertyName: 'placeholder',
-            widgetPropertyName: 'placeHolder'
-        }
-    ]
-}
-
-// ...
-
-textWidget.placeholder = 'Enter first name';
-```
-
-* `propertyName` - name of the property on the DOM element
-* `widgetPropertyName` - name of the property on the widget; if unspecified, `propertyName` is used instead
-* `getValue` - if specified, will be called with the widget's property value as an argument. The returned value is returned as the DOM element property value.
-* `setValue` - if specified, is called with the DOM elements property value. The returned value is used for the widget property's value.
+An array of property names that will be accessible programmatically on the
+custom element but not as attributes. The property name must match
+the corresponding widget property.
 
 ##### Events
 
 Some widgets have function properties, like events, that need to be exposed to your element. You can use the
-`events` array to map widget properties to DOM events.
+`events` array to specify widget properties to map to DOM events.
 
 ```ts
 {
-    events: [
-        {
-            propertyName: 'onChange',
-            eventName: 'change'
-        }
-    ]
+    events: [ 'onChange' ]
 }
 ```
 
@@ -1333,6 +1238,13 @@ textWidget.addEventListener('change', function (event) {
     // do something
 });
 ```
+
+The name of the event is determined by removing the `'on'` prefix from the name
+and lowercasing the resulting name.
+
+##### Tag Name
+
+Your widget will be registered with the browser using the provided tag name. The tag name **must** have a `-` in it.
 
 ##### Initialization
 
@@ -1356,7 +1268,7 @@ The initialization function is run from the context of the HTML element.
 }
 ```
 
-It should be noted that children nodes are removed from the DOM when widget instantiation occurs, and added as children to the widget instance.
+It should be noted that children nodes are removed from the DOM when attached, and added as children to the widget instance.
 
 ## API
 
