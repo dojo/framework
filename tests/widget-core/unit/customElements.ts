@@ -30,7 +30,7 @@ function createFakeElement(attributes: any, descriptor: CustomElementDescriptor)
 		getDescriptor: () => descriptor,
 		children: [],
 		getAttribute(name: string) {
-			return attributes[ name ] || null;
+			return attributes[name] || null;
 		},
 		dispatchEvent(event: Event) {
 			events.push(event);

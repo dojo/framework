@@ -5,13 +5,13 @@ import customElement from '../../../src/decorators/customElement';
 
 interface TestButtonProperties extends WidgetProperties {
 	label: string;
-	suffix: string;
+	labelSuffix: string;
 	onClick: () => void;
 }
 
 @customElement<TestButtonProperties>({
 	tag: 'test-button',
-	attributes: [ 'label', 'suffix' ],
+	attributes: [ 'label', 'labelSuffix' ],
 	events: [ 'onClick' ]
 })
 @customElement<TestButtonProperties>({
@@ -26,12 +26,12 @@ export class TestButton extends WidgetBase<TestButtonProperties> {
 
 	render(this: TestButton) {
 		const { onClick : onclick } = this;
-		const { label = '', suffix = '' } = this.properties;
+		const { label = '', labelSuffix = '' } = this.properties;
 
 		return v('button', {
 			onclick
 		}, [
-			label + ((suffix !== '') ? (' ' + suffix) : '')
+			label + ((labelSuffix !== '') ? (' ' + labelSuffix) : '')
 		]);
 	}
 }

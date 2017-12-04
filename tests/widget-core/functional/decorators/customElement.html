@@ -7,21 +7,22 @@
 	<script src="../../../../node_modules/@dojo/loader/loader.js"></script>
 </head>
 <body>
-<test-button id="testButton-2" label="world" suffix="hello"></test-button>
-<test-button id="testButton" label="hello" suffix="world"></test-button>
+<test-button id="testButton-2" label="world" labelsuffix="hello"></test-button>
+<test-button id="testButton" label="hello" labelsuffix="world"></test-button>
 
-<no-attributes id="noAttributes" label="hello" suffix="world"></no-attributes>
+<no-attributes id="noAttributes" label="hello" labelsuffix="world"></no-attributes>
 <child-wrapper id="parent-element">
 	<child-wrapper id="nested-parent">
 		<div>nested child</div>
 	</child-wrapper>
 	<div>top level child</div>
 </child-wrapper>
-
+<not-used></not-used>
 <script>
 	window.buttonClicked = false;
 	window.ready = false;
 	window.connectedEvent = false;
+	window.__dojoCustomElements__ = true;
 
 	require.config(shimAmdDependencies({
 		baseUrl: '../../../../'

@@ -226,8 +226,8 @@ export function initializeElement(element: CustomElement) {
 	attributes.forEach(attribute => {
 		const attributeName = attribute.attributeName;
 
-		const [ propertyName, propertyValue ] = getWidgetPropertyFromAttribute(attributeName, element.getAttribute(attributeName), attribute);
-		initialProperties[ propertyName ] = propertyValue;
+		const [ propertyName, propertyValue ] = getWidgetPropertyFromAttribute(attributeName, element.getAttribute(attributeName.toLowerCase()), attribute);
+		initialProperties[propertyName] = propertyValue;
 	});
 
 	let customProperties: PropertyDescriptorMap = {};
@@ -235,9 +235,9 @@ export function initializeElement(element: CustomElement) {
 	attributes.reduce((properties, attribute) => {
 		const { propertyName = attribute.attributeName } = attribute;
 
-		properties[ propertyName ] = {
+		properties[propertyName] = {
 			get() {
-				return element.getWidgetInstance().properties[ propertyName ];
+				return element.getWidgetInstance().properties[propertyName];
 			},
 			set(value: any) {
 				const [ propertyName, propertyValue ] = getWidgetPropertyFromAttribute(attribute.attributeName, value, attribute);
@@ -256,7 +256,7 @@ export function initializeElement(element: CustomElement) {
 
 		properties[ propertyName ] = {
 			get() {
-				const value = element.getWidgetInstance().properties[ widgetPropertyName ];
+				const value = element.getWidgetInstance().properties[widgetPropertyName];
 				return getValue ? getValue(value) : value;
 			},
 
@@ -278,7 +278,7 @@ export function initializeElement(element: CustomElement) {
 	events.forEach((event) => {
 		const { propertyName, eventName } = event;
 
-		initialProperties[ propertyName ] = (event: any) => {
+		initialProperties[propertyName] = (event: any) => {
 			element.dispatchEvent(new customEventClass(eventName, {
 				bubbles: false,
 				detail: event
@@ -330,8 +330,10 @@ export function handleAttributeChanged(element: CustomElement, name: string, new
 	const attributes = element.getDescriptor().attributes || [];
 
 	attributes.forEach((attribute) => {
-		if (attribute.attributeName === name) {
-			const [ propertyName, propertyValue ] = getWidgetPropertyFromAttribute(name, newValue, attribute);
+		const { attributeName } = attribute;
+
+		if (attributeName.toLowerCase() ===  name.toLowerCase()) {
+			const [ propertyName, propertyValue ] = getWidgetPropertyFromAttribute(attributeName, newValue, attribute);
 			element.getWidgetInstance().setProperties(assign(
 				{},
 				element.getWidgetInstance().properties,

@@ -182,6 +182,25 @@ registerSuite('customElement', {
 				.then((text: string) => {
 					assert.strictEqual(text, 'programmatic top level child');
 				});
+		},
+		'should not register custom elements if the __dojoCustomElements__ global is not present'() {
+			if (skip) {
+				this.skip('not compatible with iOS 9.1 or Safari 9.1');
+			}
+
+			return this.remote
+				.get('_build/tests/functional/decorators/noCustomElement.html')
+				.setFindTimeout(200)
+				.findByCssSelector('button')
+				.then(
+					() => {
+						assert.fail('Should not have registered custom elements;, page should have no buttons');
+					},
+					() => {
+						// should end up here
+					}
+				);
 		}
+
 	}
 });

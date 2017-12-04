@@ -71,7 +71,7 @@ export function registerCustomElement(descriptorFactory: CustomElementDescriptor
 		}
 
 		static get observedAttributes(): string[] {
-			return (descriptor.attributes || []).map(attribute => attribute.attributeName);
+			return (descriptor.attributes || []).map(attribute => attribute.attributeName.toLowerCase());
 		}
 	});
 }
