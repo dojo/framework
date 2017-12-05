@@ -719,7 +719,7 @@ registerSuite('harness', {
 				render() {
 					return v('div', {
 						onclick(e) {
-							assert.strictEqual(e, event);
+							assert.strictEqual(e, event as any);
 						}
 					});
 				}
