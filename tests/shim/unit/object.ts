@@ -68,7 +68,7 @@ registerSuite('object', {
 				property4: 'value4',
 				property7: 'value7',
 				property8: 'value8'
-			});
+			} as any);
 		},
 
 		'.assign() with inferred type from multiple sources'() {

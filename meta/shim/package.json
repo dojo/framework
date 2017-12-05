@@ -25,7 +25,6 @@
   },
   "devDependencies": {
     "@dojo/loader": "~0.1.1",
-    "@types/chai": "~3.4.0",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
     "@types/node": "~6.0.49",
