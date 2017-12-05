@@ -75,7 +75,7 @@ describe('WidgetBase', () => {
 		const renderResult = widget.render() as HNode;
 		assert.strictEqual(renderResult.tag, 'div');
 		assert.deepEqual(renderResult.properties, {});
-		assert.lengthOf(renderResult.children, 1);
+		assert.lengthOf(renderResult.children!, 1);
 		assert.strictEqual(renderResult.children![0], 'child');
 	});
 
@@ -110,7 +110,7 @@ describe('WidgetBase', () => {
 			const widget = new TestWidget();
 			const renderResult = widget.__render__() as HNode;
 			assert.strictEqual(renderResult.tag, 'my-app');
-			assert.lengthOf(renderResult.children, 1);
+			assert.lengthOf(renderResult.children!, 1);
 			assert.strictEqual(renderResult.children![0], 'child');
 		});
 	});
@@ -259,7 +259,7 @@ describe('WidgetBase', () => {
 			const invalidateSpy = spy(widget, 'invalidate');
 			widget.__setCoreProperties__({ bind: widget, baseRegistry });
 			assert.isTrue(invalidateSpy.calledOnce);
-			assert.strictEqual(widget.registry.getInjector('label'), 'item');
+			assert.strictEqual(widget.registry.getInjector('label'), 'item' as any);
 		});
 
 		it('The same baseRegistry does not causes an invalidation', () => {
@@ -279,7 +279,7 @@ describe('WidgetBase', () => {
 			assert.isNull(widget.registry.getInjector('label'));
 			const invalidateSpy = spy(widget, 'invalidate');
 			widget.__setCoreProperties__({ bind: widget, baseRegistry });
-			assert.strictEqual(widget.registry.getInjector('label'), 'item');
+			assert.strictEqual(widget.registry.getInjector('label'), 'item' as any);
 			assert.isTrue(invalidateSpy.called);
 		});
 	});

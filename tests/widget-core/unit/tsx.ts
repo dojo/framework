@@ -26,14 +26,14 @@ registerSuite('tsx', {
 		'tsx generate a WNode'() {
 			const node: WNode = tsx(WidgetBase, { hello: 'world' }, [ 'child' ]) as WNode;
 			assert.deepEqual(node.widgetConstructor, WidgetBase);
-			assert.deepEqual(node.properties, { hello: 'world' });
+			assert.deepEqual(node.properties, { hello: 'world' } as any);
 			assert.deepEqual(node.children, [ 'child' ]);
 		},
 		'tsx generate a WNode from a RegistryWrapper'() {
 			const RegistryWrapper = fromRegistry<WidgetProperties>('tag');
 			const node: WNode = tsx(RegistryWrapper, { hello: 'world' }, [ 'child' ]) as WNode;
 			assert.deepEqual(node.widgetConstructor, 'tag');
-			assert.deepEqual(node.properties, { hello: 'world' });
+			assert.deepEqual(node.properties, { hello: 'world' } as any);
 			assert.deepEqual(node.children, [ 'child' ]);
 		},
 		'children arrays are spread correctly'() {

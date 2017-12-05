@@ -356,7 +356,7 @@ registerSuite('customElements', {
 		sendEvent(div, 'connected');
 		assert.isTrue(invalidateSpy.calledOnce);
 		widget.__render__() as InternalHNode;
-		assert.deepEqual(widgetInstance.properties, { key: 'root', foo: 'bar' });
+		assert.deepEqual(widgetInstance.properties, { key: 'root', foo: 'bar' } as any);
 	},
 
 	'initialization': {

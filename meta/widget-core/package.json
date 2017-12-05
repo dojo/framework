@@ -35,7 +35,6 @@
   "devDependencies": {
     "@dojo/interfaces": "~0.2.0",
     "@dojo/loader": "~0.1.1",
-    "@types/chai": "3.4.*",
     "@types/glob": "5.0.*",
     "@types/grunt": "0.4.*",
     "@types/jsdom": "2.0.*",

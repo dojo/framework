@@ -52,7 +52,7 @@ registerSuite('d', {
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, 'my-widget');
-			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
+			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]} as any);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isHNode(dNode));
 		},
@@ -91,7 +91,7 @@ registerSuite('d', {
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, 'my-widget');
-			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
+			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]} as any);
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isHNode(dNode));
@@ -103,7 +103,7 @@ registerSuite('d', {
 			const dNode = w(symbolLabel, properties, [ w(WidgetBase, properties) ]);
 			assert.equal(dNode.type, WNODE);
 			assert.strictEqual(dNode.widgetConstructor, symbolLabel);
-			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
+			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]} as any);
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isHNode(dNode));
@@ -120,21 +120,21 @@ registerSuite('d', {
 		},
 		'create HNode wrapper with children'() {
 			const hNode = v('div', {}, [ v('div'), v('div') ]);
-			assert.lengthOf(hNode.children, 2);
+			assert.lengthOf(hNode.children!, 2);
 			assert.equal(hNode.type, HNODE);
 			assert.isTrue(isHNode(hNode));
 			assert.isFalse(isWNode(hNode));
 		},
 		'create HNode wrapper with children as options param'() {
 			const hNode = v('div', [ v('div'), v('div') ]);
-			assert.lengthOf(hNode.children, 2);
+			assert.lengthOf(hNode.children!, 2);
 			assert.equal(hNode.type, HNODE);
 			assert.isTrue(isHNode(hNode));
 			assert.isFalse(isWNode(hNode));
 		},
 		'create HNode wrapper with text node children'() {
 			const hNode = v('div', {}, [ 'This Text Node', 'That Text Node' ]);
-			assert.lengthOf(hNode.children, 2);
+			assert.lengthOf(hNode.children!, 2);
 			assert.equal(hNode.type, HNODE);
 			assert.isTrue(isHNode(hNode));
 			assert.isFalse(isWNode(hNode));

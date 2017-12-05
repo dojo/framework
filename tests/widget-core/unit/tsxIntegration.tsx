@@ -39,7 +39,7 @@ registerSuite('tsx integration', {
 		bar.__setCoreProperties__({ bind: bar, baseRegistry: registry });
 		bar.__setProperties__({ registry });
 		const barRender = bar.__render__() as WNode;
-		assert.deepEqual(barRender.properties, { hello: 'world' });
+		assert.deepEqual(barRender.properties, { hello: 'world' } as any);
 		assert.strictEqual(barRender.widgetConstructor, Foo);
 		assert.lengthOf(barRender.children, 0);
 
