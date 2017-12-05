@@ -385,7 +385,7 @@ registerSuite('i18n', {
 				}).then((messages: Messages) => {
 					const cached = getCachedMessages(bundle, 'ar-JO');
 
-					assert.strictEqual(cached, messages, 'Message dictionaries are cached.');
+					assert.strictEqual(cached, messages as any, 'Message dictionaries are cached.');
 				});
 			},
 
