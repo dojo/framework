@@ -380,7 +380,7 @@ registerSuite('request/node', {
 						method: 'POST'
 					}).then(
 						dfd.callback(function () {
-							assert.deepEqual(requestData, { foo: 'bar' });
+							assert.deepEqual(requestData, { foo: 'bar' } as any);
 						}),
 						dfd.reject.bind(dfd)
 					);
@@ -390,7 +390,7 @@ registerSuite('request/node', {
 						body: Buffer.from('{ "foo": "bar" }', 'utf8'),
 						method: 'POST'
 					}).then(() => {
-						assert.deepEqual(requestData, { foo: 'bar' });
+						assert.deepEqual(requestData, { foo: 'bar' } as any);
 					});
 				}
 			},
@@ -401,7 +401,7 @@ registerSuite('request/node', {
 						method: 'POST',
 						bodyStream: fs.createReadStream('tests/support/data/foo.json')
 					}).then(res => res.json()).then(json => {
-						assert.deepEqual(requestData, { foo: 'bar' });
+						assert.deepEqual(requestData, { foo: 'bar' } as any);
 					});
 				}
 			},

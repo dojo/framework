@@ -1406,7 +1406,7 @@ registerSuite('compare', {
 				};
 
 				assert.deepEqual(result, expected, 'Result should match expected');
-				assert.deepEqual(target, expected, 'Original target should match expected');
+				assert.deepEqual(target, expected as any, 'Original target should match expected');
 				assert.strictEqual(target, result, 'target and result should be strictly equal');
 			},
 
