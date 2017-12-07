@@ -54,10 +54,12 @@ registerSuite('decorators', {
 			}
 
 			assert.throws(() => {
+				/* tslint:disable */
 				@hasClass('test-decorator-noclass', Real, Fill)
 				class Target {
 					type = 'target';
 				}
+				/* tslint:enable */
 			}, TypeError, 'Attempt to detect unregistered has feature');
 		}
 	}

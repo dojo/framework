@@ -88,7 +88,7 @@ export const queueTask = (function() {
 		return getQueueHandle(item, destructor && function () {
 				destructor(id);
 			});
-	};
+	}
 
 	// TODO: Use aspect.before when it is available.
 	return has('microtasks') ? queueTask : function (callback: (...args: any[]) => any): Handle {

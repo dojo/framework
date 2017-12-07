@@ -111,10 +111,6 @@ registerSuite('object', {
 			assert.strictEqual(assignedObject.foo, 'foo');
 		},
 		'.assign() with a source whose type is a subset of another'() {
-			type FooBar = {
-				foo: string;
-				bar: string;
-			};
 			const foobar = {
 				foo: 'foo',
 				bar: 'bar'

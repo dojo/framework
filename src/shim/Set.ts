@@ -121,7 +121,7 @@ if (!has('es6-set')) {
 					}
 				}
 			}
-		};
+		}
 
 		add(value: T): this {
 			if (this.has(value)) {
@@ -129,11 +129,11 @@ if (!has('es6-set')) {
 			}
 			this._setData.push(value);
 			return this;
-		};
+		}
 
 		clear(): void {
 			this._setData.length = 0;
-		};
+		}
 
 		delete(value: T): boolean {
 			const idx = this._setData.indexOf(value);
@@ -142,11 +142,11 @@ if (!has('es6-set')) {
 			}
 			this._setData.splice(idx, 1);
 			return true;
-		};
+		}
 
 		entries(): IterableIterator<[T, T]> {
 			return new ShimIterator<[any, any]>(this._setData.map<[any, any]>((value) => [ value, value ]));
-		};
+		}
 
 		forEach(callbackfn: (value: T, index: T, set: Set<T>) => void, thisArg?: any): void {
 			const iterator = this.values();
@@ -155,27 +155,27 @@ if (!has('es6-set')) {
 				callbackfn.call(thisArg, result.value, result.value, this);
 				result = iterator.next();
 			}
-		};
+		}
 
 		has(value: T): boolean {
 			return this._setData.indexOf(value) > -1;
-		};
+		}
 
 		keys(): IterableIterator<T> {
 			return new ShimIterator(this._setData);
-		};
+		}
 
 		get size(): number {
 			return this._setData.length;
-		};
+		}
 
 		values(): IterableIterator<T> {
 			return new ShimIterator(this._setData);
-		};
+		}
 
 		[Symbol.iterator](): IterableIterator<T> {
 			return new ShimIterator(this._setData);
-		};
+		}
 
 		[Symbol.toStringTag]: 'Set' = 'Set';
 	};

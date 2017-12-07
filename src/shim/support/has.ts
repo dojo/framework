@@ -176,8 +176,8 @@ add('es6-weakmap', () => {
 /* Miscellaneous features */
 add('microtasks', () => has('es6-promise') || has('host-node') || has('dom-mutationobserver'), true);
 add('postmessage', () => {
-	 // If window is undefined, and we have postMessage, it probably means we're in a web worker. Web workers have
-	 // post message but it doesn't work how we expect it to, so it's best just to pretend it doesn't exist.
+	// If window is undefined, and we have postMessage, it probably means we're in a web worker. Web workers have
+	// post message but it doesn't work how we expect it to, so it's best just to pretend it doesn't exist.
 	return typeof global.window !== 'undefined' && typeof global.postMessage === 'function';
 }, true);
 add('raf', () => typeof global.requestAnimationFrame === 'function', true);

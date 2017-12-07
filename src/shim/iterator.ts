@@ -29,7 +29,7 @@ const staticDone: IteratorResult<any> = { done: true, value: undefined };
  */
 export class ShimIterator<T> {
 	private _list: ArrayLike<T>;
-	private _nextIndex: number = -1;
+	private _nextIndex = -1;
 	private _nativeIterator: Iterator<T>;
 
 	constructor(list: ArrayLike<T> | Iterable<T>) {
@@ -39,7 +39,7 @@ export class ShimIterator<T> {
 		else {
 			this._list = list;
 		}
-	};
+	}
 
 	/**
 	 * Return the next iteration result for the Iterator
@@ -58,7 +58,7 @@ export class ShimIterator<T> {
 			};
 		}
 		return staticDone;
-	};
+	}
 
 	[Symbol.iterator](): IterableIterator<T> {
 		return this;
@@ -95,7 +95,7 @@ export function get<T>(iterable: Iterable<T> | ArrayLike<T>): Iterator<T> | unde
 	else if (isArrayLike(iterable)) {
 		return new ShimIterator(iterable);
 	}
-};
+}
 
 export interface ForOfCallback<T> {
 	/**
