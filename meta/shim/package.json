@@ -36,6 +36,6 @@
   "dependencies": {
     "intersection-observer": "^0.4.2",
     "pepjs": "^0.4.2",
-    "tslib": "^1.7.1"
+    "tslib": "^1.8.0"
   }
 }
