@@ -4,15 +4,19 @@ import i18n, {
 	Bundle,
 	formatMessage,
 	getCachedMessages,
-	Messages,
-	observeLocale
+	Messages
 } from '@dojo/i18n/i18n';
-import { Constructor, DNode, WidgetProperties, VirtualDomProperties } from './../interfaces';
-import { WidgetBase } from './../WidgetBase';
-import { afterRender } from './../decorators/afterRender';
 import { isHNode } from './../d';
+import { afterRender } from './../decorators/afterRender';
+import { inject } from './../decorators/inject';
+import { Constructor, DNode, WidgetProperties, VirtualDomProperties } from './../interfaces';
+import { Injector } from './../Injector';
+import { Registry } from './../Registry';
+import { WidgetBase } from './../WidgetBase';
 
-export interface I18nProperties extends WidgetProperties {
+export const INJECTOR_KEY = Symbol('i18n');
+
+export interface LocaleData {
 	/**
 	 * The locale for the widget. If not specified, then the root locale (as determined by `@dojo/i18n`) is assumed.
 	 * If specified, the widget's node will have a `lang` property set to the locale.
@@ -26,6 +30,8 @@ export interface I18nProperties extends WidgetProperties {
 	 */
 	rtl?: boolean;
 }
+
+export interface I18nProperties extends LocaleData, WidgetProperties {}
 
 /**
  * @private
@@ -72,21 +78,23 @@ export interface I18nMixin {
 	properties: I18nProperties;
 }
 
+export function registerI18nInjector(localeData: LocaleData, registry: Registry): Injector {
+	const injector = new Injector(localeData);
+	registry.defineInjector(INJECTOR_KEY, injector);
+	return injector;
+}
+
 export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & Constructor<I18nMixin> {
+	@inject({
+		name: INJECTOR_KEY,
+		getProperties: (localeData: LocaleData, properties: I18nProperties) => {
+			const { locale = localeData.locale, rtl = localeData.rtl } = properties;
+			return { locale, rtl };
+		}
+	})
 	class I18n extends Base {
 
 		public properties: I18nProperties;
-
-		constructor(...args: any[]) {
-			super(...args);
-			observeLocale({
-				next: () => {
-					if (!this.properties.locale) {
-						this.invalidate();
-					}
-				}
-			});
-		}
 
 		public localizeBundle<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T> {
 			const { locale } = this.properties;

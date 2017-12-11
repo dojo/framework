@@ -89,12 +89,13 @@ export function registerThemeInjector(theme: any, themeRegistry: Registry): Inje
 export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties<E>>>>(Base: T): Constructor<ThemedMixin<E>> & T {
 	@inject({
 		name: INJECTED_THEME_KEY,
-		getProperties: (theme: Theme, properties: ThemedProperties): ThemedProperties  => {
-		if (!properties.theme) {
-			return { theme };
+		getProperties: (theme: Theme, properties: ThemedProperties): ThemedProperties => {
+			if (!properties.theme) {
+				return { theme };
+			}
+			return {};
 		}
-		return {};
-	}})
+	})
 	class Themed extends Base {
 
 		public properties: ThemedProperties<E>;

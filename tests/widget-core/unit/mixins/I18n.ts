@@ -1,8 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import i18n, { invalidate, switchLocale, systemLocale } from '@dojo/i18n/i18n';
-import * as sinon from 'sinon';
-import { I18nMixin, I18nProperties } from '../../../src/mixins/I18n';
+import { INJECTOR_KEY, I18nMixin, I18nProperties, registerI18nInjector } from '../../../src/mixins/I18n';
+import { Injector } from '../../../src/Injector';
+import { Registry } from '../../../src/Registry';
 import { WidgetBase } from '../../../src/WidgetBase';
 import bundle from '../../support/nls/greetings';
 import { fetchCldrData } from '../../support/util';
@@ -82,25 +83,50 @@ registerSuite('mixins/I18nMixin', {
 				});
 			}
 		},
+		'locale data can be injected by defining an Injector with a registry': {
+			'defaults to the injector data'() {
+				const injector = new Injector({ locale: 'ar', rtl: true });
+				const registry = new Registry();
 
-		'root locale switching': {
-			'Updates when no `locale` property is set'() {
+				registry.defineInjector(INJECTOR_KEY, injector);
 				localized = new Localized();
-				sinon.spy(localized, 'invalidate');
+				localized.__setCoreProperties__({ bind: localized, baseRegistry: registry });
+				localized.__setProperties__({});
 
-				switchLocale('fr');
-
-				assert.isTrue(localized.invalidate.called, 'Widget invalidated.');
+				const result = localized.__render__();
+				assert.strictEqual(result.properties!['lang'], 'ar');
+				assert.strictEqual(result.properties!['dir'], 'rtl');
 			},
 
-			'Does not update when `locale` property is set'() {
+			'does not override property values'() {
+				const injector = new Injector({ locale: 'ar', rtl: true });
+				const registry = new Registry();
+
+				registry.defineInjector(INJECTOR_KEY, injector);
 				localized = new Localized();
-				localized.__setProperties__({ locale: 'en' });
-				sinon.spy(localized, 'invalidate');
+				localized.__setCoreProperties__({ bind: localized, baseRegistry: registry });
+				localized.__setProperties__({ locale: 'fr', rtl: false });
 
-				switchLocale('fr');
+				const result = localized.__render__();
+				assert.strictEqual(result.properties!['lang'], 'fr');
+				assert.strictEqual(result.properties!['dir'], 'ltr');
+			},
 
-				assert.isFalse(localized.invalidate.called, 'Widget not invalidated.');
+			'properties can be registered with helper'() {
+				const registry = new Registry();
+				const injector = registerI18nInjector({ locale: 'fr' }, registry);
+
+				localized = new Localized();
+				localized.__setCoreProperties__({ bind: localized, baseRegistry: registry });
+				localized.__setProperties__({});
+
+				let result = localized.__render__();
+				assert.strictEqual(result.properties!['lang'], 'fr');
+
+				injector.set({ locale: 'jp' });
+				localized.__setProperties__({});
+				result = localized.__render__();
+				assert.strictEqual(result.properties!['lang'], 'jp');
 			}
 		},
 		'does not decorate properties for wNode'() {
