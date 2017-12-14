@@ -37,6 +37,21 @@ registerSuite('RegistryHandler', {
 				assert.isTrue(registryHandler.has(bar));
 			}
 		},
+		destroy: {
+			'destroying the registry handler clears base registry'() {
+				const registry = new Registry();
+				class TestRegistryHandler extends RegistryHandler {
+					getBaseRegistry() {
+						return this.baseRegistry;
+					}
+				}
+				const registryHandler = new TestRegistryHandler();
+				registryHandler.base = registry;
+				return registryHandler.destroy().then(() => {
+					assert.isUndefined(registryHandler.getBaseRegistry());
+				});
+			}
+		},
 		get: {
 			base() {
 				const registryHandler = new RegistryHandler();

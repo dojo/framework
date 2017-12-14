@@ -118,6 +118,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			},
 			onDetach: (): void => {
 				this.onDetach();
+				this._destroy();
 			},
 			nodeHandler: this._nodeHandler,
 			registry: () => {
@@ -371,6 +372,20 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		}
 
 		return allDecorators;
+	}
+
+	/**
+	 * Destroys private resources for WidgetBase
+	 */
+	private _destroy() {
+		if (this._registry) {
+			this._registry.destroy();
+		}
+		if (this._metaMap !== undefined) {
+			this._metaMap.forEach((meta) => {
+				meta.destroy();
+			});
+		}
 	}
 
 	/**

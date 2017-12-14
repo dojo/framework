@@ -189,10 +189,6 @@ describe('WidgetBase', () => {
 			assert.isUndefined(widget.properties.foobar);
 		});
 
-		it('Runs registered reactions when property is considered changed', () => {
-
-		});
-
 		it('Automatically binds functions properties', () => {
 			class TestWidget extends BaseTestWidget {
 				public called = false;
@@ -284,6 +280,16 @@ describe('WidgetBase', () => {
 		});
 	});
 
+	it('destroys registry when WidgetBase is detached', () => {
+		const widget = new BaseTestWidget();
+		const registry = widget.registry;
+		const instanceData = widgetInstanceMap.get(widget)!;
+		instanceData.onDetach();
+		assert.throws(() => {
+			registry.own({ destroy() {} });
+		}, 'Call made to destroyed method');
+	});
+
 	describe('meta', () => {
 		it('meta providers are cached', () => {
 			const widget = new BaseTestWidget();
@@ -329,6 +335,22 @@ describe('WidgetBase', () => {
 
 			instanceData.nodeHandler.addRoot();
 			assert.isTrue(meta.widgetEvent);
+		});
+
+		it('Meta is destroyed when the widget is detached', () => {
+			let metaDestroyed = false;
+			class DestroyableMeta extends TestMeta {
+				destroy() {
+					const result = super.destroy();
+					metaDestroyed = true;
+					return result;
+				}
+			}
+			const widget = new BaseTestWidget();
+			widget.meta(DestroyableMeta);
+			const instanceData = widgetInstanceMap.get(widget)!;
+			instanceData.onDetach();
+			assert.isTrue(metaDestroyed);
 		});
 	});
 

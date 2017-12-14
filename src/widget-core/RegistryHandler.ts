@@ -11,19 +11,29 @@ export interface RegistryHandlerEventMap {
 
 export class RegistryHandler extends Evented<RegistryHandlerEventMap> {
 	private _registry = new Registry();
-	private _baseRegistry: Registry;
 	private _registryWidgetLabelMap: Map<Registry, RegistryLabel[]> = new Map();
 	private _registryInjectorLabelMap: Map<Registry, RegistryLabel[]> = new Map();
+	protected baseRegistry?: Registry;
 
 	constructor() {
 		super();
 		this.own(this._registry);
+		const destroy = () => {
+			if (this.baseRegistry) {
+				this._registryWidgetLabelMap.delete(this.baseRegistry);
+				this._registryInjectorLabelMap.delete(this.baseRegistry);
+				this.baseRegistry = undefined;
+			}
+		};
+		this.own({ destroy });
 	}
 
 	public set base(baseRegistry: Registry) {
-		this._registryWidgetLabelMap.delete(this._baseRegistry);
-		this._registryInjectorLabelMap.delete(this._baseRegistry);
-		this._baseRegistry = baseRegistry;
+		if (this.baseRegistry) {
+			this._registryWidgetLabelMap.delete(this.baseRegistry);
+			this._registryInjectorLabelMap.delete(this.baseRegistry);
+		}
+		this.baseRegistry = baseRegistry;
 	}
 
 	public define(label: RegistryLabel, widget: RegistryItem): void {
@@ -35,11 +45,11 @@ export class RegistryHandler extends Evented<RegistryHandlerEventMap> {
 	}
 
 	public has(label: RegistryLabel): boolean {
-		return this._registry.has(label) || this._baseRegistry.has(label);
+		return this._registry.has(label) || Boolean(this.baseRegistry && this.baseRegistry.has(label));
 	}
 
 	public hasInjector(label: RegistryLabel): boolean {
-		return this._registry.hasInjector(label) || this._baseRegistry.hasInjector(label);
+		return this._registry.hasInjector(label) || Boolean(this.baseRegistry && this.baseRegistry.hasInjector(label));
 	}
 
 	public get<T extends WidgetBaseInterface = WidgetBaseInterface>(label: RegistryLabel, globalPrecedence: boolean = false): Constructor<T> | null {
@@ -51,7 +61,7 @@ export class RegistryHandler extends Evented<RegistryHandlerEventMap> {
 	}
 
 	private _get(label: RegistryLabel, globalPrecedence: boolean, getFunctionName: 'getInjector' | 'get', labelMap: Map<Registry, RegistryLabel[]>): any {
-		const registries = globalPrecedence ? [ this._baseRegistry, this._registry ] : [ this._registry, this._baseRegistry ];
+		const registries = globalPrecedence ? [ this.baseRegistry, this._registry ] : [ this._registry, this.baseRegistry ];
 		for (let i = 0; i < registries.length; i++) {
 			const registry: any = registries[i];
 			if (!registry) {
