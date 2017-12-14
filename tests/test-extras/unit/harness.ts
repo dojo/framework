@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-import harness, { MetaMockContext } from '../../src/harness';
+import harness, { MetaMockContext, findDNodeByKey } from '../../src/harness';
 import { compareProperty } from '../../src/support/d';
 
 import { v, w } from '@dojo/widget-core/d';
@@ -650,6 +650,42 @@ registerSuite('harness', {
 			assert.strictEqual(secondClick, 0);
 		},
 
+		'defaults with render array'() {
+			let rootClick = 0;
+			let firstClick = 0;
+			let secondClick = 0;
+			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return [
+						v('div', {
+							key: 'parent1',
+							onclick() {
+								rootClick++;
+							}
+						}, [
+							w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
+							w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
+						]),
+						v('div', {
+							key: 'parent2',
+							onclick() {
+								rootClick++;
+							}
+						}, [
+							w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
+							w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
+						])
+					];
+				}
+			}
+
+			const widget = harness(ComplexSubWidget);
+			widget.callListener('onclick');
+			assert.strictEqual(rootClick, 2);
+			assert.strictEqual(firstClick, 0);
+			assert.strictEqual(secondClick, 0);
+		},
+
 		'by key'() {
 			let rootClick = 0;
 			let firstClick = 0;
@@ -664,6 +700,36 @@ registerSuite('harness', {
 						w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
 						w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
 					]);
+				}
+			}
+
+			const widget = harness(ComplexSubWidget);
+			widget.callListener('onClick', { key: 'first' });
+			assert.strictEqual(rootClick, 0);
+			assert.strictEqual(firstClick, 1);
+			assert.strictEqual(secondClick, 0);
+		},
+
+		'by key with render array'() {
+			let rootClick = 0;
+			let firstClick = 0;
+			let secondClick = 0;
+			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
+				render() {
+					return [
+						v( 'div', {
+							key: 'parent1'
+						}),
+						v('div', {
+							key: 'parent2',
+							onclick() {
+								rootClick++;
+							}
+						}, [
+							w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
+							w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
+						])
+					];
 				}
 			}
 
@@ -926,6 +992,12 @@ registerSuite('harness', {
 			handle1.destroy();
 
 			widget.destroy();
+		}
+	},
+
+	'findDNodeByKey': {
+		'should not error with string'() {
+			findDNodeByKey('foo', 'bar');
 		}
 	}
 });

@@ -4,6 +4,8 @@ import { isHNode, isWNode } from '@dojo/widget-core/d';
 import AssertionError from './AssertionError';
 import { CustomDiff } from './compare';
 
+export type RenderResults = DNode | DNode[];
+
 type FoundNodeInfo<T extends DNode = DNode> = { found?: T, parent?: WNode | HNode | undefined, index?: number };
 
 function  assignChildPropertiesByKeyOrIndex(

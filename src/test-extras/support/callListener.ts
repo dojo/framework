@@ -1,5 +1,5 @@
-import { HNode, WNode } from '@dojo/widget-core/interfaces';
-import { findIndex, findKey } from './d';
+import { DNode } from '@dojo/widget-core/interfaces';
+import { findIndex, findKey, RenderResults } from './d';
 
 /**
  * Options that can be passed to `callListener`
@@ -24,7 +24,7 @@ export interface CallListenerOptions {
 	/**
 	 * Supply your own `target`
 	 */
-	target?: HNode | WNode;
+	target?: DNode;
 
 	/**
 	 * The `thisArg` to call a listener with.  It defaults to `properties.bind` of the target or `undefined`.
@@ -38,31 +38,56 @@ export interface CallListenerOptions {
  * @param method The listener name in the `node.properties` to call
  * @param options Options that effect how the listener is called
  */
-export default function callListener(node: HNode | WNode, method: string, options: CallListenerOptions = {}): void {
-	const { args, index, key, target, thisArg } = options;
-	let resolvedTarget: any;
-	if (target) {
-		resolvedTarget = target;
-	}
-	else if (key) {
-		resolvedTarget = findKey(node, key);
-	}
-	else if (typeof index !== 'undefined') {
-		const byIndex = findIndex(node, index);
-		if (typeof byIndex === 'object' && byIndex !== null && 'properties' in byIndex) {
-			resolvedTarget = byIndex;
-		}
-	}
-	else {
-		resolvedTarget = node;
-	}
-	if (!resolvedTarget) {
+export default function callListener(node: RenderResults, method: string, options: CallListenerOptions = {}): void {
+	const { args, thisArg } = options;
+	const resolvedTargets = resolveTarget(node, options);
+	if (resolvedTargets == null || !resolvedTargets.length) {
 		throw new TypeError(`Cannot resolve target`);
 	}
-	const listener: ((...args: any[]) => void) | undefined = resolvedTarget.properties[method];
-	if (!listener) {
-		throw new TypeError(`Cannot resolve listener: "${method}"`);
+	resolvedTargets.forEach( (target) => {
+		const listener: ((...args: any[]) => void) | undefined = target.properties[method];
+		if (!listener) {
+			throw new TypeError(`Cannot resolve listener: "${method}"`);
+		}
+		const bind = target.coreProperties ? target.coreProperties.bind : target.properties.bind;
+		listener.apply(thisArg || bind, args);
+	});
+}
+
+function resolveTarget(node: RenderResults, options: CallListenerOptions): any[] {
+	if (Array.isArray(node)) {
+		let resolvedTargets: DNode[] = [];
+		for (let i = 0, len = node.length; i < len; i++) {
+			const item = node[i];
+			const found = resolveTarget(item, options);
+			if (found != null) {
+				found.forEach((node) => {
+					resolvedTargets.push(node);
+				});
+			}
+		}
+		return resolvedTargets;
 	}
-	const bind = resolvedTarget.coreProperties ? resolvedTarget.coreProperties.bind : resolvedTarget.properties.bind;
-	listener.apply(thisArg || bind, args);
+	else {
+		let resolvedTarget: any;
+		const { index, key, target } = options;
+		if (target) {
+			resolvedTarget = target;
+		}
+		else if (node != null && (typeof node !== 'string')) {
+			if (key) {
+				resolvedTarget = findKey(node, key);
+			}
+			else if (typeof index !== 'undefined') {
+				const byIndex = findIndex(node, index);
+				if (typeof byIndex === 'object' && byIndex !== null && 'properties' in byIndex) {
+					resolvedTarget = byIndex;
+				}
+			}
+			else {
+				resolvedTarget = node;
+			}
+		}
+		return resolvedTarget && [ resolvedTarget ];
+	}
 }

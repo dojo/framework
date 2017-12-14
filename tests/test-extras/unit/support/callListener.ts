@@ -149,6 +149,12 @@ registerSuite('support/callListener', {
 			assert.throws(() => {
 				callListener(vnode, 'onClick', { index: 2 });
 			}, TypeError, 'Cannot resolve target');
+		},
+
+		'string is not supported'() {
+			assert.throws(() => {
+				callListener('testString', 'onclick');
+			}, TypeError, 'Cannot resolve target');
 		}
 	}
 });

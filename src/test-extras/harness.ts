@@ -19,8 +19,9 @@ import WidgetBase from '@dojo/widget-core/WidgetBase';
 import { afterRender } from '@dojo/widget-core/decorators/afterRender';
 import { ProjectorMixin } from '@dojo/widget-core/mixins/Projector';
 import assertRender from './support/assertRender';
-import callListener, { CallListenerOptions } from './support/callListener';
+import supportCallListener, { CallListenerOptions } from './support/callListener';
 import sendEvent, { SendEventOptions } from './support/sendEvent';
+import { RenderResults } from './support/d';
 
 /* tslint:disable:variable-name */
 
@@ -35,26 +36,31 @@ let harnessId = 0;
  * @param target the root DNode to search
  * @param key the key to match
  */
-function findDNodeByKey(target: DNode, key: string | object): HNode | WNode | undefined {
-	if (target && typeof target === 'object') {
-		if (target && typeof target === 'object' && target.properties && target.properties.key === key) {
-			return target;
-		}
+export function findDNodeByKey(target: RenderResults, key: string | object): HNode | WNode | undefined {
+	if (!target) {
+		return;
+	}
+	if (Array.isArray(target)) {
 		let found: HNode | WNode | undefined;
-		if (target.children) {
-			target.children
-				.forEach((child) => {
-					if (found) {
-						if (findDNodeByKey(child, key)) {
-							console.warn(`Duplicate key of "${key}" found.`);
-						}
-					}
-					else {
-						found = findDNodeByKey(child, key);
-					}
-				});
-		}
+		target.forEach((node) => {
+			if (found) {
+				if (findDNodeByKey(node, key)) {
+					console.warn(`Duplicate key of "${key}" found.`);
+				}
+			}
+			else {
+				found = findDNodeByKey(node, key);
+			}
+		});
 		return found;
+	}
+	else {
+		if (target && typeof target === 'object') {
+			if (target.properties && target.properties.key === key) {
+				return target;
+			}
+			return findDNodeByKey(target.children, key);
+		}
 	}
 }
 
@@ -62,7 +68,20 @@ function findDNodeByKey(target: DNode, key: string | object): HNode | WNode | un
  * Decorate a `DNode` where any `WNode`s are replaced with stubbed widgets
  * @param target The `DNode` to decorate with stubbed widgets
  */
-function stubRender(target: DNode): DNode {
+function stubRender(target: RenderResults): RenderResults {
+	if (target) {
+		if (Array.isArray(target)) {
+			target.forEach((node) => {
+				decorateTarget(node);
+			});
+		} else {
+			decorateTarget(target);
+		}
+	}
+	return target;
+}
+
+function decorateTarget(target: DNode): void {
 	decorate(
 		target,
 		(dNode: WNode) => {
@@ -75,7 +94,6 @@ function stubRender(target: DNode): DNode {
 		},
 		isWNode
 	);
-	return target;
 }
 
 interface StubWidgetProperties extends WidgetProperties {
@@ -84,7 +102,7 @@ interface StubWidgetProperties extends WidgetProperties {
 }
 
 class StubWidget extends WidgetBase<StubWidgetProperties> {
-	render(): DNode {
+	render(): RenderResults {
 		const { _stubTag: tag, _widgetName: widgetName } = this.properties;
 		return v(tag, { [WIDGET_STUB_NAME_PROPERTY]: widgetName }, this.children);
 	}
@@ -92,11 +110,11 @@ class StubWidget extends WidgetBase<StubWidgetProperties> {
 
 interface SpyWidgetMixin {
 	meta<T extends WidgetMetaBase>(provider: WidgetMetaConstructor<T>): T;
-	spyRender(result: DNode): DNode;
+	spyRender(result: RenderResults): RenderResults;
 }
 
 interface SpyTarget {
-	actualRender(actual: DNode): void;
+	actualRender(actual: RenderResults): void;
 	decorateMeta<T extends WidgetMetaBase>(provider: T): T;
 }
 
@@ -109,7 +127,7 @@ function SpyWidgetMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(bas
 
 	class SpyRender extends base {
 		@afterRender()
-		spyRender(result: DNode): DNode {
+		spyRender(result: RenderResults): RenderResults {
 			target.actualRender(result);
 			return stubRender(result);
 		}
@@ -147,12 +165,12 @@ class WidgetHarness<W extends WidgetBase> extends WidgetBase {
 	/**
 	 * What `DNode` that is expected on the next render
 	 */
-	public expectedRender: DNode | DNode[] | undefined;
+	public expectedRender: RenderResults | undefined;
 
 	/**
 	 * A reference to the previous render
 	 */
-	public lastRender: DNode | undefined;
+	public lastRender: RenderResults | undefined;
 	public renderCount = 0;
 
 	constructor(widgetConstructor: Constructor<W>, metaData: WeakMap<Constructor<WidgetMetaBase>, MetaData>) {
@@ -165,7 +183,7 @@ class WidgetHarness<W extends WidgetBase> extends WidgetBase {
 	 * Called by a harnessed widget's render spy, allowing potential assertion of the render
 	 * @param actual The render, just after `afterRender`
 	 */
-	public actualRender(actual: DNode) {
+	public actualRender(actual: RenderResults) {
 		this.lastRender = actual;
 		this.didRender = true;
 		this.renderCount++;
@@ -193,7 +211,7 @@ class WidgetHarness<W extends WidgetBase> extends WidgetBase {
 	/**
 	 * Wrap the widget in a custom element
 	 */
-	public render(): DNode {
+	public render(): RenderResults {
 		const { _id: id, _widgetConstructor, children, properties } = this;
 		return v(
 				ROOT_CUSTOM_ELEMENT_NAME,
@@ -285,10 +303,10 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 	 */
 	public callListener(method: string, options?: CallListenerOptions): void {
 		const render = this.getRender();
-		if (typeof render !== 'object' || render === null) {
+		if (render == null || typeof render !== 'object') {
 			throw new TypeError('Widget is not rendering an HNode or WNode');
 		}
-		callListener(render, method, options);
+		supportCallListener(render, method, options);
 	}
 
 	/**
@@ -297,7 +315,7 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 	 * @param expected The expected render (`DNode`)
 	 * @param message Any message to be part of an error that gets thrown if the actual and expected do not match
 	 */
-	public expectRender(expected: DNode | DNode[], message?: string): this {
+	public expectRender(expected: RenderResults, message?: string): this {
 		this._widgetHarness.expectedRender = expected;
 		this._widgetHarness.assertionMessage = message;
 		this._widgetHarness.didRender = false;
@@ -347,7 +365,7 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 	/**
 	 * Refresh the render and return the last render's root `DNode`.
 	 */
-	public getRender(): DNode {
+	public getRender(): RenderResults {
 		this._invalidate();
 		return this._widgetHarness.lastRender;
 	}
