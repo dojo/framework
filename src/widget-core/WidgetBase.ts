@@ -272,6 +272,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		if (this._changedPropertyKeys.length > 0) {
 			this.invalidate();
 		}
+		else {
+			this._renderState = WidgetRenderState.IDLE;
+		}
 	}
 
 	public get children(): (C | null)[] {

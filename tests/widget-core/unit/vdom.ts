@@ -200,22 +200,23 @@ describe('vdom', () => {
 
 		it('invalidates up the widget tree', () => {
 			class Foo extends WidgetBase {
-				private _text = 'first';
+				private _id = 0;
 
 				private _onClick() {
-					this._text = 'second';
+					this._id++;
 					this.invalidate();
 				}
 
 				render() {
-					return v('div', { onclick: this._onClick }, [ this._text ]);
+					return v('div', { onclick: this._onClick }, [ `${this._id}` ]);
 				}
 			}
 
 			class Bar extends WidgetBase {
 				render() {
 					return v('div', [
-						w(Foo, {})
+						w(Foo, { key: '1' }),
+						w(Foo, { key: '2' })
 					]);
 				}
 			}
@@ -237,29 +238,56 @@ describe('vdom', () => {
 			const root = (projection.domNode.childNodes[0] as Element) as HTMLElement;
 			assert.lengthOf(root.childNodes, 1);
 			const barDiv = root.childNodes[0];
-			assert.lengthOf(barDiv.childNodes, 1);
-			const fooDiv = barDiv.childNodes[0] as HTMLDivElement;
-			assert.lengthOf(fooDiv.childNodes, 1);
-			const fooTextNode = fooDiv.childNodes[0] as Text;
-			assert.strictEqual(fooTextNode.data, 'first');
+			assert.lengthOf(barDiv.childNodes, 2);
+			const fooOneDiv = barDiv.childNodes[0] as HTMLDivElement;
+			const fooTwoDiv = barDiv.childNodes[1] as HTMLDivElement;
+			assert.lengthOf(fooOneDiv.childNodes, 1);
+			assert.lengthOf(fooTwoDiv.childNodes, 1);
+			const fooOneTextNode = fooOneDiv.childNodes[0] as Text;
+			const fooTwoTextNode = fooTwoDiv.childNodes[0] as Text;
+			assert.strictEqual(fooOneTextNode.data, '0');
+			assert.strictEqual(fooTwoTextNode.data, '0');
 			projection.update(widget.__render__() as HNode);
 			assert.lengthOf(root.childNodes, 1);
 			assert.strictEqual(root.childNodes[0], barDiv);
-			assert.lengthOf(barDiv.childNodes, 1);
-			assert.strictEqual(barDiv.childNodes[0], fooDiv);
-			assert.lengthOf(fooDiv.childNodes, 1);
-			assert.strictEqual(fooDiv.childNodes[0], fooTextNode);
-			assert.strictEqual(fooTextNode.data, 'first');
-			sendEvent(fooDiv, 'click');
+			assert.lengthOf(barDiv.childNodes, 2);
+			assert.strictEqual(barDiv.childNodes[0], fooOneDiv);
+			assert.strictEqual(barDiv.childNodes[1], fooTwoDiv);
+			assert.lengthOf(fooOneDiv.childNodes, 1);
+			assert.lengthOf(fooTwoDiv.childNodes, 1);
+			assert.strictEqual(fooOneDiv.childNodes[0], fooOneTextNode);
+			assert.strictEqual(fooTwoDiv.childNodes[0], fooTwoTextNode);
+			assert.strictEqual(fooOneTextNode.data, '0');
+			assert.strictEqual(fooTwoTextNode.data, '0');
+			sendEvent(fooOneDiv, 'click');
 			projection.update(widget.__render__() as HNode);
 			assert.lengthOf(root.childNodes, 1);
 			assert.strictEqual(root.childNodes[0], barDiv);
-			assert.lengthOf(barDiv.childNodes, 1);
-			assert.strictEqual(barDiv.childNodes[0], fooDiv);
-			assert.lengthOf(fooDiv.childNodes, 1);
-			assert.notStrictEqual(fooDiv.childNodes[0], fooTextNode);
-			const updatedFooTextNode = fooDiv.childNodes[0] as Text;
-			assert.strictEqual(updatedFooTextNode.data, 'second');
+			assert.lengthOf(barDiv.childNodes, 2);
+			assert.strictEqual(barDiv.childNodes[0], fooOneDiv);
+			assert.strictEqual(barDiv.childNodes[1], fooTwoDiv);
+			assert.lengthOf(fooOneDiv.childNodes, 1);
+			assert.lengthOf(fooTwoDiv.childNodes, 1);
+			assert.notStrictEqual(fooOneDiv.childNodes[0], fooOneTextNode);
+			assert.strictEqual(fooTwoDiv.childNodes[0], fooTwoTextNode);
+			const updatedFooOneTextNode = fooOneDiv.childNodes[0] as Text;
+			assert.strictEqual(updatedFooOneTextNode.data, '1');
+			sendEvent(fooTwoDiv, 'click');
+			projection.update(widget.__render__() as HNode);
+			assert.lengthOf(root.childNodes, 1);
+			assert.strictEqual(root.childNodes[0], barDiv);
+			assert.lengthOf(barDiv.childNodes, 2);
+			assert.strictEqual(barDiv.childNodes[0], fooOneDiv);
+			assert.strictEqual(barDiv.childNodes[1], fooTwoDiv);
+			assert.lengthOf(fooOneDiv.childNodes, 1);
+			assert.lengthOf(fooTwoDiv.childNodes, 1);
+			assert.strictEqual(fooOneDiv.childNodes[0], updatedFooOneTextNode);
+			assert.notStrictEqual(fooTwoDiv.childNodes[0], fooTwoTextNode);
+			const updatedFooTwoTextNode = fooTwoDiv.childNodes[0] as Text;
+			assert.strictEqual(updatedFooTwoTextNode.data, '1');
+			sendEvent(fooOneDiv, 'click');
+			projection.update(widget.__render__() as HNode);
+			assert.strictEqual((fooOneDiv.childNodes[0] as Text).data, '2');
 		});
 
 		it('DNodes are bound to the parent widget', () => {
