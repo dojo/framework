@@ -4,9 +4,9 @@ import {
 	DefaultWidgetBaseInterface,
 	DeferredVirtualProperties,
 	DNode,
-	HNode,
+	VNode,
 	RegistryLabel,
-	VirtualDomProperties,
+	VNodeProperties,
 	WidgetBaseInterface,
 	WNode
 } from './interfaces';
@@ -17,9 +17,9 @@ import {
 export const WNODE = Symbol('Identifier for a WNode.');
 
 /**
- * The symbol identifier for a HNode type
+ * The symbol identifier for a VNode type
  */
-export const HNODE = Symbol('Identifier for a HNode.');
+export const VNODE = Symbol('Identifier for a VNode.');
 
 /**
  * Helper function that returns true if the `DNode` is a `WNode` using the `type` property
@@ -29,10 +29,10 @@ export function isWNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfa
 }
 
 /**
- * Helper function that returns true if the `DNode` is a `HNode` using the `type` property
+ * Helper function that returns true if the `DNode` is a `VNode` using the `type` property
  */
-export function isHNode(child: DNode): child is HNode {
-	return Boolean(child && (typeof child !== 'string') && child.type === HNODE);
+export function isVNode(child: DNode): child is VNode {
+	return Boolean(child && (typeof child !== 'string') && child.type === VNODE);
 }
 
 /**
@@ -55,7 +55,7 @@ export function decorate(dNodes: DNode | DNode[], modifier: (dNode: DNode) => vo
 			if (!predicate || predicate(node)) {
 				modifier(node);
 			}
-			if ((isWNode(node) || isHNode(node)) && node.children) {
+			if ((isWNode(node) || isVNode(node)) && node.children) {
 				nodes = [ ...nodes, ...node.children ];
 			}
 		}
@@ -77,13 +77,13 @@ export function w<W extends WidgetBaseInterface>(widgetConstructor: Constructor<
 }
 
 /**
- * Wrapper function for calls to create HNodes.
+ * Wrapper function for calls to create VNodes.
  */
-export function v(tag: string, properties: VirtualDomProperties | DeferredVirtualProperties, children?: DNode[]): HNode;
-export function v(tag: string, children: undefined | DNode[]): HNode;
-export function v(tag: string): HNode;
-export function v(tag: string, propertiesOrChildren: VirtualDomProperties | DeferredVirtualProperties | DNode[] = {}, children: undefined | DNode[] = undefined): HNode {
-		let properties: VirtualDomProperties | DeferredVirtualProperties = propertiesOrChildren;
+export function v(tag: string, properties: VNodeProperties | DeferredVirtualProperties, children?: DNode[]): VNode;
+export function v(tag: string, children: undefined | DNode[]): VNode;
+export function v(tag: string): VNode;
+export function v(tag: string, propertiesOrChildren: VNodeProperties | DeferredVirtualProperties | DNode[] = {}, children: undefined | DNode[] = undefined): VNode {
+		let properties: VNodeProperties | DeferredVirtualProperties = propertiesOrChildren;
 		let deferredPropertiesCallback;
 
 		if (Array.isArray(propertiesOrChildren)) {
@@ -101,6 +101,6 @@ export function v(tag: string, propertiesOrChildren: VirtualDomProperties | Defe
 			deferredPropertiesCallback,
 			children,
 			properties,
-			type: HNODE
+			type: VNODE
 		};
 }

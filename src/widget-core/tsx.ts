@@ -1,6 +1,6 @@
 import { v, w } from './d';
 import { Constructor, DNode } from './interfaces';
-import { WNode, VirtualDomProperties } from './interfaces';
+import { WNode, VNodeProperties } from './interfaces';
 
 declare global {
 	namespace JSX {
@@ -9,7 +9,7 @@ declare global {
 			properties: {};
 		}
 		interface IntrinsicElements {
-			[key: string]: VirtualDomProperties;
+			[key: string]: VNodeProperties;
 		}
 	}
 }

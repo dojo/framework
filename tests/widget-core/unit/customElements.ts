@@ -8,7 +8,7 @@ import * as projector from '../../src/mixins/Projector';
 import * as sinon from 'sinon';
 import sendEvent from './../support/sendEvent';
 import { v } from '../../src/d';
-import { InternalHNode } from '../../src/vdom';
+import { InternalVNode } from '../../src/vdom';
 import { Constructor } from '../../src/interfaces';
 import ProjectorMixin from '../../src/mixins/Projector';
 
@@ -346,7 +346,7 @@ registerSuite('customElements', {
 		const widget = new Wrapper();
 		widget.__setProperties__({ foo: 'bar' });
 		const invalidateSpy = sinon.spy(widget, 'invalidate');
-		const renderResult = widget.__render__() as InternalHNode;
+		const renderResult = widget.__render__() as InternalVNode;
 		assert.strictEqual(renderResult.tag, 'DIV');
 		assert.strictEqual(renderResult.domNode, div);
 		assert.deepEqual(renderResult.properties, { });
@@ -355,7 +355,7 @@ registerSuite('customElements', {
 		assert.isTrue(invalidateSpy.notCalled);
 		sendEvent(div, 'connected');
 		assert.isTrue(invalidateSpy.calledOnce);
-		widget.__render__() as InternalHNode;
+		widget.__render__() as InternalVNode;
 		assert.deepEqual(widgetInstance.properties, { key: 'root', foo: 'bar' } as any);
 	},
 

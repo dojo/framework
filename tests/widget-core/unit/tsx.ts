@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { WidgetBase } from './../../src/WidgetBase';
-import { HNode, WidgetProperties, WNode } from '../../src/interfaces';
+import { VNode, WidgetProperties, WNode } from '../../src/interfaces';
 import { tsx, fromRegistry, REGISTRY_ITEM } from '../../src/tsx';
-import { HNODE } from './../../src/d';
+import { VNODE } from './../../src/d';
 
 registerSuite('tsx', {
 	'create a registry wrapper'() {
@@ -16,12 +16,12 @@ registerSuite('tsx', {
 		assert.isUndefined(registryWrapper.properties.key);
 	},
 	tsx: {
-		'tsx generate a HNode'() {
-			const node: HNode = tsx('div', { hello: 'world' }, [ 'child' ]) as HNode;
+		'tsx generate a VNode'() {
+			const node: VNode = tsx('div', { hello: 'world' }, [ 'child' ]) as VNode;
 			assert.deepEqual(node.tag, 'div');
 			assert.deepEqual(node.properties, { hello: 'world' });
 			assert.deepEqual(node.children, [ 'child' ]);
-			assert.strictEqual(node.type, HNODE);
+			assert.strictEqual(node.type, VNODE);
 		},
 		'tsx generate a WNode'() {
 			const node: WNode = tsx(WidgetBase, { hello: 'world' }, [ 'child' ]) as WNode;
@@ -37,25 +37,25 @@ registerSuite('tsx', {
 			assert.deepEqual(node.children, [ 'child' ]);
 		},
 		'children arrays are spread correctly'() {
-			const node: HNode = tsx('div', { hello: 'world' }, [ 'child', [ 'child-2', [ 'child-3' ] ] ]) as HNode;
+			const node: VNode = tsx('div', { hello: 'world' }, [ 'child', [ 'child-2', [ 'child-3' ] ] ]) as VNode;
 			assert.deepEqual(node.tag, 'div');
 			assert.deepEqual(node.properties, { hello: 'world' });
 			assert.deepEqual(node.children, [ 'child', 'child-2', 'child-3' ]);
-			assert.strictEqual(node.type, HNODE);
+			assert.strictEqual(node.type, VNODE);
 		},
 		'defaults properties to empty object'() {
-			const node: HNode = tsx('div') as HNode;
+			const node: VNode = tsx('div') as VNode;
 			assert.deepEqual(node.tag, 'div');
 			assert.deepEqual(node.properties, {});
 			assert.deepEqual(node.children, []);
-			assert.strictEqual(node.type, HNODE);
+			assert.strictEqual(node.type, VNODE);
 		},
 		'defaults `null` properties to empty object'() {
-			const node: HNode = tsx('div', null as any) as HNode;
+			const node: VNode = tsx('div', null as any) as VNode;
 			assert.deepEqual(node.tag, 'div');
 			assert.deepEqual(node.properties, {});
 			assert.deepEqual(node.children, []);
-			assert.strictEqual(node.type, HNODE);
+			assert.strictEqual(node.type, VNODE);
 		}
 	}
 });

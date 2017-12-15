@@ -8,7 +8,7 @@ import { v } from '../../../src/d';
 import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projector';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { beforeRender } from './../../../src/decorators/beforeRender';
-import { HNode } from './../../../src/interfaces';
+import { VNode } from './../../../src/interfaces';
 
 const Event = global.window.Event;
 
@@ -68,7 +68,7 @@ registerSuite('mixins/projectorMixin', {
 				result = 'my string';
 				projector = new MyWidget();
 
-				const renderedResult = projector.__render__() as HNode;
+				const renderedResult = projector.__render__() as VNode;
 				assert.strictEqual(renderedResult.tag, 'span');
 				assert.strictEqual(renderedResult.children![0], 'my string');
 			},
@@ -76,12 +76,12 @@ registerSuite('mixins/projectorMixin', {
 				result = v('h1', [ 'my string' ]);
 				projector = new MyWidget();
 
-				let renderedResult = projector.__render__() as HNode;
+				let renderedResult = projector.__render__() as VNode;
 				assert.strictEqual(renderedResult.tag, 'h1');
 				assert.strictEqual(renderedResult.children![0], 'my string');
 
 				result = 'my string';
-				renderedResult = projector.__render__() as HNode;
+				renderedResult = projector.__render__() as VNode;
 				assert.strictEqual(renderedResult.tag, 'span');
 				assert.strictEqual(renderedResult.children![0], 'my string');
 			},
@@ -89,7 +89,7 @@ registerSuite('mixins/projectorMixin', {
 				result = null;
 				projector = new MyWidget();
 
-				const renderedResult = projector.__render__() as HNode;
+				const renderedResult = projector.__render__() as VNode;
 				assert.strictEqual(renderedResult.tag, 'span');
 				assert.isNull(renderedResult.children![0]);
 			},
@@ -97,12 +97,12 @@ registerSuite('mixins/projectorMixin', {
 				result = v('h1', [ 'my string' ]);
 				projector = new MyWidget();
 
-				let renderedResult = projector.__render__() as HNode;
+				let renderedResult = projector.__render__() as VNode;
 				assert.strictEqual(renderedResult.tag, 'h1');
 				assert.strictEqual(renderedResult.children![0], 'my string');
 				projector.invalidate();
 				result = null;
-				renderedResult = projector.__render__() as HNode;
+				renderedResult = projector.__render__() as VNode;
 				assert.strictEqual(renderedResult.tag, 'span');
 				assert.isNull(renderedResult.children![0]);
 			},
@@ -110,7 +110,7 @@ registerSuite('mixins/projectorMixin', {
 				result = undefined;
 				projector = new MyWidget();
 
-				const renderedResult = projector.__render__() as HNode;
+				const renderedResult = projector.__render__() as VNode;
 				assert.strictEqual(renderedResult.tag, 'span');
 				assert.isUndefined(renderedResult.children![0]);
 			},
@@ -118,12 +118,12 @@ registerSuite('mixins/projectorMixin', {
 				result = v('h1', [ 'my string' ]);
 				projector = new MyWidget();
 
-				let renderedResult = projector.__render__() as HNode;
+				let renderedResult = projector.__render__() as VNode;
 				assert.strictEqual(renderedResult.tag, 'h1');
 				assert.strictEqual(renderedResult.children![0], 'my string');
 				projector.invalidate();
 				result = undefined;
-				renderedResult = projector.__render__() as HNode;
+				renderedResult = projector.__render__() as VNode;
 				assert.strictEqual(renderedResult.tag, 'span');
 				assert.isUndefined(renderedResult.children![0]);
 			},
@@ -131,7 +131,7 @@ registerSuite('mixins/projectorMixin', {
 				result = [ v('h1', [ 'my string' ]) ];
 				projector = new MyWidget();
 
-				const renderedResult = projector.__render__() as HNode;
+				const renderedResult = projector.__render__() as VNode;
 				assert.strictEqual(renderedResult, result);
 			}
 		},

@@ -1,4 +1,4 @@
-import { VirtualDomProperties } from './../interfaces';
+import { VNodeProperties } from './../interfaces';
 
 let browserSpecificTransitionEndEventName = '';
 let browserSpecificAnimationEndEventName = '';
@@ -44,7 +44,7 @@ function runAndCleanUp(element: HTMLElement, startAnimation: () => void, finishA
 	element.addEventListener(browserSpecificTransitionEndEventName, transitionEnd);
 }
 
-function exit(node: HTMLElement, properties: VirtualDomProperties, exitAnimation: string, removeNode: () => void) {
+function exit(node: HTMLElement, properties: VNodeProperties, exitAnimation: string, removeNode: () => void) {
 	const activeClass = properties.exitAnimationActive || `${exitAnimation}-active`;
 
 	runAndCleanUp(node, () => {
@@ -58,7 +58,7 @@ function exit(node: HTMLElement, properties: VirtualDomProperties, exitAnimation
 	});
 }
 
-function enter(node: HTMLElement, properties: VirtualDomProperties, enterAnimation: string) {
+function enter(node: HTMLElement, properties: VNodeProperties, enterAnimation: string) {
 	const activeClass = properties.enterAnimationActive || `${enterAnimation}-active`;
 
 	runAndCleanUp(node, () => {

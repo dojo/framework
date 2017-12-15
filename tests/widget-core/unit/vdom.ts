@@ -4,9 +4,9 @@ import { match, spy, stub, SinonStub } from 'sinon';
 import { createResolvers } from './../support/util';
 import sendEvent from './../support/sendEvent';
 
-import { dom, InternalHNode, InternalWNode, widgetInstanceMap } from '../../src/vdom';
+import { dom, InternalVNode, InternalWNode, widgetInstanceMap } from '../../src/vdom';
 import { v, w } from '../../src/d';
-import { HNode } from '../../src/interfaces';
+import { VNode } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
 import { Registry } from '../../src/Registry';
 
@@ -82,7 +82,7 @@ describe('vdom', () => {
 			widget.__setCoreProperties__({ bind: widget } as any);
 			widget.__setProperties__({ show: true });
 
-			const renderResult = widget.__render__() as HNode;
+			const renderResult = widget.__render__() as VNode;
 			const projection = dom.create(renderResult, widget);
 			const span = (projection.domNode.childNodes[0] as Element) as HTMLSpanElement;
 			assert.lengthOf(span.childNodes, 1);
@@ -116,7 +116,7 @@ describe('vdom', () => {
 			widget.__setCoreProperties__({ bind: widget } as any);
 			widget.__setProperties__({ show: true });
 
-			const renderResult = widget.__render__() as HNode;
+			const renderResult = widget.__render__() as VNode;
 			const projection = dom.create(renderResult, widget);
 			const root = (projection.domNode.childNodes[0] as Element) as HTMLSpanElement;
 
@@ -146,7 +146,7 @@ describe('vdom', () => {
 			assert.strictEqual(headerTwo.innerHTML, 'span');
 
 			widget.__setProperties__({ show: false });
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 
 			assert.lengthOf(root.childNodes, 1);
 			rootChild = root.childNodes[0] as HTMLDivElement;
@@ -170,7 +170,7 @@ describe('vdom', () => {
 			assert.strictEqual(headerTwo.innerHTML, 'span');
 
 			widget.__setProperties__({ show: true });
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 
 			assert.lengthOf(root.childNodes, 1);
 			rootChild = root.childNodes[0] as HTMLDivElement;
@@ -231,7 +231,7 @@ describe('vdom', () => {
 
 			const widget = new Baz();
 			const projection = dom.create(
-				widget.__render__() as HNode,
+				widget.__render__() as VNode,
 				widget
 			);
 
@@ -247,7 +247,7 @@ describe('vdom', () => {
 			const fooTwoTextNode = fooTwoDiv.childNodes[0] as Text;
 			assert.strictEqual(fooOneTextNode.data, '0');
 			assert.strictEqual(fooTwoTextNode.data, '0');
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			assert.lengthOf(root.childNodes, 1);
 			assert.strictEqual(root.childNodes[0], barDiv);
 			assert.lengthOf(barDiv.childNodes, 2);
@@ -260,7 +260,7 @@ describe('vdom', () => {
 			assert.strictEqual(fooOneTextNode.data, '0');
 			assert.strictEqual(fooTwoTextNode.data, '0');
 			sendEvent(fooOneDiv, 'click');
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			assert.lengthOf(root.childNodes, 1);
 			assert.strictEqual(root.childNodes[0], barDiv);
 			assert.lengthOf(barDiv.childNodes, 2);
@@ -273,7 +273,7 @@ describe('vdom', () => {
 			const updatedFooOneTextNode = fooOneDiv.childNodes[0] as Text;
 			assert.strictEqual(updatedFooOneTextNode.data, '1');
 			sendEvent(fooTwoDiv, 'click');
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			assert.lengthOf(root.childNodes, 1);
 			assert.strictEqual(root.childNodes[0], barDiv);
 			assert.lengthOf(barDiv.childNodes, 2);
@@ -286,7 +286,7 @@ describe('vdom', () => {
 			const updatedFooTwoTextNode = fooTwoDiv.childNodes[0] as Text;
 			assert.strictEqual(updatedFooTwoTextNode.data, '1');
 			sendEvent(fooOneDiv, 'click');
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			assert.strictEqual((fooOneDiv.childNodes[0] as Text).data, '2');
 		});
 
@@ -325,7 +325,7 @@ describe('vdom', () => {
 
 			const widget = new App();
 			const projection: any = dom.create(
-				widget.__render__() as HNode,
+				widget.__render__() as VNode,
 				widget
 			);
 			sendEvent(projection.domNode.childNodes[0], 'click', { eventInit: { bubbles: false } });
@@ -362,7 +362,7 @@ describe('vdom', () => {
 
 			const widget = new Baz();
 			widget.__setCoreProperties__({ bind: widget, baseRegistry });
-			const projection: any = dom.create(widget.__render__() as HNode, widget);
+			const projection: any = dom.create(widget.__render__() as VNode, widget);
 			const root = (projection.domNode.childNodes[0] as Element);
 			const headerOne = root.childNodes[0];
 			const headerOneText = headerOne.childNodes[0] as Text;
@@ -397,12 +397,12 @@ describe('vdom', () => {
 
 			const widget = new Baz();
 			widget.__setCoreProperties__({ bind: widget, baseRegistry });
-			const projection: any = dom.create(widget.__render__() as HNode, widget);
+			const projection: any = dom.create(widget.__render__() as VNode, widget);
 			const root = (projection.domNode.childNodes[0] as Element);
 			assert.lengthOf(root.childNodes, 0);
 			baseRegistry.define('foo', Foo);
 			baseRegistry.define('bar', Bar);
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			const headerOne = root.childNodes[0];
 			const headerOneText = headerOne.childNodes[0] as Text;
 			const headerTwo = root.childNodes[1];
@@ -436,7 +436,7 @@ describe('vdom', () => {
 			}
 
 			const widget = new Bar();
-			const renderResult = widget.__render__() as HNode;
+			const renderResult = widget.__render__() as VNode;
 			const projection: any = dom.create(renderResult, widget);
 			const root = (projection.domNode.childNodes[0] as Element);
 			assert.lengthOf(root.childNodes, 3);
@@ -454,7 +454,7 @@ describe('vdom', () => {
 			assert.strictEqual(textNodeThree.data, '3');
 
 			widget.invalidate();
-			const secondRenderResult = widget.__render__() as HNode;
+			const secondRenderResult = widget.__render__() as VNode;
 			projection.update(secondRenderResult);
 			const firstWNode = secondRenderResult.children![0] as InternalWNode;
 			const secondWNode = secondRenderResult.children![0] as InternalWNode;
@@ -484,7 +484,7 @@ describe('vdom', () => {
 			}
 
 			const widget = new Baz();
-			const projection: any = dom.create(widget.__render__() as HNode, widget);
+			const projection: any = dom.create(widget.__render__() as VNode, widget);
 			const root = (projection.domNode.childNodes[0] as Element);
 			assert.lengthOf(root.childNodes, 0);
 		});
@@ -530,11 +530,11 @@ describe('vdom', () => {
 			}
 
 			const widget = new Baz();
-			const projection: any = dom.create(widget.__render__() as HNode, widget);
+			const projection: any = dom.create(widget.__render__() as VNode, widget);
 			const root = (projection.domNode.childNodes[0] as Element);
 			assert.lengthOf(root.childNodes, 0);
 			widget.show = true;
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			assert.lengthOf(root.childNodes, 1);
 			const fooDiv = root.childNodes[0] as HTMLDivElement;
 			assert.lengthOf(fooDiv.classList, 1);
@@ -542,7 +542,7 @@ describe('vdom', () => {
 			const fooDivContent = fooDiv.childNodes[0] as Text;
 			assert.strictEqual(fooDivContent.data, 'content');
 			fooInvalidate();
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			assert.lengthOf(fooDiv.classList, 0);
 			assert.lengthOf(fooDiv.childNodes, 1);
 		});
@@ -629,13 +629,13 @@ describe('vdom', () => {
 
 			const widget = new Baz();
 			widget.__setProperties__({ foo: 'foo' });
-			const projection = dom.create(widget.__render__() as HNode, widget);
+			const projection = dom.create(widget.__render__() as VNode, widget);
 			const root = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 1);
 			let textNodeOne = root.childNodes[0] as Text;
 			assert.strictEqual(textNodeOne.data, 'Hello, foo!');
 			widget.__setProperties__({ foo: 'bar' });
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			textNodeOne = root.childNodes[0] as Text;
 			assert.strictEqual(textNodeOne.data, 'Hello, bar!');
 		});
@@ -658,7 +658,7 @@ describe('vdom', () => {
 			}
 
 			const widget = new Bar();
-			const projection = dom.create(widget.__render__() as HNode, widget);
+			const projection = dom.create(widget.__render__() as VNode, widget);
 			const root = projection.domNode;
 			assert.lengthOf(root.childNodes, 3);
 			const firstTextNodeChild = root.childNodes[0].childNodes[0] as Text;
@@ -683,7 +683,7 @@ describe('vdom', () => {
 			}
 
 			const widget = new Foo();
-			const projection = dom.create(widget.__render__() as HNode, widget);
+			const projection = dom.create(widget.__render__() as VNode, widget);
 			const root = projection.domNode;
 			assert.lengthOf(root.childNodes, 3);
 			const firstTextNodeChild = root.childNodes[0].childNodes[0] as Text;
@@ -712,7 +712,7 @@ describe('vdom', () => {
 
 			const div = document.createElement('div');
 			const widget = new Foo();
-			const projection = dom.append(div, widget.__render__() as HNode, widget);
+			const projection = dom.append(div, widget.__render__() as VNode, widget);
 			const root = projection.domNode as Element;
 			assert.lengthOf(root.childNodes, 3);
 			const firstTextNodeChild = root.childNodes[0].childNodes[0] as Text;
@@ -742,7 +742,7 @@ describe('vdom', () => {
 
 			const div = document.createElement('div');
 			const widget = new Bar();
-			const projection = dom.append(div, widget.__render__() as HNode, widget);
+			const projection = dom.append(div, widget.__render__() as VNode, widget);
 			const root = projection.domNode;
 			assert.lengthOf(root.childNodes, 3);
 			const firstTextNodeChild = root.childNodes[0].childNodes[0] as Text;
@@ -806,7 +806,7 @@ describe('vdom', () => {
 			const div = document.createElement('div');
 			const widget = new Foo();
 			assert.throws(() => {
-				dom.merge(div, widget.__render__() as HNode, widget);
+				dom.merge(div, widget.__render__() as VNode, widget);
 			}, Error, 'Unable to merge an array of nodes. (consider adding one extra level to the virtual DOM)');
 		});
 
@@ -824,7 +824,7 @@ describe('vdom', () => {
 			const div = document.createElement('div');
 			const widget = new Foo();
 			assert.throws(() => {
-				dom.replace(div, widget.__render__() as HNode, widget);
+				dom.replace(div, widget.__render__() as VNode, widget);
 			}, Error, 'Unable to replace a node with an array of nodes. (consider adding one extra level to the virtual DOM)');
 		});
 
@@ -871,11 +871,11 @@ describe('vdom', () => {
 			}
 
 			const widget = new Baz();
-			const projection = dom.create(widget.__render__() as HNode, widget);
+			const projection = dom.create(widget.__render__() as VNode, widget);
 			resolvers.resolve();
 			assert.isTrue(fooCreated);
 			widget.foo = false;
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			resolvers.resolve();
 			assert.strictEqual(barCreatedCount, 3);
 		});
@@ -1046,12 +1046,12 @@ describe('vdom', () => {
 			}
 
 			const widget = new Baz();
-			const projection = dom.create(widget.__render__() as HNode, widget);
+			const projection = dom.create(widget.__render__() as VNode, widget);
 			const root = (projection.domNode.childNodes[0] as Element);
 			const fooDiv = root.childNodes[0] as HTMLDivElement;
 			assert.strictEqual(fooDiv.getAttribute('id'), 'foo');
 			widget.show = false;
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			assert.isNull(fooDiv.parentNode);
 		});
 
@@ -1084,11 +1084,11 @@ describe('vdom', () => {
 			const errorMsg = `A widget (${parentName}) has had a child addded or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${widgetName}) multiple times as siblings`;
 
 			const widget = new Baz();
-			const projection = dom.create(widget.__render__() as HNode, widget);
+			const projection = dom.create(widget.__render__() as VNode, widget);
 			assert.isTrue(consoleStub.notCalled);
 			widget.invalidate();
 			widget.show = true;
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			resolvers.resolve();
 			assert.isTrue(consoleStub.calledOnce);
 			assert.isTrue(consoleStub.calledWith(errorMsg));
@@ -1140,7 +1140,7 @@ describe('vdom', () => {
 					}
 				}
 				const widget = new Bar();
-				dom.merge(root, widget.__render__() as HNode, widget);
+				dom.merge(root, widget.__render__() as VNode, widget);
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 				assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 				assert.strictEqual(select, root.childNodes[1], 'should have been reused');
@@ -1213,7 +1213,7 @@ describe('vdom', () => {
 					}
 				}
 				const widget = new Bar();
-				dom.merge(root, widget.__render__() as HNode, widget);
+				dom.merge(root, widget.__render__() as VNode, widget);
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 				assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 				assert.strictEqual(label, root.childNodes[0], 'should have been reused');
@@ -1300,7 +1300,7 @@ describe('vdom', () => {
 					}
 				}
 				const widget = new Bar();
-				dom.merge(root, widget.__render__() as HNode, widget);
+				dom.merge(root, widget.__render__() as VNode, widget);
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 				assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 				assert.strictEqual(label, root.childNodes[1], 'should have been reused');
@@ -1359,11 +1359,11 @@ describe('vdom', () => {
 		});
 
 		it('should break update when vdom object references are equal', () => {
-			const hNode = v('div', [ 'text' ]);
-			const projection = dom.create(hNode, projectorStub);
+			const vNode = v('div', [ 'text' ]);
+			const projection = dom.create(vNode, projectorStub);
 			assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div>text</div>');
-			hNode.text = 'new';
-			projection.update(hNode);
+			vNode.text = 'new';
+			projection.update(vNode);
 			assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div>text</div>');
 		});
 
@@ -1382,12 +1382,12 @@ describe('vdom', () => {
 			node.appendChild(childNode);
 			const appendChildSpy = spy(node, 'appendChild');
 
-			const childHNode = v('span', { id: 'b' }) as InternalHNode;
-			childHNode.domNode = childNode;
-			const hNode = v('div', { id: 'a' }, [ childHNode ]) as InternalHNode;
-			hNode.domNode = node;
+			const childVNode = v('span', { id: 'b' }) as InternalVNode;
+			childVNode.domNode = childNode;
+			const vNode = v('div', { id: 'a' }, [ childVNode ]) as InternalVNode;
+			vNode.domNode = node;
 
-			const projection = dom.create(hNode, projectorStub);
+			const projection = dom.create(vNode, projectorStub);
 			const root = (projection.domNode.childNodes[0] as Element) as any;
 			assert.strictEqual(root.outerHTML, '<div id="a"><span id="b"></span></div>');
 			assert.strictEqual(root.foo, 'foo');
@@ -1693,7 +1693,7 @@ describe('vdom', () => {
 	});
 
 	describe('deferred properties', () => {
-		it('can call a callback on render and on the next rAF for hnode properties', () => {
+		it('can call a callback on render and on the next rAF for vnode properties', () => {
 			let deferredCallbackCount = 0;
 			let renderCount = 0;
 
@@ -2246,7 +2246,7 @@ describe('vdom', () => {
 				}
 			}
 			const widget = new Foo();
-			dom.merge(root, widget.__render__() as HNode, widget);
+			dom.merge(root, widget.__render__() as VNode, widget);
 			assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 			assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 			assert.strictEqual(select, root.childNodes[1], 'should have been reused');
@@ -2314,7 +2314,7 @@ describe('vdom', () => {
 				}
 			}
 			const widget = new Foo();
-			dom.merge(root, widget.__render__() as HNode, widget);
+			dom.merge(root, widget.__render__() as VNode, widget);
 			assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 			assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 			assert.strictEqual(label, root.childNodes[0], 'should have been reused');
@@ -2396,7 +2396,7 @@ describe('vdom', () => {
 				}
 			}
 			const widget = new Foo();
-			dom.merge(root, widget.__render__() as HNode, widget);
+			dom.merge(root, widget.__render__() as VNode, widget);
 			assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 			assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 			assert.strictEqual(label, root.childNodes[1], 'should have been reused');
@@ -2443,13 +2443,13 @@ describe('vdom', () => {
 				}
 			}
 			const widget = new Foo();
-			const projection = dom.merge(root, widget.__render__() as HNode, widget);
+			const projection = dom.merge(root, widget.__render__() as VNode, widget);
 			const projectionRoot = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(projectionRoot.childNodes, 1, 'should have 1 child');
 
 			firstRender = false;
 			widget.invalidate();
-			projection.update(widget.__render__() as HNode);
+			projection.update(widget.__render__() as VNode);
 			assert.lengthOf(projectionRoot.childNodes, 2, 'should have 2 child');
 			document.body.removeChild(iframe);
 		});

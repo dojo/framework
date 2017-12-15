@@ -58,8 +58,8 @@ export type ScrollEventHandler = (event?: UIEvent) => EventHandlerResult;
 export type SubmitEventHandler = EventHandler;
 
 export interface TransitionStrategy {
-	enter(element: Element, properties: VirtualDomProperties, enterAnimation: string): void;
-	exit(element: Element, properties: VirtualDomProperties, exitAnimation: string, removeElement: () => void): void;
+	enter(element: Element, properties: VNodeProperties, enterAnimation: string): void;
+	exit(element: Element, properties: VNodeProperties, exitAnimation: string, removeElement: () => void): void;
 }
 
 export interface ProjectorOptions {
@@ -85,7 +85,7 @@ export interface Projection {
 
 export type SupportedClassName = string | null | undefined;
 
-export type DeferredVirtualProperties = (inserted: boolean) => VirtualDomProperties;
+export type DeferredVirtualProperties = (inserted: boolean) => VNodeProperties;
 
 /**
  * Animation controls are used to control the web animation that has been applied
@@ -137,7 +137,7 @@ export interface AnimationInfo {
 	startTime: number;
 }
 
-export interface VirtualDomProperties {
+export interface VNodeProperties {
 	/**
 	 * The animation to perform when this node is added to an already existing parent.
 	 * When this value is a string, you must pass a `projectionOptions.transitions` object when creating the
@@ -145,7 +145,7 @@ export interface VirtualDomProperties {
 	 * @param element - Element that was just added to the DOM.
 	 * @param properties - The properties object that was supplied to the [[h]] method
 	 */
-	enterAnimation?: ((element: Element, properties?: VirtualDomProperties) => void) | string;
+	enterAnimation?: ((element: Element, properties?: VNodeProperties) => void) | string;
 	/**
 	 * The animation to perform when this node is removed while its parent remains.
 	 * When this value is a string, you must pass a `projectionOptions.transitions` object when creating the projector using [[createProjector]].
@@ -153,9 +153,9 @@ export interface VirtualDomProperties {
 	 * @param removeElement - Function that removes the element from the DOM.
 	 * This argument is provided purely for convenience.
 	 * You may use this function to remove the element when the animation is done.
-	 * @param properties - The properties object that was supplied to the [[v]] method that rendered this [[HNode]] the previous time.
+	 * @param properties - The properties object that was supplied to the [[v]] method that rendered this [[VNode]] the previous time.
 	 */
-	exitAnimation?: ((element: Element, removeElement: () => void, properties?: VirtualDomProperties) => void) | string;
+	exitAnimation?: ((element: Element, removeElement: () => void, properties?: VNodeProperties) => void) | string;
 	/**
 	 * The animation to perform when the properties of this node change.
 	 * This also includes attributes, styles, css classes. This callback is also invoked when node contains only text and that text changes.
@@ -163,7 +163,7 @@ export interface VirtualDomProperties {
 	 * @param properties - The last properties object that was supplied to the [[h]] method
 	 * @param previousProperties - The previous properties object that was supplied to the [[h]] method
 	 */
-	updateAnimation?: (element: Element, properties?: VirtualDomProperties, previousProperties?: VirtualDomProperties) => void;
+	updateAnimation?: (element: Element, properties?: VNodeProperties, previousProperties?: VNodeProperties) => void;
 	/**
 	 * Bind should not be defined.
 	 */
@@ -305,24 +305,24 @@ interface CoreProperties {
 /**
  * Wrapper for v
  */
-export interface HNode {
+export interface VNode {
 	/**
 	 * Specified children
 	 */
 	children?: DNode[];
 
 	/**
-	 * HNode properties
+	 * VNode properties
 	 */
-	properties: VirtualDomProperties;
+	properties: VNodeProperties;
 
 	/**
-	 * Deferred callback for HNode properties
+	 * Deferred callback for VNode properties
 	 */
 	deferredPropertiesCallback?: DeferredVirtualProperties;
 
 	/**
-	 * The tag of the HNode
+	 * The tag of the VNode
 	 */
 	tag: string;
 
@@ -365,7 +365,7 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 /**
  * union type for all possible return types from render
  */
-export type DNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = HNode | WNode<W> | undefined | null | string;
+export type DNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = VNode | WNode<W> | undefined | null | string;
 
 /**
  * Property Change record for specific property diff functions
@@ -457,7 +457,7 @@ export interface NodeHandlerInterface extends Evented {
 	has(key: string | number): boolean;
 	add(element: Element, key: string): void;
 	addRoot(element: Element, key: string): void;
-	addProjector(element: Element, properties: VirtualDomProperties): void;
+	addProjector(element: Element, properties: VNodeProperties): void;
 	clear(): void;
 }
 

@@ -6,10 +6,10 @@ import i18n, {
 	getCachedMessages,
 	Messages
 } from '@dojo/i18n/i18n';
-import { isHNode } from './../d';
+import { isVNode } from './../d';
 import { afterRender } from './../decorators/afterRender';
 import { inject } from './../decorators/inject';
-import { Constructor, DNode, WidgetProperties, VirtualDomProperties } from './../interfaces';
+import { Constructor, DNode, WidgetProperties, VNodeProperties } from './../interfaces';
 import { Injector } from './../Injector';
 import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
@@ -37,7 +37,7 @@ export interface I18nProperties extends LocaleData, WidgetProperties {}
  * @private
  * An internal helper interface for defining locale and text direction attributes on widget nodes.
  */
-interface I18nVirtualDomProperties extends VirtualDomProperties {
+interface I18nVNodeProperties extends VNodeProperties {
 	dir: string | null;
 	lang: string | null;
 }
@@ -109,9 +109,9 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 
 		@afterRender()
 		protected renderDecorator(result: DNode): DNode {
-			if (isHNode(result)) {
+			if (isVNode(result)) {
 				const { locale, rtl } = this.properties;
-				const properties: I18nVirtualDomProperties = {
+				const properties: I18nVNodeProperties = {
 					dir: null,
 					lang: null
 				};

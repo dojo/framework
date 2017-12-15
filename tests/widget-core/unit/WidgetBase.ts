@@ -5,7 +5,7 @@ import { spy, stub, SinonStub } from 'sinon';
 import { WidgetBase } from './../../src/WidgetBase';
 import { v } from './../../src/d';
 import { WIDGET_BASE_TYPE } from './../../src/Registry';
-import { HNode, WidgetMetaConstructor, WidgetMetaBase } from './../../src/interfaces';
+import { VNode, WidgetMetaConstructor, WidgetMetaBase } from './../../src/interfaces';
 import { handleDecorator } from './../../src/decorators/handleDecorator';
 import { diffProperty } from './../../src/decorators/diffProperty';
 import { Registry } from './../../src/Registry';
@@ -72,7 +72,7 @@ describe('WidgetBase', () => {
 	it('default render returns a `div` with the current widgets children', () => {
 		const widget = new BaseTestWidget();
 		widget.__setChildren__([ 'child' ]);
-		const renderResult = widget.render() as HNode;
+		const renderResult = widget.render() as VNode;
 		assert.strictEqual(renderResult.tag, 'div');
 		assert.deepEqual(renderResult.properties, {});
 		assert.lengthOf(renderResult.children!, 1);
@@ -108,7 +108,7 @@ describe('WidgetBase', () => {
 				}
 			}
 			const widget = new TestWidget();
-			const renderResult = widget.__render__() as HNode;
+			const renderResult = widget.__render__() as VNode;
 			assert.strictEqual(renderResult.tag, 'my-app');
 			assert.lengthOf(renderResult.children!, 1);
 			assert.strictEqual(renderResult.children![0], 'child');

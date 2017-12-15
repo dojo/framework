@@ -1,12 +1,12 @@
 import { assign } from '@dojo/core/lang';
 import { from as arrayFrom } from '@dojo/shim/array';
 import global from '@dojo/shim/global';
-import { Constructor, DNode, HNode, VirtualDomProperties, WidgetProperties } from './interfaces';
+import { Constructor, DNode, VNode, VNodeProperties, WidgetProperties } from './interfaces';
 import { WidgetBase } from './WidgetBase';
 import { v, w } from './d';
 import { DomWrapper } from './util/DomWrapper';
 import { ProjectorMixin } from './mixins/Projector';
-import { InternalHNode } from './vdom';
+import { InternalVNode } from './vdom';
 
 /**
  * @type CustomElementAttributeDescriptor
@@ -135,7 +135,7 @@ export interface CustomElement extends HTMLElement {
 /**
  * Properties for DomToWidgetWrapper
  */
-export type DomToWidgetWrapperProperties = VirtualDomProperties & WidgetProperties;
+export type DomToWidgetWrapperProperties = VNodeProperties & WidgetProperties;
 
 /**
  * DomToWidgetWrapper type
@@ -161,8 +161,8 @@ export function DomToWidgetWrapper(domNode: CustomElement): DomToWidgetWrapper {
 			});
 		}
 
-		public __render__(): HNode {
-			const vNode = super.__render__() as InternalHNode;
+		public __render__(): VNode {
+			const vNode = super.__render__() as InternalVNode;
 			vNode.domNode = domNode;
 			return vNode;
 		}

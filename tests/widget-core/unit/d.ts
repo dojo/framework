@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { assign } from '@dojo/core/lang';
-import { DNode, HNode, WNode, WidgetProperties } from '../../src/interfaces';
+import { DNode, VNode, WNode, WidgetProperties } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
-import { v, w, decorate, WNODE, HNODE, isWNode, isHNode } from '../../src/d';
+import { v, w, decorate, WNODE, VNODE, isWNode, isVNode } from '../../src/d';
 
 interface ChildProperties extends WidgetProperties {
 	myChildProperty: string;
@@ -44,7 +44,7 @@ registerSuite('d', {
 			assert.deepEqual(dNode.widgetConstructor, WidgetBase);
 			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
 			assert.isTrue(isWNode(dNode));
-			assert.isFalse(isHNode(dNode));
+			assert.isFalse(isVNode(dNode));
 		},
 		'create WNode wrapper using label with properties'() {
 			const properties: any = { id: 'id', classes: [ 'world' ] };
@@ -54,7 +54,7 @@ registerSuite('d', {
 			assert.deepEqual(dNode.widgetConstructor, 'my-widget');
 			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]} as any);
 			assert.isTrue(isWNode(dNode));
-			assert.isFalse(isHNode(dNode));
+			assert.isFalse(isVNode(dNode));
 		},
 		'create WNode wrapper using constructor with children'() {
 			const dNode = w(TestWidget, { required: true }, [ w(TestChildWidget, { myChildProperty: '' }) ]);
@@ -63,16 +63,16 @@ registerSuite('d', {
 			assert.deepEqual(dNode.widgetConstructor, TestWidget);
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
-			assert.isFalse(isHNode(dNode));
+			assert.isFalse(isVNode(dNode));
 		},
-		'create WNode wrapper using constructor with HNode children'() {
+		'create WNode wrapper using constructor with VNode children'() {
 			const dNode = w(TestChildWidget, { myChildProperty: '' }, [ v('div') ]);
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, TestChildWidget);
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
-			assert.isFalse(isHNode(dNode));
+			assert.isFalse(isVNode(dNode));
 		},
 		'create WNode wrapper using constructor with properties and children'() {
 			const properties: any = { id: 'id', classes: [ 'world' ] };
@@ -83,7 +83,7 @@ registerSuite('d', {
 			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
-			assert.isFalse(isHNode(dNode));
+			assert.isFalse(isVNode(dNode));
 		},
 		'create WNode wrapper using string label with properties and children'() {
 			const properties: any = { id: 'id', classes: [ 'world' ] };
@@ -94,7 +94,7 @@ registerSuite('d', {
 			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]} as any);
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
-			assert.isFalse(isHNode(dNode));
+			assert.isFalse(isVNode(dNode));
 		},
 		'create WNode wrapper using symbol label with properties and children'() {
 			const properties: any = { id: 'id', classes: [ 'world' ] };
@@ -106,47 +106,47 @@ registerSuite('d', {
 			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]} as any);
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
-			assert.isFalse(isHNode(dNode));
+			assert.isFalse(isVNode(dNode));
 		}
 	},
 	v: {
-		'create HNode wrapper'() {
-			const hNode = v('div');
-			assert.isUndefined(hNode.children);
-			assert.equal(hNode.tag, 'div');
-			assert.equal(hNode.type, HNODE);
-			assert.isTrue(isHNode(hNode));
-			assert.isFalse(isWNode(hNode));
+		'create VNode wrapper'() {
+			const vNode = v('div');
+			assert.isUndefined(vNode.children);
+			assert.equal(vNode.tag, 'div');
+			assert.equal(vNode.type, VNODE);
+			assert.isTrue(isVNode(vNode));
+			assert.isFalse(isWNode(vNode));
 		},
-		'create HNode wrapper with children'() {
-			const hNode = v('div', {}, [ v('div'), v('div') ]);
-			assert.lengthOf(hNode.children!, 2);
-			assert.equal(hNode.type, HNODE);
-			assert.isTrue(isHNode(hNode));
-			assert.isFalse(isWNode(hNode));
+		'create VNode wrapper with children'() {
+			const vNode = v('div', {}, [ v('div'), v('div') ]);
+			assert.lengthOf(vNode.children!, 2);
+			assert.equal(vNode.type, VNODE);
+			assert.isTrue(isVNode(vNode));
+			assert.isFalse(isWNode(vNode));
 		},
-		'create HNode wrapper with children as options param'() {
-			const hNode = v('div', [ v('div'), v('div') ]);
-			assert.lengthOf(hNode.children!, 2);
-			assert.equal(hNode.type, HNODE);
-			assert.isTrue(isHNode(hNode));
-			assert.isFalse(isWNode(hNode));
+		'create VNode wrapper with children as options param'() {
+			const vNode = v('div', [ v('div'), v('div') ]);
+			assert.lengthOf(vNode.children!, 2);
+			assert.equal(vNode.type, VNODE);
+			assert.isTrue(isVNode(vNode));
+			assert.isFalse(isWNode(vNode));
 		},
-		'create HNode wrapper with text node children'() {
-			const hNode = v('div', {}, [ 'This Text Node', 'That Text Node' ]);
-			assert.lengthOf(hNode.children!, 2);
-			assert.equal(hNode.type, HNODE);
-			assert.isTrue(isHNode(hNode));
-			assert.isFalse(isWNode(hNode));
+		'create VNode wrapper with text node children'() {
+			const vNode = v('div', {}, [ 'This Text Node', 'That Text Node' ]);
+			assert.lengthOf(vNode.children!, 2);
+			assert.equal(vNode.type, VNODE);
+			assert.isTrue(isVNode(vNode));
+			assert.isFalse(isWNode(vNode));
 		},
-		'create HNode wrapper with deferred properties'() {
+		'create VNode wrapper with deferred properties'() {
 			const props = () => {
 				return { a: 'a' };
 			};
-			const hNode = v('div', props);
+			const vNode = v('div', props);
 
-			assert.deepEqual(hNode.properties, {});
-			assert.strictEqual(hNode.deferredPropertiesCallback, props);
+			assert.deepEqual(vNode.properties, {});
+			assert.strictEqual(vNode.deferredPropertiesCallback, props);
 		}
 	},
 	decorator: {
@@ -199,11 +199,11 @@ registerSuite('d', {
 				if (isWNode(node)) {
 					(node.properties as any)['decorated'] = true;
 				}
-				else if (isHNode(node)) {
+				else if (isVNode(node)) {
 					assign(node.properties, { id: 'id' });
 				}
 			};
-			const children: any = (<HNode> testWidget.render()).children;
+			const children: any = (<VNode> testWidget.render()).children;
 			assert.isOk(children);
 			decorate(children, modifier);
 			if (children) {
@@ -228,7 +228,7 @@ registerSuite('d', {
 					node = 'replaced string';
 				}
 			};
-			const children: any = (<HNode> testWidget.render()).children;
+			const children: any = (<VNode> testWidget.render()).children;
 			assert.isOk(children);
 			decorate(children, modifier);
 			if (children) {
@@ -237,18 +237,18 @@ registerSuite('d', {
 			}
 		}
 	},
-	'isHNode and isWNode': {
+	'isVNode and isWNode': {
 		'isWNode returns false for null'() {
 			assert.isFalse(isWNode(null));
 		},
 		'isWNode returns false for a string'() {
 			assert.isFalse(isWNode('string'));
 		},
-		'isHNode returns false for null'() {
-			assert.isFalse(isHNode(null));
+		'isVNode returns false for null'() {
+			assert.isFalse(isVNode(null));
 		},
-		'isHNode returns false for a string'() {
-			assert.isFalse(isHNode('string'));
+		'isVNode returns false for a string'() {
+			assert.isFalse(isVNode('string'));
 		}
 	}
 });

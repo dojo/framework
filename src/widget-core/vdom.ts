@@ -3,16 +3,16 @@ import {
 	CoreProperties,
 	DefaultWidgetBaseInterface,
 	DNode,
-	HNode,
+	VNode,
 	WNode,
 	ProjectionOptions,
 	Projection,
 	SupportedClassName,
 	TransitionStrategy,
-	VirtualDomProperties
+	VNodeProperties
 } from './interfaces';
 import { from as arrayFrom } from '@dojo/shim/array';
-import { isWNode, isHNode, HNODE } from './d';
+import { isWNode, isVNode, VNODE } from './d';
 import { isWidgetBaseConstructor } from './Registry';
 import WeakMap from '@dojo/shim/WeakMap';
 import NodeHandler from './NodeHandler';
@@ -22,7 +22,7 @@ const NAMESPACE_W3 = 'http://www.w3.org/';
 const NAMESPACE_SVG = NAMESPACE_W3 + '2000/svg';
 const NAMESPACE_XLINK = NAMESPACE_W3 + '1999/xlink';
 
-const emptyArray: (InternalWNode | InternalHNode)[] = [];
+const emptyArray: (InternalWNode | InternalVNode)[] = [];
 
 export type RenderResult = DNode<any> | DNode<any>[];
 
@@ -49,10 +49,10 @@ export interface InternalWNode extends WNode<DefaultWidgetBaseInterface> {
 	children: InternalDNode[];
 }
 
-export interface InternalHNode extends HNode {
+export interface InternalVNode extends VNode {
 
 	/**
-	 * Children for the HNode
+	 * Children for the VNode
 	 */
 	children?: InternalDNode[];
 
@@ -61,7 +61,7 @@ export interface InternalHNode extends HNode {
 	/**
 	 * Bag used to still decorate properties on a deferred properties callback
 	 */
-	decoratedDeferredProperties?: VirtualDomProperties;
+	decoratedDeferredProperties?: VNodeProperties;
 
 	/**
 	 * DOM element
@@ -69,7 +69,7 @@ export interface InternalHNode extends HNode {
 	domNode?: Element | Text;
 }
 
-export type InternalDNode = InternalHNode | InternalWNode;
+export type InternalDNode = InternalVNode | InternalWNode;
 
 export interface WidgetData {
 	onElementCreated: Function;
@@ -87,7 +87,7 @@ export interface WidgetData {
 export const widgetInstanceMap = new WeakMap<any, WidgetData>();
 
 function same(dnode1: InternalDNode, dnode2: InternalDNode) {
-	if (isHNode(dnode1) && isHNode(dnode2)) {
+	if (isVNode(dnode1) && isVNode(dnode2)) {
 		if (dnode1.tag !== dnode2.tag) {
 			return false;
 		}
@@ -139,9 +139,9 @@ function checkStyleValue(styleValue: Object) {
 function updateEvents(
 	domNode: Node,
 	propName: string,
-	properties: VirtualDomProperties,
+	properties: VNodeProperties,
 	projectionOptions: ProjectionOptions,
-	previousProperties?: VirtualDomProperties
+	previousProperties?: VNodeProperties
 ) {
 	const previous = previousProperties || Object.create(null);
 	const currentValue = properties[propName];
@@ -187,7 +187,7 @@ function removeClasses(domNode: Element, classes: SupportedClassName) {
 	}
 }
 
-function setProperties(domNode: Element, properties: VirtualDomProperties, projectionOptions: ProjectionOptions) {
+function setProperties(domNode: Element, properties: VNodeProperties, projectionOptions: ProjectionOptions) {
 	const propNames = Object.keys(properties);
 	const propCount = propNames.length;
 	for (let i = 0; i < propCount; i++) {
@@ -238,8 +238,8 @@ function setProperties(domNode: Element, properties: VirtualDomProperties, proje
 
 function removeOrphanedEvents(
 	domNode: Element,
-	previousProperties: VirtualDomProperties,
-	properties: VirtualDomProperties,
+	previousProperties: VNodeProperties,
+	properties: VNodeProperties,
 	projectionOptions: ProjectionOptions
 ) {
 	const eventMap = projectionOptions.nodeMap.get(domNode);
@@ -257,8 +257,8 @@ function removeOrphanedEvents(
 
 function updateProperties(
 	domNode: Element,
-	previousProperties: VirtualDomProperties,
-	properties: VirtualDomProperties,
+	previousProperties: VNodeProperties,
+	properties: VNodeProperties,
 	projectionOptions: ProjectionOptions
 ) {
 	let propertiesUpdated = false;
@@ -392,24 +392,24 @@ function findIndexOfChild(children: InternalDNode[], sameAs: InternalDNode, star
 	return -1;
 }
 
-export function toParentHNode(domNode: Element): InternalHNode {
+export function toParentVNode(domNode: Element): InternalVNode {
 	return {
 		tag: '',
 		properties: {},
 		children: undefined,
 		domNode,
-		type: HNODE
+		type: VNODE
 	};
 }
 
-export function toTextHNode(data: any): InternalHNode {
+export function toTextVNode(data: any): InternalVNode {
 	return {
 		tag: '',
 		properties: {},
 		children: undefined,
 		text: `${data}`,
 		domNode: undefined,
-		type: HNODE
+		type: VNODE
 	};
 }
 
@@ -426,10 +426,10 @@ export function filterAndDecorateChildren(children: undefined | DNode | DNode[],
 			continue;
 		}
 		else if (typeof child === 'string') {
-			children[i] = toTextHNode(child);
+			children[i] = toTextVNode(child);
 		}
 		else {
-			if (isHNode(child)) {
+			if (isVNode(child)) {
 				if (child.properties.bind === undefined) {
 					(child.properties as any).bind = instance;
 					if (child.children && child.children.length > 0) {
@@ -456,7 +456,7 @@ export function filterAndDecorateChildren(children: undefined | DNode | DNode[],
 }
 
 function nodeAdded(dnode: InternalDNode, transitions: TransitionStrategy) {
-	if (isHNode(dnode) && dnode.properties) {
+	if (isVNode(dnode) && dnode.properties) {
 		const enterAnimation = dnode.properties.enterAnimation;
 		if (enterAnimation) {
 			if (typeof enterAnimation === 'function') {
@@ -491,7 +491,7 @@ function nodeToRemove(dnode: InternalDNode, transitions: TransitionStrategy, pro
 		const rendered = dnode.rendered || emptyArray;
 		for (let i = 0; i < rendered.length; i++) {
 			const child = rendered[i];
-			if (isHNode(child)) {
+			if (isVNode(child)) {
 				child.domNode!.parentNode!.removeChild(child.domNode!);
 			}
 			else {
@@ -527,7 +527,7 @@ function checkDistinguishable(
 	parentInstance: DefaultWidgetBaseInterface
 ) {
 	const childNode = childNodes[indexToCheck];
-	if (isHNode(childNode) && childNode.tag === '') {
+	if (isVNode(childNode) && childNode.tag === '') {
 		return; // Text nodes need not be distinguishable
 	}
 	const { key } = childNode.properties;
@@ -555,7 +555,7 @@ function checkDistinguishable(
 }
 
 function updateChildren(
-	parentHNode: InternalHNode,
+	parentVNode: InternalVNode,
 	oldChildren: InternalDNode[],
 	newChildren: InternalDNode[],
 	parentInstance: DefaultWidgetBaseInterface,
@@ -576,7 +576,7 @@ function updateChildren(
 		const newChild = newChildren[newIndex];
 
 		if (oldChild !== undefined && same(oldChild, newChild)) {
-			textUpdated = updateDom(oldChild, newChild, projectionOptions, parentHNode, parentInstance) || textUpdated;
+			textUpdated = updateDom(oldChild, newChild, projectionOptions, parentVNode, parentInstance) || textUpdated;
 			oldIndex++;
 		}
 		else {
@@ -591,7 +591,7 @@ function updateChildren(
 					});
 					nodeToRemove(oldChildren[i], transitions, projectionOptions);
 				}
-				textUpdated = updateDom(oldChildren[findOldIndex], newChild, projectionOptions, parentHNode, parentInstance) || textUpdated;
+				textUpdated = updateDom(oldChildren[findOldIndex], newChild, projectionOptions, parentVNode, parentInstance) || textUpdated;
 				oldIndex = findOldIndex + 1;
 			}
 			else {
@@ -618,7 +618,7 @@ function updateChildren(
 					}
 				}
 
-				createDom(newChild, parentHNode, insertBefore, projectionOptions, parentInstance);
+				createDom(newChild, parentVNode, insertBefore, projectionOptions, parentInstance);
 				nodeAdded(newChild, transitions);
 				const indexToCheck = newIndex;
 				projectionOptions.afterRenderCallbacks.push(() => {
@@ -644,7 +644,7 @@ function updateChildren(
 }
 
 function addChildren(
-	parentHNode: InternalHNode,
+	parentVNode: InternalVNode,
 	children: InternalDNode[] | undefined,
 	projectionOptions: ProjectionOptions,
 	parentInstance: DefaultWidgetBaseInterface,
@@ -656,13 +656,13 @@ function addChildren(
 	}
 
 	if (projectionOptions.merge && childNodes === undefined) {
-		childNodes = arrayFrom(parentHNode.domNode!.childNodes) as (Element | Text)[];
+		childNodes = arrayFrom(parentVNode.domNode!.childNodes) as (Element | Text)[];
 	}
 
 	for (let i = 0; i < children.length; i++) {
 		const child = children[i];
 
-		if (isHNode(child)) {
+		if (isVNode(child)) {
 			if (projectionOptions.merge && childNodes) {
 				let domElement: Element | undefined = undefined;
 				while (child.domNode === undefined && childNodes.length > 0) {
@@ -672,17 +672,17 @@ function addChildren(
 					}
 				}
 			}
-			createDom(child, parentHNode, insertBefore, projectionOptions, parentInstance);
+			createDom(child, parentVNode, insertBefore, projectionOptions, parentInstance);
 		}
 		else {
-			createDom(child, parentHNode, insertBefore, projectionOptions, parentInstance, childNodes);
+			createDom(child, parentVNode, insertBefore, projectionOptions, parentInstance, childNodes);
 		}
 	}
 }
 
 function initPropertiesAndChildren(
 	domNode: Element,
-	dnode: InternalHNode,
+	dnode: InternalVNode,
 	parentInstance: DefaultWidgetBaseInterface,
 	projectionOptions: ProjectionOptions
 ) {
@@ -703,7 +703,7 @@ function initPropertiesAndChildren(
 
 function createDom(
 	dnode: InternalDNode,
-	parentHNode: InternalHNode,
+	parentVNode: InternalVNode,
 	insertBefore: Element | Text | undefined,
 	projectionOptions: ProjectionOptions,
 	parentInstance: DefaultWidgetBaseInterface,
@@ -731,7 +731,7 @@ function createDom(
 		if (rendered) {
 			const filteredRendered = filterAndDecorateChildren(rendered, instance);
 			dnode.rendered = filteredRendered;
-			addChildren(parentHNode, filteredRendered, projectionOptions, instance, insertBefore, childNodes);
+			addChildren(parentVNode, filteredRendered, projectionOptions, instance, insertBefore, childNodes);
 		}
 		instanceData.nodeHandler.addRoot();
 		projectionOptions.afterRenderCallbacks.push(() => {
@@ -745,7 +745,7 @@ function createDom(
 			initPropertiesAndChildren(domNode!, dnode, parentInstance, projectionOptions);
 			return;
 		}
-		const doc = parentHNode.domNode!.ownerDocument;
+		const doc = parentVNode.domNode!.ownerDocument;
 		if (dnode.tag === '') {
 			if (dnode.domNode !== undefined) {
 				const newDomNode = dnode.domNode.ownerDocument.createTextNode(dnode.text!);
@@ -755,10 +755,10 @@ function createDom(
 			else {
 				domNode = dnode.domNode = doc.createTextNode(dnode.text!);
 				if (insertBefore !== undefined) {
-					parentHNode.domNode!.insertBefore(domNode, insertBefore);
+					parentVNode.domNode!.insertBefore(domNode, insertBefore);
 				}
 				else {
-					parentHNode.domNode!.appendChild(domNode);
+					parentVNode.domNode!.appendChild(domNode);
 				}
 			}
 		}
@@ -778,17 +778,17 @@ function createDom(
 				domNode = dnode.domNode;
 			}
 			if (insertBefore !== undefined) {
-				parentHNode.domNode!.insertBefore(domNode, insertBefore);
+				parentVNode.domNode!.insertBefore(domNode, insertBefore);
 			}
-			else if (domNode!.parentNode !== parentHNode.domNode!) {
-				parentHNode.domNode!.appendChild(domNode);
+			else if (domNode!.parentNode !== parentVNode.domNode!) {
+				parentVNode.domNode!.appendChild(domNode);
 			}
 			initPropertiesAndChildren(domNode! as Element, dnode, parentInstance, projectionOptions);
 		}
 	}
 }
 
-function updateDom(previous: any, dnode: InternalDNode, projectionOptions: ProjectionOptions, parentHNode: InternalHNode, parentInstance: DefaultWidgetBaseInterface) {
+function updateDom(previous: any, dnode: InternalDNode, projectionOptions: ProjectionOptions, parentVNode: InternalVNode, parentInstance: DefaultWidgetBaseInterface) {
 	if (isWNode(dnode)) {
 		const { instance, rendered: previousRendered } = previous;
 		if (instance && previousRendered) {
@@ -800,7 +800,7 @@ function updateDom(previous: any, dnode: InternalDNode, projectionOptions: Proje
 			if (instanceData.dirty === true) {
 				const rendered = instance.__render__();
 				dnode.rendered = filterAndDecorateChildren(rendered, instance);
-				updateChildren(parentHNode, previousRendered, dnode.rendered, instance, projectionOptions);
+				updateChildren(parentVNode, previousRendered, dnode.rendered, instance, projectionOptions);
 			}
 			else {
 				dnode.rendered = previousRendered;
@@ -808,7 +808,7 @@ function updateDom(previous: any, dnode: InternalDNode, projectionOptions: Proje
 			instanceData.nodeHandler.addRoot();
 		}
 		else {
-			createDom(dnode, parentHNode, undefined, projectionOptions, parentInstance);
+			createDom(dnode, parentVNode, undefined, projectionOptions, parentInstance);
 		}
 	}
 	else {
@@ -859,18 +859,18 @@ function updateDom(previous: any, dnode: InternalDNode, projectionOptions: Proje
 	}
 }
 
-function addDeferredProperties(hnode: InternalHNode, projectionOptions: ProjectionOptions) {
+function addDeferredProperties(vnode: InternalVNode, projectionOptions: ProjectionOptions) {
 	// transfer any properties that have been passed - as these must be decorated properties
-	hnode.decoratedDeferredProperties = hnode.properties;
-	const properties = hnode.deferredPropertiesCallback!(!!hnode.inserted);
-	hnode.properties = { ...properties, ...hnode.decoratedDeferredProperties };
+	vnode.decoratedDeferredProperties = vnode.properties;
+	const properties = vnode.deferredPropertiesCallback!(!!vnode.inserted);
+	vnode.properties = { ...properties, ...vnode.decoratedDeferredProperties };
 	projectionOptions.deferredRenderCallbacks.push(() => {
 		const properties = {
-			...hnode.deferredPropertiesCallback!(!!hnode.inserted),
-			...hnode.decoratedDeferredProperties
+			...vnode.deferredPropertiesCallback!(!!vnode.inserted),
+			...vnode.decoratedDeferredProperties
 		};
-		updateProperties(hnode.domNode! as Element, hnode.properties, properties, projectionOptions);
-		hnode.properties = properties;
+		updateProperties(vnode.domNode! as Element, vnode.properties, properties, projectionOptions);
+		vnode.properties = properties;
 	});
 }
 
@@ -928,7 +928,7 @@ function createProjection(dnode: InternalDNode | InternalDNode[], parentInstance
 			let domNode = projectionOptions.rootNode;
 
 			updatedDNode = filterAndDecorateChildren(updatedDNode, parentInstance);
-			updateChildren(toParentHNode(domNode), projectionDNode, updatedDNode as InternalDNode[], parentInstance, projectionOptions);
+			updateChildren(toParentVNode(domNode), projectionDNode, updatedDNode as InternalDNode[], parentInstance, projectionOptions);
 			const instanceData = widgetInstanceMap.get(parentInstance)!;
 			instanceData.nodeHandler.addRoot();
 			runDeferredRenderCallbacks(projectionOptions);
@@ -945,7 +945,7 @@ export const dom = {
 		const rootNode = document.createElement('div');
 		finalProjectorOptions.rootNode = rootNode;
 		const decoratedNode = filterAndDecorateChildren(dNode, instance);
-		addChildren(toParentHNode(finalProjectorOptions.rootNode), decoratedNode, finalProjectorOptions, instance, undefined);
+		addChildren(toParentVNode(finalProjectorOptions.rootNode), decoratedNode, finalProjectorOptions, instance, undefined);
 		const instanceData = widgetInstanceMap.get(instance)!;
 		instanceData.nodeHandler.addRoot();
 		finalProjectorOptions.afterRenderCallbacks.push(() => {
@@ -959,7 +959,7 @@ export const dom = {
 		const finalProjectorOptions = getProjectionOptions(projectionOptions);
 		finalProjectorOptions.rootNode = parentNode;
 		const decoratedNode = filterAndDecorateChildren(dNode, instance);
-		addChildren(toParentHNode(finalProjectorOptions.rootNode), decoratedNode, finalProjectorOptions, instance, undefined);
+		addChildren(toParentVNode(finalProjectorOptions.rootNode), decoratedNode, finalProjectorOptions, instance, undefined);
 		const instanceData = widgetInstanceMap.get(instance)!;
 		instanceData.nodeHandler.addRoot();
 		finalProjectorOptions.afterRenderCallbacks.push(() => {
@@ -977,8 +977,8 @@ export const dom = {
 		finalProjectorOptions.merge = true;
 		finalProjectorOptions.mergeElement = element;
 		finalProjectorOptions.rootNode = element.parentNode as Element;
-		const decoratedNode = filterAndDecorateChildren(dNode, instance)[0] as InternalHNode;
-		createDom(decoratedNode, toParentHNode(finalProjectorOptions.rootNode), undefined, finalProjectorOptions, instance);
+		const decoratedNode = filterAndDecorateChildren(dNode, instance)[0] as InternalVNode;
+		createDom(decoratedNode, toParentVNode(finalProjectorOptions.rootNode), undefined, finalProjectorOptions, instance);
 		const instanceData = widgetInstanceMap.get(instance)!;
 		instanceData.nodeHandler.addRoot();
 		finalProjectorOptions.afterRenderCallbacks.push(() => {
@@ -993,9 +993,9 @@ export const dom = {
 			throw new Error('Unable to replace a node with an array of nodes. (consider adding one extra level to the virtual DOM)');
 		}
 		const finalProjectorOptions = getProjectionOptions(projectionOptions);
-		const decoratedNode = filterAndDecorateChildren(dNode, instance)[0] as InternalHNode;
+		const decoratedNode = filterAndDecorateChildren(dNode, instance)[0] as InternalVNode;
 		finalProjectorOptions.rootNode = element.parentNode! as Element;
-		createDom(decoratedNode, toParentHNode(finalProjectorOptions.rootNode), element, finalProjectorOptions, instance);
+		createDom(decoratedNode, toParentVNode(finalProjectorOptions.rootNode), element, finalProjectorOptions, instance);
 		const instanceData = widgetInstanceMap.get(instance)!;
 		instanceData.nodeHandler.addRoot();
 		finalProjectorOptions.afterRenderCallbacks.push(() => {

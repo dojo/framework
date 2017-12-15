@@ -147,7 +147,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	/**
-	 * Widget lifecycle method that is called whenever a dom node is created for a HNode.
+	 * Widget lifecycle method that is called whenever a dom node is created for a VNode.
 	 * Override this method to access the dom nodes that were inserted into the dom.
 	 * @param element The dom node represented by the vdom node.
 	 * @param key The vdom node's key.
@@ -157,7 +157,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	/**
-	 * Widget lifecycle method that is called whenever a dom node that is associated with a HNode is updated.
+	 * Widget lifecycle method that is called whenever a dom node that is associated with a VNode is updated.
 	 * Override this method to access the dom node.
 	 * @param element The dom node represented by the vdom node.
 	 * @param key The vdom node's key.
