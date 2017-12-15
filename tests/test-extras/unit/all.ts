@@ -4,4 +4,5 @@ import '../../src/support/loadJsdom';
 /* Modules to test */
 import './harness';
 import './main';
+import './resolvers';
 import './support/all';
