@@ -6,7 +6,6 @@ import callListener from '../../../src/support/callListener';
 import { v, w } from '@dojo/widget-core/d';
 
 registerSuite('support/callListener', {
-
 	'should call listener'() {
 		let count = 0;
 		const vnode = w<any>('widget', {
@@ -45,7 +44,7 @@ registerSuite('support/callListener', {
 	},
 
 	'should pass args when specified'() {
-		const args = [ 1, 2, 3 ];
+		const args = [1, 2, 3];
 		const vnode = w<any>('widget', {
 			onClick(...calledArgs: any[]) {
 				assert.deepEqual(calledArgs, args);
@@ -79,14 +78,28 @@ registerSuite('support/callListener', {
 	'should target key when passed'() {
 		let keyCount = 0;
 		let count = 0;
-		const vnode = w<any>('widget', {
-			onClick() {
-				count++;
-			}
-		}, [
-			w<any>('sub-widget', { key: 'foo', onClick() { keyCount++; } }),
-			w<any>('sub-widget', { key: 'bar', onClick() { count++; } })
-		]);
+		const vnode = w<any>(
+			'widget',
+			{
+				onClick() {
+					count++;
+				}
+			},
+			[
+				w<any>('sub-widget', {
+					key: 'foo',
+					onClick() {
+						keyCount++;
+					}
+				}),
+				w<any>('sub-widget', {
+					key: 'bar',
+					onClick() {
+						count++;
+					}
+				})
+			]
+		);
 		callListener(vnode, 'onClick', {
 			key: 'foo'
 		});
@@ -97,14 +110,28 @@ registerSuite('support/callListener', {
 	'should target when index is passed'() {
 		let indexCount = 0;
 		let count = 0;
-		const vnode = v('div', {
-			onClick() {
-				count++;
-			}
-		}, [
-			w<any>('sub-widget', { key: 'foo', onClick() { indexCount++; } }),
-			w<any>('sub-widget', { key: 'bar', onClick() { count++; } })
-		]);
+		const vnode = v(
+			'div',
+			{
+				onClick() {
+					count++;
+				}
+			},
+			[
+				w<any>('sub-widget', {
+					key: 'foo',
+					onClick() {
+						indexCount++;
+					}
+				}),
+				w<any>('sub-widget', {
+					key: 'bar',
+					onClick() {
+						count++;
+					}
+				})
+			]
+		);
 		callListener(vnode, 'onClick', {
 			index: 0
 		});
@@ -125,36 +152,52 @@ registerSuite('support/callListener', {
 
 	'error conditions': {
 		'method is not found'() {
-			const vnode = w<any>('widget', { onClick() { } });
-			assert.throws(() => {
-				callListener(vnode, 'onFoo');
-			}, TypeError, 'Cannot resolve listener: "onFoo"');
+			const vnode = w<any>('widget', { onClick() {} });
+			assert.throws(
+				() => {
+					callListener(vnode, 'onFoo');
+				},
+				TypeError,
+				'Cannot resolve listener: "onFoo"'
+			);
 		},
 
 		'key is not found'() {
 			const vnode = v('div', {}, [
-				w<any>('sub-widget', { key: 'foo', onClick() { } }),
-				w<any>('sub-widget', { key: 'bar', onClick() { } })
+				w<any>('sub-widget', { key: 'foo', onClick() {} }),
+				w<any>('sub-widget', { key: 'bar', onClick() {} })
 			]);
-			assert.throws(() => {
-				callListener(vnode, 'onClick', { key: 'baz' });
-			}, TypeError, 'Cannot resolve target');
+			assert.throws(
+				() => {
+					callListener(vnode, 'onClick', { key: 'baz' });
+				},
+				TypeError,
+				'Cannot resolve target'
+			);
 		},
 
 		'index is not found'() {
 			const vnode = v('div', {}, [
-				w<any>('sub-widget', { key: 'foo', onClick() { } }),
-				w<any>('sub-widget', { key: 'bar', onClick() { } })
+				w<any>('sub-widget', { key: 'foo', onClick() {} }),
+				w<any>('sub-widget', { key: 'bar', onClick() {} })
 			]);
-			assert.throws(() => {
-				callListener(vnode, 'onClick', { index: 2 });
-			}, TypeError, 'Cannot resolve target');
+			assert.throws(
+				() => {
+					callListener(vnode, 'onClick', { index: 2 });
+				},
+				TypeError,
+				'Cannot resolve target'
+			);
 		},
 
 		'string is not supported'() {
-			assert.throws(() => {
-				callListener('testString', 'onclick');
-			}, TypeError, 'Cannot resolve target');
+			assert.throws(
+				() => {
+					callListener('testString', 'onclick');
+				},
+				TypeError,
+				'Cannot resolve target'
+			);
 		}
 	}
 });

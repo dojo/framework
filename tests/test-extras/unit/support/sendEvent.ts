@@ -5,7 +5,6 @@ import has from '@dojo/has/has';
 import sendEvent from '../../../src/support/sendEvent';
 
 registerSuite('support/sendEvent', {
-
 	'custom event'() {
 		const target = document.createElement('div');
 		document.body.appendChild(target);
@@ -47,16 +46,15 @@ registerSuite('support/sendEvent', {
 		});
 	},
 
-	'MouseEvents'() {
+	MouseEvents() {
 		const target = document.createElement('button');
 		document.body.appendChild(target);
 
 		function listener(evt: MouseEvent) {
 			assert.strictEqual(evt.type, 'click', 'event type should be "click"');
 			if (has('customevent-constructor')) {
-				assert(evt instanceof (<any> window).MouseEvent, 'event should be an instance of MouseEvent');
-			}
-			else {
+				assert(evt instanceof (<any>window).MouseEvent, 'event should be an instance of MouseEvent');
+			} else {
 				assert.instanceOf(evt, window['CustomEvent'], 'event should be an instance of CustomEvent');
 			}
 			assert.strictEqual(evt.clientX, 50);
@@ -97,7 +95,7 @@ registerSuite('support/sendEvent', {
 
 		target.addEventListener('deviceproximity', listener);
 
-		const eventInit: EventInit & { max: number, min: number, value: number } = {
+		const eventInit: EventInit & { max: number; min: number; value: number } = {
 			max: 0,
 			min: 0,
 			value: 0
@@ -109,7 +107,7 @@ registerSuite('support/sendEvent', {
 		});
 	},
 
-	'selector'() {
+	selector() {
 		const target = document.createElement('div');
 		const button = document.createElement('button');
 		target.appendChild(button);
@@ -139,11 +137,15 @@ registerSuite('support/sendEvent', {
 		const target = document.createElement('div');
 		document.body.appendChild(target);
 
-		assert.throws(() => {
-			sendEvent(target, 'foo', {
-				selector: 'button'
-			});
-		}, Error, 'Cannot resolve to an element with selector');
+		assert.throws(
+			() => {
+				sendEvent(target, 'foo', {
+					selector: 'button'
+				});
+			},
+			Error,
+			'Cannot resolve to an element with selector'
+		);
 
 		document.body.removeChild(target);
 	},
@@ -161,9 +163,13 @@ registerSuite('support/sendEvent', {
 		}
 		target.addEventListener('click', thrower);
 
-		assert.throws(() => {
-			sendEvent(target, 'click');
-		}, Error, 'foo');
+		assert.throws(
+			() => {
+				sendEvent(target, 'click');
+			},
+			Error,
+			'foo'
+		);
 
 		target.removeEventListener('click', thrower);
 		document.body.removeChild(target);

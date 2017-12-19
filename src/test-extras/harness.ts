@@ -47,14 +47,12 @@ export function findDNodeByKey(target: RenderResults, key: string | object): HNo
 				if (findDNodeByKey(node, key)) {
 					console.warn(`Duplicate key of "${key}" found.`);
 				}
-			}
-			else {
+			} else {
 				found = findDNodeByKey(node, key);
 			}
 		});
 		return found;
-	}
-	else {
+	} else {
 		if (target && typeof target === 'object') {
 			if (target.properties && target.properties.key === key) {
 				return target;
@@ -88,9 +86,10 @@ function decorateTarget(target: DNode): void {
 			const { widgetConstructor, properties } = dNode;
 			dNode.widgetConstructor = StubWidget;
 			(properties as StubWidgetProperties)._stubTag = WIDGET_STUB_CUSTOM_ELEMENT;
-			(properties as StubWidgetProperties)._widgetName = typeof widgetConstructor === 'string'
-				? widgetConstructor
-				: (widgetConstructor as any).name || '<Anonymous>';
+			(properties as StubWidgetProperties)._widgetName =
+				typeof widgetConstructor === 'string'
+					? widgetConstructor
+					: (widgetConstructor as any).name || '<Anonymous>';
 		},
 		isWNode
 	);
@@ -123,8 +122,10 @@ interface SpyTarget {
  * @param base The base class to add the render spy to
  * @param target An object with a property named `lastRender` which will be set to the result of the `render()` method
  */
-function SpyWidgetMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(base: T, target: SpyTarget): T & Constructor<SpyWidgetMixin> {
-
+function SpyWidgetMixin<T extends Constructor<WidgetBase<WidgetProperties>>>(
+	base: T,
+	target: SpyTarget
+): T & Constructor<SpyWidgetMixin> {
 	class SpyRender extends base {
 		@afterRender()
 		spyRender(result: RenderResults): RenderResults {
@@ -150,7 +151,7 @@ interface MetaData {
  * the harnessed widget.
  */
 class WidgetHarness<W extends WidgetBase> extends WidgetBase {
-	private _id = ROOT_CUSTOM_ELEMENT_NAME + '-' + (++harnessId);
+	private _id = ROOT_CUSTOM_ELEMENT_NAME + '-' + ++harnessId;
 	private _metaData: WeakMap<Constructor<WidgetMetaBase>, MetaData>;
 	private _widgetConstructor: Constructor<W>;
 
@@ -213,11 +214,7 @@ class WidgetHarness<W extends WidgetBase> extends WidgetBase {
 	 */
 	public render(): RenderResults {
 		const { _id: id, _widgetConstructor, children, properties } = this;
-		return v(
-				ROOT_CUSTOM_ELEMENT_NAME,
-				{ id },
-				[ w(_widgetConstructor, properties, children) ]
-			);
+		return v(ROOT_CUSTOM_ELEMENT_NAME, { id }, [w(_widgetConstructor, properties, children)]);
 	}
 }
 
@@ -248,7 +245,8 @@ export type MetaMockContext<T extends WidgetMetaBase = WidgetMetaBase> = T & {
 	invalidate(): void;
 };
 
-type ProjectorWidgetHarness<W extends WidgetBase<WidgetProperties>> = ProjectorMixin<W['properties']> & WidgetHarness<W>;
+type ProjectorWidgetHarness<W extends WidgetBase<WidgetProperties>> = ProjectorMixin<W['properties']> &
+	WidgetHarness<W>;
 
 const ProjectorWidgetHarness = ProjectorMixin(WidgetHarness);
 
@@ -283,7 +281,7 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 	constructor(widgetConstructor: Constructor<W>, root?: HTMLElement) {
 		super();
 
-		const widgetHarness = this._widgetHarness = new ProjectorWidgetHarness(widgetConstructor, this._metaMap);
+		const widgetHarness = (this._widgetHarness = new ProjectorWidgetHarness(widgetConstructor, this._metaMap));
 		// we want to control when the render gets scheduled, so we will hijack the projects one
 		this._scheduleRender = widgetHarness.scheduleRender.bind(widgetHarness);
 		widgetHarness.scheduleRender = () => {};
@@ -333,7 +331,7 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 		if (!this._projectorHandle) {
 			this._invalidate();
 		}
-		if (!(this._widgetHarness.lastRender) || !(this._widgetHarness.lastRender as any).domNode) {
+		if (!this._widgetHarness.lastRender || !(this._widgetHarness.lastRender as any).domNode) {
 			throw new Error('No root node has been rendered');
 		}
 		return (this._widgetHarness.lastRender as any).domNode as HTMLElement;
@@ -354,8 +352,7 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 				// TODO: no need to coerce in 2.5.2
 				mocks: mocks as any
 			});
-		}
-		else {
+		} else {
 			// TODO: no need to coerce in 2.5.2
 			_metaMap.get(provider)!.mocks = mocks as any;
 		}
@@ -386,8 +383,7 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 			const dnode = findDNodeByKey(this._widgetHarness.lastRender, key);
 			if (isHNode(dnode)) {
 				target = (dnode as any).domNode as Element;
-			}
-			else {
+			} else {
 				throw new Error(`Could not find key of "${key}" to sendEvent`);
 			}
 		}
@@ -419,6 +415,9 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
  * @param widgetConstructor The constructor function/class of widget that should be harnessed.
  * @param root The root where the harness should append itself to the DOM.  Defaults to `document.body`
  */
-export default function harness<W extends WidgetBase<WidgetProperties>>(widgetConstructor: Constructor<W>, root?: HTMLElement): Harness<W> {
+export default function harness<W extends WidgetBase<WidgetProperties>>(
+	widgetConstructor: Constructor<W>,
+	root?: HTMLElement
+): Harness<W> {
 	return new Harness(widgetConstructor, root);
 }

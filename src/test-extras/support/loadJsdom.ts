@@ -28,16 +28,19 @@ if (!('document' in global)) {
 	virtualConsole.sendTo(console);
 
 	/* Create a new jsdom instance */
-	const dom = new jsdom.JSDOM(`
+	const dom = new jsdom.JSDOM(
+		`
 		<!DOCTYPE html>
 		<html>
 		<head></head>
 		<body></body>
 		<html>
-	`, {
-		virtualConsole,
-		runScripts: 'dangerously'
-	});
+	`,
+		{
+			virtualConsole,
+			runScripts: 'dangerously'
+		}
+	);
 
 	/* Assign a global window */
 	global.window = dom.window;
@@ -55,7 +58,7 @@ if (!('document' in global)) {
 	Object.defineProperty(
 		window.CSSStyleDeclaration.prototype,
 		'transition',
-		Object.getOwnPropertyDescriptor((<any> window).CSSStyleDeclaration.prototype, 'webkitTransition')!
+		Object.getOwnPropertyDescriptor((<any>window).CSSStyleDeclaration.prototype, 'webkitTransition')!
 	);
 
 	/* Polyfill requestAnimationFrame - this can never be called an *actual* polyfill */
@@ -68,8 +71,7 @@ if (!('document' in global)) {
 	global.cancelAnimationFrame = () => {};
 
 	hasAdd('jsdom', true);
-}
-else {
+} else {
 	doc = document;
 	/* istanbul ignore else */
 	if (!exists('jsdom')) {

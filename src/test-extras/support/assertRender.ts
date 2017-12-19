@@ -26,9 +26,9 @@ export interface AssertRenderOptions extends DiffOptions {
  * @param expected The expected DNode
  */
 function getArrayPreamble(actual: DNode | DNode[], expected: DNode | DNode[]): string {
-	return Array.isArray(actual) ?
-		`Expected "${getTypeOf(expected)}" but got an array` :
-		`Expected an array but got "${getTypeOf(actual)}"`;
+	return Array.isArray(actual)
+		? `Expected "${getTypeOf(expected)}" but got an array`
+		: `Expected an array but got "${getTypeOf(actual)}"`;
 }
 
 /**
@@ -40,8 +40,7 @@ function getChildMessage(childIndex: number, message: string = '') {
 	const lastIndex = message.lastIndexOf(']');
 	if (lastIndex === -1) {
 		return `[${childIndex}] ${message}`;
-	}
-	else {
+	} else {
 		return message.slice(0, lastIndex + 1) + `[${childIndex}]` + message.slice(lastIndex + 1);
 	}
 }
@@ -71,11 +70,15 @@ function getTypeOf(value: any) {
  * @param message any message to be part of the error
  */
 function throwAssertionError(actual: any, expected: any, prolog: string, message?: string): never {
-	throw new AssertionError(`${RENDER_FAIL_MESSAGE}: ${prolog}${message ? `: ${message}` : ''}`, {
-		actual,
-		expected,
-		showDiff: true
-	}, assertRender);
+	throw new AssertionError(
+		`${RENDER_FAIL_MESSAGE}: ${prolog}${message ? `: ${message}` : ''}`,
+		{
+			actual,
+			expected,
+			showDiff: true
+		},
+		assertRender
+	);
 }
 
 /**
@@ -83,7 +86,7 @@ function throwAssertionError(actual: any, expected: any, prolog: string, message
  */
 const defaultDiffOptions: DiffOptions = {
 	allowFunctionValues: true,
-	ignoreProperties: [ 'bind' ]
+	ignoreProperties: ['bind']
 };
 
 /**
@@ -97,13 +100,24 @@ const defaultDiffOptions: DiffOptions = {
  * @param message Any message to be part of an error thrown if actual and expected do not match
  */
 export default function assertRender(actual: DNode | DNode[], expected: DNode | DNode[], message?: string): void;
-export default function assertRender(actual: DNode | DNode[], expected: DNode | DNode[], options: AssertRenderOptions, message?: string): void;
-export default function assertRender(actual: DNode | DNode[], expected: DNode | DNode[], options?: AssertRenderOptions | string, message?: string): void {
+export default function assertRender(
+	actual: DNode | DNode[],
+	expected: DNode | DNode[],
+	options: AssertRenderOptions,
+	message?: string
+): void;
+export default function assertRender(
+	actual: DNode | DNode[],
+	expected: DNode | DNode[],
+	options?: AssertRenderOptions | string,
+	message?: string
+): void {
 	if (typeof options === 'string') {
 		message = options;
 		options = undefined;
 	}
-	const { isHNode: localIsHNode = isHNode, isWNode: localIsWNode = isWNode, ...passedDiffOptions } = (options || {}) as AssertRenderOptions;
+	const { isHNode: localIsHNode = isHNode, isWNode: localIsWNode = isWNode, ...passedDiffOptions } = (options ||
+		{}) as AssertRenderOptions;
 	const diffOptions: DiffOptions = assign({}, defaultDiffOptions, passedDiffOptions);
 
 	function assertChildren(actual?: DNode[], expected?: DNode[]) {
@@ -112,10 +126,14 @@ export default function assertRender(actual: DNode | DNode[], expected: DNode | 
 				throwAssertionError(actual, expected, `Children's length mismatch`, message);
 			}
 			actual.forEach((actualChild, index) => {
-				assertRender(actualChild, expected[index], (options || {}) as AssertRenderOptions, getChildMessage(index, message));
+				assertRender(
+					actualChild,
+					expected[index],
+					(options || {}) as AssertRenderOptions,
+					getChildMessage(index, message)
+				);
 			});
-		}
-		else {
+		} else {
 			if (actual || expected) {
 				throwAssertionError(actual, expected, actual ? 'Unxpected children' : 'Expected children', message);
 			}
@@ -124,69 +142,74 @@ export default function assertRender(actual: DNode | DNode[], expected: DNode | 
 
 	if (Array.isArray(actual) && Array.isArray(expected)) {
 		assertChildren(actual, expected);
-	}
-	else if (Array.isArray(actual) || Array.isArray(expected)) {
+	} else if (Array.isArray(actual) || Array.isArray(expected)) {
 		throwAssertionError(actual, expected, getArrayPreamble(actual, expected), message);
-	}
-	else if ((localIsHNode(actual) && localIsHNode(expected)) || (localIsWNode(actual) && localIsWNode(expected))) {
+	} else if ((localIsHNode(actual) && localIsHNode(expected)) || (localIsWNode(actual) && localIsWNode(expected))) {
 		if (localIsHNode(actual) && localIsHNode(expected)) {
 			if (actual.tag !== expected.tag) {
 				/* The tags do not match */
 				throwAssertionError(actual.tag, expected.tag, `Tags do not match`, message);
 			}
-		}
-		/* istanbul ignore else: not being tracked by TypeScript properly */
-		else if (localIsWNode(actual) && localIsWNode(expected)) {
+		} else if (localIsWNode(actual) && localIsWNode(expected)) {
+			/* istanbul ignore else: not being tracked by TypeScript properly */
 			if (actual.widgetConstructor !== expected.widgetConstructor) {
 				/* The WNode does not share the same constructor */
-				throwAssertionError(actual.widgetConstructor, expected.widgetConstructor, `WNodes do not share constructor`, message);
+				throwAssertionError(
+					actual.widgetConstructor,
+					expected.widgetConstructor,
+					`WNodes do not share constructor`,
+					message
+				);
 			}
 		}
 		/* Inject a custom comparator for class names */
-		const expectedClasses: SupportedClassName | SupportedClassName[] = expected.properties && (expected.properties as any).classes;
+		const expectedClasses: SupportedClassName | SupportedClassName[] =
+			expected.properties && (expected.properties as any).classes;
 		if (expectedClasses && !isCustomDiff(expectedClasses)) {
-			(expected.properties as any).classes = compareProperty((value: SupportedClassName | SupportedClassName[]) => {
-				const expectedValue = typeof expectedClasses === 'string' ? [ expectedClasses ] : expectedClasses;
-				value = (typeof value === 'string' ? [ value ] : value) || [];
-				const expectedSet = new Set(expectedValue.filter(expectedClass => Boolean(expectedClass)));
-				const actualSet = new Set(value.filter(actualClass => Boolean(actualClass)));
+			(expected.properties as any).classes = compareProperty(
+				(value: SupportedClassName | SupportedClassName[]) => {
+					const expectedValue = typeof expectedClasses === 'string' ? [expectedClasses] : expectedClasses;
+					value = (typeof value === 'string' ? [value] : value) || [];
+					const expectedSet = new Set(expectedValue.filter((expectedClass) => Boolean(expectedClass)));
+					const actualSet = new Set(value.filter((actualClass) => Boolean(actualClass)));
 
-				if (expectedSet.size !== actualSet.size) {
-					return false;
+					if (expectedSet.size !== actualSet.size) {
+						return false;
+					}
+
+					let allMatch = true;
+					actualSet.forEach((actualClass) => {
+						allMatch = allMatch && expectedSet.has(actualClass);
+					});
+					return allMatch;
 				}
-
-				let allMatch = true;
-				actualSet.forEach(actualClass => {
-					allMatch = allMatch && expectedSet.has(actualClass);
-				});
-				return allMatch;
-			}
-);
+			);
 		}
 		const delta = diff(actual.properties, expected.properties, diffOptions);
 		if (delta.length) {
 			/* The properties do not match */
-			const { comparableA, comparableB } = getComparableObjects(actual.properties, expected.properties, diffOptions);
+			const { comparableA, comparableB } = getComparableObjects(
+				actual.properties,
+				expected.properties,
+				diffOptions
+			);
 			throwAssertionError(comparableA, comparableB, `Properties do not match`, message);
 		}
 		/* We need to assert the children match */
 		assertChildren(actual.children, expected.children);
-	}
-	else if (typeof actual === 'string' && typeof expected === 'string') {
+	} else if (typeof actual === 'string' && typeof expected === 'string') {
 		/* Both DNodes are strings */
 		if (actual !== expected) {
 			/* The strings do not match */
 			throwAssertionError(actual, expected, `Unexpected string values`, message);
 		}
-	}
-	else if (isHNode(actual) && typeof expected === 'string') {
+	} else if (isHNode(actual) && typeof expected === 'string') {
 		// when doing an expected render on already rendered nodes, strings are converted to _shell_ HNodes
 		// so we want to compare to those instead
 		if (actual.text !== expected) {
 			throwAssertionError(actual.text, expected, `Expected text differs from rendered text`, message);
 		}
-	}
-	else if (!(actual === null && expected === null)) {
+	} else if (!(actual === null && expected === null)) {
 		/* There is a mismatch between the types of DNodes */
 		throwAssertionError(actual, expected, getMismatchPreamble(actual, expected), message);
 	}

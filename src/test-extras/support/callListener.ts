@@ -44,7 +44,7 @@ export default function callListener(node: RenderResults, method: string, option
 	if (resolvedTargets == null || !resolvedTargets.length) {
 		throw new TypeError(`Cannot resolve target`);
 	}
-	resolvedTargets.forEach( (target) => {
+	resolvedTargets.forEach((target) => {
 		const listener: ((...args: any[]) => void) | undefined = target.properties[method];
 		if (!listener) {
 			throw new TypeError(`Cannot resolve listener: "${method}"`);
@@ -67,27 +67,23 @@ function resolveTarget(node: RenderResults, options: CallListenerOptions): any[]
 			}
 		}
 		return resolvedTargets;
-	}
-	else {
+	} else {
 		let resolvedTarget: any;
 		const { index, key, target } = options;
 		if (target) {
 			resolvedTarget = target;
-		}
-		else if (node != null && (typeof node !== 'string')) {
+		} else if (node != null && typeof node !== 'string') {
 			if (key) {
 				resolvedTarget = findKey(node, key);
-			}
-			else if (typeof index !== 'undefined') {
+			} else if (typeof index !== 'undefined') {
 				const byIndex = findIndex(node, index);
 				if (typeof byIndex === 'object' && byIndex !== null && 'properties' in byIndex) {
 					resolvedTarget = byIndex;
 				}
-			}
-			else {
+			} else {
 				resolvedTarget = node;
 			}
 		}
-		return resolvedTarget && [ resolvedTarget ];
+		return resolvedTarget && [resolvedTarget];
 	}
 }

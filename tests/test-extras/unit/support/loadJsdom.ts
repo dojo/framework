@@ -6,7 +6,6 @@ import global from '@dojo/shim/global';
 import doc from '../../../src/support/loadJsdom';
 
 registerSuite('support/loadJsdom', {
-
 	'document is global and matches export'() {
 		assert(document, 'document should be in the global scope');
 		assert.strictEqual(document, doc, 'document should equal default export of module');

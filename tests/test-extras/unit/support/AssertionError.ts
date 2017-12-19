@@ -4,22 +4,21 @@ const { assert } = intern.getPlugin('chai');
 import AssertionError from '../../../src/support/AssertionError';
 
 registerSuite('support/AssertionError', {
-
-	'construction'() {
+	construction() {
 		const err = new AssertionError();
 		assert(err instanceof Error, 'instanceof Error');
 		assert(err instanceof AssertionError, 'instanceof AssertionError');
 		assert(err.name && err.name === 'AssertionError', 'name === "AssertionError"');
 	},
 
-	'message'() {
+	message() {
 		const err = new AssertionError('Oops.');
 		const empty = new AssertionError();
 		assert(err.message === 'Oops.', 'w/ err.message');
 		assert(empty.message === 'Unspecified AssertionError', 'w/o err.message');
 	},
 
-	'stack'() {
+	stack() {
 		assert(typeof new AssertionError().stack === 'string');
 	},
 

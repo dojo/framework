@@ -7,4 +7,4 @@ export default class NodeId extends Base {
 			return node.id;
 		}
 	}
-};
+}

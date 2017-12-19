@@ -14,7 +14,7 @@ import assertRender from '../../src/support/assertRender';
 
 const hasFunctionName = (() => {
 	function foo() {}
-	return (<any> foo).name === 'foo';
+	return (<any>foo).name === 'foo';
 })();
 
 interface MockWidgetProperties extends WidgetProperties {
@@ -26,15 +26,13 @@ interface MockWidgetProperties extends WidgetProperties {
 
 class MockWidget extends WidgetBase<MockWidgetProperties> {
 	render() {
-		return v('div', { classes: [ 'foo' ] });
+		return v('div', { classes: ['foo'] });
 	}
 }
 
 class MockArrayWidget extends WidgetBase<MockWidgetProperties> {
 	render() {
-		return [
-			v('div', { classes: [ 'foo' ] })
-		];
+		return [v('div', { classes: ['foo'] })];
 	}
 }
 
@@ -52,28 +50,33 @@ class RegistryWidgetChild extends WidgetBase<RegistryWidgetProperties> {
 	}
 }
 
-class RegisterChildWidget extends WidgetBase<WidgetProperties & { tag: string; }> {
+class RegisterChildWidget extends WidgetBase<WidgetProperties & { tag: string }> {
 	render() {
 		const registry = new MockRegistry();
 		registry.tag = this.properties.tag;
-		return v('div', {
-			key: 'wrapper'
-		}, [ w(RegistryWidgetChild, {
-			key: 'child',
-			registry
-		}) ]);
+		return v(
+			'div',
+			{
+				key: 'wrapper'
+			},
+			[
+				w(RegistryWidgetChild, {
+					key: 'child',
+					registry
+				})
+			]
+		);
 	}
 }
 
 class SubWidget extends WidgetBase<WidgetProperties> {
 	render() {
-		return v('div', { }, [ w(MockWidget, { key: 'first' }), w('widget', { key: 'second' }) ]);
+		return v('div', {}, [w(MockWidget, { key: 'first' }), w('widget', { key: 'second' })]);
 	}
 }
 
 registerSuite('harness', {
-
-	'rendering': {
+	rendering: {
 		'nodes are added during rendering'() {
 			const widget = harness(MockWidget);
 			const dom = widget.getDom();
@@ -90,7 +93,11 @@ registerSuite('harness', {
 
 			const widget = harness(MockWidget, div);
 			const parentElement = widget.getDom().parentElement!;
-			assert.strictEqual(parentElement.parentElement, div, 'the root of the harness should be a child of the div');
+			assert.strictEqual(
+				parentElement.parentElement,
+				div,
+				'the root of the harness should be a child of the div'
+			);
 			widget.destroy();
 			document.body.removeChild(div); /* cleanup after test */
 		},
@@ -104,8 +111,7 @@ registerSuite('harness', {
 			assert.strictEqual(dom.children[1].tagName, 'TEST--WIDGET-STUB');
 			if (hasFunctionName) {
 				assert.strictEqual(dom.children[0].getAttribute('data--widget-name'), 'MockWidget');
-			}
-			else {
+			} else {
 				assert.strictEqual(dom.children[0].getAttribute('data--widget-name'), '<Anonymous>');
 			}
 			assert.strictEqual(dom.children[1].getAttribute('data--widget-name'), 'widget');
@@ -117,7 +123,11 @@ registerSuite('harness', {
 
 			class CustomEventWidget extends WidgetBase<WidgetProperties> {
 				render() {
-					return v('div', { onfoo() { called = true; }});
+					return v('div', {
+						onfoo() {
+							called = true;
+						}
+					});
 				}
 			}
 
@@ -166,9 +176,13 @@ registerSuite('harness', {
 
 			const widget = harness(NullWidget);
 
-			assert.throws(() => {
-				widget.getDom();
-			}, Error, 'No root node has been rendered');
+			assert.throws(
+				() => {
+					widget.getDom();
+				},
+				Error,
+				'No root node has been rendered'
+			);
 
 			widget.destroy();
 		}
@@ -177,13 +191,13 @@ registerSuite('harness', {
 	'.expectRender()': {
 		'HNode render - matches'() {
 			const widget = harness(MockWidget);
-			widget.expectRender(v('div', { classes: [ 'foo' ] }));
+			widget.expectRender(v('div', { classes: ['foo'] }));
 			widget.destroy();
 		},
 
 		'HNode render array - matches'() {
 			const widget = harness(MockArrayWidget);
-			widget.expectRender([ v('div', { classes: [ 'foo' ] }) ]);
+			widget.expectRender([v('div', { classes: ['foo'] })]);
 			widget.destroy();
 		},
 
@@ -212,7 +226,7 @@ registerSuite('harness', {
 		'HNode render - does not match'() {
 			const widget = harness(MockWidget);
 			assert.throws(() => {
-				widget.expectRender(v('div', { classes: [ 'bar' ] }));
+				widget.expectRender(v('div', { classes: ['bar'] }));
 			});
 			widget.destroy();
 		},
@@ -220,7 +234,7 @@ registerSuite('harness', {
 		'HNode render array - does not match'() {
 			const widget = harness(MockWidget);
 			assert.throws(() => {
-				widget.expectRender([ v('div', { classes: [ 'baz' ] }) ]);
+				widget.expectRender([v('div', { classes: ['baz'] })]);
 			});
 			widget.destroy();
 		},
@@ -233,7 +247,7 @@ registerSuite('harness', {
 			}
 			const widget = harness(MockWidget);
 			assert.throws(() => {
-				widget.expectRender([ v('div', { classes: [ 'baz' ] }) ]);
+				widget.expectRender([v('div', { classes: ['baz'] })]);
 			});
 			widget.destroy();
 		},
@@ -246,39 +260,43 @@ registerSuite('harness', {
 			}
 			const widget = harness(MockWidget);
 			assert.throws(() => {
-				widget.expectRender([ v('div', { classes: [ 'baz' ] }) ]);
+				widget.expectRender([v('div', { classes: ['baz'] })]);
 			});
 			widget.destroy();
 		},
 
 		'WNode children render - matches'() {
 			const widget = harness(SubWidget);
-			widget.expectRender(v('div', { }, [ w(MockWidget, { key: 'first' }), w('widget', { key: 'second' }) ]));
+			widget.expectRender(v('div', {}, [w(MockWidget, { key: 'first' }), w('widget', { key: 'second' })]));
 			widget.destroy();
 		},
 
 		'WNode children render - does not match'() {
 			const widget = harness(SubWidget);
 			assert.throws(() => {
-				widget.expectRender(v('div', { }, [ w(MockWidget, { key: 'fist' }), w('widget', { key: 'second' }) ]));
+				widget.expectRender(v('div', {}, [w(MockWidget, { key: 'fist' }), w('widget', { key: 'second' })]));
 			});
 			widget.destroy();
 		},
 
 		'render does not occur'() {
 			class BrokenRender {
-				addDecorator() { }
-				__setProperties__() { }
-				on() { }
-				own() { }
-				__setChildren__() { }
-				__render__() { }
+				addDecorator() {}
+				__setProperties__() {}
+				on() {}
+				own() {}
+				__setChildren__() {}
+				__render__() {}
 			}
 
 			const widget = harness(BrokenRender as any);
-			assert.throws(() => {
-				widget.expectRender(null);
-			}, Error, 'An expected render did not occur.');
+			assert.throws(
+				() => {
+					widget.expectRender(null);
+				},
+				Error,
+				'An expected render did not occur.'
+			);
 			widget.destroy();
 		},
 
@@ -288,7 +306,7 @@ registerSuite('harness', {
 				onClick = () => {
 					called = true;
 					this.invalidate();
-				}
+				};
 
 				render() {
 					return v('div', {
@@ -300,9 +318,11 @@ registerSuite('harness', {
 			const widget = harness(SelfInvalidateWidget);
 			widget.callListener('onClick');
 			assert.isTrue(called);
-			widget.expectRender(v('div', {
-				onClick: widget.listener
-			}));
+			widget.expectRender(
+				v('div', {
+					onClick: widget.listener
+				})
+			);
 		},
 
 		'with comparison': {
@@ -312,16 +332,20 @@ registerSuite('harness', {
 					tag: 'foo'
 				});
 				let called = false;
-				const compareRegistry = compareProperty((value: MockRegistry, name, properties: RegistryWidgetProperties | VirtualDomProperties) => {
-					called = true;
-					assert.instanceOf(value, MockRegistry);
-					assert.strictEqual(name, 'registry');
-					assert.strictEqual(properties.key, 'child');
-					return value.tag === 'foo';
-				});
-				widget.expectRender(v('div', { key: 'wrapper' }, [
-					w<any>(RegistryWidgetChild, { key: 'child', registry: compareRegistry })
-				]));
+				const compareRegistry = compareProperty(
+					(value: MockRegistry, name, properties: RegistryWidgetProperties | VirtualDomProperties) => {
+						called = true;
+						assert.instanceOf(value, MockRegistry);
+						assert.strictEqual(name, 'registry');
+						assert.strictEqual(properties.key, 'child');
+						return value.tag === 'foo';
+					}
+				);
+				widget.expectRender(
+					v('div', { key: 'wrapper' }, [
+						w<any>(RegistryWidgetChild, { key: 'child', registry: compareRegistry })
+					])
+				);
 				assert.isTrue(called, 'comparer should have been called');
 			},
 
@@ -335,11 +359,17 @@ registerSuite('harness', {
 					called = true;
 					return value.tag === 'foo';
 				});
-				assert.throws(() => {
-					widget.expectRender(v('div', { key: 'wrapper' }, [
-						w<any>(RegistryWidgetChild, { key: 'child', registry: compareRegistry })
-					]));
-				}, AssertionError, 'The value of property "registry" is unexpected.');
+				assert.throws(
+					() => {
+						widget.expectRender(
+							v('div', { key: 'wrapper' }, [
+								w<any>(RegistryWidgetChild, { key: 'child', registry: compareRegistry })
+							])
+						);
+					},
+					AssertionError,
+					'The value of property "registry" is unexpected.'
+				);
 				assert.isTrue(called, 'comparer should have been called');
 			},
 
@@ -378,7 +408,7 @@ registerSuite('harness', {
 			'widget render - array value compare'() {
 				class ArrayWidget extends WidgetBase<WidgetProperties> {
 					render() {
-						return v('div', { array: [ 3 ] });
+						return v('div', { array: [3] });
 					}
 				}
 				const widget = harness(ArrayWidget);
@@ -386,7 +416,7 @@ registerSuite('harness', {
 					return array.length === 1 && array[0] === 3;
 				});
 				const compareId = compareProperty(comparisonStub);
-				widget.expectRender(v('div', { array : compareId as any }));
+				widget.expectRender(v('div', { array: compareId as any }));
 				assert.isTrue(comparisonStub.calledOnce, 'comparer should have been called');
 			}
 		}
@@ -402,12 +432,9 @@ registerSuite('harness', {
 
 			const widget = harness(ParentWidget);
 
-			widget.setChildren([ v('span'), v('a', { href: 'http://dojo.io' }) ]);
+			widget.setChildren([v('span'), v('a', { href: 'http://dojo.io' })]);
 
-			widget.expectRender(v('div', {}, [
-				v('span'),
-				v('a', { href: 'http://dojo.io' })
-			]));
+			widget.expectRender(v('div', {}, [v('span'), v('a', { href: 'http://dojo.io' })]));
 
 			widget.destroy();
 		}
@@ -421,19 +448,19 @@ registerSuite('harness', {
 
 			class DynamicWidget extends WidgetBase<DynamicWidgetProperties> {
 				render() {
-					return this.properties.flag ?
-						v('div', { }, [ w(MockWidget, { key: 'first' }), w(MockWidget, { key: 'second' }) ]) :
-						v('div', { }, [ w(MockWidget, { key: 'first' }) ]);
+					return this.properties.flag
+						? v('div', {}, [w(MockWidget, { key: 'first' }), w(MockWidget, { key: 'second' })])
+						: v('div', {}, [w(MockWidget, { key: 'first' })]);
 				}
 			}
 
 			const widget = harness(DynamicWidget);
 
 			widget.setProperties({ flag: false });
-			widget.expectRender(v('div', { }, [ w(MockWidget, { key: 'first' }) ]));
+			widget.expectRender(v('div', {}, [w(MockWidget, { key: 'first' })]));
 
 			widget.setProperties({ flag: true });
-			widget.expectRender(v('div', { }, [ w(MockWidget, { key: 'first' }), w(MockWidget, { key: 'second' }) ]));
+			widget.expectRender(v('div', {}, [w(MockWidget, { key: 'first' }), w(MockWidget, { key: 'second' })]));
 
 			widget.destroy();
 		}
@@ -497,7 +524,7 @@ registerSuite('harness', {
 				}
 
 				render() {
-					return v('div', { onclick: this.onClick }, [ v('button') ]);
+					return v('div', { onclick: this.onClick }, [v('button')]);
 				}
 			}
 
@@ -536,7 +563,7 @@ registerSuite('harness', {
 				}
 
 				render() {
-					return v('div', { key: 'wrap', onclick: this.onClick }, [ v('button', { key: 'button' }) ]);
+					return v('div', { key: 'wrap', onclick: this.onClick }, [v('button', { key: 'button' })]);
 				}
 			}
 
@@ -558,17 +585,21 @@ registerSuite('harness', {
 		'with key not found'() {
 			class ButtonWidget extends WidgetBase<WidgetProperties> {
 				render() {
-					return v('div', { key: 'wrap' }, [ v('button', { key: 'button' }), 'foo', 'bar' ]);
+					return v('div', { key: 'wrap' }, [v('button', { key: 'button' }), 'foo', 'bar']);
 				}
 			}
 
 			const widget = harness(ButtonWidget);
 
-			assert.throws(() => {
-				widget.sendEvent('click', {
-					key: 'foo'
-				});
-			}, Error, 'Could not find key of "foo" to sendEvent');
+			assert.throws(
+				() => {
+					widget.sendEvent('click', {
+						key: 'foo'
+					});
+				},
+				Error,
+				'Could not find key of "foo" to sendEvent'
+			);
 
 			widget.destroy();
 		},
@@ -578,17 +609,9 @@ registerSuite('harness', {
 				render() {
 					return v('div', { key: 'foo' }, [
 						'foo',
-						v('span', { key: 'parent1' }, [
-							v('i', { key: 'icon', id: 'i1' }, [ 'bar' ]),
-							'bar'
-						]),
-						v('span', { key: 'parent2' }, [
-							v('i', { key: 'super-icon', id: 'i1' }, [ 'bar' ]),
-							'bar'
-						]),
-						v('span', { key: 'parent3' }, [
-							v('i', { key: 'icon', id: 'i2' }, [ 'bar' ])
-						])
+						v('span', { key: 'parent1' }, [v('i', { key: 'icon', id: 'i1' }, ['bar']), 'bar']),
+						v('span', { key: 'parent2' }, [v('i', { key: 'super-icon', id: 'i1' }, ['bar']), 'bar']),
+						v('span', { key: 'parent3' }, [v('i', { key: 'icon', id: 'i2' }, ['bar'])])
 					]);
 				}
 			}
@@ -600,7 +623,11 @@ registerSuite('harness', {
 				key: 'icon'
 			});
 			assert.strictEqual(warnStub.callCount, 1, 'should have been called once');
-			assert.strictEqual(warnStub.lastCall.args[0], 'Duplicate key of "icon" found.', 'should have logged duplicate key');
+			assert.strictEqual(
+				warnStub.lastCall.args[0],
+				'Duplicate key of "icon" found.',
+				'should have logged duplicate key'
+			);
 
 			warnStub.restore();
 		},
@@ -615,31 +642,49 @@ registerSuite('harness', {
 
 			const widget = harness(TextOnlyWidget);
 
-			assert.throws(() => {
-				widget.sendEvent('click', {
-					key: 'foo'
-				});
-			}, Error, 'No root node has been rendered');
+			assert.throws(
+				() => {
+					widget.sendEvent('click', {
+						key: 'foo'
+					});
+				},
+				Error,
+				'No root node has been rendered'
+			);
 
 			widget.destroy();
 		}
 	},
 
 	'.callListener()': {
-		'defaults'() {
+		defaults() {
 			let rootClick = 0;
 			let firstClick = 0;
 			let secondClick = 0;
 			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
 				render() {
-					return v('div', {
-						onclick() {
-							rootClick++;
-						}
-					}, [
-						w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
-						w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
-					]);
+					return v(
+						'div',
+						{
+							onclick() {
+								rootClick++;
+							}
+						},
+						[
+							w(MockWidget, {
+								onClick() {
+									firstClick++;
+								},
+								key: 'first'
+							}),
+							w<MockWidget>('widget', {
+								onClick() {
+									secondClick++;
+								},
+								key: 'second'
+							})
+						]
+					);
 				}
 			}
 
@@ -657,24 +702,52 @@ registerSuite('harness', {
 			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
 				render() {
 					return [
-						v('div', {
-							key: 'parent1',
-							onclick() {
-								rootClick++;
-							}
-						}, [
-							w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
-							w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
-						]),
-						v('div', {
-							key: 'parent2',
-							onclick() {
-								rootClick++;
-							}
-						}, [
-							w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
-							w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
-						])
+						v(
+							'div',
+							{
+								key: 'parent1',
+								onclick() {
+									rootClick++;
+								}
+							},
+							[
+								w(MockWidget, {
+									onClick() {
+										firstClick++;
+									},
+									key: 'first'
+								}),
+								w<MockWidget>('widget', {
+									onClick() {
+										secondClick++;
+									},
+									key: 'second'
+								})
+							]
+						),
+						v(
+							'div',
+							{
+								key: 'parent2',
+								onclick() {
+									rootClick++;
+								}
+							},
+							[
+								w(MockWidget, {
+									onClick() {
+										firstClick++;
+									},
+									key: 'first'
+								}),
+								w<MockWidget>('widget', {
+									onClick() {
+										secondClick++;
+									},
+									key: 'second'
+								})
+							]
+						)
 					];
 				}
 			}
@@ -692,14 +765,28 @@ registerSuite('harness', {
 			let secondClick = 0;
 			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
 				render() {
-					return v('div', {
-						onclick() {
-							rootClick++;
-						}
-					}, [
-						w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
-						w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
-					]);
+					return v(
+						'div',
+						{
+							onclick() {
+								rootClick++;
+							}
+						},
+						[
+							w(MockWidget, {
+								onClick() {
+									firstClick++;
+								},
+								key: 'first'
+							}),
+							w<MockWidget>('widget', {
+								onClick() {
+									secondClick++;
+								},
+								key: 'second'
+							})
+						]
+					);
 				}
 			}
 
@@ -717,18 +804,32 @@ registerSuite('harness', {
 			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
 				render() {
 					return [
-						v( 'div', {
+						v('div', {
 							key: 'parent1'
 						}),
-						v('div', {
-							key: 'parent2',
-							onclick() {
-								rootClick++;
-							}
-						}, [
-							w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
-							w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
-						])
+						v(
+							'div',
+							{
+								key: 'parent2',
+								onclick() {
+									rootClick++;
+								}
+							},
+							[
+								w(MockWidget, {
+									onClick() {
+										firstClick++;
+									},
+									key: 'first'
+								}),
+								w<MockWidget>('widget', {
+									onClick() {
+										secondClick++;
+									},
+									key: 'second'
+								})
+							]
+						)
 					];
 				}
 			}
@@ -746,14 +847,28 @@ registerSuite('harness', {
 			let secondClick = 0;
 			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
 				render() {
-					return v('div', {
-						onclick() {
-							rootClick++;
-						}
-					}, [
-						w(MockWidget, { onClick() { firstClick++; }, key: 'first' }),
-						w<MockWidget>('widget', { onClick() { secondClick++; }, key: 'second' })
-					]);
+					return v(
+						'div',
+						{
+							onclick() {
+								rootClick++;
+							}
+						},
+						[
+							w(MockWidget, {
+								onClick() {
+									firstClick++;
+								},
+								key: 'first'
+							}),
+							w<MockWidget>('widget', {
+								onClick() {
+									secondClick++;
+								},
+								key: 'second'
+							})
+						]
+					);
 				}
 			}
 
@@ -767,10 +882,13 @@ registerSuite('harness', {
 		'properties.bind'() {
 			class ComplexSubWidget extends WidgetBase<WidgetProperties> {
 				render() {
-					return v('div', { }, [
-						w(MockWidget, { onClick(this: any) {
-							assert.instanceOf(this, ComplexSubWidget, 'should call with bound scope');
-						}, key: 'first' })
+					return v('div', {}, [
+						w(MockWidget, {
+							onClick(this: any) {
+								assert.instanceOf(this, ComplexSubWidget, 'should call with bound scope');
+							},
+							key: 'first'
+						})
 					]);
 				}
 			}
@@ -793,7 +911,7 @@ registerSuite('harness', {
 
 			const widget = harness(BasicWidget);
 			widget.callListener('onclick', {
-				args: [ event ]
+				args: [event]
 			});
 		},
 
@@ -805,9 +923,13 @@ registerSuite('harness', {
 			}
 
 			const widget = harness(StringWidget);
-			assert.throws(() => {
-				widget.callListener('onclick');
-			}, TypeError, 'Widget is not rendering an HNode or WNode');
+			assert.throws(
+				() => {
+					widget.callListener('onclick');
+				},
+				TypeError,
+				'Widget is not rendering an HNode or WNode'
+			);
 		},
 
 		'widget renders null'() {
@@ -818,27 +940,35 @@ registerSuite('harness', {
 			}
 
 			const widget = harness(NullWidget);
-			assert.throws(() => {
-				widget.callListener('onclick');
-			}, TypeError, 'Widget is not rendering an HNode or WNode');
+			assert.throws(
+				() => {
+					widget.callListener('onclick');
+				},
+				TypeError,
+				'Widget is not rendering an HNode or WNode'
+			);
 		}
 	},
 
 	'.getDom()'() {
 		const widget = harness(MockWidget);
 		const dom = widget.getDom();
-		assert.strictEqual(dom.parentElement && dom.parentElement.innerHTML, '<div class="foo"></div>', 'widget was rendered to the DOM as expected');
+		assert.strictEqual(
+			dom.parentElement && dom.parentElement.innerHTML,
+			'<div class="foo"></div>',
+			'widget was rendered to the DOM as expected'
+		);
 		widget.destroy();
 	},
 
 	'.getRender()'() {
 		class ChildTextWidget extends WidgetBase {
 			render() {
-				return v('div', {}, [ 'foo' ]);
+				return v('div', {}, ['foo']);
 			}
 		}
 		const widget = harness(ChildTextWidget);
-		assertRender(widget.getRender(), v('div', {}, [ 'foo' ]));
+		assertRender(widget.getRender(), v('div', {}, ['foo']));
 		widget.destroy();
 	},
 
@@ -846,7 +976,9 @@ registerSuite('harness', {
 		'handles premature removal from the dom'() {
 			const widget = harness(MockWidget);
 			const dom = widget.getDom();
-			dom.parentElement && dom.parentElement.parentElement && dom.parentElement.parentElement.removeChild(dom.parentElement);
+			dom.parentElement &&
+				dom.parentElement.parentElement &&
+				dom.parentElement.parentElement.removeChild(dom.parentElement);
 			widget.destroy();
 		},
 
@@ -874,10 +1006,14 @@ registerSuite('harness', {
 			class IdWidget extends WidgetBase {
 				render() {
 					idStack.push(this.meta(NodeId).get('foo'));
-					return v('div', {
-						key: 'foo',
-						id: 'foo'
-					}, [ 'Hello world' ]);
+					return v(
+						'div',
+						{
+							key: 'foo',
+							id: 'foo'
+						},
+						['Hello world']
+					);
 				}
 			}
 
@@ -885,7 +1021,7 @@ registerSuite('harness', {
 
 			widget.getRender();
 
-			assert.deepEqual(idStack, [ undefined, 'foo' ]);
+			assert.deepEqual(idStack, [undefined, 'foo']);
 
 			const handle = widget.mockMeta(NodeId, {
 				get(key: string | number) {
@@ -899,7 +1035,7 @@ registerSuite('harness', {
 
 			widget.getRender();
 
-			assert.deepEqual(idStack, [ undefined, 'foo', 'qat' ]);
+			assert.deepEqual(idStack, [undefined, 'foo', 'qat']);
 
 			handle.destroy();
 			widget.setProperties({
@@ -908,7 +1044,7 @@ registerSuite('harness', {
 
 			widget.getRender();
 
-			assert.deepEqual(idStack, [ undefined, 'foo', 'qat', undefined ]);
+			assert.deepEqual(idStack, [undefined, 'foo', 'qat', undefined]);
 
 			widget.destroy();
 		},
@@ -917,19 +1053,29 @@ registerSuite('harness', {
 			class IdWidget extends WidgetBase<{ flush: boolean }> {
 				render() {
 					const content = this.meta(NodeId).get('foo');
-					return v('div', {
-						key: 'foo',
-						id: 'foo'
-					}, [ content ? content : 'foo' ]);
+					return v(
+						'div',
+						{
+							key: 'foo',
+							id: 'foo'
+						},
+						[content ? content : 'foo']
+					);
 				}
 			}
 
 			const widget = harness(IdWidget);
 
-			widget.expectRender(v('div', {
-				key: 'foo',
-				id: 'foo'
-			}, [ 'foo' ]));
+			widget.expectRender(
+				v(
+					'div',
+					{
+						key: 'foo',
+						id: 'foo'
+					},
+					['foo']
+				)
+			);
 
 			widget.mockMeta(NodeId, {
 				get(this: MetaMockContext<NodeId>, key: string | number) {
@@ -940,10 +1086,16 @@ registerSuite('harness', {
 
 			widget.setProperties({ flush: true });
 
-			widget.expectRender(v('div', {
-				key: 'foo',
-				id: 'foo'
-			}, [ 'qat' ]));
+			widget.expectRender(
+				v(
+					'div',
+					{
+						key: 'foo',
+						id: 'foo'
+					},
+					['qat']
+				)
+			);
 
 			widget.destroy();
 		},
@@ -954,10 +1106,14 @@ registerSuite('harness', {
 			class IdWidget extends WidgetBase {
 				render() {
 					idStack.push(this.meta(NodeId).get('foo'));
-					return v('div', {
-						key: 'foo',
-						id: 'foo'
-					}, [ 'Hello world' ]);
+					return v(
+						'div',
+						{
+							key: 'foo',
+							id: 'foo'
+						},
+						['Hello world']
+					);
 				}
 			}
 
@@ -971,7 +1127,7 @@ registerSuite('harness', {
 
 			widget.getRender();
 
-			assert.deepEqual(idStack, [ 'qat' ]);
+			assert.deepEqual(idStack, ['qat']);
 
 			const handle2 = widget.mockMeta(NodeId, {
 				get(key: string | number) {
@@ -987,7 +1143,7 @@ registerSuite('harness', {
 
 			widget.getRender();
 
-			assert.deepEqual(idStack, [ 'qat', 'baz' ]);
+			assert.deepEqual(idStack, ['qat', 'baz']);
 
 			handle1.destroy();
 
@@ -995,7 +1151,7 @@ registerSuite('harness', {
 		}
 	},
 
-	'findDNodeByKey': {
+	findDNodeByKey: {
 		'should not error with string'() {
 			findDNodeByKey('foo', 'bar');
 		}

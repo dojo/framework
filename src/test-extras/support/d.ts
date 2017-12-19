@@ -6,9 +6,9 @@ import { CustomDiff } from './compare';
 
 export type RenderResults = DNode | DNode[];
 
-type FoundNodeInfo<T extends DNode = DNode> = { found?: T, parent?: WNode | HNode | undefined, index?: number };
+type FoundNodeInfo<T extends DNode = DNode> = { found?: T; parent?: WNode | HNode | undefined; index?: number };
 
-function  assignChildPropertiesByKeyOrIndex(
+function assignChildPropertiesByKeyOrIndex(
 	target: WNode | HNode,
 	keyOrIndex: string | number | object,
 	properties: WidgetProperties | VirtualDomProperties,
@@ -18,24 +18,42 @@ function  assignChildPropertiesByKeyOrIndex(
 
 	if (!node || !(isWNode(node) || isHNode(node))) {
 		const keyOrIndexString = typeof keyOrIndex === 'object' ? JSON.stringify(keyOrIndex) : keyOrIndex;
-		throw new TypeError(`${(byKey || typeof keyOrIndex === 'object') ? 'Key' : 'Index'} of "${keyOrIndexString}" is not resolving to a valid target`);
+		throw new TypeError(
+			`${
+				byKey || typeof keyOrIndex === 'object' ? 'Key' : 'Index'
+			} of "${keyOrIndexString}" is not resolving to a valid target`
+		);
 	}
 	assignProperties(node, properties);
 	return target;
 }
 
-export function assignChildProperties(target: WNode | HNode, index: number | string, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
-	return assignChildPropertiesByKeyOrIndex(target, index,  properties);
+export function assignChildProperties(
+	target: WNode | HNode,
+	index: number | string,
+	properties: WidgetProperties | VirtualDomProperties
+): WNode | HNode {
+	return assignChildPropertiesByKeyOrIndex(target, index, properties);
 }
 
-export function  assignChildPropertiesByKey(target: WNode | HNode,  key: string | object, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
+export function assignChildPropertiesByKey(
+	target: WNode | HNode,
+	key: string | object,
+	properties: WidgetProperties | VirtualDomProperties
+): WNode | HNode {
 	return assignChildPropertiesByKeyOrIndex(target, key, properties, true);
 }
 
 export function assignProperties(target: HNode, properties: VirtualDomProperties): HNode;
 export function assignProperties(target: WNode, properties: WidgetProperties): WNode;
-export function assignProperties(target: WNode | HNode, properties: WidgetProperties | VirtualDomProperties): WNode | HNode;
-export function assignProperties(target: WNode | HNode, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
+export function assignProperties(
+	target: WNode | HNode,
+	properties: WidgetProperties | VirtualDomProperties
+): WNode | HNode;
+export function assignProperties(
+	target: WNode | HNode,
+	properties: WidgetProperties | VirtualDomProperties
+): WNode | HNode {
 	assign(target.properties, properties);
 	return target;
 }
@@ -45,7 +63,9 @@ export function assignProperties(target: WNode | HNode, properties: WidgetProper
  * of the property is considered equal, otherwise it is considered not equal and the expected render will fail.
  * @param callback A function that is invoked when comparing the property value
  */
-export function compareProperty<T>(callback: (value: T, name: string | number, parent: WidgetProperties | VirtualDomProperties) => boolean): CustomDiff<T> {
+export function compareProperty<T>(
+	callback: (value: T, name: string | number, parent: WidgetProperties | VirtualDomProperties) => boolean
+): CustomDiff<T> {
 	function differ(value: T, name: string | number, parent: WidgetProperties | VirtualDomProperties) {
 		if (!callback(value, name, parent)) {
 			throw new AssertionError(`The value of property "${name}" is unexpected.`, {}, differ);
@@ -68,13 +88,15 @@ function replaceChildByKeyOrIndex(
 
 	if (!parent || typeof index === 'undefined' || !parent.children) {
 		if (byKey || typeof indexOrKey === 'object') {
-			throw new TypeError(`Key of "${typeof indexOrKey === 'object' ? JSON.stringify(indexOrKey) : indexOrKey}" is not resolving to a valid target`);
-		}
-		else {
+			throw new TypeError(
+				`Key of "${
+					typeof indexOrKey === 'object' ? JSON.stringify(indexOrKey) : indexOrKey
+				}" is not resolving to a valid target`
+			);
+		} else {
 			throw new TypeError(`Index of "${indexOrKey}" is not resolving to a valid target`);
 		}
-	}
-	else {
+	} else {
 		parent.children[index] = replacement;
 	}
 
@@ -112,9 +134,8 @@ function isNode(value: any): value is WNode | HNode {
 
 function findByKeyOrIndex(target: WNode | HNode, keyOrIndex: string | number | object, byKey = false) {
 	if (byKey || typeof keyOrIndex === 'object') {
-		return findByKey(target,  keyOrIndex);
-	}
-	else {
+		return findByKey(target, keyOrIndex);
+	} else {
 		return findByIndex(target, keyOrIndex);
 	}
 }
@@ -132,28 +153,23 @@ function findByKey(
 		return {};
 	}
 	let nodeInfo: FoundNodeInfo<WNode | HNode> | undefined;
-	target.children
-		.forEach((child, index) => {
-			if (isNode(child)) {
-				if (nodeInfo && nodeInfo.found) {
-					if (findByKey(child, key, target, index).found) {
-						console.warn(`Duplicate key of "${typeof key === 'object' ? JSON.stringify(key) : key }" found.`);
-					}
+	target.children.forEach((child, index) => {
+		if (isNode(child)) {
+			if (nodeInfo && nodeInfo.found) {
+				if (findByKey(child, key, target, index).found) {
+					console.warn(`Duplicate key of "${typeof key === 'object' ? JSON.stringify(key) : key}" found.`);
 				}
-				else {
-					nodeInfo = findByKey(child, key, target, index);
-				}
+			} else {
+				nodeInfo = findByKey(child, key, target, index);
 			}
-		});
+		}
+	});
 	return nodeInfo || {};
 }
 
-function  findByIndex(
-	target: WNode | HNode,
-	index: number | string
-): FoundNodeInfo {
+function findByIndex(target: WNode | HNode, index: number | string): FoundNodeInfo {
 	if (typeof index === 'number') {
-		return target.children  ? { parent: target, found: target.children[index], index } : {};
+		return target.children ? { parent: target, found: target.children[index], index } : {};
 	}
 	const indexes = index.split(',').map(Number);
 	const lastIndex = indexes.pop()!;
@@ -200,29 +216,46 @@ function replaceChildPropertiesByKeyOrIndex(
 
 	if (!found || !(isWNode(found) || isHNode(found))) {
 		if (byKey || typeof indexOrKey === 'object') {
-			throw new TypeError(`Key of "${typeof indexOrKey === 'object' ? JSON.stringify(indexOrKey) : indexOrKey}" is not resolving to a valid target`);
-		}
-		else {
+			throw new TypeError(
+				`Key of "${
+					typeof indexOrKey === 'object' ? JSON.stringify(indexOrKey) : indexOrKey
+				}" is not resolving to a valid target`
+			);
+		} else {
 			throw new TypeError(`Index of "${indexOrKey}" is not resolving to a valid target`);
 		}
 	}
 
-	replaceProperties(found,  properties);
+	replaceProperties(found, properties);
 	return target;
 }
 
-export function replaceChildProperties(target: WNode | HNode, index: number | string, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
+export function replaceChildProperties(
+	target: WNode | HNode,
+	index: number | string,
+	properties: WidgetProperties | VirtualDomProperties
+): WNode | HNode {
 	return replaceChildPropertiesByKeyOrIndex(target, index, properties);
 }
 
-export function  replaceChildPropertiesByKey(target: WNode | HNode, key: string | object, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
-	return replaceChildPropertiesByKeyOrIndex(target, key,  properties, true);
+export function replaceChildPropertiesByKey(
+	target: WNode | HNode,
+	key: string | object,
+	properties: WidgetProperties | VirtualDomProperties
+): WNode | HNode {
+	return replaceChildPropertiesByKeyOrIndex(target, key, properties, true);
 }
 
 export function replaceProperties(target: HNode, properties: VirtualDomProperties): HNode;
 export function replaceProperties(target: WNode, properties: WidgetProperties): WNode;
-export function replaceProperties(target: WNode | HNode, properties: WidgetProperties | VirtualDomProperties): WNode | HNode;
-export function replaceProperties(target: WNode | HNode, properties: WidgetProperties | VirtualDomProperties): WNode | HNode {
+export function replaceProperties(
+	target: WNode | HNode,
+	properties: WidgetProperties | VirtualDomProperties
+): WNode | HNode;
+export function replaceProperties(
+	target: WNode | HNode,
+	properties: WidgetProperties | VirtualDomProperties
+): WNode | HNode {
 	target.properties = properties;
 	return target;
 }

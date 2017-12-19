@@ -7,7 +7,9 @@ declare module 'assertion-error' {
 		stack: string;
 	}
 
-	module AssertionError { }
+	namespace AssertionError {
+
+	}
 
 	export = AssertionError;
 }

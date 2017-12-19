@@ -35,9 +35,8 @@
  * @param excluds excluded properties
  */
 function exclude(...excludes: string[]) {
-
 	function excludeProps(res: any, obj: any) {
-		Object.keys(obj).forEach(function (key) {
+		Object.keys(obj).forEach(function(key) {
 			if (!~excludes.indexOf(key)) {
 				res[key] = obj[key];
 			}
@@ -53,7 +52,7 @@ function exclude(...excludes: string[]) {
 
 		return res;
 	};
-};
+}
 
 export interface AssertionError extends Error {
 	[prop: string]: any;
@@ -91,12 +90,10 @@ function AssertionError(this: AssertionError, message?: string, _props?: any, ss
 	// capture stack trace
 	if (ssf && Error.captureStackTrace) {
 		Error.captureStackTrace(this, ssf);
-	}
-	else {
+	} else {
 		try {
 			throw new Error();
-		}
-		catch (e) {
+		} catch (e) {
 			this.stack = e.stack;
 		}
 	}
@@ -125,7 +122,7 @@ AssertionError.prototype.constructor = AssertionError;
  *
  * @param stack include stack (default: `true`)
  */
-AssertionError.prototype.toJSON = function (this: AssertionError, stack?: boolean) {
+AssertionError.prototype.toJSON = function(this: AssertionError, stack?: boolean) {
 	const extend = exclude('constructor', 'toJSON', 'stack');
 	const props: { [prop: string]: any } = extend({ name: this.name }, this);
 
@@ -138,6 +135,6 @@ AssertionError.prototype.toJSON = function (this: AssertionError, stack?: boolea
 };
 
 /* tslint:disable:variable-name */
-const AssertionErrorConstructor: AssertionErrorConstructor = <any> AssertionError;
+const AssertionErrorConstructor: AssertionErrorConstructor = <any>AssertionError;
 
 export default AssertionErrorConstructor;

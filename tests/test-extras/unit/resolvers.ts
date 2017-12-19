@@ -47,9 +47,12 @@ registerSuite('resolvers', {
 			resolvers.restore();
 
 			const dfd = this.async();
-			setTimeout(dfd.callback(() => {
-				assert.isTrue(callback.calledOnce);
-			}), 100);
+			setTimeout(
+				dfd.callback(() => {
+					assert.isTrue(callback.calledOnce);
+				}),
+				100
+			);
 		},
 
 		'resolve idle callback'() {
@@ -66,9 +69,12 @@ registerSuite('resolvers', {
 			resolvers.restore();
 
 			const dfd = this.async();
-			setTimeout(dfd.callback(() => {
-				assert.isTrue(callback.calledOnce);
-			}), 100);
+			setTimeout(
+				dfd.callback(() => {
+					assert.isTrue(callback.calledOnce);
+				}),
+				100
+			);
 		}
 	}
 });
