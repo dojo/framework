@@ -144,15 +144,14 @@ if (!has('es6-map')) {
 
 		static [Symbol.species] = Map;
 
-		constructor(iterable?: ArrayLike<[ K, V ]> | Iterable<[ K, V ]>) {
+		constructor(iterable?: ArrayLike<[K, V]> | Iterable<[K, V]>) {
 			if (iterable) {
 				if (isArrayLike(iterable)) {
 					for (let i = 0; i < iterable.length; i++) {
-						const value = iterable[ i ];
+						const value = iterable[i];
 						this.set(value[0], value[1]);
 					}
-				}
-				else {
+				} else {
 					for (const value of iterable) {
 						this.set(value[0], value[1]);
 					}
@@ -180,7 +179,7 @@ if (!has('es6-map')) {
 
 		entries(): IterableIterator<[K, V]> {
 			const values = this._keys.map((key: K, i: number): [K, V] => {
-				return [ key, this._values[i] ];
+				return [key, this._values[i]];
 			});
 
 			return new ShimIterator(values);

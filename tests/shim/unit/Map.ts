@@ -10,29 +10,31 @@ let mapArgs: any[];
 registerSuite('Map', {
 	instantiation: {
 		'null data'() {
-			assert.doesNotThrow(function () {
-				map = new Map<number, string>(<any> null);
+			assert.doesNotThrow(function() {
+				map = new Map<number, string>(<any>null);
 			});
 		},
 
 		'undefined data'() {
-			assert.doesNotThrow(function () {
+			assert.doesNotThrow(function() {
 				map = new Map<number, string>(undefined);
 			});
 		},
 
 		'empty data'() {
-			assert.doesNotThrow(function () {
+			assert.doesNotThrow(function() {
 				map = new Map<number, string>([]);
 			});
 		},
 
 		'iterator data'() {
-			assert.doesNotThrow(function () {
-				map = new Map(new ShimIterator<[number, string]>({
-					length: 1,
-					0: [ 3, 'bar' ]
-				}));
+			assert.doesNotThrow(function() {
+				map = new Map(
+					new ShimIterator<[number, string]>({
+						length: 1,
+						0: [3, 'bar']
+					})
+				);
 			});
 		}
 	},
@@ -40,27 +42,22 @@ registerSuite('Map', {
 	clear: {
 		'empty map'() {
 			map = new Map();
-			assert.doesNotThrow(function () {
+			assert.doesNotThrow(function() {
 				map.clear();
 			});
 		},
 
 		'non-empty map'() {
-			map = new Map([
-				[ 3, 'abc' ]
-			]);
+			map = new Map([[3, 'abc']]);
 			map.clear();
 			assert.isFalse(map.has(3));
 			assert.strictEqual(map.size, 0);
 		}
 	},
 
-	'delete': {
+	delete: {
 		before() {
-			map = new Map([
-				[ 3, 'abc' ],
-				[ 4, 'def' ]
-			]);
+			map = new Map([[3, 'abc'], [4, 'def']]);
 		},
 
 		tests: {
@@ -81,14 +78,7 @@ registerSuite('Map', {
 		function foo() {}
 		const array: any[] = [];
 		const object = Object.create(null);
-		mapArgs = [
-			[ 0, 0 ],
-			[ 1, '1' ],
-			[ 2, object ],
-			[ 3, array ],
-			[ 4, foo ],
-			[ 5, undefined ]
-		];
+		mapArgs = [[0, 0], [1, '1'], [2, object], [3, array], [4, foo], [5, undefined]];
 		map = new Map<number, any>(mapArgs);
 		const entries: IterableIterator<[number, any]> = map.entries();
 
@@ -107,20 +97,13 @@ registerSuite('Map', {
 			function foo() {}
 			const object = Object.create(null);
 			const array: any[] = [];
-			mapArgs = [
-				[ 0, 0 ],
-				[ 1, '1' ],
-				[ 2, object ],
-				[ 3, array ],
-				[ 4, foo ],
-				[ 5, undefined ]
-			];
+			mapArgs = [[0, 0], [1, '1'], [2, object], [3, array], [4, foo], [5, undefined]];
 			map = new Map<number, any>(mapArgs);
 		},
 
 		tests: {
 			'callback arguments'() {
-				map.forEach(function (value, key, mapInstance) {
+				map.forEach(function(value, key, mapInstance) {
 					assert.lengthOf(arguments, 3);
 					assert.strictEqual(map.get(key), value);
 					assert.strictEqual(map, mapInstance);
@@ -129,7 +112,7 @@ registerSuite('Map', {
 
 			'times executed'() {
 				let counter = 0;
-				map.forEach(function (key, value, mapInstance) {
+				map.forEach(function(key, value, mapInstance) {
 					counter++;
 				});
 				assert.strictEqual(counter, mapArgs.length);
@@ -139,19 +122,14 @@ registerSuite('Map', {
 
 	get: {
 		before() {
-			map = new Map([
-				[ 0, 'a' ],
-				[ 8, 'b' ],
-				[ NaN, 'c' ]
-			]);
+			map = new Map([[0, 'a'], [8, 'b'], [NaN, 'c']]);
 		},
 
 		tests: {
 			'key found'() {
 				assert.strictEqual(map.get(0), 'a');
 				assert.strictEqual(map.get(8), 'b');
-				assert.strictEqual(map.get(NaN), 'c',
-					'Map should successfully retrieve an item with a key of NaN');
+				assert.strictEqual(map.get(NaN), 'c', 'Map should successfully retrieve an item with a key of NaN');
 			},
 
 			'key not found'() {
@@ -162,9 +140,7 @@ registerSuite('Map', {
 
 	has: {
 		before() {
-			map = new Map<number, string>([
-				[ 3, 'abc' ]
-			]);
+			map = new Map<number, string>([[3, 'abc']]);
 		},
 
 		tests: {
@@ -179,9 +155,9 @@ registerSuite('Map', {
 	},
 
 	keys() {
-		mapArgs = '012345'.split('').map(function (value: string) {
+		mapArgs = '012345'.split('').map(function(value: string) {
 			const numeric = Number(value);
-			return [ numeric, numeric ];
+			return [numeric, numeric];
 		});
 		map = new Map<number, number>(mapArgs);
 		const keys: IterableIterator<number> = map.keys();
@@ -236,7 +212,7 @@ registerSuite('Map', {
 		},
 
 		'key exists'() {
-			map = new Map<number, string>([ [ 3, 'abc' ] ]);
+			map = new Map<number, string>([[3, 'abc']]);
 			map.set(3, 'def');
 			assert.strictEqual(map.get(3), 'def');
 		},
@@ -246,12 +222,10 @@ registerSuite('Map', {
 			assert.strictEqual(map.size, 0);
 
 			map.set('foo', 'bar');
-			assert.strictEqual(map.size, 1,
-				'size should increase after setting a new key');
+			assert.strictEqual(map.size, 1, 'size should increase after setting a new key');
 
 			map.set('foo', 'baz');
-			assert.strictEqual(map.size, 1,
-				'size should remain the same after setting an existing key');
+			assert.strictEqual(map.size, 1, 'size should remain the same after setting an existing key');
 		}
 	},
 
@@ -259,14 +233,7 @@ registerSuite('Map', {
 		function foo() {}
 		const array: any[] = [];
 		const object = Object.create(null);
-		mapArgs = [
-			[ 0, 0 ],
-			[ 1, '1' ],
-			[ 2, object ],
-			[ 3, array ],
-			[ 4, foo ],
-			[ 5, undefined ]
-		];
+		mapArgs = [[0, 0], [1, '1'], [2, object], [3, array], [4, foo], [5, undefined]];
 		map = new Map<number, any>(mapArgs);
 		const values: IterableIterator<any> = map.values();
 

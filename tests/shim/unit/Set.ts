@@ -12,7 +12,7 @@ registerSuite('Set', {
 			assert.instanceOf(set, Set, 'set should be instance of Set');
 		},
 
-		'iterable'() {
+		iterable() {
 			const set = new Set([1, 2, 3, 2]);
 			assert.isTrue(set.has(1));
 			assert.isTrue(set.has(2));
@@ -21,14 +21,16 @@ registerSuite('Set', {
 			assert.strictEqual(set.size, 3);
 		},
 
-		'arraylike'() {
-			const set = new Set(new ShimIterator({
-				0: 1,
-				1: 2,
-				2: 3,
-				3: 2,
-				length: 4
-			}));
+		arraylike() {
+			const set = new Set(
+				new ShimIterator({
+					0: 1,
+					1: 2,
+					2: 3,
+					3: 2,
+					length: 4
+				})
+			);
 			assert.isTrue(set.has(1));
 			assert.isTrue(set.has(2));
 			assert.isTrue(set.has(3));
@@ -38,7 +40,7 @@ registerSuite('Set', {
 	},
 
 	'.delete'() {
-		const set = new Set([ 1 ]);
+		const set = new Set([1]);
 		assert.isTrue(set.has(1), 'Should have member');
 		assert.isFalse(set.delete(2), 'Should return false for missing memeber');
 		assert.isTrue(set.delete(1), 'Should return true when member removed');
@@ -46,7 +48,7 @@ registerSuite('Set', {
 		assert.isFalse(set.has(1), 'Should now return false');
 	},
 
-	'iterable'() {
+	iterable() {
 		const source = [1, 2, 3];
 		const set = new Set(source);
 		const results: number[] = [];
@@ -86,7 +88,7 @@ registerSuite('Set', {
 	},
 
 	'.has()'() {
-		const set = new Set([ 1, '2' ]);
+		const set = new Set([1, '2']);
 		assert.isTrue(set.has(1));
 		assert.isFalse(set.has('1'));
 		assert.isTrue(set.has('2'));
@@ -95,11 +97,12 @@ registerSuite('Set', {
 
 	'.add()'() {
 		const set = new Set();
-		set.add(1)
+		set
+			.add(1)
 			.add('foo')
 			.add(/ /)
 			.add({})
-			.add([ 1 ])
+			.add([1])
 			.add(1)
 			.add('foo');
 		assert.strictEqual(set.size, 5, 'should have the right size');
@@ -136,7 +139,7 @@ registerSuite('Set', {
 		const scope = {};
 		const set = new Set(source);
 		const results: any[] = [];
-		set.forEach(function (this: any, value: any, index: any, subject: any) {
+		set.forEach(function(this: any, value: any, index: any, subject: any) {
 			assert.strictEqual(set, subject);
 			assert.strictEqual(this, scope);
 			assert.strictEqual(value, index);

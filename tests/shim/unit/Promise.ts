@@ -10,83 +10,87 @@ const { assert } = intern.getPlugin('chai');
 export type TypeUnderTest = typeof Promise;
 
 /* tslint:disable-next-line:variable-name */
-export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeUnderTest) {
+export function addPromiseTests(suite: { [key: string]: Tests }, Promise: TypeUnderTest) {
 	suite['.all'] = {
-		'empty array': function () {
+		'empty array': function() {
 			let dfd = this.async();
-			let promise = Promise.all([]).then(dfd.callback(function (value: any[]) {
-				assert.isArray(value);
-				assert.deepEqual(value, []);
-			}));
+			let promise = Promise.all([]).then(
+				dfd.callback(function(value: any[]) {
+					assert.isArray(value);
+					assert.deepEqual(value, []);
+				})
+			);
 			assert.instanceOf(promise, Promise, 'promise should have expected type');
 		},
 
-		'mixed values and resolved': function () {
+		'mixed values and resolved': function() {
 			let dfd = this.async();
-			Promise.all([ 0, Promise.resolve(1), Promise.resolve(2) ]).then(
-				dfd.callback(function (value: number[]) {
+			Promise.all([0, Promise.resolve(1), Promise.resolve(2)]).then(
+				dfd.callback(function(value: number[]) {
 					assert.isArray(value);
-					assert.deepEqual(value, [ 0, 1, 2 ]);
+					assert.deepEqual(value, [0, 1, 2]);
 				})
 			);
 		},
 
-		'iterable argument': function () {
+		'iterable argument': function() {
 			let dfd = this.async();
 			Promise.all({
 				[Symbol.iterator]() {
-					return new ShimIterator<number | Thenable<number>>([
-						0, Promise.resolve(1), Promise.resolve(2)
-					]);
+					return new ShimIterator<number | Thenable<number>>([0, Promise.resolve(1), Promise.resolve(2)]);
 				}
 			}).then(
-				dfd.callback(function (value: number[]) {
+				dfd.callback(function(value: number[]) {
 					assert.isArray(value);
-					assert.deepEqual(value, [ 0, 1, 2 ]);
+					assert.deepEqual(value, [0, 1, 2]);
 				})
 			);
 		},
 
-		'reject if any rejected': function () {
+		'reject if any rejected': function() {
 			let dfd = this.async();
-			let pending = new Promise<void>(function () {});
+			let pending = new Promise<void>(function() {});
 			let rejected = Promise.reject(new Error('rejected'));
 
-			Promise.all<any>([ pending, rejected ]).then(
-				dfd.rejectOnError(function () {
+			Promise.all<any>([pending, rejected]).then(
+				dfd.rejectOnError(function() {
 					assert(false, 'Should not have resolved');
 				}),
-				dfd.callback(function (error: Error) {
+				dfd.callback(function(error: Error) {
 					assert.strictEqual(error.message, 'rejected');
 				})
 			);
 		},
 
-		'foreign thenables': function () {
+		'foreign thenables': function() {
 			let dfd = this.async();
 			let normal = Promise.resolve(1);
-			let foreign = <any> {
-				then: function (f: Function) {
+			let foreign = <any>{
+				then: function(f: Function) {
 					f(2);
 				}
 			};
 
-			Promise.all([ normal, foreign ]).then(dfd.callback(function (value: number[]) {
-				assert.deepEqual(value, [ 1, 2 ]);
-			}));
+			Promise.all([normal, foreign]).then(
+				dfd.callback(function(value: number[]) {
+					assert.deepEqual(value, [1, 2]);
+				})
+			);
 		},
 
-		'non-callable thenables': function () {
+		'non-callable thenables': function() {
 			let dfd = this.async();
 			let normal = Promise.resolve(1);
-			let foreign = <any> { then: 'foo' };
+			let foreign = <any>{ then: 'foo' };
 
-			Promise.all([ normal, foreign ]).then(dfd.callback(function (value: number[]) {
-				assert.deepEqual(value, [ 1, foreign ]);
-			}));
+			Promise.all([normal, foreign]).then(
+				dfd.callback(function(value: number[]) {
+					assert.deepEqual(value, [1, foreign]);
+				})
+			);
 		},
 
-		'sparse array': <Tests> {
+		'sparse array': <Tests>{
 			tests: {
 				all() {
 					let dfd = this.async();
@@ -95,12 +99,14 @@ export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeU
 					iterable[1] = Promise.resolve(1);
 					iterable[3] = Promise.resolve(3);
 
-					Promise.all(iterable).then(dfd.callback(function (value: number[]) {
-						assert.isUndefined(value[0]);
-						assert.strictEqual(value[1], 1);
-						assert.isUndefined(value[2]);
-						assert.strictEqual(value[3], 3);
-					}));
+					Promise.all(iterable).then(
+						dfd.callback(function(value: number[]) {
+							assert.isUndefined(value[0]);
+							assert.strictEqual(value[1], 1);
+							assert.isUndefined(value[2]);
+							assert.strictEqual(value[3], 3);
+						})
+					);
 				},
 
 				race() {
@@ -110,23 +116,27 @@ export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeU
 					iterable[1] = Promise.resolve(1);
 					iterable[3] = Promise.resolve(3);
 
-					Promise.race(iterable).then(dfd.callback(function (value: number) {
-						assert.isUndefined(value);
-					}));
+					Promise.race(iterable).then(
+						dfd.callback(function(value: number) {
+							assert.isUndefined(value);
+						})
+					);
 				}
 			}
 		},
 
-		'value not input': function () {
+		'value not input': function() {
 			let dfd = this.async();
-			let iterable = [ 0, 1 ];
+			let iterable = [0, 1];
 
-			Promise.all(iterable).then(dfd.callback(function (value: number[]) {
-				assert.notStrictEqual(value, iterable);
-			}));
+			Promise.all(iterable).then(
+				dfd.callback(function(value: number[]) {
+					assert.notStrictEqual(value, iterable);
+				})
+			);
 		},
 
-		'non-promise thenables': function () {
+		'non-promise thenables': function() {
 			let dfd = this.async();
 			let thenable = {
 				then(resolve: (_: string) => void) {
@@ -134,70 +144,75 @@ export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeU
 				}
 			};
 
-			Promise.all<any>([ 'hello', thenable ]).then((results: any[]) => {
-				assert.deepEqual(results, [ 'hello', 'test' ]);
+			Promise.all<any>(['hello', thenable]).then((results: any[]) => {
+				assert.deepEqual(results, ['hello', 'test']);
 				dfd.resolve();
 			});
 		}
 	};
 
 	suite['.race'] = {
-		'empty array': function () {
+		'empty array': function() {
 			let dfd = this.async();
-			Promise.race([]).then(dfd.rejectOnError(function () {
-				assert.fail(false, true, 'Promise should not have resolved');
-			}));
-			setTimeout(dfd.callback(function () {}), 10);
+			Promise.race([]).then(
+				dfd.rejectOnError(function() {
+					assert.fail(false, true, 'Promise should not have resolved');
+				})
+			);
+			setTimeout(dfd.callback(function() {}), 10);
 		},
 
-		'mixed values and resolved': function () {
+		'mixed values and resolved': function() {
 			let dfd = this.async();
-			Promise.race([ 0, Promise.resolve(1), Promise.resolve(2) ])
-				.then(dfd.callback(function (value: any) {
-					assert.strictEqual(value, 0);
-				}));
-		},
-
-		'iterable argument': function () {
-			let dfd = this.async();
-			Promise.race({
-				[Symbol.iterator]() {
-					return new ShimIterator<number | Thenable<number>>([
-						0, Promise.resolve(1), Promise.resolve(2)
-					]);
-				}
-			}).then(
-				dfd.callback(function (value: any) {
+			Promise.race([0, Promise.resolve(1), Promise.resolve(2)]).then(
+				dfd.callback(function(value: any) {
 					assert.strictEqual(value, 0);
 				})
 			);
 		},
 
-		'reject if any rejected': function () {
+		'iterable argument': function() {
 			let dfd = this.async();
-			let pending = new Promise<void>(function () {});
-			let rejected = Promise.reject(new Error('rejected'));
-
-			Promise.race<any>([ pending, rejected ])
-				.then(dfd.rejectOnError(function () {
-					assert(false, 'Should not have resolved');
-				}), dfd.callback(function (error: Error) {
-					assert.strictEqual(error.message, 'rejected');
-				}));
+			Promise.race({
+				[Symbol.iterator]() {
+					return new ShimIterator<number | Thenable<number>>([0, Promise.resolve(1), Promise.resolve(2)]);
+				}
+			}).then(
+				dfd.callback(function(value: any) {
+					assert.strictEqual(value, 0);
+				})
+			);
 		},
 
-		'foreign thenables': function () {
+		'reject if any rejected': function() {
+			let dfd = this.async();
+			let pending = new Promise<void>(function() {});
+			let rejected = Promise.reject(new Error('rejected'));
+
+			Promise.race<any>([pending, rejected]).then(
+				dfd.rejectOnError(function() {
+					assert(false, 'Should not have resolved');
+				}),
+				dfd.callback(function(error: Error) {
+					assert.strictEqual(error.message, 'rejected');
+				})
+			);
+		},
+
+		'foreign thenables': function() {
 			let dfd = this.async();
 			let normal = Promise.resolve(1);
-			let foreign = <any> {
-				then: function (f: Function) {
+			let foreign = <any>{
+				then: function(f: Function) {
 					f(2);
 				}
 			};
 
-			Promise.race([ normal, foreign ]).then(dfd.callback(function (value: any) {
-				assert.strictEqual(value, 1);
-			}));
+			Promise.race([normal, foreign]).then(
+				dfd.callback(function(value: any) {
+					assert.strictEqual(value, 1);
+				})
+			);
 		}
 	};
 
@@ -206,11 +221,11 @@ export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeU
 			let dfd = this.async();
 			let resolved = false;
 			let promise = Promise.reject(new Error('foo')).then(
-				dfd.rejectOnError(function () {
+				dfd.rejectOnError(function() {
 					resolved = true;
 					assert(false, 'should not have resolved');
 				}),
-				dfd.callback(function (error: Error) {
+				dfd.callback(function(error: Error) {
 					resolved = true;
 					assert.instanceOf(error, Error, 'error value should be an Error');
 					assert.propertyVal(error, 'message', 'foo', 'error value should have expected message');
@@ -224,17 +239,17 @@ export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeU
 		'rejected thenable'() {
 			let dfd = this.async();
 			let resolved = false;
-			let thenable = <any> {
-				then: function (f: Function, r: Function) {
+			let thenable = <any>{
+				then: function(f: Function, r: Function) {
 					r(new Error('foo'));
 				}
 			};
 			Promise.resolve(thenable).then(
-				dfd.rejectOnError(function () {
+				dfd.rejectOnError(function() {
 					resolved = true;
 					assert(false, 'should not have rejected');
 				}),
-				dfd.callback(function (error: Error) {
+				dfd.callback(function(error: Error) {
 					resolved = true;
 					// value should be resolved value of thenable
 					assert.instanceOf(error, Error, 'error value should be an Error');
@@ -251,11 +266,11 @@ export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeU
 			let dfd = this.async();
 			let resolved = false;
 			let promise = Promise.resolve('foo').then(
-				dfd.callback(function (value: any) {
+				dfd.callback(function(value: any) {
 					resolved = true;
 					assert.equal(value, 'foo', 'unexpected resolution value');
 				}),
-				dfd.rejectOnError(function () {
+				dfd.rejectOnError(function() {
 					resolved = true;
 					assert(false, 'should not have rejected');
 				})
@@ -268,18 +283,18 @@ export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeU
 		thenable() {
 			let dfd = this.async();
 			let resolved = false;
-			let thenable = <any> {
-				then: function (f: Function) {
+			let thenable = <any>{
+				then: function(f: Function) {
 					f(2);
 				}
 			};
 			Promise.resolve(thenable).then(
-				dfd.callback(function (value: any) {
+				dfd.callback(function(value: any) {
 					resolved = true;
 					// value should be resolved value of thenable
 					assert.equal(value, 2, 'unexpected resolution value');
 				}),
-				dfd.rejectOnError(function () {
+				dfd.rejectOnError(function() {
 					resolved = true;
 					assert(false, 'should not have rejected');
 				})
@@ -290,144 +305,171 @@ export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeU
 	};
 
 	suite['#catch'] = {
-		rejection: function () {
+		rejection: function() {
 			let dfd = this.async();
 			let error = new Error('foo');
-			Promise.reject(error).catch(dfd.callback(function (err: Error) {
-				assert.strictEqual(err, error);
-			}));
+			Promise.reject(error).catch(
+				dfd.callback(function(err: Error) {
+					assert.strictEqual(err, error);
+				})
+			);
 		},
 
-		identity: function () {
+		identity: function() {
 			let dfd = this.async();
 			let error = new Error('foo');
 			Promise.reject(error)
-				.then(dfd.rejectOnError(function () {
-					assert(false, 'Should not be resolved');
-				}))
-				.catch(dfd.callback(function (err: Error) {
-					assert.strictEqual(err, error);
-				}));
+				.then(
+					dfd.rejectOnError(function() {
+						assert(false, 'Should not be resolved');
+					})
+				)
+				.catch(
+					dfd.callback(function(err: Error) {
+						assert.strictEqual(err, error);
+					})
+				);
 		},
 
-		'resolver throws': function () {
+		'resolver throws': function() {
 			let dfd = this.async();
 
 			let error = new Error('foo');
-			let promise = new Promise(function () {
+			let promise = new Promise(function() {
 				throw error;
 			});
 
-			promise.catch(dfd.callback((err: Error) => {
-				assert.strictEqual(err, error);
-			}));
+			promise.catch(
+				dfd.callback((err: Error) => {
+					assert.strictEqual(err, error);
+				})
+			);
 		},
 
-		'handler throws': function () {
+		'handler throws': function() {
 			let dfd = this.async();
 			let error = new Error('foo');
 			Promise.resolve(5)
-				.then(function () {
+				.then(function() {
 					throw error;
 				})
-				.catch(dfd.callback(function (err: Error) {
-					assert.strictEqual(err, error);
-				}));
+				.catch(
+					dfd.callback(function(err: Error) {
+						assert.strictEqual(err, error);
+					})
+				);
 		},
 
-		'then throws': <Tests> {
-			'from resolver': function () {
+		'then throws': <Tests>{
+			'from resolver': function() {
 				let dfd = this.async();
 				let error = new Error('foo');
-				let foreign = <any> {
+				let foreign = <any>{
 					then: (f: Function) => {
 						throw error;
 					}
 				};
 
-				let promise = new Promise(function (resolve: Function) {
+				let promise = new Promise(function(resolve: Function) {
 					resolve(foreign);
 				});
-				promise.catch(dfd.callback(function (err: Error) {
-					assert.strictEqual(err, error);
-				}));
+				promise.catch(
+					dfd.callback(function(err: Error) {
+						assert.strictEqual(err, error);
+					})
+				);
 			},
 
-			'from handler': function () {
+			'from handler': function() {
 				let dfd = this.async();
 				let error = new Error('foo');
-				let foreign = <any> {
-					then: function (f: Function) {
+				let foreign = <any>{
+					then: function(f: Function) {
 						throw error;
 					}
 				};
 
 				Promise.resolve(5)
-					.then(function () {
+					.then(function() {
 						return foreign;
 					})
-					.catch(dfd.callback(function (err: Error) {
-						assert.strictEqual(err, error);
-					}));
+					.catch(
+						dfd.callback(function(err: Error) {
+							assert.strictEqual(err, error);
+						})
+					);
 			},
 
 			'then throws': {
-				'from resolver': function () {
+				'from resolver': function() {
 					let dfd = this.async();
 					let error = new Error('foo');
-					let foreign = <any> {
-						then: function (f: Function) {
+					let foreign = <any>{
+						then: function(f: Function) {
 							throw error;
 						}
 					};
 
-					let promise = new Promise(function (resolve: Function) {
+					let promise = new Promise(function(resolve: Function) {
 						resolve(foreign);
 					});
-					promise.catch(dfd.callback(function (err: Error) {
-						assert.strictEqual(err, error);
-					}));
+					promise.catch(
+						dfd.callback(function(err: Error) {
+							assert.strictEqual(err, error);
+						})
+					);
 				},
 
-				'from handler': function () {
+				'from handler': function() {
 					let dfd = this.async();
 					let error = new Error('foo');
-					let foreign = <any> {
-						then: function (f: Function) {
+					let foreign = <any>{
+						then: function(f: Function) {
 							throw error;
 						}
 					};
 
 					Promise.resolve(5)
-						.then(function () {
+						.then(function() {
 							return foreign;
 						})
-						.catch(dfd.callback(function (err: Error) {
-							assert.strictEqual(err, error);
-						}));
+						.catch(
+							dfd.callback(function(err: Error) {
+								assert.strictEqual(err, error);
+							})
+						);
 				}
 			}
 		}
 	};
 
 	suite['#then'] = {
-		fulfillment: function () {
+		fulfillment: function() {
 			let dfd = this.async();
-			Promise.resolve(5).then(dfd.callback(function (value: number) {
-				assert.strictEqual(value, 5);
-			}));
+			Promise.resolve(5).then(
+				dfd.callback(function(value: number) {
+					assert.strictEqual(value, 5);
+				})
+			);
 		},
 
-		identity: function () {
+		identity: function() {
 			let dfd = this.async();
-			Promise.resolve(5).then(undefined, dfd.rejectOnError(function (value: Error) {
-				assert(false, 'Should not have resolved');
-			})).then(dfd.callback(function (value: number) {
-				assert.strictEqual(value, 5);
-			}));
+			Promise.resolve(5)
+				.then(
+					undefined,
+					dfd.rejectOnError(function(value: Error) {
+						assert(false, 'Should not have resolved');
+					})
+				)
+				.then(
+					dfd.callback(function(value: number) {
+						assert.strictEqual(value, 5);
+					})
+				);
 		},
 
-		'resolve once': function () {
+		'resolve once': function() {
 			let dfd = this.async();
 			let evilPromise = {
 				then: (f?: Function, r?: Function) => {
@@ -439,11 +481,15 @@ export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeU
 			};
 
 			let calledAlready = false;
-			Promise.resolve(evilPromise).then(dfd.rejectOnError(function (value: number) {
-				assert.strictEqual(calledAlready, false, 'resolver should not have been called');
-				calledAlready = true;
-				assert.strictEqual(value, 1, 'resolver called with unexpected value');
-			})).then(() => dfd.resolve(), () => dfd.reject());
+			Promise.resolve(evilPromise)
+				.then(
+					dfd.rejectOnError(function(value: number) {
+						assert.strictEqual(calledAlready, false, 'resolver should not have been called');
+						calledAlready = true;
+						assert.strictEqual(value, 1, 'resolver called with unexpected value');
+					})
+				)
+				.then(() => dfd.resolve(), () => dfd.reject());
 		}
 	};
 
@@ -452,13 +498,13 @@ export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeU
 			let dfd = this.async();
 			let resolver: any;
 			let resolved = false;
-			new Promise(function (resolve, reject) {
+			new Promise(function(resolve, reject) {
 				resolver = resolve;
 			}).then(
-				dfd.callback(function () {
+				dfd.callback(function() {
 					resolved = true;
 				}),
-				dfd.rejectOnError(function () {
+				dfd.rejectOnError(function() {
 					assert(false, 'should not have rejected');
 				})
 			);
@@ -470,13 +516,13 @@ export function addPromiseTests(suite: { [key: string]: Tests; }, Promise: TypeU
 			let dfd = this.async();
 			let resolver: any;
 			let resolved = false;
-			new Promise(function (resolve, reject) {
+			new Promise(function(resolve, reject) {
 				resolver = reject;
 			}).then(
-				dfd.rejectOnError(function () {
+				dfd.rejectOnError(function() {
 					assert(false, 'should not have resolved');
 				}),
-				dfd.callback(function () {
+				dfd.callback(function() {
 					resolved = true;
 				})
 			);

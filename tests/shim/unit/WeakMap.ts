@@ -14,13 +14,10 @@ registerSuite('WeakMap', {
 			assert.instanceOf(map, WeakMap, 'map should be an instance of WeakMap');
 		},
 
-		'array'() {
+		array() {
 			const key1: Key = {};
 			const key2: Key = {};
-			const map = new WeakMap([
-				[ key1, 1 ],
-				[ key2, 2 ]
-			]);
+			const map = new WeakMap([[key1, 1], [key2, 2]]);
 
 			assert.isTrue(map.has(key1), 'key1 should be in map');
 			assert.isTrue(map.has(key2), 'key2 should be in map');
@@ -28,14 +25,16 @@ registerSuite('WeakMap', {
 			assert.strictEqual(map.get(key2), 2, 'key2 should equal 2');
 		},
 
-		'iterable'() {
+		iterable() {
 			const key1: Key = {};
 			const key2: Key = {};
-			const map = new WeakMap(new ShimIterator<[Key, number]>({
-				0: [ key1, 1 ],
-				1: [ key2, 2 ],
-				length: 2
-			}));
+			const map = new WeakMap(
+				new ShimIterator<[Key, number]>({
+					0: [key1, 1],
+					1: [key2, 2],
+					length: 2
+				})
+			);
 
 			assert.isTrue(map.has(key1), 'key1 should be in map');
 			assert.isTrue(map.has(key2), 'key2 should be in map');
@@ -49,10 +48,7 @@ registerSuite('WeakMap', {
 		const frozen: Key = {};
 		Object.freeze(frozen);
 
-		const map = new WeakMap([
-			[ key, 1 ],
-			[ frozen, 2 ]
-		]);
+		const map = new WeakMap([[key, 1], [frozen, 2]]);
 
 		assert.isTrue(map.delete(key), 'deleting key should return true');
 		assert.isFalse(map.has(key), 'key should not be in map');
@@ -70,11 +66,7 @@ registerSuite('WeakMap', {
 		const frozen: Key = {};
 		Object.freeze(frozen);
 
-		const map = new WeakMap([
-			[ key1, 1 ],
-			[ key2, 2 ],
-			[ frozen, 3]
-		]);
+		const map = new WeakMap([[key1, 1], [key2, 2], [frozen, 3]]);
 
 		assert.strictEqual(map.get(key1), 1, 'key1 should equal 1');
 		assert.strictEqual(map.get(key2), 2, 'key2 should equal 2');
@@ -89,7 +81,11 @@ registerSuite('WeakMap', {
 		assert.strictEqual(map.get(key1), undefined, 'key1 should still be undefined');
 		assert.strictEqual(map.get(key2), undefined, 'key2 should be undefined');
 
-		assert.strictEqual(map.get(undefined as any), undefined, 'getting undefined value should just return undefined');
+		assert.strictEqual(
+			map.get(undefined as any),
+			undefined,
+			'getting undefined value should just return undefined'
+		);
 		assert.strictEqual(map.get(null as any), undefined, 'getting null value should just return undefined');
 
 		assert.strictEqual(map.get(frozen), 3, 'frozen should be 3');
@@ -102,11 +98,7 @@ registerSuite('WeakMap', {
 		const frozen: Key = {};
 		Object.freeze(frozen);
 
-		const map = new WeakMap([
-			[ key1, 1 ],
-			[ key3, 3 ],
-			[ frozen, 5]
-		]);
+		const map = new WeakMap([[key1, 1], [key3, 3], [frozen, 5]]);
 
 		assert.isTrue(map.has(key1), 'key1 should be in map');
 		assert.isFalse(map.has(key2), 'key2 should not be in map');
@@ -138,31 +130,31 @@ registerSuite('WeakMap', {
 		map.set(key2, 3);
 		assert.strictEqual(map.get(key2), 3, 'key2 should equal 3');
 
-		assert.throws(function () {
+		assert.throws(function() {
 			map.set(1, 1);
 		});
-		assert.throws(function () {
-			map.set(<any> null, 1);
+		assert.throws(function() {
+			map.set(<any>null, 1);
 		});
-		assert.throws(function () {
-			map.set(<any> undefined, 1);
+		assert.throws(function() {
+			map.set(<any>undefined, 1);
 		});
-		assert.throws(function () {
+		assert.throws(function() {
 			map.set(true, 1);
 		});
-		assert.throws(function () {
+		assert.throws(function() {
 			map.set('', 1);
 		});
-		assert.doesNotThrow(function () {
-			map.set(function () {}, 1);
+		assert.doesNotThrow(function() {
+			map.set(function() {}, 1);
 		});
-		assert.doesNotThrow(function () {
+		assert.doesNotThrow(function() {
 			map.set(/ /, 1);
 		});
-		assert.doesNotThrow(function () {
+		assert.doesNotThrow(function() {
 			map.set(new Date(), 1);
 		});
-		assert.doesNotThrow(function () {
+		assert.doesNotThrow(function() {
 			map.set([], 1);
 		});
 

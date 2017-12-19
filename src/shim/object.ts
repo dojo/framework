@@ -54,8 +54,8 @@ export interface ObjectEnteries {
 }
 
 export interface ObjectGetOwnPropertyDescriptors {
-	<T>(o: T): { [K in keyof T]: PropertyDescriptor; };
-	(o: any): { [key: string]: PropertyDescriptor; };
+	<T>(o: T): { [K in keyof T]: PropertyDescriptor };
+	(o: any): { [key: string]: PropertyDescriptor };
 }
 
 export interface ObjectValues {
@@ -125,20 +125,21 @@ if (has('es6-object')) {
 	getOwnPropertySymbols = globalObject.getOwnPropertySymbols;
 	is = globalObject.is;
 	keys = globalObject.keys;
-}
-else {
+} else {
 	keys = function symbolAwareKeys(o: object): string[] {
 		return Object.keys(o).filter((key) => !Boolean(key.match(/^@@.+/)));
 	};
 
 	assign = function assign(target: any, ...sources: any[]) {
-		if (target == null) { // TypeError if undefined or null
+		if (target == null) {
+			// TypeError if undefined or null
 			throw new TypeError('Cannot convert undefined or null to object');
 		}
 
 		const to = Object(target);
 		sources.forEach((nextSource) => {
-			if (nextSource) { // Skip over if undefined or null
+			if (nextSource) {
+				// Skip over if undefined or null
 				keys(nextSource).forEach((nextKey) => {
 					to[nextKey] = nextSource[nextKey];
 				});
@@ -148,9 +149,12 @@ else {
 		return to;
 	};
 
-	getOwnPropertyDescriptor = function getOwnPropertyDescriptor(o: any, prop: string | symbol): PropertyDescriptor | undefined {
+	getOwnPropertyDescriptor = function getOwnPropertyDescriptor(
+		o: any,
+		prop: string | symbol
+	): PropertyDescriptor | undefined {
 		if (isSymbol(prop)) {
-			return (<any> Object).getOwnPropertyDescriptor(o, prop);
+			return (<any>Object).getOwnPropertyDescriptor(o, prop);
 		} else {
 			return Object.getOwnPropertyDescriptor(o, prop);
 		}
@@ -161,7 +165,8 @@ else {
 	};
 
 	getOwnPropertySymbols = function getOwnPropertySymbols(o: any): symbol[] {
-		return Object.getOwnPropertyNames(o).filter((key) => Boolean(key.match(/^@@.+/)))
+		return Object.getOwnPropertyNames(o)
+			.filter((key) => Boolean(key.match(/^@@.+/)))
 			.map((key) => Symbol.for(key.substring(2)));
 	};
 
@@ -178,20 +183,22 @@ if (has('es2017-object')) {
 	getOwnPropertyDescriptors = globalObject.getOwnPropertyDescriptors;
 	entries = globalObject.entries;
 	values = globalObject.values;
-}
-else {
+} else {
 	getOwnPropertyDescriptors = function getOwnPropertyDescriptors(o: any) {
-		return getOwnPropertyNames(o).reduce((previous, key) => {
-			previous[key] = getOwnPropertyDescriptor(o, key)!;
-			return previous;
-		}, {} as { [key: string]: PropertyDescriptor });
+		return getOwnPropertyNames(o).reduce(
+			(previous, key) => {
+				previous[key] = getOwnPropertyDescriptor(o, key)!;
+				return previous;
+			},
+			{} as { [key: string]: PropertyDescriptor }
+		);
 	};
 
 	entries = function entries(o: any): [string, any][] {
-		return keys(o).map((key) => [ key, o[key] ] as [string, any]);
+		return keys(o).map((key) => [key, o[key]] as [string, any]);
 	};
 
 	values = function values(o: any): any[] {
-		return keys(o).map((key) => o[ key ]);
+		return keys(o).map((key) => o[key]);
 	};
 }

@@ -34,9 +34,8 @@ export class ShimIterator<T> {
 
 	constructor(list: ArrayLike<T> | Iterable<T>) {
 		if (isIterable(list)) {
-			this._nativeIterator = list[ Symbol.iterator ]();
-		}
-		else {
+			this._nativeIterator = list[Symbol.iterator]();
+		} else {
 			this._list = list;
 		}
 	}
@@ -54,7 +53,7 @@ export class ShimIterator<T> {
 		if (++this._nextIndex < this._list.length) {
 			return {
 				done: false,
-				value: this._list[ this._nextIndex ]
+				value: this._list[this._nextIndex]
 			};
 		}
 		return staticDone;
@@ -71,7 +70,7 @@ export class ShimIterator<T> {
  * @param value The value to type guard against
  */
 export function isIterable(value: any): value is Iterable<any> {
-	return value && typeof value[ Symbol.iterator ] === 'function';
+	return value && typeof value[Symbol.iterator] === 'function';
 }
 
 /**
@@ -91,8 +90,7 @@ export function isArrayLike(value: any): value is ArrayLike<any> {
 export function get<T>(iterable: Iterable<T> | ArrayLike<T>): Iterator<T> | undefined {
 	if (isIterable(iterable)) {
 		return iterable[Symbol.iterator]();
-	}
-	else if (isArrayLike(iterable)) {
+	} else if (isArrayLike(iterable)) {
 		return new ShimIterator(iterable);
 	}
 }
@@ -115,7 +113,11 @@ export interface ForOfCallback<T> {
  * @param callback The callback which will be called for each item of the iterable
  * @param thisArg Optional scope to pass the callback
  */
-export function forOf<T>(iterable: Iterable<T> | ArrayLike<T> | string, callback: ForOfCallback<T>, thisArg?: any): void {
+export function forOf<T>(
+	iterable: Iterable<T> | ArrayLike<T> | string,
+	callback: ForOfCallback<T>,
+	thisArg?: any
+): void {
 	let broken = false;
 
 	function doBreak() {
@@ -127,9 +129,9 @@ export function forOf<T>(iterable: Iterable<T> | ArrayLike<T> | string, callback
 		const l = iterable.length;
 		for (let i = 0; i < l; ++i) {
 			let char = iterable[i];
-			if ((i + 1) < l) {
+			if (i + 1 < l) {
 				const code = char.charCodeAt(0);
-				if ((code >= HIGH_SURROGATE_MIN) && (code <= HIGH_SURROGATE_MAX)) {
+				if (code >= HIGH_SURROGATE_MIN && code <= HIGH_SURROGATE_MAX) {
 					char += iterable[++i];
 				}
 			}
@@ -138,8 +140,7 @@ export function forOf<T>(iterable: Iterable<T> | ArrayLike<T> | string, callback
 				return;
 			}
 		}
-	}
-	else {
+	} else {
 		const iterator = get(iterable);
 		if (iterator) {
 			let result = iterator.next();

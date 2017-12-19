@@ -9,29 +9,32 @@ registerSuite('object', {
 	'.assign()': {
 		'.assign()'() {
 			const source: {
-				a: number
+				a: number;
 				b: {
-					enumerable: boolean,
-					configurable: boolean,
-					writable: boolean,
-					value: number
+					enumerable: boolean;
+					configurable: boolean;
+					writable: boolean;
+					value: number;
+				};
+			} = Object.create(
+				{ a: 1 },
+				{
+					b: {
+						enumerable: false,
+						configurable: true,
+						writable: true,
+						value: 2
+					}
 				}
-			} = Object.create({ a: 1 }, {
-				b: {
-					enumerable: false,
-					configurable: true,
-					writable: true,
-					value: 2
-				}
-			});
-			(<any> source).c = 3;
-			(<any> source).nested = { a: 5 };
+			);
+			(<any>source).c = 3;
+			(<any>source).nested = { a: 5 };
 
 			const object: {
-				c: number,
+				c: number;
 				nested: {
-					a: number
-				}
+					a: number;
+				};
 			} = Object.create(null);
 			const assignedObject = assign(object, source);
 
@@ -39,7 +42,7 @@ registerSuite('object', {
 			assert.isUndefined(assignedObject.a, 'assign should not copy inherited properties');
 			assert.isUndefined(assignedObject.b, 'assign should not copy non-enumerable properties');
 			assert.strictEqual(assignedObject.c, 3);
-			assert.strictEqual(assignedObject.nested, (<any> source).nested, 'assign should perform a shallow copy');
+			assert.strictEqual(assignedObject.nested, (<any>source).nested, 'assign should perform a shallow copy');
 			assert.strictEqual(assignedObject.nested.a, 5);
 		},
 
@@ -72,7 +75,7 @@ registerSuite('object', {
 		},
 
 		'.assign() with inferred type from multiple sources'() {
-			let source1: { a: number, b: number } | { c: number, d: number } = {
+			let source1: { a: number; b: number } | { c: number; d: number } = {
 				a: 1,
 				b: 2,
 				c: 3,
@@ -96,7 +99,12 @@ registerSuite('object', {
 			assert(assignedObject);
 
 			// Verify that the inferred type is what we expect
-			const alsoAssigned: {} & ({ a: number, b: number } | { c: number, d: number }) = assign(object, source1, source2, source3);
+			const alsoAssigned: {} & ({ a: number; b: number } | { c: number; d: number }) = assign(
+				object,
+				source1,
+				source2,
+				source3
+			);
 
 			assert(alsoAssigned);
 		},
@@ -194,7 +202,7 @@ registerSuite('object', {
 					return 'foo';
 				}
 			};
-			const [ sym, ...other ] = object.getOwnPropertySymbols(o);
+			const [sym, ...other] = object.getOwnPropertySymbols(o);
 			assert.strictEqual(sym, Symbol.iterator);
 			assert.strictEqual(other.length, 0);
 		},
@@ -204,7 +212,7 @@ registerSuite('object', {
 				[foo]: 'bar',
 				bar: 1
 			};
-			const [ sym, ...other ] = object.getOwnPropertySymbols(o);
+			const [sym, ...other] = object.getOwnPropertySymbols(o);
 			assert.strictEqual(sym, foo);
 			assert.strictEqual(other.length, 0);
 		}
@@ -219,7 +227,7 @@ registerSuite('object', {
 			[sym]: 'bar',
 			bar: 1
 		};
-		assert.deepEqual(object.getOwnPropertyNames(o), [ 'bar' ]);
+		assert.deepEqual(object.getOwnPropertyNames(o), ['bar']);
 	},
 
 	'.getOwnPropertyDescriptors()'() {
@@ -231,8 +239,7 @@ registerSuite('object', {
 			get prop2() {
 				return 'value2';
 			},
-			set prop3(_: string) {
-			},
+			set prop3(_: string) {},
 			[visibleSymbol]: 'foo'
 		};
 
@@ -241,24 +248,16 @@ registerSuite('object', {
 			enumerable: false
 		});
 
-		(<any> Object).defineProperty(obj, hiddenSymbol, {
+		(<any>Object).defineProperty(obj, hiddenSymbol, {
 			value: 'test',
 			enumerable: false
 		});
 
 		let keys = object.getOwnPropertyDescriptors(obj);
 
-		assert.sameMembers(Object.keys(keys), [
-			'prop1',
-			'prop2',
-			'prop3',
-			'hidden'
-		]);
+		assert.sameMembers(Object.keys(keys), ['prop1', 'prop2', 'prop3', 'hidden']);
 
-		assert.sameMembers(object.getOwnPropertySymbols(obj), [
-			visibleSymbol,
-			hiddenSymbol
-		]);
+		assert.sameMembers(object.getOwnPropertySymbols(obj), [visibleSymbol, hiddenSymbol]);
 	},
 
 	'.keys()'() {
@@ -276,9 +275,9 @@ registerSuite('object', {
 			enumerable: false
 		});
 
-		assert.strictEqual((<any> o).baz, 'qat');
-		assert.strictEqual((<any> o)[sym], 'bar');
-		assert.deepEqual(object.keys(o), [ 'bar' ]);
+		assert.strictEqual((<any>o).baz, 'qat');
+		assert.strictEqual((<any>o)[sym], 'bar');
+		assert.deepEqual(object.keys(o), ['bar']);
 	},
 
 	'.values()'() {
@@ -289,7 +288,7 @@ registerSuite('object', {
 			[sym]: 5
 		};
 
-		assert.sameMembers(object.values(o), [ 'value1', 2 ]);
+		assert.sameMembers(object.values(o), ['value1', 2]);
 	},
 
 	'.entries()'() {
@@ -300,6 +299,6 @@ registerSuite('object', {
 			[sym]: 5
 		};
 
-		assert.sameDeepMembers(object.entries(o), [ [ 'key1', 'value1' ], [ 'key2', 2 ] ]);
+		assert.sameDeepMembers(object.entries(o), [['key1', 'value1'], ['key2', 2]]);
 	}
 });

@@ -6,16 +6,16 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
 registerSuite('queue functions', {
-	'.queueTask()': function () {
+	'.queueTask()': function() {
 		const dfd = this.async(5000);
 		const parts: string[] = [];
 
 		function a() {
-			queueTask(function () {
+			queueTask(function() {
 				parts.push('queueTask 1');
 			});
 			parts.push('start');
-			queueTask(function () {
+			queueTask(function() {
 				parts.push('queueTask 2');
 			});
 		}
@@ -28,13 +28,19 @@ registerSuite('queue functions', {
 		}
 
 		c();
-		setTimeout(dfd.callback(function () {
-			assert.equal(parts.join(','), 'start,end,queueTask 1,queueTask 2',
-				'queueTasks should be executed to the beginning of the next loop.');
-		}), 300);
+		setTimeout(
+			dfd.callback(function() {
+				assert.equal(
+					parts.join(','),
+					'start,end,queueTask 1,queueTask 2',
+					'queueTasks should be executed to the beginning of the next loop.'
+				);
+			}),
+			300
+		);
 	},
 
-	'.queueTask() => handle.destroy()': function () {
+	'.queueTask() => handle.destroy()': function() {
 		const dfd = this.async(5000);
 		let parts: string[];
 
@@ -42,19 +48,22 @@ registerSuite('queue functions', {
 			parts = [];
 
 			parts.push('start');
-			queueTask(function () {
+			queueTask(function() {
 				parts.push('queueTask');
 			}).destroy();
 			parts.push('end');
 		}
 
 		test();
-		setTimeout(dfd.callback(function () {
-			assert.equal(parts.join(','), 'start,end');
-		}), 100);
+		setTimeout(
+			dfd.callback(function() {
+				assert.equal(parts.join(','), 'start,end');
+			}),
+			100
+		);
 	},
 
-	'.queueAnimationTask()': function () {
+	'.queueAnimationTask()': function() {
 		if (!has('host-browser')) {
 			this.skip('browser required.');
 		}
@@ -63,11 +72,11 @@ registerSuite('queue functions', {
 		const parts: string[] = [];
 
 		function a() {
-			queueAnimationTask(function () {
+			queueAnimationTask(function() {
 				parts.push('queueAnimationTask 1');
 			});
 			parts.push('start');
-			queueAnimationTask(function () {
+			queueAnimationTask(function() {
 				parts.push('queueAnimationTask 2');
 			});
 		}
@@ -80,13 +89,19 @@ registerSuite('queue functions', {
 		}
 
 		c();
-		setTimeout(dfd.callback(function () {
-			assert.equal(parts.join(','), 'start,end,queueAnimationTask 1,queueAnimationTask 2',
-				'queueAnimationTasks should be executed to the beginning of the next loop.');
-		}), 300);
+		setTimeout(
+			dfd.callback(function() {
+				assert.equal(
+					parts.join(','),
+					'start,end,queueAnimationTask 1,queueAnimationTask 2',
+					'queueAnimationTasks should be executed to the beginning of the next loop.'
+				);
+			}),
+			300
+		);
 	},
 
-	'.queueAnimationTask() => handle.destroy()': function () {
+	'.queueAnimationTask() => handle.destroy()': function() {
 		if (!has('host-browser')) {
 			this.skip('browser required.');
 		}
@@ -98,33 +113,36 @@ registerSuite('queue functions', {
 			parts = [];
 
 			parts.push('start');
-			queueAnimationTask(function () {
+			queueAnimationTask(function() {
 				parts.push('queueAnimationTask');
 			}).destroy();
 			parts.push('end');
 		}
 
 		test();
-		setTimeout(dfd.callback(function () {
-			assert.equal(parts.join(','), 'start,end');
-		}), 100);
+		setTimeout(
+			dfd.callback(function() {
+				assert.equal(parts.join(','), 'start,end');
+			}),
+			100
+		);
 	},
 
-	'.queueMicroTask()': function () {
+	'.queueMicroTask()': function() {
 		const dfd = this.async(5000);
 		const parts: string[] = [];
 
 		function a() {
-			queueTask(function () {
+			queueTask(function() {
 				parts.push('queueTask 1');
 			});
-			queueAnimationTask(function () {
+			queueAnimationTask(function() {
 				parts.push('queueAnimationTask 1');
 			});
-			queueMicroTask(function () {
+			queueMicroTask(function() {
 				parts.push('queueMicroTask');
 			});
-			queueTask(function () {
+			queueTask(function() {
 				parts.push('queueTask 2');
 			});
 			parts.push('start');
@@ -138,17 +156,20 @@ registerSuite('queue functions', {
 		}
 
 		c();
-		setTimeout(dfd.callback(function () {
-			const actual = parts.join(',');
-			// Different browsers implement rAF differently, so there's no way to predict exactly
-			// when in the macrotask queue any callback registered with queueAnimationTask will be
-			// executed. As a result, the following just tests that queueMicroTask executes its
-			// callbacks before either queueTask or queueAnimationTask.
-			assert.equal(actual.indexOf('start,end,queueMicroTask'), 0);
-		}), 1000);
+		setTimeout(
+			dfd.callback(function() {
+				const actual = parts.join(',');
+				// Different browsers implement rAF differently, so there's no way to predict exactly
+				// when in the macrotask queue any callback registered with queueAnimationTask will be
+				// executed. As a result, the following just tests that queueMicroTask executes its
+				// callbacks before either queueTask or queueAnimationTask.
+				assert.equal(actual.indexOf('start,end,queueMicroTask'), 0);
+			}),
+			1000
+		);
 	},
 
-	'.queueMicroTask() => handle.destroy()': function () {
+	'.queueMicroTask() => handle.destroy()': function() {
 		const dfd = this.async(5000);
 		let parts: string[];
 
@@ -156,20 +177,23 @@ registerSuite('queue functions', {
 			parts = [];
 
 			parts.push('start');
-			queueMicroTask(function () {
+			queueMicroTask(function() {
 				parts.push('queueMicroTask');
 			}).destroy();
 			parts.push('end');
 		}
 
 		test();
-		setTimeout(dfd.callback(function () {
-			assert.equal(parts.join(','), 'start,end');
-		}), 100);
+		setTimeout(
+			dfd.callback(function() {
+				assert.equal(parts.join(','), 'start,end');
+			}),
+			100
+		);
 	},
 
 	'web workers': {
-		'queue from webworker': function () {
+		'queue from webworker': function() {
 			if (global.Blob === undefined || global.Worker === undefined) {
 				this.skip('does not support blobs and/or web workers');
 				return;
@@ -178,7 +202,9 @@ registerSuite('queue functions', {
 			try {
 				const baseUrl = location.origin;
 				const dfd = this.async(10000);
-				const blob = new Blob([ `(function() {
+				const blob = new Blob(
+					[
+						`(function() {
 self.addEventListener('message', function (event) {
 	if(event.data.baseUrl) {
 		var baseUrl = event.data.baseUrl;
@@ -195,7 +221,10 @@ self.addEventListener('message', function (event) {
 		});
 	}
 });
-})()` ], { type: 'application/javascript' });
+})()`
+					],
+					{ type: 'application/javascript' }
+				);
 				const worker = new Worker(URL.createObjectURL(blob));
 				worker.addEventListener('error', (error) => {
 					dfd.reject(new Error(error.message));
@@ -209,8 +238,7 @@ self.addEventListener('message', function (event) {
 				worker.postMessage({
 					baseUrl
 				});
-			}
-			catch (e) {
+			} catch (e) {
 				// IE11 on Winodws 8.1 encounters a security error.
 				this.skip('does not support blobs and/or web workers');
 			}

@@ -126,8 +126,7 @@ if (has('es6-array') && has('es6-array-fill')) {
 	fill = wrapNative(global.Array.prototype.fill);
 	find = wrapNative(global.Array.prototype.find);
 	findIndex = wrapNative(global.Array.prototype.findIndex);
-}
-else {
+} else {
 	// It is only older versions of Safari/iOS that have a bad fill implementation and so aren't in the wild
 	// To make things easier, if there is a bad fill implementation, the whole set of functions will be filled
 
@@ -179,7 +178,12 @@ else {
 		return value < 0 ? Math.max(length + value, 0) : Math.min(value, length);
 	};
 
-	from = function from(this: ArrayConstructor, arrayLike: Iterable<any> | ArrayLike<any>, mapFunction?: MapCallback<any, any>, thisArg?: any): Array<any> {
+	from = function from(
+		this: ArrayConstructor,
+		arrayLike: Iterable<any> | ArrayLike<any>,
+		mapFunction?: MapCallback<any, any>,
+		thisArg?: any
+	): Array<any> {
 		if (arrayLike == null) {
 			throw new TypeError('from: requires an array-like object');
 		}
@@ -190,10 +194,11 @@ else {
 
 		/* tslint:disable-next-line:variable-name */
 		const Constructor = this;
-		const length: number = toLength((<any> arrayLike).length);
+		const length: number = toLength((<any>arrayLike).length);
 
 		// Support extension
-		const array: any[] = (typeof Constructor === 'function') ? <any[]> Object(new Constructor(length)) : new Array(length);
+		const array: any[] =
+			typeof Constructor === 'function' ? <any[]>Object(new Constructor(length)) : new Array(length);
 
 		if (!isArrayLike(arrayLike) && !isIterable(arrayLike)) {
 			return array;
@@ -209,8 +214,7 @@ else {
 			for (let i = 0; i < arrayLike.length; i++) {
 				array[i] = mapFunction ? mapFunction(arrayLike[i], i) : arrayLike[i];
 			}
-		}
-		else {
+		} else {
 			let i = 0;
 			for (const value of arrayLike) {
 				array[i] = mapFunction ? mapFunction(value, i) : value;
@@ -218,7 +222,7 @@ else {
 			}
 		}
 
-		if ((<any> arrayLike).length !== undefined) {
+		if ((<any>arrayLike).length !== undefined) {
 			array.length = length;
 		}
 
@@ -229,7 +233,12 @@ else {
 		return Array.prototype.slice.call(items);
 	};
 
-	copyWithin = function copyWithin<T>(target: ArrayLike<T>, offset: number, start: number, end?: number): ArrayLike<T> {
+	copyWithin = function copyWithin<T>(
+		target: ArrayLike<T>,
+		offset: number,
+		start: number,
+		end?: number
+	): ArrayLike<T> {
 		if (target == null) {
 			throw new TypeError('copyWithin: target must be an array-like object');
 		}
@@ -241,7 +250,7 @@ else {
 		let count = Math.min(end - start, length - offset);
 
 		let direction = 1;
-		if (offset > start && offset < (start + count)) {
+		if (offset > start && offset < start + count) {
 			direction = -1;
 			start += count - 1;
 			offset += count - 1;
@@ -250,8 +259,7 @@ else {
 		while (count > 0) {
 			if (start in target) {
 				(target as WritableArrayLike<T>)[offset] = target[start];
-			}
-			else {
+			} else {
 				delete (target as WritableArrayLike<T>)[offset];
 			}
 
@@ -303,8 +311,7 @@ else {
 
 if (has('es7-array')) {
 	includes = wrapNative(global.Array.prototype.includes);
-}
-else {
+} else {
 	/**
 	 * Ensures a non-negative, non-infinite, safe integer.
 	 *
@@ -328,8 +335,10 @@ else {
 
 		for (let i = fromIndex; i < len; ++i) {
 			const currentElement = target[i];
-			if (searchElement === currentElement ||
-				(searchElement !== searchElement && currentElement !== currentElement)) {
+			if (
+				searchElement === currentElement ||
+				(searchElement !== searchElement && currentElement !== currentElement)
+			) {
 				return true;
 			}
 		}

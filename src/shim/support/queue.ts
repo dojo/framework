@@ -10,8 +10,8 @@ function executeTask(item: QueueItem | undefined): void {
 
 function getQueueHandle(item: QueueItem, destructor?: (...args: any[]) => any): Handle {
 	return {
-		destroy: function (this: Handle) {
-			this.destroy = function () {};
+		destroy: function(this: Handle) {
+			this.destroy = function() {};
 			item.isActive = false;
 			item.callback = null;
 
@@ -49,7 +49,7 @@ export const queueTask = (function() {
 	if (has('postmessage')) {
 		const queue: QueueItem[] = [];
 
-		global.addEventListener('message', function (event: PostMessageEvent): void {
+		global.addEventListener('message', function(event: PostMessageEvent): void {
 			// Confirm that the event was triggered by the current window and by this particular implementation.
 			if (event.source === global && event.data === 'dojo-queue-message') {
 				event.stopPropagation();
@@ -60,20 +60,18 @@ export const queueTask = (function() {
 			}
 		});
 
-		enqueue = function (item: QueueItem): void {
+		enqueue = function(item: QueueItem): void {
 			queue.push(item);
 			global.postMessage('dojo-queue-message', '*');
 		};
-	}
-	else if (has('setimmediate')) {
+	} else if (has('setimmediate')) {
 		destructor = global.clearImmediate;
-		enqueue = function (item: QueueItem): any {
+		enqueue = function(item: QueueItem): any {
 			return setImmediate(executeTask.bind(null, item));
 		};
-	}
-	else {
+	} else {
 		destructor = global.clearTimeout;
-		enqueue = function (item: QueueItem): any {
+		enqueue = function(item: QueueItem): any {
 			return setTimeout(executeTask.bind(null, item), 0);
 		};
 	}
@@ -85,16 +83,22 @@ export const queueTask = (function() {
 		};
 		const id: any = enqueue(item);
 
-		return getQueueHandle(item, destructor && function () {
-				destructor(id);
-			});
+		return getQueueHandle(
+			item,
+			destructor &&
+				function() {
+					destructor(id);
+				}
+		);
 	}
 
 	// TODO: Use aspect.before when it is available.
-	return has('microtasks') ? queueTask : function (callback: (...args: any[]) => any): Handle {
-			checkMicroTaskQueue();
-			return queueTask(callback);
-		};
+	return has('microtasks')
+		? queueTask
+		: function(callback: (...args: any[]) => any): Handle {
+				checkMicroTaskQueue();
+				return queueTask(callback);
+			};
 })();
 
 // When no mechanism for registering microtasks is exposed by the environment, microtasks will
@@ -103,15 +107,15 @@ if (!has('microtasks')) {
 	let isMicroTaskQueued = false;
 
 	microTasks = [];
-	checkMicroTaskQueue = function (): void {
+	checkMicroTaskQueue = function(): void {
 		if (!isMicroTaskQueued) {
 			isMicroTaskQueued = true;
-			queueTask(function () {
+			queueTask(function() {
 				isMicroTaskQueued = false;
 
 				if (microTasks.length) {
 					let item: QueueItem | undefined;
-					while (item = microTasks.shift()) {
+					while ((item = microTasks.shift())) {
 						executeTask(item);
 					}
 				}
@@ -129,7 +133,7 @@ if (!has('microtasks')) {
  * @param callback the function to be queued and later executed.
  * @returns An object with a `destroy` method that, when called, prevents the registered callback from executing.
  */
-export const queueAnimationTask = (function () {
+export const queueAnimationTask = (function() {
 	if (!has('raf')) {
 		return queueTask;
 	}
@@ -141,16 +145,18 @@ export const queueAnimationTask = (function () {
 		};
 		const rafId: number = requestAnimationFrame(executeTask.bind(null, item));
 
-		return getQueueHandle(item, function () {
+		return getQueueHandle(item, function() {
 			cancelAnimationFrame(rafId);
 		});
 	}
 
 	// TODO: Use aspect.before when it is available.
-	return has('microtasks') ? queueAnimationTask : function (callback: (...args: any[]) => any): Handle {
-			checkMicroTaskQueue();
-			return queueAnimationTask(callback);
-		};
+	return has('microtasks')
+		? queueAnimationTask
+		: function(callback: (...args: any[]) => any): Handle {
+				checkMicroTaskQueue();
+				return queueAnimationTask(callback);
+			};
 })();
 
 /**
@@ -163,25 +169,23 @@ export const queueAnimationTask = (function () {
  * @param callback the function to be queued and later executed.
  * @returns An object with a `destroy` method that, when called, prevents the registered callback from executing.
  */
-export let queueMicroTask = (function () {
+export let queueMicroTask = (function() {
 	let enqueue: (item: QueueItem) => void;
 
 	if (has('host-node')) {
-		enqueue = function (item: QueueItem): void {
+		enqueue = function(item: QueueItem): void {
 			global.process.nextTick(executeTask.bind(null, item));
 		};
-	}
-	else if (has('es6-promise')) {
-		enqueue = function (item: QueueItem): void {
+	} else if (has('es6-promise')) {
+		enqueue = function(item: QueueItem): void {
 			global.Promise.resolve(item).then(executeTask);
 		};
-	}
-	else if (has('dom-mutationobserver')) {
+	} else if (has('dom-mutationobserver')) {
 		/* tslint:disable-next-line:variable-name */
 		const HostMutationObserver = global.MutationObserver || global.WebKitMutationObserver;
 		const node = document.createElement('div');
 		const queue: QueueItem[] = [];
-		const observer = new HostMutationObserver(function (): void {
+		const observer = new HostMutationObserver(function(): void {
 			while (queue.length > 0) {
 				const item = queue.shift();
 				if (item && item.isActive && item.callback) {
@@ -192,19 +196,18 @@ export let queueMicroTask = (function () {
 
 		observer.observe(node, { attributes: true });
 
-		enqueue = function (item: QueueItem): void {
+		enqueue = function(item: QueueItem): void {
 			queue.push(item);
 			node.setAttribute('queueStatus', '1');
 		};
-	}
-	else {
-		enqueue = function (item: QueueItem): void {
+	} else {
+		enqueue = function(item: QueueItem): void {
 			checkMicroTaskQueue();
 			microTasks.push(item);
 		};
 	}
 
-	return function (callback: (...args: any[]) => any): Handle {
+	return function(callback: (...args: any[]) => any): Handle {
 		const item: QueueItem = {
 			isActive: true,
 			callback: callback

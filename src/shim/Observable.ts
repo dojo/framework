@@ -24,7 +24,11 @@ export interface Observable<T> extends ObservableObject {
 	 *
 	 * @return {Subscription} A Subscription object that can be used to manage the subscription.
 	 */
-	subscribe(onNext: (value: T) => any, onError?: (error: any) => any, onComplete?: (completeValue?: any) => void): Subscription;
+	subscribe(
+		onNext: (value: T) => any,
+		onError?: (error: any) => any,
+		onComplete?: (completeValue?: any) => void
+	): Subscription;
 
 	[Symbol.observable](): this;
 }
@@ -117,7 +121,11 @@ export interface Observer<T> {
  */
 export interface Subscribable<T> {
 	subscribe(observer: Observer<T>): Subscription;
-	subscribe(onNext: (value: T) => any, onError?: (error: any) => any, onComplete?: (completeValue?: any) => void): Subscription;
+	subscribe(
+		onNext: (value: T) => any,
+		onError?: (error: any) => any,
+		onComplete?: (completeValue?: any) => void
+	): Subscription;
 }
 
 export interface Subscriber<T> {
@@ -178,7 +186,10 @@ if (!has('es-observable')) {
 	 * Create a subscription observer for a given observer, and return the subscription.  The "logic" for Observerables
 	 * is in here!
 	 */
-	const startSubscription = function startSubscription<T>(executor: Subscriber<T>, observer: Observer<T>): Subscription {
+	const startSubscription = function startSubscription<T>(
+		executor: Subscriber<T>,
+		observer: Observer<T>
+	): Subscription {
 		let closed = false;
 		let cleanUp: () => void | undefined;
 
@@ -206,11 +217,9 @@ if (!has('es-observable')) {
 
 				if (typeof result === 'function') {
 					cleanUp = result;
-				}
-				else if (result && 'unsubscribe' in result) {
+				} else if (result && 'unsubscribe' in result) {
 					cleanUp = result.unsubscribe;
-				}
-				else if (result !== undefined && result !== null) {
+				} else if (result !== undefined && result !== null) {
 					throw new TypeError('Subscriber must return a callable or subscription');
 				}
 
@@ -219,8 +228,7 @@ if (!has('es-observable')) {
 						cleanUp();
 					}
 				}
-			}
-			catch (e) {
+			} catch (e) {
 				error(e);
 			}
 		}
@@ -235,12 +243,10 @@ if (!has('es-observable')) {
 			try {
 				if (typeof next === 'function') {
 					return next(value);
-				}
-				else if (next !== undefined && next !== null) {
+				} else if (next !== undefined && next !== null) {
 					throw new TypeError('Observer.next is not a function');
 				}
-			}
-			catch (e) {
+			} catch (e) {
 				error(e);
 			}
 		}
@@ -251,8 +257,7 @@ if (!has('es-observable')) {
 
 				try {
 					unsubscribe();
-				}
-				catch (e) {
+				} catch (e) {
 					cleanUpError = e;
 				}
 
@@ -267,19 +272,15 @@ if (!has('es-observable')) {
 						}
 
 						return errorResult;
-					}
-					else {
+					} else {
 						throw new TypeError('Observer.error is not a function');
 					}
-				}
-				else if (observer.complete) {
+				} else if (observer.complete) {
 					return observer.complete(errorValue);
-				}
-				else {
+				} else {
 					throw errorValue;
 				}
-			}
-			else {
+			} else {
 				throw errorValue;
 			}
 		}
@@ -290,8 +291,7 @@ if (!has('es-observable')) {
 
 				try {
 					unsubscribe();
-				}
-				catch (e) {
+				} catch (e) {
 					cleanUpError = e;
 				}
 
@@ -306,60 +306,66 @@ if (!has('es-observable')) {
 						}
 
 						return completeResult;
-					}
-					else {
+					} else {
 						throw new TypeError('Observer.complete is not a function');
 					}
-				}
-				else if (cleanUpError) {
+				} else if (cleanUpError) {
 					throw cleanUpError;
 				}
 			}
 		}
 
-		const subscription = Object.create(Object.create({}, {
-			'closed': {
-				enumerable: false,
-				configurable: true,
-				get() {
-					return closed;
+		const subscription = Object.create(
+			Object.create(
+				{},
+				{
+					closed: {
+						enumerable: false,
+						configurable: true,
+						get() {
+							return closed;
+						}
+					},
+					unsubscribe: {
+						enumerable: false,
+						configurable: true,
+						writable: true,
+						value: unsubscribe
+					}
 				}
-			},
-			'unsubscribe': {
-				enumerable: false,
-				configurable: true,
-				writable: true,
-				value: unsubscribe
-			}
-		}));
+			)
+		);
 
-		const prototype = Object.create({}, {
-			'next': {
-				enumerable: false,
-				writable: true,
-				value: next,
-				configurable: true
-			},
-			'error': {
-				enumerable: false,
-				writable: true,
-				value: error,
-				configurable: true
-			},
-			'complete': {
-				enumerable: false,
-				writable: true,
-				value: complete,
-				configurable: true
-			},
-			'closed': {
-				enumerable: false,
-				configurable: true,
-				get() {
-					return closed;
+		const prototype = Object.create(
+			{},
+			{
+				next: {
+					enumerable: false,
+					writable: true,
+					value: next,
+					configurable: true
+				},
+				error: {
+					enumerable: false,
+					writable: true,
+					value: error,
+					configurable: true
+				},
+				complete: {
+					enumerable: false,
+					writable: true,
+					value: complete,
+					configurable: true
+				},
+				closed: {
+					enumerable: false,
+					configurable: true,
+					get() {
+						return closed;
+					}
 				}
 			}
-		});
+		);
 
 		// create the SubscriptionObserver and kick things off
 		start(Object.create(prototype));
@@ -368,7 +374,7 @@ if (!has('es-observable')) {
 		return subscription;
 	};
 
-	Observable = (function () {
+	Observable = (function() {
 		function nonEnumerable(target: any, key: string | symbol, descriptor: PropertyDescriptor) {
 			descriptor.enumerable = false;
 		}
@@ -391,9 +397,14 @@ if (!has('es-observable')) {
 
 			@nonEnumerable
 			subscribe(observerOrNext: any, ...listeners: any[]) {
-				const [ onError, onComplete ] = [ ...listeners ];
+				const [onError, onComplete] = [...listeners];
 
-				if (!observerOrNext || typeof observerOrNext === 'number' || typeof observerOrNext === 'string' || typeof observerOrNext === 'boolean') {
+				if (
+					!observerOrNext ||
+					typeof observerOrNext === 'number' ||
+					typeof observerOrNext === 'string' ||
+					typeof observerOrNext === 'boolean'
+				) {
 					throw new TypeError('parameter must be a function or an observer');
 				}
 
@@ -411,8 +422,7 @@ if (!has('es-observable')) {
 					if (typeof onComplete === 'function') {
 						observer.complete = onComplete;
 					}
-				}
-				else {
+				} else {
 					observer = observerOrNext;
 				}
 
@@ -425,8 +435,7 @@ if (!has('es-observable')) {
 
 				if (typeof this !== 'function') {
 					constructor = Observable;
-				}
-				else {
+				} else {
 					constructor = this;
 				}
 
@@ -448,12 +457,11 @@ if (!has('es-observable')) {
 
 				if (typeof this !== 'function') {
 					constructor = Observable;
-				}
-				else {
+				} else {
 					constructor = this;
 				}
 
-				const observableSymbol = (item as Observable<U>)[ Symbol.observable ];
+				const observableSymbol = (item as Observable<U>)[Symbol.observable];
 
 				if (observableSymbol !== undefined) {
 					if (typeof observableSymbol !== 'function') {
@@ -462,41 +470,41 @@ if (!has('es-observable')) {
 
 					const result: any = observableSymbol.call(item);
 
-					if (result === undefined || result === null || typeof result === 'number' || typeof result === 'boolean' || typeof result === 'string') {
+					if (
+						result === undefined ||
+						result === null ||
+						typeof result === 'number' ||
+						typeof result === 'boolean' ||
+						typeof result === 'string'
+					) {
 						throw new TypeError('Return value of Symbol.observable must be object');
 					}
 
-					if (result.constructor && result.constructor === this || result instanceof Observable) {
+					if ((result.constructor && result.constructor === this) || result instanceof Observable) {
 						return result;
-					}
-					else if (result.subscribe) {
+					} else if (result.subscribe) {
 						return new constructor(result.subscribe);
-					}
-					else {
+					} else {
 						if (constructor.of) {
 							return constructor.of(result);
-						}
-						else {
+						} else {
 							return Observable.of(result);
 						}
 					}
-				}
-				else if (isIterable(item) || isArrayLike(item)) {
+				} else if (isIterable(item) || isArrayLike(item)) {
 					return new constructor((observer: SubscriptionObserver<U>) => {
 						if (isArrayLike(item)) {
 							for (let i = 0; i < item.length; i++) {
 								observer.next(item[i]);
 							}
-						}
-						else {
+						} else {
 							for (const o of item) {
 								observer.next(o);
 							}
 						}
 						observer.complete();
 					});
-				}
-				else {
+				} else {
 					throw new TypeError('Parameter is neither Observable nor Iterable');
 				}
 			}

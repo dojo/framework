@@ -1,6 +1,4 @@
-import {
-	hasClass
-} from '../../../src/support/decorators';
+import { hasClass } from '../../../src/support/decorators';
 import { add } from '../../../src/support/has';
 
 const { registerSuite } = intern.getInterface('object');
@@ -53,14 +51,18 @@ registerSuite('decorators', {
 				type = 'real';
 			}
 
-			assert.throws(() => {
-				/* tslint:disable */
-				@hasClass('test-decorator-noclass', Real, Fill)
-				class Target {
-					type = 'target';
-				}
-				/* tslint:enable */
-			}, TypeError, 'Attempt to detect unregistered has feature');
+			assert.throws(
+				() => {
+					/* tslint:disable */
+					@hasClass('test-decorator-noclass', Real, Fill)
+					class Target {
+						type = 'target';
+					}
+					/* tslint:enable */
+				},
+				TypeError,
+				'Attempt to detect unregistered has feature'
+			);
 		}
 	}
 });

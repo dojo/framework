@@ -5,12 +5,11 @@ import '../../src/Symbol';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-class MoreObservable extends Observable<any> {
-}
+class MoreObservable extends Observable<any> {}
 
 registerSuite('Observable', {
-	'subscribe': {
-		'observer'() {
+	subscribe: {
+		observer() {
 			let source = Observable.of(1, 2, 3);
 			let startCalled = false;
 			let nextCalled = false;
@@ -32,12 +31,13 @@ registerSuite('Observable', {
 			assert.isTrue(nextCalled);
 			assert.isTrue(completeCalled);
 		},
-		'functions'() {
+		functions() {
 			let source = Observable.of(1, 2, 3);
 			let nextCalled = false;
 			let completeCalled = false;
 
-			source.subscribe(() => {
+			source.subscribe(
+				() => {
 					nextCalled = true;
 				},
 				undefined,
@@ -53,18 +53,18 @@ registerSuite('Observable', {
 			let source = Observable.of(1, 2);
 
 			assert.throws(() => {
-				source.subscribe(<any> undefined);
+				source.subscribe(<any>undefined);
 			});
 
 			assert.throws(() => {
-				source.subscribe(<any> 'test');
+				source.subscribe(<any>'test');
 			});
 		}
 	},
 
-	'creation': {
-		'constructor': {
-			'constructor'() {
+	creation: {
+		constructor: {
+			constructor() {
 				let source = new Observable((observer) => {
 					observer.next(1);
 				});
@@ -75,11 +75,11 @@ registerSuite('Observable', {
 			},
 			'errors for bad subscriber function'() {
 				assert.throws(() => {
-					new Observable(<any> undefined);
+					new Observable(<any>undefined);
 				});
 
 				assert.throws(() => {
-					new Observable(<any> 'test');
+					new Observable(<any>'test');
 				});
 			},
 			'thrown error during subscription'() {
@@ -90,38 +90,50 @@ registerSuite('Observable', {
 
 				let values: any[] = [];
 
-				source.subscribe((value: any) => {
-					values.push(value);
-				}, (error: Error) => {
-					assert.deepEqual(values, [ 1 ]);
-					assert.strictEqual(error.message, 'error');
-				}, () => {
-					assert.fail('Should not have completed');
-				});
+				source.subscribe(
+					(value: any) => {
+						values.push(value);
+					},
+					(error: Error) => {
+						assert.deepEqual(values, [1]);
+						assert.strictEqual(error.message, 'error');
+					},
+					() => {
+						assert.fail('Should not have completed');
+					}
+				);
 			},
 			'manual error during subscription w/ error handler'() {
 				const source = new Observable((observer) => {
 					observer.error(new Error('error'));
 				});
 
-				source.subscribe(() => {
-					assert.fail('should not have called next');
-				}, (error: Error) => {
-					assert.strictEqual(error.message, 'error');
-				}, () => {
-					assert.fail('Should not have completed');
-				});
+				source.subscribe(
+					() => {
+						assert.fail('should not have called next');
+					},
+					(error: Error) => {
+						assert.strictEqual(error.message, 'error');
+					},
+					() => {
+						assert.fail('Should not have completed');
+					}
+				);
 			},
 			'manual error during subscription w/ completion handler'() {
 				const source = new Observable((observer) => {
 					observer.error(new Error('error'));
 				});
 
-				source.subscribe(() => {
-					assert.fail('should not have called next');
-				}, undefined, (error: any) => {
-					assert.strictEqual(error.message, 'error');
-				});
+				source.subscribe(
+					() => {
+						assert.fail('should not have called next');
+					},
+					undefined,
+					(error: any) => {
+						assert.strictEqual(error.message, 'error');
+					}
+				);
 			},
 			'subscriber return value is an unsubscribe method'() {
 				let cleanUp = false;
@@ -149,7 +161,7 @@ registerSuite('Observable', {
 				new Observable((observer) => {
 					observer.complete();
 
-					return <any> null;
+					return <any>null;
 				}).subscribe({});
 			},
 			'subscriber cannot return a number/string/boolean'() {
@@ -157,7 +169,7 @@ registerSuite('Observable', {
 					new Observable((observer) => {
 						observer.complete();
 
-						return <any> 1;
+						return <any>1;
 					}).subscribe({});
 				});
 
@@ -165,7 +177,7 @@ registerSuite('Observable', {
 					new Observable((observer) => {
 						observer.complete();
 
-						return <any> 'test';
+						return <any>'test';
 					}).subscribe({});
 				});
 
@@ -173,24 +185,28 @@ registerSuite('Observable', {
 					new Observable((observer) => {
 						observer.complete();
 
-						return <any> false;
+						return <any>false;
 					}).subscribe({});
 				});
 			}
 		},
-		'of': {
+		of: {
 			'multiple values'() {
 				let source = Observable.of(1, 2, 3, 4);
 				let allValues: any[] = [];
 				let completeCalled = false;
 
-				let subscription = source.subscribe((value: any) => {
-					allValues.push(value);
-				}, undefined, () => {
-					completeCalled = true;
-				});
+				let subscription = source.subscribe(
+					(value: any) => {
+						allValues.push(value);
+					},
+					undefined,
+					() => {
+						completeCalled = true;
+					}
+				);
 
-				assert.deepEqual(allValues, [ 1, 2, 3, 4 ]);
+				assert.deepEqual(allValues, [1, 2, 3, 4]);
 				assert.isTrue(subscription.closed);
 				assert.isTrue(completeCalled);
 			},
@@ -200,13 +216,17 @@ registerSuite('Observable', {
 				let allValues: any[] = [];
 				let completeCalled = false;
 
-				let subscription = source.subscribe((value: any) => {
-					allValues.push(value);
-				}, undefined, () => {
-					completeCalled = true;
-				});
+				let subscription = source.subscribe(
+					(value: any) => {
+						allValues.push(value);
+					},
+					undefined,
+					() => {
+						completeCalled = true;
+					}
+				);
 
-				assert.deepEqual(allValues, [ 'test' ]);
+				assert.deepEqual(allValues, ['test']);
 				assert.isTrue(subscription.closed);
 				assert.isTrue(completeCalled);
 			},
@@ -219,81 +239,84 @@ registerSuite('Observable', {
 					allValues.push(value);
 				});
 
-				assert.deepEqual(allValues, [ 1 ]);
+				assert.deepEqual(allValues, [1]);
 			}
 		},
 
-		'from': {
-			'array'() {
-				let source = Observable.from([ 1, 2, 3 ]);
-				let expectedValues = [ 1, 2, 3 ];
+		from: {
+			array() {
+				let source = Observable.from([1, 2, 3]);
+				let expectedValues = [1, 2, 3];
 				let i = 0;
 				let completeCalled = false;
 
-				let subscription = source.subscribe((value: any) => {
-					assert.strictEqual(value, expectedValues[ i++ ]);
-				}, undefined, () => {
-					completeCalled = true;
-				});
+				let subscription = source.subscribe(
+					(value: any) => {
+						assert.strictEqual(value, expectedValues[i++]);
+					},
+					undefined,
+					() => {
+						completeCalled = true;
+					}
+				);
 
 				assert.equal(i, 3);
 				assert.isTrue(subscription.closed);
 				assert.isTrue(completeCalled);
 			},
-			'iterable'() {
-				let map = new Map([
-					[ 1, 'one' ],
-					[ 2, 'two' ]
-				]);
+			iterable() {
+				let map = new Map([[1, 'one'], [2, 'two']]);
 
 				let source = Observable.from(map.keys());
 				let values: any[] = [];
 				let completeCalled = false;
 
-				let subscription = source.subscribe((value: any) => {
-					values.push(value);
-				}, undefined, () => {
-					completeCalled = true;
-				});
+				let subscription = source.subscribe(
+					(value: any) => {
+						values.push(value);
+					},
+					undefined,
+					() => {
+						completeCalled = true;
+					}
+				);
 
-				assert.deepEqual(values, [ 1, 2 ]);
+				assert.deepEqual(values, [1, 2]);
 				assert.isTrue(subscription.closed);
 				assert.isTrue(completeCalled);
 			},
 			'invalid value'() {
 				assert.throws(() => {
-					Observable.from(<any> null);
+					Observable.from(<any>null);
 				});
 
 				assert.throws(() => {
-					Observable.from(<any> undefined);
+					Observable.from(<any>undefined);
 				});
 
 				assert.throws(() => {
-					Observable.from(<any> 5);
+					Observable.from(<any>5);
 				});
 			},
 			'invalid this value'() {
 				let values: number[] = [];
 
-				Observable.from.call({}, [ 1 ]).subscribe({
+				Observable.from.call({}, [1]).subscribe({
 					next: (value: number) => {
 						values.push(value);
 					}
 				});
 
-				assert.deepEqual(values, [ 1 ]);
+				assert.deepEqual(values, [1]);
 			},
 			'observable value': {
 				'another Observable'() {
-					let o = new Observable(() => {
-					});
+					let o = new Observable(() => {});
 
 					assert.isTrue(Observable.from(o) === o);
 				},
 				'subclass observable'() {
-					let o = new MoreObservable(() => {
-					});
+					let o = new MoreObservable(() => {});
 
 					assert.isTrue(Observable.from(o) === o);
 				},
@@ -336,8 +359,7 @@ registerSuite('Observable', {
 					let obj = {};
 					let value: any;
 
-					let source = Observable.from.call(function () {
-					}, {
+					let source = Observable.from.call(function() {}, {
 						[Symbol.observable]() {
 							return obj;
 						}
@@ -351,13 +373,13 @@ registerSuite('Observable', {
 				},
 				'invalid observable'() {
 					assert.throws(() => {
-						Observable.from(<any> {
+						Observable.from(<any>{
 							[Symbol.observable]: 42
 						});
 					});
 
 					assert.throws(() => {
-						Observable.from(<any> {
+						Observable.from(<any>{
 							[Symbol.observable]: () => {
 								return 42;
 							}
@@ -365,7 +387,7 @@ registerSuite('Observable', {
 					});
 
 					assert.throws(() => {
-						Observable.from(<any> {
+						Observable.from(<any>{
 							[Symbol.observable]: () => {
 								return 'test';
 							}
@@ -373,7 +395,7 @@ registerSuite('Observable', {
 					});
 
 					assert.throws(() => {
-						Observable.from(<any> {
+						Observable.from(<any>{
 							[Symbol.observable]: () => {
 								return false;
 							}
@@ -381,7 +403,7 @@ registerSuite('Observable', {
 					});
 
 					assert.throws(() => {
-						Observable.from(<any> {
+						Observable.from(<any>{
 							[Symbol.observable]: () => {
 								return null;
 							}
@@ -389,7 +411,7 @@ registerSuite('Observable', {
 					});
 
 					assert.throws(() => {
-						Observable.from(<any> {
+						Observable.from(<any>{
 							[Symbol.observable]: () => {
 								return;
 							}
@@ -398,7 +420,7 @@ registerSuite('Observable', {
 				}
 			}
 		},
-		'unsubscribe': {
+		unsubscribe: {
 			'closed reflects state'() {
 				new Observable((observer) => {
 					assert.isFalse(observer.closed);
@@ -450,7 +472,7 @@ registerSuite('Observable', {
 				observer.next(1);
 				observer.next(2);
 
-				assert.deepEqual(values, [ 0, 1 ]);
+				assert.deepEqual(values, [0, 1]);
 				assert.isTrue(unsubscribed);
 			},
 			'without unsubscribe handler'() {
@@ -474,13 +496,13 @@ registerSuite('Observable', {
 				observer.next(1);
 				observer.next(2);
 
-				assert.deepEqual(values, [ 0, 1 ]);
+				assert.deepEqual(values, [0, 1]);
 			}
 		}
 	},
 	'observer.next': {
-		'next': {
-			'normal'() {
+		next: {
+			normal() {
 				const source = new Observable((observer) => {
 					observer.next(1);
 					observer.next(2);
@@ -488,15 +510,19 @@ registerSuite('Observable', {
 
 				let values: any[] = [];
 
-				source.subscribe((value: any) => {
-					values.push(value);
-				}, () => {
-					assert.fail('Should not have errored');
-				}, () => {
-					assert.fail('Should not have completed');
-				});
+				source.subscribe(
+					(value: any) => {
+						values.push(value);
+					},
+					() => {
+						assert.fail('Should not have errored');
+					},
+					() => {
+						assert.fail('Should not have completed');
+					}
+				);
 
-				assert.deepEqual(values, [ 1, 2 ]);
+				assert.deepEqual(values, [1, 2]);
 			},
 			'invalid next observer'() {
 				const source = new Observable((observer) => {
@@ -505,19 +531,19 @@ registerSuite('Observable', {
 
 				assert.throws(() => {
 					source.subscribe({
-						next: <any> 1
+						next: <any>1
 					});
 				});
 
 				assert.throws(() => {
 					source.subscribe({
-						next: <any> false
+						next: <any>false
 					});
 				});
 
 				assert.doesNotThrow(() => {
 					source.subscribe({
-						next: <any> null
+						next: <any>null
 					});
 				});
 
@@ -528,7 +554,7 @@ registerSuite('Observable', {
 				});
 			},
 
-			'closed'() {
+			closed() {
 				const source = new Observable((observer) => {
 					observer.next(1);
 					observer.complete();
@@ -541,23 +567,27 @@ registerSuite('Observable', {
 					values.push(value);
 				});
 
-				assert.deepEqual(values, [ 1 ]);
+				assert.deepEqual(values, [1]);
 			},
 			'thrown error in subscriber'() {
 				const source = Observable.of(1, 2, 3);
 
-				source.subscribe(() => {
-					throw new Error('error');
-				}, (error: Error) => {
-					assert.strictEqual(error.message, 'error');
-				}, () => {
-					assert.fail('Should not have completed');
-				});
+				source.subscribe(
+					() => {
+						throw new Error('error');
+					},
+					(error: Error) => {
+						assert.strictEqual(error.message, 'error');
+					},
+					() => {
+						assert.fail('Should not have completed');
+					}
+				);
 			}
 		}
 	},
 	'observer.complete': {
-		'normal'() {
+		normal() {
 			let called = false;
 
 			new Observable((observer) => {
@@ -575,7 +605,7 @@ registerSuite('Observable', {
 				new Observable((observer) => {
 					observer.complete();
 				}).subscribe({
-					complete: <any> false
+					complete: <any>false
 				});
 			});
 
@@ -583,7 +613,7 @@ registerSuite('Observable', {
 				new Observable((observer) => {
 					observer.complete();
 				}).subscribe({
-					complete: <any> 'test'
+					complete: <any>'test'
 				});
 			});
 
@@ -591,7 +621,7 @@ registerSuite('Observable', {
 				new Observable((observer) => {
 					observer.complete();
 				}).subscribe({
-					complete: <any> 1
+					complete: <any>1
 				});
 			});
 		},
@@ -642,8 +672,7 @@ registerSuite('Observable', {
 						throw new Error();
 					};
 				}).subscribe({
-					complete: () => {
-					}
+					complete: () => {}
 				});
 
 				observer.complete();
@@ -705,7 +734,7 @@ registerSuite('Observable', {
 				new Observable((observer) => {
 					observer.error(new Error('observer error'));
 				}).subscribe({
-					error: <any> 1
+					error: <any>1
 				});
 			});
 
@@ -713,7 +742,7 @@ registerSuite('Observable', {
 				new Observable((observer) => {
 					observer.error(new Error('observer error'));
 				}).subscribe({
-					error: <any> false
+					error: <any>false
 				});
 			});
 
@@ -721,7 +750,7 @@ registerSuite('Observable', {
 				new Observable((observer) => {
 					observer.error(new Error('observer error'));
 				}).subscribe({
-					error: <any> 'test'
+					error: <any>'test'
 				});
 			});
 		}

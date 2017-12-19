@@ -114,8 +114,7 @@ if (!has('es6-set')) {
 					for (let i = 0; i < iterable.length; i++) {
 						this.add(iterable[i]);
 					}
-				}
-				else {
+				} else {
 					for (const value of iterable) {
 						this.add(value);
 					}
@@ -145,7 +144,7 @@ if (!has('es6-set')) {
 		}
 
 		entries(): IterableIterator<[T, T]> {
-			return new ShimIterator<[any, any]>(this._setData.map<[any, any]>((value) => [ value, value ]));
+			return new ShimIterator<[any, any]>(this._setData.map<[any, any]>((value) => [value, value]));
 		}
 
 		forEach(callbackfn: (value: T, index: T, set: Set<T>) => void, thisArg?: any): void {

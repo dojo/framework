@@ -8,12 +8,19 @@ interface CallbackResults {
 }
 
 registerSuite('Polyfills', {
-	'Polyfills'() {
+	Polyfills() {
 		return this.remote
 			.get('/_build/tests/functional/polyfills.html')
-			.then(pollUntil<{ pointerEvents: boolean; intersectionObserver: boolean; }>(function () {
-				return (<any> window).results;
-			}, undefined, 5000), undefined)
+			.then(
+				pollUntil<{ pointerEvents: boolean; intersectionObserver: boolean }>(
+					function() {
+						return (<any>window).results;
+					},
+					undefined,
+					5000
+				),
+				undefined
+			)
 			.then((results: CallbackResults) => {
 				assert.isTrue(results.pointerEvents, 'Expected pointer events to be available');
 				assert.isTrue(results.intersectionObserver, 'Expected intersection observer to be available');

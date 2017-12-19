@@ -25,22 +25,22 @@ export interface StringNormalize {
 /**
  * The minimum location of high surrogates
  */
-export const HIGH_SURROGATE_MIN = 0xD800;
+export const HIGH_SURROGATE_MIN = 0xd800;
 
 /**
  * The maximum location of high surrogates
  */
-export const HIGH_SURROGATE_MAX = 0xDBFF;
+export const HIGH_SURROGATE_MAX = 0xdbff;
 
 /**
  * The minimum location of low surrogates
  */
-export const LOW_SURROGATE_MIN = 0xDC00;
+export const LOW_SURROGATE_MIN = 0xdc00;
 
 /**
  * The maximum location of low surrogates
  */
-export const LOW_SURROGATE_MAX = 0xDFFF;
+export const LOW_SURROGATE_MAX = 0xdfff;
 
 /* ES6 static methods */
 
@@ -151,23 +151,27 @@ if (has('es6-string') && has('es6-string-raw')) {
 	normalize = wrapNative(global.String.prototype.normalize);
 	repeat = wrapNative(global.String.prototype.repeat);
 	startsWith = wrapNative(global.String.prototype.startsWith);
-}
-else {
+} else {
 	/**
 	 * Validates that text is defined, and normalizes position (based on the given default if the input is NaN).
 	 * Used by startsWith, includes, and endsWith.
 	 *
 	 * @return Normalized position.
 	 */
-	const normalizeSubstringArgs = function(name: string, text: string, search: string, position: number,
-			isEnd: boolean = false): [ string, string, number ] {
+	const normalizeSubstringArgs = function(
+		name: string,
+		text: string,
+		search: string,
+		position: number,
+		isEnd: boolean = false
+	): [string, string, number] {
 		if (text == null) {
 			throw new TypeError('string.' + name + ' requires a valid string to search against.');
 		}
 
 		const length = text.length;
 		position = position !== position ? (isEnd ? length : 0) : position;
-		return [ text, String(search), Math.min(Math.max(position, 0), length) ];
+		return [text, String(search), Math.min(Math.max(position, 0), length)];
 	};
 
 	fromCodePoint = function fromCodePoint(...codePoints: number[]): string {
@@ -187,22 +191,21 @@ else {
 			let codePoint = Number(arguments[index]);
 
 			// Code points must be finite integers within the valid range
-			let isValid = isFinite(codePoint) && Math.floor(codePoint) === codePoint &&
-				codePoint >= 0 && codePoint <= 0x10FFFF;
+			let isValid =
+				isFinite(codePoint) && Math.floor(codePoint) === codePoint && codePoint >= 0 && codePoint <= 0x10ffff;
 			if (!isValid) {
 				throw RangeError('string.fromCodePoint: Invalid code point ' + codePoint);
 			}
 
-			if (codePoint <= 0xFFFF) {
+			if (codePoint <= 0xffff) {
 				// BMP code point
 				codeUnits.push(codePoint);
-			}
-			else {
+			} else {
 				// Astral code point; split in surrogate halves
 				// https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
 				codePoint -= 0x10000;
 				let highSurrogate = (codePoint >> 10) + HIGH_SURROGATE_MIN;
-				let lowSurrogate = (codePoint % 0x400) + LOW_SURROGATE_MIN;
+				let lowSurrogate = codePoint % 0x400 + LOW_SURROGATE_MIN;
 				codeUnits.push(highSurrogate, lowSurrogate);
 			}
 
@@ -262,7 +265,7 @@ else {
 			endPosition = text.length;
 		}
 
-		[ text, search, endPosition ] = normalizeSubstringArgs('endsWith', text, search, endPosition, true);
+		[text, search, endPosition] = normalizeSubstringArgs('endsWith', text, search, endPosition, true);
 
 		const start = endPosition - search.length;
 		if (start < 0) {
@@ -273,7 +276,7 @@ else {
 	};
 
 	includes = function includes(text: string, search: string, position: number = 0): boolean {
-		[ text, search, position ] = normalizeSubstringArgs('includes', text, search, position);
+		[text, search, position] = normalizeSubstringArgs('includes', text, search, position);
 		return text.indexOf(search, position) !== -1;
 	};
 
@@ -304,7 +307,7 @@ else {
 
 	startsWith = function startsWith(text: string, search: string, position: number = 0): boolean {
 		search = String(search);
-		[ text, search, position ] = normalizeSubstringArgs('startsWith', text, search, position);
+		[text, search, position] = normalizeSubstringArgs('startsWith', text, search, position);
 
 		const end = position + search.length;
 		if (end > text.length) {
@@ -318,8 +321,7 @@ else {
 if (has('es2017-string')) {
 	padEnd = wrapNative(global.String.prototype.padEnd);
 	padStart = wrapNative(global.String.prototype.padStart);
-}
-else {
+} else {
 	padEnd = function padEnd(text: string, maxLength: number, fillString: string = ' '): string {
 		if (text === null || text === undefined) {
 			throw new TypeError('string.repeat requires a valid string.');
@@ -337,7 +339,9 @@ else {
 		const padding = maxLength - strText.length;
 
 		if (padding > 0) {
-			strText += repeat(fillString, Math.floor(padding / fillString.length)) + fillString.slice(0, padding % fillString.length);
+			strText +=
+				repeat(fillString, Math.floor(padding / fillString.length)) +
+				fillString.slice(0, padding % fillString.length);
 		}
 
 		return strText;
@@ -360,7 +364,10 @@ else {
 		const padding = maxLength - strText.length;
 
 		if (padding > 0) {
-			strText = repeat(fillString, Math.floor(padding / fillString.length)) + fillString.slice(0, padding % fillString.length) + strText;
+			strText =
+				repeat(fillString, Math.floor(padding / fillString.length)) +
+				fillString.slice(0, padding % fillString.length) +
+				strText;
 		}
 
 		return strText;

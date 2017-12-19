@@ -32,15 +32,15 @@ if (!has('es6-promise')) {
 	}
 
 	global.Promise = ShimPromise = class Promise<T> implements Thenable<T> {
-		static all(iterable: Iterable<(any | PromiseLike<any>)> | (any | PromiseLike<any>)[]): Promise<any> {
-			return new this(function (resolve, reject) {
+		static all(iterable: Iterable<any | PromiseLike<any>> | (any | PromiseLike<any>)[]): Promise<any> {
+			return new this(function(resolve, reject) {
 				const values: any[] = [];
 				let complete = 0;
 				let total = 0;
 				let populating = true;
 
 				function fulfill(index: number, value: any): void {
-					values[ index ] = value;
+					values[index] = value;
 					++complete;
 					finish();
 				}
@@ -58,8 +58,7 @@ if (!has('es6-promise')) {
 						// If an item Promise rejects, this Promise is immediately rejected with the item
 						// Promise's rejection error.
 						item.then(fulfill.bind(null, index), reject);
-					}
-					else {
+					} else {
 						Promise.resolve(item).then(fulfill.bind(null, index));
 					}
 				}
@@ -75,15 +74,14 @@ if (!has('es6-promise')) {
 			});
 		}
 
-		static race<T>(iterable: Iterable<(T | PromiseLike<T>)> | (T | PromiseLike<T>)[]): Promise<T[]> {
-			return new this(function (resolve: (value?: any) => void, reject) {
+		static race<T>(iterable: Iterable<T | PromiseLike<T>> | (T | PromiseLike<T>)[]): Promise<T[]> {
+			return new this(function(resolve: (value?: any) => void, reject) {
 				for (const item of iterable) {
 					if (item instanceof Promise) {
 						// If a Promise item rejects, this Promise is immediately rejected with the item
 						// Promise's rejection error.
 						item.then(resolve, reject);
-					}
-					else {
+					} else {
 						Promise.resolve(item).then(resolve);
 					}
 				}
@@ -91,16 +89,16 @@ if (!has('es6-promise')) {
 		}
 
 		static reject(reason?: any): Promise<never> {
-			return new this(function (resolve, reject) {
+			return new this(function(resolve, reject) {
 				reject(reason);
 			});
 		}
 
 		static resolve(): Promise<void>;
-		static resolve<T>(value: (T | PromiseLike<T>)): Promise<T>;
+		static resolve<T>(value: T | PromiseLike<T>): Promise<T>;
 		static resolve<T>(value?: any): Promise<T> {
-			return new this(function (resolve) {
-				resolve(<T> value);
+			return new this(function(resolve) {
+				resolve(<T>value);
 			});
 		}
 
@@ -140,7 +138,7 @@ if (!has('es6-promise')) {
 			 * Initially pushes callbacks onto a queue for execution once this promise settles. After the promise settles,
 			 * enqueues callbacks for execution on the next event loop turn.
 			 */
-			let whenFinished = function (callback: () => void): void {
+			let whenFinished = function(callback: () => void): void {
 				if (callbacks) {
 					callbacks.push(callback);
 				}
@@ -165,11 +163,11 @@ if (!has('es6-promise')) {
 				// Only enqueue a callback runner if there are callbacks so that initially fulfilled Promises don't have to
 				// wait an extra turn.
 				if (callbacks && callbacks.length > 0) {
-					queueMicroTask(function (): void {
+					queueMicroTask(function(): void {
 						if (callbacks) {
 							let count = callbacks.length;
 							for (let i = 0; i < count; ++i) {
-								callbacks[ i ].call(null);
+								callbacks[i].call(null);
 							}
 							callbacks = null;
 						}
@@ -189,38 +187,34 @@ if (!has('es6-promise')) {
 				}
 
 				if (isThenable(value)) {
-					value.then(
-						settle.bind(null, State.Fulfilled),
-						settle.bind(null, State.Rejected)
-					);
+					value.then(settle.bind(null, State.Fulfilled), settle.bind(null, State.Rejected));
 					isChained = true;
-				}
-				else {
+				} else {
 					settle(newState, value);
 				}
 			};
 
-			this.then = <TResult1 = T, TResult2 = never>(onFulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-					onRejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2> => {
+			this.then = <TResult1 = T, TResult2 = never>(
+				onFulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+				onRejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
+			): Promise<TResult1 | TResult2> => {
 				return new Promise((resolve, reject) => {
 					// whenFinished initially queues up callbacks for execution after the promise has settled. Once the
 					// promise has settled, whenFinished will schedule callbacks for execution on the next turn through the
 					// event loop.
 					whenFinished(() => {
-						const callback: ((value?: any) => any) | undefined | null = this.state === State.Rejected ? onRejected : onFulfilled;
+						const callback: ((value?: any) => any) | undefined | null =
+							this.state === State.Rejected ? onRejected : onFulfilled;
 
 						if (typeof callback === 'function') {
 							try {
 								resolve(callback(this.resolvedValue));
-							}
-							catch (error) {
+							} catch (error) {
 								reject(error);
 							}
-						}
-						else if (this.state === State.Rejected) {
+						} else if (this.state === State.Rejected) {
 							reject(this.resolvedValue);
-						}
-						else {
+						} else {
 							resolve(this.resolvedValue);
 						}
 					});
@@ -228,17 +222,15 @@ if (!has('es6-promise')) {
 			};
 
 			try {
-				executor(
-					resolve.bind(null, State.Fulfilled),
-					resolve.bind(null, State.Rejected)
-				);
-			}
-			catch (error) {
+				executor(resolve.bind(null, State.Fulfilled), resolve.bind(null, State.Rejected));
+			} catch (error) {
 				settle(State.Rejected, error);
 			}
 		}
 
-		catch<TResult = never>(onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult> {
+		catch<TResult = never>(
+			onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null
+		): Promise<T | TResult> {
 			return this.then(undefined, onRejected);
 		}
 
@@ -254,7 +246,10 @@ if (!has('es6-promise')) {
 		 */
 		private resolvedValue: any;
 
-		then: <TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null) => Promise<TResult1 | TResult2>;
+		then: <TResult1 = T, TResult2 = never>(
+			onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+			onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
+		) => Promise<TResult1 | TResult2>;
 
 		[Symbol.toStringTag]: 'Promise' = 'Promise';
 	};

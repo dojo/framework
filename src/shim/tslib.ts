@@ -4,8 +4,9 @@ import * as tslib from 'tslib';
 /**
  * Provide any overrides and then load the TypeScript helpers.
  */
-(<any> tslib).__values = global.__values = function (o: any) {
-	let m = typeof Symbol === 'function' && o[ Symbol.iterator ], i = 0;
+(<any>tslib).__values = global.__values = function(o: any) {
+	let m = typeof Symbol === 'function' && o[Symbol.iterator],
+		i = 0;
 	if (m) {
 		return m.call(o);
 	}
@@ -14,16 +15,16 @@ import * as tslib from 'tslib';
 		const l = o.length;
 
 		return {
-			next: function () {
+			next: function() {
 				if (i >= l) {
 					return { done: true };
 				}
 
-				let char = o[ i++ ];
+				let char = o[i++];
 				if (i < l) {
 					let code = char.charCodeAt(0);
-					if ((code >= 0xD800) && (code <= 0xDBFF)) {
-						char += o[ i++ ];
+					if (code >= 0xd800 && code <= 0xdbff) {
+						char += o[i++];
 					}
 				}
 
@@ -33,11 +34,11 @@ import * as tslib from 'tslib';
 	}
 
 	return {
-		next: function () {
+		next: function() {
 			if (o && i >= o.length) {
 				o = void 0;
 			}
-			return { value: o && o[ i++ ], done: !o };
+			return { value: o && o[i++], done: !o };
 		}
 	};
 };

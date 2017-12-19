@@ -83,7 +83,7 @@ if (!has('es6-weakmap')) {
 		return Math.floor(Math.random() * 100000000);
 	};
 
-	const generateName = (function () {
+	const generateName = (function() {
 		let startId = Math.floor(Date.now() % 100000000);
 
 		return function generateName(): string {
@@ -108,9 +108,8 @@ if (!has('es6-weakmap')) {
 						const item = iterable[i];
 						this.set(item[0], item[1]);
 					}
-				}
-				else {
-					for (const [ key, value ] of iterable) {
+				} else {
+					for (const [key, value] of iterable) {
 						this.set(key, value);
 					}
 				}
@@ -193,8 +192,7 @@ if (!has('es6-weakmap')) {
 
 				if (Object.isFrozen(key)) {
 					this._frozenEntries.push(entry);
-				}
-				else {
+				} else {
 					Object.defineProperty(key, this._name, {
 						value: entry
 					});

@@ -3,9 +3,13 @@ const { assert } = intern.getPlugin('chai');
 import pollUntil from '@theintern/leadfoot/helpers/pollUntil';
 
 registerSuite('asyncAwait', () => {
-	const poller = pollUntil<number>(function () {
-		return (<any> window).callbackValue;
-	}, undefined, 5000);
+	const poller = pollUntil<number>(
+		function() {
+			return (<any>window).callbackValue;
+		},
+		undefined,
+		5000
+	);
 
 	return {
 		async 'Async/Await with Bluebird'() {

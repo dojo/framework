@@ -17,15 +17,4 @@ import './Promise';
 `!has('es6-symbol')`;
 import './Symbol';
 
-export {
-	array,
-	iterator,
-	Map,
-	math,
-	number,
-	object,
-	Set,
-	string,
-	Symbol,
-	WeakMap
-};
+export { array, iterator, Map, math, number, object, Set, string, Symbol, WeakMap };
