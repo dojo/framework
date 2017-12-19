@@ -11,6 +11,7 @@
 		],
 		"module": "umd",
 		"moduleResolution": "node",
+		"noUnusedLocals": true,
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,

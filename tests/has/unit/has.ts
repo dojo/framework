@@ -11,17 +11,15 @@ import has, {
 	load as hasLoad
 } from '../../src/has';
 
-const globalScope: any = (function (): any {
+const globalScope: any = (function(): any {
 	/* istanbul ignore else */
 	if (typeof window !== 'undefined') {
 		// Browsers
 		return window;
-	}
-	else if (typeof global !== 'undefined') {
+	} else if (typeof global !== 'undefined') {
 		// Node
 		return global;
-	}
-	else if (typeof self !== 'undefined') {
+	} else if (typeof self !== 'undefined') {
 		// Web workers
 		return self;
 	}
@@ -29,29 +27,29 @@ const globalScope: any = (function (): any {
 	return {};
 })();
 
-let alreadyCached: { [ feature: string ]: boolean };
-let alreadyTest: { [ feature: string ]: boolean };
-const feature = 'feature';  // default feature name for lazy devs
+let alreadyCached: { [feature: string]: boolean };
+let alreadyTest: { [feature: string]: boolean };
+const feature = 'feature'; // default feature name for lazy devs
 
 const normalize: (id: string) => string = (require as any).toAbsMid || ((id: string) => id);
-const undef: (id: string) => void = has('host-node') ?
-	(id: string) => {
-		const path = require('path');
-		delete require.cache[path.resolve(__dirname, id) + '.js'];
-	} :
-	(id: string) => {
-		(require as any).undef((require as any).toAbsMid(id));
-	};
+const undef: (id: string) => void = has('host-node')
+	? (id: string) => {
+			const path = require('path');
+			delete require.cache[path.resolve(__dirname, id) + '.js'];
+		}
+	: (id: string) => {
+			(require as any).undef((require as any).toAbsMid(id));
+		};
 
 registerSuite('has', {
 	before() {
 		alreadyCached = {};
-		Object.keys(hasCache).forEach(function (key) {
+		Object.keys(hasCache).forEach(function(key) {
 			alreadyCached[key] = true;
 		});
 
 		alreadyTest = {};
-		Object.keys(hasTestFunctions).forEach(function (key) {
+		Object.keys(hasTestFunctions).forEach(function(key) {
 			alreadyTest[key] = true;
 		});
 	},
@@ -78,13 +76,17 @@ registerSuite('has', {
 				assert.isFalse(hasCache['def']);
 
 				delete hasCache['abc'];
-				assert.throws(() => {
-					has('abc');
-				}, TypeError, 'Attempt to detect unregistered has feature');
+				assert.throws(
+					() => {
+						has('abc');
+					},
+					TypeError,
+					'Attempt to detect unregistered has feature'
+				);
 			},
 
 			'deferred feature test should not populate cache until evaluated'() {
-				hasAdd('deferred-cache', function () {
+				hasAdd('deferred-cache', function() {
 					return true;
 				});
 				assert.notProperty(hasCache, 'deferred-cache');
@@ -122,18 +124,20 @@ registerSuite('has', {
 				let answer = 42;
 
 				hasAdd('answer', answer);
-				assert.strictEqual(has('answer'), answer,
-					'has feature should report original uncoerced value');
+				assert.strictEqual(has('answer'), answer, 'has feature should report original uncoerced value');
 
-				hasAdd('answer-function', function () {
+				hasAdd('answer-function', function() {
 					return answer;
 				});
-				assert.strictEqual(has('answer-function'), answer,
-					'deferred has feature test should report uncoerced value');
+				assert.strictEqual(
+					has('answer-function'),
+					answer,
+					'deferred has feature test should report uncoerced value'
+				);
 			},
 
 			'null test should not throw'() {
-				assert.doesNotThrow(function () {
+				assert.doesNotThrow(function() {
 					hasAdd('baz', null as any);
 				}, TypeError);
 			},
@@ -145,9 +149,13 @@ registerSuite('has', {
 
 			'feature is already defined; throws'() {
 				hasAdd(feature, true);
-				assert.throws(() => {
-					hasAdd(feature, false);
-				}, TypeError, 'exists and overwrite not true');
+				assert.throws(
+					() => {
+						hasAdd(feature, false);
+					},
+					TypeError,
+					'exists and overwrite not true'
+				);
 			},
 
 			'works with thenable'() {
@@ -166,9 +174,12 @@ registerSuite('has', {
 				hasAdd('thenable', thenable);
 				assert.isFalse(has('thenable'));
 
-				setTimeout(dfd.callback(() => {
-					assert.equal(has('thenable'), 5);
-				}), 100);
+				setTimeout(
+					dfd.callback(() => {
+						assert.equal(has('thenable'), 5);
+					}),
+					100
+				);
 			},
 
 			'failed thenable removes itself from cache'() {
@@ -187,11 +198,14 @@ registerSuite('has', {
 				hasAdd('thenable', thenable);
 				assert.isFalse(has('thenable'));
 
-				setTimeout(dfd.callback(() => {
-					assert.throws(() => {
-						has('thenable');
-					});
-				}), 100);
+				setTimeout(
+					dfd.callback(() => {
+						assert.throws(() => {
+							has('thenable');
+						});
+					}),
+					100
+				);
 			},
 
 			overwrite: {
@@ -261,9 +275,12 @@ registerSuite('has', {
 				hasAdd('thenable', thenable);
 				assert.isFalse(hasExists('thenable'));
 
-				setTimeout(dfd.callback(() => {
-					assert.isTrue(hasExists('thenable'));
-				}), 100);
+				setTimeout(
+					dfd.callback(() => {
+						assert.isTrue(hasExists('thenable'));
+					}),
+					100
+				);
 			},
 
 			'case should not matter'() {
@@ -361,17 +378,23 @@ registerSuite('has', {
 		},
 
 		'built in feature flags': {
-			'debug'() {
+			debug() {
 				assert.isTrue(hasExists('debug'));
 				assert.isTrue(has('debug'), 'Debug should default to true');
 			},
 			'host-browser'() {
 				assert.isTrue(hasExists('host-browser'));
-				assert.strictEqual(has('host-browser'), typeof document !== 'undefined' && typeof location !== 'undefined');
+				assert.strictEqual(
+					has('host-browser'),
+					typeof document !== 'undefined' && typeof location !== 'undefined'
+				);
 			},
 			'host-node'() {
 				assert.isTrue(hasExists('host-node'));
-				assert.strictEqual(has('host-node'), (typeof process === 'object' && process.versions && process.versions.node) || undefined);
+				assert.strictEqual(
+					has('host-node'),
+					(typeof process === 'object' && process.versions && process.versions.node) || undefined
+				);
 			}
 		},
 
@@ -381,40 +404,44 @@ registerSuite('has', {
 				undef('../../src/has');
 				globalScope.DojoHasEnvironment = {
 					staticFeatures: {
-						'foo': 1,
-						'bar': 'bar',
-						'baz': false
+						foo: 1,
+						bar: 'bar',
+						baz: false
 					}
 				};
 				// tslint:disable-next-line
-				import('../../src/has').then(dfd.callback((mod: { default: typeof has }) => {
-					const h = mod.default;
-					assert(!('DojoHasEnvironment' in globalScope));
-					assert.strictEqual(h('foo'), 1);
-					assert.strictEqual(h('bar'), 'bar');
-					assert.isFalse(h('baz'));
-				}));
+				import('../../src/has').then(
+					dfd.callback((mod: { default: typeof has }) => {
+						const h = mod.default;
+						assert(!('DojoHasEnvironment' in globalScope));
+						assert.strictEqual(h('foo'), 1);
+						assert.strictEqual(h('bar'), 'bar');
+						assert.isFalse(h('baz'));
+					})
+				);
 			},
 			'staticFeatures function'() {
 				const dfd = this.async();
 				undef('../../src/has');
 				globalScope.DojoHasEnvironment = {
-					staticFeatures: function () {
+					staticFeatures: function() {
 						return {
-							'foo': 1,
-							'bar': 'bar',
-							'baz': false
+							foo: 1,
+							bar: 'bar',
+							baz: false
 						};
 					}
 				};
 				// tslint:disable-next-line
-				import('../../src/has').then(dfd.callback((mod: { default: typeof has }) => {
-					const h = mod.default;
-					assert(!('DojoHasEnvironment' in globalScope));
-					assert.strictEqual(h('foo'), 1);
-					assert.strictEqual(h('bar'), 'bar');
-					assert.isFalse(h('baz'));
-				}));
+				import('../../src/has').then(
+					dfd.callback((mod: { default: typeof has }) => {
+						const h = mod.default;
+						assert(!('DojoHasEnvironment' in globalScope));
+						assert.strictEqual(h('foo'), 1);
+						assert.strictEqual(h('bar'), 'bar');
+						assert.isFalse(h('baz'));
+					})
+				);
 			},
 			'can override run-time defined features'() {
 				const dfd = this.async();
@@ -425,13 +452,15 @@ registerSuite('has', {
 					}
 				};
 				// tslint:disable-next-line
-				import('../../src/has').then(dfd.callback((mod: { default: typeof has, add: typeof hasAdd }) => {
-					const h = mod.default;
-					const hAdd = mod.add;
-					assert.isFalse(h('debug'), 'Static features override "add()"');
-					hAdd('debug', true, true);
-					assert.isFalse(h('debug'), 'Static features cannot be overwritten');
-				}));
+				import('../../src/has').then(
+					dfd.callback((mod: { default: typeof has; add: typeof hasAdd }) => {
+						const h = mod.default;
+						const hAdd = mod.add;
+						assert.isFalse(h('debug'), 'Static features override "add()"');
+						hAdd('debug', true, true);
+						assert.isFalse(h('debug'), 'Static features cannot be overwritten');
+					})
+				);
 			}
 		}
 	}

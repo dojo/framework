@@ -33,7 +33,7 @@ export const testFunctions: { [feature: string]: FeatureTest } = {};
 const testThenables: { [feature: string]: FeatureTestThenable } = {};
 
 export interface StaticHasFeatures {
-	[ feature: string ]: FeatureTestResult;
+	[feature: string]: FeatureTestResult;
 }
 
 export interface DojoHasEnvironment {
@@ -57,17 +57,15 @@ declare global {
 /**
  * A reference to the global scope (`window` in a browser, `global` in NodeJS)
  */
-const globalScope = (function (): any {
+const globalScope = (function(): any {
 	/* istanbul ignore else */
 	if (typeof window !== 'undefined') {
 		// Browsers
 		return window;
-	}
-	else if (typeof global !== 'undefined') {
+	} else if (typeof global !== 'undefined') {
 		// Node
 		return global;
-	}
-	else if (typeof self !== 'undefined') {
+	} else if (typeof self !== 'undefined') {
 		// Web workers
 		return self;
 	}
@@ -98,9 +96,7 @@ function isStaticFeatureFunction(value: any): value is (() => StaticHasFeatures)
  * module loaded
  */
 const staticCache: StaticHasFeatures = staticFeatures
-	? isStaticFeatureFunction(staticFeatures)
-		? staticFeatures.apply(globalScope)
-		: staticFeatures
+	? isStaticFeatureFunction(staticFeatures) ? staticFeatures.apply(globalScope) : staticFeatures
 	: {}; /* Providing an empty cache, if none was in the environment
 
 /**
@@ -114,7 +110,7 @@ const staticCache: StaticHasFeatures = staticFeatures
  * @param load Callback to loader that consumes result of plugin demand.
  */
 export function load(resourceId: string, require: Require, load: (value?: any) => void, config?: Config): void {
-	resourceId ? require([ resourceId ], load) : load();
+	resourceId ? require([resourceId], load) : load();
 }
 
 /**
@@ -135,15 +131,13 @@ export function normalize(resourceId: string, normalize: (moduleId: string) => s
 		if (term === ':') {
 			// empty string module name, resolves to null
 			return null;
-		}
-		else {
+		} else {
 			// postfixed with a ? means it is a feature to branch on, the term is the name of the feature
 			if (tokens[i++] === '?') {
 				if (!skip && has(term)) {
 					// matched the feature, get the first value from the options
 					return get();
-				}
-				else {
+				} else {
 					// did not match, get the second value, passing over the first
 					get(true);
 					return get(skip);
@@ -167,7 +161,9 @@ export function normalize(resourceId: string, normalize: (moduleId: string) => s
 export function exists(feature: string): boolean {
 	const normalizedFeature = feature.toLowerCase();
 
-	return Boolean(normalizedFeature in staticCache || normalizedFeature in testCache || testFunctions[normalizedFeature]);
+	return Boolean(
+		normalizedFeature in staticCache || normalizedFeature in testCache || testFunctions[normalizedFeature]
+	);
 }
 
 /**
@@ -185,7 +181,11 @@ export function exists(feature: string): boolean {
  * @param value the value reported of the feature, or a function that will be executed once on first test
  * @param overwrite if an existing value should be overwritten. Defaults to false.
  */
-export function add(feature: string, value: FeatureTest | FeatureTestResult | FeatureTestThenable, overwrite: boolean = false): void {
+export function add(
+	feature: string,
+	value: FeatureTest | FeatureTestResult | FeatureTestThenable,
+	overwrite: boolean = false
+): void {
 	const normalizedFeature = feature.toLowerCase();
 
 	if (exists(normalizedFeature) && !overwrite && !(normalizedFeature in staticCache)) {
@@ -194,16 +194,17 @@ export function add(feature: string, value: FeatureTest | FeatureTestResult | Fe
 
 	if (typeof value === 'function') {
 		testFunctions[normalizedFeature] = value;
-	}
-	else if (isFeatureTestThenable(value)) {
-		testThenables[ feature ] = value.then((resolvedValue: FeatureTestResult) => {
-			testCache [ feature ] = resolvedValue;
-			delete testThenables [ feature ];
-		}, () => {
-			delete testThenables [ feature ];
-		});
-	}
-	else {
+	} else if (isFeatureTestThenable(value)) {
+		testThenables[feature] = value.then(
+			(resolvedValue: FeatureTestResult) => {
+				testCache[feature] = resolvedValue;
+				delete testThenables[feature];
+			},
+			() => {
+				delete testThenables[feature];
+			}
+		);
+	} else {
 		testCache[normalizedFeature] = value;
 		delete testFunctions[normalizedFeature];
 	}
@@ -221,18 +222,14 @@ export default function has(feature: string): FeatureTestResult {
 
 	if (normalizedFeature in staticCache) {
 		result = staticCache[normalizedFeature];
-	}
-	else if (testFunctions[normalizedFeature]) {
+	} else if (testFunctions[normalizedFeature]) {
 		result = testCache[normalizedFeature] = testFunctions[normalizedFeature].call(null);
 		delete testFunctions[normalizedFeature];
-	}
-	else if (normalizedFeature in testCache) {
+	} else if (normalizedFeature in testCache) {
 		result = testCache[normalizedFeature];
-	}
-	else if (feature in testThenables) {
+	} else if (feature in testThenables) {
 		return false;
-	}
-	else {
+	} else {
 		throw new TypeError(`Attempt to detect unregistered has feature "${feature}"`);
 	}
 
@@ -252,7 +249,7 @@ add('debug', true);
 add('host-browser', typeof document !== 'undefined' && typeof location !== 'undefined');
 
 /* Detects if the environment appears to be NodeJS */
-add('host-node', function () {
+add('host-node', function() {
 	if (typeof process === 'object' && process.versions && process.versions.node) {
 		return process.versions.node;
 	}

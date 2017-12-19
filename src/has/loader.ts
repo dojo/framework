@@ -2,20 +2,20 @@ export interface Config {
 	baseUrl?: string;
 	map?: ModuleMap;
 	packages?: Package[];
-	paths?: { [ path: string ]: string; };
-	pkgs?: { [ path: string ]: Package; };
+	paths?: { [path: string]: string };
+	pkgs?: { [path: string]: Package };
 }
 
 export interface ModuleMap extends ModuleMapItem {
-	[ sourceMid: string ]: ModuleMapReplacement;
+	[sourceMid: string]: ModuleMapReplacement;
 }
 
 export interface ModuleMapItem {
-	[ mid: string ]: any;
+	[mid: string]: any;
 }
 
 export interface ModuleMapReplacement extends ModuleMapItem {
-	[ findMid: string ]: string;
+	[findMid: string]: string;
 }
 
 export interface Package {
@@ -34,8 +34,12 @@ export interface Require {
 
 export interface Has {
 	(name: string): any;
-	add(name: string, value: (global: Window, document?: HTMLDocument, element?: HTMLDivElement) => any,
-		now?: boolean, force?: boolean): void;
+	add(
+		name: string,
+		value: (global: Window, document?: HTMLDocument, element?: HTMLDivElement) => any,
+		now?: boolean,
+		force?: boolean
+	): void;
 	add(name: string, value: any, now?: boolean, force?: boolean): void;
 }
 
