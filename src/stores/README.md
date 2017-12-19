@@ -195,7 +195,26 @@ Additionally, this means that there is no need to coordinate `actions` and `redu
 
 ### Subscribing to store changes
 
-In order to be notified when changes occur within the store's state, simply register to the stores `.on()` for a type of `invalidate` passing the function to be called.
+To be notified of changes in the store, use the `onChange()` function, which takes a `path` or an array of `path`'s and a callback for when that portion of state changes, for example:
+
+```ts
+store.onChange(store.path('foo', 'bar'), () => {
+	// do something when the state at foo/bar has been updated.
+});
+```
+
+or
+
+```ts
+store.onChange([
+	store.path('foo', 'bar'),
+	store.path('baz')
+], () => {
+	// do something when the state at /foo/bar or /baz has been updated.
+});
+```
+
+In order to be notified when any changes occur within the store's state, simply register to the stores `.on()` for a type of `invalidate` passing the function to be called.
 
 ```ts
 store.on('invalidate', () => {

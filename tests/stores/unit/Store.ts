@@ -23,11 +23,73 @@ describe('store',  () => {
 	it('apply/get', () => {
 		const undo = store.apply(testPatchOperations);
 
-				assert.strictEqual(store.get(store.path('test')), 'test');
-				assert.deepEqual(undo, [
-					{ op: OperationType.TEST, path: new Pointer('/test'), value: 'test' },
-					{ op: OperationType.REMOVE, path: new Pointer('/test') }
-				]);
+		assert.strictEqual(store.get(store.path('test')), 'test');
+		assert.deepEqual(undo, [
+			{ op: OperationType.TEST, path: new Pointer('/test'), value: 'test' },
+			{ op: OperationType.REMOVE, path: new Pointer('/test') }
+		]);
+	});
+
+	it('should allow paths to be registered to an onChange', () => {
+		let first = 0;
+		let second = 0;
+
+		const { onChange, path, apply } = store;
+
+		onChange(path('foo', 'bar'), () => first += 1);
+
+		onChange([
+			path('foo', 'bar'),
+			path('baz')
+		], () => second += 1);
+
+		apply([
+			{ op: OperationType.ADD, path: new Pointer('/foo/bar'), value: 'test' },
+			{ op: OperationType.ADD, path: new Pointer('/baz'), value: 'hello' }
+		], true);
+
+		assert.strictEqual(first, 1);
+		assert.strictEqual(second, 1);
+
+		apply([
+			{ op: OperationType.ADD, path: new Pointer('/foo/bar'), value: 'test' },
+			{ op: OperationType.ADD, path: new Pointer('/baz'), value: 'world' }
+		], true);
+
+		assert.strictEqual(first, 1);
+		assert.strictEqual(second, 2);
+	});
+
+	it('can remove a registered onChange', () => {
+		let first = 0;
+		let second = 0;
+
+		const { onChange, path, apply } = store;
+
+		const { remove } = onChange(path('foo', 'bar'), () => first += 1);
+
+		onChange([
+			path('foo', 'bar'),
+			path('baz')
+		], () => second += 1);
+
+		apply([
+			{ op: OperationType.ADD, path: new Pointer('/foo/bar'), value: 'test' },
+			{ op: OperationType.ADD, path: new Pointer('/baz'), value: 'hello' }
+		], true);
+
+		assert.strictEqual(first, 1);
+		assert.strictEqual(second, 1);
+
+		remove();
+
+		apply([
+			{ op: OperationType.ADD, path: new Pointer('/foo/bar'), value: 'test2' },
+			{ op: OperationType.ADD, path: new Pointer('/baz'), value: 'hello2' }
+		], true);
+
+		assert.strictEqual(first, 1);
+		assert.strictEqual(second, 2);
 	});
 
 	it('invalidate', () => {
