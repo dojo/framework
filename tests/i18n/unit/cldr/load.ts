@@ -1,20 +1,11 @@
-import has from '@dojo/has/has';
-
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import * as sinon from 'sinon';
-import loadCldrData, {
+import baseLoad, {
 	isLoaded,
 	mainPackages,
 	reset,
 	supplementalPackages
 } from '../../../src/cldr/load';
-import {
-	isLoaded as utilIsLoaded,
-	mainPackages as utilMainPackages,
-	reset as utilReset,
-	supplementalPackages as utilSupplementalPackages
-} from '../../../src/cldr/load/default';
 
 registerSuite('cldr/load', {
 
@@ -24,52 +15,130 @@ registerSuite('cldr/load', {
 
 	tests: {
 
-		api() {
-			assert.strictEqual(isLoaded, utilIsLoaded, 'isLoaded should be re-exported');
-			assert.strictEqual(mainPackages, utilMainPackages, 'mainPackages should be re-exported');
-			assert.strictEqual(reset, utilReset, 'reset should be re-exported');
-			assert.strictEqual(supplementalPackages, utilSupplementalPackages, 'supplementalPackages should be re-exported');
+		mainPackages() {
+			assert.isTrue(Object.isFrozen(mainPackages), 'Should be frozen.');
+			assert.sameMembers(mainPackages as any[], [
+				'dates/calendars/gregorian',
+				'dates/fields',
+				'dates/timeZoneNames',
+				'numbers',
+				'numbers/currencies',
+				'units'
+			]);
 		},
 
-		loadCldrData: {
-			'with a list of data URLs'() {
-				assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
+		supplementalPackages() {
+			assert.isTrue(Object.isFrozen(supplementalPackages), 'Should be frozen.');
+			assert.sameMembers(supplementalPackages as any[], [
+				'currencyData',
+				'likelySubtags',
+				'numberingSystems',
+				'plurals-type-cardinal',
+				'plurals-type-ordinal',
+				'timeData',
+				'weekData'
+			]);
+		},
 
-				return loadCldrData([ 'cldr-data/supplemental/likelySubtags.json' ]).then(() => {
-					assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
-				});
+		isLoaded: {
+			'with an unloaded package'() {
+				assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
+				assert.isFalse(isLoaded('main', 'en'));
 			},
 
-			'with a CLDR data object'() {
-				assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
+			'with loaded pacakges'() {
+				baseLoad({
+					main: {
+						zh: {
+							numbers: {}
+						}
+					},
 
-				return loadCldrData({
 					supplemental: {
 						likelySubtags: {}
 					}
-				}).then(() => {
-					assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
+				});
+
+				assert.isTrue(isLoaded('main'));
+				assert.isTrue(isLoaded('supplemental'));
+				assert.isTrue(isLoaded('main', 'zh'));
+				assert.isTrue(isLoaded('main', 'zh-MO'));
+				assert.isTrue(isLoaded('main', 'zh', 'numbers'));
+				assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
+			},
+
+			'with unknown packages'() {
+				baseLoad({
+					main: {
+						arbitrary: {}
+					},
+					supplemental: {
+						arbitrary: {}
+					}
+				});
+
+				assert.isFalse(isLoaded('main', 'arbitrary'), 'Unknown locale packages are ignored.');
+				assert.isFalse(isLoaded('supplemental', 'arbitrary'), 'Unknown supplemental packages are ignored.');
+			}
+		},
+
+		baseLoad() {
+			assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
+
+			baseLoad({
+				supplemental: {
+					likelySubtags: {}
+				}
+			});
+
+			assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
+		},
+
+		reset: {
+			beforeEach() {
+				baseLoad({
+					main: {
+						zh: {
+							numbers: {}
+						}
+					},
+
+					supplemental: {
+						likelySubtags: {}
+					}
 				});
 			},
 
-			'with a require function'() {
-				assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
+			tests: {
 
-				const path = 'cldr-data/supplemental/likelySubtags.json';
+				'main only'() {
+					reset('main');
 
-				if (has('host-browser')) {
-					sinon.spy(require, 'toUrl');
+					assert.isFalse(isLoaded('main', 'zh'), '"main" data should be cleared.');
+					assert.isFalse(isLoaded('main', 'zh-MO'), '"main" data should be cleared.');
+					assert.isFalse(isLoaded('main', 'zh', 'numbers'), '"main" data should be cleared.');
+
+					assert.isTrue(isLoaded('supplemental', 'likelySubtags'), '"supplemental" data should not be cleared.');
+				},
+
+				'supplemental only'() {
+					reset('supplemental');
+
+					assert.isTrue(isLoaded('main', 'zh'));
+					assert.isTrue(isLoaded('main', 'zh-MO'));
+					assert.isTrue(isLoaded('main', 'zh', 'numbers'));
+
+					assert.isFalse(isLoaded('supplemental', 'likelySubtags'), '"supplemental" data should be cleared.');
+				},
+
+				'both main and supplmental'() {
+					reset();
+
+					assert.isFalse(isLoaded('main', 'zh'));
+					assert.isFalse(isLoaded('main', 'zh-MO'));
+					assert.isFalse(isLoaded('main', 'zh', 'numbers'));
+					assert.isFalse(isLoaded('supplemental', 'likelySubtags'));
 				}
-
-				return loadCldrData(require, [ path ]).then(() => {
-					if (has('host-browser')) {
-						assert.isTrue((<any> require).toUrl.calledWith(path));
-						(<any> require).toUrl.restore();
-					}
-					assert.isTrue(isLoaded('supplemental', 'likelySubtags'));
-				}, () => {
-					has('host-browser') && (<any> require).toUrl.restore();
-				});
 			}
 		}
 	}

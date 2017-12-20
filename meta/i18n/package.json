@@ -34,7 +34,7 @@
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
     "@types/sinon": "^1.16.31",
-    "cldr-data": "~31.0.2",
+    "cldr-data": "~32.0.0",
     "grunt": "^1.0.1",
     "grunt-dojo2": "latest",
     "intern": "~4.1.0",

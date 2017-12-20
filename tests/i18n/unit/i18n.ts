@@ -63,26 +63,26 @@ registerSuite('i18n', {
 				},
 
 				after() {
-					return <Promise<void>> fetchCldrData([ 'en', 'fr' ]);
+					return fetchCldrData([ 'en', 'fr' ]);
 				},
 
 				tests: {
 					'assert without loaded messages'() {
 						assert.throws(() => {
-							formatMessage('path/to/make-believe', 'messageKey');
-						}, Error, 'The bundle "path/to/make-believe" has not been registered.');
+							formatMessage({ messages: {} }, 'messageKey');
+						}, Error, 'The bundle has not been registered.');
 					},
 
 					'assert tokens replaced'() {
 						return i18n(partyBundle).then(() => {
-							const formatted = formatMessage(partyBundle.bundlePath, 'simpleGuestInfo', {
+							const formatted = formatMessage(partyBundle, 'simpleGuestInfo', {
 								host: 'Nita',
 								guest: 'Bryan'
 							});
 							assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
 
 							assert.throws(() => {
-								formatMessage(partyBundle.bundlePath, 'simpleGuestInfo', {
+								formatMessage(partyBundle, 'simpleGuestInfo', {
 									host: 'Nita'
 								});
 							}, Error, 'Missing property guest');
@@ -91,7 +91,7 @@ registerSuite('i18n', {
 
 					'assert message without tokens'() {
 						return i18n(bundle).then(() => {
-							const formatted = formatMessage(bundle.bundlePath, 'hello');
+							const formatted = formatMessage(bundle, 'hello');
 							assert.strictEqual(formatted, 'Hello');
 						});
 					},
@@ -99,7 +99,7 @@ registerSuite('i18n', {
 					'assert default locale used'() {
 						switchLocale('ar');
 						return i18n(bundle, 'ar').then(() => {
-							const formatted = formatMessage(bundle.bundlePath, 'hello');
+							const formatted = formatMessage(bundle, 'hello');
 							assert.strictEqual(formatted, 'السلام عليكم');
 						});
 					}
@@ -109,13 +109,13 @@ registerSuite('i18n', {
 			'with CLDR data': {
 				'assert without a locale'() {
 					return i18n(partyBundle).then(() => {
-						let formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+						let formatted = formatMessage(partyBundle, 'guestInfo', {
 							host: 'Nita',
 							guestCount: 0
 						});
 						assert.strictEqual(formatted, 'Nita does not host a party.');
 
-						formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+						formatted = formatMessage(partyBundle, 'guestInfo', {
 							host: 'Nita',
 							gender: 'female',
 							guestCount: 1,
@@ -123,7 +123,7 @@ registerSuite('i18n', {
 						});
 						assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
 
-						formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+						formatted = formatMessage(partyBundle, 'guestInfo', {
 							host: 'Nita',
 							gender: 'female',
 							guestCount: 2,
@@ -131,7 +131,7 @@ registerSuite('i18n', {
 						});
 						assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
 
-						formatted = formatMessage(partyBundle.bundlePath, 'guestInfo', {
+						formatted = formatMessage(partyBundle, 'guestInfo', {
 							host: 'Nita',
 							gender: 'female',
 							guestCount: 42,
@@ -143,13 +143,13 @@ registerSuite('i18n', {
 
 				'assert supported locale'() {
 					return i18n(bundle, 'ar').then(() => {
-						assert.strictEqual(formatMessage(bundle.bundlePath, 'hello', {}, 'ar'), 'السلام عليكم');
+						assert.strictEqual(formatMessage(bundle, 'hello', {}, 'ar'), 'السلام عليكم');
 					});
 				},
 
 				'assert unsupported locale'() {
 					return i18n(bundle, 'fr').then(() => {
-						assert.strictEqual(formatMessage(bundle.bundlePath, 'hello', {}, 'fr'), 'Hello');
+						assert.strictEqual(formatMessage(bundle, 'hello', {}, 'fr'), 'Hello');
 					});
 				}
 			}
@@ -206,13 +206,13 @@ registerSuite('i18n', {
 				tests: {
 					'assert without loaded messages'() {
 						assert.throws(() => {
-							getMessageFormatter('path/to/make-believe', 'messageKey')();
-						}, Error, 'The bundle "path/to/make-believe" has not been registered.');
+							getMessageFormatter({ messages: {} }, 'messageKey')();
+						}, Error, 'The bundle has not been registered.');
 					},
 
 					'assert tokens replaced'() {
 						return i18n(partyBundle).then(() => {
-							const formatter = getMessageFormatter(partyBundle.bundlePath, 'simpleGuestInfo');
+							const formatter = getMessageFormatter(partyBundle, 'simpleGuestInfo');
 							const formatted = formatter({
 								host: 'Nita',
 								guest: 'Bryan'
@@ -229,7 +229,7 @@ registerSuite('i18n', {
 
 					'assert message without tokens'() {
 						return i18n(bundle).then(() => {
-							const formatter = getMessageFormatter(bundle.bundlePath, 'hello');
+							const formatter = getMessageFormatter(bundle, 'hello');
 							assert.strictEqual(formatter(), 'Hello');
 						});
 					}
@@ -239,7 +239,7 @@ registerSuite('i18n', {
 			'with CLDR data': {
 				'assert without a locale'() {
 					return i18n(partyBundle).then(() => {
-						const formatter = getMessageFormatter(partyBundle.bundlePath, 'guestInfo');
+						const formatter = getMessageFormatter(partyBundle, 'guestInfo');
 						let formatted = formatter({
 							host: 'Nita',
 							guestCount: 0
@@ -274,14 +274,14 @@ registerSuite('i18n', {
 
 				'assert supported locale'() {
 					return i18n(bundle, 'ar').then(() => {
-						const formatter = getMessageFormatter(bundle.bundlePath, 'hello', 'ar');
+						const formatter = getMessageFormatter(bundle, 'hello', 'ar');
 						assert.strictEqual(formatter(), 'السلام عليكم');
 					});
 				},
 
 				'assert unsupported locale'() {
 					return i18n(bundle, 'fr').then(() => {
-						const formatter = getMessageFormatter(bundle.bundlePath, 'hello', 'fr');
+						const formatter = getMessageFormatter(bundle, 'hello', 'fr');
 						assert.strictEqual(formatter(), 'Hello');
 					});
 				}
@@ -289,22 +289,6 @@ registerSuite('i18n', {
 		},
 
 		i18n: {
-			'assert invalid path'() {
-				const pathless = {
-					bundlePath: 'path',
-					messages: {},
-					locales: []
-				};
-
-				return i18n(pathless, 'en').then(function () {
-					throw new Error('Load promise should not resolve.');
-				}, function (error: Error) {
-					const expected = 'Invalid i18n bundle path. Bundle maps must adhere to the format ' +
-						'"{basePath}{separator}{bundleName}" so that locale bundles can be resolved.';
-					assert.strictEqual(error.message, expected);
-				});
-			},
-
 			'assert system locale used as default'() {
 				return i18n(bundle).then(function (messages: Messages) {
 					assert.deepEqual(messages, {
@@ -357,8 +341,8 @@ registerSuite('i18n', {
 			},
 
 			'assert bundle without locales'() {
-				const { bundlePath, messages } = bundle;
-				const localeless = { bundlePath, messages };
+				const { messages } = bundle;
+				const localeless = { messages };
 
 				return i18n(localeless, 'ar').then(function (messages: Messages) {
 					assert.deepEqual(messages, {
@@ -366,16 +350,6 @@ registerSuite('i18n', {
 						helloReply: 'Hello',
 						goodbye: 'Goodbye'
 					}, 'Default messages returned when bundle provides no locales.');
-				});
-			},
-
-			'assert no default export'() {
-				return i18n(bundle, 'es').then(function (messages: Messages) {
-					assert.deepEqual(messages, {
-						hello: 'Hola',
-						helloReply: 'Hola',
-						goodbye: 'Adiós'
-					}, 'The entire exported module should be used when no default is provided.');
 				});
 			},
 
@@ -401,14 +375,14 @@ registerSuite('i18n', {
 		},
 
 		invalidate: {
-			'assert with a bundle path'() {
+			'assert with a bundle'() {
 				return i18n(bundle, 'ar').then((messages: Messages) => {
-					invalidate(bundle.bundlePath);
+					invalidate(bundle);
 					assert.isUndefined(getCachedMessages(bundle, 'ar'), 'The cache is invalidated for the specified bundle.');
 				});
 			},
 
-			'assert without a bundle path'() {
+			'assert without a bundle'() {
 				return i18n(bundle, 'ar').then((messages: Messages) => {
 					invalidate();
 					assert.isUndefined(getCachedMessages(bundle, 'ar'), 'The cache is invalidated for all bundles.');

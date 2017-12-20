@@ -51,24 +51,28 @@ The examples below are provided in TypeScript syntax. The package does work unde
 
 ### Message Bundle Loading
 
-`@dojo/i18n` provides a means for loading locale-specific messages, and updating those messages when the locale changes. Each bundle has a default module that is `import`ed like any other TypeScript module. Locale-specific messages are then loaded via the `i18n` method. Every default bundle MUST provide a `bundlePath` that will be used to determine locale bundle locations, a `locales` array of supported locales, and a `messages` map of default messages. For example, suppose the module located at `nls/common.ts` contains the following contents:
+`@dojo/i18n` provides a means for loading locale-specific messages, and updating those messages when the locale changes. Each bundle has a default module that is `import`ed like any other TypeScript module. Locale-specific messages are then loaded via the `i18n` method. Every default bundle MUST provide a `messages` map containing default messages, and an optional `locales` object that maps supported locales to functions that load their respective translations. Further, each default bundle is assigned a unique `id` property that is used internally to manage caching and handle interoperability with Globalize.js (see below). While it is possible to include an `id` with your message bundles, doing so is neither necessary nor recommended.
 
 ```typescript
-const bundlePath = 'nls/common';
-const locales = [ 'fr', 'ar', 'ar-JO' ];
-const messages = {
-	hello: 'Hello',
-	goodbye: 'Goodbye'
-};
+import fr from './fr/common';
 
-export default { bundlePath, locales, messages };
+export default {
+	locales: {
+		// Locale providers can load translations lazily...
+		ar: () => import('./ar/main'),
+		'ar-JO': () => import('./ar-JO/main'),
+
+		// ... or locale providers can return translations directly.
+		fr: () => fr
+	},
+	messages: {
+		hello: 'Hello',
+		goodbye: 'Goodbye'
+	}
+};
 ```
 
-There are three things to note about the structure of default bundles. First, the `messages` object contains default messages for all keys used through the bundle. These messages are used as fallbacks for any messages not included in locale-specific bundles.
-
-Second, the `locales` array indicates that the listed locales have corresponding directories underneath the parent directory. In the above example, the fact that "fr" (French) is supported indicates that the default bundle's parent directory also contains a `fr/common.ts` module (which would be represented by the module ID `nls/fr/common`). Alternatively, if the default messages were housed in the module ID `arbitrary/path/numbers.ts`, the corresponding "fr" messages would be expected at `arbitrary/path/fr/numbers.ts`.
-
-Third, the `bundlePath` indicates where the bundle is located, using whichever module path format is understood by the underlying system loader (`global.require`, assumed to be the default `require` in Node, and the [Dojo 2 loader](https://github.com/dojo/loader/) in browser environments). The `bundlePath` is not only required, but also MUST be in the format `{basePath}{separator}{filename}` in order for the i18n system to correctly find locale-specific bundles.
+The `messages` object contains default messages for all keys used through the bundle. These messages are used as fallbacks for any messages not included in locale-specific bundles. Further, the `locales` map uses functions to load translations, providing an extra layer of flexibility in determining how translations are included.
 
 Once the default bundle is in place, any locale-specific messages are loaded by passing the default bundle to the `i18n` function. The locale bundles expose their messages on their default exports:
 
@@ -127,14 +131,14 @@ console.log(madeUpLocaleMessages.hello); // "Hello"
 console.log(madeUpLocaleMessages.goodbye); // "Goodbye"
 ```
 
-If need be, bundle caches can be cleared with `invalidate`. If called with a bundle path, only the messages for that particular bundle are removed from the cache. Otherwise, all messages are cleared:
+If need be, bundle caches can be cleared with `invalidate`. If called with a bundle, only the messages for that particular bundle are removed from the cache. Otherwise, all messages are cleared:
 
 ```
 import i18n from '@dojo/i18n/main';
 import bundle from 'nls/common';
 
 i18n(bundle, 'ar').then(() => {
-	invalidate(bundle.bundlePath);
+	invalidate(bundle);
 	console.log(getCachedMessages(bundle, 'ar')); // undefined
 });
 ```
@@ -169,12 +173,11 @@ switchLocale('de');
 
 ### Loading CLDR data
 
-Given the very large size of the [Unicode CLDR data](http://cldr.unicode.org), it is not included as a dependency of `@dojo/i18n`. For applications that use `@dojo/i18n` only for selecting unformatted, locale-specific messages, this is not a concern. However, if using the [ICU-formatted messages](http://userguide.icu-project.org/formatparse/messages) or any of the other formatters provided by `@dojo/i18n` (see below), applications must explicitly load any required CLDR data via the `loadCldrData` method exported by `@dojo/i18n/cldr/load`. `loadCldrData` accepts either an object of CLDR data, or an array of URLs to CLDR JSON files. All CLDR data MUST match the format used by the [Unicode CLDR JSON](https://github.com/unicode-cldr/cldr-json) files. Supplemental data MUST be nested within a top-level `supplemental` object, and locale-specific data MUST be nested under locale objects within a top-level `main` object:
+Given the very large size of the [Unicode CLDR data](http://cldr.unicode.org), it is not included as a dependency of `@dojo/i18n`. For applications that use `@dojo/i18n` only for selecting unformatted, locale-specific messages, this is not a concern. However, if using the [ICU-formatted messages](http://userguide.icu-project.org/formatparse/messages) or any of the other formatters provided by `@dojo/i18n` (see below), applications must explicitly load any required CLDR data via the `loadCldrData` method exported by `@dojo/i18n/cldr/load`. `loadCldrData` accepts an object of CLDR data. All CLDR data MUST match the format used by the [Unicode CLDR JSON](https://github.com/unicode-cldr/cldr-json) files. Supplemental data MUST be nested within a top-level `supplemental` object, and locale-specific data MUST be nested under locale objects within a top-level `main` object:
 
 ```
 import loadCldrData from '@dojo/i18n/cldr/load';
 
-// Using a CLDR data object.
 loadCldrData({
 	"supplemental": {
 		"likelySubtags": { ... }
@@ -185,12 +188,6 @@ loadCldrData({
 		}
 	}
 });
-
-// Using an array of URLs
-loadCldrData([
-	'cldr-data/supplemental/likelySubtags.json',
-	'cldr-data/main/en/numbers.json'
-]);
 ```
 
 `@dojo/i18n` requires the following CLDR data:
@@ -243,7 +240,7 @@ import i18n, { formatMessage, getMessageFormatter } from '@dojo/i18n/i18n';
 import bundle from 'nls/main';
 
 i18n(bundle, 'en').then(() => {
-	const formatter = getMessageFormatter(bundle.bundlePath, 'guestInfo', 'en');
+	const formatter = getMessageFormatter(bundle, 'guestInfo', 'en');
 	let message = formatter({
 		host: 'Margaret Mead',
 		guest: 'Laura Nader'
@@ -251,7 +248,7 @@ i18n(bundle, 'en').then(() => {
 	console.log(message); // "Margaret Mead invites Laura Nader to the party."
 
 	// Note that `formatMessage` is essentially a convenience wrapper around `getMessageFormatter`.
-	message = formatMessage(bundle.bundlePath, 'guestInfo', {
+	message = formatMessage(bundle, 'guestInfo', {
 		host: 'Marshall Sahlins',
 		gender: 'male',
 		guest: 'Bronisław Malinowski'
@@ -295,7 +292,7 @@ export default messages;
 
 The above message can be converted directly with `formatMessage`, or `getMessageFormatter` can be used to generate a function that can be used over and over with different options. Note that the formatters created and used by both methods are cached, so there is no performance penalty from compiling the same message multiple times.
 
-Since the Globalize.js formatting methods use message paths rather than the message strings themselves, the `@dojo/i18n` methods also require both the bundle path and the message key, which will be resolved to a message path. If an optional locale is provided, then the corresponding locale-specific message will be used. Otherwise, the current locale is assumed.
+Since the Globalize.js formatting methods use message paths rather than the message strings themselves, the `@dojo/i18n` methods also require that the bundle itself be provided, so its unique identifier can be resolved to a message path within the Globalize.js ecosystem. If an optional locale is provided, then the corresponding locale-specific message will be used. Otherwise, the current locale is assumed.
 
 ```typescript
 import i18n, { formatMessage, getMessageFormatter } from '@dojo/i18n/i18n';
@@ -303,7 +300,7 @@ import bundle from 'nls/main';
 
 // 1. Load the messages for the locale.
 i18n(bundle, 'en').then(() => {
-	const message = formatMessage(bundle.bundlePath, 'guestInfo', {
+	const message = formatMessage(bundle, 'guestInfo', {
 		host: 'Margaret Mead',
 		gender: 'female',
 		guest: 'Laura Nader',
@@ -311,7 +308,7 @@ i18n(bundle, 'en').then(() => {
 	}, 'en');
 	console.log(message); // "Margaret Mead invites Laura Nader and 19 other people to her party."
 
-	const formatter = getMessageFormatter(bundle.bundlePath, 'guestInfo', 'en');
+	const formatter = getMessageFormatter(bundle, 'guestInfo', 'en');
 	console.log(formatter({
 		host: 'Margaret Mead',
 		gender: 'female',

@@ -1,13 +1,14 @@
 /* tslint:disable:interface-name */
+import '@dojo/shim/Promise'; // ensure Promise.all exists
 import Evented from '@dojo/core/Evented';
 import has from '@dojo/core/has';
 import { assign } from '@dojo/core/lang';
-import load, { useDefault } from '@dojo/core/load';
+import { useDefault } from '@dojo/core/load/util';
+import uuid from '@dojo/core/uuid';
 import { Handle } from '@dojo/core/interfaces';
 import global from '@dojo/shim/global';
 import Map from '@dojo/shim/Map';
 import Observable, { Observer, Subscription, SubscriptionObserver } from '@dojo/shim/Observable';
-import Promise from '@dojo/shim/Promise';
 import * as Globalize from 'globalize/dist/globalize/message';
 import { isLoaded } from './cldr/load';
 import { generateLocales, normalizeLocale } from './util/main';
@@ -17,16 +18,14 @@ import { generateLocales, normalizeLocale } from './util/main';
  */
 export interface Bundle<T extends Messages> {
 	/**
-	 * The absolute module ID used by the loader to resolve paths to locale-specific paths. This MUST follow the format
-	 * "{basePath}{separator}{filename}". For example, if the module ID for a bundle is "nls/common", the loader will
-	 * look for locale-specific bundles at "nls/{locale}/common".
+	 * A unique identifier for the bundle that will be generated automatically when it is registered.
 	 */
-	readonly bundlePath: string;
+	readonly id?: string;
 
 	/**
 	 * A list of supported locales. Any included locale MUST have an associated bundle.
 	 */
-	readonly locales?: string[];
+	readonly locales?: LocaleLoaders<T>;
 
 	/**
 	 * The map of default messages that will be used when locale-specific messages are unavailable.
@@ -51,9 +50,17 @@ export interface I18n<T extends Messages> {
 	readonly locale: string;
 }
 
-interface LocaleModule<T extends Messages> {
-	default?: T;
+/**
+ * A map of locales to functions responsible for loading their respective translations.
+ */
+export interface LocaleLoaders<T extends Messages> {
+	[locale: string]: () => (LocaleTranslations<T> | Promise<LocaleTranslations<T>>);
 }
+
+/**
+ * An object of locale-specific translations.
+ */
+export type LocaleTranslations<T extends Messages> = Partial<T> | { default?: Partial<T> };
 
 /**
  * Describes a compiled ICU message formatter function.
@@ -69,20 +76,36 @@ export interface Messages {
 	[key: string]: string;
 }
 
-const PATH_SEPARATOR: string = has('host-node') ? require('path').sep : '/';
 const TOKEN_PATTERN = /\{([a-z0-9_]+)\}/gi;
-const VALID_PATH_PATTERN = new RegExp(`\\${PATH_SEPARATOR}[^\\${PATH_SEPARATOR}]+\$`);
 const bundleMap = new Map<string, Map<string, Messages>>();
 const formatterMap = new Map<string, MessageFormatter>();
 const localeProducer = new Evented();
 let rootLocale: string;
 
 /**
+ * Return the bundle's unique identifier, creating one if it does not already exist.
+ *
+ * @param bundle A message bundle
+ * @return The bundle's unique identifier
+ */
+function getBundleId<T extends Messages>(bundle: Bundle<T>): string {
+	if (bundle.id) {
+		return bundle.id;
+	}
+
+	const id = uuid();
+	Object.defineProperty(bundle, 'id', {
+		value: id
+	});
+	return id;
+}
+
+/**
  * @private
  * Return a function that formats an ICU-style message, and takes an optional value for token replacement.
  *
  * Usage:
- * const formatter = getMessageFormatter(bundlePath, 'guestInfo', 'fr');
+ * const formatter = getMessageFormatter(bundle, 'guestInfo', 'fr');
  * const message = formatter({
  *   host: 'Miles',
  *   gender: 'male',
@@ -90,8 +113,8 @@ let rootLocale: string;
  *   guestCount: '15'
  * });
  *
- * @param bundlePath
- * The message's bundle path.
+ * @param id
+ * The message's bundle id.
  *
  * @param key
  * The message's key.
@@ -103,10 +126,9 @@ let rootLocale: string;
  * @return
  * The message formatter.
  */
-function getIcuMessageFormatter(bundlePath: string, key: string, locale?: string): MessageFormatter {
-	const normalized = bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}`, 'g'), '-').replace(/-$/, '');
+function getIcuMessageFormatter(id: string, key: string, locale?: string): MessageFormatter {
 	locale = normalizeLocale(locale || getRootLocale());
-	const formatterKey = `${locale}:${bundlePath}:${key}`;
+	const formatterKey = `${locale}:${id}:${key}`;
 	let formatter = formatterMap.get(formatterKey);
 
 	if (formatter) {
@@ -114,9 +136,9 @@ function getIcuMessageFormatter(bundlePath: string, key: string, locale?: string
 	}
 
 	const globalize = locale !== getRootLocale() ? new Globalize(normalizeLocale(locale)) : Globalize;
-	formatter = globalize.messageFormatter(`${normalized}/${key}`);
+	formatter = globalize.messageFormatter(`${id}/${key}`);
 
-	const cached = bundleMap.get(bundlePath);
+	const cached = bundleMap.get(id);
 	if (cached && cached.get(locale)) {
 		formatterMap.set(formatterKey, formatter);
 	}
@@ -128,17 +150,12 @@ function getIcuMessageFormatter(bundlePath: string, key: string, locale?: string
  * @private
  * Load the specified locale-specific bundles, mapping the default exports to simple `Messages` objects.
  */
-const loadLocaleBundles = (function () {
-	function mapMessages<T extends Messages>(modules: LocaleModule<T>[]): T[] {
-		return modules.map((localeModule: LocaleModule<T>): T => useDefault(localeModule));
-	}
-
-	return function<T extends Messages>(paths: string[]): Promise<T[]> {
-		return load(<any> require, ...paths).then((modules: LocaleModule<T>[]) => {
-			return mapMessages(modules);
+function loadLocaleBundles<T extends Messages>(locales: LocaleLoaders<T>, supported: string[]): Promise<T[]> {
+	return Promise.all(supported.map(locale => locales[locale]()))
+		.then((bundles) => {
+			return bundles.map(bundle => useDefault(bundle));
 		});
-	};
-})();
+}
 
 /**
  * @private
@@ -169,8 +186,8 @@ function getSupportedLocales(locale: string, supported: string[] = []): string[]
  * @private
  * Inject messages for the specified locale into the i18n system.
  *
- * @param bundlePath
- * The bundle path
+ * @param id
+ * The bundle's unique identifier
  *
  * @param messages
  * The messages to inject
@@ -179,64 +196,20 @@ function getSupportedLocales(locale: string, supported: string[] = []): string[]
  * An optional locale. If not specified, then it is assumed that the messages are the defaults for the given
  * bundle path.
  */
-function loadMessages<T extends Messages> (bundlePath: string, messages: T, locale: string = 'root') {
-	let cached = bundleMap.get(bundlePath);
+function loadMessages<T extends Messages>(id: string, messages: T, locale: string = 'root') {
+	let cached = bundleMap.get(id);
 
 	if (!cached) {
 		cached = new Map<string, Messages>();
-		bundleMap.set(bundlePath, cached);
+		bundleMap.set(id, cached);
 	}
 
 	cached.set(locale, messages);
 	Globalize.loadMessages({
 		[locale]: {
-			[bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}`, 'g'), '-')]: messages
+			[id]: messages
 		}
 	});
-}
-
-/**
- * @private
- * Return a list of locale path bundles for a target locale.
- *
- * @param path
- * The default bundle path.
- *
- * @param locale
- * The target locale
- *
- * @param supported
- * A list of locales with their own bundles.
- *
- * @return Paths for locale bundles to be loaded.
- */
-function resolveLocalePaths<T extends Messages>(path: string, locale: string, supported?: string[]): string[] {
-	validatePath(path);
-
-	let filename: string;
-	const parentDirectory = path.replace(VALID_PATH_PATTERN, (matched: string): string => {
-		filename = matched;
-		return PATH_SEPARATOR;
-	});
-	const locales = getSupportedLocales(locale, supported);
-	return locales.map((locale: string): string => {
-		return `${parentDirectory}${locale}${filename}`;
-	});
-}
-
-/**
- * @private
- * Ensure a path follows the required format for loading locale-specific bundles.
- *
- * @param path
- * The default bundle path to validate.
- */
-function validatePath(path: string): void {
-	if (!VALID_PATH_PATTERN.test(path)) {
-		const message = 'Invalid i18n bundle path. Bundle maps must adhere to the format' +
-			' "{basePath}{separator}{bundleName}" so that locale bundles can be resolved.';
-		throw new Error(message);
-	}
 }
 
 /**
@@ -246,13 +219,13 @@ function validatePath(path: string): void {
  * the ICU message format is supported. Otherwise, a simple token-replacement mechanism is used.
  *
  * Usage:
- * formatMessage(bundle.bundlePath, 'guestInfo', {
+ * formatMessage(bundle, 'guestInfo', {
  *   host: 'Bill',
  *   guest: 'John'
  * }, 'fr');
  *
- * @param bundlePath
- * The message's bundle path.
+ * @param bundle
+ * The bundle containing the target message.
  *
  * @param key
  * The message's key.
@@ -267,15 +240,13 @@ function validatePath(path: string): void {
  * @return
  * The formatted message.
  */
-export function formatMessage(bundlePath: string, key: string, options?: FormatOptions, locale?: string): string {
-	return getMessageFormatter(bundlePath, key, locale)(options);
+export function formatMessage<T extends Messages>(bundle: Bundle<T>, key: string, options?: FormatOptions, locale?: string): string {
+	return getMessageFormatter(bundle, key, locale)(options);
 }
 
 /**
  * Return the cached messages for the specified bundle and locale. If messages have not been previously loaded for the
- * specified locale, no value will be returned. If messages for the specified locale were added via
- * `setLocaleMessages`, then those messages will be returned regardless of whether the locale is listed in the bundle's
- * `locales` array.
+ * specified locale, no value will be returned.
  *
  * @param bundle
  * The default bundle that is used to determine where the locale-specific bundles are located.
@@ -286,11 +257,11 @@ export function formatMessage(bundlePath: string, key: string, options?: FormatO
  * @return The cached messages object, if it exists.
  */
 export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale: string): T | void {
-	const { bundlePath, locales, messages } = bundle;
-	const cached = bundleMap.get(bundlePath);
+	const { id = getBundleId(bundle), locales, messages } = bundle;
+	const cached = bundleMap.get(id);
 
 	if (!cached) {
-		loadMessages(bundlePath, messages);
+		loadMessages(id, messages);
 	}
 	else {
 		const localeMessages = cached.get(locale);
@@ -299,7 +270,7 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
 		}
 	}
 
-	const supportedLocales = getSupportedLocales(locale, locales);
+	const supportedLocales = getSupportedLocales(locale, locales && Object.keys(locales));
 	if (!supportedLocales.length) {
 		return messages;
 	}
@@ -317,7 +288,7 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
  * token replacement on the message string.
  *
  * Usage:
- * const formatter = getMessageFormatter(bundlePath, 'guestInfo', 'fr');
+ * const formatter = getMessageFormatter(bundle, 'guestInfo', 'fr');
  * const message = formatter({
  *   host: 'Miles',
  *   gender: 'male',
@@ -325,8 +296,8 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
  *   guestCount: '15'
  * });
  *
- * @param bundlePath
- * The message's bundle path.
+ * @param bundle
+ * The bundle containing the target message.
  *
  * @param key
  * The message's key.
@@ -338,16 +309,18 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
  * @return
  * The message formatter.
  */
-export function getMessageFormatter(bundlePath: string, key: string, locale?: string): MessageFormatter {
+export function getMessageFormatter<T extends Messages>(bundle: Bundle<T>, key: string, locale?: string): MessageFormatter {
+	const { id = getBundleId(bundle) } = bundle;
+
 	if (isLoaded('supplemental', 'likelySubtags') && isLoaded('supplemental', 'plurals-type-cardinal')) {
-		return getIcuMessageFormatter(bundlePath, key, locale);
+		return getIcuMessageFormatter(id, key, locale);
 	}
 
-	const cached = bundleMap.get(bundlePath);
+	const cached = bundleMap.get(id);
 	const messages = cached ? (cached.get(locale || getRootLocale()) || cached.get('root')) : null;
 
 	if (!messages) {
-		throw new Error(`The bundle "${bundlePath}" has not been registered.`);
+		throw new Error(`The bundle has not been registered.`);
 	}
 
 	return function (options: FormatOptions = Object.create(null)) {
@@ -374,31 +347,22 @@ export function getMessageFormatter(bundlePath: string, key: string, locale?: st
  *
  * @return A promise to the locale-specific messages.
  */
-function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Promise<T> {
-	const { bundlePath, locales, messages } = bundle;
-	const path = bundlePath.replace(new RegExp(`\\${PATH_SEPARATOR}\$`), '');
+async function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Promise<T> {
 	const currentLocale = locale ? normalizeLocale(locale) : getRootLocale();
-
-	try {
-		validatePath(path);
-	}
-	catch (error) {
-		return Promise.reject(error);
-	}
-
 	const cachedMessages = getCachedMessages(bundle, currentLocale);
+
 	if (cachedMessages) {
-		return Promise.resolve(cachedMessages);
+		return cachedMessages;
 	}
 
-	const localePaths = resolveLocalePaths(path, currentLocale, locales);
-	return loadLocaleBundles<T>(localePaths).then((bundles: T[]): T => {
-		return bundles.reduce((previous: T, partial: T): T => {
-			const localeMessages: T = assign({}, previous, partial);
-			loadMessages(bundlePath, <T> Object.freeze(localeMessages), currentLocale);
-			return localeMessages;
-		}, messages);
-	});
+	const locales = bundle.locales as LocaleLoaders<T>;
+	const supportedLocales = getSupportedLocales(currentLocale, Object.keys(locales));
+	const bundles = await loadLocaleBundles<T>(locales, supportedLocales);
+	return bundles.reduce((previous: T, partial: T): T => {
+		const localeMessages: T = assign({}, previous, partial);
+		loadMessages(getBundleId(bundle), <T> Object.freeze(localeMessages), currentLocale);
+		return localeMessages;
+	}, bundle.messages);
 }
 
 Object.defineProperty(i18n, 'locale', {
@@ -411,12 +375,12 @@ export default i18n as I18n<Messages>;
  * Invalidate the cache for a particular bundle, or invalidate the entire cache. Note that cached messages for all
  * locales for a given bundle will be cleared.
  *
- * @param bundlePath
- * The optional path of the bundle to invalidate. If no path is provided, then the cache is cleared for all bundles.
+ * @param bundle
+ * An optional bundle to invalidate. If no bundle is provided, then the cache is cleared for all bundles.
  */
-export function invalidate(bundlePath?: string) {
-	if (bundlePath) {
-		bundleMap.delete(bundlePath);
+export function invalidate<T extends Messages>(bundle?: Bundle<T>) {
+	if (bundle) {
+		bundle.id && bundleMap.delete(bundle.id);
 	}
 	else {
 		bundleMap.clear();
@@ -465,9 +429,9 @@ export const observeLocale = (function () {
  * @param locale
  * The locale for the messages
  */
-export function setLocaleMessages<T extends Messages>(bundle: Bundle<T>, localeMessages: T, locale: string): void {
+export function setLocaleMessages<T extends Messages>(bundle: Bundle<T>, localeMessages: Partial<T>, locale: string): void {
 	const messages: T = assign({}, bundle.messages, localeMessages);
-	loadMessages(bundle.bundlePath, <T> Object.freeze(messages), locale);
+	loadMessages(getBundleId(bundle), <T> Object.freeze(messages), locale);
 }
 
 /**

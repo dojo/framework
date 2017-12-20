@@ -1,19 +1,14 @@
-import has from '@dojo/core/has';
+import ar from './ar/main';
+import arJO from './ar-JO/main';
 
-const locales = [
-	'ar',
-	'ar-JO',
-	'es'
-];
-
-const hasHostNode = has('host-node');
-const pathSeparator = hasHostNode ? require('path').sep : '/';
-const bundlePath = hasHostNode ? `${__dirname}${pathSeparator}main` : '_build/tests/support/mocks/common/main';
-
-const messages = {
-	hello: 'Hello',
-	helloReply: 'Hello',
-	goodbye: 'Goodbye'
+export default {
+	locales: {
+		ar: () => ar,
+		'ar-JO': () => arJO
+	},
+	messages: {
+		hello: 'Hello',
+		helloReply: 'Hello',
+		goodbye: 'Goodbye'
+	}
 };
-
-export default { bundlePath, locales, messages };
