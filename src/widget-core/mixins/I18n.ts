@@ -102,7 +102,7 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 
 			return assign(Object.create({
 				format(key: string, options?: any) {
-					return formatMessage(bundle.bundlePath, key, options, locale);
+					return formatMessage(bundle, key, options, locale);
 				}
 			}), messages) as LocalizedMessages<T>;
 		}
