@@ -1,8 +1,7 @@
 import global from '@dojo/shim/global';
 const { assert } = intern.getPlugin('chai');
 const { beforeEach, before, describe, it} = intern.getInterface('bdd');
-import WebAnimation from '../../../src/meta/WebAnimation';
-import { AnimationControls, AnimationTimingProperties } from '../../../src/interfaces';
+import WebAnimation, { AnimationControls, AnimationTimingProperties } from '../../../src/meta/WebAnimation';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { v } from '../../../src/d';
 import { spy, stub } from 'sinon';
