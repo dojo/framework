@@ -127,6 +127,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			coreProperties: {} as CoreProperties,
 			invalidate: this._boundInvalidate
 		});
+
+		this._runAfterConstructors();
 	}
 
 	protected meta<T extends WidgetMetaBase>(MetaType: WidgetMetaConstructor<T>): T {
@@ -513,6 +515,14 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		}
 
 		return dNode;
+	}
+
+	private _runAfterConstructors(): void {
+		const afterConstructors = this.getDecorator('afterConstructor');
+
+		if (afterConstructors.length > 0) {
+			afterConstructors.forEach(afterConstructor => afterConstructor.call(this));
+		}
 	}
 }
 

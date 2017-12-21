@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import Registry from './../../src/Registry';
+import Registry, { ESMDefaultWidgetBase } from './../../src/Registry';
 import { WidgetBase } from './../../src/WidgetBase';
 import Promise from '@dojo/shim/Promise';
 import { Injector } from './../../src/Injector';
@@ -146,6 +146,27 @@ registerSuite('Registry', {
 				rejectFunction!(new Error('reject error'));
 
 				return promise;
+			},
+			'recognises esm modules with widget constructor as default'() {
+				let resolveFunction: (widget: ESMDefaultWidgetBase<WidgetBase>) => void;
+				const promise: Promise<any> = new Promise((resolve) => {
+					resolveFunction = resolve;
+				});
+				const lazyFactory = () => promise;
+
+				const factoryRegistry = new Registry();
+				factoryRegistry.define('my-widget', lazyFactory);
+				factoryRegistry.get('my-widget');
+
+				resolveFunction!({
+					default: WidgetBase,
+					__esModule: true
+				});
+
+				return promise.then(() => {
+					const factory = factoryRegistry.get('my-widget');
+					assert.strictEqual(factory, WidgetBase);
+				});
 			}
 		}
 	},

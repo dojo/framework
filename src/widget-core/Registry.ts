@@ -84,6 +84,20 @@ export function isWidgetBaseConstructor<T extends WidgetBaseInterface>(item: any
 	return Boolean(item && item._type === WIDGET_BASE_TYPE);
 }
 
+export interface ESMDefaultWidgetBase<T> {
+	default: Constructor<T>;
+	__esModule: boolean;
+}
+
+export function isWidgetConstructorDefaultExport<T>(item: any): item is ESMDefaultWidgetBase<T> {
+	return Boolean(
+		item &&
+		item.hasOwnProperty('__esModule') &&
+		item.hasOwnProperty('default') &&
+		isWidgetBaseConstructor(item.default)
+	);
+}
+
 /**
  * The Registry implementation
  */
@@ -164,6 +178,11 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 		this._widgetRegistry.set(label, promise);
 
 		promise.then((widgetCtor) => {
+
+			if (isWidgetConstructorDefaultExport<T>(widgetCtor)) {
+				widgetCtor = widgetCtor.default;
+			}
+
 			this._widgetRegistry.set(label, widgetCtor);
 			this.emitLoadedEvent(label, widgetCtor);
 			return widgetCtor;
