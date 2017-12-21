@@ -64,57 +64,102 @@ const operations = [
 
 Dojo 2 stores provides a helper package that can generate `PatchOperation` objects from `@dojo/stores/state/operations`:
 
-* `add`     - Returns a `PatchOperation` of type `OperationType.ADD` for the `path` and `value`
+* `add` - Returns a `PatchOperation` of type `OperationType.ADD` for the `path` and `value`
 * `remove`  - Returns a `PatchOperation` of type `OperationType.REMOVE` for the `path`
 * `replace` - Returns a `PatchOperation` of type `OperationType.REPLACE` for the `path` and `value`
+
+These function accept a `Path` type. This is returned by the `path` and `at` methods on a store. More often this will be created using the `path` and `at` functions provided as part of the arguments to a [command](#commands), which are described in more detail below. Rather than accepting a full string path, the `path` and `at` functions accept a series of arguments and provide type checking to verify that the path created actually exists on the state object.
 
 ### Commands
 
 Commands are simply functions which are called internally by the store when executing a `Process` and return an array of `PatchOperations` that tells the `store` what state changes needs to be performed.
 
-Each command is passed a `CommandRequest` which provides a `get` function for access to the stores state and a `payload` object which contains an array of the arguments that the process executor was called with.
+Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a typesafe way, a `get` function for access to the store's state, and a `payload` object which contains an array of the arguments that the process executor was called with.
 
-The `get` function returns back state for a given "path" or "selector", for example `get('/my/deep/state')` or `get('/my/array/item/9')`.
+The `get` function returns back state for a given `Path`, for example `get(path('my', 'deep', 'state'))` or `get(at(path('my', 'array', 'item'), 9))`.
 
 ```ts
-function addTodoCommand({ get, payload }: CommandRequest) {
-	const todos = get('/todos');
+function addTodoCommand({ at, path, get, payload }: CommandRequest) {
+	const todosPath = path('todos');
+	const length = get(todosPath).length;
 	const operations = [
-		{ op: OperationType.ADD, path: `/todos/${todos.length}`, value: payload[0] }
+		add(at(todosPath, length), payload[0])
 	];
 
 	return operations;
 }
 
-function calculateCountsCommand({ get }: CommandRequest) {
-	const todos = get('/todos');
+function calculateCountsCommand({ get, path }: CommandRequest) {
+	const todos = get(path('todos'));
 	const completedTodos = todos.filter((todo: any) => todo.completed);
 	const operations = [
-		{ op: OperationType.REPLACE, path: '/activeCount', value: todos.length - completedTodos.length },
-		{ op: OperationType.REPLACE, path: '/completedCount', value: completedTodos.length }
+		replace(path('activeCount'), todos.length - completedTodos.length),
+		replace(path('completedCount'), completedTodos.length)	
 	];
+
 	return operations;
 }
 ```
 
- *Important:* Access to state root is not permitted and will throw an error, for example `get('/')`. This applies for `Operations` also, it is not possible to create an operation that will update the state root.
+A `Command`, or the `CommandRequest` argument to it, can be provided with a generic that indicates the type of the state of the
+store they are intended to target. This will provide type checking for all calls to `path` and `at`, ensuring that the operations will be targeting real properties of the store, and providing type inference for the return type of `get`. In order to avoid typing each `Command` explicitly, a `CommandFactory` can be created that will pass its generic type onto all commands it creates. Creating commands using a factory is essentially the same as creating them without one. It is simply a convenience to avoid repeating the same type for each command.
 
- ##### Asynchronous Commands
+```ts
+interface Todo {
+	completed: boolean;
+	label: string;
+}
+
+interface TodoState {
+	todos: Todo[];
+	activeCount: number;
+	completdCount: number;
+}
+
+const createCommand = createCommandFactory<TodoState>();
+
+const addTodoCommand = createCommand(({ at, get, path, payload }) => {
+	const todos = get(path('todos'));
+	// const todos = get(path('todoes')); Fails to compile because `todoes` is not a property on the state
+	// const value = todos + 3;  Fails to compile because todos is typed as inferred to be an array of `Todo` objects
+	const operations = [
+		// Using the utilities provided by the `operations` module ensures that the paths provided are valid,
+		// and that the values being added or replaced are of the appropriate type
+		add(at(path('todos'), todos.length), payload[0])
+	];
+
+	return operations;
+});
+
+const calculateCountsCommand = createCommand(({ get, path }) => {
+	const todos = get(path('todos'));
+	const completedTodos = todos.filter((todo: any) => todo.completed);
+	const operations = [
+		replace(path('activeCount'), todos.length - completedTodos.length),
+		replace(path('completedCount'), completedTodos.length)
+	];
+	return operations;
+});
+```
+
+ *Important:* Access to state root is not permitted and will throw an error, for example `get(path('/'))`. This applies for `Operations` also, it is not possible to create an operation that will update the state root.
+
+##### Asynchronous Commands
 
 Commands support asynchronous behavior out of the box simply by returning a `Promise<PatchOperation[]>`.
 
 ```ts
-async function postTodoCommand({ get, payload: [ id ] }: CommandRequest): Promise<PatchOperation[]> {
+async function postTodoCommand({ get, path, payload: [ id ] }: CommandRequest): Promise<PatchOperation[]> {
 	const response = await fetch('/todos');
 	if (!response.ok) {
 		throw new Error('Unable to post todo');
 	}
 	const json = await response.json();
-	const todos = get('/todos');
+	const todos = get(path('todos'));
 	const index = findIndex(todos, byId(id));
 	// success
 	return [
-		replace(`/todos/${index}`, { ...todos[index], loading: false, id: data.uuid
+		replace(at(path('todos'), index), { ...todos[index], loading: false, id: data.uuid })
 	];
 }
 ```
@@ -162,12 +207,12 @@ Initial state can be defined on store creation by executing a `Process` after th
 
 ```ts
 // Command that creates the basic initial state
-function initialStateCommand() {
+const initialStateCommand = createCommand({ path }) => {
 	return [
-		add('/todos', []),
-		add('/currentTodo', ''),
-		add('/activeCount', 0),
-		add('/completedCount', 0)
+		add(path('todos'), []),
+		add(path('currentTodo'), ''),
+		add(path('activeCount'), 0),
+		add(path('completedCount'), 0)
 	]);
 }
 
@@ -185,7 +230,7 @@ getTodosProcess(store)().then(() => {
 
 ## How does this differ from Redux
 
-Although Dojo 2 stores is a big atom state store, you never get access to the entire state object. To access the sections of state that are needed we use pointers to return the slice of state that is needed i.e. `path/to/state`. State is never directly updated by the user, with state changes only being processed by the operations returned by commands.
+Although Dojo 2 stores is a big atom state store, you never get access to the entire state object. To access the sections of state that are needed we use pointers to return the slice of state that is needed i.e. `path('path', 'to', 'state')`. State is never directly updated by the user, with state changes only being processed by the operations returned by commands.
 
 There is no concept of `reducers`, meaning that there is no confusion about where logic needs to reside between `reducers` and  `actions`. `Commands` are the only place that state logic resides and return `operations` that dictate what `state` changes are required and processed internally by the `store`.
 
@@ -251,21 +296,6 @@ executor('id');
 ```
 
 Each `Command` will be passed the result of the transformer as the `payload` for example: `{ id: 'UUID-VALUE', value }`
-
-### Typing with `store.get`
-
-All access to the internal store state is restricted through `store.get`, the function that is passed to each `Command` when they are executed. It is possible to specify the expected type of the data by passing a generic to `get`.
-
-```ts
-interface Todo {
-	id: string;
-	label: string;
-	completed: boolean;
-}
-
-// Will return an array typed as Todo items
-const todos = store.get<Todo[]>('/todos');
-```
 
 ### Optimistic Update Pattern
 
