@@ -1,7 +1,7 @@
 import Promise from '@dojo/shim/Promise';
 import has from './has';
 import request from './request';
-import { NodeRequire, Require as AmdRequire, Config } from '@dojo/interfaces/loader';
+import { NodeRequire, AmdRequire, AmdConfig } from './interfaces';
 import { Require, isAmdRequire } from './load';
 
 declare const require: Require;
@@ -82,7 +82,7 @@ export function normalize(id: string, toAbsMid: (moduleId: string) => string): s
 	return (/^\./.test(url) ? toAbsMid(url) : url) + (parts[1] ? '!' + parts[1] : '');
 }
 
-export function load(id: string, require: AmdRequire, load: (value?: any) => void, config?: Config): void {
+export function load(id: string, require: AmdRequire, load: (value?: any) => void, config?: AmdConfig): void {
 	let parts = id.split('!');
 	let stripFlag = parts.length > 1;
 	let mid = parts[0];

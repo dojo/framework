@@ -1,5 +1,5 @@
 import Promise from '@dojo/shim/Promise';
-import { Require as AmdRequire, Define as AmdDefine, NodeRequire } from '@dojo/interfaces/loader';
+import { AmdRequire, AmdDefine, NodeRequire } from './interfaces';
 import { isPlugin, useDefault } from './load/util';
 
 export type Require = AmdRequire | NodeRequire;
