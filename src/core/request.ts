@@ -16,16 +16,15 @@ const request: {
 	put(url: string, options?: RequestOptions): UploadObservableTask<Response>;
 
 	setDefaultProvider(provider: Provider): void;
-} = <any> function request(url: string, options: RequestOptions = {}): Task<Response> {
+} = <any>function request(url: string, options: RequestOptions = {}): Task<Response> {
 	try {
 		return providerRegistry.match(url, options)(url, options);
-	}
-	catch (error) {
+	} catch (error) {
 		return Task.reject<Response>(error);
 	}
 };
 
-[ 'DELETE', 'GET', 'HEAD', 'OPTIONS' ].forEach(method => {
+['DELETE', 'GET', 'HEAD', 'OPTIONS'].forEach((method) => {
 	Object.defineProperty(request, method.toLowerCase(), {
 		value(url: string, options: RequestOptions = {}): Task<Response> {
 			options = Object.create(options);
@@ -35,12 +34,12 @@ const request: {
 	});
 });
 
-[ 'POST', 'PUT' ].forEach(method => {
+['POST', 'PUT'].forEach((method) => {
 	Object.defineProperty(request, method.toLowerCase(), {
 		value(url: string, options: RequestOptions = {}): UploadObservableTask<Response> {
 			options = Object.create(options);
 			options.method = method;
-			return <UploadObservableTask<Response>> request(url, options);
+			return <UploadObservableTask<Response>>request(url, options);
 		}
 	});
 });
@@ -55,7 +54,7 @@ providerRegistry.setDefaultProvider(xhr);
 
 if (has('host-node')) {
 	// tslint:disable-next-line
-	import('./request/providers/node').then(node => {
+	import('./request/providers/node').then((node) => {
 		providerRegistry.setDefaultProvider(node.default);
 	});
 }

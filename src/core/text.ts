@@ -30,15 +30,14 @@ let getText: (url: string, callback: (value: string | null) => void) => void;
 
 if (has('host-browser')) {
 	getText = function(url: string, callback: (value: string | null) => void): void {
-		request(url).then(response => {
-			response.text().then(data => {
+		request(url).then((response) => {
+			response.text().then((data) => {
 				callback(data);
 			});
 		});
 	};
-}
-else if (has('host-node')) {
-	let fs = isAmdRequire(require) && require.nodeRequire ? require.nodeRequire('fs') : (<NodeRequire> require)('fs');
+} else if (has('host-node')) {
+	let fs = isAmdRequire(require) && require.nodeRequire ? require.nodeRequire('fs') : (<NodeRequire>require)('fs');
 	getText = function(url: string, callback: (value: string) => void): void {
 		fs.readFile(url, { encoding: 'utf8' }, function(error: Error, data: string): void {
 			if (error) {
@@ -48,8 +47,7 @@ else if (has('host-node')) {
 			callback(data);
 		});
 	};
-}
-else {
+} else {
 	getText = function(): void {
 		throw new Error('dojo/text not supported on this platform');
 	};
@@ -58,16 +56,16 @@ else {
 /*
  * Cache of previously-loaded text resources
  */
-let textCache: { [key: string]: any; } = {};
+let textCache: { [key: string]: any } = {};
 
 /*
  * Cache of pending text resources
  */
-let pending: { [key: string]: any; } = {};
+let pending: { [key: string]: any } = {};
 
-export function get(url: string): Promise <string | null> {
-	let promise = new Promise<string | null>(function (resolve, reject) {
-		getText(url, function (text) {
+export function get(url: string): Promise<string | null> {
+	let promise = new Promise<string | null>(function(resolve, reject) {
+		getText(url, function(text) {
 			resolve(text);
 		});
 	});
@@ -95,8 +93,7 @@ export function load(id: string, require: AmdRequire, load: (value?: any) => voi
 
 	if (mid in textCache) {
 		text = textCache[mid];
-	}
-	else if (url in textCache) {
+	} else if (url in textCache) {
 		text = textCache[url];
 	}
 
@@ -104,7 +101,7 @@ export function load(id: string, require: AmdRequire, load: (value?: any) => voi
 		if (pending[url]) {
 			pending[url].push(finish);
 		} else {
-			let pendingList = pending[url] = [finish];
+			let pendingList = (pending[url] = [finish]);
 			getText(url, function(value) {
 				textCache[mid] = textCache[url] = value;
 				for (let i = 0; i < pendingList.length; ) {

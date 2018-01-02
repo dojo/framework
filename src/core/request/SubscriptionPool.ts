@@ -31,13 +31,13 @@ export default class SubscriptionPool<T> {
 			}
 		}
 
-		this._observers.forEach(observer => {
+		this._observers.forEach((observer) => {
 			observer.next(value);
 		});
 	}
 
 	complete() {
-		this._observers.forEach(observer => {
+		this._observers.forEach((observer) => {
 			observer.complete();
 		});
 	}

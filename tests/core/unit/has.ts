@@ -7,8 +7,7 @@ registerSuite('has', {
 		const value = has('node-buffer');
 		if (has('host-node')) {
 			assert.ok(value, 'Should be true running under node');
-		}
-		else {
+		} else {
 			assert.notOk(value, 'Should be false running under node');
 		}
 	}

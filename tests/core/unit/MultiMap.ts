@@ -8,40 +8,42 @@ function foo() {}
 const object = Object.create(null);
 const array: any[] = [];
 const mapArgs: any[] = [
-	[ [ 0 ], 0 ],
-	[ [ 0, 1, 2 ], '1' ],
-	[ [ 2, 3, 4, 5, 6 ], object ],
-	[ [ 3 ], array ],
-	[ [ 4, 3, 2, 1 ], foo ],
-	[ [ 5 ], undefined ]
+	[[0], 0],
+	[[0, 1, 2], '1'],
+	[[2, 3, 4, 5, 6], object],
+	[[3], array],
+	[[4, 3, 2, 1], foo],
+	[[5], undefined]
 ];
 
 registerSuite('Map', {
 	instantiation: {
 		'null data'() {
-			assert.doesNotThrow(function () {
-				map = new MultiMap<string>(<any> null);
+			assert.doesNotThrow(function() {
+				map = new MultiMap<string>(<any>null);
 			});
 		},
 
 		'undefined data'() {
-			assert.doesNotThrow(function () {
+			assert.doesNotThrow(function() {
 				map = new MultiMap<string>(undefined);
 			});
 		},
 
 		'empty data'() {
-			assert.doesNotThrow(function () {
+			assert.doesNotThrow(function() {
 				map = new MultiMap<string>([]);
 			});
 		},
 
 		'iterator data'() {
-			assert.doesNotThrow(function () {
-				map = new MultiMap(new ShimIterator<[any[], any]>({
-					length: 1,
-					0: [ [ 1 ], 'foo' ]
-				}));
+			assert.doesNotThrow(function() {
+				map = new MultiMap(
+					new ShimIterator<[any[], any]>({
+						length: 1,
+						0: [[1], 'foo']
+					})
+				);
 			});
 		}
 	},
@@ -49,41 +51,35 @@ registerSuite('Map', {
 	clear: {
 		'empty map'() {
 			map = new MultiMap();
-			assert.doesNotThrow(function () {
+			assert.doesNotThrow(function() {
 				map.clear();
 			});
 		},
 
 		'non-empty map'() {
-			map = new MultiMap([
-				[ [ 1 ] , 'foo' ]
-			]);
+			map = new MultiMap([[[1], 'foo']]);
 			assert.isFalse(map.has([3]));
 			map.clear();
 			assert.isFalse(map.has([3]));
 		}
 	},
 
-	'delete': {
+	delete: {
 		before() {
-			map = new MultiMap([
-				[ [ 1 ], 'foo' ],
-				[ [ 1, 2 ], 'bar' ],
-				[ [ 2 ], 'baz' ]
-			]);
+			map = new MultiMap([[[1], 'foo'], [[1, 2], 'bar'], [[2], 'baz']]);
 		},
 
 		tests: {
 			'key found'() {
-				assert.strictEqual(map.get([ 1, 2 ]), 'bar');
-				assert.isTrue(map.delete([ 1, 2 ]));
-				assert.isUndefined(map.get([ 1, 2 ]));
-				assert.strictEqual(map.get([ 1 ] ), 'foo');
-				assert.strictEqual(map.get([ 2 ] ), 'baz');
+				assert.strictEqual(map.get([1, 2]), 'bar');
+				assert.isTrue(map.delete([1, 2]));
+				assert.isUndefined(map.get([1, 2]));
+				assert.strictEqual(map.get([1]), 'foo');
+				assert.strictEqual(map.get([2]), 'baz');
 			},
 
 			'key not found'() {
-				assert.isFalse(map.delete([ 'foo' ]));
+				assert.isFalse(map.delete(['foo']));
 			}
 		}
 	},
@@ -91,7 +87,7 @@ registerSuite('Map', {
 	size() {
 		map = new MultiMap<any>(mapArgs);
 		assert.strictEqual(map.size, 6);
-		map.delete([ 2, 3, 4, 5, 6 ]);
+		map.delete([2, 3, 4, 5, 6]);
 		assert.strictEqual(map.size, 5);
 		map.clear();
 		assert.strictEqual(map.size, 0);
@@ -136,7 +132,7 @@ registerSuite('Map', {
 
 		tests: {
 			'callback arguments'() {
-				map.forEach(function (value, key, mapInstance) {
+				map.forEach(function(value, key, mapInstance) {
 					assert.lengthOf(arguments, 3);
 					assert.strictEqual(map.get(key), value);
 					assert.strictEqual(map, mapInstance);
@@ -145,7 +141,7 @@ registerSuite('Map', {
 
 			'times executed'() {
 				let counter = 0;
-				map.forEach(function (key, value, mapInstance) {
+				map.forEach(function(key, value, mapInstance) {
 					counter++;
 				});
 				assert.strictEqual(counter, mapArgs.length);
@@ -160,12 +156,12 @@ registerSuite('Map', {
 
 		tests: {
 			'key found'() {
-				assert.strictEqual(map.get([ 0 ]), 0);
-				assert.strictEqual(map.get([ 4, 3, 2, 1 ]), foo);
+				assert.strictEqual(map.get([0]), 0);
+				assert.strictEqual(map.get([4, 3, 2, 1]), foo);
 			},
 
 			'key not found'() {
-				assert.isUndefined(map.get([ 2, 3, 4, 5, 7 ]));
+				assert.isUndefined(map.get([2, 3, 4, 5, 7]));
 			}
 		}
 	},
@@ -177,11 +173,11 @@ registerSuite('Map', {
 
 		tests: {
 			'key found'() {
-				assert.isTrue(map.has([ 4, 3, 2, 1 ]));
+				assert.isTrue(map.has([4, 3, 2, 1]));
 			},
 
 			'key not found'() {
-				assert.isFalse(map.has([ 'key', 'not', 'exist' ]));
+				assert.isFalse(map.has(['key', 'not', 'exist']));
 			}
 		}
 	},
@@ -209,26 +205,26 @@ registerSuite('Map', {
 		tests: {
 			'single key'() {
 				map = new MultiMap<any>();
-				map.set( [ 1 ], 'foo');
-				assert.strictEqual(map.get([ 1 ]), 'foo');
+				map.set([1], 'foo');
+				assert.strictEqual(map.get([1]), 'foo');
 			},
 
 			'multiple keys'() {
 				map = new MultiMap<string>();
-				map.set([ 'foo', 'bar', 'baz', foo, object, array ], 'qux');
-				assert.strictEqual(map.get([ 'foo', 'bar', 'baz', foo, object, array ]), 'qux');
+				map.set(['foo', 'bar', 'baz', foo, object, array], 'qux');
+				assert.strictEqual(map.get(['foo', 'bar', 'baz', foo, object, array]), 'qux');
 			},
 
 			'returns instance'() {
 				map = new MultiMap<string>();
-				assert.instanceOf(map.set([ 'foo' ], 'bar'), MultiMap);
-				assert.strictEqual(map.set([ 'foo' ], 'bar'), map);
+				assert.instanceOf(map.set(['foo'], 'bar'), MultiMap);
+				assert.strictEqual(map.set(['foo'], 'bar'), map);
 			},
 
 			'key exists'() {
-				map = new MultiMap<string>([ [ [ 3 ], 'abc' ] ]);
-				map.set([ 3 ], 'def');
-				assert.strictEqual(map.get([ 3 ]), 'def');
+				map = new MultiMap<string>([[[3], 'abc']]);
+				map.set([3], 'def');
+				assert.strictEqual(map.get([3]), 'def');
 			}
 		}
 	},

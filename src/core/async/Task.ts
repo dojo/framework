@@ -6,7 +6,7 @@ import ExtensiblePromise, { DictionaryOfPromises, ListOfPromises, unwrapPromises
 /**
  * Describe the internal state of a task.
  */
-export declare const enum State {
+export const enum State {
 	Fulfilled = 0,
 	Pending = 1,
 	Rejected = 2,
@@ -40,7 +40,7 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	 * @param iterable    An iterable of values to resolve. These can be Promises, ExtensiblePromises, or other objects
 	 * @returns {Task}
 	 */
-	static race<T>(iterable: Iterable<(T | Thenable<T>)> | (T | Thenable<T>)[]): Task<T> {
+	static race<T>(iterable: Iterable<T | Thenable<T>> | (T | Thenable<T>)[]): Task<T> {
 		return new this((resolve, reject) => {
 			Promise.race(unwrapPromises(iterable)).then(resolve, reject);
 		});
@@ -72,7 +72,7 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	 *
 	 * @return A task
 	 */
-	public static resolve<T>(value: (T | Thenable<T>)): Task<T>;
+	public static resolve<T>(value: T | Thenable<T>): Task<T>;
 
 	/**
 	 * Return a resolved task.
@@ -149,35 +149,36 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	 * @returns An extensible promise
 	 */
 	static all<T>(iterable: DictionaryOfPromises<T> | ListOfPromises<T>): Task<any> {
-		return new Task((resolve, reject) => {
-			super.all(iterable).then(resolve, reject);
-		}, () => {
-			if (isArrayLike(iterable)) {
-				for (let i = 0; i < iterable.length; i++) {
-					const promiseLike = iterable[i];
+		return new Task(
+			(resolve, reject) => {
+				super.all(iterable).then(resolve, reject);
+			},
+			() => {
+				if (isArrayLike(iterable)) {
+					for (let i = 0; i < iterable.length; i++) {
+						const promiseLike = iterable[i];
 
-					if (isTask(promiseLike)) {
-						promiseLike.cancel();
+						if (isTask(promiseLike)) {
+							promiseLike.cancel();
+						}
 					}
+				} else if (isIterable(iterable)) {
+					for (const promiseLike of iterable) {
+						if (isTask(promiseLike)) {
+							promiseLike.cancel();
+						}
+					}
+				} else {
+					Object.keys(iterable).forEach((key: any) => {
+						const promiseLike = iterable[key];
+
+						if (isTask(promiseLike)) {
+							promiseLike.cancel();
+						}
+					});
 				}
 			}
-			else if (isIterable(iterable)) {
-				for (const promiseLike of iterable) {
-					if (isTask(promiseLike)) {
-						promiseLike.cancel();
-					}
-				}
-			}
-			else {
-				Object.keys(iterable).forEach((key: any) => {
-					const promiseLike = iterable[key];
-
-					if (isTask(promiseLike)) {
-						promiseLike.cancel();
-					}
-				});
-			}
-		});
+		);
 	}
 
 	/**
@@ -251,8 +252,7 @@ export default class Task<T> extends ExtensiblePromise<T> {
 					superReject(reason);
 				}
 			);
-		}
-		catch (reason) {
+		} catch (reason) {
 			this._state = State.Rejected;
 			superReject(reason);
 		}
@@ -270,22 +270,20 @@ export default class Task<T> extends ExtensiblePromise<T> {
 		const runFinally = () => {
 			try {
 				return this._finally();
-			}
-			catch (error) {
+			} catch (error) {
 				// Any errors in a `finally` callback are completely ignored during cancelation
 			}
 		};
 
 		if (this._finally) {
 			if (isThenable(finallyTask)) {
-				finallyTask = (<Thenable<any>> finallyTask).then(runFinally, runFinally);
-			}
-			else {
+				finallyTask = (<Thenable<any>>finallyTask).then(runFinally, runFinally);
+			} else {
 				finallyTask = runFinally();
 			}
 		}
 
-		this.children.forEach(function (child) {
+		this.children.forEach(function(child) {
 			child._cancel(finallyTask);
 		});
 	}
@@ -300,7 +298,9 @@ export default class Task<T> extends ExtensiblePromise<T> {
 		}
 	}
 
-	catch<TResult = never>(onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined): Task<T | TResult> {
+	catch<TResult = never>(
+		onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined
+	): Task<T | TResult> {
 		return this.then(undefined, onRejected) as Task<T | TResult>;
 	}
 
@@ -315,10 +315,11 @@ export default class Task<T> extends ExtensiblePromise<T> {
 		}
 
 		const task = this.then<any>(
-			value => Task.resolve(callback()).then(() => value),
-			reason => Task.resolve(callback()).then(() => {
-				throw reason;
-			})
+			(value) => Task.resolve(callback()).then(() => value),
+			(reason) =>
+				Task.resolve(callback()).then(() => {
+					throw reason;
+				})
 		);
 
 		// Keep a reference to the callback; it will be called if the Task is canceled
@@ -334,21 +335,24 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	 *
 	 * @returns A task
 	 */
-	then<TResult1 = T, TResult2 = never>(onFulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onRejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Task<TResult1 | TResult2> {
+	then<TResult1 = T, TResult2 = never>(
+		onFulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+		onRejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
+	): Task<TResult1 | TResult2> {
 		// FIXME
 		// tslint:disable-next-line:no-var-keyword
 		var task = super.then(
 			// Don't call the onFulfilled or onRejected handlers if this Task is canceled
-			function (value) {
+			function(value) {
 				if (task._state === State.Canceled) {
 					return;
 				}
 				if (onFulfilled) {
 					return onFulfilled(value);
 				}
-				return <any> value;
+				return <any>value;
 			},
-			function (error) {
+			function(error) {
 				if (task._state === State.Canceled) {
 					return;
 				}
@@ -364,9 +368,8 @@ export default class Task<T> extends ExtensiblePromise<T> {
 			// unresolved parent
 			if (this._state === State.Pending) {
 				this.cancel();
-			}
-			// If task's parent has been resolved, propagate cancelation to the task's descendants
-			else {
+			} else {
+				// If task's parent has been resolved, propagate cancelation to the task's descendants
 				task._cancel();
 			}
 		};

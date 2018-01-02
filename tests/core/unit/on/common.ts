@@ -26,7 +26,7 @@ interface CustomEvent {
 	preventDefault?: () => void;
 }
 
-export default function (args: any): ObjectSuiteDescriptor {
+export default function(args: any): ObjectSuiteDescriptor {
 	let target: any;
 	const testEventName: string = args.eventName;
 
@@ -45,7 +45,7 @@ export default function (args: any): ObjectSuiteDescriptor {
 				let listenerCallCount = 0;
 				let emittedEvent: CustomEvent;
 
-				testOn(target, testEventName, function (actualEvent: CustomEvent) {
+				testOn(target, testEventName, function(actualEvent: CustomEvent) {
 					listenerCallCount++;
 					assert.strictEqual(actualEvent.value, emittedEvent.value);
 				});
@@ -64,7 +64,7 @@ export default function (args: any): ObjectSuiteDescriptor {
 				let emittedEventType: string;
 				let emittedEvent: CustomEvent;
 
-				testOn(target, ['test1', 'test2'], function (actualEvent: CustomEvent) {
+				testOn(target, ['test1', 'test2'], function(actualEvent: CustomEvent) {
 					listenerCallCount++;
 					if (emittedEventType in actualEvent) {
 						assert.strictEqual(actualEvent.type, emittedEventType);
@@ -85,26 +85,28 @@ export default function (args: any): ObjectSuiteDescriptor {
 
 			'on - multiple handlers'() {
 				const order: any[] = [];
-				testOn(target, ['a', 'b'], function (event: CustomEvent) {
+				testOn(target, ['a', 'b'], function(event: CustomEvent) {
 					order.push(`1${event.type}`);
 				});
-				testOn(target, [ 'a', 'c' ], function (event: CustomEvent) {
+				testOn(target, ['a', 'c'], function(event: CustomEvent) {
 					order.push(`2${event.type}`);
 				});
 				emit(target, { type: 'a' });
 				emit(target, { type: 'b' });
 				emit(target, { type: 'c' });
-				assert.deepEqual(order, [ '1a', '2a', '1b', '2c' ]);
+				assert.deepEqual(order, ['1a', '2a', '1b', '2c']);
 			},
 
-			'once'() {
+			once() {
 				let listenerCallCount = 0;
 				let emittedEvent: CustomEvent;
 
-				handles.push(once(target, testEventName, function (actualEvent: CustomEvent) {
-					listenerCallCount++;
-					assert.strictEqual(actualEvent.value, emittedEvent.value);
-				}));
+				handles.push(
+					once(target, testEventName, function(actualEvent: CustomEvent) {
+						listenerCallCount++;
+						assert.strictEqual(actualEvent.value, emittedEvent.value);
+					})
+				);
 
 				emittedEvent = { value: 'foo', type: testEventName };
 
@@ -115,11 +117,11 @@ export default function (args: any): ObjectSuiteDescriptor {
 				assert.strictEqual(listenerCallCount, 1);
 			},
 
-			'pausable'() {
+			pausable() {
 				let listenerCallCount = 0;
 				let emittedEvent: CustomEvent;
 
-				let handle = pausable(target, testEventName, function (actualEvent: CustomEvent) {
+				let handle = pausable(target, testEventName, function(actualEvent: CustomEvent) {
 					listenerCallCount++;
 					assert.strictEqual(actualEvent.value, emittedEvent.value);
 				});

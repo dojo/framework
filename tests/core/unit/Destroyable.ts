@@ -24,10 +24,7 @@ registerSuite('Destroyable', {
 			const destroy2 = sinon.spy();
 
 			const destroyable = new Destroyable();
-			destroyable.own([
-				{ destroy: destroy1 },
-				{ destroy: destroy2 }
-			]);
+			destroyable.own([{ destroy: destroy1 }, { destroy: destroy2 }]);
 
 			assert.strictEqual(destroy1.callCount, 0, 'first handle should not be called yet');
 			assert.strictEqual(destroy2.callCount, 0, 'second handle should not be called yet');
@@ -69,10 +66,7 @@ registerSuite('Destroyable', {
 			const destroy1 = sinon.spy();
 			const destroy2 = sinon.spy();
 			const destroyable = new Destroyable();
-			const handle = destroyable.own([
-				{ destroy: destroy1 },
-				{ destroy: destroy2 }
-			]);
+			const handle = destroyable.own([{ destroy: destroy1 }, { destroy: destroy2 }]);
 			assert.strictEqual(destroy1.callCount, 0, 'first destroy not called yet');
 			assert.strictEqual(destroy2.callCount, 0, 'second destroy not called yet');
 			handle.destroy();

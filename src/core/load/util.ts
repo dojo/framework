@@ -41,7 +41,7 @@ export function useDefault(modules: any | any[]): any[] | any {
 
 		for (let i = 0; i < modules.length; i++) {
 			const module = modules[i];
-			processedModules.push((module.__esModule && module.default) ? module.default : module);
+			processedModules.push(module.__esModule && module.default ? module.default : module);
 		}
 
 		return processedModules;
@@ -49,12 +49,11 @@ export function useDefault(modules: any | any[]): any[] | any {
 		let processedModules: any[] = [];
 
 		for (const module of modules) {
-			processedModules.push((module.__esModule && module.default) ? module.default : module);
+			processedModules.push(module.__esModule && module.default ? module.default : module);
 		}
 
 		return processedModules;
-	}
-	else {
-		return (modules.__esModule && modules.default) ? modules.default : modules;
+	} else {
+		return modules.__esModule && modules.default ? modules.default : modules;
 	}
 }

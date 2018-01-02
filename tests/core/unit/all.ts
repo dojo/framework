@@ -31,7 +31,7 @@ import './uuid';
 import './util';
 import './has';
 
-if (typeof (<any> require).toUrl === 'function') {
+if (typeof (<any>require).toUrl === 'function') {
 	// tslint:disable-next-line
 	import('./text');
 }

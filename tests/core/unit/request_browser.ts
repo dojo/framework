@@ -5,18 +5,19 @@ import { AmdRequire } from '../../src/interfaces';
 
 declare const require: AmdRequire;
 
-const getRequestUrl = function (dataKey: string): string {
+const getRequestUrl = function(dataKey: string): string {
 	return require.toUrl('../support/data/' + dataKey);
 };
 
 registerSuite('request_browser', {
 	'.get'() {
-		return request.get(getRequestUrl('foo.json'))
-			.then(response => {
+		return request
+			.get(getRequestUrl('foo.json'))
+			.then((response) => {
 				return response.json();
-			}).then(json => {
-				assert.deepEqual(json, { foo: 'bar' });
 			})
-		;
+			.then((json) => {
+				assert.deepEqual(json, { foo: 'bar' });
+			});
 	}
 });

@@ -21,10 +21,10 @@ export function isNodeRequire(object: any): object is NodeRequire {
 	return typeof object.resolve === 'function';
 }
 
-const load: Load = (function (): Load {
-	const resolver = isAmdRequire(require) ? require.toUrl :
-		isNodeRequire(require) ? require.resolve :
-		(resourceId: string) => resourceId;
+const load: Load = (function(): Load {
+	const resolver = isAmdRequire(require)
+		? require.toUrl
+		: isNodeRequire(require) ? require.resolve : (resourceId: string) => resourceId;
 
 	function pluginLoad(moduleIds: string[], load: Load, loader: (modulesIds: string[]) => Promise<any>) {
 		const pluginResourceIds: string[] = [];
@@ -41,9 +41,10 @@ const load: Load = (function (): Load {
 					const defaultExport = module['default'] || module;
 
 					if (isPlugin(defaultExport)) {
-						resourceId = typeof defaultExport.normalize === 'function' ?
-							defaultExport.normalize(resourceId, resolver) :
-							resolver(resourceId);
+						resourceId =
+							typeof defaultExport.normalize === 'function'
+								? defaultExport.normalize(resourceId, resolver)
+								: resolver(resourceId);
 
 						modules[i] = defaultExport.load(resourceId, load);
 					}
@@ -63,17 +64,17 @@ const load: Load = (function (): Load {
 
 			return pluginLoad(moduleIds, load, (moduleIds: string[]) => {
 				try {
-					return Promise.resolve(moduleIds.map(function (moduleId): any {
-						return contextualRequire(moduleId.split('!')[0]);
-					}));
-				}
-				catch (error) {
+					return Promise.resolve(
+						moduleIds.map(function(moduleId): any {
+							return contextualRequire(moduleId.split('!')[0]);
+						})
+					);
+				} catch (error) {
 					return Promise.reject(error);
 				}
 			});
 		};
-	}
-	else if (typeof define === 'function' && define.amd) {
+	} else if (typeof define === 'function' && define.amd) {
 		return function load(contextualRequire: any, ...moduleIds: string[]): Promise<any[]> {
 			if (typeof contextualRequire === 'string') {
 				moduleIds.unshift(contextualRequire);
@@ -81,7 +82,7 @@ const load: Load = (function (): Load {
 			}
 
 			return pluginLoad(moduleIds, load, (moduleIds: string[]) => {
-				return new Promise(function (resolve, reject) {
+				return new Promise(function(resolve, reject) {
 					let errorHandle: { remove: () => void };
 
 					if (typeof contextualRequire.on === 'function') {
@@ -91,23 +92,19 @@ const load: Load = (function (): Load {
 						});
 					}
 
-					contextualRequire(moduleIds, function (...modules: any[]) {
+					contextualRequire(moduleIds, function(...modules: any[]) {
 						errorHandle && errorHandle.remove();
 						resolve(modules);
 					});
 				});
 			});
 		};
-	}
-	else {
-		return function () {
+	} else {
+		return function() {
 			return Promise.reject(new Error('Unknown loader'));
 		};
 	}
 })();
 export default load;
 
-export {
-	isPlugin,
-	useDefault
-};
+export { isPlugin, useDefault };

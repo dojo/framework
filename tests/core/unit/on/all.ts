@@ -6,15 +6,15 @@ import on, { emit } from '../../../src/on';
 import Evented from '../../../src/Evented';
 
 registerSuite('events - Evented', {
-	'cannot target non-emitter': function () {
-		assert.throws(function () {
-			on(<any> {}, 'test', function () {});
+	'cannot target non-emitter': function() {
+		assert.throws(function() {
+			on(<any>{}, 'test', function() {});
 		});
 	},
 
 	'common cases': common({
 		eventName: 'test',
-		createTarget: function () {
+		createTarget: function() {
 			return new Evented();
 		}
 	}),
@@ -23,7 +23,7 @@ registerSuite('events - Evented', {
 		const target = new Evented();
 		assert.isFalse(emit(target, { type: 'test' }));
 
-		const handle = on(target, 'test', function () {});
+		const handle = on(target, 'test', function() {});
 		assert.isFalse(emit(target, { type: 'test' }));
 
 		handle.destroy();

@@ -24,8 +24,7 @@ export default class List<T> {
 				for (let i = 0; i < source.length; i++) {
 					this.add(source[i]);
 				}
-			}
-			else if (isIterable(source)) {
+			} else if (isIterable(source)) {
 				for (const item of source) {
 					this.add(item);
 				}
@@ -52,7 +51,7 @@ export default class List<T> {
 	}
 
 	entries(): IterableIterator<[number, T]> {
-		return new ShimIterator<[number, T]>(getListItems(this).map<[number, T]>((value, index) => [ index, value ]));
+		return new ShimIterator<[number, T]>(getListItems(this).map<[number, T]>((value, index) => [index, value]));
 	}
 
 	forEach(fn: (value: T, idx: number, list: this) => void, thisArg?: any): void {
@@ -92,8 +91,9 @@ export default class List<T> {
 	}
 
 	splice(start: number, deleteCount?: number, ...newItems: T[]): T[] {
-		return getListItems(this).splice(start,
-			deleteCount === undefined ? (this.size - start) : deleteCount,
+		return getListItems(this).splice(
+			start,
+			deleteCount === undefined ? this.size - start : deleteCount,
 			...newItems
 		);
 	}

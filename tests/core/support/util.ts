@@ -1,9 +1,12 @@
 export function isEventuallyRejected<T>(promise: PromiseLike<T>): PromiseLike<boolean> {
-	return promise.then(function () {
-		throw new Error('unexpected code path');
-	}, function () {
-		return true; // expect rejection
-	});
+	return promise.then(
+		function() {
+			throw new Error('unexpected code path');
+		},
+		function() {
+			return true; // expect rejection
+		}
+	);
 }
 
 export function throwImmediatly() {
@@ -20,5 +23,5 @@ export function hasClassName(): boolean {
 		return _hasClassName;
 	}
 	class Foo {}
-	return _hasClassName = Boolean((<any> Foo.constructor).name);
+	return (_hasClassName = Boolean((<any>Foo.constructor).name));
 }

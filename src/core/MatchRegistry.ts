@@ -62,11 +62,11 @@ export default class MatchRegistry<T> {
 			value: value
 		};
 
-		(<any> entries)[(first ? 'unshift' : 'push')](entry);
+		(<any>entries)[first ? 'unshift' : 'push'](entry);
 
 		return {
-			destroy: function (this: Handle) {
-				this.destroy = function (): void {};
+			destroy: function(this: Handle) {
+				this.destroy = function(): void {};
 				let i = 0;
 				if (entries && entry) {
 					while ((i = entries.indexOf(entry, i)) > -1) {

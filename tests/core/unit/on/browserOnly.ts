@@ -35,7 +35,7 @@ registerSuite('events - EventTarget', {
 		const target = createTarget();
 		assert.isTrue(emit(target, { type: 'test' }));
 
-		const handle = on(target, 'test', function (evt: EventObject) {
+		const handle = on(target, 'test', function(evt: EventObject) {
 			if (isDOMEvent(evt)) {
 				evt.preventDefault();
 			}

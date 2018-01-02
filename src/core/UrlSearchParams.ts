@@ -22,8 +22,7 @@ function parseQueryString(input: string): ParamList {
 		if (indexOfFirstEquals >= 0) {
 			key = entry.slice(0, indexOfFirstEquals);
 			value = entry.slice(indexOfFirstEquals + 1);
-		}
-		else {
+		} else {
 			key = entry;
 		}
 
@@ -32,8 +31,7 @@ function parseQueryString(input: string): ParamList {
 
 		if (key in query) {
 			query[key].push(value);
-		}
-		else {
+		} else {
 			query[key] = [value];
 		}
 	}
@@ -53,30 +51,25 @@ export default class UrlSearchParams {
 
 		if (input instanceof UrlSearchParams) {
 			// Copy the incoming UrlSearchParam's internal list
-			list = <ParamList> duplicate(input._list);
-		}
-		else if (typeof input === 'object') {
+			list = <ParamList>duplicate(input._list);
+		} else if (typeof input === 'object') {
 			// Copy the incoming object, assuming its property values are either arrays or strings
 			list = {};
 			for (const key in input) {
-				const value = (<ParamList> input)[key];
+				const value = (<ParamList>input)[key];
 
 				if (Array.isArray(value)) {
-					list[key] = value.length ? value.slice() : [ '' ];
-				}
-				else if (value == null) {
-					list[key] = [ '' ];
-				}
-				else {
-					list[key] = [ <string> value ];
+					list[key] = value.length ? value.slice() : [''];
+				} else if (value == null) {
+					list[key] = [''];
+				} else {
+					list[key] = [<string>value];
 				}
 			}
-		}
-		else if (typeof input === 'string') {
+		} else if (typeof input === 'string') {
 			// Parse the incoming string as a query string
 			list = parseQueryString(input);
-		}
-		else {
+		} else {
 			list = {};
 		}
 
@@ -97,8 +90,7 @@ export default class UrlSearchParams {
 	append(key: string, value: string): void {
 		if (!this.has(key)) {
 			this.set(key, value);
-		}
-		else {
+		} else {
 			const values = this._list[key];
 			if (values) {
 				values.push(value);
@@ -172,7 +164,7 @@ export default class UrlSearchParams {
 	 * @param key The key to set the value of
 	 */
 	set(key: string, value: string): void {
-		this._list[key] = [ value ];
+		this._list[key] = [value];
 	}
 
 	/**
@@ -191,7 +183,7 @@ export default class UrlSearchParams {
 			if (values) {
 				const encodedKey = encodeURIComponent(key);
 				for (let i = 0; i < values.length; i++) {
-					query.push(encodedKey + (values[i] ? ('=' + encodeURIComponent(values[i])) : ''));
+					query.push(encodedKey + (values[i] ? '=' + encodeURIComponent(values[i]) : ''));
 				}
 			}
 		}

@@ -13,7 +13,7 @@ registerSuite('request/providers/xhr', {
 		return xhrRequest('/__echo/', {
 			method: 'GET',
 			timeout: 10000
-		}).then(response => {
+		}).then((response) => {
 			if (response && response.status === 200) {
 				echoServerAvailable = true;
 				return;
@@ -27,42 +27,37 @@ registerSuite('request/providers/xhr', {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
 				}
-				return xhrRequest('/__echo/foo.json', { method: 'get' })
-					.then(function (response: any) {
-						assert.strictEqual(response.requestOptions.method, 'get');
-					});
+				return xhrRequest('/__echo/foo.json', { method: 'get' }).then(function(response: any) {
+					assert.strictEqual(response.requestOptions.method, 'get');
+				});
 			},
 
-			'default'(this: any) {
+			default(this: any) {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
 				}
-				return xhrRequest('/__echo/foo.json')
-					.then(function (response: any) {
-						assert.strictEqual(response.requestOptions.method, 'GET');
-					});
+				return xhrRequest('/__echo/foo.json').then(function(response: any) {
+					assert.strictEqual(response.requestOptions.method, 'GET');
+				});
 			},
 
 			'.get with URL query'(this: any) {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
 				}
-				return xhrRequest('/__echo/xhr?color=blue&numbers=one&numbers=two').then(function (response: any) {
+				return xhrRequest('/__echo/xhr?color=blue&numbers=one&numbers=two').then(function(response: any) {
 					return response.json().then((data: any) => {
 						const query = data.query;
 						assert.deepEqual(query, {
 							color: 'blue',
-							numbers: [ 'one', 'two' ]
+							numbers: ['one', 'two']
 						});
-						assert.strictEqual(
-							response.url,
-							'/__echo/xhr?color=blue&numbers=one&numbers=two'
-						);
+						assert.strictEqual(response.url, '/__echo/xhr?color=blue&numbers=one&numbers=two');
 					});
 				});
 			},
 
-			'.post': function (this: any) {
+			'.post': function(this: any) {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
 				}
@@ -72,7 +67,7 @@ registerSuite('request/providers/xhr', {
 					headers: {
 						'Content-Type': 'application/x-www-form-urlencoded'
 					}
-				}).then(function (response: any) {
+				}).then(function(response: any) {
 					return response.json().then((data: any) => {
 						assert.strictEqual(data.method, 'POST');
 						const payload = data.payload;
@@ -89,15 +84,14 @@ registerSuite('request/providers/xhr', {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
 				}
-				return xhrRequest('/__echo/xhr?delay=5000', { timeout: 10 })
-					.then(
-						function () {
-							assert(false, 'Should have timed out');
-						},
-						function (error: Error) {
-							assert.strictEqual(error.name, 'TimeoutError');
-						}
-					);
+				return xhrRequest('/__echo/xhr?delay=5000', { timeout: 10 }).then(
+					function() {
+						assert(false, 'Should have timed out');
+					},
+					function(error: Error) {
+						assert.strictEqual(error.name, 'TimeoutError');
+					}
+				);
 			},
 
 			'user and password'(this: any) {
@@ -107,7 +101,7 @@ registerSuite('request/providers/xhr', {
 				return xhrRequest('/__echo/foo.json', {
 					user: 'user',
 					password: 'password'
-				}).then(function (response: any) {
+				}).then(function(response: any) {
 					assert.strictEqual(response.requestOptions.user, 'user');
 					assert.strictEqual(response.requestOptions.password, 'password');
 				});
@@ -125,35 +119,35 @@ registerSuite('request/providers/xhr', {
 					body: '12345'
 				});
 
-				req.upload.subscribe(totalBytesUploaded => {
+				req.upload.subscribe((totalBytesUploaded) => {
 					events.push(totalBytesUploaded);
 				});
 
-				return req.then(res => {
+				return req.then((res) => {
 					assert.isTrue(events.length > 0, 'was expecting at least one monitor event');
 					assert.equal(events[events.length - 1], 5);
 				});
 			},
 
-			'query': {
+			query: {
 				'.get with query URL and query option string'(this: any) {
 					if (!echoServerAvailable) {
 						this.skip('No echo server available');
 					}
 					return xhrRequest('/__echo/xhr?color=blue&numbers=one&numbers=two', {
 						query: new UrlSearchParams({
-							foo: [ 'bar', 'baz' ],
+							foo: ['bar', 'baz'],
 							thud: 'thonk',
 							xyzzy: '3'
 						}).toString()
-					}).then(function (response: any) {
+					}).then(function(response: any) {
 						return response.json().then((data: any) => {
 							const query = data.query;
 							assert.deepEqual(query, {
 								color: 'blue',
-								numbers: [ 'one', 'two' ],
+								numbers: ['one', 'two'],
 								thud: 'thonk',
-								foo: [ 'bar', 'baz' ],
+								foo: ['bar', 'baz'],
 								xyzzy: '3'
 							});
 							assert.strictEqual(
@@ -170,22 +164,19 @@ registerSuite('request/providers/xhr', {
 					}
 					return xhrRequest('/__echo/xhr', {
 						query: new UrlSearchParams({
-							foo: [ 'bar', 'baz' ],
+							foo: ['bar', 'baz'],
 							thud: 'thonk',
 							xyzzy: '3'
 						}).toString()
-					}).then(function (response: any) {
+					}).then(function(response: any) {
 						return response.json().then((data: any) => {
 							const query = data.query;
 							assert.deepEqual(query, {
-								foo: [ 'bar', 'baz' ],
+								foo: ['bar', 'baz'],
 								thud: 'thonk',
 								xyzzy: '3'
 							});
-							assert.strictEqual(
-								response.url,
-								'/__echo/xhr?foo=bar&foo=baz&thud=thonk&xyzzy=3'
-							);
+							assert.strictEqual(response.url, '/__echo/xhr?foo=bar&foo=baz&thud=thonk&xyzzy=3');
 						});
 					});
 				},
@@ -196,22 +187,19 @@ registerSuite('request/providers/xhr', {
 					}
 					return xhrRequest('/__echo/xhr', {
 						query: {
-							foo: [ 'bar', 'baz' ],
+							foo: ['bar', 'baz'],
 							thud: 'thonk',
 							xyzzy: '3'
 						}
-					}).then(function (response: any) {
+					}).then(function(response: any) {
 						return response.json().then((data: any) => {
 							const query = data.query;
 							assert.deepEqual(query, {
-								foo: [ 'bar', 'baz' ],
+								foo: ['bar', 'baz'],
 								thud: 'thonk',
 								xyzzy: '3'
 							});
-							assert.strictEqual(
-								response.url,
-								'/__echo/xhr?foo=bar&foo=baz&thud=thonk&xyzzy=3'
-							);
+							assert.strictEqual(response.url, '/__echo/xhr?foo=bar&foo=baz&thud=thonk&xyzzy=3');
 						});
 					});
 				},
@@ -224,24 +212,26 @@ registerSuite('request/providers/xhr', {
 					let cacheBustStringB: string;
 					return xhrRequest('/__echo/xhr?foo=bar', {
 						cacheBust: true
-					}).then(function (response: any) {
-						assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
-						cacheBustStringA = response.url.split('&')[ 1 ];
-						assert.isFalse(isNaN(Number(cacheBustStringA)));
-						return new Promise<Response>(function (resolve, reject) {
-							setTimeout(function () {
-								xhrRequest('/__echo/xhr?foo=bar', {
-									cacheBust: true
-								}).then(resolve, reject);
-							}, 5);
-						});
-					}).then(function (response: any) {
-						assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
-						cacheBustStringB = response.url.split('&')[ 1 ];
-						assert.isFalse(isNaN(Number(cacheBustStringB)));
+					})
+						.then(function(response: any) {
+							assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
+							cacheBustStringA = response.url.split('&')[1];
+							assert.isFalse(isNaN(Number(cacheBustStringA)));
+							return new Promise<Response>(function(resolve, reject) {
+								setTimeout(function() {
+									xhrRequest('/__echo/xhr?foo=bar', {
+										cacheBust: true
+									}).then(resolve, reject);
+								}, 5);
+							});
+						})
+						.then(function(response: any) {
+							assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
+							cacheBustStringB = response.url.split('&')[1];
+							assert.isFalse(isNaN(Number(cacheBustStringB)));
 
-						assert.notEqual(cacheBustStringA, cacheBustStringB);
-					});
+							assert.notEqual(cacheBustStringA, cacheBustStringB);
+						});
 				},
 
 				'.get with cacheBust w/query string w/query option'(this: any) {
@@ -255,28 +245,30 @@ registerSuite('request/providers/xhr', {
 						query: {
 							bar: 'baz'
 						}
-					}).then(function (response: any) {
-						assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar&bar=baz'), 0);
-						cacheBustStringA = response.url.split('&')[ 2 ];
-						assert.isFalse(isNaN(Number(cacheBustStringA)));
+					})
+						.then(function(response: any) {
+							assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar&bar=baz'), 0);
+							cacheBustStringA = response.url.split('&')[2];
+							assert.isFalse(isNaN(Number(cacheBustStringA)));
 
-						return new Promise<Response>(function (resolve, reject) {
-							setTimeout(function () {
-								xhrRequest('/__echo/xhr?foo=bar', {
-									cacheBust: true,
-									query: {
-										bar: 'baz'
-									}
-								}).then(resolve, reject);
-							}, 5);
+							return new Promise<Response>(function(resolve, reject) {
+								setTimeout(function() {
+									xhrRequest('/__echo/xhr?foo=bar', {
+										cacheBust: true,
+										query: {
+											bar: 'baz'
+										}
+									}).then(resolve, reject);
+								}, 5);
+							});
+						})
+						.then(function(response: any) {
+							assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar&bar=baz'), 0);
+							cacheBustStringB = response.url.split('&')[2];
+							assert.isFalse(isNaN(Number(cacheBustStringB)));
+
+							assert.notEqual(cacheBustStringA, cacheBustStringB);
 						});
-					}).then(function (response: any) {
-						assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar&bar=baz'), 0);
-						cacheBustStringB = response.url.split('&')[ 2 ];
-						assert.isFalse(isNaN(Number(cacheBustStringB)));
-
-						assert.notEqual(cacheBustStringA, cacheBustStringB);
-					});
 				},
 
 				'.get with cacheBust w/o/query string w/query option'(this: any) {
@@ -290,28 +282,30 @@ registerSuite('request/providers/xhr', {
 						query: {
 							foo: 'bar'
 						}
-					}).then(function (response: any) {
-						assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
-						cacheBustStringA = response.url.split('&')[ 1 ];
-						assert.isFalse(isNaN(Number(cacheBustStringA)));
+					})
+						.then(function(response: any) {
+							assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
+							cacheBustStringA = response.url.split('&')[1];
+							assert.isFalse(isNaN(Number(cacheBustStringA)));
 
-						return new Promise<Response>(function (resolve, reject) {
-							setTimeout(function () {
-								xhrRequest('/__echo/xhr', {
-									cacheBust: true,
-									query: {
-										foo: 'bar'
-									}
-								}).then(resolve, reject);
-							}, 5);
+							return new Promise<Response>(function(resolve, reject) {
+								setTimeout(function() {
+									xhrRequest('/__echo/xhr', {
+										cacheBust: true,
+										query: {
+											foo: 'bar'
+										}
+									}).then(resolve, reject);
+								}, 5);
+							});
+						})
+						.then(function(response: any) {
+							assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
+							cacheBustStringB = response.url.split('&')[1];
+							assert.isFalse(isNaN(Number(cacheBustStringB)));
+
+							assert.notEqual(cacheBustStringA, cacheBustStringB);
 						});
-					}).then(function (response: any) {
-						assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
-						cacheBustStringB = response.url.split('&')[ 1 ];
-						assert.isFalse(isNaN(Number(cacheBustStringB)));
-
-						assert.notEqual(cacheBustStringA, cacheBustStringB);
-					});
 				},
 
 				'.get with cacheBust and no query'(this: any) {
@@ -322,24 +316,26 @@ registerSuite('request/providers/xhr', {
 					let cacheBustStringB: string;
 					return xhrRequest('/__echo/xhr', {
 						cacheBust: true
-					}).then(function (response: any) {
-						cacheBustStringA = response.url.split('?')[ 1 ];
-						assert.ok(cacheBustStringA);
-						assert.isFalse(isNaN(Number(cacheBustStringA)));
+					})
+						.then(function(response: any) {
+							cacheBustStringA = response.url.split('?')[1];
+							assert.ok(cacheBustStringA);
+							assert.isFalse(isNaN(Number(cacheBustStringA)));
 
-						return xhrRequest('/__echo/xhr', {
-							cacheBust: true
+							return xhrRequest('/__echo/xhr', {
+								cacheBust: true
+							});
+						})
+						.then(function(response: any) {
+							cacheBustStringB = response.url.split('?')[1];
+							assert.ok(cacheBustStringB);
+							assert.isFalse(isNaN(Number(cacheBustStringB)));
+							assert.notEqual(cacheBustStringA, cacheBustStringB);
 						});
-					}).then(function (response: any) {
-						cacheBustStringB = response.url.split('?')[ 1 ];
-						assert.ok(cacheBustStringB);
-						assert.isFalse(isNaN(Number(cacheBustStringB)));
-						assert.notEqual(cacheBustStringA, cacheBustStringB);
-					});
 				}
 			},
 
-			'headers': {
+			headers: {
 				'normalize header names'(this: any) {
 					if (!echoServerAvailable) {
 						this.skip('No echo server available');
@@ -349,12 +345,12 @@ registerSuite('request/providers/xhr', {
 							'CONTENT-TYPE': 'arbitrary-value',
 							'X-REQUESTED-WITH': 'test'
 						}
-					}).then(function (response: any) {
+					}).then(function(response: any) {
 						return response.json().then((data: any) => {
-							assert.isUndefined(data.headers[ 'CONTENT-TYPE' ]);
+							assert.isUndefined(data.headers['CONTENT-TYPE']);
 							assert.propertyVal(data.headers, 'content-type', 'arbitrary-value');
 
-							assert.isUndefined(data.headers[ 'X-REQUESTED-WITH' ]);
+							assert.isUndefined(data.headers['X-REQUESTED-WITH']);
 							assert.propertyVal(data.headers, 'x-requested-with', 'test');
 						});
 					});
@@ -368,21 +364,23 @@ registerSuite('request/providers/xhr', {
 						headers: {
 							'Content-Type': 'application/arbitrary-value'
 						}
-					}).then(function (response: any) {
-						return response.json().then((data: any) => {
-							assert.propertyVal(data.headers, 'content-type', 'application/arbitrary-value');
+					})
+						.then(function(response: any) {
+							return response.json().then((data: any) => {
+								assert.propertyVal(data.headers, 'content-type', 'application/arbitrary-value');
 
-							return xhrRequest('/__echo/custom', {
-								headers: {
-									'Range': 'bytes=0-1024'
-								}
+								return xhrRequest('/__echo/custom', {
+									headers: {
+										Range: 'bytes=0-1024'
+									}
+								});
+							});
+						})
+						.then((response: any) => {
+							return response.json().then((data: any) => {
+								assert.isDefined(data.headers, 'range');
 							});
 						});
-					}).then((response: any) => {
-						return response.json().then((data: any) => {
-							assert.isDefined(data.headers, 'range');
-						});
-					});
 				},
 
 				'default headers'(this: any) {
@@ -390,11 +388,11 @@ registerSuite('request/providers/xhr', {
 						this.skip('No echo server available');
 					}
 					const options = has('formdata') ? { body: new FormData() } : {};
-					return xhrRequest('/__echo/default', options).then(function (response: any) {
+					return xhrRequest('/__echo/default', options).then(function(response: any) {
 						return response.json().then((data: any) => {
-							assert.strictEqual(data.headers[ 'x-requested-with' ], 'XMLHttpRequest');
+							assert.strictEqual(data.headers['x-requested-with'], 'XMLHttpRequest');
 							if (has('formdata')) {
-								assert.include(data.headers[ 'content-type' ], 'application/x-www-form-urlencoded');
+								assert.include(data.headers['content-type'], 'application/x-www-form-urlencoded');
 							}
 						});
 					});
@@ -404,8 +402,8 @@ registerSuite('request/providers/xhr', {
 					if (!echoServerAvailable) {
 						this.skip('No echo server available');
 					}
-					const options = {includeRequestedWithHeader: false};
-					return xhrRequest('/__echo/default?norequestedwith', options).then(function (response: any) {
+					const options = { includeRequestedWithHeader: false };
+					return xhrRequest('/__echo/default?norequestedwith', options).then(function(response: any) {
 						return response.json().then((data: any) => {
 							assert.isUndefined(data.headers['x-requested-with']);
 						});
@@ -419,7 +417,7 @@ registerSuite('request/providers/xhr', {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
 				}
-				return xhrRequest('/__echo/foo.json').then(function (response: XhrResponse) {
+				return xhrRequest('/__echo/foo.json').then(function(response: XhrResponse) {
 					assert.strictEqual(response.status, 200);
 					assert.strictEqual(response.statusText, 'OK');
 					assert.isTrue(response.nativeResponse instanceof XMLHttpRequest);
@@ -432,7 +430,7 @@ registerSuite('request/providers/xhr', {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
 				}
-				return xhrRequest('/__echo/foo.json').then(function (response: any) {
+				return xhrRequest('/__echo/foo.json').then(function(response: any) {
 					return response.text().then((data: any) => {
 						const length: number = Number(response.headers.get('content-length'));
 						assert.strictEqual(length, data.length);
@@ -451,17 +449,20 @@ registerSuite('request/providers/xhr', {
 					return response.text().then(() => {
 						assert.isTrue(response.bodyUsed);
 
-						return response.text().then(() => {
-							throw new Error('should not have succeeded');
-						}, () => {
-							return 'success';
-						});
+						return response.text().then(
+							() => {
+								throw new Error('should not have succeeded');
+							},
+							() => {
+								return 'success';
+							}
+						);
 					});
 				});
 			},
 
 			'response types': {
-				'arrayBuffer'(this: any) {
+				arrayBuffer(this: any) {
 					if (!echoServerAvailable) {
 						this.skip('No echo server available');
 					}
@@ -477,7 +478,7 @@ registerSuite('request/providers/xhr', {
 					});
 				},
 
-				'blob'(this: any) {
+				blob(this: any) {
 					if (!echoServerAvailable) {
 						this.skip('No echo server available');
 					}
@@ -493,7 +494,7 @@ registerSuite('request/providers/xhr', {
 					});
 				},
 
-				'formData'(this: any) {
+				formData(this: any) {
 					if (!echoServerAvailable) {
 						this.skip('No echo server available');
 					}
@@ -509,7 +510,7 @@ registerSuite('request/providers/xhr', {
 					});
 				},
 
-				'xml'(this: any) {
+				xml(this: any) {
 					if (!echoServerAvailable) {
 						this.skip('No echo server available');
 					}
@@ -530,8 +531,8 @@ registerSuite('request/providers/xhr', {
 
 					let timesCalled = 0;
 
-					return xhrRequest('/__echo/foo.json').then(response => {
-						response.data.subscribe(chunk => {
+					return xhrRequest('/__echo/foo.json').then((response) => {
+						response.data.subscribe((chunk) => {
 							assert.isNotNull(chunk);
 							timesCalled++;
 						});
@@ -549,8 +550,8 @@ registerSuite('request/providers/xhr', {
 
 					let downloadEvents: number[] = [];
 
-					return xhrRequest('/__echo/foo.json').then(response => {
-						response.download.subscribe(totalBytesDownloaded => {
+					return xhrRequest('/__echo/foo.json').then((response) => {
+						response.download.subscribe((totalBytesDownloaded) => {
 							downloadEvents.push(totalBytesDownloaded);
 						});
 
@@ -572,7 +573,9 @@ registerSuite('request/providers/xhr', {
 				const baseUrl = location.origin;
 				const dfd = this.async();
 
-				const blob = new Blob([ `(function() {
+				const blob = new Blob(
+					[
+						`(function() {
 self.addEventListener('message', function (event) {
 	testXhr(event.data.baseUrl, event.data.testUrl);
 });
@@ -594,7 +597,10 @@ function testXhr(baseUrl, testUrl) {
 		});
 	});
 }
-				})()` ], { type: 'application/javascript' });
+				})()`
+					],
+					{ type: 'application/javascript' }
+				);
 				const worker = new Worker(URL.createObjectURL(blob));
 				worker.addEventListener('error', (error) => {
 					dfd.reject(error.message);
@@ -604,8 +610,7 @@ function testXhr(baseUrl, testUrl) {
 
 					if (status === 'success') {
 						dfd.resolve();
-					}
-					else if (status === 'error') {
+					} else if (status === 'error') {
 						dfd.reject(result.message);
 					}
 				});

@@ -3,7 +3,11 @@ import { IterableIterator, ShimIterator } from '@dojo/shim/iterator';
 import Map from '@dojo/shim/Map';
 
 function isHeadersLike(object: any): object is HeadersInterface {
-	return typeof object.append === 'function' && typeof object.entries === 'function' && typeof object[Symbol.iterator] === 'function';
+	return (
+		typeof object.append === 'function' &&
+		typeof object.entries === 'function' &&
+		typeof object[Symbol.iterator] === 'function'
+	);
 }
 
 export default class Headers implements HeadersInterface {
@@ -13,13 +17,11 @@ export default class Headers implements HeadersInterface {
 		if (headers) {
 			if (headers instanceof Headers) {
 				this.map = new Map(headers.map);
-			}
-			else if (isHeadersLike(headers)) {
+			} else if (isHeadersLike(headers)) {
 				for (const [key, value] of headers) {
 					this.append(key, value);
 				}
-			}
-			else {
+			} else {
 				for (let key in headers) {
 					this.set(key, headers[key]);
 				}
@@ -32,8 +34,7 @@ export default class Headers implements HeadersInterface {
 
 		if (values) {
 			values.push(value);
-		}
-		else {
+		} else {
 			this.set(name, value);
 		}
 	}
@@ -45,7 +46,7 @@ export default class Headers implements HeadersInterface {
 	entries(): IterableIterator<[string, string]> {
 		const entries: [string, string][] = [];
 		for (const [key, values] of this.map.entries()) {
-			values.forEach(value => {
+			values.forEach((value) => {
 				entries.push([key, value]);
 			});
 		}
@@ -57,8 +58,7 @@ export default class Headers implements HeadersInterface {
 
 		if (values) {
 			return values[0];
-		}
-		else {
+		} else {
 			return null;
 		}
 	}
@@ -68,8 +68,7 @@ export default class Headers implements HeadersInterface {
 
 		if (values) {
 			return values.slice(0);
-		}
-		else {
+		} else {
 			return [];
 		}
 	}
@@ -83,7 +82,7 @@ export default class Headers implements HeadersInterface {
 	}
 
 	set(name: string, value: string) {
-		this.map.set(name.toLowerCase(), [ value ]);
+		this.map.set(name.toLowerCase(), [value]);
 	}
 
 	values(): IterableIterator<string> {

@@ -32,13 +32,11 @@ export function isGlobMatch(globString: string | symbol, targetString: string | 
 		let regex: RegExp;
 		if (regexMap.has(globString)) {
 			regex = regexMap.get(globString)!;
-		}
-		else {
-			regex = new RegExp(`^${ globString.replace(/\*/g, '.*') }$`);
+		} else {
+			regex = new RegExp(`^${globString.replace(/\*/g, '.*')}$`);
 			regexMap.set(globString, regex);
 		}
 		return regex.test(targetString);
-
 	} else {
 		return globString === targetString;
 	}
@@ -59,13 +57,14 @@ export type EventedCallback<T = EventType, E extends EventObject<T> = EventObjec
  * @template T The type of target for the events
  * @template E The event type for the events
  */
-export type EventedCallbackOrArray<T = EventType, E extends EventObject<T> = EventObject<T>> = EventedCallback<T, E> | EventedCallback<T, E>[];
+export type EventedCallbackOrArray<T = EventType, E extends EventObject<T> = EventObject<T>> =
+	| EventedCallback<T, E>
+	| EventedCallback<T, E>[];
 
 /**
  * Event Class
  */
 export class Evented<M extends {} = {}, T = EventType, O extends EventObject<T> = EventObject<T>> extends Destroyable {
-
 	// The following member is purely so TypeScript remembers the type of `M` when extending so
 	// that the utilities in `on.ts` will work
 	// https://github.com/Microsoft/TypeScript/issues/20348
@@ -117,8 +116,7 @@ export class Evented<M extends {} = {}, T = EventType, O extends EventObject<T> 
 		if (Array.isArray(listener)) {
 			const handles = listener.map((listener) => aspectOn(this.listenersMap, type, listener));
 			return handlesArraytoHandle(handles);
-		}
-		else {
+		} else {
 			return aspectOn(this.listenersMap, type, listener);
 		}
 	}

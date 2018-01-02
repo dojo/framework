@@ -13,9 +13,9 @@ export interface Identity<T> {
  * @return {function (value: T | (() => T | Thenable<T>)): Promise<T>} a function producing a promise that eventually returns the value or executes the value function passed to it; usable with Thenable.then()
  */
 export function delay<T>(milliseconds: number): Identity<T> {
-	return function (value?: IdentityValue<T>): Promise<T> {
-		return new Promise(function (resolve) {
-			setTimeout(function () {
+	return function(value?: IdentityValue<T>): Promise<T> {
+		return new Promise(function(resolve) {
+			setTimeout(function() {
 				resolve(typeof value === 'function' ? value() : value);
 			}, milliseconds);
 		});
@@ -31,7 +31,7 @@ export function delay<T>(milliseconds: number): Identity<T> {
  */
 export function timeout<T>(milliseconds: number, reason: Error): Identity<T> {
 	const start = Date.now();
-	return function (value?: IdentityValue<T>): Promise<T> {
+	return function(value?: IdentityValue<T>): Promise<T> {
 		if (Date.now() - milliseconds > start) {
 			return Promise.reject<T>(reason);
 		}
@@ -52,10 +52,9 @@ export class DelayedRejection extends Promise<any> {
 	 * @param reason the reason for the rejection
 	 */
 	constructor(milliseconds: number, reason?: Error) {
-		super(() => {
-		});
+		super(() => {});
 
-		return new Promise(function (resolve, reject) {
+		return new Promise(function(resolve, reject) {
 			setTimeout(() => {
 				reject(reason);
 			}, milliseconds);

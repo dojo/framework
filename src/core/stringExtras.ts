@@ -8,7 +8,7 @@ const escapeXmlMap: Hash<string> = {
 	'<': '&lt;',
 	'>': '&gt;',
 	'"': '&quot;',
-	'\'': '&#39;'
+	"'": '&#39;'
 };
 
 /**
@@ -33,7 +33,7 @@ export function escapeXml(xml: string, forAttribute: boolean = true): string {
 
 	const pattern = forAttribute ? escapeXmlForPattern : escapeXmlPattern;
 
-	return xml.replace(pattern, function (character: string): string {
+	return xml.replace(pattern, function(character: string): string {
 		return escapeXmlMap[character];
 	});
 }

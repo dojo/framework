@@ -21,7 +21,7 @@ abstract class Response implements ResponseInterface {
 	abstract readonly data: Observable<any>;
 
 	json<T>(): Task<T> {
-		return <any> this.text().then(JSON.parse);
+		return <any>this.text().then(JSON.parse);
 	}
 
 	abstract arrayBuffer(): Task<ArrayBuffer>;
@@ -34,10 +34,10 @@ export default Response;
 
 export function getFileReaderPromise<T>(reader: FileReader): Promise<T> {
 	return new Promise((resolve, reject) => {
-		reader.onload = function () {
+		reader.onload = function() {
 			resolve(reader.result);
 		};
-		reader.onerror = function () {
+		reader.onerror = function() {
 			reject(reader.error);
 		};
 	});

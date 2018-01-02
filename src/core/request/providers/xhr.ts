@@ -87,7 +87,7 @@ export class XhrResponse extends Response {
 	constructor(request: XMLHttpRequest) {
 		super();
 
-		const headers = this.headers = new Headers();
+		const headers = (this.headers = new Headers());
 
 		const responseHeaders = request.getAllResponseHeaders();
 		if (responseHeaders) {
@@ -119,13 +119,13 @@ export class XhrResponse extends Response {
 	}
 
 	text(): Task<string> {
-		return <any> getDataTask(this).then((request: XMLHttpRequest) => {
+		return <any>getDataTask(this).then((request: XMLHttpRequest) => {
 			return String(request.responseText);
 		});
 	}
 
 	xml(): Task<Document> {
-		return <any> this.text().then((text: string) => {
+		return <any>this.text().then((text: string) => {
 			const parser = new DOMParser();
 			return parser.parseFromString(text, this.headers.get('content-type') || 'text/html');
 		});
@@ -133,45 +133,48 @@ export class XhrResponse extends Response {
 }
 
 if (has('blob')) {
-	XhrResponse.prototype.blob = function (this: XhrResponse): Task<Blob> {
-		return <any> getDataTask(this).then((request: XMLHttpRequest) => request.response);
+	XhrResponse.prototype.blob = function(this: XhrResponse): Task<Blob> {
+		return <any>getDataTask(this).then((request: XMLHttpRequest) => request.response);
 	};
 
-	XhrResponse.prototype.text = function (this: XhrResponse): Task<string> {
-		return <any> this.blob().then(getTextFromBlob);
+	XhrResponse.prototype.text = function(this: XhrResponse): Task<string> {
+		return <any>this.blob().then(getTextFromBlob);
 	};
 
 	if (has('arraybuffer')) {
-		XhrResponse.prototype.arrayBuffer = function (this: XhrResponse): Task<ArrayBuffer> {
-			return <any> this.blob().then(getArrayBufferFromBlob);
+		XhrResponse.prototype.arrayBuffer = function(this: XhrResponse): Task<ArrayBuffer> {
+			return <any>this.blob().then(getArrayBufferFromBlob);
 		};
 	}
 }
 
 if (has('formdata')) {
-	XhrResponse.prototype.formData = function (this: XhrResponse): Task<FormData> {
-		return <any> this.text().then((text: string) => {
+	XhrResponse.prototype.formData = function(this: XhrResponse): Task<FormData> {
+		return <any>this.text().then((text: string) => {
 			const data = new FormData();
 
-			text.trim().split('&').forEach(keyValues => {
-				if (keyValues) {
-					const pairs = keyValues.split('=');
-					const name = (pairs.shift() || '').replace(/\+/, ' ');
-					const value = pairs.join('=').replace(/\+/, ' ');
+			text
+				.trim()
+				.split('&')
+				.forEach((keyValues) => {
+					if (keyValues) {
+						const pairs = keyValues.split('=');
+						const name = (pairs.shift() || '').replace(/\+/, ' ');
+						const value = pairs.join('=').replace(/\+/, ' ');
 
-					data.append(decodeURIComponent(name), decodeURIComponent(value));
-				}
-			});
+						data.append(decodeURIComponent(name), decodeURIComponent(value));
+					}
+				});
 
 			return data;
 		});
 	};
 }
 
-function noop () {}
+function noop() {}
 
 function setOnError(request: XMLHttpRequest, reject: Function) {
-	request.addEventListener('error', function (event) {
+	request.addEventListener('error', function(event) {
 		reject(new TypeError(event.error || 'Network request failed'));
 	});
 }
@@ -199,10 +202,10 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 	let timeoutHandle: Handle;
 	let timeoutReject: Function;
 
-	const task = <UploadObservableTask<XhrResponse>> new Task<XhrResponse>((resolve, reject) => {
+	const task = <UploadObservableTask<XhrResponse>>new Task<XhrResponse>((resolve, reject) => {
 		timeoutReject = reject;
 
-		request.onreadystatechange = function () {
+		request.onreadystatechange = function() {
 			if (isAborted) {
 				return;
 			}
@@ -216,7 +219,7 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 				const task = new Task<XMLHttpRequest>((resolve, reject) => {
 					timeoutReject = reject;
 
-					request.onprogress = function (event: any) {
+					request.onprogress = function(event: any) {
 						if (isAborted) {
 							return;
 						}
@@ -224,7 +227,7 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 						downloadSubscriptionPool.next(event.loaded);
 					};
 
-					request.onreadystatechange = function () {
+					request.onreadystatechange = function() {
 						if (isAborted) {
 							return;
 						}
@@ -249,8 +252,8 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 					nativeResponse: request,
 					requestOptions: options,
 					url: requestUrl,
-					downloadObservable: new Observable<number>(observer => downloadSubscriptionPool.add(observer)),
-					dataObservable: new Observable<any>(observer => dataSubscriptionPool.add(observer))
+					downloadObservable: new Observable<number>((observer) => downloadSubscriptionPool.add(observer)),
+					dataObservable: new Observable<any>((observer) => dataSubscriptionPool.add(observer))
 				});
 
 				resolve(response);
@@ -258,7 +261,6 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 		};
 
 		setOnError(request, reject);
-
 	}, abort);
 
 	request.open(options.method, requestUrl, !options.blockMainThread, options.user, options.password);
@@ -310,10 +312,10 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 	});
 
 	const uploadObserverPool = new SubscriptionPool<number>();
-	task.upload = new Observable<number>(observer => uploadObserverPool.add(observer));
+	task.upload = new Observable<number>((observer) => uploadObserverPool.add(observer));
 
 	if (has('host-browser') || has('web-worker-xhr-upload')) {
-		request.upload.addEventListener('progress', event => {
+		request.upload.addEventListener('progress', (event) => {
 			uploadObserverPool.next(event.loaded);
 		});
 	}

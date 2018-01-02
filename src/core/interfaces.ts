@@ -54,7 +54,7 @@ export interface Handle {
  * A general interface that can be used to renference a general index map of values of a particular type
  */
 export interface Hash<T> {
-	[ id: string ]: T;
+	[id: string]: T;
 }
 
 /**

@@ -5,7 +5,7 @@ import { Handle } from './interfaces';
 import '@dojo/shim/Symbol';
 import List from './List';
 
-const noop = () => { };
+const noop = () => {};
 
 interface Entry<V> {
 	readonly handle: Handle;
@@ -175,4 +175,4 @@ export default class IdentityRegistry<V extends object> implements Iterable<[Ide
 	[Symbol.iterator](): IterableIterator<[Identity, V]> {
 		return this.entries();
 	}
-};
+}

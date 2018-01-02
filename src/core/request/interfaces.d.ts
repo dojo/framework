@@ -48,7 +48,7 @@ export interface RequestOptions {
 	/**
 	 * Headers to send along with the http request
 	 */
-	headers?: Headers | { [key: string]: string; };
+	headers?: Headers | { [key: string]: string };
 	/**
 	 * HTTP method
 	 */

@@ -26,8 +26,7 @@ export default class MultiMap<T> implements Map<any[], T> {
 					const value = iterable[i];
 					this.set(value[0], value[1]);
 				}
-			}
-			else if (isIterable(iterable)) {
+			} else if (isIterable(iterable)) {
 				for (const value of iterable) {
 					this.set(value[0], value[1]);
 				}
@@ -55,7 +54,7 @@ export default class MultiMap<T> implements Map<any[], T> {
 			childMap = new Map<any, any>();
 			map.set(keys[i], childMap);
 			map = childMap;
-		};
+		}
 
 		map.set(this._key, value);
 		return this;
@@ -77,7 +76,7 @@ export default class MultiMap<T> implements Map<any[], T> {
 			if (!map) {
 				return undefined;
 			}
-		};
+		}
 
 		return map.get(this._key);
 	}
@@ -149,8 +148,7 @@ export default class MultiMap<T> implements Map<any[], T> {
 			map.forEach((value, key) => {
 				if (key === this._key) {
 					values.push(value);
-				}
-				else {
+				} else {
 					getValues(value);
 				}
 			});
@@ -172,8 +170,7 @@ export default class MultiMap<T> implements Map<any[], T> {
 			map.forEach((value, key) => {
 				if (key === this._key) {
 					finalKeys.push(keys);
-				}
-				else {
+				} else {
 					const nextKeys = [...keys, key];
 					getKeys(value, nextKeys);
 				}
@@ -190,14 +187,13 @@ export default class MultiMap<T> implements Map<any[], T> {
 	 * @return An iterator for each key/value pair in the instance.
 	 */
 	entries(): IterableIterator<[any[], T]> {
-		const finalEntries: [ any[], T ][] = [];
+		const finalEntries: [any[], T][] = [];
 
 		const getKeys = (map: Map<any, any>, keys: any[] = []) => {
 			map.forEach((value, key) => {
 				if (key === this._key) {
-					finalEntries.push([ keys, value ]);
-				}
-				else {
+					finalEntries.push([keys, value]);
+				} else {
 					const nextKeys = [...keys, key];
 					getKeys(value, nextKeys);
 				}

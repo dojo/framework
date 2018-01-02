@@ -7,32 +7,30 @@ function isSubscribable(object: any): object is Subscribable<any> {
 }
 
 export default class Observable<T> extends ObservableShim<T> {
-
 	static of<T>(...items: T[]): Observable<T> {
-		return <Observable<T>> super.of(...items);
+		return <Observable<T>>super.of(...items);
 	}
 
 	static from<T>(item: Iterable<T> | ArrayLike<T> | ObservableObject): Observable<T> {
-		return <Observable<T>> super.from(item);
+		return <Observable<T>>super.from(item);
 	}
 
 	static defer<T>(deferFunction: () => Subscribable<T>): Observable<T> {
-		return new Observable<T>(observer => {
-				const trueObservable = deferFunction();
+		return new Observable<T>((observer) => {
+			const trueObservable = deferFunction();
 
-				return trueObservable.subscribe({
-					next(value: T) {
-						return observer.next(value);
-					},
-					error(errorValue ?: any) {
-						return observer.error(errorValue);
-					},
-					complete(completeValue ?: any) {
-						observer.complete(completeValue);
-					}
-				});
-			}
-		);
+			return trueObservable.subscribe({
+				next(value: T) {
+					return observer.next(value);
+				},
+				error(errorValue?: any) {
+					return observer.error(errorValue);
+				},
+				complete(completeValue?: any) {
+					observer.complete(completeValue);
+				}
+			});
+		});
 	}
 
 	toPromise(): Promise<T> {
@@ -61,8 +59,7 @@ export default class Observable<T> extends ObservableShim<T> {
 					try {
 						const result: U = mapFunction(value);
 						return observer.next(result);
-					}
-					catch (e) {
+					} catch (e) {
 						return observer.error(e);
 					}
 				},
@@ -90,8 +87,7 @@ export default class Observable<T> extends ObservableShim<T> {
 						if (filterFunction(value)) {
 							return observer.next(value);
 						}
-					}
-					catch (e) {
+					} catch (e) {
 						return observer.error(e);
 					}
 				},
@@ -108,7 +104,7 @@ export default class Observable<T> extends ObservableShim<T> {
 	toArray(): Observable<T[]> {
 		const self = this;
 
-		return new Observable<T[]>(observer => {
+		return new Observable<T[]>((observer) => {
 			const values: T[] = [];
 
 			self.subscribe({
@@ -136,8 +132,7 @@ export default class Observable<T> extends ObservableShim<T> {
 			function checkForComplete() {
 				if (active.length === 0 && queue.length === 0) {
 					observer.complete();
-				}
-				else if (queue.length > 0 && active.length < concurrent) {
+				} else if (queue.length > 0 && active.length < concurrent) {
 					const item = queue.shift();
 
 					if (isSubscribable(item)) {
@@ -153,8 +148,7 @@ export default class Observable<T> extends ObservableShim<T> {
 								checkForComplete();
 							}
 						});
-					}
-					else {
+					} else {
 						observer.next(item);
 						checkForComplete();
 					}
@@ -174,8 +168,4 @@ export default class Observable<T> extends ObservableShim<T> {
 }
 
 // for convienence, re-export some interfaces from shim
-export {
-	Observable,
-	Subscribable,
-	SubscriptionObserver as Observer
-}
+export { Observable, Subscribable, SubscriptionObserver as Observer };

@@ -45,13 +45,16 @@ registerSuite('utility functions', {
 				const spy = sinon.spy();
 				timerHandle = util.createTimer(spy, 100);
 
-				setTimeout(function () {
+				setTimeout(function() {
 					destroyTimerHandle();
 				}, 50);
 
-				setTimeout(dfd.callback(function () {
-					assert.strictEqual(spy.callCount, 0);
-				}), 110);
+				setTimeout(
+					dfd.callback(function() {
+						assert.strictEqual(spy.callCount, 0);
+					}),
+					110
+				);
 			},
 
 			timeout(this: any) {
@@ -59,9 +62,12 @@ registerSuite('utility functions', {
 				const spy = sinon.spy();
 				timerHandle = util.createTimer(spy, 100);
 
-				setTimeout(dfd.callback(function () {
-					assert.strictEqual(spy.callCount, 1);
-				}), 110);
+				setTimeout(
+					dfd.callback(function() {
+						assert.strictEqual(spy.callCount, 1);
+					}),
+					110
+				);
 			}
 		},
 
@@ -71,36 +77,47 @@ registerSuite('utility functions', {
 				const spy = sinon.spy();
 				timerHandle = util.guaranteeMinimumTimeout(spy, 100);
 
-				setTimeout(function () {
+				setTimeout(function() {
 					destroyTimerHandle();
 				}, 50);
 
-				setTimeout(dfd.callback(function () {
-					assert.strictEqual(spy.callCount, 0);
-				}), 110);
+				setTimeout(
+					dfd.callback(function() {
+						assert.strictEqual(spy.callCount, 0);
+					}),
+					110
+				);
 			},
 
 			timeout(this: any) {
 				const dfd = this.async(1000);
 				const startTime = Date.now();
-				timerHandle = util.guaranteeMinimumTimeout(dfd.callback(function () {
-					const dif = Date.now() - startTime;
-					assert.isTrue(dif >= 100, 'Delay was ' + dif + 'ms.');
-				}), 100);
+				timerHandle = util.guaranteeMinimumTimeout(
+					dfd.callback(function() {
+						const dif = Date.now() - startTime;
+						assert.isTrue(dif >= 100, 'Delay was ' + dif + 'ms.');
+					}),
+					100
+				);
 			},
 
 			'timeout no delay'(this: any) {
 				const dfd = this.async(1000);
-				timerHandle = util.guaranteeMinimumTimeout(dfd.callback(function () {
-					// test will timeout if not called
-				}));
+				timerHandle = util.guaranteeMinimumTimeout(
+					dfd.callback(function() {
+						// test will timeout if not called
+					})
+				);
 			},
 
 			'timeout zero delay'(this: any) {
 				const dfd = this.async(1000);
-				timerHandle = util.guaranteeMinimumTimeout(dfd.callback(function () {
-					// test will timeout if not called
-				}), 0);
+				timerHandle = util.guaranteeMinimumTimeout(
+					dfd.callback(function() {
+						// test will timeout if not called
+					}),
+					0
+				);
 			}
 		},
 
@@ -109,9 +126,12 @@ registerSuite('utility functions', {
 				const dfd = this.async(TIMEOUT);
 				// FIXME
 				let foo = {
-					bar: util.debounce(dfd.callback(function (this: any) {
-						assert.strictEqual(this, foo, 'Function should be executed with correct context');
-					}), 0)
+					bar: util.debounce(
+						dfd.callback(function(this: any) {
+							assert.strictEqual(this, foo, 'Function should be executed with correct context');
+						}),
+						0
+					)
 				};
 
 				foo.bar();
@@ -121,24 +141,34 @@ registerSuite('utility functions', {
 				const dfd = this.async(TIMEOUT);
 				const testArg1 = 5;
 				const testArg2 = 'a';
-				const debouncedFunction = util.debounce(dfd.callback(function (a: number, b: string) {
-					assert.strictEqual(a, testArg1, 'Function should receive correct arguments');
-					assert.strictEqual(b, testArg2, 'Function should receive correct arguments');
-				}), 0);
+				const debouncedFunction = util.debounce(
+					dfd.callback(function(a: number, b: string) {
+						assert.strictEqual(a, testArg1, 'Function should receive correct arguments');
+						assert.strictEqual(b, testArg2, 'Function should receive correct arguments');
+					}),
+					0
+				);
 
 				debouncedFunction(testArg1, testArg2);
 			},
 
 			'debounces callback'(this: any) {
 				const dfd = this.async(TIMEOUT);
-				const debouncedFunction = util.debounce(dfd.callback(function () {
-					assert.isAbove(Date.now() - lastCallTick, 10, 'Function should not be called until period has elapsed without further calls');
+				const debouncedFunction = util.debounce(
+					dfd.callback(function() {
+						assert.isAbove(
+							Date.now() - lastCallTick,
+							10,
+							'Function should not be called until period has elapsed without further calls'
+						);
 
-					// Typically, we expect the 3rd invocation to be the one that is executed.
-					// Although the setTimeout in 'run' specifies a delay of 5ms, a very slow test environment may
-					// take longer. If 25+ ms has actually elapsed, then the first or second invocation may end up
-					// being eligible for execution.
-				}), 25);
+						// Typically, we expect the 3rd invocation to be the one that is executed.
+						// Although the setTimeout in 'run' specifies a delay of 5ms, a very slow test environment may
+						// take longer. If 25+ ms has actually elapsed, then the first or second invocation may end up
+						// being eligible for execution.
+					}),
+					25
+				);
 
 				let runCount = 1;
 				let lastCallTick: number;
@@ -162,9 +192,12 @@ registerSuite('utility functions', {
 				const dfd = this.async(TIMEOUT);
 				// FIXME
 				const foo = {
-					bar: util.throttle(dfd.callback(function (this: any) {
-						assert.strictEqual(this, foo, 'Function should be executed with correct context');
-					}), 0)
+					bar: util.throttle(
+						dfd.callback(function(this: any) {
+							assert.strictEqual(this, foo, 'Function should be executed with correct context');
+						}),
+						0
+					)
 				};
 
 				foo.bar();
@@ -174,10 +207,13 @@ registerSuite('utility functions', {
 				const dfd = this.async(TIMEOUT);
 				const testArg1 = 5;
 				const testArg2 = 'a';
-				const throttledFunction = util.throttle(dfd.callback(function (a: number, b: string) {
-					assert.strictEqual(a, testArg1, 'Function should receive correct arguments');
-					assert.strictEqual(b, testArg2, 'Function should receive correct arguments');
-				}), 0);
+				const throttledFunction = util.throttle(
+					dfd.callback(function(a: number, b: string) {
+						assert.strictEqual(a, testArg1, 'Function should receive correct arguments');
+						assert.strictEqual(b, testArg2, 'Function should receive correct arguments');
+					}),
+					0
+				);
 
 				throttledFunction(testArg1, testArg2);
 			},
@@ -186,22 +222,28 @@ registerSuite('utility functions', {
 				const dfd = this.async(TIMEOUT);
 				let callCount = 0;
 				let cleared = false;
-				const throttledFunction = util.throttle(dfd.rejectOnError(function (a: string) {
-					callCount++;
-					assert.notStrictEqual(a, 'b', 'Second invocation should be throttled');
-					// Rounding errors?
-					// Technically, the time diff should be greater than 24ms, but in some cases
-					// it is equal to 24ms.
-					assert.isAbove(Date.now() - lastRunTick, 23,
-						'Function should not be called until throttle delay has elapsed');
+				const throttledFunction = util.throttle(
+					dfd.rejectOnError(function(a: string) {
+						callCount++;
+						assert.notStrictEqual(a, 'b', 'Second invocation should be throttled');
+						// Rounding errors?
+						// Technically, the time diff should be greater than 24ms, but in some cases
+						// it is equal to 24ms.
+						assert.isAbove(
+							Date.now() - lastRunTick,
+							23,
+							'Function should not be called until throttle delay has elapsed'
+						);
 
-					lastRunTick = Date.now();
-					if (callCount > 1) {
-						destroyTimerHandle();
-						cleared = true;
-						dfd.resolve();
-					}
-				}), 25);
+						lastRunTick = Date.now();
+						if (callCount > 1) {
+							destroyTimerHandle();
+							cleared = true;
+							dfd.resolve();
+						}
+					}),
+					25
+				);
 
 				let runCount = 1;
 				let lastRunTick = 0;
@@ -217,8 +259,7 @@ registerSuite('utility functions', {
 				}
 
 				run();
-				assert.strictEqual(callCount, 1,
-					'Function should be called as soon as it is first invoked');
+				assert.strictEqual(callCount, 1, 'Function should be called as soon as it is first invoked');
 			}
 		},
 
@@ -227,9 +268,12 @@ registerSuite('utility functions', {
 				const dfd = this.async(TIMEOUT);
 				// FIXME
 				const foo = {
-					bar: util.throttleAfter(dfd.callback(function (this: any) {
-						assert.strictEqual(this, foo, 'Function should be executed with correct context');
-					}), 0)
+					bar: util.throttleAfter(
+						dfd.callback(function(this: any) {
+							assert.strictEqual(this, foo, 'Function should be executed with correct context');
+						}),
+						0
+					)
 				};
 
 				foo.bar();
@@ -239,10 +283,13 @@ registerSuite('utility functions', {
 				const dfd = this.async(TIMEOUT);
 				const testArg1 = 5;
 				const testArg2 = 'a';
-				const throttledFunction = util.throttleAfter(dfd.callback(function (a: number, b: string) {
-					assert.strictEqual(a, testArg1, 'Function should receive correct arguments');
-					assert.strictEqual(b, testArg2, 'Function should receive correct arguments');
-				}), 0);
+				const throttledFunction = util.throttleAfter(
+					dfd.callback(function(a: number, b: string) {
+						assert.strictEqual(a, testArg1, 'Function should receive correct arguments');
+						assert.strictEqual(b, testArg2, 'Function should receive correct arguments');
+					}),
+					0
+				);
 
 				throttledFunction(testArg1, testArg2);
 			},
@@ -252,18 +299,24 @@ registerSuite('utility functions', {
 
 				let callCount = 0;
 				let lastRunTick = 0;
-				const throttledFunction = util.throttleAfter(dfd.rejectOnError(function (a: string) {
-					callCount++;
-					assert.notStrictEqual(a, 'b', 'Second invocation should be throttled');
-					assert.isAbove(Date.now() - lastRunTick, 23,
-						'Function should not be called until throttle delay has elapsed');
+				const throttledFunction = util.throttleAfter(
+					dfd.rejectOnError(function(a: string) {
+						callCount++;
+						assert.notStrictEqual(a, 'b', 'Second invocation should be throttled');
+						assert.isAbove(
+							Date.now() - lastRunTick,
+							23,
+							'Function should not be called until throttle delay has elapsed'
+						);
 
-					lastRunTick = Date.now();
-					if (callCount > 2) {
-						destroyTimerHandle();
-						dfd.resolve();
-					}
-				}), 25);
+						lastRunTick = Date.now();
+						if (callCount > 2) {
+							destroyTimerHandle();
+							dfd.resolve();
+						}
+					}),
+					25
+				);
 
 				function run() {
 					throttledFunction('a');
@@ -273,8 +326,7 @@ registerSuite('utility functions', {
 				}
 
 				run();
-				assert.strictEqual(callCount, 0,
-					'Function should not be called as soon as it is first invoked');
+				assert.strictEqual(callCount, 0, 'Function should not be called as soon as it is first invoked');
 			}
 		}
 	}

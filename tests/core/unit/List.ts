@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import Set from '@dojo/shim/Set';
 import List from '../../src/List';
 
-registerSuite('List', function () {
+registerSuite('List', function() {
 	function listWith<T>(...items: T[]): List<T> {
 		const list = new List<T>();
 
@@ -15,7 +15,7 @@ registerSuite('List', function () {
 	}
 
 	return {
-		'add'() {
+		add() {
 			const list = new List<number>();
 
 			list.add(1);
@@ -25,7 +25,7 @@ registerSuite('List', function () {
 			assert.equal(list.size, 2);
 		},
 
-		'clear'() {
+		clear() {
 			const list = new List<number>();
 
 			list.add(1);
@@ -33,7 +33,7 @@ registerSuite('List', function () {
 			assert.equal(list.size, 0);
 		},
 
-		'delete'() {
+		delete() {
 			const list = listWith(1, 2, 3);
 
 			assert.strictEqual(list.delete(1), true);
@@ -43,7 +43,7 @@ registerSuite('List', function () {
 
 			assert.strictEqual(list.delete(2), false);
 		},
-		'entries'() {
+		entries() {
 			const list = listWith('one', 'two', 'three');
 
 			let entries: [number, string][] = [];
@@ -52,14 +52,10 @@ registerSuite('List', function () {
 				entries.push(value);
 			}
 
-			assert.deepEqual(entries, [
-				[ 0, 'one' ],
-				[ 1, 'two' ],
-				[ 2, 'three' ]
-			]);
+			assert.deepEqual(entries, [[0, 'one'], [1, 'two'], [2, 'three']]);
 		},
 
-		'forEach'() {
+		forEach() {
 			const list = listWith('one', 'two', 'three');
 
 			let items: string[] = [];
@@ -68,22 +64,22 @@ registerSuite('List', function () {
 				myValue: 'test'
 			};
 
-			list.forEach(function (this: any, value: string, index: number) {
+			list.forEach(function(this: any, value: string, index: number) {
 				assert(this.myValue, 'test');
 
 				items.push(value);
 				indicies.push(index);
 			}, obj);
 
-			assert.deepEqual(items, [ 'one', 'two', 'three' ]);
-			assert.deepEqual(indicies, [ 0, 1, 2 ]);
+			assert.deepEqual(items, ['one', 'two', 'three']);
+			assert.deepEqual(indicies, [0, 1, 2]);
 
-			list.forEach(function (this: any) {
+			list.forEach(function(this: any) {
 				assert.equal(this, list);
 			});
 		},
 
-		'has'() {
+		has() {
 			const list = listWith('one', 'two', 'three');
 
 			assert.isFalse(list.has(3));
@@ -91,7 +87,7 @@ registerSuite('List', function () {
 			assert.isTrue(list.has(0));
 		},
 
-		'keys'() {
+		keys() {
 			const list = listWith('one', 'two', 'three');
 
 			let keys: number[] = [];
@@ -100,10 +96,10 @@ registerSuite('List', function () {
 				keys.push(key);
 			}
 
-			assert.deepEqual(keys, [ 0, 1, 2 ]);
+			assert.deepEqual(keys, [0, 1, 2]);
 		},
 
-		'values'() {
+		values() {
 			const list = listWith('one', 'two', 'three');
 
 			let values: string[] = [];
@@ -112,10 +108,10 @@ registerSuite('List', function () {
 				values.push(value);
 			}
 
-			assert.deepEqual(values, [ 'one', 'two', 'three' ]);
+			assert.deepEqual(values, ['one', 'two', 'three']);
 		},
 
-		'includes'() {
+		includes() {
 			const list = listWith('one', 'two', 'three');
 
 			assert.isTrue(list.includes('two'));
@@ -123,21 +119,21 @@ registerSuite('List', function () {
 			assert.isTrue(list.includes('one'));
 		},
 
-		'indexOf'() {
+		indexOf() {
 			const list = listWith('one', 'two', 'three', 'two');
 
 			assert.equal(list.indexOf('two'), 1);
 			assert.equal(list.indexOf('test'), -1);
 		},
 
-		'lastIndexOf'() {
+		lastIndexOf() {
 			const list = listWith('one', 'two', 'three', 'two');
 
 			assert.equal(list.lastIndexOf('two'), 3);
 			assert.equal(list.lastIndexOf('test'), -1);
 		},
 
-		'push'() {
+		push() {
 			const list = new List();
 
 			list.push('one');
@@ -146,7 +142,7 @@ registerSuite('List', function () {
 			assert.equal(list.indexOf('one'), 0);
 		},
 
-		'pop'() {
+		pop() {
 			const list = listWith(1, 2, 3);
 
 			assert.equal(list.pop(), 3);
@@ -155,22 +151,22 @@ registerSuite('List', function () {
 			assert.equal(list.indexOf(2), 1);
 		},
 
-		'splice'() {
+		splice() {
 			const list = listWith(1, 2, 3);
 
-			assert.deepEqual(list.splice(0, 1), [ 1 ]);
+			assert.deepEqual(list.splice(0, 1), [1]);
 			assert.deepEqual(list.splice(1, 0, 1), []);
 
 			assert.equal(list.indexOf(1), 1);
 			assert.equal(list.indexOf(2), 0);
 			assert.equal(list.indexOf(3), 2);
 
-			assert.deepEqual(list.splice(1), [ 1, 3 ]);
+			assert.deepEqual(list.splice(1), [1, 3]);
 			assert.equal(list.size, 1);
 			assert.equal(list.indexOf(2), 0);
 		},
 
-		'join'() {
+		join() {
 			let list = listWith('the', 'quick', 'brown', 'fox');
 
 			assert.equal(list.join(), 'the,quick,brown,fox');
@@ -193,16 +189,16 @@ registerSuite('List', function () {
 				values.push(value);
 			}
 
-			assert.deepEqual(values, [ 'the', 'quick', 'brown', 'fox' ]);
+			assert.deepEqual(values, ['the', 'quick', 'brown', 'fox']);
 		},
 
-		'constructor'() {
+		constructor() {
 			// empty list
 			let list = new List();
 			assert.equal(list.size, 0);
 
 			// array like
-			list = new List([ 1, 2, 3 ]);
+			list = new List([1, 2, 3]);
 			assert.equal(list.size, 3);
 			assert.strictEqual(list.indexOf(1), 0);
 			assert.strictEqual(list.indexOf(2), 1);

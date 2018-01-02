@@ -21,19 +21,19 @@ function shouldDeepCopyObject(value: any): value is Object {
 }
 
 function copyArray<T>(array: T[], inherited: boolean): T[] {
-	return array.map(function (item: T): T {
+	return array.map(function(item: T): T {
 		if (Array.isArray(item)) {
-			return <any> copyArray(<any> item, inherited);
+			return <any>copyArray(<any>item, inherited);
 		}
 
-		return !shouldDeepCopyObject(item) ?
-			item :
-			_mixin({
-				deep: true,
-				inherited: inherited,
-				sources: <Array<T>> [ item ],
-				target: <T> {}
-			});
+		return !shouldDeepCopyObject(item)
+			? item
+			: _mixin({
+					deep: true,
+					inherited: inherited,
+					sources: <Array<T>>[item],
+					target: <T>{}
+				});
 	});
 }
 
@@ -45,12 +45,12 @@ interface MixinArgs<T extends {}, U extends {}> {
 	copied?: any[];
 }
 
-function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
+function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T & U {
 	const deep = kwArgs.deep;
 	const inherited = kwArgs.inherited;
 	const target: any = kwArgs.target;
 	const copied = kwArgs.copied || [];
-	const copiedClone = [ ...copied ];
+	const copiedClone = [...copied];
 
 	for (let i = 0; i < kwArgs.sources.length; i++) {
 		const source = kwArgs.sources[i];
@@ -69,14 +69,13 @@ function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
 				if (deep) {
 					if (Array.isArray(value)) {
 						value = copyArray(value, inherited);
-					}
-					else if (shouldDeepCopyObject(value)) {
+					} else if (shouldDeepCopyObject(value)) {
 						const targetValue: any = target[key] || {};
 						copied.push(source);
 						value = _mixin({
 							deep: true,
 							inherited: inherited,
-							sources: [ value ],
+							sources: [value],
 							target: targetValue,
 							copied
 						});
@@ -87,14 +86,7 @@ function _mixin<T extends {}, U extends {}>(kwArgs: MixinArgs<T, U>): T&U {
 		}
 	}
 
-	return <T&U> target;
-}
-
-interface ObjectAssignConstructor extends ObjectConstructor {
-	assign<T, U>(target: T, source: U): T & U;
-	assign<T, U1, U2>(target: T, source1: U1, source2: U2): T & U1 & U2;
-	assign<T, U1, U2, U3>(target: T, source1: U1, source2: U2, source3: U3): T & U1 & U2 & U3;
-	assign(target: any, ...sources: any[]): any;
+	return <T & U>target;
 }
 
 /**
@@ -105,10 +97,36 @@ interface ObjectAssignConstructor extends ObjectConstructor {
  * @param mixins Any number of objects whose enumerable own properties will be copied to the created object
  * @return The new object
  */
-export function create<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}, Z extends {}>(prototype: T, mixin1: U, mixin2: V, mixin3: W, mixin4: X, mixin5: Y, mixin6: Z): T & U & V & W & X & Y & Z;
-export function create<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(prototype: T, mixin1: U, mixin2: V, mixin3: W, mixin4: X, mixin5: Y): T & U & V & W & X & Y;
-export function create<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(prototype: T, mixin1: U, mixin2: V, mixin3: W, mixin4: X): T & U & V & W & X;
-export function create<T extends {}, U extends {}, V extends {}, W extends {}>(prototype: T, mixin1: U, mixin2: V, mixin3: W): T & U & V & W;
+export function create<
+	T extends {},
+	U extends {},
+	V extends {},
+	W extends {},
+	X extends {},
+	Y extends {},
+	Z extends {}
+>(prototype: T, mixin1: U, mixin2: V, mixin3: W, mixin4: X, mixin5: Y, mixin6: Z): T & U & V & W & X & Y & Z;
+export function create<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(
+	prototype: T,
+	mixin1: U,
+	mixin2: V,
+	mixin3: W,
+	mixin4: X,
+	mixin5: Y
+): T & U & V & W & X & Y;
+export function create<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(
+	prototype: T,
+	mixin1: U,
+	mixin2: V,
+	mixin3: W,
+	mixin4: X
+): T & U & V & W & X;
+export function create<T extends {}, U extends {}, V extends {}, W extends {}>(
+	prototype: T,
+	mixin1: U,
+	mixin2: V,
+	mixin3: W
+): T & U & V & W;
 export function create<T extends {}, U extends {}, V extends {}>(prototype: T, mixin1: U, mixin2: V): T & U & V;
 export function create<T extends {}, U extends {}>(prototype: T, mixin: U): T & U;
 export function create<T extends {}>(prototype: T): T;
@@ -131,10 +149,36 @@ export function create(prototype: any, ...mixins: any[]): any {
  * @param sources Any number of objects whose enumerable own properties will be copied to the target object
  * @return The modified target object
  */
-export function deepAssign<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}, Z extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y, source6: Z): T & U & V & W & X & Y & Z;
-export function deepAssign<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y): T & U & V & W & X & Y;
-export function deepAssign<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(target: T, source1: U, source2: V, source3: W, source4: X): T & U & V & W & X;
-export function deepAssign<T extends {}, U extends {}, V extends {}, W extends {}>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
+export function deepAssign<
+	T extends {},
+	U extends {},
+	V extends {},
+	W extends {},
+	X extends {},
+	Y extends {},
+	Z extends {}
+>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y, source6: Z): T & U & V & W & X & Y & Z;
+export function deepAssign<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(
+	target: T,
+	source1: U,
+	source2: V,
+	source3: W,
+	source4: X,
+	source5: Y
+): T & U & V & W & X & Y;
+export function deepAssign<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(
+	target: T,
+	source1: U,
+	source2: V,
+	source3: W,
+	source4: X
+): T & U & V & W & X;
+export function deepAssign<T extends {}, U extends {}, V extends {}, W extends {}>(
+	target: T,
+	source1: U,
+	source2: V,
+	source3: W
+): T & U & V & W;
 export function deepAssign<T extends {}, U extends {}, V extends {}>(target: T, source1: U, source2: V): T & U & V;
 export function deepAssign<T extends {}, U extends {}>(target: T, source: U): T & U;
 export function deepAssign(target: any, ...sources: any[]): any {
@@ -154,10 +198,36 @@ export function deepAssign(target: any, ...sources: any[]): any {
  * @param sources Any number of objects whose enumerable properties will be copied to the target object
  * @return The modified target object
  */
-export function deepMixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}, Z extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y, source6: Z): T & U & V & W & X & Y & Z;
-export function deepMixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y): T & U & V & W & X & Y;
-export function deepMixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(target: T, source1: U, source2: V, source3: W, source4: X): T & U & V & W & X;
-export function deepMixin<T extends {}, U extends {}, V extends {}, W extends {}>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
+export function deepMixin<
+	T extends {},
+	U extends {},
+	V extends {},
+	W extends {},
+	X extends {},
+	Y extends {},
+	Z extends {}
+>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y, source6: Z): T & U & V & W & X & Y & Z;
+export function deepMixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(
+	target: T,
+	source1: U,
+	source2: V,
+	source3: W,
+	source4: X,
+	source5: Y
+): T & U & V & W & X & Y;
+export function deepMixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(
+	target: T,
+	source1: U,
+	source2: V,
+	source3: W,
+	source4: X
+): T & U & V & W & X;
+export function deepMixin<T extends {}, U extends {}, V extends {}, W extends {}>(
+	target: T,
+	source1: U,
+	source2: V,
+	source3: W
+): T & U & V & W;
 export function deepMixin<T extends {}, U extends {}, V extends {}>(target: T, source1: U, source2: V): T & U & V;
 export function deepMixin<T extends {}, U extends {}>(target: T, source: U): T & U;
 export function deepMixin(target: any, ...sources: any[]): any {
@@ -190,9 +260,11 @@ export function duplicate<T extends {}>(source: T): T {
  * @return true if the values are the same; false otherwise
  */
 export function isIdentical(a: any, b: any): boolean {
-	return a === b ||
+	return (
+		a === b ||
 		/* both values are NaN */
-		(a !== a && b !== b);
+		(a !== a && b !== b)
+	);
 }
 
 /**
@@ -207,17 +279,17 @@ export function isIdentical(a: any, b: any): boolean {
  * @return The bound function
  */
 export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): (...args: any[]) => any {
-	return suppliedArgs.length ?
-		function () {
-			const args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
+	return suppliedArgs.length
+		? function() {
+				const args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
 
-			// TS7017
-			return (<any> instance)[method].apply(instance, args);
-		} :
-		function () {
-			// TS7017
-			return (<any> instance)[method].apply(instance, arguments);
-		};
+				// TS7017
+				return (<any>instance)[method].apply(instance, args);
+			}
+		: function() {
+				// TS7017
+				return (<any>instance)[method].apply(instance, arguments);
+			};
 }
 
 /**
@@ -226,10 +298,36 @@ export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): 
  *
  * @return The modified target object
  */
-export function mixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}, Z extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y, source6: Z): T & U & V & W & X & Y & Z;
-export function mixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(target: T, source1: U, source2: V, source3: W, source4: X, source5: Y): T & U & V & W & X & Y;
-export function mixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(target: T, source1: U, source2: V, source3: W, source4: X): T & U & V & W & X;
-export function mixin<T extends {}, U extends {}, V extends {}, W extends {}>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
+export function mixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}, Z extends {}>(
+	target: T,
+	source1: U,
+	source2: V,
+	source3: W,
+	source4: X,
+	source5: Y,
+	source6: Z
+): T & U & V & W & X & Y & Z;
+export function mixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}, Y extends {}>(
+	target: T,
+	source1: U,
+	source2: V,
+	source3: W,
+	source4: X,
+	source5: Y
+): T & U & V & W & X & Y;
+export function mixin<T extends {}, U extends {}, V extends {}, W extends {}, X extends {}>(
+	target: T,
+	source1: U,
+	source2: V,
+	source3: W,
+	source4: X
+): T & U & V & W & X;
+export function mixin<T extends {}, U extends {}, V extends {}, W extends {}>(
+	target: T,
+	source1: U,
+	source2: V,
+	source3: W
+): T & U & V & W;
 export function mixin<T extends {}, U extends {}, V extends {}>(target: T, source1: U, source2: V): T & U & V;
 export function mixin<T extends {}, U extends {}>(target: T, source: U): T & U;
 export function mixin(target: any, ...sources: any[]): any {
@@ -250,7 +348,7 @@ export function mixin(target: any, ...sources: any[]): any {
  * @return The bound function
  */
 export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs: any[]): (...args: any[]) => any {
-	return function (this: any) {
+	return function(this: any) {
 		const args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
 
 		return targetFunction.apply(this, args);
@@ -267,8 +365,8 @@ export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs
  */
 export function createHandle(destructor: () => void): Handle {
 	return {
-		destroy: function (this: Handle) {
-			this.destroy = function () {};
+		destroy: function(this: Handle) {
+			this.destroy = function() {};
 			destructor.call(this);
 		}
 	};
@@ -281,7 +379,7 @@ export function createHandle(destructor: () => void): Handle {
  * @return The handle object
  */
 export function createCompositeHandle(...handles: Handle[]): Handle {
-	return createHandle(function () {
+	return createHandle(function() {
 		for (let i = 0; i < handles.length; i++) {
 			handles[i].destroy();
 		}

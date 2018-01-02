@@ -3,8 +3,8 @@ const { assert } = intern.getPlugin('chai');
 import { Evented } from '../../src/Evented';
 
 interface FooBarEvents {
-	foo: { type: 'foo'; };
-	bar: { type: 'bar'; };
+	foo: { type: 'foo' };
+	bar: { type: 'bar' };
 }
 
 registerSuite('Evented', {
@@ -14,7 +14,7 @@ registerSuite('Evented', {
 		assert.isFunction(evented.on);
 		assert.isFunction(evented.emit);
 	},
-	'on': {
+	on: {
 		'on()'() {
 			const eventStack: string[] = [];
 			const evented = new Evented<FooBarEvents>();
@@ -30,7 +30,7 @@ registerSuite('Evented', {
 			evented.emit({ type: 'foo' });
 			evented.emit({ type: 'bar' });
 
-			assert.deepEqual(eventStack, [ 'foo' ]);
+			assert.deepEqual(eventStack, ['foo']);
 		},
 		'on() with Symbol type'() {
 			const foo = Symbol();
@@ -50,7 +50,7 @@ registerSuite('Evented', {
 			evented.emit({ type: foo });
 			evented.emit({ type: 'bar' });
 
-			assert.deepEqual(eventStack, [ foo ]);
+			assert.deepEqual(eventStack, [foo]);
 		},
 		'multiple listeners, same event'() {
 			const eventStack: string[] = [];
@@ -69,17 +69,17 @@ registerSuite('Evented', {
 			handle2.destroy();
 			evented.emit({ type: 'foo' });
 
-			assert.deepEqual(eventStack, [ 'one', 'two', 'two' ]);
+			assert.deepEqual(eventStack, ['one', 'two', 'two']);
 		},
 		'on(type, listener[])'() {
 			const eventStack: string[] = [];
 			const evented = new Evented<FooBarEvents>();
 
 			const handle = evented.on('foo', [
-				function (event) {
+				function(event) {
 					eventStack.push('foo1');
 				},
-				function (event) {
+				function(event) {
 					eventStack.push('foo2');
 				}
 			]);
@@ -88,7 +88,7 @@ registerSuite('Evented', {
 			handle.destroy();
 			evented.emit({ type: 'foo' });
 
-			assert.deepEqual(eventStack, [ 'foo1', 'foo2' ]);
+			assert.deepEqual(eventStack, ['foo1', 'foo2']);
 		}
 	},
 	'wildcards in event type name': {
@@ -103,7 +103,7 @@ registerSuite('Evented', {
 			evented.emit({ type: 'bar' });
 			evented.emit({ type: 'foo:bar' });
 
-			assert.deepEqual(eventStack, [ 'foo', 'bar', 'foo:bar' ]);
+			assert.deepEqual(eventStack, ['foo', 'bar', 'foo:bar']);
 		},
 		'event types starting with a pattern'() {
 			const eventStack: string[] = [];
@@ -116,7 +116,7 @@ registerSuite('Evented', {
 			evented.emit({ type: 'foo:' });
 			evented.emit({ type: 'foo:bar' });
 
-			assert.deepEqual(eventStack, [ 'foo:', 'foo:bar' ]);
+			assert.deepEqual(eventStack, ['foo:', 'foo:bar']);
 		},
 		'event types ending with a pattern'() {
 			const eventStack: string[] = [];
@@ -129,7 +129,7 @@ registerSuite('Evented', {
 			evented.emit({ type: ':bar' });
 			evented.emit({ type: 'foo:bar' });
 
-			assert.deepEqual(eventStack, [ ':bar', 'foo:bar' ]);
+			assert.deepEqual(eventStack, [':bar', 'foo:bar']);
 		},
 		'event types contains a pattern'() {
 			const eventStack: string[] = [];
@@ -143,7 +143,7 @@ registerSuite('Evented', {
 			evented.emit({ type: 'barfoo' });
 			evented.emit({ type: 'barfoobiz' });
 
-			assert.deepEqual(eventStack, [ 'foo', 'foobar', 'barfoo', 'barfoobiz' ]);
+			assert.deepEqual(eventStack, ['foo', 'foobar', 'barfoo', 'barfoobiz']);
 		},
 		'multiple matches'() {
 			const eventStack: string[] = [];
@@ -159,7 +159,7 @@ registerSuite('Evented', {
 			evented.emit({ type: 'foobar' });
 			evented.emit({ type: 'barfoo' });
 
-			assert.deepEqual(eventStack, [ 'foo->foo', '*foo->foo', '*foo->barfoo' ]);
+			assert.deepEqual(eventStack, ['foo->foo', '*foo->foo', '*foo->barfoo']);
 		}
 	}
 });

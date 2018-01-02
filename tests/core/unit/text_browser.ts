@@ -6,12 +6,15 @@ import { AmdRootRequire } from '../../src/interfaces';
 declare const require: AmdRootRequire;
 
 registerSuite('text - browser', {
-		'load': {
-			'should return text'(this: any) {
-				text.load('../support/data/textLoad.txt', require, this.async().callback((val: string) => {
+	load: {
+		'should return text'(this: any) {
+			text.load(
+				'../support/data/textLoad.txt',
+				require,
+				this.async().callback((val: string) => {
 					assert.strictEqual(val, 'test', 'Correct text should be returned');
-				}));
-			}
+				})
+			);
 		}
 	}
-);
+});

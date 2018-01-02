@@ -15,7 +15,7 @@ let methodSpy: any;
 let map: Map<string | symbol, (...args: any[]) => any>;
 
 function createBeforeSpy() {
-	return sinon.spy(function (a: number) {
+	return sinon.spy(function(a: number) {
 		return [a + 1];
 	});
 }
@@ -23,7 +23,7 @@ function createBeforeSpy() {
 function indexableTests(property: string | symbol): ObjectSuiteDescriptor {
 	return {
 		beforeEach() {
-			methodSpy = sinon.spy(function (a: number) {
+			methodSpy = sinon.spy(function(a: number) {
 				return a + 1;
 			});
 			obj = { [property]: methodSpy };
@@ -49,21 +49,23 @@ function indexableTests(property: string | symbol): ObjectSuiteDescriptor {
 					let receivedArgs: string[] = [];
 					let beforeCalled = false;
 					let obj = {
-						[property]: function (...args: string[]) {
+						[property]: function(...args: string[]) {
 							receivedArgs = args;
 						}
 					};
 
-					aspect.before(obj, property, function () {
+					aspect.before(obj, property, function() {
 						beforeCalled = true;
 					});
 
 					obj[property]('foo', 'bar');
 
-					assert.isTrue(beforeCalled,
-						'Before advice should be called before original function');
-					assert.deepEqual(receivedArgs, [ 'foo', 'bar' ],
-						'Arguments passed to original method should be unaltered if before advice returns undefined');
+					assert.isTrue(beforeCalled, 'Before advice should be called before original function');
+					assert.deepEqual(
+						receivedArgs,
+						['foo', 'bar'],
+						'Arguments passed to original method should be unaltered if before advice returns undefined'
+					);
 				},
 
 				'multiple aspect.before()'() {
@@ -85,18 +87,18 @@ function indexableTests(property: string | symbol): ObjectSuiteDescriptor {
 				'multiple aspect.before() with removal inside handler'() {
 					let count = 0;
 
-					const handle1 = aspect.before(obj, property, function () {
+					const handle1 = aspect.before(obj, property, function() {
 						count++;
 					});
 
 					// FIXME: TDZ
-					var handle2 = aspect.before(obj, property, function () {
+					var handle2 = aspect.before(obj, property, function() {
 						handle2.destroy();
 						handle1.destroy();
 						count++;
 					});
 
-					assert.doesNotThrow(function () {
+					assert.doesNotThrow(function() {
 						obj[property]();
 					});
 					assert.strictEqual(count, 1, 'Only one advising function should be called');
@@ -131,17 +133,17 @@ function indexableTests(property: string | symbol): ObjectSuiteDescriptor {
 					let handle2: Handle;
 
 					// FIXME: TDZ
-					var handle1 = aspect.after(obj, property, function () {
+					var handle1 = aspect.after(obj, property, function() {
 						handle1.destroy();
 						handle2.destroy();
 						count++;
 					});
 
-					handle2 = aspect.after(obj, property, function () {
+					handle2 = aspect.after(obj, property, function() {
 						count++;
 					});
 
-					assert.doesNotThrow(function () {
+					assert.doesNotThrow(function() {
 						obj[property]();
 					});
 					assert.strictEqual(count, 1, 'Only one advising function should be called');
@@ -289,10 +291,10 @@ function indexableTests(property: string | symbol): ObjectSuiteDescriptor {
 function mapTests(property: string | symbol): ObjectSuiteDescriptor {
 	return {
 		beforeEach() {
-			methodSpy = sinon.spy(function (a: number) {
+			methodSpy = sinon.spy(function(a: number) {
 				return a + 1;
 			});
-			map = new Map([ [ property, methodSpy ] ]);
+			map = new Map([[property, methodSpy]]);
 		},
 
 		tests: {
@@ -315,21 +317,28 @@ function mapTests(property: string | symbol): ObjectSuiteDescriptor {
 				'no return value from advising function'() {
 					let receivedArgs: string[] = [];
 					let beforeCalled = false;
-					map = new Map([ [ property, function (...args: string[]) {
-							receivedArgs = args;
-						} ] ]);
+					map = new Map([
+						[
+							property,
+							function(...args: string[]) {
+								receivedArgs = args;
+							}
+						]
+					]);
 
-					aspect.before(map, property, function () {
+					aspect.before(map, property, function() {
 						beforeCalled = true;
 					});
 
 					const method = map.get(property);
 					method && method('foo', 'bar');
 
-					assert.isTrue(beforeCalled,
-						'Before advice should be called before original function');
-					assert.deepEqual(receivedArgs, [ 'foo', 'bar' ],
-						'Arguments passed to original method should be unaltered if before advice returns undefined');
+					assert.isTrue(beforeCalled, 'Before advice should be called before original function');
+					assert.deepEqual(
+						receivedArgs,
+						['foo', 'bar'],
+						'Arguments passed to original method should be unaltered if before advice returns undefined'
+					);
 				},
 
 				'multiple aspect.before()'() {
@@ -352,18 +361,18 @@ function mapTests(property: string | symbol): ObjectSuiteDescriptor {
 				'multiple aspect.before() with removal inside handler'() {
 					let count = 0;
 
-					const handle1 = aspect.before(map, property, function () {
+					const handle1 = aspect.before(map, property, function() {
 						count++;
 					});
 
 					// FIXME: TDZ
-					var handle2 = aspect.before(map, property, function () {
+					var handle2 = aspect.before(map, property, function() {
 						handle2.destroy();
 						handle1.destroy();
 						count++;
 					});
 
-					assert.doesNotThrow(function () {
+					assert.doesNotThrow(function() {
 						const method = map.get(property);
 						method && method();
 					});
@@ -401,17 +410,17 @@ function mapTests(property: string | symbol): ObjectSuiteDescriptor {
 					let handle2: Handle;
 
 					// FIXME: TDZ
-					var handle1 = aspect.after(map, property, function () {
+					var handle1 = aspect.after(map, property, function() {
 						handle1.destroy();
 						handle2.destroy();
 						count++;
 					});
 
-					handle2 = aspect.after(map, property, function () {
+					handle2 = aspect.after(map, property, function() {
 						count++;
 					});
 
-					assert.doesNotThrow(function () {
+					assert.doesNotThrow(function() {
 						const method = map.get(property);
 						method && method();
 					});
@@ -579,14 +588,14 @@ registerSuite('aspect', {
 	},
 	'join points': {
 		'before advice': {
-			'adjust arguments': function () {
+			'adjust arguments': function() {
 				let result = 0;
 				function foo(a: number) {
 					result = a;
 				}
 
 				function advice(a: number) {
-					return [ a * a ];
+					return [a * a];
 				}
 
 				const fn = aspect.before(foo, advice);
@@ -595,7 +604,7 @@ registerSuite('aspect', {
 
 				assert.strictEqual(result, 4, '"result" should equal 4');
 			},
-			'passes this': function () {
+			'passes this': function() {
 				let result = 0;
 				function foo(this: any) {
 					result = this.a;
@@ -611,7 +620,7 @@ registerSuite('aspect', {
 				assert.strictEqual(context.a, 2, 'context.a should equal 2');
 				assert.strictEqual(result, 2, 'result should equal 2');
 			},
-			'multiple before advice': function () {
+			'multiple before advice': function() {
 				let result = 0;
 				const calls: string[] = [];
 				function foo(a: number) {
@@ -626,17 +635,17 @@ registerSuite('aspect', {
 
 				function advice2(a: number) {
 					calls.push('2');
-					return [ ++a ];
+					return [++a];
 				}
 
 				const fn = aspect.before(aspect.before(foo, advice1), advice2);
 				fn(2);
 				assert.strictEqual(result, 6, '"result" should equal 5');
-				assert.deepEqual(calls, [ '2', '1' ], 'advice should be called in order');
+				assert.deepEqual(calls, ['2', '1'], 'advice should be called in order');
 			}
 		},
 		'after advice': {
-			'adjust return value': function () {
+			'adjust return value': function() {
 				function foo(a: number) {
 					return a;
 				}
@@ -651,7 +660,7 @@ registerSuite('aspect', {
 
 				assert.strictEqual(result, 4, '"result" should equal 4');
 			},
-			'passes this': function () {
+			'passes this': function() {
 				function foo(this: any) {
 					return this.a;
 				}
@@ -667,7 +676,7 @@ registerSuite('aspect', {
 				assert.strictEqual(result, 4, '"result" should equal 4');
 				assert.strictEqual(context.c, 4, '"context.c" should equal 4');
 			},
-			'multiple after advice': function () {
+			'multiple after advice': function() {
 				const calls: string[] = [];
 				function foo(a: number): number {
 					return a;
@@ -687,11 +696,11 @@ registerSuite('aspect', {
 				fn = aspect.after(fn, advice2);
 				const result = fn(2);
 				assert.strictEqual(result, 7, '"result" should equal 7');
-				assert.deepEqual(calls, [ '1', '2' ], 'call should have been made in order');
+				assert.deepEqual(calls, ['1', '2'], 'call should have been made in order');
 			}
 		},
 		'around advice': {
-			'basic function': function () {
+			'basic function': function() {
 				function foo(a: number): number {
 					return a;
 				}
@@ -708,7 +717,7 @@ registerSuite('aspect', {
 				const result = fn(2);
 				assert.strictEqual(result, 5, '"result" should equal 5');
 			},
-			'preserves this': function () {
+			'preserves this': function() {
 				function foo(this: any, a: number): number {
 					return this.a;
 				}
@@ -725,14 +734,14 @@ registerSuite('aspect', {
 				const result = fn.apply(context);
 				assert.strictEqual(result, 2, '"result" should equal 2');
 			},
-			'multiple around advice': function () {
+			'multiple around advice': function() {
 				const calls: string[] = [];
 				function foo(a: number): number {
 					return a;
 				}
 
 				function advice1(origFn: Function): (...args: any[]) => number {
-					return function (this: any, ...args: any[]): number {
+					return function(this: any, ...args: any[]): number {
 						calls.push('1');
 						args[0]++;
 						return origFn.apply(this, args) + 1;
@@ -740,7 +749,7 @@ registerSuite('aspect', {
 				}
 
 				function advice2(origFn: Function): (...args: any[]) => number {
-					return function (this: any, ...args: any[]): number {
+					return function(this: any, ...args: any[]): number {
 						calls.push('2');
 						args[0] += args[0];
 						return origFn.apply(this, args) + 1;
@@ -750,11 +759,11 @@ registerSuite('aspect', {
 				const fn = aspect.around(aspect.around(foo, advice1), advice2);
 				const result = fn(2);
 				assert.strictEqual(result, 7, '"result" should equal 7');
-				assert.deepEqual(calls, [ '2', '1' ]);
+				assert.deepEqual(calls, ['2', '1']);
 			}
 		},
 		'combined advice': {
-			'before and after': function () {
+			'before and after': function() {
 				function foo(a: number): number {
 					return a + a;
 				}

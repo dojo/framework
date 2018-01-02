@@ -136,7 +136,7 @@ const DEFAULT_REDIRECT_LIMIT = 15;
 interface Options {
 	agent?: any;
 	auth?: string;
-	headers?: { [name: string]: string; };
+	headers?: { [name: string]: string };
 	host?: string;
 	hostname?: string;
 	localAddress?: string;
@@ -175,10 +175,23 @@ interface RequestData {
 
 const dataMap = new WeakMap<NodeResponse, RequestData>();
 const discardedDuplicates = new Set<string>([
-	'age', 'authorization', 'content-length', 'content-type', 'etag',
-	'expires', 'from', 'host', 'if-modified-since', 'if-unmodified-since',
-	'last-modified', 'location', 'max-forwards', 'proxy-authorization',
-	'referer', 'retry-after', 'user-agent'
+	'age',
+	'authorization',
+	'content-length',
+	'content-type',
+	'etag',
+	'expires',
+	'from',
+	'host',
+	'if-modified-since',
+	'if-unmodified-since',
+	'last-modified',
+	'location',
+	'max-forwards',
+	'proxy-authorization',
+	'referer',
+	'retry-after',
+	'user-agent'
 ]);
 
 function getDataTask(response: NodeResponse): Task<RequestData> {
@@ -190,7 +203,7 @@ function getDataTask(response: NodeResponse): Task<RequestData> {
 
 	data.used = true;
 
-	return <Task<RequestData>> data.task.then(_ => data);
+	return <Task<RequestData>>data.task.then((_) => data);
 }
 
 /**
@@ -231,7 +244,7 @@ export class NodeResponse extends Response {
 	constructor(response: http.IncomingMessage) {
 		super();
 
-		const headers = this.headers = new Headers();
+		const headers = (this.headers = new Headers());
 		for (let key in response.headers) {
 			const value = response.headers[key];
 			if (value) {
@@ -250,7 +263,7 @@ export class NodeResponse extends Response {
 	}
 
 	arrayBuffer(): Task<ArrayBuffer> {
-		return <any> getDataTask(this).then(data => {
+		return <any>getDataTask(this).then((data) => {
 			if (data) {
 				return data.data;
 			}
@@ -269,21 +282,24 @@ export class NodeResponse extends Response {
 	}
 
 	text(): Task<string> {
-		return <any> getDataTask(this).then(data => {
+		return <any>getDataTask(this).then((data) => {
 			return String(data ? data.data : '');
 		});
 	}
 }
 
-function redirect(resolve: (p?: any) => void, reject: (_?: Error) => void, originalUrl: string, redirectUrl: string | null, options: NodeRequestOptions): boolean {
+function redirect(
+	resolve: (p?: any) => void,
+	reject: (_?: Error) => void,
+	originalUrl: string,
+	redirectUrl: string | null,
+	options: NodeRequestOptions
+): boolean {
 	if (!options.redirectOptions) {
 		options.redirectOptions = {};
 	}
 
-	const {
-		limit: redirectLimit = DEFAULT_REDIRECT_LIMIT,
-		count: redirectCount = 0
-	} = options.redirectOptions;
+	const { limit: redirectLimit = DEFAULT_REDIRECT_LIMIT, count: redirectCount = 0 } = options.redirectOptions;
 	const { followRedirects = true } = options;
 
 	if (!followRedirects) {
@@ -317,7 +333,7 @@ export function getAuth(proxyAuth: string | undefined, options: NodeRequestOptio
 	}
 
 	if (options.user || options.password) {
-		return `${ options.user || '' }:${ options.password || '' }`;
+		return `${options.user || ''}:${options.password || ''}`;
 	}
 
 	return undefined;
@@ -346,21 +362,25 @@ export default function node(url: string, options: NodeRequestOptions = {}): Upl
 		socketPath: options.socketPath
 	};
 
-	requestOptions.headers = <{ [key: string]: string }> options.headers || {};
+	requestOptions.headers = <{ [key: string]: string }>options.headers || {};
 
-	if (!Object.keys(requestOptions.headers).map(headerName => headerName.toLowerCase()).some(headerName => headerName === 'user-agent')) {
-		requestOptions.headers[ 'user-agent' ] = 'dojo/' + version + ' Node.js/' + process.version.replace(/^v/, '');
+	if (
+		!Object.keys(requestOptions.headers)
+			.map((headerName) => headerName.toLowerCase())
+			.some((headerName) => headerName === 'user-agent')
+	) {
+		requestOptions.headers['user-agent'] = 'dojo/' + version + ' Node.js/' + process.version.replace(/^v/, '');
 	}
 
 	if (options.proxy) {
 		requestOptions.path = url;
 		if (parsedUrl.auth) {
-			requestOptions.headers[ 'proxy-authorization' ] = 'Basic ' + new Buffer(parsedUrl.auth).toString('base64');
+			requestOptions.headers['proxy-authorization'] = 'Basic ' + new Buffer(parsedUrl.auth).toString('base64');
 		}
 
 		const parsedProxyUrl = urlUtil.parse(url);
 		if (parsedProxyUrl.host) {
-			requestOptions.headers[ 'host' ] = parsedProxyUrl.host;
+			requestOptions.headers['host'] = parsedProxyUrl.host;
 		}
 
 		if (parsedProxyUrl.auth) {
@@ -370,273 +390,275 @@ export default function node(url: string, options: NodeRequestOptions = {}): Upl
 
 	const { acceptCompression = true } = options;
 	if (acceptCompression) {
-		requestOptions.headers[ 'Accept-Encoding' ] = 'gzip, deflate';
+		requestOptions.headers['Accept-Encoding'] = 'gzip, deflate';
 	}
 
 	const request = parsedUrl.protocol === 'https:' ? https.request(requestOptions) : http.request(requestOptions);
 
 	const uploadObserverPool = new SubscriptionPool<number>();
 
-	const requestTask = <UploadObservableTask<NodeResponse>> new Task<NodeResponse>((resolve, reject) => {
-		let timeoutHandle: Handle;
-		let timeoutReject: Function = reject;
+	const requestTask = <UploadObservableTask<NodeResponse>>new Task<NodeResponse>(
+		(resolve, reject) => {
+			let timeoutHandle: Handle;
+			let timeoutReject: Function = reject;
 
-		if (options.socketOptions) {
-			if (options.socketOptions.timeout) {
-				request.setTimeout(options.socketOptions.timeout);
-			}
+			if (options.socketOptions) {
+				if (options.socketOptions.timeout) {
+					request.setTimeout(options.socketOptions.timeout);
+				}
 
-			if ('noDelay' in options.socketOptions) {
-				request.setNoDelay(options.socketOptions.noDelay);
-			}
+				if ('noDelay' in options.socketOptions) {
+					request.setNoDelay(options.socketOptions.noDelay);
+				}
 
-			if ('keepAlive' in options.socketOptions) {
-				const initialDelay: number | undefined = options.socketOptions.keepAlive;
-				if (initialDelay !== undefined) {
-					request.setSocketKeepAlive(initialDelay >= 0, initialDelay);
+				if ('keepAlive' in options.socketOptions) {
+					const initialDelay: number | undefined = options.socketOptions.keepAlive;
+					if (initialDelay !== undefined) {
+						request.setSocketKeepAlive(initialDelay >= 0, initialDelay);
+					}
 				}
 			}
-		}
 
-		request.once('response', (message: http.IncomingMessage) => {
-			const response = new NodeResponse(message);
+			request.once('response', (message: http.IncomingMessage) => {
+				const response = new NodeResponse(message);
 
-			// Redirection handling defaults to true in order to harmonise with the XHR provider, which will always
-			// follow redirects
-			if (
-				response.status >= 300 &&
-				response.status < 400
-			) {
-				const redirectOptions = options.redirectOptions || {};
-				const newOptions = deepAssign({}, options);
+				// Redirection handling defaults to true in order to harmonise with the XHR provider, which will always
+				// follow redirects
+				if (response.status >= 300 && response.status < 400) {
+					const redirectOptions = options.redirectOptions || {};
+					const newOptions = deepAssign({}, options);
 
-				switch (response.status) {
-					case 300:
-						/**
-						 * Note about 300 redirects. RFC 2616 doesn't specify what to do with them, it is up to the client to "pick
-						 * the right one".  We're picking like Chrome does, just don't pick any.
-						 */
-						break;
+					switch (response.status) {
+						case 300:
+							/**
+							 * Note about 300 redirects. RFC 2616 doesn't specify what to do with them, it is up to the client to "pick
+							 * the right one".  We're picking like Chrome does, just don't pick any.
+							 */
+							break;
 
-					case 301:
-					case 302:
-						/**
-						 * RFC 2616 says,
-						 *
-						 *     If the 301 status code is received in response to a request other
-						 *     than GET or HEAD, the user agent MUST NOT automatically redirect the
-						 *     request unless it can be confirmed by the user, since this might
-						 *       change the conditions under which the request was issued.
-						 *
-						 *     Note: When automatically redirecting a POST request after
-						 *     receiving a 301 status code, some existing HTTP/1.0 user agents
-						 *     will erroneously change it into a GET request.
-						 *
-						 * We're going to be one of those erroneous agents, to prevent the request from failing..
-						 */
-						if ((requestOptions.method !== 'GET' && requestOptions.method !== 'HEAD') && !redirectOptions.keepOriginalMethod) {
-							newOptions.method = 'GET';
-						}
+						case 301:
+						case 302:
+							/**
+							 * RFC 2616 says,
+							 *
+							 *     If the 301 status code is received in response to a request other
+							 *     than GET or HEAD, the user agent MUST NOT automatically redirect the
+							 *     request unless it can be confirmed by the user, since this might
+							 *       change the conditions under which the request was issued.
+							 *
+							 *     Note: When automatically redirecting a POST request after
+							 *     receiving a 301 status code, some existing HTTP/1.0 user agents
+							 *     will erroneously change it into a GET request.
+							 *
+							 * We're going to be one of those erroneous agents, to prevent the request from failing..
+							 */
+							if (
+								requestOptions.method !== 'GET' &&
+								requestOptions.method !== 'HEAD' &&
+								!redirectOptions.keepOriginalMethod
+							) {
+								newOptions.method = 'GET';
+							}
 
-						if (redirect(resolve, reject, url, response.headers.get('location'), newOptions)) {
-							return;
-						}
-						break;
-
-					case 303:
-
-						/**
-						 * The response to the request can be found under a different URI and
-						 * SHOULD be retrieved using a GET method on that resource.
-						 */
-						if (requestOptions.method !== 'GET') {
-							newOptions.method = 'GET';
-						}
-
-						if (redirect(resolve, reject, url, response.headers.get('location'), newOptions)) {
-							return;
-						}
-						break;
-
-					case 304:
-						// do nothing so this can fall through and return the response as normal. Nothing more can
-						// be done for 304
-						break;
-
-					case 305:
-						if (!response.headers.get('location')) {
-							reject(new Error('expected Location header to contain a proxy url'));
-						}
-						else {
-							newOptions.proxy = response.headers.get('location') || '';
-							if (redirect(resolve, reject, url, '', newOptions)) {
+							if (redirect(resolve, reject, url, response.headers.get('location'), newOptions)) {
 								return;
 							}
-						}
-						break;
+							break;
 
-					case 307:
-						/**
-						 *  If the 307 status code is received in response to a request other
-						 *  than GET or HEAD, the user agent MUST NOT automatically redirect the
-						 *  request unless it can be confirmed by the user, since this might
-						 *  change the conditions under which the request was issued.
-						 */
-						if (redirect(resolve, reject, url, response.headers.get('location'), newOptions)) {
+						case 303:
+							/**
+							 * The response to the request can be found under a different URI and
+							 * SHOULD be retrieved using a GET method on that resource.
+							 */
+							if (requestOptions.method !== 'GET') {
+								newOptions.method = 'GET';
+							}
+
+							if (redirect(resolve, reject, url, response.headers.get('location'), newOptions)) {
+								return;
+							}
+							break;
+
+						case 304:
+							// do nothing so this can fall through and return the response as normal. Nothing more can
+							// be done for 304
+							break;
+
+						case 305:
+							if (!response.headers.get('location')) {
+								reject(new Error('expected Location header to contain a proxy url'));
+							} else {
+								newOptions.proxy = response.headers.get('location') || '';
+								if (redirect(resolve, reject, url, '', newOptions)) {
+									return;
+								}
+							}
+							break;
+
+						case 307:
+							/**
+							 *  If the 307 status code is received in response to a request other
+							 *  than GET or HEAD, the user agent MUST NOT automatically redirect the
+							 *  request unless it can be confirmed by the user, since this might
+							 *  change the conditions under which the request was issued.
+							 */
+							if (redirect(resolve, reject, url, response.headers.get('location'), newOptions)) {
+								return;
+							}
+							break;
+
+						default:
+							reject(new Error('unhandled redirect status ' + response.status));
 							return;
-						}
-						break;
-
-					default:
-						reject(new Error('unhandled redirect status ' + response.status));
-						return;
+					}
 				}
-			}
 
-			options.streamEncoding && message.setEncoding(options.streamEncoding);
+				options.streamEncoding && message.setEncoding(options.streamEncoding);
 
-			const downloadSubscriptionPool = new SubscriptionPool<number>();
-			const dataSubscriptionPool = new SubscriptionPool<any>();
+				const downloadSubscriptionPool = new SubscriptionPool<number>();
+				const dataSubscriptionPool = new SubscriptionPool<any>();
 
-			/*
+				/*
 			 [RFC 2616](https://tools.ietf.org/html/rfc2616#page-118) says that content-encoding can have multiple
 			 values, so we split them here and put them in a list to process later.
 			 */
-			const contentEncodings = response.headers.getAll('content-encoding');
+				const contentEncodings = response.headers.getAll('content-encoding');
 
-			const task = new Task<http.IncomingMessage>((resolve, reject) => {
-				timeoutReject = reject;
+				const task = new Task<http.IncomingMessage>(
+					(resolve, reject) => {
+						timeoutReject = reject;
 
-				// we queue this up for later to allow listeners to register themselves before we start receiving data
-				queueTask(() => {
-					/*
+						// we queue this up for later to allow listeners to register themselves before we start receiving data
+						queueTask(() => {
+							/*
 					 * Note that this is the raw data, if your input stream is zipped, and you are piecing
 					 * together the downloaded data, you'll have to decompress it yourself
 					 */
-					message.on('data', (chunk: any) => {
-						dataSubscriptionPool.next(chunk);
+							message.on('data', (chunk: any) => {
+								dataSubscriptionPool.next(chunk);
 
-						if (response.downloadBody) {
-							data.buffer.push(chunk);
-						}
+								if (response.downloadBody) {
+									data.buffer.push(chunk);
+								}
 
-						data.size += typeof chunk === 'string' ?
-							Buffer.byteLength(chunk, options.streamEncoding) :
-							chunk.length;
+								data.size +=
+									typeof chunk === 'string'
+										? Buffer.byteLength(chunk, options.streamEncoding)
+										: chunk.length;
 
-						downloadSubscriptionPool.next(data.size);
-					});
+								downloadSubscriptionPool.next(data.size);
+							});
 
-					message.once('end', () => {
-						timeoutHandle && timeoutHandle.destroy();
+							message.once('end', () => {
+								timeoutHandle && timeoutHandle.destroy();
 
-						let dataAsBuffer = (options.streamEncoding ? new Buffer(data.buffer.join(''), 'utf8') : Buffer.concat(data.buffer, data.size));
+								let dataAsBuffer = options.streamEncoding
+									? new Buffer(data.buffer.join(''), 'utf8')
+									: Buffer.concat(data.buffer, data.size);
 
-						const handleEncoding = function () {
-							/*
+								const handleEncoding = function() {
+									/*
 							 Content encoding is ordered by the order in which they were applied to the
 							 content, so do undo the encoding we have to start at the end and work backwards.
 							 */
-							if (contentEncodings.length) {
-								const encoding = contentEncodings.pop()!.trim().toLowerCase();
+									if (contentEncodings.length) {
+										const encoding = contentEncodings.pop()!.trim().toLowerCase();
 
-								if (encoding === '' || encoding === 'none' || encoding === 'identity') {
-									// do nothing, response stream is as-is
-									handleEncoding();
-								}
-								else if (encoding === 'gzip') {
-									zlib.gunzip(dataAsBuffer, function (err: Error | null, result: Buffer) {
-										if (err) {
-											reject(err);
+										if (encoding === '' || encoding === 'none' || encoding === 'identity') {
+											// do nothing, response stream is as-is
+											handleEncoding();
+										} else if (encoding === 'gzip') {
+											zlib.gunzip(dataAsBuffer, function(err: Error | null, result: Buffer) {
+												if (err) {
+													reject(err);
+												}
+
+												dataAsBuffer = result;
+												handleEncoding();
+											});
+										} else if (encoding === 'deflate') {
+											zlib.inflate(dataAsBuffer, function(err: Error | null, result: Buffer) {
+												if (err) {
+													reject(err);
+												}
+
+												dataAsBuffer = result;
+												handleEncoding();
+											});
+										} else {
+											reject(new Error('Unsupported content encoding, ' + encoding));
 										}
+									} else {
+										data.data = dataAsBuffer;
 
-										dataAsBuffer = result;
-										handleEncoding();
-									});
-								}
-								else if (encoding === 'deflate') {
-									zlib.inflate(dataAsBuffer, function (err: Error | null, result: Buffer) {
-										if (err) {
-											reject(err);
-										}
+										resolve(message);
+									}
+								};
 
-										dataAsBuffer = result;
-										handleEncoding();
-									});
-								}
-								else {
-									reject(new Error('Unsupported content encoding, ' + encoding));
-								}
-							}
-							else {
-								data.data = dataAsBuffer;
+								handleEncoding();
+							});
+						});
+					},
+					() => {
+						request.abort();
+					}
+				);
 
-								resolve(message);
-							}
-						};
+				const data: RequestData = {
+					task,
+					buffer: [],
+					data: Buffer.alloc(0),
+					size: 0,
+					used: false,
+					url: url,
+					requestOptions: options,
+					nativeResponse: message,
+					downloadObservable: new Observable<number>((observer) => downloadSubscriptionPool.add(observer)),
+					dataObservable: new Observable<any>((observer) => dataSubscriptionPool.add(observer))
+				};
 
-						handleEncoding();
-					});
+				dataMap.set(response, data);
+
+				resolve(response);
+			});
+
+			request.once('error', reject);
+
+			if (options.bodyStream) {
+				options.bodyStream.pipe(request);
+				let uploadedSize = 0;
+
+				options.bodyStream.on('data', (chunk: any) => {
+					uploadedSize += chunk.length;
+					uploadObserverPool.next(uploadedSize);
 				});
-			}, () => {
-				request.abort();
-			});
 
-			const data: RequestData = {
-				task,
-				buffer: [],
-				data: Buffer.alloc(0),
-				size: 0,
-				used: false,
-				url: url,
-				requestOptions: options,
-				nativeResponse: message,
-				downloadObservable: new Observable<number>(observer => downloadSubscriptionPool.add(observer)),
-				dataObservable: new Observable<any>(observer => dataSubscriptionPool.add(observer))
-			};
+				options.bodyStream.on('end', () => {
+					uploadObserverPool.complete();
+					request.end();
+				});
+			} else if (options.body) {
+				const body = options.body.toString();
 
-			dataMap.set(response, data);
+				request.on('response', () => {
+					uploadObserverPool.next(body.length);
+				});
 
-			resolve(response);
-		});
-
-		request.once('error', reject);
-
-		if (options.bodyStream) {
-			options.bodyStream.pipe(request);
-			let uploadedSize = 0;
-
-			options.bodyStream.on('data', (chunk: any) => {
-				uploadedSize += chunk.length;
-				uploadObserverPool.next(uploadedSize);
-			});
-
-			options.bodyStream.on('end', () => {
-				uploadObserverPool.complete();
+				request.end(body);
+			} else {
 				request.end();
-			});
-		}
-		else if (options.body) {
-			const body = options.body.toString();
+			}
 
-			request.on('response', () => {
-				uploadObserverPool.next(body.length);
-			});
-
-			request.end(body);
+			if (options.timeout && options.timeout > 0 && options.timeout !== Infinity) {
+				timeoutHandle = createTimer(() => {
+					timeoutReject && timeoutReject(new TimeoutError('The request timed out'));
+				}, options.timeout);
+			}
+		},
+		() => {
+			request.abort();
 		}
-		else {
-			request.end();
-		}
-
-		if (options.timeout && options.timeout > 0 && options.timeout !== Infinity) {
-			timeoutHandle = createTimer(() => {
-				timeoutReject && timeoutReject(new TimeoutError('The request timed out'));
-			}, options.timeout);
-		}
-	}, () => {
-		request.abort();
-	}).catch(function (error: Error): any {
+	).catch(function(error: Error): any {
 		const parsedUrl = urlUtil.parse(url);
 
 		if (parsedUrl.auth) {
@@ -649,7 +671,7 @@ export default function node(url: string, options: NodeRequestOptions = {}): Upl
 		throw error;
 	});
 
-	requestTask.upload = new Observable<number>(observer => uploadObserverPool.add(observer));
+	requestTask.upload = new Observable<number>((observer) => uploadObserverPool.add(observer));
 
 	return requestTask;
 }

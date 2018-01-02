@@ -1,18 +1,20 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import Test from 'intern/lib/Test';
-import { Require } from '../../../src/load';
 import pollUntil from '@theintern/leadfoot/helpers/pollUntil';
-
-declare const require: Require;
 
 async function executeTest(test: Test, htmlTestPath: string, timeout = 10000) {
 	try {
-		return await test.remote.get(htmlTestPath).then(pollUntil<{ text: string; }>(function () {
-			return (<any> window).loaderTestResults || null;
-		}, undefined, timeout));
-	}
-	catch (e) {
+		return await test.remote.get(htmlTestPath).then(
+			pollUntil<{ text: string }>(
+				function() {
+					return (<any>window).loaderTestResults || null;
+				},
+				undefined,
+				timeout
+			)
+		);
+	} catch (e) {
 		throw new Error('loaderTestResult was not set.');
 	}
 }

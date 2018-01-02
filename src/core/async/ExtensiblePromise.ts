@@ -18,8 +18,7 @@ export function unwrapPromises(iterable: Iterable<any> | any[]): any[] {
 			const item = iterable[i];
 			unwrapped.push(item instanceof ExtensiblePromise ? item._promise : item);
 		}
-	}
-	else {
+	} else {
 		for (const item of iterable) {
 			unwrapped.push(item instanceof ExtensiblePromise ? item._promise : item);
 		}
@@ -29,7 +28,7 @@ export function unwrapPromises(iterable: Iterable<any> | any[]): any[] {
 }
 
 export type DictionaryOfPromises<T> = { [_: string]: T | Promise<T> | Thenable<T> };
-export type ListOfPromises<T> = Iterable<(T | Thenable<T>)>;
+export type ListOfPromises<T> = Iterable<T | Thenable<T>>;
 
 /**
  * An extensible base to allow Promises to be extended in ES5. This class basically wraps a native Promise object,
@@ -138,13 +137,15 @@ export default class ExtensiblePromise<T> {
 	 * @param iterable    An iterable of values to resolve, or a key/value pair of values to resolve. These can be Promises, ExtensiblePromises, or other objects
 	 * @returns An extensible promise
 	 */
-	static all<T>(iterable: DictionaryOfPromises<T> | ListOfPromises<T>): ExtensiblePromise<T[] | { [key: string]: T }> {
+	static all<T>(
+		iterable: DictionaryOfPromises<T> | ListOfPromises<T>
+	): ExtensiblePromise<T[] | { [key: string]: T }> {
 		if (!isArrayLike(iterable) && !isIterable(iterable)) {
 			const promiseKeys = Object.keys(iterable);
 
 			return new this((resolve, reject) => {
-				Promise.all(promiseKeys.map(key => iterable[key])).then((promiseResults: T[]) => {
-					const returnValue: { [key: string]: T} = {};
+				Promise.all(promiseKeys.map((key) => iterable[key])).then((promiseResults: T[]) => {
+					const returnValue: { [key: string]: T } = {};
 
 					promiseResults.forEach((value: T, index: number) => {
 						returnValue[promiseKeys[index]] = value;
@@ -156,7 +157,7 @@ export default class ExtensiblePromise<T> {
 		}
 
 		return new this((resolve, reject) => {
-			Promise.all(unwrapPromises(<Iterable<T>> iterable)).then(resolve, reject);
+			Promise.all(unwrapPromises(<Iterable<T>>iterable)).then(resolve, reject);
 		});
 	}
 
@@ -166,7 +167,7 @@ export default class ExtensiblePromise<T> {
 	 * @param iterable    An iterable of values to resolve. These can be Promises, ExtensiblePromises, or other objects
 	 * @returns {ExtensiblePromise}
 	 */
-	static race<T>(iterable: Iterable<(T | PromiseLike<T>)> | (T | PromiseLike<T>)[]): ExtensiblePromise<T> {
+	static race<T>(iterable: Iterable<T | PromiseLike<T>> | (T | PromiseLike<T>)[]): ExtensiblePromise<T> {
 		return new this((resolve, reject) => {
 			Promise.race(unwrapPromises(iterable)).then(resolve, reject);
 		});
@@ -201,7 +202,9 @@ export default class ExtensiblePromise<T> {
 	 *
 	 * @returns {ExtensiblePromise}
 	 */
-	catch<TResult = never>(onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): ExtensiblePromise<T | TResult> {
+	catch<TResult = never>(
+		onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null
+	): ExtensiblePromise<T | TResult> {
 		return this.then(undefined, onRejected);
 	}
 
@@ -224,15 +227,12 @@ export default class ExtensiblePromise<T> {
 				if (typeof callback === 'function') {
 					try {
 						resolve(callback(valueOrError));
-					}
-					catch (error) {
+					} catch (error) {
 						reject(error);
 					}
-				}
-				else if (rejected) {
+				} else if (rejected) {
 					reject(valueOrError);
-				}
-				else {
+				} else {
 					resolve(valueOrError as TResult1);
 				}
 			}

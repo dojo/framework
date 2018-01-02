@@ -19,7 +19,7 @@ function assertPropertiesEqual(left: DateProperties, right: DateProperties): voi
 }
 
 registerSuite('DateObject', {
-	'creation': function () {
+	creation: function() {
 		const date = new Date();
 		let object = new DateObject();
 
@@ -43,16 +43,16 @@ registerSuite('DateObject', {
 		assert.strictEqual(object.valueOf(), +date);
 	},
 
-	'properties': {
-		beforeEach: function () {
+	properties: {
+		beforeEach: function() {
 			date = new Date();
 			object = new DateObject(date);
 		},
 
 		tests: {
-			'year': function () {
+			year: function() {
 				assert.strictEqual(object.year, date.getFullYear());
-				date.setFullYear(object.year = 1);
+				date.setFullYear((object.year = 1));
 				assert.strictEqual(object.year, date.getFullYear());
 
 				object = new DateObject({ year: 2005, month: 12, dayOfMonth: 27 });
@@ -80,7 +80,7 @@ registerSuite('DateObject', {
 				assert.strictEqual(+object, +new Date(2030, 11, 31));
 			},
 
-			'month': function () {
+			month: function() {
 				assert.strictEqual(object.month, date.getMonth() + 1);
 				date.setMonth((object.month = 1) - 1);
 				assert.strictEqual(object.month, date.getMonth() + 1);
@@ -98,52 +98,52 @@ registerSuite('DateObject', {
 				assert.strictEqual(+object, +new Date(2001, 1, 28));
 			},
 
-			'dayOfMonth': function () {
+			dayOfMonth: function() {
 				assert.strictEqual(object.dayOfMonth, date.getDate());
-				date.setDate(object.dayOfMonth = 1);
+				date.setDate((object.dayOfMonth = 1));
 				assert.strictEqual(object.dayOfMonth, date.getDate());
 			},
 
-			'hours': function () {
+			hours: function() {
 				assert.strictEqual(object.hours, date.getHours());
-				date.setHours(object.hours = 12);
+				date.setHours((object.hours = 12));
 				assert.strictEqual(object.hours, date.getHours());
 			},
 
-			'minutes': function () {
+			minutes: function() {
 				assert.strictEqual(object.minutes, date.getMinutes());
-				date.setMinutes(object.minutes = 12);
+				date.setMinutes((object.minutes = 12));
 				assert.strictEqual(object.minutes, date.getMinutes());
 			},
 
-			'seconds': function () {
+			seconds: function() {
 				assert.strictEqual(object.seconds, date.getSeconds());
-				date.setSeconds(object.seconds = 12);
+				date.setSeconds((object.seconds = 12));
 				assert.strictEqual(object.seconds, date.getSeconds());
 			},
 
-			'milliseconds': function () {
+			milliseconds: function() {
 				assert.strictEqual(object.milliseconds, date.getMilliseconds());
-				date.setMilliseconds(object.milliseconds = 12);
+				date.setMilliseconds((object.milliseconds = 12));
 				assert.strictEqual(object.milliseconds, date.getMilliseconds());
 			},
 
-			'time': function () {
+			time: function() {
 				assert.strictEqual(object.time, +date);
-				date.setTime(object.time = 0);
+				date.setTime((object.time = 0));
 				assert.strictEqual(object.time, +date);
 			},
 
-			'dayOfWeek': function () {
+			dayOfWeek: function() {
 				assert.strictEqual(object.dayOfWeek, date.getDay());
 			},
 
-			'timezoneOffset': function () {
+			timezoneOffset: function() {
 				assert.strictEqual(object.timezoneOffset, date.getTimezoneOffset());
 			},
 
 			utc: {
-				'basic': function () {
+				basic: function() {
 					const date = new Date(1979, 2, 20, 7, 20, 12, 123);
 					const obj = new DateObject(date);
 					const utc = obj.utc;
@@ -151,7 +151,7 @@ registerSuite('DateObject', {
 					assertPropertiesEqual(obj.add(60000 * date.getTimezoneOffset()), utc);
 				},
 
-				'leap year': function () {
+				'leap year': function() {
 					const date = new Date(2012, 1, 29, 7, 20, 12, 123);
 					const obj = new DateObject(date);
 					const utc = obj.utc;
@@ -159,7 +159,7 @@ registerSuite('DateObject', {
 					assertPropertiesEqual(obj.add(60000 * date.getTimezoneOffset()), utc);
 				},
 
-				'setters': (function () {
+				setters: (function() {
 					function assertChange(property: string, dateProperty: string, value: number = 2) {
 						const date = new DateObject();
 						const time = date.time;
@@ -171,44 +171,44 @@ registerSuite('DateObject', {
 							// Months are 0-indexed in Date and 1-indexed in DateObject
 							expected += 1;
 						}
-						(<any> date.utc)[property] += value;
+						(<any>date.utc)[property] += value;
 
-						assert.strictEqual((<any> date.utc)[property], expected);
+						assert.strictEqual((<any>date.utc)[property], expected);
 						assert.notEqual(date.time, time);
 					}
 
 					return {
-						'year': function () {
+						year: function() {
 							assertChange('year', 'FullYear');
 						},
 
-						'month': function () {
+						month: function() {
 							assertChange('month', 'Month');
 						},
 
-						'dayOfMonth': function () {
+						dayOfMonth: function() {
 							assertChange('dayOfMonth', 'Date');
 						},
 
-						'hours': function () {
+						hours: function() {
 							assertChange('hours', 'Hours');
 						},
 
-						'minutes': function () {
+						minutes: function() {
 							assertChange('minutes', 'Minutes');
 						},
 
-						'seconds': function () {
+						seconds: function() {
 							assertChange('seconds', 'Seconds');
 						},
 
-						'milliseconds': function () {
+						milliseconds: function() {
 							assertChange('milliseconds', 'Milliseconds');
 						}
 					};
 				})(),
 
-				'toString': function () {
+				toString: function() {
 					const milliseconds = Date.UTC(1979, 2, 20);
 					const expected = new Date(milliseconds);
 					const date = new DateObject(milliseconds);
@@ -218,16 +218,16 @@ registerSuite('DateObject', {
 		}
 	},
 
-	'parse': function () {
+	parse: function() {
 		const date = DateObject.parse('Tue, 20 Mar 1979 00:00:00');
 		assertPropertiesEqual(date, new DateObject(new Date(1979, 2, 20)));
 	},
 
-	'now': function () {
+	now: function() {
 		assert.closeTo(DateObject.now().time, Date.now(), 100);
 	},
 
-	'.to* methods': function () {
+	'.to* methods': function() {
 		const date = new Date();
 		const object = new DateObject(date);
 
@@ -241,118 +241,46 @@ registerSuite('DateObject', {
 		assert.strictEqual(object.toJSON(), date.toJSON());
 	},
 
-	'.add': (function () {
+	'.add': (function() {
 		function addAndAssertEqual(kwArgs: KwArgs, addArgs: OperationKwArgs, expected: Date) {
 			const object = new DateObject(kwArgs);
 			assert.strictEqual(+object.add(addArgs), +expected);
 		}
 		return {
-			'returns new object': function () {
+			'returns new object': function() {
 				const object: DateObject = new DateObject();
 
 				assert.notStrictEqual(object, object.add(1));
 			},
 
-			'years': function () {
-				addAndAssertEqual(
-					{ year: 2005, month: 12, dayOfMonth: 27 },
-					{ years: 1 },
-					new Date(2006, 11, 27)
-				);
-				addAndAssertEqual(
-					{ year: 2005, month: 12, dayOfMonth: 27 },
-					{ years: -1 },
-					new Date(2004, 11, 27)
-				);
-				addAndAssertEqual(
-					{ year: 2000, month: 2, dayOfMonth: 29 },
-					{ years: 1 },
-					new Date(2001, 1, 28)
-				);
-				addAndAssertEqual(
-					{ year: 2000, month: 2, dayOfMonth: 29 },
-					{ years: 5 },
-					new Date(2005, 1, 28)
-				);
-				addAndAssertEqual(
-					{ year: 1900, month: 12, dayOfMonth: 31 },
-					{ years: 30 },
-					new Date(1930, 11, 31)
-				);
-				addAndAssertEqual(
-					{ year: 1995, month: 12, dayOfMonth: 31 },
-					{ years: 35 },
-					new Date(2030, 11, 31)
-				);
+			years: function() {
+				addAndAssertEqual({ year: 2005, month: 12, dayOfMonth: 27 }, { years: 1 }, new Date(2006, 11, 27));
+				addAndAssertEqual({ year: 2005, month: 12, dayOfMonth: 27 }, { years: -1 }, new Date(2004, 11, 27));
+				addAndAssertEqual({ year: 2000, month: 2, dayOfMonth: 29 }, { years: 1 }, new Date(2001, 1, 28));
+				addAndAssertEqual({ year: 2000, month: 2, dayOfMonth: 29 }, { years: 5 }, new Date(2005, 1, 28));
+				addAndAssertEqual({ year: 1900, month: 12, dayOfMonth: 31 }, { years: 30 }, new Date(1930, 11, 31));
+				addAndAssertEqual({ year: 1995, month: 12, dayOfMonth: 31 }, { years: 35 }, new Date(2030, 11, 31));
 			},
 
-			'months': function () {
-				addAndAssertEqual(
-					{ year: 2000, month: 1, dayOfMonth: 1 },
-					{ months: 1 },
-					new Date(2000, 1, 1)
-				);
-				addAndAssertEqual(
-					{ year: 2000, month: 1, dayOfMonth: 31 },
-					{ months: 1 },
-					new Date(2000, 1, 29)
-				);
-				addAndAssertEqual(
-					{ year: 2000, month: 3, dayOfMonth: 31 },
-					{ months: -1 },
-					new Date(2000, 1, 29)
-				);
-				addAndAssertEqual(
-					{ year: 2000, month: 2, dayOfMonth: 29 },
-					{ months: 12 },
-					new Date(2001, 1, 28)
-				);
+			months: function() {
+				addAndAssertEqual({ year: 2000, month: 1, dayOfMonth: 1 }, { months: 1 }, new Date(2000, 1, 1));
+				addAndAssertEqual({ year: 2000, month: 1, dayOfMonth: 31 }, { months: 1 }, new Date(2000, 1, 29));
+				addAndAssertEqual({ year: 2000, month: 3, dayOfMonth: 31 }, { months: -1 }, new Date(2000, 1, 29));
+				addAndAssertEqual({ year: 2000, month: 2, dayOfMonth: 29 }, { months: 12 }, new Date(2001, 1, 28));
 			},
 
-			'days': function () {
-				addAndAssertEqual(
-					{ year: 2000, month: 1, dayOfMonth: 1 },
-					{ days: 1 },
-					new Date(2000, 0, 2)
-				);
-				addAndAssertEqual(
-					{ year: 2001, month: 1, dayOfMonth: 1 },
-					{ days: 365 },
-					new Date(2002, 0, 1)
-				);
-				addAndAssertEqual(
-					{ year: 2000, month: 1, dayOfMonth: 1 },
-					{ days: 366 },
-					new Date(2001, 0, 1)
-				);
-				addAndAssertEqual(
-					{ year: 2000, month: 2, dayOfMonth: 28 },
-					{ days: 1 },
-					new Date(2000, 1, 29)
-				);
-				addAndAssertEqual(
-					{ year: 2001, month: 2, dayOfMonth: 28 },
-					{ days: 1 },
-					new Date(2001, 2, 1)
-				);
-				addAndAssertEqual(
-					{ year: 2000, month: 3, dayOfMonth: 1 },
-					{ days: -1 },
-					new Date(2000, 1, 29)
-				);
-				addAndAssertEqual(
-					{ year: 2001, month: 3, dayOfMonth: 1 },
-					{ days: -1 },
-					new Date(2001, 1, 28)
-				);
-				addAndAssertEqual(
-					{ year: 2000, month: 1, dayOfMonth: 1 },
-					{ days: -1 },
-					new Date(1999, 11, 31)
-				);
+			days: function() {
+				addAndAssertEqual({ year: 2000, month: 1, dayOfMonth: 1 }, { days: 1 }, new Date(2000, 0, 2));
+				addAndAssertEqual({ year: 2001, month: 1, dayOfMonth: 1 }, { days: 365 }, new Date(2002, 0, 1));
+				addAndAssertEqual({ year: 2000, month: 1, dayOfMonth: 1 }, { days: 366 }, new Date(2001, 0, 1));
+				addAndAssertEqual({ year: 2000, month: 2, dayOfMonth: 28 }, { days: 1 }, new Date(2000, 1, 29));
+				addAndAssertEqual({ year: 2001, month: 2, dayOfMonth: 28 }, { days: 1 }, new Date(2001, 2, 1));
+				addAndAssertEqual({ year: 2000, month: 3, dayOfMonth: 1 }, { days: -1 }, new Date(2000, 1, 29));
+				addAndAssertEqual({ year: 2001, month: 3, dayOfMonth: 1 }, { days: -1 }, new Date(2001, 1, 28));
+				addAndAssertEqual({ year: 2000, month: 1, dayOfMonth: 1 }, { days: -1 }, new Date(1999, 11, 31));
 			},
 
-			'hours': function () {
+			hours: function() {
 				addAndAssertEqual(
 					{ year: 2000, month: 1, dayOfMonth: 1, hours: 11 },
 					{ hours: 1 },
@@ -361,7 +289,7 @@ registerSuite('DateObject', {
 				addAndAssertEqual(
 					{ year: 2001, month: 10, dayOfMonth: 28, hours: 0 },
 					{ hours: 1 },
-					new Date((+new Date(2001, 9, 28, 0)) + (60 * 60 * 1000))
+					new Date(+new Date(2001, 9, 28, 0) + 60 * 60 * 1000)
 				);
 				addAndAssertEqual(
 					{ year: 2001, month: 10, dayOfMonth: 28, hours: 23 },
@@ -375,7 +303,7 @@ registerSuite('DateObject', {
 				);
 			},
 
-			'minutes': function () {
+			minutes: function() {
 				addAndAssertEqual(
 					{ year: 2000, month: 12, dayOfMonth: 31, hours: 23, minutes: 59 },
 					{ minutes: 1 },
@@ -388,7 +316,7 @@ registerSuite('DateObject', {
 				);
 			},
 
-			'seconds': function () {
+			seconds: function() {
 				addAndAssertEqual(
 					{ year: 2000, month: 12, dayOfMonth: 31, hours: 23, minutes: 59, seconds: 59 },
 					{ seconds: 1 },
@@ -401,7 +329,7 @@ registerSuite('DateObject', {
 				);
 			},
 
-			'number': function () {
+			number: function() {
 				const date = new DateObject({ year: 2000, month: 2, dayOfMonth: 29 });
 
 				assert.strictEqual(date.add(100).time, date.time + 100);
@@ -409,7 +337,7 @@ registerSuite('DateObject', {
 		};
 	})(),
 
-	'isLeapYear': function () {
+	isLeapYear: function() {
 		const date = new DateObject({
 			year: 2006,
 			month: 1,
@@ -431,7 +359,7 @@ registerSuite('DateObject', {
 		assert.isTrue(date.isLeapYear);
 	},
 
-	'daysInMonth': function () {
+	daysInMonth: function() {
 		const date = new DateObject({
 			year: 2006,
 			month: 1,
@@ -478,33 +406,33 @@ registerSuite('DateObject', {
 		assert.strictEqual(date.daysInMonth, 29);
 	},
 
-	comparisons: (function () {
+	comparisons: (function() {
 		const younger = new DateObject(new Date(2012, 0, 31, 23, 55));
-		const older = new DateObject(new Date(2010, 7, 26, 4 , 15));
+		const older = new DateObject(new Date(2010, 7, 26, 4, 15));
 
 		return {
 			compare: {
-				'if date is newer than comparison: return positive': function () {
+				'if date is newer than comparison: return positive': function() {
 					assert.isTrue(younger.compare(older) > 0);
 				},
 
-				'if date is less recent than comparison: return negative': function () {
+				'if date is less recent than comparison: return negative': function() {
 					assert.isTrue(older.compare(younger) < 0);
 				},
 
-				'if dates are identical: return 0': function () {
+				'if dates are identical: return 0': function() {
 					assert.strictEqual(younger.compare(younger), 0);
 				}
 			},
 
-			compareDate: function () {
+			compareDate: function() {
 				const similarDate1 = new DateObject(new Date(1979, 2, 20, 2, 4, 6));
 				const similarDate2 = new DateObject(new Date(1979, 2, 20, 1, 3, 5));
 
 				assert.strictEqual(similarDate1.compareDate(similarDate2), 0);
 			},
 
-			compareTime:  function () {
+			compareTime: function() {
 				const similarTime1 = new DateObject(new Date(2015, 1, 1, 2, 4, 6));
 				const similarTime2 = new DateObject(new Date(1977, 3, 20, 2, 4, 6));
 

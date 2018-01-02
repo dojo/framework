@@ -5,7 +5,10 @@ import * as stringExtras from '../../src/stringExtras';
 registerSuite('string functions', {
 	'.escapeRegExp()'() {
 		assert.strictEqual(stringExtras.escapeRegExp(''), '');
-		assert.strictEqual(stringExtras.escapeRegExp('[]{}()|/\\^$.*+?'), '\\[\\]\\{\\}\\(\\)\\|\\/\\\\\\^\\$\\.\\*\\+\\?');
+		assert.strictEqual(
+			stringExtras.escapeRegExp('[]{}()|/\\^$.*+?'),
+			'\\[\\]\\{\\}\\(\\)\\|\\/\\\\\\^\\$\\.\\*\\+\\?'
+		);
 	},
 
 	'.escapeXml()'() {
@@ -13,6 +16,9 @@ registerSuite('string functions', {
 
 		assert.strictEqual(stringExtras.escapeXml(''), '');
 		assert.strictEqual(stringExtras.escapeXml(html, false), '&lt;p class="text">Fox &amp; Hound\'s&lt;/p>');
-		assert.strictEqual(stringExtras.escapeXml(html), '&lt;p class=&quot;text&quot;&gt;Fox &amp; Hound&#39;s&lt;/p&gt;');
+		assert.strictEqual(
+			stringExtras.escapeXml(html),
+			'&lt;p class=&quot;text&quot;&gt;Fox &amp; Hound&#39;s&lt;/p&gt;'
+		);
 	}
 });

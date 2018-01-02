@@ -23,26 +23,32 @@ interface DOMEventObject extends EventObject {
  * @return Boolean indicating if preventDefault was called on the event object (only relevant for DOM events;
  *     always false for other event emitters)
  */
-export function emit<M, T, O extends EventObject<T> = EventObject<T>, K extends keyof M = keyof M>(target: Evented<M, T, O>, event: M[K]): boolean;
+export function emit<M, T, O extends EventObject<T> = EventObject<T>, K extends keyof M = keyof M>(
+	target: Evented<M, T, O>,
+	event: M[K]
+): boolean;
 export function emit<T, O extends EventObject<T> = EventObject<T>>(target: Evented<any, T, O>, event: O): boolean;
-export function emit<O extends EventObject<string> = EventObject<string>>(target: EventTarget | EventEmitter, event: O): boolean;
+export function emit<O extends EventObject<string> = EventObject<string>>(
+	target: EventTarget | EventEmitter,
+	event: O
+): boolean;
 export function emit(target: any, event: EventObject<any>): boolean {
 	if (
-		target.dispatchEvent && /* includes window and document */
-			((target.ownerDocument && target.ownerDocument.createEvent) || /* matches nodes */
-			(target.document && target.document.createEvent) || /* matches window */
+		target.dispatchEvent /* includes window and document */ &&
+		((target.ownerDocument && target.ownerDocument.createEvent) /* matches nodes */ ||
+		(target.document && target.document.createEvent) /* matches window */ ||
 			target.createEvent) /* matches document */
 	) {
 		const nativeEvent = (target.ownerDocument || target.document || target).createEvent('HTMLEvents');
 		nativeEvent.initEvent(
 			event.type,
-			Boolean((<DOMEventObject> event).bubbles),
-			Boolean((<DOMEventObject> event).cancelable)
+			Boolean((<DOMEventObject>event).bubbles),
+			Boolean((<DOMEventObject>event).cancelable)
 		);
 
 		for (let key in event) {
 			if (!(key in nativeEvent)) {
-				nativeEvent[key] = (<any> event)[key];
+				nativeEvent[key] = (<any>event)[key];
 			}
 		}
 
@@ -54,8 +60,7 @@ export function emit(target: any, event: EventObject<any>): boolean {
 			// Node.js EventEmitter
 			target.emit(event.type, event);
 			return false;
-		}
-		else if (target.on) {
+		} else if (target.on) {
 			// Dojo Evented or similar
 			target.emit(event);
 			return false;
@@ -73,27 +78,40 @@ export function emit(target: any, event: EventObject<any>): boolean {
  * @param capture Whether the listener should be registered in the capture phase (DOM events only)
  * @return A handle which will remove the listener when destroy is called
  */
-export default function on<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(target: Evented<M, T, O>, type: K | K[], listener: EventCallback<M[K]>): Handle;
-export default function on<T, O extends EventObject<T> = EventObject<T>>(target: Evented<any, T, O>, type: T | T[], listener: EventCallback<O>): Handle;
+export default function on<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(
+	target: Evented<M, T, O>,
+	type: K | K[],
+	listener: EventCallback<M[K]>
+): Handle;
+export default function on<T, O extends EventObject<T> = EventObject<T>>(
+	target: Evented<any, T, O>,
+	type: T | T[],
+	listener: EventCallback<O>
+): Handle;
 export default function on(target: EventEmitter, type: string | string[], listener: EventCallback): Handle;
-export default function on(target: EventTarget, type: string | string[], listener: EventCallback, capture?: boolean): Handle;
+export default function on(
+	target: EventTarget,
+	type: string | string[],
+	listener: EventCallback,
+	capture?: boolean
+): Handle;
 export default function on(target: any, type: any, listener: any, capture?: boolean): Handle {
 	if (Array.isArray(type)) {
-		let handles: Handle[] = type.map(function (type: string): Handle {
+		let handles: Handle[] = type.map(function(type: string): Handle {
 			return on(target, type, listener, capture);
 		});
 
 		return createCompositeHandle(...handles);
 	}
 
-	const callback = function (this: any) {
+	const callback = function(this: any) {
 		listener.apply(this, arguments);
 	};
 
 	// DOM EventTarget
 	if (target.addEventListener && target.removeEventListener) {
 		target.addEventListener(type, callback, capture);
-		return createHandle(function () {
+		return createHandle(function() {
 			target.removeEventListener(type, callback, capture);
 		});
 	}
@@ -102,12 +120,11 @@ export default function on(target: any, type: any, listener: any, capture?: bool
 		// EventEmitter
 		if (target.removeListener) {
 			target.on(type, callback);
-			return createHandle(function () {
+			return createHandle(function() {
 				target.removeListener(type, callback);
 			});
-		}
-		// Evented
-		else if (target.emit) {
+		} else if (target.emit) {
+			// Evented
 			return target.on(type, listener);
 		}
 	}
@@ -124,17 +141,30 @@ export default function on(target: any, type: any, listener: any, capture?: bool
  * @param capture Whether the listener should be registered in the capture phase (DOM events only)
  * @return A handle which will remove the listener when destroy is called
  */
-export function once<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(target: Evented<M, T, O>, type: K | K[], listener: EventCallback<M[K]>): Handle;
-export function once<T, O extends EventObject<T> = EventObject<T>>(target: Evented<any, T, O>, type: T | T[], listener: EventCallback<O>): Handle;
+export function once<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(
+	target: Evented<M, T, O>,
+	type: K | K[],
+	listener: EventCallback<M[K]>
+): Handle;
+export function once<T, O extends EventObject<T> = EventObject<T>>(
+	target: Evented<any, T, O>,
+	type: T | T[],
+	listener: EventCallback<O>
+): Handle;
 export function once(target: EventTarget, type: string | string[], listener: EventCallback, capture?: boolean): Handle;
 export function once(target: EventEmitter, type: string | string[], listener: EventCallback): Handle;
 export function once(target: any, type: any, listener: any, capture?: boolean): Handle {
 	// FIXME
 	// tslint:disable-next-line:no-var-keyword
-	var handle = on(target, type, function (this: any) {
-		handle.destroy();
-		return listener.apply(this, arguments);
-	}, capture);
+	var handle = on(
+		target,
+		type,
+		function(this: any) {
+			handle.destroy();
+			return listener.apply(this, arguments);
+		},
+		capture
+	);
 
 	return handle;
 }
@@ -152,24 +182,42 @@ export interface PausableHandle extends Handle {
  * @param capture Whether the listener should be registered in the capture phase (DOM events only)
  * @return A handle with additional pause and resume methods; the listener will never fire when paused
  */
-export function pausable<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(target: Evented<M, T, O>, type: K | K[], listener: EventCallback<M[K]>): PausableHandle;
-export function pausable<T, O extends EventObject<T> = EventObject<T>>(target: Evented<any, T, O>, type: T | T[], listener: EventCallback<O>): PausableHandle;
-export function pausable(target: EventTarget, type: string | string[], listener: EventCallback, capture?: boolean): PausableHandle;
+export function pausable<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(
+	target: Evented<M, T, O>,
+	type: K | K[],
+	listener: EventCallback<M[K]>
+): PausableHandle;
+export function pausable<T, O extends EventObject<T> = EventObject<T>>(
+	target: Evented<any, T, O>,
+	type: T | T[],
+	listener: EventCallback<O>
+): PausableHandle;
+export function pausable(
+	target: EventTarget,
+	type: string | string[],
+	listener: EventCallback,
+	capture?: boolean
+): PausableHandle;
 export function pausable(target: EventEmitter, type: string | string[], listener: EventCallback): PausableHandle;
 export function pausable(target: any, type: any, listener: any, capture?: boolean): PausableHandle {
 	let paused: boolean;
 
-	const handle = <PausableHandle> on(target, type, function (this: any) {
-		if (!paused) {
-			return listener.apply(this, arguments);
-		}
-	}, capture);
+	const handle = <PausableHandle>on(
+		target,
+		type,
+		function(this: any) {
+			if (!paused) {
+				return listener.apply(this, arguments);
+			}
+		},
+		capture
+	);
 
-	handle.pause = function () {
+	handle.pause = function() {
 		paused = true;
 	};
 
-	handle.resume = function () {
+	handle.resume = function() {
 		paused = false;
 	};
 

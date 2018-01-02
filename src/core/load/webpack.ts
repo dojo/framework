@@ -75,7 +75,10 @@ function resolveRelative(base: string, mid: string): string {
  * The parent directory of the path returned by the context function.
  */
 function getBasePath(context: () => string): string {
-	return context().split('/').slice(0, -1).join('/');
+	return context()
+		.split('/')
+		.slice(0, -1)
+		.join('/');
 }
 
 /**
@@ -97,15 +100,21 @@ export default function load(contextRequire: () => string, ...mids: string[]): P
 export default function load(...mids: string[]): Promise<any[]>;
 export default function load(...args: any[]): Promise<any[]> {
 	const req = __webpack_require__;
-	const context = typeof args[0] === 'function' ? args[0] : function () { return ''; };
+	const context =
+		typeof args[0] === 'function'
+			? args[0]
+			: function() {
+					return '';
+				};
 
 	const modules = __modules__ || {};
 	const base = getBasePath(context);
 
-	const results = args.filter((mid: string | Function) => typeof mid === 'string')
+	const results = args
+		.filter((mid: string | Function) => typeof mid === 'string')
 		.map((mid: string) => resolveRelative(base, mid))
 		.map((mid: string) => {
-			let [ moduleId, pluginResourceId ] = mid.split('!');
+			let [moduleId, pluginResourceId] = mid.split('!');
 			const moduleMeta = modules[mid] || modules[moduleId];
 
 			if (!moduleMeta) {
@@ -120,11 +129,12 @@ export default function load(...args: any[]): Promise<any[]> {
 			const defaultExport = module['default'] || module;
 
 			if (isPlugin(defaultExport)) {
-				pluginResourceId = typeof defaultExport.normalize === 'function' ?
-					defaultExport.normalize(pluginResourceId, (mid: string) => resolveRelative(base, mid)) :
-					resolveRelative(base, pluginResourceId);
+				pluginResourceId =
+					typeof defaultExport.normalize === 'function'
+						? defaultExport.normalize(pluginResourceId, (mid: string) => resolveRelative(base, mid))
+						: resolveRelative(base, pluginResourceId);
 
-				return Promise.resolve(defaultExport.load(pluginResourceId, <any> load));
+				return Promise.resolve(defaultExport.load(pluginResourceId, <any>load));
 			}
 
 			return Promise.resolve(module);

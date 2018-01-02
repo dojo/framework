@@ -12,13 +12,11 @@ export default class ProviderRegistry extends MatchRegistry<Provider> {
 
 		if (typeof test === 'string') {
 			entryTest = (url, options) => test === url;
-		}
-		else if (test instanceof RegExp) {
+		} else if (test instanceof RegExp) {
 			entryTest = (url, options) => {
 				return test ? test.test(url) : null;
 			};
-		}
-		else {
+		} else {
 			entryTest = test;
 		}
 

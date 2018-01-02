@@ -3,8 +3,8 @@ import { QueueItem, queueTask } from './queue';
 
 function getQueueHandle(item: QueueItem): Handle {
 	return {
-		destroy: function (this: Handle) {
-			this.destroy = function () {};
+		destroy: function(this: Handle) {
+			this.destroy = function() {};
 			item.isActive = false;
 			item.callback = null;
 		}
@@ -60,7 +60,7 @@ export default class Scheduler {
 		const queue = this._queue;
 		let item: QueueItem | undefined;
 
-		while (item = queue.shift()) {
+		while ((item = queue.shift())) {
 			if (item.isActive && item.callback) {
 				item.callback();
 			}
@@ -73,7 +73,7 @@ export default class Scheduler {
 			this._deferred = null;
 
 			let item: QueueItem | undefined;
-			while (item = deferred.shift()) {
+			while ((item = deferred.shift())) {
 				this._schedule(item);
 			}
 		}
@@ -88,8 +88,8 @@ export default class Scheduler {
 	}
 
 	constructor(kwArgs?: KwArgs) {
-		this.deferWhileProcessing = (kwArgs && 'deferWhileProcessing' in kwArgs) ? kwArgs.deferWhileProcessing : true;
-		this.queueFunction = (kwArgs && kwArgs.queueFunction) ? kwArgs.queueFunction : queueTask;
+		this.deferWhileProcessing = kwArgs && 'deferWhileProcessing' in kwArgs ? kwArgs.deferWhileProcessing : true;
+		this.queueFunction = kwArgs && kwArgs.queueFunction ? kwArgs.queueFunction : queueTask;
 
 		this._boundDispatch = this._dispatch.bind(this);
 		this._isProcessing = false;

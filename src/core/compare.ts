@@ -103,37 +103,39 @@ export interface ConstructRecord extends AnonymousConstructRecord {
  * A record that describes the mutations necessary to a property of an object to make that property look
  * like another
  */
-export type PatchRecord = {
-		/**
-		 * The name of the property on the Object
-		 */
-		name: string;
+export type PatchRecord =
+	| {
+			/**
+			 * The name of the property on the Object
+			 */
+			name: string;
 
-		/**
-		 * The type of the patch
-		 */
-		type: 'delete';
-	} | {
-		/**
-		 * A property descriptor that describes the property in `name`
-		 */
-		descriptor: PropertyDescriptor;
+			/**
+			 * The type of the patch
+			 */
+			type: 'delete';
+		}
+	| {
+			/**
+			 * A property descriptor that describes the property in `name`
+			 */
+			descriptor: PropertyDescriptor;
 
-		/**
-		 * The name of the property on the Object
-		 */
-		name: string;
+			/**
+			 * The name of the property on the Object
+			 */
+			name: string;
 
-		/**
-		 * The type of the patch
-		 */
-		type: 'add' | 'update';
+			/**
+			 * The type of the patch
+			 */
+			type: 'add' | 'update';
 
-		/**
-		 * Additional patch records which describe the value of the property
-		 */
-		valueRecords?: (ConstructRecord | PatchRecord | SpliceRecord)[];
-	};
+			/**
+			 * Additional patch records which describe the value of the property
+			 */
+			valueRecords?: (ConstructRecord | PatchRecord | SpliceRecord)[];
+		};
 
 /**
  * The different types of patch records supported
@@ -171,7 +173,11 @@ export interface SpliceRecord {
  * @param args Any arguments to be passed to the constructor function
  */
 /* tslint:disable:variable-name */
-export function createConstructRecord(Ctor: Constructor, args?: any[], descriptor?: ConstructDescriptor): AnonymousConstructRecord {
+export function createConstructRecord(
+	Ctor: Constructor,
+	args?: any[],
+	descriptor?: ConstructDescriptor
+): AnonymousConstructRecord {
 	const record: AnonymousConstructRecord = assign(objectCreate(null), { Ctor });
 	if (args) {
 		record.args = args;
@@ -191,7 +197,12 @@ export function createConstructRecord(Ctor: Constructor, args?: any[], descripto
  * @param descriptor The property descriptor to be installed on the object
  * @param valueRecords Any subsequenet patch recrds to be applied to the value of the descriptor
  */
-function createPatchRecord(type: PatchTypes, name: string, descriptor?: PropertyDescriptor, valueRecords?: (ConstructRecord | PatchRecord | SpliceRecord)[]): PatchRecord {
+function createPatchRecord(
+	type: PatchTypes,
+	name: string,
+	descriptor?: PropertyDescriptor,
+	valueRecords?: (ConstructRecord | PatchRecord | SpliceRecord)[]
+): PatchRecord {
 	const patchRecord = assign(objectCreate(null), {
 		type,
 		name
@@ -237,7 +248,12 @@ function createSpliceRecord(start: number, deleteCount: number, add?: any[]): Sp
  * @param enumerable Defaults to `true` if not specified
  * @param configurable Defaults to `true` if not specified
  */
-function createValuePropertyDescriptor(value: any, writable: boolean = true, enumerable: boolean = true, configurable: boolean = true): PropertyDescriptor {
+function createValuePropertyDescriptor(
+	value: any,
+	writable: boolean = true,
+	enumerable: boolean = true,
+	configurable: boolean = true
+): PropertyDescriptor {
 	return assign(objectCreate(null), {
 		value,
 		writable,
@@ -249,7 +265,11 @@ function createValuePropertyDescriptor(value: any, writable: boolean = true, enu
 /**
  * A function that returns a constructor record or `undefined` when diffing a value
  */
-export type CustomDiffFunction<T> = (value: T, nameOrIndex: string | number, parent: object) => AnonymousConstructRecord | void;
+export type CustomDiffFunction<T> = (
+	value: T,
+	nameOrIndex: string | number,
+	parent: object
+) => AnonymousConstructRecord | void;
 
 /**
  * A class which is used when making a custom comparison of a non-plain object or array
@@ -298,7 +318,8 @@ function diffArray(a: any[], b: any, options: DiffOptions): SpliceRecord[] {
 	const lengthB = arrayB.length;
 	const patchRecords: SpliceRecord[] = [];
 
-	if (!lengthA && lengthB) { /* empty array */
+	if (!lengthA && lengthB) {
+		/* empty array */
 		patchRecords.push(createSpliceRecord(0, lengthB));
 		return patchRecords;
 	}
@@ -310,12 +331,15 @@ function diffArray(a: any[], b: any, options: DiffOptions): SpliceRecord[] {
 
 	function flushSpliceRecord() {
 		if (deleteCount || add.length) {
-			patchRecords.push(createSpliceRecord(start, start + deleteCount > lengthB ? lengthB - start : deleteCount, add));
+			patchRecords.push(
+				createSpliceRecord(start, start + deleteCount > lengthB ? lengthB - start : deleteCount, add)
+			);
 		}
 	}
 
 	function addDifference(index: number, adding: boolean, value?: any) {
-		if (index > (last + 1)) { /* flush the splice */
+		if (index > last + 1) {
+			/* flush the splice */
 			flushSpliceRecord();
 			start = index;
 			deleteCount = 0;
@@ -334,7 +358,10 @@ function diffArray(a: any[], b: any, options: DiffOptions): SpliceRecord[] {
 	arrayA.forEach((valueA, index) => {
 		const valueB = arrayB[index];
 
-		if (index in arrayB && (valueA === valueB || (allowFunctionValues && typeof valueA === 'function' && typeof valueB === 'function'))) {
+		if (
+			index in arrayB &&
+			(valueA === valueB || (allowFunctionValues && typeof valueA === 'function' && typeof valueB === 'function'))
+		) {
 			return; /* not different */
 		}
 
@@ -342,20 +369,22 @@ function diffArray(a: any[], b: any, options: DiffOptions): SpliceRecord[] {
 		const isValueAPlainObject = isPlainObject(valueA);
 
 		if (isValueAArray || isValueAPlainObject) {
-			const value = isValueAArray ? isArray(valueB) ? valueB : [] : isPlainObject(valueB) ? valueB : Object.create(null);
+			const value = isValueAArray
+				? isArray(valueB) ? valueB : []
+				: isPlainObject(valueB) ? valueB : Object.create(null);
 			const valueRecords = diff(valueA, value, options);
-			if (valueRecords.length) { /* only add if there are changes */
+			if (valueRecords.length) {
+				/* only add if there are changes */
 				addDifference(index, true, diff(valueA, value, options));
 			}
-		}
-		else if (isPrimitive(valueA)) {
+		} else if (isPrimitive(valueA)) {
 			addDifference(index, true, valueA);
-		}
-		else if (allowFunctionValues && typeof valueA === 'function') {
+		} else if (allowFunctionValues && typeof valueA === 'function') {
 			addDifference(index, true, valueA);
-		}
-		else {
-			throw new TypeError(`Value of array element "${index}" from first argument is not a primative, plain Object, or Array.`);
+		} else {
+			throw new TypeError(
+				`Value of array element "${index}" from first argument is not a primative, plain Object, or Array.`
+			);
 		}
 	});
 
@@ -390,10 +419,13 @@ function diffPlainObject(a: any, b: any, options: DiffOptions): (ConstructRecord
 		const valueB = b[name];
 		const bHasOwnProperty = hasOwnProperty.call(comparableB, name);
 
-		if (bHasOwnProperty && (valueA === valueB ||
-			(allowFunctionValues && typeof valueA === 'function' && typeof valueB === 'function'))) { /* not different */
-				/* when `allowFunctionValues` is true, functions are simply considered to be equal by `typeof` */
-				return patchRecords;
+		if (
+			bHasOwnProperty &&
+			(valueA === valueB || (allowFunctionValues && typeof valueA === 'function' && typeof valueB === 'function'))
+		) {
+			/* not different */
+			/* when `allowFunctionValues` is true, functions are simply considered to be equal by `typeof` */
+			return patchRecords;
 		}
 
 		const type = bHasOwnProperty ? 'update' : 'add';
@@ -401,37 +433,45 @@ function diffPlainObject(a: any, b: any, options: DiffOptions): (ConstructRecord
 		const isValueAArray = isArray(valueA);
 		const isValueAPlainObject = isPlainObject(valueA);
 
-		if ((isValueAArray || isValueAPlainObject)) { /* non-primitive values we can diff */
+		if (isValueAArray || isValueAPlainObject) {
+			/* non-primitive values we can diff */
 			/* this is a bit complicated, but essentially if valueA and valueB are both arrays or plain objects, then
 			* we can diff those two values, if not, then we need to use an empty array or an empty object and diff
 			* the valueA with that */
-			const value = (isValueAArray && isArray(valueB)) || (isValueAPlainObject && isPlainObject(valueB)) ?
-				valueB : isValueAArray ?
-					[] : objectCreate(null);
+			const value =
+				(isValueAArray && isArray(valueB)) || (isValueAPlainObject && isPlainObject(valueB))
+					? valueB
+					: isValueAArray ? [] : objectCreate(null);
 			const valueRecords = diff(valueA, value, options);
-			if (valueRecords.length) { /* only add if there are changes */
-				patchRecords.push(createPatchRecord(type, name, createValuePropertyDescriptor(value), diff(valueA, value, options)));
+			if (valueRecords.length) {
+				/* only add if there are changes */
+				patchRecords.push(
+					createPatchRecord(type, name, createValuePropertyDescriptor(value), diff(valueA, value, options))
+				);
 			}
-		}
-		else if (isCustomDiff(valueA) && !isCustomDiff(valueB)) { /* complex diff left hand */
+		} else if (isCustomDiff(valueA) && !isCustomDiff(valueB)) {
+			/* complex diff left hand */
 			const result = valueA.diff(valueB, name, b);
 			if (result) {
 				patchRecords.push(result);
 			}
-		}
-		else if (isCustomDiff(valueB)) { /* complex diff right hand */
+		} else if (isCustomDiff(valueB)) {
+			/* complex diff right hand */
 			const result = valueB.diff(valueA, name, a);
 			if (result) {
 				patchRecords.push(result);
 			}
-		}
-		else if (isPrimitive(valueA) || (allowFunctionValues && typeof valueA === 'function') ||
-			isIgnoredPropertyValue(name, a, b, ignorePropertyValues)) {
-				/* primitive values, functions values if allowed, or ignored property values can just be copied */
-				patchRecords.push(createPatchRecord(type, name, createValuePropertyDescriptor(valueA)));
-		}
-		else {
-			throw new TypeError(`Value of property named "${name}" from first argument is not a primative, plain Object, or Array.`);
+		} else if (
+			isPrimitive(valueA) ||
+			(allowFunctionValues && typeof valueA === 'function') ||
+			isIgnoredPropertyValue(name, a, b, ignorePropertyValues)
+		) {
+			/* primitive values, functions values if allowed, or ignored property values can just be copied */
+			patchRecords.push(createPatchRecord(type, name, createValuePropertyDescriptor(valueA)));
+		} else {
+			throw new TypeError(
+				`Value of property named "${name}" from first argument is not a primative, plain Object, or Array.`
+			);
 		}
 		return patchRecords;
 	}, patchRecords);
@@ -461,30 +501,42 @@ export function getComparableObjects(a: any, b: any, options: DiffOptions) {
 	const ignore = new Set<string>();
 	const keep = new Set<string>();
 
-	const isIgnoredProperty = Array.isArray(ignoreProperties) ? (name: string) => {
-		return ignoreProperties.some((value) => typeof value === 'string' ? name === value : value.test(name));
-	} : (name: string) => ignoreProperties(name, a, b);
+	const isIgnoredProperty = Array.isArray(ignoreProperties)
+		? (name: string) => {
+				return ignoreProperties.some(
+					(value) => (typeof value === 'string' ? name === value : value.test(name))
+				);
+			}
+		: (name: string) => ignoreProperties(name, a, b);
 
-	const comparableA = keys(a).reduce((obj, name) => {
-		if (isIgnoredProperty(name) ||
-			hasOwnProperty.call(b, name) && isIgnoredPropertyValue(name, a, b, ignorePropertyValues)) {
+	const comparableA = keys(a).reduce(
+		(obj, name) => {
+			if (
+				isIgnoredProperty(name) ||
+				(hasOwnProperty.call(b, name) && isIgnoredPropertyValue(name, a, b, ignorePropertyValues))
+			) {
 				ignore.add(name);
 				return obj;
-		}
+			}
 
-		keep.add(name);
-		obj[name] = a[name];
-		return obj;
-	}, {} as { [key: string]: any });
-
-	const comparableB = keys(b).reduce((obj, name) => {
-		if (ignore.has(name) || !keep.has(name) && isIgnoredProperty(name)) {
+			keep.add(name);
+			obj[name] = a[name];
 			return obj;
-		}
+		},
+		{} as { [key: string]: any }
+	);
 
-		obj[name] = b[name];
-		return obj;
-	}, {} as { [key: string]: any });
+	const comparableB = keys(b).reduce(
+		(obj, name) => {
+			if (ignore.has(name) || (!keep.has(name) && isIgnoredProperty(name))) {
+				return obj;
+			}
+
+			obj[name] = b[name];
+			return obj;
+		},
+		{} as { [key: string]: any }
+	);
 
 	return { comparableA, comparableB, ignore };
 }
@@ -497,10 +549,17 @@ function isConstructRecord(value: any): value is ConstructRecord {
 	return Boolean(value && typeof value === 'object' && value !== null && value.Ctor && value.name);
 }
 
-function isIgnoredPropertyValue(name: string, a: any, b: any, ignoredPropertyValues: (string | RegExp)[] | IgnorePropertyFunction) {
-	return Array.isArray(ignoredPropertyValues) ? ignoredPropertyValues.some((value) => {
-		return typeof value === 'string' ? name === value : value.test(name);
-	}) : ignoredPropertyValues(name, a, b);
+function isIgnoredPropertyValue(
+	name: string,
+	a: any,
+	b: any,
+	ignoredPropertyValues: (string | RegExp)[] | IgnorePropertyFunction
+) {
+	return Array.isArray(ignoredPropertyValues)
+		? ignoredPropertyValues.some((value) => {
+				return typeof value === 'string' ? name === value : value.test(name);
+			})
+		: ignoredPropertyValues(name, a, b);
 }
 
 /**
@@ -529,9 +588,7 @@ function isPatchRecordArray(value: any): value is PatchRecord[] {
  */
 function isPlainObject(value: any): value is Object {
 	return Boolean(
-		value &&
-		typeof value === 'object' &&
-		(value.constructor === Object || value.constructor === undefined)
+		value && typeof value === 'object' && (value.constructor === Object || value.constructor === undefined)
 	);
 }
 
@@ -541,13 +598,15 @@ function isPlainObject(value: any): value is Object {
  *
  * @param value The value to check
  */
-function isPrimitive(value: any): value is (string | number | boolean | undefined | null) {
+function isPrimitive(value: any): value is string | number | boolean | undefined | null {
 	const typeofValue = typeof value;
-	return value === null ||
+	return (
+		value === null ||
 		typeofValue === 'undefined' ||
 		typeofValue === 'string' ||
 		typeofValue === 'number' ||
-		typeofValue === 'boolean';
+		typeofValue === 'boolean'
+	);
 }
 
 /**
@@ -584,8 +643,7 @@ function patchSplice(target: any[], { add, deleteCount, start }: SpliceRecord): 
 		const deletedItems = deleteCount ? target.slice(start, start + deleteCount) : [];
 		add = add.map((value, index) => resolveTargetValue(value, deletedItems[index]));
 		target.splice(start, deleteCount, ...add);
-	}
-	else {
+	} else {
 		target.splice(start, deleteCount);
 	}
 	return target;
@@ -618,7 +676,9 @@ function patchConstruct(target: any, record: ConstructRecord): any {
 	const { args, descriptor = defaultConstructDescriptor, Ctor, name, propertyRecords } = record;
 	const value = new Ctor(...(args || []));
 	if (propertyRecords) {
-		propertyRecords.forEach((record) => isConstructRecord(record) ? patchConstruct(value, record) : patchPatch(value, record));
+		propertyRecords.forEach(
+			(record) => (isConstructRecord(record) ? patchConstruct(value, record) : patchPatch(value, record))
+		);
 	}
 	defineProperty(target, name, assign({ value }, descriptor));
 	return target;
@@ -630,15 +690,14 @@ function patchConstruct(target: any, record: ConstructRecord): any {
  */
 function resolveTargetValue(patchValue: any, targetValue: any): any {
 	const patchIsSpliceRecordArray = isSpliceRecordArray(patchValue);
-	return (patchIsSpliceRecordArray || isPatchRecordArray(patchValue)) ?
-		patch(
-			patchIsSpliceRecordArray ?
-				isArray(targetValue) ?
-					targetValue : [] : isPlainObject(targetValue) ?
-						targetValue : objectCreate(null),
-			patchValue
-		) :
-		patchValue;
+	return patchIsSpliceRecordArray || isPatchRecordArray(patchValue)
+		? patch(
+				patchIsSpliceRecordArray
+					? isArray(targetValue) ? targetValue : []
+					: isPlainObject(targetValue) ? targetValue : objectCreate(null),
+				patchValue
+			)
+		: patchValue;
 }
 
 /**
@@ -687,7 +746,8 @@ export function patch(target: any, records: (ConstructRecord | PatchRecord | Spl
 	records.forEach((record) => {
 		target = isSpliceRecord(record)
 			? patchSplice(isArray(target) ? target : [], record) /* patch arrays */
-			: isConstructRecord(record) ? patchConstruct(target, record) /* patch complex object */
+			: isConstructRecord(record)
+				? patchConstruct(target, record) /* patch complex object */
 				: patchPatch(isPlainObject(target) ? target : {}, record); /* patch plain object */
 	});
 	return target;

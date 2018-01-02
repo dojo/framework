@@ -47,11 +47,9 @@ export function deprecated({ message, name, warn, url }: DeprecatedOptions = {})
 		}
 		if (warn) {
 			warn(warning);
-		}
-		else if (globalWarn) {
+		} else if (globalWarn) {
 			globalWarn(warning);
-		}
-		else {
+		} else {
 			console.warn(warning);
 		}
 	}

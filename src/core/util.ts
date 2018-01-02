@@ -11,7 +11,7 @@ import { createHandle } from './lang';
 export function createTimer(callback: (...args: any[]) => void, delay?: number): Handle {
 	let timerId: number | null = setTimeout(callback, delay);
 
-	return createHandle(function () {
+	return createHandle(function() {
 		if (timerId) {
 			clearTimeout(timerId);
 			timerId = null;
@@ -31,13 +31,13 @@ export function debounce<T extends (this: any, ...args: any[]) => void>(callback
 	// but browsers return/receive a number
 	let timer: Handle | null;
 
-	return <T> function () {
+	return <T>function() {
 		timer && timer.destroy();
 
 		let context = this;
 		let args: IArguments | null = arguments;
 
-		timer = guaranteeMinimumTimeout(function () {
+		timer = guaranteeMinimumTimeout(function() {
 			callback.apply(context, args);
 			args = context = timer = null;
 		}, delay);
@@ -54,7 +54,7 @@ export function debounce<T extends (this: any, ...args: any[]) => void>(callback
 export function throttle<T extends (this: any, ...args: any[]) => void>(callback: T, delay: number): T {
 	let ran: boolean | null;
 
-	return <T> function () {
+	return <T>function() {
 		if (ran) {
 			return;
 		}
@@ -62,7 +62,7 @@ export function throttle<T extends (this: any, ...args: any[]) => void>(callback
 		ran = true;
 
 		callback.apply(this, arguments);
-		guaranteeMinimumTimeout(function () {
+		guaranteeMinimumTimeout(function() {
 			ran = null;
 		}, delay);
 	};
@@ -79,7 +79,7 @@ export function throttle<T extends (this: any, ...args: any[]) => void>(callback
 export function throttleAfter<T extends (this: any, ...args: any[]) => void>(callback: T, delay: number): T {
 	let ran: boolean | null;
 
-	return <T> function () {
+	return <T>function() {
 		if (ran) {
 			return;
 		}
@@ -89,7 +89,7 @@ export function throttleAfter<T extends (this: any, ...args: any[]) => void>(cal
 		let context = this;
 		let args: IArguments | null = arguments;
 
-		guaranteeMinimumTimeout(function () {
+		guaranteeMinimumTimeout(function() {
 			callback.apply(context, args);
 			args = context = ran = null;
 		}, delay);
@@ -109,7 +109,7 @@ export function guaranteeMinimumTimeout(callback: (...args: any[]) => void, dela
 			// it thinks we are using the Node version of setTimeout.
 			// Revisit this with the next TypeScript update.
 			// Set another timer for the mount of time that we came up short.
-			timerId = <any> setTimeout(timeoutHandler, delay - delta);
+			timerId = <any>setTimeout(timeoutHandler, delay - delta);
 		}
 	}
 	timerId = setTimeout(timeoutHandler, delay);

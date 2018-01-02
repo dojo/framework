@@ -10,29 +10,32 @@ registerSuite('lang functions', {
 
 	'.deepAssign()'() {
 		const source: {
-			a: number,
+			a: number;
 			b: {
-				enumerable: boolean,
-				configurable: boolean,
-				writable: boolean,
-				value: number
-			},
+				enumerable: boolean;
+				configurable: boolean;
+				writable: boolean;
+				value: number;
+			};
 			c: {
-				d: number,
-				e: any[]
+				d: number;
+				e: any[];
+			};
+		} = Object.create(
+			{ a: 1 },
+			{
+				b: {
+					enumerable: false,
+					configurable: true,
+					writable: true,
+					value: 2
+				}
 			}
-		} = Object.create({ a: 1 }, {
-			b: {
-				enumerable: false,
-				configurable: true,
-				writable: true,
-				value: 2
-			}
-		});
+		);
 
 		source.c = {
 			d: 3,
-			e: [ 4, [ 5 ], { f: 6 } ]
+			e: [4, [5], { f: 6 }]
 		};
 
 		const object: {} = Object.create(null);
@@ -55,7 +58,8 @@ registerSuite('lang functions', {
 				weight: 52,
 				price: 100,
 				details: {
-					colour: 'brown', texture: 'soft'
+					colour: 'brown',
+					texture: 'soft'
 				}
 			},
 			cherry: 97
@@ -117,26 +121,30 @@ registerSuite('lang functions', {
 		};
 
 		const assignedObject = lang.deepAssign(target, source);
-		assert.deepEqual(assignedObject, { bar: { foo: 'bar' }, baz: { foo: 'bar' }, qux: { foo: { foo: 'bar' }, bar: { foo: { foo: 'bar' } } } });
+		assert.deepEqual(assignedObject, {
+			bar: { foo: 'bar' },
+			baz: { foo: 'bar' },
+			qux: { foo: { foo: 'bar' }, bar: { foo: { foo: 'bar' } } }
+		});
 	},
 
 	'.mixin()'() {
 		const source: {
-			a: number,
-			c: number,
+			a: number;
+			c: number;
 			nested: {
-				a: number
-			},
-			b: number,
-			hidden: number
-		} = <any> Object.create({
+				a: number;
+			};
+			b: number;
+			hidden: number;
+		} = <any>Object.create({
 			a: 1
 		});
 		source.c = 3;
 		source.nested = { a: 5 };
 		Object.defineProperty(source, 'b', {
 			enumerable: true,
-			get: function () {
+			get: function() {
 				return 2;
 			}
 		});
@@ -175,19 +183,19 @@ registerSuite('lang functions', {
 	'.deepMixin()'() {
 		const source: {
 			nested: {
-				a: number,
-				b: any[]
-			},
-			a: number,
-			b: number,
-			c: number,
-			d: Date,
-			e: RegExp,
-			hidden: number
-		} = <any> Object.create({
+				a: number;
+				b: any[];
+			};
+			a: number;
+			b: number;
+			c: number;
+			d: Date;
+			e: RegExp;
+			hidden: number;
+		} = <any>Object.create({
 			nested: {
 				a: 1,
-				b: [ 2, [ 3 ], { f: 4 } ]
+				b: [2, [3], { f: 4 }]
 			}
 		});
 		source.a = 1;
@@ -196,7 +204,7 @@ registerSuite('lang functions', {
 		source.e = /abc/;
 		Object.defineProperty(source, 'b', {
 			enumerable: true,
-			get: function () {
+			get: function() {
 				return 2;
 			}
 		});
@@ -229,7 +237,8 @@ registerSuite('lang functions', {
 				weight: 52,
 				price: 100,
 				details: {
-					colour: 'brown', texture: 'soft'
+					colour: 'brown',
+					texture: 'soft'
 				}
 			},
 			cherry: 97
@@ -280,41 +289,44 @@ registerSuite('lang functions', {
 			a: 1
 		};
 		const mixin: {
-			lorem: string,
+			lorem: string;
 			b: {
-				enumerable: boolean,
-				configurable: boolean,
-				writable: boolean,
+				enumerable: boolean;
+				configurable: boolean;
+				writable: boolean;
 				value: {
-					c: number
+					c: number;
+				};
+			};
+			d: {
+				enumerable: boolean;
+				configurable: boolean;
+				writable: boolean;
+				value: number;
+			};
+			e: {
+				value: number;
+			};
+		} = Object.create(
+			{ lorem: 'ipsum' },
+			{
+				b: {
+					enumerable: true,
+					configurable: true,
+					writable: true,
+					value: { c: 2 }
+				},
+				d: {
+					enumerable: true,
+					configurable: true,
+					writable: false,
+					value: 3
+				},
+				e: {
+					value: 4
 				}
-			},
-			d: {
-				enumerable: boolean,
-				configurable: boolean,
-				writable: boolean,
-				value: number
-			},
-			e: {
-				value: number
 			}
-		} = Object.create({ lorem: 'ipsum' }, {
-			b: {
-				enumerable: true,
-				configurable: true,
-				writable: true,
-				value: { c: 2 }
-			},
-			d: {
-				enumerable: true,
-				configurable: true,
-				writable: false,
-				value: 3
-			},
-			e: {
-				value: 4
-			}
-		});
+		);
 		const object: typeof prototype & typeof mixin = lang.create(prototype, mixin);
 
 		assert.strictEqual(Object.getPrototypeOf(object), prototype);
@@ -322,7 +334,7 @@ registerSuite('lang functions', {
 		assert.isTrue(Object.getOwnPropertyDescriptor(object, 'd')!.writable);
 		assert.isUndefined(object.e);
 		assert.isUndefined(object.lorem);
-		assert.throw(function () {
+		assert.throw(function() {
 			lang.create({});
 		});
 	},
@@ -332,13 +344,13 @@ registerSuite('lang functions', {
 			a: 1
 		};
 		const source: {
-			a: number,
+			a: number;
 			b: {
-				value: number
-			},
+				value: number;
+			};
 			c: {
-				d: number
-			}
+				d: number;
+			};
 		} = Object.create(prototype, {
 			b: { value: 2 }
 		});
@@ -364,56 +376,77 @@ registerSuite('lang functions', {
 	'.lateBind() context'() {
 		const object: {
 			method?: (...args: string[]) => string;
-		} = <any> {};
+		} = <any>{};
 		const method = lang.lateBind(object, 'method');
-		object.method = function (this: any): any {
+		object.method = function(this: any): any {
 			return this;
 		};
 
-		assert.strictEqual(method(), object, 'lateBind\'s context should be `object`.');
+		assert.strictEqual(method(), object, "lateBind's context should be `object`.");
 	},
 
 	'.lateBind() arguments'() {
 		const object: {
 			method?: (...args: string[]) => string;
-		} = <any> {};
+		} = <any>{};
 		const method = lang.lateBind(object, 'method', 'The', 'quick', 'brown');
 		const methodNoArgs = lang.lateBind(object, 'method');
 		const suffix = 'fox jumped over the lazy dog';
-		object.method = function (...parts: string[]): string {
+		object.method = function(...parts: string[]): string {
 			return parts.join(' ');
 		};
 
-		assert.strictEqual(method(suffix), 'The quick brown ' + suffix,
-			'lateBind\'s additional arguments should be prepended to the wrapped function.');
-		assert.strictEqual(methodNoArgs(suffix), suffix,
-			'lateBind\'s additional arguments should be prepended to the wrapped function.');
-		assert.strictEqual(method(), 'The quick brown',
-			'lateBind\'s additional arguments should be prepended to the wrapped function.');
+		assert.strictEqual(
+			method(suffix),
+			'The quick brown ' + suffix,
+			"lateBind's additional arguments should be prepended to the wrapped function."
+		);
+		assert.strictEqual(
+			methodNoArgs(suffix),
+			suffix,
+			"lateBind's additional arguments should be prepended to the wrapped function."
+		);
+		assert.strictEqual(
+			method(),
+			'The quick brown',
+			"lateBind's additional arguments should be prepended to the wrapped function."
+		);
 	},
 
 	'.partial()'() {
 		const ending = 'jumps over the lazy dog';
-		const finish = lang.partial(function (this: any) {
-			const start = this && this.start ? [ this.start ] : [];
+		const finish = lang.partial(
+			function(this: any) {
+				const start = this && this.start ? [this.start] : [];
 
-			return start.concat(Array.prototype.slice.call(arguments)).join(' ');
-		}, 'jumps', 'over');
+				return start.concat(Array.prototype.slice.call(arguments)).join(' ');
+			},
+			'jumps',
+			'over'
+		);
 
 		function Sentence(this: any, start: string = '') {
 			this.start = start;
 		}
 		Sentence.prototype.finish = finish;
 
-		assert.strictEqual(finish('the lazy dog'), ending,
+		assert.strictEqual(
+			finish('the lazy dog'),
+			ending,
 			'The arguments supplied to `lang.partial` should be prepended to the arguments list of the ' +
-			'original function.');
-		assert.strictEqual(finish(), 'jumps over',
+				'original function.'
+		);
+		assert.strictEqual(
+			finish(),
+			'jumps over',
 			'The arguments supplied to `lang.partial` should still be used even if no arguments are passed to the ' +
-			'wrapped function.');
-		assert.strictEqual(new (<any> Sentence)('The quick brown fox').finish('the lazy dog'),
+				'wrapped function.'
+		);
+		assert.strictEqual(
+			new (<any>Sentence)('The quick brown fox').finish('the lazy dog'),
 			'The quick brown fox ' + ending,
-			'A function passed to `lang.partial` should inherit its context.');
+			'A function passed to `lang.partial` should inherit its context.'
+		);
 	},
 
 	'.createHandle'() {
@@ -434,10 +467,7 @@ registerSuite('lang functions', {
 		function destructor(): void {
 			++count;
 		}
-		const handle = lang.createCompositeHandle(
-			lang.createHandle(destructor),
-			lang.createHandle(destructor)
-		);
+		const handle = lang.createCompositeHandle(lang.createHandle(destructor), lang.createHandle(destructor));
 
 		handle.destroy();
 		assert.strictEqual(count, 2, 'both destructors in the composite handle should have been called');

@@ -18,7 +18,7 @@ registerSuite('events - EventEmitter', {
 		const target = createTarget();
 		assert.isFalse(emit(target, { type: 'test' }));
 
-		const handle = on(target, 'test', function () {});
+		const handle = on(target, 'test', function() {});
 		assert.isFalse(emit(target, { type: 'test' }));
 
 		handle.destroy();

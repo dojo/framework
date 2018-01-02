@@ -36,9 +36,9 @@ export interface DateProperties {
 	year: number;
 }
 
-const days = [ NaN, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
+const days = [NaN, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-const isLeapYear = (function () {
+const isLeapYear = (function() {
 	const date = new Date();
 	function isLeapYear(year: number): boolean {
 		date.setFullYear(year, 1, 29);
@@ -47,7 +47,7 @@ const isLeapYear = (function () {
 	return isLeapYear;
 })();
 
-const operationOrder = [ 'years', 'months', 'days', 'hours', 'minutes', 'seconds', 'milliseconds' ];
+const operationOrder = ['years', 'months', 'days', 'hours', 'minutes', 'seconds', 'milliseconds'];
 const operationHash: Hash<string> = Object.create(null, {
 	days: { value: 'Date' },
 	hours: { value: 'UTCHours' },
@@ -79,14 +79,11 @@ export default class DateObject implements DateProperties {
 		let _date: Date;
 		if (!arguments.length) {
 			_date = new Date();
-		}
-		else if (value instanceof Date) {
+		} else if (value instanceof Date) {
 			_date = new Date(+value);
-		}
-		else if (typeof value === 'number' || typeof value === 'string') {
-			_date = new Date(<any> value);
-		}
-		else {
+		} else if (typeof value === 'number' || typeof value === 'string') {
+			_date = new Date(<any>value);
+		} else {
 			_date = new Date(
 				value.year,
 				value.month - 1,
@@ -173,7 +170,7 @@ export default class DateObject implements DateProperties {
 					return self._date.getUTCDay();
 				},
 
-				toString: function (): string {
+				toString: function(): string {
 					return self._date.toUTCString();
 				}
 			},
@@ -276,8 +273,7 @@ export default class DateObject implements DateProperties {
 
 		if (typeof value === 'number') {
 			result.time += value;
-		}
-		else {
+		} else {
 			// Properties have to be added in a particular order to properly handle
 			// date overshoots in month and year calculations
 			operationOrder.forEach((property: string): void => {
@@ -286,12 +282,9 @@ export default class DateObject implements DateProperties {
 				}
 
 				const dateMethod = operationHash[property];
-				(<any> result._date)[`set${dateMethod}`](
-					(<any> this._date)[`get${dateMethod}`]() + value[property]
-				);
+				(<any>result._date)[`set${dateMethod}`]((<any>this._date)[`get${dateMethod}`]() + value[property]);
 
-				if ((property === 'years' || property === 'months') &&
-					result.dayOfMonth < this.dayOfMonth) {
+				if ((property === 'years' || property === 'months') && result.dayOfMonth < this.dayOfMonth) {
 					// Set the day of the month to 0 to move the date to the first day of the previous
 					// month to fix overshoots when adding a month and the date is the 31st or adding
 					// a year and the date is the 29th
