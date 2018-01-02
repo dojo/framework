@@ -5,6 +5,7 @@
 		"module": "umd",
 		"noImplicitAny": true,
 		"noImplicitThis": true,
+		"noUnusedLocals": true,
 		"strictNullChecks": true,
 		"outDir": "_build/",
 		"removeComments": false,

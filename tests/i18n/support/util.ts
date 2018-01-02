@@ -13,36 +13,42 @@ export interface Thenable<T> {
 }
 
 export function isEventuallyRejected<T>(promise: Thenable<T>): Thenable<boolean> {
-	return promise.then<any>(function () {
-		throw new Error('unexpected code path');
-	}, function () {
-		return true; // expect rejection
-	});
+	return promise.then<any>(
+		function() {
+			throw new Error('unexpected code path');
+		},
+		function() {
+			return true; // expect rejection
+		}
+	);
 }
 
 export function throwImmediatly() {
 	throw new Error('unexpected code path');
 }
 
-const getJson: (paths: string[]) => Promise<CldrData[]> = (function () {
+const getJson: (paths: string[]) => Promise<CldrData[]> = (function() {
 	if (has('host-node')) {
-		return function (paths: string[]): Promise<CldrData[]> {
-			return Promise.resolve(paths.map(path => require(path) as CldrData));
+		return function(paths: string[]): Promise<CldrData[]> {
+			return Promise.resolve(paths.map((path) => require(path) as CldrData));
 		};
 	}
 
-	return function (paths: string[]): Promise<CldrData[]> {
-		return Promise.all(paths.map((path: string): Promise<CldrData> => {
-			if (typeof require.toUrl === 'function') {
-				path = require.toUrl(path);
-			}
+	return function(paths: string[]): Promise<CldrData[]> {
+		return Promise.all(
+			paths.map((path: string): Promise<CldrData> => {
+				if (typeof require.toUrl === 'function') {
+					path = require.toUrl(path);
+				}
 
-			return <Promise<CldrData>> request.get(path)
-				.then(response => response.json())
-				.then((data: CldrData) => {
-					return data;
-				});
-		}));
+				return <Promise<CldrData>>request
+					.get(path)
+					.then((response) => response.json())
+					.then((data: CldrData) => {
+						return data;
+					});
+			})
+		);
 	};
 })();
 
@@ -50,17 +56,18 @@ const getJson: (paths: string[]) => Promise<CldrData[]> = (function () {
  * Load into Globalize.js all CLDR data for the specified locales.
  */
 export async function fetchCldrData(locales: string | string[]): Promise<void> {
-	locales = Array.isArray(locales) ? locales : [ locales ];
+	locales = Array.isArray(locales) ? locales : [locales];
 
 	await locales.map((locale: string) => {
 		if (isLoaded('main', locale)) {
 			return Promise.resolve();
 		}
 
-		const paths = [ 'ca-gregorian', 'currencies', 'dateFields', 'numbers', 'timeZoneNames', 'units' ]
-			.map((name: string) => `cldr-data/main/${locale}/${name}.json`);
+		const paths = ['ca-gregorian', 'currencies', 'dateFields', 'numbers', 'timeZoneNames', 'units'].map(
+			(name: string) => `cldr-data/main/${locale}/${name}.json`
+		);
 		return getJson(paths).then((result: CldrData[]) => {
-			return result.map(data => loadCldrData(data));
+			return result.map((data) => loadCldrData(data));
 		});
 	});
 
@@ -76,7 +83,7 @@ export async function fetchCldrData(locales: string | string[]): Promise<void> {
 		].map((name: string) => `cldr-data/supplemental/${name}.json`);
 
 		await getJson(supplementalPaths).then((result: CldrData[]) => {
-			return result.map(data => loadCldrData(data));
+			return result.map((data) => loadCldrData(data));
 		});
 	}
 }

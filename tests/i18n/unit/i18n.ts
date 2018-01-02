@@ -22,16 +22,15 @@ import bundle from '../support/mocks/common/main';
 import partyBundle from '../support/mocks/common/party';
 
 registerSuite('i18n', {
-
 	before() {
 		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
-		return fetchCldrData([ 'en', 'fr' ]).then(() => {
+		return fetchCldrData(['en', 'fr']).then(() => {
 			switchLocale('en');
 		});
 	},
 
 	afterEach() {
-		const loadCldrData = <any> cldrLoad.default;
+		const loadCldrData = <any>cldrLoad.default;
 		if (typeof loadCldrData.restore === 'function') {
 			loadCldrData.restore();
 		}
@@ -41,15 +40,13 @@ registerSuite('i18n', {
 	},
 
 	tests: {
-
 		systemLocale() {
 			let expected = 'en';
 
 			if (has('host-browser')) {
 				const navigator = global.navigator;
 				expected = navigator.language || navigator.userLanguage;
-			}
-			else if (has('host-node')) {
+			} else if (has('host-node')) {
 				expected = process.env.LANG || expected;
 			}
 
@@ -63,14 +60,18 @@ registerSuite('i18n', {
 				},
 
 				after() {
-					return fetchCldrData([ 'en', 'fr' ]);
+					return fetchCldrData(['en', 'fr']);
 				},
 
 				tests: {
 					'assert without loaded messages'() {
-						assert.throws(() => {
-							formatMessage({ messages: {} }, 'messageKey');
-						}, Error, 'The bundle has not been registered.');
+						assert.throws(
+							() => {
+								formatMessage({ messages: {} }, 'messageKey');
+							},
+							Error,
+							'The bundle has not been registered.'
+						);
 					},
 
 					'assert tokens replaced'() {
@@ -81,11 +82,15 @@ registerSuite('i18n', {
 							});
 							assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
 
-							assert.throws(() => {
-								formatMessage(partyBundle, 'simpleGuestInfo', {
-									host: 'Nita'
-								});
-							}, Error, 'Missing property guest');
+							assert.throws(
+								() => {
+									formatMessage(partyBundle, 'simpleGuestInfo', {
+										host: 'Nita'
+									});
+								},
+								Error,
+								'Missing property guest'
+							);
 						});
 					},
 
@@ -162,11 +167,15 @@ registerSuite('i18n', {
 
 			'assert supported locale'() {
 				return i18n(bundle, 'ar').then(() => {
-					assert.deepEqual(getCachedMessages(bundle, 'ar'), {
-						hello: 'السلام عليكم',
-						helloReply: 'و عليكم السام',
-						goodbye: 'مع السلامة'
-					}, 'Locale messages can be retrieved with a bundle object.');
+					assert.deepEqual(
+						getCachedMessages(bundle, 'ar'),
+						{
+							hello: 'السلام عليكم',
+							helloReply: 'و عليكم السام',
+							goodbye: 'مع السلامة'
+						},
+						'Locale messages can be retrieved with a bundle object.'
+					);
 				});
 			},
 
@@ -180,15 +189,21 @@ registerSuite('i18n', {
 				setLocaleMessages(bundle, messages, 'en-GB');
 
 				const cached = getCachedMessages(bundle, 'en-GB');
-				assert.deepEqual(cached, assign({}, bundle.messages, messages),
-					'Messages added with `setLocaleMessages` are returned.');
+				assert.deepEqual(
+					cached,
+					assign({}, bundle.messages, messages),
+					'Messages added with `setLocaleMessages` are returned.'
+				);
 			},
 
 			'assert most specific supported locale returned'() {
 				return i18n(bundle, 'ar').then(() => {
 					const cached = getCachedMessages(bundle, 'ar');
-					assert.deepEqual(getCachedMessages(bundle, 'ar-IR'), cached,
-						'Messages are returned for the most specific supported locale.');
+					assert.deepEqual(
+						getCachedMessages(bundle, 'ar-IR'),
+						cached,
+						'Messages are returned for the most specific supported locale.'
+					);
 				});
 			}
 		},
@@ -200,14 +215,18 @@ registerSuite('i18n', {
 				},
 
 				after() {
-					return fetchCldrData([ 'en', 'fr' ]);
+					return fetchCldrData(['en', 'fr']);
 				},
 
 				tests: {
 					'assert without loaded messages'() {
-						assert.throws(() => {
-							getMessageFormatter({ messages: {} }, 'messageKey')();
-						}, Error, 'The bundle has not been registered.');
+						assert.throws(
+							() => {
+								getMessageFormatter({ messages: {} }, 'messageKey')();
+							},
+							Error,
+							'The bundle has not been registered.'
+						);
 					},
 
 					'assert tokens replaced'() {
@@ -219,11 +238,15 @@ registerSuite('i18n', {
 							});
 							assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
 
-							assert.throws(() => {
-								formatter({
-									host: 'Nita'
-								});
-							}, Error, 'Missing property guest');
+							assert.throws(
+								() => {
+									formatter({
+										host: 'Nita'
+									});
+								},
+								Error,
+								'Missing property guest'
+							);
 						});
 					},
 
@@ -290,7 +313,7 @@ registerSuite('i18n', {
 
 		i18n: {
 			'assert system locale used as default'() {
-				return i18n(bundle).then(function (messages: Messages) {
+				return i18n(bundle).then(function(messages: Messages) {
 					assert.deepEqual(messages, {
 						hello: 'Hello',
 						helloReply: 'Hello',
@@ -300,38 +323,50 @@ registerSuite('i18n', {
 			},
 
 			'assert with string locale'() {
-				return i18n(bundle, 'ar').then(function (messages: Messages) {
-					assert.deepEqual(messages, {
-						hello: 'السلام عليكم',
-						helloReply: 'و عليكم السام',
-						goodbye: 'مع السلامة'
-					}, 'Locale dictionary is used.');
+				return i18n(bundle, 'ar').then(function(messages: Messages) {
+					assert.deepEqual(
+						messages,
+						{
+							hello: 'السلام عليكم',
+							helloReply: 'و عليكم السام',
+							goodbye: 'مع السلامة'
+						},
+						'Locale dictionary is used.'
+					);
 				});
 			},
 
 			'assert with nested locale'() {
-				return i18n(bundle, 'ar-JO').then(function (messages: Messages) {
+				return i18n(bundle, 'ar-JO').then(function(messages: Messages) {
 					// ar-JO is missing "goodbye" key
-					assert.deepEqual(messages, {
-						hello: 'مرحبا',
-						helloReply: 'مرحبتين',
-						goodbye: 'مع السلامة'
-					}, 'Most specific dictionary is used with fallbacks provided.');
+					assert.deepEqual(
+						messages,
+						{
+							hello: 'مرحبا',
+							helloReply: 'مرحبتين',
+							goodbye: 'مع السلامة'
+						},
+						'Most specific dictionary is used with fallbacks provided.'
+					);
 				});
 			},
 
 			'assert with invalid locale'() {
-				return i18n(bundle, 'ar-JO-').then(function (messages: Messages) {
-					assert.deepEqual(messages, {
-						hello: 'مرحبا',
-						helloReply: 'مرحبتين',
-						goodbye: 'مع السلامة'
-					}, 'Only non-empty locale segments are considered.');
+				return i18n(bundle, 'ar-JO-').then(function(messages: Messages) {
+					assert.deepEqual(
+						messages,
+						{
+							hello: 'مرحبا',
+							helloReply: 'مرحبتين',
+							goodbye: 'مع السلامة'
+						},
+						'Only non-empty locale segments are considered.'
+					);
 				});
 			},
 
 			'assert unsupported locale'() {
-				return i18n(bundle, 'fr-CA').then(function (messages: Messages) {
+				return i18n(bundle, 'fr-CA').then(function(messages: Messages) {
 					assert.deepEqual(messages, {
 						hello: 'Hello',
 						helloReply: 'Hello',
@@ -344,31 +379,37 @@ registerSuite('i18n', {
 				const { messages } = bundle;
 				const localeless = { messages };
 
-				return i18n(localeless, 'ar').then(function (messages: Messages) {
-					assert.deepEqual(messages, {
-						hello: 'Hello',
-						helloReply: 'Hello',
-						goodbye: 'Goodbye'
-					}, 'Default messages returned when bundle provides no locales.');
+				return i18n(localeless, 'ar').then(function(messages: Messages) {
+					assert.deepEqual(
+						messages,
+						{
+							hello: 'Hello',
+							helloReply: 'Hello',
+							goodbye: 'Goodbye'
+						},
+						'Default messages returned when bundle provides no locales.'
+					);
 				});
 			},
 
 			'assert messages cached'() {
-				return i18n(bundle, 'ar-JO').then(function () {
-					return i18n(bundle, 'ar-JO');
-				}).then((messages: Messages) => {
-					const cached = getCachedMessages(bundle, 'ar-JO');
+				return i18n(bundle, 'ar-JO')
+					.then(function() {
+						return i18n(bundle, 'ar-JO');
+					})
+					.then((messages: Messages) => {
+						const cached = getCachedMessages(bundle, 'ar-JO');
 
-					assert.strictEqual(cached, messages as any, 'Message dictionaries are cached.');
-				});
+						assert.strictEqual(cached, messages as any, 'Message dictionaries are cached.');
+					});
 			},
 
 			'assert message dictionaries are frozen'() {
-				return i18n(bundle, 'ar-JO').then(function () {
+				return i18n(bundle, 'ar-JO').then(function() {
 					const cached = getCachedMessages(bundle, 'ar-JO');
 
 					assert.throws(() => {
-						cached![ 'hello' ] = 'Hello';
+						cached!['hello'] = 'Hello';
 					});
 				});
 			}
@@ -378,7 +419,10 @@ registerSuite('i18n', {
 			'assert with a bundle'() {
 				return i18n(bundle, 'ar').then((messages: Messages) => {
 					invalidate(bundle);
-					assert.isUndefined(getCachedMessages(bundle, 'ar'), 'The cache is invalidated for the specified bundle.');
+					assert.isUndefined(
+						getCachedMessages(bundle, 'ar'),
+						'The cache is invalidated for the specified bundle.'
+					);
 				});
 			},
 
@@ -421,18 +465,24 @@ registerSuite('i18n', {
 			setLocaleMessages(bundle, czech, 'cz');
 
 			const path = '..-_build-tests-support-mocks-common-main';
-			const first = (<any> Globalize).loadMessages.args[ 0 ][ 0 ].fr[ path ];
-			const second = (<any> Globalize).loadMessages.args[ 1 ][ 0 ].cz[ path ];
+			const first = (<any>Globalize).loadMessages.args[0][0].fr[path];
+			const second = (<any>Globalize).loadMessages.args[1][0].cz[path];
 
 			assert.isFrozen(first, 'locale messages should be frozen');
 			assert.isFrozen(second, 'locale messages should be frozen');
 
-			assert.deepEqual(getCachedMessages(bundle, 'fr'), assign({}, french, <any> { helloReply: 'Hello' }),
-				'Default messages should be included where not overridden');
-			assert.deepEqual(getCachedMessages(bundle, 'cz'), assign({}, czech, <any> { helloReply: 'Hello' }),
-				'Default messages should be included where not overridden');
+			assert.deepEqual(
+				getCachedMessages(bundle, 'fr'),
+				assign({}, french, <any>{ helloReply: 'Hello' }),
+				'Default messages should be included where not overridden'
+			);
+			assert.deepEqual(
+				getCachedMessages(bundle, 'cz'),
+				assign({}, czech, <any>{ helloReply: 'Hello' }),
+				'Default messages should be included where not overridden'
+			);
 
-			(<any> Globalize).loadMessages.restore();
+			(<any>Globalize).loadMessages.restore();
 		},
 
 		switchLocale: {
@@ -456,18 +506,28 @@ registerSuite('i18n', {
 			'assert new locale passed to Globalize'() {
 				sinon.spy(Globalize, 'locale');
 
-				return fetchCldrData([ 'fr' ]).then(() => {
-					switchLocale('fr');
-					assert.isTrue((<any> Globalize).locale.calledWith('fr'), 'Locale should be passed to Globalize.');
+				return fetchCldrData(['fr']).then(
+					() => {
+						switchLocale('fr');
+						assert.isTrue(
+							(<any>Globalize).locale.calledWith('fr'),
+							'Locale should be passed to Globalize.'
+						);
 
-					cldrLoad.reset();
-					switchLocale('en');
-					assert.strictEqual((<any> Globalize).locale.callCount, 1, 'Locale should not be passed to Globalize.');
-					(<any> Globalize).locale.restore();
-				}, (error: Error) => {
-					(<any> Globalize).locale.restore();
-					throw error;
-				});
+						cldrLoad.reset();
+						switchLocale('en');
+						assert.strictEqual(
+							(<any>Globalize).locale.callCount,
+							1,
+							'Locale should not be passed to Globalize.'
+						);
+						(<any>Globalize).locale.restore();
+					},
+					(error: Error) => {
+						(<any>Globalize).locale.restore();
+						throw error;
+					}
+				);
 			}
 		},
 

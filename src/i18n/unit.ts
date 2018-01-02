@@ -37,7 +37,12 @@ export type UnitFormatterOptions = {
  */
 export function formatUnit(value: number, unit: string, options?: UnitFormatterOptions, locale?: string): string;
 export function formatUnit(value: number, unit: string, locale?: string): string;
-export function formatUnit(value: number, unit: string, optionsOrLocale?: UnitFormatterOptions | string, locale?: string): string {
+export function formatUnit(
+	value: number,
+	unit: string,
+	optionsOrLocale?: UnitFormatterOptions | string,
+	locale?: string
+): string {
 	return globalizeDelegator<number, UnitFormatterOptions, string>('formatUnit', {
 		locale,
 		optionsOrLocale,
@@ -63,7 +68,11 @@ export function formatUnit(value: number, unit: string, optionsOrLocale?: UnitFo
  */
 export function getUnitFormatter(unit: string, options?: UnitFormatterOptions, locale?: string): NumberFormatter;
 export function getUnitFormatter(unit: string, locale?: string): NumberFormatter;
-export function getUnitFormatter(unit: string, optionsOrLocale?: UnitFormatterOptions | string, locale?: string): NumberFormatter {
+export function getUnitFormatter(
+	unit: string,
+	optionsOrLocale?: UnitFormatterOptions | string,
+	locale?: string
+): NumberFormatter {
 	return globalizeDelegator<string, UnitFormatterOptions, NumberFormatter>('unitFormatter', {
 		locale,
 		optionsOrLocale,

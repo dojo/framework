@@ -8,7 +8,7 @@ export type CurrencyStyleOption = 'accounting' | 'code' | 'name' | 'symbol';
 export type NumberStyleOption = 'decimal' | 'percent';
 export type PluralGroup = 'zero' | 'one' | 'two' | 'few' | 'many' | 'other';
 export type PluralTypeOption = 'cardinal' | 'ordinal';
-export type RoundNumberOption =  'ceil' | 'floor' | 'round' | 'truncate';
+export type RoundNumberOption = 'ceil' | 'floor' | 'round' | 'truncate';
 
 export interface CommonNumberFormatterOptions {
 	/**
@@ -122,9 +122,19 @@ export type PluralGeneratorOptions = {
  * @return
  * The formatted currency string.
  */
-export function formatCurrency(value: number, currency: string, options?: CurrencyFormatterOptions, locale?: string): string;
+export function formatCurrency(
+	value: number,
+	currency: string,
+	options?: CurrencyFormatterOptions,
+	locale?: string
+): string;
 export function formatCurrency(value: number, currency: string, locale?: string): string;
-export function formatCurrency(value: number, currency: string, optionsOrLocale?: CurrencyFormatterOptions | string, locale?: string): string {
+export function formatCurrency(
+	value: number,
+	currency: string,
+	optionsOrLocale?: CurrencyFormatterOptions | string,
+	locale?: string
+): string {
 	return globalizeDelegator<number, CurrencyFormatterOptions, string>('formatCurrency', {
 		locale,
 		optionsOrLocale,
@@ -150,7 +160,11 @@ export function formatCurrency(value: number, currency: string, optionsOrLocale?
  */
 export function formatNumber(value: number, options?: NumberFormatterOptions, locale?: string): string;
 export function formatNumber(value: number, locale?: string): string;
-export function formatNumber(value: number, optionsOrLocale?: NumberFormatterOptions | string, locale?: string): string {
+export function formatNumber(
+	value: number,
+	optionsOrLocale?: NumberFormatterOptions | string,
+	locale?: string
+): string {
 	return globalizeDelegator<number, NumberFormatterOptions, string>('formatNumber', {
 		locale,
 		optionsOrLocale,
@@ -174,9 +188,17 @@ export function formatNumber(value: number, optionsOrLocale?: NumberFormatterOpt
  * @return
  * A function that accepts a number and returns a formatted currency string.
  */
-export function getCurrencyFormatter(currency: string, options?: CurrencyFormatterOptions, locale?: string): NumberFormatter;
+export function getCurrencyFormatter(
+	currency: string,
+	options?: CurrencyFormatterOptions,
+	locale?: string
+): NumberFormatter;
 export function getCurrencyFormatter(currency: string, locale?: string): NumberFormatter;
-export function getCurrencyFormatter(currency: string, optionsOrLocale?: CurrencyFormatterOptions | string, locale?: string): NumberFormatter {
+export function getCurrencyFormatter(
+	currency: string,
+	optionsOrLocale?: CurrencyFormatterOptions | string,
+	locale?: string
+): NumberFormatter {
 	return globalizeDelegator<string, CurrencyFormatterOptions, NumberFormatter>('currencyFormatter', {
 		locale,
 		optionsOrLocale,
@@ -198,7 +220,10 @@ export function getCurrencyFormatter(currency: string, optionsOrLocale?: Currenc
  */
 export function getNumberFormatter(options?: NumberFormatterOptions, locale?: string): NumberFormatter;
 export function getNumberFormatter(locale?: string): NumberFormatter;
-export function getNumberFormatter(optionsOrLocale?: NumberFormatterOptions | string, locale?: string): NumberFormatter {
+export function getNumberFormatter(
+	optionsOrLocale?: NumberFormatterOptions | string,
+	locale?: string
+): NumberFormatter {
 	return globalizeDelegator<NumberFormatterOptions, NumberFormatter>('numberFormatter', {
 		locale,
 		optionsOrLocale
@@ -241,7 +266,10 @@ export function getNumberParser(optionsOrLocale?: NumberFormatterOptions | strin
  */
 export function getPluralGenerator(options?: PluralGeneratorOptions, locale?: string): NumberFormatter;
 export function getPluralGenerator(locale?: string): NumberFormatter;
-export function getPluralGenerator(optionsOrLocale?: PluralGeneratorOptions | string, locale?: string): NumberFormatter {
+export function getPluralGenerator(
+	optionsOrLocale?: PluralGeneratorOptions | string,
+	locale?: string
+): NumberFormatter {
 	return globalizeDelegator<PluralGeneratorOptions, NumberFormatter>('pluralGenerator', {
 		locale,
 		optionsOrLocale

@@ -20,7 +20,7 @@ function getOffsets(date: Date) {
 	const fullSecondOffset = padStart(String(offset % 60), 2, '0');
 	const fullOffset = `${fullHourOffset}:${fullSecondOffset}`;
 
-	return [ longOffset < 0 ? -1 : 1, Math.abs(longOffset), fullOffset ];
+	return [longOffset < 0 ? -1 : 1, Math.abs(longOffset), fullOffset];
 }
 
 function getTimezoneDate(date: Date, offset: number = 0): Date {
@@ -30,12 +30,12 @@ function getTimezoneDate(date: Date, offset: number = 0): Date {
 }
 
 function getTimezones(date: Date, standard: string = 'GMT') {
-	const [ sign, longOffset, fullOffset ] = getOffsets(date);
+	const [sign, longOffset, fullOffset] = getOffsets(date);
 	const timeSeparator = standard === 'UTC' ? '\u2212' : '-';
-	const fullSeparator = (sign < 0) ? '+' : timeSeparator;
+	const fullSeparator = sign < 0 ? '+' : timeSeparator;
 	const zeroPattern = /^[0:]+$/;
 	return [
-		`${standard}${longOffset ? ((sign < 0) ? '+' : timeSeparator) + longOffset : ''}`,
+		`${standard}${longOffset ? (sign < 0 ? '+' : timeSeparator) + longOffset : ''}`,
 		`${standard}${zeroPattern.test(fullOffset as string) ? '' : fullSeparator + fullOffset}`
 	];
 }
@@ -60,13 +60,13 @@ interface DateOptionsTypes {
 
 type DateOptionsKeys = keyof DateOptionsTypes;
 
-function getDateOptions<T extends DateOptionsKeys>(type: T, timezoneOffset?: number): [
-	DateOptionsTypes[T],
-	DateOptionsTypes[T]
-] {
+function getDateOptions<T extends DateOptionsKeys>(
+	type: T,
+	timezoneOffset?: number
+): [DateOptionsTypes[T], DateOptionsTypes[T]] {
 	const date = getTimezoneDate(new Date(1815, 11, 10, 11, 27), timezoneOffset);
-	const [ gmtLong, gmtFull ] = getTimezones(date);
-	const [ utcLong, utcFull ] = getTimezones(date, 'UTC');
+	const [gmtLong, gmtFull] = getTimezones(date);
+	const [utcLong, utcFull] = getTimezones(date, 'UTC');
 	const values = {
 		en: {
 			date: {
@@ -84,7 +84,7 @@ function getDateOptions<T extends DateOptionsKeys>(type: T, timezoneOffset?: num
 			},
 
 			skeleton: {
-				'GyMMMd': 'Dec 10, 1815 AD'
+				GyMMMd: 'Dec 10, 1815 AD'
 			},
 
 			time: {
@@ -111,7 +111,7 @@ function getDateOptions<T extends DateOptionsKeys>(type: T, timezoneOffset?: num
 			},
 
 			skeleton: {
-				'GyMMMd': '10 déc. 1815 ap. J.-C.'
+				GyMMMd: '10 déc. 1815 ap. J.-C.'
 			},
 
 			time: {
@@ -123,21 +123,23 @@ function getDateOptions<T extends DateOptionsKeys>(type: T, timezoneOffset?: num
 		}
 	};
 
-	const enValues = values[ 'en' ][ type ];
-	const frValues = values[ 'fr' ][ type ];
+	const enValues = values['en'][type];
+	const frValues = values['fr'][type];
 
-	return [ enValues, frValues ];
+	return [enValues, frValues];
 }
 
-function getKeys<T extends DateOptionsKeys>(object: SkeletonOptions | DateOptions, key: T): Array<keyof DateOptionsTypes[T]> {
-	return <any> Object.keys(object);
+function getKeys<T extends DateOptionsKeys>(
+	object: SkeletonOptions | DateOptions,
+	key: T
+): Array<keyof DateOptionsTypes[T]> {
+	return <any>Object.keys(object);
 }
 
 registerSuite('date', {
-
 	before() {
 		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
-		return fetchCldrData([ 'en', 'fr' ]).then(() => {
+		return fetchCldrData(['en', 'fr']).then(() => {
 			switchLocale('en');
 		});
 	},
@@ -160,20 +162,20 @@ registerSuite('date', {
 				assert.strictEqual(formatter(date), '10/12/1815');
 			},
 
-			'with options': (function () {
+			'with options': (function() {
 				function getAssertion<T extends DateOptionsKeys>(type: T, timezoneOffset?: number) {
 					const date = getTimezoneDate(new Date(1815, 11, 10, 11, 27), timezoneOffset);
-					return function () {
-						const [ enValues, frValues ] = getDateOptions(type, timezoneOffset);
+					return function() {
+						const [enValues, frValues] = getDateOptions(type, timezoneOffset);
 
-						getKeys(enValues, type).forEach(key => {
+						getKeys(enValues, type).forEach((key) => {
 							const formatter = getDateFormatter({ [type]: key });
-							assert.strictEqual(formatter(date), enValues[ key ]);
+							assert.strictEqual(formatter(date), enValues[key]);
 						});
 
-						getKeys(frValues, type).forEach(key => {
+						getKeys(frValues, type).forEach((key) => {
 							const formatter = getDateFormatter({ [type]: key }, 'fr');
-							assert.strictEqual(formatter(date), frValues[ key ]);
+							assert.strictEqual(formatter(date), frValues[key]);
 						});
 					};
 				}
@@ -195,10 +197,7 @@ registerSuite('date', {
 
 		getDateParser: {
 			'assert without a locale'() {
-				assert.strictEqual(
-					getDateParser()('12/10/1815').toISOString(),
-					new Date(1815, 11, 10).toISOString()
-				);
+				assert.strictEqual(getDateParser()('12/10/1815').toISOString(), new Date(1815, 11, 10).toISOString());
 			},
 
 			'assert with a locale'() {
@@ -211,21 +210,21 @@ registerSuite('date', {
 			'with options': {
 				'assert "date" option'() {
 					const date = new Date(1815, 11, 10);
-					const [ enValues, frValues ] = getDateOptions('date');
+					const [enValues, frValues] = getDateOptions('date');
 
 					getKeys(enValues, 'date').forEach((key) => {
 						// The expected "short" year format in English is the last two digits,
 						// with the current century assumed.
 						const expected = key === 'short' ? new Date(2015, 11, 10) : date;
 						assert.strictEqual(
-							getDateParser({ date: key })(enValues[ key ]).toISOString(),
+							getDateParser({ date: key })(enValues[key]).toISOString(),
 							expected.toISOString()
 						);
 					});
 
 					getKeys(frValues, 'date').forEach((key) => {
 						assert.strictEqual(
-							getDateParser({ date: key }, 'fr')(frValues[ key ]).toISOString(),
+							getDateParser({ date: key }, 'fr')(frValues[key]).toISOString(),
 							date.toISOString()
 						);
 					});
@@ -238,8 +237,8 @@ registerSuite('date', {
 					expected.setSeconds(0);
 					expected.setMilliseconds(0);
 
-					const [ gmtLong, gmtFull ] = getTimezones(expected);
-					const [ utcLong, utcFull ] = getTimezones(expected, 'UTC');
+					const [gmtLong, gmtFull] = getTimezones(expected);
+					const [utcLong, utcFull] = getTimezones(expected, 'UTC');
 					const enValues = {
 						short: '11:27 AM',
 						medium: '11:27:00 AM',
@@ -255,13 +254,13 @@ registerSuite('date', {
 
 					getKeys(enValues, 'time').forEach((key) => {
 						assert.strictEqual(
-							getDateParser({ time: key })(enValues[ key ]).toISOString(),
+							getDateParser({ time: key })(enValues[key]).toISOString(),
 							expected.toISOString()
 						);
 					});
 					getKeys(frValues, 'time').forEach((key) => {
 						assert.strictEqual(
-							getDateParser({ time: key }, 'fr')(frValues[ key ]).toISOString(),
+							getDateParser({ time: key }, 'fr')(frValues[key]).toISOString(),
 							expected.toISOString()
 						);
 					});
@@ -269,8 +268,8 @@ registerSuite('date', {
 
 				'assert "datetime" option'() {
 					const expected = new Date(2015, 11, 10, 11, 27);
-					const [ gmtLong, gmtFull ] = getTimezones(expected);
-					const [ utcLong, utcFull ] = getTimezones(expected, 'UTC');
+					const [gmtLong, gmtFull] = getTimezones(expected);
+					const [utcLong, utcFull] = getTimezones(expected, 'UTC');
 					const enValues = {
 						short: '12/10/15, 11:27 AM',
 						medium: 'Dec 10, 2015, 11:27:00 AM',
@@ -286,13 +285,13 @@ registerSuite('date', {
 
 					getKeys(enValues, 'datetime').forEach((key) => {
 						assert.strictEqual(
-							getDateParser({ datetime: key })(enValues[ key ]).toISOString(),
+							getDateParser({ datetime: key })(enValues[key]).toISOString(),
 							expected.toISOString()
 						);
 					});
 					getKeys(frValues, 'datetime').forEach((key) => {
 						assert.strictEqual(
-							getDateParser({ datetime: key }, 'fr')(frValues[ key ]).toISOString(),
+							getDateParser({ datetime: key }, 'fr')(frValues[key]).toISOString(),
 							expected.toISOString()
 						);
 					});
@@ -300,16 +299,16 @@ registerSuite('date', {
 
 				'assert "skeleton" option'() {
 					const expected = new Date(1815, 11, 10).toISOString();
-					const [ enValues, frValues ] = getDateOptions('skeleton');
+					const [enValues, frValues] = getDateOptions('skeleton');
 
 					getKeys(enValues, 'skeleton').forEach((key) => {
 						const parser = getDateParser({ skeleton: 'GyMMMd' });
-						assert.strictEqual(parser(enValues[ key ]).toISOString(), expected);
+						assert.strictEqual(parser(enValues[key]).toISOString(), expected);
 					});
 
 					getKeys(enValues, 'skeleton').forEach((key) => {
 						const parser = getDateParser({ skeleton: 'GyMMMd' }, 'fr');
-						assert.strictEqual(parser(frValues[ key ]).toISOString(), expected);
+						assert.strictEqual(parser(frValues[key]).toISOString(), expected);
 					});
 				}
 			}
@@ -324,18 +323,18 @@ registerSuite('date', {
 				assert.strictEqual(formatDate(new Date(1815, 11, 10), 'fr'), '10/12/1815');
 			},
 
-			'assert options': (function () {
+			'assert options': (function() {
 				function getAssertion<T extends DateOptionsKeys>(type: T, timezoneOffset?: number) {
 					const date = getTimezoneDate(new Date(1815, 11, 10, 11, 27), timezoneOffset);
 
-					return function () {
-						const [ enValues, frValues ] = getDateOptions(type, timezoneOffset);
+					return function() {
+						const [enValues, frValues] = getDateOptions(type, timezoneOffset);
 
 						getKeys(enValues, type).forEach((key) => {
-							assert.strictEqual(formatDate(date, { [type]: key }), enValues[ key ]);
+							assert.strictEqual(formatDate(date, { [type]: key }), enValues[key]);
 						});
 						getKeys(frValues, type).forEach((key) => {
-							assert.strictEqual(formatDate(date, { [type]: key }, 'fr'), frValues[ key ]);
+							assert.strictEqual(formatDate(date, { [type]: key }, 'fr'), frValues[key]);
 						});
 					};
 				}
@@ -398,37 +397,31 @@ registerSuite('date', {
 
 		parseDate: {
 			'assert without a locale'() {
-				assert.strictEqual(
-					parseDate('12/10/1815').toISOString(),
-					new Date(1815, 11, 10).toISOString()
-				);
+				assert.strictEqual(parseDate('12/10/1815').toISOString(), new Date(1815, 11, 10).toISOString());
 			},
 
 			'assert with a locale'() {
-				assert.strictEqual(
-					parseDate('10/12/1815', 'fr').toISOString(),
-					new Date(1815, 11, 10).toISOString()
-				);
+				assert.strictEqual(parseDate('10/12/1815', 'fr').toISOString(), new Date(1815, 11, 10).toISOString());
 			},
 
 			'with options': {
 				'assert "date" option'() {
 					const date = new Date(1815, 11, 10);
-					const [ enValues, frValues ] = getDateOptions('date');
+					const [enValues, frValues] = getDateOptions('date');
 
 					getKeys(enValues, 'date').forEach((key) => {
 						// The expected "short" year format in English is the last two digits,
 						// with the current century assumed.
 						const expected = key === 'short' ? new Date(2015, 11, 10) : date;
 						assert.strictEqual(
-							parseDate(enValues[ key ], { date: key }).toISOString(),
+							parseDate(enValues[key], { date: key }).toISOString(),
 							expected.toISOString()
 						);
 					});
 
 					getKeys(frValues, 'date').forEach((key) => {
 						assert.strictEqual(
-							parseDate(frValues[ key ], { date: key }, 'fr').toISOString(),
+							parseDate(frValues[key], { date: key }, 'fr').toISOString(),
 							date.toISOString()
 						);
 					});
@@ -441,8 +434,8 @@ registerSuite('date', {
 					expected.setSeconds(0);
 					expected.setMilliseconds(0);
 
-					const [ gmtLong, gmtFull ] = getTimezones(expected);
-					const [ utcLong, utcFull ] = getTimezones(expected, 'UTC');
+					const [gmtLong, gmtFull] = getTimezones(expected);
+					const [utcLong, utcFull] = getTimezones(expected, 'UTC');
 					const enValues = {
 						short: '11:27 AM',
 						medium: '11:27:00 AM',
@@ -458,13 +451,13 @@ registerSuite('date', {
 
 					getKeys(enValues, 'time').forEach((key) => {
 						assert.strictEqual(
-							parseDate((<any> enValues)[ key ], { time: key }).toISOString(),
+							parseDate((<any>enValues)[key], { time: key }).toISOString(),
 							expected.toISOString()
 						);
 					});
 					getKeys(frValues, 'time').forEach((key) => {
 						assert.strictEqual(
-							parseDate((<any> frValues)[ key ], { time: key }, 'fr').toISOString(),
+							parseDate((<any>frValues)[key], { time: key }, 'fr').toISOString(),
 							expected.toISOString()
 						);
 					});
@@ -472,8 +465,8 @@ registerSuite('date', {
 
 				'assert "datetime" option'() {
 					const expected = new Date(2015, 11, 10, 11, 27);
-					const [ gmtLong, gmtFull ] = getTimezones(expected);
-					const [ utcLong, utcFull ] = getTimezones(expected, 'UTC');
+					const [gmtLong, gmtFull] = getTimezones(expected);
+					const [utcLong, utcFull] = getTimezones(expected, 'UTC');
 					const enValues = {
 						short: '12/10/15, 11:27 AM',
 						medium: 'Dec 10, 2015, 11:27:00 AM',
@@ -489,13 +482,13 @@ registerSuite('date', {
 
 					getKeys(enValues, 'datetime').forEach((key) => {
 						assert.strictEqual(
-							parseDate((<any> enValues)[ key ], { datetime: key }).toISOString(),
+							parseDate((<any>enValues)[key], { datetime: key }).toISOString(),
 							expected.toISOString()
 						);
 					});
 					getKeys(frValues, 'datetime').forEach((key) => {
 						assert.strictEqual(
-							parseDate((<any> frValues)[ key ], { datetime: key }, 'fr').toISOString(),
+							parseDate((<any>frValues)[key], { datetime: key }, 'fr').toISOString(),
 							expected.toISOString()
 						);
 					});
@@ -503,14 +496,17 @@ registerSuite('date', {
 
 				'assert "skeleton" option'() {
 					const expected = new Date(1815, 11, 10).toISOString();
-					const [ enValues, frValues ] = getDateOptions('skeleton');
+					const [enValues, frValues] = getDateOptions('skeleton');
 
 					getKeys(enValues, 'skeleton').forEach((key) => {
-						assert.strictEqual(parseDate(enValues[ key ], { skeleton: 'GyMMMd' }).toISOString(), expected);
+						assert.strictEqual(parseDate(enValues[key], { skeleton: 'GyMMMd' }).toISOString(), expected);
 					});
 
 					getKeys(enValues, 'skeleton').forEach((key) => {
-						assert.strictEqual(parseDate(frValues[ key ], { skeleton: 'GyMMMd' }, 'fr').toISOString(), expected);
+						assert.strictEqual(
+							parseDate(frValues[key], { skeleton: 'GyMMMd' }, 'fr').toISOString(),
+							expected
+						);
 					});
 				}
 			}

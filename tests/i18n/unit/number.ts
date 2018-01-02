@@ -16,7 +16,7 @@ import { switchLocale, systemLocale } from '../../src/i18n';
 registerSuite('number', {
 	before() {
 		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
-		return fetchCldrData([ 'en', 'fr' ]).then(() => {
+		return fetchCldrData(['en', 'fr']).then(() => {
 			switchLocale('en');
 		});
 	},
@@ -50,23 +50,35 @@ registerSuite('number', {
 				assert.strictEqual(formatNumber(12.37, { minimumFractionDigits: 3 }), '12.370');
 				assert.strictEqual(formatNumber(12.37, { maximumFractionDigits: 1 }), '12.4');
 				assert.strictEqual(formatNumber(12.33, { maximumFractionDigits: 1 }), '12.3');
-				assert.strictEqual(formatNumber(12.37, {
-					minimumSignificantDigits: 3,
-					maximumSignificantDigits: 5
-				}), '12.37');
+				assert.strictEqual(
+					formatNumber(12.37, {
+						minimumSignificantDigits: 3,
+						maximumSignificantDigits: 5
+					}),
+					'12.37'
+				);
 
-				assert.strictEqual(formatNumber(12.33, {
-					maximumFractionDigits: 1,
-					round: 'ceil'
-				}), '12.4');
-				assert.strictEqual(formatNumber(12.33, {
-					maximumFractionDigits: 1,
-					round: 'floor'
-				}), '12.3');
-				assert.strictEqual(formatNumber(12.33, {
-					maximumFractionDigits: 1,
-					round: 'truncate'
-				}), '12.3');
+				assert.strictEqual(
+					formatNumber(12.33, {
+						maximumFractionDigits: 1,
+						round: 'ceil'
+					}),
+					'12.4'
+				);
+				assert.strictEqual(
+					formatNumber(12.33, {
+						maximumFractionDigits: 1,
+						round: 'floor'
+					}),
+					'12.3'
+				);
+				assert.strictEqual(
+					formatNumber(12.33, {
+						maximumFractionDigits: 1,
+						round: 'truncate'
+					}),
+					'12.3'
+				);
 
 				assert.strictEqual(formatNumber(1234567890), '1,234,567,890');
 				assert.strictEqual(formatNumber(1234567890, { useGrouping: false }), '1234567890');
@@ -79,23 +91,51 @@ registerSuite('number', {
 				assert.strictEqual(formatNumber(12.37, { minimumFractionDigits: 3 }, 'fr'), '12,370');
 				assert.strictEqual(formatNumber(12.37, { maximumFractionDigits: 1 }, 'fr'), '12,4');
 				assert.strictEqual(formatNumber(12.33, { maximumFractionDigits: 1 }, 'fr'), '12,3');
-				assert.strictEqual(formatNumber(12.37, {
-					minimumSignificantDigits: 3,
-					maximumSignificantDigits: 5
-				}, 'fr'), '12,37');
+				assert.strictEqual(
+					formatNumber(
+						12.37,
+						{
+							minimumSignificantDigits: 3,
+							maximumSignificantDigits: 5
+						},
+						'fr'
+					),
+					'12,37'
+				);
 
-				assert.strictEqual(formatNumber(12.33, {
-					maximumFractionDigits: 1,
-					round: 'ceil'
-				}, 'fr'), '12,4');
-				assert.strictEqual(formatNumber(12.33, {
-					maximumFractionDigits: 1,
-					round: 'floor'
-				}, 'fr'), '12,3');
-				assert.strictEqual(formatNumber(12.33, {
-					maximumFractionDigits: 1,
-					round: 'truncate'
-				}, 'fr'), '12,3');
+				assert.strictEqual(
+					formatNumber(
+						12.33,
+						{
+							maximumFractionDigits: 1,
+							round: 'ceil'
+						},
+						'fr'
+					),
+					'12,4'
+				);
+				assert.strictEqual(
+					formatNumber(
+						12.33,
+						{
+							maximumFractionDigits: 1,
+							round: 'floor'
+						},
+						'fr'
+					),
+					'12,3'
+				);
+				assert.strictEqual(
+					formatNumber(
+						12.33,
+						{
+							maximumFractionDigits: 1,
+							round: 'truncate'
+						},
+						'fr'
+					),
+					'12,3'
+				);
 
 				assert.strictEqual(formatNumber(1234567890, 'fr'), '1\u00A0234\u00A0567\u00A0890');
 				assert.strictEqual(formatNumber(1234567890, { useGrouping: false }, 'fr'), '1234567890');
@@ -126,23 +166,35 @@ registerSuite('number', {
 				assert.strictEqual(getNumberFormatter({ minimumFractionDigits: 3 })(12.37), '12.370');
 				assert.strictEqual(getNumberFormatter({ maximumFractionDigits: 1 })(12.37), '12.4');
 				assert.strictEqual(getNumberFormatter({ maximumFractionDigits: 1 })(12.33), '12.3');
-				assert.strictEqual(getNumberFormatter({
-					minimumSignificantDigits: 3,
-					maximumSignificantDigits: 5
-				})(12.37), '12.37');
+				assert.strictEqual(
+					getNumberFormatter({
+						minimumSignificantDigits: 3,
+						maximumSignificantDigits: 5
+					})(12.37),
+					'12.37'
+				);
 
-				assert.strictEqual(getNumberFormatter({
-					maximumFractionDigits: 1,
-					round: 'ceil'
-				})(12.33), '12.4');
-				assert.strictEqual(getNumberFormatter({
-					maximumFractionDigits: 1,
-					round: 'floor'
-				})(12.33), '12.3');
-				assert.strictEqual(getNumberFormatter({
-					maximumFractionDigits: 1,
-					round: 'truncate'
-				})(12.33), '12.3');
+				assert.strictEqual(
+					getNumberFormatter({
+						maximumFractionDigits: 1,
+						round: 'ceil'
+					})(12.33),
+					'12.4'
+				);
+				assert.strictEqual(
+					getNumberFormatter({
+						maximumFractionDigits: 1,
+						round: 'floor'
+					})(12.33),
+					'12.3'
+				);
+				assert.strictEqual(
+					getNumberFormatter({
+						maximumFractionDigits: 1,
+						round: 'truncate'
+					})(12.33),
+					'12.3'
+				);
 
 				assert.strictEqual(getNumberFormatter()(1234567890), '1,234,567,890');
 				assert.strictEqual(getNumberFormatter({ useGrouping: false })(1234567890), '1234567890');
@@ -155,23 +207,47 @@ registerSuite('number', {
 				assert.strictEqual(getNumberFormatter({ minimumFractionDigits: 3 }, 'fr')(12.37), '12,370');
 				assert.strictEqual(getNumberFormatter({ maximumFractionDigits: 1 }, 'fr')(12.37), '12,4');
 				assert.strictEqual(getNumberFormatter({ maximumFractionDigits: 1 }, 'fr')(12.33), '12,3');
-				assert.strictEqual(getNumberFormatter({
-					minimumSignificantDigits: 3,
-					maximumSignificantDigits: 5
-				}, 'fr')(12.37), '12,37');
+				assert.strictEqual(
+					getNumberFormatter(
+						{
+							minimumSignificantDigits: 3,
+							maximumSignificantDigits: 5
+						},
+						'fr'
+					)(12.37),
+					'12,37'
+				);
 
-				assert.strictEqual(getNumberFormatter({
-					maximumFractionDigits: 1,
-					round: 'ceil'
-				}, 'fr')(12.33), '12,4');
-				assert.strictEqual(getNumberFormatter({
-					maximumFractionDigits: 1,
-					round: 'floor'
-				}, 'fr')(12.33), '12,3');
-				assert.strictEqual(getNumberFormatter({
-					maximumFractionDigits: 1,
-					round: 'truncate'
-				}, 'fr')(12.33), '12,3');
+				assert.strictEqual(
+					getNumberFormatter(
+						{
+							maximumFractionDigits: 1,
+							round: 'ceil'
+						},
+						'fr'
+					)(12.33),
+					'12,4'
+				);
+				assert.strictEqual(
+					getNumberFormatter(
+						{
+							maximumFractionDigits: 1,
+							round: 'floor'
+						},
+						'fr'
+					)(12.33),
+					'12,3'
+				);
+				assert.strictEqual(
+					getNumberFormatter(
+						{
+							maximumFractionDigits: 1,
+							round: 'truncate'
+						},
+						'fr'
+					)(12.33),
+					'12,3'
+				);
 
 				assert.strictEqual(getNumberFormatter('fr')(1234567890), '1\u00A0234\u00A0567\u00A0890');
 				assert.strictEqual(getNumberFormatter({ useGrouping: false }, 'fr')(1234567890), '1234567890');

@@ -10,9 +10,8 @@ import { switchLocale, systemLocale } from '../../../src/i18n';
 import getGlobalize, { globalizeDelegator } from '../../../src/util/globalize';
 
 registerSuite('util/globalize', {
-
 	before() {
-		return fetchCldrData([ 'en', 'fr' ]).then(() => {
+		return fetchCldrData(['en', 'fr']).then(() => {
 			switchLocale('en');
 			switchLocale('en');
 		});
@@ -23,7 +22,6 @@ registerSuite('util/globalize', {
 	},
 
 	tests: {
-
 		getGlobalize() {
 			assert.strictEqual(getGlobalize(), Globalize, 'The main globalize object is returned.');
 			assert.instanceOf(getGlobalize('fr'), Globalize, 'A Globalize instance is returned.');
@@ -37,15 +35,21 @@ registerSuite('util/globalize', {
 				const options: DateFormatterOptions = { datetime: 'full' };
 
 				assert.strictEqual(globalizeDelegator('formatDate', { value }), Globalize.formatDate(value));
-				assert.strictEqual(globalizeDelegator('formatDate', {
-					optionsOrLocale: options,
-					value
-				}), Globalize.formatDate(value, options));
-				assert.strictEqual(globalizeDelegator('formatDate', {
-					locale,
-					optionsOrLocale: options,
-					value
-				}), new Globalize('fr').formatDate(value, options));
+				assert.strictEqual(
+					globalizeDelegator('formatDate', {
+						optionsOrLocale: options,
+						value
+					}),
+					Globalize.formatDate(value, options)
+				);
+				assert.strictEqual(
+					globalizeDelegator('formatDate', {
+						locale,
+						optionsOrLocale: options,
+						value
+					}),
+					new Globalize('fr').formatDate(value, options)
+				);
 			},
 
 			'assert method that takes a value and a unit'() {
@@ -54,21 +58,30 @@ registerSuite('util/globalize', {
 				const value = 5;
 				const options: RelativeTimeFormatterOptions = { form: 'short' };
 
-				assert.strictEqual(globalizeDelegator('formatRelativeTime', {
-					unit,
-					value
-				}), Globalize.formatRelativeTime(value, unit));
-				assert.strictEqual(globalizeDelegator('formatRelativeTime', {
-					optionsOrLocale: options,
-					unit,
-					value
-				}), Globalize.formatRelativeTime(value, unit, options));
-				assert.strictEqual(globalizeDelegator('formatRelativeTime', {
-					locale,
-					optionsOrLocale: options,
-					unit,
-					value
-				}), new Globalize('fr').formatRelativeTime(value, unit, options));
+				assert.strictEqual(
+					globalizeDelegator('formatRelativeTime', {
+						unit,
+						value
+					}),
+					Globalize.formatRelativeTime(value, unit)
+				);
+				assert.strictEqual(
+					globalizeDelegator('formatRelativeTime', {
+						optionsOrLocale: options,
+						unit,
+						value
+					}),
+					Globalize.formatRelativeTime(value, unit, options)
+				);
+				assert.strictEqual(
+					globalizeDelegator('formatRelativeTime', {
+						locale,
+						optionsOrLocale: options,
+						unit,
+						value
+					}),
+					new Globalize('fr').formatRelativeTime(value, unit, options)
+				);
 			},
 
 			'assert method returns a method'() {

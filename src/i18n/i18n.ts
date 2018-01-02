@@ -54,7 +54,7 @@ export interface I18n<T extends Messages> {
  * A map of locales to functions responsible for loading their respective translations.
  */
 export interface LocaleLoaders<T extends Messages> {
-	[locale: string]: () => (LocaleTranslations<T> | Promise<LocaleTranslations<T>>);
+	[locale: string]: () => LocaleTranslations<T> | Promise<LocaleTranslations<T>>;
 }
 
 /**
@@ -151,10 +151,9 @@ function getIcuMessageFormatter(id: string, key: string, locale?: string): Messa
  * Load the specified locale-specific bundles, mapping the default exports to simple `Messages` objects.
  */
 function loadLocaleBundles<T extends Messages>(locales: LocaleLoaders<T>, supported: string[]): Promise<T[]> {
-	return Promise.all(supported.map(locale => locales[locale]()))
-		.then((bundles) => {
-			return bundles.map(bundle => useDefault(bundle));
-		});
+	return Promise.all(supported.map((locale) => locales[locale]())).then((bundles) => {
+		return bundles.map((bundle) => useDefault(bundle));
+	});
 }
 
 /**
@@ -240,7 +239,12 @@ function loadMessages<T extends Messages>(id: string, messages: T, locale: strin
  * @return
  * The formatted message.
  */
-export function formatMessage<T extends Messages>(bundle: Bundle<T>, key: string, options?: FormatOptions, locale?: string): string {
+export function formatMessage<T extends Messages>(
+	bundle: Bundle<T>,
+	key: string,
+	options?: FormatOptions,
+	locale?: string
+): string {
 	return getMessageFormatter(bundle, key, locale)(options);
 }
 
@@ -262,8 +266,7 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
 
 	if (!cached) {
 		loadMessages(id, messages);
-	}
-	else {
+	} else {
 		const localeMessages = cached.get(locale);
 		if (localeMessages) {
 			return localeMessages as T;
@@ -309,7 +312,11 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
  * @return
  * The message formatter.
  */
-export function getMessageFormatter<T extends Messages>(bundle: Bundle<T>, key: string, locale?: string): MessageFormatter {
+export function getMessageFormatter<T extends Messages>(
+	bundle: Bundle<T>,
+	key: string,
+	locale?: string
+): MessageFormatter {
 	const { id = getBundleId(bundle) } = bundle;
 
 	if (isLoaded('supplemental', 'likelySubtags') && isLoaded('supplemental', 'plurals-type-cardinal')) {
@@ -317,13 +324,13 @@ export function getMessageFormatter<T extends Messages>(bundle: Bundle<T>, key: 
 	}
 
 	const cached = bundleMap.get(id);
-	const messages = cached ? (cached.get(locale || getRootLocale()) || cached.get('root')) : null;
+	const messages = cached ? cached.get(locale || getRootLocale()) || cached.get('root') : null;
 
 	if (!messages) {
 		throw new Error(`The bundle has not been registered.`);
 	}
 
-	return function (options: FormatOptions = Object.create(null)) {
+	return function(options: FormatOptions = Object.create(null)) {
 		return messages[key].replace(TOKEN_PATTERN, (token: string, property: string) => {
 			const value = options[property];
 
@@ -360,7 +367,7 @@ async function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Pro
 	const bundles = await loadLocaleBundles<T>(locales, supportedLocales);
 	return bundles.reduce((previous: T, partial: T): T => {
 		const localeMessages: T = assign({}, previous, partial);
-		loadMessages(getBundleId(bundle), <T> Object.freeze(localeMessages), currentLocale);
+		loadMessages(getBundleId(bundle), <T>Object.freeze(localeMessages), currentLocale);
 		return localeMessages;
 	}, bundle.messages);
 }
@@ -381,8 +388,7 @@ export default i18n as I18n<Messages>;
 export function invalidate<T extends Messages>(bundle?: Bundle<T>) {
 	if (bundle) {
 		bundle.id && bundleMap.delete(bundle.id);
-	}
-	else {
+	} else {
 		bundleMap.clear();
 	}
 }
@@ -397,7 +403,7 @@ export function invalidate<T extends Messages>(bundle?: Bundle<T>) {
  * @return
  * A subscription object that can be used to unsubscribe from updates.
  */
-export const observeLocale = (function () {
+export const observeLocale = (function() {
 	const localeSource = new Observable<string>((observer: SubscriptionObserver<string>) => {
 		const handles: Handle[] = [
 			localeProducer.on('change', (event: any) => {
@@ -405,14 +411,14 @@ export const observeLocale = (function () {
 			})
 		];
 
-		return function () {
+		return function() {
 			handles.forEach((handle: Handle) => {
 				handle.destroy();
 			});
 		};
 	});
 
-	return function (observer: Observer<string>): Subscription {
+	return function(observer: Observer<string>): Subscription {
 		return localeSource.subscribe(observer);
 	};
 })();
@@ -429,9 +435,13 @@ export const observeLocale = (function () {
  * @param locale
  * The locale for the messages
  */
-export function setLocaleMessages<T extends Messages>(bundle: Bundle<T>, localeMessages: Partial<T>, locale: string): void {
+export function setLocaleMessages<T extends Messages>(
+	bundle: Bundle<T>,
+	localeMessages: Partial<T>,
+	locale: string
+): void {
 	const messages: T = assign({}, bundle.messages, localeMessages);
-	loadMessages(getBundleId(bundle), <T> Object.freeze(messages), locale);
+	loadMessages(getBundleId(bundle), <T>Object.freeze(messages), locale);
 }
 
 /**
@@ -465,13 +475,12 @@ export function switchLocale(locale: string): void {
  * format when loading message bundles, this value represents the unaltered
  * locale returned directly by the environment.
  */
-export const systemLocale: string = (function () {
+export const systemLocale: string = (function() {
 	let systemLocale = 'en';
 	if (has('host-browser')) {
 		const navigator = global.navigator;
 		systemLocale = navigator.language || navigator.userLanguage;
-	}
-	else if (has('host-node')) {
+	} else if (has('host-node')) {
 		systemLocale = process.env.LANG || systemLocale;
 	}
 	return normalizeLocale(systemLocale);

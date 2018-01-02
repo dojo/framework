@@ -17,7 +17,7 @@ export function generateLocales(locale: string): string[] {
 	const normalized = normalizeLocale(locale);
 	const parts = normalized.split('-');
 	let current = parts[0];
-	const result: string[] = [ current ];
+	const result: string[] = [current];
 
 	for (let i = 0; i < parts.length - 1; i += 1) {
 		current += '-' + parts[i + 1];
@@ -35,7 +35,7 @@ export function generateLocales(locale: string): string[] {
  *
  * @return The normalized locale.
  */
-export const normalizeLocale = (function () {
+export const normalizeLocale = (function() {
 	function removeTrailingSeparator(value: string): string {
 		return value.replace(/(\-|_)$/, '');
 	}
@@ -45,12 +45,16 @@ export const normalizeLocale = (function () {
 			return removeTrailingSeparator(locale);
 		}
 
-		return locale.split('.').slice(0, -1).map((part: string): string => {
-			return removeTrailingSeparator(part).replace(/_/g, '-');
-		}).join('-');
+		return locale
+			.split('.')
+			.slice(0, -1)
+			.map((part: string): string => {
+				return removeTrailingSeparator(part).replace(/_/g, '-');
+			})
+			.join('-');
 	}
 
-	return function (locale: string): string {
+	return function(locale: string): string {
 		const normalized = normalize(locale);
 
 		if (!validateLocale(normalized)) {

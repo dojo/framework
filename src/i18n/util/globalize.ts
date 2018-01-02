@@ -62,9 +62,12 @@ export default function getGlobalize(locale?: string) {
  */
 export function globalizeDelegator<O, R>(method: string, args: DelegatorOptions<O>): R;
 export function globalizeDelegator<T, O, R>(method: string, args: FormatterDelegatorOptions<T, O>): R;
-export function globalizeDelegator<T, O, R>(method: string, args: DelegatorOptions<O> | FormatterDelegatorOptions<T, O>): R {
+export function globalizeDelegator<T, O, R>(
+	method: string,
+	args: DelegatorOptions<O> | FormatterDelegatorOptions<T, O>
+): R {
 	const { locale, options, value, unit } = normalizeFormatterArguments<T, O>(args);
-	const methodArgs: any[] = typeof value !== 'undefined' ? [ value ] : [];
+	const methodArgs: any[] = typeof value !== 'undefined' ? [value] : [];
 
 	if (typeof unit !== 'undefined') {
 		methodArgs.push(unit);
@@ -75,5 +78,5 @@ export function globalizeDelegator<T, O, R>(method: string, args: DelegatorOptio
 	}
 
 	const globalize = getGlobalize(locale);
-	return (<any> globalize)[method].apply(globalize, methodArgs);
+	return (<any>globalize)[method].apply(globalize, methodArgs);
 }

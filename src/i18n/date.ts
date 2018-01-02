@@ -94,9 +94,19 @@ export function formatDate(value: Date, optionsOrLocale?: DateFormatterOptions |
  * @param locale
  * An optional locale. Defaults to the current locale.
  */
-export function formatRelativeTime(value: number, unit: string, options?: RelativeTimeFormatterOptions, locale?: string): string;
+export function formatRelativeTime(
+	value: number,
+	unit: string,
+	options?: RelativeTimeFormatterOptions,
+	locale?: string
+): string;
 export function formatRelativeTime(value: number, unit: string, locale?: string): string;
-export function formatRelativeTime(value: number, unit: string, optionsOrLocale?: RelativeTimeFormatterOptions | string, locale?: string): string {
+export function formatRelativeTime(
+	value: number,
+	unit: string,
+	optionsOrLocale?: RelativeTimeFormatterOptions | string,
+	locale?: string
+): string {
 	return globalizeDelegator<number, RelativeTimeFormatterOptions, string>('formatRelativeTime', {
 		locale,
 		optionsOrLocale,
@@ -165,9 +175,17 @@ export function getDateParser(optionsOrLocale?: DateFormatterOptions | string, l
  * A function that accepts a relative time number and returns a formatted string. Positive numbers indicate future
  * events (e.g., "in 2 days") while negative numbers represent past events (e.g., "1 day ago").
  */
-export function getRelativeTimeFormatter(unit: string, options?: RelativeTimeFormatterOptions, locale?: string): NumberFormatter;
+export function getRelativeTimeFormatter(
+	unit: string,
+	options?: RelativeTimeFormatterOptions,
+	locale?: string
+): NumberFormatter;
 export function getRelativeTimeFormatter(unit: string, locale?: string): NumberFormatter;
-export function getRelativeTimeFormatter(unit: string, optionsOrLocale?: RelativeTimeFormatterOptions | string, locale?: string): NumberFormatter {
+export function getRelativeTimeFormatter(
+	unit: string,
+	optionsOrLocale?: RelativeTimeFormatterOptions | string,
+	locale?: string
+): NumberFormatter {
 	return globalizeDelegator<string, RelativeTimeFormatterOptions, NumberFormatter>('relativeTimeFormatter', {
 		locale,
 		optionsOrLocale,

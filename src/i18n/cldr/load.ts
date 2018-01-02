@@ -131,8 +131,7 @@ function registerLocaleData(cache: any, localeData: any) {
 
 			if (typeof value === 'boolean') {
 				cache[key] = true;
-			}
-			else {
+			} else {
 				registerLocaleData(value, localeData[key]);
 			}
 		}

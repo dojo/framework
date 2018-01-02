@@ -397,8 +397,17 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 
 ## How do I contribute?
 
-We appreciate your interest!  Please see the [Guidelines Repository](https://github.com/dojo/guidelines#readme) for the
-Contributing Guidelines and Style Guide.
+We appreciate your interest!  Please see the [Guidelines Repository](https://github.com/dojo/guidelines#readme) for the Contributing Guidelines.
+
+### Code Style
+
+This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the projects `package.json`.
+
+An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
+
+```bash
+npm run prettier
+```
 
 ### Installation
 
