@@ -8,7 +8,7 @@ import { Injector } from './../../src/Injector';
 const testInjector = new Injector({});
 
 registerSuite('Registry', {
-	'api'() {
+	api() {
 		const factoryRegistry = new Registry();
 
 		assert.isFunction(factoryRegistry.define);
@@ -18,8 +18,8 @@ registerSuite('Registry', {
 		assert.isFunction(factoryRegistry.hasInjector);
 		assert.isFunction(factoryRegistry.getInjector);
 	},
-	'Widget': {
-		'has'() {
+	Widget: {
+		has() {
 			const factoryRegistry = new Registry();
 			assert.isFalse(factoryRegistry.has('my-widget'));
 			factoryRegistry.define('my-widget', WidgetBase);
@@ -45,10 +45,9 @@ registerSuite('Registry', {
 				try {
 					factoryRegistry.define('my-widget', WidgetBase);
 					assert.fail();
-				}
-				catch (error) {
+				} catch (error) {
 					assert.isTrue(error instanceof Error);
-					assert.equal(error.message, 'widget has already been registered for \'my-widget\'');
+					assert.equal(error.message, "widget has already been registered for 'my-widget'");
 				}
 			},
 			'throw an error using a previously registered factory symbol label'() {
@@ -58,8 +57,7 @@ registerSuite('Registry', {
 				try {
 					factoryRegistry.define(myWidget, WidgetBase);
 					assert.fail();
-				}
-				catch (error) {
+				} catch (error) {
 					assert.isTrue(error instanceof Error);
 					assert.include(error.message, 'widget has already been registered for');
 					assert.include(error.message, 'symbol registry label');
@@ -81,7 +79,7 @@ registerSuite('Registry', {
 				assert.strictEqual(factory, WidgetBase);
 			},
 			'get allows a generic to passed that defines the type of registry item'() {
-				class TestWidget extends WidgetBase<{foo: string}> {}
+				class TestWidget extends WidgetBase<{ foo: string }> {}
 				const factoryRegistry = new Registry();
 				factoryRegistry.define('test-widget', TestWidget);
 				const RegistryTestWidget = factoryRegistry.get<TestWidget>('test-widget');
@@ -132,12 +130,15 @@ registerSuite('Registry', {
 				let rejectFunction: (error: Error) => void;
 				const promise: Promise<any> = new Promise((_resolve, reject) => {
 					rejectFunction = reject;
-				}).then(() => {
-					assert.fail();
-				}, (error) => {
-					assert.isTrue(error instanceof Error);
-					assert.equal(error.message, 'reject error');
-				});
+				}).then(
+					() => {
+						assert.fail();
+					},
+					(error) => {
+						assert.isTrue(error instanceof Error);
+						assert.equal(error.message, 'reject error');
+					}
+				);
 				const lazyFactory = () => promise;
 
 				const factoryRegistry = new Registry();
@@ -170,8 +171,8 @@ registerSuite('Registry', {
 			}
 		}
 	},
-	'Injector': {
-		'has'() {
+	Injector: {
+		has() {
 			const factoryRegistry = new Registry();
 			assert.isFalse(factoryRegistry.hasInjector('my-injector'));
 			factoryRegistry.defineInjector('my-injector', testInjector);
@@ -184,10 +185,9 @@ registerSuite('Registry', {
 				try {
 					factoryRegistry.defineInjector('my-injector', testInjector);
 					assert.fail();
-				}
-				catch (error) {
+				} catch (error) {
 					assert.isTrue(error instanceof Error);
-					assert.equal(error.message, 'injector has already been registered for \'my-injector\'');
+					assert.equal(error.message, "injector has already been registered for 'my-injector'");
 				}
 			},
 			'throw an error using a previously registered factory symbol label'() {
@@ -197,8 +197,7 @@ registerSuite('Registry', {
 				try {
 					factoryRegistry.defineInjector(myInjector, testInjector);
 					assert.fail();
-				}
-				catch (error) {
+				} catch (error) {
 					assert.isTrue(error instanceof Error);
 					assert.include(error.message, 'injector has already been registered for');
 					assert.include(error.message, 'symbol registry label');

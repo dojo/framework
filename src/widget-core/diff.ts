@@ -44,8 +44,7 @@ export function shallow(previousProperty: any, newProperty: any): PropertyChange
 
 	if (previousKeys.length !== newKeys.length) {
 		changed = true;
-	}
-	else {
+	} else {
 		changed = newKeys.some((key) => {
 			return newProperty[key] !== previousProperty[key];
 		});
@@ -61,15 +60,12 @@ export function auto(previousProperty: any, newProperty: any): PropertyChangeRec
 	if (typeof newProperty === 'function') {
 		if (newProperty._type === WIDGET_BASE_TYPE) {
 			result = reference(previousProperty, newProperty);
-		}
-		else {
+		} else {
 			result = ignore(previousProperty, newProperty);
 		}
-	}
-	else if (isObjectOrArray(newProperty)) {
+	} else if (isObjectOrArray(newProperty)) {
 		result = shallow(previousProperty, newProperty);
-	}
-	else {
+	} else {
 		result = reference(previousProperty, newProperty);
 	}
 	return result;

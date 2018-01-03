@@ -8,7 +8,6 @@ declare const __dojoCustomElements__: boolean;
  * Defines the custom element configuration used by the customElement decorator
  */
 export interface CustomElementConfig<P extends WidgetProperties> {
-
 	/**
 	 * The tag of the custom element
 	 */
@@ -39,15 +38,21 @@ export interface CustomElementConfig<P extends WidgetProperties> {
  * This Decorator is provided properties that define the behavior of a custom element, and
  * registers that custom element.
  */
-export function customElement<P extends WidgetProperties = WidgetProperties>({ tag, properties, attributes, events, initialization }: CustomElementConfig<P>) {
-	return function <T extends Constructor<any>>(target: T) {
+export function customElement<P extends WidgetProperties = WidgetProperties>({
+	tag,
+	properties,
+	attributes,
+	events,
+	initialization
+}: CustomElementConfig<P>) {
+	return function<T extends Constructor<any>>(target: T) {
 		if (typeof __dojoCustomElements__ !== 'undefined') {
 			registerCustomElement(() => ({
 				tagName: tag,
 				widgetConstructor: target,
-				attributes: (attributes || []).map(attributeName => ({ attributeName })),
-				properties: (properties || []).map(propertyName => ({ propertyName })),
-				events: (events || []).map(propertyName => ({
+				attributes: (attributes || []).map((attributeName) => ({ attributeName })),
+				properties: (properties || []).map((propertyName) => ({ propertyName })),
+				events: (events || []).map((propertyName) => ({
 					propertyName,
 					eventName: propertyName.replace('on', '').toLowerCase()
 				})),

@@ -6,7 +6,6 @@ export interface InjectorEventMap {
 }
 
 export class Injector<T = any> extends Evented<InjectorEventMap> {
-
 	private _payload: T;
 
 	constructor(payload: T) {

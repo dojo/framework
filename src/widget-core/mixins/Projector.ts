@@ -29,7 +29,6 @@ export enum AttachType {
 }
 
 export interface AttachOptions {
-
 	/**
 	 * If `'append'` it will appended to the root. If `'merge'` it will merged with the root. If `'replace'` it will
 	 * replace the root.
@@ -47,7 +46,6 @@ export interface ProjectorProperties {
 }
 
 export interface ProjectorMixin<P> {
-
 	readonly properties: Readonly<P> & Readonly<ProjectorProperties>;
 
 	/**
@@ -141,7 +139,6 @@ export interface ProjectorMixin<P> {
 
 export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T): T & Constructor<ProjectorMixin<P>> {
 	class Projector extends Base {
-
 		public projectorState: ProjectorAttachState;
 		public properties: Readonly<P> & Readonly<ProjectorProperties>;
 
@@ -176,7 +173,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			this.projectorState = ProjectorAttachState.Detached;
 		}
 
-		public append(root?: Element): Handle  {
+		public append(root?: Element): Handle {
 			const options = {
 				type: AttachType.Append,
 				root
@@ -194,7 +191,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			return this._attach(options);
 		}
 
-		public replace(root?: Element): Handle  {
+		public replace(root?: Element): Handle {
 			const options = {
 				type: AttachType.Replace,
 				root
@@ -224,8 +221,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 				if (!this._scheduled && !this._paused) {
 					if (this._async) {
 						this._scheduled = global.requestAnimationFrame(this._boundDoRender);
-					}
-					else {
+					} else {
 						this._boundDoRender();
 					}
 				}
@@ -279,7 +275,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		}
 
 		public __setChildren__(children: DNode[]) {
-			this._projectorChildren = [ ...children ];
+			this._projectorChildren = [...children];
 			super.__setChildren__(children);
 		}
 
@@ -310,7 +306,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		public afterRender(result: DNode) {
 			let node = result;
 			if (typeof result === 'string' || result === null || result === undefined) {
-				node = v('span', {}, [ result ]);
+				node = v('span', {}, [result]);
 			}
 
 			return node;
@@ -364,13 +360,13 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			switch (type) {
 				case AttachType.Append:
 					this._projection = dom.append(this.root, this._boundRender(), this, this._projectionOptions);
-				break;
+					break;
 				case AttachType.Merge:
-					this._projection = dom.merge(this.root, this._boundRender(), this , this._projectionOptions);
-				break;
+					this._projection = dom.merge(this.root, this._boundRender(), this, this._projectionOptions);
+					break;
 				case AttachType.Replace:
 					this._projection = dom.replace(this.root, this._boundRender(), this, this._projectionOptions);
-				break;
+					break;
 			}
 
 			return this._attachHandle;

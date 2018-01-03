@@ -1,6 +1,12 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { ChildrenType, initializeElement, DomToWidgetWrapper, handleAttributeChanged, CustomElementDescriptor } from '../../src/customElements';
+import {
+	ChildrenType,
+	initializeElement,
+	DomToWidgetWrapper,
+	handleAttributeChanged,
+	CustomElementDescriptor
+} from '../../src/customElements';
 import { WidgetBase } from '../../src/WidgetBase';
 import global from '@dojo/shim/global';
 import { assign } from '@dojo/core/lang';
@@ -22,11 +28,12 @@ function createFakeElement(attributes: any, descriptor: CustomElementDescriptor)
 		setWidgetInstance(instance: WidgetBase<any>) {
 			widgetInstance = instance;
 		},
-		getWidgetConstructor: () => class extends WidgetBase<any> {
-			render() {
-				return v('div');
-			}
-		},
+		getWidgetConstructor: () =>
+			class extends WidgetBase<any> {
+				render() {
+					return v('div');
+				}
+			},
 		getDescriptor: () => descriptor,
 		children: [],
 		getAttribute(name: string) {
@@ -35,8 +42,7 @@ function createFakeElement(attributes: any, descriptor: CustomElementDescriptor)
 		dispatchEvent(event: Event) {
 			events.push(event);
 		},
-		appendChild: function () {
-		},
+		appendChild: function() {},
 		getEvents() {
 			return events;
 		},
@@ -54,32 +60,34 @@ let oldCustomEvent: any;
 let sandbox: any;
 
 registerSuite('customElements', {
-
-	'attributes': {
+	attributes: {
 		'attributes are set as properties'() {
-			let element = createFakeElement({
-				'a': '1',
-				'my-attribute': '2',
-				'convert': '4'
-			}, {
-				tagName: 'test',
-				widgetConstructor: WidgetBase,
-				attributes: [
-					{
-						attributeName: 'a'
-					},
-					{
-						attributeName: 'my-attribute',
-						propertyName: 'b'
-					},
-					{
-						attributeName: 'convert',
-						value: (value: string | null) => {
-							return parseInt(value || '0', 10) * 2;
+			let element = createFakeElement(
+				{
+					a: '1',
+					'my-attribute': '2',
+					convert: '4'
+				},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase,
+					attributes: [
+						{
+							attributeName: 'a'
+						},
+						{
+							attributeName: 'my-attribute',
+							propertyName: 'b'
+						},
+						{
+							attributeName: 'convert',
+							value: (value: string | null) => {
+								return parseInt(value || '0', 10) * 2;
+							}
 						}
-					}
-				]
-			});
+					]
+				}
+			);
 
 			initializeElement(element)();
 
@@ -90,22 +98,25 @@ registerSuite('customElements', {
 		},
 
 		'attributes also create properties'() {
-			let element = createFakeElement({
-				'a': '1',
-				'my-attribute': '2'
-			}, {
-				tagName: 'test',
-				widgetConstructor: WidgetBase,
-				attributes: [
-					{
-						attributeName: 'a'
-					},
-					{
-						attributeName: 'my-attribute',
-						propertyName: 'b'
-					}
-				]
-			});
+			let element = createFakeElement(
+				{
+					a: '1',
+					'my-attribute': '2'
+				},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase,
+					attributes: [
+						{
+							attributeName: 'a'
+						},
+						{
+							attributeName: 'my-attribute',
+							propertyName: 'b'
+						}
+					]
+				}
+			);
 
 			initializeElement(element)();
 
@@ -114,22 +125,25 @@ registerSuite('customElements', {
 		},
 
 		'setting attribute properties sets the widget properties'() {
-			let element = createFakeElement({
-				'a': '1',
-				'my-attribute': '2'
-			}, {
-				tagName: 'test',
-				widgetConstructor: WidgetBase,
-				attributes: [
-					{
-						attributeName: 'a'
-					},
-					{
-						attributeName: 'my-attribute',
-						propertyName: 'b'
-					}
-				]
-			});
+			let element = createFakeElement(
+				{
+					a: '1',
+					'my-attribute': '2'
+				},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase,
+					attributes: [
+						{
+							attributeName: 'a'
+						},
+						{
+							attributeName: 'my-attribute',
+							propertyName: 'b'
+						}
+					]
+				}
+			);
 
 			initializeElement(element)();
 
@@ -139,15 +153,18 @@ registerSuite('customElements', {
 		},
 
 		'attribute changes are sent to widget'() {
-			let element = createFakeElement({}, {
-				tagName: 'test',
-				widgetConstructor: WidgetBase,
-				attributes: [
-					{
-						attributeName: 'a'
-					}
-				]
-			});
+			let element = createFakeElement(
+				{},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase,
+					attributes: [
+						{
+							attributeName: 'a'
+						}
+					]
+				}
+			);
 
 			initializeElement(element)();
 
@@ -159,10 +176,13 @@ registerSuite('customElements', {
 		},
 
 		'unregistered attribute changes do nothing'() {
-			let element = createFakeElement({}, {
-				widgetConstructor: WidgetBase,
-				tagName: 'test'
-			});
+			let element = createFakeElement(
+				{},
+				{
+					widgetConstructor: WidgetBase,
+					tagName: 'test'
+				}
+			);
 
 			initializeElement(element)();
 
@@ -171,17 +191,20 @@ registerSuite('customElements', {
 			assert.isUndefined(element.getWidgetInstance().properties.b);
 		}
 	},
-	'properties': {
+	properties: {
 		'property names default to provided name'() {
-			let element = createFakeElement({}, {
-				tagName: 'test',
-				widgetConstructor: WidgetBase,
-				properties: [
-					{
-						propertyName: 'a'
-					}
-				]
-			});
+			let element = createFakeElement(
+				{},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase,
+					properties: [
+						{
+							propertyName: 'a'
+						}
+					]
+				}
+			);
 
 			initializeElement(element)();
 			element.getWidgetInstance().__setProperties__({
@@ -194,16 +217,19 @@ registerSuite('customElements', {
 			assert.deepEqual(element.getWidgetInstance().properties.a, 'blah');
 		},
 		'widget property names can be specified'() {
-			let element = createFakeElement({}, {
-				tagName: 'test',
-				widgetConstructor: WidgetBase,
-				properties: [
-					{
-						propertyName: 'a',
-						widgetPropertyName: 'test'
-					}
-				]
-			});
+			let element = createFakeElement(
+				{},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase,
+					properties: [
+						{
+							propertyName: 'a',
+							widgetPropertyName: 'test'
+						}
+					]
+				}
+			);
 
 			initializeElement(element)();
 			element.getWidgetInstance().__setProperties__({
@@ -213,18 +239,21 @@ registerSuite('customElements', {
 			assert.deepEqual(element.a, 'test');
 		},
 		'properties can transform with getter'() {
-			let element = createFakeElement({}, {
-				tagName: 'test',
-				widgetConstructor: WidgetBase,
-				properties: [
-					{
-						propertyName: 'a',
-						getValue: (value: any) => {
-							return value * 2;
+			let element = createFakeElement(
+				{},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase,
+					properties: [
+						{
+							propertyName: 'a',
+							getValue: (value: any) => {
+								return value * 2;
+							}
 						}
-					}
-				]
-			});
+					]
+				}
+			);
 
 			initializeElement(element)();
 			element.getWidgetInstance().__setProperties__({
@@ -234,18 +263,21 @@ registerSuite('customElements', {
 			assert.deepEqual(element.a, 8);
 		},
 		'properties can transform with a setter'() {
-			let element = createFakeElement({}, {
-				tagName: 'test',
-				widgetConstructor: WidgetBase,
-				properties: [
-					{
-						propertyName: 'a',
-						setValue: (value: any) => {
-							return value * 2;
+			let element = createFakeElement(
+				{},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase,
+					properties: [
+						{
+							propertyName: 'a',
+							setValue: (value: any) => {
+								return value * 2;
+							}
 						}
-					}
-				]
-			});
+					]
+				}
+			);
 
 			initializeElement(element)();
 			element.a = 4;
@@ -253,10 +285,10 @@ registerSuite('customElements', {
 			assert.deepEqual(element.getWidgetInstance().properties.a, 8);
 		}
 	},
-	'events': {
+	events: {
 		beforeEach() {
 			oldCustomEvent = global.CustomEvent;
-			global.CustomEvent = function (this: any, type: string, args: any) {
+			global.CustomEvent = function(this: any, type: string, args: any) {
 				args.type = type;
 				assign(this, args);
 			};
@@ -268,16 +300,19 @@ registerSuite('customElements', {
 
 		tests: {
 			'events are created'() {
-				let element = createFakeElement({}, {
-					tagName: 'test',
-					widgetConstructor: WidgetBase,
-					events: [
-						{
-							propertyName: 'onTest',
-							eventName: 'test'
-						}
-					]
-				});
+				let element = createFakeElement(
+					{},
+					{
+						tagName: 'test',
+						widgetConstructor: WidgetBase,
+						events: [
+							{
+								propertyName: 'onTest',
+								eventName: 'test'
+							}
+						]
+					}
+				);
 
 				initializeElement(element)();
 
@@ -285,27 +320,32 @@ registerSuite('customElements', {
 				element.getWidgetInstance().properties.onTest('detail here');
 
 				assert.lengthOf(element.getEvents(), 1);
-				assert.strictEqual(element.getEvents()[ 0 ].type, 'test');
-				assert.strictEqual(element.getEvents()[ 0 ].detail, 'detail here');
+				assert.strictEqual(element.getEvents()[0].type, 'test');
+				assert.strictEqual(element.getEvents()[0].detail, 'detail here');
 			}
 		}
 	},
 
-	'children': {
+	children: {
 		'element children get wrapped in DomWrapper'() {
 			if (!(WidgetBase as any).name) {
 				this.skip();
 			}
-			let element = createFakeElement({}, {
-				tagName: 'test',
-				widgetConstructor: WidgetBase,
-				childrenType: ChildrenType.ELEMENT
-			});
-			element.children = [ {
-				key: 'test',
-				parentNode: element,
-				addEventListener() {}
-			} ];
+			let element = createFakeElement(
+				{},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase,
+					childrenType: ChildrenType.ELEMENT
+				}
+			);
+			element.children = [
+				{
+					key: 'test',
+					parentNode: element,
+					addEventListener() {}
+				}
+			];
 
 			initializeElement(element)();
 
@@ -318,15 +358,20 @@ registerSuite('customElements', {
 			if (!(WidgetBase as any).name) {
 				this.skip();
 			}
-			let element = createFakeElement({}, {
-				tagName: 'test',
-				widgetConstructor: WidgetBase
-			});
-			element.children = [ {
-				key: 'test',
-				parentNode: element,
-				addEventListener() {}
-			} ];
+			let element = createFakeElement(
+				{},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase
+				}
+			);
+			element.children = [
+				{
+					key: 'test',
+					parentNode: element,
+					addEventListener() {}
+				}
+			];
 
 			initializeElement(element)();
 
@@ -349,9 +394,9 @@ registerSuite('customElements', {
 		const renderResult = widget.__render__() as InternalVNode;
 		assert.strictEqual(renderResult.tag, 'DIV');
 		assert.strictEqual(renderResult.domNode, div);
-		assert.deepEqual(renderResult.properties, { });
+		assert.deepEqual(renderResult.properties, {});
 		assert.deepEqual(widget.properties, { foo: 'bar' });
-		assert.deepEqual(widgetInstance.properties, { });
+		assert.deepEqual(widgetInstance.properties, {});
 		assert.isTrue(invalidateSpy.notCalled);
 		sendEvent(div, 'connected');
 		assert.isTrue(invalidateSpy.calledOnce);
@@ -359,15 +404,18 @@ registerSuite('customElements', {
 		assert.deepEqual(widgetInstance.properties, { key: 'root', foo: 'bar' } as any);
 	},
 
-	'initialization': {
+	initialization: {
 		'properties are sent to widget'() {
-			let element = createFakeElement({}, {
-				tagName: 'test',
-				widgetConstructor: WidgetBase,
-				initialization(properties: any) {
-					properties.prop1 = 'test';
+			let element = createFakeElement(
+				{},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase,
+					initialization(properties: any) {
+						properties.prop1 = 'test';
+					}
 				}
-			});
+			);
 
 			initializeElement(element)();
 
@@ -375,32 +423,36 @@ registerSuite('customElements', {
 		}
 	},
 
-	'appender': {
-			'beforeEach'() {
-				sandbox = sinon.sandbox.create();
-			},
+	appender: {
+		beforeEach() {
+			sandbox = sinon.sandbox.create();
+		},
 
-			afterEach() {
-				sandbox.restore();
-			},
+		afterEach() {
+			sandbox.restore();
+		},
 
-			tests: {
-				'appender is returned as a function'(this: any) {
-					let rendered = false;
+		tests: {
+			'appender is returned as a function'(this: any) {
+				let rendered = false;
 
-					const appendStub = sandbox.stub();
+				const appendStub = sandbox.stub();
 
-					const OrigProjectorMixin = projector.ProjectorMixin;
+				const OrigProjectorMixin = projector.ProjectorMixin;
 
-					function TestProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T): T & Constructor<ProjectorMixin<P>> {
-						const Mixed = OrigProjectorMixin(Base);
-						Mixed.prototype.append = appendStub;
-						return Mixed;
-					}
+				function TestProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(
+					Base: T
+				): T & Constructor<ProjectorMixin<P>> {
+					const Mixed = OrigProjectorMixin(Base);
+					Mixed.prototype.append = appendStub;
+					return Mixed;
+				}
 
-					sandbox.stub(projector, 'ProjectorMixin', TestProjectorMixin);
+				sandbox.stub(projector, 'ProjectorMixin', TestProjectorMixin);
 
-					let element = createFakeElement({}, {
+				let element = createFakeElement(
+					{},
+					{
 						tagName: 'test',
 						widgetConstructor: class extends WidgetBase<any> {
 							render() {
@@ -408,17 +460,18 @@ registerSuite('customElements', {
 								return v('div');
 							}
 						}
-					});
+					}
+				);
 
-					const appender = initializeElement(element);
+				const appender = initializeElement(element);
 
-					assert.isFalse(rendered);
-					assert.isFunction(appender);
+				assert.isFalse(rendered);
+				assert.isFunction(appender);
 
-					appender();
+				appender();
 
-					assert.isTrue(appendStub.called);
-				}
+				assert.isTrue(appendStub.called);
 			}
+		}
 	}
 });

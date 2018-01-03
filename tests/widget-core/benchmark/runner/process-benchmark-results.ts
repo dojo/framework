@@ -18,7 +18,7 @@ const files = [
 	'30_startup.json'
 ];
 
-const results = files.map(file => {
+const results = files.map((file) => {
 	const vanillaResult = require(`${benchmarkResultsPath}/vanillajs-non-keyed_${file}`);
 	const dojoResult = require(`${benchmarkResultsPath}/dojo2-v0.2.0-non-keyed_${file}`);
 
@@ -26,12 +26,15 @@ const results = files.map(file => {
 		vanillaResult,
 		dojoResult
 	};
-
 });
 
-console.dir(results, {colors: true});
+console.dir(results, { colors: true });
 
-results.forEach(({vanillaResult, dojoResult}) => {
-	const percentSlower = ((dojoResult.median - vanillaResult.median) / vanillaResult.median) * 100;
-	console.log(`${vanillaResult.benchmark} - vanilla: ${vanillaResult.median}. dojo: ${dojoResult.median} (${Math.round(percentSlower)}% slower)`);
+results.forEach(({ vanillaResult, dojoResult }) => {
+	const percentSlower = (dojoResult.median - vanillaResult.median) / vanillaResult.median * 100;
+	console.log(
+		`${vanillaResult.benchmark} - vanilla: ${vanillaResult.median}. dojo: ${dojoResult.median} (${Math.round(
+			percentSlower
+		)}% slower)`
+	);
 });

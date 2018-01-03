@@ -4,18 +4,18 @@ import * as diff from '../../src/diff';
 import WidgetBase from '../../src/WidgetBase';
 
 registerSuite('diff', {
-	'always'() {
+	always() {
 		const foo = {};
 		const result = diff.always(foo, foo);
 		assert.equal(result.value, foo);
 		assert.isTrue(result.changed);
 	},
-	'ignore'() {
+	ignore() {
 		const result = diff.ignore('foo', 'bar');
 		assert.equal(result.value, 'bar');
 		assert.isFalse(result.changed);
 	},
-	'reference'() {
+	reference() {
 		const foo = {
 			bar: 'bar'
 		};
@@ -26,8 +26,8 @@ registerSuite('diff', {
 		assert.equal(result.value, bar);
 		assert.isTrue(result.changed);
 	},
-	'shallow': {
-		'object'() {
+	shallow: {
+		object() {
 			const foo = {
 				bar: 'bar'
 			};
@@ -55,20 +55,20 @@ registerSuite('diff', {
 			assert.equal(result.value, baz);
 			assert.isTrue(result.changed);
 		},
-		'array'() {
-			const foo = [ 1, 2, 3 ];
-			const bar = [ 1, 2, 3 ];
+		array() {
+			const foo = [1, 2, 3];
+			const bar = [1, 2, 3];
 			let result = diff.shallow(foo, bar);
 			assert.equal(result.value, bar);
 			assert.isFalse(result.changed);
 
-			const qux = [ 1, 3, 2];
+			const qux = [1, 3, 2];
 			result = diff.shallow(foo, qux);
 			assert.equal(result.value, qux);
 			assert.isTrue(result.changed);
 		}
 	},
-	'auto': {
+	auto: {
 		'widget constructor'() {
 			class Foo extends WidgetBase {}
 			class Bar extends WidgetBase {}
@@ -76,14 +76,14 @@ registerSuite('diff', {
 			assert.equal(result.value, Bar);
 			assert.isTrue(result.changed);
 		},
-		'function'() {
+		function() {
 			const foo = () => {};
 			const bar = () => {};
 			let result = diff.auto(foo, bar);
 			assert.equal(result.value, bar);
 			assert.isFalse(result.changed);
 		},
-		'object'() {
+		object() {
 			const foo = {
 				bar: 'bar'
 			};
@@ -99,7 +99,7 @@ registerSuite('diff', {
 			assert.equal(result.value, bar);
 			assert.isTrue(result.changed);
 		},
-		'other'() {
+		other() {
 			const foo = new Date();
 			let result = diff.auto(foo, foo);
 			assert.equal(result.value, foo);

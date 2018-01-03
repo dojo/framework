@@ -37,7 +37,6 @@ registerSuite('decorators/afterRender', {
 	'non decorator'() {
 		let afterRenderCount = 1;
 		class TestWidget extends WidgetBase<any> {
-
 			constructor() {
 				super();
 				afterRender()(this, 'firstAfterRender');
@@ -56,7 +55,6 @@ registerSuite('decorators/afterRender', {
 		}
 
 		class ExtendedTestWidget extends TestWidget {
-
 			constructor() {
 				super();
 				afterRender(this.thirdAfterRender)(this);
@@ -75,12 +73,11 @@ registerSuite('decorators/afterRender', {
 	'class level decorator'() {
 		let afterRenderCount = 0;
 
-		@afterRender(function (node: any) {
+		@afterRender(function(node: any) {
 			afterRenderCount++;
 			return node;
 		})
-		class TestWidget extends WidgetBase<any> {
-		}
+		class TestWidget extends WidgetBase<any> {}
 
 		const widget = new TestWidget();
 		widget.__render__();

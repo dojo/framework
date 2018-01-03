@@ -13,7 +13,6 @@ import Matches from '../../../src/meta/Matches';
 const resolvers = createResolvers();
 
 registerSuite('support/meta/Matches', {
-
 	beforeEach() {
 		resolvers.stub();
 	},
@@ -52,7 +51,7 @@ registerSuite('support/meta/Matches', {
 
 			sendEvent(div.firstChild as Element, 'click');
 
-			assert.deepEqual(results, [ true ], 'should have been called and the target matched');
+			assert.deepEqual(results, [true], 'should have been called and the target matched');
 
 			document.body.removeChild(div);
 		},
@@ -86,7 +85,7 @@ registerSuite('support/meta/Matches', {
 
 			sendEvent(div.firstChild as Element, 'click');
 
-			assert.deepEqual(results, [ true ], 'should have been called and the target matched');
+			assert.deepEqual(results, [true], 'should have been called and the target matched');
 
 			document.body.removeChild(div);
 		},
@@ -100,15 +99,19 @@ registerSuite('support/meta/Matches', {
 				}
 
 				render() {
-					return v('div', {
-						key: 'root',
-						onclick: this._onclick
-					}, [
-						v('div', {
-							innerHTML: 'Hello World',
-							root: 'child'
-						})
-					]);
+					return v(
+						'div',
+						{
+							key: 'root',
+							onclick: this._onclick
+						},
+						[
+							v('div', {
+								innerHTML: 'Hello World',
+								root: 'child'
+							})
+						]
+					);
 				}
 			}
 
@@ -128,7 +131,7 @@ registerSuite('support/meta/Matches', {
 				}
 			});
 
-			assert.deepEqual(results, [ false ], 'should have been called and the target not matching');
+			assert.deepEqual(results, [false], 'should have been called and the target not matching');
 
 			document.body.removeChild(div);
 		},
@@ -146,15 +149,19 @@ registerSuite('support/meta/Matches', {
 				}
 
 				render() {
-					return v('div', {
-						key: 'root',
-						onclick: this._onclick
-					}, [
-						v('div', {
-							innerHTML: this._renderSecond ? 'child2' : 'child1',
-							key: this._renderSecond ? 'child2' : 'child1'
-						})
-					]);
+					return v(
+						'div',
+						{
+							key: 'root',
+							onclick: this._onclick
+						},
+						[
+							v('div', {
+								innerHTML: this._renderSecond ? 'child2' : 'child1',
+								key: this._renderSecond ? 'child2' : 'child1'
+							})
+						]
+					);
 				}
 			}
 
@@ -182,7 +189,7 @@ registerSuite('support/meta/Matches', {
 				}
 			});
 
-			assert.deepEqual(results, [ true, false, false, true ], 'should have been called twice and keys changed');
+			assert.deepEqual(results, [true, false, false, true], 'should have been called twice and keys changed');
 
 			document.body.removeChild(div);
 		}

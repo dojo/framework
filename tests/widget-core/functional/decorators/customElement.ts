@@ -11,13 +11,13 @@ interface TestButtonProperties extends WidgetProperties {
 
 @customElement<TestButtonProperties>({
 	tag: 'test-button',
-	attributes: [ 'label', 'labelSuffix' ],
-	events: [ 'onClick' ]
+	attributes: ['label', 'labelSuffix'],
+	events: ['onClick']
 })
 @customElement<TestButtonProperties>({
 	tag: 'no-attributes',
-	properties: [ 'label' ],
-	events: [ 'onClick' ]
+	properties: ['label'],
+	events: ['onClick']
 })
 export class TestButton extends WidgetBase<TestButtonProperties> {
 	onClick(this: TestButton) {
@@ -25,14 +25,16 @@ export class TestButton extends WidgetBase<TestButtonProperties> {
 	}
 
 	render(this: TestButton) {
-		const { onClick : onclick } = this;
+		const { onClick: onclick } = this;
 		const { label = '', labelSuffix = '' } = this.properties;
 
-		return v('button', {
-			onclick
-		}, [
-			label + ((labelSuffix !== '') ? (' ' + labelSuffix) : '')
-		]);
+		return v(
+			'button',
+			{
+				onclick
+			},
+			[label + (labelSuffix !== '' ? ' ' + labelSuffix : '')]
+		);
 	}
 }
 

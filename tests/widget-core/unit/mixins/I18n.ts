@@ -10,14 +10,13 @@ import { fetchCldrData } from '../../support/util';
 import { w } from './../../../src/d';
 import { ThemedMixin } from './../../../src/mixins/Themed';
 
-class Localized extends I18nMixin(ThemedMixin(WidgetBase))<I18nProperties> { }
+class Localized extends I18nMixin(ThemedMixin(WidgetBase))<I18nProperties> {}
 
 let localized: any;
 
 registerSuite('mixins/I18nMixin', {
-
 	before() {
-		return <Promise<any>> fetchCldrData();
+		return <Promise<any>>fetchCldrData();
 	},
 
 	afterEach() {
@@ -137,16 +136,16 @@ registerSuite('mixins/I18nMixin', {
 			}
 
 			localized = new LocalizedExtended();
-			localized.__setProperties__({locale: 'ar-JO'});
+			localized.__setProperties__({ locale: 'ar-JO' });
 
 			const result = localized.__render__();
 			assert.isOk(result);
 			assert.isUndefined(result.properties!['lang']);
 		},
-		'`properties.locale` updates the widget node\'s `lang` property': {
+		"`properties.locale` updates the widget node's `lang` property": {
 			'when non-empty'() {
 				localized = new Localized();
-				localized.__setProperties__({locale: 'ar-JO'});
+				localized.__setProperties__({ locale: 'ar-JO' });
 
 				const result = localized.__render__();
 				assert.isOk(result);

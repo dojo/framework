@@ -12,7 +12,6 @@ let projector: any;
 const resolvers = createResolvers();
 
 registerSuite('DomWrapper', {
-
 	beforeEach() {
 		resolvers.stub();
 	},
@@ -31,9 +30,7 @@ registerSuite('DomWrapper', {
 			const DomNode = DomWrapper(domNode);
 			class Foo extends WidgetBase {
 				render() {
-					return v('div', [
-						w(DomNode, { id: 'foo', extra: { foo: 'bar' } })
-					]);
+					return v('div', [w(DomNode, { id: 'foo', extra: { foo: 'bar' } })]);
 				}
 			}
 			const Projector = ProjectorMixin(Foo);
@@ -97,7 +94,7 @@ registerSuite('DomWrapper', {
 			assert.isTrue(domNode.classList.contains('classFoo'));
 			assert.equal(domNode.style.color, 'red');
 		},
-		'onAttached'() {
+		onAttached() {
 			let attached = false;
 			const domNode: any = document.createElement('custom-element');
 			const root = document.createElement('div');

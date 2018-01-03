@@ -46,7 +46,7 @@ export interface ThemedMixin<T = ClassNames> {
 /**
  * Decorator for base css classes
  */
-export function theme (theme: {}) {
+export function theme(theme: {}) {
 	return handleDecorator((target) => {
 		target.addDecorator('baseThemeClasses', theme);
 	});
@@ -59,12 +59,15 @@ export function theme (theme: {}) {
  * @requires
  */
 function createThemeClassesLookup(classes: ClassNames[]): ClassNames {
-	return classes.reduce((currentClassNames, baseClass) => {
-		Object.keys(baseClass).forEach((key: string) => {
-			currentClassNames[baseClass[key]] = key;
-		});
-		return currentClassNames;
-	}, <ClassNames> {});
+	return classes.reduce(
+		(currentClassNames, baseClass) => {
+			Object.keys(baseClass).forEach((key: string) => {
+				currentClassNames[baseClass[key]] = key;
+			});
+			return currentClassNames;
+		},
+		<ClassNames>{}
+	);
 }
 
 /**
@@ -86,7 +89,9 @@ export function registerThemeInjector(theme: any, themeRegistry: Registry): Inje
 /**
  * Function that returns a class decorated with with Themed functionality
  */
-export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties<E>>>>(Base: T): Constructor<ThemedMixin<E>> & T {
+export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties<E>>>>(
+	Base: T
+): Constructor<ThemedMixin<E>> & T {
 	@inject({
 		name: INJECTED_THEME_KEY,
 		getProperties: (theme: Theme, properties: ThemedProperties): ThemedProperties => {
@@ -97,7 +102,6 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		}
 	})
 	class Themed extends Base {
-
 		public properties: ThemedProperties<E>;
 
 		/**
@@ -151,7 +155,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 				return className;
 			}
 
-			const extraClasses = this.properties.extraClasses || {} as any;
+			const extraClasses = this.properties.extraClasses || ({} as any);
 			const themeClassName = this._baseThemeClassesReverseLookup[className];
 			let resultClassNames: string[] = [];
 			if (!themeClassName) {
@@ -165,8 +169,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 
 			if (this._theme[themeClassName]) {
 				resultClassNames.push(this._theme[themeClassName]);
-			}
-			else {
+			} else {
 				resultClassNames.push(this._registeredBaseTheme[themeClassName]);
 			}
 			return resultClassNames.join(' ');
@@ -177,7 +180,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			const baseThemes = this.getDecorator('baseThemeClasses');
 			if (!this._registeredBaseTheme) {
 				this._registeredBaseTheme = baseThemes.reduce((finalBaseTheme, baseTheme) => {
-					const { [THEME_KEY]: key, ...classes }  = baseTheme;
+					const { [THEME_KEY]: key, ...classes } = baseTheme;
 					this._registeredBaseThemeKeys.push(key);
 					return { ...finalBaseTheme, ...classes };
 				}, {});

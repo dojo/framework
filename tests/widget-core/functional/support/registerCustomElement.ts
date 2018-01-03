@@ -15,14 +15,16 @@ class TestButton extends WidgetBase<TestButtonProperties> {
 	}
 
 	render(this: TestButton) {
-		const { onClick : onclick } = this;
+		const { onClick: onclick } = this;
 		const { label = '', suffix = '' } = this.properties;
 
-		return v('button', {
-			onclick
-		}, [
-			label + ((suffix !== '') ? (' ' + suffix) : '')
-		]);
+		return v(
+			'button',
+			{
+				onclick
+			},
+			[label + (suffix !== '' ? ' ' + suffix : '')]
+		);
 	}
 }
 
@@ -32,7 +34,7 @@ class ChildWrapper extends WidgetBase {
 	}
 }
 
-registerCustomElement(function () {
+registerCustomElement(function() {
 	return {
 		tagName: 'test-button',
 		widgetConstructor: TestButton,
@@ -54,7 +56,7 @@ registerCustomElement(function () {
 	};
 });
 
-registerCustomElement(function () {
+registerCustomElement(function() {
 	return {
 		tagName: 'no-attributes',
 		widgetConstructor: TestButton,
@@ -73,7 +75,7 @@ registerCustomElement(function () {
 	};
 });
 
-registerCustomElement(function () {
+registerCustomElement(function() {
 	return {
 		tagName: 'child-wrapper',
 		widgetConstructor: ChildWrapper

@@ -16,7 +16,6 @@ const emptyResults: DragResults = {
 };
 
 registerSuite('support/meta/Drag', {
-
 	beforeEach() {
 		resolvers.stub();
 	},
@@ -49,10 +48,22 @@ registerSuite('support/meta/Drag', {
 			resolvers.resolve();
 			resolvers.resolve();
 
-			assert.deepEqual(dragResults, [ emptyResults, emptyResults ], 'should have been called twice, both empty results');
+			assert.deepEqual(
+				dragResults,
+				[emptyResults, emptyResults],
+				'should have been called twice, both empty results'
+			);
 
-			assert.strictEqual((div.firstChild as HTMLElement).getAttribute('touch-action'), 'none', 'Should have set touch-action attribute to none');
-			assert.strictEqual((div.firstChild as HTMLElement).style.touchAction, 'none', 'Should have set touch-action type to none');
+			assert.strictEqual(
+				(div.firstChild as HTMLElement).getAttribute('touch-action'),
+				'none',
+				'Should have set touch-action attribute to none'
+			);
+			assert.strictEqual(
+				(div.firstChild as HTMLElement).style.touchAction,
+				'none',
+				'Should have set touch-action type to none'
+			);
 
 			document.body.removeChild(div);
 		},
@@ -80,7 +91,11 @@ registerSuite('support/meta/Drag', {
 			resolvers.resolve();
 			resolvers.resolve();
 
-			assert.deepEqual(dragResults, [ emptyResults, emptyResults ], 'should have been called twice, both empty results');
+			assert.deepEqual(
+				dragResults,
+				[emptyResults, emptyResults],
+				'should have been called twice, both empty results'
+			);
 
 			document.body.removeChild(div);
 		},
@@ -162,23 +177,44 @@ registerSuite('support/meta/Drag', {
 
 			resolvers.resolve();
 
-			assert.deepEqual(dragResults, [
-				emptyResults,
-				emptyResults,
-				{
-					delta: { x: 0, y: 0 },
-					isDragging: true,
-					start: { client: { x: 100, y: 50 }, offset: { x: 10, y: 5 }, page: { x: 100, y: 50 }, screen: { x: 1100, y: 1050 } }
-				}, {
-					delta: { x: 10, y: 5 },
-					isDragging: true,
-					start: { client: { x: 100, y: 50 }, offset: { x: 10, y: 5 }, page: { x: 100, y: 50 }, screen: { x: 1100, y: 1050 } }
-				}, {
-					delta: { x: -5, y: -10 },
-					isDragging: false,
-					start: { client: { x: 110, y: 55 }, offset: { x: 10, y: 5 }, page: { x: 110, y: 55 }, screen: { x: 1100, y: 1050 } }
-				}
-			], 'the stack of should represent a drag state');
+			assert.deepEqual(
+				dragResults,
+				[
+					emptyResults,
+					emptyResults,
+					{
+						delta: { x: 0, y: 0 },
+						isDragging: true,
+						start: {
+							client: { x: 100, y: 50 },
+							offset: { x: 10, y: 5 },
+							page: { x: 100, y: 50 },
+							screen: { x: 1100, y: 1050 }
+						}
+					},
+					{
+						delta: { x: 10, y: 5 },
+						isDragging: true,
+						start: {
+							client: { x: 100, y: 50 },
+							offset: { x: 10, y: 5 },
+							page: { x: 100, y: 50 },
+							screen: { x: 1100, y: 1050 }
+						}
+					},
+					{
+						delta: { x: -5, y: -10 },
+						isDragging: false,
+						start: {
+							client: { x: 110, y: 55 },
+							offset: { x: 10, y: 5 },
+							page: { x: 110, y: 55 },
+							screen: { x: 1100, y: 1050 }
+						}
+					}
+				],
+				'the stack of should represent a drag state'
+			);
 
 			document.body.removeChild(div);
 		},
@@ -288,23 +324,44 @@ registerSuite('support/meta/Drag', {
 
 			resolvers.resolve();
 
-			assert.deepEqual(dragResults, [
-				emptyResults,
-				emptyResults,
-				{
-					delta: { x: 0, y: 0 },
-					isDragging: true,
-					start: { client: { x: 100, y: 50 }, offset: { x: 10, y: 5 }, page: { x: 100, y: 50 }, screen: { x: 1100, y: 1050 } }
-				}, {
-					delta: { x: 15, y: 15 },
-					isDragging: true,
-					start: { client: { x: 100, y: 50 }, offset: { x: 10, y: 5 }, page: { x: 100, y: 50 }, screen: { x: 1100, y: 1050 } }
-				}, {
-					delta: { x: 5, y: 5 },
-					isDragging: false,
-					start: { client: { x: 115, y: 65 }, offset: { x: 10, y: 5 }, page: { x: 115, y: 65 }, screen: { x: 1100, y: 1050 } }
-				}
-			], 'the stack of should represent a drag state');
+			assert.deepEqual(
+				dragResults,
+				[
+					emptyResults,
+					emptyResults,
+					{
+						delta: { x: 0, y: 0 },
+						isDragging: true,
+						start: {
+							client: { x: 100, y: 50 },
+							offset: { x: 10, y: 5 },
+							page: { x: 100, y: 50 },
+							screen: { x: 1100, y: 1050 }
+						}
+					},
+					{
+						delta: { x: 15, y: 15 },
+						isDragging: true,
+						start: {
+							client: { x: 100, y: 50 },
+							offset: { x: 10, y: 5 },
+							page: { x: 100, y: 50 },
+							screen: { x: 1100, y: 1050 }
+						}
+					},
+					{
+						delta: { x: 5, y: 5 },
+						isDragging: false,
+						start: {
+							client: { x: 115, y: 65 },
+							offset: { x: 10, y: 5 },
+							page: { x: 115, y: 65 },
+							screen: { x: 1100, y: 1050 }
+						}
+					}
+				],
+				'the stack of should represent a drag state'
+			);
 
 			document.body.removeChild(div);
 		},
@@ -412,19 +469,34 @@ registerSuite('support/meta/Drag', {
 
 			resolvers.resolve();
 
-			assert.deepEqual(dragResults, [
-				emptyResults,
-				emptyResults,
-				{
-					delta: { x: 0, y: 0 },
-					isDragging: true,
-					start: { client: { x: 100, y: 50 }, offset: { x: 10, y: 5 }, page: { x: 100, y: 50 }, screen: { x: 1100, y: 1050 } }
-				}, {
-					delta: { x: 20, y: 20 },
-					isDragging: false,
-					start: { client: { x: 100, y: 50 }, offset: { x: 10, y: 5 }, page: { x: 100, y: 50 }, screen: { x: 1100, y: 1050 } }
-				}
-			], 'the stack of should represent a drag state');
+			assert.deepEqual(
+				dragResults,
+				[
+					emptyResults,
+					emptyResults,
+					{
+						delta: { x: 0, y: 0 },
+						isDragging: true,
+						start: {
+							client: { x: 100, y: 50 },
+							offset: { x: 10, y: 5 },
+							page: { x: 100, y: 50 },
+							screen: { x: 1100, y: 1050 }
+						}
+					},
+					{
+						delta: { x: 20, y: 20 },
+						isDragging: false,
+						start: {
+							client: { x: 100, y: 50 },
+							offset: { x: 10, y: 5 },
+							page: { x: 100, y: 50 },
+							screen: { x: 1100, y: 1050 }
+						}
+					}
+				],
+				'the stack of should represent a drag state'
+			);
 
 			document.body.removeChild(div);
 		},
@@ -488,10 +560,11 @@ registerSuite('support/meta/Drag', {
 
 			resolvers.resolve();
 
-			assert.deepEqual(dragResults, [
-				emptyResults,
-				emptyResults
-			], 'the widget does not invalidate on ignored events');
+			assert.deepEqual(
+				dragResults,
+				[emptyResults, emptyResults],
+				'the widget does not invalidate on ignored events'
+			);
 
 			document.body.removeChild(div);
 		},
@@ -502,18 +575,22 @@ registerSuite('support/meta/Drag', {
 			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('root'));
-					return v('div', {
-						key: 'root',
-						styles: {
-							width: '100px',
-							height: '100px'
-						}
-					}, [
-						v('div', {
-							innerHTML: 'Hello World',
-							key: 'child'
-						})
-					]);
+					return v(
+						'div',
+						{
+							key: 'root',
+							styles: {
+								width: '100px',
+								height: '100px'
+							}
+						},
+						[
+							v('div', {
+								innerHTML: 'Hello World',
+								key: 'child'
+							})
+						]
+					);
 				}
 			}
 
@@ -577,23 +654,44 @@ registerSuite('support/meta/Drag', {
 
 			resolvers.resolve();
 
-			assert.deepEqual(dragResults, [
-				emptyResults,
-				emptyResults,
-				{
-					delta: { x: 0, y: 0 },
-					isDragging: true,
-					start: { client: { x: 100, y: 50 }, offset: { x: 10, y: 5 }, page: { x: 100, y: 50 }, screen: { x: 1100, y: 1050 } }
-				}, {
-					delta: { x: 10, y: 5 },
-					isDragging: true,
-					start: { client: { x: 100, y: 50 }, offset: { x: 10, y: 5 }, page: { x: 100, y: 50 }, screen: { x: 1100, y: 1050 } }
-				}, {
-					delta: { x: -5, y: -10 },
-					isDragging: false,
-					start: { client: { x: 110, y: 55 }, offset: { x: 10, y: 5 }, page: { x: 110, y: 55 }, screen: { x: 1100, y: 1050 } }
-				}
-			], 'dragging should be attributed to parent node');
+			assert.deepEqual(
+				dragResults,
+				[
+					emptyResults,
+					emptyResults,
+					{
+						delta: { x: 0, y: 0 },
+						isDragging: true,
+						start: {
+							client: { x: 100, y: 50 },
+							offset: { x: 10, y: 5 },
+							page: { x: 100, y: 50 },
+							screen: { x: 1100, y: 1050 }
+						}
+					},
+					{
+						delta: { x: 10, y: 5 },
+						isDragging: true,
+						start: {
+							client: { x: 100, y: 50 },
+							offset: { x: 10, y: 5 },
+							page: { x: 100, y: 50 },
+							screen: { x: 1100, y: 1050 }
+						}
+					},
+					{
+						delta: { x: -5, y: -10 },
+						isDragging: false,
+						start: {
+							client: { x: 110, y: 55 },
+							offset: { x: 10, y: 5 },
+							page: { x: 110, y: 55 },
+							screen: { x: 1100, y: 1050 }
+						}
+					}
+				],
+				'dragging should be attributed to parent node'
+			);
 
 			document.body.removeChild(div);
 		},
@@ -604,22 +702,26 @@ registerSuite('support/meta/Drag', {
 			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
 				render() {
 					dragResults.push(this.meta(Drag).get('child2'));
-					return v('div', {
-						key: 'root',
-						styles: {
-							width: '100px',
-							height: '100px'
-						}
-					}, [
-						v('div', {
-							innerHTML: 'Hello World',
-							key: 'child1'
-						}),
-						v('div', {
-							innerHTML: 'Hello World',
-							key: 'child2'
-						})
-					]);
+					return v(
+						'div',
+						{
+							key: 'root',
+							styles: {
+								width: '100px',
+								height: '100px'
+							}
+						},
+						[
+							v('div', {
+								innerHTML: 'Hello World',
+								key: 'child1'
+							}),
+							v('div', {
+								innerHTML: 'Hello World',
+								key: 'child2'
+							})
+						]
+					);
 				}
 			}
 
@@ -683,10 +785,7 @@ registerSuite('support/meta/Drag', {
 
 			resolvers.resolve();
 
-			assert.deepEqual(dragResults, [
-				emptyResults,
-				emptyResults
-			], 'there should be no drag results');
+			assert.deepEqual(dragResults, [emptyResults, emptyResults], 'there should be no drag results');
 
 			document.body.removeChild(div);
 		},
@@ -768,10 +867,7 @@ registerSuite('support/meta/Drag', {
 
 			resolvers.resolve();
 
-			assert.deepEqual(dragResults, [
-				emptyResults,
-				emptyResults
-			], 'the stack of should represent a drag state');
+			assert.deepEqual(dragResults, [emptyResults, emptyResults], 'the stack of should represent a drag state');
 
 			document.body.removeChild(div);
 		},
@@ -871,18 +967,28 @@ registerSuite('support/meta/Drag', {
 
 			resolvers.resolve();
 
-			assert.deepEqual(dragResults, [
-				emptyResults,
-				emptyResults,
-				{
-					delta: { x: 0, y: 0 },
-					isDragging: true,
-					start: { client: { x: 100, y: 50 }, offset: { x: 10, y: 5 }, page: { x: 100, y: 50 }, screen: { x: 1100, y: 1050 } }
-				}, {
-					delta: { x: 0, y: 0 },
-					isDragging: false
-				}
-			], 'the stack of should represent a drag state');
+			assert.deepEqual(
+				dragResults,
+				[
+					emptyResults,
+					emptyResults,
+					{
+						delta: { x: 0, y: 0 },
+						isDragging: true,
+						start: {
+							client: { x: 100, y: 50 },
+							offset: { x: 10, y: 5 },
+							page: { x: 100, y: 50 },
+							screen: { x: 1100, y: 1050 }
+						}
+					},
+					{
+						delta: { x: 0, y: 0 },
+						isDragging: false
+					}
+				],
+				'the stack of should represent a drag state'
+			);
 
 			document.body.removeChild(div);
 		},
@@ -968,26 +1074,48 @@ registerSuite('support/meta/Drag', {
 
 			resolvers.resolve();
 
-			assert.deepEqual(dragResults, [
-				emptyResults,
-				emptyResults,
-				{
-					delta: { x: 0, y: 0 },
-					isDragging: true,
-					start: { client: { x: 100, y: 50 }, offset: { x: 10, y: 5 }, page: { x: 100, y: 50 }, screen: { x: 1100, y: 1050 } }
-				}, {
-					delta: { x: 10, y: 5 },
-					isDragging: true,
-					start: { client: { x: 100, y: 50 }, offset: { x: 10, y: 5 }, page: { x: 100, y: 50 }, screen: { x: 1100, y: 1050 } }
-				}, {
-					delta: { x: 0, y: 0 },
-					isDragging: true
-				}, {
-					delta: { x: -5, y: -10 },
-					isDragging: false,
-					start: { client: { x: 110, y: 55 }, offset: { x: 10, y: 5 }, page: { x: 110, y: 55 }, screen: { x: 1100, y: 1050 } }
-				}
-			], 'the stack of should represent a drag state');
+			assert.deepEqual(
+				dragResults,
+				[
+					emptyResults,
+					emptyResults,
+					{
+						delta: { x: 0, y: 0 },
+						isDragging: true,
+						start: {
+							client: { x: 100, y: 50 },
+							offset: { x: 10, y: 5 },
+							page: { x: 100, y: 50 },
+							screen: { x: 1100, y: 1050 }
+						}
+					},
+					{
+						delta: { x: 10, y: 5 },
+						isDragging: true,
+						start: {
+							client: { x: 100, y: 50 },
+							offset: { x: 10, y: 5 },
+							page: { x: 100, y: 50 },
+							screen: { x: 1100, y: 1050 }
+						}
+					},
+					{
+						delta: { x: 0, y: 0 },
+						isDragging: true
+					},
+					{
+						delta: { x: -5, y: -10 },
+						isDragging: false,
+						start: {
+							client: { x: 110, y: 55 },
+							offset: { x: 10, y: 5 },
+							page: { x: 110, y: 55 },
+							screen: { x: 1100, y: 1050 }
+						}
+					}
+				],
+				'the stack of should represent a drag state'
+			);
 
 			document.body.removeChild(div);
 		}

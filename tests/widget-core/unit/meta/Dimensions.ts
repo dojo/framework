@@ -41,7 +41,6 @@ function resolveRAF() {
 }
 
 registerSuite('meta - Dimensions', {
-
 	beforeEach() {
 		rAF = stub(global, 'requestAnimationFrame');
 	},

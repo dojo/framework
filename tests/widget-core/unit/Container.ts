@@ -74,7 +74,7 @@ registerSuite('mixins/Container', {
 			const widget = new TestWidgetContainer();
 			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
 			widget.__setProperties__({ foo: 'bar' });
-			widget.__setChildren__([ child ]);
+			widget.__setChildren__([child]);
 			widget.__render__();
 		},
 		'container for registry item'() {
@@ -108,11 +108,11 @@ registerSuite('mixins/Container', {
 			}
 			const widget = new ContainerClass();
 			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
-			widget.__setProperties__({ foo: 'bar'});
+			widget.__setProperties__({ foo: 'bar' });
 			assert.strictEqual(invalidatedCount, 3);
-			widget.__setProperties__({ foo: 'bar'});
+			widget.__setProperties__({ foo: 'bar' });
 			assert.strictEqual(invalidatedCount, 4);
-			widget.__setProperties__({ foo: 'bar'});
+			widget.__setProperties__({ foo: 'bar' });
 			assert.strictEqual(invalidatedCount, 5);
 		}
 	}

@@ -37,27 +37,27 @@ class TestWidget extends WidgetBase<TestProperties, WNode<TestChildWidget>> {
 registerSuite('d', {
 	w: {
 		'create WNode wrapper using constructor with properties'() {
-			const properties: any = { id: 'id', classes: [ 'world' ] };
+			const properties: any = { id: 'id', classes: ['world'] };
 			const dNode = w(WidgetBase, properties);
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, WidgetBase);
-			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
+			assert.deepEqual(dNode.properties, { id: 'id', classes: ['world'] });
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));
 		},
 		'create WNode wrapper using label with properties'() {
-			const properties: any = { id: 'id', classes: [ 'world' ] };
+			const properties: any = { id: 'id', classes: ['world'] };
 			const dNode = w('my-widget', properties);
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, 'my-widget');
-			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]} as any);
+			assert.deepEqual(dNode.properties, { id: 'id', classes: ['world'] } as any);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));
 		},
 		'create WNode wrapper using constructor with children'() {
-			const dNode = w(TestWidget, { required: true }, [ w(TestChildWidget, { myChildProperty: '' }) ]);
+			const dNode = w(TestWidget, { required: true }, [w(TestChildWidget, { myChildProperty: '' })]);
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, TestWidget);
@@ -66,7 +66,7 @@ registerSuite('d', {
 			assert.isFalse(isVNode(dNode));
 		},
 		'create WNode wrapper using constructor with VNode children'() {
-			const dNode = w(TestChildWidget, { myChildProperty: '' }, [ v('div') ]);
+			const dNode = w(TestChildWidget, { myChildProperty: '' }, [v('div')]);
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, TestChildWidget);
@@ -75,35 +75,35 @@ registerSuite('d', {
 			assert.isFalse(isVNode(dNode));
 		},
 		'create WNode wrapper using constructor with properties and children'() {
-			const properties: any = { id: 'id', classes: [ 'world' ] };
-			const dNode = w(WidgetBase, properties, [ w(WidgetBase, properties) ]);
+			const properties: any = { id: 'id', classes: ['world'] };
+			const dNode = w(WidgetBase, properties, [w(WidgetBase, properties)]);
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, WidgetBase);
-			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]});
+			assert.deepEqual(dNode.properties, { id: 'id', classes: ['world'] });
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));
 		},
 		'create WNode wrapper using string label with properties and children'() {
-			const properties: any = { id: 'id', classes: [ 'world' ] };
-			const dNode = w('my-widget', properties, [ w(WidgetBase, properties) ]);
+			const properties: any = { id: 'id', classes: ['world'] };
+			const dNode = w('my-widget', properties, [w(WidgetBase, properties)]);
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, 'my-widget');
-			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]} as any);
+			assert.deepEqual(dNode.properties, { id: 'id', classes: ['world'] } as any);
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));
 		},
 		'create WNode wrapper using symbol label with properties and children'() {
-			const properties: any = { id: 'id', classes: [ 'world' ] };
+			const properties: any = { id: 'id', classes: ['world'] };
 			const symbolLabel = Symbol();
 
-			const dNode = w(symbolLabel, properties, [ w(WidgetBase, properties) ]);
+			const dNode = w(symbolLabel, properties, [w(WidgetBase, properties)]);
 			assert.equal(dNode.type, WNODE);
 			assert.strictEqual(dNode.widgetConstructor, symbolLabel);
-			assert.deepEqual(dNode.properties, { id: 'id', classes: [ 'world' ]} as any);
+			assert.deepEqual(dNode.properties, { id: 'id', classes: ['world'] } as any);
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));
@@ -119,21 +119,21 @@ registerSuite('d', {
 			assert.isFalse(isWNode(vNode));
 		},
 		'create VNode wrapper with children'() {
-			const vNode = v('div', {}, [ v('div'), v('div') ]);
+			const vNode = v('div', {}, [v('div'), v('div')]);
 			assert.lengthOf(vNode.children!, 2);
 			assert.equal(vNode.type, VNODE);
 			assert.isTrue(isVNode(vNode));
 			assert.isFalse(isWNode(vNode));
 		},
 		'create VNode wrapper with children as options param'() {
-			const vNode = v('div', [ v('div'), v('div') ]);
+			const vNode = v('div', [v('div'), v('div')]);
 			assert.lengthOf(vNode.children!, 2);
 			assert.equal(vNode.type, VNODE);
 			assert.isTrue(isVNode(vNode));
 			assert.isFalse(isWNode(vNode));
 		},
 		'create VNode wrapper with text node children'() {
-			const vNode = v('div', {}, [ 'This Text Node', 'That Text Node' ]);
+			const vNode = v('div', {}, ['This Text Node', 'That Text Node']);
 			assert.lengthOf(vNode.children!, 2);
 			assert.equal(vNode.type, VNODE);
 			assert.isTrue(isVNode(vNode));
@@ -159,7 +159,7 @@ registerSuite('d', {
 			assert.isOk(node);
 			decorate(node, modifier, isWNode);
 			if (node) {
-				const children = <any[]> node.children;
+				const children = <any[]>node.children;
 				assert.isUndefined(children[0].properties['decorated']);
 				assert.isUndefined(children[1].properties['decorated']);
 				assert.isUndefined(children[2].properties['decorated']);
@@ -198,12 +198,11 @@ registerSuite('d', {
 			const modifier = (node: DNode): void => {
 				if (isWNode(node)) {
 					(node.properties as any)['decorated'] = true;
-				}
-				else if (isVNode(node)) {
+				} else if (isVNode(node)) {
 					assign(node.properties, { id: 'id' });
 				}
 			};
-			const children: any = (<VNode> testWidget.render()).children;
+			const children: any = (<VNode>testWidget.render()).children;
 			assert.isOk(children);
 			decorate(children, modifier);
 			if (children) {
@@ -223,12 +222,11 @@ registerSuite('d', {
 			const modifier = (node: DNode): void => {
 				if (node === null) {
 					node = magicNode;
-				}
-				else if (typeof node === 'string') {
+				} else if (typeof node === 'string') {
 					node = 'replaced string';
 				}
 			};
-			const children: any = (<VNode> testWidget.render()).children;
+			const children: any = (<VNode>testWidget.render()).children;
 			assert.isOk(children);
 			decorate(children, modifier);
 			if (children) {

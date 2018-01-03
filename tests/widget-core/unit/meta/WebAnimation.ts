@@ -1,13 +1,12 @@
 import global from '@dojo/shim/global';
 const { assert } = intern.getPlugin('chai');
-const { beforeEach, before, describe, it} = intern.getInterface('bdd');
+const { beforeEach, before, describe, it } = intern.getInterface('bdd');
 import WebAnimation, { AnimationControls, AnimationTimingProperties } from '../../../src/meta/WebAnimation';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { v } from '../../../src/d';
 import { spy, stub } from 'sinon';
 
 describe('WebAnimation', () => {
-
 	let effects: any;
 	let controls: AnimationControls;
 	let timing: AnimationTimingProperties;
@@ -46,10 +45,7 @@ describe('WebAnimation', () => {
 	let metaNode: HTMLElement;
 
 	beforeEach(() => {
-		effects = [
-			{ height: '0px' },
-			{ height: '10px' }
-		];
+		effects = [{ height: '0px' }, { height: '10px' }];
 		controls = {};
 		timing = {};
 		animate = {
@@ -172,16 +168,11 @@ describe('WebAnimation', () => {
 
 			widget.__render__();
 			assert.isTrue(keyframeCtorStub.calledOnce);
-			assert.isTrue(keyframeCtorStub.firstCall.calledWithMatch(
-				metaNode,
-				[
-					{ height: '0px' },
-					{ height: '10px' }
-				],
-				{
+			assert.isTrue(
+				keyframeCtorStub.firstCall.calledWithMatch(metaNode, [{ height: '0px' }, { height: '10px' }], {
 					duration: 2
-				}
-			));
+				})
+			);
 		});
 		it('starts animations paused', () => {
 			const widget = new TestWidget();
@@ -335,14 +326,9 @@ describe('WebAnimation', () => {
 
 			widget.__render__();
 			assert.isTrue(keyframeCtorStub.calledOnce);
-			assert.isTrue(keyframeCtorStub.firstCall.calledWithMatch(
-				metaNode,
-				[
-					{ height: '0px' },
-					{ height: '10px' }
-				],
-				{}
-			));
+			assert.isTrue(
+				keyframeCtorStub.firstCall.calledWithMatch(metaNode, [{ height: '0px' }, { height: '10px' }], {})
+			);
 		});
 		it('does not create animation if function does not return properties', () => {
 			animate = () => undefined;
@@ -355,18 +341,20 @@ describe('WebAnimation', () => {
 			assert.isTrue(keyframeCtorStub.notCalled);
 		});
 		it('can have multiple animations on a single node', () => {
-			animate = [{
-				id: 'animation1',
-				effects,
-				controls,
-				timing
-			},
-			{
-				id: 'animation2',
-				effects,
-				controls,
-				timing
-			}];
+			animate = [
+				{
+					id: 'animation1',
+					effects,
+					controls,
+					timing
+				},
+				{
+					id: 'animation2',
+					effects,
+					controls,
+					timing
+				}
+			];
 			const widget = new TestWidget();
 			const meta = widget.getMeta();
 			stub(meta, 'getNode').returns(metaNode);
@@ -381,10 +369,18 @@ describe('WebAnimation', () => {
 					constructor() {}
 					play() {}
 					pause() {}
-					get startTime() { return 0; }
-					get currentTime() { return 500; }
-					get playState() { return 'running'; }
-					get playbackRate() { return 1; }
+					get startTime() {
+						return 0;
+					}
+					get currentTime() {
+						return 500;
+					}
+					get playState() {
+						return 'running';
+					}
+					get playbackRate() {
+						return 1;
+					}
 				};
 			});
 
@@ -422,6 +418,5 @@ describe('WebAnimation', () => {
 				});
 			});
 		});
-
 	});
 });

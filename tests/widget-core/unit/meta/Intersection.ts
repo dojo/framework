@@ -7,18 +7,17 @@ import { NodeHandler } from './../../../src/NodeHandler';
 import WidgetBase from '../../../src/WidgetBase';
 
 let intersectionObserver: any;
-const observers: ([ object, Function ])[] = [];
+const observers: ([object, Function])[] = [];
 const bindInstance = new WidgetBase();
 
 registerSuite('meta - Intersection', {
-
 	beforeEach() {
-		intersectionObserver = stub(global, 'IntersectionObserver', function (callback: any) {
+		intersectionObserver = stub(global, 'IntersectionObserver', function(callback: any) {
 			const observer = {
 				observe: stub(),
 				takeRecords: stub().returns([])
 			};
-			observers.push([ observer, callback ]);
+			observers.push([observer, callback]);
 			return observer;
 		});
 	},
@@ -66,20 +65,25 @@ registerSuite('meta - Intersection', {
 				nodeHandler.add(element, 'root');
 
 				intersection.get('root');
-				const [ observer, callback ] = observers[0];
+				const [observer, callback] = observers[0];
 
-				callback([{
-					target: element,
-					intersectionRatio: 0.1,
-					isIntersecting: true
-				}], observer);
+				callback(
+					[
+						{
+							target: element,
+							intersectionRatio: 0.1,
+							isIntersecting: true
+						}
+					],
+					observer
+				);
 
 				const hasIntersectionInfo = intersection.has('root');
 				assert.isTrue(hasIntersectionInfo);
 			}
 		},
 		get: {
-			'intersections'() {
+			intersections() {
 				const nodeHandler = new NodeHandler();
 				const onSpy = spy(nodeHandler, 'on');
 
@@ -154,23 +158,33 @@ registerSuite('meta - Intersection', {
 
 				assert.isFalse(onSpy.called);
 
-				const [ observer, callback ] = observers[0];
+				const [observer, callback] = observers[0];
 
-				callback([{
-					target: element,
-					intersectionRatio: 0.1,
-					isIntersecting: true
-				}], observer);
+				callback(
+					[
+						{
+							target: element,
+							intersectionRatio: 0.1,
+							isIntersecting: true
+						}
+					],
+					observer
+				);
 
 				assert.isTrue(invalidateStub.calledTwice);
 				const result = intersection.get('root');
 				assert.deepEqual(result, { intersectionRatio: 0.1, isIntersecting: true });
 
-				callback([{
-					target: element,
-					intersectionRatio: 0.1,
-					isIntersecting: false
-				}], observer);
+				callback(
+					[
+						{
+							target: element,
+							intersectionRatio: 0.1,
+							isIntersecting: false
+						}
+					],
+					observer
+				);
 
 				assert.isTrue(invalidateStub.calledThrice);
 				const resultTwo = intersection.get('root');
@@ -207,13 +221,18 @@ registerSuite('meta - Intersection', {
 				assert.strictEqual(intersectionObserver.firstCall.args[1].root, root);
 				assert.lengthOf(observers, 1);
 
-				const [ observer, callback ] = observers[0];
+				const [observer, callback] = observers[0];
 
-				callback([{
-					target: element,
-					intersectionRatio: 0.1,
-					isIntersecting: true
-				}], observer);
+				callback(
+					[
+						{
+							target: element,
+							intersectionRatio: 0.1,
+							isIntersecting: true
+						}
+					],
+					observer
+				);
 
 				assert.isTrue(invalidateStub.calledTwice);
 				const result = intersection.get('foo', { root: 'root' });
@@ -232,11 +251,11 @@ registerSuite('meta - Intersection', {
 				nodeHandler.add(root, 'root');
 				intersection.get('foo');
 				assert.lengthOf(observers, 1);
-				intersection.get('foo', { root: 'root'});
+				intersection.get('foo', { root: 'root' });
 				assert.lengthOf(observers, 2);
 				intersection.get('foo');
 				assert.lengthOf(observers, 2);
-				intersection.get('foo', { root: 'root'});
+				intersection.get('foo', { root: 'root' });
 				assert.lengthOf(observers, 2);
 			},
 			'observing multiple elements with the same root'() {
@@ -251,12 +270,12 @@ registerSuite('meta - Intersection', {
 				const bar = document.createElement('div');
 
 				intersectionObserver.restore();
-				intersectionObserver = stub(global, 'IntersectionObserver', function (callback: any) {
+				intersectionObserver = stub(global, 'IntersectionObserver', function(callback: any) {
 					const observer = {
 						observe: observeStub,
 						takeRecords: stub().returns([])
 					};
-					observers.push([ observer, callback ]);
+					observers.push([observer, callback]);
 					return observer;
 				});
 
@@ -268,20 +287,20 @@ registerSuite('meta - Intersection', {
 				intersection.get('foo');
 				assert.lengthOf(observers, 1);
 				assert.equal(observeStub.callCount, 1, 'Should have observed node');
-				intersection.get('foo', { root: 'root'});
+				intersection.get('foo', { root: 'root' });
 				assert.equal(observeStub.callCount, 2, 'Should have observed node with different options');
 				assert.lengthOf(observers, 2);
 				intersection.get('bar');
 				assert.equal(observeStub.callCount, 3, 'Should have observed new node');
 				assert.lengthOf(observers, 2);
-				intersection.get('bar', { root: 'root'});
+				intersection.get('bar', { root: 'root' });
 				assert.lengthOf(observers, 2);
 				assert.equal(observeStub.callCount, 4, 'Should have observed new node with different options');
 
-				intersection.get('bar', { root: 'root'});
+				intersection.get('bar', { root: 'root' });
 				intersection.get('bar');
 				intersection.get('foo');
-				intersection.get('foo', { root: 'root'});
+				intersection.get('foo', { root: 'root' });
 				assert.lengthOf(observers, 2);
 				assert.equal(observeStub.callCount, 4, 'Should not have observed the same nodes again');
 			},
@@ -296,12 +315,12 @@ registerSuite('meta - Intersection', {
 				const root = document.createElement('div');
 
 				intersectionObserver.restore();
-				intersectionObserver = stub(global, 'IntersectionObserver', function (callback: any) {
+				intersectionObserver = stub(global, 'IntersectionObserver', function(callback: any) {
 					const observer = {
 						observe: observeStub,
 						takeRecords: stub().returns([])
 					};
-					observers.push([ observer, callback ]);
+					observers.push([observer, callback]);
 					return observer;
 				});
 
@@ -312,13 +331,13 @@ registerSuite('meta - Intersection', {
 				intersection.get('foo');
 				assert.lengthOf(observers, 1);
 				assert.equal(observeStub.callCount, 1, 'Should have observed node');
-				intersection.get('foo', { root: 'root'});
+				intersection.get('foo', { root: 'root' });
 				assert.equal(observeStub.callCount, 2, 'Should have observed node with different options');
 				assert.lengthOf(observers, 2);
 				intersection.get('baz');
 				assert.equal(observeStub.callCount, 2, 'Should not have observed with the same node and options');
 				assert.lengthOf(observers, 2);
-				intersection.get('baz', { root: 'root'});
+				intersection.get('baz', { root: 'root' });
 				assert.equal(observeStub.callCount, 2, 'Should not have observed with the same node and options');
 				assert.lengthOf(observers, 2);
 			}

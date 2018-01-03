@@ -8,7 +8,7 @@ export interface TopLeft {
 
 export interface BottomRight {
 	bottom: number;
-	right: number ;
+	right: number;
 }
 
 export interface Size {
@@ -49,7 +49,6 @@ const defaultDimensions = {
 };
 
 export class Dimensions extends Base {
-
 	public get(key: string | number): Readonly<DimensionResults> {
 		const node = this.getNode(key) as HTMLElement;
 

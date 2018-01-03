@@ -28,21 +28,21 @@ import testTheme3 from './../../support/styles/theme3.css';
 let testRegistry: Registry;
 
 @theme(baseThemeClasses1)
-class TestWidget extends ThemedMixin(WidgetBase)<any> { }
+class TestWidget extends ThemedMixin(WidgetBase)<any> {}
 
 @theme(baseThemeClasses2)
-class SubClassTestWidget extends TestWidget { }
+class SubClassTestWidget extends TestWidget {}
 
 @theme(baseThemeClasses1)
 @theme(baseThemeClasses2)
-class StackedTestWidget extends ThemedMixin(WidgetBase)<ThemedProperties> { }
+class StackedTestWidget extends ThemedMixin(WidgetBase)<ThemedProperties> {}
 
 @theme(baseThemeClasses3)
 @theme(baseThemeClasses1)
-class DuplicateThemeClassWidget extends ThemedMixin(WidgetBase)<ThemedProperties> { }
+class DuplicateThemeClassWidget extends ThemedMixin(WidgetBase)<ThemedProperties> {}
 
 @theme(baseThemeClasses3)
-class ExtendedThemeClassWidget extends TestWidget { }
+class ExtendedThemeClassWidget extends TestWidget {}
 
 class NonDecoratorDuplicateThemeClassWidget extends ThemedMixin(WidgetBase)<ThemedProperties> {
 	constructor() {
@@ -68,7 +68,7 @@ registerSuite('ThemedMixin', {
 				const ThemedInstance = new TestWidget();
 				const { class1, class2 } = baseThemeClasses1;
 				const flaggedClasses = ThemedInstance.theme([class1, class2]);
-				assert.deepEqual(flaggedClasses, [ class1, class2 ]);
+				assert.deepEqual(flaggedClasses, [class1, class2]);
 				assert.isFalse(consoleStub.called);
 			},
 			'should return negated classes for those that are not passed'() {
@@ -84,7 +84,7 @@ registerSuite('ThemedMixin', {
 				const newClassName = 'newClassName';
 				const flaggedClasses = ThemedInstance.theme([class1, newClassName]);
 
-				assert.deepEqual(flaggedClasses, [ class1, null ]);
+				assert.deepEqual(flaggedClasses, [class1, null]);
 
 				assert.isTrue(consoleStub.calledOnce);
 				assert.strictEqual(consoleStub.firstCall.args[0], `Class name: '${newClassName}' not found in theme`);
@@ -94,7 +94,7 @@ registerSuite('ThemedMixin', {
 				ThemedInstance.__setProperties__({ theme: testTheme3 });
 				const { class1, class2 } = baseThemeClasses1;
 				const flaggedClasses = ThemedInstance.theme([class1, class2]);
-				assert.deepEqual(flaggedClasses, [ 'testTheme3Class1 testTheme3AdjoinedClass1', class2 ]);
+				assert.deepEqual(flaggedClasses, ['testTheme3Class1 testTheme3AdjoinedClass1', class2]);
 			},
 			'should remove adjoined classes when they are no longer provided'() {
 				const { class1, class2 } = baseThemeClasses1;
@@ -103,13 +103,13 @@ registerSuite('ThemedMixin', {
 				let flaggedClasses = ThemedInstance.theme([class1, class2]);
 				ThemedInstance.__setProperties__({ theme: testTheme1 });
 				flaggedClasses = ThemedInstance.theme([class1, class2]);
-				assert.deepEqual(flaggedClasses, [ testTheme1.testPath1.class1, baseThemeClasses1.class2 ]);
+				assert.deepEqual(flaggedClasses, [testTheme1.testPath1.class1, baseThemeClasses1.class2]);
 			},
 			'should return null and undefineds unprocessed'() {
 				const ThemedInstance = new TestWidget();
 				const { class1, class2 } = baseThemeClasses1;
-				const flaggedClasses = ThemedInstance.theme([ class1, null, class2, undefined ]);
-				assert.deepEqual(flaggedClasses,  [ class1, null, class2, undefined ]);
+				const flaggedClasses = ThemedInstance.theme([class1, null, class2, undefined]);
+				assert.deepEqual(flaggedClasses, [class1, null, class2, undefined]);
 				assert.isFalse(consoleStub.called);
 			}
 		},
@@ -119,7 +119,7 @@ registerSuite('ThemedMixin', {
 				ThemedInstance.__setProperties__({ theme: testTheme1 });
 				const { class1, class2 } = baseThemeClasses1;
 				const flaggedClasses = ThemedInstance.theme([class1, class2]);
-				assert.deepEqual(flaggedClasses, [ testTheme1.testPath1.class1, baseThemeClasses1.class2 ]);
+				assert.deepEqual(flaggedClasses, [testTheme1.testPath1.class1, baseThemeClasses1.class2]);
 			},
 			'should return new theme classes when the theme is updated'() {
 				const { class1, class2 } = baseThemeClasses1;
@@ -130,7 +130,7 @@ registerSuite('ThemedMixin', {
 				ThemedInstance.__setProperties__({ theme: testTheme2 });
 
 				const themeClasses = ThemedInstance.theme([class1, class2]);
-				assert.deepEqual(themeClasses, [ testTheme2.testPath1.class1, baseThemeClasses1.class2 ]);
+				assert.deepEqual(themeClasses, [testTheme2.testPath1.class1, baseThemeClasses1.class2]);
 			}
 		},
 		'setting extra classes': {
@@ -146,27 +146,27 @@ registerSuite('ThemedMixin', {
 			}
 		},
 		'setting base theme classes': {
-			'decorator': {
+			decorator: {
 				'Themes get inherited from base classes and merged into the available classes'() {
 					const { class1, class2 } = baseThemeClasses1;
 					const { class3, class4 } = baseThemeClasses2;
 					const ThemedInstance = new SubClassTestWidget();
 					const flaggedClasses = ThemedInstance.theme([class1, class2, class3, class4]);
-					assert.deepEqual(flaggedClasses, [ class1, class2, class3, class4 ]);
+					assert.deepEqual(flaggedClasses, [class1, class2, class3, class4]);
 				},
 				'Stacked themes get merged into the available classes'() {
 					const { class1, class2 } = baseThemeClasses1;
 					const { class3, class4 } = baseThemeClasses2;
 					const ThemedInstance = new StackedTestWidget();
 					const flaggedClasses = ThemedInstance.theme([class1, class2, class3, class4]);
-					assert.deepEqual(flaggedClasses, [ class1, class2, class3, class4 ]);
+					assert.deepEqual(flaggedClasses, [class1, class2, class3, class4]);
 				},
 				'Can override classes'() {
 					const { class1, class2 } = baseThemeClasses1;
 					const { class1: duplicateClass1 } = baseThemeClasses3;
 					const ThemedInstance = new DuplicateThemeClassWidget();
 					const flaggedClasses = ThemedInstance.theme([class1, class2]);
-					assert.deepEqual(flaggedClasses, [ duplicateClass1, class2 ]);
+					assert.deepEqual(flaggedClasses, [duplicateClass1, class2]);
 				}
 			},
 			'non decorator': {
@@ -175,29 +175,29 @@ registerSuite('ThemedMixin', {
 					const { class3, class4 } = baseThemeClasses2;
 					const ThemedInstance = new SubClassTestWidget();
 					const flaggedClasses = ThemedInstance.theme([class1, class2, class3, class4]);
-					assert.deepEqual(flaggedClasses, [ class1, class2, class3, class4 ]);
+					assert.deepEqual(flaggedClasses, [class1, class2, class3, class4]);
 				},
 				'Stacked themes get merged into the available classes'() {
 					const { class1, class2 } = baseThemeClasses1;
 					const { class3, class4 } = baseThemeClasses2;
 					const ThemedInstance = new StackedTestWidget();
 					const flaggedClasses = ThemedInstance.theme([class1, class2, class3, class4]);
-					assert.deepEqual(flaggedClasses, [ class1, class2, class3, class4 ]);
+					assert.deepEqual(flaggedClasses, [class1, class2, class3, class4]);
 				},
 				'Can override classes'() {
 					const { class1, class2 } = baseThemeClasses1;
 					const { class1: duplicateClass1 } = baseThemeClasses3;
 					const ThemedInstance = new NonDecoratorDuplicateThemeClassWidget();
 					const flaggedClasses = ThemedInstance.theme([class1, class2]);
-					assert.deepEqual(flaggedClasses, [ duplicateClass1, class2 ]);
+					assert.deepEqual(flaggedClasses, [duplicateClass1, class2]);
 				}
 			},
-			'extension'() {
+			extension() {
 				const { class1, class2 } = baseThemeClasses1;
 				const { class1: duplicateClass1 } = baseThemeClasses3;
 				const ThemedInstance = new ExtendedThemeClassWidget();
 				const flaggedClasses = ThemedInstance.theme([class1, class2]);
-				assert.deepEqual(flaggedClasses, [ duplicateClass1, class2 ]);
+				assert.deepEqual(flaggedClasses, [duplicateClass1, class2]);
 			}
 		},
 		'injecting a theme': {
@@ -234,7 +234,6 @@ registerSuite('ThemedMixin', {
 					render() {
 						return v('div', { classes: this.theme(baseThemeClasses1.class1) });
 					}
-
 				}
 				const ThemedInstance = new InjectedTheme();
 				const renderResult: any = ThemedInstance.__render__();
@@ -266,7 +265,7 @@ registerSuite('ThemedMixin', {
 				assert.deepEqual(renderResult.properties.classes, 'theme1Class1');
 			}
 		},
-		'integration': {
+		integration: {
 			'should work as mixin to createWidgetBase'() {
 				const fixedClassName = 'fixedClassName';
 
@@ -277,9 +276,7 @@ registerSuite('ThemedMixin', {
 
 					render() {
 						const { class1 } = baseThemeClasses1;
-						return v('div', [
-							v('div', { classes: [ this.theme(class1), fixedClassName ] })
-						]);
+						return v('div', [v('div', { classes: [this.theme(class1), fixedClassName] })]);
 					}
 				}
 
@@ -287,12 +284,18 @@ registerSuite('ThemedMixin', {
 				ThemedWidget.__setProperties__({ theme: testTheme1 });
 
 				const result = ThemedWidget.__render__();
-				assert.deepEqual(result.children![0].properties!.classes, [ testTheme1.testPath1.class1, fixedClassName ]);
+				assert.deepEqual(result.children![0].properties!.classes, [
+					testTheme1.testPath1.class1,
+					fixedClassName
+				]);
 
 				ThemedWidget.__setProperties__({ theme: testTheme2 });
 
 				const result2 = ThemedWidget.__render__();
-				assert.deepEqual(result2.children![0].properties!.classes, [ testTheme2.testPath1.class1, fixedClassName ]);
+				assert.deepEqual(result2.children![0].properties!.classes, [
+					testTheme2.testPath1.class1,
+					fixedClassName
+				]);
 			}
 		}
 	}

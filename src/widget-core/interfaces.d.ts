@@ -69,7 +69,7 @@ export interface ProjectorOptions {
 
 export interface ProjectionOptions extends ProjectorOptions {
 	namespace?: string;
-	deferredRenderCallbacks: Function [];
+	deferredRenderCallbacks: Function[];
 	afterRenderCallbacks: Function[];
 	merge: boolean;
 	sync: boolean;
@@ -216,7 +216,6 @@ export type RegistryLabel = string | symbol;
  * Base widget properties
  */
 export interface WidgetProperties {
-
 	/**
 	 * The key for a widget. Used to differentiate uniquely identify child widgets for
 	 * rendering and instance management
@@ -228,7 +227,6 @@ export interface WidgetProperties {
  * Widget properties that require a key
  */
 export interface KeyedWidgetProperties extends WidgetProperties {
-
 	/**
 	 * The key for a widget. Used to differentiate uniquely identify child widgets for
 	 * rendering and instance management
@@ -240,7 +238,6 @@ export interface KeyedWidgetProperties extends WidgetProperties {
  *
  */
 interface CoreProperties {
-
 	/**
 	 * The default registry for the projection
 	 */
@@ -315,7 +312,12 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 /**
  * union type for all possible return types from render
  */
-export type DNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = VNode | WNode<W> | undefined | null | string;
+export type DNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> =
+	| VNode
+	| WNode<W>
+	| undefined
+	| null
+	| string;
 
 /**
  * Property Change record for specific property diff functions
@@ -336,19 +338,16 @@ export interface DiffPropertyReaction {
 /**
  * WidgetBase constructor type
  */
-export type WidgetBaseConstructor<
-	P extends WidgetProperties = WidgetProperties,
-	C extends DNode = DNode> = Constructor<WidgetBaseInterface<P, C>>;
+export type WidgetBaseConstructor<P extends WidgetProperties = WidgetProperties, C extends DNode = DNode> = Constructor<
+	WidgetBaseInterface<P, C>
+>;
 
 export interface DefaultWidgetBaseInterface extends WidgetBaseInterface<WidgetProperties, DNode> {}
 
 /**
  * The interface for WidgetBase
  */
-export interface WidgetBaseInterface<
-	P = WidgetProperties,
-	C extends DNode = DNode> {
-
+export interface WidgetBaseInterface<P = WidgetProperties, C extends DNode = DNode> {
 	/**
 	 * Widget properties
 	 */
@@ -435,7 +434,7 @@ export interface BeforeRender {
  * Interface for afterRender function
  */
 export interface AfterRender {
-	(dNode: DNode | DNode []): DNode | DNode[];
+	(dNode: DNode | DNode[]): DNode | DNode[];
 }
 
 /**

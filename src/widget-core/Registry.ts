@@ -24,7 +24,6 @@ export interface RegistryEventObject extends EventObject<RegistryLabel> {
  * Widget Registry Interface
  */
 export interface RegistryInterface {
-
 	/**
 	 * Define a WidgetRegistryItem against a label
 	 *
@@ -92,9 +91,9 @@ export interface ESMDefaultWidgetBase<T> {
 export function isWidgetConstructorDefaultExport<T>(item: any): item is ESMDefaultWidgetBase<T> {
 	return Boolean(
 		item &&
-		item.hasOwnProperty('__esModule') &&
-		item.hasOwnProperty('default') &&
-		isWidgetBaseConstructor(item.default)
+			item.hasOwnProperty('__esModule') &&
+			item.hasOwnProperty('default') &&
+			isWidgetBaseConstructor(item.default)
 	);
 }
 
@@ -102,7 +101,6 @@ export function isWidgetConstructorDefaultExport<T>(item: any): item is ESMDefau
  * The Registry implementation
  */
 export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> implements RegistryInterface {
-
 	/**
 	 * internal map of labels and RegistryItem
 	 */
@@ -113,7 +111,10 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 	/**
 	 * Emit loaded event for registry label
 	 */
-	private emitLoadedEvent(widgetLabel: RegistryLabel, item: WidgetBaseConstructorFunction | WidgetBaseConstructor | Injector): void {
+	private emitLoadedEvent(
+		widgetLabel: RegistryLabel,
+		item: WidgetBaseConstructorFunction | WidgetBaseConstructor | Injector
+	): void {
 		this.emit({
 			type: widgetLabel,
 			action: 'loaded',
@@ -133,15 +134,17 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 		this._widgetRegistry.set(label, item);
 
 		if (item instanceof Promise) {
-			item.then((widgetCtor) => {
-				this._widgetRegistry.set(label, widgetCtor);
-				this.emitLoadedEvent(label, widgetCtor);
-				return widgetCtor;
-			}, (error) => {
-				throw error;
-			});
-		}
-		else {
+			item.then(
+				(widgetCtor) => {
+					this._widgetRegistry.set(label, widgetCtor);
+					this.emitLoadedEvent(label, widgetCtor);
+					return widgetCtor;
+				},
+				(error) => {
+					throw error;
+				}
+			);
+		} else {
 			this.emitLoadedEvent(label, item);
 		}
 	}
@@ -174,21 +177,23 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 			return null;
 		}
 
-		const promise = (<WidgetBaseConstructorFunction> item)();
+		const promise = (<WidgetBaseConstructorFunction>item)();
 		this._widgetRegistry.set(label, promise);
 
-		promise.then((widgetCtor) => {
+		promise.then(
+			(widgetCtor) => {
+				if (isWidgetConstructorDefaultExport<T>(widgetCtor)) {
+					widgetCtor = widgetCtor.default;
+				}
 
-			if (isWidgetConstructorDefaultExport<T>(widgetCtor)) {
-				widgetCtor = widgetCtor.default;
+				this._widgetRegistry.set(label, widgetCtor);
+				this.emitLoadedEvent(label, widgetCtor);
+				return widgetCtor;
+			},
+			(error) => {
+				throw error;
 			}
-
-			this._widgetRegistry.set(label, widgetCtor);
-			this.emitLoadedEvent(label, widgetCtor);
-			return widgetCtor;
-		}, (error) => {
-			throw error;
-		});
+		);
 
 		return null;
 	}

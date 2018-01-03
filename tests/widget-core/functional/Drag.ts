@@ -4,13 +4,10 @@ import { DragResults } from '../../src/meta/Drag';
 import Test from 'intern/lib/Test';
 
 function getPage(test: Test) {
-	return test.remote
-		.get('_build/tests/functional/meta/Drag.html')
-		.setFindTimeout(5000);
+	return test.remote.get('_build/tests/functional/meta/Drag.html').setFindTimeout(5000);
 }
 
 registerSuite('Drag', {
-
 	'touch drag'() {
 		if (!this.remote.session.capabilities.touchEnabled) {
 			this.skip('Not touch enabled device');

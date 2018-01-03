@@ -14,12 +14,11 @@ export enum NodeEventType {
 }
 
 export interface NodeHandlerEventMap {
-	'Projector': EventObject<NodeEventType.Projector>;
-	'Widget': EventObject<NodeEventType.Widget>;
+	Projector: EventObject<NodeEventType.Projector>;
+	Widget: EventObject<NodeEventType.Widget>;
 }
 
 export class NodeHandler extends Evented<NodeHandlerEventMap> implements NodeHandlerInterface {
-
 	private _nodeMap = new Map<string, Element>();
 
 	public get(key: string): Element | undefined {

@@ -25,8 +25,7 @@ class MyWidget extends BaseTestWidget {
 function dispatchEvent(element: Element, eventType: string) {
 	try {
 		element.dispatchEvent(new CustomEvent(eventType));
-	}
-	catch (e) {
+	} catch (e) {
 		const event = document.createEvent('CustomEvent');
 		event.initCustomEvent(eventType, false, false, {});
 		element.dispatchEvent(event);
@@ -45,7 +44,6 @@ let cancelRafStub: SinonStub;
 let projector: BaseTestWidget | MyWidget;
 
 registerSuite('mixins/projectorMixin', {
-
 	beforeEach() {
 		result = null;
 		rafStub = stub(global, 'requestAnimationFrame').returns(1);
@@ -63,7 +61,7 @@ registerSuite('mixins/projectorMixin', {
 	},
 
 	tests: {
-		'render': {
+		render: {
 			'string root node'() {
 				result = 'my string';
 				projector = new MyWidget();
@@ -73,7 +71,7 @@ registerSuite('mixins/projectorMixin', {
 				assert.strictEqual(renderedResult.children![0], 'my string');
 			},
 			'string root node after an initial render'() {
-				result = v('h1', [ 'my string' ]);
+				result = v('h1', ['my string']);
 				projector = new MyWidget();
 
 				let renderedResult = projector.__render__() as VNode;
@@ -94,7 +92,7 @@ registerSuite('mixins/projectorMixin', {
 				assert.isNull(renderedResult.children![0]);
 			},
 			'null root node after an initial render'() {
-				result = v('h1', [ 'my string' ]);
+				result = v('h1', ['my string']);
 				projector = new MyWidget();
 
 				let renderedResult = projector.__render__() as VNode;
@@ -115,7 +113,7 @@ registerSuite('mixins/projectorMixin', {
 				assert.isUndefined(renderedResult.children![0]);
 			},
 			'undefined root node after an initial render'() {
-				result = v('h1', [ 'my string' ]);
+				result = v('h1', ['my string']);
 				projector = new MyWidget();
 
 				let renderedResult = projector.__render__() as VNode;
@@ -128,7 +126,7 @@ registerSuite('mixins/projectorMixin', {
 				assert.isUndefined(renderedResult.children![0]);
 			},
 			'array root node'() {
-				result = [ v('h1', [ 'my string' ]) ];
+				result = [v('h1', ['my string'])];
 				projector = new MyWidget();
 
 				const renderedResult = projector.__render__() as VNode;
@@ -136,39 +134,43 @@ registerSuite('mixins/projectorMixin', {
 			}
 		},
 		'attach projector': {
-			'append'() {
-					const childNodeLength = document.body.childNodes.length;
-					projector = new BaseTestWidget();
+			append() {
+				const childNodeLength = document.body.childNodes.length;
+				projector = new BaseTestWidget();
 
-					projector.setChildren([ v('h2', [ 'foo' ] ) ]);
-					projector.append();
-					assert.strictEqual(document.body.childNodes.length, childNodeLength + 1, 'child should have been added');
-					const child = document.body.lastChild as HTMLElement;
-					assert.strictEqual(child.innerHTML, '<h2>foo</h2>');
-					assert.strictEqual(child.tagName.toLowerCase(), 'div');
-					assert.strictEqual((child.firstChild as HTMLElement).tagName.toLowerCase(), 'h2');
+				projector.setChildren([v('h2', ['foo'])]);
+				projector.append();
+				assert.strictEqual(
+					document.body.childNodes.length,
+					childNodeLength + 1,
+					'child should have been added'
+				);
+				const child = document.body.lastChild as HTMLElement;
+				assert.strictEqual(child.innerHTML, '<h2>foo</h2>');
+				assert.strictEqual(child.tagName.toLowerCase(), 'div');
+				assert.strictEqual((child.firstChild as HTMLElement).tagName.toLowerCase(), 'h2');
 			},
-			'replace'() {
-					const projector = new class extends BaseTestWidget {
-						render() {
-							return v('body', this.children);
-						}
-					}();
+			replace() {
+				const projector = new class extends BaseTestWidget {
+					render() {
+						return v('body', this.children);
+					}
+				}();
 
-					projector.setChildren([ v('h2', [ 'foo' ] ) ]);
-					projector.replace();
-					assert.strictEqual(document.body.childNodes.length, 1, 'child should have been added');
-					const child = document.body.lastChild as HTMLElement;
-					assert.strictEqual(child.innerHTML, 'foo');
-					assert.strictEqual(child.tagName.toLowerCase(), 'h2');
+				projector.setChildren([v('h2', ['foo'])]);
+				projector.replace();
+				assert.strictEqual(document.body.childNodes.length, 1, 'child should have been added');
+				const child = document.body.lastChild as HTMLElement;
+				assert.strictEqual(child.innerHTML, 'foo');
+				assert.strictEqual(child.tagName.toLowerCase(), 'h2');
 			},
-			'merge': {
-				'standard'() {
+			merge: {
+				standard() {
 					const div = document.createElement('div');
 					document.body.appendChild(div);
 					const projector = new BaseTestWidget();
 
-					projector.setChildren([ v('h2', [ 'foo' ] ) ]);
+					projector.setChildren([v('h2', ['foo'])]);
 					projector.merge(div);
 					assert.strictEqual(div.childNodes.length, 1, 'child should have been added');
 					const child = div.lastChild as HTMLElement;
@@ -178,16 +180,23 @@ registerSuite('mixins/projectorMixin', {
 				}
 			}
 		},
-		'sandbox': {
-			'attaching'() {
+		sandbox: {
+			attaching() {
 				const childNodeLength = document.body.childNodes.length;
 				projector = new BaseTestWidget();
-				projector.setChildren([ v('h2', [ 'foo' ]) ]);
+				projector.setChildren([v('h2', ['foo'])]);
 
 				projector.sandbox();
 
-				assert.strictEqual(document.body.childNodes.length, childNodeLength, 'No nodes should be added to body');
-				assert.isTrue(projector.root instanceof global.window.DocumentFragment, 'the root should be a document fragment');
+				assert.strictEqual(
+					document.body.childNodes.length,
+					childNodeLength,
+					'No nodes should be added to body'
+				);
+				assert.isTrue(
+					projector.root instanceof global.window.DocumentFragment,
+					'the root should be a document fragment'
+				);
 				const child = projector.root.firstChild as HTMLElement;
 				assert.strictEqual(child.innerHTML, '<h2>foo</h2>');
 				assert.strictEqual(child.tagName.toLocaleLowerCase(), 'div');
@@ -199,9 +208,9 @@ registerSuite('mixins/projectorMixin', {
 			'operates synchronously'() {
 				let count = 0;
 				const projector = new class extends BaseTestWidget {
-					render () {
+					render() {
 						count++;
-						return v('div', [ String(count) ]);
+						return v('div', [String(count)]);
 					}
 				}();
 
@@ -230,7 +239,7 @@ registerSuite('mixins/projectorMixin', {
 			projector.root = root;
 			assert.equal(projector.root, root);
 		},
-		'scheduleRender'() {
+		scheduleRender() {
 			rafStub.restore();
 			rafStub = stub(global, 'requestAnimationFrame').returns(1);
 			const projector = new BaseTestWidget();
@@ -242,7 +251,7 @@ registerSuite('mixins/projectorMixin', {
 			projector.invalidate();
 			assert.isTrue(scheduleRenderStub.calledTwice);
 		},
-		'pause'() {
+		pause() {
 			const projector = new BaseTestWidget();
 
 			projector.append();
@@ -260,7 +269,7 @@ registerSuite('mixins/projectorMixin', {
 			projector.pause();
 			assert.isTrue(cancelRafStub.called);
 		},
-		'resume'() {
+		resume() {
 			const projector = new BaseTestWidget();
 			spy(projector, 'scheduleRender');
 			assert.isFalse((projector.scheduleRender as any).called);
@@ -276,7 +285,7 @@ registerSuite('mixins/projectorMixin', {
 			projector.destroy();
 			assert.equal(projector.projectorState, ProjectorAttachState.Detached);
 		},
-		'async': {
+		async: {
 			'can set async mode on projector'() {
 				const projector = new BaseTestWidget();
 				assert.isTrue(projector.async);
@@ -286,15 +295,19 @@ registerSuite('mixins/projectorMixin', {
 			'cannot set async mode on projector that is already attached'() {
 				const projector = new BaseTestWidget();
 				projector.append();
-				assert.throws(() => {
-					projector.async = false;
-				}, Error, 'Projector already attached, cannot change async mode');
+				assert.throws(
+					() => {
+						projector.async = false;
+					},
+					Error,
+					'Projector already attached, cannot change async mode'
+				);
 			}
 		},
 		'toHtml()': {
-			'appended'() {
+			appended() {
 				const projector = new BaseTestWidget();
-				projector.setChildren([ v('h2', [ 'foo' ]) ]);
+				projector.setChildren([v('h2', ['foo'])]);
 
 				const div = document.createElement('div');
 				projector.append(div);
@@ -302,28 +315,28 @@ registerSuite('mixins/projectorMixin', {
 				assert.strictEqual(projector.toHtml(), (projector.root.lastChild as Element).outerHTML);
 				projector.destroy();
 			},
-			'replaced'() {
+			replaced() {
 				const div = document.createElement('div');
 				const root = document.createElement('div');
 				document.body.appendChild(root);
 				root.appendChild(div);
 
 				const projector = new BaseTestWidget();
-				projector.setChildren([ v('h2', [ 'foo' ]) ]);
+				projector.setChildren([v('h2', ['foo'])]);
 
 				projector.replace(div);
 				assert.strictEqual(projector.toHtml(), `<div><h2>foo</h2></div>`);
 				assert.strictEqual(projector.toHtml(), (root.lastChild as Element).outerHTML);
 				projector.destroy();
 			},
-			'merged'() {
+			merged() {
 				const root = document.createElement('div');
 				const div = document.createElement('div');
 				document.body.appendChild(root);
 				root.appendChild(div);
 
 				const projector = new BaseTestWidget();
-				projector.setChildren([ v('h2', [ 'foo' ]) ]);
+				projector.setChildren([v('h2', ['foo'])]);
 
 				projector.merge(div);
 				assert.strictEqual(projector.toHtml(), `<div><h2>foo</h2></div>`);
@@ -332,12 +345,16 @@ registerSuite('mixins/projectorMixin', {
 			},
 			'not attached throws'() {
 				const projector = new BaseTestWidget();
-				assert.throws(() => {
-					projector.toHtml();
-				}, Error, 'Projector is not attached, cannot return an HTML string of projection.');
+				assert.throws(
+					() => {
+						projector.toHtml();
+					},
+					Error,
+					'Projector is not attached, cannot return an HTML string of projection.'
+				);
 			}
 		},
-		'destroy'() {
+		destroy() {
 			const projector = new BaseTestWidget();
 			const projectorStopSpy = spy(projector, 'pause');
 
@@ -367,9 +384,8 @@ registerSuite('mixins/projectorMixin', {
 			const testProperties = {
 				key: 'bar'
 			};
-			const testChildren = [ v('div') ];
+			const testChildren = [v('div')];
 			class TestWidget extends BaseTestWidget {
-
 				@beforeRender()
 				protected updateProperties(renderFunc: any, props: any, children: any) {
 					assert.deepEqual(props, testProperties);
@@ -399,7 +415,7 @@ registerSuite('mixins/projectorMixin', {
 			projector.invalidate();
 			assert.isTrue(rafStub.called);
 		},
-		'reattach'() {
+		reattach() {
 			const root = document.createElement('div');
 			const projector = new BaseTestWidget();
 			const promise = projector.append(root);
@@ -410,16 +426,24 @@ registerSuite('mixins/projectorMixin', {
 			const div = document.createElement('div');
 			projector.root = div;
 			projector.append();
-			assert.throws(() => {
-				projector.root = document.body;
-			}, Error, 'already attached');
+			assert.throws(
+				() => {
+					projector.root = document.body;
+				},
+				Error,
+				'already attached'
+			);
 		},
 		'sandbox throws when already attached'() {
 			const projector = new BaseTestWidget();
 			projector.append();
-			assert.throws(() => {
-				projector.sandbox();
-			}, Error, 'Projector already attached, cannot create sandbox');
+			assert.throws(
+				() => {
+					projector.sandbox();
+				},
+				Error,
+				'Projector already attached, cannot create sandbox'
+			);
 		},
 		'can attach an event handler'() {
 			let domEvent: any;
@@ -476,11 +500,13 @@ registerSuite('mixins/projectorMixin', {
 			projector.async = false;
 			projector.append();
 
-			children = [ v('div', {
-				id: 'test-element',
-				enterAnimation: 'fade-in',
-				exitAnimation: 'fade-out'
-			}) ];
+			children = [
+				v('div', {
+					id: 'test-element',
+					enterAnimation: 'fade-in',
+					exitAnimation: 'fade-out'
+				})
+			];
 
 			projector.invalidate();
 
@@ -519,13 +545,15 @@ registerSuite('mixins/projectorMixin', {
 			projector.async = false;
 			projector.append();
 
-			children = [ v('div', {
-				id: 'test-element',
-				enterAnimation: 'fade-in',
-				enterAnimationActive: 'active-fade-in',
-				exitAnimation: 'fade-out',
-				exitAnimationActive: 'active-fade-out'
-			}) ];
+			children = [
+				v('div', {
+					id: 'test-element',
+					enterAnimation: 'fade-in',
+					enterAnimationActive: 'active-fade-in',
+					exitAnimation: 'fade-out',
+					exitAnimationActive: 'active-fade-out'
+				})
+			];
 
 			projector.invalidate();
 

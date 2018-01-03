@@ -38,7 +38,7 @@ interface ReactionFunctionConfig {
 	reaction: DiffPropertyReaction;
 }
 
-export type BoundFunctionData = { boundFunc: (...args: any[]) => any, scope: any };
+export type BoundFunctionData = { boundFunc: (...args: any[]) => any; scope: any };
 
 const decoratorMap = new Map<Function, Map<string, any[]>>();
 const boundAuto = auto.bind(null);
@@ -47,7 +47,6 @@ const boundAuto = auto.bind(null);
  * Main widget base for all widgets to extend
  */
 export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implements WidgetBaseInterface<P, C> {
-
 	/**
 	 * static identifier
 	 */
@@ -101,7 +100,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	constructor() {
 		this._children = [];
 		this._decoratorCache = new Map<string, any[]>();
-		this._properties = <P> {};
+		this._properties = <P>{};
 		this._boundRenderFunc = this.render.bind(this);
 		this._boundInvalidate = this.invalidate.bind(this);
 
@@ -181,7 +180,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	public get changedPropertyKeys(): string[] {
-		return [ ...this._changedPropertyKeys ];
+		return [...this._changedPropertyKeys];
 	}
 
 	public __setCoreProperties__(coreProperties: CoreProperties): void {
@@ -209,7 +208,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		this._renderState = WidgetRenderState.PROPERTIES;
 
 		if (this._initialProperties === false || registeredDiffPropertyNames.length !== 0) {
-			const allProperties = [ ...propertyNames, ...Object.keys(this._properties) ];
+			const allProperties = [...propertyNames, ...Object.keys(this._properties)];
 			const checkedProperties: (string | number)[] = [];
 			const diffPropertyResults: any = {};
 			let runReactions = false;
@@ -221,7 +220,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				}
 				checkedProperties.push(propertyName);
 				const previousProperty = this._properties[propertyName];
-				const newProperty = this._bindFunctionProperty(properties[propertyName], instanceData.coreProperties.bind);
+				const newProperty = this._bindFunctionProperty(
+					properties[propertyName],
+					instanceData.coreProperties.bind
+				);
 				if (registeredDiffPropertyNames.indexOf(propertyName) !== -1) {
 					runReactions = true;
 					const diffFunctions = this.getDecorator(`diffProperty:${propertyName}`);
@@ -234,8 +236,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 							diffPropertyResults[propertyName] = result.value;
 						}
 					}
-				}
-				else {
+				} else {
 					const result = boundAuto(previousProperty, newProperty);
 					if (result.changed && changedPropertyKeys.indexOf(propertyName) === -1) {
 						changedPropertyKeys.push(propertyName);
@@ -255,15 +256,16 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			}
 			this._properties = diffPropertyResults;
 			this._changedPropertyKeys = changedPropertyKeys;
-		}
-		else {
+		} else {
 			this._initialProperties = false;
 			for (let i = 0; i < propertyNames.length; i++) {
 				const propertyName = propertyNames[i];
 				if (typeof properties[propertyName] === 'function') {
-					properties[propertyName] = this._bindFunctionProperty(properties[propertyName], instanceData.coreProperties.bind);
-				}
-				else {
+					properties[propertyName] = this._bindFunctionProperty(
+						properties[propertyName],
+						instanceData.coreProperties.bind
+					);
+				} else {
 					changedPropertyKeys.push(propertyName);
 				}
 			}
@@ -273,8 +275,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 		if (this._changedPropertyKeys.length > 0) {
 			this.invalidate();
-		}
-		else {
+		} else {
 			this._renderState = WidgetRenderState.IDLE;
 		}
 	}
@@ -310,11 +311,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			if (instanceData.parentInvalidate) {
 				instanceData.parentInvalidate();
 			}
-		}
-		else if (this._renderState === WidgetRenderState.PROPERTIES) {
+		} else if (this._renderState === WidgetRenderState.PROPERTIES) {
 			instanceData.dirty = true;
-		}
-		else if (this._renderState === WidgetRenderState.CHILDREN) {
+		} else if (this._renderState === WidgetRenderState.CHILDREN) {
 			instanceData.dirty = true;
 		}
 	}
@@ -330,7 +329,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 * @param value The value of the decorator
 	 */
 	protected addDecorator(decoratorKey: string, value: any): void {
-		value = Array.isArray(value) ? value : [ value ];
+		value = Array.isArray(value) ? value : [value];
 		if (this.hasOwnProperty('constructor')) {
 			let decoratorList = decoratorMap.get(this.constructor);
 			if (!decoratorList) {
@@ -344,10 +343,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				decoratorList.set(decoratorKey, specificDecoratorList);
 			}
 			specificDecoratorList.push(...value);
-		}
-		else {
+		} else {
 			const decorators = this.getDecorator(decoratorKey);
-			this._decoratorCache.set(decoratorKey, [ ...decorators, ...value ]);
+			this._decoratorCache.set(decoratorKey, [...decorators, ...value]);
 		}
 	}
 
@@ -412,7 +410,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		return allDecorators;
 	}
 
-	private _mapDiffPropertyReactions(newProperties: any, changedPropertyKeys: string[]): Map<Function, ReactionFunctionArguments> {
+	private _mapDiffPropertyReactions(
+		newProperties: any,
+		changedPropertyKeys: string[]
+	): Map<Function, ReactionFunctionArguments> {
 		const reactionFunctions: ReactionFunctionConfig[] = this.getDecorator('diffReaction');
 
 		return reactionFunctions.reduce((reactionPropertyMap, { reaction, propertyName }) => {
@@ -432,7 +433,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			reactionPropertyMap.set(reaction, reactionArguments);
 			return reactionPropertyMap;
 		}, new Map<Function, ReactionFunctionArguments>());
-
 	}
 
 	/**
@@ -443,7 +443,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	private _bindFunctionProperty(property: any, bind: any): any {
 		if (typeof property === 'function' && isWidgetBaseConstructor(property) === false) {
 			if (this._bindFunctionPropertyMap === undefined) {
-				this._bindFunctionPropertyMap = new WeakMap<(...args: any[]) => any, { boundFunc: (...args: any[]) => any, scope: any }>();
+				this._bindFunctionPropertyMap = new WeakMap<
+					(...args: any[]) => any,
+					{ boundFunc: (...args: any[]) => any; scope: any }
+				>();
 			}
 			const bindInfo: Partial<BoundFunctionData> = this._bindFunctionPropertyMap.get(property) || {};
 			let { boundFunc, scope } = bindInfo;
@@ -468,9 +471,12 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	private _runBeforeProperties(properties: any) {
 		const beforeProperties: BeforeProperties[] = this.getDecorator('beforeProperties');
 		if (beforeProperties.length > 0) {
-			return beforeProperties.reduce((properties, beforePropertiesFunction) => {
-				return { ...properties, ...beforePropertiesFunction.call(this, properties) };
-			}, { ...properties });
+			return beforeProperties.reduce(
+				(properties, beforePropertiesFunction) => {
+					return { ...properties, ...beforePropertiesFunction.call(this, properties) };
+				},
+				{ ...properties }
+			);
 		}
 		return properties;
 	}
@@ -521,7 +527,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		const afterConstructors = this.getDecorator('afterConstructor');
 
 		if (afterConstructors.length > 0) {
-			afterConstructors.forEach(afterConstructor => afterConstructor.call(this));
+			afterConstructors.forEach((afterConstructor) => afterConstructor.call(this));
 		}
 	}
 }

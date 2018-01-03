@@ -95,7 +95,7 @@ export class Intersection extends Base {
 			}
 			this.invalidate();
 		};
-	}
+	};
 }
 
 export default Intersection;

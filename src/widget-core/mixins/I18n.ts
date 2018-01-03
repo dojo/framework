@@ -1,11 +1,6 @@
 /* tslint:disable:interface-name */
 import { assign } from '@dojo/core/lang';
-import i18n, {
-	Bundle,
-	formatMessage,
-	getCachedMessages,
-	Messages
-} from '@dojo/i18n/i18n';
+import i18n, { Bundle, formatMessage, getCachedMessages, Messages } from '@dojo/i18n/i18n';
 import { isVNode } from './../d';
 import { afterRender } from './../decorators/afterRender';
 import { inject } from './../decorators/inject';
@@ -93,18 +88,20 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 		}
 	})
 	class I18n extends Base {
-
 		public properties: I18nProperties;
 
 		public localizeBundle<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T> {
 			const { locale } = this.properties;
 			const messages = this._getLocaleMessages(bundle) || bundle.messages;
 
-			return assign(Object.create({
-				format(key: string, options?: any) {
-					return formatMessage(bundle, key, options, locale);
-				}
-			}), messages) as LocalizedMessages<T>;
+			return assign(
+				Object.create({
+					format(key: string, options?: any) {
+						return formatMessage(bundle, key, options, locale);
+					}
+				}),
+				messages
+			) as LocalizedMessages<T>;
 		}
 
 		@afterRender()

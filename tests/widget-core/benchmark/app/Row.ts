@@ -11,7 +11,6 @@ export interface RowProperties {
 }
 
 export class Row extends WidgetBase<RowProperties> {
-
 	private _onDelete() {
 		const { onRowDeleted, id } = this.properties;
 		onRowDeleted(id);
@@ -25,22 +24,23 @@ export class Row extends WidgetBase<RowProperties> {
 	protected render(): DNode {
 		const { id, selected, label } = this.properties;
 
-		return v('tr', {
-				classes: [ selected ? 'danger' : null ]
-			}, [
-				v('td', { classes: [ 'col-md-1' ] }, [ `${id}` ]),
-				v('td', { classes: [ 'col-md-4' ] }, [
-					v('a', { onclick: this._onClick }, [ label ])
-				]),
-				v('td', { classes: [ 'col-md-1' ] }, [
+		return v(
+			'tr',
+			{
+				classes: [selected ? 'danger' : null]
+			},
+			[
+				v('td', { classes: ['col-md-1'] }, [`${id}`]),
+				v('td', { classes: ['col-md-4'] }, [v('a', { onclick: this._onClick }, [label])]),
+				v('td', { classes: ['col-md-1'] }, [
 					v('a', { onclick: this._onDelete }, [
 						v('span', {
 							'aria-hidden': true,
-							classes: [ 'glyphicon', 'glyphicon-remove' ]
+							classes: ['glyphicon', 'glyphicon-remove']
 						})
 					])
 				]),
-				v('td', { classes: [ 'col-md-6' ] })
+				v('td', { classes: ['col-md-6'] })
 			]
 		);
 	}

@@ -13,7 +13,7 @@ interface TestProperties {
 }
 
 registerSuite('decorators/diffProperty', {
-	'decorator': {
+	decorator: {
 		'diff with no reaction'() {
 			let callCount = 0;
 			function diffFoo(previousProperty: any, newProperty: any) {
@@ -46,7 +46,6 @@ registerSuite('decorators/diffProperty', {
 				}
 
 				class TestWidget extends WidgetBase<TestProperties> {
-
 					reactionCalled = false;
 
 					@diffProperty('foo', customDiff)
@@ -71,7 +70,6 @@ registerSuite('decorators/diffProperty', {
 				}
 
 				class TestWidget extends WidgetBase<TestProperties> {
-
 					reactionCalled = false;
 
 					@diffProperty('foo', customDiff)
@@ -174,10 +172,10 @@ registerSuite('decorators/diffProperty', {
 	},
 	'multiple default decorators on the same method cause the first matching decorator to win'() {
 		@diffProperty('foo', ignore)
-		class TestWidget extends WidgetBase<TestProperties> { }
+		class TestWidget extends WidgetBase<TestProperties> {}
 
 		@diffProperty('foo', always)
-		class SubWidget extends TestWidget { }
+		class SubWidget extends TestWidget {}
 
 		const widget = new SubWidget();
 		const renderResult = widget.__render__();
@@ -208,10 +206,10 @@ registerSuite('decorators/diffProperty', {
 		}
 
 		@diffProperty('foo', diff1)
-		class TestWidget extends WidgetBase<TestProperties> { }
+		class TestWidget extends WidgetBase<TestProperties> {}
 
 		@diffProperty('foo', diff2)
-		class SubWidget extends TestWidget { }
+		class SubWidget extends TestWidget {}
 
 		const widget = new SubWidget();
 		widget.__setProperties__({
@@ -233,7 +231,7 @@ registerSuite('decorators/diffProperty', {
 		}
 		@diffProperty('foo', customDiff)
 		@diffProperty('id', customDiff)
-		class TestWidget extends WidgetBase<TestProperties> { }
+		class TestWidget extends WidgetBase<TestProperties> {}
 
 		const widget = new TestWidget();
 		widget.__render__();

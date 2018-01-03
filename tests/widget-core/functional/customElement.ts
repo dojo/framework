@@ -93,9 +93,18 @@ registerSuite('customElement', {
 				.findById('testButton')
 				.end()
 				.execute('document.querySelector("test-button").setAttribute("label", "greetings")')
-				.then(pollUntil(function () {
-					return (<any> document).querySelector('test-button > button').innerHTML === 'greetings world';
-				}, undefined, 1000), undefined);
+				.then(
+					pollUntil(
+						function() {
+							return (
+								(<any>document).querySelector('test-button > button').innerHTML === 'greetings world'
+							);
+						},
+						undefined,
+						1000
+					),
+					undefined
+				);
 		},
 		'setting custom element properties updates widget'() {
 			if (skip) {
@@ -107,9 +116,16 @@ registerSuite('customElement', {
 				.findByCssSelector('no-attributes > button')
 				.end()
 				.execute('document.querySelector("no-attributes").buttonLabel = "greetings"')
-				.then(pollUntil(function () {
-					return (<any> document).querySelector('no-attributes > button').innerHTML === 'greetings';
-				}, undefined, 1000), undefined);
+				.then(
+					pollUntil(
+						function() {
+							return (<any>document).querySelector('no-attributes > button').innerHTML === 'greetings';
+						},
+						undefined,
+						1000
+					),
+					undefined
+				);
 		},
 		'creating elements manually works'() {
 			if (skip) {
@@ -120,9 +136,16 @@ registerSuite('customElement', {
 				.setFindTimeout(1000)
 				.findByCssSelector('#manualButton > button')
 				.end()
-				.then(pollUntil(function () {
-					return (<any> document).querySelector('#manualButton > button').innerHTML === 'manual';
-				}, undefined, 1000), undefined);
+				.then(
+					pollUntil(
+						function() {
+							return (<any>document).querySelector('#manualButton > button').innerHTML === 'manual';
+						},
+						undefined,
+						1000
+					),
+					undefined
+				);
 		},
 		'elements readded to the DOM are only initialized once'() {
 			if (skip) {
@@ -133,9 +156,16 @@ registerSuite('customElement', {
 				.setFindTimeout(1000)
 				.findByCssSelector('#reinitButton > button')
 				.end()
-				.then(pollUntil(function () {
-					return (<any> document).querySelector('#reinitButton > button').innerHTML === 'test';
-				}, undefined, 1000), undefined);
+				.then(
+					pollUntil(
+						function() {
+							return (<any>document).querySelector('#reinitButton > button').innerHTML === 'test';
+						},
+						undefined,
+						1000
+					),
+					undefined
+				);
 		},
 		'declarative children should be wrapped as widgets'() {
 			if (skip) {
@@ -201,6 +231,5 @@ registerSuite('customElement', {
 					}
 				);
 		}
-
 	}
 });

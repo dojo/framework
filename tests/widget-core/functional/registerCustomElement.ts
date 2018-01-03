@@ -8,19 +8,15 @@ function getPage(test: Test) {
 	if ((browser === 'iPhone' && version === '9.1') || (browserName === 'safari' && version === '9.1.3')) {
 		test.skip('not compatible with iOS 9.1 or Safari 9.1');
 	}
-	return test.remote
-		.get('_build/tests/functional/support/registerCustomElement.html')
-		.setFindTimeout(1000);
+	return test.remote.get('_build/tests/functional/support/registerCustomElement.html').setFindTimeout(1000);
 }
 
 registerSuite('registerCustomElement', {
-	beforeEach() {
-	},
+	beforeEach() {},
 
 	tests: {
 		'custom elements are registered'() {
-			return getPage(this)
-				.findById('testButton');
+			return getPage(this).findById('testButton');
 		},
 		'custom element initial properties are set correctly'() {
 			return getPage(this)
@@ -67,34 +63,64 @@ registerSuite('registerCustomElement', {
 				.findById('testButton')
 				.end()
 				.execute('document.querySelector("test-button").setAttribute("label", "greetings")')
-				.then(pollUntil(function () {
-					return (<any> document).querySelector('test-button > button').innerHTML === 'greetings world';
-				}, undefined, 1000), undefined);
+				.then(
+					pollUntil(
+						function() {
+							return (
+								(<any>document).querySelector('test-button > button').innerHTML === 'greetings world'
+							);
+						},
+						undefined,
+						1000
+					),
+					undefined
+				);
 		},
 		'setting custom element properties updates widget'() {
 			return getPage(this)
 				.findByCssSelector('no-attributes > button')
 				.end()
 				.execute('document.querySelector("no-attributes").buttonLabel = "greetings"')
-				.then(pollUntil(function () {
-					return (<any> document).querySelector('no-attributes > button').innerHTML === 'greetings';
-				}, undefined, 1000), undefined);
+				.then(
+					pollUntil(
+						function() {
+							return (<any>document).querySelector('no-attributes > button').innerHTML === 'greetings';
+						},
+						undefined,
+						1000
+					),
+					undefined
+				);
 		},
 		'creating elements manually works'() {
 			return getPage(this)
 				.findByCssSelector('#manualButton > button')
 				.end()
-				.then(pollUntil(function () {
-					return (<any> document).querySelector('#manualButton > button').innerHTML === 'manual';
-				}, undefined, 1000), undefined);
+				.then(
+					pollUntil(
+						function() {
+							return (<any>document).querySelector('#manualButton > button').innerHTML === 'manual';
+						},
+						undefined,
+						1000
+					),
+					undefined
+				);
 		},
 		'elements readded to the DOM are only initialized once'() {
 			return getPage(this)
 				.findByCssSelector('#reinitButton > button')
 				.end()
-				.then(pollUntil(function () {
-					return (<any> document).querySelector('#reinitButton > button').innerHTML === 'test';
-				}, undefined, 1000), undefined);
+				.then(
+					pollUntil(
+						function() {
+							return (<any>document).querySelector('#reinitButton > button').innerHTML === 'test';
+						},
+						undefined,
+						1000
+					),
+					undefined
+				);
 		},
 		'declarative children should be wrapped as widgets'() {
 			return getPage(this)

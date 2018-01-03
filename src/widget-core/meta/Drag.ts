@@ -149,7 +149,7 @@ class DragController {
 	private _nodeMap = new WeakMap<HTMLElement, NodeData>();
 	private _dragging: HTMLElement | undefined = undefined;
 
-	private _getData(target: HTMLElement): { state: NodeData, target: HTMLElement } | undefined {
+	private _getData(target: HTMLElement): { state: NodeData; target: HTMLElement } | undefined {
 		if (this._nodeMap.has(target)) {
 			return { state: this._nodeMap.get(target)!, target };
 		}
@@ -183,7 +183,7 @@ class DragController {
 			state.dragResults.isDragging = true;
 			state.invalidate();
 		} // else, we are ignoring the event
-	}
+	};
 
 	private _onDrag = (event: PointerEvent) => {
 		const { _dragging } = this;
@@ -198,7 +198,7 @@ class DragController {
 			state.dragResults.start = deepAssign({}, state.start);
 		}
 		state.invalidate();
-	}
+	};
 
 	private _onDragStop = (event: PointerEvent) => {
 		const { _dragging } = this;
@@ -215,7 +215,7 @@ class DragController {
 		state.dragResults.isDragging = false;
 		state.invalidate();
 		this._dragging = undefined;
-	}
+	};
 
 	constructor() {
 		const win: Window = global.window;

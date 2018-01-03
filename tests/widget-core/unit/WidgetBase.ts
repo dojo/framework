@@ -60,7 +60,6 @@ function testDecorator(func?: Function) {
 let consoleStub: SinonStub;
 
 describe('WidgetBase', () => {
-
 	beforeEach(() => {
 		consoleStub = stub(console, 'warn');
 	});
@@ -71,7 +70,7 @@ describe('WidgetBase', () => {
 
 	it('default render returns a `div` with the current widgets children', () => {
 		const widget = new BaseTestWidget();
-		widget.__setChildren__([ 'child' ]);
+		widget.__setChildren__(['child']);
 		const renderResult = widget.render() as VNode;
 		assert.strictEqual(renderResult.tag, 'div');
 		assert.deepEqual(renderResult.properties, {});
@@ -100,11 +99,10 @@ describe('WidgetBase', () => {
 	});
 
 	describe('__render__', () => {
-
 		it('returns render result', () => {
 			class TestWidget extends BaseTestWidget {
 				render() {
-					return v('my-app', [ 'child' ]);
+					return v('my-app', ['child']);
 				}
 			}
 			const widget = new TestWidget();
@@ -116,7 +114,6 @@ describe('WidgetBase', () => {
 	});
 
 	describe('__setProperties__', () => {
-
 		it('diffs properties using `auto` strategy by default', () => {
 			const widget = new BaseTestWidget();
 			const invalidateSpy = spy(widget, 'invalidate');
@@ -126,7 +123,7 @@ describe('WidgetBase', () => {
 				foo: 'bar',
 				bar: 'foo'
 			};
-			const quux = [ 1, 2, 3, 4 ];
+			const quux = [1, 2, 3, 4];
 
 			widget.__setProperties__({
 				foo: 'bar',
@@ -137,7 +134,7 @@ describe('WidgetBase', () => {
 			});
 
 			assert.isTrue(invalidateSpy.calledOnce);
-			assert.deepEqual(widget.changedPropertyKeys, [ 'foo', 'bar', 'qux', 'quux' ]);
+			assert.deepEqual(widget.changedPropertyKeys, ['foo', 'bar', 'qux', 'quux']);
 
 			widget.__setProperties__({
 				foo: 'bar',
@@ -148,7 +145,7 @@ describe('WidgetBase', () => {
 			});
 
 			assert.isTrue(invalidateSpy.calledOnce);
-			assert.deepEqual(widget.changedPropertyKeys, [ ]);
+			assert.deepEqual(widget.changedPropertyKeys, []);
 
 			widget.__setProperties__({
 				foo: 'bar',
@@ -158,7 +155,7 @@ describe('WidgetBase', () => {
 			});
 
 			assert.isTrue(invalidateSpy.calledTwice);
-			assert.deepEqual(widget.changedPropertyKeys, [ 'qux' ]);
+			assert.deepEqual(widget.changedPropertyKeys, ['qux']);
 		});
 
 		it('Supports custom diffProperty function', () => {
@@ -175,17 +172,17 @@ describe('WidgetBase', () => {
 
 			widget.__setProperties__({ foobar: 2 });
 			assert.isTrue(invalidateSpy.calledOnce);
-			assert.deepEqual(widget.changedPropertyKeys, [ 'foobar' ]);
+			assert.deepEqual(widget.changedPropertyKeys, ['foobar']);
 			assert.strictEqual(widget.properties.foobar, 2);
 
 			widget.__setProperties__({ foobar: 4 });
 			assert.isTrue(invalidateSpy.calledTwice);
-			assert.deepEqual(widget.changedPropertyKeys, [ 'foobar' ]);
+			assert.deepEqual(widget.changedPropertyKeys, ['foobar']);
 			assert.strictEqual(widget.properties.foobar, 6);
 
-			widget.__setProperties__({ });
+			widget.__setProperties__({});
 			assert.isTrue(invalidateSpy.calledThrice);
-			assert.deepEqual(widget.changedPropertyKeys, [ 'foobar' ]);
+			assert.deepEqual(widget.changedPropertyKeys, ['foobar']);
 			assert.isUndefined(widget.properties.foobar);
 		});
 
@@ -237,9 +234,9 @@ describe('WidgetBase', () => {
 		const invalidateSpy = spy(widget, 'invalidate');
 		widget.__setChildren__([]);
 		assert.isTrue(invalidateSpy.notCalled);
-		widget.__setChildren__([ 'child' ]);
+		widget.__setChildren__(['child']);
 		assert.isTrue(invalidateSpy.calledOnce);
-		widget.__setChildren__([ 'child' ]);
+		widget.__setChildren__(['child']);
 		assert.isTrue(invalidateSpy.calledTwice);
 		widget.__setChildren__([]);
 		assert.isTrue(invalidateSpy.calledThrice);
@@ -355,7 +352,6 @@ describe('WidgetBase', () => {
 	});
 
 	describe('decorators', () => {
-
 		it('returns an empty array for decorators that do not exist', () => {
 			@testDecorator()
 			class TestWidget extends BaseTestWidget {}
@@ -409,7 +405,7 @@ describe('WidgetBase', () => {
 			class TestWidget extends BaseTestWidget {
 				constructor() {
 					super();
-					this.addDecorator('test-decorator', [ () => {}, () => {} ]);
+					this.addDecorator('test-decorator', [() => {}, () => {}]);
 				}
 			}
 

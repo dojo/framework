@@ -59,38 +59,20 @@ export interface AnimationPlayer {
 }
 
 export class WebAnimations extends Base {
-
 	private _animationMap = new Map<string, AnimationPlayer>();
 
 	private _createPlayer(node: HTMLElement, properties: AnimationProperties): Animation {
-		const {
-			effects,
-			timing = {}
-		} = properties;
+		const { effects, timing = {} } = properties;
 
 		const fx = typeof effects === 'function' ? effects() : effects;
 
-		const keyframeEffect = new KeyframeEffect(
-			node,
-			fx,
-			timing as AnimationEffectTiming
-		);
+		const keyframeEffect = new KeyframeEffect(node, fx, timing as AnimationEffectTiming);
 
 		return new Animation(keyframeEffect, global.document.timeline);
 	}
 
 	private _updatePlayer(player: Animation, controls: AnimationControls) {
-		const {
-			play,
-			reverse,
-			cancel,
-			finish,
-			onFinish,
-			onCancel,
-			playbackRate,
-			startTime,
-			currentTime
-		} = controls;
+		const { play, reverse, cancel, finish, onFinish, onCancel, playbackRate, startTime, currentTime } = controls;
 
 		if (playbackRate !== undefined) {
 			player.playbackRate = playbackRate;
@@ -118,8 +100,7 @@ export class WebAnimations extends Base {
 
 		if (play) {
 			player.play();
-		}
-		else {
+		} else {
 			player.pause();
 		}
 
@@ -137,7 +118,7 @@ export class WebAnimations extends Base {
 
 		if (node) {
 			if (!Array.isArray(animateProperties)) {
-				animateProperties = [ animateProperties ];
+				animateProperties = [animateProperties];
 			}
 			animateProperties.forEach((properties) => {
 				properties = typeof properties === 'function' ? properties() : properties;
@@ -145,7 +126,6 @@ export class WebAnimations extends Base {
 				if (properties) {
 					const { id } = properties;
 					if (!this._animationMap.has(id)) {
-
 						this._animationMap.set(id, {
 							player: this._createPlayer(node, properties),
 							used: true
@@ -171,12 +151,7 @@ export class WebAnimations extends Base {
 	get(id: string): Readonly<AnimationInfo> | undefined {
 		const animation = this._animationMap.get(id);
 		if (animation) {
-			const {
-				currentTime,
-				playState,
-				playbackRate,
-				startTime
-			} = animation.player;
+			const { currentTime, playState, playbackRate, startTime } = animation.player;
 
 			return {
 				currentTime,

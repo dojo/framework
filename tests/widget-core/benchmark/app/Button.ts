@@ -12,12 +12,16 @@ export class Button extends WidgetBase<ButtonProperties> {
 	protected render(): DNode {
 		const { id, label, onClick } = this.properties;
 
-		return v('div', { classes: [ 'col-sm-6', 'smallpad' ] }, [
-			v('button', {
-				id,
-				classes: [ 'btn', 'btn-primary', 'btn-block' ],
-				onclick: onClick
-			}, [ label ])
+		return v('div', { classes: ['col-sm-6', 'smallpad'] }, [
+			v(
+				'button',
+				{
+					id,
+					classes: ['btn', 'btn-primary', 'btn-block'],
+					onclick: onClick
+				},
+				[label]
+			)
 		]);
 	}
 }

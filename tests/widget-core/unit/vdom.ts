@@ -39,22 +39,20 @@ class MainBar extends WidgetBase<any> {
 class MainFoo extends WidgetBase<any> {
 	render() {
 		const { show } = this.properties;
-		return v('div', { classes: [ 'myClass' ], foo: 'bar' }, [
-			v('h1', { classes: [ 'myClass' ], key: 'one' }, [ 'Hello Widget' ]),
-			show ? w(MainBar, { classes: [ 'myClass' ], key: 'first' }) : null,
+		return v('div', { classes: ['myClass'], foo: 'bar' }, [
+			v('h1', { classes: ['myClass'], key: 'one' }, ['Hello Widget']),
+			show ? w(MainBar, { classes: ['myClass'], key: 'first' }) : null,
 			show ? w(MainBar, { key: 'second' }) : null,
 			show ? null : v('div', { key: 'three' }, ['me']),
 			`text node`,
-			v('h1', { key: 'two', classes: [ 'myClass' ], innerHTML: 'span' })
+			v('h1', { key: 'two', classes: ['myClass'], innerHTML: 'span' })
 		]);
 	}
 }
 
 class TestWidget extends WidgetBase<any> {
 	render() {
-		return v('span', { classes: [ 'myClass' ] }, [
-			w(MainFoo, { show: this.properties.show })
-		]);
+		return v('span', { classes: ['myClass'] }, [w(MainFoo, { show: this.properties.show })]);
 	}
 }
 
@@ -76,7 +74,6 @@ describe('vdom', () => {
 	});
 
 	describe('widgets', () => {
-
 		it('should create elements for widgets', () => {
 			const widget = new TestWidget();
 			widget.__setCoreProperties__({ bind: widget } as any);
@@ -208,32 +205,24 @@ describe('vdom', () => {
 				}
 
 				render() {
-					return v('div', { onclick: this._onClick }, [ `${this._id}` ]);
+					return v('div', { onclick: this._onClick }, [`${this._id}`]);
 				}
 			}
 
 			class Bar extends WidgetBase {
 				render() {
-					return v('div', [
-						w(Foo, { key: '1' }),
-						w(Foo, { key: '2' })
-					]);
+					return v('div', [w(Foo, { key: '1' }), w(Foo, { key: '2' })]);
 				}
 			}
 
 			class Baz extends WidgetBase {
 				render() {
-					return v('div', [
-						w(Bar, {})
-					]);
+					return v('div', [w(Bar, {})]);
 				}
 			}
 
 			const widget = new Baz();
-			const projection = dom.create(
-				widget.__render__() as VNode,
-				widget
-			);
+			const projection = dom.create(widget.__render__() as VNode, widget);
 
 			const root = (projection.domNode.childNodes[0] as Element) as HTMLElement;
 			assert.lengthOf(root.childNodes, 1);
@@ -303,7 +292,6 @@ describe('vdom', () => {
 				}
 			}
 			class App extends WidgetBase {
-
 				public onClickCount = 0;
 
 				_onClick() {
@@ -324,14 +312,15 @@ describe('vdom', () => {
 			}
 
 			const widget = new App();
-			const projection: any = dom.create(
-				widget.__render__() as VNode,
-				widget
-			);
+			const projection: any = dom.create(widget.__render__() as VNode, widget);
 			sendEvent(projection.domNode.childNodes[0], 'click', { eventInit: { bubbles: false } });
 			sendEvent(projection.domNode.childNodes[0].childNodes[0], 'click', { eventInit: { bubbles: false } });
-			sendEvent(projection.domNode.childNodes[0].childNodes[0].childNodes[0], 'click', { eventInit: { bubbles: false } });
-			sendEvent(projection.domNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0], 'click', { eventInit: { bubbles: false } });
+			sendEvent(projection.domNode.childNodes[0].childNodes[0].childNodes[0], 'click', {
+				eventInit: { bubbles: false }
+			});
+			sendEvent(projection.domNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0], 'click', {
+				eventInit: { bubbles: false }
+			});
 			assert.strictEqual(widget.onClickCount, 4);
 		});
 
@@ -340,12 +329,12 @@ describe('vdom', () => {
 
 			class Foo extends WidgetBase<any> {
 				render() {
-					return v('h1', [ this.properties.text ]);
+					return v('h1', [this.properties.text]);
 				}
 			}
 			class Bar extends WidgetBase<any> {
 				render() {
-					return v('h2', [ this.properties.text ]);
+					return v('h2', [this.properties.text]);
 				}
 			}
 
@@ -353,17 +342,14 @@ describe('vdom', () => {
 			baseRegistry.define('bar', Bar);
 			class Baz extends WidgetBase {
 				render() {
-					return v('div', [
-						w<Foo>('foo', { text: 'foo' }),
-						w<Bar>('bar', { text: 'bar' })
-					]);
+					return v('div', [w<Foo>('foo', { text: 'foo' }), w<Bar>('bar', { text: 'bar' })]);
 				}
 			}
 
 			const widget = new Baz();
 			widget.__setCoreProperties__({ bind: widget, baseRegistry });
 			const projection: any = dom.create(widget.__render__() as VNode, widget);
-			const root = (projection.domNode.childNodes[0] as Element);
+			const root = projection.domNode.childNodes[0] as Element;
 			const headerOne = root.childNodes[0];
 			const headerOneText = headerOne.childNodes[0] as Text;
 			const headerTwo = root.childNodes[1];
@@ -377,28 +363,25 @@ describe('vdom', () => {
 
 			class Foo extends WidgetBase<any> {
 				render() {
-					return v('h1', [ this.properties.text ]);
+					return v('h1', [this.properties.text]);
 				}
 			}
 			class Bar extends WidgetBase<any> {
 				render() {
-					return v('h2', [ this.properties.text ]);
+					return v('h2', [this.properties.text]);
 				}
 			}
 
 			class Baz extends WidgetBase {
 				render() {
-					return v('div', [
-						w<Foo>('foo', { text: 'foo' }),
-						w<Bar>('bar', { text: 'bar' })
-					]);
+					return v('div', [w<Foo>('foo', { text: 'foo' }), w<Bar>('bar', { text: 'bar' })]);
 				}
 			}
 
 			const widget = new Baz();
 			widget.__setCoreProperties__({ bind: widget, baseRegistry });
 			const projection: any = dom.create(widget.__render__() as VNode, widget);
-			const root = (projection.domNode.childNodes[0] as Element);
+			const root = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 0);
 			baseRegistry.define('foo', Foo);
 			baseRegistry.define('bar', Bar);
@@ -417,28 +400,26 @@ describe('vdom', () => {
 
 				render() {
 					this.myClass = !this.myClass;
-					const classes = this.myClass ? [ 'myClass' ] : [];
+					const classes = this.myClass ? ['myClass'] : [];
 
 					return [
-						v('div', { classes }, [ '1' ]),
-						v('div', {}, [ '2' ]),
-						v('div', { classes: [ 'myClass' ] }, [ '3' ])
+						v('div', { classes }, ['1']),
+						v('div', {}, ['2']),
+						v('div', { classes: ['myClass'] }, ['3'])
 					];
 				}
 			}
 
 			class Bar extends WidgetBase {
 				render() {
-					return v('div', [
-						w(Foo, {})
-					]);
+					return v('div', [w(Foo, {})]);
 				}
 			}
 
 			const widget = new Bar();
 			const renderResult = widget.__render__() as VNode;
 			const projection: any = dom.create(renderResult, widget);
-			const root = (projection.domNode.childNodes[0] as Element);
+			const root = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 3);
 			const childOne = root.childNodes[0];
 			assert.lengthOf(childOne.childNodes, 1);
@@ -476,23 +457,19 @@ describe('vdom', () => {
 
 			class Baz extends WidgetBase {
 				render() {
-					return v('div', [
-						w(Foo, {}),
-						w(Bar, {})
-					]);
+					return v('div', [w(Foo, {}), w(Bar, {})]);
 				}
 			}
 
 			const widget = new Baz();
 			const projection: any = dom.create(widget.__render__() as VNode, widget);
-			const root = (projection.domNode.childNodes[0] as Element);
+			const root = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 0);
 		});
 
 		it('supports null return from render and subsequent return on re-render', () => {
 			let fooInvalidate: any;
 			class Foo extends WidgetBase<any> {
-
 				private myClass = false;
 
 				constructor() {
@@ -501,20 +478,16 @@ describe('vdom', () => {
 				}
 
 				render() {
-
 					if (!this.properties.show) {
 						return null;
 					}
 					this.myClass = !this.myClass;
-					const classes = this.myClass ? [ 'myClass' ] : [];
-					return v('div', { key: '1', classes }, [
-						'content'
-					]);
+					const classes = this.myClass ? ['myClass'] : [];
+					return v('div', { key: '1', classes }, ['content']);
 				}
 			}
 
 			class Baz extends WidgetBase {
-
 				private _show = false;
 
 				set show(value: boolean) {
@@ -523,15 +496,13 @@ describe('vdom', () => {
 				}
 
 				render() {
-					return v('div', [
-						w(Foo, { show: this._show })
-					]);
+					return v('div', [w(Foo, { show: this._show })]);
 				}
 			}
 
 			const widget = new Baz();
 			const projection: any = dom.create(widget.__render__() as VNode, widget);
-			const root = (projection.domNode.childNodes[0] as Element);
+			const root = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 0);
 			widget.show = true;
 			projection.update(widget.__render__() as VNode);
@@ -550,13 +521,13 @@ describe('vdom', () => {
 		it('Should insert nodes at correct position the previous widget returned null', () => {
 			class Foo extends WidgetBase {
 				render() {
-					return v('div', [ 'foo' ]);
+					return v('div', ['foo']);
 				}
 			}
 
 			class Bar extends WidgetBase {
 				render() {
-					return v('div', [ 'bar' ]);
+					return v('div', ['bar']);
 				}
 			}
 
@@ -564,10 +535,10 @@ describe('vdom', () => {
 				render() {
 					const { widget = 'default' } = this.properties;
 					return v('div', [
-						v('div', [ 'first' ]),
+						v('div', ['first']),
 						w(widget, {}),
 						w(widget, {}),
-						v('div', [ 'second' ]),
+						v('div', ['second']),
 						w(widget, {})
 					]);
 				}
@@ -614,10 +585,9 @@ describe('vdom', () => {
 		});
 
 		it('should allow a widget returned from render', () => {
-
 			class Bar extends WidgetBase<any> {
 				render() {
-					return v('div', [ `Hello, ${this.properties.foo}!` ]);
+					return v('div', [`Hello, ${this.properties.foo}!`]);
 				}
 			}
 
@@ -643,11 +613,7 @@ describe('vdom', () => {
 		it('should create nodes for an array returned from the top level via a widget', () => {
 			class Foo extends WidgetBase {
 				render() {
-					return [
-						v('div', [ '1' ]),
-						v('div', [ '2' ]),
-						v('div', [ '3' ])
-					];
+					return [v('div', ['1']), v('div', ['2']), v('div', ['3'])];
 				}
 			}
 
@@ -674,11 +640,9 @@ describe('vdom', () => {
 				private _array = false;
 				render() {
 					this._array = !this._array;
-					return this._array ? [
-						v('div', { key: '1' }, [ '1' ]),
-						v('div', { key: '2' }, [ '2' ]),
-						v('div', { key: '3' }, [ '3' ])
-					] : v('div', { key: '1' }, [ '2' ]);
+					return this._array
+						? [v('div', { key: '1' }, ['1']), v('div', { key: '2' }, ['2']), v('div', { key: '3' }, ['3'])]
+						: v('div', { key: '1' }, ['2']);
 				}
 			}
 
@@ -702,11 +666,7 @@ describe('vdom', () => {
 		it('should append nodes for an array returned from the top level', () => {
 			class Foo extends WidgetBase {
 				render() {
-					return [
-						v('div', [ '1' ]),
-						v('div', [ '2' ]),
-						v('div', [ '3' ])
-					];
+					return [v('div', ['1']), v('div', ['2']), v('div', ['3'])];
 				}
 			}
 
@@ -726,11 +686,7 @@ describe('vdom', () => {
 		it('should append nodes for an array returned from the top level via a widget', () => {
 			class Foo extends WidgetBase {
 				render() {
-					return [
-						v('div', [ '1' ]),
-						v('div', [ '2' ]),
-						v('div', [ '3' ])
-					];
+					return [v('div', ['1']), v('div', ['2']), v('div', ['3'])];
 				}
 			}
 
@@ -767,15 +723,12 @@ describe('vdom', () => {
 
 			class Bar extends WidgetBase<any> {
 				render() {
-					return v('div', [ this.properties.selected ? 'selected' : 'not selected' ]);
+					return v('div', [this.properties.selected ? 'selected' : 'not selected']);
 				}
 			}
 
 			const widget = new Foo();
-			widget.__setChildren__([
-				w(Bar, { key: '1' }),
-				w(Bar, { key: '2' })
-			]);
+			widget.__setChildren__([w(Bar, { key: '1' }), w(Bar, { key: '2' })]);
 			widget.__setProperties__({ selected: 0 });
 			const projection = dom.create(widget.__render__(), widget);
 			const root = projection.domNode.childNodes[0];
@@ -795,44 +748,43 @@ describe('vdom', () => {
 		it('should throw an error when attempting to merge an array of node', () => {
 			class Foo extends WidgetBase {
 				render() {
-					return [
-						v('div', [ '1' ]),
-						v('div', [ '2' ]),
-						v('div', [ '3' ])
-					];
+					return [v('div', ['1']), v('div', ['2']), v('div', ['3'])];
 				}
 			}
 
 			const div = document.createElement('div');
 			const widget = new Foo();
-			assert.throws(() => {
-				dom.merge(div, widget.__render__() as VNode, widget);
-			}, Error, 'Unable to merge an array of nodes. (consider adding one extra level to the virtual DOM)');
+			assert.throws(
+				() => {
+					dom.merge(div, widget.__render__() as VNode, widget);
+				},
+				Error,
+				'Unable to merge an array of nodes. (consider adding one extra level to the virtual DOM)'
+			);
 		});
 
 		it('should throw an error when attempting to replace with an array of node', () => {
 			class Foo extends WidgetBase {
 				render() {
-					return [
-						v('div', [ '1' ]),
-						v('div', [ '2' ]),
-						v('div', [ '3' ])
-					];
+					return [v('div', ['1']), v('div', ['2']), v('div', ['3'])];
 				}
 			}
 
 			const div = document.createElement('div');
 			const widget = new Foo();
-			assert.throws(() => {
-				dom.replace(div, widget.__render__() as VNode, widget);
-			}, Error, 'Unable to replace a node with an array of nodes. (consider adding one extra level to the virtual DOM)');
+			assert.throws(
+				() => {
+					dom.replace(div, widget.__render__() as VNode, widget);
+				},
+				Error,
+				'Unable to replace a node with an array of nodes. (consider adding one extra level to the virtual DOM)'
+			);
 		});
 
 		it('removes existing widget and uses new widget when widget changes', () => {
 			let fooCreated = false;
 			let barCreatedCount = 0;
 			class Foo extends WidgetBase {
-
 				constructor() {
 					super();
 					fooCreated = true;
@@ -927,12 +879,7 @@ describe('vdom', () => {
 				}
 
 				render() {
-					return [
-						w(Qux, {}),
-						v('div', [
-							w(Qux, {})
-						])
-					];
+					return [w(Qux, {}), v('div', [w(Qux, {})])];
 				}
 			}
 
@@ -946,9 +893,7 @@ describe('vdom', () => {
 				}
 			}
 
-			class FooBar extends WidgetBase {
-
-			}
+			class FooBar extends WidgetBase {}
 
 			class Baz extends WidgetBase {
 				private _foo = false;
@@ -1071,15 +1016,13 @@ describe('vdom', () => {
 				}
 
 				render() {
-					return v('div', [
-						this._show ? w(Bar, {}) : null
-					]);
+					return v('div', [this._show ? w(Bar, {}) : null]);
 				}
 			}
 
 			const widget = new Baz();
 			const projection = dom.create(widget.__render__() as VNode, widget);
-			const root = (projection.domNode.childNodes[0] as Element);
+			const root = projection.domNode.childNodes[0] as Element;
 			const fooDiv = root.childNodes[0] as HTMLDivElement;
 			assert.strictEqual(fooDiv.getAttribute('id'), 'foo');
 			widget.show = false;
@@ -1090,12 +1033,11 @@ describe('vdom', () => {
 		it('should warn in the console for siblings for the same widgets with no key when added or removed', () => {
 			class Foo extends WidgetBase<any> {
 				render() {
-					return v('div', [ this.properties.text ]);
+					return v('div', [this.properties.text]);
 				}
 			}
 
 			class Baz extends WidgetBase {
-
 				show = false;
 
 				render() {
@@ -1103,9 +1045,7 @@ describe('vdom', () => {
 						w(Foo, { text: '1' }),
 						this.show ? w(Foo, { text: '2' }) : null,
 						w(Foo, { text: '3' }),
-						v('div', [
-							w(Foo, { text: '4' })
-						])
+						v('div', [w(Foo, { text: '4' })])
 					]);
 				}
 			}
@@ -1127,11 +1067,12 @@ describe('vdom', () => {
 		});
 
 		describe('supports merging with a widget returned a the top level', () => {
-
 			it('Supports merging DNodes onto existing HTML', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
-				iframe.contentDocument.write(`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button></div>`);
+				iframe.contentDocument.write(
+					`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button></div>`
+				);
 				iframe.contentDocument.close();
 				const root = iframe.contentDocument.body.firstChild as HTMLElement;
 				const childElementCount = root.childElementCount;
@@ -1141,28 +1082,44 @@ describe('vdom', () => {
 				const onclickListener = spy();
 				class Foo extends WidgetBase {
 					render() {
-						return v('div', {
-							classes: [ 'foo', 'bar' ]
-						}, [
-							v('label', {
-								for: 'baz'
-							}, [ 'Select Me:' ]),
-							v('select', {
-								type: 'text',
-								name: 'baz',
-								id: 'baz',
-								disabled: false
-							}, [
-								v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
-								v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
-								v('option', { value: 'baz', selected: false }, [ 'label baz' ])
-							]),
-							v('button', {
-								type: 'button',
-								disabled: false,
-								onclick: onclickListener
-							}, [ 'Click Me!' ])
-						]);
+						return v(
+							'div',
+							{
+								classes: ['foo', 'bar']
+							},
+							[
+								v(
+									'label',
+									{
+										for: 'baz'
+									},
+									['Select Me:']
+								),
+								v(
+									'select',
+									{
+										type: 'text',
+										name: 'baz',
+										id: 'baz',
+										disabled: false
+									},
+									[
+										v('option', { value: 'foo', selected: true }, ['label foo']),
+										v('option', { value: 'bar', selected: false }, ['label bar']),
+										v('option', { value: 'baz', selected: false }, ['label baz'])
+									]
+								),
+								v(
+									'button',
+									{
+										type: 'button',
+										disabled: false,
+										onclick: onclickListener
+									},
+									['Click Me!']
+								)
+							]
+						);
 					}
 				}
 
@@ -1174,7 +1131,11 @@ describe('vdom', () => {
 				const widget = new Bar();
 				dom.merge(root, widget.__render__() as VNode, widget);
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
-				assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
+				assert.strictEqual(
+					root.childElementCount,
+					childElementCount,
+					'should have the same number of children'
+				);
 				assert.strictEqual(select, root.childNodes[1], 'should have been reused');
 				assert.strictEqual(button, root.childNodes[2], 'should have been reused');
 				assert.isFalse(select.disabled, 'select should be enabled');
@@ -1196,7 +1157,9 @@ describe('vdom', () => {
 			it('Supports merging DNodes with widgets onto existing HTML', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
-				iframe.contentDocument.write(`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button><span>label</span><div>last node</div></div>`);
+				iframe.contentDocument.write(
+					`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button><span>label</span><div>last node</div></div>`
+				);
 				iframe.contentDocument.close();
 				const root = iframe.contentDocument.body.firstChild as HTMLElement;
 				const childElementCount = root.childElementCount;
@@ -1211,32 +1174,44 @@ describe('vdom', () => {
 				class Button extends WidgetBase {
 					render() {
 						return [
-							v('button', { type: 'button', disabled: false, onclick: onclickListener }, [ 'Click Me!' ]),
-							v('span', {}, [ 'label' ])
+							v('button', { type: 'button', disabled: false, onclick: onclickListener }, ['Click Me!']),
+							v('span', {}, ['label'])
 						];
 					}
 				}
 				class Foo extends WidgetBase {
 					render() {
-						return v('div', {
-							classes: [ 'foo', 'bar' ]
-						}, [
-							v('label', {
-								for: 'baz'
-							}, [ 'Select Me:' ]),
-							v('select', {
-								type: 'text',
-								name: 'baz',
-								id: 'baz',
-								disabled: false
-							}, [
-								v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
-								v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
-								v('option', { value: 'baz', selected: false }, [ 'label baz' ])
-							]),
-							w(Button, {}),
-							v('div', [ 'last node'])
-						]);
+						return v(
+							'div',
+							{
+								classes: ['foo', 'bar']
+							},
+							[
+								v(
+									'label',
+									{
+										for: 'baz'
+									},
+									['Select Me:']
+								),
+								v(
+									'select',
+									{
+										type: 'text',
+										name: 'baz',
+										id: 'baz',
+										disabled: false
+									},
+									[
+										v('option', { value: 'foo', selected: true }, ['label foo']),
+										v('option', { value: 'bar', selected: false }, ['label bar']),
+										v('option', { value: 'baz', selected: false }, ['label baz'])
+									]
+								),
+								w(Button, {}),
+								v('div', ['last node'])
+							]
+						);
 					}
 				}
 				class Bar extends WidgetBase {
@@ -1247,7 +1222,11 @@ describe('vdom', () => {
 				const widget = new Bar();
 				dom.merge(root, widget.__render__() as VNode, widget);
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
-				assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
+				assert.strictEqual(
+					root.childElementCount,
+					childElementCount,
+					'should have the same number of children'
+				);
 				assert.strictEqual(label, root.childNodes[0], 'should have been reused');
 				assert.strictEqual(select, root.childNodes[1], 'should have been reused');
 				assert.strictEqual(button, root.childNodes[2], 'should have been reused');
@@ -1298,32 +1277,44 @@ describe('vdom', () => {
 				class Button extends WidgetBase {
 					render() {
 						return [
-							v('button', { type: 'button', disabled: false, onclick: onclickListener }, [ 'Click Me!' ]),
-							v('span', {}, [ 'label' ])
+							v('button', { type: 'button', disabled: false, onclick: onclickListener }, ['Click Me!']),
+							v('span', {}, ['label'])
 						];
 					}
 				}
 				class Foo extends WidgetBase {
 					render() {
-						return v('div', {
-							classes: [ 'foo', 'bar' ]
-						}, [
-							v('label', {
-								for: 'baz'
-							}, [ 'Select Me:' ]),
-							v('select', {
-								type: 'text',
-								name: 'baz',
-								id: 'baz',
-								disabled: false
-							}, [
-								v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
-								v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
-								v('option', { value: 'baz', selected: false }, [ 'label baz' ])
-							]),
-							w(Button, {}),
-							v('div', [ 'last node'])
-						]);
+						return v(
+							'div',
+							{
+								classes: ['foo', 'bar']
+							},
+							[
+								v(
+									'label',
+									{
+										for: 'baz'
+									},
+									['Select Me:']
+								),
+								v(
+									'select',
+									{
+										type: 'text',
+										name: 'baz',
+										id: 'baz',
+										disabled: false
+									},
+									[
+										v('option', { value: 'foo', selected: true }, ['label foo']),
+										v('option', { value: 'bar', selected: false }, ['label bar']),
+										v('option', { value: 'baz', selected: false }, ['label baz'])
+									]
+								),
+								w(Button, {}),
+								v('div', ['last node'])
+							]
+						);
 					}
 				}
 				class Bar extends WidgetBase {
@@ -1334,7 +1325,11 @@ describe('vdom', () => {
 				const widget = new Bar();
 				dom.merge(root, widget.__render__() as VNode, widget);
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
-				assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
+				assert.strictEqual(
+					root.childElementCount,
+					childElementCount,
+					'should have the same number of children'
+				);
 				assert.strictEqual(label, root.childNodes[1], 'should have been reused');
 				assert.strictEqual(select, root.childNodes[3], 'should have been reused');
 				assert.strictEqual(button, root.childNodes[5], 'should have been reused');
@@ -1355,43 +1350,43 @@ describe('vdom', () => {
 
 				document.body.removeChild(iframe);
 			});
-
 		});
-
 	});
 
 	describe('create', () => {
-
 		it('should create and update single text nodes', () => {
-			const projection = dom.create(v('div', [ 'text' ]), projectorStub);
+			const projection = dom.create(v('div', ['text']), projectorStub);
 			assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div>text</div>');
 
-			projection.update(v('div', [ 'text2' ]));
+			projection.update(v('div', ['text2']));
 			assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div>text2</div>');
 
-			projection.update(v('div', [ 'text2', v('span', [ 'a' ]) ]));
-			assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div>text2<span>a</span></div>');
+			projection.update(v('div', ['text2', v('span', ['a'])]));
+			assert.strictEqual(
+				(projection.domNode.childNodes[0] as Element).outerHTML,
+				'<div>text2<span>a</span></div>'
+			);
 
-			projection.update(v('div', [ 'text2' ]));
+			projection.update(v('div', ['text2']));
 			assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div>text2</div>');
 
-			projection.update(v('div', [ 'text' ]));
+			projection.update(v('div', ['text']));
 			assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div>text</div>');
 		});
 
 		it('should work correctly with adjacent text nodes', () => {
-			const projection = dom.create(v('div', [ '', '1', '' ]), projectorStub);
+			const projection = dom.create(v('div', ['', '1', '']), projectorStub);
 			assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div>1</div>');
 
-			projection.update(v('div', [ ' ', '' ]));
+			projection.update(v('div', [' ', '']));
 			assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div> </div>');
 
-			projection.update(v('div', [ '', '1', '' ]));
+			projection.update(v('div', ['', '1', '']));
 			assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div>1</div>');
 		});
 
 		it('should break update when vdom object references are equal', () => {
-			const vNode = v('div', [ 'text' ]);
+			const vNode = v('div', ['text']);
 			const projection = dom.create(vNode, projectorStub);
 			assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div>text</div>');
 			vNode.text = 'new';
@@ -1416,7 +1411,7 @@ describe('vdom', () => {
 
 			const childVNode = v('span', { id: 'b' }) as InternalVNode;
 			childVNode.domNode = childNode;
-			const vNode = v('div', { id: 'a' }, [ childVNode ]) as InternalVNode;
+			const vNode = v('div', { id: 'a' }, [childVNode]) as InternalVNode;
 			vNode.domNode = node;
 
 			const projection = dom.create(vNode, projectorStub);
@@ -1426,11 +1421,9 @@ describe('vdom', () => {
 			assert.strictEqual(root.children[0].bar, 'bar');
 			assert.isFalse(appendChildSpy.called);
 		});
-
 	});
 
 	describe('properties', () => {
-
 		it('updates attributes', () => {
 			const projection = dom.create(v('a', { href: '#1' }), projectorStub);
 			const link = (projection.domNode.childNodes[0] as Element) as HTMLLinkElement;
@@ -1484,7 +1477,7 @@ describe('vdom', () => {
 
 		it('updates innerHTML', () => {
 			const projection = dom.create(v('p', { innerHTML: '<span>INNER</span>' }), projectorStub);
-			const paragraph = (projection.domNode.childNodes[0] as Element);
+			const paragraph = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(paragraph.childNodes, 1);
 			assert.strictEqual(paragraph.childNodes[0].textContent, 'INNER');
 			projection.update(v('p', { innerHTML: '<span>UPDATED</span>' }));
@@ -1503,27 +1496,26 @@ describe('vdom', () => {
 		});
 
 		describe('classes', () => {
-
 			it('adds and removes classes', () => {
-				const projection = dom.create(v('div', { classes: [ 'a' ] }), projectorStub);
+				const projection = dom.create(v('div', { classes: ['a'] }), projectorStub);
 				const div = (projection.domNode.childNodes[0] as Element) as HTMLDivElement;
 				assert.strictEqual(div.className, 'a');
-				projection.update(v('div', { classes: [ 'a', 'b' ] }));
+				projection.update(v('div', { classes: ['a', 'b'] }));
 				assert.strictEqual(div.className, 'a b');
 
-				projection.update(v('div', { classes: [ 'b' ] }));
+				projection.update(v('div', { classes: ['b'] }));
 				assert.strictEqual(div.className, 'b');
 			});
 
 			it('should leave classes that are not controlled', () => {
 				const div = document.createElement('div');
 				div.className = 'c b';
-				const projection = dom.merge(div, v('div', { classes: [ 'a' ] }), projectorStub);
+				const projection = dom.merge(div, v('div', { classes: ['a'] }), projectorStub);
 				assert.strictEqual(div.className, 'c b a');
-				projection.update(v('div', { classes: [ 'a', 'b' ] }));
+				projection.update(v('div', { classes: ['a', 'b'] }));
 				assert.strictEqual(div.className, 'c b a');
 
-				projection.update(v('div', { classes: [ 'b' ] }));
+				projection.update(v('div', { classes: ['b'] }));
 				assert.strictEqual(div.className, 'c b');
 
 				projection.update(v('div'));
@@ -1533,16 +1525,16 @@ describe('vdom', () => {
 			it('supports null, undefined and zero length strings in classes', () => {
 				const div = document.createElement('div');
 				div.className = 'b';
-				const projection = dom.merge(div, v('div', { classes: [ 'b', null, null, null ] }), projectorStub);
+				const projection = dom.merge(div, v('div', { classes: ['b', null, null, null] }), projectorStub);
 				assert.strictEqual(div.className, 'b');
-				projection.update(v('div', { classes: [ 'a' , null, undefined, '' ] }));
+				projection.update(v('div', { classes: ['a', null, undefined, ''] }));
 				assert.strictEqual(div.className, 'a');
 
-				projection.update(v('div', { classes: [ 'a', null, undefined, '' ] }));
+				projection.update(v('div', { classes: ['a', null, undefined, ''] }));
 				assert.strictEqual(div.className, 'a');
 				projection.update(v('div', { classes: [] }));
 				assert.strictEqual(div.className, '');
-				projection.update(v('div', { classes: [ 'a', null, undefined, '' ] }));
+				projection.update(v('div', { classes: ['a', null, undefined, ''] }));
 				assert.strictEqual(div.className, 'a');
 				projection.update(v('div'));
 				assert.strictEqual(div.className, '');
@@ -1573,7 +1565,7 @@ describe('vdom', () => {
 				projection.update(v('div'));
 				assert.strictEqual(div.className, '');
 
-				projection.update(v('div', { classes: [ 'a b' ] }));
+				projection.update(v('div', { classes: ['a b'] }));
 				assert.strictEqual(div.className, 'a b');
 				projection.update(v('div'));
 				assert.strictEqual(div.className, '');
@@ -1594,7 +1586,6 @@ describe('vdom', () => {
 		});
 
 		describe('styles', () => {
-
 			it('should not allow non-string values', () => {
 				try {
 					dom.create(v('div', { styles: { height: 20 as any } }), projectorStub);
@@ -1606,25 +1597,37 @@ describe('vdom', () => {
 
 			it('should add styles to the real DOM', () => {
 				const projection = dom.create(v('div', { styles: { height: '20px' } }), projectorStub);
-				assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div style="height: 20px;"></div>');
+				assert.strictEqual(
+					(projection.domNode.childNodes[0] as Element).outerHTML,
+					'<div style="height: 20px;"></div>'
+				);
 			});
 
 			it('should update styles', () => {
 				const projection = dom.create(v('div', { styles: { height: '20px' } }), projectorStub);
 				projection.update(v('div', { styles: { height: '30px' } }));
-				assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div style="height: 30px;"></div>');
+				assert.strictEqual(
+					(projection.domNode.childNodes[0] as Element).outerHTML,
+					'<div style="height: 30px;"></div>'
+				);
 			});
 
 			it('should remove styles', () => {
 				const projection = dom.create(v('div', { styles: { width: '30px', height: '20px' } }), projectorStub);
 				projection.update(v('div', { styles: { height: null, width: '30px' } }));
-				assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div style="width: 30px;"></div>');
+				assert.strictEqual(
+					(projection.domNode.childNodes[0] as Element).outerHTML,
+					'<div style="width: 30px;"></div>'
+				);
 			});
 
 			it('should add styles', () => {
 				const projection = dom.create(v('div', { styles: { height: undefined } }), projectorStub);
 				projection.update(v('div', { styles: { height: '20px' } }));
-				assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div style="height: 20px;"></div>');
+				assert.strictEqual(
+					(projection.domNode.childNodes[0] as Element).outerHTML,
+					'<div style="height: 20px;"></div>'
+				);
 				projection.update(v('div', { styles: { height: '20px' } }));
 			});
 
@@ -1633,12 +1636,19 @@ describe('vdom', () => {
 					// Useless styleApplyer which transforms height to minHeight
 					domNode.style['min' + styleName.substr(0, 1).toUpperCase() + styleName.substr(1)] = value;
 				};
-				const projection = dom.create(v('div', { styles: { height: '20px' } }), projectorStub, { styleApplyer: styleApplyer });
-				assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div style="min-height: 20px;"></div>');
+				const projection = dom.create(v('div', { styles: { height: '20px' } }), projectorStub, {
+					styleApplyer: styleApplyer
+				});
+				assert.strictEqual(
+					(projection.domNode.childNodes[0] as Element).outerHTML,
+					'<div style="min-height: 20px;"></div>'
+				);
 				projection.update(v('div', { styles: { height: '30px' } }));
-				assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div style="min-height: 30px;"></div>');
+				assert.strictEqual(
+					(projection.domNode.childNodes[0] as Element).outerHTML,
+					'<div style="min-height: 30px;"></div>'
+				);
 			});
-
 		});
 
 		it('updates the value property', () => {
@@ -1649,7 +1659,7 @@ describe('vdom', () => {
 
 			const renderFunction = () => v('input', { value: typedKeys, oninput: handleInput });
 			const projection = dom.create(renderFunction(), projectorStub);
-			const inputElement = ((projection.domNode.childNodes[0] as Element) as HTMLInputElement);
+			const inputElement = (projection.domNode.childNodes[0] as Element) as HTMLInputElement;
 			assert.strictEqual(inputElement.value, typedKeys);
 			typedKeys = 'value1';
 			projection.update(renderFunction());
@@ -1665,7 +1675,7 @@ describe('vdom', () => {
 			const renderFunction = () => v('input', { value: typedKeys, oninput: handleInput });
 
 			const projection = dom.create(renderFunction(), projectorStub);
-			const inputElement = ((projection.domNode.childNodes[0] as Element) as HTMLInputElement);
+			const inputElement = (projection.domNode.childNodes[0] as Element) as HTMLInputElement;
 			assert.strictEqual(inputElement.value, typedKeys);
 
 			inputElement.value = 'value written by a testing tool without invoking the input event';
@@ -1688,7 +1698,7 @@ describe('vdom', () => {
 			const renderFunction = () => v('input', { value: model, oninput: handleInput });
 			const projection = dom.create(renderFunction(), projectorStub);
 
-			const inputElement = ((projection.domNode.childNodes[0] as Element) as HTMLInputElement);
+			const inputElement = (projection.domNode.childNodes[0] as Element) as HTMLInputElement;
 			assert.strictEqual(inputElement.value, model);
 
 			inputElement.value = '4';
@@ -1712,7 +1722,7 @@ describe('vdom', () => {
 			const renderFunction = () => v('div', { role: role });
 
 			const projection = dom.create(renderFunction(), projectorStub);
-			const element = (projection.domNode.childNodes[0] as Element);
+			const element = projection.domNode.childNodes[0] as Element;
 
 			assert.property(element.attributes, 'role');
 			assert.strictEqual(element.getAttribute('role'), role);
@@ -1721,7 +1731,6 @@ describe('vdom', () => {
 			projection.update(renderFunction());
 			assert.notProperty(element.attributes, 'role');
 		});
-
 	});
 
 	describe('deferred properties', () => {
@@ -1811,7 +1820,6 @@ describe('vdom', () => {
 	});
 
 	describe('events', () => {
-
 		it('should add an event listener', () => {
 			const onclick = stub();
 			const renderFunction = () => {
@@ -1895,7 +1903,7 @@ describe('vdom', () => {
 			const renderFunction = () => v('input', { value: typedKeys, oninput: handleInput });
 
 			const projection = dom.create(renderFunction(), projectorStub);
-			const inputElement = ((projection.domNode.childNodes[0] as Element) as HTMLInputElement);
+			const inputElement = (projection.domNode.childNodes[0] as Element) as HTMLInputElement;
 			assert.strictEqual(inputElement.value, typedKeys);
 
 			// Normal behavior
@@ -1916,31 +1924,24 @@ describe('vdom', () => {
 	});
 
 	describe('children', () => {
-
 		it('can remove child nodes', () => {
-			const projection = dom.create(v('div', [
-				v('span', { key: 1 }),
-				v('span', { key: 2 }),
-				v('span', { key: 3 })
-			]), projectorStub);
+			const projection = dom.create(
+				v('div', [v('span', { key: 1 }), v('span', { key: 2 }), v('span', { key: 3 })]),
+				projectorStub
+			);
 
-			const div = (projection.domNode.childNodes[0] as Element);
+			const div = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(div.childNodes, 3);
 			const firstSpan = div.childNodes[0];
 			const lastSpan = div.childNodes[2];
 
-			projection.update(v('div', [
-				v('span', { key: 1 }),
-				v('span', { key: 3 })
-			]));
+			projection.update(v('div', [v('span', { key: 1 }), v('span', { key: 3 })]));
 
 			assert.lengthOf(div.childNodes, 2);
 			assert.strictEqual(div.childNodes[0], firstSpan);
 			assert.strictEqual(div.childNodes[1], lastSpan);
 
-			projection.update(v('div', [
-				v('span', { key: 3 })
-			]));
+			projection.update(v('div', [v('span', { key: 3 })]));
 
 			assert.lengthOf(div.childNodes, 1);
 			assert.strictEqual(div.childNodes[0], lastSpan);
@@ -1950,23 +1951,22 @@ describe('vdom', () => {
 		});
 
 		it('can add child nodes', () => {
-			const projection = dom.create(v('div', [
-				v('span', { key: 2 }),
-				v('span', { key: 4 })
-			]), projectorStub);
+			const projection = dom.create(v('div', [v('span', { key: 2 }), v('span', { key: 4 })]), projectorStub);
 
-			const div = (projection.domNode.childNodes[0] as Element);
+			const div = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(div.childNodes, 2);
 			const firstSpan = div.childNodes[0];
 			const lastSpan = div.childNodes[1];
 
-			projection.update(v('div', [
-				v('span', { key: 1 }),
-				v('span', { key: 2 }),
-				v('span', { key: 3 }),
-				v('span', { key: 4 }),
-				v('span', { key: 5 })
-			]));
+			projection.update(
+				v('div', [
+					v('span', { key: 1 }),
+					v('span', { key: 2 }),
+					v('span', { key: 3 }),
+					v('span', { key: 4 }),
+					v('span', { key: 5 })
+				])
+			);
 
 			assert.lengthOf(div.childNodes, 5);
 			assert.strictEqual(div.childNodes[1], firstSpan);
@@ -1974,21 +1974,19 @@ describe('vdom', () => {
 		});
 
 		it('can distinguish between string keys when adding', () => {
-			const projection = dom.create(v('div', [
-				v('span', { key: 'one' }),
-				v('span', { key: 'three' })
-			]), projectorStub);
+			const projection = dom.create(
+				v('div', [v('span', { key: 'one' }), v('span', { key: 'three' })]),
+				projectorStub
+			);
 
-			const div = (projection.domNode.childNodes[0] as Element);
+			const div = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(div.childNodes, 2);
 			const firstSpan = div.childNodes[0];
 			const secondSpan = div.childNodes[1];
 
-			projection.update(v('div', [
-				v('span', { key: 'one' }),
-				v('span', { key: 'two' }),
-				v('span', { key: 'three' })
-			]));
+			projection.update(
+				v('div', [v('span', { key: 'one' }), v('span', { key: 'two' }), v('span', { key: 'three' })])
+			);
 
 			assert.lengthOf(div.childNodes, 3);
 			assert.strictEqual(div.childNodes[0], firstSpan);
@@ -1996,14 +1994,17 @@ describe('vdom', () => {
 		});
 
 		it('can distinguish between falsy keys when replacing', () => {
-			const projection = dom.create(v('div', [
-				v('span', { key: false as any }),
-				v('span', { key: null as any }),
-				v('span', { key: '' }),
-				v('span', {})
-			]), projectorStub);
+			const projection = dom.create(
+				v('div', [
+					v('span', { key: false as any }),
+					v('span', { key: null as any }),
+					v('span', { key: '' }),
+					v('span', {})
+				]),
+				projectorStub
+			);
 
-			const div = (projection.domNode.childNodes[0] as Element);
+			const div = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(div.childNodes, 4);
 
 			const firstSpan = div.childNodes[0];
@@ -2011,9 +2012,7 @@ describe('vdom', () => {
 			const thirdSpan = div.childNodes[2];
 			const fourthSpan = div.childNodes[3];
 
-			projection.update(v('div', [
-				v('span', { key: 0 })
-			]));
+			projection.update(v('div', [v('span', { key: 0 })]));
 
 			assert.lengthOf(div.childNodes, 1);
 			const newSpan = div.childNodes[0];
@@ -2025,21 +2024,17 @@ describe('vdom', () => {
 		});
 
 		it('can distinguish between string keys when deleting', () => {
-			const projection = dom.create(v('div', [
-				v('span', { key: 'one' }),
-				v('span', { key: 'two' }),
-				v('span', { key: 'three' })
-			]), projectorStub);
+			const projection = dom.create(
+				v('div', [v('span', { key: 'one' }), v('span', { key: 'two' }), v('span', { key: 'three' })]),
+				projectorStub
+			);
 
-			const div = (projection.domNode.childNodes[0] as Element);
+			const div = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(div.childNodes, 3);
 			const firstSpan = div.childNodes[0];
 			const thirdSpan = div.childNodes[2];
 
-			projection.update(v('div', [
-				v('span', { key: 'one' }),
-				v('span', { key: 'three' })
-			]));
+			projection.update(v('div', [v('span', { key: 'one' }), v('span', { key: 'three' })]));
 
 			assert.lengthOf(div.childNodes, 2);
 			assert.strictEqual(div.childNodes[0], firstSpan);
@@ -2047,21 +2042,17 @@ describe('vdom', () => {
 		});
 
 		it('can distinguish between falsy keys when deleting', () => {
-			const projection = dom.create(v('div', [
-				v('span', { key: 0 }),
-				v('span', { key: false as any }),
-				v('span', { key: null as any })
-			]), projectorStub);
+			const projection = dom.create(
+				v('div', [v('span', { key: 0 }), v('span', { key: false as any }), v('span', { key: null as any })]),
+				projectorStub
+			);
 
-			const div = (projection.domNode.childNodes[0] as Element);
+			const div = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(div.childNodes, 3);
 			const firstSpan = div.childNodes[0];
 			const thirdSpan = div.childNodes[2];
 
-			projection.update(v('div', [
-				v('span', { key: 0 }),
-				v('span', { key: null as any })
-			]));
+			projection.update(v('div', [v('span', { key: 0 }), v('span', { key: null as any })]));
 
 			assert.lengthOf(div.childNodes, 2);
 			assert.strictEqual(div.childNodes[0], firstSpan);
@@ -2069,20 +2060,14 @@ describe('vdom', () => {
 		});
 
 		it('does not reorder nodes based on keys', () => {
-			const projection = dom.create(v('div', [
-				v('span', { key: 'a' }),
-				v('span', { key: 'b' })
-			]), projectorStub);
+			const projection = dom.create(v('div', [v('span', { key: 'a' }), v('span', { key: 'b' })]), projectorStub);
 
-			const div = (projection.domNode.childNodes[0] as Element);
+			const div = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(div.childNodes, 2);
 			const firstSpan = div.childNodes[0];
 			const lastSpan = div.childNodes[1];
 
-			projection.update(v('div', [
-				v('span', { key: 'b' }),
-				v('span', { key: 'a' })
-			]));
+			projection.update(v('div', [v('span', { key: 'b' }), v('span', { key: 'a' })]));
 
 			assert.lengthOf(div.childNodes, 2);
 			assert.strictEqual(div.childNodes[0], lastSpan);
@@ -2090,21 +2075,14 @@ describe('vdom', () => {
 		});
 
 		it('can insert text nodes', () => {
-			const projection = dom.create(v('div', [
-				v('span', { key: 2 }),
-				v('span', { key: 4 })
-			]), projectorStub);
+			const projection = dom.create(v('div', [v('span', { key: 2 }), v('span', { key: 4 })]), projectorStub);
 
-			const div = (projection.domNode.childNodes[0] as Element);
+			const div = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(div.childNodes, 2);
 			const firstSpan = div.childNodes[0];
 			const lastSpan = div.childNodes[1];
 
-			projection.update(v('div', [
-				v('span', { key: 2 }),
-				'Text between',
-				v('span', { key: 4 })
-			]));
+			projection.update(v('div', [v('span', { key: 2 }), 'Text between', v('span', { key: 4 })]));
 
 			assert.lengthOf(div.childNodes, 3);
 
@@ -2113,23 +2091,23 @@ describe('vdom', () => {
 		});
 
 		it('can update single text nodes', () => {
-			const projection = dom.create(v('span', [ '' ]), projectorStub);
-			const span = (projection.domNode.childNodes[0] as Element);
+			const projection = dom.create(v('span', ['']), projectorStub);
+			const span = projection.domNode.childNodes[0] as Element;
 			assert.lengthOf(span.childNodes, 1);
 
-			projection.update(v('span', [ undefined ]));
+			projection.update(v('span', [undefined]));
 			assert.lengthOf(span.childNodes, 0);
 
-			projection.update(v('span', [ 'f' ]));
+			projection.update(v('span', ['f']));
 			assert.lengthOf(span.childNodes, 1);
 
-			projection.update(v('span', [ undefined ]));
+			projection.update(v('span', [undefined]));
 			assert.lengthOf(span.childNodes, 0);
 
-			projection.update(v('span', [ '' ]));
+			projection.update(v('span', ['']));
 			assert.lengthOf(span.childNodes, 1);
 
-			projection.update(v('span', [ ' ' ]));
+			projection.update(v('span', [' ']));
 			assert.lengthOf(span.childNodes, 1);
 		});
 
@@ -2138,18 +2116,11 @@ describe('vdom', () => {
 			const parentName = projectorStub.constructor.name || 'unknown';
 			const errorMsg = `A widget (${parentName}) has had a child addded or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${widgetName}) multiple times as siblings`;
 
-			const projection = dom.create(v('div', [
-				v('span', [ 'a' ]),
-				v('span', [ 'c' ])
-			]), projectorStub);
+			const projection = dom.create(v('div', [v('span', ['a']), v('span', ['c'])]), projectorStub);
 
 			assert.isTrue(consoleStub.notCalled);
 
-			projection.update(v('div', [
-				v('span', [ 'a' ]),
-				v('span', [ 'b' ]),
-				v('span', [ 'c' ])
-			]));
+			projection.update(v('div', [v('span', ['a']), v('span', ['b']), v('span', ['c'])]));
 
 			resolvers.resolve();
 
@@ -2162,18 +2133,14 @@ describe('vdom', () => {
 			const parentName = projectorStub.constructor.name || 'unknown';
 			const errorMsg = `A widget (${parentName}) has had a child addded or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${widgetName}) multiple times as siblings`;
 
-			const projection = dom.create(v('div', [
-				v('span', [ 'a' ]),
-				v('span', [ 'b' ]),
-				v('span', [ 'c' ])
-			]), projectorStub);
+			const projection = dom.create(
+				v('div', [v('span', ['a']), v('span', ['b']), v('span', ['c'])]),
+				projectorStub
+			);
 
 			assert.isTrue(consoleStub.notCalled);
 
-			projection.update(v('div', [
-				v('span', [ 'a' ]),
-				v('span', [ 'c' ])
-			]));
+			projection.update(v('div', [v('span', ['a']), v('span', ['c'])]));
 
 			resolvers.resolve();
 
@@ -2186,34 +2153,39 @@ describe('vdom', () => {
 			const handleInput = (evt: any) => {
 				text = evt.currentTarget.innerHTML;
 			};
-			const renderDNodes = () => v('div', {
-				contentEditable: true,
-				oninput: handleInput,
-				innerHTML: text
-			});
+			const renderDNodes = () =>
+				v('div', {
+					contentEditable: true,
+					oninput: handleInput,
+					innerHTML: text
+				});
 			const projection = dom.create(renderDNodes(), projectorStub);
 
-			(projection.domNode.childNodes[0] as Element).removeChild((projection.domNode.childNodes[0] as Element).childNodes[0]);
-			handleInput({ currentTarget: (projection.domNode.childNodes[0] as Element) });
+			(projection.domNode.childNodes[0] as Element).removeChild(
+				(projection.domNode.childNodes[0] as Element).childNodes[0]
+			);
+			handleInput({ currentTarget: projection.domNode.childNodes[0] as Element });
 			projection.update(renderDNodes());
 
 			(projection.domNode.childNodes[0] as Element).innerHTML = 'changed <i>value</i>';
-			handleInput({ currentTarget: (projection.domNode.childNodes[0] as Element) });
+			handleInput({ currentTarget: projection.domNode.childNodes[0] as Element });
 			projection.update(renderDNodes());
 
 			assert.strictEqual((projection.domNode.childNodes[0] as Element).innerHTML, 'changed <i>value</i>');
 		});
 
 		describe('svg', () => {
-
 			it('creates and updates svg dom nodes with the right namespace', () => {
-				const projection = dom.create(v('div', [
-					v('svg', [
-						v('circle', { cx: '2cm', cy: '2cm', r: '1cm', fill: 'red' }),
-						v('image', { href: '/image.jpeg' })
+				const projection = dom.create(
+					v('div', [
+						v('svg', [
+							v('circle', { cx: '2cm', cy: '2cm', r: '1cm', fill: 'red' }),
+							v('image', { href: '/image.jpeg' })
+						]),
+						v('span')
 					]),
-					v('span')
-				]), projectorStub);
+					projectorStub
+				);
 				const svg = (projection.domNode.childNodes[0] as Element).childNodes[0];
 				assert.strictEqual(svg.namespaceURI, 'http://www.w3.org/2000/svg');
 				const circle = svg.childNodes[0];
@@ -2223,27 +2195,29 @@ describe('vdom', () => {
 				const span = (projection.domNode.childNodes[0] as Element).childNodes[1];
 				assert.strictEqual(span.namespaceURI, 'http://www.w3.org/1999/xhtml');
 
-				projection.update(v('div', [
-					v('svg', [
-						v('circle', { key: 'blue', cx: '2cm', cy: '2cm', r: '1cm', fill: 'blue' }),
-						v('image', { href: '/image2.jpeg' })
-					]),
-					v('span')
-				]));
+				projection.update(
+					v('div', [
+						v('svg', [
+							v('circle', { key: 'blue', cx: '2cm', cy: '2cm', r: '1cm', fill: 'blue' }),
+							v('image', { href: '/image2.jpeg' })
+						]),
+						v('span')
+					])
+				);
 
 				const blueCircle = svg.childNodes[0];
 				assert.strictEqual(blueCircle.namespaceURI, 'http://www.w3.org/2000/svg');
 			});
 		});
-
 	});
 
 	describe('merging', () => {
-
 		it('Supports merging DNodes onto existing HTML', () => {
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);
-			iframe.contentDocument.write(`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button></div>`);
+			iframe.contentDocument.write(
+				`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button></div>`
+			);
 			iframe.contentDocument.close();
 			const root = iframe.contentDocument.body.firstChild as HTMLElement;
 			const childElementCount = root.childElementCount;
@@ -2253,28 +2227,44 @@ describe('vdom', () => {
 			const onclickListener = spy();
 			class Foo extends WidgetBase {
 				render() {
-					return v('div', {
-						classes: [ 'foo', 'bar' ]
-					}, [
-						v('label', {
-							for: 'baz'
-						}, [ 'Select Me:' ]),
-						v('select', {
-							type: 'text',
-							name: 'baz',
-							id: 'baz',
-							disabled: false
-						}, [
-							v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
-							v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
-							v('option', { value: 'baz', selected: false }, [ 'label baz' ])
-						]),
-						v('button', {
-							type: 'button',
-							disabled: false,
-							onclick: onclickListener
-						}, [ 'Click Me!' ])
-					]);
+					return v(
+						'div',
+						{
+							classes: ['foo', 'bar']
+						},
+						[
+							v(
+								'label',
+								{
+									for: 'baz'
+								},
+								['Select Me:']
+							),
+							v(
+								'select',
+								{
+									type: 'text',
+									name: 'baz',
+									id: 'baz',
+									disabled: false
+								},
+								[
+									v('option', { value: 'foo', selected: true }, ['label foo']),
+									v('option', { value: 'bar', selected: false }, ['label bar']),
+									v('option', { value: 'baz', selected: false }, ['label baz'])
+								]
+							),
+							v(
+								'button',
+								{
+									type: 'button',
+									disabled: false,
+									onclick: onclickListener
+								},
+								['Click Me!']
+							)
+						]
+					);
 				}
 			}
 			const widget = new Foo();
@@ -2302,7 +2292,9 @@ describe('vdom', () => {
 		it('Supports merging DNodes with widgets onto existing HTML', () => {
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);
-			iframe.contentDocument.write(`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button><span>label</span><div>last node</div></div>`);
+			iframe.contentDocument.write(
+				`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button><span>label</span><div>last node</div></div>`
+			);
 			iframe.contentDocument.close();
 			const root = iframe.contentDocument.body.firstChild as HTMLElement;
 			const childElementCount = root.childElementCount;
@@ -2317,32 +2309,44 @@ describe('vdom', () => {
 			class Button extends WidgetBase {
 				render() {
 					return [
-						v('button', { type: 'button', disabled: false, onclick: onclickListener }, [ 'Click Me!' ]),
-						v('span', {}, [ 'label' ])
+						v('button', { type: 'button', disabled: false, onclick: onclickListener }, ['Click Me!']),
+						v('span', {}, ['label'])
 					];
 				}
 			}
 			class Foo extends WidgetBase {
 				render() {
-					return v('div', {
-						classes: [ 'foo', 'bar' ]
-					}, [
-						v('label', {
-							for: 'baz'
-						}, [ 'Select Me:' ]),
-						v('select', {
-							type: 'text',
-							name: 'baz',
-							id: 'baz',
-							disabled: false
-						}, [
-							v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
-							v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
-							v('option', { value: 'baz', selected: false }, [ 'label baz' ])
-						]),
-						w(Button, {}),
-						v('div', [ 'last node'])
-					]);
+					return v(
+						'div',
+						{
+							classes: ['foo', 'bar']
+						},
+						[
+							v(
+								'label',
+								{
+									for: 'baz'
+								},
+								['Select Me:']
+							),
+							v(
+								'select',
+								{
+									type: 'text',
+									name: 'baz',
+									id: 'baz',
+									disabled: false
+								},
+								[
+									v('option', { value: 'foo', selected: true }, ['label foo']),
+									v('option', { value: 'bar', selected: false }, ['label bar']),
+									v('option', { value: 'baz', selected: false }, ['label baz'])
+								]
+							),
+							w(Button, {}),
+							v('div', ['last node'])
+						]
+					);
 				}
 			}
 			const widget = new Foo();
@@ -2399,32 +2403,44 @@ describe('vdom', () => {
 			class Button extends WidgetBase {
 				render() {
 					return [
-						v('button', { type: 'button', disabled: false, onclick: onclickListener }, [ 'Click Me!' ]),
-						v('span', {}, [ 'label' ])
+						v('button', { type: 'button', disabled: false, onclick: onclickListener }, ['Click Me!']),
+						v('span', {}, ['label'])
 					];
 				}
 			}
 			class Foo extends WidgetBase {
 				render() {
-					return v('div', {
-						classes: [ 'foo', 'bar' ]
-					}, [
-						v('label', {
-							for: 'baz'
-						}, [ 'Select Me:' ]),
-						v('select', {
-							type: 'text',
-							name: 'baz',
-							id: 'baz',
-							disabled: false
-						}, [
-							v('option', { value: 'foo', selected: true }, [ 'label foo' ]),
-							v('option', { value: 'bar', selected: false }, [ 'label bar' ]),
-							v('option', { value: 'baz', selected: false }, [ 'label baz' ])
-						]),
-						w(Button, {}),
-						v('div', [ 'last node'])
-					]);
+					return v(
+						'div',
+						{
+							classes: ['foo', 'bar']
+						},
+						[
+							v(
+								'label',
+								{
+									for: 'baz'
+								},
+								['Select Me:']
+							),
+							v(
+								'select',
+								{
+									type: 'text',
+									name: 'baz',
+									id: 'baz',
+									disabled: false
+								},
+								[
+									v('option', { value: 'foo', selected: true }, ['label foo']),
+									v('option', { value: 'bar', selected: false }, ['label bar']),
+									v('option', { value: 'baz', selected: false }, ['label baz'])
+								]
+							),
+							w(Button, {}),
+							v('div', ['last node'])
+						]
+					);
 				}
 			}
 			const widget = new Foo();
@@ -2462,7 +2478,7 @@ describe('vdom', () => {
 
 			class Bar extends WidgetBase<any> {
 				render() {
-					return v('div', [ this.properties.value ]);
+					return v('div', [this.properties.value]);
 				}
 			}
 
@@ -2485,28 +2501,29 @@ describe('vdom', () => {
 			assert.lengthOf(projectionRoot.childNodes, 2, 'should have 2 child');
 			document.body.removeChild(iframe);
 		});
-
 	});
 
 	describe('sync mode', () => {
-
 		it('should run afterRenderCallbacks sync', () => {
 			const projection = dom.create(v('div', { key: '1' }), projectorStub, { sync: true });
-			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '1' ));
+			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '1'));
 		});
 
 		it('should run defferedRenderCallbacks sync', () => {
 			let callCount = 0;
-			dom.create(v('div', () => {
-				callCount++;
-				return {};
-			}), projectorStub, { sync: true });
+			dom.create(
+				v('div', () => {
+					callCount++;
+					return {};
+				}),
+				projectorStub,
+				{ sync: true }
+			);
 			assert.strictEqual(callCount, 2);
 		});
 	});
 
 	describe('node callbacks', () => {
-
 		it('element not added to node handler for nodes without a key', () => {
 			const projection = dom.create(v('div'), projectorStub);
 			resolvers.resolve();
@@ -2518,32 +2535,32 @@ describe('vdom', () => {
 		it('element added on create to node handler for nodes with a key', () => {
 			const projection = dom.create(v('div', { key: '1' }), projectorStub);
 			assert.isTrue(projectorStub.nodeHandler.add.called);
-			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '1' ));
+			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '1'));
 			projectorStub.nodeHandler.add.reset();
 			projection.update(v('div', { key: '1' }));
 			assert.isTrue(projectorStub.nodeHandler.add.called);
-			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '1' ));
+			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '1'));
 		});
 
 		it('element added on update to node handler for nodes with a key of 0', () => {
 			const projection = dom.create(v('div', { key: 0 }), projectorStub);
 			assert.isTrue(projectorStub.nodeHandler.add.called);
-			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '0' ));
+			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '0'));
 			projectorStub.nodeHandler.add.reset();
 			projection.update(v('div', { key: 0 }));
 			assert.isTrue(projectorStub.nodeHandler.add.called);
-			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '0' ));
+			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '0'));
 		});
 
 		it('on element created and updated callbacks are called for nodes with keys', () => {
 			const projection = dom.create(v('div', { key: 0 }), projectorStub);
 			resolvers.resolve();
 			assert.isTrue(projectorStub.onElementCreated.called);
-			assert.isTrue(projectorStub.onElementCreated.calledWith(projection.domNode.childNodes[0] as Element, 0 ));
+			assert.isTrue(projectorStub.onElementCreated.calledWith(projection.domNode.childNodes[0] as Element, 0));
 			projection.update(v('div', { key: 0 }));
 			resolvers.resolve();
 			assert.isTrue(projectorStub.onElementUpdated.called);
-			assert.isTrue(projectorStub.onElementUpdated.calledWith(projection.domNode.childNodes[0] as Element, 0 ));
+			assert.isTrue(projectorStub.onElementUpdated.calledWith(projection.domNode.childNodes[0] as Element, 0));
 		});
 
 		it('addRoot called on node handler for created widgets with a zero key', () => {
@@ -2571,41 +2588,29 @@ describe('vdom', () => {
 			assert.isTrue(projectorStub.nodeHandler.addRoot.called);
 			projectorStub.nodeHandler.addRoot.reset();
 		});
-
 	});
 
 	describe('animations', () => {
-
 		describe('updateAnimation', () => {
-
 			it('is invoked when a node contains only text and that text changes', () => {
 				const updateAnimation = stub();
-				const projection = dom.create(v('div', { updateAnimation }, [ 'text' ]), projectorStub);
-				projection.update(v('div', { updateAnimation }, [ 'text2' ]));
+				const projection = dom.create(v('div', { updateAnimation }, ['text']), projectorStub);
+				projection.update(v('div', { updateAnimation }, ['text2']));
 				assert.isTrue(updateAnimation.calledOnce);
 				assert.strictEqual((projection.domNode.childNodes[0] as Element).outerHTML, '<div>text2</div>');
 			});
 
 			it('is invoked when a node contains text and other nodes and the text changes', () => {
 				const updateAnimation = stub();
-				const projection = dom.create(v('div', { updateAnimation }, [
-					'textBefore',
-					v('span'),
-					'textAfter'
-				]), projectorStub);
-				projection.update(v('div', { updateAnimation }, [
-					'textBefore',
-					v('span'),
-					'newTextAfter'
-				]));
+				const projection = dom.create(
+					v('div', { updateAnimation }, ['textBefore', v('span'), 'textAfter']),
+					projectorStub
+				);
+				projection.update(v('div', { updateAnimation }, ['textBefore', v('span'), 'newTextAfter']));
 				assert.isTrue(updateAnimation.calledOnce);
 				updateAnimation.reset();
 
-				projection.update(v('div', { updateAnimation }, [
-					'textBefore',
-					v('span'),
-					'newTextAfter'
-				]));
+				projection.update(v('div', { updateAnimation }, ['textBefore', v('span'), 'newTextAfter']));
 				assert.isTrue(updateAnimation.notCalled);
 			});
 
@@ -2613,82 +2618,82 @@ describe('vdom', () => {
 				const updateAnimation = stub();
 				const projection = dom.create(v('a', { updateAnimation, href: '#1' }), projectorStub);
 				projection.update(v('a', { updateAnimation, href: '#2' }));
-				assert.isTrue(updateAnimation.calledWith(
-					(projection.domNode.childNodes[0] as Element),
-					match({ href: '#2' }),
-					match({ href: '#1' })
-				));
+				assert.isTrue(
+					updateAnimation.calledWith(
+						projection.domNode.childNodes[0] as Element,
+						match({ href: '#2' }),
+						match({ href: '#1' })
+					)
+				);
 			});
 		});
 
 		describe('enterAnimation', () => {
-
 			it('is invoked when a new node is added to an existing parent node', () => {
 				const enterAnimation = stub();
 				const projection = dom.create(v('div', []), projectorStub);
 
-				projection.update(v('div', [
-					v('span', { enterAnimation })
-				]));
+				projection.update(v('div', [v('span', { enterAnimation })]));
 
-				assert.isTrue(enterAnimation.calledWith((projection.domNode.childNodes[0] as Element).childNodes[0], match({})));
+				assert.isTrue(
+					enterAnimation.calledWith((projection.domNode.childNodes[0] as Element).childNodes[0], match({}))
+				);
 			});
 		});
 
 		describe('exitAnimation', () => {
-
 			it('is invoked when a node is removed from an existing parent node', () => {
 				const exitAnimation = stub();
-				const projection = dom.create(v('div', [
-					v('span', { exitAnimation })
-				]), projectorStub);
+				const projection = dom.create(v('div', [v('span', { exitAnimation })]), projectorStub);
 
 				projection.update(v('div', []));
 
-				assert.isTrue(exitAnimation.calledWithExactly((projection.domNode.childNodes[0] as Element).childNodes[0], match({}), match({})));
+				assert.isTrue(
+					exitAnimation.calledWithExactly(
+						(projection.domNode.childNodes[0] as Element).childNodes[0],
+						match({}),
+						match({})
+					)
+				);
 
 				assert.lengthOf((projection.domNode.childNodes[0] as Element).childNodes, 1);
 				exitAnimation.lastCall.callArg(1); // arg1: removeElement
 				assert.lengthOf((projection.domNode.childNodes[0] as Element).childNodes, 0);
 			});
-
 		});
 
 		describe('transitionStrategy', () => {
-
 			it('will be invoked when enterAnimation is provided as a string', () => {
 				const transitionStrategy = { enter: stub(), exit: stub() };
 				const projection = dom.create(v('div'), projectorStub, { transitions: transitionStrategy });
 
-				projection.update(v('div', [
-					v('span', { enterAnimation: 'fadeIn' })
-				]));
+				projection.update(v('div', [v('span', { enterAnimation: 'fadeIn' })]));
 
-				assert.isTrue(transitionStrategy.enter.calledWithExactly(
-					(projection.domNode.childNodes[0] as Element).firstChild,
-					match({}),
-					'fadeIn'
-				));
+				assert.isTrue(
+					transitionStrategy.enter.calledWithExactly(
+						(projection.domNode.childNodes[0] as Element).firstChild,
+						match({}),
+						'fadeIn'
+					)
+				);
 			});
 
 			it('will be invoked when exitAnimation is provided as a string', () => {
 				const transitionStrategy = { enter: stub(), exit: stub() };
-				const projection = dom.create(
-					v('div', [
-						v('span', { exitAnimation: 'fadeOut' })
-					]),
-					projectorStub,
-					{ transitions: transitionStrategy }
-				);
+				const projection = dom.create(v('div', [v('span', { exitAnimation: 'fadeOut' })]), projectorStub, {
+					transitions: transitionStrategy
+				});
 
 				projection.update(v('div', []));
 
-				assert.isTrue(transitionStrategy.exit.calledWithExactly(
-					(projection.domNode.childNodes[0] as Element).firstChild,
-					match({}),
-					'fadeOut',
-					match({})
-				));
+				assert.isTrue(
+					transitionStrategy.exit.calledWithExactly(
+						(projection.domNode.childNodes[0] as Element).firstChild,
+						match({}),
+						'fadeOut',
+						match({})
+					)
+				);
 
 				transitionStrategy.exit.lastCall.callArg(3);
 				assert.lengthOf((projection.domNode.childNodes[0] as Element).childNodes, 0);
@@ -2698,14 +2703,9 @@ describe('vdom', () => {
 				const projection = dom.create(v('div'), projectorStub, {});
 
 				assert.throws(() => {
-					projection.update(v('div', [
-						v('span', { enterAnimation: 'fadeIn' })
-					]));
+					projection.update(v('div', [v('span', { enterAnimation: 'fadeIn' })]));
 				});
 			});
-
 		});
-
 	});
-
 });

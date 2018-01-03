@@ -1,7 +1,14 @@
 export interface JSONResult {
-	framework: string; benchmark: string; type: string; min: number;
-		max: number; mean: number; geometricMean: number;
-		standardDeviation: number; median: number; values: Array<number>;
+	framework: string;
+	benchmark: string;
+	type: string;
+	min: number;
+	max: number;
+	mean: number;
+	geometricMean: number;
+	standardDeviation: number;
+	median: number;
+	values: Array<number>;
 }
 
 export let config = {
@@ -27,8 +34,8 @@ interface Options {
 	useShadowRoot?: boolean;
 }
 
-function f(name: string, keyed: boolean, options: Options = {uri: null, useShadowRoot: false}): FrameworkData {
-	return {name, keyed, uri: options.uri ? options.uri : name, useShadowRoot: options.useShadowRoot};
+function f(name: string, keyed: boolean, options: Options = { uri: null, useShadowRoot: false }): FrameworkData {
+	return { name, keyed, uri: options.uri ? options.uri : name, useShadowRoot: options.useShadowRoot };
 }
 
 export let frameworks = [

@@ -22,7 +22,6 @@ export interface GetProperties<T = any> {
  * Defines the inject configuration required for use of the `inject` decorator
  */
 export interface InjectConfig {
-
 	/**
 	 * The label of the registry injector
 	 */

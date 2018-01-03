@@ -47,8 +47,7 @@ export function createResolvers() {
 			rAFStub = stub(global, 'requestAnimationFrame').returns(1);
 			if (global.requestIdleCallback) {
 				rICStub = stub(global, 'requestIdleCallback').returns(1);
-			}
-			else {
+			} else {
 				rICStub = stub(global, 'setTimeout').returns(1);
 			}
 		},

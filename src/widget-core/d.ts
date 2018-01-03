@@ -24,15 +24,17 @@ export const VNODE = Symbol('Identifier for a VNode.');
 /**
  * Helper function that returns true if the `DNode` is a `WNode` using the `type` property
  */
-export function isWNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface>(child: DNode<W>): child is WNode<W> {
-	return Boolean(child && (typeof child !== 'string') && child.type === WNODE);
+export function isWNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface>(
+	child: DNode<W>
+): child is WNode<W> {
+	return Boolean(child && typeof child !== 'string' && child.type === WNODE);
 }
 
 /**
  * Helper function that returns true if the `DNode` is a `VNode` using the `type` property
  */
 export function isVNode(child: DNode): child is VNode {
-	return Boolean(child && (typeof child !== 'string') && child.type === VNODE);
+	return Boolean(child && typeof child !== 'string' && child.type === VNODE);
 }
 
 /**
@@ -43,12 +45,24 @@ export function isVNode(child: DNode): child is VNode {
  *
  * If no predicate is supplied then the modifier will be executed on all nodes.
  */
-export function decorate<T extends DNode>(dNodes: DNode, modifier: (dNode: T) => void, predicate: (dNode: DNode) => dNode is T): DNode;
-export function decorate<T extends DNode>(dNodes: DNode[], modifier: (dNode: T) => void, predicate: (dNode: DNode) => dNode is T): DNode[];
+export function decorate<T extends DNode>(
+	dNodes: DNode,
+	modifier: (dNode: T) => void,
+	predicate: (dNode: DNode) => dNode is T
+): DNode;
+export function decorate<T extends DNode>(
+	dNodes: DNode[],
+	modifier: (dNode: T) => void,
+	predicate: (dNode: DNode) => dNode is T
+): DNode[];
 export function decorate(dNodes: DNode, modifier: (dNode: DNode) => void): DNode;
 export function decorate(dNodes: DNode[], modifier: (dNode: DNode) => void): DNode[];
-export function decorate(dNodes: DNode | DNode[], modifier: (dNode: DNode) => void, predicate?: (dNode: DNode) => boolean): DNode | DNode[] {
-	let nodes = Array.isArray(dNodes) ? [ ...dNodes ] : [ dNodes ];
+export function decorate(
+	dNodes: DNode | DNode[],
+	modifier: (dNode: DNode) => void,
+	predicate?: (dNode: DNode) => boolean
+): DNode | DNode[] {
+	let nodes = Array.isArray(dNodes) ? [...dNodes] : [dNodes];
 	while (nodes.length) {
 		const node = nodes.pop();
 		if (node) {
@@ -56,7 +70,7 @@ export function decorate(dNodes: DNode | DNode[], modifier: (dNode: DNode) => vo
 				modifier(node);
 			}
 			if ((isWNode(node) || isVNode(node)) && node.children) {
-				nodes = [ ...nodes, ...node.children ];
+				nodes = [...nodes, ...node.children];
 			}
 		}
 	}
@@ -66,8 +80,11 @@ export function decorate(dNodes: DNode | DNode[], modifier: (dNode: DNode) => vo
 /**
  * Wrapper function for calls to create a widget.
  */
-export function w<W extends WidgetBaseInterface>(widgetConstructor: Constructor<W> | RegistryLabel, properties: W['properties'], children: W['children'] = []): WNode<W> {
-
+export function w<W extends WidgetBaseInterface>(
+	widgetConstructor: Constructor<W> | RegistryLabel,
+	properties: W['properties'],
+	children: W['children'] = []
+): WNode<W> {
 	return {
 		children,
 		widgetConstructor,
@@ -82,25 +99,29 @@ export function w<W extends WidgetBaseInterface>(widgetConstructor: Constructor<
 export function v(tag: string, properties: VNodeProperties | DeferredVirtualProperties, children?: DNode[]): VNode;
 export function v(tag: string, children: undefined | DNode[]): VNode;
 export function v(tag: string): VNode;
-export function v(tag: string, propertiesOrChildren: VNodeProperties | DeferredVirtualProperties | DNode[] = {}, children: undefined | DNode[] = undefined): VNode {
-		let properties: VNodeProperties | DeferredVirtualProperties = propertiesOrChildren;
-		let deferredPropertiesCallback;
+export function v(
+	tag: string,
+	propertiesOrChildren: VNodeProperties | DeferredVirtualProperties | DNode[] = {},
+	children: undefined | DNode[] = undefined
+): VNode {
+	let properties: VNodeProperties | DeferredVirtualProperties = propertiesOrChildren;
+	let deferredPropertiesCallback;
 
-		if (Array.isArray(propertiesOrChildren)) {
-			children = propertiesOrChildren;
-			properties = {};
-		}
+	if (Array.isArray(propertiesOrChildren)) {
+		children = propertiesOrChildren;
+		properties = {};
+	}
 
-		if (typeof properties === 'function') {
-			deferredPropertiesCallback = properties;
-			properties = {};
-		}
+	if (typeof properties === 'function') {
+		deferredPropertiesCallback = properties;
+		properties = {};
+	}
 
-		return {
-			tag,
-			deferredPropertiesCallback,
-			children,
-			properties,
-			type: VNODE
-		};
+	return {
+		tag,
+		deferredPropertiesCallback,
+		children,
+		properties,
+		type: VNODE
+	};
 }

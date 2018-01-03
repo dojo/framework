@@ -28,7 +28,7 @@ registerSuite('decorators/beforeRender', {
 					return () => {
 						const rendered = renderFunction();
 						const clonedProperties = { ...properties };
-						return v('bar', clonedProperties, [ rendered, ...children ]);
+						return v('bar', clonedProperties, [rendered, ...children]);
 					};
 				}
 
@@ -38,7 +38,7 @@ registerSuite('decorators/beforeRender', {
 					return () => {
 						const rendered = renderFunction();
 						properties.bar = 'foo';
-						return v('qux', properties, [ rendered ]);
+						return v('qux', properties, [rendered]);
 					};
 				}
 			}
@@ -82,12 +82,11 @@ registerSuite('decorators/beforeRender', {
 		'class level decorator'() {
 			let beforeRenderCount = 0;
 
-			@beforeRender(function (renderFunc: Render) {
+			@beforeRender(function(renderFunc: Render) {
 				beforeRenderCount++;
 				return renderFunc;
 			})
-			class TestWidget extends WidgetBase<any> {
-			}
+			class TestWidget extends WidgetBase<any> {}
 
 			const widget = new TestWidget();
 			widget.__render__();
@@ -101,14 +100,16 @@ registerSuite('decorators/beforeRender', {
 				}
 
 				@beforeRender()
-				protected secondBeforeRender(renderFunc: Render) { }
+				protected secondBeforeRender(renderFunc: Render) {}
 			}
 
 			const widget = new TestWidget();
 			const renderResult = widget.__render__();
 			assert.strictEqual(renderResult, 'first render');
 			assert.isTrue(consoleStub.calledOnce);
-			assert.isTrue(consoleStub.calledWith('Render function not returned from beforeRender, using previous render'));
+			assert.isTrue(
+				consoleStub.calledWith('Render function not returned from beforeRender, using previous render')
+			);
 		}
 	}
 });

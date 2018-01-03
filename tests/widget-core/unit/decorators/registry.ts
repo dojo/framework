@@ -7,13 +7,13 @@ import { WidgetBase } from './../../../src/WidgetBase';
 import ProjectorMixin from './../../../src/mixins/Projector';
 
 export class Widget1 extends WidgetBase {
-	protected render () {
+	protected render() {
 		return v('span', { classes: ['widget1'] });
 	}
 }
 
 export class Widget2 extends WidgetBase {
-	protected render () {
+	protected render() {
 		return v('span', { classes: ['widget2'] });
 	}
 }
@@ -45,7 +45,7 @@ describe('decorators/registry', () => {
 		})
 		class TestWidget2 extends WidgetBase {
 			render() {
-				return [ w('reg-widget-1', {}), w('reg-widget-2', {}) ];
+				return [w('reg-widget-1', {}), w('reg-widget-2', {})];
 			}
 		}
 

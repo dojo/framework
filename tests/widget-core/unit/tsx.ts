@@ -17,30 +17,30 @@ registerSuite('tsx', {
 	},
 	tsx: {
 		'tsx generate a VNode'() {
-			const node: VNode = tsx('div', { hello: 'world' }, [ 'child' ]) as VNode;
+			const node: VNode = tsx('div', { hello: 'world' }, ['child']) as VNode;
 			assert.deepEqual(node.tag, 'div');
 			assert.deepEqual(node.properties, { hello: 'world' });
-			assert.deepEqual(node.children, [ 'child' ]);
+			assert.deepEqual(node.children, ['child']);
 			assert.strictEqual(node.type, VNODE);
 		},
 		'tsx generate a WNode'() {
-			const node: WNode = tsx(WidgetBase, { hello: 'world' }, [ 'child' ]) as WNode;
+			const node: WNode = tsx(WidgetBase, { hello: 'world' }, ['child']) as WNode;
 			assert.deepEqual(node.widgetConstructor, WidgetBase);
 			assert.deepEqual(node.properties, { hello: 'world' } as any);
-			assert.deepEqual(node.children, [ 'child' ]);
+			assert.deepEqual(node.children, ['child']);
 		},
 		'tsx generate a WNode from a RegistryWrapper'() {
 			const RegistryWrapper = fromRegistry<WidgetProperties>('tag');
-			const node: WNode = tsx(RegistryWrapper, { hello: 'world' }, [ 'child' ]) as WNode;
+			const node: WNode = tsx(RegistryWrapper, { hello: 'world' }, ['child']) as WNode;
 			assert.deepEqual(node.widgetConstructor, 'tag');
 			assert.deepEqual(node.properties, { hello: 'world' } as any);
-			assert.deepEqual(node.children, [ 'child' ]);
+			assert.deepEqual(node.children, ['child']);
 		},
 		'children arrays are spread correctly'() {
-			const node: VNode = tsx('div', { hello: 'world' }, [ 'child', [ 'child-2', [ 'child-3' ] ] ]) as VNode;
+			const node: VNode = tsx('div', { hello: 'world' }, ['child', ['child-2', ['child-3']]]) as VNode;
 			assert.deepEqual(node.tag, 'div');
 			assert.deepEqual(node.properties, { hello: 'world' });
-			assert.deepEqual(node.children, [ 'child', 'child-2', 'child-3' ]);
+			assert.deepEqual(node.children, ['child', 'child-2', 'child-3']);
 			assert.strictEqual(node.type, VNODE);
 		},
 		'defaults properties to empty object'() {

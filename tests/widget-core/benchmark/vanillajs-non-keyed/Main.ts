@@ -8,7 +8,7 @@ let startMeasure = function(name: any) {
 let stopMeasure = function() {
 	let last = lastMeasure;
 	if (lastMeasure) {
-		window.setTimeout(function () {
+		window.setTimeout(function() {
 			lastMeasure = null;
 			let stop = performance.now();
 			console.log(last + ' took ' + (stop - startTime));
@@ -33,12 +33,72 @@ class Store {
 		this.id = 1;
 	}
 	buildData(count = 1000) {
-		let adjectives = ['pretty', 'large', 'big', 'small', 'tall', 'short', 'long', 'handsome', 'plain', 'quaint', 'clean', 'elegant', 'easy', 'angry', 'crazy', 'helpful', 'mushy', 'odd', 'unsightly', 'adorable', 'important', 'inexpensive', 'cheap', 'expensive', 'fancy'];
-		let colours = ['red', 'yellow', 'blue', 'green', 'pink', 'brown', 'purple', 'brown', 'white', 'black', 'orange'];
-		let nouns = ['table', 'chair', 'house', 'bbq', 'desk', 'car', 'pony', 'cookie', 'sandwich', 'burger', 'pizza', 'mouse', 'keyboard'];
+		let adjectives = [
+			'pretty',
+			'large',
+			'big',
+			'small',
+			'tall',
+			'short',
+			'long',
+			'handsome',
+			'plain',
+			'quaint',
+			'clean',
+			'elegant',
+			'easy',
+			'angry',
+			'crazy',
+			'helpful',
+			'mushy',
+			'odd',
+			'unsightly',
+			'adorable',
+			'important',
+			'inexpensive',
+			'cheap',
+			'expensive',
+			'fancy'
+		];
+		let colours = [
+			'red',
+			'yellow',
+			'blue',
+			'green',
+			'pink',
+			'brown',
+			'purple',
+			'brown',
+			'white',
+			'black',
+			'orange'
+		];
+		let nouns = [
+			'table',
+			'chair',
+			'house',
+			'bbq',
+			'desk',
+			'car',
+			'pony',
+			'cookie',
+			'sandwich',
+			'burger',
+			'pizza',
+			'mouse',
+			'keyboard'
+		];
 		let data = [];
 		for (let i = 0; i < count; i++) {
-			data.push({id: this.id++, label: adjectives[_random(adjectives.length)] + ' ' + colours[_random(colours.length)] + ' ' + nouns[_random(nouns.length)] });
+			data.push({
+				id: this.id++,
+				label:
+					adjectives[_random(adjectives.length)] +
+					' ' +
+					colours[_random(colours.length)] +
+					' ' +
+					nouns[_random(nouns.length)]
+			});
 		}
 		return data;
 	}
@@ -132,47 +192,38 @@ class Main {
 
 		const mainEl = document.getElementById('main');
 		if (mainEl) {
-			mainEl.addEventListener('click', e => {
-				const currentTarget = <HTMLElement> e.target;
+			mainEl.addEventListener('click', (e) => {
+				const currentTarget = <HTMLElement>e.target;
 				if (currentTarget.matches('#add')) {
 					e.preventDefault();
 					this.add();
-				}
-				else if (currentTarget.matches('#run')) {
+				} else if (currentTarget.matches('#run')) {
 					e.preventDefault();
 					this.run();
-				}
-				else if (currentTarget.matches('#update')) {
+				} else if (currentTarget.matches('#update')) {
 					e.preventDefault();
 					this.update();
-				}
-				else if (currentTarget.matches('#hideall')) {
+				} else if (currentTarget.matches('#hideall')) {
 					e.preventDefault();
 					// this.hideAll();
-				}
-				else if (currentTarget.matches('#showall')) {
+				} else if (currentTarget.matches('#showall')) {
 					e.preventDefault();
 					// this.showAll();
-				}
-				else if (currentTarget.matches('#runlots')) {
+				} else if (currentTarget.matches('#runlots')) {
 					e.preventDefault();
 					this.runLots();
-				}
-				else if (currentTarget.matches('#clear')) {
+				} else if (currentTarget.matches('#clear')) {
 					e.preventDefault();
 					this.clear();
-				}
-				else if (currentTarget.matches('#swaprows')) {
+				} else if (currentTarget.matches('#swaprows')) {
 					e.preventDefault();
 					this.swapRows();
-				}
-				else if (currentTarget.matches('.remove')) {
+				} else if (currentTarget.matches('.remove')) {
 					e.preventDefault();
 					let id = getParentId(currentTarget);
 					let idx = this.findIdx(id);
 					this.delete(idx);
-				}
-				else if (currentTarget.matches('.lbl')) {
+				} else if (currentTarget.matches('.lbl')) {
 					e.preventDefault();
 					let id = getParentId(currentTarget);
 					let idx = this.findIdx(id);
@@ -185,7 +236,9 @@ class Main {
 	}
 	findIdx(id: any) {
 		for (let i = 0; i < this.data.length; i++) {
-			if (this.data[i].id === id) { return i; }
+			if (this.data[i].id === id) {
+				return i;
+			}
 		}
 		return undefined;
 	}
@@ -240,7 +293,7 @@ class Main {
 		// Faster, shift all rows below the row that should be deleted rows one up and drop the last row
 		for (let i = this.rows.length - 2; i >= idx; i--) {
 			let tr = this.rows[i];
-			let data =  this.store.data[i + 1];
+			let data = this.store.data[i + 1];
 			tr.data_id = data.id;
 			tr.childNodes[0].innerText = data.id;
 			tr.childNodes[1].childNodes[0].innerText = data.label;
@@ -334,7 +387,10 @@ class Main {
 		// this.tbody.appendChild(docfrag);
 
 		// ... than adding directly
-		let rows = this.rows, sData = this.store.data, data = this.data, tbody = this.tbody;
+		let rows = this.rows,
+			sData = this.store.data,
+			data = this.data,
+			tbody = this.tbody;
 		for (let i = rows.length; i < sData.length; i++) {
 			let tr = this.createRow(sData[i]);
 			rows[i] = tr;
@@ -343,7 +399,7 @@ class Main {
 		}
 	}
 	createRow(data: any) {
-		let tr = <any> document.createElement('tr');
+		let tr = <any>document.createElement('tr');
 		tr.data_id = data.id;
 		let td1 = td('col-md-1');
 		td1.innerText = data.id;

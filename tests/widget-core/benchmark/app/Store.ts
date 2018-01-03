@@ -37,19 +37,7 @@ const adjectives = [
 	'fancy'
 ];
 
-const colours = [
-	'red',
-	'yellow',
-	'blue',
-	'green',
-	'pink',
-	'brown',
-	'purple',
-	'brown',
-	'white',
-	'black',
-	'orange'
-];
+const colours = ['red', 'yellow', 'blue', 'green', 'pink', 'brown', 'purple', 'brown', 'white', 'black', 'orange'];
 
 const nouns = [
 	'table',
@@ -87,7 +75,7 @@ export class Store {
 			const colour = colours[random(colours.length)];
 			const noun = nouns[random(nouns.length)];
 			const label = `${adjective} ${colour} ${noun}`;
-			data.push({id: this._id, label });
+			data.push({ id: this._id, label });
 			this._id++;
 		}
 		return data;
@@ -96,7 +84,7 @@ export class Store {
 	public updateData(mod: number = 10): void {
 		for (let i = 0; i < this._data.length; i += 10) {
 			const data = this._data[i];
-			this._data[i] = { ...data, label: `${data.label} !!!`};
+			this._data[i] = { ...data, label: `${data.label} !!!` };
 		}
 	}
 
@@ -111,7 +99,7 @@ export class Store {
 	}
 
 	public add(): void {
-		this._data = [ ...this._data, ...this._buildData() ];
+		this._data = [...this._data, ...this._buildData()];
 	}
 
 	public update(): void {

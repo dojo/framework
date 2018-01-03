@@ -1,9 +1,22 @@
-import { testTextContains, testClassContains, testElementLocatedByXpath, testElementNotLocatedByXPath, testElementLocatedById, clickElementById, clickElementByXPath, getTextByXPath } from './webdriverAccess';
+import {
+	testTextContains,
+	testClassContains,
+	testElementLocatedByXpath,
+	testElementNotLocatedByXPath,
+	testElementLocatedById,
+	clickElementById,
+	clickElementByXPath,
+	getTextByXPath
+} from './webdriverAccess';
 import { WebDriver } from 'selenium-webdriver';
 import { config, FrameworkData } from './common';
 import { repeat } from '@dojo/shim/string';
 
-export enum BenchmarkType { CPU, MEM, STARTUP }
+export enum BenchmarkType {
+	CPU,
+	MEM,
+	STARTUP
+}
 
 const SHORT_TIMEOUT = 20 * 1000;
 
@@ -22,7 +35,9 @@ const benchRun: Benchmark = {
 	label: 'create rows',
 	description: 'Duration for creating 1000 rows after the page loaded.',
 	type: BenchmarkType.CPU,
-	init: async function(driver: WebDriver) { await testElementLocatedById(driver, 'add', SHORT_TIMEOUT); },
+	init: async function(driver: WebDriver) {
+		await testElementLocatedById(driver, 'add', SHORT_TIMEOUT);
+	},
 	run: async function(driver: WebDriver) {
 		await clickElementById(driver, 'add');
 		await testElementLocatedByXpath(driver, '//tbody/tr[1000]/td[2]/a');
@@ -32,15 +47,16 @@ const benchRun: Benchmark = {
 const benchReplaceAll: Benchmark = {
 	id: '02_replace1k',
 	label: 'replace all rows',
-	description: 'Duration for updating all 1000 rows of the table (with ' + config.WARMUP_COUNT + ' warmup iterations).',
+	description:
+		'Duration for updating all 1000 rows of the table (with ' + config.WARMUP_COUNT + ' warmup iterations).',
 	type: BenchmarkType.CPU,
-	init: async function (driver: WebDriver) {
+	init: async function(driver: WebDriver) {
 		await testElementLocatedById(driver, 'run', SHORT_TIMEOUT);
 		for (let i = 0; i < config.WARMUP_COUNT; i++) {
 			await clickElementById(driver, 'run');
 		}
 	},
-	run: async function (driver: WebDriver) {
+	run: async function(driver: WebDriver) {
 		await clickElementById(driver, 'run');
 		await testTextContains(driver, '//tbody/tr[1]/td[1]', '5001');
 	}
@@ -49,33 +65,39 @@ const benchReplaceAll: Benchmark = {
 const benchUpdate: Benchmark = {
 	id: '03_update10th1k',
 	label: 'partial update',
-	description: 'Time to update the text of every 10th row (with ' + config.WARMUP_COUNT + ' warmup iterations) for a table with 10k rows.',
+	description:
+		'Time to update the text of every 10th row (with ' +
+		config.WARMUP_COUNT +
+		' warmup iterations) for a table with 10k rows.',
 	type: BenchmarkType.CPU,
-	init: async function (driver: WebDriver) {
-			await testElementLocatedById(driver, 'runlots', SHORT_TIMEOUT);
-			await clickElementById(driver, 'runlots');
-			for (let i = 0; i < config.WARMUP_COUNT; i++) {
-				await clickElementById(driver, 'update');
-			}
-	},
-	run: async function (driver: WebDriver) {
+	init: async function(driver: WebDriver) {
+		await testElementLocatedById(driver, 'runlots', SHORT_TIMEOUT);
+		await clickElementById(driver, 'runlots');
+		for (let i = 0; i < config.WARMUP_COUNT; i++) {
 			await clickElementById(driver, 'update');
-			await testTextContains(driver, '//tbody/tr[1]/td[2]/a', repeat(' !!!', config.WARMUP_COUNT + 1));
+		}
+	},
+	run: async function(driver: WebDriver) {
+		await clickElementById(driver, 'update');
+		await testTextContains(driver, '//tbody/tr[1]/td[2]/a', repeat(' !!!', config.WARMUP_COUNT + 1));
 	}
 };
 
 const benchSelect: Benchmark = {
 	id: '04_select1k',
 	label: 'select row',
-	description: 'Duration to highlight a row in response to a click on the row. (with ' + config.WARMUP_COUNT + ' warmup iterations).',
+	description:
+		'Duration to highlight a row in response to a click on the row. (with ' +
+		config.WARMUP_COUNT +
+		' warmup iterations).',
 	type: BenchmarkType.CPU,
 	init: async function(driver: WebDriver) {
-			await testElementLocatedById(driver, 'run', SHORT_TIMEOUT);
-			await clickElementById(driver, 'run');
-			await testElementLocatedByXpath(driver, '//tbody/tr[1]/td[2]/a');
-			for (let i = 0; i <= config.WARMUP_COUNT; i++) {
-				await clickElementByXPath(driver, `//tbody/tr[${i + 1}]/td[2]/a`);
-			}
+		await testElementLocatedById(driver, 'run', SHORT_TIMEOUT);
+		await clickElementById(driver, 'run');
+		await testElementLocatedByXpath(driver, '//tbody/tr[1]/td[2]/a');
+		for (let i = 0; i <= config.WARMUP_COUNT; i++) {
+			await clickElementByXPath(driver, `//tbody/tr[${i + 1}]/td[2]/a`);
+		}
 	},
 	run: async function(driver: WebDriver) {
 		await clickElementByXPath(driver, '//tbody/tr[2]/td[2]/a');
@@ -88,7 +110,7 @@ const benchSwapRows: Benchmark = {
 	label: 'swap rows',
 	description: 'Time to swap 2 rows on a 1K table. (with ' + config.WARMUP_COUNT + ' warmup iterations).',
 	type: BenchmarkType.CPU,
-	init: async function (driver: WebDriver) {
+	init: async function(driver: WebDriver) {
 		await testElementLocatedById(driver, 'run', SHORT_TIMEOUT);
 		await clickElementById(driver, 'run');
 		await testElementLocatedByXpath(driver, '//tbody/tr[1]/td[2]/a');
@@ -115,7 +137,11 @@ const benchRemove: Benchmark = {
 		await clickElementById(driver, 'run');
 		await testElementLocatedByXpath(driver, '//tbody/tr[1]/td[2]/a');
 		for (let i = 0; i < config.WARMUP_COUNT; i++) {
-			await testTextContains(driver, `//tbody/tr[${config.WARMUP_COUNT - i + 4}]/td[1]`, (config.WARMUP_COUNT - i + 4).toString());
+			await testTextContains(
+				driver,
+				`//tbody/tr[${config.WARMUP_COUNT - i + 4}]/td[1]`,
+				(config.WARMUP_COUNT - i + 4).toString()
+			);
 			await clickElementByXPath(driver, `//tbody/tr[${config.WARMUP_COUNT - i + 4}]/td[3]/a/span[1]`);
 			await testTextContains(driver, `//tbody/tr[${config.WARMUP_COUNT - i + 4}]/td[1]`, '10');
 		}
@@ -274,7 +300,7 @@ const benchStartup: Benchmark = {
 	}
 };
 
-export let benchmarks: [ Benchmark ] = [
+export let benchmarks: [Benchmark] = [
 	benchRun,
 	benchReplaceAll,
 	benchUpdate,
@@ -290,7 +316,7 @@ export let benchmarks: [ Benchmark ] = [
 	benchReplace5Memory,
 	benchCreateClear5Memory,
 	benchStartup
-	];
+];
 
 export function fileName(framework: FrameworkData, benchmark: Benchmark) {
 	return `${framework.name}_${benchmark.id}.json`;

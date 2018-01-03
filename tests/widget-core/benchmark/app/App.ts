@@ -4,7 +4,7 @@ import { v, w } from '../../../src/d';
 
 import { Row } from './Row';
 import { Buttons, ButtonConfig } from './Buttons';
-import { Store } from  './Store';
+import { Store } from './Store';
 
 export class App extends WidgetBase {
 	private _store: Store = new Store();
@@ -12,42 +12,42 @@ export class App extends WidgetBase {
 	private _run = () => {
 		this._store.run();
 		this.invalidate();
-	}
+	};
 
 	private _add = () => {
 		this._store.add();
 		this.invalidate();
-	}
+	};
 
 	private _update = () => {
 		this._store.update();
 		this.invalidate();
-	}
+	};
 
 	private _select = (id: number) => {
 		this._store.select(id);
 		this.invalidate();
-	}
+	};
 
 	private _delete = (id: number) => {
 		this._store.delete(id);
 		this.invalidate();
-	}
+	};
 
 	private _runLots = () => {
 		this._store.runLots();
 		this.invalidate();
-	}
+	};
 
 	private _clear = () => {
 		this._store.clear();
 		this.invalidate();
-	}
+	};
 
 	private _swapRows = () => {
 		this._store.swapRows();
 		this.invalidate();
-	}
+	};
 
 	private _buttonConfigs: ButtonConfig[] = [
 		{ id: 'run', label: 'Create 1,000 rows', onClick: this._run },
@@ -58,7 +58,7 @@ export class App extends WidgetBase {
 		{ id: 'swaprows', label: 'Swap Rows', onClick: this._swapRows }
 	];
 
-	protected render (): DNode {
+	protected render(): DNode {
 		const { _select, _delete, _store } = this;
 		const rows = _store.data.map(({ id, label }, index) => {
 			return w(Row, {
@@ -71,12 +71,10 @@ export class App extends WidgetBase {
 			});
 		});
 
-		return v('div', { key: 'root', classes: [ 'container' ] }, [
+		return v('div', { key: 'root', classes: ['container'] }, [
 			w(Buttons, { buttonConfigs: this._buttonConfigs }),
-			v('table', { classes: [ 'table', 'table-hover', 'table-striped', 'test-data' ] }, [
-				v('tbody', rows)
-			]),
-			v('span', { classes: [ 'preloadicon', 'glyphicon', 'glyphicon-remove' ] })
+			v('table', { classes: ['table', 'table-hover', 'table-striped', 'test-data'] }, [v('tbody', rows)]),
+			v('span', { classes: ['preloadicon', 'glyphicon', 'glyphicon-remove'] })
 		]);
 	}
 }
