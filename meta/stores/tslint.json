@@ -1,5 +1,7 @@
 {
+	"rulesDirectory": ["tslint-plugin-prettier"],
 	"rules": {
+		"prettier": true,
 		"align": false,
 		"ban": [],
 		"class-name": true,
@@ -35,9 +37,7 @@
 		"no-var-requires": false,
 		"object-literal-sort-keys": false,
 		"one-line": [ true, "check-open-brace", "check-whitespace" ],
-		"quotemark": [ true, "single" ],
 		"radix": true,
-		"semicolon": [ true, "always" ],
 		"trailing-comma": [ true, {
 			"multiline": "never",
 			"singleline": "never"
@@ -57,7 +57,6 @@
 			"property-declaration": "onespace",
 			"variable-declaration": "onespace"
 		} ],
-		"variable-name": [ true, "check-format", "allow-leading-underscore", "ban-keywords", "allow-pascal-case" ],
-		"whitespace": [ true, "check-branch", "check-decl", "check-operator", "check-module", "check-separator", "check-type", "check-typecast" ]
+		"variable-name": [ true, "check-format", "allow-leading-underscore", "ban-keywords", "allow-pascal-case" ]
 	}
 }

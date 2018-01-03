@@ -6,7 +6,6 @@ import { OperationType } from './../../../src/state/Patch';
 import { Pointer } from './../../../src/state/Pointer';
 
 describe('state/operations', () => {
-
 	it('add()', () => {
 		const result = operations.add({ path: '/test', state: null, value: null }, 'test');
 		assert.deepEqual(result, {
@@ -17,7 +16,7 @@ describe('state/operations', () => {
 	});
 
 	it('remove()', () => {
-		const result = operations.remove({ path:  '/test', state: null, value: null });
+		const result = operations.remove({ path: '/test', state: null, value: null });
 		assert.deepEqual(result, {
 			op: OperationType.REMOVE,
 			path: new Pointer('/test')
@@ -41,5 +40,4 @@ describe('state/operations', () => {
 			value: 'test'
 		});
 	});
-
 });

@@ -32,25 +32,20 @@ export function walk(segments: string[], object: any, clone = true): PointerTarg
 
 			if (clone || target === undefined) {
 				if (Array.isArray(target)) {
-					target = [ ...target ];
-				}
-				else if (typeof target === 'object') {
+					target = [...target];
+				} else if (typeof target === 'object') {
 					target = { ...target };
-				}
-				else if (isNaN(parseInt(nextSegment, 0))) {
+				} else if (isNaN(parseInt(nextSegment, 0))) {
 					target = {};
-				}
-				else {
+				} else {
 					target = [];
 				}
 				pointerTarget.target[segment] = target;
 				pointerTarget.target = target;
-			}
-			else {
+			} else {
 				pointerTarget.target = target;
 			}
-		}
-		else {
+		} else {
 			pointerTarget.segment = segment;
 		}
 		return pointerTarget;
@@ -63,12 +58,11 @@ export class Pointer<T = any, U = any> {
 	constructor(segments: string | string[]) {
 		if (Array.isArray(segments)) {
 			this._segments = segments;
-		}
-		else {
-			this._segments = (segments[0] === '/' ? segments : `/${segments}`).split('/') ;
+		} else {
+			this._segments = (segments[0] === '/' ? segments : `/${segments}`).split('/');
 			this._segments.shift();
 		}
-		if (segments.length === 0 || (segments.length === 1 && (segments[0] === '/') || segments[0] === '')) {
+		if (segments.length === 0 || ((segments.length === 1 && segments[0] === '/') || segments[0] === '')) {
 			throw new Error('Access to the root is not supported.');
 		}
 		this._segments = this._segments.map(decode);

@@ -1,10 +1,4 @@
-import {
-	ProcessError,
-	ProcessResult,
-	ProcessCallback,
-	ProcessCallbackDecorator,
-	Undo
-} from './process';
+import { ProcessError, ProcessResult, ProcessCallback, ProcessCallbackDecorator, Undo } from './process';
 
 /**
  * Undo manager interface

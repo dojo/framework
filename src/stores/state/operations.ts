@@ -1,8 +1,14 @@
-import { RemovePatchOperation, ReplacePatchOperation, AddPatchOperation, TestPatchOperation, OperationType } from './Patch';
+import {
+	RemovePatchOperation,
+	ReplacePatchOperation,
+	AddPatchOperation,
+	TestPatchOperation,
+	OperationType
+} from './Patch';
 import { Pointer } from './Pointer';
 import { Path } from '../Store';
 
-export function add<T = any, U = any>(path: Path<T,  U>, value: U): AddPatchOperation<T, U> {
+export function add<T = any, U = any>(path: Path<T, U>, value: U): AddPatchOperation<T, U> {
 	return {
 		op: OperationType.ADD,
 		path: new Pointer(path.path),

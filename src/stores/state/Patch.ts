@@ -31,7 +31,11 @@ export interface TestPatchOperation<T = any, U = any> extends BaseOperation<T, U
 	value: U;
 }
 
-export type PatchOperation<T = any, U = any> = AddPatchOperation<T, U> | RemovePatchOperation<T, U> | ReplacePatchOperation<T, U> | TestPatchOperation<T, U>;
+export type PatchOperation<T = any, U = any> =
+	| AddPatchOperation<T, U>
+	| RemovePatchOperation<T, U>
+	| ReplacePatchOperation<T, U>
+	| TestPatchOperation<T, U>;
 
 export interface PatchResult<T = any, U = any> {
 	object: T;
@@ -41,8 +45,7 @@ export interface PatchResult<T = any, U = any> {
 function add(pointerTarget: PointerTarget, value: any): any {
 	if (Array.isArray(pointerTarget.target)) {
 		pointerTarget.target.splice(parseInt(pointerTarget.segment, 10), 0, value);
-	}
-	else {
+	} else {
 		pointerTarget.target[pointerTarget.segment] = value;
 	}
 	return pointerTarget.object;
@@ -51,8 +54,7 @@ function add(pointerTarget: PointerTarget, value: any): any {
 function replace(pointerTarget: PointerTarget, value: any): any {
 	if (Array.isArray(pointerTarget.target)) {
 		pointerTarget.target.splice(parseInt(pointerTarget.segment, 10), 1, value);
-	}
-	else {
+	} else {
 		pointerTarget.target[pointerTarget.segment] = value;
 	}
 	return pointerTarget.object;
@@ -61,8 +63,7 @@ function replace(pointerTarget: PointerTarget, value: any): any {
 function remove(pointerTarget: PointerTarget): any {
 	if (Array.isArray(pointerTarget.target)) {
 		pointerTarget.target.splice(parseInt(pointerTarget.segment, 10), 1);
-	}
-	else {
+	} else {
 		delete pointerTarget.target[pointerTarget.segment];
 	}
 	return pointerTarget.object;
@@ -79,13 +80,11 @@ export function isObject(value: any): value is Object {
 export function isEqual(a: any, b: any): boolean {
 	if (Array.isArray(a) && Array.isArray(b)) {
 		return a.length === b.length && a.every((element: any, i: number) => isEqual(element, b[i]));
-	}
-	else if (isObject(a) && isObject(b)) {
+	} else if (isObject(a) && isObject(b)) {
 		const keysForA = Object.keys(a).sort();
 		const keysForB = Object.keys(b).sort();
-		return isEqual(keysForA, keysForB) && keysForA.every(key => isEqual(a[key], b[key]));
-	}
-	else {
+		return isEqual(keysForA, keysForB) && keysForA.every((key) => isEqual(a[key], b[key]));
+	} else {
 		return a === b;
 	}
 }
@@ -101,9 +100,8 @@ function inverse(operation: PatchOperation, state: any): any[] {
 			path: operation.path,
 			value: operation.value
 		};
-		return [ test, op ];
-	}
-	else if (operation.op === OperationType.REPLACE) {
+		return [test, op];
+	} else if (operation.op === OperationType.REPLACE) {
 		const op = {
 			op: OperationType.REPLACE,
 			path: operation.path,
@@ -114,14 +112,15 @@ function inverse(operation: PatchOperation, state: any): any[] {
 			path: operation.path,
 			value: operation.value
 		};
-		return [ test, op ];
-	}
-	else  {
-		return [{
-			op: OperationType.ADD,
-			path: operation.path,
-			value: operation.path.get(state)
-		}];
+		return [test, op];
+	} else {
+		return [
+			{
+				op: OperationType.ADD,
+				path: operation.path,
+				value: operation.path.get(state)
+			}
+		];
 	}
 }
 
@@ -129,7 +128,7 @@ export class Patch<T = any> {
 	private _operations: PatchOperation<T>[];
 
 	constructor(operations: PatchOperation<T> | PatchOperation<T>[]) {
-		this._operations = Array.isArray(operations) ? operations : [ operations ];
+		this._operations = Array.isArray(operations) ? operations : [operations];
 	}
 
 	public apply(object: any): PatchResult<T> {
@@ -156,7 +155,7 @@ export class Patch<T = any> {
 				default:
 					throw new Error('Unknown operation');
 			}
-			undoOperations = [ ...undoOperations, ...inverse(next, patchedObject) ];
+			undoOperations = [...undoOperations, ...inverse(next, patchedObject)];
 			return object;
 		}, object);
 		return { object: patchedObject, undoOperations };

@@ -50,7 +50,11 @@ export interface ProcessError<T = any> {
  * Represents a successful result from a ProcessExecutor
  */
 export interface ProcessResult<T = any> extends State<T> {
-	executor: (process: Process<T>, payload?: any, payloadTransformer?: Transformer) => Promise<ProcessResult<T> | ProcessError<T>>;
+	executor: (
+		process: Process<T>,
+		payload?: any,
+		payloadTransformer?: Transformer
+	) => Promise<ProcessResult<T> | ProcessError<T>>;
 	undo: Undo;
 	operations: PatchOperation<T>[];
 	apply: (operations: PatchOperation<T>[], invalidate?: boolean) => PatchOperation<T>[];
@@ -108,34 +112,37 @@ export function createCommandFactory<T>(): CommandFactory<T> {
 export function createProcess<T>(commands: (Command<T>[] | Command<T>)[], callback?: ProcessCallback): Process<T> {
 	return (store: Store<T>, transformer?: Transformer): ProcessExecutor<T> => {
 		const { apply, get, path, at } = store;
-		function executor(process: Process, payload?: any, payloadTransformer?: Transformer): Promise<ProcessResult | ProcessError> {
+		function executor(
+			process: Process,
+			payload?: any,
+			payloadTransformer?: Transformer
+		): Promise<ProcessResult | ProcessError> {
 			return process(store, payloadTransformer)(payload);
 		}
 
-		return async (...payload: any[]): Promise<ProcessResult | ProcessError>  => {
+		return async (...payload: any[]): Promise<ProcessResult | ProcessError> => {
 			const undoOperations: PatchOperation[] = [];
 			const operations: PatchOperation[] = [];
-			const commandsCopy = [ ...commands ];
+			const commandsCopy = [...commands];
 			const undo = () => {
 				store.apply(undoOperations, true);
 			};
 
 			let command = commandsCopy.shift();
 			let error: ProcessError | null = null;
-			payload = transformer ? [ transformer(payload) ] : payload;
+			payload = transformer ? [transformer(payload)] : payload;
 			try {
 				while (command) {
 					let results = [];
 					if (Array.isArray(command)) {
 						results = command.map((commandFunction) => commandFunction({ at, get, path, payload }));
 						results = await Promise.all(results);
-					}
-					else {
+					} else {
 						let result = command({ at, get, path, payload });
 						if (isThenable(result)) {
 							result = await result;
 						}
-						results = [ result ];
+						results = [result];
 					}
 
 					for (let i = 0; i < results.length; i++) {
@@ -146,8 +153,7 @@ export function createProcess<T>(commands: (Command<T>[] | Command<T>)[], callba
 					store.invalidate();
 					command = commandsCopy.shift();
 				}
-			}
-			catch (e) {
+			} catch (e) {
 				error = { error: e, command };
 			}
 

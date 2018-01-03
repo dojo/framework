@@ -6,9 +6,7 @@ import { Patch, OperationType } from './../../../src/state/Patch';
 import * as ops from './../../../src/state/operations';
 
 describe('state/Patch', () => {
-
 	describe('add', () => {
-
 		it('value to new path', () => {
 			const patch = new Patch(ops.add({ path: 'test', state: null, value: null }, 'test'));
 			const obj = {};
@@ -16,8 +14,8 @@ describe('state/Patch', () => {
 			assert.notStrictEqual(result.object, obj);
 			assert.deepEqual(result.object, { test: 'test' });
 			assert.deepEqual(result.undoOperations, [
-				{op: 'test', path: new Pointer('/test'), value: 'test'},
-				{op: 'remove', path: new Pointer('/test') }
+				{ op: 'test', path: new Pointer('/test'), value: 'test' },
+				{ op: 'remove', path: new Pointer('/test') }
 			]);
 		});
 
@@ -28,8 +26,8 @@ describe('state/Patch', () => {
 			assert.notStrictEqual(result.object, obj);
 			assert.deepEqual(result.object, { foo: { bar: { qux: 'test' } } });
 			assert.deepEqual(result.undoOperations, [
-				{op: 'test', path: new Pointer('/foo/bar/qux'), value: 'test'},
-				{op: 'remove', path: new Pointer('/foo/bar/qux') }
+				{ op: 'test', path: new Pointer('/foo/bar/qux'), value: 'test' },
+				{ op: 'remove', path: new Pointer('/foo/bar/qux') }
 			]);
 		});
 
@@ -40,8 +38,8 @@ describe('state/Patch', () => {
 			assert.notStrictEqual(result.object, obj);
 			assert.deepEqual(result.object, { test: 'test' });
 			assert.deepEqual(result.undoOperations, [
-				{op: 'test', path: new Pointer('/test'), value: 'test'},
-				{op: 'remove', path: new Pointer('/test') }
+				{ op: 'test', path: new Pointer('/test'), value: 'test' },
+				{ op: 'remove', path: new Pointer('/test') }
 			]);
 		});
 
@@ -52,15 +50,13 @@ describe('state/Patch', () => {
 			assert.notStrictEqual(result.object, obj);
 			assert.deepEqual(result.object, { test: ['test'] });
 			assert.deepEqual(result.undoOperations, [
-				{op: 'test', path: new Pointer('/test/0'), value: 'test'},
-				{op: 'remove', path: new Pointer('/test/0') }
+				{ op: 'test', path: new Pointer('/test/0'), value: 'test' },
+				{ op: 'remove', path: new Pointer('/test/0') }
 			]);
 		});
-
 	});
 
 	describe('replace', () => {
-
 		it('new path', () => {
 			const patch = new Patch(ops.replace({ path: '/test', state: null, value: null }, 'test'));
 			const obj = {};
@@ -68,8 +64,8 @@ describe('state/Patch', () => {
 			assert.notStrictEqual(result.object, obj);
 			assert.deepEqual(result.object, { test: 'test' });
 			assert.deepEqual(result.undoOperations, [
-				{op: OperationType.TEST, path: new Pointer('/test'), value: 'test'},
-				{op: OperationType.REPLACE, path: new Pointer('/test'), value: undefined }
+				{ op: OperationType.TEST, path: new Pointer('/test'), value: 'test' },
+				{ op: OperationType.REPLACE, path: new Pointer('/test'), value: undefined }
 			]);
 		});
 
@@ -80,8 +76,8 @@ describe('state/Patch', () => {
 			assert.notStrictEqual(result.object, obj);
 			assert.deepEqual(result.object, { foo: { bar: { qux: 'test' } } });
 			assert.deepEqual(result.undoOperations, [
-				{op: OperationType.TEST, path: new Pointer('/foo/bar/qux'), value: 'test'},
-				{op: OperationType.REPLACE, path: new Pointer('/foo/bar/qux'), value: undefined }
+				{ op: OperationType.TEST, path: new Pointer('/foo/bar/qux'), value: 'test' },
+				{ op: OperationType.REPLACE, path: new Pointer('/foo/bar/qux'), value: undefined }
 			]);
 		});
 
@@ -92,64 +88,60 @@ describe('state/Patch', () => {
 			assert.notStrictEqual(result.object, obj);
 			assert.deepEqual(result.object, { test: 'test' });
 			assert.deepEqual(result.undoOperations, [
-				{op: OperationType.TEST, path: new Pointer('/test'), value: 'test'},
-				{op: OperationType.REPLACE, path: new Pointer('/test'), value: true }
+				{ op: OperationType.TEST, path: new Pointer('/test'), value: 'test' },
+				{ op: OperationType.REPLACE, path: new Pointer('/test'), value: true }
 			]);
 		});
 
 		it('array index path', () => {
 			const patch = new Patch(ops.replace({ path: '/test/1', state: null, value: null }, 'test'));
-			const obj = { test: [ 'test', 'foo' ] };
+			const obj = { test: ['test', 'foo'] };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
-			assert.deepEqual(result.object, { test: [ 'test', 'test' ] });
+			assert.deepEqual(result.object, { test: ['test', 'test'] });
 			assert.deepEqual(result.undoOperations, [
-				{op: OperationType.TEST, path: new Pointer('/test/1'), value: 'test'},
-				{op: OperationType.REPLACE, path: new Pointer('/test/1'), value: 'foo' }
+				{ op: OperationType.TEST, path: new Pointer('/test/1'), value: 'test' },
+				{ op: OperationType.REPLACE, path: new Pointer('/test/1'), value: 'foo' }
 			]);
 		});
-
 	});
 
 	describe('remove', () => {
-
 		it('new path', () => {
-			const patch = new Patch(ops.remove({ path:  '/test', state: null, value: null }));
+			const patch = new Patch(ops.remove({ path: '/test', state: null, value: null }));
 			const obj = { other: true };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
 			assert.deepEqual(result.object, { other: true });
 			assert.deepEqual(result.undoOperations, [
-				{op: OperationType.ADD, path: new Pointer('/test'), value: undefined }
+				{ op: OperationType.ADD, path: new Pointer('/test'), value: undefined }
 			]);
 		});
 
 		it('existing path', () => {
-			const patch = new Patch(ops.remove({ path:  '/test', state: null, value: null }));
+			const patch = new Patch(ops.remove({ path: '/test', state: null, value: null }));
 			const obj = { test: true };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
-			assert.deepEqual(result.object, { });
+			assert.deepEqual(result.object, {});
 			assert.deepEqual(result.undoOperations, [
-				{op: OperationType.ADD, path: new Pointer('/test'), value: true }
+				{ op: OperationType.ADD, path: new Pointer('/test'), value: true }
 			]);
 		});
 
 		it('array index path', () => {
 			const patch = new Patch(ops.remove({ path: '/test/1', state: null, value: null }));
-			const obj = { test: [ 'test', 'foo' ] };
+			const obj = { test: ['test', 'foo'] };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
-			assert.deepEqual(result.object, { test: [ 'test' ] });
+			assert.deepEqual(result.object, { test: ['test'] });
 			assert.deepEqual(result.undoOperations, [
-				{op: OperationType.ADD, path: new Pointer('/test/1'), value: 'foo' }
+				{ op: OperationType.ADD, path: new Pointer('/test/1'), value: 'foo' }
 			]);
 		});
-
 	});
 
 	describe('test', () => {
-
 		it('success', () => {
 			const patch = new Patch(ops.test({ path: '/test', state: null, value: null }, 'test'));
 			const obj = { test: 'test' };
@@ -160,42 +152,60 @@ describe('state/Patch', () => {
 		it('failure', () => {
 			const patch = new Patch(ops.test({ path: '/test', state: null, value: null }, true));
 			const obj = { test: 'test' };
-			assert.throws(() => {
-				patch.apply(obj);
-			}, Error, 'Test operation failure. Unable to apply any operations.');
+			assert.throws(
+				() => {
+					patch.apply(obj);
+				},
+				Error,
+				'Test operation failure. Unable to apply any operations.'
+			);
 		});
 
 		it('nested path', () => {
 			const patch = new Patch(ops.test({ path: '/foo/0/bar/baz/0/qux', state: null, value: null }, true));
 			const obj = {
-				foo: [ {
-					bar: {
-						baz: [{
-							qux: true
-						}]
+				foo: [
+					{
+						bar: {
+							baz: [
+								{
+									qux: true
+								}
+							]
+						}
 					}
-				}]
+				]
 			};
 			const result = patch.apply(obj);
 			assert.strictEqual(result.object, obj);
 		});
 
 		it('complex value', () => {
-			const patch = new Patch(ops.test({ path: '/foo', state: null, value: null }, [ {
-				bar: {
-					baz: [{
-						qux: true
-					}]
-				}
-			}]));
-			const obj = {
-				foo: [ {
-					bar: {
-						baz: [{
-							qux: true
-						}]
+			const patch = new Patch(
+				ops.test({ path: '/foo', state: null, value: null }, [
+					{
+						bar: {
+							baz: [
+								{
+									qux: true
+								}
+							]
+						}
 					}
-				}]
+				])
+			);
+			const obj = {
+				foo: [
+					{
+						bar: {
+							baz: [
+								{
+									qux: true
+								}
+							]
+						}
+					}
+				]
 			};
 			const result = patch.apply(obj);
 			assert.strictEqual(result.object, obj);
@@ -214,9 +224,12 @@ describe('state/Patch', () => {
 			op: 'unknown',
 			path: new Pointer('/test')
 		} as any);
-		assert.throws(() => {
-			patch.apply({});
-		}, Error, 'Unknown operation');
+		assert.throws(
+			() => {
+				patch.apply({});
+			},
+			Error,
+			'Unknown operation'
+		);
 	});
-
 });
