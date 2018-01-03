@@ -474,7 +474,9 @@ function callOnDetach(dNodes: InternalDNode | InternalDNode[], parentInstance: D
 	for (let i = 0; i < dNodes.length; i++) {
 		const dNode = dNodes[i];
 		if (isWNode(dNode)) {
-			callOnDetach(dNode.rendered, dNode.instance);
+			if (dNode.rendered) {
+				callOnDetach(dNode.rendered, dNode.instance);
+			}
 			const instanceData = widgetInstanceMap.get(dNode.instance)!;
 			instanceData.onDetach();
 		}

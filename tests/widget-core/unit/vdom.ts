@@ -1017,6 +1017,38 @@ describe('vdom', () => {
 			assert.strictEqual(quxDetachCount, 8);
 		});
 
+		it('should not throw error running `onDetach` for widgets that do not have any rendered children', () => {
+			class Foo extends WidgetBase {
+				render() {
+					return null;
+				}
+			}
+
+			class Bar extends WidgetBase {
+				render() {
+					return w(Foo, {});
+				}
+			}
+
+			class Baz extends WidgetBase {
+				private _show = false;
+
+				render() {
+					this._show = !this._show;
+					return this._show ? w(Bar, {}) : null;
+				}
+			}
+
+			const widget = new Baz();
+			const projection = dom.create(widget.__render__(), widget);
+			resolvers.resolve();
+			widget.invalidate();
+			projection.update(widget.__render__());
+			assert.doesNotThrow(() => {
+				resolvers.resolve();
+			});
+		});
+
 		it('remove elements for embedded WNodes', () => {
 			class Foo extends WidgetBase {
 				render() {
