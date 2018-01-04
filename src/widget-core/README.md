@@ -729,7 +729,7 @@ class MyWidget extends WidgetBase {
 
 // multiple entries
 @registry('loading', LoadingWidget)
-@registry('heading', () => import('./HeadingWidget')
+@registry('heading', () => import('./HeadingWidget'))
 class MyWidget extends WidgetBase {
     render() {
         if (this.properties) {
@@ -741,6 +741,19 @@ class MyWidget extends WidgetBase {
         ]);
     }
 }
+```
+
+#### Loading esModules
+
+The registry can handle the detection of imported esModules for you that have the widget constructor as the default export. This means that your callback function can simply return the `import` call. If the widget constructor is not the default export you will need to pass it manually.
+
+``` ts
+@registry('Button', () => import('./Button')) // default export
+@registry('Table', async () => {
+    const module = await import('./HeadingWidget');
+    return module.table;
+})
+class MyWidget extends WidgetBase {}
 ```
 
 ### Decorator Lifecycle Hooks
