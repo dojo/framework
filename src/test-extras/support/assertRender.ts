@@ -1,7 +1,7 @@
 import { assign } from '@dojo/core/lang';
 import Set from '@dojo/shim/Set';
-import { isHNode, isWNode } from '@dojo/widget-core/d';
-import { DNode, HNode, WNode, SupportedClassName } from '@dojo/widget-core/interfaces';
+import { isVNode, isWNode } from '@dojo/widget-core/d';
+import { DNode, VNode, WNode, SupportedClassName } from '@dojo/widget-core/interfaces';
 import AssertionError from './AssertionError';
 import { diff, DiffOptions, getComparableObjects, isCustomDiff } from './compare';
 import { compareProperty } from './d';
@@ -10,9 +10,9 @@ const RENDER_FAIL_MESSAGE = 'Render unexpected';
 
 export interface AssertRenderOptions extends DiffOptions {
 	/**
-	 * A replacement type guard for `isHNode`
+	 * A replacement type guard for `isVNode`
 	 */
-	isHNode?(child: DNode): child is HNode;
+	isVNode?(child: DNode): child is VNode;
 
 	/**
 	 * A replacement type guard for `isWNode`
@@ -116,7 +116,7 @@ export default function assertRender(
 		message = options;
 		options = undefined;
 	}
-	const { isHNode: localIsHNode = isHNode, isWNode: localIsWNode = isWNode, ...passedDiffOptions } = (options ||
+	const { isVNode: localIsVNode = isVNode, isWNode: localIsWNode = isWNode, ...passedDiffOptions } = (options ||
 		{}) as AssertRenderOptions;
 	const diffOptions: DiffOptions = assign({}, defaultDiffOptions, passedDiffOptions);
 
@@ -144,8 +144,8 @@ export default function assertRender(
 		assertChildren(actual, expected);
 	} else if (Array.isArray(actual) || Array.isArray(expected)) {
 		throwAssertionError(actual, expected, getArrayPreamble(actual, expected), message);
-	} else if ((localIsHNode(actual) && localIsHNode(expected)) || (localIsWNode(actual) && localIsWNode(expected))) {
-		if (localIsHNode(actual) && localIsHNode(expected)) {
+	} else if ((localIsVNode(actual) && localIsVNode(expected)) || (localIsWNode(actual) && localIsWNode(expected))) {
+		if (localIsVNode(actual) && localIsVNode(expected)) {
 			if (actual.tag !== expected.tag) {
 				/* The tags do not match */
 				throwAssertionError(actual.tag, expected.tag, `Tags do not match`, message);
@@ -203,8 +203,8 @@ export default function assertRender(
 			/* The strings do not match */
 			throwAssertionError(actual, expected, `Unexpected string values`, message);
 		}
-	} else if (isHNode(actual) && typeof expected === 'string') {
-		// when doing an expected render on already rendered nodes, strings are converted to _shell_ HNodes
+	} else if (isVNode(actual) && typeof expected === 'string') {
+		// when doing an expected render on already rendered nodes, strings are converted to _shell_ VNodes
 		// so we want to compare to those instead
 		if (actual.text !== expected) {
 			throwAssertionError(actual.text, expected, `Expected text differs from rendered text`, message);

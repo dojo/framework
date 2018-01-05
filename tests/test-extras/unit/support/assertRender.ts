@@ -5,7 +5,7 @@ import AssertionError from '../../../src/support/AssertionError';
 import assertRender from '../../../src/support/assertRender';
 import { v, w } from '@dojo/widget-core/d';
 import WidgetBase from '@dojo/widget-core/WidgetBase';
-import { HNode, SupportedClassName, WidgetProperties, WNode } from '@dojo/widget-core/interfaces';
+import { VNode, SupportedClassName, WidgetProperties, WNode } from '@dojo/widget-core/interfaces';
 
 interface MockWidgetProperties extends WidgetProperties {
 	classes?: SupportedClassName | SupportedClassName[];
@@ -32,11 +32,11 @@ registerSuite('support/assertRender', {
 			assertRender(v('div'), v('div'));
 		},
 
-		'array HNodes equal'() {
+		'array VNodes equal'() {
 			assertRender([v('div'), v('span')], [v('div'), v('span')]);
 		},
 
-		'actual HNodes array and expected HNode not equal'() {
+		'actual VNodes array and expected VNode not equal'() {
 			assert.throws(
 				() => {
 					assertRender([v('div'), v('span')], v('div'));
@@ -46,7 +46,7 @@ registerSuite('support/assertRender', {
 			);
 		},
 
-		'expected HNode and expected HNode array not equal'() {
+		'expected VNode and expected VNode array not equal'() {
 			assert.throws(
 				() => {
 					assertRender(v('div'), [v('div'), v('span')]);
@@ -180,11 +180,11 @@ registerSuite('support/assertRender', {
 			);
 		},
 
-		'HNode children equal'() {
+		'VNode children equal'() {
 			assertRender(v('div', {}, [v('span', {}, ['foo'])]), v('div', {}, [v('span', {}, ['foo'])]));
 		},
 
-		'HNode children not equal'() {
+		'VNode children not equal'() {
 			assert.throws(
 				() => {
 					assertRender(v('div', {}, [v('span', {}, ['foo'])]), v('div', {}, [v('i', {}, ['foo'])]));
@@ -360,7 +360,7 @@ registerSuite('support/assertRender', {
 			assertRender(w(MockWidget, {}, ['foo']), w(MockWidget, {}, ['foo']));
 		},
 
-		'HNode children equal'() {
+		'VNode children equal'() {
 			assertRender(w(MockWidget, {}, [v('div')]), w(MockWidget, {}, [v('div')]));
 		},
 
@@ -524,15 +524,15 @@ registerSuite('support/assertRender', {
 			assert.isTrue(called, 'isWNode should have been called');
 		},
 
-		isHNode() {
+		isVNode() {
 			let called = false;
 			assertRender(v('div'), v('div'), {
-				isHNode(node: any): node is HNode {
+				isVNode(node: any): node is VNode {
 					called = true;
 					return true;
 				}
 			});
-			assert.isTrue(called, 'isHNode should have been called');
+			assert.isTrue(called, 'isVNode should have been called');
 		},
 
 		allowFunctionValues() {

@@ -31,9 +31,9 @@
   "peerDependencies": {
     "@dojo/core": "~0.3.0",
     "@dojo/has": "~0.1.1",
-    "@dojo/i18n": "~0.3.0",
+    "@dojo/i18n": "~0.4.0",
     "@dojo/shim": "~0.2.3",
-    "@dojo/widget-core": "~0.4.0"
+    "@dojo/widget-core": "~0.5.0"
   },
   "dependencies": {
     "jsdom": "^10.0.0",

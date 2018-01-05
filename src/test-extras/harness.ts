@@ -8,13 +8,13 @@ import WeakMap from '@dojo/shim/WeakMap';
 import {
 	Constructor,
 	DNode,
-	HNode,
+	VNode,
 	WidgetMetaBase,
 	WidgetMetaConstructor,
 	WidgetProperties,
 	WNode
 } from '@dojo/widget-core/interfaces';
-import { decorate, isHNode, isWNode, v, w } from '@dojo/widget-core/d';
+import { decorate, isVNode, isWNode, v, w } from '@dojo/widget-core/d';
 import WidgetBase from '@dojo/widget-core/WidgetBase';
 import { afterRender } from '@dojo/widget-core/decorators/afterRender';
 import { ProjectorMixin } from '@dojo/widget-core/mixins/Projector';
@@ -36,12 +36,12 @@ let harnessId = 0;
  * @param target the root DNode to search
  * @param key the key to match
  */
-export function findDNodeByKey(target: RenderResults, key: string | object): HNode | WNode | undefined {
+export function findDNodeByKey(target: RenderResults, key: string | object): VNode | WNode | undefined {
 	if (!target) {
 		return;
 	}
 	if (Array.isArray(target)) {
-		let found: HNode | WNode | undefined;
+		let found: VNode | WNode | undefined;
 		target.forEach((node) => {
 			if (found) {
 				if (findDNodeByKey(node, key)) {
@@ -381,7 +381,7 @@ export class Harness<W extends WidgetBase<WidgetProperties>> extends Evented {
 		let { target = this.getDom(), key, ...sendOptions } = options;
 		if (key) {
 			const dnode = findDNodeByKey(this._widgetHarness.lastRender, key);
-			if (isHNode(dnode)) {
+			if (isVNode(dnode)) {
 				target = (dnode as any).domNode as Element;
 			} else {
 				throw new Error(`Could not find key of "${key}" to sendEvent`);
