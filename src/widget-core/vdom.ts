@@ -744,12 +744,12 @@ function createDom(
 			} else {
 				domNode = dnode.domNode;
 			}
+			initPropertiesAndChildren(domNode! as Element, dnode, parentInstance, projectionOptions);
 			if (insertBefore !== undefined) {
 				parentVNode.domNode!.insertBefore(domNode, insertBefore);
 			} else if (domNode!.parentNode !== parentVNode.domNode!) {
 				parentVNode.domNode!.appendChild(domNode);
 			}
-			initPropertiesAndChildren(domNode! as Element, dnode, parentInstance, projectionOptions);
 		}
 	}
 }

@@ -1,6 +1,6 @@
 const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import { match, spy, stub, SinonStub } from 'sinon';
+import { match, spy, stub, SinonStub, SinonSpy } from 'sinon';
 import { createResolvers } from './../support/util';
 import sendEvent from './../support/sendEvent';
 
@@ -57,6 +57,8 @@ class TestWidget extends WidgetBase<any> {
 }
 
 describe('vdom', () => {
+	const spys: SinonSpy[] = [];
+
 	beforeEach(() => {
 		projectorStub.nodeHandler.add.reset();
 		projectorStub.nodeHandler.addRoot.reset();
@@ -71,6 +73,10 @@ describe('vdom', () => {
 	afterEach(() => {
 		consoleStub.restore();
 		resolvers.restore();
+		for (let spy of spys) {
+			spy.restore();
+		}
+		spys.length = 0;
 	});
 
 	describe('widgets', () => {
@@ -1420,6 +1426,28 @@ describe('vdom', () => {
 			assert.strictEqual(root.foo, 'foo');
 			assert.strictEqual(root.children[0].bar, 'bar');
 			assert.isFalse(appendChildSpy.called);
+		});
+
+		it('will append nodes with attributes already attached', (test) => {
+			const expected = '<div data-attr="test"></div>';
+			const appendedHtml: string[] = [];
+
+			const createElement = document.createElement.bind(document);
+			const createElementStub = stub(document, 'createElement', (name: string) => {
+				const node = createElement(name);
+				const appendChild = node.appendChild.bind(node);
+				stub(node, 'appendChild', (node: Element) => {
+					appendedHtml.push(node.outerHTML);
+					return appendChild(node);
+				});
+				return node;
+			});
+			spys.push(createElementStub);
+			const projection = dom.create(v('div', { 'data-attr': 'test' }), projectorStub);
+
+			assert.strictEqual(projection.domNode.innerHTML, expected);
+			assert.lengthOf(appendedHtml, 1);
+			assert.strictEqual(appendedHtml[0], expected);
 		});
 	});
 
