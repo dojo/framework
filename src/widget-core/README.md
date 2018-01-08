@@ -690,25 +690,7 @@ projector.setProperties({ registry });
 
 In some scenarios, it might be desirable to allow the `baseRegistry` to override an item defined in the local `registry`. Use true as the second argument of the registry.get function to override the local item.
 
-The following example sets a default loading indicator widget, but passes `true` when getting the widget from the `registry`. This allows a consumer to register an overriding loading indicator in the `baseRegistry`.
-
 The Registry will automatically detect and handle widget constructors as default exports for imported esModules for you.
-
-```ts
-class MyWidget extends WidgetBase {
-    constructor() {
-        this.registry.define('loading', LoadingWidget);
-    }
-
-    render() {
-        if (this.properties) {
-            const LoadingWidget = this.registry.get('loading', true);
-            return w(LoadingWidget, {});
-        }
-        return w(MyActualChildWidget, {});
-    }
-}
-```
 
 #### Registry Decorator
 
@@ -819,10 +801,6 @@ class MyBaseClass extends WidgetBase<WidgetProperties> {
     }
 }
 ```
-
-##### AfterConstructor
-
-The `afterConstructor` lifecycle hook does not receive any params and is ran after the `WidgetBase` constructor code. It is currently used in the `registry decorator` to create registry entries.
 
 ### Method Lifecycle Hooks
 
