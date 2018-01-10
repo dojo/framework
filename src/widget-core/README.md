@@ -767,6 +767,15 @@ class MyClass extends WidgetBase<MyClassProperties> {
 }
 ```
 
+##### AlwaysRender
+
+The `alwaysRender` decorator is used to force a widget to always render regardless of whether the widget's properties are considered different.
+
+```ts
+@alwaysRender()
+class MyClass extends WidgetBase {}
+```
+
 ##### BeforeRender
 
 The `beforeRender` lifecycle hook receives the widget's `render` function, `properties` and `children` and is expected to return a function that satisfies the `render` API. The `properties` and `children` are passed to enable them to be manipulated or decorated prior to `render` being called.

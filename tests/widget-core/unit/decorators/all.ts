@@ -1,4 +1,5 @@
 import './afterRender';
+import './alwaysRender';
 import './beforeProperties';
 import './beforeRender';
 import './diffProperty';

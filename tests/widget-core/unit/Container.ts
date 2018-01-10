@@ -1,12 +1,11 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { v } from '../../src/d';
+import { v, w } from '../../src/d';
 import { WidgetBase } from '../../src/WidgetBase';
-import { diffProperty } from './../../src/decorators/diffProperty';
-import { always } from '../../src/diff';
 import { Container } from './../../src/Container';
 import { Registry } from './../../src/Registry';
 import { Injector } from './../../src/Injector';
+import { ProjectorMixin } from './../../src/mixins/Projector';
 
 interface TestWidgetProperties {
 	foo: string;
@@ -95,25 +94,43 @@ registerSuite('mixins/Container', {
 
 			assert.strictEqual(renderResult.widgetConstructor, 'test-widget');
 		},
-		'container always updates'() {
-			@diffProperty('foo', always)
+		'Container should always render but not invalidate parent when properties have not changed'() {
+			let parentInvalidateCount = 0;
+			let renderCount = 0;
 			class Child extends WidgetBase<{ foo: string }> {}
-			let invalidatedCount = 0;
-
 			class ContainerClass extends Container(Child, 'test-state-1', { getProperties }) {
-				invalidate() {
-					invalidatedCount++;
-					super.invalidate();
+				render() {
+					renderCount++;
+					return super.render();
 				}
 			}
-			const widget = new ContainerClass();
-			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
-			widget.__setProperties__({ foo: 'bar' });
-			assert.strictEqual(invalidatedCount, 3);
-			widget.__setProperties__({ foo: 'bar' });
-			assert.strictEqual(invalidatedCount, 4);
-			widget.__setProperties__({ foo: 'bar' });
-			assert.strictEqual(invalidatedCount, 5);
+			class Parent extends ProjectorMixin(WidgetBase) {
+				invalidate() {
+					parentInvalidateCount++;
+					super.invalidate();
+				}
+				render() {
+					return w(ContainerClass, {});
+				}
+			}
+			const projector = new Parent();
+			projector.setProperties({ registry });
+			projector.async = false;
+			projector.append();
+			parentInvalidateCount = 0;
+			renderCount = 0;
+
+			injector.set({});
+			assert.strictEqual(parentInvalidateCount, 1);
+			assert.strictEqual(renderCount, 1);
+
+			injector.set({});
+			assert.strictEqual(parentInvalidateCount, 2);
+			assert.strictEqual(renderCount, 2);
+
+			injector.set({});
+			assert.strictEqual(parentInvalidateCount, 3);
+			assert.strictEqual(renderCount, 3);
 		}
 	}
 });

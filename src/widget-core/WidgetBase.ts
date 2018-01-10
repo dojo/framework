@@ -200,12 +200,12 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	public __setProperties__(originalProperties: this['properties']): void {
+		this._renderState = WidgetRenderState.PROPERTIES;
 		const properties = this._runBeforeProperties(originalProperties);
 		const registeredDiffPropertyNames = this.getDecorator('registeredDiffProperty');
 		const changedPropertyKeys: string[] = [];
 		const propertyNames = Object.keys(properties);
 		const instanceData = widgetInstanceMap.get(this)!;
-		this._renderState = WidgetRenderState.PROPERTIES;
 
 		if (this._initialProperties === false || registeredDiffPropertyNames.length !== 0) {
 			const allProperties = [...propertyNames, ...Object.keys(this._properties)];
