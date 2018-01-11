@@ -8,6 +8,7 @@ import {
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { w } from '@dojo/widget-core/d';
 import { inject } from '@dojo/widget-core/decorators/inject';
+import { alwaysRender } from '@dojo/widget-core/decorators/alwaysRender';
 
 import { Router } from './Router';
 import { routerKey } from './RouterInjector';
@@ -42,12 +43,8 @@ export function Outlet<W extends WidgetBaseInterface, F extends WidgetBaseInterf
 	}
 
 	@inject({ name: routerKey, getProperties })
+	@alwaysRender()
 	class OutletComponent extends WidgetBase<Partial<W['properties']> & { router: Router<any> }, null> {
-
-		public __setProperties__(properties: Partial<W['properties']> & { router: Router<any> }): void {
-			super.__setProperties__(properties);
-			this.invalidate();
-		}
 
 		protected render(): DNode {
 			const { router } = this.properties;

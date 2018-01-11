@@ -1,12 +1,12 @@
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { v } from '@dojo/widget-core/d';
 import { inject } from '@dojo/widget-core/decorators/inject';
-import { Constructor, DNode, VirtualDomProperties } from '@dojo/widget-core/interfaces';
+import { Constructor, DNode, VNodeProperties } from '@dojo/widget-core/interfaces';
 
 import { routerKey } from './RouterInjector';
 import { Router } from './Router';
 
-export interface LinkProperties extends VirtualDomProperties {
+export interface LinkProperties extends VNodeProperties {
 	key?: string;
 	isOutlet?: boolean;
 	params?: any;
