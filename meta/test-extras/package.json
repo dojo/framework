@@ -40,7 +40,6 @@
     "pepjs": "^0.4.2"
   },
   "devDependencies": {
-    "@dojo/interfaces": "~0.2.0",
     "@dojo/loader": "~0.1.1",
     "@types/glob": "5.0.*",
     "@types/grunt": "0.4.*",
