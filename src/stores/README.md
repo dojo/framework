@@ -74,7 +74,7 @@ These function accept a `Path` type. This is returned by the `path` and `at` met
 
 Commands are simply functions which are called internally by the store when executing a `Process` and return an array of `PatchOperations` that tells the `store` what state changes needs to be performed.
 
-Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a typesafe way, a `get` function for access to the store's state, and a `payload` object which contains an array of the arguments that the process executor was called with.
+Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a typesafe way, a `get` function for access to the store's state, and a `payload` object for the argument that the process executor was called with.
 
 The `get` function returns back state for a given `Path`, for example `get(path('my', 'deep', 'state'))` or `get(at(path('my', 'array', 'item'), 9))`.
 
@@ -83,7 +83,7 @@ function addTodoCommand({ at, path, get, payload }: CommandRequest) {
 	const todosPath = path('todos');
 	const length = get(todosPath).length;
 	const operations = [
-		add(at(todosPath, length), payload[0])
+		add(at(todosPath, length), payload)
 	];
 
 	return operations;
@@ -94,15 +94,32 @@ function calculateCountsCommand({ get, path }: CommandRequest) {
 	const completedTodos = todos.filter((todo: any) => todo.completed);
 	const operations = [
 		replace(path('activeCount'), todos.length - completedTodos.length),
-		replace(path('completedCount'), completedTodos.length)	
+		replace(path('completedCount'), completedTodos.length)
 	];
 
 	return operations;
 }
 ```
 
-A `Command`, or the `CommandRequest` argument to it, can be provided with a generic that indicates the type of the state of the
-store they are intended to target. This will provide type checking for all calls to `path` and `at`, ensuring that the operations will be targeting real properties of the store, and providing type inference for the return type of `get`. In order to avoid typing each `Command` explicitly, a `CommandFactory` can be created that will pass its generic type onto all commands it creates. Creating commands using a factory is essentially the same as creating them without one. It is simply a convenience to avoid repeating the same type for each command.
+A `Command`, or the `CommandRequest` argument to it, can be provided with generics that indicate the type of the state of the store they are intended to target and the payload that will be passed. This will provide type checking for all calls to `path` and `at` and usages of `payload`, ensuring that the operations will be targeting real properties of the store, and providing type inference for the return type of `get`.
+
+```ts
+interface MyState {
+	id: string;
+}
+
+interface Payload {
+	id: string;
+}
+const command = (request: CommandRequest<MyState, Payload>) => {
+	return [
+		add(path('id'), request.payload.id);
+	];
+};
+
+```
+
+In order to avoid typing each `Command` explicitly, a `CommandFactory` can be created that will pass its generic types onto all commands it creates. Creating commands using a factory is essentially the same as creating them without one. It is simply a convenience to avoid repeating the same typings for each command.
 
 ```ts
 interface Todo {
@@ -113,7 +130,7 @@ interface Todo {
 interface TodoState {
 	todos: Todo[];
 	activeCount: number;
-	completdCount: number;
+	completedCount: number;
 }
 
 const createCommand = createCommandFactory<TodoState>();
@@ -125,7 +142,7 @@ const addTodoCommand = createCommand(({ at, get, path, payload }) => {
 	const operations = [
 		// Using the utilities provided by the `operations` module ensures that the paths provided are valid,
 		// and that the values being added or replaced are of the appropriate type
-		add(at(path('todos'), todos.length), payload[0])
+		add(at(path('todos'), todos.length), payload)
 	];
 
 	return operations;
@@ -149,7 +166,7 @@ const calculateCountsCommand = createCommand(({ get, path }) => {
 Commands support asynchronous behavior out of the box simply by returning a `Promise<PatchOperation[]>`.
 
 ```ts
-async function postTodoCommand({ get, path, payload: [ id ] }: CommandRequest): Promise<PatchOperation[]> {
+async function postTodoCommand({ get, path, payload: { id }}: CommandRequest): Promise<PatchOperation[]> {
 	const response = await fetch('/todos');
 	if (!response.ok) {
 		throw new Error('Unable to post todo');
@@ -190,15 +207,15 @@ function addTodoProcessCallback(error, result) {
 	// possible additional state changes by running another process using result.executor(otherProcess)
 }
 
-const addTodoProcess = createProcess([ addTodoCommand, calculateCountCommand ], addTodoProcessCallback);
+const addTodoProcess = createProcess([ addTodoCommand, calculateCountCommand ], { callback: addTodoProcessCallback });
 ```
 
-The `Process` creates a deferred executor by passing the `store` instance `addTodoProcess(store)` which can be executed immediately by passing the `payload` `addTodoProcess(store)(arg1, arg2)` or more often passed to your widgets and used to initiate state changes on user interactions. The `payload` arguments passed to the `executor` are passed to each of the `Process`'s commands in a `payload` argument
+The `Process` creates a deferred executor by passing the `store` instance `addTodoProcess(store)` which can be executed immediately by passing the `payload`, `addTodoProcess(store)(payload)`. Or more often passed to your widgets and used to initiate state changes on user interactions. The `payload` argument for the `executor` is required and is passed to each of the `Process`'s commands in a `payload` argument.
 
 ```ts
 const addTodoExecutor = addTodoProcess(store);
 
-addTodoExecutor('arguments', 'get', 'passed', 'here');
+addTodoExecutor({ foo: 'arguments', bar: 'get', baz: 'passed', qux: 'here'});
 ```
 
 ### Initial State
@@ -226,6 +243,47 @@ initialStateProcess(store)();
 getTodosProcess(store)().then(() => {
 	// do things once the todos have been fetched.
 });
+```
+
+The `payload` argument for the process executor can be specified as the second generic type when using `createProcess`
+
+```ts
+const process = createProcess<any, { foo: string }>([ command ]);
+const processExecutor = process(store);
+
+// The executor will require an argument that satisfies `{ foo: string }`
+processExecutor({ foo: 'bar' });
+processExecutor({ foo: 1 }); // Compile error
+```
+
+The process executor's `payload` type will also be inferred by the `payload` type of the commands if not specified explicitly, however the `payload` type for all the commands must be assignable, when this is not the case the payload generic type needs to be explicitly passed.
+
+```ts
+const createCommandOne = createCommandFactory<any, { foo: string }>();
+const createCommandTwo = createCommandFactory<any, { bar: string }>();
+const commandOne = createCommandOne(({ get, path, payload }) => []);
+const commandTwo = createCommandTwo(({ get, path, payload }) => []);
+
+const processOne = createProcess([commandOne]);
+const executorOne = processOne(store); // payload for executor inferred based on `commandOne`
+
+executorOne({ foo: 'foo' });
+executorOne({ bar: 'foo' }); // compile error
+
+// compile error as payload types for commandOne and commandTwo are not assignable
+const processTwo = createProcess([commandOne, commandTwo]);
+// Explicitly passing a generic that satisfies all the command payload types enables payload type widening
+const processTwo = createProcess<any, { foo: string, bar: string }>([commandOne, commandTwo]);
+const executorTwo = processTwo(store);
+executorTwo({ foo: 'foo' }); // compile error, as requires both `bar` and `foo`
+executorTwo({ foo: 'foo', bar: 'bar' }); // Yay, valid
+```
+
+Alternatively the payload can be typed at command creation
+
+```ts
+const createCommandOne = createCommandFactory<MyState>();
+const commandOne = createCommandOne<{ foo: string }>(({ get, path, payload }) => []);
 ```
 
 ## How does this differ from Redux
@@ -283,19 +341,53 @@ The `undo` function will rollback all the operations that were performed by the 
 
 ### Transforming Executor Arguments
 
-An optional `transformer` can be passed to the `createExecutor` function that will be used to parse the arguments passed to the executor.
+An optional `transformer` can be passed to a process that is used to transform the `executor`s payload to the `command` payload type. The return type of the `transformer` must match the `command` `payload` type of the `process`. The argument type of the `executor` is inferred from transformers `payload` type.
 
 ```ts
-function transformer(...payload: any[]): any {
-	return { id: uuid(), value: payload[0] };
+interface CommandPayload {
+	bar: number;
+	foo: number;
+}
+// `CommandPayload` types the command payload and the argument of the process executor
+const createCommand = createCommandFactory<any, CommandPayload>();
+
+// `payload` is typed to `CommandPayload`
+const command = createCommand(({ get, path, payload }) => {
+});
+
+const process = createProcess([command]);
+
+interface TransformerPayload {
+	foo: string;
 }
 
-const executor = process(state, transformer);
+// The transformer return type must match the original `CommandPayload`
+const transformer = (payload: TransformerPayload): CommandPayload => {
+	return {
+		bar: 1,
+		foo: 2
+	};
+};
 
-executor('id');
+// when no transformer passed to the process the executor `payload` is typed to `CommandPayload`
+const processExecutor = process(store);
+// Works
+processExecutor({ bar: 1, foo: 2 });
+// These shouldn't work as `payload` does not match `CommandPayload` interface
+processExecutor({ bar: '', foo: 2 });
+processExecutor({ foo: '' });
+
+// when a `transformer` passed to the process the `transformer` return type must match `CommandPayload`
+// and the executor `payload` type becomes `payload` type of the `transformer`
+const processExecutor = process(store, transformer);
+// Works as the `transformer` payload type is `{ foo: string }`
+processExecutor({ foo: '' });
+// Shouldn't work as `payload` does not match the `TransformerPayload` type
+processExecutor({ bar: 1, foo: 2 });
+processExecutor({ bar: 1, foo: '' });
 ```
 
-Each `Command` will be passed the result of the transformer as the `payload` for example: `{ id: 'UUID-VALUE', value }`
+Each `Command` will be passed the result of the transformer as the `payload` for example: `{ bar: 1, foo: 2 }`
 
 ### Optimistic Update Pattern
 
@@ -323,7 +415,7 @@ const addTodoProcess = createProcess([
 		postTodoCommand,
 		calculateCountsCommand
 	],
-	addTodoCallback);
+	{ callback: addTodoCallback });
 ```
 
 * `addTodoCommand`: Adds the new todo into the application state
@@ -340,7 +432,7 @@ function byId(id: string) {
 	return (item: any) => id === item.id;
 }
 
-async function deleteTodoCommand({ get, payload: [ id ] }: CommandRequest) {
+async function deleteTodoCommand({ get, payload: { id } }: CommandRequest) {
     const { todo, index } = find(get('/todos'), byId(id))
     await fetch(`/todo/${todo.id}`, { method: 'DELETE' } );
     return [ remove(`/todos/${index}`) ];
@@ -375,8 +467,8 @@ import { createUndoManager } from '@dojo/stores/extras';
 
 const { undoCollector, undoer } = createUndoManager();
 // if the process doesn't need a local callback, the collector can be used without.
-const myProcess = createProcess([ commandOne, commandTwo ], undoCollector());
-const myOtherProcess = createProcess([ commandThree, commandFour ], undoCollector());
+const myProcess = createProcess([ commandOne, commandTwo ], { callback: undoCollector() });
+const myOtherProcess = createProcess([ commandThree, commandFour ], { callback: undoCollector() });
 
 // running `undeor` will undo the last process executed, that had registered the `collector` as a callback.
 undoer();
@@ -412,7 +504,7 @@ const myCallback = (error: ProcessError, result: ProcessResult) => {
 const myCallbackDecorator = createCallbackDecorator(myCallback);
 
 // use the callback decorator as normal
-const myProcess = createProcess([ commandOne ], myCallbackDecorator());
+const myProcess = createProcess([ commandOne ], { callback: myCallbackDecorator() });
 ```
 
 ## How do I contribute?

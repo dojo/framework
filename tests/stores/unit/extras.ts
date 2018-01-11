@@ -17,18 +17,17 @@ describe('extras', () => {
 		const { undoCollector, undoer } = createUndoManager();
 		const store = new Store();
 		let localUndoStack: any[] = [];
-		const incrementCounterProcess = createProcess(
-			[incrementCounter],
-			undoCollector((error, result) => {
+		const incrementCounterProcess = createProcess([incrementCounter], {
+			callback: undoCollector((error, result) => {
 				localUndoStack.push(result.undo);
 			})
-		);
+		});
 		const executor = incrementCounterProcess(store);
-		executor();
+		executor({});
 		assert.strictEqual(store.get(store.path('counter')), 1);
-		executor();
+		executor({});
 		assert.strictEqual(store.get(store.path('counter')), 2);
-		executor();
+		executor({});
 		assert.strictEqual(store.get(store.path('counter')), 3);
 		localUndoStack[2]();
 		assert.strictEqual(store.get(store.path('counter')), 2);
@@ -41,7 +40,7 @@ describe('extras', () => {
 		const store = new Store();
 		const incrementCounterProcess = createProcess([incrementCounter]);
 		const executor = incrementCounterProcess(store);
-		executor();
+		executor({});
 		undoer();
 		assert.strictEqual(store.get(store.path('counter')), 1);
 	});
@@ -50,14 +49,13 @@ describe('extras', () => {
 		const { undoCollector, undoer } = createUndoManager();
 		const store = new Store();
 		let localUndo: any;
-		const incrementCounterProcess = createProcess(
-			[incrementCounter],
-			undoCollector((error, result) => {
+		const incrementCounterProcess = createProcess([incrementCounter], {
+			callback: undoCollector((error, result) => {
 				localUndo = result.undo;
 			})
-		);
+		});
 		const executor = incrementCounterProcess(store);
-		executor();
+		executor({});
 		assert.strictEqual(store.get(store.path('counter')), 1);
 		undoer();
 		assert.throws(
