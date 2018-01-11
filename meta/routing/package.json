@@ -41,5 +41,8 @@
     "intern": "~4.1.0",
     "sinon": "^1.17.4",
     "typescript": "~2.6.1"
+  },
+  "dependencies": {
+    "tslib": "~1.8.1"
   }
 }
