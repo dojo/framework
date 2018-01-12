@@ -1,6 +1,6 @@
 {
   "name": "@dojo/routing",
-  "version": "0.4.1",
+  "version": "0.4.2-pre",
   "description": "A routing library for Dojo 2 applications",
   "private": true,
   "homepage": "https://dojo.io",
