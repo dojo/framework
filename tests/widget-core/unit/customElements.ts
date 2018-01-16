@@ -448,7 +448,7 @@ registerSuite('customElements', {
 					return Mixed;
 				}
 
-				sandbox.stub(projector, 'ProjectorMixin', TestProjectorMixin);
+				sandbox.stub(projector, 'ProjectorMixin').callsFake(TestProjectorMixin);
 
 				let element = createFakeElement(
 					{},

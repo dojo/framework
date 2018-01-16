@@ -2,7 +2,7 @@ import * as jsdom from 'jsdom';
 import global from '@dojo/shim/global';
 
 /* In order to have the tests work under Node.js, we need to load JSDom and polyfill
- * requestAnimationFrame */
+ * requestAnimationFrame and create a fake document.activeElement getter */
 
 /* Create a basic document */
 const doc = jsdom.jsdom(`
@@ -31,5 +31,12 @@ global.requestAnimationFrame = (cb: (...args: any[]) => {}) => {
 
 global.cancelAnimationFrame = () => {};
 global.IntersectionObserver = () => {};
+
+global.fakeActiveElement = () => {};
+Object.defineProperty(doc, 'activeElement', {
+	get: () => {
+		return global.fakeActiveElement();
+	}
+});
 
 console.log('Loaded JSDOM...');

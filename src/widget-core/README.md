@@ -1075,6 +1075,60 @@ class VerticalScrollBarController extends WidgetBase {
 As can be seen in the above code, the meta provider simply provides information which the widgets can react to.  The implementation
 needs to react to these changes.
 
+#### Focus
+
+The `Focus` meta determines whether a given node is focused or contains document focus. Calling `this.meta(Focus).get(key)` returns the following results object:
+
+|Property|Description|
+|-|-|
+|`active`|A boolean indicating whether the specified node itself is focused.|
+|`containsFocus`|A boolean indicating whether one of the descendants of the specified node is currently focused. This will return true if `active` is true.|
+
+An example usage that opens a tooltip if the trigger is focused might look like this:
+
+```typescript
+class MyWidget extends WidgetBase<WidgetProperties> {
+    // ...
+    render() {
+        // run your meta
+        const buttonFocus = this.meta(FocusMeta).get('button');
+        return v('div', {
+          w(Button, {
+            key: 'button'
+          }, [ 'Open Tooltip' ]),
+          w(Tooltip, {
+            content: 'Foo',
+            open: buttonFocus.active
+          }, [ 'modal content' ])
+        });
+    }
+    // ...
+}
+```
+
+The `Focus` meta also provides a `set` method to call focus on a given node. This is most relevant when it is necessary to shift focus in response to a user action, e.g. when opening a modal or navigating to a new page. You can use it like this:
+
+```typescript
+class MyWidget extends WidgetBase<WidgetProperties> {
+    // ...
+    render() {
+        // run your meta
+        return v('div', {
+          w(Button, {
+            onClick: () => {
+              this.meta(Focus).set('modal');
+            }
+          }, [ 'Open Modal' ]),
+          v('div', {
+            key: 'modal',
+            tabIndex: -1
+          }, [ 'modal content' ])
+        });
+    }
+    // ...
+}
+```
+
 #### Matches
 
 The `Matches` meta determines if the target of a DOM event matches a particular virtual DOM key.

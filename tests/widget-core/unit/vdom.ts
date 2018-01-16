@@ -1433,10 +1433,10 @@ describe('vdom', () => {
 			const appendedHtml: string[] = [];
 
 			const createElement = document.createElement.bind(document);
-			const createElementStub = stub(document, 'createElement', (name: string) => {
+			const createElementStub = stub(document, 'createElement').callsFake((name: string) => {
 				const node = createElement(name);
 				const appendChild = node.appendChild.bind(node);
-				stub(node, 'appendChild', (node: Element) => {
+				stub(node, 'appendChild').callsFake((node: Element) => {
 					appendedHtml.push(node.outerHTML);
 					return appendChild(node);
 				});

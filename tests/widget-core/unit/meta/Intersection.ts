@@ -12,7 +12,7 @@ const bindInstance = new WidgetBase();
 
 registerSuite('meta - Intersection', {
 	beforeEach() {
-		intersectionObserver = stub(global, 'IntersectionObserver', function(callback: any) {
+		intersectionObserver = stub(global, 'IntersectionObserver').callsFake(function(callback: any) {
 			const observer = {
 				observe: stub(),
 				takeRecords: stub().returns([])
@@ -270,7 +270,7 @@ registerSuite('meta - Intersection', {
 				const bar = document.createElement('div');
 
 				intersectionObserver.restore();
-				intersectionObserver = stub(global, 'IntersectionObserver', function(callback: any) {
+				intersectionObserver = stub(global, 'IntersectionObserver').callsFake(function(callback: any) {
 					const observer = {
 						observe: observeStub,
 						takeRecords: stub().returns([])
@@ -315,7 +315,7 @@ registerSuite('meta - Intersection', {
 				const root = document.createElement('div');
 
 				intersectionObserver.restore();
-				intersectionObserver = stub(global, 'IntersectionObserver', function(callback: any) {
+				intersectionObserver = stub(global, 'IntersectionObserver').callsFake(function(callback: any) {
 					const observer = {
 						observe: observeStub,
 						takeRecords: stub().returns([])

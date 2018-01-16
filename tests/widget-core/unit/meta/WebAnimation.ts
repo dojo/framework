@@ -1,6 +1,6 @@
 import global from '@dojo/shim/global';
 const { assert } = intern.getPlugin('chai');
-const { beforeEach, before, describe, it } = intern.getInterface('bdd');
+const { afterEach, beforeEach, before, describe, it } = intern.getInterface('bdd');
 import WebAnimation, { AnimationControls, AnimationTimingProperties } from '../../../src/meta/WebAnimation';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { v } from '../../../src/d';
@@ -43,6 +43,9 @@ describe('WebAnimation', () => {
 	const currentStub = stub();
 	const playbackRateStub = stub();
 	let metaNode: HTMLElement;
+	let widget: any;
+	let meta: any;
+	let metaStub: any;
 
 	beforeEach(() => {
 		effects = [{ height: '0px' }, { height: '10px' }];
@@ -56,8 +59,8 @@ describe('WebAnimation', () => {
 
 	describe('integration', () => {
 		it('creates an animation player for each node with animations', () => {
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
+			widget = new TestWidget();
+			meta = widget.getMeta();
 
 			const addSpy = spy(meta, 'animate');
 
@@ -65,8 +68,8 @@ describe('WebAnimation', () => {
 			assert.isTrue(addSpy.calledOnce);
 		});
 		it('clears animations after new animations have been added', () => {
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
+			widget = new TestWidget();
+			meta = widget.getMeta();
 
 			const addSpy = spy(meta, 'animate');
 			const clearSpy = spy(meta, 'afterRender');
@@ -136,22 +139,22 @@ describe('WebAnimation', () => {
 			currentStub.reset();
 			playbackRateStub.reset();
 			metaNode = document.createElement('div');
+
+			widget = new TestWidget();
+			meta = widget.getMeta();
+			metaStub = stub(meta as any, 'getNode').returns(metaNode);
+		});
+
+		afterEach(() => {
+			metaStub.restore();
 		});
 
 		it('creates new KeyframeEffect and Animation for each WebAnimation node', () => {
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
-
 			widget.__render__();
 			assert.isTrue(keyframeCtorStub.calledOnce);
 			assert.isTrue(animationCtorStub.calledOnce);
 		});
 		it('reuses previous KeyframeEffect and Player when animation is still valid', () => {
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
-
 			widget.__render__();
 			widget.callInvalidate();
 			widget.__render__();
@@ -162,9 +165,6 @@ describe('WebAnimation', () => {
 			animate.timing = {
 				duration: 2
 			};
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(keyframeCtorStub.calledOnce);
@@ -175,10 +175,6 @@ describe('WebAnimation', () => {
 			);
 		});
 		it('starts animations paused', () => {
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
-
 			widget.__render__();
 			assert.isTrue(pauseStub.calledOnce);
 			assert.isTrue(playStub.notCalled);
@@ -187,9 +183,6 @@ describe('WebAnimation', () => {
 			animate.controls = {
 				play: true
 			};
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(playStub.calledOnce);
@@ -199,9 +192,6 @@ describe('WebAnimation', () => {
 			animate.controls = {
 				reverse: true
 			};
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(reverseStub.calledOnce);
@@ -210,9 +200,6 @@ describe('WebAnimation', () => {
 			animate.controls = {
 				cancel: true
 			};
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(cancelStub.calledOnce);
@@ -221,9 +208,6 @@ describe('WebAnimation', () => {
 			animate.controls = {
 				finish: true
 			};
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(finishStub.calledOnce);
@@ -232,9 +216,6 @@ describe('WebAnimation', () => {
 			animate.controls = {
 				playbackRate: 2
 			};
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(playbackRateStub.calledOnce);
@@ -243,9 +224,6 @@ describe('WebAnimation', () => {
 			animate.controls = {
 				startTime: 2
 			};
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(startStub.calledOnce);
@@ -255,9 +233,6 @@ describe('WebAnimation', () => {
 			animate.controls = {
 				currentTime: 2
 			};
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(currentStub.calledOnce);
@@ -266,18 +241,11 @@ describe('WebAnimation', () => {
 		it('will execute effects function if one is passed', () => {
 			const fx = stub().returns([]);
 			animate.effects = fx;
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(fx.calledOnce);
 		});
 		it('clears down used animations on next render if theyve been removed', () => {
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
-
 			widget.__render__();
 			assert.isTrue(cancelStub.notCalled);
 
@@ -292,9 +260,6 @@ describe('WebAnimation', () => {
 			animate.controls = {
 				onFinish: onFinishStub
 			};
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(onFinishStub.calledOnce);
@@ -304,9 +269,6 @@ describe('WebAnimation', () => {
 			animate.controls = {
 				onCancel: onCancelStub
 			};
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(onCancelStub.calledOnce);
@@ -320,10 +282,6 @@ describe('WebAnimation', () => {
 			};
 			animate = () => animateReturn;
 
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
-
 			widget.__render__();
 			assert.isTrue(keyframeCtorStub.calledOnce);
 			assert.isTrue(
@@ -332,10 +290,6 @@ describe('WebAnimation', () => {
 		});
 		it('does not create animation if function does not return properties', () => {
 			animate = () => undefined;
-
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(keyframeCtorStub.notCalled);
@@ -355,9 +309,6 @@ describe('WebAnimation', () => {
 					timing
 				}
 			];
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-			stub(meta, 'getNode').returns(metaNode);
 
 			widget.__render__();
 			assert.isTrue(keyframeCtorStub.calledTwice);
@@ -382,13 +333,17 @@ describe('WebAnimation', () => {
 						return 1;
 					}
 				};
+
+				widget = new TestWidget();
+				meta = widget.getMeta();
+				metaStub = stub(meta as any, 'getNode').returns(metaNode);
+			});
+
+			afterEach(() => {
+				metaStub.restore();
 			});
 
 			it('returns undefined for non existant animation', () => {
-				const widget = new TestWidget();
-				const meta = widget.getMeta();
-				stub(meta, 'getNode').returns(metaNode);
-
 				widget.render();
 
 				const info = meta.get('nonAnimation');
@@ -401,10 +356,6 @@ describe('WebAnimation', () => {
 				animate.controls = {
 					play: true
 				};
-
-				const widget = new TestWidget();
-				const meta = widget.getMeta();
-				stub(meta, 'getNode').returns(metaNode);
 
 				widget.render();
 
