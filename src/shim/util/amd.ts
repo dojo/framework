@@ -29,6 +29,11 @@ function shimAmdDependencies(config: any) {
 	});
 
 	addIfNotPresent(packages, {
+		name: 'web-animations-js',
+		location: 'node_modules/web-animations-js'
+	});
+
+	addIfNotPresent(packages, {
 		name: '@dojo',
 		location: 'node_modules/@dojo'
 	});

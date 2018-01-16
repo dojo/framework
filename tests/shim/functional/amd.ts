@@ -23,12 +23,13 @@ registerSuite('AMD Util', {
 				undefined
 			)
 			.then((config: any) => {
-				assert.lengthOf(config.packages, 5);
+				assert.lengthOf(config.packages, 6);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'pepjs'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'tslib'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'intersection-observer'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === '@dojo'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'existingPackage'), 1);
+				assert.lengthOf(config.packages.filter((p: any) => p.name === 'web-animations-js'), 1);
 			});
 	},
 	async 'Utility does not inject dependency if it already exists'() {
