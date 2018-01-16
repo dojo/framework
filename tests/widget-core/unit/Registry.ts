@@ -169,6 +169,26 @@ registerSuite('Registry', {
 					assert.strictEqual(factory, WidgetBase);
 				});
 			}
+		},
+		emit: {
+			'emits loaded event concrete Widget item'() {
+				let loadedEvent = false;
+				const registry = new Registry();
+				registry.on('foo', ({ type }) => {
+					loadedEvent = true;
+				});
+				registry.define('foo', WidgetBase);
+				assert.isTrue(loadedEvent);
+			},
+			'does not emits loaded event when defining a function'() {
+				let loadedEvent = false;
+				const registry = new Registry();
+				registry.on('foo', ({ type }) => {
+					loadedEvent = true;
+				});
+				registry.define('foo', () => Promise.resolve(WidgetBase));
+				assert.isFalse(loadedEvent);
+			}
 		}
 	},
 	Injector: {

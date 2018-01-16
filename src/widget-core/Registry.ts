@@ -8,7 +8,13 @@ import { Injector } from './Injector';
 
 export type WidgetBaseConstructorFunction = () => Promise<WidgetBaseConstructor>;
 
-export type RegistryItem = WidgetBaseConstructor | Promise<WidgetBaseConstructor> | WidgetBaseConstructorFunction;
+export type ESMDefaultWidgetBaseFunction = () => Promise<ESMDefaultWidgetBase<WidgetBaseInterface>>;
+
+export type RegistryItem =
+	| WidgetBaseConstructor
+	| Promise<WidgetBaseConstructor>
+	| WidgetBaseConstructorFunction
+	| ESMDefaultWidgetBaseFunction;
 
 /**
  * Widget base symbol type
@@ -111,10 +117,7 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 	/**
 	 * Emit loaded event for registry label
 	 */
-	private emitLoadedEvent(
-		widgetLabel: RegistryLabel,
-		item: WidgetBaseConstructorFunction | WidgetBaseConstructor | Injector
-	): void {
+	private emitLoadedEvent(widgetLabel: RegistryLabel, item: WidgetBaseConstructor | Injector): void {
 		this.emit({
 			type: widgetLabel,
 			action: 'loaded',
@@ -144,7 +147,7 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 					throw error;
 				}
 			);
-		} else {
+		} else if (isWidgetBaseConstructor(item)) {
 			this.emitLoadedEvent(label, item);
 		}
 	}
