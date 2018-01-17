@@ -103,7 +103,7 @@ registerSuite('meta base', {
 			resolvers.resolve();
 			assert.isTrue(invalidate.calledOnce);
 
-			onSpy.reset();
+			onSpy.resetHistory();
 			meta.callGetNode('foo');
 
 			assert.isFalse(onSpy.called);
@@ -128,7 +128,7 @@ registerSuite('meta base', {
 			meta.callGetNode('foo');
 			assert.isTrue(onSpy.calledOnce);
 			assert.isTrue(onSpy.firstCall.calledWith('foo'));
-			onSpy.reset();
+			onSpy.resetHistory();
 			meta.callGetNode('foo');
 			assert.isTrue(onSpy.notCalled);
 			assert.isTrue(invalidate.notCalled);

@@ -128,16 +128,16 @@ describe('WebAnimation', () => {
 		});
 
 		beforeEach(() => {
-			keyframeCtorStub.reset();
-			animationCtorStub.reset();
-			pauseStub.reset();
-			playStub.reset();
-			reverseStub.reset();
-			cancelStub.reset();
-			finishStub.reset();
-			startStub.reset();
-			currentStub.reset();
-			playbackRateStub.reset();
+			keyframeCtorStub.resetHistory();
+			animationCtorStub.resetHistory();
+			pauseStub.resetHistory();
+			playStub.resetHistory();
+			reverseStub.resetHistory();
+			cancelStub.resetHistory();
+			finishStub.resetHistory();
+			startStub.resetHistory();
+			currentStub.resetHistory();
+			playbackRateStub.resetHistory();
 			metaNode = document.createElement('div');
 
 			widget = new TestWidget();

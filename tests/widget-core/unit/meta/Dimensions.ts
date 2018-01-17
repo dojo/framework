@@ -37,7 +37,7 @@ function resolveRAF() {
 	for (let i = 0; i < rAF.callCount; i++) {
 		rAF.getCall(i).args[0]();
 	}
-	rAF.reset();
+	rAF.resetHistory();
 }
 
 registerSuite('meta - Dimensions', {
@@ -110,7 +110,7 @@ registerSuite('meta - Dimensions', {
 			resolveRAF();
 			assert.isTrue(invalidateStub.calledOnce);
 
-			onSpy.reset();
+			onSpy.resetHistory();
 			dimensions.get('foo');
 
 			assert.isFalse(onSpy.called);

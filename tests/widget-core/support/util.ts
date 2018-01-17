@@ -35,7 +35,7 @@ export function createResolvers() {
 		for (let i = 0; i < rICStub.callCount; i++) {
 			rICStub.getCall(i).callArg(0);
 		}
-		rICStub.reset();
+		rICStub.resetHistory();
 	}
 
 	return {

@@ -35,9 +35,9 @@ registerSuite('NodeHandler', {
 		},
 		events: {
 			beforeEach() {
-				elementStub.reset();
-				widgetStub.reset();
-				projectorStub.reset();
+				elementStub.resetHistory();
+				widgetStub.resetHistory();
+				projectorStub.resetHistory();
 
 				nodeHandler.on('foo', elementStub);
 				nodeHandler.on(NodeEventType.Widget, widgetStub);

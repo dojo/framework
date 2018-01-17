@@ -129,7 +129,7 @@ registerSuite('meta - Intersection', {
 				const element = document.createElement('div');
 				nodeHandler.add(element, 'root');
 				assert.isTrue(invalidateStub.calledOnce);
-				onSpy.reset();
+				onSpy.resetHistory();
 				intersection.get('root');
 				assert.isFalse(onSpy.called);
 			},
@@ -153,7 +153,7 @@ registerSuite('meta - Intersection', {
 
 				assert.isTrue(invalidateStub.calledOnce);
 
-				onSpy.reset();
+				onSpy.resetHistory();
 				intersection.get('root');
 
 				assert.isFalse(onSpy.called);

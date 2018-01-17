@@ -60,12 +60,12 @@ describe('vdom', () => {
 	const spys: SinonSpy[] = [];
 
 	beforeEach(() => {
-		projectorStub.nodeHandler.add.reset();
-		projectorStub.nodeHandler.addRoot.reset();
-		projectorStub.onElementCreated.reset();
-		projectorStub.onElementUpdated.reset();
-		projectorStub.onAttach.reset();
-		projectorStub.onDetach.reset();
+		projectorStub.nodeHandler.add.resetHistory();
+		projectorStub.nodeHandler.addRoot.resetHistory();
+		projectorStub.onElementCreated.resetHistory();
+		projectorStub.onElementUpdated.resetHistory();
+		projectorStub.onAttach.resetHistory();
+		projectorStub.onDetach.resetHistory();
 		consoleStub = stub(console, 'warn');
 		resolvers.stub();
 	});
@@ -2564,7 +2564,7 @@ describe('vdom', () => {
 			const projection = dom.create(v('div', { key: '1' }), projectorStub);
 			assert.isTrue(projectorStub.nodeHandler.add.called);
 			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '1'));
-			projectorStub.nodeHandler.add.reset();
+			projectorStub.nodeHandler.add.resetHistory();
 			projection.update(v('div', { key: '1' }));
 			assert.isTrue(projectorStub.nodeHandler.add.called);
 			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '1'));
@@ -2574,7 +2574,7 @@ describe('vdom', () => {
 			const projection = dom.create(v('div', { key: 0 }), projectorStub);
 			assert.isTrue(projectorStub.nodeHandler.add.called);
 			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '0'));
-			projectorStub.nodeHandler.add.reset();
+			projectorStub.nodeHandler.add.resetHistory();
 			projection.update(v('div', { key: 0 }));
 			assert.isTrue(projectorStub.nodeHandler.add.called);
 			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '0'));
@@ -2597,11 +2597,11 @@ describe('vdom', () => {
 
 			const projection = dom.create(widget.__render__(), projectorStub);
 			assert.isTrue(projectorStub.nodeHandler.addRoot.called);
-			projectorStub.nodeHandler.addRoot.reset();
+			projectorStub.nodeHandler.addRoot.resetHistory();
 			widget.invalidate();
 			projection.update(widget.__render__());
 			assert.isTrue(projectorStub.nodeHandler.addRoot.called);
-			projectorStub.nodeHandler.addRoot.reset();
+			projectorStub.nodeHandler.addRoot.resetHistory();
 		});
 
 		it('addRoot called on node handler for updated widgets with key', () => {
@@ -2610,11 +2610,11 @@ describe('vdom', () => {
 
 			const projection = dom.create(widget.__render__(), projectorStub);
 			assert.isTrue(projectorStub.nodeHandler.addRoot.called);
-			projectorStub.nodeHandler.addRoot.reset();
+			projectorStub.nodeHandler.addRoot.resetHistory();
 			widget.invalidate();
 			projection.update(widget.__render__());
 			assert.isTrue(projectorStub.nodeHandler.addRoot.called);
-			projectorStub.nodeHandler.addRoot.reset();
+			projectorStub.nodeHandler.addRoot.resetHistory();
 		});
 	});
 
@@ -2636,7 +2636,7 @@ describe('vdom', () => {
 				);
 				projection.update(v('div', { updateAnimation }, ['textBefore', v('span'), 'newTextAfter']));
 				assert.isTrue(updateAnimation.calledOnce);
-				updateAnimation.reset();
+				updateAnimation.resetHistory();
 
 				projection.update(v('div', { updateAnimation }, ['textBefore', v('span'), 'newTextAfter']));
 				assert.isTrue(updateAnimation.notCalled);
