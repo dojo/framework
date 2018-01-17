@@ -131,7 +131,7 @@ export interface VNodeProperties {
 	/**
 	 * An object literal like `{height:'100px'}` which allows styles to be changed dynamically. All values must be strings.
 	 */
-	readonly styles?: Partial<CSSStyleDeclaration>;
+	readonly styles?: { [index: string]: string | null | undefined };
 
 	// Pointer Events
 	onpointermove?(ev?: PointerEvent): boolean | void;
