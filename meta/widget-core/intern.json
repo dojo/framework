@@ -21,8 +21,7 @@
 					{ "name": "tests", "location": "_build/tests" },
 					{ "name": "cldr-data", "location": "node_modules/cldr-data" },
 					{ "name": "cldrjs", "location": "node_modules/cldrjs" },
-					{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" },
-					{ "name": "web-animations-js", "location": "node_modules/web-animations-js" }
+					{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" }
 				],
 				"map": {
 					"globalize": {
