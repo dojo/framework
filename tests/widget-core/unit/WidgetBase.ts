@@ -227,6 +227,32 @@ describe('WidgetBase', () => {
 			assert.isFalse(testWidget.functionIsBound);
 			assert.isTrue(testWidget.properties.functionIsBound);
 		});
+
+		it('properties are only diffed once', () => {
+			let diffCounter = 0;
+			function testDiff(previousProperty: any, newProperty: any) {
+				diffCounter++;
+				return {
+					value: newProperty,
+					changed: false
+				};
+			}
+
+			@diffProperty('foo', testDiff)
+			@diffProperty('bar', testDiff)
+			@diffProperty('baz', testDiff)
+			class TestWidget extends WidgetBase<any> {}
+			const testWidget = new TestWidget();
+			const properties = {
+				foo: 'foo',
+				bar: 'bar',
+				baz: 'baz'
+			};
+			testWidget.__setProperties__(properties);
+			assert.strictEqual(diffCounter, 3);
+			testWidget.__setProperties__(properties);
+			assert.strictEqual(diffCounter, 6);
+		});
 	});
 
 	it('__setChildren__', () => {

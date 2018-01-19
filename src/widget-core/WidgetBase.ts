@@ -215,7 +215,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 			for (let i = 0; i < allProperties.length; i++) {
 				const propertyName = allProperties[i];
-				if (checkedProperties.indexOf(propertyName) > 0) {
+				if (checkedProperties.indexOf(propertyName) !== -1) {
 					continue;
 				}
 				checkedProperties.push(propertyName);
