@@ -1,67 +1,95 @@
-import {
-	Constructor,
-	RegistryLabel,
-	DNode,
-	WidgetBaseInterface,
-	WidgetProperties
-} from '@dojo/widget-core/interfaces';
+import { DNode, WidgetBaseInterface } from '@dojo/widget-core/interfaces';
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { w } from '@dojo/widget-core/d';
 import { inject } from '@dojo/widget-core/decorators/inject';
 import { alwaysRender } from '@dojo/widget-core/decorators/alwaysRender';
-
+import { OnEnter, Component, OutletOptions, OutletComponents, Outlet, Params, OutletContext } from './interfaces';
 import { Router } from './Router';
-import { routerKey } from './RouterInjector';
-import {
-	MatchType,
-	Component,
-	MapParams,
-	OutletComponents,
-	MapParamsOptions
-} from './interfaces';
 
 export function isComponent<W extends WidgetBaseInterface>(value: any): value is Component<W> {
-	return Boolean(value && ((typeof value === 'string') || (typeof value === 'function') || (typeof value === 'symbol')));
+	return Boolean(value && (typeof value === 'string' || typeof value === 'function' || typeof value === 'symbol'));
 }
 
-export type Outlet<
-	W extends WidgetBaseInterface,
-	F extends WidgetBaseInterface,
-	E extends WidgetBaseInterface> = Constructor<WidgetBase<Partial<E['properties']> & Partial<W['properties']> & Partial<F['properties']> & WidgetProperties, null>>;
+export function getProperties(router: Router, properties: any) {
+	return { router };
+}
 
 export function Outlet<W extends WidgetBaseInterface, F extends WidgetBaseInterface, E extends WidgetBaseInterface>(
 	outletComponents: Component<W> | OutletComponents<W, F, E>,
-	outlet: string | string[],
-	mapParams: MapParams = (options: MapParamsOptions) => {},
-	key: RegistryLabel = routerKey
+	outlet: string,
+	options: OutletOptions = {}
 ): Outlet<W, F, E> {
 	const indexComponent = isComponent(outletComponents) ? undefined : outletComponents.index;
 	const mainComponent = isComponent(outletComponents) ? outletComponents : outletComponents.main;
 	const errorComponent = isComponent(outletComponents) ? undefined : outletComponents.error;
-	function getProperties(this: WidgetBase, router: Router<any>, properties: any) {
-		return { router };
-	}
+	const { mapParams, key = 'router' } = options;
 
-	@inject({ name: routerKey, getProperties })
+	@inject({ name: key, getProperties })
 	@alwaysRender()
-	class OutletComponent extends WidgetBase<Partial<W['properties']> & { router: Router<any> }, null> {
+	class OutletComponent extends WidgetBase<Partial<W['properties']> & { router: Router }, null> {
+		private _matched = false;
+		private _matchedParams: Params = {};
+		private _onExit?: () => void;
+
+		private _hasRouteChanged(params: Params): boolean {
+			if (!this._matched) {
+				return true;
+			}
+			const newParamKeys = Object.keys(params);
+			for (let i = 0; i < newParamKeys.length; i++) {
+				const key = newParamKeys[i];
+				if (this._matchedParams[key] !== params[key]) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private _onEnter(outletContext: OutletContext, onEnterCallback?: OnEnter) {
+			const { params, type } = outletContext;
+			if (this._hasRouteChanged(params)) {
+				onEnterCallback && onEnterCallback(params, type);
+				this._matched = true;
+				this._matchedParams = params;
+			}
+		}
+
+		protected onDetach() {
+			if (this._matched) {
+				this._onExit && this._onExit();
+				this._matched = false;
+			}
+		}
 
 		protected render(): DNode {
-			const { router } = this.properties;
+			let { router, ...properties } = this.properties;
+
 			const outletContext = router.getOutlet(outlet);
 			if (outletContext) {
-				const { params, type, location } = outletContext;
-				const properties = { ...this.properties, ...mapParams({ params, type, location, router }) };
+				const { queryParams, params, type, onEnter, onExit } = outletContext;
+				this._onExit = onExit;
+				if (mapParams) {
+					properties = { ...properties, ...mapParams({ queryParams, params, type, router }) };
+				}
 
-				if ((type === MatchType.INDEX || type === MatchType.ERROR) && indexComponent) {
+				if (type === 'index' && indexComponent) {
+					this._onEnter(outletContext, onEnter);
 					return w(indexComponent, properties, this.children);
-				}
-				else if (type === MatchType.ERROR && errorComponent) {
+				} else if (type === 'error' && errorComponent) {
+					this._onEnter(outletContext, onEnter);
 					return w(errorComponent, properties, this.children);
-				}
-				else if (type !== MatchType.ERROR && mainComponent) {
+				} else if (type === 'error' && indexComponent) {
+					this._onEnter(outletContext, onEnter);
+					return w(indexComponent, properties, this.children);
+				} else if (type !== 'error' && mainComponent) {
+					this._onEnter(outletContext, onEnter);
 					return w(mainComponent, properties, this.children);
 				}
+			}
+
+			if (this._matched) {
+				this._onExit && this._onExit();
+				this._matched = false;
 			}
 			return null;
 		}

@@ -1,113 +1,54 @@
 import global from '@dojo/shim/global';
-import on from '@dojo/core/on';
-import { HistoryBase } from './HistoryBase';
+import { History as HistoryInterface, HistoryOptions, OnChangeFunction } from './../interfaces';
 
-import { History, BrowserHistory, HistoryOptions } from './interfaces';
-
-/**
- * Options for creating StateHistory instances.
- */
-export interface StateHistoryOptions extends HistoryOptions {
-	/**
-	 * A base pathname. The current value, as well as the emitted change value, will be relative to this base (though
-	 * starting with a slash). If not set the DOM window's location's path will be used in its entirety. If the
-	 * location's path is not a suffix of the base, the value will be a single slash instead.
-	 *
-	 * Must not contain fragment identifiers or search components.
-	 */
-	base?: string;
-
-	/**
-	 * A DOM window object. StateHistory uses the `history` and `location` properties and
-	 * listens to `popstate` events. The current value is initialized to the current path.
-	 */
-	window: Window;
-}
-
-/**
- * A browser-based history manager that uses the history object to store the current value.
- *
- * This manager ensures the current value always starts with a slash.
- */
-export class StateHistory extends HistoryBase implements History {
-	private _base: string;
+export class StateHistory implements HistoryInterface {
 	private _current: string;
-	private _browserHistory: BrowserHistory;
+	private _onChangeFunction: OnChangeFunction;
+	private _window: Window;
+	private _base: string;
 
-	get current() {
-		return this._current;
+	constructor({ onChange, window = global.window, base = '/' }: HistoryOptions) {
+		if (/(#|\?)/.test(base)) {
+			throw new TypeError("base must not contain '#' or '?'");
+		}
+		this._onChangeFunction = onChange;
+		this._window = window;
+		this._base = base;
+		this._current = this._window.location.pathname + this._window.location.search;
+		this._window.addEventListener('popstate', this._onChange, false);
+		this._onChange();
 	}
 
-	prefix(path: string) {
+	public prefix(path: string) {
 		const baseEndsWithSlash = /\/$/.test(this._base);
 		const pathStartsWithSlash = /^\//.test(path);
 		if (baseEndsWithSlash && pathStartsWithSlash) {
 			return this._base + path.slice(1);
-		}
-		else if (!baseEndsWithSlash && !pathStartsWithSlash) {
+		} else if (!baseEndsWithSlash && !pathStartsWithSlash) {
 			return `${this._base}/${path}`;
-		}
-		else {
+		} else {
 			return this._base + path;
 		}
 	}
 
-	set(path: string) {
+	public set(path: string) {
 		const value = ensureLeadingSlash(path);
+		this._window.history.pushState({}, '', this.prefix(value));
+		this._onChange();
+	}
+
+	public get current(): string {
+		return this._current;
+	}
+
+	private _onChange = () => {
+		const value = stripBase(this._base, this._window.location.pathname + this._window.location.search);
 		if (this._current === value) {
 			return;
 		}
-
 		this._current = value;
-		this._browserHistory.pushState({}, '', this.prefix(path));
-		this.emit({ type: 'change', target: this, value });
-	}
-
-	replace(path: string) {
-		const value = ensureLeadingSlash(path);
-		if (this._current === value) {
-			return;
-		}
-
-		this._current = value;
-		this._browserHistory.replaceState({}, '', this.prefix(path));
-		this.emit({ type: 'change', target: this, value });
-	}
-
-	constructor({ base = '/', window }: StateHistoryOptions = { window: global }) {
-		super();
-
-		if (base !== '/') {
-			if (/#/.test(base)) {
-				throw new TypeError('base must not contain \'#\'');
-			}
-			if (/\?/.test(base)) {
-				throw new TypeError('base must not contain \'?\'');
-			}
-		}
-
-		const { history: browserHistory, location } = window;
-
-		this._base = base;
-		this._current = stripBase(base, location.pathname + location.search);
-		this._browserHistory = browserHistory;
-
-		this.own(on(window, 'popstate', () => {
-			const path = stripBase(base, location.pathname + location.search);
-
-			// Ignore popstate for the current path. Guards against browsers firing
-			// popstate on page load, see
-			// <https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onpopstate>.
-			if (path !== this._current) {
-				this._current = path;
-				this.emit({
-					type: 'change',
-					target: this,
-					value: path
-				});
-			}
-		}));
-	}
+		this._onChangeFunction(this._current);
+	};
 }
 
 function stripBase(base: string, path: string): string {
@@ -117,14 +58,16 @@ function stripBase(base: string, path: string): string {
 
 	if (path.indexOf(base) === 0) {
 		return ensureLeadingSlash(path.slice(base.length));
-	}
-	else {
+	} else {
 		return '/';
 	}
 }
 
 function ensureLeadingSlash(path: string): string {
-	return /^\//.test(path) ? path : `/${path}`;
+	if (path[0] !== '/') {
+		return `/${path}`;
+	}
+	return path;
 }
 
 export default StateHistory;

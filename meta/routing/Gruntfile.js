@@ -1,5 +1,5 @@
 module.exports = function (grunt) {
-	const staticExampleFiles = [ 'src/examples/index.html' ];
+	const staticExampleFiles = [ 'examples/index.html' ];
 
 	require('grunt-dojo2').initConfig(grunt, {
 		copy: {
@@ -10,18 +10,15 @@ module.exports = function (grunt) {
 				dest: '<%= devDirectory %>'
 			}
 		},
+		ts: {
+			dist: {
+				exclude: ['tests/**/*.ts', 'examples/**/*.ts']
+			}
+		},
 		typedoc: {
 			options: {
 				ignoreCompilerErrors: true // Remove this once compile errors are resolved
 			}
-		},
-		ts: {
-			dist: {
-				exclude: ['tests/**/*.ts', 'src/examples/**/*.ts']
-			}
-		},
-		intern: {
-			version: 4
 		}
 	});
 

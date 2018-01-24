@@ -1,174 +1,99 @@
-import { Evented } from '@dojo/core/Evented';
-import { emit } from '@dojo/core/on';
-import Promise from '@dojo/shim/Promise';
-const { afterEach, beforeEach, suite, test } = intern.getInterface('tdd');
+const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
+import { stub } from 'sinon';
 
-import HashHistory from '../../../src/history/HashHistory';
+import { HashHistory } from '../../../src/history/HashHistory';
 
-suite('HashHistory', () => {
-	// Mask the globals so tests are forced to explicitly reference the
-	// correct window.
-	/* tslint:disable */
-	const location: void = <any> null;
-	/* tslint:enable */
+class MockLocation {
+	private _hash = '#current';
+	private _change: Function;
 
-	let sandbox: HTMLIFrameElement;
-	beforeEach(function () {
-		sandbox = document.createElement('iframe');
-		sandbox.src = '/tests/support/sandbox.html';
-		document.body.appendChild(sandbox);
-		return new Promise<void>(resolve => {
-			sandbox.addEventListener('load', function () {
-				resolve();
-			});
-		});
+	constructor(change: Function) {
+		this._change = change;
+	}
+
+	set hash(value: string) {
+		const newHash = value[0] !== '#' ? `#${value}` : value;
+		if (newHash !== this._hash) {
+			this._hash = newHash;
+			this._change();
+		}
+	}
+
+	get hash() {
+		return this._hash;
+	}
+}
+
+class MockWindow {
+	private _onhashchange: Function;
+	onhashchange = () => {
+		this._onhashchange && this._onhashchange();
+	};
+	public location = new MockLocation(this.onhashchange);
+	addEventListener = (type: string, listener: Function) => {
+		this._onhashchange = listener;
+	};
+
+	removeEventListener = stub();
+}
+
+let mockWindow: any;
+
+describe('HashHistory', () => {
+	beforeEach(() => {
+		mockWindow = new MockWindow();
 	});
 
-	afterEach(() => {
-		document.body.removeChild(sandbox);
-		sandbox = <any> null;
+	it('Calls onChange for current hash', () => {
+		const onChange = stub();
+		const history = new HashHistory({ onChange, window: mockWindow });
+		assert.isTrue(onChange.calledWith('current'));
+		assert.isTrue(onChange.calledOnce);
+		assert.strictEqual(history.current, 'current');
 	});
 
-	test('initializes current path to current location', () => {
-		sandbox.contentWindow.location.hash = '/foo';
-		assert.equal(new HashHistory({ window: sandbox.contentWindow }).current, '/foo');
+	it('Calls onChange on hash change', () => {
+		const onChange = stub();
+		const history = new HashHistory({ onChange, window: mockWindow });
+		assert.isTrue(onChange.calledWith('current'));
+		assert.isTrue(onChange.calledOnce);
+		assert.strictEqual(history.current, 'current');
+		mockWindow.location.hash = 'new';
+		assert.isTrue(onChange.calledTwice);
+		assert.isTrue(onChange.secondCall.calledWith('new'));
+		assert.strictEqual(history.current, 'new');
 	});
 
-	test('location defers to the global object', () => {
-		assert.equal(new HashHistory().current, window.location.hash.slice(1));
+	it('Calls onChange on set', () => {
+		const onChange = stub();
+		const history = new HashHistory({ onChange, window: mockWindow });
+		assert.isTrue(onChange.calledWith('current'));
+		assert.isTrue(onChange.calledOnce);
+		assert.strictEqual(history.current, 'current');
+		history.set('new');
+		assert.isTrue(onChange.calledTwice);
+		assert.isTrue(onChange.secondCall.calledWith('new'));
+		assert.strictEqual(history.current, 'new');
 	});
 
-	test('prefixes the path with a #', () => {
-		assert.equal(new HashHistory().prefix('/foo'), '#/foo');
+	it('should add hash prefix', () => {
+		const onChange = stub();
+		const history = new HashHistory({ onChange, window: mockWindow });
+		assert.strictEqual(history.prefix('hash'), '#hash');
 	});
 
-	test('does not prefixe the path when it already starts with a #', () => {
-		assert.equal(new HashHistory().prefix('#/foo'), '#/foo');
+	it('should not add hash prefix if it already exists', () => {
+		const onChange = stub();
+		const history = new HashHistory({ onChange, window: mockWindow });
+		assert.strictEqual(history.prefix('#hash'), '#hash');
 	});
 
-	test('update path', () => {
-		const history = new HashHistory({ window: sandbox.contentWindow });
-		history.set('/foo');
-		assert.equal(history.current, '/foo');
-		assert.equal(sandbox.contentWindow.location.hash, '#/foo');
-	});
-
-	test('emits change when path is updated', () => {
-		const history = new HashHistory({ window: sandbox.contentWindow });
-		let emittedValues: string[] = [];
-		history.on('change', ({ value }) => {
-			emittedValues.push(value);
-		});
-		history.set('/foo');
-
-		return new Promise((resolve) => setTimeout(resolve, 500))
-			.then(() => {
-				assert.lengthOf(emittedValues, 1);
-				assert.equal(emittedValues[0], '/foo');
-			});
-	});
-
-	test('does not emit change if path is set to the current value', () => {
-		sandbox.contentWindow.location.hash = '/foo';
-		const history = new HashHistory({ window: sandbox.contentWindow });
-		let emittedValues: string[] = [];
-		history.on('change', ({ value }) => {
-			emittedValues.push(value);
-		});
-		history.set('/foo');
-		assert.lengthOf(emittedValues, 0);
-	});
-
-	test('does not emit change if path is set to the current value even with a hash', () => {
-		sandbox.contentWindow.location.hash = '/foo';
-		const history = new HashHistory({ window: sandbox.contentWindow });
-		let emittedValues: string[] = [];
-		history.on('change', ({ value }) => {
-			emittedValues.push(value);
-		});
-		history.set('#/foo');
-		assert.lengthOf(emittedValues, 0);
-	});
-
-	test('replace path', () => {
-		const history = new HashHistory({ window: sandbox.contentWindow });
-		history.replace('/foo');
-		assert.equal(history.current, '/foo');
-		assert.equal(sandbox.contentWindow.location.hash, '#/foo');
-	});
-
-	test('emits change when path is replaced', () => {
-		const history = new HashHistory({ window: sandbox.contentWindow });
-		let emittedValues: string[] = [];
-		history.on('change', ({ value }) => {
-			emittedValues.push(value);
-		});
-		history.replace('/foo');
-
-		return new Promise((resolve) => setTimeout(resolve, 500))
-			.then(() => {
-				assert.lengthOf(emittedValues, 1);
-				assert.equal(emittedValues[0], '/foo');
-			});
-	});
-
-	test('does not emit change if path is replaced with the current value', () => {
-		sandbox.contentWindow.location.hash = '/foo';
-		const history = new HashHistory({ window: sandbox.contentWindow });
-		let emittedValues: string[] = [];
-		history.on('change', ({ value }) => {
-			emittedValues.push(value);
-		});
-		history.replace('/foo');
-		assert.lengthOf(emittedValues, 0);
-	});
-
-	test('does not add a new history entry when path is replaced', () => {
-		const { length } = sandbox.contentWindow.history;
-		assert.isTrue(length < 49, 'Too many history entries to run this test. Please open a new browser window');
-
-		const history = new HashHistory({ window: sandbox.contentWindow });
-		history.replace('/baz');
-		assert.equal(sandbox.contentWindow.history.length, length);
-	});
-
-	suite('hashchange', () => {
-		let window: Window & Evented<{}>;
-
-		beforeEach(() => {
-			const { location: contentWindowLocation } = sandbox.contentWindow;
-			const createFauxWindow = class extends Evented<{}> {
-				location = contentWindowLocation;
-			};
-			window = <any> new createFauxWindow();
-		});
-
-		test('handles hashchange', () => {
-			const history = new HashHistory({ window });
-
-			let emittedValue = '';
-			history.on('change', ({ value }) => {
-				emittedValue = value;
-			});
-
-			sandbox.contentWindow.location.hash = '#/foo';
-			emit(window, { type: 'hashchange' });
-
-			assert.equal(history.current, '/foo');
-			assert.equal(emittedValue, '/foo');
-		});
-
-		test('stops listening to hashchange when destroyed', () => {
-			const history = new HashHistory({ window });
-			assert.equal(history.current, '');
-
-			return history.destroy().then(function () {
-				sandbox.contentWindow.location.hash = '#/foo';
-				emit(window, { type: 'hashchange' });
-
-				assert.equal(history.current, '');
-			});
-		});
+	it('destroying removes the hashchange event listener', () => {
+		const onChange = stub();
+		const history = new HashHistory({ onChange, window: mockWindow });
+		assert.isTrue(mockWindow.removeEventListener.notCalled);
+		history.destroy();
+		assert.isTrue(mockWindow.removeEventListener.calledOnce);
 	});
 });

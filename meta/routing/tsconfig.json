@@ -2,7 +2,6 @@
 	"compilerOptions": {
 		"declaration": false,
 		"downlevelIteration": true,
-		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"importHelpers": true,
 		"lib": [
@@ -16,6 +15,7 @@
 		],
 		"module": "umd",
 		"moduleResolution": "node",
+		"noUnusedLocals": true,
 		"outDir": "_build/",
 		"removeComments": false,
 		"sourceMap": true,
@@ -25,6 +25,7 @@
 	},
 	"include": [
 		"./src/**/*.ts",
-		"./tests/**/*.ts"
+		"./tests/**/*.ts",
+		"./examples/**/*.ts"
 	]
 }

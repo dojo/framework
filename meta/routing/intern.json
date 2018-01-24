@@ -20,8 +20,7 @@
 				"packages": [
 					{ "name": "src", "location": "_build/src" },
 					{ "name": "tests", "location": "_build/tests" },
-					{ "name": "dojo", "location": "node_modules/intern/browser_modules/dojo" },
-					{ "name": "maquette", "location": "node_modules/maquette/dist", "main": "maquette" }
+					{ "name": "dojo", "location": "node_modules/intern/browser_modules/dojo" }
 				]
 			}
 		}
@@ -30,14 +29,12 @@
 		"suites": [
 			"./_build/tests/unit/**/*.js",
 			"!./_build/tests/unit/**/all.js",
-			"!./_build/tests/unit/Router.js",
-			"!./_build/tests/unit/history/HashHistory.js",
 			"!./_build/tests/unit/history/StateHistory.js"
 		]
 	},
 	"coverage": [
 		"./_build/src/**/*.js",
-		"!./_build/src/examples/**"
+		"!./_build/examples/**"
 	],
 	"configs": {
 		"local": {

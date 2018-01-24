@@ -1,7 +1,5 @@
-import './Route';
-import './Router';
-import './Outlet';
 import './Link';
+import './Outlet';
+import './Router';
 import './RouterInjector';
 import './history/all';
-import './main';

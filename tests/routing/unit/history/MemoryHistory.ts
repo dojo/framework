@@ -1,70 +1,35 @@
-const { suite, test } = intern.getInterface('tdd');
+const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
+import { stub } from 'sinon';
 
-import MemoryHistory from '../../../src/history/MemoryHistory';
+import { MemoryHistory } from '../../../src/history/MemoryHistory';
 
-suite('MemoryHistory', () => {
-	test('default initial path is empty', () => {
-		assert.equal(new MemoryHistory().current, '');
+describe('MemoryHistory', () => {
+	it('Calls onChange on set', () => {
+		const onChange = stub();
+		const history = new MemoryHistory({ onChange });
+		assert.isTrue(onChange.calledWith('/'));
+		assert.isTrue(onChange.calledOnce);
+		assert.strictEqual(history.current, '/');
+		history.set('new');
+		assert.isTrue(onChange.calledTwice);
+		assert.isTrue(onChange.secondCall.calledWith('new'));
+		assert.strictEqual(history.current, 'new');
 	});
 
-	test('can create history with initial path', () => {
-		assert.equal(new MemoryHistory({ path: '/initial'}).current, '/initial');
+	it('Does not call onChange on set if paths match', () => {
+		const onChange = stub();
+		const history = new MemoryHistory({ onChange });
+		assert.isTrue(onChange.calledWith('/'));
+		assert.isTrue(onChange.calledOnce);
+		assert.strictEqual(history.current, '/');
+		history.set('/');
+		assert.isTrue(onChange.calledOnce);
 	});
 
-	test('does not prefix the path', () => {
-		assert.equal(new MemoryHistory().prefix('/foo'), '/foo');
-	});
-
-	test('update path', () => {
-		const history = new MemoryHistory();
-		history.set('/foo');
-		assert.equal(history.current, '/foo');
-	});
-
-	test('emits change when path is updated', () => {
-		const history = new MemoryHistory();
-		let emittedValue = '';
-		history.on('change', ({ value }) => {
-			emittedValue = value;
-		});
-		history.set('/foo');
-		assert.equal(emittedValue, '/foo');
-	});
-
-	test('does not emit change when path is set to the current value', () => {
-		const history = new MemoryHistory({ path: '/foo' });
-		let emittedValues: string[] = [];
-		history.on('change', ({ value }) => {
-			emittedValues.push(value);
-		});
-		history.set('/foo');
-		assert.lengthOf(emittedValues, 0);
-	});
-
-	test('replace path', () => {
-		const history = new MemoryHistory();
-		history.replace('/foo');
-		assert.equal(history.current, '/foo');
-	});
-
-	test('emits change when path is replaced', () => {
-		const history = new MemoryHistory();
-		let emittedValue = '';
-		history.on('change', ({ value }) => {
-			emittedValue = value;
-		});
-		history.replace('/foo');
-		assert.equal(emittedValue, '/foo');
-	});
-
-	test('does not emit change when path is replaced with the current value', () => {
-		const history = new MemoryHistory({ path: '/foo' });
-		let emittedValues: string[] = [];
-		history.on('change', ({ value }) => {
-			emittedValues.push(value);
-		});
-		history.replace('/foo');
-		assert.lengthOf(emittedValues, 0);
+	it('should not add any prefix', () => {
+		const onChange = stub();
+		const history = new MemoryHistory({ onChange });
+		assert.strictEqual(history.prefix('hash'), 'hash');
 	});
 });
