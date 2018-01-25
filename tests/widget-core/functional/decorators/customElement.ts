@@ -2,6 +2,7 @@ import { WidgetBase } from '../../../src/WidgetBase';
 import { WidgetProperties } from '../../../src/interfaces';
 import { v } from '../../../src/d';
 import customElement from '../../../src/decorators/customElement';
+import registerCustomElement from '../../../src/registerCustomElement';
 
 interface TestButtonProperties extends WidgetProperties {
 	label: string;
@@ -12,11 +13,6 @@ interface TestButtonProperties extends WidgetProperties {
 @customElement<TestButtonProperties>({
 	tag: 'test-button',
 	attributes: ['label', 'labelSuffix'],
-	events: ['onClick']
-})
-@customElement<TestButtonProperties>({
-	tag: 'no-attributes',
-	properties: ['label'],
 	events: ['onClick']
 })
 export class TestButton extends WidgetBase<TestButtonProperties> {
@@ -38,6 +34,13 @@ export class TestButton extends WidgetBase<TestButtonProperties> {
 	}
 }
 
+@customElement<TestButtonProperties>({
+	tag: 'no-attributes',
+	properties: ['label'],
+	events: ['onClick']
+})
+export class NoAttributeButton extends TestButton {}
+
 @customElement({
 	tag: 'child-wrapper'
 })
@@ -46,3 +49,7 @@ export class ChildWrapper extends WidgetBase {
 		return v('div', {}, this.children);
 	}
 }
+
+registerCustomElement(() => (TestButton as any).prototype.__customElementDescriptor);
+registerCustomElement(() => (NoAttributeButton as any).prototype.__customElementDescriptor);
+registerCustomElement(() => (ChildWrapper as any).prototype.__customElementDescriptor);
