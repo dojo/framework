@@ -106,12 +106,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 		widgetInstanceMap.set(this, {
 			dirty: true,
-			onElementCreated: (element: HTMLElement, key: string) => {
-				this.onElementCreated(element, key);
-			},
-			onElementUpdated: (element: HTMLElement, key: string) => {
-				this.onElementUpdated(element, key);
-			},
 			onAttach: (): void => {
 				this.onAttach();
 			},
@@ -145,26 +139,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		}
 
 		return cached as T;
-	}
-
-	/**
-	 * Widget lifecycle method that is called whenever a dom node is created for a VNode.
-	 * Override this method to access the dom nodes that were inserted into the dom.
-	 * @param element The dom node represented by the vdom node.
-	 * @param key The vdom node's key.
-	 */
-	protected onElementCreated(element: Element, key: string | number): void {
-		// Do nothing by default.
-	}
-
-	/**
-	 * Widget lifecycle method that is called whenever a dom node that is associated with a VNode is updated.
-	 * Override this method to access the dom node.
-	 * @param element The dom node represented by the vdom node.
-	 * @param key The vdom node's key.
-	 */
-	protected onElementUpdated(element: Element, key: string | number): void {
-		// Do nothing by default.
 	}
 
 	protected onAttach(): void {

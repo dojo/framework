@@ -19,7 +19,7 @@ export function DomWrapper(domNode: Element, options: DomWrapperOptions = {}): D
 			return vNode;
 		}
 
-		protected onElementCreated(element: Element, key: string | number) {
+		protected onAttach() {
 			options.onAttached && options.onAttached();
 		}
 

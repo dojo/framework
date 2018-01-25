@@ -70,8 +70,6 @@ export interface InternalVNode extends VNode {
 export type InternalDNode = InternalVNode | InternalWNode;
 
 export interface WidgetData {
-	onElementCreated: Function;
-	onElementUpdated: Function;
 	onDetach: () => void;
 	onAttach: () => void;
 	parentInvalidate?: Function;
@@ -667,9 +665,6 @@ function initPropertiesAndChildren(
 	if (dnode.properties.key !== null && dnode.properties.key !== undefined) {
 		const instanceData = widgetInstanceMap.get(parentInstance)!;
 		instanceData.nodeHandler.add(domNode as HTMLElement, `${dnode.properties.key}`);
-		projectionOptions.afterRenderCallbacks.push(() => {
-			instanceData.onElementCreated(domNode as HTMLElement, dnode.properties.key!);
-		});
 	}
 	dnode.inserted = true;
 }
@@ -816,9 +811,6 @@ function updateDom(
 			if (dnode.properties.key !== null && dnode.properties.key !== undefined) {
 				const instanceData = widgetInstanceMap.get(parentInstance)!;
 				instanceData.nodeHandler.add(domNode, `${dnode.properties.key}`);
-				projectionOptions.afterRenderCallbacks.push(() => {
-					instanceData.onElementUpdated(domNode as HTMLElement, dnode.properties.key!);
-				});
 			}
 		}
 		if (updated && dnode.properties && dnode.properties.updateAnimation) {

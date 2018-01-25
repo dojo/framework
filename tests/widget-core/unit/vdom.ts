@@ -19,8 +19,6 @@ const projectorStub: any = {
 		add: stub(),
 		addRoot: stub()
 	},
-	onElementCreated: stub(),
-	onElementUpdated: stub(),
 	onAttach: stub(),
 	onDetach: stub(),
 	constructor: {
@@ -62,8 +60,6 @@ describe('vdom', () => {
 	beforeEach(() => {
 		projectorStub.nodeHandler.add.resetHistory();
 		projectorStub.nodeHandler.addRoot.resetHistory();
-		projectorStub.onElementCreated.resetHistory();
-		projectorStub.onElementUpdated.resetHistory();
 		projectorStub.onAttach.resetHistory();
 		projectorStub.onDetach.resetHistory();
 		consoleStub = stub(console, 'warn');
@@ -2578,17 +2574,6 @@ describe('vdom', () => {
 			projection.update(v('div', { key: 0 }));
 			assert.isTrue(projectorStub.nodeHandler.add.called);
 			assert.isTrue(projectorStub.nodeHandler.add.calledWith(projection.domNode.childNodes[0] as Element, '0'));
-		});
-
-		it('on element created and updated callbacks are called for nodes with keys', () => {
-			const projection = dom.create(v('div', { key: 0 }), projectorStub);
-			resolvers.resolve();
-			assert.isTrue(projectorStub.onElementCreated.called);
-			assert.isTrue(projectorStub.onElementCreated.calledWith(projection.domNode.childNodes[0] as Element, 0));
-			projection.update(v('div', { key: 0 }));
-			resolvers.resolve();
-			assert.isTrue(projectorStub.onElementUpdated.called);
-			assert.isTrue(projectorStub.onElementUpdated.calledWith(projection.domNode.childNodes[0] as Element, 0));
 		});
 
 		it('addRoot called on node handler for created widgets with a zero key', () => {
