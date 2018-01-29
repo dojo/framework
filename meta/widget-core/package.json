@@ -1,6 +1,6 @@
 {
   "name": "@dojo/widget-core",
-  "version": "0.6.6-pre",
+  "version": "0.7.0",
   "description": "A core widget library for Dojo 2",
   "private": true,
   "homepage": "https://dojo.io",
