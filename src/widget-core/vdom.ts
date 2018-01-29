@@ -549,7 +549,10 @@ function updateChildren(
 	while (newIndex < newChildrenLength) {
 		const oldChild = oldIndex < oldChildrenLength ? oldChildren[oldIndex] : undefined;
 		const newChild = newChildren[newIndex];
-
+		if (isVNode(newChild) && typeof newChild.deferredPropertiesCallback === 'function') {
+			newChild.inserted = isVNode(oldChild) && oldChild.inserted;
+			addDeferredProperties(newChild, projectionOptions);
+		}
 		if (oldChild !== undefined && same(oldChild, newChild)) {
 			textUpdated = updateDom(oldChild, newChild, projectionOptions, parentVNode, parentInstance) || textUpdated;
 			oldIndex++;
@@ -782,7 +785,6 @@ function updateDom(
 		const domNode = (dnode.domNode = previous.domNode);
 		let textUpdated = false;
 		let updated = false;
-		dnode.inserted = previous.inserted;
 		if (dnode.tag === '') {
 			if (dnode.text !== previous.text) {
 				const newDomNode = domNode.ownerDocument.createTextNode(dnode.text!);
@@ -800,10 +802,6 @@ function updateDom(
 				dnode.children = children;
 				updated =
 					updateChildren(dnode, previous.children, children, parentInstance, projectionOptions) || updated;
-			}
-
-			if (typeof dnode.deferredPropertiesCallback === 'function') {
-				addDeferredProperties(dnode, projectionOptions);
 			}
 
 			updated = updateProperties(domNode, previous.properties, dnode.properties, projectionOptions) || updated;

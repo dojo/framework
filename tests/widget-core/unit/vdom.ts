@@ -1767,7 +1767,8 @@ describe('vdom', () => {
 				const div = v('div', (inserted) => {
 					return {
 						inserted,
-						deferredCallbackCount: ++deferredCallbackCount
+						deferredCallbackCount: ++deferredCallbackCount,
+						key: 'prop'
 					};
 				});
 				(div.properties as any).renderCount = renderCount;
@@ -1790,6 +1791,7 @@ describe('vdom', () => {
 
 			projection.update(renderFunction());
 
+			assert.strictEqual(projection.domNode.childNodes[0], element);
 			assert.strictEqual(element.deferredCallbackCount, 3);
 			assert.strictEqual(element.renderCount, 2);
 			assert.isTrue(element.inserted);
