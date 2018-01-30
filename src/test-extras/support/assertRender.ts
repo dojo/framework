@@ -1,216 +1,117 @@
-import { assign } from '@dojo/core/lang';
+import { DNode, WNode, VNode, DefaultWidgetBaseInterface, Constructor } from '@dojo/widget-core/interfaces';
+import { isWNode } from '@dojo/widget-core/d';
+import * as diff from 'diff';
+import WeakMap from '@dojo/shim/WeakMap';
 import Set from '@dojo/shim/Set';
-import { isVNode, isWNode } from '@dojo/widget-core/d';
-import { DNode, VNode, WNode, SupportedClassName } from '@dojo/widget-core/interfaces';
-import AssertionError from './AssertionError';
-import { diff, DiffOptions, getComparableObjects, isCustomDiff } from './compare';
-import { compareProperty } from './d';
+import Map from '@dojo/shim/Map';
+import { from as arrayFrom } from '@dojo/shim/array';
 
-const RENDER_FAIL_MESSAGE = 'Render unexpected';
+let widgetClassCounter = 0;
+const widgetMap = new WeakMap<Constructor<DefaultWidgetBaseInterface>, number>();
 
-export interface AssertRenderOptions extends DiffOptions {
-	/**
-	 * A replacement type guard for `isVNode`
-	 */
-	isVNode?(child: DNode): child is VNode;
-
-	/**
-	 * A replacement type guard for `isWNode`
-	 */
-	isWNode?(child: DNode): child is WNode;
+function replacer(key: string, value: any): any {
+	if (typeof value === 'function') {
+		return 'function';
+	} else if (typeof value === 'undefined') {
+		return 'undefined';
+	} else if (value instanceof Set || value instanceof Map) {
+		return arrayFrom(value);
+	}
+	return value;
 }
 
-/**
- * Return a string that provides diagnostic information when comparing DNodes where one should be an array
- * @param actual The actual DNode
- * @param expected The expected DNode
- */
-function getArrayPreamble(actual: DNode | DNode[], expected: DNode | DNode[]): string {
-	return Array.isArray(actual)
-		? `Expected "${getTypeOf(expected)}" but got an array`
-		: `Expected an array but got "${getTypeOf(actual)}"`;
+export function formatDNodes(nodes: DNode | DNode[], depth: number = 0): string {
+	const isArrayFragment = Array.isArray(nodes) && depth === 0;
+	let initial = isArrayFragment ? '[\n' : '';
+	let tabs = '';
+	depth = isArrayFragment ? 1 : depth;
+	nodes = Array.isArray(nodes) ? nodes : [nodes];
+
+	for (let i = 0; i < depth; i++) {
+		tabs = `${tabs}\t`;
+	}
+	let formattedNode = nodes.reduce((result: string, node, index) => {
+		if (node === null || node === undefined) {
+			return result;
+		}
+		if (index > 0) {
+			result = `${result}\n`;
+		}
+		result = `${result}${tabs}`;
+
+		if (typeof node === 'string') {
+			return `${result}"${node}"`;
+		}
+
+		result = `${result}${formatNode(node, tabs)}`;
+		if (node.children && node.children.length > 0) {
+			result = `${result}, [\n${formatDNodes(node.children, depth + 1)}\n${tabs}]`;
+		}
+		return `${result})`;
+	}, initial);
+
+	return isArrayFragment ? (formattedNode = `${formattedNode}\n]`) : formattedNode;
 }
 
-/**
- * An internal function that returns a string that contains an array of child indexes which related to the message
- * @param childIndex The index of the child to add to the message
- * @param message The message, if any to prepend the child to
- */
-function getChildMessage(childIndex: number, message: string = '') {
-	const lastIndex = message.lastIndexOf(']');
-	if (lastIndex === -1) {
-		return `[${childIndex}] ${message}`;
+function formatProperties(properties: any, tabs: string): string {
+	properties = Object.keys(properties)
+		.sort()
+		.reduce((props: any, key) => {
+			props[key] = properties[key];
+			return props;
+		}, {});
+	properties = JSON.stringify(properties, replacer, `${tabs}\t`).slice(0, -1);
+	return `${properties}${tabs}}`;
+}
+
+function getWidgetName(widgetConstructor: any): string {
+	let name: string;
+	if (typeof widgetConstructor === 'string' || typeof widgetConstructor === 'symbol') {
+		name = widgetConstructor.toString();
 	} else {
-		return message.slice(0, lastIndex + 1) + `[${childIndex}]` + message.slice(lastIndex + 1);
-	}
-}
-
-/**
- * Return a string that provides diagnostic information when two DNodes being compared are mismatched
- * @param actual The actual DNode
- * @param expected The expected DNode
- */
-function getMismatchPreamble(actual: DNode, expected: DNode): string {
-	return `DNode type mismatch, expected "${getTypeOf(expected)}" actual "${getTypeOf(actual)}"`;
-}
-
-/**
- * Return a string that represents the type of the value, including null as a seperate type.
- * @param value The value to get the type of
- */
-function getTypeOf(value: any) {
-	return value === null ? 'null' : typeof value;
-}
-
-/**
- * Internal function that throws an AssertionError
- * @param actual actual value
- * @param expected expected value
- * @param prolog a message that provides the specific assertion issue
- * @param message any message to be part of the error
- */
-function throwAssertionError(actual: any, expected: any, prolog: string, message?: string): never {
-	throw new AssertionError(
-		`${RENDER_FAIL_MESSAGE}: ${prolog}${message ? `: ${message}` : ''}`,
-		{
-			actual,
-			expected,
-			showDiff: true
-		},
-		assertRender
-	);
-}
-
-/**
- * Options used to configure diff to correctly compare `DNode`s
- */
-const defaultDiffOptions: DiffOptions = {
-	allowFunctionValues: true,
-	ignoreProperties: ['bind']
-};
-
-/**
- * A function that asserts Dojo virtual DOM against expected virtual DOM.  When the actual and
- * expected differ, the function will throw an `AssertionError`.  It is expected to be used
- * in conjunction with `w` and `v` from `@dojo/widget-core/d` and would look something like this:
- *
- * @param actual The actual rendered DNode or DNode Array to be asserted
- * @param expected The expected DNode or DNode Array to be asserted against the actual
- * @param options A set of options that effect the behaviour of `assertRender`
- * @param message Any message to be part of an error thrown if actual and expected do not match
- */
-export default function assertRender(actual: DNode | DNode[], expected: DNode | DNode[], message?: string): void;
-export default function assertRender(
-	actual: DNode | DNode[],
-	expected: DNode | DNode[],
-	options: AssertRenderOptions,
-	message?: string
-): void;
-export default function assertRender(
-	actual: DNode | DNode[],
-	expected: DNode | DNode[],
-	options?: AssertRenderOptions | string,
-	message?: string
-): void {
-	if (typeof options === 'string') {
-		message = options;
-		options = undefined;
-	}
-	const { isVNode: localIsVNode = isVNode, isWNode: localIsWNode = isWNode, ...passedDiffOptions } = (options ||
-		{}) as AssertRenderOptions;
-	const diffOptions: DiffOptions = assign({}, defaultDiffOptions, passedDiffOptions);
-
-	function assertChildren(actual?: DNode[], expected?: DNode[]) {
-		if (actual && expected) {
-			if (actual.length !== expected.length) {
-				throwAssertionError(actual, expected, `Children's length mismatch`, message);
+		name = widgetConstructor.name;
+		if (name === undefined) {
+			let id = widgetMap.get(widgetConstructor);
+			if (id === undefined) {
+				id = ++widgetClassCounter;
+				widgetMap.set(widgetConstructor, id);
 			}
-			actual.forEach((actualChild, index) => {
-				assertRender(
-					actualChild,
-					expected[index],
-					(options || {}) as AssertRenderOptions,
-					getChildMessage(index, message)
-				);
-			});
+			name = `Widget-${id}`;
+		}
+	}
+	return name;
+}
+
+function formatNode(node: WNode | VNode, tabs: any): string {
+	const propertyKeyCount = Object.keys(node.properties).length;
+	let properties = propertyKeyCount > 0 ? formatProperties(node.properties, tabs) : '{}';
+	if (isWNode(node)) {
+		return `w(${getWidgetName(node.widgetConstructor)}, ${properties}`;
+	}
+	return `v("${node.tag}", ${properties}`;
+}
+
+export function assertRender(actual: DNode | DNode[], expected: DNode | DNode[], message?: string): void {
+	const parsedActual = formatDNodes(actual);
+	const parsedExpected = formatDNodes(expected);
+	const diffResult = diff.diffLines(parsedActual, parsedExpected);
+	let diffFound = false;
+	const parsedDiff = diffResult.reduce((result: string, part, index) => {
+		if (part.added) {
+			diffFound = true;
+			result = `${result}(E)${part.value.replace(/\n\t/g, '\n(E)\t')}`;
+		} else if (part.removed) {
+			diffFound = true;
+			result = `${result}(A)${part.value.replace(/\n\t/g, '\n(A)\t')}`;
 		} else {
-			if (actual || expected) {
-				throwAssertionError(actual, expected, actual ? 'Unxpected children' : 'Expected children', message);
-			}
+			result = `${result}${part.value}`;
 		}
-	}
+		return result;
+	}, '\n');
 
-	if (Array.isArray(actual) && Array.isArray(expected)) {
-		assertChildren(actual, expected);
-	} else if (Array.isArray(actual) || Array.isArray(expected)) {
-		throwAssertionError(actual, expected, getArrayPreamble(actual, expected), message);
-	} else if ((localIsVNode(actual) && localIsVNode(expected)) || (localIsWNode(actual) && localIsWNode(expected))) {
-		if (localIsVNode(actual) && localIsVNode(expected)) {
-			if (actual.tag !== expected.tag) {
-				/* The tags do not match */
-				throwAssertionError(actual.tag, expected.tag, `Tags do not match`, message);
-			}
-		} else if (localIsWNode(actual) && localIsWNode(expected)) {
-			/* istanbul ignore else: not being tracked by TypeScript properly */
-			if (actual.widgetConstructor !== expected.widgetConstructor) {
-				/* The WNode does not share the same constructor */
-				throwAssertionError(
-					actual.widgetConstructor,
-					expected.widgetConstructor,
-					`WNodes do not share constructor`,
-					message
-				);
-			}
-		}
-		/* Inject a custom comparator for class names */
-		const expectedClasses: SupportedClassName | SupportedClassName[] =
-			expected.properties && (expected.properties as any).classes;
-		if (expectedClasses && !isCustomDiff(expectedClasses)) {
-			(expected.properties as any).classes = compareProperty(
-				(value: SupportedClassName | SupportedClassName[]) => {
-					const expectedValue = typeof expectedClasses === 'string' ? [expectedClasses] : expectedClasses;
-					value = (typeof value === 'string' ? [value] : value) || [];
-					const expectedSet = new Set(expectedValue.filter((expectedClass) => Boolean(expectedClass)));
-					const actualSet = new Set(value.filter((actualClass) => Boolean(actualClass)));
-
-					if (expectedSet.size !== actualSet.size) {
-						return false;
-					}
-
-					let allMatch = true;
-					actualSet.forEach((actualClass) => {
-						allMatch = allMatch && expectedSet.has(actualClass);
-					});
-					return allMatch;
-				}
-			);
-		}
-		const delta = diff(actual.properties, expected.properties, diffOptions);
-		if (delta.length) {
-			/* The properties do not match */
-			const { comparableA, comparableB } = getComparableObjects(
-				actual.properties,
-				expected.properties,
-				diffOptions
-			);
-			throwAssertionError(comparableA, comparableB, `Properties do not match`, message);
-		}
-		/* We need to assert the children match */
-		assertChildren(actual.children, expected.children);
-	} else if (typeof actual === 'string' && typeof expected === 'string') {
-		/* Both DNodes are strings */
-		if (actual !== expected) {
-			/* The strings do not match */
-			throwAssertionError(actual, expected, `Unexpected string values`, message);
-		}
-	} else if (isVNode(actual) && typeof expected === 'string') {
-		// when doing an expected render on already rendered nodes, strings are converted to _shell_ VNodes
-		// so we want to compare to those instead
-		if (actual.text !== expected) {
-			throwAssertionError(actual.text, expected, `Expected text differs from rendered text`, message);
-		}
-	} else if (!(actual === null && expected === null)) {
-		/* There is a mismatch between the types of DNodes */
-		throwAssertionError(actual, expected, getMismatchPreamble(actual, expected), message);
+	if (diffFound) {
+		throw new Error(parsedDiff);
 	}
 }
+
+export default assertRender;

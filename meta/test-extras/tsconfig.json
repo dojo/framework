@@ -2,6 +2,8 @@
 	"compilerOptions": {
 		"declaration": false,
 		"experimentalDecorators": true,
+		"jsx": "react",
+		"jsxFactory": "tsx",
 		"module": "umd",
 		"moduleResolution": "node",
 		"noImplicitAny": true,

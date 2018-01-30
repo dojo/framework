@@ -1,7 +1,5 @@
 {
-	"rulesDirectory": ["tslint-plugin-prettier"],
 	"rules": {
-		"prettier": true,
 		"align": false,
 		"ban": [],
 		"class-name": true,
@@ -57,6 +55,6 @@
 			"property-declaration": "onespace",
 			"variable-declaration": "onespace"
 		} ],
-		"variable-name": [ true, "check-format", "allow-leading-underscore", "ban-keywords" ]
+		"variable-name": [ true, "check-format", "allow-leading-underscore", "ban-keywords", "allow-pascal-case" ]
 	}
 }

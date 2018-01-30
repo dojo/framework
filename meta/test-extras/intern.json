@@ -20,7 +20,9 @@
 			"options": {
 				"packages": [
 					{ "name": "src", "location": "_build/src" },
-					{ "name": "tests", "location": "_build/tests" }
+					{ "name": "tests", "location": "_build/tests" },
+					{ "name": "css-select-umd", "location": "node_modules/css-select-umd", "main": "dist/index.js" },
+					{ "name": "diff", "location": "node_modules/diff", "main": "dist/diff.js" }
 				]
 			}
 		}
