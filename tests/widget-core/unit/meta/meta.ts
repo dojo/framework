@@ -5,7 +5,7 @@ import { stub, spy } from 'sinon';
 import { createResolvers } from './../../support/util';
 import NodeHandler, { NodeEventType } from '../../../src/NodeHandler';
 import { v } from '../../../src/d';
-import { ProjectorMixin } from '../../../src/main';
+import { ProjectorMixin } from '../../../src/mixins/Projector';
 import { WidgetBase } from '../../../src/WidgetBase';
 
 const resolvers = createResolvers();

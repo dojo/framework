@@ -95,7 +95,6 @@ registerSuite('mixins/Container', {
 			assert.strictEqual(renderResult.widgetConstructor, 'test-widget');
 		},
 		'Container should always render but not invalidate parent when properties have not changed'() {
-			let parentInvalidateCount = 0;
 			let renderCount = 0;
 			class Child extends WidgetBase<{ foo: string }> {}
 			class ContainerClass extends Container(Child, 'test-state-1', { getProperties }) {
@@ -105,10 +104,6 @@ registerSuite('mixins/Container', {
 				}
 			}
 			class Parent extends ProjectorMixin(WidgetBase) {
-				invalidate() {
-					parentInvalidateCount++;
-					super.invalidate();
-				}
 				render() {
 					return w(ContainerClass, {});
 				}
@@ -117,19 +112,15 @@ registerSuite('mixins/Container', {
 			projector.setProperties({ registry });
 			projector.async = false;
 			projector.append();
-			parentInvalidateCount = 0;
 			renderCount = 0;
 
 			injector.set({});
-			assert.strictEqual(parentInvalidateCount, 1);
 			assert.strictEqual(renderCount, 1);
 
 			injector.set({});
-			assert.strictEqual(parentInvalidateCount, 2);
 			assert.strictEqual(renderCount, 2);
 
 			injector.set({});
-			assert.strictEqual(parentInvalidateCount, 3);
 			assert.strictEqual(renderCount, 3);
 		}
 	}

@@ -76,11 +76,13 @@ export interface ProjectionOptions extends ProjectorOptions {
 	mergeElement?: Element;
 	nodeMap: WeakMap<Node, WeakMap<Function, EventListener>>;
 	rootNode: Element;
+	depth: number;
+	projectorInstance: DefaultWidgetBaseInterface;
+	renderScheduled?: number;
 }
 
 export interface Projection {
 	readonly domNode: Element;
-	update(updatedDNode: DNode | DNode[]): void;
 }
 
 export type SupportedClassName = string | null | undefined;

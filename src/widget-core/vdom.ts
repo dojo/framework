@@ -12,7 +12,7 @@ import {
 	VNodeProperties
 } from './interfaces';
 import { from as arrayFrom } from '@dojo/shim/array';
-import { isWNode, isVNode, VNODE } from './d';
+import { isWNode, isVNode, VNODE, WNODE } from './d';
 import { isWidgetBaseConstructor } from './Registry';
 import WeakMap from '@dojo/shim/WeakMap';
 import NodeHandler from './NodeHandler';
@@ -25,6 +25,11 @@ const NAMESPACE_XLINK = NAMESPACE_W3 + '1999/xlink';
 const emptyArray: (InternalWNode | InternalVNode)[] = [];
 
 export type RenderResult = DNode<any> | DNode<any>[];
+
+interface InstanceMapData {
+	parentVNode: InternalVNode;
+	dnode: InternalWNode;
+}
 
 export interface InternalWNode extends WNode<DefaultWidgetBaseInterface> {
 	/**
@@ -69,18 +74,27 @@ export interface InternalVNode extends VNode {
 
 export type InternalDNode = InternalVNode | InternalWNode;
 
+export interface RenderQueue {
+	instance: DefaultWidgetBaseInterface;
+	depth: number;
+}
+
 export interface WidgetData {
 	onDetach: () => void;
 	onAttach: () => void;
-	parentInvalidate?: Function;
 	dirty: boolean;
 	registry: () => RegistryHandler;
 	nodeHandler: NodeHandler;
 	coreProperties: CoreProperties;
-	invalidate: Function;
+	invalidate?: Function;
+	rendering: boolean;
+	inputProperties: any;
 }
 
 export const widgetInstanceMap = new WeakMap<any, WidgetData>();
+
+const instanceMap = new WeakMap<DefaultWidgetBaseInterface, InstanceMapData>();
+const renderQueueMap = new WeakMap<DefaultWidgetBaseInterface, RenderQueue[]>();
 
 function same(dnode1: InternalDNode, dnode2: InternalDNode) {
 	if (isVNode(dnode1) && isVNode(dnode2)) {
@@ -107,7 +121,10 @@ const missingTransition = function() {
 	throw new Error('Provide a transitions object to the projectionOptions to do animations');
 };
 
-function getProjectionOptions(projectorOptions?: Partial<ProjectionOptions>): ProjectionOptions {
+function getProjectionOptions(
+	projectorOptions: Partial<ProjectionOptions>,
+	projectorInstance: DefaultWidgetBaseInterface
+): ProjectionOptions {
 	const defaults = {
 		namespace: undefined,
 		styleApplyer: function(domNode: HTMLElement, styleName: string, value: string) {
@@ -120,7 +137,11 @@ function getProjectionOptions(projectorOptions?: Partial<ProjectionOptions>): Pr
 		deferredRenderCallbacks: [],
 		afterRenderCallbacks: [],
 		nodeMap: new WeakMap(),
-		merge: false
+		depth: 0,
+		merge: false,
+		renderScheduled: undefined,
+		renderQueue: [],
+		projectorInstance
 	};
 	return { ...defaults, ...projectorOptions } as ProjectionOptions;
 }
@@ -390,6 +411,18 @@ export function toTextVNode(data: any): InternalVNode {
 	};
 }
 
+function toInternalWNode(instance: DefaultWidgetBaseInterface, instanceData: WidgetData): InternalWNode {
+	return {
+		instance,
+		rendered: [],
+		coreProperties: instanceData.coreProperties,
+		children: instance.children as any,
+		widgetConstructor: instance.constructor as any,
+		properties: instanceData.inputProperties,
+		type: WNODE
+	};
+}
+
 export function filterAndDecorateChildren(
 	children: undefined | DNode | DNode[],
 	instance: DefaultWidgetBaseInterface
@@ -453,8 +486,10 @@ function callOnDetach(dNodes: InternalDNode | InternalDNode[], parentInstance: D
 			if (dNode.rendered) {
 				callOnDetach(dNode.rendered, dNode.instance);
 			}
-			const instanceData = widgetInstanceMap.get(dNode.instance)!;
-			instanceData.onDetach();
+			if (dNode.instance) {
+				const instanceData = widgetInstanceMap.get(dNode.instance)!;
+				instanceData.onDetach();
+			}
 		} else {
 			if (dNode.children) {
 				callOnDetach(dNode.children as InternalDNode[], parentInstance);
@@ -541,7 +576,7 @@ function updateChildren(
 	const oldChildrenLength = oldChildren.length;
 	const newChildrenLength = newChildren.length;
 	const transitions = projectionOptions.transitions!;
-
+	projectionOptions = { ...projectionOptions, depth: projectionOptions.depth + 1 };
 	let oldIndex = 0;
 	let newIndex = 0;
 	let i: number;
@@ -634,6 +669,8 @@ function addChildren(
 		childNodes = arrayFrom(parentVNode.domNode!.childNodes) as (Element | Text)[];
 	}
 
+	projectionOptions = { ...projectionOptions, depth: projectionOptions.depth + 1 };
+
 	for (let i = 0; i < children.length; i++) {
 		const child = children[i];
 
@@ -661,7 +698,7 @@ function initPropertiesAndChildren(
 	projectionOptions: ProjectionOptions
 ) {
 	addChildren(dnode, dnode.children, projectionOptions, parentInstance, undefined);
-	if (typeof dnode.deferredPropertiesCallback === 'function') {
+	if (typeof dnode.deferredPropertiesCallback === 'function' && dnode.inserted === undefined) {
 		addDeferredProperties(dnode, projectionOptions);
 	}
 	setProperties(domNode, dnode.properties, projectionOptions);
@@ -694,16 +731,26 @@ function createDom(
 		const instance = new widgetConstructor();
 		dnode.instance = instance;
 		const instanceData = widgetInstanceMap.get(instance)!;
-		instanceData.parentInvalidate = parentInstanceData.invalidate;
+		instanceData.invalidate = () => {
+			instanceData.dirty = true;
+			if (instanceData.rendering === false) {
+				const renderQueue = renderQueueMap.get(projectionOptions.projectorInstance)!;
+				renderQueue.push({ instance, depth: projectionOptions.depth });
+				scheduleRender(projectionOptions);
+			}
+		};
+		instanceData.rendering = true;
 		instance.__setCoreProperties__(dnode.coreProperties);
 		instance.__setChildren__(dnode.children);
 		instance.__setProperties__(dnode.properties);
+		instanceData.rendering = false;
 		const rendered = instance.__render__();
 		if (rendered) {
 			const filteredRendered = filterAndDecorateChildren(rendered, instance);
 			dnode.rendered = filteredRendered;
 			addChildren(parentVNode, filteredRendered, projectionOptions, instance, insertBefore, childNodes);
 		}
+		instanceMap.set(instance, { dnode, parentVNode });
 		instanceData.nodeHandler.addRoot();
 		projectionOptions.afterRenderCallbacks.push(() => {
 			instanceData.onAttach();
@@ -760,13 +807,18 @@ function updateDom(
 	parentInstance: DefaultWidgetBaseInterface
 ) {
 	if (isWNode(dnode)) {
-		const { instance, rendered: previousRendered } = previous;
-		if (instance && previousRendered) {
+		const { instance } = previous;
+		if (instance) {
+			const { parentVNode, dnode: node } = instanceMap.get(instance)!;
+			const previousRendered = node ? node.rendered : previous.rendered;
 			const instanceData = widgetInstanceMap.get(instance)!;
+			instanceData.rendering = true;
 			instance.__setCoreProperties__(dnode.coreProperties);
 			instance.__setChildren__(dnode.children);
 			instance.__setProperties__(dnode.properties);
+			instanceData.rendering = false;
 			dnode.instance = instance;
+			instanceMap.set(instance, { dnode, parentVNode });
 			if (instanceData.dirty === true) {
 				const rendered = instance.__render__();
 				dnode.rendered = filterAndDecorateChildren(rendered, instance);
@@ -814,7 +866,6 @@ function updateDom(
 		if (updated && dnode.properties && dnode.properties.updateAnimation) {
 			dnode.properties.updateAnimation(domNode as Element, dnode.properties, previous.properties);
 		}
-		return textUpdated;
 	}
 }
 
@@ -876,145 +927,76 @@ function runAfterRenderCallbacks(projectionOptions: ProjectionOptions) {
 	}
 }
 
-function createProjection(
-	dnode: InternalDNode | InternalDNode[],
-	parentInstance: DefaultWidgetBaseInterface,
-	projectionOptions: ProjectionOptions
-): Projection {
-	let projectionDNode = Array.isArray(dnode) ? dnode : [dnode];
-	projectionOptions.merge = false;
-	return {
-		update: function(updatedDNode: RenderResult) {
-			let domNode = projectionOptions.rootNode;
+function scheduleRender(projectionOptions: ProjectionOptions) {
+	if (projectionOptions.sync) {
+		render(projectionOptions);
+	} else if (projectionOptions.renderScheduled === undefined) {
+		projectionOptions.renderScheduled = global.requestAnimationFrame(() => {
+			render(projectionOptions);
+		});
+	}
+}
 
-			updatedDNode = filterAndDecorateChildren(updatedDNode, parentInstance);
-			updateChildren(
-				toParentVNode(domNode),
-				projectionDNode,
-				updatedDNode as InternalDNode[],
-				parentInstance,
-				projectionOptions
-			);
-			const instanceData = widgetInstanceMap.get(parentInstance)!;
-			instanceData.nodeHandler.addRoot();
-			runDeferredRenderCallbacks(projectionOptions);
-			runAfterRenderCallbacks(projectionOptions);
-			projectionDNode = updatedDNode as InternalDNode[];
-		},
-		domNode: projectionOptions.rootNode
-	};
+function render(projectionOptions: ProjectionOptions) {
+	projectionOptions.renderScheduled = undefined;
+	const renderQueue = renderQueueMap.get(projectionOptions.projectorInstance)!;
+	const renders = [...renderQueue];
+	renderQueueMap.set(projectionOptions.projectorInstance, []);
+	renders.sort((a, b) => a.depth - b.depth);
+
+	while (renders.length) {
+		const { instance } = renders.shift()!;
+		const { parentVNode, dnode } = instanceMap.get(instance)!;
+		const instanceData = widgetInstanceMap.get(instance)!;
+		updateDom(dnode, toInternalWNode(instance, instanceData), projectionOptions, parentVNode, instance);
+	}
+	runAfterRenderCallbacks(projectionOptions);
+	runDeferredRenderCallbacks(projectionOptions);
 }
 
 export const dom = {
-	create: function(
-		dNode: RenderResult,
-		instance: DefaultWidgetBaseInterface,
-		projectionOptions?: Partial<ProjectionOptions>
-	): Projection {
-		const finalProjectorOptions = getProjectionOptions(projectionOptions);
-		const rootNode = document.createElement('div');
-		finalProjectorOptions.rootNode = rootNode;
-		const decoratedNode = filterAndDecorateChildren(dNode, instance);
-		addChildren(
-			toParentVNode(finalProjectorOptions.rootNode),
-			decoratedNode,
-			finalProjectorOptions,
-			instance,
-			undefined
-		);
-		const instanceData = widgetInstanceMap.get(instance)!;
-		instanceData.nodeHandler.addRoot();
-		finalProjectorOptions.afterRenderCallbacks.push(() => {
-			instanceData.onAttach();
-		});
-		runDeferredRenderCallbacks(finalProjectorOptions);
-		runAfterRenderCallbacks(finalProjectorOptions);
-		return createProjection(decoratedNode, instance, finalProjectorOptions);
-	},
 	append: function(
 		parentNode: Element,
-		dNode: RenderResult,
 		instance: DefaultWidgetBaseInterface,
-		projectionOptions?: Partial<ProjectionOptions>
+		projectionOptions: Partial<ProjectionOptions> = {}
 	): Projection {
-		const finalProjectorOptions = getProjectionOptions(projectionOptions);
-		finalProjectorOptions.rootNode = parentNode;
-		const decoratedNode = filterAndDecorateChildren(dNode, instance);
-		addChildren(
-			toParentVNode(finalProjectorOptions.rootNode),
-			decoratedNode,
-			finalProjectorOptions,
-			instance,
-			undefined
-		);
 		const instanceData = widgetInstanceMap.get(instance)!;
-		instanceData.nodeHandler.addRoot();
+		const finalProjectorOptions = getProjectionOptions(projectionOptions, instance);
+
+		finalProjectorOptions.rootNode = parentNode;
+		const parentVNode = toParentVNode(finalProjectorOptions.rootNode);
+		const node = toInternalWNode(instance, instanceData);
+		const renderQueue: RenderQueue[] = [];
+		instanceMap.set(instance, { dnode: node, parentVNode });
+		renderQueueMap.set(finalProjectorOptions.projectorInstance, renderQueue);
+		instanceData.invalidate = () => {
+			instanceData.dirty = true;
+			if (instanceData.rendering === false) {
+				const renderQueue = renderQueueMap.get(finalProjectorOptions.projectorInstance)!;
+				renderQueue.push({ instance, depth: finalProjectorOptions.depth });
+				scheduleRender(finalProjectorOptions);
+			}
+		};
+		updateDom(node, node, finalProjectorOptions, parentVNode, instance);
 		finalProjectorOptions.afterRenderCallbacks.push(() => {
 			instanceData.onAttach();
 		});
 		runDeferredRenderCallbacks(finalProjectorOptions);
 		runAfterRenderCallbacks(finalProjectorOptions);
-		return createProjection(decoratedNode, instance, finalProjectorOptions);
+		return {
+			domNode: finalProjectorOptions.rootNode
+		};
+	},
+	create: function(instance: DefaultWidgetBaseInterface, projectionOptions?: Partial<ProjectionOptions>): Projection {
+		return this.append(document.createElement('div'), instance, projectionOptions);
 	},
 	merge: function(
 		element: Element,
-		dNode: RenderResult,
 		instance: DefaultWidgetBaseInterface,
-		projectionOptions?: Partial<ProjectionOptions>
+		projectionOptions: Partial<ProjectionOptions> = {}
 	): Projection {
-		if (Array.isArray(dNode)) {
-			throw new Error('Unable to merge an array of nodes. (consider adding one extra level to the virtual DOM)');
-		}
-		const finalProjectorOptions = getProjectionOptions(projectionOptions);
-		finalProjectorOptions.merge = true;
-		finalProjectorOptions.mergeElement = element;
-		finalProjectorOptions.rootNode = element.parentNode as Element;
-		const decoratedNode = filterAndDecorateChildren(dNode, instance)[0] as InternalVNode;
-		createDom(
-			decoratedNode,
-			toParentVNode(finalProjectorOptions.rootNode),
-			undefined,
-			finalProjectorOptions,
-			instance
-		);
-		const instanceData = widgetInstanceMap.get(instance)!;
-		instanceData.nodeHandler.addRoot();
-		finalProjectorOptions.afterRenderCallbacks.push(() => {
-			instanceData.onAttach();
-		});
-		runDeferredRenderCallbacks(finalProjectorOptions);
-		runAfterRenderCallbacks(finalProjectorOptions);
-		return createProjection(decoratedNode, instance, finalProjectorOptions);
-	},
-	replace: function(
-		element: Element,
-		dNode: RenderResult,
-		instance: DefaultWidgetBaseInterface,
-		projectionOptions?: Partial<ProjectionOptions>
-	): Projection {
-		if (Array.isArray(dNode)) {
-			throw new Error(
-				'Unable to replace a node with an array of nodes. (consider adding one extra level to the virtual DOM)'
-			);
-		}
-		const finalProjectorOptions = getProjectionOptions(projectionOptions);
-		const decoratedNode = filterAndDecorateChildren(dNode, instance)[0] as InternalVNode;
-		finalProjectorOptions.rootNode = element.parentNode! as Element;
-		createDom(
-			decoratedNode,
-			toParentVNode(finalProjectorOptions.rootNode),
-			element,
-			finalProjectorOptions,
-			instance
-		);
-		const instanceData = widgetInstanceMap.get(instance)!;
-		instanceData.nodeHandler.addRoot();
-		finalProjectorOptions.afterRenderCallbacks.push(() => {
-			instanceData.onAttach();
-		});
-		runDeferredRenderCallbacks(finalProjectorOptions);
-		runAfterRenderCallbacks(finalProjectorOptions);
-		element.parentNode!.removeChild(element);
-		return createProjection(decoratedNode, instance, finalProjectorOptions);
+		projectionOptions.merge = true;
+		projectionOptions.mergeElement = element;
+		return this.append(element.parentNode as Element, instance, projectionOptions);
 	}
 };

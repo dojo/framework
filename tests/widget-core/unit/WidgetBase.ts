@@ -78,16 +78,15 @@ describe('WidgetBase', () => {
 		assert.strictEqual(renderResult.children![0], 'child');
 	});
 
-	it('parentInvalidator gets called when the widget is invalidated', () => {
+	it('instance data invalidate is called on invalidate', () => {
 		const child = new BaseTestWidget();
-		const parent = new BaseTestWidget();
-		const parentInvalidateSpy = stub(parent, 'invalidate');
+		const invalidateStub = stub();
 		const instanceData = widgetInstanceMap.get(child)!;
-		instanceData.parentInvalidate = () => parent.invalidate();
+		instanceData.invalidate = invalidateStub;
 		child.invalidate();
-		assert.isTrue(parentInvalidateSpy.calledOnce);
+		assert.isTrue(invalidateStub.calledOnce);
 		child.invalidate();
-		assert.isTrue(parentInvalidateSpy.calledTwice);
+		assert.isTrue(invalidateStub.calledTwice);
 	});
 
 	it('updated core properties available on instance data', () => {

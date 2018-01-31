@@ -29,7 +29,8 @@ describe('decorators/alwaysRender', () => {
 		projector.setProperties({});
 		projector.append();
 		assert.strictEqual(renderCount, 1);
-		projector.setProperties({});
+
+		projector.invalidate();
 		assert.strictEqual(renderCount, 2);
 	});
 });

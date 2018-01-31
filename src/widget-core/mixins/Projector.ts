@@ -1,15 +1,14 @@
 import { assign } from '@dojo/core/lang';
-import global from '@dojo/shim/global';
 import { createHandle } from '@dojo/core/lang';
 import { Handle } from '@dojo/core/interfaces';
-import 'pepjs';
 import cssTransitions from '../animations/cssTransitions';
 import { Constructor, DNode, Projection, ProjectionOptions } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
 import { afterRender } from './../decorators/afterRender';
 import { v } from './../d';
 import { Registry } from './../Registry';
-import { dom, widgetInstanceMap } from './../vdom';
+import { dom } from './../vdom';
+import 'pepjs';
 
 /**
  * Represents the attach state of the projector
@@ -24,8 +23,7 @@ export enum ProjectorAttachState {
  */
 export enum AttachType {
 	Append = 1,
-	Merge = 2,
-	Replace = 3
+	Merge = 2
 }
 
 export interface AttachOptions {
@@ -63,21 +61,6 @@ export interface ProjectorMixin<P> {
 	merge(root?: Element): Handle;
 
 	/**
-	 * Replace the root with the projector node.
-	 */
-	replace(root?: Element): Handle;
-
-	/**
-	 * Pause the projector.
-	 */
-	pause(): void;
-
-	/**
-	 * Resume the projector.
-	 */
-	resume(): void;
-
-	/**
 	 * Attach the project to a _sandboxed_ document fragment that is not part of the DOM.
 	 *
 	 * When sandboxed, the `Projector` will run in a sync manner, where renders are completed within the same turn.
@@ -85,11 +68,6 @@ export interface ProjectorMixin<P> {
 	 * @param doc The `Document` to use, which defaults to the global `document`.
 	 */
 	sandbox(doc?: Document): void;
-
-	/**
-	 * Schedule a render.
-	 */
-	scheduleRender(): void;
 
 	/**
 	 * Sets the properties for the widget. Responsible for calling the diffing functions for the properties against the
@@ -127,11 +105,6 @@ export interface ProjectorMixin<P> {
 	readonly projectorState: ProjectorAttachState;
 
 	/**
-	 * Exposes invalidate for projector instances
-	 */
-	invalidate(): void;
-
-	/**
 	 * Runs registered destroy handles
 	 */
 	destroy(): void;
@@ -147,28 +120,16 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		private _attachHandle: Handle;
 		private _projectionOptions: Partial<ProjectionOptions>;
 		private _projection: Projection | undefined;
-		private _scheduled: number | undefined;
-		private _paused: boolean;
-		private _boundDoRender: () => void;
-		private _boundRender: Function;
-		private _projectorChildren: DNode[] = [];
 		private _projectorProperties: this['properties'] = {} as this['properties'];
 		private _handles: Function[] = [];
 
 		constructor(...args: any[]) {
 			super(...args);
 
-			const instanceData = widgetInstanceMap.get(this)!;
-
-			instanceData.parentInvalidate = () => {
-				this.scheduleRender();
-			};
 			this._projectionOptions = {
 				transitions: cssTransitions
 			};
 
-			this._boundDoRender = this._doRender.bind(this);
-			this._boundRender = this.__render__.bind(this);
 			this.root = document.body;
 			this.projectorState = ProjectorAttachState.Detached;
 		}
@@ -189,43 +150,6 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			};
 
 			return this._attach(options);
-		}
-
-		public replace(root?: Element): Handle {
-			const options = {
-				type: AttachType.Replace,
-				root
-			};
-
-			return this._attach(options);
-		}
-
-		public pause() {
-			if (this._scheduled) {
-				global.cancelAnimationFrame(this._scheduled);
-				this._scheduled = undefined;
-			}
-			this._paused = true;
-		}
-
-		public resume() {
-			this._paused = false;
-			this.scheduleRender();
-		}
-
-		public scheduleRender() {
-			if (this.projectorState === ProjectorAttachState.Attached) {
-				this.__setProperties__(this._projectorProperties);
-				this.__setChildren__(this._projectorChildren);
-				(this as any)._renderState = 1;
-				if (!this._scheduled && !this._paused) {
-					if (this._async) {
-						this._scheduled = global.requestAnimationFrame(this._boundDoRender);
-					} else {
-						this._boundDoRender();
-					}
-				}
-			}
 		}
 
 		public set root(root: Element) {
@@ -271,17 +195,10 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 
 		public setChildren(children: DNode[]): void {
 			this.__setChildren__(children);
-			this.scheduleRender();
-		}
-
-		public __setChildren__(children: DNode[]) {
-			this._projectorChildren = [...children];
-			super.__setChildren__(children);
 		}
 
 		public setProperties(properties: this['properties']): void {
 			this.__setProperties__(properties);
-			this.scheduleRender();
 		}
 
 		public __setProperties__(properties: this['properties']): void {
@@ -312,14 +229,6 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			return node;
 		}
 
-		private _doRender() {
-			this._scheduled = undefined;
-
-			if (this._projection) {
-				this._projection.update(this._boundRender());
-			}
-		}
-
 		private own(handle: Function): void {
 			this._handles.push(handle);
 		}
@@ -346,7 +255,6 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 
 			const handle = () => {
 				if (this.projectorState === ProjectorAttachState.Attached) {
-					this.pause();
 					this._projection = undefined;
 					this.projectorState = ProjectorAttachState.Detached;
 				}
@@ -359,13 +267,10 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 
 			switch (type) {
 				case AttachType.Append:
-					this._projection = dom.append(this.root, this._boundRender(), this, this._projectionOptions);
+					this._projection = dom.append(this.root, this, this._projectionOptions);
 					break;
 				case AttachType.Merge:
-					this._projection = dom.merge(this.root, this._boundRender(), this, this._projectionOptions);
-					break;
-				case AttachType.Replace:
-					this._projection = dom.replace(this.root, this._boundRender(), this, this._projectionOptions);
+					this._projection = dom.merge(this.root, this, this._projectionOptions);
 					break;
 			}
 

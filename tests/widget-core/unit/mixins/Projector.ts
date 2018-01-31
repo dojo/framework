@@ -7,7 +7,6 @@ import { spy, stub, SinonStub } from 'sinon';
 import { v } from '../../../src/d';
 import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projector';
 import { WidgetBase } from '../../../src/WidgetBase';
-import { beforeRender } from './../../../src/decorators/beforeRender';
 import { VNode } from './../../../src/interfaces';
 
 const Event = global.window.Event;
@@ -150,20 +149,6 @@ registerSuite('mixins/projectorMixin', {
 				assert.strictEqual(child.tagName.toLowerCase(), 'div');
 				assert.strictEqual((child.firstChild as HTMLElement).tagName.toLowerCase(), 'h2');
 			},
-			replace() {
-				const projector = new class extends BaseTestWidget {
-					render() {
-						return v('body', this.children);
-					}
-				}();
-
-				projector.setChildren([v('h2', ['foo'])]);
-				projector.replace();
-				assert.strictEqual(document.body.childNodes.length, 1, 'child should have been added');
-				const child = document.body.lastChild as HTMLElement;
-				assert.strictEqual(child.innerHTML, 'foo');
-				assert.strictEqual(child.tagName.toLowerCase(), 'h2');
-			},
 			merge: {
 				standard() {
 					const div = document.createElement('div');
@@ -239,43 +224,6 @@ registerSuite('mixins/projectorMixin', {
 			projector.root = root;
 			assert.equal(projector.root, root);
 		},
-		scheduleRender() {
-			rafStub.restore();
-			rafStub = stub(global, 'requestAnimationFrame').returns(1);
-			const projector = new BaseTestWidget();
-			const scheduleRenderStub = spy(projector, 'scheduleRender');
-			projector.append();
-			assert.isTrue(scheduleRenderStub.notCalled);
-			projector.invalidate();
-			assert.isTrue(scheduleRenderStub.calledOnce);
-			projector.invalidate();
-			assert.isTrue(scheduleRenderStub.calledTwice);
-		},
-		pause() {
-			const projector = new BaseTestWidget();
-
-			projector.append();
-
-			projector.pause();
-			projector.scheduleRender();
-			assert.isFalse(rafStub.called);
-		},
-		'pause cancels animation frame if scheduled'() {
-			const projector = new BaseTestWidget();
-
-			projector.append();
-
-			projector.scheduleRender();
-			projector.pause();
-			assert.isTrue(cancelRafStub.called);
-		},
-		resume() {
-			const projector = new BaseTestWidget();
-			spy(projector, 'scheduleRender');
-			assert.isFalse((projector.scheduleRender as any).called);
-			projector.resume();
-			assert.isTrue((projector.scheduleRender as any).called);
-		},
 		'get projector state'() {
 			const projector = new BaseTestWidget();
 
@@ -315,20 +263,6 @@ registerSuite('mixins/projectorMixin', {
 				assert.strictEqual(projector.toHtml(), (projector.root.lastChild as Element).outerHTML);
 				projector.destroy();
 			},
-			replaced() {
-				const div = document.createElement('div');
-				const root = document.createElement('div');
-				document.body.appendChild(root);
-				root.appendChild(div);
-
-				const projector = new BaseTestWidget();
-				projector.setChildren([v('h2', ['foo'])]);
-
-				projector.replace(div);
-				assert.strictEqual(projector.toHtml(), `<div><h2>foo</h2></div>`);
-				assert.strictEqual(projector.toHtml(), (root.lastChild as Element).outerHTML);
-				projector.destroy();
-			},
 			merged() {
 				const root = document.createElement('div');
 				const div = document.createElement('div');
@@ -354,19 +288,6 @@ registerSuite('mixins/projectorMixin', {
 				);
 			}
 		},
-		destroy() {
-			const projector = new BaseTestWidget();
-			const projectorStopSpy = spy(projector, 'pause');
-
-			projector.append();
-			projector.destroy();
-
-			assert.isTrue(projectorStopSpy.calledOnce);
-
-			projector.destroy();
-
-			assert.isTrue(projectorStopSpy.calledOnce);
-		},
 		'setProperties guards against original property interface'() {
 			interface Props {
 				foo: string;
@@ -379,27 +300,6 @@ registerSuite('mixins/projectorMixin', {
 			// Demonstrates the type guarding for widget properties
 
 			// projector.setProperties({ foo: true });
-		},
-		'properties are reset to original state on render'() {
-			const testProperties = {
-				key: 'bar'
-			};
-			const testChildren = [v('div')];
-			class TestWidget extends BaseTestWidget {
-				@beforeRender()
-				protected updateProperties(renderFunc: any, props: any, children: any) {
-					assert.deepEqual(props, testProperties);
-					assert.deepEqual(children, testChildren);
-					props.bar = 'foo';
-					children.push(v('span'));
-					return renderFunc;
-				}
-			}
-			const projector = new TestWidget();
-			projector.setProperties(testProperties);
-			projector.setChildren(testChildren);
-			projector.scheduleRender();
-			projector.invalidate();
 		},
 		'invalidate before attached'() {
 			const projector: any = new BaseTestWidget();
@@ -519,7 +419,6 @@ registerSuite('mixins/projectorMixin', {
 
 			children = [];
 			projector.invalidate();
-			projector.scheduleRender();
 
 			assert.isTrue(domNode.classList.contains('fade-out'));
 			assert.isTrue(domNode.classList.contains('fade-out-active'));

@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import sendEvent from '../../support/sendEvent';
 import { createResolvers } from './../../support/util';
 import { v } from '../../../src/d';
-import { ProjectorMixin } from '../../../src/main';
+import { ProjectorMixin } from '../../../src/mixins/Projector';
 import Drag, { DragResults } from '../../../src/meta/Drag';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { ThemedMixin } from '../../../src/mixins/Themed';

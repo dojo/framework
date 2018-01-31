@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 
 import { customElement } from '../../../src/decorators/customElement';
 import { WidgetBase } from '../../../src/WidgetBase';
-import { WidgetProperties } from '../../../src/main';
+import { WidgetProperties } from '../../../src/interfaces';
 
 interface CustomElementWidgetProperties extends WidgetProperties {
 	label: string;

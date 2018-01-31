@@ -89,6 +89,7 @@ export function registerThemeInjector(theme: any, themeRegistry: Registry): Inje
 /**
  * Function that returns a class decorated with with Themed functionality
  */
+
 export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties<E>>>>(
 	Base: T
 ): Constructor<ThemedMixin<E>> & T {
