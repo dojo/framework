@@ -554,7 +554,7 @@ function checkDistinguishable(
 	parentInstance: DefaultWidgetBaseInterface
 ) {
 	const childNode = childNodes[indexToCheck];
-	if (isVNode(childNode) && childNode.tag === '') {
+	if (isVNode(childNode) && !childNode.tag) {
 		return; // Text nodes need not be distinguishable
 	}
 	const { key } = childNode.properties;
@@ -781,8 +781,8 @@ function createDom(
 			return;
 		}
 		const doc = parentVNode.domNode!.ownerDocument;
-		if (dnode.tag === '') {
-			if (dnode.domNode !== undefined) {
+		if (!dnode.tag && typeof dnode.text === 'string') {
+			if (dnode.domNode !== undefined && dnode.domNode.parentNode) {
 				const newDomNode = dnode.domNode.ownerDocument.createTextNode(dnode.text!);
 				dnode.domNode.parentNode!.replaceChild(newDomNode, dnode.domNode);
 				dnode.domNode = newDomNode;
@@ -855,7 +855,7 @@ function updateDom(
 		const domNode = (dnode.domNode = previous.domNode);
 		let textUpdated = false;
 		let updated = false;
-		if (dnode.tag === '') {
+		if (!dnode.tag && typeof dnode.text === 'string') {
 			if (dnode.text !== previous.text) {
 				const newDomNode = domNode.ownerDocument.createTextNode(dnode.text!);
 				domNode.parentNode!.replaceChild(newDomNode, domNode);

@@ -5,7 +5,7 @@ import { createResolvers } from './../support/util';
 import sendEvent from './../support/sendEvent';
 
 import { dom, InternalVNode, InternalWNode, widgetInstanceMap, RenderResult } from '../../src/vdom';
-import { v, w } from '../../src/d';
+import { v, w, VNODE } from '../../src/d';
 import { VNode } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
 import { Registry } from '../../src/Registry';
@@ -2255,7 +2255,6 @@ describe('vdom', () => {
 			const thirdSpan = div.childNodes[2];
 
 			widget.renderResult = v('div', [v('span', { key: 'one' }), v('span', { key: 'three' })]);
-			//
 
 			assert.lengthOf(div.childNodes, 2);
 			assert.strictEqual(div.childNodes[0], firstSpan);
@@ -2338,6 +2337,46 @@ describe('vdom', () => {
 			widget.renderResult = v('span', [' ']);
 
 			assert.lengthOf(span.childNodes, 1);
+		});
+
+		it('Assumes text node where tag is falsy and there is text in the VNode', () => {
+			const textVNode: VNode = {
+				tag: undefined as any,
+				properties: {},
+				children: undefined,
+				text: 'text-node',
+				type: VNODE
+			};
+			const widget = getWidget(textVNode);
+			const projection = dom.create(widget, { sync: true });
+			let textNode = projection.domNode.childNodes[0] as Text;
+			assert.strictEqual(textNode.data, 'text-node');
+			widget.renderResult = {
+				tag: undefined as any,
+				properties: {},
+				children: undefined,
+				text: 'text-other',
+				type: VNODE
+			};
+			textNode = projection.domNode.childNodes[0] as Text;
+			assert.strictEqual(textNode.data, 'text-other');
+		});
+
+		it('Will append text node when VNode has a domNode with no parentNode', () => {
+			const domNode = document.createTextNode('text-node');
+			const textVNode: InternalVNode = {
+				tag: undefined as any,
+				properties: {},
+				children: undefined,
+				text: 'text-node',
+				domNode,
+				type: VNODE
+			};
+			const widget = getWidget(textVNode);
+			const projection = dom.create(widget, { sync: true });
+			const textNode = projection.domNode.childNodes[0] as Text;
+			assert.strictEqual(textNode.data, 'text-node');
+			assert.notEqual(textNode, domNode);
 		});
 
 		it('will throw an error when vdom is not sure which node is added', () => {

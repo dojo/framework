@@ -94,6 +94,29 @@ registerSuite('DomWrapper', {
 			assert.isTrue(domNode.classList.contains('classFoo'));
 			assert.equal(domNode.style.color, 'red');
 		},
+		'DomWrapper supports text nodes'() {
+			const domNode = document.createTextNode('text-node');
+			const root = document.createElement('div');
+
+			const DomNode = DomWrapper(domNode);
+			const myTheme = {
+				class1: 'classFoo'
+			};
+
+			@theme(myTheme)
+			class Foo extends ThemedMixin(WidgetBase) {
+				render() {
+					return w(DomNode, {});
+				}
+			}
+			const Projector = ProjectorMixin(Foo);
+			projector = new Projector();
+			projector.append(root);
+			resolvers.resolve();
+			resolvers.resolve();
+			assert.strictEqual(domNode.data, 'text-node');
+			assert.strictEqual(root.childNodes[0], domNode);
+		},
 		onAttached() {
 			let attached = false;
 			const domNode: any = document.createElement('custom-element');

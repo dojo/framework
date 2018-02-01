@@ -11,7 +11,11 @@ export type DomWrapperProperties = VNodeProperties & WidgetProperties;
 
 export type DomWrapper = Constructor<WidgetBase<DomWrapperProperties>>;
 
-export function DomWrapper(domNode: Element, options: DomWrapperOptions = {}): DomWrapper {
+function isElement(value: any): value is Element {
+	return value.tagName;
+}
+
+export function DomWrapper(domNode: Element | Text, options: DomWrapperOptions = {}): DomWrapper {
 	return class DomWrapper extends WidgetBase<DomWrapperProperties> {
 		public __render__(): VNode {
 			const vNode = super.__render__() as InternalVNode;
@@ -25,7 +29,8 @@ export function DomWrapper(domNode: Element, options: DomWrapperOptions = {}): D
 
 		protected render(): DNode {
 			const properties = { ...this.properties, key: 'root' };
-			return v(domNode.tagName, properties);
+			const tag = isElement(domNode) ? domNode.tagName : '';
+			return v(tag, properties);
 		}
 	};
 }

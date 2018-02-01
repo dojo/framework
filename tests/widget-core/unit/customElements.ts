@@ -18,40 +18,43 @@ import { InternalVNode } from '../../src/vdom';
 import { Constructor } from '../../src/interfaces';
 import ProjectorMixin from '../../src/mixins/Projector';
 
-function createFakeElement(attributes: any, descriptor: CustomElementDescriptor): any {
+function createFakeElement(attributes: any, properties: any, descriptor: CustomElementDescriptor): any {
 	let widgetInstance: WidgetBase<any> | null;
 	let events: Event[] = [];
 	let removedChildren: any[] = [];
 
 	return {
-		getWidgetInstance: () => widgetInstance!,
-		setWidgetInstance(instance: WidgetBase<any>) {
-			widgetInstance = instance;
-		},
-		getWidgetConstructor: () =>
-			class extends WidgetBase<any> {
-				render() {
-					return v('div');
-				}
+		...properties,
+		...{
+			getWidgetInstance: () => widgetInstance!,
+			setWidgetInstance(instance: WidgetBase<any>) {
+				widgetInstance = instance;
 			},
-		getDescriptor: () => descriptor,
-		children: [],
-		getAttribute(name: string) {
-			return attributes[name] || null;
-		},
-		dispatchEvent(event: Event) {
-			events.push(event);
-		},
-		appendChild: function() {},
-		getEvents() {
-			return events;
-		},
-		ownerDocument: global.document,
-		removeChild(child: any) {
-			removedChildren.push(child);
-		},
-		removedChildren() {
-			return removedChildren;
+			getWidgetConstructor: () =>
+				class extends WidgetBase<any> {
+					render() {
+						return v('div');
+					}
+				},
+			getDescriptor: () => descriptor,
+			childNodes: undefined,
+			getAttribute(name: string) {
+				return attributes[name] || null;
+			},
+			dispatchEvent(event: Event) {
+				events.push(event);
+			},
+			appendChild: function() {},
+			getEvents() {
+				return events;
+			},
+			ownerDocument: global.document,
+			removeChild(child: any) {
+				removedChildren.push(child);
+			},
+			removedChildren() {
+				return removedChildren;
+			}
 		}
 	};
 }
@@ -68,6 +71,7 @@ registerSuite('customElements', {
 					'my-attribute': '2',
 					convert: '4'
 				},
+				{},
 				{
 					tagName: 'test',
 					widgetConstructor: WidgetBase,
@@ -103,6 +107,7 @@ registerSuite('customElements', {
 					a: '1',
 					'my-attribute': '2'
 				},
+				{},
 				{
 					tagName: 'test',
 					widgetConstructor: WidgetBase,
@@ -130,6 +135,7 @@ registerSuite('customElements', {
 					a: '1',
 					'my-attribute': '2'
 				},
+				{},
 				{
 					tagName: 'test',
 					widgetConstructor: WidgetBase,
@@ -155,6 +161,7 @@ registerSuite('customElements', {
 		'attribute changes are sent to widget'() {
 			let element = createFakeElement(
 				{},
+				{},
 				{
 					tagName: 'test',
 					widgetConstructor: WidgetBase,
@@ -178,6 +185,7 @@ registerSuite('customElements', {
 		'unregistered attribute changes do nothing'() {
 			let element = createFakeElement(
 				{},
+				{},
 				{
 					widgetConstructor: WidgetBase,
 					tagName: 'test'
@@ -192,8 +200,39 @@ registerSuite('customElements', {
 		}
 	},
 	properties: {
+		'element properties are set as widget properties'() {
+			let element = createFakeElement(
+				{},
+				{
+					a: '1',
+					'my-attribute': '2',
+					convert: '4'
+				},
+				{
+					tagName: 'test',
+					widgetConstructor: WidgetBase,
+					properties: [
+						{
+							propertyName: 'a'
+						},
+						{
+							propertyName: 'my-attribute',
+							widgetPropertyName: 'b'
+						}
+					]
+				}
+			);
+
+			initializeElement(element)();
+
+			const result = element.getWidgetInstance().properties;
+			assert.strictEqual(result.a, '1');
+			assert.strictEqual(result.b, '2');
+		},
+
 		'property names default to provided name'() {
 			let element = createFakeElement(
+				{},
 				{},
 				{
 					tagName: 'test',
@@ -219,6 +258,7 @@ registerSuite('customElements', {
 		'widget property names can be specified'() {
 			let element = createFakeElement(
 				{},
+				{},
 				{
 					tagName: 'test',
 					widgetConstructor: WidgetBase,
@@ -240,6 +280,7 @@ registerSuite('customElements', {
 		},
 		'properties can transform with getter'() {
 			let element = createFakeElement(
+				{},
 				{},
 				{
 					tagName: 'test',
@@ -264,6 +305,7 @@ registerSuite('customElements', {
 		},
 		'properties can transform with a setter'() {
 			let element = createFakeElement(
+				{},
 				{},
 				{
 					tagName: 'test',
@@ -302,6 +344,7 @@ registerSuite('customElements', {
 			'events are created'() {
 				let element = createFakeElement(
 					{},
+					{},
 					{
 						tagName: 'test',
 						widgetConstructor: WidgetBase,
@@ -333,13 +376,14 @@ registerSuite('customElements', {
 			}
 			let element = createFakeElement(
 				{},
+				{},
 				{
 					tagName: 'test',
 					widgetConstructor: WidgetBase,
 					childrenType: ChildrenType.ELEMENT
 				}
 			);
-			element.children = [
+			element.childNodes = [
 				{
 					key: 'test',
 					parentNode: element,
@@ -360,12 +404,13 @@ registerSuite('customElements', {
 			}
 			let element = createFakeElement(
 				{},
+				{},
 				{
 					tagName: 'test',
 					widgetConstructor: WidgetBase
 				}
 			);
-			element.children = [
+			element.childNodes = [
 				{
 					key: 'test',
 					parentNode: element,
@@ -429,6 +474,7 @@ registerSuite('customElements', {
 		'properties are sent to widget'() {
 			let element = createFakeElement(
 				{},
+				{},
 				{
 					tagName: 'test',
 					widgetConstructor: WidgetBase,
@@ -472,6 +518,7 @@ registerSuite('customElements', {
 				sandbox.stub(projector, 'ProjectorMixin').callsFake(TestProjectorMixin);
 
 				let element = createFakeElement(
+					{},
 					{},
 					{
 						tagName: 'test',
