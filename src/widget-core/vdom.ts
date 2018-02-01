@@ -203,6 +203,20 @@ function removeClasses(domNode: Element, classes: SupportedClassName) {
 	}
 }
 
+function focusNode(propValue: any, previousValue: any, domNode: Element, projectionOptions: ProjectionOptions): void {
+	let result;
+	if (typeof propValue === 'function') {
+		result = propValue();
+	} else {
+		result = propValue && !previousValue;
+	}
+	if (result === true) {
+		projectionOptions.deferredRenderCallbacks.push(() => {
+			(domNode as HTMLElement).focus();
+		});
+	}
+}
+
 function setProperties(domNode: Element, properties: VNodeProperties, projectionOptions: ProjectionOptions) {
 	const propNames = Object.keys(properties);
 	const propCount = propNames.length;
@@ -211,13 +225,15 @@ function setProperties(domNode: Element, properties: VNodeProperties, projection
 		let propValue = properties[propName];
 		if (propName === 'classes') {
 			const currentClasses = Array.isArray(propValue) ? propValue : [propValue];
-			if (!(domNode as Element).className) {
-				(domNode as Element).className = currentClasses.join(' ').trim();
+			if (!domNode.className) {
+				domNode.className = currentClasses.join(' ').trim();
 			} else {
 				for (let i = 0; i < currentClasses.length; i++) {
-					addClasses(domNode as Element, currentClasses[i]);
+					addClasses(domNode, currentClasses[i]);
 				}
 			}
+		} else if (propName === 'focus') {
+			focusNode(propValue, false, domNode, projectionOptions);
 		} else if (propName === 'styles') {
 			const styleNames = Object.keys(propValue);
 			const styleCount = styleNames.length;
@@ -320,6 +336,8 @@ function updateProperties(
 					addClasses(domNode, currentClasses[i]);
 				}
 			}
+		} else if (propName === 'focus') {
+			focusNode(propValue, previousValue, domNode, projectionOptions);
 		} else if (propName === 'styles') {
 			const styleNames = Object.keys(propValue);
 			const styleCount = styleNames.length;

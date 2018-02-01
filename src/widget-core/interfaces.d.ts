@@ -89,6 +89,8 @@ export type SupportedClassName = string | null | undefined;
 
 export type DeferredVirtualProperties = (inserted: boolean) => VNodeProperties;
 
+export type FocusFunction = () => boolean;
+
 export interface VNodeProperties {
 	/**
 	 * The animation to perform when this node is added to an already existing parent.
@@ -202,6 +204,11 @@ export interface VNodeProperties {
 	 * Note: if you use innerHTML, cannot protect you from XSS vulnerabilities and you must make sure that the innerHTML value is safe.
 	 */
 	readonly innerHTML?: string;
+
+	/**
+	 * determines if the node should be focused
+	 */
+	readonly focus?: boolean | FocusFunction;
 
 	/**
 	 * Everything that is not explicitly listed (properties and attributes that are either uncommon or custom).

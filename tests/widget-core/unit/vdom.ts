@@ -2934,4 +2934,78 @@ describe('vdom', () => {
 			});
 		});
 	});
+
+	describe('focus', () => {
+		it('focus is only called once when set to true', () => {
+			const widget = getWidget(
+				v('input', {
+					focus: true
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const focusSpy = spy(input, 'focus');
+			resolvers.resolve();
+			assert.isTrue(focusSpy.calledOnce);
+			widget.renderResult = v('input', { focus: true });
+			assert.isTrue(focusSpy.calledOnce);
+			document.body.removeChild(input);
+		});
+
+		it('focus is called when focus property is set to true from false', () => {
+			const widget = getWidget(
+				v('input', {
+					focus: false
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const focusSpy = spy(input, 'focus');
+			resolvers.resolve();
+			assert.isTrue(focusSpy.notCalled);
+			widget.renderResult = v('input', { focus: true });
+			resolvers.resolve();
+			assert.isTrue(focusSpy.calledOnce);
+			document.body.removeChild(input);
+		});
+
+		it('Should focus if function for focus returns true', () => {
+			const shouldFocus = () => {
+				console.log('here2');
+				return true;
+			};
+			const widget = getWidget(
+				v('input', {
+					focus: shouldFocus
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const focusSpy = spy(input, 'focus');
+			resolvers.resolve();
+			assert.isTrue(focusSpy.calledOnce);
+			widget.renderResult = v('input', { focus: shouldFocus });
+			resolvers.resolve();
+			assert.isTrue(focusSpy.calledTwice);
+			document.body.removeChild(input);
+		});
+
+		it('Should never focus if function for focus returns false', () => {
+			const shouldFocus = () => false;
+			const widget = getWidget(
+				v('input', {
+					focus: shouldFocus
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const focusSpy = spy(input, 'focus');
+			resolvers.resolve();
+			assert.isTrue(focusSpy.notCalled);
+			widget.renderResult = v('input', { focus: shouldFocus });
+			resolvers.resolve();
+			assert.isTrue(focusSpy.notCalled);
+			document.body.removeChild(input);
+		});
+	});
 });
