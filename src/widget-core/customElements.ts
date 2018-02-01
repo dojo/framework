@@ -153,10 +153,13 @@ export function DomToWidgetWrapper(domNode: CustomElement): DomToWidgetWrapper {
 
 		constructor() {
 			super();
-			domNode.addEventListener('connected', () => {
-				this._widgetInstance = domNode.getWidgetInstance();
-				this.invalidate();
-			});
+			this._widgetInstance = domNode.getWidgetInstance && domNode.getWidgetInstance();
+			if (!this._widgetInstance) {
+				domNode.addEventListener('connected', () => {
+					this._widgetInstance = domNode.getWidgetInstance();
+					this.invalidate();
+				});
+			}
 		}
 
 		public __render__(): VNode {

@@ -381,7 +381,7 @@ registerSuite('customElements', {
 		}
 	},
 
-	DomToWidgetWrapper() {
+	'DomToWidgetWrapper will call setProperties on immediately if the child instance is available'() {
 		const widgetInstance = new (projector.ProjectorMixin(WidgetBase))();
 		const div: any = document.createElement('div');
 		div.getWidgetInstance = () => {
@@ -396,8 +396,29 @@ registerSuite('customElements', {
 		assert.strictEqual(renderResult.domNode, div);
 		assert.deepEqual(renderResult.properties, {});
 		assert.deepEqual(widget.properties, { foo: 'bar' });
+		assert.deepEqual(widgetInstance.properties, { key: 'root', foo: 'bar' } as any);
+		assert.isTrue(invalidateSpy.notCalled);
+		sendEvent(div, 'connected');
+		assert.isTrue(invalidateSpy.notCalled);
+	},
+
+	'DomToWidgetWrapper will invalidate on the connected event if no child widget instance is available'() {
+		const widgetInstance = new (projector.ProjectorMixin(WidgetBase))();
+		const div: any = document.createElement('div');
+		const Wrapper = DomToWidgetWrapper(div);
+		const widget = new Wrapper();
+		widget.__setProperties__({ foo: 'bar' });
+		const invalidateSpy = sinon.spy(widget, 'invalidate');
+		const renderResult = widget.__render__() as InternalVNode;
+		assert.strictEqual(renderResult.tag, 'DIV');
+		assert.strictEqual(renderResult.domNode, div);
+		assert.deepEqual(renderResult.properties, {});
+		assert.deepEqual(widget.properties, { foo: 'bar' });
 		assert.deepEqual(widgetInstance.properties, {});
 		assert.isTrue(invalidateSpy.notCalled);
+		div.getWidgetInstance = () => {
+			return widgetInstance;
+		};
 		sendEvent(div, 'connected');
 		assert.isTrue(invalidateSpy.calledOnce);
 		widget.__render__() as InternalVNode;
