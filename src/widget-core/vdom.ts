@@ -864,7 +864,7 @@ function updateDom(
 				return textUpdated;
 			}
 		} else {
-			if (dnode.tag.lastIndexOf('svg', 0) === 0) {
+			if (dnode.tag && dnode.tag.lastIndexOf('svg', 0) === 0) {
 				projectionOptions = { ...projectionOptions, ...{ namespace: NAMESPACE_SVG } };
 			}
 			if (previous.children !== dnode.children) {

@@ -2379,6 +2379,25 @@ describe('vdom', () => {
 			assert.notEqual(textNode, domNode);
 		});
 
+		it('Should ignore vnode with no tag or text', () => {
+			const domNode = document.createTextNode('text-node');
+			const textVNode: InternalVNode = {
+				tag: undefined as any,
+				properties: {},
+				children: undefined,
+				text: undefined,
+				domNode,
+				type: VNODE
+			};
+			const widget = getWidget(textVNode);
+			const projection = dom.create(widget, { sync: true });
+			let textNode = projection.domNode.childNodes[0] as Text;
+			assert.strictEqual(textNode, domNode);
+			widget.renderResult = { ...textVNode } as any;
+			textNode = projection.domNode.childNodes[0] as Text;
+			assert.strictEqual(textNode, domNode);
+		});
+
 		it('will throw an error when vdom is not sure which node is added', () => {
 			const widgetName = 'span';
 			const widget = getWidget(v('div', [v('span', ['a']), v('span', ['c'])]));
