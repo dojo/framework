@@ -14,8 +14,6 @@ There are two exceptions to this. One is the `Promise` object, which needs to be
 operations. The other exception is the `Symbol` functionality, in that the well-known symbols need to be located
 off of the global `Symbol` object in order to ensure that the correct symbol is referenced.
 
-**WARNING** This is *beta* software.  While we do not anticipate significant changes to the API at this stage, we may feel the need to do so.  This is not yet production ready, so you should use at your own risk.
-
 ## Usage
 
 To use `@dojo/shim`, install the package along with its required peer dependencies:
@@ -199,5 +197,5 @@ or
 
 ## Licensing information
 
-© [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© 2018 [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
