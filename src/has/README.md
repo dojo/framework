@@ -11,8 +11,6 @@ detected features.  The features can also be asserted statically, thereby allowi
 optimization tool that can be used to make certain branches of code "dead" which can be elided during a build
 step.  The `has` module is also capable of allowing conditional loading of modules with certain loaders.
 
-**WARNING** This is *beta* software.  While we do not anticipate significant changes to the API at this stage, we may feel the need to do so.  This is not yet production ready, so you should use at your own risk.
-
 - [Usage](#usage)
 - [Features](#features)
     - [Feature Branching](#feature-branching)
@@ -235,5 +233,5 @@ or
 
 The original Dojo 1 `has()` API was based upon Peter Higgin's [has.js](https://github.com/phiggins42/has.js/).
 
-© [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© 2018 [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
