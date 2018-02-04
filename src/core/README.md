@@ -9,8 +9,6 @@ This package provides a set of language helpers, utility functions, and classes 
 It includes APIs for feature detection, asynchronous operations, basic event handling,
 and making HTTP requests.
 
-**WARNING** This is *beta* software.  While we do not anticipate significant changes to the API at this stage, we may feel the need to do so.  This is not yet production ready, so you should use at your own risk.
-
 ## Usage
 
 To use `@dojo/core`, install the package along with its required peer dependencies:
@@ -143,7 +141,7 @@ or
 
 ## Licensing information
 
-© 2004–2017 [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© 2004–2018 [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
 Some string functions (`codePointAt`, `fromCodePoint`, and `repeat`) adopted from polyfills by Mathias Bynens,
 under the [MIT](http://opensource.org/licenses/MIT) license.
