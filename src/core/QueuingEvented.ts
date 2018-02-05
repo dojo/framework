@@ -14,15 +14,9 @@ class QueuingEvented<M extends {} = {}, T = EventType, O extends EventObject<T> 
 	T,
 	O
 > {
-	private _queue: Map<string | symbol, EventObject[]>;
+	private _queue: Map<string | symbol, EventObject[]> = new Map();
 
-	maxEvents = 0;
-
-	constructor() {
-		super();
-
-		this._queue = new Map();
-	}
+	public maxEvents = 0;
 
 	emit<K extends keyof M>(event: M[K]): void;
 	emit(event: O): void;

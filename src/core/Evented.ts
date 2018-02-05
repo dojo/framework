@@ -1,21 +1,6 @@
 import Map from '@dojo/shim/Map';
 import { Handle, EventType, EventObject } from './interfaces';
-import { on as aspectOn } from './aspect';
 import { Destroyable } from './Destroyable';
-
-/**
- * Handles an array of handles
- *
- * @param handles an array of handles
- * @returns a single Handle for handles passed
- */
-function handlesArraytoHandle(handles: Handle[]): Handle {
-	return {
-		destroy() {
-			handles.forEach((handle) => handle.destroy());
-		}
-	};
-}
 
 /**
  * Map of computed regular expressions, keyed by string
@@ -66,28 +51,28 @@ export type EventedCallbackOrArray<T = EventType, E extends EventObject<T> = Eve
  */
 export class Evented<M extends {} = {}, T = EventType, O extends EventObject<T> = EventObject<T>> extends Destroyable {
 	// The following member is purely so TypeScript remembers the type of `M` when extending so
-	// that the utilities in `on.ts` will work
-	// https://github.com/Microsoft/TypeScript/issues/20348
+	// that the utilities in `on.ts` will work https://github.com/Microsoft/TypeScript/issues/20348
 	// tslint:disable-next-line
 	protected __typeMap__?: M;
 
 	/**
 	 * map of listeners keyed by event type
 	 */
-	protected listenersMap: Map<T | keyof M, EventedCallback<T, O> | EventedCallback<keyof M, M[keyof M]>> = new Map();
+	protected listenersMap: Map<T | keyof M, EventedCallback<T, O>[]> = new Map();
 
 	/**
-	 * Emits the event objet for the specified type
+	 * Emits the event object for the specified type
 	 *
 	 * @param event the event to emit
 	 */
 	emit<K extends keyof M>(event: M[K]): void;
 	emit(event: O): void;
 	emit(event: any): void {
-		this.listenersMap.forEach((method, type) => {
-			// Since `type` is generic, the compiler doesn't know what type it is and `isGlobMatch` requires `string | symbol`
+		this.listenersMap.forEach((methods, type) => {
 			if (isGlobMatch(type as any, event.type)) {
-				method.call(this, event);
+				methods.forEach((method) => {
+					method.call(this, event);
+				});
 			}
 		});
 	}
@@ -114,11 +99,26 @@ export class Evented<M extends {} = {}, T = EventType, O extends EventObject<T> 
 	on(type: T, listener: EventedCallbackOrArray<T, O>): Handle;
 	on(type: any, listener: EventedCallbackOrArray<any, any>): Handle {
 		if (Array.isArray(listener)) {
-			const handles = listener.map((listener) => aspectOn(this.listenersMap, type, listener));
-			return handlesArraytoHandle(handles);
-		} else {
-			return aspectOn(this.listenersMap, type, listener);
+			const handles = listener.map((listener) => this._addListener(type, listener));
+			return {
+				destroy() {
+					handles.forEach((handle) => handle.destroy());
+				}
+			};
 		}
+		return this._addListener(type, listener);
+	}
+
+	private _addListener(type: T | keyof M, listener: EventedCallback<T, O>) {
+		const listeners = this.listenersMap.get(type) || [];
+		listeners.push(listener);
+		this.listenersMap.set(type, listeners);
+		return {
+			destroy: () => {
+				const listeners = this.listenersMap.get(type) || [];
+				listeners.splice(listeners.indexOf(listener), 1);
+			}
+		};
 	}
 }
 
