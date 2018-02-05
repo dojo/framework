@@ -6,8 +6,6 @@
 
 This library provides an application store designed to complement @dojo/widgets and @dojo/widget-core or any other reactive application.
 
-**WARNING** This is *alpha* software. It is not yet production ready, so you should use at your own risk.
-
 ## Usage
 
 To use `@dojo/stores`, install the package along with its required peer dependencies:
@@ -37,6 +35,8 @@ Managing state can become difficult to coordinate when an application becomes co
 
 Dojo 2 stores provides a centralized store, designed to be the **single source of truth** for an application. It operates using uni-directional data flow. This means all application data follows the same lifecycle, ensuring the application logic is predictable and easy to understand.
 
+__Note__: Do you need a centralised store? Lifting state up to parent widgets and using local state are likely to be sufficient in less complex applications.
+
 ## Basics
 
 To work with the Dojo 2 store there are three core but simple concepts - Operations, Commands and Processes.
@@ -55,11 +55,21 @@ Operations are the raw instructions the store uses to make modifications to the 
 Each operation is a simple object which contains instructions with the `OperationType`, `path` and optionally the `value` (depending on operation).
 
 ```ts
-const operations = [
-	{ op: OperationType.ADD, path: new JsonPointer('/foo'), value: 'foo' },
-	{ op: OperationType.REPLACE, path: new JsonPointer('/bar'), value: 'bar' },
-	{ op: OperationType.REMOVE, path: new JsonPointer('/qux') },
-];
+import { OperationType } from '@dojo/stores/State/patch';
+import { Pointer } from '@dojo/stores/state/Pointer';
+
+const operations = [{
+	op: OperationType.ADD,
+	path: new Pointer('/foo'),
+	value: 'foo'
+}, {
+	op: OperationType.REPLACE,
+	path: new Pointer('/bar'),
+	value: 'bar'
+}, {
+	op: OperationType.REMOVE,
+	path: new Pointer('/qux')
+}];
 ```
 
 Dojo 2 stores provides a helper package that can generate `PatchOperation` objects from `@dojo/stores/state/operations`:
@@ -68,7 +78,7 @@ Dojo 2 stores provides a helper package that can generate `PatchOperation` objec
 * `remove`  - Returns a `PatchOperation` of type `OperationType.REMOVE` for the `path`
 * `replace` - Returns a `PatchOperation` of type `OperationType.REPLACE` for the `path` and `value`
 
-These function accept a `Path` type. This is returned by the `path` and `at` methods on a store. More often this will be created using the `path` and `at` functions provided as part of the arguments to a [command](#commands), which are described in more detail below. Rather than accepting a full string path, the `path` and `at` functions accept a series of arguments and provide type checking to verify that the path created actually exists on the state object.
+These functions accept a `Path` type. This is returned by the `path` and `at` methods on a store. More often this will be created using the `path` and `at` functions provided as part of the arguments to a [command](#commands), which are described in more detail below. Rather than accepting a full string path, the `path` and `at` functions accept a series of arguments and provide type checking to verify that the path created actually exists on the state object.
 
 ### Commands
 
@@ -159,7 +169,7 @@ const calculateCountsCommand = createCommand(({ get, path }) => {
 });
 ```
 
- *Important:* Access to state root is not permitted and will throw an error, for example `get(path('/'))`. This applies for `Operations` also, it is not possible to create an operation that will update the state root.
+ *Important:* Access to state root is not permitted and will throw an error, for example `get(path('/'))`. This applies for `Operations` also, it is not possible to create an operation that will update the state root. Best practices with @dojo/stores mean touching the smallest part of the store as is necessary.
 
 ##### Asynchronous Commands
 
@@ -176,14 +186,24 @@ async function postTodoCommand({ get, path, payload: { id }}: CommandRequest): P
 	const index = findIndex(todos, byId(id));
 	// success
 	return [
-		replace(at(path('todos'), index), { ...todos[index], loading: false, id: data.uuid })
+		replace(at(path('todos'), index), {
+			...todos[index],
+			loading: false,
+			id: data.uuid
+		})
 	];
 }
 ```
 
 ### Processes
 
-A `Process` is the construct used to execute commands against a `store` instance in order to make changes to the application state. `Processes` are created using the `createProcess` factory function that accepts an array of commands and an optional callback that can be used to manage errors thrown from a command. The optional callback receives an `error` object and a `result` object. The `error` object contains the `error` stack and the command that caused the error. The `result` object contains the `payload` passed to the process, a function to undo the operations of the `process` and a function to execute an additional `process`.
+A `Process` is the construct used to execute commands against a `store` instance in order to make changes to the application state. `Processes` are created using the `createProcess` factory function that accepts an array of commands and an optional callback that can be used to manage errors thrown from a command. The optional callback receives an `error` object and a `result` object. The `error` object contains the `error` stack and the command that caused the error.
+
+The result object contains the following:
+
+* The `payload` passed to the process
+* A function to undo the operations of the `process`
+* A function to execute an additional `process`.
 
 The array of `Commands` are executed in sequence by the store until the last Command is completed or a `Command` throws an error. These processes often represent an application behavior. For example adding a todo in a simple todo application which will be made up with multiple discreet commands.
 
@@ -215,7 +235,12 @@ The `Process` creates a deferred executor by passing the `store` instance `addTo
 ```ts
 const addTodoExecutor = addTodoProcess(store);
 
-addTodoExecutor({ foo: 'arguments', bar: 'get', baz: 'passed', qux: 'here'});
+addTodoExecutor({
+	foo: 'arguments',
+	bar: 'get',
+	baz: 'passed',
+	qux: 'here'
+});
 ```
 
 ### Initial State
@@ -235,7 +260,7 @@ const initialStateCommand = createCommand({ path }) => {
 
 const initialStateProcess = createProcess([ initialStateCommand ]);
 
-// creates the store, initializes the state and runs the `getTodosProcess`.
+// creates the store, initializes the state and runs the `getTodosProcess` shown below.
 const store = createStore();
 initialStateProcess(store)();
 // if a process contains an async command, like fetching initial data from a remote service the return promise can be used
@@ -317,7 +342,7 @@ store.onChange([
 });
 ```
 
-In order to be notified when any changes occur within the store's state, simply register to the stores `.on()` for a type of `invalidate` passing the function to be called.
+In order to be notified when any changes occur within the store's state, simply register to the stores `.on()` method for a type of `invalidate` passing the function to be called.
 
 ```ts
 store.on('invalidate', () => {
@@ -470,7 +495,7 @@ const { undoCollector, undoer } = createUndoManager();
 const myProcess = createProcess([ commandOne, commandTwo ], { callback: undoCollector() });
 const myOtherProcess = createProcess([ commandThree, commandFour ], { callback: undoCollector() });
 
-// running `undeor` will undo the last process executed, that had registered the `collector` as a callback.
+// running `undoer` will undo the last process executed, that had registered the `collector` as a callback.
 undoer();
 ```
 
@@ -556,4 +581,4 @@ TODO: If third-party code was used to write this library, make a list of project
 
 * [Third-party lib one](https//github.com/foo/bar) ([New BSD](http://opensource.org/licenses/BSD-3-Clause))
 
-© 2017 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© 2018 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
