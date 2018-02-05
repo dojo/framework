@@ -6,8 +6,6 @@
 
 A routing library for Dojo 2 applications.
 
-**WARNING** This is _beta_ software. While we do not anticipate significant changes to the API at this stage, we may feel the need to do so. This is not yet production ready, so you should use at your own risk.
-
  - [Features](#features)
    - [Route Configuration](#route-configuration)
    - [Router](#router)
@@ -396,4 +394,4 @@ or
 
 ## Licensing information
 
-© 2004–2017 [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© 2018 [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
