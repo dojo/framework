@@ -6,8 +6,6 @@
 
 An internationalization library that provides locale-specific message loading, and support for locale-specific message, date, and number formatting.
 
-**WARNING** This is _beta_ software. While we do not anticipate significant changes to the API at this stage, we may feel the need to do so. This is not yet production ready, so you should use at your own risk.
-
 - [Usage](#usage)
 - [Features](#features)
   - [Message Bundle Loading](#message-bundle-loading)
@@ -425,5 +423,5 @@ Test cases MUST be written using Intern using the Object test interface and Asse
 
 * [Globalize.js](https://github.com/globalizejs/globalize) ([MIT](http://spdx.org/licenses/MIT))
 
-© 2017 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© 2018 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
