@@ -3029,7 +3029,6 @@ describe('vdom', () => {
 
 		it('Should focus if function for focus returns true', () => {
 			const shouldFocus = () => {
-				console.log('here2');
 				return true;
 			};
 			const widget = getWidget(

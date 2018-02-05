@@ -1,10 +1,12 @@
 import { CustomElementInitializer } from '../customElements';
 import { Constructor, WidgetProperties } from '../interfaces';
 
+export type CustomElementPropertyNames<P extends object> = ((keyof P) | (keyof WidgetProperties))[];
+
 /**
  * Defines the custom element configuration used by the customElement decorator
  */
-export interface CustomElementConfig<P extends WidgetProperties> {
+export interface CustomElementConfig<P extends object = { [index: string]: any }> {
 	/**
 	 * The tag of the custom element
 	 */
@@ -13,17 +15,17 @@ export interface CustomElementConfig<P extends WidgetProperties> {
 	/**
 	 * List of widget properties to expose as properties on the custom element
 	 */
-	properties?: (keyof P)[];
+	properties?: CustomElementPropertyNames<P>;
 
 	/**
 	 * List of attributes on the custom element to map to widget properties
 	 */
-	attributes?: (keyof P)[];
+	attributes?: CustomElementPropertyNames<P>;
 
 	/**
 	 * List of events to expose
 	 */
-	events?: (keyof P)[];
+	events?: CustomElementPropertyNames<P>;
 
 	/**
 	 * Initialization function called before the widget is created (for custom property setting)
@@ -35,7 +37,7 @@ export interface CustomElementConfig<P extends WidgetProperties> {
  * This Decorator is provided properties that define the behavior of a custom element, and
  * registers that custom element.
  */
-export function customElement<P extends WidgetProperties = WidgetProperties>({
+export function customElement<P extends object = { [index: string]: any }>({
 	tag,
 	properties,
 	attributes,

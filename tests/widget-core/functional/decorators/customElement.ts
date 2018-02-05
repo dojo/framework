@@ -1,10 +1,9 @@
 import { WidgetBase } from '../../../src/WidgetBase';
-import { WidgetProperties } from '../../../src/interfaces';
 import { v } from '../../../src/d';
 import customElement from '../../../src/decorators/customElement';
 import registerCustomElement from '../../../src/registerCustomElement';
 
-interface TestButtonProperties extends WidgetProperties {
+interface TestButtonProperties {
 	label: string;
 	labelSuffix: string;
 	onClick: () => void;
