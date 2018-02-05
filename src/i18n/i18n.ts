@@ -2,7 +2,6 @@
 import '@dojo/shim/Promise'; // ensure Promise.all exists
 import Evented from '@dojo/core/Evented';
 import has from '@dojo/core/has';
-import { assign } from '@dojo/core/lang';
 import { useDefault } from '@dojo/core/load/util';
 import uuid from '@dojo/core/uuid';
 import { Handle } from '@dojo/core/interfaces';
@@ -365,8 +364,8 @@ async function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Pro
 	const locales = bundle.locales as LocaleLoaders<T>;
 	const supportedLocales = getSupportedLocales(currentLocale, Object.keys(locales));
 	const bundles = await loadLocaleBundles<T>(locales, supportedLocales);
-	return bundles.reduce((previous: T, partial: T): T => {
-		const localeMessages: T = assign({}, previous, partial);
+	return bundles.reduce((previous: any, partial: any): T => {
+		const localeMessages: T = { ...previous, ...partial };
 		loadMessages(getBundleId(bundle), <T>Object.freeze(localeMessages), currentLocale);
 		return localeMessages;
 	}, bundle.messages);
@@ -440,7 +439,7 @@ export function setLocaleMessages<T extends Messages>(
 	localeMessages: Partial<T>,
 	locale: string
 ): void {
-	const messages: T = assign({}, bundle.messages, localeMessages);
+	const messages: T = { ...(bundle.messages as any), ...(localeMessages as any) };
 	loadMessages(getBundleId(bundle), <T>Object.freeze(messages), locale);
 }
 
