@@ -106,6 +106,15 @@ describe('meta - Focus', () => {
 			global.document.dispatchEvent(focusEvent);
 			assert.isTrue(invalidateStub.calledOnce);
 		});
+		it('will invalidate on blur events', () => {
+			const blurEvent = global.document.createEvent('Event');
+			blurEvent.initEvent('focusout', true, true);
+			nodeHandler.add(element, 'root');
+
+			focus.get('root');
+			global.document.dispatchEvent(blurEvent);
+			assert.isTrue(invalidateStub.calledOnce);
+		});
 		it('updates the saved activeElement value on focus events', (test) => {
 			if (!isNode) {
 				test.skip('test requires activeElement stub');
@@ -132,22 +141,28 @@ describe('meta - Focus', () => {
 			assert.equal(focusResults.active, false);
 			assert.equal(focusResults.containsFocus, true);
 		});
-		it('removes the focus listener when the meta is destroyed', (test) => {
+		it('removes the focus and blur listeners when the meta is destroyed', (test) => {
 			if (!isNode) {
 				test.skip('test requires activeElement stub');
 			}
 			const focusEvent = global.document.createEvent('Event');
+			const blurEvent = global.document.createEvent('Event');
 			focusEvent.initEvent('focusin', true, true);
+			blurEvent.initEvent('focusout', true, true);
 			nodeHandler.add(element, 'root');
 
 			focus.get('root');
 			global.document.dispatchEvent(focusEvent);
 			assert.isTrue(activeGetter.called, 'focus handler calls activeElement');
+			activeGetter.resetHistory();
+			global.document.dispatchEvent(blurEvent);
+			assert.isTrue(activeGetter.called, 'blur handler calls activeElement');
 
 			focus.destroy();
 			activeGetter.resetHistory();
 			global.document.dispatchEvent(focusEvent);
-			assert.isFalse(activeGetter.called, 'focus handler is removed');
+			global.document.dispatchEvent(blurEvent);
+			assert.isFalse(activeGetter.called, 'focus and blur handlers removed');
 		});
 	});
 

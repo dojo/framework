@@ -38,18 +38,20 @@ export class Focus extends Base {
 		node && (node as HTMLElement).focus();
 	}
 
-	private _onFocus = () => {
+	private _onFocusChange = () => {
 		this._activeElement = global.document.activeElement;
 		this.invalidate();
 	};
 
 	private _createListener() {
-		global.document.addEventListener('focusin', this._onFocus);
+		global.document.addEventListener('focusin', this._onFocusChange);
+		global.document.addEventListener('focusout', this._onFocusChange);
 		this.own(createHandle(this._removeListener.bind(this)));
 	}
 
 	private _removeListener() {
-		global.document.removeEventListener('focusin', this._onFocus);
+		global.document.removeEventListener('focusin', this._onFocusChange);
+		global.document.removeEventListener('focusout', this._onFocusChange);
 	}
 }
 
