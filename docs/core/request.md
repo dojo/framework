@@ -1,14 +1,28 @@
 # request
 
-This modules provides 4 methods (get, post, delete, and put) to simplify sending
-http requests. Each of these methods returns a promise that resolves with the
-response.
+This modules provides 4 methods (get, post, delete, and put) to simplify sending http requests. Each of these methods returns a promise that resolves with the response.
 
 * request
   * get
   * post
   * delete
   * put
+
+## Making Requests
+
+Making requests is similar to using the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
+
+A GET request,
+
+```typescript
+const json = await request('http://www.example.com').then(response => response.json());
+```
+
+A POST request,
+
+```typescript
+const response = await request.post('http://www.example.com', { body: JSON.stringify(myValues)}).then(response => response.json());
+```
 
 ## Observables
 

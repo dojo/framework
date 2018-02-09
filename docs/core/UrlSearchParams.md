@@ -1,5 +1,7 @@
 # UrlSearchParams
 
+The `UrlSearchParams` object makes working with URL query parameters a little easier.
+
 ## Creating a Url Search Params Object
 
 ### With search params string

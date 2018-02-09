@@ -5,8 +5,7 @@
 [![npm version](https://badge.fury.io/js/%40dojo%2Fcore.svg)](https://badge.fury.io/js/%40dojo%2Fcore)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fdojo%2Fcore.svg?type=shield)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fdojo%2Fcore?ref=badge_shield)
 
-This package provides a set of language helpers, utility functions, and classes for writing TypeScript applications.
-It includes APIs for feature detection, asynchronous operations, basic event handling,
+This package provides a set of language helpers, utility functions, and classes for writing TypeScript applications. It includes APIs for feature detection, asynchronous operations, basic event handling,
 and making HTTP requests.
 
 ## Usage
@@ -39,8 +38,7 @@ npm install @dojo/shim
 
 ### Feature Detection
 
-Using the latest Web technologies isn't always as straightforward as developers would like due to differing support
-across platforms. [`@dojo/core/has`](docs/has.md) provides a simple feature detection API that makes it easy to
+Using the latest Web technologies isn't always as straightforward as developers would like due to differing support across platforms. [`@dojo/core/has`](docs/has.md) provides a simple feature detection API that makes it easy to
 detect which platforms support which features.
 
 ### Language Utilities
@@ -62,8 +60,7 @@ The [`@dojo/core/load` module](docs/load.md) can be used to dynamically load mod
 
 #### math
 
-The [`@dojo/core/math` module](docs/math.md) contains analogues to a number of ES2015 APIs, including many trigonometric and logarithmic
-functions.
+The [`@dojo/core/math` module](docs/math.md) contains analogues to a number of ES2015 APIs, including many trigonometric and logarithmic functions.
 
 #### string
 
@@ -87,8 +84,7 @@ making requests in both node and the browser through the same methods.
 
 #### Promise
 
-The `@dojo/core/Promise` class is an implementation of the ES2015 Promise API that also includes static state
-inspection and a `finally` method for cleanup actions.
+The `@dojo/core/Promise` class is an implementation of the ES2015 Promise API that also includes static state inspection and a `finally` method for cleanup actions.
 
 `@dojo/core/async` contains a number of classes and utility modules to simplify working with asynchronous operations.
 
