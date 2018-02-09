@@ -8,7 +8,7 @@ A feature detection library.
 
 This package provides an API for expressing feature detection to allow developers to branch code based upon the
 detected features.  The features can also be asserted statically, thereby allowing integration into a build
-optimization tool that can be used to make certain branches of code "dead" which can be elided during a build
+optimization tool that can be used to create "dead" code branches which can be elided during a build
 step.  The `has` module is also capable of allowing conditional loading of modules with certain loaders.
 
 - [Usage](#usage)
@@ -41,7 +41,7 @@ if (has('some-feature')) {
 
 ### Feature Branching
 
-The most common feature is branching in code based upon a feature flag.  `has()` essentially manages feature
+The most common use case is branching in code based upon a feature flag.  `has()` essentially manages feature
 flags, returning either a *truthy* value if the feature is present or a *falsey* value if the feature isn't present.
 The `has()` module is the default export of the main module of the package:
 
@@ -74,7 +74,7 @@ used to enable a developer to express other features.  The flags though that are
 
 |Feature Flag|Description|
 |------------|-----------|
-|`debug`|Provides a way to code path for code that is only usable when debugging or providing enhanced diagnostics that are not desired in a *production* build.  Defaults to `true` but should be configured statically as `false` in production builds.|
+|`debug`|Provides a way to create a code path for code that is only usable when debugging or providing enhanced diagnostics that are not desired in a *production* build.  Defaults to `true` but should be configured statically as `false` in production builds.|
 |`host-browser`|Determines if the current environment contains a `window` and `document` object in the global context, therefore it being generally safe to assume the code is running in a browser environment.|
 |`host-node`|Attempts to detect if the environment appears to be a node environment.|
 
@@ -138,7 +138,7 @@ import foo from '@dojo/has!host-browser?foo/browser:foo/node';
 ```
 
 The module IDs supplied in the ternary operator can be specified as absolute MIDs or relative MIDs based on the loading
-module, just as if you were just directly importing the module.
+module, just as if you were directly importing the module.
 
 When using TypeScript, TypeScript will not be able to automatically resolve the module shape, therefore you will often
 have to make a global declaration of the module that is in the scope of the project where the module name matches the
@@ -153,12 +153,12 @@ declare module '@dojo/has!host-browser?foo/browser:foo/node' {
 ### Static Features
 
 Features can also be defined statically, before the module is loaded, in the global scope.  The main use case is when
-it is not desirable to detect these features from the environment (because they may not be accurate, like when using
+it is not desirable to detect these features from the environment (because they may not be accurate, for example when using
 a build tool).  The features can only be specified before the module is loaded for the first time and cannot be
 changed once the module is loaded.  The values specified in the static features will *always* be returned from `has()`
-irrespective of how those features a subsequently defined using `add()`, even if `override` is specified.  In addition,
-if a value is being added via `add()` that is already defined as a static feature, it will still complete and not throw
-although if specified as function, the function will never be invoked.
+irrespective of how those features are subsequently defined using `add()`, even if `override` is specified.  In addition,
+if a value is being added via `add()` that is already defined as a static feature, it will still complete and not throw.
+If specified as a function, the function will never be invoked.
 
 To specify the features, the global variable `DojoHasEnvironment` needs to be specified with a property of `staticFeatures`
 which is a simple map of the features:
@@ -173,7 +173,7 @@ window.DojoHasEnvironment = {
 };
 ```
 
-`staticFeatures` can also be specified as a function, which returns an map of the features:
+`staticFeatures` can also be specified as a function, which returns a map of the features:
 
 ```typescript
 window.DojoHasEnvironment = {
@@ -193,7 +193,7 @@ Contributing Guidelines.
 
 ### Code Style
 
-This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the projects `package.json`.
+This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the project's `package.json`.
 
 An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
 
