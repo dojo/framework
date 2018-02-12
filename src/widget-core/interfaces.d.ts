@@ -91,6 +91,20 @@ export type DeferredVirtualProperties = (inserted: boolean) => VNodeProperties;
 
 export type FocusFunction = () => boolean;
 
+export type DiffType = 'none' | 'dom' | 'vdom';
+
+export interface On {
+	[index: string]: <T extends Event>(event?: T) => void | undefined;
+}
+
+export interface DomOptions {
+	node: Element | Text;
+	props?: VNodeProperties;
+	attrs?: { [index: string]: string | undefined };
+	on?: On;
+	diffType?: DiffType;
+}
+
 export interface VNodeProperties {
 	/**
 	 * The animation to perform when this node is added to an already existing parent.
@@ -273,6 +287,16 @@ export interface VNode {
 	properties: VNodeProperties;
 
 	/**
+	 * VNode attributes
+	 */
+	attributes?: { [index: string]: string };
+
+	/**
+	 * VNode events
+	 */
+	events?: On;
+
+	/**
 	 * Deferred callback for VNode properties
 	 */
 	deferredPropertiesCallback?: DeferredVirtualProperties;
@@ -291,6 +315,11 @@ export interface VNode {
 	 * Text node string
 	 */
 	text?: string;
+
+	/**
+	 * Indicates the type of diff for the VNode
+	 */
+	diffType?: DiffType;
 }
 
 /**

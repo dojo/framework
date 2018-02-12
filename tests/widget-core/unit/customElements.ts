@@ -24,6 +24,7 @@ function createFakeElement(attributes: any, properties: any, descriptor: CustomE
 	let removedChildren: any[] = [];
 
 	return {
+		tagName: 'fake-element',
 		...properties,
 		...{
 			getWidgetInstance: () => widgetInstance!,
@@ -370,7 +371,7 @@ registerSuite('customElements', {
 	},
 
 	children: {
-		'element children get wrapped in DomWrapper'() {
+		'element children get added as a VNode using `dom`'() {
 			if (!(WidgetBase as any).name) {
 				this.skip();
 			}
@@ -383,19 +384,19 @@ registerSuite('customElements', {
 					childrenType: ChildrenType.ELEMENT
 				}
 			);
-			element.childNodes = [
-				{
-					key: 'test',
-					parentNode: element,
-					addEventListener() {}
-				}
-			];
+			const childNode = {
+				tagName: 'fake-child',
+				key: 'test',
+				parentNode: element,
+				addEventListener() {}
+			};
+			element.childNodes = [childNode];
 
 			initializeElement(element)();
 
 			assert.lengthOf(element.removedChildren(), 1);
 			assert.lengthOf(element.getWidgetInstance().children, 1);
-			assert.strictEqual(element.getWidgetInstance().children[0].widgetConstructor.name, 'DomWrapper');
+			assert.strictEqual(element.getWidgetInstance().children[0].domNode, childNode);
 		},
 
 		'widget children get wrapped in DomToWidgetWrapper'() {
@@ -437,7 +438,7 @@ registerSuite('customElements', {
 		widget.__setProperties__({ foo: 'bar' });
 		const invalidateSpy = sinon.spy(widget, 'invalidate');
 		const renderResult = widget.__render__() as InternalVNode;
-		assert.strictEqual(renderResult.tag, 'DIV');
+		assert.strictEqual(renderResult.tag, 'div');
 		assert.strictEqual(renderResult.domNode, div);
 		assert.deepEqual(renderResult.properties, {});
 		assert.deepEqual(widget.properties, { foo: 'bar' });
@@ -455,7 +456,7 @@ registerSuite('customElements', {
 		widget.__setProperties__({ foo: 'bar' });
 		const invalidateSpy = sinon.spy(widget, 'invalidate');
 		const renderResult = widget.__render__() as InternalVNode;
-		assert.strictEqual(renderResult.tag, 'DIV');
+		assert.strictEqual(renderResult.tag, 'div');
 		assert.strictEqual(renderResult.domNode, div);
 		assert.deepEqual(renderResult.properties, {});
 		assert.deepEqual(widget.properties, { foo: 'bar' });

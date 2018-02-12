@@ -8,9 +8,10 @@ import {
 	RegistryLabel,
 	VNodeProperties,
 	WidgetBaseInterface,
-	WNode
+	WNode,
+	DomOptions
 } from './interfaces';
-import { RenderResult } from './vdom';
+import { InternalVNode, RenderResult } from './vdom';
 
 /**
  * The symbol identifier for a WNode type
@@ -36,6 +37,10 @@ export function isWNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfa
  */
 export function isVNode(child: DNode): child is VNode {
 	return Boolean(child && typeof child !== 'string' && child.type === VNODE);
+}
+
+export function isElementNode(value: any): value is Element {
+	return !!value.tagName;
 }
 
 /**
@@ -166,4 +171,24 @@ export function v(
 		properties,
 		type: VNODE
 	};
+}
+
+/**
+ * Create a VNode for an existing DOM Node.
+ */
+export function dom(
+	{ node, attrs = {}, props = {}, on = {}, diffType = 'none' }: DomOptions,
+	children?: DNode[]
+): VNode {
+	return {
+		tag: isElementNode(node) ? node.tagName.toLowerCase() : '',
+		properties: props,
+		attributes: attrs,
+		events: on,
+		children,
+		type: VNODE,
+		domNode: node,
+		text: isElementNode(node) ? undefined : node.data,
+		diffType
+	} as InternalVNode;
 }

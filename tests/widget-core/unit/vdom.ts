@@ -5,7 +5,7 @@ import { createResolvers } from './../support/util';
 import sendEvent from './../support/sendEvent';
 
 import { dom, InternalVNode, InternalWNode, widgetInstanceMap, RenderResult } from '../../src/vdom';
-import { v, w, VNODE } from '../../src/d';
+import { dom as d, v, w, VNODE } from '../../src/d';
 import { VNode } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
 import { Registry } from '../../src/Registry';
@@ -1948,6 +1948,249 @@ describe('vdom', () => {
 			widget.renderResult = renderFunction();
 
 			assert.notProperty(element.attributes, 'role');
+		});
+	});
+
+	describe('diffType', () => {
+		it('Should diff against previous properties with diffType `vdom`', () => {
+			let vnode = v('div', { foo: 'bar', bar: 1 });
+			vnode.diffType = 'vdom';
+			const widget = getWidget(vnode);
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0] as any;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			root.bar = 2;
+			root.setAttribute('foo', 'baz');
+			vnode = v('div', { foo: 'bar', bar: 1 });
+			vnode.diffType = 'vdom';
+			widget.renderResult = vnode;
+			assert.strictEqual('baz', root.getAttribute('foo'));
+			assert.strictEqual(2, root.bar);
+			vnode = v('div', { foo: 'qux', bar: 3 });
+			vnode.diffType = 'vdom';
+			widget.renderResult = vnode;
+			assert.strictEqual('qux', root.getAttribute('foo'));
+			assert.strictEqual(3, root.bar);
+		});
+
+		it('Should always set properties/attribute with diffType `none`', () => {
+			let vnode = v('div', { foo: 'bar', bar: 1 });
+			vnode.diffType = 'none';
+			const widget = getWidget(vnode);
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0] as any;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			root.bar = 2;
+			root.setAttribute('foo', 'baz');
+			vnode = v('div', { foo: 'bar', bar: 1 });
+			vnode.diffType = 'none';
+			widget.renderResult = vnode;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			vnode = v('div', { foo: 'qux', bar: 3 });
+			vnode.diffType = 'none';
+			widget.renderResult = vnode;
+			assert.strictEqual('qux', root.getAttribute('foo'));
+			assert.strictEqual(3, root.bar);
+		});
+
+		it('Should diff against values on the DOM with diffType `dom`', () => {
+			let vnode = v('div', { foo: 'bar', bar: 1 });
+			vnode.diffType = 'dom';
+			const widget = getWidget(vnode);
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0] as any;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			root.bar = 2;
+			root.setAttribute('foo', 'baz');
+			vnode = v('div', { foo: 'bar', bar: 1 });
+			vnode.diffType = 'dom';
+			widget.renderResult = vnode;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			vnode = v('div', { foo: 'qux', bar: 3 });
+			vnode.diffType = 'dom';
+			widget.renderResult = vnode;
+			assert.strictEqual('qux', root.getAttribute('foo'));
+			assert.strictEqual(3, root.bar);
+		});
+
+		it('Should use diffType `vdom` by default', () => {
+			const widget = getWidget(v('div', { foo: 'bar', bar: 1 }));
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0] as any;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			root.bar = 2;
+			root.setAttribute('foo', 'baz');
+			widget.renderResult = v('div', { foo: 'bar', bar: 1 });
+			assert.strictEqual('baz', root.getAttribute('foo'));
+			assert.strictEqual(2, root.bar);
+			widget.renderResult = v('div', { foo: 'qux', bar: 3 });
+			assert.strictEqual('qux', root.getAttribute('foo'));
+			assert.strictEqual(3, root.bar);
+		});
+	});
+
+	describe('dom VNode', () => {
+		it('Should diff against previous properties with diffType `vdom`', () => {
+			const div = document.createElement('div');
+			let clickerCount = 0;
+			const click = () => {
+				clickerCount++;
+			};
+			let vnode = d({
+				node: div,
+				props: { foo: 'bar', bar: 1 },
+				attrs: { baz: 'foo', qux: 'qux' },
+				on: { click },
+				diffType: 'vdom'
+			});
+			const widget = getWidget(vnode);
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0] as any;
+			assert.strictEqual('bar', root.foo);
+			assert.strictEqual('foo', root.getAttribute('baz'));
+			assert.strictEqual('qux', root.getAttribute('qux'));
+			assert.strictEqual(1, root.bar);
+			const clickEvent = document.createEvent('CustomEvent');
+			clickEvent.initEvent('click', true, true);
+			root.dispatchEvent(clickEvent);
+			assert.strictEqual(clickerCount, 1);
+
+			root.bar = 2;
+			root.setAttribute('foo', 'baz');
+			vnode = d({
+				node: div,
+				props: { foo: 'bar', bar: 1 },
+				attrs: { baz: undefined, qux: 'qux' },
+				on: { click },
+				diffType: 'vdom'
+			});
+			widget.renderResult = vnode;
+			assert.strictEqual('bar', root.foo);
+			assert.strictEqual(null, root.getAttribute('baz'));
+			assert.strictEqual('qux', root.getAttribute('qux'));
+			assert.strictEqual(2, root.bar);
+			root.dispatchEvent(clickEvent);
+			assert.strictEqual(clickerCount, 2);
+
+			vnode = d({
+				node: div,
+				props: { foo: 'qux', bar: 3 },
+				attrs: { baz: 'foo', qux: 'qux' },
+				diffType: 'vdom'
+			});
+			root.baz = 'baz';
+			widget.renderResult = vnode;
+			assert.strictEqual('qux', root.foo);
+			assert.strictEqual('foo', root.getAttribute('baz'));
+			assert.strictEqual('qux', root.getAttribute('qux'));
+			assert.strictEqual(3, root.bar);
+			root.dispatchEvent(clickEvent);
+			assert.strictEqual(clickerCount, 2);
+		});
+
+		it('Should always set properties/attribute with diffType `none`', () => {
+			const div = document.createElement('div');
+			let clickerCount = 0;
+			let secondClickerCount = 0;
+			const click = () => {
+				clickerCount++;
+			};
+			const secondClick = () => {
+				secondClickerCount++;
+			};
+			let vnode = d({ node: div, props: { bar: 1 }, attrs: { foo: 'bar' }, on: { click }, diffType: 'none' });
+			const widget = getWidget(vnode);
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0] as any;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			const clickEvent = document.createEvent('CustomEvent');
+			clickEvent.initEvent('click', true, true);
+			root.dispatchEvent(clickEvent);
+			assert.strictEqual(clickerCount, 1);
+			root.bar = 2;
+			root.setAttribute('foo', 'baz');
+			vnode = d({
+				node: div,
+				props: { bar: 1 },
+				attrs: { foo: 'bar' },
+				on: { click: secondClick },
+				diffType: 'none'
+			});
+			widget.renderResult = vnode;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			root.dispatchEvent(clickEvent);
+			assert.strictEqual(clickerCount, 1);
+			assert.strictEqual(secondClickerCount, 1);
+
+			vnode = d({ node: div, props: { bar: 3 }, attrs: { foo: 'qux' }, diffType: 'none' });
+			vnode.diffType = 'none';
+			widget.renderResult = vnode;
+			assert.strictEqual('qux', root.getAttribute('foo'));
+			assert.strictEqual(3, root.bar);
+			root.dispatchEvent(clickEvent);
+			assert.strictEqual(clickerCount, 1);
+			assert.strictEqual(secondClickerCount, 1);
+		});
+
+		it('Should diff against values on the DOM with diffType `dom`', () => {
+			const div = document.createElement('div');
+			let clickerCount = 0;
+			const click = () => {
+				clickerCount++;
+			};
+			let vnode = d({ node: div, props: { bar: 1 }, attrs: { foo: 'bar' }, on: { click }, diffType: 'dom' });
+			const widget = getWidget(vnode);
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0] as any;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			const clickEvent = document.createEvent('CustomEvent');
+			clickEvent.initEvent('click', true, true);
+			root.dispatchEvent(clickEvent);
+			assert.strictEqual(clickerCount, 1);
+			root.bar = 2;
+			root.setAttribute('foo', 'baz');
+			vnode = d({ node: div, props: { bar: 1 }, attrs: { foo: 'bar' }, on: { click }, diffType: 'dom' });
+			widget.renderResult = vnode;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			root.dispatchEvent(clickEvent);
+			assert.strictEqual(clickerCount, 2);
+			vnode = d({ node: div, props: { bar: 3 }, attrs: { foo: 'qux' }, diffType: 'dom' });
+			widget.renderResult = vnode;
+			assert.strictEqual('qux', root.getAttribute('foo'));
+			assert.strictEqual(3, root.bar);
+			root.dispatchEvent(clickEvent);
+			assert.strictEqual(clickerCount, 2);
+		});
+
+		it('Should use diffType `none` by default', () => {
+			const div = document.createElement('div');
+			let vnode = d({ node: div, props: { bar: 1 }, attrs: { foo: 'bar' } });
+			const widget = getWidget(vnode);
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0] as any;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			root.bar = 2;
+			root.setAttribute('foo', 'baz');
+			vnode = d({ node: div, props: { bar: 1 }, attrs: { foo: 'bar' } });
+			widget.renderResult = vnode;
+			assert.strictEqual('bar', root.getAttribute('foo'));
+			assert.strictEqual(1, root.bar);
+			vnode = d({ node: div, props: { bar: 3 }, attrs: { foo: 'qux' } });
+			vnode.diffType = 'none';
+			widget.renderResult = vnode;
+			assert.strictEqual('qux', root.getAttribute('foo'));
+			assert.strictEqual(3, root.bar);
 		});
 	});
 
