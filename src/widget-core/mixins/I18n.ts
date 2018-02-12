@@ -8,6 +8,7 @@ import { Constructor, DNode, WidgetProperties, VNodeProperties } from './../inte
 import { Injector } from './../Injector';
 import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
+import { decorate } from '../main';
 
 export const INJECTOR_KEY = Symbol('i18n');
 
@@ -105,23 +106,25 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 		}
 
 		@afterRender()
-		protected renderDecorator(result: DNode): DNode {
-			if (isVNode(result)) {
-				const { locale, rtl } = this.properties;
-				const properties: I18nVNodeProperties = {
-					dir: null,
-					lang: null
-				};
-
-				if (typeof rtl === 'boolean') {
-					properties['dir'] = rtl ? 'rtl' : 'ltr';
-				}
-				if (locale) {
-					properties['lang'] = locale;
-				}
-
-				assign(result.properties, properties);
-			}
+		protected renderDecorator(result: DNode | DNode[]): DNode | DNode[] {
+			decorate(result, {
+				modifier: (node, breaker) => {
+					const { locale, rtl } = this.properties;
+					const properties: I18nVNodeProperties = {
+						dir: null,
+						lang: null
+					};
+					if (typeof rtl === 'boolean') {
+						properties['dir'] = rtl ? 'rtl' : 'ltr';
+					}
+					if (locale) {
+						properties['lang'] = locale;
+					}
+					node.properties = { ...node.properties, ...properties };
+					breaker();
+				},
+				predicate: isVNode
+			});
 			return result;
 		}
 

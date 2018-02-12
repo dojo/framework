@@ -157,7 +157,7 @@ registerSuite('d', {
 			};
 			const node = testWidget.render();
 			assert.isOk(node);
-			decorate(node, modifier, isWNode);
+			decorate(node, { modifier, predicate: isWNode });
 			if (node) {
 				const children = <any[]>node.children;
 				assert.isUndefined(children[0].properties['decorated']);
@@ -216,6 +216,48 @@ registerSuite('d', {
 				assert.isTrue(children[7].properties['decorated']);
 			}
 		},
+		'Calling the breaker drains the node queue'() {
+			const nodeOne = w(WidgetBase, {});
+			const nodeTwo = 'text node';
+			const nodeThree = v('div');
+			const nodeFour = v('div');
+			const nodes = [nodeOne, nodeTwo, nodeThree, nodeFour];
+			decorate(nodes, {
+				modifier: (node: DNode, breaker: Function) => {
+					if (isVNode(node)) {
+						node.properties = { ...node.properties, key: 'key' };
+						breaker();
+					}
+				}
+			});
+			assert.isUndefined(nodeOne.properties.key);
+			assert.strictEqual(nodeTwo, 'text node');
+			assert.strictEqual(nodeThree.properties.key, 'key');
+			assert.isUndefined(nodeFour.properties.key);
+		},
+		'Passing shallow will only direct the top node or nodes'() {
+			const childOne = v('div');
+			const nodeOne = w(WidgetBase, {}, [childOne]);
+			const nodeTwo = 'text node';
+			const childTwo = v('div');
+			const nodeThree = v('div', {}, [childTwo]);
+			const nodeFour = v('div');
+			const nodes = [nodeOne, nodeTwo, nodeThree, nodeFour];
+			decorate(nodes, {
+				modifier: (node: DNode, breaker: Function) => {
+					if (isVNode(node) || isWNode(node)) {
+						node.properties = { ...node.properties, key: 'key' };
+					}
+				},
+				shallow: true
+			});
+			assert.strictEqual(nodeOne.properties.key, 'key');
+			assert.strictEqual(nodeTwo, 'text node');
+			assert.strictEqual(nodeThree.properties.key, 'key');
+			assert.strictEqual(nodeFour.properties.key, 'key');
+			assert.isUndefined(childOne.properties.key);
+			assert.isUndefined(childTwo.properties.key);
+		},
 		'cannot replace or modify actual node'() {
 			const testWidget = new TestWidget();
 			const magicNode = v('magic');
@@ -228,7 +270,7 @@ registerSuite('d', {
 			};
 			const children: any = (<VNode>testWidget.render()).children;
 			assert.isOk(children);
-			decorate(children, modifier);
+			decorate(children, { modifier });
 			if (children) {
 				assert.strictEqual(children[4], 'my text');
 				assert.isNull(children[5]);

@@ -7,10 +7,16 @@ import { Registry } from '../../../src/Registry';
 import { WidgetBase } from '../../../src/WidgetBase';
 import bundle from '../../support/nls/greetings';
 import { fetchCldrData } from '../../support/util';
-import { w } from './../../../src/d';
+import { v, w } from './../../../src/d';
 import { ThemedMixin } from './../../../src/mixins/Themed';
 
 class Localized extends I18nMixin(ThemedMixin(WidgetBase))<I18nProperties> {}
+
+class LocalizedWithWidget extends I18nMixin(ThemedMixin(WidgetBase))<I18nProperties> {
+	render() {
+		return w(Localized, {}, [v('div', {})]);
+	}
+}
 
 let localized: any;
 
@@ -186,6 +192,16 @@ registerSuite('mixins/I18nMixin', {
 				const result = localized.__render__();
 				assert.isOk(result);
 				assert.isNull(result.properties!['dir']);
+			},
+
+			'The `dir` attribute is added to the first VNode in the render'() {
+				localized = new LocalizedWithWidget();
+				localized.__setProperties__({ rtl: false });
+
+				const result = localized.__render__();
+				assert.isOk(result);
+				assert.isUndefined(result.properties!['dir']);
+				assert.strictEqual(result.children[0].properties!['dir'], 'ltr');
 			}
 		}
 	}
