@@ -45,7 +45,16 @@ const routeConfigDefaultRoute = [
 		defaultRoute: true,
 		defaultParams: {
 			bar: 'defaultBar'
-		}
+		},
+		children: [
+			{
+				path: 'bar/{foo}',
+				outlet: 'bar',
+				defaultParams: {
+					foo: 'defaultFoo'
+				}
+			}
+		]
 	}
 ];
 
@@ -71,6 +80,27 @@ const routeWithChildrenAndMultipleParams = [
 						outlet: 'baz'
 					}
 				]
+			}
+		]
+	}
+];
+
+const routeConfigWithParamsAndQueryParams = [
+	{
+		path: '/foo/{foo}?{fooQuery}',
+		outlet: 'foo',
+		defaultParams: {
+			foo: 'foo',
+			fooQuery: 'fooQuery'
+		},
+		children: [
+			{
+				path: '/bar/{bar}?{barQuery}',
+				outlet: 'bar',
+				defaultParams: {
+					bar: 'bar',
+					barQuery: 'barQuery'
+				}
 			}
 		]
 	}
@@ -194,6 +224,21 @@ describe('Router', () => {
 		assert.deepEqual(barContext!.type, 'index');
 	});
 
+	it('Should pass params and query params to all matched outlets', () => {
+		const config = [
+			{
+				path: 'view/{view}?{filter}',
+				outlet: 'foo'
+			}
+		];
+		const router = new Router(config, { HistoryManager });
+		router.setPath('/view/bar?filter=true');
+		const fooContext = router.getOutlet('foo');
+		assert.deepEqual(fooContext!.params, { view: 'bar' });
+		assert.deepEqual(fooContext!.queryParams, { filter: 'true' });
+		assert.deepEqual(fooContext!.type, 'index');
+	});
+
 	it('Should return all params for a route', () => {
 		const router = new Router(routeWithChildrenAndMultipleParams, { HistoryManager });
 		router.setPath('/foo/foo/bar/bar/baz/baz');
@@ -234,6 +279,34 @@ describe('Router', () => {
 		const router = new Router(routeConfigDefaultRoute, { HistoryManager });
 		const link = router.link('foo');
 		assert.strictEqual(link, 'foo/defaultBar');
+	});
+
+	it('Should fallback to full routes default params to generate link', () => {
+		const router = new Router(routeConfigDefaultRoute, { HistoryManager });
+		const link = router.link('bar');
+		assert.strictEqual(link, 'foo/defaultBar/bar/defaultFoo');
+	});
+
+	it('Should create link with params and query params with default params', () => {
+		const router = new Router(routeConfigWithParamsAndQueryParams, { HistoryManager });
+		assert.strictEqual(router.link('foo'), 'foo/foo?fooQuery=fooQuery');
+		assert.strictEqual(router.link('bar'), 'foo/foo/bar/bar?fooQuery=fooQuery&barQuery=barQuery');
+	});
+
+	it('Should create link with params and query params with current params', () => {
+		const router = new Router(routeConfigWithParamsAndQueryParams, { HistoryManager });
+		router.setPath('foo/bar/bar/foo?fooQuery=bar&barQuery=foo');
+		assert.strictEqual(router.link('foo'), 'foo/bar?fooQuery=bar');
+		assert.strictEqual(router.link('bar'), 'foo/bar/bar/foo?fooQuery=bar&barQuery=foo');
+	});
+
+	it('Should create link with params and query params with specified params', () => {
+		const router = new Router(routeConfigWithParamsAndQueryParams, { HistoryManager });
+		assert.strictEqual(router.link('foo', { foo: 'qux', fooQuery: 'quxQuery' }), 'foo/qux?fooQuery=quxQuery');
+		assert.strictEqual(
+			router.link('bar', { foo: 'qux', bar: 'baz', fooQuery: 'quxQuery', barQuery: 'bazQuery' }),
+			'foo/qux/bar/baz?fooQuery=quxQuery&barQuery=bazQuery'
+		);
 	});
 
 	it('Cannot generate link for an unknown outlet', () => {

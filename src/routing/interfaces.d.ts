@@ -14,11 +14,11 @@ export interface Route {
 	path: string;
 	outlet: string;
 	params: string[];
-	query: string[];
 	segments: (symbol | string)[];
 	children: Route[];
 	fullPath: string;
 	fullParams: string[];
+	fullQueryParams: string[];
 	defaultParams: Params;
 	onEnter?: OnEnter;
 	onExit?: OnExit;

@@ -18,6 +18,7 @@ export class Router extends Evented implements RouterInterface {
 	private _outletMap: { [index: string]: Route } = Object.create(null);
 	private _matchedOutlets: { [index: string]: OutletContext } = Object.create(null);
 	private _currentParams: Params = {};
+	private _currentQueryParams: Params = {};
 	private _defaultOutlet: string;
 	private _history: History;
 
@@ -50,21 +51,31 @@ export class Router extends Evented implements RouterInterface {
 	 * @param params Optional Params for the generated link
 	 */
 	public link(outlet: string, params: Params = {}): string | undefined {
-		const { _outletMap, _currentParams } = this;
+		const { _outletMap, _currentParams, _currentQueryParams } = this;
 		let route = _outletMap[outlet];
 		if (route === undefined) {
 			return;
 		}
 
-		let linkPath = route.fullPath;
-		params = { ...route.defaultParams, ..._currentParams, ...params };
+		let linkPath: string | undefined = route.fullPath;
+		if (route.fullQueryParams.length > 0) {
+			let queryString = route.fullQueryParams.reduce((queryParamString, param, index) => {
+				if (index > 0) {
+					return `${queryParamString}&${param}={${param}}`;
+				}
+				return `?${param}={${param}}`;
+			}, '');
+			linkPath = `${linkPath}${queryString}`;
+		}
+		params = { ...route.defaultParams, ..._currentQueryParams, ..._currentParams, ...params };
 
 		if (Object.keys(params).length === 0 && route.fullParams.length > 0) {
 			return undefined;
 		}
 
-		for (let i = 0; i < route.fullParams.length; i++) {
-			const param = route.fullParams[i];
+		const fullParams = [...route.fullParams, ...route.fullQueryParams];
+		for (let i = 0; i < fullParams.length; i++) {
+			const param = fullParams[i];
 			if (params[param]) {
 				linkPath = linkPath.replace(`{${param}}`, params[param]);
 			} else {
@@ -113,18 +124,21 @@ export class Router extends Evented implements RouterInterface {
 		routes = routes ? routes : this._routes;
 		for (let i = 0; i < config.length; i++) {
 			let { onEnter, onExit, path, outlet, children, defaultRoute = false, defaultParams = {} } = config[i];
-			path = this._stripLeadingSlash(path);
-			const segments: (symbol | string)[] = path.split('/');
+			let [parsedPath, queryParamString] = path.split('?');
+			let queryParams: string[] = [];
+			parsedPath = this._stripLeadingSlash(parsedPath);
+
+			const segments: (symbol | string)[] = parsedPath.split('/');
 			const route: Route = {
 				params: [],
 				outlet,
-				path,
+				path: parsedPath,
 				segments,
-				defaultParams,
-				query: [],
+				defaultParams: parentRoute ? { ...parentRoute.defaultParams, ...defaultParams } : defaultParams,
 				children: [],
-				fullPath: parentRoute ? `${parentRoute.fullPath}/${path}` : path,
+				fullPath: parentRoute ? `${parentRoute.fullPath}/${parsedPath}` : parsedPath,
 				fullParams: [],
+				fullQueryParams: [],
 				onEnter,
 				onExit
 			};
@@ -138,6 +152,12 @@ export class Router extends Evented implements RouterInterface {
 					segments[i] = PARAM;
 				}
 			}
+			if (queryParamString) {
+				queryParams = queryParamString.split('$').map((queryParam) => {
+					return queryParam.replace('{', '').replace('}', '');
+				});
+			}
+			route.fullQueryParams = parentRoute ? [...parentRoute.fullQueryParams, ...queryParams] : queryParams;
 
 			route.fullParams = parentRoute ? [...parentRoute.fullParams, ...route.params] : route.params;
 
@@ -179,7 +199,7 @@ export class Router extends Evented implements RouterInterface {
 		requestedPath = this._stripLeadingSlash(requestedPath);
 
 		const [path, queryParamString] = requestedPath.split('?');
-		const queryParams = this._getQueryParams(queryParamString);
+		this._currentQueryParams = this._getQueryParams(queryParamString);
 		let matchedOutletContext: OutletContext | undefined;
 		let matchedOutlet: string | undefined;
 		let routes = [...this._routes];
@@ -220,7 +240,7 @@ export class Router extends Evented implements RouterInterface {
 				previousOutlet = route.outlet;
 				routeMatched = true;
 				this._matchedOutlets[route.outlet] = {
-					queryParams,
+					queryParams: this._currentQueryParams,
 					params: { ...this._currentParams },
 					type,
 					onEnter,
@@ -240,7 +260,11 @@ export class Router extends Evented implements RouterInterface {
 			}
 		}
 		if (routeMatched === false) {
-			this._matchedOutlets.errorOutlet = { queryParams, params: { ...this._currentParams }, type: 'error' };
+			this._matchedOutlets.errorOutlet = {
+				queryParams: this._currentQueryParams,
+				params: { ...this._currentParams },
+				type: 'error'
+			};
 		}
 		this.emit({ type: 'nav', outlet: matchedOutlet, context: matchedOutletContext });
 	};
