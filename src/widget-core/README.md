@@ -63,9 +63,9 @@ You can also use the [dojo cli](https://github.com/dojo/cli) to create a complet
 
 Dojo 2 applications use the Virtual DOM (vdom) paradigm to represent what should be shown on the view. These vdom nodes are plain JavaScript objects that are more efficient to create from a performance perspective than browser DOM elements. Dojo 2 uses these vdom elements to synchronize and update the browser DOM so that the application shows the expected view.
 
-There are two types of vdom within Dojo 2, the first are pure representations of DOM elements and are the fundamental building blocks of all Dojo 2 applications. These are called `HNode`s and are created using the `v()` function available from the `@dojo/widget-core/d` module.
+There are two types of vdom within Dojo 2, the first are pure representations of DOM elements and are the fundamental building blocks of all Dojo 2 applications. These are called `VNode`s and are created using the `v()` function available from the `@dojo/widget-core/d` module.
 
-The following will create a `HNode` that represents a simple `div` DOM element, with a text node child: `Hello, Dojo 2!`:
+The following will create a `VNode` that represents a simple `div` DOM element, with a text node child: `Hello, Dojo 2!`:
 
 ```ts
 v('div', [ 'Hello, Dojo 2!' ])
@@ -73,7 +73,7 @@ v('div', [ 'Hello, Dojo 2!' ])
 
 The second vdom type, `WNode`, represent widgets. A widget is a class that extends `WidgetBase` from `@dojo/widget-core/WidgetBase` and implements a `render` function that returns one of the Dojo 2 vdom types (known as a `DNode`). Widgets are used to represent reusable, independent sections of a Dojo 2 application.
 
-The following returns the `HNode` example from above from the `render` function:
+The following returns the `VNode` example from above from the `render` function:
 
 ```ts
 class HelloDojo extends WidgetBase {
@@ -114,7 +114,7 @@ projector.append(root);
 
 #### Widgets and Properties
 
-We have created a widget used to project our `HNode`s into the DOM, however widgets can be composed of other widgets and `properties` which are used to determine if a widget needs to be re-rendered.
+We have created a widget used to project our `VNode`s into the DOM, however widgets can be composed of other widgets and `properties` which are used to determine if a widget needs to be re-rendered.
 
 Properties are available on the the widget instance, defined by an interface and passed as a [`generic`](https://www.typescriptlang.org/docs/handbook/generics.html) to the `WidgetBase` class when creating your custom widget. The properties interface should extend the base `WidgetProperties` provided from `@dojo/widget-core/interfaces`:
 
@@ -464,10 +464,10 @@ The following example passes `css.root` that will be themeable and `css.rootFixe
 
 ```typescript
 import * as css from './styles/myWidget.m.css';
-import { ThemeableMixin, theme } from '@dojo/widget-core/mixins/Themeable';
+import { ThemedMixin, theme } from '@dojo/widget-core/mixins/Themed';
 
 @theme(css)
-export default class MyWidget extends ThemeableMixin(WidgetBase) {
+export default class MyWidget extends ThemedMixin(WidgetBase) {
     protected render() {
         return v('div', { classes: [ this.theme(css.root), css.rootFixed ] });
     }
@@ -955,6 +955,58 @@ If the node has not yet been rendered, all values will contain `0`. If you need 
 ```ts
 const hasRootBeenRendered = this.meta(Dimensions).has('root');
 ```
+
+#### Intersection
+
+The Intersection Meta provides information on whether a Node is visible in the applications viewport using the [Intersection Observer API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) (this is polyfilled for unsupported browsers).
+
+This example renders a list with images, the image src is only added when the item is in the viewport which prevents needlessly downloading images until the user scrolls to them:
+
+```ts
+import { WidgetBase } from '@dojo/widget-core/WidgetBase';
+import { v, w } from '@dojo/widget-core/d';
+import { DNode } from '@dojo/widget-core/interfaces';
+import { Intersection } from '@dojo/widget-core/meta/Intersection';
+
+// Add image URLs here to load
+const images = [];
+
+class Item extends WidgetBase<{ imageSrc: string }> {
+	protected render() {
+		const { imageSrc } = this.properties;
+		const { isIntersecting } = this.meta(Intersection).get('root');
+		let imageProperties: any = {
+			key: 'root',
+			styles: {
+				height: '200px',
+				width: '200px'
+			}
+		};
+
+        // Only adds the image source if the node is in the viewport
+		if (isIntersecting) {
+			imageProperties = { ...imageProperties, src: imageSrc };
+		}
+
+		return v('img', imageProperties);
+	}
+}
+
+class List extends WidgetBase {
+	protected render() {
+		let items: DNode[] = [];
+		for (let i = 0; i < images.length; i++) {
+			items.push(v('ul', { key: i }, [ w(Item, { key: i, imageSrc: images[i] }) ]));
+		}
+
+		return v('div', items);
+	}
+}
+```
+
+#### Animations
+
+See the [Animations](#animations) section more information.
 
 #### Drag
 
