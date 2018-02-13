@@ -6,13 +6,9 @@
 
 This package provides functional shims for ECMAScript, access to the Typescript helpers, and a quick way to include the polyfills needed to run Dojo 2 in the browser.
 
-It is targeted at providing function shims for ECMAScript 6 and beyond targeted at ECMAScript 5.  It is different
-other solutions of shimming or polyfilling functionality, in that it does not provide the functionality via
-augmenting the built in classes in the global namespace.
+It is targeted at providing function shims for ECMAScript 6 and beyond targeted at ECMAScript 5.  It is different than other solutions of shimming or polyfilling functionality, in that it does not provide the functionality via augmenting the built in classes in the global namespace.
 
-There are two exceptions to this. One is the `Promise` object, which needs to be globally available for async/await
-operations. The other exception is the `Symbol` functionality, in that the well-known symbols need to be located
-off of the global `Symbol` object in order to ensure that the correct symbol is referenced.
+There are two exceptions to this. One is the `Promise` object, which needs to be globally available for async/await operations. The other exception is the `Symbol` functionality, in that the well-known symbols need to be located off of the global `Symbol` object in order to ensure that the correct symbol is referenced.
 
 ## Usage
 
@@ -107,7 +103,7 @@ without iterators for use in older browsers. The main difference between WeakMap
 is that WeakMap's keys can only be objects and that the store has a weak reference
 to the key/value pair. This allows for the garbage collector to remove pairs.
 
-Look at [Map](docs/Map.md) for more information on how to use WeakMap.
+See the [Map](docs/Map.md) documentation for more information on how to use WeakMap.
 
 ### Iterators
 

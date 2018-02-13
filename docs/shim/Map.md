@@ -1,8 +1,6 @@
 # Map
 
-An implementation analogous to the Map specification in ES2015,
-with the exception of iterators.  The entries, keys, and values methods
-are omitted, since forEach essentially provides the same functionality.
+An implementation analogous to the Map specification in ES2015, with the exception of iterators.  The entries, keys, and values methods are omitted, since forEach essentially provides the same functionality.
 
 ## Creation
 

@@ -93,3 +93,4 @@ rejectedPromise.catch((error) => {
 	// error is 'some error'
 });
 ```
+

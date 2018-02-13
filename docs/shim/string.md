@@ -71,10 +71,7 @@ const result = startsWith(str, search);
 result === true; // true
 ```
 
-Special thanks to Mathias Bynens for granting permission to adopt code from his
-[`codePointAt`](https://github.com/mathiasbynens/String.prototype.codePointAt),
-[`fromCodePoint`](https://github.com/mathiasbynens/String.fromCodePoint), and
-[`repeat`](https://github.com/mathiasbynens/String.prototype.repeat) polyfills.
+Special thanks to Mathias Bynens for granting permission to adopt code from his [`codePointAt`](https://github.com/mathiasbynens/String.prototype.codePointAt), [`fromCodePoint`](https://github.com/mathiasbynens/String.fromCodePoint), and [`repeat`](https://github.com/mathiasbynens/String.prototype.repeat) polyfills.
 
 The `string` module also contains the following utility functions:
 
