@@ -1,14 +1,13 @@
 /* tslint:disable:interface-name */
 import { assign } from '@dojo/core/lang';
 import i18n, { Bundle, formatMessage, getCachedMessages, Messages } from '@dojo/i18n/i18n';
-import { isVNode } from './../d';
+import { isVNode, decorate } from './../d';
 import { afterRender } from './../decorators/afterRender';
 import { inject } from './../decorators/inject';
 import { Constructor, DNode, WidgetProperties, VNodeProperties } from './../interfaces';
 import { Injector } from './../Injector';
 import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
-import { decorate } from '../main';
 
 export const INJECTOR_KEY = Symbol('i18n');
 
