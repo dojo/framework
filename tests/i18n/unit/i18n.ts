@@ -1,5 +1,4 @@
 import has from '@dojo/core/has';
-import { assign } from '@dojo/core/lang';
 import global from '@dojo/shim/global';
 import * as Globalize from 'globalize';
 const { registerSuite } = intern.getInterface('object');
@@ -191,7 +190,7 @@ registerSuite('i18n', {
 				const cached = getCachedMessages(bundle, 'en-GB');
 				assert.deepEqual(
 					cached,
-					assign({}, bundle.messages, messages),
+					{ ...bundle.messages, ...messages },
 					'Messages added with `setLocaleMessages` are returned.'
 				);
 			},
@@ -437,22 +436,12 @@ registerSuite('i18n', {
 		observeLocale: {
 			'assert observer notified of locale change'() {
 				const next = sinon.spy();
-				const subscription = observeLocale({ next });
+				const handle = observeLocale(next);
 
 				switchLocale('ar');
-				subscription.unsubscribe();
+				handle.destroy();
 
 				assert.isTrue(next.calledWith('ar'), '`observer.next` called with new locale.');
-			},
-
-			'assert observer not notified after unsubscribe'() {
-				const observer = { next: sinon.spy() };
-				const subscription = observeLocale(observer);
-
-				subscription.unsubscribe();
-				switchLocale('ar');
-
-				assert.isFalse(observer.next.called, '`observer.next` not called after unsubscribe.');
 			}
 		},
 
@@ -473,12 +462,12 @@ registerSuite('i18n', {
 
 			assert.deepEqual(
 				getCachedMessages(bundle, 'fr'),
-				assign({}, french, <any>{ helloReply: 'Hello' }),
+				{ ...french, helloReply: 'Hello' },
 				'Default messages should be included where not overridden'
 			);
 			assert.deepEqual(
 				getCachedMessages(bundle, 'cz'),
-				assign({}, czech, <any>{ helloReply: 'Hello' }),
+				{ ...czech, helloReply: 'Hello' },
 				'Default messages should be included where not overridden'
 			);
 
@@ -495,7 +484,7 @@ registerSuite('i18n', {
 
 			'assert observers not updated when locale remains the same'() {
 				const next = sinon.spy();
-				observeLocale({ next });
+				observeLocale(next);
 
 				switchLocale('ar');
 				switchLocale('ar');

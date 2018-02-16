@@ -1,6 +1,5 @@
 // required for Globalize/Cldr to properly resolve locales in the browser.
 import 'cldrjs/dist/cldr/unresolved';
-import Promise from '@dojo/shim/Promise';
 import * as Globalize from 'globalize';
 import supportedLocales from './locales';
 import { generateLocales, validateLocale } from '../util/main';

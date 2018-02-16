@@ -147,20 +147,18 @@ The current locale can be accessed via the read-only property `i18n.locale`, whi
 
 ### Changing the Root Locale and Observing Locale Changes
 
-The `switchLocale` method changes the root locale and notifies all [`Observers`](https://github.com/dojo/shim) registered with `observeLocale` (no `error` or `complete` methods are currently used when switching locales).
+The `switchLocale` method changes the root locale and notifies all consumers registered with `observeLocale`.
 
 ```typescript
 import i18n, { observeLocale, switchLocale } from '@dojo/i18n/i18n';
 import bundle from 'nls/bundle';
 
 // Register an `Observable`
-observeLocale({
-	next(locale: string) {
-		// handle locale change...
-	}
+observeLocale((locale: string) => {
+	// handle locale change...
 });
 
-// Change the locale to German. The registered observer's `next` method will be called
+// Change the locale to German. The registered observer's callback will be called
 // with the new locale.
 switchLocale('de');
 

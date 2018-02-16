@@ -1,13 +1,11 @@
 /* tslint:disable:interface-name */
-import '@dojo/shim/Promise'; // ensure Promise.all exists
-import Evented from '@dojo/core/Evented';
-import has from '@dojo/core/has';
-import { useDefault } from '@dojo/core/load/util';
-import uuid from '@dojo/core/uuid';
-import { Handle } from '@dojo/core/interfaces';
 import global from '@dojo/shim/global';
 import Map from '@dojo/shim/Map';
-import Observable, { Observer, Subscription, SubscriptionObserver } from '@dojo/shim/Observable';
+import Evented from '@dojo/core/Evented';
+import has from '@dojo/core/has';
+import uuid from '@dojo/core/uuid';
+import { Handle } from '@dojo/core/interfaces';
+import { useDefault } from '@dojo/core/load/util';
 import * as Globalize from 'globalize/dist/globalize/message';
 import { isLoaded } from './cldr/load';
 import { generateLocales, normalizeLocale } from './util/main';
@@ -402,25 +400,11 @@ export function invalidate<T extends Messages>(bundle?: Bundle<T>) {
  * @return
  * A subscription object that can be used to unsubscribe from updates.
  */
-export const observeLocale = (function() {
-	const localeSource = new Observable<string>((observer: SubscriptionObserver<string>) => {
-		const handles: Handle[] = [
-			localeProducer.on('change', (event: any) => {
-				observer.next(event.target);
-			})
-		];
-
-		return function() {
-			handles.forEach((handle: Handle) => {
-				handle.destroy();
-			});
-		};
+export const observeLocale = function(callback: (locale: string) => {}): Handle {
+	return localeProducer.on('change', (event: any) => {
+		callback(event.target);
 	});
-
-	return function(observer: Observer<string>): Subscription {
-		return localeSource.subscribe(observer);
-	};
-})();
+};
 
 /**
  * Pre-load locale-specific messages into the i18n system.
