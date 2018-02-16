@@ -2192,6 +2192,19 @@ describe('vdom', () => {
 			assert.strictEqual('qux', root.getAttribute('foo'));
 			assert.strictEqual(3, root.bar);
 		});
+
+		it('Should move a text node to the parent VNode dom node', () => {
+			const div = document.createElement('div');
+			const text = document.createTextNode('foo');
+			div.appendChild(text);
+			let vnode = v('div', [d({ node: text })]);
+			const widget = getWidget(vnode);
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0] as any;
+			assert.strictEqual(root.childNodes.length, 1);
+			assert.strictEqual(div.childNodes.length, 0);
+			assert.strictEqual((root.childNodes[0] as Text).data, 'foo');
+		});
 	});
 
 	describe('deferred properties', () => {

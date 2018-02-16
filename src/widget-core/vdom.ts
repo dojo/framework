@@ -808,9 +808,14 @@ function createDom(
 		}
 		const doc = parentVNode.domNode!.ownerDocument;
 		if (!dnode.tag && typeof dnode.text === 'string') {
-			if (dnode.domNode !== undefined && dnode.domNode.parentNode) {
+			if (dnode.domNode !== undefined && parentVNode.domNode) {
 				const newDomNode = dnode.domNode.ownerDocument.createTextNode(dnode.text!);
-				dnode.domNode.parentNode!.replaceChild(newDomNode, dnode.domNode);
+				if (parentVNode.domNode === dnode.domNode.parentNode) {
+					parentVNode.domNode.replaceChild(newDomNode, dnode.domNode);
+				} else {
+					parentVNode.domNode.appendChild(newDomNode);
+					dnode.domNode.parentNode && dnode.domNode.parentNode.removeChild(dnode.domNode);
+				}
 				dnode.domNode = newDomNode;
 			} else {
 				domNode = dnode.domNode = doc.createTextNode(dnode.text!);
