@@ -38,10 +38,12 @@ export interface AnimationTimingProperties {
  */
 export interface AnimationProperties {
 	id: string;
-	effects: any[];
+	effects: (() => AnimationKeyFrame | AnimationKeyFrame)[];
 	controls?: AnimationControls;
 	timing?: AnimationTimingProperties;
 }
+
+export type AnimationPropertiesFunction = () => AnimationProperties;
 
 /**
  * Info returned by the `get` function on WebAnimation meta
@@ -113,7 +115,13 @@ export class WebAnimations extends Base {
 		}
 	}
 
-	animate(key: string, animateProperties: AnimationProperties | AnimationProperties[]) {
+	animate(
+		key: string,
+		animateProperties:
+			| AnimationProperties
+			| AnimationPropertiesFunction
+			| (AnimationProperties | AnimationPropertiesFunction)[]
+	) {
 		const node = this.getNode(key) as HTMLElement;
 
 		if (node) {
