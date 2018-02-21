@@ -33,7 +33,13 @@ npm install @dojo/widget-core
 
 ## Features
 
-Widgets are a fundamental concept for any Dojo 2 application and as such Dojo 2 Routing provides a collection of components that integrate directly with existing widgets within an application. These components enable widgets to be registered against a route _without_ requiring any knowledge of the `Router`.
+Widgets are a fundamental concept for any Dojo 2 application and as such Dojo 2 Routing provides a collection of components that integrate directly with existing widgets within an application. These components enable widgets to be registered against a route _without_ requiring any knowledge of the `Router`. Routing in a Dojo 2 application consists of:
+
+- `Outlet` widget wrappers that are assigned a specific outlet key and represent the view for a specific route
+- a configuration of individual `Route`s that map paths to outlet keys
+- a `Router` that resolves a `Route` based on the current path
+- a `History` provider that notifies the `Router` of path changes
+- a `Registry` that injects the `Router` into the widget ecosystem
 
 ### Route Configuration
 
@@ -195,7 +201,7 @@ The state history uses the browser's history API, `pushState()` and `replaceStat
 
 ##### Memory History
 
-The `MemoryHistory` should not be used in production applications, but is useful for testing routing.
+The `MemoryHistory` does not rely on any browser API, but keeps its own internal path state. It should not be used in production applications, but is useful for testing routing.
 
 ```ts
 import { Router } from '@dojo/routing/Router';
@@ -265,7 +271,7 @@ When registering an outlet a different widget can be configure for each match ty
 | Type    | Description |
 | ------- | ------------ |
 |`index`  | This is an exact match for the registered route. E.g. Navigating to `foo/bar` with a registered route `foo/bar`.   |
-|`partial`| Any match other than an index match, for example `foo/bar` would partially match `foo/bar/qux`, but only if `foo/bar/qux` was also a registered route. Otherwise it would be an `ERROR` match. |
+|`main`| Any match other than an index match, for example `foo/bar` would partially match `foo/bar/qux`, but only if `foo/bar/qux` was also a registered route. Otherwise it would be an `ERROR` match. |
 |`error`  | When a partial match occurs but there is no match for the next section of the route. |
 
 To do this, instead of passing a widget as the first argument to the `Outlet`, use the `OutletComponents` object.
