@@ -75,7 +75,7 @@ used to enable a developer to express other features.  The flags though that are
 |Feature Flag|Description|
 |------------|-----------|
 |`debug`|Provides a way to create a code path for code that is only usable when debugging or providing enhanced diagnostics that are not desired in a *production* build.  Defaults to `true` but should be configured statically as `false` in production builds.|
-|`host-browser`|Determines if the current environment contains a `window` and `document` object in the global context, therefore it being generally safe to assume the code is running in a browser environment.|
+|`host-browser`|Determines if the current environment contains a `window` and `document` object in the global context, therefore it is generally safe to assume the code is running in a browser environment.|
 |`host-node`|Attempts to detect if the environment appears to be a node environment.|
 
 ### Adding a Feature Test/Feature Detection
@@ -156,7 +156,7 @@ Features can also be defined statically, before the module is loaded, in the glo
 it is not desirable to detect these features from the environment (because they may not be accurate, for example when using
 a build tool).  The features can only be specified before the module is loaded for the first time and cannot be
 changed once the module is loaded.  The values specified in the static features will *always* be returned from `has()`
-irrespective of how those features are subsequently defined using `add()`, even if `override` is specified.  In addition,
+irrespective of how those features are subsequently defined using `add()`, even if an `override` is specified.  In addition,
 if a value is being added via `add()` that is already defined as a static feature, it will still complete and not throw.
 If specified as a function, the function will never be invoked.
 
