@@ -6,7 +6,7 @@
 
 This package provides functional shims for ECMAScript, access to the Typescript helpers, and a quick way to include the polyfills needed to run Dojo 2 in the browser.
 
-It is targeted at providing function shims for ECMAScript 6 and beyond targeted at ECMAScript 5.  It is different than other solutions of shimming or polyfilling functionality, in that it does not provide the functionality via augmenting the built in classes in the global namespace.
+It is targeted at providing function shims for ECMAScript 6 and beyond targeted at ECMAScript 5.  It is different than other solutions of shimming or polyfilling functionality, in that it does not provide the functionality via augmenting the built-in classes in the global namespace.
 
 There are two exceptions to this. One is the `Promise` object, which needs to be globally available for async/await operations. The other exception is the `Symbol` functionality, in that the well-known symbols need to be located off of the global `Symbol` object in order to ensure that the correct symbol is referenced.
 
@@ -77,7 +77,7 @@ without iterators for use in older browsers.
 
 #### Set
 
-The `@dojo/shim/Set` class is an implementation of the [ES2015 Set specification](http://www.ecma-international.org/ecma-262/6.0/#sec-set-objects).  A Set is used to a collection of unique values.
+The `@dojo/shim/Set` class is an implementation of the [ES2015 Set specification](http://www.ecma-international.org/ecma-262/6.0/#sec-set-objects).  A Set is used to create a collection of unique values.
 
 ```typescript
 import Set from '@dojo/shim/Set';
@@ -155,7 +155,7 @@ We appreciate your interest!  Please see the [Dojo 2 Meta Repository](https://gi
 
 ### Code Style
 
-This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the projects `package.json`.
+This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the project's `package.json`.
 
 An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
 
