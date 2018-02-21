@@ -48,7 +48,7 @@ on methods in the ES2015 proposal; others are additional APIs for commonly-perfo
 
 #### array
 
-The [`@dojo/core/array` module](docs/array.md) contains analogues to some of the ES2015 Array APIs.
+The [`@dojo/core/array` module](docs/array.md) contains analogs to some of the ES2015 Array APIs.
 
 #### lang
 
@@ -56,11 +56,11 @@ The [`@dojo/core/lang` module](docs/lang.md) contains various utility functions 
 and creating late-bound or partially applied functions.
 
 ### load
-The [`@dojo/core/load` module](docs/load.md) can be used to dynamically load modules, or other arbitrary resources via plugins.
+The [`@dojo/core/load` module](docs/load.md) can be used to dynamically load modules or other arbitrary resources via plugins.
 
 #### math
 
-The [`@dojo/core/math` module](docs/math.md) contains analogues to a number of ES2015 APIs, including many trigonometric and logarithmic functions.
+The [`@dojo/core/math` module](docs/math.md) contains analogs to a number of ES2015 APIs, including many trigonometric and logarithmic functions.
 
 #### string
 
@@ -77,7 +77,7 @@ once and pauseable events.
 
 #### HTTP requests
 
-The [`@dojo/core/request` module](docs/request.md) contains methods to simplify making http requests. It can handle
+The [`@dojo/core/request` module](docs/request.md) contains methods to simplify making HTTP requests. It can handle
 making requests in both node and the browser through the same methods.
 
 ### Promises and Asynchronous Operations
@@ -99,7 +99,7 @@ for the Contributing Guidelines.
 
 ### Code Style
 
-This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the projects `package.json`.
+This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the project's `package.json`.
 
 An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
 
