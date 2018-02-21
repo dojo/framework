@@ -1,5 +1,4 @@
 export * from './animations/cssTransitions';
-export * from './customElements';
 export * from './d';
 export * from './Registry';
 export * from './interfaces';

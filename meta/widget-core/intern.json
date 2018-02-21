@@ -32,7 +32,13 @@
 					}
 				}
 			}
-		}
+		},
+		"plugins": [
+			{
+				"script": "./tests/support/loadCustomElements.js",
+				"useLoader": true
+			}
+		]
 	},
 	"node" : {
 		"plugins": [
@@ -62,7 +68,7 @@
 				{ "browserName": "internet explorer", "version": "11" },
 				{ "browserName": "chrome", "platform": "WINDOWS" },
 				{ "browserName": "firefox", "os": "WINDOWS", "os_version": "10" },
-				{ "browserName": "safari", "version": "9.1", "platform": "MAC" },
+				{ "browserName": "safari", "version": "10", "platform": "MAC" },
 				{ "browserName": "iPhone", "version": "9.1" }
 			]
 		},

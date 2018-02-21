@@ -1,7 +1,6 @@
 import './Container';
 import './WidgetBase';
 import './Registry';
-import './customElements';
 import './d';
 import './decorators/all';
 import './mixins/all';
@@ -13,3 +12,4 @@ import './tsxIntegration';
 import './NodeHandler';
 import './meta/all';
 import './vdom';
+import './registerCustomElement';

@@ -1,79 +1,241 @@
-import { customEventClass, CustomElementDescriptor, handleAttributeChanged, initializeElement } from './customElements';
-import { Constructor, WidgetProperties } from './interfaces';
 import { WidgetBase } from './WidgetBase';
 import { ProjectorMixin } from './mixins/Projector';
+import { from } from '@dojo/shim/array';
+import { w, dom } from './d';
+import global from '@dojo/shim/global';
+import Registry from './Registry';
+import { registerThemeInjector } from './mixins/Themed';
 
-declare namespace customElements {
-	function define(name: string, constructor: any): void;
+export enum CustomElementChildType {
+	DOJO = 'DOJO',
+	NODE = 'NODE',
+	TEXT = 'TEXT'
 }
 
-/**
- * Describes a function that returns a CustomElementDescriptor
- */
-export interface CustomElementDescriptorFactory {
-	(): CustomElementDescriptor;
+export function DomToWidgetWrapper(domNode: HTMLElement): any {
+	return class DomToWidgetWrapper extends WidgetBase<any> {
+		protected render() {
+			const properties = Object.keys(this.properties).reduce(
+				(props, key: string) => {
+					const value = this.properties[key];
+					if (key.indexOf('on') === 0) {
+						key = `__${key}`;
+					}
+					props[key] = value;
+					return props;
+				},
+				{} as any
+			);
+			return dom({ node: domNode, props: properties });
+		}
+
+		static get domNode() {
+			return domNode;
+		}
+	};
 }
 
-/**
- * Register a custom element using the v1 spec of custom elements. Note that
- * this is the default export, and, expects the proposal to work in the browser.
- * This will likely require the polyfill and native shim.
- *
- * @param descriptorFactory
- */
-export function registerCustomElement(descriptorFactory: CustomElementDescriptorFactory) {
-	const descriptor = descriptorFactory();
+export function create(descriptor: any, WidgetConstructor: any): any {
+	const { attributes, childType } = descriptor;
+	const attributeMap: any = {};
 
-	customElements.define(
-		descriptor.tagName,
-		class extends HTMLElement {
-			private _isAppended = false;
-			private _appender: Function;
-			private _widgetInstance: ProjectorMixin<any>;
+	attributes.forEach((propertyName: string) => {
+		const attributeName = propertyName.toLowerCase();
+		attributeMap[attributeName] = propertyName;
+	});
 
-			constructor() {
-				super();
+	return class extends HTMLElement {
+		private _projector: any;
+		private _properties: any = {};
+		private _children: any[] = [];
+		private _eventProperties: any = {};
+		private _initialised = false;
 
-				this._appender = initializeElement(this);
+		public connectedCallback() {
+			if (this._initialised) {
+				return;
 			}
 
-			public connectedCallback() {
-				if (!this._isAppended) {
-					this._appender();
-					this._isAppended = true;
+			const domProperties: any = {};
+			const { attributes, properties, events } = descriptor;
+
+			this._properties = { ...this._properties, ...this._attributesToProperties(attributes) };
+
+			[...attributes, ...properties].forEach((propertyName: string) => {
+				const value = (this as any)[propertyName];
+				const filteredPropertyName = propertyName.replace(/^on/, '__');
+				if (value !== undefined) {
+					this._properties[propertyName] = value;
+				}
+
+				domProperties[filteredPropertyName] = {
+					get: () => this._getProperty(propertyName),
+					set: (value: any) => this._setProperty(propertyName, value)
+				};
+			});
+
+			events.forEach((propertyName: string) => {
+				const eventName = propertyName.replace(/^on/, '').toLowerCase();
+				const filteredPropertyName = propertyName.replace(/^on/, '__on');
+
+				domProperties[filteredPropertyName] = {
+					get: () => this._getEventProperty(propertyName),
+					set: (value: any) => this._setEventProperty(propertyName, value)
+				};
+
+				this._eventProperties[propertyName] = undefined;
+				this._properties[propertyName] = (...args: any[]) => {
+					const eventCallback = this._getEventProperty(propertyName);
+					if (typeof eventCallback === 'function') {
+						eventCallback(...args);
+					}
 					this.dispatchEvent(
-						new customEventClass('connected', {
-							bubbles: false
+						new CustomEvent(eventName, {
+							bubbles: false,
+							detail: args
 						})
 					);
+				};
+			});
+
+			Object.defineProperties(this, domProperties);
+
+			const children = childType === CustomElementChildType.TEXT ? this.childNodes : this.children;
+
+			from(children).forEach((childNode: Node) => {
+				if (childType === CustomElementChildType.DOJO) {
+					childNode.addEventListener('dojo-ce-render', () => this._render());
+					childNode.addEventListener('dojo-ce-connected', () => this._render());
+					this._children.push(DomToWidgetWrapper(childNode as HTMLElement));
+				} else {
+					this._children.push(dom({ node: childNode as HTMLElement }));
 				}
-			}
+			});
 
-			public attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
-				handleAttributeChanged(this, name, newValue, oldValue);
-			}
+			this.addEventListener('dojo-ce-connected', (e: any) => this._childConnected(e));
 
-			public getWidgetInstance(): ProjectorMixin<any> {
-				return this._widgetInstance;
-			}
+			const widgetProperties = this._properties;
+			const renderChildren = () => this.__children__();
+			const Wrapper = class extends WidgetBase {
+				render() {
+					return w(WidgetConstructor, widgetProperties, renderChildren());
+				}
+			};
+			const registry = new Registry();
+			const themeContext = registerThemeInjector(this._getTheme(), registry);
+			global.addEventListener('dojo-theme-set', () => themeContext.set(this._getTheme()));
+			const Projector = ProjectorMixin(Wrapper);
+			this._projector = new Projector();
+			this._projector.setProperties({ registry });
+			this._projector.append(this);
 
-			public setWidgetInstance(widget: ProjectorMixin<any>): void {
-				this._widgetInstance = widget;
-			}
+			this._initialised = true;
+			this.dispatchEvent(
+				new CustomEvent('dojo-ce-connected', {
+					bubbles: true,
+					detail: this
+				})
+			);
+		}
 
-			public getWidgetConstructor(): Constructor<WidgetBase<WidgetProperties>> {
-				return this.getDescriptor().widgetConstructor;
-			}
-
-			public getDescriptor(): CustomElementDescriptor {
-				return descriptor;
-			}
-
-			static get observedAttributes(): string[] {
-				return (descriptor.attributes || []).map((attribute) => attribute.attributeName.toLowerCase());
+		private _getTheme() {
+			if (global && global.dojoce && global.dojoce.theme) {
+				return global.dojoce.themes[global.dojoce.theme];
 			}
 		}
-	);
+
+		private _childConnected(e: any) {
+			const node = e.detail;
+			if (node.parentNode === this) {
+				const exists = this._children.some((child) => child.domNode === node);
+				if (!exists) {
+					node.addEventListener('dojo-ce-render', () => this._render());
+					this._children.push(DomToWidgetWrapper(node));
+					this._render();
+				}
+			}
+		}
+
+		private _render() {
+			if (this._projector) {
+				this._projector.invalidate();
+				this.dispatchEvent(
+					new CustomEvent('dojo-ce-render', {
+						bubbles: false,
+						detail: this
+					})
+				);
+			}
+		}
+
+		public __properties__() {
+			return { ...this._properties, ...this._eventProperties };
+		}
+
+		public __children__() {
+			if (childType === CustomElementChildType.DOJO) {
+				return this._children.filter((Child) => Child.domNode.isWidget).map((Child: any) => {
+					const { domNode } = Child;
+					return w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]);
+				});
+			} else {
+				return this._children;
+			}
+		}
+
+		public attributeChangedCallback(name: string, oldValue: string | null, value: string | null) {
+			const propertyName = attributeMap[name];
+			this._setProperty(propertyName, value);
+		}
+
+		private _setEventProperty(propertyName: string, value: any) {
+			this._eventProperties[propertyName] = value;
+		}
+
+		private _getEventProperty(propertyName: string) {
+			return this._eventProperties[propertyName];
+		}
+
+		private _setProperty(propertyName: string, value: any) {
+			this._properties[propertyName] = value;
+			this._render();
+		}
+
+		private _getProperty(propertyName: string) {
+			return this._properties[propertyName];
+		}
+
+		private _attributesToProperties(attributes: string[]) {
+			return attributes.reduce((properties: any, propertyName: string) => {
+				const attributeName = propertyName.toLowerCase();
+				const value = this.getAttribute(attributeName);
+				if (value !== null) {
+					properties[propertyName] = value;
+				}
+				return properties;
+			}, {});
+		}
+
+		static get observedAttributes() {
+			return Object.keys(attributeMap);
+		}
+
+		public get isWidget() {
+			return true;
+		}
+	};
 }
 
-export default registerCustomElement;
+export function register(WidgetConstructor: any): void {
+	const descriptor = WidgetConstructor.prototype && WidgetConstructor.prototype.__customElementDescriptor;
+
+	if (!descriptor) {
+		throw new Error(
+			'Cannot get descriptor for Custom Element, have you added the @customElement decorator to your Widget?'
+		);
+	}
+
+	global.customElements.define(descriptor.tagName, create(descriptor, WidgetConstructor));
+}
+
+export default register;
