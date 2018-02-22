@@ -257,3 +257,9 @@ add(
 	},
 	true
 );
+
+add(
+	'dom-webanimation',
+	() => has('host-browser') && global.Animation !== undefined && global.KeyframeEffect !== undefined,
+	true
+);
