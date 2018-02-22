@@ -17,6 +17,7 @@ npm install @dojo/stores
 npm install @dojo/core
 npm install @dojo/has
 npm install @dojo/shim
+npm install @dojo/widget-core
 ```
 
 ## Features
@@ -26,6 +27,31 @@ npm install @dojo/shim
  * All state operations are recorded per process and undoable via a process callback
  * Supports the optimistic pattern with the ability to roll back on a failure
  * Fully serializable operations and state
+
+-----
+
+ - [Overview](#overview)
+ - [Basics](#basics)
+     - [Operations](#operations)
+     - [Commands](#commands)
+     - [Processes](#processes)
+     - [Initial State](#initial-state)
+ - [How Does This Differ From Redux](#how-does-this-differ-from-Redux)
+ - [Advanced](#advanced)
+     - [Subscribing To Store Changes](#subscribing-to-store-changes)
+	 - [Connecting Store Updates To Widgets](#connecting-store-updates-to-widgets)
+     - [Undo Processes](#undo-processes)
+     - [Transforming Executor Arguments](#transforming-executor-arguments)
+     - [Optimistic Update Pattern](#optimistic-update-pattern)
+     - [Executing Concurrent Commands](#executing-concurrent-commands)
+     - [Decorating Processes](#decorating-processes)
+        - [Decorating Multiple Processes](#decorating-multiple-processes)
+ - [How Do I Contribute?](#how-do-i-contribute)
+    - [Setup Installation](#setup-installation)
+    - [Testing](#testing)
+ - [Licensing Information](#licensing-information)
+
+-----
 
 ## Overview
 
@@ -348,6 +374,50 @@ In order to be notified when any changes occur within the store's state, simply 
 store.on('invalidate', () => {
 	// do something when the store's state has been updated.
 });
+```
+
+### Connecting Store Updates To Widgets
+
+Store data can be connected to widgets within your application using the [Containers & Injectors Pattern](https://github.com/dojo/widget-core#containers--injectors) supported by `@dojo/widget-core`. `@dojo/stores` provides a specialized injector that invalidates store containers on two conditions:
+
+1. The recommended approach is to register `paths` on container creation to ensure invalidation will only occur when state you are interested in changes.
+2. A catch all when no `paths` are defined for the container, it will invalidate when any data changes in the store.
+
+```ts
+import { WidgetBase } from '@dojo/widget-core/WidgetBase';
+import { Store } from '@dojo/stores/Stores';
+import { StoreInjector, StoreContainer } from '@dojo/stores/StoreInjector';
+
+interface State {
+	foo: string;
+	bar: {
+		baz: string;
+	}
+}
+
+// Will only invalidate when the foo property is changed
+const Container = Container(WidgetBase, 'state', { paths: [ [ 'foo' ] ], getProperties(store: Store<State>) {
+	return {
+		foo: store.get(store.path('foo'))
+	}
+}});
+
+// Catch all, will invalidate if _any_ state changes in the store even if the container is not interested in the changes
+const Container = Container(WidgetBase, 'state', { getProperties(store: Store<State>) {
+	return {
+		foo: store.get(store.path('foo'))
+	}
+}});
+```
+
+To provide a typed container for the store's state, use the `createStoreContainer` function from `@dojo/stores/StoreInjector` passing in the state interface as a generic and then export the returned `Container` to be available throughout your application.
+
+```ts
+interface State {
+	foo: string;
+}
+
+const StoreContainer = createStoreContainer<State>();
 ```
 
 ### Undo Processes

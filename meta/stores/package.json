@@ -20,7 +20,8 @@
   "peerDependencies": {
     "@dojo/core": "~0.3.0",
     "@dojo/has": "~0.1.1",
-    "@dojo/shim": "~0.2.3"
+    "@dojo/shim": "~0.2.3",
+    "@dojo/widget-core": "~0.8.0"
   },
   "devDependencies": {
     "@dojo/loader": "~0.1.1",
