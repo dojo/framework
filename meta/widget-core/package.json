@@ -65,10 +65,7 @@
     "typescript": "~2.6.1"
   },
   "dependencies": {
-    "intersection-observer": "0.4.3",
-    "pepjs": "0.4.3",
     "tslib": "~1.8.1",
-    "web-animations-js": "2.3.1",
     "@types/web-animations-js": "2.2.5"
   },
   "lint-staged": {

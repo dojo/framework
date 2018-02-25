@@ -1,4 +1,3 @@
-import 'web-animations-js/web-animations-next-lite.min';
 import { Base } from './Base';
 import Map from '@dojo/shim/Map';
 import global from '@dojo/shim/global';
