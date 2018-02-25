@@ -63,7 +63,7 @@ You can also use the [dojo cli](https://github.com/dojo/cli) to create a complet
 
 Dojo 2 applications use the Virtual DOM (vdom) paradigm to represent what should be shown on the view. These vdom nodes are plain JavaScript objects that are more efficient to create from a performance perspective than browser DOM elements. Dojo 2 uses these vdom elements to synchronize and update the browser DOM so that the application shows the expected view.
 
-There are two types of vdom within Dojo 2, the first are pure representations of DOM elements and are the fundamental building blocks of all Dojo 2 applications. These are called `VNode`s and are created using the `v()` function available from the `@dojo/widget-core/d` module.
+There are two types of vdom within Dojo 2. The first type provides a pure representation of DOM elements, the fundamental building blocks of all Dojo 2 applications. These are called `VNode`s and are created using the `v()` function available from the `@dojo/widget-core/d` module.
 
 The following will create a `VNode` that represents a simple `div` DOM element, with a text node child: `Hello, Dojo 2!`:
 
@@ -94,7 +94,7 @@ const projector = new Projector();
 projector.append();
 ```
 
-By default the projector will attach the widget to the `document.body` in the DOM, but this can be overridden by passing a reference to the preferred parent DOM Element.
+By default, the projector will attach the widget to the `document.body` in the DOM, but this can be overridden by passing a reference to the preferred parent DOM Element.
 
 Consider the following in your HTML file:
 
@@ -114,9 +114,9 @@ projector.append(root);
 
 #### Widgets and Properties
 
-We have created a widget used to project our `VNode`s into the DOM, however widgets can be composed of other widgets and `properties` which are used to determine if a widget needs to be re-rendered.
+We have created a widget used to project our `VNode`s into the DOM, however, widgets can be composed of other widgets and `properties` which are used to determine if a widget needs to be re-rendered.
 
-Properties are available on the the widget instance, defined by an interface and passed as a [`generic`](https://www.typescriptlang.org/docs/handbook/generics.html) to the `WidgetBase` class when creating your custom widget. The properties interface should extend the base `WidgetProperties` provided from `@dojo/widget-core/interfaces`:
+Properties are available on the widget instance, defined by an interface and passed as a [`generic`](https://www.typescriptlang.org/docs/handbook/generics.html) to the `WidgetBase` class when creating your custom widget. The properties interface should extend the base `WidgetProperties` provided from `@dojo/widget-core/interfaces`:
 
 ```ts
 interface MyProperties extends WidgetProperties {
@@ -163,7 +163,7 @@ const projector = new Projector();
 projector.append();
 ```
 
-**Note:** Widgets must return a single top level `DNode` from the `render` method, which is why the `Hello` widgets were wrapped in a `div` element.
+**Note:** Widgets must return a single top-level `DNode` from the `render` method, which is why the `Hello` widgets were wrapped in a `div` element.
 
 #### Decomposing Widgets
 
@@ -264,7 +264,7 @@ class List extends WidgetBase<ListProperties> {
 }
 ```
 
-Additionally the `ListItem` is now reusable in other areas of our application(s).
+Additionally, the `ListItem` is now reusable in other areas of our application(s).
 
 ### Mixins
 
@@ -334,11 +334,11 @@ export default class AnimatedWidget extends WidgetBase {
 }
 ```
 
-`controls` and `timing` are optional properties and are used to setup and control the animation. The `timing` property can only be set once, but the `controls` can be changed to stop / start / reverse etc... the web animation.
+`controls` and `timing` are optional properties and are used to setup and control the animation. The `timing` property can only be set once, but the `controls` can be changed to apply stop, start, reverse, and other actions on the web animation.
 
 #### Changing Animation
 
-Animations can be changed on each widget render in a reactive pattern, for example changing the animation from `slideUp` to `slideDown` on a title pane depending of if the titlepane is open or not.
+Animations can be changed on each widget render in a reactive pattern, for example changing the animation from `slideUp` to `slideDown` on a title pane depending on the titlepane being open or not.
 
 ```ts
 export default class AnimatedWidget extends WidgetBase {
@@ -376,7 +376,7 @@ export default class AnimatedWidget extends WidgetBase {
 
 #### Passing an effects function
 
-An `effects` function can be passed to the animation and evaluated at render time. This allows you to create programatic effects such as those depending on measurements from the `Dimensions` `Meta`.
+An `effects` function can be passed to the animation and evaluated at render time. This allows you to create programmatic effects such as those depending on measurements from the `Dimensions` `Meta`.
 
 ```ts
 export default class AnimatedWidget extends WidgetBase {
@@ -409,7 +409,7 @@ export default class AnimatedWidget extends WidgetBase {
 
 #### Get animation info
 
-The `WebAnimation` meta provides a `get` function that can be used to retrieve information about an animation via it's `id`.
+The `WebAnimation` meta provides a `get` function that can be used to retrieve information about an animation via its `id`.
 This info contains the currentTime, playState, playbackRate and startTime of the animation. If no animation is found or the animation has been cleared this will return undefined.
 
 ```ts
@@ -445,7 +445,7 @@ Dojo 2 widget-core provides `ThemedMixin` to decorate a widget with theming func
 
 To specify the theme classes for a widget, an interface needs to be imported with named exports for each class and passed to the `@theme` decorator. Importing the interface provides IntelliSense / auto-complete for the class names and passing this via the `@theme` decorator informs the `ThemedMixin` which classes can be themed.
 
-<details><summary>Example css classes interface</summary>
+<details><summary>Example CSS classes interface</summary>
 
 ```typescript
 export const classNameOne: string;
@@ -454,7 +454,7 @@ export const classNameTwo: string;
 </details>
 
 
-**Important:** at runtime a JavaScript file is required to provide the processed CSS class names.
+**Important:** at runtime, a JavaScript file is required to provide the processed CSS class names.
 
 The `ThemedMixin` provides a method available on the instance `this.theme()` takes a single argument that is either a `string` class name or an array of `string` class names and returns the theme's equivalent class names as either a single string or array of strings.
 
@@ -514,7 +514,7 @@ render() {
 
 #### Passing extra classes
 
-Sometimes you may need to apply positioning or layout styles to a child widget. As it is not possible to pass `classes` directly to virtualized widget nodes. `WNodes` thus provide an `extraClasses` property to target themeable classes within its `render` function. In most cases this should only target the `root` class and apply positioning adjustments. The classes passed via `extraClasses` are outside of the theming mechanism and thus will not be effected by a change in `theme`.
+Sometimes you may need to apply positioning or layout styles to a child widget. As it is not possible to pass `classes` directly to virtualized widget nodes. `WNodes` thus provide an `extraClasses` property to target themeable classes within its `render` function. In most cases, this should only target the `root` class and apply positioning adjustments. The classes passed via `extraClasses` are outside of the theming mechanism and thus will not be affected by a change in `theme`.
 
 ```css
 /* app.m.css */
@@ -740,11 +740,11 @@ class MyWidget extends WidgetBase {}
 
 ### Decorator Lifecycle Hooks
 
-Occasionally, in a mixin or a widget class, it my be required to provide logic that needs to be executed before properties are diffed using `beforeProperties`, either side of a widget's `render` call using `beforeRender` & `afterRender` or after a constructor using `afterContructor`.
+Occasionally, in a mixin or a widget class, it may be required to provide logic that needs to be executed before properties are diffed using `beforeProperties`, either side of a widget's `render` call using `beforeRender` & `afterRender` or after a constructor using `afterContructor`.
 
 This functionality is provided by the `beforeProperties`, `beforeRender`, `afterRender` and `afterConstructor` decorators that can be found in the `decorators` directory.
 
-***Note:*** All lifecycle functions are executed in the order that they are specified from the super class up to the final class.
+***Note:*** All lifecycle functions are executed in the order that they are specified from the superclass up to the final class.
 
 ##### beforeProperties
 
@@ -778,7 +778,7 @@ class MyClass extends WidgetBase {}
 
 ##### BeforeRender
 
-The `beforeRender` lifecycle hook receives the widget's `render` function, `properties` and `children` and is expected to return a function that satisfies the `render` API. The `properties` and `children` are passed to enable them to be manipulated or decorated prior to `render` being called.
+The `beforeRender` lifecycle hook receives the widget's `render` function, `properties`, and `children` and is expected to return a function that satisfies the `render` API. The `properties` and `children` are passed to enable them to be manipulated or decorated prior to `render` being called.
 
 **Note:** When `properties` are changed during the `beforeRender` lifecycle, they do not go through the standard property diffing provided by `WidgetBase`. If the changes to the `properties` need to go through diffing, consider using the `beforeProperties` lifecycle hook.
 
@@ -799,7 +799,7 @@ class MyClass extends WidgetBase {
 
 ##### AfterRender
 
-The `afterRender` lifecycle hook receives the returned `DNode`s from a widget's `render` call, so that the nodes can be decorated, manipulated or swapped completely.
+The `afterRender` lifecycle hook receives the returned `DNode`s from a widget's `render` call so that the nodes can be decorated, manipulated or swapped completely.
 
 ```ts
 class MyBaseClass extends WidgetBase<WidgetProperties> {
@@ -813,7 +813,7 @@ class MyBaseClass extends WidgetBase<WidgetProperties> {
 
 ### Method Lifecycle Hooks
 
-These lifecycle hooks are used by overriding methods in a widget class. Currently `onAttach` and `onDetach` are supported and provide callbacks for when a widget has been first attached and removed (destroyed) from the virtual dom.
+These lifecycle hooks are used by overriding methods in a widget class. Currently, `onAttach` and `onDetach` are supported and provide callbacks for when a widget has been first attached and removed (destroyed) from the virtual dom.
 
 #### onAttach
 
@@ -841,7 +841,7 @@ class MyClass extends WidgetBase {
 
 ### Containers & Injectors
 
-There is built in support for side-loading/injecting values into sections of the widget tree and mapping them to a widget's properties. This is achieved by registering a `@dojo/widget-core/Injector` instance against a `registry` that is available to your application (i.e. set on the projector instance, `projector.setProperties({ registry })`).
+There is built-in support for side-loading/injecting values into sections of the widget tree and mapping them to a widget's properties. This is achieved by registering a `@dojo/widget-core/Injector` instance against a `registry` that is available to your application (i.e. set on the projector instance, `projector.setProperties({ registry })`).
 
 Create an `Injector` instance and pass the `payload` that needs to be injected to the constructor:
 
@@ -850,9 +850,9 @@ const injector = new Injector({ foo: 'baz' });
 registry.defineInjector('my-injector', injector);
 ```
 
-To connect the registered `injector` to a widget, we can use the `Container` HOC (higher order component) provided by `widget-core`. The `Container` accepts a widget `constructor`, `injector` label and `getProperties` mapping function as arguments and returns a new class that returns the passed widget from its `render` function.
+To connect the registered `injector` to a widget, we can use the `Container` HOC (higher order component) provided by `widget-core`. The `Container` accepts a widget `constructor`, `injector` label, and `getProperties` mapping function as arguments and returns a new class that returns the passed widget from its `render` function.
 
-`getProperties` receives the `payload` from an `injector` and `properties` from the container HOC component. These are used to map into the wrapped widgets properties.
+`getProperties` receives the `payload` from an `injector` and `properties` from the container HOC component. These are used to map into the wrapped widget's properties.
 
 ```ts
 import { Container } from '@dojo/widget-core/Container';
@@ -867,7 +867,7 @@ function getProperties(payload: any, properties: any) {
 export const MyWidgetContainer = Container(MyWidget, 'my-injector', getProperties);
 ```
 
-The returned class from `Container` HOC is then used in place of the widget it wraps, the container assumes the properties type of the wrapped widget, however they all considered optional.
+The returned class from `Container` HOC is then used in place of the widget it wraps, the container assumes the properties type of the wrapped widget, however, they all considered optional.
 
 ```ts
 // import { MyWidget } from './MyWidget';
@@ -904,7 +904,7 @@ constructor() {
 
 ### Meta Configuration
 
-Widget meta is used to access additional information about the widget, usually information only available through the rendered DOM element - for example, the dimensions of an HTML node. You can access and respond to meta data during a widget's render operation.
+Widget meta is used to access additional information about the widget, usually information only available through the rendered DOM element - for example, the dimensions of an HTML node. You can access and respond to metadata during a widget's render operation.
 
 ```typescript
 class TestWidget extends WidgetBase<WidgetProperties> {
@@ -958,7 +958,7 @@ const hasRootBeenRendered = this.meta(Dimensions).has('root');
 
 #### Intersection
 
-The Intersection Meta provides information on whether a Node is visible in the applications viewport using the [Intersection Observer API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) (this is polyfilled for unsupported browsers).
+The Intersection Meta provides information on whether a Node is visible in the application's viewport using the [Intersection Observer API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) (this is polyfilled for unsupported browsers).
 
 This example renders a list with images, the image src is only added when the item is in the viewport which prevents needlessly downloading images until the user scrolls to them:
 
@@ -1010,7 +1010,7 @@ See the [Animations](#animations) section more information.
 
 #### Drag
 
-The `Drag` meta allow a consuming widget to determine if its nodes are being dragged and by how much.  The meta provider abstracts away the need of dealing with modelling specific mouse, pointer, and touch events to create a drag state.
+The `Drag` meta allows a consuming widget to determine if its nodes are being dragged and by how much.  The meta provider abstracts away the need for dealing with modeling specific mouse, pointer, and touch events to create a drag state.
 
 ```ts
 const dragResult = this.meta(Drag).get('root');
@@ -1022,9 +1022,9 @@ The drag information returned contains the following properties:
 |-|-|
 |`delta`|An `x`/`y` position that contains the number of pixels the pointer has moved since the last read of the drag state.|
 |`isDragging`|If the pointer is currently _active_ in dragging the identified node.|
-|`start`|A position object that contains `x`/`y` positions for `client`, `offset`, `page`, and `screen` that provides the start positions that the `delta` movement refers to.  *Note* that `offset` and `page` are not supprted by all browsers and the meta provider does nothing to normalize this data, it simply copies it from the underlying events.|
+|`start`|A position object that contains `x`/`y` positions for `client`, `offset`, `page`, and `screen` that provides the start positions that the `delta` movement refers to.  *Note* that `offset` and `page` are not supported by all browsers and the meta provider does nothing to normalize this data, it simply copies it from the underlying events.|
 
-One common use case it to create a draggable node within a container:
+One common use case is to create a draggable node within a container:
 
 ```ts
 interface ExampleWidget extends WidgetBaseProperties {
@@ -1301,7 +1301,7 @@ class MyWidgetWithTsx extends Themed(WidgetBase)<MyProperties> {
 }
 ```
 
-**Note:** Unfortunately `tsx` is not directly used within the module so the tsx module will report as an unused import, and will need to be ignored by linters..
+**Note:** Unfortunately `tsx` is not directly used within the module so the tsx module will report as an unused import, and will need to be ignored by linters.
 
 ### Web Components
 
@@ -1401,7 +1401,7 @@ We appreciate your interest!  Please see the [Dojo Meta Repository](https://gith
 
 ### Code Style
 
-This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the projects `package.json`.
+This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the project's `package.json`.
 
 An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
 
