@@ -78,7 +78,7 @@ To work with the Dojo 2 store there are three core but simple concepts - Operati
 
 Operations are the raw instructions the store uses to make modifications to the state. The operations are based on the JSON Patch and JSON Pointer specifications that have been customized specifically for Dojo 2 stores, primarily to prevent access to the state's root.
 
-Each operation is a simple object which contains instructions with the `OperationType`, `path` and optionally the `value` (depending on operation).
+Dojo 2 stores support four of the six JSON Patch operations: "add", "remove", "replace", and "test". The "copy" and "move" operations are not currently supported. Each operation is a simple object which contains instructions with the `OperationType`, `path` and optionally the `value` (depending on operation).
 
 ```ts
 import { OperationType } from '@dojo/stores/State/patch';
@@ -103,6 +103,7 @@ Dojo 2 stores provides a helper package that can generate `PatchOperation` objec
 * `add` - Returns a `PatchOperation` of type `OperationType.ADD` for the `path` and `value`
 * `remove`  - Returns a `PatchOperation` of type `OperationType.REMOVE` for the `path`
 * `replace` - Returns a `PatchOperation` of type `OperationType.REPLACE` for the `path` and `value`
+* `test` - Returns a `PatchOperation` of type `OperationType.TEST` for the `path` and `value`
 
 These functions accept a `Path` type. This is returned by the `path` and `at` methods on a store. More often this will be created using the `path` and `at` functions provided as part of the arguments to a [command](#commands), which are described in more detail below. Rather than accepting a full string path, the `path` and `at` functions accept a series of arguments and provide type checking to verify that the path created actually exists on the state object.
 
@@ -495,7 +496,7 @@ In the success scenario, we might need to update the added Todo item with an id 
 In the error scenario, it might be that we want to show a notification to say the request failed, and turn the Todo item red, with a "retry" button. It's even possible to revert/undo the adding of the Todo item or anything else that happened in the process.
 
 ```ts
-const handleAddTodoErrorProcess = createProcess([ () => [ add('/failed', true) ]; ]);
+const handleAddTodoErrorProcess = createProcess([ () => [ add(path('failed'), true) ]; ]);
 
 function addTodoCallback(error, result) {
 	if (error) {
@@ -530,7 +531,7 @@ function byId(id: string) {
 async function deleteTodoCommand({ get, payload: { id } }: CommandRequest) {
     const { todo, index } = find(get('/todos'), byId(id))
     await fetch(`/todo/${todo.id}`, { method: 'DELETE' } );
-    return [ remove(`/todos/${index}`) ];
+    return [ remove(path('todos', index)) ];
 }
 
 const deleteTodoProcess = createProcess([ deleteTodoCommand, calculateCountsCommand ]);
