@@ -314,4 +314,13 @@ describe('Router', () => {
 		const link = router.link('unknown');
 		assert.isUndefined(link);
 	});
+
+	it('Queues the first event for the first registered listener', () => {
+		let initialNavEvent = false;
+		const router = new Router(routeConfigDefaultRoute, { HistoryManager });
+		router.on('nav', () => {
+			initialNavEvent = true;
+		});
+		assert.isTrue(initialNavEvent);
+	});
 });

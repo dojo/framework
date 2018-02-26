@@ -1,4 +1,4 @@
-import { Evented } from '@dojo/core/Evented';
+import QueuingEvented from '@dojo/core/QueuingEvented';
 import {
 	RouteConfig,
 	History,
@@ -13,7 +13,7 @@ import { HashHistory } from './history/HashHistory';
 
 const PARAM = Symbol('routing param');
 
-export class Router extends Evented implements RouterInterface {
+export class Router extends QueuingEvented implements RouterInterface {
 	private _routes: Route[] = [];
 	private _outletMap: { [index: string]: Route } = Object.create(null);
 	private _matchedOutlets: { [index: string]: OutletContext } = Object.create(null);
