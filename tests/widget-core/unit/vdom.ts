@@ -1593,6 +1593,20 @@ describe('vdom', () => {
 	});
 
 	describe('properties', () => {
+		it('does not add "key" to the dom node', () => {
+			const widget = getWidget(v('div', { key: '1' }));
+			const projection = dom.create(widget, { sync: true });
+			const div = projection.domNode.childNodes[0] as HTMLElement;
+			assert.isNull(div.getAttribute('key'));
+		});
+
+		it('sets properties even when the default DOM node value matches', () => {
+			const widget = getWidget(v('div', { tabIndex: -1 }));
+			const projection = dom.create(widget, { sync: true });
+			const div = projection.domNode.childNodes[0] as HTMLElement;
+			assert.strictEqual(div.getAttribute('tabindex'), '-1');
+		});
+
 		it('updates attributes', () => {
 			const widget = getWidget(v('a', { href: '#1' }));
 			const projection = dom.create(widget, { sync: true });

@@ -388,7 +388,7 @@ function updateProperties(
 				if (propValue !== previousValue) {
 					propertiesUpdated = true;
 				}
-			} else if (propValue !== previousValue) {
+			} else if (propName !== 'key' && propValue !== previousValue) {
 				const type = typeof propValue;
 				if (type === 'function' && propName.lastIndexOf('on', 0) === 0 && includesEventsAndAttributes) {
 					updateEvent(
@@ -401,11 +401,12 @@ function updateProperties(
 					);
 				} else if (type === 'string' && propName !== 'innerHTML' && includesEventsAndAttributes) {
 					updateAttribute(domNode, propName, propValue, projectionOptions);
-				} else {
+				} else if (propName === 'scrollLeft' || propName === 'scrollTop') {
 					if ((domNode as any)[propName] !== propValue) {
-						// Comparison is here for side-effects in Edge with scrollLeft and scrollTop
 						(domNode as any)[propName] = propValue;
 					}
+				} else {
+					(domNode as any)[propName] = propValue;
 				}
 				propertiesUpdated = true;
 			}
