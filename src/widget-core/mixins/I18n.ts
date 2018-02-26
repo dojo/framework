@@ -33,7 +33,7 @@ export interface I18nProperties extends LocaleData, WidgetProperties {}
  * An internal helper interface for defining locale and text direction attributes on widget nodes.
  */
 interface I18nVNodeProperties extends VNodeProperties {
-	dir: string | null;
+	dir: string;
 	lang: string | null;
 }
 
@@ -110,7 +110,7 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 				modifier: (node, breaker) => {
 					const { locale, rtl } = this.properties;
 					const properties: I18nVNodeProperties = {
-						dir: null,
+						dir: '',
 						lang: null
 					};
 					if (typeof rtl === 'boolean') {

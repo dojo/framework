@@ -8,6 +8,7 @@ import { dom, InternalVNode, InternalWNode, widgetInstanceMap, RenderResult } fr
 import { dom as d, v, w, VNODE } from '../../src/d';
 import { VNode } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
+import { I18nMixin } from '../../src/mixins/I18n';
 import { Registry } from '../../src/Registry';
 
 let consoleStub: SinonStub;
@@ -3334,5 +3335,21 @@ describe('vdom', () => {
 			assert.isTrue(focusSpy.notCalled);
 			document.body.removeChild(input);
 		});
+	});
+
+	describe('i18n Mixin', () => {
+		class MyWidget extends I18nMixin(WidgetBase) {
+			render() {
+				return v('span');
+			}
+		}
+		const widget = new MyWidget();
+		const projection = dom.create(widget, { sync: true });
+		const root = projection.domNode.childNodes[0] as HTMLElement;
+		assert.strictEqual(root.dir, '');
+		widget.__setProperties__({ rtl: true });
+		assert.strictEqual(root.dir, 'rtl');
+		widget.__setProperties__({ rtl: false });
+		assert.strictEqual(root.dir, 'ltr');
 	});
 });

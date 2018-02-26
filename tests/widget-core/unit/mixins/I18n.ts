@@ -191,7 +191,7 @@ registerSuite('mixins/I18nMixin', {
 
 				const result = localized.__render__();
 				assert.isOk(result);
-				assert.isNull(result.properties!['dir']);
+				assert.strictEqual(result.properties.dir, '');
 			},
 
 			'The `dir` attribute is added to the first VNode in the render'() {
