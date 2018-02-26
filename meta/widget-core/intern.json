@@ -35,6 +35,10 @@
 		},
 		"plugins": [
 			{
+				"script": "./node_modules/@dojo/shim/browser.js",
+				"useLoader": true
+			},
+			{
 				"script": "./tests/support/loadCustomElements.js",
 				"useLoader": true
 			}

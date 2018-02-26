@@ -8,7 +8,6 @@ import { afterRender } from './../decorators/afterRender';
 import { v } from './../d';
 import { Registry } from './../Registry';
 import { dom } from './../vdom';
-import 'pepjs';
 
 /**
  * Represents the attach state of the projector

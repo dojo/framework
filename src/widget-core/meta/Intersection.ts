@@ -4,8 +4,6 @@ import Map from '@dojo/shim/Map';
 import { createHandle } from '@dojo/core/lang';
 import { Base } from './Base';
 
-import 'intersection-observer';
-
 interface ExtendedIntersectionObserverEntry extends IntersectionObserverEntry {
 	readonly isIntersecting: boolean;
 }
