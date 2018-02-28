@@ -162,11 +162,16 @@ describe('registerCustomElement', () => {
 		customElements.define('bar-b', CustomElementB);
 		element = document.createElement('bar-a');
 		const barB = document.createElement('bar-b');
+		let childRenderCounter = 0;
+		element.addEventListener('dojo-ce-render', () => {
+			childRenderCounter++;
+		});
 		element.appendChild(barB);
 		document.body.appendChild(element);
 		(barB as any).myProp = 'set property on child';
-
 		resolvers.resolve();
+
+		assert.strictEqual(2, childRenderCounter);
 
 		const container = element.querySelector('.children');
 		const children = (container as any).children;

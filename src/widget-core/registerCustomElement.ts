@@ -5,6 +5,7 @@ import { w, dom } from './d';
 import global from '@dojo/shim/global';
 import Registry from './Registry';
 import { registerThemeInjector } from './mixins/Themed';
+import { alwaysRender } from './decorators/alwaysRender';
 
 export enum CustomElementChildType {
 	DOJO = 'DOJO',
@@ -13,7 +14,8 @@ export enum CustomElementChildType {
 }
 
 export function DomToWidgetWrapper(domNode: HTMLElement): any {
-	return class DomToWidgetWrapper extends WidgetBase<any> {
+	@alwaysRender()
+	class DomToWidgetWrapper extends WidgetBase<any> {
 		protected render() {
 			const properties = Object.keys(this.properties).reduce(
 				(props, key: string) => {
@@ -26,13 +28,15 @@ export function DomToWidgetWrapper(domNode: HTMLElement): any {
 				},
 				{} as any
 			);
-			return dom({ node: domNode, props: properties });
+			return dom({ node: domNode, props: properties, diffType: 'dom' });
 		}
 
 		static get domNode() {
 			return domNode;
 		}
-	};
+	}
+
+	return DomToWidgetWrapper;
 }
 
 export function create(descriptor: any, WidgetConstructor: any): any {
@@ -108,7 +112,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 					childNode.addEventListener('dojo-ce-connected', () => this._render());
 					this._children.push(DomToWidgetWrapper(childNode as HTMLElement));
 				} else {
-					this._children.push(dom({ node: childNode as HTMLElement }));
+					this._children.push(dom({ node: childNode as HTMLElement, diffType: 'dom' }));
 				}
 			});
 
