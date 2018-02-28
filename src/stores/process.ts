@@ -1,6 +1,7 @@
 import { isThenable } from '@dojo/shim/Promise';
 import { PatchOperation } from './state/Patch';
 import { State, Store } from './Store';
+import Map from '@dojo/shim/Map';
 
 /**
  * Default Payload interface
@@ -68,10 +69,12 @@ export interface ProcessResultExecutor<T = any> {
  */
 export interface ProcessResult<T = any, P extends object = DefaultPayload> extends State<T> {
 	executor: ProcessResultExecutor<T>;
-	undo: Undo;
+	store: Store<T>;
 	operations: PatchOperation<T>[];
+	undoOperations: PatchOperation<T>[];
 	apply: (operations: PatchOperation<T>[], invalidate?: boolean) => PatchOperation<T>[];
 	payload: P;
+	id: string;
 	error?: ProcessError<T> | null;
 }
 
@@ -107,7 +110,7 @@ export interface ProcessCallbackDecorator {
  * CreateProcess factory interface
  */
 export interface CreateProcess<T = any, P extends object = DefaultPayload> {
-	(commands: (Command<T, P>[] | Command<T, P>)[], callback?: ProcessCallback<T>): Process<T, P>;
+	(id: string, commands: (Command<T, P>[] | Command<T, P>)[], callback?: ProcessCallback<T>): Process<T, P>;
 }
 
 /**
@@ -122,10 +125,89 @@ export function createCommandFactory<T, P extends object = DefaultPayload>(): Co
  */
 export type Commands<T = any, P extends object = DefaultPayload> = (Command<T, P>[] | Command<T, P>)[];
 
-export interface ProcessOptions {
-	callback?: ProcessCallback;
+const processMap = new Map();
+
+export function getProcess(id: string) {
+	return processMap.get(id);
 }
 
+export function processExecutor<T = any, P extends object = DefaultPayload>(
+	id: string,
+	commands: Commands<T, P>,
+	store: Store<T>,
+	callback: ProcessCallback | undefined,
+	transformer: Transformer<P> | undefined
+): ProcessExecutor<T, any, any> {
+	const { apply, get, path, at } = store;
+	function executor(
+		process: Process,
+		payload: any,
+		transformer?: Transformer
+	): Promise<ProcessResult | ProcessError> {
+		return process(store)(payload);
+	}
+
+	return async (executorPayload: P): Promise<ProcessResult<T, P>> => {
+		const undoOperations: PatchOperation[] = [];
+		const operations: PatchOperation[] = [];
+		const commandsCopy = [...commands];
+		let command = commandsCopy.shift();
+		let error: ProcessError | null = null;
+		const payload = transformer ? transformer(executorPayload) : executorPayload;
+		try {
+			while (command) {
+				let results = [];
+				if (Array.isArray(command)) {
+					results = command.map((commandFunction) => commandFunction({ at, get, path, payload }));
+					results = await Promise.all(results);
+				} else {
+					let result = command({ at, get, path, payload });
+					if (isThenable(result)) {
+						result = await result;
+					}
+					results = [result];
+				}
+
+				for (let i = 0; i < results.length; i++) {
+					operations.push(...results[i]);
+					undoOperations.push(...apply(results[i]));
+				}
+
+				store.invalidate();
+				command = commandsCopy.shift();
+			}
+		} catch (e) {
+			error = { error: e, command };
+		}
+
+		callback &&
+			callback(error, {
+				undoOperations,
+				store,
+				id,
+				operations,
+				apply,
+				at,
+				get,
+				path,
+				executor,
+				payload
+			});
+		return Promise.resolve({
+			store,
+			undoOperations,
+			id,
+			error,
+			operations,
+			apply,
+			at,
+			get,
+			path,
+			executor,
+			payload
+		});
+	};
+}
 /**
  * Factories a process using the provided commands and an optional callback. Returns an executor used to run the process.
  *
@@ -133,61 +215,13 @@ export interface ProcessOptions {
  * @param callback Callback called after the process is completed
  */
 export function createProcess<T = any, P extends object = DefaultPayload>(
+	id: string,
 	commands: Commands<T, P>,
-	{ callback }: ProcessOptions = {}
+	callback?: ProcessCallback
 ): Process<T, P> {
-	function processExecutor(store: Store<T>, transformer?: Transformer<P>): ProcessExecutor<T, any, any> {
-		const { apply, get, path, at } = store;
-		function executor(
-			process: Process,
-			payload: any,
-			transformer?: Transformer
-		): Promise<ProcessResult | ProcessError> {
-			return process(store)(payload);
-		}
-
-		return async (executorPayload: P): Promise<ProcessResult<T, P>> => {
-			const undoOperations: PatchOperation[] = [];
-			const operations: PatchOperation[] = [];
-			const commandsCopy = [...commands];
-			const undo = () => {
-				store.apply(undoOperations, true);
-			};
-
-			let command = commandsCopy.shift();
-			let error: ProcessError | null = null;
-			const payload = transformer ? transformer(executorPayload) : executorPayload;
-			try {
-				while (command) {
-					let results = [];
-					if (Array.isArray(command)) {
-						results = command.map((commandFunction) => commandFunction({ at, get, path, payload }));
-						results = await Promise.all(results);
-					} else {
-						let result = command({ at, get, path, payload });
-						if (isThenable(result)) {
-							result = await result;
-						}
-						results = [result];
-					}
-
-					for (let i = 0; i < results.length; i++) {
-						operations.push(...results[i]);
-						undoOperations.push(...apply(results[i]));
-					}
-
-					store.invalidate();
-					command = commandsCopy.shift();
-				}
-			} catch (e) {
-				error = { error: e, command };
-			}
-
-			callback && callback(error, { operations, undo, apply, at, get, path, executor, payload });
-			return Promise.resolve({ error, operations, undo, apply, at, get, path, executor, payload });
-		};
-	}
-	return processExecutor;
+	processMap.set(id, [id, commands, callback]);
+	return (store: Store<T>, transformer?: Transformer<P>) =>
+		processExecutor(id, commands, store, callback, transformer);
 }
 
 /**
@@ -195,11 +229,11 @@ export function createProcess<T = any, P extends object = DefaultPayload>(
  * @param callbackDecorators array of process callback decorators to be used by the return factory.
  */
 export function createProcessFactoryWith(callbackDecorators: ProcessCallbackDecorator[]): CreateProcess {
-	return (commands: (Command[] | Command)[], callback?: ProcessCallback): Process => {
+	return (id: string, commands: (Command[] | Command)[], callback?: ProcessCallback): Process => {
 		const decoratedCallback = callbackDecorators.reduce((callback, callbackDecorator) => {
 			return callbackDecorator(callback);
 		}, callback);
-		return createProcess(commands, { callback: decoratedCallback });
+		return createProcess(id, commands, decoratedCallback);
 	};
 }
 

@@ -80,4 +80,12 @@ export class Pointer<T = any, U = any> {
 		const pointerTarget: PointerTarget = walk(this.segments, object, false);
 		return pointerTarget.target[pointerTarget.segment];
 	}
+
+	toJSON(): string {
+		return this.toString();
+	}
+
+	toString(): string {
+		return this.path;
+	}
 }

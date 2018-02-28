@@ -1,4 +1,4 @@
-import './extras';
+import './middleware/HistoryManager';
 import './Store';
 import './process';
 import './state/all';

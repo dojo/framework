@@ -40,7 +40,6 @@ npm install @dojo/widget-core
  - [Advanced](#advanced)
      - [Subscribing To Store Changes](#subscribing-to-store-changes)
 	 - [Connecting Store Updates To Widgets](#connecting-store-updates-to-widgets)
-     - [Undo Processes](#undo-processes)
      - [Transforming Executor Arguments](#transforming-executor-arguments)
      - [Optimistic Update Pattern](#optimistic-update-pattern)
      - [Executing Concurrent Commands](#executing-concurrent-commands)
@@ -229,7 +228,7 @@ A `Process` is the construct used to execute commands against a `store` instance
 The result object contains the following:
 
 * The `payload` passed to the process
-* A function to undo the operations of the `process`
+* `undoOperations` to undo the `process`
 * A function to execute an additional `process`.
 
 The array of `Commands` are executed in sequence by the store until the last Command is completed or a `Command` throws an error. These processes often represent an application behavior. For example adding a todo in a simple todo application which will be made up with multiple discreet commands.
@@ -247,14 +246,13 @@ A `callback` can be provided which will be called when an error occurs or the pr
 function addTodoProcessCallback(error, result) {
 	if (error) {
 		// do something with the error
-		// possibly run the `undo` function from result to rollback the changes up to the
-		// error
-		result.undo();
+		// possibly undo the operations
+		result.store.apply(result.undoOperations);
 	}
 	// possible additional state changes by running another process using result.executor(otherProcess)
 }
 
-const addTodoProcess = createProcess([ addTodoCommand, calculateCountCommand ], { callback: addTodoProcessCallback });
+const addTodoProcess = createProcess([ addTodoCommand, calculateCountCommand ], addTodoProcessCallback);
 ```
 
 The `Process` creates a deferred executor by passing the `store` instance `addTodoProcess(store)` which can be executed immediately by passing the `payload`, `addTodoProcess(store)(payload)`. Or more often passed to your widgets and used to initiate state changes on user interactions. The `payload` argument for the `executor` is required and is passed to each of the `Process`'s commands in a `payload` argument.
@@ -421,20 +419,6 @@ interface State {
 const StoreContainer = createStoreContainer<State>();
 ```
 
-### Undo Processes
-
-The store records undo operations for every `Command`, grouped by its `Process`. The `undo` function is passed as part of the `result` argument in the `Process` callback.
-
-```ts
-function processCallback(error, result) {
-	result.undo();
-}
-```
-
-The `undo` function will rollback all the operations that were performed by the `process`.
-
-**Note:** Each undo operation has an associated `test` operation to ensure that the store is in the expected state to successfully run the undo operation, if the test fails then an error is thrown and no changes are performed.
-
 ### Transforming Executor Arguments
 
 An optional `transformer` can be passed to a process that is used to transform the `executor`s payload to the `command` payload type. The return type of the `transformer` must match the `command` `payload` type of the `process`. The argument type of the `executor` is inferred from transformers `payload` type.
@@ -500,7 +484,7 @@ const handleAddTodoErrorProcess = createProcess([ () => [ add(path('failed'), tr
 
 function addTodoCallback(error, result) {
 	if (error) {
-		result.undo();
+		result.store.apply(result.undoOperations);
 		result.executor(handleAddTodoErrorProcess);
 	}
 }
@@ -511,7 +495,7 @@ const addTodoProcess = createProcess([
 		postTodoCommand,
 		calculateCountsCommand
 	],
-	{ callback: addTodoCallback });
+	addTodoCallback);
 ```
 
 * `addTodoCommand`: Adds the new todo into the application state
@@ -555,21 +539,6 @@ In this example, `commandOne` is executed, then both `concurrentCommandOne` and 
 
 The `Process` callback provides a hook to apply generic/global functionality across multiple or all processes used within an application. This is done using higher order functions that wrap the process' local `callback` using the error and result payload to decorate or perform an action for all processes it is used for.
 
-Dojo 2 stores provides a simple `UndoManager` that collects the undo function for each process onto a single stack and exposes an `undoer` function that can be used to undo the last `process` executed. If the local `undo` function is called then it will be automatically removed from the managers stack.
-
-```ts
-import { createProcess } from '@dojo/stores/process';
-import { createUndoManager } from '@dojo/stores/extras';
-
-const { undoCollector, undoer } = createUndoManager();
-// if the process doesn't need a local callback, the collector can be used without.
-const myProcess = createProcess([ commandOne, commandTwo ], { callback: undoCollector() });
-const myOtherProcess = createProcess([ commandThree, commandFour ], { callback: undoCollector() });
-
-// running `undoer` will undo the last process executed, that had registered the `collector` as a callback.
-undoer();
-```
-
 `callback` decorators can be composed together to combine multiple units of functionality, such that in the example below `myProcess` would run the `error` and `result` through the `collector`, `logger` and then `snapshot` callbacks.
 
 ```ts
@@ -583,9 +552,9 @@ Specifying a `callback` decorator on an individual process explicitly works for 
 The `createProcessWith` higher order function can be used to specify `callback` decorators that need to be applied across multiple `processes`. The function accepts an array of `callback` decorators and returns a new `createProcess` factory function that will automatically apply the decorators to any process that it creates.
 
 ```ts
-const customCreateProcess = createProcessWith([ undoCollector, logger ]);
+const customCreateProcess = createProcessWith([ logger ]);
 
-// `myProcess` will automatically be decorated with the `undoCollector` and `logger` callback decorators.
+// `myProcess` will automatically be decorated with the `logger` callback decorator.
 const myProcess = customCreateProcess([ commandOne, commandTwo ]);
 ```
 
@@ -600,7 +569,7 @@ const myCallback = (error: ProcessError, result: ProcessResult) => {
 const myCallbackDecorator = createCallbackDecorator(myCallback);
 
 // use the callback decorator as normal
-const myProcess = createProcess([ commandOne ], { callback: myCallbackDecorator() });
+const myProcess = createProcess([ commandOne ], myCallbackDecorator());
 ```
 
 ## How do I contribute?

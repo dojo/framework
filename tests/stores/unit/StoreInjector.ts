@@ -36,8 +36,8 @@ describe('StoreInjector', () => {
 	beforeEach(() => {
 		registry = new Registry();
 		store = new Store<State>();
-		fooProcess = createProcess([fooCommand]);
-		barProcess = createProcess([barCommand]);
+		fooProcess = createProcess('foo', [fooCommand]);
+		barProcess = createProcess('bar', [barCommand]);
 	});
 
 	describe('StoreInjector', () => {

@@ -57,7 +57,7 @@ describe('process', () => {
 	});
 
 	it('with synchronous commands running in order', () => {
-		const process = createProcess([testCommandFactory('foo'), testCommandFactory('foo/bar')]);
+		const process = createProcess('test', [testCommandFactory('foo'), testCommandFactory('foo/bar')]);
 		const processExecutor = process(store);
 		processExecutor({});
 		const foo = store.get(store.path('foo'));
@@ -67,7 +67,7 @@ describe('process', () => {
 	});
 
 	it('processes wait for asynchronous commands to complete before continuing', () => {
-		const process = createProcess([
+		const process = createProcess('test', [
 			testCommandFactory('foo'),
 			testAsyncCommandFactory('bar'),
 			testCommandFactory('foo/bar')
@@ -90,7 +90,7 @@ describe('process', () => {
 	});
 
 	it('support concurrent commands executed synchronously', () => {
-		const process = createProcess([
+		const process = createProcess('test', [
 			testCommandFactory('foo'),
 			[testAsyncCommandFactory('bar'), testAsyncCommandFactory('baz')],
 			testCommandFactory('foo/bar')
@@ -114,7 +114,7 @@ describe('process', () => {
 	});
 
 	it('passes the payload to each command', () => {
-		const process = createProcess([
+		const process = createProcess('test', [
 			testCommandFactory('foo'),
 			testCommandFactory('bar'),
 			testCommandFactory('baz')
@@ -130,7 +130,7 @@ describe('process', () => {
 	});
 
 	it('can use a transformer for the arguments passed to the process executor', () => {
-		const process = createProcess<any, { foo: string }>([
+		const process = createProcess<any, { foo: string }>('test', [
 			testCommandFactory('foo'),
 			testCommandFactory('bar'),
 			testCommandFactory('baz')
@@ -174,11 +174,11 @@ describe('process', () => {
 		const commandOne = createCommandOne(({ get, path, payload }) => []);
 		const commandTwo = createCommandTwo(({ get, path, payload }) => []);
 		const commandThree = createCommandThree(({ get, path, payload }) => []);
-		const processOne = createProcess<any, { foo: string; bar: string }>([commandOne, commandTwo]);
-		// createProcess([commandOne, commandTwo]); // shouldn't compile
+		const processOne = createProcess<any, { foo: string; bar: string }>('test', [commandOne, commandTwo]);
+		// createProcess('test', [commandOne, commandTwo]); // shouldn't compile
 		// createProcess<any, { bar: string }>([commandOne]); // shouldn't compile
-		const processTwo = createProcess([commandTwo]);
-		const processThree = createProcess([commandThree]);
+		const processTwo = createProcess('test', [commandTwo]);
+		const processThree = createProcess('test', [commandThree]);
 		const executorOne = processOne(store);
 		const executorTwo = processTwo(store);
 		const executorThree = processThree(store);
@@ -211,8 +211,8 @@ describe('process', () => {
 			};
 		};
 
-		const processOne = createProcess([commandOne]);
-		const processTwo = createProcess<any, { bar: number; foo: number }>([commandOne, commandTwo]);
+		const processOne = createProcess('test', [commandOne]);
+		const processTwo = createProcess<any, { bar: number; foo: number }>('test', [commandOne, commandTwo]);
 		const processOneResult = processOne(store, transformerOne)({ foo: '' });
 		// processTwo(store, transformerOne); // compile error
 		const processTwoResult = processTwo(store, transformerTwo)({ foo: 3 });
@@ -236,10 +236,8 @@ describe('process', () => {
 
 	it('can provide a callback that gets called on process completion', () => {
 		let callbackCalled = false;
-		const process = createProcess([testCommandFactory('foo')], {
-			callback: () => {
-				callbackCalled = true;
-			}
+		const process = createProcess('test', [testCommandFactory('foo')], () => {
+			callbackCalled = true;
 		});
 		const processExecutor = process(store);
 		processExecutor({});
@@ -247,41 +245,23 @@ describe('process', () => {
 	});
 
 	it('when a command errors, the error and command is returned in the error argument of the callback', () => {
-		const process = createProcess([testCommandFactory('foo'), testErrorCommand], {
-			callback: (error) => {
-				assert.isNotNull(error);
-				assert.strictEqual(error && error.command, testErrorCommand);
-			}
+		const process = createProcess('test', [testCommandFactory('foo'), testErrorCommand], (error) => {
+			assert.isNotNull(error);
+			assert.strictEqual(error && error.command, testErrorCommand);
 		});
 		const processExecutor = process(store);
 		processExecutor({});
 	});
 
 	it('executor can be used to programmatically run additional processes', () => {
-		const extraProcess = createProcess([testCommandFactory('bar')]);
-		const process = createProcess([testCommandFactory('foo')], {
-			callback: (error, result) => {
-				assert.isNull(error);
-				let bar = store.get(store.path('bar'));
-				assert.isUndefined(bar);
-				result.executor(extraProcess, {});
-				bar = store.get(store.path('bar'));
-				assert.strictEqual(bar, 'bar');
-			}
-		});
-		const processExecutor = process(store);
-		processExecutor({});
-	});
-
-	it('process can be undone using the undo function provided via the callback', () => {
-		const process = createProcess([testCommandFactory('foo')], {
-			callback: (error, result) => {
-				let foo = store.get(store.path('foo'));
-				assert.strictEqual(foo, 'foo');
-				result.undo();
-				foo = store.get(store.path('foo'));
-				assert.isUndefined(foo);
-			}
+		const extraProcess = createProcess('test', [testCommandFactory('bar')]);
+		const process = createProcess('test', [testCommandFactory('foo')], (error, result) => {
+			assert.isNull(error);
+			let bar = store.get(store.path('bar'));
+			assert.isUndefined(bar);
+			result.executor(extraProcess, {});
+			bar = store.get(store.path('bar'));
+			assert.strictEqual(bar, 'bar');
 		});
 		const processExecutor = process(store);
 		processExecutor({});
@@ -315,7 +295,7 @@ describe('process', () => {
 			createCallbackDecorator(logPointerCallback)
 		]);
 
-		const process = createProcess([testCommandFactory('foo'), testCommandFactory('bar')]);
+		const process = createProcess('test', [testCommandFactory('foo'), testCommandFactory('bar')]);
 		const executor = process(store);
 		executor({});
 		assert.lengthOf(results, 2);
@@ -329,5 +309,17 @@ describe('process', () => {
 		assert.strictEqual(results[2], 'callback two');
 		assert.strictEqual(results[3], 'callback one');
 		assert.deepEqual(store.get(store.path('logs')), [['/foo', '/bar'], ['/foo', '/bar']]);
+	});
+
+	it('process can be undone using the undo function provided via the callback', () => {
+		const process = createProcess('foo', [testCommandFactory('foo')], (error, result) => {
+			let foo = store.get(result.store.path('foo'));
+			assert.strictEqual(foo, 'foo');
+			store.apply(result.undoOperations);
+			foo = store.get(result.store.path('foo'));
+			assert.isUndefined(foo);
+		});
+		const processExecutor = process(store);
+		processExecutor({});
 	});
 });
