@@ -236,7 +236,7 @@ The array of `Commands` are executed in sequence by the store until the last Com
 A simple `process` to add a todo and recalculate the todo count:
 
 ```ts
-const addTodoProcess = createProcess([ addTodoCommand, calculateCountCommand ]);
+const addTodoProcess = createProcess('add-todo', [ addTodoCommand, calculateCountCommand ]);
 ```
 
 A `callback` can be provided which will be called when an error occurs or the process is successfully completed:
@@ -252,7 +252,7 @@ function addTodoProcessCallback(error, result) {
 	// possible additional state changes by running another process using result.executor(otherProcess)
 }
 
-const addTodoProcess = createProcess([ addTodoCommand, calculateCountCommand ], addTodoProcessCallback);
+const addTodoProcess = createProcess('add-todo', [ addTodoCommand, calculateCountCommand ], addTodoProcessCallback);
 ```
 
 The `Process` creates a deferred executor by passing the `store` instance `addTodoProcess(store)` which can be executed immediately by passing the `payload`, `addTodoProcess(store)(payload)`. Or more often passed to your widgets and used to initiate state changes on user interactions. The `payload` argument for the `executor` is required and is passed to each of the `Process`'s commands in a `payload` argument.
@@ -283,7 +283,7 @@ const initialStateCommand = createCommand({ path }) => {
 	]);
 }
 
-const initialStateProcess = createProcess([ initialStateCommand ]);
+const initialStateProcess = createProcess('initial', [ initialStateCommand ]);
 
 // creates the store, initializes the state and runs the `getTodosProcess` shown below.
 const store = createStore();
@@ -298,7 +298,7 @@ getTodosProcess(store)().then(() => {
 The `payload` argument for the process executor can be specified as the second generic type when using `createProcess`
 
 ```ts
-const process = createProcess<any, { foo: string }>([ command ]);
+const process = createProcess<any, { foo: string }>('foo', [ command ]);
 const processExecutor = process(store);
 
 // The executor will require an argument that satisfies `{ foo: string }`
@@ -314,16 +314,16 @@ const createCommandTwo = createCommandFactory<any, { bar: string }>();
 const commandOne = createCommandOne(({ get, path, payload }) => []);
 const commandTwo = createCommandTwo(({ get, path, payload }) => []);
 
-const processOne = createProcess([commandOne]);
+const processOne = createProcess('one', [commandOne]);
 const executorOne = processOne(store); // payload for executor inferred based on `commandOne`
 
 executorOne({ foo: 'foo' });
 executorOne({ bar: 'foo' }); // compile error
 
 // compile error as payload types for commandOne and commandTwo are not assignable
-const processTwo = createProcess([commandOne, commandTwo]);
+const processTwo = createProcess('two', [commandOne, commandTwo]);
 // Explicitly passing a generic that satisfies all the command payload types enables payload type widening
-const processTwo = createProcess<any, { foo: string, bar: string }>([commandOne, commandTwo]);
+const processTwo = createProcess<any, { foo: string, bar: string }>('two', [commandOne, commandTwo]);
 const executorTwo = processTwo(store);
 executorTwo({ foo: 'foo' }); // compile error, as requires both `bar` and `foo`
 executorTwo({ foo: 'foo', bar: 'bar' }); // Yay, valid
@@ -435,7 +435,7 @@ const createCommand = createCommandFactory<any, CommandPayload>();
 const command = createCommand(({ get, path, payload }) => {
 });
 
-const process = createProcess([command]);
+const process = createProcess('example', [command]);
 
 interface TransformerPayload {
 	foo: string;
@@ -480,7 +480,7 @@ In the success scenario, we might need to update the added Todo item with an id 
 In the error scenario, it might be that we want to show a notification to say the request failed, and turn the Todo item red, with a "retry" button. It's even possible to revert/undo the adding of the Todo item or anything else that happened in the process.
 
 ```ts
-const handleAddTodoErrorProcess = createProcess([ () => [ add(path('failed'), true) ]; ]);
+const handleAddTodoErrorProcess = createProcess('error', [ () => [ add(path('failed'), true) ]; ]);
 
 function addTodoCallback(error, result) {
 	if (error) {
@@ -489,7 +489,7 @@ function addTodoCallback(error, result) {
 	}
 }
 
-const addTodoProcess = createProcess([
+const addTodoProcess = createProcess('add-todo', [
 		addTodoCommand,
 		calculateCountsCommand,
 		postTodoCommand,
@@ -518,7 +518,7 @@ async function deleteTodoCommand({ get, payload: { id } }: CommandRequest) {
     return [ remove(path('todos', index)) ];
 }
 
-const deleteTodoProcess = createProcess([ deleteTodoCommand, calculateCountsCommand ]);
+const deleteTodoProcess = createProcess('delete', [ deleteTodoCommand, calculateCountsCommand ]);
 ```
 
 *Note:* The process requires the counts to be recalculated after successfully deleting a todo, the process above shows how easily commands can be shared and reused.
@@ -528,7 +528,7 @@ const deleteTodoProcess = createProcess([ deleteTodoCommand, calculateCountsComm
 A `Process` supports concurrent execution of multiple commands by specifying the commands in an array when creating the process:
 
 ```ts
-const myProcess = createProcess([ commandOne, [ concurrentCommandOne, concurrentCommandTwo ], commandTwo ]);
+const myProcess = createProcess('my-process', [ commandOne, [ concurrentCommandOne, concurrentCommandTwo ], commandTwo ]);
 ```
 
 In this example, `commandOne` is executed, then both `concurrentCommandOne` and `concurrentCommandTwo` are executed concurrently. Once all of the concurrent commands are completed the results are applied in order before continuing with the process and executing `commandTwo`.
@@ -542,7 +542,7 @@ The `Process` callback provides a hook to apply generic/global functionality acr
 `callback` decorators can be composed together to combine multiple units of functionality, such that in the example below `myProcess` would run the `error` and `result` through the `collector`, `logger` and then `snapshot` callbacks.
 
 ```ts
-const myProcess = createProcess([ commandOne, commandTwo ], collector(logger(snapshot())));
+const myProcess = createProcess('my-process', [ commandOne, commandTwo ], collector(logger(snapshot())));
 ```
 
 #### Decorating Multiple Processes
@@ -555,7 +555,7 @@ The `createProcessWith` higher order function can be used to specify `callback` 
 const customCreateProcess = createProcessWith([ logger ]);
 
 // `myProcess` will automatically be decorated with the `logger` callback decorator.
-const myProcess = customCreateProcess([ commandOne, commandTwo ]);
+const myProcess = customCreateProcess('my-process', [ commandOne, commandTwo ]);
 ```
 
 An additional helper function `createCallbackDecorator` can be used to turn a simple `ProcessCallback` into a decorator that ensures the passed callback is executed after the decorating `callback` has been run.
@@ -569,7 +569,7 @@ const myCallback = (error: ProcessError, result: ProcessResult) => {
 const myCallbackDecorator = createCallbackDecorator(myCallback);
 
 // use the callback decorator as normal
-const myProcess = createProcess([ commandOne ], myCallbackDecorator());
+const myProcess = createProcess('my-process', [ commandOne ], myCallbackDecorator());
 ```
 
 ## How do I contribute?
