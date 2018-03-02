@@ -91,7 +91,7 @@ export function isWidgetBaseConstructor<T extends WidgetBaseInterface>(item: any
 
 export interface ESMDefaultWidgetBase<T> {
 	default: Constructor<T>;
-	__esModule: boolean;
+	__esModule?: boolean;
 }
 
 export function isWidgetConstructorDefaultExport<T>(item: any): item is ESMDefaultWidgetBase<T> {
