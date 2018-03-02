@@ -43,7 +43,7 @@ Widgets are a fundamental concept for any Dojo 2 application and as such Dojo 2 
 
 ### Route Configuration
 
-Application routes are registered using a `RouteConfig`, which defines a route's `path`, the associated `outlet` and nested child `RouteConfig`s. The full routes are recursively constructed from the nested route structure.
+Application routes are registered using a `RouteConfig`, which defines a route's `path`, the associated `outlet`, and nested child `RouteConfig`s. The full routes are recursively constructed from the nested route structure.
 
 Example routing configuration:
 
@@ -167,7 +167,7 @@ const registry = new Registry();
 registry.defineInjector('router', new Injector(router));
 ```
 
-Finally the `registry` needs to be made available to all widgets within the application by setting it as a `property` to the application's top level `Projector` instance.
+Finally, the `registry` needs to be made available to all widgets within the application by setting it as a `property` to the application's top-level `Projector` instance.
 
 ```ts
 const projector = new Projector();
@@ -176,7 +176,7 @@ projector.setProperties({ registry });
 
 #### History Managers
 
-Routing comes with three history managers for monitoring and changing the navigation state, `HashHistory`, `StateHistory` and `MemoryHistory`. By default the `HashHistory` is used, however this can be overridden by passing a different `HistoryManager` when creating the `Router`.
+Routing comes with three history managers for monitoring and changing the navigation state, `HashHistory`, `StateHistory` and `MemoryHistory`. By default the `HashHistory` is used, however, this can be overridden by passing a different `HistoryManager` when creating the `Router`.
 
 ```ts
 const router = new Router(config, MemoryHistory);
@@ -201,7 +201,7 @@ The state history uses the browser's history API, `pushState()` and `replaceStat
 
 ##### Memory History
 
-The `MemoryHistory` does not rely on any browser API, but keeps its own internal path state. It should not be used in production applications, but is useful for testing routing.
+The `MemoryHistory` does not rely on any browser API but keeps its own internal path state. It should not be used in production applications but is useful for testing routing.
 
 ```ts
 import { Router } from '@dojo/routing/Router';
@@ -266,12 +266,12 @@ class App extends WidgetBase {
 
 #### Outlet Component Types
 
-When registering an outlet a different widget can be configure for each match type of a route:
+When registering an outlet a different widget can be configured for each match type of a route:
 
 | Type    | Description |
 | ------- | ------------ |
 |`index`  | This is an exact match for the registered route. E.g. Navigating to `foo/bar` with a registered route `foo/bar`.   |
-|`main`| Any match other than an index match, for example `foo/bar` would partially match `foo/bar/qux`, but only if `foo/bar/qux` was also a registered route. Otherwise it would be an `ERROR` match. |
+|`main`| Any match other than an index match, for example, `foo/bar` would partially match `foo/bar/qux`, but only if `foo/bar/qux` was also a registered route. Otherwise, it would be an `ERROR` match. |
 |`error`  | When a partial match occurs but there is no match for the next section of the route. |
 
 To do this, instead of passing a widget as the first argument to the `Outlet`, use the `OutletComponents` object.
@@ -291,7 +291,7 @@ It is important to note that a widget registered against match type `error` will
 
 #### Outlet Options
 
-Outlet Options of `mapParams`, `onEnter`, `onExit` and `key` can be passed as an optional third argument to an `Outlet`.
+Outlet Options of `mapParams`, `onEnter`, `onExit`, and `key` can be passed as an optional third argument to an `Outlet`.
 
 ##### Map Parameters
 
@@ -327,7 +327,7 @@ const FooOutlet = Outlet(MyViewWidget, 'foo', { mapParams });
 
 ##### Key
 
-The `key` is the identifier used to locate the `router` from the `registry`, throughout the routing library this is defaulted to `router`.
+The `key` is the identifier used to locate the `router` from the `registry`, throughout the routing library this defaults to `router`.
 
 #### Global Error Outlet
 
@@ -362,7 +362,7 @@ We appreciate your interest!  Please see the [Dojo 2 Meta Repository](https://gi
 
 ### Code Style
 
-This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the projects `package.json`.
+This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the project's `package.json`.
 
 An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
 
