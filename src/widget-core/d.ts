@@ -143,8 +143,8 @@ export function w<W extends WidgetBaseInterface>(
 /**
  * Wrapper function for calls to create VNodes.
  */
-export function v(tag: string, properties: VNodeProperties | DeferredVirtualProperties, children?: DNode[]): VNode;
 export function v(tag: string, children: undefined | DNode[]): VNode;
+export function v(tag: string, properties: DeferredVirtualProperties | VNodeProperties, children?: DNode[]): VNode;
 export function v(tag: string): VNode;
 export function v(
 	tag: string,
