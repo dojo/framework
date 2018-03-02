@@ -54,17 +54,17 @@ npm install @dojo/widget-core
 
 ## Overview
 
-Dojo 2 stores is a predictable, consistent state container for Javascript applications with inspiration from Redux and Flux architectures. However Dojo 2 stores aims to provide more built in support for common patterns such as asynchronous behaviors, undo support and **more**!
+Dojo 2 stores is a predictable, consistent state container for Javascript applications with inspiration from Redux and Flux architectures. However, the `@dojo/stores` package aims to provide more built-in support for common patterns such as asynchronous behaviors, undo support and **more**!
 
-Managing state can become difficult to coordinate when an application becomes complicated with multiple views, widgets, components and models. With each of these attempting to update attributes of state at varying points within the application lifecycle things can get **confusing**. When state changes are hard to understand and/or non-deterministic it becomes increasingly difficult to identify and reproduce bugs or add new features.
+Managing state can become difficult to coordinate when an application becomes complicated with multiple views, widgets, components, and models. With each of these attempting to update attributes of state at varying points within the application lifecycle things can get **confusing**. When state changes are hard to understand and/or non-deterministic it becomes increasingly difficult to identify and reproduce bugs or add new features.
 
-Dojo 2 stores provides a centralized store, designed to be the **single source of truth** for an application. It operates using uni-directional data flow. This means all application data follows the same lifecycle, ensuring the application logic is predictable and easy to understand.
+The `@dojo/stores` package provides a centralized store, designed to be the **single source of truth** for an application. It operates using uni-directional data flow. This means all application data follows the same lifecycle, ensuring the application logic is predictable and easy to understand.
 
-__Note__: Do you need a centralised store? Lifting state up to parent widgets and using local state are likely to be sufficient in less complex applications.
+__Note__: Do you need a centralized store? Lifting state up to parent widgets and using local state are likely to be sufficient in less complex applications.
 
 ## Basics
 
-To work with the Dojo 2 store there are three core but simple concepts - Operations, Commands and Processes.
+To work with `@dojo/stores` there are three core but simple concepts - Operations, Commands, and Processes.
 
  * `Operation`
    * Granular instructions to manipulate state based on JSON Patch
@@ -195,7 +195,7 @@ const calculateCountsCommand = createCommand(({ get, path }) => {
 });
 ```
 
- *Important:* Access to state root is not permitted and will throw an error, for example `get(path('/'))`. This applies for `Operations` also, it is not possible to create an operation that will update the state root. Best practices with @dojo/stores mean touching the smallest part of the store as is necessary.
+ *Important:* Access to state root is not permitted and will throw an error, for example, `get(path('/'))`. This applies to `Operations` also, it is not possible to create an operation that will update the state root. Best practices with @dojo/stores mean touching the smallest part of the store as is necessary.
 
 ##### Asynchronous Commands
 
@@ -231,7 +231,7 @@ The result object contains the following:
 * `undoOperations` to undo the `process`
 * A function to execute an additional `process`.
 
-The array of `Commands` are executed in sequence by the store until the last Command is completed or a `Command` throws an error. These processes often represent an application behavior. For example adding a todo in a simple todo application which will be made up with multiple discreet commands.
+The array of `Commands` are executed in sequence by the store until the last Command is completed or a `Command` throws an error. These processes often represent an application behavior. For example, adding a todo in a simple todo application which will be made up with multiple discreet commands.
 
 A simple `process` to add a todo and recalculate the todo count:
 
@@ -306,7 +306,7 @@ processExecutor({ foo: 'bar' });
 processExecutor({ foo: 1 }); // Compile error
 ```
 
-The process executor's `payload` type will also be inferred by the `payload` type of the commands if not specified explicitly, however the `payload` type for all the commands must be assignable, when this is not the case the payload generic type needs to be explicitly passed.
+The process executor's `payload` type will also be inferred by the `payload` type of the commands if not specified explicitly, however, the `payload` type for all the commands must be assignable when this is not the case the payload generic type needs to be explicitly passed.
 
 ```ts
 const createCommandOne = createCommandFactory<any, { foo: string }>();
@@ -329,7 +329,7 @@ executorTwo({ foo: 'foo' }); // compile error, as requires both `bar` and `foo`
 executorTwo({ foo: 'foo', bar: 'bar' }); // Yay, valid
 ```
 
-Alternatively the payload can be typed at command creation
+Alternatively, the payload can be typed at command creation
 
 ```ts
 const createCommandOne = createCommandFactory<MyState>();
@@ -377,10 +377,10 @@ store.on('invalidate', () => {
 
 ### Connecting Store Updates To Widgets
 
-Store data can be connected to widgets within your application using the [Containers & Injectors Pattern](https://github.com/dojo/widget-core#containers--injectors) supported by `@dojo/widget-core`. `@dojo/stores` provides a specialized injector that invalidates store containers on two conditions:
+Store data can be connected to widgets within your application using the [Containers & Injectors Pattern](https://github.com/dojo/widget-core#containers--injectors) supported by `@dojo/widget-core`. The `@dojo/stores` package provides a specialized injector that invalidates store containers on two conditions:
 
 1. The recommended approach is to register `paths` on container creation to ensure invalidation will only occur when state you are interested in changes.
-2. A catch all when no `paths` are defined for the container, it will invalidate when any data changes in the store.
+2. A catch-all when no `paths` are defined for the container, it will invalidate when any data changes in the store.
 
 ```ts
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
@@ -421,7 +421,7 @@ const StoreContainer = createStoreContainer<State>();
 
 ### Transforming Executor Arguments
 
-An optional `transformer` can be passed to a process that is used to transform the `executor`s payload to the `command` payload type. The return type of the `transformer` must match the `command` `payload` type of the `process`. The argument type of the `executor` is inferred from transformers `payload` type.
+An optional `transformer` can be passed to a process that is used to transform the `executor`'s payload to the `command` payload type. The return type of the `transformer` must match the `command` `payload` type of the `process`. The argument type of the `executor` is inferred from transformers `payload` type.
 
 ```ts
 interface CommandPayload {
@@ -473,11 +473,11 @@ Each `Command` will be passed the result of the transformer as the `payload` for
 
 Optimistic updating can be used to build a responsive UI despite interactions that might take some time to respond, for example saving to a remote resource.
 
-In the case of adding a todo item for instance, with optimistic updating we can immediately add the todo before we even make a request to the server and avoid having an unnatural waiting period or loading indicator. When the server responds we can then reconcile the outcome based on whether it is successful or not.
+In the case of adding a todo item for instance, with optimistic updating, we can immediately add the todo before we even make a request to the server and avoid having an unnatural waiting period or loading indicator. When the server responds we can then reconcile the outcome based on whether it is successful or not.
 
-In the success scenario, we might need to update the added Todo item with an id that was provided in the response from the server, and change the color of the Todo item to green to indicate it was successfully saved.
+In the success scenario, we might need to update the added Todo item with an id that was provided in the response from the server and change the color of the Todo item to green to indicate it was successfully saved.
 
-In the error scenario, it might be that we want to show a notification to say the request failed, and turn the Todo item red, with a "retry" button. It's even possible to revert/undo the adding of the Todo item or anything else that happened in the process.
+In the error scenario, it might be that we want to show a notification to say the request failed and turn the Todo item red, with a "retry" button. It's even possible to revert/undo the adding of the Todo item or anything else that happened in the process.
 
 ```ts
 const handleAddTodoErrorProcess = createProcess('error', [ () => [ add(path('failed'), true) ]; ]);
@@ -505,7 +505,7 @@ const addTodoProcess = createProcess('add-todo', [
   * on success: Returns operations that update the todo item `id` field with the value received from the remote service
 * `calculateCountsCommand`: Runs again after the success of `postTodoCommand`
 
-To support "pessimistic" updates to the application state, i.e. wait until a remote service call has been completed before changing the application state simply put the async command before the application store update. This can be useful when performing a deletion of resource, when it can be surprising if item is removed from the UI "optimistically" only for it to reappear back if the remote service call fails.
+To support "pessimistic" updates to the application state, i.e. wait until a remote service call has been completed before changing the application state simply put the async command before the application store update. This can be useful when performing a deletion of a resource, when it can be surprising if an item is removed from the UI "optimistically" only for it to reappear back if the remote service call fails.
 
 ```ts
 function byId(id: string) {
@@ -547,7 +547,7 @@ const myProcess = createProcess('my-process', [ commandOne, commandTwo ], collec
 
 #### Decorating Multiple Processes
 
-Specifying a `callback` decorator on an individual process explicitly works for targeted behavior but can become cumbersome when the decorator needs to be applied across multiple processes throughout the application.
+Specifying a `callback` decorator on an individual process explicitly works for targeted behavior but can become cumbersome when the decorator needs to be applied to multiple processes throughout the application.
 
 The `createProcessWith` higher order function can be used to specify `callback` decorators that need to be applied across multiple `processes`. The function accepts an array of `callback` decorators and returns a new `createProcess` factory function that will automatically apply the decorators to any process that it creates.
 
@@ -562,7 +562,7 @@ An additional helper function `createCallbackDecorator` can be used to turn a si
 
 ```ts
 const myCallback = (error: ProcessError, result: ProcessResult) => {
-	// do things with the outcome from the process
+	// do things with the outcome of the process
 };
 
 // turns the callback into a callback decorator
@@ -579,7 +579,7 @@ Contributing Guidelines.
 
 ### Code Style
 
-This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the projects `package.json`.
+This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the project's `package.json`.
 
 An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
 
@@ -616,9 +616,5 @@ or
 `grunt test:saucelabs`
 
 ## Licensing information
-
-TODO: If third-party code was used to write this library, make a list of project names and licenses here
-
-* [Third-party lib one](https//github.com/foo/bar) ([New BSD](http://opensource.org/licenses/BSD-3-Clause))
 
 © 2018 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
