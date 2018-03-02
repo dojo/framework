@@ -1,4 +1,4 @@
-import * as Globalize from 'globalize';
+import * as Globalize from 'globalize/dist/globalize';
 import i18n from '../i18n';
 
 /**
