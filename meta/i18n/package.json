@@ -1,6 +1,6 @@
 {
   "name": "@dojo/i18n",
-  "version": "0.5.1-pre",
+  "version": "0.5.1",
   "description": "Dojo 2 Internationalization",
   "homepage": "https://dojo.io",
   "bugs": {
