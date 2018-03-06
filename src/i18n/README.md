@@ -49,7 +49,7 @@ The examples below are provided in TypeScript syntax. The package does work unde
 
 ### Message Bundle Loading
 
-`@dojo/i18n` provides a means for loading locale-specific messages, and updating those messages when the locale changes. Each bundle has a default module that is `import`ed like any other TypeScript module. Locale-specific messages are then loaded via the `i18n` method. Every default bundle MUST provide a `messages` map containing default messages, and an optional `locales` object that maps supported locales to functions that load their respective translations. Further, each default bundle is assigned a unique `id` property that is used internally to manage caching and handle interoperability with Globalize.js (see below). While it is possible to include an `id` with your message bundles, doing so is neither necessary nor recommended.
+`@dojo/i18n` provides a means for loading locale-specific messages and updating those messages when the locale changes. Each bundle has a default module that is `import`ed like any other TypeScript module. Locale-specific messages are then loaded via the `i18n` method. Every default bundle MUST provide a `messages` map containing default messages, and an optional `locales` object that maps supported locales to functions that load their respective translations. Further, each default bundle is assigned a unique `id` property that is used internally to manage caching and handle interoperability with Globalize.js (see below). While it is possible to include an `id` with your message bundles, doing so is neither necessary nor recommended.
 
 ```typescript
 import fr from './fr/common';
@@ -397,7 +397,7 @@ We appreciate your interest!  Please see the [Guidelines Repository](https://git
 
 ### Code Style
 
-This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the projects `package.json`.
+This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the project's `package.json`.
 
 An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
 
