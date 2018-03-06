@@ -91,10 +91,18 @@ export interface WidgetData {
 	inputProperties: any;
 }
 
+interface ProjectorState {
+	deferredRenderCallbacks: Function[];
+	afterRenderCallbacks: Function[];
+	nodeMap: WeakMap<Node, WeakMap<Function, EventListener>>;
+	renderScheduled?: number;
+	renderQueue: RenderQueue[];
+}
+
 export const widgetInstanceMap = new WeakMap<any, WidgetData>();
 
 const instanceMap = new WeakMap<DefaultWidgetBaseInterface, InstanceMapData>();
-const renderQueueMap = new WeakMap<DefaultWidgetBaseInterface, RenderQueue[]>();
+const projectorStateMap = new WeakMap<DefaultWidgetBaseInterface, ProjectorState>();
 
 function same(dnode1: InternalDNode, dnode2: InternalDNode) {
 	if (isVNode(dnode1) && isVNode(dnode2)) {
@@ -125,7 +133,7 @@ function getProjectionOptions(
 	projectorOptions: Partial<ProjectionOptions>,
 	projectorInstance: DefaultWidgetBaseInterface
 ): ProjectionOptions {
-	const defaults = {
+	const defaults: Partial<ProjectionOptions> = {
 		namespace: undefined,
 		styleApplyer: function(domNode: HTMLElement, styleName: string, value: string) {
 			(domNode.style as any)[styleName] = value;
@@ -134,13 +142,9 @@ function getProjectionOptions(
 			enter: missingTransition,
 			exit: missingTransition
 		},
-		deferredRenderCallbacks: [],
-		afterRenderCallbacks: [],
-		nodeMap: new WeakMap(),
 		depth: 0,
 		merge: false,
-		renderScheduled: undefined,
-		renderQueue: [],
+		sync: false,
 		projectorInstance
 	};
 	return { ...defaults, ...projectorOptions } as ProjectionOptions;
@@ -160,7 +164,8 @@ function updateEvent(
 	bind: any,
 	previousValue?: Function
 ) {
-	const eventMap = projectionOptions.nodeMap.get(domNode) || new WeakMap();
+	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
+	const eventMap = projectorState.nodeMap.get(domNode) || new WeakMap();
 
 	if (previousValue) {
 		const previousEvent = eventMap.get(previousValue);
@@ -178,7 +183,7 @@ function updateEvent(
 
 	domNode.addEventListener(eventName, callback);
 	eventMap.set(currentValue, callback);
-	projectionOptions.nodeMap.set(domNode, eventMap);
+	projectorState.nodeMap.set(domNode, eventMap);
 }
 
 function addClasses(domNode: Element, classes: SupportedClassName) {
@@ -238,7 +243,8 @@ function focusNode(propValue: any, previousValue: any, domNode: Element, project
 		result = propValue && !previousValue;
 	}
 	if (result === true) {
-		projectionOptions.deferredRenderCallbacks.push(() => {
+		const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
+		projectorState.deferredRenderCallbacks.push(() => {
 			(domNode as HTMLElement).focus();
 		});
 	}
@@ -251,7 +257,8 @@ function removeOrphanedEvents(
 	projectionOptions: ProjectionOptions,
 	onlyEvents: boolean = false
 ) {
-	const eventMap = projectionOptions.nodeMap.get(domNode);
+	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
+	const eventMap = projectorState.nodeMap.get(domNode);
 	if (eventMap) {
 		Object.keys(previousProperties).forEach((propName) => {
 			const isEvent = propName.substr(0, 2) === 'on' || onlyEvents;
@@ -610,6 +617,7 @@ function updateChildren(
 	const oldChildrenLength = oldChildren.length;
 	const newChildrenLength = newChildren.length;
 	const transitions = projectionOptions.transitions!;
+	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
 	projectionOptions = { ...projectionOptions, depth: projectionOptions.depth + 1 };
 	let oldIndex = 0;
 	let newIndex = 0;
@@ -631,7 +639,7 @@ function updateChildren(
 				for (i = oldIndex; i < findOldIndex; i++) {
 					const oldChild = oldChildren[i];
 					const indexToCheck = i;
-					projectionOptions.afterRenderCallbacks.push(() => {
+					projectorState.afterRenderCallbacks.push(() => {
 						callOnDetach(oldChild, parentInstance);
 						checkDistinguishable(oldChildren, indexToCheck, parentInstance);
 					});
@@ -665,7 +673,7 @@ function updateChildren(
 				createDom(newChild, parentVNode, insertBefore, projectionOptions, parentInstance);
 				nodeAdded(newChild, transitions);
 				const indexToCheck = newIndex;
-				projectionOptions.afterRenderCallbacks.push(() => {
+				projectorState.afterRenderCallbacks.push(() => {
 					checkDistinguishable(newChildren, indexToCheck, parentInstance);
 				});
 			}
@@ -677,7 +685,7 @@ function updateChildren(
 		for (i = oldIndex; i < oldChildrenLength; i++) {
 			const oldChild = oldChildren[i];
 			const indexToCheck = i;
-			projectionOptions.afterRenderCallbacks.push(() => {
+			projectorState.afterRenderCallbacks.push(() => {
 				callOnDetach(oldChild, parentInstance);
 				checkDistinguishable(oldChildren, indexToCheck, parentInstance);
 			});
@@ -765,6 +773,7 @@ function createDom(
 	let domNode: Element | Text | undefined;
 	if (isWNode(dnode)) {
 		let { widgetConstructor } = dnode;
+		const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
 		const parentInstanceData = widgetInstanceMap.get(parentInstance)!;
 		if (!isWidgetBaseConstructor<DefaultWidgetBaseInterface>(widgetConstructor)) {
 			const item = parentInstanceData.registry().get<DefaultWidgetBaseInterface>(widgetConstructor);
@@ -779,8 +788,7 @@ function createDom(
 		instanceData.invalidate = () => {
 			instanceData.dirty = true;
 			if (instanceData.rendering === false) {
-				const renderQueue = renderQueueMap.get(projectionOptions.projectorInstance)!;
-				renderQueue.push({ instance, depth: projectionOptions.depth });
+				projectorState.renderQueue.push({ instance, depth: projectionOptions.depth });
 				scheduleRender(projectionOptions);
 			}
 		};
@@ -788,8 +796,8 @@ function createDom(
 		instance.__setCoreProperties__(dnode.coreProperties);
 		instance.__setChildren__(dnode.children);
 		instance.__setProperties__(dnode.properties);
-		instanceData.rendering = false;
 		const rendered = instance.__render__();
+		instanceData.rendering = false;
 		if (rendered) {
 			const filteredRendered = filterAndDecorateChildren(rendered, instance);
 			dnode.rendered = filteredRendered;
@@ -797,7 +805,7 @@ function createDom(
 		}
 		instanceMap.set(instance, { dnode, parentVNode });
 		instanceData.nodeHandler.addRoot();
-		projectionOptions.afterRenderCallbacks.push(() => {
+		projectorState.afterRenderCallbacks.push(() => {
 			instanceData.onAttach();
 		});
 	} else {
@@ -866,14 +874,15 @@ function updateDom(
 			instance.__setCoreProperties__(dnode.coreProperties);
 			instance.__setChildren__(dnode.children);
 			instance.__setProperties__(dnode.properties);
-			instanceData.rendering = false;
 			dnode.instance = instance;
 			instanceMap.set(instance, { dnode, parentVNode });
 			if (instanceData.dirty === true) {
 				const rendered = instance.__render__();
+				instanceData.rendering = false;
 				dnode.rendered = filterAndDecorateChildren(rendered, instance);
 				updateChildren(parentVNode, previousRendered, dnode.rendered, instance, projectionOptions);
 			} else {
+				instanceData.rendering = false;
 				dnode.rendered = previousRendered;
 			}
 			instanceData.nodeHandler.addRoot();
@@ -950,8 +959,9 @@ function addDeferredProperties(vnode: InternalVNode, projectionOptions: Projecti
 	// transfer any properties that have been passed - as these must be decorated properties
 	vnode.decoratedDeferredProperties = vnode.properties;
 	const properties = vnode.deferredPropertiesCallback!(!!vnode.inserted);
+	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
 	vnode.properties = { ...properties, ...vnode.decoratedDeferredProperties };
-	projectionOptions.deferredRenderCallbacks.push(() => {
+	projectorState.deferredRenderCallbacks.push(() => {
 		const properties = {
 			...vnode.deferredPropertiesCallback!(!!vnode.inserted),
 			...vnode.decoratedDeferredProperties
@@ -962,16 +972,17 @@ function addDeferredProperties(vnode: InternalVNode, projectionOptions: Projecti
 }
 
 function runDeferredRenderCallbacks(projectionOptions: ProjectionOptions) {
-	if (projectionOptions.deferredRenderCallbacks.length) {
+	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
+	if (projectorState.deferredRenderCallbacks.length) {
 		if (projectionOptions.sync) {
-			while (projectionOptions.deferredRenderCallbacks.length) {
-				const callback = projectionOptions.deferredRenderCallbacks.shift();
+			while (projectorState.deferredRenderCallbacks.length) {
+				const callback = projectorState.deferredRenderCallbacks.shift();
 				callback && callback();
 			}
 		} else {
 			global.requestAnimationFrame(() => {
-				while (projectionOptions.deferredRenderCallbacks.length) {
-					const callback = projectionOptions.deferredRenderCallbacks.shift();
+				while (projectorState.deferredRenderCallbacks.length) {
+					const callback = projectorState.deferredRenderCallbacks.shift();
 					callback && callback();
 				}
 			});
@@ -980,23 +991,24 @@ function runDeferredRenderCallbacks(projectionOptions: ProjectionOptions) {
 }
 
 function runAfterRenderCallbacks(projectionOptions: ProjectionOptions) {
+	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
 	if (projectionOptions.sync) {
-		while (projectionOptions.afterRenderCallbacks.length) {
-			const callback = projectionOptions.afterRenderCallbacks.shift();
+		while (projectorState.afterRenderCallbacks.length) {
+			const callback = projectorState.afterRenderCallbacks.shift();
 			callback && callback();
 		}
 	} else {
 		if (global.requestIdleCallback) {
 			global.requestIdleCallback(() => {
-				while (projectionOptions.afterRenderCallbacks.length) {
-					const callback = projectionOptions.afterRenderCallbacks.shift();
+				while (projectorState.afterRenderCallbacks.length) {
+					const callback = projectorState.afterRenderCallbacks.shift();
 					callback && callback();
 				}
 			});
 		} else {
 			setTimeout(() => {
-				while (projectionOptions.afterRenderCallbacks.length) {
-					const callback = projectionOptions.afterRenderCallbacks.shift();
+				while (projectorState.afterRenderCallbacks.length) {
+					const callback = projectorState.afterRenderCallbacks.shift();
 					callback && callback();
 				}
 			});
@@ -1005,20 +1017,22 @@ function runAfterRenderCallbacks(projectionOptions: ProjectionOptions) {
 }
 
 function scheduleRender(projectionOptions: ProjectionOptions) {
+	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
 	if (projectionOptions.sync) {
 		render(projectionOptions);
-	} else if (projectionOptions.renderScheduled === undefined) {
-		projectionOptions.renderScheduled = global.requestAnimationFrame(() => {
+	} else if (projectorState.renderScheduled === undefined) {
+		projectorState.renderScheduled = global.requestAnimationFrame(() => {
 			render(projectionOptions);
 		});
 	}
 }
 
 function render(projectionOptions: ProjectionOptions) {
-	projectionOptions.renderScheduled = undefined;
-	const renderQueue = renderQueueMap.get(projectionOptions.projectorInstance)!;
+	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
+	projectorState.renderScheduled = undefined;
+	const renderQueue = projectorState.renderQueue;
 	const renders = [...renderQueue];
-	renderQueueMap.set(projectionOptions.projectorInstance, []);
+	projectorState.renderQueue = [];
 	renders.sort((a, b) => a.depth - b.depth);
 
 	while (renders.length) {
@@ -1039,23 +1053,28 @@ export const dom = {
 	): Projection {
 		const instanceData = widgetInstanceMap.get(instance)!;
 		const finalProjectorOptions = getProjectionOptions(projectionOptions, instance);
+		const projectorState: ProjectorState = {
+			afterRenderCallbacks: [],
+			deferredRenderCallbacks: [],
+			nodeMap: new WeakMap(),
+			renderScheduled: undefined,
+			renderQueue: []
+		};
+		projectorStateMap.set(instance, projectorState);
 
 		finalProjectorOptions.rootNode = parentNode;
 		const parentVNode = toParentVNode(finalProjectorOptions.rootNode);
 		const node = toInternalWNode(instance, instanceData);
-		const renderQueue: RenderQueue[] = [];
 		instanceMap.set(instance, { dnode: node, parentVNode });
-		renderQueueMap.set(finalProjectorOptions.projectorInstance, renderQueue);
 		instanceData.invalidate = () => {
 			instanceData.dirty = true;
 			if (instanceData.rendering === false) {
-				const renderQueue = renderQueueMap.get(finalProjectorOptions.projectorInstance)!;
-				renderQueue.push({ instance, depth: finalProjectorOptions.depth });
+				projectorState.renderQueue.push({ instance, depth: finalProjectorOptions.depth });
 				scheduleRender(finalProjectorOptions);
 			}
 		};
 		updateDom(node, node, finalProjectorOptions, parentVNode, instance);
-		finalProjectorOptions.afterRenderCallbacks.push(() => {
+		projectorState.afterRenderCallbacks.push(() => {
 			instanceData.onAttach();
 		});
 		runDeferredRenderCallbacks(finalProjectorOptions);

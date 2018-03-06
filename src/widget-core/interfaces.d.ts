@@ -69,16 +69,12 @@ export interface ProjectorOptions {
 
 export interface ProjectionOptions extends ProjectorOptions {
 	namespace?: string;
-	deferredRenderCallbacks: Function[];
-	afterRenderCallbacks: Function[];
 	merge: boolean;
 	sync: boolean;
 	mergeElement?: Element;
-	nodeMap: WeakMap<Node, WeakMap<Function, EventListener>>;
 	rootNode: Element;
 	depth: number;
 	projectorInstance: DefaultWidgetBaseInterface;
-	renderScheduled?: number;
 }
 
 export interface Projection {
