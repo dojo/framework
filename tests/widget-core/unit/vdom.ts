@@ -390,6 +390,44 @@ describe('vdom', () => {
 			assert.strictEqual(headerTwoText.data, 'bar');
 		});
 
+		it('registry items', () => {
+			let resolver = () => {};
+			const baseRegistry = new Registry();
+			class Widget extends WidgetBase {
+				render() {
+					return v('div', ['Hello, world!']);
+				}
+			}
+			class RegistryWidget extends WidgetBase {
+				render() {
+					return v('div', ['Registry, world!']);
+				}
+			}
+			const promise = new Promise<any>((resolve) => {
+				resolver = () => {
+					resolve(RegistryWidget);
+				};
+			});
+			baseRegistry.define('registry-item', promise);
+			class App extends WidgetBase {
+				render() {
+					return [w('registry-item', {}), w(Widget, {})];
+				}
+			}
+			const widget = new App();
+			widget.__setCoreProperties__({ bind: widget, baseRegistry });
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode as HTMLElement;
+			assert.lengthOf(root.childNodes, 1);
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'Hello, world!');
+			resolver();
+			return promise.then(() => {
+				assert.lengthOf(root.childNodes, 2);
+				assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'Registry, world!');
+				assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'Hello, world!');
+			});
+		});
+
 		it('should invalidate when a registry items is loaded', () => {
 			const baseRegistry = new Registry();
 

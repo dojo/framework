@@ -114,6 +114,9 @@ function same(dnode1: InternalDNode, dnode2: InternalDNode) {
 		}
 		return true;
 	} else if (isWNode(dnode1) && isWNode(dnode2)) {
+		if (dnode1.instance === undefined && typeof dnode2.widgetConstructor === 'string') {
+			return false;
+		}
 		if (dnode1.widgetConstructor !== dnode2.widgetConstructor) {
 			return false;
 		}
@@ -866,29 +869,25 @@ function updateDom(
 ) {
 	if (isWNode(dnode)) {
 		const { instance } = previous;
-		if (instance) {
-			const { parentVNode, dnode: node } = instanceMap.get(instance)!;
-			const previousRendered = node ? node.rendered : previous.rendered;
-			const instanceData = widgetInstanceMap.get(instance)!;
-			instanceData.rendering = true;
-			instance.__setCoreProperties__(dnode.coreProperties);
-			instance.__setChildren__(dnode.children);
-			instance.__setProperties__(dnode.properties);
-			dnode.instance = instance;
-			instanceMap.set(instance, { dnode, parentVNode });
-			if (instanceData.dirty === true) {
-				const rendered = instance.__render__();
-				instanceData.rendering = false;
-				dnode.rendered = filterAndDecorateChildren(rendered, instance);
-				updateChildren(parentVNode, previousRendered, dnode.rendered, instance, projectionOptions);
-			} else {
-				instanceData.rendering = false;
-				dnode.rendered = previousRendered;
-			}
-			instanceData.nodeHandler.addRoot();
+		const { parentVNode, dnode: node } = instanceMap.get(instance)!;
+		const previousRendered = node ? node.rendered : previous.rendered;
+		const instanceData = widgetInstanceMap.get(instance)!;
+		instanceData.rendering = true;
+		instance.__setCoreProperties__(dnode.coreProperties);
+		instance.__setChildren__(dnode.children);
+		instance.__setProperties__(dnode.properties);
+		dnode.instance = instance;
+		instanceMap.set(instance, { dnode, parentVNode });
+		if (instanceData.dirty === true) {
+			const rendered = instance.__render__();
+			instanceData.rendering = false;
+			dnode.rendered = filterAndDecorateChildren(rendered, instance);
+			updateChildren(parentVNode, previousRendered, dnode.rendered, instance, projectionOptions);
 		} else {
-			createDom(dnode, parentVNode, undefined, projectionOptions, parentInstance);
+			instanceData.rendering = false;
+			dnode.rendered = previousRendered;
 		}
+		instanceData.nodeHandler.addRoot();
 	} else {
 		if (previous === dnode) {
 			return false;
