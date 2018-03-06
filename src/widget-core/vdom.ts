@@ -97,6 +97,8 @@ interface ProjectorState {
 	nodeMap: WeakMap<Node, WeakMap<Function, EventListener>>;
 	renderScheduled?: number;
 	renderQueue: RenderQueue[];
+	merge: boolean;
+	mergeElement?: Node;
 }
 
 export const widgetInstanceMap = new WeakMap<any, WidgetData>();
@@ -710,7 +712,8 @@ function addChildren(
 		return;
 	}
 
-	if (projectionOptions.merge && childNodes === undefined) {
+	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
+	if (projectorState.merge && childNodes === undefined) {
 		childNodes = arrayFrom(parentVNode.domNode!.childNodes) as (Element | Text)[];
 	}
 
@@ -720,7 +723,7 @@ function addChildren(
 		const child = children[i];
 
 		if (isVNode(child)) {
-			if (projectionOptions.merge && childNodes) {
+			if (projectorState.merge && childNodes) {
 				let domElement: Element | undefined = undefined;
 				while (child.domNode === undefined && childNodes.length > 0) {
 					domElement = childNodes.shift() as Element;
@@ -774,9 +777,9 @@ function createDom(
 	childNodes?: (Element | Text)[]
 ) {
 	let domNode: Element | Text | undefined;
+	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
 	if (isWNode(dnode)) {
 		let { widgetConstructor } = dnode;
-		const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
 		const parentInstanceData = widgetInstanceMap.get(parentInstance)!;
 		if (!isWidgetBaseConstructor<DefaultWidgetBaseInterface>(widgetConstructor)) {
 			const item = parentInstanceData.registry().get<DefaultWidgetBaseInterface>(widgetConstructor);
@@ -812,9 +815,9 @@ function createDom(
 			instanceData.onAttach();
 		});
 	} else {
-		if (projectionOptions.merge && projectionOptions.mergeElement !== undefined) {
+		if (projectorState.merge && projectorState.mergeElement !== undefined) {
 			domNode = dnode.domNode = projectionOptions.mergeElement;
-			projectionOptions.mergeElement = undefined;
+			projectorState.mergeElement = undefined;
 			initPropertiesAndChildren(domNode!, dnode, parentInstance, projectionOptions);
 			return;
 		}
@@ -1057,7 +1060,9 @@ export const dom = {
 			deferredRenderCallbacks: [],
 			nodeMap: new WeakMap(),
 			renderScheduled: undefined,
-			renderQueue: []
+			renderQueue: [],
+			merge: projectionOptions.merge || false,
+			mergeElement: projectionOptions.mergeElement
 		};
 		projectorStateMap.set(instance, projectorState);
 
@@ -1092,6 +1097,9 @@ export const dom = {
 	): Projection {
 		projectionOptions.merge = true;
 		projectionOptions.mergeElement = element;
-		return this.append(element.parentNode as Element, instance, projectionOptions);
+		const projection = this.append(element.parentNode as Element, instance, projectionOptions);
+		const projectorState = projectorStateMap.get(instance)!;
+		projectorState.merge = false;
+		return projection;
 	}
 };

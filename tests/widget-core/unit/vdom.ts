@@ -1522,6 +1522,44 @@ describe('vdom', () => {
 
 				document.body.removeChild(iframe);
 			});
+
+			it('Should only merge on the first render', () => {
+				const iframe = document.createElement('iframe');
+				document.body.appendChild(iframe);
+				iframe.contentDocument.write(`<div>Loading</div>`);
+				iframe.contentDocument.close();
+				const root = iframe.contentDocument.body.firstChild as HTMLElement;
+
+				class Bar extends WidgetBase<any> {
+					render() {
+						return v('div', [`Item ${this.properties.id}`]);
+					}
+				}
+
+				class Foo extends WidgetBase {
+					private _renderCount = 0;
+
+					render() {
+						let nodes;
+						if (this._renderCount === 0) {
+							nodes = v('div', ['Loading']);
+						} else {
+							nodes = v('div', [w(Bar, { id: '1' }), w(Bar, { id: '2' }), w(Bar, { id: '3' })]);
+						}
+						this._renderCount++;
+						return nodes;
+					}
+				}
+				const widget = new Foo();
+				dom.merge(root, widget, { sync: true });
+				assert.lengthOf(root.childNodes, 1);
+				widget.invalidate();
+				assert.strictEqual(root.childNodes.length, 3);
+				assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'Item 1');
+				assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'Item 2');
+				assert.strictEqual((root.childNodes[2].childNodes[0] as Text).data, 'Item 3');
+				document.body.removeChild(iframe);
+			});
 		});
 	});
 
