@@ -43,7 +43,7 @@ export interface InjectConfig {
  */
 export function inject({ name, getProperties }: InjectConfig) {
 	return handleDecorator((target, propertyKey) => {
-		beforeProperties(function(this: WidgetBase, properties: any) {
+		beforeProperties(function(this: WidgetBase & { own: Function }, properties: any) {
 			const injector = this.registry.getInjector(name);
 			if (injector) {
 				const registeredInjectors = registeredInjectorsMap.get(this) || [];
@@ -51,9 +51,11 @@ export function inject({ name, getProperties }: InjectConfig) {
 					registeredInjectorsMap.set(this, registeredInjectors);
 				}
 				if (registeredInjectors.indexOf(injector) === -1) {
-					injector.on('invalidate', () => {
-						this.invalidate();
-					});
+					this.own(
+						injector.on('invalidate', () => {
+							this.invalidate();
+						})
+					);
 					registeredInjectors.push(injector);
 				}
 				return getProperties(injector.get(), properties);

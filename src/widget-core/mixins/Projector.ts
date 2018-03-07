@@ -1,5 +1,4 @@
 import { assign } from '@dojo/core/lang';
-import { createHandle } from '@dojo/core/lang';
 import { Handle } from '@dojo/core/interfaces';
 import cssTransitions from '../animations/cssTransitions';
 import { Constructor, DNode, Projection, ProjectionOptions } from './../interfaces';
@@ -120,7 +119,6 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		private _projectionOptions: Partial<ProjectionOptions>;
 		private _projection: Projection | undefined;
 		private _projectorProperties: this['properties'] = {} as this['properties'];
-		private _handles: Function[] = [];
 
 		constructor(...args: any[]) {
 			super(...args);
@@ -181,8 +179,10 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			const previousRoot = this.root;
 
 			/* free up the document fragment for GC */
-			this.own(() => {
-				this._root = previousRoot;
+			this.own({
+				destroy: () => {
+					this._root = previousRoot;
+				}
 			});
 
 			this._attach({
@@ -228,17 +228,8 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			return node;
 		}
 
-		private own(handle: Function): void {
-			this._handles.push(handle);
-		}
-
 		public destroy() {
-			while (this._handles.length > 0) {
-				const handle = this._handles.pop();
-				if (handle) {
-					handle();
-				}
-			}
+			super.destroy();
 		}
 
 		private _attach({ type, root }: AttachOptions): Handle {
@@ -252,15 +243,17 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 
 			this.projectorState = ProjectorAttachState.Attached;
 
-			const handle = () => {
-				if (this.projectorState === ProjectorAttachState.Attached) {
-					this._projection = undefined;
-					this.projectorState = ProjectorAttachState.Detached;
+			const handle = {
+				destroy: () => {
+					if (this.projectorState === ProjectorAttachState.Attached) {
+						this._projection = undefined;
+						this.projectorState = ProjectorAttachState.Detached;
+					}
 				}
 			};
 
 			this.own(handle);
-			this._attachHandle = createHandle(handle);
+			this._attachHandle = handle;
 
 			this._projectionOptions = { ...this._projectionOptions, ...{ sync: !this._async } };
 

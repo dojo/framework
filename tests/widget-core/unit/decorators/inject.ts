@@ -71,6 +71,32 @@ registerSuite('decorators/inject', {
 			widget.__setProperties__({});
 			assert.strictEqual(widget.properties.foo, 'bar');
 			assert.strictEqual(widget.properties.bar, 'foo');
+		},
+		'invalidate listeners are removed when widget is destroyed'() {
+			function getProperties(payload: any, properties: WidgetProperties): WidgetProperties {
+				return payload;
+			}
+			let invalidateCounter = 0;
+			@inject({ name: 'inject-one', getProperties: getProperties })
+			class TestWidget extends WidgetBase<any> {
+				destroy() {
+					super.destroy();
+				}
+				invalidate() {
+					invalidateCounter++;
+					super.invalidate();
+				}
+			}
+			const widget = new TestWidget();
+			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+			widget.__setProperties__({});
+			injectorOne.set({});
+			assert.strictEqual(invalidateCounter, 3);
+			injectorOne.set({});
+			assert.strictEqual(invalidateCounter, 4);
+			widget.destroy();
+			injectorOne.set({});
+			assert.strictEqual(invalidateCounter, 4);
 		}
 	}
 });

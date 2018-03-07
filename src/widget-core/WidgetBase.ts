@@ -1,5 +1,6 @@
 import Map from '@dojo/shim/Map';
 import WeakMap from '@dojo/shim/WeakMap';
+import { Handle } from '@dojo/core/interfaces';
 import { v } from './d';
 import { auto } from './diff';
 import {
@@ -85,6 +86,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 	private _nodeHandler: NodeHandler = new NodeHandler();
 
+	private _handles: Handle[] = [];
+
 	/**
 	 * @constructor
 	 */
@@ -102,7 +105,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			},
 			onDetach: (): void => {
 				this.onDetach();
-				this._destroy();
+				this.destroy();
 			},
 			nodeHandler: this._nodeHandler,
 			registry: () => {
@@ -127,6 +130,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				nodeHandler: this._nodeHandler,
 				bind: this
 			});
+			this.own(cached);
 			this._metaMap.set(MetaType, cached);
 		}
 
@@ -156,7 +160,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		if (instanceData.coreProperties.baseRegistry !== baseRegistry) {
 			if (this._registry === undefined) {
 				this._registry = new RegistryHandler();
-				this._registry.on('invalidate', this._boundInvalidate);
+				this.own(this._registry);
+				this.own(this._registry.on('invalidate', this._boundInvalidate));
 			}
 			this._registry.base = baseRegistry;
 			this.invalidate();
@@ -331,20 +336,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	/**
-	 * Destroys private resources for WidgetBase
-	 */
-	private _destroy() {
-		if (this._registry) {
-			this._registry.destroy();
-		}
-		if (this._metaMap !== undefined) {
-			this._metaMap.forEach((meta) => {
-				meta.destroy();
-			});
-		}
-	}
-
-	/**
 	 * Function to retrieve decorator values
 	 *
 	 * @param decoratorKey The key of the decorator
@@ -416,7 +407,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	public get registry(): RegistryHandler {
 		if (this._registry === undefined) {
 			this._registry = new RegistryHandler();
-			this._registry.on('invalidate', this._boundInvalidate);
+			this.own(this._registry);
+			this.own(this._registry.on('invalidate', this._boundInvalidate));
 		}
 		return this._registry;
 	}
@@ -481,6 +473,19 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 		if (afterConstructors.length > 0) {
 			afterConstructors.forEach((afterConstructor) => afterConstructor.call(this));
+		}
+	}
+
+	protected own(handle: Handle): void {
+		this._handles.push(handle);
+	}
+
+	protected destroy() {
+		while (this._handles.length > 0) {
+			const handle = this._handles.pop();
+			if (handle) {
+				handle.destroy();
+			}
 		}
 	}
 }
