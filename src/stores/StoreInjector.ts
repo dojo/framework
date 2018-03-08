@@ -40,7 +40,7 @@ export function storeInject<S>(config: StoreInjectConfig<S>) {
 	const { name, paths, getProperties } = config;
 
 	return handleDecorator((target, propertyKey) => {
-		beforeProperties(function(this: WidgetBase, properties: any) {
+		beforeProperties(function(this: WidgetBase & { own: Function }, properties: any) {
 			const injector: StoreInjector | null = this.registry.getInjector(name);
 			if (injector) {
 				const registeredInjectors = registeredInjectorsMap.get(this) || [];
@@ -49,13 +49,20 @@ export function storeInject<S>(config: StoreInjectConfig<S>) {
 				}
 				if (registeredInjectors.indexOf(injector) === -1) {
 					if (paths) {
-						injector.onChange(paths, () => {
+						const handle = injector.onChange(paths, () => {
 							this.invalidate();
+						});
+						this.own({
+							destroy: () => {
+								handle.remove();
+							}
 						});
 					} else {
-						injector.on('invalidate', () => {
-							this.invalidate();
-						});
+						this.own(
+							injector.on('invalidate', () => {
+								this.invalidate();
+							})
+						);
 					}
 					registeredInjectors.push(injector);
 				}

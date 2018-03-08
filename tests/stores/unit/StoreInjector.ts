@@ -115,6 +115,71 @@ describe('StoreInjector', () => {
 			barProcess(store)({});
 			assert.isTrue(invalidateSpy.calledTwice);
 		});
+
+		it('invalidate listeners are removed when widget is destroyed', () => {
+			let invalidateCounter = 0;
+			@storeInject<State>({
+				name: 'state',
+				getProperties: (store) => {
+					return {
+						foo: store.get(store.path('foo'))
+					};
+				}
+			})
+			class TestWidget extends WidgetBase<any> {
+				destroy() {
+					super.destroy();
+				}
+				invalidate() {
+					invalidateCounter++;
+					super.invalidate();
+				}
+			}
+			const widget = new TestWidget();
+			registry.defineInjector('state', new StoreInjector(store));
+			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+			widget.__setProperties__({});
+			fooProcess(store)({});
+			assert.strictEqual(invalidateCounter, 3);
+			barProcess(store)({});
+			assert.strictEqual(invalidateCounter, 4);
+			widget.destroy();
+			barProcess(store)({});
+			assert.strictEqual(invalidateCounter, 4);
+		});
+
+		it('path based invalidate listeners are removed when widget is destroyed', () => {
+			let invalidateCounter = 0;
+			@storeInject<State>({
+				name: 'state',
+				paths: [['foo']],
+				getProperties: (store) => {
+					return {
+						foo: store.get(store.path('foo'))
+					};
+				}
+			})
+			class TestWidget extends WidgetBase<any> {
+				destroy() {
+					super.destroy();
+				}
+				invalidate() {
+					invalidateCounter++;
+					super.invalidate();
+				}
+			}
+			const widget = new TestWidget();
+			registry.defineInjector('state', new StoreInjector(store));
+			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+			widget.__setProperties__({});
+			fooProcess(store)({});
+			assert.strictEqual(invalidateCounter, 3);
+			fooProcess(store)({});
+			assert.strictEqual(invalidateCounter, 4);
+			widget.destroy();
+			fooProcess(store)({});
+			assert.strictEqual(invalidateCounter, 4);
+		});
 	});
 
 	describe('StoreContainer', () => {

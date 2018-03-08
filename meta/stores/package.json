@@ -21,7 +21,7 @@
     "@dojo/core": "~0.4.0",
     "@dojo/has": "~0.1.1",
     "@dojo/shim": "~0.2.6",
-    "@dojo/widget-core": "~0.9.4"
+    "@dojo/widget-core": "~0.9.6"
   },
   "devDependencies": {
     "@dojo/loader": "~0.1.1",
