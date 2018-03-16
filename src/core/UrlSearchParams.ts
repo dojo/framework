@@ -47,7 +47,7 @@ export default class UrlSearchParams {
 	 * UrlSearchParams.
 	 */
 	constructor(input?: string | ParamList | UrlSearchParams) {
-		let list: ParamList;
+		let list: ParamList = {};
 
 		if (input instanceof UrlSearchParams) {
 			// Copy the incoming UrlSearchParam's internal list
@@ -69,11 +69,9 @@ export default class UrlSearchParams {
 		} else if (typeof input === 'string') {
 			// Parse the incoming string as a query string
 			list = parseQueryString(input);
-		} else {
-			list = {};
 		}
 
-		Object.defineProperty(this, '_list', { value: list });
+		this._list = list as Hash<string[] | undefined>;
 	}
 
 	/**

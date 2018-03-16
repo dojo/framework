@@ -37,6 +37,10 @@ export type EventedCallback<T = EventType, E extends EventObject<T> = EventObjec
 	(event: E): boolean | void;
 };
 
+export interface CustomEventTypes<T extends EventObject<any> = EventObject<any>> {
+	[index: string]: T;
+}
+
 /**
  * A type which is either a targeted event listener or an array of listeners
  * @template T The type of target for the events
@@ -49,12 +53,15 @@ export type EventedCallbackOrArray<T = EventType, E extends EventObject<T> = Eve
 /**
  * Event Class
  */
-export class Evented<M extends {} = {}, T = EventType, O extends EventObject<T> = EventObject<T>> extends Destroyable {
+export class Evented<
+	M extends CustomEventTypes = {},
+	T = EventType,
+	O extends EventObject<T> = EventObject<T>
+> extends Destroyable {
 	// The following member is purely so TypeScript remembers the type of `M` when extending so
 	// that the utilities in `on.ts` will work https://github.com/Microsoft/TypeScript/issues/20348
 	// tslint:disable-next-line
 	protected __typeMap__?: M;
-
 	/**
 	 * map of listeners keyed by event type
 	 */

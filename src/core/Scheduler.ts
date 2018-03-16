@@ -18,10 +18,10 @@ export interface KwArgs {
 
 export default class Scheduler {
 	protected readonly _boundDispatch: () => void;
-	protected _deferred: QueueItem[] | null;
+	protected _deferred: QueueItem[] | null = null;
 	protected _isProcessing: boolean;
 	protected readonly _queue: QueueItem[];
-	protected _task: Handle | null;
+	protected _task: Handle | null = null;
 
 	/**
 	 * Determines whether any callbacks registered during should be added to the current batch (`false`)

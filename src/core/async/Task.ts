@@ -194,7 +194,7 @@ export default class Task<T> extends ExtensiblePromise<T> {
 	/**
 	 * The finally callback for this Task (if it was created by a call to `finally`).
 	 */
-	private _finally: () => void;
+	private _finally: undefined | (() => void);
 
 	/**
 	 * The state of the task
@@ -269,7 +269,7 @@ export default class Task<T> extends ExtensiblePromise<T> {
 
 		const runFinally = () => {
 			try {
-				return this._finally();
+				return this._finally && this._finally();
 			} catch (error) {
 				// Any errors in a `finally` callback are completely ignored during cancelation
 			}

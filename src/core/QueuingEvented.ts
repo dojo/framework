@@ -1,6 +1,6 @@
 import { Handle, EventObject, EventType } from './interfaces';
 import Map from '@dojo/shim/Map';
-import Evented, { isGlobMatch, EventedCallbackOrArray } from './Evented';
+import Evented, { CustomEventTypes, isGlobMatch, EventedCallbackOrArray } from './Evented';
 
 /**
  * An implementation of the Evented class that queues up events when no listeners are
@@ -9,11 +9,11 @@ import Evented, { isGlobMatch, EventedCallbackOrArray } from './Evented';
  *
  * @property maxEvents  The number of events to queue before old events are discarded. If zero (default), an unlimited number of events is queued.
  */
-class QueuingEvented<M extends {} = {}, T = EventType, O extends EventObject<T> = EventObject<T>> extends Evented<
-	M,
-	T,
-	O
-> {
+class QueuingEvented<
+	M extends CustomEventTypes = {},
+	T = EventType,
+	O extends EventObject<T> = EventObject<T>
+> extends Evented<M, T, O> {
 	private _queue: Map<string | symbol, EventObject[]> = new Map();
 
 	public maxEvents = 0;

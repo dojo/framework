@@ -1,10 +1,15 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { Evented } from '../../src/Evented';
+import { Evented, CustomEventTypes } from '../../src/Evented';
+import { EventObject } from '../../src/interfaces';
 
-interface FooBarEvents {
-	foo: { type: 'foo' };
-	bar: { type: 'bar' };
+interface FooBarEvents extends CustomEventTypes {
+	foo: R;
+	bar: R;
+}
+
+interface R extends EventObject<string> {
+	value: number;
 }
 
 registerSuite('Evented', {
@@ -22,7 +27,7 @@ registerSuite('Evented', {
 				eventStack.push(event.type);
 			});
 
-			evented.emit({ type: 'foo' });
+			evented.emit<'foo'>({ type: 'foo', value: 1 });
 			evented.emit({ type: 'bar' });
 
 			handle.destroy();

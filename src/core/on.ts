@@ -1,6 +1,6 @@
 import { Handle, EventObject } from './interfaces';
 import { createHandle, createCompositeHandle } from './lang';
-import Evented from './Evented';
+import Evented, { CustomEventTypes } from './Evented';
 
 export interface EventCallback<O = EventObject<string>> {
 	(event: O): void;
@@ -23,10 +23,12 @@ interface DOMEventObject extends EventObject {
  * @return Boolean indicating if preventDefault was called on the event object (only relevant for DOM events;
  *     always false for other event emitters)
  */
-export function emit<M, T, O extends EventObject<T> = EventObject<T>, K extends keyof M = keyof M>(
-	target: Evented<M, T, O>,
-	event: M[K]
-): boolean;
+export function emit<
+	M extends CustomEventTypes,
+	T,
+	O extends EventObject<T> = EventObject<T>,
+	K extends keyof M = keyof M
+>(target: Evented<M, T, O>, event: M[K]): boolean;
 export function emit<T, O extends EventObject<T> = EventObject<T>>(target: Evented<any, T, O>, event: O): boolean;
 export function emit<O extends EventObject<string> = EventObject<string>>(
 	target: EventTarget | EventEmitter,
@@ -78,11 +80,12 @@ export function emit(target: any, event: EventObject<any>): boolean {
  * @param capture Whether the listener should be registered in the capture phase (DOM events only)
  * @return A handle which will remove the listener when destroy is called
  */
-export default function on<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(
-	target: Evented<M, T, O>,
-	type: K | K[],
-	listener: EventCallback<M[K]>
-): Handle;
+export default function on<
+	M extends CustomEventTypes,
+	T,
+	K extends keyof M = keyof M,
+	O extends EventObject<T> = EventObject<T>
+>(target: Evented<M, T, O>, type: K | K[], listener: EventCallback<M[K]>): Handle;
 export default function on<T, O extends EventObject<T> = EventObject<T>>(
 	target: Evented<any, T, O>,
 	type: T | T[],
@@ -141,11 +144,12 @@ export default function on(target: any, type: any, listener: any, capture?: bool
  * @param capture Whether the listener should be registered in the capture phase (DOM events only)
  * @return A handle which will remove the listener when destroy is called
  */
-export function once<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(
-	target: Evented<M, T, O>,
-	type: K | K[],
-	listener: EventCallback<M[K]>
-): Handle;
+export function once<
+	M extends CustomEventTypes,
+	T,
+	K extends keyof M = keyof M,
+	O extends EventObject<T> = EventObject<T>
+>(target: Evented<M, T, O>, type: K | K[], listener: EventCallback<M[K]>): Handle;
 export function once<T, O extends EventObject<T> = EventObject<T>>(
 	target: Evented<any, T, O>,
 	type: T | T[],
@@ -182,11 +186,12 @@ export interface PausableHandle extends Handle {
  * @param capture Whether the listener should be registered in the capture phase (DOM events only)
  * @return A handle with additional pause and resume methods; the listener will never fire when paused
  */
-export function pausable<M, T, K extends keyof M = keyof M, O extends EventObject<T> = EventObject<T>>(
-	target: Evented<M, T, O>,
-	type: K | K[],
-	listener: EventCallback<M[K]>
-): PausableHandle;
+export function pausable<
+	M extends CustomEventTypes,
+	T,
+	K extends keyof M = keyof M,
+	O extends EventObject<T> = EventObject<T>
+>(target: Evented<M, T, O>, type: K | K[], listener: EventCallback<M[K]>): PausableHandle;
 export function pausable<T, O extends EventObject<T> = EventObject<T>>(
 	target: Evented<any, T, O>,
 	type: T | T[],

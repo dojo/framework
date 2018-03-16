@@ -15,7 +15,7 @@ abstract class Response implements ResponseInterface {
 	abstract readonly statusText: string;
 	abstract readonly url: string;
 	abstract readonly bodyUsed: boolean;
-	readonly requestOptions: RequestOptions;
+	abstract readonly requestOptions: RequestOptions;
 
 	abstract readonly download: Observable<number>;
 	abstract readonly data: Observable<any>;

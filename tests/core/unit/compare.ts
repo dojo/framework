@@ -2012,8 +2012,8 @@ registerSuite('compare', {
 
 			'with property records'() {
 				class Foo {
-					foo: number;
-					bar: string;
+					foo = 1;
+					bar = '';
 				}
 
 				const result = patch({}, [
@@ -2098,7 +2098,7 @@ registerSuite('compare', {
 			);
 
 			class Foo {
-				bar: 'bar';
+				bar: 'bar' = 'bar';
 			}
 
 			assert.throws(

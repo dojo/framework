@@ -95,87 +95,78 @@ export default class DateObject implements DateProperties {
 			);
 		}
 
-		Object.defineProperty(this, '_date', {
-			configurable: true,
-			enumerable: false,
-			value: _date,
-			writable: true
-		});
-
+		this._date = _date;
 		const self = this;
-		Object.defineProperty(this, 'utc', {
-			value: {
-				get isLeapYear(this: DateObject): boolean {
-					return isLeapYear(this.year);
-				},
-				get daysInMonth(this: DateObject): number {
-					const month = this.month;
-
-					if (month === 2 && this.isLeapYear) {
-						return 29;
-					}
-					return days[month];
-				},
-
-				get year(): number {
-					return self._date.getUTCFullYear();
-				},
-				set year(year: number) {
-					self._date.setUTCFullYear(year);
-				},
-
-				get month(): number {
-					return self._date.getUTCMonth() + 1;
-				},
-				set month(month: number) {
-					self._date.setUTCMonth(month - 1);
-				},
-
-				get dayOfMonth(): number {
-					return self._date.getUTCDate();
-				},
-				set dayOfMonth(day: number) {
-					self._date.setUTCDate(day);
-				},
-
-				get hours(): number {
-					return self._date.getUTCHours();
-				},
-				set hours(hours: number) {
-					self._date.setUTCHours(hours);
-				},
-
-				get minutes(): number {
-					return self._date.getUTCMinutes();
-				},
-				set minutes(minutes: number) {
-					self._date.setUTCMinutes(minutes);
-				},
-
-				get seconds(): number {
-					return self._date.getUTCSeconds();
-				},
-				set seconds(seconds: number) {
-					self._date.setUTCSeconds(seconds);
-				},
-
-				get milliseconds(): number {
-					return self._date.getUTCMilliseconds();
-				},
-				set milliseconds(milliseconds: number) {
-					self._date.setUTCMilliseconds(milliseconds);
-				},
-
-				get dayOfWeek(): number {
-					return self._date.getUTCDay();
-				},
-
-				toString: function(): string {
-					return self._date.toUTCString();
-				}
+		this.utc = {
+			get isLeapYear(this: DateObject): boolean {
+				return isLeapYear(this.year);
 			},
-			enumerable: true
-		});
+			get daysInMonth(this: DateObject): number {
+				const month = this.month;
+
+				if (month === 2 && this.isLeapYear) {
+					return 29;
+				}
+				return days[month];
+			},
+
+			get year(): number {
+				return self._date.getUTCFullYear();
+			},
+			set year(year: number) {
+				self._date.setUTCFullYear(year);
+			},
+
+			get month(): number {
+				return self._date.getUTCMonth() + 1;
+			},
+			set month(month: number) {
+				self._date.setUTCMonth(month - 1);
+			},
+
+			get dayOfMonth(): number {
+				return self._date.getUTCDate();
+			},
+			set dayOfMonth(day: number) {
+				self._date.setUTCDate(day);
+			},
+
+			get hours(): number {
+				return self._date.getUTCHours();
+			},
+			set hours(hours: number) {
+				self._date.setUTCHours(hours);
+			},
+
+			get minutes(): number {
+				return self._date.getUTCMinutes();
+			},
+			set minutes(minutes: number) {
+				self._date.setUTCMinutes(minutes);
+			},
+
+			get seconds(): number {
+				return self._date.getUTCSeconds();
+			},
+			set seconds(seconds: number) {
+				self._date.setUTCSeconds(seconds);
+			},
+
+			get milliseconds(): number {
+				return self._date.getUTCMilliseconds();
+			},
+			set milliseconds(milliseconds: number) {
+				self._date.setUTCMilliseconds(milliseconds);
+			},
+
+			get dayOfWeek(): number {
+				return self._date.getUTCDay();
+			},
+
+			toString: function(): string {
+				return self._date.toUTCString();
+			}
+		} as any;
 	}
 
 	get isLeapYear(): boolean {
