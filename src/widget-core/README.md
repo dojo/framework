@@ -1320,7 +1320,7 @@ interface MyWidgetProperties {
 
 @customElement<MyWidgetProperties>({
 	tag: 'my-widget',
-	attribute: [ 'foo', 'bar' ],
+	attributes: [ 'foo', 'bar' ],
 	events: [ 'onClick' ]
 })
 class MyWidget extends WidgetBase<MyWidgetProperties> {
