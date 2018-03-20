@@ -10,10 +10,16 @@ import {
 	RouterOptions
 } from './interfaces';
 import { HashHistory } from './history/HashHistory';
+import { EventObject } from '@dojo/core/interfaces';
 
 const PARAM = Symbol('routing param');
 
-export class Router extends QueuingEvented implements RouterInterface {
+export interface NavEvent extends EventObject<string> {
+	outlet: string;
+	context: OutletContext;
+}
+
+export class Router extends QueuingEvented<{ nav: NavEvent }> implements RouterInterface {
 	private _routes: Route[] = [];
 	private _outletMap: { [index: string]: Route } = Object.create(null);
 	private _matchedOutlets: { [index: string]: OutletContext } = Object.create(null);
@@ -266,7 +272,9 @@ export class Router extends QueuingEvented implements RouterInterface {
 				type: 'error'
 			};
 		}
-		this.emit({ type: 'nav', outlet: matchedOutlet, context: matchedOutletContext });
+		if (matchedOutlet && matchedOutletContext) {
+			this.emit({ type: 'nav', outlet: matchedOutlet, context: matchedOutletContext });
+		}
 	};
 }
 

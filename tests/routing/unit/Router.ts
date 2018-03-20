@@ -318,7 +318,16 @@ describe('Router', () => {
 	it('Queues the first event for the first registered listener', () => {
 		let initialNavEvent = false;
 		const router = new Router(routeConfigDefaultRoute, { HistoryManager });
-		router.on('nav', () => {
+		router.on('nav', (event) => {
+			assert.strictEqual(event.type, 'nav');
+			assert.strictEqual(event.outlet, 'foo');
+			assert.deepEqual(event.context, {
+				queryParams: {},
+				params: { bar: 'defaultBar' },
+				type: 'index',
+				onEnter: undefined,
+				onExit: undefined
+			});
 			initialNavEvent = true;
 		});
 		assert.isTrue(initialNavEvent);
