@@ -95,27 +95,30 @@ export class StoreInjector<T = any> extends Injector {
 	}
 }
 
+export function StoreContainer<S = any, W extends WidgetBase<any, any> = WidgetBase<any, any>>(
+	component: Constructor<W> | RegistryLabel,
+	name: RegistryLabel,
+	{ paths, getProperties }: { paths?: StoreContainerPath<S>[]; getProperties: GetProperties<Store<S>> }
+): StoreContainer<W> {
+	@alwaysRender()
+	@storeInject({ name, paths, getProperties })
+	class WidgetContainer extends WidgetBase<Partial<W['properties']>, W['children'][0]> {
+		protected render(): DNode {
+			return w(component, this.properties, this.children);
+		}
+	}
+	return WidgetContainer;
+}
+
 /**
  * Creates a typed `StoreContainer` for State generic.
  */
 export function createStoreContainer<S>() {
-	return function<W extends WidgetBase<any, any>>(
+	return <W extends WidgetBase<any, any>>(
 		component: Constructor<W> | RegistryLabel,
 		name: RegistryLabel,
 		{ paths, getProperties }: { paths?: StoreContainerPath<S>[]; getProperties: GetProperties<Store<S>> }
-	): StoreContainer<W> {
-		@alwaysRender()
-		@storeInject({ name, paths, getProperties })
-		class WidgetContainer extends WidgetBase<Partial<W['properties']>, W['children'][0]> {
-			protected render(): DNode {
-				return w(component, this.properties, this.children);
-			}
-		}
-		return WidgetContainer;
+	) => {
+		return StoreContainer(component, name, { paths, getProperties });
 	};
 }
-
-/**
- * Exports an untyped `StoreContainer`
- */
-export const StoreContainer = createStoreContainer();

@@ -5,7 +5,7 @@ import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { v, WNODE } from '@dojo/widget-core/d';
 import { Registry } from '@dojo/widget-core/Registry';
 
-import { StoreInjector, createStoreContainer, storeInject } from './../../src/StoreInjector';
+import { StoreInjector, createStoreContainer, storeInject, StoreContainer } from './../../src/StoreInjector';
 import { Store } from './../../src/Store';
 import { createCommandFactory, createProcess, Process } from '../../src/process';
 import { replace } from '../../src/state/operations';
@@ -25,7 +25,7 @@ const barCommand = commandFactory(({ get, path }) => {
 	return [replace(path('bar'), `${currentFoo}bar`)];
 });
 
-const StoreContainer = createStoreContainer<State>();
+const TypedStoreContainer = createStoreContainer<State>();
 
 describe('StoreInjector', () => {
 	let store: Store<State>;
@@ -185,7 +185,9 @@ describe('StoreInjector', () => {
 	describe('StoreContainer', () => {
 		it('Should render the WNode with the properties and children', () => {
 			class Foo extends WidgetBase {}
-			class FooContainer extends StoreContainer(Foo, 'state', { getProperties: () => {} }) {
+			class FooContainer extends StoreContainer<State>(Foo, 'state', {
+				getProperties: (inject: Store<State>) => {}
+			}) {
 				render() {
 					return super.render();
 				}
@@ -206,7 +208,55 @@ describe('StoreInjector', () => {
 		it('Should always render a container', () => {
 			let invalidateCounter = 0;
 			class Foo extends WidgetBase {}
-			class FooContainer extends StoreContainer(Foo, 'state', { getProperties: () => {} }) {
+			class FooContainer extends StoreContainer<State>(Foo, 'state', {
+				getProperties: (inject: Store<State>) => {}
+			}) {
+				invalidate() {
+					invalidateCounter++;
+				}
+			}
+			const fooContainer = new FooContainer();
+			registry.defineInjector('state', new StoreInjector(store));
+			fooContainer.__setProperties__({});
+			assert.strictEqual(invalidateCounter, 1);
+			fooContainer.__setProperties__({});
+			assert.strictEqual(invalidateCounter, 2);
+			fooContainer.__setProperties__({});
+			assert.strictEqual(invalidateCounter, 3);
+			fooContainer.__setProperties__({});
+			assert.strictEqual(invalidateCounter, 4);
+		});
+	});
+
+	describe('Typed StoreContainer', () => {
+		it('Should render the WNode with the properties and children', () => {
+			class Foo extends WidgetBase {}
+			class FooContainer extends TypedStoreContainer(Foo, 'state', {
+				getProperties: (inject: Store<State>) => {}
+			}) {
+				render() {
+					return super.render();
+				}
+			}
+			const fooContainer = new FooContainer();
+			fooContainer.__setProperties__({ key: '1' });
+			const child = v('div');
+			fooContainer.__setChildren__([child]);
+			const renderResult = fooContainer.render();
+			assert.deepEqual(renderResult, {
+				properties: { key: '1' },
+				children: [child],
+				type: WNODE,
+				widgetConstructor: Foo
+			});
+		});
+
+		it('Should always render a container', () => {
+			let invalidateCounter = 0;
+			class Foo extends WidgetBase {}
+			class FooContainer extends TypedStoreContainer(Foo, 'state', {
+				getProperties: (inject: Store<State>) => {}
+			}) {
 				invalidate() {
 					invalidateCounter++;
 				}
