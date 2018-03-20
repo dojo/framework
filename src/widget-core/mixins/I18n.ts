@@ -1,5 +1,4 @@
 /* tslint:disable:interface-name */
-import { assign } from '@dojo/core/lang';
 import i18n, { Bundle, formatMessage, getCachedMessages, Messages } from '@dojo/i18n/i18n';
 import { isVNode, decorate } from './../d';
 import { afterRender } from './../decorators/afterRender';
@@ -37,7 +36,13 @@ interface I18nVNodeProperties extends VNodeProperties {
 	lang: string | null;
 }
 
-export type LocalizedMessages<T extends Messages> = T & {
+export type LocalizedMessages<T extends Messages> = {
+	/**
+	 * Indicates whether the messages are placeholders while waiting for the actual localized messages to load.
+	 * This is always `false` if the associated bundle does not list any supported locales.
+	 */
+	readonly isPlaceholder: boolean;
+
 	/**
 	 * Formats an ICU-formatted message template for the represented bundle.
 	 *
@@ -51,6 +56,12 @@ export type LocalizedMessages<T extends Messages> = T & {
 	 * The formatted string.
 	 */
 	format(key: string, options?: any): string;
+
+	/**
+	 * The localized messages if available, or either the default messages or a blank bundle depending on the
+	 * call signature for `localizeBundle`.
+	 */
+	readonly messages: T;
 };
 
 /**
@@ -66,7 +77,8 @@ export interface I18nMixin {
 	 * The required bundle object for which available locale messages should be loaded.
 	 *
 	 * @return
-	 * The localized messages, along with a `format` method for formatting ICU-formatted templates.
+	 * An object containing the localized messages, along with a `format` method for formatting ICU-formatted
+	 * templates and an `isPlaceholder` property indicating whether the returned messages are the defaults.
 	 */
 	localizeBundle<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T>;
 
@@ -90,18 +102,34 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 	class I18n extends Base {
 		public properties: I18nProperties;
 
-		public localizeBundle<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T> {
+		/**
+		 * Return a localized messages object for the provided bundle. If the localized messages have not yet been loaded,
+		 * return either a blank bundle or the default messages.
+		 *
+		 * @param bundle
+		 * The bundle to localize
+		 *
+		 * @param useDefaults
+		 * If `true`, the default messages will be used when the localized messages have not yet been loaded. If `false`
+		 * (the default), then a blank bundle will be returned (i.e., each key's value will be an empty string).
+		 */
+		public localizeBundle<T extends Messages>(
+			bundle: Bundle<T>,
+			useDefaults: boolean = false
+		): LocalizedMessages<T> {
 			const { locale } = this.properties;
-			const messages = this._getLocaleMessages(bundle) || bundle.messages;
+			const messages = this._getLocaleMessages(bundle);
+			const isPlaceholder = !messages;
+			const format =
+				isPlaceholder && !useDefaults
+					? (key: string, options?: any) => ''
+					: (key: string, options?: any) => formatMessage(bundle, key, options, locale);
 
-			return assign(
-				Object.create({
-					format(key: string, options?: any) {
-						return formatMessage(bundle, key, options, locale);
-					}
-				}),
-				messages
-			) as LocalizedMessages<T>;
+			return Object.create({
+				format,
+				isPlaceholder,
+				messages: messages || (useDefaults ? bundle.messages : this._getBlankMessages(bundle))
+			});
 		}
 
 		@afterRender()
@@ -125,6 +153,24 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 				predicate: isVNode
 			});
 			return result;
+		}
+
+		/**
+		 * @private
+		 * Return a message bundle containing an empty string for each key in the provided bundle.
+		 *
+		 * @param bundle
+		 * The message bundle
+		 *
+		 * @return
+		 * The blank message bundle
+		 */
+		private _getBlankMessages<T extends Messages>(bundle: Bundle<T>): T {
+			const blank = {} as T;
+			return Object.keys(bundle.messages).reduce((blank, key) => {
+				blank[key] = '';
+				return blank;
+			}, blank);
 		}
 
 		/**

@@ -541,11 +541,15 @@ In the above example, the tabPanel will receive its original `root` class in add
 
 Widgets can be internationalized by adding the `I18nMixin` mixin from `@dojo/widget-core/mixins/I18n`. [Message bundles](https://github.com/dojo/i18n) are localized by passing them to `localizeBundle`.
 
-If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then the default messages are returned.
-The widget will be invalidated once the locale-specific messages have been loaded, triggering a re-render with the localized message content.
+If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then a bundle of blank message values is returned. Alternatively, the `localizeBundle` method accepts a second boolean argument, which, when `true`, causes the default messages to be returned instead of the blank bundle. The widget will be invalidated once the locale-specific messages have been loaded, triggering a re-render with the localized message content.
 
-Each widget can have its own locale by passing a property - `properties.locale`.
-If no locale is set, then the default locale, as set by [`@dojo/i18n`](https://github.com/dojo/i18n), is assumed.
+The object returned by `localizeBundle` contains the following properties and methods:
+
+* `messages`: An object containing the localized message key-value pairs. If the messages have not yet loaded, then `messages` will be either a blank bundle or the default messages, depending upon how `localizeBundle` was called.
+* `isPlaceholder`: a boolean property indicating whether the returned messages are the actual locale-specific messages (`false`) or just the placeholders used while waiting for the localized messages to finish loading (`true`). This is useful to prevent the widget from rendering at all if localized messages have not yet loaded.
+* `format(key: string, replacements: { [key: string]: string })`: a method that accepts a message key as its first argument and an object of replacement values as its second. For example, if the bundle contains `greeting: 'Hello, {name}!'`, then calling `format('greeting', { name: 'World' })` would return `'Hello, World!'`.
+
+Each widget can have its own locale by passing a property - `properties.locale`. If no locale is set, then the default locale, as set by [`@dojo/i18n`](https://github.com/dojo/i18n), is assumed.
 
 ```ts
 const MyWidgetBase = I18nMixin(WidgetBase);
@@ -556,7 +560,13 @@ class I18nWidget extends MyWidgetBase<I18nWidgetProperties> {
         // messages have not been loaded yet, then the default messages are returned,
         // and the widget will be invalidated once the locale-specific messages have
         // loaded.
-        const messages = this.localizeBundle(greetingsBundle);
+        const { format, isPlaceholder, messages } = this.localizeBundle(greetingsBundle);
+
+        // In many cases it makes sense to postpone rendering until the locale-specific messages have loaded,
+        // which can be accomplished by returning early if `isPlaceholder` is `true`.
+        if (isPlaceholder) {
+            return;
+        }
 
         return v('div', { title: messages.hello }, [
             w(Label, {
@@ -565,7 +575,7 @@ class I18nWidget extends MyWidgetBase<I18nWidgetProperties> {
             }),
             w(Button, {
                 // Passing a formatted message string to a child widget.
-                label: messages.format('itemCount', { count: 2 })
+                label: format('itemCount', { count: 2 })
             })
         ]);
     }
