@@ -28,9 +28,9 @@ const staticDone: IteratorResult<any> = { done: true, value: undefined };
  * A class that _shims_ an iterator interface on array like objects.
  */
 export class ShimIterator<T> {
-	private _list: ArrayLike<T>;
+	private _list: ArrayLike<T> | undefined;
 	private _nextIndex = -1;
-	private _nativeIterator: Iterator<T>;
+	private _nativeIterator: Iterator<T> | undefined;
 
 	constructor(list: ArrayLike<T> | Iterable<T>) {
 		if (isIterable(list)) {

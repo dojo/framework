@@ -96,9 +96,7 @@ if (!has('es6-weakmap')) {
 		private readonly _frozenEntries: Entry<K, V>[];
 
 		constructor(iterable?: ArrayLike<[K, V]> | Iterable<[K, V]>) {
-			Object.defineProperty(this, '_name', {
-				value: generateName()
-			});
+			this._name = generateName();
 
 			this._frozenEntries = [];
 
