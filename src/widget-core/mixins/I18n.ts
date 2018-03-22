@@ -99,8 +99,8 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 			return { locale, rtl };
 		}
 	})
-	class I18n extends Base {
-		public properties: I18nProperties;
+	abstract class I18n extends Base {
+		public abstract properties: I18nProperties;
 
 		/**
 		 * Return a localized messages object for the provided bundle. If the localized messages have not yet been loaded,

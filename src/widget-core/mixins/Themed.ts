@@ -102,13 +102,13 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			return {};
 		}
 	})
-	class Themed extends Base {
-		public properties: ThemedProperties<E>;
+	abstract class Themed extends Base {
+		public abstract properties: ThemedProperties<E>;
 
 		/**
 		 * The Themed baseClasses
 		 */
-		private _registeredBaseTheme: ClassNames;
+		private _registeredBaseTheme: ClassNames | undefined;
 
 		/**
 		 * Registered base theme keys
@@ -118,7 +118,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		/**
 		 * Reverse lookup of the theme classes
 		 */
-		private _baseThemeClassesReverseLookup: ClassNames;
+		private _baseThemeClassesReverseLookup: ClassNames | undefined;
 
 		/**
 		 * Indicates if classes meta data need to be calculated.
@@ -157,7 +157,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			}
 
 			const extraClasses = this.properties.extraClasses || ({} as any);
-			const themeClassName = this._baseThemeClassesReverseLookup[className];
+			const themeClassName = this._baseThemeClassesReverseLookup![className];
 			let resultClassNames: string[] = [];
 			if (!themeClassName) {
 				console.warn(`Class name: '${className}' not found in theme`);
@@ -171,7 +171,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			if (this._theme[themeClassName]) {
 				resultClassNames.push(this._theme[themeClassName]);
 			} else {
-				resultClassNames.push(this._registeredBaseTheme[themeClassName]);
+				resultClassNames.push(this._registeredBaseTheme![themeClassName]);
 			}
 			return resultClassNames.join(' ');
 		}

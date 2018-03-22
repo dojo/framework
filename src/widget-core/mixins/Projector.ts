@@ -109,16 +109,16 @@ export interface ProjectorMixin<P> {
 }
 
 export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T): T & Constructor<ProjectorMixin<P>> {
-	class Projector extends Base {
+	abstract class Projector extends Base {
 		public projectorState: ProjectorAttachState;
-		public properties: Readonly<P> & Readonly<ProjectorProperties>;
 
-		private _root: Element;
+		private _root: Element = document.body;
 		private _async = true;
-		private _attachHandle: Handle;
+		private _attachHandle: Handle | undefined;
 		private _projectionOptions: Partial<ProjectionOptions>;
 		private _projection: Projection | undefined;
 		private _projectorProperties: this['properties'] = {} as this['properties'];
+		public abstract properties: Readonly<P> & Readonly<ProjectorProperties>;
 
 		constructor(...args: any[]) {
 			super(...args);
@@ -237,7 +237,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 				this.root = root;
 			}
 
-			if (this.projectorState === ProjectorAttachState.Attached) {
+			if (this._attachHandle) {
 				return this._attachHandle;
 			}
 

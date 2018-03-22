@@ -18,13 +18,13 @@ export const REGISTRY_ITEM = Symbol('Identifier for an item from the Widget Regi
 
 export class FromRegistry<P> {
 	static type = REGISTRY_ITEM;
-	properties: P;
-	name: string;
+	properties: P = {} as P;
+	name: string | undefined;
 }
 
 export function fromRegistry<P>(tag: string): Constructor<FromRegistry<P>> {
 	return class extends FromRegistry<P> {
-		properties: P;
+		properties: P = {} as P;
 		static type = REGISTRY_ITEM;
 		name = tag;
 	};

@@ -20,6 +20,8 @@ class TestChildWidget extends WidgetBase<ChildProperties> {
 	}
 }
 
+class FooWidget extends WidgetBase<any> {}
+
 class TestWidget extends WidgetBase<TestProperties, WNode<TestChildWidget>> {
 	render() {
 		return v('outernode', { type: 'mytype' }, [
@@ -29,8 +31,8 @@ class TestWidget extends WidgetBase<TestProperties, WNode<TestChildWidget>> {
 			v('child-four'),
 			'my text',
 			null,
-			w(WidgetBase, { myProperty: true }),
-			w(WidgetBase, { myProperty: true })
+			w(FooWidget, { myProperty: true }),
+			w(FooWidget, { myProperty: true })
 		]);
 	}
 }
@@ -43,7 +45,7 @@ registerSuite('d', {
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, WidgetBase);
-			assert.deepEqual(dNode.properties, { id: 'id', classes: ['world'] });
+			assert.deepEqual(dNode.properties, properties);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));
 		},
@@ -81,7 +83,7 @@ registerSuite('d', {
 
 			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, WidgetBase);
-			assert.deepEqual(dNode.properties, { id: 'id', classes: ['world'] });
+			assert.deepEqual(dNode.properties, properties);
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));

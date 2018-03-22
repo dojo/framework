@@ -110,9 +110,9 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 	/**
 	 * internal map of labels and RegistryItem
 	 */
-	private _widgetRegistry: Map<RegistryLabel, RegistryItem>;
+	private _widgetRegistry: Map<RegistryLabel, RegistryItem> | undefined;
 
-	private _injectorRegistry: Map<RegistryLabel, Injector>;
+	private _injectorRegistry: Map<RegistryLabel, Injector> | undefined;
 
 	/**
 	 * Emit loaded event for registry label
@@ -139,7 +139,7 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 		if (item instanceof Promise) {
 			item.then(
 				(widgetCtor) => {
-					this._widgetRegistry.set(label, widgetCtor);
+					this._widgetRegistry!.set(label, widgetCtor);
 					this.emitLoadedEvent(label, widgetCtor);
 					return widgetCtor;
 				},
@@ -166,7 +166,7 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 	}
 
 	public get<T extends WidgetBaseInterface = WidgetBaseInterface>(label: RegistryLabel): Constructor<T> | null {
-		if (!this.has(label)) {
+		if (!this._widgetRegistry || !this.has(label)) {
 			return null;
 		}
 
@@ -189,7 +189,7 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 					widgetCtor = widgetCtor.default;
 				}
 
-				this._widgetRegistry.set(label, widgetCtor);
+				this._widgetRegistry!.set(label, widgetCtor);
 				this.emitLoadedEvent(label, widgetCtor);
 				return widgetCtor;
 			},
@@ -202,7 +202,7 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 	}
 
 	public getInjector<T extends Injector>(label: RegistryLabel): T | null {
-		if (!this.hasInjector(label)) {
+		if (!this._injectorRegistry || !this.hasInjector(label)) {
 			return null;
 		}
 

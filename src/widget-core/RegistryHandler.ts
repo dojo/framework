@@ -5,9 +5,9 @@ import { Constructor, RegistryLabel, WidgetBaseInterface } from './interfaces';
 import { Registry, RegistryEventObject, RegistryItem } from './Registry';
 import { Injector } from './Injector';
 
-export interface RegistryHandlerEventMap {
+export type RegistryHandlerEventMap = {
 	invalidate: EventObject<'invalidate'>;
-}
+};
 
 export class RegistryHandler extends Evented<RegistryHandlerEventMap> {
 	private _registry = new Registry();

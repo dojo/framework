@@ -300,7 +300,11 @@ const benchStartup: Benchmark = {
 	}
 };
 
-export let benchmarks: [Benchmark] = [
+interface BenchmarkTuple extends Array<Benchmark> {
+	0: Benchmark;
+}
+
+export let benchmarks: BenchmarkTuple = [
 	benchRun,
 	benchReplaceAll,
 	benchUpdate,

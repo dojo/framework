@@ -71,14 +71,14 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 */
 	private _decoratorCache: Map<string, any[]>;
 
-	private _registry: RegistryHandler;
+	private _registry: RegistryHandler | undefined;
 
 	/**
 	 * Map of functions properties for the bound function
 	 */
-	private _bindFunctionPropertyMap: WeakMap<(...args: any[]) => any, BoundFunctionData>;
+	private _bindFunctionPropertyMap: WeakMap<(...args: any[]) => any, BoundFunctionData> | undefined;
 
-	private _metaMap: Map<WidgetMetaConstructor<any>, WidgetMetaBase>;
+	private _metaMap: Map<WidgetMetaConstructor<any>, WidgetMetaBase> | undefined;
 
 	private _boundRenderFunc: Render;
 

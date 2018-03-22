@@ -13,7 +13,7 @@ const defaultResults = {
 };
 
 export class Focus extends Base {
-	private _activeElement: Element;
+	private _activeElement: Element | undefined;
 
 	public get(key: string | number): FocusResults {
 		const node = this.getNode(key);
@@ -29,7 +29,7 @@ export class Focus extends Base {
 
 		return {
 			active: node === this._activeElement,
-			containsFocus: node.contains(this._activeElement)
+			containsFocus: !!this._activeElement && node.contains(this._activeElement)
 		};
 	}
 

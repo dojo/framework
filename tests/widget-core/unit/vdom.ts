@@ -17,7 +17,7 @@ const resolvers = createResolvers();
 
 function getWidget(renderResult: RenderResult) {
 	return new class extends WidgetBase {
-		private _renderResult = renderResult;
+		private _renderResult: RenderResult | (() => RenderResult) = renderResult;
 		private _nodeHandlerStub = {
 			add: stub(),
 			addRoot: stub()

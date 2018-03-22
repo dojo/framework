@@ -13,10 +13,10 @@ export enum NodeEventType {
 	Widget = 'Widget'
 }
 
-export interface NodeHandlerEventMap {
+export type NodeHandlerEventMap = {
 	Projector: EventObject<NodeEventType.Projector>;
 	Widget: EventObject<NodeEventType.Widget>;
-}
+};
 
 export class NodeHandler extends Evented<NodeHandlerEventMap> implements NodeHandlerInterface {
 	private _nodeMap = new Map<string, Element>();

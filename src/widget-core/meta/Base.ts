@@ -8,7 +8,7 @@ export class Base extends Destroyable implements WidgetMetaBase {
 
 	private _requestedNodeKeys = new Set<string | number>();
 
-	protected _bind: WidgetBaseInterface;
+	protected _bind: WidgetBaseInterface | undefined;
 
 	constructor(properties: WidgetMetaProperties) {
 		super();

@@ -37,7 +37,7 @@ export interface AnimationTimingProperties {
  */
 export interface AnimationProperties {
 	id: string;
-	effects: ((() => AnimationKeyFrame) | AnimationKeyFrame)[];
+	effects: (() => AnimationKeyFrame | AnimationKeyFrame[]) | AnimationKeyFrame | AnimationKeyFrame[];
 	controls?: AnimationControls;
 	timing?: AnimationTimingProperties;
 }
