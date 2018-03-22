@@ -60,10 +60,7 @@ interface DateOptionsTypes {
 
 type DateOptionsKeys = keyof DateOptionsTypes;
 
-function getDateOptions<T extends DateOptionsKeys>(
-	type: T,
-	timezoneOffset?: number
-): [DateOptionsTypes[T], DateOptionsTypes[T]] {
+function getDateOptions<T extends DateOptionsKeys>(type: T, timezoneOffset?: number): any {
 	const date = getTimezoneDate(new Date(1815, 11, 10, 11, 27), timezoneOffset);
 	const [gmtLong, gmtFull] = getTimezones(date);
 	const [utcLong, utcFull] = getTimezones(date, 'UTC');
