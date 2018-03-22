@@ -393,12 +393,11 @@ export function invalidate<T extends Messages>(bundle?: Bundle<T>) {
 /**
  * Register an observer to be notified when the root locale changes.
  *
- * @param observer
- * The observer whose `next` method will receive the locale string on updates, and whose `error` method will receive
- * an Error object if the locale switch fails.
+ * @param callback
+ * A callback function which will receive the updated locale string on updates.
  *
  * @return
- * A subscription object that can be used to unsubscribe from updates.
+ * A handle object that can be used to unsubscribe from updates.
  */
 export const observeLocale = function(callback: (locale: string) => {}): Handle {
 	return localeProducer.on('change', (event: any) => {
