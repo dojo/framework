@@ -1,6 +1,6 @@
 {
   "name": "@dojo/stores",
-  "version": "0.5.0",
+  "version": "0.5.1-pre",
   "description": "Application data store for Dojo 2",
   "homepage": "https://dojo.io",
   "engines": {
