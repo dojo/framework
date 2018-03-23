@@ -1,7 +1,10 @@
 import global from '@dojo/shim/global';
 import customElement from '../../src/decorators/customElement';
 import WidgetBase from '../../src/WidgetBase';
-import { v } from '../../src/d';
+import Container from '../../src/Container';
+import Injector from '../../src/Injector';
+import Registry from '../../src/Registry';
+import { v, w } from '../../src/d';
 import register, { create, CustomElementChildType } from '../../src/registerCustomElement';
 import { createResolvers } from './../support/util';
 import { ThemedMixin, theme } from '../../src/mixins/Themed';
@@ -246,5 +249,46 @@ describe('registerCustomElement', () => {
 		assert.equal(root.innerHTML, 'bar');
 		resolvers.resolve();
 		assert.equal(root.innerHTML, 'baz');
+	});
+
+	it('custom element with registry factory', () => {
+		class Foo extends WidgetBase<any> {
+			render() {
+				return this.properties.text;
+			}
+		}
+
+		const FooContainer = Container(Foo, 'state', {
+			getProperties: (inject: any) => {
+				return {
+					text: inject.text
+				};
+			}
+		});
+
+		const registry = new Registry();
+		const injector = new Injector({ text: 'foo' });
+		registry.defineInjector('state', injector);
+
+		@customElement<any>({
+			tag: 'bar-element',
+			registryFactory: () => registry
+		})
+		class Bar extends WidgetBase {
+			render() {
+				return w(FooContainer, {});
+			}
+		}
+
+		const CustomElement = create((Bar.prototype as any).__customElementDescriptor, Bar);
+		customElements.define('registry-element', CustomElement);
+		element = document.createElement('registry-element');
+		element.id = 'registry-element';
+		document.body.appendChild(element);
+
+		const registryElement = document.getElementById('registry-element') as HTMLElement;
+		const child = registryElement.firstChild as HTMLElement;
+		assert.equal(child.nodeType, Node.TEXT_NODE);
+		assert.equal(child.textContent, 'foo');
 	});
 });

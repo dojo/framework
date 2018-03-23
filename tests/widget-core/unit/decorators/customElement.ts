@@ -11,11 +11,16 @@ interface CustomElementWidgetProperties {
 	onClick: () => void;
 }
 
+function registryFactory() {
+	return {} as any;
+}
+
 @customElement<CustomElementWidgetProperties>({
 	tag: 'custom-element',
 	attributes: ['key', 'label', 'labelSuffix'],
 	properties: ['label'],
-	events: ['onClick']
+	events: ['onClick'],
+	registryFactory
 })
 export class CustomElementWidget extends WidgetBase<CustomElementWidgetProperties> {}
 
@@ -26,7 +31,8 @@ describe('@customElement', () => {
 			attributes: ['key', 'label', 'labelSuffix'],
 			properties: ['label'],
 			events: ['onClick'],
-			childType: CustomElementChildType.DOJO
+			childType: CustomElementChildType.DOJO,
+			registryFactory
 		});
 	});
 });

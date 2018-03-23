@@ -3,7 +3,6 @@ import { ProjectorMixin } from './mixins/Projector';
 import { from } from '@dojo/shim/array';
 import { w, dom } from './d';
 import global from '@dojo/shim/global';
-import Registry from './Registry';
 import { registerThemeInjector } from './mixins/Themed';
 import { alwaysRender } from './decorators/alwaysRender';
 
@@ -40,7 +39,7 @@ export function DomToWidgetWrapper(domNode: HTMLElement): any {
 }
 
 export function create(descriptor: any, WidgetConstructor: any): any {
-	const { attributes, childType } = descriptor;
+	const { attributes, childType, registryFactory } = descriptor;
 	const attributeMap: any = {};
 
 	attributes.forEach((propertyName: string) => {
@@ -125,7 +124,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 					return w(WidgetConstructor, widgetProperties, renderChildren());
 				}
 			};
-			const registry = new Registry();
+			const registry = registryFactory();
 			const themeContext = registerThemeInjector(this._getTheme(), registry);
 			global.addEventListener('dojo-theme-set', () => themeContext.set(this._getTheme()));
 			const Projector = ProjectorMixin(Wrapper);

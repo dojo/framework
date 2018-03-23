@@ -1,5 +1,6 @@
 import { Constructor, WidgetProperties } from '../interfaces';
 import { CustomElementChildType } from '../registerCustomElement';
+import Registry from '../Registry';
 
 export type CustomElementPropertyNames<P extends object> = ((keyof P) | (keyof WidgetProperties))[];
 
@@ -28,6 +29,8 @@ export interface CustomElementConfig<P extends object = { [index: string]: any }
 	events?: CustomElementPropertyNames<P>;
 
 	childType?: CustomElementChildType;
+
+	registryFactory?: () => Registry;
 }
 
 /**
@@ -39,7 +42,8 @@ export function customElement<P extends object = { [index: string]: any }>({
 	properties = [],
 	attributes = [],
 	events = [],
-	childType = CustomElementChildType.DOJO
+	childType = CustomElementChildType.DOJO,
+	registryFactory = () => new Registry()
 }: CustomElementConfig<P>) {
 	return function<T extends Constructor<any>>(target: T) {
 		target.prototype.__customElementDescriptor = {
@@ -47,7 +51,8 @@ export function customElement<P extends object = { [index: string]: any }>({
 			attributes,
 			properties,
 			events,
-			childType
+			childType,
+			registryFactory
 		};
 	};
 }
