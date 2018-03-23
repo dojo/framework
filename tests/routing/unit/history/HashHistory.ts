@@ -26,7 +26,7 @@ class MockLocation {
 }
 
 class MockWindow {
-	private _onhashchange: Function;
+	private _onhashchange: undefined | Function;
 	onhashchange = () => {
 		this._onhashchange && this._onhashchange();
 	};

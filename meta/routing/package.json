@@ -28,10 +28,11 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/core": "~0.4.0",
+    "@dojo/core": "~0.5.0",
     "@dojo/has": "~0.1.1",
-    "@dojo/shim": "~0.2.6",
-    "@dojo/widget-core": "~0.9.0"
+    "@dojo/shim": "~0.2.7",
+    "@dojo/i18n": "~0.6.0",
+    "@dojo/widget-core": "~0.10.0"
   },
   "devDependencies": {
     "@dojo/loader": "~0.1.1",

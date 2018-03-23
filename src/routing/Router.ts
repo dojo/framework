@@ -25,7 +25,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent }> implements RouterI
 	private _matchedOutlets: { [index: string]: OutletContext } = Object.create(null);
 	private _currentParams: Params = {};
 	private _currentQueryParams: Params = {};
-	private _defaultOutlet: string;
+	private _defaultOutlet: string | undefined;
 	private _history: History;
 
 	constructor(config: RouteConfig[], options: RouterOptions = {}) {

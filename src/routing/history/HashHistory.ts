@@ -10,7 +10,8 @@ export class HashHistory implements History {
 		this._onChangeFunction = onChange;
 		this._window = window;
 		this._window.addEventListener('hashchange', this._onChange, false);
-		this._onChange();
+		this._current = this.normalizePath(this._window.location.hash);
+		this._onChangeFunction(this._current);
 	}
 
 	public normalizePath(path: string): string {
