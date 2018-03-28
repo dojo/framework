@@ -8,7 +8,7 @@ env:
   - SAUCE_USERNAME: dojo2-ts-ci
   - SAUCE_ACCESS_KEY: e92610e3-834e-4bec-a3b5-6f7b9d874601
   - BROWSERSTACK_USERNAME: dylanschiemann2
-  - BROWSERSTACK_ACCESS_KEY: 2upt88qsxsqqeukQvecu
+  - BROWSERSTACK_ACCESS_KEY: 4Q2g8YAc9qeZzB2hECnS
 addons:
   apt:
     packages:
