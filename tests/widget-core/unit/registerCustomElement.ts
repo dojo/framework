@@ -1,4 +1,6 @@
 import global from '@dojo/shim/global';
+import { reference } from '../../src/diff';
+import diffProperty from '../../src/decorators/diffProperty';
 import customElement from '../../src/decorators/customElement';
 import WidgetBase from '../../src/WidgetBase';
 import Container from '../../src/Container';
@@ -30,6 +32,7 @@ function createTestWidget(options: any) {
 		events,
 		childType
 	})
+	@diffProperty('myExternalFunction', reference)
 	class Bar extends WidgetBase<any> {
 		private _called = false;
 
@@ -37,7 +40,6 @@ function createTestWidget(options: any) {
 			const { onBar } = this.properties;
 			onBar && onBar();
 		}
-
 		render() {
 			let childProp = '';
 			if (this.children.length) {
@@ -55,7 +57,10 @@ function createTestWidget(options: any) {
 					childProp = (child as any).properties.myProp = 'can write prop to dom node';
 				}
 			}
-			const { myProp = '', myAttr = '' } = this.properties;
+			const { myProp = '', myAttr = '', myExternalFunction } = this.properties;
+			if (myExternalFunction) {
+				myExternalFunction('hello');
+			}
 			return v('div', [
 				v('button', { classes: ['event'], onclick: this._onClick }),
 				v('div', { classes: ['prop'] }, [`${myProp}`]),
@@ -290,5 +295,25 @@ describe('registerCustomElement', () => {
 		const child = registryElement.firstChild as HTMLElement;
 		assert.equal(child.nodeType, Node.TEXT_NODE);
 		assert.equal(child.textContent, 'foo');
+	});
+
+	it('custom element with function property', () => {
+		const Widget = createTestWidget({ properties: ['myExternalFunction'] });
+		const CustomElement = create((Widget.prototype as any).__customElementDescriptor, Widget);
+		customElements.define('function-property-element', CustomElement);
+		element = document.createElement('function-property-element');
+		document.body.appendChild(element);
+
+		let functionText = '';
+		let scope: any;
+
+		(element as any).myExternalFunction = function(text: string) {
+			functionText = text;
+			scope = this;
+		};
+
+		resolvers.resolve();
+		assert.equal(functionText, 'hello');
+		assert.equal(scope, undefined, 'function scope should not be tampered with');
 	});
 });

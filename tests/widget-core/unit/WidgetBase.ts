@@ -2,7 +2,7 @@ const { describe, it, beforeEach, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { spy, stub, SinonStub } from 'sinon';
 
-import { WidgetBase } from './../../src/WidgetBase';
+import { WidgetBase, noBind } from './../../src/WidgetBase';
 import { v } from './../../src/d';
 import { WIDGET_BASE_TYPE } from './../../src/Registry';
 import { VNode, WidgetMetaConstructor, WidgetMetaBase } from './../../src/interfaces';
@@ -200,6 +200,25 @@ describe('WidgetBase', () => {
 			widget.__setProperties__({ baz });
 			widget.properties.baz && widget.properties.baz();
 			assert.isTrue(widget.called);
+		});
+
+		it('does not bind function properties that carry the dojo no bind symbol', () => {
+			class TestWidget extends BaseTestWidget {
+				public called = false;
+			}
+
+			function baz(this: any) {
+				this.called = true;
+			}
+
+			(baz as any)[noBind] = true;
+
+			const widget = new TestWidget();
+
+			widget.__setCoreProperties__({ bind: widget } as any);
+			widget.__setProperties__({ baz });
+			widget.properties.baz && widget.properties.baz();
+			assert.isFalse(widget.called);
 		});
 
 		it('Does not bind Widget constructor properties', () => {

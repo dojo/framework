@@ -1,4 +1,4 @@
-import { WidgetBase } from './WidgetBase';
+import { WidgetBase, noBind } from './WidgetBase';
 import { ProjectorMixin } from './mixins/Projector';
 import { from } from '@dojo/shim/array';
 import { w, dom } from './d';
@@ -200,6 +200,9 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		private _setProperty(propertyName: string, value: any) {
+			if (typeof value === 'function') {
+				value[noBind] = true;
+			}
 			this._properties[propertyName] = value;
 			this._render();
 		}

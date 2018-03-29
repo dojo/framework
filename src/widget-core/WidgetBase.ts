@@ -1,5 +1,6 @@
 import Map from '@dojo/shim/Map';
 import WeakMap from '@dojo/shim/WeakMap';
+import Symbol from '@dojo/shim/Symbol';
 import { Handle } from '@dojo/core/interfaces';
 import { v } from './d';
 import { auto } from './diff';
@@ -36,6 +37,8 @@ export type BoundFunctionData = { boundFunc: (...args: any[]) => any; scope: any
 
 const decoratorMap = new Map<Function, Map<string, any[]>>();
 const boundAuto = auto.bind(null);
+
+export const noBind = Symbol.for('dojoNoBind');
 
 /**
  * Main widget base for all widgets to extend
@@ -385,7 +388,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 * @param properties properties to check for functions
 	 */
 	private _bindFunctionProperty(property: any, bind: any): any {
-		if (typeof property === 'function' && isWidgetBaseConstructor(property) === false) {
+		if (typeof property === 'function' && !property[noBind] && isWidgetBaseConstructor(property) === false) {
 			if (this._bindFunctionPropertyMap === undefined) {
 				this._bindFunctionPropertyMap = new WeakMap<
 					(...args: any[]) => any,
