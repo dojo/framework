@@ -71,7 +71,14 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 					this._properties[propertyName] = value;
 				}
 
-				domProperties[filteredPropertyName] = {
+				if (filteredPropertyName !== propertyName) {
+					domProperties[filteredPropertyName] = {
+						get: () => this._getProperty(propertyName),
+						set: (value: any) => this._setProperty(propertyName, value)
+					};
+				}
+
+				domProperties[propertyName] = {
 					get: () => this._getProperty(propertyName),
 					set: (value: any) => this._setProperty(propertyName, value)
 				};

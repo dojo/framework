@@ -32,7 +32,7 @@ function createTestWidget(options: any) {
 		events,
 		childType
 	})
-	@diffProperty('myExternalFunction', reference)
+	@diffProperty('onExternalFunction', reference)
 	class Bar extends WidgetBase<any> {
 		private _called = false;
 
@@ -57,9 +57,9 @@ function createTestWidget(options: any) {
 					childProp = (child as any).properties.myProp = 'can write prop to dom node';
 				}
 			}
-			const { myProp = '', myAttr = '', myExternalFunction } = this.properties;
-			if (myExternalFunction) {
-				myExternalFunction('hello');
+			const { myProp = '', myAttr = '', onExternalFunction } = this.properties;
+			if (onExternalFunction) {
+				onExternalFunction('hello');
 			}
 			return v('div', [
 				v('button', { classes: ['event'], onclick: this._onClick }),
@@ -298,7 +298,7 @@ describe('registerCustomElement', () => {
 	});
 
 	it('custom element with function property', () => {
-		const Widget = createTestWidget({ properties: ['myExternalFunction'] });
+		const Widget = createTestWidget({ properties: ['onExternalFunction'] });
 		const CustomElement = create((Widget.prototype as any).__customElementDescriptor, Widget);
 		customElements.define('function-property-element', CustomElement);
 		element = document.createElement('function-property-element');
@@ -307,7 +307,7 @@ describe('registerCustomElement', () => {
 		let functionText = '';
 		let scope: any;
 
-		(element as any).myExternalFunction = function(text: string) {
+		(element as any).onExternalFunction = function(text: string) {
 			functionText = text;
 			scope = this;
 		};
