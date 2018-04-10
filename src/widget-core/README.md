@@ -1176,6 +1176,43 @@ class TestWidget extends WidgetBase<WidgetProperties> {
 }
 ```
 
+#### Resize
+
+The resize observer meta uses the latest [`ResizeObserver`](https://wicg.github.io/ResizeObserver/) within Dojo 2 based widgets. [Native browser support](https://caniuse.com/#feat=resizeobserver) is currently provided by `Chrome 64+`, other Dojo supported browsers work via [polyfill](https://github.com/WICG/ResizeObserver/issues/3).
+
+This allows you to observe resize events at the component level. The `meta` accepts an object of `predicate` functions which receive `ContentRect` dimensions and will be executed when a resize event has occured. The results are made available in a widget's `render` function. This is an incredibly powerful tool for creating responsive components and layouts.
+
+```ts
+function isMediumWidthPredicate(contentRect: ContentRect) {
+    return contentRect.width < 500;
+}
+
+function isSmallHeightPredicate(contentRect: ContentRect) {
+    return contentRect.height < 300;
+}
+
+class TestWidget extends WidgetBase<WidgetProperties> {
+    render() {
+        const { isMediumWidth, isSmallHeight } = this.meta(Resize).get('root', {
+            isMediumWidth: isMediumWidthPredicate,
+            isSmallHeight: isSmallHeightPredicate
+        });
+
+        return v('div', {
+            key: 'root'
+            classes: [
+                isMediumWidth ? css.medium : css.large,
+                isSmallHeight ? css.scroll : null
+            ]
+        }, [
+            v('div', {
+                innerHTML: 'Hello World'
+            })
+        ]);
+    }
+}
+```
+
 ##### Implementing Custom Meta
 
 You can create your own meta if you need access to DOM nodes.
