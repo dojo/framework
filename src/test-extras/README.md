@@ -198,7 +198,7 @@ interface FunctionalSelector {
 	(node: VNode | WNode): undefined | Function;
 }
 
-trigger(selector: string, functionSelector: string | FunctionalSelector: ...args: any[]): any;
+trigger(selector: string, functionSelector: string | FunctionalSelector, ...args: any[]): any;
 ```
 
 * `selector`: The selector query to find the node to target
