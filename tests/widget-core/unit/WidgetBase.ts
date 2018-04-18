@@ -291,12 +291,13 @@ describe('WidgetBase', () => {
 	describe('__setCoreProperties__', () => {
 		it('new baseRegistry is added to RegistryHandler and triggers an invalidation', () => {
 			const baseRegistry = new Registry();
-			baseRegistry.defineInjector('label', 'item' as any);
+			const injector = () => 'item';
+			baseRegistry.defineInjector('label', () => injector);
 			const widget = new BaseTestWidget();
 			const invalidateSpy = spy(widget, 'invalidate');
 			widget.__setCoreProperties__({ bind: widget, baseRegistry });
 			assert.isTrue(invalidateSpy.calledOnce);
-			assert.strictEqual(widget.registry.getInjector('label'), 'item' as any);
+			assert.strictEqual(widget.registry.getInjector('label')!.injector, injector);
 		});
 
 		it('The same baseRegistry does not causes an invalidation', () => {
@@ -310,13 +311,14 @@ describe('WidgetBase', () => {
 
 		it('different baseRegistry replaces the RegistryHandlers baseRegistry and triggers an invalidation', () => {
 			const baseRegistry = new Registry();
-			baseRegistry.defineInjector('label', 'item' as any);
+			const injector = () => 'item';
+			baseRegistry.defineInjector('label', () => injector);
 			const widget = new BaseTestWidget();
 			widget.__setCoreProperties__({ bind: widget, baseRegistry: new Registry() });
 			assert.isNull(widget.registry.getInjector('label'));
 			const invalidateSpy = spy(widget, 'invalidate');
 			widget.__setCoreProperties__({ bind: widget, baseRegistry });
-			assert.strictEqual(widget.registry.getInjector('label'), 'item' as any);
+			assert.strictEqual(widget.registry.getInjector('label')!.injector, injector);
 			assert.isTrue(invalidateSpy.called);
 		});
 	});

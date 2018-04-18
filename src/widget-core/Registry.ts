@@ -3,8 +3,14 @@ import Map from '@dojo/shim/Map';
 import Symbol from '@dojo/shim/Symbol';
 import { EventObject } from '@dojo/core/interfaces';
 import { Evented } from '@dojo/core/Evented';
-import { Constructor, RegistryLabel, WidgetBaseConstructor, WidgetBaseInterface } from './interfaces';
-import { Injector } from './Injector';
+import {
+	Constructor,
+	InjectorFactory,
+	InjectorItem,
+	RegistryLabel,
+	WidgetBaseConstructor,
+	WidgetBaseInterface
+} from './interfaces';
 
 export type WidgetBaseConstructorFunction = () => Promise<WidgetBaseConstructor>;
 
@@ -23,9 +29,8 @@ export const WIDGET_BASE_TYPE = Symbol('Widget Base');
 
 export interface RegistryEventObject extends EventObject<RegistryLabel> {
 	action: string;
-	item: WidgetBaseConstructor | Injector;
+	item: WidgetBaseConstructor | InjectorFactory;
 }
-
 /**
  * Widget Registry Interface
  */
@@ -58,9 +63,9 @@ export interface RegistryInterface {
 	 * Define an Injector against a label
 	 *
 	 * @param label The label of the injector to register
-	 * @param registryItem The injector to define
+	 * @param registryItem The injector factory
 	 */
-	defineInjector(label: RegistryLabel, registryItem: Injector): void;
+	defineInjector(label: RegistryLabel, injectorFactory: InjectorFactory): void;
 
 	/**
 	 * Return an Injector registry item for the given label, null if an entry doesn't exist
@@ -68,7 +73,7 @@ export interface RegistryInterface {
 	 * @param label The label of the injector to return
 	 * @returns The RegistryItem for the widgetLabel, `null` if no entry exists
 	 */
-	getInjector<T extends Injector>(label: RegistryLabel): T | null;
+	getInjector<T>(label: RegistryLabel): InjectorItem<T> | null;
 
 	/**
 	 * Returns a boolean if an injector for the label exists
@@ -112,12 +117,12 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 	 */
 	private _widgetRegistry: Map<RegistryLabel, RegistryItem> | undefined;
 
-	private _injectorRegistry: Map<RegistryLabel, Injector> | undefined;
+	private _injectorRegistry: Map<RegistryLabel, InjectorItem> | undefined;
 
 	/**
 	 * Emit loaded event for registry label
 	 */
-	private emitLoadedEvent(widgetLabel: RegistryLabel, item: WidgetBaseConstructor | Injector): void {
+	private emitLoadedEvent(widgetLabel: RegistryLabel, item: WidgetBaseConstructor | InjectorItem): void {
 		this.emit({
 			type: widgetLabel,
 			action: 'loaded',
@@ -152,7 +157,7 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 		}
 	}
 
-	public defineInjector(label: RegistryLabel, item: Injector): void {
+	public defineInjector(label: RegistryLabel, injectorFactory: InjectorFactory): void {
 		if (this._injectorRegistry === undefined) {
 			this._injectorRegistry = new Map();
 		}
@@ -161,8 +166,15 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 			throw new Error(`injector has already been registered for '${label.toString()}'`);
 		}
 
-		this._injectorRegistry.set(label, item);
-		this.emitLoadedEvent(label, item);
+		const invalidator = new Evented();
+
+		const injectorItem: InjectorItem = {
+			injector: injectorFactory(() => invalidator.emit({ type: 'invalidate' })),
+			invalidator
+		};
+
+		this._injectorRegistry.set(label, injectorItem);
+		this.emitLoadedEvent(label, injectorItem);
 	}
 
 	public get<T extends WidgetBaseInterface = WidgetBaseInterface>(label: RegistryLabel): Constructor<T> | null {
@@ -201,12 +213,12 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 		return null;
 	}
 
-	public getInjector<T extends Injector>(label: RegistryLabel): T | null {
+	public getInjector<T>(label: RegistryLabel): InjectorItem<T> | null {
 		if (!this._injectorRegistry || !this.hasInjector(label)) {
 			return null;
 		}
 
-		return this._injectorRegistry.get(label) as T;
+		return this._injectorRegistry.get(label)!;
 	}
 
 	public has(label: RegistryLabel): boolean {

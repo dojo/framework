@@ -1,14 +1,13 @@
 import WeakMap from '@dojo/shim/WeakMap';
 import { WidgetBase } from './../WidgetBase';
 import { handleDecorator } from './handleDecorator';
-import { Injector } from './../Injector';
 import { beforeProperties } from './beforeProperties';
-import { RegistryLabel } from './../interfaces';
+import { InjectorItem, RegistryLabel } from './../interfaces';
 
 /**
  * Map of instances against registered injectors.
  */
-const registeredInjectorsMap: WeakMap<WidgetBase, Injector[]> = new WeakMap();
+const registeredInjectorsMap: WeakMap<WidgetBase, InjectorItem[]> = new WeakMap();
 
 /**
  * Defines the contract requires for the get properties function
@@ -44,21 +43,22 @@ export interface InjectConfig {
 export function inject({ name, getProperties }: InjectConfig) {
 	return handleDecorator((target, propertyKey) => {
 		beforeProperties(function(this: WidgetBase & { own: Function }, properties: any) {
-			const injector = this.registry.getInjector(name);
-			if (injector) {
+			const injectorItem = this.registry.getInjector(name);
+			if (injectorItem) {
+				const { injector, invalidator } = injectorItem;
 				const registeredInjectors = registeredInjectorsMap.get(this) || [];
 				if (registeredInjectors.length === 0) {
 					registeredInjectorsMap.set(this, registeredInjectors);
 				}
-				if (registeredInjectors.indexOf(injector) === -1) {
+				if (registeredInjectors.indexOf(injectorItem) === -1) {
 					this.own(
-						injector.on('invalidate', () => {
+						invalidator.on('invalidate', () => {
 							this.invalidate();
 						})
 					);
-					registeredInjectors.push(injector);
+					registeredInjectors.push(injectorItem);
 				}
-				return getProperties(injector.get(), properties);
+				return getProperties(injector(), properties);
 			}
 		})(target);
 	});

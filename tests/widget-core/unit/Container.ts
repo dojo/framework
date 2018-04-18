@@ -4,7 +4,6 @@ import { v, w } from '../../src/d';
 import { WidgetBase } from '../../src/WidgetBase';
 import { Container } from './../../src/Container';
 import { Registry } from './../../src/Registry';
-import { Injector } from './../../src/Injector';
 import { ProjectorMixin } from './../../src/mixins/Projector';
 
 interface TestWidgetProperties {
@@ -29,7 +28,7 @@ function getProperties(toInject: any, properties: any) {
 }
 
 const registry = new Registry();
-const injector = new Injector({});
+const injector = () => () => ({});
 registry.defineInjector('test-state-1', injector);
 registry.define('test-widget', TestWidget);
 
@@ -95,9 +94,18 @@ registerSuite('mixins/Container', {
 			assert.strictEqual(renderResult.widgetConstructor, 'test-widget');
 		},
 		'Container should always render but not invalidate parent when properties have not changed'() {
+			class TestInvalidate {
+				invalidator: any;
+			}
+			const testInvalidate = new TestInvalidate();
+			const testInvalidateInjector = (invalidator: any) => {
+				testInvalidate.invalidator = invalidator;
+				return () => {};
+			};
 			let renderCount = 0;
+			registry.defineInjector('test-always-render', testInvalidateInjector);
 			class Child extends WidgetBase<{ foo: string }> {}
-			class ContainerClass extends Container(Child, 'test-state-1', { getProperties }) {
+			class ContainerClass extends Container(Child, 'test-always-render', { getProperties }) {
 				render() {
 					renderCount++;
 					return super.render();
@@ -114,13 +122,13 @@ registerSuite('mixins/Container', {
 			projector.append();
 			renderCount = 0;
 
-			injector.set({});
+			testInvalidate.invalidator();
 			assert.strictEqual(renderCount, 1);
 
-			injector.set({});
+			testInvalidate.invalidator();
 			assert.strictEqual(renderCount, 2);
 
-			injector.set({});
+			testInvalidate.invalidator();
 			assert.strictEqual(renderCount, 3);
 		}
 	}

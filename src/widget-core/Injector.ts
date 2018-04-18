@@ -7,10 +7,15 @@ export type InjectorEventMap = {
 
 export class Injector<T = any> extends Evented<InjectorEventMap> {
 	private _payload: T;
+	private _invalidator: undefined | (() => void);
 
 	constructor(payload: T) {
 		super();
 		this._payload = payload;
+	}
+
+	public setInvalidator(invalidator: () => void) {
+		this._invalidator = invalidator;
 	}
 
 	public get(): T {
@@ -19,7 +24,9 @@ export class Injector<T = any> extends Evented<InjectorEventMap> {
 
 	public set(payload: T): void {
 		this._payload = payload;
-		this.emit({ type: 'invalidate' });
+		if (this._invalidator) {
+			this._invalidator();
+		}
 	}
 }
 

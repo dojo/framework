@@ -4,18 +4,17 @@ const { assert } = intern.getPlugin('chai');
 import { inject } from './../../../src/decorators/inject';
 import { WidgetBase } from './../../../src/WidgetBase';
 import { Registry } from './../../../src/Registry';
-import { Injector } from './../../../src/Injector';
 import { WidgetProperties } from './../../../src/interfaces';
 
-let injectorOne = new Injector<any>({ foo: 'bar' });
-let injectorTwo = new Injector<any>({ bar: 'foo' });
+let injectorOne = () => () => ({ foo: 'bar' });
+let injectorTwo = () => () => ({ bar: 'foo' });
 let registry: Registry;
 
 registerSuite('decorators/inject', {
 	beforeEach() {
 		registry = new Registry();
-		injectorOne = new Injector({ foo: 'bar' });
-		injectorTwo = new Injector({ bar: 'foo' });
+		injectorOne = () => () => ({ foo: 'bar' });
+		injectorTwo = () => () => ({ bar: 'foo' });
 		registry.defineInjector('inject-one', injectorOne);
 		registry.defineInjector('inject-two', injectorTwo);
 	},
@@ -73,11 +72,20 @@ registerSuite('decorators/inject', {
 			assert.strictEqual(widget.properties.bar, 'foo');
 		},
 		'invalidate listeners are removed when widget is destroyed'() {
+			class TestInvalidate {
+				invalidator: any;
+			}
+			const testInvalidate = new TestInvalidate();
+			const testInvalidateInjector = (invalidator: any) => {
+				testInvalidate.invalidator = invalidator;
+				return () => {};
+			};
+			registry.defineInjector('invalidate-test', testInvalidateInjector);
 			function getProperties(payload: any, properties: WidgetProperties): WidgetProperties {
 				return payload;
 			}
 			let invalidateCounter = 0;
-			@inject({ name: 'inject-one', getProperties: getProperties })
+			@inject({ name: 'invalidate-test', getProperties: getProperties })
 			class TestWidget extends WidgetBase<any> {
 				destroy() {
 					super.destroy();
@@ -90,13 +98,13 @@ registerSuite('decorators/inject', {
 			const widget = new TestWidget();
 			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
 			widget.__setProperties__({});
-			injectorOne.set({});
+			testInvalidate.invalidator();
+			assert.strictEqual(invalidateCounter, 2);
+			testInvalidate.invalidator();
 			assert.strictEqual(invalidateCounter, 3);
-			injectorOne.set({});
-			assert.strictEqual(invalidateCounter, 4);
 			widget.destroy();
-			injectorOne.set({});
-			assert.strictEqual(invalidateCounter, 4);
+			testInvalidate.invalidator();
+			assert.strictEqual(invalidateCounter, 3);
 		}
 	}
 });

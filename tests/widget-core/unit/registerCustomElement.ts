@@ -4,7 +4,6 @@ import diffProperty from '../../src/decorators/diffProperty';
 import customElement from '../../src/decorators/customElement';
 import WidgetBase from '../../src/WidgetBase';
 import Container from '../../src/Container';
-import Injector from '../../src/Injector';
 import Registry from '../../src/Registry';
 import { v, w } from '../../src/d';
 import register, { create, CustomElementChildType } from '../../src/registerCustomElement';
@@ -272,7 +271,7 @@ describe('registerCustomElement', () => {
 		});
 
 		const registry = new Registry();
-		const injector = new Injector({ text: 'foo' });
+		const injector = () => () => ({ text: 'foo' });
 		registry.defineInjector('state', injector);
 
 		@customElement<any>({

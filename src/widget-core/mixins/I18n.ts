@@ -87,7 +87,10 @@ export interface I18nMixin {
 
 export function registerI18nInjector(localeData: LocaleData, registry: Registry): Injector {
 	const injector = new Injector(localeData);
-	registry.defineInjector(INJECTOR_KEY, injector);
+	registry.defineInjector(INJECTOR_KEY, (invalidator) => {
+		injector.setInvalidator(invalidator);
+		return () => injector.get();
+	});
 	return injector;
 }
 

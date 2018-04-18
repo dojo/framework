@@ -7,7 +7,6 @@ import {
 	INJECTED_THEME_KEY,
 	registerThemeInjector
 } from '../../../src/mixins/Themed';
-import { Injector } from './../../../src/Injector';
 import { WidgetBase } from '../../../src/WidgetBase';
 import { Registry } from '../../../src/Registry';
 import { v } from '../../../src/d';
@@ -202,7 +201,7 @@ registerSuite('ThemedMixin', {
 		},
 		'injecting a theme': {
 			'theme can be injected by defining a ThemeInjector with registry'() {
-				const injector = new Injector(testTheme1);
+				const injector = () => () => testTheme1;
 				testRegistry.defineInjector(INJECTED_THEME_KEY, injector);
 				class InjectedTheme extends TestWidget {
 					render() {
@@ -216,7 +215,7 @@ registerSuite('ThemedMixin', {
 				assert.deepEqual(renderResult.properties.classes, 'theme1Class1');
 			},
 			'theme will not be injected if a theme has been passed via a property'() {
-				const injector = new Injector(testTheme1);
+				const injector = () => () => testTheme1;
 				testRegistry.defineInjector(INJECTED_THEME_KEY, injector);
 				class InjectedTheme extends TestWidget {
 					render() {

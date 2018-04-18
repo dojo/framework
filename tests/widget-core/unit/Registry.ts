@@ -3,9 +3,9 @@ const { assert } = intern.getPlugin('chai');
 import Registry, { ESMDefaultWidgetBase } from './../../src/Registry';
 import { WidgetBase } from './../../src/WidgetBase';
 import Promise from '@dojo/shim/Promise';
-import { Injector } from './../../src/Injector';
 
-const testInjector = new Injector({});
+const testPayload = () => ({});
+const testInjector = () => testPayload;
 
 registerSuite('Registry', {
 	api() {
@@ -228,15 +228,15 @@ registerSuite('Registry', {
 			'get a registered injector'() {
 				const factoryRegistry = new Registry();
 				factoryRegistry.defineInjector('my-injector', testInjector);
-				const injector = factoryRegistry.getInjector('my-injector');
-				assert.strictEqual(injector, testInjector);
+				const injectorItem = factoryRegistry.getInjector('my-injector')!;
+				assert.strictEqual(injectorItem.injector, testPayload);
 			},
 			'get a registered injector with a Symbol'() {
 				const symbolLabel = Symbol();
 				const factoryRegistry = new Registry();
 				factoryRegistry.defineInjector(symbolLabel, testInjector);
-				const injector = factoryRegistry.getInjector(symbolLabel);
-				assert.strictEqual(injector, testInjector);
+				const injectorItem = factoryRegistry.getInjector(symbolLabel)!;
+				assert.strictEqual(injectorItem.injector, testPayload);
 			},
 			'returns null when injector is not registered'() {
 				const symbolLabel = Symbol();
@@ -248,7 +248,7 @@ registerSuite('Registry', {
 	},
 	'Support injectors and widgets with the same label'() {
 		const factoryRegistry = new Registry();
-		const injector = new Injector({});
+		const injector = () => () => ({});
 		assert.isFalse(factoryRegistry.hasInjector('my-item'));
 		assert.isFalse(factoryRegistry.has('my-item'));
 		factoryRegistry.defineInjector('my-item', injector);

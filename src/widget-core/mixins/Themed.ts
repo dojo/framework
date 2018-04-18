@@ -82,7 +82,10 @@ function createThemeClassesLookup(classes: ClassNames[]): ClassNames {
  */
 export function registerThemeInjector(theme: any, themeRegistry: Registry): Injector {
 	const themeInjector = new Injector(theme);
-	themeRegistry.defineInjector(INJECTED_THEME_KEY, themeInjector);
+	themeRegistry.defineInjector(INJECTED_THEME_KEY, (invalidator) => {
+		themeInjector.setInvalidator(invalidator);
+		return () => themeInjector.get();
+	});
 	return themeInjector;
 }
 

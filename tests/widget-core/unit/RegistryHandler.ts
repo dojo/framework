@@ -3,19 +3,19 @@ const { assert } = intern.getPlugin('chai');
 import RegistryHandler from '../../src/RegistryHandler';
 import Registry from '../../src/Registry';
 import { WidgetBase } from '../../src/WidgetBase';
-import { Injector } from './../../src/Injector';
 
 const foo = Symbol();
 const bar = Symbol();
 
 class GlobalWidget extends WidgetBase {}
-const globalInjector = new Injector({});
+const globalInjector = () => ({});
+const globalInjectorFactory = () => globalInjector;
 
 const registry = new Registry();
 registry.define('foo', GlobalWidget);
 registry.define(foo, GlobalWidget);
-registry.defineInjector('foo', globalInjector);
-registry.defineInjector(foo, globalInjector);
+registry.defineInjector('foo', globalInjectorFactory);
+registry.defineInjector(foo, globalInjectorFactory);
 
 class LocalWidget extends WidgetBase {}
 
@@ -179,7 +179,7 @@ registerSuite('RegistryHandler', {
 			local() {
 				const registryHandler = new RegistryHandler();
 				registryHandler.base = registry;
-				const localInjector = new Injector({});
+				const localInjector = () => () => ({});
 				registryHandler.defineInjector('bar', localInjector);
 				registryHandler.defineInjector(bar, localInjector);
 				assert.isTrue(registryHandler.hasInjector('bar'));
@@ -190,26 +190,27 @@ registerSuite('RegistryHandler', {
 			base() {
 				const registryHandler = new RegistryHandler();
 				registryHandler.base = registry;
-				assert.equal(registryHandler.getInjector('foo'), globalInjector);
-				assert.equal(registryHandler.getInjector(foo), globalInjector);
+				assert.equal(registryHandler.getInjector('foo')!.injector, globalInjector);
+				assert.equal(registryHandler.getInjector(foo)!.injector, globalInjector);
 			},
 			local() {
 				const registryHandler = new RegistryHandler();
 				registryHandler.base = registry;
-				const localInjector = new Injector({});
-				registryHandler.defineInjector('foo', localInjector);
-				registryHandler.defineInjector(foo, localInjector);
-				assert.equal(registryHandler.getInjector('foo'), localInjector);
-				assert.equal(registryHandler.getInjector(foo), localInjector);
+				const localInjector = () => ({});
+				const localInjectorFactory = () => localInjector;
+				registryHandler.defineInjector('foo', localInjectorFactory);
+				registryHandler.defineInjector(foo, localInjectorFactory);
+				assert.equal(registryHandler.getInjector('foo')!.injector, localInjector);
+				assert.equal(registryHandler.getInjector(foo)!.injector, localInjector);
 			},
 			'with global precedence'() {
 				const registryHandler = new RegistryHandler();
 				registryHandler.base = registry;
-				const localInjector = new Injector({});
+				const localInjector = () => () => ({});
 				registryHandler.defineInjector('foo', localInjector);
 				registryHandler.defineInjector(foo, localInjector);
-				assert.equal(registryHandler.getInjector('foo', true), globalInjector);
-				assert.equal(registryHandler.getInjector(foo, true), globalInjector);
+				assert.equal(registryHandler.getInjector('foo', true)!.injector, globalInjector);
+				assert.equal(registryHandler.getInjector(foo, true)!.injector, globalInjector);
 			},
 			'invalidates when registry emits loaded event (only once)'() {
 				const registryHandler = new RegistryHandler();
@@ -223,13 +224,14 @@ registerSuite('RegistryHandler', {
 				registryHandler.getInjector('global');
 				registryHandler.getInjector('global');
 				registryHandler.getInjector('global');
-				registry.defineInjector('global', globalInjector);
+				registry.defineInjector('global', globalInjectorFactory);
 				assert.strictEqual(invalidateCount, 1);
 			},
 			'invalidates when primary registry emits loaded event even when widget is loaded in secondary registry'() {
 				const registryHandler = new RegistryHandler();
 				const registry = new Registry();
-				const localInjector = new Injector({});
+				const localInjector = () => ({});
+				const localInjectorFactory = () => localInjector;
 				registryHandler.base = registry;
 				let invalidateCount = 0;
 				registryHandler.on('invalidate', () => {
@@ -238,15 +240,15 @@ registerSuite('RegistryHandler', {
 
 				registryHandler.getInjector('global');
 				registryHandler.getInjector('global');
-				registry.defineInjector('global', globalInjector);
+				registry.defineInjector('global', globalInjectorFactory);
 				assert.strictEqual(invalidateCount, 1);
-				registryHandler.defineInjector('global', localInjector);
+				registryHandler.defineInjector('global', localInjectorFactory);
 				assert.strictEqual(invalidateCount, 2);
 			},
 			'no loaded event listeners once the widget is fully loaded (into primary registry)'() {
 				const registryHandler = new RegistryHandler();
 				registryHandler.base = registry;
-				const localInjector = new Injector({});
+				const localInjector = () => () => ({});
 				let invalidateCount = 0;
 				registryHandler.on('invalidate', () => {
 					invalidateCount++;
@@ -262,7 +264,7 @@ registerSuite('RegistryHandler', {
 				const registryHandler = new RegistryHandler();
 				const registry = new Registry();
 				registryHandler.base = registry;
-				const localInjector = new Injector({});
+				const localInjector = () => () => ({});
 				let invalidateCount = 0;
 				registryHandler.on('invalidate', () => {
 					invalidateCount++;
@@ -270,20 +272,20 @@ registerSuite('RegistryHandler', {
 				registryHandler.getInjector('injector');
 				registryHandler.defineInjector('injector', localInjector);
 				assert.strictEqual(invalidateCount, 1);
-				registry.defineInjector('injector', globalInjector);
+				registry.defineInjector('injector', globalInjectorFactory);
 				assert.strictEqual(invalidateCount, 1);
 			},
 			'no `invalidate` events emitted once the with registry with the highest precedence has loaded - with global'() {
 				const registryHandler = new RegistryHandler();
 				const registry = new Registry();
 				registryHandler.base = registry;
-				const localInjector = new Injector({});
+				const localInjector = () => () => ({});
 				let invalidateCount = 0;
 				registryHandler.on('invalidate', () => {
 					invalidateCount++;
 				});
 				registryHandler.getInjector('injector', true);
-				registry.defineInjector('injector', globalInjector);
+				registry.defineInjector('injector', globalInjectorFactory);
 				assert.strictEqual(invalidateCount, 1);
 				registryHandler.defineInjector('injector', localInjector);
 				assert.strictEqual(invalidateCount, 1);

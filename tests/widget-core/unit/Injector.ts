@@ -1,5 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
+import { stub } from 'sinon';
 
 import { Injector } from './../../src/Injector';
 
@@ -10,14 +11,12 @@ registerSuite('Injector', {
 		assert.strictEqual(injector.get(), payload);
 	},
 	set() {
-		let invalidateCalled = false;
 		const payload = {};
 		const injector = new Injector(payload);
+		const invalidatorStub = stub();
+		injector.setInvalidator(invalidatorStub);
 		assert.strictEqual(injector.get(), payload);
-		injector.on('invalidate', () => {
-			invalidateCalled = true;
-		});
 		injector.set({});
-		assert.isTrue(invalidateCalled);
+		assert.isTrue(invalidatorStub.calledOnce);
 	}
 });

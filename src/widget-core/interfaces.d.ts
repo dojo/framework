@@ -231,6 +231,21 @@ export interface VNodeProperties {
  */
 export type RegistryLabel = string | symbol;
 
+export type InjectorPayload = () => any;
+
+/**
+ * Factory that returns an injector function
+ */
+export type InjectorFactory = (invalidator: () => void) => InjectorPayload;
+
+/**
+ * The injector item created for a registered Injector factory
+ */
+export interface InjectorItem<T = any> {
+	injector: () => T;
+	invalidator: Evented;
+}
+
 /**
  * Base widget properties
  */

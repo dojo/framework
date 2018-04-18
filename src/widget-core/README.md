@@ -688,11 +688,14 @@ A main registry can be provided to the `projector`, which will be automatically 
 import { Registry } from '@dojo/widget-core/Registry';
 
 import { MyWidget } from './MyWidget';
-import { MyInjector } from './MyInjector';
+import { MyAppContext } from './MyAppContext';
 
 const registry = new Registry();
 registry.define('my-widget', MyWidget);
-registry.defineInjector('my-injector', MyInjector);
+registry.defineInjector('my-injector', (invalidator) => {
+	const appContext = new MyAppContext(invalidator);
+	return () => appContext;
+});
 // ... Mixin and create Projector ...
 
 projector.setProperties({ registry });
@@ -851,18 +854,32 @@ class MyClass extends WidgetBase {
 
 ### Containers & Injectors
 
-There is built-in support for side-loading/injecting values into sections of the widget tree and mapping them to a widget's properties. This is achieved by registering a `@dojo/widget-core/Injector` instance against a `registry` that is available to your application (i.e. set on the projector instance, `projector.setProperties({ registry })`).
+There is built-in support for side-loading/injecting values into sections of the widget tree and mapping them to a widget's properties. This is achieved by registering an injector factory with a `registry` and setting the registry as a property on the application's `projector` to ensure the registry instance is available to your application.
 
-Create an `Injector` instance and pass the `payload` that needs to be injected to the constructor:
+Create a factory function for a function that returns the required `payload`.
 
 ```ts
-const injector = new Injector({ foo: 'baz' });
-registry.defineInjector('my-injector', injector);
+registry.defineInjector('my-injector', () => {
+    return () => ({ foo: 'bar' });
+});
 ```
 
-To connect the registered `injector` to a widget, we can use the `Container` HOC (higher order component) provided by `widget-core`. The `Container` accepts a widget `constructor`, `injector` label, and `getProperties` mapping function as arguments and returns a new class that returns the passed widget from its `render` function.
+The injector factory gets passed an `invalidator` function that can get called when something has changed that requires connected widgets to `invalidate`.
 
-`getProperties` receives the `payload` from an `injector` and `properties` from the container HOC component. These are used to map into the wrapped widget's properties.
+```ts
+registry.defineInjector('my-injector', (invalidator) => {
+    // This could be a store, but for this example it is simply an instance
+    // that accepts the `invalidator` and calls it when any of its internal
+    // state has changed.
+    const appContext = new AppContext(invalidator);
+    return () => appContext;
+});
+
+```
+
+To connect the registered `payload` to a widget, we can use the `Container` HOC (higher order component) provided by `widget-core`. The `Container` accepts a widget `constructor`, `injector` label, and `getProperties` mapping function as arguments and returns a new class that returns the passed widget from its `render` function.
+
+`getProperties` receives the `payload` returned from the injector function and the `properties` passed to the container HOC component. These are used to map into the wrapped widget's properties.
 
 ```ts
 import { Container } from '@dojo/widget-core/Container';
