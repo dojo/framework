@@ -19,7 +19,7 @@ add(
 		}
 
 		const request = new global.XMLHttpRequest();
-		request.open('GET', 'http://www.google.com', true);
+		request.open('GET', global.location.protocol + '//www.google.com', true);
 		request.responseType = 'blob';
 		request.abort();
 		return request.responseType === 'blob';
