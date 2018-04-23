@@ -1,43 +1,37 @@
 const { suite, test } = intern.getInterface('tdd');
 const { assert } = intern.getPlugin('chai');
+import { spy } from 'sinon';
 import { Registry } from '@dojo/widget-core/Registry';
-import { Injector } from '@dojo/widget-core/Injector';
 import { registerRouterInjector } from '../../src/RouterInjector';
 import { MemoryHistory } from '../../src/history/MemoryHistory';
 
 suite('RouterInjector', () => {
 	test('registerRouterInjector', () => {
-		let invalidateCalled = false;
 		const registry = new Registry();
 		const router = registerRouterInjector([{ path: 'path', outlet: 'path' }], registry, {
 			HistoryManager: MemoryHistory
 		});
-		const injector = registry.getInjector('router') as Injector;
+		const { injector, invalidator } = registry.getInjector('router')!;
 		assert.isNotNull(injector);
-		assert.strictEqual(injector.get(), router);
-		injector.on('invalidate', () => {
-			invalidateCalled = true;
-		});
+		assert.strictEqual(injector(), router);
+		const invalidatorSpy = spy(invalidator, 'emit');
 		router.emit({ type: 'navstart' });
-		assert.isTrue(invalidateCalled);
+		assert.isTrue(invalidatorSpy.calledOnce);
 	});
 
 	test('registerRouterInjector with custom key', () => {
-		let invalidateCalled = false;
 		const registry = new Registry();
 		const router = registerRouterInjector([{ path: 'path', outlet: 'path' }], registry, {
 			HistoryManager: MemoryHistory,
 			key: 'custom-key'
 		});
-		const injector = registry.getInjector('custom-key') as Injector;
+		const { injector, invalidator } = registry.getInjector('custom-key')!;
+		const invalidatorSpy = spy(invalidator, 'emit');
 		assert.isNotNull(injector);
-		const registeredRouter = injector.get();
-		assert.strictEqual(injector.get(), registeredRouter);
-		injector.on('invalidate', () => {
-			invalidateCalled = true;
-		});
+		const registeredRouter = injector();
+		assert.strictEqual(router, registeredRouter);
 		router.emit({ type: 'navstart' });
-		assert.isTrue(invalidateCalled);
+		assert.isTrue(invalidatorSpy.calledOnce);
 	});
 
 	test('throws error if a second router is registered for the same key', () => {

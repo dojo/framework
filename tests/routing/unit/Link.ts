@@ -3,7 +3,6 @@ const { assert } = intern.getPlugin('chai');
 import { spy, SinonSpy } from 'sinon';
 
 import { Registry } from '@dojo/widget-core/Registry';
-import { Injector } from '@dojo/widget-core/Injector';
 import { Link } from './../../src/Link';
 import { Router } from './../../src/Router';
 import { MemoryHistory } from './../../src/history/MemoryHistory';
@@ -24,7 +23,7 @@ const router = new Router(
 	{ HistoryManager: MemoryHistory }
 );
 
-registry.defineInjector('router', new Injector(router));
+registry.defineInjector('router', () => () => router);
 
 let routerSetPathSpy: SinonSpy;
 
