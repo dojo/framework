@@ -433,3 +433,8 @@ Test cases MUST be written using Intern using the Object test interface and Asse
 
 © 2018 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
+<!-- doc-viewer-config
+{
+	"api": "docs/api.json"
+}
+-->
