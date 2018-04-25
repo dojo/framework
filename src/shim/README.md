@@ -46,6 +46,7 @@ import '@dojo/shim/browser';
 
 *Note*: Other Dojo 2 packages will include these dependencies.  You only need to worry about this if you are using this package stand alone.
 
+<!-- start-github-only -->
 ## Features
 
 Many of the features in this package will fallback to a native implementation if one is available.
@@ -63,6 +64,8 @@ Many of the features in this package will fallback to a native implementation if
 - [Promises](#promises)
 - [String](#string)
 - [Symbols](#symbols)
+
+<!-- end-github-only -->
 
 ### Array Methods
 
@@ -194,4 +197,20 @@ or
 ## Licensing information
 
 © 2018 [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+
+<!-- doc-viewer-config
+{
+	"api": "docs/api.json",
+	"pages": [
+		"docs/array.md",
+		"docs/lang.md",
+		"docs/Map.md",
+		"docs/math.md",
+		"docs/Observable.md",
+		"docs/Promise.md",
+		"docs/string.md",
+		"docs/UrlSearchParams.md",
+	]
+}
+-->
 
