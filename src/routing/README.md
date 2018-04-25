@@ -1,5 +1,7 @@
 # @dojo/routing
 
+<!-- start-github-only -->
+
 [![Build Status](https://travis-ci.org/dojo/routing.svg?branch=master)](https://travis-ci.org/dojo/routing)
 [![codecov.io](https://codecov.io/github/dojo/routing/coverage.svg?branch=master)](https://codecov.io/github/dojo/routing?branch=master)
 [![npm version](https://badge.fury.io/js/%40dojo%2Frouting.svg)](https://badge.fury.io/js/%40dojo%2Frouting)
@@ -16,6 +18,8 @@ A routing library for Dojo 2 applications.
      - [Outlet Options](#outlet-options)
      - [Global Error Outlet](#global-error-outlet)
    - [Link](#link)
+
+<!-- end-github-only -->
 
 ## Usage
 
@@ -401,3 +405,9 @@ or
 ## Licensing information
 
 © 2018 [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+
+<!-- doc-viewer-config
+{
+	"api": "docs/api.json",
+}
+-->
