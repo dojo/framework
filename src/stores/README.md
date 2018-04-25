@@ -27,9 +27,10 @@ npm install @dojo/widget-core
  * All state operations are recorded per process and undoable via a process callback
  * Supports the optimistic pattern with the ability to roll back on a failure
  * Fully serializable operations and state
+ 
+<!-- start-github-only -->
 
 -----
-
  - [Overview](#overview)
  - [Basics](#basics)
      - [Operations](#operations)
@@ -51,6 +52,8 @@ npm install @dojo/widget-core
  - [Licensing Information](#licensing-information)
 
 -----
+
+<!-- end-github-only -->
 
 ## Overview
 
@@ -618,3 +621,9 @@ or
 ## Licensing information
 
 © 2018 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+
+<!-- doc-viewer-config
+{
+	"api": "docs/api.json",
+}
+-->
