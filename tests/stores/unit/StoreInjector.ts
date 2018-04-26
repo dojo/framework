@@ -5,7 +5,7 @@ import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { v, WNODE } from '@dojo/widget-core/d';
 import { Registry } from '@dojo/widget-core/Registry';
 
-import { StoreInjector, createStoreContainer, storeInject, StoreContainer } from './../../src/StoreInjector';
+import { createStoreContainer, storeInject, StoreContainer } from './../../src/StoreInjector';
 import { Store } from './../../src/Store';
 import { createCommandFactory, createProcess, Process } from '../../src/process';
 import { replace } from '../../src/state/operations';
@@ -40,30 +40,6 @@ describe('StoreInjector', () => {
 		barProcess = createProcess('bar', [barCommand]);
 	});
 
-	describe('StoreInjector', () => {
-		it('should emit invalidate when the store invalidates', () => {
-			let invalidateEmitted = false;
-			const injector = new StoreInjector(store);
-			injector.on('invalidate', () => {
-				invalidateEmitted = true;
-			});
-			store.emit({ type: 'invalidate' });
-			assert.isTrue(invalidateEmitted);
-		});
-
-		it('should emit invalidate when the registered state in store changes', () => {
-			let invalidateEmitted = false;
-			const injector = new StoreInjector(store);
-			injector.onChange([['foo']], () => {
-				invalidateEmitted = true;
-			});
-			barProcess(store)({});
-			assert.isFalse(invalidateEmitted);
-			fooProcess(store)({});
-			assert.isTrue(invalidateEmitted);
-		});
-	});
-
 	describe('storeInject', () => {
 		it('Should invalidate every time the payload invalidate when no path is passed', () => {
 			@storeInject<State>({
@@ -76,7 +52,7 @@ describe('StoreInjector', () => {
 			})
 			class TestWidget extends WidgetBase<any> {}
 			const widget = new TestWidget();
-			registry.defineInjector('state', new StoreInjector(store));
+			registry.defineInjector('state', () => () => store);
 			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
 			widget.__setProperties__({});
 			const invalidateSpy = spy(widget, 'invalidate');
@@ -102,7 +78,7 @@ describe('StoreInjector', () => {
 			})
 			class TestWidget extends WidgetBase<any> {}
 			const widget = new TestWidget();
-			registry.defineInjector('state', new StoreInjector(store));
+			registry.defineInjector('state', () => () => store);
 			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
 			widget.__setProperties__({});
 			const invalidateSpy = spy(widget, 'invalidate');
@@ -136,7 +112,7 @@ describe('StoreInjector', () => {
 				}
 			}
 			const widget = new TestWidget();
-			registry.defineInjector('state', new StoreInjector(store));
+			registry.defineInjector('state', () => () => store);
 			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
 			widget.__setProperties__({});
 			fooProcess(store)({});
@@ -169,7 +145,7 @@ describe('StoreInjector', () => {
 				}
 			}
 			const widget = new TestWidget();
-			registry.defineInjector('state', new StoreInjector(store));
+			registry.defineInjector('state', () => () => store);
 			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
 			widget.__setProperties__({});
 			fooProcess(store)({});
@@ -216,7 +192,7 @@ describe('StoreInjector', () => {
 				}
 			}
 			const fooContainer = new FooContainer();
-			registry.defineInjector('state', new StoreInjector(store));
+			registry.defineInjector('state', () => () => store);
 			fooContainer.__setProperties__({});
 			assert.strictEqual(invalidateCounter, 1);
 			fooContainer.__setProperties__({});
@@ -262,7 +238,7 @@ describe('StoreInjector', () => {
 				}
 			}
 			const fooContainer = new FooContainer();
-			registry.defineInjector('state', new StoreInjector(store));
+			registry.defineInjector('state', () => () => store);
 			fooContainer.__setProperties__({});
 			assert.strictEqual(invalidateCounter, 1);
 			fooContainer.__setProperties__({});

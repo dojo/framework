@@ -4,11 +4,10 @@ import { w } from '@dojo/widget-core/d';
 import { handleDecorator } from '@dojo/widget-core/decorators/handleDecorator';
 import { beforeProperties } from '@dojo/widget-core/decorators/beforeProperties';
 import { alwaysRender } from '@dojo/widget-core/decorators/alwaysRender';
-import { RegistryLabel, Constructor, DNode } from '@dojo/widget-core/interfaces';
+import { InjectorItem, RegistryLabel, Constructor, DNode } from '@dojo/widget-core/interfaces';
 import { Store } from './Store';
-import { Injector } from '@dojo/widget-core/Injector';
 
-const registeredInjectorsMap: WeakMap<WidgetBase, StoreInjector[]> = new WeakMap();
+const registeredInjectorsMap: WeakMap<WidgetBase, InjectorItem<Store>[]> = new WeakMap();
 
 export interface GetProperties<S extends Store, T = any> {
 	(payload: S, properties: T): T;
@@ -41,17 +40,19 @@ export function storeInject<S>(config: StoreInjectConfig<S>) {
 
 	return handleDecorator((target, propertyKey) => {
 		beforeProperties(function(this: WidgetBase & { own: Function }, properties: any) {
-			const injector: StoreInjector | null = this.registry.getInjector(name);
-			if (injector) {
+			const injectorItem = this.registry.getInjector<Store<S>>(name);
+			if (injectorItem) {
+				const { injector } = injectorItem;
+				const store = injector();
 				const registeredInjectors = registeredInjectorsMap.get(this) || [];
 				if (registeredInjectors.length === 0) {
 					registeredInjectorsMap.set(this, registeredInjectors);
 				}
-				if (registeredInjectors.indexOf(injector) === -1) {
+				if (registeredInjectors.indexOf(injectorItem) === -1) {
 					if (paths) {
-						const handle = injector.onChange(paths, () => {
-							this.invalidate();
-						});
+						const handle = store.onChange(paths.map((path: any) => store.path(path.join('/'))), () =>
+							this.invalidate()
+						);
 						this.own({
 							destroy: () => {
 								handle.remove();
@@ -59,40 +60,17 @@ export function storeInject<S>(config: StoreInjectConfig<S>) {
 						});
 					} else {
 						this.own(
-							injector.on('invalidate', () => {
+							store.on('invalidate', () => {
 								this.invalidate();
 							})
 						);
 					}
-					registeredInjectors.push(injector);
+					registeredInjectors.push(injectorItem);
 				}
-				return getProperties(injector.get(), properties);
+				return getProperties(store, properties);
 			}
 		})(target);
 	});
-}
-
-/**
- * Injector for a store
- */
-export class StoreInjector<T = any> extends Injector {
-	private _store: Store<T>;
-
-	constructor(payload: Store<T>) {
-		super({});
-		this._store = payload;
-		payload.on('invalidate', () => {
-			this.emit({ type: 'invalidate' });
-		});
-	}
-
-	public onChange = (paths: StoreContainerPath<T>[], callback: () => void) => {
-		return this._store.onChange(paths.map((path: any) => this._store.path(path.join('/'))), callback);
-	};
-
-	public get() {
-		return this._store;
-	}
 }
 
 export function StoreContainer<S = any, W extends WidgetBase<any, any> = WidgetBase<any, any>>(
