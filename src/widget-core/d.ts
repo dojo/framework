@@ -24,6 +24,11 @@ export const WNODE = Symbol('Identifier for a WNode.');
 export const VNODE = Symbol('Identifier for a VNode.');
 
 /**
+ * The symbol identifier for a VNode type created using dom()
+ */
+export const DOMVNODE = Symbol('Identifier for a VNode created using existing dom.');
+
+/**
  * Helper function that returns true if the `DNode` is a `WNode` using the `type` property
  */
 export function isWNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface>(
@@ -36,7 +41,14 @@ export function isWNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfa
  * Helper function that returns true if the `DNode` is a `VNode` using the `type` property
  */
 export function isVNode(child: DNode): child is VNode {
-	return Boolean(child && typeof child !== 'string' && child.type === VNODE);
+	return Boolean(child && typeof child !== 'string' && (child.type === VNODE || child.type === DOMVNODE));
+}
+
+/**
+ * Helper function that returns true if the `DNode` is a `VNode` created with `dom()` using the `type` property
+ */
+export function isDomVNode(child: DNode): child is VNode {
+	return Boolean(child && typeof child !== 'string' && child.type === DOMVNODE);
 }
 
 export function isElementNode(value: any): value is Element {
@@ -186,7 +198,7 @@ export function dom(
 		attributes: attrs,
 		events: on,
 		children,
-		type: VNODE,
+		type: DOMVNODE,
 		domNode: node,
 		text: isElementNode(node) ? undefined : node.data,
 		diffType

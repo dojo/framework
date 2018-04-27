@@ -12,7 +12,7 @@ import {
 	VNodeProperties
 } from './interfaces';
 import { from as arrayFrom } from '@dojo/shim/array';
-import { isWNode, isVNode, VNODE, WNODE } from './d';
+import { isWNode, isVNode, isDomVNode, VNODE, WNODE } from './d';
 import { isWidgetBaseConstructor } from './Registry';
 import WeakMap from '@dojo/shim/WeakMap';
 import NodeHandler from './NodeHandler';
@@ -108,6 +108,11 @@ const projectorStateMap = new WeakMap<DefaultWidgetBaseInterface, ProjectorState
 
 function same(dnode1: InternalDNode, dnode2: InternalDNode) {
 	if (isVNode(dnode1) && isVNode(dnode2)) {
+		if (isDomVNode(dnode1) || isDomVNode(dnode2)) {
+			if (dnode1.domNode !== dnode2.domNode) {
+				return false;
+			}
+		}
 		if (dnode1.tag !== dnode2.tag) {
 			return false;
 		}

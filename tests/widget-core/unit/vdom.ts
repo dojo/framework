@@ -2296,6 +2296,24 @@ describe('vdom', () => {
 			assert.strictEqual(div.childNodes.length, 0);
 			assert.strictEqual((root.childNodes[0] as Text).data, 'foo');
 		});
+
+		it('Should not consider different dom nodes as the same', () => {
+			const divA = document.createElement('div');
+			divA.innerHTML = 'A';
+			const divB = document.createElement('div');
+			divB.innerHTML = 'B';
+			let vnode = d({ node: divA });
+			const widget = getWidget(vnode);
+			const projection = dom.create(widget, { sync: true });
+			let root = projection.domNode.childNodes[0] as any;
+			assert.strictEqual(root, divA);
+			assert.strictEqual(root.innerHTML, 'A');
+			vnode = d({ node: divB });
+			widget.renderResult = vnode;
+			root = projection.domNode.childNodes[0] as any;
+			assert.strictEqual(root, divB);
+			assert.strictEqual(root.innerHTML, 'B');
+		});
 	});
 
 	describe('deferred properties', () => {
