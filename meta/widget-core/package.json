@@ -8,11 +8,9 @@
     "url": "https://github.com/dojo/widget-core/issues"
   },
   "license": "BSD-3-Clause",
-  "main": "main.js",
   "files": [
     "dist",
-    "src",
-    "typings.json"
+    "src"
   ],
   "engines": {
     "npm": ">=3.0.0"
@@ -39,6 +37,7 @@
     "@types/glob": "5.0.*",
     "@types/grunt": "0.4.*",
     "@types/jsdom": "2.0.*",
+    "@types/node": "~9.6.5",
     "@types/ramda": "^0.25.5",
     "@types/selenium-webdriver": "^3.0.8",
     "@types/sinon": "~4.1.2",
