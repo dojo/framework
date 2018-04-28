@@ -27,6 +27,7 @@
   "devDependencies": {
     "@dojo/loader": "~0.1.1",
     "@types/grunt": "~0.4.0",
+    "@types/node": "~9.6.5",
     "@types/sinon": "^1.16.35",
     "codecov.io": "0.1.6",
     "glob": "^7.0.6",
