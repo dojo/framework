@@ -38,6 +38,7 @@
     "@dojo/loader": "~0.1.1",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
+    "@types/node": "~9.6.5",
     "@types/sinon": "^4.1.2",
     "grunt": "~1.0.1",
     "grunt-dojo2": "latest",
