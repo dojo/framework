@@ -7,7 +7,7 @@ An implementation analogous to the Map specification in ES2015, with the excepti
 ### Empty Map
 
 ```ts
-import { Map } from 'src/Map';
+import { Map } from '@dojo/shim/Map';
 
 var map = new Map();
 
@@ -16,7 +16,7 @@ var map = new Map();
 ### With Initial Values
 
 ```ts
-import { Map } from 'src/Map';
+import { Map } from '@dojo/shim/Map';
 
 var map = new Map([
 	['age', 2],
@@ -28,7 +28,7 @@ var map = new Map([
 ## Adding a key/value pair
 
 ```ts
-import { Map } from 'src/Map';
+import { Map } from '@dojo/shim/Map';
 
 var map = new Map([
 	['age', 2],
@@ -45,7 +45,7 @@ map.set(key, value);
 ## Getting the amount of key/value pairs
 
 ```ts
-import { Map } from 'src/Map';
+import { Map } from '@dojo/shim/Map';
 
 var map = new Map([
 	['age', 2],
@@ -59,7 +59,7 @@ map.size() === 2; // true
 ## Clearing the key/value pairs
 
 ```ts
-import { Map } from 'src/Map';
+import { Map } from '@dojo/shim/Map';
 
 var map = new Map([
 	['age', 2],
@@ -75,7 +75,7 @@ map.size() === 0; // true
 ## Deleting a pair
 
 ```ts
-import { Map } from 'src/Map';
+import { Map } from '@dojo/shim/Map';
 
 var map = new Map([
 	['age', 2],
@@ -93,7 +93,7 @@ map.size() === 1; // true
 ## Loop over the key/value pairs
 
 ```ts
-import { Map } from 'src/Map';
+import { Map } from '@dojo/shim/Map';
 
 var map = new Map([
 	['age', 2],
@@ -108,7 +108,7 @@ map.forEach((value, key, map) -> {
 ## Retrieving a value
 
 ```ts
-import { Map } from 'src/Map';
+import { Map } from '@dojo/shim/Map';
 
 var map = new Map([
 	['age', 2],
@@ -124,7 +124,7 @@ map.get(key) === 2; // true
 ## Determine whether the map has a key
 
 ```ts
-import { Map } from 'src/Map';
+import { Map } from '@dojo/shim/Map';
 
 var map = new Map([
 	['age', 2],

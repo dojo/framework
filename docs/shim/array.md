@@ -1,8 +1,11 @@
 # array
 
-## `copyWithin` - Copies a sequence of elements to another position in the given array
+## `copyWithin`
+
+Copies a sequence of elements to another position in the given array.
+
 ```ts
-import { copyWithin } from 'src/array';
+import { copyWithin } from '@dojo/shim/array';
 
 var array = [ 0, 1, 2, 3 ];
 
@@ -18,11 +21,12 @@ array[2] === 1; // true
 array[3] === 2; // true
 ```
 
-## `from` - Creates an `Array` from an array-like object or a string. Array-like
-object being an object that has a length property and is indexible through `[]`.
+## `from`
+
+Creates an `Array` from an array-like object or a string. Array-like. Object being an object that has a length property and is indexible through `[]`.
 
 ```ts
-import { from } from 'src/array';
+import { from } from '@dojo/shim/array';
 
 var nodeList = document.getElementsByTagName('a');
 
@@ -30,9 +34,12 @@ var array = from(nodeList);
 
 array instanceof Array // true
 ```
-## `fill` - Fills some or all elements of an array with a given value
+## `fill`
+
+Fills some or all elements of an array with a given value.
+
 ```ts
-import { fill } from 'src/array';
+import { fill } from '@dojo/shim/array';
 
 var array = [0, 1, 2, 3];
 
@@ -47,9 +54,13 @@ array[2] === 4; // true
 array[3] === 4; // true
 
 ```
-## `find` - Returns the first value in the array satisfying a given function
+
+## `find`
+
+Returns the first value in the array satisfying a given function.
+
 ```ts
-import { find } from 'src/array';
+import { find } from '@dojo/shim/array';
 
 var array = [5, 10, 8, 1];
 
@@ -60,9 +71,13 @@ var result = find(array, (elm, index, array) => {
 result === 10; // true
 
 ```
-## `findIndex` - Returns the first index in the array whose value satisfies a given function
+
+## `findIndex`
+
+Returns the first index in the array whose value satisfies a given function.
+
 ```ts
-import { findIndex } from 'src/array';
+import { findIndex } from '@dojo/shim/array';
 
 var array = [5, 10, 8, 1];
 
@@ -73,9 +88,13 @@ var result = findIndex(array, (elm, index, array) => {
 result === 1; // true
 
 ```
-## `of` - Creates an `Array` with the given arguments as its elements
+
+## `of`
+
+Creates an `Array` with the given arguments as its elements.
+
 ```ts
-import { of } from 'src/array';
+import { of } from '@dojo/shim/array';
 
 var array = of(0, 1, 2, 3);
 

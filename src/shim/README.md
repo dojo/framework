@@ -203,13 +203,11 @@ or
 	"api": "docs/api.json",
 	"pages": [
 		"docs/array.md",
-		"docs/lang.md",
 		"docs/Map.md",
 		"docs/math.md",
 		"docs/Observable.md",
 		"docs/Promise.md",
-		"docs/string.md",
-		"docs/UrlSearchParams.md"
+		"docs/string.md"
 	]
 }
 -->
