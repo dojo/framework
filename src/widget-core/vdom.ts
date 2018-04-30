@@ -553,12 +553,7 @@ function nodeToRemove(dnode: InternalDNode, transitions: TransitionStrategy, pro
 	if (isWNode(dnode)) {
 		const rendered = dnode.rendered || emptyArray;
 		for (let i = 0; i < rendered.length; i++) {
-			const child = rendered[i];
-			if (isVNode(child)) {
-				child.domNode!.parentNode!.removeChild(child.domNode!);
-			} else {
-				nodeToRemove(child, transitions, projectionOptions);
-			}
+			nodeToRemove(rendered[i], transitions, projectionOptions);
 		}
 	} else {
 		const domNode = dnode.domNode;
@@ -735,7 +730,7 @@ function addChildren(
 	if (projectorState.merge && childNodes === undefined) {
 		childNodes = arrayFrom(parentVNode.domNode!.childNodes) as (Element | Text)[];
 	}
-
+	const transitions = projectionOptions.transitions!;
 	projectionOptions = { ...projectionOptions, depth: projectionOptions.depth + 1 };
 
 	for (let i = 0; i < children.length; i++) {
@@ -755,6 +750,7 @@ function addChildren(
 		} else {
 			createDom(child, parentVNode, insertBefore, projectionOptions, parentInstance, childNodes);
 		}
+		nodeAdded(child, transitions);
 	}
 }
 

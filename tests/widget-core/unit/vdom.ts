@@ -3501,6 +3501,77 @@ describe('vdom', () => {
 				assert.lengthOf((projection.domNode.childNodes[0] as Element).childNodes, 0);
 			});
 
+			it('Should run enter animations when a widget is added', () => {
+				const transitionStrategy = { enter: stub(), exit: stub() };
+				class Child extends WidgetBase {
+					render() {
+						return v('div', { enterAnimation: 'enter' });
+					}
+				}
+				class Parent extends WidgetBase {
+					items = [w(Child, { key: '1' })];
+
+					addItem() {
+						this.items = [...this.items, w(Child, { key: '2' })];
+						this.invalidate();
+					}
+
+					render() {
+						return v('div', [...this.items]);
+					}
+				}
+				const widget = new Parent();
+				const projection = dom.create(widget, {
+					transitions: transitionStrategy,
+					sync: true
+				});
+				assert.isTrue(
+					transitionStrategy.enter.calledWithExactly(
+						(projection.domNode.childNodes[0] as Element).children[0],
+						match({}),
+						'enter'
+					)
+				);
+				widget.addItem();
+				assert.isTrue(
+					transitionStrategy.enter.calledWithExactly(
+						(projection.domNode.childNodes[0] as Element).children[1],
+						match({}),
+						'enter'
+					)
+				);
+			});
+
+			it('Should run exit animations when a widget is removed', () => {
+				const transitionStrategy = { enter: stub(), exit: stub() };
+				class Child extends WidgetBase {
+					render() {
+						return v('div', { exitAnimation: 'exit' });
+					}
+				}
+				class Parent extends WidgetBase {
+					items = [w(Child, { key: '1' }), w(Child, { key: '2' })];
+
+					removeItem() {
+						this.items = [this.items[0]];
+						this.invalidate();
+					}
+
+					render() {
+						return v('div', [...this.items]);
+					}
+				}
+				const widget = new Parent();
+				const projection = dom.create(widget, {
+					transitions: transitionStrategy,
+					sync: true
+				});
+				const node = (projection.domNode.childNodes[0] as Element).children[1];
+				widget.removeItem();
+				console.log(transitionStrategy.exit.called);
+				assert.isTrue(transitionStrategy.exit.calledWithExactly(node, match({}), 'exit', match({})));
+			});
+
 			it('will complain about a missing transitionStrategy', () => {
 				const widget = getWidget(v('div'));
 				dom.create(widget, { sync: true });
