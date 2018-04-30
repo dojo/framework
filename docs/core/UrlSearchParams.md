@@ -7,7 +7,7 @@ The `UrlSearchParams` object makes working with URL query parameters a little ea
 ### With search params string
 
 ```
-import { UrlSearchParams } from 'src/UrlSearchParams';
+import { UrlSearchParams } from '@dojo/core/UrlSearchParams';
 
 const searchParams = new UrlSearchParams('a=b&b=c&c=a');
 ```
@@ -15,7 +15,7 @@ const searchParams = new UrlSearchParams('a=b&b=c&c=a');
 ### With object of search params
 
 ```
-import { UrlSearchParams } from 'src/UrlSearchParams';
+import { UrlSearchParams } from '@dojo/core/UrlSearchParams';
 
 const searchParams = new UrlSearchParams({
 	a: 'b',
@@ -26,10 +26,12 @@ const searchParams = new UrlSearchParams({
 
 ## Instance methods
 
-### append - Adds the value to the values that are associated with the key
+### `append`
+
+Adds the value to the values that are associated with the key.
 
 ```
-import { UrlSearchParams } from 'src/UrlSearchParams';
+import { UrlSearchParams } from '@dojo/core/UrlSearchParams';
 
 const searchParams = new UrlSearchParams('a=b&b=c&c=a');
 
@@ -39,10 +41,12 @@ const value = 'e';
 searchParams.append(key, value);
 ```
 
-### delete - removes the key from the search params
+### `delete`
+
+Removes the key from the search params.
 
 ```
-import { UrlSearchParams } from 'src/UrlSearchParams';
+import { UrlSearchParams } from '@dojo/core/UrlSearchParams';
 
 const searchParams = new UrlSearchParams('a=b&b=c&c=a');
 
@@ -51,10 +55,12 @@ const key = 'a';
 searchParams.delete(key);
 ```
 
-### get - retrieves the first value for the key provided
+### `get`
+
+Retrieves the first value for the key provided.
 
 ```
-import { UrlSearchParams } from 'src/UrlSearchParams';
+import { UrlSearchParams } from '@dojo/core/UrlSearchParams';
 
 const searchParams = new UrlSearchParams('a=first&a=second');
 
@@ -65,10 +71,12 @@ const result = searchParams.get(key);
 result === 'first'; // true
 ```
 
-### getAll - retrieves all the values for the key provided
+### `getAll`
+
+Retrieves all the values for the key provided.
 
 ```
-import { UrlSearchParams } from 'src/UrlSearchParams';
+import { UrlSearchParams } from '@dojo/core/UrlSearchParams';
 
 const searchParams = new UrlSearchParams('a=first&a=second');
 
@@ -80,10 +88,12 @@ result[0] === 'first'; // true
 result[1] === 'second'; // true
 ```
 
-### has - returns true if the key exists within the search params and false if it is not
+### `has`
+
+Returns true if the key exists within the search params and false if it is not.
 
 ```
-import { UrlSearchParams } from 'src/UrlSearchParams';
+import { UrlSearchParams } from '@dojo/core/UrlSearchParams';
 
 const searchParams = new UrlSearchParams('a=b&b=c&c=a');
 
@@ -94,10 +104,12 @@ const result = searchParams.has(key);
 result === false; // true
 ```
 
-### keys - returns an array of the keys of the search params
+### `keys`
+
+Returns an array of the keys of the search params.
 
 ```
-import { UrlSearchParams } from 'src/UrlSearchParams';
+import { UrlSearchParams } from '@dojo/core/UrlSearchParams';
 
 const searchParams = new UrlSearchParams('a=b&b=c&c=a');
 
@@ -109,10 +121,12 @@ result[1] === 'b'; // true
 result[2] === 'b'; // true
 ```
 
-### set - sets the value of a key (clears previous values)
+### `set`
+
+Sets the value of a key (clears previous values).
 
 ```
-import { UrlSearchParams } from 'src/UrlSearchParams';
+import { UrlSearchParams } from '@dojo/core/UrlSearchParams';
 
 const searchParams = new UrlSearchParams('a=b&b=c&c=a');
 
@@ -122,10 +136,12 @@ const value = 'e';
 searchParams.set(key, value);
 ```
 
-### toString - return a string of the search params
+### `toString`
+
+Return a string of the search params.
 
 ```
-import { UrlSearchParams } from 'src/UrlSearchParams';
+import { UrlSearchParams } from '@dojo/core/UrlSearchParams';
 
 const searchParams = new UrlSearchParams('a=b&b=c&c=a');
 

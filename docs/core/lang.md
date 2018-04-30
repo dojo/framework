@@ -2,10 +2,12 @@
 
 ## Module Exports
 
-### assign - copies values of own properties from the source object(s) to the target object
+### `assign`
+
+Copies values of own properties from the source object(s) to the target object.
 
 ```ts
-import { assign } from 'src/lang';
+import { assign } from '@dojo/core/lang';
 
 var target = {
 	foo: 'bar'
@@ -22,10 +24,12 @@ target.bar === 'foo'; // true
 
 ```
 
-### create - creates a new object based on
+### `create`
+
+Creates a new object from the given prototype, and copies all enumerable own properties of one or more source objects to the newly created target object.
 
 ```ts
-import { create } from 'src/lang';
+import { create } from '@dojo/core/lang';
 
 var oldObj = {
 	foo: 'bar',
@@ -49,10 +53,12 @@ newObj.foo === 'bar'; // true
 newObj.obj.bar === 'bar'; // true
 ```
 
-### deepAssign - recursively copies values from own properties of source object(s) to target object
+### `deepAssign`
+
+Copies the values of all enumerable own properties of one or more source objects to the target object, recursively copying all nested objects and arrays as well.
 
 ```ts
-import { deepAssign } from 'src/lang';
+import { deepAssign } from '@dojo/core/lang';
 
 var oldObj = {
 	foo: 'bar',
@@ -76,9 +82,12 @@ newObj.foo === 'bar'; // true
 newObj.obj.bar === 'bar'; // true
 ```
 
-### mixin - copies values of own and inherited properties from the source object(s) to the target object
+### `mixin`
+
+Copies values of own and inherited properties from the source object(s) to the target object.
+
 ```ts
-import { mixin } from 'src/lang';
+import { mixin } from '@dojo/core/lang';
 
 const obj = {
 	foo: 'bar',
@@ -98,9 +107,12 @@ result.fooObj.bar === 'bar'; // true
 
 ```
 
-### deepMixin - recursively copies values of own and inherited properties from the source object(s) to the target object
+### `deepMixin`
+
+Copies the values of all enumerable (own or inherited) properties of one or more source objects to the target object, recursively copying all nested objects and arrays as well.
+
 ```ts
-import { deepMixin } from 'src/lang';
+import { deepMixin } from '@dojo/core/lang';
 
 const obj = {
 	foo: 'bar',
@@ -121,9 +133,12 @@ result.fooObj.bar === 'foo'; // true
 
 ```
 
-### duplicate - creates new object with property set to `oldObj` prototype and a deep copies of its properties
+### `duplicate`
+
+Creates a new object using the provided source's prototype as the prototype for the new object, and then deep copies the provided source's values into the new target.
+
 ```ts
-import { duplicate } from 'src/lang';
+import { duplicate } from '@dojo/core/lang';
 
 var oldObj = {
 	foo: 'bar'
@@ -138,10 +153,12 @@ newObj.foo === 'bar';
 
 ```
 
-### partial - creates a function that calls the provided function with the arguments provides and any other arguments provided to the new function
+### `partial`
+
+Returns a function which invokes the given function with the given arguments prepended to its argument list. Like `Function.prototype.bind`, but does not alter execution context.
 
 ```ts
-import { partial } from 'src/lang';
+import { partial } from '@dojo/core/lang';
 
 var add = function (a, b) {
 	return a + b;
@@ -155,18 +172,24 @@ result === 9;
 
 ```
 
-### isIdentical - determines whether two values are the same (including NaN)
+### `isIdentical`
+
+Determines whether two values are the same (including NaN).
+
 ```ts
-import { isIdentical } from 'src/lang';
+import { isIdentical } from '@dojo/core/lang';
 
 isIdentical(1, 1); // true
 isIdentical(NaN, NaN); // true
 
 ```
 
-### lateBind - creates a function that calls the current method on an object with given arguments
+### `lateBind`
+
+Creates a function that calls the current method on an object with given arguments.
+
 ```ts
-import { lateBind } from 'src/lang';
+import { lateBind } from '@dojo/core/lang';
 
 var person = {
 	speak: function (name) {

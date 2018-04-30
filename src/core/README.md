@@ -24,10 +24,8 @@ npm install @dojo/shim
 
 - [Feature Detection](#feature-detection)
 - [Language Utilities](#language-utilities)
-  - [array](#array)
   - [lang](#lang)
   - [load](#load)
-  - [math](#math)
   - [string](#string)
 - [UrlSearchParams](#urlsearchparams)
 - [Event Handling](#event-handling)
@@ -46,10 +44,6 @@ detect which platforms support which features.
 The core package provides modules offering language utilities.  Some of these are heavily based
 on methods in the ES2015 proposal; others are additional APIs for commonly-performed tasks.
 
-#### array
-
-The [`@dojo/core/array` module](docs/array.md) contains analogs to some of the ES2015 Array APIs.
-
 #### lang
 
 The [`@dojo/core/lang` module](docs/lang.md) contains various utility functions for tasks such as copying objects
@@ -57,10 +51,6 @@ and creating late-bound or partially applied functions.
 
 ### load
 The [`@dojo/core/load` module](docs/load.md) can be used to dynamically load modules or other arbitrary resources via plugins.
-
-#### math
-
-The [`@dojo/core/math` module](docs/math.md) contains analogs to a number of ES2015 APIs, including many trigonometric and logarithmic functions.
 
 #### string
 
@@ -150,13 +140,10 @@ See [LICENSE](LICENSE) for details.
 {
 	"api": "docs/api.json",
 	"pages": [
-		"docs/DateObject.md",
 		"docs/UrlSearchParams.md",
-		"docs/array.md",
 		"docs/has.md",
 		"docs/lang.md",
 		"docs/load.md",
-		"docs/math.md",
 		"docs/on.md",
 		"docs/request.md",
 		"docs/stringExtras.md"

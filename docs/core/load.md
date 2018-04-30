@@ -2,10 +2,12 @@
 
 ## Module Exports
 
-### isPlugin - tests a value to determine whether is a plugin (an object with a `load` method)
+### 'isPlugin'
+
+Tests a value to determine whether is a plugin (an object with a `load` method).
 
 ```ts
-import { isPlugin } from 'src/load';
+import { isPlugin } from '@dojo/core/load';
 
 // true
 isPlugin({
@@ -23,10 +25,12 @@ isPlugin({
 
 ```
 
-### load - dynamically loads a module or other resource
+### 'load'
+
+Dynamically loads a module or other resource.
 
 ```ts
-import load, { useDefault } from 'src/load';
+import load, { useDefault } from '@dojo/core/load';
 
 // Load a single module
 load('mymodule').then(([ myModule ]: [ any ]) => {
@@ -66,7 +70,7 @@ Note: the plugins that can be used with `load` loosely follow the [amdjs plugin 
 
 ```ts
 // Plugin that does not use the default export.
-import { Load } from 'src/load';
+import { Load } from '@dojo/core/load';
 
 export function normalize(resourceId: string, resolver: (id: string) => string): string {
 	return resolver(resourceId);
@@ -81,7 +85,7 @@ export function load(resourceId: string, load: Load) {
 
 ```ts
 // The same plugin, but using the default export
-import { Load } from 'src/load';
+import { Load } from '@dojo/core/load';
 
 const plugin = {
 	normalize(resourceId: string, resolver: (id: string) => string): string {
@@ -98,7 +102,7 @@ export default plugin;
 ```
 
 ```ts
-import load from 'src/load';
+import load from '@dojo/core/load';
 
 // 1. The module with the id `plugin` is loaded.
 // 2. If `plugin` is not actually a plugin, then `plugin` itself is returned.
