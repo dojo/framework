@@ -46,6 +46,7 @@
     "@types/glob": "5.0.*",
     "@types/grunt": "0.4.*",
     "@types/jsdom": "2.0.*",
+    "@types/node": "~9.6.5",
     "@types/sinon": "^1.16.31",
     "grunt": "~1.0.1",
     "grunt-dojo2": "latest",
