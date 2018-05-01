@@ -6,7 +6,7 @@ import sendEvent from './../support/sendEvent';
 
 import { dom, InternalVNode, InternalWNode, widgetInstanceMap, RenderResult } from '../../src/vdom';
 import { dom as d, v, w, VNODE } from '../../src/d';
-import { VNode } from '../../src/interfaces';
+import { VNode, DNode } from '../../src/interfaces';
 import { WidgetBase } from '../../src/WidgetBase';
 import { I18nMixin } from '../../src/mixins/I18n';
 import { Registry } from '../../src/Registry';
@@ -654,6 +654,123 @@ describe('vdom', () => {
 			assert.strictEqual(root.childNodes[2].childNodes[0].data, 'bar');
 			assert.strictEqual(root.childNodes[3].childNodes[0].data, 'second');
 			assert.strictEqual(root.childNodes[4].childNodes[0].data, 'bar');
+		});
+
+		it('should only insert before nodes that are not orphaned', () => {
+			class Parent extends WidgetBase {
+				private items: DNode[] = [w(ChildOne, {}), w(ChildTwo, {})];
+				render() {
+					return v('div', this.items);
+				}
+
+				swap() {
+					this.items = [w(ChildThree, {})];
+					this.invalidate();
+				}
+			}
+
+			let hideOne: Function;
+			class ChildOne extends WidgetBase {
+				private _show = true;
+
+				render() {
+					return this._show ? w(Widget, { num: 1 }) : null;
+				}
+
+				hide() {
+					this._show = false;
+					this.invalidate();
+				}
+
+				constructor() {
+					super();
+					hideOne = this.hide.bind(this);
+				}
+			}
+
+			let hideTwo: Function;
+			class ChildTwo extends WidgetBase {
+				private _show = true;
+
+				render() {
+					return this._show ? w(Widget, { num: 2 }) : null;
+				}
+
+				hide() {
+					this._show = false;
+					this.invalidate();
+				}
+
+				constructor() {
+					super();
+					hideTwo = this.hide.bind(this);
+				}
+			}
+
+			class ChildThree extends WidgetBase {
+				render() {
+					return w(Widget, { num: 3 });
+				}
+			}
+
+			class Widget extends WidgetBase<any> {
+				render() {
+					return v('div', [`hello ${this.properties.num}`]);
+				}
+			}
+
+			const widget = new Parent();
+			const projection = dom.create(widget, { sync: true });
+			hideOne!();
+			hideTwo!();
+			widget.swap();
+			const root: any = projection.domNode.childNodes[0];
+			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'hello 3');
+		});
+
+		it('Should not render widgets that have been detached', () => {
+			class ChildOne extends WidgetBase {
+				render() {
+					return 'Child One';
+				}
+			}
+
+			let childTwoInvalidate: Function;
+			let renderResult: DNode = null;
+			class ChildTwo extends WidgetBase {
+				constructor() {
+					super();
+					childTwoInvalidate = this.invalidate.bind(this);
+				}
+
+				render() {
+					return renderResult;
+				}
+			}
+
+			class Parent extends WidgetBase {
+				private _items: any[] = [w(ChildTwo, {})];
+				render() {
+					return v('main', this._items);
+				}
+
+				switch() {
+					this._items = [w(ChildOne, {})];
+					this.invalidate();
+				}
+			}
+
+			const widget = new Parent();
+			const projection = dom.create(widget);
+			resolvers.resolve();
+			renderResult = v('span', ['me']);
+			childTwoInvalidate!();
+			resolvers.resolve();
+			widget.switch();
+			childTwoInvalidate!();
+			resolvers.resolve();
+			assert.lengthOf(projection.domNode.childNodes[0]!.childNodes, 1);
+			assert.strictEqual((projection.domNode.childNodes[0]!.childNodes[0] as Text).data, 'Child One');
 		});
 
 		it('should allow a widget returned from render', () => {
