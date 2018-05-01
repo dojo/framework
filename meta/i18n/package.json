@@ -35,6 +35,7 @@
     "@dojo/loader": "~0.1.1",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
+    "@types/node": "~9.6.5",
     "@types/sinon": "^1.16.31",
     "cldr-data": "~32.0.0",
     "grunt": "^1.0.1",
