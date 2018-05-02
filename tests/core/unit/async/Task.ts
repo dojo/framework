@@ -687,11 +687,9 @@ function addPromiseTests(suite: any, Promise: any) {
 			'from resolver': function(this: any) {
 				let dfd = this.async();
 				let error = new Error('foo');
-				let foreign = <any>{
-					then: (f: Function) => {
-						throw error;
-					}
-				};
+				let foreign = Promise.resolve().then(() => {
+					throw error;
+				});
 
 				let promise = new Promise(function(resolve: Function) {
 					resolve(foreign);
@@ -706,11 +704,9 @@ function addPromiseTests(suite: any, Promise: any) {
 			'from handler': function(this: any) {
 				let dfd = this.async();
 				let error = new Error('foo');
-				let foreign = <any>{
-					then: function(f: Function) {
-						throw error;
-					}
-				};
+				let foreign = Promise.resolve().then(() => {
+					throw error;
+				});
 
 				Promise.resolve(5)
 					.then(function() {
@@ -727,11 +723,9 @@ function addPromiseTests(suite: any, Promise: any) {
 				'from resolver': function(this: any) {
 					let dfd = this.async();
 					let error = new Error('foo');
-					let foreign = <any>{
-						then: function(f: Function) {
-							throw error;
-						}
-					};
+					let foreign = Promise.resolve().then(() => {
+						throw error;
+					});
 
 					let promise = new Promise(function(resolve: Function) {
 						resolve(foreign);
@@ -746,11 +740,9 @@ function addPromiseTests(suite: any, Promise: any) {
 				'from handler': function(this: any) {
 					let dfd = this.async();
 					let error = new Error('foo');
-					let foreign = <any>{
-						then: function(f: Function) {
-							throw error;
-						}
-					};
+					let foreign = Promise.resolve().then(() => {
+						throw error;
+					});
 
 					Promise.resolve(5)
 						.then(function() {
