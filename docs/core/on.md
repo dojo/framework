@@ -2,7 +2,7 @@
 
 `dojo-core/on` provides event handling support with methods to attach and emit events.
 
-## 'emit'
+## `emit`
 
 Dispatch event to target.
 
@@ -19,7 +19,7 @@ var DOMEventObject = {
 emit(button, DOMEventObject);
 
 ```
-## 'on'
+## `on`
 
 Adds event listener to target.
 
@@ -33,7 +33,7 @@ on(button, 'click', function (event) {
 });
 
 ```
-## 'once'
+## `once`
 
 Attach an event that can only be called once to a target.
 
@@ -47,7 +47,7 @@ once(button, 'click', function (event) {
 });
 
 ```
-## 'pausable'
+## `pausable`
 
 Attach an event that can be paused to a target.
 
