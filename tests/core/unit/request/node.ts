@@ -281,7 +281,7 @@ function getResponseData(request: any): DummyResponse {
 		};
 	}
 
-	return responseData[urlInfo.query.dataKey] || {};
+	return responseData[urlInfo.query.dataKey as string] || {};
 }
 
 function getRequestUrl(dataKey: string): string {

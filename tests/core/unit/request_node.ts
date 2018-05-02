@@ -27,7 +27,7 @@ registerSuite('request node', {
 
 		function getResponseData(request: any) {
 			const urlInfo = parse(request.url, true);
-			return responseData[urlInfo.query.dataKey];
+			return responseData[urlInfo.query.dataKey as string];
 		}
 
 		server = createServer(function(request, response) {
