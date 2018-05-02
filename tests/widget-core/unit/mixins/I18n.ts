@@ -1,6 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import i18n, { invalidate, switchLocale, systemLocale } from '@dojo/i18n/i18n';
+import Map from '@dojo/shim/Map';
 import { INJECTOR_KEY, I18nMixin, I18nProperties, registerI18nInjector } from '../../../src/mixins/I18n';
 import { Registry } from '../../../src/Registry';
 import { WidgetBase } from '../../../src/WidgetBase';
@@ -16,6 +17,21 @@ class LocalizedWithWidget extends I18nMixin(ThemedMixin(WidgetBase))<I18nPropert
 		return w(Localized, {}, [v('div', {})]);
 	}
 }
+
+const overrideBundle = {
+	locales: {
+		es: () => ({
+			hello: 'Hola',
+			goodbye: 'Adiós',
+			welcome: 'Bienvenido, {name}'
+		})
+	},
+	messages: {
+		hello: 'Hi!',
+		goodbye: 'Bye!',
+		welcome: 'Salutations, {name}!'
+	}
+};
 
 let localized: any;
 
@@ -117,6 +133,59 @@ registerSuite('mixins/I18nMixin', {
 					format = localized.localizeBundle(bundle).format;
 					assert.strictEqual(format('welcome', { name: 'Jean' }), 'Bienvenue, Jean!');
 				});
+			}
+		},
+		'.localizeBundle() with an override': {
+			'Uses the `i18nBundle` property'() {
+				localized = new Localized();
+				localized.__setProperties__({ i18nBundle: overrideBundle });
+
+				switchLocale('es');
+				localized.localizeBundle(bundle);
+
+				return i18n(bundle, 'es')
+					.then(() => i18n(overrideBundle, 'es'))
+					.then(() => {
+						const { format, messages } = localized.localizeBundle(bundle);
+						assert.strictEqual(messages.hello, 'Hola');
+						assert.strictEqual(messages.goodbye, 'Adiós');
+						assert.strictEqual(format('welcome', { name: 'Jean' }), 'Bienvenido, Jean');
+					});
+			},
+			'Allows `i18nBundle` to be a `Map`'() {
+				const i18nBundleMap = new Map<any, any>();
+				i18nBundleMap.set(bundle, overrideBundle);
+
+				localized = new Localized();
+				localized.__setProperties__({ i18nBundle: i18nBundleMap });
+
+				switchLocale('es');
+				localized.localizeBundle(bundle);
+				return i18n(bundle, 'es')
+					.then(() => i18n(overrideBundle, 'es'))
+					.then(() => {
+						const { format, messages } = localized.localizeBundle(bundle);
+						assert.strictEqual(messages.hello, 'Hola');
+						assert.strictEqual(messages.goodbye, 'Adiós');
+						assert.strictEqual(format('welcome', { name: 'Jean' }), 'Bienvenido, Jean');
+					});
+			},
+			'Uses the base bundle when the `i18nBundle` map does not contain an override'() {
+				const i18nBundleMap = new Map<any, any>();
+
+				localized = new Localized();
+				localized.__setProperties__({ i18nBundle: i18nBundleMap });
+
+				switchLocale('es');
+				localized.localizeBundle(bundle);
+				return i18n(bundle, 'es')
+					.then(() => i18n(overrideBundle, 'es'))
+					.then(() => {
+						const { format, messages } = localized.localizeBundle(bundle);
+						assert.strictEqual(messages.hello, 'Hello');
+						assert.strictEqual(messages.goodbye, 'Goodbye');
+						assert.strictEqual(format('hello'), 'Hello');
+					});
 			}
 		},
 		'locale data can be injected by defining an Injector with a registry': {

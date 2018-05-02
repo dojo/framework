@@ -1,5 +1,6 @@
 /* tslint:disable:interface-name */
 import i18n, { Bundle, formatMessage, getCachedMessages, Messages } from '@dojo/i18n/i18n';
+import Map from '@dojo/shim/Map';
 import { isVNode, decorate } from './../d';
 import { afterRender } from './../decorators/afterRender';
 import { inject } from './../decorators/inject';
@@ -25,7 +26,14 @@ export interface LocaleData {
 	rtl?: boolean;
 }
 
-export interface I18nProperties extends LocaleData, WidgetProperties {}
+export interface I18nProperties extends LocaleData, WidgetProperties {
+	/**
+	 * An optional override for the bundle passed to the `localizeBundle`. If the override contains a `messages` object,
+	 * then it will completely replace the underlying bundle. Otherwise, a new bundle will be created with the additional
+	 * locale loaders.
+	 */
+	i18nBundle?: Bundle<Messages> | Map<Bundle<Messages>, Bundle<Messages>>;
+}
 
 /**
  * @private
@@ -106,8 +114,9 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 		public abstract properties: I18nProperties;
 
 		/**
-		 * Return a localized messages object for the provided bundle. If the localized messages have not yet been loaded,
-		 * return either a blank bundle or the default messages.
+		 * Return a localized messages object for the provided bundle, deferring to the `i18nBundle` property
+		 * when present. If the localized messages have not yet been loaded, return either a blank bundle or the
+		 * default messages.
 		 *
 		 * @param bundle
 		 * The bundle to localize
@@ -117,12 +126,13 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 		 * (the default), then a blank bundle will be returned (i.e., each key's value will be an empty string).
 		 */
 		public localizeBundle<T extends Messages>(
-			bundle: Bundle<T>,
+			baseBundle: Bundle<T>,
 			useDefaults: boolean = false
 		): LocalizedMessages<T> {
-			const { locale } = this.properties;
+			const bundle = this._resolveBundle(baseBundle);
 			const messages = this._getLocaleMessages(bundle);
 			const isPlaceholder = !messages;
+			const { locale } = this.properties;
 			const format =
 				isPlaceholder && !useDefaults
 					? (key: string, options?: any) => ''
@@ -168,8 +178,8 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 		 * @return
 		 * The blank message bundle
 		 */
-		private _getBlankMessages<T extends Messages>(bundle: Bundle<T>): T {
-			const blank = {} as T;
+		private _getBlankMessages(bundle: Bundle<Messages>): Messages {
+			const blank = {} as Messages;
 			return Object.keys(bundle.messages).reduce((blank, key) => {
 				blank[key] = '';
 				return blank;
@@ -199,6 +209,33 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 			i18n(bundle, locale).then(() => {
 				this.invalidate();
 			});
+		}
+
+		/**
+		 * @private
+		 * Resolve the bundle to use for the widget's messages to either the provided bundle or to the
+		 * `i18nBundle` property.
+		 *
+		 * @param bundle
+		 * The base bundle
+		 *
+		 * @return
+		 * Either override bundle or the original bundle.
+		 */
+		private _resolveBundle(bundle: Bundle<Messages>): Bundle<Messages> {
+			let { i18nBundle } = this.properties;
+			if (i18nBundle) {
+				if (i18nBundle instanceof Map) {
+					i18nBundle = i18nBundle.get(bundle);
+
+					if (!i18nBundle) {
+						return bundle;
+					}
+				}
+
+				return i18nBundle;
+			}
+			return bundle;
 		}
 	}
 

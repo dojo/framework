@@ -539,7 +539,7 @@ In the above example, the tabPanel will receive its original `root` class in add
 
 ### Internationalization
 
-Widgets can be internationalized by adding the `I18nMixin` mixin from `@dojo/widget-core/mixins/I18n`. [Message bundles](https://github.com/dojo/i18n) are localized by passing them to `localizeBundle`.
+Widgets can be internationalized by adding the `I18nMixin` mixin from `@dojo/widget-core/mixins/I18n`. [Message bundles](https://github.com/dojo/i18n) are localized by passing them to `localizeBundle`. Note that with this pattern it is possible for a widget to obtain its messages from multiple bundles; however, we strongly recommend limiting widgets to a single bundle whenever possible.
 
 If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then a bundle of blank message values is returned. Alternatively, the `localizeBundle` method accepts a second boolean argument, which, when `true`, causes the default messages to be returned instead of the blank bundle. The widget will be invalidated once the locale-specific messages have been loaded, triggering a re-render with the localized message content.
 
@@ -579,6 +579,36 @@ class I18nWidget extends MyWidgetBase<I18nWidgetProperties> {
             })
         ]);
     }
+}
+```
+
+Once the `I18n` mixin has been added to a widget, the default bundle can be replaced with the `i18nBundle` property. Further, while we recommend against using multiple bundles in the same widget, there may be times when you need to consume a third-party widget that does so. As such, `i18nBundle` can also be a `Map` of default bundles to override bundles.
+
+```typescript
+import { Bundle } from '@dojo/i18n/i18n';
+
+// A complete bundle to replace WidgetA's message bundle
+import overrideBundleForWidgetA from './nls/widgetA';
+
+// Bundles for WidgetB
+import widgetB1 from 'third-party/nls/widgetB1';
+import overrideBundleForWidgetB from './nls/widgetB';
+
+// WidgetB uses multiple bundles, but only `thirdy-party/nls/widgetB1` needs to be overridden
+const overrideMapForWidgetB = new Map<Bundle<any>, Bundle<any>>();
+map.set(widgetB1, overrideBundleForWidgetB);
+
+export class MyWidget extends WidgetBase {
+	protected render() {
+		return [
+			w(WidgetA, {
+				i18nBundle: overrideBundleForWidgetA
+			}),
+			w(WidgetB, {
+				i18nBundle: overrideMapForWidgetB
+			}),
+		];
+	}
 }
 ```
 
