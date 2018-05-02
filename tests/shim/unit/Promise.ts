@@ -1,8 +1,8 @@
-import { Thenable } from '../../src/interfaces';
-import Promise from '../../src/Promise';
-import { ShimIterator } from '../../src/iterator';
-import '../../src/Symbol';
 import { Tests } from 'intern/lib/interfaces/object';
+import { Thenable } from '../../src/interfaces';
+import { ShimIterator } from '../../src/iterator';
+import Promise from '../../src/Promise';
+import '../../src/Symbol';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
@@ -364,11 +364,10 @@ export function addPromiseTests(suite: { [key: string]: Tests }, Promise: TypeUn
 			'from resolver': function() {
 				let dfd = this.async();
 				let error = new Error('foo');
-				let foreign = <any>{
-					then: (f: Function) => {
-						throw error;
-					}
-				};
+
+				let foreign = Promise.resolve().then(() => {
+					throw error;
+				});
 
 				let promise = new Promise(function(resolve: Function) {
 					resolve(foreign);
@@ -383,11 +382,10 @@ export function addPromiseTests(suite: { [key: string]: Tests }, Promise: TypeUn
 			'from handler': function() {
 				let dfd = this.async();
 				let error = new Error('foo');
-				let foreign = <any>{
-					then: function(f: Function) {
-						throw error;
-					}
-				};
+
+				let foreign = Promise.resolve().then(() => {
+					throw error;
+				});
 
 				Promise.resolve(5)
 					.then(function() {
@@ -404,11 +402,9 @@ export function addPromiseTests(suite: { [key: string]: Tests }, Promise: TypeUn
 				'from resolver': function() {
 					let dfd = this.async();
 					let error = new Error('foo');
-					let foreign = <any>{
-						then: function(f: Function) {
-							throw error;
-						}
-					};
+					let foreign = Promise.resolve().then(() => {
+						throw error;
+					});
 
 					let promise = new Promise(function(resolve: Function) {
 						resolve(foreign);
@@ -423,11 +419,10 @@ export function addPromiseTests(suite: { [key: string]: Tests }, Promise: TypeUn
 				'from handler': function() {
 					let dfd = this.async();
 					let error = new Error('foo');
-					let foreign = <any>{
-						then: function(f: Function) {
-							throw error;
-						}
-					};
+
+					let foreign = Promise.resolve().then(() => {
+						throw error;
+					});
 
 					Promise.resolve(5)
 						.then(function() {
