@@ -22,7 +22,7 @@
     "test": "grunt test"
   },
   "devDependencies": {
-    "@dojo/loader": "~0.1.0",
+    "@dojo/loader": "^2.0.0",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
     "@types/node": "~9.6.5",
