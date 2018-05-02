@@ -33,7 +33,7 @@ on(button, 'click', function (event) {
 });
 
 ```
-## .once.
+## 'once'
 
 Attach an event that can only be called once to a target.
 
