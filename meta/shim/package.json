@@ -29,7 +29,7 @@
     "@dojo/loader": "~0.1.1",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
-    "@types/node": "~6.0.49",
+    "@types/node": "~9.6.5",
     "grunt": "~1.0.1",
     "grunt-dojo2": "latest",
     "grunt-tslint": "5.0.1",
