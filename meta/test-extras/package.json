@@ -1,6 +1,6 @@
 {
   "name": "@dojo/test-extras",
-  "version": "2.0.0",
+  "version": "2.0.1-pre",
   "description": "A set of modules to help with testing Dojo 2",
   "engines": {
     "npm": "^3.10.0 || ^4.0.0",
