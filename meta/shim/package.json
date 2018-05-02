@@ -23,10 +23,10 @@
     "test": "grunt test"
   },
   "peerDependencies": {
-    "@dojo/has": "~0.1.1"
+    "@dojo/has": "^2.0.0"
   },
   "devDependencies": {
-    "@dojo/loader": "~0.1.1",
+    "@dojo/loader": "^2.0.0",
     "@types/glob": "~5.0.0",
     "@types/grunt": "~0.4.0",
     "@types/node": "~9.6.5",
