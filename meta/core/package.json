@@ -26,11 +26,11 @@
     "tslib": "~1.8.1"
   },
   "peerDependencies": {
-    "@dojo/has": "~0.1.1",
-    "@dojo/shim": "~0.2.6"
+    "@dojo/has": "^2.0.0",
+    "@dojo/shim": "^2.0.0"
   },
   "devDependencies": {
-    "@dojo/loader": "~0.1.1",
+    "@dojo/loader": "^2.0.0",
     "@theintern/leadfoot": "~2.0.2",
     "@types/benchmark": "~1.0.0",
     "@types/chai": "~4.0.0",
