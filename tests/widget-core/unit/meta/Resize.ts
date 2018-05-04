@@ -130,6 +130,27 @@ registerSuite('meta - Resize', {
 
 			assert.isTrue(invalidate.calledTwice);
 			assert.isTrue(predicates.isFoo);
+		},
+		'Will invalidate given no predicates'() {
+			const nodeHandler = new NodeHandler();
+			const invalidate = stub();
+			const element = document.createElement('div');
+			document.body.appendChild(element);
+			nodeHandler.add(element, 'foo');
+
+			const resize = new Resize({
+				invalidate,
+				nodeHandler,
+				bind: bindInstance
+			});
+
+			const contentRect: Partial<ContentRect> = {
+				width: 10
+			};
+
+			resize.get('foo');
+			resizeCallback([{ contentRect }]);
+			assert.isTrue(invalidate.called);
 		}
 	}
 });
