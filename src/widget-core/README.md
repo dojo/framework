@@ -301,7 +301,7 @@ function StateMixin<T extends new(...args: any[]) => WidgetBase>(Base: T): T & (
 }
 ```
 
-Examples of Dojo 2 mixins can be seen with `ThemedMixin` and `I18nMixin` that are described in [Classes & theming](#classes--theming) and [Internationalization](#internationalization) sections.
+Examples of Dojo 2 mixins can be seen with `ThemedMixin` and `I18nMixin` that are described in [Styling & Theming](#styling--theming) and [Internationalization](#internationalization) sections.
 
 ### Animation
 
