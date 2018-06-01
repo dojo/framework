@@ -12,6 +12,7 @@ export interface JSONResult {
 }
 
 export let config = {
+	HEADLESS: false,
 	REPEAT_RUN: 20,
 	DROP_WORST_RUN: 0,
 	WARMUP_COUNT: 5,

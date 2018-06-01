@@ -3,7 +3,6 @@ import { Builder, WebDriver, promise, logging } from 'selenium-webdriver';
 import { BenchmarkType, Benchmark, benchmarks, fileName } from './benchmarks';
 import { setUseShadowRoot } from './webdriverAccess';
 import * as fs from 'fs';
-import * as yargs from 'yargs';
 import { JSONResult, config, FrameworkData, frameworks } from './common';
 import * as R from 'ramda';
 let jStat: any = require('jstat').jStat;
@@ -304,10 +303,11 @@ function buildDriver() {
 
 	let options = new chrome.Options();
 
-	if (args.headless) {
+	if (config.HEADLESS) {
 		options = options.addArguments('--headless');
 	}
 
+	options = options.addArguments('--no-sandbox');
 	options = options.addArguments('--js-flags=--expose-gc');
 	options = options.addArguments('--disable-infobars');
 	options = options.addArguments('--disable-background-networking');
@@ -318,7 +318,7 @@ function buildDriver() {
 	options = options.setPerfLoggingPrefs(<any>{
 		enableNetwork: false,
 		enablePage: false,
-		enableTimeline: false,
+		// enableTimeline: false, // This throws an error
 		traceCategories: 'devtools.timeline, disabled-by-default-devtools.timeline,blink.user_timing'
 	});
 	return new Builder()
@@ -369,6 +369,9 @@ interface Result {
 }
 
 function writeResult(res: Result, dir: string) {
+	if (!fs.existsSync(dir)) {
+		fs.mkdirSync(dir);
+	}
 	let benchmark = res.benchmark;
 	let framework = res.framework.name;
 	let data = res.results;
@@ -396,11 +399,14 @@ function writeResult(res: Result, dir: string) {
 	fs.writeFileSync(`${dir}/${fileName(res.framework, benchmark)}`, JSON.stringify(result), { encoding: 'utf8' });
 }
 
-async function takeScreenshotOnError(driver: WebDriver, fileName: string, error: string) {
+async function takeScreenshotOnError(driver: WebDriver, fileName: string, error: string, dir: string) {
+	if (!fs.existsSync(dir)) {
+		fs.mkdirSync(dir);
+	}
 	console.error('Benchmark failed', error);
 	let image = await driver.takeScreenshot();
 	console.error(`Writing screenshot ${fileName}`);
-	fs.writeFileSync(fileName, image, { encoding: 'base64' });
+	fs.writeFileSync(`${dir}/${fileName}`, image, { encoding: 'base64' });
 }
 
 async function runMemOrCPUBenchmark(framework: FrameworkData, benchmark: Benchmark, dir: string) {
@@ -419,7 +425,7 @@ async function runMemOrCPUBenchmark(framework: FrameworkData, benchmark: Benchma
 				await afterBenchmark(driver, benchmark, framework);
 				await driver.executeScript("console.timeStamp('afterBenchmark')");
 			} catch (e) {
-				await takeScreenshotOnError(driver, 'error-' + framework.name + '-' + benchmark.id + '.png', e);
+				await takeScreenshotOnError(driver, 'error-' + framework.name + '-' + benchmark.id + '.png', e, dir);
 				throw e;
 			}
 		}
@@ -456,7 +462,7 @@ async function runStartupBenchmark(framework: FrameworkData, benchmark: Benchmar
 				await driver.executeScript("console.timeStamp('afterBenchmark')");
 				results.push(await computeResultsStartup(driver));
 			} catch (e) {
-				await takeScreenshotOnError(driver, 'error-' + framework.name + '-' + benchmark.id + '.png', e);
+				await takeScreenshotOnError(driver, 'error-' + framework.name + '-' + benchmark.id + '.png', e, dir);
 				throw e;
 			} finally {
 				await driver.quit();
@@ -472,7 +478,15 @@ async function runStartupBenchmark(framework: FrameworkData, benchmark: Benchmar
 	}
 }
 
-async function runBench(frameworkNames: string[], benchmarkNames: string[], dir: string) {
+export async function runBench(frameworkNames: string[], benchmarkNames: string[], dir: string, args: any) {
+	if (args.count !== undefined) {
+		config.REPEAT_RUN = args.count;
+	}
+
+	if (args.headless !== undefined) {
+		config.HEADLESS = args.headless;
+	}
+
 	let runFrameworks = frameworks.filter((f) => frameworkNames.some((name) => f.name.indexOf(name) > -1));
 	let runBenchmarks = benchmarks.filter((b) => benchmarkNames.some((name) => b.id.toLowerCase().indexOf(name) > -1));
 	console.log('Frameworks that will be benchmarked', runFrameworks);
@@ -494,39 +508,4 @@ async function runBench(frameworkNames: string[], benchmarkNames: string[], dir:
 			await runMemOrCPUBenchmark(framework, benchmark, dir);
 		}
 	}
-}
-
-let args = yargs(process.argv)
-	.usage(
-		'$0 [--framework Framework1,Framework2,...] [--benchmark Benchmark1,Benchmark2,...] [--count n] [--exitOnError]'
-	)
-	.help('help')
-	.default('check', 'false')
-	.default('exitOnError', 'false')
-	.default('count', config.REPEAT_RUN)
-	.boolean('headless')
-	.array('framework')
-	.array('benchmark').argv;
-
-console.log(args);
-
-let runBenchmarks = args.benchmark && args.benchmark.length > 0 ? args.benchmark : [''];
-let runFrameworks = args.framework && args.framework.length > 0 ? args.framework : [''];
-let count = Number(args.count);
-
-config.REPEAT_RUN = count;
-
-let dir = args.check === 'true' ? 'results_check' : 'benchmark-results';
-let exitOnError = args.exitOnError === 'true';
-
-config.EXIT_ON_ERROR = exitOnError;
-
-if (!fs.existsSync(dir)) {
-	fs.mkdirSync(dir);
-}
-
-if (args.help) {
-	yargs.showHelp();
-} else {
-	runBench(runFrameworks, runBenchmarks, dir);
 }

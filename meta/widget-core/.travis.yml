@@ -2,6 +2,8 @@ sudo: false
 language: node_js
 node_js:
 - '6'
+addons:
+  chrome: stable
 env:
   global:
   - SAUCE_USERNAME: dojo2-ts-ci
@@ -21,6 +23,7 @@ script:
 - grunt uploadCoverage
 - grunt dist
 - grunt doc
+- grunt dev
 - npm run benchmark
 notifications:
   slack:
