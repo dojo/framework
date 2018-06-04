@@ -605,6 +605,7 @@ function checkDistinguishable(
 
 function updateChildren(
 	parentVNode: InternalVNode,
+	siblings: InternalDNode[],
 	oldChildren: InternalDNode[],
 	newChildren: InternalDNode[],
 	parentInstance: DefaultWidgetBaseInterface,
@@ -629,18 +630,32 @@ function updateChildren(
 			addDeferredProperties(newChild, projectionOptions);
 		}
 		if (oldChild !== undefined && same(oldChild, newChild)) {
-			textUpdated = updateDom(oldChild, newChild, projectionOptions, parentVNode, parentInstance) || textUpdated;
 			oldIndex++;
 			newIndex++;
+			textUpdated =
+				updateDom(
+					oldChild,
+					newChild,
+					projectionOptions,
+					parentVNode,
+					parentInstance,
+					oldChildren.slice(oldIndex)
+				) || textUpdated;
 			continue;
 		}
 
 		const findOldIndex = findIndexOfChild(oldChildren, newChild, oldIndex + 1);
 		const addChild = () => {
-			let insertBeforeDomNode: Element | Text | undefined = undefined;
+			let insertBeforeDomNode: Node | undefined = undefined;
+			let childrenArray = oldChildren;
+			let nextIndex = oldIndex + 1;
 			let child: InternalDNode = oldChildren[oldIndex];
+			if (!child) {
+				child = siblings[0];
+				nextIndex = 1;
+				childrenArray = siblings;
+			}
 			if (child) {
-				let nextIndex = oldIndex + 1;
 				let insertBeforeChildren = [child];
 				while (insertBeforeChildren.length) {
 					const insertBefore = insertBeforeChildren.shift()!;
@@ -654,14 +669,21 @@ function updateChildren(
 							break;
 						}
 					}
-					if (insertBeforeChildren.length === 0 && oldChildren[nextIndex]) {
-						insertBeforeChildren.push(oldChildren[nextIndex]);
+					if (insertBeforeChildren.length === 0 && childrenArray[nextIndex]) {
+						insertBeforeChildren.push(childrenArray[nextIndex]);
 						nextIndex++;
 					}
 				}
 			}
 
-			createDom(newChild, parentVNode, insertBeforeDomNode, projectionOptions, parentInstance);
+			createDom(
+				newChild,
+				parentVNode,
+				oldChildren.slice(oldIndex + 1),
+				insertBeforeDomNode,
+				projectionOptions,
+				parentInstance
+			);
 			nodeAdded(newChild, transitions);
 			const indexToCheck = newIndex;
 			projectorState.afterRenderCallbacks.push(() => {
@@ -726,7 +748,7 @@ function addChildren(
 	children: InternalDNode[] | undefined,
 	projectionOptions: ProjectionOptions,
 	parentInstance: DefaultWidgetBaseInterface,
-	insertBefore: Element | Text | undefined = undefined,
+	insertBefore: Node | undefined = undefined,
 	childNodes?: (Element | Text)[]
 ) {
 	if (children === undefined) {
@@ -753,9 +775,9 @@ function addChildren(
 					}
 				}
 			}
-			createDom(child, parentVNode, insertBefore, projectionOptions, parentInstance);
+			createDom(child, parentVNode, [], insertBefore, projectionOptions, parentInstance);
 		} else {
-			createDom(child, parentVNode, insertBefore, projectionOptions, parentInstance, childNodes);
+			createDom(child, parentVNode, [], insertBefore, projectionOptions, parentInstance, childNodes);
 		}
 		nodeAdded(child, transitions);
 	}
@@ -793,7 +815,8 @@ function initPropertiesAndChildren(
 function createDom(
 	dnode: InternalDNode,
 	parentVNode: InternalVNode,
-	insertBefore: Element | Text | undefined,
+	siblings: InternalDNode[],
+	insertBefore: Node | undefined,
 	projectionOptions: ProjectionOptions,
 	parentInstance: DefaultWidgetBaseInterface,
 	childNodes?: (Element | Text)[]
@@ -890,7 +913,8 @@ function updateDom(
 	dnode: InternalDNode,
 	projectionOptions: ProjectionOptions,
 	parentVNode: InternalVNode,
-	parentInstance: DefaultWidgetBaseInterface
+	parentInstance: DefaultWidgetBaseInterface,
+	siblings: InternalDNode[]
 ) {
 	if (isWNode(dnode)) {
 		const { instance } = previous;
@@ -906,7 +930,7 @@ function updateDom(
 			const rendered = instance.__render__();
 			instanceData.rendering = false;
 			dnode.rendered = filterAndDecorateChildren(rendered, instance);
-			updateChildren(parentVNode, previousRendered, dnode.rendered, instance, projectionOptions);
+			updateChildren(parentVNode, siblings, previousRendered, dnode.rendered, instance, projectionOptions);
 		} else {
 			instanceData.rendering = false;
 			dnode.rendered = previousRendered;
@@ -936,7 +960,8 @@ function updateDom(
 				const children = filterAndDecorateChildren(dnode.children, parentInstance);
 				dnode.children = children;
 				updated =
-					updateChildren(dnode, previous.children, children, parentInstance, projectionOptions) || updated;
+					updateChildren(dnode, siblings, previous.children, children, parentInstance, projectionOptions) ||
+					updated;
 			}
 
 			const previousProperties = buildPreviousProperties(domNode, previous, dnode);
@@ -1065,7 +1090,16 @@ function render(projectionOptions: ProjectionOptions) {
 			previouslyRendered.push(instance);
 			const { parentVNode, dnode } = instanceMap.get(instance)!;
 			const instanceData = widgetInstanceMap.get(instance)!;
-			updateDom(dnode, toInternalWNode(instance, instanceData), projectionOptions, parentVNode, instance);
+			const index = (parentVNode.children || []).indexOf(dnode);
+			const siblings = (parentVNode.children || []).slice(index + 1);
+			updateDom(
+				dnode,
+				toInternalWNode(instance, instanceData),
+				projectionOptions,
+				parentVNode,
+				instance,
+				siblings
+			);
 		}
 	}
 	runAfterRenderCallbacks(projectionOptions);
@@ -1102,7 +1136,7 @@ export const dom = {
 				scheduleRender(finalProjectorOptions);
 			}
 		};
-		updateDom(node, node, finalProjectorOptions, parentVNode, instance);
+		updateDom(node, node, finalProjectorOptions, parentVNode, instance, []);
 		projectorState.afterRenderCallbacks.push(() => {
 			instanceData.onAttach();
 		});
