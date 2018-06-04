@@ -457,7 +457,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		const afterRenders = this.getDecorator('afterRender');
 
 		if (afterRenders.length > 0) {
-			return afterRenders.reduce((dNode: DNode | DNode[], afterRenderFunction: AfterRender) => {
+			dNode = afterRenders.reduce((dNode: DNode | DNode[], afterRenderFunction: AfterRender) => {
 				return afterRenderFunction.call(this, dNode);
 			}, dNode);
 		}

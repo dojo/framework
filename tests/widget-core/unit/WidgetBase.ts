@@ -12,6 +12,7 @@ import { Registry } from './../../src/Registry';
 import { Base } from './../../src/meta/Base';
 import { NodeEventType } from './../../src/NodeHandler';
 import { widgetInstanceMap } from './../../src/vdom';
+import { afterRender } from '../../src/decorators/afterRender';
 
 interface TestProperties {
 	foo?: string;
@@ -416,6 +417,29 @@ describe('WidgetBase', () => {
 			const cachedDecorators = widget.callGetDecorator('test-decorator');
 			assert.lengthOf(cachedDecorators, 1);
 			assert.strictEqual(cachedDecorators, decorators);
+		});
+
+		it('should run meta after renders even when a widget has afterRender decorator', () => {
+			let metaAfterRenderCalled = false;
+			class MetaWithAfterRender extends TestMeta {
+				afterRender() {
+					metaAfterRenderCalled = true;
+				}
+			}
+
+			class TestWidget extends WidgetBase {
+				@afterRender()
+				protected afterRenders() {}
+
+				protected render() {
+					this.meta(MetaWithAfterRender).get('');
+					return null;
+				}
+			}
+
+			const widget = new TestWidget();
+			widget.__render__();
+			assert.isTrue(metaAfterRenderCalled);
 		});
 
 		it('decorators applied to subclasses are not applied to base classes', () => {
