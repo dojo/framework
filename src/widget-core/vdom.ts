@@ -531,7 +531,8 @@ function nodeAdded(dnode: InternalDNode, transitions: TransitionStrategy) {
 
 function nodeToRemove(dnode: InternalDNode, transitions: TransitionStrategy, projectionOptions: ProjectionOptions) {
 	if (isWNode(dnode)) {
-		const rendered = dnode.rendered || emptyArray;
+		const item = instanceMap.get(dnode.instance);
+		const rendered = (item ? item.dnode.rendered : dnode.rendered) || emptyArray;
 		if (dnode.instance) {
 			const instanceData = widgetInstanceMap.get(dnode.instance)!;
 			instanceData.onDetach();

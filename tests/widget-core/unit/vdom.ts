@@ -1180,6 +1180,59 @@ describe('vdom', () => {
 			assert.strictEqual(quxDetachCount, 8);
 		});
 
+		it('should use the latest version of nodes when calling remove', () => {
+			let showFooNodes: any;
+			class Baz extends WidgetBase {
+				render() {
+					return ['one', 'two'];
+				}
+			}
+
+			class Qux extends WidgetBase {
+				render() {
+					return w(Foo, {});
+				}
+			}
+
+			class Foo extends WidgetBase {
+				private _show = false;
+				private _toggleShow = () => {
+					this._show = !this._show;
+					this.invalidate();
+				};
+				constructor() {
+					super();
+					showFooNodes = this._toggleShow;
+				}
+				render() {
+					if (this._show) {
+						return w(Baz, {});
+					}
+					return null;
+				}
+			}
+
+			class Bar extends WidgetBase {
+				private _show = true;
+				toggleShow = () => {
+					this._show = !this._show;
+					this.invalidate();
+				};
+				render() {
+					return v('div', [this._show ? w(Qux, {}) : null, this._show ? null : 'three']);
+				}
+			}
+
+			const widget = new Bar();
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0] as Element;
+			assert.lengthOf(root.childNodes, 0);
+			showFooNodes();
+			assert.lengthOf(root.childNodes, 2);
+			widget.toggleShow();
+			assert.lengthOf(root.childNodes, 1);
+		});
+
 		it('should not throw error running `onDetach` for widgets that do not have any rendered children', () => {
 			class Foo extends WidgetBase {
 				render() {
