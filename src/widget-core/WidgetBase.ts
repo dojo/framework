@@ -22,12 +22,6 @@ import NodeHandler from './NodeHandler';
 import { widgetInstanceMap } from './vdom';
 import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './Registry';
 
-interface ReactionFunctionArguments {
-	previousProperties: any;
-	newProperties: any;
-	changed: boolean;
-}
-
 interface ReactionFunctionConfig {
 	propertyName: string;
 	reaction: DiffPropertyReaction;
@@ -221,9 +215,14 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			}
 
 			if (runReactions) {
-				this._mapDiffPropertyReactions(properties, changedPropertyKeys).forEach((args, reaction) => {
-					if (args.changed) {
-						reaction.call(this, args.previousProperties, args.newProperties);
+				const reactionFunctions: ReactionFunctionConfig[] = this.getDecorator('diffReaction');
+				const executedReactions: Function[] = [];
+				reactionFunctions.forEach(({ reaction, propertyName }) => {
+					const propertyChanged = changedPropertyKeys.indexOf(propertyName) !== -1;
+					const reactionRun = executedReactions.indexOf(reaction) !== -1;
+					if (propertyChanged && !reactionRun) {
+						reaction.call(this, this._properties, diffPropertyResults);
+						executedReactions.push(reaction);
 					}
 				});
 			}
@@ -355,31 +354,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 		this._decoratorCache.set(decoratorKey, allDecorators);
 		return allDecorators;
-	}
-
-	private _mapDiffPropertyReactions(
-		newProperties: any,
-		changedPropertyKeys: string[]
-	): Map<Function, ReactionFunctionArguments> {
-		const reactionFunctions: ReactionFunctionConfig[] = this.getDecorator('diffReaction');
-
-		return reactionFunctions.reduce((reactionPropertyMap, { reaction, propertyName }) => {
-			let reactionArguments = reactionPropertyMap.get(reaction);
-			if (reactionArguments === undefined) {
-				reactionArguments = {
-					previousProperties: {},
-					newProperties: {},
-					changed: false
-				};
-			}
-			reactionArguments.previousProperties[propertyName] = this._properties[propertyName];
-			reactionArguments.newProperties[propertyName] = newProperties[propertyName];
-			if (changedPropertyKeys.indexOf(propertyName) !== -1) {
-				reactionArguments.changed = true;
-			}
-			reactionPropertyMap.set(reaction, reactionArguments);
-			return reactionPropertyMap;
-		}, new Map<Function, ReactionFunctionArguments>());
 	}
 
 	/**
