@@ -129,6 +129,20 @@ registerSuite('request/providers/xhr', {
 				});
 			},
 
+			'includeUploadProgress=false'(this: any) {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+
+				const req = xhrRequest('/__echo/post', {
+					method: 'POST',
+					body: '12345',
+					includeUploadProgress: false
+				});
+
+				assert.isUndefined(req.upload);
+			},
+
 			query: {
 				'.get with query URL and query option string'(this: any) {
 					if (!echoServerAvailable) {

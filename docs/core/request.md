@@ -30,7 +30,7 @@ Several observables are available to provide deeper insight into the state of a 
 
 ### Monitoring Upload Progress
 
-Upload progress can be monitored with the `upload` observable on the `Request` object.
+Upload progress can be monitored with the `upload` observable on the `Request` object. Since upload events automatically cause a preflight request, they can be disabled by setting `includeUploadProgress: false`.
 
 ```typescript
 const req = request.post('http://www.example.com/', {

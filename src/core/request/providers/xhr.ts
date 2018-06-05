@@ -25,6 +25,11 @@ export interface XhrRequestOptions extends RequestOptions {
 	 * include the header.
 	 */
 	includeRequestedWithHeader?: boolean;
+	/**
+	 * Controls whether or not to subscribe to events on `XMLHttpRequest.upload`, if available. This causes all requests
+	 * to be preflighted (https://xhr.spec.whatwg.org/#request)
+	 */
+	includeUploadProgress?: boolean;
 }
 
 interface RequestData {
@@ -281,7 +286,7 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 
 	let hasContentTypeHeader = false;
 	let hasRequestedWithHeader = false;
-	const { includeRequestedWithHeader = true } = options;
+	const { includeRequestedWithHeader = true, includeUploadProgress = true } = options;
 
 	if (options.headers) {
 		const requestHeaders = new Headers(options.headers);
@@ -311,13 +316,15 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 		}
 	});
 
-	const uploadObserverPool = new SubscriptionPool<number>();
-	task.upload = new Observable<number>((observer) => uploadObserverPool.add(observer));
+	if (includeUploadProgress) {
+		const uploadObserverPool = new SubscriptionPool<number>();
+		task.upload = new Observable<number>((observer) => uploadObserverPool.add(observer));
 
-	if (has('host-browser') || has('web-worker-xhr-upload')) {
-		request.upload.addEventListener('progress', (event) => {
-			uploadObserverPool.next(event.loaded);
-		});
+		if (has('host-browser') || has('web-worker-xhr-upload')) {
+			request.upload.addEventListener('progress', (event) => {
+				uploadObserverPool.next(event.loaded);
+			});
+		}
 	}
 
 	request.send(options.body || null);
