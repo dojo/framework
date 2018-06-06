@@ -1,6 +1,6 @@
 {
   "name": "@dojo/widget-core",
-  "version": "2.0.2-pre",
+  "version": "2.0.2",
   "description": "A core widget library for Dojo 2",
   "private": true,
   "homepage": "https://dojo.io",
@@ -20,7 +20,7 @@
     "url": "https://github.com/dojo/widget-core.git"
   },
   "scripts": {
-    "dev" : "grunt dev",
+    "dev": "grunt dev",
     "benchmark": "node ./run-benchmark.js",
     "prepublish": "grunt peerDepInstall",
     "precommit": "lint-staged",
