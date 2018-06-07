@@ -58,7 +58,7 @@ const operationHash: Hash<string> = Object.create(null, {
 	years: { value: 'FullYear' }
 });
 
-export default class DateObject implements DateProperties {
+export class DateObject implements DateProperties {
 	static parse(str: string): DateObject {
 		return new DateObject(Date.parse(str));
 	}
@@ -346,3 +346,5 @@ export default class DateObject implements DateProperties {
 		return this._date.valueOf();
 	}
 }
+
+export default DateObject;

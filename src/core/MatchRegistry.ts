@@ -12,7 +12,7 @@ interface Entry<T> {
 /**
  * A registry of values tagged with matchers.
  */
-export default class MatchRegistry<T> {
+export class MatchRegistry<T> {
 	protected _defaultValue: T | undefined;
 	private readonly _entries: Entry<T>[] | null;
 
@@ -85,3 +85,5 @@ export default class MatchRegistry<T> {
 export interface Test {
 	(...args: any[]): boolean | null;
 }
+
+export default MatchRegistry;

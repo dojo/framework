@@ -16,7 +16,7 @@ export interface KwArgs {
 	queueFunction?: (callback: (...args: any[]) => any) => Handle;
 }
 
-export default class Scheduler {
+export class Scheduler {
 	protected readonly _boundDispatch: () => void;
 	protected _deferred: QueueItem[] | null = null;
 	protected _isProcessing: boolean;
@@ -111,3 +111,5 @@ export default class Scheduler {
 		return getQueueHandle(item);
 	}
 }
+
+export default Scheduler;

@@ -10,7 +10,7 @@ function isHeadersLike(object: any): object is HeadersInterface {
 	);
 }
 
-export default class Headers implements HeadersInterface {
+export class Headers implements HeadersInterface {
 	protected map = new Map<string, string[]>();
 
 	constructor(headers?: { [key: string]: string } | HeadersInterface) {
@@ -97,3 +97,5 @@ export default class Headers implements HeadersInterface {
 		return this.entries();
 	}
 }
+
+export default Headers;

@@ -1,4 +1,4 @@
-export default class TimeoutError implements Error {
+export class TimeoutError implements Error {
 	readonly message: string;
 
 	get name(): string {
@@ -10,3 +10,5 @@ export default class TimeoutError implements Error {
 		this.message = message;
 	}
 }
+
+export default TimeoutError;

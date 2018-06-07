@@ -31,7 +31,7 @@ export type Identity = string | symbol;
 /**
  * A registry of values, mapped by identities.
  */
-export default class IdentityRegistry<V extends object> implements Iterable<[Identity, V]> {
+export class IdentityRegistry<V extends object> implements Iterable<[Identity, V]> {
 	constructor() {
 		privateStateMap.set(this, {
 			entryMap: new Map<Identity, Entry<V>>(),
@@ -176,3 +176,5 @@ export default class IdentityRegistry<V extends object> implements Iterable<[Ide
 		return this.entries();
 	}
 }
+
+export default IdentityRegistry;

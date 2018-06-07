@@ -8,7 +8,7 @@ import '@dojo/shim/Symbol';
  *
  * @param T Accepts the type of the value
  */
-export default class MultiMap<T> implements Map<any[], T> {
+export class MultiMap<T> implements Map<any[], T> {
 	private _map: Map<any, any>;
 	private _key: symbol;
 
@@ -233,3 +233,5 @@ export default class MultiMap<T> implements Map<any[], T> {
 
 	[Symbol.toStringTag] = 'MultiMap';
 }
+
+export default MultiMap;

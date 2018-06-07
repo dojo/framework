@@ -33,7 +33,7 @@ export function isThenable<T>(value: any): value is Thenable<T> {
 /**
  * Task is an extension of Promise that supports cancellation and the Task#finally method.
  */
-export default class Task<T> extends ExtensiblePromise<T> {
+export class Task<T> extends ExtensiblePromise<T> {
 	/**
 	 * Return a Task that resolves when one of the passed in objects have resolved
 	 *
@@ -380,3 +380,5 @@ export default class Task<T> extends ExtensiblePromise<T> {
 		return task;
 	}
 }
+
+export default Task;

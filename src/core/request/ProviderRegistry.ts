@@ -2,7 +2,7 @@ import { Provider, ProviderTest } from './interfaces';
 import MatchRegistry, { Test } from '../MatchRegistry';
 import { Handle } from '../interfaces';
 
-export default class ProviderRegistry extends MatchRegistry<Provider> {
+export class ProviderRegistry extends MatchRegistry<Provider> {
 	setDefaultProvider(provider: Provider) {
 		this._defaultValue = provider;
 	}
@@ -23,3 +23,5 @@ export default class ProviderRegistry extends MatchRegistry<Provider> {
 		return super.register(entryTest, value, first);
 	}
 }
+
+export default ProviderRegistry;

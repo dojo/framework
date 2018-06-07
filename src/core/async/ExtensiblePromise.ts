@@ -34,7 +34,7 @@ export type ListOfPromises<T> = Iterable<T | Thenable<T>>;
  * An extensible base to allow Promises to be extended in ES5. This class basically wraps a native Promise object,
  * giving an API like a native promise.
  */
-export default class ExtensiblePromise<T> {
+export class ExtensiblePromise<T> {
 	/**
 	 * Return a rejected promise wrapped in an ExtensiblePromise
 	 *
@@ -245,3 +245,5 @@ export default class ExtensiblePromise<T> {
 
 	readonly [Symbol.toStringTag]: 'Promise';
 }
+
+export default ExtensiblePromise;

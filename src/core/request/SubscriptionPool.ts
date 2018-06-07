@@ -1,6 +1,6 @@
 import { SubscriptionObserver } from '@dojo/shim/Observable';
 
-export default class SubscriptionPool<T> {
+export class SubscriptionPool<T> {
 	private _observers: SubscriptionObserver<T>[] = [];
 	private _queue: T[] = [];
 	private _queueMaxLength: number;
@@ -42,3 +42,5 @@ export default class SubscriptionPool<T> {
 		});
 	}
 }
+
+export default SubscriptionPool;

@@ -7,7 +7,7 @@ function getListItems<T>(list: List<T>): T[] {
 	return (listItems.get(list) || []) as T[];
 }
 
-export default class List<T> {
+export class List<T> {
 	[Symbol.iterator]() {
 		return this.values();
 	}
@@ -102,3 +102,5 @@ export default class List<T> {
 		return new ShimIterator<T>(getListItems(this).map<T>((value) => value));
 	}
 }
+
+export default List;
