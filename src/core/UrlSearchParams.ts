@@ -41,7 +41,7 @@ function parseQueryString(input: string): ParamList {
 /**
  * Represents a set of URL query search parameters.
  */
-export default class UrlSearchParams {
+export class UrlSearchParams {
 	/**
 	 * Constructs a new UrlSearchParams from a query string, an object of parameters and values, or another
 	 * UrlSearchParams.
@@ -189,3 +189,5 @@ export default class UrlSearchParams {
 		return query.join('&');
 	}
 }
+
+export default UrlSearchParams;

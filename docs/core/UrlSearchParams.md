@@ -118,7 +118,7 @@ const result = searchParams.keys();
 result instanceof Array; // true
 result[0] === 'a'; // true
 result[1] === 'b'; // true
-result[2] === 'b'; // true
+result[2] === 'c'; // true
 ```
 
 ### `set`
