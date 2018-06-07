@@ -1091,8 +1091,11 @@ function render(projectionOptions: ProjectionOptions) {
 			previouslyRendered.push(instance);
 			const { parentVNode, dnode } = instanceMap.get(instance)!;
 			const instanceData = widgetInstanceMap.get(instance)!;
-			const index = (parentVNode.children || []).indexOf(dnode);
-			const siblings = (parentVNode.children || []).slice(index + 1);
+			let siblings: InternalDNode[] = [];
+			if (parentVNode.children) {
+				const index = findIndexOfChild(parentVNode.children, dnode, 0);
+				siblings = parentVNode.children.slice(index + 1);
+			}
 			updateDom(
 				dnode,
 				toInternalWNode(instance, instanceData),

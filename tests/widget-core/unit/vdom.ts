@@ -882,6 +882,58 @@ describe('vdom', () => {
 			assert.strictEqual(thirdTextNodeChild.data, '3');
 		});
 
+		it('should find node in array of siblings', () => {
+			let expand: any;
+			class Foo extends WidgetBase<any> {
+				private _expand = false;
+
+				doExpand() {
+					this._expand = !this._expand;
+					this.invalidate();
+				}
+
+				render() {
+					return this._expand
+						? [v('div', { key: '1' }, ['one']), v('div', { key: '2' }, ['two'])]
+						: [v('div', { key: '1' }, ['one'])];
+				}
+			}
+
+			class EnhancedFoo extends Foo {
+				constructor() {
+					super();
+					expand = this.doExpand.bind(this);
+				}
+			}
+
+			class Parent extends WidgetBase {
+				render() {
+					return v('div', [w(EnhancedFoo, {}), w(Foo, {})]);
+				}
+			}
+
+			const widget = new Parent();
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0];
+			assert.lengthOf(root.childNodes, 2);
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
+			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'one');
+			expand();
+			assert.lengthOf(root.childNodes, 3);
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
+			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
+			assert.strictEqual((root.childNodes[2].childNodes[0] as Text).data, 'one');
+			expand();
+			assert.lengthOf(root.childNodes, 2);
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
+			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'one');
+			expand();
+			assert.lengthOf(root.childNodes, 3);
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
+			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
+			assert.strictEqual((root.childNodes[2].childNodes[0] as Text).data, 'one');
+		});
+
 		it('should update an array of nodes to single node', () => {
 			class Foo extends WidgetBase {
 				private _array = false;
