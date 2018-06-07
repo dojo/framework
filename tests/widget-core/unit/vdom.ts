@@ -728,6 +728,64 @@ describe('vdom', () => {
 			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'hello 3');
 		});
 
+		it('should only insert before nodes that are not orphaned when returning from an array', () => {
+			class VeryParent extends WidgetBase {
+				render() {
+					return v('div', [w(Parent, {}), w(ChildOne, {}), v('div', ['insert before me'])]);
+				}
+			}
+
+			let parentInvalidate: any;
+			class Parent extends WidgetBase {
+				private items: DNode[] = [w(ChildOne, { key: '1' }), w(ChildOne, { key: '2' })];
+				constructor() {
+					super();
+					parentInvalidate = this.swap.bind(this);
+				}
+				render() {
+					return this.items;
+				}
+
+				swap() {
+					this.items = [w(ChildOne, { key: '1' }), w(ChildOne, { key: '2' }), v('div', ['New'])];
+					this.invalidate();
+				}
+			}
+
+			let hide = false;
+			class ChildOne extends WidgetBase {
+				render() {
+					return w(ChildTwo, {});
+				}
+			}
+
+			let invalidateTwo: any;
+			class ChildTwo extends WidgetBase {
+				constructor() {
+					super();
+					invalidateTwo = this.invalidate.bind(this);
+				}
+				render() {
+					return hide ? null : v('div', ['Two']);
+				}
+			}
+
+			const widget = new VeryParent();
+			const projection = dom.create(widget);
+			const root = projection.domNode.childNodes[0] as any;
+			resolvers.resolve();
+			invalidateTwo();
+			resolvers.resolve();
+			hide = true;
+			invalidateTwo();
+			resolvers.resolve();
+			parentInvalidate();
+			resolvers.resolve();
+			assert.lengthOf(root.childNodes, 4);
+			assert.strictEqual(root.childNodes[2].childNodes[0].data, 'New');
+			assert.strictEqual(root.childNodes[3].childNodes[0].data, 'insert before me');
+		});
+
 		it('Should not render widgets that have been detached', () => {
 			class ChildOne extends WidgetBase {
 				render() {
