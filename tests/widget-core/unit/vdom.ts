@@ -934,6 +934,189 @@ describe('vdom', () => {
 			assert.strictEqual((root.childNodes[2].childNodes[0] as Text).data, 'one');
 		});
 
+		it('only pass siblings if the node found exists in the list', () => {
+			class Foo extends WidgetBase {
+				render() {
+					return v('div', [v('div', { key: '3' }, ['one']), v('div', { key: '3' }, ['two']), w(Bar, {})]);
+				}
+			}
+			let showBar = false;
+			let invalidateBar: any;
+			class Bar extends WidgetBase {
+				constructor() {
+					super();
+					invalidateBar = this.invalidate.bind(this);
+				}
+				render() {
+					return showBar ? [v('div', { key: '3' }, ['three']), w(Qux, {})] : null;
+				}
+			}
+
+			let showQux = false;
+			let invalidateQux: any;
+			class Qux extends WidgetBase {
+				constructor() {
+					super();
+					invalidateQux = this.invalidate.bind(this);
+				}
+				render() {
+					return showQux ? v('div', { key: '3' }, ['four']) : null;
+				}
+			}
+
+			const widget = new Foo();
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0];
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
+			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
+			showBar = true;
+			invalidateBar();
+			showQux = true;
+			invalidateQux();
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
+			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
+			assert.strictEqual((root.childNodes[2].childNodes[0] as Text).data, 'three');
+			assert.strictEqual((root.childNodes[3].childNodes[0] as Text).data, 'four');
+		});
+
+		it('Should insert a new DNode at the beginning when returning an array in the correct position', () => {
+			class Foo extends WidgetBase {
+				render() {
+					return v('div', [v('div', { key: '1' }, ['one']), v('div', { key: '2' }, ['two']), w(Bar, {})]);
+				}
+			}
+			let showBar = false;
+			let invalidateBar: any;
+			class Bar extends WidgetBase {
+				constructor() {
+					super();
+					invalidateBar = this.invalidate.bind(this);
+				}
+				render() {
+					return showBar ? [w(Qux, {}), v('div', { key: '3' }, ['three'])] : null;
+				}
+			}
+
+			let showQux = false;
+			let invalidateQux: any;
+			class Qux extends WidgetBase {
+				constructor() {
+					super();
+					invalidateQux = this.invalidate.bind(this);
+				}
+				render() {
+					return showQux ? v('div', { key: '4' }, ['four']) : null;
+				}
+			}
+
+			const widget = new Foo();
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0];
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
+			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
+			showBar = true;
+			invalidateBar();
+			showQux = true;
+			invalidateQux();
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
+			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
+			assert.strictEqual((root.childNodes[2].childNodes[0] as Text).data, 'four');
+			assert.strictEqual((root.childNodes[3].childNodes[0] as Text).data, 'three');
+		});
+
+		it('Should insert a new DNode at the middle when returning an array in the correct position', () => {
+			class Foo extends WidgetBase {
+				render() {
+					return v('div', [v('div', { key: '1' }, ['one']), v('div', { key: '2' }, ['two']), w(Bar, {})]);
+				}
+			}
+			let showBar = false;
+			let invalidateBar: any;
+			class Bar extends WidgetBase {
+				constructor() {
+					super();
+					invalidateBar = this.invalidate.bind(this);
+				}
+				render() {
+					return showBar
+						? [v('div', { key: '3' }, ['three']), w(Qux, {}), v('div', { key: '5' }, ['five'])]
+						: null;
+				}
+			}
+
+			let showQux = false;
+			let invalidateQux: any;
+			class Qux extends WidgetBase {
+				constructor() {
+					super();
+					invalidateQux = this.invalidate.bind(this);
+				}
+				render() {
+					return showQux ? v('div', { key: '4' }, ['four']) : null;
+				}
+			}
+
+			const widget = new Foo();
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode.childNodes[0];
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
+			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
+			showBar = true;
+			invalidateBar();
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
+			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
+			assert.strictEqual((root.childNodes[2].childNodes[0] as Text).data, 'three');
+			assert.strictEqual((root.childNodes[3].childNodes[0] as Text).data, 'five');
+			showQux = true;
+			invalidateQux();
+			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
+			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
+			assert.strictEqual((root.childNodes[2].childNodes[0] as Text).data, 'three');
+			assert.strictEqual((root.childNodes[3].childNodes[0] as Text).data, 'four');
+			assert.strictEqual((root.childNodes[4].childNodes[0] as Text).data, 'five');
+		});
+
+		it('Should only try to insert before nodes that share the same parent', () => {
+			let invalidate: any;
+			class Foo extends WidgetBase {
+				private _show = false;
+
+				constructor() {
+					super();
+					invalidate = this.show;
+				}
+
+				public show = () => {
+					this._show = !this._show;
+					this.invalidate();
+				};
+
+				render() {
+					return v('div', {}, [v('h2', this._show ? [v('a', ['link'])] : []), v('p', ['Hello'])]);
+				}
+			}
+
+			class App extends WidgetBase {
+				render() {
+					return v('div', [w(Foo, {})]);
+				}
+			}
+
+			const widget = new App();
+			const projection = dom.create(widget, { sync: true });
+			const root = projection.domNode;
+			const h2 = root.childNodes[0].childNodes[0].childNodes[0];
+			const p = root.childNodes[0].childNodes[0].childNodes[1];
+			assert.lengthOf(h2.childNodes, 0);
+			assert.lengthOf(p.childNodes, 1);
+			assert.strictEqual((p.childNodes[0] as Text).data, 'Hello');
+			invalidate();
+			assert.strictEqual(root.childNodes[0].childNodes[0].childNodes[0], h2);
+			assert.strictEqual(root.childNodes[0].childNodes[0].childNodes[1], p);
+			assert.lengthOf(h2.childNodes, 1);
+			assert.strictEqual((h2.childNodes[0].childNodes[0] as Text).data, 'link');
+		});
+
 		it('should update an array of nodes to single node', () => {
 			class Foo extends WidgetBase {
 				private _array = false;
@@ -4148,7 +4331,7 @@ describe('vdom', () => {
 		});
 	});
 
-	describe('i18n Mixin', () => {
+	it('i18n Mixin', () => {
 		class MyWidget extends I18nMixin(WidgetBase) {
 			render() {
 				return v('span');

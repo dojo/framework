@@ -104,6 +104,7 @@ interface ProjectorState {
 export const widgetInstanceMap = new WeakMap<any, WidgetData>();
 
 const instanceMap = new WeakMap<DefaultWidgetBaseInterface, InstanceMapData>();
+const nextSiblingMap = new WeakMap<DefaultWidgetBaseInterface, InternalDNode[]>();
 const projectorStateMap = new WeakMap<DefaultWidgetBaseInterface, ProjectorState>();
 
 function same(dnode1: InternalDNode, dnode2: InternalDNode) {
@@ -639,7 +640,8 @@ function updateChildren(
 					projectionOptions,
 					parentVNode,
 					parentInstance,
-					oldChildren.slice(oldIndex)
+					oldChildren.slice(oldIndex),
+					newChildren.slice(newIndex)
 				) || textUpdated;
 			continue;
 		}
@@ -666,6 +668,9 @@ function updateChildren(
 						}
 					} else {
 						if (insertBefore.domNode) {
+							if (insertBefore.domNode.parentElement !== parentVNode.domNode) {
+								break;
+							}
 							insertBeforeDomNode = insertBefore.domNode;
 							break;
 						}
@@ -680,7 +685,7 @@ function updateChildren(
 			createDom(
 				newChild,
 				parentVNode,
-				oldChildren.slice(oldIndex + 1),
+				newChildren.slice(newIndex + 1),
 				insertBeforeDomNode,
 				projectionOptions,
 				parentInstance
@@ -765,6 +770,7 @@ function addChildren(
 
 	for (let i = 0; i < children.length; i++) {
 		const child = children[i];
+		const nextSiblings = children.slice(i + 1);
 
 		if (isVNode(child)) {
 			if (projectorState.merge && childNodes) {
@@ -776,9 +782,9 @@ function addChildren(
 					}
 				}
 			}
-			createDom(child, parentVNode, [], insertBefore, projectionOptions, parentInstance);
+			createDom(child, parentVNode, nextSiblings, insertBefore, projectionOptions, parentInstance);
 		} else {
-			createDom(child, parentVNode, [], insertBefore, projectionOptions, parentInstance, childNodes);
+			createDom(child, parentVNode, nextSiblings, insertBefore, projectionOptions, parentInstance, childNodes);
 		}
 		nodeAdded(child, transitions);
 	}
@@ -816,7 +822,7 @@ function initPropertiesAndChildren(
 function createDom(
 	dnode: InternalDNode,
 	parentVNode: InternalVNode,
-	siblings: InternalDNode[],
+	nextSiblings: InternalDNode[],
 	insertBefore: Node | undefined,
 	projectionOptions: ProjectionOptions,
 	parentInstance: DefaultWidgetBaseInterface,
@@ -836,6 +842,7 @@ function createDom(
 		}
 		const instance = new widgetConstructor();
 		dnode.instance = instance;
+		nextSiblingMap.set(instance, nextSiblings);
 		const instanceData = widgetInstanceMap.get(instance)!;
 		instanceData.invalidate = () => {
 			instanceData.dirty = true;
@@ -915,7 +922,8 @@ function updateDom(
 	projectionOptions: ProjectionOptions,
 	parentVNode: InternalVNode,
 	parentInstance: DefaultWidgetBaseInterface,
-	siblings: InternalDNode[]
+	oldNextSiblings: InternalDNode[],
+	nextSiblings: InternalDNode[]
 ) {
 	if (isWNode(dnode)) {
 		const { instance } = previous;
@@ -926,12 +934,13 @@ function updateDom(
 		instance.__setCoreProperties__(dnode.coreProperties);
 		instance.__setChildren__(dnode.children);
 		instance.__setProperties__(dnode.properties);
+		nextSiblingMap.set(instance, nextSiblings);
 		dnode.instance = instance;
 		if (instanceData.dirty === true) {
 			const rendered = instance.__render__();
 			instanceData.rendering = false;
 			dnode.rendered = filterAndDecorateChildren(rendered, instance);
-			updateChildren(parentVNode, siblings, previousRendered, dnode.rendered, instance, projectionOptions);
+			updateChildren(parentVNode, oldNextSiblings, previousRendered, dnode.rendered, instance, projectionOptions);
 		} else {
 			instanceData.rendering = false;
 			dnode.rendered = previousRendered;
@@ -961,8 +970,14 @@ function updateDom(
 				const children = filterAndDecorateChildren(dnode.children, parentInstance);
 				dnode.children = children;
 				updated =
-					updateChildren(dnode, siblings, previous.children, children, parentInstance, projectionOptions) ||
-					updated;
+					updateChildren(
+						dnode,
+						oldNextSiblings,
+						previous.children,
+						children,
+						parentInstance,
+						projectionOptions
+					) || updated;
 			}
 
 			const previousProperties = buildPreviousProperties(domNode, previous, dnode);
@@ -1091,18 +1106,15 @@ function render(projectionOptions: ProjectionOptions) {
 			previouslyRendered.push(instance);
 			const { parentVNode, dnode } = instanceMap.get(instance)!;
 			const instanceData = widgetInstanceMap.get(instance)!;
-			let siblings: InternalDNode[] = [];
-			if (parentVNode.children) {
-				const index = findIndexOfChild(parentVNode.children, dnode, 0);
-				siblings = parentVNode.children.slice(index + 1);
-			}
+			const nextSiblings = nextSiblingMap.get(instance)!;
 			updateDom(
 				dnode,
 				toInternalWNode(instance, instanceData),
 				projectionOptions,
 				parentVNode,
 				instance,
-				siblings
+				nextSiblings,
+				nextSiblings
 			);
 		}
 	}
@@ -1140,7 +1152,7 @@ export const dom = {
 				scheduleRender(finalProjectorOptions);
 			}
 		};
-		updateDom(node, node, finalProjectorOptions, parentVNode, instance, []);
+		updateDom(node, node, finalProjectorOptions, parentVNode, instance, [], []);
 		projectorState.afterRenderCallbacks.push(() => {
 			instanceData.onAttach();
 		});
