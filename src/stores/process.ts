@@ -148,9 +148,9 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 	}
 
 	return async (executorPayload: P): Promise<ProcessResult<T, P>> => {
-		const undoOperations: PatchOperation[] = [];
 		const operations: PatchOperation[] = [];
 		const commandsCopy = [...commands];
+		let undoOperations: PatchOperation[] = [];
 		let command = commandsCopy.shift();
 		let error: ProcessError | null = null;
 		const payload = transformer ? transformer(executorPayload) : executorPayload;
@@ -170,7 +170,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 
 				for (let i = 0; i < results.length; i++) {
 					operations.push(...results[i]);
-					undoOperations.push(...apply(results[i]));
+					undoOperations = [...apply(results[i]), ...undoOperations];
 				}
 
 				store.invalidate();

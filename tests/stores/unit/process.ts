@@ -312,14 +312,17 @@ describe('process', () => {
 	});
 
 	it('process can be undone using the undo function provided via the callback', () => {
-		const process = createProcess('foo', [testCommandFactory('foo')], (error, result) => {
+		const command = ({ payload }: CommandRequest): PatchOperation[] => {
+			return [{ op: OperationType.REPLACE, path: new Pointer('/foo'), value: 'bar' }];
+		};
+		const process = createProcess('foo', [testCommandFactory('foo'), command], (error, result) => {
 			let foo = store.get(result.store.path('foo'));
-			assert.strictEqual(foo, 'foo');
+			assert.strictEqual(foo, 'bar');
 			store.apply(result.undoOperations);
 			foo = store.get(result.store.path('foo'));
 			assert.isUndefined(foo);
 		});
 		const processExecutor = process(store);
-		processExecutor({});
+		return processExecutor({});
 	});
 });
