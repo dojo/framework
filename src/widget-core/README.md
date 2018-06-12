@@ -802,7 +802,7 @@ class MyClass extends WidgetBase<MyClassProperties> {
 
     @beforeProperties()
     protected myBeforeProperties(properties: MyClassProperties): MyClassProperties {
-        if (properties.type = 'myType') {
+        if (properties.type === 'myType') {
             return { extraProperty: 'foo' };
         }
         return {};
