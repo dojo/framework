@@ -1,12 +1,13 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
+import { SinonSpy } from 'sinon';
+import { v } from '../../../src/d';
+import Drag, { DragResults } from '../../../src/meta/Drag';
+import { ProjectorMixin } from '../../../src/mixins/Projector';
+import { ThemedMixin } from '../../../src/mixins/Themed';
+import { WidgetBase } from '../../../src/WidgetBase';
 import sendEvent from '../../support/sendEvent';
 import { createResolvers } from './../../support/util';
-import { v } from '../../../src/d';
-import { ProjectorMixin } from '../../../src/mixins/Projector';
-import Drag, { DragResults } from '../../../src/meta/Drag';
-import { WidgetBase } from '../../../src/WidgetBase';
-import { ThemedMixin } from '../../../src/mixins/Themed';
 
 const resolvers = createResolvers();
 
@@ -127,7 +128,7 @@ registerSuite('support/meta/Drag', {
 			resolvers.resolve();
 			resolvers.resolve();
 
-			sendEvent(div.firstChild as Element, 'pointerdown', {
+			const downEvent = sendEvent(div.firstChild as Element, 'pointerdown', {
 				eventInit: {
 					bubbles: true,
 					isPrimary: true,
@@ -143,9 +144,12 @@ registerSuite('support/meta/Drag', {
 				}
 			});
 
+			assert.isTrue(downEvent.defaultPrevented);
+			assert.isTrue((downEvent.stopPropagation as SinonSpy).called);
+
 			resolvers.resolve();
 
-			sendEvent(div.firstChild as Element, 'pointermove', {
+			const moveEvent = sendEvent(div.firstChild as Element, 'pointermove', {
 				eventInit: {
 					bubbles: true,
 					clientX: 110,
@@ -159,9 +163,12 @@ registerSuite('support/meta/Drag', {
 				}
 			});
 
+			assert.isTrue(moveEvent.defaultPrevented);
+			assert.isTrue((moveEvent.stopPropagation as SinonSpy).called);
+
 			resolvers.resolve();
 
-			sendEvent(div.firstChild as Element, 'pointerup', {
+			const upEvent = sendEvent(div.firstChild as Element, 'pointerup', {
 				eventInit: {
 					bubbles: true,
 					clientX: 105,
@@ -174,6 +181,9 @@ registerSuite('support/meta/Drag', {
 					screenY: 1050
 				}
 			});
+
+			assert.isTrue(upEvent.defaultPrevented);
+			assert.isTrue((upEvent.stopPropagation as SinonSpy).called);
 
 			resolvers.resolve();
 
@@ -528,7 +538,7 @@ registerSuite('support/meta/Drag', {
 			resolvers.resolve();
 			resolvers.resolve();
 
-			sendEvent(div.firstChild as Element, 'pointermove', {
+			const moveEvent = sendEvent(div.firstChild as Element, 'pointermove', {
 				eventInit: {
 					bubbles: true,
 					clientX: 115,
@@ -542,9 +552,12 @@ registerSuite('support/meta/Drag', {
 				}
 			});
 
+			assert.isFalse(moveEvent.defaultPrevented);
+			assert.isFalse((moveEvent.stopPropagation as SinonSpy).called);
+
 			resolvers.resolve();
 
-			sendEvent(div.firstChild as Element, 'pointerup', {
+			const upEvent = sendEvent(div.firstChild as Element, 'pointerup', {
 				eventInit: {
 					bubbles: true,
 					clientX: 120,
@@ -557,6 +570,9 @@ registerSuite('support/meta/Drag', {
 					screenY: 1050
 				}
 			});
+
+			assert.isFalse(upEvent.defaultPrevented);
+			assert.isFalse((upEvent.stopPropagation as SinonSpy).called);
 
 			resolvers.resolve();
 
@@ -735,7 +751,7 @@ registerSuite('support/meta/Drag', {
 			resolvers.resolve();
 			resolvers.resolve();
 
-			sendEvent(div.firstChild!.firstChild as Element, 'pointerdown', {
+			const downEvent = sendEvent(div.firstChild!.firstChild as Element, 'pointerdown', {
 				eventInit: {
 					bubbles: true,
 					isPrimary: true,
@@ -751,9 +767,12 @@ registerSuite('support/meta/Drag', {
 				}
 			});
 
+			assert.isFalse(downEvent.defaultPrevented);
+			assert.isFalse((downEvent.stopPropagation as SinonSpy).called);
+
 			resolvers.resolve();
 
-			sendEvent(div.firstChild!.firstChild as Element, 'pointermove', {
+			const moveEvent = sendEvent(div.firstChild!.firstChild as Element, 'pointermove', {
 				eventInit: {
 					bubbles: true,
 					clientX: 110,
@@ -767,9 +786,12 @@ registerSuite('support/meta/Drag', {
 				}
 			});
 
+			assert.isFalse(moveEvent.defaultPrevented);
+			assert.isFalse((moveEvent.stopPropagation as SinonSpy).called);
+
 			resolvers.resolve();
 
-			sendEvent(div.firstChild!.firstChild as Element, 'pointerup', {
+			const upEvent = sendEvent(div.firstChild!.firstChild as Element, 'pointerup', {
 				eventInit: {
 					bubbles: true,
 					clientX: 105,
@@ -782,6 +804,9 @@ registerSuite('support/meta/Drag', {
 					screenY: 1050
 				}
 			});
+
+			assert.isFalse(upEvent.defaultPrevented);
+			assert.isFalse((upEvent.stopPropagation as SinonSpy).called);
 
 			resolvers.resolve();
 

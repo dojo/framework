@@ -2,6 +2,7 @@ import has, { add as hasAdd } from '@dojo/core/has';
 import { deepAssign } from '@dojo/core/lang';
 import global from '@dojo/shim/global';
 import { assign } from '@dojo/shim/object';
+import { spy } from 'sinon';
 
 hasAdd('customevent-constructor', () => {
 	try {
@@ -96,7 +97,7 @@ export default function sendEvent<I extends EventInit>(
 	target: Element,
 	type: string,
 	options?: SendEventOptions<I>
-): void {
+): Event {
 	function dispatchEvent(target: Element, event: Event) {
 		let error: Error | undefined;
 
@@ -136,6 +137,9 @@ export default function sendEvent<I extends EventInit>(
 	} catch (e) {
 		/* swallowing assignment errors when trying to overwrite native event properties */
 	}
+
+	spy(event, 'stopPropagation');
+
 	if (selector) {
 		const selectorTarget = target.querySelector(selector);
 		if (selectorTarget) {
@@ -146,4 +150,6 @@ export default function sendEvent<I extends EventInit>(
 	} else {
 		dispatchEvent(target, event);
 	}
+
+	return event;
 }

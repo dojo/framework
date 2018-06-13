@@ -182,6 +182,9 @@ class DragController {
 			state.dragResults.start = deepAssign({}, state.start);
 			state.dragResults.isDragging = true;
 			state.invalidate();
+
+			event.preventDefault();
+			event.stopPropagation();
 		} // else, we are ignoring the event
 	};
 
@@ -198,6 +201,9 @@ class DragController {
 			state.dragResults.start = deepAssign({}, state.start);
 		}
 		state.invalidate();
+
+		event.preventDefault();
+		event.stopPropagation();
 	};
 
 	private _onDragStop = (event: PointerEvent) => {
@@ -215,6 +221,9 @@ class DragController {
 		state.dragResults.isDragging = false;
 		state.invalidate();
 		this._dragging = undefined;
+
+		event.preventDefault();
+		event.stopPropagation();
 	};
 
 	constructor() {
