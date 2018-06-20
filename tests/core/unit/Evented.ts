@@ -94,6 +94,26 @@ registerSuite('Evented', {
 			evented.emit({ type: 'foo' });
 
 			assert.deepEqual(eventStack, ['foo1', 'foo2']);
+		},
+		'listener removes itself'() {
+			const eventStack: string[] = [];
+			const evented = new Evented<FooBarEvents>();
+
+			evented.on('foo', () => {
+				eventStack.push('one');
+			});
+			const handle = evented.on('foo', () => {
+				eventStack.push('two');
+				handle.destroy();
+			});
+			evented.on('foo', () => {
+				eventStack.push('three');
+			});
+
+			evented.emit({ type: 'foo' });
+			evented.emit({ type: 'foo' });
+
+			assert.deepEqual(eventStack, ['one', 'two', 'three', 'one', 'three']);
 		}
 	},
 	'wildcards in event type name': {

@@ -77,7 +77,7 @@ export class Evented<
 	emit(event: any): void {
 		this.listenersMap.forEach((methods, type) => {
 			if (isGlobMatch(type as any, event.type)) {
-				methods.forEach((method) => {
+				[...methods].forEach((method) => {
 					method.call(this, event);
 				});
 			}
