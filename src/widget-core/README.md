@@ -1172,7 +1172,7 @@ class List extends WidgetBase {
 
 #### Animations
 
-See the [Animations](#animations) section more information.
+See the [Animation](#animation) section more information.
 
 #### Drag
 
