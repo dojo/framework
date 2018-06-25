@@ -263,7 +263,7 @@ registerSuite('mixins/I18nMixin', {
 
 				const result = localized.__render__();
 				assert.isOk(result);
-				assert.isNull(result.properties!['lang']);
+				assert.isUndefined(result.properties!['lang']);
 			}
 		},
 
@@ -291,7 +291,7 @@ registerSuite('mixins/I18nMixin', {
 
 				const result = localized.__render__();
 				assert.isOk(result);
-				assert.strictEqual(result.properties.dir, '');
+				assert.isUndefined(result.properties.dir);
 			},
 
 			'The `dir` attribute is added to the first VNode in the render'() {

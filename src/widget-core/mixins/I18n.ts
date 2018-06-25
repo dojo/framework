@@ -41,7 +41,7 @@ export interface I18nProperties extends LocaleData, WidgetProperties {
  */
 interface I18nVNodeProperties extends VNodeProperties {
 	dir: string;
-	lang: string | null;
+	lang: string;
 }
 
 export type LocalizedMessages<T extends Messages> = {
@@ -150,10 +150,7 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 			decorate(result, {
 				modifier: (node, breaker) => {
 					const { locale, rtl } = this.properties;
-					const properties: I18nVNodeProperties = {
-						dir: '',
-						lang: null
-					};
+					const properties: Partial<I18nVNodeProperties> = {};
 					if (typeof rtl === 'boolean') {
 						properties['dir'] = rtl ? 'rtl' : 'ltr';
 					}
