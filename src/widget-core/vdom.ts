@@ -24,6 +24,8 @@ const NAMESPACE_XLINK = NAMESPACE_W3 + '1999/xlink';
 
 const emptyArray: (InternalWNode | InternalVNode)[] = [];
 
+const nodeOperations = ['focus', 'blur', 'scrollIntoView', 'click'];
+
 export type RenderResult = DNode<any> | DNode<any>[];
 
 interface InstanceMapData {
@@ -246,7 +248,13 @@ function buildPreviousProperties(domNode: any, previous: InternalVNode, current:
 	return newProperties;
 }
 
-function focusNode(propValue: any, previousValue: any, domNode: Element, projectionOptions: ProjectionOptions): void {
+function nodeOperation(
+	propName: string,
+	propValue: any,
+	previousValue: any,
+	domNode: Element,
+	projectionOptions: ProjectionOptions
+): void {
 	let result;
 	if (typeof propValue === 'function') {
 		result = propValue();
@@ -256,7 +264,7 @@ function focusNode(propValue: any, previousValue: any, domNode: Element, project
 	if (result === true) {
 		const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
 		projectorState.deferredRenderCallbacks.push(() => {
-			(domNode as HTMLElement).focus();
+			(domNode as any)[propName]();
 		});
 	}
 }
@@ -368,8 +376,8 @@ function updateProperties(
 					addClasses(domNode, currentClasses[i]);
 				}
 			}
-		} else if (propName === 'focus') {
-			focusNode(propValue, previousValue, domNode, projectionOptions);
+		} else if (nodeOperations.indexOf(propName) !== -1) {
+			nodeOperation(propName, propValue, previousValue, domNode, projectionOptions);
 		} else if (propName === 'styles') {
 			const styleNames = Object.keys(propValue);
 			const styleCount = styleNames.length;

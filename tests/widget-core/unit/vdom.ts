@@ -4331,6 +4331,229 @@ describe('vdom', () => {
 		});
 	});
 
+	describe('blur', () => {
+		it('blur is only called once when set to true', () => {
+			const widget = getWidget(
+				v('input', {
+					blur: true
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const blurSpy = spy(input, 'blur');
+			resolvers.resolve();
+			assert.isTrue(blurSpy.calledOnce);
+			widget.renderResult = v('input', { blur: true });
+			assert.isTrue(blurSpy.calledOnce);
+			document.body.removeChild(input);
+		});
+
+		it('blur is called when blur property is set to true from false', () => {
+			const widget = getWidget(
+				v('input', {
+					blur: false
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const blurSpy = spy(input, 'blur');
+			resolvers.resolve();
+			assert.isTrue(blurSpy.notCalled);
+			widget.renderResult = v('input', { blur: true });
+			resolvers.resolve();
+			assert.isTrue(blurSpy.calledOnce);
+			document.body.removeChild(input);
+		});
+
+		it('Should blur if function for blur returns true', () => {
+			const shouldBlur = () => {
+				return true;
+			};
+			const widget = getWidget(
+				v('input', {
+					blur: shouldBlur
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const blurSpy = spy(input, 'blur');
+			resolvers.resolve();
+			assert.isTrue(blurSpy.calledOnce);
+			widget.renderResult = v('input', { blur: shouldBlur });
+			resolvers.resolve();
+			assert.isTrue(blurSpy.calledTwice);
+			document.body.removeChild(input);
+		});
+
+		it('Should never blur if function for blur returns false', () => {
+			const shouldBlur = () => false;
+			const widget = getWidget(
+				v('input', {
+					blur: shouldBlur
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const blurSpy = spy(input, 'blur');
+			resolvers.resolve();
+			assert.isTrue(blurSpy.notCalled);
+			widget.renderResult = v('input', { blur: shouldBlur });
+			resolvers.resolve();
+			assert.isTrue(blurSpy.notCalled);
+			document.body.removeChild(input);
+		});
+	});
+
+	describe('scrollIntoView', () => {
+		it('scrollIntoView is only called once when set to true', () => {
+			const widget = getWidget(
+				v('input', {
+					scrollIntoView: true
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const scrollIntoViewStub = stub();
+			input.scrollIntoView = scrollIntoViewStub;
+			resolvers.resolve();
+			assert.isTrue(scrollIntoViewStub.calledOnce);
+			widget.renderResult = v('input', { scrollIntoView: true });
+			assert.isTrue(scrollIntoViewStub.calledOnce);
+			document.body.removeChild(input);
+		});
+
+		it('scrollIntoView is called when scrollIntoView property is set to true from false', () => {
+			const widget = getWidget(
+				v('input', {
+					scrollIntoView: false
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const scrollIntoViewStub = stub();
+			input.scrollIntoView = scrollIntoViewStub;
+			resolvers.resolve();
+			assert.isTrue(scrollIntoViewStub.notCalled);
+			widget.renderResult = v('input', { scrollIntoView: true });
+			resolvers.resolve();
+			assert.isTrue(scrollIntoViewStub.calledOnce);
+			document.body.removeChild(input);
+		});
+
+		it('Should scrollIntoView if function for scrollIntoView returns true', () => {
+			const shouldScroll = () => {
+				return true;
+			};
+			const widget = getWidget(
+				v('input', {
+					scrollIntoView: shouldScroll
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const scrollIntoViewStub = stub();
+			input.scrollIntoView = scrollIntoViewStub;
+			resolvers.resolve();
+			assert.isTrue(scrollIntoViewStub.calledOnce);
+			widget.renderResult = v('input', { scrollIntoView: shouldScroll });
+			resolvers.resolve();
+			assert.isTrue(scrollIntoViewStub.calledTwice);
+			document.body.removeChild(input);
+		});
+
+		it('Should never scrollIntoView if function for scrollIntoView returns false', () => {
+			const shouldScroll = () => false;
+			const widget = getWidget(
+				v('input', {
+					scrollIntoView: shouldScroll
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const scrollIntoViewStub = stub();
+			input.scrollIntoView = scrollIntoViewStub;
+			resolvers.resolve();
+			assert.isTrue(scrollIntoViewStub.notCalled);
+			widget.renderResult = v('input', { scrollIntoView: shouldScroll });
+			resolvers.resolve();
+			assert.isTrue(scrollIntoViewStub.notCalled);
+			document.body.removeChild(input);
+		});
+	});
+
+	describe('click', () => {
+		it('click is only called once when set to true', () => {
+			const widget = getWidget(
+				v('input', {
+					click: true
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const clickSpy = spy(input, 'click');
+			resolvers.resolve();
+			assert.isTrue(clickSpy.calledOnce);
+			widget.renderResult = v('input', { click: true });
+			assert.isTrue(clickSpy.calledOnce);
+			document.body.removeChild(input);
+		});
+
+		it('click is called when click property is set to true from false', () => {
+			const widget = getWidget(
+				v('input', {
+					click: false
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const clickSpy = spy(input, 'click');
+			resolvers.resolve();
+			assert.isTrue(clickSpy.notCalled);
+			widget.renderResult = v('input', { click: true });
+			resolvers.resolve();
+			assert.isTrue(clickSpy.calledOnce);
+			document.body.removeChild(input);
+		});
+
+		it('Should click if function for click returns true', () => {
+			const shouldClick = () => {
+				return true;
+			};
+			const widget = getWidget(
+				v('input', {
+					click: shouldClick
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const clickSpy = spy(input, 'click');
+			resolvers.resolve();
+			assert.isTrue(clickSpy.calledOnce);
+			widget.renderResult = v('input', { click: shouldClick });
+			resolvers.resolve();
+			assert.isTrue(clickSpy.calledTwice);
+			document.body.removeChild(input);
+		});
+
+		it('Should never click if function for click returns false', () => {
+			const shouldClick = () => false;
+			const widget = getWidget(
+				v('input', {
+					click: shouldClick
+				})
+			);
+			const projection = dom.append(document.body, widget);
+			const input = projection.domNode.lastChild as HTMLElement;
+			const clickSpy = spy(input, 'click');
+			resolvers.resolve();
+			assert.isTrue(clickSpy.notCalled);
+			widget.renderResult = v('input', { click: shouldClick });
+			resolvers.resolve();
+			assert.isTrue(clickSpy.notCalled);
+			document.body.removeChild(input);
+		});
+	});
+
 	it('i18n Mixin', () => {
 		class MyWidget extends I18nMixin(WidgetBase) {
 			render() {
