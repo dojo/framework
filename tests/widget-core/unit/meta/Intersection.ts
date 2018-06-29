@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import global from '@dojo/shim/global';
-import { stub, spy } from 'sinon';
+import { stub, spy, SinonSpy } from 'sinon';
 import Intersection from '../../../src/meta/Intersection';
 import { NodeHandler } from './../../../src/NodeHandler';
 import WidgetBase from '../../../src/WidgetBase';
@@ -15,7 +15,8 @@ registerSuite('meta - Intersection', {
 		intersectionObserver = stub(global, 'IntersectionObserver').callsFake(function(callback: any) {
 			const observer = {
 				observe: stub(),
-				takeRecords: stub().returns([])
+				takeRecords: stub().returns([]),
+				disconnect: spy()
 			};
 			observers.push([observer, callback]);
 			return observer;
@@ -340,6 +341,24 @@ registerSuite('meta - Intersection', {
 				intersection.get('baz', { root: 'root' });
 				assert.equal(observeStub.callCount, 2, 'Should not have observed with the same node and options');
 				assert.lengthOf(observers, 2);
+			},
+			destroy() {
+				const nodeHandler = new NodeHandler();
+				const intersection = new Intersection({
+					invalidate: () => {},
+					nodeHandler,
+					bind: bindInstance
+				});
+
+				const root = document.createElement('div');
+				nodeHandler.add(root, 'root');
+
+				intersection.get('root');
+				intersection.destroy();
+
+				const [observer]: [{ disconnect: SinonSpy }] = observers[0] as any;
+				assert.isTrue(observer.disconnect.calledOnce);
+				assert.isTrue(observer.disconnect.calledOn(observer));
 			}
 		}
 	}

@@ -78,7 +78,7 @@ export class Intersection extends Base {
 		const details = { observer, entries, ...options };
 
 		this._details.set(JSON.stringify(options), details);
-		this.own(createHandle(observer.disconnect));
+		this.own(createHandle(() => observer.disconnect()));
 		return details;
 	}
 
