@@ -1,14 +1,14 @@
-import global from '@dojo/shim/global';
-import { reference } from '../../src/diff';
-import diffProperty from '../../src/decorators/diffProperty';
-import customElement from '../../src/decorators/customElement';
-import WidgetBase from '../../src/WidgetBase';
-import Container from '../../src/Container';
-import Registry from '../../src/Registry';
-import { v, w } from '../../src/d';
-import register, { create, CustomElementChildType } from '../../src/registerCustomElement';
-import { createResolvers } from './../support/util';
-import { ThemedMixin, theme } from '../../src/mixins/Themed';
+import global from '../../../src/shim/global';
+import { reference } from '../../../src/widget-core/diff';
+import diffProperty from '../../../src/widget-core/decorators/diffProperty';
+import customElement from '../../../src/widget-core/decorators/customElement';
+import WidgetBase from '../../../src/widget-core/WidgetBase';
+import Container from '../../../src/widget-core/Container';
+import Registry from '../../../src/widget-core/Registry';
+import { v, w } from '../../../src/widget-core/d';
+import register, { create, CustomElementChildType } from '../../../src/widget-core/registerCustomElement';
+import { createResolvers } from '../support/util';
+import { ThemedMixin, theme } from '../../../src/widget-core/mixins/Themed';
 
 const { describe, it, beforeEach, afterEach, before } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');

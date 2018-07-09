@@ -1,7 +1,7 @@
-import global from '@dojo/shim/global';
-import Promise from '@dojo/shim/Promise';
-import loadCldrData from '@dojo/i18n/cldr/load';
-import { systemLocale } from '@dojo/i18n/i18n';
+import global from '../../../src/shim/global';
+import Promise from '../../../src/shim/Promise';
+import loadCldrData from '../../../src/i18n/cldr/load';
+import { systemLocale } from '../../../src/i18n/i18n';
 import likelySubtags from './likelySubtags';
 import { stub, SinonStub } from 'sinon';
 

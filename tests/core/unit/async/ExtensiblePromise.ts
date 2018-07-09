@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import ExtensiblePromise from '../../../src/async/ExtensiblePromise';
+import ExtensiblePromise from '../../../../src/core/async/ExtensiblePromise';
 
 registerSuite('ExtensiblePromise', {
 	reject: function(this: any) {

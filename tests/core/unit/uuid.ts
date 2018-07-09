@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-import uuid from '../../src/uuid';
+import uuid from '../../../src/core/uuid';
 
 registerSuite('uuid functions', {
 	'v4 uuid'() {

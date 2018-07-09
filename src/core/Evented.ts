@@ -1,4 +1,4 @@
-import Map from '@dojo/shim/Map';
+import Map from '../shim/Map';
 import { Handle, EventType, EventObject } from './interfaces';
 import { Destroyable } from './Destroyable';
 

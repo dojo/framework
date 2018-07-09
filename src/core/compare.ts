@@ -1,6 +1,6 @@
-import { assign } from '@dojo/shim/object';
-import { keys } from '@dojo/shim/object';
-import Set from '@dojo/shim/Set';
+import { assign } from '../shim/object';
+import { keys } from '../shim/object';
+import Set from '../shim/Set';
 
 /* Assigning to local variables to improve minification and readability */
 

@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-import { DNode } from './../../../src/interfaces';
-import { afterRender } from './../../../src/decorators/afterRender';
-import { WidgetBase } from './../../../src/WidgetBase';
+import { DNode } from './../../../../src/widget-core/interfaces';
+import { afterRender } from './../../../../src/widget-core/decorators/afterRender';
+import { WidgetBase } from './../../../../src/widget-core/WidgetBase';
 
 registerSuite('decorators/afterRender', {
 	decorator() {

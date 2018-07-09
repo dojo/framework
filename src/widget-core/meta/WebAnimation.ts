@@ -1,6 +1,6 @@
 import { Base } from './Base';
-import Map from '@dojo/shim/Map';
-import global from '@dojo/shim/global';
+import Map from '../../shim/Map';
+import global from '../../shim/global';
 
 /**
  * Animation controls are used to control the web animation that has been applied

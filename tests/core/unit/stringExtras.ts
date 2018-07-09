@@ -1,8 +1,8 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import * as stringExtras from '../../src/stringExtras';
+import * as stringExtras from '../../../src/core/stringExtras';
 
-registerSuite('string functions', {
+registerSuite('core - string functions', {
 	'.escapeRegExp()'() {
 		assert.strictEqual(stringExtras.escapeRegExp(''), '');
 		assert.strictEqual(

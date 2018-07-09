@@ -1,15 +1,15 @@
-const { registerSuite } = intern.getInterface('object');
+const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 
-import global from '@dojo/shim/global';
-import has from '@dojo/has/has';
+import global from '../../../../src/shim/global';
+import has from '../../../../src/has/has';
 import { spy, stub, SinonStub } from 'sinon';
-import { v } from '../../../src/d';
-import { ProjectorMixin, ProjectorAttachState } from '../../../src/mixins/Projector';
-import { WidgetBase } from '../../../src/WidgetBase';
-import { VNode } from './../../../src/interfaces';
+import { v } from '../../../../src/widget-core/d';
+import { ProjectorMixin, ProjectorAttachState } from '../../../../src/widget-core/mixins/Projector';
+import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
+import { VNode } from '../../../../src/widget-core/interfaces';
 
-const Event = global.window.Event;
+let GlobalEvent: typeof Event;
 
 class BaseTestWidget extends ProjectorMixin(WidgetBase) {}
 
@@ -43,6 +43,10 @@ let cancelRafStub: SinonStub;
 let projector: BaseTestWidget | MyWidget;
 
 registerSuite('mixins/projectorMixin', {
+	before() {
+		GlobalEvent = global.window.Event;
+	},
+
 	beforeEach() {
 		result = null;
 		rafStub = stub(global, 'requestAnimationFrame').returns(1);
@@ -361,7 +365,7 @@ registerSuite('mixins/projectorMixin', {
 			projector.append();
 			const domNode = document.getElementById('handler-test-root');
 			dispatchEvent(domNode as HTMLElement, 'input');
-			assert.isTrue(domEvent instanceof Event);
+			assert.isTrue(domEvent instanceof GlobalEvent);
 		},
 		'can attach an event listener'() {
 			let domEvent: any;
@@ -379,7 +383,7 @@ registerSuite('mixins/projectorMixin', {
 			projector.append();
 			const domNode = document.getElementById('listener-test-root');
 			dispatchEvent(domNode as HTMLElement, 'pointermove');
-			assert.isTrue(domEvent instanceof Event);
+			assert.isTrue(domEvent instanceof GlobalEvent);
 		},
 		'-active gets appended to enter/exit animations by default'(this: any) {
 			if (!has('host-browser')) {

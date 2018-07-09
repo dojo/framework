@@ -1,14 +1,19 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { spy } from 'sinon';
-import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { v, WNODE } from '@dojo/widget-core/d';
-import { Registry } from '@dojo/widget-core/Registry';
+import { WidgetBase } from '../../../src/widget-core/WidgetBase';
+import { v, WNODE } from '../../../src/widget-core/d';
+import { Registry } from '../../../src/widget-core/Registry';
 
-import { createStoreContainer, storeInject, StoreContainer, registerStoreInjector } from './../../src/StoreInjector';
-import { Store } from './../../src/Store';
-import { createCommandFactory, createProcess, Process } from '../../src/process';
-import { replace } from '../../src/state/operations';
+import {
+	createStoreContainer,
+	storeInject,
+	StoreContainer,
+	registerStoreInjector
+} from '../../../src/stores/StoreInjector';
+import { Store } from '../../../src/stores/Store';
+import { createCommandFactory, createProcess, Process } from '../../../src/stores/process';
+import { replace } from '../../../src/stores/state/operations';
 
 interface State {
 	foo: string;
@@ -180,7 +185,7 @@ describe('StoreInjector', () => {
 		it('should create registry, register store and return the register when registry is not provided', () => {
 			const store = new Store();
 			const returnedRegistry = registerStoreInjector(store);
-			const item = returnedRegistry.getInjector<Store>('state');
+			const item = returnedRegistry.getInjector('state');
 			assert.strictEqual(item!.injector(), store);
 		});
 

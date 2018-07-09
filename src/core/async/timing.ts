@@ -1,5 +1,5 @@
 import Promise from './ExtensiblePromise';
-import { Thenable } from '@dojo/shim/interfaces';
+import { Thenable } from '../../shim/interfaces';
 
 export type IdentityValue<T> = T | (() => T | Thenable<T>);
 export interface Identity<T> {

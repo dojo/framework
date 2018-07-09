@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { queueMicroTask, queueTask } from '../../src/queue';
-import Scheduler from '../../src/Scheduler';
+import { queueMicroTask, queueTask } from '../../../src/core/queue';
+import Scheduler from '../../../src/core/Scheduler';
 
 registerSuite('Scheduler', () => {
 	let parts: string[];

@@ -1,7 +1,7 @@
-import { isThenable } from '@dojo/shim/Promise';
+import { isThenable } from '../shim/Promise';
 import { PatchOperation } from './state/Patch';
 import { State, Store } from './Store';
-import Map from '@dojo/shim/Map';
+import Map from '../shim/Map';
 
 /**
  * Default Payload interface

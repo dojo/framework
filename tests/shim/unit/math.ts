@@ -1,4 +1,4 @@
-import * as math from '../../src/math';
+import * as math from '../../../src/shim/math';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

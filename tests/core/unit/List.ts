@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import Set from '@dojo/shim/Set';
-import List from '../../src/List';
+import Set from '../../../src/shim/Set';
+import List from '../../../src/core/List';
 
 registerSuite('List', function() {
 	function listWith<T>(...items: T[]): List<T> {

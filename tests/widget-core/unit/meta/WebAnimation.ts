@@ -1,12 +1,16 @@
-import global from '@dojo/shim/global';
+import global from '../../../../src/shim/global';
 const { assert } = intern.getPlugin('chai');
 const { afterEach, beforeEach, before, describe, it } = intern.getInterface('bdd');
-import WebAnimation, { AnimationControls, AnimationTimingProperties } from '../../../src/meta/WebAnimation';
-import { WidgetBase } from '../../../src/WidgetBase';
-import { v } from '../../../src/d';
+const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
+import WebAnimation, {
+	AnimationControls,
+	AnimationTimingProperties
+} from '../../../../src/widget-core/meta/WebAnimation';
+import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
+import { v } from '../../../../src/widget-core/d';
 import { spy, stub } from 'sinon';
 
-describe('WebAnimation', () => {
+jsdomDescribe('WebAnimation', () => {
 	let effects: any;
 	let controls: AnimationControls;
 	let timing: AnimationTimingProperties;

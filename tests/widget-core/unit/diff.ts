@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import * as diff from '../../src/diff';
-import WidgetBase from '../../src/WidgetBase';
+import * as diff from '../../../src/widget-core/diff';
+import WidgetBase from '../../../src/widget-core/WidgetBase';
 
 registerSuite('diff', {
 	always() {

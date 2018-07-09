@@ -1,4 +1,4 @@
-import Symbol from '@dojo/shim/Symbol';
+import Symbol from '../shim/Symbol';
 import {
 	Constructor,
 	DefaultWidgetBaseInterface,

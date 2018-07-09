@@ -1,6 +1,6 @@
-import load from '../../../src/load';
-import { useDefault } from '../../../src/load/util';
-import { Require } from '../../../src/load';
+import load from '../../../../src/core/load';
+import { useDefault } from '../../../../src/core/load/util';
+import { Require } from '../../../../src/core/load';
 
 declare const require: Require;
 

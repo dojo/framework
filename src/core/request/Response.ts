@@ -1,4 +1,4 @@
-import Promise from '@dojo/shim/Promise';
+import Promise from '../../shim/Promise';
 import Task from '../async/Task';
 import { Headers, Response as ResponseInterface, RequestOptions } from './interfaces';
 import Observable from '../Observable';

@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { Evented, CustomEventTypes } from '../../src/Evented';
-import { EventObject } from '../../src/interfaces';
+import { Evented, CustomEventTypes } from '../../../src/core/Evented';
+import { EventObject } from '../../../src/core/interfaces';
 
 interface FooBarEvents extends CustomEventTypes {
 	foo: R;

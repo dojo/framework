@@ -1,6 +1,6 @@
-import { WidgetBase } from '../../../src/WidgetBase';
-import { v } from '../../../src/d';
-import { DNode } from '../../../src/interfaces';
+import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
+import { v } from '../../../../src/widget-core/d';
+import { DNode } from '../../../../src/widget-core/interfaces';
 
 export interface ButtonProperties {
 	id: string;

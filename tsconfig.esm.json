@@ -1,0 +1,14 @@
+{
+	"extends": "./node_modules/@dojo/scripts/tsconfig/esm.json",
+	"compilerOptions": {
+		"jsx": "react",
+		"jsxFactory": "tsx",
+		"types": [ "intern", "web-animations-js" ]
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.tsx",
+		"./tests/**/*.ts",
+		"./tests/**/*.tsx"
+	]
+}

@@ -1,8 +1,8 @@
-import { Destroyable } from '@dojo/core/Destroyable';
-import { Evented } from '@dojo/core/Evented';
-import { EventObject, EventType } from '@dojo/core/interfaces';
-import Map from '@dojo/shim/Map';
-import WeakMap from '@dojo/shim/WeakMap';
+import { Destroyable } from '../core/Destroyable';
+import { Evented } from '../core/Evented';
+import { EventObject, EventType } from '../core/interfaces';
+import Map from '../shim/Map';
+import WeakMap from '../shim/WeakMap';
 
 /**
  * Generic constructor type

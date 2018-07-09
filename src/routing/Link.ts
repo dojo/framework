@@ -1,7 +1,7 @@
-import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { v } from '@dojo/widget-core/d';
-import { inject } from '@dojo/widget-core/decorators/inject';
-import { Constructor, DNode, VNodeProperties } from '@dojo/widget-core/interfaces';
+import { WidgetBase } from '../widget-core/WidgetBase';
+import { v } from '../widget-core/d';
+import { inject } from '../widget-core/decorators/inject';
+import { Constructor, DNode, VNodeProperties } from '../widget-core/interfaces';
 import { LinkProperties } from './interfaces';
 import { Router } from './Router';
 

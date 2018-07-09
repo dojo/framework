@@ -1,4 +1,4 @@
-import Promise from '@dojo/shim/Promise';
+import Promise from '../../shim/Promise';
 import { isPlugin, useDefault } from './util';
 
 interface ModuleIdMap {

@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import DateObject, { KwArgs, OperationKwArgs, DateProperties } from '../../src/DateObject';
+import DateObject, { KwArgs, OperationKwArgs, DateProperties } from '../../../src/core/DateObject';
 
 let date: Date;
 let object: DateObject;

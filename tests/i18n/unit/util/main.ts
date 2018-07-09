@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { generateLocales, normalizeLocale, validateLocale } from '../../../src/util/main';
+import { generateLocales, normalizeLocale, validateLocale } from '../../../../src/i18n/util/main';
 
 registerSuite('util/main', {
 	generateLocales() {

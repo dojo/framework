@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import * as base64 from '../../src/base64';
+import * as base64 from '../../../src/core/base64';
 
 registerSuite('support/base64', {
 	'encode()': {

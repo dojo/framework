@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import MatchRegistry from '../../src/MatchRegistry';
+import MatchRegistry from '../../../src/core/MatchRegistry';
 
 function stringTest(value: string) {
 	return (...args: any[]): boolean => {

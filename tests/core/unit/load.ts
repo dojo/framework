@@ -1,12 +1,11 @@
-import Promise from '@dojo/shim/Promise';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { ObjectSuiteDescriptor } from 'intern/lib/interfaces/object';
 import * as sinon from 'sinon';
-import has from '../../src/has';
-import load, { isPlugin, useDefault } from '../../src/load';
-import { AmdRootRequire } from '../../src/interfaces';
-import { isPlugin as utilIsPlugin, useDefault as utilUseDefault } from '../../src/load/util';
+import has from '../../../src/core/has';
+import load, { isPlugin, useDefault } from '../../../src/core/load';
+import { AmdRootRequire } from '../../../src/core/interfaces';
+import { isPlugin as utilIsPlugin, useDefault as utilUseDefault } from '../../../src/core/load/util';
 import mockPlugin from '../support/load/plugin-default';
 
 declare const require: AmdRootRequire;
@@ -25,9 +24,9 @@ const suite: ObjectSuiteDescriptor = {
 		'global load'(this: any) {
 			const def = this.async(5000);
 
-			load('@dojo/shim/Promise').then(
-				def.callback(function([promiseModule]: [any, any]) {
-					assert.strictEqual(promiseModule.default, Promise);
+			load('sinon').then(
+				def.callback(function([localSinon]: [any, any]) {
+					assert.strictEqual(localSinon, sinon);
 				})
 			);
 		},
@@ -74,11 +73,9 @@ const suite: ObjectSuiteDescriptor = {
 
 			'with a resource id'(this: any) {
 				const dfd = this.async(5000);
-				const resourceId = require.toUrl
-					? require.toUrl('@dojo/shim/Promise')
-					: (require as any).resolve('@dojo/shim/Promise');
+				const resourceId = require.toUrl ? require.toUrl('sinon') : (require as any).resolve('sinon');
 
-				load(require, '../support/load/plugin!@dojo/shim/Promise').then(
+				load(require, '../support/load/plugin!sinon').then(
 					dfd.callback(([value]: [any]) => {
 						assert.strictEqual(
 							value,
@@ -168,14 +165,15 @@ const suite: ObjectSuiteDescriptor = {
 if (has('host-node')) {
 	const nodeRequire: any = (<any>require).nodeRequire || require;
 	const path: any = nodeRequire('path');
-	const buildDir: string = path.join(process.cwd(), '_build');
+	const buildDir: string = path.join(process.cwd(), 'dist', 'dev');
 
 	suite.tests.node = {
 		'global load succeeds'(this: any) {
 			const def = this.async(5000);
 
-			const result: () => Promise<any[]> = nodeRequire(path.join(buildDir, 'tests', 'support', 'load', 'node'))
-				.globalSucceed;
+			const result: () => Promise<any[]> = nodeRequire(
+				path.join(buildDir, 'tests', 'core', 'support', 'load', 'node')
+			).globalSucceed;
 			result().then(
 				def.callback(function([fs, path]: [any, any]) {
 					assert.strictEqual(fs, nodeRequire('fs'));
@@ -187,8 +185,9 @@ if (has('host-node')) {
 		'global load with relative path fails'(this: any) {
 			const def = this.async(5000);
 
-			const result: () => Promise<any[]> = nodeRequire(path.join(buildDir, 'tests', 'support', 'load', 'node'))
-				.globalFail;
+			const result: () => Promise<any[]> = nodeRequire(
+				path.join(buildDir, 'tests', 'core', 'support', 'load', 'node')
+			).globalFail;
 			result().then(
 				function() {
 					def.reject(new Error('load should not have succeeded'));
@@ -202,8 +201,9 @@ if (has('host-node')) {
 		'contextual load succeeds'(this: any) {
 			const def = this.async(5000);
 
-			const result: () => Promise<any[]> = nodeRequire(path.join(buildDir, 'tests', 'support', 'load', 'node'))
-				.succeed;
+			const result: () => Promise<any[]> = nodeRequire(
+				path.join(buildDir, 'tests', 'core', 'support', 'load', 'node')
+			).succeed;
 			result().then(
 				def.callback(function([a, b]: [any, any]) {
 					assert.deepEqual(a, { default: 'A', one: 1, two: 2 });
@@ -215,8 +215,9 @@ if (has('host-node')) {
 		'contextual load with non-existent module fails'(this: any) {
 			const def = this.async(5000);
 
-			const result: () => Promise<any[]> = nodeRequire(path.join(buildDir, 'tests', 'support', 'load', 'node'))
-				.fail;
+			const result: () => Promise<any[]> = nodeRequire(
+				path.join(buildDir, 'tests', 'core', 'support', 'load', 'node')
+			).fail;
 			result().then(
 				function() {
 					def.reject(new Error('load should not have succeeded'));

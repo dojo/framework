@@ -1,16 +1,20 @@
-const { registerSuite } = intern.getInterface('object');
+const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import global from '@dojo/shim/global';
+import global from '../../../../src/shim/global';
 import { stub, spy, SinonSpy } from 'sinon';
-import Intersection from '../../../src/meta/Intersection';
-import { NodeHandler } from './../../../src/NodeHandler';
-import WidgetBase from '../../../src/WidgetBase';
+import Intersection from '../../../../src/widget-core/meta/Intersection';
+import { NodeHandler } from './../../../../src/widget-core/NodeHandler';
+import WidgetBase from '../../../../src/widget-core/WidgetBase';
 
 let intersectionObserver: any;
+let bindInstance: WidgetBase;
 const observers: ([object, Function])[] = [];
-const bindInstance = new WidgetBase();
 
 registerSuite('meta - Intersection', {
+	before() {
+		bindInstance = new WidgetBase();
+	},
+
 	beforeEach() {
 		intersectionObserver = stub(global, 'IntersectionObserver').callsFake(function(callback: any) {
 			const observer = {

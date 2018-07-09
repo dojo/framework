@@ -1,5 +1,5 @@
-import { around } from '@dojo/core/aspect';
-import { padStart } from '@dojo/shim/string';
+import { around } from '../../../src/core/aspect';
+import { padStart } from '../../../src/shim/string';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import {
@@ -9,8 +9,8 @@ import {
 	getDateParser,
 	getRelativeTimeFormatter,
 	parseDate
-} from '../../src/date';
-import { switchLocale, systemLocale } from '../../src/i18n';
+} from '../../../src/i18n/date';
+import { switchLocale, systemLocale } from '../../../src/i18n/i18n';
 import { fetchCldrData } from '../support/util';
 
 function getOffsets(date: Date) {

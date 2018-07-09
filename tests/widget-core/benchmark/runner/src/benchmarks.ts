@@ -10,7 +10,7 @@ import {
 } from './webdriverAccess';
 import { WebDriver } from 'selenium-webdriver';
 import { config, FrameworkData } from './common';
-import { repeat } from '@dojo/shim/string';
+import { repeat } from '../../../../../src/shim/string';
 
 export enum BenchmarkType {
 	CPU,
@@ -300,7 +300,7 @@ const benchStartup: Benchmark = {
 	}
 };
 
-interface BenchmarkTuple extends Array<Benchmark> {
+export interface BenchmarkTuple extends Array<Benchmark> {
 	0: Benchmark;
 }
 

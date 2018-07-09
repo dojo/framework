@@ -1,4 +1,4 @@
-import Promise from '@dojo/shim/Promise';
+import Promise from '../../../../src/shim/Promise';
 const plugin = {
 	load(resourceId: string) {
 		return Promise.resolve(resourceId);

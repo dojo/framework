@@ -1,8 +1,8 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { Router } from './../../src/Router';
-import { MemoryHistory as HistoryManager } from './../../src/history/MemoryHistory';
+import { Router } from '../../../src/routing/Router';
+import { MemoryHistory as HistoryManager } from '../../../src/routing/history/MemoryHistory';
 
 const routeConfig = [
 	{

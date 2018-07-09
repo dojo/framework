@@ -1,9 +1,9 @@
-import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { v, w } from '@dojo/widget-core/d';
+import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import { v, w } from '@dojo/framework/widget-core/d';
 
-import { Outlet } from './../src/Outlet';
-import { Link } from './../src/Link';
-import { MapParamsOptions } from './../src/interfaces';
+import { Outlet } from '@dojo/framework/routing/Outlet';
+import { Link } from '@dojo/framework/routing/Link';
+import { MapParamsOptions } from '@dojo/framework/routing/interfaces';
 
 export interface ChildProperties {
 	name: string;

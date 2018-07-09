@@ -4,8 +4,8 @@ import {
 	VNodeProperties,
 	WidgetBaseInterface,
 	WidgetProperties
-} from '@dojo/widget-core/interfaces';
-import { WidgetBase } from '@dojo/widget-core/WidgetBase';
+} from '../widget-core/interfaces';
+import { WidgetBase } from '../widget-core/WidgetBase';
 
 /**
  * Description of a registered route

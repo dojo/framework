@@ -10,7 +10,7 @@ interface CallbackResults {
 registerSuite('Polyfills', {
 	Polyfills() {
 		return this.remote
-			.get('/_build/tests/functional/polyfills.html')
+			.get(`${__dirname}/polyfills.html`)
 			.then(
 				pollUntil<{ pointerEvents: boolean; intersectionObserver: boolean }>(
 					function() {

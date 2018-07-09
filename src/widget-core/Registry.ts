@@ -1,8 +1,8 @@
-import Promise from '@dojo/shim/Promise';
-import Map from '@dojo/shim/Map';
-import Symbol from '@dojo/shim/Symbol';
-import { EventObject } from '@dojo/core/interfaces';
-import { Evented } from '@dojo/core/Evented';
+import Promise from '../shim/Promise';
+import Map from '../shim/Map';
+import Symbol from '../shim/Symbol';
+import { EventObject } from '../core/interfaces';
+import { Evented } from '../core/Evented';
 import {
 	Constructor,
 	InjectorFactory,

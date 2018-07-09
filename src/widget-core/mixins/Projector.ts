@@ -1,5 +1,5 @@
-import { assign } from '@dojo/core/lang';
-import { Handle } from '@dojo/core/interfaces';
+import { assign } from '../../core/lang';
+import { Handle } from '../../core/interfaces';
 import cssTransitions from '../animations/cssTransitions';
 import { Constructor, DNode, Projection, ProjectionOptions } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';

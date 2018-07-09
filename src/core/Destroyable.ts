@@ -1,6 +1,6 @@
 import { Handle } from './interfaces';
 import { createCompositeHandle } from './lang';
-import Promise from '@dojo/shim/Promise';
+import Promise from '../shim/Promise';
 
 /**
  * No operation function to replace own once instance is destoryed

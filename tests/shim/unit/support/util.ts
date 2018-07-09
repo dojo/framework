@@ -1,4 +1,4 @@
-import { getValueDescriptor } from '../../../src/support/util';
+import { getValueDescriptor } from '../../../../src/shim/support/util';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

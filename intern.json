@@ -1,0 +1,96 @@
+{
+	"extends": "./node_modules/@dojo/scripts/intern/base.json",
+
+	"capabilities+": {
+		"name": "@dojo/framework",
+		"browserstack.debug": false
+	},
+
+	"environments": [
+		{ "browserName": "node" }
+	],
+
+	"suites": [
+		"./dist/dev/tests/has/unit/all.js",
+		"./dist/dev/tests/shim/unit/all.js",
+		"./dist/dev/tests/core/unit/all.js",
+		"./dist/dev/tests/i18n/unit/**/*.js",
+		"./dist/dev/tests/widget-core/unit/all.js",
+		"./dist/dev/tests/stores/unit/all.js"
+	],
+
+	"functionalSuites": [
+		"./dist/dev/tests/has/functional/all.js",
+		"./dist/dev/tests/shim/functional/all.js",
+		"./dist/dev/tests/core/functional/all.js",
+		"./dist/dev/tests/i18n/functional/**/*.js",
+		"./dist/dev/tests/widget-core/functional/all.js",
+		"./dist/dev/tests/routing/functional/**/*.js",
+		"./dist/dev/tests/stores/functional/all.js"
+	],
+
+	"plugins": [
+		{
+			"script": "./dist/dev/src/shim/main",
+			"useLoader": true
+		},
+		{
+			"script": "./dist/dev/tests/widget-core/support/jsdom-plugin.js",
+			"useLoader": true
+		}
+	],
+
+	"browser": {
+		"suites+": [
+			"./dist/dev/tests/core/unit/all-browser",
+			"./dist/dev/tests/routing/unit/all.js"
+		],
+		"plugins+": [
+			{
+				"script": "./dist/dev/src/shim/browser.js",
+				"useLoader": true
+			},
+			{
+				"script": "./dist/dev/tests/widget-core/support/loadCustomElements.js",
+				"useLoader": true
+			}
+		],
+		"loader": {
+			"script": "dojo2",
+			"options": {
+				"packages": [
+					{ "name": "src", "location": "dist/dev/src" },
+					{ "name": "tests", "location": "dist/dev/tests" },
+					{ "name": "tslib", "location": "node_modules/tslib", "main": "tslib" },
+					{ "name": "pepjs", "location": "node_modules/pepjs/dist", "main": "pep" },
+					{ "name": "intersection-observer", "location": "node_modules/intersection-observer", "main": "intersection-observer" },
+					{ "name": "web-animations-js", "location": "node_modules/web-animations-js" },
+					{ "name": "cldr-data", "location": "node_modules/cldr-data" },
+					{ "name": "cldrjs", "location": "node_modules/cldrjs" },
+					{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" },
+					{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
+				],
+				"map": {
+					"globalize": {
+						"cldr": "cldrjs/dist/cldr",
+						"cldr/event": "cldrjs/dist/cldr/event",
+						"cldr/supplemental": "cldrjs/dist/cldr/supplemental",
+						"cldr/unresolved": "cldrjs/dist/cldr/unresolved"
+					}
+				}
+			}
+		}
+	},
+
+	"node": {
+		"suites+": [
+			"./dist/dev/tests/core/unit/all-node",
+			"./dist/dev/tests/routing/unit/**/*.js",
+			"!./dist/dev/tests/routing/unit/**/all.js",
+			"!./dist/dev/tests/routing/unit/history/StateHistory.js"
+		],
+		"plugins+": [
+			"./dist/dev/tests/core/plugins/echo-service.js"
+		]
+	}
+}

@@ -1,4 +1,6 @@
-import 'globalize';
+import 'globalize/dist/globalize';
+import 'globalize/dist/globalize/number';
+import 'globalize/dist/globalize/plural';
 import 'globalize/dist/globalize/unit';
 import { NumberFormatter } from './number';
 import { globalizeDelegator } from './util/globalize';

@@ -1,4 +1,5 @@
-import 'globalize';
+import 'globalize/dist/globalize';
+import 'globalize/dist/globalize/number';
 import 'globalize/dist/globalize/date';
 import 'globalize/dist/globalize/relative-time';
 import { NumberFormatter } from './number';

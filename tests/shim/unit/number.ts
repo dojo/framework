@@ -1,4 +1,4 @@
-import * as numberUtil from '../../src/number';
+import * as numberUtil from '../../../src/shim/number';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

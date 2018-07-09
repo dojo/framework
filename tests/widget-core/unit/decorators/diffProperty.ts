@@ -1,11 +1,11 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-import { PropertyChangeRecord } from './../../../src/interfaces';
-import { always, ignore } from './../../../src/diff';
-import { diffProperty } from './../../../src/decorators/diffProperty';
-import { WidgetBase } from './../../../src/WidgetBase';
-import { widgetInstanceMap } from './../../../src/vdom';
+import { PropertyChangeRecord } from './../../../../src/widget-core/interfaces';
+import { always, ignore } from './../../../../src/widget-core/diff';
+import { diffProperty } from './../../../../src/widget-core/decorators/diffProperty';
+import { WidgetBase } from './../../../../src/widget-core/WidgetBase';
+import { widgetInstanceMap } from './../../../../src/widget-core/vdom';
 
 interface TestProperties {
 	id?: string;

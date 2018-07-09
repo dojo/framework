@@ -10,10 +10,10 @@ import {
 	getPluralGenerator,
 	parseNumber,
 	pluralize
-} from '../../src/number';
-import { switchLocale, systemLocale } from '../../src/i18n';
+} from '../../../src/i18n/number';
+import { switchLocale, systemLocale } from '../../../src/i18n/i18n';
 
-registerSuite('number', {
+registerSuite('i18n/number', {
 	before() {
 		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
 		return fetchCldrData(['en', 'fr']).then(() => {

@@ -1,18 +1,22 @@
-const { registerSuite } = intern.getInterface('object');
+const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import global from '@dojo/shim/global';
+import global from '../../../../src/shim/global';
 import { stub, SinonStub } from 'sinon';
-import Resize, { ContentRect } from '../../../src/meta/Resize';
-import NodeHandler from '../../../src/NodeHandler';
-import WidgetBase from '../../../src/WidgetBase';
+import Resize, { ContentRect } from '../../../../src/widget-core/meta/Resize';
+import NodeHandler from '../../../../src/widget-core/NodeHandler';
+import WidgetBase from '../../../../src/widget-core/WidgetBase';
 
 let resizeObserver: any;
 let resizeCallback: ([]: any[]) => void;
-const bindInstance = new WidgetBase();
+let bindInstance: WidgetBase;
 let isFoo: SinonStub;
 let isBar: SinonStub;
 
 registerSuite('meta - Resize', {
+	before() {
+		bindInstance = new WidgetBase();
+	},
+
 	beforeEach() {
 		isFoo = stub();
 		isBar = stub();

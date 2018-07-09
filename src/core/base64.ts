@@ -1,5 +1,5 @@
-import global from '@dojo/shim/global';
-import has, { add as hasAdd } from '@dojo/has/has';
+import global from '../shim/global';
+import has, { add as hasAdd } from '../has/has';
 
 hasAdd('btoa', 'btoa' in global, true);
 hasAdd('atob', 'atob' in global, true);

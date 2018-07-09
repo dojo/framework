@@ -1,17 +1,21 @@
-const { registerSuite } = intern.getInterface('object');
+const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import { Base as MetaBase } from '../../../src/meta/Base';
+import { Base as MetaBase } from '../../../../src/widget-core/meta/Base';
 import { stub, spy } from 'sinon';
 import { createResolvers } from './../../support/util';
-import NodeHandler, { NodeEventType } from '../../../src/NodeHandler';
-import { v } from '../../../src/d';
-import { ProjectorMixin } from '../../../src/mixins/Projector';
-import { WidgetBase } from '../../../src/WidgetBase';
+import NodeHandler, { NodeEventType } from '../../../../src/widget-core/NodeHandler';
+import { v } from '../../../../src/widget-core/d';
+import { ProjectorMixin } from '../../../../src/widget-core/mixins/Projector';
+import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 
 const resolvers = createResolvers();
-const bindInstance = new WidgetBase();
+let bindInstance: WidgetBase;
 
 registerSuite('meta base', {
+	before() {
+		bindInstance = new WidgetBase();
+	},
+
 	beforeEach() {
 		resolvers.stub();
 	},

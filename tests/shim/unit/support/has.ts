@@ -1,4 +1,4 @@
-import { exists } from '../../../src/support/has';
+import { exists } from '../../../../src/shim/support/has';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

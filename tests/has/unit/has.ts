@@ -9,7 +9,7 @@ import has, {
 	exists as hasExists,
 	normalize as hasNormalize,
 	load as hasLoad
-} from '../../src/has';
+} from '../../../src/has/has';
 
 const globalScope: any = (function(): any {
 	/* istanbul ignore else */
@@ -401,7 +401,7 @@ registerSuite('has', {
 		'static has features': {
 			'staticFeatures object'() {
 				const dfd = this.async();
-				undef('../../src/has');
+				undef('../../../src/has/has');
 				globalScope.DojoHasEnvironment = {
 					staticFeatures: {
 						foo: 1,
@@ -410,7 +410,7 @@ registerSuite('has', {
 					}
 				};
 				// tslint:disable-next-line
-				import('../../src/has').then(
+				import('../../../src/has/has').then(
 					dfd.callback((mod: { default: typeof has }) => {
 						const h = mod.default;
 						assert(!('DojoHasEnvironment' in globalScope));
@@ -422,7 +422,7 @@ registerSuite('has', {
 			},
 			'staticFeatures function'() {
 				const dfd = this.async();
-				undef('../../src/has');
+				undef('../../../src/has/has');
 				globalScope.DojoHasEnvironment = {
 					staticFeatures: function() {
 						return {
@@ -433,7 +433,7 @@ registerSuite('has', {
 					}
 				};
 				// tslint:disable-next-line
-				import('../../src/has').then(
+				import('../../../src/has/has').then(
 					dfd.callback((mod: { default: typeof has }) => {
 						const h = mod.default;
 						assert(!('DojoHasEnvironment' in globalScope));
@@ -445,14 +445,14 @@ registerSuite('has', {
 			},
 			'can override run-time defined features'() {
 				const dfd = this.async();
-				undef('../../src/has');
+				undef('../../../src/has/has');
 				globalScope.DojoHasEnvironment = {
 					staticFeatures: {
 						debug: false
 					}
 				};
 				// tslint:disable-next-line
-				import('../../src/has').then(
+				import('../../../src/has/has').then(
 					dfd.callback((mod: { default: typeof has; add: typeof hasAdd }) => {
 						const h = mod.default;
 						const hAdd = mod.add;

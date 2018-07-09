@@ -2,7 +2,7 @@ const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 
-import { HashHistory } from '../../../src/history/HashHistory';
+import { HashHistory } from '../../../../src/routing/history/HashHistory';
 
 class MockLocation {
 	private _hash = '#current';

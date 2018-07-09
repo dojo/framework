@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { createConstructRecord, CustomDiff, diff, patch } from '../../src/compare';
+import { createConstructRecord, CustomDiff, diff, patch } from '../../../src/core/compare';
 
 registerSuite('compare', {
 	diff: {

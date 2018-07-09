@@ -1,6 +1,6 @@
-import ObservableShim, { ObservableObject, Subscribable, SubscriptionObserver } from '@dojo/shim/Observable';
-import Promise from '@dojo/shim/Promise';
-import { Iterable } from '@dojo/shim/iterator';
+import ObservableShim, { ObservableObject, Subscribable, SubscriptionObserver } from '../shim/Observable';
+import Promise from '../shim/Promise';
+import { Iterable } from '../shim/iterator';
 
 function isSubscribable(object: any): object is Subscribable<any> {
 	return object && object.subscribe !== undefined;

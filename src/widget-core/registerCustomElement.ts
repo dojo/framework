@@ -1,8 +1,8 @@
 import { WidgetBase, noBind } from './WidgetBase';
 import { ProjectorMixin } from './mixins/Projector';
-import { from } from '@dojo/shim/array';
+import { from } from '../shim/array';
 import { w, dom } from './d';
-import global from '@dojo/shim/global';
+import global from '../shim/global';
 import { registerThemeInjector } from './mixins/Themed';
 import { alwaysRender } from './decorators/alwaysRender';
 

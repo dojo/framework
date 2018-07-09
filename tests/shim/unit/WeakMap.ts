@@ -1,5 +1,5 @@
-import WeakMap from '../../src/WeakMap';
-import { ShimIterator } from '../../src/iterator';
+import WeakMap from '../../../src/shim/WeakMap';
+import { ShimIterator } from '../../../src/shim/iterator';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

@@ -1,7 +1,7 @@
-import { deepAssign } from '@dojo/core/lang';
-import global from '@dojo/shim/global';
-import { assign } from '@dojo/shim/object';
-import WeakMap from '@dojo/shim/WeakMap';
+import { deepAssign } from '../../core/lang';
+import global from '../../shim/global';
+import { assign } from '../../shim/object';
+import WeakMap from '../../shim/WeakMap';
 import { Base } from './Base';
 
 export interface DragResults {

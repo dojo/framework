@@ -1,7 +1,7 @@
-import has, { add as hasAdd } from '@dojo/core/has';
-import { deepAssign } from '@dojo/core/lang';
-import global from '@dojo/shim/global';
-import { assign } from '@dojo/shim/object';
+import has, { add as hasAdd } from '../../../src/core/has';
+import { deepAssign } from '../../../src/core/lang';
+import global from '../../../src/shim/global';
+import { assign } from '../../../src/shim/object';
 import { spy } from 'sinon';
 
 hasAdd('customevent-constructor', () => {

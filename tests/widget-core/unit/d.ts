@@ -1,10 +1,10 @@
-const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { assign } from '@dojo/core/lang';
-import { DNode, VNode, WNode, WidgetProperties } from '../../src/interfaces';
-import { WidgetBase } from '../../src/WidgetBase';
-import { v, w, decorate, WNODE, VNODE, isWNode, isVNode, dom } from '../../src/d';
-import { InternalVNode } from '../../src/vdom';
+const { registerSuite } = intern.getPlugin('jsdom');
+import { assign } from '../../../src/core/lang';
+import { DNode, VNode, WNode, WidgetProperties } from '../../../src/widget-core/interfaces';
+import { WidgetBase } from '../../../src/widget-core/WidgetBase';
+import { v, w, decorate, WNODE, VNODE, isWNode, isVNode, dom } from '../../../src/widget-core/d';
+import { InternalVNode } from '../../../src/widget-core/vdom';
 
 interface ChildProperties extends WidgetProperties {
 	myChildProperty: string;

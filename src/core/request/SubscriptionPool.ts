@@ -1,4 +1,4 @@
-import { SubscriptionObserver } from '@dojo/shim/Observable';
+import { SubscriptionObserver } from '../../shim/Observable';
 
 export class SubscriptionPool<T> {
 	private _observers: SubscriptionObserver<T>[] = [];

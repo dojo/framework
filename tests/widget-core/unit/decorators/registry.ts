@@ -1,19 +1,21 @@
-const { describe, it } = intern.getInterface('bdd');
-import { v, w } from '../../../src/d';
+const { it } = intern.getInterface('bdd');
+import { v, w } from '../../../../src/widget-core/d';
 const { assert } = intern.getPlugin('chai');
+const { describe } = intern.getPlugin('jsdom');
 
-import { registry } from './../../../src/decorators/registry';
-import { WidgetBase } from './../../../src/WidgetBase';
-import ProjectorMixin from './../../../src/mixins/Projector';
+import { VNode } from './../../../../src/widget-core/interfaces';
+import { registry } from './../../../../src/widget-core/decorators/registry';
+import { WidgetBase } from './../../../../src/widget-core/WidgetBase';
+import ProjectorMixin from './../../../../src/widget-core/mixins/Projector';
 
 export class Widget1 extends WidgetBase {
-	protected render() {
+	protected render(): VNode {
 		return v('span', { classes: ['widget1'] });
 	}
 }
 
 export class Widget2 extends WidgetBase {
-	protected render() {
+	protected render(): VNode {
 		return v('span', { classes: ['widget2'] });
 	}
 }

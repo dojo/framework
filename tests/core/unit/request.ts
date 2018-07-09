@@ -1,9 +1,15 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import Task from '../../src/async/Task';
-import request, { providerRegistry, Response, Headers, RequestOptions, UploadObservableTask } from '../../src/request';
-import ResponseClass from '../../src/request/Response';
-import Observable from '../../src/Observable';
+import Task from '../../../src/core/async/Task';
+import request, {
+	providerRegistry,
+	Response,
+	Headers,
+	RequestOptions,
+	UploadObservableTask
+} from '../../../src/core/request';
+import ResponseClass from '../../../src/core/request/Response';
+import Observable from '../../../src/core/Observable';
 
 const mockData = '{ "foo": "bar" }';
 let handle: any;

@@ -4,9 +4,9 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { parse } from 'url';
 import * as zlib from 'zlib';
-import { Response } from '../../../src/request/interfaces';
-import { default as nodeRequest, NodeResponse } from '../../../src/request/providers/node';
-import TimeoutError from '../../../src/request/TimeoutError';
+import { Response } from '../../../../src/core/request/interfaces';
+import { default as nodeRequest, NodeResponse } from '../../../../src/core/request/providers/node';
+import TimeoutError from '../../../../src/core/request/TimeoutError';
 
 const serverPort = 8124;
 const serverUrl = 'http://localhost:' + serverPort;
@@ -14,7 +14,7 @@ let server: any;
 let proxy: any;
 let requestData: string;
 
-const blobFileSize = fs.statSync('tests/support/data/blob.gif').size;
+const blobFileSize = fs.statSync('tests/core/support/data/blob.gif').size;
 
 interface DummyResponse {
 	body?: string | ((callback: Function) => void);
@@ -197,7 +197,7 @@ const responseData: { [url: string]: DummyResponse } = {
 	'blob.gif': {
 		statusCode: 200,
 		body: function(callback: any) {
-			callback(fs.readFileSync('tests/support/data/blob.gif'));
+			callback(fs.readFileSync('tests/core/support/data/blob.gif'));
 		}
 	}
 };
@@ -400,7 +400,7 @@ registerSuite('request/node', {
 				'stream is read'(this: any) {
 					return nodeRequest(getRequestUrl('echo'), {
 						method: 'POST',
-						bodyStream: fs.createReadStream('tests/support/data/foo.json')
+						bodyStream: fs.createReadStream('tests/core/support/data/foo.json')
 					})
 						.then((res) => res.json())
 						.then((json) => {
@@ -572,7 +572,7 @@ registerSuite('request/node', {
 
 					const req = nodeRequest(getRequestUrl('foo.json'), {
 						method: 'POST',
-						bodyStream: fs.createReadStream('tests/support/data/foo.json')
+						bodyStream: fs.createReadStream('tests/core/support/data/foo.json')
 					});
 
 					req.upload.subscribe((totalBytesUploaded) => {

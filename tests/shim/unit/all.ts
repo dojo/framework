@@ -1,3 +1,5 @@
+import '../../../src/shim/main';
+
 import './support/decorators';
 import './support/has';
 import './support/queue';

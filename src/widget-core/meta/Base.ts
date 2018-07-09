@@ -1,5 +1,5 @@
-import { Destroyable } from '@dojo/core/Destroyable';
-import Set from '@dojo/shim/Set';
+import { Destroyable } from '../../core/Destroyable';
+import Set from '../../shim/Set';
 import { WidgetMetaBase, WidgetMetaProperties, NodeHandlerInterface, WidgetBaseInterface } from '../interfaces';
 
 export class Base extends Destroyable implements WidgetMetaBase {

@@ -1,8 +1,8 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { Tests } from 'intern/lib/interfaces/object';
-import has from '../../../src/has';
-import { isPlugin, useDefault } from '../../../src/load/util';
+import has from '../../../../src/core/has';
+import { isPlugin, useDefault } from '../../../../src/core/load/util';
 
 const suite: Tests = {
 	isPlugin() {
@@ -55,14 +55,15 @@ const suite: Tests = {
 if (has('host-node')) {
 	const nodeRequire: any = (<any>require).nodeRequire || require;
 	const path: any = nodeRequire('path');
-	const buildDir: string = path.join(process.cwd(), '_build');
+	const buildDir: string = path.join(process.cwd(), 'dist', 'dev');
 
 	suite.node = {
 		'useDefault resolves es modules'(this: any) {
 			const def = this.async(5000);
 
-			const result: () => Promise<any[]> = nodeRequire(path.join(buildDir, 'tests', 'support', 'load', 'node'))
-				.succeedDefault;
+			const result: () => Promise<any[]> = nodeRequire(
+				path.join(buildDir, 'tests', 'core', 'support', 'load', 'node')
+			).succeedDefault;
 			result().then(
 				def.callback(function([a, b]: [any, any]) {
 					assert.deepEqual(a, 'A');

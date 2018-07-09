@@ -2,8 +2,8 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
 import common from './common';
-import on, { emit } from '../../../src/on';
-import Evented from '../../../src/Evented';
+import on, { emit } from '../../../../src/core/on';
+import Evented from '../../../../src/core/Evented';
 
 registerSuite('events - Evented', {
 	'cannot target non-emitter': function() {

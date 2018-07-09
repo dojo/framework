@@ -2,10 +2,10 @@ const { beforeEach, afterEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { spy, SinonSpy } from 'sinon';
 
-import { Registry } from '@dojo/widget-core/Registry';
-import { Link } from './../../src/Link';
-import { Router } from './../../src/Router';
-import { MemoryHistory } from './../../src/history/MemoryHistory';
+import { Registry } from '../../../src/widget-core/Registry';
+import { Link } from '../../../src/routing/Link';
+import { Router } from '../../../src/routing/Router';
+import { MemoryHistory } from '../../../src/routing/history/MemoryHistory';
 
 const registry = new Registry();
 

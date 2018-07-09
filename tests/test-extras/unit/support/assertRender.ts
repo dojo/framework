@@ -1,11 +1,11 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import Set from '@dojo/shim/Set';
-import Map from '@dojo/shim/Map';
-import assertRender from '../../../src/support/assertRender';
-import { v, w } from '@dojo/widget-core/d';
-import WidgetBase from '@dojo/widget-core/WidgetBase';
+import Set from '../../../../src/shim/Set';
+import Map from '../../../../src/shim/Map';
+import assertRender from '../../../../src/test-extras/support/assertRender';
+import { v, w } from '../../../../src/widget-core/d';
+import WidgetBase from '../../../../src/widget-core/WidgetBase';
 
 class MockWidget extends WidgetBase {
 	render() {

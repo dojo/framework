@@ -1,4 +1,4 @@
-import globalObj from '../../src/global';
+import globalObj from '../../../src/shim/global';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

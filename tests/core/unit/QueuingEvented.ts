@@ -1,8 +1,8 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-import QueuingEvented from '../../src/QueuingEvented';
-import { EventObject } from '../../src/interfaces';
+import QueuingEvented from '../../../src/core/QueuingEvented';
+import { EventObject } from '../../../src/core/interfaces';
 
 interface CustomEvent extends EventObject {
 	type: 'test';

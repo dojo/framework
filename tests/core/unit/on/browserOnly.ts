@@ -1,8 +1,8 @@
 import common from './common';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import on, { emit } from '../../../src/on';
-import { EventObject } from '../../../src/interfaces';
+import on, { emit } from '../../../../src/core/on';
+import { EventObject } from '../../../../src/core/interfaces';
 
 function createTarget(): HTMLElement {
 	let element = document.createElement('div');

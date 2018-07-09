@@ -1,7 +1,7 @@
-import { v } from '../../../src/d';
-import WidgetBase from '../../../src/WidgetBase';
-import Projector from '../../../src/mixins/Projector';
-import Drag from '../../../src/meta/Drag';
+import { v } from '../../../../src/widget-core/d';
+import WidgetBase from '../../../../src/widget-core/WidgetBase';
+import Projector from '../../../../src/widget-core/mixins/Projector';
+import Drag from '../../../../src/widget-core/meta/Drag';
 
 class DragExample extends WidgetBase {
 	render() {

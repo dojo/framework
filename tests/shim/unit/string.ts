@@ -1,9 +1,9 @@
-import * as stringUtil from '../../src/string';
+import * as stringUtil from '../../../src/shim/string';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-registerSuite('string functions', {
+registerSuite('shim - string functions', {
 	'.codePointAt()': {
 		'throws on undefined or null string'() {
 			assert.throws(function() {

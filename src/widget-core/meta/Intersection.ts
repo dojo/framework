@@ -1,7 +1,7 @@
-import global from '@dojo/shim/global';
-import WeakMap from '@dojo/shim/WeakMap';
-import Map from '@dojo/shim/Map';
-import { createHandle } from '@dojo/core/lang';
+import global from '../../shim/global';
+import WeakMap from '../../shim/WeakMap';
+import Map from '../../shim/Map';
+import { createHandle } from '../../core/lang';
 import { Base } from './Base';
 
 interface ExtendedIntersectionObserverEntry extends IntersectionObserverEntry {

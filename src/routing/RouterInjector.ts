@@ -1,5 +1,5 @@
-import { Registry } from '@dojo/widget-core/Registry';
-import { RegistryLabel } from '@dojo/widget-core/interfaces';
+import { Registry } from '../widget-core/Registry';
+import { RegistryLabel } from '../widget-core/interfaces';
 
 import { Router } from './Router';
 import { RouteConfig, RouterOptions } from './interfaces';
