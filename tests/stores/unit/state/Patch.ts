@@ -65,7 +65,7 @@ describe('state/Patch', () => {
 			assert.deepEqual(result.object, { test: 'test' });
 			assert.deepEqual(result.undoOperations, [
 				{ op: OperationType.TEST, path: new Pointer('/test'), value: 'test' },
-				{ op: OperationType.REPLACE, path: new Pointer('/test'), value: undefined }
+				{ op: OperationType.REMOVE, path: new Pointer('/test') }
 			]);
 		});
 
@@ -77,7 +77,7 @@ describe('state/Patch', () => {
 			assert.deepEqual(result.object, { foo: { bar: { qux: 'test' } } });
 			assert.deepEqual(result.undoOperations, [
 				{ op: OperationType.TEST, path: new Pointer('/foo/bar/qux'), value: 'test' },
-				{ op: OperationType.REPLACE, path: new Pointer('/foo/bar/qux'), value: undefined }
+				{ op: OperationType.REMOVE, path: new Pointer('/foo/bar/qux') }
 			]);
 		});
 

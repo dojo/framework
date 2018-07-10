@@ -69,6 +69,7 @@ describe('state/Pointer', () => {
 		const pointer = new Pointer('/foo/bar/qux');
 		const obj = {};
 		assert.strictEqual(pointer.get(obj), undefined);
+		assert.deepEqual(obj, {});
 	});
 
 	it('walk deep path that does not exist with clone', () => {

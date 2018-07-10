@@ -14,6 +14,7 @@ import {
 	ProcessResult
 } from './../../src/process';
 import { Store } from './../../src/Store';
+import { replace } from '../../src/state/operations';
 
 let store: Store;
 let promises: Promise<any>[] = [];
@@ -321,6 +322,47 @@ describe('process', () => {
 			store.apply(result.undoOperations);
 			foo = store.get(result.store.path('foo'));
 			assert.isUndefined(foo);
+		});
+		const processExecutor = process(store);
+		return processExecutor({});
+	});
+
+	it('Can undo operations for commands that modify the same section of state', () => {
+		const commandOne = (): PatchOperation[] => {
+			return [{ op: OperationType.REPLACE, path: new Pointer('/state'), value: { b: 'b' } }];
+		};
+		const commandTwo = (): PatchOperation[] => {
+			return [{ op: OperationType.REPLACE, path: new Pointer('/state/a'), value: 'a' }];
+		};
+
+		const process = createProcess('foo', [commandOne, commandTwo], (error, result) => {
+			let state = store.get(result.store.path('state'));
+			assert.deepEqual(state, { a: 'a', b: 'b' });
+			store.apply(result.undoOperations);
+			state = store.get(result.store.path('state'));
+			assert.isUndefined(state);
+		});
+		const processExecutor = process(store);
+		return processExecutor({});
+	});
+
+	it('Can undo operations for commands that return multiple operations', () => {
+		const commandFactory = createCommandFactory<any>();
+		const commandOne = commandFactory(({ path }) => {
+			return [
+				replace(path('state'), {}),
+				replace(path('state', 'foo'), 'foo'),
+				replace(path('state', 'bar'), 'bar'),
+				replace(path('state', 'baz'), 'baz')
+			];
+		});
+
+		const process = createProcess('foo', [commandOne], (error, result) => {
+			let state = store.get(result.store.path('state'));
+			assert.deepEqual(state, { foo: 'foo', bar: 'bar', baz: 'baz' });
+			store.apply(result.undoOperations);
+			state = store.get(result.store.path('state'));
+			assert.isUndefined(state);
 		});
 		const processExecutor = process(store);
 		return processExecutor({});

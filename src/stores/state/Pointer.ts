@@ -12,7 +12,7 @@ export interface PointerTarget {
 	segment: string;
 }
 
-export function walk(segments: string[], object: any, clone = true): PointerTarget {
+export function walk(segments: string[], object: any, clone = true, continueOnUndefined = true): PointerTarget {
 	if (clone) {
 		object = { ...object };
 	}
@@ -23,12 +23,20 @@ export function walk(segments: string[], object: any, clone = true): PointerTarg
 	};
 
 	return segments.reduce((pointerTarget, segment, index) => {
+		if (pointerTarget.target === undefined) {
+			return pointerTarget;
+		}
 		if (Array.isArray(pointerTarget.target) && segment === '-') {
 			segment = String(pointerTarget.target.length - 1);
 		}
 		if (index + 1 < segments.length) {
 			const nextSegment = segments[index + 1];
 			let target = pointerTarget.target[segment];
+
+			if (target === undefined && !continueOnUndefined) {
+				pointerTarget.target = undefined;
+				return pointerTarget;
+			}
 
 			if (clone || target === undefined) {
 				if (Array.isArray(target)) {
@@ -77,7 +85,10 @@ export class Pointer<T = any, U = any> {
 	}
 
 	get(object: T): U {
-		const pointerTarget: PointerTarget = walk(this.segments, object, false);
+		const pointerTarget: PointerTarget = walk(this.segments, object, false, false);
+		if (pointerTarget.target === undefined) {
+			return undefined as any;
+		}
 		return pointerTarget.target[pointerTarget.segment];
 	}
 
