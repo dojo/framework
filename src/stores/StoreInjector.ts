@@ -6,6 +6,7 @@ import { beforeProperties } from '@dojo/widget-core/decorators/beforeProperties'
 import { alwaysRender } from '@dojo/widget-core/decorators/alwaysRender';
 import { InjectorItem, RegistryLabel, Constructor, DNode } from '@dojo/widget-core/interfaces';
 import { Store } from './Store';
+import { Registry } from '@dojo/widget-core/Registry';
 
 const registeredInjectorsMap: WeakMap<WidgetBase, InjectorItem<Store>[]> = new WeakMap();
 
@@ -99,4 +100,21 @@ export function createStoreContainer<S>() {
 	) => {
 		return StoreContainer(component, name, { paths, getProperties });
 	};
+}
+
+export interface StoreInjectorOptions {
+	key?: RegistryLabel;
+	registry?: Registry;
+}
+
+export function registerStoreInjector<T>(store: Store<T>, options: StoreInjectorOptions = {}) {
+	const { key = 'state', registry = new Registry() } = options;
+
+	if (registry.hasInjector(key)) {
+		throw new Error(`Store has already been defined for key ${key.toString()}`);
+	}
+	registry.defineInjector(key, () => {
+		return () => store;
+	});
+	return registry;
 }

@@ -5,7 +5,7 @@ import { WidgetBase } from '@dojo/widget-core/WidgetBase';
 import { v, WNODE } from '@dojo/widget-core/d';
 import { Registry } from '@dojo/widget-core/Registry';
 
-import { createStoreContainer, storeInject, StoreContainer } from './../../src/StoreInjector';
+import { createStoreContainer, storeInject, StoreContainer, registerStoreInjector } from './../../src/StoreInjector';
 import { Store } from './../../src/Store';
 import { createCommandFactory, createProcess, Process } from '../../src/process';
 import { replace } from '../../src/state/operations';
@@ -155,6 +155,45 @@ describe('StoreInjector', () => {
 			widget.destroy();
 			fooProcess(store)({});
 			assert.strictEqual(invalidateCounter, 4);
+		});
+	});
+
+	describe('registerStoreInjector', () => {
+		it('should register store with default key `state`', () => {
+			const registry = new Registry();
+			const store = new Store();
+			const returnedRegistry = registerStoreInjector(store, { registry });
+			assert.strictEqual(registry, returnedRegistry);
+			const item = registry.getInjector<Store>('state');
+			assert.strictEqual(item!.injector(), store);
+		});
+
+		it('should register store with custom key', () => {
+			const registry = new Registry();
+			const store = new Store();
+			const returnedRegistry = registerStoreInjector(store, { registry, key: 'custom' });
+			assert.strictEqual(registry, returnedRegistry);
+			const item = registry.getInjector<Store>('custom');
+			assert.strictEqual(item!.injector(), store);
+		});
+
+		it('should create registry, register store and return the register when registry is not provided', () => {
+			const store = new Store();
+			const returnedRegistry = registerStoreInjector(store);
+			const item = returnedRegistry.getInjector<Store>('state');
+			assert.strictEqual(item!.injector(), store);
+		});
+
+		it('should throw an error if an injector has already been registered for the given key', () => {
+			const registry = new Registry();
+			const store = new Store();
+			registry.defineInjector('state', () => {
+				return () => store;
+			});
+			assert.throws(
+				() => registerStoreInjector(store, { registry }),
+				'Store has already been defined for key state'
+			);
 		});
 	});
 
