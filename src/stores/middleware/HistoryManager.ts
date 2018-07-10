@@ -1,7 +1,7 @@
 import { processExecutor, getProcess, ProcessError, ProcessResult, ProcessCallback } from '../process';
-import { PatchOperation } from '../../src/state/Patch';
-import { Pointer } from '../../src/state/Pointer';
-import Store from '../../src/Store';
+import { PatchOperation } from '../state/Patch';
+import { Pointer } from '../state/Pointer';
+import Store from '../Store';
 import WeakMap from '@dojo/shim/WeakMap';
 
 export interface HistoryOperation {
