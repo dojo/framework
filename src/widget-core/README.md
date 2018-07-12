@@ -1101,6 +1101,10 @@ The following fields are provided:
 
 | Property         | Source                                |
 | -----------------| ------------------------------------- |
+| `client.left`    | `node.clientLeft`                     |
+| `client.top`     | `node.clientTop`                      |
+| `client.width`   | `node.clientWidth`                    |
+| `client.height   | `node.clientHeight`                   |
 | `position.bottom`| `node.getBoundingClientRect().bottom` |
 | `position.left`  | `node.getBoundingClientRect().left`   |
 | `position.right` | `node.getBoundingClientRect().right`  |
@@ -1115,6 +1119,7 @@ The following fields are provided:
 | `offset.top`     | `node.offsetTop`                      |
 | `offset.width`   | `node.offsetWidth`                    |
 | `offset.height`  | `node.offsetHeight`                   |
+
 
 If the node has not yet been rendered, all values will contain `0`. If you need more information about whether or not the node has been rendered you can use the `has` method:
 

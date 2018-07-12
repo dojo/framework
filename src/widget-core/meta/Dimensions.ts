@@ -21,9 +21,16 @@ export interface DimensionResults {
 	offset: TopLeft & Size;
 	size: Size;
 	scroll: TopLeft & Size;
+	client: TopLeft & Size;
 }
 
 const defaultDimensions = {
+	client: {
+		height: 0,
+		left: 0,
+		top: 0,
+		width: 0
+	},
 	offset: {
 		height: 0,
 		left: 0,
@@ -59,6 +66,12 @@ export class Dimensions extends Base {
 		const boundingDimensions = node.getBoundingClientRect();
 
 		return {
+			client: {
+				height: node.clientHeight,
+				left: node.clientLeft,
+				top: node.clientTop,
+				width: node.clientWidth
+			},
 			offset: {
 				height: node.offsetHeight,
 				left: node.offsetLeft,
