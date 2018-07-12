@@ -310,6 +310,8 @@ Dojo 2 widget-core provides a `WebAnimation` meta to apply web animations to VNo
 
 To specify the web animations pass an `AnimationProperties` object to the `WebAnimation` meta along with the key of the node you wish to animate. This can be a single animation or an array or animations.
 
+**Note**: The Web Animations API is not currently available even in the latest browsers. To use the Web Animations API, a polyfill needs to be included. Dojo 2 does not include the polyfill by default, so will need to be added as a script tag in your index.html or alternatively imported in the application’s main.ts using `import 'web-animations-js/web-animations-next-lite.min';` after including the dependency in your source tree, or by importing `@dojo/shim/browser`.
+
 #### Basic Example
 
 ```ts
@@ -1129,7 +1131,9 @@ const hasRootBeenRendered = this.meta(Dimensions).has('root');
 
 #### Intersection
 
-The Intersection Meta provides information on whether a Node is visible in the application's viewport using the [Intersection Observer API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) (this is polyfilled for unsupported browsers).
+The Intersection Meta provides information on whether a Node is visible in the application's viewport using the [Intersection Observer API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API).
+
+**Note**: The Intersection Observer API is not available in all browsers. To use the Intersection Observer API in all browsers supported by Dojo 2, a polyfill needs to be included. Dojo 2 does not include the polyfill by default, so will need to be added as a script tag in your index.html or alternatively imported in the application’s main.ts using `import 'intersection-observer';` after including the dependency in your source tree, or by importing `@dojo/shim/browser`.
 
 This example renders a list with images, the image src is only added when the item is in the viewport which prevents needlessly downloading images until the user scrolls to them:
 
@@ -1339,7 +1343,9 @@ class TestWidget extends WidgetBase<WidgetProperties> {
 
 #### Resize
 
-The resize observer meta uses the latest [`ResizeObserver`](https://wicg.github.io/ResizeObserver/) within Dojo 2 based widgets. [Native browser support](https://caniuse.com/#feat=resizeobserver) is currently provided by `Chrome 64+`, other Dojo supported browsers work via [polyfill](https://github.com/WICG/ResizeObserver/issues/3).
+The resize observer meta uses the latest [`ResizeObserver`](https://wicg.github.io/ResizeObserver/) within Dojo 2 based widgets.
+
+**Note**: The Resize Observer API is not available in all browsers. [Native browser support](https://caniuse.com/#feat=resizeobserver) is currently provided by `Chrome 64+`, other Dojo supported browsers work via [polyfill](https://github.com/WICG/ResizeObserver/issues/3). To use the Resize Observer API in all browsers supported by Dojo 2, either added as a script tag in your index.html pointing to the polyfill, or alternatively import the polyfill in the application’s main.ts after including the dependency in your source tree.
 
 This allows you to observe resize events at the component level. The `meta` accepts an object of `predicate` functions which receive `ContentRect` dimensions and will be executed when a resize event has occured. The results are made available in a widget's `render` function. This is an incredibly powerful tool for creating responsive components and layouts.
 
@@ -1535,6 +1541,14 @@ class MyWidget extends WidgetBase<MyWidgetProperties> {
 // ...
 }
 ```
+
+**Note**: The Custom Elements API is not available in all browsers. To use
+Custom Elements in all browsers supported by Dojo 2, a polyfill needs to be
+included such as webcomponents/custom-elements/master/custom-elements.min.js.
+Dojo 2 does not include the polyfill by default, so will need to be
+added as a script tag in your index.html. Note that this polyfill cannot 
+currently be ponyfilled like other polyfills used in Dojo 2, so it cannot 
+be added with @dojo/shim/browser or imported using ES modules.
 
 No additional steps are required. The custom element
 can be used in your application automatically. The decorator can be provided
