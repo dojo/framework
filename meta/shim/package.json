@@ -1,0 +1,63 @@
+{
+  "name": "@dojo/shim",
+  "version": "2.0.1-pre",
+  "description": "Modules that provide modular fills of ES6+ functionality",
+  "homepage": "https://dojo.io",
+  "bugs": {
+    "url": "https://github.com/dojo/shim/issues"
+  },
+  "license": "BSD-3-Clause",
+  "main": "main.js",
+  "private": true,
+  "engines": {
+    "npm": ">=3.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dojo/shim.git"
+  },
+  "scripts": {
+    "prepublish": "grunt peerDepInstall",
+    "precommit": "lint-staged",
+    "prettier": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
+    "test": "grunt test"
+  },
+  "peerDependencies": {
+    "@dojo/has": "^2.0.0"
+  },
+  "devDependencies": {
+    "@dojo/loader": "^2.0.0",
+    "@types/glob": "~5.0.0",
+    "@types/grunt": "~0.4.0",
+    "@types/node": "~9.6.5",
+    "grunt": "~1.0.1",
+    "grunt-dojo2": "latest",
+    "grunt-tslint": "5.0.1",
+    "husky": "0.14.3",
+    "intern": "~4.1.0",
+    "lint-staged": "6.0.0",
+    "prettier": "1.9.2",
+    "tslint": "5.8.0",
+    "typescript": "~2.6.1"
+  },
+  "dependencies": {
+    "intersection-observer": "0.4.2",
+    "pepjs": "0.4.2",
+    "tslib": "~1.8.0",
+    "web-animations-js": "2.3.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "tabWidth": 4,
+    "useTabs": true,
+    "parser": "typescript",
+    "printWidth": 120,
+    "arrowParens": "always"
+  }
+}

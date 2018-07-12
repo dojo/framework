@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Basic AMD Loading Test</title>
+</head>
+
+<body>
+<script src="../../src/util/amd.js"></script>
+<script src="https://cdn.jsdelivr.net/bluebird/latest/bluebird.core.min.js"></script>
+<script src="../../../node_modules/@dojo/loader/loader.js"></script>
+<script>
+	require.config(shimAmdDependencies({
+		baseUrl: '../../../'
+	}));
+	require([
+		'_build/src/main',
+		'_build/tests/functional/dojoPromise'
+	], function(unused, main) {
+		main.default(function(value) {
+			window.callbackValue = value;
+		});
+	});
+</script>
+</body>
+</html>

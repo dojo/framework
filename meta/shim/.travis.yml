@@ -1,0 +1,26 @@
+sudo: false
+language: node_js
+node_js:
+- '6'
+env:
+  global:
+  - SAUCE_USERNAME: dojo2-ts-ci
+  - SAUCE_ACCESS_KEY: e92610e3-834e-4bec-a3b5-6f7b9d874601
+  - BROWSERSTACK_USERNAME: dylanschiemann2
+  - BROWSERSTACK_ACCESS_KEY: 4Q2g8YAc9qeZzB2hECnS
+before_install:
+- if [ ${TRAVIS_BRANCH-""} == "master" ] && [ -n ${encrypted_12c8071d2874_key-""}
+  ]; then openssl aes-256-cbc -K $encrypted_12c8071d2874_key -iv $encrypted_12c8071d2874_iv
+  -in deploy_key.enc -out deploy_key -d; fi
+install:
+- travis_retry npm install grunt-cli
+- travis_retry npm install
+script:
+- grunt
+- grunt intern:browserstack --test-reporter
+- grunt uploadCoverage
+- grunt dist
+notifications:
+  slack:
+    secure: X61uiRycWzgFDQkDzaFBcbbnbFjuurc7CamFsqi+rrya3yv1SPsxjIYCwAzHO1i06N8UlllpYEAb+O1FwPN9PMuM5tofQkHuO+Uo5wgPQ97/wlPeya2iNqRDdESmTL27Gl9iIoi1hmi/Iz6lOoXyoHM73pvUkp71hZLG+t0Yo7OO7tbeaa71ZNodjArCh3LOPFP9W4ACHwjP77TploBMq3+0JUsf2GHzCLY5l2jvWLpNnWT/yIJfvz2+cXVWV6ZqKGTwOHpajW9eYzywN68tkFA1Hi6/1++6vTN7+LXpVrqtg130p+Dq1EBc37ZGZqWqG3N+dnZRZZtv5cNkcT8UQnn51dMbRfbZvMeb4Eb2etJiDekzIT2ljCiJ5xIt3axmRIAjPh5WDhYM2/OLAhRX7eTT/fQFoneiaCUBmg7rJJPvFpfnYQAF/lGDObBfUf4lw7btZIiNYNZm8A/EmZj1Bpl6WEE7UleqlNWNLcozCDXgbUjQaGmOeYVXHwVE8osk+bvuEYXVns6UQef4roXROCk454wkERkqwMBcZOdfwOPbU5j2DkHJMJ3nGPiPx26HCTmCEoxNYYlL+F2sWwE/4z5r0s3+WN/eKKZAkLODLGbFYC3Rm0p34W63KYCDllkvojp2Sva/UBuO7iLQ7i2Z4kGijwqp5bBsTDVVW7iNLNk=
+    on_success: change

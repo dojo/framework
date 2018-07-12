@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Basic AMD Loading Test</title>
+</head>
+
+<body>
+<script src="../../src/util/amd.js"></script>
+<script src="../../../node_modules/@dojo/loader/loader.js"></script>
+<script>
+	require.config(shimAmdDependencies({
+		baseUrl: '../../../'
+	}));
+	require([
+		'_build/src/main',
+		'_build/src/browser'
+	], function() {
+		window.results = {
+			pointerEvents: typeof(PointerEvent) !== 'undefined',
+			intersectionObserver: typeof(IntersectionObserver) !== 'undefined'
+		};
+	});
+</script>
+</body>
+</html>
