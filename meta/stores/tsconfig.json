@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		"declaration": false,
+		"experimentalDecorators": true,
+		"lib": [
+			"dom",
+			"es5",
+			"es2015.iterable",
+			"es2015.promise",
+			"es2015.symbol",
+			"es2015.symbol.wellknown"
+		],
+		"module": "umd",
+		"moduleResolution": "node",
+		"noUnusedLocals": true,
+		"outDir": "_build/",
+		"removeComments": false,
+		"sourceMap": true,
+		"strict": true,
+		"importHelpers": true,
+		"downlevelIteration": true,
+		"target": "es5",
+		"types": [ "intern" ]
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./tests/**/*.ts"
+	]
+}
