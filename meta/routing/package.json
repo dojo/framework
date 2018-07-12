@@ -1,0 +1,71 @@
+{
+  "name": "@dojo/routing",
+  "version": "2.0.1-pre",
+  "description": "A routing library for Dojo 2 applications",
+  "private": true,
+  "homepage": "https://dojo.io",
+  "bugs": {
+    "url": "https://github.com/dojo/routing/issues"
+  },
+  "license": "BSD-3-Clause",
+  "main": "main.js",
+  "files": [
+    "dist",
+    "src",
+    "typings.json"
+  ],
+  "engines": {
+    "npm": ">=3.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dojo/routing.git"
+  },
+  "scripts": {
+    "prepublish": "grunt peerDepInstall",
+    "precommit": "lint-staged",
+    "prettier": "prettier --write 'src/**/*.ts' 'tests/**/*.ts' 'examples/**/*.ts'",
+    "test": "grunt test"
+  },
+  "peerDependencies": {
+    "@dojo/core": "^2.0.0",
+    "@dojo/has": "^2.0.0",
+    "@dojo/shim": "^2.0.0",
+    "@dojo/i18n": "^2.0.0",
+    "@dojo/widget-core": "^2.0.0"
+  },
+  "devDependencies": {
+    "@dojo/loader": "^2.0.0",
+    "@types/glob": "~5.0.0",
+    "@types/grunt": "~0.4.0",
+    "@types/node": "~9.6.5",
+    "@types/sinon": "^4.1.2",
+    "grunt": "~1.0.1",
+    "grunt-dojo2": "latest",
+    "grunt-tslint": "5.0.1",
+    "husky": "0.14.3",
+    "intern": "~4.1.0",
+    "lint-staged": "6.0.0",
+    "prettier": "1.9.2",
+    "sinon": "^4.1.3",
+    "tslint": "5.8.0",
+    "typescript": "~2.6.1"
+  },
+  "dependencies": {
+    "tslib": "~1.8.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "tabWidth": 4,
+    "useTabs": true,
+    "parser": "typescript",
+    "printWidth": 120,
+    "arrowParens": "always"
+  }
+}

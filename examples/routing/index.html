@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Example</title>
+	<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+	<script src="../../node_modules/@dojo/loader/loader.min.js"></script>
+	<script>
+		require.config({
+			baseUrl: '.',
+			packages: [
+				{ name: 'src', location: '../_build' },
+				{ name: '@dojo', location: '../../node_modules/@dojo' },
+				{ name: 'pepjs', location: '../../node_modules/pepjs/dist', main: 'pep' },
+				{ name: 'tslib', location: '../../node_modules/tslib', main: 'tslib' }
+			]
+		});
+
+		require([ './main' ], function () {});
+	</script>
+</body>
+</html>
+
