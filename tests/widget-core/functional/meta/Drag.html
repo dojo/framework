@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Drag Test</title>
+</head>
+<body>
+	<script src="../../../../node_modules/@dojo/shim/util/amd.js"></script>
+	<script src="../../../../node_modules/@dojo/loader/loader.js"></script>
+	<script>
+		require.config(shimAmdDependencies({
+			baseUrl: '../../../../'
+		}));
+
+		require(['@dojo/shim/main', '@dojo/shim/browser'], function () {
+			require([ '_build/tests/functional/meta/Drag' ], function () {});
+		});
+	</script>
+</body>
+</html>

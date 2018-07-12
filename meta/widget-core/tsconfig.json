@@ -1,0 +1,35 @@
+{
+	"version": "2.1.5",
+	"compilerOptions": {
+		"declaration": false,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"jsx": "react",
+		"jsxFactory": "tsx",
+		"lib": [
+			"dom",
+			"es5",
+			"es2015.iterable",
+			"es2015.promise",
+			"es2015.symbol",
+			"es2015.symbol.wellknown"
+		],
+		"module": "umd",
+		"moduleResolution": "node",
+		"noUnusedLocals": true,
+		"importHelpers": true,
+		"downlevelIteration": true,
+		"outDir": "_build/",
+		"removeComments": false,
+		"sourceMap": true,
+		"strict": true,
+		"target": "es5",
+		"types": [ "intern", "web-animations-js" ]
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.tsx",
+		"./tests/**/*.ts",
+		"./tests/**/*.tsx"
+	]
+}
