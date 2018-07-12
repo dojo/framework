@@ -1,0 +1,17 @@
+*.js
+*.js.map
+!/*.js
+!/tasks/*.js
+/_apidoc
+/_build
+/bower_components
+/dist
+deploy_key
+/html-report
+/node_modules
+/typings
+.baseDir.ts
+.tscache
+.tsconfig*.json
+coverage-final.lcov
+npm-debug.log

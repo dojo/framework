@@ -1,0 +1,55 @@
+{
+  "name": "@dojo/has",
+  "version": "2.0.1-pre",
+  "description": "A feature detection library",
+  "engines": {
+    "npm": ">=3.0.0"
+  },
+  "homepage": "https://dojo.io",
+  "bugs": {
+    "url": "https://github.com/dojo/has/issues"
+  },
+  "license": "BSD-3-Clause",
+  "private": true,
+  "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dojo/has.git"
+  },
+  "scripts": {
+    "precommit": "lint-staged",
+    "prettier": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
+    "test": "grunt test"
+  },
+  "devDependencies": {
+    "@dojo/loader": "^2.0.0",
+    "@types/glob": "~5.0.0",
+    "@types/grunt": "~0.4.0",
+    "@types/node": "~9.6.5",
+    "@types/sinon": "~1.16.0",
+    "grunt": "~1.0.1",
+    "grunt-dojo2": "latest",
+    "grunt-tslint": "5.0.1",
+    "husky": "0.14.3",
+    "intern": "~4.1.0",
+    "lint-staged": "6.0.0",
+    "prettier": "1.9.2",
+    "sinon": "^1.17.4",
+    "tslint": "5.8.0",
+    "typescript": "~2.6.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "tabWidth": 4,
+    "useTabs": true,
+    "parser": "typescript",
+    "printWidth": 120,
+    "arrowParens": "always"
+  }
+}
