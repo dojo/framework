@@ -10,8 +10,8 @@ import { Registry } from '@dojo/widget-core/Registry';
 
 const registeredInjectorsMap: WeakMap<WidgetBase, InjectorItem<Store>[]> = new WeakMap();
 
-export interface GetProperties<S extends Store, T = any> {
-	(payload: S, properties: T): T;
+export interface GetProperties<S extends Store, W extends WidgetBase<any, any> = WidgetBase<any, any>> {
+	(payload: S, properties: W['properties']): W['properties'];
 }
 
 export type StoreContainerPath<
@@ -25,11 +25,13 @@ export type StoreContainerPath<
 
 export interface StoreInjectConfig<S = any> {
 	name: RegistryLabel;
-	getProperties: GetProperties<Store<S>>;
+	getProperties: GetProperties<Store<S>, any>;
 	paths?: StoreContainerPath<S>[];
 }
 
-export type StoreContainer<T extends WidgetBase> = Constructor<WidgetBase<Partial<T['properties']>, T['children'][0]>>;
+export type StoreContainer<T extends WidgetBase<any, any>> = Constructor<
+	WidgetBase<Partial<T['properties']>, T['children'][0]>
+>;
 
 /**
  * Decorator that registers a store injector with a container based on paths when provided
@@ -77,7 +79,7 @@ export function storeInject<S>(config: StoreInjectConfig<S>) {
 export function StoreContainer<S = any, W extends WidgetBase<any, any> = WidgetBase<any, any>>(
 	component: Constructor<W> | RegistryLabel,
 	name: RegistryLabel,
-	{ paths, getProperties }: { paths?: StoreContainerPath<S>[]; getProperties: GetProperties<Store<S>> }
+	{ paths, getProperties }: { paths?: StoreContainerPath<S>[]; getProperties: GetProperties<Store<S>, W> }
 ): StoreContainer<W> {
 	@alwaysRender()
 	@storeInject({ name, paths, getProperties })
@@ -96,7 +98,7 @@ export function createStoreContainer<S>() {
 	return <W extends WidgetBase<any, any>>(
 		component: Constructor<W> | RegistryLabel,
 		name: RegistryLabel,
-		{ paths, getProperties }: { paths?: StoreContainerPath<S>[]; getProperties: GetProperties<Store<S>> }
+		{ paths, getProperties }: { paths?: StoreContainerPath<S>[]; getProperties: GetProperties<Store<S>, W> }
 	) => {
 		return StoreContainer(component, name, { paths, getProperties });
 	};

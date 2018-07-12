@@ -201,7 +201,9 @@ describe('StoreInjector', () => {
 		it('Should render the WNode with the properties and children', () => {
 			class Foo extends WidgetBase {}
 			class FooContainer extends StoreContainer<State>(Foo, 'state', {
-				getProperties: (inject: Store<State>) => {}
+				getProperties: (inject, props) => {
+					return props;
+				}
 			}) {
 				render() {
 					return super.render();
@@ -224,7 +226,9 @@ describe('StoreInjector', () => {
 			let invalidateCounter = 0;
 			class Foo extends WidgetBase {}
 			class FooContainer extends StoreContainer<State>(Foo, 'state', {
-				getProperties: (inject: Store<State>) => {}
+				getProperties: (inject, props) => {
+					return props;
+				}
 			}) {
 				invalidate() {
 					invalidateCounter++;
@@ -247,7 +251,9 @@ describe('StoreInjector', () => {
 		it('Should render the WNode with the properties and children', () => {
 			class Foo extends WidgetBase {}
 			class FooContainer extends TypedStoreContainer(Foo, 'state', {
-				getProperties: (inject: Store<State>) => {}
+				getProperties: (inject, props) => {
+					return props;
+				}
 			}) {
 				render() {
 					return super.render();
@@ -270,7 +276,9 @@ describe('StoreInjector', () => {
 			let invalidateCounter = 0;
 			class Foo extends WidgetBase {}
 			class FooContainer extends TypedStoreContainer(Foo, 'state', {
-				getProperties: (inject: Store<State>) => {}
+				getProperties: (inject, props) => {
+					return props;
+				}
 			}) {
 				invalidate() {
 					invalidateCounter++;
