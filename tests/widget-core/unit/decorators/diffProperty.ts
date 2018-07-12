@@ -34,6 +34,25 @@ registerSuite('decorators/diffProperty', {
 			testWidget.__setProperties__({ id: '', foo: 'bar' });
 			assert.equal(callCount, 1);
 		},
+		'diff property with default diff'() {
+			let callCount = 0;
+
+			class TestWidget extends WidgetBase<TestProperties> {
+				@diffProperty('foo')
+				protected reaction() {
+					callCount++;
+				}
+			}
+
+			const testWidget = new TestWidget();
+
+			testWidget.__setProperties__({ id: '', foo: 'bar' });
+			assert.equal(callCount, 1);
+			testWidget.__setProperties__({ id: '', foo: 'bar' });
+			assert.equal(callCount, 1);
+			testWidget.__setProperties__({ id: '', foo: 'foo' });
+			assert.equal(callCount, 2);
+		},
 		'diff with reaction': {
 			'reaction does not execute if no registered properties are changed'() {
 				let callCount = 0;

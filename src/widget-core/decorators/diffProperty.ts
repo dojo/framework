@@ -1,5 +1,6 @@
 import { handleDecorator } from './handleDecorator';
 import { DiffPropertyFunction } from './../interfaces';
+import { auto } from './../diff';
 
 /**
  * Decorator that can be used to register a function as a specific property diff
@@ -8,7 +9,11 @@ import { DiffPropertyFunction } from './../interfaces';
  * @param diffType      The diff type, default is DiffType.AUTO.
  * @param diffFunction  A diff function to run if diffType if DiffType.CUSTOM
  */
-export function diffProperty(propertyName: string, diffFunction: DiffPropertyFunction, reactionFunction?: Function) {
+export function diffProperty(
+	propertyName: string,
+	diffFunction: DiffPropertyFunction = auto,
+	reactionFunction?: Function
+) {
 	return handleDecorator((target, propertyKey) => {
 		target.addDecorator(`diffProperty:${propertyName}`, diffFunction.bind(null));
 		target.addDecorator('registeredDiffProperty', propertyName);
