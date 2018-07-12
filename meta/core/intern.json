@@ -1,0 +1,91 @@
+{
+	"capabilities+": {
+		"project": "Dojo 2",
+		"name": "@dojo/core",
+		"fixSessionCapabilities": false,
+		"browserstack.debug": false
+	},
+
+	"environments": [
+		{ "browserName": "node" }
+	],
+
+	"suites": [
+		"./_build/tests/unit/all.js"
+	],
+
+	"functionalSuites": [
+		"./_build/tests/functional/all.js"
+	],
+
+	"plugins": [
+		"./_build/tests/plugins/echo-service.js"
+	],
+
+	"browser": {
+		"loader": "./node_modules/grunt-dojo2/lib/intern/internLoader.js",
+		"suites+": [
+			"./_build/tests/unit/all-browser.js"
+		]
+	},
+
+	"node": {
+		"suites+": [
+			"./_build/tests/unit/all-node.js"
+		]
+	},
+
+	"coverage": [
+		"./_build/src/**/*.js"
+	],
+
+	"configs": {
+		"browserstack": {
+			"tunnel": "browserstack",
+
+			"environments+": [
+				{ "browserName": "internet explorer", "version": "11", "os": "WINDOWS", "os_version": [ "8.1", "10" ] },
+				{ "browserName": "edge" },
+				{ "browserName": "firefox", "platform": "WINDOWS" },
+				{ "browserName": "chrome", "platform": "WINDOWS" },
+				{ "browserName": "safari", "version": "10.1", "platform": "MAC" }
+			],
+
+			"maxConcurrency": 5
+		},
+
+		"node-loader": {
+			"node": {
+				"loader": "./node_modules/grunt-dojo2/lib/intern/internLoader.js",
+				"suites+": [
+					"./_build/tests/unit/all-node-loader.js"
+				]
+			}
+		},
+
+		"local": {
+			"tunnel": "selenium",
+			"tunnelOptions": {
+				"hostname": "localhost",
+				"port": 4444
+			},
+
+			"environments+": [
+				{ "browserName": "chrome" }
+			]
+		},
+
+		"saucelabs": {
+			"tunnel": "saucelabs",
+			"tunnelOptions": {},
+
+			"defaultTimeout": 10000,
+			"environments+": [
+				{ "browserName": "internet explorer", "version": [ "11.0" ], "platform": "Windows 7" },
+				{ "browserName": "firefox", "version": "43", "platform": "Windows 10" },
+				{ "browserName": "chrome", "platform": "Windows 10" }
+			],
+			"maxConcurrency": 4
+		}
+	}
+}

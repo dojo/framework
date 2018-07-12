@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+	<head lang="en">
+		<meta charset="UTF-8">
+		<title>Text Plugin Test</title>
+	</head>
+
+	<body>
+		<script src="../../../../node_modules/@dojo/shim/util/amd.js"></script>
+		<script src="../../../../node_modules/@dojo/loader/loader.js"></script>
+		<script>
+			require.config(shimAmdDependencies({
+				baseUrl: '../../../../',
+				packages: [
+					{ name: 'src', location: '_build/src' },
+					{ name: 'tests', location: '_build/tests' }
+				]
+			}));
+			require(['@dojo/shim/main'], function () {
+				require([
+					'src/text!./_build/tests/support/data/strip.xml!strip'
+				], function (result) {
+					window.loaderTestResults = {
+						text: result
+					};
+				});
+			});
+		</script>
+	</body>
+</html>
