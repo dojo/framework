@@ -1,0 +1,7 @@
+{
+	"name": "dojo-i18n",
+	"globalDependencies": {
+		"cldr": "github:DefinitelyTyped/DefinitelyTyped/cldr.js/cldr.js.d.ts#7de6c3dd94feaeb21f20054b9f30d5dabc5efabd",
+		"globalize": "github:mwistrand/DefinitelyTyped/globalize/globalize.d.ts#2f4482fb5bb000feff4549d344d1558e3e673b1b"
+	}
+}
