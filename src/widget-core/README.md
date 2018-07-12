@@ -632,9 +632,9 @@ This section provides some details on more advanced Dojo 2 functionality and con
 
 ### Handling Focus
 
-Handling focus is an important aspect in any application and can often be tricky to do correctly. To help with this issue @dojo/widget-core provides a primitive mechanism built into the VDOM system that enables users to focus a virtual dom node once it has been appended to the DOM. This uses a special property called `focus` on the `VNodeProperties` interface that can be passed when using `v()`. The `focus` property is either a `boolean` or a function that returns a `boolean`.
+Handling focus is an important aspect in any application and can be tricky to do correctly. To help with this issue, `@dojo/widget-core` provides a primitive mechanism built into the Virtual DOM system that enables users to focus a Virtual DOM node once it has been appended to the DOM. This uses a special property called `focus` on the `VNodeProperties` interface that can be passed when using `v()`. The `focus` property is either a `boolean` or a function that returns a `boolean`.
 
-When passing a function, focus will called when `true` is returned without comparing the value of the previous result. However when passing a `boolean` focus will only be applied if the property is `true` and the previous property value was not.
+When passing a function, focus will be called when `true` is returned without comparing the value of the previous result. However, when passing a `boolean`, focus will only be applied if the property is `true` and the previous property value was not.
 
 
 ```ts
@@ -649,9 +649,9 @@ v('input', { type: 'text', focus: () => true) })
 
 This primitive is a base that enables further abstractions to be built to handle more complex behaviors. One of these is handling focus across the boundaries of encapsulated widgets. The `FocusMixin` should be used by widgets to provide `focus` to their children or to accept `focus` from a parent widget.
 
-The `FocusMixin` adds `focus` and `shouldFocus` to a widget's API. `shouldFocus` checks if the widget is in a state to perform a focus action and will only return `true` once until the widget's `focus` method has been called again. This `shouldFocus` method is designed to be passed to child widgets or nodes are the value of their `focus` property.
+The `FocusMixin` adds `focus` and `shouldFocus` to a widget's API. `shouldFocus` checks if the widget is in a state to perform a focus action and will only return `true` once, until the widget's `focus` method has been called again. This `shouldFocus` method is designed to be passed to child widgets or nodes as the value of their `focus` property.
 
-When `shouldFocus` is passed to a widget it will be called as the properties are set on the child widget, meaning that any other usages of the parent's `shouldFocus` method will result in a return value of `false`.
+When `shouldFocus` is passed to a widget, it will be called as the properties are set on the child widget, meaning that any other usages of the parent's `shouldFocus` method will result in a return value of `false`.
 
 An example usage controlling focus across child VNodes (DOM) and WNodes (widgets):
 
@@ -662,7 +662,7 @@ An example usage controlling focus across child VNodes (DOM) and WNodes (widgets
 
 		class FocusInputChild extends Focus(WidgetBase)<FocusInputChildProperties> {
 			protected render() {
-				// the child widget's `this.shouldFocus` is passed directly to the input nodes focus property
+				// the child widget's `this.shouldFocus` is passed directly to the input node's focus property
 				return v('input', { onfocus: this.properties.onFocus, focus: this.shouldFocus });
 			}
 		}
@@ -703,9 +703,9 @@ An example usage controlling focus across child VNodes (DOM) and WNodes (widgets
 					v('button', { onclick: this._next }, ['Next']),
 					// `this.shouldFocus` is passed to the child that requires focus based on
 					// some widget logic. If the child is a widget it can then deal with that
-					// however is necessary. The widget may also have internal logic and pass
-					// its own `this.shouldFocus` down further or could apply directly to a
-					// VNode child.
+					// in whatever manner is necessary. The widget may also have internal 
+					// logic and pass its own `this.shouldFocus` down further or it could apply
+					// directly to a VNode child.
 					w(FocusInputChild, {
 						key: 0,
 						focus: this._focusedInputKey === 0 ? this.shouldFocus : undefined,
@@ -736,7 +736,7 @@ An example usage controlling focus across child VNodes (DOM) and WNodes (widgets
 		}
 ```
 
-Link to the example on [codesandbox.io](https://codesandbox.io/s/ox5y97vqz5).
+See this [focus example on codesandbox.io](https://codesandbox.io/s/ox5y97vqz5).
 
 ### Advanced Properties
 
