@@ -13,3 +13,4 @@ deploy_key
 .tsconfig*.json
 /coverage
 npm-debug.log
+/benchmark-results
