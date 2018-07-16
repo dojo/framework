@@ -1,9 +1,5 @@
-import 'globalize/dist/globalize';
-import * as GlobalizeType from 'globalize';
+import * as Globalize from 'globalize/dist/globalize';
 import i18n from '../i18n';
-
-// TODO: use normal imports after landing https://github.com/DefinitelyTyped/DefinitelyTyped/pull/27271
-const Globalize: typeof GlobalizeType = require('globalize/dist/globalize');
 
 /**
  * @private

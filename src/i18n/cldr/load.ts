@@ -1,11 +1,8 @@
 // required for Globalize/Cldr to properly resolve locales in the browser.
-import * as GlobalizeType from 'globalize';
 import 'cldrjs/dist/cldr/unresolved';
+import * as Globalize from 'globalize/dist/globalize';
 import supportedLocales from './locales';
 import { generateLocales, validateLocale } from '../util/main';
-
-// TODO: use normal imports after landing https://github.com/DefinitelyTyped/DefinitelyTyped/pull/27271
-const Globalize: typeof GlobalizeType = require('globalize/dist/globalize');
 
 export interface CldrData {
 	main?: LocaleData;

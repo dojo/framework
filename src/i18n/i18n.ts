@@ -1,5 +1,4 @@
 /* tslint:disable:interface-name */
-import 'globalize/dist/globalize/message';
 import global from '../shim/global';
 import Map from '../shim/Map';
 import Evented from '../core/Evented';
@@ -7,12 +6,9 @@ import has from '../core/has';
 import uuid from '../core/uuid';
 import { Handle } from '../core/interfaces';
 import { useDefault } from '../core/load/util';
-import * as GlobalizeType from 'globalize';
+import * as Globalize from 'globalize/dist/globalize/message';
 import { isLoaded } from './cldr/load';
 import { generateLocales, normalizeLocale } from './util/main';
-
-// TODO: use normal imports after landing https://github.com/DefinitelyTyped/DefinitelyTyped/pull/27271
-const Globalize: typeof GlobalizeType = require('globalize/dist/globalize');
 
 /**
  * A default bundle used as basis for loading locale-specific bundles.
