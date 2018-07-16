@@ -1,13 +1,13 @@
-import Observable, { Subscription } from '../../src/Observable';
-import Map from '../../src/Map';
-import '../../src/Symbol';
+import Observable, { Subscription } from '../../../src/shim/Observable';
+import Map from '../../../src/shim/Map';
+import '../../../src/shim/Symbol';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
 class MoreObservable extends Observable<any> {}
 
-registerSuite('Observable', {
+registerSuite('shim/Observable', {
 	subscribe: {
 		observer() {
 			let source = Observable.of(1, 2, 3);

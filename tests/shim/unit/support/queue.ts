@@ -1,6 +1,6 @@
-import has from '../../../src/support/has';
-import global from '../../../src/global';
-import { queueAnimationTask, queueMicroTask, queueTask } from '../../../src/support/queue';
+import has from '../../../../src/shim/support/has';
+import global from '../../../../src/shim/global';
+import { queueAnimationTask, queueMicroTask, queueTask } from '../../../../src/shim/support/queue';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
@@ -208,13 +208,13 @@ registerSuite('queue functions', {
 self.addEventListener('message', function (event) {
 	if(event.data.baseUrl) {
 		var baseUrl = event.data.baseUrl;
-		importScripts(baseUrl + '/_build/src/util/amd.js', baseUrl + '/node_modules/@dojo/loader/loader.js');
+		importScripts(baseUrl + '/dist/dev/src/shim/util/amd.js', baseUrl + '/node_modules/@dojo/loader/loader.js');
 
 		require.config(shimAmdDependencies({
 			baseUrl: baseUrl
 		}));
 
-		require(['_build/src/support/queue'], function (queue) {
+		require(['dist/dev/src/shim/support/queue'], function (queue) {
 			queue.queueTask(function() {
 				self.postMessage('success');
 			});

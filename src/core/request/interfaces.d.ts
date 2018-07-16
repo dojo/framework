@@ -1,4 +1,4 @@
-import { IterableIterator } from '@dojo/shim/iterator';
+import { IterableIterator } from '../../shim/iterator';
 import Task from '../async/Task';
 import UrlSearchParams, { ParamList } from '../UrlSearchParams';
 import Observable from '../Observable';

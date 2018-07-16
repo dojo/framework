@@ -1,9 +1,9 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { Pointer } from './../../../src/state/Pointer';
-import { Patch, OperationType } from './../../../src/state/Patch';
-import * as ops from './../../../src/state/operations';
+import { Pointer } from './../../../../src/stores/state/Pointer';
+import { Patch, OperationType } from './../../../../src/stores/state/Patch';
+import * as ops from './../../../../src/stores/state/operations';
 
 describe('state/Patch', () => {
 	describe('add', () => {

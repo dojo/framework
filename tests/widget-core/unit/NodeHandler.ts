@@ -1,7 +1,7 @@
-const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
+const { registerSuite } = intern.getPlugin('jsdom');
 import { stub, SinonStub } from 'sinon';
-import NodeHandler, { NodeEventType } from '../../src/NodeHandler';
+import NodeHandler, { NodeEventType } from '../../../src/widget-core/NodeHandler';
 
 const elementStub: SinonStub = stub();
 const widgetStub: SinonStub = stub();

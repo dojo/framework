@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import * as sinon from 'sinon';
-import global from '@dojo/shim/global';
-import { isPlugin as utilIsPlugin, useDefault as utilUseDefault } from '../../../src/load/util';
-import load, { isPlugin, useDefault } from '../../../src/load/webpack';
+import global from '../../../../src/shim/global';
+import { isPlugin as utilIsPlugin, useDefault as utilUseDefault } from '../../../../src/core/load/util';
+import load, { isPlugin, useDefault } from '../../../../src/core/load/webpack';
 
 interface WebpackModules {
 	[id: number]: any;

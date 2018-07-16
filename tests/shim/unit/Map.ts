@@ -1,5 +1,5 @@
-import { isIterable, IterableIterator, ShimIterator } from '../../src/iterator';
-import Map from '../../src/Map';
+import { isIterable, IterableIterator, ShimIterator } from '../../../src/shim/iterator';
+import Map from '../../../src/shim/Map';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
@@ -7,7 +7,7 @@ const { assert } = intern.getPlugin('chai');
 let map: Map<any, any>;
 let mapArgs: any[];
 
-registerSuite('Map', {
+registerSuite('shim/Map', {
 	instantiation: {
 		'null data'() {
 			assert.doesNotThrow(function() {

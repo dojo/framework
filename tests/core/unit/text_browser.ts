@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import * as text from '../../src/text';
-import { AmdRootRequire } from '../../src/interfaces';
+import * as text from '../../../src/core/text';
+import { AmdRootRequire } from '../../../src/core/interfaces';
 
 declare const require: AmdRootRequire;
 

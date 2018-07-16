@@ -1,7 +1,7 @@
-import { from as arrayFrom } from '@dojo/shim/array';
-import { isArrayLike, isIterable, Iterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
-import Map from '@dojo/shim/Map';
-import '@dojo/shim/Symbol';
+import { from as arrayFrom } from '../shim/array';
+import { isArrayLike, isIterable, Iterable, IterableIterator, ShimIterator } from '../shim/iterator';
+import Map from '../shim/Map';
+import '../shim/Symbol';
 
 /**
  * A map implmentation that supports multiple keys for specific value.

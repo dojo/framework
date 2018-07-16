@@ -1,5 +1,5 @@
-import Benchmark = require('benchmark');
-import lang = require('../../src/lang');
+import * as Benchmark from 'benchmark';
+import * as lang from '../../../src/core/lang';
 
 function onComplete(this: any) {
 	console.log(this.name + ': ' + this.hz + ' with a margin of error of ' + this.stats.moe);

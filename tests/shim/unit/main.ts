@@ -1,9 +1,9 @@
-import * as main from '../../src/main';
+import * as main from '../../../src/shim/main';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-registerSuite('main', {
+registerSuite('shim/main', {
 	'validate api'() {
 		assert(main);
 	}

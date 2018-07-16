@@ -1,7 +1,7 @@
-import request from '@dojo/core/request';
-import has from '@dojo/has/has';
-import '@dojo/shim/Promise';
-import loadCldrData, { CldrData, isLoaded } from '../../src/cldr/load';
+import request from '../../../src/core/request';
+import has from '../../../src/has/has';
+import '../../../src/shim/Promise';
+import loadCldrData, { CldrData, isLoaded } from '../../../src/i18n/cldr/load';
 
 declare const require: any;
 

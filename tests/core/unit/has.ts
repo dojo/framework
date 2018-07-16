@@ -1,8 +1,8 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import has from '../../src/has';
+import has from '../../../src/core/has';
 
-registerSuite('has', {
+registerSuite('core/has', {
 	'has("node-buffer")': function() {
 		const value = has('node-buffer');
 		if (has('host-node')) {

@@ -2,7 +2,7 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { hasClassName } from '../support/util';
 import { spy, SinonSpy } from 'sinon';
-import { deprecated, deprecatedAdvice, deprecatedDecorator, setWarn } from '../../src/instrument';
+import { deprecated, deprecatedAdvice, deprecatedDecorator, setWarn } from '../../../src/core/instrument';
 
 let consoleWarnSpy: SinonSpy;
 

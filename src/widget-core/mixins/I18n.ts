@@ -1,6 +1,6 @@
 /* tslint:disable:interface-name */
-import i18n, { Bundle, formatMessage, getCachedMessages, Messages } from '@dojo/i18n/i18n';
-import Map from '@dojo/shim/Map';
+import i18n, { Bundle, formatMessage, getCachedMessages, Messages } from '../../i18n/i18n';
+import Map from '../../shim/Map';
 import { isVNode, decorate } from './../d';
 import { afterRender } from './../decorators/afterRender';
 import { inject } from './../decorators/inject';

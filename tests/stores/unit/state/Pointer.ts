@@ -1,7 +1,7 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { Pointer, walk } from './../../../src/state/Pointer';
+import { Pointer, walk } from './../../../../src/stores/state/Pointer';
 
 describe('state/Pointer', () => {
 	it('create pointer with string path', () => {

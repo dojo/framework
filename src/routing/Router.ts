@@ -1,4 +1,4 @@
-import QueuingEvented from '@dojo/core/QueuingEvented';
+import QueuingEvented from '../core/QueuingEvented';
 import {
 	RouteConfig,
 	History,
@@ -10,7 +10,7 @@ import {
 	RouterOptions
 } from './interfaces';
 import { HashHistory } from './history/HashHistory';
-import { EventObject } from '@dojo/core/interfaces';
+import { EventObject } from '../core/interfaces';
 
 const PARAM = Symbol('routing param');
 

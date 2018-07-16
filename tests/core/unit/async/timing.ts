@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import * as timing from '../../../src/async/timing';
+import * as timing from '../../../../src/core/async/timing';
 import { throwImmediatly } from '../../support/util';
 import { isEventuallyRejected } from '../../support/util';
-import Promise from '@dojo/shim/Promise';
+import Promise from '../../../../src/shim/Promise';
 
 registerSuite('async/timing', {
 	'delay()': {

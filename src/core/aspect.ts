@@ -1,5 +1,5 @@
 import { Handle } from './interfaces';
-import WeakMap from '@dojo/shim/WeakMap';
+import WeakMap from '../shim/WeakMap';
 import { createHandle } from './lang';
 
 /**

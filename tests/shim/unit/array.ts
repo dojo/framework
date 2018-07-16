@@ -1,7 +1,7 @@
-import * as array from '../../src/array';
-import has, { add as hasAdd } from '../../src/support/has';
-import { Iterable, ShimIterator } from '../../src/iterator';
-import '../../src/Symbol';
+import * as array from '../../../src/shim/array';
+import has, { add as hasAdd } from '../../../src/shim/support/has';
+import { Iterable, ShimIterator } from '../../../src/shim/iterator';
+import '../../../src/shim/Symbol';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

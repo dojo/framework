@@ -1,7 +1,7 @@
 import common from './common';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import on, { emit } from '../../../src/on';
+import on, { emit } from '../../../../src/core/on';
 import * as events from 'events';
 
 function createTarget() {

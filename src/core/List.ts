@@ -1,5 +1,5 @@
-import { isArrayLike, isIterable, Iterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
-import WeakMap from '@dojo/shim/WeakMap';
+import { isArrayLike, isIterable, Iterable, IterableIterator, ShimIterator } from '../shim/iterator';
+import WeakMap from '../shim/WeakMap';
 
 const listItems: WeakMap<List<any>, any[]> = new WeakMap<List<any>, any[]>();
 

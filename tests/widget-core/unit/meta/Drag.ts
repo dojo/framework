@@ -1,11 +1,11 @@
-const { registerSuite } = intern.getInterface('object');
+const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { SinonSpy } from 'sinon';
-import { v } from '../../../src/d';
-import Drag, { DragResults } from '../../../src/meta/Drag';
-import { ProjectorMixin } from '../../../src/mixins/Projector';
-import { ThemedMixin } from '../../../src/mixins/Themed';
-import { WidgetBase } from '../../../src/WidgetBase';
+import { v } from '../../../../src/widget-core/d';
+import DragCtor, { DragResults } from '../../../../src/widget-core/meta/Drag';
+import { ProjectorMixin } from '../../../../src/widget-core/mixins/Projector';
+import { ThemedMixin } from '../../../../src/widget-core/mixins/Themed';
+import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 import sendEvent from '../../support/sendEvent';
 import { createResolvers } from './../../support/util';
 
@@ -16,7 +16,13 @@ const emptyResults: DragResults = {
 	isDragging: false
 };
 
+let Drag: typeof DragCtor;
+
 registerSuite('support/meta/Drag', {
+	async before() {
+		Drag = (await import('../../../../src/widget-core/meta/Drag')).default;
+	},
+
 	beforeEach() {
 		resolvers.stub();
 	},

@@ -1,6 +1,6 @@
-import { Thenable } from '@dojo/shim/interfaces';
-import { isArrayLike, isIterable, Iterable } from '@dojo/shim/iterator';
-import { Executor } from '@dojo/shim/Promise';
+import { Thenable } from '../../shim/interfaces';
+import { isArrayLike, isIterable, Iterable } from '../../shim/iterator';
+import { Executor } from '../../shim/Promise';
 import ExtensiblePromise, { DictionaryOfPromises, ListOfPromises, unwrapPromises } from './ExtensiblePromise';
 
 /**

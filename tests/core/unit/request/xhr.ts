@@ -1,24 +1,34 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-import xhrRequest, { XhrResponse } from '../../../src/request/providers/xhr';
-import { Response } from '../../../src/request/interfaces';
-import UrlSearchParams from '../../../src/UrlSearchParams';
-import has from '../../../src/has';
-import Promise from '@dojo/shim/Promise';
+import xhrRequest, { XhrResponse } from '../../../../src/core/request/providers/xhr';
+import { Response } from '../../../../src/core/request/interfaces';
+import UrlSearchParams from '../../../../src/core/UrlSearchParams';
+import has from '../../../../src/has/has';
+import DojoPromise from '../../../../src/shim/Promise';
 
 let echoServerAvailable = false;
+
 registerSuite('request/providers/xhr', {
-	before(this: any) {
-		return xhrRequest('/__echo/', {
+	async before(this: any) {
+		const coreHasId = '../../../../src/core/has';
+		if (typeof (require as any).undef === 'undefined') {
+			const path = require('path');
+			delete require.cache[path.resolve(__dirname, coreHasId) + '.js'];
+		} else {
+			(require as any).undef((require as any).toAbsMid(coreHasId));
+		}
+
+		await import(coreHasId);
+
+		const response = await xhrRequest('/__echo/', {
 			method: 'GET',
 			timeout: 10000
-		}).then((response) => {
-			if (response && response.status === 200) {
-				echoServerAvailable = true;
-				return;
-			}
 		});
+
+		if (response && response.status === 200) {
+			echoServerAvailable = true;
+		}
 	},
 
 	tests: {
@@ -231,7 +241,7 @@ registerSuite('request/providers/xhr', {
 							assert.strictEqual(response.url.indexOf('/__echo/xhr?foo=bar'), 0);
 							cacheBustStringA = response.url.split('&')[1];
 							assert.isFalse(isNaN(Number(cacheBustStringA)));
-							return new Promise<Response>(function(resolve, reject) {
+							return new DojoPromise<Response>(function(resolve, reject) {
 								setTimeout(function() {
 									xhrRequest('/__echo/xhr?foo=bar', {
 										cacheBust: true
@@ -265,7 +275,7 @@ registerSuite('request/providers/xhr', {
 							cacheBustStringA = response.url.split('&')[2];
 							assert.isFalse(isNaN(Number(cacheBustStringA)));
 
-							return new Promise<Response>(function(resolve, reject) {
+							return new DojoPromise<Response>(function(resolve, reject) {
 								setTimeout(function() {
 									xhrRequest('/__echo/xhr?foo=bar', {
 										cacheBust: true,
@@ -302,7 +312,7 @@ registerSuite('request/providers/xhr', {
 							cacheBustStringA = response.url.split('&')[1];
 							assert.isFalse(isNaN(Number(cacheBustStringA)));
 
-							return new Promise<Response>(function(resolve, reject) {
+							return new DojoPromise<Response>(function(resolve, reject) {
 								setTimeout(function() {
 									xhrRequest('/__echo/xhr', {
 										cacheBust: true,
@@ -595,13 +605,13 @@ self.addEventListener('message', function (event) {
 });
 
 function testXhr(baseUrl, testUrl) {
-	importScripts(baseUrl + '/node_modules/@dojo/loader/loader.js', baseUrl + '/node_modules/@dojo/shim/util/amd.js');
+	importScripts(baseUrl + '/node_modules/@dojo/loader/loader.js', baseUrl + '/dist/dev/src/shim/util/amd.js');
 
 	require.config(shimAmdDependencies({
 		baseUrl: baseUrl
 	}));
 
-	require(['@dojo/shim/main', '_build/src/request/providers/xhr'], function (_, xhr) {
+	require(['dist/dev/src/shim/main', 'dist/dev/src/core/request/providers/xhr'], function (_, xhr) {
 		xhr.default(testUrl).then(function (response) {
 			return response.json();
 		}).then(function (json) {

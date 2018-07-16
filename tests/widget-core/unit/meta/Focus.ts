@@ -1,23 +1,29 @@
 const { assert } = intern.getPlugin('chai');
-const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
-import global from '@dojo/shim/global';
+const { afterEach, before, beforeEach, describe, it } = intern.getInterface('bdd');
+const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
+import global from '../../../../src/shim/global';
 import * as sinon from 'sinon';
-import Focus from '../../../src/meta/Focus';
-import NodeHandler from '../../../src/NodeHandler';
-import WidgetBase from '../../../src/WidgetBase';
+import Focus from '../../../../src/widget-core/meta/Focus';
+import NodeHandler from '../../../../src/widget-core/NodeHandler';
+import WidgetBase from '../../../../src/widget-core/WidgetBase';
 
-describe('meta - Focus', () => {
-	const bindInstance = new WidgetBase();
+jsdomDescribe('meta - Focus', () => {
 	const defaultFocus = {
 		active: false,
 		containsFocus: false
 	};
+	let bindInstance: WidgetBase;
 	let element: HTMLElement;
 	let activeGetter: any;
 	let focus: any;
 	let nodeHandler: any;
 	let invalidateStub: any;
-	const isNode = typeof global.fakeActiveElement === 'function';
+	let isNode: boolean;
+
+	before(() => {
+		isNode = typeof global.fakeActiveElement === 'function';
+		bindInstance = new WidgetBase();
+	});
 
 	beforeEach((test) => {
 		invalidateStub = sinon.stub();

@@ -1,14 +1,14 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import i18n, { invalidate, switchLocale, systemLocale } from '@dojo/i18n/i18n';
-import Map from '@dojo/shim/Map';
-import { INJECTOR_KEY, I18nMixin, I18nProperties, registerI18nInjector } from '../../../src/mixins/I18n';
-import { Registry } from '../../../src/Registry';
-import { WidgetBase } from '../../../src/WidgetBase';
+import i18n, { invalidate, switchLocale, systemLocale } from '../../../../src/i18n/i18n';
+import Map from '../../../../src/shim/Map';
+import { INJECTOR_KEY, I18nMixin, I18nProperties, registerI18nInjector } from '../../../../src/widget-core/mixins/I18n';
+import { Registry } from '../../../../src/widget-core/Registry';
+import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 import bundle from '../../support/nls/greetings';
 import { fetchCldrData } from '../../support/util';
-import { v, w } from './../../../src/d';
-import { ThemedMixin } from './../../../src/mixins/Themed';
+import { v, w } from './../../../../src/widget-core/d';
+import { ThemedMixin } from './../../../../src/widget-core/mixins/Themed';
 
 class Localized extends I18nMixin(ThemedMixin(WidgetBase))<I18nProperties> {}
 

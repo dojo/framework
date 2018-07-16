@@ -1,13 +1,13 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import * as text from '../../src/text';
+import * as text from '../../../src/core/text';
 import { spy, SinonSpy } from 'sinon';
 import * as fs from 'fs';
-import { AmdRootRequire } from '../../src/interfaces';
+import { AmdRootRequire } from '../../../src/core/interfaces';
 
 declare const require: AmdRootRequire;
 
-const basePath = '_build/tests/support/data/';
+const basePath = 'dist/dev/tests/core/support/data/';
 let fsSpy: SinonSpy;
 
 registerSuite('text - node', {

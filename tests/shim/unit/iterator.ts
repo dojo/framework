@@ -1,5 +1,5 @@
-import { forOf, get, ShimIterator } from '../../src/iterator';
-import '../../src/Symbol';
+import { forOf, get, ShimIterator } from '../../../src/shim/iterator';
+import '../../../src/shim/Symbol';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

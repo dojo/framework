@@ -1,4 +1,4 @@
-import Promise from '@dojo/shim/Promise';
+import Promise from '../shim/Promise';
 import { AmdRequire, AmdDefine, NodeRequire } from './interfaces';
 import { isPlugin, useDefault } from './load/util';
 

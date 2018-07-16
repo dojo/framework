@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import has from '../../src/has';
-import * as text from '../../src/text';
+import has from '../../../src/core/has';
+import * as text from '../../../src/core/text';
 import { stub } from 'sinon';
-import { AmdRootRequire } from '../../src/interfaces';
+import { AmdRootRequire } from '../../../src/core/interfaces';
 
 declare const require: AmdRootRequire;
 
@@ -15,9 +15,9 @@ declare const require: AmdRootRequire;
 // for get tests.
 const basePath = (function() {
 	if (has('host-browser')) {
-		return '../../_build/tests/support/data/';
+		return '../../dist/dev/tests/core/support/data/';
 	} else if (has('host-node')) {
-		return './_build/tests/support/data/';
+		return './dist/dev/tests/core/support/data/';
 	}
 })();
 const absPathMock = (val: string) => val;

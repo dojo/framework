@@ -1,15 +1,16 @@
 const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
+const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 import { match, spy, stub, SinonStub, SinonSpy } from 'sinon';
 import { createResolvers } from './../support/util';
 import sendEvent from './../support/sendEvent';
 
-import { dom, InternalVNode, InternalWNode, widgetInstanceMap, RenderResult } from '../../src/vdom';
-import { dom as d, v, w, VNODE } from '../../src/d';
-import { VNode, DNode } from '../../src/interfaces';
-import { WidgetBase } from '../../src/WidgetBase';
-import { I18nMixin } from '../../src/mixins/I18n';
-import { Registry } from '../../src/Registry';
+import { dom, InternalVNode, InternalWNode, widgetInstanceMap, RenderResult } from '../../../src/widget-core/vdom';
+import { dom as d, v, w, VNODE } from '../../../src/widget-core/d';
+import { VNode, DNode } from '../../../src/widget-core/interfaces';
+import { WidgetBase } from '../../../src/widget-core/WidgetBase';
+import { I18nMixin } from '../../../src/widget-core/mixins/I18n';
+import { Registry } from '../../../src/widget-core/Registry';
 
 let consoleStub: SinonStub;
 
@@ -92,7 +93,7 @@ class TestWidget extends WidgetBase<any> {
 	}
 }
 
-describe('vdom', () => {
+jsdomDescribe('vdom', () => {
 	const spys: SinonSpy[] = [];
 
 	beforeEach(() => {
@@ -1705,11 +1706,11 @@ describe('vdom', () => {
 			it('Supports merging DNodes onto existing HTML', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
-				iframe.contentDocument.write(
+				iframe.contentDocument!.write(
 					`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button></div>`
 				);
-				iframe.contentDocument.close();
-				const root = iframe.contentDocument.body.firstChild as HTMLElement;
+				iframe.contentDocument!.close();
+				const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 				const childElementCount = root.childElementCount;
 				const select = root.childNodes[1] as HTMLSelectElement;
 				const button = root.childNodes[2] as HTMLButtonElement;
@@ -1792,11 +1793,11 @@ describe('vdom', () => {
 			it('Supports merging DNodes with widgets onto existing HTML', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
-				iframe.contentDocument.write(
+				iframe.contentDocument!.write(
 					`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button><span>label</span><div>last node</div></div>`
 				);
-				iframe.contentDocument.close();
-				const root = iframe.contentDocument.body.firstChild as HTMLElement;
+				iframe.contentDocument!.close();
+				const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 				const childElementCount = root.childElementCount;
 				const label = root.childNodes[0] as HTMLLabelElement;
 				const select = root.childNodes[1] as HTMLSelectElement;
@@ -1886,7 +1887,7 @@ describe('vdom', () => {
 			it('Skips unknown nodes when merging', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
-				iframe.contentDocument.write(`
+				iframe.contentDocument!.write(`
 					<div class="foo">
 						<label for="baz">Select Me:</label>
 						<select type="text" name="baz" id="baz" disabled="disabled">
@@ -1898,8 +1899,8 @@ describe('vdom', () => {
 						<span>label</span>
 						<div>last node</div>
 					</div>`);
-				iframe.contentDocument.close();
-				const root = iframe.contentDocument.body.firstChild as HTMLElement;
+				iframe.contentDocument!.close();
+				const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 				const childElementCount = root.childElementCount;
 				const label = root.childNodes[1] as HTMLLabelElement;
 				const select = root.childNodes[3] as HTMLSelectElement;
@@ -1989,9 +1990,9 @@ describe('vdom', () => {
 			it('Should only merge on the first render', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
-				iframe.contentDocument.write(`<div>Loading</div>`);
-				iframe.contentDocument.close();
-				const root = iframe.contentDocument.body.firstChild as HTMLElement;
+				iframe.contentDocument!.write(`<div>Loading</div>`);
+				iframe.contentDocument!.close();
+				const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 
 				class Bar extends WidgetBase<any> {
 					render() {
@@ -3673,7 +3674,7 @@ describe('vdom', () => {
 				const circle = svg.childNodes[0];
 				assert.strictEqual(circle.namespaceURI, 'http://www.w3.org/2000/svg');
 				const image = svg.childNodes[1];
-				assert.strictEqual(image.attributes[0].namespaceURI, 'http://www.w3.org/1999/xlink');
+				assert.strictEqual((image as any).attributes[0].namespaceURI, 'http://www.w3.org/1999/xlink');
 				const span = (projection.domNode.childNodes[0] as Element).childNodes[1];
 				assert.strictEqual(span.namespaceURI, 'http://www.w3.org/1999/xhtml');
 
@@ -3695,11 +3696,11 @@ describe('vdom', () => {
 		it('Supports merging DNodes onto existing HTML', () => {
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);
-			iframe.contentDocument.write(
+			iframe.contentDocument!.write(
 				`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button></div>`
 			);
-			iframe.contentDocument.close();
-			const root = iframe.contentDocument.body.firstChild as HTMLElement;
+			iframe.contentDocument!.close();
+			const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 			const childElementCount = root.childElementCount;
 			const select = root.childNodes[1] as HTMLSelectElement;
 			const button = root.childNodes[2] as HTMLButtonElement;
@@ -3772,11 +3773,11 @@ describe('vdom', () => {
 		it('Supports merging DNodes with widgets onto existing HTML', () => {
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);
-			iframe.contentDocument.write(
+			iframe.contentDocument!.write(
 				`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button><span>label</span><div>last node</div></div>`
 			);
-			iframe.contentDocument.close();
-			const root = iframe.contentDocument.body.firstChild as HTMLElement;
+			iframe.contentDocument!.close();
+			const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 			const childElementCount = root.childElementCount;
 			const label = root.childNodes[0] as HTMLLabelElement;
 			const select = root.childNodes[1] as HTMLSelectElement;
@@ -3857,7 +3858,7 @@ describe('vdom', () => {
 		it('Skips unknown nodes when merging', () => {
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);
-			iframe.contentDocument.write(`
+			iframe.contentDocument!.write(`
 				<div class="foo">
 					<label for="baz">Select Me:</label>
 					<select type="text" name="baz" id="baz" disabled="disabled">
@@ -3869,8 +3870,8 @@ describe('vdom', () => {
 					<span>label</span>
 					<div>last node</div>
 				</div>`);
-			iframe.contentDocument.close();
-			const root = iframe.contentDocument.body.firstChild as HTMLElement;
+			iframe.contentDocument!.close();
+			const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 			const childElementCount = root.childElementCount;
 			const label = root.childNodes[1] as HTMLLabelElement;
 			const select = root.childNodes[3] as HTMLSelectElement;
@@ -3952,9 +3953,9 @@ describe('vdom', () => {
 			let firstRender = true;
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);
-			iframe.contentDocument.write('<div><div>foo</div></div>');
-			iframe.contentDocument.close();
-			const root = iframe.contentDocument.body.firstChild as HTMLElement;
+			iframe.contentDocument!.write('<div><div>foo</div></div>');
+			iframe.contentDocument!.close();
+			const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 
 			class Bar extends WidgetBase<any> {
 				render() {

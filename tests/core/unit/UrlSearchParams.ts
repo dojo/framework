@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import UrlSearchParams from '../../src/UrlSearchParams';
+import UrlSearchParams from '../../../src/core/UrlSearchParams';
 
 registerSuite('UrlSearchParams', {
 	construct: (function() {

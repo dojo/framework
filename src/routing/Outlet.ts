@@ -1,8 +1,8 @@
-import { DNode, WidgetBaseInterface } from '@dojo/widget-core/interfaces';
-import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { w } from '@dojo/widget-core/d';
-import { inject } from '@dojo/widget-core/decorators/inject';
-import { alwaysRender } from '@dojo/widget-core/decorators/alwaysRender';
+import { DNode, WidgetBaseInterface } from '../widget-core/interfaces';
+import { WidgetBase } from '../widget-core/WidgetBase';
+import { w } from '../widget-core/d';
+import { inject } from '../widget-core/decorators/inject';
+import { alwaysRender } from '../widget-core/decorators/alwaysRender';
 import { OnEnter, Component, OutletOptions, OutletComponents, Outlet, Params, OutletContext } from './interfaces';
 import { Router } from './Router';
 

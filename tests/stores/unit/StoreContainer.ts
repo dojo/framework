@@ -1,11 +1,11 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { v, WNODE } from '@dojo/widget-core/d';
-import { Registry } from '@dojo/widget-core/Registry';
+import { WidgetBase } from '../../../src/widget-core/WidgetBase';
+import { v, WNODE } from '../../../src/widget-core/d';
+import { Registry } from '../../../src/widget-core/Registry';
 
-import DefaultStoreContainer, { createStoreContainer, StoreContainer } from './../../src/StoreContainer';
-import { Store } from './../../src/Store';
+import DefaultStoreContainer, { createStoreContainer, StoreContainer } from '../../../src/stores/StoreContainer';
+import { Store } from '../../../src/stores/Store';
 
 interface State {
 	foo: string;

@@ -1,5 +1,5 @@
-import { hasClass } from '../../../src/support/decorators';
-import { add } from '../../../src/support/has';
+import { hasClass } from '../../../../src/shim/support/decorators';
+import { add } from '../../../../src/shim/support/has';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
@@ -58,6 +58,7 @@ registerSuite('decorators', {
 					class Target {
 						type = 'target';
 					}
+					Target;
 					/* tslint:enable */
 				},
 				TypeError,

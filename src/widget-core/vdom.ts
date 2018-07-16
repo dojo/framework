@@ -1,4 +1,4 @@
-import global from '@dojo/shim/global';
+import global from '../shim/global';
 import {
 	CoreProperties,
 	DefaultWidgetBaseInterface,
@@ -11,10 +11,10 @@ import {
 	TransitionStrategy,
 	VNodeProperties
 } from './interfaces';
-import { from as arrayFrom } from '@dojo/shim/array';
+import { from as arrayFrom } from '../shim/array';
 import { isWNode, isVNode, isDomVNode, VNODE, WNODE } from './d';
 import { isWidgetBaseConstructor } from './Registry';
-import WeakMap from '@dojo/shim/WeakMap';
+import WeakMap from '../shim/WeakMap';
 import NodeHandler from './NodeHandler';
 import RegistryHandler from './RegistryHandler';
 

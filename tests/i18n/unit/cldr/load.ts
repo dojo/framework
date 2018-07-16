@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import baseLoad, { isLoaded, mainPackages, reset, supplementalPackages } from '../../../src/cldr/load';
+import baseLoad, { isLoaded, mainPackages, reset, supplementalPackages } from '../../../../src/i18n/cldr/load';
 
 registerSuite('cldr/load', {
 	afterEach() {

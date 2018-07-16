@@ -1,5 +1,5 @@
 import { Base } from './Base';
-import Map from '@dojo/shim/Map';
+import Map from '../../shim/Map';
 
 interface Observer {
 	observe(node: HTMLElement): void;

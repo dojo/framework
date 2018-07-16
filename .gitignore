@@ -1,0 +1,15 @@
+*.js
+*.js.map
+!/*.js
+!/tasks/*.js
+/_apidoc
+/_build*
+/dist*
+deploy_key
+/html-report
+/node_modules
+.baseDir.ts
+.tscache
+.tsconfig*.json
+/coverage
+npm-debug.log

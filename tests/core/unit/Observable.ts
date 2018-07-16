@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import Observable from '../../src/Observable';
+import Observable from '../../../src/core/Observable';
 
 function asyncRange(start: number, end: number) {
 	return new Observable((observer) => {
@@ -19,7 +19,7 @@ function asyncRange(start: number, end: number) {
 	});
 }
 
-registerSuite('Observable', {
+registerSuite('core/Observable', {
 	toPromise: {
 		'resolution with single'() {
 			return Observable.of(42)

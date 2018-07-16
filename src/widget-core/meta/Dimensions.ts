@@ -1,5 +1,5 @@
 import { Base } from './Base';
-import { deepAssign } from '@dojo/core/lang';
+import { deepAssign } from '../../core/lang';
 
 export interface TopLeft {
 	left: number;

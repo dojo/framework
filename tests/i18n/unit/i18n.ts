@@ -1,11 +1,11 @@
-import has from '@dojo/core/has';
-import global from '@dojo/shim/global';
+import has from '../../../src/core/has';
+import global from '../../../src/shim/global';
 import * as Globalize from 'globalize';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import * as sinon from 'sinon';
 import { fetchCldrData } from '../support/util';
-import * as cldrLoad from '../../src/cldr/load';
+import * as cldrLoad from '../../../src/i18n/cldr/load';
 import i18n, {
 	formatMessage,
 	getCachedMessages,
@@ -16,7 +16,7 @@ import i18n, {
 	setLocaleMessages,
 	switchLocale,
 	systemLocale
-} from '../../src/i18n';
+} from '../../../src/i18n/i18n';
 import bundle from '../support/mocks/common/main';
 import partyBundle from '../support/mocks/common/party';
 

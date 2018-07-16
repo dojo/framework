@@ -1,0 +1,98 @@
+{
+  "name": "@dojo/framework",
+  "version": "3.0.0-pre",
+  "description": "The Dojo Framework",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:static:dev": "cpx '{src,tests}/**/*.{html,png,jpg,gif,json,xml,css,txt,d.ts}' dist/dev",
+    "build:static:release": "cpx 'src/**/*.d.ts' dist/release",
+    "build:umd": "tsc",
+    "build": "concurrently \"npm:build:*\" && dojo-package",
+    "clean": "rimraf dist coverage",
+    "examples:routing:tsc": "tsc -p examples/routing/tsconfig.json",
+    "examples:static": "cpx 'examples/**/*.html' dist-examples",
+    "examples": "npm run build && concurrently \"npm:examples:*\"",
+    "lint": "tslint -p .",
+    "precommit": "lint-staged",
+    "prettier": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
+    "test": "npm run build && intern",
+    "test:local": "npm run build && intern config=@local",
+    "test:browserstack": "npm run build && intern config=@browserstack",
+    "uploadCoverage": "codecov --file=coverage/coverage.json",
+    "watch:ts": "dojo-tsc-watcher -p tsconfig.json -p tsconfig.esm.json -- dojo-package",
+    "watch:static:dev": "npm run build:static:dev -- --watch --verbose",
+    "watch:static:release": "npm run build:static:release -- --watch --verbose",
+    "watch": "concurrently \"npm:watch:*\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dojo/framework.git"
+  },
+  "author": "",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/dojo/framework/issues"
+  },
+  "homepage": "https://github.com/dojo/framework#readme",
+  "dependencies": {
+    "globalize": "1.3.0",
+    "intersection-observer": "0.4.2",
+    "pepjs": "0.4.2",
+    "tslib": "~1.8.0",
+    "web-animations-js": "2.3.1"
+  },
+  "devDependencies": {
+    "@dojo/loader": "^2.0.0",
+    "@dojo/scripts": "~0.2.0",
+    "@types/benchmark": "~1.0.0",
+    "@types/cldrjs": "~0.4.20",
+    "@types/globalize": "0.0.33",
+    "@types/jsdom": "2.0.*",
+    "@types/multer": "~1.3.3",
+    "@types/node": "~9.6.5",
+    "@types/ramda": "0.25.5",
+    "@types/selenium-webdriver": "^3.0.8",
+    "@types/sinon": "~4.1.2",
+    "@types/web-animations-js": "2.2.5",
+    "@webcomponents/webcomponentsjs": "1.1.0",
+    "benchmark": "^1.0.0",
+    "bootstrap": "^3.3.7",
+    "cldr-data": "~32.0.0",
+    "codecov": "~3.0.4",
+    "concurrently": "~3.6.0",
+    "cpx": "~1.5.0",
+    "css-select-umd": "1.3.0-rc0",
+    "diff": "3.4.0",
+    "husky": "~0.14.3",
+    "intern": "~4.2.0",
+    "jsdom": "^9.5.0",
+    "lint-staged": "6.0.0",
+    "multer": "~1.3.0",
+    "prettier": "1.9.2",
+    "ramda": "0.25.0",
+    "rimraf": "~2.6.2",
+    "selenium-webdriver": "3.6.0",
+    "sinon": "~4.1.3",
+    "tslint": "5.8.0",
+    "typescript": "~2.6.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "tabWidth": 4,
+    "useTabs": true,
+    "parser": "typescript",
+    "printWidth": 120,
+    "arrowParens": "always"
+  }
+}

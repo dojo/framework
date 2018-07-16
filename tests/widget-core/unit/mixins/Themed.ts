@@ -6,10 +6,10 @@ import {
 	ThemedProperties,
 	INJECTED_THEME_KEY,
 	registerThemeInjector
-} from '../../../src/mixins/Themed';
-import { WidgetBase } from '../../../src/WidgetBase';
-import { Registry } from '../../../src/Registry';
-import { v } from '../../../src/d';
+} from '../../../../src/widget-core/mixins/Themed';
+import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
+import { Registry } from '../../../../src/widget-core/Registry';
+import { v } from '../../../../src/widget-core/d';
 import { stub, SinonStub } from 'sinon';
 
 import * as baseThemeClasses1 from './../../support/styles/testWidget1.css';

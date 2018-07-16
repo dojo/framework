@@ -1,4 +1,4 @@
-import Benchmark = require('benchmark');
+import * as Benchmark from 'benchmark';
 
 let benchmarks: any[] = [];
 

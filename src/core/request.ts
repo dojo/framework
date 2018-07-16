@@ -1,4 +1,4 @@
-import has from '@dojo/has/has';
+import has from '../has/has';
 import Task from './async/Task';
 import { RequestOptions, Response, Provider, UploadObservableTask } from './request/interfaces';
 import ProviderRegistry from './request/ProviderRegistry';

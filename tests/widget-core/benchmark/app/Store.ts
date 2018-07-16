@@ -1,4 +1,4 @@
-import { findIndex } from '@dojo/shim/array';
+import { findIndex } from '../../../../src/shim/array';
 
 function random(max: number) {
 	return Math.round(Math.random() * 1000) % max;

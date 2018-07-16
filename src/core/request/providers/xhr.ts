@@ -1,6 +1,6 @@
 import { Handle } from '../../interfaces';
-import global from '@dojo/shim/global';
-import WeakMap from '@dojo/shim/WeakMap';
+import global from '../../../shim/global';
+import WeakMap from '../../../shim/WeakMap';
 import Task, { State } from '../../async/Task';
 import has from '../../has';
 import Observable from '../../Observable';
@@ -132,7 +132,8 @@ export class XhrResponse extends Response {
 	xml(): Task<Document> {
 		return <any>this.text().then((text: string) => {
 			const parser = new DOMParser();
-			return parser.parseFromString(text, this.headers.get('content-type') || 'text/html');
+			const contentType = this.headers.get('content-type');
+			return parser.parseFromString(text, contentType ? contentType.split(';')[0] : 'text/html');
 		});
 	}
 }

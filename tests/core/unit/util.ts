@@ -20,8 +20,8 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import * as sinon from 'sinon';
-import { Handle } from '../../src/interfaces';
-import * as util from '../../src/util';
+import { Handle } from '../../../src/core/interfaces';
+import * as util from '../../../src/core/util';
 
 const TIMEOUT = 3000;
 let timerHandle: Handle | null;

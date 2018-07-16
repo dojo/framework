@@ -1,10 +1,10 @@
-import { DNode, WNode, VNode, DefaultWidgetBaseInterface, Constructor } from '@dojo/widget-core/interfaces';
-import { isWNode } from '@dojo/widget-core/d';
+import { DNode, WNode, VNode, DefaultWidgetBaseInterface, Constructor } from '../../widget-core/interfaces';
+import { isWNode } from '../../widget-core/d';
 import * as diff from 'diff';
-import WeakMap from '@dojo/shim/WeakMap';
-import Set from '@dojo/shim/Set';
-import Map from '@dojo/shim/Map';
-import { from as arrayFrom } from '@dojo/shim/array';
+import WeakMap from '../../shim/WeakMap';
+import Set from '../../shim/Set';
+import Map from '../../shim/Map';
+import { from as arrayFrom } from '../../shim/array';
 
 let widgetClassCounter = 0;
 const widgetMap = new WeakMap<Constructor<DefaultWidgetBaseInterface>, number>();

@@ -1,4 +1,4 @@
-import DPromise from '../../src/Promise';
+import DPromise from '../../../src/shim/Promise';
 
 export default async function main(callback: (n: number) => void) {
 	function reallyGetNumber() {

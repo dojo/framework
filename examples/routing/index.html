@@ -6,19 +6,20 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-	<script src="../../node_modules/@dojo/loader/loader.min.js"></script>
+	<script src="../../../node_modules/@dojo/loader/loader.js"></script>
 	<script>
 		require.config({
-			baseUrl: '.',
+			baseUrl: '../../../',
 			packages: [
-				{ name: 'src', location: '../_build' },
-				{ name: '@dojo', location: '../../node_modules/@dojo' },
-				{ name: 'pepjs', location: '../../node_modules/pepjs/dist', main: 'pep' },
-				{ name: 'tslib', location: '../../node_modules/tslib', main: 'tslib' }
+				{ name: '@dojo/framework', location: 'dist/release' },
+				{ name: 'tslib', location: 'node_modules/tslib', main: 'tslib' },
+				{ name: 'pepjs', location: 'node_modules/pepjs/dist', main: 'pep' },
+				{ name: 'intersection-observer', location: 'node_modules/intersection-observer', main: 'intersection-observer' },
+				{ name: 'tslib', location: 'node_modules/tslib', main: 'tslib' }
 			]
 		});
 
-		require([ './main' ], function () {});
+		require([ 'dist-examples/routing/main' ]);
 	</script>
 </body>
 </html>

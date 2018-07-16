@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import SubscriptionPool from '../../../src/request/SubscriptionPool';
-import Observable from '../../../src/Observable';
+import SubscriptionPool from '../../../../src/core/request/SubscriptionPool';
+import Observable from '../../../../src/core/Observable';
 
 registerSuite('SubscriptionPool', {
 	'registers observers'(this: any) {

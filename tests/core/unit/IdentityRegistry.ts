@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import Symbol from '@dojo/shim/Symbol';
-import { from as arrayFrom } from '@dojo/shim/array';
+import Symbol from '../../../src/shim/Symbol';
+import { from as arrayFrom } from '../../../src/shim/array';
 
-import IdentityRegistry from '../../src/IdentityRegistry';
+import IdentityRegistry from '../../../src/core/IdentityRegistry';
 
 class Value {}
 

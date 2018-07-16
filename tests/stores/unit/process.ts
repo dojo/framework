@@ -1,8 +1,8 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { Pointer } from './../../src/state/Pointer';
-import { OperationType, PatchOperation } from './../../src/state/Patch';
+import { Pointer } from './../../../src/stores/state/Pointer';
+import { OperationType, PatchOperation } from './../../../src/stores/state/Patch';
 import {
 	CommandRequest,
 	createCallbackDecorator,
@@ -12,9 +12,9 @@ import {
 	ProcessCallback,
 	ProcessError,
 	ProcessResult
-} from './../../src/process';
-import { Store } from './../../src/Store';
-import { replace } from '../../src/state/operations';
+} from '../../../src/stores/process';
+import { Store } from '../../../src/stores/Store';
+import { replace } from '../../../src/stores/state/operations';
 
 let store: Store;
 let promises: Promise<any>[] = [];

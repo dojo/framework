@@ -1,8 +1,8 @@
-import has, { add } from '@dojo/has/has';
+import has, { add } from '../../has/has';
 import global from '../global';
 
 export default has;
-export * from '@dojo/has/has';
+export * from '../../has/has';
 
 /* ECMAScript 6 and 7 Features */
 

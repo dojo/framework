@@ -2,15 +2,15 @@ const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 
-import { StateHistory } from '../../../src/history/StateHistory';
+import { StateHistory } from '../../../../src/routing/history/StateHistory';
 
 const onChange = stub();
 
 describe('StateHistory', () => {
 	let sandbox: HTMLIFrameElement;
-	beforeEach(async () => {
+	beforeEach(() => {
 		sandbox = document.createElement('iframe');
-		sandbox.src = '../../tests/support/sandbox.html';
+		sandbox.src = '../../tests/routing/support/sandbox.html';
 		document.body.appendChild(sandbox);
 		return new Promise((resolve) => {
 			sandbox.addEventListener('load', function() {

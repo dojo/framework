@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import Map from '@dojo/shim/Map';
+import Map from '../../../../../src/shim/Map';
 import { frameworks, FrameworkData } from './common';
 import { benchmarks, fileName } from './benchmarks';
 

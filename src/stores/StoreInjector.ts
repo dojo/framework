@@ -1,12 +1,12 @@
-import WeakMap from '@dojo/shim/WeakMap';
-import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { w } from '@dojo/widget-core/d';
-import { handleDecorator } from '@dojo/widget-core/decorators/handleDecorator';
-import { beforeProperties } from '@dojo/widget-core/decorators/beforeProperties';
-import { alwaysRender } from '@dojo/widget-core/decorators/alwaysRender';
-import { InjectorItem, RegistryLabel, Constructor, DNode } from '@dojo/widget-core/interfaces';
+import WeakMap from '../shim/WeakMap';
+import { WidgetBase } from '../widget-core/WidgetBase';
+import { w } from '../widget-core/d';
+import { handleDecorator } from '../widget-core/decorators/handleDecorator';
+import { beforeProperties } from '../widget-core/decorators/beforeProperties';
+import { alwaysRender } from '../widget-core/decorators/alwaysRender';
+import { InjectorItem, RegistryLabel, Constructor, DNode } from '../widget-core/interfaces';
 import { Store } from './Store';
-import { Registry } from '@dojo/widget-core/Registry';
+import { Registry } from '../../src/widget-core/Registry';
 
 const registeredInjectorsMap: WeakMap<WidgetBase, InjectorItem<Store>[]> = new WeakMap();
 

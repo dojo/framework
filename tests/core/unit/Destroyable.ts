@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { Destroyable } from '../../src/Destroyable';
+import { Destroyable } from '../../../src/core/Destroyable';
 import * as sinon from 'sinon';
 
 registerSuite('Destroyable', {

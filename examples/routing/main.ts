@@ -1,11 +1,11 @@
-import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { v, w } from '@dojo/widget-core/d';
-import { ProjectorMixin } from '@dojo/widget-core/mixins/Projector';
-import { Registry } from '@dojo/widget-core/Registry';
+import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import { v, w } from '@dojo/framework/widget-core/d';
+import { ProjectorMixin } from '@dojo/framework/widget-core/mixins/Projector';
+import { Registry } from '@dojo/framework/widget-core/Registry';
 
-import { RouteConfig } from './../src/interfaces';
-import { registerRouterInjector } from './../src/RouterInjector';
-import { Link } from './../src/Link';
+import { RouteConfig } from '@dojo/framework/routing/interfaces';
+import { registerRouterInjector } from '@dojo/framework/routing/RouterInjector';
+import { Link } from '@dojo/framework/routing/Link';
 import { BasicAppOutlet, BasicAppRouteConfig } from './basic';
 import { UrlParametersAppOutlet, UrlParametersRouteConfig } from './url-parameters';
 import { AmbiguousMatchesOutlet, AmbiguousMatchesRouteConfig } from './ambigious-matches';

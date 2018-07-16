@@ -1,10 +1,10 @@
-const { registerSuite } = intern.getInterface('object');
+const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import { v, w } from '../../src/d';
-import { WidgetBase } from '../../src/WidgetBase';
-import { Container } from './../../src/Container';
-import { Registry } from './../../src/Registry';
-import { ProjectorMixin } from './../../src/mixins/Projector';
+import { v, w } from '../../../src/widget-core/d';
+import { WidgetBase } from '../../../src/widget-core/WidgetBase';
+import { Container } from '../../../src/widget-core/Container';
+import { Registry } from '../../../src/widget-core/Registry';
+import { ProjectorMixin } from '../../../src/widget-core/mixins/Projector';
 
 interface TestWidgetProperties {
 	foo: string;

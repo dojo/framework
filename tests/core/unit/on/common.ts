@@ -1,7 +1,7 @@
 const { assert } = intern.getPlugin('chai');
 import { ObjectSuiteDescriptor } from 'intern/lib/interfaces/object';
-import on, { emit, once, pausable } from '../../../src/on';
-import { Handle } from '../../../src/interfaces';
+import on, { emit, once, pausable } from '../../../../src/core/on';
+import { Handle } from '../../../../src/core/interfaces';
 
 let handles: Handle[] = [];
 function testOn(...args: any[]) {

@@ -1,8 +1,8 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import Registry, { ESMDefaultWidgetBase } from './../../src/Registry';
-import { WidgetBase } from './../../src/WidgetBase';
-import Promise from '@dojo/shim/Promise';
+import Registry, { ESMDefaultWidgetBase } from '../../../src/widget-core/Registry';
+import { WidgetBase } from '../../../src/widget-core/WidgetBase';
+import Promise from '../../../src/shim/Promise';
 
 const testPayload = () => ({});
 const testInjector = () => testPayload;

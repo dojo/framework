@@ -1,4 +1,4 @@
-import { isArrayLike, isIterable } from '@dojo/shim/iterator';
+import { isArrayLike, isIterable } from '../../shim/iterator';
 import { Load } from '../load';
 
 export interface LoadPlugin<T> {

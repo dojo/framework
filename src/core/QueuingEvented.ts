@@ -1,5 +1,5 @@
 import { Handle, EventObject, EventType } from './interfaces';
-import Map from '@dojo/shim/Map';
+import Map from '../shim/Map';
 import Evented, { CustomEventTypes, isGlobMatch, EventedCallbackOrArray } from './Evented';
 
 /**

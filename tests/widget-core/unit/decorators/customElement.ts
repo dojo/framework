@@ -1,11 +1,11 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { customElement } from '../../../src/decorators/customElement';
-import { WidgetBase } from '../../../src/WidgetBase';
-import { CustomElementChildType } from '../../../src/registerCustomElement';
+import { customElement } from '../../../../src/widget-core/decorators/customElement';
+import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
+import { CustomElementChildType } from '../../../../src/widget-core/registerCustomElement';
 
-interface CustomElementWidgetProperties {
+export interface CustomElementWidgetProperties {
 	label: string;
 	labelSuffix: string;
 	onClick: () => void;

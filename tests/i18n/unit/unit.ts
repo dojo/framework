@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { fetchCldrData } from '../support/util';
-import { getNumberFormatter } from '../../src/number';
-import { getUnitFormatter, formatUnit } from '../../src/unit';
-import { switchLocale, systemLocale } from '../../src/i18n';
+import { getNumberFormatter } from '../../../src/i18n/number';
+import { getUnitFormatter, formatUnit } from '../../../src/i18n/unit';
+import { switchLocale, systemLocale } from '../../../src/i18n/i18n';
 
 registerSuite('number units', {
 	before() {

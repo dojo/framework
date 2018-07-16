@@ -1,7 +1,7 @@
-import { Evented } from '@dojo/core/Evented';
+import { Evented } from '../core/Evented';
 import { Patch, PatchOperation } from './state/Patch';
 import { Pointer } from './state/Pointer';
-import Map from '@dojo/shim/Map';
+import Map from '../shim/Map';
 
 /**
  * The "path" to a value of type T on and object of type M. The path string is a JSON Pointer to the location of

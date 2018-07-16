@@ -1,0 +1,14 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"declaration": false,
+		"outDir": "../../dist-examples/routing",
+		"paths": {
+			"@dojo/framework/*": ["../../dist/release/*"]
+		}
+	},
+	"include": [
+		"./**/*.ts"
+	]
+}

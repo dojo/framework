@@ -5,9 +5,9 @@ import 'globalize/dist/globalize/relative-time';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { fetchCldrData } from '../../support/util';
-import { DateFormatter, DateFormatterOptions, RelativeTimeFormatterOptions } from '../../../src/date';
-import { switchLocale, systemLocale } from '../../../src/i18n';
-import getGlobalize, { globalizeDelegator } from '../../../src/util/globalize';
+import { DateFormatter, DateFormatterOptions, RelativeTimeFormatterOptions } from '../../../../src/i18n/date';
+import { switchLocale, systemLocale } from '../../../../src/i18n/i18n';
+import getGlobalize, { globalizeDelegator } from '../../../../src/i18n/util/globalize';
 
 registerSuite('util/globalize', {
 	before() {

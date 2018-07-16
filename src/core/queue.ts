@@ -1,1 +1,1 @@
-export * from '@dojo/shim/support/queue';
+export * from '../shim/support/queue';

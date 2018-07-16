@@ -1,4 +1,4 @@
-import global from '@dojo/shim/global';
+import global from '../../shim/global';
 import { History as HistoryInterface, HistoryOptions, OnChangeFunction } from './../interfaces';
 
 export class StateHistory implements HistoryInterface {

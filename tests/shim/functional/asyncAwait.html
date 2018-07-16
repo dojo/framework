@@ -6,15 +6,15 @@
 </head>
 
 <body>
-<script src="../../src/util/amd.js"></script>
-<script src="../../../node_modules/@dojo/loader/loader.js"></script>
+<script src="../../../src/shim/util/amd.js"></script>
+<script src="../../../../../node_modules/@dojo/loader/loader.js"></script>
 <script>
 	require.config(shimAmdDependencies({
-		baseUrl: '../../../'
+		baseUrl: '../../../../../'
 	}));
 	require([
-		'_build/src/main',
-		'_build/tests/functional/dojoPromise'
+		'dist/dev/src/shim/main',
+		'dist/dev/tests/shim/functional/dojoPromise'
 	], function(unused, main) {
 		main.default(function(value) {
 			window.callbackValue = value;

@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import MultiMap from '../../src/MultiMap';
-import { isIterable, IterableIterator, ShimIterator } from '@dojo/shim/iterator';
+import MultiMap from '../../../src/core/MultiMap';
+import { isIterable, IterableIterator, ShimIterator } from '../../../src/shim/iterator';
 
 let map: MultiMap<any>;
 function foo() {}
@@ -16,7 +16,7 @@ const mapArgs: any[] = [
 	[[5], undefined]
 ];
 
-registerSuite('Map', {
+registerSuite('core/MultiMap', {
 	instantiation: {
 		'null data'() {
 			assert.doesNotThrow(function() {

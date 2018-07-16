@@ -2,17 +2,17 @@ const { describe, it, beforeEach, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { spy, stub, SinonStub } from 'sinon';
 
-import { WidgetBase, noBind } from './../../src/WidgetBase';
-import { v } from './../../src/d';
-import { WIDGET_BASE_TYPE } from './../../src/Registry';
-import { VNode, WidgetMetaConstructor, WidgetMetaBase } from './../../src/interfaces';
-import { handleDecorator } from './../../src/decorators/handleDecorator';
-import { diffProperty } from './../../src/decorators/diffProperty';
-import { Registry } from './../../src/Registry';
-import { Base } from './../../src/meta/Base';
-import { NodeEventType } from './../../src/NodeHandler';
-import { widgetInstanceMap } from './../../src/vdom';
-import { afterRender } from '../../src/decorators/afterRender';
+import { WidgetBase, noBind } from '../../../src/widget-core/WidgetBase';
+import { v } from '../../../src/widget-core/d';
+import { WIDGET_BASE_TYPE } from '../../../src/widget-core/Registry';
+import { VNode, WidgetMetaConstructor, WidgetMetaBase } from '../../../src/widget-core/interfaces';
+import { handleDecorator } from '../../../src/widget-core/decorators/handleDecorator';
+import { diffProperty } from '../../../src/widget-core/decorators/diffProperty';
+import { Registry } from '../../../src/widget-core/Registry';
+import { Base } from '../../../src/widget-core/meta/Base';
+import { NodeEventType } from '../../../src/widget-core/NodeHandler';
+import { widgetInstanceMap } from '../../../src/widget-core/vdom';
+import { afterRender } from '../../../src/widget-core/decorators/afterRender';
 
 interface TestProperties {
 	foo?: string;

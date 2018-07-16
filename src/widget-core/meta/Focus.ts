@@ -1,6 +1,6 @@
 import { Base } from './Base';
-import { createHandle } from '@dojo/core/lang';
-import global from '@dojo/shim/global';
+import { createHandle } from '../../core/lang';
+import global from '../../shim/global';
 
 export interface FocusResults {
 	active: boolean;

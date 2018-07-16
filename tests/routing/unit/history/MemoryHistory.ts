@@ -2,7 +2,7 @@ const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 
-import { MemoryHistory } from '../../../src/history/MemoryHistory';
+import { MemoryHistory } from '../../../../src/routing/history/MemoryHistory';
 
 describe('MemoryHistory', () => {
 	it('Calls onChange on set', () => {

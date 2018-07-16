@@ -1,7 +1,7 @@
-import Map from '@dojo/shim/Map';
-import WeakMap from '@dojo/shim/WeakMap';
-import Symbol from '@dojo/shim/Symbol';
-import { Handle } from '@dojo/core/interfaces';
+import Map from '../shim/Map';
+import WeakMap from '../shim/WeakMap';
+import Symbol from '../shim/Symbol';
+import { Handle } from '../core/interfaces';
 import { v } from './d';
 import { auto } from './diff';
 import {

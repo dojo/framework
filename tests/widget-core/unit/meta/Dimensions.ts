@@ -1,13 +1,13 @@
-const { registerSuite } = intern.getInterface('object');
+const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import global from '@dojo/shim/global';
-import { spy, stub } from 'sinon';
-import Dimensions from '../../../src/meta/Dimensions';
-import NodeHandler from '../../../src/NodeHandler';
-import WidgetBase from '../../../src/WidgetBase';
+import global from '../../../../src/shim/global';
+import { stub, spy } from 'sinon';
+import Dimensions from '../../../../src/widget-core/meta/Dimensions';
+import NodeHandler from '../../../../src/widget-core/NodeHandler';
+import WidgetBase from '../../../../src/widget-core/WidgetBase';
 
 let rAF: any;
-const bindInstance = new WidgetBase();
+let bindInstance: WidgetBase;
 const defaultDimensions = {
 	client: {
 		height: 0,
@@ -47,6 +47,10 @@ function resolveRAF() {
 }
 
 registerSuite('meta - Dimensions', {
+	before() {
+		bindInstance = new WidgetBase();
+	},
+
 	beforeEach() {
 		rAF = stub(global, 'requestAnimationFrame');
 	},

@@ -1,14 +1,14 @@
-const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
+const { registerSuite } = intern.getPlugin('jsdom');
 
 import sendEvent from '../../support/sendEvent';
 import { createResolvers } from './../../support/util';
-import { v } from '../../../src/d';
-import { ProjectorMixin } from '../../../src/mixins/Projector';
-import { WidgetBase } from '../../../src/WidgetBase';
-import { ThemedMixin } from '../../../src/mixins/Themed';
+import { v } from '../../../../src/widget-core/d';
+import { ProjectorMixin } from '../../../../src/widget-core/mixins/Projector';
+import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
+import { ThemedMixin } from '../../../../src/widget-core/mixins/Themed';
 
-import Matches from '../../../src/meta/Matches';
+import Matches from '../../../../src/widget-core/meta/Matches';
 
 const resolvers = createResolvers();
 

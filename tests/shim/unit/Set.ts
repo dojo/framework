@@ -1,5 +1,5 @@
-import Set from '../../src/Set';
-import { ShimIterator } from '../../src/iterator';
+import Set from '../../../src/shim/Set';
+import { ShimIterator } from '../../../src/shim/iterator';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

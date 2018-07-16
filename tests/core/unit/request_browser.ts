@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import request from '../../src/request';
-import { AmdRequire } from '../../src/interfaces';
+import request from '../../../src/core/request';
+import { AmdRequire } from '../../../src/core/interfaces';
 
 declare const require: AmdRequire;
 

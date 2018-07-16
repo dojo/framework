@@ -1,10 +1,10 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { Tests } from 'intern/lib/interfaces/object';
-import Promise from '@dojo/shim/Promise';
-import { Thenable } from '@dojo/shim/interfaces';
-import { ShimIterator } from '@dojo/shim/iterator';
-import Task, { State, isTask } from '../../../src/async/Task';
+import Promise from '../../../../src/shim/Promise';
+import { Thenable } from '../../../../src/shim/interfaces';
+import { ShimIterator } from '../../../../src/shim/iterator';
+import Task, { State, isTask } from '../../../../src/core/async/Task';
 
 const suite: Tests = {
 	'isTask()'() {

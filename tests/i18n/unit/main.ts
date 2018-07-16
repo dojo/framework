@@ -26,9 +26,9 @@ import i18n, {
 	pluralize,
 	switchLocale,
 	systemLocale
-} from '../../src/main';
+} from '../../../src/i18n/main';
 
-registerSuite('main', {
+registerSuite('i18n/main', {
 	i18n() {
 		assert.isFunction(formatCurrency, 'formatCurrency is exported.');
 		assert.isFunction(formatDate, 'formatDate is exported.');

@@ -1,8 +1,8 @@
 import { Tests } from 'intern/lib/interfaces/object';
-import { Thenable } from '../../src/interfaces';
-import { ShimIterator } from '../../src/iterator';
-import Promise from '../../src/Promise';
-import '../../src/Symbol';
+import { Thenable } from '../../../src/shim/interfaces';
+import { ShimIterator } from '../../../src/shim/iterator';
+import Promise from '../../../src/shim/Promise';
+import '../../../src/shim/Symbol';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

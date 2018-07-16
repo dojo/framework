@@ -1,9 +1,9 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { Store } from './../../src/Store';
-import { OperationType, PatchOperation } from './../../src/state/Patch';
-import { Pointer } from './../../src/state/Pointer';
+import { Store } from './../../../src/stores/Store';
+import { OperationType, PatchOperation } from './../../../src/stores/state/Patch';
+import { Pointer } from './../../../src/stores/state/Pointer';
 
 let store: Store = new Store();
 

@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-import * as main from '../../src/main';
+import * as main from '../../../src/has/main';
 
-registerSuite('main', {
+registerSuite('has/main', {
 	'validate api'() {
 		assert.isFunction(main.default);
 		assert.isFunction(main.add);

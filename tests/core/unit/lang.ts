@@ -1,10 +1,10 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import * as lang from '../../src/lang';
+import * as lang from '../../../src/core/lang';
 
 registerSuite('lang functions', {
 	'.assign()'() {
-		// this is a re-export from `@dojo/shim/object::assign`
+		// this is a re-export from `../../../src/shim/object::assign`
 		assert.isFunction(lang.assign);
 	},
 

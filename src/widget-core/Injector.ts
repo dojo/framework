@@ -1,5 +1,5 @@
-import { Evented } from '@dojo/core/Evented';
-import { EventObject } from '@dojo/core/interfaces';
+import { Evented } from '../core/Evented';
+import { EventObject } from '../core/interfaces';
 
 export type InjectorEventMap = {
 	invalidate: EventObject<'invalidate'>;

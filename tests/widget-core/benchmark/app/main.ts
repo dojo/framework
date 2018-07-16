@@ -1,4 +1,4 @@
-import { ProjectorMixin } from '../../../src/mixins/Projector';
+import { ProjectorMixin } from '../../../../src/widget-core/mixins/Projector';
 
 import App from './App';
 

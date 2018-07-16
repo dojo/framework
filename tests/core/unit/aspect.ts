@@ -4,9 +4,9 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
 import * as sinon from 'sinon';
-import * as aspect from '../../src/aspect';
-import { Handle } from '../../src/interfaces';
-import Map from '@dojo/shim/Map';
+import * as aspect from '../../../src/core/aspect';
+import { Handle } from '../../../src/core/interfaces';
+import Map from '../../../src/shim/Map';
 import { ObjectSuiteDescriptor } from 'intern/lib/interfaces/object';
 
 const slice = Array.prototype.slice;

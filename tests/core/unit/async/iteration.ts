@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { Tests } from 'intern/lib/interfaces/object';
-import * as iteration from '../../../src/async/iteration';
-import { ShimIterator } from '@dojo/shim/iterator';
-import Promise from '@dojo/shim/Promise';
+import * as iteration from '../../../../src/core/async/iteration';
+import { ShimIterator } from '../../../../src/shim/iterator';
+import Promise from '../../../../src/shim/Promise';
 import { isEventuallyRejected, throwImmediatly } from '../../support/util';
 
 interface ResolveFunc<T> {

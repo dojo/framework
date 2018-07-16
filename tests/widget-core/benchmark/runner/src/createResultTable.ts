@@ -1,6 +1,6 @@
 import * as fs from 'fs';
-import Map from '@dojo/shim/Map';
-import { endsWith } from '@dojo/shim/string';
+import Map from '../../../../../src/shim/Map';
+import { endsWith } from '../../../../../src/shim/string';
 import { JSONResult, frameworks, FrameworkData } from './common';
 import { BenchmarkType, Benchmark, benchmarks } from './benchmarks';
 

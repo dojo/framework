@@ -1,5 +1,5 @@
-import { DNode, DefaultWidgetBaseInterface, WNode, VNode } from '@dojo/widget-core/interfaces';
-import { isVNode, isWNode } from '@dojo/widget-core/d';
+import { DNode, DefaultWidgetBaseInterface, WNode, VNode } from '../../widget-core/interfaces';
+import { isVNode, isWNode } from '../../widget-core/d';
 import * as cssSelect from 'css-select-umd';
 
 export type TestFunction = (elem: DNode<DefaultWidgetBaseInterface>) => boolean;

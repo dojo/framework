@@ -1,7 +1,7 @@
-import 'globalize';
-import 'globalize/dist/globalize/currency';
+import 'globalize/dist/globalize';
 import 'globalize/dist/globalize/number';
 import 'globalize/dist/globalize/plural';
+import 'globalize/dist/globalize/currency';
 import { globalizeDelegator } from './util/globalize';
 
 export type CurrencyStyleOption = 'accounting' | 'code' | 'name' | 'symbol';

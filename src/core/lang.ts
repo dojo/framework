@@ -1,7 +1,7 @@
 import { Handle } from './interfaces';
-import { assign } from '@dojo/shim/object';
+import { assign } from '../shim/object';
 
-export { assign } from '@dojo/shim/object';
+export { assign } from '../shim/object';
 
 const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;

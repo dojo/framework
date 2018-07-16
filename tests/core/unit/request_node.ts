@@ -1,7 +1,7 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import request from '../../src/request';
-import node from '../../src/request/providers/node';
+import request from '../../../src/core/request';
+import node from '../../../src/core/request/providers/node';
 import { createServer } from 'http';
 import { parse } from 'url';
 

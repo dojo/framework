@@ -1,4 +1,4 @@
-import Promise from '@dojo/shim/Promise';
+import Promise from '../shim/Promise';
 import has from './has';
 import request from './request';
 import { NodeRequire, AmdRequire, AmdConfig } from './interfaces';

@@ -1,6 +1,6 @@
 import { Handle } from '../../interfaces';
-import Set from '@dojo/shim/Set';
-import WeakMap from '@dojo/shim/WeakMap';
+import Set from '../../../shim/Set';
+import WeakMap from '../../../shim/WeakMap';
 import * as http from 'http';
 import * as https from 'https';
 import * as urlUtil from 'url';

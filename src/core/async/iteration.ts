@@ -1,7 +1,7 @@
-import * as array from '@dojo/shim/array';
-import { isArrayLike, Iterable } from '@dojo/shim/iterator';
-import Promise from '@dojo/shim/Promise';
-import { Thenable } from '@dojo/shim/interfaces';
+import * as array from '../../shim/array';
+import { isArrayLike, Iterable } from '../../shim/iterator';
+import Promise from '../../shim/Promise';
+import { Thenable } from '../../shim/interfaces';
 
 function isThenable<T>(value: any): value is Thenable<T> {
 	return value && typeof value.then === 'function';

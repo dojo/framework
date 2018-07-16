@@ -2,12 +2,12 @@ const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 
-import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { w } from '@dojo/widget-core/d';
-import { WNode } from '@dojo/widget-core/interfaces';
-import { Router } from './../../src/Router';
-import { MemoryHistory as HistoryManager } from './../../src/history/MemoryHistory';
-import { Outlet, getProperties } from './../../src/Outlet';
+import { WidgetBase } from '../../../src/widget-core/WidgetBase';
+import { w } from '../../../src/widget-core/d';
+import { WNode } from '../../../src/widget-core/interfaces';
+import { Router } from '../../../src/routing/Router';
+import { MemoryHistory as HistoryManager } from '../../../src/routing/history/MemoryHistory';
+import { Outlet, getProperties } from '../../../src/routing/Outlet';
 
 class Widget extends WidgetBase {
 	render() {
