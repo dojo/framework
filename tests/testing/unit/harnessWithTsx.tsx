@@ -1,6 +1,6 @@
 const { describe, it } = intern.getInterface('bdd');
 
-import { harness } from '../../../src/test-extras/harness';
+import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { tsx, fromRegistry } from '../../../src/widget-core/tsx';
 

@@ -16,7 +16,8 @@
 		"./dist/dev/tests/core/unit/all.js",
 		"./dist/dev/tests/i18n/unit/**/*.js",
 		"./dist/dev/tests/widget-core/unit/all.js",
-		"./dist/dev/tests/stores/unit/all.js"
+		"./dist/dev/tests/stores/unit/all.js",
+		"./dist/dev/tests/testing/unit/all.js"
 	],
 
 	"functionalSuites": [
@@ -68,6 +69,8 @@
 					{ "name": "cldr-data", "location": "node_modules/cldr-data" },
 					{ "name": "cldrjs", "location": "node_modules/cldrjs" },
 					{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" },
+					{ "name": "css-select-umd", "location": "node_modules/css-select-umd", "main": "dist/index.js" },
+					{ "name": "diff", "location": "node_modules/diff", "main": "dist/diff.js" },
 					{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
 				],
 				"map": {
