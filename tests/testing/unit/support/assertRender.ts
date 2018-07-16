@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 
 import Set from '../../../../src/shim/Set';
 import Map from '../../../../src/shim/Map';
-import assertRender from '../../../../src/test-extras/support/assertRender';
+import assertRender from '../../../../src/testing/support/assertRender';
 import { v, w } from '../../../../src/widget-core/d';
 import WidgetBase from '../../../../src/widget-core/WidgetBase';
 

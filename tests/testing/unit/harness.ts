@@ -1,7 +1,7 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { harness } from '../../../src/test-extras/harness';
+import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { v, w, isVNode } from '../../../src/widget-core/d';
 import Set from '../../../src/shim/Set';
