@@ -237,5 +237,5 @@ The original Dojo 1 `has()` API was based upon Peter Higgin's [has.js](https://g
 
 <!-- doc-viewer-config
 {
-	"api": "docs/api.json"
+	"api": "../../docs/api.json"
 }

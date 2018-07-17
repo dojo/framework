@@ -27,7 +27,7 @@ npm install @dojo/widget-core
  * All state operations are recorded per process and undoable via a process callback
  * Supports the optimistic pattern with the ability to roll back on a failure
  * Fully serializable operations and state
- 
+
 <!-- start-github-only -->
 
 -----
@@ -624,6 +624,6 @@ or
 
 <!-- doc-viewer-config
 {
-	"api": "docs/api.json"
+	"api": "../../docs/api.json"
 }
 -->
