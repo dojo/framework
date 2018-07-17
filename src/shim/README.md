@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/dojo/shim/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/shim)
 [![npm version](https://badge.fury.io/js/%40dojo%2Fshim.svg)](https://badge.fury.io/js/%40dojo%2Fshim)
 
-This package provides functional shims for ECMAScript, access to the Typescript helpers, and a quick way to include the polyfills needed to run Dojo 2 in the browser.
+This package provides functional shims for ECMAScript, access to the Typescript helpers, and a quick way to include the polyfills needed to run Dojo in the browser.
 
 It is targeted at providing function shims for ECMAScript 6 and beyond targeted at ECMAScript 5.  It is different than other solutions of shimming or polyfilling functionality, in that it does not provide the functionality via augmenting the built-in classes in the global namespace.
 
@@ -37,14 +37,14 @@ Since the main module loads the Typescript helpers, you'll want to turn off help
 }
 ```
 
-If you are using Dojo 2 in the browser, you will want to load the browser polyfills. These are available by simply importing the `@dojo/shim/browser` module.
+If you are using Dojo in the browser, you will want to load the browser polyfills. These are available by simply importing the `@dojo/shim/browser` module.
 
 ```typescript
-// load polyfills for features used by Dojo 2
+// load polyfills for features used by Dojo
 import '@dojo/shim/browser';
 ```
 
-*Note*: Other Dojo 2 packages will include these dependencies.  You only need to worry about this if you are using this package stand alone.
+*Note*: Other Dojo packages will include these dependencies.  You only need to worry about this if you are using this package stand alone.
 
 <!-- start-github-only -->
 ## Features
@@ -154,7 +154,7 @@ The [`@dojo/shim/string`](../../docs/string.md) module contains `String` methods
 
 ## How do I contribute?
 
-We appreciate your interest!  Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme) for the Contributing Guidelines.
+We appreciate your interest!  Please see the [Dojo Meta Repository](https://github.com/dojo/meta#readme) for the Contributing Guidelines.
 
 ### Code Style
 

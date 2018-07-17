@@ -6,7 +6,7 @@
 [![codecov.io](https://codecov.io/github/dojo/routing/coverage.svg?branch=master)](https://codecov.io/github/dojo/routing?branch=master)
 [![npm version](https://badge.fury.io/js/%40dojo%2Frouting.svg)](https://badge.fury.io/js/%40dojo%2Frouting)
 
-A routing library for Dojo 2 applications.
+A routing library for Dojo applications.
 
  - [Features](#features)
    - [Route Configuration](#route-configuration)
@@ -37,7 +37,7 @@ npm install @dojo/widget-core
 
 ## Features
 
-Widgets are a fundamental concept for any Dojo 2 application and as such Dojo 2 Routing provides a collection of components that integrate directly with existing widgets within an application. These components enable widgets to be registered against a route _without_ requiring any knowledge of the `Router`. Routing in a Dojo 2 application consists of:
+Widgets are a fundamental concept for any Dojo application and as such Dojo Routing provides a collection of components that integrate directly with existing widgets within an application. These components enable widgets to be registered against a route _without_ requiring any knowledge of the `Router`. Routing in a Dojo application consists of:
 
 - `Outlet` widget wrappers that are assigned a specific outlet key and represent the view for a specific route
 - a configuration of individual `Route`s that map paths to outlet keys
@@ -241,13 +241,13 @@ const router = registerRouterInjector(config, registry, { history, key: 'custom-
 
 ### Outlets
 
-The primary concept for the routing integration is an `outlet`, a unique identifier associated with the registered application route. Dojo 2 Widgets can then be configured with these outlet identifiers using the `Outlet` higher order component. `Outlet` returns a new widget that can be used like any other widget within a `render` method, e.g. `w(MyFooOutlet, { })`.
+The primary concept for the routing integration is an `outlet`, a unique identifier associated with the registered application route. Dojo Widgets can then be configured with these outlet identifiers using the `Outlet` higher order component. `Outlet` returns a new widget that can be used like any other widget within a `render` method, e.g. `w(MyFooOutlet, { })`.
 
 Properties can be passed to an `Outlet` widget in the same way as if the original widget was being used. However, all properties are made optional to allow the properties to be injected using the [mapParams](#mapParams) function described below.
 
 The number of widgets that can be mapped to a single outlet identifier is not restricted. All configured widgets for a single outlet will be rendered when the route associated to the outlet is matched by the `router` and the `outlet`s are part of the current widget hierarchy.
 
-The following example configures a stateless widget with an outlet called `foo`. The resulting `FooOutlet` can be used in a widgets `render` in the same way as any other Dojo 2 Widget.
+The following example configures a stateless widget with an outlet called `foo`. The resulting `FooOutlet` can be used in a widgets `render` in the same way as any other Dojo Widget.
 
 ```ts
 import { Outlet } from '@dojo/routing/Outlet';
@@ -362,7 +362,7 @@ All the standard `VNodeProperties` are available for the `Link` component as the
 
 ## How do I contribute?
 
-We appreciate your interest!  Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme) for the Contributing Guidelines.
+We appreciate your interest!  Please see the [Dojo Meta Repository](https://github.com/dojo/meta#readme) for the Contributing Guidelines.
 
 ### Code Style
 

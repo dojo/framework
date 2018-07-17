@@ -1,4 +1,4 @@
-# Dojo 2 core
+# @dojo/core
 
 [![Build Status](https://travis-ci.org/dojo/core.svg?branch=master)](https://travis-ci.org/dojo/core)
 [![codecov.io](https://codecov.io/github/dojo/core/coverage.svg?branch=master)](https://codecov.io/github/dojo/core?branch=master)
@@ -84,7 +84,7 @@ The `@dojo/core/async/Task` class is an extension of `@dojo/core/Promise` that p
 
 ## How Do I Contribute?
 
-We appreciate your interest! Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme)
+We appreciate your interest! Please see the [Dojo Meta Repository](https://github.com/dojo/meta#readme)
 for the Contributing Guidelines.
 
 ### Code Style

@@ -56,30 +56,30 @@ npm install @dojo/core
 npm install @dojo/i18n
 ```
 
-You can also use the [dojo cli](https://github.com/dojo/cli) to create a complete Dojo 2 skeleton application.
+You can also use the [dojo cli](https://github.com/dojo/cli) to create a complete Dojo skeleton application.
 
 ## Features
 
 ### Basic Widgets
 
-Dojo 2 applications use the Virtual DOM (vdom) paradigm to represent what should be shown on the view. These vdom nodes are plain JavaScript objects that are more efficient to create from a performance perspective than browser DOM elements. Dojo 2 uses these vdom elements to synchronize and update the browser DOM so that the application shows the expected view.
+Dojo applications use the Virtual DOM (vdom) paradigm to represent what should be shown on the view. These vdom nodes are plain JavaScript objects that are more efficient to create from a performance perspective than browser DOM elements. Dojo uses these vdom elements to synchronize and update the browser DOM so that the application shows the expected view.
 
-There are two types of vdom within Dojo 2. The first type provides a pure representation of DOM elements, the fundamental building blocks of all Dojo 2 applications. These are called `VNode`s and are created using the `v()` function available from the `@dojo/widget-core/d` module.
+There are two types of vdom within Dojo. The first type provides a pure representation of DOM elements, the fundamental building blocks of all Dojo applications. These are called `VNode`s and are created using the `v()` function available from the `@dojo/widget-core/d` module.
 
-The following will create a `VNode` that represents a simple `div` DOM element, with a text node child: `Hello, Dojo 2!`:
+The following will create a `VNode` that represents a simple `div` DOM element, with a text node child: `Hello, Dojo!`:
 
 ```ts
-v('div', [ 'Hello, Dojo 2!' ])
+v('div', [ 'Hello, Dojo!' ])
 ```
 
-The second vdom type, `WNode`, represent widgets. A widget is a class that extends `WidgetBase` from `@dojo/widget-core/WidgetBase` and implements a `render` function that returns one of the Dojo 2 vdom types (known as a `DNode`). Widgets are used to represent reusable, independent sections of a Dojo 2 application.
+The second vdom type, `WNode`, represent widgets. A widget is a class that extends `WidgetBase` from `@dojo/widget-core/WidgetBase` and implements a `render` function that returns one of the Dojo vdom types (known as a `DNode`). Widgets are used to represent reusable, independent sections of a Dojo application.
 
 The following returns the `VNode` example from above from the `render` function:
 
 ```ts
 class HelloDojo extends WidgetBase {
     protected render() {
-        return v('div', [ 'Hello, Dojo 2!' ]);
+        return v('div', [ 'Hello, Dojo!' ]);
     }
 }
 ```
@@ -133,7 +133,7 @@ class Hello extends WidgetBase<MyProperties> {
 }
 ```
 
-New properties are compared with the previous properties to determine if a widget requires re-rendering. By default Dojo 2 uses the `auto` diffing strategy, that performs a shallow comparison for objects and arrays, ignores functions (except classes that extend `WidgetBase`) and a reference comparison for all other values.
+New properties are compared with the previous properties to determine if a widget requires re-rendering. By default Dojo uses the `auto` diffing strategy, that performs a shallow comparison for objects and arrays, ignores functions (except classes that extend `WidgetBase`) and a reference comparison for all other values.
 
 #### Composing Widgets
 
@@ -196,7 +196,7 @@ class List extends WidgetBase<ListProperties> {
 ```
 The `List` widget works as expected and displays the list in the browser but is difficult to reuse, modify, and/or extend.
 
-**Note:** When working with children arrays with the same type of widget or Element, it is important to add a unique `key` property or attribute so that Dojo 2 can identify the correct node when updates are made.
+**Note:** When working with children arrays with the same type of widget or Element, it is important to add a unique `key` property or attribute so that Dojo can identify the correct node when updates are made.
 
 To extend the `List` API with an event that needs to be called when an item is clicked with the item's `id`, we first update the properties interface:
 
@@ -213,7 +213,7 @@ interface ListProperties {
 
 If we try to use the `onItemClick` function in the current `List` widget, we would need to wrap it in another function in order to pass the item's `id`.
 
-This would mean a new function would be created every render but Dojo 2 does not support changing listener functions after the first render and this would **error**.
+This would mean a new function would be created every render but Dojo does not support changing listener functions after the first render and this would **error**.
 
 To resolve this, the list item can be extracted into a separate widget:
 
@@ -269,7 +269,7 @@ Additionally, the `ListItem` is now reusable in other areas of our application(s
 
 ### Mixins
 
-Dojo 2 makes use of mixins to decorate additional functionality and properties to existing widgets. Mixins provide a mechanism that allows loosely coupled design and composition of behaviors into existing widgets without having to change the base widget.
+Dojo makes use of mixins to decorate additional functionality and properties to existing widgets. Mixins provide a mechanism that allows loosely coupled design and composition of behaviors into existing widgets without having to change the base widget.
 
 TypeScript supports mixins using a constructor type of `new (...args: any[]) => any;` that enables a class to be passed as a function argument and extended to add new functionality.
 
@@ -302,15 +302,15 @@ function StateMixin<T extends new(...args: any[]) => WidgetBase>(Base: T): T & (
 }
 ```
 
-Examples of Dojo 2 mixins can be seen with `ThemedMixin` and `I18nMixin` that are described in [Styling & Theming](#styling--theming) and [Internationalization](#internationalization) sections.
+Examples of Dojo mixins can be seen with `ThemedMixin` and `I18nMixin` that are described in [Styling & Theming](#styling--theming) and [Internationalization](#internationalization) sections.
 
 ### Animation
 
-Dojo 2 widget-core provides a `WebAnimation` meta to apply web animations to VNodes.
+Dojo widget-core provides a `WebAnimation` meta to apply web animations to VNodes.
 
 To specify the web animations pass an `AnimationProperties` object to the `WebAnimation` meta along with the key of the node you wish to animate. This can be a single animation or an array or animations.
 
-**Note**: The Web Animations API is not currently available even in the latest browsers. To use the Web Animations API, a polyfill needs to be included. Dojo 2 does not include the polyfill by default, so will need to be added as a script tag in your index.html or alternatively imported in the application’s main.ts using `import 'web-animations-js/web-animations-next-lite.min';` after including the dependency in your source tree, or by importing `@dojo/shim/browser`.
+**Note**: The Web Animations API is not currently available even in the latest browsers. To use the Web Animations API, a polyfill needs to be included. Dojo does not include the polyfill by default, so will need to be added as a script tag in your index.html or alternatively imported in the application’s main.ts using `import 'web-animations-js/web-animations-next-lite.min';` after including the dependency in your source tree, or by importing `@dojo/shim/browser`.
 
 #### Basic Example
 
@@ -444,7 +444,7 @@ export default class AnimatedWidget extends WidgetBase {
 
 #### Overview
 
-Dojo 2 widget-core provides `ThemedMixin` to decorate a widget with theming functionality and a `@theme` decorator to specify the classes available to the widget. Both `ThemedMixin` and `@theme` are provided by `@dojo/widget-core/mixins/Themed`.
+Dojo widget-core provides `ThemedMixin` to decorate a widget with theming functionality and a `@theme` decorator to specify the classes available to the widget. Both `ThemedMixin` and `@theme` are provided by `@dojo/widget-core/mixins/Themed`.
 
 To specify the theme classes for a widget, an interface needs to be imported with named exports for each class and passed to the `@theme` decorator. Importing the interface provides IntelliSense / auto-complete for the class names and passing this via the `@theme` decorator informs the `ThemedMixin` which classes can be themed.
 
@@ -622,7 +622,7 @@ These are some of the **important** principles to keep in mind when creating and
 1. The widget's *`__render__`*, *`__setProperties__`*, *`__setChildren__`* functions should **never** be called or overridden.
    - These are the internal methods of the widget APIs and their behavior can change in the future, causing regressions in your application.
 2. Except for projectors, you should **never** need to deal directly with widget instances
-   - The Dojo 2 widget system manages all instances required including caching and destruction, trying to create and manage other widgets will cause issues and will not work as expected.
+   - The Dojo widget system manages all instances required including caching and destruction, trying to create and manage other widgets will cause issues and will not work as expected.
 3. **Never** update `properties` within a widget instance, they should be considered pure.
    - Properties are considered read-only and should not be updated within a widget instance, updating properties could cause unexpected behavior and introduce bugs in your application.
 4. Hyperscript should **always** be written using the `@dojo/widget-core/d#v()` function.
@@ -630,7 +630,7 @@ These are some of the **important** principles to keep in mind when creating and
 
 ## Advanced Concepts
 
-This section provides some details on more advanced Dojo 2 functionality and configuration that may be required to build more complex widgets and applications.
+This section provides some details on more advanced Dojo functionality and configuration that may be required to build more complex widgets and applications.
 
 ### Handling Focus
 
@@ -1133,7 +1133,7 @@ const hasRootBeenRendered = this.meta(Dimensions).has('root');
 
 The Intersection Meta provides information on whether a Node is visible in the application's viewport using the [Intersection Observer API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API).
 
-**Note**: The Intersection Observer API is not available in all browsers. To use the Intersection Observer API in all browsers supported by Dojo 2, a polyfill needs to be included. Dojo 2 does not include the polyfill by default, so will need to be added as a script tag in your index.html or alternatively imported in the application’s main.ts using `import 'intersection-observer';` after including the dependency in your source tree, or by importing `@dojo/shim/browser`.
+**Note**: The Intersection Observer API is not available in all browsers. To use the Intersection Observer API in all browsers supported by Dojo, a polyfill needs to be included. Dojo does not include the polyfill by default, so will need to be added as a script tag in your index.html or alternatively imported in the application’s main.ts using `import 'intersection-observer';` after including the dependency in your source tree, or by importing `@dojo/shim/browser`.
 
 This example renders a list with images, the image src is only added when the item is in the viewport which prevents needlessly downloading images until the user scrolls to them:
 
@@ -1343,9 +1343,9 @@ class TestWidget extends WidgetBase<WidgetProperties> {
 
 #### Resize
 
-The resize observer meta uses the latest [`ResizeObserver`](https://wicg.github.io/ResizeObserver/) within Dojo 2 based widgets.
+The resize observer meta uses the latest [`ResizeObserver`](https://wicg.github.io/ResizeObserver/) within Dojo based widgets.
 
-**Note**: The Resize Observer API is not available in all browsers. [Native browser support](https://caniuse.com/#feat=resizeobserver) is currently provided by `Chrome 64+`, other Dojo supported browsers work via [polyfill](https://github.com/WICG/ResizeObserver/issues/3). To use the Resize Observer API in all browsers supported by Dojo 2, either added as a script tag in your index.html pointing to the polyfill, or alternatively import the polyfill in the application’s main.ts after including the dependency in your source tree.
+**Note**: The Resize Observer API is not available in all browsers. [Native browser support](https://caniuse.com/#feat=resizeobserver) is currently provided by `Chrome 64+`, other Dojo supported browsers work via [polyfill](https://github.com/WICG/ResizeObserver/issues/3). To use the Resize Observer API in all browsers supported by Dojo, either added as a script tag in your index.html pointing to the polyfill, or alternatively import the polyfill in the application’s main.ts after including the dependency in your source tree.
 
 This allows you to observe resize events at the component level. The `meta` accepts an object of `predicate` functions which receive `ContentRect` dimensions and will be executed when a resize event has occured. The results are made available in a widget's `render` function. This is an incredibly powerful tool for creating responsive components and layouts.
 
@@ -1439,7 +1439,7 @@ class IsTallMeta extends MetaBase {
 
 ### Inserting DOM nodes into the VDom Tree
 
-The `dom()` function is used to wrap DOM that is created outside of Dojo 2. This is the only mechanism to integrate foreign DOM nodes into the virtual DOM system.
+The `dom()` function is used to wrap DOM that is created outside of Dojo. This is the only mechanism to integrate foreign DOM nodes into the virtual DOM system.
 
 `dom()` works much like `v()` but instead of taking a `tag` it accepts an existing DOM node and creates a `VNode` that references the DOM node and the vdom system will reuse this node. Unlike `v()` a `diffType` can be passed that indicates the mode to use when determining if a property or attribute has changed and needs to be applied, the default is `none`.
 
@@ -1470,7 +1470,7 @@ const vnode = dom({
 
 ### JSX Support
 
-In addition to creating widgets functionally using the `v()` and `w()` functions from `@dojo/widget-core/d`, Dojo 2 optionally supports the use of the `jsx` syntax known as [`tsx`](https://www.typescriptlang.org/docs/handbook/jsx.html) in TypeScript.
+In addition to creating widgets functionally using the `v()` and `w()` functions from `@dojo/widget-core/d`, Dojo optionally supports the use of the `jsx` syntax known as [`tsx`](https://www.typescriptlang.org/docs/handbook/jsx.html) in TypeScript.
 
 To start to use `jsx` in your project, widgets need to be named with a `.tsx` extension and some configuration is required in the project's `tsconfig.json`:
 
@@ -1543,11 +1543,11 @@ class MyWidget extends WidgetBase<MyWidgetProperties> {
 ```
 
 **Note**: The Custom Elements API is not available in all browsers. To use
-Custom Elements in all browsers supported by Dojo 2, a polyfill needs to be
+Custom Elements in all browsers supported by Dojo, a polyfill needs to be
 included such as webcomponents/custom-elements/master/custom-elements.min.js.
-Dojo 2 does not include the polyfill by default, so will need to be
+Dojo does not include the polyfill by default, so will need to be
 added as a script tag in your index.html. Note that this polyfill cannot 
-currently be ponyfilled like other polyfills used in Dojo 2, so it cannot 
+currently be ponyfilled like other polyfills used in Dojo, so it cannot 
 be added with @dojo/shim/browser or imported using ES modules.
 
 No additional steps are required. The custom element

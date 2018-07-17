@@ -68,7 +68,7 @@ function getArrayOrString(): number[] | string {
 
 ### Included Features
 
-Other Dojo 2 packages leverage the `has()` package to express features that are then used within the package.  Because
+Other Dojo packages leverage the `has()` package to express features that are then used within the package.  Because
 of this, there are very few features expressed in this foundational package.  The intention is that this package is
 used to enable a developer to express other features.  The flags though that are included in this package are:
 
@@ -188,7 +188,7 @@ static features.
 
 ## How do I contribute?
 
-We appreciate your interest!  Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme) for the
+We appreciate your interest!  Please see the [Dojo Meta Repository](https://github.com/dojo/meta#readme) for the
 Contributing Guidelines.
 
 ### Code Style
