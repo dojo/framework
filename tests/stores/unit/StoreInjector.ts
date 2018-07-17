@@ -18,6 +18,21 @@ import { replace } from '../../../src/stores/state/operations';
 interface State {
 	foo: string;
 	bar: string;
+	qux: {
+		baz: number;
+		foobar: number;
+		bar: {
+			foo: {
+				foobar: {
+					baz: {
+						barbaz: {
+							res: number;
+						};
+					};
+				};
+			};
+		};
+	};
 }
 
 const commandFactory = createCommandFactory<State>();
@@ -29,6 +44,20 @@ const barCommand = commandFactory(({ get, path }) => {
 	const currentFoo = get(path('bar'));
 	return [replace(path('bar'), `${currentFoo}bar`)];
 });
+const bazCommand = commandFactory(({ get, path }) => {
+	const currentBaz = get(path('qux', 'baz')) || 0;
+	return [replace(path('qux', 'baz'), currentBaz + 1)];
+});
+const quxCommand = commandFactory(({ get, path }) => {
+	return [replace(path('qux'), { baz: 100 })];
+});
+const fooBarCommand = commandFactory(({ get, path }) => {
+	const currentFooBar = get(path('qux', 'foobar')) || 0;
+	return [replace(path('qux', 'foobar'), currentFooBar)];
+});
+const deepCommand = commandFactory(({ get, path }) => {
+	return [replace(path(path('qux', 'bar', 'foo', 'foobar', 'baz'), 'barbaz', 'res'), 0)];
+});
 
 const TypedStoreContainer = createStoreContainer<State>();
 
@@ -37,12 +66,20 @@ describe('StoreInjector', () => {
 	let registry: Registry;
 	let fooProcess: Process;
 	let barProcess: Process;
+	let bazProcess: Process;
+	let quxProcess: Process;
+	let fooBarProcess: Process;
+	let deepProcess: Process;
 
 	beforeEach(() => {
 		registry = new Registry();
 		store = new Store<State>();
 		fooProcess = createProcess('foo', [fooCommand]);
 		barProcess = createProcess('bar', [barCommand]);
+		bazProcess = createProcess('baz', [bazCommand]);
+		quxProcess = createProcess('qux', [quxCommand]);
+		fooBarProcess = createProcess('foobar', [fooBarCommand]);
+		deepProcess = createProcess('deep', [deepCommand]);
 	});
 
 	describe('storeInject', () => {
@@ -95,6 +132,40 @@ describe('StoreInjector', () => {
 			assert.strictEqual(widget.properties.foo, 'foo');
 			barProcess(store)({});
 			assert.isTrue(invalidateSpy.calledTwice);
+		});
+
+		it('Should only invalidate when the path passed is changed using path function', () => {
+			@storeInject<State>({
+				name: 'state',
+				paths: (path) => {
+					return [path('qux', 'baz'), path(path('qux', 'bar', 'foo', 'foobar', 'baz'), 'barbaz', 'res')];
+				},
+				getProperties: (store) => {
+					return {
+						baz: store.get(store.path('qux', 'baz'))
+					};
+				}
+			})
+			class TestWidget extends WidgetBase<any> {}
+			const widget = new TestWidget();
+			registry.defineInjector('state', () => () => store);
+			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+			widget.__setProperties__({});
+			const invalidateSpy = spy(widget, 'invalidate');
+			assert.strictEqual(widget.properties.foo, undefined);
+			bazProcess(store)({});
+			assert.isTrue(invalidateSpy.calledOnce);
+			widget.__setProperties__({});
+			assert.isTrue(invalidateSpy.calledTwice);
+			assert.strictEqual(widget.properties.baz, 1);
+			barProcess(store)({});
+			assert.isTrue(invalidateSpy.calledTwice);
+			quxProcess(store)({});
+			assert.isTrue(invalidateSpy.calledThrice);
+			fooBarProcess(store)({});
+			assert.isTrue(invalidateSpy.calledThrice);
+			deepProcess(store)({});
+			assert.strictEqual(invalidateSpy.callCount, 4);
 		});
 
 		it('invalidate listeners are removed when widget is destroyed', () => {
@@ -185,7 +256,7 @@ describe('StoreInjector', () => {
 		it('should create registry, register store and return the register when registry is not provided', () => {
 			const store = new Store();
 			const returnedRegistry = registerStoreInjector(store);
-			const item = returnedRegistry.getInjector('state');
+			const item = returnedRegistry.getInjector<Store>('state');
 			assert.strictEqual(item!.injector(), store);
 		});
 

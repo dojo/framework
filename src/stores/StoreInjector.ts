@@ -5,9 +5,8 @@ import { handleDecorator } from '../widget-core/decorators/handleDecorator';
 import { beforeProperties } from '../widget-core/decorators/beforeProperties';
 import { alwaysRender } from '../widget-core/decorators/alwaysRender';
 import { InjectorItem, RegistryLabel, Constructor, DNode } from '../widget-core/interfaces';
-import { Store } from './Store';
+import { Store, StatePaths, Path } from './Store';
 import { Registry } from '../../src/widget-core/Registry';
-
 const registeredInjectorsMap: WeakMap<WidgetBase, InjectorItem<Store>[]> = new WeakMap();
 
 export interface GetProperties<S extends Store, W extends WidgetBase<any, any> = WidgetBase<any, any>> {
@@ -23,10 +22,19 @@ export type StoreContainerPath<
 	P4 extends keyof S[P0][P1][P2][P3] = keyof S[P0][P1][P2][P3]
 > = [P0] | [P0, P1] | [P0, P1, P2] | [P0, P1, P2, P3] | [P0, P1, P2, P3, P4];
 
+export interface StoreContainerOptions<S, W extends WidgetBase> {
+	paths?: GetPaths<S> | StoreContainerPath<S>[];
+	getProperties: GetProperties<Store<S>, W>;
+}
+
+export interface GetPaths<S = any> {
+	(path: StatePaths<S>): Path<S, any>[];
+}
+
 export interface StoreInjectConfig<S = any> {
 	name: RegistryLabel;
 	getProperties: GetProperties<Store<S>, any>;
-	paths?: StoreContainerPath<S>[];
+	paths?: StoreContainerPath<S>[] | GetPaths<S>;
 }
 
 export type StoreContainer<T extends WidgetBase<any, any>> = Constructor<
@@ -53,9 +61,13 @@ export function storeInject<S>(config: StoreInjectConfig<S>) {
 				}
 				if (registeredInjectors.indexOf(injectorItem) === -1) {
 					if (paths) {
-						const handle = store.onChange(paths.map((path: any) => store.path(path.join('/'))), () =>
-							this.invalidate()
-						);
+						let invalidatePaths: Path<S, any>[];
+						if (typeof paths === 'function') {
+							invalidatePaths = paths(store.path);
+						} else {
+							invalidatePaths = paths.map((path: any) => store.path(path.join('/')));
+						}
+						const handle = store.onChange(invalidatePaths, () => this.invalidate());
 						this.own({
 							destroy: () => {
 								handle.remove();
@@ -79,7 +91,7 @@ export function storeInject<S>(config: StoreInjectConfig<S>) {
 export function StoreContainer<S = any, W extends WidgetBase<any, any> = WidgetBase<any, any>>(
 	component: Constructor<W> | RegistryLabel,
 	name: RegistryLabel,
-	{ paths, getProperties }: { paths?: StoreContainerPath<S>[]; getProperties: GetProperties<Store<S>, W> }
+	{ paths, getProperties }: StoreContainerOptions<S, W>
 ): StoreContainer<W> {
 	@alwaysRender()
 	@storeInject({ name, paths, getProperties })
@@ -98,7 +110,7 @@ export function createStoreContainer<S>() {
 	return <W extends WidgetBase<any, any>>(
 		component: Constructor<W> | RegistryLabel,
 		name: RegistryLabel,
-		{ paths, getProperties }: { paths?: StoreContainerPath<S>[]; getProperties: GetProperties<Store<S>, W> }
+		{ paths, getProperties }: StoreContainerOptions<S, W>
 	) => {
 		return StoreContainer(component, name, { paths, getProperties });
 	};
