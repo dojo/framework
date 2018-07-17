@@ -200,18 +200,21 @@ registerSuite('queue functions', {
 			}
 
 			try {
-				const baseUrl = location.origin;
+				const nodeModulesUrl = location.origin + (require as any).toUrl('node_modules');
+				const srcUrl = location.origin + (require as any).toUrl('src');
+
 				const dfd = this.async(10000);
 				const blob = new Blob(
 					[
 						`(function() {
 self.addEventListener('message', function (event) {
-	if(event.data.baseUrl) {
-		var baseUrl = event.data.baseUrl;
-		importScripts(baseUrl + '/dist/dev/src/shim/util/amd.js', baseUrl + '/node_modules/@dojo/loader/loader.js');
+	if(event.data.nodeModulesUrl) {
+		var nodeModulesUrl = event.data.nodeModulesUrl;
+		var srcUrl = event.data.srcUrl;
+		importScripts(srcUrl + '/shim/util/amd.js', nodeModulesUrl + '/@dojo/loader/loader.js');
 
 		require.config(shimAmdDependencies({
-			baseUrl: baseUrl
+			baseUrl: nodeModulesUrl + '/..'
 		}));
 
 		require(['dist/dev/src/shim/support/queue'], function (queue) {
@@ -236,7 +239,8 @@ self.addEventListener('message', function (event) {
 				});
 
 				worker.postMessage({
-					baseUrl
+					nodeModulesUrl,
+					srcUrl
 				});
 			} catch (e) {
 				// IE11 on Winodws 8.1 encounters a security error.

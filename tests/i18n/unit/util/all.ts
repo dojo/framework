@@ -1,0 +1,2 @@
+import './globalize';
+import './main';

@@ -593,22 +593,29 @@ registerSuite('request/providers/xhr', {
 					this.skip('No web worker upload support');
 				}
 
-				const testUrl = location.origin + '/__echo/foo.json';
 				const baseUrl = location.origin;
+				const testUrl = baseUrl + '/__echo/foo.json';
+				const srcUrl = baseUrl + (require as any).toUrl('src');
+				const nodeModulesUrl = baseUrl + (require as any).toUrl('node_modules');
+
 				const dfd = this.async();
 
 				const blob = new Blob(
 					[
 						`(function() {
 self.addEventListener('message', function (event) {
-	testXhr(event.data.baseUrl, event.data.testUrl);
+	testXhr(event.data);
 });
 
-function testXhr(baseUrl, testUrl) {
-	importScripts(baseUrl + '/node_modules/@dojo/loader/loader.js', baseUrl + '/dist/dev/src/shim/util/amd.js');
+function testXhr(data) {
+	var nodeModulesUrl = data.nodeModulesUrl;
+	var srcUrl = data.srcUrl;
+	var testUrl = data.testUrl;
+
+	importScripts(nodeModulesUrl + '/@dojo/loader/loader.js', srcUrl + '/shim/util/amd.js');
 
 	require.config(shimAmdDependencies({
-		baseUrl: baseUrl
+		baseUrl: nodeModulesUrl + '/..'
 	}));
 
 	require(['dist/dev/src/shim/main', 'dist/dev/src/core/request/providers/xhr'], function (_, xhr) {
@@ -640,7 +647,8 @@ function testXhr(baseUrl, testUrl) {
 				});
 
 				worker.postMessage({
-					baseUrl,
+					nodeModulesUrl,
+					srcUrl,
 					testUrl
 				});
 			}
