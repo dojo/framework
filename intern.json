@@ -14,7 +14,7 @@
 		"./dist/dev/tests/has/unit/all.js",
 		"./dist/dev/tests/shim/unit/all.js",
 		"./dist/dev/tests/core/unit/all.js",
-		"./dist/dev/tests/i18n/unit/**/*.js",
+		"./dist/dev/tests/i18n/unit/all.js",
 		"./dist/dev/tests/widget-core/unit/all.js",
 		"./dist/dev/tests/stores/unit/all.js",
 		"./dist/dev/tests/testing/unit/all.js"
