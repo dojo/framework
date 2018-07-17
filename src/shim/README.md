@@ -69,13 +69,13 @@ Many of the features in this package will fallback to a native implementation if
 
 ### Array Methods
 
-[`@dojo/shim/array`](../../docs/array.md) provides implementations of many array utilities.
+[`@dojo/shim/array`](../../docs/shim/array.md) provides implementations of many array utilities.
 
 ### Data Structures
 
 #### Map
 
-The [`@dojo/shim/Map` class](../../docs/Map.md) is an implementation of the ES2015 Map specification
+The [`@dojo/shim/Map` class](../../docs/shim/Map.md) is an implementation of the ES2015 Map specification
 without iterators for use in older browsers.
 
 #### Set
@@ -106,7 +106,7 @@ without iterators for use in older browsers. The main difference between WeakMap
 is that WeakMap's keys can only be objects and that the store has a weak reference
 to the key/value pair. This allows for the garbage collector to remove pairs.
 
-See the [Map](../../docs/Map.md) documentation for more information on how to use WeakMap.
+See the [Map](../../docs/shim/Map.md) documentation for more information on how to use WeakMap.
 
 ### Iterators
 
@@ -114,7 +114,7 @@ The `@dojo/shim/iterator` module is an implementation of the [ES2015 Iterator sp
 
 ### Math
 
-The [`@dojo/shim/math`](../../docs/math.md) module provides implementations for many math methods.
+The [`@dojo/shim/math`](../../docs/shim/math.md) module provides implementations for many math methods.
 
 ### Number
 
@@ -138,15 +138,15 @@ The `dojo/shim/object` provides implementations of `Object` methods.
 
 ### Observables
 
-The [`@dojo/shim/Observable`](../../docs/Observable.md) class is an implementation of the proposed [Observable specification](https://tc39.github.io/proposal-observable/).  Observables are further extended in [`@dojo/core/Observable`](https://github.com/dojo/core/blob/master/src/Observable.ts).
+The [`@dojo/shim/Observable`](../../docs/shim/Observable.md) class is an implementation of the proposed [Observable specification](https://tc39.github.io/proposal-observable/).  Observables are further extended in [`@dojo/core/Observable`](https://github.com/dojo/core/blob/master/src/Observable.ts).
 
 ### Promises
 
-[`@dojo/shim/Promise`](../../docs/Promise.md) is an implementation of the [ES2015 Promise specification](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects).
+[`@dojo/shim/Promise`](../../docs/shim/Promise.md) is an implementation of the [ES2015 Promise specification](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects).
 
 ### String
 
-The [`@dojo/shim/string`](../../docs/string.md) module contains `String` methods.
+The [`@dojo/shim/string`](../../docs/shim/string.md) module contains `String` methods.
 
 ### Symbols
 
@@ -200,14 +200,14 @@ or
 
 <!-- doc-viewer-config
 {
-	"api": "../../docs/api.json",
+	"api": "../../docs/shim/api.json",
 	"pages": [
-		"../../docs/array.md",
-		"../../docs/Map.md",
-		"../../docs/math.md",
-		"../../docs/Observable.md",
-		"../../docs/Promise.md",
-		"../../docs/string.md"
+		"../../docs/shim/array.md",
+		"../../docs/shim/Map.md",
+		"../../docs/shim/math.md",
+		"../../docs/shim/Observable.md",
+		"../../docs/shim/Promise.md",
+		"../../docs/shim/string.md"
 	]
 }
 -->

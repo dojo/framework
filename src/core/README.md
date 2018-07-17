@@ -36,7 +36,7 @@ npm install @dojo/shim
 
 ### Feature Detection
 
-Using the latest Web technologies isn't always as straightforward as developers would like due to differing support across platforms. [`@dojo/core/has`](../../docs/has.md) provides a simple feature detection API that makes it easy to
+Using the latest Web technologies isn't always as straightforward as developers would like due to differing support across platforms. [`@dojo/core/has`](../../docs/core/has.md) provides a simple feature detection API that makes it easy to
 detect which platforms support which features.
 
 ### Language Utilities
@@ -46,28 +46,28 @@ on methods in the ES2015 proposal; others are additional APIs for commonly-perfo
 
 #### lang
 
-The [`@dojo/core/lang` module](../../docs/lang.md) contains various utility functions for tasks such as copying objects
+The [`@dojo/core/lang` module](../../docs/core/lang.md) contains various utility functions for tasks such as copying objects
 and creating late-bound or partially applied functions.
 
 ### load
-The [`@dojo/core/load` module](../../docs/load.md) can be used to dynamically load modules or other arbitrary resources via plugins.
+The [`@dojo/core/load` module](../../docs/core/load.md) can be used to dynamically load modules or other arbitrary resources via plugins.
 
 #### string
 
-The [`@dojo/core/stringExtras` module](../../docs/stringExtras.md) contains various string functions that are not available as part of the ES2015 String APIs.
+The [`@dojo/core/stringExtras` module](../../docs/core/stringExtras.md) contains various string functions that are not available as part of the ES2015 String APIs.
 
 #### UrlSearchParams
 
-The [`@dojo/core/UrlSearchParams` class](../../docs/UrlSearchParams.md) can be used to parse and generate URL query strings.
+The [`@dojo/core/UrlSearchParams` class](../../docs/core/UrlSearchParams.md) can be used to parse and generate URL query strings.
 
 #### Event handling
 
-The [`@dojo/core/on` module](../../docs/on.md) contains methods to handle events across types of listeners.  It also includes methods to handle different event use cases including only firing
+The [`@dojo/core/on` module](../../docs/core/on.md) contains methods to handle events across types of listeners.  It also includes methods to handle different event use cases including only firing
 once and pauseable events.
 
 #### HTTP requests
 
-The [`@dojo/core/request` module](../../docs/request.md) contains methods to simplify making HTTP requests. It can handle
+The [`@dojo/core/request` module](../../docs/core/request.md) contains methods to simplify making HTTP requests. It can handle
 making requests in both node and the browser through the same methods.
 
 ### Promises and Asynchronous Operations
@@ -138,15 +138,15 @@ See [LICENSE](LICENSE) for details.
 
 <!-- doc-viewer-config
 {
-	"api": "../../docs/api.json",
+	"api": "../../docs/core/api.json",
 	"pages": [
-		"../../docs/UrlSearchParams.md",
-		"../../docs/has.md",
-		"../../docs/lang.md",
-		"../../docs/load.md",
-		"../../docs/on.md",
-		"../../docs/request.md",
-		"../../docs/stringExtras.md"
+		"../../docs/core/UrlSearchParams.md",
+		"../../docs/core/has.md",
+		"../../docs/core/lang.md",
+		"../../docs/core/load.md",
+		"../../docs/core/on.md",
+		"../../docs/core/request.md",
+		"../../docs/core/stringExtras.md"
 	]
 }
 -->
