@@ -6,7 +6,7 @@ import { beforeProperties } from '../widget-core/decorators/beforeProperties';
 import { alwaysRender } from '../widget-core/decorators/alwaysRender';
 import { InjectorItem, RegistryLabel, Constructor, DNode } from '../widget-core/interfaces';
 import { Store, StatePaths, Path } from './Store';
-import { Registry } from '../../src/widget-core/Registry';
+import { Registry } from '../widget-core/Registry';
 const registeredInjectorsMap: WeakMap<WidgetBase, InjectorItem<Store>[]> = new WeakMap();
 
 export interface GetProperties<S extends Store, W extends WidgetBase<any, any> = WidgetBase<any, any>> {
