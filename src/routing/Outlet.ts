@@ -1,32 +1,16 @@
-import { DNode, WidgetBaseInterface } from '../widget-core/interfaces';
+import { DNode, WidgetProperties } from '../widget-core/interfaces';
 import { WidgetBase } from '../widget-core/WidgetBase';
-import { w } from '../widget-core/d';
 import { inject } from '../widget-core/decorators/inject';
 import { alwaysRender } from '../widget-core/decorators/alwaysRender';
-import { OnEnter, Component, OutletOptions, OutletComponents, Outlet, Params, OutletContext } from './interfaces';
+import { OnEnter, OutletOptions, Outlet, Params, OutletContext, OutletRender } from './interfaces';
 import { Router } from './Router';
 
-export function isComponent<W extends WidgetBaseInterface>(value: any): value is Component<W> {
-	return Boolean(value && (typeof value === 'string' || typeof value === 'function' || typeof value === 'symbol'));
-}
+export function Outlet<O extends WidgetProperties>(outletRender: OutletRender<O>, options: OutletOptions): Outlet<O> {
+	const { outlet, key = 'router' } = options;
 
-export function getProperties(router: Router, properties: any) {
-	return { router };
-}
-
-export function Outlet<W extends WidgetBaseInterface, F extends WidgetBaseInterface, E extends WidgetBaseInterface>(
-	outletComponents: Component<W> | OutletComponents<W, F, E>,
-	outlet: string,
-	options: OutletOptions = {}
-): Outlet<W, F, E> {
-	const indexComponent = isComponent(outletComponents) ? undefined : outletComponents.index;
-	const mainComponent = isComponent(outletComponents) ? outletComponents : outletComponents.main;
-	const errorComponent = isComponent(outletComponents) ? undefined : outletComponents.error;
-	const { mapParams, key = 'router' } = options;
-
-	@inject({ name: key, getProperties })
+	@inject({ name: key, getProperties: (properties) => properties })
 	@alwaysRender()
-	class OutletComponent extends WidgetBase<Partial<W['properties']> & { router: Router }, null> {
+	class OutletComponent extends WidgetBase<O, null> {
 		private _matched = false;
 		private _matchedParams: Params = {};
 		private _onExit?: () => void;
@@ -62,28 +46,16 @@ export function Outlet<W extends WidgetBaseInterface, F extends WidgetBaseInterf
 		}
 
 		protected render(): DNode {
-			let { router, ...properties } = this.properties;
-
+			const item = this.registry.getInjector<Router>(key)!;
+			const router = item.injector();
 			const outletContext = router.getOutlet(outlet);
 			if (outletContext) {
 				const { queryParams, params, type, onEnter, onExit } = outletContext;
 				this._onExit = onExit;
-				if (mapParams) {
-					properties = { ...properties, ...mapParams({ queryParams, params, type, router }) };
-				}
-
-				if (type === 'index' && indexComponent) {
+				const result = outletRender(this.properties, { queryParams, params, type, router });
+				if (result) {
 					this._onEnter(outletContext, onEnter);
-					return w(indexComponent, properties, this.children);
-				} else if (type === 'error' && errorComponent) {
-					this._onEnter(outletContext, onEnter);
-					return w(errorComponent, properties, this.children);
-				} else if (type === 'error' && indexComponent) {
-					this._onEnter(outletContext, onEnter);
-					return w(indexComponent, properties, this.children);
-				} else if (type !== 'error' && mainComponent) {
-					this._onEnter(outletContext, onEnter);
-					return w(mainComponent, properties, this.children);
+					return result;
 				}
 			}
 

@@ -3,7 +3,8 @@ import {
 	RegistryLabel,
 	VNodeProperties,
 	WidgetBaseInterface,
-	WidgetProperties
+	WidgetProperties,
+	DNode
 } from '../widget-core/interfaces';
 import { WidgetBase } from '../widget-core/WidgetBase';
 
@@ -42,16 +43,6 @@ export interface RouteConfig {
  */
 export interface Params {
 	[index: string]: string;
-}
-
-/**
- * Options passed to the mapParams callback
- */
-export interface MapParamsOptions {
-	queryParams: Params;
-	params: Params;
-	type: MatchType;
-	router: RouterInterface;
 }
 
 /**
@@ -114,13 +105,6 @@ export interface RouterInterface {
 	readonly currentParams: Params;
 }
 
-/**
- * Function for mapping params to properties
- */
-export interface MapParams {
-	(options: MapParamsOptions): any;
-}
-
 export interface OnEnter {
 	(params: Params, type: MatchType): void;
 }
@@ -129,12 +113,23 @@ export interface OnExit {
 	(): void;
 }
 
+export interface OutletRender<O> {
+	(properties: O, outletProperties: OutletProperties): DNode;
+}
+
 /**
  * Outlet options that can be configured
  */
 export interface OutletOptions {
 	key?: RegistryLabel;
-	mapParams?: MapParams;
+	outlet: string;
+}
+
+export interface OutletProperties {
+	queryParams: Params;
+	params: Params;
+	type: MatchType;
+	router: RouterInterface;
 }
 
 /**
@@ -158,13 +153,7 @@ export interface OutletComponents<
 /**
  * Type for Outlet
  */
-export type Outlet<
-	W extends WidgetBaseInterface,
-	F extends WidgetBaseInterface,
-	E extends WidgetBaseInterface
-> = Constructor<
-	WidgetBase<Partial<E['properties']> & Partial<W['properties']> & Partial<F['properties']> & WidgetProperties, null>
->;
+export type Outlet<O extends WidgetProperties> = Constructor<WidgetBase<O, null>>;
 
 /**
  * Properties for the Link widget
