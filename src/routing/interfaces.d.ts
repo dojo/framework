@@ -70,6 +70,16 @@ export interface OutletContext {
 	queryParams: Params;
 
 	/**
+	 * Returns `true` when the route is an error match
+	 */
+	isError(): boolean;
+
+	/**
+	 * Returns `true` when the route is an exact match
+	 */
+	isExact(): boolean;
+
+	/**
 	 * On enter for the route
 	 */
 	onEnter?: OnEnter;
@@ -114,7 +124,7 @@ export interface OnExit {
 }
 
 export interface OutletRender<O> {
-	(properties: O, outletProperties: OutletProperties): DNode;
+	(properties: O & WidgetProperties, outletProperties: OutletProperties): DNode;
 }
 
 /**
@@ -126,10 +136,35 @@ export interface OutletOptions {
 }
 
 export interface OutletProperties {
+	/**
+	 * Query params from the matching route for the outlet
+	 */
 	queryParams: Params;
+
+	/**
+	 * Params from the matching route for the outlet
+	 */
 	params: Params;
+
+	/**
+	 * Match type of the route for the outlet, either `index`, `partial` or `error`
+	 */
 	type: MatchType;
+
+	/**
+	 * The router instance
+	 */
 	router: RouterInterface;
+
+	/**
+	 * Function returns true if the outlet match was an `error` type
+	 */
+	isError(): boolean;
+
+	/**
+	 * Function returns true if the outlet match was an `index` type
+	 */
+	isExact(): boolean;
 }
 
 /**

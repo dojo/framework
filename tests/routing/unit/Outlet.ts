@@ -71,7 +71,7 @@ describe('Outlet', () => {
 	it('Should render the index component only for index matches', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
-		const TestOutlet = Outlet(
+		const TestOutlet = Outlet<{ foo: string }>(
 			(properties, outletProperties) => {
 				if (outletProperties.type === 'index') {
 					return w(Widget, {});

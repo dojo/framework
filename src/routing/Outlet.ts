@@ -5,7 +5,7 @@ import { alwaysRender } from '../widget-core/decorators/alwaysRender';
 import { OnEnter, OutletOptions, Outlet, Params, OutletContext, OutletRender } from './interfaces';
 import { Router } from './Router';
 
-export function Outlet<O extends WidgetProperties>(outletRender: OutletRender<O>, options: OutletOptions): Outlet<O> {
+export function Outlet<O = WidgetProperties>(outletRender: OutletRender<O>, options: OutletOptions): Outlet<O> {
 	const { outlet, key = 'router' } = options;
 
 	@inject({ name: key, getProperties: (properties) => properties })
@@ -50,9 +50,9 @@ export function Outlet<O extends WidgetProperties>(outletRender: OutletRender<O>
 			const router = item.injector();
 			const outletContext = router.getOutlet(outlet);
 			if (outletContext) {
-				const { queryParams, params, type, onEnter, onExit } = outletContext;
+				const { queryParams, params, type, onEnter, onExit, isError, isExact } = outletContext;
 				this._onExit = onExit;
-				const result = outletRender(this.properties, { queryParams, params, type, router });
+				const result = outletRender(this.properties, { queryParams, params, type, router, isError, isExact });
 				if (result) {
 					this._onEnter(outletContext, onEnter);
 					return result;
