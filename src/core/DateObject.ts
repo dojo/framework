@@ -267,21 +267,23 @@ export class DateObject implements DateProperties {
 		} else {
 			// Properties have to be added in a particular order to properly handle
 			// date overshoots in month and year calculations
-			operationOrder.forEach((property: string): void => {
-				if (!(property in value)) {
-					return;
-				}
+			operationOrder.forEach(
+				(property: string): void => {
+					if (!(property in value)) {
+						return;
+					}
 
-				const dateMethod = operationHash[property];
-				(<any>result._date)[`set${dateMethod}`]((<any>this._date)[`get${dateMethod}`]() + value[property]);
+					const dateMethod = operationHash[property];
+					(<any>result._date)[`set${dateMethod}`]((<any>this._date)[`get${dateMethod}`]() + value[property]);
 
-				if ((property === 'years' || property === 'months') && result.dayOfMonth < this.dayOfMonth) {
-					// Set the day of the month to 0 to move the date to the first day of the previous
-					// month to fix overshoots when adding a month and the date is the 31st or adding
-					// a year and the date is the 29th
-					result.dayOfMonth = 0;
+					if ((property === 'years' || property === 'months') && result.dayOfMonth < this.dayOfMonth) {
+						// Set the day of the month to 0 to move the date to the first day of the previous
+						// month to fix overshoots when adding a month and the date is the 31st or adding
+						// a year and the date is the 29th
+						result.dayOfMonth = 0;
+					}
 				}
-			});
+			);
 		}
 
 		return result;

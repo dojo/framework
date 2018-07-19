@@ -236,9 +236,9 @@ function buildRedirectTests(methods: RedirectTestData[]) {
 							assert.equal(response.url, expectedPage);
 
 							if (details.expectedCount !== undefined) {
-								const {
-									redirectOptions: { count: redirectCount = 0 } = {}
-								} = (<NodeResponse>response).requestOptions;
+								const { redirectOptions: { count: redirectCount = 0 } = {} } = (<NodeResponse>(
+									response
+								)).requestOptions;
 
 								assert.equal(redirectCount, details.expectedCount);
 							}

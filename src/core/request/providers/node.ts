@@ -562,7 +562,10 @@ export default function node(url: string, options: NodeRequestOptions = {}): Upl
 							 content, so do undo the encoding we have to start at the end and work backwards.
 							 */
 									if (contentEncodings.length) {
-										const encoding = contentEncodings.pop()!.trim().toLowerCase();
+										const encoding = contentEncodings
+											.pop()!
+											.trim()
+											.toLowerCase();
 
 										if (encoding === '' || encoding === 'none' || encoding === 'identity') {
 											// do nothing, response stream is as-is

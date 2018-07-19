@@ -159,8 +159,7 @@ if (has('formdata')) {
 		return <any>this.text().then((text: string) => {
 			const data = new FormData();
 
-			text
-				.trim()
+			text.trim()
 				.split('&')
 				.forEach((keyValues) => {
 					if (keyValues) {

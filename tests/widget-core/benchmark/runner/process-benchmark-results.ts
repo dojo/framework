@@ -33,7 +33,7 @@ export function processBenchmarkResults() {
 	console.log(' ---- \n');
 
 	results.forEach(({ vanillaResult, dojoResult }) => {
-		const percentSlower = (dojoResult.median - vanillaResult.median) / vanillaResult.median * 100;
+		const percentSlower = ((dojoResult.median - vanillaResult.median) / vanillaResult.median) * 100;
 		console.log(
 			`${vanillaResult.benchmark} - vanilla: ${vanillaResult.median}. dojo: ${dojoResult.median} (${Math.round(
 				percentSlower

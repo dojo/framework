@@ -114,7 +114,7 @@ export type PatchRecord =
 			 * The type of the patch
 			 */
 			type: 'delete';
-		}
+	  }
 	| {
 			/**
 			 * A property descriptor that describes the property in `name`
@@ -135,7 +135,7 @@ export type PatchRecord =
 			 * Additional patch records which describe the value of the property
 			 */
 			valueRecords?: (ConstructRecord | PatchRecord | SpliceRecord)[];
-		};
+	  };
 
 /**
  * The different types of patch records supported
@@ -370,8 +370,12 @@ function diffArray(a: any[], b: any, options: DiffOptions): SpliceRecord[] {
 
 		if (isValueAArray || isValueAPlainObject) {
 			const value = isValueAArray
-				? isArray(valueB) ? valueB : []
-				: isPlainObject(valueB) ? valueB : Object.create(null);
+				? isArray(valueB)
+					? valueB
+					: []
+				: isPlainObject(valueB)
+					? valueB
+					: Object.create(null);
 			const valueRecords = diff(valueA, value, options);
 			if (valueRecords.length) {
 				/* only add if there are changes */
@@ -441,7 +445,9 @@ function diffPlainObject(a: any, b: any, options: DiffOptions): (ConstructRecord
 			const value =
 				(isValueAArray && isArray(valueB)) || (isValueAPlainObject && isPlainObject(valueB))
 					? valueB
-					: isValueAArray ? [] : objectCreate(null);
+					: isValueAArray
+						? []
+						: objectCreate(null);
 			const valueRecords = diff(valueA, value, options);
 			if (valueRecords.length) {
 				/* only add if there are changes */
@@ -506,7 +512,7 @@ export function getComparableObjects(a: any, b: any, options: DiffOptions) {
 				return ignoreProperties.some(
 					(value) => (typeof value === 'string' ? name === value : value.test(name))
 				);
-			}
+		  }
 		: (name: string) => ignoreProperties(name, a, b);
 
 	const comparableA = keys(a).reduce(
@@ -558,7 +564,7 @@ function isIgnoredPropertyValue(
 	return Array.isArray(ignoredPropertyValues)
 		? ignoredPropertyValues.some((value) => {
 				return typeof value === 'string' ? name === value : value.test(name);
-			})
+		  })
 		: ignoredPropertyValues(name, a, b);
 }
 
@@ -693,10 +699,14 @@ function resolveTargetValue(patchValue: any, targetValue: any): any {
 	return patchIsSpliceRecordArray || isPatchRecordArray(patchValue)
 		? patch(
 				patchIsSpliceRecordArray
-					? isArray(targetValue) ? targetValue : []
-					: isPlainObject(targetValue) ? targetValue : objectCreate(null),
+					? isArray(targetValue)
+						? targetValue
+						: []
+					: isPlainObject(targetValue)
+						? targetValue
+						: objectCreate(null),
 				patchValue
-			)
+		  )
 		: patchValue;
 }
 

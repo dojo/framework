@@ -33,7 +33,7 @@ function copyArray<T>(array: T[], inherited: boolean): T[] {
 					inherited: inherited,
 					sources: <Array<T>>[item],
 					target: <T>{}
-				});
+			  });
 	});
 }
 
@@ -285,11 +285,11 @@ export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): 
 
 				// TS7017
 				return (<any>instance)[method].apply(instance, args);
-			}
+		  }
 		: function() {
 				// TS7017
 				return (<any>instance)[method].apply(instance, arguments);
-			};
+		  };
 }
 
 /**

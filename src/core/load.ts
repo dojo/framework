@@ -24,7 +24,9 @@ export function isNodeRequire(object: any): object is NodeRequire {
 const load: Load = (function(): Load {
 	const resolver = isAmdRequire(require)
 		? require.toUrl
-		: isNodeRequire(require) ? require.resolve : (resourceId: string) => resourceId;
+		: isNodeRequire(require)
+			? require.resolve
+			: (resourceId: string) => resourceId;
 
 	function pluginLoad(moduleIds: string[], load: Load, loader: (modulesIds: string[]) => Promise<any>) {
 		const pluginResourceIds: string[] = [];

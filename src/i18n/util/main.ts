@@ -48,9 +48,11 @@ export const normalizeLocale = (function() {
 		return locale
 			.split('.')
 			.slice(0, -1)
-			.map((part: string): string => {
-				return removeTrailingSeparator(part).replace(/_/g, '-');
-			})
+			.map(
+				(part: string): string => {
+					return removeTrailingSeparator(part).replace(/_/g, '-');
+				}
+			)
 			.join('-');
 	}
 
