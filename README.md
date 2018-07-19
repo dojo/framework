@@ -39,31 +39,7 @@ We have additional packages within the Dojo ecosystem to aid in quickly and easi
 * [`dojo/cli-create-app`](https://github.com/dojo/cli-create-app) - Command for creating application boilerplates
 * [`dojo/cli-create-theme`](https://github.com/dojo/cli-create-theme) - Command for scaffolding a widget theme
 * [`dojo/cli-create-widget`](https://github.com/dojo/cli-create-widget) - Command for creating a widget template and all associated boilerplate
-* [`dojo/cli-export-project`](https://github.com/dojo/cli-export-project) - Command for exporting project bundles
 * [`dojo/cli-test-intern`](https://github.com/dojo/cli-test-intern) - Command for testing projects with [Intern](https://theintern.github.io)
-
-### Future packages
-
-We also have packages that are still in their planning stages and as such might not be part of the initial Dojo release.
-
-* [`dojo/dgrid`](https://github.com/dojo/dgrid) - Reactive extensive grid for Dojo
-* [`dojo/crypto`](https://github.com/dojo/crypto) - A set of libraries to deal with cryptography
-* [`dojo/dataviz`](https://github.com/dojo/dataviz) - A data visualization library for Dojo
-
-### Deprecated Packages
-
-* [`dojo/actions`](https://github.com/dojo/actions) - A command like library for Dojo applications - *This is deprecated because we have not found this abstraction to add value*
-* [`dojo/app`](https://github.com/dojo/app) - An application framework for Dojo - *This is deprecated because widgets + routing + stores are sufficient to deal with higher order application concerns*
-* [`dojo/cli-build-webpack`](https://github.com/dojo/cli-build-webpack) - A legacy application and widget build command - *This is deprecated as it has been superseded by `@dojo/cli-build-app` and `@dojo/cli-build-widget` *
-* [`dojo/compose`](https://github.com/dojo/compose) - A mixin/trait based composition library - *This is deprecated because TypeScript now offers mixin behavior*
-* [`dojo/dom`](https://github.com/dojo/dom) - A set of APIs for manipulating the DOM - *This is deprecated because Dojo will fully abstract away DOM access.*
-* [`dojo/interfaces`](https://github.com/dojo/interfaces) - Common interfaces and types for Dojo - *This has been deprecated as interfaces now live in their respective repositories*
-* [`dojo/parser`](https://github.com/dojo/parser) - A HTML document parser for instantiating objects declaratively - *This is deprecated in lieu of functionality provided using Custom Elements from `@dojo/framework/widget-core`.*
-
-### Examples
-
-We have added a repository of examples which have been built on Dojo.  Those examples are available
-in the [dojo/examples](https://github.com/dojo/examples) repository and are _live_ at [dojo.github.io/examples](https://dojo.github.io/examples).
 
 ### Support Packages
 
@@ -75,6 +51,11 @@ There are several packages which are designed to support the Dojo platform.  Gen
 * [`dojo/scripts`](https://github.com/dojo/scripts) - A package of scripts to aid with Dojo package development.
 * [`dojo/webpack-contrib`](https://github.com/dojo/webpack-contrib) - Specialized webpack loaders and plugins used by the Dojo toolchain.
 * [`dojo/web-editor`](https://github.com/dojo/web-editor) - A web editor that can run projects exported from `cli-export-project`
+
+### Examples
+
+We have added a repository of examples which have been built on Dojo.  Those examples are available
+in the [dojo/examples](https://github.com/dojo/examples) repository and are _live_ at [dojo.github.io/examples](https://dojo.github.io/examples).
 
 ## Guidelines and Style Guide
 
