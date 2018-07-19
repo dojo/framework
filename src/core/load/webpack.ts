@@ -105,7 +105,7 @@ export default function load(...args: any[]): Promise<any[]> {
 			? args[0]
 			: function() {
 					return '';
-				};
+			  };
 
 	const modules = __modules__ || {};
 	const base = getBasePath(context);

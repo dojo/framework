@@ -36,18 +36,20 @@ const getJson: (paths: string[]) => Promise<CldrData[]> = (function() {
 
 	return function(paths: string[]): Promise<CldrData[]> {
 		return Promise.all(
-			paths.map((path: string): Promise<CldrData> => {
-				if (typeof require.toUrl === 'function') {
-					path = require.toUrl(path);
-				}
+			paths.map(
+				(path: string): Promise<CldrData> => {
+					if (typeof require.toUrl === 'function') {
+						path = require.toUrl(path);
+					}
 
-				return <Promise<CldrData>>request
-					.get(path)
-					.then((response) => response.json())
-					.then((data: CldrData) => {
-						return data;
-					});
-			})
+					return <Promise<CldrData>>request
+						.get(path)
+						.then((response) => response.json())
+						.then((data: CldrData) => {
+							return data;
+						});
+				}
+			)
 		);
 	};
 })();

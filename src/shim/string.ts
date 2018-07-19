@@ -205,7 +205,7 @@ if (has('es6-string') && has('es6-string-raw')) {
 				// https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
 				codePoint -= 0x10000;
 				let highSurrogate = (codePoint >> 10) + HIGH_SURROGATE_MIN;
-				let lowSurrogate = codePoint % 0x400 + LOW_SURROGATE_MIN;
+				let lowSurrogate = (codePoint % 0x400) + LOW_SURROGATE_MIN;
 				codeUnits.push(highSurrogate, lowSurrogate);
 			}
 

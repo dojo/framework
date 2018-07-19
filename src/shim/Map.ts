@@ -178,9 +178,11 @@ if (!has('es6-map')) {
 		}
 
 		entries(): IterableIterator<[K, V]> {
-			const values = this._keys.map((key: K, i: number): [K, V] => {
-				return [key, this._values[i]];
-			});
+			const values = this._keys.map(
+				(key: K, i: number): [K, V] => {
+					return [key, this._values[i]];
+				}
+			);
 
 			return new ShimIterator(values);
 		}

@@ -13,8 +13,7 @@ frameworks.map((f) => frameworkMap.set(f.name, f));
 
 let results: Map<string, Map<string, JSONResult>> = new Map();
 
-fs
-	.readdirSync('./results')
+fs.readdirSync('./results')
 	.filter((file) => endsWith(file, '.json'))
 	.forEach((name) => {
 		let data = <JSONResult>JSON.parse(

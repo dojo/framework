@@ -131,7 +131,7 @@ registerSuite('shim - string functions', {
 		},
 
 		'test that valid cases do not throw'() {
-			let counter = Math.pow(2, 15) * 3 / 2;
+			let counter = (Math.pow(2, 15) * 3) / 2;
 			let oneUnitArgs: number[] = [];
 			let twoUnitArgs: number[] = [];
 

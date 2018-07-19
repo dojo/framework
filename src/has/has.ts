@@ -96,7 +96,9 @@ function isStaticFeatureFunction(value: any): value is (() => StaticHasFeatures)
  * module loaded
  */
 const staticCache: StaticHasFeatures = staticFeatures
-	? isStaticFeatureFunction(staticFeatures) ? staticFeatures.apply(globalScope) : staticFeatures
+	? isStaticFeatureFunction(staticFeatures)
+		? staticFeatures.apply(globalScope)
+		: staticFeatures
 	: {}; /* Providing an empty cache, if none was in the environment
 
 /**

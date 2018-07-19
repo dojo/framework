@@ -97,8 +97,7 @@ registerSuite('Set', {
 
 	'.add()'() {
 		const set = new Set();
-		set
-			.add(1)
+		set.add(1)
 			.add('foo')
 			.add(/ /)
 			.add({})
@@ -120,8 +119,7 @@ registerSuite('Set', {
 		assert.strictEqual(set.size, 0);
 		assert.isFalse(set.has(1));
 		assert.isFalse(set.has(4));
-		set
-			.add(1)
+		set.add(1)
 			.add(2)
 			.add(3)
 			.add(4);

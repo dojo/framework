@@ -19,10 +19,10 @@ export const decode: (encodedString: string) => string = has('atob')
 					)
 					.join('')
 			);
-		}
+	  }
 	: function(encodedString: string): string {
 			return new Buffer(encodedString.toString(), 'base64').toString('utf8');
-		};
+	  };
 
 /**
  * Take a string and encode it to base64
@@ -36,7 +36,7 @@ export const encode: (rawString: string) => string = has('btoa')
 					String.fromCharCode(Number('0x' + code))
 				)
 			);
-		}
+	  }
 	: function(rawString: string): string {
 			return new Buffer(rawString.toString(), 'utf8').toString('base64');
-		};
+	  };

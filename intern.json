@@ -42,6 +42,21 @@
 	],
 
 	"browser": {
+		"loader": {
+			"script": "./node_modules/@dojo/scripts/intern/loader.js",
+			"options": {
+				"shimPath": "./dist/dev/src/shim/util/amd.js",
+				"packages": [
+					{ "name": "src", "location": "dist/dev/src" },
+					{ "name": "tests", "location": "dist/dev/tests" }
+				],
+				"map": {
+					"*": {
+						"@dojo/framework/shim/main": "./dist/dev/src/shim/main"
+					}
+				}
+			}
+		},
 		"suites+": [
 			"./dist/dev/tests/core/unit/all-browser",
 			"./dist/dev/tests/routing/unit/all.js"
@@ -55,34 +70,7 @@
 				"script": "./dist/dev/tests/widget-core/support/loadCustomElements.js",
 				"useLoader": true
 			}
-		],
-		"loader": {
-			"script": "dojo2",
-			"options": {
-				"packages": [
-					{ "name": "src", "location": "dist/dev/src" },
-					{ "name": "tests", "location": "dist/dev/tests" },
-					{ "name": "tslib", "location": "node_modules/tslib", "main": "tslib" },
-					{ "name": "pepjs", "location": "node_modules/pepjs/dist", "main": "pep" },
-					{ "name": "intersection-observer", "location": "node_modules/intersection-observer", "main": "intersection-observer" },
-					{ "name": "web-animations-js", "location": "node_modules/web-animations-js" },
-					{ "name": "cldr-data", "location": "node_modules/cldr-data" },
-					{ "name": "cldrjs", "location": "node_modules/cldrjs" },
-					{ "name": "globalize", "location": "node_modules/globalize", "main": "dist/globalize" },
-					{ "name": "css-select-umd", "location": "node_modules/css-select-umd", "main": "dist/index.js" },
-					{ "name": "diff", "location": "node_modules/diff", "main": "dist/diff.js" },
-					{ "name": "sinon", "location": "node_modules/sinon/pkg", "main": "sinon" }
-				],
-				"map": {
-					"globalize": {
-						"cldr": "cldrjs/dist/cldr",
-						"cldr/event": "cldrjs/dist/cldr/event",
-						"cldr/supplemental": "cldrjs/dist/cldr/supplemental",
-						"cldr/unresolved": "cldrjs/dist/cldr/unresolved"
-					}
-				}
-			}
-		}
+		]
 	},
 
 	"node": {

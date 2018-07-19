@@ -36,10 +36,10 @@ const undef: (id: string) => void = has('host-node')
 	? (id: string) => {
 			const path = require('path');
 			delete require.cache[path.resolve(__dirname, id) + '.js'];
-		}
+	  }
 	: (id: string) => {
 			(require as any).undef((require as any).toAbsMid(id));
-		};
+	  };
 
 registerSuite('has', {
 	before() {

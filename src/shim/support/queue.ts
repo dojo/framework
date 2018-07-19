@@ -98,7 +98,7 @@ export const queueTask = (function() {
 		: function(callback: (...args: any[]) => any): Handle {
 				checkMicroTaskQueue();
 				return queueTask(callback);
-			};
+		  };
 })();
 
 // When no mechanism for registering microtasks is exposed by the environment, microtasks will
@@ -156,7 +156,7 @@ export const queueAnimationTask = (function() {
 		: function(callback: (...args: any[]) => any): Handle {
 				checkMicroTaskQueue();
 				return queueAnimationTask(callback);
-			};
+		  };
 })();
 
 /**
