@@ -1,7 +1,7 @@
 <!--
-Thank you for contributing to Dojo 2.
+Thank you for contributing to Dojo.
 
-Our issue tracker is for bugs for Dojo 2.
+Our issue tracker is for bugs for Dojo.
 
 Please make sure you have read our Contributing Guidelines
 available at: https://github.com/dojo/meta/blob/master/CONTRIBUTING.md

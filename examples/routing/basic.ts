@@ -33,9 +33,7 @@ export class Topics extends WidgetBase<TopicsProperties> {
 			v('h2', ['Topics']),
 			v('ul', [
 				v('li', [
-					w(Link, { key: 'rendering', to: 'topic', params: { topic: 'rendering' } }, [
-						'Rendering with Dojo 2'
-					])
+					w(Link, { key: 'rendering', to: 'topic', params: { topic: 'rendering' } }, ['Rendering with Dojo'])
 				]),
 				v('li', [w(Link, { key: 'widgets', to: 'topic', params: { topic: 'widgets' } }, ['Widgets'])]),
 				v('li', [w(Link, { key: 'props', to: 'topic', params: { topic: 'props-v-state' } }, ['Props v State'])])

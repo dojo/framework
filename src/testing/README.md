@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/dojo/test-extras/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/test-extras)
 [![npm version](https://badge.fury.io/js/%40dojo%2Ftest-extras.svg)](http://badge.fury.io/js/%40dojo%2Ftest-extras)
 
-Provides a simple API for testing and asserting Dojo 2 widget's expected virtual DOM and behavior.
+Provides a simple API for testing and asserting Dojo widget's expected virtual DOM and behavior.
 
 - [Features](#features)
 - [`harness`](#harness)
@@ -22,7 +22,7 @@ Provides a simple API for testing and asserting Dojo 2 widget's expected virtual
 ## Features
 
  * Simple, familiar and minimal API
- * Focused on testing Dojo 2 virtual DOM structures
+ * Focused on testing Dojo virtual DOM structures
  * No DOM requirement by default
  * Full functional and tsx support
 

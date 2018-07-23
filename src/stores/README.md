@@ -27,7 +27,7 @@ npm install @dojo/widget-core
  * All state operations are recorded per process and undoable via a process callback
  * Supports the optimistic pattern with the ability to roll back on a failure
  * Fully serializable operations and state
- 
+
 <!-- start-github-only -->
 
 -----
@@ -57,7 +57,7 @@ npm install @dojo/widget-core
 
 ## Overview
 
-Dojo 2 stores is a predictable, consistent state container for Javascript applications with inspiration from Redux and Flux architectures. However, the `@dojo/stores` package aims to provide more built-in support for common patterns such as asynchronous behaviors, undo support and **more**!
+Dojo stores is a predictable, consistent state container for Javascript applications with inspiration from Redux and Flux architectures. However, the `@dojo/stores` package aims to provide more built-in support for common patterns such as asynchronous behaviors, undo support and **more**!
 
 Managing state can become difficult to coordinate when an application becomes complicated with multiple views, widgets, components, and models. With each of these attempting to update attributes of state at varying points within the application lifecycle things can get **confusing**. When state changes are hard to understand and/or non-deterministic it becomes increasingly difficult to identify and reproduce bugs or add new features.
 
@@ -78,9 +78,9 @@ To work with `@dojo/stores` there are three core but simple concepts - Operation
 
 ### Operations
 
-Operations are the raw instructions the store uses to make modifications to the state. The operations are based on the JSON Patch and JSON Pointer specifications that have been customized specifically for Dojo 2 stores, primarily to prevent access to the state's root.
+Operations are the raw instructions the store uses to make modifications to the state. The operations are based on the JSON Patch and JSON Pointer specifications that have been customized specifically for Dojo stores, primarily to prevent access to the state's root.
 
-Dojo 2 stores support four of the six JSON Patch operations: "add", "remove", "replace", and "test". The "copy" and "move" operations are not currently supported. Each operation is a simple object which contains instructions with the `OperationType`, `path` and optionally the `value` (depending on operation).
+Dojo stores support four of the six JSON Patch operations: "add", "remove", "replace", and "test". The "copy" and "move" operations are not currently supported. Each operation is a simple object which contains instructions with the `OperationType`, `path` and optionally the `value` (depending on operation).
 
 ```ts
 import { OperationType } from '@dojo/stores/State/patch';
@@ -100,7 +100,7 @@ const operations = [{
 }];
 ```
 
-Dojo 2 stores provides a helper package that can generate `PatchOperation` objects from `@dojo/stores/state/operations`:
+Dojo stores provides a helper package that can generate `PatchOperation` objects from `@dojo/stores/state/operations`:
 
 * `add` - Returns a `PatchOperation` of type `OperationType.ADD` for the `path` and `value`
 * `remove`  - Returns a `PatchOperation` of type `OperationType.REMOVE` for the `path`
@@ -341,7 +341,7 @@ const commandOne = createCommandOne<{ foo: string }>(({ get, path, payload }) =>
 
 ## How does this differ from Redux
 
-Although Dojo 2 stores is a big atom state store, you never get access to the entire state object. To access the sections of state that are needed we use pointers to return the slice of state that is needed i.e. `path('path', 'to', 'state')`. State is never directly updated by the user, with state changes only being processed by the operations returned by commands.
+Although Dojo stores is a big atom state store, you never get access to the entire state object. To access the sections of state that are needed we use pointers to return the slice of state that is needed i.e. `path('path', 'to', 'state')`. State is never directly updated by the user, with state changes only being processed by the operations returned by commands.
 
 There is no concept of `reducers`, meaning that there is no confusion about where logic needs to reside between `reducers` and  `actions`. `Commands` are the only place that state logic resides and return `operations` that dictate what `state` changes are required and processed internally by the `store`.
 
@@ -577,7 +577,7 @@ const myProcess = createProcess('my-process', [ commandOne ], myCallbackDecorato
 
 ## How do I contribute?
 
-We appreciate your interest!  Please see the [Dojo 2 Meta Repository](https://github.com/dojo/meta#readme) for the
+We appreciate your interest!  Please see the [Dojo Meta Repository](https://github.com/dojo/meta#readme) for the
 Contributing Guidelines.
 
 ### Code Style
@@ -624,6 +624,6 @@ or
 
 <!-- doc-viewer-config
 {
-	"api": "docs/api.json"
+	"api": "docs/stores/api.json"
 }
 -->
