@@ -138,15 +138,15 @@ See [LICENSE](LICENSE) for details.
 
 <!-- doc-viewer-config
 {
-	"api": "../../docs/core/api.json",
+	"api": "docs/core/api.json",
 	"pages": [
-		"../../docs/core/UrlSearchParams.md",
-		"../../docs/core/has.md",
-		"../../docs/core/lang.md",
-		"../../docs/core/load.md",
-		"../../docs/core/on.md",
-		"../../docs/core/request.md",
-		"../../docs/core/stringExtras.md"
+		"docs/core/UrlSearchParams.md",
+		"docs/core/has.md",
+		"docs/core/lang.md",
+		"docs/core/load.md",
+		"docs/core/on.md",
+		"docs/core/request.md",
+		"docs/core/stringExtras.md"
 	]
 }
 -->

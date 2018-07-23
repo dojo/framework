@@ -408,6 +408,6 @@ or
 
 <!-- doc-viewer-config
 {
-	"api": "../../docs/routing/api.json"
+	"api": "docs/routing/api.json"
 }
 -->

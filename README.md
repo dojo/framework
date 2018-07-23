@@ -7,7 +7,7 @@
 
 Dojo is a progressive framework for modern web applications built with Typescript.
 
-Visit us at [dojo.io](https://dojo.io/) for documentation, tutorials, cookbooks, and other materials.  This repository contains detailed information on the structure of Dojo, while `dojo.io` is focused on getting started with and learning Dojo.
+Visit us at [dojo.io](https://dojo.io/) for documentation, tutorials, cookbooks, and other materials. This repository contains detailed information on the structure of Dojo, while `dojo.io` is focused on getting started with and learning Dojo.
 
 ## Sub-packages within `@dojo/framework`
 

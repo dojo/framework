@@ -200,14 +200,14 @@ or
 
 <!-- doc-viewer-config
 {
-	"api": "../../docs/shim/api.json",
+	"api": "docs/shim/api.json",
 	"pages": [
-		"../../docs/shim/array.md",
-		"../../docs/shim/Map.md",
-		"../../docs/shim/math.md",
-		"../../docs/shim/Observable.md",
-		"../../docs/shim/Promise.md",
-		"../../docs/shim/string.md"
+		"docs/shim/array.md",
+		"docs/shim/Map.md",
+		"docs/shim/math.md",
+		"docs/shim/Observable.md",
+		"docs/shim/Promise.md",
+		"docs/shim/string.md"
 	]
 }
 -->
