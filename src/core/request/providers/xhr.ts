@@ -206,9 +206,25 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 
 	let timeoutHandle: Handle;
 	let timeoutReject: Function;
+	let abortCallback: (event: Event) => void;
 
 	const task = <UploadObservableTask<XhrResponse>>new Task<XhrResponse>((resolve, reject) => {
 		timeoutReject = reject;
+
+		if (options.signal) {
+			abortCallback = () => {
+				let abortError: Error;
+				try {
+					abortError = new DOMException('Aborted', 'AbortError');
+				} catch {
+					abortError = new Error('Aborted');
+					abortError.name = 'AbortError';
+				}
+				reject(abortError);
+			};
+
+			options.signal.addEventListener('abort', abortCallback);
+		}
 
 		request.onreadystatechange = function() {
 			if (isAborted) {
@@ -313,6 +329,10 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 		if (task.state !== State.Fulfilled) {
 			request.onreadystatechange = noop;
 			timeoutHandle && timeoutHandle.destroy();
+		}
+
+		if (options.signal) {
+			options.signal.removeEventListener('abort', abortCallback);
 		}
 	});
 

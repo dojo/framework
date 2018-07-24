@@ -4,6 +4,7 @@ import './support/decorators';
 import './support/has';
 import './support/queue';
 import './support/util';
+import './AbortController';
 import './array';
 import './global';
 import './iterator';

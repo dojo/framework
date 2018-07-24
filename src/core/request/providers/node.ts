@@ -397,6 +397,8 @@ export default function node(url: string, options: NodeRequestOptions = {}): Upl
 
 	const uploadObserverPool = new SubscriptionPool<number>();
 
+	let abortCallback: (event: Event) => void;
+
 	const requestTask = <UploadObservableTask<NodeResponse>>new Task<NodeResponse>(
 		(resolve, reject) => {
 			let timeoutHandle: Handle;
@@ -657,6 +659,16 @@ export default function node(url: string, options: NodeRequestOptions = {}): Upl
 					timeoutReject && timeoutReject(new TimeoutError('The request timed out'));
 				}, options.timeout);
 			}
+
+			if (options.signal) {
+				abortCallback = () => {
+					const abortError = new Error('Aborted');
+					abortError.name = 'AbortError';
+					reject(abortError);
+				};
+
+				options.signal.addEventListener('abort', abortCallback);
+			}
 		},
 		() => {
 			request.abort();
@@ -673,6 +685,12 @@ export default function node(url: string, options: NodeRequestOptions = {}): Upl
 		error.message = '[' + requestOptions.method + ' ' + sanitizedUrl + '] ' + error.message;
 		throw error;
 	});
+
+	const removeAbortListener = () => options.signal && options.signal.removeEventListener('abort', abortCallback);
+
+	if (options.signal) {
+		requestTask.then(removeAbortListener, removeAbortListener);
+	}
 
 	requestTask.upload = new Observable<number>((observer) => uploadObserverPool.add(observer));
 
