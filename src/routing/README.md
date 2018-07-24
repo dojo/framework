@@ -1,12 +1,8 @@
-# @dojo/routing
+# routing
 
 <!-- start-github-only -->
 
-[![Build Status](https://travis-ci.org/dojo/routing.svg?branch=master)](https://travis-ci.org/dojo/routing)
-[![codecov.io](https://codecov.io/github/dojo/routing/coverage.svg?branch=master)](https://codecov.io/github/dojo/routing?branch=master)
-[![npm version](https://badge.fury.io/js/%40dojo%2Frouting.svg)](https://badge.fury.io/js/%40dojo%2Frouting)
-
-A routing library for Dojo applications.
+Routing for Dojo applications.
 
  - [Features](#features)
    - [Route Configuration](#route-configuration)
@@ -20,20 +16,6 @@ A routing library for Dojo applications.
    - [Link](#link)
 
 <!-- end-github-only -->
-
-## Usage
-
-To use `@dojo/routing`, install the package along with its required peer dependencies:
-
-```bash
-npm install @dojo/routing
-
-# peer dependencies
-npm install @dojo/core
-npm install @dojo/has
-npm install @dojo/shim
-npm install @dojo/widget-core
-```
 
 ## Features
 
@@ -52,7 +34,7 @@ Application routes are registered using a `RouteConfig`, which defines a route's
 Example routing configuration:
 
 ```ts
-import { RouteConfig } from '@dojo/routing/interfaces';
+import { RouteConfig } from '@dojo/framework/routing/interfaces';
 
 const config: RouteConfig[] = [
 	{
@@ -154,7 +136,7 @@ const router = new Router(config);
 The router will automatically be registered with a `HashHistory` history manager. This can be overridden by passing a different history manager as the second parameter.
 
 ```ts
-import { MemoryHistory } from '@dojo/routing/MemoryHistory';
+import { MemoryHistory } from '@dojo/framework/routing/MemoryHistory';
 
 const router = new Router(config, MemoryHistory);
 ```
@@ -188,11 +170,11 @@ const router = new Router(config, MemoryHistory);
 
 ##### Hash History
 
-The hash-based manager uses the fragment identifier to store navigation state and is the default manager used within `@dojo/routing`.
+The hash-based manager uses the fragment identifier to store navigation state and is the default manager used within `@dojo/framework/routing`.
 
 ```ts
-import { Router } from '@dojo/routing/Router';
-import { HashHistory } from '@dojo/routing/history/HashHistory';
+import { Router } from '@dojo/framework/routing/Router';
+import { HashHistory } from '@dojo/framework/routing/history/HashHistory';
 
 const router = new Router(config, HashHistory);
 ```
@@ -208,8 +190,8 @@ The state history uses the browser's history API, `pushState()` and `replaceStat
 The `MemoryHistory` does not rely on any browser API but keeps its own internal path state. It should not be used in production applications but is useful for testing routing.
 
 ```ts
-import { Router } from '@dojo/routing/Router';
-import { MemoryHistory } from '@dojo/routing/history/MemoryHistory';
+import { Router } from '@dojo/framework/routing/Router';
+import { MemoryHistory } from '@dojo/framework/routing/history/MemoryHistory';
 
 const router = new Router(config, MemoryHistory);
 ```
@@ -220,7 +202,7 @@ The `RouterInjector` module exports a helper function, `registerRouterInjector`,
 
 ```ts
 import { Registry } from '@dojo/widget-core/Registry';
-import { registerRouterInjector } from '@dojo/routing/RoutingInjector';
+import { registerRouterInjector } from '@dojo/framework/routing/RoutingInjector';
 
 const registry = new Registry();
 const router = registerRouterInjector(config, registry);
@@ -230,7 +212,7 @@ The defaults can be overridden using `RouterInjectorOptions`:
 
 ```ts
 import { Registry } from '@dojo/widget-core/Registry';
-import { registerRouterInjector } from '@dojo/routing/RoutingInjector';
+import { registerRouterInjector } from '@dojo/framework/routing/RoutingInjector';
 import { MemoryHistory } from './history/MemoryHistory';
 
 const registry = new Registry();
@@ -250,7 +232,7 @@ The number of widgets that can be mapped to a single outlet identifier is not re
 The following example configures a stateless widget with an outlet called `foo`. The resulting `FooOutlet` can be used in a widgets `render` in the same way as any other Dojo Widget.
 
 ```ts
-import { Outlet } from '@dojo/routing/Outlet';
+import { Outlet } from '@dojo/framework/routing/Outlet';
 import { MyViewWidget } from './MyViewWidget';
 
 const FooOutlet = Outlet(MyViewWidget, 'foo');
@@ -348,7 +330,7 @@ The `Link` component is a wrapper around an `a` DOM element that enables consume
 If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
 
 ```ts
-import { Link } from '@dojo/routing/Link';
+import { Link } from '@dojo/framework/routing/Link';
 
 render() {
 	return v('div', [
@@ -359,52 +341,6 @@ render() {
 ```
 
 All the standard `VNodeProperties` are available for the `Link` component as they would be creating an `a` DOM Element using `v()` with `@dojo/widget-core`.
-
-## How do I contribute?
-
-We appreciate your interest!  Please see the [Dojo Meta Repository](https://github.com/dojo/meta#readme) for the Contributing Guidelines.
-
-### Code Style
-
-This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the project's `package.json`.
-
-An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
-
-```bash
-npm run prettier
-```
-
-### Installation
-
-To start working with this package, clone the repository and run `npm install`.
-
-In order to build the project run `grunt dev` or `grunt dist`.
-
-### Testing
-
-Test cases MUST be written using [Intern](https://theintern.github.io) using the Object test interface and Assert assertion interface.
-
-90% branch coverage MUST be provided for all code submitted to this repository, as reported by istanbul’s combined coverage results for all supported platforms.
-
-To test locally in node run:
-
-`grunt test`
-
-To test against browsers with a local selenium server run:
-
-`grunt test:local`
-
-To test against BrowserStack or Sauce Labs run:
-
-`grunt test:browserstack`
-
-or
-
-`grunt test:saucelabs`
-
-## Licensing information
-
-© 2018 [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
 <!-- doc-viewer-config
 {
