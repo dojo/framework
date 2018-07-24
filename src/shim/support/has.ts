@@ -263,3 +263,7 @@ add(
 	() => has('host-browser') && global.Animation !== undefined && global.KeyframeEffect !== undefined,
 	true
 );
+
+add('abort-controller', () => typeof global.AbortController !== 'undefined');
+
+add('abort-signal', () => typeof global.AbortSignal !== 'undefined');

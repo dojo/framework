@@ -26,7 +26,9 @@ registerSuite('support/has', {
 			'microtasks',
 			'postmessage',
 			'raf',
-			'setimmediate'
+			'setimmediate',
+			'abort-controller',
+			'abort-signal'
 		].forEach((feature) => assert.isTrue(exists(feature)));
 	}
 });
