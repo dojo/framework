@@ -19,8 +19,8 @@ To make simple GET requests, you must register your provider (node, or XHR) then
 format of the API resembles the [Fetch Standard](https://fetch.spec.whatwg.org/).
 
 ```ts
-import request from 'dojo/framework/core/request';
-import node from 'dojo/framework/core/providers/node';
+import request from '@dojo/framework/core/request';
+import node from '@dojo/framework/core/providers/node';
 
 request.setDefaultProvider(node);
 
