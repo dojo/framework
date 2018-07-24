@@ -380,7 +380,7 @@ store.on('invalidate', () => {
 
 ### Connecting Store Updates To Widgets
 
-Store data can be connected to widgets within your application using the [Containers & Injectors Pattern](https://github.com/dojo/widget-core#containers--injectors) supported by `@dojo/widget-core`. The `@dojo/stores` package provides a specialized injector that invalidates store containers on two conditions:
+Store data can be connected to widgets within your application using the [Containers & Injectors Pattern](../widget-core#containers--injectors) supported by `@dojo/widget-core`. The `@dojo/stores` package provides a specialized injector that invalidates store containers on two conditions:
 
 1. The recommended approach is to register `paths` on container creation to ensure invalidation will only occur when state you are interested in changes.
 2. A catch-all when no `paths` are defined for the container, it will invalidate when any data changes in the store.
@@ -397,12 +397,20 @@ interface State {
 	}
 }
 
-// Will only invalidate when the foo property is changed
-const Container = StoreContainer<State>(WidgetBase, 'state', { paths: [ [ 'foo' ] ], getProperties(store: Store<State>) {
-	return {
-		foo: store.get(store.path('foo'))
+// Will only invalidate when the `foo` or `bar/baz` property is changed
+const Container = StoreContainer<State>(WidgetBase, 'state', {
+	paths(path) {
+		return [
+			path('foo'),
+			path('bar', 'baz')
+		];
+	},
+	getProperties(store: Store<State>) {
+		return {
+			foo: store.get(store.path('foo'))
+		};
 	}
-}});
+});
 
 // Catch all, will invalidate if _any_ state changes in the store even if the container is not interested in the changes
 const Container = StoreContainer<State>(WidgetBase, 'state', { getProperties(store: Store<State>) {
