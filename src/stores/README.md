@@ -1,24 +1,6 @@
-# @dojo/stores
+# stores
 
-[![Build Status](https://travis-ci.org/dojo/stores.svg?branch=master)](https://travis-ci.org/dojo/stores)
-[![codecov.io](https://codecov.io/gh/dojo/stores/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/stores/branch/master)
-[![npm version](https://badge.fury.io/js/%40dojo%2Fstores.svg)](https://badge.fury.io/js/%40dojo%2Fstores)
-
-This library provides an application store designed to complement @dojo/widgets and @dojo/widget-core or any other reactive application.
-
-## Usage
-
-To use `@dojo/stores`, install the package along with its required peer dependencies:
-
-```bash
-npm install @dojo/stores
-
-# peer dependencies
-npm install @dojo/core
-npm install @dojo/has
-npm install @dojo/shim
-npm install @dojo/widget-core
-```
+An application store designed to complement @dojo/widgets and @dojo/widget-core or any other reactive application.
 
 ## Features
 
@@ -46,10 +28,6 @@ npm install @dojo/widget-core
      - [Executing Concurrent Commands](#executing-concurrent-commands)
      - [Decorating Processes](#decorating-processes)
         - [Decorating Multiple Processes](#decorating-multiple-processes)
- - [How Do I Contribute?](#how-do-i-contribute)
-    - [Setup Installation](#setup-installation)
-    - [Testing](#testing)
- - [Licensing Information](#licensing-information)
 
 -----
 
@@ -57,17 +35,17 @@ npm install @dojo/widget-core
 
 ## Overview
 
-Dojo stores is a predictable, consistent state container for Javascript applications with inspiration from Redux and Flux architectures. However, the `@dojo/stores` package aims to provide more built-in support for common patterns such as asynchronous behaviors, undo support and **more**!
+Dojo stores is a predictable, consistent state container for Javascript applications with inspiration from Redux and Flux architectures. However, the `@dojo/framework/stores` package aims to provide more built-in support for common patterns such as asynchronous behaviors, undo support and **more**!
 
 Managing state can become difficult to coordinate when an application becomes complicated with multiple views, widgets, components, and models. With each of these attempting to update attributes of state at varying points within the application lifecycle things can get **confusing**. When state changes are hard to understand and/or non-deterministic it becomes increasingly difficult to identify and reproduce bugs or add new features.
 
-The `@dojo/stores` package provides a centralized store, designed to be the **single source of truth** for an application. It operates using uni-directional data flow. This means all application data follows the same lifecycle, ensuring the application logic is predictable and easy to understand.
+The `@dojo/framework/stores` package provides a centralized store, designed to be the **single source of truth** for an application. It operates using uni-directional data flow. This means all application data follows the same lifecycle, ensuring the application logic is predictable and easy to understand.
 
 __Note__: Do you need a centralized store? Lifting state up to parent widgets and using local state are likely to be sufficient in less complex applications.
 
 ## Basics
 
-To work with `@dojo/stores` there are three core but simple concepts - Operations, Commands, and Processes.
+To work with `@dojo/framework/stores` there are three core but simple concepts - Operations, Commands, and Processes.
 
  * `Operation`
    * Granular instructions to manipulate state based on JSON Patch
@@ -83,8 +61,8 @@ Operations are the raw instructions the store uses to make modifications to the 
 Dojo stores support four of the six JSON Patch operations: "add", "remove", "replace", and "test". The "copy" and "move" operations are not currently supported. Each operation is a simple object which contains instructions with the `OperationType`, `path` and optionally the `value` (depending on operation).
 
 ```ts
-import { OperationType } from '@dojo/stores/State/patch';
-import { Pointer } from '@dojo/stores/state/Pointer';
+import { OperationType } from '@dojo/framework/stores/State/patch';
+import { Pointer } from '@dojo/framework/stores/state/Pointer';
 
 const operations = [{
 	op: OperationType.ADD,
@@ -100,7 +78,7 @@ const operations = [{
 }];
 ```
 
-Dojo stores provides a helper package that can generate `PatchOperation` objects from `@dojo/stores/state/operations`:
+Dojo stores provides a helper package that can generate `PatchOperation` objects from `@dojo/framework/stores/state/operations`:
 
 * `add` - Returns a `PatchOperation` of type `OperationType.ADD` for the `path` and `value`
 * `remove`  - Returns a `PatchOperation` of type `OperationType.REMOVE` for the `path`
@@ -198,7 +176,7 @@ const calculateCountsCommand = createCommand(({ get, path }) => {
 });
 ```
 
- *Important:* Access to state root is not permitted and will throw an error, for example, `get(path('/'))`. This applies to `Operations` also, it is not possible to create an operation that will update the state root. Best practices with @dojo/stores mean touching the smallest part of the store as is necessary.
+ *Important:* Access to state root is not permitted and will throw an error, for example, `get(path('/'))`. This applies to `Operations` also, it is not possible to create an operation that will update the state root. Best practices with @dojo/framework/stores mean touching the smallest part of the store as is necessary.
 
 ##### Asynchronous Commands
 
@@ -380,15 +358,15 @@ store.on('invalidate', () => {
 
 ### Connecting Store Updates To Widgets
 
-Store data can be connected to widgets within your application using the [Containers & Injectors Pattern](../widget-core#containers--injectors) supported by `@dojo/widget-core`. The `@dojo/stores` package provides a specialized injector that invalidates store containers on two conditions:
+Store data can be connected to widgets within your application using the [Containers & Injectors Pattern](../widget-core#containers--injectors) supported by `@dojo/widget-core`. The `@dojo/framework/stores` package provides a specialized injector that invalidates store containers on two conditions:
 
 1. The recommended approach is to register `paths` on container creation to ensure invalidation will only occur when state you are interested in changes.
 2. A catch-all when no `paths` are defined for the container, it will invalidate when any data changes in the store.
 
 ```ts
 import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { Store } from '@dojo/stores/Stores';
-import { StoreContainer } from '@dojo/stores/StoreInjector';
+import { Store } from '@dojo/framework/stores/Stores';
+import { StoreContainer } from '@dojo/framework/stores/StoreInjector';
 
 interface State {
 	foo: string;
@@ -420,7 +398,7 @@ const Container = StoreContainer<State>(WidgetBase, 'state', { getProperties(sto
 }});
 ```
 
-Instead of typing `StoreContainer` for every usage, it is possible to create a pre-typed StoreContainer that can be used across your application. To do this use `createStoreContainer` from `@dojo/stores/StoreInjector` passing the stores state interface as the generic argument. The result of this can be exported and used across your application.
+Instead of typing `StoreContainer` for every usage, it is possible to create a pre-typed StoreContainer that can be used across your application. To do this use `createStoreContainer` from `@dojo/framework/stores/StoreInjector` passing the stores state interface as the generic argument. The result of this can be exported and used across your application.
 
 ```ts
 interface State {
@@ -582,53 +560,6 @@ const myCallbackDecorator = createCallbackDecorator(myCallback);
 // use the callback decorator as normal
 const myProcess = createProcess('my-process', [ commandOne ], myCallbackDecorator());
 ```
-
-## How do I contribute?
-
-We appreciate your interest!  Please see the [Dojo Meta Repository](https://github.com/dojo/meta#readme) for the
-Contributing Guidelines.
-
-### Code Style
-
-This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the project's `package.json`.
-
-An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
-
-```bash
-npm run prettier
-```
-
-### Installation
-
-To start working with this package, clone the repository and run `npm install`.
-
-In order to build the project run `grunt dev` or `grunt dist`.
-
-### Testing
-
-Test cases MUST be written using [Intern](https://theintern.github.io) using the Object test interface and Assert assertion interface.
-
-90% branch coverage MUST be provided for all code submitted to this repository, as reported by istanbul’s combined coverage results for all supported platforms.
-
-To test locally in node run:
-
-`grunt test`
-
-To test against browsers with a local selenium server run:
-
-`grunt test:local`
-
-To test against BrowserStack or Sauce Labs run:
-
-`grunt test:browserstack`
-
-or
-
-`grunt test:saucelabs`
-
-## Licensing information
-
-© 2018 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
 <!-- doc-viewer-config
 {

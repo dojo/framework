@@ -1,10 +1,6 @@
-# @dojo/test-extras
+# testing
 
-[![Build Status](https://travis-ci.org/dojo/test-extras.svg?branch=master)](https://travis-ci.org/dojo/test-extras)
-[![codecov](https://codecov.io/gh/dojo/test-extras/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/test-extras)
-[![npm version](https://badge.fury.io/js/%40dojo%2Ftest-extras.svg)](http://badge.fury.io/js/%40dojo%2Ftest-extras)
-
-Provides a simple API for testing and asserting Dojo widget's expected virtual DOM and behavior.
+Simple API for testing and asserting Dojo widget's expected virtual DOM and behavior.
 
 - [Features](#features)
 - [`harness`](#harness)
@@ -13,11 +9,6 @@ Provides a simple API for testing and asserting Dojo widget's expected virtual D
 - [`harness.expect`](#harnessexpect)
 - [`harness.expectPartial`](#harnessexpectpartial)
 - [`harness.trigger`](#harnesstrigger)
-- [How Do I Contribute?](#how-do-i-contribute)
-    - [Code Style](#code-style)
-    - [Setup Installation](#installation)
-    - [Testing](#testing)
-- [Licensing Information](#licensing-information)
 
 ## Features
 
@@ -28,7 +19,7 @@ Provides a simple API for testing and asserting Dojo widget's expected virtual D
 
 ## harness
 
-`harness()` is the primary API when working with `@dojo/test-extras`, essentially setting up each test and providing a context to perform virtual DOM assertions and interactions. Designed to mirror the core behavior for widgets when updating `properties` or `children` and widget invalidation, with no special or custom logic required.
+`harness()` is the primary API when working with `@dojo/framework/testing`, essentially setting up each test and providing a context to perform virtual DOM assertions and interactions. Designed to mirror the core behavior for widgets when updating `properties` or `children` and widget invalidation, with no special or custom logic required.
 
 ### API
 
@@ -241,50 +232,3 @@ const render = h.getRender();
 // Returns the result of the render for the index provided
 h.getRender(1);
 ```
-
-
-## How Do I Contribute?
-
-We appreciate your interest!  Please see the [Dojo Meta Repository](https://github.com/dojo/meta#readme) for the Contributing Guidelines.
-
-### Code Style
-
-This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the projects `package.json`.
-
-An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
-
-```bash
-npm run prettier
-```
-
-### Installation
-
-To start working with this package, clone the repository and run `npm install`.
-
-In order to build the project, run `grunt dev` or `grunt dist`.
-
-## Testing
-
-Test cases MUST be written using [Intern](https://theintern.github.io) using the Object test interface and Assert assertion interface.
-
-90% branch coverage MUST be provided for all code submitted to this repository, as reported by istanbul’s combined coverage results for all supported platforms.
-
-To test locally in node run:
-
-`grunt test`
-
-To test against browsers with a local selenium server run:
-
-`grunt test:local`
-
-To test against BrowserStack or Sauce Labs run:
-
-`grunt test:browserstack`
-
-or
-
-`grunt test:saucelabs`
-
-## Licensing information
-
-© 2018 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.

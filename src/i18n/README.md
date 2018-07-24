@@ -1,12 +1,7 @@
-# @dojo/i18n
+# i18n
 
-[![Build Status](https://travis-ci.org/dojo/i18n.svg?branch=master)](https://travis-ci.org/dojo/i18n)
-[![codecov.io](http://codecov.io/github/dojo/i18n/coverage.svg?branch=master)](http://codecov.io/github/dojo/i18n?branch=master)
-[![npm version](https://badge.fury.io/js/%40dojo%2Fi18n.svg)](https://badge.fury.io/js/%40dojo%2Fi18n)
+An internationalization package that provides locale-specific message loading, and support for locale-specific message, date, and number formatting.
 
-An internationalization library that provides locale-specific message loading, and support for locale-specific message, date, and number formatting.
-
-- [Usage](#usage)
 - [Features](#features)
   - [Message Bundle Loading](#message-bundle-loading)
   - [Determining the Current Locale](#determining-the-current-locale)
@@ -14,28 +9,9 @@ An internationalization library that provides locale-specific message loading, a
   - [Loading CLDR data](#loading-cldr-data)
   - [Message Formatting](#message-formatting)
   - [Date and number formatting](#date-and-number-formatting)
-- [How do I contribute?](#how-do-i-contribute)
-  - [Installation](#installation)
-  - [Testing](#testing)
-- [Licensing information](#licensing-information)
-
-## Usage
-
-To use `@dojo/i18n`, install the package along with its required peer dependencies:
-
-```bash
-npm install @dojo/i18n
-
-# peer dependencies
-npm install @dojo/core
-npm install @dojo/has
-npm install @dojo/shim
-```
-
-With TypeScript or ES6 modules, you would generally want to just import the @dojo/i18n/i18n module:
 
 ```typescript
-import i18n, { Messages } from '@dojo/i18n/i18n';
+import i18n, { Messages } from '@dojo/framework/i18n/i18n';
 import messageBundle from 'path/to/bundle';
 
 i18n(messageBundle, 'fr').then((messages: Messages) => {
@@ -49,7 +25,7 @@ The examples below are provided in TypeScript syntax. The package does work unde
 
 ### Message Bundle Loading
 
-`@dojo/i18n` provides a means for loading locale-specific messages and updating those messages when the locale changes. Each bundle has a default module that is `import`ed like any other TypeScript module. Locale-specific messages are then loaded via the `i18n` method. Every default bundle MUST provide a `messages` map containing default messages, and an optional `locales` object that maps supported locales to functions that load their respective translations. Further, each default bundle is assigned a unique `id` property that is used internally to manage caching and handle interoperability with Globalize.js (see below). While it is possible to include an `id` with your message bundles, doing so is neither necessary nor recommended.
+`@dojo/framework/i18n` provides a means for loading locale-specific messages and updating those messages when the locale changes. Each bundle has a default module that is `import`ed like any other TypeScript module. Locale-specific messages are then loaded via the `i18n` method. Every default bundle MUST provide a `messages` map containing default messages, and an optional `locales` object that maps supported locales to functions that load their respective translations. Further, each default bundle is assigned a unique `id` property that is used internally to manage caching and handle interoperability with Globalize.js (see below). While it is possible to include an `id` with your message bundles, doing so is neither necessary nor recommended.
 
 ```typescript
 import fr from './fr/main';
@@ -83,7 +59,7 @@ export default messages;
 Once the default bundle is in place, any locale-specific messages are loaded by passing the default bundle to the `i18n` function. Using the previous example as the default bundle, any locale-specific messages are loaded as follows:
 
 ```typescript
-import i18n, { Messages } from '@dojo/i18n/main';
+import i18n, { Messages } from '@dojo/framework/i18n/main';
 import bundle from 'nls/main';
 
 i18n(bundle, 'fr').then(function (messages: Messages) {
@@ -97,7 +73,7 @@ If an unsupported locale is passed to `i18n`, then the default messages are retu
 Alternatively, locale messages can be manually loaded by passing them to `setLocaleMessages`. This is useful for pre-caching locale-specific messages so that an additional HTTP request is not sent to load them. Locale-specific messages are merged with the default messages, so partial message bundles are acceptable:
 
 ```typescript
-import i18n, { setLocaleMessages } from '@dojo/i18n/i18n';
+import i18n, { setLocaleMessages } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
 const partialMessages = { hello: 'Ahoj' };
@@ -112,7 +88,7 @@ i18n(bundle, 'cz').then((messages) => {
 Once locale dictionaries for a bundle have been loaded, they are cached and can be accessed synchronously via `getCachedMessages`:
 
 ```typescript
-import { getCachedMessages } from '@dojo/i18n/i18n';
+import { getCachedMessages } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
 const messages = getCachedMessages(bundle, 'fr');
@@ -124,7 +100,7 @@ console.log(messages.goodbye); // "Au revoir"
 
 
 ```typescript
-import { getCachedMessages } from '@dojo/i18n/i18n';
+import { getCachedMessages } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
 const frenchMessages = getCachedMessages(bundle, 'fr-CA');
@@ -139,7 +115,7 @@ console.log(madeUpLocaleMessages.goodbye); // "Goodbye"
 If need be, bundle caches can be cleared with `invalidate`. If called with a bundle, only the messages for that particular bundle are removed from the cache. Otherwise, all messages are cleared:
 
 ```typescript
-import i18n, { getCachedMessages, invalidate } from '@dojo/i18n/main';
+import i18n, { getCachedMessages, invalidate } from '@dojo/framework/i18n/main';
 import bundle from 'nls/main';
 
 i18n(bundle, 'ar').then(() => {
@@ -157,7 +133,7 @@ The current locale can be accessed via the read-only property `i18n.locale`, whi
 The `switchLocale` method changes the root locale and notifies all consumers registered with `observeLocale`, which accepts a function that receives the new locale string as its sole argument. For example, suppose the system locale is `en-GB`:
 
 ```typescript
-import i18n, { observeLocale, switchLocale, systemLocale } from '@dojo/i18n/i18n';
+import i18n, { observeLocale, switchLocale, systemLocale } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/bundle';
 
 // Register an event listener
@@ -179,10 +155,10 @@ console.log(systemLocale); // 'en-GB' (the system locale does not change with th
 
 ### Loading CLDR data
 
-Given the very large size of the [Unicode CLDR data](http://cldr.unicode.org), it is not included as a dependency of `@dojo/i18n`. For applications that use `@dojo/i18n` only for selecting unformatted, locale-specific messages, this is not a concern. However, if using the [ICU-formatted messages](http://userguide.icu-project.org/formatparse/messages) or any of the other formatters provided by `@dojo/i18n` (see below), applications must explicitly load any required CLDR data via the `loadCldrData` method exported by `@dojo/i18n/cldr/load`. `loadCldrData` accepts an object of CLDR data. All CLDR data MUST match the format used by the [Unicode CLDR JSON](https://github.com/unicode-cldr/cldr-json) files. Supplemental data MUST be nested within a top-level `supplemental` object, and locale-specific data MUST be nested under locale objects within a top-level `main` object:
+Given the very large size of the [Unicode CLDR data](http://cldr.unicode.org), it is not included as a dependency of `@dojo/framework/i18n`. For applications that use `@dojo/framework/i18n` only for selecting unformatted, locale-specific messages, this is not a concern. However, if using the [ICU-formatted messages](http://userguide.icu-project.org/formatparse/messages) or any of the other formatters provided by `@dojo/framework/i18n` (see below), applications must explicitly load any required CLDR data via the `loadCldrData` method exported by `@dojo/framework/i18n/cldr/load`. `loadCldrData` accepts an object of CLDR data. All CLDR data MUST match the format used by the [Unicode CLDR JSON](https://github.com/unicode-cldr/cldr-json) files. Supplemental data MUST be nested within a top-level `supplemental` object, and locale-specific data MUST be nested under locale objects within a top-level `main` object:
 
 ```typescript
-import loadCldrData from '@dojo/i18n/cldr/load';
+import loadCldrData from '@dojo/framework/i18n/cldr/load';
 
 loadCldrData({
 	"supplemental": {
@@ -196,7 +172,7 @@ loadCldrData({
 });
 ```
 
-`@dojo/i18n` requires the following CLDR data:
+`@dojo/framework/i18n` requires the following CLDR data:
 
 For ICU message formatting:
 
@@ -239,10 +215,10 @@ For unit formatting:
 
 The `i18n` module exposes two methods that handle message formatting: 1) `formatMessage`, which directly returns a formatted message based on its inputs, and 2) `getMessageFormatter`, which returns a method dedicated to formatting a single message. Both of these methods operate on bundle objects, which must first be registered with the i18n ecosystem by passing them to the `i18n` function (see below).
 
-`@dojo/i18n` supports the ICU message format (see below), but that requires CLDR data and is not something that every application requires. As such, if the `supplemental/likeSubtags` and `supplemental/plurals` data are not loaded, then both `formatMessage` and `getMessageFormatter` will perform simple token replacement. For example, given the `guestInfo` message `{host} invites {guest} to the party.`, an object with `host` and `guest` properties can be provided to a formatter without the need to load CLDR data:
+`@dojo/framework/i18n` supports the ICU message format (see below), but that requires CLDR data and is not something that every application requires. As such, if the `supplemental/likeSubtags` and `supplemental/plurals` data are not loaded, then both `formatMessage` and `getMessageFormatter` will perform simple token replacement. For example, given the `guestInfo` message `{host} invites {guest} to the party.`, an object with `host` and `guest` properties can be provided to a formatter without the need to load CLDR data:
 
 ```typescript
-import i18n, { formatMessage, getMessageFormatter } from '@dojo/i18n/i18n';
+import i18n, { formatMessage, getMessageFormatter } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
 i18n(bundle, 'en').then(() => {
@@ -267,7 +243,7 @@ i18n(bundle, 'en').then(() => {
 
 **Note**: This feature requires CLDR data (see above).
 
-`@dojo/i18n` relies on [Globalize.js](https://github.com/jquery/globalize/blob/master/doc/api/message/message-formatter.md) for [ICU message formatting](http://userguide.icu-project.org/formatparse/messages), and as such all of the features offered by Globalize.js are available through `@dojo/i18n`.
+`@dojo/framework/i18n` relies on [Globalize.js](https://github.com/jquery/globalize/blob/master/doc/api/message/message-formatter.md) for [ICU message formatting](http://userguide.icu-project.org/formatparse/messages), and as such all of the features offered by Globalize.js are available through `@dojo/framework/i18n`.
 
 As an example, suppose there is a locale bundle with a `guestInfo` message:
 
@@ -298,10 +274,10 @@ export default messages;
 
 The above message can be converted directly with `formatMessage`, or `getMessageFormatter` can be used to generate a function that can be used over and over with different options. Note that the formatters created and used by both methods are cached, so there is no performance penalty from compiling the same message multiple times.
 
-Since the Globalize.js formatting methods use message paths rather than the message strings themselves, the `@dojo/i18n` methods also require that the bundle itself be provided, so its unique identifier can be resolved to a message path within the Globalize.js ecosystem. If an optional locale is provided, then the corresponding locale-specific message will be used. Otherwise, the current locale is assumed.
+Since the Globalize.js formatting methods use message paths rather than the message strings themselves, the `@dojo/framework/i18n` methods also require that the bundle itself be provided, so its unique identifier can be resolved to a message path within the Globalize.js ecosystem. If an optional locale is provided, then the corresponding locale-specific message will be used. Otherwise, the current locale is assumed.
 
 ```typescript
-import i18n, { formatMessage, getMessageFormatter } from '@dojo/i18n/i18n';
+import i18n, { formatMessage, getMessageFormatter } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
 // 1. Load the messages for the locale.
@@ -334,14 +310,14 @@ i18n(bundle, 'en').then(() => {
 
 **Note**: This feature requires CLDR data (see above).
 
-As with the message formatting capabilities, `@dojo/i18n` relies on Globalize.js to provide locale-specific formatting for dates, times, currencies, numbers, and units. The formatters themselves are essentially light wrappers around their Globalize.js counterparts, which helps maintain consistency with the Dojo ecosystem and prevents the need to work with the `Globalize` object directly. Unlike the message formatters, the date, number, and unit formatters are not cached, as they have a more complex set of options. As such, executing the various "get formatter" methods multiple times with the same inputs does not return the exact same function object.
+As with the message formatting capabilities, `@dojo/framework/i18n` relies on Globalize.js to provide locale-specific formatting for dates, times, currencies, numbers, and units. The formatters themselves are essentially light wrappers around their Globalize.js counterparts, which helps maintain consistency with the Dojo ecosystem and prevents the need to work with the `Globalize` object directly. Unlike the message formatters, the date, number, and unit formatters are not cached, as they have a more complex set of options. As such, executing the various "get formatter" methods multiple times with the same inputs does not return the exact same function object.
 
-`@dojo/i18n` groups the various formatters accordingly: date and time formatters (`@dojo/i18n/date`); number, currency, and pluralization formatters (`@dojo/i18n/number`); and unit formatters (`@dojo/i18n/unit`). Each method corresponds to a Globalize.js method (see below), and each method follows the same basic format: the last argument is an optional locale, and the penultimate argument is the method options. If specifying a locale but no options, pass `null` as the `options` argument. If no locale is provided, then the current (`i18n.locale`) is assumed.
+`@dojo/framework/i18n` groups the various formatters accordingly: date and time formatters (`@dojo/framework/i18n/date`); number, currency, and pluralization formatters (`@dojo/framework/i18n/number`); and unit formatters (`@dojo/framework/i18n/unit`). Each method corresponds to a Globalize.js method (see below), and each method follows the same basic format: the last argument is an optional locale, and the penultimate argument is the method options. If specifying a locale but no options, pass `null` as the `options` argument. If no locale is provided, then the current (`i18n.locale`) is assumed.
 
 ```typescript
-import { formatDate, getDateFormatter, formatRelativeTime } from '@dojo/i18n/date';
-import { formatCurrency, getCurrencyFormatter } from '@dojo/i18n/number';
-import { formatUnit, getUnitFormatter } from '@dojo/i18n/unit';
+import { formatDate, getDateFormatter, formatRelativeTime } from '@dojo/framework/i18n/date';
+import { formatCurrency, getCurrencyFormatter } from '@dojo/framework/i18n/number';
+import { formatUnit, getUnitFormatter } from '@dojo/framework/i18n/unit';
 
 const date = new Date(1815, 11, 10, 11, 27);
 
@@ -376,7 +352,7 @@ frUnitFormatter(1000); // 1 000 mètres'
 formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 ```
 
-**`@dojo/i18n/date` methods:**
+**`@dojo/framework/i18n/date` methods:**
 
 - `formatDate` => [`Globalize.formatDate`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-formatter.md)
 - `formatRelativeTime` => [`Globalize.formatRelativeTime`](https://github.com/globalizejs/globalize/blob/master/doc/api/relative-time/relative-time-formatter.md)
@@ -385,7 +361,7 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 - `getRelativeTimeFormatter` => [`Globalize.relativeTimeFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/relative-time/relative-time-formatter.md)
 - `parseDate` => [`Globalize.parseDate`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-parser.md)
 
-**`@dojo/i18n/number` methods:**
+**`@dojo/framework/i18n/number` methods:**
 
 - `formatCurrency` => [`Globalize.formatCurrency`](https://github.com/globalizejs/globalize/blob/master/doc/api/currency/currency-formatter.md)
 - `formatNumber` => [`Globalize.formatNumber`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-formatter.md)
@@ -396,42 +372,10 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 - `parseNumber` => [`Globalize.parseNumber`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-parser.md)
 - `pluralize` => [`Globalize.plural`](https://github.com/globalizejs/globalize/blob/master/doc/api/plural/plural-generator.md)
 
-**`@dojo/i18n/unit` methods:**
+**`@dojo/framework/i18n/unit` methods:**
 
 - `formatUnit` => [`Globalize.formatUnit`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
 - `getUnitFormatter` => [`Globalize.unitFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
-
-## How do I contribute?
-
-We appreciate your interest!  Please see the [Guidelines Repository](https://github.com/dojo/guidelines#readme) for the Contributing Guidelines.
-
-### Code Style
-
-This repository uses [`prettier`](https://prettier.io/) for code styling rules and formatting. A pre-commit hook is installed automatically and configured to run `prettier` against all staged files as per the configuration in the project's `package.json`.
-
-An additional npm script to run `prettier` (with write set to `true`) against all `src` and `test` project files is available by running:
-
-```bash
-npm run prettier
-```
-
-### Installation
-
-To start working with this package, clone the repository and run `npm install`.
-
-In order to build the project run `grunt dev` or `grunt dist`.
-
-### Testing
-
-Test cases MUST be written using Intern using the Object test interface and Assert assertion interface.
-
-90% branch coverage MUST be provided for all code submitted to this repository, as reported by istanbul’s combined coverage results for all supported platforms.
-
-## Licensing information
-
-* [Globalize.js](https://github.com/globalizejs/globalize) ([MIT](http://spdx.org/licenses/MIT))
-
-© 2018 [JS Foundation](https://js.foundation/). [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
 
 <!-- doc-viewer-config
 {
