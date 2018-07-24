@@ -74,17 +74,17 @@ layer of structure of how repositories can relate to each other.
 Once you have successfully forked your repository, you will need to clone it locally to your machine:
 
 ```bash
-$ git clone --recursive git@github.com:username/core.git dojo-core
+$ git clone --recursive git@github.com:username/framework dojo-framework
 ```
 
-This will clone your fork to your current path in a directory named `dojo-core`.
+This will clone your fork to your current path in a directory named `dojo-framework`.
 
 You should also set up the `upstream` repository.  This will allow you to take changes from the "master" repository
 and merge them into your local clone and then push them to your GitHub fork:
 
 ```bash
-$ cd dojo-core
-$ git remote add upstream git@github.com:dojo/core.git
+$ cd dojo-framework
+$ git remote add upstream git@github.com:dojo/framework.git
 $ git fetch upstream
 ```
 
