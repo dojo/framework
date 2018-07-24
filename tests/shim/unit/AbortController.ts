@@ -83,8 +83,7 @@ registerSuite('AbortController and AbortSignal', {
 						if (typeof document !== 'undefined') {
 							event = document.createEvent('Event');
 							event.initEvent(type, false, false);
-						}
-						else {
+						} else {
 							event = {
 								type,
 								bubbles: false,
