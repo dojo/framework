@@ -1,3 +1,4 @@
+import { AbortSignal } from '../../shim/AbortController';
 import { IterableIterator } from '../../shim/iterator';
 import Task from '../async/Task';
 import UrlSearchParams, { ParamList } from '../UrlSearchParams';
@@ -57,6 +58,10 @@ export interface RequestOptions {
 	 * Password for HTTP authentication
 	 */
 	password?: string;
+	/**
+	 * Abort signal, allowing for cancelable requests
+	 */
+	signal?: AbortSignal;
 	/**
 	 * Number of milliseconds before the request times out and is canceled
 	 */

@@ -7,6 +7,7 @@ import * as zlib from 'zlib';
 import { Response } from '../../../../src/core/request/interfaces';
 import { default as nodeRequest, NodeResponse } from '../../../../src/core/request/providers/node';
 import TimeoutError from '../../../../src/core/request/TimeoutError';
+import AbortController from '../../../../src/shim/AbortController';
 
 const serverPort = 8124;
 const serverUrl = 'http://localhost:' + serverPort;
@@ -461,6 +462,20 @@ registerSuite('request/node', {
 					}),
 					dfd.reject.bind(dfd)
 				);
+			},
+
+			signal(this: any) {
+				const dfd = this.async();
+				const url = getRequestUrl('foo.json');
+				const controller = new AbortController();
+				const { signal } = controller;
+				const request = nodeRequest(url, { signal });
+				request.catch(
+					dfd.callback((error: Error) => {
+						assert.strictEqual(error.name, 'AbortError');
+					})
+				);
+				controller.abort();
 			},
 
 			'user and password': {
