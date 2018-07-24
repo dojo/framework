@@ -7,7 +7,7 @@
 Copies values of own properties from the source object(s) to the target object.
 
 ```ts
-import { assign } from '@dojo/core/lang';
+import { assign } from '@dojo/framework/core/lang';
 
 var target = {
 	foo: 'bar'
@@ -29,7 +29,7 @@ target.bar === 'foo'; // true
 Creates a new object from the given prototype, and copies all enumerable own properties of one or more source objects to the newly created target object.
 
 ```ts
-import { create } from '@dojo/core/lang';
+import { create } from '@dojo/framework/core/lang';
 
 var oldObj = {
 	foo: 'bar',
@@ -58,7 +58,7 @@ newObj.obj.bar === 'bar'; // true
 Copies the values of all enumerable own properties of one or more source objects to the target object, recursively copying all nested objects and arrays as well.
 
 ```ts
-import { deepAssign } from '@dojo/core/lang';
+import { deepAssign } from '@dojo/framework/core/lang';
 
 var oldObj = {
 	foo: 'bar',
@@ -87,7 +87,7 @@ newObj.obj.bar === 'bar'; // true
 Copies values of own and inherited properties from the source object(s) to the target object.
 
 ```ts
-import { mixin } from '@dojo/core/lang';
+import { mixin } from '@dojo/framework/core/lang';
 
 const obj = {
 	foo: 'bar',
@@ -112,7 +112,7 @@ result.fooObj.bar === 'bar'; // true
 Copies the values of all enumerable (own or inherited) properties of one or more source objects to the target object, recursively copying all nested objects and arrays as well.
 
 ```ts
-import { deepMixin } from '@dojo/core/lang';
+import { deepMixin } from '@dojo/framework/core/lang';
 
 const obj = {
 	foo: 'bar',
@@ -138,7 +138,7 @@ result.fooObj.bar === 'foo'; // true
 Creates a new object using the provided source's prototype as the prototype for the new object, and then deep copies the provided source's values into the new target.
 
 ```ts
-import { duplicate } from '@dojo/core/lang';
+import { duplicate } from '@dojo/framework/core/lang';
 
 var oldObj = {
 	foo: 'bar'
@@ -158,7 +158,7 @@ newObj.foo === 'bar';
 Returns a function which invokes the given function with the given arguments prepended to its argument list. Like `Function.prototype.bind`, but does not alter execution context.
 
 ```ts
-import { partial } from '@dojo/core/lang';
+import { partial } from '@dojo/framework/core/lang';
 
 var add = function (a, b) {
 	return a + b;
@@ -177,7 +177,7 @@ result === 9;
 Determines whether two values are the same (including NaN).
 
 ```ts
-import { isIdentical } from '@dojo/core/lang';
+import { isIdentical } from '@dojo/framework/core/lang';
 
 isIdentical(1, 1); // true
 isIdentical(NaN, NaN); // true
@@ -189,7 +189,7 @@ isIdentical(NaN, NaN); // true
 Creates a function that calls the current method on an object with given arguments.
 
 ```ts
-import { lateBind } from '@dojo/core/lang';
+import { lateBind } from '@dojo/framework/core/lang';
 
 var person = {
 	speak: function (name) {

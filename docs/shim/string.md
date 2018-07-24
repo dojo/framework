@@ -5,7 +5,7 @@
 Returns the UTF-16 encoded code point value of a position in a string.
 
 ```ts
-import { codePointAt } from '@dojo/shim/string';
+import { codePointAt } from '@dojo/framework/shim/string';
 
 const str = 'string';
 const position = 2; // zero index based position
@@ -20,7 +20,7 @@ result === 114; // true
 Determines whether a string ends with the given substring.
 
 ```ts
-import { endsWith } from '@dojo/shim/string';
+import { endsWith } from '@dojo/framework/shim/string';
 
 const str = 'string';
 const search = 'ing';
@@ -36,7 +36,7 @@ result === true; // true
 Creates a string using the specified sequence of code points.
 
 ```ts
-import { fromCodePoint } from '@dojo/shim/string';
+import { fromCodePoint } from '@dojo/framework/shim/string';
 
 const result = fromCodePoint(97, 98, 99, 49, 50, 51);
 
@@ -48,7 +48,7 @@ result === 'abc123'; // true
 Determines whether a string includes the given substring.
 
 ```ts
-import { includes } from '@dojo/shim/string';
+import { includes } from '@dojo/framework/shim/string';
 
 const str = 'string';
 const search = 'ring';
@@ -64,7 +64,7 @@ result === true; // true
 Returns a string containing a string repeated a given number of times.
 
 ```ts
-import { repeat } from '@dojo/shim/string';
+import { repeat } from '@dojo/framework/shim/string';
 
 const str = 'string';
 const times = 3; // the number of times to repeat the string
@@ -79,7 +79,7 @@ result === 'stringstringstring'; // true
 Determines whether a string begins with the given substring.
 
 ```ts
-import { startsWith } from '@dojo/shim/string';
+import { startsWith } from '@dojo/framework/shim/string';
 
 const str = 'string';
 const search = 'str';
@@ -98,7 +98,7 @@ The `string` module also contains the following utility functions:
 Adds padding to the end of a string to ensure it is a certain length.
 
 ```ts
-import { padEnd } from '@dojo/shim/string';
+import { padEnd } from '@dojo/framework/shim/string';
 
 const str = 'string';
 const length = 10;
@@ -114,7 +114,7 @@ result === 'string===='; // true
 Adds padding to the beginning of a string to ensure it is a certain length.
 
 ```ts
-import { padStart } from '@dojo/shim/string';
+import { padStart } from '@dojo/framework/shim/string';
 
 const str = 'string';
 const length = 10;

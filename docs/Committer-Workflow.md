@@ -50,7 +50,7 @@ The *squash and merge* approach is not always sufficient. Perhaps individual com
 
 #### Setting up a Branch with the Pull Request
 
-If you do not yet have a local branch containing the pull request you can create one. Let's assume you are merging pull request #200 into `dojo-core` into `master`. You should ensure you have an up-to date master:
+If you do not yet have a local branch containing the pull request you can create one. Let's assume you are merging pull request #200 of `framework` into `master`. You should ensure you have an up-to date master:
 
 ```sh
 $ git checkout master

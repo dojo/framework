@@ -1,6 +1,6 @@
 # Observable
 
-The `@dojo/shim/Observable` class is an implementation of the proposed [Observable specification](https://tc39.github.io/proposal-observable/).
+The `@dojo/framework/shim/Observable` class is an implementation of the proposed [Observable specification](https://tc39.github.io/proposal-observable/).
 
 An `Observable` is used to simplify push-based data sources like events, timed events, or sockets.
 

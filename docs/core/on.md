@@ -1,13 +1,13 @@
 # On
 
-`dojo-core/on` provides event handling support with methods to attach and emit events.
+`@dojo/framework/core/on` provides event handling support with methods to attach and emit events.
 
 ## `emit`
 
 Dispatch event to target.
 
 ```ts
-import { emit } from '@dojo/core/on';
+import { emit } from '@dojo/framework/core/on';
 
 var button = document.getElementById('button');
 var DOMEventObject = {
@@ -24,7 +24,7 @@ emit(button, DOMEventObject);
 Adds event listener to target.
 
 ```ts
-import { on } from '@dojo/core/on';
+import { on } from '@dojo/framework/core/on';
 
 var button = document.getElementById('button');
 
@@ -38,7 +38,7 @@ on(button, 'click', function (event) {
 Attach an event that can only be called once to a target.
 
 ```ts
-import { once } from '@dojo/core/on';
+import { once } from '@dojo/framework/core/on';
 
 var button = document.getElementById('button');
 once(button, 'click', function (event) {
@@ -52,7 +52,7 @@ once(button, 'click', function (event) {
 Attach an event that can be paused to a target.
 
 ```ts
-import { pausable } from '@dojo/core/on';
+import { pausable } from '@dojo/framework/core/on';
 
 var button = document.getElementById('button');
 var buttonClickHandle = pausable(button, 'click', function (event) {
