@@ -171,6 +171,7 @@ export type Outlet<
  */
 export interface LinkProperties extends VNodeProperties {
 	key?: string;
+	routerKey?: string;
 	isOutlet?: boolean;
 	params?: Params;
 	onClick?: (event: MouseEvent) => void;

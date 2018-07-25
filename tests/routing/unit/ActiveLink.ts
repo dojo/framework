@@ -1,0 +1,80 @@
+const { describe, it } = intern.getInterface('bdd');
+const { assert } = intern.getPlugin('chai');
+
+import { Registry } from '../../../src/widget-core/Registry';
+
+import { Router } from '../../../src/routing/Router';
+import { MemoryHistory } from '../../../src/routing/history/MemoryHistory';
+import { WNode } from '../../../src/widget-core/interfaces';
+import Link from '../../../src/routing/Link';
+import ActiveLink from '../../../src/routing/ActiveLink';
+
+const registry = new Registry();
+
+const router = new Router(
+	[
+		{
+			path: 'foo',
+			outlet: 'foo'
+		}
+	],
+	{ HistoryManager: MemoryHistory }
+);
+
+registry.defineInjector('router', () => () => router);
+
+describe('ActiveLink', () => {
+	it('Does not add active class when outlet is not active', () => {
+		const link = new ActiveLink();
+		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
+		const dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, []);
+		assert.deepEqual(dNode.properties.to, 'foo');
+	});
+
+	it('Should add the active class when the outlet is active', () => {
+		router.setPath('/foo');
+		const link = new ActiveLink();
+		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
+		const dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, ['foo']);
+		assert.deepEqual(dNode.properties.to, 'foo');
+	});
+
+	it('Should mix the active class onto existing string class when the outlet is active', () => {
+		router.setPath('/foo');
+		const link = new ActiveLink();
+		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.__setProperties__({ to: 'foo', activeClasses: ['foo'], classes: 'bar' });
+		const dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, ['bar', 'foo']);
+		assert.deepEqual(dNode.properties.to, 'foo');
+	});
+
+	it('Should mix the active class onto existing array of classes when the outlet is active', () => {
+		router.setPath('/foo');
+		const link = new ActiveLink();
+		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.__setProperties__({ to: 'foo', activeClasses: ['foo', 'qux'], classes: ['bar', 'baz'] });
+		const dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, ['bar', 'baz', 'foo', 'qux']);
+		assert.deepEqual(dNode.properties.to, 'foo');
+	});
+
+	it('Should return link when the router injector is not available', () => {
+		router.setPath('/foo');
+		const link = new ActiveLink();
+		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.__setProperties__({ to: 'foo', activeClasses: ['foo'], classes: 'bar', routerKey: 'other' });
+		const dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, ['bar']);
+		assert.deepEqual(dNode.properties.to, 'foo');
+	});
+});

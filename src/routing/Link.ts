@@ -1,55 +1,39 @@
 import { WidgetBase } from '../widget-core/WidgetBase';
 import { v } from '../widget-core/d';
-import { inject } from '../widget-core/decorators/inject';
-import { Constructor, DNode, VNodeProperties } from '../widget-core/interfaces';
+import { VNode } from '../widget-core/interfaces';
 import { LinkProperties } from './interfaces';
 import { Router } from './Router';
 
-const getProperties = (router: Router, properties: LinkProperties): VNodeProperties => {
-	const { to, isOutlet = true, params = {}, onClick, ...props } = properties;
-	const href = isOutlet ? router.link(to, params) : to;
+export class Link extends WidgetBase<LinkProperties> {
+	private _getProperties() {
+		let { routerKey = 'router', to, isOutlet = true, target, params = {}, onClick, ...props } = this.properties;
+		const item = this.registry.getInjector<Router>(routerKey);
+		let href: string | undefined = to;
 
-	const handleOnClick = (event: MouseEvent) => {
-		onClick && onClick(event);
+		if (item) {
+			const router = item.injector();
+			if (isOutlet) {
+				href = router.link(href, params);
+			}
+			const onclick = (event: MouseEvent) => {
+				onClick && onClick(event);
 
-		if (!event.defaultPrevented && event.button === 0 && !properties.target) {
-			event.preventDefault();
-			href !== undefined && router.setPath(href);
+				if (!event.defaultPrevented && event.button === 0 && !target) {
+					event.preventDefault();
+					href !== undefined && router.setPath(href);
+				}
+			};
+			props = { ...props, onclick, href };
+		} else {
+			props = { ...props, href };
 		}
-	};
-	return {
-		href,
-		onClick: handleOnClick,
-		...props
-	};
-};
 
-export class BaseLink extends WidgetBase<LinkProperties> {
-	private _onClick(event: MouseEvent): void {
-		this.properties.onClick && this.properties.onClick(event);
+		return props;
 	}
 
-	protected render(): DNode {
-		const props = {
-			...this.properties,
-			onclick: this._onClick,
-			onClick: undefined,
-			to: undefined,
-			isOutlet: undefined,
-			params: undefined,
-			routerKey: undefined,
-			router: undefined
-		};
-		return v('a', props, this.children);
+	protected render(): VNode {
+		return v('a', this._getProperties(), this.children);
 	}
 }
-
-export function createLink(routerKey: string): Constructor<BaseLink> {
-	@inject({ name: routerKey, getProperties })
-	class Link extends BaseLink {}
-	return Link;
-}
-
-export const Link = createLink('router');
 
 export default Link;
