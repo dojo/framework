@@ -142,6 +142,46 @@ registerSuite('d', {
 			assert.isTrue(isVNode(vNode));
 			assert.isFalse(isWNode(vNode));
 		},
+		'should mix properties onto passed vnode properties'() {
+			const children = ['child'];
+			const vnode = v('div', { a: 'a', b: 'b' }, children);
+			const mergedVNode = v(vnode, { c: 'c', b: 'c' });
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties, { a: 'a', b: 'c', c: 'c', styles: {}, classes: [] });
+			assert.strictEqual(mergedVNode.children, children);
+		},
+		'should replace children on passed vnode'() {
+			const children = ['new child'];
+			const vnode = v('div', { a: 'a', b: 'b' }, ['child']);
+			const mergedVNode = v(vnode, { c: 'c', b: 'c' }, children);
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties, { a: 'a', b: 'c', c: 'c', styles: {}, classes: [] });
+			assert.strictEqual(mergedVNode.children, children);
+		},
+		'should merge styles onto passed vnode properties'() {
+			const vnode = v('div', { styles: { color: 'red', width: '100px' } });
+			const mergedVNode = v(vnode, { styles: { width: '200px', height: '100px' } });
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties.styles, { color: 'red', width: '200px', height: '100px' });
+		},
+		'should merge classes onto passed vnode properties with no classes'() {
+			const vnode = v('div');
+			const mergedVNode = v(vnode, { classes: 'baz' });
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties.classes, ['baz']);
+		},
+		'should merge classes onto passed vnode properties with string classes'() {
+			const vnode = v('div', { classes: 'foo' });
+			const mergedVNode = v(vnode, { classes: ['baz'] });
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties.classes, ['foo', 'baz']);
+		},
+		'should merge classes onto passed vnode properties with an array of classes'() {
+			const vnode = v('div', { classes: ['foo', 'bar'] });
+			const mergedVNode = v(vnode, { classes: ['baz'] });
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties.classes, ['foo', 'bar', 'baz']);
+		},
 		'create VNode wrapper with deferred properties'() {
 			const props = () => {
 				return { a: 'a' };

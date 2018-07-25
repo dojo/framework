@@ -155,11 +155,13 @@ export function w<W extends WidgetBaseInterface>(
 /**
  * Wrapper function for calls to create VNodes.
  */
+export function v(node: VNode, properties: VNodeProperties, children: undefined | DNode[]): VNode;
+export function v(node: VNode, properties: VNodeProperties): VNode;
 export function v(tag: string, children: undefined | DNode[]): VNode;
 export function v(tag: string, properties: DeferredVirtualProperties | VNodeProperties, children?: DNode[]): VNode;
 export function v(tag: string): VNode;
 export function v(
-	tag: string,
+	tag: string | VNode,
 	propertiesOrChildren: VNodeProperties | DeferredVirtualProperties | DNode[] = {},
 	children: undefined | DNode[] = undefined
 ): VNode {
@@ -174,6 +176,16 @@ export function v(
 	if (typeof properties === 'function') {
 		deferredPropertiesCallback = properties;
 		properties = {};
+	}
+
+	if (isVNode(tag)) {
+		let { classes = [], styles = {}, ...newProperties } = properties;
+		let { classes: nodeClasses = [], styles: nodeStyles = {}, ...nodeProperties } = tag.properties;
+		nodeClasses = Array.isArray(nodeClasses) ? nodeClasses : [nodeClasses];
+		classes = Array.isArray(classes) ? classes : [classes];
+		styles = { ...nodeStyles, ...styles };
+		newProperties = { ...nodeProperties, ...newProperties, classes: [...nodeClasses, ...classes], styles };
+		return v(tag.tag, newProperties, children ? children : tag.children);
 	}
 
 	return {
