@@ -41,6 +41,12 @@ export interface RequestOptions {
 	 * requested URL
 	 */
 	cacheBust?: boolean;
+	/**
+	 * Cause browsers to send a request with credentials included.
+	 * 'same-origin' - (default) Only send credentials for same origin
+	 * 'omit' - Do not send credentials
+	 * 'include' - Include credentials for cross-domain requests
+	 */
 	credentials?: 'omit' | 'same-origin' | 'include';
 	/**
 	 * Body to send along with the http request

@@ -135,6 +135,18 @@ registerSuite('request/providers/xhr', {
 				});
 			},
 
+			async credentials(this: any) {
+				if (!echoServerAvailable) {
+					this.skip('No echo server available');
+				}
+				const makeRequest = async (credentials: 'include' | 'omit' | 'same-origin') =>
+					await xhrRequest('/__echo/foo.json', { credentials });
+
+				assert.isTrue((await makeRequest('include')).nativeResponse.withCredentials);
+				assert.isFalse((await makeRequest('omit')).nativeResponse.withCredentials);
+				assert.isFalse((await makeRequest('same-origin')).nativeResponse.withCredentials);
+			},
+
 			'upload monitoring'(this: any) {
 				if (!echoServerAvailable) {
 					this.skip('No echo server available');
