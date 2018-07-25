@@ -59,7 +59,7 @@ if (!has('abort-signal')) {
 			}
 
 			this.listeners[type].forEach((callback: (event: any) => void) => {
-				setTimeout(() => callback.call(this, event));
+				setTimeout(() => callback.call(this, event), 0);
 			});
 
 			return !event.preventDefault;

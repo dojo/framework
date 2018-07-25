@@ -112,8 +112,9 @@ registerSuite('request/providers/xhr', {
 				const dfd = this.async();
 				const controller = new AbortController();
 				const { signal } = controller;
-				const request = xhrRequest('/__echo/foo.json', { signal, timeout: 100 });
-				request.catch(
+				const request = xhrRequest('/__echo/foo.json?delay=10000', { signal });
+				request.then(
+					() => dfd.rejectOnError(() => assert.fail('Request should have been aborted')),
 					dfd.callback((error: Error) => {
 						assert.strictEqual(error.name, 'AbortError');
 					})
