@@ -194,6 +194,14 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 		options.method = 'GET';
 	}
 
+	const { credentials = 'same-origin' } = options;
+
+	if (credentials === 'include') {
+		request.withCredentials = true;
+	} else if (credentials === 'omit') {
+		request.withCredentials = false;
+	}
+
 	let isAborted = false;
 
 	function abort() {
