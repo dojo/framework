@@ -27,9 +27,9 @@
     "precommit": "lint-staged",
     "prettier": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "release": "run-s lint clean build \"dojo-release -- {@}\" --",
-    "test": "run-s lint build intern",
-    "test:local": "run-s lint build \"intern config=@local\"",
-    "test:browserstack": "run-s lint build \"intern config=@browserstack\"",
+    "test": "run-s build intern",
+    "test:local": "run-s build \"intern config=@local\"",
+    "test:browserstack": "run-s build \"intern config=@browserstack\"",
     "uploadCoverage": "codecov --file=coverage/coverage.json",
     "watch:ts": "dojo-tsc-watcher -p tsconfig.json -p tsconfig.esm.json -- dojo-package",
     "watch": "run-p watch:ts \"build:static:** -- --watch\""
