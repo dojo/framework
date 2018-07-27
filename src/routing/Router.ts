@@ -19,7 +19,11 @@ export interface NavEvent extends EventObject<string> {
 	context: OutletContext;
 }
 
-export class Router extends QueuingEvented<{ nav: NavEvent }> implements RouterInterface {
+export interface OutletEvent extends EventObject<string> {
+	outlet: string;
+}
+
+export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent }> implements RouterInterface {
 	private _routes: Route[] = [];
 	private _outletMap: { [index: string]: Route } = Object.create(null);
 	private _matchedOutlets: { [index: string]: OutletContext } = Object.create(null);
@@ -200,6 +204,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent }> implements RouterI
 	 */
 	private _onChange = (requestedPath: string): void => {
 		this.emit({ type: 'navstart' });
+		const previousMatchedOutlets = this._matchedOutlets;
 		this._matchedOutlets = Object.create(null);
 		this._currentParams = {};
 		requestedPath = this._stripLeadingSlash(requestedPath);
@@ -245,6 +250,10 @@ export class Router extends QueuingEvented<{ nav: NavEvent }> implements RouterI
 			if (routeMatch === true) {
 				previousOutlet = route.outlet;
 				routeMatched = true;
+				if (!previousMatchedOutlets[route.outlet]) {
+					this.emit({ type: 'outlet', outlet: route.outlet });
+				}
+
 				this._matchedOutlets[route.outlet] = {
 					queryParams: this._currentQueryParams,
 					params: { ...this._currentParams },
@@ -263,6 +272,13 @@ export class Router extends QueuingEvented<{ nav: NavEvent }> implements RouterI
 					this._matchedOutlets[previousOutlet].type = 'error';
 				}
 				segments = [...segmentsForRoute];
+			}
+		}
+
+		const previousMatchedOutletKeys = Object.keys(previousMatchedOutlets);
+		for (let i = 0; i < previousMatchedOutletKeys.length; i++) {
+			if (!this._matchedOutlets[previousMatchedOutletKeys[i]]) {
+				this.emit({ type: 'outlet', outlet: previousMatchedOutletKeys[i] });
 			}
 		}
 		if (routeMatched === false) {

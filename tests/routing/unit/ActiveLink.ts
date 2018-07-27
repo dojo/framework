@@ -15,7 +15,13 @@ const router = new Router(
 	[
 		{
 			path: 'foo',
-			outlet: 'foo'
+			outlet: 'foo',
+			children: [
+				{
+					path: 'bar',
+					outlet: 'bar'
+				}
+			]
 		}
 	],
 	{ HistoryManager: MemoryHistory }
@@ -24,7 +30,32 @@ const router = new Router(
 registry.defineInjector('router', () => () => router);
 
 describe('ActiveLink', () => {
+	it('should invalidate when the outlet has been matched', () => {
+		let invalidateCallCount = 0;
+		class MyActiveLink extends ActiveLink {
+			invalidate() {
+				super.invalidate();
+				invalidateCallCount++;
+			}
+		}
+		const link = new MyActiveLink();
+		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
+		const dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, []);
+		assert.deepEqual(dNode.properties.to, 'foo');
+		invalidateCallCount = 0;
+		router.setPath('/foo');
+		assert.strictEqual(invalidateCallCount, 1);
+		router.setPath('/foo/bar');
+		assert.strictEqual(invalidateCallCount, 1);
+		router.setPath('/baz');
+		assert.strictEqual(invalidateCallCount, 2);
+	});
+
 	it('Does not add active class when outlet is not active', () => {
+		router.setPath('/other');
 		const link = new ActiveLink();
 		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
