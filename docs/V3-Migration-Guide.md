@@ -16,7 +16,7 @@ To perform the migration, run the following command from the project root:
 dojo upgrade app
 ```
 
-Next, you get prompted to make sure that you want to continue as the changes are irreversible, once executed. The output from the migration tool should return the files scanned and changed:
+Next, you get prompted to make sure that you want to continue as the changes are irreversible once executed. The output from the migration tool should return the files scanned and changed:
 
 ```
 Processing 49 files...
