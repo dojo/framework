@@ -52,6 +52,10 @@ There are several packages which are designed to support the Dojo platform.  Gen
 * [`dojo/webpack-contrib`](https://github.com/dojo/webpack-contrib) - Specialized webpack loaders and plugins used by the Dojo toolchain.
 * [`dojo/web-editor`](https://github.com/dojo/web-editor) - A web editor that can run projects exported from `cli-export-project`
 
+### Version 2.x to 3.x Migration Guide
+
+See the [v3 migration guide](./docs/V3-Migration-Guide.md) for details on upgrading from version 2.x to version 3.x.
+
 ### Examples
 
 We have added a repository of examples which have been built on Dojo.  Those examples are available
