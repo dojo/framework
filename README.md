@@ -54,7 +54,7 @@ There are several packages which are designed to support the Dojo platform.  Gen
 
 ### Version 2.0.0 to 3.0.0 Migration Guide
 
-See the [v3 migration guide](./docs/v3-migration-guide) for details on upgrading from version 2.0.0 to version 3.0.0.
+See the [v3 migration guide](./docs/V3-Migration-Guide.md) for details on upgrading from version 2.0.0 to version 3.0.0.
 
 ### Examples
 
