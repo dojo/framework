@@ -16,7 +16,7 @@ To perform the migration, run the following command from the project root:
 dojo upgrade app
 ```
 
-You will be prompted to make sure that you want to continue as the changes are irreversibly, once executed, the output from the migration tool should return the files scanned and changed
+You will be prompted to make sure that you want to continue as the changes are irreversible, once executed. The output from the migration tool should return the files scanned and changed
 
 ```
 Processing 49 files...
@@ -48,7 +48,7 @@ remove legacy packages:
     npm uninstall -S -D @dojo/core @dojo/has @dojo/i18n @dojo/widget-core @dojo/routing @dojo/stores @dojo/shim @dojo/test-extras
 ```
 
-**Note:** Dependencies on `@dojo/widgets` and `@dojo/interop` need to be upgraded to `3.0.0`, this can be done by running `npm upgrade` in the project root.
+**Note:** Dependencies on `@dojo/widgets` and `@dojo/interop` also need to be upgraded to version `3.0.0`, this can be done by running `npm upgrade` in the project root.
 
 ### Other notable changes:
 
