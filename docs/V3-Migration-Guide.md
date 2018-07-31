@@ -2,7 +2,7 @@
 
 As part of version 3.0.0 eight packages (dojo/has, dojo/shim, dojo/core, dojo/i18n, dojo/widget-core, dojo/routing, dojo/stores and dojo/test-extras) have been consolidated into a new package called @dojo/framework.
 
-To facilitate a friction free upgrade process there as a migration command `@dojo/cli-upgrade-app` that should automatically update all import paths to point to the new framework package.
+To facilitate a friction-free upgrade process there as a migration command `@dojo/cli-upgrade-app` that should automatically update all import paths to point to the new framework package.
 
 To install the command run the following from the project root:
 
@@ -16,7 +16,7 @@ To perform the migration, run the following command from the project root:
 dojo upgrade app
 ```
 
-You will be prompted to make sure that you want to continue as the changes are irreversible, once executed. The output from the migration tool should return the files scanned and changed
+Next, you get prompted to make sure that you want to continue as the changes are irreversible, once executed. The output from the migration tool should return the files scanned and changed:
 
 ```
 Processing 49 files...
@@ -37,7 +37,7 @@ Results:
 Time elapsed: 0.677seconds
 ```
 
-At this point the project is ready to have the old @dojo dependencies removed and the new @dojo/framework installed. The commands for doing this is included in the migration tools output.
+At this point, the project is ready to have the old @dojo dependencies removed and the new @dojo/framework installed. The commands for doing this get included in the migration tools output.
 
 ```
 Upgrade complete, you can now add the new dojo/framework dependency and safely remove deprecated dependencies with the following:
@@ -48,7 +48,7 @@ remove legacy packages:
     npm uninstall -S -D @dojo/core @dojo/has @dojo/i18n @dojo/widget-core @dojo/routing @dojo/stores @dojo/shim @dojo/test-extras
 ```
 
-If the project is using `@dojo/widgets` and `@dojo/interop` these require upgrading to version `3.0.0`. This can be done by running `npm upgrade` in the project root.
+If the project is using @dojo/widgets and @dojo/interop, these require upgrading to version 3.0.0. These packages get upgraded by running `npm upgrade` in the project root.
 
 It is also recommended to run `dojo version --outdated` to check for outdated cli commands.
 
@@ -58,7 +58,7 @@ It is also recommended to run `dojo version --outdated` to check for outdated cl
 
 #### Evergreen builds by default
 
-The default value of the `legacy` flag in `@dojo/cli-build-app` has been changed from `true` to `false`. If the project needs to support IE11 then the legacy flag will need to be passed on the command line or saved in the projects `.dojorc` file.
+The default value of the `legacy` flag in `@dojo/cli-build-app` gets changed from `true` to `false`. If the project needs to support IE11, then the legacy flag needs to be passed on the command line or saved in the projects `.dojorc` file.
 
 To run the build in `legacy` mode use the `--legacy true` on the command line.
 
