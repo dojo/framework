@@ -583,7 +583,7 @@ registerSuite('request/node', {
 			},
 			'upload monitoriting': {
 				'with a stream'(this: any) {
-					let events: number[] = [];
+					let events: any[] = [];
 
 					const req = nodeRequest(getRequestUrl('foo.json'), {
 						method: 'POST',
@@ -596,11 +596,11 @@ registerSuite('request/node', {
 
 					return req.then((res) => {
 						assert.isTrue(events.length > 0, 'was expecting at least one monitor event');
-						assert.equal(events[events.length - 1], 17);
+						assert.deepEqual(events[events.length - 1], { loaded: 17 });
 					});
 				},
 				'without a stream'(this: any) {
-					let events: number[] = [];
+					let events: any[] = [];
 
 					const req = nodeRequest(getRequestUrl('foo.json'), {
 						method: 'POST',
@@ -613,7 +613,7 @@ registerSuite('request/node', {
 
 					return req.then((res) => {
 						assert.isTrue(events.length > 0, 'was expecting at least one monitor event');
-						assert.equal(events[events.length - 1], 17);
+						assert.deepEqual(events[events.length - 1], { loaded: 17 });
 					});
 				}
 			},

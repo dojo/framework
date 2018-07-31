@@ -37,9 +37,10 @@ const req = request.post('http://www.example.com/', {
 	body: someLargeString
 });
 
-req.upload.subscribe(totalUploadedBytes => {
+req.upload.subscribe(uploadData => {
+  const { loaded } = uploadData;
 	// do something with uploaded bytes
-})
+});
 ```
 
 Note that while the Node.js provider will emit a single upload event when it is done uploading, it cannot emit more granular upload events with `string` or `Buffer` body types. To receive more frequent upload events, you can use the `bodyStream` option to provide a `Readable` with the body content. Upload events will be emitted as the data is read from the stream.
@@ -48,6 +49,21 @@ Note that while the Node.js provider will emit a single upload event when it is 
 request.post('http://www.example.com/', {
 	bodyStream: fs.createReadStream('some-large-file')
 });
+```
+
+Progress events will always provide a `loaded` property that contains bytes uploaded, but the XMLHttpRequest provider will also emit data for `total` and `lengthComputable`:
+
+```typescript
+const xhr = xhr.post('http://www.example.com/', {
+	body: someLargeString
+});
+
+xhr.upload.subscribe(uploadData => {
+  const { loaded, total, lengthComputable } = uploadData;
+	if (lengthComputable) {
+    const percentComplete = loaded / total * 100;
+  }
+})
 ```
 
 ### Monitoring Download Progress

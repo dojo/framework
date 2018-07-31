@@ -6,7 +6,7 @@ import has from '../../has';
 import Observable from '../../Observable';
 import { createTimer } from '../../util';
 import Headers from '../Headers';
-import { RequestOptions, UploadObservableTask } from '../interfaces';
+import { RequestOptions, UploadObservableTask, RequestUploadData } from '../interfaces';
 import Response, { getArrayBufferFromBlob, getTextFromBlob } from '../Response';
 import SubscriptionPool from '../SubscriptionPool';
 import TimeoutError from '../TimeoutError';
@@ -30,6 +30,14 @@ export interface XhrRequestOptions extends RequestOptions {
 	 * to be preflighted (https://xhr.spec.whatwg.org/#request)
 	 */
 	includeUploadProgress?: boolean;
+}
+
+/**
+ * Upload event data specific to an XHR request
+ */
+export interface XhrRequestUploadData extends RequestUploadData {
+	total: number;
+	lengthComputable: boolean;
 }
 
 interface RequestData {
@@ -184,7 +192,10 @@ function setOnError(request: XMLHttpRequest, reject: Function) {
 	});
 }
 
-export default function xhr(url: string, options: XhrRequestOptions = {}): UploadObservableTask<XhrResponse> {
+export default function xhr(
+	url: string,
+	options: XhrRequestOptions = {}
+): UploadObservableTask<XhrResponse, XhrRequestUploadData> {
 	const request = new XMLHttpRequest();
 	const requestUrl = generateRequestUrl(url, options);
 
@@ -216,7 +227,7 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 	let timeoutReject: Function;
 	let abortCallback: (event: Event) => void;
 
-	const task = <UploadObservableTask<XhrResponse>>new Task<XhrResponse>((resolve, reject) => {
+	const task = <UploadObservableTask<XhrResponse, XhrRequestUploadData>>new Task<XhrResponse>((resolve, reject) => {
 		timeoutReject = reject;
 
 		if (options.signal) {
@@ -345,12 +356,13 @@ export default function xhr(url: string, options: XhrRequestOptions = {}): Uploa
 	});
 
 	if (includeUploadProgress) {
-		const uploadObserverPool = new SubscriptionPool<number>();
-		task.upload = new Observable<number>((observer) => uploadObserverPool.add(observer));
+		const uploadObserverPool = new SubscriptionPool<XhrRequestUploadData>();
+		task.upload = new Observable<XhrRequestUploadData>((observer) => uploadObserverPool.add(observer));
 
 		if (has('host-browser') || has('web-worker-xhr-upload')) {
 			request.upload.addEventListener('progress', (event) => {
-				uploadObserverPool.next(event.loaded);
+				const { loaded, total, lengthComputable } = event;
+				uploadObserverPool.next({ loaded, total, lengthComputable });
 			});
 		}
 	}
