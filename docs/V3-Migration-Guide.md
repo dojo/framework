@@ -2,7 +2,7 @@
 
 As part of version 3.0.0 eight packages (dojo/has, dojo/shim, dojo/core, dojo/i18n, dojo/widget-core, dojo/routing, dojo/stores and dojo/test-extras) have been consolidated into a new package called @dojo/framework.
 
-To facilitate a friction-free upgrade process there as a migration command `@dojo/cli-upgrade-app` that should automatically update all import paths to point to the new framework package.
+To facilitate a friction-free upgrade process there is a migration command `@dojo/cli-upgrade-app` that should automatically update all import paths to point to the new framework package.
 
 To install the command run the following from the project root:
 
