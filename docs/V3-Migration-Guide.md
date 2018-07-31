@@ -48,7 +48,11 @@ remove legacy packages:
     npm uninstall -S -D @dojo/core @dojo/has @dojo/i18n @dojo/widget-core @dojo/routing @dojo/stores @dojo/shim @dojo/test-extras
 ```
 
-**Note:** If your project is using `@dojo/widgets` and `@dojo/interop` these require upgrading to version `3.0.0`. This can be done by running `npm upgrade` in the project root. It is also recommended to run `dojo version --outdated` to check for outdated cli commands.
+If the project is using `@dojo/widgets` and `@dojo/interop` these require upgrading to version `3.0.0`. This can be done by running `npm upgrade` in the project root.
+
+It is also recommended to run `dojo version --outdated` to check for outdated cli commands.
+
+**Note:** The migration tool may create line lengths that violate your projects linting rules, be sure to run your linter and manually fix violations.
 
 ### Other notable changes:
 
