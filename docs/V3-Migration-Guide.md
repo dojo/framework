@@ -58,7 +58,7 @@ The default value of the `legacy` flag in `@dojo/cli-build-app` has been changed
 
 To run the build in `legacy` mode use the `--legacy true` on the command line.
 
-If you do not have a `.dojorc` file run `dojo init` from the root of your projects directory and then edit the file with the following contents
+If you do not have a `.dojorc` file run `dojo init` from your projects root directory and then edit the file with the following contents
 
 ```json
 {
