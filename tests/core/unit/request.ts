@@ -8,6 +8,7 @@ import request, {
 	RequestOptions,
 	UploadObservableTask
 } from '../../../src/core/request';
+import { RequestUploadData } from '../../../src/core/request/interfaces';
 import ResponseClass from '../../../src/core/request/Response';
 import Observable from '../../../src/core/Observable';
 
@@ -46,7 +47,7 @@ function mockProvider(url: string, options?: RequestOptions): UploadObservableTa
 		}()
 	);
 
-	task.upload = new Observable<number>(() => {});
+	task.upload = new Observable<RequestUploadData>(() => {});
 
 	return task;
 }
