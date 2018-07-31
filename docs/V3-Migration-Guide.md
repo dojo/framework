@@ -48,7 +48,7 @@ remove legacy packages:
     npm uninstall -S -D @dojo/core @dojo/has @dojo/i18n @dojo/widget-core @dojo/routing @dojo/stores @dojo/shim @dojo/test-extras
 ```
 
-**Note:** Dependencies on `@dojo/widgets` and `@dojo/interop` also need to be upgraded to version `3.0.0`, this can be done by running `npm upgrade` in the project root.
+**Note:** If your project is using `@dojo/widgets` and `@dojo/interop` these require upgrading to version `3.0.0`. This can be done by running `npm upgrade` in the project root. It is also recommended to run `dojo version --outdated` to check for outdated cli commands.
 
 ### Other notable changes:
 
