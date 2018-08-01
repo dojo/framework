@@ -23,7 +23,6 @@
 	"functionalSuites": [
 		"./dist/dev/tests/has/functional/all.js",
 		"./dist/dev/tests/shim/functional/all.js",
-		"./dist/dev/tests/core/functional/all.js",
 		"./dist/dev/tests/i18n/functional/**/*.js",
 		"./dist/dev/tests/widget-core/functional/all.js",
 		"./dist/dev/tests/routing/functional/**/*.js",
@@ -31,6 +30,7 @@
 	],
 
 	"plugins": [
+		"./node_modules/whatwg-fetch/fetch.js",
 		{
 			"script": "./dist/dev/src/shim/main",
 			"useLoader": true
@@ -58,7 +58,6 @@
 			}
 		},
 		"suites+": [
-			"./dist/dev/tests/core/unit/all-browser",
 			"./dist/dev/tests/routing/unit/all.js"
 		],
 		"plugins+": [
@@ -75,13 +74,9 @@
 
 	"node": {
 		"suites+": [
-			"./dist/dev/tests/core/unit/all-node",
 			"./dist/dev/tests/routing/unit/**/*.js",
 			"!./dist/dev/tests/routing/unit/**/all.js",
 			"!./dist/dev/tests/routing/unit/history/StateHistory.js"
-		],
-		"plugins+": [
-			"./dist/dev/tests/core/plugins/echo-service.js"
 		]
 	}
 }

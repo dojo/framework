@@ -1,7 +1,6 @@
 import global from '../../shim/global';
 import WeakMap from '../../shim/WeakMap';
 import Map from '../../shim/Map';
-import { createHandle } from '../../core/lang';
 import { Base } from './Base';
 
 interface ExtendedIntersectionObserverEntry extends IntersectionObserverEntry {
@@ -78,7 +77,9 @@ export class Intersection extends Base {
 		const details = { observer, entries, ...options };
 
 		this._details.set(JSON.stringify(options), details);
-		this.own(createHandle(() => observer.disconnect()));
+		this.own({
+			destroy: () => observer.disconnect()
+		});
 		return details;
 	}
 

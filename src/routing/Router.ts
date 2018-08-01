@@ -10,7 +10,7 @@ import {
 	RouterOptions
 } from './interfaces';
 import { HashHistory } from './history/HashHistory';
-import { EventObject } from '../core/interfaces';
+import { EventObject } from '../core/Evented';
 
 const PARAM = Symbol('routing param');
 

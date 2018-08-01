@@ -1,5 +1,4 @@
-import { Evented } from '../core/Evented';
-import { EventObject } from '../core/interfaces';
+import { Evented, EventObject } from '../core/Evented';
 import Map from '../shim/Map';
 import { NodeHandlerInterface } from './interfaces';
 

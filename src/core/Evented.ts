@@ -1,11 +1,22 @@
 import Map from '../shim/Map';
-import { Handle, EventType, EventObject } from './interfaces';
-import { Destroyable } from './Destroyable';
+import { Destroyable, Handle } from './Destroyable';
 
 /**
  * Map of computed regular expressions, keyed by string
  */
 const regexMap = new Map<string, RegExp>();
+
+export type EventType = string | symbol;
+
+/**
+ * The base event object, which provides a `type` property
+ */
+export interface EventObject<T = EventType> {
+	/**
+	 * The type of the event
+	 */
+	readonly type: T;
+}
 
 /**
  * Determines is the event type glob has been matched

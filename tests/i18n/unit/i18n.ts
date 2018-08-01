@@ -1,4 +1,4 @@
-import has from '../../../src/core/has';
+import has from '../../../src/has/presets/dojo';
 import global from '../../../src/shim/global';
 import * as Globalize from 'globalize';
 const { registerSuite } = intern.getInterface('object');
@@ -15,7 +15,8 @@ import i18n, {
 	observeLocale,
 	setLocaleMessages,
 	switchLocale,
-	systemLocale
+	systemLocale,
+	useDefault
 } from '../../../src/i18n/i18n';
 import bundle from '../support/mocks/common/main';
 import partyBundle from '../support/mocks/common/party';
@@ -528,6 +529,43 @@ registerSuite('i18n', {
 			'assert reflects current locale'() {
 				switchLocale('fr');
 				assert.strictEqual(i18n.locale, 'fr', '`i18n.locale` is the current locale.');
+			}
+		},
+
+		useDefault: {
+			'single es6 module'() {
+				assert.strictEqual(
+					useDefault({
+						__esModule: true,
+						default: 42
+					}),
+					42,
+					'The default export should be returned.'
+				);
+			},
+
+			'single non-es6 module'() {
+				const module = { value: 42 };
+				assert.deepEqual(useDefault(module), module, 'The module itself should be returned.');
+			},
+
+			'all es6 modules'() {
+				const modules = [42, 43].map((value: number) => {
+					return { __esModule: true, default: value };
+				});
+				assert.sameMembers(
+					useDefault(modules),
+					[42, 43],
+					'The default export should be returned for all modules.'
+				);
+			},
+
+			'mixed module types'() {
+				const modules: any[] = [42, 43].map((value: number) => {
+					return { __esModule: true, default: value };
+				});
+				modules.push({ value: 44 });
+				assert.sameDeepMembers(useDefault(modules), [42, 43, { value: 44 }]);
 			}
 		}
 	}

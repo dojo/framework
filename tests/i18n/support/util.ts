@@ -1,4 +1,3 @@
-import request from '../../../src/core/request';
 import has from '../../../src/has/has';
 import '../../../src/shim/Promise';
 import loadCldrData, { CldrData, isLoaded } from '../../../src/i18n/cldr/load';
@@ -42,8 +41,7 @@ const getJson: (paths: string[]) => Promise<CldrData[]> = (function() {
 						path = require.toUrl(path);
 					}
 
-					return <Promise<CldrData>>request
-						.get(path)
+					return fetch(path)
 						.then((response) => response.json())
 						.then((data: CldrData) => {
 							return data;
