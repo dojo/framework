@@ -5,7 +5,7 @@
 [![npm version](https://badge.fury.io/js/%40dojo%2Fframework.svg)](https://badge.fury.io/js/%40dojo%2Fframework)
 [![Join the chat at https://gitter.im/dojo/dojo2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dojo/dojo2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Dojo is a progressive framework for modern web applications built with Typescript.
+Dojo is a progressive framework for modern web applications built with TypeScript.
 
 Visit us at [dojo.io](https://dojo.io/) for documentation, tutorials, cookbooks, and other materials. This repository contains detailed information on the structure of Dojo, while `dojo.io` is focused on getting started with and learning Dojo.
 
