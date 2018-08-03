@@ -36,16 +36,14 @@ registerSuite('tsx integration', {
 		}
 
 		const bar = new Bar();
-		bar.__setCoreProperties__({ bind: bar, baseRegistry: registry });
-		bar.__setProperties__({ registry });
+		bar.registry.base = registry;
 		const barRender = bar.__render__() as WNode;
 		assert.deepEqual(barRender.properties, { hello: 'world' } as any);
 		assert.strictEqual(barRender.widgetConstructor, Foo);
 		assert.lengthOf(barRender.children, 0);
 
 		const qux = new Qux();
-		qux.__setCoreProperties__({ bind: qux, baseRegistry: registry });
-		qux.__setProperties__({ registry });
+		qux.registry.base = registry;
 		const firstQuxRender = qux.__render__() as WNode;
 		assert.strictEqual(firstQuxRender.widgetConstructor, 'LazyFoo');
 	}

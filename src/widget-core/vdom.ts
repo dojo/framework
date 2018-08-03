@@ -1,171 +1,162 @@
 import global from '../shim/global';
-import {
-	CoreProperties,
-	DefaultWidgetBaseInterface,
-	DNode,
-	VNode,
-	WNode,
-	ProjectionOptions,
-	Projection,
-	SupportedClassName,
-	TransitionStrategy,
-	VNodeProperties
-} from './interfaces';
 import { from as arrayFrom } from '../shim/array';
-import { isWNode, isVNode, isDomVNode, VNODE, WNODE } from './d';
-import { isWidgetBaseConstructor } from './Registry';
-import WeakMap from '../shim/WeakMap';
+import { WeakMap } from '../shim/WeakMap';
+import {
+	WNode,
+	VNode,
+	DNode,
+	VNodeProperties,
+	SupportedClassName,
+	WidgetBaseConstructor,
+	DefaultWidgetBaseInterface,
+	Constructor,
+	TransitionStrategy,
+	WidgetProperties
+} from './interfaces';
+import transitionStrategy from './animations/cssTransitions';
+import { isVNode, isWNode, WNODE, v, isDomVNode } from './d';
+import { Registry, isWidgetBaseConstructor } from './Registry';
+import { WidgetBase } from './WidgetBase';
 import NodeHandler from './NodeHandler';
-import RegistryHandler from './RegistryHandler';
-
-const NAMESPACE_W3 = 'http://www.w3.org/';
-const NAMESPACE_SVG = NAMESPACE_W3 + '2000/svg';
-const NAMESPACE_XLINK = NAMESPACE_W3 + '1999/xlink';
-
-const emptyArray: (InternalWNode | InternalVNode)[] = [];
-
-const nodeOperations = ['focus', 'blur', 'scrollIntoView', 'click'];
-
-export type RenderResult = DNode<any> | DNode<any>[];
-
-interface InstanceMapData {
-	parentVNode: InternalVNode;
-	dnode: InternalWNode;
-}
-
-export interface InternalWNode extends WNode<DefaultWidgetBaseInterface> {
-	/**
-	 * The instance of the widget
-	 */
-	instance: DefaultWidgetBaseInterface;
-
-	/**
-	 * The rendered DNodes from the instance
-	 */
-	rendered: InternalDNode[];
-
-	/**
-	 * Core properties that are used by the widget core system
-	 */
-	coreProperties: CoreProperties;
-
-	/**
-	 * Children for the WNode
-	 */
-	children: InternalDNode[];
-}
-
-export interface InternalVNode extends VNode {
-	/**
-	 * Children for the VNode
-	 */
-	children?: InternalDNode[];
-
-	inserted?: boolean;
-
-	/**
-	 * Bag used to still decorate properties on a deferred properties callback
-	 */
-	decoratedDeferredProperties?: VNodeProperties;
-
-	/**
-	 * DOM element
-	 */
-	domNode?: Element | Text;
-}
-
-export type InternalDNode = InternalVNode | InternalWNode;
-
-export interface RenderQueue {
-	instance: DefaultWidgetBaseInterface;
-	depth: number;
-}
 
 export interface WidgetData {
 	onDetach: () => void;
 	onAttach: () => void;
 	dirty: boolean;
-	registry: () => RegistryHandler;
 	nodeHandler: NodeHandler;
-	coreProperties: CoreProperties;
 	invalidate?: Function;
 	rendering: boolean;
 	inputProperties: any;
 }
 
-interface ProjectorState {
-	deferredRenderCallbacks: Function[];
-	afterRenderCallbacks: Function[];
-	nodeMap: WeakMap<Node, WeakMap<Function, EventListener>>;
-	renderScheduled?: number;
-	renderQueue: RenderQueue[];
-	merge: boolean;
-	mergeElement?: Node;
+export interface BaseNodeWrapper {
+	node: WNode | VNode;
+	domNode?: Node;
+	childrenWrappers?: DNodeWrapper[];
+	depth: number;
+	requiresInsertBefore?: boolean;
+	hasPreviousSiblings?: boolean;
+	hasParentWNode?: boolean;
+	nextWrapper?: DNodeWrapper;
+	namespace?: string;
 }
 
-export const widgetInstanceMap = new WeakMap<any, WidgetData>();
+export interface WNodeWrapper extends BaseNodeWrapper {
+	node: WNode;
+	instance?: WidgetBase;
+	mergeNodes?: Node[];
+	nodeHandlerCalled?: boolean;
+}
 
-const instanceMap = new WeakMap<DefaultWidgetBaseInterface, InstanceMapData>();
-const nextSiblingMap = new WeakMap<DefaultWidgetBaseInterface, InternalDNode[]>();
-const projectorStateMap = new WeakMap<DefaultWidgetBaseInterface, ProjectorState>();
+export interface VNodeWrapper extends BaseNodeWrapper {
+	node: VNode;
+	domNode?: Node;
+	merged?: boolean;
+}
 
-function same(dnode1: InternalDNode, dnode2: InternalDNode) {
-	if (isVNode(dnode1) && isVNode(dnode2)) {
-		if (isDomVNode(dnode1) || isDomVNode(dnode2)) {
-			if (dnode1.domNode !== dnode2.domNode) {
-				return false;
-			}
-		}
-		if (dnode1.tag !== dnode2.tag) {
-			return false;
-		}
-		if (dnode1.properties.key !== dnode2.properties.key) {
-			return false;
-		}
-		return true;
-	} else if (isWNode(dnode1) && isWNode(dnode2)) {
-		if (dnode1.instance === undefined && typeof dnode2.widgetConstructor === 'string') {
-			return false;
-		}
-		if (dnode1.widgetConstructor !== dnode2.widgetConstructor) {
-			return false;
-		}
-		if (dnode1.properties.key !== dnode2.properties.key) {
-			return false;
-		}
-		return true;
+export type DNodeWrapper = VNodeWrapper | WNodeWrapper;
+
+interface RenderQueueItem {
+	current?: (WNodeWrapper | VNodeWrapper)[];
+	next?: (WNodeWrapper | VNodeWrapper)[];
+	mergeNodes?: Node[];
+}
+
+interface InvalidationQueueItem {
+	current: WNodeWrapper;
+	next: WNodeWrapper;
+}
+
+interface Instruction {
+	current: undefined | DNodeWrapper;
+	next: undefined | DNodeWrapper;
+}
+
+interface CreateWidgetInstruction {
+	next: WNodeWrapper;
+}
+
+interface UpdateWidgetInstruction {
+	current: WNodeWrapper;
+	next: WNodeWrapper;
+}
+
+interface RemoveWidgetInstruction {
+	current: WNodeWrapper;
+}
+
+interface CreateDomInstruction {
+	next: VNodeWrapper;
+}
+
+interface UpdateDomInstruction {
+	current: VNodeWrapper;
+	next: VNodeWrapper;
+}
+
+interface RemoveDomInstruction {
+	current: VNodeWrapper;
+}
+
+interface ParentNodes {
+	parentDomNode?: Node;
+	parentWNodeWrapper?: WNodeWrapper;
+}
+
+interface TraversalMaps {
+	parent: WeakMap<any, DNodeWrapper>;
+	sibling: WeakMap<DNodeWrapper, DNodeWrapper>;
+}
+
+export interface CreateDomApplication {
+	type: 'create';
+	current?: VNodeWrapper;
+	next: VNodeWrapper;
+	parentWNodeWrapper?: WNodeWrapper;
+	parentDomNode: Node;
+}
+
+export interface DeleteDomApplication {
+	type: 'delete';
+	current: VNodeWrapper;
+}
+
+export type DomApplicatorInstruction = CreateDomApplication | DeleteDomApplication;
+
+export const widgetInstanceMap = new WeakMap<WidgetBase<WidgetProperties>, WidgetData>();
+
+const EMPTY_ARRAY: DNodeWrapper[] = [];
+const nodeOperations = ['focus', 'blur', 'scrollIntoView', 'click'];
+const NAMESPACE_W3 = 'http://www.w3.org/';
+const NAMESPACE_SVG = NAMESPACE_W3 + '2000/svg';
+const NAMESPACE_XLINK = NAMESPACE_W3 + '1999/xlink';
+
+function isWNodeWrapper(child: DNodeWrapper): child is WNodeWrapper {
+	return child && isWNode(child.node);
+}
+
+function isVNodeWrapper(child?: DNodeWrapper | null): child is VNodeWrapper {
+	return !!child && isVNode(child.node);
+}
+
+function isDomApplicatorInstruction(value: any): value is DomApplicatorInstruction {
+	return (value && value.type === 'create') || value.type === 'update' || value.type === 'delete';
+}
+
+function nodeOperation(
+	propName: string,
+	propValue: (() => boolean) | boolean,
+	previousValue: boolean,
+	domNode: HTMLElement & { [index: string]: any }
+): void {
+	let result = propValue && !previousValue;
+	if (typeof propValue === 'function') {
+		result = propValue();
 	}
-	return false;
-}
-
-const missingTransition = function() {
-	throw new Error('Provide a transitions object to the projectionOptions to do animations');
-};
-
-function getProjectionOptions(
-	projectorOptions: Partial<ProjectionOptions>,
-	projectorInstance: DefaultWidgetBaseInterface
-): ProjectionOptions {
-	const defaults: Partial<ProjectionOptions> = {
-		namespace: undefined,
-		styleApplyer: function(domNode: HTMLElement, styleName: string, value: string) {
-			(domNode.style as any)[styleName] = value;
-		},
-		transitions: {
-			enter: missingTransition,
-			exit: missingTransition
-		},
-		depth: 0,
-		merge: false,
-		sync: false,
-		projectorInstance
-	};
-	return { ...defaults, ...projectorOptions } as ProjectionOptions;
-}
-
-function checkStyleValue(styleValue: Object) {
-	if (typeof styleValue !== 'string') {
-		throw new Error('Style values must be strings');
+	if (result === true) {
+		global.requestAnimationFrame(() => {
+			domNode[propName]();
+		});
 	}
 }
 
@@ -173,13 +164,10 @@ function updateEvent(
 	domNode: Node,
 	eventName: string,
 	currentValue: Function,
-	projectionOptions: ProjectionOptions,
+	eventMap: WeakMap<Function, EventListener>,
 	bind: any,
 	previousValue?: Function
 ) {
-	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
-	const eventMap = projectorState.nodeMap.get(domNode) || new WeakMap();
-
 	if (previousValue) {
 		const previousEvent = eventMap.get(previousValue);
 		domNode.removeEventListener(eventName, previousEvent);
@@ -196,104 +184,154 @@ function updateEvent(
 
 	domNode.addEventListener(eventName, callback);
 	eventMap.set(currentValue, callback);
-	projectorState.nodeMap.set(domNode, eventMap);
-}
-
-function addClasses(domNode: Element, classes: SupportedClassName) {
-	if (classes) {
-		const classNames = classes.split(' ');
-		for (let i = 0; i < classNames.length; i++) {
-			domNode.classList.add(classNames[i]);
-		}
-	}
-}
-
-function removeClasses(domNode: Element, classes: SupportedClassName) {
-	if (classes) {
-		const classNames = classes.split(' ');
-		for (let i = 0; i < classNames.length; i++) {
-			domNode.classList.remove(classNames[i]);
-		}
-	}
-}
-
-function buildPreviousProperties(domNode: any, previous: InternalVNode, current: InternalVNode) {
-	const { diffType, properties, attributes } = current;
-	if (!diffType || diffType === 'vdom') {
-		return { properties: previous.properties, attributes: previous.attributes, events: previous.events };
-	} else if (diffType === 'none') {
-		return { properties: {}, attributes: previous.attributes ? {} : undefined, events: previous.events };
-	}
-	let newProperties: any = {
-		properties: {}
-	};
-	if (attributes) {
-		newProperties.attributes = {};
-		newProperties.events = previous.events;
-		Object.keys(properties).forEach((propName) => {
-			newProperties.properties[propName] = domNode[propName];
-		});
-		Object.keys(attributes).forEach((attrName) => {
-			newProperties.attributes[attrName] = domNode.getAttribute(attrName);
-		});
-		return newProperties;
-	}
-	newProperties.properties = Object.keys(properties).reduce(
-		(props, property) => {
-			props[property] = domNode.getAttribute(property) || domNode[property];
-			return props;
-		},
-		{} as any
-	);
-	return newProperties;
-}
-
-function nodeOperation(
-	propName: string,
-	propValue: any,
-	previousValue: any,
-	domNode: Element,
-	projectionOptions: ProjectionOptions
-): void {
-	let result;
-	if (typeof propValue === 'function') {
-		result = propValue();
-	} else {
-		result = propValue && !previousValue;
-	}
-	if (result === true) {
-		const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
-		projectorState.deferredRenderCallbacks.push(() => {
-			(domNode as any)[propName]();
-		});
-	}
 }
 
 function removeOrphanedEvents(
 	domNode: Element,
 	previousProperties: VNodeProperties,
 	properties: VNodeProperties,
-	projectionOptions: ProjectionOptions,
+	eventMap: WeakMap<Function, EventListener>,
 	onlyEvents: boolean = false
 ) {
-	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
-	const eventMap = projectorState.nodeMap.get(domNode);
-	if (eventMap) {
-		Object.keys(previousProperties).forEach((propName) => {
-			const isEvent = propName.substr(0, 2) === 'on' || onlyEvents;
-			const eventName = onlyEvents ? propName : propName.substr(2);
-			if (isEvent && !properties[propName]) {
-				const eventCallback = eventMap.get(previousProperties[propName]);
-				if (eventCallback) {
-					domNode.removeEventListener(eventName, eventCallback);
-				}
+	Object.keys(previousProperties).forEach((propName) => {
+		const isEvent = propName.substr(0, 2) === 'on' || onlyEvents;
+		const eventName = onlyEvents ? propName : propName.substr(2);
+		if (isEvent && !properties[propName]) {
+			const eventCallback = eventMap.get(previousProperties[propName]);
+			if (eventCallback) {
+				domNode.removeEventListener(eventName, eventCallback);
 			}
-		});
+		}
+	});
+}
+
+function renderedToWrapper(
+	rendered: DNode[],
+	parent: DNodeWrapper,
+	currentParent: DNodeWrapper | null,
+	traversalMaps: TraversalMaps
+): DNodeWrapper[] {
+	const wrappedRendered: DNodeWrapper[] = [];
+	const hasParentWNode = isWNodeWrapper(parent);
+	const currentParentLength = isVNodeWrapper(currentParent) && (currentParent.childrenWrappers || []).length > 1;
+	const requiresInsertBefore = (parent.hasPreviousSiblings !== false && hasParentWNode) || currentParentLength;
+	let previousItem: DNodeWrapper | undefined;
+	for (let i = 0; i < rendered.length; i++) {
+		const renderedItem = rendered[i];
+		const wrapper = {
+			node: renderedItem,
+			depth: parent.depth + 1,
+			requiresInsertBefore,
+			hasParentWNode,
+			namespace: parent.namespace
+		} as DNodeWrapper;
+		traversalMaps.parent.set(renderedItem, parent);
+		if (previousItem) {
+			traversalMaps.sibling.set(previousItem, wrapper);
+		}
+		wrappedRendered.push(wrapper);
+		previousItem = wrapper;
+	}
+	return wrappedRendered;
+}
+
+function findParentNodes(currentNode: VNode | WNode, { parent }: TraversalMaps): ParentNodes {
+	let parentDomNode: Node | undefined;
+	let parentWNodeWrapper: WNodeWrapper | undefined;
+	let parentWrapper = parent.get(currentNode)!;
+
+	while ((!parentDomNode || !parentWNodeWrapper) && parentWrapper) {
+		if (!parentDomNode && isVNodeWrapper(parentWrapper) && parentWrapper.domNode) {
+			parentDomNode = parentWrapper.domNode;
+		} else if (!parentWNodeWrapper && isWNodeWrapper(parentWrapper)) {
+			parentWNodeWrapper = parentWrapper;
+		}
+		parentWrapper = parent.get(parentWrapper.node)!;
+	}
+	return { parentDomNode, parentWNodeWrapper };
+}
+
+function same(dnode1: DNode, dnode2: DNode): boolean {
+	if (isVNode(dnode1) && isVNode(dnode2)) {
+		if (isDomVNode(dnode1) && isDomVNode(dnode2)) {
+			if (dnode1.domNode !== dnode2.domNode) {
+				return false;
+			}
+		}
+		if (isDomVNode(dnode1) || isDomVNode(dnode2)) {
+			return false;
+		}
+		if (dnode1.tag !== dnode2.tag) {
+			return false;
+		}
+		if (dnode1.properties.key !== dnode2.properties.key) {
+			return false;
+		}
+		return true;
+	} else if (isWNode(dnode1) && isWNode(dnode2)) {
+		if (typeof dnode2.widgetConstructor === 'string') {
+			return false;
+		}
+		if (dnode1.widgetConstructor !== dnode2.widgetConstructor) {
+			return false;
+		}
+		if (dnode1.properties.key !== dnode2.properties.key) {
+			return false;
+		}
+		return true;
+	}
+	return false;
+}
+
+function findIndexOfChild(children: DNodeWrapper[], sameAs: DNode, start: number) {
+	for (let i = start; i < children.length; i++) {
+		if (same(children[i].node, sameAs)) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+function findInsertBefore(next: DNodeWrapper, { sibling, parent }: TraversalMaps) {
+	let insertBefore: Node | null = null;
+	let searchNode = next;
+	while (!insertBefore) {
+		const nextSibling = sibling.get(searchNode);
+		if (nextSibling) {
+			if (isVNodeWrapper(nextSibling)) {
+				if (nextSibling.domNode && nextSibling.domNode.parentNode) {
+					insertBefore = nextSibling.domNode;
+					break;
+				}
+				searchNode = nextSibling;
+			} else if (isWNodeWrapper(nextSibling)) {
+				if (nextSibling.domNode && nextSibling.domNode.parentNode) {
+					insertBefore = nextSibling.domNode;
+					break;
+				}
+				searchNode = nextSibling;
+			}
+		} else {
+			searchNode = parent.get(searchNode.node)!;
+			if (!searchNode || isVNodeWrapper(searchNode)) {
+				break;
+			}
+		}
+	}
+	return insertBefore;
+}
+
+function classes(domNode: any, classes: SupportedClassName, op: string) {
+	if (classes) {
+		const classNames = classes.split(' ');
+		for (let i = 0; i < classNames.length; i++) {
+			domNode.classList[op](classNames[i]);
+		}
 	}
 }
 
-function updateAttribute(domNode: Element, attrName: string, attrValue: string, projectionOptions: ProjectionOptions) {
-	if (projectionOptions.namespace === NAMESPACE_SVG && attrName === 'href') {
+function updateAttribute(domNode: Element, attrName: string, attrValue: string, namespace?: string) {
+	if (namespace === NAMESPACE_SVG && attrName === 'href') {
 		domNode.setAttributeNS(NAMESPACE_XLINK, attrName, attrValue);
 	} else if ((attrName === 'role' && attrValue === '') || attrValue === undefined) {
 		domNode.removeAttribute(attrName);
@@ -302,57 +340,77 @@ function updateAttribute(domNode: Element, attrName: string, attrValue: string, 
 	}
 }
 
-function updateAttributes(
-	domNode: Element,
-	previousAttributes: { [index: string]: string },
-	attributes: { [index: string]: string },
-	projectionOptions: ProjectionOptions
-) {
-	const attrNames = Object.keys(attributes);
-	const attrCount = attrNames.length;
-	for (let i = 0; i < attrCount; i++) {
-		const attrName = attrNames[i];
-		const attrValue = attributes[attrName];
-		const previousAttrValue = previousAttributes[attrName];
-		if (attrValue !== previousAttrValue) {
-			updateAttribute(domNode, attrName, attrValue, projectionOptions);
+function runEnterAnimation(next: VNodeWrapper, transitions: TransitionStrategy) {
+	const {
+		domNode,
+		node: { properties },
+		node: {
+			properties: { enterAnimation }
+		}
+	} = next;
+	if (enterAnimation) {
+		if (typeof enterAnimation === 'function') {
+			enterAnimation(domNode as Element, properties);
+		} else {
+			transitions.enter(domNode as Element, properties, enterAnimation);
 		}
 	}
 }
 
-function updateProperties(
-	domNode: Element,
-	previousProperties: VNodeProperties,
-	properties: VNodeProperties,
-	projectionOptions: ProjectionOptions,
-	includesEventsAndAttributes = true
-) {
-	let propertiesUpdated = false;
-	const propNames = Object.keys(properties);
+function runExitAnimation(current: VNodeWrapper, transitions: TransitionStrategy) {
+	const {
+		domNode,
+		node: { properties },
+		node: {
+			properties: { exitAnimation }
+		}
+	} = current;
+	const removeDomNode = () => {
+		domNode && domNode.parentNode && domNode.parentNode.removeChild(domNode);
+		current.domNode = undefined;
+	};
+	if (typeof exitAnimation === 'function') {
+		exitAnimation(domNode as Element, removeDomNode, properties);
+		return;
+	} else {
+		transitions.exit(domNode as Element, properties, exitAnimation as string, removeDomNode);
+		return;
+	}
+}
+
+function setProperties(
+	domNode: HTMLElement,
+	currentProperties: VNodeProperties = {},
+	nextWrapper: VNodeWrapper,
+	eventMap: WeakMap<Function, EventListener>
+): boolean {
+	let updated = false;
+	const propNames = Object.keys(nextWrapper.node.properties);
 	const propCount = propNames.length;
-	if (propNames.indexOf('classes') === -1 && previousProperties.classes) {
-		if (Array.isArray(previousProperties.classes)) {
-			for (let i = 0; i < previousProperties.classes.length; i++) {
-				removeClasses(domNode, previousProperties.classes[i]);
+	if (propNames.indexOf('classes') === -1 && currentProperties.classes) {
+		if (Array.isArray(currentProperties.classes)) {
+			for (let i = 0; i < currentProperties.classes.length; i++) {
+				classes(domNode, currentProperties.classes[i], 'remove');
 			}
 		} else {
-			removeClasses(domNode, previousProperties.classes);
+			classes(domNode, currentProperties.classes, 'remove');
 		}
 	}
 
-	includesEventsAndAttributes && removeOrphanedEvents(domNode, previousProperties, properties, projectionOptions);
+	removeOrphanedEvents(domNode, currentProperties, nextWrapper.node.properties, eventMap);
 
 	for (let i = 0; i < propCount; i++) {
 		const propName = propNames[i];
-		let propValue = properties[propName];
-		const previousValue = previousProperties![propName];
+		let propValue = nextWrapper.node.properties[propName];
+		const previousValue = currentProperties[propName];
 		if (propName === 'classes') {
 			const previousClasses = Array.isArray(previousValue) ? previousValue : [previousValue];
 			const currentClasses = Array.isArray(propValue) ? propValue : [propValue];
 			if (previousClasses && previousClasses.length > 0) {
 				if (!propValue || propValue.length === 0) {
 					for (let i = 0; i < previousClasses.length; i++) {
-						removeClasses(domNode, previousClasses[i]);
+						classes(domNode, previousClasses[i], 'remove');
+						updated = true;
 					}
 				} else {
 					const newClasses: (null | undefined | string)[] = [...currentClasses];
@@ -361,23 +419,26 @@ function updateProperties(
 						if (previousClassName) {
 							const classIndex = newClasses.indexOf(previousClassName);
 							if (classIndex === -1) {
-								removeClasses(domNode, previousClassName);
+								classes(domNode, previousClassName, 'remove');
+								updated = true;
 							} else {
 								newClasses.splice(classIndex, 1);
 							}
 						}
 					}
 					for (let i = 0; i < newClasses.length; i++) {
-						addClasses(domNode, newClasses[i]);
+						classes(domNode, newClasses[i], 'add');
+						updated = true;
 					}
 				}
 			} else {
 				for (let i = 0; i < currentClasses.length; i++) {
-					addClasses(domNode, currentClasses[i]);
+					classes(domNode, currentClasses[i], 'add');
+					updated = true;
 				}
 			}
 		} else if (nodeOperations.indexOf(propName) !== -1) {
-			nodeOperation(propName, propValue, previousValue, domNode, projectionOptions);
+			nodeOperation(propName, propValue, previousValue, domNode);
 		} else if (propName === 'styles') {
 			const styleNames = Object.keys(propValue);
 			const styleCount = styleNames.length;
@@ -388,13 +449,8 @@ function updateProperties(
 				if (newStyleValue === oldStyleValue) {
 					continue;
 				}
-				propertiesUpdated = true;
-				if (newStyleValue) {
-					checkStyleValue(newStyleValue);
-					projectionOptions.styleApplyer!(domNode as HTMLElement, styleName, newStyleValue);
-				} else {
-					projectionOptions.styleApplyer!(domNode as HTMLElement, styleName, '');
-				}
+				(domNode.style as any)[styleName] = newStyleValue || '';
+				updated = true;
 			}
 		} else {
 			if (!propValue && typeof previousValue === 'string') {
@@ -411,22 +467,12 @@ function updateProperties(
 					(domNode as any)[propName] = propValue;
 					(domNode as any)['oninput-value'] = undefined;
 				}
-				if (propValue !== previousValue) {
-					propertiesUpdated = true;
-				}
 			} else if (propName !== 'key' && propValue !== previousValue) {
 				const type = typeof propValue;
-				if (type === 'function' && propName.lastIndexOf('on', 0) === 0 && includesEventsAndAttributes) {
-					updateEvent(
-						domNode,
-						propName.substr(2),
-						propValue,
-						projectionOptions,
-						properties.bind,
-						previousValue
-					);
-				} else if (type === 'string' && propName !== 'innerHTML' && includesEventsAndAttributes) {
-					updateAttribute(domNode, propName, propValue, projectionOptions);
+				if (type === 'function' && propName.lastIndexOf('on', 0) === 0) {
+					updateEvent(domNode, propName.substr(2), propValue, eventMap, nextWrapper.node.bind, previousValue);
+				} else if (type === 'string' && propName !== 'innerHTML') {
+					updateAttribute(domNode, propName, propValue, nextWrapper.namespace);
 				} else if (propName === 'scrollLeft' || propName === 'scrollTop') {
 					if ((domNode as any)[propName] !== propValue) {
 						(domNode as any)[propName] = propValue;
@@ -434,755 +480,491 @@ function updateProperties(
 				} else {
 					(domNode as any)[propName] = propValue;
 				}
-				propertiesUpdated = true;
+				updated = true;
 			}
 		}
 	}
-	return propertiesUpdated;
+	return updated;
 }
 
-function findIndexOfChild(children: InternalDNode[], sameAs: InternalDNode, start: number) {
-	for (let i = start; i < children.length; i++) {
-		if (same(children[i], sameAs)) {
-			return i;
+export class Renderer {
+	private _renderer: () => WNode;
+	private _registry: Registry | undefined;
+	private _merge = true;
+	private _sync = false;
+	private _transition: TransitionStrategy = transitionStrategy;
+	private _rootNode: HTMLElement = global.document.body;
+	private _invalidationQueue: InvalidationQueueItem[] = [];
+	private _renderQueue: (RenderQueueItem | DomApplicatorInstruction)[] = [];
+	private _domInstructionQueue: DomApplicatorInstruction[] = [];
+	private _eventMap = new WeakMap<Function, EventListener>();
+	private _dnodeToParentWrapperMap = new WeakMap<any, DNodeWrapper>();
+	private _instanceToWrapperMap = new WeakMap<WidgetBase, WNodeWrapper>();
+	private _domNodeToWrapperMap = new WeakMap<Node, VNodeWrapper>();
+	private _wrapperSiblingMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
+	private _renderScheduled: number | undefined;
+	private _invalidate?: () => void;
+
+	constructor(renderer: () => WNode) {
+		this._renderer = renderer;
+	}
+
+	public set sync(sync: boolean) {
+		this._sync = sync;
+	}
+
+	public set registry(registry: Registry) {
+		this._registry = registry;
+	}
+
+	public set transition(transition: TransitionStrategy) {
+		this._transition = transition;
+	}
+
+	public invalidate() {
+		this._invalidate && this._invalidate();
+	}
+
+	public append(node?: HTMLElement): void {
+		if (node) {
+			this._rootNode = node;
+		}
+		const renderResult = this._renderer();
+		this._dnodeToParentWrapperMap.set(renderResult, { depth: 0, domNode: this._rootNode, node: v('fake') });
+		this._queueInRender([
+			{
+				current: [],
+				next: [
+					{
+						node: renderResult,
+						depth: 1
+					}
+				],
+				mergeNodes: arrayFrom(this._rootNode.childNodes)
+			}
+		]);
+		this._runRenderQueue();
+		this._merge = false;
+	}
+
+	private _schedule(): void {
+		if (this._sync) {
+			this._runInvalidationQueue();
+		} else if (!this._renderScheduled) {
+			this._renderScheduled = global.requestAnimationFrame(() => {
+				this._runInvalidationQueue();
+			});
 		}
 	}
-	return -1;
-}
 
-export function toParentVNode(domNode: Element): InternalVNode {
-	return {
-		tag: '',
-		properties: {},
-		children: undefined,
-		domNode,
-		type: VNODE
-	};
-}
-
-export function toTextVNode(data: any): InternalVNode {
-	return {
-		tag: '',
-		properties: {},
-		children: undefined,
-		text: `${data}`,
-		domNode: undefined,
-		type: VNODE
-	};
-}
-
-function toInternalWNode(instance: DefaultWidgetBaseInterface, instanceData: WidgetData): InternalWNode {
-	return {
-		instance,
-		rendered: [],
-		coreProperties: instanceData.coreProperties,
-		children: instance.children as any,
-		widgetConstructor: instance.constructor as any,
-		properties: instanceData.inputProperties,
-		type: WNODE
-	};
-}
-
-export function filterAndDecorateChildren(
-	children: undefined | DNode | DNode[],
-	instance: DefaultWidgetBaseInterface
-): InternalDNode[] {
-	if (children === undefined) {
-		return emptyArray;
+	/**
+	 * This is messy now
+	 */
+	private _runInvalidationQueue() {
+		this._renderScheduled = undefined;
+		while (this._invalidationQueue.length) {
+			let { current, next } = this._invalidationQueue.pop()!;
+			const sibling = this._wrapperSiblingMap.get(current);
+			sibling && this._wrapperSiblingMap.set(next, sibling);
+			next = this._updateWidget({ current, next });
+			this._queueInRender([{ current: current.childrenWrappers, next: next.childrenWrappers }]);
+			next.instance && this._instanceToWrapperMap.set(next.instance, next);
+			this._runRenderQueue();
+		}
 	}
-	children = Array.isArray(children) ? children : [children];
 
-	for (let i = 0; i < children.length; ) {
-		const child = children[i] as InternalDNode;
-		if (child === undefined || child === null) {
-			children.splice(i, 1);
-			continue;
-		} else if (typeof child === 'string') {
-			children[i] = toTextVNode(child);
+	private _runRenderQueue() {
+		while (this._renderQueue.length) {
+			const item = this._renderQueue.pop()!;
+			if (isDomApplicatorInstruction(item)) {
+				this._process(item);
+			} else {
+				this._process(item.current || EMPTY_ARRAY, item.next || EMPTY_ARRAY, item.mergeNodes);
+			}
+		}
+		this._runDomInstructionQueue();
+	}
+
+	private _runDomInstructionQueue(): void {
+		while (this._domInstructionQueue.length) {
+			const item = this._domInstructionQueue.pop()!;
+			if (item.type === 'create') {
+				const {
+					parentWNodeWrapper,
+					next,
+					next: { domNode, merged, requiresInsertBefore, node }
+				} = item;
+				setProperties(domNode as HTMLElement, undefined, next, this._eventMap);
+				if (!merged) {
+					let insertBefore: any;
+					if (requiresInsertBefore) {
+						insertBefore = findInsertBefore(next, this._getTraversalMaps());
+					}
+					item.parentDomNode.insertBefore(domNode!, insertBefore);
+				}
+				runEnterAnimation(next, this._transition);
+				const instanceData = widgetInstanceMap.get(parentWNodeWrapper!.instance!)!;
+				if (node.properties.key != null) {
+					instanceData.nodeHandler.add(domNode as HTMLElement, `${node.properties.key}`);
+				}
+				const parent = this._dnodeToParentWrapperMap.get(node);
+				if (parent && isWNodeWrapper(parent) && parent.instance) {
+					const instanceData = widgetInstanceMap.get(parent.instance)!;
+					!parent.nodeHandlerCalled && instanceData.nodeHandler.addRoot();
+					parent.nodeHandlerCalled = true;
+					instanceData.onAttach();
+				}
+			} else if (item.type === 'delete') {
+				if (item.current.node.properties.exitAnimation) {
+					runExitAnimation(item.current, this._transition);
+				} else {
+					item.current.domNode!.parentNode!.removeChild(item.current.domNode!);
+					item.current.domNode = undefined;
+				}
+			}
+		}
+	}
+
+	private _getTraversalMaps(): TraversalMaps {
+		return {
+			parent: this._dnodeToParentWrapperMap,
+			sibling: this._wrapperSiblingMap
+		};
+	}
+
+	private _queueInvalidation(instance: WidgetBase): void {
+		const current = this._instanceToWrapperMap.get(instance)!;
+		const next = {
+			node: {
+				type: WNODE,
+				widgetConstructor: instance.constructor as WidgetBaseConstructor,
+				properties: instance.properties,
+				children: instance.children
+			},
+			instance,
+			depth: current.depth
+		};
+
+		const parent = this._dnodeToParentWrapperMap.get(current.node)!;
+		this._dnodeToParentWrapperMap.set(next.node, parent);
+		this._invalidationQueue.push({ current, next });
+	}
+
+	private _queueInRender(item: (DomApplicatorInstruction | RenderQueueItem)[]) {
+		this._renderQueue.push(...item);
+	}
+
+	private _queueDomInstruction(instruction: DomApplicatorInstruction) {
+		this._domInstructionQueue.push(instruction);
+	}
+
+	private _process(current: DomApplicatorInstruction): void;
+	private _process(current: DNodeWrapper[], next: DNodeWrapper[], mergeNodes?: Node[]): void;
+	private _process(
+		current: DomApplicatorInstruction | DNodeWrapper[],
+		next: DNodeWrapper[] = [],
+		mergeNodes: Node[] = []
+	): void {
+		if (isDomApplicatorInstruction(current)) {
+			this._queueDomInstruction(current);
 		} else {
-			if (isVNode(child)) {
-				if (child.properties.bind === undefined) {
-					(child.properties as any).bind = instance;
-					if (child.children && child.children.length > 0) {
-						filterAndDecorateChildren(child.children, instance);
-					}
-				}
-			} else {
-				if (!child.coreProperties) {
-					const instanceData = widgetInstanceMap.get(instance)!;
-					child.coreProperties = {
-						bind: instance,
-						baseRegistry: instanceData.coreProperties.baseRegistry
-					};
-				}
-				if (child.children && child.children.length > 0) {
-					filterAndDecorateChildren(child.children, instance);
-				}
-			}
-		}
-		i++;
-	}
-	return children as InternalDNode[];
-}
+			const currentLength = current.length;
+			const nextLength = next.length;
+			let oldIndex = 0;
+			let newIndex = 0;
+			const hasPreviousSiblings = current.length > 1;
+			const instructions: Instruction[] = [];
+			while (newIndex < nextLength) {
+				let currentWrapper = oldIndex < currentLength ? current[oldIndex] : undefined;
+				const nextWrapper = next[newIndex];
+				nextWrapper.hasPreviousSiblings = hasPreviousSiblings;
 
-function nodeAdded(dnode: InternalDNode, transitions: TransitionStrategy) {
-	if (isVNode(dnode) && dnode.properties) {
-		const enterAnimation = dnode.properties.enterAnimation;
-		if (enterAnimation) {
-			if (typeof enterAnimation === 'function') {
-				enterAnimation(dnode.domNode as Element, dnode.properties);
-			} else {
-				transitions.enter(dnode.domNode as Element, dnode.properties, enterAnimation as string);
-			}
-		}
-	}
-}
-
-function nodeToRemove(dnode: InternalDNode, transitions: TransitionStrategy, projectionOptions: ProjectionOptions) {
-	if (isWNode(dnode)) {
-		const item = instanceMap.get(dnode.instance);
-		const rendered = (item ? item.dnode.rendered : dnode.rendered) || emptyArray;
-		if (dnode.instance) {
-			const instanceData = widgetInstanceMap.get(dnode.instance)!;
-			instanceData.onDetach();
-			instanceMap.delete(dnode.instance);
-		}
-		for (let i = 0; i < rendered.length; i++) {
-			nodeToRemove(rendered[i], transitions, projectionOptions);
-		}
-	} else {
-		const domNode = dnode.domNode;
-		const properties = dnode.properties;
-		if (dnode.children && dnode.children.length > 0) {
-			for (let i = 0; i < dnode.children.length; i++) {
-				nodeToRemove(dnode.children[i], transitions, projectionOptions);
-			}
-		}
-		const exitAnimation = properties.exitAnimation;
-		if (properties && exitAnimation) {
-			(domNode as HTMLElement).style.pointerEvents = 'none';
-			const removeDomNode = function() {
-				domNode && domNode.parentNode && domNode.parentNode.removeChild(domNode);
-				dnode.domNode = undefined;
-			};
-			if (typeof exitAnimation === 'function') {
-				exitAnimation(domNode as Element, removeDomNode, properties);
-				return;
-			} else {
-				transitions.exit(dnode.domNode as Element, properties, exitAnimation as string, removeDomNode);
-				return;
-			}
-		}
-		domNode && domNode.parentNode && domNode.parentNode.removeChild(domNode);
-		dnode.domNode = undefined;
-	}
-}
-
-function checkDistinguishable(
-	childNodes: InternalDNode[],
-	indexToCheck: number,
-	parentInstance: DefaultWidgetBaseInterface
-) {
-	const childNode = childNodes[indexToCheck];
-	if (isVNode(childNode) && !childNode.tag) {
-		return; // Text nodes need not be distinguishable
-	}
-	const { key } = childNode.properties;
-
-	if (key === undefined || key === null) {
-		for (let i = 0; i < childNodes.length; i++) {
-			if (i !== indexToCheck) {
-				const node = childNodes[i];
-				if (same(node, childNode)) {
-					let nodeIdentifier: string;
-					const parentName = (parentInstance as any).constructor.name || 'unknown';
-					if (isWNode(childNode)) {
-						nodeIdentifier = (childNode.widgetConstructor as any).name || 'unknown';
-					} else {
-						nodeIdentifier = childNode.tag;
-					}
-
-					console.warn(
-						`A widget (${parentName}) has had a child addded or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${nodeIdentifier}) multiple times as siblings`
-					);
-					break;
-				}
-			}
-		}
-	}
-}
-
-function updateChildren(
-	parentVNode: InternalVNode,
-	siblings: InternalDNode[],
-	oldChildren: InternalDNode[],
-	newChildren: InternalDNode[],
-	parentInstance: DefaultWidgetBaseInterface,
-	projectionOptions: ProjectionOptions
-) {
-	oldChildren = oldChildren || emptyArray;
-	newChildren = newChildren;
-	const oldChildrenLength = oldChildren.length;
-	const newChildrenLength = newChildren.length;
-	const transitions = projectionOptions.transitions!;
-	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
-	projectionOptions = { ...projectionOptions, depth: projectionOptions.depth + 1 };
-	let oldIndex = 0;
-	let newIndex = 0;
-	let i: number;
-	let textUpdated = false;
-	while (newIndex < newChildrenLength) {
-		let oldChild = oldIndex < oldChildrenLength ? oldChildren[oldIndex] : undefined;
-		const newChild = newChildren[newIndex];
-		if (isVNode(newChild) && typeof newChild.deferredPropertiesCallback === 'function') {
-			newChild.inserted = isVNode(oldChild) && oldChild.inserted;
-			addDeferredProperties(newChild, projectionOptions);
-		}
-		if (oldChild !== undefined && same(oldChild, newChild)) {
-			oldIndex++;
-			newIndex++;
-			textUpdated =
-				updateDom(
-					oldChild,
-					newChild,
-					projectionOptions,
-					parentVNode,
-					parentInstance,
-					oldChildren.slice(oldIndex),
-					newChildren.slice(newIndex)
-				) || textUpdated;
-			continue;
-		}
-
-		const findOldIndex = findIndexOfChild(oldChildren, newChild, oldIndex + 1);
-		const addChild = () => {
-			let insertBeforeDomNode: Node | undefined = undefined;
-			let childrenArray = oldChildren;
-			let nextIndex = oldIndex + 1;
-			let child: InternalDNode = oldChildren[oldIndex];
-			if (!child) {
-				child = siblings[0];
-				nextIndex = 1;
-				childrenArray = siblings;
-			}
-			if (child) {
-				let insertBeforeChildren = [child];
-				while (insertBeforeChildren.length) {
-					const insertBefore = insertBeforeChildren.shift()!;
-					if (isWNode(insertBefore)) {
-						const item = instanceMap.get(insertBefore.instance);
-						if (item && item.dnode.rendered) {
-							insertBeforeChildren.push(...item.dnode.rendered);
-						}
-					} else {
-						if (insertBefore.domNode) {
-							if (insertBefore.domNode.parentElement !== parentVNode.domNode) {
+				if (this._merge && mergeNodes) {
+					if (isVNodeWrapper(nextWrapper)) {
+						let domElement: Element | undefined = undefined;
+						let firstNode: any;
+						while (nextWrapper.domNode === undefined && mergeNodes.length > 0) {
+							domElement = mergeNodes.shift() as Element;
+							if (domElement === firstNode) {
 								break;
 							}
-							insertBeforeDomNode = insertBefore.domNode;
-							break;
+							if (
+								domElement &&
+								domElement.tagName === (nextWrapper.node.tag.toUpperCase() || undefined)
+							) {
+								nextWrapper.domNode = domElement;
+							} else {
+								if (!firstNode) {
+									firstNode = domElement;
+								}
+								mergeNodes.push(domElement);
+							}
+						}
+					} else {
+						nextWrapper.mergeNodes = mergeNodes;
+					}
+				}
+
+				if (currentWrapper !== undefined && same(currentWrapper.node, nextWrapper.node)) {
+					oldIndex++;
+					newIndex++;
+					instructions.push({ current: currentWrapper, next: nextWrapper });
+					continue;
+				}
+				const findOldIndex = findIndexOfChild(current, nextWrapper.node, oldIndex + 1);
+				if (!currentWrapper || findOldIndex === -1) {
+					newIndex++;
+					instructions.push({ current: undefined, next: nextWrapper });
+					continue;
+				}
+				const findNewIndex = findIndexOfChild(next, currentWrapper.node, newIndex + 1);
+				if (findNewIndex === -1) {
+					instructions.push({ current: currentWrapper, next: undefined });
+					oldIndex++;
+					continue;
+				}
+
+				instructions.push({ current: currentWrapper, next: undefined });
+				instructions.push({ current: undefined, next: nextWrapper });
+				oldIndex++;
+				newIndex++;
+			}
+			if (currentLength > oldIndex) {
+				for (let i = oldIndex; i < currentLength; i++) {
+					instructions.push({ current: current[i], next: undefined });
+				}
+			}
+
+			let applicationInstructions: (DomApplicatorInstruction | RenderQueueItem)[] = [];
+			for (let i = 0; i < instructions.length; i++) {
+				const result = this._processOne(instructions[i]);
+				if (result && result.length) {
+					applicationInstructions.push(...result);
+				}
+			}
+			if (applicationInstructions.length) {
+				this._queueInRender(applicationInstructions);
+			}
+		}
+	}
+
+	private _processOne({ current, next }: Instruction): undefined | (RenderQueueItem | DomApplicatorInstruction)[] {
+		if (current !== next) {
+			if (!current && next) {
+				if (isVNodeWrapper(next)) {
+					next = this._createDom({ next }, this._getTraversalMaps());
+					this._domNodeToWrapperMap.set(next.domNode!, next);
+					const { parentDomNode, parentWNodeWrapper } = findParentNodes(next.node, this._getTraversalMaps());
+					if (parentWNodeWrapper) {
+						if (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
+							parentWNodeWrapper.domNode = next.domNode;
 						}
 					}
-					if (insertBeforeChildren.length === 0 && childrenArray[nextIndex]) {
-						insertBeforeChildren.push(childrenArray[nextIndex]);
-						nextIndex++;
+					const domInstruction: DomApplicatorInstruction = {
+						next: next!,
+						parentDomNode: parentDomNode!,
+						parentWNodeWrapper,
+						type: 'create'
+					};
+					let mergeNodes: Node[] = [];
+					if (this._merge) {
+						mergeNodes = arrayFrom(next.domNode!.childNodes);
 					}
-				}
-			}
-
-			createDom(
-				newChild,
-				parentVNode,
-				newChildren.slice(newIndex + 1),
-				insertBeforeDomNode,
-				projectionOptions,
-				parentInstance
-			);
-			nodeAdded(newChild, transitions);
-			const indexToCheck = newIndex;
-			projectorState.afterRenderCallbacks.push(() => {
-				checkDistinguishable(newChildren, indexToCheck, parentInstance);
-			});
-		};
-
-		if (!oldChild || findOldIndex === -1) {
-			addChild();
-			newIndex++;
-			continue;
-		}
-
-		const removeChild = () => {
-			const indexToCheck = oldIndex;
-			projectorState.afterRenderCallbacks.push(() => {
-				checkDistinguishable(oldChildren, indexToCheck, parentInstance);
-			});
-			if (isWNode(oldChild)) {
-				const item = instanceMap.get(oldChild.instance);
-				if (item) {
-					oldChild = item.dnode;
-				}
-			}
-			nodeToRemove(oldChild!, transitions, projectionOptions);
-		};
-		const findNewIndex = findIndexOfChild(newChildren, oldChild, newIndex + 1);
-
-		if (findNewIndex === -1) {
-			removeChild();
-			oldIndex++;
-			continue;
-		}
-
-		addChild();
-		removeChild();
-		oldIndex++;
-		newIndex++;
-	}
-	if (oldChildrenLength > oldIndex) {
-		// Remove child fragments
-		for (i = oldIndex; i < oldChildrenLength; i++) {
-			const indexToCheck = i;
-			projectorState.afterRenderCallbacks.push(() => {
-				checkDistinguishable(oldChildren, indexToCheck, parentInstance);
-			});
-			let childToRemove = oldChildren[i];
-			if (isWNode(childToRemove)) {
-				const item = instanceMap.get(childToRemove.instance);
-				if (item) {
-					childToRemove = item.dnode;
-				}
-			}
-			nodeToRemove(childToRemove, transitions, projectionOptions);
-		}
-	}
-	return textUpdated;
-}
-
-function addChildren(
-	parentVNode: InternalVNode,
-	children: InternalDNode[] | undefined,
-	projectionOptions: ProjectionOptions,
-	parentInstance: DefaultWidgetBaseInterface,
-	insertBefore: Node | undefined = undefined,
-	childNodes?: (Element | Text)[]
-) {
-	if (children === undefined) {
-		return;
-	}
-
-	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
-	if (projectorState.merge && childNodes === undefined) {
-		childNodes = arrayFrom(parentVNode.domNode!.childNodes) as (Element | Text)[];
-	}
-	const transitions = projectionOptions.transitions!;
-	projectionOptions = { ...projectionOptions, depth: projectionOptions.depth + 1 };
-
-	for (let i = 0; i < children.length; i++) {
-		const child = children[i];
-		const nextSiblings = children.slice(i + 1);
-
-		if (isVNode(child)) {
-			if (projectorState.merge && childNodes) {
-				let domElement: Element | undefined = undefined;
-				while (child.domNode === undefined && childNodes.length > 0) {
-					domElement = childNodes.shift() as Element;
-					if (domElement && domElement.tagName === (child.tag.toUpperCase() || undefined)) {
-						child.domNode = domElement;
+					if (next.childrenWrappers) {
+						return [{ current: [], next: next.childrenWrappers, mergeNodes }, domInstruction];
 					}
+					return [domInstruction];
+				} else {
+					next = this._createWidget({ next }, this._getTraversalMaps(), this._registry);
+					if (!this._invalidate && next.instance) {
+						this._invalidate = next.instance.invalidate.bind(next.instance);
+					}
+					next.instance && this._instanceToWrapperMap.set(next.instance, next);
+					return [{ next: next.childrenWrappers, mergeNodes: next.mergeNodes }];
+				}
+			} else if (current && next) {
+				if (isVNodeWrapper(current) && isVNodeWrapper(next)) {
+					this._updateDom({ current, next }, this._getTraversalMaps());
+					this._domNodeToWrapperMap.set(next.domNode!, next);
+					const { parentWNodeWrapper } = findParentNodes(next.node, this._getTraversalMaps());
+					const instanceData = widgetInstanceMap.get(parentWNodeWrapper!.instance!)!;
+					if (next.node.properties.key != null) {
+						instanceData.nodeHandler.add(next.domNode as HTMLElement, `${next.node.properties.key}`);
+					}
+					return [{ current: current.childrenWrappers, next: next.childrenWrappers }];
+				} else if (isWNodeWrapper(current) && isWNodeWrapper(next)) {
+					next = this._updateWidget({ current, next });
+					this._instanceToWrapperMap.set(next.instance!, next);
+					return [{ current: current.childrenWrappers, next: next.childrenWrappers }];
+				}
+			} else if (current && !next) {
+				if (isVNodeWrapper(current)) {
+					current = this._removeDom({ current }, this._getTraversalMaps());
+					if (current.domNode!.parentNode) {
+						return [
+							{ current: current.childrenWrappers },
+							{
+								type: 'delete',
+								current
+							}
+						];
+					}
+					return [{ current: current.childrenWrappers }];
+				} else if (isWNodeWrapper(current)) {
+					current = current.instance ? this._instanceToWrapperMap.get(current.instance)! : current;
+					this._removeWidget({ current });
+					return [{ current: current.childrenWrappers }];
 				}
 			}
-			createDom(child, parentVNode, nextSiblings, insertBefore, projectionOptions, parentInstance);
-		} else {
-			createDom(child, parentVNode, nextSiblings, insertBefore, projectionOptions, parentInstance, childNodes);
 		}
-		nodeAdded(child, transitions);
-	}
-}
-
-function initPropertiesAndChildren(
-	domNode: Element,
-	dnode: InternalVNode,
-	parentInstance: DefaultWidgetBaseInterface,
-	projectionOptions: ProjectionOptions
-) {
-	addChildren(dnode, dnode.children, projectionOptions, parentInstance, undefined);
-	if (typeof dnode.deferredPropertiesCallback === 'function' && dnode.inserted === undefined) {
-		addDeferredProperties(dnode, projectionOptions);
 	}
 
-	if (dnode.attributes && dnode.events) {
-		updateAttributes(domNode, {}, dnode.attributes, projectionOptions);
-		updateProperties(domNode, {}, dnode.properties, projectionOptions, false);
-		removeOrphanedEvents(domNode, {}, dnode.events, projectionOptions, true);
-		const events = dnode.events;
-		Object.keys(events).forEach((event) => {
-			updateEvent(domNode, event, events[event], projectionOptions, dnode.properties.bind);
-		});
-	} else {
-		updateProperties(domNode, {}, dnode.properties, projectionOptions);
-	}
-	if (dnode.properties.key !== null && dnode.properties.key !== undefined) {
-		const instanceData = widgetInstanceMap.get(parentInstance)!;
-		instanceData.nodeHandler.add(domNode as HTMLElement, `${dnode.properties.key}`);
-	}
-	dnode.inserted = true;
-}
-
-function createDom(
-	dnode: InternalDNode,
-	parentVNode: InternalVNode,
-	nextSiblings: InternalDNode[],
-	insertBefore: Node | undefined,
-	projectionOptions: ProjectionOptions,
-	parentInstance: DefaultWidgetBaseInterface,
-	childNodes?: (Element | Text)[]
-) {
-	let domNode: Element | Text | undefined;
-	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
-	if (isWNode(dnode)) {
-		let { widgetConstructor } = dnode;
-		const parentInstanceData = widgetInstanceMap.get(parentInstance)!;
+	private _createWidget(
+		{ next }: CreateWidgetInstruction,
+		traversalMaps: TraversalMaps,
+		registry: Registry | null = null
+	): WNodeWrapper {
+		let {
+			node: { widgetConstructor }
+		} = next;
+		const { parentWNodeWrapper } = findParentNodes(next.node, traversalMaps);
 		if (!isWidgetBaseConstructor<DefaultWidgetBaseInterface>(widgetConstructor)) {
-			const item = parentInstanceData.registry().get<DefaultWidgetBaseInterface>(widgetConstructor);
-			if (item === null) {
-				return;
+			let item: Constructor<WidgetBase> | null = null;
+			if (!parentWNodeWrapper) {
+				item = registry && registry.get<WidgetBase>(widgetConstructor);
+			} else {
+				item = parentWNodeWrapper!.instance!.registry.get<WidgetBase>(widgetConstructor);
 			}
-			widgetConstructor = item;
+			if (item) {
+				widgetConstructor = item;
+			} else {
+				return next;
+			}
 		}
-		const instance = new widgetConstructor();
-		dnode.instance = instance;
-		nextSiblingMap.set(instance, nextSiblings);
+		const instance = new widgetConstructor() as WidgetBase;
+		if (registry) {
+			instance.registry.base = registry;
+		}
 		const instanceData = widgetInstanceMap.get(instance)!;
-		instanceData.invalidate = () => {
+		instance.__setInvalidate__(() => {
 			instanceData.dirty = true;
-			if (instanceData.rendering === false) {
-				projectorState.renderQueue.push({ instance, depth: projectionOptions.depth });
-				scheduleRender(projectionOptions);
+			if (!instanceData.rendering && this._instanceToWrapperMap.has(instance)) {
+				this._queueInvalidation(instance);
+				this._schedule();
 			}
-		};
+		});
 		instanceData.rendering = true;
-		instance.__setCoreProperties__(dnode.coreProperties);
-		instance.__setChildren__(dnode.children);
-		instance.__setProperties__(dnode.properties);
-		const rendered = instance.__render__();
+		instance.__setProperties__(next.node.properties);
+		instance.__setChildren__(next.node.children);
+		next.instance = instance;
+		let rendered = instance.__render__();
 		instanceData.rendering = false;
 		if (rendered) {
-			const filteredRendered = filterAndDecorateChildren(rendered, instance);
-			dnode.rendered = filteredRendered;
-			addChildren(parentVNode, filteredRendered, projectionOptions, instance, insertBefore, childNodes);
+			rendered = Array.isArray(rendered) ? rendered : [rendered];
+			next.childrenWrappers = renderedToWrapper(rendered, next, null, traversalMaps);
 		}
-		instanceMap.set(instance, { dnode, parentVNode });
-		instanceData.nodeHandler.addRoot();
-		projectorState.afterRenderCallbacks.push(() => {
-			instanceData.onAttach();
-		});
-	} else {
-		if (projectorState.merge && projectorState.mergeElement !== undefined) {
-			domNode = dnode.domNode = projectionOptions.mergeElement;
-			projectorState.mergeElement = undefined;
-			initPropertiesAndChildren(domNode!, dnode, parentInstance, projectionOptions);
-			return;
-		}
-		const doc = parentVNode.domNode!.ownerDocument;
-		if (!dnode.tag && typeof dnode.text === 'string') {
-			if (dnode.domNode !== undefined && parentVNode.domNode) {
-				const newDomNode = dnode.domNode.ownerDocument.createTextNode(dnode.text!);
-				if (parentVNode.domNode === dnode.domNode.parentNode) {
-					parentVNode.domNode.replaceChild(newDomNode, dnode.domNode);
-				} else {
-					parentVNode.domNode.appendChild(newDomNode);
-					dnode.domNode.parentNode && dnode.domNode.parentNode.removeChild(dnode.domNode);
-				}
-				dnode.domNode = newDomNode;
-			} else {
-				domNode = dnode.domNode = doc.createTextNode(dnode.text!);
-				if (insertBefore !== undefined) {
-					parentVNode.domNode!.insertBefore(domNode, insertBefore);
-				} else {
-					parentVNode.domNode!.appendChild(domNode);
-				}
-			}
-		} else {
-			if (dnode.domNode === undefined) {
-				if (dnode.tag === 'svg') {
-					projectionOptions = { ...projectionOptions, ...{ namespace: NAMESPACE_SVG } };
-				}
-				if (projectionOptions.namespace !== undefined) {
-					domNode = dnode.domNode = doc.createElementNS(projectionOptions.namespace, dnode.tag);
-				} else {
-					domNode = dnode.domNode = dnode.domNode || doc.createElement(dnode.tag);
-				}
-			} else {
-				domNode = dnode.domNode;
-			}
-			initPropertiesAndChildren(domNode! as Element, dnode, parentInstance, projectionOptions);
-			if (insertBefore !== undefined) {
-				parentVNode.domNode!.insertBefore(domNode, insertBefore);
-			} else if (domNode!.parentNode !== parentVNode.domNode!) {
-				parentVNode.domNode!.appendChild(domNode);
-			}
-		}
+		return next;
 	}
-}
 
-function updateDom(
-	previous: any,
-	dnode: InternalDNode,
-	projectionOptions: ProjectionOptions,
-	parentVNode: InternalVNode,
-	parentInstance: DefaultWidgetBaseInterface,
-	oldNextSiblings: InternalDNode[],
-	nextSiblings: InternalDNode[]
-) {
-	if (isWNode(dnode)) {
-		const { instance } = previous;
-		const { parentVNode, dnode: node } = instanceMap.get(instance)!;
-		const previousRendered = node ? node.rendered : previous.rendered;
-		const instanceData = widgetInstanceMap.get(instance)!;
+	private _updateWidget({ current, next }: UpdateWidgetInstruction): WNodeWrapper {
+		const { instance, domNode } = current;
+		const instanceData = widgetInstanceMap.get(instance!)!;
+		next.instance = instance;
+		next.domNode = domNode;
 		instanceData.rendering = true;
-		instance.__setCoreProperties__(dnode.coreProperties);
-		instance.__setChildren__(dnode.children);
-		instance.__setProperties__(dnode.properties);
-		nextSiblingMap.set(instance, nextSiblings);
-		dnode.instance = instance;
-		if (instanceData.dirty === true) {
-			const rendered = instance.__render__();
+		instance!.__setProperties__(next.node.properties, next.node.bind);
+		instance!.__setChildren__(next.node.children);
+		if (instanceData.dirty) {
+			let rendered = instance!.__render__();
 			instanceData.rendering = false;
-			dnode.rendered = filterAndDecorateChildren(rendered, instance);
-			updateChildren(parentVNode, oldNextSiblings, previousRendered, dnode.rendered, instance, projectionOptions);
-		} else {
-			instanceData.rendering = false;
-			dnode.rendered = previousRendered;
-		}
-		instanceMap.set(instance, { dnode, parentVNode });
-		instanceData.nodeHandler.addRoot();
-	} else {
-		if (previous === dnode) {
-			return false;
-		}
-		const domNode = (dnode.domNode = previous.domNode);
-		let textUpdated = false;
-		let updated = false;
-		if (!dnode.tag && typeof dnode.text === 'string') {
-			if (dnode.text !== previous.text) {
-				const newDomNode = domNode.ownerDocument.createTextNode(dnode.text!);
-				domNode.parentNode!.replaceChild(newDomNode, domNode);
-				dnode.domNode = newDomNode;
-				textUpdated = true;
-				return textUpdated;
+			if (rendered) {
+				rendered = Array.isArray(rendered) ? rendered : [rendered];
+				next.childrenWrappers = renderedToWrapper(rendered, next, current, this._getTraversalMaps());
 			}
 		} else {
-			if (dnode.tag && dnode.tag.lastIndexOf('svg', 0) === 0) {
-				projectionOptions = { ...projectionOptions, ...{ namespace: NAMESPACE_SVG } };
-			}
-			if (previous.children !== dnode.children) {
-				const children = filterAndDecorateChildren(dnode.children, parentInstance);
-				dnode.children = children;
-				updated =
-					updateChildren(
-						dnode,
-						oldNextSiblings,
-						previous.children,
-						children,
-						parentInstance,
-						projectionOptions
-					) || updated;
-			}
-
-			const previousProperties = buildPreviousProperties(domNode, previous, dnode);
-			if (dnode.attributes && dnode.events) {
-				updateAttributes(domNode, previousProperties.attributes, dnode.attributes, projectionOptions);
-				updated =
-					updateProperties(
-						domNode,
-						previousProperties.properties,
-						dnode.properties,
-						projectionOptions,
-						false
-					) || updated;
-				removeOrphanedEvents(domNode, previousProperties.events, dnode.events, projectionOptions, true);
-				const events = dnode.events;
-				Object.keys(events).forEach((event) => {
-					updateEvent(
-						domNode,
-						event,
-						events[event],
-						projectionOptions,
-						dnode.properties.bind,
-						previousProperties.events[event]
-					);
-				});
-			} else {
-				updated =
-					updateProperties(domNode, previousProperties.properties, dnode.properties, projectionOptions) ||
-					updated;
-			}
-
-			if (dnode.properties.key !== null && dnode.properties.key !== undefined) {
-				const instanceData = widgetInstanceMap.get(parentInstance)!;
-				instanceData.nodeHandler.add(domNode, `${dnode.properties.key}`);
-			}
+			next.childrenWrappers = current.childrenWrappers;
 		}
-		if (updated && dnode.properties && dnode.properties.updateAnimation) {
-			dnode.properties.updateAnimation(domNode as Element, dnode.properties, previous.properties);
-		}
+		instanceData.rendering = false;
+		return next;
 	}
-}
 
-function addDeferredProperties(vnode: InternalVNode, projectionOptions: ProjectionOptions) {
-	// transfer any properties that have been passed - as these must be decorated properties
-	vnode.decoratedDeferredProperties = vnode.properties;
-	const properties = vnode.deferredPropertiesCallback!(!!vnode.inserted);
-	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
-	vnode.properties = { ...properties, ...vnode.decoratedDeferredProperties };
-	projectorState.deferredRenderCallbacks.push(() => {
-		const properties = {
-			...vnode.deferredPropertiesCallback!(!!vnode.inserted),
-			...vnode.decoratedDeferredProperties
-		};
-		updateProperties(vnode.domNode! as Element, vnode.properties, properties, projectionOptions);
-		vnode.properties = properties;
-	});
-}
+	private _removeWidget({ current }: RemoveWidgetInstruction): WNodeWrapper {
+		this._wrapperSiblingMap.delete(current);
+		this._dnodeToParentWrapperMap.delete(current.node);
+		this._instanceToWrapperMap.delete(current.instance!);
+		if (current.instance) {
+			const instanceData = widgetInstanceMap.get(current.instance)!;
+			instanceData.onDetach();
+		}
+		return current;
+	}
 
-function runDeferredRenderCallbacks(projectionOptions: ProjectionOptions) {
-	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
-	if (projectorState.deferredRenderCallbacks.length) {
-		if (projectionOptions.sync) {
-			while (projectorState.deferredRenderCallbacks.length) {
-				const callback = projectorState.deferredRenderCallbacks.shift();
-				callback && callback();
+	private _createDom({ next }: CreateDomInstruction, traversalMaps: TraversalMaps): VNodeWrapper {
+		if (!next.domNode) {
+			if (next.node.tag === 'svg') {
+				next.namespace = NAMESPACE_SVG;
 			}
-		} else {
-			global.requestAnimationFrame(() => {
-				while (projectorState.deferredRenderCallbacks.length) {
-					const callback = projectorState.deferredRenderCallbacks.shift();
-					callback && callback();
+			if (next.node.tag) {
+				if (next.namespace) {
+					next.domNode = global.document.createElementNS(next.namespace, next.node.tag);
+				} else {
+					next.domNode = global.document.createElement(next.node.tag);
 				}
-			});
-		}
-	}
-}
-
-function runAfterRenderCallbacks(projectionOptions: ProjectionOptions) {
-	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
-	if (projectionOptions.sync) {
-		while (projectorState.afterRenderCallbacks.length) {
-			const callback = projectorState.afterRenderCallbacks.shift();
-			callback && callback();
-		}
-	} else {
-		if (global.requestIdleCallback) {
-			global.requestIdleCallback(() => {
-				while (projectorState.afterRenderCallbacks.length) {
-					const callback = projectorState.afterRenderCallbacks.shift();
-					callback && callback();
-				}
-			});
-		} else {
-			setTimeout(() => {
-				while (projectorState.afterRenderCallbacks.length) {
-					const callback = projectorState.afterRenderCallbacks.shift();
-					callback && callback();
-				}
-			});
-		}
-	}
-}
-
-function scheduleRender(projectionOptions: ProjectionOptions) {
-	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
-	if (projectionOptions.sync) {
-		render(projectionOptions);
-	} else if (projectorState.renderScheduled === undefined) {
-		projectorState.renderScheduled = global.requestAnimationFrame(() => {
-			render(projectionOptions);
-		});
-	}
-}
-
-function render(projectionOptions: ProjectionOptions) {
-	const projectorState = projectorStateMap.get(projectionOptions.projectorInstance)!;
-	projectorState.renderScheduled = undefined;
-	const renderQueue = projectorState.renderQueue;
-	const renders = [...renderQueue];
-	projectorState.renderQueue = [];
-	renders.sort((a, b) => a.depth - b.depth);
-	const previouslyRendered = [];
-	while (renders.length) {
-		const { instance } = renders.shift()!;
-		if (instanceMap.has(instance) && previouslyRendered.indexOf(instance) === -1) {
-			previouslyRendered.push(instance);
-			const { parentVNode, dnode } = instanceMap.get(instance)!;
-			const instanceData = widgetInstanceMap.get(instance)!;
-			const nextSiblings = nextSiblingMap.get(instance)!;
-			updateDom(
-				dnode,
-				toInternalWNode(instance, instanceData),
-				projectionOptions,
-				parentVNode,
-				instance,
-				nextSiblings,
-				nextSiblings
-			);
-		}
-	}
-	runAfterRenderCallbacks(projectionOptions);
-	runDeferredRenderCallbacks(projectionOptions);
-}
-
-export const dom = {
-	append: function(
-		parentNode: Element,
-		instance: DefaultWidgetBaseInterface,
-		projectionOptions: Partial<ProjectionOptions> = {}
-	): Projection {
-		const instanceData = widgetInstanceMap.get(instance)!;
-		const finalProjectorOptions = getProjectionOptions(projectionOptions, instance);
-		const projectorState: ProjectorState = {
-			afterRenderCallbacks: [],
-			deferredRenderCallbacks: [],
-			nodeMap: new WeakMap(),
-			renderScheduled: undefined,
-			renderQueue: [],
-			merge: projectionOptions.merge || false,
-			mergeElement: projectionOptions.mergeElement
-		};
-		projectorStateMap.set(instance, projectorState);
-
-		finalProjectorOptions.rootNode = parentNode;
-		const parentVNode = toParentVNode(finalProjectorOptions.rootNode);
-		const node = toInternalWNode(instance, instanceData);
-		instanceMap.set(instance, { dnode: node, parentVNode });
-		instanceData.invalidate = () => {
-			instanceData.dirty = true;
-			if (instanceData.rendering === false) {
-				projectorState.renderQueue.push({ instance, depth: finalProjectorOptions.depth });
-				scheduleRender(finalProjectorOptions);
+			} else if (next.node.text != null) {
+				next.domNode = global.document.createTextNode(next.node.text);
 			}
-		};
-		updateDom(node, node, finalProjectorOptions, parentVNode, instance, [], []);
-		projectorState.afterRenderCallbacks.push(() => {
-			instanceData.onAttach();
-		});
-		runDeferredRenderCallbacks(finalProjectorOptions);
-		runAfterRenderCallbacks(finalProjectorOptions);
-		return {
-			domNode: finalProjectorOptions.rootNode
-		};
-	},
-	create: function(instance: DefaultWidgetBaseInterface, projectionOptions?: Partial<ProjectionOptions>): Projection {
-		return this.append(document.createElement('div'), instance, projectionOptions);
-	},
-	merge: function(
-		element: Element,
-		instance: DefaultWidgetBaseInterface,
-		projectionOptions: Partial<ProjectionOptions> = {}
-	): Projection {
-		projectionOptions.merge = true;
-		projectionOptions.mergeElement = element;
-		const projection = this.append(element.parentNode as Element, instance, projectionOptions);
-		const projectorState = projectorStateMap.get(instance)!;
-		projectorState.merge = false;
-		return projection;
+		} else {
+			next.merged = true;
+		}
+		if (next.domNode) {
+			if (next.node.children) {
+				const children = renderedToWrapper(next.node.children, next, null, traversalMaps);
+				next.childrenWrappers = children;
+			}
+		}
+		return next;
 	}
-};
+
+	private _updateDom({ current, next }: UpdateDomInstruction, traversalMaps: TraversalMaps): VNodeWrapper {
+		const parentDomNode = findParentNodes(current.node, traversalMaps).parentDomNode;
+		next.domNode = current.domNode;
+		next.namespace = current.namespace;
+		if (next.node.text && next.node.text !== current.node.text) {
+			const updatedTextNode = parentDomNode!.ownerDocument.createTextNode(next.node.text!);
+			parentDomNode!.replaceChild(updatedTextNode, next.domNode!);
+			next.domNode = updatedTextNode;
+		} else {
+			if (next.node.children) {
+				const children = renderedToWrapper(next.node.children, next, current, traversalMaps);
+				next.childrenWrappers = children;
+			}
+			// TODO move to dom instruction
+			const parent = this._dnodeToParentWrapperMap.get(next.node);
+			if (parent && isWNodeWrapper(parent) && parent.instance) {
+				const instanceData = widgetInstanceMap.get(parent.instance)!;
+				instanceData.nodeHandler.addRoot();
+			}
+			const updated = setProperties(next.domNode as HTMLElement, current.node.properties, next, this._eventMap);
+			if (updated && next.node.properties.updateAnimation) {
+				next.node.properties.updateAnimation(
+					next.domNode as HTMLElement,
+					next.node.properties,
+					current.node.properties
+				);
+			}
+		}
+		return next;
+	}
+
+	private _removeDom({ current }: RemoveDomInstruction, { sibling, parent }: TraversalMaps): VNodeWrapper {
+		sibling.delete(current);
+		parent.delete(current.node);
+		current.domNode && this._domNodeToWrapperMap.delete(current.domNode);
+		return current;
+	}
+}
+
+export function renderer(render: () => WNode): Renderer {
+	const r = new Renderer(render);
+	return r;
+}

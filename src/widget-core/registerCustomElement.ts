@@ -1,5 +1,5 @@
 import { WidgetBase, noBind } from './WidgetBase';
-import { ProjectorMixin } from './mixins/Projector';
+import { renderer } from './vdom';
 import { from } from '../shim/array';
 import { w, dom } from './d';
 import global from '../shim/global';
@@ -48,7 +48,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 	});
 
 	return class extends HTMLElement {
-		private _projector: any;
+		private _renderer: any;
 		private _properties: any = {};
 		private _children: any[] = [];
 		private _eventProperties: any = {};
@@ -134,10 +134,10 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			const registry = registryFactory();
 			const themeContext = registerThemeInjector(this._getTheme(), registry);
 			global.addEventListener('dojo-theme-set', () => themeContext.set(this._getTheme()));
-			const Projector = ProjectorMixin(Wrapper);
-			this._projector = new Projector();
-			this._projector.setProperties({ registry });
-			this._projector.append(this);
+			const r = renderer(() => w(Wrapper, {}));
+			this._renderer = r;
+			r.registry = registry;
+			r.append(this);
 
 			this._initialised = true;
 			this.dispatchEvent(
@@ -167,8 +167,8 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		private _render() {
-			if (this._projector) {
-				this._projector.invalidate();
+			if (this._renderer) {
+				this._renderer.invalidate();
 				this.dispatchEvent(
 					new CustomEvent('dojo-ce-render', {
 						bubbles: false,

@@ -195,7 +195,7 @@ registerSuite('mixins/I18nMixin', {
 
 				registry.defineInjector(INJECTOR_KEY, injector);
 				localized = new Localized();
-				localized.__setCoreProperties__({ bind: localized, baseRegistry: registry });
+				localized.registry.base = registry;
 				localized.__setProperties__({});
 
 				const result = localized.__render__();
@@ -209,7 +209,7 @@ registerSuite('mixins/I18nMixin', {
 
 				registry.defineInjector(INJECTOR_KEY, injector);
 				localized = new Localized();
-				localized.__setCoreProperties__({ bind: localized, baseRegistry: registry });
+				localized.registry.base = registry;
 				localized.__setProperties__({ locale: 'fr', rtl: false });
 
 				const result = localized.__render__();
@@ -222,7 +222,7 @@ registerSuite('mixins/I18nMixin', {
 				const injector = registerI18nInjector({ locale: 'fr' }, registry);
 
 				localized = new Localized();
-				localized.__setCoreProperties__({ bind: localized, baseRegistry: registry });
+				localized.registry.base = registry;
 				localized.__setProperties__({});
 
 				let result = localized.__render__();

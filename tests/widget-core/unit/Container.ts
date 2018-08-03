@@ -4,7 +4,7 @@ import { v, w } from '../../../src/widget-core/d';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { Container } from '../../../src/widget-core/Container';
 import { Registry } from '../../../src/widget-core/Registry';
-import { ProjectorMixin } from '../../../src/widget-core/mixins/Projector';
+import { renderer } from '../../../src/widget-core/vdom';
 
 interface TestWidgetProperties {
 	foo: string;
@@ -51,8 +51,8 @@ registerSuite('mixins/Container', {
 			};
 			const TestWidgetContainer = Container(TestWidget, 'test-state-1', { getProperties });
 			const widget = new TestWidgetContainer();
-			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
-			widget.__setProperties__({ foo: 'bar' });
+			widget.registry.base = registry;
+			widget.__setProperties__({ foo: 'bar' }, widget);
 			widget.__setChildren__([]);
 			widget.__render__();
 		},
@@ -70,8 +70,8 @@ registerSuite('mixins/Container', {
 			};
 			const TestWidgetContainer = Container(TestWidget, 'test-state-1', { getProperties });
 			const widget = new TestWidgetContainer();
-			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
-			widget.__setProperties__({ foo: 'bar' });
+			widget.registry.base = registry;
+			widget.__setProperties__({ foo: 'bar' }, widget);
 			widget.__setChildren__([child]);
 			widget.__render__();
 		},
@@ -111,15 +111,16 @@ registerSuite('mixins/Container', {
 					return super.render();
 				}
 			}
-			class Parent extends ProjectorMixin(WidgetBase) {
+			class Parent extends WidgetBase {
 				render() {
 					return w(ContainerClass, {});
 				}
 			}
-			const projector = new Parent();
-			projector.setProperties({ registry });
-			projector.async = false;
-			projector.append();
+
+			const r = renderer(() => w(Parent, {}));
+			r.registry = registry;
+			r.sync = true;
+			r.append();
 			renderCount = 0;
 
 			testInvalidate.invalidator();

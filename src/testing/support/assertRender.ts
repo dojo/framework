@@ -1,5 +1,5 @@
 import { DNode, WNode, VNode, DefaultWidgetBaseInterface, Constructor } from '../../widget-core/interfaces';
-import { isWNode } from '../../widget-core/d';
+import { isWNode, isVNode } from '../../widget-core/d';
 import * as diff from 'diff';
 import WeakMap from '../../shim/WeakMap';
 import Set from '../../shim/Set';
@@ -41,6 +41,10 @@ export function formatDNodes(nodes: DNode | DNode[], depth: number = 0): string 
 
 		if (typeof node === 'string') {
 			return `${result}"${node}"`;
+		}
+
+		if (isVNode(node) && node.text) {
+			return `${result}"${node.text}"`;
 		}
 
 		result = `${result}${formatNode(node, tabs)}`;

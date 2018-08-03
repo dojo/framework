@@ -6,7 +6,7 @@ const { describe } = intern.getPlugin('jsdom');
 import { VNode } from './../../../../src/widget-core/interfaces';
 import { registry } from './../../../../src/widget-core/decorators/registry';
 import { WidgetBase } from './../../../../src/widget-core/WidgetBase';
-import ProjectorMixin from './../../../../src/widget-core/mixins/Projector';
+import { renderer } from './../../../../src/widget-core/vdom';
 
 export class Widget1 extends WidgetBase {
 	protected render(): VNode {
@@ -29,12 +29,10 @@ describe('decorators/registry', () => {
 			}
 		}
 
-		const Projector = ProjectorMixin(TestWidget1);
-		const projector = new Projector();
-		projector.async = false;
-
+		const r = renderer(() => w(TestWidget1, {}));
+		r.sync = true;
 		const root = document.createElement('div');
-		projector.append(root);
+		r.append(root);
 
 		assert.strictEqual(root.querySelectorAll('.widget1').length, 1);
 		assert.strictEqual(root.querySelectorAll('.widget2').length, 0);
@@ -51,12 +49,10 @@ describe('decorators/registry', () => {
 			}
 		}
 
-		const Projector = ProjectorMixin(TestWidget2);
-		const projector = new Projector();
-		projector.async = false;
-
+		const r = renderer(() => w(TestWidget2, {}));
+		r.sync = true;
 		const root = document.createElement('div');
-		projector.append(root);
+		r.append(root);
 
 		assert.strictEqual(root.querySelectorAll('.widget1').length, 1);
 		assert.strictEqual(root.querySelectorAll('.widget2').length, 1);

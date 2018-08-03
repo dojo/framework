@@ -100,6 +100,12 @@ export interface DomOptions {
 	diffType?: DiffType;
 }
 
+export interface VDomOptions {
+	props?: VNodeProperties;
+	attrs?: { [index: string]: string | undefined };
+	on?: On;
+}
+
 export interface VNodeProperties {
 	/**
 	 * The animation to perform when this node is added to an already existing parent.
@@ -283,21 +289,6 @@ export interface KeyedWidgetProperties extends WidgetProperties {
 }
 
 /**
- *
- */
-interface CoreProperties {
-	/**
-	 * The default registry for the projection
-	 */
-	baseRegistry: any;
-
-	/**
-	 * The scope used to bind functions
-	 */
-	bind: any;
-}
-
-/**
  * Wrapper for v
  */
 export interface VNode {
@@ -314,7 +305,7 @@ export interface VNode {
 	/**
 	 * VNode attributes
 	 */
-	attributes?: { [index: string]: string };
+	attributes?: { [index: string]: string | undefined };
 
 	/**
 	 * VNode events
@@ -345,6 +336,12 @@ export interface VNode {
 	 * Indicates the type of diff for the VNode
 	 */
 	diffType?: DiffType;
+
+	bind?: WidgetBaseInterface;
+}
+
+export interface DomVNode extends VNode {
+	domNode: Text | Element;
 }
 
 /**
@@ -370,6 +367,8 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 	 * The type of node
 	 */
 	type: symbol;
+
+	bind?: WidgetBaseInterface;
 }
 
 /**
@@ -429,19 +428,14 @@ export interface WidgetBaseInterface<P = WidgetProperties, C extends DNode = DNo
 	 *
 	 * @param properties The new widget properties
 	 */
-	__setProperties__(properties: P & { [index: string]: any }): void;
-
-	/**
-	 * Sets core properties on the widget.
-	 *
-	 * @param coreProperties The core properties
-	 */
-	__setCoreProperties__(coreProperties?: CoreProperties): any;
+	__setProperties__(properties: P & { [index: string]: any }, bind?: WidgetBaseInterface): void;
 
 	/**
 	 * Sets the widget's children
 	 */
 	__setChildren__(children: (C | null)[]): void;
+
+	__setInvalidate__(invalidator: () => void): void;
 
 	/**
 	 * Main internal function for dealing with widget rendering
@@ -481,6 +475,8 @@ export interface WidgetMetaProperties {
 	nodeHandler: NodeHandlerInterface;
 	bind: WidgetBaseInterface;
 }
+
+export type RenderResult = DNode<any> | DNode<any>[];
 
 export interface Render {
 	(): DNode | DNode[];
