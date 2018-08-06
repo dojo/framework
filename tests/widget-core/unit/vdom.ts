@@ -120,6 +120,81 @@ jsdomDescribe('vdom', () => {
 	});
 
 	describe('widgets', () => {
+		it('testy', () => {
+			class Other extends WidgetBase {
+				render() {
+					return w(WidgetOne, {});
+				}
+			}
+
+			class WidgetOne extends WidgetBase {
+				render() {
+					return w(WidgetTwo, {});
+				}
+			}
+
+			class WidgetTwo extends WidgetBase {
+				render() {
+					return v('div', { exitAnimation: 'boo' }, ['dom2']);
+				}
+			}
+
+			class WidgetThree extends WidgetBase {
+				render() {
+					return ['dom3', 'dom3a'];
+				}
+			}
+
+			class WidgetFour extends WidgetBase {
+				render() {
+					return v('div', [w(WidgetFive, {})]);
+				}
+			}
+
+			class WidgetFive extends WidgetBase {
+				render() {
+					return w(WidgetSix, {});
+				}
+			}
+
+			class WidgetSix extends WidgetBase {
+				render() {
+					return 'dom5';
+				}
+			}
+
+			let remove: any;
+			class Parent extends WidgetBase {
+				private _items: DNode | DNode[] = [
+					'dom1',
+					w(Other, {}),
+					w(WidgetThree, {}),
+					'dom4',
+					w(WidgetFour, {}),
+					'dom6'
+				];
+
+				constructor() {
+					super();
+					remove = () => {
+						this._items = null;
+						this.invalidate();
+					};
+				}
+
+				render() {
+					return this._items;
+				}
+			}
+
+			const r = renderer(() => w(Parent, {}));
+			const root = document.createElement('div');
+			r.sync = true;
+			r.append(root);
+			remove();
+			resolvers.resolve();
+		});
+
 		it('Should render nodes in the correct order with mix of vnode and wnodes', () => {
 			class WidgetOne extends WidgetBase {
 				render() {
@@ -255,6 +330,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(fooTwoDiv.childNodes[0], fooTwoTextNode);
 			assert.strictEqual(fooOneTextNode.data, '0');
 			assert.strictEqual(fooTwoTextNode.data, '0');
+
 			sendEvent(fooOneDiv, 'click');
 
 			assert.lengthOf(root.childNodes, 1);
@@ -268,6 +344,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(fooTwoDiv.childNodes[0], fooTwoTextNode);
 			const updatedFooOneTextNode = fooOneDiv.childNodes[0] as Text;
 			assert.strictEqual(updatedFooOneTextNode.data, '1');
+
 			sendEvent(fooTwoDiv, 'click');
 
 			assert.lengthOf(root.childNodes, 1);
@@ -1535,6 +1612,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(quxDetachCount, 0);
 			invalidate();
 			resolvers.resolve();
+			resolvers.resolve();
 			assert.strictEqual(bazAttachCount, 1);
 			assert.strictEqual(bazDetachCount, 0);
 			assert.strictEqual(fooAttachCount, 2);
@@ -1545,6 +1623,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(quxDetachCount, 4);
 			invalidate();
 			resolvers.resolve();
+			resolvers.resolve();
 			assert.strictEqual(bazAttachCount, 1);
 			assert.strictEqual(bazDetachCount, 0);
 			assert.strictEqual(fooAttachCount, 4);
@@ -1554,6 +1633,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(quxAttachCount, 8);
 			assert.strictEqual(quxDetachCount, 4);
 			invalidate();
+			resolvers.resolve();
 			resolvers.resolve();
 			assert.strictEqual(bazAttachCount, 1);
 			assert.strictEqual(bazDetachCount, 0);
@@ -1816,6 +1896,7 @@ jsdomDescribe('vdom', () => {
 			const div = document.createElement('div');
 			r.sync = true;
 			r.append(div);
+			resolvers.resolve();
 			assert.strictEqual(deferredPropertyCallCount, 8);
 			const root = div.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 2);
@@ -1830,6 +1911,7 @@ jsdomDescribe('vdom', () => {
 			const barLabel = barContainer.childNodes[0] as Text;
 			assert.strictEqual(barLabel.data, 'bar-container');
 			invalidate();
+			resolvers.resolve();
 			assert.strictEqual(deferredPropertyCallCount, 12);
 		});
 
@@ -2743,6 +2825,7 @@ jsdomDescribe('vdom', () => {
 
 	describe('dom VNode', () => {
 		it('Should diff against previous properties with diffType `vdom`', () => {
+			const append = document.createElement('div');
 			const div = document.createElement('div');
 			let clickerCount = 0;
 			const click = () => {
@@ -2758,8 +2841,8 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
 			r.sync = true;
-			r.append(div);
-			const root = div.childNodes[0] as any;
+			r.append(append);
+			const root = append.childNodes[0] as any;
 			assert.strictEqual('bar', root.foo);
 			assert.strictEqual('foo', root.getAttribute('baz'));
 			assert.strictEqual('qux', root.getAttribute('qux'));
@@ -2772,7 +2855,7 @@ jsdomDescribe('vdom', () => {
 			root.setAttribute('foo', 'baz');
 			vnode = d({
 				node: div,
-				props: { foo: 'bar', bar: 1 },
+				props: { foo: 'bar', bar: 2 },
 				attrs: { baz: undefined, qux: 'qux' },
 				on: { click },
 				diffType: 'vdom'
@@ -2800,6 +2883,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(clickerCount, 2);
 		});
 		it('Should always set properties/attribute with diffType `none`', () => {
+			const append = document.createElement('div');
 			const div = document.createElement('div');
 			let clickerCount = 0;
 			let secondClickerCount = 0;
@@ -2813,8 +2897,8 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
 			r.sync = true;
-			r.append(div);
-			const root = div.childNodes[0] as any;
+			r.append(append);
+			const root = append.childNodes[0] as any;
 			assert.strictEqual('bar', root.getAttribute('foo'));
 			assert.strictEqual(1, root.bar);
 			const clickEvent = document.createEvent('CustomEvent');
@@ -2846,6 +2930,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(secondClickerCount, 1);
 		});
 		it('Should diff against values on the DOM with diffType `dom`', () => {
+			const append = document.createElement('div');
 			const div = document.createElement('div');
 			let clickerCount = 0;
 			const click = () => {
@@ -2855,8 +2940,8 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
 			r.sync = true;
-			r.append(div);
-			const root = div.childNodes[0] as any;
+			r.append(append);
+			const root = append.childNodes[0] as any;
 			assert.strictEqual('bar', root.getAttribute('foo'));
 			assert.strictEqual(1, root.bar);
 			const clickEvent = document.createEvent('CustomEvent');
@@ -2879,13 +2964,14 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(clickerCount, 2);
 		});
 		it('Should use diffType `none` by default', () => {
+			const append = document.createElement('div');
 			const div = document.createElement('div');
 			let vnode = d({ node: div, props: { bar: 1 }, attrs: { foo: 'bar' } });
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
 			r.sync = true;
-			r.append(div);
-			const root = div.childNodes[0] as any;
+			r.append(append);
+			const root = append.childNodes[0] as any;
 			assert.strictEqual('bar', root.getAttribute('foo'));
 			assert.strictEqual(1, root.bar);
 			root.bar = 2;
@@ -2901,6 +2987,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(3, root.bar);
 		});
 		it('Should move a text node to the parent VNode dom node', () => {
+			const append = document.createElement('div');
 			const div = document.createElement('div');
 			const text = document.createTextNode('foo');
 			div.appendChild(text);
@@ -2908,13 +2995,14 @@ jsdomDescribe('vdom', () => {
 			const [Widget] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
 			r.sync = true;
-			r.append(div);
-			const root = div.childNodes[0] as any;
+			r.append(append);
+			const root = append.childNodes[0] as any;
 			assert.strictEqual(root.childNodes.length, 1);
 			assert.strictEqual(div.childNodes.length, 0);
 			assert.strictEqual((root.childNodes[0] as Text).data, 'foo');
 		});
 		it('Should not consider different dom nodes as the same', () => {
+			const div = document.createElement('div');
 			const divA = document.createElement('div');
 			divA.innerHTML = 'A';
 			const divB = document.createElement('div');
@@ -2923,13 +3011,13 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
 			r.sync = true;
-			r.append(divA);
-			let root = divA.childNodes[0] as any;
+			r.append(div);
+			let root = div.childNodes[0] as any;
 			assert.strictEqual(root, divA);
 			assert.strictEqual(root.innerHTML, 'A');
 			vnode = d({ node: divB });
 			meta.setRenderResult(vnode);
-			root = divB.childNodes[0] as any;
+			root = div.childNodes[0] as any;
 			assert.strictEqual(root, divB);
 			assert.strictEqual(root.innerHTML, 'B');
 		});
@@ -2971,7 +3059,7 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(root.inserted);
 
 			meta.setRenderResult(renderFunction());
-
+			resolvers.resolve();
 			resolvers.resolve();
 
 			assert.strictEqual(div.childNodes[0], root);
@@ -4255,48 +4343,6 @@ jsdomDescribe('vdom', () => {
 	});
 
 	describe('animations', () => {
-		describe('updateAnimation', () => {
-			it('is invoked when a node contains only text and that text changes', () => {
-				const updateAnimation = stub();
-				const [Widget, meta] = getWidget(v('div', { updateAnimation }, ['text']));
-				const r = renderer(() => w(Widget, {}));
-				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
-				meta.setRenderResult(v('div', { updateAnimation }, ['text2']));
-				assert.isTrue(updateAnimation.calledOnce);
-				assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>text2</div>');
-			});
-			it('is invoked when a node contains text and other nodes and the text changes', () => {
-				const updateAnimation = stub();
-				const [Widget, meta] = getWidget(v('div', { updateAnimation }, ['textBefore', v('span'), 'textAfter']));
-				const r = renderer(() => w(Widget, {}));
-				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
-				meta.setRenderResult(v('div', { updateAnimation }, ['textBefore', v('span'), 'newTextAfter']));
-				assert.isTrue(updateAnimation.calledOnce);
-				updateAnimation.resetHistory();
-				meta.setRenderResult(v('div', { updateAnimation }, ['textBefore', v('span'), 'newTextAfter']));
-				assert.isTrue(updateAnimation.notCalled);
-			});
-			it('is invoked when a property changes', () => {
-				const updateAnimation = stub();
-				const [Widget, meta] = getWidget(v('a', { updateAnimation, href: '#1' }));
-				const r = renderer(() => w(Widget, {}));
-				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
-				meta.setRenderResult(v('a', { updateAnimation, href: '#2' }));
-				assert.isTrue(
-					updateAnimation.calledWith(
-						div.childNodes[0] as Element,
-						match({ href: '#2' }),
-						match({ href: '#1' })
-					)
-				);
-			});
-		});
 		describe('enterAnimation', () => {
 			it('is invoked when a new node is added to an existing parent node', () => {
 				const enterAnimation = stub();

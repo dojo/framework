@@ -277,7 +277,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		return isArray ? convertedNodes : convertedNodes[0];
 	}
 
-	public __render__(): DNode | DNode[] {
+	public __render__(): (WNode | VNode) | (WNode | VNode)[] {
 		const instanceData = widgetInstanceMap.get(this)!;
 		instanceData.dirty = false;
 		const render = this._runBeforeRenders();
