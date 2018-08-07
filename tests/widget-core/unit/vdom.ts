@@ -120,81 +120,6 @@ jsdomDescribe('vdom', () => {
 	});
 
 	describe('widgets', () => {
-		it('testy', () => {
-			class Other extends WidgetBase {
-				render() {
-					return w(WidgetOne, {});
-				}
-			}
-
-			class WidgetOne extends WidgetBase {
-				render() {
-					return w(WidgetTwo, {});
-				}
-			}
-
-			class WidgetTwo extends WidgetBase {
-				render() {
-					return v('div', { exitAnimation: 'boo' }, ['dom2']);
-				}
-			}
-
-			class WidgetThree extends WidgetBase {
-				render() {
-					return ['dom3', 'dom3a'];
-				}
-			}
-
-			class WidgetFour extends WidgetBase {
-				render() {
-					return v('div', [w(WidgetFive, {})]);
-				}
-			}
-
-			class WidgetFive extends WidgetBase {
-				render() {
-					return w(WidgetSix, {});
-				}
-			}
-
-			class WidgetSix extends WidgetBase {
-				render() {
-					return 'dom5';
-				}
-			}
-
-			let remove: any;
-			class Parent extends WidgetBase {
-				private _items: DNode | DNode[] = [
-					'dom1',
-					w(Other, {}),
-					w(WidgetThree, {}),
-					'dom4',
-					w(WidgetFour, {}),
-					'dom6'
-				];
-
-				constructor() {
-					super();
-					remove = () => {
-						this._items = null;
-						this.invalidate();
-					};
-				}
-
-				render() {
-					return this._items;
-				}
-			}
-
-			const r = renderer(() => w(Parent, {}));
-			const root = document.createElement('div');
-			r.sync = true;
-			r.append(root);
-			remove();
-			resolvers.resolve();
-		});
-
 		it('Should render nodes in the correct order with mix of vnode and wnodes', () => {
 			class WidgetOne extends WidgetBase {
 				render() {
@@ -239,9 +164,15 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Parent, {}));
-			const root = document.createElement('div');
+			const root: any = document.createElement('div');
 			r.append(root);
-			// TODO add actual assert
+			assert.strictEqual(root.childNodes[0].data, 'dom1');
+			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'dom2');
+			assert.strictEqual(root.childNodes[2].data, 'dom3');
+			assert.strictEqual(root.childNodes[3].data, 'dom3a');
+			assert.strictEqual(root.childNodes[4].data, 'dom4');
+			assert.strictEqual(root.childNodes[5].data, 'dom5');
+			assert.strictEqual(root.childNodes[6].data, 'dom6');
 		});
 
 		it('should create elements for widgets', () => {

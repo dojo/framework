@@ -118,8 +118,15 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				this.destroy();
 			},
 			nodeHandler: this._nodeHandler,
-			rendering: false,
-			inputProperties: {}
+			rendering: false
+		});
+
+		this.own({
+			destroy: () => {
+				widgetInstanceMap.delete(this);
+				this._nodeHandler.clear();
+				this._nodeHandler.destroy();
+			}
 		});
 
 		this._runAfterConstructors();
@@ -160,8 +167,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	public __setProperties__(originalProperties: this['properties'], bind?: WidgetBaseInterface): void {
-		const instanceData = widgetInstanceMap.get(this)!;
-		instanceData.inputProperties = originalProperties;
 		const properties = this._runBeforeProperties(originalProperties);
 		const registeredDiffPropertyNames = this.getDecorator('registeredDiffProperty');
 		const changedPropertyKeys: string[] = [];
