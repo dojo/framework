@@ -64,6 +64,11 @@ interface RenderQueueItem {
 	meta: { mergeNodes?: Node[]; oldIndex?: number; newIndex?: number };
 }
 
+interface ProcessResult {
+	renderItem?: RenderQueueItem;
+	domInstruction?: DomApplicatorInstruction;
+}
+
 interface InvalidationQueueItem {
 	current: WNodeWrapper;
 	next: WNodeWrapper;
@@ -148,10 +153,6 @@ function isWNodeWrapper(child: DNodeWrapper): child is WNodeWrapper {
 
 function isVNodeWrapper(child?: DNodeWrapper | null): child is VNodeWrapper {
 	return !!child && isVNode(child.node);
-}
-
-function isDomApplicatorInstruction(value: any): value is DomApplicatorInstruction {
-	return (value && value.type === 'create') || value.type === 'update' || value.type === 'delete';
 }
 
 function nodeOperation(
@@ -394,18 +395,18 @@ function findInsertBefore(next: DNodeWrapper, { sibling, parent }: TraversalMaps
 					break;
 				}
 				searchNode = nextSibling;
-			} else if (isWNodeWrapper(nextSibling)) {
-				if (nextSibling.domNode && nextSibling.domNode.parentNode) {
-					insertBefore = nextSibling.domNode;
-					break;
-				}
-				searchNode = nextSibling;
+				continue;
 			}
-		} else {
-			searchNode = parent.get(searchNode);
-			if (!searchNode || isVNodeWrapper(searchNode)) {
+			if (nextSibling.domNode && nextSibling.domNode.parentNode) {
+				insertBefore = nextSibling.domNode;
 				break;
 			}
+			searchNode = nextSibling;
+			continue;
+		}
+		searchNode = parent.get(searchNode);
+		if (!searchNode || isVNodeWrapper(searchNode)) {
+			break;
 		}
 	}
 	return insertBefore;
@@ -709,11 +710,7 @@ export class Renderer {
 	private _runRenderQueue() {
 		while (this._renderQueue.length) {
 			const item = this._renderQueue.pop()!;
-			if (isDomApplicatorInstruction(item)) {
-				this._process(item);
-			} else {
-				this._process(item.current || EMPTY_ARRAY, item.next || EMPTY_ARRAY, item.meta);
-			}
+			this._process(item.current || EMPTY_ARRAY, item.next || EMPTY_ARRAY, item.meta);
 		}
 		this._runDomInstructionQueue();
 	}
@@ -885,105 +882,92 @@ export class Renderer {
 		this._domInstructionQueue.push(instruction);
 	}
 
-	private _process(current: DomApplicatorInstruction): void;
 	private _process(
 		current: DNodeWrapper[],
 		next: DNodeWrapper[],
-		meta?: { mergeNodes?: Node[]; oldIndex?: number; newIndex?: number }
-	): void;
-	private _process(
-		current: DomApplicatorInstruction | DNodeWrapper[],
-		next: DNodeWrapper[] = [],
-		meta: any = {}
+		meta: { mergeNodes?: Node[]; oldIndex?: number; newIndex?: number } = {}
 	): void {
-		if (isDomApplicatorInstruction(current)) {
-			this._queueDomInstruction(current);
-		} else {
-			let { mergeNodes = [], oldIndex = 0, newIndex = 0 } = meta;
-			const currentLength = current.length;
-			const nextLength = next.length;
-			const hasPreviousSiblings = current.length > 1;
-			const instructions: Instruction[] = [];
-			while (newIndex < nextLength) {
-				let currentWrapper = oldIndex < currentLength ? current[oldIndex] : undefined;
-				const nextWrapper = next[newIndex];
-				nextWrapper.hasPreviousSiblings = hasPreviousSiblings;
+		let { mergeNodes = [], oldIndex = 0, newIndex = 0 } = meta;
+		const currentLength = current.length;
+		const nextLength = next.length;
+		const hasPreviousSiblings = current.length > 1;
+		const instructions: Instruction[] = [];
+		while (newIndex < nextLength) {
+			let currentWrapper = oldIndex < currentLength ? current[oldIndex] : undefined;
+			const nextWrapper = next[newIndex];
+			nextWrapper.hasPreviousSiblings = hasPreviousSiblings;
 
-				if (this._merge && mergeNodes.length) {
-					if (isVNodeWrapper(nextWrapper)) {
-						let {
-							node: { tag }
-						} = nextWrapper;
-						for (let i = 0; i < mergeNodes.length; i++) {
-							const domElement = mergeNodes[i] as Element;
-							if (tag.toUpperCase() === (domElement.tagName || '')) {
-								mergeNodes.splice(i, 1);
-								nextWrapper.domNode = domElement;
-								break;
-							}
+			if (this._merge && mergeNodes.length) {
+				if (isVNodeWrapper(nextWrapper)) {
+					let {
+						node: { tag }
+					} = nextWrapper;
+					for (let i = 0; i < mergeNodes.length; i++) {
+						const domElement = mergeNodes[i] as Element;
+						if (tag.toUpperCase() === (domElement.tagName || '')) {
+							mergeNodes.splice(i, 1);
+							nextWrapper.domNode = domElement;
+							break;
 						}
-					} else {
-						nextWrapper.mergeNodes = mergeNodes;
 					}
+				} else {
+					nextWrapper.mergeNodes = mergeNodes;
 				}
+			}
 
-				if (isVNodeWrapper(nextWrapper) && typeof nextWrapper.node.deferredPropertiesCallback === 'function') {
-					addDeferredProperties(nextWrapper, this._eventMap, this._deferredRenderCallbacks);
-				}
+			if (isVNodeWrapper(nextWrapper) && typeof nextWrapper.node.deferredPropertiesCallback === 'function') {
+				addDeferredProperties(nextWrapper, this._eventMap, this._deferredRenderCallbacks);
+			}
 
-				if (currentWrapper !== undefined && same(currentWrapper, nextWrapper)) {
-					oldIndex++;
-					newIndex++;
-					if (isVNodeWrapper(currentWrapper) && isVNodeWrapper(nextWrapper)) {
-						nextWrapper.inserted = currentWrapper.inserted;
-					}
-					instructions.push({ current: currentWrapper, next: nextWrapper });
-					break;
-				}
-				const findOldIndex = findIndexOfChild(current, nextWrapper, oldIndex + 1);
-				if (!currentWrapper || findOldIndex === -1) {
-					newIndex++;
-					instructions.push({ current: undefined, next: nextWrapper });
-					break;
-				}
-				const findNewIndex = findIndexOfChild(next, currentWrapper, newIndex + 1);
-				if (findNewIndex === -1) {
-					instructions.push({ current: currentWrapper, next: undefined });
-					oldIndex++;
-					break;
-				}
-
-				instructions.push({ current: currentWrapper, next: undefined });
-				instructions.push({ current: undefined, next: nextWrapper });
+			if (currentWrapper !== undefined && same(currentWrapper, nextWrapper)) {
 				oldIndex++;
 				newIndex++;
+				if (isVNodeWrapper(currentWrapper) && isVNodeWrapper(nextWrapper)) {
+					nextWrapper.inserted = currentWrapper.inserted;
+				}
+				instructions.push({ current: currentWrapper, next: nextWrapper });
 				break;
 			}
-			if (currentLength > oldIndex && newIndex >= nextLength) {
-				for (let i = oldIndex; i < currentLength; i++) {
-					instructions.push({ current: current[i], next: undefined });
-				}
+			const findOldIndex = findIndexOfChild(current, nextWrapper, oldIndex + 1);
+			if (!currentWrapper || findOldIndex === -1) {
+				newIndex++;
+				instructions.push({ current: undefined, next: nextWrapper });
+				break;
+			}
+			const findNewIndex = findIndexOfChild(next, currentWrapper, newIndex + 1);
+			if (findNewIndex === -1) {
+				instructions.push({ current: currentWrapper, next: undefined });
+				oldIndex++;
+				break;
 			}
 
-			if (newIndex < nextLength) {
-				this._queueInRender({ current, next, meta: { mergeNodes, oldIndex, newIndex } });
+			instructions.push({ current: currentWrapper, next: undefined });
+			instructions.push({ current: undefined, next: nextWrapper });
+			oldIndex++;
+			newIndex++;
+			break;
+		}
+		if (currentLength > oldIndex && newIndex >= nextLength) {
+			for (let i = oldIndex; i < currentLength; i++) {
+				instructions.push({ current: current[i], next: undefined });
 			}
-			for (let i = 0; i < instructions.length; i++) {
-				const { renderItem, domInstruction } = this._processOne(instructions[i]);
-				if (renderItem) {
-					this._queueInRender(renderItem);
-				}
-				if (domInstruction) {
-					this._queueDomInstruction(domInstruction);
-				}
+		}
+
+		if (newIndex < nextLength) {
+			this._queueInRender({ current, next, meta: { mergeNodes, oldIndex, newIndex } });
+		}
+		for (let i = 0; i < instructions.length; i++) {
+			const { renderItem, domInstruction } = this._processOne(instructions[i]);
+			if (renderItem) {
+				this._queueInRender(renderItem);
+			}
+			if (domInstruction) {
+				this._queueDomInstruction(domInstruction);
 			}
 		}
 	}
 
-	private _processOne({
-		current,
-		next
-	}: Instruction): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
+	private _processOne({ current, next }: Instruction): ProcessResult {
 		if (current !== next) {
 			if (!current && next) {
 				if (isVNodeWrapper(next)) {
@@ -1012,7 +996,7 @@ export class Renderer {
 		{ next }: CreateWidgetInstruction,
 		traversalMaps: TraversalMaps,
 		registry: Registry | null = null
-	): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
+	): ProcessResult {
 		let {
 			node: { widgetConstructor }
 		} = next;
@@ -1063,10 +1047,7 @@ export class Renderer {
 		};
 	}
 
-	private _updateWidget({
-		current,
-		next
-	}: UpdateWidgetInstruction): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
+	private _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult {
 		const { instance, domNode, hasAnimations } = current;
 		const instanceData = widgetInstanceMap.get(instance!)!;
 		next.instance = instance;
@@ -1092,9 +1073,7 @@ export class Renderer {
 		return {};
 	}
 
-	private _removeWidget({
-		current
-	}: RemoveWidgetInstruction): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
+	private _removeWidget({ current }: RemoveWidgetInstruction): ProcessResult {
 		current = current.instance ? this._instanceToWrapperMap.get(current.instance)! : current;
 		this._wrapperSiblingMap.delete(current);
 		this._wrapperToParentWrapperMap.delete(current);
@@ -1112,10 +1091,7 @@ export class Renderer {
 		};
 	}
 
-	private _createDom(
-		{ next }: CreateDomInstruction,
-		traversalMaps: TraversalMaps
-	): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
+	private _createDom({ next }: CreateDomInstruction, traversalMaps: TraversalMaps): ProcessResult {
 		let mergeNodes: Node[] = [];
 		if (!next.domNode) {
 			if ((next.node as any).domNode) {
@@ -1165,10 +1141,7 @@ export class Renderer {
 		return { domInstruction };
 	}
 
-	private _updateDom(
-		{ current, next }: UpdateDomInstruction,
-		traversalMaps: TraversalMaps
-	): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
+	private _updateDom({ current, next }: UpdateDomInstruction, traversalMaps: TraversalMaps): ProcessResult {
 		const parentDomNode = findParentNodes(current, traversalMaps).parentDomNode;
 		next.domNode = current.domNode;
 		next.namespace = current.namespace;
@@ -1188,10 +1161,7 @@ export class Renderer {
 		};
 	}
 
-	private _removeDom(
-		{ current }: RemoveDomInstruction,
-		{ sibling, parent }: TraversalMaps
-	): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
+	private _removeDom({ current }: RemoveDomInstruction, { sibling, parent }: TraversalMaps): ProcessResult {
 		sibling.delete(current);
 		parent.delete(current);
 		current.node.bind = undefined;
