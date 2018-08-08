@@ -354,7 +354,7 @@ function addDeferredProperties(wrapper: VNodeWrapper, eventMap: any, afterRender
 function same(dnode1: DNodeWrapper, dnode2: DNodeWrapper): boolean {
 	if (isVNodeWrapper(dnode1) && isVNodeWrapper(dnode2)) {
 		if (isDomVNode(dnode1.node) && isDomVNode(dnode2.node)) {
-			if (dnode1.domNode !== dnode2.domNode) {
+			if (dnode1.node.domNode !== dnode2.node.domNode) {
 				return false;
 			}
 		}
@@ -621,6 +621,59 @@ function runAfterRenderCallbacks(callbacks: Function[], sync = false) {
 	}
 }
 
+function processProperties(
+	next: VNodeWrapper,
+	previousProperties: any,
+	eventMap: WeakMap<Function, EventListener>,
+	deferredRenderCallbacks: Function[]
+) {
+	if (next.node.attributes && next.node.events) {
+		updateAttributes(
+			next.domNode as HTMLElement,
+			previousProperties.attributes || {},
+			next.node.attributes,
+			next.namespace
+		);
+		setProperties(
+			next.domNode as HTMLElement,
+			previousProperties.properties,
+			next,
+			eventMap,
+			deferredRenderCallbacks,
+			false
+		);
+		const events = next.node.events || {};
+		if (previousProperties.events) {
+			removeOrphanedEvents(
+				next.domNode as HTMLElement,
+				previousProperties.events || {},
+				next.node.events,
+				eventMap,
+				true
+			);
+		}
+		previousProperties.events = previousProperties.events || {};
+		Object.keys(events).forEach((event) => {
+			updateEvent(
+				next.domNode as HTMLElement,
+				event,
+				events[event],
+				eventMap,
+				next.node.bind,
+				previousProperties.events[event]
+			);
+		});
+	} else {
+		setProperties(
+			next.domNode as HTMLElement,
+			previousProperties.properties,
+			next,
+			eventMap,
+			deferredRenderCallbacks
+		);
+	}
+}
+
 export class Renderer {
 	private _renderer: () => WNode;
 	private _registry: Registry | undefined;
@@ -729,33 +782,10 @@ export class Renderer {
 				const {
 					parentWNodeWrapper,
 					next,
-					next: { domNode, merged, requiresInsertBefore, node, namespace }
+					next: { domNode, merged, requiresInsertBefore, node }
 				} = item;
 
-				if (node.attributes && node.events) {
-					updateAttributes(domNode as HTMLElement, {}, node.attributes, namespace);
-					setProperties(
-						domNode as HTMLElement,
-						undefined,
-						next,
-						this._eventMap,
-						this._deferredRenderCallbacks,
-						false
-					);
-					const events = node.events;
-					Object.keys(events).forEach((event) => {
-						updateEvent(domNode as HTMLElement, event, events[event], this._eventMap, node.bind);
-					});
-				} else {
-					setProperties(
-						domNode as HTMLElement,
-						undefined,
-						next,
-						this._eventMap,
-						this._deferredRenderCallbacks
-					);
-				}
-
+				processProperties(next, {}, this._eventMap, this._deferredRenderCallbacks);
 				if (!merged) {
 					let insertBefore: any;
 					if (requiresInsertBefore) {
@@ -787,51 +817,11 @@ export class Renderer {
 				}
 
 				const previousProperties = buildPreviousProperties(next.domNode, current, next);
-				if (next.node.attributes && next.node.events) {
-					updateAttributes(
-						next.domNode as HTMLElement,
-						previousProperties.attributes,
-						next.node.attributes,
-						next.namespace
-					);
-					setProperties(
-						next.domNode as HTMLElement,
-						undefined,
-						next,
-						this._eventMap,
-						this._deferredRenderCallbacks,
-						false
-					);
-					const events = next.node.events;
-					removeOrphanedEvents(
-						next.domNode as HTMLElement,
-						previousProperties.events,
-						next.node.events,
-						this._eventMap,
-						true
-					);
-					Object.keys(events).forEach((event) => {
-						updateEvent(
-							next.domNode as HTMLElement,
-							event,
-							events[event],
-							this._eventMap,
-							next.node.bind,
-							previousProperties.events[event]
-						);
-					});
-				} else {
-					setProperties(
-						next.domNode as HTMLElement,
-						previousProperties.properties,
-						next,
-						this._eventMap,
-						this._deferredRenderCallbacks
-					);
-				}
-
 				const { parentWNodeWrapper } = findParentNodes(next, this._getTraversalMaps());
 				const instanceData = widgetInstanceMap.get(parentWNodeWrapper!.instance!);
+
+				processProperties(next, previousProperties, this._eventMap, this._deferredRenderCallbacks);
+
 				if (instanceData && next.node.properties.key != null) {
 					instanceData.nodeHandler.add(next.domNode as HTMLElement, `${next.node.properties.key}`);
 				}
@@ -921,30 +911,24 @@ export class Renderer {
 				addDeferredProperties(nextWrapper, this._eventMap, this._deferredRenderCallbacks);
 			}
 
-			if (currentWrapper !== undefined && same(currentWrapper, nextWrapper)) {
+			if (currentWrapper && same(currentWrapper, nextWrapper)) {
 				oldIndex++;
 				newIndex++;
 				if (isVNodeWrapper(currentWrapper) && isVNodeWrapper(nextWrapper)) {
 					nextWrapper.inserted = currentWrapper.inserted;
 				}
 				instructions.push({ current: currentWrapper, next: nextWrapper });
+			} else if (!currentWrapper || findIndexOfChild(current, nextWrapper, oldIndex + 1) === -1) {
+				newIndex++;
+				instructions.push({ current: undefined, next: nextWrapper });
+			} else if (findIndexOfChild(next, currentWrapper, newIndex + 1) === -1) {
+				instructions.push({ current: currentWrapper, next: undefined });
+				oldIndex++;
 			} else {
-				const findOldIndex = findIndexOfChild(current, nextWrapper, oldIndex + 1);
-				if (!currentWrapper || findOldIndex === -1) {
-					newIndex++;
-					instructions.push({ current: undefined, next: nextWrapper });
-				} else {
-					const findNewIndex = findIndexOfChild(next, currentWrapper, newIndex + 1);
-					if (findNewIndex === -1) {
-						instructions.push({ current: currentWrapper, next: undefined });
-						oldIndex++;
-					} else {
-						instructions.push({ current: currentWrapper, next: undefined });
-						instructions.push({ current: undefined, next: nextWrapper });
-						oldIndex++;
-						newIndex++;
-					}
-				}
+				instructions.push({ current: currentWrapper, next: undefined });
+				instructions.push({ current: undefined, next: nextWrapper });
+				oldIndex++;
+				newIndex++;
 			}
 		}
 
