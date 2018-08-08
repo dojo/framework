@@ -36,7 +36,11 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		private _widget: T = Base;
 
 		public append(root: HTMLElement = document.body): Handle {
-			const r = renderer(() => w(this._widget, this._properties, this._children));
+			const { registry, ...props } = this._properties as any;
+			const r = renderer(() => w(this._widget, props, this._children));
+			if (registry) {
+				r.registry = registry;
+			}
 			if (!this.async) {
 				r.sync = false;
 			}
@@ -48,15 +52,7 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 		}
 
 		public merge(root: HTMLElement = document.body): Handle {
-			const r = renderer(() => w(this._widget, this._properties, this._children));
-			r.append(root.parentNode as HTMLElement);
-			if (!this.async) {
-				r.sync = false;
-			}
-			this.projectorState = ProjectorAttachState.Attached;
-			return {
-				destroy() {}
-			};
+			return this.append((root.parentNode as HTMLElement) || undefined);
 		}
 
 		public set root(root: Element) {

@@ -61,7 +61,7 @@ export type DNodeWrapper = VNodeWrapper | WNodeWrapper;
 interface RenderQueueItem {
 	current?: (WNodeWrapper | VNodeWrapper)[];
 	next?: (WNodeWrapper | VNodeWrapper)[];
-	mergeNodes?: Node[];
+	meta: { mergeNodes?: Node[]; oldIndex?: number; newIndex?: number };
 }
 
 interface InvalidationQueueItem {
@@ -106,7 +106,7 @@ interface ParentNodes {
 }
 
 interface TraversalMaps {
-	parent: WeakMap<any, DNodeWrapper>;
+	parent: WeakMap<DNodeWrapper, DNodeWrapper>;
 	sibling: WeakMap<DNodeWrapper, DNodeWrapper>;
 }
 
@@ -130,8 +130,6 @@ interface UpdateDomApplication {
 }
 
 type DomApplicatorInstruction = CreateDomApplication | UpdateDomApplication | DeleteDomApplication;
-
-type ProcessResultInstruction = (DomApplicatorInstruction | RenderQueueItem)[];
 
 export const widgetInstanceMap = new WeakMap<
 	WidgetBase<WidgetProperties, DNode<DefaultWidgetBaseInterface>>,
@@ -296,16 +294,16 @@ function renderedToWrapper(
 		} as DNodeWrapper;
 		if (isVNode(renderedItem) && renderedItem.properties.exitAnimation) {
 			parent.hasAnimations = true;
-			let nextParent = traversalMaps.parent.get(parent.node);
+			let nextParent = traversalMaps.parent.get(parent);
 			while (nextParent) {
 				if (nextParent.hasAnimations) {
 					break;
 				}
 				nextParent.hasAnimations = true;
-				nextParent = traversalMaps.parent.get(nextParent.node);
+				nextParent = traversalMaps.parent.get(nextParent);
 			}
 		}
-		traversalMaps.parent.set(renderedItem, parent);
+		traversalMaps.parent.set(wrapper, parent);
 		if (previousItem) {
 			traversalMaps.sibling.set(previousItem, wrapper);
 		}
@@ -315,7 +313,7 @@ function renderedToWrapper(
 	return wrappedRendered;
 }
 
-function findParentNodes(currentNode: VNode | WNode, { parent }: TraversalMaps): ParentNodes {
+function findParentNodes(currentNode: DNodeWrapper, { parent }: TraversalMaps): ParentNodes {
 	let parentDomNode: Node | undefined;
 	let parentWNodeWrapper: WNodeWrapper | undefined;
 	let parentWrapper = parent.get(currentNode);
@@ -326,7 +324,7 @@ function findParentNodes(currentNode: VNode | WNode, { parent }: TraversalMaps):
 		} else if (!parentWNodeWrapper && isWNodeWrapper(parentWrapper)) {
 			parentWNodeWrapper = parentWrapper;
 		}
-		parentWrapper = parent.get(parentWrapper.node);
+		parentWrapper = parent.get(parentWrapper);
 	}
 	return { parentDomNode, parentWNodeWrapper };
 }
@@ -346,28 +344,28 @@ function addDeferredProperties(wrapper: VNodeWrapper, eventMap: any, afterRender
 	});
 }
 
-function same(dnode1: DNode, dnode2: DNode): boolean {
-	if (isVNode(dnode1) && isVNode(dnode2)) {
-		if (isDomVNode(dnode1) && isDomVNode(dnode2)) {
+function same(dnode1: DNodeWrapper, dnode2: DNodeWrapper): boolean {
+	if (isVNodeWrapper(dnode1) && isVNodeWrapper(dnode2)) {
+		if (isDomVNode(dnode1.node) && isDomVNode(dnode2.node)) {
 			if (dnode1.domNode !== dnode2.domNode) {
 				return false;
 			}
 		}
-		if (dnode1.tag !== dnode2.tag) {
+		if (dnode1.node.tag !== dnode2.node.tag) {
 			return false;
 		}
-		if (dnode1.properties.key !== dnode2.properties.key) {
+		if (dnode1.node.properties.key !== dnode2.node.properties.key) {
 			return false;
 		}
 		return true;
-	} else if (isWNode(dnode1) && isWNode(dnode2)) {
-		if (typeof dnode2.widgetConstructor === 'string') {
+	} else if (isWNodeWrapper(dnode1) && isWNodeWrapper(dnode2)) {
+		if (dnode1.instance === undefined && typeof dnode2.node.widgetConstructor === 'string') {
 			return false;
 		}
-		if (dnode1.widgetConstructor !== dnode2.widgetConstructor) {
+		if (dnode1.node.widgetConstructor !== dnode2.node.widgetConstructor) {
 			return false;
 		}
-		if (dnode1.properties.key !== dnode2.properties.key) {
+		if (dnode1.node.properties.key !== dnode2.node.properties.key) {
 			return false;
 		}
 		return true;
@@ -375,9 +373,9 @@ function same(dnode1: DNode, dnode2: DNode): boolean {
 	return false;
 }
 
-function findIndexOfChild(children: DNodeWrapper[], sameAs: DNode, start: number) {
+function findIndexOfChild(children: DNodeWrapper[], sameAs: DNodeWrapper, start: number) {
 	for (let i = start; i < children.length; i++) {
-		if (same(children[i].node, sameAs)) {
+		if (same(children[i], sameAs)) {
 			return i;
 		}
 	}
@@ -404,7 +402,7 @@ function findInsertBefore(next: DNodeWrapper, { sibling, parent }: TraversalMaps
 				searchNode = nextSibling;
 			}
 		} else {
-			searchNode = parent.get(searchNode.node);
+			searchNode = parent.get(searchNode);
 			if (!searchNode || isVNodeWrapper(searchNode)) {
 				break;
 			}
@@ -624,12 +622,11 @@ export class Renderer {
 	private _transition: TransitionStrategy = transitionStrategy;
 	private _rootNode: HTMLElement = global.document.body;
 	private _invalidationQueue: InvalidationQueueItem[] = [];
-	private _renderQueue: (RenderQueueItem | DomApplicatorInstruction)[] = [];
+	private _renderQueue: RenderQueueItem[] = [];
 	private _domInstructionQueue: DomApplicatorInstruction[] = [];
 	private _eventMap = new WeakMap<Function, EventListener>();
-	private _dnodeToParentWrapperMap = new WeakMap<any, DNodeWrapper>();
+	private _wrapperToParentWrapperMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	private _instanceToWrapperMap = new WeakMap<WidgetBase, WNodeWrapper>();
-	private _domNodeToWrapperMap = new WeakMap<Node, VNodeWrapper>();
 	private _wrapperSiblingMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	private _renderScheduled: number | undefined;
 	private _invalidate?: () => void;
@@ -661,19 +658,16 @@ export class Renderer {
 			this._rootNode = node;
 		}
 		const renderResult = this._renderer();
-		this._dnodeToParentWrapperMap.set(renderResult, { depth: 0, domNode: this._rootNode, node: v('fake') });
-		this._queueInRender([
-			{
-				current: [],
-				next: [
-					{
-						node: renderResult,
-						depth: 1
-					}
-				],
-				mergeNodes: arrayFrom(this._rootNode.childNodes)
-			}
-		]);
+		const nextWrapper = {
+			node: renderResult,
+			depth: 1
+		};
+		this._wrapperToParentWrapperMap.set(nextWrapper, { depth: 0, domNode: this._rootNode, node: v('fake') });
+		this._queueInRender({
+			current: [],
+			next: [nextWrapper],
+			meta: { mergeNodes: arrayFrom(this._rootNode.childNodes) }
+		});
 		this._runRenderQueue();
 		this._merge = false;
 		this._runCallbacks();
@@ -701,10 +695,12 @@ export class Renderer {
 				previouslyRendered.push(next.instance);
 				const sibling = this._wrapperSiblingMap.get(current);
 				sibling && this._wrapperSiblingMap.set(next, sibling);
-				const instruction = this._updateWidget({ current, next });
-				this._queueInRender(instruction);
-				next.instance && this._instanceToWrapperMap.set(next.instance, next);
-				this._runRenderQueue();
+				const { renderItem } = this._updateWidget({ current, next });
+				if (renderItem) {
+					this._queueInRender(renderItem);
+					next.instance && this._instanceToWrapperMap.set(next.instance, next);
+					this._runRenderQueue();
+				}
 			}
 		}
 		this._runCallbacks();
@@ -716,13 +712,14 @@ export class Renderer {
 			if (isDomApplicatorInstruction(item)) {
 				this._process(item);
 			} else {
-				this._process(item.current || EMPTY_ARRAY, item.next || EMPTY_ARRAY, item.mergeNodes);
+				this._process(item.current || EMPTY_ARRAY, item.next || EMPTY_ARRAY, item.meta);
 			}
 		}
 		this._runDomInstructionQueue();
 	}
 
 	private _runDomInstructionQueue(): void {
+		this._domInstructionQueue.reverse();
 		while (this._domInstructionQueue.length) {
 			const item = this._domInstructionQueue.pop()!;
 			if (item.type === 'create') {
@@ -768,7 +765,7 @@ export class Renderer {
 				if (node.properties.key != null && instanceData) {
 					instanceData.nodeHandler.add(domNode as HTMLElement, `${node.properties.key}`);
 				}
-				const parent = this._dnodeToParentWrapperMap.get(node);
+				const parent = this._wrapperToParentWrapperMap.get(next);
 				if (parent && isWNodeWrapper(parent) && parent.instance) {
 					const instanceData = widgetInstanceMap.get(parent.instance);
 					if (instanceData) {
@@ -780,7 +777,7 @@ export class Renderer {
 				item.next.inserted = true;
 			} else if (item.type === 'update') {
 				const { next, current } = item;
-				const parent = this._dnodeToParentWrapperMap.get(next.node);
+				const parent = this._wrapperToParentWrapperMap.get(next);
 				if (parent && isWNodeWrapper(parent) && parent.instance) {
 					const instanceData = widgetInstanceMap.get(parent.instance);
 					instanceData && instanceData.nodeHandler.addRoot();
@@ -830,7 +827,7 @@ export class Renderer {
 					);
 				}
 
-				const { parentWNodeWrapper } = findParentNodes(next.node, this._getTraversalMaps());
+				const { parentWNodeWrapper } = findParentNodes(next, this._getTraversalMaps());
 				const instanceData = widgetInstanceMap.get(parentWNodeWrapper!.instance!);
 				if (instanceData && next.node.properties.key != null) {
 					instanceData.nodeHandler.add(next.domNode as HTMLElement, `${next.node.properties.key}`);
@@ -857,7 +854,7 @@ export class Renderer {
 
 	private _getTraversalMaps(): TraversalMaps {
 		return {
-			parent: this._dnodeToParentWrapperMap,
+			parent: this._wrapperToParentWrapperMap,
 			sibling: this._wrapperSiblingMap
 		};
 	}
@@ -875,13 +872,13 @@ export class Renderer {
 			depth: current.depth
 		};
 
-		const parent = this._dnodeToParentWrapperMap.get(current.node)!;
-		this._dnodeToParentWrapperMap.set(next.node, parent);
+		const parent = this._wrapperToParentWrapperMap.get(current)!;
+		this._wrapperToParentWrapperMap.set(next, parent);
 		this._invalidationQueue.push({ current, next });
 	}
 
-	private _queueInRender(item: (DomApplicatorInstruction | RenderQueueItem)[]) {
-		this._renderQueue.push(...item);
+	private _queueInRender(item: RenderQueueItem) {
+		this._renderQueue.push(item);
 	}
 
 	private _queueDomInstruction(instruction: DomApplicatorInstruction) {
@@ -889,19 +886,22 @@ export class Renderer {
 	}
 
 	private _process(current: DomApplicatorInstruction): void;
-	private _process(current: DNodeWrapper[], next: DNodeWrapper[], mergeNodes?: Node[]): void;
+	private _process(
+		current: DNodeWrapper[],
+		next: DNodeWrapper[],
+		meta?: { mergeNodes?: Node[]; oldIndex?: number; newIndex?: number }
+	): void;
 	private _process(
 		current: DomApplicatorInstruction | DNodeWrapper[],
 		next: DNodeWrapper[] = [],
-		mergeNodes: Node[] = []
+		meta: any = {}
 	): void {
 		if (isDomApplicatorInstruction(current)) {
 			this._queueDomInstruction(current);
 		} else {
+			let { mergeNodes = [], oldIndex = 0, newIndex = 0 } = meta;
 			const currentLength = current.length;
 			const nextLength = next.length;
-			let oldIndex = 0;
-			let newIndex = 0;
 			const hasPreviousSiblings = current.length > 1;
 			const instructions: Instruction[] = [];
 			while (newIndex < nextLength) {
@@ -909,25 +909,17 @@ export class Renderer {
 				const nextWrapper = next[newIndex];
 				nextWrapper.hasPreviousSiblings = hasPreviousSiblings;
 
-				if (this._merge && mergeNodes) {
+				if (this._merge && mergeNodes.length) {
 					if (isVNodeWrapper(nextWrapper)) {
-						let domElement: Element | undefined = undefined;
-						let firstNode: any;
-						while (nextWrapper.domNode === undefined && mergeNodes.length > 0) {
-							domElement = mergeNodes.shift() as Element;
-							if (domElement === firstNode) {
-								break;
-							}
-							if (
-								domElement &&
-								domElement.tagName === (nextWrapper.node.tag.toUpperCase() || undefined)
-							) {
+						let {
+							node: { tag }
+						} = nextWrapper;
+						for (let i = 0; i < mergeNodes.length; i++) {
+							const domElement = mergeNodes[i] as Element;
+							if (tag.toUpperCase() === (domElement.tagName || '')) {
+								mergeNodes.splice(i, 1);
 								nextWrapper.domNode = domElement;
-							} else {
-								if (!firstNode) {
-									firstNode = domElement;
-								}
-								mergeNodes.push(domElement);
+								break;
 							}
 						}
 					} else {
@@ -939,48 +931,59 @@ export class Renderer {
 					addDeferredProperties(nextWrapper, this._eventMap, this._deferredRenderCallbacks);
 				}
 
-				if (currentWrapper !== undefined && same(currentWrapper.node, nextWrapper.node)) {
+				if (currentWrapper !== undefined && same(currentWrapper, nextWrapper)) {
 					oldIndex++;
 					newIndex++;
 					if (isVNodeWrapper(currentWrapper) && isVNodeWrapper(nextWrapper)) {
 						nextWrapper.inserted = currentWrapper.inserted;
 					}
 					instructions.push({ current: currentWrapper, next: nextWrapper });
-					continue;
+					break;
 				}
-				const findOldIndex = findIndexOfChild(current, nextWrapper.node, oldIndex + 1);
+				const findOldIndex = findIndexOfChild(current, nextWrapper, oldIndex + 1);
 				if (!currentWrapper || findOldIndex === -1) {
 					newIndex++;
 					instructions.push({ current: undefined, next: nextWrapper });
-					continue;
+					break;
 				}
-				const findNewIndex = findIndexOfChild(next, currentWrapper.node, newIndex + 1);
+				const findNewIndex = findIndexOfChild(next, currentWrapper, newIndex + 1);
 				if (findNewIndex === -1) {
 					instructions.push({ current: currentWrapper, next: undefined });
 					oldIndex++;
-					continue;
+					break;
 				}
 
 				instructions.push({ current: currentWrapper, next: undefined });
 				instructions.push({ current: undefined, next: nextWrapper });
 				oldIndex++;
 				newIndex++;
+				break;
 			}
-			if (currentLength > oldIndex) {
+			if (currentLength > oldIndex && newIndex >= nextLength) {
 				for (let i = oldIndex; i < currentLength; i++) {
 					instructions.push({ current: current[i], next: undefined });
 				}
 			}
+
+			if (newIndex < nextLength) {
+				this._queueInRender({ current, next, meta: { mergeNodes, oldIndex, newIndex } });
+			}
 			for (let i = 0; i < instructions.length; i++) {
-				const result = this._processOne(instructions[i]);
-				if (result && result.length) {
-					this._queueInRender(result);
+				const { renderItem, domInstruction } = this._processOne(instructions[i]);
+				if (renderItem) {
+					this._queueInRender(renderItem);
+				}
+				if (domInstruction) {
+					this._queueDomInstruction(domInstruction);
 				}
 			}
 		}
 	}
 
-	private _processOne({ current, next }: Instruction): ProcessResultInstruction | undefined {
+	private _processOne({
+		current,
+		next
+	}: Instruction): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
 		if (current !== next) {
 			if (!current && next) {
 				if (isVNodeWrapper(next)) {
@@ -1002,17 +1005,18 @@ export class Renderer {
 				}
 			}
 		}
+		return {};
 	}
 
 	private _createWidget(
 		{ next }: CreateWidgetInstruction,
 		traversalMaps: TraversalMaps,
 		registry: Registry | null = null
-	): ProcessResultInstruction {
+	): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
 		let {
 			node: { widgetConstructor }
 		} = next;
-		const { parentWNodeWrapper } = findParentNodes(next.node, traversalMaps);
+		const { parentWNodeWrapper } = findParentNodes(next, traversalMaps);
 		if (typeof widgetConstructor !== 'function') {
 			let item: Constructor<WidgetBase> | null = null;
 			if (!parentWNodeWrapper) {
@@ -1054,10 +1058,15 @@ export class Renderer {
 				this._invalidate = next.instance.invalidate.bind(next.instance);
 			}
 		}
-		return [{ next: next.childrenWrappers, mergeNodes: next.mergeNodes }];
+		return {
+			renderItem: { next: next.childrenWrappers, meta: { mergeNodes: next.mergeNodes } }
+		};
 	}
 
-	private _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResultInstruction {
+	private _updateWidget({
+		current,
+		next
+	}: UpdateWidgetInstruction): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
 		const { instance, domNode, hasAnimations } = current;
 		const instanceData = widgetInstanceMap.get(instance!)!;
 		next.instance = instance;
@@ -1066,6 +1075,7 @@ export class Renderer {
 		instanceData.rendering = true;
 		instance!.__setProperties__(next.node.properties, next.node.bind);
 		instance!.__setChildren__(next.node.children);
+		this._instanceToWrapperMap.set(next.instance!, next);
 		if (instanceData.dirty) {
 			let rendered = instance!.__render__();
 			instanceData.rendering = false;
@@ -1073,19 +1083,21 @@ export class Renderer {
 				rendered = Array.isArray(rendered) ? rendered : [rendered];
 				next.childrenWrappers = renderedToWrapper(rendered, next, current, this._getTraversalMaps());
 			}
-		} else {
-			next.childrenWrappers = current.childrenWrappers;
-			return [];
+			return {
+				renderItem: { current: current.childrenWrappers, next: next.childrenWrappers, meta: {} }
+			};
 		}
 		instanceData.rendering = false;
-		this._instanceToWrapperMap.set(next.instance!, next);
-		return [{ current: current.childrenWrappers, next: next.childrenWrappers }];
+		next.childrenWrappers = current.childrenWrappers;
+		return {};
 	}
 
-	private _removeWidget({ current }: RemoveWidgetInstruction): ProcessResultInstruction {
+	private _removeWidget({
+		current
+	}: RemoveWidgetInstruction): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
 		current = current.instance ? this._instanceToWrapperMap.get(current.instance)! : current;
 		this._wrapperSiblingMap.delete(current);
-		this._dnodeToParentWrapperMap.delete(current.node);
+		this._wrapperToParentWrapperMap.delete(current);
 		this._instanceToWrapperMap.delete(current.instance!);
 		if (current.instance) {
 			const instanceData = widgetInstanceMap.get(current.instance);
@@ -1095,10 +1107,15 @@ export class Renderer {
 		current.node.bind = undefined;
 		current.instance = undefined;
 
-		return [{ current: current.childrenWrappers }];
+		return {
+			renderItem: { current: current.childrenWrappers, meta: {} }
+		};
 	}
 
-	private _createDom({ next }: CreateDomInstruction, traversalMaps: TraversalMaps): ProcessResultInstruction {
+	private _createDom(
+		{ next }: CreateDomInstruction,
+		traversalMaps: TraversalMaps
+	): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
 		let mergeNodes: Node[] = [];
 		if (!next.domNode) {
 			if ((next.node as any).domNode) {
@@ -1121,7 +1138,6 @@ export class Renderer {
 			next.merged = true;
 		}
 		if (next.domNode) {
-			this._domNodeToWrapperMap.set(next.domNode, next);
 			if (this._merge) {
 				mergeNodes = arrayFrom(next.domNode.childNodes);
 			}
@@ -1130,7 +1146,7 @@ export class Renderer {
 				next.childrenWrappers = children;
 			}
 		}
-		const { parentDomNode, parentWNodeWrapper } = findParentNodes(next.node, this._getTraversalMaps());
+		const { parentDomNode, parentWNodeWrapper } = findParentNodes(next, this._getTraversalMaps());
 		if (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
 			parentWNodeWrapper.domNode = next.domNode;
 		}
@@ -1141,17 +1157,19 @@ export class Renderer {
 			type: 'create'
 		};
 		if (next.childrenWrappers) {
-			return [{ current: [], next: next.childrenWrappers, mergeNodes }, domInstruction];
+			return {
+				renderItem: { current: [], next: next.childrenWrappers, meta: { mergeNodes } },
+				domInstruction
+			};
 		}
-		return [domInstruction];
+		return { domInstruction };
 	}
 
 	private _updateDom(
 		{ current, next }: UpdateDomInstruction,
 		traversalMaps: TraversalMaps
-	): ProcessResultInstruction {
-		current = current.domNode ? this._domNodeToWrapperMap.get(current.domNode)! : current;
-		const parentDomNode = findParentNodes(current.node, traversalMaps).parentDomNode;
+	): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
+		const parentDomNode = findParentNodes(current, traversalMaps).parentDomNode;
 		next.domNode = current.domNode;
 		next.namespace = current.namespace;
 		if (next.node.text && next.node.text !== current.node.text) {
@@ -1164,21 +1182,24 @@ export class Renderer {
 				next.childrenWrappers = children;
 			}
 		}
-		this._domNodeToWrapperMap.set(next.domNode!, next);
-		return [{ current: current.childrenWrappers, next: next.childrenWrappers }, { type: 'update', next, current }];
+		return {
+			renderItem: { current: current.childrenWrappers, next: next.childrenWrappers, meta: {} },
+			domInstruction: { type: 'update', next, current }
+		};
 	}
 
 	private _removeDom(
 		{ current }: RemoveDomInstruction,
 		{ sibling, parent }: TraversalMaps
-	): ProcessResultInstruction {
+	): { renderItem?: RenderQueueItem; domInstruction?: DomApplicatorInstruction } {
 		sibling.delete(current);
-		parent.delete(current.node);
-		this._dnodeToParentWrapperMap.delete(current.node);
-		current.domNode && this._domNodeToWrapperMap.delete(current.domNode);
+		parent.delete(current);
 		current.node.bind = undefined;
 		if (current.hasAnimations) {
-			return [{ current: current.childrenWrappers }, { type: 'delete', current }];
+			return {
+				renderItem: { current: current.childrenWrappers, meta: {} },
+				domInstruction: { type: 'delete', current }
+			};
 		}
 
 		if (current.childrenWrappers) {
@@ -1191,26 +1212,24 @@ export class Renderer {
 						wrapper.childrenWrappers = undefined;
 					}
 					if (isWNodeWrapper(wrapper)) {
-						this._wrapperSiblingMap.delete(wrapper);
-						this._dnodeToParentWrapperMap.delete(wrapper.node);
 						if (wrapper.instance) {
 							this._instanceToWrapperMap.delete(wrapper.instance);
 							const instanceData = widgetInstanceMap.get(wrapper.instance);
 							instanceData && instanceData.onDetach();
 						}
 						wrapper.instance = undefined;
-					} else {
-						this._wrapperSiblingMap.delete(wrapper);
-						this._dnodeToParentWrapperMap.delete(wrapper.node);
-						wrapper.domNode && this._domNodeToWrapperMap.delete(wrapper.domNode);
 					}
+					this._wrapperSiblingMap.delete(wrapper);
+					this._wrapperToParentWrapperMap.delete(wrapper);
 					wrapper.domNode = undefined;
 					wrapper.node.bind = undefined;
 				}
 			});
 		}
 
-		return [{ type: 'delete', current }];
+		return {
+			domInstruction: { type: 'delete', current }
+		};
 	}
 }
 

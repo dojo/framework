@@ -871,8 +871,8 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(Parent, {}));
 			const div = document.createElement('div');
-			r.append(div);
 			r.sync = true;
+			r.append(div);
 			renderResult = v('span', ['me']);
 			childTwoInvalidate!();
 			switcher();
