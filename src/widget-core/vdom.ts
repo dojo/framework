@@ -61,12 +61,18 @@ export type DNodeWrapper = VNodeWrapper | WNodeWrapper;
 interface RenderQueueItem {
 	current?: (WNodeWrapper | VNodeWrapper)[];
 	next?: (WNodeWrapper | VNodeWrapper)[];
-	meta: { mergeNodes?: Node[]; oldIndex?: number; newIndex?: number };
+	meta: ProcessMeta;
 }
 
 interface ProcessResult {
 	renderItem?: RenderQueueItem;
 	domInstruction?: DomApplicatorInstruction;
+}
+
+interface ProcessMeta {
+	mergeNodes?: Node[];
+	oldIndex?: number;
+	newIndex?: number;
 }
 
 interface InvalidationQueueItem {
@@ -626,7 +632,7 @@ export class Renderer {
 	private _renderQueue: RenderQueueItem[] = [];
 	private _domInstructionQueue: DomApplicatorInstruction[] = [];
 	private _eventMap = new WeakMap<Function, EventListener>();
-	private _wrapperToParentWrapperMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
+	private _parentWrapperMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	private _instanceToWrapperMap = new WeakMap<WidgetBase, WNodeWrapper>();
 	private _wrapperSiblingMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	private _renderScheduled: number | undefined;
@@ -663,7 +669,7 @@ export class Renderer {
 			node: renderResult,
 			depth: 1
 		};
-		this._wrapperToParentWrapperMap.set(nextWrapper, { depth: 0, domNode: this._rootNode, node: v('fake') });
+		this._parentWrapperMap.set(nextWrapper, { depth: 0, domNode: this._rootNode, node: v('fake') });
 		this._queueInRender({
 			current: [],
 			next: [nextWrapper],
@@ -762,7 +768,7 @@ export class Renderer {
 				if (node.properties.key != null && instanceData) {
 					instanceData.nodeHandler.add(domNode as HTMLElement, `${node.properties.key}`);
 				}
-				const parent = this._wrapperToParentWrapperMap.get(next);
+				const parent = this._parentWrapperMap.get(next);
 				if (parent && isWNodeWrapper(parent) && parent.instance) {
 					const instanceData = widgetInstanceMap.get(parent.instance);
 					if (instanceData) {
@@ -774,7 +780,7 @@ export class Renderer {
 				item.next.inserted = true;
 			} else if (item.type === 'update') {
 				const { next, current } = item;
-				const parent = this._wrapperToParentWrapperMap.get(next);
+				const parent = this._parentWrapperMap.get(next);
 				if (parent && isWNodeWrapper(parent) && parent.instance) {
 					const instanceData = widgetInstanceMap.get(parent.instance);
 					instanceData && instanceData.nodeHandler.addRoot();
@@ -851,7 +857,7 @@ export class Renderer {
 
 	private _getTraversalMaps(): TraversalMaps {
 		return {
-			parent: this._wrapperToParentWrapperMap,
+			parent: this._parentWrapperMap,
 			sibling: this._wrapperSiblingMap
 		};
 	}
@@ -869,8 +875,8 @@ export class Renderer {
 			depth: current.depth
 		};
 
-		const parent = this._wrapperToParentWrapperMap.get(current)!;
-		this._wrapperToParentWrapperMap.set(next, parent);
+		const parent = this._parentWrapperMap.get(current)!;
+		this._parentWrapperMap.set(next, parent);
 		this._invalidationQueue.push({ current, next });
 	}
 
@@ -882,17 +888,13 @@ export class Renderer {
 		this._domInstructionQueue.push(instruction);
 	}
 
-	private _process(
-		current: DNodeWrapper[],
-		next: DNodeWrapper[],
-		meta: { mergeNodes?: Node[]; oldIndex?: number; newIndex?: number } = {}
-	): void {
+	private _process(current: DNodeWrapper[], next: DNodeWrapper[], meta: ProcessMeta = {}): void {
 		let { mergeNodes = [], oldIndex = 0, newIndex = 0 } = meta;
 		const currentLength = current.length;
 		const nextLength = next.length;
 		const hasPreviousSiblings = current.length > 1;
 		const instructions: Instruction[] = [];
-		while (newIndex < nextLength) {
+		if (newIndex < nextLength) {
 			let currentWrapper = oldIndex < currentLength ? current[oldIndex] : undefined;
 			const nextWrapper = next[newIndex];
 			nextWrapper.hasPreviousSiblings = hasPreviousSiblings;
@@ -926,44 +928,40 @@ export class Renderer {
 					nextWrapper.inserted = currentWrapper.inserted;
 				}
 				instructions.push({ current: currentWrapper, next: nextWrapper });
-				break;
-			}
-			const findOldIndex = findIndexOfChild(current, nextWrapper, oldIndex + 1);
-			if (!currentWrapper || findOldIndex === -1) {
-				newIndex++;
-				instructions.push({ current: undefined, next: nextWrapper });
-				break;
-			}
-			const findNewIndex = findIndexOfChild(next, currentWrapper, newIndex + 1);
-			if (findNewIndex === -1) {
-				instructions.push({ current: currentWrapper, next: undefined });
-				oldIndex++;
-				break;
-			}
-
-			instructions.push({ current: currentWrapper, next: undefined });
-			instructions.push({ current: undefined, next: nextWrapper });
-			oldIndex++;
-			newIndex++;
-			break;
-		}
-		if (currentLength > oldIndex && newIndex >= nextLength) {
-			for (let i = oldIndex; i < currentLength; i++) {
-				instructions.push({ current: current[i], next: undefined });
+			} else {
+				const findOldIndex = findIndexOfChild(current, nextWrapper, oldIndex + 1);
+				if (!currentWrapper || findOldIndex === -1) {
+					newIndex++;
+					instructions.push({ current: undefined, next: nextWrapper });
+				} else {
+					const findNewIndex = findIndexOfChild(next, currentWrapper, newIndex + 1);
+					if (findNewIndex === -1) {
+						instructions.push({ current: currentWrapper, next: undefined });
+						oldIndex++;
+					} else {
+						instructions.push({ current: currentWrapper, next: undefined });
+						instructions.push({ current: undefined, next: nextWrapper });
+						oldIndex++;
+						newIndex++;
+					}
+				}
 			}
 		}
 
 		if (newIndex < nextLength) {
 			this._queueInRender({ current, next, meta: { mergeNodes, oldIndex, newIndex } });
 		}
+
+		if (currentLength > oldIndex && newIndex >= nextLength) {
+			for (let i = oldIndex; i < currentLength; i++) {
+				instructions.push({ current: current[i], next: undefined });
+			}
+		}
+
 		for (let i = 0; i < instructions.length; i++) {
 			const { renderItem, domInstruction } = this._processOne(instructions[i]);
-			if (renderItem) {
-				this._queueInRender(renderItem);
-			}
-			if (domInstruction) {
-				this._queueDomInstruction(domInstruction);
-			}
+			renderItem && this._queueInRender(renderItem);
+			domInstruction && this._queueDomInstruction(domInstruction);
 		}
 	}
 
@@ -1076,7 +1074,7 @@ export class Renderer {
 	private _removeWidget({ current }: RemoveWidgetInstruction): ProcessResult {
 		current = current.instance ? this._instanceToWrapperMap.get(current.instance)! : current;
 		this._wrapperSiblingMap.delete(current);
-		this._wrapperToParentWrapperMap.delete(current);
+		this._parentWrapperMap.delete(current);
 		this._instanceToWrapperMap.delete(current.instance!);
 		if (current.instance) {
 			const instanceData = widgetInstanceMap.get(current.instance);
@@ -1190,7 +1188,7 @@ export class Renderer {
 						wrapper.instance = undefined;
 					}
 					this._wrapperSiblingMap.delete(wrapper);
-					this._wrapperToParentWrapperMap.delete(wrapper);
+					this._parentWrapperMap.delete(wrapper);
 					wrapper.domNode = undefined;
 					wrapper.node.bind = undefined;
 				}
