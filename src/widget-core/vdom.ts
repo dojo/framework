@@ -749,8 +749,9 @@ export class Renderer {
 		const previouslyRendered = [];
 		this._invalidationQueue = [];
 		invalidationQueue.sort((a, b) => a.next.depth - b.next.depth);
-		while (invalidationQueue.length) {
-			let { current, next } = invalidationQueue.pop()!;
+		let item: InvalidationQueueItem | undefined;
+		while ((item = invalidationQueue.pop())) {
+			let { current, next } = item;
 			if (previouslyRendered.indexOf(next.instance) === -1) {
 				previouslyRendered.push(next.instance);
 				const sibling = this._wrapperSiblingMap.get(current);
@@ -767,8 +768,8 @@ export class Renderer {
 	}
 
 	private _runRenderQueue() {
-		while (this._renderQueue.length) {
-			const item = this._renderQueue.pop()!;
+		let item: RenderQueueItem | undefined;
+		while ((item = this._renderQueue.pop())) {
 			this._process(item.current || EMPTY_ARRAY, item.next || EMPTY_ARRAY, item.meta);
 		}
 		this._runDomInstructionQueue();
@@ -776,8 +777,8 @@ export class Renderer {
 
 	private _runDomInstructionQueue(): void {
 		this._domInstructionQueue.reverse();
-		while (this._domInstructionQueue.length) {
-			const item = this._domInstructionQueue.pop()!;
+		let item: DomApplicatorInstruction | undefined;
+		while ((item = this._domInstructionQueue.pop())) {
 			if (item.type === 'create') {
 				const {
 					parentWNodeWrapper,
@@ -1157,8 +1158,8 @@ export class Renderer {
 		if (current.childrenWrappers) {
 			this._afterRenderCallbacks.push(() => {
 				let wrappers = current.childrenWrappers || [];
-				while (wrappers.length) {
-					let wrapper = wrappers.pop()!;
+				let wrapper: DNodeWrapper | undefined;
+				while ((wrapper = wrappers.pop())) {
 					if (wrapper.childrenWrappers) {
 						wrappers.push(...wrapper.childrenWrappers);
 						wrapper.childrenWrappers = undefined;
