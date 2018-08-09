@@ -26,6 +26,7 @@ export interface WidgetData {
 	nodeHandler: NodeHandler;
 	invalidate?: Function;
 	rendering: boolean;
+	inputProperties: any;
 }
 
 export interface BaseNodeWrapper {
@@ -752,7 +753,7 @@ export class Renderer {
 		let item: InvalidationQueueItem | undefined;
 		while ((item = invalidationQueue.pop())) {
 			let { current, next } = item;
-			if (previouslyRendered.indexOf(next.instance) === -1) {
+			if (previouslyRendered.indexOf(next.instance) === -1 && this._instanceToWrapperMap.has(next.instance!)) {
 				previouslyRendered.push(next.instance);
 				const sibling = this._wrapperSiblingMap.get(current);
 				sibling && this._wrapperSiblingMap.set(next, sibling);
@@ -854,21 +855,24 @@ export class Renderer {
 	}
 
 	private _queueInvalidation(instance: WidgetBase): void {
-		const current = this._instanceToWrapperMap.get(instance)!;
-		const next = {
-			node: {
-				type: WNODE,
-				widgetConstructor: instance.constructor as WidgetBaseConstructor,
-				properties: instance.properties,
-				children: instance.children
-			},
-			instance,
-			depth: current.depth
-		};
+		const current = this._instanceToWrapperMap.get(instance);
+		if (current) {
+			const instanceData = widgetInstanceMap.get(instance)!;
+			const next = {
+				node: {
+					type: WNODE,
+					widgetConstructor: instance.constructor as WidgetBaseConstructor,
+					properties: instanceData.inputProperties,
+					children: instance.children
+				},
+				instance,
+				depth: current.depth
+			};
 
-		const parent = this._parentWrapperMap.get(current)!;
-		this._parentWrapperMap.set(next, parent);
-		this._invalidationQueue.push({ current, next });
+			const parent = this._parentWrapperMap.get(current)!;
+			this._parentWrapperMap.set(next, parent);
+			this._invalidationQueue.push({ current, next });
+		}
 	}
 
 	private _queueInRender(item: RenderQueueItem) {
@@ -1032,7 +1036,10 @@ export class Renderer {
 
 	private _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult {
 		const { instance, domNode, hasAnimations } = current;
-		const instanceData = widgetInstanceMap.get(instance!)!;
+		if (!instance) {
+			return [] as ProcessResult;
+		}
+		const instanceData = widgetInstanceMap.get(instance)!;
 		next.instance = instance;
 		next.domNode = domNode;
 		next.hasAnimations = hasAnimations;
