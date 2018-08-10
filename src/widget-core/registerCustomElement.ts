@@ -137,6 +137,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			const r = renderer(() => w(Wrapper, {}));
 			this._renderer = r;
 			r.registry = registry;
+			r.merge = false;
 			r.append(this);
 
 			this._initialised = true;

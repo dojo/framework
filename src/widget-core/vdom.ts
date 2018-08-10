@@ -702,6 +702,10 @@ export class Renderer {
 		this._sync = sync;
 	}
 
+	public set merge(merge: boolean) {
+		this._merge = merge;
+	}
+
 	public set registry(registry: Registry) {
 		this._registry = registry;
 	}

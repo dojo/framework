@@ -178,7 +178,7 @@ describe('registerCustomElement', () => {
 		(barB as any).myProp = 'set property on child';
 		resolvers.resolve();
 
-		assert.strictEqual(2, childRenderCounter);
+		assert.strictEqual(3, childRenderCounter);
 
 		const container = element.querySelector('.children');
 		const children = (container as any).children;
