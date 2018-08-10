@@ -43,6 +43,10 @@ export function tsx(tag: any, properties = {}, ...children: any[]): DNode {
 	properties = properties === null ? {} : properties;
 	if (typeof tag === 'string') {
 		return v(tag, properties, children);
+	} else if (tag.type === 'registry' && (properties as any).__autoRegistryItem) {
+		const name = (properties as any).__autoRegistryItem;
+		delete (properties as any).__autoRegistryItem;
+		return w(name, properties, children);
 	} else if (tag.type === REGISTRY_ITEM) {
 		const registryItem = new tag();
 		return w(registryItem.name, properties, children);
