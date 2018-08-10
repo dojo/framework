@@ -303,6 +303,11 @@ export interface VNode {
 	properties: VNodeProperties;
 
 	/**
+	 * VNode properties
+	 */
+	originalProperties?: VNodeProperties;
+
+	/**
 	 * VNode attributes
 	 */
 	attributes?: { [index: string]: string | undefined };
@@ -337,6 +342,9 @@ export interface VNode {
 	 */
 	diffType?: DiffType;
 
+	/**
+	 * instance the created the vnode
+	 */
 	bind?: WidgetBaseInterface;
 }
 

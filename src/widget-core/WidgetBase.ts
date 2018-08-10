@@ -1,7 +1,7 @@
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
 import Symbol from '../shim/Symbol';
-import { v, VNODE } from './d';
+import { v, VNODE, isVNode } from './d';
 import { auto } from './diff';
 import {
 	AfterRender,
@@ -275,6 +275,11 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			if (typeof node === 'string') {
 				convertedNodes.push(toTextVNode(node));
 				continue;
+			}
+			if (isVNode(node) && node.deferredPropertiesCallback) {
+				const properties = node.deferredPropertiesCallback(false);
+				node.originalProperties = node.properties;
+				node.properties = { ...properties, ...node.properties };
 			}
 			node.bind = this;
 			convertedNodes.push(node);

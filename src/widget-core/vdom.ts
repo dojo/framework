@@ -1,5 +1,4 @@
 import global from '../shim/global';
-import { from as arrayFrom } from '../shim/array';
 import { WeakMap } from '../shim/WeakMap';
 import {
 	WNode,
@@ -335,19 +334,18 @@ function findParentNodes(currentNode: DNodeWrapper, { parent }: TraversalMaps): 
 	return { parentDomNode, parentWNodeWrapper };
 }
 
-function addDeferredProperties(wrapper: VNodeWrapper, eventMap: any, afterRenderCallbacks: Function[]) {
-	wrapper.decoratedDeferredProperties = wrapper.node.properties;
-	const properties = wrapper.node.deferredPropertiesCallback!(!!wrapper.inserted);
-	wrapper.node.properties = { ...properties, ...wrapper.decoratedDeferredProperties };
-	afterRenderCallbacks.push(() => {
-		const currentProperties = wrapper.node.properties;
-		wrapper.node.properties = {
-			...wrapper.node.deferredPropertiesCallback!(!!wrapper.inserted),
-			...wrapper.decoratedDeferredProperties
-		};
-
-		setProperties(wrapper.domNode as HTMLElement, currentProperties, wrapper, eventMap, afterRenderCallbacks);
-	});
+function runDeferredProperties(
+	next: VNodeWrapper,
+	eventMap: WeakMap<Function, EventListener>,
+	afterRenderCallbacks: Function[]
+) {
+	if (next.node.deferredPropertiesCallback) {
+		const properties = next.node.properties;
+		next.node.properties = { ...next.node.deferredPropertiesCallback(true), ...next.node.originalProperties };
+		afterRenderCallbacks.push(() => {
+			processProperties(next, properties, eventMap, afterRenderCallbacks);
+		});
+	}
 }
 
 function same(dnode1: DNodeWrapper, dnode2: DNodeWrapper): boolean {
@@ -468,6 +466,10 @@ function runExitAnimation(current: VNodeWrapper, transitions: TransitionStrategy
 		return exitAnimation(domNode as Element, removeDomNode, properties);
 	}
 	transitions.exit(domNode as Element, properties, exitAnimation as string, removeDomNode);
+}
+
+function arrayFrom(arr: any) {
+	return Array.prototype.slice.call(arr);
 }
 
 function setProperties(
@@ -791,6 +793,7 @@ export class Renderer {
 				} = item;
 
 				processProperties(next, {}, this._eventMap, this._deferredRenderCallbacks);
+				runDeferredProperties(next, this._eventMap, this._deferredRenderCallbacks);
 				if (!merged) {
 					let insertBefore: any;
 					if (requiresInsertBefore) {
@@ -826,6 +829,7 @@ export class Renderer {
 				const instanceData = widgetInstanceMap.get(parentWNodeWrapper!.instance!);
 
 				processProperties(next, previousProperties, this._eventMap, this._deferredRenderCallbacks);
+				runDeferredProperties(next, this._eventMap, this._deferredRenderCallbacks);
 
 				if (instanceData && next.node.properties.key != null) {
 					instanceData.nodeHandler.add(next.domNode as HTMLElement, `${next.node.properties.key}`);
@@ -857,10 +861,30 @@ export class Renderer {
 		};
 	}
 
+	private _processMergeNodes(next: DNodeWrapper, mergeNodes: Node[]) {
+		if (this._merge && mergeNodes.length) {
+			if (isVNodeWrapper(next)) {
+				let {
+					node: { tag }
+				} = next;
+				for (let i = 0; i < mergeNodes.length; i++) {
+					const domElement = mergeNodes[i] as Element;
+					if (tag.toUpperCase() === (domElement.tagName || '')) {
+						mergeNodes.splice(i, 1);
+						next.domNode = domElement;
+						break;
+					}
+				}
+			} else {
+				next.mergeNodes = mergeNodes;
+			}
+		}
+	}
+
 	private _queueInvalidation(instance: WidgetBase): void {
 		const current = this._instanceToWrapperMap.get(instance);
-		if (current) {
-			const instanceData = widgetInstanceMap.get(instance)!;
+		const instanceData = widgetInstanceMap.get(instance);
+		if (current && instanceData) {
 			const next = {
 				node: {
 					type: WNODE,
@@ -897,27 +921,7 @@ export class Renderer {
 			const nextWrapper = next[newIndex];
 			nextWrapper.hasPreviousSiblings = hasPreviousSiblings;
 
-			if (this._merge && mergeNodes.length) {
-				if (isVNodeWrapper(nextWrapper)) {
-					let {
-						node: { tag }
-					} = nextWrapper;
-					for (let i = 0; i < mergeNodes.length; i++) {
-						const domElement = mergeNodes[i] as Element;
-						if (tag.toUpperCase() === (domElement.tagName || '')) {
-							mergeNodes.splice(i, 1);
-							nextWrapper.domNode = domElement;
-							break;
-						}
-					}
-				} else {
-					nextWrapper.mergeNodes = mergeNodes;
-				}
-			}
-
-			if (isVNodeWrapper(nextWrapper) && typeof nextWrapper.node.deferredPropertiesCallback === 'function') {
-				addDeferredProperties(nextWrapper, this._eventMap, this._deferredRenderCallbacks);
-			}
+			this._processMergeNodes(nextWrapper, mergeNodes);
 
 			if (currentWrapper && same(currentWrapper, nextWrapper)) {
 				oldIndex++;
@@ -1142,11 +1146,9 @@ export class Renderer {
 			const updatedTextNode = parentDomNode!.ownerDocument.createTextNode(next.node.text!);
 			parentDomNode!.replaceChild(updatedTextNode, next.domNode!);
 			next.domNode = updatedTextNode;
-		} else {
-			if (next.node.children) {
-				const children = renderedToWrapper(next.node.children, next, current, traversalMaps);
-				next.childrenWrappers = children;
-			}
+		} else if (next.node.children) {
+			const children = renderedToWrapper(next.node.children, next, current, traversalMaps);
+			next.childrenWrappers = children;
 		}
 		return {
 			renderItem: { current: current.childrenWrappers, next: next.childrenWrappers, meta: {} },

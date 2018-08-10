@@ -1718,52 +1718,6 @@ jsdomDescribe('vdom', () => {
 			assert.isNull(fooDiv.parentNode);
 		});
 
-		it('should warn in the console for siblings for the same widgets with no key when added or removed', () => {
-			class Foo extends WidgetBase<any> {
-				render() {
-					return v('div', [this.properties.text]);
-				}
-			}
-
-			let show: any;
-			class Baz extends WidgetBase {
-				show = false;
-
-				constructor() {
-					super();
-					show = this.setShow;
-				}
-
-				setShow = (value: boolean) => {
-					this.show = value;
-					this.invalidate();
-				};
-
-				render() {
-					return v('div', [
-						w(Foo, { text: '1' }),
-						this.show ? w(Foo, { text: '2' }) : null,
-						w(Foo, { text: '3' }),
-						v('div', [w(Foo, { text: '4' })])
-					]);
-				}
-			}
-
-			const widgetName = (Foo as any).name || 'unknown';
-			const parentName = (Baz as any).name || 'unknown';
-
-			const errorMsg = `A widget (${parentName}) has had a child addded or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${widgetName}) multiple times as siblings`;
-
-			const r = renderer(() => w(Baz, {}));
-			const div = document.createElement('div');
-			r.append(div);
-			assert.isTrue(consoleStub.notCalled);
-			show(true);
-			resolvers.resolve();
-			assert.isTrue(consoleStub.calledOnce);
-			assert.isTrue(consoleStub.calledWith(errorMsg));
-		});
-
 		it('Should support widgets using deferred properties', () => {
 			let deferredPropertyCallCount = 0;
 
@@ -3829,42 +3783,6 @@ jsdomDescribe('vdom', () => {
 			textNode = div.childNodes[0] as Text;
 			assert.strictEqual(textNode, domNode);
 		});
-
-		// it('will throw an error when vdom is not sure which node is added', () => {
-		// 	const widgetName = 'span';
-		// 	const [ Widget, meta ] = getWidget(v('div', [v('span', ['a']), v('span', ['c'])]));
-		// 	const parentName = (widget.constructor as any).name || 'unknown';
-		// 	const errorMsg = `A widget (${parentName}) has had a child addded or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${widgetName}) multiple times as siblings`;
-
-		// 	dom.create(widget);
-
-		// 	assert.isTrue(consoleStub.notCalled);
-
-		// 	meta.setRenderResult(v('div', [v('span', ['a']), v('span', ['b']), v('span', ['c'])]));
-
-		// 	resolvers.resolve();
-
-		// 	assert.isTrue(consoleStub.calledOnce);
-		// 	assert.isTrue(consoleStub.calledWith(errorMsg));
-		// });
-
-		// it('will throw an error when vdom is not sure which node is removed', () => {
-		// 	const widgetName = 'span';
-		// 	const [ Widget, meta ] = getWidget(v('div', [v('span', ['a']), v('span', ['b']), v('span', ['c'])]));
-		// 	const parentName = (widget.constructor as any).name || 'unknown';
-		// 	const errorMsg = `A widget (${parentName}) has had a child addded or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${widgetName}) multiple times as siblings`;
-
-		// 	dom.create(widget);
-
-		// 	assert.isTrue(consoleStub.notCalled);
-
-		// 	meta.setRenderResult(v('div', [v('span', ['a']), v('span', ['c'])]));
-
-		// 	resolvers.resolve();
-
-		// 	assert.isTrue(consoleStub.calledOnce);
-		// 	assert.isTrue(consoleStub.calledWith(errorMsg));
-		// });
 
 		it('allows a contentEditable tag to be altered', () => {
 			let text = 'initial value';
