@@ -37,7 +37,6 @@ export interface BaseNodeWrapper {
 	requiresInsertBefore?: boolean;
 	hasPreviousSiblings?: boolean;
 	hasParentWNode?: boolean;
-	nextWrapper?: DNodeWrapper;
 	namespace?: string;
 	hasAnimations?: boolean;
 }
@@ -51,7 +50,6 @@ export interface WNodeWrapper extends BaseNodeWrapper {
 
 export interface VNodeWrapper extends BaseNodeWrapper {
 	node: VNode;
-	domNode?: Node;
 	merged?: boolean;
 	decoratedDeferredProperties?: VNodeProperties;
 	inserted?: boolean;
@@ -686,8 +684,8 @@ export class Renderer {
 	private _renderQueue: RenderQueueItem[] = [];
 	private _domInstructionQueue: DomApplicatorInstruction[] = [];
 	private _eventMap = new WeakMap<Function, EventListener>();
-	private _parentWrapperMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	private _instanceToWrapperMap = new WeakMap<WidgetBase, WNodeWrapper>();
+	private _parentWrapperMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	private _wrapperSiblingMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	private _renderScheduled: number | undefined;
 	private _invalidate?: () => void;
@@ -734,6 +732,7 @@ export class Renderer {
 			meta: { mergeNodes: arrayFrom(this._rootNode.childNodes) }
 		});
 		this._runRenderQueue();
+		this._runDomInstructionQueue();
 		this._merge = false;
 		this._runCallbacks();
 	}
@@ -769,6 +768,7 @@ export class Renderer {
 				}
 			}
 		}
+		this._runDomInstructionQueue();
 		this._runCallbacks();
 	}
 
@@ -777,7 +777,6 @@ export class Renderer {
 		while ((item = this._renderQueue.pop())) {
 			this._process(item.current || EMPTY_ARRAY, item.next || EMPTY_ARRAY, item.meta);
 		}
-		this._runDomInstructionQueue();
 	}
 
 	private _runDomInstructionQueue(): void {
