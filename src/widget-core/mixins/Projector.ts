@@ -14,29 +14,31 @@ export interface ProjectorProperties {
 	registry?: Registry;
 }
 
-export interface ProjectorMixin<P> {
+export interface ProjectorMixin<T extends WidgetBase> {
 	append(root?: Element): Handle;
 	merge(root?: Element): Handle;
 	sandbox(doc?: Document): void;
-	setProperties(properties: P & ProjectorProperties): void;
+	setProperties(properties: T['properties'] & ProjectorProperties): void;
 	setChildren(children: DNode[]): void;
+	toHtml(): string;
 	async: boolean;
 	root: Element;
 	destroy(): void;
 	readonly projectorState: ProjectorAttachState;
 }
 
-export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T): Constructor<ProjectorMixin<P>> {
+export function ProjectorMixin<P, T extends WidgetBase<P>>(Base: Constructor<T>): Constructor<ProjectorMixin<T>> {
 	class Projector {
 		public projectorState: ProjectorAttachState;
 		private _root: Element = document.body;
 		private _async = true;
 		private _children: DNode[];
 		private _properties: P & ProjectorProperties = {} as P;
-		private _widget: T = Base;
+		private _widget: Constructor<T> = Base;
 
-		public append(root: HTMLElement = document.body): Handle {
+		public append(root: Element = this._root): Handle {
 			const { registry, ...props } = this._properties as any;
+			this._root = root;
 			const r = renderer(() => w(this._widget, props, this._children));
 			if (registry) {
 				r.registry = registry;
@@ -44,15 +46,15 @@ export function ProjectorMixin<P, T extends Constructor<WidgetBase<P>>>(Base: T)
 			if (!this.async) {
 				r.sync = false;
 			}
-			r.append(root);
+			r.append(root as HTMLElement);
 			this.projectorState = ProjectorAttachState.Attached;
 			return {
 				destroy() {}
 			};
 		}
 
-		public merge(root: HTMLElement = document.body): Handle {
-			return this.append((root.parentNode as HTMLElement) || undefined);
+		public merge(root: Element = document.body): Handle {
+			return this.append((root.parentNode as Element) || undefined);
 		}
 
 		public set root(root: Element) {

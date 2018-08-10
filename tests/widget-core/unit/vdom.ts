@@ -1,7 +1,7 @@
 const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
-import { match, spy, stub, SinonStub, SinonSpy } from 'sinon';
+import { match, spy, stub, SinonSpy } from 'sinon';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
 
@@ -11,8 +11,6 @@ import { VNode, DNode } from '../../../src/widget-core/interfaces';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import Registry from '../../../src/widget-core/Registry';
 import { I18nMixin } from '../../../src/widget-core/mixins/I18n';
-
-let consoleStub: SinonStub;
 
 const resolvers = createResolvers();
 
@@ -106,12 +104,10 @@ jsdomDescribe('vdom', () => {
 	const spys: SinonSpy[] = [];
 
 	beforeEach(() => {
-		consoleStub = stub(console, 'warn');
 		resolvers.stub();
 	});
 
 	afterEach(() => {
-		consoleStub.restore();
 		resolvers.restore();
 		for (let spy of spys) {
 			spy.restore();
