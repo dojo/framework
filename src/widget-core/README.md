@@ -61,16 +61,17 @@ class HelloDojo extends WidgetBase {
 
 #### Rendering a Widget in the DOM
 
-To display your new component in the view you will need to decorate it with some functionality needed to "project" the widget into the browser. This is done using the `ProjectorMixin` from `@dojo/framework/widget-core/mixins/Projector`.
+To display your new component in the view you will to use the `renderer` from the `@dojo/framework/widget-core/vdom` module. The `renderer` function accepts function that returns your component using the `w()` pragma and calling `.append()` on the returned instance.
 
 ```ts
-const Projector = ProjectorMixin(HelloDojo);
-const projector = new Projector();
+import renderer from '@dojo/framework/widget-core/vdom';
+import { w } from '@dojo/framework/widget-core/d';
 
-projector.append();
+const r = renderer(() => w(HelloDojo, {}));
+r.append();
 ```
 
-By default, the projector will attach the widget to the `document.body` in the DOM, but this can be overridden by passing a reference to the preferred parent DOM Element.
+The renderer by default appends to the `document.body` in the DOM, but this can be overridden by passing the preferred target dom node to the `.append()` function.
 
 Consider the following in your HTML file:
 
@@ -81,11 +82,12 @@ Consider the following in your HTML file:
 You can target this Element:
 
 ```ts
-const root = document.getElementById('my-app');
-const Projector = ProjectorMixin(HelloDojo);
-const projector = new Projector();
+import renderer from '@dojo/framework/widget-core/vdom';
+import { w } from '@dojo/framework/widget-core/d';
 
-projector.append(root);
+const root = document.getElementById('my-app');
+const r = renderer(() => w(HelloDojo, {}));
+r.append(root);
 ```
 
 #### Widgets and Properties
@@ -130,16 +132,12 @@ class App extends WidgetBase {
 }
 ```
 
-We can now use `App` with the `ProjectorMixin` to render the `Hello` widgets.
+We can now use `App` with the `renderer` to display the `Hello` widgets.
 
 ```ts
-const Projector = ProjectorMixin(App);
-const projector = new Projector();
-
-projector.append();
+const r = renderer(() => w(App, {}));
+r.append(root);
 ```
-
-**Note:** Widgets must return a single top-level `DNode` from the `render` method, which is why the `Hello` widgets were wrapped in a `div` element.
 
 #### Decomposing Widgets
 
@@ -197,7 +195,7 @@ interface ListItemProperties {
     id: string;
     content: string;
     highlighted: boolean;
-    onItemClick: (id: string) => void;
+    onItemClick(id: string) => void;
 }
 
 class ListItem extends WidgetBase<ListItemProperties> {
@@ -226,7 +224,7 @@ interface ListProperties {
         content: string;
         highlighted: boolean;
     };
-    onItemClick: (id: string) => void;
+    onItemClick(id: string) => void;
 }
 
 class List extends WidgetBase<ListProperties> {
@@ -596,7 +594,7 @@ These are some of the **important** principles to keep in mind when creating and
 
 1. The widget's *`__render__`*, *`__setProperties__`*, *`__setChildren__`* functions should **never** be called or overridden.
    - These are the internal methods of the widget APIs and their behavior can change in the future, causing regressions in your application.
-2. Except for projectors, you should **never** need to deal directly with widget instances
+2. You should **never** need to deal directly with widget instances
    - The Dojo widget system manages all instances required including caching and destruction, trying to create and manage other widgets will cause issues and will not work as expected.
 3. **Never** update `properties` within a widget instance, they should be considered pure.
    - Properties are considered read-only and should not be updated within a widget instance, updating properties could cause unexpected behavior and introduce bugs in your application.
@@ -798,23 +796,27 @@ class MyWidget extends WidgetBase {
 
 The `Registry` provides a mechanism to define widgets and injectors (see the [`Containers & Injectors`](#containers--injectors) section), that can be dynamically/lazily loaded on request. Once the registry widget is loaded all widgets that need the newly loaded widget will be invalidated and re-rendered automatically.
 
-A main registry can be provided to the `projector`, which will be automatically passed to all widgets within the tree (referred to as `baseRegistry`). Each widget also gets access to a private `Registry` instance that can be used to define registry items that are scoped to the widget. The locally defined registry items are considered a higher precedence than an item registered in the `baseRegistry`.
+A main registry can be provided to the `renderer`, which will be automatically passed to all widgets within the tree (referred to as `baseRegistry`). Each widget also gets access to a private `Registry` instance that can be used to define registry items that are scoped to the widget. The locally defined registry items are considered a higher precedence than an item registered in the `baseRegistry`.
 
 ```ts
 import { Registry } from '@dojo/framework/widget-core/Registry';
+import { w } from '@dojo/framework/widget-core/d';
 
-import { MyWidget } from './MyWidget';
-import { MyAppContext } from './MyAppContext';
+import MyWidget from './MyWidget';
+import MyAppContext from './MyAppContext';
+import App from './App';
 
 const registry = new Registry();
+
 registry.define('my-widget', MyWidget);
+
 registry.defineInjector('my-injector', (invalidator) => {
 	const appContext = new MyAppContext(invalidator);
 	return () => appContext;
 });
-// ... Mixin and create Projector ...
 
-projector.setProperties({ registry });
+const r = renderer(() => w(App, {}));
+r.registry = registry;
 ```
 
 In some scenarios, it might be desirable to allow the `baseRegistry` to override an item defined in the local `registry`. Use true as the second argument of the registry.get function to override the local item.
@@ -970,7 +972,7 @@ class MyClass extends WidgetBase {
 
 ### Containers & Injectors
 
-There is built-in support for side-loading/injecting values into sections of the widget tree and mapping them to a widget's properties. This is achieved by registering an injector factory with a `registry` and setting the registry as a property on the application's `projector` to ensure the registry instance is available to your application.
+There is built-in support for side-loading/injecting values into sections of the widget tree and mapping them to a widget's properties. This is achieved by registering an injector factory with a `registry` and setting the registry on the application's `renderer` to ensure the registry instance is available to your application.
 
 Create a factory function for a function that returns the required `payload`.
 
@@ -1570,7 +1572,7 @@ Your widget will be registered with the browser using the provided tag name. The
 
 ##### Initialization
 
-Custom logic can be performed after properties/attributes have been defined but before the projector is created. This
+Custom logic can be performed after properties/attributes have been defined but before the custom element is rendered. This
 allows you full control over your widget, allowing you to add custom properties, event handlers, work with child nodes, etc.
 The initialization function is run from the context of the HTML element.
 
