@@ -1012,13 +1012,13 @@ export class Renderer {
 				instance.registry.base = registry;
 			}
 			const instanceData = widgetInstanceMap.get(instance)!;
-			instance.__setInvalidate__(() => {
+			instanceData.invalidate = () => {
 				instanceData.dirty = true;
 				if (!instanceData.rendering && this._instanceToWrapperMap.has(instance)) {
 					this._queueInvalidation(instance);
 					this._schedule();
 				}
-			});
+			};
 			instanceData.rendering = true;
 			instance.__setProperties__(next.node.properties);
 			instance.__setChildren__(next.node.children);

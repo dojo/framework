@@ -96,8 +96,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 	private _handles: Handle[] = [];
 
-	private _invalidate: () => void;
-
 	/**
 	 * @constructor
 	 */
@@ -168,8 +166,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	public __setProperties__(originalProperties: this['properties'], bind?: WidgetBaseInterface): void {
-		const instanceData = widgetInstanceMap.get(this)!;
-		instanceData.inputProperties = originalProperties;
+		const instanceData = widgetInstanceMap.get(this);
+		if (instanceData) {
+			instanceData.inputProperties = originalProperties;
+		}
 		const properties = this._runBeforeProperties(originalProperties);
 		const registeredDiffPropertyNames = this.getDecorator('registeredDiffProperty');
 		const changedPropertyKeys: string[] = [];
@@ -256,10 +256,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		}
 	}
 
-	public __setInvalidate__(invalidate: () => void) {
-		this._invalidate = invalidate;
-	}
-
 	private _filterAndConvert(nodes: DNode[]): (WNode | VNode)[];
 	private _filterAndConvert(nodes: DNode): WNode | VNode;
 	private _filterAndConvert(nodes: DNode | DNode[]): (WNode | VNode) | (WNode | VNode)[];
@@ -291,8 +287,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	public __render__(): (WNode | VNode) | (WNode | VNode)[] {
-		const instanceData = widgetInstanceMap.get(this)!;
-		instanceData.dirty = false;
+		const instanceData = widgetInstanceMap.get(this);
+		if (instanceData) {
+			instanceData.dirty = false;
+		}
 		const render = this._runBeforeRenders();
 		let dNode = render();
 		dNode = this.runAfterRenders(dNode);
@@ -301,8 +299,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	public invalidate(): void {
-		if (this._invalidate) {
-			this._invalidate();
+		const instanceData = widgetInstanceMap.get(this);
+		if (instanceData && instanceData.invalidate) {
+			instanceData.invalidate();
 		}
 	}
 

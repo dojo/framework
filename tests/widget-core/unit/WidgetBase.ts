@@ -78,10 +78,11 @@ describe('WidgetBase', () => {
 		assert.strictEqual(renderResult.children![0], 'child');
 	});
 
-	it('Should proxy invalidate calls to the invalidate function set on the instance', () => {
+	it('instance data invalidate is called on invalidate', () => {
 		const child = new BaseTestWidget();
 		const invalidateStub = stub();
-		child.__setInvalidate__(invalidateStub);
+		const instanceData = widgetInstanceMap.get(child)!;
+		instanceData.invalidate = invalidateStub;
 		child.invalidate();
 		assert.isTrue(invalidateStub.calledOnce);
 		child.invalidate();
