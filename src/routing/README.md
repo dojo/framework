@@ -14,6 +14,7 @@ Routing for Dojo applications.
      - [Outlet Options](#outlet-options)
      - [Global Error Outlet](#global-error-outlet)
    - [Link](#link)
+   - [ActiveLink](#activelink)
 
 <!-- end-github-only -->
 
@@ -341,6 +342,20 @@ render() {
 ```
 
 All the standard `VNodeProperties` are available for the `Link` component as they would be creating an `a` DOM Element using `v()` with `@dojo/widget-core`.
+
+### ActiveLink
+
+The `ActiveLink` component is a wrapper around the `Link` component that conditionally sets classes on the `a` node if the link is currently active
+
+```ts
+import { ActiveLink } from '@dojo/framework/routing/ActiveLink';
+
+render() {
+	return v('div', [
+		w(ActiveLink, { to: 'foo', params: { foo: 'bar' }, activeClasses: [ 'link-active' ]}, [ 'Link Text' ])
+	]);
+}
+```
 
 <!-- doc-viewer-config
 {
