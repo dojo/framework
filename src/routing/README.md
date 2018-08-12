@@ -225,17 +225,56 @@ const router = registerRouterInjector(config, registry, { history, key: 'custom-
 
 The primary concept for the routing integration is an `outlet`, a unique identifier associated with the registered application route. Dojo Widgets can then be configured with these outlet identifiers using the `Outlet` higher order component. `Outlet` returns a new widget that can be used like any other widget within a `render` method, e.g. `w(MyFooOutlet, { })`.
 
-Properties can be passed to an `Outlet` widget in the same way as if the original widget was being used. However, all properties are made optional to allow the properties to be injected using the [mapParams](#mapParams) function described below.
+When defining an `Outlet` a properties interface can be passed as a generic to specify it's properties, `Outlet<MyOutletProperties>`. This can simply be a the properties of the widget that will be rendered by the outlet or a subset depending on whether some of the widget's properties will be calculated using information from the `router`.
+
+An outlet accepts a render function that receives `properties` passed to the outlet and `OutletProperties`.
+
+```ts
+interface OutletProperties {
+	/**
+	 * Query params from the matching route for the outlet
+	 */
+	queryParams: Params;
+
+	/**
+	 * Params from the matching route for the outlet
+	 */
+	params: Params;
+
+	/**
+	 * Match type of the route for the outlet, either `index`, `partial` or `error`
+	 */
+	type: MatchType;
+
+	/**
+	 * The router instance
+	 */
+	router: RouterInterface;
+
+	/**
+	 * Function returns true if the outlet match was an `error` type
+	 */
+	isError(): boolean;
+
+	/**
+	 * Function returns true if the outlet match was an `index` type
+	 */
+	isExact(): boolean;
+}
+```
+
+`OutletProperties` includes details from the matched route, including `params`, `queryParams`, the match `type` (`error`, `index`, `partial`), the `router` instance, `isError` and `isExact`. The `properties` passed to the outlet and the `OutletProperties` can be used in the render function to create the required properties for the widget to render when the outlet is matched.
 
 The number of widgets that can be mapped to a single outlet identifier is not restricted. All configured widgets for a single outlet will be rendered when the route associated to the outlet is matched by the `router` and the `outlet`s are part of the current widget hierarchy.
 
 The following example configures a stateless widget with an outlet called `foo`. The resulting `FooOutlet` can be used in a widgets `render` in the same way as any other Dojo Widget.
 
 ```ts
-import { Outlet } from '@dojo/framework/routing/Outlet';
-import { MyViewWidget } from './MyViewWidget';
 
-const FooOutlet = Outlet(MyViewWidget, 'foo');
+import { Outlet } from '@dojo/framework/routing/Outlet';
+import { MyViewWidget, MyViewWidgetProperties } from './MyViewWidget';
+
+const FooOutlet = Outlet<MyViewWidgetProperties>((properties) => w(MyViewWidget, properties) , { outlet: 'foo' });
 ```
 
 Example usage of `FooOutlet`, where the widget will only be rendered when the route registered against outlet `foo` is matched.
@@ -250,66 +289,11 @@ class App extends WidgetBase {
 }
 ```
 
-#### Outlet Component Types
-
-When registering an outlet a different widget can be configured for each match type of a route:
-
-| Type    | Description |
-| ------- | ------------ |
-|`index`  | This is an exact match for the registered route. E.g. Navigating to `foo/bar` with a registered route `foo/bar`.   |
-|`main`| Any match other than an index match, for example, `foo/bar` would partially match `foo/bar/qux`, but only if `foo/bar/qux` was also a registered route. Otherwise, it would be an `ERROR` match. |
-|`error`  | When a partial match occurs but there is no match for the next section of the route. |
-
-To do this, instead of passing a widget as the first argument to the `Outlet`, use the `OutletComponents` object.
-
-```ts
-import { MyViewWidget, MyErrorWidget } from './MyWidgets';
-
-const fooWidgets: OutletComponents = {
-	main: MyViewWidget,
-	error: MyErrorWidget
-};
-
-const FooOutlet = Outlet(fooWidgets, 'foo');
-```
-
-It is important to note that a widget registered against match type `error` will not be used if the outlet also has a widget registered for match type `index`.
-
 #### Outlet Options
 
-Outlet Options of `mapParams`, `onEnter`, `onExit`, and `key` can be passed as an optional third argument to an `Outlet`.
+##### outlet
 
-##### Map Parameters
-
-When a widget is configured for an outlet it is possible to provide a callback function that is used to inject properties that will be available during render lifecycle of the widget.
-
-```ts
-mapParams(type: 'error | index | main', location: string, params: {[key: string]: any}, router: Router)
-```
-
-| Argument | Description                                                            |
-| -------- | ---------------------------------------------------------------------- |
-| type     | The `MatchType` that caused the outlet to render                        |
-| params   | Key/Value object of the params that were parsed from the matched route |
-| router   | The router instance that can be used to provide functions that go to other routes/outlets|
-
-The following example uses `mapParams` to inject an `onClose` function that will go to the route registered against the `other-outlet` route and `id` property extracted from `params` in the `MyViewWidget` properties:
-
-```ts
-const mapParams = (options: MapParamsOptions) {
-	const { type, params, router } = options;
-
-	return {
-		onClose() {
-			// This creates a link for another outlet and sets the path
-			router.setPath(router.link('other-outlet'));
-		},
-		id: params.id
-	}
-}
-
-const FooOutlet = Outlet(MyViewWidget, 'foo', { mapParams });
-```
+The name of the outlet, that when matched will run the outlets render function.
 
 ##### Key
 
@@ -320,7 +304,7 @@ The `key` is the identifier used to locate the `router` from the `registry`, thr
 Whenever a match type of `error` is registered a global outlet is automatically added to the matched outlets called `errorOutlet`. This outlet can be used to render a widget for any unknown routes.
 
 ```ts
-const ErrorOutlet = Outlet(ErrorWidget, 'errorOutlet');
+const ErrorOutlet = Outlet((properties) => w(ErrorWidget, properties), { outlet: 'errorOutlet' });
 ```
 
 ### Link

@@ -6,9 +6,10 @@ import { Registry } from '@dojo/framework/widget-core/Registry';
 import { RouteConfig } from '@dojo/framework/routing/interfaces';
 import { registerRouterInjector } from '@dojo/framework/routing/RouterInjector';
 import { Link } from '@dojo/framework/routing/Link';
-import { BasicAppOutlet, BasicAppRouteConfig } from './basic';
-import { UrlParametersAppOutlet, UrlParametersRouteConfig } from './url-parameters';
-import { AmbiguousMatchesOutlet, AmbiguousMatchesRouteConfig } from './ambigious-matches';
+import { App as BasicApp, BasicAppRouteConfig } from './basic';
+import { App as UrlParametersApp, UrlParametersRouteConfig } from './url-parameters';
+import { App as AmbiguousMatchesApp, AmbiguousMatchesRouteConfig } from './ambigious-matches';
+import { Outlet } from '@dojo/framework/routing/Outlet';
 
 const applicationRoutes: RouteConfig[] = [BasicAppRouteConfig, UrlParametersRouteConfig, AmbiguousMatchesRouteConfig];
 
@@ -76,9 +77,24 @@ class App extends WidgetBase {
 				])
 			]),
 			v('div', { styles: contentStyles }, [
-				w(BasicAppOutlet, {}),
-				w(UrlParametersAppOutlet, {}),
-				w(AmbiguousMatchesOutlet, {})
+				w(Outlet, {
+					outlet: 'ambiguous-matches',
+					renderer() {
+						return w(AmbiguousMatchesApp, {});
+					}
+				}),
+				w(Outlet, {
+					outlet: 'basic',
+					renderer() {
+						return w(BasicApp, {});
+					}
+				}),
+				w(Outlet, {
+					outlet: 'url-parameters',
+					renderer() {
+						return w(UrlParametersApp, {});
+					}
+				})
 			])
 		]);
 	}

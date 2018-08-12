@@ -249,6 +249,8 @@ export class Router extends QueuingEvented<{ nav: NavEvent }> implements RouterI
 					queryParams: this._currentQueryParams,
 					params: { ...this._currentParams },
 					type,
+					isError: () => type === 'error',
+					isExact: () => type === 'index',
 					onEnter,
 					onExit
 				};
@@ -269,6 +271,8 @@ export class Router extends QueuingEvented<{ nav: NavEvent }> implements RouterI
 			this._matchedOutlets.errorOutlet = {
 				queryParams: this._currentQueryParams,
 				params: { ...this._currentParams },
+				isError: () => true,
+				isExact: () => false,
 				type: 'error'
 			};
 		}
