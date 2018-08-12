@@ -22,6 +22,10 @@ const router = new Router(
 					outlet: 'bar'
 				}
 			]
+		},
+		{
+			path: 'other',
+			outlet: 'other'
 		}
 	],
 	{ HistoryManager: MemoryHistory }
@@ -96,6 +100,74 @@ describe('ActiveLink', () => {
 		assert.strictEqual(dNode.widgetConstructor, Link);
 		assert.deepEqual(dNode.properties.classes, ['bar', 'baz', 'foo', 'qux']);
 		assert.deepEqual(dNode.properties.to, 'foo');
+	});
+
+	it('Should invalidate and re-render when link becomes active', () => {
+		let invalidateCount = 0;
+		router.setPath('/foo');
+		class TestActiveLink extends ActiveLink {
+			invalidate() {
+				invalidateCount++;
+				super.invalidate();
+			}
+		}
+		const link = new TestActiveLink();
+		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
+		let dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, ['foo']);
+		assert.deepEqual(dNode.properties.to, 'foo');
+		invalidateCount = 0;
+		router.setPath('/other');
+		assert.strictEqual(invalidateCount, 1);
+		dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, []);
+		assert.deepEqual(dNode.properties.to, 'foo');
+		router.setPath('/foo');
+		assert.strictEqual(invalidateCount, 2);
+		dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, ['foo']);
+		assert.deepEqual(dNode.properties.to, 'foo');
+	});
+
+	it('Should support changing the target outlet', () => {
+		let invalidateCount = 0;
+		router.setPath('/foo');
+		class TestActiveLink extends ActiveLink {
+			invalidate() {
+				invalidateCount++;
+				super.invalidate();
+			}
+		}
+		const link = new TestActiveLink();
+		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
+		let dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, ['foo']);
+		assert.deepEqual(dNode.properties.to, 'foo');
+		invalidateCount = 0;
+		link.__setProperties__({ to: 'other', activeClasses: ['foo'] });
+		dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(invalidateCount, 1);
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, []);
+		assert.deepEqual(dNode.properties.to, 'other');
+		router.setPath('/foo/bar');
+		assert.strictEqual(invalidateCount, 1);
+		dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, []);
+		assert.deepEqual(dNode.properties.to, 'other');
+		router.setPath('/other');
+		assert.strictEqual(invalidateCount, 2);
+		dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, ['foo']);
+		assert.deepEqual(dNode.properties.to, 'other');
 	});
 
 	it('Should return link when the router injector is not available', () => {

@@ -24,7 +24,7 @@ export class ActiveLink extends WidgetBase<ActiveLinkProperties> {
 		return w(Link, props);
 	}
 
-	@diffProperty('activeClasses')
+	@diffProperty('to')
 	protected _onOutletPropertyChange(previous: ActiveLinkProperties, current: ActiveLinkProperties) {
 		const { to, routerKey = 'router' } = current;
 		const item = this.registry.getInjector<Router>(routerKey);

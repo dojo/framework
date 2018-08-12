@@ -21,6 +21,7 @@ export interface NavEvent extends EventObject<string> {
 
 export interface OutletEvent extends EventObject<string> {
 	outlet: string;
+	action: 'enter' | 'exit';
 }
 
 export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent }> implements RouterInterface {
@@ -251,7 +252,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 				previousOutlet = route.outlet;
 				routeMatched = true;
 				if (!previousMatchedOutlets[route.outlet]) {
-					this.emit({ type: 'outlet', outlet: route.outlet });
+					this.emit({ type: 'outlet', outlet: route.outlet, action: 'enter' });
 				}
 
 				this._matchedOutlets[route.outlet] = {
@@ -278,7 +279,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 		const previousMatchedOutletKeys = Object.keys(previousMatchedOutlets);
 		for (let i = 0; i < previousMatchedOutletKeys.length; i++) {
 			if (!this._matchedOutlets[previousMatchedOutletKeys[i]]) {
-				this.emit({ type: 'outlet', outlet: previousMatchedOutletKeys[i] });
+				this.emit({ type: 'outlet', outlet: previousMatchedOutletKeys[i], action: 'exit' });
 			}
 		}
 		if (routeMatched === false) {
