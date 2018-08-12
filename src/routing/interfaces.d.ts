@@ -123,18 +123,6 @@ export interface OnExit {
 	(): void;
 }
 
-export interface OutletRender<O> {
-	(properties: O & WidgetProperties, outletProperties: MatchDetails): DNode;
-}
-
-/**
- * Outlet options that can be configured
- */
-export interface OutletOptions {
-	key?: RegistryLabel;
-	outlet: string;
-}
-
 export interface MatchDetails {
 	/**
 	 * Query params from the matching route for the outlet
@@ -166,29 +154,6 @@ export interface MatchDetails {
 	 */
 	isExact(): boolean;
 }
-
-/**
- * Component type
- */
-export type Component<W extends WidgetBaseInterface = WidgetBaseInterface> = Constructor<W> | RegistryLabel;
-
-/**
- * Outlet component options
- */
-export interface OutletComponents<
-	W extends WidgetBaseInterface,
-	I extends WidgetBaseInterface,
-	E extends WidgetBaseInterface
-> {
-	main?: Component<W>;
-	index?: Component<I>;
-	error?: Component<E>;
-}
-
-/**
- * Type for Outlet
- */
-export type Outlet<O extends WidgetProperties> = Constructor<WidgetBase<O, null>>;
 
 /**
  * Properties for the Link widget

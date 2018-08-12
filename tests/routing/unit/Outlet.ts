@@ -246,5 +246,143 @@ describe('Outlet', () => {
 		assert.isTrue(configOnExit.calledOnce);
 	});
 
-	it('Should render nothing when if no router is available', () => {});
+	it('Should connect the outlet on attach', () => {
+		const routeConfig = [
+			{
+				path: '/foo',
+				outlet: 'foo',
+				onEnter: configOnEnter,
+				onExit: configOnExit
+			}
+		];
+
+		let invalidateCount = 0;
+		class TestOutlet extends Outlet {
+			onAttach() {
+				super.onAttach();
+			}
+
+			invalidate() {
+				invalidateCount++;
+			}
+		}
+
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
+		router.setPath('/foo');
+		const outlet = new TestOutlet();
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
+		outlet.__setProperties__({
+			outlet: 'foo',
+			renderer(details) {
+				if (details.type === 'index') {
+					return w(Widget, {});
+				}
+			}
+		});
+		outlet.onAttach();
+		invalidateCount = 0;
+		router.setPath('/other');
+		assert.strictEqual(invalidateCount, 1);
+	});
+
+	it('Should call onExit if matched when onDetach is called', () => {
+		const routeConfig = [
+			{
+				path: '/foo',
+				outlet: 'foo',
+				onEnter: configOnEnter,
+				onExit: configOnExit
+			}
+		];
+
+		class TestOutlet extends Outlet {
+			onDetach() {
+				super.onDetach();
+			}
+		}
+
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
+		router.setPath('/foo');
+		const outlet = new TestOutlet();
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
+		outlet.__setProperties__({
+			outlet: 'foo',
+			renderer(details) {
+				if (details.type === 'index') {
+					return w(Widget, {});
+				}
+			}
+		});
+
+		outlet.__render__() as WNode;
+		outlet.onDetach();
+		assert.isTrue(configOnExit.calledOnce);
+	});
+
+	it('Should not call onExit if not matched when onDetach is called', () => {
+		const routeConfig = [
+			{
+				path: '/foo',
+				outlet: 'foo',
+				onEnter: configOnEnter,
+				onExit: configOnExit
+			}
+		];
+
+		class TestOutlet extends Outlet {
+			onDetach() {
+				super.onDetach();
+			}
+		}
+
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
+		router.setPath('/other');
+		const outlet = new TestOutlet();
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
+		outlet.__setProperties__({
+			outlet: 'foo',
+			renderer(details) {
+				if (details.type === 'index') {
+					return w(Widget, {});
+				}
+			}
+		});
+
+		outlet.__render__() as WNode;
+		outlet.onDetach();
+		assert.isTrue(configOnExit.notCalled);
+	});
+
+	it('Should render nothing when if no router is available', () => {
+		const routeConfig = [
+			{
+				path: '/foo',
+				outlet: 'foo',
+				onEnter: configOnEnter,
+				onExit: configOnExit
+			}
+		];
+
+		class TestOutlet extends Outlet {
+			onDetach() {
+				super.onDetach();
+			}
+		}
+
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
+		router.setPath('/other');
+		const outlet = new TestOutlet();
+		outlet.__setProperties__({
+			outlet: 'foo',
+			renderer(details) {
+				if (details.type === 'index') {
+					return w(Widget, {});
+				}
+			}
+		});
+
+		assert.isNull(outlet.__render__());
+	});
+
+	it('Should change the invalidator if the router key changes', () => {});
 });

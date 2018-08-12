@@ -14,7 +14,7 @@ export interface OutletProperties {
 
 @alwaysRender()
 export class Outlet extends WidgetBase<OutletProperties> {
-	private _handle: Handle;
+	private _handle: Handle | undefined;
 	private _matched = false;
 	private _matchedParams: Params = {};
 	private _onExit?: OnExit;
@@ -25,6 +25,7 @@ export class Outlet extends WidgetBase<OutletProperties> {
 		const item = this.registry.getInjector<Router>(routerKey);
 		if (this._handle) {
 			this._handle.destroy();
+			this._handle = undefined;
 		}
 		if (item) {
 			this._handle = item.invalidator.on('invalidate', () => {
@@ -92,4 +93,5 @@ export class Outlet extends WidgetBase<OutletProperties> {
 		return null;
 	}
 }
+
 export default Outlet;
