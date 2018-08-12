@@ -384,5 +384,54 @@ describe('Outlet', () => {
 		assert.isNull(outlet.__render__());
 	});
 
-	it('Should change the invalidator if the router key changes', () => {});
+	it('Should change the invalidator if the router key changes', () => {
+		const routeConfig = [
+			{
+				path: '/foo',
+				outlet: 'foo',
+				onEnter: configOnEnter,
+				onExit: configOnExit
+			}
+		];
+
+		let invalidateCount = 0;
+		class TestOutlet extends Outlet {
+			invalidate() {
+				invalidateCount++;
+			}
+		}
+
+		const routerOne = registerRouterInjector(routeConfig, registry, { HistoryManager, key: 'my-router' });
+		const routerTwo = registerRouterInjector(routeConfig, registry, { HistoryManager });
+		routerOne.setPath('/foo');
+		const outlet = new TestOutlet();
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
+		outlet.__setProperties__({
+			outlet: 'foo',
+			routerKey: 'my-router',
+			renderer(details) {
+				if (details.type === 'index') {
+					return w(Widget, {});
+				}
+			}
+		});
+		invalidateCount = 0;
+		routerOne.setPath('/bar');
+		assert.strictEqual(invalidateCount, 1);
+		routerTwo.setPath('/foo');
+		assert.strictEqual(invalidateCount, 1);
+		outlet.__setProperties__({
+			outlet: 'foo',
+			renderer(details) {
+				if (details.type === 'index') {
+					return w(Widget, {});
+				}
+			}
+		});
+		assert.strictEqual(invalidateCount, 3);
+		routerOne.setPath('/bar');
+		assert.strictEqual(invalidateCount, 3);
+		routerTwo.setPath('/bar');
+		assert.strictEqual(invalidateCount, 4);
+	});
 });
