@@ -223,14 +223,28 @@ const router = registerRouterInjector(config, registry, { history, key: 'custom-
 
 ### Outlets
 
-The primary concept for the routing integration is an `outlet`, a unique identifier associated with the registered application route. Dojo Widgets can then be configured with these outlet identifiers using the `Outlet` higher order component. `Outlet` returns a new widget that can be used like any other widget within a `render` method, e.g. `w(MyFooOutlet, { })`.
+The primary concept for the routing integration is an `outlet`, a unique identifier associated with the registered application route. The `Outlet` is a standard dojo widget and can be used anywhere within an application. The `Outlet` widget has a small API:
 
-When defining an `Outlet` a properties interface can be passed as a generic to specify it's properties, `Outlet<MyOutletProperties>`. This can simply be a the properties of the widget that will be rendered by the outlet or a subset depending on whether some of the widget's properties will be calculated using information from the `router`.
+ * `outlet`: The name of the outlet to execute the `renderer` when matched.
+ * `renderer`: A render function that is called when the outlet is matched.
+ * `routerKey` (Optional): The `key` used when the router was defined in the registry - defaults to `router`.
 
-An outlet accepts a render function that receives `properties` passed to the outlet and `OutletProperties`.
+ that accepts the name of the outlet to render for and a `renderer` function that returns the `DNode`s to render when the outlet is matched.
 
 ```ts
-interface OutletProperties {
+render() {
+	return v('div', [
+		w(Outlet, { name: 'my-outlet', renderer: () => {
+			return w(MyWidget, {});
+		}})
+	])
+}
+```
+
+The `renderer` function receives `MatchDetails` that provide router specific information that can be used to to determine what to render and compute properties to pass to the the widgets.
+
+```ts
+interface MatchDetails {
 	/**
 	 * Query params from the matching route for the outlet
 	 */
@@ -263,41 +277,21 @@ interface OutletProperties {
 }
 ```
 
-`OutletProperties` includes details from the matched route, including `params`, `queryParams`, the match `type` (`error`, `index`, `partial`), the `router` instance, `isError` and `isExact`. The `properties` passed to the outlet and the `OutletProperties` can be used in the render function to create the required properties for the widget to render when the outlet is matched.
-
-The number of widgets that can be mapped to a single outlet identifier is not restricted. All configured widgets for a single outlet will be rendered when the route associated to the outlet is matched by the `router` and the `outlet`s are part of the current widget hierarchy.
-
-The following example configures a stateless widget with an outlet called `foo`. The resulting `FooOutlet` can be used in a widgets `render` in the same way as any other Dojo Widget.
-
 ```ts
-
-import { Outlet } from '@dojo/framework/routing/Outlet';
-import { MyViewWidget, MyViewWidgetProperties } from './MyViewWidget';
-
-const FooOutlet = Outlet<MyViewWidgetProperties>((properties) => w(MyViewWidget, properties) , { outlet: 'foo' });
-```
-
-Example usage of `FooOutlet`, where the widget will only be rendered when the route registered against outlet `foo` is matched.
-
-```ts
-class App extends WidgetBase {
-	protected render(): DNode {
-		return v('div', [
-			w(FooOutlet, {})
-		]);
-	}
+render() {
+	return v('div', [
+		w(Outlet, { name: 'my-outlet', renderer: (matchDetails: MatchDetails) => {
+			if (matchDetails.isError()) {
+				return w(ErrorWidget, {});
+			}
+			if (matchDetails.isExact()) {
+				return w(IndexWidget, { id: matchDetails.params.id });
+			}
+			return w(OtherWidget, { id: matchDetails.params.id });
+		}})
+	])
 }
 ```
-
-#### Outlet Options
-
-##### outlet
-
-The name of the outlet, that when matched will run the outlets render function.
-
-##### Key
-
-The `key` is the identifier used to locate the `router` from the `registry`, throughout the routing library this defaults to `router`.
 
 #### Global Error Outlet
 
