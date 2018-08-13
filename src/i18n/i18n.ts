@@ -1,14 +1,39 @@
 /* tslint:disable:interface-name */
 import global from '../shim/global';
+import { isArrayLike, isIterable } from '../shim/iterator';
 import Map from '../shim/Map';
 import Evented from '../core/Evented';
-import has from '../core/has';
-import uuid from '../core/uuid';
-import { Handle } from '../core/interfaces';
-import { useDefault } from '../core/load/util';
+import has from '../has/preset';
+import { uuid } from '../core/util';
 import * as Globalize from 'globalize/dist/globalize/message';
 import { isLoaded } from './cldr/load';
 import { generateLocales, normalizeLocale } from './util/main';
+import { Handle } from '../core/Destroyable';
+
+export function useDefault(modules: any[]): any[];
+export function useDefault(module: any): any;
+export function useDefault(modules: any | any[]): any[] | any {
+	if (isArrayLike(modules)) {
+		let processedModules: any[] = [];
+
+		for (let i = 0; i < modules.length; i++) {
+			const module = modules[i];
+			processedModules.push(module.__esModule && module.default ? module.default : module);
+		}
+
+		return processedModules;
+	} else if (isIterable(modules)) {
+		let processedModules: any[] = [];
+
+		for (const module of modules) {
+			processedModules.push(module.__esModule && module.default ? module.default : module);
+		}
+
+		return processedModules;
+	} else {
+		return modules.__esModule && modules.default ? modules.default : modules;
+	}
+}
 
 /**
  * A default bundle used as basis for loading locale-specific bundles.

@@ -1,4 +1,4 @@
-import { deepAssign } from '../../core/lang';
+import { deepAssign } from '../../core/util';
 import global from '../../shim/global';
 import { assign } from '../../shim/object';
 import WeakMap from '../../shim/WeakMap';

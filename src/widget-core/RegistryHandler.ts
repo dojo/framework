@@ -1,6 +1,5 @@
 import { Map } from '../shim/Map';
-import { Evented } from '../core/Evented';
-import { EventObject } from '../core/interfaces';
+import { Evented, EventObject } from '../core/Evented';
 import { Constructor, InjectorFactory, InjectorItem, RegistryLabel, WidgetBaseInterface } from './interfaces';
 import { Registry, RegistryEventObject, RegistryItem } from './Registry';
 

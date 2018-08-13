@@ -1,6 +1,6 @@
-import { Handle, EventObject, EventType } from './interfaces';
 import Map from '../shim/Map';
-import Evented, { CustomEventTypes, isGlobMatch, EventedCallbackOrArray } from './Evented';
+import Evented, { CustomEventTypes, isGlobMatch, EventedCallbackOrArray, EventType, EventObject } from './Evented';
+import { Handle } from './Destroyable';
 
 /**
  * An implementation of the Evented class that queues up events when no listeners are

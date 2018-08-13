@@ -1,6 +1,15 @@
-import { Handle } from './interfaces';
-import { createCompositeHandle } from './lang';
 import Promise from '../shim/Promise';
+
+/**
+ * Used through the toolkit as a consistent API to manage how callers can "cleanup"
+ * when doing a function.
+ */
+export interface Handle {
+	/**
+	 * Perform the destruction/cleanup logic associated with this handle
+	 */
+	destroy(): void;
+}
 
 /**
  * No operation function to replace own once instance is destoryed
@@ -35,8 +44,7 @@ export class Destroyable {
 	 * @param {Handle} handle The handle to add for the instance
 	 * @returns {Handle} a handle for the handle, removes the handle for the instance and calls destroy
 	 */
-	own(handles: Handle | Handle[]): Handle {
-		const handle = Array.isArray(handles) ? createCompositeHandle(...handles) : handles;
+	own(handle: Handle): Handle {
 		const { handles: _handles } = this;
 		_handles.push(handle);
 		return {
@@ -48,7 +56,7 @@ export class Destroyable {
 	}
 
 	/**
-	 * Destrpys all handers registered for the instance
+	 * Destroys all handlers registered for the instance
 	 *
 	 * @returns {Promise<any} a promise that resolves once all handles have been destroyed
 	 */

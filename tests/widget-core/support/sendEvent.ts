@@ -1,10 +1,11 @@
-import has, { add as hasAdd } from '../../../src/core/has';
-import { deepAssign } from '../../../src/core/lang';
+import has from '../../../src/has/preset';
+import { add } from '../../../src/has/has';
+import { deepAssign } from '../../../src/core/util';
 import global from '../../../src/shim/global';
 import { assign } from '../../../src/shim/object';
 import { spy } from 'sinon';
 
-hasAdd('customevent-constructor', () => {
+add('customevent-constructor', () => {
 	try {
 		new global.window.CustomEvent('foo');
 		return true;

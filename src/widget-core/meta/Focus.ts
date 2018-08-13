@@ -1,5 +1,4 @@
 import { Base } from './Base';
-import { createHandle } from '../../core/lang';
 import global from '../../shim/global';
 
 export interface FocusResults {
@@ -46,7 +45,11 @@ export class Focus extends Base {
 	private _createListener() {
 		global.document.addEventListener('focusin', this._onFocusChange);
 		global.document.addEventListener('focusout', this._onFocusChange);
-		this.own(createHandle(this._removeListener.bind(this)));
+		this.own({
+			destroy: () => {
+				this._removeListener();
+			}
+		});
 	}
 
 	private _removeListener() {

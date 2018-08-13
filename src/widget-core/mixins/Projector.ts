@@ -1,5 +1,4 @@
-import { assign } from '../../core/lang';
-import { Handle } from '../../core/interfaces';
+import { assign } from '../../shim/object';
 import cssTransitions from '../animations/cssTransitions';
 import { Constructor, DNode, Projection, ProjectionOptions } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
@@ -7,6 +6,7 @@ import { afterRender } from './../decorators/afterRender';
 import { v } from './../d';
 import { Registry } from './../Registry';
 import { dom } from './../vdom';
+import { Handle } from '../../core/Destroyable';
 
 /**
  * Represents the attach state of the projector

@@ -1,4 +1,3 @@
-import { around } from '../../../src/core/aspect';
 import { padStart } from '../../../src/shim/string';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
@@ -25,7 +24,7 @@ function getOffsets(date: Date) {
 
 function getTimezoneDate(date: Date, offset: number = 0): Date {
 	const copy = new Date(date.getTime());
-	around(copy, 'getTimezoneOffset', () => () => offset * 60);
+	copy.getTimezoneOffset = () => offset * 60;
 	return copy;
 }
 

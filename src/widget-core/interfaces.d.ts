@@ -1,6 +1,5 @@
 import { Destroyable } from '../core/Destroyable';
-import { Evented } from '../core/Evented';
-import { EventObject, EventType } from '../core/interfaces';
+import { Evented, EventType, EventObject } from '../core/Evented';
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
 

@@ -1,5 +1,5 @@
 import { Base } from './Base';
-import { deepAssign } from '../../core/lang';
+import { deepAssign } from '../../core/util';
 
 export interface TopLeft {
 	left: number;

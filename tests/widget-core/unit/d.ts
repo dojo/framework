@@ -1,6 +1,6 @@
 const { assert } = intern.getPlugin('chai');
 const { registerSuite } = intern.getPlugin('jsdom');
-import { assign } from '../../../src/core/lang';
+import { assign } from '../../../src/shim/object';
 import { DNode, VNode, WNode, WidgetProperties } from '../../../src/widget-core/interfaces';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { v, w, decorate, WNODE, VNODE, isWNode, isVNode, dom } from '../../../src/widget-core/d';
