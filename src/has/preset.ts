@@ -1,5 +1,5 @@
-import global from '../../shim/global';
-import has, { add } from '../../shim/support/has';
+import global from '../shim/global';
+import has, { add } from '../shim/support/has';
 
 export default has;
 

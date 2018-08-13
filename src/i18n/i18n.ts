@@ -3,7 +3,7 @@ import global from '../shim/global';
 import { isArrayLike, isIterable } from '../shim/iterator';
 import Map from '../shim/Map';
 import Evented from '../core/Evented';
-import has from '../has/presets/dojo';
+import has from '../has/preset';
 import { uuid } from '../core/util';
 import * as Globalize from 'globalize/dist/globalize/message';
 import { isLoaded } from './cldr/load';

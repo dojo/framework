@@ -1,4 +1,4 @@
-import has from '../../../src/has/presets/dojo';
+import has from '../../../src/has/preset';
 import global from '../../../src/shim/global';
 import * as Globalize from 'globalize';
 const { registerSuite } = intern.getInterface('object');
