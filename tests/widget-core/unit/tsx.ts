@@ -36,6 +36,14 @@ registerSuite('tsx', {
 			assert.deepEqual(node.properties, { hello: 'world' } as any);
 			assert.deepEqual(node.children, ['child']);
 		},
+		'tsx generate a WNode from a registry type'() {
+			const node: WNode = tsx({ type: 'registry' }, { hello: 'world', __autoRegistryItem: 'foo' }, [
+				'child'
+			]) as WNode;
+			assert.deepEqual(node.widgetConstructor, 'foo');
+			assert.deepEqual(node.properties, { hello: 'world' } as any);
+			assert.deepEqual(node.children, ['child']);
+		},
 		'children arrays are spread correctly'() {
 			const node: VNode = tsx('div', { hello: 'world' }, ['child', ['child-2', ['child-3']]]) as VNode;
 			assert.deepEqual(node.tag, 'div');
