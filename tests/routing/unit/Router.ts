@@ -321,13 +321,13 @@ describe('Router', () => {
 		router.on('nav', (event) => {
 			assert.strictEqual(event.type, 'nav');
 			assert.strictEqual(event.outlet, 'foo');
-			assert.deepEqual(event.context, {
-				queryParams: {},
-				params: { bar: 'defaultBar' },
-				type: 'index',
-				onEnter: undefined,
-				onExit: undefined
-			});
+			assert.deepEqual(event.context.queryParams, {});
+			assert.deepEqual(event.context.params, { bar: 'defaultBar' });
+			assert.deepEqual(event.context.type, 'index');
+			assert.isUndefined(event.context.onEnter);
+			assert.isUndefined(event.context.onExit);
+			assert.isTrue(event.context.isExact());
+			assert.isFalse(event.context.isError());
 			initialNavEvent = true;
 		});
 		assert.isTrue(initialNavEvent);

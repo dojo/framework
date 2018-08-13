@@ -3,7 +3,8 @@ import {
 	RegistryLabel,
 	VNodeProperties,
 	WidgetBaseInterface,
-	WidgetProperties
+	WidgetProperties,
+	DNode
 } from '../widget-core/interfaces';
 import { WidgetBase } from '../widget-core/WidgetBase';
 
@@ -45,16 +46,6 @@ export interface Params {
 }
 
 /**
- * Options passed to the mapParams callback
- */
-export interface MapParamsOptions {
-	queryParams: Params;
-	params: Params;
-	type: MatchType;
-	router: RouterInterface;
-}
-
-/**
  * Type of outlet matches
  */
 export type MatchType = 'error' | 'index' | 'partial';
@@ -77,6 +68,16 @@ export interface OutletContext {
 	 * The query params for the route
 	 */
 	queryParams: Params;
+
+	/**
+	 * Returns `true` when the route is an error match
+	 */
+	isError(): boolean;
+
+	/**
+	 * Returns `true` when the route is an exact match
+	 */
+	isExact(): boolean;
 
 	/**
 	 * On enter for the route
@@ -114,13 +115,6 @@ export interface RouterInterface {
 	readonly currentParams: Params;
 }
 
-/**
- * Function for mapping params to properties
- */
-export interface MapParams {
-	(options: MapParamsOptions): any;
-}
-
 export interface OnEnter {
 	(params: Params, type: MatchType): void;
 }
@@ -129,12 +123,48 @@ export interface OnExit {
 	(): void;
 }
 
+export interface OutletRender<O> {
+	(properties: O & WidgetProperties, outletProperties: OutletProperties): DNode;
+}
+
 /**
  * Outlet options that can be configured
  */
 export interface OutletOptions {
 	key?: RegistryLabel;
-	mapParams?: MapParams;
+	outlet: string;
+}
+
+export interface OutletProperties {
+	/**
+	 * Query params from the matching route for the outlet
+	 */
+	queryParams: Params;
+
+	/**
+	 * Params from the matching route for the outlet
+	 */
+	params: Params;
+
+	/**
+	 * Match type of the route for the outlet, either `index`, `partial` or `error`
+	 */
+	type: MatchType;
+
+	/**
+	 * The router instance
+	 */
+	router: RouterInterface;
+
+	/**
+	 * Function returns true if the outlet match was an `error` type
+	 */
+	isError(): boolean;
+
+	/**
+	 * Function returns true if the outlet match was an `index` type
+	 */
+	isExact(): boolean;
 }
 
 /**
@@ -158,13 +188,7 @@ export interface OutletComponents<
 /**
  * Type for Outlet
  */
-export type Outlet<
-	W extends WidgetBaseInterface,
-	F extends WidgetBaseInterface,
-	E extends WidgetBaseInterface
-> = Constructor<
-	WidgetBase<Partial<E['properties']> & Partial<W['properties']> & Partial<F['properties']> & WidgetProperties, null>
->;
+export type Outlet<O extends WidgetProperties> = Constructor<WidgetBase<O, null>>;
 
 /**
  * Properties for the Link widget

@@ -5,9 +5,10 @@ import { stub } from 'sinon';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { w } from '../../../src/widget-core/d';
 import { WNode } from '../../../src/widget-core/interfaces';
-import { Router } from '../../../src/routing/Router';
 import { MemoryHistory as HistoryManager } from '../../../src/routing/history/MemoryHistory';
-import { Outlet, getProperties } from '../../../src/routing/Outlet';
+import { Outlet } from '../../../src/routing/Outlet';
+import { Registry } from '../../../src/widget-core/Registry';
+import { registerRouterInjector } from '../../../src/routing/RouterInjector';
 
 class Widget extends WidgetBase {
 	render() {
@@ -17,6 +18,7 @@ class Widget extends WidgetBase {
 
 const configOnEnter = stub();
 const configOnExit = stub();
+let registry: Registry;
 
 const routeConfig = [
 	{
@@ -37,15 +39,17 @@ const routeConfig = [
 
 describe('Outlet', () => {
 	beforeEach(() => {
+		registry = new Registry();
 		configOnEnter.reset();
 	});
 
 	it('Should render the main component for index matches when no index component is set', () => {
-		const router = new Router(routeConfig, { HistoryManager });
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
+
 		router.setPath('/foo');
-		const TestOutlet = Outlet(Widget, 'foo');
+		const TestOutlet = Outlet(() => w(Widget, {}), { outlet: 'foo' });
 		const outlet = new TestOutlet();
-		outlet.__setProperties__({ router } as any);
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		const renderResult = outlet.__render__() as WNode;
 		assert.strictEqual(renderResult.widgetConstructor, Widget);
 		assert.deepEqual(renderResult.children, []);
@@ -53,11 +57,11 @@ describe('Outlet', () => {
 	});
 
 	it('Should render the main component for partial matches', () => {
-		const router = new Router(routeConfig, { HistoryManager });
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo/bar');
-		const TestOutlet = Outlet(Widget, 'foo');
+		const TestOutlet = Outlet(() => w(Widget, {}), { outlet: 'foo' });
 		const outlet = new TestOutlet();
-		outlet.__setProperties__({ router } as any);
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		const renderResult = outlet.__render__() as WNode;
 		assert.strictEqual(renderResult.widgetConstructor, Widget);
 		assert.deepEqual(renderResult.children, []);
@@ -65,11 +69,18 @@ describe('Outlet', () => {
 	});
 
 	it('Should render the index component only for index matches', () => {
-		const router = new Router(routeConfig, { HistoryManager });
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
-		const TestOutlet = Outlet({ index: Widget }, 'foo');
+		const TestOutlet = Outlet<{ foo: string }>(
+			(properties, outletProperties) => {
+				if (outletProperties.type === 'index') {
+					return w(Widget, {});
+				}
+			},
+			{ outlet: 'foo' }
+		);
 		const outlet = new TestOutlet();
-		outlet.__setProperties__({ router } as any);
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		let renderResult = outlet.__render__() as WNode;
 		assert.strictEqual(renderResult.widgetConstructor, Widget);
 		assert.deepEqual(renderResult.children, []);
@@ -80,11 +91,18 @@ describe('Outlet', () => {
 	});
 
 	it('Should render the error component only for error matches', () => {
-		const router = new Router(routeConfig, { HistoryManager });
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo/other');
-		const TestOutlet = Outlet({ error: Widget }, 'foo');
+		const TestOutlet = Outlet(
+			(properties, outletProperties) => {
+				if (outletProperties.type === 'error') {
+					return w(Widget, {});
+				}
+			},
+			{ outlet: 'foo' }
+		);
 		const outlet = new TestOutlet();
-		outlet.__setProperties__({ router } as any);
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		let renderResult = outlet.__render__() as WNode;
 		assert.strictEqual(renderResult.widgetConstructor, Widget);
 		assert.deepEqual(renderResult.children, []);
@@ -92,11 +110,18 @@ describe('Outlet', () => {
 	});
 
 	it('Should render the index component only for error matches when there is no error component', () => {
-		const router = new Router(routeConfig, { HistoryManager });
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo/other');
-		const TestOutlet = Outlet({ index: Widget }, 'foo');
+		const TestOutlet = Outlet(
+			(properties, outletProperties) => {
+				if (outletProperties.type === 'error') {
+					return w(Widget, {});
+				}
+			},
+			{ outlet: 'foo' }
+		);
 		const outlet = new TestOutlet();
-		outlet.__setProperties__({ router } as any);
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		let renderResult = outlet.__render__() as WNode;
 		assert.strictEqual(renderResult.widgetConstructor, Widget);
 		assert.deepEqual(renderResult.children, []);
@@ -104,26 +129,24 @@ describe('Outlet', () => {
 	});
 
 	it('Map params is called with params, queryParams, match type and router', () => {
-		const router = new Router(routeConfig, { HistoryManager });
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/baz/bazParam?bazQuery=true');
-		const mapParams = stub();
-		const TestOutlet = Outlet({ index: Widget }, 'baz', { mapParams });
-		const outlet = new TestOutlet();
-		outlet.__setProperties__({ router } as any);
-		outlet.__render__() as WNode;
-		assert.isTrue(mapParams.calledOnce);
-		assert.isTrue(
-			mapParams.calledWith({
-				params: {
-					baz: 'bazParam'
-				},
-				queryParams: {
-					bazQuery: 'true'
-				},
-				router,
-				type: 'index'
-			})
+		const TestOutlet = Outlet(
+			(properties, outletProperties) => {
+				assert.deepEqual(outletProperties.params, { baz: 'bazParams' });
+				assert.deepEqual(outletProperties.queryParams, { bazQuery: 'true' });
+				assert.strictEqual(outletProperties.router, router);
+				assert.strictEqual(outletProperties.type, 'index');
+
+				if (outletProperties.type === 'index') {
+					return w(Widget, {});
+				}
+			},
+			{ outlet: 'foo' }
 		);
+		const outlet = new TestOutlet();
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
+		outlet.__render__() as WNode;
 	});
 
 	it('configuration onEnter called when the outlet is rendered', () => {
@@ -146,11 +169,18 @@ describe('Outlet', () => {
 			}
 		];
 
-		const router = new Router(routeConfig, { HistoryManager });
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/baz/param');
-		const TestOutlet = Outlet({ index: Widget }, 'baz');
+		const TestOutlet = Outlet(
+			(properties, outletProperties) => {
+				if (outletProperties.type === 'index') {
+					return w(Widget, {});
+				}
+			},
+			{ outlet: 'baz' }
+		);
 		const outlet = new TestOutlet();
-		outlet.__setProperties__({ router } as any);
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		outlet.__render__() as WNode;
 		assert.isTrue(configOnEnter.calledOnce);
 		router.setPath('/baz/bar');
@@ -167,7 +197,14 @@ describe('Outlet', () => {
 				return 'inner';
 			}
 		}
-		const InnerOutlet = Outlet({ index: InnerWidget }, 'qux');
+		const InnerOutlet = Outlet(
+			(properties, outletProperties) => {
+				if (outletProperties.type === 'index') {
+					return w(InnerWidget, {});
+				}
+			},
+			{ outlet: 'qux' }
+		);
 		class OuterWidget extends WidgetBase {
 			render() {
 				return w(InnerOutlet, {});
@@ -198,11 +235,16 @@ describe('Outlet', () => {
 			}
 		];
 
-		const router = new Router(routeConfig, { HistoryManager });
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/baz/param');
-		const TestOutlet = Outlet(OuterWidget, 'baz');
+		const TestOutlet = Outlet(
+			(properties, outletProperties) => {
+				return w(OuterWidget, {});
+			},
+			{ outlet: 'baz' }
+		);
 		const outlet = new TestOutlet();
-		outlet.__setProperties__({ router } as any);
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		outlet.__render__() as WNode;
 		assert.isTrue(configOnEnter.calledOnce);
 		router.setPath('/baz/bar');
@@ -236,11 +278,18 @@ describe('Outlet', () => {
 			}
 		];
 
-		const router = new Router(routeConfig, { HistoryManager });
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
-		const TestOutlet = Outlet({ index: Widget }, 'foo');
+		const TestOutlet = Outlet(
+			(properties, outletProperties) => {
+				if (outletProperties.type === 'index') {
+					return w(Widget, {});
+				}
+			},
+			{ outlet: 'foo' }
+		);
 		const outlet = new TestOutlet();
-		outlet.__setProperties__({ router } as any);
+		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		outlet.__render__() as WNode;
 		assert.isTrue(configOnExit.notCalled);
 		router.setPath('/foo/bar');
@@ -252,10 +301,5 @@ describe('Outlet', () => {
 		router.setPath('/foo');
 		outlet.__render__() as WNode;
 		assert.isTrue(configOnExit.calledOnce);
-	});
-
-	it('getProperties returns the payload as router', () => {
-		const router = new Router(routeConfig, { HistoryManager });
-		assert.deepEqual(getProperties(router, {}), { router });
 	});
 });
