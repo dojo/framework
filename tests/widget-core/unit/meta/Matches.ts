@@ -44,8 +44,7 @@ registerSuite('support/meta/Matches', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 
 			sendEvent(div.firstChild as Element, 'click');
 			assert.deepEqual(results, [true], 'should have been called and the target matched');
@@ -74,8 +73,7 @@ registerSuite('support/meta/Matches', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 
 			sendEvent(div.firstChild as Element, 'click');
 
@@ -114,8 +112,7 @@ registerSuite('support/meta/Matches', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 
 			sendEvent(div.firstChild!.firstChild as Element, 'click', {
 				eventInit: {
@@ -162,8 +159,7 @@ registerSuite('support/meta/Matches', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 
 			sendEvent(div.firstChild!.firstChild as Element, 'click', {
 				eventInit: {

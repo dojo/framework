@@ -50,7 +50,7 @@ registerSuite('support/meta/Drag', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.append(div);
+			r.mount({ domNode: div });
 
 			resolvers.resolve();
 			resolvers.resolve();
@@ -93,7 +93,7 @@ registerSuite('support/meta/Drag', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.append(div);
+			r.mount({ domNode: div });
 
 			resolvers.resolve();
 			resolvers.resolve();
@@ -129,7 +129,7 @@ registerSuite('support/meta/Drag', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.append(div);
+			r.mount({ domNode: div });
 
 			resolvers.resolve();
 			resolvers.resolve();
@@ -257,7 +257,7 @@ registerSuite('support/meta/Drag', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.append(div);
+			r.mount({ domNode: div });
 
 			resolvers.resolve();
 			resolvers.resolve();
@@ -404,7 +404,7 @@ registerSuite('support/meta/Drag', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.append(div);
+			r.mount({ domNode: div });
 
 			resolvers.resolve();
 			resolvers.resolve();
@@ -539,7 +539,7 @@ registerSuite('support/meta/Drag', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.append(div);
+			r.mount({ domNode: div });
 
 			resolvers.resolve();
 			resolvers.resolve();
@@ -621,7 +621,7 @@ registerSuite('support/meta/Drag', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.append(div);
+			r.mount({ domNode: div });
 
 			resolvers.resolve();
 			resolvers.resolve();
@@ -752,7 +752,7 @@ registerSuite('support/meta/Drag', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.append(div);
+			r.mount({ domNode: div });
 
 			resolvers.resolve();
 			resolvers.resolve();
@@ -843,7 +843,7 @@ registerSuite('support/meta/Drag', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.append(div);
+			r.mount({ domNode: div });
 
 			resolvers.resolve();
 			resolvers.resolve();
@@ -925,7 +925,7 @@ registerSuite('support/meta/Drag', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.append(div);
+			r.mount({ domNode: div });
 
 			resolvers.resolve();
 			resolvers.resolve();
@@ -1052,7 +1052,7 @@ registerSuite('support/meta/Drag', {
 			document.body.appendChild(div);
 
 			const r = renderer(() => w(TestWidget, {}));
-			r.append(div);
+			r.mount({ domNode: div });
 
 			resolvers.resolve();
 			resolvers.resolve();

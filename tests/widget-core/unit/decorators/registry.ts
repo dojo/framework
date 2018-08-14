@@ -30,9 +30,8 @@ describe('decorators/registry', () => {
 		}
 
 		const r = renderer(() => w(TestWidget1, {}));
-		r.sync = true;
 		const root = document.createElement('div');
-		r.append(root);
+		r.mount({ domNode: root, sync: true });
 
 		assert.strictEqual(root.querySelectorAll('.widget1').length, 1);
 		assert.strictEqual(root.querySelectorAll('.widget2').length, 0);
@@ -50,9 +49,8 @@ describe('decorators/registry', () => {
 		}
 
 		const r = renderer(() => w(TestWidget2, {}));
-		r.sync = true;
 		const root = document.createElement('div');
-		r.append(root);
+		r.mount({ domNode: root, sync: true });
 
 		assert.strictEqual(root.querySelectorAll('.widget1').length, 1);
 		assert.strictEqual(root.querySelectorAll('.widget2').length, 1);

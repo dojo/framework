@@ -191,8 +191,7 @@ registerSuite('meta base', {
 
 			const div = document.createElement('div');
 			const r = renderer(() => w(TestWidget, {}));
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 
 			assert.isTrue(meta.has('foo'), '1');
 			assert.isTrue(meta.has('bar'), '2');
@@ -235,8 +234,7 @@ registerSuite('meta base', {
 			}
 			const div = document.createElement('div');
 			const r = renderer(() => w(TestWidget, {}));
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 
 			assert.isTrue(meta.has('foo'));
 			assert.isTrue(meta.has('bar'));

@@ -31,8 +31,7 @@ describe('decorators/alwaysRender', () => {
 		}
 
 		const r = renderer(() => w(Parent, {}));
-		r.sync = true;
-		r.append();
+		r.mount({ sync: true });
 		renderCount = 0;
 		invalidate();
 		assert.strictEqual(renderCount, 1);

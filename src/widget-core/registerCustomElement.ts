@@ -136,9 +136,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			global.addEventListener('dojo-theme-set', () => themeContext.set(this._getTheme()));
 			const r = renderer(() => w(Wrapper, {}));
 			this._renderer = r;
-			r.registry = registry;
-			r.merge = false;
-			r.append(this);
+			r.mount({ domNode: this, merge: false, registry });
 
 			this._initialised = true;
 			this.dispatchEvent(

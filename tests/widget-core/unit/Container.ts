@@ -118,9 +118,7 @@ registerSuite('mixins/Container', {
 			}
 
 			const r = renderer(() => w(Parent, {}));
-			r.registry = registry;
-			r.sync = true;
-			r.append();
+			r.mount({ sync: true, registry });
 			renderCount = 0;
 
 			testInvalidate.invalidator();

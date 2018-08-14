@@ -161,7 +161,7 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(Parent, {}));
 			const root: any = document.createElement('div');
-			r.append(root);
+			r.mount({ domNode: root });
 			assert.strictEqual(root.childNodes[0].data, 'dom1');
 			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'dom2');
 			assert.strictEqual(root.childNodes[2].data, 'dom3');
@@ -174,7 +174,7 @@ jsdomDescribe('vdom', () => {
 		it('should create elements for widgets', () => {
 			const r = renderer(() => w(TestWidget, { show: true }));
 			const root = document.createElement('div');
-			r.append(root);
+			r.mount({ domNode: root });
 			const span = (root.childNodes[0] as Element) as HTMLSpanElement;
 			assert.lengthOf(span.childNodes, 1);
 			const div = span.childNodes[0] as HTMLDivElement;
@@ -230,8 +230,7 @@ jsdomDescribe('vdom', () => {
 
 			const div = document.createElement('div');
 			const r = renderer(() => w(Baz, {}));
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 
 			const root = div.childNodes[0] as HTMLElement;
 			assert.lengthOf(root.childNodes, 1);
@@ -323,8 +322,7 @@ jsdomDescribe('vdom', () => {
 
 			const div = document.createElement('div');
 			const r = renderer(() => w(App, {}));
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			sendEvent(div.childNodes[0] as any, 'click', { eventInit: { bubbles: false } });
 			sendEvent(div.childNodes[0].childNodes[0] as any, 'click', { eventInit: { bubbles: false } });
 			sendEvent(div.childNodes[0].childNodes[0].childNodes[0] as any, 'click', {
@@ -358,10 +356,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Baz, {}));
-			r.registry = registry;
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true, registry });
 			const root = div.childNodes[0];
 			const headerOne = root.childNodes[0];
 			const headerOneText = headerOne.childNodes[0] as Text;
@@ -396,10 +392,8 @@ jsdomDescribe('vdom', () => {
 				}
 			}
 			const r = renderer(() => w(App, {}));
-			r.registry = registry;
-			r.sync = true;
 			const root = document.createElement('div');
-			r.append(root);
+			r.mount({ domNode: root, sync: true, registry });
 			assert.lengthOf(root.childNodes, 1);
 			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'Hello, world!');
 			resolver();
@@ -440,10 +434,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Baz, {}));
-			r.registry = registry;
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true, registry });
 			const root = div.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 0);
 			registry.define('foo', Foo);
@@ -480,9 +472,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Bar, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 3);
 			const childOne = root.childNodes[0];
@@ -519,9 +510,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Baz, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 0);
 		});
@@ -566,9 +556,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Baz, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 0);
 			show(true);
@@ -621,10 +610,8 @@ jsdomDescribe('vdom', () => {
 			registry.define('bar', Bar);
 
 			const r = renderer(() => w(Baz, {}));
-			r.sync = true;
-			r.registry = registry;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true, registry });
 			const root: any = div.childNodes[0] as Element;
 			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
 			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'second');
@@ -724,9 +711,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Parent, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root: any = div.childNodes[0] as Element;
 			hideOne!();
 			hideTwo!();
@@ -761,7 +747,7 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(GrandParent, {}));
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div });
 			const root: any = div.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 4);
 		});
@@ -810,7 +796,7 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(VeryParent, {}));
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div });
 			const root: any = div.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 4);
 			invalidateTwo.forEach((invalidate) => invalidate());
@@ -867,8 +853,7 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(Parent, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			renderResult = v('span', ['me']);
 			childTwoInvalidate!();
 			switcher();
@@ -892,8 +877,7 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(Baz, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 1);
 			let textNodeOne = root.childNodes[0] as Text;
@@ -914,9 +898,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Bar, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div;
 			assert.lengthOf(root.childNodes, 3);
 			const firstTextNodeChild = root.childNodes[0].childNodes[0] as Text;
@@ -958,9 +941,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Parent, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0];
 			assert.lengthOf(root.childNodes, 2);
 			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
@@ -1012,9 +994,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Foo, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0];
 			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
 			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
@@ -1059,9 +1040,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Foo, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0];
 			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
 			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
@@ -1108,9 +1088,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Foo, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0];
 			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'one');
 			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'two');
@@ -1156,9 +1135,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(App, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div;
 			const h2 = root.childNodes[0].childNodes[0].childNodes[0];
 			const p = root.childNodes[0].childNodes[0].childNodes[1];
@@ -1189,9 +1167,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Foo, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div;
 			assert.lengthOf(root.childNodes, 3);
 			const firstTextNodeChild = root.childNodes[0].childNodes[0] as Text;
@@ -1260,9 +1237,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Foo, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			assert.strictEqual(parentRenderCount, 1);
 			assert.strictEqual(barRenderCount, 1);
 			assert.strictEqual(bazRenderCount, 1);
@@ -1286,9 +1262,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Foo, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div;
 			assert.lengthOf(root.childNodes, 3);
 			const firstTextNodeChild = root.childNodes[0].childNodes[0] as Text;
@@ -1313,9 +1288,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Bar, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div;
 			assert.lengthOf(root.childNodes, 3);
 			const firstTextNodeChild = root.childNodes[0].childNodes[0] as Text;
@@ -1356,9 +1330,8 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(Foo, {}, [w(Bar, { key: '1' }), w(Bar, { key: '2' })]));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0];
 			assert.lengthOf(root.childNodes, 2);
 			let firstTextNode = root.childNodes[0].childNodes[0] as Text;
@@ -1421,7 +1394,7 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(Baz, {}));
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div });
 			resolvers.resolve();
 			assert.isTrue(fooCreated);
 			foo(false);
@@ -1444,7 +1417,7 @@ jsdomDescribe('vdom', () => {
 			}
 			const r = renderer(() => w(Foo, {}));
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div });
 			resolvers.resolve();
 			assert.strictEqual(onAttachCallCount, 1);
 			invalidate();
@@ -1527,7 +1500,7 @@ jsdomDescribe('vdom', () => {
 			}
 			const r = renderer(() => w(Baz, {}));
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div });
 			resolvers.resolve();
 			assert.strictEqual(bazAttachCount, 1);
 			assert.strictEqual(bazDetachCount, 0);
@@ -1623,8 +1596,7 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(Bar, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 0);
 			showFooNodes();
@@ -1663,7 +1635,7 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(Baz, {}));
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div });
 			resolvers.resolve();
 			invalidate();
 			assert.doesNotThrow(() => {
@@ -1705,8 +1677,7 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(Baz, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as Element;
 			const fooDiv = root.childNodes[0] as HTMLDivElement;
 			assert.strictEqual(fooDiv.getAttribute('id'), 'foo');
@@ -1775,8 +1746,7 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(Foo, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			resolvers.resolve();
 			assert.strictEqual(deferredPropertyCallCount, 8);
 			const root = div.childNodes[0] as Element;
@@ -1859,8 +1829,7 @@ jsdomDescribe('vdom', () => {
 					}
 				}
 				const r = renderer(() => w(Bar, {}));
-				r.sync = true;
-				r.append(iframe.contentDocument.body);
+				r.mount({ domNode: iframe.contentDocument.body, sync: true });
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 				assert.strictEqual(
 					root.childElementCount,
@@ -1951,8 +1920,7 @@ jsdomDescribe('vdom', () => {
 					}
 				}
 				const r = renderer(() => w(Bar, {}));
-				r.sync = true;
-				r.append(iframe.contentDocument.body);
+				r.mount({ domNode: iframe.contentDocument.body, sync: true });
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 				assert.strictEqual(
 					root.childElementCount,
@@ -2055,8 +2023,7 @@ jsdomDescribe('vdom', () => {
 					}
 				}
 				const r = renderer(() => w(Bar, {}));
-				r.sync = true;
-				r.append(iframe.contentDocument.body);
+				r.mount({ domNode: iframe.contentDocument.body, sync: true });
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 				assert.strictEqual(
 					root.childElementCount,
@@ -2118,8 +2085,7 @@ jsdomDescribe('vdom', () => {
 					}
 				}
 				const r = renderer(() => w(Foo, {}));
-				r.sync = true;
-				r.append(iframe.contentDocument.body);
+				r.mount({ domNode: iframe.contentDocument.body, sync: true });
 				assert.lengthOf(root.childNodes, 1);
 				invalidate();
 				assert.strictEqual(root.childNodes.length, 3);
@@ -2136,8 +2102,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', ['text']));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>text</div>');
 			meta.setRenderResult(v('div', ['text2']));
 			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>text2</div>');
@@ -2154,8 +2119,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', ['', '1', '']));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>1</div>');
 			meta.setRenderResult(v('div', [' ', '']));
 			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div> </div>');
@@ -2168,8 +2132,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>text</div>');
 			vnode.text = 'new';
 			meta.setRenderResult(vnode);
@@ -2180,8 +2143,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div'));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			assert.strictEqual(div.children[0].tagName, 'DIV');
 			meta.setRenderResult(v('span'));
 			assert.strictEqual(div.children[0].tagName, 'SPAN');
@@ -2238,8 +2200,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget] = getWidget(v('div', { key: '1' }));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.isNull(root.getAttribute('key'));
 		});
@@ -2248,8 +2209,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget] = getWidget(v('div', { tabIndex: -1 }));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.strictEqual(root.getAttribute('tabindex'), '-1');
 		});
@@ -2258,8 +2218,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('a', { href: '#1' }));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.strictEqual(root.getAttribute('href'), '#1');
 			meta.setRenderResult(v('a', { href: '#2' }));
@@ -2271,9 +2230,8 @@ jsdomDescribe('vdom', () => {
 		it('can add an attribute that was initially undefined', () => {
 			const [Widget, meta] = getWidget(v('a', { href: undefined }));
 			const r = renderer(() => w(Widget, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const link = (div.childNodes[0] as Element) as HTMLLinkElement;
 			assert.isNull(link.getAttribute('href'));
 			meta.setRenderResult(v('a', { href: '#2' }));
@@ -2283,9 +2241,8 @@ jsdomDescribe('vdom', () => {
 		it('can remove disabled property when set to null or undefined', () => {
 			const [Widget, meta] = getWidget(v('a', { disabled: true }));
 			const r = renderer(() => w(Widget, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const link = div.childNodes[0] as HTMLLinkElement;
 			assert.isTrue(link.disabled);
 			meta.setRenderResult(v('a', { disabled: null as any }));
@@ -2295,9 +2252,8 @@ jsdomDescribe('vdom', () => {
 		it('updates properties', () => {
 			const [Widget, meta] = getWidget(v('a', { href: '#1', tabIndex: 1 }));
 			const r = renderer(() => w(Widget, {}));
-			r.sync = true;
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const link = div.childNodes[0] as HTMLLinkElement;
 			assert.strictEqual(link.tabIndex, 1);
 			meta.setRenderResult(v('a', { href: '#1', tabIndex: 2 }));
@@ -2310,8 +2266,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('p', { innerHTML: '<span>INNER</span>' }));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.lengthOf(root.childNodes, 1);
 			assert.strictEqual(root.childNodes[0].textContent, 'INNER');
@@ -2324,8 +2279,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', { scrollTop: 0 }));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			Object.defineProperty(root, 'scrollTop', {
 				get: () => 1,
@@ -2339,8 +2293,7 @@ jsdomDescribe('vdom', () => {
 				const [Widget, meta] = getWidget(v('div', { classes: ['a'] }));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
+				r.mount({ domNode: div, sync: true });
 				const root = div.childNodes[0] as HTMLElement;
 				assert.strictEqual(root.className, 'a');
 				meta.setRenderResult(v('div', { classes: ['a', 'b'] }));
@@ -2356,8 +2309,7 @@ jsdomDescribe('vdom', () => {
 				root.appendChild(div);
 				const [Widget, meta] = getWidget(v('div', { classes: ['a'] }));
 				const r = renderer(() => w(Widget, {}));
-				r.sync = true;
-				r.append(root);
+				r.mount({ domNode: root, sync: true });
 				assert.strictEqual(div.className, 'c b a');
 				meta.setRenderResult(v('div', { classes: ['a', 'b'] }));
 				assert.strictEqual(div.className, 'c b a');
@@ -2374,8 +2326,7 @@ jsdomDescribe('vdom', () => {
 				root.appendChild(div);
 				const [Widget, meta] = getWidget(v('div', { classes: ['b', null, null, null] }));
 				const r = renderer(() => w(Widget, {}));
-				r.sync = true;
-				r.append(root);
+				r.mount({ domNode: root, sync: true });
 				assert.strictEqual(div.className, 'b');
 				meta.setRenderResult(v('div', { classes: ['a', null, undefined, ''] }));
 
@@ -2401,8 +2352,7 @@ jsdomDescribe('vdom', () => {
 				const root = document.createElement('div');
 				root.appendChild(div);
 				const r = renderer(() => w(Widget, {}));
-				r.sync = true;
-				r.append(root);
+				r.mount({ domNode: root, sync: true });
 				assert.strictEqual(div.className, 'b');
 				meta.setRenderResult(v('div', { classes: 'b' }));
 
@@ -2430,8 +2380,7 @@ jsdomDescribe('vdom', () => {
 				const root = document.createElement('div');
 				root.appendChild(div);
 				const r = renderer(() => w(Widget, {}));
-				r.sync = true;
-				r.append(root);
+				r.mount({ domNode: root, sync: true });
 				assert.strictEqual(div.className, 'a b');
 				meta.setRenderResult(v('div'));
 
@@ -2451,8 +2400,7 @@ jsdomDescribe('vdom', () => {
 				const root = document.createElement('div');
 				root.appendChild(div);
 				const r = renderer(() => w(Widget, {}));
-				r.sync = true;
-				r.append(root);
+				r.mount({ domNode: root, sync: true });
 				assert.strictEqual(div.className, '');
 			});
 
@@ -2460,8 +2408,7 @@ jsdomDescribe('vdom', () => {
 				const [Widget, meta] = getWidget(v('div', { classes: 'a b c d' }));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
+				r.mount({ domNode: div, sync: true });
 				const root = div.childNodes[0] as HTMLElement;
 				assert.strictEqual(root.className, 'a b c d');
 				meta.setRenderResult(v('div', { classes: 'a b' }));
@@ -2473,8 +2420,7 @@ jsdomDescribe('vdom', () => {
 				const [Widget] = getWidget(v('div', { styles: { height: '20px' } }));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
+				r.mount({ domNode: div, sync: true });
 				const root = div.childNodes[0] as HTMLElement;
 				assert.strictEqual(root.outerHTML, '<div style="height: 20px;"></div>');
 			});
@@ -2483,8 +2429,7 @@ jsdomDescribe('vdom', () => {
 				const [Widget, meta] = getWidget(v('div', { styles: { height: '20px' } }));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
+				r.mount({ domNode: div, sync: true });
 				const root = div.childNodes[0] as HTMLElement;
 				meta.setRenderResult(v('div', { styles: { height: '30px' } }));
 
@@ -2495,8 +2440,7 @@ jsdomDescribe('vdom', () => {
 				const [Widget, meta] = getWidget(v('div', { styles: { width: '30px', height: '20px' } }));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
+				r.mount({ domNode: div, sync: true });
 				const root = div.childNodes[0] as HTMLElement;
 				meta.setRenderResult(v('div', { styles: { height: null, width: '30px' } }));
 
@@ -2507,8 +2451,7 @@ jsdomDescribe('vdom', () => {
 				const [Widget, meta] = getWidget(v('div', { styles: { height: undefined } }));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
+				r.mount({ domNode: div, sync: true });
 				const root = div.childNodes[0] as HTMLElement;
 				meta.setRenderResult(v('div', { styles: { height: '20px' } }));
 
@@ -2526,8 +2469,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLInputElement;
 			assert.strictEqual(root.value, typedKeys);
 			typedKeys = 'value1';
@@ -2546,8 +2488,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLInputElement;
 			assert.strictEqual(root.value, typedKeys);
 			root.value = 'value written by a testing tool without invoking the input event';
@@ -2570,8 +2511,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLInputElement;
 			assert.strictEqual(root.value, model);
 
@@ -2597,8 +2537,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.property(root.attributes, 'role');
 			assert.strictEqual(root.getAttribute('role'), role);
@@ -2615,8 +2554,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as any;
 			assert.strictEqual('bar', root.getAttribute('foo'));
 			assert.strictEqual(1, root.bar);
@@ -2640,8 +2578,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as any;
 			assert.strictEqual('bar', root.getAttribute('foo'));
 			assert.strictEqual(1, root.bar);
@@ -2665,8 +2602,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as any;
 			assert.strictEqual('bar', root.getAttribute('foo'));
 			assert.strictEqual(1, root.bar);
@@ -2688,8 +2624,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', { foo: 'bar', bar: 1 }));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as any;
 			assert.strictEqual('bar', root.getAttribute('foo'));
 			assert.strictEqual(1, root.bar);
@@ -2721,8 +2656,7 @@ jsdomDescribe('vdom', () => {
 			});
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
-			r.sync = true;
-			r.append(append);
+			r.mount({ domNode: append, sync: true });
 			const root = append.childNodes[0] as any;
 			assert.strictEqual('bar', root.foo);
 			assert.strictEqual('foo', root.getAttribute('baz'));
@@ -2777,8 +2711,7 @@ jsdomDescribe('vdom', () => {
 			let vnode = d({ node: div, props: { bar: 1 }, attrs: { foo: 'bar' }, on: { click }, diffType: 'none' });
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
-			r.sync = true;
-			r.append(append);
+			r.mount({ domNode: append, sync: true });
 			const root = append.childNodes[0] as any;
 			assert.strictEqual('bar', root.getAttribute('foo'));
 			assert.strictEqual(1, root.bar);
@@ -2820,8 +2753,7 @@ jsdomDescribe('vdom', () => {
 			let vnode = d({ node: div, props: { bar: 1 }, attrs: { foo: 'bar' }, on: { click }, diffType: 'dom' });
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
-			r.sync = true;
-			r.append(append);
+			r.mount({ domNode: append, sync: true });
 			const root = append.childNodes[0] as any;
 			assert.strictEqual('bar', root.getAttribute('foo'));
 			assert.strictEqual(1, root.bar);
@@ -2850,8 +2782,7 @@ jsdomDescribe('vdom', () => {
 			let vnode = d({ node: div, props: { bar: 1 }, attrs: { foo: 'bar' } });
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
-			r.sync = true;
-			r.append(append);
+			r.mount({ domNode: append, sync: true });
 			const root = append.childNodes[0] as any;
 			assert.strictEqual('bar', root.getAttribute('foo'));
 			assert.strictEqual(1, root.bar);
@@ -2875,8 +2806,7 @@ jsdomDescribe('vdom', () => {
 			let vnode = v('div', [d({ node: text })]);
 			const [Widget] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
-			r.sync = true;
-			r.append(append);
+			r.mount({ domNode: append, sync: true });
 			const root = append.childNodes[0] as any;
 			assert.strictEqual(root.childNodes.length, 1);
 			assert.strictEqual(div.childNodes.length, 0);
@@ -2891,8 +2821,7 @@ jsdomDescribe('vdom', () => {
 			let vnode = d({ node: divA });
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			let root = div.childNodes[0] as any;
 			assert.strictEqual(root, divA);
 			assert.strictEqual(root.innerHTML, 'A');
@@ -2925,7 +2854,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div });
 			const root = div.childNodes[0] as any;
 
 			assert.strictEqual(root.deferredCallbackCount, 1);
@@ -2966,7 +2895,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div });
 			const root = div.childNodes[0] as HTMLElement;
 
 			assert.strictEqual(root.getAttribute('foo'), 'bar');
@@ -2998,8 +2927,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			sendEvent(root, 'click');
 			assert.isTrue(onclick.called);
@@ -3014,8 +2942,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			sendEvent(root, 'click');
 			assert.strictEqual(onclickFirst.callCount, 1);
@@ -3036,8 +2963,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			sendEvent(root, 'click');
 			assert.strictEqual(onclick.callCount, 1);
@@ -3062,8 +2988,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLInputElement;
 			assert.strictEqual(root.value, typedKeys);
 
@@ -3094,8 +3019,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLInputElement;
 			assert.strictEqual(root.value, typedKeys);
 
@@ -3124,8 +3048,7 @@ jsdomDescribe('vdom', () => {
 			);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.lengthOf(root.childNodes, 3);
 			const firstSpan = root.childNodes[0];
@@ -3145,8 +3068,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', [v('span', { key: 2 }), v('span', { key: 4 })]));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.lengthOf(root.childNodes, 2);
 			const firstSpan = root.childNodes[0];
@@ -3171,8 +3093,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', [v('span', { key: 'one' }), v('span', { key: 'three' })]));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.lengthOf(root.childNodes, 2);
 			const firstSpan = root.childNodes[0];
@@ -3198,8 +3119,7 @@ jsdomDescribe('vdom', () => {
 			);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 
 			assert.lengthOf(root.childNodes, 4);
@@ -3226,8 +3146,7 @@ jsdomDescribe('vdom', () => {
 			);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.lengthOf(root.childNodes, 3);
 			const firstSpan = root.childNodes[0];
@@ -3246,8 +3165,7 @@ jsdomDescribe('vdom', () => {
 			);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 
 			assert.lengthOf(root.childNodes, 3);
@@ -3265,8 +3183,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', [v('span', { key: 'a' }), v('span', { key: 'b' })]));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 
 			assert.lengthOf(root.childNodes, 2);
@@ -3284,8 +3201,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', [v('span', { key: 2 }), v('span', { key: 4 })]));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 
 			assert.lengthOf(root.childNodes, 2);
@@ -3319,8 +3235,7 @@ jsdomDescribe('vdom', () => {
 			);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			const childOne = root.childNodes[0] as HTMLSpanElement;
 			const childTwo = root.childNodes[1] as HTMLSpanElement;
@@ -3404,8 +3319,7 @@ jsdomDescribe('vdom', () => {
 			);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			const childOne = root.childNodes[0] as HTMLSpanElement;
 			const childTwo = root.childNodes[1] as HTMLSpanElement;
@@ -3495,8 +3409,7 @@ jsdomDescribe('vdom', () => {
 			}
 			const r = renderer(() => w(B, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, '1');
 			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, '1');
@@ -3550,8 +3463,7 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(B, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, '4');
 			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, '5');
@@ -3613,8 +3525,7 @@ jsdomDescribe('vdom', () => {
 			}
 			const r = renderer(() => w(B, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, '4');
 			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, '5');
@@ -3670,8 +3581,7 @@ jsdomDescribe('vdom', () => {
 			}
 			const r = renderer(() => w(B, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, '4');
 			assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, '5');
@@ -3689,8 +3599,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('span', ['']));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 			assert.lengthOf(root.childNodes, 0);
 
@@ -3726,8 +3635,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(textVNode);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			let root = div.childNodes[0] as Text;
 			assert.strictEqual(root.data, 'text-node');
 			meta.setRenderResult({
@@ -3771,8 +3679,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(textVNode);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			let textNode = div.childNodes[0] as Text;
 			assert.strictEqual(textNode, domNode);
 			meta.setRenderResult({ ...textVNode } as any);
@@ -3794,8 +3701,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(renderDNodes());
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 
 			root.removeChild(root.childNodes[0]);
@@ -3822,8 +3728,7 @@ jsdomDescribe('vdom', () => {
 				);
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
+				r.mount({ domNode: div, sync: true });
 				const svg = (div.childNodes[0] as Element).childNodes[0];
 				assert.strictEqual(svg.namespaceURI, 'http://www.w3.org/2000/svg');
 				const circle = svg.childNodes[0];
@@ -3906,7 +3811,7 @@ jsdomDescribe('vdom', () => {
 				}
 			}
 			const r = renderer(() => w(Foo, {}));
-			r.append(iframe.contentDocument.body);
+			r.mount({ domNode: iframe.contentDocument.body });
 			assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 			assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 			assert.strictEqual(select, root.childNodes[1], 'should have been reused');
@@ -3982,7 +3887,7 @@ jsdomDescribe('vdom', () => {
 				}
 			}
 			const r = renderer(() => w(Foo, {}));
-			r.append(iframe.contentDocument.body);
+			r.mount({ domNode: iframe.contentDocument.body });
 			assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 			assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 			assert.strictEqual(label, root.childNodes[0], 'should have been reused');
@@ -4070,7 +3975,7 @@ jsdomDescribe('vdom', () => {
 				}
 			}
 			const r = renderer(() => w(Foo, {}));
-			r.append(iframe.contentDocument.body);
+			r.mount({ domNode: iframe.contentDocument.body });
 			assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 			assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 			assert.strictEqual(label, root.childNodes[1], 'should have been reused');
@@ -4096,8 +4001,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', { key: '1' }));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '1'));
 		});
 
@@ -4111,8 +4015,7 @@ jsdomDescribe('vdom', () => {
 			);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			assert.strictEqual(callCount, 2);
 		});
 	});
@@ -4122,7 +4025,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div'));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.append(div);
+			r.mount({ domNode: div });
 			resolvers.resolve();
 			meta.setRenderResult(v('div'));
 
@@ -4134,8 +4037,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', { key: '1' }));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.add.called);
 			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '1'));
 			meta.nodeHandlerStub.add.resetHistory();
@@ -4149,8 +4051,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', { key: 0 }));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.add.called);
 			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '0'));
 			meta.nodeHandlerStub.add.resetHistory();
@@ -4164,8 +4065,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', { key: 0 }));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.addRoot.called);
 			meta.nodeHandlerStub.addRoot.resetHistory();
 			meta.invalidate();
@@ -4178,8 +4078,7 @@ jsdomDescribe('vdom', () => {
 			const [Widget, meta] = getWidget(v('div', { key: '1' }));
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.sync = true;
-			r.append(div);
+			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.addRoot.called);
 			meta.nodeHandlerStub.addRoot.resetHistory();
 			meta.invalidate();
@@ -4194,8 +4093,7 @@ jsdomDescribe('vdom', () => {
 				const [Widget, meta] = getWidget(v('div', []));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
+				r.mount({ domNode: div, sync: true });
 				meta.setRenderResult(v('div', [v('span', { enterAnimation })]));
 				assert.isTrue(enterAnimation.calledWith((div.childNodes[0] as Element).childNodes[0], match({})));
 			});
@@ -4206,8 +4104,7 @@ jsdomDescribe('vdom', () => {
 				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation })]));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.append(div);
+				r.mount({ domNode: div, sync: true });
 				meta.setRenderResult(v('div', []));
 				assert.isTrue(
 					exitAnimation.calledWithExactly((div.childNodes[0] as Element).childNodes[0], match({}), match({}))
@@ -4223,9 +4120,7 @@ jsdomDescribe('vdom', () => {
 				const [Widget, meta] = getWidget(v('div'));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.transition = transitionStrategy;
-				r.append(div);
+				r.mount({ domNode: div, sync: true, transition: transitionStrategy });
 				meta.setRenderResult(v('div', [v('span', { enterAnimation: 'fadeIn' })]));
 				assert.isTrue(
 					transitionStrategy.enter.calledWithExactly(
@@ -4240,9 +4135,7 @@ jsdomDescribe('vdom', () => {
 				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation: 'fadeOut' })]));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.transition = transitionStrategy;
-				r.append(div);
+				r.mount({ domNode: div, sync: true, transition: transitionStrategy });
 				meta.setRenderResult(v('div', []));
 				assert.isTrue(
 					transitionStrategy.exit.calledWithExactly(
@@ -4280,9 +4173,7 @@ jsdomDescribe('vdom', () => {
 				}
 				const r = renderer(() => w(Parent, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.transition = transitionStrategy;
-				r.append(div);
+				r.mount({ domNode: div, sync: true, transition: transitionStrategy });
 				assert.isTrue(
 					transitionStrategy.enter.calledWithExactly(
 						(div.childNodes[0] as Element).children[0],
@@ -4324,9 +4215,7 @@ jsdomDescribe('vdom', () => {
 				}
 				const r = renderer(() => w(Parent, {}));
 				const div = document.createElement('div');
-				r.sync = true;
-				r.transition = transitionStrategy;
-				r.append(div);
+				r.mount({ domNode: div, sync: true, transition: transitionStrategy });
 				const node = (div.childNodes[0] as Element).children[1];
 				removeItem();
 				assert.isTrue(transitionStrategy.exit.calledWithExactly(node, match({}), 'exit', match({})));
@@ -4343,7 +4232,7 @@ jsdomDescribe('vdom', () => {
 			);
 
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const focusSpy = spy(input, 'focus');
 			resolvers.resolve();
@@ -4360,7 +4249,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const focusSpy = spy(input, 'focus');
 			resolvers.resolve();
@@ -4381,7 +4270,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const focusSpy = spy(input, 'focus');
 			resolvers.resolve();
@@ -4400,7 +4289,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const focusSpy = spy(input, 'focus');
 			resolvers.resolve();
@@ -4420,7 +4309,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const blurSpy = spy(input, 'blur');
 			resolvers.resolve();
@@ -4437,7 +4326,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const blurSpy = spy(input, 'blur');
 			resolvers.resolve();
@@ -4458,7 +4347,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const blurSpy = spy(input, 'blur');
 			resolvers.resolve();
@@ -4477,7 +4366,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const blurSpy = spy(input, 'blur');
 			resolvers.resolve();
@@ -4497,7 +4386,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const scrollIntoViewStub = stub();
 			input.scrollIntoView = scrollIntoViewStub;
@@ -4515,7 +4404,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const scrollIntoViewStub = stub();
 			input.scrollIntoView = scrollIntoViewStub;
@@ -4537,7 +4426,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const scrollIntoViewStub = stub();
 			input.scrollIntoView = scrollIntoViewStub;
@@ -4557,7 +4446,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const scrollIntoViewStub = stub();
 			input.scrollIntoView = scrollIntoViewStub;
@@ -4578,7 +4467,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const clickSpy = spy(input, 'click');
 			resolvers.resolve();
@@ -4595,7 +4484,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const clickSpy = spy(input, 'click');
 			resolvers.resolve();
@@ -4616,7 +4505,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const clickSpy = spy(input, 'click');
 			resolvers.resolve();
@@ -4635,7 +4524,7 @@ jsdomDescribe('vdom', () => {
 				})
 			);
 			const r = renderer(() => w(Widget, {}));
-			r.append();
+			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const clickSpy = spy(input, 'click');
 			resolvers.resolve();
@@ -4659,9 +4548,8 @@ jsdomDescribe('vdom', () => {
 			}
 		}
 		const r = renderer(() => w(MyWidget, {}));
-		r.sync = true;
 		const div = document.createElement('div');
-		r.append(div);
+		r.mount({ domNode: div, sync: true });
 		const root = div.childNodes[0] as HTMLElement;
 		assert.strictEqual(root.dir, '');
 		setProperties({ rtl: true });

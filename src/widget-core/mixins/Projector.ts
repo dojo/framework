@@ -40,13 +40,7 @@ export function ProjectorMixin<P, T extends WidgetBase<P>>(Base: Constructor<T>)
 			const { registry, ...props } = this._properties as any;
 			this._root = root;
 			const r = renderer(() => w(this._widget, props, this._children));
-			if (registry) {
-				r.registry = registry;
-			}
-			if (!this.async) {
-				r.sync = false;
-			}
-			r.append(root as HTMLElement);
+			r.mount({ domNode: root as HTMLElement, registry, sync: !this.async });
 			this.projectorState = ProjectorAttachState.Attached;
 			return {
 				destroy() {}
