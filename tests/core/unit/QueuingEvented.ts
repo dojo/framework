@@ -6,7 +6,7 @@ import { EventObject } from '../../../src/core/Evented';
 
 interface CustomEvent extends EventObject {
 	type: 'test';
-	target: any;
+	target?: any;
 	value: number;
 }
 
@@ -16,7 +16,7 @@ function isCustomEvent(object: any): object is CustomEvent {
 
 registerSuite('QueuingEvented', {
 	'events are queued for the first subscriber': function() {
-		const evented = new QueuingEvented();
+		const evented = new QueuingEvented<{}, string, CustomEvent>();
 		let listenerCallCount = 0;
 
 		evented.emit({
@@ -32,7 +32,7 @@ registerSuite('QueuingEvented', {
 	},
 
 	'events do not get queued over maximum'() {
-		const evented = new QueuingEvented();
+		const evented = new QueuingEvented<{}, string, CustomEvent>();
 		evented.maxEvents = 5;
 		let expectedValues: number[] = [];
 

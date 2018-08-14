@@ -3,6 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import RegistryHandler from '../../../src/widget-core/RegistryHandler';
 import Registry from '../../../src/widget-core/Registry';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
+import { Evented } from '../../../src/core/Evented';
 
 const foo = Symbol();
 const bar = Symbol();
@@ -118,7 +119,7 @@ registerSuite('RegistryHandler', {
 				registryHandler.get('global');
 				registryHandler.define('global', LocalWidget);
 				assert.strictEqual(invalidateCount, 1);
-				registry.emit({ type: 'global', action: 'other' });
+				registry.emit({ type: 'global', action: 'other', item: LocalWidget });
 				assert.strictEqual(invalidateCount, 1);
 			},
 			'no `invalidate` events emitted once the with registry with the highest precedence has loaded'() {
@@ -160,10 +161,10 @@ registerSuite('RegistryHandler', {
 				registryHandler.get('global');
 				registryHandler.base = registry;
 				registryHandler.get('global');
-				registry.emit({ type: 'global', action: 'other' });
+				registry.emit({ type: 'global', action: 'other', item: WidgetBase });
 				assert.strictEqual(invalidateCount, 0);
 				registryHandler.get('global', true);
-				registry.emit({ type: 'global', action: 'other' });
+				registry.emit({ type: 'global', action: 'other', item: WidgetBase });
 				assert.strictEqual(invalidateCount, 0);
 			}
 		}
@@ -257,7 +258,14 @@ registerSuite('RegistryHandler', {
 				registryHandler.getInjector('global');
 				registryHandler.defineInjector('global', localInjector);
 				assert.strictEqual(invalidateCount, 1);
-				registry.emit({ type: 'global', action: 'other' });
+				registry.emit({
+					type: 'global',
+					action: 'other',
+					item: {
+						injector: () => ({}),
+						invalidator: new Evented()
+					}
+				});
 				assert.strictEqual(invalidateCount, 1);
 			},
 			'no `invalidate` events emitted once the with registry with the highest precedence has loaded'() {
@@ -300,10 +308,24 @@ registerSuite('RegistryHandler', {
 				});
 
 				registryHandler.getInjector('global');
-				registry.emit({ type: 'global', action: 'other' });
+				registry.emit({
+					type: 'global',
+					action: 'other',
+					item: {
+						injector: () => ({}),
+						invalidator: new Evented()
+					}
+				});
 				assert.strictEqual(invalidateCount, 0);
 				registryHandler.getInjector('global', true);
-				registry.emit({ type: 'global', action: 'other' });
+				registry.emit({
+					type: 'global',
+					action: 'other',
+					item: {
+						injector: () => ({}),
+						invalidator: new Evented()
+					}
+				});
 				assert.strictEqual(invalidateCount, 0);
 			}
 		}

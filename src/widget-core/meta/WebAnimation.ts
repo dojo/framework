@@ -32,6 +32,13 @@ export interface AnimationTimingProperties {
 	iterationStart?: number;
 }
 
+interface AnimationKeyFrame {
+	easing?: string | string[];
+	offset?: number | Array<number | null> | null;
+	opacity?: number | number[];
+	transform?: string | string[];
+}
+
 /**
  * Animation propertiues that can be passed as vdom property `animate`
  */
@@ -62,12 +69,12 @@ export interface AnimationPlayer {
 export class WebAnimations extends Base {
 	private _animationMap = new Map<string, AnimationPlayer>();
 
-	private _createPlayer(node: HTMLElement, properties: AnimationProperties): Animation {
+	private _createPlayer(node: HTMLElement, properties: AnimationProperties): any {
 		const { effects, timing = {} } = properties;
 
 		const fx = typeof effects === 'function' ? effects() : effects;
 
-		const keyframeEffect = new KeyframeEffect(node, fx, timing as AnimationEffectTiming);
+		const keyframeEffect = new KeyframeEffect(node, fx as any, timing);
 
 		return new Animation(keyframeEffect, global.document.timeline);
 	}
@@ -161,10 +168,10 @@ export class WebAnimations extends Base {
 			const { currentTime, playState, playbackRate, startTime } = animation.player;
 
 			return {
-				currentTime,
+				currentTime: currentTime || 0,
 				playState,
 				playbackRate,
-				startTime
+				startTime: startTime || 0
 			};
 		}
 	}

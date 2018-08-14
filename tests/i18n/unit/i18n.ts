@@ -409,7 +409,7 @@ registerSuite('i18n', {
 					const cached = getCachedMessages(bundle, 'ar-JO');
 
 					assert.throws(() => {
-						cached!['hello'] = 'Hello';
+						cached!.hello = 'Hello';
 					});
 				});
 			}

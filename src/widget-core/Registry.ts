@@ -28,7 +28,7 @@ export const WIDGET_BASE_TYPE = Symbol('Widget Base');
 
 export interface RegistryEventObject extends EventObject<RegistryLabel> {
 	action: string;
-	item: WidgetBaseConstructor | InjectorFactory;
+	item: WidgetBaseConstructor | InjectorItem;
 }
 /**
  * Widget Registry Interface
