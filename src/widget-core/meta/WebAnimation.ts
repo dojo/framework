@@ -32,7 +32,7 @@ export interface AnimationTimingProperties {
 	iterationStart?: number;
 }
 
-interface AnimationKeyFrame {
+export interface AnimationKeyFrame {
 	easing?: string | string[];
 	offset?: number | Array<number | null> | null;
 	opacity?: number | number[];
@@ -62,7 +62,7 @@ export interface AnimationInfo {
 }
 
 export interface AnimationPlayer {
-	player: Animation;
+	player: any;
 	used: boolean;
 }
 
@@ -74,12 +74,12 @@ export class WebAnimations extends Base {
 
 		const fx = typeof effects === 'function' ? effects() : effects;
 
-		const keyframeEffect = new KeyframeEffect(node, fx as any, timing);
+		const keyframeEffect = new global.KeyframeEffect(node, fx, timing);
 
-		return new Animation(keyframeEffect, global.document.timeline);
+		return new global.Animation(keyframeEffect, global.document.timeline);
 	}
 
-	private _updatePlayer(player: Animation, controls: AnimationControls) {
+	private _updatePlayer(player: any, controls: AnimationControls) {
 		const { play, reverse, cancel, finish, onFinish, onCancel, playbackRate, startTime, currentTime } = controls;
 
 		if (playbackRate !== undefined) {

@@ -84,7 +84,7 @@
     "rimraf": "~2.6.2",
     "selenium-webdriver": "3.6.0",
     "sinon": "~4.1.3",
-    "typescript": "~3.0.0",
+    "typescript": "^2.5.3",
     "whatwg-fetch": "^2.0.4"
   },
   "lint-staged": {
