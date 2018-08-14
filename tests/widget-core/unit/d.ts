@@ -3,7 +3,7 @@ const { registerSuite } = intern.getPlugin('jsdom');
 import { assign } from '../../../src/shim/object';
 import { DNode, VNode, WNode, WidgetProperties } from '../../../src/widget-core/interfaces';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import { v, w, decorate, WNODE, VNODE, isWNode, isVNode } from '../../../src/widget-core/d';
+import { dom, v, w, decorate, WNODE, VNODE, isWNode, isVNode } from '../../../src/widget-core/d';
 
 interface ChildProperties extends WidgetProperties {
 	myChildProperty: string;
@@ -252,51 +252,51 @@ registerSuite('d', {
 			assert.strictEqual(vNode.deferredPropertiesCallback, props);
 		}
 	},
-	// dom: {
-	// 	'creates VNode with the DOM node attached, associated tagname and default diff type'() {
-	// 		const div = document.createElement('div');
-	// 		const vnode = dom(
-	// 			{
-	// 				node: div,
-	// 				props: { foo: 1, bar: 'bar' },
-	// 				attrs: { baz: 'baz' }
-	// 			},
-	// 			[v('div'), w(WidgetBase, {})]
-	// 		) as InternalVNode;
-	// 		assert.strictEqual(vnode.domNode, div);
-	// 		assert.strictEqual(vnode.tag, 'div');
-	// 		assert.deepEqual(vnode.properties, { foo: 1, bar: 'bar' });
-	// 		assert.deepEqual(vnode.attributes, { baz: 'baz' });
-	// 		assert.deepEqual(vnode.children, [v('div'), w(WidgetBase, {})] as any);
-	// 		assert.strictEqual(vnode.diffType, 'none');
-	// 	},
-	// 	'creates an empty properties and attribute object and undefined children when not passed'() {
-	// 		const span = document.createElement('span');
-	// 		const vnode = dom({
-	// 			node: span
-	// 		}) as InternalVNode;
-	// 		assert.strictEqual(vnode.domNode, span);
-	// 		assert.strictEqual(vnode.tag, 'span');
-	// 		assert.deepEqual(vnode.properties, {});
-	// 		assert.deepEqual(vnode.attributes, {});
-	// 		assert.deepEqual(vnode.children, undefined);
-	// 		assert.strictEqual(vnode.diffType, 'none');
-	// 	},
+	dom: {
+		'creates VNode with the DOM node attached, associated tagname and default diff type'() {
+			const div = document.createElement('div');
+			const vnode = dom(
+				{
+					node: div,
+					props: { foo: 1, bar: 'bar' },
+					attrs: { baz: 'baz' }
+				},
+				[v('div'), w(WidgetBase, {})]
+			);
+			assert.strictEqual(vnode.domNode, div);
+			assert.strictEqual(vnode.tag, 'div');
+			assert.deepEqual(vnode.properties, { foo: 1, bar: 'bar' });
+			assert.deepEqual(vnode.attributes, { baz: 'baz' });
+			assert.deepEqual(vnode.children, [v('div'), w(WidgetBase, {})] as any);
+			assert.strictEqual(vnode.diffType, 'none');
+		},
+		'creates an empty properties and attribute object and undefined children when not passed'() {
+			const span = document.createElement('span');
+			const vnode = dom({
+				node: span
+			});
+			assert.strictEqual(vnode.domNode, span);
+			assert.strictEqual(vnode.tag, 'span');
+			assert.deepEqual(vnode.properties, {});
+			assert.deepEqual(vnode.attributes, {});
+			assert.deepEqual(vnode.children, undefined);
+			assert.strictEqual(vnode.diffType, 'none');
+		},
 
-	// 	'can override the default diffType'() {
-	// 		const span = document.createElement('span');
-	// 		const vnode = dom({
-	// 			node: span,
-	// 			diffType: 'dom'
-	// 		}) as InternalVNode;
-	// 		assert.strictEqual(vnode.domNode, span);
-	// 		assert.strictEqual(vnode.tag, 'span');
-	// 		assert.deepEqual(vnode.properties, {});
-	// 		assert.deepEqual(vnode.attributes, {});
-	// 		assert.deepEqual(vnode.children, undefined);
-	// 		assert.strictEqual(vnode.diffType, 'dom');
-	// 	}
-	// },
+		'can override the default diffType'() {
+			const span = document.createElement('span');
+			const vnode = dom({
+				node: span,
+				diffType: 'dom'
+			});
+			assert.strictEqual(vnode.domNode, span);
+			assert.strictEqual(vnode.tag, 'span');
+			assert.deepEqual(vnode.properties, {});
+			assert.deepEqual(vnode.attributes, {});
+			assert.deepEqual(vnode.children, undefined);
+			assert.strictEqual(vnode.diffType, 'dom');
+		}
+	},
 	decorator: {
 		'modifies only nodes that match predicate'() {
 			const testWidget = new TestWidget();
