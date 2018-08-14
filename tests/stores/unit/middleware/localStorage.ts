@@ -1,7 +1,7 @@
 import global from '../../../../src/shim/global';
 const { describe, it, beforeEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import { stub } from 'sinon';
+import { SinonStub, stub } from 'sinon';
 
 import { collector, load } from './../../../../src/stores/middleware/localStorage';
 import { Store } from './../../../../src/stores/Store';
@@ -14,22 +14,28 @@ function incrementCounter({ get, path }: CommandRequest<{ counter: number }>): P
 	return [{ op: OperationType.REPLACE, path: new Pointer('/counter'), value: ++counter }];
 }
 
-const localStorageGetStub = stub();
-const localStorageSetStub = stub();
-const localStorageStub = {
-	getItem: localStorageGetStub,
-	setItem: localStorageSetStub
-};
+let getStub: SinonStub;
+let setStub: SinonStub;
 
-global.localStorage = localStorageStub;
+if (global.localStorage) {
+	getStub = stub(global.localStorage, 'getItem');
+	setStub = stub(global.localStorage, 'setItem');
+} else {
+	getStub = stub();
+	setStub = stub();
+	global.localStorage = {
+		getItem: getStub,
+		setItem: setStub
+	};
+}
 
 let store: Store;
 
 describe('middleware - local storage', () => {
 	beforeEach(() => {
 		store = new Store();
-		localStorageGetStub.reset();
-		localStorageSetStub.reset();
+		getStub.reset();
+		setStub.reset();
 	});
 
 	it('Should save state to local storage', () => {
@@ -39,7 +45,7 @@ describe('middleware - local storage', () => {
 			collector('local-storage-id', (path) => [path('counter')])
 		);
 		incrementCounterProcess(store)({});
-		assert.isTrue(localStorageSetStub.calledWith('local-storage-id', '[{"meta":{"path":"/counter"},"state":1}]'));
+		assert.isTrue(setStub.calledWith('local-storage-id', '[{"meta":{"path":"/counter"},"state":1}]'));
 	});
 
 	it('Should call next middleware', () => {
@@ -60,13 +66,13 @@ describe('middleware - local storage', () => {
 	});
 
 	it('should load from local storage', () => {
-		localStorageGetStub.withArgs('local-storage-id').returns('[{"meta":{"path":"/counter"},"state":1}]');
+		getStub.withArgs('local-storage-id').returns('[{"meta":{"path":"/counter"},"state":1}]');
 		load('local-storage-id', store);
 		assert.deepEqual((store as any)._state, { counter: 1 });
 	});
 
 	it('should not load anything or throw an error if data does exist', () => {
-		localStorageGetStub.withArgs('other-storage-id').returns('[{"meta":{"path":"/counter"},"state":1}]');
+		getStub.withArgs('other-storage-id').returns('[{"meta":{"path":"/counter"},"state":1}]');
 		load('local-storage-id', store);
 		assert.deepEqual((store as any)._state, {});
 	});
