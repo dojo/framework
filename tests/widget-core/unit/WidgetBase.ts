@@ -3,15 +3,16 @@ const { assert } = intern.getPlugin('chai');
 import { spy, stub, SinonStub } from 'sinon';
 
 import { WidgetBase, noBind } from '../../../src/widget-core/WidgetBase';
-import { v } from '../../../src/widget-core/d';
+import { v, w } from '../../../src/widget-core/d';
 import { WIDGET_BASE_TYPE } from '../../../src/widget-core/Registry';
-import { VNode, WidgetMetaConstructor, WidgetMetaBase } from '../../../src/widget-core/interfaces';
+import { VNode, WidgetMetaConstructor, WidgetMetaBase, WNode } from '../../../src/widget-core/interfaces';
 import { handleDecorator } from '../../../src/widget-core/decorators/handleDecorator';
 import { diffProperty } from '../../../src/widget-core/decorators/diffProperty';
 import { Base } from '../../../src/widget-core/meta/Base';
 import { NodeEventType } from '../../../src/widget-core/NodeHandler';
 import { widgetInstanceMap } from '../../../src/widget-core/vdom';
 import { afterRender } from '../../../src/widget-core/decorators/afterRender';
+import { registry } from '../../../src/widget-core/decorators/registry';
 
 interface TestProperties {
 	foo?: string;
@@ -101,6 +102,74 @@ describe('WidgetBase', () => {
 			assert.strictEqual(renderResult.tag, 'my-app');
 			assert.lengthOf(renderResult.children!, 1);
 			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+		});
+
+		it('Deferred properties are run during __render__', () => {
+			class TestWidget extends BaseTestWidget {
+				render() {
+					return v('my-app', () => ({ foo: 'bar' }), ['child']);
+				}
+			}
+			const widget = new TestWidget();
+			const renderResult = widget.__render__() as VNode;
+			assert.strictEqual(renderResult.tag, 'my-app');
+			assert.isFunction(renderResult.deferredPropertiesCallback);
+			assert.deepEqual(renderResult.properties, { foo: 'bar' });
+			assert.lengthOf(renderResult.children!, 1);
+			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+		});
+
+		it('Decorated properties are stored separately to resolved deferred properties', () => {
+			class TestWidget extends BaseTestWidget {
+				@afterRender()
+				after(node: VNode) {
+					node.properties = {
+						bar: 'foo'
+					};
+					return node;
+				}
+
+				render() {
+					return v('my-app', () => ({ foo: 'bar' }), ['child']);
+				}
+			}
+			const widget = new TestWidget();
+			const renderResult = widget.__render__() as VNode;
+			assert.strictEqual(renderResult.tag, 'my-app');
+			assert.isFunction(renderResult.deferredPropertiesCallback);
+			assert.deepEqual(renderResult.properties, { foo: 'bar', bar: 'foo' });
+			assert.deepEqual(renderResult.originalProperties, { bar: 'foo' });
+			assert.lengthOf(renderResult.children!, 1);
+			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+		});
+
+		it('Empty nodes are filtered from children', () => {
+			class TestWidget extends BaseTestWidget {
+				render() {
+					return v('my-app', ['child', undefined]);
+				}
+			}
+			const widget = new TestWidget();
+			const renderResult = widget.__render__() as VNode;
+			assert.strictEqual(renderResult.tag, 'my-app');
+			assert.lengthOf(renderResult.children!, 1);
+			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+		});
+
+		it('Resolves registry items', () => {
+			class Bar extends WidgetBase {}
+
+			@registry('bar', Bar)
+			class TestWidget extends BaseTestWidget {
+				render() {
+					return w('bar', {}, [w('bar', {})]);
+				}
+			}
+			const widget = new TestWidget();
+			const renderResult = widget.__render__() as WNode;
+			assert.strictEqual(renderResult.widgetConstructor, Bar);
+			assert.lengthOf(renderResult.children!, 1);
+			assert.strictEqual((renderResult.children![0] as WNode).widgetConstructor, Bar);
 		});
 	});
 

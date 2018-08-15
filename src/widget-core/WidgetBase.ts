@@ -1,7 +1,7 @@
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
 import Symbol from '../shim/Symbol';
-import { v, VNODE, isVNode } from './d';
+import { v, VNODE, isVNode, isWNode } from './d';
 import { auto } from './diff';
 import {
 	AfterRender,
@@ -277,7 +277,13 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				node.originalProperties = node.properties;
 				node.properties = { ...properties, ...node.properties };
 			}
-			node.bind = this;
+			if (isWNode(node) && !isWidgetBaseConstructor(node.widgetConstructor)) {
+				node.widgetConstructor =
+					this.registry.get<WidgetBase>(node.widgetConstructor) || node.widgetConstructor;
+			}
+			if (!node.bind) {
+				node.bind = this;
+			}
 			convertedNodes.push(node);
 			if (node.children && node.children.length) {
 				node.children = this._filterAndConvert(node.children);

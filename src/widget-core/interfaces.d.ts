@@ -2,6 +2,7 @@ import { Destroyable } from '../core/Destroyable';
 import { Evented, EventType, EventObject } from '../core/Evented';
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
+import { RegistryHandler } from './RegistryHandler';
 
 /**
  * Generic constructor type
@@ -376,7 +377,7 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 	 */
 	type: symbol;
 
-	bind?: WidgetBaseInterface;
+	bind?: WidgetBaseInterface & { registry: RegistryHandler };
 }
 
 /**

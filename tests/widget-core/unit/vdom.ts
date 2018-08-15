@@ -11,6 +11,7 @@ import { VNode, DNode, DomVNode } from '../../../src/widget-core/interfaces';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import Registry from '../../../src/widget-core/Registry';
 import { I18nMixin } from '../../../src/widget-core/mixins/I18n';
+import registry from '../../../src/widget-core/decorators/registry';
 
 const resolvers = createResolvers();
 
@@ -447,6 +448,32 @@ jsdomDescribe('vdom', () => {
 			const headerTwoText = headerTwo.childNodes[0] as Text;
 			assert.strictEqual(headerOneText.data, 'foo');
 			assert.strictEqual(headerTwoText.data, 'bar');
+		});
+
+		it('scopes registry to the widget that the WNode is defined', () => {
+			class Foo extends WidgetBase {
+				render() {
+					return this.children;
+				}
+			}
+
+			class Bar extends WidgetBase {
+				render() {
+					return 'BAR';
+				}
+			}
+
+			@registry('bar', Bar)
+			class Qux extends WidgetBase {
+				render() {
+					return v('div', [w(Foo, {}, [w('bar', {})])]);
+				}
+			}
+
+			const r = renderer(() => w(Qux, {}));
+			const div: any = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual(div.childNodes[0].childNodes[0].data, 'BAR');
 		});
 
 		it('supports an array of DNodes', () => {

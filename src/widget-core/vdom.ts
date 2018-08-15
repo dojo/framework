@@ -7,7 +7,6 @@ import {
 	VNodeProperties,
 	SupportedClassName,
 	WidgetBaseConstructor,
-	Constructor,
 	TransitionStrategy,
 	WidgetProperties,
 	DefaultWidgetBaseInterface
@@ -943,41 +942,30 @@ export function renderer(renderer: () => WNode): Renderer {
 			node: { widgetConstructor }
 		} = next;
 		let { registry } = _mountOptions;
-		const { parentWNodeWrapper } = findParentNodes(next);
-		if (typeof widgetConstructor !== 'function') {
-			let item: Constructor<WidgetBase> | null = null;
-			if (!parentWNodeWrapper) {
-				item = registry && registry.get<WidgetBase>(widgetConstructor);
-			} else {
-				item = parentWNodeWrapper!.instance!.registry.get<WidgetBase>(widgetConstructor);
-			}
-			if (item) {
-				widgetConstructor = item;
-			}
+		if (!isWidgetBaseConstructor(widgetConstructor)) {
+			return {};
 		}
-		if (isWidgetBaseConstructor(widgetConstructor)) {
-			const instance = new widgetConstructor() as WidgetBase;
-			if (registry) {
-				instance.registry.base = registry;
+		const instance = new widgetConstructor() as WidgetBase;
+		if (registry) {
+			instance.registry.base = registry;
+		}
+		const instanceData = widgetInstanceMap.get(instance)!;
+		instanceData.invalidate = () => {
+			instanceData.dirty = true;
+			if (!instanceData.rendering && _instanceToWrapperMap.has(instance)) {
+				_invalidationQueue.push({ instance, depth: next.depth });
+				_schedule();
 			}
-			const instanceData = widgetInstanceMap.get(instance)!;
-			instanceData.invalidate = () => {
-				instanceData.dirty = true;
-				if (!instanceData.rendering && _instanceToWrapperMap.has(instance)) {
-					_invalidationQueue.push({ instance, depth: next.depth });
-					_schedule();
-				}
-			};
-			instanceData.rendering = true;
-			instance.__setProperties__(next.node.properties, next.node.bind);
-			instance.__setChildren__(next.node.children);
-			next.instance = instance;
-			let rendered = instance.__render__();
-			instanceData.rendering = false;
-			if (rendered) {
-				rendered = Array.isArray(rendered) ? rendered : [rendered];
-				next.childrenWrappers = renderedToWrapper(rendered, next, null);
-			}
+		};
+		instanceData.rendering = true;
+		instance.__setProperties__(next.node.properties, next.node.bind);
+		instance.__setChildren__(next.node.children);
+		next.instance = instance;
+		let rendered = instance.__render__();
+		instanceData.rendering = false;
+		if (rendered) {
+			rendered = Array.isArray(rendered) ? rendered : [rendered];
+			next.childrenWrappers = renderedToWrapper(rendered, next, null);
 		}
 		if (next.instance) {
 			_instanceToWrapperMap.set(next.instance, next);
