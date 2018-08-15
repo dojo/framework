@@ -292,10 +292,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			instanceData.dirty = false;
 		}
 		const render = this._runBeforeRenders();
-		let dNode = render();
-		dNode = this.runAfterRenders(dNode);
+		const dNode = this._filterAndConvert(this.runAfterRenders(render()));
 		this._nodeHandler.clear();
-		return this._filterAndConvert(dNode);
+		return dNode;
 	}
 
 	public invalidate(): void {
