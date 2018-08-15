@@ -61,17 +61,30 @@ class HelloDojo extends WidgetBase {
 
 #### Rendering a Widget in the DOM
 
-To display your new component in the view you will to use the `renderer` from the `@dojo/framework/widget-core/vdom` module. The `renderer` function accepts function that returns your component using the `w()` pragma and calling `.append()` on the returned instance.
+To display your new component in the view you will to use the `renderer` from the `@dojo/framework/widget-core/vdom` module. The `renderer` function accepts function that returns your component using the `w()` pragma and calling `.mount()` on the returned API.
 
 ```ts
 import renderer from '@dojo/framework/widget-core/vdom';
 import { w } from '@dojo/framework/widget-core/d';
 
 const r = renderer(() => w(HelloDojo, {}));
-r.append();
+r.mount();
 ```
 
-The renderer by default appends to the `document.body` in the DOM, but this can be overridden by passing the preferred target dom node to the `.append()` function.
+`renderer#mount` accepts an optional argument of `MountOptions` that controls configuration of the mount operation.
+
+```ts
+interface MountOptions {
+	sync: boolean; // (default `false`)
+
+	merge: boolean; // (default `true`)
+
+	domNode: HTMLElement; // (default `document.body)
+
+	transition: TransitionStrategy; // (default `cssTransitions`)
+}
+
+The renderer by default mounts to the `document.body` in the DOM, but this can be overridden by passing the preferred target dom node to the `.mount()` function.
 
 Consider the following in your HTML file:
 
@@ -87,7 +100,7 @@ import { w } from '@dojo/framework/widget-core/d';
 
 const root = document.getElementById('my-app');
 const r = renderer(() => w(HelloDojo, {}));
-r.append(root);
+r.mount({ domNode: root });
 ```
 
 #### Widgets and Properties
@@ -136,7 +149,7 @@ We can now use `App` with the `renderer` to display the `Hello` widgets.
 
 ```ts
 const r = renderer(() => w(App, {}));
-r.append(root);
+r.mount({ domNode: root });
 ```
 
 #### Decomposing Widgets
