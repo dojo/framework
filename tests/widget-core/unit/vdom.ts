@@ -840,6 +840,47 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'insert before me');
 		});
 
+		it('Should insert result from widget in correct position', () => {
+			class Menu extends WidgetBase {
+				render() {
+					return 'Menu';
+				}
+			}
+			class View extends WidgetBase {
+				render() {
+					return 'View';
+				}
+			}
+
+			let switcher: any;
+			class App extends WidgetBase {
+				private _show = true;
+
+				private switcher = () => {
+					this._show = !this._show;
+					this.invalidate();
+				};
+
+				constructor() {
+					super();
+					switcher = this.switcher;
+				}
+
+				render() {
+					return v('div', [this._show ? w(Menu, {}) : null, v('div', [this._show ? w(View, {}) : null])]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual(div.outerHTML, '<div><div>Menu<div>View</div></div></div>');
+			switcher();
+			assert.strictEqual(div.outerHTML, '<div><div><div></div></div></div>');
+			switcher();
+			assert.strictEqual(div.outerHTML, '<div><div>Menu<div>View</div></div></div>');
+		});
+
 		it('Should not render widgets that have been detached', () => {
 			let switcher: any;
 			class ChildOne extends WidgetBase {

@@ -876,7 +876,7 @@ export function renderer(renderer: () => WNode): Renderer {
 		let { mergeNodes = [], oldIndex = 0, newIndex = 0 } = meta;
 		const currentLength = current.length;
 		const nextLength = next.length;
-		const hasPreviousSiblings = currentLength > 1;
+		const hasPreviousSiblings = currentLength > 1 || (currentLength > 0 && currentLength < nextLength);
 		const instructions: Instruction[] = [];
 		if (newIndex < nextLength) {
 			let currentWrapper = oldIndex < currentLength ? current[oldIndex] : undefined;
