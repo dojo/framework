@@ -76,7 +76,8 @@ interface ProcessItem {
 
 interface ProcessResult {
 	item?: ProcessItem;
-	dom?: DomApplicatorInstruction;
+	widget?: AttachApplication;
+	dom?: ApplicationInstruction;
 }
 
 interface ProcessMeta {
@@ -126,6 +127,12 @@ interface ParentNodes {
 	parentWNodeWrapper?: WNodeWrapper;
 }
 
+interface AttachApplication {
+	type: 'attach';
+	instance: WidgetBase;
+	attached: boolean;
+}
+
 interface CreateDomApplication {
 	type: 'create';
 	current?: VNodeWrapper;
@@ -145,7 +152,7 @@ interface UpdateDomApplication {
 	next: VNodeWrapper;
 }
 
-type DomApplicatorInstruction = CreateDomApplication | UpdateDomApplication | DeleteDomApplication;
+type ApplicationInstruction = CreateDomApplication | UpdateDomApplication | DeleteDomApplication | AttachApplication;
 
 export const widgetInstanceMap = new WeakMap<
 	WidgetBase<WidgetProperties, DNode<DefaultWidgetBaseInterface>>,
@@ -164,6 +171,10 @@ function isWNodeWrapper(child: DNodeWrapper): child is WNodeWrapper {
 
 function isVNodeWrapper(child?: DNodeWrapper | null): child is VNodeWrapper {
 	return !!child && isVNode(child.node);
+}
+
+function isAttachApplication(value: any): value is AttachApplication {
+	return !!value.type;
 }
 
 function updateAttributes(
@@ -325,8 +336,8 @@ export function renderer(renderer: () => WNode): Renderer {
 		registry: null
 	};
 	let _invalidationQueue: InvalidationQueueItem[] = [];
-	let _processQueue: ProcessItem[] = [];
-	let _domInstructionQueue: DomApplicatorInstruction[] = [];
+	let _processQueue: (ProcessItem | AttachApplication)[] = [];
+	let _applicationQueue: ApplicationInstruction[] = [];
 	let _eventMap = new WeakMap<Function, EventListener>();
 	let _instanceToWrapperMap = new WeakMap<WidgetBase, WNodeWrapper>();
 	let _parentWrapperMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
@@ -753,17 +764,21 @@ export function renderer(renderer: () => WNode): Renderer {
 	}
 
 	function _runProcessQueue() {
-		let item: ProcessItem | undefined;
+		let item: AttachApplication | ProcessItem | undefined;
 		while ((item = _processQueue.pop())) {
-			const { current, next, meta } = item;
-			_process(current || EMPTY_ARRAY, next || EMPTY_ARRAY, meta);
+			if (isAttachApplication(item)) {
+				_applicationQueue.push(item);
+			} else {
+				const { current, next, meta } = item;
+				_process(current || EMPTY_ARRAY, next || EMPTY_ARRAY, meta);
+			}
 		}
 	}
 
 	function _runDomInstructionQueue(): void {
-		_domInstructionQueue.reverse();
-		let item: DomApplicatorInstruction | undefined;
-		while ((item = _domInstructionQueue.pop())) {
+		_applicationQueue.reverse();
+		let item: ApplicationInstruction | undefined;
+		while ((item = _applicationQueue.pop())) {
 			if (item.type === 'create') {
 				const {
 					parentWNodeWrapper,
@@ -790,15 +805,6 @@ export function renderer(renderer: () => WNode): Renderer {
 				const instanceData = widgetInstanceMap.get(parentWNodeWrapper!.instance!);
 				if (properties.key != null && instanceData) {
 					instanceData.nodeHandler.add(domNode as HTMLElement, `${properties.key}`);
-				}
-				const parent = _parentWrapperMap.get(next);
-				if (parent && isWNodeWrapper(parent) && parent.instance) {
-					const instanceData = widgetInstanceMap.get(parent.instance);
-					if (instanceData) {
-						!parent.nodeHandlerCalled && instanceData.nodeHandler.addRoot();
-						parent.nodeHandlerCalled = true;
-						instanceData.onAttach();
-					}
 				}
 				item.next.inserted = true;
 			} else if (item.type === 'update') {
@@ -831,6 +837,11 @@ export function renderer(renderer: () => WNode): Renderer {
 					current.domNode!.parentNode!.removeChild(current.domNode!);
 					current.domNode = undefined;
 				}
+			} else {
+				const { instance, attached } = item;
+				const instanceData = widgetInstanceMap.get(instance)!;
+				instanceData.nodeHandler.addRoot();
+				attached && instanceData.onAttach();
 			}
 		}
 	}
@@ -906,9 +917,10 @@ export function renderer(renderer: () => WNode): Renderer {
 		}
 
 		for (let i = 0; i < instructions.length; i++) {
-			const { item, dom } = _processOne(instructions[i]);
+			const { item, dom, widget } = _processOne(instructions[i]);
+			widget && _processQueue.push(widget);
 			item && _processQueue.push(item);
-			dom && _domInstructionQueue.push(dom);
+			dom && _applicationQueue.push(dom);
 		}
 	}
 
@@ -974,7 +986,8 @@ export function renderer(renderer: () => WNode): Renderer {
 			}
 		}
 		return {
-			item: { next: next.childrenWrappers, meta: { mergeNodes: next.mergeNodes } }
+			item: { next: next.childrenWrappers, meta: { mergeNodes: next.mergeNodes } },
+			widget: { type: 'attach', instance, attached: true }
 		};
 	}
 
@@ -1000,12 +1013,15 @@ export function renderer(renderer: () => WNode): Renderer {
 				next.childrenWrappers = renderedToWrapper(rendered, next, current);
 			}
 			return {
-				item: { current: current.childrenWrappers, next: next.childrenWrappers, meta: {} }
+				item: { current: current.childrenWrappers, next: next.childrenWrappers, meta: {} },
+				widget: { type: 'attach', instance, attached: false }
 			};
 		}
 		instanceData.rendering = false;
 		next.childrenWrappers = current.childrenWrappers;
-		return {};
+		return {
+			widget: { type: 'attach', instance, attached: false }
+		};
 	}
 
 	function _removeWidget({ current }: RemoveWidgetInstruction): ProcessResult {
@@ -1060,7 +1076,7 @@ export function renderer(renderer: () => WNode): Renderer {
 		if (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
 			parentWNodeWrapper.domNode = next.domNode;
 		}
-		const dom: DomApplicatorInstruction = {
+		const dom: ApplicationInstruction = {
 			next: next!,
 			parentDomNode: parentDomNode!,
 			parentWNodeWrapper,

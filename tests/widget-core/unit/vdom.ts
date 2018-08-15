@@ -1432,6 +1432,16 @@ jsdomDescribe('vdom', () => {
 		it('calls onAttach when widget is rendered', () => {
 			let onAttachCallCount = 0;
 			let invalidate: any;
+			class Bar extends WidgetBase {
+				onAttach() {
+					onAttachCallCount++;
+				}
+
+				render() {
+					return [v('div')];
+				}
+			}
+
 			class Foo extends WidgetBase {
 				constructor() {
 					super();
@@ -1441,15 +1451,19 @@ jsdomDescribe('vdom', () => {
 				onAttach() {
 					onAttachCallCount++;
 				}
+
+				render() {
+					return w(Bar, {});
+				}
 			}
 			const r = renderer(() => w(Foo, {}));
 			const div = document.createElement('div');
 			r.mount({ domNode: div });
 			resolvers.resolve();
-			assert.strictEqual(onAttachCallCount, 1);
+			assert.strictEqual(onAttachCallCount, 2);
 			invalidate();
 			resolvers.resolve();
-			assert.strictEqual(onAttachCallCount, 1);
+			assert.strictEqual(onAttachCallCount, 2);
 		});
 
 		it('calls onDetach when widget is removed', () => {
