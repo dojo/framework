@@ -87,8 +87,8 @@ interface ProcessMeta {
 }
 
 interface InvalidationQueueItem {
-	current: WNodeWrapper;
-	next: WNodeWrapper;
+	instance: WidgetBase;
+	depth: number;
 }
 
 interface Instruction {
@@ -716,17 +716,30 @@ export function renderer(renderer: () => WNode): Renderer {
 		const invalidationQueue = [..._invalidationQueue];
 		const previouslyRendered = [];
 		_invalidationQueue = [];
-		invalidationQueue.sort((a, b) => a.next.depth - b.next.depth);
+		invalidationQueue.sort((a, b) => b.depth - a.depth);
 		let item: InvalidationQueueItem | undefined;
 		while ((item = invalidationQueue.pop())) {
-			let {
-				current,
-				next,
-				next: { instance }
-			} = item;
+			let { instance } = item;
 			if (previouslyRendered.indexOf(instance) === -1 && _instanceToWrapperMap.has(instance!)) {
 				previouslyRendered.push(instance);
+				const current = _instanceToWrapperMap.get(instance)!;
+				const instanceData = widgetInstanceMap.get(instance)!;
+				const parent = _parentWrapperMap.get(current);
 				const sibling = _wrapperSiblingMap.get(current);
+				const { constructor, children } = instance;
+				const next = {
+					node: {
+						type: WNODE,
+						widgetConstructor: constructor as WidgetBaseConstructor,
+						properties: instanceData.inputProperties,
+						children: children,
+						bind: current.node.bind
+					},
+					instance,
+					depth: current.depth
+				};
+
+				parent && _parentWrapperMap.set(next, parent);
 				sibling && _wrapperSiblingMap.set(next, sibling);
 				const { item } = _updateWidget({ current, next });
 				if (item) {
@@ -849,28 +862,6 @@ export function renderer(renderer: () => WNode): Renderer {
 		}
 	}
 
-	function _queueInvalidation(instance: WidgetBase): void {
-		const current = _instanceToWrapperMap.get(instance);
-		const instanceData = widgetInstanceMap.get(instance);
-		if (current && instanceData) {
-			const { constructor, children } = instance;
-			const next = {
-				node: {
-					type: WNODE,
-					widgetConstructor: constructor as WidgetBaseConstructor,
-					properties: instanceData.inputProperties,
-					children: children
-				},
-				instance,
-				depth: current.depth
-			};
-
-			const parent = _parentWrapperMap.get(current)!;
-			_parentWrapperMap.set(next, parent);
-			_invalidationQueue.push({ current, next });
-		}
-	}
-
 	function _process(current: DNodeWrapper[], next: DNodeWrapper[], meta: ProcessMeta = {}): void {
 		let { mergeNodes = [], oldIndex = 0, newIndex = 0 } = meta;
 		const currentLength = current.length;
@@ -973,12 +964,12 @@ export function renderer(renderer: () => WNode): Renderer {
 			instanceData.invalidate = () => {
 				instanceData.dirty = true;
 				if (!instanceData.rendering && _instanceToWrapperMap.has(instance)) {
-					_queueInvalidation(instance);
+					_invalidationQueue.push({ instance, depth: next.depth });
 					_schedule();
 				}
 			};
 			instanceData.rendering = true;
-			instance.__setProperties__(next.node.properties);
+			instance.__setProperties__(next.node.properties, next.node.bind);
 			instance.__setChildren__(next.node.children);
 			next.instance = instance;
 			let rendered = instance.__render__();
@@ -1000,6 +991,7 @@ export function renderer(renderer: () => WNode): Renderer {
 	}
 
 	function _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult {
+		current = (current.instance && _instanceToWrapperMap.get(current.instance)) || current;
 		const { instance, domNode, hasAnimations } = current;
 		if (!instance) {
 			return [] as ProcessResult;
