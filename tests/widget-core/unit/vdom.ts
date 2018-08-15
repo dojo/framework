@@ -7,7 +7,7 @@ import sendEvent from '../support/sendEvent';
 
 import { renderer, widgetInstanceMap } from '../../../src/widget-core/vdom';
 import { v, w, dom as d, VNODE } from '../../../src/widget-core/d';
-import { VNode, DNode } from '../../../src/widget-core/interfaces';
+import { VNode, DNode, DomVNode } from '../../../src/widget-core/interfaces';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import Registry from '../../../src/widget-core/Registry';
 import { I18nMixin } from '../../../src/widget-core/mixins/I18n';
@@ -2149,50 +2149,52 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(div.children[0].tagName, 'SPAN');
 		});
 
-		// it('should allow an existing dom node to be used', () => {
-		// 	const node = document.createElement('div');
-		// 	(node as any).foo = 'foo';
-		// 	const childNode = document.createElement('span');
-		// 	(childNode as any).bar = 'bar';
-		// 	node.appendChild(childNode);
-		// 	const appendChildSpy = spy(node, 'appendChild');
+		it('should allow an existing dom node to be used', () => {
+			const node = document.createElement('div');
+			(node as any).foo = 'foo';
+			const childNode = document.createElement('span');
+			(childNode as any).bar = 'bar';
+			node.appendChild(childNode);
+			const appendChildSpy = spy(node, 'appendChild');
 
-		// 	const childVNode = v('span', { id: 'b' }) as InternalVNode;
-		// 	childVNode.domNode = childNode;
-		// 	const vNode = v('div', { id: 'a' }, [childVNode]) as InternalVNode;
-		// 	vNode.domNode = node;
+			const childVNode = v('span', { id: 'b' }) as DomVNode;
+			childVNode.domNode = childNode;
+			const vNode = v('div', { id: 'a' }, [childVNode]) as DomVNode;
+			vNode.domNode = node;
 
-		// 	const widget = getWidget(vNode);
-		// 	const projection = dom.create(widget, { sync: true });
-		// 	const root = (projection.domNode.childNodes[0] as Element) as any;
-		// 	assert.strictEqual(root.outerHTML, '<div id="a"><span id="b"></span></div>');
-		// 	assert.strictEqual(root.foo, 'foo');
-		// 	assert.strictEqual(root.children[0].bar, 'bar');
-		// 	assert.isFalse(appendChildSpy.called);
-		// });
+			const root: any = document.createElement('div');
+			const [Widget] = getWidget(vNode);
+			const r = renderer(() => w(Widget, {}));
+			r.mount({ domNode: root, sync: true });
+			assert.strictEqual(root.childNodes[0].outerHTML, '<div id="a"><span id="b"></span></div>');
+			assert.strictEqual(root.childNodes[0].foo, 'foo');
+			assert.strictEqual(root.childNodes[0].children[0].bar, 'bar');
+			assert.isFalse(appendChildSpy.called);
+		});
 
-		// it('will append nodes with attributes already attached', (test) => {
-		// 	const expected = '<div data-attr="test"></div>';
-		// 	const appendedHtml: string[] = [];
+		it('will append nodes with attributes already attached', (test) => {
+			const expected = '<div data-attr="test"></div>';
+			const appendedHtml: string[] = [];
 
-		// 	const createElement = document.createElement.bind(document);
-		// 	const createElementStub = stub(document, 'createElement').callsFake((name: string) => {
-		// 		const node = createElement(name);
-		// 		const appendChild = node.appendChild.bind(node);
-		// 		stub(node, 'appendChild').callsFake((node: Element) => {
-		// 			appendedHtml.push(node.outerHTML);
-		// 			return appendChild(node);
-		// 		});
-		// 		return node;
-		// 	});
-		// 	spys.push(createElementStub);
-		// 	const widget = getWidget(v('div', { 'data-attr': 'test' }));
-		// 	const projection = dom.create(widget, { sync: true });
-
-		// 	assert.strictEqual(projection.domNode.innerHTML, expected);
-		// 	assert.lengthOf(appendedHtml, 1);
-		// 	assert.strictEqual(appendedHtml[0], expected);
-		// });
+			const createElement = document.createElement.bind(document);
+			const createElementStub = stub(document, 'createElement').callsFake((name: string) => {
+				const node = createElement(name);
+				const appendChild = node.appendChild.bind(node);
+				stub(node, 'insertBefore').callsFake((node: Element) => {
+					appendedHtml.push(node.outerHTML);
+					return appendChild(node);
+				});
+				return node;
+			});
+			spys.push(createElementStub);
+			const [Widget] = getWidget(v('div', { 'data-attr': 'test' }));
+			const root: any = document.createElement('div');
+			const r = renderer(() => w(Widget, {}));
+			r.mount({ domNode: root, sync: true });
+			assert.strictEqual(root.innerHTML, expected);
+			assert.lengthOf(appendedHtml, 1);
+			assert.strictEqual(appendedHtml[0], expected);
+		});
 	});
 
 	describe('properties', () => {
@@ -3649,22 +3651,24 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.data, 'text-other');
 		});
 
-		// it('Will append text node when VNode has a domNode with no parentNode', () => {
-		// 	const domNode = document.createTextNode('text-node');
-		// 	const textVNode: InternalVNode = {
-		// 		tag: undefined as any,
-		// 		properties: {},
-		// 		children: undefined,
-		// 		text: 'text-node',
-		// 		domNode,
-		// 		type: VNODE
-		// 	};
-		// 	const [ Widget, meta ] = getWidget(textVNode);
-		// 	const projection = dom.create(widget, { sync: true });
-		// 	const textNode = projection.domNode.childNodes[0] as Text;
-		// 	assert.strictEqual(textNode.data, 'text-node');
-		// 	assert.notEqual(textNode, domNode);
-		// });
+		it('Will append text node when VNode has a domNode with no parentNode', () => {
+			const domNode = document.createTextNode('text-node');
+			const textVNode = {
+				tag: undefined as any,
+				properties: {},
+				children: undefined,
+				text: 'text-node',
+				domNode,
+				type: VNODE
+			};
+			const [Widget] = getWidget(textVNode);
+			const r = renderer(() => w(Widget, {}));
+			const root = document.createElement('div');
+			r.mount({ domNode: root, sync: true });
+			const textNode = root.childNodes[0] as Text;
+			assert.strictEqual(textNode.data, 'text-node');
+			assert.strictEqual(textNode, domNode);
+		});
 
 		it('Should ignore vnode with no tag or text', () => {
 			const domNode = document.createTextNode('text-node');
