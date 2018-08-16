@@ -1,5 +1,5 @@
 import global from '../../../../src/shim/global';
-const { describe, it, beforeEach } = intern.getInterface('bdd');
+const { describe, it, beforeEach, before } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
 import { collector, load } from './../../../../src/stores/middleware/localStorage';
@@ -32,7 +32,15 @@ if (!global.localStorage) {
 
 let store: Store;
 
-describe('middleware - local storage', () => {
+describe('middleware - local storage', (suite) => {
+	before(() => {
+		try {
+			global.localStorage.setItem('test', '');
+		} catch {
+			suite.skip('Local Storage is not accessible on private mode pre version 11.');
+		}
+	});
+
 	beforeEach(() => {
 		global.localStorage.removeItem(LOCAL_STORAGE_TEST_ID);
 		store = new Store();
