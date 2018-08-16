@@ -7,8 +7,8 @@ import { diffProperty } from '../widget-core/decorators/diffProperty';
 import { Handle } from '../core/Destroyable';
 
 export interface OutletProperties {
-	renderer: (matchDetails: MatchDetails) => DNode;
-	outlet: string;
+	renderer: (matchDetails: MatchDetails) => DNode | DNode[];
+	id: string;
 	routerKey?: string;
 }
 
@@ -68,13 +68,13 @@ export class Outlet extends WidgetBase<OutletProperties> {
 		}
 	}
 
-	protected render(): DNode {
-		const { renderer, outlet, routerKey = 'router' } = this.properties;
+	protected render(): DNode | DNode[] {
+		const { renderer, id, routerKey = 'router' } = this.properties;
 		const item = this.registry.getInjector<Router>(routerKey);
 
 		if (item) {
 			const router = item.injector();
-			const outletContext = router.getOutlet(outlet);
+			const outletContext = router.getOutlet(id);
 			if (outletContext) {
 				const { queryParams, params, type, onEnter, onExit, isError, isExact } = outletContext;
 				this._onExit = onExit;

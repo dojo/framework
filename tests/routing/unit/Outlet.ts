@@ -50,7 +50,7 @@ describe('Outlet', () => {
 		router.setPath('/foo');
 		const outlet = new Outlet();
 		outlet.__setProperties__({
-			outlet: 'foo',
+			id: 'foo',
 			renderer() {
 				return w(Widget, {});
 			}
@@ -68,7 +68,7 @@ describe('Outlet', () => {
 		router.setPath('/foo');
 		const outlet = new Outlet();
 		outlet.__setProperties__({
-			outlet: 'foo',
+			id: 'foo',
 			renderer(details) {
 				matchType = details.type;
 				return null;
@@ -85,7 +85,7 @@ describe('Outlet', () => {
 		router.setPath('/foo/other');
 		const outlet = new Outlet();
 		outlet.__setProperties__({
-			outlet: 'foo',
+			id: 'foo',
 			renderer(details) {
 				matchType = details.type;
 				return null;
@@ -120,7 +120,7 @@ describe('Outlet', () => {
 		router.setPath('/baz/param');
 		const outlet = new Outlet();
 		outlet.__setProperties__({
-			outlet: 'baz',
+			id: 'baz',
 			renderer(details) {
 				return w(Widget, {});
 			}
@@ -146,7 +146,7 @@ describe('Outlet', () => {
 		class OuterWidget extends WidgetBase {
 			render() {
 				return w(Outlet, {
-					outlet: 'quz',
+					id: 'quz',
 					renderer() {
 						return w(InnerWidget, {});
 					}
@@ -182,7 +182,7 @@ describe('Outlet', () => {
 		router.setPath('/baz/param');
 		const outlet = new Outlet();
 		outlet.__setProperties__({
-			outlet: 'baz',
+			id: 'baz',
 			renderer() {
 				return w(OuterWidget, {});
 			}
@@ -225,7 +225,7 @@ describe('Outlet', () => {
 		router.setPath('/foo');
 		const outlet = new Outlet();
 		outlet.__setProperties__({
-			outlet: 'foo',
+			id: 'foo',
 			renderer(details) {
 				if (details.type === 'index') {
 					return w(Widget, {});
@@ -272,7 +272,7 @@ describe('Outlet', () => {
 		const outlet = new TestOutlet();
 		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		outlet.__setProperties__({
-			outlet: 'foo',
+			id: 'foo',
 			renderer(details) {
 				if (details.type === 'index') {
 					return w(Widget, {});
@@ -306,7 +306,7 @@ describe('Outlet', () => {
 		const outlet = new TestOutlet();
 		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		outlet.__setProperties__({
-			outlet: 'foo',
+			id: 'foo',
 			renderer(details) {
 				if (details.type === 'index') {
 					return w(Widget, {});
@@ -340,7 +340,7 @@ describe('Outlet', () => {
 		const outlet = new TestOutlet();
 		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		outlet.__setProperties__({
-			outlet: 'foo',
+			id: 'foo',
 			renderer(details) {
 				if (details.type === 'index') {
 					return w(Widget, {});
@@ -373,7 +373,7 @@ describe('Outlet', () => {
 		router.setPath('/other');
 		const outlet = new TestOutlet();
 		outlet.__setProperties__({
-			outlet: 'foo',
+			id: 'foo',
 			renderer(details) {
 				if (details.type === 'index') {
 					return w(Widget, {});
@@ -407,7 +407,7 @@ describe('Outlet', () => {
 		const outlet = new TestOutlet();
 		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
 		outlet.__setProperties__({
-			outlet: 'foo',
+			id: 'foo',
 			routerKey: 'my-router',
 			renderer(details) {
 				if (details.type === 'index') {
@@ -421,7 +421,7 @@ describe('Outlet', () => {
 		routerTwo.setPath('/foo');
 		assert.strictEqual(invalidateCount, 1);
 		outlet.__setProperties__({
-			outlet: 'foo',
+			id: 'foo',
 			renderer(details) {
 				if (details.type === 'index') {
 					return w(Widget, {});
