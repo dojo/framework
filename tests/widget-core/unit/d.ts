@@ -153,6 +153,24 @@ registerSuite('d', {
 			assert.strictEqual(mergedNode.children[1], 'children');
 			assert.isTrue(isWNode(mergedNode));
 			assert.isFalse(isVNode(mergedNode));
+		},
+		'should replace children with an empty array on a WNode'() {
+			class Foo extends WidgetBase<any, string> {}
+			const dNode = w(Foo, {}, ['original']);
+			assert.equal(dNode.type, WNODE);
+			assert.strictEqual(dNode.widgetConstructor, Foo);
+			assert.deepEqual(dNode.properties, {});
+			assert.lengthOf(dNode.children, 1);
+			assert.strictEqual(dNode.children[0], 'original');
+			assert.isTrue(isWNode(dNode));
+			assert.isFalse(isVNode(dNode));
+			const mergedNode = w(dNode, {}, []);
+			assert.equal(mergedNode.type, WNODE);
+			assert.strictEqual(mergedNode.widgetConstructor, Foo);
+			assert.deepEqual(mergedNode.properties, {});
+			assert.lengthOf(mergedNode.children, 0);
+			assert.isTrue(isWNode(mergedNode));
+			assert.isFalse(isVNode(mergedNode));
 		}
 	},
 	v: {

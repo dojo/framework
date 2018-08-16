@@ -152,16 +152,16 @@ export function w<W extends WidgetBaseInterface>(
 export function w<W extends WidgetBaseInterface>(
 	widgetConstructorOrNode: Constructor<W> | RegistryLabel | WNode<W>,
 	properties: W['properties'],
-	children: W['children'] = []
+	children?: W['children']
 ): WNode<W> {
 	if (isWNode(widgetConstructorOrNode)) {
 		properties = { ...(widgetConstructorOrNode.properties as any), ...(properties as any) };
-		children = children.length ? children : widgetConstructorOrNode.children;
+		children = children ? children : widgetConstructorOrNode.children;
 		widgetConstructorOrNode = widgetConstructorOrNode.widgetConstructor;
 	}
 
 	return {
-		children,
+		children: children || [],
 		widgetConstructor: widgetConstructorOrNode,
 		properties,
 		type: WNODE
