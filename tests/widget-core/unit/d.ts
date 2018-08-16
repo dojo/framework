@@ -3,8 +3,7 @@ const { registerSuite } = intern.getPlugin('jsdom');
 import { assign } from '../../../src/shim/object';
 import { DNode, VNode, WNode, WidgetProperties } from '../../../src/widget-core/interfaces';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import { v, w, decorate, WNODE, VNODE, isWNode, isVNode, dom } from '../../../src/widget-core/d';
-import { InternalVNode } from '../../../src/widget-core/vdom';
+import { dom, v, w, decorate, WNODE, VNODE, isWNode, isVNode } from '../../../src/widget-core/d';
 
 interface ChildProperties extends WidgetProperties {
 	myChildProperty: string;
@@ -263,7 +262,7 @@ registerSuite('d', {
 					attrs: { baz: 'baz' }
 				},
 				[v('div'), w(WidgetBase, {})]
-			) as InternalVNode;
+			);
 			assert.strictEqual(vnode.domNode, div);
 			assert.strictEqual(vnode.tag, 'div');
 			assert.deepEqual(vnode.properties, { foo: 1, bar: 'bar' });
@@ -275,7 +274,7 @@ registerSuite('d', {
 			const span = document.createElement('span');
 			const vnode = dom({
 				node: span
-			}) as InternalVNode;
+			});
 			assert.strictEqual(vnode.domNode, span);
 			assert.strictEqual(vnode.tag, 'span');
 			assert.deepEqual(vnode.properties, {});
@@ -289,7 +288,7 @@ registerSuite('d', {
 			const vnode = dom({
 				node: span,
 				diffType: 'dom'
-			}) as InternalVNode;
+			});
 			assert.strictEqual(vnode.domNode, span);
 			assert.strictEqual(vnode.tag, 'span');
 			assert.deepEqual(vnode.properties, {});

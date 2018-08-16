@@ -1,20 +1,21 @@
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
 import Symbol from '../shim/Symbol';
-import { v } from './d';
+import { v, VNODE, isVNode, isWNode } from './d';
 import { auto } from './diff';
 import {
 	AfterRender,
 	BeforeProperties,
 	BeforeRender,
-	CoreProperties,
 	DiffPropertyReaction,
 	DNode,
 	Render,
 	WidgetMetaBase,
 	WidgetMetaConstructor,
 	WidgetBaseInterface,
-	WidgetProperties
+	WidgetProperties,
+	WNode,
+	VNode
 } from './interfaces';
 import RegistryHandler from './RegistryHandler';
 import NodeHandler from './NodeHandler';
@@ -33,6 +34,16 @@ const decoratorMap = new Map<Function, Map<string, any[]>>();
 const boundAuto = auto.bind(null);
 
 export const noBind = Symbol.for('dojoNoBind');
+
+function toTextVNode(data: any): VNode {
+	return {
+		tag: '',
+		properties: {},
+		children: undefined,
+		text: `${data}`,
+		type: VNODE
+	};
+}
 
 /**
  * Main widget base for all widgets to extend
@@ -105,12 +116,16 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				this.destroy();
 			},
 			nodeHandler: this._nodeHandler,
-			registry: () => {
-				return this.registry;
-			},
-			coreProperties: {} as CoreProperties,
 			rendering: false,
 			inputProperties: {}
+		});
+
+		this.own({
+			destroy: () => {
+				widgetInstanceMap.delete(this);
+				this._nodeHandler.clear();
+				this._nodeHandler.destroy();
+			}
 		});
 
 		this._runAfterConstructors();
@@ -150,25 +165,11 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		return [...this._changedPropertyKeys];
 	}
 
-	public __setCoreProperties__(coreProperties: CoreProperties): void {
-		const { baseRegistry } = coreProperties;
-		const instanceData = widgetInstanceMap.get(this)!;
-
-		if (instanceData.coreProperties.baseRegistry !== baseRegistry) {
-			if (this._registry === undefined) {
-				this._registry = new RegistryHandler();
-				this.own(this._registry);
-				this.own(this._registry.on('invalidate', this._boundInvalidate));
-			}
-			this._registry.base = baseRegistry;
-			this.invalidate();
+	public __setProperties__(originalProperties: this['properties'], bind?: WidgetBaseInterface): void {
+		const instanceData = widgetInstanceMap.get(this);
+		if (instanceData) {
+			instanceData.inputProperties = originalProperties;
 		}
-		instanceData.coreProperties = coreProperties;
-	}
-
-	public __setProperties__(originalProperties: this['properties']): void {
-		const instanceData = widgetInstanceMap.get(this)!;
-		instanceData.inputProperties = originalProperties;
 		const properties = this._runBeforeProperties(originalProperties);
 		const registeredDiffPropertyNames = this.getDecorator('registeredDiffProperty');
 		const changedPropertyKeys: string[] = [];
@@ -187,10 +188,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				}
 				checkedProperties.push(propertyName);
 				const previousProperty = this._properties[propertyName];
-				const newProperty = this._bindFunctionProperty(
-					properties[propertyName],
-					instanceData.coreProperties.bind
-				);
+				const newProperty = this._bindFunctionProperty(properties[propertyName], bind);
 				if (registeredDiffPropertyNames.indexOf(propertyName) !== -1) {
 					runReactions = true;
 					const diffFunctions = this.getDecorator(`diffProperty:${propertyName}`);
@@ -233,10 +231,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			for (let i = 0; i < propertyNames.length; i++) {
 				const propertyName = propertyNames[i];
 				if (typeof properties[propertyName] === 'function') {
-					properties[propertyName] = this._bindFunctionProperty(
-						properties[propertyName],
-						instanceData.coreProperties.bind
-					);
+					properties[propertyName] = this._bindFunctionProperty(properties[propertyName], bind);
 				} else {
 					changedPropertyKeys.push(propertyName);
 				}
@@ -261,19 +256,56 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		}
 	}
 
-	public __render__(): DNode | DNode[] {
-		const instanceData = widgetInstanceMap.get(this)!;
-		instanceData.dirty = false;
+	private _filterAndConvert(nodes: DNode[]): (WNode | VNode)[];
+	private _filterAndConvert(nodes: DNode): WNode | VNode;
+	private _filterAndConvert(nodes: DNode | DNode[]): (WNode | VNode) | (WNode | VNode)[];
+	private _filterAndConvert(nodes: DNode | DNode[]): (WNode | VNode) | (WNode | VNode)[] {
+		const isArray = Array.isArray(nodes);
+		const filteredNodes = Array.isArray(nodes) ? nodes : [nodes];
+		const convertedNodes: (WNode | VNode)[] = [];
+		for (let i = 0; i < filteredNodes.length; i++) {
+			const node = filteredNodes[i];
+			if (!node) {
+				continue;
+			}
+			if (typeof node === 'string') {
+				convertedNodes.push(toTextVNode(node));
+				continue;
+			}
+			if (isVNode(node) && node.deferredPropertiesCallback) {
+				const properties = node.deferredPropertiesCallback(false);
+				node.originalProperties = node.properties;
+				node.properties = { ...properties, ...node.properties };
+			}
+			if (isWNode(node) && !isWidgetBaseConstructor(node.widgetConstructor)) {
+				node.widgetConstructor =
+					this.registry.get<WidgetBase>(node.widgetConstructor) || node.widgetConstructor;
+			}
+			if (!node.bind) {
+				node.bind = this;
+			}
+			convertedNodes.push(node);
+			if (node.children && node.children.length) {
+				node.children = this._filterAndConvert(node.children);
+			}
+		}
+		return isArray ? convertedNodes : convertedNodes[0];
+	}
+
+	public __render__(): (WNode | VNode) | (WNode | VNode)[] {
+		const instanceData = widgetInstanceMap.get(this);
+		if (instanceData) {
+			instanceData.dirty = false;
+		}
 		const render = this._runBeforeRenders();
-		let dNode = render();
-		dNode = this.runAfterRenders(dNode);
+		const dNode = this._filterAndConvert(this.runAfterRenders(render()));
 		this._nodeHandler.clear();
 		return dNode;
 	}
 
 	public invalidate(): void {
-		const instanceData = widgetInstanceMap.get(this)!;
-		if (instanceData.invalidate) {
+		const instanceData = widgetInstanceMap.get(this);
+		if (instanceData && instanceData.invalidate) {
 			instanceData.invalidate();
 		}
 	}

@@ -15,7 +15,13 @@ class MockWidget extends WidgetBase {
 
 class OtherWidget extends WidgetBase {
 	render() {
-		return v('div', { key: 'one', classes: 'class' }, ['text node', undefined, w(MockWidget, {})]);
+		return v('div', { key: 'one', classes: 'class' }, ['text node', undefined, '', null, w(MockWidget, {})]);
+	}
+}
+
+class FalsyChildren extends WidgetBase {
+	render() {
+		return v('div', { key: 'one', classes: 'class' }, [undefined, '', null]);
 	}
 }
 
@@ -86,8 +92,16 @@ describe('support/assertRender', () => {
 		assert.doesNotThrow(() => {
 			assertRender(
 				renderResult,
-				v('div', { classes: 'class', key: 'one' }, ['text node', undefined, w(MockWidget, {})])
+				v('div', { classes: 'class', key: 'one' }, ['text node', undefined, '', null, w(MockWidget, {})])
 			);
+		});
+	});
+
+	it('Should not throw when all the children are falsy', () => {
+		const widget = new FalsyChildren();
+		const renderResult = widget.__render__();
+		assert.doesNotThrow(() => {
+			assertRender(renderResult, v('div', { classes: 'class', key: 'one' }, [undefined, '', null]));
 		});
 	});
 

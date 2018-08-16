@@ -76,7 +76,7 @@ describe('Outlet', () => {
 		assert.deepEqual(renderResult.properties, {});
 		router.setPath('/foo/bar');
 		renderResult = outlet.__render__() as WNode;
-		assert.isNull(renderResult);
+		assert.isUndefined(renderResult);
 	});
 
 	it('Should render the error component only for error matches', () => {
@@ -110,7 +110,7 @@ describe('Outlet', () => {
 		const TestOutlet = Outlet({ index: Widget }, 'baz', { mapParams });
 		const outlet = new TestOutlet();
 		outlet.__setProperties__({ router } as any);
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(mapParams.calledOnce);
 		assert.isTrue(
 			mapParams.calledWith({
@@ -151,13 +151,13 @@ describe('Outlet', () => {
 		const TestOutlet = Outlet({ index: Widget }, 'baz');
 		const outlet = new TestOutlet();
 		outlet.__setProperties__({ router } as any);
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(configOnEnter.calledOnce);
 		router.setPath('/baz/bar');
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(configOnEnter.calledTwice);
 		router.setPath('/baz/baz');
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(configOnEnter.calledThrice);
 	});
 
@@ -203,16 +203,16 @@ describe('Outlet', () => {
 		const TestOutlet = Outlet(OuterWidget, 'baz');
 		const outlet = new TestOutlet();
 		outlet.__setProperties__({ router } as any);
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(configOnEnter.calledOnce);
 		router.setPath('/baz/bar');
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(configOnEnter.calledTwice);
 		router.setPath('/baz/bar/qux');
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(configOnEnter.calledTwice);
 		router.setPath('/baz/foo/qux');
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(configOnEnter.calledThrice);
 	});
 
@@ -241,16 +241,16 @@ describe('Outlet', () => {
 		const TestOutlet = Outlet({ index: Widget }, 'foo');
 		const outlet = new TestOutlet();
 		outlet.__setProperties__({ router } as any);
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(configOnExit.notCalled);
 		router.setPath('/foo/bar');
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(configOnExit.calledOnce);
 		router.setPath('/baz');
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(configOnExit.calledOnce);
 		router.setPath('/foo');
-		outlet.__render__() as WNode;
+		outlet.__render__();
 		assert.isTrue(configOnExit.calledOnce);
 	});
 

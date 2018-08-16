@@ -1,5 +1,5 @@
 import { DNode, WNode, VNode, DefaultWidgetBaseInterface, Constructor } from '../../widget-core/interfaces';
-import { isWNode } from '../../widget-core/d';
+import { isWNode, isVNode } from '../../widget-core/d';
 import * as diff from 'diff';
 import WeakMap from '../../shim/WeakMap';
 import Set from '../../shim/Set';
@@ -30,12 +30,15 @@ export function formatDNodes(nodes: DNode | DNode[], depth: number = 0): string 
 	for (let i = 0; i < depth; i++) {
 		tabs = `${tabs}\t`;
 	}
+	let requiresCarriageReturn = false;
 	let formattedNode = nodes.reduce((result: string, node, index) => {
-		if (node === null || node === undefined) {
+		if (!node) {
 			return result;
 		}
-		if (index > 0) {
+		if (requiresCarriageReturn) {
 			result = `${result}\n`;
+		} else {
+			requiresCarriageReturn = true;
 		}
 		result = `${result}${tabs}`;
 
@@ -43,8 +46,12 @@ export function formatDNodes(nodes: DNode | DNode[], depth: number = 0): string 
 			return `${result}"${node}"`;
 		}
 
+		if (isVNode(node) && node.text) {
+			return `${result}"${node.text}"`;
+		}
+
 		result = `${result}${formatNode(node, tabs)}`;
-		if (node.children && node.children.length > 0) {
+		if (node.children && node.children.some((child) => !!child)) {
 			result = `${result}, [\n${formatDNodes(node.children, depth + 1)}\n${tabs}]`;
 		}
 		return `${result})`;

@@ -4,9 +4,9 @@ import { Base as MetaBase } from '../../../../src/widget-core/meta/Base';
 import { stub, spy } from 'sinon';
 import { createResolvers } from './../../support/util';
 import NodeHandler, { NodeEventType } from '../../../../src/widget-core/NodeHandler';
-import { v } from '../../../../src/widget-core/d';
-import { ProjectorMixin } from '../../../../src/widget-core/mixins/Projector';
+import { v, w } from '../../../../src/widget-core/d';
 import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
+import { renderer } from '../../../../src/widget-core/vdom';
 
 const resolvers = createResolvers();
 let bindInstance: WidgetBase;
@@ -167,7 +167,19 @@ registerSuite('meta base', {
 				}
 			}
 
-			class TestWidget extends ProjectorMixin(WidgetBase) {
+			const onFoo = stub();
+			const onBar = stub();
+			const onWidget = stub();
+			let meta: any;
+			class TestWidget extends WidgetBase {
+				constructor() {
+					super();
+					meta = this.meta(MyMeta);
+					const nodeHandler = meta.getNodeHandler();
+					nodeHandler.on('foo', onFoo);
+					nodeHandler.on('bar', onBar);
+					nodeHandler.on(NodeEventType.Widget, onWidget);
+				}
 				render() {
 					return v('div', { key: 'foo' }, [v('div', { key: 'bar' }, ['hello world'])]);
 				}
@@ -177,21 +189,9 @@ registerSuite('meta base', {
 				}
 			}
 
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-
-			const nodeHandler = meta.getNodeHandler();
-			const onFoo = stub();
-			const onBar = stub();
-			const onWidget = stub();
-
-			nodeHandler.on('foo', onFoo);
-			nodeHandler.on('bar', onBar);
-			nodeHandler.on(NodeEventType.Widget, onWidget);
-
 			const div = document.createElement('div');
-			widget.append(div);
-			resolvers.resolve();
+			const r = renderer(() => w(TestWidget, {}));
+			r.mount({ domNode: div, sync: true });
 
 			assert.isTrue(meta.has('foo'), '1');
 			assert.isTrue(meta.has('bar'), '2');
@@ -210,7 +210,20 @@ registerSuite('meta base', {
 				}
 			}
 
-			class TestWidget extends ProjectorMixin(WidgetBase) {
+			const onFoo = stub();
+			const onBar = stub();
+			const onWidget = stub();
+			let meta: any;
+			class TestWidget extends WidgetBase {
+				constructor() {
+					super();
+					meta = this.meta(MyMeta);
+					const nodeHandler = meta.getNodeHandler();
+					nodeHandler.on('foo', onFoo);
+					nodeHandler.on('bar', onBar);
+					nodeHandler.on(NodeEventType.Widget, onWidget);
+				}
+
 				render() {
 					return [v('div', { key: 'foo' }), v('div', { key: 'bar' })];
 				}
@@ -219,22 +232,9 @@ registerSuite('meta base', {
 					return this.meta(MyMeta);
 				}
 			}
-
-			const widget = new TestWidget();
-			const meta = widget.getMeta();
-
-			const nodeHandler = meta.getNodeHandler();
-			const onFoo = stub();
-			const onBar = stub();
-			const onWidget = stub();
-
-			nodeHandler.on('foo', onFoo);
-			nodeHandler.on('bar', onBar);
-			nodeHandler.on(NodeEventType.Widget, onWidget);
-
 			const div = document.createElement('div');
-			widget.append(div);
-			resolvers.resolve();
+			const r = renderer(() => w(TestWidget, {}));
+			r.mount({ domNode: div, sync: true });
 
 			assert.isTrue(meta.has('foo'));
 			assert.isTrue(meta.has('bar'));

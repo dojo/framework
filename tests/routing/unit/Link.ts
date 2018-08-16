@@ -48,7 +48,7 @@ describe('Link', () => {
 
 	it('Generate link component for basic outlet', () => {
 		const link = new Link();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', registry });
 		const dNode: any = link.__render__();
 		assert.strictEqual(dNode.tag, 'a');
@@ -57,7 +57,7 @@ describe('Link', () => {
 
 	it('Generate link component for outlet with specified params', () => {
 		const link = new Link();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo2', params: { foo: 'foo' }, registry });
 		const dNode: any = link.__render__();
 		assert.strictEqual(dNode.tag, 'a');
@@ -66,7 +66,7 @@ describe('Link', () => {
 
 	it('Generate link component for fixed href', () => {
 		const link = new Link();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: '#foo/static', isOutlet: false, registry });
 		const dNode: any = link.__render__();
 		assert.strictEqual(dNode.tag, 'a');
@@ -75,7 +75,7 @@ describe('Link', () => {
 
 	it('Set router path on click', () => {
 		const link = new Link();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: '#foo/static', isOutlet: false, registry });
 		const dNode: any = link.__render__();
 		assert.strictEqual(dNode.tag, 'a');
@@ -86,7 +86,7 @@ describe('Link', () => {
 
 	it('Custom onClick handler can prevent default', () => {
 		const link = new Link();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({
 			to: 'foo',
 			registry,
@@ -103,7 +103,7 @@ describe('Link', () => {
 
 	it('Does not set router path when target attribute is set', () => {
 		const link = new Link();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({
 			to: 'foo',
 			registry,
@@ -118,7 +118,7 @@ describe('Link', () => {
 
 	it('Does not set router path on right click', () => {
 		const link = new Link();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({
 			to: 'foo',
 			registry
@@ -132,7 +132,7 @@ describe('Link', () => {
 
 	it('throw error if the injected router cannot be found with the router key', () => {
 		const link = new Link();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: '#foo/static', isOutlet: false, routerKey: 'fake-key' });
 		try {
 			link.__render__();

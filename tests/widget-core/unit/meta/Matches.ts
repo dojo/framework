@@ -3,12 +3,12 @@ const { registerSuite } = intern.getPlugin('jsdom');
 
 import sendEvent from '../../support/sendEvent';
 import { createResolvers } from './../../support/util';
-import { v } from '../../../../src/widget-core/d';
-import { ProjectorMixin } from '../../../../src/widget-core/mixins/Projector';
+import { v, w } from '../../../../src/widget-core/d';
 import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 import { ThemedMixin } from '../../../../src/widget-core/mixins/Themed';
 
 import Matches from '../../../../src/widget-core/meta/Matches';
+import { renderer } from '../../../../src/widget-core/vdom';
 
 const resolvers = createResolvers();
 
@@ -25,7 +25,7 @@ registerSuite('support/meta/Matches', {
 		'node matches'() {
 			const results: boolean[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
+			class TestWidget extends ThemedMixin(WidgetBase) {
 				private _onclick(evt: MouseEvent) {
 					results.push(this.meta(Matches).get('root', evt));
 				}
@@ -43,23 +43,18 @@ registerSuite('support/meta/Matches', {
 
 			document.body.appendChild(div);
 
-			const widget = new TestWidget();
-			widget.append(div);
-
-			resolvers.resolve();
-			resolvers.resolve();
+			const r = renderer(() => w(TestWidget, {}));
+			r.mount({ domNode: div, sync: true });
 
 			sendEvent(div.firstChild as Element, 'click');
-
 			assert.deepEqual(results, [true], 'should have been called and the target matched');
-
 			document.body.removeChild(div);
 		},
 
 		'node matches with number key'() {
 			const results: boolean[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
+			class TestWidget extends ThemedMixin(WidgetBase) {
 				private _onclick(evt: MouseEvent) {
 					results.push(this.meta(Matches).get(1234, evt));
 				}
@@ -77,11 +72,8 @@ registerSuite('support/meta/Matches', {
 
 			document.body.appendChild(div);
 
-			const widget = new TestWidget();
-			widget.append(div);
-
-			resolvers.resolve();
-			resolvers.resolve();
+			const r = renderer(() => w(TestWidget, {}));
+			r.mount({ domNode: div, sync: true });
 
 			sendEvent(div.firstChild as Element, 'click');
 
@@ -93,7 +85,7 @@ registerSuite('support/meta/Matches', {
 		'node does not match'() {
 			const results: boolean[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
+			class TestWidget extends ThemedMixin(WidgetBase) {
 				private _onclick(evt: MouseEvent) {
 					results.push(this.meta(Matches).get('root', evt));
 				}
@@ -119,11 +111,8 @@ registerSuite('support/meta/Matches', {
 
 			document.body.appendChild(div);
 
-			const widget = new TestWidget();
-			widget.append(div);
-
-			resolvers.resolve();
-			resolvers.resolve();
+			const r = renderer(() => w(TestWidget, {}));
+			r.mount({ domNode: div, sync: true });
 
 			sendEvent(div.firstChild!.firstChild as Element, 'click', {
 				eventInit: {
@@ -139,7 +128,7 @@ registerSuite('support/meta/Matches', {
 		'node only exists on some renders'() {
 			const results: boolean[] = [];
 
-			class TestWidget extends ProjectorMixin(ThemedMixin(WidgetBase)) {
+			class TestWidget extends ThemedMixin(WidgetBase) {
 				private _renderSecond = false;
 				private _onclick(evt: MouseEvent) {
 					results.push(this.meta(Matches).get('child1', evt));
@@ -169,11 +158,8 @@ registerSuite('support/meta/Matches', {
 
 			document.body.appendChild(div);
 
-			const widget = new TestWidget();
-			widget.append(div);
-
-			resolvers.resolve();
-			resolvers.resolve();
+			const r = renderer(() => w(TestWidget, {}));
+			r.mount({ domNode: div, sync: true });
 
 			sendEvent(div.firstChild!.firstChild as Element, 'click', {
 				eventInit: {

@@ -4,7 +4,7 @@ const { assert } = intern.getPlugin('chai');
 
 import { WidgetBase } from './../../../../src/widget-core/WidgetBase';
 import { w } from './../../../../src/widget-core/d';
-import { ProjectorMixin } from './../../../../src/widget-core/mixins/Projector';
+import { renderer } from './../../../../src/widget-core/vdom';
 import { alwaysRender } from './../../../../src/widget-core/decorators/alwaysRender';
 
 describe('decorators/alwaysRender', () => {
@@ -19,19 +19,23 @@ describe('decorators/alwaysRender', () => {
 			}
 		}
 
-		class Parent extends ProjectorMixin(WidgetBase) {
+		let invalidate: any;
+		class Parent extends WidgetBase {
+			constructor() {
+				super();
+				invalidate = this.invalidate.bind(this);
+			}
 			render() {
 				return w(Widget, {});
 			}
 		}
 
-		const projector = new Parent();
-		projector.async = false;
-		projector.setProperties({});
-		projector.append();
+		const r = renderer(() => w(Parent, {}));
+		r.mount({ sync: true });
+		renderCount = 0;
+		invalidate();
 		assert.strictEqual(renderCount, 1);
-
-		projector.invalidate();
+		invalidate();
 		assert.strictEqual(renderCount, 2);
 	});
 });

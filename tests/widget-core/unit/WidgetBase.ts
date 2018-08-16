@@ -3,16 +3,16 @@ const { assert } = intern.getPlugin('chai');
 import { spy, stub, SinonStub } from 'sinon';
 
 import { WidgetBase, noBind } from '../../../src/widget-core/WidgetBase';
-import { v } from '../../../src/widget-core/d';
+import { v, w } from '../../../src/widget-core/d';
 import { WIDGET_BASE_TYPE } from '../../../src/widget-core/Registry';
-import { VNode, WidgetMetaConstructor, WidgetMetaBase } from '../../../src/widget-core/interfaces';
+import { VNode, WidgetMetaConstructor, WidgetMetaBase, WNode } from '../../../src/widget-core/interfaces';
 import { handleDecorator } from '../../../src/widget-core/decorators/handleDecorator';
 import { diffProperty } from '../../../src/widget-core/decorators/diffProperty';
-import { Registry } from '../../../src/widget-core/Registry';
 import { Base } from '../../../src/widget-core/meta/Base';
 import { NodeEventType } from '../../../src/widget-core/NodeHandler';
 import { widgetInstanceMap } from '../../../src/widget-core/vdom';
 import { afterRender } from '../../../src/widget-core/decorators/afterRender';
+import { registry } from '../../../src/widget-core/decorators/registry';
 
 interface TestProperties {
 	foo?: string;
@@ -90,14 +90,6 @@ describe('WidgetBase', () => {
 		assert.isTrue(invalidateStub.calledTwice);
 	});
 
-	it('updated core properties available on instance data', () => {
-		const child = new BaseTestWidget();
-		const instanceData = widgetInstanceMap.get(child)!;
-		assert.deepEqual(instanceData.coreProperties, {});
-		child.__setCoreProperties__({ bind: child, baseRegistry: 'base' });
-		assert.deepEqual(instanceData.coreProperties, { bind: child, baseRegistry: 'base' });
-	});
-
 	describe('__render__', () => {
 		it('returns render result', () => {
 			class TestWidget extends BaseTestWidget {
@@ -109,7 +101,75 @@ describe('WidgetBase', () => {
 			const renderResult = widget.__render__() as VNode;
 			assert.strictEqual(renderResult.tag, 'my-app');
 			assert.lengthOf(renderResult.children!, 1);
-			assert.strictEqual(renderResult.children![0], 'child');
+			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+		});
+
+		it('Deferred properties are run during __render__', () => {
+			class TestWidget extends BaseTestWidget {
+				render() {
+					return v('my-app', () => ({ foo: 'bar' }), ['child']);
+				}
+			}
+			const widget = new TestWidget();
+			const renderResult = widget.__render__() as VNode;
+			assert.strictEqual(renderResult.tag, 'my-app');
+			assert.isFunction(renderResult.deferredPropertiesCallback);
+			assert.deepEqual(renderResult.properties, { foo: 'bar' });
+			assert.lengthOf(renderResult.children!, 1);
+			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+		});
+
+		it('Decorated properties are stored separately to resolved deferred properties', () => {
+			class TestWidget extends BaseTestWidget {
+				@afterRender()
+				after(node: VNode) {
+					node.properties = {
+						bar: 'foo'
+					};
+					return node;
+				}
+
+				render() {
+					return v('my-app', () => ({ foo: 'bar' }), ['child']);
+				}
+			}
+			const widget = new TestWidget();
+			const renderResult = widget.__render__() as VNode;
+			assert.strictEqual(renderResult.tag, 'my-app');
+			assert.isFunction(renderResult.deferredPropertiesCallback);
+			assert.deepEqual(renderResult.properties, { foo: 'bar', bar: 'foo' });
+			assert.deepEqual(renderResult.originalProperties, { bar: 'foo' });
+			assert.lengthOf(renderResult.children!, 1);
+			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+		});
+
+		it('Empty nodes are filtered from children', () => {
+			class TestWidget extends BaseTestWidget {
+				render() {
+					return v('my-app', ['child', undefined]);
+				}
+			}
+			const widget = new TestWidget();
+			const renderResult = widget.__render__() as VNode;
+			assert.strictEqual(renderResult.tag, 'my-app');
+			assert.lengthOf(renderResult.children!, 1);
+			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+		});
+
+		it('Resolves registry items', () => {
+			class Bar extends WidgetBase {}
+
+			@registry('bar', Bar)
+			class TestWidget extends BaseTestWidget {
+				render() {
+					return w('bar', {}, [w('bar', {})]);
+				}
+			}
+			const widget = new TestWidget();
+			const renderResult = widget.__render__() as WNode;
+			assert.strictEqual(renderResult.widgetConstructor, Bar);
+			assert.lengthOf(renderResult.children!, 1);
+			assert.strictEqual((renderResult.children![0] as WNode).widgetConstructor, Bar);
 		});
 	});
 
@@ -197,8 +257,7 @@ describe('WidgetBase', () => {
 
 			const widget = new TestWidget();
 
-			widget.__setCoreProperties__({ bind: widget } as any);
-			widget.__setProperties__({ baz });
+			widget.__setProperties__({ baz }, widget);
 			widget.properties.baz && widget.properties.baz();
 			assert.isTrue(widget.called);
 		});
@@ -215,9 +274,7 @@ describe('WidgetBase', () => {
 			(baz as any)[noBind] = true;
 
 			const widget = new TestWidget();
-
-			widget.__setCoreProperties__({ bind: widget } as any);
-			widget.__setProperties__({ baz });
+			widget.__setProperties__({ baz }, widget);
 			widget.properties.baz && widget.properties.baz();
 			assert.isFalse(widget.called);
 		});
@@ -287,41 +344,6 @@ describe('WidgetBase', () => {
 		assert.isTrue(invalidateSpy.calledThrice);
 		widget.__setChildren__([]);
 		assert.isTrue(invalidateSpy.calledThrice);
-	});
-
-	describe('__setCoreProperties__', () => {
-		it('new baseRegistry is added to RegistryHandler and triggers an invalidation', () => {
-			const baseRegistry = new Registry();
-			const injector = () => 'item';
-			baseRegistry.defineInjector('label', () => injector);
-			const widget = new BaseTestWidget();
-			const invalidateSpy = spy(widget, 'invalidate');
-			widget.__setCoreProperties__({ bind: widget, baseRegistry });
-			assert.isTrue(invalidateSpy.calledOnce);
-			assert.strictEqual(widget.registry.getInjector('label')!.injector, injector);
-		});
-
-		it('The same baseRegistry does not causes an invalidation', () => {
-			const baseRegistry = new Registry();
-			const widget = new BaseTestWidget();
-			widget.__setCoreProperties__({ bind: widget, baseRegistry });
-			const invalidateSpy = spy(widget, 'invalidate');
-			widget.__setCoreProperties__({ bind: widget, baseRegistry });
-			assert.isTrue(invalidateSpy.notCalled);
-		});
-
-		it('different baseRegistry replaces the RegistryHandlers baseRegistry and triggers an invalidation', () => {
-			const baseRegistry = new Registry();
-			const injector = () => 'item';
-			baseRegistry.defineInjector('label', () => injector);
-			const widget = new BaseTestWidget();
-			widget.__setCoreProperties__({ bind: widget, baseRegistry: new Registry() });
-			assert.isNull(widget.registry.getInjector('label'));
-			const invalidateSpy = spy(widget, 'invalidate');
-			widget.__setCoreProperties__({ bind: widget, baseRegistry });
-			assert.strictEqual(widget.registry.getInjector('label')!.injector, injector);
-			assert.isTrue(invalidateSpy.called);
-		});
 	});
 
 	it('destroys registry when WidgetBase is detached', () => {

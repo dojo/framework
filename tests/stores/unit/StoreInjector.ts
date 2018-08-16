@@ -95,7 +95,7 @@ describe('StoreInjector', () => {
 			class TestWidget extends WidgetBase<any> {}
 			const widget = new TestWidget();
 			registry.defineInjector('state', () => () => store);
-			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+			widget.registry.base = registry;
 			widget.__setProperties__({});
 			const invalidateSpy = spy(widget, 'invalidate');
 			assert.strictEqual(widget.properties.foo, undefined);
@@ -121,7 +121,7 @@ describe('StoreInjector', () => {
 			class TestWidget extends WidgetBase<any> {}
 			const widget = new TestWidget();
 			registry.defineInjector('state', () => () => store);
-			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+			widget.registry.base = registry;
 			widget.__setProperties__({});
 			const invalidateSpy = spy(widget, 'invalidate');
 			assert.strictEqual(widget.properties.foo, undefined);
@@ -149,7 +149,7 @@ describe('StoreInjector', () => {
 			class TestWidget extends WidgetBase<any> {}
 			const widget = new TestWidget();
 			registry.defineInjector('state', () => () => store);
-			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+			widget.registry.base = registry;
 			widget.__setProperties__({});
 			const invalidateSpy = spy(widget, 'invalidate');
 			assert.strictEqual(widget.properties.foo, undefined);
@@ -189,15 +189,15 @@ describe('StoreInjector', () => {
 			}
 			const widget = new TestWidget();
 			registry.defineInjector('state', () => () => store);
-			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+			widget.registry.base = registry;
 			widget.__setProperties__({});
 			fooProcess(store)({});
-			assert.strictEqual(invalidateCounter, 3);
+			assert.strictEqual(invalidateCounter, 2);
 			barProcess(store)({});
-			assert.strictEqual(invalidateCounter, 4);
+			assert.strictEqual(invalidateCounter, 3);
 			widget.destroy();
 			barProcess(store)({});
-			assert.strictEqual(invalidateCounter, 4);
+			assert.strictEqual(invalidateCounter, 3);
 		});
 
 		it('path based invalidate listeners are removed when widget is destroyed', () => {
@@ -222,15 +222,15 @@ describe('StoreInjector', () => {
 			}
 			const widget = new TestWidget();
 			registry.defineInjector('state', () => () => store);
-			widget.__setCoreProperties__({ bind: widget, baseRegistry: registry });
+			widget.registry.base = registry;
 			widget.__setProperties__({});
 			fooProcess(store)({});
-			assert.strictEqual(invalidateCounter, 3);
+			assert.strictEqual(invalidateCounter, 2);
 			fooProcess(store)({});
-			assert.strictEqual(invalidateCounter, 4);
+			assert.strictEqual(invalidateCounter, 3);
 			widget.destroy();
 			fooProcess(store)({});
-			assert.strictEqual(invalidateCounter, 4);
+			assert.strictEqual(invalidateCounter, 3);
 		});
 	});
 
