@@ -270,7 +270,7 @@ describe('Outlet', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
 		const outlet = new TestOutlet();
-		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
+		outlet.registry.base = registry;
 		outlet.__setProperties__({
 			id: 'foo',
 			renderer(details) {
@@ -304,7 +304,7 @@ describe('Outlet', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
 		const outlet = new TestOutlet();
-		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
+		outlet.registry.base = registry;
 		outlet.__setProperties__({
 			id: 'foo',
 			renderer(details) {
@@ -338,7 +338,7 @@ describe('Outlet', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/other');
 		const outlet = new TestOutlet();
-		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
+		outlet.registry.base = registry;
 		outlet.__setProperties__({
 			id: 'foo',
 			renderer(details) {
@@ -405,7 +405,7 @@ describe('Outlet', () => {
 		const routerTwo = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		routerOne.setPath('/foo');
 		const outlet = new TestOutlet();
-		outlet.__setCoreProperties__({ baseRegistry: registry, bind: outlet });
+		outlet.registry.base = registry;
 		outlet.__setProperties__({
 			id: 'foo',
 			routerKey: 'my-router',
