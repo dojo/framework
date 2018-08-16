@@ -10,8 +10,6 @@ Routing for Dojo applications.
      - [History Managers](#history-managers)
    - [Router Context Injection](#router-context-injection)
    - [Outlets](#outlets)
-     - [Outlet Component Types](#outlet-component-types)
-     - [Outlet Options](#outlet-options)
      - [Global Error Outlet](#global-error-outlet)
    - [Link](#link)
 
@@ -225,7 +223,7 @@ const router = registerRouterInjector(config, registry, { history, key: 'custom-
 
 The primary concept for the routing integration is an `outlet`, a unique identifier associated with the registered application route. The `Outlet` is a standard dojo widget and can be used anywhere within an application. The `Outlet` widget has a small API:
 
- * `outlet`: The name of the outlet to execute the `renderer` when matched.
+ * `id`: The id of the outlet to execute the `renderer` when matched.
  * `renderer`: A render function that is called when the outlet is matched.
  * `routerKey` (Optional): The `key` used when the router was defined in the registry - defaults to `router`.
 
@@ -234,7 +232,7 @@ The primary concept for the routing integration is an `outlet`, a unique identif
 ```ts
 render() {
 	return v('div', [
-		w(Outlet, { name: 'my-outlet', renderer: () => {
+		w(Outlet, { id: 'my-outlet', renderer: () => {
 			return w(MyWidget, {});
 		}})
 	])
@@ -280,7 +278,7 @@ interface MatchDetails {
 ```ts
 render() {
 	return v('div', [
-		w(Outlet, { name: 'my-outlet', renderer: (matchDetails: MatchDetails) => {
+		w(Outlet, { id: 'my-outlet', renderer: (matchDetails: MatchDetails) => {
 			if (matchDetails.isError()) {
 				return w(ErrorWidget, {});
 			}
@@ -298,7 +296,14 @@ render() {
 Whenever a match type of `error` is registered a global outlet is automatically added to the matched outlets called `errorOutlet`. This outlet can be used to render a widget for any unknown routes.
 
 ```ts
-const ErrorOutlet = Outlet((properties) => w(ErrorWidget, properties), { outlet: 'errorOutlet' });
+render() {
+	return w(Outlet, {
+		id: 'errorOutlet',
+		renderer: (matchDetails: MatchDetails) => {
+			return w(ErrorWidget, properties);
+		}
+	});
+}
 ```
 
 ### Link
