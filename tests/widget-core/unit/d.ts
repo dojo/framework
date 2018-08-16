@@ -110,6 +110,67 @@ registerSuite('d', {
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));
+		},
+		'should merge properties onto a WNode'() {
+			class Foo extends WidgetBase<{ foo: string; bar: number }> {}
+			const dNode = w(Foo, { foo: 'foo', bar: 1 }, ['child']);
+			assert.equal(dNode.type, WNODE);
+			assert.strictEqual(dNode.widgetConstructor, Foo);
+			assert.deepEqual(dNode.properties, { foo: 'foo', bar: 1 });
+			assert.lengthOf(dNode.children, 1);
+			assert.strictEqual(dNode.children[0], 'child');
+			assert.isTrue(isWNode(dNode));
+			assert.isFalse(isVNode(dNode));
+			const mergedNode = w(dNode, { foo: 'bar' });
+			// maintains properties typings, this errors
+			// w(dNode, { foo: 1 });
+			assert.equal(mergedNode.type, WNODE);
+			assert.strictEqual(mergedNode.widgetConstructor, Foo);
+			assert.deepEqual(mergedNode.properties, { foo: 'bar', bar: 1 });
+			assert.lengthOf(mergedNode.children, 1);
+			assert.strictEqual(dNode.children[0], 'child');
+			assert.isTrue(isWNode(mergedNode));
+			assert.isFalse(isVNode(mergedNode));
+		},
+		'should replace children on a WNode'() {
+			class Foo extends WidgetBase<any, string> {}
+			const dNode = w(Foo, {}, ['original']);
+			assert.equal(dNode.type, WNODE);
+			assert.strictEqual(dNode.widgetConstructor, Foo);
+			assert.deepEqual(dNode.properties, {});
+			assert.lengthOf(dNode.children, 1);
+			assert.strictEqual(dNode.children[0], 'original');
+			assert.isTrue(isWNode(dNode));
+			assert.isFalse(isVNode(dNode));
+			const mergedNode = w(dNode, {}, ['updated', 'children']);
+			// maintains children typings, this errors
+			// w(dNode, { }, [ v('div') ]);
+			assert.equal(mergedNode.type, WNODE);
+			assert.strictEqual(mergedNode.widgetConstructor, Foo);
+			assert.deepEqual(mergedNode.properties, {});
+			assert.lengthOf(mergedNode.children, 2);
+			assert.strictEqual(mergedNode.children[0], 'updated');
+			assert.strictEqual(mergedNode.children[1], 'children');
+			assert.isTrue(isWNode(mergedNode));
+			assert.isFalse(isVNode(mergedNode));
+		},
+		'should replace children with an empty array on a WNode'() {
+			class Foo extends WidgetBase<any, string> {}
+			const dNode = w(Foo, {}, ['original']);
+			assert.equal(dNode.type, WNODE);
+			assert.strictEqual(dNode.widgetConstructor, Foo);
+			assert.deepEqual(dNode.properties, {});
+			assert.lengthOf(dNode.children, 1);
+			assert.strictEqual(dNode.children[0], 'original');
+			assert.isTrue(isWNode(dNode));
+			assert.isFalse(isVNode(dNode));
+			const mergedNode = w(dNode, {}, []);
+			assert.equal(mergedNode.type, WNODE);
+			assert.strictEqual(mergedNode.widgetConstructor, Foo);
+			assert.deepEqual(mergedNode.properties, {});
+			assert.lengthOf(mergedNode.children, 0);
+			assert.isTrue(isWNode(mergedNode));
+			assert.isFalse(isVNode(mergedNode));
 		}
 	},
 	v: {
@@ -141,6 +202,46 @@ registerSuite('d', {
 			assert.equal(vNode.type, VNODE);
 			assert.isTrue(isVNode(vNode));
 			assert.isFalse(isWNode(vNode));
+		},
+		'should mix properties onto passed vnode properties'() {
+			const children = ['child'];
+			const vnode = v('div', { a: 'a', b: 'b' }, children);
+			const mergedVNode = v(vnode, { c: 'c', b: 'c' });
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties, { a: 'a', b: 'c', c: 'c', styles: {}, classes: [] });
+			assert.strictEqual(mergedVNode.children, children);
+		},
+		'should replace children on passed vnode'() {
+			const children = ['new child'];
+			const vnode = v('div', { a: 'a', b: 'b' }, ['child']);
+			const mergedVNode = v(vnode, { c: 'c', b: 'c' }, children);
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties, { a: 'a', b: 'c', c: 'c', styles: {}, classes: [] });
+			assert.strictEqual(mergedVNode.children, children);
+		},
+		'should merge styles onto passed vnode properties'() {
+			const vnode = v('div', { styles: { color: 'red', width: '100px' } });
+			const mergedVNode = v(vnode, { styles: { width: '200px', height: '100px' } });
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties.styles, { color: 'red', width: '200px', height: '100px' });
+		},
+		'should merge classes onto passed vnode properties with no classes'() {
+			const vnode = v('div');
+			const mergedVNode = v(vnode, { classes: 'baz' });
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties.classes, ['baz']);
+		},
+		'should merge classes onto passed vnode properties with string classes'() {
+			const vnode = v('div', { classes: 'foo' });
+			const mergedVNode = v(vnode, { classes: ['baz'] });
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties.classes, ['foo', 'baz']);
+		},
+		'should merge classes onto passed vnode properties with an array of classes'() {
+			const vnode = v('div', { classes: ['foo', 'bar'] });
+			const mergedVNode = v(vnode, { classes: ['baz'] });
+			assert.strictEqual(mergedVNode.tag, 'div');
+			assert.deepEqual(mergedVNode.properties.classes, ['foo', 'bar', 'baz']);
 		},
 		'create VNode wrapper with deferred properties'() {
 			const props = () => {

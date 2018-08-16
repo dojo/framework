@@ -32,7 +32,7 @@ export const DOMVNODE = Symbol('Identifier for a VNode created using existing do
  * Helper function that returns true if the `DNode` is a `WNode` using the `type` property
  */
 export function isWNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface>(
-	child: DNode<W>
+	child: DNode<W> | any
 ): child is WNode<W> {
 	return Boolean(child && typeof child !== 'string' && child.type === WNODE);
 }
@@ -140,13 +140,29 @@ export function decorate(
  * Wrapper function for calls to create a widget.
  */
 export function w<W extends WidgetBaseInterface>(
+	node: WNode<W>,
+	properties: Partial<W['properties']>,
+	children?: W['children']
+): WNode<W>;
+export function w<W extends WidgetBaseInterface>(
 	widgetConstructor: Constructor<W> | RegistryLabel,
 	properties: W['properties'],
-	children: W['children'] = []
+	children?: W['children']
+): WNode<W>;
+export function w<W extends WidgetBaseInterface>(
+	widgetConstructorOrNode: Constructor<W> | RegistryLabel | WNode<W>,
+	properties: W['properties'],
+	children?: W['children']
 ): WNode<W> {
+	if (isWNode(widgetConstructorOrNode)) {
+		properties = { ...(widgetConstructorOrNode.properties as any), ...(properties as any) };
+		children = children ? children : widgetConstructorOrNode.children;
+		widgetConstructorOrNode = widgetConstructorOrNode.widgetConstructor;
+	}
+
 	return {
-		children,
-		widgetConstructor,
+		children: children || [],
+		widgetConstructor: widgetConstructorOrNode,
 		properties,
 		type: WNODE
 	};
@@ -155,11 +171,13 @@ export function w<W extends WidgetBaseInterface>(
 /**
  * Wrapper function for calls to create VNodes.
  */
+export function v(node: VNode, properties: VNodeProperties, children: undefined | DNode[]): VNode;
+export function v(node: VNode, properties: VNodeProperties): VNode;
 export function v(tag: string, children: undefined | DNode[]): VNode;
 export function v(tag: string, properties: DeferredVirtualProperties | VNodeProperties, children?: DNode[]): VNode;
 export function v(tag: string): VNode;
 export function v(
-	tag: string,
+	tag: string | VNode,
 	propertiesOrChildren: VNodeProperties | DeferredVirtualProperties | DNode[] = {},
 	children: undefined | DNode[] = undefined
 ): VNode {
@@ -174,6 +192,17 @@ export function v(
 	if (typeof properties === 'function') {
 		deferredPropertiesCallback = properties;
 		properties = {};
+	}
+
+	if (isVNode(tag)) {
+		let { classes = [], styles = {}, ...newProperties } = properties;
+		let { classes: nodeClasses = [], styles: nodeStyles = {}, ...nodeProperties } = tag.properties;
+		nodeClasses = Array.isArray(nodeClasses) ? nodeClasses : [nodeClasses];
+		classes = Array.isArray(classes) ? classes : [classes];
+		styles = { ...nodeStyles, ...styles };
+		properties = { ...nodeProperties, ...newProperties, classes: [...nodeClasses, ...classes], styles };
+		children = children ? children : tag.children;
+		tag = tag.tag;
 	}
 
 	return {
