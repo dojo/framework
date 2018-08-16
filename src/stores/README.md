@@ -26,8 +26,9 @@ An application store designed to complement @dojo/widgets and @dojo/widget-core 
      - [Transforming Executor Arguments](#transforming-executor-arguments)
      - [Optimistic Update Pattern](#optimistic-update-pattern)
      - [Executing Concurrent Commands](#executing-concurrent-commands)
-     - [Decorating Processes](#decorating-processes)
-        - [Decorating Multiple Processes](#decorating-multiple-processes)
+ - [Middleware](#middleware)
+     - [Applying Middleware to Multiple Processes](#applying-middleware-to-multiple-processes)
+     - [Local Storage Middleware](#local-storage-middleware)
 
 -----
 
@@ -524,9 +525,11 @@ In this example, `commandOne` is executed, then both `concurrentCommandOne` and 
 
 **Note:** Concurrent commands are always assumed to be asynchronous and resolved using `Promise.all`.
 
-### Decorating Processes
+## Middleware
 
-The `Process` callback provides a hook to apply generic/global functionality across multiple or all processes used within an application. This is done using higher order functions that wrap the process' local `callback` using the error and result payload to decorate or perform an action for all processes it is used for.
+Middleware provides a hook to apply generic/global functionality across multiple or all processes used within an application. Middleware is a function that receives the error and the result of a process to perform a specific action, before calling the next middleware if provided.
+
+This is done using higher order functions that wrap the process' local `callback` using the error and result payload to decorate or perform an action for all processes it is used for.
 
 `callback` decorators can be composed together to combine multiple units of functionality, such that in the example below `myProcess` would run the `error` and `result` through the `collector`, `logger` and then `snapshot` callbacks.
 
@@ -534,11 +537,11 @@ The `Process` callback provides a hook to apply generic/global functionality acr
 const myProcess = createProcess('my-process', [ commandOne, commandTwo ], collector(logger(snapshot())));
 ```
 
-#### Decorating Multiple Processes
+### Applying Middleware to Multiple Processes
 
-Specifying a `callback` decorator on an individual process explicitly works for targeted behavior but can become cumbersome when the decorator needs to be applied to multiple processes throughout the application.
+Specifying a middleware on an individual process explicitly works for targeted behavior but can become cumbersome when the middleware needs to be applied to multiple processes throughout the application.
 
-The `createProcessWith` higher order function can be used to specify `callback` decorators that need to be applied across multiple `processes`. The function accepts an array of `callback` decorators and returns a new `createProcess` factory function that will automatically apply the decorators to any process that it creates.
+The `createProcessWith` higher order function can be used to specify middlewares that need to be applied across multiple `processes`. The function accepts an array of middleware and returns a new `createProcess` factory function that will automatically apply the middleware to any process that it creates.
 
 ```ts
 const customCreateProcess = createProcessWith([ logger ]);
@@ -547,18 +550,43 @@ const customCreateProcess = createProcessWith([ logger ]);
 const myProcess = customCreateProcess('my-process', [ commandOne, commandTwo ]);
 ```
 
-An additional helper function `createCallbackDecorator` can be used to turn a simple `ProcessCallback` into a decorator that ensures the passed callback is executed after the decorating `callback` has been run.
+An additional helper function `createCallbackDecorator` can be used to ensure that a middleware function calls the next middleware after it has finished executing.
 
 ```ts
-const myCallback = (error: ProcessError, result: ProcessResult) => {
+const myMiddleware = (error: ProcessError, result: ProcessResult) => {
 	// do things with the outcome of the process
 };
 
-// turns the callback into a callback decorator
-const myCallbackDecorator = createCallbackDecorator(myCallback);
+// ensures the middleware will call the next middleware in the stack
+const myMiddlewareDecorator = createCallbackDecorator(myMiddleware);
 
-// use the callback decorator as normal
-const myProcess = createProcess('my-process', [ commandOne ], myCallbackDecorator());
+// use the middleware decorator as normal
+const myProcess = createProcess('my-process', [ commandOne ], myMiddlewareDecorator());
+```
+
+### Local Storage Middleware
+
+Middleware that provides a `collector` that saves state to `LocalStorage` and a `load` function to hydrate a store from `LocalStorage`.
+
+```ts
+export const myProcess = createProcess(
+	'my-process',
+	[ command ],
+	collector('my-process', (path) => {
+		return [
+			path('state', 'to', 'save'),
+			path('other', 'state', 'to', 'save')
+		];
+	})
+);
+```
+
+```ts
+import { load } from '@dojo/framework/stores/middleware/localStorage';
+import { Store } from '@dojo/framework/stores/Store';
+
+const store = new Store();
+load('my-process', store);
 ```
 
 <!-- doc-viewer-config
