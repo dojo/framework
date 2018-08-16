@@ -1,4 +1,3 @@
-import Symbol from '../shim/Symbol';
 import {
 	Constructor,
 	DefaultWidgetBaseInterface,
@@ -15,19 +14,19 @@ import {
 } from './interfaces';
 
 /**
- * The symbol identifier for a WNode type
+ * The identifier for a WNode type
  */
-export const WNODE = Symbol('Identifier for a WNode.');
+export const WNODE = '__WNODE_TYPE';
 
 /**
- * The symbol identifier for a VNode type
+ * The identifier for a VNode type
  */
-export const VNODE = Symbol('Identifier for a VNode.');
+export const VNODE = '__VNODE_TYPE';
 
 /**
- * The symbol identifier for a VNode type created using dom()
+ * The identifier for a VNode type created using dom()
  */
-export const DOMVNODE = Symbol('Identifier for a VNode created using existing dom.');
+export const DOMVNODE = '__DOMVNODE_TYPE';
 
 /**
  * Helper function that returns true if the `DNode` is a `WNode` using the `type` property

@@ -331,7 +331,7 @@ export interface VNode {
 	/**
 	 * The type of node
 	 */
-	type: symbol;
+	type: string;
 
 	/**
 	 * Text node string
@@ -375,8 +375,11 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 	/**
 	 * The type of node
 	 */
-	type: symbol;
+	type: string;
 
+	/**
+	 * The instance that created the node
+	 */
 	bind?: WidgetBaseInterface & { registry: RegistryHandler };
 }
 

@@ -1,6 +1,5 @@
 import Promise from '../shim/Promise';
 import Map from '../shim/Map';
-import Symbol from '../shim/Symbol';
 import { Evented, EventObject } from '../core/Evented';
 import {
 	Constructor,
@@ -22,9 +21,9 @@ export type RegistryItem =
 	| ESMDefaultWidgetBaseFunction;
 
 /**
- * Widget base symbol type
+ * Widget base type
  */
-export const WIDGET_BASE_TYPE = Symbol('Widget Base');
+export const WIDGET_BASE_TYPE = '__widget_base_type';
 
 export interface RegistryEventObject extends EventObject<RegistryLabel> {
 	action: string;

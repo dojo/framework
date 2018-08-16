@@ -9,7 +9,7 @@ import { Injector } from './../Injector';
 import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
 
-export const INJECTOR_KEY = Symbol('i18n');
+export const INJECTOR_KEY = '__i18n_injector';
 
 export interface LocaleData {
 	/**
