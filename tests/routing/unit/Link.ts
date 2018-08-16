@@ -49,7 +49,7 @@ describe('Link', () => {
 	it('Generate link component for basic outlet', () => {
 		const link = new Link();
 		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo', registry });
+		link.__setProperties__({ to: 'foo' });
 		const dNode: any = link.__render__();
 		assert.strictEqual(dNode.tag, 'a');
 		assert.strictEqual(dNode.properties.href, 'foo');
@@ -58,7 +58,7 @@ describe('Link', () => {
 	it('Generate link component for outlet with specified params', () => {
 		const link = new Link();
 		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo2', params: { foo: 'foo' }, registry });
+		link.__setProperties__({ to: 'foo2', params: { foo: 'foo' } });
 		const dNode: any = link.__render__();
 		assert.strictEqual(dNode.tag, 'a');
 		assert.strictEqual(dNode.properties.href, 'foo/foo');
@@ -67,7 +67,7 @@ describe('Link', () => {
 	it('Generate link component for fixed href', () => {
 		const link = new Link();
 		link.registry.base = registry;
-		link.__setProperties__({ to: '#foo/static', isOutlet: false, registry });
+		link.__setProperties__({ to: '#foo/static', isOutlet: false });
 		const dNode: any = link.__render__();
 		assert.strictEqual(dNode.tag, 'a');
 		assert.strictEqual(dNode.properties.href, '#foo/static');
@@ -76,7 +76,7 @@ describe('Link', () => {
 	it('Set router path on click', () => {
 		const link = new Link();
 		link.registry.base = registry;
-		link.__setProperties__({ to: '#foo/static', isOutlet: false, registry });
+		link.__setProperties__({ to: '#foo/static', isOutlet: false });
 		const dNode: any = link.__render__();
 		assert.strictEqual(dNode.tag, 'a');
 		assert.strictEqual(dNode.properties.href, '#foo/static');
@@ -106,7 +106,6 @@ describe('Link', () => {
 		link.registry.base = registry;
 		link.__setProperties__({
 			to: 'foo',
-			registry,
 			target: '_blank'
 		});
 		const dNode: any = link.__render__();
@@ -120,8 +119,7 @@ describe('Link', () => {
 		const link = new Link();
 		link.registry.base = registry;
 		link.__setProperties__({
-			to: 'foo',
-			registry
+			to: 'foo'
 		});
 		const dNode: any = link.__render__();
 		assert.strictEqual(dNode.tag, 'a');
