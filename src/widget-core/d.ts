@@ -5,6 +5,7 @@ import {
 	DeferredVirtualProperties,
 	DNode,
 	VNode,
+	LazyWidget,
 	RegistryLabel,
 	VNodeProperties,
 	WidgetBaseInterface,
@@ -146,12 +147,12 @@ export function w<W extends WidgetBaseInterface>(
 	children?: W['children']
 ): WNode<W>;
 export function w<W extends WidgetBaseInterface>(
-	widgetConstructor: Constructor<W> | RegistryLabel,
+	widgetConstructor: Constructor<W> | RegistryLabel | LazyWidget<W>,
 	properties: W['properties'],
 	children?: W['children']
 ): WNode<W>;
 export function w<W extends WidgetBaseInterface>(
-	widgetConstructorOrNode: Constructor<W> | RegistryLabel | WNode<W>,
+	widgetConstructorOrNode: Constructor<W> | RegistryLabel | WNode<W> | LazyWidget<W>,
 	properties: W['properties'],
 	children?: W['children']
 ): WNode<W> {

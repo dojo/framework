@@ -353,6 +353,8 @@ export interface DomVNode extends VNode {
 	domNode: Text | Element;
 }
 
+export type LazyWidget<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = () => Promise<Constructor<W>>;
+
 /**
  * Wrapper for `w`
  */
@@ -360,7 +362,7 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 	/**
 	 * Constructor to create a widget or string constructor label
 	 */
-	widgetConstructor: Constructor<W> | RegistryLabel;
+	widgetConstructor: Constructor<W> | RegistryLabel | LazyWidget<W>;
 
 	/**
 	 * Properties to set against a widget instance
