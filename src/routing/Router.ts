@@ -263,6 +263,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent }> implements RouterI
 			} else {
 				if (previousOutlet !== undefined && routes.length === 0) {
 					this._matchedOutlets[previousOutlet].type = 'error';
+					this._matchedOutlets[previousOutlet].isError = () => true;
 				}
 				segments = [...segmentsForRoute];
 			}
