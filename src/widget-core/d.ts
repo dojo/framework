@@ -32,7 +32,7 @@ export const DOMVNODE = Symbol('Identifier for a VNode created using existing do
  * Helper function that returns true if the `DNode` is a `WNode` using the `type` property
  */
 export function isWNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface>(
-	child: DNode<W>
+	child: DNode<W> | any
 ): child is WNode<W> {
 	return Boolean(child && typeof child !== 'string' && child.type === WNODE);
 }
@@ -140,13 +140,28 @@ export function decorate(
  * Wrapper function for calls to create a widget.
  */
 export function w<W extends WidgetBaseInterface>(
+	node: WNode<W>,
+	properties: Partial<W['properties']>,
+	children?: W['children']
+): WNode<W>;
+export function w<W extends WidgetBaseInterface>(
 	widgetConstructor: Constructor<W> | RegistryLabel,
+	properties: W['properties'],
+	children?: W['children']
+): WNode<W>;
+export function w<W extends WidgetBaseInterface>(
+	widgetConstructorOrNode: Constructor<W> | RegistryLabel | WNode<W>,
 	properties: W['properties'],
 	children: W['children'] = []
 ): WNode<W> {
+	if (isWNode(widgetConstructorOrNode)) {
+		properties = { ...(widgetConstructorOrNode.properties as any), ...(properties as any) };
+		widgetConstructorOrNode = widgetConstructorOrNode.widgetConstructor;
+	}
+
 	return {
 		children,
-		widgetConstructor,
+		widgetConstructor: widgetConstructorOrNode,
 		properties,
 		type: WNODE
 	};

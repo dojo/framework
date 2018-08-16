@@ -110,6 +110,47 @@ registerSuite('d', {
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));
+		},
+		'should merge properties onto a WNode'() {
+			class Foo extends WidgetBase<{ foo: string; bar: number }> {}
+			const dNode = w(Foo, { foo: 'foo', bar: 1 });
+			assert.equal(dNode.type, WNODE);
+			assert.strictEqual(dNode.widgetConstructor, Foo);
+			assert.deepEqual(dNode.properties, { foo: 'foo', bar: 1 });
+			assert.lengthOf(dNode.children, 0);
+			assert.isTrue(isWNode(dNode));
+			assert.isFalse(isVNode(dNode));
+			const mergedNode = w(dNode, { foo: 'bar' });
+			// maintains properties typings, this errors
+			// w(dNode, { foo: 1 });
+			assert.equal(mergedNode.type, WNODE);
+			assert.strictEqual(mergedNode.widgetConstructor, Foo);
+			assert.deepEqual(mergedNode.properties, { foo: 'bar', bar: 1 });
+			assert.lengthOf(mergedNode.children, 0);
+			assert.isTrue(isWNode(mergedNode));
+			assert.isFalse(isVNode(mergedNode));
+		},
+		'should replace children on a WNode'() {
+			class Foo extends WidgetBase<any, string> {}
+			const dNode = w(Foo, {}, ['original']);
+			assert.equal(dNode.type, WNODE);
+			assert.strictEqual(dNode.widgetConstructor, Foo);
+			assert.deepEqual(dNode.properties, {});
+			assert.lengthOf(dNode.children, 1);
+			assert.strictEqual(dNode.children[0], 'original');
+			assert.isTrue(isWNode(dNode));
+			assert.isFalse(isVNode(dNode));
+			const mergedNode = w(dNode, {}, ['updated', 'children']);
+			// maintains children typings, this errors
+			// w(dNode, { }, [ v('div') ]);
+			assert.equal(mergedNode.type, WNODE);
+			assert.strictEqual(mergedNode.widgetConstructor, Foo);
+			assert.deepEqual(mergedNode.properties, {});
+			assert.lengthOf(mergedNode.children, 2);
+			assert.strictEqual(mergedNode.children[0], 'updated');
+			assert.strictEqual(mergedNode.children[1], 'children');
+			assert.isTrue(isWNode(mergedNode));
+			assert.isFalse(isVNode(mergedNode));
 		}
 	},
 	v: {
