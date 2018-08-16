@@ -43,7 +43,7 @@ describe('ActiveLink', () => {
 			}
 		}
 		const link = new MyActiveLink();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
 		const dNode = link.__render__() as WNode<Link>;
 		assert.strictEqual(dNode.widgetConstructor, Link);
@@ -61,7 +61,7 @@ describe('ActiveLink', () => {
 	it('Does not add active class when outlet is not active', () => {
 		router.setPath('/other');
 		const link = new ActiveLink();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
 		const dNode = link.__render__() as WNode<Link>;
 		assert.strictEqual(dNode.widgetConstructor, Link);
@@ -72,7 +72,7 @@ describe('ActiveLink', () => {
 	it('Should add the active class when the outlet is active', () => {
 		router.setPath('/foo');
 		const link = new ActiveLink();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
 		const dNode = link.__render__() as WNode<Link>;
 		assert.strictEqual(dNode.widgetConstructor, Link);
@@ -83,7 +83,7 @@ describe('ActiveLink', () => {
 	it('Should mix the active class onto existing string class when the outlet is active', () => {
 		router.setPath('/foo');
 		const link = new ActiveLink();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo'], classes: 'bar' });
 		const dNode = link.__render__() as WNode<Link>;
 		assert.strictEqual(dNode.widgetConstructor, Link);
@@ -94,7 +94,7 @@ describe('ActiveLink', () => {
 	it('Should mix the active class onto existing array of classes when the outlet is active', () => {
 		router.setPath('/foo');
 		const link = new ActiveLink();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo', 'qux'], classes: ['bar', 'baz'] });
 		const dNode = link.__render__() as WNode<Link>;
 		assert.strictEqual(dNode.widgetConstructor, Link);
@@ -112,7 +112,7 @@ describe('ActiveLink', () => {
 			}
 		}
 		const link = new TestActiveLink();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
 		let dNode = link.__render__() as WNode<Link>;
 		assert.strictEqual(dNode.widgetConstructor, Link);
@@ -143,7 +143,7 @@ describe('ActiveLink', () => {
 			}
 		}
 		const link = new TestActiveLink();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
 		let dNode = link.__render__() as WNode<Link>;
 		assert.strictEqual(dNode.widgetConstructor, Link);
@@ -173,7 +173,7 @@ describe('ActiveLink', () => {
 	it('Should return link when the router injector is not available', () => {
 		router.setPath('/foo');
 		const link = new ActiveLink();
-		link.__setCoreProperties__({ bind: link, baseRegistry: registry });
+		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo'], classes: 'bar', routerKey: 'other' });
 		const dNode = link.__render__() as WNode<Link>;
 		assert.strictEqual(dNode.widgetConstructor, Link);
