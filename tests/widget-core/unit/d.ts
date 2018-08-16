@@ -113,11 +113,12 @@ registerSuite('d', {
 		},
 		'should merge properties onto a WNode'() {
 			class Foo extends WidgetBase<{ foo: string; bar: number }> {}
-			const dNode = w(Foo, { foo: 'foo', bar: 1 });
+			const dNode = w(Foo, { foo: 'foo', bar: 1 }, ['child']);
 			assert.equal(dNode.type, WNODE);
 			assert.strictEqual(dNode.widgetConstructor, Foo);
 			assert.deepEqual(dNode.properties, { foo: 'foo', bar: 1 });
-			assert.lengthOf(dNode.children, 0);
+			assert.lengthOf(dNode.children, 1);
+			assert.strictEqual(dNode.children[0], 'child');
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));
 			const mergedNode = w(dNode, { foo: 'bar' });
@@ -126,7 +127,8 @@ registerSuite('d', {
 			assert.equal(mergedNode.type, WNODE);
 			assert.strictEqual(mergedNode.widgetConstructor, Foo);
 			assert.deepEqual(mergedNode.properties, { foo: 'bar', bar: 1 });
-			assert.lengthOf(mergedNode.children, 0);
+			assert.lengthOf(mergedNode.children, 1);
+			assert.strictEqual(dNode.children[0], 'child');
 			assert.isTrue(isWNode(mergedNode));
 			assert.isFalse(isVNode(mergedNode));
 		},

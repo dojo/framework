@@ -156,6 +156,7 @@ export function w<W extends WidgetBaseInterface>(
 ): WNode<W> {
 	if (isWNode(widgetConstructorOrNode)) {
 		properties = { ...(widgetConstructorOrNode.properties as any), ...(properties as any) };
+		children = children.length ? children : widgetConstructorOrNode.children;
 		widgetConstructorOrNode = widgetConstructorOrNode.widgetConstructor;
 	}
 
@@ -199,8 +200,9 @@ export function v(
 		nodeClasses = Array.isArray(nodeClasses) ? nodeClasses : [nodeClasses];
 		classes = Array.isArray(classes) ? classes : [classes];
 		styles = { ...nodeStyles, ...styles };
-		newProperties = { ...nodeProperties, ...newProperties, classes: [...nodeClasses, ...classes], styles };
-		return v(tag.tag, newProperties, children ? children : tag.children);
+		properties = { ...nodeProperties, ...newProperties, classes: [...nodeClasses, ...classes], styles };
+		children = children ? children : tag.children;
+		tag = tag.tag;
 	}
 
 	return {
