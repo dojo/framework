@@ -122,11 +122,6 @@ interface RemoveDomInstruction {
 	current: VNodeWrapper;
 }
 
-interface ParentNodes {
-	parentDomNode?: Node;
-	parentWNodeWrapper?: WNodeWrapper;
-}
-
 interface AttachApplication {
 	type: 'attach';
 	instance: WidgetBase;
@@ -137,7 +132,6 @@ interface CreateDomApplication {
 	type: 'create';
 	current?: VNodeWrapper;
 	next: VNodeWrapper;
-	parentWNodeWrapper?: WNodeWrapper;
 	parentDomNode: Node;
 }
 
@@ -447,20 +441,30 @@ export function renderer(renderer: () => WNode): Renderer {
 		return wrappedRendered;
 	}
 
-	function findParentNodes(currentNode: DNodeWrapper): ParentNodes {
-		let parentDomNode: Node | undefined;
+	function findParentWNodeWrapper(currentNode: DNodeWrapper): WNodeWrapper | undefined {
 		let parentWNodeWrapper: WNodeWrapper | undefined;
 		let parentWrapper = _parentWrapperMap.get(currentNode);
 
-		while ((!parentDomNode || !parentWNodeWrapper) && parentWrapper) {
-			if (!parentDomNode && isVNodeWrapper(parentWrapper) && parentWrapper.domNode) {
-				parentDomNode = parentWrapper.domNode;
-			} else if (!parentWNodeWrapper && isWNodeWrapper(parentWrapper)) {
+		while (!parentWNodeWrapper && parentWrapper) {
+			if (!parentWNodeWrapper && isWNodeWrapper(parentWrapper)) {
 				parentWNodeWrapper = parentWrapper;
 			}
 			parentWrapper = _parentWrapperMap.get(parentWrapper);
 		}
-		return { parentDomNode, parentWNodeWrapper };
+		return parentWNodeWrapper;
+	}
+
+	function findParentDomNode(currentNode: DNodeWrapper): Node | undefined {
+		let parentDomNode: Node | undefined;
+		let parentWrapper = _parentWrapperMap.get(currentNode);
+
+		while (!parentDomNode && parentWrapper) {
+			if (!parentDomNode && isVNodeWrapper(parentWrapper) && parentWrapper.domNode) {
+				parentDomNode = parentWrapper.domNode;
+			}
+			parentWrapper = _parentWrapperMap.get(parentWrapper);
+		}
+		return parentDomNode;
 	}
 
 	function runDeferredProperties(next: VNodeWrapper) {
@@ -781,7 +785,6 @@ export function renderer(renderer: () => WNode): Renderer {
 		while ((item = _applicationQueue.pop())) {
 			if (item.type === 'create') {
 				const {
-					parentWNodeWrapper,
 					parentDomNode,
 					next,
 					next: {
@@ -802,7 +805,7 @@ export function renderer(renderer: () => WNode): Renderer {
 					parentDomNode.insertBefore(domNode!, insertBefore);
 				}
 				runEnterAnimation(next, _mountOptions.transition);
-				const instanceData = widgetInstanceMap.get(parentWNodeWrapper!.instance!);
+				const instanceData = widgetInstanceMap.get(next.node.bind as WidgetBase);
 				if (properties.key != null && instanceData) {
 					instanceData.nodeHandler.add(domNode as HTMLElement, `${properties.key}`);
 				}
@@ -820,8 +823,7 @@ export function renderer(renderer: () => WNode): Renderer {
 				}
 
 				const previousProperties = buildPreviousProperties(domNode, current, next);
-				const { parentWNodeWrapper } = findParentNodes(next);
-				const instanceData = widgetInstanceMap.get(parentWNodeWrapper!.instance!);
+				const instanceData = widgetInstanceMap.get(next.node.bind as WidgetBase);
 
 				processProperties(next, previousProperties);
 				runDeferredProperties(next);
@@ -1072,14 +1074,13 @@ export function renderer(renderer: () => WNode): Renderer {
 				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
 			}
 		}
-		const { parentDomNode, parentWNodeWrapper } = findParentNodes(next);
+		const parentWNodeWrapper = findParentWNodeWrapper(next);
 		if (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
 			parentWNodeWrapper.domNode = next.domNode;
 		}
 		const dom: ApplicationInstruction = {
 			next: next!,
-			parentDomNode: parentDomNode!,
-			parentWNodeWrapper,
+			parentDomNode: findParentDomNode(next)!,
 			type: 'create'
 		};
 		if (next.childrenWrappers) {
@@ -1092,7 +1093,7 @@ export function renderer(renderer: () => WNode): Renderer {
 	}
 
 	function _updateDom({ current, next }: UpdateDomInstruction): ProcessResult {
-		const parentDomNode = findParentNodes(current).parentDomNode;
+		const parentDomNode = findParentDomNode(current);
 		next.domNode = current.domNode;
 		next.namespace = current.namespace;
 		if (next.node.text && next.node.text !== current.node.text) {
