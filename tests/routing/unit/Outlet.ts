@@ -381,7 +381,7 @@ describe('Outlet', () => {
 			}
 		});
 
-		assert.isNull(outlet.__render__());
+		assert.isUndefined(outlet.__render__());
 	});
 
 	it('Should change the invalidator if the router key changes', () => {
