@@ -4,7 +4,7 @@ import { findIndex } from './array';
 
 export interface AbortSignal extends EventTarget {
 	aborted: boolean;
-	onabort: (ev: Event) => any;
+	onabort: undefined | ((ev: Event) => any);
 }
 
 export interface AbortSignalConstructor {
@@ -18,7 +18,7 @@ export let ShimAbortSignal: AbortSignalConstructor = global.AbortSignal;
 if (!has('abort-signal')) {
 	global.AbortSignal = ShimAbortSignal = class implements AbortSignal {
 		private _aborted = false;
-		onabort: (ev: Event) => any;
+		onabort: undefined | ((ev: Event) => any);
 
 		listeners: { [type: string]: ((event: Event) => void)[] } = {};
 

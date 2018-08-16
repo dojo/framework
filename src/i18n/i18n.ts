@@ -2,7 +2,7 @@
 import global from '../shim/global';
 import { isArrayLike, isIterable } from '../shim/iterator';
 import Map from '../shim/Map';
-import Evented from '../core/Evented';
+import Evented, { EventObject } from '../core/Evented';
 import has from '../has/preset';
 import { uuid } from '../core/util';
 import * as Globalize from 'globalize/dist/globalize/message';
@@ -98,10 +98,14 @@ export interface Messages {
 	[key: string]: string;
 }
 
+export interface I18nEventObject extends EventObject<string> {
+	target: any;
+}
+
 const TOKEN_PATTERN = /\{([a-z0-9_]+)\}/gi;
 const bundleMap = new Map<string, Map<string, Messages>>();
 const formatterMap = new Map<string, MessageFormatter>();
-const localeProducer = new Evented();
+const localeProducer = new Evented<{}, string, I18nEventObject>();
 let rootLocale: string;
 
 /**
@@ -282,7 +286,7 @@ export function formatMessage<T extends Messages>(
  *
  * @return The cached messages object, if it exists.
  */
-export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale: string): T | void {
+export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale: string): T | undefined {
 	const { id = getBundleId(bundle), locales, messages } = bundle;
 	const cached = bundleMap.get(id);
 

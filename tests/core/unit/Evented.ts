@@ -39,8 +39,8 @@ registerSuite('Evented', {
 		'on() with Symbol type'() {
 			const foo = Symbol();
 			const bar = Symbol();
-			const eventStack: symbol[] = [];
-			const evented = new Evented<{}, symbol>();
+			const eventStack: (symbol | string)[] = [];
+			const evented = new Evented<{}, symbol | string>();
 			const handle = evented.on(foo, (event) => {
 				eventStack.push(event.type);
 			});
@@ -173,10 +173,10 @@ registerSuite('Evented', {
 			const eventStack: string[] = [];
 			const evented = new Evented();
 			evented.on('foo', (event) => {
-				eventStack.push(`foo->${event.type}`);
+				eventStack.push(`foo->${event.type.toString()}`);
 			});
 			evented.on('*foo', (event) => {
-				eventStack.push(`*foo->${event.type}`);
+				eventStack.push(`*foo->${event.type.toString()}`);
 			});
 
 			evented.emit({ type: 'foo' });

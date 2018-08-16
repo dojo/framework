@@ -149,10 +149,7 @@ if (has('es6-object')) {
 		return to;
 	};
 
-	getOwnPropertyDescriptor = function getOwnPropertyDescriptor(
-		o: any,
-		prop: string | symbol
-	): PropertyDescriptor | undefined {
+	getOwnPropertyDescriptor = function<T, K extends keyof T>(o: T, prop: K): PropertyDescriptor | undefined {
 		if (isSymbol(prop)) {
 			return (<any>Object).getOwnPropertyDescriptor(o, prop);
 		} else {

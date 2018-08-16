@@ -32,6 +32,13 @@ export interface AnimationTimingProperties {
 	iterationStart?: number;
 }
 
+export interface AnimationKeyFrame {
+	easing?: string | string[];
+	offset?: number | Array<number | null> | null;
+	opacity?: number | number[];
+	transform?: string | string[];
+}
+
 /**
  * Animation propertiues that can be passed as vdom property `animate`
  */
@@ -55,24 +62,24 @@ export interface AnimationInfo {
 }
 
 export interface AnimationPlayer {
-	player: Animation;
+	player: any;
 	used: boolean;
 }
 
 export class WebAnimations extends Base {
 	private _animationMap = new Map<string, AnimationPlayer>();
 
-	private _createPlayer(node: HTMLElement, properties: AnimationProperties): Animation {
+	private _createPlayer(node: HTMLElement, properties: AnimationProperties): any {
 		const { effects, timing = {} } = properties;
 
 		const fx = typeof effects === 'function' ? effects() : effects;
 
-		const keyframeEffect = new KeyframeEffect(node, fx, timing as AnimationEffectTiming);
+		const keyframeEffect = new global.KeyframeEffect(node, fx, timing);
 
-		return new Animation(keyframeEffect, global.document.timeline);
+		return new global.Animation(keyframeEffect, global.document.timeline);
 	}
 
-	private _updatePlayer(player: Animation, controls: AnimationControls) {
+	private _updatePlayer(player: any, controls: AnimationControls) {
 		const { play, reverse, cancel, finish, onFinish, onCancel, playbackRate, startTime, currentTime } = controls;
 
 		if (playbackRate !== undefined) {
@@ -161,10 +168,10 @@ export class WebAnimations extends Base {
 			const { currentTime, playState, playbackRate, startTime } = animation.player;
 
 			return {
-				currentTime,
+				currentTime: currentTime || 0,
 				playState,
 				playbackRate,
-				startTime
+				startTime: startTime || 0
 			};
 		}
 	}
