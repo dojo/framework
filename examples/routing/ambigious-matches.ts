@@ -1,9 +1,9 @@
 import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
 import { v, w } from '@dojo/framework/widget-core/d';
-import { MapParamsOptions } from '@dojo/framework/routing/interfaces';
 
 import { Link } from '@dojo/framework/routing/Link';
 import { Outlet } from '@dojo/framework/routing/Outlet';
+import { MatchDetails } from '@dojo/framework/routing/interfaces';
 
 export interface ChildProperties {
 	name: string;
@@ -31,14 +31,6 @@ export class User extends WidgetBase<UserProperties> {
 	}
 }
 
-export const AboutOutlet = Outlet(About, 'about-us');
-export const CompanyOutlet = Outlet(Company, 'company');
-export const UserOutlet = Outlet(User, 'user', {
-	mapParams: ({ params }: MapParamsOptions) => {
-		return { name: params.user };
-	}
-});
-
 export class App extends WidgetBase {
 	protected render() {
 		return v('div', [
@@ -48,9 +40,24 @@ export class App extends WidgetBase {
 				v('li', [w(Link, { key: '3', to: 'user', params: { user: 'kim' } }, ['Kim (dynamic)'])]),
 				v('li', [w(Link, { key: '4', to: 'user', params: { user: 'chris' } }, ['Chris (dynamic)'])])
 			]),
-			w(AboutOutlet, {}),
-			w(CompanyOutlet, {}),
-			w(UserOutlet, {})
+			w(Outlet, {
+				outlet: 'about-us',
+				renderer: () => {
+					return w(About, {});
+				}
+			}),
+			w(Outlet, {
+				outlet: 'company',
+				renderer: () => {
+					return w(Company, {});
+				}
+			}),
+			w(Outlet, {
+				outlet: 'user',
+				renderer: ({ params }: MatchDetails) => {
+					return w(User, { name: params.user });
+				}
+			})
 		]);
 	}
 }
@@ -73,5 +80,3 @@ export const AmbiguousMatchesRouteConfig = {
 		}
 	]
 };
-
-export const AmbiguousMatchesOutlet = Outlet(App, 'ambiguous-matches');

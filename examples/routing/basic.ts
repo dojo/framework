@@ -3,7 +3,7 @@ import { v, w } from '@dojo/framework/widget-core/d';
 
 import { Outlet } from '@dojo/framework/routing/Outlet';
 import { Link } from '@dojo/framework/routing/Link';
-import { MapParamsOptions } from '@dojo/framework/routing/interfaces';
+import { MatchDetails } from '@dojo/framework/routing/interfaces';
 
 export interface ChildProperties {
 	name: string;
@@ -39,7 +39,15 @@ export class Topics extends WidgetBase<TopicsProperties> {
 				v('li', [w(Link, { key: 'props', to: 'topic', params: { topic: 'props-v-state' } }, ['Props v State'])])
 			]),
 			showHeading ? v('h3', ['Please select a topic.']) : null,
-			w(TopicOutlet, {})
+			w(Outlet, {
+				outlet: 'topic',
+				renderer({ params, type }: MatchDetails) {
+					if (type === 'error') {
+						return w(ErrorWidget, {});
+					}
+					return w(Topic, { topic: params.topic });
+				}
+			})
 		]);
 	}
 }
@@ -60,19 +68,6 @@ class ErrorWidget extends WidgetBase {
 	}
 }
 
-export const AboutOutlet = Outlet(About, 'about');
-export const HomeOutlet = Outlet({ index: Home }, 'home');
-export const TopicsOutlet = Outlet(Topics, 'topics', {
-	mapParams: ({ type }: MapParamsOptions) => {
-		return { showHeading: type === 'index' };
-	}
-});
-export const TopicOutlet = Outlet({ main: Topic, error: ErrorWidget }, 'topic', {
-	mapParams: ({ params }) => {
-		return { topic: params.topic };
-	}
-});
-
 export class App extends WidgetBase {
 	protected render() {
 		return v('div', [
@@ -81,9 +76,24 @@ export class App extends WidgetBase {
 				v('li', [w(Link, { key: 'about', to: 'about' }, ['About'])]),
 				v('li', [w(Link, { key: 'topics', to: 'topics' }, ['Topics'])])
 			]),
-			w(AboutOutlet, {}),
-			w(HomeOutlet, {}),
-			w(TopicsOutlet, {})
+			w(Outlet, {
+				outlet: 'about',
+				renderer() {
+					return w(About, {});
+				}
+			}),
+			w(Outlet, {
+				outlet: 'home',
+				renderer() {
+					return w(Home, {});
+				}
+			}),
+			w(Outlet, {
+				outlet: 'topics',
+				renderer({ type }: MatchDetails) {
+					return w(Topics, { showHeading: type === 'index' });
+				}
+			})
 		]);
 	}
 }
@@ -112,5 +122,3 @@ export const BasicAppRouteConfig = {
 		}
 	]
 };
-
-export const BasicAppOutlet = Outlet(App, 'basic');

@@ -1,9 +1,9 @@
 import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
 import { v, w } from '@dojo/framework/widget-core/d';
-import { MapParamsOptions } from '@dojo/framework/routing/interfaces';
 
 import { Link } from '@dojo/framework/routing/Link';
 import { Outlet } from '@dojo/framework/routing/Outlet';
+import { MatchDetails } from '@dojo/framework/routing/interfaces';
 
 export interface ChildProperties {
 	name: string;
@@ -15,12 +15,6 @@ export class Child extends WidgetBase<ChildProperties> {
 	}
 }
 
-export const ChildOutlet = Outlet(Child, 'child', {
-	mapParams: ({ params }: MapParamsOptions) => {
-		return { name: params.id };
-	}
-});
-
 export class App extends WidgetBase {
 	protected render() {
 		return v('div', [
@@ -31,7 +25,12 @@ export class App extends WidgetBase {
 				v('li', [w(Link, { key: '3', to: 'child', params: { id: 'yahoo' } }, ['Yahoo'])]),
 				v('li', [w(Link, { key: '4', to: 'child', params: { id: 'modus-create' } }, ['Modus Create'])])
 			]),
-			w(ChildOutlet, {})
+			w(Outlet, {
+				outlet: 'child',
+				renderer: (details: MatchDetails) => {
+					return w(Child, { name: details.params.id });
+				}
+			})
 		]);
 	}
 }
@@ -46,5 +45,3 @@ export const UrlParametersRouteConfig = {
 		}
 	]
 };
-
-export const UrlParametersAppOutlet = Outlet(App, 'url-parameters');

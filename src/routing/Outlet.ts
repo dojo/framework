@@ -1,100 +1,97 @@
-import { DNode, WidgetBaseInterface } from '../widget-core/interfaces';
+import { DNode } from '../widget-core/interfaces';
 import { WidgetBase } from '../widget-core/WidgetBase';
-import { w } from '../widget-core/d';
-import { inject } from '../widget-core/decorators/inject';
 import { alwaysRender } from '../widget-core/decorators/alwaysRender';
-import { OnEnter, Component, OutletOptions, OutletComponents, Outlet, Params, OutletContext } from './interfaces';
+import { MatchDetails, OnExit, OutletContext, OnEnter, Params } from './interfaces';
 import { Router } from './Router';
+import { diffProperty } from '../widget-core/decorators/diffProperty';
+import { Handle } from '../core/Destroyable';
 
-export function isComponent<W extends WidgetBaseInterface>(value: any): value is Component<W> {
-	return Boolean(value && (typeof value === 'string' || typeof value === 'function' || typeof value === 'symbol'));
+export interface OutletProperties {
+	renderer: (matchDetails: MatchDetails) => DNode | DNode[];
+	id: string;
+	routerKey?: string;
 }
 
-export function getProperties(router: Router, properties: any) {
-	return { router };
-}
+@alwaysRender()
+export class Outlet extends WidgetBase<OutletProperties> {
+	private _handle: Handle | undefined;
+	private _matched = false;
+	private _matchedParams: Params = {};
+	private _onExit?: OnExit;
 
-export function Outlet<W extends WidgetBaseInterface, F extends WidgetBaseInterface, E extends WidgetBaseInterface>(
-	outletComponents: Component<W> | OutletComponents<W, F, E>,
-	outlet: string,
-	options: OutletOptions = {}
-): Outlet<W, F, E> {
-	const indexComponent = isComponent(outletComponents) ? undefined : outletComponents.index;
-	const mainComponent = isComponent(outletComponents) ? outletComponents : outletComponents.main;
-	const errorComponent = isComponent(outletComponents) ? undefined : outletComponents.error;
-	const { mapParams, key = 'router' } = options;
-
-	@inject({ name: key, getProperties })
-	@alwaysRender()
-	class OutletComponent extends WidgetBase<Partial<W['properties']> & { router: Router }, null> {
-		private _matched = false;
-		private _matchedParams: Params = {};
-		private _onExit?: () => void;
-
-		private _hasRouteChanged(params: Params): boolean {
-			if (!this._matched) {
-				return true;
-			}
-			const newParamKeys = Object.keys(params);
-			for (let i = 0; i < newParamKeys.length; i++) {
-				const key = newParamKeys[i];
-				if (this._matchedParams[key] !== params[key]) {
-					return true;
-				}
-			}
-			return false;
+	@diffProperty('routerKey')
+	protected onRouterKeyChange(current: OutletProperties, next: OutletProperties) {
+		const { routerKey = 'router' } = next;
+		const item = this.registry.getInjector<Router>(routerKey);
+		if (this._handle) {
+			this._handle.destroy();
+			this._handle = undefined;
 		}
-
-		private _onEnter(outletContext: OutletContext, onEnterCallback?: OnEnter) {
-			const { params, type } = outletContext;
-			if (this._hasRouteChanged(params)) {
-				onEnterCallback && onEnterCallback(params, type);
-				this._matched = true;
-				this._matchedParams = params;
-			}
-		}
-
-		protected onDetach() {
-			if (this._matched) {
-				this._onExit && this._onExit();
-				this._matched = false;
-			}
-		}
-
-		protected render(): DNode {
-			let { router, ...properties } = this.properties;
-
-			const outletContext = router.getOutlet(outlet);
-			if (outletContext) {
-				const { queryParams, params, type, onEnter, onExit } = outletContext;
-				this._onExit = onExit;
-				if (mapParams) {
-					properties = { ...properties, ...mapParams({ queryParams, params, type, router }) };
-				}
-
-				if (type === 'index' && indexComponent) {
-					this._onEnter(outletContext, onEnter);
-					return w(indexComponent, properties, this.children);
-				} else if (type === 'error' && errorComponent) {
-					this._onEnter(outletContext, onEnter);
-					return w(errorComponent, properties, this.children);
-				} else if (type === 'error' && indexComponent) {
-					this._onEnter(outletContext, onEnter);
-					return w(indexComponent, properties, this.children);
-				} else if (type !== 'error' && mainComponent) {
-					this._onEnter(outletContext, onEnter);
-					return w(mainComponent, properties, this.children);
-				}
-			}
-
-			if (this._matched) {
-				this._onExit && this._onExit();
-				this._matched = false;
-			}
-			return null;
+		if (item) {
+			this._handle = item.invalidator.on('invalidate', () => {
+				this.invalidate();
+			});
+			this.own(this._handle);
 		}
 	}
-	return OutletComponent;
+
+	protected onDetach() {
+		this._onExit && this._onExit();
+	}
+
+	protected onAttach() {
+		if (!this._handle) {
+			this.onRouterKeyChange(this.properties, this.properties);
+		}
+	}
+
+	private _hasRouteChanged(params: Params): boolean {
+		if (!this._matched) {
+			return true;
+		}
+		const newParamKeys = Object.keys(params);
+		for (let i = 0; i < newParamKeys.length; i++) {
+			const key = newParamKeys[i];
+			if (this._matchedParams[key] !== params[key]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private _onEnter(outletContext: OutletContext, onEnterCallback?: OnEnter) {
+		const { params, type } = outletContext;
+		if (this._hasRouteChanged(params)) {
+			onEnterCallback && onEnterCallback(params, type);
+			this._matched = true;
+			this._matchedParams = params;
+		}
+	}
+
+	protected render(): DNode | DNode[] {
+		const { renderer, id, routerKey = 'router' } = this.properties;
+		const item = this.registry.getInjector<Router>(routerKey);
+
+		if (item) {
+			const router = item.injector();
+			const outletContext = router.getOutlet(id);
+			if (outletContext) {
+				const { queryParams, params, type, onEnter, onExit, isError, isExact } = outletContext;
+				this._onExit = onExit;
+				const result = renderer({ queryParams, params, type, isError, isExact, router });
+				if (result) {
+					this._onEnter(outletContext, onEnter);
+					return result;
+				}
+			}
+		}
+		if (this._matched) {
+			this._onExit && this._onExit();
+			this._onExit = undefined;
+			this._matched = false;
+		}
+		return null;
+	}
 }
 
 export default Outlet;

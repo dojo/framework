@@ -125,7 +125,9 @@ describe('Router', () => {
 		assert.isOk(context);
 		assert.deepEqual(context!.params, {});
 		assert.deepEqual(context!.queryParams, {});
-		assert.deepEqual(context!.type, 'error');
+		assert.strictEqual(context!.type, 'error');
+		assert.strictEqual(context!.isError(), true);
+		assert.strictEqual(context!.isExact(), false);
 	});
 
 	it('Should navigates to global "errorOutlet" if default route requires params but none have been provided', () => {
@@ -136,7 +138,9 @@ describe('Router', () => {
 		assert.isOk(errorContext);
 		assert.deepEqual(errorContext!.params, {});
 		assert.deepEqual(errorContext!.queryParams, {});
-		assert.deepEqual(errorContext!.type, 'error');
+		assert.strictEqual(errorContext!.type, 'error');
+		assert.strictEqual(errorContext!.isError(), true);
+		assert.strictEqual(errorContext!.isExact(), false);
 	});
 
 	it('Should register as an index match for an outlet that index matches the route', () => {
@@ -146,7 +150,8 @@ describe('Router', () => {
 		assert.isOk(context);
 		assert.deepEqual(context!.params, {});
 		assert.deepEqual(context!.queryParams, {});
-		assert.deepEqual(context!.type, 'index');
+		assert.strictEqual(context!.type, 'index');
+		assert.strictEqual(context!.isExact(), true);
 	});
 
 	it('Should register as a partial match for an outlet that matches a section of the route', () => {
@@ -157,11 +162,13 @@ describe('Router', () => {
 		assert.deepEqual(fooContext!.params, {});
 		assert.deepEqual(fooContext!.queryParams, {});
 		assert.deepEqual(fooContext!.type, 'partial');
+		assert.strictEqual(fooContext!.isExact(), false);
 		const barContext = router.getOutlet('bar');
 		assert.isOk(barContext);
 		assert.deepEqual(barContext!.params, {});
 		assert.deepEqual(barContext!.queryParams, {});
 		assert.deepEqual(barContext!.type, 'index');
+		assert.strictEqual(barContext!.isExact(), true);
 	});
 
 	it('Should register as a error match for an outlet that matches a section of the route with no further matching registered outlets', () => {
@@ -172,6 +179,7 @@ describe('Router', () => {
 		assert.deepEqual(fooContext!.params, {});
 		assert.deepEqual(fooContext!.queryParams, {});
 		assert.deepEqual(fooContext!.type, 'error');
+		assert.strictEqual(fooContext!.isError(), true);
 		const barContext = router.getOutlet('bar');
 		assert.isNotOk(barContext);
 	});
@@ -184,11 +192,15 @@ describe('Router', () => {
 		assert.deepEqual(fooContext!.params, {});
 		assert.deepEqual(fooContext!.queryParams, {});
 		assert.deepEqual(fooContext!.type, 'partial');
+		assert.strictEqual(fooContext!.isExact(), false);
+		assert.strictEqual(fooContext!.isError(), false);
 		const context = router.getOutlet('baz');
 		assert.isOk(context);
 		assert.deepEqual(context!.params, { baz: 'baz' });
 		assert.deepEqual(context!.queryParams, {});
 		assert.deepEqual(context!.type, 'index');
+		assert.strictEqual(context!.isExact(), true);
+		assert.strictEqual(context!.isError(), false);
 	});
 
 	it('Should return params from all matching outlets', () => {
@@ -199,16 +211,22 @@ describe('Router', () => {
 		assert.deepEqual(fooContext!.params, {});
 		assert.deepEqual(fooContext!.queryParams, { hello: 'world' });
 		assert.deepEqual(fooContext!.type, 'partial');
+		assert.strictEqual(fooContext!.isExact(), false);
+		assert.strictEqual(fooContext!.isError(), false);
 		const bazContext = router.getOutlet('baz');
 		assert.isOk(bazContext);
 		assert.deepEqual(bazContext!.params, { baz: 'baz' });
 		assert.deepEqual(bazContext!.queryParams, { hello: 'world' });
 		assert.deepEqual(bazContext!.type, 'partial');
+		assert.strictEqual(bazContext!.isExact(), false);
+		assert.strictEqual(bazContext!.isError(), false);
 		const quxContext = router.getOutlet('qux');
 		assert.isOk(quxContext);
 		assert.deepEqual(quxContext!.params, { baz: 'baz', qux: 'qux' });
 		assert.deepEqual(quxContext!.queryParams, { hello: 'world' });
 		assert.deepEqual(quxContext!.type, 'index');
+		assert.strictEqual(quxContext!.isExact(), true);
+		assert.strictEqual(quxContext!.isError(), false);
 	});
 
 	it('Should pass query params to all matched outlets', () => {
@@ -218,10 +236,14 @@ describe('Router', () => {
 		assert.deepEqual(fooContext!.params, {});
 		assert.deepEqual(fooContext!.queryParams, { query: 'true' });
 		assert.deepEqual(fooContext!.type, 'partial');
+		assert.strictEqual(fooContext!.isExact(), false);
+		assert.strictEqual(fooContext!.isError(), false);
 		const barContext = router.getOutlet('bar');
 		assert.deepEqual(barContext!.params, {});
 		assert.deepEqual(barContext!.queryParams, { query: 'true' });
 		assert.deepEqual(barContext!.type, 'index');
+		assert.strictEqual(barContext!.isExact(), true);
+		assert.strictEqual(barContext!.isError(), false);
 	});
 
 	it('Should pass params and query params to all matched outlets', () => {
@@ -237,6 +259,8 @@ describe('Router', () => {
 		assert.deepEqual(fooContext!.params, { view: 'bar' });
 		assert.deepEqual(fooContext!.queryParams, { filter: 'true' });
 		assert.deepEqual(fooContext!.type, 'index');
+		assert.strictEqual(fooContext!.isExact(), true);
+		assert.strictEqual(fooContext!.isError(), false);
 	});
 
 	it('Should return all params for a route', () => {
@@ -321,13 +345,13 @@ describe('Router', () => {
 		router.on('nav', (event) => {
 			assert.strictEqual(event.type, 'nav');
 			assert.strictEqual(event.outlet, 'foo');
-			assert.deepEqual(event.context, {
-				queryParams: {},
-				params: { bar: 'defaultBar' },
-				type: 'index',
-				onEnter: undefined,
-				onExit: undefined
-			});
+			assert.deepEqual(event.context.queryParams, {});
+			assert.deepEqual(event.context.params, { bar: 'defaultBar' });
+			assert.deepEqual(event.context.type, 'index');
+			assert.isUndefined(event.context.onEnter);
+			assert.isUndefined(event.context.onExit);
+			assert.isTrue(event.context.isExact());
+			assert.isFalse(event.context.isError());
 			initialNavEvent = true;
 		});
 		assert.isTrue(initialNavEvent);

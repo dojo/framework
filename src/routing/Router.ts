@@ -259,6 +259,8 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 					queryParams: this._currentQueryParams,
 					params: { ...this._currentParams },
 					type,
+					isError: () => type === 'error',
+					isExact: () => type === 'index',
 					onEnter,
 					onExit
 				};
@@ -271,6 +273,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 			} else {
 				if (previousOutlet !== undefined && routes.length === 0) {
 					this._matchedOutlets[previousOutlet].type = 'error';
+					this._matchedOutlets[previousOutlet].isError = () => true;
 				}
 				segments = [...segmentsForRoute];
 			}
@@ -286,6 +289,8 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 			this._matchedOutlets.errorOutlet = {
 				queryParams: this._currentQueryParams,
 				params: { ...this._currentParams },
+				isError: () => true,
+				isExact: () => false,
 				type: 'error'
 			};
 		}
