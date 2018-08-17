@@ -8,6 +8,7 @@ import {
 	BeforeRender,
 	DiffPropertyReaction,
 	DNode,
+	LazyWidget,
 	Render,
 	WidgetMetaBase,
 	WidgetMetaConstructor,
@@ -29,6 +30,8 @@ interface ReactionFunctionConfig {
 
 export type BoundFunctionData = { boundFunc: (...args: any[]) => any; scope: any };
 
+let lazyWidgetId = 0;
+const lazyWidgetIdMap = new WeakMap<LazyWidget, string>();
 const decoratorMap = new Map<Function, Map<string, any[]>>();
 const boundAuto = auto.bind(null);
 
@@ -277,6 +280,16 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				node.properties = { ...properties, ...node.properties };
 			}
 			if (isWNode(node) && !isWidgetBaseConstructor(node.widgetConstructor)) {
+				if (typeof node.widgetConstructor === 'function') {
+					let id = lazyWidgetIdMap.get(node.widgetConstructor);
+					if (!id) {
+						id = `__lazy_widget_${lazyWidgetId++}`;
+						lazyWidgetIdMap.set(node.widgetConstructor, id);
+						this.registry.define(id, node.widgetConstructor());
+					}
+					node.widgetConstructor = id;
+				}
+
 				node.widgetConstructor =
 					this.registry.get<WidgetBase>(node.widgetConstructor) || node.widgetConstructor;
 			}

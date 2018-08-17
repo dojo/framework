@@ -3,9 +3,9 @@ const { assert } = intern.getPlugin('chai');
 import { spy, stub, SinonStub } from 'sinon';
 
 import { WidgetBase, noBind } from '../../../src/widget-core/WidgetBase';
-import { v, w } from '../../../src/widget-core/d';
+import { v, w, WNODE } from '../../../src/widget-core/d';
 import { WIDGET_BASE_TYPE } from '../../../src/widget-core/Registry';
-import { VNode, WidgetMetaConstructor, WidgetMetaBase, WNode } from '../../../src/widget-core/interfaces';
+import { Constructor, VNode, WidgetMetaConstructor, WidgetMetaBase, WNode } from '../../../src/widget-core/interfaces';
 import { handleDecorator } from '../../../src/widget-core/decorators/handleDecorator';
 import { diffProperty } from '../../../src/widget-core/decorators/diffProperty';
 import { Base } from '../../../src/widget-core/meta/Base';
@@ -170,6 +170,35 @@ describe('WidgetBase', () => {
 			assert.strictEqual(renderResult.widgetConstructor, Bar);
 			assert.lengthOf(renderResult.children!, 1);
 			assert.strictEqual((renderResult.children![0] as WNode).widgetConstructor, Bar);
+		});
+
+		it('Should support lazy widgets defined directly with w by adding them to the registry', () => {
+			let resolver: any;
+			const promise = new Promise<Constructor<WidgetBase>>((resolve) => {
+				resolver = resolve;
+			});
+			const lazyWidget = () => promise;
+			class MyWidget extends WidgetBase {
+				render() {
+					return w(lazyWidget, {});
+				}
+			}
+			const widget = new MyWidget();
+			const initialNode = widget.__render__() as WNode;
+			assert.strictEqual(initialNode.bind, widget);
+			assert.deepEqual(initialNode.children, []);
+			assert.deepEqual(initialNode.properties, {});
+			assert.strictEqual(initialNode.type, WNODE);
+			assert.isString(initialNode.widgetConstructor);
+			resolver(WidgetBase);
+			return promise.then(() => {
+				const resolvedNode = widget.__render__() as WNode;
+				assert.strictEqual(resolvedNode.bind, widget);
+				assert.deepEqual(resolvedNode.children, []);
+				assert.deepEqual(resolvedNode.properties, {});
+				assert.strictEqual(resolvedNode.type, WNODE);
+				assert.strictEqual(resolvedNode.widgetConstructor, WidgetBase);
+			});
 		});
 	});
 
