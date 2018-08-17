@@ -1296,41 +1296,6 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 }
 ```
 
-#### Matches
-
-The `Matches` meta determines if the target of a DOM event matches a particular virtual DOM key.
-
-```ts
-const matches = this.meta(Matches).get('root', evt);
-```
-
-This allows a widget to not have to _know_ anything about the real DOM when dealing with events that may have bubbled
-up from child DOM.  For example to determine if the containing node in the widget was clicked on, versus the child node,
-you would do something like this:
-
-```ts
-class TestWidget extends WidgetBase<WidgetProperties> {
-    private _onclick(evt: MouseEvent) {
-        if (this.meta(Matches).get('root', evt)) {
-            console.log('The root node was clicked on.');
-        }
-    }
-
-    render() {
-        const dimensions = this.meta(Matches).get('root');
-
-        return v('div', {
-            key: 'root'
-            onclick: this._onclick
-        }, [
-            v('div', {
-                innerHTML: 'Hello World'
-            })
-        ]);
-    }
-}
-```
-
 #### Resize
 
 The resize observer meta uses the latest [`ResizeObserver`](https://wicg.github.io/ResizeObserver/) within Dojo based widgets.
