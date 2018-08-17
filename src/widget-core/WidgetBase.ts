@@ -1,6 +1,5 @@
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
-import Symbol from '../shim/Symbol';
 import { v, VNODE, isVNode, isWNode } from './d';
 import { auto } from './diff';
 import {
@@ -33,7 +32,7 @@ export type BoundFunctionData = { boundFunc: (...args: any[]) => any; scope: any
 const decoratorMap = new Map<Function, Map<string, any[]>>();
 const boundAuto = auto.bind(null);
 
-export const noBind = Symbol.for('dojoNoBind');
+export const noBind = '__dojo_no_bind';
 
 function toTextVNode(data: any): VNode {
 	return {
@@ -52,7 +51,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	/**
 	 * static identifier
 	 */
-	static _type: symbol = WIDGET_BASE_TYPE;
+	static _type = WIDGET_BASE_TYPE;
 
 	/**
 	 * children array

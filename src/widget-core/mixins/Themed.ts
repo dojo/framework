@@ -32,7 +32,7 @@ export interface ThemedProperties<T = ClassNames> extends WidgetProperties {
 
 const THEME_KEY = ' _key';
 
-export const INJECTED_THEME_KEY = Symbol('theme');
+export const INJECTED_THEME_KEY = '__theme_injector';
 
 /**
  * Interface for the ThemedMixin
