@@ -1,8 +1,8 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { Pointer } from './../../../../src/stores/state/Pointer';
-import { Patch, OperationType } from './../../../../src/stores/state/Patch';
+import { Pointer } from '../../../../src/stores/state/Pointer';
+import { Patch, OperationType } from '../../../../src/stores/state/Patch';
 import * as ops from './../../../../src/stores/state/operations';
 
 describe('state/Patch', () => {
@@ -149,15 +149,28 @@ describe('state/Patch', () => {
 			assert.strictEqual(result.object, obj);
 		});
 
-		it('failure', () => {
-			const patch = new Patch(ops.test({ path: '/test', state: null, value: null }, true));
-			const obj = { test: 'test' };
+		function assertTestFailure(initial: any, value: any, errorMessage: string) {
+			const patch = new Patch(ops.test({ path: '/test', state: null, value: null }, initial));
+			const obj = { test: value };
 			assert.throws(
 				() => {
 					patch.apply(obj);
 				},
 				Error,
-				'Test operation failure. Unable to apply any operations.'
+				errorMessage
+			);
+		}
+
+		it('failure', () => {
+			assertTestFailure(
+				true,
+				'true',
+				'Test operation failure at "test". Expected boolean "true" but got string "true" instead.'
+			);
+			assertTestFailure(
+				{},
+				[],
+				'Test operation failure at "test". Expected object "[object Object]" but got array "" instead.'
 			);
 		});
 

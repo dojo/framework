@@ -1,4 +1,5 @@
 import { Pointer, walk, PointerTarget } from './Pointer';
+import { getFriendlyDifferenceMessage, isEqual } from './compare';
 
 export enum OperationType {
 	ADD = 'add',
@@ -51,6 +52,15 @@ function add(pointerTarget: PointerTarget, value: any): any {
 	return pointerTarget.object;
 }
 
+function assert(pointerTarget: PointerTarget, value: any) {
+	const current = pointerTarget.target[pointerTarget.segment];
+	if (!isEqual(current, value)) {
+		throw new Error(
+			`Test operation failure at "${pointerTarget.segment}". ${getFriendlyDifferenceMessage(value, current)}.`
+		);
+	}
+}
+
 function replace(pointerTarget: PointerTarget, value: any): any {
 	if (Array.isArray(pointerTarget.target)) {
 		pointerTarget.target.splice(parseInt(pointerTarget.segment, 10), 1, value);
@@ -67,26 +77,6 @@ function remove(pointerTarget: PointerTarget): any {
 		delete pointerTarget.target[pointerTarget.segment];
 	}
 	return pointerTarget.object;
-}
-
-function test(pointerTarget: PointerTarget, value: any) {
-	return isEqual(pointerTarget.target[pointerTarget.segment], value);
-}
-
-export function isObject(value: any): value is Object {
-	return Object.prototype.toString.call(value) === '[object Object]';
-}
-
-export function isEqual(a: any, b: any): boolean {
-	if (Array.isArray(a) && Array.isArray(b)) {
-		return a.length === b.length && a.every((element: any, i: number) => isEqual(element, b[i]));
-	} else if (isObject(a) && isObject(b)) {
-		const keysForA = Object.keys(a).sort();
-		const keysForB = Object.keys(b).sort();
-		return isEqual(keysForA, keysForB) && keysForA.every((key) => isEqual(a[key], b[key]));
-	} else {
-		return a === b;
-	}
 }
 
 function inverse(operation: PatchOperation, state: any): PatchOperation[] {
@@ -156,10 +146,7 @@ export class Patch<T = any> {
 					object = remove(pointerTarget);
 					break;
 				case OperationType.TEST:
-					const result = test(pointerTarget, next.value);
-					if (!result) {
-						throw new Error('Test operation failure. Unable to apply any operations.');
-					}
+					assert(pointerTarget, next.value);
 					return patchedObject;
 				default:
 					throw new Error('Unknown operation');
