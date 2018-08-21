@@ -129,7 +129,7 @@ New properties are compared with the previous properties to determine if a widge
 
 It is common for widgets to maintain internal state, that directly affects the results of the render output or passed as properties to child widgets. The most common pattern is that an action (often user initiated via an event) occurs which updates the internal state leaving the user to manually call `this.invalidate()` to trigger a re-render.
 
-For class properties that always need to trigger a re-render when it's updated, a property decorator, `@watch` can be used, which implicitly calls `this.invalidate` each time the property is set.
+For class properties that always need to trigger a re-render when they're updated, a property decorator, `@watch` can be used, which implicitly calls `this.invalidate` each time the property is set.
 
 ```ts
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
