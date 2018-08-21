@@ -334,7 +334,7 @@ Store data can be connected to widgets within your application using the `StoreP
 
 Container Property API:
 
- * `renderer`: A render function that has the store injected in order to access state and pass process to child widgets.
+ * `renderer`: A render function that has the store injected in order to access state and pass processes to child widgets.
  * `stateKey`: The key of the state in the registry.
  * `paths` (optional): A function to connect the `Container` to sections of the state.
 
@@ -359,7 +359,7 @@ class MyApp extends WidgetBase {
 	protected render() {
 		return w(StoreProvider, { stateKey: 'state', (store: Store<State>) => {
 			return v('div', [ store.get(store.path('foo')) ]);
-		}})
+		}});
 	}
 }
 ```
