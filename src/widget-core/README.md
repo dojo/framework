@@ -125,6 +125,34 @@ class Hello extends WidgetBase<MyProperties> {
 
 New properties are compared with the previous properties to determine if a widget requires re-rendering. By default Dojo uses the `auto` diffing strategy, that performs a shallow comparison for objects and arrays, ignores functions (except classes that extend `WidgetBase`) and a reference comparison for all other values.
 
+#### Internal Widget State
+
+It is common for widgets to maintain internal state, that directly affects the results of the render output or passed as properties to child widgets. The most common pattern is that an action (often user initiated via an event) occurs which updates the internal state leaving the user to manually call `this.invalidate()` to trigger a re-render.
+
+For class properties that always need to trigger a re-render when it's updated, a property decorator, `@watch` can be used, which implicitly calls `this.invalidate` each time the property is set.
+
+```ts
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import watch from '@dojo/framework/widget-core/decorators/watch';
+
+class Counter extends WidgetBase {
+
+	@watch()
+    private _count = 0;
+
+    private _increment() {
+         this._count = this._count + 1; // this automatically calls invalidate
+    }
+
+    protected render() {
+        return v('div', [
+            v('button', { onclick: this._increment }, [ 'Increment' ]),
+            `${this._count}`)
+        ]);
+    }
+}
+```
+
 #### Composing Widgets
 
 As mentioned, often widgets are composed of other widgets in their `render` output. This promotes widget reuse across an application (or multiple applications) and promotes widget best practices.
