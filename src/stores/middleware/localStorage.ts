@@ -1,7 +1,7 @@
 import global from '../../shim/global';
 import { ProcessError, ProcessResult, ProcessCallback, processExecutor } from '../process';
 import { Store } from '../Store';
-import { GetPaths } from '../StoreInjector';
+import { GetPaths } from '../StoreProvider';
 import { add } from '../state/operations';
 
 export function collector<T = any>(id: string, getPaths: GetPaths<T>, callback?: ProcessCallback): ProcessCallback {

@@ -5,8 +5,10 @@ import { handleDecorator } from '../widget-core/decorators/handleDecorator';
 import { beforeProperties } from '../widget-core/decorators/beforeProperties';
 import { alwaysRender } from '../widget-core/decorators/alwaysRender';
 import { InjectorItem, RegistryLabel, Constructor, DNode } from '../widget-core/interfaces';
-import { Store, StatePaths, Path } from './Store';
+import { Store, Path } from './Store';
 import { Registry } from '../widget-core/Registry';
+import { GetPaths } from './StoreProvider';
+export { GetPaths } from './StoreProvider';
 const registeredInjectorsMap: WeakMap<WidgetBase, InjectorItem<Store>[]> = new WeakMap();
 
 export interface GetProperties<S extends Store, W extends WidgetBase<any, any> = WidgetBase<any, any>> {
@@ -25,10 +27,6 @@ export type StoreContainerPath<
 export interface StoreContainerOptions<S, W extends WidgetBase> {
 	paths?: GetPaths<S> | StoreContainerPath<S>[];
 	getProperties: GetProperties<Store<S>, W>;
-}
-
-export interface GetPaths<S = any> {
-	(path: StatePaths<S>): Path<S, any>[];
 }
 
 export interface StoreInjectConfig<S = any> {

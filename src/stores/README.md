@@ -21,8 +21,8 @@ An application store designed to complement @dojo/widgets and @dojo/widget-core 
      - [Initial State](#initial-state)
  - [How Does This Differ From Redux](#how-does-this-differ-from-Redux)
  - [Advanced](#advanced)
+     - [Connecting Stores To Widgets](#connecting-stores-to-widgets)
      - [Subscribing To Store Changes](#subscribing-to-store-changes)
-	 - [Connecting Store Updates To Widgets](#connecting-store-updates-to-widgets)
      - [Transforming Executor Arguments](#transforming-executor-arguments)
      - [Optimistic Update Pattern](#optimistic-update-pattern)
      - [Executing Concurrent Commands](#executing-concurrent-commands)
@@ -328,6 +328,63 @@ Additionally, this means that there is no need to coordinate `actions` and `redu
 
 ## Advanced
 
+### Connecting Store To Widgets
+
+Store data can be connected to widgets within your application using the `StoreProvider` widget provided by `@dojo/framework/stores`.
+
+Container Property API:
+
+ * `renderer`: A render function that has the store injected in order to access state and pass process to child widgets.
+ * `stateKey`: The key of the state in the registry.
+ * `paths` (optional): A function to connect the `Container` to sections of the state.
+
+There are two mechanisms to connect the `StoreProvider` to the `Store`:
+
+1. The recommended approach is to register `paths` on container creation to ensure invalidation will only occur when state you are interested in changes.
+2. A catch-all when no `paths` are defined for the container, it will invalidate when any data changes in the store.
+
+```ts
+import { WidgetBase } from '@dojo/widget-core/WidgetBase';
+import { Store } from '@dojo/framework/stores/Stores';
+import StoreProvider from '@dojo/framework/stores/StoreProvider';
+
+interface State {
+	foo: string;
+	bar: {
+		baz: string;
+	}
+}
+
+class MyApp extends WidgetBase {
+	protected render() {
+		return w(StoreProvider, { stateKey: 'state', (store: Store<State>) => {
+			return v('div', [ store.get(store.path('foo')) ]);
+		}})
+	}
+}
+```
+
+A pre-typed container can be created by extending the standard `StoreProvider` and passing the `State` type as a generic.
+
+```ts
+interface State {
+	foo: string;
+}
+
+export class MyTypeStoreProvider extends StoreProvider<State> {}
+```
+
+**However** in order for TypeScript to infer this correctly when using `w()`, the generic will need to be explicitly passed.
+
+```ts
+w<MyTypeStoreProvider>(MyTypeStoreProvider, {
+	stateKey: 'state',
+	renderer(store) {
+		return v('div', [ store.get(store.path('foo')) ]);
+	}
+});
+```
+
 ### Subscribing to store changes
 
 To be notified of changes in the store, use the `onChange()` function, which takes a `path` or an array of `path`'s and a callback for when that portion of state changes, for example:
@@ -355,58 +412,6 @@ In order to be notified when any changes occur within the store's state, simply 
 store.on('invalidate', () => {
 	// do something when the store's state has been updated.
 });
-```
-
-### Connecting Store Updates To Widgets
-
-Store data can be connected to widgets within your application using the [Containers & Injectors Pattern](../widget-core#containers--injectors) supported by `@dojo/widget-core`. The `@dojo/framework/stores` package provides a specialized injector that invalidates store containers on two conditions:
-
-1. The recommended approach is to register `paths` on container creation to ensure invalidation will only occur when state you are interested in changes.
-2. A catch-all when no `paths` are defined for the container, it will invalidate when any data changes in the store.
-
-```ts
-import { WidgetBase } from '@dojo/widget-core/WidgetBase';
-import { Store } from '@dojo/framework/stores/Stores';
-import { StoreContainer } from '@dojo/framework/stores/StoreInjector';
-
-interface State {
-	foo: string;
-	bar: {
-		baz: string;
-	}
-}
-
-// Will only invalidate when the `foo` or `bar/baz` property is changed
-const Container = StoreContainer<State>(WidgetBase, 'state', {
-	paths(path) {
-		return [
-			path('foo'),
-			path('bar', 'baz')
-		];
-	},
-	getProperties(store: Store<State>) {
-		return {
-			foo: store.get(store.path('foo'))
-		};
-	}
-});
-
-// Catch all, will invalidate if _any_ state changes in the store even if the container is not interested in the changes
-const Container = StoreContainer<State>(WidgetBase, 'state', { getProperties(store: Store<State>) {
-	return {
-		foo: store.get(store.path('foo'))
-	}
-}});
-```
-
-Instead of typing `StoreContainer` for every usage, it is possible to create a pre-typed StoreContainer that can be used across your application. To do this use `createStoreContainer` from `@dojo/framework/stores/StoreInjector` passing the stores state interface as the generic argument. The result of this can be exported and used across your application.
-
-```ts
-interface State {
-	foo: string;
-}
-
-export const StoreContainer = createStoreContainer<State>();
 ```
 
 ### Transforming Executor Arguments
