@@ -13,6 +13,7 @@ Routing for Dojo applications.
      - [Global Error Outlet](#global-error-outlet)
    - [Link](#link)
    - [ActiveLink](#activelink)
+   - [Prompt](#Prompt)
 
 <!-- end-github-only -->
 
@@ -339,6 +340,30 @@ render() {
 	]);
 }
 ```
+
+### Prompt
+
+A widget that can be used to prompt the user before the router navigates away from the page. The `Prompt` widget uses a predicate to determine whether the active route should be block and the `Prompt` renderer displayed. The `renderer` receives two functions `continue` and `block`, which can be used to remain on the current route or continue through to the blocked route.
+
+```ts
+import Prompt from '@dojo/framework/routing/Prompt';
+
+render() {
+	return v('div', [
+		w(Prompt, { shouldBlock: () => true, renderer: ({ continue, block }) => {
+			// return widgets or vnodes to show when the should block predicate returns true
+			// use `continue` and `block` to stay on the current route or continue to the
+			// blocked route.
+			return v('div', [
+				v('button', { onclick: continue }, [ 'continue' ]),
+				v('button', { onclick: block }, [ 'block' ])
+			]);
+		}})
+	]);
+}
+```
+
+**Note:** A hard refresh or URL change, cannot be caught and blocked by the dojo router so `Prompt` hooks onto the `onbeforeunload` event that initiates the native confirmation popup.
 
 <!-- doc-viewer-config
 {
