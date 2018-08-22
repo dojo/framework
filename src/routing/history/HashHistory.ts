@@ -4,6 +4,7 @@ import { History, HistoryOptions, OnChangeFunction } from './../interfaces';
 export class HashHistory implements History {
 	private _onChangeFunction: OnChangeFunction;
 	private _current: string;
+	private _previous = '';
 	private _window: Window;
 
 	constructor({ window = global.window, onChange }: HistoryOptions) {
@@ -16,6 +17,10 @@ export class HashHistory implements History {
 
 	public normalizePath(path: string): string {
 		return path.replace('#', '');
+	}
+
+	public replace(path: string) {
+		this._window.history.replaceState(undefined, '', this.prefix(path));
 	}
 
 	public prefix(path: string) {
@@ -33,11 +38,20 @@ export class HashHistory implements History {
 		return this._current;
 	}
 
+	public get previous(): string {
+		return this._previous;
+	}
+
 	public destroy() {
 		this._window.removeEventListener('hashchange', this._onChange);
 	}
 
 	private _onChange = () => {
+		const requestPath = this.normalizePath(this._window.location.hash);
+		if (requestPath === this._current) {
+			return;
+		}
+		this._previous = this._current;
 		this._current = this.normalizePath(this._window.location.hash);
 		this._onChangeFunction(this._current);
 	};

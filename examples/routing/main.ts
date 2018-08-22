@@ -9,9 +9,15 @@ import { Link } from '@dojo/framework/routing/Link';
 import { App as BasicApp, BasicAppRouteConfig } from './basic';
 import { App as UrlParametersApp, UrlParametersRouteConfig } from './url-parameters';
 import { App as AmbiguousMatchesApp, AmbiguousMatchesRouteConfig } from './ambigious-matches';
+import { App as PromptApp, PromptRouteConfig } from './prompt';
 import { Outlet } from '@dojo/framework/routing/Outlet';
 
-const applicationRoutes: RouteConfig[] = [BasicAppRouteConfig, UrlParametersRouteConfig, AmbiguousMatchesRouteConfig];
+const applicationRoutes: RouteConfig[] = [
+	BasicAppRouteConfig,
+	UrlParametersRouteConfig,
+	AmbiguousMatchesRouteConfig,
+	PromptRouteConfig
+];
 
 const registry = new Registry();
 
@@ -72,27 +78,34 @@ class App extends WidgetBase {
 					v('div', { styles: menuContainerStyles }, [
 						w(Link, { key: 'basic', to: 'basic', styles: linkStyles }, ['Basic']),
 						w(Link, { key: 'url', to: 'url-parameters', styles: linkStyles }, ['Url Parameters']),
-						w(Link, { key: 'amb', to: 'ambiguous-matches', styles: linkStyles }, ['Ambiguous Matches'])
+						w(Link, { key: 'amb', to: 'ambiguous-matches', styles: linkStyles }, ['Ambiguous Matches']),
+						w(Link, { key: 'prompt', to: 'prompt', styles: linkStyles }, ['Prompt'])
 					])
 				])
 			]),
 			v('div', { styles: contentStyles }, [
 				w(Outlet, {
-					outlet: 'ambiguous-matches',
+					id: 'ambiguous-matches',
 					renderer() {
 						return w(AmbiguousMatchesApp, {});
 					}
 				}),
 				w(Outlet, {
-					outlet: 'basic',
+					id: 'basic',
 					renderer() {
 						return w(BasicApp, {});
 					}
 				}),
 				w(Outlet, {
-					outlet: 'url-parameters',
+					id: 'url-parameters',
 					renderer() {
 						return w(UrlParametersApp, {});
+					}
+				}),
+				w(Outlet, {
+					id: 'prompt',
+					renderer() {
+						return w(PromptApp, {});
 					}
 				})
 			])

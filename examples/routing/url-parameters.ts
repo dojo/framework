@@ -26,7 +26,7 @@ export class App extends WidgetBase {
 				v('li', [w(Link, { key: '4', to: 'child', params: { id: 'modus-create' } }, ['Modus Create'])])
 			]),
 			w(Outlet, {
-				outlet: 'child',
+				id: 'child',
 				renderer: (details: MatchDetails) => {
 					return w(Child, { name: details.params.id });
 				}

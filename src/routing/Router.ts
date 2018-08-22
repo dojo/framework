@@ -1,16 +1,9 @@
+import Map from '../shim/Map';
 import QueuingEvented from '../core/QueuingEvented';
-import {
-	RouteConfig,
-	History,
-	MatchType,
-	OutletContext,
-	Params,
-	RouterInterface,
-	Route,
-	RouterOptions
-} from './interfaces';
+import { RouteConfig, History, MatchType, OutletContext, Params, Route, RouterOptions } from './interfaces';
 import { HashHistory } from './history/HashHistory';
 import { EventObject } from '../core/Evented';
+import { Handle } from '../core/Destroyable';
 
 const PARAM = Symbol('routing param');
 
@@ -24,7 +17,7 @@ export interface OutletEvent extends EventObject<string> {
 	action: 'enter' | 'exit';
 }
 
-export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent }> implements RouterInterface {
+export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent }> {
 	private _routes: Route[] = [];
 	private _outletMap: { [index: string]: Route } = Object.create(null);
 	private _matchedOutlets: { [index: string]: OutletContext } = Object.create(null);
@@ -32,6 +25,11 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 	private _currentQueryParams: Params = {};
 	private _defaultOutlet: string | undefined;
 	private _history: History;
+	private _prompts: (() => boolean)[] = [];
+	private _activePrompts: (() => boolean)[] = [];
+	private _promptInvalidatorMap = new Map<any, any>();
+	private _blockedRoute: string | undefined;
+	private _continueRoute = false;
 
 	constructor(config: RouteConfig[], options: RouterOptions = {}) {
 		super();
@@ -110,6 +108,56 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 	 */
 	public get currentParams() {
 		return this._currentParams;
+	}
+
+	/**
+	 * Returns whether the router has a blocked route
+	 */
+	public hasBlockedRoute() {
+		return !!this._blockedRoute;
+	}
+
+	/**
+	 * Registers a predicate for whether a route should be block with the prompts invalidator
+	 */
+	public registerPrompt(shouldBlock: () => boolean, invalidator: Function): Handle {
+		this._prompts.push(shouldBlock);
+		this._promptInvalidatorMap.set(shouldBlock, invalidator);
+		return {
+			destroy: () => {
+				this._prompts.splice(this._prompts.indexOf(shouldBlock));
+				this._promptInvalidatorMap.delete(shouldBlock);
+			}
+		};
+	}
+
+	/**
+	 * Continues routing is there is a blocked route
+	 */
+	public continueRoute() {
+		const route = this._blockedRoute;
+		if (route) {
+			this._blockedRoute = undefined;
+			this._activePrompts = [];
+			this._continueRoute = true;
+			this._onChange(route);
+		}
+	}
+
+	/**
+	 * Prevents the attempted transition and invalidate all registered prompts
+	 */
+	public preventRoute() {
+		const route = this._blockedRoute;
+		if (route) {
+			this._activePrompts.forEach((prompt) => {
+				const invalidator = this._promptInvalidatorMap.get(prompt)!;
+				invalidator();
+			});
+			this._blockedRoute = undefined;
+			this._activePrompts = [];
+			this._history.replace(this._history.previous);
+		}
 	}
 
 	/**
@@ -197,6 +245,19 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 		return queryParams;
 	}
 
+	private _isBlocked(): boolean {
+		let result = false;
+		this._prompts.forEach((prompt) => {
+			if (prompt()) {
+				this._activePrompts.push(prompt);
+				const invalidator = this._promptInvalidatorMap.get(prompt)!;
+				invalidator();
+				result = true;
+			}
+		});
+		return result;
+	}
+
 	/**
 	 * Called on change of the route by the the registered history manager. Matches the path against
 	 * the registered outlets.
@@ -204,6 +265,11 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 	 * @param requestedPath The path of the requested route
 	 */
 	private _onChange = (requestedPath: string): void => {
+		if (!this._continueRoute && this._isBlocked()) {
+			this._blockedRoute = requestedPath;
+			return;
+		}
+		this._continueRoute = false;
 		this.emit({ type: 'navstart' });
 		const previousMatchedOutlets = this._matchedOutlets;
 		this._matchedOutlets = Object.create(null);
