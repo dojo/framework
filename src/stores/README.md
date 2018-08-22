@@ -357,7 +357,7 @@ interface State {
 
 class MyApp extends WidgetBase {
 	protected render() {
-		return w(StoreProvider, { stateKey: 'state', (store: Store<State>) => {
+		return w(StoreProvider, { stateKey: 'state', renderer: (store: Store<State>) => {
 			return v('div', [ store.get(store.path('foo')) ]);
 		}});
 	}
