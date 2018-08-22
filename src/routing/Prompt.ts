@@ -46,3 +46,5 @@ export class Prompt extends WidgetBase<PromptProperties> {
 		}
 	}
 }
+
+export default Prompt;
