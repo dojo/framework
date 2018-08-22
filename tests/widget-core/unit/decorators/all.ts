@@ -6,3 +6,4 @@ import './customElement';
 import './diffProperty';
 import './inject';
 import './registry';
+import './watch';
