@@ -753,7 +753,7 @@ class FocusParent extends Focus(WidgetBase) {
 }
 ```
 
-See this [focus example on codesandbox.io](https://codesandbox.io/s/ox5y97vqz5).
+[![Edit widget-core-readme-04](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/1vzlzn1nmj)
 
 ### Advanced Properties
 
