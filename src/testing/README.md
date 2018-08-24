@@ -2,20 +2,20 @@
 
 Simple API for testing and asserting Dojo widget's expected virtual DOM and behavior.
 
-- [Features](#features)
-- [`harness`](#harness)
-  - [Custom Comparators](#custom-comparators)
-- [selectors](#selectors)
-- [`harness.expect`](#harnessexpect)
-- [`harness.expectPartial`](#harnessexpectpartial)
-- [`harness.trigger`](#harnesstrigger)
+-   [Features](#features)
+-   [`harness`](#harness)
+    -   [Custom Comparators](#custom-comparators)
+-   [selectors](#selectors)
+-   [`harness.expect`](#harnessexpect)
+-   [`harness.expectPartial`](#harnessexpectpartial)
+-   [`harness.trigger`](#harnesstrigger)
 
 ## Features
 
- * Simple, familiar and minimal API
- * Focused on testing Dojo virtual DOM structures
- * No DOM requirement by default
- * Full functional and tsx support
+-   Simple, familiar and minimal API
+-   Focused on testing Dojo virtual DOM structures
+-   No DOM requirement by default
+-   Full functional and tsx support
 
 ## harness
 
@@ -27,35 +27,35 @@ Simple API for testing and asserting Dojo widget's expected virtual DOM and beha
 harness(renderFunction: () => WNode, customComparators?: CustomComparator[]): Harness;
 ```
 
-* `renderFunction`: A function that returns a WNode for the widget under test
-* [`customComparators`](custom-comparators): Array of custom comparator descriptors. Each provides a comparator function to be used during the comparison for `properties` located using a `selector` and `property` name
+-   `renderFunction`: A function that returns a WNode for the widget under test
+-   [`customComparators`](custom-comparators): Array of custom comparator descriptors. Each provides a comparator function to be used during the comparison for `properties` located using a `selector` and `property` name
 
 The harness returns a `Harness` object that provides a small API for interacting with the widget under test:
 
 `Harness`
 
-* [`expect`](#harnessexpect): Performs an assertion against the full render output from the widget under test.
-* [`expectPartial`](#harnessexpectpartial): Performs an assertion against a section of the render output from the widget under test.
-* [`trigger`](#harnesstrigger): Used to trigger a function from a node on the widget under test's API
-* [`getRender`](#harnessgetRender): Returns a render from the harness based on the index provided
+-   [`expect`](#harnessexpect): Performs an assertion against the full render output from the widget under test.
+-   [`expectPartial`](#harnessexpectpartial): Performs an assertion against a section of the render output from the widget under test.
+-   [`trigger`](#harnesstrigger): Used to trigger a function from a node on the widget under test's API
+-   [`getRender`](#harnessgetRender): Returns a render from the harness based on the index provided
 
-Setting up a widget for testing is simple and familiar using the `w()` function from `@dojo/widget-core`:
+Setting up a widget for testing is simple and familiar using the `w()` function from `@dojo/framework/widget-core`:
 
 ```ts
-class MyWidget extends WidgetBase<{ foo: string; }> {
+class MyWidget extends WidgetBase<{ foo: string }> {
 	protected render() {
 		const { foo } = this.properties;
 		return v('div', { foo }, this.children);
 	}
 }
 
-const h = harness(() => w(MyWidget, { foo: 'bar' }, [ 'child' ]));
+const h = harness(() => w(MyWidget, { foo: 'bar' }, ['child']));
 ```
 
 The harness also supports `tsx` usage as show below. For the rest of the README the examples will be using the programmatic `w()` API, there are more examples of `tsx` in the [unit tests](./blob/master/tests/unit/harnessWithTsx.tsx).
 
 ```ts
-const h = harness(() => <MyWidget foo='bar'>child</MyWidget>);
+const h = harness(() => <MyWidget foo="bar">child</MyWidget>);
 ```
 
 The `renderFunction` is lazily executed so it can include additional logic to manipulate the widget's `properties` and `children` between assertions.
@@ -86,7 +86,7 @@ const compareId = {
 	comparator: (value: any) => typeof value === 'string' // checks the property value is a string
 };
 
-const h = harness(() => w(MyWidget, {}), [ compareId ]);
+const h = harness(() => w(MyWidget, {}), [compareId]);
 ```
 
 For all assertions, using the returned `harness` API will now only test identified `id` properties using the `comparator` instead of the standard equality.
@@ -97,8 +97,8 @@ The `harness` APIs commonly support a concept of CSS style selectors to target n
 
 In addition to the standard API:
 
-* The `@` symbol is supported as shorthand for targeting a node's `key` property
-* The `classes` property is used instead of `class` when using the standard shorthand `.` for targeting classes
+-   The `@` symbol is supported as shorthand for targeting a node's `key` property
+-   The `classes` property is used instead of `class` when using the standard shorthand `.` for targeting classes
 
 ## `harness.expect`
 
@@ -110,21 +110,19 @@ API
 expect(expectedRenderFunction: () => DNode | DNode[], actualRenderFunction?: () => DNode | DNode[]);
 ```
 
-* `expectedRenderFunction`: A function that returns the expected `DNode` structure of the queried node
-* `actualRenderFunction`: An optional function that returns the actual `DNode` structure to be asserted
+-   `expectedRenderFunction`: A function that returns the expected `DNode` structure of the queried node
+-   `actualRenderFunction`: An optional function that returns the actual `DNode` structure to be asserted
 
 ```ts
-h.expect(() => v('div', { key: 'foo'}, [
-    w(Widget, { key: 'child-widget' }),
-    'text node',
-    v('span', { classes: [ 'class' ] })
-]));
+h.expect(() =>
+	v('div', { key: 'foo' }, [w(Widget, { key: 'child-widget' }), 'text node', v('span', { classes: ['class'] })])
+);
 ```
 
 Optionally `expect` can accepts a second parameter of function that returns a render result to assert against.
 
 ```ts
-h.expect(() => v('div', { key: 'foo'}), () => v('div', { key: 'foo' }));
+h.expect(() => v('div', { key: 'foo' }), () => v('div', { key: 'foo' }));
 ```
 
 If the actual render output and expected render output are different, an exception is thrown with a structured visualization indicating all differences with `(A)` (the actual value) and `(E)` (the expected value).
@@ -170,9 +168,9 @@ API
 expectPartial(selector: string, expectedRenderFunction: () => DNode | DNode[]);
 ```
 
-* `selector`: The selector query to find the node to target
-* `expectedRenderFunction`: A function that returns the expected `DNode` structure of the queried node
-* `actualRenderFunction`: An optional function that returns the actual `DNode` structure to be asserted
+-   `selector`: The selector query to find the node to target
+-   `expectedRenderFunction`: A function that returns the expected `DNode` structure of the queried node
+-   `actualRenderFunction`: An optional function that returns the actual `DNode` structure to be asserted
 
 Example usage:
 
@@ -192,9 +190,9 @@ interface FunctionalSelector {
 trigger(selector: string, functionSelector: string | FunctionalSelector, ...args: any[]): any;
 ```
 
-* `selector`: The selector query to find the node to target
-* `functionSelector`: Either the name of the function to call from found node's properties or a functional selector that returns a function from a nodes properties.
-* `args`: The arguments to call the located function with
+-   `selector`: The selector query to find the node to target
+-   `functionSelector`: Either the name of the function to call from found node's properties or a functional selector that returns a function from a nodes properties.
+-   `args`: The arguments to call the located function with
 
 Returns the result of the function triggered if one is returned.
 
@@ -219,7 +217,7 @@ const result = h.trigger('@bar', 'customFunction', 100);
 getRender(index?: number);
 ```
 
-* `index`: The index of the render result to return
+-   `index`: The index of the render result to return
 
 Example Usage(s):
 

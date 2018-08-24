@@ -2,13 +2,13 @@
 
 An internationalization package that provides locale-specific message loading, and support for locale-specific message, date, and number formatting.
 
-- [Features](#features)
-  - [Message Bundle Loading](#message-bundle-loading)
-  - [Determining the Current Locale](#determining-the-current-locale)
-  - [Changing the Root Locale and Observing Locale Changes](#changing-the-root-locale-and-observering-locale-changes)
-  - [Loading CLDR data](#loading-cldr-data)
-  - [Message Formatting](#message-formatting)
-  - [Date and number formatting](#date-and-number-formatting)
+-   [Features](#features)
+    -   [Message Bundle Loading](#message-bundle-loading)
+    -   [Determining the Current Locale](#determining-the-current-locale)
+    -   [Changing the Root Locale and Observing Locale Changes](#changing-the-root-locale-and-observering-locale-changes)
+    -   [Loading CLDR data](#loading-cldr-data)
+    -   [Message Formatting](#message-formatting)
+    -   [Date and number formatting](#date-and-number-formatting)
 
 ```typescript
 import i18n, { Messages } from '@dojo/framework/i18n/i18n';
@@ -62,7 +62,7 @@ Once the default bundle is in place, any locale-specific messages are loaded by 
 import i18n, { Messages } from '@dojo/framework/i18n/main';
 import bundle from 'nls/main';
 
-i18n(bundle, 'fr').then(function (messages: Messages) {
+i18n(bundle, 'fr').then(function(messages: Messages) {
 	console.log(messages.hello); // "Bonjour"
 	console.log(messages.goodbye); // "Au revoir"
 });
@@ -97,7 +97,6 @@ console.log(messages.goodbye); // "Au revoir"
 ```
 
 `getCachedMessages` will look up the bundle's supported `locales` to determine whether the default messages should be returned. Locales are also normalized to their most specific messages. For example, if the 'fr' locale is supported, but 'fr-CA' is not, `getCachedMessages` will return the messages for the 'fr' locale:
-
 
 ```typescript
 import { getCachedMessages } from '@dojo/framework/i18n/i18n';
@@ -176,40 +175,40 @@ loadCldrData({
 
 For ICU message formatting:
 
-* `supplemental/likelySubtags`
-* `supplemental/plurals`
+-   `supplemental/likelySubtags`
+-   `supplemental/plurals`
 
 For date/time formatting:
 
-* `main/{locale}/ca-gregorian`
-* `main/{locale}/dateFields`
-* `main/{locale}/numbers`
-* `main/{locale}/timeZoneNames`
-* `supplemental/likelySubtags`
-* `supplemental/numberingSystems`
-* `supplemental/ordinals`
-* `supplemental/plurals`
-* `supplemental/timeData`
-* `supplemental/weekData`
+-   `main/{locale}/ca-gregorian`
+-   `main/{locale}/dateFields`
+-   `main/{locale}/numbers`
+-   `main/{locale}/timeZoneNames`
+-   `supplemental/likelySubtags`
+-   `supplemental/numberingSystems`
+-   `supplemental/ordinals`
+-   `supplemental/plurals`
+-   `supplemental/timeData`
+-   `supplemental/weekData`
 
 For number/currency formatting:
 
-* `main/{locale}/currencies`
-* `main/{locale}/numbers`
-* `supplemental/currencyData`
-* `supplemental/likelySubtags`
-* `supplemental/numberingSystems`
-* `supplemental/ordinals`
-* `supplemental/plurals`
+-   `main/{locale}/currencies`
+-   `main/{locale}/numbers`
+-   `supplemental/currencyData`
+-   `supplemental/likelySubtags`
+-   `supplemental/numberingSystems`
+-   `supplemental/ordinals`
+-   `supplemental/plurals`
 
 For unit formatting:
 
-* `main/{locale}/numbers`
-* `main/{locale}/units`
-* `supplemental/likelySubtags`
-* `supplemental/numberingSystems`
-* `supplemental/ordinals`
-* `supplemental/plurals`
+-   `main/{locale}/numbers`
+-   `main/{locale}/units`
+-   `supplemental/likelySubtags`
+-   `supplemental/numberingSystems`
+-   `supplemental/ordinals`
+-   `supplemental/plurals`
 
 ### Message Formatting
 
@@ -230,11 +229,16 @@ i18n(bundle, 'en').then(() => {
 	console.log(message); // "Margaret Mead invites Laura Nader to the party."
 
 	// Note that `formatMessage` is essentially a convenience wrapper around `getMessageFormatter`.
-	message = formatMessage(bundle, 'guestInfo', {
-		host: 'Marshall Sahlins',
-		gender: 'male',
-		guest: 'Bronisław Malinowski'
-	}, 'en');
+	message = formatMessage(
+		bundle,
+		'guestInfo',
+		{
+			host: 'Marshall Sahlins',
+			gender: 'male',
+			guest: 'Bronisław Malinowski'
+		},
+		'en'
+	);
 	console.log(message); // "Marshall Sahlins invites Bronisław Malinowski to the party."
 });
 ```
@@ -282,27 +286,36 @@ import bundle from 'nls/main';
 
 // 1. Load the messages for the locale.
 i18n(bundle, 'en').then(() => {
-	const message = formatMessage(bundle, 'guestInfo', {
-		host: 'Margaret Mead',
-		gender: 'female',
-		guest: 'Laura Nader',
-		guestCount: 20
-	}, 'en');
+	const message = formatMessage(
+		bundle,
+		'guestInfo',
+		{
+			host: 'Margaret Mead',
+			gender: 'female',
+			guest: 'Laura Nader',
+			guestCount: 20
+		},
+		'en'
+	);
 	console.log(message); // "Margaret Mead invites Laura Nader and 19 other people to her party."
 
 	const formatter = getMessageFormatter(bundle, 'guestInfo', 'en');
-	console.log(formatter({
-		host: 'Margaret Mead',
-		gender: 'female',
-		guest: 'Laura Nader',
-		guestCount: 20
-	})); // "Margaret Mead invites Laura Nader and 19 other people to her party."
+	console.log(
+		formatter({
+			host: 'Margaret Mead',
+			gender: 'female',
+			guest: 'Laura Nader',
+			guestCount: 20
+		})
+	); // "Margaret Mead invites Laura Nader and 19 other people to her party."
 
-	console.log(formatter({
-		host: 'Marshall Sahlins',
-		gender: 'male',
-		guest: 'Bronisław Malinowski'
-	})); // "Marshall Sahlins invites Bronisław Malinowski to his party."
+	console.log(
+		formatter({
+			host: 'Marshall Sahlins',
+			gender: 'male',
+			guest: 'Bronisław Malinowski'
+		})
+	); // "Marshall Sahlins invites Bronisław Malinowski to his party."
 });
 ```
 
@@ -354,28 +367,28 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 
 **`@dojo/framework/i18n/date` methods:**
 
-- `formatDate` => [`Globalize.formatDate`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-formatter.md)
-- `formatRelativeTime` => [`Globalize.formatRelativeTime`](https://github.com/globalizejs/globalize/blob/master/doc/api/relative-time/relative-time-formatter.md)
-- `getDateFormatter` => [`Globalize.dateFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-formatter.md)
-- `getDateParser` => [`Globalize.dateParser`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-parser.md)
-- `getRelativeTimeFormatter` => [`Globalize.relativeTimeFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/relative-time/relative-time-formatter.md)
-- `parseDate` => [`Globalize.parseDate`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-parser.md)
+-   `formatDate` => [`Globalize.formatDate`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-formatter.md)
+-   `formatRelativeTime` => [`Globalize.formatRelativeTime`](https://github.com/globalizejs/globalize/blob/master/doc/api/relative-time/relative-time-formatter.md)
+-   `getDateFormatter` => [`Globalize.dateFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-formatter.md)
+-   `getDateParser` => [`Globalize.dateParser`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-parser.md)
+-   `getRelativeTimeFormatter` => [`Globalize.relativeTimeFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/relative-time/relative-time-formatter.md)
+-   `parseDate` => [`Globalize.parseDate`](https://github.com/globalizejs/globalize/blob/master/doc/api/date/date-parser.md)
 
 **`@dojo/framework/i18n/number` methods:**
 
-- `formatCurrency` => [`Globalize.formatCurrency`](https://github.com/globalizejs/globalize/blob/master/doc/api/currency/currency-formatter.md)
-- `formatNumber` => [`Globalize.formatNumber`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-formatter.md)
-- `getCurrencyFormatter` => [`Globalize.currencyFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/currency/currency-formatter.md)
-- `getNumberFormatter` => [`Globalize.numberFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-formatter.md)
-- `getNumberParser` => [`Globalize.numberParser`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-parser.md)
-- `getPluralGenerator` => [`Globalize.pluralGenerator`](https://github.com/globalizejs/globalize/blob/master/doc/api/plural/plural-generator.md)
-- `parseNumber` => [`Globalize.parseNumber`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-parser.md)
-- `pluralize` => [`Globalize.plural`](https://github.com/globalizejs/globalize/blob/master/doc/api/plural/plural-generator.md)
+-   `formatCurrency` => [`Globalize.formatCurrency`](https://github.com/globalizejs/globalize/blob/master/doc/api/currency/currency-formatter.md)
+-   `formatNumber` => [`Globalize.formatNumber`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-formatter.md)
+-   `getCurrencyFormatter` => [`Globalize.currencyFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/currency/currency-formatter.md)
+-   `getNumberFormatter` => [`Globalize.numberFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-formatter.md)
+-   `getNumberParser` => [`Globalize.numberParser`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-parser.md)
+-   `getPluralGenerator` => [`Globalize.pluralGenerator`](https://github.com/globalizejs/globalize/blob/master/doc/api/plural/plural-generator.md)
+-   `parseNumber` => [`Globalize.parseNumber`](https://github.com/globalizejs/globalize/blob/master/doc/api/number/number-parser.md)
+-   `pluralize` => [`Globalize.plural`](https://github.com/globalizejs/globalize/blob/master/doc/api/plural/plural-generator.md)
 
 **`@dojo/framework/i18n/unit` methods:**
 
-- `formatUnit` => [`Globalize.formatUnit`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
-- `getUnitFormatter` => [`Globalize.unitFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
+-   `formatUnit` => [`Globalize.formatUnit`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
+-   `getUnitFormatter` => [`Globalize.unitFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
 
 <!-- doc-viewer-config
 {

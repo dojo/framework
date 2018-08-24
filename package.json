@@ -25,7 +25,7 @@
     "lint:prettier": "prettier -l \"{src,tests}/**/*.{ts,tsx}\"",
     "lint": "run-p lint:*",
     "precommit": "lint-staged",
-    "prettier": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "prettier": "prettier --write \"src/**/*.md\" \"src/**/*.ts\" \"tests/**/*.ts\"",
     "release": "run-s lint clean build \"dojo-release -- {@}\" --",
     "test": "run-s lint build intern",
     "test:local": "run-s lint build \"intern config=@local\"",
@@ -96,7 +96,6 @@
     "singleQuote": true,
     "tabWidth": 4,
     "useTabs": true,
-    "parser": "typescript",
     "printWidth": 120,
     "arrowParens": "always"
   }
