@@ -71,6 +71,9 @@ const r = renderer(() => w(HelloDojo, {}));
 r.mount();
 ```
 
+<!--widget-core-readme-01-->
+[![Edit widget-core-readme-01](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/300oxjkoyp)
+
 `renderer#mount` accepts an optional argument of `MountOptions` that controls configuration of the mount operation.
 
 ```ts
@@ -125,6 +128,9 @@ class Hello extends WidgetBase<MyProperties> {
 ```
 
 New properties are compared with the previous properties to determine if a widget requires re-rendering. By default Dojo uses the `auto` diffing strategy, that performs a shallow comparison for objects and arrays, ignores functions (except classes that extend `WidgetBase`) and a reference comparison for all other values.
+
+<!--widget-core-readme-02-->
+[![Edit widget-core-readme-02](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/9ynz3wkqn4)
 
 #### Internal Widget State
 
@@ -235,14 +241,17 @@ This would mean a new function would be created every render but Dojo does not s
 To resolve this, the list item can be extracted into a separate widget:
 
 ```ts
+import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import { v, w } from '@dojo/framework/widget-core/d';
+
 interface ListItemProperties {
 	id: string;
 	content: string;
 	highlighted: boolean;
-	onItemClick(id: string) => void;
+	onItemClick(id: string): void;
 }
 
-class ListItem extends WidgetBase<ListItemProperties> {
+export default class ListItem extends WidgetBase<ListItemProperties> {
 	protected onClick(event: MouseEvent) {
 		const { id } = this.properties;
 
@@ -251,9 +260,9 @@ class ListItem extends WidgetBase<ListItemProperties> {
 
 	protected render() {
 		const { id, content, highlighted } = this.properties;
-		const classes = [ highlighted ? 'highlighted' : null ];
+		const classes = [highlighted ? 'highlighted' : null];
 
-		return v('li', { key: id, classes, onclick: this.onClick }, [ content ]);
+		return v('li', { key: id, classes, onclick: this.onClick }, [content]);
 	}
 }
 ```
@@ -261,27 +270,31 @@ class ListItem extends WidgetBase<ListItemProperties> {
 Using the `ListItem` we can simplify the `List` slightly and also add the `onclick` functionality that we required:
 
 ```ts
-interface ListProperties {
-	items: {
-		id: string;
-		content: string;
-		highlighted: boolean;
-	};
-	onItemClick(id: string) => void;
+interface Item {
+	id: string;
+	content: string;
+	highlighted: boolean;
 }
 
-class List extends WidgetBase<ListProperties> {
+interface ListProperties {
+	items: Item[];
+	onItemClick(id: string): void;
+}
+
+export default class List extends WidgetBase<ListProperties> {
 	protected render() {
 		const { onItemClick, items } = this.properties;
 
 		return v('ul', { classes: 'list' }, items.map(({ id, content, highlighted }) => {
-			return w(ListItem, { key:id, content, highlighted, onItemClick });
-		});
+			return w(ListItem, { key: id, id, content, highlighted, onItemClick });
+		}));
 	}
 }
 ```
 
 Additionally, the `ListItem` is now reusable in other areas of our application(s).
+
+[![Edit widget-core-readme-3](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/13korpwzyj)
 
 ### Mixins
 
