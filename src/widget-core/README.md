@@ -72,6 +72,7 @@ r.mount();
 ```
 
 <!--widget-core-readme-01-->
+
 [![Edit widget-core-readme-01](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/300oxjkoyp)
 
 `renderer#mount` accepts an optional argument of `MountOptions` that controls configuration of the mount operation.
@@ -130,6 +131,7 @@ class Hello extends WidgetBase<MyProperties> {
 New properties are compared with the previous properties to determine if a widget requires re-rendering. By default Dojo uses the `auto` diffing strategy, that performs a shallow comparison for objects and arrays, ignores functions (except classes that extend `WidgetBase`) and a reference comparison for all other values.
 
 <!--widget-core-readme-02-->
+
 [![Edit widget-core-readme-02](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/9ynz3wkqn4)
 
 #### Internal Widget State
@@ -285,9 +287,13 @@ export default class List extends WidgetBase<ListProperties> {
 	protected render() {
 		const { onItemClick, items } = this.properties;
 
-		return v('ul', { classes: 'list' }, items.map(({ id, content, highlighted }) => {
-			return w(ListItem, { key: id, id, content, highlighted, onItemClick });
-		}));
+		return v(
+			'ul',
+			{ classes: 'list' },
+			items.map(({ id, content, highlighted }) => {
+				return w(ListItem, { key: id, id, content, highlighted, onItemClick });
+			})
+		);
 	}
 }
 ```
@@ -1112,26 +1118,26 @@ In this simple snippet, `dimensions` would be an object containing `offset`, `po
 
 The following fields are provided:
 
-| Property                            | Source                                |
-| ----------------------------------- | ------------------------------------- |
-| `client.left`                       | `node.clientLeft`                     |
-| `client.top`                        | `node.clientTop`                      |
-| `client.width`                      | `node.clientWidth`                    |
-| `client.height`                     | `node.clientHeight`                   |
-| `position.bottom`                   | `node.getBoundingClientRect().bottom` |
-| `position.left`                     | `node.getBoundingClientRect().left`   |
-| `position.right`                    | `node.getBoundingClientRect().right`  |
-| `position.top`                      | `node.getBoundingClientRect().top`    |
-| `size.width`                        | `node.getBoundingClientRect().width`  |
-| `size.height`                       | `node.getBoundingClientRect().height` |
-| `scroll.left`                       | `node.scrollLeft`                     |
-| `scroll.top`                        | `node.scrollTop`                      |
-| `scroll.height`                     | `node.scrollHeight`                   |
-| `scroll.width`                      | `node.scrollWidth`                    |
-| `offset.left`                       | `node.offsetLeft`                     |
-| `offset.top`                        | `node.offsetTop`                      |
-| `offset.width`                      | `node.offsetWidth`                    |
-| `offset.height`                     | `node.offsetHeight`                   |
+| Property          | Source                                |
+| ----------------- | ------------------------------------- |
+| `client.left`     | `node.clientLeft`                     |
+| `client.top`      | `node.clientTop`                      |
+| `client.width`    | `node.clientWidth`                    |
+| `client.height`   | `node.clientHeight`                   |
+| `position.bottom` | `node.getBoundingClientRect().bottom` |
+| `position.left`   | `node.getBoundingClientRect().left`   |
+| `position.right`  | `node.getBoundingClientRect().right`  |
+| `position.top`    | `node.getBoundingClientRect().top`    |
+| `size.width`      | `node.getBoundingClientRect().width`  |
+| `size.height`     | `node.getBoundingClientRect().height` |
+| `scroll.left`     | `node.scrollLeft`                     |
+| `scroll.top`      | `node.scrollTop`                      |
+| `scroll.height`   | `node.scrollHeight`                   |
+| `scroll.width`    | `node.scrollWidth`                    |
+| `offset.left`     | `node.offsetLeft`                     |
+| `offset.top`      | `node.offsetTop`                      |
+| `offset.width`    | `node.offsetWidth`                    |
+| `offset.height`   | `node.offsetHeight`                   |
 
 If the node has not yet been rendered, all values will contain `0`. If you need more information about whether or not the node has been rendered you can use the `has` method:
 

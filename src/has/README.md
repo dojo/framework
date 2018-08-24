@@ -6,7 +6,11 @@ optimization tool that can be used to create "dead" code branches which can be e
 step. The `has` module is also capable of allowing conditional loading of modules with certain loaders.
 
 -   [Features](#features)
-    -   [Feature Branching](#feature-branching) - [Included Features](#included-features) - [Adding a Feature Test/Feature Detection](#adding-a-feature-testfeature-detection) - [Conditional Module Loading](#conditional-module-loading) - [Static Features](#static-features)
+    -   [Feature Branching](#feature-branching)
+    -   [Included Features](#included-features)
+    -   [Adding a Feature Test/Feature Detection](#adding-a-feature-testfeature-detection)
+    -   [Conditional Module Loading](#conditional-module-loading)
+    -   [Static Features](#static-features)
 
 ## Features
 
