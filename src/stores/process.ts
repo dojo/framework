@@ -228,8 +228,12 @@ export function createProcess<T = any, P extends object = DefaultPayload>(
  * Creates a process factory that will create processes with the specified callback decorators applied.
  * @param callbackDecorators array of process callback decorators to be used by the return factory.
  */
-export function createProcessFactoryWith(callbackDecorators: ProcessCallbackDecorator[]): CreateProcess {
-	return (id: string, commands: (Command[] | Command)[], callback?: ProcessCallback): Process => {
+export function createProcessFactoryWith(callbackDecorators: ProcessCallbackDecorator[]) {
+	return <S, P extends object>(
+		id: string,
+		commands: (Command<S, P>[] | Command<S, P>)[],
+		callback?: ProcessCallback<S>
+	): Process<S, P> => {
 		const decoratedCallback = callbackDecorators.reduce((callback, callbackDecorator) => {
 			return callbackDecorator(callback);
 		}, callback);
