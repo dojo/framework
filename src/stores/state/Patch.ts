@@ -52,15 +52,6 @@ function add(pointerTarget: PointerTarget, value: any): any {
 	return pointerTarget.object;
 }
 
-function assert(pointerTarget: PointerTarget, value: any) {
-	const current = pointerTarget.target[pointerTarget.segment];
-	if (!isEqual(current, value)) {
-		throw new Error(
-			`Test operation failure at "${pointerTarget.segment}". ${getFriendlyDifferenceMessage(value, current)}.`
-		);
-	}
-}
-
 function replace(pointerTarget: PointerTarget, value: any): any {
 	if (Array.isArray(pointerTarget.target)) {
 		pointerTarget.target.splice(parseInt(pointerTarget.segment, 10), 1, value);
@@ -146,7 +137,16 @@ export class Patch<T = any> {
 					object = remove(pointerTarget);
 					break;
 				case OperationType.TEST:
-					assert(pointerTarget, next.value);
+					const current = pointerTarget.target[pointerTarget.segment];
+					if (!isEqual(current, next.value)) {
+						const location = next.path.path;
+						throw new Error(
+							`Test operation failure at "${location}". ${getFriendlyDifferenceMessage(
+								next.value,
+								current
+							)}.`
+						);
+					}
 					return patchedObject;
 				default:
 					throw new Error('Unknown operation');

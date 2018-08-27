@@ -165,12 +165,34 @@ describe('state/Patch', () => {
 			assertTestFailure(
 				true,
 				'true',
-				'Test operation failure at "test". Expected boolean "true" but got string "true" instead.'
+				'Test operation failure at "/test". Expected boolean "true" but got string "true" instead.'
 			);
 			assertTestFailure(
 				{},
 				[],
-				'Test operation failure at "test". Expected object "[object Object]" but got array "" instead.'
+				'Test operation failure at "/test". Expected object "[object Object]" but got array "" instead.'
+			);
+		});
+
+		it('nested path failure', () => {
+			const patch = new Patch(ops.test({ path: '/foo/0/bar/baz', state: null, value: null }, { thing: 'one' }));
+			const obj = {
+				foo: [
+					{
+						bar: {
+							baz: {
+								thing: 'two'
+							}
+						}
+					}
+				]
+			};
+			assert.throws(
+				() => {
+					patch.apply(obj);
+				},
+				Error,
+				'Test operation failure at "/foo/0/bar/baz". Expected "one" for object property thing but got "two" instead.'
 			);
 		});
 
