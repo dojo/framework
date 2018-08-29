@@ -11,7 +11,7 @@ export interface ActiveLinkProperties extends LinkProperties {
 	activeClasses: string[];
 }
 
-export function paramsEqual(linkParams: any = {}, contextParams: any = {}) {
+function paramsEqual(linkParams: any = {}, contextParams: any = {}) {
 	return Object.keys(linkParams).every((key) => linkParams[key] === contextParams[key]);
 }
 
