@@ -173,8 +173,11 @@ describe('Router', () => {
 		const router = new Router(config, { HistoryManager });
 		router.setPath('/bar');
 		assert.isOk(router.getOutlet('bar'));
+		assert.isUndefined(router.getOutlet('param'));
 		router.setPath('/foo/baz');
 		assert.isOk(router.getOutlet('baz'));
+		assert.isOk(router.getOutlet('foo-two'));
+		assert.isUndefined(router.getOutlet('foo-one'));
 	});
 
 	it('Navigates to global "errorOutlet" if current route does not match a registered outlet and no default route is configured', () => {
