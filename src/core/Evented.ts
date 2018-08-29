@@ -19,7 +19,7 @@ export interface EventObject<T = EventType> {
 }
 
 /**
- * Determines is the event type glob has been matched
+ * Determines if the event type glob has been matched
  *
  * @returns boolean that indicates if the glob is matched
  */
