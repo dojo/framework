@@ -181,8 +181,13 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 
 		private _recalculateThemeClasses() {
 			const { theme = {} } = this.properties;
-			const baseThemes = this.getDecorator('baseThemeClasses');
 			if (!this._registeredBaseTheme) {
+				const baseThemes = this.getDecorator('baseThemeClasses');
+				if (baseThemes.length === 0) {
+					console.warn(
+						'A base theme has not been provided to this widget. Please use the @theme decorator to add a theme.'
+					);
+				}
 				this._registeredBaseTheme = baseThemes.reduce((finalBaseTheme, baseTheme) => {
 					const { [THEME_KEY]: key, ...classes } = baseTheme;
 					this._registeredBaseThemeKeys.push(key);

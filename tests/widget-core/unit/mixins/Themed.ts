@@ -131,6 +131,20 @@ registerSuite('ThemedMixin', {
 
 				const themeClasses = ThemedInstance.theme([class1, class2]);
 				assert.deepEqual(themeClasses, [testTheme2.testPath1.class1, baseThemeClasses1.class2]);
+			},
+			'should warn when missing a theme'() {
+				const Unthemed = class extends ThemedMixin(WidgetBase) {
+					render() {
+						return v('div', { classes: this.theme(baseThemeClasses1.class1) });
+					}
+				};
+				const widget = new Unthemed();
+				widget.__render__();
+				assert.strictEqual(consoleStub.callCount, 2);
+				assert.strictEqual(
+					consoleStub.firstCall.args[0],
+					'A base theme has not been provided to this widget. Please use the @theme decorator to add a theme.'
+				);
 			}
 		},
 		'setting extra classes': {
