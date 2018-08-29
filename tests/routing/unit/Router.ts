@@ -131,6 +131,31 @@ const orderIndependentRouteConfig = [
 	}
 ];
 
+const config = [
+	{
+		path: 'foo',
+		outlet: 'foo-one'
+	},
+	{
+		path: 'foo',
+		outlet: 'foo-two',
+		children: [
+			{
+				path: 'baz',
+				outlet: 'baz'
+			}
+		]
+	},
+	{
+		path: '{bar}',
+		outlet: 'param'
+	},
+	{
+		path: 'bar',
+		outlet: 'bar'
+	}
+];
+
 describe('Router', () => {
 	it('Navigates to current route if matches against a registered outlet', () => {
 		const router = new Router(routeConfig, { HistoryManager });
@@ -142,6 +167,14 @@ describe('Router', () => {
 		const router = new Router(routeConfigDefaultRoute, { HistoryManager });
 		const context = router.getOutlet('foo');
 		assert.isOk(context);
+	});
+
+	it('should match against the most exact outlet specified in the configuration based on the outlets score', () => {
+		const router = new Router(config, { HistoryManager });
+		router.setPath('/bar');
+		assert.isOk(router.getOutlet('bar'));
+		router.setPath('/foo/baz');
+		assert.isOk(router.getOutlet('baz'));
 	});
 
 	it('Navigates to global "errorOutlet" if current route does not match a registered outlet and no default route is configured', () => {
