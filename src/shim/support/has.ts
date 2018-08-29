@@ -181,7 +181,7 @@ add(
 			let callSite = getCallSite`a\n${b}`;
 
 			(callSite as any).raw = ['a\\n'];
-			const supportsTrunc = global.String.raw(callSite, 42) === 'a:\\n';
+			const supportsTrunc = global.String.raw(callSite, 42) === 'a\\n';
 
 			return supportsTrunc;
 		}

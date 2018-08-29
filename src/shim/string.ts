@@ -261,8 +261,14 @@ if (has('es6-string') && has('es6-string-raw')) {
 	};
 
 	endsWith = function endsWith(text: string, search: string, endPosition?: number): boolean {
-		if (endPosition == null) {
+		if (search === '') {
+			return true;
+		}
+
+		if (typeof endPosition === 'undefined') {
 			endPosition = text.length;
+		} else if (endPosition === null || isNaN(endPosition)) {
+			return false;
 		}
 
 		[text, search, endPosition] = normalizeSubstringArgs('endsWith', text, search, endPosition, true);
