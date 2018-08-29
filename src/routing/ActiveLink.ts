@@ -14,6 +14,10 @@ export interface ActiveLinkProperties extends LinkProperties {
 export class ActiveLink extends WidgetBase<ActiveLinkProperties> {
 	private _outletHandle: Handle | undefined;
 
+	private _paramsEqual(linkParams: any = {}, contextParams: any = {}) {
+		return Object.keys(linkParams).every((key) => linkParams[key] === contextParams[key]);
+	}
+
 	private _renderLink(isActive = false) {
 		let { activeClasses, classes = [], ...props } = this.properties;
 		classes = Array.isArray(classes) ? classes : [classes];
@@ -43,13 +47,17 @@ export class ActiveLink extends WidgetBase<ActiveLinkProperties> {
 	}
 
 	protected render(): WNode {
-		const { to, routerKey = 'router' } = this.properties;
+		const { to, routerKey = 'router', params } = this.properties;
 		const item = this.registry.getInjector<Router>(routerKey);
 		if (!item) {
 			return this._renderLink();
 		}
 		const router = item.injector();
-		return this._renderLink(!!router.getOutlet(to));
+		const context = router.getOutlet(to);
+
+		const isActive = context && this._paramsEqual(params, context.params);
+
+		return this._renderLink(isActive);
 	}
 }
 

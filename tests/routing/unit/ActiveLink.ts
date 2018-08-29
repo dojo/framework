@@ -26,6 +26,16 @@ const router = new Router(
 		{
 			path: 'other',
 			outlet: 'other'
+		},
+		{
+			path: 'param',
+			outlet: 'param',
+			children: [
+				{
+					path: '{suffix}',
+					outlet: 'suffixed-param'
+				}
+			]
 		}
 	],
 	{ HistoryManager: MemoryHistory }
@@ -36,12 +46,14 @@ registry.defineInjector('router', () => () => router);
 describe('ActiveLink', () => {
 	it('should invalidate when the outlet has been matched', () => {
 		let invalidateCallCount = 0;
+
 		class MyActiveLink extends ActiveLink {
 			invalidate() {
 				super.invalidate();
 				invalidateCallCount++;
 			}
 		}
+
 		const link = new MyActiveLink();
 		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
@@ -105,12 +117,14 @@ describe('ActiveLink', () => {
 	it('Should invalidate and re-render when link becomes active', () => {
 		let invalidateCount = 0;
 		router.setPath('/foo');
+
 		class TestActiveLink extends ActiveLink {
 			invalidate() {
 				invalidateCount++;
 				super.invalidate();
 			}
 		}
+
 		const link = new TestActiveLink();
 		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
@@ -136,12 +150,14 @@ describe('ActiveLink', () => {
 	it('Should support changing the target outlet', () => {
 		let invalidateCount = 0;
 		router.setPath('/foo');
+
 		class TestActiveLink extends ActiveLink {
 			invalidate() {
 				invalidateCount++;
 				super.invalidate();
 			}
 		}
+
 		const link = new TestActiveLink();
 		link.registry.base = registry;
 		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
@@ -179,5 +195,34 @@ describe('ActiveLink', () => {
 		assert.strictEqual(dNode.widgetConstructor, Link);
 		assert.deepEqual(dNode.properties.classes, ['bar']);
 		assert.deepEqual(dNode.properties.to, 'foo');
+	});
+
+	it('should look at route params when determining active', () => {
+		router.setPath('/param/one');
+		const link = new ActiveLink();
+		link.registry.base = registry;
+		link.__setProperties__({
+			to: 'suffixed-param',
+			activeClasses: ['foo'],
+			params: {
+				suffix: 'one'
+			}
+		});
+		const dNode = link.__render__() as WNode<Link>;
+
+		assert.deepEqual(dNode.properties.classes, ['foo']);
+
+		const link2 = new ActiveLink();
+		link2.registry.base = registry;
+		link2.__setProperties__({
+			to: 'suffixed-param',
+			activeClasses: ['foo'],
+			params: {
+				suffix: 'two'
+			}
+		});
+		const dNode2 = link2.__render__() as WNode<Link>;
+
+		assert.deepEqual(dNode2.properties.classes, []);
 	});
 });
