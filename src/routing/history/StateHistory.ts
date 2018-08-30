@@ -3,6 +3,7 @@ import { History as HistoryInterface, HistoryOptions, OnChangeFunction } from '.
 
 export class StateHistory implements HistoryInterface {
 	private _current: string;
+	private _previous = '';
 	private _onChangeFunction: OnChangeFunction;
 	private _window: Window;
 	private _base: string;
@@ -41,11 +42,21 @@ export class StateHistory implements HistoryInterface {
 		return this._current;
 	}
 
+	public get previous(): string {
+		return this._previous;
+	}
+
+	public replace(path: string) {
+		const value = ensureLeadingSlash(path);
+		this._window.history.replaceState({}, '', this.prefix(value));
+	}
+
 	private _onChange = () => {
 		const value = stripBase(this._base, this._window.location.pathname + this._window.location.search);
 		if (this._current === value) {
 			return;
 		}
+		this._previous = this._current;
 		this._current = value;
 		this._onChangeFunction(this._current);
 	};

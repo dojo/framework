@@ -40,7 +40,7 @@ export class Topics extends WidgetBase<TopicsProperties> {
 			]),
 			showHeading ? v('h3', ['Please select a topic.']) : null,
 			w(Outlet, {
-				outlet: 'topic',
+				id: 'topic',
 				renderer({ params, type }: MatchDetails) {
 					if (type === 'error') {
 						return w(ErrorWidget, {});
@@ -77,19 +77,19 @@ export class App extends WidgetBase {
 				v('li', [w(Link, { key: 'topics', to: 'topics' }, ['Topics'])])
 			]),
 			w(Outlet, {
-				outlet: 'about',
+				id: 'about',
 				renderer() {
 					return w(About, {});
 				}
 			}),
 			w(Outlet, {
-				outlet: 'home',
+				id: 'home',
 				renderer() {
 					return w(Home, {});
 				}
 			}),
 			w(Outlet, {
-				outlet: 'topics',
+				id: 'topics',
 				renderer({ type }: MatchDetails) {
 					return w(Topics, { showHeading: type === 'index' });
 				}

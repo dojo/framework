@@ -7,6 +7,7 @@ import {
 	DNode
 } from '../widget-core/interfaces';
 import { WidgetBase } from '../widget-core/WidgetBase';
+import { Router } from './Router';
 
 /**
  * Description of a registered route
@@ -90,31 +91,6 @@ export interface OutletContext {
 	onExit?: OnExit;
 }
 
-/**
- * Interface for Router
- */
-export interface RouterInterface {
-	/**
-	 * Generates a link from the outlet and the optional params
-	 */
-	link(outlet: string, params?: Params): string | undefined;
-
-	/**
-	 * Sets the path on the underlying history manager
-	 */
-	setPath(path: string): void;
-
-	/**
-	 * Returns the outlet context if matched
-	 */
-	getOutlet(outletId: string): OutletContext | undefined;
-
-	/**
-	 * The current params for matched routes
-	 */
-	readonly currentParams: Params;
-}
-
 export interface OnEnter {
 	(params: Params, type: MatchType): void;
 }
@@ -142,7 +118,7 @@ export interface MatchDetails {
 	/**
 	 * The router instance
 	 */
-	router: RouterInterface;
+	router: Router;
 
 	/**
 	 * Function returns true if the outlet match was an `error` type
@@ -205,9 +181,16 @@ export interface History {
 	prefix(path: string): string;
 
 	/**
+	 *
+	 */
+	replace(path: string): void;
+
+	/**
 	 * Returns the current path
 	 */
 	readonly current: string;
+
+	readonly previous: string;
 }
 
 export interface RouterOptions {

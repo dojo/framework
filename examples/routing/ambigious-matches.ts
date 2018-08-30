@@ -41,19 +41,19 @@ export class App extends WidgetBase {
 				v('li', [w(Link, { key: '4', to: 'user', params: { user: 'chris' } }, ['Chris (dynamic)'])])
 			]),
 			w(Outlet, {
-				outlet: 'about-us',
+				id: 'about-us',
 				renderer: () => {
 					return w(About, {});
 				}
 			}),
 			w(Outlet, {
-				outlet: 'company',
+				id: 'company',
 				renderer: () => {
 					return w(Company, {});
 				}
 			}),
 			w(Outlet, {
-				outlet: 'user',
+				id: 'user',
 				renderer: ({ params }: MatchDetails) => {
 					return w(User, { name: params.user });
 				}
