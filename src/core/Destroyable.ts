@@ -6,20 +6,20 @@ import Promise from '../shim/Promise';
  */
 export interface Handle {
 	/**
-	 * Perform the destruction/cleanup logic associated with this handle
+	 * Perform the destruction/cleanup logic associated with this Handle
 	 */
 	destroy(): void;
 }
 
 /**
- * No operation function to replace own once instance is destoryed
+ * No op function used to replace a Destroyable instance's `destroy` method, once the instance has been destroyed
  */
 function noop(): Promise<boolean> {
 	return Promise.resolve(false);
 }
 
 /**
- * No op function used to replace own, once instance has been destoryed
+ * No op function used to replace a Destroyable instance's `own` method, once the instance has been destroyed
  */
 function destroyed(): never {
 	throw new Error('Call made to destroyed method');
@@ -27,7 +27,7 @@ function destroyed(): never {
 
 export class Destroyable {
 	/**
-	 * register handles for the instance
+	 * The instance's handles
 	 */
 	private handles: Handle[];
 
@@ -42,7 +42,8 @@ export class Destroyable {
 	 * Register handles for the instance that will be destroyed when `this.destroy` is called
 	 *
 	 * @param {Handle} handle The handle to add for the instance
-	 * @returns {Handle} a handle for the handle, removes the handle for the instance and calls destroy
+	 * @returns {Handle} A wrapper Handle. When the wrapper Handle's `destroy` method is invoked, the original handle is
+	 *                   removed from the instance, and its `destroy` method is invoked.
 	 */
 	own(handle: Handle): Handle {
 		const { handles: _handles } = this;
@@ -58,7 +59,7 @@ export class Destroyable {
 	/**
 	 * Destroys all handlers registered for the instance
 	 *
-	 * @returns {Promise<any} a promise that resolves once all handles have been destroyed
+	 * @returns {Promise<any} A Promise that resolves once all handles have been destroyed
 	 */
 	destroy(): Promise<any> {
 		return new Promise((resolve) => {
