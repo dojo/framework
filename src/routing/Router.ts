@@ -25,6 +25,9 @@ export interface OutletEvent extends EventObject<string> {
 	action: 'enter' | 'exit';
 }
 
+const ROUTE_SEGMENT_SCORE = 7;
+const DYNAMIC_SEGMENT_PENALTY = 2;
+
 export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent }> implements RouterInterface {
 	private _routes: Route[] = [];
 	private _outletMap: { [index: string]: Route } = Object.create(null);
@@ -160,9 +163,9 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 			}
 			for (let i = 0; i < segments.length; i++) {
 				const segment = segments[i];
-				route.score += 7;
+				route.score += ROUTE_SEGMENT_SCORE;
 				if (paramRegExp.test(segment)) {
-					route.score -= 2;
+					route.score -= DYNAMIC_SEGMENT_PENALTY;
 					route.params.push(segment.replace('{', '').replace('}', ''));
 					segments[i] = PARAM;
 				}
