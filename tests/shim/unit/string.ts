@@ -66,16 +66,37 @@ registerSuite('shim - string functions', {
 		},
 
 		'position is Infinity, not included, or NaN'() {
-			const counts = [Infinity, undefined as any, null, NaN];
-			for (let count of counts) {
-				assert.isTrue(stringUtil.endsWith('abc', '', count));
-				assert.isFalse(stringUtil.endsWith('abc', '\0', count));
-				assert.isTrue(stringUtil.endsWith('abc', 'c', count));
-				assert.isFalse(stringUtil.endsWith('abc', 'b', count));
-				assert.isTrue(stringUtil.endsWith('abc', 'bc', count));
-				assert.isTrue(stringUtil.endsWith('abc', 'abc', count));
-				assert.isFalse(stringUtil.endsWith('abc', 'abcd', count));
-			}
+			assert.isTrue(stringUtil.endsWith('abc', '', Infinity));
+			assert.isFalse(stringUtil.endsWith('abc', '\0', Infinity));
+			assert.isTrue(stringUtil.endsWith('abc', 'c', Infinity));
+			assert.isFalse(stringUtil.endsWith('abc', 'b', Infinity));
+			assert.isTrue(stringUtil.endsWith('abc', 'bc', Infinity));
+			assert.isTrue(stringUtil.endsWith('abc', 'abc', Infinity));
+			assert.isFalse(stringUtil.endsWith('abc', 'abcd', Infinity));
+
+			assert.isTrue(stringUtil.endsWith('abc', '', undefined));
+			assert.isFalse(stringUtil.endsWith('abc', '\0', undefined));
+			assert.isTrue(stringUtil.endsWith('abc', 'c', undefined));
+			assert.isFalse(stringUtil.endsWith('abc', 'b', undefined));
+			assert.isTrue(stringUtil.endsWith('abc', 'bc', undefined));
+			assert.isTrue(stringUtil.endsWith('abc', 'abc', undefined));
+			assert.isFalse(stringUtil.endsWith('abc', 'abcd', undefined));
+
+			assert.isTrue(stringUtil.endsWith('abc', '', null as any));
+			assert.isFalse(stringUtil.endsWith('abc', '\0', null as any));
+			assert.isFalse(stringUtil.endsWith('abc', 'c', null as any));
+			assert.isFalse(stringUtil.endsWith('abc', 'b', null as any));
+			assert.isFalse(stringUtil.endsWith('abc', 'bc', null as any));
+			assert.isFalse(stringUtil.endsWith('abc', 'abc', null as any));
+			assert.isFalse(stringUtil.endsWith('abc', 'abcd', null as any));
+
+			assert.isTrue(stringUtil.endsWith('abc', '', NaN));
+			assert.isFalse(stringUtil.endsWith('abc', '\0', NaN));
+			assert.isFalse(stringUtil.endsWith('abc', 'c', NaN));
+			assert.isFalse(stringUtil.endsWith('abc', 'b', NaN));
+			assert.isFalse(stringUtil.endsWith('abc', 'bc', NaN));
+			assert.isFalse(stringUtil.endsWith('abc', 'abc', NaN));
+			assert.isFalse(stringUtil.endsWith('abc', 'abcd', NaN));
 		},
 
 		'position is 0 or negative'() {
