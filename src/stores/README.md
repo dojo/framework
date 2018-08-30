@@ -12,25 +12,26 @@ An application store for dojo.
 
 <!-- start-github-only -->
 
------
- - [Overview](#overview)
- - [Basics](#basics)
-     - [Operations](#operations)
-     - [Commands](#commands)
-     - [Processes](#processes)
-     - [Initial State](#initial-state)
- - [How Does This Differ From Redux](#how-does-this-differ-from-Redux)
- - [Advanced](#advanced)
-     - [Connecting Stores To Widgets](#connecting-stores-to-widgets)
-     - [Subscribing To Store Changes](#subscribing-to-store-changes)
-     - [Transforming Executor Arguments](#transforming-executor-arguments)
-     - [Optimistic Update Pattern](#optimistic-update-pattern)
-     - [Executing Concurrent Commands](#executing-concurrent-commands)
- - [Middleware](#middleware)
-     - [Applying Middleware to Multiple Processes](#applying-middleware-to-multiple-processes)
-     - [Local Storage Middleware](#local-storage-middleware)
+---
 
------
+-   [Overview](#overview)
+-   [Basics](#basics)
+    -   [Operations](#operations)
+    -   [Commands](#commands)
+    -   [Processes](#processes)
+    -   [Initial State](#initial-state)
+-   [How Does This Differ From Redux](#how-does-this-differ-from-Redux)
+-   [Advanced](#advanced)
+    -   [Connecting Stores To Widgets](#connecting-stores-to-widgets)
+    -   [Subscribing To Store Changes](#subscribing-to-store-changes)
+    -   [Transforming Executor Arguments](#transforming-executor-arguments)
+    -   [Optimistic Update Pattern](#optimistic-update-pattern)
+    -   [Executing Concurrent Commands](#executing-concurrent-commands)
+-   [Middleware](#middleware)
+    -   [Applying Middleware to Multiple Processes](#applying-middleware-to-multiple-processes)
+    -   [Local Storage Middleware](#local-storage-middleware)
+
+---
 
 <!-- end-github-only -->
 
@@ -334,9 +335,9 @@ Store data can be connected to widgets within your application using the `StoreP
 
 Container Property API:
 
- * `renderer`: A render function that has the store injected in order to access state and pass processes to child widgets.
- * `stateKey`: The key of the state in the registry.
- * `paths` (optional): A function to connect the `Container` to sections of the state.
+-   `renderer`: A render function that has the store injected in order to access state and pass processes to child widgets.
+-   `stateKey`: The key of the state in the registry.
+-   `paths` (optional): A function to connect the `Container` to sections of the state.
 
 There are two mechanisms to connect the `StoreProvider` to the `Store`:
 
@@ -357,9 +358,12 @@ interface State {
 
 class MyApp extends WidgetBase {
 	protected render() {
-		return w(StoreProvider, { stateKey: 'state', renderer: (store: Store<State>) => {
-			return v('div', [ store.get(store.path('foo')) ]);
-		}});
+		return w(StoreProvider, {
+			stateKey: 'state',
+			renderer: (store: Store<State>) => {
+				return v('div', [store.get(store.path('foo'))]);
+			}
+		});
 	}
 }
 ```
@@ -380,7 +384,7 @@ export class MyTypeStoreProvider extends StoreProvider<State> {}
 w<MyTypeStoreProvider>(MyTypeStoreProvider, {
 	stateKey: 'state',
 	renderer(store) {
-		return v('div', [ store.get(store.path('foo')) ]);
+		return v('div', [store.get(store.path('foo'))]);
 	}
 });
 ```
@@ -398,10 +402,7 @@ store.onChange(store.path('foo', 'bar'), () => {
 or
 
 ```ts
-store.onChange([
-	store.path('foo', 'bar'),
-	store.path('baz')
-], () => {
+store.onChange([store.path('foo', 'bar'), store.path('baz')], () => {
 	// do something when the state at /foo/bar or /baz has been updated.
 });
 ```
