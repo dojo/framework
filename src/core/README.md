@@ -3,7 +3,8 @@
 Provides a core helpers for use within dojo/framework.
 
 ## Features
-- [lang](#lang)
+
+-   [lang](#lang)
 
 #### lang
 

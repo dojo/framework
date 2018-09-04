@@ -1,36 +1,37 @@
 # stores
 
-An application store designed to complement @dojo/widgets and @dojo/widget-core or any other reactive application.
+An application store for dojo.
 
 ## Features
 
- * Application state store designed to work with a reactive component architecture
- * Out of the box support for asynchronous commands
- * All state operations are recorded per process and undoable via a process callback
- * Supports the optimistic pattern with the ability to roll back on a failure
- * Fully serializable operations and state
+-   Application state store designed to work with a reactive component architecture
+-   Out of the box support for asynchronous commands
+-   All state operations are recorded per process and undoable via a process callback
+-   Supports the optimistic pattern with the ability to roll back on a failure
+-   Fully serializable operations and state
 
 <!-- start-github-only -->
 
------
- - [Overview](#overview)
- - [Basics](#basics)
-     - [Operations](#operations)
-     - [Commands](#commands)
-     - [Processes](#processes)
-     - [Initial State](#initial-state)
- - [How Does This Differ From Redux](#how-does-this-differ-from-Redux)
- - [Advanced](#advanced)
-     - [Connecting Stores To Widgets](#connecting-stores-to-widgets)
-     - [Subscribing To Store Changes](#subscribing-to-store-changes)
-     - [Transforming Executor Arguments](#transforming-executor-arguments)
-     - [Optimistic Update Pattern](#optimistic-update-pattern)
-     - [Executing Concurrent Commands](#executing-concurrent-commands)
- - [Middleware](#middleware)
-     - [Applying Middleware to Multiple Processes](#applying-middleware-to-multiple-processes)
-     - [Local Storage Middleware](#local-storage-middleware)
+---
 
------
+-   [Overview](#overview)
+-   [Basics](#basics)
+    -   [Operations](#operations)
+    -   [Commands](#commands)
+    -   [Processes](#processes)
+    -   [Initial State](#initial-state)
+-   [How Does This Differ From Redux](#how-does-this-differ-from-Redux)
+-   [Advanced](#advanced)
+    -   [Connecting Stores To Widgets](#connecting-stores-to-widgets)
+    -   [Subscribing To Store Changes](#subscribing-to-store-changes)
+    -   [Transforming Executor Arguments](#transforming-executor-arguments)
+    -   [Optimistic Update Pattern](#optimistic-update-pattern)
+    -   [Executing Concurrent Commands](#executing-concurrent-commands)
+-   [Middleware](#middleware)
+    -   [Applying Middleware to Multiple Processes](#applying-middleware-to-multiple-processes)
+    -   [Local Storage Middleware](#local-storage-middleware)
+
+---
 
 <!-- end-github-only -->
 
@@ -42,18 +43,18 @@ Managing state can become difficult to coordinate when an application becomes co
 
 The `@dojo/framework/stores` package provides a centralized store, designed to be the **single source of truth** for an application. It operates using uni-directional data flow. This means all application data follows the same lifecycle, ensuring the application logic is predictable and easy to understand.
 
-__Note__: Do you need a centralized store? Lifting state up to parent widgets and using local state are likely to be sufficient in less complex applications.
+**Note**: Do you need a centralized store? Lifting state up to parent widgets and using local state are likely to be sufficient in less complex applications.
 
 ## Basics
 
 To work with `@dojo/framework/stores` there are three core but simple concepts - Operations, Commands, and Processes.
 
- * `Operation`
-   * Granular instructions to manipulate state based on JSON Patch
- * `Command`
-   * Simple functions that ultimately return operations needed to perform the required state change
- * `Process`
-   * A function that executes a group of commands that usually represent a complete application behavior
+-   `Operation`
+    -   Granular instructions to manipulate state based on JSON Patch
+-   `Command`
+    -   Simple functions that ultimately return operations needed to perform the required state change
+-   `Process`
+    -   A function that executes a group of commands that usually represent a complete application behavior
 
 ### Operations
 
@@ -65,26 +66,30 @@ Dojo stores support four of the six JSON Patch operations: "add", "remove", "rep
 import { OperationType } from '@dojo/framework/stores/State/patch';
 import { Pointer } from '@dojo/framework/stores/state/Pointer';
 
-const operations = [{
-	op: OperationType.ADD,
-	path: new Pointer('/foo'),
-	value: 'foo'
-}, {
-	op: OperationType.REPLACE,
-	path: new Pointer('/bar'),
-	value: 'bar'
-}, {
-	op: OperationType.REMOVE,
-	path: new Pointer('/qux')
-}];
+const operations = [
+	{
+		op: OperationType.ADD,
+		path: new Pointer('/foo'),
+		value: 'foo'
+	},
+	{
+		op: OperationType.REPLACE,
+		path: new Pointer('/bar'),
+		value: 'bar'
+	},
+	{
+		op: OperationType.REMOVE,
+		path: new Pointer('/qux')
+	}
+];
 ```
 
 Dojo stores provides a helper package that can generate `PatchOperation` objects from `@dojo/framework/stores/state/operations`:
 
-* `add` - Returns a `PatchOperation` of type `OperationType.ADD` for the `path` and `value`
-* `remove`  - Returns a `PatchOperation` of type `OperationType.REMOVE` for the `path`
-* `replace` - Returns a `PatchOperation` of type `OperationType.REPLACE` for the `path` and `value`
-* `test` - Returns a `PatchOperation` of type `OperationType.TEST` for the `path` and `value`
+-   `add` - Returns a `PatchOperation` of type `OperationType.ADD` for the `path` and `value`
+-   `remove` - Returns a `PatchOperation` of type `OperationType.REMOVE` for the `path`
+-   `replace` - Returns a `PatchOperation` of type `OperationType.REPLACE` for the `path` and `value`
+-   `test` - Returns a `PatchOperation` of type `OperationType.TEST` for the `path` and `value`
 
 These functions accept a `Path` type. This is returned by the `path` and `at` methods on a store. More often this will be created using the `path` and `at` functions provided as part of the arguments to a [command](#commands), which are described in more detail below. Rather than accepting a full string path, the `path` and `at` functions accept a series of arguments and provide type checking to verify that the path created actually exists on the state object.
 
@@ -100,9 +105,7 @@ The `get` function returns back state for a given `Path`, for example `get(path(
 function addTodoCommand({ at, path, get, payload }: CommandRequest) {
 	const todosPath = path('todos');
 	const length = get(todosPath).length;
-	const operations = [
-		add(at(todosPath, length), payload)
-	];
+	const operations = [add(at(todosPath, length), payload)];
 
 	return operations;
 }
@@ -134,7 +137,6 @@ const command = (request: CommandRequest<MyState, Payload>) => {
 		add(path('id'), request.payload.id);
 	];
 };
-
 ```
 
 In order to avoid typing each `Command` explicitly, a `CommandFactory` can be created that will pass its generic types onto all commands it creates. Creating commands using a factory is essentially the same as creating them without one. It is simply a convenience to avoid repeating the same typings for each command.
@@ -177,14 +179,14 @@ const calculateCountsCommand = createCommand(({ get, path }) => {
 });
 ```
 
- *Important:* Access to state root is not permitted and will throw an error, for example, `get(path('/'))`. This applies to `Operations` also, it is not possible to create an operation that will update the state root. Best practices with @dojo/framework/stores mean touching the smallest part of the store as is necessary.
+_Important:_ Access to state root is not permitted and will throw an error, for example, `get(path('/'))`. This applies to `Operations` also, it is not possible to create an operation that will update the state root. Best practices with @dojo/framework/stores mean touching the smallest part of the store as is necessary.
 
 ##### Asynchronous Commands
 
 Commands support asynchronous behavior out of the box simply by returning a `Promise<PatchOperation[]>`.
 
 ```ts
-async function postTodoCommand({ get, path, payload: { id }}: CommandRequest): Promise<PatchOperation[]> {
+async function postTodoCommand({ get, path, payload: { id } }: CommandRequest): Promise<PatchOperation[]> {
 	const response = await fetch('/todos');
 	if (!response.ok) {
 		throw new Error('Unable to post todo');
@@ -209,20 +211,19 @@ A `Process` is the construct used to execute commands against a `store` instance
 
 The result object contains the following:
 
-* The `payload` passed to the process
-* `undoOperations` to undo the `process`
-* A function to execute an additional `process`.
+-   The `payload` passed to the process
+-   `undoOperations` to undo the `process`
+-   A function to execute an additional `process`.
 
 The array of `Commands` are executed in sequence by the store until the last Command is completed or a `Command` throws an error. These processes often represent an application behavior. For example, adding a todo in a simple todo application which will be made up with multiple discreet commands.
 
 A simple `process` to add a todo and recalculate the todo count:
 
 ```ts
-const addTodoProcess = createProcess('add-todo', [ addTodoCommand, calculateCountCommand ]);
+const addTodoProcess = createProcess('add-todo', [addTodoCommand, calculateCountCommand]);
 ```
 
 A `callback` can be provided which will be called when an error occurs or the process is successfully completed:
-
 
 ```ts
 function addTodoProcessCallback(error, result) {
@@ -234,7 +235,7 @@ function addTodoProcessCallback(error, result) {
 	// possible additional state changes by running another process using result.executor(otherProcess)
 }
 
-const addTodoProcess = createProcess('add-todo', [ addTodoCommand, calculateCountCommand ], addTodoProcessCallback);
+const addTodoProcess = createProcess('add-todo', [addTodoCommand, calculateCountCommand], addTodoProcessCallback);
 ```
 
 The `Process` creates a deferred executor by passing the `store` instance `addTodoProcess(store)` which can be executed immediately by passing the `payload`, `addTodoProcess(store)(payload)`. Or more often passed to your widgets and used to initiate state changes on user interactions. The `payload` argument for the `executor` is required and is passed to each of the `Process`'s commands in a `payload` argument.
@@ -280,7 +281,7 @@ getTodosProcess(store)().then(() => {
 The `payload` argument for the process executor can be specified as the second generic type when using `createProcess`
 
 ```ts
-const process = createProcess<any, { foo: string }>('foo', [ command ]);
+const process = createProcess<any, { foo: string }>('foo', [command]);
 const processExecutor = process(store);
 
 // The executor will require an argument that satisfies `{ foo: string }`
@@ -305,7 +306,7 @@ executorOne({ bar: 'foo' }); // compile error
 // compile error as payload types for commandOne and commandTwo are not assignable
 const processTwo = createProcess('two', [commandOne, commandTwo]);
 // Explicitly passing a generic that satisfies all the command payload types enables payload type widening
-const processTwo = createProcess<any, { foo: string, bar: string }>('two', [commandOne, commandTwo]);
+const processTwo = createProcess<any, { foo: string; bar: string }>('two', [commandOne, commandTwo]);
 const executorTwo = processTwo(store);
 executorTwo({ foo: 'foo' }); // compile error, as requires both `bar` and `foo`
 executorTwo({ foo: 'foo', bar: 'bar' }); // Yay, valid
@@ -322,7 +323,7 @@ const commandOne = createCommandOne<{ foo: string }>(({ get, path, payload }) =>
 
 Although Dojo stores is a big atom state store, you never get access to the entire state object. To access the sections of state that are needed we use pointers to return the slice of state that is needed i.e. `path('path', 'to', 'state')`. State is never directly updated by the user, with state changes only being processed by the operations returned by commands.
 
-There is no concept of `reducers`, meaning that there is no confusion about where logic needs to reside between `reducers` and  `actions`. `Commands` are the only place that state logic resides and return `operations` that dictate what `state` changes are required and processed internally by the `store`.
+There is no concept of `reducers`, meaning that there is no confusion about where logic needs to reside between `reducers` and `actions`. `Commands` are the only place that state logic resides and return `operations` that dictate what `state` changes are required and processed internally by the `store`.
 
 Additionally, this means that there is no need to coordinate `actions` and `reducers` using a string action key. Commands are simple function references that can be reused in multiple `processes`.
 
@@ -334,17 +335,17 @@ Store data can be connected to widgets within your application using the `StoreP
 
 Container Property API:
 
- * `renderer`: A render function that has the store injected in order to access state and pass processes to child widgets.
- * `stateKey`: The key of the state in the registry.
- * `paths` (optional): A function to connect the `Container` to sections of the state.
+-   `renderer`: A render function that has the store injected in order to access state and pass processes to child widgets.
+-   `stateKey`: The key of the state in the registry.
+-   `paths` (optional): A function to connect the `Container` to sections of the state.
 
 There are two mechanisms to connect the `StoreProvider` to the `Store`:
 
-1. The recommended approach is to register `paths` on container creation to ensure invalidation will only occur when state you are interested in changes.
-2. A catch-all when no `paths` are defined for the container, it will invalidate when any data changes in the store.
+1.  The recommended approach is to register `paths` on container creation to ensure invalidation will only occur when state you are interested in changes.
+2.  A catch-all when no `paths` are defined for the container, it will invalidate when any data changes in the store.
 
 ```ts
-import { WidgetBase } from '@dojo/widget-core/WidgetBase';
+import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
 import { Store } from '@dojo/framework/stores/Stores';
 import StoreProvider from '@dojo/framework/stores/StoreProvider';
 
@@ -352,14 +353,17 @@ interface State {
 	foo: string;
 	bar: {
 		baz: string;
-	}
+	};
 }
 
 class MyApp extends WidgetBase {
 	protected render() {
-		return w(StoreProvider, { stateKey: 'state', renderer: (store: Store<State>) => {
-			return v('div', [ store.get(store.path('foo')) ]);
-		}});
+		return w(StoreProvider, {
+			stateKey: 'state',
+			renderer: (store: Store<State>) => {
+				return v('div', [store.get(store.path('foo'))]);
+			}
+		});
 	}
 }
 ```
@@ -380,7 +384,7 @@ export class MyTypeStoreProvider extends StoreProvider<State> {}
 w<MyTypeStoreProvider>(MyTypeStoreProvider, {
 	stateKey: 'state',
 	renderer(store) {
-		return v('div', [ store.get(store.path('foo')) ]);
+		return v('div', [store.get(store.path('foo'))]);
 	}
 });
 ```
@@ -398,10 +402,7 @@ store.onChange(store.path('foo', 'bar'), () => {
 or
 
 ```ts
-store.onChange([
-	store.path('foo', 'bar'),
-	store.path('baz')
-], () => {
+store.onChange([store.path('foo', 'bar'), store.path('baz')], () => {
 	// do something when the state at /foo/bar or /baz has been updated.
 });
 ```
@@ -427,8 +428,7 @@ interface CommandPayload {
 const createCommand = createCommandFactory<any, CommandPayload>();
 
 // `payload` is typed to `CommandPayload`
-const command = createCommand(({ get, path, payload }) => {
-});
+const command = createCommand(({ get, path, payload }) => {});
 
 const process = createProcess('example', [command]);
 
@@ -493,12 +493,12 @@ const addTodoProcess = createProcess('add-todo', [
 	addTodoCallback);
 ```
 
-* `addTodoCommand`: Adds the new todo into the application state
-* `calculateCountsCommand`: Recalculates the count of completed and active todo items
-* `postTodoCommand`: posts the todo item to a remote service and using the process callback we can make changes if there is a failure
-  * on failure: the previous two commands are reverted and the `failed` state field is set to `true`
-  * on success: Returns operations that update the todo item `id` field with the value received from the remote service
-* `calculateCountsCommand`: Runs again after the success of `postTodoCommand`
+-   `addTodoCommand`: Adds the new todo into the application state
+-   `calculateCountsCommand`: Recalculates the count of completed and active todo items
+-   `postTodoCommand`: posts the todo item to a remote service and using the process callback we can make changes if there is a failure
+    -   on failure: the previous two commands are reverted and the `failed` state field is set to `true`
+    -   on success: Returns operations that update the todo item `id` field with the value received from the remote service
+-   `calculateCountsCommand`: Runs again after the success of `postTodoCommand`
 
 To support "pessimistic" updates to the application state, i.e. wait until a remote service call has been completed before changing the application state simply put the async command before the application store update. This can be useful when performing a deletion of a resource, when it can be surprising if an item is removed from the UI "optimistically" only for it to reappear back if the remote service call fails.
 
@@ -508,22 +508,22 @@ function byId(id: string) {
 }
 
 async function deleteTodoCommand({ get, payload: { id } }: CommandRequest) {
-    const { todo, index } = find(get('/todos'), byId(id))
-    await fetch(`/todo/${todo.id}`, { method: 'DELETE' } );
-    return [ remove(path('todos', index)) ];
+	const { todo, index } = find(get('/todos'), byId(id));
+	await fetch(`/todo/${todo.id}`, { method: 'DELETE' });
+	return [remove(path('todos', index))];
 }
 
-const deleteTodoProcess = createProcess('delete', [ deleteTodoCommand, calculateCountsCommand ]);
+const deleteTodoProcess = createProcess('delete', [deleteTodoCommand, calculateCountsCommand]);
 ```
 
-*Note:* The process requires the counts to be recalculated after successfully deleting a todo, the process above shows how easily commands can be shared and reused.
+_Note:_ The process requires the counts to be recalculated after successfully deleting a todo, the process above shows how easily commands can be shared and reused.
 
 ### Executing concurrent commands
 
 A `Process` supports concurrent execution of multiple commands by specifying the commands in an array when creating the process:
 
 ```ts
-const myProcess = createProcess('my-process', [ commandOne, [ concurrentCommandOne, concurrentCommandTwo ], commandTwo ]);
+const myProcess = createProcess('my-process', [commandOne, [concurrentCommandOne, concurrentCommandTwo], commandTwo]);
 ```
 
 In this example, `commandOne` is executed, then both `concurrentCommandOne` and `concurrentCommandTwo` are executed concurrently. Once all of the concurrent commands are completed the results are applied in order before continuing with the process and executing `commandTwo`.
@@ -539,7 +539,7 @@ This is done using higher order functions that wrap the process' local `callback
 `callback` decorators can be composed together to combine multiple units of functionality, such that in the example below `myProcess` would run the `error` and `result` through the `collector`, `logger` and then `snapshot` callbacks.
 
 ```ts
-const myProcess = createProcess('my-process', [ commandOne, commandTwo ], collector(logger(snapshot())));
+const myProcess = createProcess('my-process', [commandOne, commandTwo], collector(logger(snapshot())));
 ```
 
 ### Applying Middleware to Multiple Processes
@@ -549,10 +549,10 @@ Specifying a middleware on an individual process explicitly works for targeted b
 The `createProcessWith` higher order function can be used to specify middlewares that need to be applied across multiple `processes`. The function accepts an array of middleware and returns a new `createProcess` factory function that will automatically apply the middleware to any process that it creates.
 
 ```ts
-const customCreateProcess = createProcessWith([ logger ]);
+const customCreateProcess = createProcessWith([logger]);
 
 // `myProcess` will automatically be decorated with the `logger` callback decorator.
-const myProcess = customCreateProcess('my-process', [ commandOne, commandTwo ]);
+const myProcess = customCreateProcess('my-process', [commandOne, commandTwo]);
 ```
 
 An additional helper function `createCallbackDecorator` can be used to ensure that a middleware function calls the next middleware after it has finished executing.
@@ -566,7 +566,7 @@ const myMiddleware = (error: ProcessError, result: ProcessResult) => {
 const myMiddlewareDecorator = createCallbackDecorator(myMiddleware);
 
 // use the middleware decorator as normal
-const myProcess = createProcess('my-process', [ commandOne ], myMiddlewareDecorator());
+const myProcess = createProcess('my-process', [commandOne], myMiddlewareDecorator());
 ```
 
 ### Local Storage Middleware
@@ -576,12 +576,9 @@ Middleware that provides a `collector` that saves state to `LocalStorage` and a 
 ```ts
 export const myProcess = createProcess(
 	'my-process',
-	[ command ],
+	[command],
 	collector('my-process', (path) => {
-		return [
-			path('state', 'to', 'save'),
-			path('other', 'state', 'to', 'save')
-		];
+		return [path('state', 'to', 'save'), path('other', 'state', 'to', 'save')];
 	})
 );
 ```
