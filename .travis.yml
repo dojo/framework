@@ -13,6 +13,4 @@ env:
 install:
 - travis_retry npm install
 script:
-- npm run test:browserstack
-- npm run uploadCoverage
-- npm run benchmark
+- npm run lint && npm run test:browserstack && npm run uploadCoverage && npm run benchmark
