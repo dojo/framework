@@ -1,18 +1,19 @@
 import QueuingEvented from '../core/QueuingEvented';
-import {
-	RouteConfig,
-	History,
-	MatchType,
-	OutletContext,
-	Params,
-	RouterInterface,
-	Route,
-	RouterOptions
-} from './interfaces';
+import { RouteConfig, History, OutletContext, Params, RouterInterface, Route, RouterOptions } from './interfaces';
 import { HashHistory } from './history/HashHistory';
 import { EventObject } from '../core/Evented';
 
-const PARAM = Symbol('routing param');
+const PARAM = '__PARAM__';
+
+const paramRegExp = new RegExp(/^{.+}$/);
+
+interface RouteWrapper {
+	route: Route;
+	segments: string[];
+	parent?: RouteWrapper;
+	type?: string;
+	params: Params;
+}
 
 export interface NavEvent extends EventObject<string> {
 	outlet: string;
@@ -23,6 +24,9 @@ export interface OutletEvent extends EventObject<string> {
 	outlet: string;
 	action: 'enter' | 'exit';
 }
+
+const ROUTE_SEGMENT_SCORE = 7;
+const DYNAMIC_SEGMENT_PENALTY = 2;
 
 export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent }> implements RouterInterface {
 	private _routes: Route[] = [];
@@ -139,7 +143,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 			let queryParams: string[] = [];
 			parsedPath = this._stripLeadingSlash(parsedPath);
 
-			const segments: (symbol | string)[] = parsedPath.split('/');
+			const segments: string[] = parsedPath.split('/');
 			const route: Route = {
 				params: [],
 				outlet,
@@ -151,6 +155,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 				fullParams: [],
 				fullQueryParams: [],
 				onEnter,
+				score: parentRoute ? parentRoute.score : 0,
 				onExit
 			};
 			if (defaultRoute) {
@@ -158,7 +163,9 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 			}
 			for (let i = 0; i < segments.length; i++) {
 				const segment = segments[i];
-				if (typeof segment === 'string' && segment[0] === '{') {
+				route.score += ROUTE_SEGMENT_SCORE;
+				if (paramRegExp.test(segment)) {
+					route.score -= DYNAMIC_SEGMENT_PENALTY;
 					route.params.push(segment.replace('{', '').replace('}', ''));
 					segments[i] = PARAM;
 				}
@@ -205,31 +212,26 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 	 */
 	private _onChange = (requestedPath: string): void => {
 		this.emit({ type: 'navstart' });
+		requestedPath = this._stripLeadingSlash(requestedPath);
 		const previousMatchedOutlets = this._matchedOutlets;
 		this._matchedOutlets = Object.create(null);
-		this._currentParams = {};
-		requestedPath = this._stripLeadingSlash(requestedPath);
-
 		const [path, queryParamString] = requestedPath.split('?');
 		this._currentQueryParams = this._getQueryParams(queryParamString);
-		let matchedOutletContext: OutletContext | undefined;
-		let matchedOutlet: string | undefined;
-		let routes = [...this._routes];
-		let paramIndex = 0;
-		let segments = path.split('/');
-		let routeMatched = false;
-		let previousOutlet: string | undefined;
-		while (routes.length > 0) {
-			if (segments.length === 0) {
-				break;
-			}
-			const route = routes.shift()!;
-			const { onEnter, onExit } = route;
-			let type: MatchType = 'index';
-			const segmentsForRoute = [...segments];
-			let routeMatch = true;
+		const segments = path.split('/');
+		let routeConfigs: RouteWrapper[] = this._routes.map((route) => ({
+			route,
+			segments: [...segments],
+			parent: undefined,
+			params: {}
+		}));
+		let routeConfig: RouteWrapper | undefined;
+		let matchedRoutes: RouteWrapper[] = [];
+		while ((routeConfig = routeConfigs.pop())) {
+			const { route, parent, segments, params } = routeConfig;
 			let segmentIndex = 0;
-
+			let type = 'index';
+			let paramIndex = 0;
+			let routeMatch = true;
 			if (segments.length < route.segments.length) {
 				routeMatch = false;
 			} else {
@@ -240,7 +242,8 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 					}
 					const segment = segments.shift()!;
 					if (route.segments[segmentIndex] === PARAM) {
-						this._currentParams[route.params[paramIndex++]] = segment;
+						params[route.params[paramIndex++]] = segment;
+						this._currentParams = { ...this._currentParams, ...params };
 					} else if (route.segments[segmentIndex] !== segment) {
 						routeMatch = false;
 						break;
@@ -248,35 +251,66 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 					segmentIndex++;
 				}
 			}
-			if (routeMatch === true) {
-				previousOutlet = route.outlet;
-				routeMatched = true;
+
+			if (routeMatch) {
+				routeConfig.type = type;
+				matchedRoutes.push({ route, parent, type, params, segments: [] });
+				if (segments.length) {
+					routeConfigs = [
+						...routeConfigs,
+						...route.children.map((childRoute) => ({
+							route: childRoute,
+							segments: [...segments],
+							parent: routeConfig,
+							type,
+							params: { ...params }
+						}))
+					];
+				}
+			}
+		}
+
+		let matchedOutletName: string | undefined = undefined;
+		let matchedRoute: any = matchedRoutes.reduce((match: any, matchedRoute: any) => {
+			if (!match) {
+				return matchedRoute;
+			}
+			if (match.route.score > matchedRoute.route.score) {
+				return match;
+			}
+			return matchedRoute;
+		}, undefined);
+
+		if (matchedRoute) {
+			if (matchedRoute.type === 'partial') {
+				matchedRoute.type = 'error';
+			}
+			matchedOutletName = matchedRoute.route.outlet;
+			while (matchedRoute) {
+				let { type, params, parent, route } = matchedRoute;
+
 				if (!previousMatchedOutlets[route.outlet]) {
 					this.emit({ type: 'outlet', outlet: route.outlet, action: 'enter' });
 				}
-
-				this._matchedOutlets[route.outlet] = {
+				this._matchedOutlets[matchedRoute.route.outlet] = {
 					queryParams: this._currentQueryParams,
-					params: { ...this._currentParams },
+					params,
 					type,
 					isError: () => type === 'error',
 					isExact: () => type === 'index',
-					onEnter,
-					onExit
+					onEnter: route.onEnter,
+					onExit: route.onExit
 				};
-				matchedOutletContext = this._matchedOutlets[route.outlet];
-				matchedOutlet = route.outlet;
-				if (route.children.length) {
-					paramIndex = 0;
-				}
-				routes = [...route.children];
-			} else {
-				if (previousOutlet !== undefined && routes.length === 0) {
-					this._matchedOutlets[previousOutlet].type = 'error';
-					this._matchedOutlets[previousOutlet].isError = () => true;
-				}
-				segments = [...segmentsForRoute];
+				matchedRoute = parent;
 			}
+		} else {
+			this._matchedOutlets.errorOutlet = {
+				queryParams: {},
+				params: {},
+				isError: () => true,
+				isExact: () => false,
+				type: 'error'
+			};
 		}
 
 		const previousMatchedOutletKeys = Object.keys(previousMatchedOutlets);
@@ -285,17 +319,8 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 				this.emit({ type: 'outlet', outlet: previousMatchedOutletKeys[i], action: 'exit' });
 			}
 		}
-		if (routeMatched === false) {
-			this._matchedOutlets.errorOutlet = {
-				queryParams: this._currentQueryParams,
-				params: { ...this._currentParams },
-				isError: () => true,
-				isExact: () => false,
-				type: 'error'
-			};
-		}
-		if (matchedOutlet && matchedOutletContext) {
-			this.emit({ type: 'nav', outlet: matchedOutlet, context: matchedOutletContext });
+		if (matchedOutletName) {
+			this.emit({ type: 'nav', outlet: matchedOutletName, context: this._matchedOutlets[matchedOutletName] });
 		}
 	};
 }

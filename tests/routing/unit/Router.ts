@@ -106,6 +106,56 @@ const routeConfigWithParamsAndQueryParams = [
 	}
 ];
 
+const orderIndependentRouteConfig = [
+	{
+		path: '{foo}',
+		outlet: 'partial',
+		children: [
+			{
+				path: 'bar/{bar}',
+				outlet: 'bar-with-param'
+			},
+			{
+				path: 'bar/bar',
+				outlet: 'bar'
+			}
+		]
+	},
+	{
+		path: 'foo',
+		outlet: 'foo'
+	},
+	{
+		path: '/',
+		outlet: 'home'
+	}
+];
+
+const config = [
+	{
+		path: 'foo',
+		outlet: 'foo-one'
+	},
+	{
+		path: 'foo',
+		outlet: 'foo-two',
+		children: [
+			{
+				path: 'baz',
+				outlet: 'baz'
+			}
+		]
+	},
+	{
+		path: '{bar}',
+		outlet: 'param'
+	},
+	{
+		path: 'bar',
+		outlet: 'bar'
+	}
+];
+
 describe('Router', () => {
 	it('Navigates to current route if matches against a registered outlet', () => {
 		const router = new Router(routeConfig, { HistoryManager });
@@ -117,6 +167,17 @@ describe('Router', () => {
 		const router = new Router(routeConfigDefaultRoute, { HistoryManager });
 		const context = router.getOutlet('foo');
 		assert.isOk(context);
+	});
+
+	it('should match against the most exact outlet specified in the configuration based on the outlets score', () => {
+		const router = new Router(config, { HistoryManager });
+		router.setPath('/bar');
+		assert.isOk(router.getOutlet('bar'));
+		assert.isUndefined(router.getOutlet('param'));
+		router.setPath('/foo/baz');
+		assert.isOk(router.getOutlet('baz'));
+		assert.isOk(router.getOutlet('foo-two'));
+		assert.isUndefined(router.getOutlet('foo-one'));
 	});
 
 	it('Navigates to global "errorOutlet" if current route does not match a registered outlet and no default route is configured', () => {
@@ -152,6 +213,30 @@ describe('Router', () => {
 		assert.deepEqual(context!.queryParams, {});
 		assert.strictEqual(context!.type, 'index');
 		assert.strictEqual(context!.isExact(), true);
+	});
+
+	it('should find the most specific match from the routing configuration', () => {
+		const router = new Router(orderIndependentRouteConfig, { HistoryManager });
+		router.setPath('/foo');
+		const fooContext = router.getOutlet('foo');
+		assert.isOk(fooContext);
+		assert.deepEqual(fooContext!.params, {});
+		assert.deepEqual(fooContext!.queryParams, {});
+		assert.deepEqual(fooContext!.type, 'index');
+		assert.strictEqual(fooContext!.isExact(), true);
+		router.setPath('/foo/bar/bar');
+		const barContext = router.getOutlet('bar');
+		assert.isOk(barContext);
+		assert.deepEqual(barContext!.params, { foo: 'foo' });
+		assert.deepEqual(barContext!.queryParams, {});
+		assert.deepEqual(barContext!.type, 'index');
+		assert.strictEqual(barContext!.isExact(), true);
+		const partialContext = router.getOutlet('partial');
+		assert.isOk(partialContext);
+		assert.deepEqual(partialContext!.params, { foo: 'foo' });
+		assert.deepEqual(partialContext!.queryParams, {});
+		assert.deepEqual(partialContext!.type, 'partial');
+		assert.strictEqual(partialContext!.isExact(), false);
 	});
 
 	it('Should register as a partial match for an outlet that matches a section of the route', () => {

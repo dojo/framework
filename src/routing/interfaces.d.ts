@@ -15,12 +15,13 @@ export interface Route {
 	path: string;
 	outlet: string;
 	params: string[];
-	segments: (symbol | string)[];
+	segments: string[];
 	children: Route[];
 	fullPath: string;
 	fullParams: string[];
 	fullQueryParams: string[];
 	defaultParams: Params;
+	score: number;
 	onEnter?: OnEnter;
 	onExit?: OnExit;
 }
