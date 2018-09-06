@@ -1,6 +1,27 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import * as lang from '../../../src/core/util';
+import * as sinon from 'sinon';
+import {
+	debounce,
+	deepAssign,
+	deepMixin,
+	throttle,
+	uuid,
+	mixin,
+	partial,
+	guaranteeMinimumTimeout
+} from '../../../src/core/util';
+import { Handle } from '../../../src/core/Destroyable';
+
+const TIMEOUT = 3000;
+let timerHandle: Handle | null;
+
+function destroyTimerHandle() {
+	if (timerHandle) {
+		timerHandle.destroy();
+		timerHandle = null;
+	}
+}
 
 registerSuite('util functions', {
 	'.deepAssign()'() {
@@ -34,7 +55,7 @@ registerSuite('util functions', {
 		};
 
 		const object: {} = Object.create(null);
-		const assignedObject: {} & typeof source = lang.deepAssign(object, source);
+		const assignedObject: {} & typeof source = deepAssign(object, source);
 
 		assert.strictEqual(object, assignedObject, 'deepAssign should return the modified target object');
 		assert.isUndefined(assignedObject.a, 'deepAssign should not copy inherited properties');
@@ -65,7 +86,7 @@ registerSuite('util functions', {
 			durian: 100
 		};
 
-		const assignedObject = lang.deepAssign(target, source);
+		const assignedObject = deepAssign(target, source);
 		assert.deepEqual(assignedObject, {
 			apple: 0,
 			banana: { weight: 52, price: 200, details: { colour: 'yellow', texture: 'soft' } },
@@ -93,7 +114,7 @@ registerSuite('util functions', {
 		};
 		source.cyclical = source;
 
-		const assignedObject = lang.deepAssign(target, source);
+		const assignedObject = deepAssign(target, source);
 		assert.deepEqual(assignedObject.nested, { foo: 'bar', bar: 'baz', baz: 'qux', qux: 'baz' });
 	},
 
@@ -115,7 +136,7 @@ registerSuite('util functions', {
 			}
 		};
 
-		const assignedObject = lang.deepAssign(target, source);
+		const assignedObject = deepAssign(target, source);
 		assert.deepEqual(assignedObject, {
 			bar: { foo: 'bar' },
 			baz: { foo: 'bar' },
@@ -149,7 +170,7 @@ registerSuite('util functions', {
 		});
 
 		const object: {} = Object.create(null);
-		const mixedObject = lang.mixin(object, source);
+		const mixedObject = mixin(object, source);
 
 		assert.strictEqual(object, mixedObject, 'mixin should return the modified target object');
 		assert.strictEqual(mixedObject.a, 1, 'mixin should copy inherited properties');
@@ -168,7 +189,7 @@ registerSuite('util functions', {
 		const source2 = {
 			c: 'string'
 		};
-		const mixedObject = lang.mixin({}, source1, source2);
+		const mixedObject = mixin({}, source1, source2);
 
 		assert.strictEqual(mixedObject.a, 12);
 		assert.strictEqual(mixedObject.b, false);
@@ -209,7 +230,7 @@ registerSuite('util functions', {
 		});
 
 		const object: {} = Object.create(null);
-		const mixedObject: {} & typeof source = lang.deepMixin(object, source);
+		const mixedObject: {} & typeof source = deepMixin(object, source);
 
 		assert.strictEqual(object, mixedObject, 'deepMixin should return the modified target object');
 		assert.strictEqual(mixedObject.a, 1);
@@ -244,7 +265,7 @@ registerSuite('util functions', {
 			durian: 100
 		});
 
-		const assignedObject = lang.deepMixin(target, source);
+		const assignedObject = deepMixin(target, source);
 		assert.deepEqual(assignedObject, {
 			apple: 0,
 			banana: { weight: 52, price: 200, details: { colour: 'yellow', texture: 'soft' } },
@@ -275,13 +296,13 @@ registerSuite('util functions', {
 		source.cyclical = source;
 		source = Object.create(source);
 
-		const assignedObject = lang.deepMixin(target, source);
+		const assignedObject = deepMixin(target, source);
 		assert.deepEqual(assignedObject.nested, { foo: 'bar', bar: 'baz', baz: 'qux', qux: 'baz' });
 	},
 
 	'.partial()'() {
 		const ending = 'jumps over the lazy dog';
-		const finish = lang.partial(
+		const finish = partial(
 			function(this: any) {
 				const start = this && this.start ? [this.start] : [];
 
@@ -299,23 +320,23 @@ registerSuite('util functions', {
 		assert.strictEqual(
 			finish('the lazy dog'),
 			ending,
-			'The arguments supplied to `lang.partial` should be prepended to the arguments list of the ' +
+			'The arguments supplied to `partial` should be prepended to the arguments list of the ' +
 				'original function.'
 		);
 		assert.strictEqual(
 			finish(),
 			'jumps over',
-			'The arguments supplied to `lang.partial` should still be used even if no arguments are passed to the ' +
+			'The arguments supplied to `partial` should still be used even if no arguments are passed to the ' +
 				'wrapped function.'
 		);
 		assert.strictEqual(
 			new (<any>Sentence)('The quick brown fox').finish('the lazy dog'),
 			'The quick brown fox ' + ending,
-			'A function passed to `lang.partial` should inherit its context.'
+			'A function passed to `partial` should inherit its context.'
 		);
 	},
 	'v4 uuid'() {
-		const firstId = lang.uuid();
+		const firstId = uuid();
 
 		assert.isDefined(firstId);
 		assert.match(
@@ -323,12 +344,201 @@ registerSuite('util functions', {
 			new RegExp('^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', 'ig')
 		);
 
-		const secondId = lang.uuid();
+		const secondId = uuid();
 
 		assert.match(
 			secondId,
 			new RegExp('^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', 'ig')
 		);
 		assert.notEqual(firstId, secondId);
+	},
+	guaranteeMinimumTimeout: {
+		destroy(this: any) {
+			const dfd = this.async(1000);
+			const spy = sinon.spy();
+			timerHandle = guaranteeMinimumTimeout(spy, 100);
+
+			setTimeout(function() {
+				destroyTimerHandle();
+			}, 50);
+
+			setTimeout(
+				dfd.callback(function() {
+					assert.strictEqual(spy.callCount, 0);
+				}),
+				110
+			);
+		},
+
+		timeout(this: any) {
+			const dfd = this.async(1000);
+			const startTime = Date.now();
+			timerHandle = guaranteeMinimumTimeout(
+				dfd.callback(function() {
+					const dif = Date.now() - startTime;
+					assert.isTrue(dif >= 100, 'Delay was ' + dif + 'ms.');
+				}),
+				100
+			);
+		},
+
+		'timeout no delay'(this: any) {
+			const dfd = this.async(1000);
+			timerHandle = guaranteeMinimumTimeout(
+				dfd.callback(function() {
+					// test will timeout if not called
+				})
+			);
+		},
+
+		'timeout zero delay'(this: any) {
+			const dfd = this.async(1000);
+			timerHandle = guaranteeMinimumTimeout(
+				dfd.callback(function() {
+					// test will timeout if not called
+				}),
+				0
+			);
+		}
+	},
+	debounce: {
+		'preserves context'(this: any) {
+			const dfd = this.async(TIMEOUT);
+			// FIXME
+			let foo = {
+				bar: debounce(
+					dfd.callback(function(this: any) {
+						assert.strictEqual(this, foo, 'Function should be executed with correct context');
+					}),
+					0
+				)
+			};
+
+			foo.bar();
+		},
+
+		'receives arguments'(this: any) {
+			const dfd = this.async(TIMEOUT);
+			const testArg1 = 5;
+			const testArg2 = 'a';
+			const debouncedFunction = debounce(
+				dfd.callback(function(a: number, b: string) {
+					assert.strictEqual(a, testArg1, 'Function should receive correct arguments');
+					assert.strictEqual(b, testArg2, 'Function should receive correct arguments');
+				}),
+				0
+			);
+
+			debouncedFunction(testArg1, testArg2);
+		},
+
+		'debounces callback'(this: any) {
+			const dfd = this.async(TIMEOUT);
+			const debouncedFunction = debounce(
+				dfd.callback(function() {
+					assert.isAbove(
+						Date.now() - lastCallTick,
+						10,
+						'Function should not be called until period has elapsed without further calls'
+					);
+
+					// Typically, we expect the 3rd invocation to be the one that is executed.
+					// Although the setTimeout in 'run' specifies a delay of 5ms, a very slow test environment may
+					// take longer. If 25+ ms has actually elapsed, then the first or second invocation may end up
+					// being eligible for execution.
+				}),
+				25
+			);
+
+			let runCount = 1;
+			let lastCallTick: number;
+
+			function run() {
+				lastCallTick = Date.now();
+				debouncedFunction();
+				runCount += 1;
+
+				if (runCount < 4) {
+					setTimeout(run, 5);
+				}
+			}
+
+			run();
+		}
+	},
+	throttle: {
+		'preserves context'(this: any) {
+			const dfd = this.async(TIMEOUT);
+			// FIXME
+			const foo = {
+				bar: throttle(
+					dfd.callback(function(this: any) {
+						assert.strictEqual(this, foo, 'Function should be executed with correct context');
+					}),
+					0
+				)
+			};
+
+			foo.bar();
+		},
+
+		'receives arguments'(this: any) {
+			const dfd = this.async(TIMEOUT);
+			const testArg1 = 5;
+			const testArg2 = 'a';
+			const throttledFunction = throttle(
+				dfd.callback(function(a: number, b: string) {
+					assert.strictEqual(a, testArg1, 'Function should receive correct arguments');
+					assert.strictEqual(b, testArg2, 'Function should receive correct arguments');
+				}),
+				0
+			);
+
+			throttledFunction(testArg1, testArg2);
+		},
+
+		'throttles callback'(this: any) {
+			const dfd = this.async(TIMEOUT);
+			let callCount = 0;
+			let cleared = false;
+			const throttledFunction = throttle(
+				dfd.rejectOnError(function(a: string) {
+					callCount++;
+					assert.notStrictEqual(a, 'b', 'Second invocation should be throttled');
+					// Rounding errors?
+					// Technically, the time diff should be greater than 24ms, but in some cases
+					// it is equal to 24ms.
+					assert.isAbove(
+						Date.now() - lastRunTick,
+						23,
+						'Function should not be called until throttle delay has elapsed'
+					);
+
+					lastRunTick = Date.now();
+					if (callCount > 1) {
+						destroyTimerHandle();
+						cleared = true;
+						dfd.resolve();
+					}
+				}),
+				25
+			);
+
+			let runCount = 1;
+			let lastRunTick = 0;
+
+			function run() {
+				throttledFunction('a');
+				throttledFunction('b');
+				runCount += 1;
+
+				if (runCount < 10 && !cleared) {
+					timerHandle = guaranteeMinimumTimeout(run, 5);
+				}
+			}
+
+			run();
+			assert.strictEqual(callCount, 1, 'Function should be called as soon as it is first invoked');
+		}
 	}
 });
