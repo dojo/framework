@@ -1537,7 +1537,7 @@ jsdomDescribe('vdom', () => {
 				}
 
 				render() {
-					return [w(Qux, {}), v('div', [w(Qux, {})])];
+					return [w(Qux, { key: '1' }), v('div', [w(Qux, { key: '2' })])];
 				}
 			}
 
@@ -1574,9 +1574,9 @@ jsdomDescribe('vdom', () => {
 					this._foo = !this._foo;
 					return v('div', [
 						w(FooBar, {}),
-						this._foo ? w(Foo, {}) : null,
+						this._foo ? w(Foo, { key: '1' }) : null,
 						w(FooBar, {}),
-						this._foo ? w(Foo, {}) : w(Bar, {})
+						this._foo ? w(Foo, { key: '2' }) : w(Bar, {})
 					]);
 				}
 			}
@@ -2160,7 +2160,11 @@ jsdomDescribe('vdom', () => {
 						if (this._renderCount === 0) {
 							nodes = v('div', ['Loading']);
 						} else {
-							nodes = v('div', [w(Bar, { id: '1' }), w(Bar, { id: '2' }), w(Bar, { id: '3' })]);
+							nodes = v('div', [
+								w(Bar, { key: '1', id: '1' }),
+								w(Bar, { key: '2', id: '2' }),
+								w(Bar, { key: '3', id: '3' })
+							]);
 						}
 						this._renderCount++;
 						return nodes;

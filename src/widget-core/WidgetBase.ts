@@ -1,5 +1,7 @@
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
+import has from '../has/has';
+import global from '../shim/global';
 import { v, VNODE, isVNode, isWNode } from './d';
 import { auto } from './diff';
 import {
@@ -288,6 +290,15 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 						this.registry.define(id, node.widgetConstructor());
 					}
 					node.widgetConstructor = id;
+				}
+
+				if (has('dojo-debug')) {
+					if (!global.dojoDebug) {
+						global.dojoDebug = {
+							widgets: []
+						};
+					}
+					global.dojoDebug.widgets.push(node.widgetConstructor);
 				}
 
 				node.widgetConstructor =

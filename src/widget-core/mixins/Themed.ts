@@ -1,3 +1,4 @@
+import has from '../../has/has';
 import { Constructor, WidgetProperties, SupportedClassName } from './../interfaces';
 import { Registry } from './../Registry';
 import { Injector } from './../Injector';
@@ -163,7 +164,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			const themeClassName = this._baseThemeClassesReverseLookup![className];
 			let resultClassNames: string[] = [];
 			if (!themeClassName) {
-				console.warn(`Class name: '${className}' not found in theme`);
+				has('dojo-debug') && console.warn(`Class name: '${className}' not found in theme`);
 				return null;
 			}
 
@@ -183,10 +184,12 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			const { theme = {} } = this.properties;
 			if (!this._registeredBaseTheme) {
 				const baseThemes = this.getDecorator('baseThemeClasses');
-				if (baseThemes.length === 0) {
-					console.warn(
-						'A base theme has not been provided to this widget. Please use the @theme decorator to add a theme.'
-					);
+				if (has('dojo-debug')) {
+					if (baseThemes.length === 0) {
+						console.warn(
+							'A base theme has not been provided to this widget. Please use the @theme decorator to add a theme.'
+						);
+					}
 				}
 				this._registeredBaseTheme = baseThemes.reduce((finalBaseTheme, baseTheme) => {
 					const { [THEME_KEY]: key, ...classes } = baseTheme;
