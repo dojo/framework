@@ -18,6 +18,12 @@ export interface Executor<T> {
 	(resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void): void;
 }
 
+declare global {
+	interface Promise<T> {
+		finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+	}
+}
+
 export let ShimPromise: typeof Promise = global.Promise;
 
 export const isThenable = function isThenable<T>(value: any): value is PromiseLike<T> {
@@ -232,6 +238,17 @@ if (!has('es6-promise')) {
 			onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null
 		): Promise<T | TResult> {
 			return this.then(undefined, onRejected);
+		}
+
+		finally(onFinally: (() => any) | undefined | null): Promise<T> {
+			return this.then(
+				onFinally && ((value: T) => Promise.resolve(onFinally()).then(() => value)),
+				onFinally &&
+					((reason: any) =>
+						Promise.resolve(onFinally()).then(() => {
+							throw reason;
+						}))
+			);
 		}
 
 		/**

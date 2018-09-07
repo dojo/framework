@@ -128,7 +128,14 @@ add(
 add('es-observable', () => typeof global.Observable !== 'undefined', true);
 
 /* Promise */
-add('es6-promise', () => typeof global.Promise !== 'undefined' && has('es6-symbol'), true);
+add(
+	'es6-promise',
+	() =>
+		typeof global.Promise !== 'undefined' &&
+		has('es6-symbol') &&
+		typeof global.Promise.prototype.finally !== 'undefined',
+	true
+);
 
 /* Set */
 add(
