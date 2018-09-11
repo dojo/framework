@@ -1,4 +1,5 @@
 import global from '../shim/global';
+import { warn } from '../core/debug';
 import has from '../has/has';
 import { WeakMap } from '../shim/WeakMap';
 import {
@@ -253,7 +254,7 @@ function checkDistinguishable(wrappers: DNodeWrapper[], index: number, parentWNo
 						nodeIdentifier = wrapper.node.tag;
 					}
 
-					console.warn(
+					warn(
 						`A widget (${parentName}) has had a child added or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${nodeIdentifier}) multiple times as siblings`
 					);
 					break;
