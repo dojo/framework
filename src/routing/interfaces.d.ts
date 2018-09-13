@@ -22,8 +22,6 @@ export interface Route {
 	fullQueryParams: string[];
 	defaultParams: Params;
 	score: number;
-	onEnter?: OnEnter;
-	onExit?: OnExit;
 }
 
 /**
@@ -35,8 +33,6 @@ export interface RouteConfig {
 	children?: RouteConfig[];
 	defaultParams?: Params;
 	defaultRoute?: boolean;
-	onEnter?: OnEnter;
-	onExit?: OnExit;
 }
 
 /**
@@ -55,6 +51,10 @@ export type MatchType = 'error' | 'index' | 'partial';
  * Context stored for matched outlets
  */
 export interface OutletContext {
+	/**
+	 * Outlet id
+	 */
+	id: string;
 	/**
 	 * The type of match for the outlet
 	 */
@@ -79,16 +79,6 @@ export interface OutletContext {
 	 * Returns `true` when the route is an exact match
 	 */
 	isExact(): boolean;
-
-	/**
-	 * On enter for the route
-	 */
-	onEnter?: OnEnter;
-
-	/**
-	 * On exit for the route
-	 */
-	onExit?: OnExit;
 }
 
 /**
@@ -114,14 +104,6 @@ export interface RouterInterface {
 	 * The current params for matched routes
 	 */
 	readonly currentParams: Params;
-}
-
-export interface OnEnter {
-	(params: Params, type: MatchType): void;
-}
-
-export interface OnExit {
-	(): void;
 }
 
 export interface MatchDetails {

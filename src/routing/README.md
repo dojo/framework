@@ -8,6 +8,7 @@ Routing for Dojo applications.
     -   [Route Configuration](#route-configuration)
     -   [Router](#router)
         -   [History Managers](#history-managers)
+        -   [Outlet Event](#outlet-event)
     -   [Router Context Injection](#router-context-injection)
     -   [Outlets](#outlets)
         -   [Global Error Outlet](#global-error-outlet)
@@ -107,23 +108,6 @@ const config = [
 ];
 ```
 
-Callbacks for `onEnter` and `onExit` can be set on the route configuration, these callbacks get called when an outlet is entered and exited.
-
-```ts
-const config = [
-	{
-		path: 'foo/{foo}',
-		outlet: 'foo',
-		onEnter: () => {
-			console.log('outlet foo entered');
-		},
-		onExit: () => {
-			console.log('outlet foo exited');
-		}
-	}
-];
-```
-
 ### Router
 
 A `Router` registers a [route configuration](#route-configuration) which is passed to the router on construction:
@@ -193,6 +177,20 @@ import { Router } from '@dojo/framework/routing/Router';
 import { MemoryHistory } from '@dojo/framework/routing/history/MemoryHistory';
 
 const router = new Router(config, MemoryHistory);
+```
+
+#### Outlet Event
+
+The `outlet` event is emitted from the `router` instance each time an outlet is entered or exited. The outlet context is provided with the event payload along with the `enter` or `exit` action.
+
+```ts
+router.on('outlet', ({ outlet, action }) => {
+	if (action === 'enter') {
+		if (outlet.id === 'my-outlet') {
+			// do something, perhaps fetch data or set state
+		}
+	}
+});
 ```
 
 ### Router Context Injection

@@ -21,12 +21,20 @@ export interface NavEvent extends EventObject<string> {
 }
 
 export interface OutletEvent extends EventObject<string> {
-	outlet: string;
+	outlet: OutletContext;
 	action: 'enter' | 'exit';
 }
 
 const ROUTE_SEGMENT_SCORE = 7;
 const DYNAMIC_SEGMENT_PENALTY = 2;
+
+function matchingParams({ params: previousParams }: OutletContext, { params }: OutletContext) {
+	const matching = Object.keys(previousParams).every((key) => previousParams[key] === params[key]);
+	if (!matching) {
+		return false;
+	}
+	return Object.keys(params).every((key) => previousParams[key] === params[key]);
+}
 
 export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent }> implements RouterInterface {
 	private _routes: Route[] = [];
@@ -138,7 +146,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 	private _register(config: RouteConfig[], routes?: Route[], parentRoute?: Route): void {
 		routes = routes ? routes : this._routes;
 		for (let i = 0; i < config.length; i++) {
-			let { onEnter, onExit, path, outlet, children, defaultRoute = false, defaultParams = {} } = config[i];
+			let { path, outlet, children, defaultRoute = false, defaultParams = {} } = config[i];
 			let [parsedPath, queryParamString] = path.split('?');
 			let queryParams: string[] = [];
 			parsedPath = this._stripLeadingSlash(parsedPath);
@@ -154,9 +162,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 				fullPath: parentRoute ? `${parentRoute.fullPath}/${parsedPath}` : parsedPath,
 				fullParams: [],
 				fullQueryParams: [],
-				onEnter,
-				score: parentRoute ? parentRoute.score : 0,
-				onExit
+				score: parentRoute ? parentRoute.score : 0
 			};
 			if (defaultRoute) {
 				this._defaultOutlet = outlet;
@@ -288,23 +294,24 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 			matchedOutletName = matchedRoute.route.outlet;
 			while (matchedRoute) {
 				let { type, params, parent, route } = matchedRoute;
-
-				if (!previousMatchedOutlets[route.outlet]) {
-					this.emit({ type: 'outlet', outlet: route.outlet, action: 'enter' });
-				}
-				this._matchedOutlets[matchedRoute.route.outlet] = {
+				const matchedOutlet = {
+					id: route.outlet,
 					queryParams: this._currentQueryParams,
 					params,
 					type,
 					isError: () => type === 'error',
-					isExact: () => type === 'index',
-					onEnter: route.onEnter,
-					onExit: route.onExit
+					isExact: () => type === 'index'
 				};
+				const previousMatchedOutlet = previousMatchedOutlets[route.outlet];
+				if (!previousMatchedOutlet || !matchingParams(previousMatchedOutlet, matchedOutlet)) {
+					this.emit({ type: 'outlet', outlet: matchedOutlet, action: 'enter' });
+				}
+				this._matchedOutlets[route.outlet] = matchedOutlet;
 				matchedRoute = parent;
 			}
 		} else {
 			this._matchedOutlets.errorOutlet = {
+				id: 'errorOutlet',
 				queryParams: {},
 				params: {},
 				isError: () => true,
@@ -315,8 +322,10 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 
 		const previousMatchedOutletKeys = Object.keys(previousMatchedOutlets);
 		for (let i = 0; i < previousMatchedOutletKeys.length; i++) {
-			if (!this._matchedOutlets[previousMatchedOutletKeys[i]]) {
-				this.emit({ type: 'outlet', outlet: previousMatchedOutletKeys[i], action: 'exit' });
+			const key = previousMatchedOutletKeys[i];
+			const matchedOutlet = this._matchedOutlets[key];
+			if (!matchedOutlet || !matchingParams(previousMatchedOutlets[key], matchedOutlet)) {
+				this.emit({ type: 'outlet', outlet: previousMatchedOutlets[key], action: 'exit' });
 			}
 		}
 		if (matchedOutletName) {
