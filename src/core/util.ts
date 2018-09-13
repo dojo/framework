@@ -1,3 +1,5 @@
+import { Handle } from './Destroyable';
+
 const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -242,6 +244,62 @@ export function partial(targetFunction: (...args: any[]) => any, ...suppliedArgs
 		const args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
 
 		return targetFunction.apply(this, args);
+	};
+}
+
+export function guaranteeMinimumTimeout(callback: (...args: any[]) => void, delay?: number): Handle {
+	const startTime = Date.now();
+	let timerId: any;
+
+	function timeoutHandler() {
+		const delta = Date.now() - startTime;
+		if (delay == null || delta >= delay) {
+			callback();
+		} else {
+			timerId = setTimeout(timeoutHandler, delay - delta);
+		}
+	}
+	timerId = setTimeout(timeoutHandler, delay);
+	return {
+		destroy: () => {
+			if (timerId != null) {
+				clearTimeout(timerId);
+				timerId = null;
+			}
+		}
+	};
+}
+
+export function debounce<T extends (this: any, ...args: any[]) => void>(callback: T, delay: number): T {
+	let timer: Handle | null;
+
+	return <T>function() {
+		timer && timer.destroy();
+
+		let context = this;
+		let args: IArguments | null = arguments;
+
+		timer = guaranteeMinimumTimeout(function() {
+			callback.apply(context, args);
+			args = context = timer = null;
+		}, delay);
+	};
+}
+
+export function throttle<T extends (this: any, ...args: any[]) => void>(callback: T, delay: number): T {
+	let ran: boolean | null;
+
+	return <T>function() {
+		if (ran) {
+			return;
+		}
+
+		ran = true;
+
+		callback.apply(this, arguments);
+		guaranteeMinimumTimeout(function() {
+			ran = null;
+		}, delay);
 	};
 }
 
