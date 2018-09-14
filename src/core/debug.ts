@@ -1,6 +1,5 @@
 import has from '../has/has';
 import global from '../shim/global';
-import { RouteConfig } from '../routing/interfaces';
 import { RegistryLabel } from '../widget-core/interfaces';
 
 export interface DojoDebug {
@@ -13,13 +12,6 @@ function init() {
 		global.dojoDebug = {
 			widgets: []
 		};
-	}
-}
-
-export function routingConfiguration(config: RouteConfig[]): void {
-	init();
-	if (has('dojo-debug')) {
-		global.dojoDebug.routingConfiguration = config;
 	}
 }
 

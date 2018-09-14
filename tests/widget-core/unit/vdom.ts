@@ -1,7 +1,9 @@
 const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
-import { match, spy, stub, SinonSpy } from 'sinon';
+import { match, spy, stub, SinonSpy, SinonStub } from 'sinon';
+import * as debug from '../../../src/core/debug';
+import { add } from '../../../src/has/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
 
@@ -101,11 +103,15 @@ class TestWidget extends WidgetBase<any> {
 	}
 }
 
+let consoleWarnStub: SinonStub;
+
 jsdomDescribe('vdom', () => {
 	const spys: SinonSpy[] = [];
 
 	beforeEach(() => {
 		resolvers.stub();
+		add('dojo-debug', true, true);
+		consoleWarnStub = stub(debug, 'warn');
 	});
 
 	afterEach(() => {
@@ -114,6 +120,7 @@ jsdomDescribe('vdom', () => {
 			spy.restore();
 		}
 		spys.length = 0;
+		consoleWarnStub.restore();
 	});
 
 	describe('widgets', () => {
@@ -403,6 +410,250 @@ jsdomDescribe('vdom', () => {
 				assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'Registry, world!');
 				assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'Hello, world!');
 			});
+		});
+
+		it('Should warn when removing nodes that are not distinguishable', () => {
+			let invalidate: any;
+			class Foo extends WidgetBase {
+				constructor() {
+					super();
+					invalidate = this.invalidate.bind(this);
+				}
+
+				renderResult = v('div', [v('div'), v('div')]);
+
+				renderTwo = v('div', [v('div')]);
+
+				invalidate() {
+					this.renderResult = this.renderTwo;
+					super.invalidate();
+				}
+
+				render() {
+					return this.renderResult;
+				}
+			}
+
+			const r = renderer(() => w(Foo, {}));
+			const root = document.createElement('div');
+			r.mount({ domNode: root, sync: true });
+			assert.isTrue(consoleWarnStub.notCalled);
+			invalidate();
+			assert.isTrue(consoleWarnStub.calledOnce);
+		});
+
+		it('Should warn when removing widgets that are not distinguishable', () => {
+			class Bar extends WidgetBase {}
+			let invalidate: any;
+			class Foo extends WidgetBase {
+				constructor() {
+					super();
+					invalidate = this.invalidate.bind(this);
+				}
+
+				renderResult = v('div', [w(Bar, {}), w(Bar, {})]);
+
+				renderTwo = v('div', [w(Bar, {})]);
+
+				invalidate() {
+					this.renderResult = this.renderTwo;
+					super.invalidate();
+				}
+
+				render() {
+					return this.renderResult;
+				}
+			}
+
+			const r = renderer(() => w(Foo, {}));
+			const root = document.createElement('div');
+			r.mount({ domNode: root, sync: true });
+			assert.isTrue(consoleWarnStub.notCalled);
+			invalidate();
+			assert.isTrue(consoleWarnStub.calledOnce);
+		});
+
+		it('Should warn when adding nodes that are not distinguishable', () => {
+			let invalidate: any;
+			class Foo extends WidgetBase {
+				constructor() {
+					super();
+					invalidate = this.invalidate.bind(this);
+				}
+
+				renderTwo = v('div', [v('div'), v('div')]);
+
+				renderResult = v('div', [v('div')]);
+
+				invalidate() {
+					this.renderResult = this.renderTwo;
+					super.invalidate();
+				}
+
+				render() {
+					return this.renderResult;
+				}
+			}
+
+			const r = renderer(() => w(Foo, {}));
+			const root = document.createElement('div');
+			r.mount({ domNode: root, sync: true });
+			assert.isTrue(consoleWarnStub.notCalled);
+			invalidate();
+			assert.isTrue(consoleWarnStub.calledOnce);
+		});
+
+		it('Should warn when adding widgets that are not distinguishable', () => {
+			class Bar extends WidgetBase {}
+			let invalidate: any;
+			class Foo extends WidgetBase {
+				constructor() {
+					super();
+					invalidate = this.invalidate.bind(this);
+				}
+
+				renderTwo = v('div', [w(Bar, {}), w(Bar, {})]);
+
+				renderResult = v('div', [w(Bar, {})]);
+
+				invalidate() {
+					this.renderResult = this.renderTwo;
+					super.invalidate();
+				}
+
+				render() {
+					return this.renderResult;
+				}
+			}
+
+			const r = renderer(() => w(Foo, {}));
+			const root = document.createElement('div');
+			r.mount({ domNode: root, sync: true });
+			assert.isTrue(consoleWarnStub.notCalled);
+			invalidate();
+			assert.isTrue(consoleWarnStub.calledOnce);
+		});
+
+		it('Should not warn when removing nodes that are distinguishable', () => {
+			let invalidate: any;
+			class Foo extends WidgetBase {
+				constructor() {
+					super();
+					invalidate = this.invalidate.bind(this);
+				}
+
+				renderResult = v('div', [v('div', { key: '1' }), v('div', { key: '2' })]);
+
+				renderTwo = v('div', [v('div', { key: '1' })]);
+
+				invalidate() {
+					this.renderResult = this.renderTwo;
+					super.invalidate();
+				}
+
+				render() {
+					return this.renderResult;
+				}
+			}
+
+			const r = renderer(() => w(Foo, {}));
+			const root = document.createElement('div');
+			r.mount({ domNode: root, sync: true });
+			assert.isTrue(consoleWarnStub.notCalled);
+			invalidate();
+			assert.isTrue(consoleWarnStub.notCalled);
+		});
+
+		it('Should not warn when removing widgets that are distinguishable', () => {
+			class Bar extends WidgetBase {}
+			let invalidate: any;
+			class Foo extends WidgetBase {
+				constructor() {
+					super();
+					invalidate = this.invalidate.bind(this);
+				}
+
+				renderResult = v('div', [w(Bar, { key: '1' }), w(Bar, { key: '2' })]);
+
+				renderTwo = v('div', [w(Bar, { key: '1' })]);
+
+				invalidate() {
+					this.renderResult = this.renderTwo;
+					super.invalidate();
+				}
+
+				render() {
+					return this.renderResult;
+				}
+			}
+
+			const r = renderer(() => w(Foo, {}));
+			const root = document.createElement('div');
+			r.mount({ domNode: root, sync: true });
+			assert.isTrue(consoleWarnStub.notCalled);
+			invalidate();
+			assert.isTrue(consoleWarnStub.notCalled);
+		});
+
+		it('Should not warn when adding nodes that are distinguishable', () => {
+			let invalidate: any;
+			class Foo extends WidgetBase {
+				constructor() {
+					super();
+					invalidate = this.invalidate.bind(this);
+				}
+
+				renderTwo = v('div', [v('div', { key: '1' }), v('div', { key: '2' })]);
+
+				renderResult = v('div', [v('div', { key: '1' })]);
+
+				invalidate() {
+					this.renderResult = this.renderTwo;
+					super.invalidate();
+				}
+
+				render() {
+					return this.renderResult;
+				}
+			}
+
+			const r = renderer(() => w(Foo, {}));
+			const root = document.createElement('div');
+			r.mount({ domNode: root, sync: true });
+			assert.isTrue(consoleWarnStub.notCalled);
+			invalidate();
+			assert.isTrue(consoleWarnStub.notCalled);
+		});
+
+		it('Should not warn when adding widgets that are distinguishable', () => {
+			class Bar extends WidgetBase {}
+			let invalidate: any;
+			class Foo extends WidgetBase {
+				constructor() {
+					super();
+					invalidate = this.invalidate.bind(this);
+				}
+
+				renderTwo = v('div', [w(Bar, { key: '1' }), w(Bar, { key: '2' })]);
+
+				renderResult = v('div', [w(Bar, { key: '1' })]);
+
+				invalidate() {
+					this.renderResult = this.renderTwo;
+					super.invalidate();
+				}
+
+				render() {
+					return this.renderResult;
+				}
+			}
+
+			const r = renderer(() => w(Foo, {}));
+			const root = document.createElement('div');
+			r.mount({ domNode: root, sync: true });
+			assert.isTrue(consoleWarnStub.notCalled);
+			invalidate();
+			assert.isTrue(consoleWarnStub.notCalled);
 		});
 
 		it('should invalidate when a registry items is loaded', () => {
