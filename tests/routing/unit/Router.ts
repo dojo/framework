@@ -348,6 +348,57 @@ describe('Router', () => {
 		assert.strictEqual(fooContext!.isError(), false);
 	});
 
+	it('should emit outlet event when a route is entered and exited', () => {
+		const router = new Router(routeConfig, { HistoryManager });
+		let handle = router.on('outlet', () => {});
+		handle.destroy();
+		handle = router.on('outlet', ({ outlet, action }) => {
+			if (action === 'exit') {
+				assert.strictEqual(outlet.id, 'home');
+			} else {
+				assert.strictEqual(outlet.id, 'foo');
+			}
+		});
+		router.setPath('/foo');
+		handle.destroy();
+		handle = router.on('outlet', ({ outlet, action }) => {
+			assert.strictEqual(outlet.id, 'bar');
+			assert.strictEqual(action, 'enter');
+		});
+		router.setPath('/foo/bar');
+	});
+
+	it('should emit outlet event when a routes param changes', () => {
+		const router = new Router(routeConfig, { HistoryManager });
+		let handle = router.on('outlet', () => {});
+		handle.destroy();
+		handle = router.on('outlet', ({ outlet, action }) => {
+			if (action === 'exit') {
+				assert.strictEqual(outlet.id, 'home');
+			} else {
+				assert.strictEqual(outlet.id, 'foo');
+			}
+		});
+		router.setPath('/foo');
+		handle.destroy();
+		handle = router.on('outlet', ({ outlet, action }) => {
+			assert.strictEqual(outlet.id, 'baz');
+			assert.strictEqual(action, 'enter');
+		});
+		router.setPath('/foo/baz/baz');
+		handle.destroy();
+		handle = router.on('outlet', ({ outlet, action }) => {
+			if (action === 'exit') {
+				assert.strictEqual(outlet.id, 'baz');
+				assert.deepEqual(outlet.params, { baz: 'baz' });
+			} else {
+				assert.strictEqual(outlet.id, 'baz');
+				assert.deepEqual(outlet.params, { baz: 'baaz' });
+			}
+		});
+		router.setPath('/foo/baaz/baz');
+	});
+
 	it('Should return all params for a route', () => {
 		const router = new Router(routeWithChildrenAndMultipleParams, { HistoryManager });
 		router.setPath('/foo/foo/bar/bar/baz/baz');
@@ -433,8 +484,6 @@ describe('Router', () => {
 			assert.deepEqual(event.context.queryParams, {});
 			assert.deepEqual(event.context.params, { bar: 'defaultBar' });
 			assert.deepEqual(event.context.type, 'index');
-			assert.isUndefined(event.context.onEnter);
-			assert.isUndefined(event.context.onExit);
 			assert.isTrue(event.context.isExact());
 			assert.isFalse(event.context.isError());
 			initialNavEvent = true;

@@ -39,7 +39,7 @@ export class ActiveLink extends WidgetBase<ActiveLinkProperties> {
 		if (item) {
 			const router = item.injector();
 			this._outletHandle = router.on('outlet', ({ outlet }) => {
-				if (outlet === to) {
+				if (outlet.id === to) {
 					this.invalidate();
 				}
 			});
