@@ -12,7 +12,7 @@ import {
 	DefaultWidgetBaseInterface
 } from './interfaces';
 import transitionStrategy from './animations/cssTransitions';
-import { isVNode, isWNode, WNODE, v, isDomVNode } from './d';
+import { isVNode, isWNode, WNODE, v, isDomVNode, w } from './d';
 import { Registry, isWidgetBaseConstructor } from './Registry';
 import { WidgetBase } from './WidgetBase';
 import NodeHandler from './NodeHandler';
@@ -321,7 +321,15 @@ function arrayFrom(arr: any) {
 	return Array.prototype.slice.call(arr);
 }
 
-export function renderer(renderer: () => WNode): Renderer {
+function wrapVNodes(nodes: VNode) {
+	return class extends WidgetBase {
+		protected render() {
+			return nodes;
+		}
+	};
+}
+
+export function renderer(renderer: () => WNode | VNode): Renderer {
 	let _mountOptions: MountOptions = {
 		sync: false,
 		merge: true,
@@ -693,7 +701,10 @@ export function renderer(renderer: () => WNode): Renderer {
 	function mount(mountOptions: Partial<MountOptions> = {}) {
 		_mountOptions = { ..._mountOptions, ...mountOptions };
 		const { domNode } = _mountOptions;
-		const renderResult = renderer();
+		let renderResult = renderer();
+		if (isVNode(renderResult)) {
+			renderResult = w(wrapVNodes(renderResult), {});
+		}
 		const nextWrapper = {
 			node: renderResult,
 			depth: 1

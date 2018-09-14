@@ -2180,6 +2180,13 @@ jsdomDescribe('vdom', () => {
 	});
 
 	describe('create', () => {
+		it('should support rendering vnodes only', () => {
+			const r = renderer(() => v('div', ['hello, world!']));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>hello, world!</div>');
+		});
+
 		it('should create and update single text nodes', () => {
 			const [Widget, meta] = getWidget(v('div', ['text']));
 			const r = renderer(() => w(Widget, {}));
