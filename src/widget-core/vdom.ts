@@ -1156,3 +1156,5 @@ export function renderer(renderer: () => WNode): Renderer {
 		invalidate
 	};
 }
+
+export default renderer;
