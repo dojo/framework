@@ -71,4 +71,28 @@ jsdomDescribe('Projector', () => {
 		projector.append();
 		assert.strictEqual((div.childNodes[0].childNodes[0] as Text).data, 'widget');
 	});
+
+	it('should invalidate when properties are set after mounting', () => {
+		const div = document.createElement('div');
+		const Projector = ProjectorMixin(App);
+		const projector = new Projector();
+		projector.async = false;
+		projector.root = div;
+		projector.append();
+		assert.strictEqual((div.childNodes[0].childNodes[0] as Text).data, 'widget');
+		projector.setProperties({ child: 'property' });
+		assert.strictEqual((div.childNodes[0].childNodes[0] as Text).data, 'property');
+	});
+
+	it('should invalidate when children are set after mounting', () => {
+		const div = document.createElement('div');
+		const Projector = ProjectorMixin(App);
+		const projector = new Projector();
+		projector.async = false;
+		projector.root = div;
+		projector.append();
+		assert.strictEqual((div.childNodes[0].childNodes[0] as Text).data, 'widget');
+		projector.setChildren(['child']);
+		assert.strictEqual((div.childNodes[0].childNodes[0] as Text).data, 'child');
+	});
 });
