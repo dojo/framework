@@ -41,11 +41,18 @@ Previously:
 
 ```ts
 // outlet module
-export default Outlet({ index: MyIndexWidget, main: MyMainWidget }, 'outlet-id', { mapParams: (matchDetails) => {
-	return {
-		id: matchDetails.param.id
-	};
-} });
+export default Outlet(
+	{
+		index: MyIndexWidget,
+		main: MyMainWidget
+	},
+	'outlet-id',
+	{
+		mapParams: (matchDetails) => {
+			return { id: matchDetails.param.id };
+		}
+	}
+);
 
 // widget module
 import MyOutlet from './MyOutlet';
@@ -72,7 +79,7 @@ class MyWidget extends WidgetBase {
 }
 ```
 
-We feel the using a standard widget with a render property provides the end user more flexibility to meet all an applications needs!
+We feel the using a standard widget with a render property provides the end user more flexibility to meet all an application's needs!
 
 ### [Static Routing Configuration](https://github.com/dojo/framework/pull/98)
 
