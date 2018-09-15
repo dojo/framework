@@ -1,4 +1,3 @@
-import { routingConfiguration } from '../core/debug';
 import QueuingEvented from '../core/QueuingEvented';
 import { RouteConfig, History, OutletContext, Params, RouterInterface, Route, RouterOptions } from './interfaces';
 import { HashHistory } from './history/HashHistory';

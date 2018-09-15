@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import { stub, SinonStub } from 'sinon';
 import { add } from '../../../src/has/has';
 import global from '../../../src/shim/global';
-import { warn, error, registerWidget, registerRoutingConfig } from '../../../src/core/debug';
+import { warn, error, registerWidget } from '../../../src/core/debug';
 
 let consoleWarnStub: SinonStub;
 let consoleErrorStub: SinonStub;
@@ -47,10 +47,5 @@ describe('debug', () => {
 		assert.deepEqual(global.dojoDebug.widgets, ['widget']);
 		registerWidget('another-widget');
 		assert.deepEqual(global.dojoDebug.widgets, ['widget', 'another-widget']);
-	});
-
-	it('should add routing configuration on global dojo debug object', () => {
-		registerRoutingConfig([{ path: '', outlet: '' }]);
-		assert.deepEqual(global.dojoDebug.routingConfiguration, [{ path: '', outlet: '' }]);
 	});
 });
