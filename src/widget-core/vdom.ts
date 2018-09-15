@@ -560,12 +560,8 @@ export function renderer(renderer: () => WNode): Renderer {
 						}
 					}
 				} else {
-					if (nextWrapper.merged) {
-						for (let i = 0; i < currentClasses.length; i++) {
-							applyClasses(domNode, currentClasses[i], 'add');
-						}
-					} else {
-						domNode.className = currentClasses.join(' ').trim();
+					for (let i = 0; i < currentClasses.length; i++) {
+						applyClasses(domNode, currentClasses[i], 'add');
 					}
 				}
 			} else if (nodeOperations.indexOf(propName) !== -1) {
