@@ -136,7 +136,6 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 	 * @param parentRoute The parent route
 	 */
 	private _register(config: RouteConfig[], routes?: Route[], parentRoute?: Route): void {
-		routingConfiguration(config);
 		routes = routes ? routes : this._routes;
 		for (let i = 0; i < config.length; i++) {
 			let { onEnter, onExit, path, outlet, children, defaultRoute = false, defaultParams = {} } = config[i];
