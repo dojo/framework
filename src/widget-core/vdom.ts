@@ -146,6 +146,12 @@ interface UpdateDomApplication {
 	next: VNodeWrapper;
 }
 
+interface PreviousProperties {
+	properties: any;
+	attributes?: any;
+	events?: any;
+}
+
 type ApplicationInstruction = CreateDomApplication | UpdateDomApplication | DeleteDomApplication | AttachApplication;
 
 export const widgetInstanceMap = new WeakMap<
@@ -472,7 +478,7 @@ export function renderer(renderer: () => WNode): Renderer {
 			const properties = next.node.properties;
 			next.node.properties = { ...next.node.deferredPropertiesCallback(true), ...next.node.originalProperties };
 			_afterRenderCallbacks.push(() => {
-				processProperties(next, properties);
+				processProperties(next, { properties });
 			});
 		}
 	}
@@ -657,7 +663,7 @@ export function renderer(renderer: () => WNode): Renderer {
 		}
 	}
 
-	function processProperties(next: VNodeWrapper, previousProperties: any) {
+	function processProperties(next: VNodeWrapper, previousProperties: PreviousProperties) {
 		if (next.node.attributes && next.node.events) {
 			updateAttributes(
 				next.domNode as HTMLElement,
@@ -795,7 +801,7 @@ export function renderer(renderer: () => WNode): Renderer {
 					}
 				} = item;
 
-				processProperties(next, {});
+				processProperties(next, { properties: {} });
 				runDeferredProperties(next);
 				if (!merged) {
 					let insertBefore: any;
