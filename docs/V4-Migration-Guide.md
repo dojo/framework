@@ -25,6 +25,16 @@ If you are upgrading from a version before 3.0.0, please see the [previous migra
 
 ### Breaking Changes:
 
+#### [Goodbye Projector Mixin]()
+
+As part of the new vdom, we've removed the `ProjectorMixin`. The `ProjectorMixin` has been one of the more confusing aspects within dojo, especially due to the need to create an instance. This is fundamentally different to how widgets were used everywhere else in the framework.
+
+The `renderer` function from `vdom.ts` is now imported directly, which accepts a render function that returns DNodes using `w()` and `v()`. This is a familiar pattern as it mirrors how widgets and nodes are returned from a widget.
+
+```ts
+
+```
+
 #### [Core modules consolidation](https://github.com/dojo/framework/pull/53)
 
 The most obvious change with 4.0.0 is that we've tried to streamline the functionality provided by core, which resulted in most of the modules being removed. The upgrade tool will identify any uses of a core module that has been removed, copy the modules into your project and update imports to the local versions.
