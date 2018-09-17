@@ -6,10 +6,10 @@ import { add } from '../../../src/has/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
 
-import { renderer, widgetInstanceMap } from '../../../src/widget-core/vdom';
+import { renderer } from '../../../src/widget-core/vdom';
 import { v, w, dom as d, VNODE } from '../../../src/widget-core/d';
 import { VNode, DNode, DomVNode } from '../../../src/widget-core/interfaces';
-import { WidgetBase } from '../../../src/widget-core/WidgetBase';
+import { WidgetBase, widgetInstanceMap } from '../../../src/widget-core/WidgetBase';
 import Registry from '../../../src/widget-core/Registry';
 import { I18nMixin } from '../../../src/widget-core/mixins/I18n';
 import registry from '../../../src/widget-core/decorators/registry';
@@ -2434,6 +2434,13 @@ jsdomDescribe('vdom', () => {
 	});
 
 	describe('create', () => {
+		it('should support rendering vnodes only', () => {
+			const r = renderer(() => v('div', ['hello, world!']));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>hello, world!</div>');
+		});
+
 		it('should create and update single text nodes', () => {
 			const [Widget, meta] = getWidget(v('div', ['text']));
 			const r = renderer(() => w(Widget, {}));
