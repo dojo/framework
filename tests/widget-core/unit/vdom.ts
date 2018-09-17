@@ -2394,13 +2394,13 @@ jsdomDescribe('vdom', () => {
 				const [Widget, meta] = getWidget(v('div', { classes: ['a'] }));
 				const r = renderer(() => w(Widget, {}));
 				r.mount({ domNode: root, sync: true });
-				assert.strictEqual(div.className, 'c b a');
+				assert.strictEqual(div.className, 'b c a');
 				meta.setRenderResult(v('div', { classes: ['a', 'b'] }));
-				assert.strictEqual(div.className, 'c b a');
+				assert.strictEqual(div.className, 'a b');
 				meta.setRenderResult(v('div', { classes: ['b'] }));
-				assert.strictEqual(div.className, 'c b');
+				assert.strictEqual(div.className, 'b');
 				meta.setRenderResult(v('div'));
-				assert.strictEqual(div.className, 'c');
+				assert.strictEqual(div.className, '');
 			});
 
 			it('supports null, undefined and zero length strings in classes', () => {
@@ -3850,7 +3850,7 @@ jsdomDescribe('vdom', () => {
 			meta.setRenderResult(v('svg', { classes: ['foo', 'bar'] }));
 			assert.strictEqual(svg.getAttribute('class'), 'foo bar');
 			meta.setRenderResult(v('svg', { classes: [] }));
-			assert.strictEqual(svg.getAttribute('class'), '');
+			assert.strictEqual(svg.getAttribute('class'), null);
 			meta.setRenderResult(v('svg', { classes: ['bar'] }));
 			assert.strictEqual(svg.getAttribute('class'), 'bar');
 		});
