@@ -1,9 +1,10 @@
-import { Constructor, DNode } from '../interfaces';
+import { Constructor, DNode, WNode } from '../interfaces';
 import WidgetBase from '../WidgetBase';
 import { Handle } from '../../core/Destroyable';
 import Registry from '../Registry';
-import { renderer } from './../vdom';
+import { renderer, Renderer } from './../vdom';
 import { w } from '../d';
+import { alwaysRender } from '../decorators/alwaysRender';
 
 export enum ProjectorAttachState {
 	Attached = 1,
@@ -27,6 +28,13 @@ export interface ProjectorMixin<T extends WidgetBase> {
 	readonly projectorState: ProjectorAttachState;
 }
 
+@alwaysRender()
+class ProjectorWidget extends WidgetBase<{ renderer: () => WNode }> {
+	protected render() {
+		return this.properties.renderer();
+	}
+}
+
 export function ProjectorMixin<P, T extends WidgetBase<P>>(Base: Constructor<T>): Constructor<ProjectorMixin<T>> {
 	class Projector {
 		public projectorState: ProjectorAttachState;
@@ -35,12 +43,23 @@ export function ProjectorMixin<P, T extends WidgetBase<P>>(Base: Constructor<T>)
 		private _children: DNode[];
 		private _properties: P & ProjectorProperties = {} as P;
 		private _widget: Constructor<T> = Base;
+		private _renderer: Renderer | undefined;
+		private _renderResult: WNode;
 
 		public append(root: Element = this._root): Handle {
-			const { registry, ...props } = this._properties as any;
 			this._root = root;
-			const r = renderer(() => w(this._widget, props, this._children));
-			r.mount({ domNode: root as HTMLElement, registry, sync: !this.async });
+			this._renderResult = w(ProjectorWidget, {
+				renderer: () => {
+					const { registry, ...props } = this._properties as any;
+					return w(this._widget, props, this._children);
+				}
+			});
+			this._renderer = renderer(() => this._renderResult);
+			this._renderer.mount({
+				domNode: root as HTMLElement,
+				registry: this._properties.registry,
+				sync: !this.async
+			});
 			this.projectorState = ProjectorAttachState.Attached;
 			return {
 				destroy() {}
@@ -83,10 +102,16 @@ export function ProjectorMixin<P, T extends WidgetBase<P>>(Base: Constructor<T>)
 
 		public setChildren(children: DNode[]): void {
 			this._children = children;
+			if (this._renderer) {
+				this._renderer.invalidate();
+			}
 		}
 
 		public setProperties(properties: P): void {
 			this._properties = properties;
+			if (this._renderer) {
+				this._renderer.invalidate();
+			}
 		}
 
 		public toHtml(): string {
