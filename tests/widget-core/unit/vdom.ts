@@ -1848,6 +1848,38 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(deferredPropertyCallCount, 12);
 		});
 
+		describe('deferred properties', () => {
+			let createElementStub: any;
+
+			afterEach(() => {
+				if (createElementStub) {
+					createElementStub.restore();
+				}
+			});
+
+			it('should only set properties and attributes that have changed for deferred properties', () => {
+				class Foo extends WidgetBase {
+					render() {
+						return v('div', () => {
+							return {
+								foo: 'foo'
+							};
+						});
+					}
+				}
+				const divSpy = document.createElement('div');
+				const setAttributeSpy = spy(divSpy, 'setAttribute');
+				const div = document.createElement('div');
+				const r = renderer(() => w(Foo, {}));
+				createElementStub = stub(document, 'createElement');
+				createElementStub.returns(divSpy);
+				r.mount({ domNode: div });
+				assert.isTrue(setAttributeSpy.calledOnce);
+				resolvers.resolve();
+				assert.isTrue(setAttributeSpy.calledOnce);
+			});
+		});
+
 		describe('supports merging with a widget returned a the top level', () => {
 			it('Supports merging DNodes onto existing HTML', () => {
 				const iframe = document.createElement('iframe');
