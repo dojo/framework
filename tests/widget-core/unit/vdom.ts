@@ -3179,6 +3179,40 @@ jsdomDescribe('vdom', () => {
 	});
 
 	describe('deferred properties', () => {
+		let createElementStub: any;
+
+		afterEach(() => {
+			if (createElementStub) {
+				createElementStub.restore();
+			}
+		});
+
+		it('should only set properties and attributes that have changed for deferred properties', () => {
+			class Foo extends WidgetBase {
+				render() {
+					return v('div', () => {
+						return {
+							foo: 'foo'
+						};
+					});
+				}
+			}
+			let setAttributeSpy: SinonSpy;
+			const div = document.createElement('div');
+			const r = renderer(() => w(Foo, {}));
+			const originalCreateElement = document.createElement.bind(document);
+			createElementStub = stub(document, 'createElement');
+			createElementStub.callsFake((name: string) => {
+				const element = originalCreateElement(name);
+				setAttributeSpy = spy(element, 'setAttribute');
+				return element;
+			});
+			r.mount({ domNode: div });
+			assert.isTrue(setAttributeSpy!.calledOnce);
+			resolvers.resolve();
+			assert.isTrue(setAttributeSpy!.calledOnce);
+		});
+
 		it('can call a callback on render and on the next rAF for vnode properties', () => {
 			let deferredCallbackCount = 0;
 			let renderCount = 0;
