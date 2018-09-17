@@ -8,6 +8,7 @@ import {
 	BeforeRender,
 	DiffPropertyReaction,
 	DNode,
+	DefaultWidgetBaseInterface,
 	LazyWidget,
 	Render,
 	WidgetMetaBase,
@@ -19,7 +20,6 @@ import {
 } from './interfaces';
 import RegistryHandler from './RegistryHandler';
 import NodeHandler from './NodeHandler';
-import { widgetInstanceMap } from './vdom';
 import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './Registry';
 import { Handle } from '../core/Destroyable';
 
@@ -28,11 +28,25 @@ interface ReactionFunctionConfig {
 	reaction: DiffPropertyReaction;
 }
 
+export interface WidgetData {
+	onDetach: () => void;
+	onAttach: () => void;
+	dirty: boolean;
+	nodeHandler: NodeHandler;
+	invalidate?: Function;
+	rendering: boolean;
+	inputProperties: any;
+}
+
 export type BoundFunctionData = { boundFunc: (...args: any[]) => any; scope: any };
 
 let lazyWidgetId = 0;
 const lazyWidgetIdMap = new WeakMap<LazyWidget, string>();
 const decoratorMap = new Map<Function, Map<string, any[]>>();
+export const widgetInstanceMap = new WeakMap<
+	WidgetBase<WidgetProperties, DNode<DefaultWidgetBaseInterface>>,
+	WidgetData
+>();
 const boundAuto = auto.bind(null);
 
 export const noBind = '__dojo_no_bind';

@@ -7,25 +7,12 @@ import {
 	VNodeProperties,
 	SupportedClassName,
 	WidgetBaseConstructor,
-	TransitionStrategy,
-	WidgetProperties,
-	DefaultWidgetBaseInterface
+	TransitionStrategy
 } from './interfaces';
 import transitionStrategy from './animations/cssTransitions';
 import { isVNode, isWNode, WNODE, v, isDomVNode, w } from './d';
 import { Registry, isWidgetBaseConstructor } from './Registry';
-import { WidgetBase } from './WidgetBase';
-import NodeHandler from './NodeHandler';
-
-export interface WidgetData {
-	onDetach: () => void;
-	onAttach: () => void;
-	dirty: boolean;
-	nodeHandler: NodeHandler;
-	invalidate?: Function;
-	rendering: boolean;
-	inputProperties: any;
-}
+import { WidgetBase, widgetInstanceMap } from './WidgetBase';
 
 export interface BaseNodeWrapper {
 	node: WNode | VNode;
@@ -147,11 +134,6 @@ interface UpdateDomApplication {
 }
 
 type ApplicationInstruction = CreateDomApplication | UpdateDomApplication | DeleteDomApplication | AttachApplication;
-
-export const widgetInstanceMap = new WeakMap<
-	WidgetBase<WidgetProperties, DNode<DefaultWidgetBaseInterface>>,
-	WidgetData
->();
 
 const EMPTY_ARRAY: DNodeWrapper[] = [];
 const nodeOperations = ['focus', 'blur', 'scrollIntoView', 'click'];

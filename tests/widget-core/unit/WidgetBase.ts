@@ -2,7 +2,7 @@ const { describe, it, beforeEach, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { spy, stub, SinonStub } from 'sinon';
 
-import { WidgetBase, noBind } from '../../../src/widget-core/WidgetBase';
+import { WidgetBase, noBind, widgetInstanceMap } from '../../../src/widget-core/WidgetBase';
 import { v, w, WNODE } from '../../../src/widget-core/d';
 import { WIDGET_BASE_TYPE } from '../../../src/widget-core/Registry';
 import { Constructor, VNode, WidgetMetaConstructor, WidgetMetaBase, WNode } from '../../../src/widget-core/interfaces';
@@ -10,7 +10,6 @@ import { handleDecorator } from '../../../src/widget-core/decorators/handleDecor
 import { diffProperty } from '../../../src/widget-core/decorators/diffProperty';
 import { Base } from '../../../src/widget-core/meta/Base';
 import { NodeEventType } from '../../../src/widget-core/NodeHandler';
-import { widgetInstanceMap } from '../../../src/widget-core/vdom';
 import { afterRender } from '../../../src/widget-core/decorators/afterRender';
 import { registry } from '../../../src/widget-core/decorators/registry';
 
