@@ -1,4 +1,6 @@
 import global from '../shim/global';
+import { warn } from '../core/debug';
+import has from '../has/has';
 import { WeakMap } from '../shim/WeakMap';
 import {
 	WNode,
@@ -224,6 +226,42 @@ function buildPreviousProperties(domNode: any, current: VNodeWrapper, next: VNod
 		{} as any
 	);
 	return newProperties;
+}
+
+function checkDistinguishable(wrappers: DNodeWrapper[], index: number, parentWNodeWrapper?: WNodeWrapper) {
+	const wrapperToCheck = wrappers[index];
+	if (isVNodeWrapper(wrapperToCheck) && !wrapperToCheck.node.tag) {
+		return;
+	}
+	const { key } = wrapperToCheck.node.properties;
+	let parentName = 'unknown';
+	if (parentWNodeWrapper) {
+		const {
+			node: { widgetConstructor }
+		} = parentWNodeWrapper;
+		parentName = (widgetConstructor as any).name || 'unknown';
+	}
+
+	if (key === undefined || key === null) {
+		for (let i = 0; i < wrappers.length; i++) {
+			if (i !== index) {
+				const wrapper = wrappers[i];
+				if (same(wrapper, wrapperToCheck)) {
+					let nodeIdentifier: string;
+					if (isWNodeWrapper(wrapper)) {
+						nodeIdentifier = (wrapper.node.widgetConstructor as any).name || 'unknown';
+					} else {
+						nodeIdentifier = wrapper.node.tag;
+					}
+
+					warn(
+						`A widget (${parentName}) has had a child added or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${nodeIdentifier}) multiple times as siblings`
+					);
+					break;
+				}
+			}
+		}
+	}
 }
 
 function same(dnode1: DNodeWrapper, dnode2: DNodeWrapper): boolean {
@@ -874,6 +912,13 @@ export function renderer(renderer: () => WNode): Renderer {
 		}
 	}
 
+	function registerDistinguishableCallback(childNodes: DNodeWrapper[], index: number) {
+		_afterRenderCallbacks.push(() => {
+			const parentWNodeWrapper = findParentWNodeWrapper(childNodes[index]);
+			checkDistinguishable(childNodes, index, parentWNodeWrapper);
+		});
+	}
+
 	function _process(current: DNodeWrapper[], next: DNodeWrapper[], meta: ProcessMeta = {}): void {
 		let { mergeNodes = [], oldIndex = 0, newIndex = 0 } = meta;
 		const currentLength = current.length;
@@ -895,12 +940,16 @@ export function renderer(renderer: () => WNode): Renderer {
 				}
 				instructions.push({ current: currentWrapper, next: nextWrapper });
 			} else if (!currentWrapper || findIndexOfChild(current, nextWrapper, oldIndex + 1) === -1) {
-				newIndex++;
+				has('dojo-debug') && current.length && registerDistinguishableCallback(next, newIndex);
 				instructions.push({ current: undefined, next: nextWrapper });
+				newIndex++;
 			} else if (findIndexOfChild(next, currentWrapper, newIndex + 1) === -1) {
+				has('dojo-debug') && registerDistinguishableCallback(current, oldIndex);
 				instructions.push({ current: currentWrapper, next: undefined });
 				oldIndex++;
 			} else {
+				has('dojo-debug') && registerDistinguishableCallback(next, newIndex);
+				has('dojo-debug') && registerDistinguishableCallback(current, oldIndex);
 				instructions.push({ current: currentWrapper, next: undefined });
 				instructions.push({ current: undefined, next: nextWrapper });
 				oldIndex++;
@@ -914,6 +963,7 @@ export function renderer(renderer: () => WNode): Renderer {
 
 		if (currentLength > oldIndex && newIndex >= nextLength) {
 			for (let i = oldIndex; i < currentLength; i++) {
+				has('dojo-debug') && registerDistinguishableCallback(current, i);
 				instructions.push({ current: current[i], next: undefined });
 			}
 		}

@@ -1,5 +1,7 @@
+import { warn, registerWidget } from '../core/debug';
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
+import has from '../has/has';
 import { v, VNODE, isVNode, isWNode } from './d';
 import { auto } from './diff';
 import {
@@ -290,6 +292,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 					node.widgetConstructor = id;
 				}
 
+				if (has('dojo-debug')) {
+					registerWidget(node.widgetConstructor);
+				}
+
 				node.widgetConstructor =
 					this.registry.get<WidgetBase>(node.widgetConstructor) || node.widgetConstructor;
 			}
@@ -457,7 +463,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			return beforeRenders.reduce((render: Render, beforeRenderFunction: BeforeRender) => {
 				const updatedRender = beforeRenderFunction.call(this, render, this._properties, this._children);
 				if (!updatedRender) {
-					console.warn('Render function not returned from beforeRender, using previous render');
+					warn('Render function not returned from beforeRender, using previous render');
 					return render;
 				}
 				return updatedRender;

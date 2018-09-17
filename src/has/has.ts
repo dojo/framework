@@ -247,6 +247,9 @@ export default function has(feature: string): FeatureTestResult {
 /* Used as a value to provide a debug only code path */
 add('debug', true);
 
+/* flag for dojo debug, default to false */
+add('dojo-debug', false);
+
 /* Detects if the environment is "browser like" */
 add('host-browser', typeof document !== 'undefined' && typeof location !== 'undefined');
 
