@@ -6,7 +6,6 @@ import {
 	VNode,
 	DNode,
 	VNodeProperties,
-	SupportedClassName,
 	WidgetBaseConstructor,
 	TransitionStrategy
 } from './interfaces';
@@ -289,13 +288,9 @@ function findIndexOfChild(children: DNodeWrapper[], sameAs: DNodeWrapper, start:
 	return -1;
 }
 
-function applyClasses(domNode: any, classes: SupportedClassName, op: string) {
-	if (classes) {
-		const classNames = classes.split(' ');
-		for (let i = 0; i < classNames.length; i++) {
-			domNode.classList[op](classNames[i]);
-		}
-	}
+function createClassPropValue(classes: string | string[] = []) {
+	classes = Array.isArray(classes) ? classes : [classes];
+	return classes.join(' ').trim();
 }
 
 function updateAttribute(domNode: Element, attrName: string, attrValue: string | undefined, namespace?: string) {
@@ -548,12 +543,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		const propNames = Object.keys(nextWrapper.node.properties);
 		const propCount = propNames.length;
 		if (propNames.indexOf('classes') === -1 && currentProperties.classes) {
-			const classes = Array.isArray(currentProperties.classes)
-				? currentProperties.classes
-				: [currentProperties.classes];
-			for (let i = 0; i < classes.length; i++) {
-				applyClasses(domNode, classes[i], 'remove');
-			}
+			domNode.removeAttribute('class');
 		}
 
 		includesEventsAndAttributes && removeOrphanedEvents(domNode, currentProperties, nextWrapper.node.properties);
@@ -563,42 +553,21 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			let propValue = nextWrapper.node.properties[propName];
 			const previousValue = currentProperties[propName];
 			if (propName === 'classes') {
-				const previousClasses = Array.isArray(previousValue)
-					? previousValue
-					: previousValue
-						? [previousValue]
-						: [];
-				const currentClasses = Array.isArray(propValue) ? propValue : [propValue];
-				const prevClassesLength = previousClasses.length;
-				if (previousClasses && prevClassesLength > 0) {
-					if (!propValue || propValue.length === 0) {
-						for (let i = 0; i < prevClassesLength; i++) {
-							applyClasses(domNode, previousClasses[i], 'remove');
-						}
-					} else {
-						const newClasses: (null | undefined | string)[] = [...currentClasses];
-						for (let i = 0; i < prevClassesLength; i++) {
-							const previousClassName = previousClasses[i];
-							if (previousClassName) {
-								const classIndex = newClasses.indexOf(previousClassName);
-								if (classIndex === -1) {
-									applyClasses(domNode, previousClassName, 'remove');
-									continue;
+				const previousClassString = createClassPropValue(previousValue);
+				let currentClassString = createClassPropValue(propValue);
+				if (previousClassString !== currentClassString) {
+					if (currentClassString) {
+						if (nextWrapper.merged) {
+							const domClasses = (domNode.getAttribute('class') || '').split(' ');
+							for (let i = 0; i < domClasses.length; i++) {
+								if (currentClassString.indexOf(domClasses[i]) === -1) {
+									currentClassString = `${domClasses[i]} ${currentClassString}`;
 								}
-								newClasses.splice(classIndex, 1);
 							}
 						}
-						for (let i = 0; i < newClasses.length; i++) {
-							applyClasses(domNode, newClasses[i], 'add');
-						}
-					}
-				} else {
-					if (nextWrapper.merged) {
-						for (let i = 0; i < currentClasses.length; i++) {
-							applyClasses(domNode, currentClasses[i], 'add');
-						}
+						domNode.setAttribute('class', currentClassString);
 					} else {
-						domNode.className = currentClasses.join(' ').trim();
+						domNode.removeAttribute('class');
 					}
 				}
 			} else if (nodeOperations.indexOf(propName) !== -1) {

@@ -2655,13 +2655,13 @@ jsdomDescribe('vdom', () => {
 				const [Widget, meta] = getWidget(v('div', { classes: ['a'] }));
 				const r = renderer(() => w(Widget, {}));
 				r.mount({ domNode: root, sync: true });
-				assert.strictEqual(div.className, 'c b a');
+				assert.strictEqual(div.className, 'b c a');
 				meta.setRenderResult(v('div', { classes: ['a', 'b'] }));
-				assert.strictEqual(div.className, 'c b a');
+				assert.strictEqual(div.className, 'a b');
 				meta.setRenderResult(v('div', { classes: ['b'] }));
-				assert.strictEqual(div.className, 'c b');
+				assert.strictEqual(div.className, 'b');
 				meta.setRenderResult(v('div'));
-				assert.strictEqual(div.className, 'c');
+				assert.strictEqual(div.className, '');
 			});
 
 			it('supports null, undefined and zero length strings in classes', () => {
@@ -4095,43 +4095,59 @@ jsdomDescribe('vdom', () => {
 
 			assert.strictEqual(root.innerHTML, 'changed <i>value</i>');
 		});
+	});
 
-		describe('svg', () => {
-			it('creates and updates svg dom nodes with the right namespace', () => {
-				const [Widget, meta] = getWidget(
-					v('div', [
-						v('svg', [
-							v('circle', { cx: '2cm', cy: '2cm', r: '1cm', fill: 'red' }),
-							v('image', { href: '/image.jpeg' })
-						]),
-						v('span')
-					])
-				);
-				const r = renderer(() => w(Widget, {}));
-				const div = document.createElement('div');
-				r.mount({ domNode: div, sync: true });
-				const svg = (div.childNodes[0] as Element).childNodes[0];
-				assert.strictEqual(svg.namespaceURI, 'http://www.w3.org/2000/svg');
-				const circle = svg.childNodes[0];
-				assert.strictEqual(circle.namespaceURI, 'http://www.w3.org/2000/svg');
-				const image = svg.childNodes[1];
-				assert.strictEqual(image.attributes[0].namespaceURI, 'http://www.w3.org/1999/xlink');
-				const span = (div.childNodes[0] as Element).childNodes[1];
-				assert.strictEqual(span.namespaceURI, 'http://www.w3.org/1999/xhtml');
+	describe('svg', () => {
+		it('creates and updates svg dom nodes with the right namespace', () => {
+			const [Widget, meta] = getWidget(
+				v('div', [
+					v('svg', [
+						v('circle', { cx: '2cm', cy: '2cm', r: '1cm', fill: 'red' }),
+						v('image', { href: '/image.jpeg' })
+					]),
+					v('span')
+				])
+			);
+			const r = renderer(() => w(Widget, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			const svg = (div.childNodes[0] as Element).childNodes[0];
+			assert.strictEqual(svg.namespaceURI, 'http://www.w3.org/2000/svg');
+			const circle = svg.childNodes[0];
+			assert.strictEqual(circle.namespaceURI, 'http://www.w3.org/2000/svg');
+			const image = svg.childNodes[1];
+			assert.strictEqual(image.attributes[0].namespaceURI, 'http://www.w3.org/1999/xlink');
+			const span = (div.childNodes[0] as Element).childNodes[1];
+			assert.strictEqual(span.namespaceURI, 'http://www.w3.org/1999/xhtml');
 
-				meta.setRenderResult(
-					v('div', [
-						v('svg', [
-							v('circle', { key: 'blue', cx: '2cm', cy: '2cm', r: '1cm', fill: 'blue' }),
-							v('image', { href: '/image2.jpeg' })
-						]),
-						v('span')
-					])
-				);
+			meta.setRenderResult(
+				v('div', [
+					v('svg', [
+						v('circle', { key: 'blue', cx: '2cm', cy: '2cm', r: '1cm', fill: 'blue' }),
+						v('image', { href: '/image2.jpeg' })
+					]),
+					v('span')
+				])
+			);
 
-				const blueCircle = svg.childNodes[0];
-				assert.strictEqual(blueCircle.namespaceURI, 'http://www.w3.org/2000/svg');
-			});
+			const blueCircle = svg.childNodes[0];
+			assert.strictEqual(blueCircle.namespaceURI, 'http://www.w3.org/2000/svg');
+		});
+
+		it('should support adding and removing classes on svg dom', () => {
+			const [Widget, meta] = getWidget(v('svg', { classes: ['foo'] }));
+			const r = renderer(() => w(Widget, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			const svg = div.childNodes[0] as SVGElement;
+			assert.strictEqual(svg.namespaceURI, 'http://www.w3.org/2000/svg');
+			assert.strictEqual(svg.getAttribute('class'), 'foo');
+			meta.setRenderResult(v('svg', { classes: ['foo', 'bar'] }));
+			assert.strictEqual(svg.getAttribute('class'), 'foo bar');
+			meta.setRenderResult(v('svg', { classes: [] }));
+			assert.strictEqual(svg.getAttribute('class'), null);
+			meta.setRenderResult(v('svg', { classes: ['bar'] }));
+			assert.strictEqual(svg.getAttribute('class'), 'bar');
 		});
 	});
 
