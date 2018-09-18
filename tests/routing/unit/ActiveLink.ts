@@ -92,6 +92,25 @@ describe('ActiveLink', () => {
 		assert.deepEqual(dNode.properties.to, 'foo');
 	});
 
+	it('Should render the ActiveLink children', () => {
+		router.setPath('/foo');
+		const link = new ActiveLink();
+		link.registry.base = registry;
+		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
+		link.__setChildren__(['hello']);
+		const dNode = link.__render__() as WNode<Link>;
+		assert.strictEqual(dNode.widgetConstructor, Link);
+		assert.deepEqual(dNode.properties.classes, ['foo']);
+		assert.deepEqual(dNode.properties.to, 'foo');
+		assert.deepEqual(dNode.children[0] as any, {
+			children: undefined,
+			properties: {},
+			tag: '',
+			text: 'hello',
+			type: '__VNODE_TYPE'
+		});
+	});
+
 	it('Should mix the active class onto existing string class when the outlet is active', () => {
 		router.setPath('/foo');
 		const link = new ActiveLink();
