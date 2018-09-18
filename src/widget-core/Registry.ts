@@ -7,12 +7,11 @@ import {
 	InjectorItem,
 	RegistryLabel,
 	WidgetBaseConstructor,
-	WidgetBaseInterface
+	WidgetBaseInterface,
+	ESMDefaultWidgetBase,
+	WidgetBaseConstructorFunction,
+	ESMDefaultWidgetBaseFunction
 } from './interfaces';
-
-export type WidgetBaseConstructorFunction = () => Promise<WidgetBaseConstructor>;
-
-export type ESMDefaultWidgetBaseFunction = () => Promise<ESMDefaultWidgetBase<WidgetBaseInterface>>;
 
 export type RegistryItem =
 	| WidgetBaseConstructor
@@ -90,11 +89,6 @@ export interface RegistryInterface {
  */
 export function isWidgetBaseConstructor<T extends WidgetBaseInterface>(item: any): item is Constructor<T> {
 	return Boolean(item && item._type === WIDGET_BASE_TYPE);
-}
-
-export interface ESMDefaultWidgetBase<T> {
-	default: Constructor<T>;
-	__esModule?: boolean;
 }
 
 export function isWidgetConstructorDefaultExport<T>(item: any): item is ESMDefaultWidgetBase<T> {
