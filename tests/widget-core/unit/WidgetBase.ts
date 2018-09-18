@@ -284,8 +284,6 @@ describe('WidgetBase', () => {
 				assert.deepEqual(resolvedNode.properties, {});
 				assert.strictEqual(resolvedNode.type, WNODE);
 				assert.strictEqual(resolvedNode.widgetConstructor, WidgetBase);
-				// widget.invalidate();
-				// const initialNode = widget.__render__() as WNode;
 			});
 		});
 	});
