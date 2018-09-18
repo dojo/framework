@@ -171,7 +171,36 @@ describe('WidgetBase', () => {
 			assert.strictEqual((renderResult.children![0] as WNode).widgetConstructor, Bar);
 		});
 
-		it('Should support lazy widgets defined directly with w by adding them to the registry', () => {
+		it('Supports a lazy widget that returns an esm default module defined directly with w', () => {
+			let resolver: any;
+			const promise = new Promise<Constructor<WidgetBase>>((resolve) => {
+				resolver = resolve;
+			});
+			const lazyWidget = () => promise;
+			class MyWidget extends WidgetBase {
+				render() {
+					return w(lazyWidget, {});
+				}
+			}
+			const widget = new MyWidget();
+			const initialNode = widget.__render__() as WNode;
+			assert.strictEqual(initialNode.bind, widget);
+			assert.deepEqual(initialNode.children, []);
+			assert.deepEqual(initialNode.properties, {});
+			assert.strictEqual(initialNode.type, WNODE);
+			assert.isString(initialNode.widgetConstructor);
+			resolver({ default: WidgetBase, __esModule: true });
+			return promise.then(() => {
+				const resolvedNode = widget.__render__() as WNode;
+				assert.strictEqual(resolvedNode.bind, widget);
+				assert.deepEqual(resolvedNode.children, []);
+				assert.deepEqual(resolvedNode.properties, {});
+				assert.strictEqual(resolvedNode.type, WNODE);
+				assert.strictEqual(resolvedNode.widgetConstructor, WidgetBase);
+			});
+		});
+
+		it('Supports a lazy widget that returns a widget defined directly with w', () => {
 			let resolver: any;
 			const promise = new Promise<Constructor<WidgetBase>>((resolve) => {
 				resolver = resolve;
@@ -190,6 +219,64 @@ describe('WidgetBase', () => {
 			assert.strictEqual(initialNode.type, WNODE);
 			assert.isString(initialNode.widgetConstructor);
 			resolver(WidgetBase);
+			return promise.then(() => {
+				const resolvedNode = widget.__render__() as WNode;
+				assert.strictEqual(resolvedNode.bind, widget);
+				assert.deepEqual(resolvedNode.children, []);
+				assert.deepEqual(resolvedNode.properties, {});
+				assert.strictEqual(resolvedNode.type, WNODE);
+				assert.strictEqual(resolvedNode.widgetConstructor, WidgetBase);
+			});
+		});
+
+		it('Supports an explicit registry define that returns a widget with w', () => {
+			let resolver: any;
+			const promise = new Promise<Constructor<WidgetBase>>((resolve) => {
+				resolver = resolve;
+			});
+			const lazyWidget = () => promise;
+			class MyWidget extends WidgetBase {
+				render() {
+					return w({ label: 'foo', registryItem: lazyWidget }, {});
+				}
+			}
+			const widget = new MyWidget();
+			const initialNode = widget.__render__() as WNode;
+			assert.strictEqual(initialNode.bind, widget);
+			assert.deepEqual(initialNode.children, []);
+			assert.deepEqual(initialNode.properties, {});
+			assert.strictEqual(initialNode.type, WNODE);
+			assert.isString(initialNode.widgetConstructor);
+			resolver(WidgetBase);
+			return promise.then(() => {
+				const resolvedNode = widget.__render__() as WNode;
+				assert.strictEqual(resolvedNode.bind, widget);
+				assert.deepEqual(resolvedNode.children, []);
+				assert.deepEqual(resolvedNode.properties, {});
+				assert.strictEqual(resolvedNode.type, WNODE);
+				assert.strictEqual(resolvedNode.widgetConstructor, WidgetBase);
+			});
+		});
+
+		it('Supports an explicit registry define that returns esm default module with w', () => {
+			let resolver: any;
+			const promise = new Promise<Constructor<WidgetBase>>((resolve) => {
+				resolver = resolve;
+			});
+			const lazyWidget = () => promise;
+			class MyWidget extends WidgetBase {
+				render() {
+					return w({ label: 'foo', registryItem: lazyWidget }, {});
+				}
+			}
+			const widget = new MyWidget();
+			const initialNode = widget.__render__() as WNode;
+			assert.strictEqual(initialNode.bind, widget);
+			assert.deepEqual(initialNode.children, []);
+			assert.deepEqual(initialNode.properties, {});
+			assert.strictEqual(initialNode.type, WNODE);
+			assert.isString(initialNode.widgetConstructor);
+			resolver({ default: WidgetBase, __esModule: true });
 			return promise.then(() => {
 				const resolvedNode = widget.__render__() as WNode;
 				assert.strictEqual(resolvedNode.bind, widget);

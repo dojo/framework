@@ -353,7 +353,27 @@ export interface DomVNode extends VNode {
 	domNode: Text | Element;
 }
 
-export type LazyWidget<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = () => Promise<Constructor<W>>;
+export interface ESMDefaultWidgetBase<T> {
+	default: Constructor<T>;
+	__esModule?: boolean;
+}
+
+export type WidgetBaseConstructorFunction<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = () => Promise<
+	Constructor<W>
+>;
+
+export type ESMDefaultWidgetBaseFunction<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = () => Promise<
+	ESMDefaultWidgetBase<W>
+>;
+
+export type LazyWidget<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> =
+	| WidgetBaseConstructorFunction<W>
+	| ESMDefaultWidgetBaseFunction<W>;
+
+export type LazyDefine<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> = {
+	label: string;
+	registryItem: LazyWidget<W>;
+};
 
 /**
  * Wrapper for `w`
@@ -362,7 +382,12 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 	/**
 	 * Constructor to create a widget or string constructor label
 	 */
-	widgetConstructor: Constructor<W> | RegistryLabel | LazyWidget<W>;
+	widgetConstructor:
+		| Constructor<W>
+		| RegistryLabel
+		| WidgetBaseConstructorFunction<W>
+		| ESMDefaultWidgetBaseFunction<W>
+		| LazyDefine<W>;
 
 	/**
 	 * Properties to set against a widget instance

@@ -16,7 +16,8 @@ import {
 	WidgetBaseInterface,
 	WidgetProperties,
 	WNode,
-	VNode
+	VNode,
+	LazyDefine
 } from './interfaces';
 import RegistryHandler from './RegistryHandler';
 import NodeHandler from './NodeHandler';
@@ -59,6 +60,10 @@ function toTextVNode(data: any): VNode {
 		text: `${data}`,
 		type: VNODE
 	};
+}
+
+function isLazyDefine(item: any): item is LazyDefine {
+	return Boolean(item && item.label);
 }
 
 /**
@@ -299,9 +304,15 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 					if (!id) {
 						id = `__lazy_widget_${lazyWidgetId++}`;
 						lazyWidgetIdMap.set(node.widgetConstructor, id);
-						this.registry.define(id, node.widgetConstructor());
+						this.registry.define(id, node.widgetConstructor);
 					}
 					node.widgetConstructor = id;
+				} else if (isLazyDefine(node.widgetConstructor)) {
+					const { label, registryItem } = node.widgetConstructor;
+					if (!this.registry.has(label)) {
+						this.registry.define(label, registryItem);
+					}
+					node.widgetConstructor = label;
 				}
 
 				node.widgetConstructor =
