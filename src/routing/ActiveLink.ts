@@ -25,7 +25,7 @@ export class ActiveLink extends WidgetBase<ActiveLinkProperties> {
 			classes = [...classes, ...activeClasses];
 		}
 		props = { ...props, classes };
-		return w(Link, props);
+		return w(Link, props, this.children);
 	}
 
 	@diffProperty('to')
