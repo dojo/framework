@@ -177,7 +177,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 				}
 			}
 			if (queryParamString) {
-				queryParams = queryParamString.split('$').map((queryParam) => {
+				queryParams = queryParamString.split('&').map((queryParam) => {
 					return queryParam.replace('{', '').replace('}', '');
 				});
 			}
