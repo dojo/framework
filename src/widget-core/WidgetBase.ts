@@ -335,7 +335,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			instanceData.dirty = false;
 		}
 		const render = this._runBeforeRenders();
-		const dNode = this._filterAndConvert(this.runAfterRenders(render()));
+		const dNode = this._filterAndConvert(this._runAfterRenders(render()));
 		this._nodeHandler.clear();
 		return dNode;
 	}
@@ -496,7 +496,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 *
 	 * @param dNode The DNodes to run through the after renders
 	 */
-	protected runAfterRenders(dNode: DNode | DNode[]): DNode | DNode[] {
+	private _runAfterRenders(dNode: DNode | DNode[]): DNode | DNode[] {
 		const afterRenders = this.getDecorator('afterRender');
 
 		if (afterRenders.length > 0) {
