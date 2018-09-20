@@ -416,6 +416,34 @@ describe('Router', () => {
 		assert.strictEqual(link, 'foo/foo/bar/bar/baz/baz');
 	});
 
+	it('Should generate link with multiple params and query params', () => {
+		const router = new Router(
+			[
+				{
+					path: 'foo/{foo}/{bar}?{baz}&{qux}',
+					outlet: 'foo',
+					defaultParams: {
+						foo: 'defaultFoo',
+						bar: 'defaultBar',
+						baz: 'defaultBaz',
+						qux: 'defaultQux'
+					}
+				}
+			],
+			{ HistoryManager }
+		);
+		assert.strictEqual(
+			router.link('foo', {
+				foo: 'foo',
+				bar: 'bar',
+				baz: 'baz',
+				qux: 'qux'
+			}),
+			'foo/foo/bar?baz=baz&qux=qux'
+		);
+		assert.strictEqual(router.link('foo'), 'foo/defaultFoo/defaultBar?baz=defaultBaz&qux=defaultQux');
+	});
+
 	it('Will not generate a link if params are not available', () => {
 		const router = new Router(routeWithChildrenAndMultipleParams, { HistoryManager });
 		const link = router.link('baz');
