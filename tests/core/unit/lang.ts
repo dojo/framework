@@ -137,7 +137,7 @@ registerSuite('lang functions', {
 			};
 			b: number;
 			hidden: number;
-		} = <any>Object.create({
+		} = Object.create({
 			a: 1
 		});
 		source.c = 3;
@@ -192,7 +192,7 @@ registerSuite('lang functions', {
 			d: Date;
 			e: RegExp;
 			hidden: number;
-		} = <any>Object.create({
+		} = Object.create({
 			nested: {
 				a: 1,
 				b: [2, [3], { f: 4 }]
@@ -376,7 +376,7 @@ registerSuite('lang functions', {
 	'.lateBind() context'() {
 		const object: {
 			method?: (...args: string[]) => string;
-		} = <any>{};
+		} = {};
 		const method = lang.lateBind(object, 'method');
 		object.method = function(this: any): any {
 			return this;
@@ -388,7 +388,7 @@ registerSuite('lang functions', {
 	'.lateBind() arguments'() {
 		const object: {
 			method?: (...args: string[]) => string;
-		} = <any>{};
+		} = {};
 		const method = lang.lateBind(object, 'method', 'The', 'quick', 'brown');
 		const methodNoArgs = lang.lateBind(object, 'method');
 		const suffix = 'fox jumped over the lazy dog';

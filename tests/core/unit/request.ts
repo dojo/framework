@@ -15,7 +15,7 @@ const mockData = '{ "foo": "bar" }';
 let handle: any;
 
 function mockProvider(url: string, options?: RequestOptions): UploadObservableTask<Response> {
-	const task: UploadObservableTask<Response> = <any>Task.resolve(
+	const task: UploadObservableTask<Response> = Task.resolve(
 		new class extends ResponseClass {
 			bodyUsed = false;
 			headers: Headers = new Headers();
@@ -44,7 +44,7 @@ function mockProvider(url: string, options?: RequestOptions): UploadObservableTa
 				return Task.resolve(mockData);
 			}
 		}()
-	);
+	) as any;
 
 	task.upload = new Observable<number>(() => {});
 

@@ -62,7 +62,7 @@ export class MatchRegistry<T> {
 			value: value
 		};
 
-		(<any>entries)[first ? 'unshift' : 'push'](entry);
+		(entries as any)[first ? 'unshift' : 'push'](entry);
 
 		return {
 			destroy: function(this: Handle) {

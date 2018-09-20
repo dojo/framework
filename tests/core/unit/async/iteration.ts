@@ -25,8 +25,8 @@ function createTriggerablePromise<T>(): ControlledPromise<T> {
 	let resolveFunc: any;
 	let rejectFunc: any;
 	const dfd: ControlledPromise<T> = <ControlledPromise<T>>new Promise<T>(function(resolve, reject) {
-		resolveFunc = <any>resolve;
-		rejectFunc = <any>reject;
+		resolveFunc = resolve;
+		rejectFunc = reject;
 	});
 	dfd.resolve = resolveFunc;
 	dfd.reject = rejectFunc;
@@ -575,7 +575,7 @@ registerSuite('async/iteration', {
 
 			(<ControlledPromise<boolean>>response[1]).resolve(false);
 
-			return <any>promise;
+			return promise;
 		};
 
 		return tests;
@@ -1033,7 +1033,7 @@ registerSuite('async/iteration', {
 			(<ControlledPromise<boolean>>response[0]).resolve(false);
 			(<ControlledPromise<boolean>>response[1]).resolve(true);
 
-			return <any>promise;
+			return promise;
 		};
 
 		return tests;

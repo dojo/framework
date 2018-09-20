@@ -263,13 +263,13 @@ export class NodeResponse extends Response {
 	}
 
 	arrayBuffer(): Task<ArrayBuffer> {
-		return <any>getDataTask(this).then((data) => {
+		return getDataTask(this).then((data) => {
 			if (data) {
 				return data.data;
 			}
 
 			return new Buffer([]);
-		});
+		}) as any;
 	}
 
 	blob(): Task<Blob> {
@@ -282,7 +282,7 @@ export class NodeResponse extends Response {
 	}
 
 	text(): Task<string> {
-		return <any>getDataTask(this).then((data) => {
+		return getDataTask(this).then((data) => {
 			return String(data ? data.data : '');
 		});
 	}

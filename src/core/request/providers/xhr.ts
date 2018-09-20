@@ -124,13 +124,13 @@ export class XhrResponse extends Response {
 	}
 
 	text(): Task<string> {
-		return <any>getDataTask(this).then((request: XMLHttpRequest) => {
+		return getDataTask(this).then((request: XMLHttpRequest) => {
 			return String(request.responseText);
 		});
 	}
 
 	xml(): Task<Document> {
-		return <any>this.text().then((text: string) => {
+		return this.text().then((text: string) => {
 			const parser = new DOMParser();
 			const contentType = this.headers.get('content-type');
 			return parser.parseFromString(text, contentType ? contentType.split(';')[0] : 'text/html');
@@ -140,23 +140,23 @@ export class XhrResponse extends Response {
 
 if (has('blob')) {
 	XhrResponse.prototype.blob = function(this: XhrResponse): Task<Blob> {
-		return <any>getDataTask(this).then((request: XMLHttpRequest) => request.response);
+		return getDataTask(this).then((request: XMLHttpRequest) => request.response);
 	};
 
 	XhrResponse.prototype.text = function(this: XhrResponse): Task<string> {
-		return <any>this.blob().then(getTextFromBlob);
+		return this.blob().then(getTextFromBlob);
 	};
 
 	if (has('arraybuffer')) {
 		XhrResponse.prototype.arrayBuffer = function(this: XhrResponse): Task<ArrayBuffer> {
-			return <any>this.blob().then(getArrayBufferFromBlob);
+			return this.blob().then(getArrayBufferFromBlob);
 		};
 	}
 }
 
 if (has('formdata')) {
 	XhrResponse.prototype.formData = function(this: XhrResponse): Task<FormData> {
-		return <any>this.text().then((text: string) => {
+		return this.text().then((text: string) => {
 			const data = new FormData();
 
 			text.trim()

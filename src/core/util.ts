@@ -109,7 +109,7 @@ export function guaranteeMinimumTimeout(callback: (...args: any[]) => void, dela
 			// it thinks we are using the Node version of setTimeout.
 			// Revisit this with the next TypeScript update.
 			// Set another timer for the mount of time that we came up short.
-			timerId = <any>setTimeout(timeoutHandler, delay - delta);
+			timerId = setTimeout(timeoutHandler, delay - delta) as any;
 		}
 	}
 	timerId = setTimeout(timeoutHandler, delay);

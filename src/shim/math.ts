@@ -10,7 +10,7 @@ export const MIN_FLOAT32 = 1.401298464324817e-45;
  * @param n The number to use in calculation
  * @return The result
  */
-export let acosh: (n: number) => number = (<any>Math).acosh;
+export let acosh: (n: number) => number = (Math as any).acosh;
 
 /**
  * Returns the hyperbolic arcsine of a number.
@@ -18,7 +18,7 @@ export let acosh: (n: number) => number = (<any>Math).acosh;
  * @param n The number to use in calculation
  * @return The result
  */
-export let asinh: (n: number) => number = (<any>Math).asinh;
+export let asinh: (n: number) => number = (Math as any).asinh;
 
 /**
  * Returns the hyperbolic arctangent of a number.
@@ -26,7 +26,7 @@ export let asinh: (n: number) => number = (<any>Math).asinh;
  * @param n The number to use in calculation
  * @return The result
  */
-export let atanh: (n: number) => number = (<any>Math).atanh;
+export let atanh: (n: number) => number = (Math as any).atanh;
 
 /**
  * Returns the cube root of a number.
@@ -34,7 +34,7 @@ export let atanh: (n: number) => number = (<any>Math).atanh;
  * @param n The number to use in calculation
  * @return The result
  */
-export let cbrt: (n: number) => number = (<any>Math).cbrt;
+export let cbrt: (n: number) => number = (Math as any).cbrt;
 
 /**
  * Returns the number of leading zero bits in the 32-bit
@@ -43,7 +43,7 @@ export let cbrt: (n: number) => number = (<any>Math).cbrt;
  * @param n The number to use in calculation
  * @return The result
  */
-export let clz32: (n: number) => number = (<any>Math).clz32;
+export let clz32: (n: number) => number = (Math as any).clz32;
 
 /**
  * Returns the hyperbolic cosine of a number.
@@ -51,7 +51,7 @@ export let clz32: (n: number) => number = (<any>Math).clz32;
  * @param n The number to use in calculation
  * @return The result
  */
-export let cosh: (n: number) => number = (<any>Math).cosh;
+export let cosh: (n: number) => number = (Math as any).cosh;
 
 /**
  * Returns e raised to the specified power minus one.
@@ -59,7 +59,7 @@ export let cosh: (n: number) => number = (<any>Math).cosh;
  * @param n The number to use in calculation
  * @return The result
  */
-export let expm1: (n: number) => number = (<any>Math).expm1;
+export let expm1: (n: number) => number = (Math as any).expm1;
 
 /**
  * Returns the nearest single-precision float representation of a number.
@@ -67,14 +67,14 @@ export let expm1: (n: number) => number = (<any>Math).expm1;
  * @param n The number to use in calculation
  * @return The result
  */
-export let fround: (n: number) => number = (<any>Math).fround;
+export let fround: (n: number) => number = (Math as any).fround;
 
 /**
  * Returns the square root of the sum of squares of its arguments.
  *
  * @return The result
  */
-export let hypot: (...args: number[]) => number = (<any>Math).hypot;
+export let hypot: (...args: number[]) => number = (Math as any).hypot;
 
 /**
  * Returns the result of the 32-bit multiplication of the two parameters.
@@ -83,7 +83,7 @@ export let hypot: (...args: number[]) => number = (<any>Math).hypot;
  * @param m The number to use in calculation
  * @return The result
  */
-export let imul: (n: number, m: number) => number = (<any>Math).imul;
+export let imul: (n: number, m: number) => number = (Math as any).imul;
 
 /**
  * Returns the base 2 logarithm of a number.
@@ -91,7 +91,7 @@ export let imul: (n: number, m: number) => number = (<any>Math).imul;
  * @param n The number to use in calculation
  * @return The result
  */
-export let log2: (n: number) => number = (<any>Math).log2;
+export let log2: (n: number) => number = (Math as any).log2;
 
 /**
  * Returns the base 10 logarithm of a number.
@@ -99,7 +99,7 @@ export let log2: (n: number) => number = (<any>Math).log2;
  * @param n The number to use in calculation
  * @return The result
  */
-export let log10: (n: number) => number = (<any>Math).log10;
+export let log10: (n: number) => number = (Math as any).log10;
 
 /**
  * Returns the natural logarithm of 1 + a number.
@@ -107,7 +107,7 @@ export let log10: (n: number) => number = (<any>Math).log10;
  * @param n The number to use in calculation
  * @return The result
  */
-export let log1p: (n: number) => number = (<any>Math).log1p;
+export let log1p: (n: number) => number = (Math as any).log1p;
 
 /**
  * Returns the sign of a number, indicating whether the number is positive.
@@ -115,7 +115,7 @@ export let log1p: (n: number) => number = (<any>Math).log1p;
  * @param n The number to use in calculation
  * @return 1 if the number is positive, -1 if the number is negative, or 0 if the number is 0
  */
-export let sign: (n: number) => number = (<any>Math).sign;
+export let sign: (n: number) => number = (Math as any).sign;
 
 /**
  * Returns the hyperbolic sine of a number.
@@ -123,7 +123,7 @@ export let sign: (n: number) => number = (<any>Math).sign;
  * @param n The number to use in calculation
  * @return The result
  */
-export let sinh: (n: number) => number = (<any>Math).sinh;
+export let sinh: (n: number) => number = (Math as any).sinh;
 
 /**
  * Returns the hyperbolic tangent of a number.
@@ -131,7 +131,7 @@ export let sinh: (n: number) => number = (<any>Math).sinh;
  * @param n The number to use in calculation
  * @return The result
  */
-export let tanh: (n: number) => number = (<any>Math).tanh;
+export let tanh: (n: number) => number = (Math as any).tanh;
 
 /**
  * Returns the integral part of a number by removing any fractional digits.
@@ -139,7 +139,7 @@ export let tanh: (n: number) => number = (<any>Math).tanh;
  * @param n The number to use in calculation
  * @return The result
  */
-export let trunc: (n: number) => number = (<any>Math).trunc;
+export let trunc: (n: number) => number = (Math as any).trunc;
 
 if (!has('es6-math')) {
 	acosh = function acosh(n: number): number {

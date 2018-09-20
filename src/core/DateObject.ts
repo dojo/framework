@@ -82,7 +82,7 @@ export class DateObject implements DateProperties {
 		} else if (value instanceof Date) {
 			_date = new Date(+value);
 		} else if (typeof value === 'number' || typeof value === 'string') {
-			_date = new Date(<any>value);
+			_date = new Date(value as any);
 		} else {
 			_date = new Date(
 				value.year,
@@ -274,7 +274,9 @@ export class DateObject implements DateProperties {
 					}
 
 					const dateMethod = operationHash[property];
-					(<any>result._date)[`set${dateMethod}`]((<any>this._date)[`get${dateMethod}`]() + value[property]);
+					(result._date as any)[`set${dateMethod}`](
+						(this._date as any)[`get${dateMethod}`]() + value[property]
+					);
 
 					if ((property === 'years' || property === 'months') && result.dayOfMonth < this.dayOfMonth) {
 						// Set the day of the month to 0 to move the date to the first day of the previous

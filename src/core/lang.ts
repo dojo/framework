@@ -23,7 +23,7 @@ function shouldDeepCopyObject(value: any): value is Object {
 function copyArray<T>(array: T[], inherited: boolean): T[] {
 	return array.map(function(item: T): T {
 		if (Array.isArray(item)) {
-			return <any>copyArray(<any>item, inherited);
+			return copyArray(item, inherited) as any;
 		}
 
 		return !shouldDeepCopyObject(item)
@@ -284,11 +284,11 @@ export function lateBind(instance: {}, method: string, ...suppliedArgs: any[]): 
 				const args: any[] = arguments.length ? suppliedArgs.concat(slice.call(arguments)) : suppliedArgs;
 
 				// TS7017
-				return (<any>instance)[method].apply(instance, args);
+				return (instance as any)[method].apply(instance, args);
 		  }
 		: function() {
 				// TS7017
-				return (<any>instance)[method].apply(instance, arguments);
+				return (instance as any)[method].apply(instance, arguments);
 		  };
 }
 

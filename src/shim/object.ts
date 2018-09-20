@@ -154,7 +154,7 @@ if (has('es6-object')) {
 		prop: string | symbol
 	): PropertyDescriptor | undefined {
 		if (isSymbol(prop)) {
-			return (<any>Object).getOwnPropertyDescriptor(o, prop);
+			return (Object as any).getOwnPropertyDescriptor(o, prop);
 		} else {
 			return Object.getOwnPropertyDescriptor(o, prop);
 		}

@@ -29,7 +29,7 @@ registerSuite('i18n', {
 	},
 
 	afterEach() {
-		const loadCldrData = <any>cldrLoad.default;
+		const loadCldrData = cldrLoad.default as any;
 		if (typeof loadCldrData.restore === 'function') {
 			loadCldrData.restore();
 		}
