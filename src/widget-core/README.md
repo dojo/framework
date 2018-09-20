@@ -1455,6 +1455,19 @@ const vnode = dom({
 });
 ```
 
+To execute a function after the node has been appended to the DOM, there is an `onAttach` property that will be executed immediately after the append has occurred.
+
+```ts
+const node = document.createElement('div');
+
+const vnode = dom({
+	node,
+	onAttach: () => {
+		// do things after the node has been attached
+	}
+});
+```
+
 ### JSX Support
 
 In addition to creating widgets functionally using the `v()` and `w()` functions from `@dojo/framework/widget-core/d`, Dojo optionally supports the use of the `jsx` syntax known as [`tsx`](https://www.typescriptlang.org/docs/handbook/jsx.html) in TypeScript.
