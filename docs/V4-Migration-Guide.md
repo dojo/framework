@@ -29,8 +29,31 @@ If you are upgrading from a version before 3.0.0, please see the [previous migra
 
 As part of the new virtual dom implementation, we've removed the `ProjectorMixin`. The `ProjectorMixin` has been one of the more confusing aspects within dojo, especially due to the need to create an instance. The previous use of ProjectorMixin was fundamentally different to how widgets were used everywhere else in the framework. The new approach using the vdom `renderer` with the `w()` pragma is now more straightforward and consistent.
 
-```ts
+**v3.0.0**
 
+```ts
+import ProjectorMixin from '@dojo/framework/widget-core/mixins/Projector';
+
+import MyApp from './MyApp';
+
+const Projector = ProjectorMixin(MyApp);
+const projector = new Projector();
+
+projector.setProperties({ foo: 'foo' })
+
+projector.append();
+```
+
+**v4.0.0**
+
+```ts
+import renderer from '@dojo/framework/widget-core/vdom';
+import { w } from '@dojo/framework/widget-core/d';
+
+import MyApp from './MyApp';
+
+const r = renderer(() => w(MyApp, { foo: 'foo' }));
+r.mount();
 ```
 
 #### [Core modules consolidation](https://github.com/dojo/framework/pull/53)
@@ -45,7 +68,7 @@ The local copying of modules means that you won't need to make any significant e
 
 `Outlet` has been changed from a higher order component to a standard widget that accepts a render property to define what output when the outlet has matched.
 
-Previously:
+**v3.0.0**
 
 ```ts
 // outlet module
@@ -72,7 +95,7 @@ class MyWidget extends WidgetBase {
 }
 ```
 
-Now:
+**v4.0.0**
 
 ```ts
 class MyWidget extends WidgetBase {
