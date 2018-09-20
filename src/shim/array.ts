@@ -194,7 +194,7 @@ if (has('es6-array') && has('es6-array-fill')) {
 
 		/* tslint:disable-next-line:variable-name */
 		const Constructor = this;
-		const length: number = toLength((<any>arrayLike).length);
+		const length: number = toLength((arrayLike as any).length);
 
 		// Support extension
 		const array: any[] =
@@ -222,7 +222,7 @@ if (has('es6-array') && has('es6-array-fill')) {
 			}
 		}
 
-		if ((<any>arrayLike).length !== undefined) {
+		if ((arrayLike as any).length !== undefined) {
 			array.length = length;
 		}
 

@@ -96,7 +96,7 @@ function generalReduce<T, U>(
 					throw new Error('reduce array with no initial value');
 				}
 				if (results) {
-					value = <any>results[i];
+					value = (results as any)[i];
 				}
 			}
 			next(value);

@@ -358,7 +358,7 @@ function addPromiseTests(suite: any, Promise: any) {
 		'foreign thenables': function(this: any) {
 			let dfd = this.async();
 			let normal = Promise.resolve(1);
-			let foreign = <any>{
+			let foreign = {
 				then: function(f: Function) {
 					f(2);
 				}
@@ -374,7 +374,7 @@ function addPromiseTests(suite: any, Promise: any) {
 		'non-callable thenables': function(this: any) {
 			let dfd = this.async();
 			let normal = Promise.resolve(1);
-			let foreign = <any>{ then: 'foo' };
+			let foreign = { then: 'foo' };
 
 			Promise.all([normal, foreign]).then(
 				dfd.callback(function(value: number[]) {
@@ -525,7 +525,7 @@ function addPromiseTests(suite: any, Promise: any) {
 		'foreign thenables': function(this: any) {
 			let dfd = this.async();
 			let normal = Promise.resolve(1);
-			let foreign = <any>{
+			let foreign = {
 				then: function(f: Function) {
 					f(2);
 				}
@@ -562,7 +562,7 @@ function addPromiseTests(suite: any, Promise: any) {
 		'rejected thenable'(this: any) {
 			let dfd = this.async();
 			let resolved = false;
-			let thenable = <any>{
+			let thenable = {
 				then: function(f: Function, r: Function) {
 					r(new Error('foo'));
 				}
@@ -606,7 +606,7 @@ function addPromiseTests(suite: any, Promise: any) {
 		thenable(this: any) {
 			let dfd = this.async();
 			let resolved = false;
-			let thenable = <any>{
+			let thenable = {
 				then: function(f: Function) {
 					f(2);
 				}

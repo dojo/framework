@@ -21,7 +21,7 @@ abstract class Response implements ResponseInterface {
 	abstract readonly data: Observable<any>;
 
 	json<T>(): Task<T> {
-		return <any>this.text().then(JSON.parse);
+		return this.text().then(JSON.parse);
 	}
 
 	abstract arrayBuffer(): Task<ArrayBuffer>;

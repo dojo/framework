@@ -50,7 +50,7 @@ export function emit(target: any, event: EventObject<any>): boolean {
 
 		for (let key in event) {
 			if (!(key in nativeEvent)) {
-				nativeEvent[key] = (<any>event)[key];
+				nativeEvent[key] = (event as any)[key];
 			}
 		}
 

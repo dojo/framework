@@ -23,7 +23,7 @@ add(
 	() => {
 		if ('fill' in global.Array.prototype) {
 			/* Some versions of Safari do not properly implement this */
-			return (<any>[1]).fill(9, Number.POSITIVE_INFINITY)[0] === 1;
+			return ([1] as any).fill(9, Number.POSITIVE_INFINITY)[0] === 1;
 		}
 		return false;
 	},
@@ -93,7 +93,7 @@ add(
 	() => {
 		if ('imul' in global.Math) {
 			/* Some versions of Safari on ios do not properly implement this */
-			return (<any>Math).imul(0xffffffff, 5) === -5;
+			return (Math as any).imul(0xffffffff, 5) === -5;
 		}
 		return false;
 	},

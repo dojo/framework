@@ -277,7 +277,7 @@ export class Task<T> extends ExtensiblePromise<T> {
 
 		if (this._finally) {
 			if (isThenable(finallyTask)) {
-				finallyTask = (<Thenable<any>>finallyTask).then(runFinally, runFinally);
+				finallyTask = finallyTask.then(runFinally, runFinally);
 			} else {
 				finallyTask = runFinally();
 			}
@@ -350,7 +350,7 @@ export class Task<T> extends ExtensiblePromise<T> {
 				if (onFulfilled) {
 					return onFulfilled(value);
 				}
-				return <any>value;
+				return value as any;
 			},
 			function(error) {
 				if (task._state === State.Canceled) {
