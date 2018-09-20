@@ -20,7 +20,7 @@ function shouldDeepCopyObject(value: any): value is Object {
 function copyArray<T>(array: T[], inherited: boolean): T[] {
 	return array.map(function(item: T): T {
 		if (Array.isArray(item)) {
-			return <any>copyArray(<any>item, inherited);
+			return copyArray(item, inherited) as any;
 		}
 
 		return !shouldDeepCopyObject(item)

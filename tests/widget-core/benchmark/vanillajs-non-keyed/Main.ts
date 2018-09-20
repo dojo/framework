@@ -399,7 +399,7 @@ class Main {
 		}
 	}
 	createRow(data: any) {
-		let tr = <any>document.createElement('tr');
+		let tr = document.createElement('tr') as any;
 		tr.data_id = data.id;
 		let td1 = td('col-md-1');
 		td1.innerText = data.id;

@@ -65,7 +65,7 @@ export function addPromiseTests(suite: { [key: string]: Tests }, Promise: TypeUn
 		'foreign thenables': function() {
 			let dfd = this.async();
 			let normal = Promise.resolve(1);
-			let foreign = <any>{
+			let foreign = {
 				then: function(f: Function) {
 					f(2);
 				}
@@ -81,7 +81,7 @@ export function addPromiseTests(suite: { [key: string]: Tests }, Promise: TypeUn
 		'non-callable thenables': function() {
 			let dfd = this.async();
 			let normal = Promise.resolve(1);
-			let foreign = <any>{ then: 'foo' };
+			let foreign = { then: 'foo' };
 
 			Promise.all([normal, foreign]).then(
 				dfd.callback(function(value: number[]) {
@@ -202,7 +202,7 @@ export function addPromiseTests(suite: { [key: string]: Tests }, Promise: TypeUn
 		'foreign thenables': function() {
 			let dfd = this.async();
 			let normal = Promise.resolve(1);
-			let foreign = <any>{
+			let foreign = {
 				then: function(f: Function) {
 					f(2);
 				}
@@ -239,7 +239,7 @@ export function addPromiseTests(suite: { [key: string]: Tests }, Promise: TypeUn
 		'rejected thenable'() {
 			let dfd = this.async();
 			let resolved = false;
-			let thenable = <any>{
+			let thenable = {
 				then: function(f: Function, r: Function) {
 					r(new Error('foo'));
 				}
@@ -283,7 +283,7 @@ export function addPromiseTests(suite: { [key: string]: Tests }, Promise: TypeUn
 		thenable() {
 			let dfd = this.async();
 			let resolved = false;
-			let thenable = <any>{
+			let thenable = {
 				then: function(f: Function) {
 					f(2);
 				}

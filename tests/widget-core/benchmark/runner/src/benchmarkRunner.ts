@@ -315,12 +315,12 @@ function buildDriver() {
 	options = options.addArguments('--disable-extensions');
 	options = options.addArguments('--window-size=1200,800');
 	options = options.setLoggingPrefs(logPref);
-	options = options.setPerfLoggingPrefs(<any>{
+	options = options.setPerfLoggingPrefs({
 		enableNetwork: false,
 		enablePage: false,
 		// enableTimeline: false, // This throws an error
 		traceCategories: 'devtools.timeline, disabled-by-default-devtools.timeline,blink.user_timing'
-	});
+	} as any);
 	return new Builder()
 		.forBrowser('chrome')
 		.setChromeOptions(options)
@@ -492,7 +492,7 @@ export async function runBench(frameworkNames: string[], benchmarkNames: string[
 	console.log('Frameworks that will be benchmarked', runFrameworks);
 	console.log('Benchmarks that will be run', runBenchmarks.map((b) => b.id));
 
-	let data: [[FrameworkData, Benchmark]] = <any>[];
+	let data: [[FrameworkData, Benchmark]] = [] as any;
 	for (let i = 0; i < runFrameworks.length; i++) {
 		for (let j = 0; j < runBenchmarks.length; j++) {
 			data.push([runFrameworks[i], runBenchmarks[j]]);

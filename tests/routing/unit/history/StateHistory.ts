@@ -21,7 +21,7 @@ describe('StateHistory', () => {
 
 	afterEach(() => {
 		document.body.removeChild(sandbox);
-		sandbox = <any>null;
+		sandbox = null as any;
 		onChange.reset();
 	});
 
