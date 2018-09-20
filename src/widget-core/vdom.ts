@@ -809,8 +809,8 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 						insertBefore = findInsertBefore(next);
 					}
 					parentDomNode.insertBefore(domNode!, insertBefore);
-					if (isDomVNode(next.node) && next.node.onAppend) {
-						next.node.onAppend();
+					if (isDomVNode(next.node) && next.node.onAttach) {
+						next.node.onAttach();
 					}
 				}
 				runEnterAnimation(next, _mountOptions.transition);

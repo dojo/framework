@@ -221,7 +221,7 @@ export function v(
  * Create a VNode for an existing DOM Node.
  */
 export function dom(
-	{ node, attrs = {}, props = {}, on = {}, diffType = 'none', onAppend }: DomOptions,
+	{ node, attrs = {}, props = {}, on = {}, diffType = 'none', onAttach }: DomOptions,
 	children?: DNode[]
 ): DomVNode {
 	return {
@@ -234,6 +234,6 @@ export function dom(
 		domNode: node,
 		text: isElementNode(node) ? undefined : node.data,
 		diffType,
-		onAppend
+		onAttach
 	};
 }

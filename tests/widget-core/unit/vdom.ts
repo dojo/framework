@@ -3176,26 +3176,26 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root, divB);
 			assert.strictEqual(root.innerHTML, 'B');
 		});
-		it('Should run onAppend after the dom node has been appended to the dom', () => {
-			let onAppendCallCount = 0;
+		it('Should run onAttach after the dom node has been appended to the dom', () => {
+			let onAttachCallCount = 0;
 			const myDomNode = document.createElement('div');
 			const div = document.createElement('div');
 			let vnode = d({
 				node: myDomNode,
-				onAppend: () => {
-					onAppendCallCount++;
+				onAttach: () => {
+					onAttachCallCount++;
 				}
 			});
 			const [Widget, meta] = getWidget(vnode);
 			const r = renderer(() => w(Widget, {}));
 			r.mount({ domNode: div, sync: true });
-			assert.strictEqual(onAppendCallCount, 1);
+			assert.strictEqual(onAttachCallCount, 1);
 			meta.setRenderResult(vnode);
-			assert.strictEqual(onAppendCallCount, 1);
+			assert.strictEqual(onAttachCallCount, 1);
 			meta.setRenderResult(null);
-			assert.strictEqual(onAppendCallCount, 1);
+			assert.strictEqual(onAttachCallCount, 1);
 			meta.setRenderResult(vnode);
-			assert.strictEqual(onAppendCallCount, 2);
+			assert.strictEqual(onAttachCallCount, 2);
 		});
 	});
 
