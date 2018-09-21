@@ -129,7 +129,7 @@ function getKeys<T extends DateOptionsKeys>(
 	object: SkeletonOptions | DateOptions,
 	key: T
 ): Array<keyof DateOptionsTypes[T]> {
-	return <any>Object.keys(object);
+	return Object.keys(object) as any;
 }
 
 registerSuite('date', {

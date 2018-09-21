@@ -130,7 +130,7 @@ if (!has('es6-symbol')) {
 	/* Decorate the Symbol.prototype */
 	defineProperties(Symbol.prototype, {
 		toString: getValueDescriptor(function(this: Symbol) {
-			return 'Symbol (' + (<any>validateSymbol(this)).__description__ + ')';
+			return 'Symbol (' + (validateSymbol(this) as any).__description__ + ')';
 		}),
 		valueOf: getValueDescriptor(function(this: Symbol) {
 			return validateSymbol(this);
@@ -149,12 +149,12 @@ if (!has('es6-symbol')) {
 	defineProperty(
 		InternalSymbol.prototype,
 		Symbol.toPrimitive,
-		getValueDescriptor((<any>Symbol).prototype[Symbol.toPrimitive], false, false, true)
+		getValueDescriptor((Symbol as any).prototype[Symbol.toPrimitive], false, false, true)
 	);
 	defineProperty(
 		InternalSymbol.prototype,
 		Symbol.toStringTag,
-		getValueDescriptor((<any>Symbol).prototype[Symbol.toStringTag], false, false, true)
+		getValueDescriptor((Symbol as any).prototype[Symbol.toStringTag], false, false, true)
 	);
 }
 

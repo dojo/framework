@@ -78,5 +78,5 @@ export function globalizeDelegator<T, O, R>(
 	}
 
 	const globalize = getGlobalize(locale);
-	return (<any>globalize)[method].apply(globalize, methodArgs);
+	return (globalize as any)[method].apply(globalize, methodArgs);
 }

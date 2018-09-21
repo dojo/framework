@@ -161,7 +161,7 @@ registerSuite('shim/Observable', {
 				new Observable((observer) => {
 					observer.complete();
 
-					return <any>null;
+					return null as any;
 				}).subscribe({});
 			},
 			'subscriber cannot return a number/string/boolean'() {
@@ -169,7 +169,7 @@ registerSuite('shim/Observable', {
 					new Observable((observer) => {
 						observer.complete();
 
-						return <any>1;
+						return 1 as any;
 					}).subscribe({});
 				});
 
@@ -177,7 +177,7 @@ registerSuite('shim/Observable', {
 					new Observable((observer) => {
 						observer.complete();
 
-						return <any>'test';
+						return 'test' as any;
 					}).subscribe({});
 				});
 
@@ -185,7 +185,7 @@ registerSuite('shim/Observable', {
 					new Observable((observer) => {
 						observer.complete();
 
-						return <any>false;
+						return false as any;
 					}).subscribe({});
 				});
 			}

@@ -153,7 +153,7 @@ registerSuite('util functions', {
 			};
 			b: number;
 			hidden: number;
-		} = <any>Object.create({
+		} = Object.create({
 			a: 1
 		});
 		source.c = 3;
@@ -208,7 +208,7 @@ registerSuite('util functions', {
 			d: Date;
 			e: RegExp;
 			hidden: number;
-		} = <any>Object.create({
+		} = Object.create({
 			nested: {
 				a: 1,
 				b: [2, [3], { f: 4 }]
