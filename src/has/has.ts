@@ -215,7 +215,7 @@ export function add(
 /**
  * Return the current value of a named feature.
  *
- * @param feature The name (if a string) or identifier (if an integer) of the feature to test.
+ * @param feature The name of the feature to test.
  */
 export default function has(feature: string): FeatureTestResult {
 	let result: FeatureTestResult;
