@@ -99,6 +99,7 @@ export interface DomOptions {
 	attrs?: { [index: string]: string | undefined };
 	on?: On;
 	diffType?: DiffType;
+	onAttach?: () => void;
 }
 
 export interface VDomOptions {
@@ -351,6 +352,7 @@ export interface VNode {
 
 export interface DomVNode extends VNode {
 	domNode: Text | Element;
+	onAttach?: () => void;
 }
 
 export interface ESMDefaultWidgetBase<T> {

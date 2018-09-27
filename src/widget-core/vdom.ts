@@ -1,7 +1,15 @@
 import global from '../shim/global';
 import has from '../has/has';
 import { WeakMap } from '../shim/WeakMap';
-import { WNode, VNode, DNode, VNodeProperties, WidgetBaseConstructor, TransitionStrategy } from './interfaces';
+import {
+	WNode,
+	VNode,
+	DNode,
+	VNodeProperties,
+	WidgetBaseConstructor,
+	TransitionStrategy,
+	DomVNode
+} from './interfaces';
 import transitionStrategy from './animations/cssTransitions';
 import { isVNode, isWNode, WNODE, v, isDomVNode, w } from './d';
 import { Registry, isWidgetBaseConstructor } from './Registry';
@@ -27,7 +35,7 @@ export interface WNodeWrapper extends BaseNodeWrapper {
 }
 
 export interface VNodeWrapper extends BaseNodeWrapper {
-	node: VNode;
+	node: VNode | DomVNode;
 	merged?: boolean;
 	decoratedDeferredProperties?: VNodeProperties;
 	inserted?: boolean;
@@ -801,6 +809,9 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 						insertBefore = findInsertBefore(next);
 					}
 					parentDomNode.insertBefore(domNode!, insertBefore);
+					if (isDomVNode(next.node) && next.node.onAttach) {
+						next.node.onAttach();
+					}
 				}
 				runEnterAnimation(next, _mountOptions.transition);
 				const instanceData = widgetInstanceMap.get(next.node.bind as WidgetBase);

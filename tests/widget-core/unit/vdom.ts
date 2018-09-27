@@ -3176,6 +3176,27 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root, divB);
 			assert.strictEqual(root.innerHTML, 'B');
 		});
+		it('Should run onAttach after the dom node has been appended to the dom', () => {
+			let onAttachCallCount = 0;
+			const myDomNode = document.createElement('div');
+			const div = document.createElement('div');
+			let vnode = d({
+				node: myDomNode,
+				onAttach: () => {
+					onAttachCallCount++;
+				}
+			});
+			const [Widget, meta] = getWidget(vnode);
+			const r = renderer(() => w(Widget, {}));
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual(onAttachCallCount, 1);
+			meta.setRenderResult(vnode);
+			assert.strictEqual(onAttachCallCount, 1);
+			meta.setRenderResult(null);
+			assert.strictEqual(onAttachCallCount, 1);
+			meta.setRenderResult(vnode);
+			assert.strictEqual(onAttachCallCount, 2);
+		});
 	});
 
 	describe('deferred properties', () => {
