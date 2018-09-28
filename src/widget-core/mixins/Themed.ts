@@ -25,7 +25,6 @@ export interface Theme {
  * Properties required for the Themed mixin
  */
 export interface ThemedProperties<T = ClassNames> extends WidgetProperties {
-	injectedTheme?: any;
 	theme?: Theme;
 	extraClasses?: { [P in keyof T]?: string };
 }
