@@ -17,8 +17,14 @@ step. The `has` module is also capable of allowing conditional loading of module
 ### Feature Branching
 
 The most common use case is branching in code based upon a feature flag. `has()` essentially manages feature
-flags, returning either a _truthy_ value if the feature is present or a _falsey_ value if the feature isn't present.
-The `has()` module is the default export of the main module of the package:
+flags. It returns the current value of a named feature that has been added to `has()` via `add()`.
+
+-   If the value is a function, it will be evaluated (via `call(null)`) and the resulting value is returned.
+-   If the value is a thenable (an object with a `then` method, like a Promise), `false` is returned until
+    the thenable is resolved and a proper value can be returned.
+-   If the feature flag has not been added to `has()`, a `TypeError` is thrown.
+
+The `has()` module is the default export of the main module of the package.
 
 For example:
 
@@ -56,7 +62,7 @@ used to enable a developer to express other features. The flags though that are 
 
 The main module of the package exports a function named `add()` which allows the addition of features flags. The feature
 tests can be expressed as a static value, a function which will be lazily evaluated when the feature flag is first
-requested from `has()`, or a thenable (an object with a `then` method, like a Promise). Once evaluated, the value is cached.
+requested from `has()`, or a thenable. Once evaluated, the value is cached.
 
 An example of adding a feature:
 
