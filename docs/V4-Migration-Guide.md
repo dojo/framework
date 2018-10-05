@@ -25,7 +25,7 @@ If you are upgrading from a version before 3.0.0, please see the [previous migra
 
 ### Breaking Changes:
 
-#### [Goodbye `ProjectorMixin()`]()
+#### [Goodbye `ProjectorMixin()`](https://github.com/dojo/framework/pull/58)
 
 As part of the new virtual dom implementation, we've removed the `ProjectorMixin`. The `ProjectorMixin` has been one of the more confusing aspects within dojo, especially due to the need to create an instance. The previous use of ProjectorMixin was fundamentally different to how widgets were used everywhere else in the framework. The new approach using the vdom `renderer` with the `w()` pragma is now more straightforward and consistent.
 
@@ -128,7 +128,7 @@ router.on('outlet', (context, action) => {
 });
 ```
 
-### [A new way to build your test bundles](https://dojo.io/comingsoon.html)
+### [A new way to build your test bundles](https://github.com/dojo/cli-build-app/pull/166)
 
 To ensure that unit and functional test bundles get created correctly, we have split the single test mode into separate unit and functional modes. The existing test mode still exists but will only build the unit bundle as of 4.0.0. We recommend moving to the explicit build modes as test will get removed in the next major release.
 
@@ -143,7 +143,3 @@ dojo build app --mode unit
 ```shell
 dojo build app --mode functional
 ```
-
-
-
-
