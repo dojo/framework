@@ -116,7 +116,7 @@ We feel that using a standard widget with a render property provides the end use
 
 Along with the changes to `Outlet`, 4.0.0 removes the `onEnter` and `onExit` properties from the routing configuration.
 
-The motivation behind this changes is to make the route configuration more static and discourage the use of dynamic logic or introduction of side effects. In the long term, this will allow Dojo to statically analyze route configuration and perform automatic code-splitting based on the routes during an application build.
+The motivation behind this change is to make the route configuration more static and discourage the use of dynamic logic or introduction of side effects. In the long term, this will allow Dojo to statically analyze route configuration and perform automatic code-splitting based on the routes during an application build.
 
 Registering an action when an outlet is entered or exited is still possible by listening to an `outlet` event on the router instance.
 
