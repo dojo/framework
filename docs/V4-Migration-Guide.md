@@ -112,7 +112,7 @@ class MyWidget extends WidgetBase {
 
 We feel that using a standard widget with a render property provides the end user with more flexibility to meet all of an application's outlet routing needs!
 
-### [Static Routing Configuration](https://github.com/dojo/framework/pull/98)
+#### [Static Routing Configuration](https://github.com/dojo/framework/pull/98)
 
 Along with the changes to `Outlet`, 4.0.0 removes the `onEnter` and `onExit` properties from the routing configuration.
 
@@ -128,7 +128,7 @@ router.on('outlet', (context, action) => {
 });
 ```
 
-### [A new way to build your test bundles](https://github.com/dojo/cli-build-app/pull/166)
+#### [A new way to build your test bundles](https://github.com/dojo/cli-build-app/pull/166)
 
 To ensure that unit and functional test bundles get created correctly, we have split the single test mode into separate unit and functional modes. The existing test mode still exists but will only build the unit bundle as of 4.0.0. We recommend moving to the explicit build modes as test will get removed in the next major release.
 
