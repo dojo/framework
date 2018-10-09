@@ -1592,6 +1592,47 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(thirdTextNodeChild.data, '3');
 		});
 
+		it('Should insert lazy widgets in the correct position when returning nested widgets', () => {
+			let resolver: any;
+			const promise = new Promise<any>((resolve) => {
+				resolver = resolve;
+			});
+
+			class Item extends WidgetBase {
+				render() {
+					const { key } = this.properties;
+					return v('div', [`item-${key}`]);
+				}
+			}
+
+			class Menu extends WidgetBase {
+				render() {
+					const { key } = this.properties;
+					return w(Item, { key });
+				}
+			}
+
+			class App extends WidgetBase {
+				render() {
+					return v('div', [
+						w({ label: 'first', registryItem: () => promise }, { key: 'first' }),
+						v('div', [w({ label: 'second', registryItem: () => promise }, { key: 'second' })])
+					]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			resolver(Menu);
+			return promise.then(() => {
+				assert.strictEqual(
+					div.outerHTML,
+					'<div><div><div>item-first</div><div><div>item-second</div></div></div></div>'
+				);
+			});
+		});
+
 		it('should append nodes for an array returned from the top level via a widget', () => {
 			class Foo extends WidgetBase {
 				render() {
