@@ -1,13 +1,15 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
+const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import { w } from '../../../src/widget-core/d';
+import { w, v } from '../../../src/widget-core/d';
 import { WNode } from '../../../src/widget-core/interfaces';
-import { MemoryHistory as HistoryManager } from '../../../src/routing/history/MemoryHistory';
+import { MemoryHistory as HistoryManager, MemoryHistory } from '../../../src/routing/history/MemoryHistory';
 import { Outlet } from '../../../src/routing/Outlet';
 import { Registry } from '../../../src/widget-core/Registry';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
+import { renderer } from '../../../src/widget-core/vdom';
 
 class Widget extends WidgetBase {
 	render() {
@@ -204,5 +206,57 @@ describe('Outlet', () => {
 		assert.strictEqual(invalidateCount, 3);
 		routerTwo.setPath('/bar');
 		assert.strictEqual(invalidateCount, 4);
+	});
+
+	jsdomDescribe('integration tests', () => {
+		it('should render outlets correctly', () => {
+			const registry = new Registry();
+			const router = registerRouterInjector(
+				[
+					{
+						path: 'foo',
+						outlet: 'foo',
+						defaultRoute: true
+					},
+					{
+						path: 'bar',
+						outlet: 'bar'
+					},
+					{
+						path: 'baz',
+						outlet: 'baz'
+					}
+				],
+				registry,
+				{ HistoryManager: MemoryHistory }
+			);
+
+			class Item extends WidgetBase {
+				protected render() {
+					return `${this.properties.key}`;
+				}
+			}
+
+			class App extends WidgetBase {
+				protected render() {
+					return v('div', [
+						w(Outlet, { key: 'foo', id: 'foo', renderer: () => w(Item, { key: 'foo' }) }),
+						w(Outlet, { key: 'bar', id: 'bar', renderer: () => w(Item, { key: 'bar' }) }),
+						w(Outlet, { key: 'baz', id: 'baz', renderer: () => w(Item, { key: 'baz' }) })
+					]);
+				}
+			}
+
+			const root = document.createElement('div');
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root, sync: true, registry });
+			assert.strictEqual(root.outerHTML, '<div><div>foo</div></div>');
+			router.setPath('/bar');
+			assert.strictEqual(root.outerHTML, '<div><div>bar</div></div>');
+			router.setPath('/baz');
+			assert.strictEqual(root.outerHTML, '<div><div>baz</div></div>');
+			router.setPath('/foo');
+			assert.strictEqual(root.outerHTML, '<div><div>foo</div></div>');
+		});
 	});
 });
