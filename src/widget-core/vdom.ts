@@ -438,7 +438,9 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		const wrappedRendered: DNodeWrapper[] = [];
 		const hasParentWNode = isWNodeWrapper(parent);
 		const currentParentLength = isVNodeWrapper(currentParent) && (currentParent.childrenWrappers || []).length > 1;
-		const requiresInsertBefore = (parent.hasPreviousSiblings !== false && hasParentWNode) || currentParentLength;
+		const requiresInsertBefore =
+			((parent.requiresInsertBefore || parent.hasPreviousSiblings !== false) && hasParentWNode) ||
+			currentParentLength;
 		let previousItem: DNodeWrapper | undefined;
 		for (let i = 0; i < rendered.length; i++) {
 			const renderedItem = rendered[i];
