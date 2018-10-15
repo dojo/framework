@@ -64,7 +64,7 @@ interface ProcessItem {
 
 interface ProcessResult {
 	item?: ProcessItem;
-	widget?: AttachApplication;
+	widget?: AttachApplication | DetachApplication;
 	dom?: ApplicationInstruction;
 }
 
@@ -116,6 +116,11 @@ interface AttachApplication {
 	attached: boolean;
 }
 
+interface DetachApplication {
+	type: 'detach';
+	current: WNodeWrapper;
+}
+
 interface CreateDomApplication {
 	type: 'create';
 	current?: VNodeWrapper;
@@ -140,7 +145,12 @@ interface PreviousProperties {
 	events?: any;
 }
 
-type ApplicationInstruction = CreateDomApplication | UpdateDomApplication | DeleteDomApplication | AttachApplication;
+type ApplicationInstruction =
+	| CreateDomApplication
+	| UpdateDomApplication
+	| DeleteDomApplication
+	| AttachApplication
+	| DetachApplication;
 
 const EMPTY_ARRAY: DNodeWrapper[] = [];
 const nodeOperations = ['focus', 'blur', 'scrollIntoView', 'click'];
@@ -156,7 +166,7 @@ function isVNodeWrapper(child?: DNodeWrapper | null): child is VNodeWrapper {
 	return !!child && isVNode(child.node);
 }
 
-function isAttachApplication(value: any): value is AttachApplication {
+function isAttachApplication(value: any): value is AttachApplication | DetachApplication {
 	return !!value.type;
 }
 
@@ -359,7 +369,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		registry: null
 	};
 	let _invalidationQueue: InvalidationQueueItem[] = [];
-	let _processQueue: (ProcessItem | AttachApplication)[] = [];
+	let _processQueue: (ProcessItem | DetachApplication | AttachApplication)[] = [];
 	let _applicationQueue: ApplicationInstruction[] = [];
 	let _eventMap = new WeakMap<Function, EventListener>();
 	let _instanceToWrapperMap = new WeakMap<WidgetBase, WNodeWrapper>();
@@ -776,7 +786,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 	}
 
 	function _runProcessQueue() {
-		let item: AttachApplication | ProcessItem | undefined;
+		let item: DetachApplication | AttachApplication | ProcessItem | undefined;
 		while ((item = _processQueue.pop())) {
 			if (isAttachApplication(item)) {
 				_applicationQueue.push(item);
@@ -850,11 +860,19 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 					current.domNode!.parentNode!.removeChild(current.domNode!);
 					current.domNode = undefined;
 				}
-			} else {
+			} else if (item.type === 'attach') {
 				const { instance, attached } = item;
 				const instanceData = widgetInstanceMap.get(instance)!;
 				instanceData.nodeHandler.addRoot();
 				attached && instanceData.onAttach();
+			} else if (item.type === 'detach') {
+				if (item.current.instance) {
+					const instanceData = widgetInstanceMap.get(item.current.instance);
+					instanceData && instanceData.onDetach();
+				}
+				item.current.domNode = undefined;
+				item.current.node.bind = undefined;
+				item.current.instance = undefined;
 			}
 		}
 	}
@@ -1054,16 +1072,10 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		_wrapperSiblingMap.delete(current);
 		_parentWrapperMap.delete(current);
 		_instanceToWrapperMap.delete(current.instance!);
-		if (current.instance) {
-			const instanceData = widgetInstanceMap.get(current.instance!);
-			instanceData && instanceData.onDetach();
-		}
-		current.domNode = undefined;
-		current.node.bind = undefined;
-		current.instance = undefined;
 
 		return {
-			item: { current: current.childrenWrappers, meta: {} }
+			item: { current: current.childrenWrappers, meta: {} },
+			widget: { type: 'detach', current }
 		};
 	}
 
