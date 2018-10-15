@@ -1918,6 +1918,53 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(quxDetachCount, 8);
 		});
 
+		it('calls onDetach after the root node has been removed', () => {
+			let removeChildCount = 0;
+			let toggleShow: any;
+			const onDetachStub = stub();
+
+			class Bar extends WidgetBase {
+				render() {
+					return v('span');
+				}
+
+				onDetach() {
+					onDetachStub();
+				}
+			}
+
+			class Foo extends WidgetBase {
+				private _show = true;
+
+				constructor() {
+					super();
+					toggleShow = this.toggleShow;
+				}
+
+				toggleShow = () => {
+					this._show = !this._show;
+					this.invalidate();
+				};
+
+				render() {
+					return this._show ? w(Bar, {}) : null;
+				}
+			}
+
+			const r = renderer(() => w(Foo, {}));
+			const div = document.createElement('div');
+			const remove = div.removeChild.bind(div);
+			div.removeChild = (child: any) => {
+				removeChildCount++;
+				assert.isTrue(onDetachStub.notCalled);
+				return remove(child);
+			};
+			r.mount({ domNode: div, sync: true });
+			toggleShow();
+			assert.isTrue(onDetachStub.called);
+			assert.strictEqual(removeChildCount, 1);
+		});
+
 		it('should use the latest version of nodes when calling remove', () => {
 			let showFooNodes: any;
 			class Baz extends WidgetBase {
