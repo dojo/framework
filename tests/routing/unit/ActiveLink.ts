@@ -1,5 +1,6 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
+const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 
 import { Registry } from '../../../src/widget-core/Registry';
 
@@ -8,6 +9,10 @@ import { MemoryHistory } from '../../../src/routing/history/MemoryHistory';
 import { WNode } from '../../../src/widget-core/interfaces';
 import Link from '../../../src/routing/Link';
 import ActiveLink from '../../../src/routing/ActiveLink';
+import { registerRouterInjector } from '../../../src/routing/RouterInjector';
+import { w, v } from '../../../src/widget-core/d';
+import { renderer } from '../../../src/widget-core/vdom';
+import WidgetBase from '../../../src/widget-core/WidgetBase';
 
 const registry = new Registry();
 
@@ -243,5 +248,63 @@ describe('ActiveLink', () => {
 		const dNode2 = link2.__render__() as WNode<Link>;
 
 		assert.deepEqual(dNode2.properties.classes, []);
+	});
+
+	jsdomDescribe('integration tests', () => {
+		it('should render outlets correctly', () => {
+			const registry = new Registry();
+			const router = registerRouterInjector(
+				[
+					{
+						path: 'foo',
+						outlet: 'foo',
+						defaultRoute: true
+					},
+					{
+						path: 'bar',
+						outlet: 'bar'
+					},
+					{
+						path: 'baz',
+						outlet: 'baz'
+					}
+				],
+				registry,
+				{ HistoryManager: MemoryHistory }
+			);
+
+			class App extends WidgetBase {
+				protected render() {
+					return v('div', [
+						w(ActiveLink, { to: 'foo', activeClasses: ['foo'] }),
+						w(ActiveLink, { to: 'bar', activeClasses: ['bar'] }),
+						w(ActiveLink, { to: 'baz', activeClasses: ['baz'] })
+					]);
+				}
+			}
+
+			const root = document.createElement('div');
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root, sync: true, registry });
+			assert.strictEqual(
+				root.outerHTML,
+				'<div><div><a class="foo" href="foo"></a><a href="bar"></a><a href="baz"></a></div></div>'
+			);
+			router.setPath('/bar');
+			assert.strictEqual(
+				root.outerHTML,
+				'<div><div><a href="foo"></a><a class="bar" href="bar"></a><a href="baz"></a></div></div>'
+			);
+			router.setPath('/baz');
+			assert.strictEqual(
+				root.outerHTML,
+				'<div><div><a href="foo"></a><a href="bar"></a><a class="baz" href="baz"></a></div></div>'
+			);
+			router.setPath('/foo');
+			assert.strictEqual(
+				root.outerHTML,
+				'<div><div><a class="foo" href="foo"></a><a href="bar"></a><a href="baz"></a></div></div>'
+			);
+		});
 	});
 });
