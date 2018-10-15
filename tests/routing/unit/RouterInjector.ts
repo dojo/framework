@@ -15,7 +15,7 @@ suite('RouterInjector', () => {
 		assert.isNotNull(injector);
 		assert.strictEqual(injector(), router);
 		const invalidatorSpy = spy(invalidator, 'emit');
-		router.emit({ type: 'navstart' });
+		router.emit({ type: 'nav' });
 		assert.isTrue(invalidatorSpy.calledOnce);
 	});
 
@@ -30,7 +30,7 @@ suite('RouterInjector', () => {
 		assert.isNotNull(injector);
 		const registeredRouter = injector();
 		assert.strictEqual(router, registeredRouter);
-		router.emit({ type: 'navstart' });
+		router.emit({ type: 'nav' });
 		assert.isTrue(invalidatorSpy.calledOnce);
 	});
 
