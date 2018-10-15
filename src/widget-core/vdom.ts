@@ -344,10 +344,12 @@ function arrayFrom(arr: any) {
 
 function wrapNodes(renderer: () => DNode) {
 	return class extends WidgetBase {
-		static isWrapper = true;
+		public isWNodeWrapper = true;
 
 		protected render() {
-			return renderer();
+			const result = renderer();
+			this.isWNodeWrapper = isWNode(result);
+			return result;
 		}
 	};
 }
@@ -1005,7 +1007,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		}
 		if (next.instance) {
 			_instanceToWrapperMap.set(next.instance, next);
-			if (!parentInvalidate && !(next.instance as any).constructor.isWrapper) {
+			if (!parentInvalidate && !(next.instance as any).isWNodeWrapper) {
 				parentInvalidate = next.instance.invalidate.bind(next.instance);
 			}
 		}
