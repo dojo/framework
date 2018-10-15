@@ -1,4 +1,4 @@
-import { VNodeProperties } from './../interfaces';
+import { VNodeProperties, SupportedClassName } from './../interfaces';
 
 let browserSpecificTransitionEndEventName = '';
 let browserSpecificAnimationEndEventName = '';
@@ -42,13 +42,18 @@ function runAndCleanUp(element: HTMLElement, startAnimation: () => void, finishA
 	element.addEventListener(browserSpecificTransitionEndEventName, transitionEnd);
 }
 
-function exit(node: HTMLElement, properties: VNodeProperties, exitAnimation: string, removeNode: () => void) {
+function exit(
+	node: HTMLElement,
+	properties: VNodeProperties,
+	exitAnimation: SupportedClassName,
+	removeNode: () => void
+) {
 	const activeClass = properties.exitAnimationActive || `${exitAnimation}-active`;
 
 	runAndCleanUp(
 		node,
 		() => {
-			node.classList.add(exitAnimation);
+			exitAnimation && node.classList.add(exitAnimation);
 
 			requestAnimationFrame(function() {
 				node.classList.add(activeClass);
@@ -60,20 +65,20 @@ function exit(node: HTMLElement, properties: VNodeProperties, exitAnimation: str
 	);
 }
 
-function enter(node: HTMLElement, properties: VNodeProperties, enterAnimation: string) {
+function enter(node: HTMLElement, properties: VNodeProperties, enterAnimation: SupportedClassName) {
 	const activeClass = properties.enterAnimationActive || `${enterAnimation}-active`;
 
 	runAndCleanUp(
 		node,
 		() => {
-			node.classList.add(enterAnimation);
+			enterAnimation && node.classList.add(enterAnimation);
 
 			requestAnimationFrame(function() {
 				node.classList.add(activeClass);
 			});
 		},
 		() => {
-			node.classList.remove(enterAnimation);
+			enterAnimation && node.classList.remove(enterAnimation);
 			node.classList.remove(activeClass);
 		}
 	);

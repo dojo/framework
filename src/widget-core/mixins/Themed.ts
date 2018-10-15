@@ -26,7 +26,7 @@ export interface Theme {
  */
 export interface ThemedProperties<T = ClassNames> extends WidgetProperties {
 	theme?: Theme;
-	extraClasses?: { [P in keyof T]?: string };
+	extraClasses?: { [P in keyof T]?: SupportedClassName };
 }
 
 const THEME_KEY = ' _key';
