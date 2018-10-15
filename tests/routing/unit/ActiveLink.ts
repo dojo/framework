@@ -283,28 +283,24 @@ describe('ActiveLink', () => {
 				}
 			}
 
-			const root = document.createElement('div');
+			const root = document.createElement('div') as any;
 			const r = renderer(() => w(App, {}));
 			r.mount({ domNode: root, sync: true, registry });
-			assert.strictEqual(
-				root.outerHTML,
-				'<div><div><a class="foo" href="foo"></a><a href="bar"></a><a href="baz"></a></div></div>'
-			);
+			assert.strictEqual(root.childNodes[0].childNodes[0].getAttribute('class'), 'foo');
+			assert.isNull(root.childNodes[0].childNodes[1].getAttribute('class'));
+			assert.isNull(root.childNodes[0].childNodes[2].getAttribute('class'));
 			router.setPath('/bar');
-			assert.strictEqual(
-				root.outerHTML,
-				'<div><div><a href="foo"></a><a href="bar" class="bar"></a><a href="baz"></a></div></div>'
-			);
+			assert.isNull(root.childNodes[0].childNodes[0].getAttribute('class'));
+			assert.strictEqual(root.childNodes[0].childNodes[1].getAttribute('class'), 'bar');
+			assert.isNull(root.childNodes[0].childNodes[2].getAttribute('class'));
 			router.setPath('/baz');
-			assert.strictEqual(
-				root.outerHTML,
-				'<div><div><a href="foo"></a><a href="bar"></a><a href="baz" class="baz"></a></div></div>'
-			);
+			assert.isNull(root.childNodes[0].childNodes[0].getAttribute('class'));
+			assert.isNull(root.childNodes[0].childNodes[1].getAttribute('class'));
+			assert.strictEqual(root.childNodes[0].childNodes[2].getAttribute('class'), 'baz');
 			router.setPath('/foo');
-			assert.strictEqual(
-				root.outerHTML,
-				'<div><div><a href="foo" class="foo"></a><a href="bar"></a><a href="baz"></a></div></div>'
-			);
+			assert.strictEqual(root.childNodes[0].childNodes[0].getAttribute('class'), 'foo');
+			assert.isNull(root.childNodes[0].childNodes[1].getAttribute('class'));
+			assert.isNull(root.childNodes[0].childNodes[2].getAttribute('class'));
 		});
 	});
 });
