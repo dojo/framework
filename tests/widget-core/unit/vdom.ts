@@ -399,8 +399,9 @@ jsdomDescribe('vdom', () => {
 				)
 			);
 			const div = document.createElement('div');
-			r.mount({ domNode: div, sync: true, registry });
+			r.mount({ domNode: div, registry, sync: true });
 			resolver(Foo);
+			assert.strictEqual(div.outerHTML, '<div></div>');
 			return promise.then(() => {
 				assert.strictEqual(div.outerHTML, '<div>Top Level Registry</div>');
 			});

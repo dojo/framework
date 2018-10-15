@@ -342,10 +342,12 @@ function arrayFrom(arr: any) {
 	return Array.prototype.slice.call(arr);
 }
 
-function wrapVNodes(nodes: VNode) {
+function wrapNodes(renderer: () => DNode) {
 	return class extends WidgetBase {
+		static isWrapper = true;
+
 		protected render() {
-			return nodes;
+			return renderer();
 		}
 	};
 }
@@ -698,10 +700,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 	function mount(mountOptions: Partial<MountOptions> = {}) {
 		_mountOptions = { ..._mountOptions, ...mountOptions };
 		const { domNode } = _mountOptions;
-		let renderResult = renderer();
-		if (isVNode(renderResult)) {
-			renderResult = w(wrapVNodes(renderResult), {});
-		}
+		const renderResult = w(wrapNodes(renderer), {});
 		const nextWrapper = {
 			node: renderResult,
 			depth: 1
@@ -1006,7 +1005,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		}
 		if (next.instance) {
 			_instanceToWrapperMap.set(next.instance, next);
-			if (!parentInvalidate) {
+			if (!parentInvalidate && !(next.instance as any).constructor.isWrapper) {
 				parentInvalidate = next.instance.invalidate.bind(next.instance);
 			}
 		}
