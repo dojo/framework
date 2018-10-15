@@ -302,10 +302,10 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 					isExact: () => type === 'index'
 				};
 				const previousMatchedOutlet = previousMatchedOutlets[route.outlet];
+				this._matchedOutlets[route.outlet] = matchedOutlet;
 				if (!previousMatchedOutlet || !matchingParams(previousMatchedOutlet, matchedOutlet)) {
 					this.emit({ type: 'outlet', outlet: matchedOutlet, action: 'enter' });
 				}
-				this._matchedOutlets[route.outlet] = matchedOutlet;
 				matchedRoute = parent;
 			}
 		} else {
