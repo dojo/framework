@@ -32,7 +32,7 @@ export function registerRouterInjector(
 	}
 	const router = new Router(config, routerOptions);
 	registry.defineInjector(key, (invalidator: () => void) => {
-		router.on('navstart', () => invalidator());
+		router.on('nav', () => invalidator());
 		return () => router;
 	});
 	return router;

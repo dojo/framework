@@ -16,8 +16,8 @@ interface RouteWrapper {
 }
 
 export interface NavEvent extends EventObject<string> {
-	outlet: string;
-	context: OutletContext;
+	outlet?: string;
+	context?: OutletContext;
 }
 
 export interface OutletEvent extends EventObject<string> {
@@ -217,7 +217,6 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 	 * @param requestedPath The path of the requested route
 	 */
 	private _onChange = (requestedPath: string): void => {
-		this.emit({ type: 'navstart' });
 		requestedPath = this._stripLeadingSlash(requestedPath);
 		const previousMatchedOutlets = this._matchedOutlets;
 		this._matchedOutlets = Object.create(null);
@@ -303,10 +302,10 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 					isExact: () => type === 'index'
 				};
 				const previousMatchedOutlet = previousMatchedOutlets[route.outlet];
+				this._matchedOutlets[route.outlet] = matchedOutlet;
 				if (!previousMatchedOutlet || !matchingParams(previousMatchedOutlet, matchedOutlet)) {
 					this.emit({ type: 'outlet', outlet: matchedOutlet, action: 'enter' });
 				}
-				this._matchedOutlets[route.outlet] = matchedOutlet;
 				matchedRoute = parent;
 			}
 		} else {
@@ -328,9 +327,11 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 				this.emit({ type: 'outlet', outlet: previousMatchedOutlets[key], action: 'exit' });
 			}
 		}
-		if (matchedOutletName) {
-			this.emit({ type: 'nav', outlet: matchedOutletName, context: this._matchedOutlets[matchedOutletName] });
-		}
+		this.emit({
+			type: 'nav',
+			outlet: matchedOutletName,
+			context: matchedOutletName ? this._matchedOutlets[matchedOutletName] : undefined
+		});
 	};
 }
 
