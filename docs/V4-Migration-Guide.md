@@ -60,7 +60,7 @@ r.mount();
 
 The most obvious change with 4.0.0 is that we've tried to streamline the functionality provided by core, which resulted in most of the modules being removed. The upgrade tool will identify any uses of a core module that has been removed, copy the modules into your project and update imports to the local versions.
 
-The local copying of modules means that you won't need to make any significant effort during the upgrade trying to replace or rewrite areas that leveraged defunct modules. These modules are copied into a `dojo` directory inside your projects `src` directory.
+The local copying of modules means that you won't need to make any significant effort during the upgrade trying to replace or rewrite areas that leveraged defunct modules. These modules are copied into a `dojo` directory inside your project's `src` directory.
 
 ```shell
 ℹ Running transform: Move deleted core dependencies into codebase
