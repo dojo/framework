@@ -1534,8 +1534,6 @@ class MyWidgetWithTsx extends Themed(WidgetBase)<MyProperties> {
 }
 ```
 
-**Note:** Unfortunately `tsx` is not directly used within the module so the tsx module will report as an unused import, and will need to be ignored by linters.
-
 ### Web Components
 
 Widgets can be turned into [Custom Elements](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) with
