@@ -74,13 +74,13 @@ The local copying of modules means that you won't need to make any significant e
 
 The `has` module from `@dojo/framework/core/has` has been moved to `@dojo/framework/has/preset`.
 
-**v3.0.0**
+**v3.x**
 
 ```ts
 import has from '@dojo/framework/core/has';
 ```
 
-**v4.0.0**
+**v4.x**
 
 ```ts
 import has from '@dojo/framework/has/preset';
@@ -90,7 +90,7 @@ import has from '@dojo/framework/has/preset';
 
 `Outlet` has been changed from a higher order component to a standard widget that accepts a render property to define what output when the outlet has matched.
 
-**v3.0.0**
+**v3.x**
 
 ```ts
 // outlet module
@@ -117,7 +117,7 @@ class MyWidget extends WidgetBase {
 }
 ```
 
-**v4.0.0**
+**v4.x**
 
 ```ts
 class MyWidget extends WidgetBase {
