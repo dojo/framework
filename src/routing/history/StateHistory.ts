@@ -1,6 +1,20 @@
 import global from '../../shim/global';
 import { History as HistoryInterface, HistoryOptions, OnChangeFunction } from './../interfaces';
 
+const trailingSlash = new RegExp(/\/$/);
+
+function stripBase(base: string, path: string): string {
+	if (base === '/') {
+		return path;
+	}
+
+	if (path.indexOf(base) === 0) {
+		return path.slice(base.length - 1);
+	} else {
+		return '/';
+	}
+}
+
 export class StateHistory implements HistoryInterface {
 	private _current: string;
 	private _onChangeFunction: OnChangeFunction;
@@ -14,26 +28,26 @@ export class StateHistory implements HistoryInterface {
 		this._onChangeFunction = onChange;
 		this._window = window;
 		this._base = base;
+		if (!trailingSlash.test(this._base)) {
+			this._base = `${this._base}/`;
+		}
 		this._current = this._window.location.pathname + this._window.location.search;
 		this._window.addEventListener('popstate', this._onChange, false);
 		this._onChange();
 	}
 
 	public prefix(path: string) {
-		const baseEndsWithSlash = /\/$/.test(this._base);
-		const pathStartsWithSlash = /^\//.test(path);
-		if (baseEndsWithSlash && pathStartsWithSlash) {
-			return this._base + path.slice(1);
-		} else if (!baseEndsWithSlash && !pathStartsWithSlash) {
-			return `${this._base}/${path}`;
-		} else {
-			return this._base + path;
+		if (path[0] === '#') {
+			path = path.slice(1);
 		}
+		if (path[0] === '/') {
+			path = path.slice(1);
+		}
+		return `${this._base}${path}`;
 	}
 
 	public set(path: string) {
-		const value = ensureLeadingSlash(path);
-		this._window.history.pushState({}, '', this.prefix(value));
+		this._window.history.pushState({}, '', this.prefix(path));
 		this._onChange();
 	}
 
@@ -49,25 +63,6 @@ export class StateHistory implements HistoryInterface {
 		this._current = value;
 		this._onChangeFunction(this._current);
 	};
-}
-
-function stripBase(base: string, path: string): string {
-	if (base === '/') {
-		return path;
-	}
-
-	if (path.indexOf(base) === 0) {
-		return ensureLeadingSlash(path.slice(base.length));
-	} else {
-		return '/';
-	}
-}
-
-function ensureLeadingSlash(path: string): string {
-	if (path[0] !== '/') {
-		return `/${path}`;
-	}
-	return path;
 }
 
 export default StateHistory;

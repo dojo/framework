@@ -40,6 +40,12 @@ describe('StateHistory', () => {
 		assert.equal(history.prefix('foo'), '/foo');
 	});
 
+	it('prefixes path removes # characters', () => {
+		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+		assert.equal(history.prefix('#/foo'), '/foo');
+		assert.equal(history.prefix('#foo'), '/foo');
+	});
+
 	it('update path', () => {
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
 		history.set('/foo');

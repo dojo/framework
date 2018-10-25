@@ -409,6 +409,18 @@ describe('Router', () => {
 		});
 	});
 
+	it('Should prefix links based on the history manager', () => {
+		class TestHistoryManager extends HistoryManager {
+			prefix(value: string) {
+				return `test-${value}`;
+			}
+		}
+		const router = new Router(routeWithChildrenAndMultipleParams, { HistoryManager: TestHistoryManager });
+		router.setPath('/foo/foo/bar/bar/baz/baz');
+		const link = router.link('baz');
+		assert.strictEqual(link, 'test-foo/foo/bar/bar/baz/baz');
+	});
+
 	it('Should create link using current params', () => {
 		const router = new Router(routeWithChildrenAndMultipleParams, { HistoryManager });
 		router.setPath('/foo/foo/bar/bar/baz/baz');

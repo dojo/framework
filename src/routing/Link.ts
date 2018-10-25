@@ -18,17 +18,14 @@ export class Link extends WidgetBase<LinkProperties> {
 			const onclick = (event: MouseEvent) => {
 				onClick && onClick(event);
 
-				if (!event.defaultPrevented && event.button === 0 && !target) {
+				if (!event.defaultPrevented && event.button === 0 && !event.metaKey && !event.ctrlKey && !target) {
 					event.preventDefault();
 					href !== undefined && router.setPath(href);
 				}
 			};
-			props = { ...props, onclick, href };
-		} else {
-			props = { ...props, href };
+			return { ...props, onclick, href };
 		}
-
-		return props;
+		return { ...props, href };
 	}
 
 	protected render(): VNode {
