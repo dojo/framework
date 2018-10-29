@@ -1,5 +1,6 @@
 {
 	"id": 0,
+	"holu": "chan",
 	"name": "@dojo/stores",
 	"kind": 0,
 	"flags": {
