@@ -27,6 +27,7 @@ export class HashHistory implements History {
 
 	public set(path: string) {
 		this._window.location.hash = this.prefix(path);
+		this._onChange();
 	}
 
 	public get current(): string {
@@ -38,8 +39,11 @@ export class HashHistory implements History {
 	}
 
 	private _onChange = () => {
-		this._current = this.normalizePath(this._window.location.hash);
-		this._onChangeFunction(this._current);
+		const path = this.normalizePath(this._window.location.hash);
+		if (path !== this._current) {
+			this._current = path;
+			this._onChangeFunction(this._current);
+		}
 	};
 }
 

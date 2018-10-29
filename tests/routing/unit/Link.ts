@@ -27,13 +27,23 @@ registry.defineInjector('router', () => () => router);
 
 let routerSetPathSpy: SinonSpy;
 
-function createMockEvent(isRightClick: boolean = false) {
+function createMockEvent(
+	options: { isRightClick?: boolean; metaKey?: boolean; ctrlKey?: boolean } = {
+		isRightClick: false,
+		metaKey: false,
+		ctrlKey: false
+	}
+) {
+	const { ctrlKey = false, metaKey = false, isRightClick = false } = options;
+
 	return {
 		defaultPrevented: false,
 		preventDefault() {
 			this.defaultPrevented = true;
 		},
-		button: isRightClick ? undefined : 0
+		button: isRightClick ? undefined : 0,
+		metaKey,
+		ctrlKey
 	};
 }
 
@@ -124,7 +134,33 @@ describe('Link', () => {
 		const dNode: any = link.__render__();
 		assert.strictEqual(dNode.tag, 'a');
 		assert.strictEqual(dNode.properties.href, 'foo');
-		dNode.properties.onclick.call(link, createMockEvent(true));
+		dNode.properties.onclick.call(link, createMockEvent({ isRightClick: true }));
+		assert.isTrue(routerSetPathSpy.notCalled);
+	});
+
+	it('Does not set router path on ctrl click', () => {
+		const link = new Link();
+		link.registry.base = registry;
+		link.__setProperties__({
+			to: 'foo'
+		});
+		const dNode: any = link.__render__();
+		assert.strictEqual(dNode.tag, 'a');
+		assert.strictEqual(dNode.properties.href, 'foo');
+		dNode.properties.onclick.call(link, createMockEvent({ ctrlKey: true }));
+		assert.isTrue(routerSetPathSpy.notCalled);
+	});
+
+	it('Does not set router path on meta click', () => {
+		const link = new Link();
+		link.registry.base = registry;
+		link.__setProperties__({
+			to: 'foo'
+		});
+		const dNode: any = link.__render__();
+		assert.strictEqual(dNode.tag, 'a');
+		assert.strictEqual(dNode.properties.href, 'foo');
+		dNode.properties.onclick.call(link, createMockEvent({ metaKey: true }));
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 

@@ -105,7 +105,7 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 				return undefined;
 			}
 		}
-		return linkPath;
+		return this._history.prefix(linkPath);
 	}
 
 	/**
