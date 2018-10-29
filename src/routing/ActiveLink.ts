@@ -1,5 +1,5 @@
 import WidgetBase from '../widget-core/WidgetBase';
-import { WNode } from '../widget-core/interfaces';
+import { WNode, SupportedClassName } from '../widget-core/interfaces';
 import { w } from '../widget-core/d';
 import diffProperty from '../widget-core/decorators/diffProperty';
 import { LinkProperties } from './interfaces';
@@ -8,7 +8,7 @@ import Router from './Router';
 import { Handle } from '../shim/interfaces';
 
 export interface ActiveLinkProperties extends LinkProperties {
-	activeClasses: string[];
+	activeClasses: SupportedClassName[];
 }
 
 function paramsEqual(linkParams: any = {}, contextParams: any = {}) {

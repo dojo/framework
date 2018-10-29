@@ -90,10 +90,10 @@ describe('ActiveLink', () => {
 		router.setPath('/foo');
 		const link = new ActiveLink();
 		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
+		link.__setProperties__({ to: 'foo', activeClasses: ['foo', undefined, null] });
 		const dNode = link.__render__() as WNode<Link>;
 		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, ['foo']);
+		assert.deepEqual(dNode.properties.classes, ['foo', undefined, null]);
 		assert.deepEqual(dNode.properties.to, 'foo');
 	});
 
