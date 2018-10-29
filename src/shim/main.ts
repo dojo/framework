@@ -11,7 +11,7 @@ import * as string from './string';
 import Symbol from './Symbol';
 import WeakMap from './WeakMap';
 
-`!has('es6-promise')`;
+`!has('es6-promise') || !has('es2018-promise-finallly')`;
 import './Promise';
 
 `!has('es6-symbol')`;

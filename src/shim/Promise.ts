@@ -18,6 +18,12 @@ export interface Executor<T> {
 	(resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void): void;
 }
 
+declare global {
+	interface Promise<T> {
+		finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+	}
+}
+
 export let ShimPromise: typeof Promise = global.Promise;
 
 export const isThenable = function isThenable<T>(value: any): value is PromiseLike<T> {
@@ -252,6 +258,24 @@ if (!has('es6-promise')) {
 		) => Promise<TResult1 | TResult2>;
 
 		[Symbol.toStringTag]: 'Promise' = 'Promise';
+	} as any;
+	// this cast is needed in order to omit finally in the class declaration; this was done so the finally code
+	// is not duplicated and always added in the conditional below
+}
+
+if (!has('es2018-promise-finally')) {
+	global.Promise.prototype.finally = function<T>(
+		this: Promise<T>,
+		onFinally: (() => any) | undefined | null
+	): Promise<any> {
+		return this.then(
+			onFinally && ((value: T) => Promise.resolve(onFinally()).then(() => value)),
+			onFinally &&
+				((reason: any) =>
+					Promise.resolve(onFinally()).then(() => {
+						throw reason;
+					}))
+		);
 	};
 }
 

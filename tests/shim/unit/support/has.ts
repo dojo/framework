@@ -10,6 +10,7 @@ registerSuite('support/has', {
 			'es-observable',
 			'es2017-object',
 			'es2017-string',
+			'es2018-promise-finally',
 			'es6-array',
 			'es6-array-fill',
 			'es6-map',

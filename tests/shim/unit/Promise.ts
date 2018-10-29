@@ -438,6 +438,78 @@ export function addPromiseTests(suite: { [key: string]: Tests }, Promise: TypeUn
 		}
 	};
 
+	suite['#finally'] = {
+		'does not change the resolve value'() {
+			const dfd = this.async();
+			Promise.resolve('test')
+				.finally(() => 'changed')
+				.then(
+					dfd.callback((value: string) => {
+						assert.strictEqual(value, 'test');
+					})
+				);
+		},
+
+		'rejects if handler rejects'() {
+			const dfd = this.async();
+			Promise.resolve('test')
+				.finally(() => Promise.reject('changed'))
+				.catch(
+					dfd.callback((value: string) => {
+						assert.strictEqual(value, 'changed');
+					})
+				);
+		},
+
+		'rejects if handler throws'() {
+			const dfd = this.async();
+			Promise.resolve('test')
+				.finally(() => {
+					throw 'changed';
+				})
+				.catch(
+					dfd.callback((value: string) => {
+						assert.strictEqual(value, 'changed');
+					})
+				);
+		},
+
+		'does not change the reject value'() {
+			const dfd = this.async();
+			Promise.reject('test')
+				.finally(() => 'changed')
+				.catch(
+					dfd.callback((value: string) => {
+						assert.strictEqual(value, 'test');
+					})
+				);
+		},
+
+		'changes the reject value if handler rejects'() {
+			const dfd = this.async();
+			Promise.reject('test')
+				.finally(() => Promise.reject('changed'))
+				.catch(
+					dfd.callback((value: string) => {
+						assert.strictEqual(value, 'changed');
+					})
+				);
+		},
+
+		'changes the reject value if handler throws'() {
+			const dfd = this.async();
+			Promise.reject('test')
+				.finally(() => {
+					throw 'changed';
+				})
+				.catch(
+					dfd.callback((value: string) => {
+						assert.strictEqual(value, 'changed');
+					})
+				);
+		}
+	};
+
 	suite['#then'] = {
 		fulfillment: function() {
 			let dfd = this.async();

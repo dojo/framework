@@ -112,7 +112,7 @@ intern.registerPlugin('jsdom', async () => {
 						const oldBefore = descriptor['before'];
 						descriptor['before'] = (suite) => {
 							initialize();
-							oldBefore!.call(suite, suite);
+							return oldBefore!.call(suite, suite);
 						};
 					} else {
 						descriptor['before'] = initialize;
@@ -121,7 +121,7 @@ intern.registerPlugin('jsdom', async () => {
 						const oldAfter = descriptor['after'];
 						descriptor['after'] = (suite) => {
 							uninitialize();
-							oldAfter!.call(suite, suite);
+							return oldAfter!.call(suite, suite);
 						};
 					} else {
 						descriptor['after'] = uninitialize;
