@@ -5089,6 +5089,38 @@ jsdomDescribe('vdom', () => {
 		});
 	});
 
+	describe('selects', () => {
+		it('should set initial select value', () => {
+			const r = renderer(() =>
+				v('select', { value: 'a' }, [
+					v('option'),
+					v('option', { value: 'a' }, ['a']),
+					v('option', { value: 'b' }, ['b'])
+				])
+			);
+
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual((div.children[0] as any).value, 'a');
+		});
+
+		it('should support multi-select selects', () => {
+			const r = renderer(() =>
+				v('select', { key: 'multi', multiple: true }, [
+					v('option', { key: 'a', value: 'a', selected: true }, ['a']),
+					v('option', { key: 'b', value: 'b', selected: true }, ['b']),
+					v('option', { key: 'c', value: 'c' }, ['c'])
+				])
+			);
+
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual((div.childNodes[0].childNodes[0] as any).selected, true);
+			assert.strictEqual((div.childNodes[0].childNodes[1] as any).selected, true);
+			assert.strictEqual((div.childNodes[0].childNodes[2] as any).selected, false);
+		});
+	});
+
 	it('i18n Mixin', () => {
 		let setProperties: any;
 		class MyWidget extends I18nMixin(WidgetBase) {
