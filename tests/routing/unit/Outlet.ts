@@ -4,12 +4,12 @@ const { assert } = intern.getPlugin('chai');
 
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { w, v } from '../../../src/widget-core/d';
-import { WNode } from '../../../src/widget-core/interfaces';
 import { MemoryHistory as HistoryManager, MemoryHistory } from '../../../src/routing/history/MemoryHistory';
 import { Outlet } from '../../../src/routing/Outlet';
 import { Registry } from '../../../src/widget-core/Registry';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
 import { renderer } from '../../../src/widget-core/vdom';
+import harness from '../../../src/testing/harness';
 
 class Widget extends WidgetBase {
 	render() {
@@ -36,43 +36,49 @@ const routeConfig = [
 	}
 ];
 
+let BaseOutlet: new (...args: any[]) => Outlet;
+
 describe('Outlet', () => {
 	beforeEach(() => {
 		registry = new Registry();
+		BaseOutlet = class extends Outlet {
+			constructor(...args: any[]) {
+				super(...args);
+
+				this.registry.base = registry;
+			}
+		};
 	});
 
 	it('Should render the result of the renderer when the outlet matches', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 
 		router.setPath('/foo');
-		const outlet = new Outlet();
-		outlet.__setProperties__({
-			id: 'foo',
-			renderer() {
-				return w(Widget, {});
-			}
-		});
-		outlet.registry.base = registry;
-		const renderResult = outlet.__render__() as WNode;
-		assert.strictEqual(renderResult.widgetConstructor, Widget);
-		assert.deepEqual(renderResult.children, []);
-		assert.deepEqual(renderResult.properties, {});
+		const h = harness(() =>
+			w(BaseOutlet, {
+				id: 'foo',
+				renderer() {
+					return w(Widget, {});
+				}
+			})
+		);
+		h.expect(() => w(Widget, {}, []));
 	});
 
 	it('Should set the type as index for exact matches', () => {
 		let matchType: string | undefined;
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
-		const outlet = new Outlet();
-		outlet.__setProperties__({
-			id: 'foo',
-			renderer(details) {
-				matchType = details.type;
-				return null;
-			}
-		});
-		outlet.registry.base = registry;
-		outlet.__render__() as WNode;
+		const h = harness(() =>
+			w(BaseOutlet, {
+				id: 'foo',
+				renderer(details: any) {
+					matchType = details.type;
+					return null;
+				}
+			})
+		);
+		h.expect(() => null);
 		assert.strictEqual(matchType, 'index');
 	});
 
@@ -80,16 +86,16 @@ describe('Outlet', () => {
 		let matchType: string | undefined;
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo/other');
-		const outlet = new Outlet();
-		outlet.__setProperties__({
-			id: 'foo',
-			renderer(details) {
-				matchType = details.type;
-				return null;
-			}
-		});
-		outlet.registry.base = registry;
-		outlet.__render__() as WNode;
+		const h = harness(() =>
+			w(BaseOutlet, {
+				id: 'foo',
+				renderer(details: any) {
+					matchType = details.type;
+					return null;
+				}
+			})
+		);
+		h.expect(() => null);
 		assert.strictEqual(matchType, 'error');
 	});
 
@@ -102,7 +108,7 @@ describe('Outlet', () => {
 		];
 
 		let invalidateCount = 0;
-		class TestOutlet extends Outlet {
+		class TestOutlet extends BaseOutlet {
 			onAttach() {
 				super.onAttach();
 			}
@@ -114,17 +120,18 @@ describe('Outlet', () => {
 
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
-		const outlet = new TestOutlet();
-		outlet.registry.base = registry;
-		outlet.__setProperties__({
-			id: 'foo',
-			renderer(details) {
-				if (details.type === 'index') {
-					return w(Widget, {});
+		const h = harness(() =>
+			w(TestOutlet, {
+				id: 'foo',
+				renderer(details: any) {
+					if (details.type === 'index') {
+						return w(Widget, {});
+					}
 				}
-			}
-		});
-		outlet.onAttach();
+			})
+		);
+		const widget = (h.getRender(0) as any).bind;
+		widget.onAttach();
 		invalidateCount = 0;
 		router.setPath('/other');
 		assert.strictEqual(invalidateCount, 1);
@@ -138,7 +145,7 @@ describe('Outlet', () => {
 			}
 		];
 
-		class TestOutlet extends Outlet {
+		class TestOutlet extends BaseOutlet {
 			onDetach() {
 				super.onDetach();
 			}
@@ -146,17 +153,17 @@ describe('Outlet', () => {
 
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/other');
-		const outlet = new TestOutlet();
-		outlet.__setProperties__({
-			id: 'foo',
-			renderer(details) {
-				if (details.type === 'index') {
-					return w(Widget, {});
+		const h = harness(() =>
+			w(TestOutlet, {
+				id: 'foo',
+				renderer(details: any) {
+					if (details.type === 'index') {
+						return w(Widget, {});
+					}
 				}
-			}
-		});
-
-		assert.isUndefined(outlet.__render__());
+			})
+		);
+		h.expect(() => null);
 	});
 
 	it('Should change the invalidator if the router key changes', () => {
@@ -168,39 +175,40 @@ describe('Outlet', () => {
 		];
 
 		let invalidateCount = 0;
-		class TestOutlet extends Outlet {
+		class TestOutlet extends BaseOutlet {
 			invalidate() {
 				invalidateCount++;
 			}
 		}
 
-		const routerOne = registerRouterInjector(routeConfig, registry, { HistoryManager, key: 'my-router' });
-		const routerTwo = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		routerOne.setPath('/foo');
-		const outlet = new TestOutlet();
-		outlet.registry.base = registry;
-		outlet.__setProperties__({
+		let properties: any = {
 			id: 'foo',
 			routerKey: 'my-router',
-			renderer(details) {
+			renderer(details: any) {
 				if (details.type === 'index') {
 					return w(Widget, {});
 				}
 			}
-		});
+		};
+
+		const routerOne = registerRouterInjector(routeConfig, registry, { HistoryManager, key: 'my-router' });
+		const routerTwo = registerRouterInjector(routeConfig, registry, { HistoryManager });
+		routerOne.setPath('/foo');
+		const h = harness(() => w(TestOutlet, properties));
 		invalidateCount = 0;
 		routerOne.setPath('/bar');
 		assert.strictEqual(invalidateCount, 1);
 		routerTwo.setPath('/foo');
 		assert.strictEqual(invalidateCount, 1);
-		outlet.__setProperties__({
+		properties = {
 			id: 'foo',
-			renderer(details) {
+			renderer(details: any) {
 				if (details.type === 'index') {
 					return w(Widget, {});
 				}
 			}
-		});
+		};
+		h.expect(() => w(Widget, {}));
 		assert.strictEqual(invalidateCount, 3);
 		routerOne.setPath('/bar');
 		assert.strictEqual(invalidateCount, 3);
