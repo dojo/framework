@@ -6,13 +6,13 @@ import { Registry } from '../../../src/widget-core/Registry';
 
 import { Router } from '../../../src/routing/Router';
 import { MemoryHistory } from '../../../src/routing/history/MemoryHistory';
-import { WNode } from '../../../src/widget-core/interfaces';
 import Link from '../../../src/routing/Link';
 import ActiveLink from '../../../src/routing/ActiveLink';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
 import { w, v } from '../../../src/widget-core/d';
 import { renderer } from '../../../src/widget-core/vdom';
 import WidgetBase from '../../../src/widget-core/WidgetBase';
+import harness from '../../../src/testing/harness';
 
 const registry = new Registry();
 
@@ -48,24 +48,28 @@ const router = new Router(
 
 registry.defineInjector('router', () => () => router);
 
+class BaseActiveLink extends ActiveLink {
+	constructor(...args: any[]) {
+		super(...args);
+
+		this.registry.base = registry;
+	}
+}
+
 describe('ActiveLink', () => {
 	it('should invalidate when the outlet has been matched', () => {
 		let invalidateCallCount = 0;
 
-		class MyActiveLink extends ActiveLink {
+		class MyActiveLink extends BaseActiveLink {
 			invalidate() {
 				super.invalidate();
 				invalidateCallCount++;
 			}
 		}
 
-		const link = new MyActiveLink();
-		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
-		const dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, []);
-		assert.deepEqual(dNode.properties.to, 'foo');
+		const h = harness(() => w(MyActiveLink, { to: 'foo', activeClasses: ['foo'] }));
+		h.expect(() => w(Link, { classes: [], to: 'foo' }));
+
 		invalidateCallCount = 0;
 		router.setPath('/foo');
 		assert.strictEqual(invalidateCallCount, 1);
@@ -77,177 +81,120 @@ describe('ActiveLink', () => {
 
 	it('Does not add active class when outlet is not active', () => {
 		router.setPath('/other');
-		const link = new ActiveLink();
-		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
-		const dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, []);
-		assert.deepEqual(dNode.properties.to, 'foo');
+		const h = harness(() => w(BaseActiveLink, { to: 'foo', activeClasses: ['foo', undefined, null] }));
+		h.expect(() => w(Link, { classes: [], to: 'foo' }));
 	});
 
 	it('Should add the active class when the outlet is active', () => {
 		router.setPath('/foo');
-		const link = new ActiveLink();
-		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo', activeClasses: ['foo', undefined, null] });
-		const dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, ['foo', undefined, null]);
-		assert.deepEqual(dNode.properties.to, 'foo');
+		const h = harness(() => w(BaseActiveLink, { to: 'foo', activeClasses: ['foo', undefined, null] }));
+		h.expect(() => w(Link, { classes: ['foo', undefined, null], to: 'foo' }));
 	});
 
 	it('Should render the ActiveLink children', () => {
 		router.setPath('/foo');
-		const link = new ActiveLink();
-		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
-		link.__setChildren__(['hello']);
-		const dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, ['foo']);
-		assert.deepEqual(dNode.properties.to, 'foo');
-		assert.deepEqual(dNode.children[0] as any, {
-			children: undefined,
-			properties: {},
-			tag: '',
-			text: 'hello',
-			type: '__VNODE_TYPE'
-		});
+		const h = harness(() => w(BaseActiveLink, { to: 'foo', activeClasses: ['foo'] }, ['hello']));
+		h.expect(() => w(Link, { classes: ['foo'], to: 'foo' }, ['hello']));
 	});
 
 	it('Should mix the active class onto existing string class when the outlet is active', () => {
 		router.setPath('/foo');
-		const link = new ActiveLink();
-		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo', activeClasses: ['foo'], classes: 'bar' });
-		const dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, ['bar', 'foo']);
-		assert.deepEqual(dNode.properties.to, 'foo');
+		const h = harness(() => w(BaseActiveLink, { to: 'foo', activeClasses: ['foo'], classes: 'bar' }));
+		h.expect(() => w(Link, { classes: ['bar', 'foo'], to: 'foo' }));
 	});
 
 	it('Should mix the active class onto existing array of classes when the outlet is active', () => {
 		router.setPath('/foo');
-		const link = new ActiveLink();
-		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo', activeClasses: ['foo', 'qux'], classes: ['bar', 'baz'] });
-		const dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, ['bar', 'baz', 'foo', 'qux']);
-		assert.deepEqual(dNode.properties.to, 'foo');
+		const h = harness(() =>
+			w(BaseActiveLink, { to: 'foo', activeClasses: ['foo', 'qux'], classes: ['bar', 'baz'] })
+		);
+		h.expect(() => w(Link, { classes: ['bar', 'baz', 'foo', 'qux'], to: 'foo' }));
 	});
 
 	it('Should invalidate and re-render when link becomes active', () => {
 		let invalidateCount = 0;
 		router.setPath('/foo');
 
-		class TestActiveLink extends ActiveLink {
+		class TestActiveLink extends BaseActiveLink {
 			invalidate() {
 				invalidateCount++;
 				super.invalidate();
 			}
 		}
 
-		const link = new TestActiveLink();
-		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
-		let dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, ['foo']);
-		assert.deepEqual(dNode.properties.to, 'foo');
+		const h = harness(() => w(TestActiveLink, { to: 'foo', activeClasses: ['foo'] }));
+		h.expect(() => w(Link, { to: 'foo', classes: ['foo'] }));
+
 		invalidateCount = 0;
 		router.setPath('/other');
 		assert.strictEqual(invalidateCount, 1);
-		dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, []);
-		assert.deepEqual(dNode.properties.to, 'foo');
+		h.expect(() => w(Link, { to: 'foo', classes: [] }));
 		router.setPath('/foo');
 		assert.strictEqual(invalidateCount, 2);
-		dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, ['foo']);
-		assert.deepEqual(dNode.properties.to, 'foo');
+		h.expect(() => w(Link, { to: 'foo', classes: ['foo'] }));
 	});
 
 	it('Should support changing the target outlet', () => {
 		let invalidateCount = 0;
 		router.setPath('/foo');
 
-		class TestActiveLink extends ActiveLink {
+		class TestActiveLink extends BaseActiveLink {
 			invalidate() {
 				invalidateCount++;
 				super.invalidate();
 			}
 		}
 
-		const link = new TestActiveLink();
-		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo', activeClasses: ['foo'] });
-		let dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, ['foo']);
-		assert.deepEqual(dNode.properties.to, 'foo');
+		let properties: any = { to: 'foo', activeClasses: ['foo'] };
+
+		const h = harness(() => w(TestActiveLink, properties));
+		h.expect(() => w(Link, { to: 'foo', classes: ['foo'] }));
+
 		invalidateCount = 0;
-		link.__setProperties__({ to: 'other', activeClasses: ['foo'] });
-		dNode = link.__render__() as WNode<Link>;
+		properties = { to: 'other', activeClasses: ['foo'] };
+		h.expect(() => w(Link, { to: 'other', classes: [] }));
 		assert.strictEqual(invalidateCount, 1);
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, []);
-		assert.deepEqual(dNode.properties.to, 'other');
+
 		router.setPath('/foo/bar');
 		assert.strictEqual(invalidateCount, 1);
-		dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, []);
-		assert.deepEqual(dNode.properties.to, 'other');
+		h.expect(() => w(Link, { to: 'other', classes: [] }));
+
 		router.setPath('/other');
 		assert.strictEqual(invalidateCount, 2);
-		dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, ['foo']);
-		assert.deepEqual(dNode.properties.to, 'other');
+		h.expect(() => w(Link, { to: 'other', classes: ['foo'] }));
 	});
 
 	it('Should return link when the router injector is not available', () => {
 		router.setPath('/foo');
-		const link = new ActiveLink();
-		link.registry.base = registry;
-		link.__setProperties__({ to: 'foo', activeClasses: ['foo'], classes: 'bar', routerKey: 'other' });
-		const dNode = link.__render__() as WNode<Link>;
-		assert.strictEqual(dNode.widgetConstructor, Link);
-		assert.deepEqual(dNode.properties.classes, ['bar']);
-		assert.deepEqual(dNode.properties.to, 'foo');
+		const h = harness(() =>
+			w(BaseActiveLink, { to: 'foo', activeClasses: ['foo'], classes: 'bar', routerKey: 'other' })
+		);
+		h.expect(() => w(Link, { to: 'foo', classes: ['bar'], routerKey: 'other' }));
 	});
 
 	it('should look at route params when determining active', () => {
 		router.setPath('/param/one');
-		const link = new ActiveLink();
-		link.registry.base = registry;
-		link.__setProperties__({
-			to: 'suffixed-param',
-			activeClasses: ['foo'],
-			params: {
-				suffix: 'one'
-			}
-		});
-		const dNode = link.__render__() as WNode<Link>;
+		const h1 = harness(() =>
+			w(BaseActiveLink, {
+				to: 'suffixed-param',
+				activeClasses: ['foo'],
+				params: {
+					suffix: 'one'
+				}
+			})
+		);
+		h1.expect(() => w(Link, { to: 'suffixed-param', classes: ['foo'], params: { suffix: 'one' } }));
 
-		assert.deepEqual(dNode.properties.classes, ['foo']);
-
-		const link2 = new ActiveLink();
-		link2.registry.base = registry;
-		link2.__setProperties__({
-			to: 'suffixed-param',
-			activeClasses: ['foo'],
-			params: {
-				suffix: 'two'
-			}
-		});
-		const dNode2 = link2.__render__() as WNode<Link>;
-
-		assert.deepEqual(dNode2.properties.classes, []);
+		const h2 = harness(() =>
+			w(BaseActiveLink, {
+				to: 'suffixed-param',
+				activeClasses: ['foo'],
+				params: {
+					suffix: 'two'
+				}
+			})
+		);
+		h2.expect(() => w(Link, { to: 'suffixed-param', classes: [], params: { suffix: 'two' } }));
 	});
 
 	jsdomDescribe('integration tests', () => {
