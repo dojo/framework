@@ -36,31 +36,24 @@ const routeConfig = [
 	}
 ];
 
-let BaseOutlet: new (...args: any[]) => Outlet;
-
 describe('Outlet', () => {
 	beforeEach(() => {
 		registry = new Registry();
-		BaseOutlet = class extends Outlet {
-			constructor(...args: any[]) {
-				super(...args);
-
-				this.registry.base = registry;
-			}
-		};
 	});
 
 	it('Should render the result of the renderer when the outlet matches', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 
 		router.setPath('/foo');
-		const h = harness(() =>
-			w(BaseOutlet, {
-				id: 'foo',
-				renderer() {
-					return w(Widget, {});
-				}
-			})
+		const h = harness(
+			() =>
+				w(Outlet, {
+					id: 'foo',
+					renderer() {
+						return w(Widget, {});
+					}
+				}),
+			{ registry }
 		);
 		h.expect(() => w(Widget, {}, []));
 	});
@@ -69,14 +62,16 @@ describe('Outlet', () => {
 		let matchType: string | undefined;
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
-		const h = harness(() =>
-			w(BaseOutlet, {
-				id: 'foo',
-				renderer(details: any) {
-					matchType = details.type;
-					return null;
-				}
-			})
+		const h = harness(
+			() =>
+				w(Outlet, {
+					id: 'foo',
+					renderer(details: any) {
+						matchType = details.type;
+						return null;
+					}
+				}),
+			{ registry }
 		);
 		h.expect(() => null);
 		assert.strictEqual(matchType, 'index');
@@ -86,14 +81,16 @@ describe('Outlet', () => {
 		let matchType: string | undefined;
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo/other');
-		const h = harness(() =>
-			w(BaseOutlet, {
-				id: 'foo',
-				renderer(details: any) {
-					matchType = details.type;
-					return null;
-				}
-			})
+		const h = harness(
+			() =>
+				w(Outlet, {
+					id: 'foo',
+					renderer(details: any) {
+						matchType = details.type;
+						return null;
+					}
+				}),
+			{ registry }
 		);
 		h.expect(() => null);
 		assert.strictEqual(matchType, 'error');
@@ -108,7 +105,7 @@ describe('Outlet', () => {
 		];
 
 		let invalidateCount = 0;
-		class TestOutlet extends BaseOutlet {
+		class TestOutlet extends Outlet {
 			onAttach() {
 				super.onAttach();
 			}
@@ -120,15 +117,17 @@ describe('Outlet', () => {
 
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
-		const h = harness(() =>
-			w(TestOutlet, {
-				id: 'foo',
-				renderer(details: any) {
-					if (details.type === 'index') {
-						return w(Widget, {});
+		const h = harness(
+			() =>
+				w(TestOutlet, {
+					id: 'foo',
+					renderer(details: any) {
+						if (details.type === 'index') {
+							return w(Widget, {});
+						}
 					}
-				}
-			})
+				}),
+			{ registry }
 		);
 		const widget = (h.getRender(0) as any).bind;
 		widget.onAttach();
@@ -145,7 +144,7 @@ describe('Outlet', () => {
 			}
 		];
 
-		class TestOutlet extends BaseOutlet {
+		class TestOutlet extends Outlet {
 			onDetach() {
 				super.onDetach();
 			}
@@ -153,15 +152,17 @@ describe('Outlet', () => {
 
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/other');
-		const h = harness(() =>
-			w(TestOutlet, {
-				id: 'foo',
-				renderer(details: any) {
-					if (details.type === 'index') {
-						return w(Widget, {});
+		const h = harness(
+			() =>
+				w(TestOutlet, {
+					id: 'foo',
+					renderer(details: any) {
+						if (details.type === 'index') {
+							return w(Widget, {});
+						}
 					}
-				}
-			})
+				}),
+			{ registry }
 		);
 		h.expect(() => null);
 	});
@@ -175,7 +176,7 @@ describe('Outlet', () => {
 		];
 
 		let invalidateCount = 0;
-		class TestOutlet extends BaseOutlet {
+		class TestOutlet extends Outlet {
 			invalidate() {
 				invalidateCount++;
 			}
@@ -194,7 +195,7 @@ describe('Outlet', () => {
 		const routerOne = registerRouterInjector(routeConfig, registry, { HistoryManager, key: 'my-router' });
 		const routerTwo = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		routerOne.setPath('/foo');
-		const h = harness(() => w(TestOutlet, properties));
+		const h = harness(() => w(TestOutlet, properties), { registry });
 		invalidateCount = 0;
 		routerOne.setPath('/bar');
 		assert.strictEqual(invalidateCount, 1);

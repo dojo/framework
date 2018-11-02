@@ -49,14 +49,6 @@ function createMockEvent(
 	};
 }
 
-class TestLink extends Link {
-	constructor(...args: any[]) {
-		super(...args);
-
-		this.registry.base = registry;
-	}
-}
-
 const noop: any = () => {};
 
 describe('Link', () => {
@@ -69,36 +61,38 @@ describe('Link', () => {
 	});
 
 	it('Generate link component for basic outlet', () => {
-		const h = harness(() => w(TestLink, { to: 'foo' }));
+		const h = harness(() => w(Link, { to: 'foo' }), { registry });
 		h.expect(() => v('a', { href: 'foo', onclick: noop }));
 	});
 
 	it('Generate link component for outlet with specified params', () => {
-		const h = harness(() => w(TestLink, { to: 'foo2', params: { foo: 'foo' } }));
+		const h = harness(() => w(Link, { to: 'foo2', params: { foo: 'foo' } }), { registry });
 		h.expect(() => v('a', { href: 'foo/foo', onclick: noop }));
 	});
 
 	it('Generate link component for fixed href', () => {
-		const h = harness(() => w(TestLink, { to: '#foo/static', isOutlet: false }));
+		const h = harness(() => w(Link, { to: '#foo/static', isOutlet: false }), { registry });
 		h.expect(() => v('a', { href: '#foo/static', onclick: noop }));
 	});
 
 	it('Set router path on click', () => {
-		const h = harness(() => w(TestLink, { to: '#foo/static', isOutlet: false }));
+		const h = harness(() => w(Link, { to: '#foo/static', isOutlet: false }), { registry });
 		h.expect(() => v('a', { href: '#foo/static', onclick: noop }));
 		h.trigger('a', 'onclick', createMockEvent());
 		assert.isTrue(routerSetPathSpy.calledWith('#foo/static'));
 	});
 
 	it('Custom onClick handler can prevent default', () => {
-		const h = harness(() =>
-			w(TestLink, {
-				to: 'foo',
-				registry,
-				onClick(event: MouseEvent) {
-					event.preventDefault();
-				}
-			})
+		const h = harness(
+			() =>
+				w(Link, {
+					to: 'foo',
+					registry,
+					onClick(event: MouseEvent) {
+						event.preventDefault();
+					}
+				}),
+			{ registry }
 		);
 		h.expect(() => v('a', { href: 'foo', registry, onclick: noop }));
 		h.trigger('a', 'onclick', createMockEvent());
@@ -106,28 +100,28 @@ describe('Link', () => {
 	});
 
 	it('Does not set router path when target attribute is set', () => {
-		const h = harness(() => w(TestLink, { to: 'foo', target: '_blank' }));
+		const h = harness(() => w(Link, { to: 'foo', target: '_blank' }), { registry });
 		h.expect(() => v('a', { href: 'foo', onclick: noop }));
 		h.trigger('a', 'onclick', createMockEvent());
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 
 	it('Does not set router path on right click', () => {
-		const h = harness(() => w(TestLink, { to: 'foo' }));
+		const h = harness(() => w(Link, { to: 'foo' }), { registry });
 		h.expect(() => v('a', { href: 'foo', onclick: noop }));
 		h.trigger('a', 'onclick', createMockEvent({ isRightClick: true }));
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 
 	it('Does not set router path on ctrl click', () => {
-		const h = harness(() => w(TestLink, { to: 'foo' }));
+		const h = harness(() => w(Link, { to: 'foo' }), { registry });
 		h.expect(() => v('a', { href: 'foo', onclick: noop }));
 		h.trigger('a', 'onclick', createMockEvent({ ctrlKey: true }));
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 
 	it('Does not set router path on meta click', () => {
-		const h = harness(() => w(TestLink, { to: 'foo' }));
+		const h = harness(() => w(Link, { to: 'foo' }), { registry });
 		h.expect(() => v('a', { href: 'foo', onclick: noop }));
 		h.trigger('a', 'onclick', createMockEvent({ metaKey: true }));
 		assert.isTrue(routerSetPathSpy.notCalled);
@@ -135,7 +129,7 @@ describe('Link', () => {
 
 	it('throw error if the injected router cannot be found with the router key', () => {
 		try {
-			harness(() => w(TestLink, { to: '#foo/static', isOutlet: false, routerKey: 'fake-key' }));
+			harness(() => w(Link, { to: '#foo/static', isOutlet: false, routerKey: 'fake-key' }), { registry });
 			assert.fail('Should throw an error when the injected router cannot be found with the routerKey');
 		} catch (err) {
 			// nothing to see here

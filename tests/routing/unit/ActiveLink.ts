@@ -48,26 +48,18 @@ const router = new Router(
 
 registry.defineInjector('router', () => () => router);
 
-class BaseActiveLink extends ActiveLink {
-	constructor(...args: any[]) {
-		super(...args);
-
-		this.registry.base = registry;
-	}
-}
-
 describe('ActiveLink', () => {
 	it('should invalidate when the outlet has been matched', () => {
 		let invalidateCallCount = 0;
 
-		class MyActiveLink extends BaseActiveLink {
+		class MyActiveLink extends ActiveLink {
 			invalidate() {
 				super.invalidate();
 				invalidateCallCount++;
 			}
 		}
 
-		const h = harness(() => w(MyActiveLink, { to: 'foo', activeClasses: ['foo'] }));
+		const h = harness(() => w(MyActiveLink, { to: 'foo', activeClasses: ['foo'] }), { registry });
 		h.expect(() => w(Link, { classes: [], to: 'foo' }));
 
 		invalidateCallCount = 0;
@@ -81,33 +73,33 @@ describe('ActiveLink', () => {
 
 	it('Does not add active class when outlet is not active', () => {
 		router.setPath('/other');
-		const h = harness(() => w(BaseActiveLink, { to: 'foo', activeClasses: ['foo', undefined, null] }));
+		const h = harness(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo', undefined, null] }), { registry });
 		h.expect(() => w(Link, { classes: [], to: 'foo' }));
 	});
 
 	it('Should add the active class when the outlet is active', () => {
 		router.setPath('/foo');
-		const h = harness(() => w(BaseActiveLink, { to: 'foo', activeClasses: ['foo', undefined, null] }));
+		const h = harness(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo', undefined, null] }), { registry });
 		h.expect(() => w(Link, { classes: ['foo', undefined, null], to: 'foo' }));
 	});
 
 	it('Should render the ActiveLink children', () => {
 		router.setPath('/foo');
-		const h = harness(() => w(BaseActiveLink, { to: 'foo', activeClasses: ['foo'] }, ['hello']));
+		const h = harness(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo'] }, ['hello']), { registry });
 		h.expect(() => w(Link, { classes: ['foo'], to: 'foo' }, ['hello']));
 	});
 
 	it('Should mix the active class onto existing string class when the outlet is active', () => {
 		router.setPath('/foo');
-		const h = harness(() => w(BaseActiveLink, { to: 'foo', activeClasses: ['foo'], classes: 'bar' }));
+		const h = harness(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo'], classes: 'bar' }), { registry });
 		h.expect(() => w(Link, { classes: ['bar', 'foo'], to: 'foo' }));
 	});
 
 	it('Should mix the active class onto existing array of classes when the outlet is active', () => {
 		router.setPath('/foo');
-		const h = harness(() =>
-			w(BaseActiveLink, { to: 'foo', activeClasses: ['foo', 'qux'], classes: ['bar', 'baz'] })
-		);
+		const h = harness(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo', 'qux'], classes: ['bar', 'baz'] }), {
+			registry
+		});
 		h.expect(() => w(Link, { classes: ['bar', 'baz', 'foo', 'qux'], to: 'foo' }));
 	});
 
@@ -115,14 +107,14 @@ describe('ActiveLink', () => {
 		let invalidateCount = 0;
 		router.setPath('/foo');
 
-		class TestActiveLink extends BaseActiveLink {
+		class TestActiveLink extends ActiveLink {
 			invalidate() {
 				invalidateCount++;
 				super.invalidate();
 			}
 		}
 
-		const h = harness(() => w(TestActiveLink, { to: 'foo', activeClasses: ['foo'] }));
+		const h = harness(() => w(TestActiveLink, { to: 'foo', activeClasses: ['foo'] }), { registry });
 		h.expect(() => w(Link, { to: 'foo', classes: ['foo'] }));
 
 		invalidateCount = 0;
@@ -138,7 +130,7 @@ describe('ActiveLink', () => {
 		let invalidateCount = 0;
 		router.setPath('/foo');
 
-		class TestActiveLink extends BaseActiveLink {
+		class TestActiveLink extends ActiveLink {
 			invalidate() {
 				invalidateCount++;
 				super.invalidate();
@@ -147,7 +139,7 @@ describe('ActiveLink', () => {
 
 		let properties: any = { to: 'foo', activeClasses: ['foo'] };
 
-		const h = harness(() => w(TestActiveLink, properties));
+		const h = harness(() => w(TestActiveLink, properties), { registry });
 		h.expect(() => w(Link, { to: 'foo', classes: ['foo'] }));
 
 		invalidateCount = 0;
@@ -166,33 +158,38 @@ describe('ActiveLink', () => {
 
 	it('Should return link when the router injector is not available', () => {
 		router.setPath('/foo');
-		const h = harness(() =>
-			w(BaseActiveLink, { to: 'foo', activeClasses: ['foo'], classes: 'bar', routerKey: 'other' })
+		const h = harness(
+			() => w(ActiveLink, { to: 'foo', activeClasses: ['foo'], classes: 'bar', routerKey: 'other' }),
+			{ registry }
 		);
 		h.expect(() => w(Link, { to: 'foo', classes: ['bar'], routerKey: 'other' }));
 	});
 
 	it('should look at route params when determining active', () => {
 		router.setPath('/param/one');
-		const h1 = harness(() =>
-			w(BaseActiveLink, {
-				to: 'suffixed-param',
-				activeClasses: ['foo'],
-				params: {
-					suffix: 'one'
-				}
-			})
+		const h1 = harness(
+			() =>
+				w(ActiveLink, {
+					to: 'suffixed-param',
+					activeClasses: ['foo'],
+					params: {
+						suffix: 'one'
+					}
+				}),
+			{ registry }
 		);
 		h1.expect(() => w(Link, { to: 'suffixed-param', classes: ['foo'], params: { suffix: 'one' } }));
 
-		const h2 = harness(() =>
-			w(BaseActiveLink, {
-				to: 'suffixed-param',
-				activeClasses: ['foo'],
-				params: {
-					suffix: 'two'
-				}
-			})
+		const h2 = harness(
+			() =>
+				w(ActiveLink, {
+					to: 'suffixed-param',
+					activeClasses: ['foo'],
+					params: {
+						suffix: 'two'
+					}
+				}),
+			{ registry }
 		);
 		h2.expect(() => w(Link, { to: 'suffixed-param', classes: [], params: { suffix: 'two' } }));
 	});

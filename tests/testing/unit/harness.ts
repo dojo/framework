@@ -7,6 +7,7 @@ import { v, w, isVNode } from '../../../src/widget-core/d';
 import Set from '../../../src/shim/Set';
 import Map from '../../../src/shim/Map';
 import { VNode, WNode } from '../../../src/widget-core/interfaces';
+import Registry from '../../../src/widget-core/Registry';
 
 const noop: any = () => {};
 
@@ -433,6 +434,49 @@ describe('harness', () => {
 			const h = harness(() => w(Foo, { foo, bar }));
 			h.expect(() => w(Bar, { foo, bar }));
 		});
+
+		it('supports passing a registry', () => {
+			const registry = new Registry();
+			registry.define('registry-item', ChildWidget);
+			const h = harness(() => w(MyWidget, {}), { registry });
+			h.expect(() =>
+				v('div', { classes: ['root', 'other'], onclick: () => {} }, [
+					v(
+						'span',
+						{ key: 'span', classes: 'span', style: 'width: 100px', id: 'random-id', onclick: () => {} },
+						['hello 0']
+					),
+					w(ChildWidget, { key: 'widget', id: 'random-id', func: noop }),
+					w(ChildWidget, { key: 'registry', id: 'random-id' })
+				])
+			);
+		});
+
+		it('supports passing a registry and comparators', () => {
+			const registry = new Registry();
+			registry.define('registry-item', ChildWidget);
+			const h = harness(() => w(MyWidget, {}), {
+				registry,
+				comparators: [
+					{
+						selector: '*[key="registry"]',
+						property: 'id',
+						comparator: (property: any) => typeof property === 'string'
+					}
+				]
+			});
+			h.expect(() =>
+				v('div', { classes: ['root', 'other'], onclick: () => {} }, [
+					v(
+						'span',
+						{ key: 'span', classes: 'span', style: 'width: 100px', id: 'random-id', onclick: () => {} },
+						['hello 0']
+					),
+					w(ChildWidget, { key: 'widget', id: 'random-id', func: noop }),
+					w(ChildWidget, { key: 'registry', id: '' })
+				])
+			);
+		});
 	});
 
 	describe('widget with an array of DNodes', () => {
@@ -578,6 +622,41 @@ describe('harness', () => {
 				]),
 				w(ChildWidget, { key: 'widget', id: 'random-id' }),
 				w<ChildWidget>('registry-item', { key: 'registry', id: '' })
+			]);
+		});
+
+		it('supports passing a registry', () => {
+			const registry = new Registry();
+			registry.define('registry-item', ChildWidget);
+			const h = harness(() => w(ArrayWidget, {}), { registry });
+			h.expect(() => [
+				v('span', { key: 'span', classes: 'span', style: 'width: 100px', id: 'random-id', onclick: () => {} }, [
+					'hello 0'
+				]),
+				w(ChildWidget, { key: 'widget', id: 'random-id' }),
+				w(ChildWidget, { key: 'registry', id: 'random-id' })
+			]);
+		});
+
+		it('supports passing a registry and comparators', () => {
+			const registry = new Registry();
+			registry.define('registry-item', ChildWidget);
+			const h = harness(() => w(ArrayWidget, {}), {
+				registry,
+				comparators: [
+					{
+						selector: '*[key="registry"]',
+						property: 'id',
+						comparator: (property: any) => typeof property === 'string'
+					}
+				]
+			});
+			h.expect(() => [
+				v('span', { key: 'span', classes: 'span', style: 'width: 100px', id: 'random-id', onclick: () => {} }, [
+					'hello 0'
+				]),
+				w(ChildWidget, { key: 'widget', id: 'random-id' }),
+				w(ChildWidget, { key: 'registry', id: '' })
 			]);
 		});
 	});

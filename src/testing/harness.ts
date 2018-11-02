@@ -1,6 +1,7 @@
 import assertRender from './support/assertRender';
 import { select } from './support/selector';
 import { WNode, DNode, WidgetBaseInterface, Constructor, VNode } from '../widget-core/interfaces';
+import { Registry } from '../widget-core/Registry';
 import { WidgetBase } from '../widget-core/WidgetBase';
 import { decorate, isVNode, isWNode } from '../widget-core/d';
 
@@ -49,6 +50,11 @@ export interface HarnessAPI {
 	getRender: GetRender;
 }
 
+export interface HarnessOptions {
+	registry?: Registry;
+	comparators?: CustomComparator[];
+}
+
 function decorateNodes(dNode: DNode[]): DecoratorResult<DNode[]>;
 function decorateNodes(dNode: DNode): DecoratorResult<DNode>;
 function decorateNodes(dNode: DNode | DNode[]): DecoratorResult<DNode | DNode[]>;
@@ -69,10 +75,16 @@ function decorateNodes(dNode: any): DecoratorResult<DNode | DNode[]> {
 	return { hasDeferredProperties, nodes };
 }
 
+export function harness(renderFunc: () => WNode<WidgetBaseInterface>, options?: HarnessOptions): HarnessAPI;
+export function harness(renderFunc: () => WNode<WidgetBaseInterface>, customComparator: CustomComparator[]): HarnessAPI;
 export function harness(
 	renderFunc: () => WNode<WidgetBaseInterface>,
-	customComparator: CustomComparator[] = []
+	options: HarnessOptions | CustomComparator[] = {}
 ): HarnessAPI {
+	const { registry = undefined, comparators: customComparator = [] } = Array.isArray(options)
+		? { comparators: options }
+		: options;
+
 	let invalidated = true;
 	let wNode = renderFunc();
 	let widget: WidgetBase;
@@ -86,6 +98,9 @@ export function harness(
 				super.invalidate();
 			}
 		}();
+		if (registry) {
+			widget.registry.base = registry;
+		}
 		widget.__setProperties__(properties);
 		widget.__setChildren__(children);
 		_tryRender();
