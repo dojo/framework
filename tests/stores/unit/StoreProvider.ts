@@ -1,13 +1,13 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import { v } from '../../../src/widget-core/d';
+import { v, w } from '../../../src/widget-core/d';
 import { Registry } from '../../../src/widget-core/Registry';
 
 import { StoreProvider } from '../../../src/stores/StoreProvider';
 import { createCommandFactory, createProcess, Process } from '../../../src/stores/process';
 import { replace } from '../../../src/stores/state/operations';
 import { Store } from '../../../src/stores/Store';
-import { VNode } from '../../../src/widget-core/interfaces';
+import harness from '../../../src/testing/harness';
 
 interface State {
 	foo: string;
@@ -75,210 +75,203 @@ describe('StoreProvider', () => {
 		deepProcess = createProcess('deep', [deepCommand]);
 	});
 
-	it('should connect to the stores generally invalidate', () => {
+	describe('invalidate', () => {
 		let invalidateCount = 0;
-		class TestContainer extends StoreProvider<State> {
-			invalidate() {
-				invalidateCount++;
-			}
-		}
-		const container = new TestContainer();
-		container.registry.base = registry;
-		container.__setProperties__({
-			stateKey: 'state',
-			renderer(injectedStore) {
-				assert.strictEqual<any>(injectedStore, store);
-				return v('div');
-			}
-		});
-		invalidateCount = 0;
-		fooProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		barProcess(store)({});
-		assert.strictEqual(invalidateCount, 2);
-		bazProcess(store)({});
-		assert.strictEqual(invalidateCount, 3);
-		quxProcess(store)({});
-		assert.strictEqual(invalidateCount, 4);
-		fooBarProcess(store)({});
-		assert.strictEqual(invalidateCount, 5);
-		deepProcess(store)({});
-		assert.strictEqual(invalidateCount, 6);
-	});
+		let TestContainer: new (...args: any[]) => StoreProvider<State>;
 
-	it('should connect to the stores for paths', () => {
-		let invalidateCount = 0;
-		class TestContainer extends StoreProvider<State> {
-			invalidate() {
-				invalidateCount++;
-			}
-		}
-		const container = new TestContainer();
-		container.registry.base = registry;
-		container.__setProperties__({
-			paths: (path) => {
-				return [path(path('qux', 'bar', 'foo', 'foobar', 'baz'), 'barbaz', 'res')];
-			},
-			stateKey: 'state',
-			renderer(injectedStore) {
-				assert.strictEqual<any>(injectedStore, store);
-				return v('div');
-			}
+		beforeEach(() => {
+			invalidateCount = 0;
+			TestContainer = class extends StoreProvider<State> {
+				invalidate() {
+					invalidateCount++;
+				}
+			};
 		});
-		invalidateCount = 0;
-		deepProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		fooProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		barProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		bazProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		quxProcess(store)({});
-		assert.strictEqual(invalidateCount, 2);
-		fooBarProcess(store)({});
-		assert.strictEqual(invalidateCount, 2);
-	});
 
-	it('should re-connect to the store when paths change', () => {
-		let invalidateCount = 0;
-		class TestContainer extends StoreProvider<State> {
-			invalidate() {
-				invalidateCount++;
-			}
-		}
-		const container = new TestContainer();
-		container.registry.base = registry;
-		container.__setProperties__({
-			paths: (path) => {
-				return [path(path('qux', 'bar', 'foo', 'foobar', 'baz'), 'barbaz', 'res')];
-			},
-			stateKey: 'state',
-			renderer(injectedStore) {
-				assert.strictEqual<any>(injectedStore, store);
-				return v('div');
-			}
+		it('should connect to the stores generally invalidate', () => {
+			harness(
+				() =>
+					w(TestContainer, {
+						stateKey: 'state',
+						renderer(injectedStore: any) {
+							assert.strictEqual<any>(injectedStore, store);
+							return v('div');
+						}
+					}),
+				{ registry }
+			);
+			invalidateCount = 0;
+			fooProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			barProcess(store)({});
+			assert.strictEqual(invalidateCount, 2);
+			bazProcess(store)({});
+			assert.strictEqual(invalidateCount, 3);
+			quxProcess(store)({});
+			assert.strictEqual(invalidateCount, 4);
+			fooBarProcess(store)({});
+			assert.strictEqual(invalidateCount, 5);
+			deepProcess(store)({});
+			assert.strictEqual(invalidateCount, 6);
 		});
-		invalidateCount = 0;
-		deepProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		fooProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		barProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		bazProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		quxProcess(store)({});
-		assert.strictEqual(invalidateCount, 2);
-		fooBarProcess(store)({});
-		assert.strictEqual(invalidateCount, 2);
-		container.__setProperties__({
-			paths: (path) => {
-				return [path('foo')];
-			},
-			stateKey: 'state',
-			renderer(injectedStore) {
-				assert.strictEqual<any>(injectedStore, store);
-				return v('div');
-			}
-		});
-		invalidateCount = 0;
-		deepProcess(store)({});
-		assert.strictEqual(invalidateCount, 0);
-		fooProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		barProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		bazProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		quxProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		fooBarProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-	});
 
-	it('should re-connect to the entire store paths are not passed', () => {
-		let invalidateCount = 0;
-		class TestContainer extends StoreProvider<State> {
-			invalidate() {
-				invalidateCount++;
-			}
-		}
-		const container = new TestContainer();
-		container.registry.base = registry;
-		container.__setProperties__({
-			paths: (path) => {
-				return [path(path('qux', 'bar', 'foo', 'foobar', 'baz'), 'barbaz', 'res')];
-			},
-			stateKey: 'state',
-			renderer(injectedStore) {
-				assert.strictEqual<any>(injectedStore, store);
-				return v('div');
-			}
+		it('should connect to the stores for paths', () => {
+			harness(
+				() =>
+					w(TestContainer, {
+						paths: (path: any) => {
+							return [path(path('qux', 'bar', 'foo', 'foobar', 'baz'), 'barbaz', 'res')];
+						},
+						stateKey: 'state',
+						renderer(injectedStore: any) {
+							assert.strictEqual<any>(injectedStore, store);
+							return v('div');
+						}
+					}),
+				{ registry }
+			);
+			invalidateCount = 0;
+			deepProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			fooProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			barProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			bazProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			quxProcess(store)({});
+			assert.strictEqual(invalidateCount, 2);
+			fooBarProcess(store)({});
+			assert.strictEqual(invalidateCount, 2);
 		});
-		invalidateCount = 0;
-		deepProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		fooProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		barProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		bazProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		quxProcess(store)({});
-		assert.strictEqual(invalidateCount, 2);
-		fooBarProcess(store)({});
-		assert.strictEqual(invalidateCount, 2);
-		container.__setProperties__({
-			stateKey: 'state',
-			renderer(injectedStore) {
-				assert.strictEqual<any>(injectedStore, store);
-				return v('div');
-			}
+
+		it('should re-connect to the store when paths change', () => {
+			let properties: any = {
+				paths: (path: any) => {
+					return [path(path('qux', 'bar', 'foo', 'foobar', 'baz'), 'barbaz', 'res')];
+				},
+				stateKey: 'state',
+				renderer(injectedStore: any) {
+					assert.strictEqual<any>(injectedStore, store);
+					return v('div');
+				}
+			};
+			const h = harness(() => w(TestContainer, properties), { registry });
+			invalidateCount = 0;
+			deepProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			fooProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			barProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			bazProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			quxProcess(store)({});
+			assert.strictEqual(invalidateCount, 2);
+			fooBarProcess(store)({});
+			assert.strictEqual(invalidateCount, 2);
+			properties = {
+				paths: (path: any) => {
+					return [path('foo')];
+				},
+				stateKey: 'state',
+				renderer(injectedStore: any) {
+					assert.strictEqual<any>(injectedStore, store);
+					return v('div');
+				}
+			};
+			h.expect(() => v('div'));
+			invalidateCount = 0;
+			deepProcess(store)({});
+			assert.strictEqual(invalidateCount, 0);
+			fooProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			barProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			bazProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			quxProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			fooBarProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
 		});
-		invalidateCount = 0;
-		deepProcess(store)({});
-		assert.strictEqual(invalidateCount, 1);
-		fooProcess(store)({});
-		assert.strictEqual(invalidateCount, 2);
-		barProcess(store)({});
-		assert.strictEqual(invalidateCount, 3);
-		bazProcess(store)({});
-		assert.strictEqual(invalidateCount, 4);
-		quxProcess(store)({});
-		assert.strictEqual(invalidateCount, 5);
-		fooBarProcess(store)({});
-		assert.strictEqual(invalidateCount, 6);
+
+		it('should re-connect to the entire store paths are not passed', () => {
+			let properties: any = {
+				paths: (path: any) => {
+					return [path(path('qux', 'bar', 'foo', 'foobar', 'baz'), 'barbaz', 'res')];
+				},
+				stateKey: 'state',
+				renderer(injectedStore: any) {
+					assert.strictEqual<any>(injectedStore, store);
+					return v('div');
+				}
+			};
+			const h = harness(() => w(TestContainer, properties), { registry });
+			invalidateCount = 0;
+			deepProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			fooProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			barProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			bazProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			quxProcess(store)({});
+			assert.strictEqual(invalidateCount, 2);
+			fooBarProcess(store)({});
+			assert.strictEqual(invalidateCount, 2);
+			properties = {
+				stateKey: 'state',
+				renderer(injectedStore: any) {
+					assert.strictEqual<any>(injectedStore, store);
+					return v('div');
+				}
+			};
+			h.expect(() => v('div'));
+			invalidateCount = 0;
+			deepProcess(store)({});
+			assert.strictEqual(invalidateCount, 1);
+			fooProcess(store)({});
+			assert.strictEqual(invalidateCount, 2);
+			barProcess(store)({});
+			assert.strictEqual(invalidateCount, 3);
+			bazProcess(store)({});
+			assert.strictEqual(invalidateCount, 4);
+			quxProcess(store)({});
+			assert.strictEqual(invalidateCount, 5);
+			fooBarProcess(store)({});
+			assert.strictEqual(invalidateCount, 6);
+		});
 	});
 
 	it('should return the result of the renderer', () => {
-		const container = new StoreProvider();
-		container.registry.base = registry;
-		container.__setProperties__({
-			stateKey: 'state',
-			renderer(injectedStore) {
-				assert.strictEqual<any>(injectedStore, store);
-				return v('div');
-			}
-		});
-		const result = container.__render__() as VNode;
-		assert.strictEqual(result.bind, container);
-		assert.deepEqual(result.properties, {});
-		assert.isUndefined(result.children);
-		assert.strictEqual(result.tag, 'div');
+		const h = harness(
+			() =>
+				w(StoreProvider, {
+					stateKey: 'state',
+					renderer(injectedStore: any) {
+						assert.strictEqual<any>(injectedStore, store);
+						return v('div');
+					}
+				}),
+			{ registry }
+		);
+		h.expect(() => v('div'));
 	});
 
 	it('should return undefined is the store is not available in the registry', () => {
-		const container = new StoreProvider();
-		container.registry.base = registry;
-		container.__setProperties__({
-			stateKey: 'other-state',
-			renderer(injectedStore) {
-				assert.strictEqual<any>(injectedStore, store);
-				return v('div');
-			}
-		});
-		const result = container.__render__() as VNode;
-		assert.isUndefined(result);
+		const h = harness(
+			() =>
+				w(StoreProvider, {
+					stateKey: 'other-state',
+					renderer(injectedStore: any) {
+						assert.strictEqual<any>(injectedStore, store);
+						return v('div');
+					}
+				}),
+			{ registry }
+		);
+		h.expect(() => null);
 	});
 });

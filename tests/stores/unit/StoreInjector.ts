@@ -2,8 +2,9 @@ const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { spy } from 'sinon';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import { v, WNODE } from '../../../src/widget-core/d';
+import { v, w } from '../../../src/widget-core/d';
 import { Registry } from '../../../src/widget-core/Registry';
+import harness from '../../../src/testing/harness';
 
 import {
 	createStoreContainer,
@@ -84,6 +85,9 @@ describe('StoreInjector', () => {
 
 	describe('storeInject', () => {
 		it('Should invalidate every time the payload invalidate when no path is passed', () => {
+			registry.defineInjector('state', () => () => store);
+			const invalidateSpy = spy();
+
 			@storeInject<State>({
 				name: 'state',
 				getProperties: (store) => {
@@ -92,23 +96,28 @@ describe('StoreInjector', () => {
 					};
 				}
 			})
-			class TestWidget extends WidgetBase<any> {}
-			const widget = new TestWidget();
-			registry.defineInjector('state', () => () => store);
-			widget.registry.base = registry;
-			widget.__setProperties__({});
-			const invalidateSpy = spy(widget, 'invalidate');
-			assert.strictEqual(widget.properties.foo, undefined);
+			class TestWidget extends WidgetBase<any> {
+				invalidate() {
+					super.invalidate();
+					invalidateSpy();
+				}
+			}
+			const h = harness(() => w(TestWidget, {}), { registry });
+			h.expect(() => v('div'));
+			assert.strictEqual((h.getRender(0) as any).bind.properties.foo, undefined);
 			fooProcess(store)({});
-			assert.isTrue(invalidateSpy.calledOnce);
-			widget.__setProperties__({});
 			assert.isTrue(invalidateSpy.calledTwice);
-			assert.strictEqual(widget.properties.foo, 'foo');
-			barProcess(store)({});
+			h.expect(() => v('div', {}));
 			assert.isTrue(invalidateSpy.calledThrice);
+			assert.strictEqual((h.getRender(1) as any).bind.properties.foo, 'foo');
+			barProcess(store)({});
+			assert.strictEqual(invalidateSpy.callCount, 4);
 		});
 
 		it('Should only invalidate when the path passed is changed', () => {
+			registry.defineInjector('state', () => () => store);
+			const invalidateSpy = spy();
+
 			@storeInject<State>({
 				name: 'state',
 				paths: [['foo']],
@@ -118,23 +127,28 @@ describe('StoreInjector', () => {
 					};
 				}
 			})
-			class TestWidget extends WidgetBase<any> {}
-			const widget = new TestWidget();
-			registry.defineInjector('state', () => () => store);
-			widget.registry.base = registry;
-			widget.__setProperties__({});
-			const invalidateSpy = spy(widget, 'invalidate');
-			assert.strictEqual(widget.properties.foo, undefined);
+			class TestWidget extends WidgetBase<any> {
+				invalidate() {
+					super.invalidate();
+					invalidateSpy();
+				}
+			}
+			const h = harness(() => w(TestWidget, {}), { registry });
+			h.expect(() => v('div'));
+			assert.strictEqual((h.getRender(0) as any).bind.properties.foo, undefined);
 			fooProcess(store)({});
-			assert.isTrue(invalidateSpy.calledOnce);
-			widget.__setProperties__({});
 			assert.isTrue(invalidateSpy.calledTwice);
-			assert.strictEqual(widget.properties.foo, 'foo');
+			h.expect(() => v('div'));
+			assert.isTrue(invalidateSpy.calledThrice);
+			assert.strictEqual((h.getRender(1) as any).bind.properties.foo, 'foo');
 			barProcess(store)({});
-			assert.isTrue(invalidateSpy.calledTwice);
+			assert.isTrue(invalidateSpy.calledThrice);
 		});
 
 		it('Should only invalidate when the path passed is changed using path function', () => {
+			registry.defineInjector('state', () => () => store);
+			const invalidateSpy = spy();
+
 			@storeInject<State>({
 				name: 'state',
 				paths: (path) => {
@@ -146,29 +160,33 @@ describe('StoreInjector', () => {
 					};
 				}
 			})
-			class TestWidget extends WidgetBase<any> {}
-			const widget = new TestWidget();
-			registry.defineInjector('state', () => () => store);
-			widget.registry.base = registry;
-			widget.__setProperties__({});
-			const invalidateSpy = spy(widget, 'invalidate');
-			assert.strictEqual(widget.properties.foo, undefined);
+			class TestWidget extends WidgetBase<any> {
+				invalidate() {
+					super.invalidate();
+					invalidateSpy();
+				}
+			}
+			const h = harness(() => w(TestWidget, {}), { registry });
+			h.expect(() => v('div'));
+			assert.strictEqual((h.getRender(0) as any).bind.properties.foo, undefined);
 			bazProcess(store)({});
-			assert.isTrue(invalidateSpy.calledOnce);
-			widget.__setProperties__({});
 			assert.isTrue(invalidateSpy.calledTwice);
-			assert.strictEqual(widget.properties.baz, 1);
+			h.expect(() => v('div'));
+			assert.isTrue(invalidateSpy.calledThrice);
+			assert.strictEqual((h.getRender(1) as any).bind.properties.baz, 1);
 			barProcess(store)({});
-			assert.isTrue(invalidateSpy.calledTwice);
+			assert.isTrue(invalidateSpy.calledThrice);
 			quxProcess(store)({});
-			assert.isTrue(invalidateSpy.calledThrice);
-			fooBarProcess(store)({});
-			assert.isTrue(invalidateSpy.calledThrice);
-			deepProcess(store)({});
 			assert.strictEqual(invalidateSpy.callCount, 4);
+			fooBarProcess(store)({});
+			assert.strictEqual(invalidateSpy.callCount, 4);
+			deepProcess(store)({});
+			assert.strictEqual(invalidateSpy.callCount, 5);
 		});
 
 		it('invalidate listeners are removed when widget is destroyed', () => {
+			registry.defineInjector('state', () => () => store);
+
 			let invalidateCounter = 0;
 			@storeInject<State>({
 				name: 'state',
@@ -187,20 +205,20 @@ describe('StoreInjector', () => {
 					super.invalidate();
 				}
 			}
-			const widget = new TestWidget();
-			registry.defineInjector('state', () => () => store);
-			widget.registry.base = registry;
-			widget.__setProperties__({});
+			const h = harness(() => w(TestWidget, {}), { registry });
+			h.expect(() => v('div'));
 			fooProcess(store)({});
 			assert.strictEqual(invalidateCounter, 2);
 			barProcess(store)({});
 			assert.strictEqual(invalidateCounter, 3);
-			widget.destroy();
+			(h.getRender(0) as any).bind.destroy();
 			barProcess(store)({});
 			assert.strictEqual(invalidateCounter, 3);
 		});
 
 		it('path based invalidate listeners are removed when widget is destroyed', () => {
+			registry.defineInjector('state', () => () => store);
+
 			let invalidateCounter = 0;
 			@storeInject<State>({
 				name: 'state',
@@ -220,15 +238,13 @@ describe('StoreInjector', () => {
 					super.invalidate();
 				}
 			}
-			const widget = new TestWidget();
-			registry.defineInjector('state', () => () => store);
-			widget.registry.base = registry;
-			widget.__setProperties__({});
+			const h = harness(() => w(TestWidget, {}), { registry });
+			h.expect(() => v('div'));
 			fooProcess(store)({});
 			assert.strictEqual(invalidateCounter, 2);
 			fooProcess(store)({});
 			assert.strictEqual(invalidateCounter, 3);
-			widget.destroy();
+			(h.getRender(0) as any).bind.destroy();
 			fooProcess(store)({});
 			assert.strictEqual(invalidateCounter, 3);
 		});
@@ -285,20 +301,14 @@ describe('StoreInjector', () => {
 					return super.render();
 				}
 			}
-			const fooContainer = new FooContainer();
-			fooContainer.__setProperties__({ key: '1' });
-			const child = v('div');
-			fooContainer.__setChildren__([child]);
-			const renderResult = fooContainer.render();
-			assert.deepEqual(renderResult, {
-				properties: { key: '1' },
-				children: [child],
-				type: WNODE,
-				widgetConstructor: Foo
-			});
+
+			const h = harness(() => w(FooContainer, { key: '1' }, [v('div')]));
+			h.expect(() => w(Foo, { key: '1' }, [v('div')]));
 		});
 
 		it('Should always render a container', () => {
+			registry.defineInjector('state', () => () => store);
+
 			let invalidateCounter = 0;
 			class Foo extends WidgetBase {}
 			class FooContainer extends StoreContainer<State>(Foo, 'state', {
@@ -310,15 +320,15 @@ describe('StoreInjector', () => {
 					invalidateCounter++;
 				}
 			}
-			const fooContainer = new FooContainer();
-			registry.defineInjector('state', () => () => store);
-			fooContainer.__setProperties__({});
+			const h = harness(() => w(FooContainer, {}));
+			invalidateCounter = 0;
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 1);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 2);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 3);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 4);
 		});
 	});
@@ -335,20 +345,13 @@ describe('StoreInjector', () => {
 					return super.render();
 				}
 			}
-			const fooContainer = new FooContainer();
-			fooContainer.__setProperties__({ key: '1' });
-			const child = v('div');
-			fooContainer.__setChildren__([child]);
-			const renderResult = fooContainer.render();
-			assert.deepEqual(renderResult, {
-				properties: { key: '1' },
-				children: [child],
-				type: WNODE,
-				widgetConstructor: Foo
-			});
+			const h = harness(() => w(FooContainer, { key: '1' }, [v('div')]));
+			h.expect(() => w(Foo, { key: '1' }, [v('div')]));
 		});
 
 		it('Should always render a container', () => {
+			registry.defineInjector('state', () => () => store);
+
 			let invalidateCounter = 0;
 			class Foo extends WidgetBase {}
 			class FooContainer extends TypedStoreContainer(Foo, 'state', {
@@ -360,15 +363,15 @@ describe('StoreInjector', () => {
 					invalidateCounter++;
 				}
 			}
-			const fooContainer = new FooContainer();
-			registry.defineInjector('state', () => () => store);
-			fooContainer.__setProperties__({});
+			const h = harness(() => w(FooContainer, {}));
+			invalidateCounter = 0;
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 1);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 2);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 3);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 4);
 		});
 	});

@@ -9,6 +9,7 @@ import bundle from '../../support/nls/greetings';
 import { fetchCldrData } from '../../support/util';
 import { v, w } from './../../../../src/widget-core/d';
 import { ThemedMixin } from './../../../../src/widget-core/mixins/Themed';
+import harness from '../../../../src/testing/harness';
 
 class Localized extends I18nMixin(ThemedMixin(WidgetBase))<I18nProperties> {}
 
@@ -51,7 +52,7 @@ registerSuite('mixins/I18nMixin', {
 
 	tests: {
 		api() {
-			const localized = new Localized();
+			const localized = (harness(() => w(Localized, {})).getRender(0) as any).bind;
 			assert(localized);
 			assert.isFunction(localized.localizeBundle);
 		},
@@ -60,7 +61,7 @@ registerSuite('mixins/I18nMixin', {
 			'Returns blank messages when locale bundle not loaded'() {
 				switchLocale('fr');
 
-				localized = new Localized();
+				localized = (harness(() => w(Localized, {})).getRender(0) as any).bind;
 				const { format, isPlaceholder, messages } = localized.localizeBundle(bundle);
 
 				assert.isTrue(isPlaceholder);
@@ -72,7 +73,7 @@ registerSuite('mixins/I18nMixin', {
 			'Returns default messages with second argument when locale bundle not loaded'() {
 				switchLocale('fr');
 
-				localized = new Localized();
+				localized = (harness(() => w(Localized, {})).getRender(0) as any).bind;
 				const { format, isPlaceholder, messages } = localized.localizeBundle(bundle, true);
 
 				assert.isTrue(isPlaceholder);
@@ -84,7 +85,7 @@ registerSuite('mixins/I18nMixin', {
 			'Returns default messages when bundle has no supported locales'() {
 				switchLocale('fr');
 
-				localized = new Localized();
+				localized = (harness(() => w(Localized, {})).getRender(0) as any).bind;
 				const { isPlaceholder, messages } = localized.localizeBundle({
 					messages: {
 						hello: 'Hello',
@@ -98,8 +99,8 @@ registerSuite('mixins/I18nMixin', {
 			},
 
 			'Uses `properties.locale` when available'() {
-				localized = new Localized();
-				localized.__setProperties__({ locale: 'fr' });
+				const h = harness(() => w(Localized, { locale: 'fr' }));
+				localized = (h.getRender(0) as any).bind;
 				return i18n(bundle, 'fr').then(() => {
 					const { isPlaceholder, messages } = localized.localizeBundle(bundle);
 					assert.isFalse(isPlaceholder);
@@ -111,7 +112,8 @@ registerSuite('mixins/I18nMixin', {
 			'Uses default locale when no locale is set'() {
 				switchLocale('fr');
 
-				localized = new Localized();
+				const h = harness(() => w(Localized, {}));
+				localized = (h.getRender(0) as any).bind;
 				return i18n(bundle, 'fr').then(() => {
 					const { isPlaceholder, messages } = localized.localizeBundle(bundle);
 					assert.isFalse(isPlaceholder);
@@ -121,7 +123,7 @@ registerSuite('mixins/I18nMixin', {
 			},
 
 			'Returns an object with a `format` method'() {
-				localized = new Localized();
+				localized = (harness(() => w(Localized, {})).getRender(0) as any).bind;
 				let { format } = localized.localizeBundle(bundle);
 
 				assert.isFunction(format);
@@ -137,8 +139,7 @@ registerSuite('mixins/I18nMixin', {
 		},
 		'.localizeBundle() with an override': {
 			'Uses the `i18nBundle` property'() {
-				localized = new Localized();
-				localized.__setProperties__({ i18nBundle: overrideBundle });
+				localized = (harness(() => w(Localized, { i18nBundle: overrideBundle })).getRender(0) as any).bind;
 
 				switchLocale('es');
 				localized.localizeBundle(bundle);
@@ -156,8 +157,7 @@ registerSuite('mixins/I18nMixin', {
 				const i18nBundleMap = new Map<any, any>();
 				i18nBundleMap.set(bundle, overrideBundle);
 
-				localized = new Localized();
-				localized.__setProperties__({ i18nBundle: i18nBundleMap });
+				localized = (harness(() => w(Localized, { i18nBundle: i18nBundleMap })).getRender(0) as any).bind;
 
 				switchLocale('es');
 				localized.localizeBundle(bundle);
@@ -173,8 +173,7 @@ registerSuite('mixins/I18nMixin', {
 			'Uses the base bundle when the `i18nBundle` map does not contain an override'() {
 				const i18nBundleMap = new Map<any, any>();
 
-				localized = new Localized();
-				localized.__setProperties__({ i18nBundle: i18nBundleMap });
+				localized = (harness(() => w(Localized, { i18nBundle: i18nBundleMap })).getRender(0) as any).bind;
 
 				switchLocale('es');
 				localized.localizeBundle(bundle);
@@ -194,13 +193,12 @@ registerSuite('mixins/I18nMixin', {
 				const registry = new Registry();
 
 				registry.defineInjector(INJECTOR_KEY, injector);
-				localized = new Localized();
-				localized.registry.base = registry;
-				localized.__setProperties__({});
-
-				const result = localized.__render__();
-				assert.strictEqual(result.properties!['lang'], 'ar');
-				assert.strictEqual(result.properties!['dir'], 'rtl');
+				harness(() => w(Localized, {}), { registry }).expect(() =>
+					v('div', {
+						lang: 'ar',
+						dir: 'rtl'
+					})
+				);
 			},
 
 			'does not override property values'() {
@@ -208,30 +206,23 @@ registerSuite('mixins/I18nMixin', {
 				const registry = new Registry();
 
 				registry.defineInjector(INJECTOR_KEY, injector);
-				localized = new Localized();
-				localized.registry.base = registry;
-				localized.__setProperties__({ locale: 'fr', rtl: false });
-
-				const result = localized.__render__();
-				assert.strictEqual(result.properties!['lang'], 'fr');
-				assert.strictEqual(result.properties!['dir'], 'ltr');
+				harness(() => w(Localized, { locale: 'fr', rtl: false }), { registry }).expect(() =>
+					v('div', {
+						lang: 'fr',
+						dir: 'ltr'
+					})
+				);
 			},
 
 			'properties can be registered with helper'() {
 				const registry = new Registry();
 				const injector = registerI18nInjector({ locale: 'fr' }, registry);
 
-				localized = new Localized();
-				localized.registry.base = registry;
-				localized.__setProperties__({});
-
-				let result = localized.__render__();
-				assert.strictEqual(result.properties!['lang'], 'fr');
+				const h = harness(() => w(Localized, {}), { registry });
+				h.expect(() => v('div', { lang: 'fr' }));
 
 				injector.set({ locale: 'jp' });
-				localized.__setProperties__({});
-				result = localized.__render__();
-				assert.strictEqual(result.properties!['lang'], 'jp');
+				h.expect(() => v('div', { lang: 'jp' }));
 			}
 		},
 		'does not decorate properties for wNode'() {
@@ -241,67 +232,36 @@ registerSuite('mixins/I18nMixin', {
 				}
 			}
 
-			localized = new LocalizedExtended();
-			localized.__setProperties__({ locale: 'ar-JO' });
-
-			const result = localized.__render__();
-			assert.isOk(result);
-			assert.isUndefined(result.properties!['lang']);
+			const h = harness(() => w(LocalizedExtended, { locale: 'ar-JO' }));
+			h.expect(() => w(Localized, {}));
 		},
 		"`properties.locale` updates the widget node's `lang` property": {
 			'when non-empty'() {
-				localized = new Localized();
-				localized.__setProperties__({ locale: 'ar-JO' });
-
-				const result = localized.__render__();
-				assert.isOk(result);
-				assert.strictEqual(result.properties!['lang'], 'ar-JO');
+				harness(() => w(Localized, { locale: 'ar-JO' })).expect(() => v('div', { lang: 'ar-JO' }));
 			},
 
 			'when empty'() {
-				localized = new Localized();
-
-				const result = localized.__render__();
-				assert.isOk(result);
-				assert.isUndefined(result.properties!['lang']);
+				harness(() => w(Localized, {})).expect(() => v('div'));
 			}
 		},
 
 		'`properties.rtl`': {
 			'The `dir` attribute is "rtl" when true'() {
-				localized = new Localized();
-				localized.__setProperties__({ rtl: true });
-
-				const result = localized.__render__();
-				assert.isOk(result);
-				assert.strictEqual(result.properties!['dir'], 'rtl');
+				harness(() => w(Localized, { rtl: true })).expect(() => v('div', { dir: 'rtl' }));
 			},
 
 			'The `dir` attribute is "ltr" when false'() {
-				localized = new Localized();
-				localized.__setProperties__({ rtl: false });
-
-				const result = localized.__render__();
-				assert.isOk(result);
-				assert.strictEqual(result.properties!['dir'], 'ltr');
+				harness(() => w(Localized, { rtl: false })).expect(() => v('div', { dir: 'ltr' }));
 			},
 
 			'The `dir` attribute is not set when not a boolean.'() {
-				localized = new Localized();
-
-				const result = localized.__render__();
-				assert.isOk(result);
-				assert.isUndefined(result.properties.dir);
+				harness(() => w(Localized, {})).expect(() => v('div'));
 			},
 
 			'The `dir` attribute is added to the first VNode in the render'() {
-				localized = new LocalizedWithWidget();
-				localized.__setProperties__({ rtl: false });
-
-				const result = localized.__render__();
-				assert.isOk(result);
-				assert.isUndefined(result.properties!['dir']);
-				assert.strictEqual(result.children[0].properties!['dir'], 'ltr');
+				harness(() => w(LocalizedWithWidget, { rtl: false })).expect(() =>
+					w(Localized, {}, [v('div', { dir: 'ltr' })])
+				);
 			}
 		}
 	}

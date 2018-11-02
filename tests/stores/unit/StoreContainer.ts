@@ -1,11 +1,10 @@
-const { beforeEach, describe, it } = intern.getInterface('bdd');
+const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import { v, WNODE } from '../../../src/widget-core/d';
-import { Registry } from '../../../src/widget-core/Registry';
+import { w, v } from '../../../src/widget-core/d';
+import harness from '../../../src/testing/harness';
 
 import DefaultStoreContainer, { createStoreContainer, StoreContainer } from '../../../src/stores/StoreContainer';
-import { Store } from '../../../src/stores/Store';
 
 interface State {
 	foo: string;
@@ -15,17 +14,9 @@ interface State {
 const TypedStoreContainer = createStoreContainer<State>();
 
 describe('StoreContainer', () => {
-	let store: Store<State>;
-	let registry: Registry;
-
-	beforeEach(() => {
-		registry = new Registry();
-		store = new Store<State>();
-	});
-
 	describe('Default StoreContainer', () => {
 		it('Should render the WNode with the properties and children', () => {
-			class Foo extends WidgetBase<{ foo: string }> {}
+			class Foo extends WidgetBase<{ key: string }> {}
 			class FooContainer extends DefaultStoreContainer<State>(Foo, 'state', {
 				getProperties: (inject, properties) => {
 					return properties;
@@ -35,17 +26,8 @@ describe('StoreContainer', () => {
 					return super.render();
 				}
 			}
-			const fooContainer = new FooContainer();
-			fooContainer.__setProperties__({ key: '1' });
-			const child = v('div');
-			fooContainer.__setChildren__([child]);
-			const renderResult = fooContainer.render();
-			assert.deepEqual(renderResult, {
-				properties: { key: '1' },
-				children: [child],
-				type: WNODE,
-				widgetConstructor: Foo
-			});
+			const h = harness(() => w(FooContainer, { key: '1' }, [v('div')]));
+			h.expect(() => w(Foo, { key: '1' }, [v('div')]));
 		});
 
 		it('Should always render a container', () => {
@@ -60,15 +42,15 @@ describe('StoreContainer', () => {
 					invalidateCounter++;
 				}
 			}
-			const fooContainer = new FooContainer();
-			registry.defineInjector('state', () => () => store);
-			fooContainer.__setProperties__({});
+			const h = harness(() => w(FooContainer, {}));
+			invalidateCounter = 0;
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 1);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 2);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 3);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 4);
 		});
 	});
@@ -85,17 +67,8 @@ describe('StoreContainer', () => {
 					return super.render();
 				}
 			}
-			const fooContainer = new FooContainer();
-			fooContainer.__setProperties__({ key: '1' });
-			const child = v('div');
-			fooContainer.__setChildren__([child]);
-			const renderResult = fooContainer.render();
-			assert.deepEqual(renderResult, {
-				properties: { key: '1' },
-				children: [child],
-				type: WNODE,
-				widgetConstructor: Foo
-			});
+			const h = harness(() => w(FooContainer, { key: '1' }, [v('div')]));
+			h.expect(() => w(Foo, { key: '1' }, [v('div')]));
 		});
 
 		it('Should always render a container', () => {
@@ -110,22 +83,22 @@ describe('StoreContainer', () => {
 					invalidateCounter++;
 				}
 			}
-			const fooContainer = new FooContainer();
-			registry.defineInjector('state', () => () => store);
-			fooContainer.__setProperties__({});
+			const h = harness(() => w(FooContainer, {}));
+			invalidateCounter = 0;
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 1);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 2);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 3);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 4);
 		});
 	});
 
 	describe('Typed StoreContainer', () => {
 		it('Should render the WNode with the properties and children', () => {
-			class Foo extends WidgetBase<{ foo: string }> {}
+			class Foo extends WidgetBase<{ key: string }> {}
 			class FooContainer extends TypedStoreContainer(Foo, 'state', {
 				getProperties: (inject, properties) => {
 					properties;
@@ -136,17 +109,8 @@ describe('StoreContainer', () => {
 					return super.render();
 				}
 			}
-			const fooContainer = new FooContainer();
-			fooContainer.__setProperties__({ key: '1' });
-			const child = v('div');
-			fooContainer.__setChildren__([child]);
-			const renderResult = fooContainer.render();
-			assert.deepEqual(renderResult, {
-				properties: { key: '1' },
-				children: [child],
-				type: WNODE,
-				widgetConstructor: Foo
-			});
+			const h = harness(() => w(FooContainer, { key: '1' }, [v('div')]));
+			h.expect(() => w(Foo, { key: '1' }, [v('div')]));
 		});
 
 		it('Should always render a container', () => {
@@ -161,15 +125,15 @@ describe('StoreContainer', () => {
 					invalidateCounter++;
 				}
 			}
-			const fooContainer = new FooContainer();
-			registry.defineInjector('state', () => () => store);
-			fooContainer.__setProperties__({});
+			const h = harness(() => w(FooContainer, {}));
+			invalidateCounter = 0;
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 1);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 2);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 3);
-			fooContainer.__setProperties__({});
+			h.expect(() => w(Foo, {}));
 			assert.strictEqual(invalidateCounter, 4);
 		});
 	});
