@@ -2415,7 +2415,7 @@ jsdomDescribe('vdom', () => {
 				document.body.removeChild(iframe);
 			});
 
-			it('Skips unknown nodes when merging', () => {
+			it('Removes unknown nodes when merging', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
 				iframe.contentDocument.write(`
@@ -2497,11 +2497,11 @@ jsdomDescribe('vdom', () => {
 					childElementCount,
 					'should have the same number of children'
 				);
-				assert.strictEqual(label, root.childNodes[1], 'should have been reused');
-				assert.strictEqual(select, root.childNodes[3], 'should have been reused');
-				assert.strictEqual(button, root.childNodes[5], 'should have been reused');
-				assert.strictEqual(span, root.childNodes[7], 'should have been reused');
-				assert.strictEqual(div, root.childNodes[9], 'should have been reused');
+				assert.strictEqual(label, root.childNodes[0], 'should have been reused');
+				assert.strictEqual(select, root.childNodes[1], 'should have been reused');
+				assert.strictEqual(button, root.childNodes[2], 'should have been reused');
+				assert.strictEqual(span, root.childNodes[3], 'should have been reused');
+				assert.strictEqual(div, root.childNodes[4], 'should have been reused');
 				assert.isFalse(select.disabled, 'select should be enabled');
 				assert.isFalse(button.disabled, 'button should be enabled');
 
@@ -4459,7 +4459,7 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(onclickListener.called, 'onclickListener should have been called');
 			document.body.removeChild(iframe);
 		});
-		it('Skips unknown nodes when merging', () => {
+		it('Removes unknown nodes when merging', () => {
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);
 			iframe.contentDocument.write(`
@@ -4531,11 +4531,11 @@ jsdomDescribe('vdom', () => {
 			r.mount({ domNode: iframe.contentDocument.body });
 			assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 			assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
-			assert.strictEqual(label, root.childNodes[1], 'should have been reused');
-			assert.strictEqual(select, root.childNodes[3], 'should have been reused');
-			assert.strictEqual(button, root.childNodes[5], 'should have been reused');
-			assert.strictEqual(span, root.childNodes[7], 'should have been reused');
-			assert.strictEqual(div, root.childNodes[9], 'should have been reused');
+			assert.strictEqual(label, root.childNodes[0], 'should have been reused');
+			assert.strictEqual(select, root.childNodes[1], 'should have been reused');
+			assert.strictEqual(button, root.childNodes[2], 'should have been reused');
+			assert.strictEqual(span, root.childNodes[3], 'should have been reused');
+			assert.strictEqual(div, root.childNodes[4], 'should have been reused');
 			assert.isFalse(select.disabled, 'select should be enabled');
 			assert.isFalse(button.disabled, 'button should be enabled');
 			assert.strictEqual(select.value, 'foo', 'foo should be selected');

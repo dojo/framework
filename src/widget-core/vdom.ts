@@ -379,6 +379,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 	let _afterRenderCallbacks: Function[] = [];
 	let _deferredRenderCallbacks: Function[] = [];
 	let parentInvalidate: () => void;
+	let _allMergedNodes: Node[] = [];
 
 	function nodeOperation(
 		propName: string,
@@ -724,6 +725,10 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		});
 		_runProcessQueue();
 		_mountOptions.merge = false;
+		let mergedNode: Node | undefined;
+		while ((mergedNode = _allMergedNodes.pop())) {
+			mergedNode.parentNode && mergedNode.parentNode.removeChild(mergedNode);
+		}
 		_runDomInstructionQueue();
 		_runCallbacks();
 	}
@@ -892,6 +897,10 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				for (let i = 0; i < mergeNodes.length; i++) {
 					const domElement = mergeNodes[i] as Element;
 					if (tag.toUpperCase() === (domElement.tagName || '')) {
+						const mergeNodeIndex = _allMergedNodes.indexOf(domElement);
+						if (mergeNodeIndex !== -1) {
+							_allMergedNodes.splice(mergeNodeIndex, 1);
+						}
 						mergeNodes.splice(i, 1);
 						next.domNode = domElement;
 						break;
@@ -1099,12 +1108,13 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				}
 			}
 		} else {
+			if (_mountOptions.merge) {
+				mergeNodes = arrayFrom(next.domNode.childNodes);
+				_allMergedNodes = [..._allMergedNodes, ...mergeNodes];
+			}
 			next.merged = true;
 		}
 		if (next.domNode) {
-			if (_mountOptions.merge) {
-				mergeNodes = arrayFrom(next.domNode.childNodes);
-			}
 			if (next.node.children) {
 				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
 			}
