@@ -2,6 +2,7 @@ import global from '../../shim/global';
 import { History as HistoryInterface, HistoryOptions, OnChangeFunction } from './../interfaces';
 
 const trailingSlash = new RegExp(/\/$/);
+const leadingSlash = new RegExp(/^\//);
 
 function stripBase(base: string, path: string): string {
 	if (base === '/') {
@@ -10,9 +11,8 @@ function stripBase(base: string, path: string): string {
 
 	if (path.indexOf(base) === 0) {
 		return path.slice(base.length - 1);
-	} else {
-		return '/';
 	}
+	return '/';
 }
 
 export class StateHistory implements HistoryInterface {
@@ -21,7 +21,7 @@ export class StateHistory implements HistoryInterface {
 	private _window: Window;
 	private _base: string;
 
-	constructor({ onChange, window = global.window, base = '/' }: HistoryOptions) {
+	constructor({ onChange, window = global.window, base = global.__public_path__ || '/' }: HistoryOptions) {
 		if (/(#|\?)/.test(base)) {
 			throw new TypeError("base must not contain '#' or '?'");
 		}
@@ -31,7 +31,9 @@ export class StateHistory implements HistoryInterface {
 		if (!trailingSlash.test(this._base)) {
 			this._base = `${this._base}/`;
 		}
-		this._current = this._window.location.pathname + this._window.location.search;
+		if (!leadingSlash.test(this._base)) {
+			this._base = `/${this._base}`;
+		}
 		this._window.addEventListener('popstate', this._onChange, false);
 		this._onChange();
 	}
@@ -47,7 +49,7 @@ export class StateHistory implements HistoryInterface {
 	}
 
 	public set(path: string) {
-		this._window.history.pushState({}, '', this.prefix(path));
+		this._window.history.pushState({}, '', this.prefix(stripBase(this._base, path)));
 		this._onChange();
 	}
 
