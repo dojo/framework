@@ -23,7 +23,7 @@ export class StateHistory implements HistoryInterface {
 	private _base: string;
 
 	constructor({ onChange, window = global.window, base }: HistoryOptions) {
-		base = (has('public-path') as string) || '/';
+		base = `${has('public-path')}` || '/';
 		if (/(#|\?)/.test(base)) {
 			throw new TypeError("base must not contain '#' or '?'");
 		}
