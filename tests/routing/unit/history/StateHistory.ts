@@ -3,6 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 
 import global from '../../../../src/shim/global';
+import { add } from '../../../../src/has/has';
 import { StateHistory } from '../../../../src/routing/history/StateHistory';
 
 const onChange = stub();
@@ -24,6 +25,7 @@ describe('StateHistory', () => {
 		document.body.removeChild(sandbox);
 		sandbox = null as any;
 		onChange.reset();
+		add('public-path', undefined, true);
 		global.window.__public_path__ = undefined;
 	});
 
@@ -155,6 +157,7 @@ describe('StateHistory', () => {
 		});
 
 		it('Assumes base set in window __public_path__ variable if not explicitly set', () => {
+			add('public-path', 'base/path', true);
 			global.window.__public_path__ = 'base/path';
 			const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
 			assert.strictEqual(history.prefix('foo'), '/base/path/foo');

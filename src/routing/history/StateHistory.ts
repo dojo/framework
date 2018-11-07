@@ -1,5 +1,6 @@
 import global from '../../shim/global';
 import { History as HistoryInterface, HistoryOptions, OnChangeFunction } from './../interfaces';
+import has from '../../has/has';
 
 const trailingSlash = new RegExp(/\/$/);
 const leadingSlash = new RegExp(/^\//);
@@ -21,7 +22,8 @@ export class StateHistory implements HistoryInterface {
 	private _window: Window;
 	private _base: string;
 
-	constructor({ onChange, window = global.window, base = global.__public_path__ || '/' }: HistoryOptions) {
+	constructor({ onChange, window = global.window, base }: HistoryOptions) {
+		base = (has('public-path') as string) || '/';
 		if (/(#|\?)/.test(base)) {
 			throw new TypeError("base must not contain '#' or '?'");
 		}
