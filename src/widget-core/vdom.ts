@@ -548,6 +548,22 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		return insertBefore;
 	}
 
+	function setValue(domNode: any, propValue?: any, previousValue?: any) {
+		const domValue = domNode.value;
+		const onInputValue = domNode['oninput-value'];
+		const onSelectValue = domNode['select-value'];
+
+		if (onSelectValue && domValue !== onSelectValue) {
+			domNode.value = onSelectValue;
+			if (domNode.value === onSelectValue) {
+				domNode['select-value'] = undefined;
+			}
+		} else if ((onInputValue && domValue === onInputValue) || propValue !== previousValue) {
+			domNode.value = propValue;
+			domNode['oninput-value'] = undefined;
+		}
+	}
+
 	function setProperties(
 		domNode: HTMLElement,
 		currentProperties: VNodeProperties = {},
@@ -603,15 +619,9 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 					propValue = '';
 				}
 				if (propName === 'value') {
-					const domValue = (domNode as any)[propName];
-					if (
-						domValue !== propValue &&
-						((domNode as any)['oninput-value']
-							? domValue === (domNode as any)['oninput-value']
-							: propValue !== previousValue)
-					) {
-						(domNode as any)[propName] = propValue;
-						(domNode as any)['oninput-value'] = undefined;
+					setValue(domNode, propValue, previousValue);
+					if ((domNode as HTMLElement).tagName === 'SELECT') {
+						(domNode as any)['select-value'] = propValue;
 					}
 				} else if (propName !== 'key' && propValue !== previousValue) {
 					const type = typeof propValue;
@@ -829,6 +839,9 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 					if (isDomVNode(next.node) && next.node.onAttach) {
 						next.node.onAttach();
 					}
+				}
+				if ((domNode as HTMLElement).tagName === 'OPTION' && domNode!.parentElement) {
+					setValue(domNode!.parentElement);
 				}
 				runEnterAnimation(next, _mountOptions.transition);
 				const instanceData = widgetInstanceMap.get(next.node.bind as WidgetBase);
