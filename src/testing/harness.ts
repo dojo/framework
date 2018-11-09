@@ -180,6 +180,7 @@ export function harness(
 			return _getRender(index);
 		},
 		select(selector: string): DNode[] {
+			_tryRender();
 			return select(selector, _getRender());
 		}
 	};
