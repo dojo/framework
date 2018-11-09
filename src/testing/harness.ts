@@ -42,11 +42,16 @@ export interface GetRender {
 	(index?: number): DNode | DNode[];
 }
 
+export interface Select {
+	(selector: string): DNode[];
+}
+
 export interface HarnessAPI {
 	expect: Expect;
 	expectPartial: ExpectPartial;
 	trigger: Trigger;
 	getRender: GetRender;
+	select: Select;
 }
 
 function decorateNodes(dNode: DNode[]): DecoratorResult<DNode[]>;
@@ -173,6 +178,9 @@ export function harness(
 		},
 		getRender(index?: number): DNode | DNode[] {
 			return _getRender(index);
+		},
+		select(selector: string): DNode[] {
+			return select(selector, _getRender());
 		}
 	};
 }
