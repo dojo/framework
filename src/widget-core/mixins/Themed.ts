@@ -25,8 +25,8 @@ export interface Theme {
  * Classes property interface
  */
 export interface Classes {
-	[key: string]: {
-		[key: string]: SupportedClassName[];
+	[widgetKey: string]: {
+		[classKey: string]: SupportedClassName[];
 	};
 }
 
