@@ -240,7 +240,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 
 			this._classes = Object.keys(classes).reduce((computed, key) => {
 				if (this._registeredBaseThemeKeys.indexOf(key) > -1) {
-					computed = { ...computed, key: classes[key] };
+					computed = { ...computed, [key]: classes[key] };
 				}
 				return computed;
 			}, {});

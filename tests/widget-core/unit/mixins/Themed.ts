@@ -161,18 +161,24 @@ registerSuite('ThemedMixin', {
 		},
 		'setting classes': {
 			'should supplement base theme classes with matching classes'() {
-				const ThemedInstance = new TestWidget();
+				const ThemedInstance = new StackedTestWidget();
 				const { class1 } = baseThemeClasses1;
 				ThemedInstance.__setProperties__({
 					classes: {
 						testPath1: {
 							class1: [undefined, null, 'special-extra']
+						},
+						testPath2: {
+							class1: [undefined, null, 'special-extra2']
+						},
+						testPath3: {
+							class1: [undefined, null, 'special-extra2']
 						}
 					}
 				});
 
 				const flaggedClasses = ThemedInstance.theme([class1]);
-				assert.deepEqual(flaggedClasses, [`special-extra ${baseThemeClasses1.class1}`]);
+				assert.deepEqual(flaggedClasses, [`special-extra special-extra2 ${baseThemeClasses1.class1}`]);
 			}
 		},
 		'setting base theme classes': {
