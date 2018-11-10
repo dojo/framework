@@ -22,10 +22,20 @@ export interface Theme {
 }
 
 /**
+ * Classes property interface
+ */
+export interface Classes {
+	[key: string]: {
+		[key: string]: SupportedClassName[];
+	};
+}
+
+/**
  * Properties required for the Themed mixin
  */
 export interface ThemedProperties<T = ClassNames> extends WidgetProperties {
 	theme?: Theme;
+	classes?: Classes;
 	extraClasses?: { [P in keyof T]?: string };
 }
 
@@ -128,6 +138,11 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		private _recalculateClasses = true;
 
 		/**
+		 * Extra classes map
+		 */
+		private _classes: Classes;
+
+		/**
 		 * Loaded theme
 		 */
 		private _theme: ClassNames = {};
@@ -149,6 +164,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		 */
 		@diffProperty('theme', shallow)
 		@diffProperty('extraClasses', shallow)
+		@diffProperty('classes', shallow)
 		protected onPropertiesChanged() {
 			this._recalculateClasses = true;
 		}
@@ -166,6 +182,29 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 				return null;
 			}
 
+			if (this._classes) {
+				const classes = Object.keys(this._classes).reduce(
+					(classes, key) => {
+						const classNames = Object.keys(this._classes[key]);
+						for (let i = 0; i < classNames.length; i++) {
+							const extraClass = this._classes[key][classNames[i]];
+							if (className === themeClassName && extraClass) {
+								extraClass.forEach((className) => {
+									if (className) {
+										classes.push(className);
+									}
+								});
+								break;
+							}
+						}
+						return classes;
+					},
+					[] as string[]
+				);
+
+				resultClassNames.push(...classes);
+			}
+
 			if (extraClasses[themeClassName]) {
 				resultClassNames.push(extraClasses[themeClassName]);
 			}
@@ -179,7 +218,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		}
 
 		private _recalculateThemeClasses() {
-			const { theme = {} } = this.properties;
+			const { theme = {}, classes = {} } = this.properties;
 			if (!this._registeredBaseTheme) {
 				const baseThemes = this.getDecorator('baseThemeClasses');
 				if (baseThemes.length === 0) {
@@ -197,6 +236,13 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 
 			this._theme = this._registeredBaseThemeKeys.reduce((baseTheme, themeKey) => {
 				return { ...baseTheme, ...theme[themeKey] };
+			}, {});
+
+			this._classes = Object.keys(classes).reduce((computed, key) => {
+				if (this._registeredBaseThemeKeys.indexOf(key) > -1) {
+					computed = { ...computed, key: classes[key] };
+				}
+				return computed;
 			}, {});
 
 			this._recalculateClasses = false;
