@@ -162,6 +162,7 @@ registerSuite('ThemedMixin', {
 		'setting classes': {
 			'should supplement base theme classes with matching classes'() {
 				const ThemedInstance = new TestWidget();
+				const { class1 } = baseThemeClasses1;
 				ThemedInstance.__setProperties__({
 					classes: {
 						testPath1: {
@@ -169,7 +170,7 @@ registerSuite('ThemedMixin', {
 						}
 					}
 				});
-				const { class1 } = baseThemeClasses1;
+
 				const flaggedClasses = ThemedInstance.theme([class1]);
 				assert.deepEqual(flaggedClasses, [`special-extra ${baseThemeClasses1.class1}`]);
 			}

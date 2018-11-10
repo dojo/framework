@@ -188,7 +188,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 						const classNames = Object.keys(this._classes[key]);
 						for (let i = 0; i < classNames.length; i++) {
 							const extraClass = this._classes[key][classNames[i]];
-							if (className === themeClassName && extraClass) {
+							if (classNames[i] === themeClassName && extraClass) {
 								extraClass.forEach((className) => {
 									if (className) {
 										classes.push(className);
