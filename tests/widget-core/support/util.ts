@@ -43,6 +43,12 @@ export function createResolvers() {
 			resolveRAF();
 			resolveRIC();
 		},
+		resolveRAF() {
+			resolveRAF();
+		},
+		resolveRIC() {
+			resolveRIC();
+		},
 		stub() {
 			rAFStub = stub(global, 'requestAnimationFrame').returns(1);
 			if (global.requestIdleCallback) {

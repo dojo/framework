@@ -25,6 +25,7 @@ export interface BaseNodeWrapper {
 	hasParentWNode?: boolean;
 	namespace?: string;
 	hasAnimations?: boolean;
+	hasWidgetChild?: boolean;
 }
 
 export interface WNodeWrapper extends BaseNodeWrapper {
@@ -441,6 +442,23 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		});
 	}
 
+	function parentModifier(
+		parent: DNodeWrapper,
+		predicate: (parent: DNodeWrapper) => boolean,
+		modifier: (parent: DNodeWrapper) => void
+	) {
+		modifier(parent);
+		let nextParent = _parentWrapperMap.get(parent);
+		while (nextParent) {
+			if (predicate(nextParent)) {
+				modifier(nextParent);
+				nextParent = _parentWrapperMap.get(nextParent);
+				continue;
+			}
+			break;
+		}
+	}
+
 	function renderedToWrapper(
 		rendered: DNode[],
 		parent: DNodeWrapper,
@@ -463,16 +481,11 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				namespace: parent.namespace
 			} as DNodeWrapper;
 			if (isVNode(renderedItem) && renderedItem.properties.exitAnimation) {
-				parent.hasAnimations = true;
-				let nextParent = _parentWrapperMap.get(parent);
-				while (nextParent) {
-					if (nextParent.hasAnimations) {
-						break;
-					}
-					nextParent.hasAnimations = true;
-					nextParent = _parentWrapperMap.get(nextParent);
-				}
+				parentModifier(parent, (parent) => !parent.hasAnimations, (parent) => (parent.hasAnimations = true));
+			} else if (isWNode(renderedItem)) {
+				parentModifier(parent, (parent) => !parent.hasWidgetChild, (parent) => (parent.hasWidgetChild = true));
 			}
+
 			_parentWrapperMap.set(wrapper, parent);
 			if (previousItem) {
 				_wrapperSiblingMap.set(previousItem, wrapper);
@@ -1172,7 +1185,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		_wrapperSiblingMap.delete(current);
 		_parentWrapperMap.delete(current);
 		current.node.bind = undefined;
-		if (current.hasAnimations) {
+		if (current.hasAnimations || current.hasWidgetChild) {
 			return {
 				item: { current: current.childrenWrappers, meta: {} },
 				dom: { type: 'delete', current }
@@ -1187,14 +1200,6 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 					if (wrapper.childrenWrappers) {
 						wrappers.push(...wrapper.childrenWrappers);
 						wrapper.childrenWrappers = undefined;
-					}
-					if (isWNodeWrapper(wrapper)) {
-						if (wrapper.instance) {
-							_instanceToWrapperMap.delete(wrapper.instance);
-							const instanceData = widgetInstanceMap.get(wrapper.instance);
-							instanceData && instanceData.onDetach();
-						}
-						wrapper.instance = undefined;
 					}
 					_wrapperSiblingMap.delete(wrapper);
 					_parentWrapperMap.delete(wrapper);

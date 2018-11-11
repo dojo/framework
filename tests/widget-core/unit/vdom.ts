@@ -1798,7 +1798,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(onAttachCallCount, 2);
 		});
 
-		it('calls onDetach when widget is removed', () => {
+		it('calls onDetach synchronously when widget is removed', () => {
 			let fooAttachCount = 0;
 			let fooDetachCount = 0;
 			let barAttachCount = 0;
@@ -1865,9 +1865,9 @@ jsdomDescribe('vdom', () => {
 					this._foo = !this._foo;
 					return v('div', [
 						w(FooBar, {}),
-						this._foo ? w(Foo, { key: '1' }) : null,
+						this._foo ? v('div', [w(Foo, { key: '1' })]) : null,
 						w(FooBar, {}),
-						this._foo ? w(Foo, { key: '2' }) : w(Bar, {})
+						this._foo ? v('div', [w(Foo, { key: '2' })]) : w(Bar, {})
 					]);
 				}
 			}
@@ -1884,8 +1884,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(quxAttachCount, 4);
 			assert.strictEqual(quxDetachCount, 0);
 			invalidate();
-			resolvers.resolve();
-			resolvers.resolve();
+			resolvers.resolveRAF();
 			assert.strictEqual(bazAttachCount, 1);
 			assert.strictEqual(bazDetachCount, 0);
 			assert.strictEqual(fooAttachCount, 2);
@@ -1895,8 +1894,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(quxAttachCount, 4);
 			assert.strictEqual(quxDetachCount, 4);
 			invalidate();
-			resolvers.resolve();
-			resolvers.resolve();
+			resolvers.resolveRAF();
 			assert.strictEqual(bazAttachCount, 1);
 			assert.strictEqual(bazDetachCount, 0);
 			assert.strictEqual(fooAttachCount, 4);
@@ -1906,8 +1904,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(quxAttachCount, 8);
 			assert.strictEqual(quxDetachCount, 4);
 			invalidate();
-			resolvers.resolve();
-			resolvers.resolve();
+			resolvers.resolveRAF();
 			assert.strictEqual(bazAttachCount, 1);
 			assert.strictEqual(bazDetachCount, 0);
 			assert.strictEqual(fooAttachCount, 4);
