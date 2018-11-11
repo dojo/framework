@@ -39,6 +39,7 @@ export interface VNodeWrapper extends BaseNodeWrapper {
 	merged?: boolean;
 	decoratedDeferredProperties?: VNodeProperties;
 	inserted?: boolean;
+	removed?: boolean;
 }
 
 export type DNodeWrapper = VNodeWrapper | WNodeWrapper;
@@ -330,24 +331,6 @@ function runEnterAnimation(next: VNodeWrapper, transitions: TransitionStrategy) 
 	}
 }
 
-function runExitAnimation(current: VNodeWrapper, transitions: TransitionStrategy) {
-	const {
-		domNode,
-		node: { properties },
-		node: {
-			properties: { exitAnimation }
-		}
-	} = current;
-	const removeDomNode = () => {
-		domNode && domNode.parentNode && domNode.parentNode.removeChild(domNode);
-		current.domNode = undefined;
-	};
-	if (typeof exitAnimation === 'function') {
-		return exitAnimation(domNode as Element, removeDomNode, properties);
-	}
-	transitions.exit(domNode as Element, properties, exitAnimation as string, removeDomNode);
-}
-
 function arrayFrom(arr: any) {
 	return Array.prototype.slice.call(arr);
 }
@@ -516,6 +499,47 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				processProperties(next, { properties });
 			});
 		}
+	}
+
+	function processDeleteDomInstruction(wrapper: VNodeWrapper): void {
+		const { domNode } = wrapper;
+		domNode && domNode.parentNode && domNode.parentNode.removeChild(domNode);
+		_wrapperSiblingMap.delete(wrapper);
+		_parentWrapperMap.delete(wrapper);
+		wrapper.domNode = undefined;
+		wrapper.node.bind = undefined;
+	}
+
+	function runExitAnimation(current: VNodeWrapper, transitions: TransitionStrategy) {
+		const {
+			domNode,
+			node: { properties },
+			node: {
+				properties: { exitAnimation }
+			}
+		} = current;
+		const removeDomNode = () => {
+			let wrapper: DNodeWrapper | undefined = _parentWrapperMap.get(current);
+			processDeleteDomInstruction(current);
+			while (wrapper) {
+				let parent = _parentWrapperMap.get(current);
+				if (isVNodeWrapper(wrapper)) {
+					if (wrapper.node.properties.exitAnimation) {
+						runExitAnimation(wrapper, transitions);
+						break;
+					} else if (wrapper.removed) {
+						processDeleteDomInstruction(wrapper);
+						wrapper = parent;
+						continue;
+					}
+					break;
+				}
+			}
+		};
+		if (typeof exitAnimation === 'function') {
+			return exitAnimation(domNode as Element, removeDomNode, properties);
+		}
+		transitions.exit(domNode as Element, properties, exitAnimation as string, removeDomNode);
 	}
 
 	function findInsertBefore(next: DNodeWrapper) {
@@ -854,11 +878,12 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				}
 			} else if (item.type === 'delete') {
 				const { current } = item;
-				if (current.node.properties.exitAnimation) {
+				if (current.node.properties.exitAnimation && !current.hasAnimations) {
 					runExitAnimation(current, _mountOptions.transition);
+				} else if (current.hasAnimations) {
+					current.removed = true;
 				} else {
-					current.domNode!.parentNode!.removeChild(current.domNode!);
-					current.domNode = undefined;
+					processDeleteDomInstruction(current);
 				}
 			} else if (item.type === 'attach') {
 				const { instance, attached } = item;
@@ -1146,9 +1171,6 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 	}
 
 	function _removeDom({ current }: RemoveDomInstruction): ProcessResult {
-		_wrapperSiblingMap.delete(current);
-		_parentWrapperMap.delete(current);
-		current.node.bind = undefined;
 		if (current.hasAnimations) {
 			return {
 				item: { current: current.childrenWrappers, meta: {} },

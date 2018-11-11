@@ -26,12 +26,12 @@ function runAndCleanUp(element: HTMLElement, startAnimation: () => void, finishA
 
 	let finished = false;
 
-	let transitionEnd = function() {
+	let transitionEnd = function(event: Event) {
+		event.stopPropagation();
 		if (!finished) {
 			finished = true;
 			element.removeEventListener(browserSpecificTransitionEndEventName, transitionEnd);
 			element.removeEventListener(browserSpecificAnimationEndEventName, transitionEnd);
-
 			finishAnimation();
 		}
 	};
