@@ -4666,6 +4666,53 @@ jsdomDescribe('vdom', () => {
 				exitAnimation.lastCall.callArg(1); // arg1: removeElement
 				assert.lengthOf((div.childNodes[0] as Element).childNodes, 0);
 			});
+
+			it('Should invoke exit animations from child to parent', () => {
+				const exitAnimation = stub();
+				const transition = {
+					exit: exitAnimation,
+					enter: stub()
+				};
+				const [Widget, meta] = getWidget(
+					v('div', [
+						v('div', [v('span', { exitAnimation: 'first' }, [v('span', { exitAnimation: 'second' })])])
+					])
+				);
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				const rootWrapper = div.childNodes[0] as HTMLElement;
+				const divWrapper = div.childNodes[0].childNodes[0] as HTMLElement;
+				const firstSpan = div.childNodes[0].childNodes[0].childNodes[0] as HTMLElement;
+				const firstSpanRemoveChildSpy = spy(firstSpan, 'removeChild');
+				const divWrapperRemoveChildSpy = spy(divWrapper, 'removeChild');
+				const rootWrapperRemoveChildSpy = spy(rootWrapper, 'removeChild');
+				meta.setRenderResult(v('div', []));
+				assert.isTrue(exitAnimation.calledOnce, 'Exit animation should only be called once');
+				assert.strictEqual(
+					exitAnimation.firstCall.args[2],
+					'second',
+					'Should call exit animation for deepest child'
+				);
+				assert.lengthOf(divWrapper.childNodes, 1, 'Should not have removed any nodes');
+				assert.lengthOf(firstSpan.childNodes, 1, 'Should not have removed any nodes');
+				exitAnimation.lastCall.callArg(3); // arg1: removeElement
+				assert.lengthOf(divWrapper.childNodes, 1, 'Should not have removed any nodes from wrapper');
+				assert.lengthOf(firstSpan.childNodes, 0, 'Should have removed the nested span child');
+				assert.isTrue(rootWrapperRemoveChildSpy.notCalled, 'Should not have removed a child from root wrapper');
+				assert.isTrue(divWrapperRemoveChildSpy.notCalled, 'Should not have removed a child from div wrapper');
+				assert.isTrue(firstSpanRemoveChildSpy.calledOnce, 'should have removed the child span');
+				assert.isTrue(exitAnimation.calledTwice, 'Should have called exit animation for the parent span');
+				assert.strictEqual(exitAnimation.secondCall.args[2], 'first');
+				exitAnimation.lastCall.callArg(3);
+				assert.isTrue(rootWrapperRemoveChildSpy.calledOnce);
+				assert.isTrue(divWrapperRemoveChildSpy.calledOnce);
+				assert.isTrue(firstSpanRemoveChildSpy.calledOnce);
+				assert.isTrue(firstSpanRemoveChildSpy.calledBefore(divWrapperRemoveChildSpy));
+				assert.isTrue(firstSpanRemoveChildSpy.calledBefore(rootWrapperRemoveChildSpy));
+				assert.isTrue(divWrapperRemoveChildSpy.calledBefore(rootWrapperRemoveChildSpy));
+				assert.lengthOf(divWrapper.childNodes, 0);
+			});
 		});
 		describe('transitionStrategy', () => {
 			it('will be invoked when enterAnimation is provided as a string', () => {
