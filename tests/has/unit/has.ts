@@ -2,7 +2,7 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
 import * as sinon from 'sinon';
-// import global from '../../../src/shim/global';
+import global from '../../../src/shim/global';
 import has, {
 	testCache as hasCache,
 	testFunctions as hasTestFunctions,
@@ -387,7 +387,6 @@ registerSuite('has', {
 			'staticFeatures object'() {
 				const dfd = this.async();
 				undef('../../../src/has/has');
-				// @ts-ignore
 				global.DojoHasEnvironment = {
 					staticFeatures: {
 						foo: 1,
@@ -409,7 +408,6 @@ registerSuite('has', {
 			'staticFeatures function'() {
 				const dfd = this.async();
 				undef('../../../src/has/has');
-				// @ts-ignore
 				global.DojoHasEnvironment = {
 					staticFeatures: function() {
 						return {
@@ -433,7 +431,6 @@ registerSuite('has', {
 			'can override run-time defined features'() {
 				const dfd = this.async();
 				undef('../../../src/has/has');
-				// @ts-ignore
 				global.DojoHasEnvironment = {
 					staticFeatures: {
 						debug: false
