@@ -1,7 +1,6 @@
 import '../../../src/shim/main';
 
 import './support/decorators';
-import './support/has';
 import './support/queue';
 import './support/util';
 import './AbortController';

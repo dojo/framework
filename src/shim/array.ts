@@ -1,7 +1,7 @@
 import global from './global';
 import { isArrayLike, isIterable, Iterable } from './iterator';
 import { MAX_SAFE_INTEGER } from './number';
-import has from './support/has';
+import has from '../has/has';
 import { wrapNative } from './support/util';
 
 export interface MapCallback<T, U> {

@@ -3,7 +3,7 @@ import { AbortController, AbortSignal, ShimAbortController, ShimAbortSignal } fr
 let controller: AbortController;
 let signal: AbortSignal;
 
-import has from '../../../src/shim/support/has';
+import has from '../../../src/has/has';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

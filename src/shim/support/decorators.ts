@@ -1,4 +1,4 @@
-import has from './has';
+import has from '../../has/has';
 
 /**
  * A class decorator that provides either a native class or a shimmed class based on a feature

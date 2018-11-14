@@ -1,5 +1,5 @@
 import { hasClass } from '../../../../src/shim/support/decorators';
-import { add } from '../../../../src/shim/support/has';
+import { add } from '../../../../src/has/has';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

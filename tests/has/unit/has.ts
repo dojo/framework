@@ -2,6 +2,7 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
 import * as sinon from 'sinon';
+// import global from '../../../src/shim/global';
 import has, {
 	testCache as hasCache,
 	testFunctions as hasTestFunctions,
@@ -10,22 +11,6 @@ import has, {
 	normalize as hasNormalize,
 	load as hasLoad
 } from '../../../src/has/has';
-
-const globalScope: any = (function(): any {
-	/* istanbul ignore else */
-	if (typeof window !== 'undefined') {
-		// Browsers
-		return window;
-	} else if (typeof global !== 'undefined') {
-		// Node
-		return global;
-	} else if (typeof self !== 'undefined') {
-		// Web workers
-		return self;
-	}
-	/* istanbul ignore next */
-	return {};
-})();
 
 let alreadyCached: { [feature: string]: boolean };
 let alreadyTest: { [feature: string]: boolean };
@@ -402,7 +387,8 @@ registerSuite('has', {
 			'staticFeatures object'() {
 				const dfd = this.async();
 				undef('../../../src/has/has');
-				globalScope.DojoHasEnvironment = {
+				// @ts-ignore
+				global.DojoHasEnvironment = {
 					staticFeatures: {
 						foo: 1,
 						bar: 'bar',
@@ -413,7 +399,7 @@ registerSuite('has', {
 				import('../../../src/has/has').then(
 					dfd.callback((mod: { default: typeof has }) => {
 						const h = mod.default;
-						assert(!('DojoHasEnvironment' in globalScope));
+						assert(!('DojoHasEnvironment' in global));
 						assert.strictEqual(h('foo'), 1);
 						assert.strictEqual(h('bar'), 'bar');
 						assert.isFalse(h('baz'));
@@ -423,7 +409,8 @@ registerSuite('has', {
 			'staticFeatures function'() {
 				const dfd = this.async();
 				undef('../../../src/has/has');
-				globalScope.DojoHasEnvironment = {
+				// @ts-ignore
+				global.DojoHasEnvironment = {
 					staticFeatures: function() {
 						return {
 							foo: 1,
@@ -436,7 +423,7 @@ registerSuite('has', {
 				import('../../../src/has/has').then(
 					dfd.callback((mod: { default: typeof has }) => {
 						const h = mod.default;
-						assert(!('DojoHasEnvironment' in globalScope));
+						assert(!('DojoHasEnvironment' in global));
 						assert.strictEqual(h('foo'), 1);
 						assert.strictEqual(h('bar'), 'bar');
 						assert.isFalse(h('baz'));
@@ -446,7 +433,8 @@ registerSuite('has', {
 			'can override run-time defined features'() {
 				const dfd = this.async();
 				undef('../../../src/has/has');
-				globalScope.DojoHasEnvironment = {
+				// @ts-ignore
+				global.DojoHasEnvironment = {
 					staticFeatures: {
 						debug: false
 					}
@@ -462,6 +450,35 @@ registerSuite('has', {
 					})
 				);
 			}
+		},
+
+		'features defined'() {
+			[
+				'dom-mutationobserver',
+				'es-observable',
+				'es2017-object',
+				'es2017-string',
+				'es2018-promise-finally',
+				'es6-array',
+				'es6-array-fill',
+				'es6-map',
+				'es6-math',
+				'es6-math-imul',
+				'es6-object',
+				'es6-promise',
+				'es6-set',
+				'es6-string',
+				'es6-string-raw',
+				'es6-symbol',
+				'es6-weakmap',
+				'es7-array',
+				'microtasks',
+				'postmessage',
+				'raf',
+				'setimmediate',
+				'abort-controller',
+				'abort-signal'
+			].forEach((feature) => assert.isTrue(hasExists(feature)));
 		}
 	}
 });

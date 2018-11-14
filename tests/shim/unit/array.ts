@@ -1,5 +1,5 @@
 import * as array from '../../../src/shim/array';
-import has, { add as hasAdd } from '../../../src/shim/support/has';
+import has, { add as hasAdd } from '../../../src/has/has';
 import { Iterable, ShimIterator } from '../../../src/shim/iterator';
 import '../../../src/shim/Symbol';
 

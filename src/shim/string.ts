@@ -1,5 +1,5 @@
 import global from './global';
-import has from './support/has';
+import has from '../has/has';
 import { wrapNative } from './support/util';
 
 export interface StringNormalize {

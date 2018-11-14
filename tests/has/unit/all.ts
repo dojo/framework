@@ -1,2 +1,1 @@
 import './has';
-import './main';
