@@ -619,10 +619,10 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 					propValue = '';
 				}
 				if (propName === 'value') {
-					setValue(domNode, propValue, previousValue);
 					if ((domNode as HTMLElement).tagName === 'SELECT') {
 						(domNode as any)['select-value'] = propValue;
 					}
+					setValue(domNode, propValue, previousValue);
 				} else if (propName !== 'key' && propValue !== previousValue) {
 					const type = typeof propValue;
 					if (type === 'function' && propName.lastIndexOf('on', 0) === 0 && includesEventsAndAttributes) {
