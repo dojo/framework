@@ -5104,6 +5104,42 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual((div.children[0] as any).value, 'a');
 		});
 
+		it('should support clearing select value', () => {
+			let change: any;
+			class Select extends WidgetBase {
+				constructor() {
+					super();
+					change = this.change.bind(this);
+				}
+
+				value = '';
+				change(event: any) {
+					this.value = event.target.value;
+					this.invalidate();
+				}
+				render() {
+					return v('select', { onchange: this.change, value: this.value }, [
+						v('option', { value: '' }),
+						v('option', { value: 'a' }, ['a']),
+						v('option', { value: 'b' }, ['b'])
+					]);
+				}
+			}
+
+			const r = renderer(() => w(Select, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual((div.children[0] as any).value, '');
+			// set the value as this is what happens when the select is click in the browser
+			(div.children[0] as any).value = 'a';
+			change({ target: { value: 'a' } });
+			assert.strictEqual((div.children[0] as any).value, 'a');
+			// set the value as this is what happens when the select is click in the browser
+			(div.children[0] as any).value = 'b';
+			change({ target: { value: 'b' } });
+			assert.strictEqual((div.children[0] as any).value, 'b');
+		});
+
 		it('should support multi-select selects', () => {
 			const r = renderer(() =>
 				v('select', { key: 'multi', multiple: true }, [
