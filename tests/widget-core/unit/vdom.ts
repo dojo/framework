@@ -5104,7 +5104,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual((div.children[0] as any).value, 'a');
 		});
 
-		it('should support clearing select value', () => {
+		it('should support changing the select value', () => {
 			let change: any;
 			class Select extends WidgetBase {
 				constructor() {
@@ -5140,7 +5140,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual((div.children[0] as any).value, 'b');
 		});
 
-		it('should support clearing select value - programmatically', () => {
+		it('should support changing the select value - programmatically', () => {
 			let change: any;
 			class Select extends WidgetBase {
 				constructor() {
