@@ -591,6 +591,45 @@ const store = new Store();
 load('my-process', store);
 ```
 
+## Initializers
+
+Similar to middleware, initializers provide a hook to apply generic/global functionality across multiple or all processes used within an application. Initializers are functions that receive the payload passed to the process to perform a specific action, before calling the next initializer if provided. They can be synchronous or asynchronous.
+
+This is done using higher order functions that wrap the process' local `initializer` using the payload to decorate or perform an action for all processes it is used for.
+
+`initializer` decorators can be composed together to combine multiple units of functionality, such that in the example below `myProcess` would run the `payload` through the `authenticator` and `logger` initializers.
+
+```ts
+const myProcess = createProcess('my-process', [commandOne, commandTwo], undefined, authenticator(logger()));
+```
+
+### Applying Initializers to Multiple Processes
+
+Specifying an initializer on an individual process explicitly works for targeted behavior but can become cumbersome when the initializer needs to be applied to multiple processes throughout the application.
+
+The `createProcessWith` higher order function can be used to specify initializers that need to be applied across multiple `processes`. The function accepts an array of initializers and returns a new `createProcess` factory function that will automatically apply the initializers to any process that it creates.
+
+```ts
+const customCreateProcess = createProcessWith(undefined, [logger]);
+
+// `myProcess` will automatically be decorated with the `logger` initializer decorator.
+const myProcess = customCreateProcess('my-process', [commandOne, commandTwo]);
+```
+
+An additional helper function `createInitializerDecorator` can be used to ensure that an initializer function calls the next initializer after it has finished executing.
+
+```ts
+const myInitializer = async (payload: DefaultPayload) => {
+	// do things with the payload
+};
+
+// ensures the initializer will call the next initializer in the stack
+const myInitializerDecorator = createInitializerDecorator(myInitializer);
+
+// use the initializer decorator as normal
+const myProcess = createProcess('my-process', [commandOne], undefined, myInitializerDecorator());
+```
+
 <!-- doc-viewer-config
 {
 	"api": "docs/stores/api.json"

@@ -24,7 +24,7 @@ export function load<T>(id: string, store: Store<T>) {
 			const operations = parsedData.map((item) => {
 				return add(store.path(item.meta.path), item.state);
 			});
-			processExecutor('local-storage-load', [() => operations], store, undefined, undefined)({});
+			processExecutor('local-storage-load', [() => operations], store, undefined, undefined, undefined)({});
 		} catch {
 			// do nothing?
 		}

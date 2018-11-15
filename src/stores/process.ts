@@ -92,6 +92,10 @@ export interface ProcessCallback<T = any> {
 	(error: ProcessError<T> | null, result: ProcessResult<T>): void;
 }
 
+export interface ProcessInitializer<P extends object = DefaultPayload> {
+	(payload: P): void | Promise<void>;
+}
+
 /**
  * Function for undoing operations
  */
@@ -106,11 +110,20 @@ export interface ProcessCallbackDecorator {
 	(callback?: ProcessCallback): ProcessCallback;
 }
 
+export interface ProcessInitializerDecorator {
+	(initializer?: ProcessInitializer): ProcessInitializer;
+}
+
 /**
  * CreateProcess factory interface
  */
 export interface CreateProcess<T = any, P extends object = DefaultPayload> {
-	(id: string, commands: (Command<T, P>[] | Command<T, P>)[], callback?: ProcessCallback<T>): Process<T, P>;
+	(
+		id: string,
+		commands: (Command<T, P>[] | Command<T, P>)[],
+		callback?: ProcessCallback<T>,
+		initializer?: ProcessInitializer<P>
+	): Process<T, P>;
 }
 
 /**
@@ -136,6 +149,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 	commands: Commands<T, P>,
 	store: Store<T>,
 	callback: ProcessCallback | undefined,
+	initializer: ProcessInitializer | undefined,
 	transformer: Transformer<P> | undefined
 ): ProcessExecutor<T, any, any> {
 	const { apply, get, path, at } = store;
@@ -154,6 +168,10 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 		let command = commandsCopy.shift();
 		let error: ProcessError | null = null;
 		const payload = transformer ? transformer(executorPayload) : executorPayload;
+
+		if (initializer) {
+			await initializer(payload);
+		}
 		try {
 			while (command) {
 				let results = [];
@@ -217,27 +235,35 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 export function createProcess<T = any, P extends object = DefaultPayload>(
 	id: string,
 	commands: Commands<T, P>,
-	callback?: ProcessCallback
+	callback?: ProcessCallback,
+	initializer?: ProcessInitializer
 ): Process<T, P> {
 	processMap.set(id, [id, commands, callback]);
 	return (store: Store<T>, transformer?: Transformer<P>) =>
-		processExecutor(id, commands, store, callback, transformer);
+		processExecutor(id, commands, store, callback, initializer, transformer);
 }
 
 /**
  * Creates a process factory that will create processes with the specified callback decorators applied.
  * @param callbackDecorators array of process callback decorators to be used by the return factory.
  */
-export function createProcessFactoryWith(callbackDecorators: ProcessCallbackDecorator[]) {
+export function createProcessFactoryWith(
+	callbackDecorators?: ProcessCallbackDecorator[],
+	callbackInitializers?: ProcessInitializerDecorator[]
+) {
 	return <S, P extends object>(
 		id: string,
 		commands: (Command<S, P>[] | Command<S, P>)[],
-		callback?: ProcessCallback<S>
+		callback?: ProcessCallback<S>,
+		initializer?: ProcessInitializer
 	): Process<S, P> => {
-		const decoratedCallback = callbackDecorators.reduce((callback, callbackDecorator) => {
+		const decoratedCallback = (callbackDecorators || []).reduce((callback, callbackDecorator) => {
 			return callbackDecorator(callback);
 		}, callback);
-		return createProcess(id, commands, decoratedCallback);
+		const decoratedInitializer = (callbackInitializers || []).reduce((initializer, initializerDecorator) => {
+			return initializerDecorator(initializer);
+		}, initializer);
+		return createProcess(id, commands, decoratedCallback, decoratedInitializer);
 	};
 }
 
@@ -250,6 +276,18 @@ export function createCallbackDecorator(processCallback: ProcessCallback): Proce
 		return (error: ProcessError | null, result: ProcessResult): void => {
 			processCallback(error, result);
 			previousCallback && previousCallback(error, result);
+		};
+	};
+}
+
+export function createInitializerDecorator(processInitializer: ProcessInitializer): ProcessInitializerDecorator {
+	return (previousInitializer?: ProcessInitializer): ProcessInitializer => {
+		return async (payload) => {
+			if (previousInitializer) {
+				await previousInitializer(payload);
+			}
+
+			await processInitializer(payload);
 		};
 	};
 }

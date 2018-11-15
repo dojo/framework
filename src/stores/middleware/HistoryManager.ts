@@ -93,7 +93,7 @@ export class HistoryManager {
 			if (process) {
 				callback = process[2];
 			}
-			processExecutor(id, [() => operations], store, callback, undefined)({});
+			processExecutor(id, [() => operations], store, callback, undefined, undefined)({});
 		});
 		const stacks = this._storeMap.get(store);
 		redo.forEach(({ id, operations }: HistoryOperation) => {
