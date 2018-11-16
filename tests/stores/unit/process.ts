@@ -316,6 +316,7 @@ describe('process', () => {
 
 	it('Creating a process automatically decorates all process initializers', async () => {
 		let initialization: string[] = [];
+		let firstCall = true;
 
 		const initializer = (initializer?: ProcessInitializer): ProcessInitializer => {
 			return async (payload) => {
@@ -332,11 +333,13 @@ describe('process', () => {
 			});
 		};
 
-		const initializerThree = (payload: any): void => {
+		const initializerThree = () => {
 			initialization.push('initializer three');
 		};
 
 		const logPointerCallback = (error: ProcessError | null, result: ProcessResult<{ logs: string[][] }>): void => {
+			assert.lengthOf(initialization, firstCall ? 3 : 6);
+			firstCall = false;
 			const paths = result.operations.map((operation) => operation.path.path);
 			const logs = result.get(store.path('logs')) || [];
 
@@ -351,7 +354,14 @@ describe('process', () => {
 
 		const process = createProcess(
 			'test',
-			[testCommandFactory('foo'), testCommandFactory('bar')],
+			[
+				(): PatchOperation[] => {
+					assert.lengthOf(initialization, firstCall ? 3 : 6);
+					return [];
+				},
+				testCommandFactory('foo'),
+				testCommandFactory('bar')
+			],
 			logPointerCallback
 		);
 		const executor = process(store);
@@ -369,6 +379,38 @@ describe('process', () => {
 		assert.strictEqual(initialization[3], 'initializer one');
 		assert.strictEqual(initialization[4], 'initializer two');
 		assert.strictEqual(initialization[5], 'initializer three');
+		assert.deepEqual(store.get(store.path('logs')), [['/foo', '/bar'], ['/foo', '/bar']]);
+	});
+
+	it('Should work with a single initializer', async () => {
+		let initialization: string[] = [];
+
+		const initializer = async () => {
+			initialization.push('initializer');
+		};
+
+		const logPointerCallback = (error: ProcessError | null, result: ProcessResult<{ logs: string[][] }>): void => {
+			const paths = result.operations.map((operation) => operation.path.path);
+			const logs = result.get(store.path('logs')) || [];
+
+			result.apply([{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }]);
+		};
+
+		const process = createProcess(
+			'test',
+			[testCommandFactory('foo'), testCommandFactory('bar')],
+			logPointerCallback,
+			createInitializerDecorator(initializer)()
+		);
+		const executor = process(store);
+		await executor({});
+		assert.lengthOf(initialization, 1);
+		assert.strictEqual(initialization[0], 'initializer');
+		assert.deepEqual(store.get(store.path('logs')), [['/foo', '/bar']]);
+		await executor({});
+		assert.lengthOf(initialization, 2);
+		assert.strictEqual(initialization[0], 'initializer');
+		assert.strictEqual(initialization[1], 'initializer');
 		assert.deepEqual(store.get(store.path('logs')), [['/foo', '/bar'], ['/foo', '/bar']]);
 	});
 
