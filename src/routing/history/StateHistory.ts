@@ -62,7 +62,8 @@ export class StateHistory implements HistoryInterface {
 	}
 
 	private _onChange = () => {
-		const value = stripBase(this._base, this._window.location.pathname + this._window.location.search);
+		const pathName = this._window.location.pathname.replace(/\/$/, '');
+		const value = stripBase(this._base, pathName + this._window.location.search);
 		if (this._current === value) {
 			return;
 		}
