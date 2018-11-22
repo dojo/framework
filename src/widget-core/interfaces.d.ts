@@ -116,7 +116,7 @@ export interface VNodeProperties {
 	 * @param element - Element that was just added to the DOM.
 	 * @param properties - The properties object that was supplied to the [[h]] method
 	 */
-	enterAnimation?: ((element: Element, properties?: VNodeProperties) => void) | string;
+	enterAnimation?: ((element: Element, properties?: VNodeProperties) => void) | SupportedClassName;
 	/**
 	 * The animation to perform when this node is removed while its parent remains.
 	 * When this value is a string, you must pass a `projectionOptions.transitions` object when creating the projector using [[createProjector]].
@@ -126,7 +126,9 @@ export interface VNodeProperties {
 	 * You may use this function to remove the element when the animation is done.
 	 * @param properties - The properties object that was supplied to the [[v]] method that rendered this [[VNode]] the previous time.
 	 */
-	exitAnimation?: ((element: Element, removeElement: () => void, properties?: VNodeProperties) => void) | string;
+	exitAnimation?:
+		| ((element: Element, removeElement: () => void, properties?: VNodeProperties) => void)
+		| SupportedClassName;
 	/**
 	 * The animation to perform when the properties of this node change.
 	 * This also includes attributes, styles, css classes. This callback is also invoked when node contains only text and that text changes.
