@@ -374,6 +374,39 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(headerTwoText.data, 'bar');
 		});
 
+		it('support top level registry items', () => {
+			const registry = new Registry();
+			class Foo extends WidgetBase {
+				render() {
+					return 'Top Level Registry';
+				}
+			}
+
+			let resolver: any;
+			const promise = new Promise<any>((resolve) => {
+				resolver = resolve;
+			});
+
+			const r = renderer(() =>
+				w(
+					{
+						label: 'foo',
+						registryItem: () => {
+							return promise;
+						}
+					},
+					{}
+				)
+			);
+			const div = document.createElement('div');
+			r.mount({ domNode: div, registry, sync: true });
+			resolver(Foo);
+			assert.strictEqual(div.outerHTML, '<div></div>');
+			return promise.then(() => {
+				assert.strictEqual(div.outerHTML, '<div>Top Level Registry</div>');
+			});
+		});
+
 		it('registry items', () => {
 			let resolver = () => {};
 			const registry = new Registry();

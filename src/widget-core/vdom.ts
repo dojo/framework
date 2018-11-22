@@ -352,10 +352,14 @@ function arrayFrom(arr: any) {
 	return Array.prototype.slice.call(arr);
 }
 
-function wrapVNodes(nodes: VNode) {
+function wrapNodes(renderer: () => DNode) {
 	return class extends WidgetBase {
+		public isWNodeWrapper = true;
+
 		protected render() {
-			return nodes;
+			const result = renderer();
+			this.isWNodeWrapper = isWNode(result);
+			return result;
 		}
 	};
 }
@@ -721,10 +725,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 	function mount(mountOptions: Partial<MountOptions> = {}) {
 		_mountOptions = { ..._mountOptions, ...mountOptions };
 		const { domNode } = _mountOptions;
-		let renderResult = renderer();
-		if (isVNode(renderResult)) {
-			renderResult = w(wrapVNodes(renderResult), {});
-		}
+		const renderResult = w(wrapNodes(renderer), {});
 		const nextWrapper = {
 			node: renderResult,
 			depth: 1
@@ -1048,7 +1049,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		}
 		if (next.instance) {
 			_instanceToWrapperMap.set(next.instance, next);
-			if (!parentInvalidate) {
+			if (!parentInvalidate && !(next.instance as any).isWNodeWrapper) {
 				parentInvalidate = next.instance.invalidate.bind(next.instance);
 			}
 		}
