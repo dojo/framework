@@ -446,21 +446,23 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		parent: DNodeWrapper,
 		currentParent: DNodeWrapper | null
 	): DNodeWrapper[] {
+		const { requiresInsertBefore, hasPreviousSiblings, namespace, depth } = parent;
 		const wrappedRendered: DNodeWrapper[] = [];
 		const hasParentWNode = isWNodeWrapper(parent);
-		const currentParentLength = isVNodeWrapper(currentParent) && (currentParent.childrenWrappers || []).length > 1;
-		const requiresInsertBefore =
-			((parent.requiresInsertBefore || parent.hasPreviousSiblings !== false) && hasParentWNode) ||
-			currentParentLength;
+		const currentParentChildren = (isVNodeWrapper(currentParent) && currentParent.childrenWrappers) || [];
+		const hasCurrentParentChildren = currentParentChildren.length > 0;
+		const insertBefore =
+			((requiresInsertBefore || hasPreviousSiblings !== false) && hasParentWNode) ||
+			(hasCurrentParentChildren && rendered.length > 1);
 		let previousItem: DNodeWrapper | undefined;
 		for (let i = 0; i < rendered.length; i++) {
 			const renderedItem = rendered[i];
 			const wrapper = {
 				node: renderedItem,
-				depth: parent.depth + 1,
-				requiresInsertBefore,
+				depth: depth + 1,
+				requiresInsertBefore: insertBefore,
 				hasParentWNode,
-				namespace: parent.namespace
+				namespace: namespace
 			} as DNodeWrapper;
 			if (isVNode(renderedItem) && renderedItem.properties.exitAnimation) {
 				parent.hasAnimations = true;

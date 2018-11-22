@@ -997,7 +997,39 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'hello 3');
 		});
 
-		it('A', () => {
+		it('Should insert the new DOM node before the existing node', () => {
+			let invalidate: any;
+
+			class App extends WidgetBase {
+				private isBig = false;
+
+				constructor() {
+					super();
+					invalidate = this.goBig.bind(this);
+				}
+
+				goBig() {
+					this.isBig = !this.isBig;
+					this.invalidate();
+				}
+
+				protected render() {
+					return v('div', { key: 'root' }, [this.isBig ? v('h1', ['First']) : null, v('h2', ['Second'])]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const root: any = document.createElement('div');
+			r.mount({ domNode: root, sync: true });
+			assert.lengthOf(root.childNodes[0].childNodes, 1);
+			assert.strictEqual((root.childNodes[0].childNodes[0].childNodes[0] as Text).data, 'Second');
+			invalidate();
+			assert.lengthOf(root.childNodes[0].childNodes, 2);
+			assert.strictEqual((root.childNodes[0].childNodes[0].childNodes[0] as Text).data, 'First');
+			assert.strictEqual((root.childNodes[0].childNodes[1].childNodes[0] as Text).data, 'Second');
+		});
+
+		it('Should insert sibling DOM nodes in the correct order with a mixture of vnodes and wnodes returns an array', () => {
 			class GrandParent extends WidgetBase {
 				render() {
 					return v('div', [w(Parent, {}), w(ChildOne, {}), v('div', ['insert before me'])]);
