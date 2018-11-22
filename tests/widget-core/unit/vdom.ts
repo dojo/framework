@@ -4698,7 +4698,7 @@ jsdomDescribe('vdom', () => {
 					enter: stub(),
 					exit: stub()
 				};
-				const [Widget] = getWidget(v('div', [v('span', { enterAnimation: null })]));
+				const [Widget] = getWidget(v('div', [v('span', { enterAnimation: undefined })]));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
 				r.mount({ domNode: div, sync: true, transition });
