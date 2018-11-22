@@ -2,6 +2,8 @@ const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 
+import global from '../../../../src/shim/global';
+import { add } from '../../../../src/has/has';
 import { StateHistory } from '../../../../src/routing/history/StateHistory';
 
 const onChange = stub();
@@ -23,6 +25,8 @@ describe('StateHistory', () => {
 		document.body.removeChild(sandbox);
 		sandbox = null as any;
 		onChange.reset();
+		add('public-path', undefined, true);
+		global.window.__public_path__ = undefined;
 	});
 
 	it('initializes current path to current location', () => {
@@ -62,15 +66,18 @@ describe('StateHistory', () => {
 
 	it('emits change when path is updated', () => {
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+		assert.deepEqual(onChange.firstCall.args, [
+			sandbox.contentWindow.location.pathname + sandbox.contentWindow.location.search
+		]);
 		history.set('/foo');
-		assert.deepEqual(onChange.firstCall.args, ['/foo']);
+		assert.deepEqual(onChange.secondCall.args, ['/foo']);
 	});
 
 	it('does not emit change if path is set to the current value', () => {
 		sandbox.contentWindow!.history.pushState({}, '', '/foo');
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
 		history.set('/foo');
-		assert.isTrue(onChange.notCalled);
+		assert.isTrue(onChange.calledOnce);
 	});
 
 	describe('with base', () => {
@@ -129,24 +136,31 @@ describe('StateHistory', () => {
 
 		it('#set expands the path with the base when pushing state, with trailing slash', () => {
 			const history = new StateHistory({ onChange, base: '/foo/', window: sandbox.contentWindow! });
-			history.set('/bar');
+			history.set('/foo/bar');
 			assert.equal(history.current, '/bar');
 			assert.equal(sandbox.contentWindow!.location.pathname, '/foo/bar');
 
-			history.set('baz');
+			history.set('/foo/baz');
 			assert.equal(history.current, '/baz');
 			assert.equal(sandbox.contentWindow!.location.pathname, '/foo/baz');
 		});
 
 		it('#set expands the path with the base when pushing state, without trailing slash', () => {
 			const history = new StateHistory({ onChange, base: '/foo', window: sandbox.contentWindow! });
-			history.set('/bar');
+			history.set('/foo/bar');
 			assert.equal(history.current, '/bar');
 			assert.equal(sandbox.contentWindow!.location.pathname, '/foo/bar');
 
-			history.set('baz');
+			history.set('/foo/baz');
 			assert.equal(history.current, '/baz');
 			assert.equal(sandbox.contentWindow!.location.pathname, '/foo/baz');
+		});
+
+		it('Assumes base set in window __public_path__ variable if not explicitly set', () => {
+			add('public-path', 'base/path', true);
+			global.window.__public_path__ = 'base/path';
+			const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+			assert.strictEqual(history.prefix('foo'), '/base/path/foo');
 		});
 	});
 });

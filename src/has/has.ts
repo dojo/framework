@@ -247,6 +247,8 @@ export default function has(feature: string): FeatureTestResult {
 /* Used as a value to provide a debug only code path */
 add('debug', true);
 
+add('public-path', undefined);
+
 /* flag for dojo debug, default to false */
 add('dojo-debug', false);
 
