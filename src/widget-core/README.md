@@ -64,6 +64,7 @@ class HelloDojo extends WidgetBase {
 To display your new component in the view you will to use the `renderer` from the `@dojo/framework/widget-core/vdom` module. The `renderer` function accepts function that returns your component using the `w()` pragma and calling `.mount()` on the returned API.
 
 <!--READMEONLY-->
+
 ```ts
 import renderer from '@dojo/framework/widget-core/vdom';
 import { w } from '@dojo/framework/widget-core/d';
@@ -71,8 +72,11 @@ import { w } from '@dojo/framework/widget-core/d';
 const r = renderer(() => w(HelloDojo, {}));
 r.mount();
 ```
+
 <!--widget-core-readme-01-->
+
 [![Edit widget-core-readme-01](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/300oxjkoyp)
+
 <!--READMEONLY-->
 
 <!--DOCSONLY
@@ -119,6 +123,7 @@ We have created a widget used to project our `VNode`s into the DOM, however, wid
 Properties are available on the widget instance, defined by an interface and passed as a [`generic`](https://www.typescriptlang.org/docs/handbook/generics.html) to the `WidgetBase` class when creating your custom widget. The properties interface should extend the base `WidgetProperties` provided from `@dojo/framework/widget-core/interfaces`:
 
 <!--READMEONLY-->
+
 ```ts
 interface MyProperties extends WidgetProperties {
 	name: string;
@@ -132,7 +137,9 @@ class Hello extends WidgetBase<MyProperties> {
 	}
 }
 ```
+
 <!--widget-core-readme-02-->
+
 [![Edit widget-core-readme-02](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/9ynz3wkqn4)<!--READMEONLY-->
 
 <!--DOCSONLY
@@ -279,6 +286,7 @@ export default class ListItem extends WidgetBase<ListItemProperties> {
 Using the `ListItem` we can simplify the `List` slightly and also add the `onclick` functionality that we required:
 
 <!--READMEONLY-->
+
 ```ts
 interface Item {
 	id: string;
@@ -307,6 +315,7 @@ export default class List extends WidgetBase<ListProperties> {
 ```
 
 [![Edit widget-core-readme-3](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/13korpwzyj)<!--READMEONLY-->
+
 <!--DOCSONLY
 <iframe src="https://codesandbox.io/embed/13korpwzyj?autoresize=1&fontsize=12&hidenavigation=1&module=%2Fsrc%2Fwidgets%2FList.ts&view=editor" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
 DOCSONLY-->
@@ -548,30 +557,37 @@ render() {
 }
 ```
 
-#### Passing extra classes
+#### Passing extra classes to widgets
 
-Sometimes you may need to apply positioning or layout styles to a child widget. As it is not possible to pass `classes` directly to virtualized widget nodes. `WNodes` thus provide an `extraClasses` property to target themeable classes within its `render` function. In most cases, this should only target the `root` class and apply positioning adjustments. The classes passed via `extraClasses` are outside of the theming mechanism and thus will not be affected by a change in `theme`.
+The theming mechanism is great for consistently applying custom styles across every widget, but isn't flexible enough for individual cases when a user wants to apply additional styles for a specific widget or widgets.
 
-```css
-/* app.m.css */
-.tabPanel {
-	position: absolute;
-	left: 50px;
-	top: 50px;
+To apply extra classes to a widget and any child widget that they leverage the `Themed` mixins adds an extra property, `classes` to the widget API. This property can be used to pass extra classes that target specific classes used within a widget. It is the widget authors responsibility to explicitly pass the `classes` property to all children widget, this is not injected or automatically passed to children.
+
+Each set of classes is keyed by the widget key (the same structure as the Theme object) to identify the widget that they should be applied to.
+
+```ts
+interface Classes {
+	[widgetKey: string]: {
+		[className: string]: string | null | undefined;
+	}
 }
-```
 
-```typescript
-// app.ts
-import * as appCss from './styles/app.m.css';
+const myExtraClasses = {
+	'@dojo/widgets/icon': {
+		root: [css.extraRoot]
+	},
+	'@dojo/widgets/button': {
+		root: [css.extraRoot]
+	}
+}
 
-// ...
+// example render method
 render() {
-	return w(TabPanel, { extraClasses: { 'root': appCss.tabPanel } });
+	return w(Button, { classes: myExtraClasses });
 }
 ```
 
-In the above example, the tabPanel will receive its original `root` class in addition to the `appCss.tabPanel` class when used with `this.theme`.
+**Note:** The widget key is constructed by the package name from the `package.json` and the widget name, i.e. The `Icon` widget from `@dojo/widgets` has a key of `@dojo/widget/icon` or a widget called `Spinner` from a package called `all-the-dojo-spinners` would have a key of `all-the-dojo-spinners/spinners`.
 
 ### Internationalization
 
@@ -690,6 +706,7 @@ When `shouldFocus` is passed to a widget, it will be called as the properties ar
 An example usage controlling focus across child VNodes (DOM) and WNodes (widgets):
 
 <!--READMEONLY-->
+
 ```ts
 interface FocusInputChildProperties {
 	onFocus: () => void;
