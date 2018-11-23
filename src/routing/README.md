@@ -124,7 +124,7 @@ import { MemoryHistory } from '@dojo/framework/routing/MemoryHistory';
 const router = new Router(config, MemoryHistory);
 ```
 
-Once the router has been created with the application route configuration, it needs to be made available to all the components within your application. This is done using a `Registry` from `@dojo/framework/widget-core/Registry` and defining an `Injector` that contains returns the `router` instance. This `Injector` is defined using a known key, by default the key is `router` but this can be overridden if desired.
+Once the router has been created with the application route configuration, it needs to be made available to all the components within your application. This is done using a `Registry` from `@dojo/framework/widget-core/Registry` and defining an injector that wires the `invalidator` to the router's `nav` event and returns the `router` instance. This injector is defined using a key, the default key for routing is `router`.
 
 ```ts
 import { Registry } from '@dojo/framework/widget-core/Registry';
