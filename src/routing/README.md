@@ -141,7 +141,7 @@ registry.defineInjector('router', () => {
 
 **Note:** Routing provides a [convenience method for registering the router](#router-context-injection).
 
-Finally, the `registry` needs to be made available to all widgets within the application by passing it to the `.mount()` method of the vdom `renderer`
+Finally, the `registry` needs to be made available to all widgets within the application by passing it to the `.mount()` method of the vdom `renderer`.
 
 ```ts
 const r = renderer(() => v(App, {}));
