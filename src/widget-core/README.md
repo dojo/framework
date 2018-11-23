@@ -561,9 +561,9 @@ render() {
 
 The theming mechanism is great for consistently applying custom styles across every widget, but isn't flexible enough for individual cases when a user wants to apply additional styles for a specific widget or widgets.
 
-To apply extra classes to a widget and any child widget that they leverage the `Themed` mixins adds an extra property, `classes` to the widget API. This property can be used to pass extra classes that target specific classes used within a widget. It is the widget authors responsibility to explicitly pass the `classes` property to all children widget, this is not injected or automatically passed to children.
+To apply extra classes to a widget and any child widget that they leverage, the `Themed` mixins adds an extra property, `classes` to the widget API. This property can be used to pass extra classes that target specific classes used within a widget. It is the widget author's responsibility to explicitly pass the `classes` property to all children widget as this is not injected or automatically passed to children.
 
-Each set of classes is keyed by the widget key (the same structure as the Theme object) to identify the widget that they should be applied to.
+Each set of classes is keyed by the widget key (the same structure as the Theme object) to identify the widget to which the classes get applied.
 
 ```ts
 interface Classes {
@@ -587,7 +587,7 @@ render() {
 }
 ```
 
-**Note:** The widget key is constructed by the package name from the `package.json` and the widget name, i.e. The `Icon` widget from `@dojo/widgets` has a key of `@dojo/widget/icon` or a widget called `Spinner` from a package called `all-the-dojo-spinners` would have a key of `all-the-dojo-spinners/spinners`.
+**Note:** The widget key is constructed by the package name from the `package.json` and the widget name, i.e. the `Icon` widget from `@dojo/widgets` has a key of `@dojo/widget/icon` or a widget called `Spinner` from a package called `all-the-dojo-spinners` would have a key of `all-the-dojo-spinners/spinners`.
 
 ### Internationalization
 
