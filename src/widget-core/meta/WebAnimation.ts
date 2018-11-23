@@ -1,6 +1,7 @@
 import { Base } from './Base';
 import Map from '../../shim/Map';
 import global from '../../shim/global';
+import { Animation, KeyframeEffect, AnimationEffectTiming, AnimationKeyFrame } from '../../shim/WebAnimations';
 
 /**
  * Animation controls are used to control the web animation that has been applied
@@ -17,36 +18,14 @@ export interface AnimationControls {
 	startTime?: number;
 	currentTime?: number;
 }
-
 /**
- * Animation timing properties passed to a new KeyframeEffect.
- */
-export interface AnimationTimingProperties {
-	duration?: number;
-	delay?: number;
-	direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse';
-	easing?: string;
-	endDelay?: number;
-	fill?: 'none' | 'forwards' | 'backwards' | 'both' | 'auto';
-	iterations?: number;
-	iterationStart?: number;
-}
-
-export interface AnimationKeyFrame {
-	easing?: string | string[];
-	offset?: number | Array<number | null> | null;
-	opacity?: number | number[];
-	transform?: string | string[];
-}
-
-/**
- * Animation propertiues that can be passed as vdom property `animate`
+ * Animation properties that can be passed as vdom property `animate`
  */
 export interface AnimationProperties {
 	id: string;
 	effects: (() => AnimationKeyFrame | AnimationKeyFrame[]) | AnimationKeyFrame | AnimationKeyFrame[];
 	controls?: AnimationControls;
-	timing?: AnimationTimingProperties;
+	timing?: AnimationEffectTiming;
 }
 
 export type AnimationPropertiesFunction = () => AnimationProperties;
@@ -74,9 +53,9 @@ export class WebAnimations extends Base {
 
 		const fx = typeof effects === 'function' ? effects() : effects;
 
-		const keyframeEffect = new global.KeyframeEffect(node, fx, timing);
+		const keyframeEffect = new KeyframeEffect(node, fx, timing);
 
-		return new global.Animation(keyframeEffect, global.document.timeline);
+		return new Animation(keyframeEffect, global.document.timeline);
 	}
 
 	private _updatePlayer(player: any, controls: AnimationControls) {

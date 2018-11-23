@@ -2,10 +2,8 @@ import global from '../../../../src/shim/global';
 const { assert } = intern.getPlugin('chai');
 const { afterEach, beforeEach, before, describe, it } = intern.getInterface('bdd');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
-import WebAnimation, {
-	AnimationControls,
-	AnimationTimingProperties
-} from '../../../../src/widget-core/meta/WebAnimation';
+import WebAnimation, { AnimationControls } from '../../../../src/widget-core/meta/WebAnimation';
+import { AnimationEffectTiming } from '../../../../src/shim/WebAnimations';
 import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 import { v } from '../../../../src/widget-core/d';
 import { spy, stub } from 'sinon';
@@ -13,7 +11,7 @@ import { spy, stub } from 'sinon';
 jsdomDescribe('WebAnimation', () => {
 	let effects: any;
 	let controls: AnimationControls;
-	let timing: AnimationTimingProperties;
+	let timing: AnimationEffectTiming;
 	let animate: any;
 
 	class TestWidget extends WidgetBase {

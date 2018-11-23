@@ -1,7 +1,7 @@
-import global from '../../shim/global';
 import WeakMap from '../../shim/WeakMap';
 import Map from '../../shim/Map';
 import { Base } from './Base';
+import IntersectionObserver from '../../shim/IntersectionObserver';
 
 interface ExtendedIntersectionObserverEntry extends IntersectionObserverEntry {
 	readonly isIntersecting: boolean;
@@ -73,7 +73,7 @@ export class Intersection extends Base {
 
 	private _createDetails(options: IntersectionGetOptions, rootNode?: HTMLElement): IntersectionDetail {
 		const entries = new WeakMap<HTMLElement, ExtendedIntersectionObserverEntry>();
-		const observer = new global.IntersectionObserver(this._onIntersect(entries), { ...options, root: rootNode });
+		const observer = new IntersectionObserver(this._onIntersect(entries), { ...options, root: rootNode });
 		const details = { observer, entries, ...options };
 
 		this._details.set(JSON.stringify(options), details);
