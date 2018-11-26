@@ -575,3 +575,11 @@ add(
 add('abort-controller', () => typeof global.AbortController !== 'undefined');
 
 add('abort-signal', () => typeof global.AbortSignal !== 'undefined');
+
+add('dom-intersection-observer', () => has('host-browser') && global.IntersectionObserver !== undefined, true);
+
+add('dom-resize-observer', () => has('host-browser') && global.ResizeObserver !== undefined, true);
+
+add('dom-pointer-events', () => has('host-browser') && global.onpointerdown !== undefined, true);
+
+add('build-elide', false);

@@ -1,18 +1,6 @@
 import { Base } from './Base';
 import Map from '../../shim/Map';
-
-interface Observer {
-	observe(node: HTMLElement): void;
-}
-
-declare const ResizeObserver: {
-	prototype: Observer;
-	new (callback: (entries: ResizeObserverEntry[]) => any): any;
-};
-
-interface ResizeObserverEntry {
-	contentRect: ContentRect;
-}
+import ResizeObserver from '../../shim/ResizeObserver';
 
 export interface ContentRect {
 	readonly bottom: number;

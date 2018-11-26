@@ -23,6 +23,12 @@ function shimAmdDependencies(config: any) {
 	});
 
 	addIfNotPresent(packages, {
+		name: 'resize-observer-polyfill',
+		location: 'node_modules/resize-observer-polyfill/dist',
+		main: 'ResizeObserver'
+	});
+
+	addIfNotPresent(packages, {
 		name: 'intersection-observer',
 		location: 'node_modules/intersection-observer',
 		main: 'intersection-observer'
