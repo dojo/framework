@@ -1,5 +1,5 @@
 import global from './global';
-import has from './support/has';
+import has from '../has/has';
 import { isSymbol } from './Symbol';
 
 export interface ObjectAssign {

@@ -1,6 +1,6 @@
 import global from './global';
 import { isArrayLike, isIterable, Iterable } from './iterator';
-import has from './support/has';
+import has from '../has/has';
 import './Symbol';
 
 export interface Observable<T> extends ObservableObject {

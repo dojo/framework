@@ -1,4 +1,4 @@
-import has from './support/has';
+import has from '../has/has';
 import global from './global';
 import { getValueDescriptor } from './support/util';
 

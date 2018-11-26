@@ -1,4 +1,4 @@
-import has from '../../../../src/shim/support/has';
+import has from '../../../../src/has/has';
 import global from '../../../../src/shim/global';
 import { queueAnimationTask, queueMicroTask, queueTask } from '../../../../src/shim/support/queue';
 

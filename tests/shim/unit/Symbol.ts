@@ -1,5 +1,5 @@
 import Symbol, { isSymbol } from '../../../src/shim/Symbol';
-import has from '../../../src/shim/support/has';
+import has from '../../../src/has/has';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');

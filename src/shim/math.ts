@@ -1,4 +1,4 @@
-import has from './support/has';
+import has from '../has/has';
 
 export const FRACTION_UNITS = Math.pow(2, 23);
 export const MAX_FLOAT32 = 3.4028234663852886e38;

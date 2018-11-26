@@ -1,5 +1,5 @@
 import global from './global';
-import has from './support/has';
+import has from '../has/has';
 import { findIndex } from './array';
 
 export interface AbortSignal extends EventTarget {

@@ -3,7 +3,7 @@ import global from './global';
 import { queueMicroTask } from './support/queue';
 import { Iterable } from './iterator';
 import './Symbol';
-import has from './support/has';
+import has from '../has/has';
 
 /**
  * Executor is the interface for functions used to initialize a Promise.

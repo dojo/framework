@@ -1,7 +1,7 @@
 import { isArrayLike, Iterable, IterableIterator, ShimIterator } from './iterator';
 import global from './global';
 import { is as objectIs } from './object';
-import has from './support/has';
+import has from '../has/has';
 import './Symbol';
 
 export interface Map<K, V> {

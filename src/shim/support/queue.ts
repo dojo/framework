@@ -1,5 +1,5 @@
 import global from '../global';
-import has from './has';
+import has from '../../has/has';
 import { Handle } from '../interfaces';
 
 function executeTask(item: QueueItem | undefined): void {
