@@ -30,7 +30,7 @@ registerSuite('AMD Util', {
 				assert.lengthOf(config.packages.filter((p: any) => p.name === '@dojo'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'existingPackage'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'web-animations-js'), 1);
-				assert.lengthOf(config.packages.filter((p: any) => p.name === 'ResizeObserver'), 1);
+				assert.lengthOf(config.packages.filter((p: any) => p.name === 'resize-observer-polyfill'), 1);
 			});
 	},
 	async 'Utility does not inject dependency if it already exists'() {
