@@ -1,2 +1,2 @@
-`has('build-elide')`;
+`!has('build-elide')`;
 import 'pepjs';
