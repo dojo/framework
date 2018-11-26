@@ -1,5 +1,5 @@
 import global from './global';
-`has('build-elide')`;
+`!has('build-elide')`;
 import 'web-animations-js/web-animations-next-lite.min';
 
 export type AnimationEffectTimingFillMode = 'none' | 'forwards' | 'backwards' | 'both' | 'auto';

@@ -2,21 +2,23 @@ import global from '../../../../src/shim/global';
 const { assert } = intern.getPlugin('chai');
 const { afterEach, beforeEach, before, describe, it } = intern.getInterface('bdd');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
-import WebAnimation, { AnimationControls } from '../../../../src/widget-core/meta/WebAnimation';
 import { AnimationEffectTiming } from '../../../../src/shim/WebAnimations';
 import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 import { v } from '../../../../src/widget-core/d';
 import { spy, stub } from 'sinon';
 
+let WebAnimation: any;
+let animationExists = false;
+
 jsdomDescribe('WebAnimation', () => {
 	let effects: any;
-	let controls: AnimationControls;
+	let controls: any;
 	let timing: AnimationEffectTiming;
 	let animate: any;
 
 	class TestWidget extends WidgetBase {
 		render() {
-			this.meta(WebAnimation).animate('animated', animate);
+			(this.meta(WebAnimation) as any).animate('animated', animate);
 
 			return v('div', {}, [
 				v('div', {
@@ -49,6 +51,64 @@ jsdomDescribe('WebAnimation', () => {
 	let meta: any;
 	let metaStub: any;
 
+	before(async () => {
+		class KeyframeEffectMock {
+			constructor(...args: any[]) {
+				keyframeCtorStub(...args);
+			}
+		}
+		class AnimationMock {
+			constructor(...args: any[]) {
+				animationCtorStub(...args);
+			}
+			get startTime() {
+				return 0;
+			}
+			get currentTime(): number | undefined {
+				return animationExists ? 500 : undefined;
+			}
+			get playState() {
+				return animationExists ? 'running' : undefined;
+			}
+			get playbackRate() {
+				return 1;
+			}
+			pause() {
+				pauseStub();
+			}
+			play() {
+				playStub();
+			}
+			reverse() {
+				reverseStub();
+			}
+			cancel() {
+				cancelStub();
+			}
+			finish() {
+				finishStub();
+			}
+			set startTime(time: number) {
+				startStub(time);
+			}
+			set currentTime(time: number | undefined) {
+				currentStub(time);
+			}
+			set onfinish(onFinish: () => {}) {
+				onFinish();
+			}
+			set oncancel(onCancel: () => {}) {
+				onCancel();
+			}
+			set playbackRate(rate: number) {
+				playbackRateStub(rate);
+			}
+		}
+		global.KeyframeEffect = KeyframeEffectMock;
+		global.Animation = AnimationMock;
+		WebAnimation = (await import('../../../../src/widget-core/meta/WebAnimation')).default;
+	});
+
 	beforeEach(() => {
 		effects = [{ height: '0px' }, { height: '10px' }];
 		controls = {};
@@ -57,6 +117,7 @@ jsdomDescribe('WebAnimation', () => {
 			id: 'animation',
 			effects
 		};
+		animationExists = false;
 	});
 
 	describe('integration', () => {
@@ -84,51 +145,6 @@ jsdomDescribe('WebAnimation', () => {
 	});
 
 	describe('player', () => {
-		before(() => {
-			class KeyframeEffectMock {
-				constructor(...args: any[]) {
-					keyframeCtorStub(...args);
-				}
-			}
-			class AnimationMock {
-				constructor(...args: any[]) {
-					animationCtorStub(...args);
-				}
-				pause() {
-					pauseStub();
-				}
-				play() {
-					playStub();
-				}
-				reverse() {
-					reverseStub();
-				}
-				cancel() {
-					cancelStub();
-				}
-				finish() {
-					finishStub();
-				}
-				set startTime(time: number) {
-					startStub(time);
-				}
-				set currentTime(time: number) {
-					currentStub(time);
-				}
-				set onfinish(onFinish: () => {}) {
-					onFinish();
-				}
-				set oncancel(onCancel: () => {}) {
-					onCancel();
-				}
-				set playbackRate(rate: number) {
-					playbackRateStub(rate);
-				}
-			}
-			global.KeyframeEffect = KeyframeEffectMock;
-			global.Animation = AnimationMock;
-		});
-
 		beforeEach(() => {
 			keyframeCtorStub.resetHistory();
 			animationCtorStub.resetHistory();
@@ -318,24 +334,6 @@ jsdomDescribe('WebAnimation', () => {
 
 		describe('get info', () => {
 			beforeEach(() => {
-				global.Animation = class {
-					constructor() {}
-					play() {}
-					pause() {}
-					get startTime() {
-						return 0;
-					}
-					get currentTime() {
-						return 500;
-					}
-					get playState() {
-						return 'running';
-					}
-					get playbackRate() {
-						return 1;
-					}
-				};
-
 				widget = new TestWidget();
 				meta = widget.getMeta();
 				metaStub = stub(meta as any, 'getNode').returns(metaNode);
@@ -354,6 +352,7 @@ jsdomDescribe('WebAnimation', () => {
 			});
 
 			it('returns animation info when get is called', () => {
+				animationExists = true;
 				animate.duration = 1000;
 				animate.controls = {
 					play: true
@@ -362,7 +361,6 @@ jsdomDescribe('WebAnimation', () => {
 				widget.render();
 
 				const info = meta.get('animation');
-
 				assert.deepEqual(info, {
 					startTime: 0,
 					currentTime: 500,

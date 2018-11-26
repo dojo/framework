@@ -581,3 +581,5 @@ add('dom-intersection-observer', () => has('host-browser') && global.Intersectio
 add('dom-resize-observer', () => has('host-browser') && global.ResizeObserver !== undefined, true);
 
 add('dom-pointer-events', () => has('host-browser') && global.onpointerdown !== undefined, true);
+
+add('build-elide', false);

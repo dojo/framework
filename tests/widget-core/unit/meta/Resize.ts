@@ -2,7 +2,7 @@ const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import global from '../../../../src/shim/global';
 import { stub, SinonStub } from 'sinon';
-import Resize, { ContentRect } from '../../../../src/widget-core/meta/Resize';
+
 import NodeHandler from '../../../../src/widget-core/NodeHandler';
 import WidgetBase from '../../../../src/widget-core/WidgetBase';
 
@@ -11,15 +11,11 @@ let resizeCallback: ([]: any[]) => void;
 let bindInstance: WidgetBase;
 let isFoo: SinonStub;
 let isBar: SinonStub;
+let Resize: any;
 
 registerSuite('meta - Resize', {
-	before() {
+	async before() {
 		bindInstance = new WidgetBase();
-	},
-
-	beforeEach() {
-		isFoo = stub();
-		isBar = stub();
 		resizeObserver = stub().callsFake(function(callback: any) {
 			const observer = {
 				observe: stub()
@@ -27,15 +23,19 @@ registerSuite('meta - Resize', {
 			resizeCallback = callback;
 			return observer;
 		});
-
 		global.ResizeObserver = resizeObserver;
+		Resize = (await import('../../../../src/widget-core/meta/Resize')).default;
+	},
+
+	beforeEach() {
+		isFoo = stub();
+		isBar = stub();
 	},
 
 	afterEach() {
 		isFoo.reset();
 		isBar.reset();
-		resizeObserver.reset();
-		global.ResizeObserver = undefined;
+		resizeObserver.resetHistory();
 	},
 
 	tests: {
@@ -79,7 +79,7 @@ registerSuite('meta - Resize', {
 				bind: bindInstance
 			});
 
-			const contentRect: Partial<ContentRect> = {
+			const contentRect: any = {
 				width: 10
 			};
 
@@ -118,7 +118,7 @@ registerSuite('meta - Resize', {
 				bind: bindInstance
 			});
 
-			const contentRect: Partial<ContentRect> = {
+			const contentRect: any = {
 				width: 10
 			};
 
@@ -148,7 +148,7 @@ registerSuite('meta - Resize', {
 				bind: bindInstance
 			});
 
-			const contentRect: Partial<ContentRect> = {
+			const contentRect: any = {
 				width: 10
 			};
 

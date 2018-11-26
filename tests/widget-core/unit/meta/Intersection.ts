@@ -2,33 +2,45 @@ const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import global from '../../../../src/shim/global';
 import { stub, spy, SinonSpy } from 'sinon';
-import Intersection from '../../../../src/widget-core/meta/Intersection';
 import { NodeHandler } from './../../../../src/widget-core/NodeHandler';
 import WidgetBase from '../../../../src/widget-core/WidgetBase';
 
 let intersectionObserver: any;
 let bindInstance: WidgetBase;
 const observers: ([object, Function])[] = [];
+let Intersection: any;
+let normal = true;
+let observeStub: any;
 
 registerSuite('meta - Intersection', {
-	before() {
+	async before() {
 		bindInstance = new WidgetBase();
-	},
-
-	beforeEach() {
+		observeStub = stub();
 		intersectionObserver = stub(global, 'IntersectionObserver').callsFake(function(callback: any) {
-			const observer = {
-				observe: stub(),
-				takeRecords: stub().returns([]),
-				disconnect: spy()
-			};
-			observers.push([observer, callback]);
-			return observer;
+			if (normal) {
+				const observer = {
+					observe: stub(),
+					takeRecords: stub().returns([]),
+					disconnect: spy()
+				};
+				observers.push([observer, callback]);
+				return observer;
+			} else {
+				const observer = {
+					observe: observeStub,
+					takeRecords: stub().returns([])
+				};
+				observers.push([observer, callback]);
+				return observer;
+			}
 		});
+		Intersection = (await import('../../../../src/widget-core/meta/Intersection')).default;
 	},
 
 	afterEach() {
-		intersectionObserver.restore();
+		normal = true;
+		observeStub.resetHistory();
+		intersectionObserver.resetHistory();
 		observers.length = 0;
 	},
 
@@ -265,7 +277,7 @@ registerSuite('meta - Intersection', {
 			},
 			'observing multiple elements with the same root'() {
 				const nodeHandler = new NodeHandler();
-				const observeStub = stub();
+				normal = false;
 				const intersection = new Intersection({
 					invalidate: () => {},
 					nodeHandler,
@@ -273,16 +285,6 @@ registerSuite('meta - Intersection', {
 				});
 				const root = document.createElement('div');
 				const bar = document.createElement('div');
-
-				intersectionObserver.restore();
-				intersectionObserver = stub(global, 'IntersectionObserver').callsFake(function(callback: any) {
-					const observer = {
-						observe: observeStub,
-						takeRecords: stub().returns([])
-					};
-					observers.push([observer, callback]);
-					return observer;
-				});
 
 				nodeHandler.add(root, 'foo');
 				nodeHandler.add(bar, 'bar');
@@ -311,23 +313,13 @@ registerSuite('meta - Intersection', {
 			},
 			'observation should be based on node, not key'() {
 				const nodeHandler = new NodeHandler();
-				const observeStub = stub();
+				normal = false;
 				const intersection = new Intersection({
 					invalidate: () => {},
 					nodeHandler,
 					bind: bindInstance
 				});
 				const root = document.createElement('div');
-
-				intersectionObserver.restore();
-				intersectionObserver = stub(global, 'IntersectionObserver').callsFake(function(callback: any) {
-					const observer = {
-						observe: observeStub,
-						takeRecords: stub().returns([])
-					};
-					observers.push([observer, callback]);
-					return observer;
-				});
 
 				nodeHandler.add(root, 'foo');
 				nodeHandler.add(root, 'baz');
