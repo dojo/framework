@@ -4715,6 +4715,28 @@ jsdomDescribe('vdom', () => {
 				meta.setRenderResult(v('div', [v('span', { enterAnimation })]));
 				assert.isTrue(enterAnimation.calledWith((div.childNodes[0] as Element).childNodes[0], match({})));
 			});
+			it('Does not invoke transition when null passed as enterAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget] = getWidget(v('div', [v('span', { enterAnimation: null })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				assert.isTrue(transition.enter.notCalled);
+			});
+			it('Does not invoke transition when undefined passed as enterAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget] = getWidget(v('div', [v('span', { enterAnimation: undefined })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				assert.isTrue(transition.enter.notCalled);
+			});
 		});
 		describe('exitAnimation', () => {
 			it('is invoked when a node is removed from an existing parent node', () => {
@@ -4730,6 +4752,30 @@ jsdomDescribe('vdom', () => {
 				assert.lengthOf((div.childNodes[0] as Element).childNodes, 1);
 				exitAnimation.lastCall.callArg(1); // arg1: removeElement
 				assert.lengthOf((div.childNodes[0] as Element).childNodes, 0);
+			});
+			it('Does not invoke transition when null passed as exitAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation: null })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				meta.setRenderResult(v('div', []));
+				assert.isTrue(transition.exit.notCalled);
+			});
+			it('Does not invoke transition when undefined passed as exitAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation: undefined })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				meta.setRenderResult(v('div', []));
+				assert.isTrue(transition.exit.notCalled);
 			});
 		});
 		describe('transitionStrategy', () => {
