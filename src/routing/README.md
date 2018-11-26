@@ -121,10 +121,10 @@ The router will automatically be registered with a `HashHistory` history manager
 ```ts
 import { MemoryHistory } from '@dojo/framework/routing/MemoryHistory';
 
-const router = new Router(config, MemoryHistory);
+const router = new Router(config, { HistoryManager: MemoryHistory });
 ```
 
-Once the router has been created with the application route configuration, it needs to be made available to all the components within your application. This is done using a `Registry` from `@dojo/framework/widget-core/Registry` and defining an `Injector` that contains the `router` instance as the `payload`. This `Injector` is defined using a known key, by default the key is `router` but this can be overridden if desired.
+Once the router has been created with the application route configuration, it needs to be made available to all the components within your application. This is done using a `Registry` from `@dojo/framework/widget-core/Registry` and defining an injector that wires the `invalidator` to the router's `nav` event and returns the `router` instance. This injector is defined using a key, the default key for routing is `router`.
 
 ```ts
 import { Registry } from '@dojo/framework/widget-core/Registry';
@@ -133,14 +133,19 @@ import { Injector } from '@dojo/framework/widget-core/Injector';
 const registry = new Registry();
 
 // Assuming we have the router instance available
-registry.defineInjector('router', new Injector(router));
+registry.defineInjector('router', () => {
+	router.on('nav', () => invalidator());
+	return () => router;
+};
 ```
 
-Finally, the `registry` needs to be made available to all widgets within the application by setting it as a `property` to the application's top-level `Projector` instance.
+**Note:** Routing provides a [convenience method for registering the router](#router-context-injection).
+
+Finally, the `registry` needs to be made available to all widgets within the application by passing it to the `.mount()` method of the vdom `renderer`.
 
 ```ts
-const projector = new Projector();
-projector.setProperties({ registry });
+const r = renderer(() => v(App, {}));
+r.mount({ registry });
 ```
 
 #### History Managers
@@ -148,7 +153,7 @@ projector.setProperties({ registry });
 Routing comes with three history managers for monitoring and changing the navigation state, `HashHistory`, `StateHistory` and `MemoryHistory`. By default the `HashHistory` is used, however, this can be overridden by passing a different `HistoryManager` when creating the `Router`.
 
 ```ts
-const router = new Router(config, MemoryHistory);
+const router = new Router(config, { HistoryManager: MemoryHistory });
 ```
 
 ##### Hash History
@@ -159,7 +164,7 @@ The hash-based manager uses the fragment identifier to store navigation state an
 import { Router } from '@dojo/framework/routing/Router';
 import { HashHistory } from '@dojo/framework/routing/history/HashHistory';
 
-const router = new Router(config, HashHistory);
+const router = new Router(config, { HistoryManager: HashHistory });
 ```
 
 The history manager has `current` getter, `set(path: string)` and `prefix(path: string)` APIs. The `HashHistory` class assumes the global object is a browser `window` object, but an explicit object can be provided. The manager uses `window.location.hash` and adds an event listener for the `hashchange` event. The `current` getter returns the current path, without a # prefix.
@@ -176,7 +181,7 @@ The `MemoryHistory` does not rely on any browser API but keeps its own internal 
 import { Router } from '@dojo/framework/routing/Router';
 import { MemoryHistory } from '@dojo/framework/routing/history/MemoryHistory';
 
-const router = new Router(config, MemoryHistory);
+const router = new Router(config, { HistoryManager: MemoryHistory });
 ```
 
 #### Outlet Event
