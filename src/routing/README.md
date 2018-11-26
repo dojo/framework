@@ -121,7 +121,7 @@ The router will automatically be registered with a `HashHistory` history manager
 ```ts
 import { MemoryHistory } from '@dojo/framework/routing/MemoryHistory';
 
-const router = new Router(config, MemoryHistory);
+const router = new Router(config, { HistoryManager: MemoryHistory });
 ```
 
 Once the router has been created with the application route configuration, it needs to be made available to all the components within your application. This is done using a `Registry` from `@dojo/framework/widget-core/Registry` and defining an injector that wires the `invalidator` to the router's `nav` event and returns the `router` instance. This injector is defined using a key, the default key for routing is `router`.
@@ -153,7 +153,7 @@ r.mount({ registry });
 Routing comes with three history managers for monitoring and changing the navigation state, `HashHistory`, `StateHistory` and `MemoryHistory`. By default the `HashHistory` is used, however, this can be overridden by passing a different `HistoryManager` when creating the `Router`.
 
 ```ts
-const router = new Router(config, MemoryHistory);
+const router = new Router(config, { HistoryManager: MemoryHistory });
 ```
 
 ##### Hash History
@@ -164,7 +164,7 @@ The hash-based manager uses the fragment identifier to store navigation state an
 import { Router } from '@dojo/framework/routing/Router';
 import { HashHistory } from '@dojo/framework/routing/history/HashHistory';
 
-const router = new Router(config, HashHistory);
+const router = new Router(config, { HistoryManager: HashHistory });
 ```
 
 The history manager has `current` getter, `set(path: string)` and `prefix(path: string)` APIs. The `HashHistory` class assumes the global object is a browser `window` object, but an explicit object can be provided. The manager uses `window.location.hash` and adds an event listener for the `hashchange` event. The `current` getter returns the current path, without a # prefix.
@@ -181,7 +181,7 @@ The `MemoryHistory` does not rely on any browser API but keeps its own internal 
 import { Router } from '@dojo/framework/routing/Router';
 import { MemoryHistory } from '@dojo/framework/routing/history/MemoryHistory';
 
-const router = new Router(config, MemoryHistory);
+const router = new Router(config, { HistoryManager: MemoryHistory });
 ```
 
 #### Outlet Event
