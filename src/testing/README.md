@@ -9,7 +9,7 @@ Simple API for testing and asserting Dojo widget's expected virtual DOM and beha
 -   [`harness.expect`](#harnessexpect)
 -   [`harness.expectPartial`](#harnessexpectpartial)
 -   [`harness.trigger`](#harnesstrigger)
--   `harness.select`
+-   [`harness.select`](#harnessselect)
 
 ## Features
 
@@ -235,10 +235,10 @@ h.getRender(1);
 
 #### `harness.select`
 
-`harness.select` returns a list of DNodes, using the latest render, that match the provided selector. This can be useful if you need access to a widget's properties.
+`harness.select` returns an array of DNodes, using the latest render, that match the provided selector. This can be useful if you need access to a widget's properties.
 
 ```typescript
-select(selector: string);
+select(selector: string): DNode[];
 ```
 
 -   `selector`: The selector to use while determining matching DNodes
