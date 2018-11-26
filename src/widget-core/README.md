@@ -557,30 +557,37 @@ render() {
 }
 ```
 
-#### Passing extra classes
+#### Passing extra classes to widgets
 
-Sometimes you may need to apply positioning or layout styles to a child widget. As it is not possible to pass `classes` directly to virtualized widget nodes. `WNodes` thus provide an `extraClasses` property to target themeable classes within its `render` function. In most cases, this should only target the `root` class and apply positioning adjustments. The classes passed via `extraClasses` are outside of the theming mechanism and thus will not be affected by a change in `theme`.
+The theming mechanism is great for consistently applying custom styles across every widget, but isn't flexible enough for individual cases when a user wants to apply additional styles for a specific widget or widgets.
 
-```css
-/* app.m.css */
-.tabPanel {
-	position: absolute;
-	left: 50px;
-	top: 50px;
+To apply extra classes to a widget and any child widget that they leverage, the `Themed` mixins adds an extra property, `classes` to the widget API. This property can be used to pass extra classes that target specific classes used within a widget. It is the widget author's responsibility to explicitly pass the `classes` property to all children widget as this is not injected or automatically passed to children.
+
+Each set of classes is keyed by the widget key (the same structure as the Theme object) to identify the widget to which the classes get applied.
+
+```ts
+interface Classes {
+	[widgetKey: string]: {
+		[className: string]: string | null | undefined;
+	}
 }
-```
 
-```typescript
-// app.ts
-import * as appCss from './styles/app.m.css';
+const myExtraClasses = {
+	'@dojo/widgets/icon': {
+		root: [css.extraRoot]
+	},
+	'@dojo/widgets/button': {
+		root: [css.extraRoot]
+	}
+}
 
-// ...
+// example render method
 render() {
-	return w(TabPanel, { extraClasses: { 'root': appCss.tabPanel } });
+	return w(Button, { classes: myExtraClasses });
 }
 ```
 
-In the above example, the tabPanel will receive its original `root` class in addition to the `appCss.tabPanel` class when used with `this.theme`.
+**Note:** The widget key is constructed by the package name from the `package.json` and the widget name, i.e. the `Icon` widget from `@dojo/widgets` has a key of `@dojo/widget/icon` or a widget called `Spinner` from a package called `all-the-dojo-spinners` would have a key of `all-the-dojo-spinners/spinners`.
 
 ### Internationalization
 
