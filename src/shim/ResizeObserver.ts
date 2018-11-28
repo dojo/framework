@@ -1,5 +1,5 @@
 import global from './global';
-import has from '../../src/has/has';
+import has from '../has/has';
 `!has('build-elide')`;
 import ResizeObserver from 'resize-observer-polyfill';
 
