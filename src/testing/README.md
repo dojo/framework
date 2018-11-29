@@ -9,7 +9,6 @@ Simple API for testing and asserting Dojo widget's expected virtual DOM and beha
 -   [`harness.expect`](#harnessexpect)
 -   [`harness.expectPartial`](#harnessexpectpartial)
 -   [`harness.trigger`](#harnesstrigger)
--   [`harness.select`](#harnessselect)
 
 ## Features
 
@@ -39,7 +38,6 @@ The harness returns a `Harness` object that provides a small API for interacting
 -   [`expectPartial`](#harnessexpectpartial): Performs an assertion against a section of the render output from the widget under test.
 -   [`trigger`](#harnesstrigger): Used to trigger a function from a node on the widget under test's API
 -   [`getRender`](#harnessgetRender): Returns a render from the harness based on the index provided
--   [`select`](#harnessselect): Returns a list of nodes matching the given selector, using the last render.
 
 Setting up a widget for testing is simple and familiar using the `w()` function from `@dojo/framework/widget-core`:
 
@@ -231,47 +229,4 @@ const render = h.getRender();
 ```ts
 // Returns the result of the render for the index provided
 h.getRender(1);
-```
-
-#### `harness.select`
-
-`harness.select` returns an array of DNodes, using the latest render, that match the provided selector. This can be useful if you need access to a widget's properties.
-
-```typescript
-select(selector: string): DNode[];
-```
-
--   `selector`: The selector to use while determining matching DNodes
-
-Example Usage:
-
-Given a VDOM tree like,
-
-```typescript
-v(Toolbar, {
-	key: 'toolbar',
-	buttons: [
-		{
-			icon: 'save',
-			onClick: () => this._onSave()
-		},
-		{
-			icon: 'cancel',
-			onClick: () => this._onCancel()
-		}
-	]
-});
-```
-
-And you want to run the save toolbar button's `onClick` function.
-
-```typescript
-// find the toolbar
-const [toolbar] = h.select('@toolbar');
-
-// get the button's properties
-const properties = toolbar.properties as ToolbarProperties;
-
-// manually call the click handler
-properties.buttons[0].onClick();
 ```
