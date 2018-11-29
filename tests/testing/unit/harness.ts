@@ -581,10 +581,4 @@ describe('harness', () => {
 			]);
 		});
 	});
-
-	describe('select', () => {
-		const h = harness(() => w(MyWidget, {}));
-
-		assert.isTrue(h.select('@span').length === 1);
-	});
 });
