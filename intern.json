@@ -23,7 +23,6 @@
 		"./dist/dev/tests/has/functional/all.js",
 		"./dist/dev/tests/shim/functional/all.js",
 		"./dist/dev/tests/i18n/functional/**/*.js",
-		"./dist/dev/tests/widget-core/functional/all.js",
 		"./dist/dev/tests/routing/functional/**/*.js",
 		"./dist/dev/tests/stores/functional/all.js"
 	],
