@@ -209,6 +209,36 @@ h.trigger('@foo', 'onclick');
 const result = h.trigger('@bar', 'customFunction', 100);
 ```
 
+A `functionalSelector` can be used return a function that is nested in a widget's properties. The function will be triggered, in the same way that using a plain string `functionSelector`.
+
+Example Usage:
+
+Given a VDOM tree like,
+
+```typescript
+v(Toolbar, {
+	key: 'toolbar',
+	buttons: [
+		{
+			icon: 'save',
+			onClick: () => this._onSave()
+		},
+		{
+			icon: 'cancel',
+			onClick: () => this._onCancel()
+		}
+	]
+});
+```
+
+And you want to trigger the save toolbar button's `onClick` function.
+
+```typescript
+h.trigger("@buttons", (renderResult: DNode<Toolbar>) => {
+  return renderResult.properties.buttons[0].onClick;
+});
+```
+
 #### `harness.getRender`
 
 `harness.getRender()` returns the render with the index provided, when no index is provided it returns the last render.
