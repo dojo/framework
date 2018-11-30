@@ -29,7 +29,6 @@
 	],
 
 	"plugins": [
-		"./node_modules/whatwg-fetch/fetch.js",
 		{
 			"script": "./dist/dev/src/shim/main",
 			"useLoader": true
@@ -61,6 +60,7 @@
 			"./dist/dev/tests/widget-core/unit/all.js"
 		],
 		"plugins+": [
+			"./node_modules/whatwg-fetch/dist/fetch.umd.js",
 			{
 				"script": "./dist/dev/src/shim/browser.js",
 				"useLoader": true
