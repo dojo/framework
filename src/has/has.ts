@@ -11,12 +11,6 @@ export type FeatureTestResult = boolean | string | number | undefined | void;
  */
 export type FeatureTest = () => FeatureTestResult;
 
-export type FeatureTestThenable = PromiseLike<FeatureTestResult>;
-
-function isFeatureTestThenable(value: any): value is FeatureTestThenable {
-	return value && value.then;
-}
-
 /**
  * A cache of results of feature tests
  */
@@ -26,12 +20,6 @@ export const testCache: { [feature: string]: FeatureTestResult } = {};
  * A cache of the un-resolved feature tests
  */
 export const testFunctions: { [feature: string]: FeatureTest } = {};
-
-/**
- * A cache of unresolved thenables (probably promises)
- * @type {{}}
- */
-const testThenables: { [feature: string]: FeatureTestThenable } = {};
 
 export interface StaticHasFeatures {
 	[feature: string]: FeatureTestResult;
@@ -165,11 +153,7 @@ export function exists(feature: string): boolean {
  * @param value the value reported of the feature, or a function that will be executed once on first test
  * @param overwrite if an existing value should be overwritten. Defaults to false.
  */
-export function add(
-	feature: string,
-	value: FeatureTest | FeatureTestResult | FeatureTestThenable,
-	overwrite: boolean = false
-): void {
+export function add(feature: string, value: FeatureTest | FeatureTestResult, overwrite: boolean = false): void {
 	const normalizedFeature = feature.toLowerCase();
 
 	if (exists(normalizedFeature) && !overwrite && !(normalizedFeature in staticCache)) {
@@ -178,16 +162,6 @@ export function add(
 
 	if (typeof value === 'function') {
 		testFunctions[normalizedFeature] = value;
-	} else if (isFeatureTestThenable(value)) {
-		testThenables[feature] = value.then(
-			(resolvedValue: FeatureTestResult) => {
-				testCache[feature] = resolvedValue;
-				delete testThenables[feature];
-			},
-			() => {
-				delete testThenables[feature];
-			}
-		);
 	} else {
 		testCache[normalizedFeature] = value;
 		delete testFunctions[normalizedFeature];
@@ -211,8 +185,6 @@ export default function has(feature: string): FeatureTestResult {
 		delete testFunctions[normalizedFeature];
 	} else if (normalizedFeature in testCache) {
 		result = testCache[normalizedFeature];
-	} else if (feature in testThenables) {
-		return false;
 	} else {
 		throw new TypeError(`Attempt to detect unregistered has feature "${feature}"`);
 	}
@@ -223,12 +195,6 @@ export default function has(feature: string): FeatureTestResult {
 /*
  * Out of the box feature tests
  */
-
-/* Environments */
-
-/* Used as a value to provide a debug only code path */
-add('debug', true);
-
 add('public-path', undefined);
 
 /* flag for dojo debug, default to false */
@@ -244,70 +210,7 @@ add('host-node', function() {
 	}
 });
 
-add('object-assign', typeof global.Object.assign === 'function', true);
-
-add('arraybuffer', typeof global.ArrayBuffer !== 'undefined', true);
-add('formdata', typeof global.FormData !== 'undefined', true);
-add('filereader', typeof global.FileReader !== 'undefined', true);
-add('xhr', typeof global.XMLHttpRequest !== 'undefined', true);
-add('xhr2', has('xhr') && 'responseType' in global.XMLHttpRequest.prototype, true);
-add(
-	'blob',
-	function() {
-		if (!has('xhr2')) {
-			return false;
-		}
-
-		const request = new global.XMLHttpRequest();
-		request.open('GET', global.location.protocol + '//www.google.com', true);
-		request.responseType = 'blob';
-		request.abort();
-		return request.responseType === 'blob';
-	},
-	true
-);
-
-add('node-buffer', 'Buffer' in global && typeof global.Buffer === 'function', true);
-
 add('fetch', 'fetch' in global && typeof global.fetch === 'function', true);
-
-add(
-	'web-worker-xhr-upload',
-	typeof global.Promise !== 'undefined' &&
-		new Promise((resolve) => {
-			try {
-				if (global.Worker !== undefined && global.URL && global.URL.createObjectURL) {
-					const blob = new Blob(
-						[
-							`(function () {
-self.addEventListener('message', function () {
-	var xhr = new XMLHttpRequest();
-	try {
-		xhr.upload;
-		postMessage('true');
-	} catch (e) {
-		postMessage('false');
-	}
-});
-		})()`
-						],
-						{ type: 'application/javascript' }
-					);
-					const worker = new Worker(URL.createObjectURL(blob));
-					worker.addEventListener('message', ({ data: result }) => {
-						resolve(result === 'true');
-					});
-					worker.postMessage({});
-				} else {
-					resolve(false);
-				}
-			} catch (e) {
-				// IE11 on Winodws 8.1 encounters a security error.
-				resolve(false);
-			}
-		}),
-	true
-);
 
 add(
 	'es6-array',
