@@ -143,56 +143,6 @@ registerSuite('has', {
 				);
 			},
 
-			'works with thenable'() {
-				const dfd = this.async();
-
-				const thenable: PromiseLike<number> = {
-					then(resolve?: ((_: number) => void) | null) {
-						setTimeout(() => {
-							resolve!(5);
-						}, 10);
-
-						return thenable as any;
-					}
-				};
-
-				hasAdd('thenable', thenable);
-				assert.isFalse(has('thenable'));
-
-				setTimeout(
-					dfd.callback(() => {
-						assert.equal(has('thenable'), 5);
-					}),
-					100
-				);
-			},
-
-			'failed thenable removes itself from cache'() {
-				const dfd = this.async();
-
-				const thenable: PromiseLike<number> = {
-					then(_?: ((_: number) => void) | null, reject?: ((_: Error) => void) | null) {
-						setTimeout(() => {
-							reject!(new Error('test error'));
-						}, 10);
-
-						return thenable as any;
-					}
-				};
-
-				hasAdd('thenable', thenable);
-				assert.isFalse(has('thenable'));
-
-				setTimeout(
-					dfd.callback(() => {
-						assert.throws(() => {
-							has('thenable');
-						});
-					}),
-					100
-				);
-			},
-
 			overwrite: {
 				'value with value'() {
 					hasAdd(feature, 'old');
@@ -242,30 +192,6 @@ registerSuite('has', {
 			'null test value counts as being defined'() {
 				hasAdd(feature, null as any);
 				assert.isTrue(hasExists(feature));
-			},
-
-			'exists with thenabale'() {
-				const dfd = this.async();
-
-				const thenable: PromiseLike<number> = {
-					then(resolve?: ((_: number) => void) | null) {
-						setTimeout(() => {
-							resolve!(5);
-						}, 10);
-
-						return thenable as any;
-					}
-				};
-
-				hasAdd('thenable', thenable);
-				assert.isFalse(hasExists('thenable'));
-
-				setTimeout(
-					dfd.callback(() => {
-						assert.isTrue(hasExists('thenable'));
-					}),
-					100
-				);
 			},
 
 			'case should not matter'() {
@@ -363,10 +289,6 @@ registerSuite('has', {
 		},
 
 		'built in feature flags': {
-			debug() {
-				assert.isTrue(hasExists('debug'));
-				assert.isTrue(has('debug'), 'Debug should default to true');
-			},
 			'host-browser'() {
 				assert.isTrue(hasExists('host-browser'));
 				assert.strictEqual(
