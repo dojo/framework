@@ -258,7 +258,7 @@ export function createProcess<T = any, P extends object = DefaultPayload>(
  * @param callbacks array of process callback to be used by the returned factory.
  * @param initializers array of process initializers to be used by the returned factory.
  */
-export function createProcessFactoryWith(callbacks: ProcessCallback[] = []) {
+export function createProcessFactoryWith(callbacks: ProcessCallback[]) {
 	return <S, P extends object>(
 		id: string,
 		commands: (Command<S, P>[] | Command<S, P>)[],

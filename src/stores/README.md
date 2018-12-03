@@ -28,7 +28,10 @@ An application store for dojo.
     -   [Optimistic Update Pattern](#optimistic-update-pattern)
     -   [Executing Concurrent Commands](#executing-concurrent-commands)
 -   [Middleware](#middleware)
+    -   [After Middleware](#after-middleware)
+    -   [Before Middleware](#before-middleware)
     -   [Applying Middleware to Multiple Processes](#applying-middleware-to-multiple-processes)
+    -   [Combining Before and After Callbacks](#combining-before-and-after-callbacks)
     -   [Local Storage Middleware](#local-storage-middleware)
 
 ---
@@ -532,14 +535,30 @@ In this example, `commandOne` is executed, then both `concurrentCommandOne` and 
 
 ## Middleware
 
-Middleware provides a hook to apply generic/global functionality across multiple or all processes used within an application. Middleware is a function that receives the error and the result of a process to perform a specific action, before calling the next middleware if provided.
+Middleware provides a hook to apply generic/global functionality across multiple or all processes used within an application. Middleware is a function that returns an object with optional `before` and `after` callback functions.
 
-This is done using higher order functions that wrap the process' local `callback` using the error and result payload to decorate or perform an action for all processes it is used for.
+Multiple middlewares can be provided, and in this case any `before` callbacks will be called in the order they are provided, and `after` callbacks will be called in the opposite order.
 
-`callback` decorators can be composed together to combine multiple units of functionality, such that in the example below `myProcess` would run the `error` and `result` through the `collector`, `logger` and then `snapshot` callbacks.
+### After Middleware
+
+If provided, the `after` callback will be passed the error and the result of a process to perform a specific action. If multiple middlewares are provided, their `after` callbacks will be
+executed in the opposite order as they were provided.
+
+In the example below, the `after` callbacks returned snapshot, logger, and callback will be called in that order.
 
 ```ts
-const myProcess = createProcess('my-process', [commandOne, commandTwo], collector(logger(snapshot())));
+const myProcess = createProcess('my-process', [commandOne, commandTwo], [callback, logger, snapshot]);
+```
+
+### Before Middleware
+
+If provided, the `before` callback functions will be passed payload passed to the process and a reference to the store. They can be synchronous or asynchronous, designated by returning a promise,
+but if they are asynchronous they will make any processes they are attached to asynchronous as well.
+
+In the example below, the `before` callbacks returned by authenticator and logger would be called in that order.
+
+```ts
+const myProcess = createProcess('my-process', [commandOne, commandTwo], [authenticator, logger]);
 ```
 
 ### Applying Middleware to Multiple Processes
@@ -551,22 +570,77 @@ The `createProcessWith` higher order function can be used to specify middlewares
 ```ts
 const customCreateProcess = createProcessWith([logger]);
 
-// `myProcess` will automatically be decorated with the `logger` callback decorator.
+// `myProcess` will automatically be decorated with `logger` middleware.
 const myProcess = customCreateProcess('my-process', [commandOne, commandTwo]);
 ```
 
-An additional helper function `createCallbackDecorator` can be used to ensure that a middleware function calls the next middleware after it has finished executing.
+### Combining Before and After Callbacks
+
+The example below demonstrates the usage of both `before` and `after` callbacks
 
 ```ts
-const myMiddleware = (error: ProcessError, result: ProcessResult) => {
-	// do things with the outcome of the process
+const logger: ProcessCallback = () => {
+	const beforeLogs: string[] = [];
+	const afterLogs: string[] = [];
+	return {
+		before(payload, store) {
+			const value = `${beforeLogs.length}th payload: ${JSON.stringify(payload)}`;
+			beforeLogs.push(value);
+			store.apply([
+				{
+					op: OperationType.ADD,
+					path: new Pointer(`/beforeLogs/${beforeLogs.length}`),
+					value
+				}
+			]);
+
+			console.log('logger before called');
+		},
+		after(error, result) {
+			const value = error ? 'Process failed' : 'Process Succeeded';
+			afterLogs.push(value);
+			result.apply([
+				{
+					op: OperationType.ADD,
+					path: new Pointer(`/afterLogs/${afterLogs.length}`),
+					value
+				}
+			]);
+			console.log('logger after called');
+		}
+	};
 };
 
-// ensures the middleware will call the next middleware in the stack
-const myMiddlewareDecorator = createCallbackDecorator(myMiddleware);
+const afterOnly: ProcessCallback = () => ({
+	after(error, result) {
+		console.log('after only called');
+	}
+});
 
-// use the middleware decorator as normal
-const myProcess = createProcess('my-process', [commandOne], myMiddlewareDecorator());
+const beforeOnly: ProcessCallback = () => ({
+	before(payload, store) {
+		console.log('before only called');
+	}
+});
+
+const callback: ProcessCallback = () => ({
+	before(payload, store) {
+		console.log('callback before called');
+	},
+	after(error, result) {
+		console.log('callback after called');
+	}
+});
+
+const myProcess = createProcess('my-process', [commandOne, commandTwo], [logger, afterOnly, beforeOnly, callback]);
+
+// Subsequent usages of this process will log the following to console:
+// logger before called
+// before only called
+// callback before called
+// callback after called
+// after only called
+// logger after called
 ```
 
 ### Local Storage Middleware
@@ -589,45 +663,6 @@ import { Store } from '@dojo/framework/stores/Store';
 
 const store = new Store();
 load('my-process', store);
-```
-
-## Initializers
-
-Similar to middleware, initializers provide a hook to apply generic/global functionality across multiple or all processes used within an application. Initializers are functions that receive the payload passed to the process to perform a specific action, before calling the next initializer if provided. They can be synchronous or asynchronous.
-
-This is done using higher order functions that wrap the process' local `initializer` using the payload to decorate or perform an action for all processes it is used for.
-
-`initializer` decorators can be composed together to combine multiple units of functionality, such that in the example below `myProcess` would run the `payload` through the `authenticator` and `logger` initializers.
-
-```ts
-const myProcess = createProcess('my-process', [commandOne, commandTwo], undefined, authenticator(logger()));
-```
-
-### Applying Initializers to Multiple Processes
-
-Specifying an initializer on an individual process explicitly works for targeted behavior but can become cumbersome when the initializer needs to be applied to multiple processes throughout the application.
-
-The `createProcessWith` higher order function can be used to specify initializers that need to be applied across multiple `processes`. The function accepts an array of initializers and returns a new `createProcess` factory function that will automatically apply the initializers to any process that it creates.
-
-```ts
-const customCreateProcess = createProcessWith(undefined, [logger]);
-
-// `myProcess` will automatically be decorated with the `logger` initializer decorator.
-const myProcess = customCreateProcess('my-process', [commandOne, commandTwo]);
-```
-
-An additional helper function `createInitializerDecorator` can be used to ensure that an initializer function calls the next initializer after it has finished executing.
-
-```ts
-const myInitializer = async (payload: DefaultPayload) => {
-	// do things with the payload
-};
-
-// ensures the initializer will call the next initializer in the stack
-const myInitializerDecorator = createInitializerDecorator(myInitializer);
-
-// use the initializer decorator as normal
-const myProcess = createProcess('my-process', [commandOne], undefined, myInitializerDecorator());
 ```
 
 <!-- doc-viewer-config
