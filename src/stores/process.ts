@@ -92,8 +92,8 @@ export interface ProcessCallback<T = any> {
 	(error: ProcessError<T> | null, result: ProcessResult<T>): void;
 }
 
-export interface ProcessInitializer<P extends object = DefaultPayload> {
-	(payload: P): void | Promise<void>;
+export interface ProcessInitializer<T = any, P extends object = DefaultPayload> {
+	(payload: P, store: Store<T>): void | Promise<void>;
 }
 
 /**
@@ -170,7 +170,10 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 		const payload = transformer ? transformer(executorPayload) : executorPayload;
 
 		if (initializer) {
-			await initializer(payload);
+			let result = initializer(payload, store);
+			if (result) {
+				await result;
+			}
 		}
 		try {
 			while (command) {
@@ -293,12 +296,18 @@ function createCallbackDecorator(processCallback: ProcessCallback): ProcessCallb
 
 function createInitializerDecorator(processInitializer: ProcessInitializer): ProcessInitializerDecorator {
 	return (previousInitializer?: ProcessInitializer): ProcessInitializer => {
-		return async (payload) => {
+		return async (payload, store) => {
 			if (previousInitializer) {
-				await previousInitializer(payload);
+				let result = previousInitializer(payload, store);
+				if (result) {
+					await result;
+				}
 			}
 
-			await processInitializer(payload);
+			let result = processInitializer(payload, store);
+			if (result) {
+				await result;
+			}
 		};
 	};
 }

@@ -309,8 +309,12 @@ describe('process', () => {
 		let initialization: string[] = [];
 		let firstCall = true;
 
-		const initializer: ProcessInitializer = async (payload) => {
+		const initializer: ProcessInitializer = async (payload, store) => {
 			initialization.push('initializer one');
+			const initLog = store.get(store.path('initLogs')) || [];
+			store.apply([
+				{ op: OperationType.ADD, path: new Pointer(`/initLogs/${initLog.length}`), value: 'initial value' }
+			]);
 		};
 
 		const initializerTwo = async (payload: any) => {
@@ -355,6 +359,7 @@ describe('process', () => {
 		assert.strictEqual(initialization[1], 'initializer two');
 		assert.strictEqual(initialization[2], 'initializer three');
 		assert.deepEqual(store.get(store.path('logs')), [['/foo', '/bar']]);
+		assert.deepEqual(store.get(store.path('initLogs')), ['initial value']);
 		await executor({});
 		assert.lengthOf(initialization, 6);
 		assert.strictEqual(initialization[0], 'initializer one');
@@ -364,6 +369,7 @@ describe('process', () => {
 		assert.strictEqual(initialization[4], 'initializer two');
 		assert.strictEqual(initialization[5], 'initializer three');
 		assert.deepEqual(store.get(store.path('logs')), [['/foo', '/bar'], ['/foo', '/bar']]);
+		assert.deepEqual(store.get(store.path('initLogs')), ['initial value', 'initial value']);
 	});
 
 	it('Should work with a single initializer', async () => {

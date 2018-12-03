@@ -234,8 +234,8 @@ v(Toolbar, {
 And you want to trigger the save toolbar button's `onClick` function.
 
 ```typescript
-h.trigger("@buttons", (renderResult: DNode<Toolbar>) => {
-  return renderResult.properties.buttons[0].onClick;
+h.trigger('@buttons', (renderResult: DNode<Toolbar>) => {
+	return renderResult.properties.buttons[0].onClick;
 });
 ```
 
