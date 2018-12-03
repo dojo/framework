@@ -106,11 +106,11 @@ export interface Undo {
 /**
  * ProcessCallbackDecorator callback
  */
-export interface ProcessCallbackDecorator {
+interface ProcessCallbackDecorator {
 	(callback?: ProcessCallback): ProcessCallback;
 }
 
-export interface ProcessInitializerDecorator {
+interface ProcessInitializerDecorator {
 	(initializer?: ProcessInitializer): ProcessInitializer;
 }
 
@@ -235,9 +235,23 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 export function createProcess<T = any, P extends object = DefaultPayload>(
 	id: string,
 	commands: Commands<T, P>,
-	callback?: ProcessCallback,
-	initializer?: ProcessInitializer
+	callbacks?: ProcessCallback | ProcessCallback[],
+	initializers?: ProcessInitializer | ProcessInitializer[]
 ): Process<T, P> {
+	callbacks = Array.isArray(callbacks) ? callbacks : callbacks ? [callbacks] : [];
+	initializers = Array.isArray(initializers) ? initializers : initializers ? [initializers] : [];
+
+	const callback = callbacks.length
+		? callbacks.reduce((callback, nextCallback) => {
+				return createCallbackDecorator(nextCallback)(callback);
+		  })
+		: undefined;
+
+	const initializer = initializers.length
+		? initializers.reduce((initializer, nextInitializer) => {
+				return createInitializerDecorator(nextInitializer)(initializer);
+		  })
+		: undefined;
 	processMap.set(id, [id, commands, callback]);
 	return (store: Store<T>, transformer?: Transformer<P>) =>
 		processExecutor(id, commands, store, callback, initializer, transformer);
@@ -245,25 +259,22 @@ export function createProcess<T = any, P extends object = DefaultPayload>(
 
 /**
  * Creates a process factory that will create processes with the specified callback decorators applied.
- * @param callbackDecorators array of process callback decorators to be used by the return factory.
+ * @param callbacks array of process callback to be used by the returned factory.
+ * @param initializers array of process initializers to be used by the returned factory.
  */
-export function createProcessFactoryWith(
-	callbackDecorators?: ProcessCallbackDecorator[],
-	callbackInitializers?: ProcessInitializerDecorator[]
-) {
+export function createProcessFactoryWith(callbacks: ProcessCallback[] = [], initializers: ProcessInitializer[] = []) {
 	return <S, P extends object>(
 		id: string,
 		commands: (Command<S, P>[] | Command<S, P>)[],
 		callback?: ProcessCallback<S>,
 		initializer?: ProcessInitializer
 	): Process<S, P> => {
-		const decoratedCallback = (callbackDecorators || []).reduce((callback, callbackDecorator) => {
-			return callbackDecorator(callback);
-		}, callback);
-		const decoratedInitializer = (callbackInitializers || []).reduce((initializer, initializerDecorator) => {
-			return initializerDecorator(initializer);
-		}, initializer);
-		return createProcess(id, commands, decoratedCallback, decoratedInitializer);
+		return createProcess(
+			id,
+			commands,
+			callback ? [...callbacks, callback] : callbacks,
+			initializer ? [...initializers, initializer] : initializers
+		);
 	};
 }
 
@@ -271,7 +282,7 @@ export function createProcessFactoryWith(
  * Creates a `ProcessCallbackDecorator` from a `ProcessCallback`.
  * @param processCallback the process callback to convert to a decorator.
  */
-export function createCallbackDecorator(processCallback: ProcessCallback): ProcessCallbackDecorator {
+function createCallbackDecorator(processCallback: ProcessCallback): ProcessCallbackDecorator {
 	return (previousCallback?: ProcessCallback): ProcessCallback => {
 		return (error: ProcessError | null, result: ProcessResult): void => {
 			processCallback(error, result);
@@ -280,7 +291,7 @@ export function createCallbackDecorator(processCallback: ProcessCallback): Proce
 	};
 }
 
-export function createInitializerDecorator(processInitializer: ProcessInitializer): ProcessInitializerDecorator {
+function createInitializerDecorator(processInitializer: ProcessInitializer): ProcessInitializerDecorator {
 	return (previousInitializer?: ProcessInitializer): ProcessInitializer => {
 		return async (payload) => {
 			if (previousInitializer) {

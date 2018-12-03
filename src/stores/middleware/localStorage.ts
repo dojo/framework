@@ -4,7 +4,7 @@ import { Store } from '../Store';
 import { GetPaths } from '../StoreProvider';
 import { add } from '../state/operations';
 
-export function collector<T = any>(id: string, getPaths: GetPaths<T>, callback?: ProcessCallback): ProcessCallback {
+export function collector<T = any>(id: string, getPaths: GetPaths<T>): ProcessCallback {
 	return (error: ProcessError | null, result: ProcessResult): void => {
 		const paths = getPaths(result.store.path);
 		const data = paths.map((path) => {
@@ -12,7 +12,6 @@ export function collector<T = any>(id: string, getPaths: GetPaths<T>, callback?:
 			return { meta: { path: path.path }, state };
 		});
 		global.localStorage.setItem(id, JSON.stringify(data));
-		callback && callback(error, result);
 	};
 }
 

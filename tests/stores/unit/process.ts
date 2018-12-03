@@ -5,9 +5,7 @@ import { Pointer } from './../../../src/stores/state/Pointer';
 import { OperationType, PatchOperation } from './../../../src/stores/state/Patch';
 import {
 	CommandRequest,
-	createCallbackDecorator,
 	createCommandFactory,
-	createInitializerDecorator,
 	createProcess,
 	createProcessFactoryWith,
 	ProcessCallback,
@@ -273,11 +271,8 @@ describe('process', () => {
 	it('Creating a process returned automatically decorates all process callbacks', () => {
 		let results: string[] = [];
 
-		const callbackDecorator = (callback?: ProcessCallback): ProcessCallback => {
-			return (error, result): void => {
-				results.push('callback one');
-				callback && callback(error, result);
-			};
+		const callback: ProcessCallback = (error, result): void => {
+			results.push('callback one');
 		};
 
 		const callbackTwo = (error: ProcessError | null, result: ProcessResult): void => {
@@ -292,11 +287,7 @@ describe('process', () => {
 			result.apply([{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }]);
 		};
 
-		const createProcess = createProcessFactoryWith([
-			callbackDecorator,
-			createCallbackDecorator(callbackTwo),
-			createCallbackDecorator(logPointerCallback)
-		]);
+		const createProcess = createProcessFactoryWith([callback, callbackTwo, logPointerCallback]);
 
 		const process = createProcess('test', [testCommandFactory('foo'), testCommandFactory('bar')]);
 		const executor = process(store);
@@ -318,11 +309,8 @@ describe('process', () => {
 		let initialization: string[] = [];
 		let firstCall = true;
 
-		const initializer = (initializer?: ProcessInitializer): ProcessInitializer => {
-			return async (payload) => {
-				initialization.push('initializer one');
-				await (initializer && initializer(payload));
-			};
+		const initializer: ProcessInitializer = async (payload) => {
+			initialization.push('initializer one');
 		};
 
 		const initializerTwo = async (payload: any) => {
@@ -346,11 +334,7 @@ describe('process', () => {
 			result.apply([{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }]);
 		};
 
-		const createProcess = createProcessFactoryWith(undefined, [
-			initializer,
-			createInitializerDecorator(initializerTwo),
-			createInitializerDecorator(initializerThree)
-		]);
+		const createProcess = createProcessFactoryWith(undefined, [initializer, initializerTwo, initializerThree]);
 
 		const process = createProcess(
 			'test',
@@ -400,7 +384,7 @@ describe('process', () => {
 			'test',
 			[testCommandFactory('foo'), testCommandFactory('bar')],
 			logPointerCallback,
-			createInitializerDecorator(initializer)()
+			initializer
 		);
 		const executor = process(store);
 		await executor({});

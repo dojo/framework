@@ -17,19 +17,16 @@ export interface HistoryData {
 export class HistoryManager {
 	private _storeMap = new WeakMap();
 
-	public collector(callback?: ProcessCallback): ProcessCallback {
-		return (error: ProcessError | null, result: ProcessResult): void => {
-			const { operations, undoOperations, id, store } = result;
-			const { history, undo } = this._storeMap.get(store) || {
-				history: [],
-				undo: []
-			};
-			history.push({ id, operations });
-			undo.push({ id, operations: undoOperations });
-			this._storeMap.set(store, { history, undo, redo: [] });
-			callback && callback(error, result);
+	public callback: ProcessCallback = (error: ProcessError | null, result: ProcessResult) => {
+		const { operations, undoOperations, id, store } = result;
+		const { history, undo } = this._storeMap.get(store) || {
+			history: [],
+			undo: []
 		};
-	}
+		history.push({ id, operations });
+		undo.push({ id, operations: undoOperations });
+		this._storeMap.set(store, { history, undo, redo: [] });
+	};
 
 	public canUndo(store: Store): boolean {
 		const stacks = this._storeMap.get(store);
