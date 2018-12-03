@@ -10,7 +10,6 @@ import {
 	createProcessFactoryWith,
 	ProcessCallback,
 	ProcessError,
-	ProcessInitializer,
 	ProcessResult
 } from '../../../src/stores/process';
 import { Store } from '../../../src/stores/Store';
@@ -237,33 +236,39 @@ describe('process', () => {
 
 	it('can provide a callback that gets called on process completion', () => {
 		let callbackCalled = false;
-		const process = createProcess('test', [testCommandFactory('foo')], () => {
-			callbackCalled = true;
-		});
+		const process = createProcess('test', [testCommandFactory('foo')], () => ({
+			after: () => {
+				callbackCalled = true;
+			}
+		}));
 		const processExecutor = process(store);
 		processExecutor({});
 		assert.isTrue(callbackCalled);
 	});
 
 	it('when a command errors, the error and command is returned in the error argument of the callback', () => {
-		const process = createProcess('test', [testCommandFactory('foo'), testErrorCommand], (error) => {
-			assert.isNotNull(error);
-			assert.strictEqual(error && error.command, testErrorCommand);
-		});
+		const process = createProcess('test', [testCommandFactory('foo'), testErrorCommand], () => ({
+			after: (error) => {
+				assert.isNotNull(error);
+				assert.strictEqual(error && error.command, testErrorCommand);
+			}
+		}));
 		const processExecutor = process(store);
 		processExecutor({});
 	});
 
 	it('executor can be used to programmatically run additional processes', () => {
 		const extraProcess = createProcess('test', [testCommandFactory('bar')]);
-		const process = createProcess('test', [testCommandFactory('foo')], (error, result) => {
-			assert.isNull(error);
-			let bar = store.get(store.path('bar'));
-			assert.isUndefined(bar);
-			result.executor(extraProcess, {});
-			bar = store.get(store.path('bar'));
-			assert.strictEqual(bar, 'bar');
-		});
+		const process = createProcess('test', [testCommandFactory('foo')], () => ({
+			after: (error, result) => {
+				assert.isNull(error);
+				let bar = store.get(store.path('bar'));
+				assert.isUndefined(bar);
+				result.executor(extraProcess, {});
+				bar = store.get(store.path('bar'));
+				assert.strictEqual(bar, 'bar');
+			}
+		}));
 		const processExecutor = process(store);
 		processExecutor({});
 	});
@@ -271,21 +276,27 @@ describe('process', () => {
 	it('Creating a process returned automatically decorates all process callbacks', () => {
 		let results: string[] = [];
 
-		const callback: ProcessCallback = (error, result): void => {
-			results.push('callback one');
-		};
+		const callback: ProcessCallback = () => ({
+			after: (error, result): void => {
+				results.push('callback one');
+			}
+		});
 
-		const callbackTwo = (error: ProcessError | null, result: ProcessResult): void => {
-			results.push('callback two');
-			result.payload;
-		};
+		const callbackTwo = () => ({
+			after: (error: ProcessError | null, result: ProcessResult): void => {
+				results.push('callback two');
+				result.payload;
+			}
+		});
 
-		const logPointerCallback = (error: ProcessError | null, result: ProcessResult<{ logs: string[][] }>): void => {
-			const paths = result.operations.map((operation) => operation.path.path);
-			const logs = result.get(store.path('logs')) || [];
+		const logPointerCallback = () => ({
+			after: (error: ProcessError | null, result: ProcessResult<{ logs: string[][] }>): void => {
+				const paths = result.operations.map((operation) => operation.path.path);
+				const logs = result.get(store.path('logs')) || [];
 
-			result.apply([{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }]);
-		};
+				result.apply([{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }]);
+			}
+		});
 
 		const createProcess = createProcessFactoryWith([callback, callbackTwo, logPointerCallback]);
 
@@ -309,36 +320,44 @@ describe('process', () => {
 		let initialization: string[] = [];
 		let firstCall = true;
 
-		const initializer: ProcessInitializer = async (payload, store) => {
-			initialization.push('initializer one');
-			const initLog = store.get(store.path('initLogs')) || [];
-			store.apply([
-				{ op: OperationType.ADD, path: new Pointer(`/initLogs/${initLog.length}`), value: 'initial value' }
-			]);
-		};
+		const initializer: ProcessCallback = () => ({
+			before: async (payload, store) => {
+				initialization.push('initializer one');
+				const initLog = store.get(store.path('initLogs')) || [];
+				store.apply([
+					{ op: OperationType.ADD, path: new Pointer(`/initLogs/${initLog.length}`), value: 'initial value' }
+				]);
+			}
+		});
 
-		const initializerTwo = async (payload: any) => {
-			initialization.push('initializer two');
-			payload.foo;
-			await new Promise((resolve) => {
-				setTimeout(resolve, 100);
-			});
-		};
+		const initializerTwo = () => ({
+			before: async (payload: any) => {
+				initialization.push('initializer two');
+				payload.foo;
+				await new Promise((resolve) => {
+					setTimeout(resolve, 100);
+				});
+			}
+		});
 
-		const initializerThree = () => {
-			initialization.push('initializer three');
-		};
+		const initializerThree = () => ({
+			before: () => {
+				initialization.push('initializer three');
+			}
+		});
 
-		const logPointerCallback = (error: ProcessError | null, result: ProcessResult<{ logs: string[][] }>): void => {
-			assert.lengthOf(initialization, firstCall ? 3 : 6);
-			firstCall = false;
-			const paths = result.operations.map((operation) => operation.path.path);
-			const logs = result.get(store.path('logs')) || [];
+		const logPointerCallback = () => ({
+			after: (error: ProcessError | null, result: ProcessResult<{ logs: string[][] }>): void => {
+				assert.lengthOf(initialization, firstCall ? 3 : 6);
+				firstCall = false;
+				const paths = result.operations.map((operation) => operation.path.path);
+				const logs = result.get(store.path('logs')) || [];
 
-			result.apply([{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }]);
-		};
+				result.apply([{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }]);
+			}
+		});
 
-		const createProcess = createProcessFactoryWith(undefined, [initializer, initializerTwo, initializerThree]);
+		const createProcess = createProcessFactoryWith([initializer, initializerTwo, initializerThree]);
 
 		const process = createProcess(
 			'test',
@@ -386,12 +405,10 @@ describe('process', () => {
 			result.apply([{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }]);
 		};
 
-		const process = createProcess(
-			'test',
-			[testCommandFactory('foo'), testCommandFactory('bar')],
-			logPointerCallback,
-			initializer
-		);
+		const process = createProcess('test', [testCommandFactory('foo'), testCommandFactory('bar')], () => ({
+			before: initializer,
+			after: logPointerCallback
+		}));
 		const executor = process(store);
 		await executor({});
 		assert.lengthOf(initialization, 1);
@@ -408,13 +425,15 @@ describe('process', () => {
 		const command = ({ payload }: CommandRequest): PatchOperation[] => {
 			return [{ op: OperationType.REPLACE, path: new Pointer('/foo'), value: 'bar' }];
 		};
-		const process = createProcess('foo', [testCommandFactory('foo'), command], (error, result) => {
-			let foo = store.get(result.store.path('foo'));
-			assert.strictEqual(foo, 'bar');
-			store.apply(result.undoOperations);
-			foo = store.get(result.store.path('foo'));
-			assert.isUndefined(foo);
-		});
+		const process = createProcess('foo', [testCommandFactory('foo'), command], () => ({
+			after: (error, result) => {
+				let foo = store.get(result.store.path('foo'));
+				assert.strictEqual(foo, 'bar');
+				store.apply(result.undoOperations);
+				foo = store.get(result.store.path('foo'));
+				assert.isUndefined(foo);
+			}
+		}));
 		const processExecutor = process(store);
 		return processExecutor({});
 	});
@@ -427,13 +446,15 @@ describe('process', () => {
 			return [{ op: OperationType.REPLACE, path: new Pointer('/state/a'), value: 'a' }];
 		};
 
-		const process = createProcess('foo', [commandOne, commandTwo], (error, result) => {
-			let state = store.get(result.store.path('state'));
-			assert.deepEqual(state, { a: 'a', b: 'b' });
-			store.apply(result.undoOperations);
-			state = store.get(result.store.path('state'));
-			assert.isUndefined(state);
-		});
+		const process = createProcess('foo', [commandOne, commandTwo], () => ({
+			after: (error, result) => {
+				let state = store.get(result.store.path('state'));
+				assert.deepEqual(state, { a: 'a', b: 'b' });
+				store.apply(result.undoOperations);
+				state = store.get(result.store.path('state'));
+				assert.isUndefined(state);
+			}
+		}));
 		const processExecutor = process(store);
 		return processExecutor({});
 	});
@@ -449,13 +470,15 @@ describe('process', () => {
 			];
 		});
 
-		const process = createProcess('foo', [commandOne], (error, result) => {
-			let state = store.get(result.store.path('state'));
-			assert.deepEqual(state, { foo: 'foo', bar: 'bar', baz: 'baz' });
-			store.apply(result.undoOperations);
-			state = store.get(result.store.path('state'));
-			assert.isUndefined(state);
-		});
+		const process = createProcess('foo', [commandOne], () => ({
+			after: (error, result) => {
+				let state = store.get(result.store.path('state'));
+				assert.deepEqual(state, { foo: 'foo', bar: 'bar', baz: 'baz' });
+				store.apply(result.undoOperations);
+				state = store.get(result.store.path('state'));
+				assert.isUndefined(state);
+			}
+		}));
 		const processExecutor = process(store);
 		return processExecutor({});
 	});

@@ -5,14 +5,16 @@ import { GetPaths } from '../StoreProvider';
 import { add } from '../state/operations';
 
 export function collector<T = any>(id: string, getPaths: GetPaths<T>): ProcessCallback {
-	return (error: ProcessError | null, result: ProcessResult): void => {
-		const paths = getPaths(result.store.path);
-		const data = paths.map((path) => {
-			const state = result.get(path);
-			return { meta: { path: path.path }, state };
-		});
-		global.localStorage.setItem(id, JSON.stringify(data));
-	};
+	return () => ({
+		after: (error: ProcessError | null, result: ProcessResult): void => {
+			const paths = getPaths(result.store.path);
+			const data = paths.map((path) => {
+				const state = result.get(path);
+				return { meta: { path: path.path }, state };
+			});
+			global.localStorage.setItem(id, JSON.stringify(data));
+		}
+	});
 }
 
 export function load<T>(id: string, store: Store<T>) {
