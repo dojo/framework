@@ -62,15 +62,18 @@ describe('StateHistory', () => {
 
 	it('emits change when path is updated', () => {
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+		assert.deepEqual(onChange.firstCall.args, [
+			sandbox.contentWindow.location.pathname + sandbox.contentWindow.location.search
+		]);
 		history.set('/foo');
-		assert.deepEqual(onChange.firstCall.args, ['/foo']);
+		assert.deepEqual(onChange.secondCall.args, ['/foo']);
 	});
 
 	it('does not emit change if path is set to the current value', () => {
 		sandbox.contentWindow!.history.pushState({}, '', '/foo');
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
 		history.set('/foo');
-		assert.isTrue(onChange.notCalled);
+		assert.isTrue(onChange.calledOnce);
 	});
 
 	describe('with base', () => {

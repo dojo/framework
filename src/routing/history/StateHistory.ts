@@ -31,7 +31,6 @@ export class StateHistory implements HistoryInterface {
 		if (!trailingSlash.test(this._base)) {
 			this._base = `${this._base}/`;
 		}
-		this._current = this._window.location.pathname + this._window.location.search;
 		this._window.addEventListener('popstate', this._onChange, false);
 		this._onChange();
 	}
