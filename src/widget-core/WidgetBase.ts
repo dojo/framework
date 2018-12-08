@@ -110,13 +110,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 	private _metaMap: Map<WidgetMetaConstructor<any>, WidgetMetaBase> | undefined;
 
-	private _boundInvalidate: () => void = () => {
-		this.invalidate();
-	};
+	private _boundRenderFunc: Render;
 
-	private _boundRenderFunc: Render = () => {
-		return this.render();
-	};
+	private _boundInvalidate: () => void;
 
 	private _nodeHandler: NodeHandler = new NodeHandler();
 
@@ -129,6 +125,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		this._children = [];
 		this._decoratorCache = new Map<string, any[]>();
 		this._properties = {} as P;
+		this._boundRenderFunc = this.render.bind(this);
+		this._boundInvalidate = this.invalidate.bind(this);
 
 		widgetInstanceMap.set(this, {
 			dirty: true,
@@ -141,8 +139,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			},
 			nodeHandler: this._nodeHandler,
 			rendering: false,
-			inputProperties: {},
-			invalidate: undefined
+			inputProperties: {}
 		});
 
 		this.own({
@@ -537,9 +534,11 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	protected destroy() {
-		let handle: Handle | undefined;
-		while ((handle = this._handles.pop())) {
-			handle.destroy();
+		while (this._handles.length > 0) {
+			const handle = this._handles.pop();
+			if (handle) {
+				handle.destroy();
+			}
 		}
 	}
 }
