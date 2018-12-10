@@ -341,6 +341,59 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(clickerCount, 4);
 		});
 
+		it('Should render async widgets in the correct order', () => {
+			let invalidateFoo = () => {};
+			let invalidateBar = () => {};
+			class Foo extends WidgetBase {
+				doRender = 0;
+
+				constructor() {
+					super();
+					invalidateFoo = () => {
+						this.doRender++;
+						this.invalidate();
+					};
+				}
+
+				render() {
+					return this.doRender > 0 ? v('foo', ['foo']) : null;
+				}
+			}
+
+			class Bar extends WidgetBase {
+				doRender = 0;
+
+				constructor() {
+					super();
+					invalidateBar = () => {
+						this.doRender++;
+						this.invalidate();
+					};
+				}
+
+				render() {
+					return this.doRender > 0 ? v('bar', [this.doRender > 1 ? 'bar' : null]) : null;
+				}
+			}
+
+			class App extends WidgetBase {
+				render() {
+					return v('div', [w(Foo, {}), w(Bar, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const div = document.createElement('app');
+			r.mount({ domNode: div });
+			invalidateFoo();
+			invalidateBar();
+			resolvers.resolve();
+			assert.strictEqual(div.outerHTML, '<app><div><foo>foo</foo><bar></bar></div></app>');
+			invalidateBar();
+			resolvers.resolve();
+			assert.strictEqual(div.outerHTML, '<app><div><foo>foo</foo><bar>bar</bar></div></app>');
+		});
+
 		it('supports widget registry items', () => {
 			const registry = new Registry();
 			class Foo extends WidgetBase<any> {

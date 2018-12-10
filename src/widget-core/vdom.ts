@@ -20,6 +20,7 @@ export interface BaseNodeWrapper {
 	domNode?: Node;
 	childrenWrappers?: DNodeWrapper[];
 	depth: number;
+	order: number;
 	requiresInsertBefore?: boolean;
 	hasPreviousSiblings?: boolean;
 	hasParentWNode?: boolean;
@@ -77,6 +78,7 @@ interface ProcessMeta {
 interface InvalidationQueueItem {
 	instance: WidgetBase;
 	depth: number;
+	order: number;
 }
 
 interface Instruction {
@@ -464,6 +466,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			const wrapper = {
 				node: renderedItem,
 				depth: depth + 1,
+				order: i,
 				requiresInsertBefore: insertBefore,
 				hasParentWNode,
 				namespace: namespace
@@ -728,9 +731,10 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		const renderResult = w(wrapNodes(renderer), {});
 		const nextWrapper = {
 			node: renderResult,
+			order: 0,
 			depth: 1
 		};
-		_parentWrapperMap.set(nextWrapper, { depth: 0, domNode, node: v('fake') });
+		_parentWrapperMap.set(nextWrapper, { depth: 0, order: 0, domNode, node: v('fake') });
 		_processQueue.push({
 			current: [],
 			next: [nextWrapper],
@@ -766,7 +770,13 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		const invalidationQueue = [..._invalidationQueue];
 		const previouslyRendered = [];
 		_invalidationQueue = [];
-		invalidationQueue.sort((a, b) => b.depth - a.depth);
+		invalidationQueue.sort((a, b) => {
+			let result = b.depth - a.depth;
+			if (result === 0) {
+				result = b.order - a.order;
+			}
+			return result;
+		});
 		let item: InvalidationQueueItem | undefined;
 		while ((item = invalidationQueue.pop())) {
 			let { instance } = item;
@@ -786,7 +796,8 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 						bind: current.node.bind
 					},
 					instance,
-					depth: current.depth
+					depth: current.depth,
+					order: current.order
 				};
 
 				parent && _parentWrapperMap.set(next, parent);
@@ -1033,7 +1044,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		instanceData.invalidate = () => {
 			instanceData.dirty = true;
 			if (!instanceData.rendering && _instanceToWrapperMap.has(instance)) {
-				_invalidationQueue.push({ instance, depth: next.depth });
+				_invalidationQueue.push({ instance, depth: next.depth, order: next.order });
 				_schedule();
 			}
 		};
