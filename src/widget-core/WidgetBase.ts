@@ -43,7 +43,8 @@ export type BoundFunctionData = { boundFunc: (...args: any[]) => any; scope: any
 
 let lazyWidgetId = 0;
 const lazyWidgetIdMap = new WeakMap<LazyWidget, string>();
-const decoratorMap = new Map<Function, Map<string, any[]>>();
+const decoratorMap = new WeakMap<Function, Map<string, any[]>>();
+const builtDecoratorMap = new WeakMap<Function, Map<string, any[]>>();
 export const widgetInstanceMap = new WeakMap<
 	WidgetBase<WidgetProperties, DNode<DefaultWidgetBaseInterface>>,
 	WidgetData
@@ -123,7 +124,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	constructor() {
 		this._children = [];
 		this._decoratorCache = new Map<string, any[]>();
-		this._properties = <P>{};
+		this._properties = {} as P;
 		this._boundRenderFunc = this.render.bind(this);
 		this._boundInvalidate = this.invalidate.bind(this);
 
@@ -403,6 +404,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			constructor = Object.getPrototypeOf(constructor);
 		}
 
+		const buildDecorators = builtDecoratorMap.get(this.constructor) || new Map();
+		buildDecorators.set(decoratorKey, allDecorators);
+		builtDecoratorMap.set(this.constructor, buildDecorators);
 		return allDecorators;
 	}
 
@@ -413,7 +417,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 * @returns An array of decorator values
 	 */
 	protected getDecorator(decoratorKey: string): any[] {
-		let allDecorators = this._decoratorCache.get(decoratorKey);
+		let decoratorCache = builtDecoratorMap.get(this.constructor);
+		let allDecorators =
+			this._decoratorCache.get(decoratorKey) || (decoratorCache && decoratorCache.get(decoratorKey));
 
 		if (allDecorators !== undefined) {
 			return allDecorators;
@@ -421,6 +427,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 		allDecorators = this._buildDecoratorList(decoratorKey);
 
+		allDecorators = [...allDecorators];
 		this._decoratorCache.set(decoratorKey, allDecorators);
 		return allDecorators;
 	}
