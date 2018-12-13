@@ -5,7 +5,7 @@ import { spy, stub, SinonStub } from 'sinon';
 import { WidgetBase, noBind, widgetInstanceMap } from '../../../src/widget-core/WidgetBase';
 import { v, w, WNODE } from '../../../src/widget-core/d';
 import { WIDGET_BASE_TYPE } from '../../../src/widget-core/Registry';
-import { Constructor, VNode, WidgetMetaConstructor, WidgetMetaBase, WNode } from '../../../src/widget-core/interfaces';
+import { Constructor, VNode, WidgetMetaConstructor, WNode, MetaBase } from '../../../src/widget-core/interfaces';
 import { handleDecorator } from '../../../src/widget-core/decorators/handleDecorator';
 import { diffProperty } from '../../../src/widget-core/decorators/diffProperty';
 import { Base } from '../../../src/widget-core/meta/Base';
@@ -38,7 +38,7 @@ class TestMeta extends Base {
 }
 
 class BaseTestWidget extends WidgetBase<TestProperties> {
-	public meta<T extends WidgetMetaBase>(metaType: WidgetMetaConstructor<T>) {
+	public meta<T extends MetaBase>(metaType: WidgetMetaConstructor<T>) {
 		return super.meta(metaType) as T;
 	}
 
