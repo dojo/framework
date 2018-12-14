@@ -304,15 +304,15 @@ describe('process', () => {
 		const executor = process(store);
 		executor({});
 		assert.lengthOf(results, 2);
-		assert.strictEqual(results[0], 'callback two');
-		assert.strictEqual(results[1], 'callback one');
+		assert.strictEqual(results[0], 'callback one');
+		assert.strictEqual(results[1], 'callback two');
 		assert.deepEqual(store.get(store.path('logs')), [['/foo', '/bar']]);
 		executor({});
 		assert.lengthOf(results, 4);
-		assert.strictEqual(results[0], 'callback two');
-		assert.strictEqual(results[1], 'callback one');
-		assert.strictEqual(results[2], 'callback two');
-		assert.strictEqual(results[3], 'callback one');
+		assert.strictEqual(results[0], 'callback one');
+		assert.strictEqual(results[1], 'callback two');
+		assert.strictEqual(results[2], 'callback one');
+		assert.strictEqual(results[3], 'callback two');
 		assert.deepEqual(store.get(store.path('logs')), [['/foo', '/bar'], ['/foo', '/bar']]);
 	});
 

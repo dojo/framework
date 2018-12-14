@@ -537,14 +537,14 @@ In this example, `commandOne` is executed, then both `concurrentCommandOne` and 
 
 Middleware provides a hook to apply generic/global functionality across multiple or all processes used within an application. Middleware is a function that returns an object with optional `before` and `after` callback functions.
 
-Multiple middlewares can be provided, and in this case any `before` callbacks will be called in the order they are provided, and `after` callbacks will be called in the opposite order.
+Multiple middlewares can be provided, and in this case any `before` callbacks will be called in the order they are provided, the process will run, and then `after` callbacks will be called in the order provided.
 
 ### After Middleware
 
 If provided, the `after` callback will be passed the error and the result of a process to perform a specific action. If multiple middlewares are provided, their `after` callbacks will be
-executed in the opposite order as they were provided.
+executed in the order they were provided.
 
-In the example below, the `after` callbacks returned snapshot, logger, and callback will be called in that order.
+In the example below, the `after` callbacks returned by callback, logger, and snapshot will be called in that order.
 
 ```ts
 const myProcess = createProcess('my-process', [commandOne, commandTwo], [callback, logger, snapshot]);
@@ -638,9 +638,9 @@ const myProcess = createProcess('my-process', [commandOne, commandTwo], [logger,
 // logger before called
 // before only called
 // callback before called
-// callback after called
-// after only called
 // logger after called
+// after only called
+// callback after called
 ```
 
 ### Local Storage Middleware

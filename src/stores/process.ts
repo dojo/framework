@@ -280,12 +280,12 @@ function createCallbackDecorator(processCallback: ProcessCallback): ProcessCallb
 			: {};
 		return () => ({
 			after(error: ProcessError | null, result: ProcessResult) {
-				if (after) {
-					after(error, result);
-				}
-
 				if (previousAfter) {
 					previousAfter(error, result);
+				}
+
+				if (after) {
+					after(error, result);
 				}
 			},
 			before(payload: DefaultPayload, store: Store<any>) {
