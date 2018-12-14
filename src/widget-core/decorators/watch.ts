@@ -18,3 +18,5 @@ export function watch(): DecoratorHandler {
 		});
 	});
 }
+
+export default watch;
