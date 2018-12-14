@@ -11,6 +11,7 @@ export class Build extends Destroyable implements MetaBase {
 		super();
 		this._invalidate = properties.invalidate;
 	}
+
 	public run<T extends Function>(module: T): T {
 		const decoratedModule: any = (...args: any[]) => {
 			let valueMap = this._moduleMap.get(module);
