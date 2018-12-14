@@ -85,11 +85,22 @@ export interface ProcessExecutor<T = any, P extends object = DefaultPayload, R e
 	(payload: R): Promise<ProcessResult<T, P>>;
 }
 
+export interface ProcessCallback<T = any, P extends object = DefaultPayload> {
+	(): {
+		before?: ProcessCallbackBefore<T, P>;
+		after?: ProcessCallbackAfter<T>;
+	};
+}
+
 /**
  * Callback for a process, returns an error as the first argument
  */
-export interface ProcessCallback<T = any> {
+export interface ProcessCallbackAfter<T = any> {
 	(error: ProcessError<T> | null, result: ProcessResult<T>): void;
+}
+
+export interface ProcessCallbackBefore<T = any, P extends object = DefaultPayload> {
+	(payload: P, store: Store<T>): void | Promise<void>;
 }
 
 /**
@@ -102,7 +113,7 @@ export interface Undo {
 /**
  * ProcessCallbackDecorator callback
  */
-export interface ProcessCallbackDecorator {
+interface ProcessCallbackDecorator {
 	(callback?: ProcessCallback): ProcessCallback;
 }
 
@@ -135,7 +146,8 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 	id: string,
 	commands: Commands<T, P>,
 	store: Store<T>,
-	callback: ProcessCallback | undefined,
+	before: ProcessCallbackBefore | undefined,
+	after: ProcessCallbackAfter | undefined,
 	transformer: Transformer<P> | undefined
 ): ProcessExecutor<T, any, any> {
 	const { apply, get, path, at } = store;
@@ -154,6 +166,13 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 		let command = commandsCopy.shift();
 		let error: ProcessError | null = null;
 		const payload = transformer ? transformer(executorPayload) : executorPayload;
+
+		if (before) {
+			let result = before(payload, store);
+			if (result) {
+				await result;
+			}
+		}
 		try {
 			while (command) {
 				let results = [];
@@ -180,8 +199,8 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 			error = { error: e, command };
 		}
 
-		callback &&
-			callback(error, {
+		after &&
+			after(error, {
 				undoOperations,
 				store,
 				id,
@@ -217,27 +236,35 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 export function createProcess<T = any, P extends object = DefaultPayload>(
 	id: string,
 	commands: Commands<T, P>,
-	callback?: ProcessCallback
+	callbacks?: ProcessCallback | ProcessCallback[]
 ): Process<T, P> {
-	processMap.set(id, [id, commands, callback]);
+	callbacks = Array.isArray(callbacks) ? callbacks : callbacks ? [callbacks] : [];
+
+	const callback = callbacks.length
+		? callbacks.reduce((callback, nextCallback) => {
+				return createCallbackDecorator(nextCallback)(callback);
+		  })
+		: undefined;
+
+	const { before = undefined, after = undefined } = callback ? callback() : {};
+
+	processMap.set(id, [id, commands, before, after]);
 	return (store: Store<T>, transformer?: Transformer<P>) =>
-		processExecutor(id, commands, store, callback, transformer);
+		processExecutor(id, commands, store, before, after, transformer);
 }
 
 /**
  * Creates a process factory that will create processes with the specified callback decorators applied.
- * @param callbackDecorators array of process callback decorators to be used by the return factory.
+ * @param callbacks array of process callback to be used by the returned factory.
+ * @param initializers array of process initializers to be used by the returned factory.
  */
-export function createProcessFactoryWith(callbackDecorators: ProcessCallbackDecorator[]) {
+export function createProcessFactoryWith(callbacks: ProcessCallback[]) {
 	return <S, P extends object>(
 		id: string,
 		commands: (Command<S, P>[] | Command<S, P>)[],
 		callback?: ProcessCallback<S>
 	): Process<S, P> => {
-		const decoratedCallback = callbackDecorators.reduce((callback, callbackDecorator) => {
-			return callbackDecorator(callback);
-		}, callback);
-		return createProcess(id, commands, decoratedCallback);
+		return createProcess(id, commands, callback ? [...callbacks, callback] : callbacks);
 	};
 }
 
@@ -245,11 +272,31 @@ export function createProcessFactoryWith(callbackDecorators: ProcessCallbackDeco
  * Creates a `ProcessCallbackDecorator` from a `ProcessCallback`.
  * @param processCallback the process callback to convert to a decorator.
  */
-export function createCallbackDecorator(processCallback: ProcessCallback): ProcessCallbackDecorator {
-	return (previousCallback?: ProcessCallback): ProcessCallback => {
-		return (error: ProcessError | null, result: ProcessResult): void => {
-			processCallback(error, result);
-			previousCallback && previousCallback(error, result);
-		};
+function createCallbackDecorator(processCallback: ProcessCallback): ProcessCallbackDecorator {
+	const { before, after } = processCallback();
+	return (previousCallback?: ProcessCallback) => {
+		const { before: previousBefore = undefined, after: previousAfter = undefined } = previousCallback
+			? previousCallback()
+			: {};
+		return () => ({
+			after(error: ProcessError | null, result: ProcessResult) {
+				if (previousAfter) {
+					previousAfter(error, result);
+				}
+
+				if (after) {
+					after(error, result);
+				}
+			},
+			before(payload: DefaultPayload, store: Store<any>) {
+				if (previousBefore) {
+					previousBefore(payload, store);
+				}
+
+				if (before) {
+					before(payload, store);
+				}
+			}
+		});
 	};
 }

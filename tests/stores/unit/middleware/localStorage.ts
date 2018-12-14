@@ -59,23 +59,6 @@ describe('middleware - local storage', (suite) => {
 		);
 	});
 
-	it('Should call next middleware', () => {
-		let composedMiddlewareCalled = false;
-		const incrementCounterProcess = createProcess(
-			'increment',
-			[incrementCounter],
-			collector(
-				LOCAL_STORAGE_TEST_ID,
-				(path) => [path('counter')],
-				(error, result) => {
-					composedMiddlewareCalled = true;
-				}
-			)
-		);
-		incrementCounterProcess(store)({});
-		assert.isTrue(composedMiddlewareCalled);
-	});
-
 	it('should load from local storage', () => {
 		global.localStorage.setItem(LOCAL_STORAGE_TEST_ID, '[{"meta":{"path":"/counter"},"state":1}]');
 		load(LOCAL_STORAGE_TEST_ID, store);

@@ -16,20 +16,18 @@ export interface HistoryData {
 
 export class HistoryManager {
 	private _storeMap = new WeakMap();
-
-	public collector(callback?: ProcessCallback): ProcessCallback {
-		return (error: ProcessError | null, result: ProcessResult): void => {
-			const { operations, undoOperations, id, store } = result;
-			const { history, undo } = this._storeMap.get(store) || {
-				history: [],
-				undo: []
-			};
-			history.push({ id, operations });
-			undo.push({ id, operations: undoOperations });
-			this._storeMap.set(store, { history, undo, redo: [] });
-			callback && callback(error, result);
+	private after = (error: ProcessError | null, result: ProcessResult) => {
+		const { operations, undoOperations, id, store } = result;
+		const { history, undo } = this._storeMap.get(store) || {
+			history: [],
+			undo: []
 		};
-	}
+		history.push({ id, operations });
+		undo.push({ id, operations: undoOperations });
+		this._storeMap.set(store, { history, undo, redo: [] });
+	};
+
+	public callback: ProcessCallback = () => ({ after: this.after });
 
 	public canUndo(store: Store): boolean {
 		const stacks = this._storeMap.get(store);
@@ -88,12 +86,14 @@ export class HistoryManager {
 				operation.path = new Pointer(String(operation.path));
 				return operation;
 			});
-			let callback;
+			let before;
+			let after;
 			const process = getProcess(id);
 			if (process) {
-				callback = process[2];
+				before = process[2];
+				after = process[3];
 			}
-			processExecutor(id, [() => operations], store, callback, undefined)({});
+			processExecutor(id, [() => operations], store, before, after, undefined)({});
 		});
 		const stacks = this._storeMap.get(store);
 		redo.forEach(({ id, operations }: HistoryOperation) => {

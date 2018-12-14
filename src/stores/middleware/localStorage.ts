@@ -4,16 +4,17 @@ import { Store } from '../Store';
 import { GetPaths } from '../StoreProvider';
 import { add } from '../state/operations';
 
-export function collector<T = any>(id: string, getPaths: GetPaths<T>, callback?: ProcessCallback): ProcessCallback {
-	return (error: ProcessError | null, result: ProcessResult): void => {
-		const paths = getPaths(result.store.path);
-		const data = paths.map((path) => {
-			const state = result.get(path);
-			return { meta: { path: path.path }, state };
-		});
-		global.localStorage.setItem(id, JSON.stringify(data));
-		callback && callback(error, result);
-	};
+export function collector<T = any>(id: string, getPaths: GetPaths<T>): ProcessCallback {
+	return () => ({
+		after: (error: ProcessError | null, result: ProcessResult): void => {
+			const paths = getPaths(result.store.path);
+			const data = paths.map((path) => {
+				const state = result.get(path);
+				return { meta: { path: path.path }, state };
+			});
+			global.localStorage.setItem(id, JSON.stringify(data));
+		}
+	});
 }
 
 export function load<T>(id: string, store: Store<T>) {
@@ -24,7 +25,7 @@ export function load<T>(id: string, store: Store<T>) {
 			const operations = parsedData.map((item) => {
 				return add(store.path(item.meta.path), item.state);
 			});
-			processExecutor('local-storage-load', [() => operations], store, undefined, undefined)({});
+			processExecutor('local-storage-load', [() => operations], store, undefined, undefined, undefined)({});
 		} catch {
 			// do nothing?
 		}

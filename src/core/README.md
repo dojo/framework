@@ -4,10 +4,10 @@ Provides a small set of base classes and core helpers for use within dojo/framew
 
 ## Features
 
-- [Destroyable](#destroyable)
-- [Evented](#evented)
-- [QueuingEvented](#queuingevented)
-- [util](#util)
+-   [Destroyable](#destroyable)
+-   [Evented](#evented)
+-   [QueuingEvented](#queuingevented)
+-   [util](#util)
 
 ### Destroyable
 

@@ -12,22 +12,12 @@ function incrementCounter({ get, path }: CommandRequest<{ counter: number }>): P
 	return [{ op: OperationType.REPLACE, path: new Pointer('/counter'), value: ++counter }];
 }
 
-function collector(callback?: any): any {
-	return (error: any, result: any): void => {
-		callback && callback(error, result);
-	};
-}
-
 describe('extras', () => {
 	it('can serialize and deserialize history', () => {
 		const historyManager = new HistoryManager();
 		const store = new Store();
 
-		const incrementCounterProcess = createProcess(
-			'increment',
-			[incrementCounter],
-			historyManager.collector(collector())
-		);
+		const incrementCounterProcess = createProcess('increment', [incrementCounter], historyManager.callback);
 		const executor = incrementCounterProcess(store);
 		executor({});
 		assert.strictEqual(store.get(store.path('counter')), 1);
