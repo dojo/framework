@@ -487,7 +487,12 @@ export interface WidgetBaseInterface<P = WidgetProperties, C extends DNode = DNo
 /**
  * Meta Base type
  */
-export interface WidgetMetaBase extends Destroyable {
+export interface MetaBase extends Destroyable {}
+
+/**
+ * Meta Base type
+ */
+export interface WidgetMetaBase extends MetaBase {
 	has(key: string | number): boolean;
 	afterRender(): void;
 }
@@ -495,7 +500,7 @@ export interface WidgetMetaBase extends Destroyable {
 /**
  * Meta Base constructor type
  */
-export interface WidgetMetaConstructor<T extends WidgetMetaBase> {
+export interface WidgetMetaConstructor<T extends MetaBase> {
 	new (properties: WidgetMetaProperties): T;
 }
 

@@ -11,18 +11,19 @@ import {
 	DefaultWidgetBaseInterface,
 	LazyWidget,
 	Render,
-	WidgetMetaBase,
 	WidgetMetaConstructor,
 	WidgetBaseInterface,
 	WidgetProperties,
 	WNode,
 	VNode,
-	LazyDefine
+	LazyDefine,
+	MetaBase
 } from './interfaces';
 import RegistryHandler from './RegistryHandler';
 import NodeHandler from './NodeHandler';
 import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './Registry';
 import { Handle } from '../core/Destroyable';
+import { Base } from './meta/Base';
 
 interface ReactionFunctionConfig {
 	propertyName: string;
@@ -67,6 +68,10 @@ function isLazyDefine(item: any): item is LazyDefine {
 	return Boolean(item && item.label);
 }
 
+function isDomMeta(meta: any): meta is Base {
+	return Boolean(meta.afterRender);
+}
+
 /**
  * Main widget base for all widgets to extend
  */
@@ -108,7 +113,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 */
 	private _bindFunctionPropertyMap: WeakMap<(...args: any[]) => any, BoundFunctionData> | undefined;
 
-	private _metaMap: Map<WidgetMetaConstructor<any>, WidgetMetaBase> | undefined;
+	private _metaMap: Map<WidgetMetaConstructor<any>, MetaBase> | undefined;
 
 	private _boundRenderFunc: Render;
 
@@ -153,9 +158,9 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		this._runAfterConstructors();
 	}
 
-	protected meta<T extends WidgetMetaBase>(MetaType: WidgetMetaConstructor<T>): T {
+	protected meta<T extends MetaBase>(MetaType: WidgetMetaConstructor<T>): T {
 		if (this._metaMap === undefined) {
-			this._metaMap = new Map<WidgetMetaConstructor<any>, WidgetMetaBase>();
+			this._metaMap = new Map<WidgetMetaConstructor<any>, MetaBase>();
 		}
 		let cached = this._metaMap.get(MetaType);
 		if (!cached) {
@@ -514,7 +519,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 
 		if (this._metaMap !== undefined) {
 			this._metaMap.forEach((meta) => {
-				meta.afterRender();
+				isDomMeta(meta) && meta.afterRender();
 			});
 		}
 

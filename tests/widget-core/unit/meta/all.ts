@@ -1,3 +1,4 @@
+import './Build';
 import './meta';
 import './Dimensions';
 import './Drag';
