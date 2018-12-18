@@ -65,7 +65,9 @@ describe('Build Meta', () => {
 			bind: bindInstance
 		});
 
-		const resultOne = meta.run(testModule)('test');
+		let resultOne = meta.run(testModule)('test');
+		assert.strictEqual(resultOne, 'sync');
+		resultOne = meta.run(testModule)('test');
 		assert.strictEqual(resultOne, 'sync');
 	});
 });
