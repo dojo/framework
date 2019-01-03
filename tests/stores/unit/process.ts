@@ -58,8 +58,8 @@ describe('process', () => {
 		promiseResolvers = [];
 	});
 
-	it('with synchronous commands running in order', () => {
-		const process = createProcess('test', [testCommandFactory('foo'), testCommandFactory('foo/bar')]);
+	it('with synchronous commands running in order', async () => {
+		const process = createProcess('test', [[testCommandFactory('foo')], testCommandFactory('foo/bar')]);
 		const processExecutor = process(store);
 		processExecutor({});
 		const foo = store.get(store.path('foo'));
