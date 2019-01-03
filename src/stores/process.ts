@@ -305,16 +305,9 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 					}
 				});
 
-				function combineProxyResults(result?: PatchOperation[]) {
-					result = result ? [...proxyOperations, ...result] : [...proxyOperations];
-					proxyOperations = [];
-
-					return result;
-				}
-
-				function getOperations(commandFunction: Command<T, P>) {
+				results = command.map((commandFunction: Command<T, P>) => {
 					if (typeof Proxy !== 'undefined') {
-						const result = commandFunction({
+						let result = commandFunction({
 							at,
 							get,
 							path,
@@ -322,12 +315,23 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 							state: new Proxy({}, createHandler()) as T
 						});
 
-						return isThenable(result) ? result.then(combineProxyResults) : combineProxyResults(result);
+						if (isThenable(result)) {
+							return result.then((result) => {
+								result = result ? [...proxyOperations, ...result] : [...proxyOperations];
+								proxyOperations = [];
+
+								return result;
+							});
+						} else {
+							result = result ? [...proxyOperations, ...result] : [...proxyOperations];
+							proxyOperations = [];
+
+							return result;
+						}
 					}
 
 					return commandFunction({ at, get, path, payload });
-				}
-				results = command.map(getOperations);
+				});
 				let resolvedResults: PatchOperation[][];
 				if (results.some(isThenable)) {
 					resolvedResults = await Promise.all(results);
