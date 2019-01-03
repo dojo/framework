@@ -1,8 +1,11 @@
 import { isThenable } from '../shim/Promise';
 import { PatchOperation } from './state/Patch';
-import { State, Store } from './Store';
+import { add, replace, remove } from './state/operations';
+import { Path, State, Store } from './Store';
+import { deepMixin } from '../core/util';
 import Map from '../shim/Map';
 import has from '../has/has';
+import Set from '../shim/Set';
 
 /**
  * Default Payload interface
@@ -16,6 +19,7 @@ export interface DefaultPayload {
  */
 export interface CommandRequest<T = any, P extends object = DefaultPayload> extends State<T> {
 	payload: P;
+	state?: T;
 }
 
 /**
@@ -143,6 +147,26 @@ export function getProcess(id: string) {
 	return processMap.get(id);
 }
 
+function deepCopy(source: any) {
+	if (Array.isArray(source)) {
+		return deepMixin([], source);
+	} else if (typeof source === 'object' && source !== null) {
+		return deepMixin({}, source);
+	} else {
+		return source;
+	}
+}
+
+function shallowCopy(source: any) {
+	if (Array.isArray(source)) {
+		return [...source];
+	} else if (typeof source === 'object' && source !== null) {
+		return { ...source };
+	} else {
+		return source;
+	}
+}
+
 export function processExecutor<T = any, P extends object = DefaultPayload>(
 	id: string,
 	commands: Commands<T, P>,
@@ -177,20 +201,143 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 		try {
 			while (command) {
 				let results = [];
-				if (Array.isArray(command)) {
-					results = command.map((commandFunction) => commandFunction({ at, get, path, payload }));
-					results = await Promise.all(results);
-				} else {
-					let result = command({ at, get, path, payload });
-					if (isThenable(result)) {
-						result = await result;
+				let proxyOperations: PatchOperation[] = [];
+				const proxied = new Set();
+				command = Array.isArray(command) ? command : [command];
+				const createHandler = (partialPath?: Path<T, any>) => ({
+					get(obj: any, prop: string) {
+						if (Array.isArray(obj) && partialPath) {
+							switch (prop) {
+								case 'push':
+									return (value: any) => {
+										const indexPath = at(partialPath, obj.length);
+										proxyOperations.push(add(indexPath, deepCopy(value)));
+
+										if (typeof value === 'object' && value != null) {
+											value = new Proxy(shallowCopy(value), createHandler(indexPath));
+										}
+										return obj.push(value);
+									};
+								case 'unshift':
+									return (value: any) => {
+										const indexPath = at(partialPath, 0);
+										proxyOperations.push(add(indexPath, deepCopy(value)));
+
+										if (typeof value === 'object' && value !== null) {
+											value = new Proxy(shallowCopy(value), createHandler(indexPath));
+										}
+
+										return obj.unshift(value);
+									};
+								case 'splice':
+									return (start: number, removeCount?: number, ...items: any[]) => {
+										const result = obj.splice(start, removeCount, ...items);
+										const itemsAfterStart = obj.length - start;
+										if (removeCount == null) {
+											removeCount = itemsAfterStart;
+										}
+										removeCount = Math.min(removeCount, itemsAfterStart);
+										const startPath = at(partialPath, start);
+										while (removeCount) {
+											proxyOperations.push(remove(startPath));
+											removeCount--;
+										}
+
+										items.reverse().forEach((item) => {
+											proxyOperations.push(add(startPath, deepCopy(item)));
+										});
+
+										return result;
+									};
+								case 'pop':
+									return () => {
+										const item = obj.pop();
+										proxyOperations.push(remove(at(partialPath, obj.length)));
+
+										return typeof item === 'object'
+											? Array.isArray(item)
+												? item.slice()
+												: { ...item }
+											: item;
+									};
+								case 'shift':
+									return () => {
+										proxyOperations.push(remove(at(partialPath, 0)));
+
+										return obj.shift();
+									};
+								default:
+									break;
+							}
+						}
+
+						const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
+						let value = obj && obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
+						const stringPath = fullPath.path;
+						if (typeof value === 'object' && value !== null && !proxied.has(stringPath)) {
+							if (Array.isArray(value)) {
+								value = value.slice();
+							} else {
+								value = { ...value };
+							}
+							value = new Proxy(value, createHandler(fullPath));
+							proxied.add(stringPath);
+						}
+						obj[prop] = value;
+
+						return value;
+					},
+
+					set(obj: any, prop: string, value: any) {
+						proxyOperations.push(
+							replace(partialPath ? path(partialPath, prop) : path(prop as keyof T), value)
+						);
+						obj[prop] = value;
+
+						return true;
+					},
+
+					deleteProperty(obj: any, prop: string) {
+						proxyOperations.push(remove(partialPath ? path(partialPath, prop) : path(prop as keyof T)));
+						delete obj[prop];
+
+						return true;
 					}
-					results = [result];
+				});
+
+				function combineProxyResults(result?: PatchOperation[]) {
+					result = result ? [...proxyOperations, ...result] : [...proxyOperations];
+					proxyOperations = [];
+
+					return result;
+				}
+
+				function getOperations(commandFunction: Command<T, P>) {
+					if (typeof Proxy !== 'undefined') {
+						const result = commandFunction({
+							at,
+							get,
+							path,
+							payload,
+							state: new Proxy({}, createHandler()) as T
+						});
+
+						return isThenable(result) ? result.then(combineProxyResults) : combineProxyResults(result);
+					}
+
+					return commandFunction({ at, get, path, payload });
+				}
+				results = command.map(getOperations);
+				let resolvedResults: PatchOperation[][];
+				if (results.some(isThenable)) {
+					resolvedResults = await Promise.all(results);
+				} else {
+					resolvedResults = results as PatchOperation[][];
 				}
 
 				for (let i = 0; i < results.length; i++) {
-					operations.push(...results[i]);
-					undoOperations = [...apply(results[i]), ...undoOperations];
+					operations.push(...resolvedResults[i]);
+					undoOperations = [...apply(resolvedResults[i]), ...undoOperations];
 				}
 
 				store.invalidate();
