@@ -4,6 +4,7 @@ import { Store, StatePaths, Path } from './Store';
 import { diffProperty } from '../widget-core/decorators/diffProperty';
 import { Handle } from '../core/Destroyable';
 import { shallow } from '../widget-core/diff';
+import { alwaysRender } from '../widget-core/decorators/alwaysRender';
 
 export interface GetPaths<S = any> {
 	(path: StatePaths<S>): Path<S, any>[];
@@ -29,6 +30,7 @@ function pathDiff(previousProperty: Function, newProperty: Function) {
 	};
 }
 
+@alwaysRender()
 export class StoreProvider<S = any> extends WidgetBase<StoreProviderProperties<S>, never> {
 	private _handle: Handle | undefined;
 
