@@ -128,18 +128,18 @@ function isString(segment?: string): segment is string {
 	return typeof segment === 'string';
 }
 
-/**
- * Application state store
- */
-export class Store<T = any> extends Evented implements State<T> {
+export interface MutableState<T = any> extends State<T> {
+	/**
+	 * Applies store operations to state and returns the undo operations
+	 */
+	apply(operations: PatchOperation<T>[]): PatchOperation<T>[];
+}
+
+export class DefaultState<T = any> implements MutableState<T> {
 	/**
 	 * The private state object
 	 */
 	private _state = {} as T;
-
-	private _changePaths = new Map<string, OnChangeValue>();
-
-	private _callbackId = 0;
 
 	/**
 	 * Returns the state at a specific pointer path location.
@@ -151,13 +151,10 @@ export class Store<T = any> extends Evented implements State<T> {
 	/**
 	 * Applies store operations to state and returns the undo operations
 	 */
-	public apply = (operations: PatchOperation<T>[], invalidate: boolean = false): PatchOperation<T>[] => {
+	public apply = (operations: PatchOperation<T>[]): PatchOperation<T>[] => {
 		const patch = new Patch(operations);
 		const patchResult = patch.apply(this._state);
 		this._state = patchResult.object;
-		if (invalidate) {
-			this.invalidate();
-		}
 		return patchResult.undoOperations;
 	};
 
@@ -170,6 +167,66 @@ export class Store<T = any> extends Evented implements State<T> {
 			state: path.state,
 			value
 		};
+	};
+
+	public path: State<T>['path'] = (path: string | Path<T, any>, ...segments: (string | undefined)[]) => {
+		if (typeof path === 'string') {
+			segments = [path, ...segments];
+		} else {
+			segments = [...new Pointer(path.path).segments, ...segments];
+		}
+
+		const stringSegments = segments.filter<string>(isString);
+		const hasMultipleSegments = stringSegments.length > 1;
+		const pointer = new Pointer(hasMultipleSegments ? stringSegments : stringSegments[0] || '');
+
+		return {
+			path: pointer.path,
+			state: this._state,
+			value: pointer.get(this._state)
+		};
+	};
+}
+
+/**
+ * Application state store
+ */
+export class Store<T = any> extends Evented implements MutableState<T> {
+	private _state: MutableState<T> = new DefaultState<T>();
+
+	private _changePaths = new Map<string, OnChangeValue>();
+
+	private _callbackId = 0;
+
+	/**
+	 * Returns the state at a specific pointer path location.
+	 */
+	public get = <U = any>(path: Path<T, U>): U => {
+		return this._state.get(path);
+	};
+
+	constructor(options?: { state?: MutableState<T> }) {
+		super();
+		if (options && options.state) {
+			this._state = options.state;
+		}
+	}
+
+	/**
+	 * Applies store operations to state and returns the undo operations
+	 */
+	public apply = (operations: PatchOperation<T>[], invalidate: boolean = false): PatchOperation<T>[] => {
+		const result = this._state.apply(operations);
+
+		if (invalidate) {
+			this.invalidate();
+		}
+
+		return result;
+	};
+
+	public at = <U = any>(path: Path<T, Array<U>>, index: number): Path<T, U> => {
+		return this._state.at(path, index);
 	};
 
 	public onChange = <U = any>(paths: Path<T, U> | Path<T, U>[], callback: () => void) => {
@@ -228,23 +285,7 @@ export class Store<T = any> extends Evented implements State<T> {
 		this.emit({ type: 'invalidate' });
 	}
 
-	public path: State<T>['path'] = (path: string | Path<T, any>, ...segments: (string | undefined)[]) => {
-		if (typeof path === 'string') {
-			segments = [path, ...segments];
-		} else {
-			segments = [...new Pointer(path.path).segments, ...segments];
-		}
-
-		const stringSegments = segments.filter<string>(isString);
-		const hasMultipleSegments = stringSegments.length > 1;
-		const pointer = new Pointer(hasMultipleSegments ? stringSegments : stringSegments[0] || '');
-
-		return {
-			path: pointer.path,
-			state: this._state,
-			value: pointer.get(this._state)
-		};
-	};
+	public path: State<T>['path'] = this._state.path.bind(this._state);
 }
 
 export default Store;

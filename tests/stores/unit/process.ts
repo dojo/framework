@@ -1,5 +1,7 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
+const { registerSuite } = intern.getPlugin('interface.benchmark');
+// import Test from 'intern/lib/Test';
 
 import { uuid } from '../../../src/core/util';
 import { Pointer } from './../../../src/stores/state/Pointer';
@@ -786,3 +788,104 @@ describe('process', () => {
 		return processExecutor({});
 	});
 });
+
+const performanceTestStore = new Store();
+const operations: PatchOperation[] = [];
+for (let i = 0; i < 100; i++) {
+	operations.push({ op: OperationType.ADD, path: new Pointer(`/${i}`), value: {} });
+	for (let j = 0; j < 50; j++) {
+		operations.push({ op: OperationType.ADD, path: new Pointer(`/${i}/${j}`), value: {} });
+		for (let k = 0; k < 10; k++) {
+			operations.push({ op: OperationType.ADD, path: new Pointer(`/${i}/${j}/${k}`), value: k });
+		}
+	}
+}
+console.time('buildstore');
+performanceTestStore.apply(operations);
+console.timeEnd('buildstore');
+registerSuite('Normal performance', {
+	'update values'() {
+		const process = createProcess('test', [testCommandFactory('foo'), testCommandFactory('foo/bar')]);
+		const processExecutor = process(performanceTestStore);
+		processExecutor({});
+	}
+});
+
+// registerSuite('Proxy performance', {
+// 	beforeEach() {
+// 		store = new Store();
+// 	},
+//
+// 	tests: {
+// 		'update values'() {
+// 			const process = createProcess('test', [
+// 				testProxyCommandFactory('foo'),
+// 				testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 				// testProxyCommandFactory('foo', 'bar'),
+// 			]);
+// 			const processExecutor = process(store);
+// 			processExecutor({});
+// 		}
+// 	}
+// });
