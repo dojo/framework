@@ -177,47 +177,51 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 				await result;
 			}
 		}
+
+		const proxied = new Set();
+		let proxyOperations: PatchOperation[] = [];
+		const createHandler = (partialPath?: Path<T, any>) => ({
+			get(obj: any, prop: string) {
+				const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
+				let value = partialPath || obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
+				const stringPath = fullPath.path;
+				if (typeof value === 'object' && value !== null && !proxied.has(stringPath)) {
+					if (Array.isArray(value)) {
+						value = value.slice();
+					} else {
+						value = { ...value };
+					}
+					value = new Proxy(value, createHandler(fullPath));
+					proxied.add(stringPath);
+				}
+				obj[prop] = value;
+
+				return value;
+			},
+
+			set(obj: any, prop: string, value: any) {
+				proxyOperations.push(replace(partialPath ? path(partialPath, prop) : path(prop as keyof T), value));
+				obj[prop] = value;
+
+				return true;
+			},
+
+			deleteProperty(obj: any, prop: string) {
+				proxyOperations.push(remove(partialPath ? path(partialPath, prop) : path(prop as keyof T)));
+				delete obj[prop];
+
+				return true;
+			}
+		});
+		let state: T;
+		if (typeof Proxy !== 'undefined') {
+			state = new Proxy({}, createHandler()) as T;
+		}
+
 		try {
 			while (command) {
 				let results = [];
-				let proxyOperations: PatchOperation[] = [];
-				const proxied = new Set();
 				const commandArray = Array.isArray(command) ? command : [command];
-				const createHandler = (partialPath?: Path<T, any>) => ({
-					get(obj: any, prop: string) {
-						const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
-						let value = partialPath || obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
-						const stringPath = fullPath.path;
-						if (typeof value === 'object' && value !== null && !proxied.has(stringPath)) {
-							if (Array.isArray(value)) {
-								value = value.slice();
-							} else {
-								value = { ...value };
-							}
-							value = new Proxy(value, createHandler(fullPath));
-							proxied.add(stringPath);
-						}
-						obj[prop] = value;
-
-						return value;
-					},
-
-					set(obj: any, prop: string, value: any) {
-						proxyOperations.push(
-							replace(partialPath ? path(partialPath, prop) : path(prop as keyof T), value)
-						);
-						obj[prop] = value;
-
-						return true;
-					},
-
-					deleteProperty(obj: any, prop: string) {
-						proxyOperations.push(remove(partialPath ? path(partialPath, prop) : path(prop as keyof T)));
-						delete obj[prop];
-
-						return true;
-					}
-				});
 
 				results = commandArray.map((commandFunction: Command<T, P>) => {
 					if (typeof Proxy !== 'undefined') {
@@ -226,7 +230,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 							get,
 							path,
 							payload,
-							state: new Proxy({}, createHandler()) as T
+							state
 						});
 
 						if (isThenable(result)) {
