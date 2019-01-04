@@ -203,7 +203,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 				let results = [];
 				let proxyOperations: PatchOperation[] = [];
 				const proxied = new Set();
-				command = Array.isArray(command) ? command : [command];
+				const commandArray = Array.isArray(command) ? command : [command];
 				const createHandler = (partialPath?: Path<T, any>) => ({
 					get(obj: any, prop: string) {
 						if (Array.isArray(obj) && partialPath) {
@@ -305,7 +305,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 					}
 				});
 
-				results = command.map((commandFunction: Command<T, P>) => {
+				results = commandArray.map((commandFunction: Command<T, P>) => {
 					if (typeof Proxy !== 'undefined') {
 						let result = commandFunction({
 							at,

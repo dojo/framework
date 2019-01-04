@@ -47,8 +47,10 @@ const testAsyncCommandFactory = (path: string) => {
 	};
 };
 
+const testNoop = ({ payload }: CommandRequest): any => {};
+
 const testErrorCommand = ({ payload }: CommandRequest): any => {
-	new Error('Command Failed');
+	throw new Error('Command Failed');
 };
 
 describe('process', () => {
@@ -248,11 +250,23 @@ describe('process', () => {
 		assert.isTrue(callbackCalled);
 	});
 
-	it('when a command errors, the error and command is returned in the error argument of the callback', () => {
+	it('when a command errors, the error and command is returned in the error argument of the callback', async () => {
 		const process = createProcess('test', [testCommandFactory('foo'), testErrorCommand], () => ({
 			after: (error) => {
 				assert.isNotNull(error);
+				assert.equal(error && error.error && error.error.message, 'Command Failed');
 				assert.strictEqual(error && error.command, testErrorCommand);
+			}
+		}));
+		const processExecutor = process(store);
+		await processExecutor({});
+	});
+
+	it('a command that does not return results does not break other commands', () => {
+		const process = createProcess('test', [testCommandFactory('foo'), testNoop], () => ({
+			after: (error) => {
+				assert.isNull(error);
+				assert.strictEqual(store.get(store.path('foo')), 'foo');
 			}
 		}));
 		const processExecutor = process(store);
