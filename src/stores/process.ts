@@ -1,8 +1,7 @@
 import { isThenable } from '../shim/Promise';
 import { PatchOperation } from './state/Patch';
-import { add, replace, remove } from './state/operations';
+import { replace, remove } from './state/operations';
 import { Path, State, Store } from './Store';
-import { deepMixin } from '../core/util';
 import Map from '../shim/Map';
 import has from '../has/has';
 import Set from '../shim/Set';
@@ -34,7 +33,7 @@ export interface CommandFactory<T = any, P extends object = DefaultPayload> {
  * Command that returns patch operations based on the command request
  */
 export interface Command<T = any, P extends object = DefaultPayload> {
-	(request: CommandRequest<T, P>): Promise<PatchOperation<T>[]> | PatchOperation<T>[];
+	(request: CommandRequest<T, P>): Promise<PatchOperation<T>[]> | PatchOperation<T>[] | void;
 }
 
 /**
@@ -147,26 +146,6 @@ export function getProcess(id: string) {
 	return processMap.get(id);
 }
 
-function deepCopy(source: any) {
-	if (Array.isArray(source)) {
-		return deepMixin([], source);
-	} else if (typeof source === 'object' && source !== null) {
-		return deepMixin({}, source);
-	} else {
-		return source;
-	}
-}
-
-function shallowCopy(source: any) {
-	if (Array.isArray(source)) {
-		return [...source];
-	} else if (typeof source === 'object' && source !== null) {
-		return { ...source };
-	} else {
-		return source;
-	}
-}
-
 export function processExecutor<T = any, P extends object = DefaultPayload>(
 	id: string,
 	commands: Commands<T, P>,
@@ -207,7 +186,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 				const createHandler = (partialPath?: Path<T, any>) => ({
 					get(obj: any, prop: string) {
 						const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
-						let value = obj && obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
+						let value = partialPath || obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
 						const stringPath = fullPath.path;
 						if (typeof value === 'object' && value !== null && !proxied.has(stringPath)) {
 							if (Array.isArray(value)) {
@@ -265,7 +244,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 						}
 					}
 
-					return commandFunction({ at, get, path, payload });
+					return commandFunction({ at, get, path, payload }) || [];
 				});
 				let resolvedResults: PatchOperation[][];
 				if (results.some(isThenable)) {

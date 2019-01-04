@@ -54,6 +54,18 @@ describe('state/Patch', () => {
 				{ op: OperationType.REMOVE, path: new Pointer('/test/0') }
 			]);
 		});
+
+		it('value to array property', () => {
+			const patch = new Patch(ops.add({ path: '/test/length', state: null, value: null }, 1));
+			const obj = { test: [] };
+			const result = patch.apply(obj);
+			assert.notStrictEqual(result.object, obj);
+			assert.deepEqual(result.object, { test: [undefined] });
+			assert.deepEqual(result.undoOperations, [
+				{ op: OperationType.TEST, path: new Pointer('/test/length'), value: 1 },
+				{ op: OperationType.REMOVE, path: new Pointer('/test/length') }
+			]);
+		});
 	});
 
 	describe('replace', () => {
@@ -102,6 +114,18 @@ describe('state/Patch', () => {
 			assert.deepEqual(result.undoOperations, [
 				{ op: OperationType.TEST, path: new Pointer('/test/1'), value: 'test' },
 				{ op: OperationType.REPLACE, path: new Pointer('/test/1'), value: 'foo' }
+			]);
+		});
+
+		it('array property', () => {
+			const patch = new Patch(ops.replace({ path: '/test/length', state: null, value: null }, 3));
+			const obj = { test: ['test', 'foo'] };
+			const result = patch.apply(obj);
+			assert.notStrictEqual(result.object, obj);
+			assert.deepEqual(result.object, { test: ['test', 'foo', undefined] });
+			assert.deepEqual(result.undoOperations, [
+				{ op: OperationType.TEST, path: new Pointer('/test/length'), value: 3 },
+				{ op: OperationType.REPLACE, path: new Pointer('/test/length'), value: 2 }
 			]);
 		});
 	});
