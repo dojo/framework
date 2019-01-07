@@ -33,6 +33,8 @@ export class Build extends Destroyable implements MetaBase {
 					this._invalidate();
 				});
 				return null;
+			} else {
+				valueMap.set(argsString, result);
 			}
 			return result;
 		};
