@@ -307,7 +307,7 @@ export function createCallbackDecorator(
 ): (callbacks?: ProcessCallback[]) => ProcessCallback[] {
 	if (has('dojo-debug')) {
 		console.warn(
-			'Process using the the legacy middleware API. Please update to use the latest API, see https://link-to-upgrade.com for details.'
+			'Process using the the legacy middleware API. Please update to use the latest API, see https://github.com/dojo/framework/blob/master/docs/V5-Migration-Guide.md for details.'
 		);
 	}
 	const convertedCallback = () => ({
