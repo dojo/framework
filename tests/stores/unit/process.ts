@@ -10,7 +10,9 @@ import {
 	createProcessFactoryWith,
 	ProcessCallback,
 	ProcessError,
-	ProcessResult
+	ProcessResult,
+	ProcessCallbackAfter,
+	createCallbackDecorator
 } from '../../../src/stores/process';
 import { Store } from '../../../src/stores/Store';
 import { replace } from '../../../src/stores/state/operations';
@@ -271,6 +273,44 @@ describe('process', () => {
 		}));
 		const processExecutor = process(store);
 		processExecutor({});
+	});
+
+	it('process decorator should convert callbacks to after callback', () => {
+		let callbackArray: string[] = [];
+		const legacyCallbackOne: ProcessCallbackAfter = (error, result) => {
+			callbackArray.push('one');
+		};
+		const legacyCallbackTwo: ProcessCallbackAfter = (error, result) => {
+			callbackArray.push('two');
+		};
+
+		const decoratorOne = createCallbackDecorator(legacyCallbackOne);
+		const decoratorTwo = createCallbackDecorator(legacyCallbackTwo);
+
+		const callbackOne: ProcessCallback = () => ({
+			after: (error, result) => {
+				callbackArray.push('one');
+			}
+		});
+		const callbackTwo: ProcessCallback = () => ({
+			after: (error, result) => {
+				callbackArray.push('two');
+			}
+		});
+
+		const process = createProcess('decorator-test', [], [callbackOne, callbackTwo]);
+		const processWithLegacyMiddleware = createProcess(
+			'createCallbackDecorator-test',
+			[],
+			decoratorOne(decoratorTwo())
+		);
+		const processExecutor = process(store);
+		const legacyMiddlewareProcessExecutor = processWithLegacyMiddleware(store);
+		processExecutor({});
+		assert.deepEqual(callbackArray, ['one', 'two']);
+		callbackArray = [];
+		legacyMiddlewareProcessExecutor({});
+		assert.deepEqual(callbackArray, ['one', 'two']);
 	});
 
 	it('Creating a process returned automatically decorates all process callbacks', () => {

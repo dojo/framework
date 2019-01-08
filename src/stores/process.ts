@@ -2,6 +2,7 @@ import { isThenable } from '../shim/Promise';
 import { PatchOperation } from './state/Patch';
 import { State, Store } from './Store';
 import Map from '../shim/Map';
+import has from '../has/has';
 
 /**
  * Default Payload interface
@@ -242,7 +243,7 @@ export function createProcess<T = any, P extends object = DefaultPayload>(
 
 	const callback = callbacks.length
 		? callbacks.reduce((callback, nextCallback) => {
-				return createCallbackDecorator(nextCallback)(callback);
+				return combineCallbacks(nextCallback)(callback);
 		  })
 		: undefined;
 
@@ -272,7 +273,7 @@ export function createProcessFactoryWith(callbacks: ProcessCallback[]) {
  * Creates a `ProcessCallbackDecorator` from a `ProcessCallback`.
  * @param processCallback the process callback to convert to a decorator.
  */
-function createCallbackDecorator(processCallback: ProcessCallback): ProcessCallbackDecorator {
+function combineCallbacks(processCallback: ProcessCallback): ProcessCallbackDecorator {
 	const { before, after } = processCallback();
 	return (previousCallback?: ProcessCallback) => {
 		const { before: previousBefore = undefined, after: previousAfter = undefined } = previousCallback
@@ -298,5 +299,21 @@ function createCallbackDecorator(processCallback: ProcessCallback): ProcessCallb
 				}
 			}
 		});
+	};
+}
+
+export function createCallbackDecorator(
+	callback: ProcessCallbackAfter
+): (callbacks?: ProcessCallback[]) => ProcessCallback[] {
+	if (has('dojo-debug')) {
+		console.warn(
+			'Process using the the legacy middleware API. Please update to use the latest API, see https://github.com/dojo/framework/blob/master/docs/V5-Migration-Guide.md for details.'
+		);
+	}
+	const convertedCallback = () => ({
+		after: callback
+	});
+	return (callbacks: ProcessCallback[] = []) => {
+		return [convertedCallback, ...callbacks];
 	};
 }
