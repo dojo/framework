@@ -25,7 +25,7 @@ If you are upgrading from a version before 4.0.0, please see the [previous migra
 
 #### [has consolidation](https://github.com/dojo/framework/pulls)
 
-Part of the legacy clean up, this release of Dojo consolidates all the `has` related modules in a single `has` module, `@dojo/framework/has/has`. If you run the `dojo/cli-upgrade-app` command all references to removed has modules should be automatically updated.
+Part of the cleanup started with the 3.0 consolidation of packages into `@dojo/framework`, this release of Dojo moves all the `has` related modules in a single `has` module, `@dojo/framework/has/has`. If you run the `dojo/cli-upgrade-app` command all references to removed has modules should be automatically updated.
 
 #### [Support for `before` middleware in stores](https://github.com/dojo/framework/pulls)
 
