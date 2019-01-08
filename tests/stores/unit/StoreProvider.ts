@@ -1,6 +1,7 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
+const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import { v } from '../../../src/widget-core/d';
+import { v, w } from '../../../src/widget-core/d';
 import { Registry } from '../../../src/widget-core/Registry';
 
 import { StoreProvider } from '../../../src/stores/StoreProvider';
@@ -8,6 +9,8 @@ import { createCommandFactory, createProcess, Process } from '../../../src/store
 import { replace } from '../../../src/stores/state/operations';
 import { Store } from '../../../src/stores/Store';
 import { VNode } from '../../../src/widget-core/interfaces';
+import { WidgetBase } from '../../../src/widget-core/WidgetBase';
+import renderer from '../../../src/widget-core/vdom';
 
 interface State {
 	foo: string;
@@ -280,5 +283,41 @@ describe('StoreProvider', () => {
 		});
 		const result = container.__render__() as VNode;
 		assert.isUndefined(result);
+	});
+
+	jsdomDescribe('integration', () => {
+		it('should always render', () => {
+			let invalidate: any;
+
+			class App extends WidgetBase {
+				private _value = 'first';
+				constructor() {
+					super();
+					invalidate = this.update;
+				}
+
+				update = () => {
+					this._value = 'second';
+					this.invalidate();
+				};
+
+				render() {
+					return w(StoreProvider, {
+						stateKey: 'state',
+						renderer: () => {
+							return this._value;
+						}
+					});
+				}
+			}
+
+			const root = document.createElement('root');
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root, registry, sync: true });
+			assert.strictEqual(root.outerHTML, '<root>first</root>');
+			invalidate();
+			assert.strictEqual(root.outerHTML, '<root>second</root>');
+		});
 	});
 });
