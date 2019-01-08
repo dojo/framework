@@ -22,6 +22,24 @@ class Foo extends WidgetBase {
 	}
 }
 
+@customElement({
+	tag: 'display-element-inline-block'
+})
+class DisplayElement extends WidgetBase {
+	render() {
+		return v('div', { styles: { display: 'inline-block' } }, ['hello world']);
+	}
+}
+
+@customElement({
+	tag: 'display-element-default-block'
+})
+class DisplayElementDefault extends WidgetBase {
+	render() {
+		return v('div', ['hello world']);
+	}
+}
+
 function createTestWidget(options: any) {
 	const { properties, attributes, events, childType = CustomElementChildType.DOJO } = options;
 	@customElement<any>({
@@ -60,7 +78,7 @@ function createTestWidget(options: any) {
 			if (onExternalFunction) {
 				onExternalFunction('hello');
 			}
-			return v('div', [
+			return v('div', { styles: { display: 'inline-block' } }, [
 				v('button', { classes: ['event'], onclick: this._onClick }),
 				v('div', { classes: ['prop'] }, [`${myProp}`]),
 				v('div', { classes: ['attr'] }, [`${myAttr}`]),
@@ -120,7 +138,7 @@ describe('registerCustomElement', () => {
 		register(Foo);
 		element = document.createElement('foo-element');
 		document.body.appendChild(element);
-		assert.equal(element.outerHTML, '<foo-element><div>hello world</div></foo-element>');
+		assert.equal(element.outerHTML, '<foo-element style="display: block;"><div>hello world</div></foo-element>');
 	});
 
 	it('custom element with property', () => {
@@ -314,5 +332,21 @@ describe('registerCustomElement', () => {
 		resolvers.resolve();
 		assert.equal(functionText, 'hello');
 		assert.equal(scope, undefined, 'function scope should not be tampered with');
+	});
+
+	it('adds the correct display style to the wrapping node based on the root node of the widget', () => {
+		register(DisplayElement);
+		element = document.createElement('display-element-inline-block');
+		document.body.appendChild(element);
+		const { display } = global.getComputedStyle(element);
+		assert.equal(display, 'inline-block');
+	});
+
+	it('adds display:block if no style found on root node of widget', () => {
+		register(DisplayElementDefault);
+		element = document.createElement('display-element-default-block');
+		document.body.appendChild(element);
+		const { display } = global.getComputedStyle(element);
+		assert.equal(display, 'block');
 	});
 });

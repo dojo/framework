@@ -137,6 +137,11 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			const r = renderer(() => w(Wrapper, {}));
 			this._renderer = r;
 			r.mount({ domNode: this, merge: false, registry });
+			const root = this.children[0];
+			if (root) {
+				const { display = 'block' } = global.getComputedStyle(root);
+				this.style.display = display;
+			}
 
 			this._initialised = true;
 			this.dispatchEvent(
