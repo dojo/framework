@@ -417,7 +417,7 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 /**
  * union type for all possible return types from render
  */
-export type DNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface> =
+export type DNode<W extends WidgetBaseInterface<WidgetProperties, any> = WidgetBaseInterface<WidgetProperties, any>> =
 	| VNode
 	| WNode<W>
 	| undefined
