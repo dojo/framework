@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/dojo/framework.svg?branch=master)](https://travis-ci.org/dojo/framework)
 [![codecov](https://codecov.io/gh/dojo/framework/branch/master/graph/badge.svg)](https://codecov.io/gh/dojo/framework)
 [![npm version](https://badge.fury.io/js/%40dojo%2Fframework.svg)](https://badge.fury.io/js/%40dojo%2Fframework)
-[![Join the chat at https://discordapp.com/invite/M7yRngE](https://img.shields.io/discord/471607790213922816.svg?style=for-the-badge)](https://discordapp.com/invite/M7yRngE)
+[![Join the chat at https://discordapp.com/invite/M7yRngE](https://img.shields.io/discord/471607790213922816.svg?logo=discord)](https://discordapp.com/invite/M7yRngE)
 
 Dojo is a progressive framework for modern web applications built with TypeScript.
 
