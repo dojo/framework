@@ -1626,27 +1626,3 @@ and lower-casing the resulting name.
 ##### Tag Name
 
 Your widget will be registered with the browser using the provided tag name. The tag name **must** have a `-` in it.
-
-##### Initialization
-
-Custom logic can be performed after properties/attributes have been defined but before the custom element is rendered. This
-allows you full control over your widget, allowing you to add custom properties, event handlers, work with child nodes, etc.
-The initialization function is run from the context of the HTML element.
-
-```ts
-{
-	initialization(properties) {
-		const footer = this.getElementsByTagName('footer');
-		if (footer) {
-			properties.footer = footer;
-		}
-
-		const header = this.getElementsByTagName('header');
-		if (header) {
-			properties.header = header;
-		}
-	}
-}
-```
-
-It should be noted that children nodes are removed from the DOM when attached, and added as children to the widget instance.
