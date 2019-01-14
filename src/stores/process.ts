@@ -4,7 +4,7 @@ import { replace, remove } from './state/operations';
 import { Path, State, Store } from './Store';
 import Map from '../shim/Map';
 import has from '../has/has';
-import Set from '../shim/Set';
+import Symbol, { isSymbol } from '../shim/Symbol';
 
 /**
  * Default Payload interface
@@ -141,6 +141,7 @@ export function createCommandFactory<T, P extends object = DefaultPayload>(): Co
 export type Commands<T = any, P extends object = DefaultPayload> = (Command<T, P>[] | Command<T, P>)[];
 
 const processMap = new Map();
+const valueSymbol = Symbol('value');
 
 export function getProcess(id: string) {
 	return processMap.get(id);
@@ -178,28 +179,49 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 			}
 		}
 
-		const proxied = new Set();
+		const proxies = new Map<string, any>();
+		const proxied = new Map<string, any>();
+
 		let proxyOperations: PatchOperation[] = [];
 		const createHandler = (partialPath?: Path<T, any>) => ({
-			get(obj: any, prop: string) {
+			get(obj: any, prop: string): any {
 				const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
-				let value = partialPath || obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
 				const stringPath = fullPath.path;
-				if (typeof value === 'object' && value !== null && !proxied.has(stringPath)) {
-					if (Array.isArray(value)) {
-						value = value.slice();
-					} else {
-						value = { ...value };
-					}
-					value = new Proxy(value, createHandler(fullPath));
-					proxied.add(stringPath);
-				}
-				obj[prop] = value;
 
+				if (isSymbol(prop) && prop === valueSymbol) {
+					return proxied.get(stringPath);
+				}
+
+				let value = partialPath || obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
+
+				if (typeof value === 'object' && value !== null) {
+					let proxiedValue;
+					if (!proxies.has(stringPath)) {
+						if (Array.isArray(value)) {
+							value = value.slice();
+						} else {
+							value = { ...value };
+						}
+						proxiedValue = new Proxy(value, createHandler(fullPath));
+						proxies.set(stringPath, proxiedValue);
+						proxied.set(stringPath, value);
+					} else {
+						proxiedValue = proxies.get(stringPath);
+					}
+
+					obj[prop] = value;
+					return proxiedValue;
+				}
+
+				obj[prop] = value;
 				return value;
 			},
 
 			set(obj: any, prop: string, value: any) {
+				if (typeof value === 'object' && value !== null && value[valueSymbol]) {
+					value = value[valueSymbol];
+				}
+
 				proxyOperations.push(replace(partialPath ? path(partialPath, prop) : path(prop as keyof T), value));
 				obj[prop] = value;
 

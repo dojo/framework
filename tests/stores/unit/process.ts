@@ -2,6 +2,7 @@ const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import Test from 'intern/lib/Test';
 
+import { uuid } from '../../../src/core/util';
 import { Pointer } from './../../../src/stores/state/Pointer';
 import { OperationType, PatchOperation } from './../../../src/stores/state/Patch';
 import {
@@ -105,6 +106,39 @@ const testNoop = ({ payload }: CommandRequest): any => {};
 const testErrorCommand = ({ payload }: CommandRequest): any => {
 	throw new Error('Command Failed');
 };
+const testSelfAssignment = ({ state }: CommandRequest) => {
+	const id = uuid();
+	if (state) {
+		const label = state.currentTodo ? state.currentTodo.trim() : '';
+
+		if (label) {
+			state.todos = state.todos || {};
+			state.todos[id] = { label, id };
+		} else {
+			state.currentTodo = '';
+		}
+	}
+};
+
+const testSetCurrentTodo = ({ payload, state }: CommandRequest) => {
+	state.currentTodo = payload.label;
+};
+
+const testUpdateCompletedFlagCommand = ({ state }: CommandRequest) => {
+	if (state) {
+		state.completed = state.todoCount > 0 && state.todoCount === state.completedCount;
+	}
+};
+
+const testUpdateTodoCountsCommand = ({ state }: CommandRequest) => {
+	if (state) {
+		const todos = state.todos;
+		const todoArray = Object.keys(todos).map((key) => todos[key]);
+
+		state.todoCount = todoArray.length;
+		state.completedCount = todoArray.filter(({ completed }) => completed).length;
+	}
+};
 
 describe('process', () => {
 	beforeEach(() => {
@@ -137,6 +171,26 @@ describe('process', () => {
 		const foobar = store.get(store.path('foo', 'bar'));
 		assert.deepEqual(foo, { bar: 'foo/bar' });
 		assert.strictEqual(foobar, 'foo/bar');
+	});
+
+	it('Can set a proxied property to itself', (test: Test) => {
+		if (typeof Proxy === 'undefined') {
+			test.skip('Proxy updates require Proxy');
+		}
+		const process = createProcess('test', [
+			testSetCurrentTodo,
+			testSelfAssignment,
+			testUpdateTodoCountsCommand,
+			testUpdateCompletedFlagCommand
+		]);
+		process(store)({ label: 'label-1' });
+		process(store)({ label: 'label-2' });
+		const todos = store.get(store.path('todos'));
+		const todoCount = store.get(store.path('todoCount'));
+		const completedCount = store.get(store.path('completedCount'));
+		assert.strictEqual(Object.keys(todos).length, 2);
+		assert.strictEqual(todoCount, 2);
+		assert.strictEqual(completedCount, 0);
 	});
 
 	it('processes wait for asynchronous commands to complete before continuing', () => {
