@@ -3,11 +3,11 @@ const { describe, it } = intern.getInterface('bdd');
 import * as sinon from 'sinon';
 import NodeHandler from '../../../../src/widget-core/NodeHandler';
 import WidgetBase from '../../../../src/widget-core/WidgetBase';
-import Build from '../../../../src/widget-core/meta/Build';
+import Block from '../../../../src/widget-core/meta/Block';
 
 let bindInstance = new WidgetBase();
 
-describe('Build Meta', () => {
+describe('Block Meta', () => {
 	it('Should resolve module result when async', () => {
 		let resolverOne: any;
 		let resolverTwo: any;
@@ -29,7 +29,7 @@ describe('Build Meta', () => {
 			return promiseTwo as any;
 		}
 
-		const meta = new Build({
+		const meta = new Block({
 			invalidate,
 			nodeHandler,
 			bind: bindInstance
@@ -59,7 +59,7 @@ describe('Build Meta', () => {
 			return 'sync';
 		}
 
-		const meta = new Build({
+		const meta = new Block({
 			invalidate,
 			nodeHandler,
 			bind: bindInstance

@@ -3,7 +3,7 @@ import Map from '../../shim/Map';
 import WeakMap from '../../shim/WeakMap';
 import { WidgetMetaProperties, MetaBase } from '../interfaces';
 
-export class Build extends Destroyable implements MetaBase {
+export class Block extends Destroyable implements MetaBase {
 	private _moduleMap = new WeakMap<Function, any>();
 	private _invalidate: () => void;
 
@@ -42,4 +42,4 @@ export class Build extends Destroyable implements MetaBase {
 	}
 }
 
-export default Build;
+export default Block;
