@@ -45,12 +45,9 @@ We have additional packages within the Dojo ecosystem to aid in quickly and easi
 
 There are several packages which are designed to support the Dojo platform.  Generally these packages are not directly used by end developers:
 
-* [`dojo/dojo2-package-template`](https://github.com/dojo/dojo2-package-template) - The standard template for Dojo packages, including build and packaging templates
-* [`dojo/grunt-dojo2`](https://github.com/dojo/grunt-dojo2) - A set of Grunt tasks for use with Dojo packages.
-* [`dojo/grunt-dojo2-extras`](https://github.com/dojo/grunt-dojo2-extras) - Additional tasks and code supporting continuous delivery with Dojo packages.
 * [`dojo/scripts`](https://github.com/dojo/scripts) - A package of scripts to aid with Dojo package development.
 * [`dojo/webpack-contrib`](https://github.com/dojo/webpack-contrib) - Specialized webpack loaders and plugins used by the Dojo toolchain.
-* [`dojo/web-editor`](https://github.com/dojo/web-editor) - A web editor that can run projects exported from `cli-export-project`
+
 
 ## Migrating Versions
 
