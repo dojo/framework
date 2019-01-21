@@ -2683,6 +2683,66 @@ jsdomDescribe('vdom', () => {
 				assert.strictEqual((root.childNodes[2].childNodes[0] as Text).data, 'Item 3');
 				document.body.removeChild(iframe);
 			});
+
+			it('should render in the correct order when inserting a node between nodes that already exist on a merge', () => {
+				class Header extends WidgetBase {
+					render() {
+						return v('header', { id: 'header' });
+					}
+				}
+
+				class Body extends WidgetBase {
+					render() {
+						return v('div', { id: 'my-body' });
+					}
+				}
+
+				class Footer extends WidgetBase {
+					render() {
+						return v('footer', { id: 'footer' }, [v('span', ['span'])]);
+					}
+				}
+
+				class MyRendererWidget extends WidgetBase<any> {
+					render() {
+						return this.properties.renderer();
+					}
+				}
+
+				class App extends WidgetBase {
+					render() {
+						return v('div', [
+							w(Header, {}),
+							w(MyRendererWidget, {
+								renderer: () => {
+									return w(Body, {});
+								}
+							}),
+							w(Footer, {})
+						]);
+					}
+				}
+
+				const div = document.createElement('div');
+				const header = document.createElement('header');
+				const root = document.createElement('div');
+				header.id = 'header';
+				const footer = document.createElement('footer');
+				const footerChild = document.createElement('span');
+				const footerText = document.createTextNode('span');
+				footerChild.appendChild(footerText);
+				footer.appendChild(footerChild);
+				footer.id = 'footer';
+				div.appendChild(root);
+				root.appendChild(header);
+				root.appendChild(footer);
+				const r = renderer(() => w(App, {}));
+				r.mount({ domNode: div });
+				assert.strictEqual(
+					div.outerHTML,
+					'<div><div><header id="header"></header><div id="my-body"></div><footer id="footer"><span>span</span></footer></div></div>'
+				);
+			});
 		});
 	});
 
