@@ -147,6 +147,8 @@ export function getProcess(id: string) {
 	return processMap.get(id);
 }
 
+const proxyError = 'State updates are not available on legacy browsers';
+
 export function processExecutor<T = any, P extends object = DefaultPayload>(
 	id: string,
 	commands: Commands<T, P>,
@@ -253,7 +255,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 						payload,
 						get state() {
 							if (typeof Proxy === 'undefined') {
-								throw new Error('State updates are not available on legacy browsers');
+								throw new Error(proxyError);
 							}
 
 							return state;
@@ -290,6 +292,9 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 				command = commandsCopy.shift();
 			}
 		} catch (e) {
+			if (e.message === proxyError) {
+				throw e;
+			}
 			error = { error: e, command };
 		}
 
