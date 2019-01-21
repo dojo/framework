@@ -2683,6 +2683,38 @@ jsdomDescribe('vdom', () => {
 				assert.strictEqual((root.childNodes[2].childNodes[0] as Text).data, 'Item 3');
 				document.body.removeChild(iframe);
 			});
+
+			it('should render in the correct order when inserting a node between nodes that already exist on a merge', () => {
+				class App extends WidgetBase {
+					render() {
+						return v('div', [
+							v('header', { id: 'header' }),
+							v('div', { id: 'my-body' }),
+							v('footer', { id: 'footer' }, [v('span', ['span'])])
+						]);
+					}
+				}
+
+				const div = document.createElement('div');
+				const header = document.createElement('header');
+				const root = document.createElement('div');
+				header.id = 'header';
+				const footer = document.createElement('footer');
+				const footerChild = document.createElement('span');
+				const footerText = document.createTextNode('span');
+				footerChild.appendChild(footerText);
+				footer.appendChild(footerChild);
+				footer.id = 'footer';
+				div.appendChild(root);
+				root.appendChild(header);
+				root.appendChild(footer);
+				const r = renderer(() => w(App, {}));
+				r.mount({ domNode: div });
+				assert.strictEqual(
+					div.outerHTML,
+					'<div><div><header id="header"></header><div id="my-body"></div><footer id="footer"><span>span</span></footer></div></div>'
+				);
+			});
 		});
 	});
 
