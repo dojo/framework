@@ -149,10 +149,8 @@ async function assertProxyError(test: () => void) {
 		if (typeof Proxy === 'undefined') {
 			assert.exists(error, 'Should have thrown an error accessing the state proxy in a browser without proxies');
 			assert.equal(error!.message, 'State updates are not available on legacy browsers');
-		} else {
-			if (error) {
-				throw error;
-			}
+		} else if (error) {
+			throw error;
 		}
 	}
 }
@@ -175,36 +173,44 @@ describe('process', () => {
 	});
 
 	it('handles commands modifying the state proxy directly', async () => {
-		await assertProxyError(() => {
+		await assertProxyError(async () => {
 			const process = createProcess('test', [
 				[testProxyCommandFactory('foo')],
 				testProxyCommandFactory('foo', 'bar')
 			]);
 			const processExecutor = process(store);
-			processExecutor({});
-			const foo = store.get(store.path('foo'));
-			const foobar = store.get(store.path('foo', 'bar'));
-			assert.deepEqual(foo, { bar: 'foo/bar' });
-			assert.strictEqual(foobar, 'foo/bar');
+			const promise = processExecutor({});
+
+			if (typeof Proxy !== 'undefined') {
+				const foo = store.get(store.path('foo'));
+				const foobar = store.get(store.path('foo', 'bar'));
+				assert.deepEqual(foo, { bar: 'foo/bar' });
+				assert.strictEqual(foobar, 'foo/bar');
+			} else {
+				await promise;
+			}
 		});
 	});
 
 	it('Can set a proxied property to itself', async () => {
-		await assertProxyError(() => {
+		await assertProxyError(async () => {
 			const process = createProcess('test', [
 				testSetCurrentTodo,
 				testSelfAssignment,
 				testUpdateTodoCountsCommand,
 				testUpdateCompletedFlagCommand
 			]);
-			process(store)({ label: 'label-1' });
-			process(store)({ label: 'label-2' });
-			const todos = store.get(store.path('todos'));
-			const todoCount = store.get(store.path('todoCount'));
-			const completedCount = store.get(store.path('completedCount'));
-			assert.strictEqual(Object.keys(todos).length, 2);
-			assert.strictEqual(todoCount, 2);
-			assert.strictEqual(completedCount, 0);
+			const promises = [process(store)({ label: 'label-1' }), process(store)({ label: 'label-2' })];
+			if (typeof Proxy !== 'undefined') {
+				const todos = store.get(store.path('todos'));
+				const todoCount = store.get(store.path('todoCount'));
+				const completedCount = store.get(store.path('completedCount'));
+				assert.strictEqual(Object.keys(todos).length, 2);
+				assert.strictEqual(todoCount, 2);
+				assert.strictEqual(completedCount, 0);
+			} else {
+				await Promise.all(promises);
+			}
 		});
 	});
 
@@ -257,10 +263,15 @@ describe('process', () => {
 			const processExecutor = process(store);
 			const promise = processExecutor({});
 
-			let foo = store.get(store.path('foo'));
-			let bar = store.get(store.path('bar'));
-			assert.strictEqual(foo, 'foo');
-			assert.isUndefined(bar);
+			let foo;
+			let bar;
+
+			if (typeof Proxy !== 'undefined') {
+				foo = store.get(store.path('foo'));
+				bar = store.get(store.path('bar'));
+				assert.strictEqual(foo, 'foo');
+				assert.isUndefined(bar);
+			}
 
 			promiseResolver();
 			await promise;
@@ -274,19 +285,23 @@ describe('process', () => {
 	});
 
 	it('updates the proxy as it is being modified', async () => {
-		await assertProxyError(() => {
+		await assertProxyError(async () => {
 			const process = createProcess('test', [testIterativeProxyCommand]);
 			const processExecutor = process(store);
-			processExecutor({});
+			const promise = processExecutor({});
 
-			const itemCount = store.get(store.path('itemCount'));
-			assert.equal(itemCount, 10);
-			const finalCount = store.get(store.path('finalCount'));
-			assert.equal(finalCount, 9);
-			const items = store.get(store.path('items'));
-			assert.deepEqual(items, [0, 1, 2, 3, 4, { foo: { bar: 'baz' } }, { bar: 'baz' }, 8, 9]);
-			const temp = store.get(store.path('temp'));
-			assert.isUndefined(temp);
+			if (typeof Proxy !== 'undefined') {
+				const itemCount = store.get(store.path('itemCount'));
+				assert.equal(itemCount, 10);
+				const finalCount = store.get(store.path('finalCount'));
+				assert.equal(finalCount, 9);
+				const items = store.get(store.path('items'));
+				assert.deepEqual(items, [0, 1, 2, 3, 4, { foo: { bar: 'baz' } }, { bar: 'baz' }, 8, 9]);
+				const temp = store.get(store.path('temp'));
+				assert.isUndefined(temp);
+			}
+
+			await promise;
 		});
 	});
 
