@@ -2685,40 +2685,12 @@ jsdomDescribe('vdom', () => {
 			});
 
 			it('should render in the correct order when inserting a node between nodes that already exist on a merge', () => {
-				class Header extends WidgetBase {
-					render() {
-						return v('header', { id: 'header' });
-					}
-				}
-
-				class Body extends WidgetBase {
-					render() {
-						return v('div', { id: 'my-body' });
-					}
-				}
-
-				class Footer extends WidgetBase {
-					render() {
-						return v('footer', { id: 'footer' }, [v('span', ['span'])]);
-					}
-				}
-
-				class MyRendererWidget extends WidgetBase<any> {
-					render() {
-						return this.properties.renderer();
-					}
-				}
-
 				class App extends WidgetBase {
 					render() {
 						return v('div', [
-							w(Header, {}),
-							w(MyRendererWidget, {
-								renderer: () => {
-									return w(Body, {});
-								}
-							}),
-							w(Footer, {})
+							v('header', { id: 'header' }),
+							v('div', { id: 'my-body' }),
+							v('footer', { id: 'footer' }, [v('span', ['span'])])
 						]);
 					}
 				}
