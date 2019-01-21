@@ -18,7 +18,7 @@ export interface DefaultPayload {
  */
 export interface CommandRequest<T = any, P extends object = DefaultPayload> extends State<T> {
 	payload: P;
-	state?: T;
+	state: T;
 }
 
 /**
@@ -246,31 +246,33 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 				const commandArray = Array.isArray(command) ? command : [command];
 
 				results = commandArray.map((commandFunction: Command<T, P>) => {
-					if (typeof Proxy !== 'undefined') {
-						let result = commandFunction({
-							at,
-							get,
-							path,
-							payload,
-							state
-						});
+					let result = commandFunction({
+						at,
+						get,
+						path,
+						payload,
+						get state() {
+							if (typeof Proxy === 'undefined') {
+								throw new Error('State updates are not available on legacy browsers');
+							}
 
-						if (isThenable(result)) {
-							return result.then((result) => {
-								result = result ? [...proxyOperations, ...result] : [...proxyOperations];
-								proxyOperations = [];
+							return state;
+						}
+					});
 
-								return result;
-							});
-						} else {
+					if (isThenable(result)) {
+						return result.then((result) => {
 							result = result ? [...proxyOperations, ...result] : [...proxyOperations];
 							proxyOperations = [];
 
 							return result;
-						}
-					}
+						});
+					} else {
+						result = result ? [...proxyOperations, ...result] : [...proxyOperations];
+						proxyOperations = [];
 
-					return commandFunction({ at, get, path, payload }) || [];
+						return result;
+					}
 				});
 				let resolvedResults: PatchOperation[][];
 				if (results.some(isThenable)) {

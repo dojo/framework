@@ -1,6 +1,5 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import Test from 'intern/lib/Test';
 
 import { uuid } from '../../../src/core/util';
 import { Pointer } from './../../../src/stores/state/Pointer';
@@ -140,6 +139,24 @@ const testUpdateTodoCountsCommand = ({ state }: CommandRequest) => {
 	}
 };
 
+async function assertProxyError(test: () => void) {
+	let error: Error | undefined = undefined;
+	try {
+		await test();
+	} catch (ex) {
+		error = ex;
+	} finally {
+		if (typeof Proxy === 'undefined') {
+			assert.exists(error, 'Should have thrown an error accessing the state proxy in a browser without proxies');
+			assert.equal(error!.message, 'State updates are not available on legacy browsers');
+		} else {
+			if (error) {
+				throw error;
+			}
+		}
+	}
+}
+
 describe('process', () => {
 	beforeEach(() => {
 		store = new Store();
@@ -157,40 +174,38 @@ describe('process', () => {
 		assert.strictEqual(foobar, 'foo/bar');
 	});
 
-	it('handles commands modifying the state proxy directly', (test: Test) => {
-		if (typeof Proxy === 'undefined') {
-			test.skip('Proxy updates require Proxy');
-		}
-		const process = createProcess('test', [
-			[testProxyCommandFactory('foo')],
-			testProxyCommandFactory('foo', 'bar')
-		]);
-		const processExecutor = process(store);
-		processExecutor({});
-		const foo = store.get(store.path('foo'));
-		const foobar = store.get(store.path('foo', 'bar'));
-		assert.deepEqual(foo, { bar: 'foo/bar' });
-		assert.strictEqual(foobar, 'foo/bar');
+	it('handles commands modifying the state proxy directly', async () => {
+		await assertProxyError(() => {
+			const process = createProcess('test', [
+				[testProxyCommandFactory('foo')],
+				testProxyCommandFactory('foo', 'bar')
+			]);
+			const processExecutor = process(store);
+			processExecutor({});
+			const foo = store.get(store.path('foo'));
+			const foobar = store.get(store.path('foo', 'bar'));
+			assert.deepEqual(foo, { bar: 'foo/bar' });
+			assert.strictEqual(foobar, 'foo/bar');
+		});
 	});
 
-	it('Can set a proxied property to itself', (test: Test) => {
-		if (typeof Proxy === 'undefined') {
-			test.skip('Proxy updates require Proxy');
-		}
-		const process = createProcess('test', [
-			testSetCurrentTodo,
-			testSelfAssignment,
-			testUpdateTodoCountsCommand,
-			testUpdateCompletedFlagCommand
-		]);
-		process(store)({ label: 'label-1' });
-		process(store)({ label: 'label-2' });
-		const todos = store.get(store.path('todos'));
-		const todoCount = store.get(store.path('todoCount'));
-		const completedCount = store.get(store.path('completedCount'));
-		assert.strictEqual(Object.keys(todos).length, 2);
-		assert.strictEqual(todoCount, 2);
-		assert.strictEqual(completedCount, 0);
+	it('Can set a proxied property to itself', async () => {
+		await assertProxyError(() => {
+			const process = createProcess('test', [
+				testSetCurrentTodo,
+				testSelfAssignment,
+				testUpdateTodoCountsCommand,
+				testUpdateCompletedFlagCommand
+			]);
+			process(store)({ label: 'label-1' });
+			process(store)({ label: 'label-2' });
+			const todos = store.get(store.path('todos'));
+			const todoCount = store.get(store.path('todoCount'));
+			const completedCount = store.get(store.path('completedCount'));
+			assert.strictEqual(Object.keys(todos).length, 2);
+			assert.strictEqual(todoCount, 2);
+			assert.strictEqual(completedCount, 0);
+		});
 	});
 
 	it('processes wait for asynchronous commands to complete before continuing', () => {
@@ -216,66 +231,63 @@ describe('process', () => {
 		});
 	});
 
-	it('does not make updates till async processes that modify the proxy resolve', async (test: Test) => {
-		if (typeof Proxy === 'undefined') {
-			test.skip('Proxy updates require Proxy');
-		}
-		const process = createProcess('test', [testAsyncProxyCommandFactory('foo')]);
-		const processExecutor = process(store);
-		const promise = processExecutor({});
+	it('does not make updates till async processes that modify the proxy resolve', async () => {
+		await assertProxyError(async () => {
+			const process = createProcess('test', [testAsyncProxyCommandFactory('foo')]);
+			const processExecutor = process(store);
+			const promise = processExecutor({});
 
-		let foo = store.get(store.path('foo'));
-		assert.isUndefined(foo);
+			let foo = store.get(store.path('foo'));
+			assert.isUndefined(foo);
 
-		promiseResolver();
-		await promise;
-		foo = store.get(store.path('foo'));
-		assert.equal(foo, 'foo');
+			promiseResolver();
+			await promise;
+			foo = store.get(store.path('foo'));
+			assert.equal(foo, 'foo');
+		});
 	});
 
-	it('waits for asynchronous commands to complete before continuing with proxy updates', async (test: Test) => {
-		if (typeof Proxy === 'undefined') {
-			test.skip('Proxy updates require Proxy');
-		}
-		const process = createProcess('test', [
-			testProxyCommandFactory('foo'),
-			testAsyncProxyCommandFactory('bar'),
-			testProxyCommandFactory('foo', 'bar')
-		]);
-		const processExecutor = process(store);
-		const promise = processExecutor({});
+	it('waits for asynchronous commands to complete before continuing with proxy updates', async () => {
+		await assertProxyError(async () => {
+			const process = createProcess('test', [
+				testProxyCommandFactory('foo'),
+				testAsyncProxyCommandFactory('bar'),
+				testProxyCommandFactory('foo', 'bar')
+			]);
+			const processExecutor = process(store);
+			const promise = processExecutor({});
 
-		let foo = store.get(store.path('foo'));
-		let bar = store.get(store.path('bar'));
-		assert.strictEqual(foo, 'foo');
-		assert.isUndefined(bar);
+			let foo = store.get(store.path('foo'));
+			let bar = store.get(store.path('bar'));
+			assert.strictEqual(foo, 'foo');
+			assert.isUndefined(bar);
 
-		promiseResolver();
-		await promise;
-		foo = store.get(store.path('foo'));
-		bar = store.get(store.path('bar'));
-		const foobar = store.get(store.path('foo', 'bar'));
-		assert.deepEqual(foo, { bar: 'foo/bar' });
-		assert.strictEqual(bar, 'bar');
-		assert.strictEqual(foobar, 'foo/bar');
+			promiseResolver();
+			await promise;
+			foo = store.get(store.path('foo'));
+			bar = store.get(store.path('bar'));
+			const foobar = store.get(store.path('foo', 'bar'));
+			assert.deepEqual(foo, { bar: 'foo/bar' });
+			assert.strictEqual(bar, 'bar');
+			assert.strictEqual(foobar, 'foo/bar');
+		});
 	});
 
-	it('updates the proxy as it is being modified', (test: Test) => {
-		if (typeof Proxy === 'undefined') {
-			test.skip('Proxy updates require Proxy');
-		}
-		const process = createProcess('test', [testIterativeProxyCommand]);
-		const processExecutor = process(store);
-		processExecutor({});
+	it('updates the proxy as it is being modified', async () => {
+		await assertProxyError(() => {
+			const process = createProcess('test', [testIterativeProxyCommand]);
+			const processExecutor = process(store);
+			processExecutor({});
 
-		const itemCount = store.get(store.path('itemCount'));
-		assert.equal(itemCount, 10);
-		const finalCount = store.get(store.path('finalCount'));
-		assert.equal(finalCount, 9);
-		const items = store.get(store.path('items'));
-		assert.deepEqual(items, [0, 1, 2, 3, 4, { foo: { bar: 'baz' } }, { bar: 'baz' }, 8, 9]);
-		const temp = store.get(store.path('temp'));
-		assert.isUndefined(temp);
+			const itemCount = store.get(store.path('itemCount'));
+			assert.equal(itemCount, 10);
+			const finalCount = store.get(store.path('finalCount'));
+			assert.equal(finalCount, 9);
+			const items = store.get(store.path('items'));
+			assert.deepEqual(items, [0, 1, 2, 3, 4, { foo: { bar: 'baz' } }, { bar: 'baz' }, 8, 9]);
+			const temp = store.get(store.path('temp'));
+			assert.isUndefined(temp);
+		});
 	});
 
 	it('support concurrent commands executed synchronously', () => {
