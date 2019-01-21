@@ -381,6 +381,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 	let _instanceToWrapperMap = new WeakMap<WidgetBase, WNodeWrapper>();
 	let _parentWrapperMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	let _wrapperSiblingMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
+	let _insertBeforeMap: undefined | WeakMap<DNodeWrapper, Node> = new WeakMap<DNodeWrapper, Node>();
 	let _renderScheduled: number | undefined;
 	let _afterRenderCallbacks: Function[] = [];
 	let _deferredRenderCallbacks: Function[] = [];
@@ -741,12 +742,13 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			meta: { mergeNodes: arrayFrom(domNode.childNodes) }
 		});
 		_runProcessQueue();
-		_mountOptions.merge = false;
 		let mergedNode: Node | undefined;
 		while ((mergedNode = _allMergedNodes.pop())) {
 			mergedNode.parentNode && mergedNode.parentNode.removeChild(mergedNode);
 		}
 		_runDomInstructionQueue();
+		_mountOptions.merge = false;
+		_insertBeforeMap = undefined;
 		_runCallbacks();
 	}
 
@@ -848,6 +850,8 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 					let insertBefore: any;
 					if (requiresInsertBefore) {
 						insertBefore = findInsertBefore(next);
+					} else if (_insertBeforeMap) {
+						insertBefore = _insertBeforeMap.get(next);
 					}
 					parentDomNode.insertBefore(domNode!, insertBefore);
 					if (isDomVNode(next.node) && next.node.onAttach) {
@@ -1117,6 +1121,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 
 	function _createDom({ next }: CreateDomInstruction): ProcessResult {
 		let mergeNodes: Node[] = [];
+		const parentDomNode = findParentDomNode(next)!;
 		if (!next.domNode) {
 			if ((next.node as any).domNode) {
 				next.domNode = (next.node as any).domNode;
@@ -1132,6 +1137,11 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 					}
 				} else if (next.node.text != null) {
 					next.domNode = global.document.createTextNode(next.node.text);
+				}
+			}
+			if (_insertBeforeMap && _allMergedNodes.length) {
+				if (parentDomNode === _allMergedNodes[0].parentNode) {
+					_insertBeforeMap.set(next, _allMergedNodes[0]);
 				}
 			}
 		} else {
@@ -1152,7 +1162,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		}
 		const dom: ApplicationInstruction = {
 			next: next!,
-			parentDomNode: findParentDomNode(next)!,
+			parentDomNode: parentDomNode,
 			type: 'create'
 		};
 		if (next.childrenWrappers) {
