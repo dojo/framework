@@ -46,7 +46,12 @@
 				"shimPath": "./dist/dev/src/shim/util/amd.js",
 				"packages": [
 					{ "name": "src", "location": "dist/dev/src" },
-					{ "name": "tests", "location": "dist/dev/tests" }
+					{ "name": "tests", "location": "dist/dev/tests" },
+					{
+						"name":  "immutable",
+						"location":  "./node_modules/immutable/dist",
+						"main": "immutable.js"
+					}
 				],
 				"map": {
 					"*": {

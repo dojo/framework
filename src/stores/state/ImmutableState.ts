@@ -88,38 +88,37 @@ export class ImmutableState<T = any> implements MutableState<T> {
 		const stringSegments = segments.filter<string>(isString);
 		const hasMultipleSegments = stringSegments.length > 1;
 		const pointer = new Pointer(hasMultipleSegments ? stringSegments : stringSegments[0] || '');
+		let value = this._state.getIn(pointer.segments);
+
+		if (value instanceof List || value instanceof Map) {
+			value = value.toJS();
+		}
 
 		return {
 			path: pointer.path,
 			state: this._state as any,
-			value: pointer.get(this._state)
+			value
 		};
 	};
 
 	public apply(operations: PatchOperation<T>[]): PatchOperation<T>[] {
 		let undoOperations: PatchOperation<T>[] = [];
 
-		const newState = operations.reduce((state, next) => {
+		const patchedState = operations.reduce((state, next) => {
+			let patchedState;
 			switch (next.op) {
 				case OperationType.ADD:
-					const segments = next.path.segments.slice();
-					const lastSegment = segments.pop();
-					const parent = state.getIn(segments);
-					if (parent instanceof List) {
-						state = state.setIn(segments, parent.insert(lastSegment, next.value));
-					} else {
-						state = state.setIn([...segments, lastSegment], next.value);
-					}
+					patchedState = this.setIn(next.path.segments, next.value, state, true);
 					break;
 				case OperationType.REPLACE:
-					state = state.setIn(next.path.segments, next.value);
+					patchedState = this.setIn(next.path.segments, next.value, state);
 					break;
 				case OperationType.REMOVE:
-					state = state.removeIn(next.path.segments);
+					patchedState = state.removeIn(next.path.segments);
 					break;
 				case OperationType.TEST:
 					const current = state.getIn(next.path.segments);
-					if (current === next.value || (current && current.equals && current.equals(next.value))) {
+					if (!current === next.value && !(current && current.equals && current.equals(next.value))) {
 						const location = next.path.path;
 						throw new Error(`Test operation failure at "${location}".`);
 					}
@@ -128,9 +127,61 @@ export class ImmutableState<T = any> implements MutableState<T> {
 					throw new Error('Unknown operation');
 			}
 			undoOperations = [...inverse(next, state), ...undoOperations];
-			return state;
+			return patchedState;
 		}, this._state);
-		this._state = newState;
+		this._state = patchedState;
 		return undoOperations;
+	}
+
+	private setIn(segments: string[], value: any, state: Map<any, any>, add = false) {
+		const updated = this.set(segments, value, state, add);
+		if (updated) {
+			return updated;
+		}
+
+		state = state.withMutations((map) => {
+			segments.slice(0, segments.length - 1).forEach((segment, index) => {
+				let nextSegment = '';
+				if (index + 1 < segments.length) {
+					nextSegment = segments[index + 1];
+				}
+				const value = state.getIn([...segments.slice(0, index), segment]);
+				if (!value || !(value instanceof List || value instanceof Map)) {
+					if (!isNaN(parseInt(nextSegment, 10))) {
+						map = map.setIn([...segments.slice(0, index), segment], List());
+					} else {
+						map = map.setIn([...segments.slice(0, index), segment], Map());
+					}
+				}
+			});
+		});
+
+		return this.set(segments, value, state, add) || state;
+	}
+
+	private set(segments: string[], value: any, state: Map<any, any>, add = false) {
+		if (typeof value === 'object' && value != null) {
+			if (Array.isArray(value)) {
+				value = List(value);
+			} else {
+				value = Map(value);
+			}
+		}
+		segments = segments.slice();
+		const allSegments = segments.slice();
+		const lastSegment = segments.pop();
+		const parent = state.getIn(segments);
+
+		if (parent instanceof List && add) {
+			state = state.setIn(segments, parent.insert(lastSegment, value));
+
+			return state;
+		} else if (parent instanceof Map || parent instanceof List) {
+			state = state.setIn(allSegments, value);
+
+			return state;
+		}
+
+		return false;
 	}
 }

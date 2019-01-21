@@ -209,6 +209,7 @@ export class Store<T = any> extends Evented implements MutableState<T> {
 		super();
 		if (options && options.state) {
 			this._state = options.state;
+			this.path = this._state.path.bind(this._state);
 		}
 	}
 
@@ -263,7 +264,10 @@ export class Store<T = any> extends Evented implements MutableState<T> {
 		const callbackIdsCalled: number[] = [];
 		this._changePaths.forEach((value: OnChangeValue, path: string) => {
 			const { previousValue, callbacks } = value;
-			const newValue = new Pointer(path).get(this._state);
+			const pointer = new Pointer(path);
+			const newValue = pointer.segments.length
+				? this._state.path(pointer.segments[0] as keyof T, ...pointer.segments.slice(1)).value
+				: undefined;
 			if (previousValue !== newValue) {
 				this._changePaths.set(path, { callbacks, previousValue: newValue });
 				callbacks.forEach((callbackItem) => {

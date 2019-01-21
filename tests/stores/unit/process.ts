@@ -1,6 +1,8 @@
+import { ImmutableState } from '../../../src/stores/state/ImmutableState';
+
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-const { registerSuite } = intern.getPlugin('interface.benchmark');
+// const { registerSuite } = intern.getPlugin('interface.benchmark');
 // import Test from 'intern/lib/Test';
 
 import { uuid } from '../../../src/core/util';
@@ -159,7 +161,7 @@ async function assertProxyError(test: () => void) {
 
 describe('process', () => {
 	beforeEach(() => {
-		store = new Store();
+		store = new Store({ state: new ImmutableState() });
 		promises = [];
 		promiseResolvers = [];
 	});
@@ -789,27 +791,29 @@ describe('process', () => {
 	});
 });
 
-const performanceTestStore = new Store();
-const operations: PatchOperation[] = [];
-for (let i = 0; i < 100; i++) {
-	operations.push({ op: OperationType.ADD, path: new Pointer(`/${i}`), value: {} });
-	for (let j = 0; j < 50; j++) {
-		operations.push({ op: OperationType.ADD, path: new Pointer(`/${i}/${j}`), value: {} });
-		for (let k = 0; k < 10; k++) {
-			operations.push({ op: OperationType.ADD, path: new Pointer(`/${i}/${j}/${k}`), value: k });
-		}
-	}
-}
-console.time('buildstore');
-performanceTestStore.apply(operations);
-console.timeEnd('buildstore');
-registerSuite('Normal performance', {
-	'update values'() {
-		const process = createProcess('test', [testCommandFactory('foo'), testCommandFactory('foo/bar')]);
-		const processExecutor = process(performanceTestStore);
-		processExecutor({});
-	}
-});
+// const performanceTestStore = new Store({
+// 	state: new ImmutableState()
+// });
+// const operations: PatchOperation[] = [];
+// for (let i = 0; i < 100; i++) {
+// 	operations.push({ op: OperationType.ADD, path: new Pointer(`/${i}`), value: {} });
+// 	for (let j = 0; j < 50; j++) {
+// 		operations.push({ op: OperationType.ADD, path: new Pointer(`/${i}/${j}`), value: {} });
+// 		for (let k = 0; k < 10; k++) {
+// 			operations.push({ op: OperationType.ADD, path: new Pointer(`/${i}/${j}/${k}`), value: k });
+// 		}
+// 	}
+// }
+// console.time('buildstore');
+// performanceTestStore.apply(operations);
+// console.timeEnd('buildstore');
+// registerSuite('Normal performance', {
+// 	'update values'() {
+// 		const process = createProcess('test', [testCommandFactory('foo'), testCommandFactory('foo/bar')]);
+// 		const processExecutor = process(performanceTestStore);
+// 		processExecutor({});
+// 	}
+// });
 
 // registerSuite('Proxy performance', {
 // 	beforeEach() {
