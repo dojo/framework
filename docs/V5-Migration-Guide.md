@@ -25,13 +25,13 @@ If you are upgrading from a version before 4.0.0, please see the [previous migra
 
 #### [`has` module consolidation](https://github.com/dojo/framework/pull/182)
 
-Part of the cleanup started with the 3.0 consolidation of packages into `@dojo/framework`, this release of Dojo moves all the `has` related modules in a single `has` module, `@dojo/framework/has/has`. If you run the `dojo/cli-upgrade-app` command all references to removed has modules should be automatically updated.
+Building on the cleanup started with the 3.0 consolidation of packages into `@dojo/framework`, this release of Dojo moves all `has` related modules in a single `has` module, `@dojo/framework/has/has`. If you run the `dojo/cli-upgrade-app` command all references to removed `has` modules should be automatically updated.
 
 #### [`classes` property with the `Themed` mixin](https://github.com/dojo/framework/pull/164)
 
 A new API that supports passing classes keyed by a widgets theme key is now available for all widgets that use the `@dojo/framework/widget-core/meta/Themed` mixin.
 
-This is not a traditional breaking changes as it will only affect themed widgets that have a `classes` property specified on its API.
+This is not a traditional breaking change as it will only affect themed widgets that have a `classes` property specified on its API.
 
 #### [Support for `before` middleware in stores](https://github.com/dojo/framework/pull/173)
 
@@ -93,5 +93,5 @@ const myProcess = createProcess('process', [myCommand], [myMiddlewareOne, myMidd
 
 A new base interface is used by the `meta` method on `WidgetBase`. It is unlikely that this change will impact most application code bases.
 
-However when upgrading to Dojo 5 you experience compilation errors related to `WidgetMetaBase` it is likely that you will need to switch this interface out for the new base, `MetaBase` from `@dojo/framework/interfaces`.
+However, when upgrading to Dojo 5, if you experience compilation errors related to `WidgetMetaBase` you will likely need to switch this interface with the new base, `MetaBase`, from `@dojo/framework/interfaces`.
 
