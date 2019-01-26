@@ -172,6 +172,31 @@ describe('process', () => {
 		assert.strictEqual(foobar, 'foo/bar');
 	});
 
+	it('should handle optional properties for updates', () => {
+		type StateType = { a?: { b?: string }; foo?: number; bar: string };
+		const createCommand = createCommandFactory<StateType>();
+
+		createProcess('test', [
+			createCommand(({ path }) => [
+				{
+					op: OperationType.ADD,
+					path: new Pointer(path('foo').path),
+					value: 3
+				}
+			]),
+			createCommand(({ path }) => [
+				{
+					op: OperationType.ADD,
+					path: new Pointer(path('a', 'b').path),
+					value: 'foo'
+				}
+			])
+		])(store)({});
+
+		assert.equal(store.get(store.path('a', 'b')), 'foo');
+		assert.equal(store.get(store.path('foo')), 3);
+	});
+
 	it('handles commands modifying the state proxy directly', async () => {
 		await assertProxyError(async () => {
 			const process = createProcess('test', [
