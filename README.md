@@ -59,6 +59,10 @@ See the [v3 migration guide](./docs/V3-Migration-Guide.md) for details on upgrad
 
 See the [v4 migration guide](./docs/V4-Migration-Guide.md) for details on upgrading from version 3.x to version 4.x.
 
+### Version 4.x to 5.x Migration Guide
+
+See the [v5 migration guide](./docs/V5-Migration-Guide.md) for details on upgrading from version 4.x to version 5.x.
+
 ### Examples
 
 We have added a repository of examples which have been built on Dojo.  Those examples are available
@@ -87,6 +91,7 @@ TypeScript and Dojo both iterate rapidly. In general Dojo strives for maximum co
 |-------|---------|-------------|
 |3.0|2.6.x|2.6.x|
 |4.0|2.6.x|3.1.x|
+|5.0|2.6.x|3.2.x|
 
 ## Licensing information
 
