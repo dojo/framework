@@ -27,6 +27,9 @@ export class Block extends Destroyable implements MetaBase {
 
 			valueMap.set(argsString, null);
 			const result = module(...args);
+			if (!result) {
+				return null;
+			}
 			if (typeof result.then === 'function') {
 				result.then((result: any) => {
 					valueMap.set(argsString, result);

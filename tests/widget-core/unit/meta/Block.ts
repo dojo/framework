@@ -70,4 +70,22 @@ describe('Block Meta', () => {
 		resultOne = meta.run(testModule)('test');
 		assert.strictEqual(resultOne, 'sync');
 	});
+
+	it('Should return null if module does not return a result', () => {
+		const invalidate = sinon.stub();
+		const nodeHandler = new NodeHandler();
+
+		function testModule(a: string) {
+			return undefined;
+		}
+
+		const meta = new Block({
+			invalidate,
+			nodeHandler,
+			bind: bindInstance
+		});
+
+		let result = meta.run(testModule)('test');
+		assert.isNull(result);
+	});
 });
