@@ -71,7 +71,7 @@ describe('Block Meta', () => {
 		assert.strictEqual(resultOne, 'sync');
 	});
 
-	it('Should return null if module does not return a result', () => {
+	it('Should return result value if module does not return a promise', () => {
 		const invalidate = sinon.stub();
 		const nodeHandler = new NodeHandler();
 
@@ -86,6 +86,6 @@ describe('Block Meta', () => {
 		});
 
 		let result = meta.run(testModule)('test');
-		assert.isNull(result);
+		assert.isUndefined(result);
 	});
 });
