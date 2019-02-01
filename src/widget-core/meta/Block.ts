@@ -18,7 +18,7 @@ export class Block extends Destroyable implements MetaBase {
 			let valueMap = this._moduleMap.get(module);
 			if (valueMap) {
 				const cachedValue = valueMap.get(argsString);
-				if (cachedValue) {
+				if (cachedValue !== undefined) {
 					return cachedValue;
 				}
 			}
