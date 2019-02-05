@@ -8,6 +8,7 @@ import {
 import { Pointer } from './Pointer';
 import { MutableState, Path, State } from '../Store';
 import { Map, List } from 'immutable';
+import { getFriendlyDifferenceMessage, isEqual } from './compare';
 
 function isString(segment?: string): segment is string {
 	return typeof segment === 'string';
@@ -118,9 +119,15 @@ export class ImmutableState<T = any> implements MutableState<T> {
 					break;
 				case OperationType.TEST:
 					const current = state.getIn(next.path.segments);
-					if (!current === next.value && !(current && current.equals && current.equals(next.value))) {
+					const currentValue = current && current.toJS ? current.toJS() : current;
+					if (!isEqual(currentValue, next.value)) {
 						const location = next.path.path;
-						throw new Error(`Test operation failure at "${location}".`);
+						throw new Error(
+							`Test operation failure at "${location}". ${getFriendlyDifferenceMessage(
+								next.value,
+								currentValue
+							)}.`
+						);
 					}
 					return state;
 				default:

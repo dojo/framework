@@ -6,7 +6,7 @@ import { Pointer } from '../../../../src/stores/state/Pointer';
 import { OperationType } from '../../../../src/stores/state/Patch';
 import * as ops from './../../../../src/stores/state/operations';
 
-describe('state/Patch', () => {
+describe('state/ImmutableState', () => {
 	describe('add', () => {
 		it('value to new path', () => {
 			const state = new ImmutableState();
@@ -107,7 +107,7 @@ describe('state/Patch', () => {
 			const state = new ImmutableState();
 			state.apply([ops.add({ path: '/test', state: null, value: null }, true)]);
 			const result = state.apply([ops.remove({ path: '/test', state: null, value: null })]);
-			assert.deepEqual(state.path('/test'), undefined);
+			assert.deepEqual(state.path('/test').value, undefined);
 			assert.deepEqual(result, [{ op: OperationType.ADD, path: new Pointer('/test'), value: true }]);
 		});
 
@@ -156,7 +156,7 @@ describe('state/Patch', () => {
 
 		it('nested path failure', () => {
 			const state = new ImmutableState();
-			state.apply([ops.add({ path: '/foo/0/bar/baz', state: null, value: null }, { thing: 'one' })]);
+			state.apply([ops.add({ path: '/foo/0/bar/baz', state: null, value: null }, { thing: 'two' })]);
 			assert.throws(
 				() => {
 					state.apply([ops.test({ path: '/foo/0/bar/baz', state: null, value: null }, { thing: 'one' })]);

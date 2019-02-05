@@ -220,7 +220,7 @@ and will immediately throw an error.
 function calculateCountsCommand = createCommand(({ state }) => {
 	const todos = state.todos;
 	const completedTodos = todos.filter((todo: any) => todo.completed);
-	
+
 	state.activeCount = todos.length - completedTodos.length;
 	state.completedCount = completedTodos.length;
 });
