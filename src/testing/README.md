@@ -281,9 +281,7 @@ class NumberWidget extends WidgetBase<{ num?: number }> {
 	protected render() {
 		const { num } = this.properties;
 		const message = num === undefined ? 'no number passed' : `the number ${num}`;
-		return v('div', [
-			v('span', [ message ])
-		]);
+		return v('div', [v('span', [message])]);
 	}
 }
 ```
@@ -311,7 +309,7 @@ now lets see how we'd test the output when the `num` property is passed to the `
 
 ```ts
 it('should render the number when a number is passed as a property', () => {
-	const numberAssertion = baseAssertion.setChildren('~message', [ 'the number 5' ]);
+	const numberAssertion = baseAssertion.setChildren('~message', ['the number 5']);
 	const h = harness(() => w(NumberWidget, { num: 5 }));
 	h.expect(numberAssertion);
 });
@@ -327,5 +325,3 @@ setProperty(selector: string, property: string, value: any): AssertionTemplateRe
 getChildren(selector: string): DNode[];
 getProperty(selector: string, property: string): any;
 ```
-
-
