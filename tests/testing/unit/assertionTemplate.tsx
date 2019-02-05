@@ -4,6 +4,7 @@ const { assert } = intern.getPlugin('chai');
 import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { v, w } from '../../../src/widget-core/d';
+import { tsx } from '../../../src/widget-core/tsx';
 import assertionTemplate from '../../../src/testing/assertionTemplate';
 
 class MyWidget extends WidgetBase<{
@@ -37,6 +38,19 @@ const baseAssertion = assertionTemplate(() =>
 		v('ul', [v('li', { '~key': 'li-one', foo: 'a' }, ['one']), v('li', ['two']), v('li', ['three'])])
 	])
 );
+
+const tsxAssertion = assertionTemplate(() => (
+	<div classes={['root']}>
+		<h2>hello</h2>
+		<ul>
+			<li assertion-key="li-one" foo="a">
+				one
+			</li>
+			<li>two</li>
+			<li>three</li>
+		</ul>
+	</div>
+));
 
 describe('assertionTemplate', () => {
 	it('can get a property', () => {
@@ -82,5 +96,11 @@ describe('assertionTemplate', () => {
 		const h = harness(() => w(MyWidget, { appendChild: true }));
 		const childAssertion = baseAssertion.setChildren('~header', ['append'], 'append');
 		h.expect(childAssertion);
+	});
+
+	it('can be used with tsx', () => {
+		const h = harness(() => <MyWidget toggleProperty={true} />);
+		const propertyAssertion = tsxAssertion.setProperty('~li-one', 'foo', 'b');
+		h.expect(propertyAssertion);
 	});
 });
