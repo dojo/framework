@@ -36,21 +36,23 @@ export const DOMVNODE = '__DOMVNODE_TYPE';
 export function isWNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface>(
 	child: DNode<W> | any
 ): child is WNode<W> {
-	return Boolean(child && typeof child !== 'string' && child.type === WNODE);
+	return Boolean(child && child !== true && typeof child !== 'string' && child.type === WNODE);
 }
 
 /**
  * Helper function that returns true if the `DNode` is a `VNode` using the `type` property
  */
 export function isVNode(child: DNode): child is VNode {
-	return Boolean(child && typeof child !== 'string' && (child.type === VNODE || child.type === DOMVNODE));
+	return Boolean(
+		child && child !== true && typeof child !== 'string' && (child.type === VNODE || child.type === DOMVNODE)
+	);
 }
 
 /**
  * Helper function that returns true if the `DNode` is a `VNode` created with `dom()` using the `type` property
  */
 export function isDomVNode(child: DNode): child is DomVNode {
-	return Boolean(child && typeof child !== 'string' && child.type === DOMVNODE);
+	return Boolean(child && child !== true && typeof child !== 'string' && child.type === DOMVNODE);
 }
 
 export function isElementNode(value: any): value is Element {
@@ -126,7 +128,7 @@ export function decorate(
 	}
 	while (nodes.length) {
 		const node = nodes.shift();
-		if (node) {
+		if (node && node !== true) {
 			if (!shallow && (isWNode(node) || isVNode(node)) && node.children) {
 				nodes = [...nodes, ...node.children];
 			}

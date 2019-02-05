@@ -853,7 +853,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(textNodeThree.data, '3');
 		});
 
-		it('supports null and undefined return from render', () => {
+		it('supports null, undefined and false return from render', () => {
 			class Foo extends WidgetBase {
 				render() {
 					return null;
@@ -866,9 +866,15 @@ jsdomDescribe('vdom', () => {
 				}
 			}
 
+			class Qux extends WidgetBase {
+				render() {
+					return false;
+				}
+			}
+
 			class Baz extends WidgetBase {
 				render() {
-					return v('div', [w(Foo, {}), w(Bar, {})]);
+					return v('div', [w(Foo, {}), w(Bar, {}), w(Qux, {})]);
 				}
 			}
 
@@ -3024,14 +3030,14 @@ jsdomDescribe('vdom', () => {
 				assert.strictEqual(div.className, '');
 			});
 
-			it('should accept null as a class', () => {
-				const [Widget] = getWidget(v('div', { classes: null }));
+			it('should accept falsy as a class', () => {
+				const [Widget] = getWidget(v('div', { classes: ['my-class', null, undefined, false, 'other'] }));
 				const div = document.createElement('div');
 				const root = document.createElement('div');
 				root.appendChild(div);
 				const r = renderer(() => w(Widget, {}));
 				r.mount({ domNode: root, sync: true });
-				assert.strictEqual(div.className, '');
+				assert.strictEqual(div.className, 'my-class other');
 			});
 
 			it('can add and remove multiple classes in IE11', () => {
