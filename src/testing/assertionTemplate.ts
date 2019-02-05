@@ -11,10 +11,15 @@ export interface AssertionTemplateResult {
 }
 
 const findOne = (nodes: DNode | DNode[], selector: string): DNode | undefined => {
+	let finalSelector = selector;
 	if (selector.indexOf('~') === 0) {
-		selector = `[\\~key='${selector.substr(1)}']`;
+		finalSelector = `[\\~key='${selector.substr(1)}']`;
 	}
-	const [node] = select(selector, nodes);
+	let [node] = select(finalSelector, nodes);
+	if (!node) {
+		finalSelector = `[assertion-key='${selector.substr(1)}']`;
+		[node] = select(finalSelector, nodes);
+	}
 	return node;
 };
 
@@ -36,6 +41,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		decorate(render, (node) => {
 			if (isWNode(node) || isVNode(node)) {
 				delete (node as NodeWithProperties).properties['~key'];
+				delete (node as NodeWithProperties).properties['assertion-key'];
 			}
 		});
 		return render;
