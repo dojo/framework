@@ -4,7 +4,7 @@ import { VNode, WNode, DNode } from '../widget-core/interfaces';
 
 export interface AssertionTemplateResult {
 	(): DNode | DNode[];
-	setChildren(selector: string, children: DNode[]): AssertionTemplateResult;
+	setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
 	setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
 	getChildren(selector: string): DNode[];
 	getProperty(selector: string, property: string): any;
@@ -46,10 +46,25 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		node.properties[property] = value;
 		return assertionTemplate(() => render);
 	};
-	assertionTemplateResult.setChildren = (selector: string, children: DNode[]) => {
+	assertionTemplateResult.setChildren = (
+		selector: string,
+		children: DNode[],
+		type: 'prepend' | 'replace' | 'append' = 'replace'
+	) => {
 		const render = renderFunc();
 		const node = guard(findOne(render, selector));
-		node.children = children;
+		node.children = node.children || [];
+		switch (type) {
+			case 'prepend':
+				node.children = [...children, ...node.children];
+				break;
+			case 'append':
+				node.children = [...node.children, ...children];
+				break;
+			case 'replace':
+				node.children = [...children];
+				break;
+		}
 		return assertionTemplate(() => render);
 	};
 	assertionTemplateResult.getProperty = (selector: string, property: string) => {

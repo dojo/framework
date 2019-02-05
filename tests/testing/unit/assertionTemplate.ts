@@ -6,11 +6,26 @@ import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { v, w } from '../../../src/widget-core/d';
 import assertionTemplate from '../../../src/testing/assertionTemplate';
 
-class MyWidget extends WidgetBase<{ toggleProperty?: boolean; toggleChild?: boolean }> {
+class MyWidget extends WidgetBase<{
+	toggleProperty?: boolean;
+	prependChild?: boolean;
+	appendChild?: boolean;
+	replaceChild?: boolean;
+}> {
 	render() {
-		const { toggleProperty, toggleChild } = this.properties;
+		const { toggleProperty, prependChild, appendChild, replaceChild } = this.properties;
+		let children = ['hello'];
+		if (prependChild) {
+			children = ['prepend', ...children];
+		}
+		if (appendChild) {
+			children = [...children, 'append'];
+		}
+		if (replaceChild) {
+			children = ['replace'];
+		}
 		return v('div', { classes: ['root'] }, [
-			v('h2', [toggleChild ? 'world' : 'hello']),
+			v('h2', children),
 			v('ul', [v('li', { foo: toggleProperty ? 'b' : 'a' }, ['one']), v('li', ['two']), v('li', ['three'])])
 		]);
 	}
@@ -46,8 +61,26 @@ describe('assertionTemplate', () => {
 	});
 
 	it('can set a child', () => {
-		const h = harness(() => w(MyWidget, { toggleChild: true }));
-		const childAssertion = baseAssertion.setChildren('~header', ['world']);
+		const h = harness(() => w(MyWidget, { replaceChild: true }));
+		const childAssertion = baseAssertion.setChildren('~header', ['replace']);
+		h.expect(childAssertion);
+	});
+
+	it('can set a child with replace', () => {
+		const h = harness(() => w(MyWidget, { replaceChild: true }));
+		const childAssertion = baseAssertion.setChildren('~header', ['replace'], 'replace');
+		h.expect(childAssertion);
+	});
+
+	it('can set a child with prepend', () => {
+		const h = harness(() => w(MyWidget, { prependChild: true }));
+		const childAssertion = baseAssertion.setChildren('~header', ['prepend'], 'prepend');
+		h.expect(childAssertion);
+	});
+
+	it('can set a child with append', () => {
+		const h = harness(() => w(MyWidget, { appendChild: true }));
+		const childAssertion = baseAssertion.setChildren('~header', ['append'], 'append');
 		h.expect(childAssertion);
 	});
 });
