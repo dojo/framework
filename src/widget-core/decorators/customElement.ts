@@ -11,7 +11,7 @@ export interface CustomElementConfig<P extends object = { [index: string]: any }
 	/**
 	 * The tag of the custom element
 	 */
-	tag: string;
+	tag?: string;
 
 	/**
 	 * List of widget properties to expose as properties on the custom element
@@ -37,22 +37,22 @@ export interface CustomElementConfig<P extends object = { [index: string]: any }
  * This Decorator is provided properties that define the behavior of a custom element, and
  * registers that custom element.
  */
-export function customElement<P extends object = { [index: string]: any }>({
-	tag,
-	properties = [],
-	attributes = [],
-	events = [],
-	childType = CustomElementChildType.DOJO,
-	registryFactory = () => new Registry()
-}: CustomElementConfig<P>) {
+export function customElement<P extends object = { [index: string]: any }>(config: CustomElementConfig<P>) {
+	const defaults = {
+		properties: [],
+		attributes: [],
+		events: [],
+		childType: CustomElementChildType.DOJO,
+		registryFactory: () => new Registry()
+	};
+	const { tag: tagName, ...configRest } = config;
+	const updatedConfig = { ...(tagName ? { tagName } : {}), ...configRest };
+
 	return function<T extends Constructor<any>>(target: T) {
 		target.prototype.__customElementDescriptor = {
-			tagName: tag,
-			attributes,
-			properties,
-			events,
-			childType,
-			registryFactory
+			...defaults,
+			...target.prototype.__customElementDescriptor,
+			...updatedConfig
 		};
 	};
 }

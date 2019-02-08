@@ -15,6 +15,12 @@ function registryFactory() {
 	return {} as any;
 }
 
+@customElement({
+	events: ['onClick2']
+})
+@customElement<CustomElementWidgetProperties>({
+	tag: 'test-element'
+})
 @customElement<CustomElementWidgetProperties>({
 	tag: 'custom-element',
 	attributes: ['key', 'label', 'labelSuffix'],
@@ -27,10 +33,10 @@ export class CustomElementWidget extends WidgetBase<CustomElementWidgetPropertie
 describe('@customElement', () => {
 	it('Should add the descriptor to the widget prototype', () => {
 		assert.deepEqual((CustomElementWidget.prototype as any).__customElementDescriptor, {
-			tagName: 'custom-element',
+			tagName: 'test-element',
 			attributes: ['key', 'label', 'labelSuffix'],
 			properties: ['label'],
-			events: ['onClick'],
+			events: ['onClick2'],
 			childType: CustomElementChildType.DOJO,
 			registryFactory
 		});
