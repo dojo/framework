@@ -48,53 +48,59 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		return render;
 	};
 	assertionTemplateResult.setProperty = (selector: string, property: string, value: any) => {
-		const render = renderFunc();
-		const node = guard(findOne(render, selector));
-		node.properties[property] = value;
-		return assertionTemplate(() => render);
+		return assertionTemplate(() => {
+			const render = renderFunc();
+			const node = guard(findOne(render, selector));
+			node.properties[property] = value;
+			return render;
+		});
 	};
 	assertionTemplateResult.setChildren = (
 		selector: string,
 		children: DNode[],
 		type: 'prepend' | 'replace' | 'append' = 'replace'
 	) => {
-		const render = renderFunc();
-		const node = guard(findOne(render, selector));
-		node.children = node.children || [];
-		switch (type) {
-			case 'prepend':
-				node.children = [...children, ...node.children];
-				break;
-			case 'append':
-				node.children = [...node.children, ...children];
-				break;
-			case 'replace':
-				node.children = [...children];
-				break;
-		}
-		return assertionTemplate(() => render);
+		return assertionTemplate(() => {
+			const render = renderFunc();
+			const node = guard(findOne(render, selector));
+			node.children = node.children || [];
+			switch (type) {
+				case 'prepend':
+					node.children = [...children, ...node.children];
+					break;
+				case 'append':
+					node.children = [...node.children, ...children];
+					break;
+				case 'replace':
+					node.children = [...children];
+					break;
+			}
+			return render;
+		});
 	};
 	assertionTemplateResult.insertChildren = (
 		selector: string,
 		children: DNode[],
 		type: 'before' | 'after' = 'after'
 	) => {
-		const render = renderFunc();
-		const node = guard(findOne(render, selector));
-		const parent = (node as any).parent;
-		const index = parent.children.indexOf(node);
-		let newChildren = [...parent.children];
-		switch (type) {
-			case 'before':
-				newChildren.splice(index, 0, ...children);
-				parent.children = newChildren;
-				break;
-			case 'after':
-				newChildren.splice(index + 1, 0, ...children);
-				parent.children = newChildren;
-				break;
-		}
-		return assertionTemplate(() => render);
+		return assertionTemplate(() => {
+			const render = renderFunc();
+			const node = guard(findOne(render, selector));
+			const parent = (node as any).parent;
+			const index = parent.children.indexOf(node);
+			let newChildren = [...parent.children];
+			switch (type) {
+				case 'before':
+					newChildren.splice(index, 0, ...children);
+					parent.children = newChildren;
+					break;
+				case 'after':
+					newChildren.splice(index + 1, 0, ...children);
+					parent.children = newChildren;
+					break;
+			}
+			return render;
+		});
 	};
 	assertionTemplateResult.getProperty = (selector: string, property: string) => {
 		const render = renderFunc();

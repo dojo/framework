@@ -119,4 +119,24 @@ describe('assertionTemplate', () => {
 		const propertyAssertion = tsxAssertion.setProperty('~li-one', 'foo', 'b');
 		h.expect(propertyAssertion);
 	});
+
+	it('should be immutable', () => {
+		const fooAssertion = baseAssertion
+			.setChildren(':root', ['foo'])
+			.setProperty(':root', 'foo', true)
+			.setProperty(':root', 'bar', false);
+		const barAssertion = fooAssertion
+			.setChildren(':root', ['bar'])
+			.setProperty(':root', 'foo', false)
+			.setProperty(':root', 'bar', true);
+
+		const foo = fooAssertion() as any;
+		const bar = barAssertion() as any;
+		assert.equal(foo!.children[0], 'foo');
+		assert.equal(bar!.children[0], 'bar');
+		assert.equal(foo!.properties.foo, true);
+		assert.equal(foo!.properties.bar, false);
+		assert.equal(bar!.properties.foo, false);
+		assert.equal(bar!.properties.bar, true);
+	});
 });
