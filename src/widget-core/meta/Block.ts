@@ -14,27 +14,25 @@ export class Block extends Destroyable implements MetaBase {
 
 	public run<T extends Function>(module: T): T {
 		const decoratedModule: any = (...args: any[]) => {
-			let valueMap = this._moduleMap.get(module);
-			if (!valueMap) {
-				valueMap = new Map();
-				this._moduleMap.set(module, valueMap);
-			}
 			const argsString = JSON.stringify(args);
-			const value = valueMap.get(argsString);
-			if (value !== undefined) {
-				return value;
+			let valueMap = this._moduleMap.get(module);
+			if (valueMap) {
+				const cachedValue = valueMap.get(argsString);
+				if (cachedValue !== undefined) {
+					return cachedValue;
+				}
 			}
-
-			valueMap.set(argsString, null);
 			const result = module(...args);
-			if (typeof result.then === 'function') {
+			if (result && typeof result.then === 'function') {
 				result.then((result: any) => {
+					if (!valueMap) {
+						valueMap = new Map();
+						this._moduleMap.set(module, valueMap);
+					}
 					valueMap.set(argsString, result);
 					this._invalidate();
 				});
 				return null;
-			} else {
-				valueMap.set(argsString, result);
 			}
 			return result;
 		};
