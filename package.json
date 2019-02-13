@@ -4,7 +4,6 @@
   "description": "The Dojo Framework",
   "directories": {
     "doc": "docs",
-    "example": "examples",
     "test": "tests"
   },
   "scripts": {
@@ -14,12 +13,9 @@
     "build:static:release": "cpx \"src/**/*.d.ts\" dist/release",
     "build:umd": "tsc",
     "build": "npm-run-all -p build:** -s dojo-package",
-    "clean": "rimraf dist dist-examples coverage benchmark-results",
+    "clean": "rimraf dist coverage benchmark-results",
     "dojo-package": "dojo-package",
     "dojo-release": "dojo-release",
-    "examples:routing:tsc": "tsc -p examples/routing/tsconfig.json",
-    "examples:static": "cpx \"examples/**/*.html\" dist-examples",
-    "examples": "npm-run-all build -p examples:**",
     "intern": "intern",
     "lint:tsc": "tslint -p .",
     "lint:prettier": "prettier -l \"{src,tests}/**/*.{ts,tsx}\"",
