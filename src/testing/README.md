@@ -322,7 +322,7 @@ Assertion Template has the following api's:
 ```
 insertBefore(selector: string, children: DNode[]): AssertionTemplateResult;
 insertAfter(selector: string, children: DNode[]): AssertionTemplateResult;
-insertChildren(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
+insertSiblings(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
 append(selector: string, children: DNode[]): AssertionTemplateResult;
 prepend(selector: string, children: DNode[]): AssertionTemplateResult;
 replace(selector: string, children: DNode[]): AssertionTemplateResult;

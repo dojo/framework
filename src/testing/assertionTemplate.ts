@@ -9,7 +9,7 @@ export interface AssertionTemplateResult {
 	replace(selector: string, children: DNode[]): AssertionTemplateResult;
 	insertBefore(selector: string, children: DNode[]): AssertionTemplateResult;
 	insertAfter(selector: string, children: DNode[]): AssertionTemplateResult;
-	insertChildren(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
+	insertSiblings(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
 	setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
 	setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
 	getChildren(selector: string): DNode[];
@@ -93,12 +93,12 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		});
 	};
 	assertionTemplateResult.insertBefore = (selector: string, children: DNode[]) => {
-		return assertionTemplateResult.insertChildren(selector, children, 'before');
+		return assertionTemplateResult.insertSiblings(selector, children, 'before');
 	};
 	assertionTemplateResult.insertAfter = (selector: string, children: DNode[]) => {
-		return assertionTemplateResult.insertChildren(selector, children, 'after');
+		return assertionTemplateResult.insertSiblings(selector, children, 'after');
 	};
-	assertionTemplateResult.insertChildren = (
+	assertionTemplateResult.insertSiblings = (
 		selector: string,
 		children: DNode[],
 		type: 'before' | 'after' = 'after'
