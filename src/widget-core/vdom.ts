@@ -303,7 +303,10 @@ function findIndexOfChild(children: DNodeWrapper[], sameAs: DNodeWrapper, start:
 
 function createClassPropValue(classes: string | string[] = []) {
 	classes = Array.isArray(classes) ? classes : [classes];
-	return classes.join(' ').trim();
+	return classes
+		.filter((className) => className)
+		.join(' ')
+		.trim();
 }
 
 function updateAttribute(domNode: Element, attrName: string, attrValue: string | undefined, namespace?: string) {

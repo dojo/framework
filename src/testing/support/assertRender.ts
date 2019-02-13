@@ -32,7 +32,7 @@ export function formatDNodes(nodes: DNode | DNode[], depth: number = 0): string 
 	}
 	let requiresCarriageReturn = false;
 	let formattedNode = nodes.reduce((result: string, node, index) => {
-		if (!node) {
+		if (!node || node === true) {
 			return result;
 		}
 		if (requiresCarriageReturn) {

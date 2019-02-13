@@ -170,7 +170,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		}
 
 		private _getThemeClass(className: SupportedClassName): SupportedClassName {
-			if (className === undefined || className === null) {
+			if (className === undefined || className === null || className === false) {
 				return className;
 			}
 
