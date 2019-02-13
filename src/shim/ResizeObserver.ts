@@ -1,7 +1,7 @@
 import global from './global';
 import has from '../has/has';
 `!has('build-elide')`;
-import Resize from 'resize-observer-polyfill';
+import * as Resize from 'resize-observer-polyfill';
 
 export interface DOMRectReadOnly {
 	readonly x: number;
@@ -33,7 +33,8 @@ export interface ResizeObserver {
 
 if (!has('build-elide')) {
 	if (!global.ResizeObserver) {
-		global.ResizeObserver = Resize;
+		// default is undefined when UMD module is used
+		global.ResizeObserver = Resize.default || Resize;
 	}
 }
 
