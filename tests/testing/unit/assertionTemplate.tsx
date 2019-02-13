@@ -86,31 +86,31 @@ describe('assertionTemplate', () => {
 
 	it('can set a child with replace', () => {
 		const h = harness(() => w(MyWidget, { replaceChild: true }));
-		const childAssertion = baseAssertion.setChildren('~header', ['replace'], 'replace');
+		const childAssertion = baseAssertion.replace('~header', ['replace']);
 		h.expect(childAssertion);
 	});
 
 	it('can set a child with prepend', () => {
 		const h = harness(() => w(MyWidget, { prependChild: true }));
-		const childAssertion = baseAssertion.setChildren('~header', ['prepend'], 'prepend');
+		const childAssertion = baseAssertion.prepend('~header', ['prepend']);
 		h.expect(childAssertion);
 	});
 
 	it('can set a child with append', () => {
 		const h = harness(() => w(MyWidget, { appendChild: true }));
-		const childAssertion = baseAssertion.setChildren('~header', ['append'], 'append');
+		const childAssertion = baseAssertion.append('~header', ['append']);
 		h.expect(childAssertion);
 	});
 
 	it('can set children after with insert', () => {
 		const h = harness(() => w(MyWidget, { after: true }));
-		const childAssertion = baseAssertion.insertChildren('ul', [v('span', ['after'])]);
+		const childAssertion = baseAssertion.insertAfter('ul', [v('span', ['after'])]);
 		h.expect(childAssertion);
 	});
 
 	it('can set children before with insert', () => {
 		const h = harness(() => w(MyWidget, { before: true }));
-		const childAssertion = baseAssertion.insertChildren('ul', [v('span', ['before'])], 'before');
+		const childAssertion = baseAssertion.insertBefore('ul', [v('span', ['before'])]);
 		h.expect(childAssertion);
 	});
 

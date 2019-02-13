@@ -4,6 +4,12 @@ import { VNode, WNode, DNode } from '../widget-core/interfaces';
 
 export interface AssertionTemplateResult {
 	(): DNode | DNode[];
+	(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
+	append(selector: string, children: DNode[]): AssertionTemplateResult;
+	prepend(selector: string, children: DNode[]): AssertionTemplateResult;
+	replace(selector: string, children: DNode[]): AssertionTemplateResult;
+	insertBefore(selector: string, children: DNode[]): AssertionTemplateResult;
+	insertAfter(selector: string, children: DNode[]): AssertionTemplateResult;
 	insertChildren(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
 	setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
 	setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
@@ -55,6 +61,15 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			return render;
 		});
 	};
+	assertionTemplateResult.append = (selector: string, children: DNode[]) => {
+		return assertionTemplateResult.setChildren(selector, children, 'append');
+	};
+	assertionTemplateResult.prepend = (selector: string, children: DNode[]) => {
+		return assertionTemplateResult.setChildren(selector, children, 'prepend');
+	};
+	assertionTemplateResult.replace = (selector: string, children: DNode[]) => {
+		return assertionTemplateResult.setChildren(selector, children, 'replace');
+	};
 	assertionTemplateResult.setChildren = (
 		selector: string,
 		children: DNode[],
@@ -77,6 +92,12 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			}
 			return render;
 		});
+	};
+	assertionTemplateResult.insertBefore = (selector: string, children: DNode[]) => {
+		return assertionTemplateResult.insertChildren(selector, children, 'before');
+	};
+	assertionTemplateResult.insertAfter = (selector: string, children: DNode[]) => {
+		return assertionTemplateResult.insertChildren(selector, children, 'after');
 	};
 	assertionTemplateResult.insertChildren = (
 		selector: string,
