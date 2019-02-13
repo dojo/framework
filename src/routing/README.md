@@ -342,9 +342,3 @@ render() {
 	]);
 }
 ```
-
-<!-- doc-viewer-config
-{
-	"api": "docs/routing/api.json"
-}
--->

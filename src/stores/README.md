@@ -664,9 +664,3 @@ import { Store } from '@dojo/framework/stores/Store';
 const store = new Store();
 load('my-process', store);
 ```
-
-<!-- doc-viewer-config
-{
-	"api": "docs/stores/api.json"
-}
--->
