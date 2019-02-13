@@ -4,7 +4,6 @@ import { VNode, WNode, DNode } from '../widget-core/interfaces';
 
 export interface AssertionTemplateResult {
 	(): DNode | DNode[];
-	(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
 	append(selector: string, children: DNode[]): AssertionTemplateResult;
 	prepend(selector: string, children: DNode[]): AssertionTemplateResult;
 	replace(selector: string, children: DNode[]): AssertionTemplateResult;
