@@ -104,13 +104,13 @@ describe('assertionTemplate', () => {
 
 	it('can set children after with insert', () => {
 		const h = harness(() => w(MyWidget, { after: true }));
-		const childAssertion = baseAssertion.insert('ul', [v('span', ['after'])]);
+		const childAssertion = baseAssertion.insertChildren('ul', [v('span', ['after'])]);
 		h.expect(childAssertion);
 	});
 
 	it('can set children before with insert', () => {
 		const h = harness(() => w(MyWidget, { before: true }));
-		const childAssertion = baseAssertion.insert('ul', [v('span', ['before'])], 'before');
+		const childAssertion = baseAssertion.insertChildren('ul', [v('span', ['before'])], 'before');
 		h.expect(childAssertion);
 	});
 

@@ -4,7 +4,7 @@ import { VNode, WNode, DNode } from '../widget-core/interfaces';
 
 export interface AssertionTemplateResult {
 	(): DNode | DNode[];
-	insert(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
+	insertChildren(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
 	setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
 	setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
 	getChildren(selector: string): DNode[];
@@ -74,7 +74,11 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		}
 		return assertionTemplate(() => render);
 	};
-	assertionTemplateResult.insert = (selector: string, children: DNode[], type: 'before' | 'after' = 'after') => {
+	assertionTemplateResult.insertChildren = (
+		selector: string,
+		children: DNode[],
+		type: 'before' | 'after' = 'after'
+	) => {
 		const render = renderFunc();
 		const node = guard(findOne(render, selector));
 		const parent = (node as any).parent;
