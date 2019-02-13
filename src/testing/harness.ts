@@ -1,8 +1,7 @@
 import assertRender from './support/assertRender';
-import { select } from './support/selector';
+import { decorateNodes, select } from './support/selector';
 import { WNode, DNode, WidgetBaseInterface, Constructor, VNode } from '../widget-core/interfaces';
 import { WidgetBase } from '../widget-core/WidgetBase';
-import { decorate, isVNode, isWNode } from '../widget-core/d';
 
 export interface CustomComparator {
 	selector: string;
@@ -12,11 +11,6 @@ export interface CustomComparator {
 
 export interface FunctionalSelector {
 	(node: VNode | WNode): undefined | Function;
-}
-
-export interface DecoratorResult<T> {
-	hasDeferredProperties: boolean;
-	nodes: T;
 }
 
 export interface ExpectedRender {
@@ -47,26 +41,6 @@ export interface HarnessAPI {
 	expectPartial: ExpectPartial;
 	trigger: Trigger;
 	getRender: GetRender;
-}
-
-function decorateNodes(dNode: DNode[]): DecoratorResult<DNode[]>;
-function decorateNodes(dNode: DNode): DecoratorResult<DNode>;
-function decorateNodes(dNode: DNode | DNode[]): DecoratorResult<DNode | DNode[]>;
-function decorateNodes(dNode: any): DecoratorResult<DNode | DNode[]> {
-	let hasDeferredProperties = false;
-	function addParent(parent: WNode | VNode): void {
-		(parent.children || []).forEach((child) => {
-			if (isVNode(child) || isWNode(child)) {
-				(child as any).parent = parent;
-			}
-		});
-		if (isVNode(parent) && typeof parent.deferredPropertiesCallback === 'function') {
-			hasDeferredProperties = true;
-			parent.properties = { ...parent.properties, ...parent.deferredPropertiesCallback(false) };
-		}
-	}
-	const nodes = decorate(dNode, addParent, (node: DNode): node is WNode | VNode => isWNode(node) || isVNode(node));
-	return { hasDeferredProperties, nodes };
 }
 
 export function harness(

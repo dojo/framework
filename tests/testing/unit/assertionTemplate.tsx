@@ -12,9 +12,11 @@ class MyWidget extends WidgetBase<{
 	prependChild?: boolean;
 	appendChild?: boolean;
 	replaceChild?: boolean;
+	before?: boolean;
+	after?: boolean;
 }> {
 	render() {
-		const { toggleProperty, prependChild, appendChild, replaceChild } = this.properties;
+		const { toggleProperty, prependChild, appendChild, replaceChild, before, after } = this.properties;
 		let children = ['hello'];
 		if (prependChild) {
 			children = ['prepend', ...children];
@@ -27,7 +29,9 @@ class MyWidget extends WidgetBase<{
 		}
 		return v('div', { classes: ['root'] }, [
 			v('h2', children),
-			v('ul', [v('li', { foo: toggleProperty ? 'b' : 'a' }, ['one']), v('li', ['two']), v('li', ['three'])])
+			before ? v('span', ['before']) : undefined,
+			v('ul', [v('li', { foo: toggleProperty ? 'b' : 'a' }, ['one']), v('li', ['two']), v('li', ['three'])]),
+			after ? v('span', ['after']) : undefined
 		]);
 	}
 }
@@ -95,6 +99,18 @@ describe('assertionTemplate', () => {
 	it('can set a child with append', () => {
 		const h = harness(() => w(MyWidget, { appendChild: true }));
 		const childAssertion = baseAssertion.setChildren('~header', ['append'], 'append');
+		h.expect(childAssertion);
+	});
+
+	it('can set children after with insert', () => {
+		const h = harness(() => w(MyWidget, { after: true }));
+		const childAssertion = baseAssertion.insertChildren('ul', [v('span', ['after'])]);
+		h.expect(childAssertion);
+	});
+
+	it('can set children before with insert', () => {
+		const h = harness(() => w(MyWidget, { before: true }));
+		const childAssertion = baseAssertion.insertChildren('ul', [v('span', ['before'])], 'before');
 		h.expect(childAssertion);
 	});
 
