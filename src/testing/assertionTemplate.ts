@@ -4,7 +4,12 @@ import { VNode, WNode, DNode } from '../widget-core/interfaces';
 
 export interface AssertionTemplateResult {
 	(): DNode | DNode[];
-	insertChildren(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
+	append(selector: string, children: DNode[]): AssertionTemplateResult;
+	prepend(selector: string, children: DNode[]): AssertionTemplateResult;
+	replace(selector: string, children: DNode[]): AssertionTemplateResult;
+	insertBefore(selector: string, children: DNode[]): AssertionTemplateResult;
+	insertAfter(selector: string, children: DNode[]): AssertionTemplateResult;
+	insertSiblings(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
 	setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
 	setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
 	getChildren(selector: string): DNode[];
@@ -55,6 +60,15 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			return render;
 		});
 	};
+	assertionTemplateResult.append = (selector: string, children: DNode[]) => {
+		return assertionTemplateResult.setChildren(selector, children, 'append');
+	};
+	assertionTemplateResult.prepend = (selector: string, children: DNode[]) => {
+		return assertionTemplateResult.setChildren(selector, children, 'prepend');
+	};
+	assertionTemplateResult.replace = (selector: string, children: DNode[]) => {
+		return assertionTemplateResult.setChildren(selector, children, 'replace');
+	};
 	assertionTemplateResult.setChildren = (
 		selector: string,
 		children: DNode[],
@@ -78,7 +92,13 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			return render;
 		});
 	};
-	assertionTemplateResult.insertChildren = (
+	assertionTemplateResult.insertBefore = (selector: string, children: DNode[]) => {
+		return assertionTemplateResult.insertSiblings(selector, children, 'before');
+	};
+	assertionTemplateResult.insertAfter = (selector: string, children: DNode[]) => {
+		return assertionTemplateResult.insertSiblings(selector, children, 'after');
+	};
+	assertionTemplateResult.insertSiblings = (
 		selector: string,
 		children: DNode[],
 		type: 'before' | 'after' = 'after'
