@@ -1,8 +1,33 @@
 import { DNode, DefaultWidgetBaseInterface, WNode, VNode } from '../../widget-core/interfaces';
-import { isVNode, isWNode } from '../../widget-core/d';
+import { decorate, isVNode, isWNode } from '../../widget-core/d';
 import * as cssSelect from 'css-select-umd';
 
 export type TestFunction = (elem: DNode<DefaultWidgetBaseInterface>) => boolean;
+
+export interface DecoratorResult<T> {
+	hasDeferredProperties: boolean;
+	nodes: T;
+}
+
+export function decorateNodes(dNode: DNode[]): DecoratorResult<DNode[]>;
+export function decorateNodes(dNode: DNode): DecoratorResult<DNode>;
+export function decorateNodes(dNode: DNode | DNode[]): DecoratorResult<DNode | DNode[]>;
+export function decorateNodes(dNode: any): DecoratorResult<DNode | DNode[]> {
+	let hasDeferredProperties = false;
+	function addParent(parent: WNode | VNode): void {
+		(parent.children || []).forEach((child) => {
+			if (isVNode(child) || isWNode(child)) {
+				(child as any).parent = parent;
+			}
+		});
+		if (isVNode(parent) && typeof parent.deferredPropertiesCallback === 'function') {
+			hasDeferredProperties = true;
+			parent.properties = { ...parent.properties, ...parent.deferredPropertiesCallback(false) };
+		}
+	}
+	const nodes = decorate(dNode, addParent, (node: DNode): node is WNode | VNode => isWNode(node) || isVNode(node));
+	return { hasDeferredProperties, nodes };
+}
 
 export const parseSelector = (selector: string) => {
 	const selectors = selector.split(' ');
@@ -102,6 +127,7 @@ export const adapter: any = {
 };
 
 export function select(selector: string, nodes: DNode | DNode[]): (WNode | VNode)[] {
+	nodes = decorateNodes(nodes).nodes;
 	nodes = Array.isArray(nodes) ? nodes : [nodes];
 	selector = parseSelector(selector);
 	return cssSelect(selector, nodes, { adapter }) as (WNode | VNode)[];

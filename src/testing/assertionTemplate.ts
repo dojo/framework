@@ -4,6 +4,7 @@ import { VNode, WNode, DNode } from '../widget-core/interfaces';
 
 export interface AssertionTemplateResult {
 	(): DNode | DNode[];
+	insert(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
 	setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
 	setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
 	getChildren(selector: string): DNode[];
@@ -69,6 +70,24 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 				break;
 			case 'replace':
 				node.children = [...children];
+				break;
+		}
+		return assertionTemplate(() => render);
+	};
+	assertionTemplateResult.insert = (selector: string, children: DNode[], type: 'before' | 'after' = 'after') => {
+		const render = renderFunc();
+		const node = guard(findOne(render, selector));
+		const parent = (node as any).parent;
+		const index = parent.children.indexOf(node);
+		let newChildren = [...parent.children];
+		switch (type) {
+			case 'before':
+				newChildren.splice(index, 0, ...children);
+				parent.children = newChildren;
+				break;
+			case 'after':
+				newChildren.splice(index + 1, 0, ...children);
+				parent.children = newChildren;
 				break;
 		}
 		return assertionTemplate(() => render);
