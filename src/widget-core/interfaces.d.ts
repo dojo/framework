@@ -81,7 +81,7 @@ export interface Projection {
 	readonly domNode: Element;
 }
 
-export type SupportedClassName = string | null | undefined | false;
+export type SupportedClassName = string | null | undefined | boolean;
 
 export type DeferredVirtualProperties = (inserted: boolean) => VNodeProperties;
 

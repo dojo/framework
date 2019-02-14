@@ -8,6 +8,7 @@ import {
 	VNodeProperties,
 	WidgetBaseConstructor,
 	TransitionStrategy,
+	SupportedClassName,
 	DomVNode
 } from './interfaces';
 import transitionStrategy from './animations/cssTransitions';
@@ -301,10 +302,10 @@ function findIndexOfChild(children: DNodeWrapper[], sameAs: DNodeWrapper, start:
 	return -1;
 }
 
-function createClassPropValue(classes: string | string[] = []) {
+function createClassPropValue(classes: SupportedClassName | SupportedClassName[] = []) {
 	classes = Array.isArray(classes) ? classes : [classes];
 	return classes
-		.filter((className) => className)
+		.filter((className) => className && className !== true)
 		.join(' ')
 		.trim();
 }
@@ -327,7 +328,7 @@ function runEnterAnimation(next: VNodeWrapper, transitions: TransitionStrategy) 
 			properties: { enterAnimation }
 		}
 	} = next;
-	if (enterAnimation) {
+	if (enterAnimation && enterAnimation !== true) {
 		if (typeof enterAnimation === 'function') {
 			return enterAnimation(domNode as Element, properties);
 		}
@@ -335,13 +336,10 @@ function runEnterAnimation(next: VNodeWrapper, transitions: TransitionStrategy) 
 	}
 }
 
-function runExitAnimation(current: VNodeWrapper, transitions: TransitionStrategy) {
+function runExitAnimation(current: VNodeWrapper, transitions: TransitionStrategy, exitAnimation: string | Function) {
 	const {
 		domNode,
-		node: { properties },
-		node: {
-			properties: { exitAnimation }
-		}
+		node: { properties }
 	} = current;
 	const removeDomNode = () => {
 		domNode && domNode.parentNode && domNode.parentNode.removeChild(domNode);
@@ -350,7 +348,7 @@ function runExitAnimation(current: VNodeWrapper, transitions: TransitionStrategy
 	if (typeof exitAnimation === 'function') {
 		return exitAnimation(domNode as Element, removeDomNode, properties);
 	}
-	transitions.exit(domNode as Element, properties, exitAnimation as string, removeDomNode);
+	transitions.exit(domNode as Element, properties, exitAnimation, removeDomNode);
 }
 
 function arrayFrom(arr: any) {
@@ -893,8 +891,9 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				}
 			} else if (item.type === 'delete') {
 				const { current } = item;
-				if (current.node.properties.exitAnimation) {
-					runExitAnimation(current, _mountOptions.transition);
+				const { exitAnimation } = current.node.properties;
+				if (exitAnimation && exitAnimation !== true) {
+					runExitAnimation(current, _mountOptions.transition, exitAnimation);
 				} else {
 					current.domNode!.parentNode!.removeChild(current.domNode!);
 					current.domNode = undefined;
