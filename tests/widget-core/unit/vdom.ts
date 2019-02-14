@@ -3031,7 +3031,7 @@ jsdomDescribe('vdom', () => {
 			});
 
 			it('should accept falsy as a class', () => {
-				const [Widget] = getWidget(v('div', { classes: ['my-class', null, undefined, false, 'other'] }));
+				const [Widget] = getWidget(v('div', { classes: ['my-class', null, undefined, false, true, 'other'] }));
 				const div = document.createElement('div');
 				const root = document.createElement('div');
 				root.appendChild(div);
@@ -4828,6 +4828,28 @@ jsdomDescribe('vdom', () => {
 				r.mount({ domNode: div, sync: true, transition });
 				assert.isTrue(transition.enter.notCalled);
 			});
+			it('Does not invoke transition when false passed as enterAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget] = getWidget(v('div', [v('span', { enterAnimation: false })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				assert.isTrue(transition.enter.notCalled);
+			});
+			it('Does not invoke transition when true passed as enterAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget] = getWidget(v('div', [v('span', { enterAnimation: true })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				assert.isTrue(transition.enter.notCalled);
+			});
 		});
 		describe('exitAnimation', () => {
 			it('is invoked when a node is removed from an existing parent node', () => {
@@ -4862,6 +4884,30 @@ jsdomDescribe('vdom', () => {
 					exit: stub()
 				};
 				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation: undefined })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				meta.setRenderResult(v('div', []));
+				assert.isTrue(transition.exit.notCalled);
+			});
+			it('Does not invoke transition when false passed as exitAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation: false })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				meta.setRenderResult(v('div', []));
+				assert.isTrue(transition.exit.notCalled);
+			});
+			it('Does not invoke transition when true passed as exitAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation: true })]));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
 				r.mount({ domNode: div, sync: true, transition });

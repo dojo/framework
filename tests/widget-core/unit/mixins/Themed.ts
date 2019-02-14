@@ -108,8 +108,8 @@ registerSuite('ThemedMixin', {
 			'should return null and undefineds unprocessed'() {
 				const ThemedInstance = new TestWidget();
 				const { class1, class2 } = baseThemeClasses1;
-				const flaggedClasses = ThemedInstance.theme([class1, null, class2, undefined]);
-				assert.deepEqual(flaggedClasses, [class1, null, class2, undefined]);
+				const flaggedClasses = ThemedInstance.theme([class1, null, class2, true, false, undefined]);
+				assert.deepEqual(flaggedClasses, [class1, null, class2, true, false, undefined]);
 				assert.isFalse(consoleStub.called);
 			}
 		},
