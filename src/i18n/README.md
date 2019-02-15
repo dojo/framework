@@ -389,4 +389,3 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 
 -   `formatUnit` => [`Globalize.formatUnit`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
 -   `getUnitFormatter` => [`Globalize.unitFormatter`](https://github.com/globalizejs/globalize/blob/master/doc/api/unit/unit-formatter.md)
-
