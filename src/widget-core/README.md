@@ -586,9 +586,9 @@ To change the theme a widget `ThemeSwitcher` is available from `@dojo/framework/
 ##### Properties
 
 -   `renderer`: (updateTheme(theme: Theme) => void): DNode | DNode[]
-  -   The `renderer` that is called with the `updateTheme` function and returns `DNode | DNode[]` that will be rendered
+     -   The `renderer` that is called with the `updateTheme` function and returns `DNode | DNode[]` that will be rendered
 -   `registryLabel`(optional): string
-  -   The registry label used to register the theme injector. When using the `registerThemeInjector` this does not need to be set.
+     -   The registry label used to register the theme injector. When using the `registerThemeInjector` this does not need to be set.
 
 ##### Example Usage
 
@@ -771,9 +771,9 @@ When using the `Registry` to inject i18n properties to widgets using the `I18nMi
 ##### Properties
 
 -   `renderer`: (updateLocale(localeData: LocaleData) => void): DNode | DNode[]
-  -   The `renderer` that is called with the `updateLocale` function and returns `DNode | DNode[]` that will be rendered
+    -   The `renderer` that is called with the `updateLocale` function and returns `DNode | DNode[]` that will be rendered
 -   `registryLabel`(optional): string
-  -   The registry label used to register the i18n injector. When using the `registerI18nInjector` this does not need to be set.
+    -   The registry label used to register the i18n injector. When using the `registerI18nInjector` this does not need to be set.
 
 ##### Example Usage
 
