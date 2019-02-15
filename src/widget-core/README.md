@@ -26,7 +26,7 @@ widget-core is a library to create powerful, composable user interface widgets.
     -   [Registry](#registry)
     -   [Decorator Lifecycle Hooks](#decorator-lifecycle-hooks)
     -   [Method Lifecycle Hooks](#method-lifecycle-hooks)
-    -   [Injectors, Providers and Containers](#injectors,-providers--containers)
+    -   [Injectors, Providers and Containers](#injectors-providers--containers)
     -   [Decorators](#decorators)
     -   [Meta Configuration](#meta-configuration)
     -   [Inserting DOM Nodes Into The VDom Tree](#inserting-dom-nodes-into-the-vdom-tree)
@@ -559,7 +559,7 @@ render() {
 
 #### Managing Themes Throughout an Application
 
-To manage themes throughout an application, the `ThemedMixin` leverages the [`Containers` and `Injectors`](#containers--injectors) to set an application's locale and inject the locale data into all widgets using the `ThemedMixin`. When the locale is updated in the theme `Injector` all themed widgets will be invalidated and re-rendered with the updated locale.
+To manage themes throughout an application, the `ThemedMixin` leverages the [Injectors, Providers & Containers](#injectors-providers--containers) to set an application's locale and inject the locale data into all widgets using the `ThemedMixin`. When the locale is updated in the theme `Injector` all themed widgets will be invalidated and re-rendered with the updated locale.
 
 `@dojo/framework/widget-core/mixins/Themed` exposes a convenience method, `registerThemeInjector`, for registering the `theme` injector with a registry.
 
@@ -745,7 +745,7 @@ export class MyWidget extends WidgetBase {
 
 #### Managing I18n throughout an Application
 
-To manage the i18n locale data throughout an application, the `I18nMixin` leverages the [`Containers` and `Injectors`](#containers--injectors) to set an application's locale and inject the locale data into all widgets using the `I18nMixin`. When the locale is updated in the i18n `Injector` all i18n widgets will be invalidated and re-rendered with the updated locale.
+To manage the i18n locale data throughout an application, the `I18nMixin` leverages the [Injectors, Providers & Containers](#injectors-providers--containers) to set an application's locale and inject the locale data into all widgets using the `I18nMixin`. When the locale is updated in the i18n `Injector` all i18n widgets will be invalidated and re-rendered with the updated locale.
 
 `@dojo/framework/widget-core/mixins/I18n` exposes a convenience method, `registerI18nInjector` for registering the `i18n` injector with a registry.
 
@@ -1028,7 +1028,7 @@ class MyWidget extends WidgetBase {
 
 ### Registry
 
-The `Registry` provides a mechanism to define widgets and injectors (see the [`Containers & Injectors`](#containers--injectors) section), that can be dynamically/lazily loaded on request. Once the registry widget is loaded all widgets that need the newly loaded widget will be invalidated and re-rendered automatically.
+The `Registry` provides a mechanism to define widgets and injectors (see the [Injectors, Providers & Containers](#injectors-providers--containers) section), that can be dynamically/lazily loaded on request. Once the registry widget is loaded all widgets that need the newly loaded widget will be invalidated and re-rendered automatically.
 
 A main registry can be provided to the `renderer`, which will be automatically passed to all widgets within the tree (referred to as `baseRegistry`). Each widget also gets access to a private `Registry` instance that can be used to define registry items that are scoped to the widget. The locally defined registry items are considered a higher precedence than an item registered in the `baseRegistry`.
 
