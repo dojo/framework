@@ -5,6 +5,7 @@ import { Path, State, Store } from './Store';
 import Map from '../shim/Map';
 import has from '../has/has';
 import Symbol, { isSymbol } from '../shim/Symbol';
+import { isIterable } from '../shim/iterator';
 
 /**
  * Default Payload interface
@@ -33,7 +34,7 @@ export interface CommandFactory<T = any, P extends object = DefaultPayload> {
  * Command that returns patch operations based on the command request
  */
 export interface Command<T = any, P extends object = DefaultPayload> {
-	(request: CommandRequest<T, P>): Promise<PatchOperation<T>[]> | PatchOperation<T>[] | void;
+	(request: CommandRequest<T, P>): Promise<PatchOperation<T>[]> | PatchOperation<T>[] | void | Promise<void>;
 }
 
 /**
@@ -270,7 +271,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 							return result;
 						});
 					} else {
-						result = result ? [...proxyOperations, ...result] : [...proxyOperations];
+						result = result && isIterable(result) ? [...proxyOperations, ...result] : [...proxyOperations];
 						proxyOperations = [];
 
 						return result;
