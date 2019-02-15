@@ -559,7 +559,7 @@ render() {
 
 #### Managing Themes Throughout an Application
 
-To manage themes throughout an application, the `ThemedMixin` leverages the [Injectors, Providers & Containers](#injectors-providers--containers) to set an application's locale and inject the locale data into all widgets using the `ThemedMixin`. When the locale is updated in the theme `Injector` all themed widgets will be invalidated and re-rendered with the updated locale.
+To manage themes throughout an application, the `ThemedMixin` leverages the [Injectors, Providers & Containers](#injectors-providers--containers) to set an application's locale and inject the locale data into all widgets using the `ThemedMixin`. When the locale is updated in the theme `Injector` all themed widgets will be invalidated and re-rendered with the updated theme.
 
 `@dojo/framework/widget-core/mixins/Themed` exposes a convenience method, `registerThemeInjector`, for registering the `theme` injector with a registry.
 
