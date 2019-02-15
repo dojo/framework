@@ -1,4 +1,5 @@
 import './Container';
+import './Provider';
 import './WidgetBase';
 import './Registry';
 import './d';
