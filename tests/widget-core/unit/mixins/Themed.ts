@@ -1,6 +1,12 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { ThemedMixin, theme, ThemedProperties, registerThemeInjector } from '../../../../src/widget-core/mixins/Themed';
+import {
+	ThemedMixin,
+	theme,
+	ThemedProperties,
+	registerThemeInjector,
+	ThemeSwitcher
+} from '../../../../src/widget-core/mixins/Themed';
 import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 import { Registry } from '../../../../src/widget-core/Registry';
 import { v } from '../../../../src/widget-core/d';
@@ -14,6 +20,7 @@ import testTheme1 from './../../support/styles/theme1.css';
 import testTheme2 from './../../support/styles/theme2.css';
 import testTheme3 from './../../support/styles/theme3.css';
 import { VNode } from '../../../../src/widget-core/interfaces';
+import Injector from '../../../../src/widget-core/Injector';
 
 (baseThemeClasses1 as any)[' _key'] = 'testPath1';
 (baseThemeClasses2 as any)[' _key'] = 'testPath2';
@@ -291,6 +298,55 @@ registerSuite('ThemedMixin', {
 				testWidget.__setProperties__({ foo: 'bar' });
 				renderResult = testWidget.__render__() as VNode;
 				assert.deepEqual(renderResult.properties.classes, 'theme1Class1');
+			}
+		},
+		ThemeSwitcher: {
+			'Injects updateTheme function to renderer'() {
+				const themeInjectorContext = registerThemeInjector(testTheme1, testRegistry);
+
+				const testWidget = new ThemeSwitcher();
+				testWidget.registry.base = testRegistry;
+				testWidget.__setProperties__({
+					renderer: (updateTheme) => {
+						updateTheme && updateTheme(testTheme2);
+						return 'ThemeSwitcher';
+					}
+				});
+				const result = testWidget.__render__() as VNode;
+				assert.strictEqual(result.text, 'ThemeSwitcher');
+				assert.deepEqual(themeInjectorContext.get(), testTheme2);
+			},
+			'Does not inject updateTheme if the theme injector has not been registered'() {
+				const testWidget = new ThemeSwitcher();
+				testWidget.registry.base = testRegistry;
+				testWidget.__setProperties__({
+					renderer: (updateTheme) => {
+						assert.isUndefined(updateTheme);
+						return 'ThemeSwitcher';
+					}
+				});
+				const result = testWidget.__render__() as VNode;
+				assert.strictEqual(result.text, 'ThemeSwitcher');
+			},
+			'Can use a custom registry label for the theme injector'() {
+				const themeInjectorContext = new Injector<any>(testTheme1);
+				testRegistry.defineInjector('other', (invalidator) => {
+					themeInjectorContext.setInvalidator(invalidator);
+					return () => themeInjectorContext;
+				});
+
+				const testWidget = new ThemeSwitcher();
+				testWidget.registry.base = testRegistry;
+				testWidget.__setProperties__({
+					registryLabel: 'other',
+					renderer: (updateTheme) => {
+						updateTheme && updateTheme(testTheme2);
+						return 'ThemeSwitcher';
+					}
+				});
+				const result = testWidget.__render__() as VNode;
+				assert.strictEqual(result.text, 'ThemeSwitcher');
+				assert.deepEqual(themeInjectorContext.get(), testTheme2);
 			}
 		},
 		integration: {

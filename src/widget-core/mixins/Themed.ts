@@ -1,4 +1,4 @@
-import { Constructor, WidgetProperties, SupportedClassName } from './../interfaces';
+import { Constructor, WidgetProperties, SupportedClassName, DNode } from './../interfaces';
 import { Registry } from './../Registry';
 import { Injector } from './../Injector';
 import { inject } from './../decorators/inject';
@@ -6,6 +6,7 @@ import { WidgetBase } from './../WidgetBase';
 import { handleDecorator } from './../decorators/handleDecorator';
 import { diffProperty } from './../decorators/diffProperty';
 import { shallow } from './../diff';
+import alwaysRender from '../decorators/alwaysRender';
 
 /**
  * A lookup object for available class names
@@ -96,6 +97,30 @@ export function registerThemeInjector(theme: any, themeRegistry: Registry): Inje
 		return () => themeInjector;
 	});
 	return themeInjector;
+}
+
+export interface UpdateTheme {
+	(theme: Theme): void;
+}
+
+export interface ThemeSwitcherProperties {
+	registryLabel?: string;
+	renderer(updateTheme?: UpdateTheme): DNode | DNode[];
+}
+
+@alwaysRender()
+export class ThemeSwitcher extends WidgetBase<ThemeSwitcherProperties> {
+	protected render(): DNode | DNode[] {
+		const { renderer, registryLabel = INJECTED_THEME_KEY } = this.properties;
+		const injector = this.registry.getInjector<Injector>(registryLabel);
+		if (injector) {
+			const themeContext = injector.injector();
+			return renderer((theme: Theme) => {
+				themeContext.set(theme);
+			});
+		}
+		return renderer();
+	}
 }
 
 /**
