@@ -5,7 +5,6 @@ import { Path, State, Store } from './Store';
 import Map from '../shim/Map';
 import has from '../has/has';
 import Symbol, { isSymbol } from '../shim/Symbol';
-import { isIterable } from '../shim/iterator';
 
 /**
  * Default Payload interface
@@ -271,7 +270,8 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 							return result;
 						});
 					} else {
-						result = result && isIterable(result) ? [...proxyOperations, ...result] : [...proxyOperations];
+						result =
+							result && Array.isArray(result) ? [...proxyOperations, ...result] : [...proxyOperations];
 						proxyOperations = [];
 
 						return result;
