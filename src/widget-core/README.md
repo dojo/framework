@@ -563,10 +563,10 @@ To change a theme a widget `ThemeSwitcher` is available from `@dojo/framework/wi
 
 ##### Properties
 
- * `renderer`: (updateTheme(theme: Theme) => void): DNode | DNode[]
-  * The renderer that is called with the `updateTheme` function and returns `DNode | DNode[]` that will be rendered
- * `registryLabel`(optional): string
-  * The registry label used to register the theme injector. When using the `registerThemeInjector` this does not need to be set.
+-   `renderer`: (updateTheme(theme: Theme) => void): DNode | DNode[]
+-   The renderer that is called with the `updateTheme` function and returns `DNode | DNode[]` that will be rendered
+-   `registryLabel`(optional): string
+-   The registry label used to register the theme injector. When using the `registerThemeInjector` this does not need to be set.
 
 ##### Example Usage
 
@@ -582,17 +582,31 @@ import * as css from './style/MyApp.m.css';
 class MyApp extends ThemedMixin(WidgetBase) {
 	protected render() {
 		return v('div', [
-			w(ThemeSwitcher, { renderer: (updateTheme: UpdateTheme) => {
-				return v('div', [
-					v('button', { onclick: () => {
-						updateTheme(lightTheme);
-					}}, ['light']),
-					v('button', { onclick: () => {
-						updateTheme(darkTheme);
-					}}, ['dark'])
-				]);
-			}}),
-			v('div', { classes: this.theme(css.container )})
+			w(ThemeSwitcher, {
+				renderer: (updateTheme: UpdateTheme) => {
+					return v('div', [
+						v(
+							'button',
+							{
+								onclick: () => {
+									updateTheme(lightTheme);
+								}
+							},
+							['light']
+						),
+						v(
+							'button',
+							{
+								onclick: () => {
+									updateTheme(darkTheme);
+								}
+							},
+							['dark']
+						)
+					]);
+				}
+			}),
+			v('div', { classes: this.theme(css.container) })
 		]);
 	}
 }
