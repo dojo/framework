@@ -26,7 +26,7 @@ widget-core is a library to create powerful, composable user interface widgets.
     -   [Registry](#registry)
     -   [Decorator Lifecycle Hooks](#decorator-lifecycle-hooks)
     -   [Method Lifecycle Hooks](#method-lifecycle-hooks)
-    -   [Containers](#containers--injectors)
+    -   [Injectors, Providers and Containers](#injectors,-providers--containers)
     -   [Decorators](#decorators)
     -   [Meta Configuration](#meta-configuration)
     -   [Inserting DOM Nodes Into The VDom Tree](#inserting-dom-nodes-into-the-vdom-tree)
@@ -1200,7 +1200,7 @@ class MyClass extends WidgetBase {
 }
 ```
 
-### Containers & Injectors
+### Injectors, Providers & Containers
 
 There is built-in support for side-loading/injecting values into sections of the widget tree and mapping them to a widget's properties. This is achieved by registering an injector factory with a `registry` and setting the registry on the application's `renderer` to ensure the registry instance is available to your application.
 
@@ -1224,7 +1224,22 @@ registry.defineInjector('my-injector', (invalidator) => {
 });
 ```
 
-To connect the registered `payload` to a widget, we can use the `Container` HOC (higher order component) provided by `widget-core`. The `Container` accepts a widget `constructor`, `injector` label, and `getProperties` mapping function as arguments and returns a new class that returns the passed widget from its `render` function.
+To connect (inject) the registered values to a widget there are two options. The first is the `Provider` which is a widget that is designed to be used inline the a widgets `render`. The `Provider` takes a `registryLabel` property and a `renderer` property that received the values from the registry. The second is the `Container` HOC (higher order component).
+
+#### Provider
+
+The `Provider` is a standard widget, but has no visual output. Instead the visual aspect is provided by the `renderer` function property, the renderer function will receive the injector value from the registry.
+
+```ts
+w(Provider, { registryLabel: 'my-injector', renderer: (myInjector: MyInjector) => {
+	// do something with `myInjector` and return widgets and/or nodes.
+	return v('div', [ w(MyWidget, { text: myInjector.text })]);
+} })
+```
+
+#### Container
+
+The `Container` accepts a widget `constructor`, `injector` label, and `getProperties` mapping function as arguments and returns a new class that returns the passed widget from its `render` function.
 
 `getProperties` receives the `payload` returned from the injector function and the `properties` passed to the container HOC component. These are used to map into the wrapped widget's properties.
 
