@@ -208,6 +208,40 @@ async function postTodoCommand({ get, path, payload: { id } }: CommandRequest): 
 }
 ```
 
+#### The `state` Object
+
+In modern browsers, commands can also directly modify a `state` object that is passed in as part of the CommandRequest.
+Any modifications to this object will be translated into the appropriate patch operations and executed against the store.
+Commands that modify the state object can be synchronous or asynchronous, but if they are asynchronous they must return
+a promise that will resolve when modifications are complete. Note that attempting to access `state` is not supported in IE
+and will immediately throw an error.
+
+```ts
+function calculateCountsCommand = createCommand(({ state }) => {
+	const todos = state.todos;
+	const completedTodos = todos.filter((todo: any) => todo.completed);
+	
+	state.activeCount = todos.length - completedTodos.length;
+	state.completedCount = completedTodos.length;
+});
+
+async function postTodoCommand({ state }: CommandRequest): Promise<PatchOperation[]> {
+	const response = await fetch('/todos');
+	if (!response.ok) {
+		throw new Error('Unable to post todo');
+	}
+	const json = await response.json();
+	const todos = state.todos
+	const index = findIndex(todos, byId(id));
+	// success
+	state.todos[index] = {
+		...todos[index],
+		loading: false,
+		id: json.uuid
+	};
+}
+```
+
 ### Processes
 
 A `Process` is the construct used to execute commands against a `store` instance in order to make changes to the application state. `Processes` are created using the `createProcess` factory function that accepts an array of commands and an optional callback that can be used to manage errors thrown from a command. The optional callback receives an `error` object and a `result` object. The `error` object contains the `error` stack and the command that caused the error.
