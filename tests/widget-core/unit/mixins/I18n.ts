@@ -2,7 +2,7 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import i18n, { invalidate, switchLocale, systemLocale } from '../../../../src/i18n/i18n';
 import Map from '../../../../src/shim/Map';
-import { INJECTOR_KEY, I18nMixin, I18nProperties, registerI18nInjector } from '../../../../src/widget-core/mixins/I18n';
+import { I18nMixin, I18nProperties, registerI18nInjector } from '../../../../src/widget-core/mixins/I18n';
 import { Registry } from '../../../../src/widget-core/Registry';
 import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 import bundle from '../../support/nls/greetings';
@@ -190,10 +190,9 @@ registerSuite('mixins/I18nMixin', {
 		},
 		'locale data can be injected by defining an Injector with a registry': {
 			'defaults to the injector data'() {
-				const injector = () => () => ({ locale: 'ar', rtl: true });
 				const registry = new Registry();
+				registerI18nInjector({ locale: 'ar', rtl: true }, registry);
 
-				registry.defineInjector(INJECTOR_KEY, injector);
 				localized = new Localized();
 				localized.registry.base = registry;
 				localized.__setProperties__({});
@@ -204,10 +203,9 @@ registerSuite('mixins/I18nMixin', {
 			},
 
 			'does not override property values'() {
-				const injector = () => () => ({ locale: 'ar', rtl: true });
 				const registry = new Registry();
+				registerI18nInjector({ locale: 'ar', rtl: true }, registry);
 
-				registry.defineInjector(INJECTOR_KEY, injector);
 				localized = new Localized();
 				localized.registry.base = registry;
 				localized.__setProperties__({ locale: 'fr', rtl: false });

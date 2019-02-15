@@ -1,12 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import {
-	ThemedMixin,
-	theme,
-	ThemedProperties,
-	INJECTED_THEME_KEY,
-	registerThemeInjector
-} from '../../../../src/widget-core/mixins/Themed';
+import { ThemedMixin, theme, ThemedProperties, registerThemeInjector } from '../../../../src/widget-core/mixins/Themed';
 import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 import { Registry } from '../../../../src/widget-core/Registry';
 import { v } from '../../../../src/widget-core/d';
@@ -238,8 +232,7 @@ registerSuite('ThemedMixin', {
 		},
 		'injecting a theme': {
 			'theme can be injected by defining a ThemeInjector with registry'() {
-				const injector = () => () => testTheme1;
-				testRegistry.defineInjector(INJECTED_THEME_KEY, injector);
+				registerThemeInjector(testTheme1, testRegistry);
 				class InjectedTheme extends TestWidget {
 					render() {
 						return v('div', { classes: this.theme(baseThemeClasses1.class1) });
@@ -252,8 +245,7 @@ registerSuite('ThemedMixin', {
 				assert.deepEqual(renderResult.properties.classes, 'theme1Class1');
 			},
 			'theme will not be injected if a theme has been passed via a property'() {
-				const injector = () => () => testTheme1;
-				testRegistry.defineInjector(INJECTED_THEME_KEY, injector);
+				registerThemeInjector(testTheme1, testRegistry);
 				class InjectedTheme extends TestWidget {
 					render() {
 						return v('div', { classes: this.theme(baseThemeClasses1.class1) });
