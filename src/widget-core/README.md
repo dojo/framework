@@ -557,7 +557,7 @@ render() {
 }
 ```
 
-#### Managing Theming throughout an Application
+#### Managing Themes throughout an Application
 
 To manage themes throughout an application, the `ThemedMixin` leverages the [`Containers` and `Injectors`](#containers--injectors) to set an application's locale and inject the locale data into all widgets using the `ThemedMixin`. When the locale is updated in the theme `Injector` all themed widgets will be invalidated and re-rendered with the updated locale.
 
