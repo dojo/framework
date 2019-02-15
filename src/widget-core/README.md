@@ -557,11 +557,11 @@ render() {
 }
 ```
 
-#### Managing Themes throughout an Application
+#### Managing Themes Throughout an Application
 
 To manage themes throughout an application, the `ThemedMixin` leverages the [`Containers` and `Injectors`](#containers--injectors) to set an application's locale and inject the locale data into all widgets using the `ThemedMixin`. When the locale is updated in the theme `Injector` all themed widgets will be invalidated and re-rendered with the updated locale.
 
-`@dojo/framework/widget-core/mixins/Themed` exposes a convenience method, `registerThemeInjector` for registering the `theme` injector with a registry.
+`@dojo/framework/widget-core/mixins/Themed` exposes a convenience method, `registerThemeInjector`, for registering the `theme` injector with a registry.
 
 ```ts
 import renderer from '@dojo/framework/widget-core/vdom';
@@ -579,9 +579,9 @@ const r = renderer(() => w(App, {}));
 r.mount({ registry });
 ```
 
-#### Changing Theme
+#### Changing the Theme
 
-To change a theme a widget `ThemeSwitcher` is available from `@dojo/framework/widget-core/mixins/Themed`, the `ThemeSwitcher` widget has a `renderer` property that injects an `updateTheme` function and returns `DNode | DNode[]` to render.
+To change the theme a widget `ThemeSwitcher` is available from `@dojo/framework/widget-core/mixins/Themed`. The `ThemeSwitcher` widget has a `renderer` property that injects an `updateTheme` function and returns `DNode | DNode[]` to render.
 
 ##### Properties
 
@@ -1224,7 +1224,7 @@ registry.defineInjector('my-injector', (invalidator) => {
 });
 ```
 
-To connect (inject) the registered values to a widget there are two options. The first is the `Provider` which is a widget that is designed to be used inline the a widgets `render`. The `Provider` takes a `registryLabel` property and a `renderer` property that received the values from the registry. The second is the `Container` HOC (higher order component).
+To connect (inject) the registered values to a widget there are two options. The first is the `Provider` which is a widget that is designed to be used inline the widgets `render`. The `Provider` takes a `registryLabel` property and a `renderer` property that received the values from the registry. The second is the `Container` HOC (higher order component).
 
 #### Provider
 
