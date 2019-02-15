@@ -7,6 +7,7 @@ import { handleDecorator } from './../decorators/handleDecorator';
 import { diffProperty } from './../decorators/diffProperty';
 import { shallow } from './../diff';
 import alwaysRender from '../decorators/alwaysRender';
+import has from '../../has/has';
 
 /**
  * A lookup object for available class names
@@ -105,21 +106,22 @@ export interface UpdateTheme {
 
 export interface ThemeSwitcherProperties {
 	registryLabel?: string;
-	renderer(updateTheme?: UpdateTheme): DNode | DNode[];
+	renderer(updateTheme: UpdateTheme): DNode | DNode[];
 }
 
 @alwaysRender()
 export class ThemeSwitcher extends WidgetBase<ThemeSwitcherProperties> {
 	protected render(): DNode | DNode[] {
 		const { renderer, registryLabel = INJECTED_THEME_KEY } = this.properties;
-		const injector = this.registry.getInjector<Injector>(registryLabel);
-		if (injector) {
-			const themeContext = injector.injector();
+		const injectorItem = this.registry.getInjector<Injector>(registryLabel);
+		if (injectorItem) {
+			const injector = injectorItem.injector();
 			return renderer((theme: Theme) => {
-				themeContext.set(theme);
+				injector.set(theme);
 			});
 		}
-		return renderer();
+		has('dojo-debug') && console.warn(`Theme injector has not been registered with label: '${registryLabel}'`);
+		return renderer(() => {});
 	}
 }
 

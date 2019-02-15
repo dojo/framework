@@ -557,6 +557,28 @@ render() {
 }
 ```
 
+#### Managing Theming throughout an Application
+
+To manage themes throughout an application, the `ThemedMixin` leverages the [`Containers` and `Injectors`](#containers--injectors) to set an application's locale and inject the locale data into all widgets using the `ThemedMixin`. When the locale is updated in the theme `Injector` all themed widgets will be invalidated and re-rendered with the updated locale.
+
+`@dojo/framework/widget-core/mixins/Themed` exposes a convenience method, `registerThemeInjector` for registering the `theme` injector with a registry.
+
+```ts
+import renderer from '@dojo/framework/widget-core/vdom';
+import { w } from '@dojo/framework/widget-core/d';
+import Registry from '@dojo/framework/widget-core/Registry';
+import { registerThemeInjector } from '@dojo/framework/widget-core/mixins/Themed';
+
+import myTheme from './theme';
+import App from './App';
+
+const registry = new Registry();
+registerThemeInjector(myTheme, registry);
+
+const r = renderer(() => w(App, {}));
+r.mount({ registry });
+```
+
 #### Changing Theme
 
 To change a theme a widget `ThemeSwitcher` is available from `@dojo/framework/widget-core/mixins/Themed`, the `ThemeSwitcher` widget has a `renderer` property that injects an `updateTheme` function and returns `DNode | DNode[]` to render.
@@ -720,6 +742,83 @@ export class MyWidget extends WidgetBase {
 	}
 }
 ```
+
+#### Managing I18n throughout an Application
+
+To manage the i18n locale data throughout an application, the `I18nMixin` leverages the [`Containers` and `Injectors`](#containers--injectors) to set an application's locale and inject the locale data into all widgets using the `I18nMixin`. When the locale is updated in the i18n `Injector` all i18n widgets will be invalidated and re-rendered with the updated locale.
+
+`@dojo/framework/widget-core/mixins/I18n` exposes a convenience method, `registerI18nInjector` for registering the `i18n` injector with a registry.
+
+```ts
+import renderer from '@dojo/framework/widget-core/vdom';
+import { w } from '@dojo/framework/widget-core/d';
+import Registry from '@dojo/framework/widget-core/Registry';
+import { registerI18nInjector } from '@dojo/framework/widget-core/mixins/I18n';
+
+import App from './App';
+
+const registry = new Registry();
+registerI18nInjector({ locale: 'us', rtl: false }, registry);
+
+const r = renderer(() => w(App, {}));
+r.mount({ registry });
+```
+
+#### Changing LocaleData
+
+When using the `Registry` to inject i18n properties to widgets using the `I18nMixin`, `@dojo/framework/widget-core/mixins/I18n` provides a widget, `LocaleSwitcher` that can be used to inject a function for changing the applications locale. The widget has a `renderer` property that injects an `updateLocale` function and returns `DNode | DNode[]` to render.
+
+##### Properties
+
+-   `renderer`: (updateLocale(localeData: LocaleData) => void): DNode | DNode[]
+-   The renderer that is called with the `updateLocale` function and returns `DNode | DNode[]` that will be rendered
+-   `registryLabel`(optional): string
+-   The registry label used to register the i18n injector. When using the `registerI18nInjector` this does not need to be set.
+
+##### Example Usage
+
+```ts
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import I18ndMixin, { LocaleSwitcher, UpdateLocale } from '@dojo/framework/widget-core/mixins/I18n';
+
+import nlsBundle from '../nls/main';
+
+class MyApp extends I18ndMixin(WidgetBase) {
+	protected render() {
+		const { messages } = this.localizeBundle(nlsBundle);
+
+		return v('div', [
+			w(LocaleSwitcher, {
+				renderer: (updateLocale: UpdateLocale) => {
+					return v('div', [
+						v(
+							'button',
+							{
+								onclick: () => {
+									updateLocale({ locale: 'gb' });
+								}
+							},
+							['English']
+						),
+						v(
+							'button',
+							{
+								onclick: () => {
+									updateLocale({ locale: 'fr' });
+								}
+							},
+							['French']
+						)
+					]);
+				}
+			}),
+			v('div', [messages.greetings])
+		]);
+	}
+}
+```
+
+The above example shows a I18n widget, with the `LocaleSwitcher` used to render two buttons that will switch the locale between a english and french.
 
 ## Key Principles
 

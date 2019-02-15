@@ -21,6 +21,7 @@ import testTheme2 from './../../support/styles/theme2.css';
 import testTheme3 from './../../support/styles/theme3.css';
 import { VNode } from '../../../../src/widget-core/interfaces';
 import Injector from '../../../../src/widget-core/Injector';
+import { add } from '../../../../src/has/has';
 
 (baseThemeClasses1 as any)[' _key'] = 'testPath1';
 (baseThemeClasses2 as any)[' _key'] = 'testPath2';
@@ -59,6 +60,7 @@ registerSuite('ThemedMixin', {
 	beforeEach() {
 		testRegistry = new Registry();
 		consoleStub = stub(console, 'warn');
+		add('dojo-debug', true, true);
 	},
 	afterEach() {
 		consoleStub.restore();
@@ -308,7 +310,7 @@ registerSuite('ThemedMixin', {
 				testWidget.registry.base = testRegistry;
 				testWidget.__setProperties__({
 					renderer: (updateTheme) => {
-						updateTheme && updateTheme(testTheme2);
+						updateTheme(testTheme2);
 						return 'ThemeSwitcher';
 					}
 				});
@@ -316,17 +318,38 @@ registerSuite('ThemedMixin', {
 				assert.strictEqual(result.text, 'ThemeSwitcher');
 				assert.deepEqual(themeInjectorContext.get(), testTheme2);
 			},
-			'Does not inject updateTheme if the theme injector has not been registered'() {
+			'Warns when theme injector is not registered in debug mode and injects dummy function'() {
+				const registry = new Registry();
 				const testWidget = new ThemeSwitcher();
-				testWidget.registry.base = testRegistry;
+				testWidget.registry.base = registry;
 				testWidget.__setProperties__({
 					renderer: (updateTheme) => {
-						assert.isUndefined(updateTheme);
+						updateTheme(testTheme2);
 						return 'ThemeSwitcher';
 					}
 				});
 				const result = testWidget.__render__() as VNode;
 				assert.strictEqual(result.text, 'ThemeSwitcher');
+				assert.isTrue(consoleStub.calledOnce);
+				assert.strictEqual(
+					consoleStub.firstCall.args[0],
+					"Theme injector has not been registered with label: '__theme_injector'"
+				);
+			},
+			'Does not warns when i18n injector is not registered when debug mode is false'() {
+				add('dojo-debug', false, true);
+				const registry = new Registry();
+				const testWidget = new ThemeSwitcher();
+				testWidget.registry.base = registry;
+				testWidget.__setProperties__({
+					renderer: (updateTheme) => {
+						updateTheme(testTheme2);
+						return 'ThemeSwitcher';
+					}
+				});
+				const result = testWidget.__render__() as VNode;
+				assert.strictEqual(result.text, 'ThemeSwitcher');
+				assert.isTrue(consoleStub.notCalled);
 			},
 			'Can use a custom registry label for the theme injector'() {
 				const themeInjectorContext = new Injector<any>(testTheme1);
@@ -340,7 +363,7 @@ registerSuite('ThemedMixin', {
 				testWidget.__setProperties__({
 					registryLabel: 'other',
 					renderer: (updateTheme) => {
-						updateTheme && updateTheme(testTheme2);
+						updateTheme(testTheme2);
 						return 'ThemeSwitcher';
 					}
 				});

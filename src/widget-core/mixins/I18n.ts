@@ -8,6 +8,8 @@ import { Constructor, DNode, WidgetProperties, VNodeProperties } from './../inte
 import { Injector } from './../Injector';
 import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
+import alwaysRender from '../decorators/alwaysRender';
+import has from '../../has/has';
 
 export const INJECTOR_KEY = '__i18n_injector';
 
@@ -100,6 +102,31 @@ export function registerI18nInjector(localeData: LocaleData, registry: Registry)
 		return () => injector;
 	});
 	return injector;
+}
+
+export interface UpdateLocale {
+	(localeData: LocaleData): void;
+}
+
+export interface LocaleSwitcherProperties {
+	registryLabel?: string;
+	renderer(updateLocale: UpdateLocale): DNode | DNode[];
+}
+
+@alwaysRender()
+export class LocaleSwitcher extends WidgetBase<LocaleSwitcherProperties> {
+	protected render(): DNode | DNode[] {
+		const { renderer, registryLabel = INJECTOR_KEY } = this.properties;
+		const injectorItem = this.registry.getInjector<Injector>(registryLabel);
+		if (injectorItem) {
+			const injector = injectorItem.injector();
+			return renderer((localeData: LocaleData) => {
+				injector.set(localeData);
+			});
+		}
+		has('dojo-debug') && console.warn(`I18n injector has not been registered with label: '${registryLabel}'`);
+		return renderer(() => {});
+	}
 }
 
 export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & Constructor<I18nMixin> {

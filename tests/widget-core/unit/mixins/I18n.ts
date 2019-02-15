@@ -2,13 +2,22 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import i18n, { invalidate, switchLocale, systemLocale } from '../../../../src/i18n/i18n';
 import Map from '../../../../src/shim/Map';
-import { I18nMixin, I18nProperties, registerI18nInjector } from '../../../../src/widget-core/mixins/I18n';
+import {
+	I18nMixin,
+	I18nProperties,
+	registerI18nInjector,
+	LocaleSwitcher
+} from '../../../../src/widget-core/mixins/I18n';
 import { Registry } from '../../../../src/widget-core/Registry';
 import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 import bundle from '../../support/nls/greetings';
 import { fetchCldrData } from '../../support/util';
 import { v, w } from './../../../../src/widget-core/d';
 import { ThemedMixin } from './../../../../src/widget-core/mixins/Themed';
+import { VNode } from '../../../../src/widget-core/interfaces';
+import { add } from '../../../../src/has/has';
+import { SinonStub, stub } from 'sinon';
+import Injector from '../../../../src/widget-core/Injector';
 
 class Localized extends I18nMixin(ThemedMixin(WidgetBase))<I18nProperties> {}
 
@@ -34,10 +43,16 @@ const overrideBundle = {
 };
 
 let localized: any;
+let consoleWarnStub: SinonStub;
 
 registerSuite('mixins/I18nMixin', {
 	before() {
 		return <Promise<any>>fetchCldrData();
+	},
+
+	beforeEach() {
+		add('dojo-debug', true, true);
+		consoleWarnStub = stub(console, 'warn');
 	},
 
 	afterEach() {
@@ -47,6 +62,7 @@ registerSuite('mixins/I18nMixin', {
 		if (localized) {
 			localized = null;
 		}
+		consoleWarnStub.restore();
 	},
 
 	tests: {
@@ -230,6 +246,78 @@ registerSuite('mixins/I18nMixin', {
 				localized.__setProperties__({});
 				result = localized.__render__();
 				assert.strictEqual(result.properties!['lang'], 'jp');
+			}
+		},
+		LocaleSwitcher: {
+			'Injects updateLocale function to renderer'() {
+				const registry = new Registry();
+				const i18nInjectorContext = registerI18nInjector({ locale: 'ar', rtl: true }, registry);
+
+				const testWidget = new LocaleSwitcher();
+				testWidget.registry.base = registry;
+				testWidget.__setProperties__({
+					renderer: (updateLocale) => {
+						updateLocale({ locale: 'us', rtl: false });
+						return 'I18nSwitcher';
+					}
+				});
+				const result = testWidget.__render__() as VNode;
+				assert.strictEqual(result.text, 'I18nSwitcher');
+				assert.deepEqual(i18nInjectorContext.get(), { locale: 'us', rtl: false });
+			},
+			'Warns when i18n injector is not registered in debug mode and injects dummy function'() {
+				const registry = new Registry();
+				const testWidget = new LocaleSwitcher();
+				testWidget.registry.base = registry;
+				testWidget.__setProperties__({
+					renderer: (updateLocale) => {
+						updateLocale({ locale: 'us', rtl: false });
+						return 'I18nSwitcher';
+					}
+				});
+				const result = testWidget.__render__() as VNode;
+				assert.strictEqual(result.text, 'I18nSwitcher');
+				assert.isTrue(consoleWarnStub.calledOnce);
+				assert.strictEqual(
+					consoleWarnStub.firstCall.args[0],
+					"I18n injector has not been registered with label: '__i18n_injector'"
+				);
+			},
+			'Does not warns when i18n injector is not registered when debug mode is false'() {
+				add('dojo-debug', false, true);
+				const registry = new Registry();
+				const testWidget = new LocaleSwitcher();
+				testWidget.registry.base = registry;
+				testWidget.__setProperties__({
+					renderer: (updateLocale) => {
+						updateLocale({ locale: 'us', rtl: false });
+						return 'I18nSwitcher';
+					}
+				});
+				const result = testWidget.__render__() as VNode;
+				assert.strictEqual(result.text, 'I18nSwitcher');
+				assert.isTrue(consoleWarnStub.notCalled);
+			},
+			'Can use a custom registry label for the i18n injector'() {
+				const registry = new Registry();
+				const i18nInjectorContext = new Injector<any>({ locale: 'ar', rtl: true });
+				registry.defineInjector('other', (invalidator) => {
+					i18nInjectorContext.setInvalidator(invalidator);
+					return () => i18nInjectorContext;
+				});
+
+				const testWidget = new LocaleSwitcher();
+				testWidget.registry.base = registry;
+				testWidget.__setProperties__({
+					registryLabel: 'other',
+					renderer: (updateLocale) => {
+						updateLocale({ locale: 'us', rtl: false });
+						return 'I18nSwitcher';
+					}
+				});
+				const result = testWidget.__render__() as VNode;
+				assert.strictEqual(result.text, 'I18nSwitcher');
+				assert.deepEqual(i18nInjectorContext.get(), { locale: 'us', rtl: false });
 			}
 		},
 		'does not decorate properties for wNode'() {
