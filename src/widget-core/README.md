@@ -557,6 +557,49 @@ render() {
 }
 ```
 
+#### Changing Theme
+
+To change a theme a widget `ThemeSwitcher` is available from `@dojo/framework/widget-core/mixins/Themed`, the `ThemeSwitcher` widget has a `renderer` property that injects an `updateTheme` function and returns `DNode | DNode[]` to render.
+
+##### Properties
+
+ * `renderer`: (updateTheme(theme: Theme) => void): DNode | DNode[]
+  * The renderer that is called with the `updateTheme` function and returns `DNode | DNode[]` that will be rendered
+ * `registryLabel`(optional): string
+  * The registry label used to register the theme injector. When using the `registerThemeInjector` this does not need to be set.
+
+##### Example Usage
+
+```ts
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import ThemedMixin, { ThemeSwitcher, theme, UpdateTheme } from '@dojo/framework/widget-core/mixins/Themed';
+
+import lightTheme from '../light-theme';
+import darkTheme from '../dark-theme';
+import * as css from './style/MyApp.m.css';
+
+@theme(css)
+class MyApp extends ThemedMixin(WidgetBase) {
+	protected render() {
+		return v('div', [
+			w(ThemeSwitcher, { renderer: (updateTheme: UpdateTheme) => {
+				return v('div', [
+					v('button', { onclick: () => {
+						updateTheme(lightTheme);
+					}}, ['light']),
+					v('button', { onclick: () => {
+						updateTheme(darkTheme);
+					}}, ['dark'])
+				]);
+			}}),
+			v('div', { classes: this.theme(css.container )})
+		]);
+	}
+}
+```
+
+The above example shows a themed widget, with the `ThemeSwitcher` used to render two buttons that will switch between a `light` and `dark` theme.
+
 #### Passing extra classes to widgets
 
 The theming mechanism is great for consistently applying custom styles across every widget, but isn't flexible enough for individual cases when a user wants to apply additional styles for a specific widget or widgets.
