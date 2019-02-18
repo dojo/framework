@@ -5,6 +5,7 @@ import WeakMap from '../../shim/WeakMap';
 import Set from '../../shim/Set';
 import Map from '../../shim/Map';
 import { from as arrayFrom } from '../../shim/array';
+import { Mimic } from '../assertionTemplate';
 
 let widgetClassCounter = 0;
 const widgetMap = new WeakMap<Constructor<DefaultWidgetBaseInterface>, number>();
@@ -98,9 +99,55 @@ function formatNode(node: WNode | VNode, tabs: any): string {
 	return `v("${node.tag}", ${properties}`;
 }
 
+const assertionWidgets = [
+	{
+		type: Mimic,
+		value(actual: DNode, expected: DNode) {
+			return [actual, actual];
+		}
+	}
+];
+
+function decorate(actual: DNode | DNode[], expected: DNode | DNode[]): [DNode[], DNode[]] {
+	actual = Array.isArray(actual) ? actual : [actual];
+	expected = Array.isArray(expected) ? expected : [expected];
+	let actualDecoratedNodes = [];
+	let expectedDecoratedNodes = [];
+	for (let i = 0; i < expected.length; i++) {
+		let actualNode = actual[i];
+		let expectedNode = expected[i];
+
+		if (isWNode(expectedNode)) {
+			[actualNode, expectedNode] = assertionWidgets.reduce(
+				(result, assertionWidget) => {
+					if ((expectedNode as any).widgetConstructor === assertionWidget.type) {
+						return assertionWidget.value(result[0], result[1]);
+					}
+					return [result[0], result[1]];
+				},
+				[actualNode, expectedNode]
+			);
+		}
+		if ((isWNode(actualNode) || isVNode(actualNode)) && (isWNode(expectedNode) || isVNode(expectedNode))) {
+			if (typeof expectedNode.properties === 'function') {
+				expectedNode.properties = expectedNode.properties(expectedNode.properties, actualNode.properties);
+			}
+			if (actualNode.children && expectedNode.children) {
+				const [actualChildren, expectedChildren] = decorate(actualNode.children, expectedNode.children);
+				actualNode.children = actualChildren;
+				expectedNode.children = expectedChildren;
+			}
+		}
+		actualDecoratedNodes.push(actualNode);
+		expectedDecoratedNodes.push(expectedNode);
+	}
+	return [actualDecoratedNodes, expectedDecoratedNodes];
+}
+
 export function assertRender(actual: DNode | DNode[], expected: DNode | DNode[], message?: string): void {
-	const parsedActual = formatDNodes(actual);
-	const parsedExpected = formatDNodes(expected);
+	const [decoratedActual, decoratedExpected] = decorate(actual, expected);
+	const parsedActual = formatDNodes(Array.isArray(actual) ? decoratedActual : decoratedActual[0]);
+	const parsedExpected = formatDNodes(Array.isArray(expected) ? decoratedExpected : decoratedExpected[0]);
 	const diffResult = diff.diffLines(parsedActual, parsedExpected);
 	let diffFound = false;
 	const parsedDiff = diffResult.reduce((result: string, part, index) => {

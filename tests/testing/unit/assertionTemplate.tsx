@@ -5,7 +5,7 @@ import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { v, w } from '../../../src/widget-core/d';
 import { tsx } from '../../../src/widget-core/tsx';
-import assertionTemplate from '../../../src/testing/assertionTemplate';
+import assertionTemplate, { Mimic } from '../../../src/testing/assertionTemplate';
 
 class MyWidget extends WidgetBase<{
 	toggleProperty?: boolean;
@@ -62,6 +62,11 @@ describe('assertionTemplate', () => {
 		assert.deepEqual(classes, ['root']);
 	});
 
+	it('can get properties', () => {
+		const properties = baseAssertion.getProperties('~root');
+		assert.deepEqual(properties, { '~key': 'root', classes: ['root'] });
+	});
+
 	it('can get a child', () => {
 		const children = baseAssertion.getChildren('~header');
 		assert.equal(children[0], 'hello');
@@ -75,6 +80,20 @@ describe('assertionTemplate', () => {
 	it('can set a property', () => {
 		const h = harness(() => w(MyWidget, { toggleProperty: true }));
 		const propertyAssertion = baseAssertion.setProperty('~li-one', 'foo', 'b');
+		h.expect(propertyAssertion);
+	});
+
+	it('can set properties', () => {
+		const h = harness(() => w(MyWidget, { toggleProperty: true }));
+		const propertyAssertion = baseAssertion.setProperties('~li-one', { foo: 'b' });
+		h.expect(propertyAssertion);
+	});
+
+	it('can set properties and use the actual properties', () => {
+		const h = harness(() => w(MyWidget, { toggleProperty: true }));
+		const propertyAssertion = baseAssertion.setProperties('~li-one', (expectedProps: any, actualProps: any) => {
+			return actualProps;
+		});
 		h.expect(propertyAssertion);
 	});
 
@@ -118,6 +137,12 @@ describe('assertionTemplate', () => {
 		const h = harness(() => <MyWidget toggleProperty={true} />);
 		const propertyAssertion = tsxAssertion.setProperty('~li-one', 'foo', 'b');
 		h.expect(propertyAssertion);
+	});
+
+	it('can use mimic', () => {
+		const h = harness(() => w(MyWidget, {}));
+		const childAssertion = baseAssertion.replace('~header', [w(Mimic, {})]);
+		h.expect(childAssertion);
 	});
 
 	it('should be immutable', () => {
