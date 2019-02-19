@@ -779,11 +779,11 @@ When using the `Registry` to inject i18n properties to widgets using the `I18nMi
 
 ```ts
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import I18ndMixin, { LocaleSwitcher, UpdateLocale } from '@dojo/framework/widget-core/mixins/I18n';
+import I18nMixin, { LocaleSwitcher, UpdateLocale } from '@dojo/framework/widget-core/mixins/I18n';
 
 import nlsBundle from '../nls/main';
 
-class MyApp extends I18ndMixin(WidgetBase) {
+class MyApp extends I18nMixin(WidgetBase) {
 	protected render() {
 		const { messages } = this.localizeBundle(nlsBundle);
 
