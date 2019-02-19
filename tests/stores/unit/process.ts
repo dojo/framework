@@ -16,7 +16,7 @@ import {
 	createCallbackDecorator
 } from '../../../src/stores/process';
 import { Store } from '../../../src/stores/Store';
-import { replace } from '../../../src/stores/state/operations';
+import { replace, add } from '../../../src/stores/state/operations';
 
 let store: Store;
 let promises: Promise<any>[] = [];
@@ -406,6 +406,18 @@ describe('process', () => {
 		});
 
 		assert.equal(typeof command, 'function');
+	});
+
+	it('should add object by integer like index key', () => {
+		const id = '3fe3c6d3-15e1-4d77-886f-daeb0ed63458';
+		const createCommand = createCommandFactory<any>();
+		const command = createCommand(({ get, path, payload }) => {
+			return [add(path('test', id), { foo: 'bar' })];
+		});
+		const process = createProcess('test', [command]);
+		const executor = process(store);
+		executor({});
+		assert.deepEqual(store.get(store.path('test')), { [id]: { foo: 'bar' } });
 	});
 
 	it('can type payload that extends an object', () => {
