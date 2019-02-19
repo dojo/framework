@@ -504,7 +504,7 @@ For example, with the following configuration, the `numbers.json` CLDR file will
 {
 	"build-app": {
 		"locale": "en",
-		"supportedLocales": [ "es", "fr" ]
+		"supportedLocales": [ "es", "fr" ],
 		"cldrPaths": [
 			"cldr-data/main/{locale}/numbers.json"
 		]
