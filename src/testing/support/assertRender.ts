@@ -108,12 +108,17 @@ const assertionWidgets = [
 	}
 ];
 
+function isWNodeOrVNode(node: any): node is VNode | WNode {
+	return isVNode(node) || isWNode(node);
+}
+
 function decorate(actual: DNode | DNode[], expected: DNode | DNode[]): [DNode[], DNode[]] {
 	actual = Array.isArray(actual) ? actual : [actual];
 	expected = Array.isArray(expected) ? expected : [expected];
 	let actualDecoratedNodes = [];
 	let expectedDecoratedNodes = [];
-	for (let i = 0; i < expected.length; i++) {
+	const length = actual.length > expected.length ? actual.length : expected.length;
+	for (let i = 0; i < length; i++) {
 		let actualNode = actual[i];
 		let expectedNode = expected[i];
 
@@ -128,15 +133,21 @@ function decorate(actual: DNode | DNode[], expected: DNode | DNode[]): [DNode[],
 				[actualNode, expectedNode]
 			);
 		}
-		if ((isWNode(actualNode) || isVNode(actualNode)) && (isWNode(expectedNode) || isVNode(expectedNode))) {
+		if (isWNodeOrVNode(expectedNode)) {
 			if (typeof expectedNode.properties === 'function') {
-				expectedNode.properties = expectedNode.properties(expectedNode.properties, actualNode.properties);
+				const actualProperties = isWNodeOrVNode(actualNode) ? actualNode.properties : {};
+				expectedNode.properties = expectedNode.properties(expectedNode.properties, actualProperties);
 			}
-			if (actualNode.children && expectedNode.children) {
-				const [actualChildren, expectedChildren] = decorate(actualNode.children, expectedNode.children);
-				actualNode.children = actualChildren;
-				expectedNode.children = expectedChildren;
-			}
+		}
+		const childrenA = isWNodeOrVNode(actualNode) ? actualNode.children : [];
+		const childrenB = isWNodeOrVNode(expectedNode) ? expectedNode.children : [];
+
+		const [actualChildren, expectedChildren] = decorate(childrenA, childrenB);
+		if (isWNodeOrVNode(actualNode)) {
+			actualNode.children = actualChildren;
+		}
+		if (isWNodeOrVNode(expectedNode)) {
+			expectedNode.children = expectedChildren;
 		}
 		actualDecoratedNodes.push(actualNode);
 		expectedDecoratedNodes.push(expectedNode);
