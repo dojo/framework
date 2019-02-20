@@ -1,14 +1,3 @@
-- [Internationalizing a Dojo application](#internationalizing-a-dojo-application)
-  - [Configuring supported application locales](#configuring-supported-application-locales)
-  - [Creating i18n-aware Widgets](#creating-i18n-aware-widgets)
-    - [`I18nMixin` Widget Properties](#i18nmixin-widget-properties)
-    - [`I18nMixin` `localizeBundle()` method](#i18nmixin-localizebundle-method)
-  - [Providing locale data to i18n-aware widgets](#providing-locale-data-to-i18n-aware-widgets)
-  - [Changing locales](#changing-locales)
-    - [LocaleSwitcher Properties](#localeswitcher-properties)
-    - [Example Usage](#example-usage)
-  - [Overriding locales and bundles per-widget](#overriding-locales-and-bundles-per-widget)
-
 # Internationalizing a Dojo application
 
 ## Configuring supported application locales
@@ -41,11 +30,11 @@ Individual widgets can be internationalized by adding the `I18nMixin` mixin from
 - `rtl`?: boolean
     - An optional flag indicating the widget's text direction. If `true`, then the underlying DOM node's `dir` property is set to `"rtl"`. If it is `false`, then the `dir` property is set to `"ltr"`. Otherwise, the property is not set.
 - `i18nBundle`?: `Bundle<Messages>` | `Map<Bundle<Messages>, Bundle<Messages>>`
-    -  An optional override for the [default language bundle](./10-bundles.md#default-language-module) passed to the `localizeBundle` method. If the override contains a `messages` object, then it will completely replace the underlying default language bundle that the widget may be using. If the override only contains a `locales` object, a new bundle will be created with the additional locale loaders specified in the override.
+    -  An optional override for the [default language bundle](./bundles.md#default-language-module) passed to the `localizeBundle` method. If the override contains a `messages` object, then it will completely replace the underlying default language bundle that the widget may be using. If the override only contains a `locales` object, a new bundle will be created with the additional locale loaders specified in the override.
 
 ### `I18nMixin` `localizeBundle()` method
 
-Widgets can pass in their [default language bundle](./10-bundles.md#default-language-module) into the `localizeBundle` method to have the bundle localized appropriately given the widget's `locale` property.
+Widgets can pass in their [default language bundle](./bundles.md#default-language-module) into the `localizeBundle` method to have the bundle localized appropriately given the widget's `locale` property.
 
 If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then a bundle of blank message values is returned. Alternatively, the `localizeBundle` method accepts a second boolean argument, which, when `true`, causes the default messages to be returned instead of the blank bundle. The widget will be invalidated once the locale-specific messages have been loaded, triggering a re-render with the localized message content.
 
@@ -203,11 +192,3 @@ export class MyWidget extends WidgetBase {
 	}
 }
 ```
-
----
-
-**Next:** [Advanced formatting: CLDR](./30-formatting.md)
-
-**Previous:** [Working with message bundles](./10-bundles.md)
-
-**Up:** [Dojo i18n Index](./index.md)

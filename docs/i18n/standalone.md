@@ -1,8 +1,3 @@
-- [Standalone API](#standalone-api)
-  - [Accessing locale message bundles](#accessing-locale-message-bundles)
-  - [Determining the Current Locale](#determining-the-current-locale)
-  - [Changing the Root Locale and Observing Locale Changes](#changing-the-root-locale-and-observing-locale-changes)
-
 # Standalone API
 
 ## Accessing locale message bundles
@@ -102,9 +97,3 @@ switchLocale('de');
 console.log(i18n.locale); // 'de'
 console.log(systemLocale); // 'en-GB' (the system locale does not change with the root locale)
 ```
-
----
-
-**Previous:** [Advanced formatting: CLDR](./30-formatting.md)
-
-**Up:** [Dojo i18n Index](./index.md)

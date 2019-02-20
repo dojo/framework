@@ -1,10 +1,3 @@
-- [Working with message bundles](#working-with-message-bundles)
-  - [Bundle default language](#bundle-default-language)
-  - [TypeScript structure](#typescript-structure)
-    - [Default language module](#default-language-module)
-  - [Importing and using bundles](#importing-and-using-bundles)
-  - [Lazy vs. static loading](#lazy-vs-static-loading)
-
 # Working with message bundles
 
 Dojo's concept of a message bundle is a map of keyed text messages, with message content for each key represented across one or more languages.
@@ -93,9 +86,9 @@ export default class MyI18nWidget extends I18nMixin(WidgetBase) {
 }
 ```
 
-As this example widget loads its messages through `I18nMixin`'s [localizeBundle](./20-i18n-dojo-apps.md#i18nmixin-localizebundle-method) method, it will continue to work as new language translations are added and referenced within the bundle's `nls/MyI18nWidget.en.ts` default language module. Users will see localized messages from `MyI18nWidget` instances if a message set for their currently configured language is available.
+As this example widget loads its messages through `I18nMixin`'s [localizeBundle](./i18n-dojo-apps.md#i18nmixin-localizebundle-method) method, it will continue to work as new language translations are added and referenced within the bundle's `nls/MyI18nWidget.en.ts` default language module. Users will see localized messages from `MyI18nWidget` instances if a message set for their currently configured language is available.
 
-Applications that want to override user default languages and allow changing locales within the application itself require additional setup, covered in [Internationalizing a Dojo application](./20-i18n-dojo-apps.md#internationalizing-a-dojo-application).
+Applications that want to override user default languages and allow changing locales within the application itself require additional setup, covered in [Internationalizing a Dojo application](./i18n-dojo-apps.md#internationalizing-a-dojo-application).
 
 ## Lazy vs. static loading
 
@@ -123,9 +116,3 @@ export default {
 	}
 };
 ```
-
----
-
-**Next:** [Internationalizing a Dojo application](./20-i18n-dojo-apps.md)
-
-**Up:** [Dojo i18n Index](./index.md)
