@@ -1,6 +1,5 @@
 const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-// import global from '../../../../src/shim/global';
 import { createSandbox, SinonStub } from 'sinon';
 import InputValidity from '../../../../src/widget-core/meta/InputValidity';
 
