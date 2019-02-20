@@ -42,6 +42,18 @@ const baseAssertion = assertionTemplate(() =>
 	])
 );
 
+class ListWidget extends WidgetBase {
+	render() {
+		let children = [];
+		for (let i = 0; i < 30; i++) {
+			children.push(v('li', [`item: ${i}`]));
+		}
+		return v('div', { classes: ['root'] }, [v('ul', children)]);
+	}
+}
+
+const baseListAssertion = assertionTemplate(() => v('div', { classes: ['root'] }, [v('ul', [])]));
+
 const tsxAssertion = assertionTemplate(() => (
 	<div classes={['root']}>
 		<h2>hello</h2>
@@ -147,9 +159,12 @@ describe('assertionTemplate', () => {
 	});
 
 	it('can use mimic', () => {
-		const h = harness(() => w(MyWidget, {}));
-		const childAssertion = baseAssertion.replace('~header', [w(Mimic, {})]);
-		h.expect(childAssertion);
+		const h = harness(() => w(ListWidget, {}));
+		const childListAssertion = baseListAssertion.replace('ul', [
+			v('li', ['item: 0']),
+			...new Array(29).fill(w(Mimic, {}))
+		]);
+		h.expect(childListAssertion);
 	});
 
 	it('should be immutable', () => {
