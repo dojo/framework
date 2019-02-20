@@ -109,7 +109,7 @@ const assertionWidgets = [
 	}
 ];
 
-function isWNodeOrVNode(node: any): node is VNode | WNode {
+function isNode(node: any): node is VNode | WNode {
 	return isVNode(node) || isWNode(node);
 }
 
@@ -134,20 +134,20 @@ function decorate(actual: DNode | DNode[], expected: DNode | DNode[]): [DNode[],
 				[actualNode, expectedNode]
 			);
 		}
-		if (isWNodeOrVNode(expectedNode)) {
+		if (isNode(expectedNode)) {
 			if (typeof expectedNode.properties === 'function') {
-				const actualProperties = isWNodeOrVNode(actualNode) ? actualNode.properties : {};
+				const actualProperties = isNode(actualNode) ? actualNode.properties : {};
 				expectedNode.properties = expectedNode.properties(expectedNode.properties, actualProperties);
 			}
 		}
-		const childrenA = isWNodeOrVNode(actualNode) ? actualNode.children : [];
-		const childrenB = isWNodeOrVNode(expectedNode) ? expectedNode.children : [];
+		const childrenA = isNode(actualNode) ? actualNode.children : [];
+		const childrenB = isNode(expectedNode) ? expectedNode.children : [];
 
 		const [actualChildren, expectedChildren] = decorate(childrenA, childrenB);
-		if (isWNodeOrVNode(actualNode)) {
+		if (isNode(actualNode)) {
 			actualNode.children = actualChildren;
 		}
-		if (isWNodeOrVNode(expectedNode)) {
+		if (isNode(expectedNode)) {
 			expectedNode.children = expectedChildren;
 		}
 		actualDecoratedNodes.push(actualNode);
