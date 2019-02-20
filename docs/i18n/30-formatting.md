@@ -1,17 +1,27 @@
+- [Advanced formatting: CLDR](#advanced-formatting-cldr)
+	- [Loading CLDR data](#loading-cldr-data)
+		- [Dojo build system](#dojo-build-system)
+		- [Standalone](#standalone)
+	- [Required CLDR data per feature](#required-cldr-data-per-feature)
+	- [Message Formatting](#message-formatting)
+		- [Basic token replacement](#basic-token-replacement)
+		- [ICU Message Formatting](#icu-message-formatting)
+	- [Date and number formatting.](#date-and-number-formatting)
+
 # Advanced formatting: CLDR
 
 ## Loading CLDR data
 
 Given the very large size of the [Unicode CLDR data](http://cldr.unicode.org), it is not included as a dependency of `@dojo/framework/i18n`. Relevant portions of CLDR data must be explicitly loaded when applications require features such as [ICU-formatted messages](http://userguide.icu-project.org/formatparse/messages) or others provided by `@dojo/framework/i18n` such as date or number formatters.
 
-**Note**: Internationalized applications that require simple, unformatted locale-specific messages do not need to concern themselves with loading CLDR data. These applications only need to be configured as per [an internationalized Dojo application](#internationalizing-a-dojo-application).
+**Note**: Internationalized applications that require simple, unformatted locale-specific messages do not need to concern themselves with loading CLDR data. These applications only need to be configured as per [an internationalized Dojo application](./20-i18n-dojo-apps.md#internationalizing-a-dojo-application).
 
 ### Dojo build system
 
 CLDR data can be loaded from an application's `.dojorc` build configuration file via the `cldrPaths` list within the `build-app` section.
 
 - `cldrPaths`: string[]
-    - An array of paths to [CLDR JSON](https://github.com/dojo/i18n#loading-cldr-data) files to load. Can be used in conjunction with the [locale and supportedLocales](#configuring-supported-application-locales) options - if a path contains the string `{locale}`, that file will be loaded for each locale listed in the `locale` and `supportedLocales` properties. 
+    - An array of paths to [CLDR JSON](https://github.com/dojo/i18n#loading-cldr-data) files to load. Can be used in conjunction with the [locale and supportedLocales](./20-i18n-dojo-apps.md#configuring-supported-application-locales) options - if a path contains the string `{locale}`, that file will be loaded for each locale listed in the `locale` and `supportedLocales` properties. 
 
 For example, with the following configuration, the `numbers.json` CLDR file will be loaded for all three supported `en`, `es`, and `fr` locales:
 
