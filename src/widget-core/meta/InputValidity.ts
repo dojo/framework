@@ -13,7 +13,6 @@ export class InputValidity extends Base {
 			// validation check will be one render behind.
 			// Call invalidate on the next loop.
 			setTimeout(() => this.invalidate());
-			return { valid: undefined, message: '' };
 		}
 
 		return {
