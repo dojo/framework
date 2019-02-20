@@ -9,7 +9,11 @@ export class InputValidity extends Base {
 		}
 
 		if (value !== node.value) {
+			// if the vdom is out of sync with the real dom our
+			// validation check will be one render behind.
+			// Call invalidate on the next loop.
 			setTimeout(() => this.invalidate());
+			return { valid: undefined, message: '' };
 		}
 
 		return {
