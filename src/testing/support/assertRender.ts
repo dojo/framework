@@ -103,7 +103,8 @@ const assertionWidgets = [
 	{
 		type: Mimic,
 		value(actual: DNode, expected: DNode) {
-			return [actual, actual];
+			const node = actual ? actual : expected;
+			return [actual, node];
 		}
 	}
 ];
