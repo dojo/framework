@@ -1,11 +1,11 @@
 # Standalone API
 
 ## Accessing locale message bundles
-Once a default language bundle has been imported, any locale-specific messages are loaded by passing the default bundle to the `i18n` function.
+Once a [default language bundle](./bundles.md#default-language-module) has been imported, any locale-specific messages are accessed by passing the message bundle to the `i18n` function.
 
 For example:
 ```ts
-import i18n, { Messages } from '@dojo/framework/i18n';
+import i18n, { Messages } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
 i18n(bundle, 'fr').then(function(messages: Messages) {

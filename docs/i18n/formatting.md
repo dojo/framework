@@ -29,8 +29,10 @@ For example, with the following configuration, the `numbers.json` CLDR file will
 ```
 
 ### Standalone
-CLDR data can be loaded via the `loadCldrData` method exported by `@dojo/framework/i18n/cldr/load`. `loadCldrData` accepts an object of CLDR data. All CLDR data MUST match the format used by the [Unicode CLDR JSON](https://github.com/unicode-cldr/cldr-json) files. Supplemental data MUST be nested within a top-level `supplemental` object, and locale-specific data MUST be nested under locale objects within a top-level `main` object:
 
+Outside of the Dojo build system, CLDR data can be loaded via the `loadCldrData` method exported by `@dojo/framework/i18n/cldr/load`. `loadCldrData` accepts an object of CLDR data. All CLDR data must match the format used by the [Unicode CLDR JSON](https://github.com/unicode-cldr/cldr-json) files. Supplemental data must be nested within a top-level `supplemental` object, and locale-specific data must be nested under locale objects within a top-level `main` object.
+
+For example:
 ```ts
 import loadCldrData from '@dojo/framework/i18n/cldr/load';
 
@@ -90,19 +92,53 @@ For [unit formatting](#date-and-number-formatting):
 
 ### Basic token replacement
 
-The `i18n` module exposes two methods that handle message formatting: 
+Dojo's `i18n` framework supports [ICU message formatting](#icu-message-formatting), but this requires CLDR data to be available and is not something that every application requires. As such, if the `supplemental/likeSubtags` and `supplemental/plurals` CLDR data are not loaded in the application, then Dojo's various message formatting methods will perform simple token replacement.
+
+The message formatting examples in the next two subsections will use a [message bundle](./bundles.md#working-with-message-bundles) with a `guestInfo` message as follows:
+
+>nls/main.ts
+```ts
+export default {
+	messages: {
+		guestInfo: "{host} invites {guest} to the party."
+	}
+};
+```
+
+With basic token replacement, an object with `host` and `guest` properties can be provided to a formatter without the need to load CLDR data.
+
+#### Replacing tokens in widgets
+
+[I18n-aware widgets](./i18n-dojo-apps.md#creating-i18n-aware-widgets) can use the `format` function returned from [their `localizeBundle` method](./i18n-dojo-apps.md#i18nmixin-localizebundle-method) to perform simple token replacement in their messages.
+
+The `guestInfo` message can be rendered directly via `format`:
+
+>widgets/MyI18nWidget.ts
+```ts
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { v } from '@dojo/framework/widget-core/d';
+import I18nMixin from '@dojo/framework/widget-core/mixins/I18n';
+
+import nlsBundle from '../nls/main';
+
+export default class MyI18nWidget extends I18nMixin(WidgetBase) {
+	protected render() {
+		const { format } = this.localizeBundle(nlsBundle);
+
+		return v('div', [ format('guestInfo', {
+			host: 'Margaret Mead',
+			guest: 'Laura Nader'
+		})]); // Will render as 'Margaret Mead invites Laura Nader to the party.'
+	}
+}
+```
+#### Direct token replacement formatting
+
+The `i18n` module exposes two methods that handle message formatting:
 - `formatMessage`, which directly returns a formatted message based on its inputs
 - `getMessageFormatter`, which returns a method dedicated to formatting a single message.
-  
-Both of these methods operate on bundle objects, which must first be registered with the i18n ecosystem by passing them to the `i18n` function (see below).
 
-`@dojo/framework/i18n` supports the [ICU message format](#icu-message-formatting), but that requires CLDR data and is not something that every application requires. As such, if the `supplemental/likeSubtags` and `supplemental/plurals` data are not loaded, then both `formatMessage` and `getMessageFormatter` will perform simple token replacement.
-
-For example, given a `guestInfo` message:
-
->`{host} invites {guest} to the party.`
-
-an object with `host` and `guest` properties can be provided to a formatter without the need to load CLDR data:
+Both of these methods operate on bundle objects, which must first be registered with the i18n ecosystem by passing them to [the `i18n` function](./standalone.md#accessing-locale-message-bundles).
 
 ```ts
 import i18n, { formatMessage, getMessageFormatter } from '@dojo/framework/i18n/i18n';
@@ -137,34 +173,66 @@ i18n(bundle, 'en').then(() => {
 
 `@dojo/framework/i18n` relies on [Globalize.js](https://github.com/jquery/globalize/blob/master/doc/api/message/message-formatter.md) for [ICU message formatting](http://userguide.icu-project.org/formatparse/messages), and as such all of the features offered by Globalize.js are available through `@dojo/framework/i18n`.
 
-As an example, suppose there is a locale bundle with a `guestInfo` message:
+The message formatting examples in the next two subsections will use a [message bundle](./bundles.md#working-with-message-bundles) with an updated `guestInfo` message as follows:
 
+>nls/main.ts
 ```ts
-const messages = {
-	guestInfo: `{gender, select,
-		female {
-			{guestCount, plural, offset:1
-			=0 {{host} does not give a party.}
-			=1 {{host} invites {guest} to her party.}
-			=2 {{host} invites {guest} and one other person to her party.}
-			other {{host} invites {guest} and # other people to her party.}}}
-		male {
-			{guestCount, plural, offset:1
-			=0 {{host} does not give a party.}
-			=1 {{host} invites {guest} to his party.}
-			=2 {{host} invites {guest} and one other person to his party.}
-			other {{host} invites {guest} and # other people to his party.}}}
-		other {
-			{guestCount, plural, offset:1
-			=0 {{host} does not give a party.}
-			=1 {{host} invites {guest} to their party.}
-			=2 {{host} invites {guest} and one other person to their party.}
-			other {{host} invites {guest} and # other people to their party.}}}}`
+export default {
+	messages: {
+		guestInfo: `{gender, select,
+			female {
+				{guestCount, plural, offset:1
+				=0 {{host} does not give a party.}
+				=1 {{host} invites {guest} to her party.}
+				=2 {{host} invites {guest} and one other person to her party.}
+				other {{host} invites {guest} and # other people to her party.}}}
+			male {
+				{guestCount, plural, offset:1
+				=0 {{host} does not give a party.}
+				=1 {{host} invites {guest} to his party.}
+				=2 {{host} invites {guest} and one other person to his party.}
+				other {{host} invites {guest} and # other people to his party.}}}
+			other {
+				{guestCount, plural, offset:1
+				=0 {{host} does not give a party.}
+				=1 {{host} invites {guest} to their party.}
+				=2 {{host} invites {guest} and one other person to their party.}
+				other {{host} invites {guest} and # other people to their party.}}}}`
+	}
 };
-export default messages;
 ```
 
-The above message can be converted directly with `formatMessage`, or `getMessageFormatter` can be used to generate a function that can be used over and over with different options. Note that the formatters created and used by both methods are cached, so there is no performance penalty from compiling the same message multiple times.
+#### ICU message formatting in widgets
+
+[I18n-aware widgets](./i18n-dojo-apps.md#creating-i18n-aware-widgets) can use the `format` function returned from [their `localizeBundle` method](./i18n-dojo-apps.md#i18nmixin-localizebundle-method) to perform ICU message formatting in the same way as for [simple token replacement](#replacing-tokens-in-widgets) described above.
+
+The ICU-formatted `guestInfo` message can then be rendered as:
+
+>widgets/MyI18nWidget.ts
+```ts
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { v } from '@dojo/framework/widget-core/d';
+import I18nMixin from '@dojo/framework/widget-core/mixins/I18n';
+
+import nlsBundle from '../nls/main';
+
+export default class MyI18nWidget extends I18nMixin(WidgetBase) {
+	protected render() {
+		const { format } = this.localizeBundle(nlsBundle);
+
+		return v('div', [ format('guestInfo', {
+			host: 'Margaret Mead',
+			gender: 'female',
+			guest: 'Laura Nader',
+			guestCount: 20
+		})]); // Will render as 'Margaret Mead invites Laura Nader and 19 other people to her party.'
+	}
+}
+```
+
+#### Direct ICU message formatting
+
+The ICU-formatted `guestInfo` message can be converted directly with `formatMessage`, or `getMessageFormatter` can be used to generate a function that can be called several times with different options. Note that the formatters created and used by both methods are cached, so there is no performance penalty from compiling the same message multiple times.
 
 Since the Globalize.js formatting methods use message paths rather than the message strings themselves, the `@dojo/framework/i18n` methods also require that the bundle itself be provided, so its unique identifier can be resolved to a message path within the Globalize.js ecosystem. If an optional locale is provided, then the corresponding locale-specific message will be used. Otherwise, the current locale is assumed.
 
