@@ -5,12 +5,13 @@ import { spy, stub, SinonStub } from 'sinon';
 import { WidgetBase, widgetInstanceMap, widget } from '../../../src/widget-core/WidgetBase';
 import { v, w, isWNode } from '../../../src/widget-core/d';
 import { WIDGET_BASE_TYPE } from '../../../src/widget-core/Registry';
-import { VNode, WidgetMetaConstructor, MetaBase } from '../../../src/widget-core/interfaces';
+import { DNode, VNode, WidgetMetaConstructor, MetaBase } from '../../../src/widget-core/interfaces';
 import { handleDecorator } from '../../../src/widget-core/decorators/handleDecorator';
 import { diffProperty } from '../../../src/widget-core/decorators/diffProperty';
 import { Base } from '../../../src/widget-core/meta/Base';
 import { NodeEventType } from '../../../src/widget-core/NodeHandler';
 import { afterRender } from '../../../src/widget-core/decorators/afterRender';
+import { tsx } from '../../../src/widget-core/tsx';
 
 interface TestProperties {
 	foo?: string;
@@ -408,7 +409,7 @@ describe('WidgetBase', () => {
 		it('factory should work on its own', () => {
 			interface FooProperties {
 				foo: string;
-				renderer(hello: string): VNode;
+				renderer(hello: string): DNode;
 			}
 			const Foo = widget(class extends WidgetBase<FooProperties> {});
 
@@ -430,7 +431,7 @@ describe('WidgetBase', () => {
 		it('should work with a w()', () => {
 			interface FooProperties {
 				foo: string;
-				renderer(hello: string): VNode;
+				renderer(hello: string): DNode;
 			}
 			const Foo = widget(class extends WidgetBase<FooProperties> {});
 
@@ -442,6 +443,23 @@ describe('WidgetBase', () => {
 							return v('div', [hello]);
 						}
 					});
+				}
+			}
+			const app = new App();
+			const output = app.render();
+			assert.isTrue(isWNode(output));
+		});
+
+		it('should still work with tsx', () => {
+			interface FooProperties {
+				foo: string;
+				renderer(hello: string): DNode;
+			}
+			const Foo = widget(class extends WidgetBase<FooProperties> {});
+
+			class App extends WidgetBase {
+				render() {
+					return <Foo foo="hello" renderer={(hello) => <div>{hello}</div>} />;
 				}
 			}
 			const app = new App();
