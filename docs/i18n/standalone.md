@@ -71,7 +71,16 @@ i18n(bundle, 'ar').then(() => {
 
 ## Determining the Current Locale
 
-The current locale can be accessed via the read-only property `i18n.locale`, which will always be either the locale set via `switchLocale` (see below) or the `systemLocale`. `systemLocale` is always set to the user's default locale.
+The current locale can be accessed via the read-only property `i18n.locale`, which will always be either the locale set via [`switchLocale` (see below)](#changing-the-root-locale-and-observing-locale-changes)
+ or the `systemLocale`.
+
+The `systemLocale` is also read-only, and its value is determined by the current execution environment in the following manner:
+
+Environment | Locale
+---: | ---
+Browser | User's default language setting
+Node.js | The Node.js process's `LANG` environment variable.
+Fallback | `en`
 
 ## Changing the Root Locale and Observing Locale Changes
 

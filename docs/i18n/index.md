@@ -21,6 +21,7 @@
     - [LocaleSwitcher Properties](./i18n-dojo-apps.md#localeswitcher-properties)
     - [Example Usage](./i18n-dojo-apps.md#example-usage)
   - [Overriding locales and bundles per-widget](./i18n-dojo-apps.md#overriding-locales-and-bundles-per-widget)
+  - [Default locale](./i18n-dojo-apps.md#default-locale)
 - [Advanced formatting: CLDR](./formatting.md#advanced-formatting-cldr)
 	- [Loading CLDR data](./formatting.md#loading-cldr-data)
 		- [Dojo build system](./formatting.md#dojo-build-system)

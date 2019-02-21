@@ -40,15 +40,37 @@ If the bundle supports the widget's current locale, but those locale-specific me
 
 The object returned by `localizeBundle` contains the following properties and methods:
 
--   `messages`: An object containing the localized message key-value pairs. If the messages have not yet loaded, then `messages` will be either a blank bundle or the default messages, depending upon how `localizeBundle` was called.
--   `isPlaceholder`: a boolean property indicating whether the returned messages are the actual locale-specific messages (`false`) or just the placeholders used while waiting for the localized messages to finish loading (`true`). This is useful to prevent the widget from rendering at all if localized messages have not yet loaded.
--   `format(key: string, replacements: { [key: string]: string })`: a method that accepts a message key as its first argument and an object of replacement values as its second. For example, if the bundle contains `greeting: 'Hello, {name}!'`, then calling `format('greeting', { name: 'World' })` would return `'Hello, World!'`.
+- `messages`
+    - An object containing the localized message key-value pairs. If the messages have not yet loaded, then `messages` will be either a blank bundle or the default messages, depending upon how `localizeBundle` was called.
+- `isPlaceholder`
+    - A boolean property indicating whether the returned messages are the actual locale-specific messages (`false`) or just the placeholders used while waiting for the localized messages to finish loading (`true`). This is useful to prevent the widget from rendering at all if localized messages have not yet loaded.
+- `format(key: string, replacements: { [key: string]: string })`
+    - A method that accepts a message key as its first argument and an object of replacement values as its second. For example, if the bundle contains `greeting: 'Hello, {name}!'`, then calling `format('greeting', { name: 'World' })` would return `'Hello, World!'`.
 
 An example of using all features returned by `localizeBundle`:
-```ts
-const MyWidgetBase = I18nMixin(WidgetBase);
 
-class I18nWidget extends MyWidgetBase<I18nWidgetProperties> {
+>nls/MyI18nWidget.en.ts
+```ts
+export default {
+	messages: {
+		hello: 'Welcome to the shop',
+		purchaseItems: 'Please confirm your purchase',
+		itemCount: 'Purchase {count} items'
+	}
+};
+```
+
+>widgets/MyI18nWidget.ts
+```ts
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { v, w } from '@dojo/framework/widget-core/d';
+import I18nMixin from '@dojo/framework/widget-core/mixins/I18n';
+import Label from '@dojo/widgets/label';
+import Button from '@dojo/widgets/button';
+
+import greetingsBundle from '../nls/MyI18nWidget.en';
+
+export default class MyI18nWidget extends I18nMixin(WidgetBase) {
 	render() {
 		// Load the "greetings" messages for the current locale. If the locale-specific
 		// messages have not been loaded yet, then the default messages are returned,
@@ -63,17 +85,18 @@ class I18nWidget extends MyWidgetBase<I18nWidgetProperties> {
 		}
 
 		return v('div', { title: messages.hello }, [
-			w(Label, {
+			w(Label, {}, [
 				// Passing a message string to a child widget.
-				label: messages.purchaseItems
-			}),
-			w(Button, {
+				messages.purchaseItems
+			]),
+			w(Button, {}, [
 				// Passing a formatted message string to a child widget.
-				label: format('itemCount', { count: 2 })
-			})
+				format('itemCount', { count: 2 })
+			])
 		]);
 	}
 }
+
 ```
 
 Note that with this pattern it is possible for a widget to obtain its messages from multiple bundles. When favoring simplicity, however, it is recommend that widgets are limited to a single bundle wherever possible.
@@ -117,11 +140,11 @@ The following example shows an i18n-aware widget that uses `LocaleSwitcher` to r
 
 ```ts
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import I18ndMixin, { LocaleSwitcher, UpdateLocale } from '@dojo/framework/widget-core/mixins/I18n';
+import I18nMixin, { LocaleSwitcher, UpdateLocale } from '@dojo/framework/widget-core/mixins/I18n';
 
 import nlsBundle from '../nls/main';
 
-class MyApp extends I18ndMixin(WidgetBase) {
+class MyApp extends I18nMixin(WidgetBase) {
 	protected render() {
 		const { messages } = this.localizeBundle(nlsBundle);
 
@@ -160,9 +183,9 @@ class MyApp extends I18ndMixin(WidgetBase) {
 
 Widgets that use `I18nMixin` can have their [i18n widget properties](#i18nmixin-widget-properties) overridden when instantiated by a parent. This can be useful when rendering several widgets with different locales in a single application (that is, using multiple locales within one application), as well as to override the set of messages a third-party widget may be using and align them within the context of your application.
 
-Each i18n-aware widget can have its own locale by passing a `locale` widget property. If no locale is set, then the default locale is assumed.
+Each i18n-aware widget can have its own independent locale by providing a `locale` widget property. If no `locale` property is set, then the [default locale](#default-locale) is assumed.
 
-The widget's default bundle can be replaced by passing an `i18nBundle` widget property. Dojo recommends against using multiple bundles in the same widget, but there may be times when an application needs to consume a third-party widget that does make use of more than one bundle. As such, `i18nBundle` can also be a `Map` of default bundles to override bundles.
+The widget's default bundle can also be replaced by passing an `i18nBundle` widget property. Dojo recommends against using multiple bundles in the same widget, but there may be times when an application needs to consume a third-party widget that does make use of more than one bundle. As such, `i18nBundle` can also be a `Map` of default bundles to override bundles.
 
 An example of overriding bundles within child widgets:
 ```ts
@@ -192,3 +215,17 @@ export class MyWidget extends WidgetBase {
 	}
 }
 ```
+
+## Default locale
+
+The locale that an [i18n-aware widget](#creating-i18n-aware-widgets) will use is determined in the following order until a value is found, depending on which i18n features an application makes use of:
+
+Order | I18n capability | Locale setting
+---: | --- | ---
+1 | **`I18nMixin`** | An explicit override provided via [the widget's `locale` property](#overriding-locales-and-bundles-per-widget).
+2 | **`I18nMixin` and i18n injector** | A locale that has been [selected or changed within the application](#changing-locales)
+3 | **`I18nMixin` and i18n injector** | The default locale set when initially registering [the i18n injector](#providing-locale-data-to-i18n-aware-widgets).
+4 | **`.dojorc`** | A user's current locale, such as their browser language setting, if the locale [is in the application's list of `build-app`.`supportedLocales`](#configuring-supported-application-locales).
+5 | **`.dojorc`** | The application's [default locale specified in `build-app`.`locale`](#configuring-supported-application-locales).
+6 | **`@dojo/framework/i18n`** | An explicit locale set via [Dojo i18n's `switchLocale` method](./standalone.md#changing-the-root-locale-and-observing-locale-changes).
+7 | **`@dojo/framework/i18n`** | The [`systemLocale` for the current execution environment](./standalone.md#determining-the-current-locale).

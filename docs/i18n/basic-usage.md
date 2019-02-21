@@ -18,7 +18,7 @@ Starting off with a single default language (English).
 import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
 import { v } from '@dojo/framework/widget-core/d';
 
-import I18nMixin from "@dojo/framework/widget-core/mixins/I18n";
+import I18nMixin from '@dojo/framework/widget-core/mixins/I18n';
 import myWidgetMessageBundle from '../nls/MyI18nWidget.en.ts';
 
 export default class MyI18nWidget extends I18nMixin(WidgetBase) {
@@ -132,14 +132,4 @@ class LocaleChanger extends WidgetBase {
 	}
 
 }
-```
-## Using Dojo i18n as a standalone module
-
-```ts
-import i18n, { Messages } from '@dojo/framework/i18n/i18n';
-import messageBundle from 'path/to/message/bundle';
-
-i18n(messageBundle, 'fr').then((messages: Messages) => {
-	// locale-specific messages ready to use...
-});
 ```

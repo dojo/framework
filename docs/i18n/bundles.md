@@ -16,25 +16,29 @@ Each message bundle has its own set of supported language translations. One lang
 
 ## TypeScript structure
 
-Every language within a bundle is a TypeScript module, and is required to export a default object containing a `messages` property. This property should be a map of message keys to their translated values within the particular language.
+Every language within a bundle is a TypeScript module, and is required to export a default object representing a map of message keys to their translated values within the particular language.
 
-For example, an English language module within a bundle:
+For example, a French language module within a bundle:
 
+>nls/fr/main.ts
 ```ts
 export default {
-	messages: {
-		hello: 'Hello',
-		goodbye: 'Goodbye'
-	}
+	hello: 'Bonjour',
+	goodbye: 'Au revoir'
 };
 ```
 
 ### Default language module
 
-The language module designated as the bundle's default should also provide a `locales` property on its exported object. This property is a map of locale identifiers to functions that can load the message set for each language/locale supported by the bundle.
+The language module designated as the bundle's default is formatted slightly differently to other languages. The default module needs to export an object with the following properties
+- `messages`
+    - A map of message keys to values in the default language, structured in the same way as the object exported by other languages in the bundle. This represents the canonical set of message keys supported by the bundle.<br>When the application locale is set to the default value, these `messages` are used as a regular lookup when resolving message keys. When a non-default locale is in use, these `messages` are used as fallbacks for any keys not included in the bundle's additional language modules.
+- `locales`
+    - An optional property that represents a map of locale identifiers to functions that can load the message set for each language/locale supported by the bundle.
 
-For example, a bundle supporting French, Arabic and Japanese (with English designated as default):
+For example, a bundle with English as the default that also supports French, Arabic and Japanese:
 
+>nls/main.ts
 ```ts
 export default {
 	locales: {
@@ -48,10 +52,6 @@ export default {
 	}
 };
 ```
-
-The `messages` object within the bundle's default language module contains a comprehensive set of all message keys and their descriptions for a particular section of an application. When the application locale is set to the default value, the bundle's default language module acts as a regular message lookup via its own `messages` property. When a non-default locale is in use, the default's `messages` are used as fallbacks for any keys not included in the bundle's additional language modules.
-
-Each bundle's default language module will also have a unique `id` property assigned to it. The bundle ID is used internally to manage caching and handle interoperability with other parts of the i18n infrastructure. While it is possible for bundles to specify their own `id` property alongside `locales` and `messages` within the bundle's default language module, doing so is neither necessary nor recommended.
 
 ## Importing and using bundles
 
@@ -71,9 +71,9 @@ export default {
 This can be imported and referenced within a widget such as:
 >widgets/MyI18nWidget.ts
 ```ts
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { v } from '@dojo/framework/widget-core/d';
-import I18nMixin from "@dojo/framework/widget-core/mixins/I18n";
+import I18nMixin from '@dojo/framework/widget-core/mixins/I18n';
 
 import myWidgetMessageBundle from '../nls/MyI18nWidget.en.ts';
 
