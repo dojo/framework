@@ -12,7 +12,8 @@ import {
 	RenderResult,
 	DomVNode,
 	LazyWidget,
-	LazyDefine
+	LazyDefine,
+	WNodeFactory
 } from './interfaces';
 
 /**
@@ -140,6 +141,13 @@ export function decorate(
 	return dNodes;
 }
 
+function isWNodeFactory<W extends WidgetBaseInterface>(node: any): node is WNodeFactory<W> {
+	if (typeof node.widgetConstructorOrNode === 'function' && node.ctor) {
+		return true;
+	}
+	return false;
+}
+
 /**
  * Wrapper function for calls to create a widget.
  */
@@ -149,15 +157,25 @@ export function w<W extends WidgetBaseInterface>(
 	children?: W['children']
 ): WNode<W>;
 export function w<W extends WidgetBaseInterface>(
-	widgetConstructor: Constructor<W> | RegistryLabel | LazyWidget<W> | LazyDefine<W>,
+	widgetConstructor: Constructor<W> | RegistryLabel | WNodeFactory<W> | LazyWidget<W> | LazyDefine<W>,
 	properties: W['properties'],
 	children?: W['children']
 ): WNode<W>;
 export function w<W extends WidgetBaseInterface>(
-	widgetConstructorOrNode: Constructor<W> | RegistryLabel | WNode<W> | LazyWidget<W> | LazyDefine<W>,
+	widgetConstructorOrNode:
+		| Constructor<W>
+		| RegistryLabel
+		| WNodeFactory<W>
+		| WNode<W>
+		| LazyWidget<W>
+		| LazyDefine<W>,
 	properties: W['properties'],
 	children?: W['children']
 ): WNode<W> {
+	if (isWNodeFactory<W>(widgetConstructorOrNode)) {
+		return widgetConstructorOrNode(properties, children);
+	}
+
 	if (isWNode(widgetConstructorOrNode)) {
 		properties = { ...(widgetConstructorOrNode.properties as any), ...(properties as any) };
 		children = children ? children : widgetConstructorOrNode.children;

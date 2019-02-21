@@ -530,3 +530,8 @@ export interface AfterRender {
 export interface BeforeProperties<P = any> {
 	(properties: P): P;
 }
+
+export interface WNodeFactory<W extends WidgetBaseInterface> {
+	(properties: W['properties'], children?: W['children']): WNode<W>;
+	ctor: Constructor<W>;
+}

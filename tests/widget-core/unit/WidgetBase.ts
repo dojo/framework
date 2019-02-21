@@ -2,8 +2,8 @@ const { describe, it, beforeEach, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { spy, stub, SinonStub } from 'sinon';
 
-import { WidgetBase, widgetInstanceMap } from '../../../src/widget-core/WidgetBase';
-import { v } from '../../../src/widget-core/d';
+import { WidgetBase, widgetInstanceMap, widget } from '../../../src/widget-core/WidgetBase';
+import { v, w } from '../../../src/widget-core/d';
 import { WIDGET_BASE_TYPE } from '../../../src/widget-core/Registry';
 import { VNode, WidgetMetaConstructor, MetaBase } from '../../../src/widget-core/interfaces';
 import { handleDecorator } from '../../../src/widget-core/decorators/handleDecorator';
@@ -401,6 +401,62 @@ describe('WidgetBase', () => {
 			const testWidget = new TestWidget();
 
 			assert.lengthOf(testWidget.callGetDecorator('test-decorator'), 2);
+		});
+	});
+
+	describe('widget()', () => {
+		it('should work in a render func', () => {
+			interface FooProperties {
+				foo: string;
+				renderer(hello: string): VNode;
+			}
+			const Foo = widget(
+				class extends WidgetBase<FooProperties> {
+					render() {
+						const { renderer } = this.properties;
+						return renderer('world');
+					}
+				}
+			);
+
+			class App extends WidgetBase {
+				render() {
+					return Foo({
+						foo: 'hello',
+						renderer: (hello) => {
+							return v('div', [hello]);
+						}
+					});
+				}
+			}
+			console.log(App);
+		});
+
+		it('should work with a w()', () => {
+			interface FooProperties {
+				foo: string;
+				renderer(hello: string): VNode;
+			}
+			const Foo = widget(
+				class extends WidgetBase<FooProperties> {
+					render() {
+						const { renderer } = this.properties;
+						return renderer('world');
+					}
+				}
+			);
+
+			class App extends WidgetBase {
+				render() {
+					return w(Foo, {
+						foo: 'hello',
+						renderer: (hello: string) => {
+							return v('div', [hello]);
+						}
+					});
+				}
+			}
+			console.log(App);
 		});
 	});
 });

@@ -1,11 +1,12 @@
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
-import { v } from './d';
+import { v, w } from './d';
 import { auto } from './diff';
 import {
 	AfterRender,
 	BeforeProperties,
 	BeforeRender,
+	Constructor,
 	DiffPropertyReaction,
 	DNode,
 	DefaultWidgetBaseInterface,
@@ -14,7 +15,8 @@ import {
 	WidgetBaseInterface,
 	WidgetProperties,
 	MetaBase,
-	RenderResult
+	RenderResult,
+	WNodeFactory
 } from './interfaces';
 import RegistryHandler from './RegistryHandler';
 import NodeHandler from './NodeHandler';
@@ -466,5 +468,11 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		}
 	}
 }
+
+export const widget = <W extends WidgetBase>(ctor: Constructor<W>): WNodeFactory<W> => {
+	const factory = (properties: any, children: any) => w(ctor, properties, children);
+	(factory as any).ctor = ctor;
+	return factory as WNodeFactory<W>;
+};
 
 export default WidgetBase;
