@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import { spy, stub, SinonStub } from 'sinon';
 
 import { WidgetBase, widgetInstanceMap, widget } from '../../../src/widget-core/WidgetBase';
-import { v, w } from '../../../src/widget-core/d';
+import { v, w, isWNode } from '../../../src/widget-core/d';
 import { WIDGET_BASE_TYPE } from '../../../src/widget-core/Registry';
 import { VNode, WidgetMetaConstructor, MetaBase } from '../../../src/widget-core/interfaces';
 import { handleDecorator } from '../../../src/widget-core/decorators/handleDecorator';
@@ -405,19 +405,12 @@ describe('WidgetBase', () => {
 	});
 
 	describe('widget()', () => {
-		it('should work in a render func', () => {
+		it('factory should work on its own', () => {
 			interface FooProperties {
 				foo: string;
 				renderer(hello: string): VNode;
 			}
-			const Foo = widget(
-				class extends WidgetBase<FooProperties> {
-					render() {
-						const { renderer } = this.properties;
-						return renderer('world');
-					}
-				}
-			);
+			const Foo = widget(class extends WidgetBase<FooProperties> {});
 
 			class App extends WidgetBase {
 				render() {
@@ -429,7 +422,9 @@ describe('WidgetBase', () => {
 					});
 				}
 			}
-			console.log(App);
+			const app = new App();
+			const output = app.render();
+			assert.isTrue(isWNode(output));
 		});
 
 		it('should work with a w()', () => {
@@ -437,14 +432,7 @@ describe('WidgetBase', () => {
 				foo: string;
 				renderer(hello: string): VNode;
 			}
-			const Foo = widget(
-				class extends WidgetBase<FooProperties> {
-					render() {
-						const { renderer } = this.properties;
-						return renderer('world');
-					}
-				}
-			);
+			const Foo = widget(class extends WidgetBase<FooProperties> {});
 
 			class App extends WidgetBase {
 				render() {
@@ -456,7 +444,9 @@ describe('WidgetBase', () => {
 					});
 				}
 			}
-			console.log(App);
+			const app = new App();
+			const output = app.render();
+			assert.isTrue(isWNode(output));
 		});
 	});
 });
