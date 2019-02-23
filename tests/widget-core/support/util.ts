@@ -24,14 +24,14 @@ export function createResolvers() {
 	let rAFStub: SinonStub;
 	let rICStub: SinonStub;
 
-	function resolveRAF() {
+	function resolveRAFCallbacks() {
 		for (let i = 0; i < rAFStub.callCount; i++) {
 			rAFStub.getCall(i).callArg(0);
 		}
 		rAFStub.resetHistory();
 	}
 
-	function resolveRIC() {
+	function resolveRICCallbacks() {
 		for (let i = 0; i < rICStub.callCount; i++) {
 			rICStub.getCall(i).callArg(0);
 		}
@@ -40,8 +40,14 @@ export function createResolvers() {
 
 	return {
 		resolve() {
-			resolveRAF();
-			resolveRIC();
+			resolveRAFCallbacks();
+			resolveRICCallbacks();
+		},
+		resolveRIC() {
+			resolveRICCallbacks();
+		},
+		resolveRAF() {
+			resolveRAFCallbacks();
 		},
 		stub() {
 			rAFStub = stub(global, 'requestAnimationFrame').returns(1);
