@@ -64,6 +64,11 @@ export class Resize extends Base {
 				predicateChanged && this.invalidate();
 			});
 			resizeObserver.observe(node);
+			this.own({
+				destroy: () => {
+					resizeObserver.disconnect();
+				}
+			});
 		}
 
 		return this._details.get(key) as PredicateResponses<T>;
