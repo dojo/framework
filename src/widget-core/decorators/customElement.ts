@@ -47,10 +47,11 @@ export function customElement<P extends object = { [index: string]: any }>(confi
 	};
 	// rename "tag" to "tagName"
 	const { tag: tagName, ...configRest } = config;
-	const userDefinedConfig = {
-		tagName,
-		...configRest
-	};
+	const userDefinedConfig: CustomElementConfig & { tagName?: string } = configRest;
+
+	if (tagName) {
+		userDefinedConfig.tagName = tagName;
+	}
 
 	return function<T extends Constructor<any>>(target: T) {
 		target.prototype.__customElementDescriptor = {
