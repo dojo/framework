@@ -45,14 +45,18 @@ export function customElement<P extends object = { [index: string]: any }>(confi
 		childType: CustomElementChildType.DOJO,
 		registryFactory: () => new Registry()
 	};
+	// rename "tag" to "tagName"
 	const { tag: tagName, ...configRest } = config;
-	const updatedConfig = { ...(tagName ? { tagName } : {}), ...configRest };
+	const userDefinedConfig = {
+		tagName,
+		...configRest
+	};
 
 	return function<T extends Constructor<any>>(target: T) {
 		target.prototype.__customElementDescriptor = {
 			...defaults,
 			...target.prototype.__customElementDescriptor,
-			...updatedConfig
+			...userDefinedConfig
 		};
 	};
 }
