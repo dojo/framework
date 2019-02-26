@@ -589,9 +589,9 @@ const store = new Store({ state: myStateImpl });
 
 #### ImmutableState
 
-An implementation of the `MutableState` interface that leverages [ImmutableJS](https://github.com/immutable-js/immutable-js) under the hood is provided as
-an example. This implementation may provide better performance if there are frequent, deep updates to the store's state, but this should be tested and verified
-before switching to this implementation.
+An implementation of the `MutableState` interface that leverages [Immutable](https://github.com/immutable-js/immutable-js) under the hood is provided as
+an example. This implementation may provide better performance if there are frequent, deep updates to the store's state, but performance should be tested and verified
+for your app before switching to this implementation.
 
 ## Middleware
 
