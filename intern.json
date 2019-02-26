@@ -89,6 +89,5 @@
 			"!./dist/dev/tests/widget-core/unit/meta/WebAnimation.js",
 			"!./dist/dev/tests/widget-core/unit/meta/Intersection.js"
 		]
-	},
-	"benchmark": true
+	}
 }
