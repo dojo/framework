@@ -12,7 +12,7 @@ export interface GetPaths<S = any> {
 
 export interface StoreProviderProperties<S = any> {
 	renderer: (store: Store<S>) => DNode | DNode[];
-	stateKey: string;
+	stateKey?: string;
 	paths?: GetPaths<S>;
 }
 
@@ -41,10 +41,14 @@ export class StoreProvider<S = any> extends WidgetBase<StoreProviderProperties<S
 		}
 	}
 
+	private _getProperties() {
+		return { stateKey: 'state', ...this.properties };
+	}
+
 	@diffProperty('stateKey')
 	@diffProperty('paths', pathDiff)
-	protected onChange(previousProperties: StoreProviderProperties, currentProperties: StoreProviderProperties) {
-		const { stateKey, paths } = currentProperties;
+	protected onChange(previousProperties: any, currentProperties: StoreProviderProperties) {
+		const { stateKey = 'state', paths } = currentProperties;
 		if (this._handle) {
 			this._handle.destroy();
 			this._handle = undefined;
@@ -68,8 +72,11 @@ export class StoreProvider<S = any> extends WidgetBase<StoreProviderProperties<S
 	}
 
 	protected render(): DNode | DNode[] {
-		const { stateKey, renderer } = this.properties;
+		const { stateKey, renderer } = this._getProperties();
 		const store = this._getStore(stateKey);
+		if (!this._handle) {
+			this.onChange({}, this._getProperties());
+		}
 		if (store) {
 			return renderer(store);
 		}
