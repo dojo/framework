@@ -2083,9 +2083,13 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(onDetachStub.notCalled);
 				return remove(child);
 			};
-			r.mount({ domNode: div, sync: true });
+			r.mount({ domNode: div });
 			toggleShow();
-			assert.isTrue(onDetachStub.called);
+			resolvers.resolveRAF();
+			assert.isTrue(onDetachStub.calledOnce);
+			assert.strictEqual(removeChildCount, 1);
+			resolvers.resolveRIC();
+			assert.isTrue(onDetachStub.calledOnce);
 			assert.strictEqual(removeChildCount, 1);
 		});
 
@@ -2337,8 +2341,8 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(Foo, {}));
 			const div = document.createElement('div');
-			r.mount({ domNode: div, sync: true });
-			resolvers.resolve();
+			r.mount({ domNode: div });
+			resolvers.resolveRAF();
 			assert.strictEqual(deferredPropertyCallCount, 8);
 			const root = div.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 2);
@@ -2352,8 +2356,12 @@ jsdomDescribe('vdom', () => {
 			assert.lengthOf(barContainer.childNodes, 1);
 			const barLabel = barContainer.childNodes[0] as Text;
 			assert.strictEqual(barLabel.data, 'bar-container');
+			resolvers.resolveRIC();
+			assert.strictEqual(deferredPropertyCallCount, 8);
 			invalidate();
-			resolvers.resolve();
+			resolvers.resolveRAF();
+			assert.strictEqual(deferredPropertyCallCount, 12);
+			resolvers.resolveRIC();
 			assert.strictEqual(deferredPropertyCallCount, 12);
 		});
 
@@ -5036,9 +5044,14 @@ jsdomDescribe('vdom', () => {
 			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const focusSpy = spy(input, 'focus');
-			resolvers.resolve();
+			resolvers.resolveRAF();
+			assert.isTrue(focusSpy.calledOnce);
+			resolvers.resolveRIC();
 			assert.isTrue(focusSpy.calledOnce);
 			meta.setRenderResult(v('input', { focus: true }));
+			resolvers.resolveRAF();
+			assert.isTrue(focusSpy.calledOnce);
+			resolvers.resolveRIC();
 			assert.isTrue(focusSpy.calledOnce);
 			document.body.removeChild(input);
 		});

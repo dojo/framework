@@ -384,7 +384,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 	let _wrapperSiblingMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	let _insertBeforeMap: undefined | WeakMap<DNodeWrapper, Node> = new WeakMap<DNodeWrapper, Node>();
 	let _renderScheduled: number | undefined;
-	let _afterRenderCallbacks: Function[] = [];
+	let _idleCallbacks: Function[] = [];
 	let _deferredRenderCallbacks: Function[] = [];
 	let parentInvalidate: () => void;
 	let _allMergedNodes: Node[] = [];
@@ -400,7 +400,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			result = propValue();
 		}
 		if (result === true) {
-			_afterRenderCallbacks.push(() => {
+			_deferredRenderCallbacks.push(() => {
 				domNode[propName]();
 			});
 		}
@@ -524,7 +524,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		if (next.node.deferredPropertiesCallback) {
 			const properties = next.node.properties;
 			next.node.properties = { ...next.node.deferredPropertiesCallback(true), ...next.node.originalProperties };
-			_afterRenderCallbacks.push(() => {
+			_deferredRenderCallbacks.push(() => {
 				processProperties(next, { properties });
 			});
 		}
@@ -673,8 +673,8 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 
 	function runAfterRenderCallbacks() {
 		const { sync } = _mountOptions;
-		const callbacks = _afterRenderCallbacks;
-		_afterRenderCallbacks = [];
+		const callbacks = _idleCallbacks;
+		_idleCallbacks = [];
 		if (callbacks.length) {
 			const run = () => {
 				let callback: Function | undefined;
@@ -946,7 +946,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 	}
 
 	function registerDistinguishableCallback(childNodes: DNodeWrapper[], index: number) {
-		_afterRenderCallbacks.push(() => {
+		_idleCallbacks.push(() => {
 			const parentWNodeWrapper = findParentWNodeWrapper(childNodes[index]);
 			checkDistinguishable(childNodes, index, parentWNodeWrapper);
 		});
@@ -1206,7 +1206,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		}
 
 		if (current.childrenWrappers) {
-			_afterRenderCallbacks.push(() => {
+			_deferredRenderCallbacks.push(() => {
 				let wrappers = current.childrenWrappers || [];
 				let wrapper: DNodeWrapper | undefined;
 				while ((wrapper = wrappers.pop())) {
