@@ -7,13 +7,7 @@ import {
 } from './Patch';
 import { Pointer } from './Pointer';
 import { MutableState, Path, State } from '../Store';
-import { Map as _Map, List as _List } from 'immutable';
-let Map: typeof _Map;
-let List: typeof _List;
-import('immutable').then((immutable) => {
-	Map = immutable.Map;
-	List = immutable.List;
-});
+import { Map, List } from 'immutable';
 
 import { getFriendlyDifferenceMessage, isEqual } from './compare';
 
@@ -21,7 +15,7 @@ function isString(segment?: string): segment is string {
 	return typeof segment === 'string';
 }
 
-function inverse(operation: PatchOperation, state: _Map<any, any>): PatchOperation[] {
+function inverse(operation: PatchOperation, state: Map<any, any>): PatchOperation[] {
 	if (operation.op === OperationType.ADD) {
 		const op: RemovePatchOperation = {
 			op: OperationType.REMOVE,
@@ -66,7 +60,7 @@ function inverse(operation: PatchOperation, state: _Map<any, any>): PatchOperati
 }
 
 export class ImmutableState<T = any> implements MutableState<T> {
-	private _state: _Map<any, any> = Map();
+	private _state: Map<any, any> = Map();
 
 	/**
 	 * Returns the state at a specific pointer path location.
@@ -147,7 +141,7 @@ export class ImmutableState<T = any> implements MutableState<T> {
 		return undoOperations;
 	}
 
-	private setIn(segments: string[], value: any, state: _Map<any, any>, add = false) {
+	private setIn(segments: string[], value: any, state: Map<any, any>, add = false) {
 		const updated = this.set(segments, value, state, add);
 		if (updated) {
 			return updated;
@@ -173,7 +167,7 @@ export class ImmutableState<T = any> implements MutableState<T> {
 		return this.set(segments, value, state, add) || state;
 	}
 
-	private set(segments: string[], value: any, state: _Map<any, any>, add = false) {
+	private set(segments: string[], value: any, state: Map<any, any>, add = false) {
 		if (typeof value === 'object' && value != null) {
 			if (Array.isArray(value)) {
 				value = List(value);

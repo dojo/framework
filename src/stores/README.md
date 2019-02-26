@@ -568,15 +568,14 @@ In this example, `commandOne` is executed, then both `concurrentCommandOne` and 
 
 **Note:** Concurrent commands are always assumed to be asynchronous and resolved using `Promise.all`.
 
-
 ### Providing an alternative State implementation
 
 Processing operations and updating the store state is handled by an implementation of the `MutableState` interface
 defined in `Store.ts`. This interface defines four methods necessary to properly apply operations to the state.
 
 -   `get<S>(path: Path<M, S>): S` Takes a `Path` object and returns the value in the current state that that path points to
--   `at<S extends Path<M, Array<any>>>(path: S, index: number): Path<M, S['value'][0]>` Returns a `Path` object that 
-points to the provided `index` in the array at the provided `path`
+-   `at<S extends Path<M, Array<any>>>(path: S, index: number): Path<M, S['value'][0]>` Returns a `Path` object that
+    points to the provided `index` in the array at the provided `path`
 -   `path: StatePaths<M>` A typesafe way to generate a `Path` object for a given path in the state
 -   `apply(operations: PatchOperation<T>[]): PatchOperation<T>[]` Apply the provided operations to the current state
 
