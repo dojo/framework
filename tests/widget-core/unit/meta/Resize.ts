@@ -12,14 +12,15 @@ let bindInstance: WidgetBase;
 let isFoo: SinonStub;
 let isBar: SinonStub;
 let Resize: any;
+let observer: {
+	observe: SinonStub;
+	disconnect: SinonStub;
+};
 
 registerSuite('meta - Resize', {
 	async before() {
 		bindInstance = new WidgetBase();
 		resizeObserver = stub().callsFake(function(callback: any) {
-			const observer = {
-				observe: stub()
-			};
 			resizeCallback = callback;
 			return observer;
 		});
@@ -30,6 +31,10 @@ registerSuite('meta - Resize', {
 	beforeEach() {
 		isFoo = stub();
 		isBar = stub();
+		observer = {
+			observe: stub(),
+			disconnect: stub()
+		};
 	},
 
 	afterEach() {
@@ -155,6 +160,24 @@ registerSuite('meta - Resize', {
 			resize.get('foo');
 			resizeCallback([{ contentRect }]);
 			assert.isTrue(invalidate.called);
+		},
+		'Should disconnect the resize observer when meta is destroyed'() {
+			const nodeHandler = new NodeHandler();
+			const invalidate = stub();
+			const element = document.createElement('div');
+			document.body.appendChild(element);
+			nodeHandler.add(element, 'foo');
+
+			const resize = new Resize({
+				invalidate,
+				nodeHandler,
+				bind: bindInstance
+			});
+
+			resize.get('foo');
+			assert.isTrue(observer.observe.calledOnce);
+			resize.destroy();
+			assert.isTrue(observer.disconnect.calledOnce);
 		}
 	}
 });
