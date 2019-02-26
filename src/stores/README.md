@@ -27,6 +27,7 @@ An application store for dojo.
     -   [Transforming Executor Arguments](#transforming-executor-arguments)
     -   [Optimistic Update Pattern](#optimistic-update-pattern)
     -   [Executing Concurrent Commands](#executing-concurrent-commands)
+    -   [Providing An Alternative State Implementation](#providing-an-alternative-state-implementation)
 -   [Middleware](#middleware)
     -   [After Middleware](#after-middleware)
     -   [Before Middleware](#before-middleware)
@@ -220,7 +221,7 @@ and will immediately throw an error.
 function calculateCountsCommand = createCommand(({ state }) => {
 	const todos = state.todos;
 	const completedTodos = todos.filter((todo: any) => todo.completed);
-	
+
 	state.activeCount = todos.length - completedTodos.length;
 	state.completedCount = completedTodos.length;
 });
@@ -566,6 +567,28 @@ const myProcess = createProcess('my-process', [commandOne, [concurrentCommandOne
 In this example, `commandOne` is executed, then both `concurrentCommandOne` and `concurrentCommandTwo` are executed concurrently. Once all of the concurrent commands are completed the results are applied in order before continuing with the process and executing `commandTwo`.
 
 **Note:** Concurrent commands are always assumed to be asynchronous and resolved using `Promise.all`.
+
+### Providing an alternative State implementation
+
+Processing operations and updating the store state is handled by an implementation of the `MutableState` interface
+defined in `Store.ts`. This interface defines four methods necessary to properly apply operations to the state.
+
+-   `get<S>(path: Path<M, S>): S` Takes a `Path` object and returns the value in the current state that that path points to
+-   `at<S extends Path<M, Array<any>>>(path: S, index: number): Path<M, S['value'][0]>` Returns a `Path` object that
+    points to the provided `index` in the array at the provided `path`
+-   `path: StatePaths<M>` A typesafe way to generate a `Path` object for a given path in the state
+-   `apply(operations: PatchOperation<T>[]): PatchOperation<T>[]` Apply the provided operations to the current state
+
+The default state implementation is reasonably optimized and in most circumstances will be sufficient.
+If a particular use case merits an alternative implementation it can be provided to the store constructor
+
+```ts
+const store = new Store({ state: myStateImpl });
+```
+
+#### ImmutableState
+
+An implementation of the `MutableState` interface that leverages [Immutable](https://github.com/immutable-js/immutable-js) under the hood is provided as an example. This implementation may provide better performance if there are frequent, deep updates to the store's state, but performance should be tested and verified for your app before switching to this implementation.
 
 ## Middleware
 
