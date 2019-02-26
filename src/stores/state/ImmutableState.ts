@@ -10,11 +10,10 @@ import { MutableState, Path, State } from '../Store';
 import { Map as _Map, List as _List } from 'immutable';
 let Map: typeof _Map;
 let List: typeof _List;
-try {
-	const immutable = require('immutable');
+import('immutable').then((immutable) => {
 	Map = immutable.Map;
 	List = immutable.List;
-} catch (ex) {}
+});
 
 import { getFriendlyDifferenceMessage, isEqual } from './compare';
 

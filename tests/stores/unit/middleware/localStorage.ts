@@ -62,12 +62,12 @@ describe('middleware - local storage', (suite) => {
 	it('should load from local storage', () => {
 		global.localStorage.setItem(LOCAL_STORAGE_TEST_ID, '[{"meta":{"path":"/counter"},"state":1}]');
 		load(LOCAL_STORAGE_TEST_ID, store);
-		assert.deepEqual((store as any)._state._state, { counter: 1 });
+		assert.deepEqual((store as any)._adapter._state, { counter: 1 });
 	});
 
 	it('should not load anything or throw an error if data does exist', () => {
 		global.localStorage.setItem('other-storage-id', '[{"meta":{"path":"/counter"},"state":1}]');
 		load(LOCAL_STORAGE_TEST_ID, store);
-		assert.deepEqual((store as any)._state._state, {});
+		assert.deepEqual((store as any)._adapter._state, {});
 	});
 });

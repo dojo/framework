@@ -192,7 +192,7 @@ export class DefaultState<T = any> implements MutableState<T> {
  * Application state store
  */
 export class Store<T = any> extends Evented implements MutableState<T> {
-	private _state: MutableState<T> = new DefaultState<T>();
+	private _adapter: MutableState<T> = new DefaultState<T>();
 
 	private _changePaths = new Map<string, OnChangeValue>();
 
@@ -202,14 +202,14 @@ export class Store<T = any> extends Evented implements MutableState<T> {
 	 * Returns the state at a specific pointer path location.
 	 */
 	public get = <U = any>(path: Path<T, U>): U => {
-		return this._state.get(path);
+		return this._adapter.get(path);
 	};
 
 	constructor(options?: { state?: MutableState<T> }) {
 		super();
 		if (options && options.state) {
-			this._state = options.state;
-			this.path = this._state.path.bind(this._state);
+			this._adapter = options.state;
+			this.path = this._adapter.path.bind(this._adapter);
 		}
 	}
 
@@ -217,7 +217,7 @@ export class Store<T = any> extends Evented implements MutableState<T> {
 	 * Applies store operations to state and returns the undo operations
 	 */
 	public apply = (operations: PatchOperation<T>[], invalidate: boolean = false): PatchOperation<T>[] => {
-		const result = this._state.apply(operations);
+		const result = this._adapter.apply(operations);
 
 		if (invalidate) {
 			this.invalidate();
@@ -227,7 +227,7 @@ export class Store<T = any> extends Evented implements MutableState<T> {
 	};
 
 	public at = <U = any>(path: Path<T, Array<U>>, index: number): Path<T, U> => {
-		return this._state.at(path, index);
+		return this._adapter.at(path, index);
 	};
 
 	public onChange = <U = any>(paths: Path<T, U> | Path<T, U>[], callback: () => void) => {
@@ -266,7 +266,7 @@ export class Store<T = any> extends Evented implements MutableState<T> {
 			const { previousValue, callbacks } = value;
 			const pointer = new Pointer(path);
 			const newValue = pointer.segments.length
-				? this._state.path(pointer.segments[0] as keyof T, ...pointer.segments.slice(1)).value
+				? this._adapter.path(pointer.segments[0] as keyof T, ...pointer.segments.slice(1)).value
 				: undefined;
 			if (previousValue !== newValue) {
 				this._changePaths.set(path, { callbacks, previousValue: newValue });
@@ -289,7 +289,7 @@ export class Store<T = any> extends Evented implements MutableState<T> {
 		this.emit({ type: 'invalidate' });
 	}
 
-	public path: State<T>['path'] = this._state.path.bind(this._state);
+	public path: State<T>['path'] = this._adapter.path.bind(this._adapter);
 }
 
 export default Store;
