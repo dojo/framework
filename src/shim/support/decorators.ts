@@ -10,6 +10,6 @@ import has from '../../has/has';
 export function hasClass(feature: string, trueClass: Function, falseClass: Function): ClassDecorator {
 	return function(target: Function) {
 		/* Return type generics aren't catching the fact that Function is assignable to the generic */
-		return (has(feature) ? trueClass : falseClass) as any;
+		return (has(feature, true) ? trueClass : falseClass) as any;
 	};
 }

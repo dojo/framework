@@ -59,15 +59,22 @@ registerSuite('has', {
 				assert.isTrue(hasCache['abc']);
 				hasAdd('def', false);
 				assert.isFalse(hasCache['def']);
-
 				delete hasCache['abc'];
+			},
+
+			'throws when unregistered in strict mode'() {
 				assert.throws(
 					() => {
-						has('abc');
+						has('abc', true);
 					},
 					TypeError,
 					'Attempt to detect unregistered has feature'
 				);
+			},
+
+			'returns undefined when unregistered'() {
+				const abc = has('abc');
+				assert.equal(abc, undefined);
 			},
 
 			'deferred feature test should not populate cache until evaluated'() {
