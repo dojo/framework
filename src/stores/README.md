@@ -6,7 +6,7 @@ An application store for dojo.
 
 -   Application state store designed to work with a reactive component architecture
 -   Out of the box support for asynchronous commands
--   All state operations are recorded per process and undoable via a process callback
+-   All state operations are recorded per process and undoable via middleware
 -   Supports the optimistic pattern with the ability to roll back on a failure
 -   Fully serializable operations and state
 
@@ -226,19 +226,23 @@ A simple `process` to add a todo and recalculate the todo count:
 const addTodoProcess = createProcess('add-todo', [addTodoCommand, calculateCountCommand]);
 ```
 
-A `callback` can be provided which will be called when an error occurs or the process is successfully completed:
+An after `middleware` can be provided which will be called when an error occurs or the process is successfully completed:
 
 ```ts
-function addTodoProcessCallback(error, result) {
-	if (error) {
-		// do something with the error
-		// possibly undo the operations
-		result.store.apply(result.undoOperations);
-	}
-	// possible additional state changes by running another process using result.executor(otherProcess)
-}
+const addTodoProcessMiddleware = () => {
+	return {
+		after: (error, result) => {
+			if (error) {
+				// do something with the error
+				// possibly undo the operations
+				result.store.apply(result.undoOperations);
+			}
+			// possible additional state changes by running another process using result.executor(otherProcess)
+		};
+	};
+};
 
-const addTodoProcess = createProcess('add-todo', [addTodoCommand, calculateCountCommand], addTodoProcessCallback);
+const addTodoProcess = createProcess('add-todo', [addTodoCommand, calculateCountCommand], [ addTodoProcessMiddleware ]);
 ```
 
 The `Process` creates a deferred executor by passing the `store` instance `addTodoProcess(store)` which can be executed immediately by passing the `payload`, `addTodoProcess(store)(payload)`. Or more often passed to your widgets and used to initiate state changes on user interactions. The `payload` argument for the `executor` is required and is passed to each of the `Process`'s commands in a `payload` argument.
@@ -480,12 +484,16 @@ In the error scenario, it might be that we want to show a notification to say th
 ```ts
 const handleAddTodoErrorProcess = createProcess('error', [ () => [ add(path('failed'), true) ]; ]);
 
-function addTodoCallback(error, result) {
-	if (error) {
-		result.store.apply(result.undoOperations);
-		result.executor(handleAddTodoErrorProcess);
-	}
-}
+const addTodoErrorMiddleware = () => {
+	return {
+		after: () => (error, result) {
+			if (error) {
+				result.store.apply(result.undoOperations);
+				result.executor(handleAddTodoErrorProcess);
+			}
+		}
+	};
+};
 
 const addTodoProcess = createProcess('add-todo', [
 		addTodoCommand,
@@ -493,12 +501,12 @@ const addTodoProcess = createProcess('add-todo', [
 		postTodoCommand,
 		calculateCountsCommand
 	],
-	addTodoCallback);
+	[ addTodoCallback ]);
 ```
 
 -   `addTodoCommand`: Adds the new todo into the application state
 -   `calculateCountsCommand`: Recalculates the count of completed and active todo items
--   `postTodoCommand`: posts the todo item to a remote service and using the process callback we can make changes if there is a failure
+-   `postTodoCommand`: posts the todo item to a remote service and using the process after middlware we can make changes if there is a failure
     -   on failure: the previous two commands are reverted and the `failed` state field is set to `true`
     -   on success: Returns operations that update the todo item `id` field with the value received from the remote service
 -   `calculateCountsCommand`: Runs again after the success of `postTodoCommand`
