@@ -1,0 +1,10 @@
+<!-- This index file is used as both the reference guide's table of contents, as well as an ordered manifest of all other markdown files that comprise the full reference guide for a particular capability. -->
+- [Introduction](./introduction.md#introduction)
+- [Basic Usage](./basic-usage.md#basic-usage)
+  - [Using feature X](./basic-usage.md#using-feature-x)
+  - [Using feature Y](./basic-usage.md#using-feature-y)
+- [Feature X in detail](./more-feature-topic-files-as-needed.md#feature-x-in-detail)
+  - [Feature X.x](./more-feature-topic-files-as-needed.md#feature-xx)
+  - [Feature X.y](./more-feature-topic-files-as-needed.md#feature-xy)
+- [Further examples of the capability](./examples.md#further-examples-of-the-capability)
+  - [Feature X](./examples.md#feature-x)
