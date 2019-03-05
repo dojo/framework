@@ -88,12 +88,12 @@ describe('StoreProvider', () => {
 		const container = new TestContainer();
 		container.registry.base = registry;
 		container.__setProperties__({
-			stateKey: 'state',
 			renderer(injectedStore) {
 				assert.strictEqual<any>(injectedStore, store);
 				return v('div');
 			}
 		});
+		container.__render__();
 		invalidateCount = 0;
 		fooProcess(store)({});
 		assert.strictEqual(invalidateCount, 1);

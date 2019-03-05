@@ -142,7 +142,6 @@ The [`@dojo/framework/shim/string`](../../docs/shim/string.md) module contains `
 
 <!-- doc-viewer-config
 {
-	"api": "docs/shim/api.json",
 	"pages": [
 		"docs/shim/array.md",
 		"docs/shim/Map.md",

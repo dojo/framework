@@ -1,8 +1,10 @@
 import { isThenable } from '../shim/Promise';
 import { PatchOperation } from './state/Patch';
-import { State, Store } from './Store';
+import { replace, remove } from './state/operations';
+import { Path, State, Store } from './Store';
 import Map from '../shim/Map';
 import has from '../has/has';
+import Symbol, { isSymbol } from '../shim/Symbol';
 
 /**
  * Default Payload interface
@@ -16,6 +18,7 @@ export interface DefaultPayload {
  */
 export interface CommandRequest<T = any, P extends object = DefaultPayload> extends State<T> {
 	payload: P;
+	state: T;
 }
 
 /**
@@ -30,7 +33,7 @@ export interface CommandFactory<T = any, P extends object = DefaultPayload> {
  * Command that returns patch operations based on the command request
  */
 export interface Command<T = any, P extends object = DefaultPayload> {
-	(request: CommandRequest<T, P>): Promise<PatchOperation<T>[]> | PatchOperation<T>[];
+	(request: CommandRequest<T, P>): Promise<PatchOperation<T>[]> | PatchOperation<T>[] | void | Promise<void>;
 }
 
 /**
@@ -138,10 +141,13 @@ export function createCommandFactory<T, P extends object = DefaultPayload>(): Co
 export type Commands<T = any, P extends object = DefaultPayload> = (Command<T, P>[] | Command<T, P>)[];
 
 const processMap = new Map();
+const valueSymbol = Symbol('value');
 
 export function getProcess(id: string) {
 	return processMap.get(id);
 }
+
+const proxyError = 'State updates are not available on legacy browsers';
 
 export function processExecutor<T = any, P extends object = DefaultPayload>(
 	id: string,
@@ -174,29 +180,122 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 				await result;
 			}
 		}
+
+		const proxies = new Map<string, any>();
+		const proxied = new Map<string, any>();
+
+		let proxyOperations: PatchOperation[] = [];
+		const createHandler = (partialPath?: Path<T, any>) => ({
+			get(obj: any, prop: string): any {
+				const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
+				const stringPath = fullPath.path;
+
+				if (isSymbol(prop) && prop === valueSymbol) {
+					return proxied.get(stringPath);
+				}
+
+				let value = partialPath || obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
+
+				if (typeof value === 'object' && value !== null) {
+					let proxiedValue;
+					if (!proxies.has(stringPath)) {
+						if (Array.isArray(value)) {
+							value = value.slice();
+						} else {
+							value = { ...value };
+						}
+						proxiedValue = new Proxy(value, createHandler(fullPath));
+						proxies.set(stringPath, proxiedValue);
+						proxied.set(stringPath, value);
+					} else {
+						proxiedValue = proxies.get(stringPath);
+					}
+
+					obj[prop] = value;
+					return proxiedValue;
+				}
+
+				obj[prop] = value;
+				return value;
+			},
+
+			set(obj: any, prop: string, value: any) {
+				if (typeof value === 'object' && value !== null && value[valueSymbol]) {
+					value = value[valueSymbol];
+				}
+
+				proxyOperations.push(replace(partialPath ? path(partialPath, prop) : path(prop as keyof T), value));
+				obj[prop] = value;
+
+				return true;
+			},
+
+			deleteProperty(obj: any, prop: string) {
+				proxyOperations.push(remove(partialPath ? path(partialPath, prop) : path(prop as keyof T)));
+				delete obj[prop];
+
+				return true;
+			}
+		});
+		let state: T;
+		if (typeof Proxy !== 'undefined') {
+			state = new Proxy({}, createHandler()) as T;
+		}
+
 		try {
 			while (command) {
 				let results = [];
-				if (Array.isArray(command)) {
-					results = command.map((commandFunction) => commandFunction({ at, get, path, payload }));
-					results = await Promise.all(results);
-				} else {
-					let result = command({ at, get, path, payload });
+				const commandArray = Array.isArray(command) ? command : [command];
+
+				results = commandArray.map((commandFunction: Command<T, P>) => {
+					let result = commandFunction({
+						at,
+						get,
+						path,
+						payload,
+						get state() {
+							if (typeof Proxy === 'undefined') {
+								throw new Error(proxyError);
+							}
+
+							return state;
+						}
+					});
+
 					if (isThenable(result)) {
-						result = await result;
+						return result.then((result) => {
+							result = result ? [...proxyOperations, ...result] : [...proxyOperations];
+							proxyOperations = [];
+
+							return result;
+						});
+					} else {
+						result =
+							result && Array.isArray(result) ? [...proxyOperations, ...result] : [...proxyOperations];
+						proxyOperations = [];
+
+						return result;
 					}
-					results = [result];
+				});
+				let resolvedResults: PatchOperation[][];
+				if (results.some(isThenable)) {
+					resolvedResults = await Promise.all(results);
+				} else {
+					resolvedResults = results as PatchOperation[][];
 				}
 
 				for (let i = 0; i < results.length; i++) {
-					operations.push(...results[i]);
-					undoOperations = [...apply(results[i]), ...undoOperations];
+					operations.push(...resolvedResults[i]);
+					undoOperations = [...apply(resolvedResults[i]), ...undoOperations];
 				}
 
 				store.invalidate();
 				command = commandsCopy.shift();
 			}
 		} catch (e) {
+			if (e.message === proxyError) {
+				throw e;
+			}
 			error = { error: e, command };
 		}
 

@@ -3,6 +3,7 @@ import './meta';
 import './Dimensions';
 import './Drag';
 import './Focus';
+import './InputValidity';
 import './Intersection';
 import './Resize';
 import './WebAnimation';

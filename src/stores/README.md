@@ -6,7 +6,7 @@ An application store for dojo.
 
 -   Application state store designed to work with a reactive component architecture
 -   Out of the box support for asynchronous commands
--   All state operations are recorded per process and undoable via a process callback
+-   All state operations are recorded per process and undoable via middleware
 -   Supports the optimistic pattern with the ability to roll back on a failure
 -   Fully serializable operations and state
 
@@ -27,6 +27,7 @@ An application store for dojo.
     -   [Transforming Executor Arguments](#transforming-executor-arguments)
     -   [Optimistic Update Pattern](#optimistic-update-pattern)
     -   [Executing Concurrent Commands](#executing-concurrent-commands)
+    -   [Providing An Alternative State Implementation](#providing-an-alternative-state-implementation)
 -   [Middleware](#middleware)
     -   [After Middleware](#after-middleware)
     -   [Before Middleware](#before-middleware)
@@ -208,6 +209,40 @@ async function postTodoCommand({ get, path, payload: { id } }: CommandRequest): 
 }
 ```
 
+#### The `state` Object
+
+In modern browsers, commands can also directly modify a `state` object that is passed in as part of the CommandRequest.
+Any modifications to this object will be translated into the appropriate patch operations and executed against the store.
+Commands that modify the state object can be synchronous or asynchronous, but if they are asynchronous they must return
+a promise that will resolve when modifications are complete. Note that attempting to access `state` is not supported in IE
+and will immediately throw an error.
+
+```ts
+function calculateCountsCommand = createCommand(({ state }) => {
+	const todos = state.todos;
+	const completedTodos = todos.filter((todo: any) => todo.completed);
+
+	state.activeCount = todos.length - completedTodos.length;
+	state.completedCount = completedTodos.length;
+});
+
+async function postTodoCommand({ state }: CommandRequest): Promise<PatchOperation[]> {
+	const response = await fetch('/todos');
+	if (!response.ok) {
+		throw new Error('Unable to post todo');
+	}
+	const json = await response.json();
+	const todos = state.todos
+	const index = findIndex(todos, byId(id));
+	// success
+	state.todos[index] = {
+		...todos[index],
+		loading: false,
+		id: json.uuid
+	};
+}
+```
+
 ### Processes
 
 A `Process` is the construct used to execute commands against a `store` instance in order to make changes to the application state. `Processes` are created using the `createProcess` factory function that accepts an array of commands and an optional callback that can be used to manage errors thrown from a command. The optional callback receives an `error` object and a `result` object. The `error` object contains the `error` stack and the command that caused the error.
@@ -226,19 +261,23 @@ A simple `process` to add a todo and recalculate the todo count:
 const addTodoProcess = createProcess('add-todo', [addTodoCommand, calculateCountCommand]);
 ```
 
-A `callback` can be provided which will be called when an error occurs or the process is successfully completed:
+An after `middleware` can be provided which will be called when an error occurs or the process is successfully completed:
 
 ```ts
-function addTodoProcessCallback(error, result) {
-	if (error) {
-		// do something with the error
-		// possibly undo the operations
-		result.store.apply(result.undoOperations);
-	}
-	// possible additional state changes by running another process using result.executor(otherProcess)
-}
+const addTodoProcessMiddleware = () => {
+	return {
+		after: (error, result) => {
+			if (error) {
+				// do something with the error
+				// possibly undo the operations
+				result.store.apply(result.undoOperations);
+			}
+			// possible additional state changes by running another process using result.executor(otherProcess)
+		};
+	};
+};
 
-const addTodoProcess = createProcess('add-todo', [addTodoCommand, calculateCountCommand], addTodoProcessCallback);
+const addTodoProcess = createProcess('add-todo', [addTodoCommand, calculateCountCommand], [ addTodoProcessMiddleware ]);
 ```
 
 The `Process` creates a deferred executor by passing the `store` instance `addTodoProcess(store)` which can be executed immediately by passing the `payload`, `addTodoProcess(store)(payload)`. Or more often passed to your widgets and used to initiate state changes on user interactions. The `payload` argument for the `executor` is required and is passed to each of the `Process`'s commands in a `payload` argument.
@@ -480,12 +519,16 @@ In the error scenario, it might be that we want to show a notification to say th
 ```ts
 const handleAddTodoErrorProcess = createProcess('error', [ () => [ add(path('failed'), true) ]; ]);
 
-function addTodoCallback(error, result) {
-	if (error) {
-		result.store.apply(result.undoOperations);
-		result.executor(handleAddTodoErrorProcess);
-	}
-}
+const addTodoErrorMiddleware = () => {
+	return {
+		after: () => (error, result) {
+			if (error) {
+				result.store.apply(result.undoOperations);
+				result.executor(handleAddTodoErrorProcess);
+			}
+		}
+	};
+};
 
 const addTodoProcess = createProcess('add-todo', [
 		addTodoCommand,
@@ -493,12 +536,12 @@ const addTodoProcess = createProcess('add-todo', [
 		postTodoCommand,
 		calculateCountsCommand
 	],
-	addTodoCallback);
+	[ addTodoCallback ]);
 ```
 
 -   `addTodoCommand`: Adds the new todo into the application state
 -   `calculateCountsCommand`: Recalculates the count of completed and active todo items
--   `postTodoCommand`: posts the todo item to a remote service and using the process callback we can make changes if there is a failure
+-   `postTodoCommand`: posts the todo item to a remote service and using the process after middlware we can make changes if there is a failure
     -   on failure: the previous two commands are reverted and the `failed` state field is set to `true`
     -   on success: Returns operations that update the todo item `id` field with the value received from the remote service
 -   `calculateCountsCommand`: Runs again after the success of `postTodoCommand`
@@ -532,6 +575,28 @@ const myProcess = createProcess('my-process', [commandOne, [concurrentCommandOne
 In this example, `commandOne` is executed, then both `concurrentCommandOne` and `concurrentCommandTwo` are executed concurrently. Once all of the concurrent commands are completed the results are applied in order before continuing with the process and executing `commandTwo`.
 
 **Note:** Concurrent commands are always assumed to be asynchronous and resolved using `Promise.all`.
+
+### Providing an alternative State implementation
+
+Processing operations and updating the store state is handled by an implementation of the `MutableState` interface
+defined in `Store.ts`. This interface defines four methods necessary to properly apply operations to the state.
+
+-   `get<S>(path: Path<M, S>): S` Takes a `Path` object and returns the value in the current state that that path points to
+-   `at<S extends Path<M, Array<any>>>(path: S, index: number): Path<M, S['value'][0]>` Returns a `Path` object that
+    points to the provided `index` in the array at the provided `path`
+-   `path: StatePaths<M>` A typesafe way to generate a `Path` object for a given path in the state
+-   `apply(operations: PatchOperation<T>[]): PatchOperation<T>[]` Apply the provided operations to the current state
+
+The default state implementation is reasonably optimized and in most circumstances will be sufficient.
+If a particular use case merits an alternative implementation it can be provided to the store constructor
+
+```ts
+const store = new Store({ state: myStateImpl });
+```
+
+#### ImmutableState
+
+An implementation of the `MutableState` interface that leverages [Immutable](https://github.com/immutable-js/immutable-js) under the hood is provided as an example. This implementation may provide better performance if there are frequent, deep updates to the store's state, but performance should be tested and verified for your app before switching to this implementation.
 
 ## Middleware
 
@@ -664,9 +729,3 @@ import { Store } from '@dojo/framework/stores/Store';
 const store = new Store();
 load('my-process', store);
 ```
-
-<!-- doc-viewer-config
-{
-	"api": "docs/stores/api.json"
-}
--->

@@ -81,7 +81,7 @@ export interface Projection {
 	readonly domNode: Element;
 }
 
-export type SupportedClassName = string | null | undefined;
+export type SupportedClassName = string | null | undefined | boolean;
 
 export type DeferredVirtualProperties = (inserted: boolean) => VNodeProperties;
 
@@ -422,7 +422,8 @@ export type DNode<W extends WidgetBaseInterface<WidgetProperties, any> = WidgetB
 	| WNode<W>
 	| undefined
 	| null
-	| string;
+	| string
+	| boolean;
 
 /**
  * Property Change record for specific property diff functions

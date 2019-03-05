@@ -70,4 +70,22 @@ describe('Block Meta', () => {
 		resultOne = meta.run(testModule)('test');
 		assert.strictEqual(resultOne, 'sync');
 	});
+
+	it('Should return result value if module does not return a promise', () => {
+		const invalidate = sinon.stub();
+		const nodeHandler = new NodeHandler();
+
+		function testModule(a: string) {
+			return undefined;
+		}
+
+		const meta = new Block({
+			invalidate,
+			nodeHandler,
+			bind: bindInstance
+		});
+
+		let result = meta.run(testModule)('test');
+		assert.isUndefined(result);
+	});
 });

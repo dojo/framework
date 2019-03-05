@@ -281,9 +281,7 @@ class NumberWidget extends WidgetBase<{ num?: number }> {
 	protected render() {
 		const { num } = this.properties;
 		const message = num === undefined ? 'no number passed' : `the number ${num}`;
-		return v('div', [
-			v('span', [ message ])
-		]);
+		return v('div', [v('span', [message])]);
 	}
 }
 ```
@@ -311,21 +309,25 @@ now lets see how we'd test the output when the `num` property is passed to the `
 
 ```ts
 it('should render the number when a number is passed as a property', () => {
-	const numberAssertion = baseAssertion.setChildren('~message', [ 'the number 5' ]);
+	const numberAssertion = baseAssertion.setChildren('~message', ['the number 5']);
 	const h = harness(() => w(NumberWidget, { num: 5 }));
 	h.expect(numberAssertion);
 });
 ```
 
-Here we're using the `setChildren()` api on the baseAssertion, and we're using the special `~` selector to find a node with a key of `~message`. The `~key` property is a special property on Assertion Templates that will be erased at assertion time so it doesn't show up when matching the renders. This allows you to decorate the AssertionTemplates to easily select nodes, without having to augment the actual widgets render function. Once we have the `message` node we then set the children to the expected `the number 5`, and use the resulting template in `h.expect`. It's important to note that Assertion Templates always return a new Assertion Template when setting a value, this ensures that you do not accidentally mutate an existing template (causing other tests to potentially fail), and allows you to build layered Templates that incrementally build on each other.
+Here we're using the `setChildren()` api on the baseAssertion, and we're using the special `~` selector to find a node with a key of `~message`. The `~key` property (or when using tsx in a template, `assertion-key`) is a special property on Assertion Templates that will be erased at assertion time so it doesn't show up when matching the renders. This allows you to decorate the AssertionTemplates to easily select nodes, without having to augment the actual widgets render function. Once we have the `message` node we then set the children to the expected `the number 5`, and use the resulting template in `h.expect`. It's important to note that Assertion Templates always return a new Assertion Template when setting a value, this ensures that you do not accidentally mutate an existing template (causing other tests to potentially fail), and allows you to build layered Templates that incrementally build on each other.
 
 Assertion Template has the following api's:
 
 ```
-setChildren(selector: string, children: DNode[]): AssertionTemplateResult;
+insertBefore(selector: string, children: DNode[]): AssertionTemplateResult;
+insertAfter(selector: string, children: DNode[]): AssertionTemplateResult;
+insertSiblings(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
+append(selector: string, children: DNode[]): AssertionTemplateResult;
+prepend(selector: string, children: DNode[]): AssertionTemplateResult;
+replace(selector: string, children: DNode[]): AssertionTemplateResult;
+setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
 setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
 getChildren(selector: string): DNode[];
 getProperty(selector: string, property: string): any;
 ```
-
-

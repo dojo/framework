@@ -14,6 +14,10 @@ export interface Path<M, T> {
 	value: T;
 }
 
+export type RequiredProps<T> = { [P in PurifyProps<keyof T>]: NonNullableProps<T[P]> };
+export type PurifyProps<T extends string> = { [P in T]: T }[T];
+export type NonNullableProps<T> = T & {};
+
 /**
  * An interface that enables typed traversal of an arbitrary type M. `path` and `at` can be used to generate
  * `Path`s that allow access to properties within M via the `get` method. The returned `Path`s can also be passed to the
@@ -26,28 +30,42 @@ export interface State<M> {
 }
 
 export interface StatePaths<M> {
-	<T, P0 extends keyof T>(path: Path<M, T>, a: P0): Path<M, T[P0]>;
-	<T, P0 extends keyof T, P1 extends keyof T[P0]>(path: Path<M, T>, a: P0, b: P1): Path<M, T[P0][P1]>;
-	<T, P0 extends keyof T, P1 extends keyof T[P0], P2 extends keyof T[P0][P1]>(
+	<T, P0 extends keyof RequiredProps<T>>(path: Path<M, T>, a: P0): Path<M, RequiredProps<T>[P0]>;
+	<T, P0 extends keyof T, P1 extends keyof RequiredProps<T>[P0]>(path: Path<M, T>, a: P0, b: P1): Path<
+		M,
+		RequiredProps<RequiredProps<T>[P0]>[P1]
+	>;
+	<
+		T,
+		P0 extends keyof T,
+		P1 extends keyof RequiredProps<T>[P0],
+		P2 extends keyof RequiredProps<RequiredProps<T>[P0]>[P1]
+	>(
 		path: Path<M, T>,
 		a: P0,
 		b: P1,
 		c: P2
-	): Path<M, T[P0][P1][P2]>;
-	<T, P0 extends keyof T, P1 extends keyof T[P0], P2 extends keyof T[P0][P1], P3 extends keyof T[P0][P1][P2]>(
-		path: Path<M, T>,
-		a: P0,
-		b: P1,
-		c: P2,
-		d: P3
-	): Path<M, T[P0][P1][P2][P3]>;
+	): Path<M, RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2]>;
 	<
 		T,
 		P0 extends keyof T,
-		P1 extends keyof T[P0],
-		P2 extends keyof T[P0][P1],
-		P3 extends keyof T[P0][P1][P2],
-		P4 extends keyof T[P0][P1][P2][P3]
+		P1 extends keyof RequiredProps<T>[P0],
+		P2 extends keyof RequiredProps<RequiredProps<T>[P0]>[P1],
+		P3 extends keyof RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2]
+	>(
+		path: Path<M, T>,
+		a: P0,
+		b: P1,
+		c: P2,
+		d: P3
+	): Path<M, RequiredProps<RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2]>[P3]>;
+	<
+		T,
+		P0 extends keyof T,
+		P1 extends keyof RequiredProps<T>[P0],
+		P2 extends keyof RequiredProps<RequiredProps<T>[P0]>[P1],
+		P3 extends keyof RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2],
+		P4 extends keyof RequiredProps<RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2]>[P3]
 	>(
 		path: Path<M, T>,
 		a: P0,
@@ -55,32 +73,45 @@ export interface StatePaths<M> {
 		c: P2,
 		d: P3,
 		e: P4
-	): Path<M, T[P0][P1][P2][P3][P4]>;
-	<P0 extends keyof M>(a: P0): Path<M, M[P0]>;
-	<P0 extends keyof M, P1 extends keyof M[P0]>(a: P0, b: P1): Path<M, M[P0][P1]>;
-	<P0 extends keyof M, P1 extends keyof M[P0], P2 extends keyof M[P0][P1]>(a: P0, b: P1, c: P2): Path<
+	): Path<M, RequiredProps<RequiredProps<RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2]>[P3]>[P4]>;
+	<P0 extends keyof M>(a: P0): Path<M, RequiredProps<M>[P0]>;
+	<P0 extends keyof M, P1 extends keyof RequiredProps<M>[P0]>(a: P0, b: P1): Path<
 		M,
-		M[P0][P1][P2]
+		RequiredProps<RequiredProps<M>[P0]>[P1]
 	>;
-	<P0 extends keyof M, P1 extends keyof M[P0], P2 extends keyof M[P0][P1], P3 extends keyof M[P0][P1][P2]>(
+	<
+		P0 extends keyof M,
+		P1 extends keyof RequiredProps<M>[P0],
+		P2 extends keyof RequiredProps<RequiredProps<M>[P0]>[P1]
+	>(
+		a: P0,
+		b: P1,
+		c: P2
+	): Path<M, RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2]>;
+	<
+		P0 extends keyof M,
+		P1 extends keyof RequiredProps<M>[P0],
+		P2 extends keyof RequiredProps<RequiredProps<M>[P0]>[P1],
+		P3 extends keyof RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2]
+	>(
 		a: P0,
 		b: P1,
 		c: P2,
 		d: P3
-	): Path<M, M[P0][P1][P2][P3]>;
+	): Path<M, RequiredProps<RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2]>[P3]>;
 	<
 		P0 extends keyof M,
-		P1 extends keyof M[P0],
-		P2 extends keyof M[P0][P1],
-		P3 extends keyof M[P0][P1][P2],
-		P4 extends keyof M[P0][P1][P2][P3]
+		P1 extends keyof RequiredProps<M>[P0],
+		P2 extends keyof RequiredProps<RequiredProps<M>[P0]>[P1],
+		P3 extends keyof RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2],
+		P4 extends keyof RequiredProps<RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2]>[P3]
 	>(
 		a: P0,
 		b: P1,
 		c: P2,
 		d: P3,
 		e: P4
-	): Path<M, M[P0][P1][P2][P3][P4]>;
+	): Path<M, RequiredProps<RequiredProps<RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2]>[P3]>[P4]>;
 }
 
 interface OnChangeCallback {
@@ -97,18 +128,18 @@ function isString(segment?: string): segment is string {
 	return typeof segment === 'string';
 }
 
-/**
- * Application state store
- */
-export class Store<T = any> extends Evented implements State<T> {
+export interface MutableState<T = any> extends State<T> {
+	/**
+	 * Applies store operations to state and returns the undo operations
+	 */
+	apply(operations: PatchOperation<T>[]): PatchOperation<T>[];
+}
+
+export class DefaultState<T = any> implements MutableState<T> {
 	/**
 	 * The private state object
 	 */
 	private _state = {} as T;
-
-	private _changePaths = new Map<string, OnChangeValue>();
-
-	private _callbackId = 0;
 
 	/**
 	 * Returns the state at a specific pointer path location.
@@ -120,13 +151,10 @@ export class Store<T = any> extends Evented implements State<T> {
 	/**
 	 * Applies store operations to state and returns the undo operations
 	 */
-	public apply = (operations: PatchOperation<T>[], invalidate: boolean = false): PatchOperation<T>[] => {
+	public apply = (operations: PatchOperation<T>[]): PatchOperation<T>[] => {
 		const patch = new Patch(operations);
 		const patchResult = patch.apply(this._state);
 		this._state = patchResult.object;
-		if (invalidate) {
-			this.invalidate();
-		}
 		return patchResult.undoOperations;
 	};
 
@@ -139,6 +167,67 @@ export class Store<T = any> extends Evented implements State<T> {
 			state: path.state,
 			value
 		};
+	};
+
+	public path: State<T>['path'] = (path: string | Path<T, any>, ...segments: (string | undefined)[]) => {
+		if (typeof path === 'string') {
+			segments = [path, ...segments];
+		} else {
+			segments = [...new Pointer(path.path).segments, ...segments];
+		}
+
+		const stringSegments = segments.filter<string>(isString);
+		const hasMultipleSegments = stringSegments.length > 1;
+		const pointer = new Pointer(hasMultipleSegments ? stringSegments : stringSegments[0] || '');
+
+		return {
+			path: pointer.path,
+			state: this._state,
+			value: pointer.get(this._state)
+		};
+	};
+}
+
+/**
+ * Application state store
+ */
+export class Store<T = any> extends Evented implements MutableState<T> {
+	private _adapter: MutableState<T> = new DefaultState<T>();
+
+	private _changePaths = new Map<string, OnChangeValue>();
+
+	private _callbackId = 0;
+
+	/**
+	 * Returns the state at a specific pointer path location.
+	 */
+	public get = <U = any>(path: Path<T, U>): U => {
+		return this._adapter.get(path);
+	};
+
+	constructor(options?: { state?: MutableState<T> }) {
+		super();
+		if (options && options.state) {
+			this._adapter = options.state;
+			this.path = this._adapter.path.bind(this._adapter);
+		}
+	}
+
+	/**
+	 * Applies store operations to state and returns the undo operations
+	 */
+	public apply = (operations: PatchOperation<T>[], invalidate: boolean = false): PatchOperation<T>[] => {
+		const result = this._adapter.apply(operations);
+
+		if (invalidate) {
+			this.invalidate();
+		}
+
+		return result;
+	};
+
+	public at = <U = any>(path: Path<T, Array<U>>, index: number): Path<T, U> => {
+		return this._adapter.at(path, index);
 	};
 
 	public onChange = <U = any>(paths: Path<T, U> | Path<T, U>[], callback: () => void) => {
@@ -175,7 +264,10 @@ export class Store<T = any> extends Evented implements State<T> {
 		const callbackIdsCalled: number[] = [];
 		this._changePaths.forEach((value: OnChangeValue, path: string) => {
 			const { previousValue, callbacks } = value;
-			const newValue = new Pointer(path).get(this._state);
+			const pointer = new Pointer(path);
+			const newValue = pointer.segments.length
+				? this._adapter.path(pointer.segments[0] as keyof T, ...pointer.segments.slice(1)).value
+				: undefined;
 			if (previousValue !== newValue) {
 				this._changePaths.set(path, { callbacks, previousValue: newValue });
 				callbacks.forEach((callbackItem) => {
@@ -197,23 +289,7 @@ export class Store<T = any> extends Evented implements State<T> {
 		this.emit({ type: 'invalidate' });
 	}
 
-	public path: State<T>['path'] = (path: string | Path<T, any>, ...segments: (string | undefined)[]) => {
-		if (typeof path === 'string') {
-			segments = [path, ...segments];
-		} else {
-			segments = [...new Pointer(path.path).segments, ...segments];
-		}
-
-		const stringSegments = segments.filter<string>(isString);
-		const hasMultipleSegments = stringSegments.length > 1;
-		const pointer = new Pointer(hasMultipleSegments ? stringSegments : stringSegments[0] || '');
-
-		return {
-			path: pointer.path,
-			state: this._state,
-			value: pointer.get(this._state)
-		};
-	};
+	public path: State<T>['path'] = this._adapter.path.bind(this._adapter);
 }
 
 export default Store;

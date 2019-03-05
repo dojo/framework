@@ -292,7 +292,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		const convertedNodes: (WNode | VNode)[] = [];
 		for (let i = 0; i < filteredNodes.length; i++) {
 			const node = filteredNodes[i];
-			if (!node) {
+			if (!node || node === true) {
 				continue;
 			}
 			if (typeof node === 'string') {

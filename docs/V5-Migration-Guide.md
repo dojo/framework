@@ -64,25 +64,25 @@ const myProcess = createProcess('process', [myCommand], myMiddlewareOne(myMiddle
 ```ts
 // A single process middleware
 
-const myProcess = createProcess('process', [myCommand], () => {
+const myProcess = createProcess('process', [myCommand], () => ({
 	after: (error, result) => {
 		// middleware logic
 	}
-}
+}));
 
 // Composite middleware
 
-const myMiddlewareOne = () => {
+const myMiddlewareOne = () => ({
 	after: (error, result) => {
 		// middleware logic
 	}
-}
+})
 
-const myMiddlewareTwo = () => {
+const myMiddlewareTwo = () => ({
 	after: (error, result) => {
 		// middleware logic
 	}
-}
+})
 
 const myProcess = createProcess('process', [myCommand], [myMiddlewareOne, myMiddlewareTwo]);
 ```

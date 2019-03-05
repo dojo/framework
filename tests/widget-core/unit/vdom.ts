@@ -853,7 +853,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(textNodeThree.data, '3');
 		});
 
-		it('supports null and undefined return from render', () => {
+		it('supports null, undefined and false return from render', () => {
 			class Foo extends WidgetBase {
 				render() {
 					return null;
@@ -866,9 +866,15 @@ jsdomDescribe('vdom', () => {
 				}
 			}
 
+			class Qux extends WidgetBase {
+				render() {
+					return false;
+				}
+			}
+
 			class Baz extends WidgetBase {
 				render() {
-					return v('div', [w(Foo, {}), w(Bar, {})]);
+					return v('div', [w(Foo, {}), w(Bar, {}), w(Qux, {})]);
 				}
 			}
 
@@ -2077,9 +2083,13 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(onDetachStub.notCalled);
 				return remove(child);
 			};
-			r.mount({ domNode: div, sync: true });
+			r.mount({ domNode: div });
 			toggleShow();
-			assert.isTrue(onDetachStub.called);
+			resolvers.resolveRAF();
+			assert.isTrue(onDetachStub.calledOnce);
+			assert.strictEqual(removeChildCount, 1);
+			resolvers.resolveRIC();
+			assert.isTrue(onDetachStub.calledOnce);
 			assert.strictEqual(removeChildCount, 1);
 		});
 
@@ -2331,8 +2341,8 @@ jsdomDescribe('vdom', () => {
 
 			const r = renderer(() => w(Foo, {}));
 			const div = document.createElement('div');
-			r.mount({ domNode: div, sync: true });
-			resolvers.resolve();
+			r.mount({ domNode: div });
+			resolvers.resolveRAF();
 			assert.strictEqual(deferredPropertyCallCount, 8);
 			const root = div.childNodes[0] as Element;
 			assert.lengthOf(root.childNodes, 2);
@@ -2346,8 +2356,12 @@ jsdomDescribe('vdom', () => {
 			assert.lengthOf(barContainer.childNodes, 1);
 			const barLabel = barContainer.childNodes[0] as Text;
 			assert.strictEqual(barLabel.data, 'bar-container');
+			resolvers.resolveRIC();
+			assert.strictEqual(deferredPropertyCallCount, 8);
 			invalidate();
-			resolvers.resolve();
+			resolvers.resolveRAF();
+			assert.strictEqual(deferredPropertyCallCount, 12);
+			resolvers.resolveRIC();
 			assert.strictEqual(deferredPropertyCallCount, 12);
 		});
 
@@ -3024,14 +3038,14 @@ jsdomDescribe('vdom', () => {
 				assert.strictEqual(div.className, '');
 			});
 
-			it('should accept null as a class', () => {
-				const [Widget] = getWidget(v('div', { classes: null }));
+			it('should accept falsy as a class', () => {
+				const [Widget] = getWidget(v('div', { classes: ['my-class', null, undefined, false, true, 'other'] }));
 				const div = document.createElement('div');
 				const root = document.createElement('div');
 				root.appendChild(div);
 				const r = renderer(() => w(Widget, {}));
 				r.mount({ domNode: root, sync: true });
-				assert.strictEqual(div.className, '');
+				assert.strictEqual(div.className, 'my-class other');
 			});
 
 			it('can add and remove multiple classes in IE11', () => {
@@ -4822,6 +4836,28 @@ jsdomDescribe('vdom', () => {
 				r.mount({ domNode: div, sync: true, transition });
 				assert.isTrue(transition.enter.notCalled);
 			});
+			it('Does not invoke transition when false passed as enterAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget] = getWidget(v('div', [v('span', { enterAnimation: false })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				assert.isTrue(transition.enter.notCalled);
+			});
+			it('Does not invoke transition when true passed as enterAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget] = getWidget(v('div', [v('span', { enterAnimation: true })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				assert.isTrue(transition.enter.notCalled);
+			});
 		});
 		describe('exitAnimation', () => {
 			it('is invoked when a node is removed from an existing parent node', () => {
@@ -4856,6 +4892,30 @@ jsdomDescribe('vdom', () => {
 					exit: stub()
 				};
 				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation: undefined })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				meta.setRenderResult(v('div', []));
+				assert.isTrue(transition.exit.notCalled);
+			});
+			it('Does not invoke transition when false passed as exitAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation: false })]));
+				const r = renderer(() => w(Widget, {}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, transition });
+				meta.setRenderResult(v('div', []));
+				assert.isTrue(transition.exit.notCalled);
+			});
+			it('Does not invoke transition when true passed as exitAnimation', () => {
+				const transition = {
+					enter: stub(),
+					exit: stub()
+				};
+				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation: true })]));
 				const r = renderer(() => w(Widget, {}));
 				const div = document.createElement('div');
 				r.mount({ domNode: div, sync: true, transition });
@@ -4984,9 +5044,14 @@ jsdomDescribe('vdom', () => {
 			r.mount();
 			const input = document.body.lastChild as HTMLElement;
 			const focusSpy = spy(input, 'focus');
-			resolvers.resolve();
+			resolvers.resolveRAF();
+			assert.isTrue(focusSpy.calledOnce);
+			resolvers.resolveRIC();
 			assert.isTrue(focusSpy.calledOnce);
 			meta.setRenderResult(v('input', { focus: true }));
+			resolvers.resolveRAF();
+			assert.isTrue(focusSpy.calledOnce);
+			resolvers.resolveRIC();
 			assert.isTrue(focusSpy.calledOnce);
 			document.body.removeChild(input);
 		});

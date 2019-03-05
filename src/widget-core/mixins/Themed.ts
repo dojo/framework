@@ -170,7 +170,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		}
 
 		private _getThemeClass(className: SupportedClassName): SupportedClassName {
-			if (className === undefined || className === null) {
+			if (className === undefined || className === null || className === false || className === true) {
 				return className;
 			}
 
@@ -190,7 +190,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 							const extraClass = this._classes[key][classNames[i]];
 							if (classNames[i] === themeClassName && extraClass) {
 								extraClass.forEach((className) => {
-									if (className) {
+									if (className && className !== true) {
 										classes.push(className);
 									}
 								});

@@ -591,78 +591,7 @@ render() {
 
 ### Internationalization
 
-Widgets can be internationalized by adding the `I18nMixin` mixin from `@dojo/framework/widget-core/mixins/I18n`. [Message bundles](./../i18n/README.md) are localized by passing them to `localizeBundle`. Note that with this pattern it is possible for a widget to obtain its messages from multiple bundles; however, we strongly recommend limiting widgets to a single bundle whenever possible.
-
-If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then a bundle of blank message values is returned. Alternatively, the `localizeBundle` method accepts a second boolean argument, which, when `true`, causes the default messages to be returned instead of the blank bundle. The widget will be invalidated once the locale-specific messages have been loaded, triggering a re-render with the localized message content.
-
-The object returned by `localizeBundle` contains the following properties and methods:
-
--   `messages`: An object containing the localized message key-value pairs. If the messages have not yet loaded, then `messages` will be either a blank bundle or the default messages, depending upon how `localizeBundle` was called.
--   `isPlaceholder`: a boolean property indicating whether the returned messages are the actual locale-specific messages (`false`) or just the placeholders used while waiting for the localized messages to finish loading (`true`). This is useful to prevent the widget from rendering at all if localized messages have not yet loaded.
--   `format(key: string, replacements: { [key: string]: string })`: a method that accepts a message key as its first argument and an object of replacement values as its second. For example, if the bundle contains `greeting: 'Hello, {name}!'`, then calling `format('greeting', { name: 'World' })` would return `'Hello, World!'`.
-
-Each widget can have its own locale by passing a property - `properties.locale`. If no locale is set, then the default locale, as set by [`@dojo/framework/i18n`](./../i18n/README.md), is assumed.
-
-```ts
-const MyWidgetBase = I18nMixin(WidgetBase);
-
-class I18nWidget extends MyWidgetBase<I18nWidgetProperties> {
-	render() {
-		// Load the "greetings" messages for the current locale. If the locale-specific
-		// messages have not been loaded yet, then the default messages are returned,
-		// and the widget will be invalidated once the locale-specific messages have
-		// loaded.
-		const { format, isPlaceholder, messages } = this.localizeBundle(greetingsBundle);
-
-		// In many cases it makes sense to postpone rendering until the locale-specific messages have loaded,
-		// which can be accomplished by returning early if `isPlaceholder` is `true`.
-		if (isPlaceholder) {
-			return;
-		}
-
-		return v('div', { title: messages.hello }, [
-			w(Label, {
-				// Passing a message string to a child widget.
-				label: messages.purchaseItems
-			}),
-			w(Button, {
-				// Passing a formatted message string to a child widget.
-				label: format('itemCount', { count: 2 })
-			})
-		]);
-	}
-}
-```
-
-Once the `I18n` mixin has been added to a widget, the default bundle can be replaced with the `i18nBundle` property. Further, while we recommend against using multiple bundles in the same widget, there may be times when you need to consume a third-party widget that does so. As such, `i18nBundle` can also be a `Map` of default bundles to override bundles.
-
-```typescript
-import { Bundle } from '@dojo/framework/i18n/i18n';
-
-// A complete bundle to replace WidgetA's message bundle
-import overrideBundleForWidgetA from './nls/widgetA';
-
-// Bundles for WidgetB
-import widgetB1 from 'third-party/nls/widgetB1';
-import overrideBundleForWidgetB from './nls/widgetB';
-
-// WidgetB uses multiple bundles, but only `thirdy-party/nls/widgetB1` needs to be overridden
-const overrideMapForWidgetB = new Map<Bundle<any>, Bundle<any>>();
-map.set(widgetB1, overrideBundleForWidgetB);
-
-export class MyWidget extends WidgetBase {
-	protected render() {
-		return [
-			w(WidgetA, {
-				i18nBundle: overrideBundleForWidgetA
-			}),
-			w(WidgetB, {
-				i18nBundle: overrideMapForWidgetB
-			})
-		];
-	}
-}
-```
+Please refer to the [I18n reference guide](../../docs/en/i18n/index.md) for details on how to to internationalize Dojo widgets and applications.
 
 ## Key Principles
 
