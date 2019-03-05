@@ -340,9 +340,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				node.widgetConstructor =
 					this.registry.get<WidgetBase>(node.widgetConstructor) || node.widgetConstructor;
 			}
-			if (!node.bind) {
-				node.bind = this;
-			}
 			convertedNodes.push(node);
 			if (node.children && node.children.length) {
 				node.children = this._filterAndConvert(node.children);

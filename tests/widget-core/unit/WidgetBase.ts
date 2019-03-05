@@ -184,7 +184,6 @@ describe('WidgetBase', () => {
 			}
 			const widget = new MyWidget();
 			const initialNode = widget.__render__() as WNode;
-			assert.strictEqual(initialNode.bind, widget);
 			assert.deepEqual(initialNode.children, []);
 			assert.deepEqual(initialNode.properties, {});
 			assert.strictEqual(initialNode.type, WNODE);
@@ -192,7 +191,6 @@ describe('WidgetBase', () => {
 			resolver({ default: WidgetBase, __esModule: true });
 			return promise.then(() => {
 				const resolvedNode = widget.__render__() as WNode;
-				assert.strictEqual(resolvedNode.bind, widget);
 				assert.deepEqual(resolvedNode.children, []);
 				assert.deepEqual(resolvedNode.properties, {});
 				assert.strictEqual(resolvedNode.type, WNODE);
@@ -213,7 +211,6 @@ describe('WidgetBase', () => {
 			}
 			const widget = new MyWidget();
 			const initialNode = widget.__render__() as WNode;
-			assert.strictEqual(initialNode.bind, widget);
 			assert.deepEqual(initialNode.children, []);
 			assert.deepEqual(initialNode.properties, {});
 			assert.strictEqual(initialNode.type, WNODE);
@@ -221,7 +218,6 @@ describe('WidgetBase', () => {
 			resolver(WidgetBase);
 			return promise.then(() => {
 				const resolvedNode = widget.__render__() as WNode;
-				assert.strictEqual(resolvedNode.bind, widget);
 				assert.deepEqual(resolvedNode.children, []);
 				assert.deepEqual(resolvedNode.properties, {});
 				assert.strictEqual(resolvedNode.type, WNODE);
@@ -242,7 +238,6 @@ describe('WidgetBase', () => {
 			}
 			const widget = new MyWidget();
 			const initialNode = widget.__render__() as WNode;
-			assert.strictEqual(initialNode.bind, widget);
 			assert.deepEqual(initialNode.children, []);
 			assert.deepEqual(initialNode.properties, {});
 			assert.strictEqual(initialNode.type, WNODE);
@@ -250,7 +245,6 @@ describe('WidgetBase', () => {
 			resolver(WidgetBase);
 			return promise.then(() => {
 				const resolvedNode = widget.__render__() as WNode;
-				assert.strictEqual(resolvedNode.bind, widget);
 				assert.deepEqual(resolvedNode.children, []);
 				assert.deepEqual(resolvedNode.properties, {});
 				assert.strictEqual(resolvedNode.type, WNODE);
@@ -271,7 +265,6 @@ describe('WidgetBase', () => {
 			}
 			const widget = new MyWidget();
 			const initialNode = widget.__render__() as WNode;
-			assert.strictEqual(initialNode.bind, widget);
 			assert.deepEqual(initialNode.children, []);
 			assert.deepEqual(initialNode.properties, {});
 			assert.strictEqual(initialNode.type, WNODE);
@@ -279,7 +272,6 @@ describe('WidgetBase', () => {
 			resolver({ default: WidgetBase, __esModule: true });
 			return promise.then(() => {
 				const resolvedNode = widget.__render__() as WNode;
-				assert.strictEqual(resolvedNode.bind, widget);
 				assert.deepEqual(resolvedNode.children, []);
 				assert.deepEqual(resolvedNode.properties, {});
 				assert.strictEqual(resolvedNode.type, WNODE);
