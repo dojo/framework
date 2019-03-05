@@ -6,10 +6,12 @@ import {
 	VNode,
 	DNode,
 	VNodeProperties,
+	LazyWidget,
 	WidgetBaseConstructor,
 	TransitionStrategy,
 	SupportedClassName,
-	DomVNode
+	DomVNode,
+	LazyDefine
 } from './interfaces';
 import transitionStrategy from './animations/cssTransitions';
 import { isVNode, isWNode, WNODE, v, isDomVNode, w, VNODE } from './d';
@@ -160,6 +162,13 @@ const nodeOperations = ['focus', 'blur', 'scrollIntoView', 'click'];
 const NAMESPACE_W3 = 'http://www.w3.org/';
 const NAMESPACE_SVG = NAMESPACE_W3 + '2000/svg';
 const NAMESPACE_XLINK = NAMESPACE_W3 + '1999/xlink';
+
+let lazyWidgetId = 0;
+const lazyWidgetIdMap = new WeakMap<LazyWidget, string>();
+
+function isLazyDefine(item: any): item is LazyDefine {
+	return Boolean(item && item.label);
+}
 
 function isWNodeWrapper(child: DNodeWrapper): child is WNodeWrapper {
 	return child && isWNode(child.node);
@@ -459,11 +468,43 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		});
 	}
 
-	function mapNodeToInstance(nodes: any[], instance: WidgetBase) {
-		let node: any;
+	function resolveRegistryItem(node: VNode | WNode, instance?: WidgetBase) {
+		instance = _nodeToInstanceMap.get(node) || instance;
+		if (instance) {
+			const instanceData = widgetInstanceMap.get(instance);
+			if (instanceData && isWNode(node) && !isWidgetBaseConstructor(node.widgetConstructor)) {
+				if (typeof node.widgetConstructor === 'function') {
+					let id = lazyWidgetIdMap.get(node.widgetConstructor);
+					if (!id) {
+						id = `__lazy_widget_${lazyWidgetId++}`;
+						lazyWidgetIdMap.set(node.widgetConstructor, id);
+						instanceData.registry.define(id, node.widgetConstructor);
+					}
+					node.widgetConstructor = id;
+				} else if (isLazyDefine(node.widgetConstructor)) {
+					const { label, registryItem } = node.widgetConstructor;
+					if (!instanceData.registry.has(label)) {
+						instanceData.registry.define(label, registryItem);
+					}
+					node.widgetConstructor = label;
+				}
+
+				node.widgetConstructor =
+					instanceData.registry.get<WidgetBase>(node.widgetConstructor) || node.widgetConstructor;
+			}
+		}
+	}
+
+	function mapNodeToInstance(nodes: DNode[], instance: WidgetBase) {
+		let node: DNode;
 		while ((node = nodes.pop())) {
 			if (isWNode(node) || isVNode(node)) {
-				_nodeToInstanceMap.set(node, instance);
+				if (!_nodeToInstanceMap.has(node)) {
+					_nodeToInstanceMap.set(node, instance);
+					if (node.children && node.children.length) {
+						nodes = [...nodes, ...node.children];
+					}
+				}
 			}
 		}
 	}
@@ -482,14 +523,16 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			((requiresInsertBefore || hasPreviousSiblings !== false) && hasParentWNode) ||
 			(hasCurrentParentChildren && rendered.length > 1);
 		let previousItem: DNodeWrapper | undefined;
-		let children: any[] = [...rendered];
+		if (isWNodeWrapper(parent) && rendered.length) {
+			mapNodeToInstance([...rendered], parent.instance!);
+		}
 		for (let i = 0; i < rendered.length; i++) {
 			let renderedItem = rendered[i];
+			if (!renderedItem || renderedItem === true) {
+				continue;
+			}
 			if (typeof renderedItem === 'string') {
 				renderedItem = toTextVNode(renderedItem);
-			}
-			if (hasParentWNode && renderedItem && renderedItem !== true && renderedItem.children) {
-				children = [...children, ...renderedItem.children];
 			}
 			const wrapper = {
 				node: renderedItem,
@@ -499,17 +542,28 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				hasParentWNode,
 				namespace: namespace
 			} as DNodeWrapper;
-			if (isVNode(renderedItem) && renderedItem.properties.exitAnimation) {
-				parent.hasAnimations = true;
-				let nextParent = _parentWrapperMap.get(parent);
-				while (nextParent) {
-					if (nextParent.hasAnimations) {
-						break;
+			if (isVNode(renderedItem)) {
+				if (renderedItem.deferredPropertiesCallback) {
+					const properties = renderedItem.deferredPropertiesCallback(false);
+					renderedItem.originalProperties = renderedItem.properties;
+					renderedItem.properties = { ...properties, ...renderedItem.properties };
+				}
+				if (renderedItem.properties.exitAnimation) {
+					parent.hasAnimations = true;
+					let nextParent = _parentWrapperMap.get(parent);
+					while (nextParent) {
+						if (nextParent.hasAnimations) {
+							break;
+						}
+						nextParent.hasAnimations = true;
+						nextParent = _parentWrapperMap.get(nextParent);
 					}
-					nextParent.hasAnimations = true;
-					nextParent = _parentWrapperMap.get(nextParent);
 				}
 			}
+			if (isWNode(renderedItem)) {
+				resolveRegistryItem(renderedItem, (parent as any).instance);
+			}
+
 			_parentWrapperMap.set(wrapper, parent);
 			if (previousItem) {
 				_wrapperSiblingMap.set(previousItem, wrapper);
@@ -517,7 +571,6 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			wrappedRendered.push(wrapper);
 			previousItem = wrapper;
 		}
-		isWNodeWrapper(parent) && mapNodeToInstance(children, parent.instance!);
 		return wrappedRendered;
 	}
 

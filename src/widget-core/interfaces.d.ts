@@ -468,7 +468,7 @@ export interface WidgetBaseInterface<P = WidgetProperties, C extends DNode = DNo
 	/**
 	 * Main internal function for dealing with widget rendering
 	 */
-	__render__(): (WNode | VNode | string) | (WNode | VNode | string)[];
+	__render__(): RenderResult;
 }
 
 /**

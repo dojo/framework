@@ -1,6 +1,6 @@
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
-import { v, isVNode, isWNode } from './d';
+import { v } from './d';
 import { auto } from './diff';
 import {
 	AfterRender,
@@ -9,19 +9,16 @@ import {
 	DiffPropertyReaction,
 	DNode,
 	DefaultWidgetBaseInterface,
-	LazyWidget,
 	Render,
 	WidgetMetaConstructor,
 	WidgetBaseInterface,
 	WidgetProperties,
-	WNode,
-	VNode,
-	LazyDefine,
-	MetaBase
+	MetaBase,
+	RenderResult
 } from './interfaces';
 import RegistryHandler from './RegistryHandler';
 import NodeHandler from './NodeHandler';
-import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './Registry';
+import { WIDGET_BASE_TYPE } from './Registry';
 import { Handle } from '../core/Destroyable';
 import { Base } from './meta/Base';
 
@@ -38,12 +35,11 @@ export interface WidgetData {
 	invalidate?: Function;
 	rendering: boolean;
 	inputProperties: any;
+	registry: RegistryHandler;
 }
 
 export type BoundFunctionData = { boundFunc: (...args: any[]) => any; scope: any };
 
-let lazyWidgetId = 0;
-const lazyWidgetIdMap = new WeakMap<LazyWidget, string>();
 const decoratorMap = new WeakMap<Function, Map<string, any[]>>();
 const builtDecoratorMap = new WeakMap<Function, Map<string, any[]>>();
 export const widgetInstanceMap = new WeakMap<
@@ -51,10 +47,6 @@ export const widgetInstanceMap = new WeakMap<
 	WidgetData
 >();
 const boundAuto = auto.bind(null);
-
-function isLazyDefine(item: any): item is LazyDefine {
-	return Boolean(item && item.label);
-}
 
 function isDomMeta(meta: any): meta is Base {
 	return Boolean(meta.afterRender);
@@ -113,7 +105,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 */
 	private _decoratorCache: Map<string, any[]>;
 
-	private _registry: RegistryHandler | undefined;
+	private _registry: RegistryHandler = new RegistryHandler();
 
 	private _metaMap: Map<WidgetMetaConstructor<any>, MetaBase> | undefined;
 
@@ -134,6 +126,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		this._properties = {} as P;
 		this._boundRenderFunc = this.render.bind(this);
 		this._boundInvalidate = this.invalidate.bind(this);
+		this.own(this._registry);
+		this.own(this._registry.on('invalidate', this._boundInvalidate));
 
 		widgetInstanceMap.set(this, {
 			dirty: true,
@@ -146,7 +140,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			},
 			nodeHandler: this._nodeHandler,
 			rendering: false,
-			inputProperties: {}
+			inputProperties: {},
+			registry: this.registry
 		});
 
 		this.own({
@@ -289,62 +284,13 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		}
 	}
 
-	private _filterAndConvert(nodes: DNode[]): (WNode | VNode | string)[];
-	private _filterAndConvert(nodes: DNode): WNode | VNode | string;
-	private _filterAndConvert(nodes: DNode | DNode[]): (WNode | VNode | string) | (WNode | VNode | string)[];
-	private _filterAndConvert(nodes: DNode | DNode[]): (WNode | VNode | string) | (WNode | VNode | string)[] {
-		const isArray = Array.isArray(nodes);
-		const filteredNodes = Array.isArray(nodes) ? nodes : [nodes];
-		const convertedNodes: (WNode | VNode | string)[] = [];
-		for (let i = 0; i < filteredNodes.length; i++) {
-			const node = filteredNodes[i];
-			if (!node || node === true) {
-				continue;
-			}
-			if (typeof node === 'string') {
-				convertedNodes.push(node);
-				continue;
-			}
-			if (isVNode(node) && node.deferredPropertiesCallback) {
-				const properties = node.deferredPropertiesCallback(false);
-				node.originalProperties = node.properties;
-				node.properties = { ...properties, ...node.properties };
-			}
-			if (isWNode(node) && !isWidgetBaseConstructor(node.widgetConstructor)) {
-				if (typeof node.widgetConstructor === 'function') {
-					let id = lazyWidgetIdMap.get(node.widgetConstructor);
-					if (!id) {
-						id = `__lazy_widget_${lazyWidgetId++}`;
-						lazyWidgetIdMap.set(node.widgetConstructor, id);
-						this.registry.define(id, node.widgetConstructor);
-					}
-					node.widgetConstructor = id;
-				} else if (isLazyDefine(node.widgetConstructor)) {
-					const { label, registryItem } = node.widgetConstructor;
-					if (!this.registry.has(label)) {
-						this.registry.define(label, registryItem);
-					}
-					node.widgetConstructor = label;
-				}
-
-				node.widgetConstructor =
-					this.registry.get<WidgetBase>(node.widgetConstructor) || node.widgetConstructor;
-			}
-			convertedNodes.push(node);
-			if (node.children && node.children.length) {
-				node.children = this._filterAndConvert(node.children);
-			}
-		}
-		return isArray ? convertedNodes : convertedNodes[0];
-	}
-
-	public __render__(): (WNode | VNode | string) | (WNode | VNode | string)[] {
+	public __render__(): RenderResult {
 		const instanceData = widgetInstanceMap.get(this);
 		if (instanceData) {
 			instanceData.dirty = false;
 		}
 		const render = this._runBeforeRenders();
-		const dNode = this._filterAndConvert(this._runAfterRenders(render()));
+		const dNode = this._runAfterRenders(render());
 		this._nodeHandler.clear();
 		return dNode;
 	}
@@ -441,11 +387,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	}
 
 	public get registry(): RegistryHandler {
-		if (this._registry === undefined) {
-			this._registry = new RegistryHandler();
-			this.own(this._registry);
-			this.own(this._registry.on('invalidate', this._boundInvalidate));
-		}
 		return this._registry;
 	}
 
