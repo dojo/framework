@@ -52,7 +52,7 @@ registerSuite('mixins/Container', {
 			const TestWidgetContainer = Container(TestWidget, 'test-state-1', { getProperties });
 			const widget = new TestWidgetContainer();
 			widget.registry.base = registry;
-			widget.__setProperties__({ foo: 'bar' }, widget);
+			widget.__setProperties__({ foo: 'bar' });
 			widget.__setChildren__([]);
 			widget.__render__();
 		},
@@ -71,7 +71,7 @@ registerSuite('mixins/Container', {
 			const TestWidgetContainer = Container(TestWidget, 'test-state-1', { getProperties });
 			const widget = new TestWidgetContainer();
 			widget.registry.base = registry;
-			widget.__setProperties__({ foo: 'bar' }, widget);
+			widget.__setProperties__({ foo: 'bar' });
 			widget.__setChildren__([child]);
 			widget.__render__();
 		},

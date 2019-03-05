@@ -52,8 +52,6 @@ export const widgetInstanceMap = new WeakMap<
 >();
 const boundAuto = auto.bind(null);
 
-export const noBind = '__dojo_no_bind';
-
 function toTextVNode(data: any): VNode {
 	return {
 		tag: '',
@@ -70,6 +68,25 @@ function isLazyDefine(item: any): item is LazyDefine {
 
 function isDomMeta(meta: any): meta is Base {
 	return Boolean(meta.afterRender);
+}
+
+const IGNORE_LIST: (string | symbol)[] = ['constructor', 'render'];
+
+function autoBind(instance: any) {
+	let keys: string[] = Object.getOwnPropertyNames(instance.constructor.prototype);
+	for (let i = 0; i < keys.length; i++) {
+		const key = keys[i];
+		if (typeof instance[key] !== 'function' || IGNORE_LIST.indexOf(key) > -1) {
+			continue;
+		}
+		const boundFunc = instance[key].bind(instance);
+		Object.defineProperty(instance, key, {
+			configurable: true,
+			get() {
+				return boundFunc;
+			}
+		});
+	}
 }
 
 /**
@@ -107,11 +124,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	private _decoratorCache: Map<string, any[]>;
 
 	private _registry: RegistryHandler | undefined;
-
-	/**
-	 * Map of functions properties for the bound function
-	 */
-	private _bindFunctionPropertyMap: WeakMap<(...args: any[]) => any, BoundFunctionData> | undefined;
 
 	private _metaMap: Map<WidgetMetaConstructor<any>, MetaBase> | undefined;
 
@@ -192,7 +204,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		return [...this._changedPropertyKeys];
 	}
 
-	public __setProperties__(originalProperties: this['properties'], bind?: WidgetBaseInterface): void {
+	public __setProperties__(originalProperties: this['properties']): void {
 		const instanceData = widgetInstanceMap.get(this);
 		if (instanceData) {
 			instanceData.inputProperties = originalProperties;
@@ -201,6 +213,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		const registeredDiffPropertyNames = this.getDecorator('registeredDiffProperty');
 		const changedPropertyKeys: string[] = [];
 		const propertyNames = Object.keys(properties);
+
+		if (this._initialProperties) {
+			autoBind(this);
+		}
 
 		if (this._initialProperties === false || registeredDiffPropertyNames.length !== 0) {
 			const allProperties = [...propertyNames, ...Object.keys(this._properties)];
@@ -215,7 +231,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				}
 				checkedProperties.push(propertyName);
 				const previousProperty = this._properties[propertyName];
-				const newProperty = this._bindFunctionProperty(properties[propertyName], bind);
+				const newProperty = properties[propertyName];
 				if (registeredDiffPropertyNames.indexOf(propertyName) !== -1) {
 					runReactions = true;
 					const diffFunctions = this.getDecorator(`diffProperty:${propertyName}`);
@@ -258,7 +274,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			for (let i = 0; i < propertyNames.length; i++) {
 				const propertyName = propertyNames[i];
 				if (typeof properties[propertyName] === 'function') {
-					properties[propertyName] = this._bindFunctionProperty(properties[propertyName], bind);
+					properties[propertyName] = properties[propertyName];
 				} else {
 					changedPropertyKeys.push(propertyName);
 				}
@@ -435,31 +451,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		allDecorators = [...allDecorators];
 		this._decoratorCache.set(decoratorKey, allDecorators);
 		return allDecorators;
-	}
-
-	/**
-	 * Binds unbound property functions to the specified `bind` property
-	 *
-	 * @param properties properties to check for functions
-	 */
-	private _bindFunctionProperty(property: any, bind: any): any {
-		if (typeof property === 'function' && !property[noBind] && isWidgetBaseConstructor(property) === false) {
-			if (this._bindFunctionPropertyMap === undefined) {
-				this._bindFunctionPropertyMap = new WeakMap<
-					(...args: any[]) => any,
-					{ boundFunc: (...args: any[]) => any; scope: any }
-				>();
-			}
-			const bindInfo: Partial<BoundFunctionData> = this._bindFunctionPropertyMap.get(property) || {};
-			let { boundFunc, scope } = bindInfo;
-
-			if (boundFunc === undefined || scope !== bind) {
-				boundFunc = property.bind(bind) as (...args: any[]) => any;
-				this._bindFunctionPropertyMap.set(property, { boundFunc, scope: bind });
-			}
-			return boundFunc;
-		}
-		return property;
 	}
 
 	public get registry(): RegistryHandler {

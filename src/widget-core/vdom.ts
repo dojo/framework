@@ -1055,7 +1055,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			}
 		};
 		instanceData.rendering = true;
-		instance.__setProperties__(next.node.properties, next.node.bind);
+		instance.__setProperties__(next.node.properties);
 		instance.__setChildren__(next.node.children);
 		next.instance = instance;
 		let rendered = instance.__render__();
@@ -1087,7 +1087,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		next.domNode = domNode;
 		next.hasAnimations = hasAnimations;
 		instanceData.rendering = true;
-		instance!.__setProperties__(next.node.properties, next.node.bind);
+		instance!.__setProperties__(next.node.properties);
 		instance!.__setChildren__(next.node.children);
 		_instanceToWrapperMap.set(next.instance!, next);
 		if (instanceData.dirty) {
