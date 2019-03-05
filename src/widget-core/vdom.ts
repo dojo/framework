@@ -393,6 +393,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 	let _parentWrapperMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	let _wrapperSiblingMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	let _insertBeforeMap: undefined | WeakMap<DNodeWrapper, Node> = new WeakMap<DNodeWrapper, Node>();
+	let _nodeToInstanceMap = new WeakMap<VNode | WNode, WidgetBase>();
 	let _renderScheduled: number | undefined;
 	let _idleCallbacks: Function[] = [];
 	let _deferredRenderCallbacks: Function[] = [];
@@ -458,6 +459,15 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		});
 	}
 
+	function mapNodeToInstance(nodes: any[], instance: WidgetBase) {
+		let node: any;
+		while ((node = nodes.pop())) {
+			if (isWNode(node) || isVNode(node)) {
+				_nodeToInstanceMap.set(node, instance);
+			}
+		}
+	}
+
 	function renderedToWrapper(
 		rendered: DNode[],
 		parent: DNodeWrapper,
@@ -472,10 +482,14 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			((requiresInsertBefore || hasPreviousSiblings !== false) && hasParentWNode) ||
 			(hasCurrentParentChildren && rendered.length > 1);
 		let previousItem: DNodeWrapper | undefined;
+		let children: any[] = [...rendered];
 		for (let i = 0; i < rendered.length; i++) {
 			let renderedItem = rendered[i];
 			if (typeof renderedItem === 'string') {
 				renderedItem = toTextVNode(renderedItem);
+			}
+			if (hasParentWNode && renderedItem && renderedItem !== true && renderedItem.children) {
+				children = [...children, ...renderedItem.children];
 			}
 			const wrapper = {
 				node: renderedItem,
@@ -503,6 +517,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			wrappedRendered.push(wrapper);
 			previousItem = wrapper;
 		}
+		isWNodeWrapper(parent) && mapNodeToInstance(children, parent.instance!);
 		return wrappedRendered;
 	}
 
@@ -842,7 +857,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				const {
 					parentDomNode,
 					next,
-					next: { domNode, merged, requiresInsertBefore }
+					next: { domNode, merged, requiresInsertBefore, node }
 				} = item;
 
 				processProperties(next, { properties: {} });
@@ -863,10 +878,13 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 					setValue(domNode!.parentElement);
 				}
 				runEnterAnimation(next, _mountOptions.transition);
-				// const instanceData = widgetInstanceMap.get(next.node.bind as WidgetBase);
-				// if (properties.key != null && instanceData) {
-				// 	instanceData.nodeHandler.add(domNode as HTMLElement, `${properties.key}`);
-				// }
+				const instance = _nodeToInstanceMap.get(next.node);
+				if (instance) {
+					const instanceData = widgetInstanceMap.get(instance);
+					if (node.properties.key != null && instanceData) {
+						instanceData.nodeHandler.add(domNode as HTMLElement, `${node.properties.key}`);
+					}
+				}
 				item.next.inserted = true;
 			} else if (item.type === 'update') {
 				const {
@@ -881,14 +899,16 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				}
 
 				const previousProperties = buildPreviousProperties(domNode, current, next);
-				// const instanceData = widgetInstanceMap.get(next.node.bind as WidgetBase);
-
 				processProperties(next, previousProperties);
 				runDeferredProperties(next);
 
-				// if (instanceData && node.properties.key != null) {
-				// 	instanceData.nodeHandler.add(next.domNode as HTMLElement, `${node.properties.key}`);
-				// }
+				const instance = _nodeToInstanceMap.get(next.node);
+				if (instance) {
+					const instanceData = widgetInstanceMap.get(instance);
+					if (instanceData && next.node.properties.key != null) {
+						instanceData.nodeHandler.add(next.domNode as HTMLElement, `${next.node.properties.key}`);
+					}
+				}
 			} else if (item.type === 'delete') {
 				const { current } = item;
 				const { exitAnimation } = current.node.properties;
