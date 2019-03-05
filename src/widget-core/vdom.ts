@@ -12,7 +12,7 @@ import {
 	DomVNode
 } from './interfaces';
 import transitionStrategy from './animations/cssTransitions';
-import { isVNode, isWNode, WNODE, v, isDomVNode, w } from './d';
+import { isVNode, isWNode, WNODE, v, isDomVNode, w, VNODE } from './d';
 import { Registry, isWidgetBaseConstructor } from './Registry';
 import { WidgetBase, widgetInstanceMap } from './WidgetBase';
 
@@ -171,6 +171,16 @@ function isVNodeWrapper(child?: DNodeWrapper | null): child is VNodeWrapper {
 
 function isAttachApplication(value: any): value is AttachApplication | DetachApplication {
 	return !!value.type;
+}
+
+function toTextVNode(data: any): VNode {
+	return {
+		tag: '',
+		properties: {},
+		children: undefined,
+		text: `${data}`,
+		type: VNODE
+	};
 }
 
 function updateAttributes(
@@ -463,7 +473,10 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			(hasCurrentParentChildren && rendered.length > 1);
 		let previousItem: DNodeWrapper | undefined;
 		for (let i = 0; i < rendered.length; i++) {
-			const renderedItem = rendered[i];
+			let renderedItem = rendered[i];
+			if (typeof renderedItem === 'string') {
+				renderedItem = toTextVNode(renderedItem);
+			}
 			const wrapper = {
 				node: renderedItem,
 				depth: depth + 1,

@@ -1,6 +1,6 @@
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
-import { v, VNODE, isVNode, isWNode } from './d';
+import { v, isVNode, isWNode } from './d';
 import { auto } from './diff';
 import {
 	AfterRender,
@@ -51,16 +51,6 @@ export const widgetInstanceMap = new WeakMap<
 	WidgetData
 >();
 const boundAuto = auto.bind(null);
-
-function toTextVNode(data: any): VNode {
-	return {
-		tag: '',
-		properties: {},
-		children: undefined,
-		text: `${data}`,
-		type: VNODE
-	};
-}
 
 function isLazyDefine(item: any): item is LazyDefine {
 	return Boolean(item && item.label);
@@ -299,20 +289,20 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		}
 	}
 
-	private _filterAndConvert(nodes: DNode[]): (WNode | VNode)[];
-	private _filterAndConvert(nodes: DNode): WNode | VNode;
-	private _filterAndConvert(nodes: DNode | DNode[]): (WNode | VNode) | (WNode | VNode)[];
-	private _filterAndConvert(nodes: DNode | DNode[]): (WNode | VNode) | (WNode | VNode)[] {
+	private _filterAndConvert(nodes: DNode[]): (WNode | VNode | string)[];
+	private _filterAndConvert(nodes: DNode): WNode | VNode | string;
+	private _filterAndConvert(nodes: DNode | DNode[]): (WNode | VNode | string) | (WNode | VNode | string)[];
+	private _filterAndConvert(nodes: DNode | DNode[]): (WNode | VNode | string) | (WNode | VNode | string)[] {
 		const isArray = Array.isArray(nodes);
 		const filteredNodes = Array.isArray(nodes) ? nodes : [nodes];
-		const convertedNodes: (WNode | VNode)[] = [];
+		const convertedNodes: (WNode | VNode | string)[] = [];
 		for (let i = 0; i < filteredNodes.length; i++) {
 			const node = filteredNodes[i];
 			if (!node || node === true) {
 				continue;
 			}
 			if (typeof node === 'string') {
-				convertedNodes.push(toTextVNode(node));
+				convertedNodes.push(node);
 				continue;
 			}
 			if (isVNode(node) && node.deferredPropertiesCallback) {
@@ -348,7 +338,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		return isArray ? convertedNodes : convertedNodes[0];
 	}
 
-	public __render__(): (WNode | VNode) | (WNode | VNode)[] {
+	public __render__(): (WNode | VNode | string) | (WNode | VNode | string)[] {
 		const instanceData = widgetInstanceMap.get(this);
 		if (instanceData) {
 			instanceData.dirty = false;

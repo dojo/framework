@@ -100,7 +100,7 @@ describe('WidgetBase', () => {
 			const renderResult = widget.__render__() as VNode;
 			assert.strictEqual(renderResult.tag, 'my-app');
 			assert.lengthOf(renderResult.children!, 1);
-			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+			assert.strictEqual(renderResult.children![0], 'child');
 		});
 
 		it('Deferred properties are run during __render__', () => {
@@ -115,7 +115,7 @@ describe('WidgetBase', () => {
 			assert.isFunction(renderResult.deferredPropertiesCallback);
 			assert.deepEqual(renderResult.properties, { foo: 'bar' });
 			assert.lengthOf(renderResult.children!, 1);
-			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+			assert.strictEqual(renderResult.children![0], 'child');
 		});
 
 		it('Decorated properties are stored separately to resolved deferred properties', () => {
@@ -139,7 +139,7 @@ describe('WidgetBase', () => {
 			assert.deepEqual(renderResult.properties, { foo: 'bar', bar: 'foo' });
 			assert.deepEqual(renderResult.originalProperties, { bar: 'foo' });
 			assert.lengthOf(renderResult.children!, 1);
-			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+			assert.strictEqual(renderResult.children![0], 'child');
 		});
 
 		it('Empty nodes are filtered from children', () => {
@@ -152,7 +152,7 @@ describe('WidgetBase', () => {
 			const renderResult = widget.__render__() as VNode;
 			assert.strictEqual(renderResult.tag, 'my-app');
 			assert.lengthOf(renderResult.children!, 1);
-			assert.strictEqual((renderResult.children![0] as any).text, 'child');
+			assert.strictEqual(renderResult.children![0], 'child');
 		});
 
 		it('Resolves registry items', () => {

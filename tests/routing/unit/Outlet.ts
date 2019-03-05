@@ -120,17 +120,8 @@ describe('Outlet', () => {
 
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
-		const h = harness(() =>
-			w(TestOutlet, {
-				id: 'foo',
-				renderer(details: any) {
-					if (details.type === 'index') {
-						return w(Widget, {});
-					}
-				}
-			})
-		);
-		const widget = (h.getRender(0) as any).bind;
+
+		const widget = new TestOutlet();
 		widget.onAttach();
 		invalidateCount = 0;
 		router.setPath('/other');
