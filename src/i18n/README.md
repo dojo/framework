@@ -2,4 +2,4 @@
 
 An internationalization package that provides locale-specific message loading, and support for locale-specific message, date, and number formatting.
 
-Please refer to the [I18n reference guide](../../docs/i18n/index.md) for details on how to use this module.
+Please refer to the [I18n reference guide](../../docs/en/i18n/index.md) for details on how to use this module.
