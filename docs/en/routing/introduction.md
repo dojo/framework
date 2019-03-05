@@ -1,6 +1,6 @@
 # Introduction
 
-Dojos Routing package provides a first class declarative routing solution for your applications. Widgets are the fundamental concept in Dojo applications and with routing it's no different. Dojo Routing offers a collection of widgets that integrate directly within any Dojo application. They enable widgets to be associated with routes without compromising their functionality, reusability and property interface.
+Dojos Routing package provides a first class declarative routing solution for your application. Widgets are the fundamental concept in Dojo applications and with routing it is no different. Dojo Routing provides a collection of widgets that integrate directly within your Dojo application. They enable widgets to be associated with routes without compromising their functionality, reusability or property interface.
 
 Feature | Description
 --- | ---

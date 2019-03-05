@@ -33,7 +33,7 @@ const r = renderer(() => <App />);
 r.mount({ registry });
 ```
 
-Using the `Outlet` widget to control what widgets to render when an outlet id is matched, the example will render `<div>Home</div>` for the `home` outlet.
+Use the `Outlet` widget to control what widgets to render when an outlet id is matched, the example will render `<div>Home</div>` for the `home` outlet.
 
 >src/App.tsx
 ```tsx
