@@ -985,6 +985,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				item.current.instance = undefined;
 			}
 		}
+		_nodeToInstanceMap = new WeakMap();
 	}
 
 	function _runCallbacks() {
