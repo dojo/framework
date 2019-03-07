@@ -7,6 +7,3 @@ Feature | Description
 Multiple History Managers | Routing comes with a collection of history managers depending on the needs of your application
 Out-of-the-box Routing Widgets | There are a selection of out the box routing widgets, such as `Link` and `ActiveLink`
 Automatic Code Splitting | Combined with `@dojo/cli-build-app`, top level routes are automatically code split
-
-
-
