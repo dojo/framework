@@ -271,7 +271,7 @@ Dojo Routing comes with three history managers, which determine the underlying r
 
 `StateHistory` uses the browser's [history API](https://developer.mozilla.org/en-US/docs/Web/API/History), to manage application route changes.
 
-**Note:** The `StateHistory` manager will require server-side support to work effectively.
+**Note:** The `StateHistory` manager will require server-side machinery to enable an application to support refreshing on a route.
 
  ### MemoryHistory
 
@@ -298,7 +298,70 @@ These history managers work like adapters, meaning that custom history managers 
 
 ## Error Outlet
 
+A special `outlet` called, `errorOutlet` is registered for that will match when the route doesn't match (`exact` or `partial`) any outlet in the routing configuration. You can use this `outlet` to render a widget to inform the user that the route does not exist.
+
+```tsx
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { tsx } from '@dojo/framework/widget-core/tsx';
+import Outlet from '@dojo/framework/routing/Outlet';
+
+export default class App extends WidgetBase {
+	protected render() {
+		return (
+			<div>
+				<Outlet id="errorOutlet" renderer={() => {
+					return <div>Unknown Page</div>;
+				}} />
+			</div>
+		);
+	}
+}
+```
+
 ## Code Splitting By Route
+
+When using `@dojo/cli-build-app` Dojo supports automatically code splitting your application by default for all top level outlets. This means that all widgets referenced within the `Outlet`s `renderer` will included specific bundle for the outlet that will be loaded lazily when the user goes to the route.
+
+To take advantage of the code splitting there are 4 rules:
+
+1) The routing configuration needs to be the default export in the `src/routes.ts` module.
+2) The widgets must be the default export of their module.
+3) The `renderer` property must be defined inline.
+4) The outlet `id` must be static and defined inline.
+
+>src/routes.ts
+```ts
+export default [
+	{
+		path: 'home',
+		outlet: 'home'
+	},
+	{
+		path: 'about',
+		outlet: 'about',
+		children: [
+			{
+				path: 'company',
+				outlet: 'about-company'
+			}
+		]
+	},
+	{
+		path: 'profile',
+		outlet: 'profile'
+	},
+	{
+		path: 'settings',
+		outlet: 'settings'
+	}
+];
+```
 
 ## Route Matching Algorithm
 
+Dojo Routing applies a scoring algorithm for path matches so that how you the routing configuration is ordered does not affect the which outlets are matched.
+
+Every segment match gets 4 points, plus:
+
+ * 3 points for a static segment, i.e. `/foo` matching `path: 'foo'`.
+ * 2 points for a dynamic segment, i.e. `/foo` matching `path: '{param}'`
