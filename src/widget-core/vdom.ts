@@ -36,13 +36,14 @@ export interface WNodeWrapper extends BaseNodeWrapper {
 	instance?: WidgetBase;
 	mergeNodes?: Node[];
 	nodeHandlerCalled?: boolean;
+	registryItem?: WidgetBaseConstructor;
 }
 
 export interface VNodeWrapper extends BaseNodeWrapper {
 	node: VNode | DomVNode;
 	merged?: boolean;
-	decoratedDeferredProperties?: VNodeProperties;
 	inserted?: boolean;
+	deferredProperties?: VNodeProperties;
 }
 
 export type DNodeWrapper = VNodeWrapper | WNodeWrapper;
@@ -210,13 +211,15 @@ function updateAttributes(
 	}
 }
 
-function buildPreviousProperties(domNode: any, current: VNodeWrapper, next: VNodeWrapper) {
+function buildPreviousProperties(domNode: any, current: VNodeWrapper) {
 	const {
 		node: { diffType, properties, attributes }
 	} = current;
 	if (!diffType || diffType === 'vdom') {
 		return {
-			properties: current.node.properties,
+			properties: current.deferredProperties
+				? { ...current.deferredProperties, ...current.node.properties }
+				: current.node.properties,
 			attributes: current.node.attributes,
 			events: current.node.events
 		};
@@ -534,7 +537,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			if (typeof renderedItem === 'string') {
 				renderedItem = toTextVNode(renderedItem);
 			}
-			const wrapper = {
+			const wrapper: DNodeWrapper = {
 				node: renderedItem,
 				depth: depth + 1,
 				order: i,
@@ -544,9 +547,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			} as DNodeWrapper;
 			if (isVNode(renderedItem)) {
 				if (renderedItem.deferredPropertiesCallback) {
-					const properties = renderedItem.deferredPropertiesCallback(false);
-					renderedItem.originalProperties = renderedItem.properties;
-					renderedItem.properties = { ...properties, ...renderedItem.properties };
+					(wrapper as VNodeWrapper).deferredProperties = renderedItem.deferredPropertiesCallback(false);
 				}
 				if (renderedItem.properties.exitAnimation) {
 					parent.hasAnimations = true;
@@ -601,11 +602,13 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 	}
 
 	function runDeferredProperties(next: VNodeWrapper) {
-		if (next.node.deferredPropertiesCallback) {
+		const { deferredPropertiesCallback } = next.node;
+		if (deferredPropertiesCallback) {
 			const properties = next.node.properties;
-			next.node.properties = { ...next.node.deferredPropertiesCallback(true), ...next.node.originalProperties };
 			_deferredRenderCallbacks.push(() => {
-				processProperties(next, { properties });
+				const deferredProperties = next.deferredProperties;
+				next.deferredProperties = deferredPropertiesCallback(true);
+				processProperties(next, { properties: { ...deferredProperties, ...properties } });
 			});
 		}
 	}
@@ -661,17 +664,20 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		nextWrapper: VNodeWrapper,
 		includesEventsAndAttributes = true
 	): void {
-		const propNames = Object.keys(nextWrapper.node.properties);
+		const properties = nextWrapper.deferredProperties
+			? { ...nextWrapper.deferredProperties, ...nextWrapper.node.properties }
+			: nextWrapper.node.properties;
+		const propNames = Object.keys(properties);
 		const propCount = propNames.length;
 		if (propNames.indexOf('classes') === -1 && currentProperties.classes) {
 			domNode.removeAttribute('class');
 		}
 
-		includesEventsAndAttributes && removeOrphanedEvents(domNode, currentProperties, nextWrapper.node.properties);
+		includesEventsAndAttributes && removeOrphanedEvents(domNode, currentProperties, properties);
 
 		for (let i = 0; i < propCount; i++) {
 			const propName = propNames[i];
-			let propValue = nextWrapper.node.properties[propName];
+			let propValue = properties[propName];
 			const previousValue = currentProperties[propName];
 			if (propName === 'classes') {
 				const previousClassString = createClassPropValue(previousValue);
@@ -951,7 +957,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 					instanceData && instanceData.nodeHandler.addRoot();
 				}
 
-				const previousProperties = buildPreviousProperties(domNode, current, next);
+				const previousProperties = buildPreviousProperties(domNode, current);
 				processProperties(next, previousProperties);
 				runDeferredProperties(next);
 

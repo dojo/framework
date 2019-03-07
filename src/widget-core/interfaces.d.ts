@@ -303,11 +303,6 @@ export interface VNode {
 	properties: VNodeProperties;
 
 	/**
-	 * VNode properties
-	 */
-	originalProperties?: VNodeProperties;
-
-	/**
 	 * VNode attributes
 	 */
 	attributes?: { [index: string]: string | undefined };

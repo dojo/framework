@@ -212,7 +212,6 @@ export function v(
 	return {
 		tag,
 		deferredPropertiesCallback,
-		originalProperties: {},
 		children,
 		properties,
 		type: VNODE
