@@ -11,7 +11,8 @@ import {
 	TransitionStrategy,
 	SupportedClassName,
 	DomVNode,
-	LazyDefine
+	LazyDefine,
+	Constructor
 } from './interfaces';
 import transitionStrategy from './animations/cssTransitions';
 import { isVNode, isWNode, WNODE, v, isDomVNode, w, VNODE } from './d';
@@ -36,7 +37,7 @@ export interface WNodeWrapper extends BaseNodeWrapper {
 	instance?: WidgetBase;
 	mergeNodes?: Node[];
 	nodeHandlerCalled?: boolean;
-	registryItem?: WidgetBaseConstructor;
+	registryItem?: Constructor<WidgetBase> | null;
 }
 
 export interface VNodeWrapper extends BaseNodeWrapper {
@@ -301,10 +302,12 @@ function same(dnode1: DNodeWrapper, dnode2: DNodeWrapper): boolean {
 		}
 		return true;
 	} else if (isWNodeWrapper(dnode1) && isWNodeWrapper(dnode2)) {
-		if (dnode1.instance === undefined && typeof dnode2.node.widgetConstructor === 'string') {
+		const widgetConstructor1 = dnode1.registryItem || dnode1.node.widgetConstructor;
+		const widgetConstructor2 = dnode2.registryItem || dnode2.node.widgetConstructor;
+		if (dnode1.instance === undefined && typeof widgetConstructor2 === 'string') {
 			return false;
 		}
-		if (dnode1.node.widgetConstructor !== dnode2.node.widgetConstructor) {
+		if (widgetConstructor1 !== widgetConstructor2) {
 			return false;
 		}
 		if (dnode1.node.properties.key !== dnode2.node.properties.key) {
@@ -471,29 +474,31 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		});
 	}
 
-	function resolveRegistryItem(node: VNode | WNode, instance?: WidgetBase) {
-		instance = _nodeToInstanceMap.get(node) || instance;
+	function resolveRegistryItem(wrapper: WNodeWrapper, instance?: WidgetBase) {
+		instance = _nodeToInstanceMap.get(wrapper.node) || instance;
 		if (instance) {
 			const instanceData = widgetInstanceMap.get(instance);
-			if (instanceData && isWNode(node) && !isWidgetBaseConstructor(node.widgetConstructor)) {
-				if (typeof node.widgetConstructor === 'function') {
-					let id = lazyWidgetIdMap.get(node.widgetConstructor);
+			if (instanceData && !isWidgetBaseConstructor(wrapper.node.widgetConstructor)) {
+				let registryLabel: symbol | string | undefined;
+				if (typeof wrapper.node.widgetConstructor === 'function') {
+					let id = lazyWidgetIdMap.get(wrapper.node.widgetConstructor);
 					if (!id) {
 						id = `__lazy_widget_${lazyWidgetId++}`;
-						lazyWidgetIdMap.set(node.widgetConstructor, id);
-						instanceData.registry.define(id, node.widgetConstructor);
+						lazyWidgetIdMap.set(wrapper.node.widgetConstructor, id);
+						instanceData.registry.define(id, wrapper.node.widgetConstructor);
 					}
-					node.widgetConstructor = id;
-				} else if (isLazyDefine(node.widgetConstructor)) {
-					const { label, registryItem } = node.widgetConstructor;
+					registryLabel = id;
+				} else if (isLazyDefine(wrapper.node.widgetConstructor)) {
+					const { label, registryItem } = wrapper.node.widgetConstructor;
 					if (!instanceData.registry.has(label)) {
 						instanceData.registry.define(label, registryItem);
 					}
-					node.widgetConstructor = label;
+					registryLabel = label;
+				} else {
+					registryLabel = wrapper.node.widgetConstructor;
 				}
 
-				node.widgetConstructor =
-					instanceData.registry.get<WidgetBase>(node.widgetConstructor) || node.widgetConstructor;
+				wrapper.registryItem = instanceData.registry.get<WidgetBase>(registryLabel);
 			}
 		}
 	}
@@ -562,7 +567,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				}
 			}
 			if (isWNode(renderedItem)) {
-				resolveRegistryItem(renderedItem, (parent as any).instance);
+				resolveRegistryItem(wrapper as WNodeWrapper, (parent as any).instance);
 			}
 
 			_parentWrapperMap.set(wrapper, parent);
@@ -1118,10 +1123,11 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			node: { widgetConstructor }
 		} = next;
 		let { registry } = _mountOptions;
-		if (!isWidgetBaseConstructor(widgetConstructor)) {
+		const Constructor = next.registryItem || widgetConstructor;
+		if (!isWidgetBaseConstructor(Constructor)) {
 			return {};
 		}
-		const instance = new widgetConstructor() as WidgetBase;
+		const instance = new Constructor() as WidgetBase;
 		if (registry) {
 			instance.registry.base = registry;
 		}
