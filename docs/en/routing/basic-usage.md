@@ -14,7 +14,7 @@ export default [
 ];
 ```
 
-Then configuring the application to be "routing" aware by registering the router with an application registry.
+Then configure the application to be "routing" aware by registering the router with an application registry.
 
 >src/main.tsx
 ```tsx
@@ -33,7 +33,7 @@ const r = renderer(() => <App />);
 r.mount({ registry });
 ```
 
-Use the `Outlet` widget to control what widgets to render when an outlet id is matched, the example will render `<div>Home</div>` for the `home` outlet.
+Use the `Outlet` widget to control what widgets to render when the path for an outlet id is matched, the example will render `<div>Home</div>` for the `home` outlet.
 
 >src/App.tsx
 ```tsx
@@ -54,7 +54,7 @@ export default class App extends WidgetBase {
 
 ## Path & Query Parameters
 
-Path parameters are placeholders in the routing configuration that will match any value for the segment. The parameters are defined using curly braces, `{param}`.
+Path parameters are placeholders in the routing configuration that will match any value for the segment. The parameters are defined using curly braces, for example: `{param}`.
 
 >src/routes.ts
 ```ts
@@ -183,7 +183,7 @@ This example would register the following routes and outlets:
 
 The `about-services` outlet has been registered to match any path after `/about` This is at odds with the other registered outlets, `about-company` and `about-history`, however the [matching algorithm](#route-matching-algorithm) ensures that exact match is weighted higher than a parameter match.
 
-## Using the Outlet `MatchDetails`
+## Using the Outlet MatchDetails
 
 For every `outlet` that is match on a route change `MatchDetails` are injected into the `Outlet` widget's `renderer` property. The `MatchDetails` object contains specific details for the matched outlet.
 
@@ -255,7 +255,7 @@ export default class App extends WidgetBase {
 }
 ```
 
-## `Link` and `ActiveLink` Widgets
+## `Link` and `ActiveLink`
 
 Put some examples/details on using the `Link` and `ActiveLink` widget.
 
