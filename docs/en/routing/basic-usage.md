@@ -20,6 +20,7 @@ Then configure the application to be "routing" aware by registering the router w
 ```tsx
 import renderer from '@dojo/framework/widget-core/vdom';
 import { tsx } from '@dojo/framework/widget-core/tsx';
+import Registry from '@dojo/framework/widget-core/Registry';
 import { registerRouterInjector } from '@dojo/framework/routing/RouterInjector';
 
 import routes from './routes';
@@ -257,15 +258,105 @@ export default class App extends WidgetBase {
 
 ## `Link` and `ActiveLink`
 
-Put some examples/details on using the `Link` and `ActiveLink` widget.
+The `Link` component is a wrapper around an `a` DOM element that enables consumers to specify an `outlet` to create a link to. It is also possible to use a static route by setting the `isOutlet` property to `false`.
+
+If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
+
+Link Properties:
+
+* `to: string`: The `outlet` id or `href` for the link.
+* `params: { [index: string]: string }`: Params to generate the link with for the outlet.
+* `isOutlet: boolean`(optional): Indicates if the link is for an outlet or a static `href`, defaults to `true`.
+* `onClick: (event: MouseEvent) => void`(optional): Function that gets called when the `Link` is clicked.
+
+In addition to the `Link` specific properties, all the standard `VNodeProperties` are available for the `Link` component as they would be creating an `a` DOM Element.
+
+>src/App.tsx
+```tsx
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { tsx } from '@dojo/framework/widget-core/tsx';
+import { Link } from '@dojo/framework/routing/Link';
+
+export default class App extends WidgetBase {
+	protected render() {
+		return (
+			<div>
+				<Link to="home" params={{ foo: 'bar' }}>Link Text</Link>
+				<Link to="#/static-route" isOutlet={false}>Link Text</Link>
+			</div>
+		);
+	}
+}
+```
+
+The `ActiveLink` component is a wrapper around the `Link` component that conditionally sets classes on the `a` node if the link is currently active:
+
+ActiveLink Properties:
+
+* `activeClasses: string[]`: An array of classes to apply when the `Link`'s outlet is matched.
+
+```tsx
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { tsx } from '@dojo/framework/widget-core/tsx';
+import { ActiveLink } from '@dojo/framework/routing/ActiveLink';
+
+export default class App extends WidgetBase {
+	protected render() {
+		return (
+			<div>
+				<ActiveLink to="home" params={{ foo: 'bar' }} activeClasses={[ 'link-active' ]}>Link Text</ActiveLink>
+			</div>
+		);
+	}
+}
+```
 
 ## History Managers
 
-Dojo Routing comes with three history managers, which determine the underlying routing implementation to use, with `HashHistory` as the default history manager.
+Dojo Routing comes with three history managers for managing an application's navigation state, `HashHistory`, `StateHistory` and `MemoryHistory`. By default the `HashHistory` is used, however, this can be overridden by passing a different `HistoryManager` when creating the `Router` or using `registerRouterInjector`.
+
+>src/main.ts
+```ts
+import Router from '@dojo/framework/routing/Router';
+import StateHistory from '@dojo/framework/routing/history/StateHistory';
+
+import routes from './routes';
+
+// creates a router using the default history manager, `HashHistory`
+const router = new Router(routes);
+
+// creates a router using the `StateHistory`
+const routerWithHistoryOverride = new Router(routes, { HistoryManager: StateHistory });
+```
+
+Or using the `registerRouterInjector` helper function:
+
+>src/main.ts
+```ts
+import Registry from '@dojo/framework/widget-core/Registry';
+import { registerRouterInjector } from '@dojo/framework/routing/RouterInjector';
+import StateHistory from '@dojo/framework/routing/history/StateHistory';
+
+import routes from './routes';
+
+const registry = new Registry();
+
+// creates and registers a router using the default history manager, `HashHistory`
+registerRouterInjector(routes, registry);
+
+// creates and registers a router using the `StateHistory`
+registerRouterInjector(routes, registry, { HistoryManager: StateHistory });
+```
 
 ### HashHistory
 
- `HashHistory` uses the fragment identifier to process route changes, for example `https://foo.com/#home` would process the `home` as the route path.
+ `HashHistory` uses the fragment identifier to process route changes, for example `https://foo.com/#home` would process the `home` as the route path. As `HashHistory` is the default manager, you do not need to import module.
+
+ ```ts
+import { Router } from '@dojo/framework/routing/Router';
+
+const router = new Router(config);
+```
 
  ### StateHistory
 
@@ -273,9 +364,23 @@ Dojo Routing comes with three history managers, which determine the underlying r
 
 **Note:** The `StateHistory` manager will require server-side machinery to enable an application to support refreshing on a route.
 
+```ts
+import { Router } from '@dojo/framework/routing/Router';
+import { MemoryHistory } from '@dojo/framework/routing/history/StateHistory';
+
+const router = new Router(config, { HistoryManager: StateHistory });
+```
+
  ### MemoryHistory
 
-Add some notes on memory history.
+The `MemoryHistory` does not rely on any browser API but keeps its own internal path state. It should not be used in production applications but is useful for testing application routing.
+
+```ts
+import { Router } from '@dojo/framework/routing/Router';
+import { MemoryHistory } from '@dojo/framework/routing/history/MemoryHistory';
+
+const router = new Router(config, { HistoryManager: MemoryHistory });
+```
 
 >src/main.tsx
 ```tsx
@@ -357,11 +462,29 @@ export default [
 ];
 ```
 
-## Route Matching Algorithm
+With the routing configuration above the following example will generate 4 separate bundles for each of the widgets return in the `Outlet`'s renderer, `Home`, `About`, `Profile` and `Settings`.
 
-Dojo Routing applies a scoring algorithm for path matches so that how you the routing configuration is ordered does not affect the which outlets are matched.
+>src/App.tsx
+```tsx
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { tsx } from '@dojo/framework/widget-core/tsx';
+import Outlet from '@dojo/framework/routing/Outlet';
 
-Every segment match gets 4 points, plus:
+import Home from './Home';
+import About from './About';
+import Profile from './Profile';
+import Settings from './Settings';
 
- * 3 points for a static segment, i.e. `/foo` matching `path: 'foo'`.
- * 2 points for a dynamic segment, i.e. `/foo` matching `path: '{param}'`
+export default class App extends WidgetBase {
+	protected render() {
+		return (
+			<div>
+				<Outlet id="home" renderer={() => <Home />} />
+				<Outlet id="about" renderer={() => <About />} />
+				<Outlet id="profile" renderer={() => <Profile />} />
+				<Outlet id="settings" renderer={() => <Settings />} />
+			</div>
+		);
+	}
+}
+```
