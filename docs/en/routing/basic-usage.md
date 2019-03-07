@@ -462,7 +462,7 @@ export default [
 ];
 ```
 
-With the routing configuration above the following example will generate 4 separate bundles for each of the widgets return in the `Outlet`'s renderer, `Home`, `About`, `Profile` and `Settings`.
+With the routing configuration above the following example will generate 4 separate bundles for each of the widgets returned in the `Outlet`'s renderer, `Home`, `About`, `Profile` and `Settings`.
 
 >src/App.tsx
 ```tsx
