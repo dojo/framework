@@ -155,18 +155,17 @@ export default [
 
 ## Using Link Widgets
 
-The `Link` component is a wrapper around an `a` DOM element that enables consumers to specify an `outlet` to create a link to. It is also possible to use a static route by setting the `isOutlet` property to `false`.
+The `Link` component is a wrapper around an anchor tag that enables consumers to specify an `outlet` to create a link to. It is also possible to use a static route by setting the `isOutlet` property to `false`.
 
 If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
 
 Link Properties:
 
-* `to: string`: The `outlet` id or `href` for the link.
+* `to: string`: The `outlet` id.
 * `params: { [index: string]: string }`: Params to generate the link with for the outlet.
-* `isOutlet: boolean`(optional): Indicates if the link is for an outlet or a static `href`, defaults to `true`.
 * `onClick: (event: MouseEvent) => void`(optional): Function that gets called when the `Link` is clicked.
 
-In addition to the `Link` specific properties, all the standard `VNodeProperties` are available for the `Link` component as they would be creating an `a` DOM Element.
+In addition to the `Link` specific properties, all the standard `VNodeProperties` are available for the `Link` component as they would be creating an anchor tag.
 
 >src/App.tsx
 ```tsx
@@ -179,7 +178,6 @@ export default class App extends WidgetBase {
 		return (
 			<div>
 				<Link to="home" params={{ foo: 'bar' }}>Link Text</Link>
-				<Link to="#/static-route" isOutlet={false}>Link Text</Link>
 			</div>
 		);
 	}
