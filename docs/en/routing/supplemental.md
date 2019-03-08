@@ -61,10 +61,121 @@ The Dojo Router exposes an API that can be used to generate and navigate to link
  * `get currentParams(): { [string: index]: string }`: Returns parameters in the current route
  * `getOutlet(outletIdentifier: string): OutletContext | undefined`: Returns the `OutletContext` for an outlet id if it is currently matched. If the outlet id is not matched then returned `undefined`.
 
-## Generating a link for an outlet
+## Generating a Link for an Outlet
+
+>src/routes.ts
+```ts
+export default [
+	{
+		path: 'home',
+		outlet: 'home'
+	},
+	{
+		path: 'about',
+		outlet: 'about-overview',
+		children: [
+			{
+				path: '{services}',
+				outlet: 'about-services',
+				defaultParams: {
+					services: 'sewing'
+				}
+			},
+			{
+				path: 'company',
+				outlet: 'about-company'
+			},
+			{
+				path: 'history',
+				outlet: 'about-history'
+			}
+		]
+	}
+];
+```
+
+>src/main.ts
+```ts
+import Router from '@dojo/framework/routing/Router';
+
+import routes from './routes';
+
+const router = new Router(routes);
+
+// returns `#home`
+console.log(router.link('home'));
+
+// returns `#about`
+console.log(router.link('about-overview'));
+
+// returns `#about/company`
+console.log(router.link('about-company'));
+
+// returns `#about/history`
+console.log(router.link('about-history'));
+
+// returns `#about/knitting`
+console.log(router.link('about-services'), { services: 'knitting' });
+
+// Uses the current URL then default params to returns `#about/knitting`
+// when the current route is `#about/cooking` returns `#about/cooking`
+// when the current route does not contain the params returns `#about/sewing`
+console.log(router.link('about-services'));
+
+// returns `undefined` for an unknown route
+console.log(router.link('unknown'));
+```
+
+## Changing a Route
+
+```ts
+import Router from '@dojo/framework/routing/Router';
+
+import routes from './routes';
+
+const router = new Router(routes);
+
+// goto `#home` route
+router.setPath('#home');
+```
+
+## Getting the Current Params
+
+```ts
+import Router from '@dojo/framework/routing/Router';
+
+import routes from './routes';
+
+const router = new Router(routes);
+
+// returns the current params for the route
+const params = router.currentParams
+```
+
+## Get a Matched Outlet
+
+Use the `getOutlet` to return the `OutletContext` for a matched outlet, or `undefined` if the outlet is not matched.
+
+`OutletContext`:
+
+* `id: string`: The outlet id
+* `queryParams: { [index: string]: string }`: The query params from the matched routing.
+* `params: { [index: string]: string }`: The path params from the matched routing.
+* `isExact(): boolean`: A function indicates if the outlet is an exact match for the path.
+* `isError(): boolean`: A function indicates if the outlet is an error match for the path.
+* `type: 'index' | 'partial' | 'error'`: The type of match for the route, either `index`, `partial` or `error`.
 
 
-## Setting
+```ts
+import Router from '@dojo/framework/routing/Router';
+
+import routes from './routes';
+
+const router = new Router(routes);
+
+// returns the outlet context if the `home` outlet is matched, otherwise `undefined`
+const outletContext = router.getOutlet('home');
+```
 
 # Using the Outlet MatchDetails
 
@@ -189,7 +300,12 @@ const router = new Router(config);
 
 `StateHistory` uses the browser's [history API](https://developer.mozilla.org/en-US/docs/Web/API/History), to manage application route changes.
 
-**Note:** The `StateHistory` manager will require server-side machinery to enable an application to support refreshing on a route.
+The `StateHistory` manager will require server-side machinery to enable an application to support refreshing on a route, for example:
+
+1) Re-writing the `index.html` request to load from the application root.
+2) Re-writing requests to load static resources (`.js`, `.css` etc) from the application root.
+
+**Note:** This machinery is included with `@dojo/cli-build-app` using the `--serve` option (intended for development only).
 
 ```ts
 import { Router } from '@dojo/framework/routing/Router';
