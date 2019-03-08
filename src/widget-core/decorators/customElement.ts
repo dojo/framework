@@ -38,13 +38,6 @@ export interface CustomElementConfig<P extends object = { [index: string]: any }
  * registers that custom element.
  */
 export function customElement<P extends object = { [index: string]: any }>(config: CustomElementConfig<P>) {
-	const defaults = {
-		properties: [],
-		attributes: [],
-		events: [],
-		childType: CustomElementChildType.DOJO,
-		registryFactory: () => new Registry()
-	};
 	// rename "tag" to "tagName"
 	const { tag: tagName, ...configRest } = config;
 	const userDefinedConfig: CustomElementConfig & { tagName?: string } = configRest;
@@ -55,7 +48,6 @@ export function customElement<P extends object = { [index: string]: any }>(confi
 
 	return function<T extends Constructor<any>>(target: T) {
 		target.prototype.__customElementDescriptor = {
-			...defaults,
 			...target.prototype.__customElementDescriptor,
 			...userDefinedConfig
 		};

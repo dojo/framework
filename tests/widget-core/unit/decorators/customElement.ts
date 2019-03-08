@@ -3,7 +3,6 @@ const { assert } = intern.getPlugin('chai');
 
 import { customElement } from '../../../../src/widget-core/decorators/customElement';
 import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
-import { CustomElementChildType } from '../../../../src/widget-core/registerCustomElement';
 
 export interface CustomElementWidgetProperties {
 	label: string;
@@ -37,7 +36,6 @@ describe('@customElement', () => {
 			attributes: ['key', 'label', 'labelSuffix'],
 			properties: ['label'],
 			events: ['onClick2'],
-			childType: CustomElementChildType.DOJO,
 			registryFactory
 		});
 	});
