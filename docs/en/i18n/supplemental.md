@@ -86,9 +86,9 @@ export default class MyI18nWidget extends I18nMixin(WidgetBase) {
 }
 ```
 
-As this example widget loads its messages through `I18nMixin`'s [localizeBundle](./i18n-dojo-apps.md#i18nmixin-localizebundle-method) method, it will continue to work as new language translations are added and referenced within the bundle's `nls/MyI18nWidget.en.ts` default language module. Users will see localized messages from `MyI18nWidget` instances if a message set for their currently configured language is available.
+As this example widget loads its messages through `I18nMixin`'s [localizeBundle](#i18nmixin-localizebundle-method) method, it will continue to work as new language translations are added and referenced within the bundle's `nls/MyI18nWidget.en.ts` default language module. Users will see localized messages from `MyI18nWidget` instances if a message set for their currently configured language is available.
 
-Applications that want to override user default languages and allow changing locales within the application itself require additional setup, covered in [Internationalizing a Dojo application](./i18n-dojo-apps.md#internationalizing-a-dojo-application).
+Applications that want to override user default languages and allow changing locales within the application itself require additional setup, covered in [Internationalizing a Dojo application](#internationalizing-a-dojo-application).
 
 ## Lazy vs. static loading
 
@@ -149,11 +149,11 @@ Individual widgets can be internationalized by adding the `I18nMixin` mixin from
 - `rtl`?: boolean
     - An optional flag indicating the widget's text direction. If `true`, then the underlying DOM node's `dir` property is set to `"rtl"`. If it is `false`, then the `dir` property is set to `"ltr"`. Otherwise, the property is not set.
 - `i18nBundle`?: `Bundle<Messages>` | `Map<Bundle<Messages>, Bundle<Messages>>`
-    -  An optional override for the [default language bundle](./bundles.md#default-language-module) passed to the `localizeBundle` method. If the override contains a `messages` object, then it will completely replace the underlying default language bundle that the widget may be using. If the override only contains a `locales` object, a new bundle will be created with the additional locale loaders specified in the override.
+    -  An optional override for the [default language bundle](#default-language-module) passed to the `localizeBundle` method. If the override contains a `messages` object, then it will completely replace the underlying default language bundle that the widget may be using. If the override only contains a `locales` object, a new bundle will be created with the additional locale loaders specified in the override.
 
 ### `I18nMixin` `localizeBundle()` method
 
-Widgets can pass in their [default language bundle](./bundles.md#default-language-module) into the `localizeBundle` method to have the bundle localized appropriately given the widget's `locale` property.
+Widgets can pass in their [default language bundle](#default-language-module) into the `localizeBundle` method to have the bundle localized appropriately given the widget's `locale` property.
 
 If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then a bundle of blank message values is returned. Alternatively, the `localizeBundle` method accepts a second boolean argument, which, when `true`, causes the default messages to be returned instead of the blank bundle. The widget will be invalidated once the locale-specific messages have been loaded, triggering a re-render with the localized message content.
 
@@ -346,8 +346,8 @@ Order | I18n capability | Locale setting
 3 | **`I18nMixin` and i18n injector** | The default locale set when initially registering [the i18n injector](#providing-locale-data-to-i18n-aware-widgets).
 4 | **`.dojorc`** | A user's current locale, such as their browser language setting, if the locale [is in the application's list of `build-app`.`supportedLocales`](#configuring-supported-application-locales).
 5 | **`.dojorc`** | The application's [default locale specified in `build-app`.`locale`](#configuring-supported-application-locales).
-6 | **`@dojo/framework/i18n`** | An explicit locale set via [Dojo i18n's `switchLocale` method](./standalone.md#changing-the-root-locale-and-observing-locale-changes).
-7 | **`@dojo/framework/i18n`** | The [`systemLocale` for the current execution environment](./standalone.md#determining-the-current-locale).
+6 | **`@dojo/framework/i18n`** | An explicit locale set via [Dojo i18n's `switchLocale` method](#changing-the-root-locale-and-observing-locale-changes).
+7 | **`@dojo/framework/i18n`** | The [`systemLocale` for the current execution environment](#determining-the-current-locale).
 
 # Advanced formatting: CLDR
 
@@ -355,14 +355,14 @@ Order | I18n capability | Locale setting
 
 Given the very large size of the [Unicode CLDR data](http://cldr.unicode.org), it is not included as a dependency of `@dojo/framework/i18n`. Relevant portions of CLDR data must be explicitly loaded when applications require features such as [ICU-formatted messages](http://userguide.icu-project.org/formatparse/messages) or others provided by `@dojo/framework/i18n` such as date or number formatters.
 
-**Note**: Internationalized applications that require simple, unformatted locale-specific messages do not need to concern themselves with loading CLDR data. These applications only need to be configured as per [an internationalized Dojo application](./i18n-dojo-apps.md#internationalizing-a-dojo-application).
+**Note**: Internationalized applications that require simple, unformatted locale-specific messages do not need to concern themselves with loading CLDR data. These applications only need to be configured as per [an internationalized Dojo application](#internationalizing-a-dojo-application).
 
 ### Dojo build system
 
 CLDR data can be loaded from an application's `.dojorc` build configuration file via the `cldrPaths` list within the `build-app` section.
 
 - `cldrPaths`: string[]
-    - An array of paths to [CLDR JSON](https://github.com/dojo/i18n#loading-cldr-data) files to load. Can be used in conjunction with the [locale and supportedLocales](./i18n-dojo-apps.md#configuring-supported-application-locales) options - if a path contains the string `{locale}`, that file will be loaded for each locale listed in the `locale` and `supportedLocales` properties. 
+    - An array of paths to [CLDR JSON](https://github.com/dojo/i18n#loading-cldr-data) files to load. Can be used in conjunction with the [locale and supportedLocales](#configuring-supported-application-locales) options - if a path contains the string `{locale}`, that file will be loaded for each locale listed in the `locale` and `supportedLocales` properties. 
 
 For example, with the following configuration, the `numbers.json` CLDR file will be loaded for all three supported `en`, `es`, and `fr` locales:
 
@@ -445,7 +445,7 @@ For [unit formatting](#date-and-number-formatting):
 
 Dojo's `i18n` framework supports [ICU message formatting](#icu-message-formatting), but this requires CLDR data to be available and is not something that every application requires. As such, if the `supplemental/likeSubtags` and `supplemental/plurals` CLDR data are not loaded in the application, then Dojo's various message formatting methods will perform simple token replacement.
 
-The message formatting examples in the next two subsections will use a [message bundle](./bundles.md#working-with-message-bundles) with a `guestInfo` message as follows:
+The message formatting examples in the next two subsections will use a [message bundle](#working-with-message-bundles) with a `guestInfo` message as follows:
 
 >nls/main.ts
 ```ts
@@ -460,7 +460,7 @@ With basic token replacement, an object with `host` and `guest` properties can b
 
 #### Replacing tokens in widgets
 
-[I18n-aware widgets](./i18n-dojo-apps.md#creating-i18n-aware-widgets) can use the `format` function returned from [their `localizeBundle` method](./i18n-dojo-apps.md#i18nmixin-localizebundle-method) to perform simple token replacement in their messages.
+[I18n-aware widgets](#creating-i18n-aware-widgets) can use the `format` function returned from [their `localizeBundle` method](#i18nmixin-localizebundle-method) to perform simple token replacement in their messages.
 
 The `guestInfo` message can be rendered directly via `format`:
 
@@ -489,7 +489,7 @@ The `i18n` module exposes two methods that handle message formatting:
 - `formatMessage`, which directly returns a formatted message based on its inputs
 - `getMessageFormatter`, which returns a method dedicated to formatting a single message.
 
-Both of these methods operate on bundle objects, which must first be registered with the i18n ecosystem by passing them to [the `i18n` function](./standalone.md#accessing-locale-message-bundles).
+Both of these methods operate on bundle objects, which must first be registered with the i18n ecosystem by passing them to [the `i18n` function](#accessing-locale-message-bundles).
 
 ```ts
 import i18n, { formatMessage, getMessageFormatter } from '@dojo/framework/i18n/i18n';
@@ -524,7 +524,7 @@ i18n(bundle, 'en').then(() => {
 
 `@dojo/framework/i18n` relies on [Globalize.js](https://github.com/jquery/globalize/blob/master/doc/api/message/message-formatter.md) for [ICU message formatting](http://userguide.icu-project.org/formatparse/messages), and as such all of the features offered by Globalize.js are available through `@dojo/framework/i18n`.
 
-The message formatting examples in the next two subsections will use a [message bundle](./bundles.md#working-with-message-bundles) with an updated `guestInfo` message as follows:
+The message formatting examples in the next two subsections will use a [message bundle](#working-with-message-bundles) with an updated `guestInfo` message as follows:
 
 >nls/main.ts
 ```ts
@@ -555,7 +555,7 @@ export default {
 
 #### ICU message formatting in widgets
 
-[I18n-aware widgets](./i18n-dojo-apps.md#creating-i18n-aware-widgets) can use the `format` function returned from [their `localizeBundle` method](./i18n-dojo-apps.md#i18nmixin-localizebundle-method) to perform ICU message formatting in the same way as for [simple token replacement](#replacing-tokens-in-widgets) described above.
+[I18n-aware widgets](#creating-i18n-aware-widgets) can use the `format` function returned from [their `localizeBundle` method](#i18nmixin-localizebundle-method) to perform ICU message formatting in the same way as for [simple token replacement](#replacing-tokens-in-widgets) described above.
 
 The ICU-formatted `guestInfo` message can then be rendered as:
 
@@ -700,7 +700,7 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 # Standalone API
 
 ## Accessing locale message bundles
-Once a [default language bundle](./bundles.md#default-language-module) has been imported, any locale-specific messages are accessed by passing the message bundle to the `i18n` function.
+Once a [default language bundle](#default-language-module) has been imported, any locale-specific messages are accessed by passing the message bundle to the `i18n` function.
 
 For example:
 ```ts
