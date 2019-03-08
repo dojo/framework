@@ -1,2 +1,10 @@
 - [Introduction](./introduction.md#introduction)
 - [Basic Usage](./basic-usage.md#basic-usage)
+- [Route Configuration](./route-configuration)
+- [Outlet Match Details](./outlet-match-details)
+- [History Managers](./history-managers)
+  - [HashHistory](./history-managers#hashhistory)
+  - [StateHistory](./history-managers#statehistory)
+  - [MemoryHistory](./history-managers#memoryhistory)
+- [Error Outlet](./error-outlet)
+
