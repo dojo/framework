@@ -6,7 +6,7 @@ The routing configuration API is constructed with the following properties:
 
 * `path: string`: The routing path segment to match in the URL.
 * `outlet: string`: The `outlet` id used to render widgets to the associated routing path.
-* `defaultRoute: boolean`(optional): Marks the outlet as default, the application will redirect to this route automatically if an unknown routes is detected on application load.
+* `defaultRoute: boolean`(optional): Marks the outlet as default, the application will redirect to this route automatically if no route or an unknown routes is found on application load.
 * `defaultParams: { [index: string]: string }`(optional): Associated default parameters (`path` and `query`), required if the default route has required params.
 * `children: RouteConfig[]`(optional): Nested child routing configuration.
 
