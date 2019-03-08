@@ -155,7 +155,7 @@ export default [
 
 ## Using Link Widgets
 
-The `Link` component is a wrapper around an anchor tag that enables consumers to specify an `outlet` to create a link to. It is also possible to use a static route by setting the `isOutlet` property to `false`.
+The `Link` widget is a wrapper around an anchor tag that enables consumers to specify an `outlet` to create a link to. It is also possible to use a static route by setting the `isOutlet` property to `false`.
 
 If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
 
@@ -165,7 +165,7 @@ Link Properties:
 * `params: { [index: string]: string }`: Params to generate the link with for the outlet.
 * `onClick: (event: MouseEvent) => void`(optional): Function that gets called when the `Link` is clicked.
 
-In addition to the `Link` specific properties, all the standard `VNodeProperties` are available for the `Link` component as they would be creating an anchor tag.
+In addition to the `Link` specific properties, all the standard `VNodeProperties` are available for the `Link` widget as they would be creating an anchor tag.
 
 >src/App.tsx
 ```tsx
@@ -184,7 +184,7 @@ export default class App extends WidgetBase {
 }
 ```
 
-The `ActiveLink` component is a wrapper around the `Link` component that conditionally sets classes on the `a` node if the link is currently active:
+The `ActiveLink` widget is a wrapper around the `Link` widget that conditionally sets classes on the `a` node if the link is currently active:
 
 ActiveLink Properties:
 
