@@ -182,11 +182,64 @@ const outletContext = router.getOutlet('home');
 For every `outlet` that is match on a route change `MatchDetails` are injected into the `Outlet` widget's `renderer` property. The `MatchDetails` object contains specific details for the matched outlet.
 
 * `queryParams: { [index: string]: string }`: The query params from the matched routing.
+
+>src/routes.ts
+```ts
+export default [
+	{
+		path: 'home?{query}',
+		outlet: 'home'
+	}
+];
+```
+
 * `params: { [index: string]: string }`: The path params from the matched routing.
-* `isExact(): boolean`: A function indicates if the outlet is an exact match for the path.
-* `isError(): boolean`: A function indicates if the outlet is an error match for the path.
-* `type: 'index' | 'partial' | 'error'`: The type of match for the route, either `index`, `partial` or `error`.
-* `router: RouterInterface`: The router instance which can used to create links and initiate route changes.
+
+>src/routes.ts
+```ts
+export default [
+	{
+		path: 'home?{query}',
+		outlet: 'home'
+	}
+];
+```
+
+* `isExact(): boolean`: A function indicates if the outlet is an exact match for the path. This can be used to conditionally render different widgets or nodes.
+
+>src/routes.ts
+```ts
+export default [
+	{
+		path: 'home',
+		outlet: 'home',
+		children: [
+			path: 'about',
+			outlet: 'about'
+		]
+	}
+];
+```
+
+* `isError(): boolean`: A function indicates if the outlet is an error match for the path. This indicates after this outlet was matched, no other matches were found.
+
+>src/routes.ts
+```ts
+export default [
+	{
+		path: 'home',
+		outlet: 'home',
+		children: [
+			path: 'about',
+			outlet: 'about'
+		]
+	}
+];
+```
+
+* `type: 'index' | 'partial' | 'error'`: The type of match for the route, either `index`, `partial` or `error`. Using `type` should not be necessary, instead favouring a combination of `isExact` and `isError`.
+
+* `router: RouterInterface`: The router instance which can used to create links and initiate route changes. For more information on the [router API](./)
 
 >src/routes.ts
 ```ts
@@ -248,6 +301,10 @@ export default class App extends WidgetBase {
 	}
 }
 ```
+
+
+
+
 
 # History Managers
 
