@@ -1084,7 +1084,9 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		}
 		const instanceData = widgetInstanceMap.get(instance)!;
 		next.instance = instance;
-		next.domNode = domNode;
+		if (domNode && domNode.parentNode) {
+			next.domNode = domNode;
+		}
 		next.hasAnimations = hasAnimations;
 		instanceData.rendering = true;
 		instance!.__setProperties__(next.node.properties, next.node.bind);
