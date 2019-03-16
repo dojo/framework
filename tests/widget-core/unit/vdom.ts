@@ -971,17 +971,16 @@ jsdomDescribe('vdom', () => {
 				}
 
 				protected render() {
-					const thing = ['a', 'b'];
 					return v('div', [
 						v('div', [
 							w(Renderer, {
 								renderer: () => {
-									return !this._filter && w(Test, {}, [thing[0]]);
+									return !this._filter && w(Test, {}, ['a']);
 								}
 							}),
 							w(Renderer, {
 								renderer: () => {
-									return w(Test, {}, [thing[1]]);
+									return w(Test, {}, ['b']);
 								}
 							})
 						])
