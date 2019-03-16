@@ -1121,6 +1121,19 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		};
 	}
 
+	function setDomNodeOnParentWrapper(next: VNodeWrapper) {
+		let parentWNodeWrapper = findParentWNodeWrapper(next);
+		while (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
+			parentWNodeWrapper.domNode = next.domNode;
+			const nextParent = _parentWrapperMap.get(parentWNodeWrapper);
+			if (nextParent && isWNodeWrapper(nextParent)) {
+				parentWNodeWrapper = nextParent;
+				continue;
+			}
+			parentWNodeWrapper = undefined;
+		}
+	}
+
 	function _createDom({ next }: CreateDomInstruction): ProcessResult {
 		let mergeNodes: Node[] = [];
 		const parentDomNode = findParentDomNode(next)!;
@@ -1158,10 +1171,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
 			}
 		}
-		const parentWNodeWrapper = findParentWNodeWrapper(next);
-		if (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
-			parentWNodeWrapper.domNode = next.domNode;
-		}
+		setDomNodeOnParentWrapper(next);
 		const dom: ApplicationInstruction = {
 			next: next!,
 			parentDomNode: parentDomNode,
