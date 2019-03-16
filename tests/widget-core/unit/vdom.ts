@@ -13,6 +13,7 @@ import { WidgetBase, widgetInstanceMap } from '../../../src/widget-core/WidgetBa
 import Registry from '../../../src/widget-core/Registry';
 import { I18nMixin } from '../../../src/widget-core/mixins/I18n';
 import registry from '../../../src/widget-core/decorators/registry';
+import { alwaysRender } from '../../../src/widget-core/decorators/alwaysRender';
 
 const resolvers = createResolvers();
 
@@ -941,6 +942,62 @@ jsdomDescribe('vdom', () => {
 
 			assert.lengthOf(fooDiv.classList, 0);
 			assert.lengthOf(fooDiv.childNodes, 1);
+		});
+
+		it('Should insert children in the correct position when returned from a nested tree of virtual widgets', () => {
+			class Test extends WidgetBase {
+				render() {
+					return this.children;
+				}
+			}
+
+			@alwaysRender()
+			class Renderer extends WidgetBase<any> {
+				render() {
+					return this.properties.renderer();
+				}
+			}
+
+			let doFilter: any;
+			class App extends WidgetBase {
+				private _filter = false;
+
+				constructor() {
+					super();
+					doFilter = () => {
+						this._filter = !this._filter;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					const thing = ['a', 'b'];
+					return v('div', [
+						v('div', [
+							w(Renderer, {
+								renderer: () => {
+									return !this._filter && w(Test, {}, [thing[0]]);
+								}
+							}),
+							w(Renderer, {
+								renderer: () => {
+									return w(Test, {}, [thing[1]]);
+								}
+							})
+						])
+					]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			const root: any = div.childNodes[0] as Element;
+			assert.strictEqual(root.innerHTML, '<div>ab</div>');
+			doFilter();
+			assert.strictEqual(root.innerHTML, '<div>b</div>');
+			doFilter();
+			assert.strictEqual(root.innerHTML, '<div>ab</div>');
 		});
 
 		it('Should insert nodes at correct position the previous widget returned null', () => {
