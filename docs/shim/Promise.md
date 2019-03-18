@@ -77,11 +77,14 @@ resolvedPromise.then((value) => {
 	// value is true
 });
 
-rejectedPromise.then((value) => {
-	// code is not reached as it is handled by the error handler
-}, (error) => {
-	// error is 'some error'
-});
+rejectedPromise.then(
+	(value) => {
+		// code is not reached as it is handled by the error handler
+	},
+	(error) => {
+		// error is 'some error'
+	}
+);
 ```
 
 ### Catch
@@ -93,4 +96,3 @@ rejectedPromise.catch((error) => {
 	// error is 'some error'
 });
 ```
-

@@ -17,8 +17,8 @@ var DOMEventObject = {
 };
 
 emit(button, DOMEventObject);
-
 ```
+
 ## `on`
 
 Adds event listener to target.
@@ -28,11 +28,11 @@ import { on } from '@dojo/framework/core/on';
 
 var button = document.getElementById('button');
 
-on(button, 'click', function (event) {
+on(button, 'click', function(event) {
 	console.log(event.target.id);
 });
-
 ```
+
 ## `once`
 
 Attach an event that can only be called once to a target.
@@ -41,12 +41,12 @@ Attach an event that can only be called once to a target.
 import { once } from '@dojo/framework/core/on';
 
 var button = document.getElementById('button');
-once(button, 'click', function (event) {
+once(button, 'click', function(event) {
 	console.log(event.target.id);
-	console.log('this event has been removed')
+	console.log('this event has been removed');
 });
-
 ```
+
 ## `pausable`
 
 Attach an event that can be paused to a target.
@@ -55,11 +55,10 @@ Attach an event that can be paused to a target.
 import { pausable } from '@dojo/framework/core/on';
 
 var button = document.getElementById('button');
-var buttonClickHandle = pausable(button, 'click', function (event) {
+var buttonClickHandle = pausable(button, 'click', function(event) {
 	console.log(event.target.id);
 });
 
 buttonClickHandle.pause(); // when paused the event will not fire
 buttonClickHandle.resume(); // after resuming the event will begin to fire again if triggered
-
 ```

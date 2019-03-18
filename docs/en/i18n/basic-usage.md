@@ -4,7 +4,8 @@
 
 Starting off with a single default language (English).
 
->.dojorc
+> .dojorc
+
 ```ts
 {
 	"build-app": {
@@ -13,7 +14,8 @@ Starting off with a single default language (English).
 }
 ```
 
->src/widgets/MyI18nWidget.ts
+> src/widgets/MyI18nWidget.ts
+
 ```ts
 import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
 import { v } from '@dojo/framework/widget-core/d';
@@ -25,26 +27,28 @@ export default class MyI18nWidget extends I18nMixin(WidgetBase) {
 	protected render() {
 		const { messages } = this.localizeBundle(myWidgetMessageBundle);
 
-		return v('div', { title: messages.title }, [ messages.content ]);
+		return v('div', { title: messages.title }, [messages.content]);
 	}
 }
 ```
 
->src/nls/MyI18nWidget.en.ts
+> src/nls/MyI18nWidget.en.ts
+
 ```ts
 export default {
 	messages: {
 		title: 'Hello',
 		content: 'This is an internationalized widget'
 	}
-}
+};
 ```
 
 ## Adding a widget language localization bundle
 
 Supporting two locales - English as the default, together with a French translation that is activated for any users that have `fr` set as their primary language.
 
->.dojorc
+> .dojorc
+
 ```ts
 {
 	"build-app": {
@@ -54,7 +58,8 @@ Supporting two locales - English as the default, together with a French translat
 }
 ```
 
->src/nls/MyI18nWidget.en.ts
+> src/nls/MyI18nWidget.en.ts
+
 ```ts
 export default {
 	locales: {
@@ -64,10 +69,11 @@ export default {
 		title: 'Hello',
 		content: 'This is an internationalized widget'
 	}
-}
+};
 ```
 
->src/nls/fr/MyI18nWidget.fr.ts
+> src/nls/fr/MyI18nWidget.fr.ts
+
 ```ts
 export default {
 	title: 'Bonjour',
@@ -78,7 +84,9 @@ export default {
 ## Specifying a root locale within an application
 
 Using the [i18n injector function](#providing-locale-data-to-i18n-aware-widgets) to surface locale properties within all i18n-aware widgets.
->src/main.ts
+
+> src/main.ts
+
 ```ts
 import renderer from '@dojo/framework/widget-core/vdom';
 import { w } from '@dojo/framework/widget-core/d';
@@ -98,7 +106,8 @@ r.mount({ registry });
 
 Using the [LocaleSwitcher](#changing-locales) utility widget to allow users to choose between supported locales, and enact a locale change via `LocaleSwitcher`'s `updateLocale` method. This should be used together with [registeri18ninjector](#providing-locale-data-to-i18n-aware-widgets) to reactively propagate locale changes to all i18n-aware widgets.
 
->src/widgets/LocaleChanger.ts
+> src/widgets/LocaleChanger.ts
+
 ```ts
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { LocaleSwitcher, UpdateLocale } from '@dojo/framework/widget-core/mixins/I18n';
@@ -113,7 +122,7 @@ class LocaleChanger extends WidgetBase {
 			})
 		]);
 	}
-	
+
 	private _renderLocaleChoices(updateLocale: UpdateLocale) {
 		return v('div', [
 			this._renderLocaleChoice('en', 'English', updateLocale),
@@ -122,7 +131,9 @@ class LocaleChanger extends WidgetBase {
 	}
 
 	private _renderLocaleChoice(localeKey: string, localeDescription: string, updateLocale: UpdateLocale) {
-		return v('button', {
+		return v(
+			'button',
+			{
 				onclick: () => {
 					updateLocale({ locale: localeKey });
 				}
@@ -130,6 +141,5 @@ class LocaleChanger extends WidgetBase {
 			[localeDescription]
 		);
 	}
-
 }
 ```

@@ -12,7 +12,6 @@ const str = 'cat file.js | grep -c';
 const result = escapeRegExp(str);
 
 result === 'cat file\\.js \\| grep -c'; // true
-
 ```
 
 ## `escapeXml`

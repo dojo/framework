@@ -16,8 +16,8 @@ dojo upgrade app
 
 If you are upgrading from a version before 4.0.0, please see the [previous migration guides](./) for more details first.
 
-* The `@dojo/cli` should be updated to version 5.0.0, along with all the commands used by the project.
-* If your project is using @dojo/widgets and @dojo/interop, these packages also require upgrading to version 5.0.0.
+-   The `@dojo/cli` should be updated to version 5.0.0, along with all the commands used by the project.
+-   If your project is using @dojo/widgets and @dojo/interop, these packages also require upgrading to version 5.0.0.
 
 **Note:** The migration tool may create line lengths that violate your projects linting rules, be sure to run your linter and manually fix any linting rule violations.
 
@@ -76,13 +76,13 @@ const myMiddlewareOne = () => ({
 	after: (error, result) => {
 		// middleware logic
 	}
-})
+});
 
 const myMiddlewareTwo = () => ({
 	after: (error, result) => {
 		// middleware logic
 	}
-})
+});
 
 const myProcess = createProcess('process', [myCommand], [myMiddlewareOne, myMiddlewareTwo]);
 ```
@@ -94,4 +94,3 @@ const myProcess = createProcess('process', [myCommand], [myMiddlewareOne, myMidd
 A new base interface is used by the `meta` method on `WidgetBase`. It is unlikely that this change will impact most application code bases.
 
 However, when upgrading to Dojo 5, if you experience compilation errors related to `WidgetMetaBase` you will likely need to switch this interface with the new base, `MetaBase`, from `@dojo/framework/interfaces`.
-

@@ -18,8 +18,8 @@ dojo upgrade app
 
 If you are upgrading from a version before 3.0.0, please see the [previous migration guide](./V3-Migration-Guide) for more details first.
 
-* The `@dojo/cli` should be updated to version 4.0.0, along with all the commands used by the project.
-* If your project is using @dojo/widgets and @dojo/interop, these packages also require upgrading to version 4.0.0.
+-   The `@dojo/cli` should be updated to version 4.0.0, along with all the commands used by the project.
+-   If your project is using @dojo/widgets and @dojo/interop, these packages also require upgrading to version 4.0.0.
 
 **Note:** The migration tool may create line lengths that violate your projects linting rules, be sure to run your linter and manually fix any linting rule violations.
 
@@ -39,7 +39,7 @@ import MyApp from './MyApp';
 const Projector = ProjectorMixin(MyApp);
 const projector = new Projector();
 
-projector.setProperties({ foo: 'foo' })
+projector.setProperties({ foo: 'foo' });
 
 projector.append();
 ```
@@ -112,7 +112,7 @@ import MyOutlet from './MyOutlet';
 
 class MyWidget extends WidgetBase {
 	render() {
-		return w(MyOutlet, {})
+		return w(MyOutlet, {});
 	}
 }
 ```
@@ -122,12 +122,15 @@ class MyWidget extends WidgetBase {
 ```ts
 class MyWidget extends WidgetBase {
 	render() {
-		return w(Outlet, { id: 'outlet-id', renderer: (matchDetails) => {
-			if (matchDetails.isExact()) {
-				return w(MyIndexWidget, { id: matchDetails.params.id });
+		return w(Outlet, {
+			id: 'outlet-id',
+			renderer: (matchDetails) => {
+				if (matchDetails.isExact()) {
+					return w(MyIndexWidget, { id: matchDetails.params.id });
+				}
+				return w(MyMainWidget, { id: matchDetails.params.id });
 			}
-			return w(MyMainWidget, { id: matchDetails.params.id });
-		}});
+		});
 	}
 }
 ```

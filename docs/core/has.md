@@ -9,7 +9,9 @@ If the feature is available, a truthy value is returned, otherwise a falsy value
 import has from '@dojo/framework/has/has';
 
 if (has('dom-addeventlistener')) {
-    element.addEventListener('click', function () { /* ... */ });
+	element.addEventListener('click', function() {
+		/* ... */
+	});
 }
 ```
 
@@ -28,8 +30,8 @@ import { add as hasAdd } from '@dojo/framework/has/has';
 hasAdd('dom-queryselector', 'querySelector' in document && 'querySelectorAll' in document);
 
 // Lazily executed; useful if a polyfill is loaded after page load
-hasAdd('typedarray', function () {
-    return 'ArrayBuffer' in window;
+hasAdd('typedarray', function() {
+	return 'ArrayBuffer' in window;
 });
 ```
 

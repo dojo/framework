@@ -11,8 +11,9 @@ Dojo applications can choose to use a single message bundle across the entire ap
 ## Bundle default language
 
 Each message bundle has its own set of supported language translations. One language within the set is required to act as the default module for the rest of the bundle. The default language module acts as the primary import/reference to the bundle, and serves two main requirements:
-* Provides a comprehensive set of message keys and their content (represented in the default language) that are used as a fallback if other languages within the bundle do not provide overrides for a given key
-* Lists the bundle's other supported languages, as well as the mechanism to load the set of messages from each supported language's module
+
+-   Provides a comprehensive set of message keys and their content (represented in the default language) that are used as a fallback if other languages within the bundle do not provide overrides for a given key
+-   Lists the bundle's other supported languages, as well as the mechanism to load the set of messages from each supported language's module
 
 ## TypeScript structure
 
@@ -20,7 +21,8 @@ Every language within a bundle is a TypeScript module, and is required to export
 
 For example, a French language module within a bundle:
 
->nls/fr/main.ts
+> nls/fr/main.ts
+
 ```ts
 export default {
 	hello: 'Bonjour',
@@ -31,14 +33,16 @@ export default {
 ### Default language module
 
 The language module designated as the bundle's default is formatted slightly differently to other languages. The default module needs to export an object with the following properties
-- `messages`
-    - A map of message keys to values in the default language, structured in the same way as the object exported by other languages in the bundle. This represents the canonical set of message keys supported by the bundle.<br>When the application locale is set to the default value, these `messages` are used as a regular lookup when resolving message keys. When a non-default locale is in use, these `messages` are used as fallbacks for any keys not included in the bundle's additional language modules.
-- `locales`
-    - An optional property that represents a map of locale identifiers to functions that can load the message set for each language/locale supported by the bundle.
+
+-   `messages`
+    -   A map of message keys to values in the default language, structured in the same way as the object exported by other languages in the bundle. This represents the canonical set of message keys supported by the bundle.<br>When the application locale is set to the default value, these `messages` are used as a regular lookup when resolving message keys. When a non-default locale is in use, these `messages` are used as fallbacks for any keys not included in the bundle's additional language modules.
+-   `locales`
+    -   An optional property that represents a map of locale identifiers to functions that can load the message set for each language/locale supported by the bundle.
 
 For example, a bundle with English as the default that also supports French, Arabic and Japanese:
 
->nls/main.ts
+> nls/main.ts
+
 ```ts
 export default {
 	locales: {
@@ -58,7 +62,9 @@ export default {
 The default language module for a bundle is `import`ed like any other TypeScript module into each widget that requires use of the set of messages contained within the bundle.
 
 For example, given a default bundle:
->nls/MyI18nWidget.en.ts
+
+> nls/MyI18nWidget.en.ts
+
 ```ts
 export default {
 	messages: {
@@ -69,7 +75,9 @@ export default {
 ```
 
 This can be imported and referenced within a widget such as:
->widgets/MyI18nWidget.ts
+
+> widgets/MyI18nWidget.ts
+
 ```ts
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { v } from '@dojo/framework/widget-core/d';
@@ -81,7 +89,7 @@ export default class MyI18nWidget extends I18nMixin(WidgetBase) {
 	protected render() {
 		const { messages } = this.localizeBundle(myWidgetMessageBundle);
 
-		return v('div', { title: messages.hello }, [ messages.welcome ]);
+		return v('div', { title: messages.hello }, [messages.welcome]);
 	}
 }
 ```
@@ -97,6 +105,7 @@ It is preferable to use functions in the default language's `locales` map to loa
 Some applications may however prefer certain languages to be statically loaded along with the bundle's default language module, and can do so by returning a compatible object structure directly.
 
 An example of both types of loading within a bundle:
+
 ```ts
 import fr from './fr/main';
 
@@ -123,33 +132,36 @@ export default {
 
 An internationalized application should specify all its supported locales within its `.dojorc` build configuration file. One locale should be designated as the primary/default locale for the application, with the remainder of the supported locales as secondary options that can be activated when required. This is done via the `locale` property and `supportedLocales` list within the `build-app` section.
 
-- `locale`: string
-    - The primary locale supported by the application. That is, the default language that will be used if an override locale is not specified.
-- `supportedLocales`: string[]
-    - A list of additional locales that the application supports. These locales need to be activated to override the default `locale`, either implicitly through an application user's language setting when running client-side, the process' or host's language setting when running server-side, or [explicitly within the application itself](#providing-locale-data-to-i18n-aware-widgets).
+-   `locale`: string
+    -   The primary locale supported by the application. That is, the default language that will be used if an override locale is not specified.
+-   `supportedLocales`: string[]
+    -   A list of additional locales that the application supports. These locales need to be activated to override the default `locale`, either implicitly through an application user's language setting when running client-side, the process' or host's language setting when running server-side, or [explicitly within the application itself](#providing-locale-data-to-i18n-aware-widgets).
 
 For example, with the following configuration, an application specifies that its default locale is English (`en`), and that it supports Spanish (`es`) and French (`fr`) as additional locale choices:
 
->.dojorc
+> .dojorc
+
 ```json
 {
 	"build-app": {
 		"locale": "en",
-		"supportedLocales": [ "es", "fr" ]
+		"supportedLocales": ["es", "fr"]
 	}
 }
 ```
+
 ## Creating i18n-aware Widgets
+
 Individual widgets can be internationalized by adding the `I18nMixin` mixin from `@dojo/framework/widget-core/mixins/I18n`. This mixin adds some optional i18n-related widget properties, and also provides a `localizeBundle` method which is used to localize an imported message bundle to the widget's current locale.
 
 ### `I18nMixin` Widget Properties
 
-- `locale`?: string
-    -  The locale for the widget.<br>If not specified, then the [root application locale](#providing-locale-data-to-i18n-aware-widgets) or [its override](#changing-locales) is assumed.<br>If specified, the widget's DOM node will have a `lang` property set to the locale.
-- `rtl`?: boolean
-    - An optional flag indicating the widget's text direction. If `true`, then the underlying DOM node's `dir` property is set to `"rtl"`. If it is `false`, then the `dir` property is set to `"ltr"`. Otherwise, the property is not set.
-- `i18nBundle`?: `Bundle<Messages>` | `Map<Bundle<Messages>, Bundle<Messages>>`
-    -  An optional override for the [default language bundle](#default-language-module) passed to the `localizeBundle` method. If the override contains a `messages` object, then it will completely replace the underlying default language bundle that the widget may be using. If the override only contains a `locales` object, a new bundle will be created with the additional locale loaders specified in the override.
+-   `locale`?: string
+    -   The locale for the widget.<br>If not specified, then the [root application locale](#providing-locale-data-to-i18n-aware-widgets) or [its override](#changing-locales) is assumed.<br>If specified, the widget's DOM node will have a `lang` property set to the locale.
+-   `rtl`?: boolean
+    -   An optional flag indicating the widget's text direction. If `true`, then the underlying DOM node's `dir` property is set to `"rtl"`. If it is `false`, then the `dir` property is set to `"ltr"`. Otherwise, the property is not set.
+-   `i18nBundle`?: `Bundle<Messages>` | `Map<Bundle<Messages>, Bundle<Messages>>`
+    -   An optional override for the [default language bundle](#default-language-module) passed to the `localizeBundle` method. If the override contains a `messages` object, then it will completely replace the underlying default language bundle that the widget may be using. If the override only contains a `locales` object, a new bundle will be created with the additional locale loaders specified in the override.
 
 ### `I18nMixin` `localizeBundle()` method
 
@@ -159,16 +171,17 @@ If the bundle supports the widget's current locale, but those locale-specific me
 
 The object returned by `localizeBundle` contains the following properties and methods:
 
-- `messages`
-    - An object containing the localized message key-value pairs. If the messages have not yet loaded, then `messages` will be either a blank bundle or the default messages, depending upon how `localizeBundle` was called.
-- `isPlaceholder`
-    - A boolean property indicating whether the returned messages are the actual locale-specific messages (`false`) or just the placeholders used while waiting for the localized messages to finish loading (`true`). This is useful to prevent the widget from rendering at all if localized messages have not yet loaded.
-- `format(key: string, replacements: { [key: string]: string })`
-    - A method that accepts a message key as its first argument and an object of replacement values as its second. For example, if the bundle contains `greeting: 'Hello, {name}!'`, then calling `format('greeting', { name: 'World' })` would return `'Hello, World!'`.
+-   `messages`
+    -   An object containing the localized message key-value pairs. If the messages have not yet loaded, then `messages` will be either a blank bundle or the default messages, depending upon how `localizeBundle` was called.
+-   `isPlaceholder`
+    -   A boolean property indicating whether the returned messages are the actual locale-specific messages (`false`) or just the placeholders used while waiting for the localized messages to finish loading (`true`). This is useful to prevent the widget from rendering at all if localized messages have not yet loaded.
+-   `format(key: string, replacements: { [key: string]: string })`
+    -   A method that accepts a message key as its first argument and an object of replacement values as its second. For example, if the bundle contains `greeting: 'Hello, {name}!'`, then calling `format('greeting', { name: 'World' })` would return `'Hello, World!'`.
 
 An example of using all features returned by `localizeBundle`:
 
->nls/MyI18nWidget.en.ts
+> nls/MyI18nWidget.en.ts
+
 ```ts
 export default {
 	messages: {
@@ -179,7 +192,8 @@ export default {
 };
 ```
 
->widgets/MyI18nWidget.ts
+> widgets/MyI18nWidget.ts
+
 ```ts
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { v, w } from '@dojo/framework/widget-core/d';
@@ -215,7 +229,6 @@ export default class MyI18nWidget extends I18nMixin(WidgetBase) {
 		]);
 	}
 }
-
 ```
 
 Note that with this pattern it is possible for a widget to obtain its messages from multiple bundles. When favoring simplicity, however, it is recommend that widgets are limited to a single bundle wherever possible.
@@ -226,7 +239,8 @@ The Dojo registry is used to manage i18n locale data throughout an application, 
 
 This mechanism is enabled through `registerI18nInjector`, a convenience method provided by `@dojo/framework/widget-core/mixins/I18n`. Calling this method will register the `i18n` injector within a specific registry instance. Typically this is done at application bootstrap, where the i18n injector is registered against the global registry passed to the `renderer.mount()` method.
 
->main.ts
+> main.ts
+
 ```ts
 import renderer from '@dojo/framework/widget-core/vdom';
 import { w } from '@dojo/framework/widget-core/d';
@@ -307,6 +321,7 @@ Each i18n-aware widget can have its own independent locale by providing a `local
 The widget's default bundle can also be replaced by passing an `i18nBundle` widget property. Dojo recommends against using multiple bundles in the same widget, but there may be times when an application needs to consume a third-party widget that does make use of more than one bundle. As such, `i18nBundle` can also be a `Map` of default bundles to override bundles.
 
 An example of overriding bundles within child widgets:
+
 ```ts
 import { Bundle } from '@dojo/framework/i18n/i18n';
 
@@ -339,15 +354,15 @@ export class MyWidget extends WidgetBase {
 
 The locale that an [i18n-aware widget](#creating-i18n-aware-widgets) will use is determined in the following order until a value is found, depending on which i18n features an application makes use of:
 
-Order | I18n capability | Locale setting
----: | --- | ---
-1 | **`I18nMixin`** | An explicit override provided via [the widget's `locale` property](#overriding-locales-and-bundles-per-widget).
-2 | **`I18nMixin` and i18n injector** | A locale that has been [selected or changed within the application](#changing-locales)
-3 | **`I18nMixin` and i18n injector** | The default locale set when initially registering [the i18n injector](#providing-locale-data-to-i18n-aware-widgets).
-4 | **`.dojorc`** | A user's current locale, such as their browser language setting, if the locale [is in the application's list of `build-app`.`supportedLocales`](#configuring-supported-application-locales).
-5 | **`.dojorc`** | The application's [default locale specified in `build-app`.`locale`](#configuring-supported-application-locales).
-6 | **`@dojo/framework/i18n`** | An explicit locale set via [Dojo i18n's `switchLocale` method](#changing-the-root-locale-and-observing-locale-changes).
-7 | **`@dojo/framework/i18n`** | The [`systemLocale` for the current execution environment](#determining-the-current-locale).
+| Order | I18n capability                   | Locale setting                                                                                                                                                                               |
+| ----: | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|     1 | **`I18nMixin`**                   | An explicit override provided via [the widget's `locale` property](#overriding-locales-and-bundles-per-widget).                                                                              |
+|     2 | **`I18nMixin` and i18n injector** | A locale that has been [selected or changed within the application](#changing-locales)                                                                                                       |
+|     3 | **`I18nMixin` and i18n injector** | The default locale set when initially registering [the i18n injector](#providing-locale-data-to-i18n-aware-widgets).                                                                         |
+|     4 | **`.dojorc`**                     | A user's current locale, such as their browser language setting, if the locale [is in the application's list of `build-app`.`supportedLocales`](#configuring-supported-application-locales). |
+|     5 | **`.dojorc`**                     | The application's [default locale specified in `build-app`.`locale`](#configuring-supported-application-locales).                                                                            |
+|     6 | **`@dojo/framework/i18n`**        | An explicit locale set via [Dojo i18n's `switchLocale` method](#changing-the-root-locale-and-observing-locale-changes).                                                                      |
+|     7 | **`@dojo/framework/i18n`**        | The [`systemLocale` for the current execution environment](#determining-the-current-locale).                                                                                                 |
 
 # Advanced formatting: CLDR
 
@@ -361,20 +376,19 @@ Given the very large size of the [Unicode CLDR data](http://cldr.unicode.org), i
 
 CLDR data can be loaded from an application's `.dojorc` build configuration file via the `cldrPaths` list within the `build-app` section.
 
-- `cldrPaths`: string[]
-    - An array of paths to [CLDR JSON](https://github.com/dojo/i18n#loading-cldr-data) files to load. Can be used in conjunction with the [locale and supportedLocales](#configuring-supported-application-locales) options - if a path contains the string `{locale}`, that file will be loaded for each locale listed in the `locale` and `supportedLocales` properties. 
+-   `cldrPaths`: string[]
+    -   An array of paths to [CLDR JSON](https://github.com/dojo/i18n#loading-cldr-data) files to load. Can be used in conjunction with the [locale and supportedLocales](#configuring-supported-application-locales) options - if a path contains the string `{locale}`, that file will be loaded for each locale listed in the `locale` and `supportedLocales` properties.
 
 For example, with the following configuration, the `numbers.json` CLDR file will be loaded for all three supported `en`, `es`, and `fr` locales:
 
->.dojorc
+> .dojorc
+
 ```json
 {
 	"build-app": {
 		"locale": "en",
-		"supportedLocales": [ "es", "fr" ],
-		"cldrPaths": [
-			"cldr-data/main/{locale}/numbers.json"
-		]
+		"supportedLocales": ["es", "fr"],
+		"cldrPaths": ["cldr-data/main/{locale}/numbers.json"]
 	}
 }
 ```
@@ -384,6 +398,7 @@ For example, with the following configuration, the `numbers.json` CLDR file will
 Outside of the Dojo build system, CLDR data can be loaded via the `loadCldrData` method exported by `@dojo/framework/i18n/cldr/load`. `loadCldrData` accepts an object of CLDR data. All CLDR data must match the format used by the [Unicode CLDR JSON](https://github.com/unicode-cldr/cldr-json) files. Supplemental data must be nested within a top-level `supplemental` object, and locale-specific data must be nested under locale objects within a top-level `main` object.
 
 For example:
+
 ```ts
 import loadCldrData from '@dojo/framework/i18n/cldr/load';
 
@@ -400,6 +415,7 @@ loadCldrData({
 ```
 
 ## Required CLDR data per feature
+
 Dojo's `i18n` module requires the following CLDR data for each particular formatting feature:
 
 For [ICU message formatting](#icu-message-formatting):
@@ -447,11 +463,12 @@ Dojo's `i18n` framework supports [ICU message formatting](#icu-message-formattin
 
 The message formatting examples in the next two subsections will use a [message bundle](#working-with-message-bundles) with a `guestInfo` message as follows:
 
->nls/main.ts
+> nls/main.ts
+
 ```ts
 export default {
 	messages: {
-		guestInfo: "{host} invites {guest} to the party."
+		guestInfo: '{host} invites {guest} to the party.'
 	}
 };
 ```
@@ -464,7 +481,8 @@ With basic token replacement, an object with `host` and `guest` properties can b
 
 The `guestInfo` message can be rendered directly via `format`:
 
->widgets/MyI18nWidget.ts
+> widgets/MyI18nWidget.ts
+
 ```ts
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { v } from '@dojo/framework/widget-core/d';
@@ -476,18 +494,22 @@ export default class MyI18nWidget extends I18nMixin(WidgetBase) {
 	protected render() {
 		const { format } = this.localizeBundle(nlsBundle);
 
-		return v('div', [ format('guestInfo', {
-			host: 'Margaret Mead',
-			guest: 'Laura Nader'
-		})]); // Will render as 'Margaret Mead invites Laura Nader to the party.'
+		return v('div', [
+			format('guestInfo', {
+				host: 'Margaret Mead',
+				guest: 'Laura Nader'
+			})
+		]); // Will render as 'Margaret Mead invites Laura Nader to the party.'
 	}
 }
 ```
+
 #### Direct token replacement formatting
 
 The `i18n` module exposes two methods that handle message formatting:
-- `formatMessage`, which directly returns a formatted message based on its inputs
-- `getMessageFormatter`, which returns a method dedicated to formatting a single message.
+
+-   `formatMessage`, which directly returns a formatted message based on its inputs
+-   `getMessageFormatter`, which returns a method dedicated to formatting a single message.
 
 Both of these methods operate on bundle objects, which must first be registered with the i18n ecosystem by passing them to [the `i18n` function](#accessing-locale-message-bundles).
 
@@ -526,7 +548,8 @@ i18n(bundle, 'en').then(() => {
 
 The message formatting examples in the next two subsections will use a [message bundle](#working-with-message-bundles) with an updated `guestInfo` message as follows:
 
->nls/main.ts
+> nls/main.ts
+
 ```ts
 export default {
 	messages: {
@@ -559,7 +582,8 @@ export default {
 
 The ICU-formatted `guestInfo` message can then be rendered as:
 
->widgets/MyI18nWidget.ts
+> widgets/MyI18nWidget.ts
+
 ```ts
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { v } from '@dojo/framework/widget-core/d';
@@ -571,12 +595,14 @@ export default class MyI18nWidget extends I18nMixin(WidgetBase) {
 	protected render() {
 		const { format } = this.localizeBundle(nlsBundle);
 
-		return v('div', [ format('guestInfo', {
-			host: 'Margaret Mead',
-			gender: 'female',
-			guest: 'Laura Nader',
-			guestCount: 20
-		})]); // Will render as 'Margaret Mead invites Laura Nader and 19 other people to her party.'
+		return v('div', [
+			format('guestInfo', {
+				host: 'Margaret Mead',
+				gender: 'female',
+				guest: 'Laura Nader',
+				guestCount: 20
+			})
+		]); // Will render as 'Margaret Mead invites Laura Nader and 19 other people to her party.'
 	}
 }
 ```
@@ -700,9 +726,11 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 # Standalone API
 
 ## Accessing locale message bundles
+
 Once a [default language bundle](#default-language-module) has been imported, any locale-specific messages are accessed by passing the message bundle to the `i18n` function.
 
 For example:
+
 ```ts
 import i18n, { Messages } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
@@ -771,15 +799,15 @@ i18n(bundle, 'ar').then(() => {
 ## Determining the Current Locale
 
 The current locale can be accessed via the read-only property `i18n.locale`, which will always be either the locale set via [`switchLocale` (see below)](#changing-the-root-locale-and-observing-locale-changes)
- or the `systemLocale`.
+or the `systemLocale`.
 
 The `systemLocale` is also read-only, and its value is determined by the current execution environment in the following manner:
 
-Environment | Locale
----: | ---
-Browser | User's default language setting
-Node.js | The Node.js process's `LANG` environment variable.
-Fallback | `en`
+| Environment | Locale                                             |
+| ----------: | -------------------------------------------------- |
+|     Browser | User's default language setting                    |
+|     Node.js | The Node.js process's `LANG` environment variable. |
+|    Fallback | `en`                                               |
 
 ## Changing the Root Locale and Observing Locale Changes
 

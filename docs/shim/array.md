@@ -7,7 +7,7 @@ Copies a sequence of elements to another position in the given array.
 ```ts
 import { copyWithin } from '@dojo/framework/shim/array';
 
-var array = [ 0, 1, 2, 3 ];
+var array = [0, 1, 2, 3];
 
 var offSet = 1; // the index where it should begin copying to
 var start = 0; // the index where it should begin copying from
@@ -32,8 +32,9 @@ var nodeList = document.getElementsByTagName('a');
 
 var array = from(nodeList);
 
-array instanceof Array // true
+array instanceof Array; // true
 ```
+
 ## `fill`
 
 Fills some or all elements of an array with a given value.
@@ -52,7 +53,6 @@ array[0] === 0; // true
 array[1] === 4; // true
 array[2] === 4; // true
 array[3] === 4; // true
-
 ```
 
 ## `find`
@@ -69,7 +69,6 @@ var result = find(array, (elm, index, array) => {
 });
 
 result === 10; // true
-
 ```
 
 ## `findIndex`
@@ -86,7 +85,6 @@ var result = findIndex(array, (elm, index, array) => {
 });
 
 result === 1; // true
-
 ```
 
 ## `of`
@@ -103,5 +101,4 @@ array[0] === 0; // true
 array[1] === 1; // true
 array[2] === 2; // true
 array[3] === 3; // true
-
 ```
