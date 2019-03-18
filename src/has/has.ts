@@ -173,7 +173,7 @@ export function add(feature: string, value: FeatureTest | FeatureTestResult, ove
  *
  * @param feature The name of the feature to test.
  */
-export default function has(feature: string): FeatureTestResult {
+export default function has(feature: string, strict: boolean = false): FeatureTestResult {
 	let result: FeatureTestResult;
 
 	const normalizedFeature = feature.toLowerCase();
@@ -185,7 +185,7 @@ export default function has(feature: string): FeatureTestResult {
 		delete testFunctions[normalizedFeature];
 	} else if (normalizedFeature in testCache) {
 		result = testCache[normalizedFeature];
-	} else {
+	} else if (strict) {
 		throw new TypeError(`Attempt to detect unregistered has feature "${feature}"`);
 	}
 
