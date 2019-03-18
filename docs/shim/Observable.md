@@ -7,18 +7,18 @@ An `Observable` is used to simplify push-based data sources like events, timed e
 Here we create an Observable that publishes an event every 1 second:
 
 ```typescript
-const timedObservable = new Observable(observer => {
+const timedObservable = new Observable((observer) => {
 	let handle = null;
-  
+
 	function timer() {
 		observer.next();
 		handle = setTimeout(timer, 1000);
 	}
-  
+
 	handle = setTimeout(timer, 1000);
-  
+
 	return () => {
-        clearTimeout(handle);
+		clearTimeout(handle);
 	};
 });
 
@@ -26,7 +26,7 @@ let seconds = 0;
 const subscription = timedObservable.subscribe(() => {
 	// 1 second has elapsed
 	seconds++;
-  
+
 	if (seconds >= 5) {
 		subscription.unsubscribe();
 	}
@@ -42,7 +42,7 @@ Observables can be created with their constructor:
 ```typescript
 new Observable((observer: SubscriptionObserver) => {
 	observer.next(1);
-	observer.next(2);  
+	observer.next(2);
 	observer.next(3);
 	observer.complete();
 });
@@ -56,14 +56,14 @@ The `SubscriptionObserver` can publish values, errors, or signal completion of t
 
 ```typescript
 // publish two values, then signal completion
-new Observable(observer => {
+new Observable((observer) => {
 	observer.next(1);
 	observer.next(2);
 	observer.complete();
 });
 
 // publish a value, then error
-new Observable(observer => {
+new Observable((observer) => {
 	observer.next(1);
 	observer.error(new Error('some error'));
 });
@@ -76,7 +76,7 @@ new Observable(observer => {
 ```typescript
 // Observable.of
 const obs = Observable.of(1, 2, 3);
-obs.subscribe(value => {
+obs.subscribe((value) => {
 	console.log(value);
 });
 
@@ -93,7 +93,7 @@ obs.subscribe(value => {
 ```typescript
 // Observable.from
 const obs = Observable.from(someIterator);
-obs.subscribe(value => {
+obs.subscribe((value) => {
 	// handle iterator value
 });
 ```
@@ -121,13 +121,17 @@ The `subscribe` method takes either a list of function handlers or an `Observer`
 
 ```typescript
 // note that the error handler and completion handler are optional
-someObservable.subscribe((value) => {
-	// next
-}, (error) => {
-	// error handler
-}, (value) => {
-	// completion handler
-});
+someObservable.subscribe(
+	(value) => {
+		// next
+	},
+	(error) => {
+		// error handler
+	},
+	(value) => {
+		// completion handler
+	}
+);
 
 // note that every field is optional
 someObservable.subscribe({

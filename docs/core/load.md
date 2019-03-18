@@ -22,7 +22,6 @@ isPlugin([]); // false
 isPlugin({
 	observer() {}
 });
-
 ```
 
 ### 'load'
@@ -33,30 +32,31 @@ Dynamically loads a module or other resource.
 import load, { useDefault } from '@dojo/framework/core/load';
 
 // Load a single module
-load('mymodule').then(([ myModule ]: [ any ]) => {
+load('mymodule').then(([myModule]: [any]) => {
 	// ...
 });
 
 // Load multiple modules
-load('namespace/first', 'namespace/second').then(([ first, second ]: [ any, any ]) => {
+load('namespace/first', 'namespace/second').then(([first, second]: [any, any]) => {
 	// ...
 });
 
 // Load modules with relative ids as relative to the current module
-load(require, './first', './second').then(([ first, second ]: [ any, any ]) => {
+load(require, './first', './second').then(([first, second]: [any, any]) => {
 	// ...
 });
 
 // Automatically map modules to their default export
-load('namespace/first').then(useDefault).then(([ first ]: [ any ]) => {
-	// ...
-});
+load('namespace/first')
+	.then(useDefault)
+	.then(([first]: [any]) => {
+		// ...
+	});
 
 // Load a custom resource via a plugin
-load(require, 'plugin!./template.html').then(([ html ]: [ string ]) => {
+load(require, 'plugin!./template.html').then(([html]: [string]) => {
 	// ...
 });
-
 ```
 
 #### Using Plugins
@@ -65,8 +65,8 @@ AMD-style plugins can be used with `load` by passing in module ids with the form
 
 Note: the plugins that can be used with `load` loosely follow the [amdjs plugin API](https://github.com/amdjs/amdjs-api/blob/master/LoaderPlugins.md), with the following exceptions:
 
-1. The plugin's `load` method does not receive a contextual `require` or a configuration object.
-2. Rather than execute a callback when the resource has loaded, the plugin's `load` method instead must return a promise that resolves to that resource.
+1.  The plugin's `load` method does not receive a contextual `require` or a configuration object.
+2.  Rather than execute a callback when the resource has loaded, the plugin's `load` method instead must return a promise that resolves to that resource.
 
 ```ts
 // Plugin that does not use the default export.
@@ -80,7 +80,6 @@ export function load(resourceId: string, load: Load) {
 	// This plugin does nothing more than load the resource id with `core/load`.
 	return load(resourceId);
 }
-
 ```
 
 ```ts
@@ -98,7 +97,6 @@ const plugin = {
 	}
 };
 export default plugin;
-
 ```
 
 ```ts
@@ -110,8 +108,7 @@ import load from '@dojo/framework/core/load';
 //    and the return value is used as the resource id.
 // 4. The resource id is passed to the plugin's `load` method.
 // 5. The loaded resource is used to resolve the `load` promise.
-load('plugin!some/resource/id').then(([ resource ]: [ any ]) => {
+load('plugin!some/resource/id').then(([resource]: [any]) => {
 	// ...
 });
-
 ```

@@ -18,10 +18,10 @@
     "dojo-release": "dojo-release",
     "intern": "intern",
     "lint:tsc": "tslint -p .",
-    "lint:prettier": "prettier -l \"{src,tests}/**/*.{ts,tsx}\"",
+    "lint:prettier": "prettier -l \"{docs,src,tests}/**/*.{ts,tsx,md}\"",
     "lint": "run-p lint:*",
     "precommit": "lint-staged",
-    "prettier": "prettier --write \"src/**/*.md\" \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "prettier": "prettier --write \"{docs,src,tests}/**/*.{ts,tsx,md}\"",
     "release": "run-s lint clean build \"dojo-release -- {@}\" --",
     "test": "run-s build intern",
     "test:local": "run-s build \"intern config=@local\"",
@@ -85,7 +85,7 @@
     "typescript": "~2.6.2"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
+    "*.{ts,tsx,md}": [
       "prettier --write",
       "git add"
     ]

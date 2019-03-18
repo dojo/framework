@@ -21,7 +21,6 @@ assign(target, source);
 
 target.foo === 'bar'; // true
 target.bar === 'foo'; // true
-
 ```
 
 ### `create`
@@ -104,7 +103,6 @@ result.fooObj.bar === 'foo'; // true
 obj.fooObj.bar = 'bar';
 
 result.fooObj.bar === 'bar'; // true
-
 ```
 
 ### `deepMixin`
@@ -130,7 +128,6 @@ obj.fooObj.bar = 'bar';
 
 result.fooObj.bar === 'bar'; // false
 result.fooObj.bar === 'foo'; // true
-
 ```
 
 ### `duplicate`
@@ -150,7 +147,6 @@ oldObj.foo = 'foo';
 
 oldObj.foo === 'foo';
 newObj.foo === 'bar';
-
 ```
 
 ### `partial`
@@ -160,16 +156,15 @@ Returns a function which invokes the given function with the given arguments pre
 ```ts
 import { partial } from '@dojo/framework/core/lang';
 
-var add = function (a, b) {
+var add = function(a, b) {
 	return a + b;
-}
+};
 
 var addFive = partial(add, 5);
 
 var result = addFive(4);
 
 result === 9;
-
 ```
 
 ### `isIdentical`
@@ -181,7 +176,6 @@ import { isIdentical } from '@dojo/framework/core/lang';
 
 isIdentical(1, 1); // true
 isIdentical(NaN, NaN); // true
-
 ```
 
 ### `lateBind`
@@ -192,7 +186,7 @@ Creates a function that calls the current method on an object with given argumen
 import { lateBind } from '@dojo/framework/core/lang';
 
 var person = {
-	speak: function (name) {
+	speak: function(name) {
 		return 'hi, ' + name;
 	}
 };
@@ -201,10 +195,9 @@ var personSpeak = lateBind(person, 'speak', 'name');
 
 personSpeak() === 'hi, name'; // true
 
-person.speak = function (name) {
+person.speak = function(name) {
 	return 'bye, ' + name;
 };
 
 personSpeak() === 'bye, name';
-
 ```

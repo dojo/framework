@@ -2,11 +2,11 @@
 
 This modules provides 4 methods (get, post, delete, and put) to simplify sending http requests. Each of these methods returns a promise that resolves with the response.
 
-* request
-  * get
-  * post
-  * delete
-  * put
+-   request
+    -   get
+    -   post
+    -   delete
+    -   put
 
 ## Making Requests
 
@@ -15,13 +15,15 @@ Making requests is similar to using the [Fetch API](https://developer.mozilla.or
 A GET request,
 
 ```typescript
-const json = await request('http://www.example.com').then(response => response.json());
+const json = await request('http://www.example.com').then((response) => response.json());
 ```
 
 A POST request,
 
 ```typescript
-const response = await request.post('http://www.example.com', { body: JSON.stringify(myValues)}).then(response => response.json());
+const response = await request
+	.post('http://www.example.com', { body: JSON.stringify(myValues) })
+	.then((response) => response.json());
 ```
 
 ## Observables
@@ -37,9 +39,9 @@ const req = request.post('http://www.example.com/', {
 	body: someLargeString
 });
 
-req.upload.subscribe(totalUploadedBytes => {
+req.upload.subscribe((totalUploadedBytes) => {
 	// do something with uploaded bytes
-})
+});
 ```
 
 Note that while the Node.js provider will emit a single upload event when it is done uploading, it cannot emit more granular upload events with `string` or `Buffer` body types. To receive more frequent upload events, you can use the `bodyStream` option to provide a `Readable` with the body content. Upload events will be emitted as the data is read from the stream.
@@ -55,8 +57,8 @@ request.post('http://www.example.com/', {
 You can monitor download progress by subscribing to the `download` observable on the `Response` object.
 
 ```typescript
-request("http://www.example/some-large-file").then(response => {
-	response.download.subscribe(totalBytesDownloaded => {
+request('http://www.example/some-large-file').then((response) => {
+	response.download.subscribe((totalBytesDownloaded) => {
 		// do something with totalBytesDownloaded
 	});
 });
@@ -67,8 +69,8 @@ request("http://www.example/some-large-file").then(response => {
 You can receive the raw data from a response with the `data` observable. Depending on the provider, the value might be a `string`, or a `Buffer`.
 
 ```typescript
-request("http://www.example/some-large-file").then(response => {
-	response.data.subscribe(chunk => {
+request('http://www.example/some-large-file').then((response) => {
+	response.data.subscribe((chunk) => {
 		// do something with chunk
 	});
 });
