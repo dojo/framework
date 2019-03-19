@@ -38,4 +38,36 @@ if (!has('build-elide')) {
 	}
 }
 
-export default global.ResizeObserver as ResizeObserver;
+const _ResizeObserver = global.ResizeObserver as ResizeObserver;
+let replacement: ResizeObserver = _ResizeObserver;
+
+const Wrapper = class {
+	constructor(callback: ResizeObserverCallback) {
+		return new replacement(callback) as any;
+	}
+
+	observe(target: Element) {
+		return replacement.observe(target);
+	}
+
+	unobserve(target: Element) {
+		return replacement.unobserve(target);
+	}
+
+	disconnect() {
+		replacement.disconnect();
+	}
+};
+
+export default Wrapper as ResizeObserver;
+
+export function replace(_ResizeObserver: ResizeObserver): () => void {
+	if (has('test')) {
+		replacement = _ResizeObserver;
+		return () => {
+			replacement = global.ResizeObserver as ResizeObserver;
+		};
+	} else {
+		throw new Error('Replacement functionality is only available in a test environment');
+	}
+}
