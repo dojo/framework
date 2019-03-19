@@ -591,7 +591,7 @@ render() {
 
 ### Internationalization
 
-Please refer to the [I18n reference guide](../../docs/en/i18n/index.md) for details on how to to internationalize Dojo widgets and applications.
+Please refer to the [I18n reference guide](../../docs/en/i18n/) for details on how to to internationalize Dojo widgets and applications.
 
 ## Key Principles
 
