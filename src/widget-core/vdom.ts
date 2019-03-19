@@ -1084,7 +1084,9 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		}
 		const instanceData = widgetInstanceMap.get(instance)!;
 		next.instance = instance;
-		next.domNode = domNode;
+		if (domNode && domNode.parentNode) {
+			next.domNode = domNode;
+		}
 		next.hasAnimations = hasAnimations;
 		instanceData.rendering = true;
 		instance!.__setProperties__(next.node.properties, next.node.bind);
@@ -1119,6 +1121,19 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			item: { current: current.childrenWrappers, meta: {} },
 			widget: { type: 'detach', current }
 		};
+	}
+
+	function setDomNodeOnParentWrapper(next: VNodeWrapper) {
+		let parentWNodeWrapper = findParentWNodeWrapper(next);
+		while (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
+			parentWNodeWrapper.domNode = next.domNode;
+			const nextParent = _parentWrapperMap.get(parentWNodeWrapper);
+			if (nextParent && isWNodeWrapper(nextParent)) {
+				parentWNodeWrapper = nextParent;
+				continue;
+			}
+			parentWNodeWrapper = undefined;
+		}
 	}
 
 	function _createDom({ next }: CreateDomInstruction): ProcessResult {
@@ -1158,10 +1173,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
 			}
 		}
-		const parentWNodeWrapper = findParentWNodeWrapper(next);
-		if (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
-			parentWNodeWrapper.domNode = next.domNode;
-		}
+		setDomNodeOnParentWrapper(next);
 		const dom: ApplicationInstruction = {
 			next: next!,
 			parentDomNode: parentDomNode,
