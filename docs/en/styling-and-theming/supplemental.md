@@ -312,7 +312,7 @@ If attempting to use the themes in custom elements, after installing `@dojo/them
 
 2.  Add the custom element-specific theme JS to `index.html`:
 
-	```html
+    ```html
     <script src="node_modules/@dojo/themes/dojo/dojo-{version}.js"></script>
     ```
 
