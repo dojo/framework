@@ -13,6 +13,7 @@ import { WidgetBase, widgetInstanceMap } from '../../../src/widget-core/WidgetBa
 import Registry from '../../../src/widget-core/Registry';
 import { I18nMixin } from '../../../src/widget-core/mixins/I18n';
 import registry from '../../../src/widget-core/decorators/registry';
+import { alwaysRender } from '../../../src/widget-core/decorators/alwaysRender';
 
 const resolvers = createResolvers();
 
@@ -941,6 +942,77 @@ jsdomDescribe('vdom', () => {
 
 			assert.lengthOf(fooDiv.classList, 0);
 			assert.lengthOf(fooDiv.childNodes, 1);
+		});
+
+		it('Should insert children in the correct position when returned from a nested tree of virtual widgets', () => {
+			class Test extends WidgetBase {
+				render() {
+					return v('div', this.children);
+				}
+			}
+
+			@alwaysRender()
+			class Renderer extends WidgetBase<any> {
+				render() {
+					return this.properties.renderer();
+				}
+			}
+
+			let showA: any;
+			let showB: any;
+			let showAll: any;
+			class App extends WidgetBase {
+				private _showA = true;
+				private _showB = true;
+
+				constructor() {
+					super();
+					showAll = () => {
+						this._showA = true;
+						this._showB = true;
+						this.invalidate();
+					};
+					showA = () => {
+						this._showA = true;
+						this._showB = false;
+						this.invalidate();
+					};
+					showB = () => {
+						this._showA = false;
+						this._showB = true;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [
+						v('div', [
+							w(Renderer, {
+								renderer: () => {
+									return this._showA && w(Test, {}, ['a']);
+								}
+							}),
+							w(Renderer, {
+								renderer: () => {
+									return this._showB && w(Test, {}, ['b']);
+								}
+							})
+						])
+					]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			const root: any = div.childNodes[0] as Element;
+			assert.strictEqual(root.innerHTML, '<div><div>a</div><div>b</div></div>');
+			showA();
+			assert.strictEqual(root.innerHTML, '<div><div>a</div></div>');
+			showB();
+			assert.strictEqual(root.innerHTML, '<div><div>b</div></div>');
+			showAll();
+			assert.strictEqual(root.innerHTML, '<div><div>a</div><div>b</div></div>');
 		});
 
 		it('Should insert nodes at correct position the previous widget returned null', () => {
