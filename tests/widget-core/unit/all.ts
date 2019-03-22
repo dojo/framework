@@ -13,3 +13,7 @@ import './NodeHandler';
 import './meta/all';
 import './vdom';
 import './registerCustomElement';
+import './Destroyable';
+import './Evented';
+import './QueuingEvented';
+import './util';
