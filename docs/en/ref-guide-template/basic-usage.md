@@ -2,23 +2,25 @@
 
 ## Using feature X
 
-One line description of what this sample accomplishes.
+One line description of what this sample accomplishes, likely also [linking to more in-depth documentation for the corresponding feature](./supplemental.md#feature-xx).
 
->sample/file/path
-```ts
+> sample/file/path
+
+```tsx
 // fully working & copy/paste-able sample code content...
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
-import { v } from '@dojo/framework/widget-core/d';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { tsx } from '@dojo/framework/widget-core/tsx';
 
 export default class MyWidget extends WidgetBase {
 	protected render() {
-		return v('div', [ 'Hello, World!' ]);
+		return <div>My Widget</div>;
 	}
 }
 ```
 
->another/file/path
-```ts
+> another/file/path
+
+```tsx
 // more sample file code content, likely referring to other files in the same feature example ...
 ```
 
