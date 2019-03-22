@@ -1,15 +1,15 @@
 const { assert } = intern.getPlugin('chai');
 const { registerSuite } = intern.getPlugin('jsdom');
 import { assign } from '../../../src/shim/object';
-import { DNode, VNode, WNode, WidgetProperties } from '../../../src/widget-core/interfaces';
+import { DNode, VNode, WNode } from '../../../src/widget-core/interfaces';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { dom, v, w, decorate, WNODE, VNODE, isWNode, isVNode } from '../../../src/widget-core/d';
 
-interface ChildProperties extends WidgetProperties {
+interface ChildProperties {
 	myChildProperty: string;
 }
 
-interface TestProperties extends WidgetProperties {
+interface TestProperties {
 	required: boolean;
 }
 

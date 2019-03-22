@@ -4,7 +4,7 @@ import Map from '../../shim/Map';
 import { isVNode, decorate } from './../d';
 import { afterRender } from './../decorators/afterRender';
 import { inject } from './../decorators/inject';
-import { Constructor, DNode, WidgetProperties, VNodeProperties } from './../interfaces';
+import { Constructor, DNode, VNodeProperties } from './../interfaces';
 import { Injector } from './../Injector';
 import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
@@ -26,7 +26,7 @@ export interface LocaleData {
 	rtl?: boolean;
 }
 
-export interface I18nProperties extends LocaleData, WidgetProperties {
+export interface I18nProperties extends LocaleData {
 	/**
 	 * An optional override for the bundle passed to the `localizeBundle`. If the override contains a `messages` object,
 	 * then it will completely replace the underlying bundle. Otherwise, a new bundle will be created with the additional

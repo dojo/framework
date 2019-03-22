@@ -1,4 +1,4 @@
-import { Constructor, WidgetProperties, SupportedClassName } from './../interfaces';
+import { Constructor, SupportedClassName } from './../interfaces';
 import { Registry } from './../Registry';
 import { Injector } from './../Injector';
 import { inject } from './../decorators/inject';
@@ -33,7 +33,7 @@ export interface Classes {
 /**
  * Properties required for the Themed mixin
  */
-export interface ThemedProperties<T = ClassNames> extends WidgetProperties {
+export interface ThemedProperties<T = ClassNames> {
 	theme?: Theme;
 	classes?: Classes;
 	extraClasses?: { [P in keyof T]?: string };

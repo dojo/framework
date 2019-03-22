@@ -120,12 +120,12 @@ r.mount({ domNode: root });
 
 We have created a widget used to project our `VNode`s into the DOM, however, widgets can be composed of other widgets and `properties` which are used to determine if a widget needs to be re-rendered.
 
-Properties are available on the widget instance, defined by an interface and passed as a [`generic`](https://www.typescriptlang.org/docs/handbook/generics.html) to the `WidgetBase` class when creating your custom widget. The properties interface should extend the base `WidgetProperties` provided from `@dojo/framework/widget-core/interfaces`:
+Properties are available on the widget instance, defined by an interface and passed as a [`generic`](https://www.typescriptlang.org/docs/handbook/generics.html) to the `WidgetBase` class when creating your custom widget.
 
 <!--READMEONLY-->
 
 ```ts
-interface MyProperties extends WidgetProperties {
+interface MyProperties {
 	name: string;
 }
 
@@ -137,6 +137,8 @@ class Hello extends WidgetBase<MyProperties> {
 	}
 }
 ```
+
+**Note:** By default widgets have a `key: string | number` property, when using a custom property interface the default property is still available, there is no need to extend `WidgetProperties`.
 
 <!--widget-core-readme-02-->
 
@@ -936,7 +938,7 @@ class MyClass extends WidgetBase {
 The `afterRender` lifecycle hook receives the returned `DNode`s from a widget's `render` call so that the nodes can be decorated, manipulated or swapped completely.
 
 ```ts
-class MyBaseClass extends WidgetBase<WidgetProperties> {
+class MyBaseClass extends WidgetBase {
 	@afterRender()
 	myAfterRender(result: DNode): DNode {
 		// do something with the result
@@ -1054,7 +1056,7 @@ constructor() {
 Widget meta is used to access additional information about the widget, usually information only available through the rendered DOM element - for example, the dimensions of an HTML node. You can access and respond to metadata during a widget's render operation.
 
 ```typescript
-class TestWidget extends WidgetBase<WidgetProperties> {
+class TestWidget extends WidgetBase {
 	render() {
 		const dimensions = this.meta(Dimensions).get('root');
 
@@ -1246,7 +1248,7 @@ The `Focus` meta determines whether a given node is focused or contains document
 An example usage that opens a tooltip if the trigger is focused might look like this:
 
 ```typescript
-class MyWidget extends WidgetBase<WidgetProperties> {
+class MyWidget extends WidgetBase {
 	// ...
 	render() {
 		// run your meta
@@ -1268,7 +1270,7 @@ class MyWidget extends WidgetBase<WidgetProperties> {
 The `Focus` meta also provides a `set` method to call focus on a given node. This is most relevant when it is necessary to shift focus in response to a user action, e.g. when opening a modal or navigating to a new page. You can use it like this:
 
 ```typescript
-class MyWidget extends WidgetBase<WidgetProperties> {
+class MyWidget extends WidgetBase {
 	// ...
 	render() {
 		// run your meta
@@ -1305,7 +1307,7 @@ function isSmallHeightPredicate(contentRect: ContentRect) {
 	return contentRect.height < 300;
 }
 
-class TestWidget extends WidgetBase<WidgetProperties> {
+class TestWidget extends WidgetBase {
 	render() {
 		const { isMediumWidth, isSmallHeight } = this.meta(Resize).get('root', {
 			isMediumWidth: isMediumWidthPredicate,
@@ -1345,7 +1347,7 @@ class HtmlMeta extends MetaBase {
 And you can use it like:
 
 ```typescript
-class MyWidget extends WidgetBase<WidgetProperties> {
+class MyWidget extends WidgetBase {
 	// ...
 	render() {
 		// run your meta

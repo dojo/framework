@@ -2,14 +2,14 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { Registry } from '../../../src/widget-core/Registry';
-import { WidgetProperties, WNode } from '../../../src/widget-core/interfaces';
+import { WNode } from '../../../src/widget-core/interfaces';
 import { tsx, fromRegistry } from '../../../src/widget-core/tsx';
 
 const registry = new Registry();
 
 registerSuite('tsx integration', {
 	'can use tsx'() {
-		interface FooProperties extends WidgetProperties {
+		interface FooProperties {
 			hello: string;
 		}
 		class Foo extends WidgetBase<FooProperties> {
