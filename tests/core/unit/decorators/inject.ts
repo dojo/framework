@@ -1,10 +1,10 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-import { inject } from './../../../../src/widget-core/decorators/inject';
-import { WidgetBase } from './../../../../src/widget-core/WidgetBase';
-import { Registry } from './../../../../src/widget-core/Registry';
-import { WidgetProperties } from './../../../../src/widget-core/interfaces';
+import { inject } from './../../../../src/core/decorators/inject';
+import { WidgetBase } from './../../../../src/core/WidgetBase';
+import { Registry } from './../../../../src/core/Registry';
+import { WidgetProperties } from './../../../../src/core/interfaces';
 
 let injectorOne = () => () => ({ foo: 'bar' });
 let injectorTwo = () => () => ({ bar: 'foo' });

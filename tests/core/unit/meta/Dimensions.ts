@@ -2,9 +2,9 @@ const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import global from '../../../../src/shim/global';
 import { stub, spy } from 'sinon';
-import Dimensions from '../../../../src/widget-core/meta/Dimensions';
-import NodeHandler from '../../../../src/widget-core/NodeHandler';
-import WidgetBase from '../../../../src/widget-core/WidgetBase';
+import Dimensions from '../../../../src/core/meta/Dimensions';
+import NodeHandler from '../../../../src/core/NodeHandler';
+import WidgetBase from '../../../../src/core/WidgetBase';
 
 let rAF: any;
 let bindInstance: WidgetBase;

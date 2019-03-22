@@ -1,13 +1,13 @@
 const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { SinonSpy } from 'sinon';
-import { v, w } from '../../../../src/widget-core/d';
-import DragCtor, { DragResults } from '../../../../src/widget-core/meta/Drag';
-import { ThemedMixin } from '../../../../src/widget-core/mixins/Themed';
-import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
+import { v, w } from '../../../../src/core/d';
+import DragCtor, { DragResults } from '../../../../src/core/meta/Drag';
+import { ThemedMixin } from '../../../../src/core/mixins/Themed';
+import { WidgetBase } from '../../../../src/core/WidgetBase';
 import sendEvent from '../../support/sendEvent';
 import { createResolvers } from './../../support/util';
-import { renderer } from '../../../../src/widget-core/vdom';
+import { renderer } from '../../../../src/core/vdom';
 
 const resolvers = createResolvers();
 
@@ -20,7 +20,7 @@ let Drag: typeof DragCtor;
 
 registerSuite('support/meta/Drag', {
 	async before() {
-		Drag = (await import('../../../../src/widget-core/meta/Drag')).default;
+		Drag = (await import('../../../../src/core/meta/Drag')).default;
 	},
 
 	beforeEach() {

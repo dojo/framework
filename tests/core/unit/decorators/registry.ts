@@ -1,12 +1,12 @@
 const { it } = intern.getInterface('bdd');
-import { v, w } from '../../../../src/widget-core/d';
+import { v, w } from '../../../../src/core/d';
 const { assert } = intern.getPlugin('chai');
 const { describe } = intern.getPlugin('jsdom');
 
-import { VNode } from './../../../../src/widget-core/interfaces';
-import { registry } from './../../../../src/widget-core/decorators/registry';
-import { WidgetBase } from './../../../../src/widget-core/WidgetBase';
-import { renderer } from './../../../../src/widget-core/vdom';
+import { VNode } from './../../../../src/core/interfaces';
+import { registry } from './../../../../src/core/decorators/registry';
+import { WidgetBase } from './../../../../src/core/WidgetBase';
+import { renderer } from './../../../../src/core/vdom';
 
 export class Widget1 extends WidgetBase {
 	protected render(): VNode {

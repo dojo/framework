@@ -3,8 +3,8 @@ const { assert } = intern.getPlugin('chai');
 const { afterEach, beforeEach, before, describe, it } = intern.getInterface('bdd');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 import { AnimationEffectTiming } from '../../../../src/shim/WebAnimations';
-import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
-import { v } from '../../../../src/widget-core/d';
+import { WidgetBase } from '../../../../src/core/WidgetBase';
+import { v } from '../../../../src/core/d';
 import { spy, stub } from 'sinon';
 
 let WebAnimation: any;
@@ -106,7 +106,7 @@ jsdomDescribe('WebAnimation', () => {
 		}
 		global.KeyframeEffect = KeyframeEffectMock;
 		global.Animation = AnimationMock;
-		WebAnimation = (await import('../../../../src/widget-core/meta/WebAnimation')).default;
+		WebAnimation = (await import('../../../../src/core/meta/WebAnimation')).default;
 	});
 
 	beforeEach(() => {

@@ -1,9 +1,9 @@
 const { assert } = intern.getPlugin('chai');
 const { describe, it } = intern.getInterface('bdd');
 import * as sinon from 'sinon';
-import NodeHandler from '../../../../src/widget-core/NodeHandler';
-import WidgetBase from '../../../../src/widget-core/WidgetBase';
-import Block from '../../../../src/widget-core/meta/Block';
+import NodeHandler from '../../../../src/core/NodeHandler';
+import WidgetBase from '../../../../src/core/WidgetBase';
+import Block from '../../../../src/core/meta/Block';
 
 let bindInstance = new WidgetBase();
 

@@ -2,7 +2,7 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 
-import { Injector } from '../../../src/widget-core/Injector';
+import { Injector } from '../../../src/core/Injector';
 
 registerSuite('Injector', {
 	get() {

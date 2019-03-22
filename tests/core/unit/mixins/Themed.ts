@@ -6,10 +6,10 @@ import {
 	ThemedProperties,
 	INJECTED_THEME_KEY,
 	registerThemeInjector
-} from '../../../../src/widget-core/mixins/Themed';
-import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
-import { Registry } from '../../../../src/widget-core/Registry';
-import { v } from '../../../../src/widget-core/d';
+} from '../../../../src/core/mixins/Themed';
+import { WidgetBase } from '../../../../src/core/WidgetBase';
+import { Registry } from '../../../../src/core/Registry';
+import { v } from '../../../../src/core/d';
 import { stub, SinonStub } from 'sinon';
 
 import * as baseThemeClasses1 from './../../support/styles/testWidget1.css';
@@ -19,7 +19,7 @@ import * as extraClasses1 from './../../support/styles/extraClasses1.css';
 import testTheme1 from './../../support/styles/theme1.css';
 import testTheme2 from './../../support/styles/theme2.css';
 import testTheme3 from './../../support/styles/theme3.css';
-import { VNode } from '../../../../src/widget-core/interfaces';
+import { VNode } from '../../../../src/core/interfaces';
 
 (baseThemeClasses1 as any)[' _key'] = 'testPath1';
 (baseThemeClasses2 as any)[' _key'] = 'testPath2';

@@ -2,8 +2,8 @@ const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import global from '../../../../src/shim/global';
 import { stub, spy, SinonSpy } from 'sinon';
-import { NodeHandler } from './../../../../src/widget-core/NodeHandler';
-import WidgetBase from '../../../../src/widget-core/WidgetBase';
+import { NodeHandler } from './../../../../src/core/NodeHandler';
+import WidgetBase from '../../../../src/core/WidgetBase';
 
 let intersectionObserver: any;
 let bindInstance: WidgetBase;
@@ -34,7 +34,7 @@ registerSuite('meta - Intersection', {
 				return observer;
 			}
 		});
-		Intersection = (await import('../../../../src/widget-core/meta/Intersection')).default;
+		Intersection = (await import('../../../../src/core/meta/Intersection')).default;
 	},
 
 	afterEach() {

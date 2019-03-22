@@ -1,8 +1,8 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import RegistryHandler from '../../../src/widget-core/RegistryHandler';
-import Registry from '../../../src/widget-core/Registry';
-import { WidgetBase } from '../../../src/widget-core/WidgetBase';
+import RegistryHandler from '../../../src/core/RegistryHandler';
+import Registry from '../../../src/core/Registry';
+import { WidgetBase } from '../../../src/core/WidgetBase';
 import { Evented } from '../../../src/core/Evented';
 
 const foo = Symbol();

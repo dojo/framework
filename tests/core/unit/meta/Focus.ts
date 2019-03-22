@@ -3,9 +3,9 @@ const { afterEach, before, beforeEach, describe, it } = intern.getInterface('bdd
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 import global from '../../../../src/shim/global';
 import * as sinon from 'sinon';
-import Focus from '../../../../src/widget-core/meta/Focus';
-import NodeHandler from '../../../../src/widget-core/NodeHandler';
-import WidgetBase from '../../../../src/widget-core/WidgetBase';
+import Focus from '../../../../src/core/meta/Focus';
+import NodeHandler from '../../../../src/core/NodeHandler';
+import WidgetBase from '../../../../src/core/WidgetBase';
 
 jsdomDescribe('meta - Focus', () => {
 	const defaultFocus = {

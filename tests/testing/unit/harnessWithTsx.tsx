@@ -1,8 +1,8 @@
 const { describe, it } = intern.getInterface('bdd');
 
 import { harness } from '../../../src/testing/harness';
-import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import { tsx, fromRegistry } from '../../../src/widget-core/tsx';
+import { WidgetBase } from '../../../src/core/WidgetBase';
+import { tsx, fromRegistry } from '../../../src/core/tsx';
 
 class ChildWidget extends WidgetBase<any> {}
 const RegistryWidget = fromRegistry<any>('registry-item');

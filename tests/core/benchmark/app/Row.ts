@@ -1,6 +1,6 @@
-import { DNode } from '../../../../src/widget-core/interfaces';
-import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
-import { v } from '../../../../src/widget-core/d';
+import { DNode } from '../../../../src/core/interfaces';
+import { WidgetBase } from '../../../../src/core/WidgetBase';
+import { v } from '../../../../src/core/d';
 
 export interface RowProperties {
 	onRowSelected: (id: number) => void;

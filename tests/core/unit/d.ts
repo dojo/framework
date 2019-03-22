@@ -1,9 +1,9 @@
 const { assert } = intern.getPlugin('chai');
 const { registerSuite } = intern.getPlugin('jsdom');
 import { assign } from '../../../src/shim/object';
-import { DNode, VNode, WNode } from '../../../src/widget-core/interfaces';
-import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import { dom, v, w, decorate, WNODE, VNODE, isWNode, isVNode } from '../../../src/widget-core/d';
+import { DNode, VNode, WNode } from '../../../src/core/interfaces';
+import { WidgetBase } from '../../../src/core/WidgetBase';
+import { dom, v, w, decorate, WNODE, VNODE, isWNode, isVNode } from '../../../src/core/d';
 
 interface ChildProperties {
 	myChildProperty: string;

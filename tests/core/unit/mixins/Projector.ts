@@ -2,9 +2,9 @@ const { it } = intern.getInterface('bdd');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 
-import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
-import { ProjectorMixin } from '../../../../src/widget-core/mixins/Projector';
-import { v } from '../../../../src/widget-core/d';
+import { WidgetBase } from '../../../../src/core/WidgetBase';
+import { ProjectorMixin } from '../../../../src/core/mixins/Projector';
+import { v } from '../../../../src/core/d';
 
 class App extends WidgetBase<{ child: string }> {
 	protected render() {

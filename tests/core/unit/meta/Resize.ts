@@ -3,8 +3,8 @@ const { assert } = intern.getPlugin('chai');
 import global from '../../../../src/shim/global';
 import { stub, SinonStub } from 'sinon';
 
-import NodeHandler from '../../../../src/widget-core/NodeHandler';
-import WidgetBase from '../../../../src/widget-core/WidgetBase';
+import NodeHandler from '../../../../src/core/NodeHandler';
+import WidgetBase from '../../../../src/core/WidgetBase';
 
 let resizeObserver: any;
 let resizeCallback: ([]: any[]) => void;
@@ -25,7 +25,7 @@ registerSuite('meta - Resize', {
 			return observer;
 		});
 		global.ResizeObserver = resizeObserver;
-		Resize = (await import('../../../../src/widget-core/meta/Resize')).default;
+		Resize = (await import('../../../../src/core/meta/Resize')).default;
 	},
 
 	beforeEach() {

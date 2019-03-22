@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { DragResults } from '../../../src/widget-core/meta/Drag';
+import { DragResults } from '../../../src/core/meta/Drag';
 import Test from 'intern/lib/Test';
 
 function getPage(test: Test) {

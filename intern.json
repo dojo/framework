@@ -13,7 +13,6 @@
 	"suites": [
 		"./dist/dev/tests/has/unit/all.js",
 		"./dist/dev/tests/shim/unit/all.js",
-		"./dist/dev/tests/core/unit/all.js",
 		"./dist/dev/tests/i18n/unit/all.js",
 		"./dist/dev/tests/stores/unit/all.js",
 		"./dist/dev/tests/testing/unit/all.js"
@@ -23,7 +22,7 @@
 		"./dist/dev/tests/has/functional/all.js",
 		"./dist/dev/tests/shim/functional/all.js",
 		"./dist/dev/tests/i18n/functional/**/*.js",
-		"./dist/dev/tests/widget-core/functional/all.js",
+		"./dist/dev/tests/core/functional/all.js",
 		"./dist/dev/tests/routing/functional/**/*.js",
 		"./dist/dev/tests/stores/functional/all.js"
 	],
@@ -34,7 +33,7 @@
 			"useLoader": true
 		},
 		{
-			"script": "./dist/dev/tests/widget-core/support/jsdom-plugin.js",
+			"script": "./dist/dev/tests/core/support/jsdom-plugin.js",
 			"useLoader": true
 		}
 	],
@@ -62,7 +61,7 @@
 		},
 		"suites+": [
 			"./dist/dev/tests/routing/unit/all.js",
-			"./dist/dev/tests/widget-core/unit/all.js"
+			"./dist/dev/tests/core/unit/all.js"
 		],
 		"plugins+": [
 			"./node_modules/whatwg-fetch/dist/fetch.umd.js",
@@ -71,7 +70,7 @@
 				"useLoader": true
 			},
 			{
-				"script": "./dist/dev/tests/widget-core/support/loadCustomElements.js",
+				"script": "./dist/dev/tests/core/support/loadCustomElements.js",
 				"useLoader": true
 			}
 		]
@@ -82,12 +81,12 @@
 			"./dist/dev/tests/routing/unit/**/*.js",
 			"!./dist/dev/tests/routing/unit/**/all.js",
 			"!./dist/dev/tests/routing/unit/history/StateHistory.js",
-			"./dist/dev/tests/widget-core/unit/**/*.js",
-			"!./dist/dev/tests/widget-core/unit/all.js",
-			"!./dist/dev/tests/widget-core/unit/meta/all.js",
-			"!./dist/dev/tests/widget-core/unit/meta/Resize.js",
-			"!./dist/dev/tests/widget-core/unit/meta/WebAnimation.js",
-			"!./dist/dev/tests/widget-core/unit/meta/Intersection.js"
+			"./dist/dev/tests/core/unit/**/*.js",
+			"!./dist/dev/tests/core/unit/all.js",
+			"!./dist/dev/tests/core/unit/meta/all.js",
+			"!./dist/dev/tests/core/unit/meta/Resize.js",
+			"!./dist/dev/tests/core/unit/meta/WebAnimation.js",
+			"!./dist/dev/tests/core/unit/meta/Intersection.js"
 		]
 	}
 }

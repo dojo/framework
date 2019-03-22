@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import { Registry } from '../../../src/widget-core/Registry';
-import { WNode } from '../../../src/widget-core/interfaces';
-import { tsx, fromRegistry } from '../../../src/widget-core/tsx';
+import { WidgetBase } from '../../../src/core/WidgetBase';
+import { Registry } from '../../../src/core/Registry';
+import { WNode } from '../../../src/core/interfaces';
+import { tsx, fromRegistry } from '../../../src/core/tsx';
 
 const registry = new Registry();
 

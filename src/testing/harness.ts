@@ -1,7 +1,7 @@
 import assertRender from './support/assertRender';
 import { decorateNodes, select } from './support/selector';
-import { WNode, DNode, WidgetBaseInterface, Constructor, VNode } from '../widget-core/interfaces';
-import { WidgetBase } from '../widget-core/WidgetBase';
+import { WNode, DNode, WidgetBaseInterface, Constructor, VNode } from '../core/interfaces';
+import { WidgetBase } from '../core/WidgetBase';
 
 export interface CustomComparator {
 	selector: string;

@@ -1,12 +1,12 @@
 const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import { Base as MetaBase } from '../../../../src/widget-core/meta/Base';
+import { Base as MetaBase } from '../../../../src/core/meta/Base';
 import { stub, spy } from 'sinon';
 import { createResolvers } from './../../support/util';
-import NodeHandler, { NodeEventType } from '../../../../src/widget-core/NodeHandler';
-import { v, w } from '../../../../src/widget-core/d';
-import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
-import { renderer } from '../../../../src/widget-core/vdom';
+import NodeHandler, { NodeEventType } from '../../../../src/core/NodeHandler';
+import { v, w } from '../../../../src/core/d';
+import { WidgetBase } from '../../../../src/core/WidgetBase';
+import { renderer } from '../../../../src/core/vdom';
 
 const resolvers = createResolvers();
 let bindInstance: WidgetBase;

@@ -1,9 +1,9 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
-import { beforeProperties } from './../../../../src/widget-core/decorators/beforeProperties';
-import { WidgetBase } from './../../../../src/widget-core/WidgetBase';
-import { WidgetProperties } from './../../../../src/widget-core/interfaces';
+import { beforeProperties } from './../../../../src/core/decorators/beforeProperties';
+import { WidgetBase } from './../../../../src/core/WidgetBase';
+import { WidgetProperties } from './../../../../src/core/interfaces';
 
 registerSuite('decorators/beforeProperties', {
 	beforeProperties() {

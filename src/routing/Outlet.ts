@@ -1,9 +1,9 @@
-import { DNode } from '../widget-core/interfaces';
-import { WidgetBase } from '../widget-core/WidgetBase';
-import { alwaysRender } from '../widget-core/decorators/alwaysRender';
+import { DNode } from '../core/interfaces';
+import { WidgetBase } from '../core/WidgetBase';
+import { alwaysRender } from '../core/decorators/alwaysRender';
 import { MatchDetails } from './interfaces';
 import { Router } from './Router';
-import { diffProperty } from '../widget-core/decorators/diffProperty';
+import { diffProperty } from '../core/decorators/diffProperty';
 import { Handle } from '../core/Destroyable';
 
 export interface OutletProperties {

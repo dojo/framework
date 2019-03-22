@@ -387,7 +387,7 @@ There are two mechanisms to connect the `StoreProvider` to the `Store`:
 2.  A catch-all when no `paths` are defined for the container, it will invalidate when any data changes in the store.
 
 ```ts
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import { WidgetBase } from '@dojo/framework/core/WidgetBase';
 import { Store } from '@dojo/framework/stores/Stores';
 import StoreProvider from '@dojo/framework/stores/StoreProvider';
 

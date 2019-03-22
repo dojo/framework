@@ -1,8 +1,8 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { customElement } from '../../../../src/widget-core/decorators/customElement';
-import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
+import { customElement } from '../../../../src/core/decorators/customElement';
+import { WidgetBase } from '../../../../src/core/WidgetBase';
 
 export interface CustomElementWidgetProperties {
 	label: string;

@@ -1,7 +1,7 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import WidgetBase from '../../../../src/widget-core/WidgetBase';
-import { watch } from '../../../../src/widget-core/decorators/watch';
+import WidgetBase from '../../../../src/core/WidgetBase';
+import { watch } from '../../../../src/core/decorators/watch';
 
 describe('Watch', () => {
 	it('should invalidate on set', () => {

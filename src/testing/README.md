@@ -40,7 +40,7 @@ The harness returns a `Harness` object that provides a small API for interacting
 -   [`trigger`](#harnesstrigger): Used to trigger a function from a node on the widget under test's API
 -   [`getRender`](#harnessgetRender): Returns a render from the harness based on the index provided
 
-Setting up a widget for testing is simple and familiar using the `w()` function from `@dojo/framework/widget-core`:
+Setting up a widget for testing is simple and familiar using the `w()` function from `@dojo/framework/core`:
 
 ```ts
 class MyWidget extends WidgetBase<{ foo: string }> {

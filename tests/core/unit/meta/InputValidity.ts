@@ -1,10 +1,10 @@
 const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { createSandbox, SinonStub } from 'sinon';
-import InputValidity from '../../../../src/widget-core/meta/InputValidity';
+import InputValidity from '../../../../src/core/meta/InputValidity';
 
-import NodeHandler from '../../../../src/widget-core/NodeHandler';
-import WidgetBase from '../../../../src/widget-core/WidgetBase';
+import NodeHandler from '../../../../src/core/NodeHandler';
+import WidgetBase from '../../../../src/core/WidgetBase';
 
 const sandbox = createSandbox();
 let bindInstance: WidgetBase;

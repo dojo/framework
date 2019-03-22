@@ -2,10 +2,10 @@ const { it } = intern.getInterface('bdd');
 const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 
-import { WidgetBase } from './../../../../src/widget-core/WidgetBase';
-import { w } from './../../../../src/widget-core/d';
-import { renderer } from './../../../../src/widget-core/vdom';
-import { alwaysRender } from './../../../../src/widget-core/decorators/alwaysRender';
+import { WidgetBase } from './../../../../src/core/WidgetBase';
+import { w } from './../../../../src/core/d';
+import { renderer } from './../../../../src/core/vdom';
+import { alwaysRender } from './../../../../src/core/decorators/alwaysRender';
 
 describe('decorators/alwaysRender', () => {
 	it('Widgets should always render', () => {

@@ -1,7 +1,7 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
-import Focus from '../../../../src/widget-core/mixins/Focus';
+import { WidgetBase } from '../../../../src/core/WidgetBase';
+import Focus from '../../../../src/core/mixins/Focus';
 
 class Foo extends Focus(WidgetBase) {}
 

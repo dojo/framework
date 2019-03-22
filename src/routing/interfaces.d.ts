@@ -5,8 +5,8 @@ import {
 	WidgetBaseInterface,
 	WidgetProperties,
 	DNode
-} from '../widget-core/interfaces';
-import { WidgetBase } from '../widget-core/WidgetBase';
+} from '../core/interfaces';
+import { WidgetBase } from '../core/WidgetBase';
 
 /**
  * Description of a registered route

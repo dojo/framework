@@ -2,10 +2,10 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { stub, SinonStub } from 'sinon';
 
-import { v } from './../../../../src/widget-core/d';
-import { DNode, Render } from './../../../../src/widget-core/interfaces';
-import { beforeRender } from './../../../../src/widget-core/decorators/beforeRender';
-import { WidgetBase } from './../../../../src/widget-core/WidgetBase';
+import { v } from './../../../../src/core/d';
+import { DNode, Render } from './../../../../src/core/interfaces';
+import { beforeRender } from './../../../../src/core/decorators/beforeRender';
+import { WidgetBase } from './../../../../src/core/WidgetBase';
 
 let consoleStub: SinonStub;
 
