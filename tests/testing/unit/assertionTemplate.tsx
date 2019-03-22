@@ -170,7 +170,8 @@ describe('assertionTemplate', () => {
 		const h = harness(() => w(ListWidget, {}));
 		const childListAssertion = baseListAssertion.replaceChildren('ul', [
 			v('li', ['item: 0']),
-			...new Array(29).fill(w(Mimic, {}))
+			...new Array(28).fill(w(Mimic, {})),
+			v('li', ['item: 29'])
 		]);
 		h.expect(childListAssertion);
 	});
