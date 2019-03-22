@@ -39,7 +39,9 @@ class MyWidget extends WidgetBase<{
 const baseAssertion = assertionTemplate(() =>
 	v('div', { '~key': 'root', classes: ['root'] }, [
 		v('h2', { '~key': 'header' }, ['hello']),
-		v('ul', [v('li', { '~key': 'li-one', foo: 'a' }, ['one']), v('li', ['two']), v('li', ['three'])])
+		undefined,
+		v('ul', [v('li', { '~key': 'li-one', foo: 'a' }, ['one']), v('li', ['two']), v('li', ['three'])]),
+		undefined
 	])
 );
 
@@ -103,10 +105,16 @@ describe('assertionTemplate', () => {
 
 	it('can set properties and use the actual properties', () => {
 		const h = harness(() => w(MyWidget, { toggleProperty: true }));
-		const propertyAssertion = baseAssertion.setProperties('~li-one', (expectedProps: any, actualProps: any) => {
+		const propertyAssertion = baseAssertion.setProperties('~li-one', (actualProps: any) => {
 			return actualProps;
 		});
 		h.expect(propertyAssertion);
+	});
+
+	it('can replace a node', () => {
+		const h = harness(() => w(MyWidget, {}));
+		const childAssertion = baseAssertion.replace('~header', v('h2', { '~key': 'header' }, ['hello']));
+		h.expect(childAssertion);
 	});
 
 	it('can set a child', () => {
@@ -117,7 +125,7 @@ describe('assertionTemplate', () => {
 
 	it('can set a child with replace', () => {
 		const h = harness(() => w(MyWidget, { replaceChild: true }));
-		const childAssertion = baseAssertion.replace('~header', ['replace']);
+		const childAssertion = baseAssertion.replaceChildren('~header', ['replace']);
 		h.expect(childAssertion);
 	});
 
@@ -153,7 +161,7 @@ describe('assertionTemplate', () => {
 
 	it('can use mimic', () => {
 		const h = harness(() => w(ListWidget, {}));
-		const childListAssertion = baseListAssertion.replace('ul', [
+		const childListAssertion = baseListAssertion.replaceChildren('ul', [
 			v('li', ['item: 0']),
 			...new Array(29).fill(w(Mimic, {}))
 		]);

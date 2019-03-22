@@ -3,13 +3,13 @@ import { isWNode, isVNode, decorate } from '../widget-core/d';
 import { VNode, WNode, DNode } from '../widget-core/interfaces';
 import WidgetBase from '../widget-core/WidgetBase';
 
-export type PropertiesComparatorFunction = (expectedProperties: any, actualProperties: any) => any;
+export type PropertiesComparatorFunction = (actualProperties: any) => any;
 
 export interface AssertionTemplateResult {
 	(): DNode | DNode[];
 	append(selector: string, children: DNode[]): AssertionTemplateResult;
 	prepend(selector: string, children: DNode[]): AssertionTemplateResult;
-	replace(selector: string, children: DNode[]): AssertionTemplateResult;
+	replaceChildren(selector: string, children: DNode[]): AssertionTemplateResult;
 	insertBefore(selector: string, children: DNode[]): AssertionTemplateResult;
 	insertAfter(selector: string, children: DNode[]): AssertionTemplateResult;
 	insertSiblings(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
@@ -19,6 +19,7 @@ export interface AssertionTemplateResult {
 	getChildren(selector: string): DNode[];
 	getProperty(selector: string, property: string): any;
 	getProperties(selector: string): any;
+	replace(selector: string, node: DNode): AssertionTemplateResult;
 }
 
 const findOne = (nodes: DNode | DNode[], selector: string): DNode | undefined => {
@@ -81,7 +82,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	assertionTemplateResult.prepend = (selector: string, children: DNode[]) => {
 		return assertionTemplateResult.setChildren(selector, children, 'prepend');
 	};
-	assertionTemplateResult.replace = (selector: string, children: DNode[]) => {
+	assertionTemplateResult.replaceChildren = (selector: string, children: DNode[]) => {
 		return assertionTemplateResult.setChildren(selector, children, 'replace');
 	};
 	assertionTemplateResult.setChildren = (
@@ -151,6 +152,17 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		const render = renderFunc();
 		const node = guard(findOne(render, selector));
 		return node.children || [];
+	};
+	assertionTemplateResult.replace = (selector: string, node: DNode) => {
+		return assertionTemplate(() => {
+			const render = renderFunc();
+			const node = guard(findOne(render, selector));
+			const parent = (node as any).parent;
+			const children = [...parent.children];
+			children.splice(children.indexOf(node), 1);
+			parent.children = [node, ...children];
+			return render;
+		});
 	};
 	return assertionTemplateResult as AssertionTemplateResult;
 }

@@ -137,7 +137,7 @@ function decorate(actual: DNode | DNode[], expected: DNode | DNode[]): [DNode[],
 		if (isNode(expectedNode)) {
 			if (typeof expectedNode.properties === 'function') {
 				const actualProperties = isNode(actualNode) ? actualNode.properties : {};
-				expectedNode.properties = expectedNode.properties(expectedNode.properties, actualProperties);
+				expectedNode.properties = expectedNode.properties(actualProperties);
 			}
 		}
 		const childrenA = isNode(actualNode) ? actualNode.children : [];
