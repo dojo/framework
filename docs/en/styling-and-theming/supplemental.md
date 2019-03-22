@@ -38,7 +38,7 @@ This stylesheet can be used within a corresponding widget as follows:
 > src/widgets/MyWidget.ts
 
 ```ts
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { v } from '@dojo/framework/widget-core/d';
 
 import * as css from '../styles/MyWidget.m.css';
@@ -55,7 +55,7 @@ Similarly, if using TSX widget syntax:
 > src/widgets/MyTsxWidget.tsx
 
 ```tsx
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { tsx } from '@dojo/framework/widget-core/tsx';
 
 import * as css from '../styles/MyWidget.m.css';
@@ -419,7 +419,7 @@ This stylesheet can be used within a corresponding themeable widget as follows:
 ```ts
 import { v } from '@dojo/framework/widget-core/d';
 import { theme, ThemedMixin } from '@dojo/framework/widget-core/mixins/Themed';
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import * as css from '../styles/MyThemeAwareWidget.m.css';
 
 /* requirement 1: */ @theme(css)
@@ -447,8 +447,8 @@ Similarly, if using TSX widget syntax:
 > src/widgets/MyThemeAwareTsxWidget.tsx
 
 ```tsx
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
-import { ThemedMixin, theme } from '@dojo/framework/widget-core/mixins/Themed';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
 import { tsx } from '@dojo/framework/widget-core/tsx';
 
 import * as css from '../styles/MyThemeAwareWidget.m.css';
@@ -511,7 +511,7 @@ As an example of providing extra classes, the following tweaks an instance of a 
 > src/widgets/MyWidget.tsx
 
 ```tsx
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { tsx } from '@dojo/framework/widget-core/tsx';
 
 import ComboBox from '@dojo/widgets/combobox';

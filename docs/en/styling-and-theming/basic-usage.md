@@ -25,7 +25,7 @@ Defining [per-widget CSS modules](./supplemental.md#structural-widget-styling):
 > src/widgets/MyWidget.tsx
 
 ```tsx
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { tsx } from '@dojo/framework/widget-core/tsx';
 
 import * as css from '../styles/MyWidget.m.css';
@@ -44,8 +44,8 @@ Allowing a [widget's default styles to be overridden by a theme](./supplemental.
 > src/widgets/MyWidget.tsx
 
 ```tsx
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
-import { ThemedMixin, theme } from '@dojo/framework/widget-core/mixins/Themed';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
 import { tsx } from '@dojo/framework/widget-core/tsx';
 
 import * as css from '../styles/MyWidget.m.css';
