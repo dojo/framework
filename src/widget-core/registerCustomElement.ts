@@ -1,3 +1,4 @@
+import Registry from './Registry';
 import { WidgetBase } from './WidgetBase';
 import { renderer } from './vdom';
 import { from } from '../shim/array';
@@ -39,7 +40,11 @@ export function DomToWidgetWrapper(domNode: HTMLElement): any {
 }
 
 export function create(descriptor: any, WidgetConstructor: any): any {
-	const { attributes, childType, registryFactory } = descriptor;
+	const {
+		attributes = [],
+		childType = CustomElementChildType.DOJO,
+		registryFactory = () => new Registry()
+	} = descriptor;
 	const attributeMap: any = {};
 
 	attributes.forEach((propertyName: string) => {
@@ -60,7 +65,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			}
 
 			const domProperties: any = {};
-			const { attributes, properties, events } = descriptor;
+			const { properties = [], events = [] } = descriptor;
 
 			this._properties = { ...this._properties, ...this._attributesToProperties(attributes) };
 
