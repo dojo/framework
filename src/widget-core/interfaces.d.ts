@@ -138,10 +138,6 @@ export interface VNodeProperties {
 	 */
 	updateAnimation?: (element: Element, properties?: VNodeProperties, previousProperties?: VNodeProperties) => void;
 	/**
-	 * Bind should not be defined.
-	 */
-	readonly bind?: void;
-	/**
 	 * Used to uniquely identify a DOM node among siblings.
 	 * A key is required when there are more children with the same selector and these children are added or removed dynamically.
 	 * NOTE: this does not have to be a string or number, a [[Component]] Object for instance is also possible.
@@ -307,11 +303,6 @@ export interface VNode {
 	properties: VNodeProperties;
 
 	/**
-	 * VNode properties
-	 */
-	originalProperties?: VNodeProperties;
-
-	/**
 	 * VNode attributes
 	 */
 	attributes?: { [index: string]: string | undefined };
@@ -345,11 +336,6 @@ export interface VNode {
 	 * Indicates the type of diff for the VNode
 	 */
 	diffType?: DiffType;
-
-	/**
-	 * instance the created the vnode
-	 */
-	bind?: WidgetBaseInterface;
 }
 
 export interface DomVNode extends VNode {
@@ -407,11 +393,6 @@ export interface WNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterfac
 	 * The type of node
 	 */
 	type: string;
-
-	/**
-	 * The instance that created the node
-	 */
-	bind?: WidgetBaseInterface & { registry: RegistryHandler };
 }
 
 /**
@@ -472,7 +453,7 @@ export interface WidgetBaseInterface<P = WidgetProperties, C extends DNode = DNo
 	 *
 	 * @param properties The new widget properties
 	 */
-	__setProperties__(properties: P & { [index: string]: any }, bind?: WidgetBaseInterface): void;
+	__setProperties__(properties: P & { [index: string]: any }): void;
 
 	/**
 	 * Sets the widget's children
@@ -482,7 +463,7 @@ export interface WidgetBaseInterface<P = WidgetProperties, C extends DNode = DNo
 	/**
 	 * Main internal function for dealing with widget rendering
 	 */
-	__render__(): (WNode | VNode) | (WNode | VNode)[];
+	__render__(): RenderResult;
 }
 
 /**

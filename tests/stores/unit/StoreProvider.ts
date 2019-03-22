@@ -265,7 +265,6 @@ describe('StoreProvider', () => {
 			}
 		});
 		const result = container.__render__() as VNode;
-		assert.strictEqual(result.bind, container);
 		assert.deepEqual(result.properties, {});
 		assert.isUndefined(result.children);
 		assert.strictEqual(result.tag, 'div');

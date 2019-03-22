@@ -1,6 +1,6 @@
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
-import { v, VNODE, isVNode, isWNode } from './d';
+import { v } from './d';
 import { auto } from './diff';
 import {
 	AfterRender,
@@ -9,19 +9,16 @@ import {
 	DiffPropertyReaction,
 	DNode,
 	DefaultWidgetBaseInterface,
-	LazyWidget,
 	Render,
 	WidgetMetaConstructor,
 	WidgetBaseInterface,
 	WidgetProperties,
-	WNode,
-	VNode,
-	LazyDefine,
-	MetaBase
+	MetaBase,
+	RenderResult
 } from './interfaces';
 import RegistryHandler from './RegistryHandler';
 import NodeHandler from './NodeHandler';
-import { isWidgetBaseConstructor, WIDGET_BASE_TYPE } from './Registry';
+import { WIDGET_BASE_TYPE } from './Registry';
 import { Handle } from '../core/Destroyable';
 import { Base } from './meta/Base';
 
@@ -38,12 +35,11 @@ export interface WidgetData {
 	invalidate?: Function;
 	rendering: boolean;
 	inputProperties: any;
+	registry: RegistryHandler;
 }
 
 export type BoundFunctionData = { boundFunc: (...args: any[]) => any; scope: any };
 
-let lazyWidgetId = 0;
-const lazyWidgetIdMap = new WeakMap<LazyWidget, string>();
 const decoratorMap = new WeakMap<Function, Map<string, any[]>>();
 const builtDecoratorMap = new WeakMap<Function, Map<string, any[]>>();
 export const widgetInstanceMap = new WeakMap<
@@ -52,24 +48,27 @@ export const widgetInstanceMap = new WeakMap<
 >();
 const boundAuto = auto.bind(null);
 
-export const noBind = '__dojo_no_bind';
-
-function toTextVNode(data: any): VNode {
-	return {
-		tag: '',
-		properties: {},
-		children: undefined,
-		text: `${data}`,
-		type: VNODE
-	};
-}
-
-function isLazyDefine(item: any): item is LazyDefine {
-	return Boolean(item && item.label);
-}
-
 function isDomMeta(meta: any): meta is Base {
 	return Boolean(meta.afterRender);
+}
+
+const IGNORE_LIST: (string | symbol)[] = ['constructor', 'render'];
+
+function autoBind(instance: any) {
+	let keys: string[] = Object.getOwnPropertyNames(instance.constructor.prototype);
+	for (let i = 0; i < keys.length; i++) {
+		const key = keys[i];
+		if (typeof instance[key] !== 'function' || IGNORE_LIST.indexOf(key) > -1) {
+			continue;
+		}
+		const boundFunc = instance[key].bind(instance);
+		Object.defineProperty(instance, key, {
+			configurable: true,
+			get() {
+				return boundFunc;
+			}
+		});
+	}
 }
 
 /**
@@ -106,12 +105,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 */
 	private _decoratorCache: Map<string, any[]>;
 
-	private _registry: RegistryHandler | undefined;
-
-	/**
-	 * Map of functions properties for the bound function
-	 */
-	private _bindFunctionPropertyMap: WeakMap<(...args: any[]) => any, BoundFunctionData> | undefined;
+	private _registry: RegistryHandler = new RegistryHandler();
 
 	private _metaMap: Map<WidgetMetaConstructor<any>, MetaBase> | undefined;
 
@@ -132,6 +126,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		this._properties = {} as P;
 		this._boundRenderFunc = this.render.bind(this);
 		this._boundInvalidate = this.invalidate.bind(this);
+		this.own(this._registry);
+		this.own(this._registry.on('invalidate', this._boundInvalidate));
 
 		widgetInstanceMap.set(this, {
 			dirty: true,
@@ -144,7 +140,8 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			},
 			nodeHandler: this._nodeHandler,
 			rendering: false,
-			inputProperties: {}
+			inputProperties: {},
+			registry: this.registry
 		});
 
 		this.own({
@@ -192,7 +189,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		return [...this._changedPropertyKeys];
 	}
 
-	public __setProperties__(originalProperties: this['properties'], bind?: WidgetBaseInterface): void {
+	public __setProperties__(originalProperties: this['properties']): void {
 		const instanceData = widgetInstanceMap.get(this);
 		if (instanceData) {
 			instanceData.inputProperties = originalProperties;
@@ -201,6 +198,10 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		const registeredDiffPropertyNames = this.getDecorator('registeredDiffProperty');
 		const changedPropertyKeys: string[] = [];
 		const propertyNames = Object.keys(properties);
+
+		if (this._initialProperties) {
+			autoBind(this);
+		}
 
 		if (this._initialProperties === false || registeredDiffPropertyNames.length !== 0) {
 			const allProperties = [...propertyNames, ...Object.keys(this._properties)];
@@ -215,7 +216,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 				}
 				checkedProperties.push(propertyName);
 				const previousProperty = this._properties[propertyName];
-				const newProperty = this._bindFunctionProperty(properties[propertyName], bind);
+				const newProperty = properties[propertyName];
 				if (registeredDiffPropertyNames.indexOf(propertyName) !== -1) {
 					runReactions = true;
 					const diffFunctions = this.getDecorator(`diffProperty:${propertyName}`);
@@ -258,7 +259,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			for (let i = 0; i < propertyNames.length; i++) {
 				const propertyName = propertyNames[i];
 				if (typeof properties[propertyName] === 'function') {
-					properties[propertyName] = this._bindFunctionProperty(properties[propertyName], bind);
+					properties[propertyName] = properties[propertyName];
 				} else {
 					changedPropertyKeys.push(propertyName);
 				}
@@ -283,65 +284,13 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		}
 	}
 
-	private _filterAndConvert(nodes: DNode[]): (WNode | VNode)[];
-	private _filterAndConvert(nodes: DNode): WNode | VNode;
-	private _filterAndConvert(nodes: DNode | DNode[]): (WNode | VNode) | (WNode | VNode)[];
-	private _filterAndConvert(nodes: DNode | DNode[]): (WNode | VNode) | (WNode | VNode)[] {
-		const isArray = Array.isArray(nodes);
-		const filteredNodes = Array.isArray(nodes) ? nodes : [nodes];
-		const convertedNodes: (WNode | VNode)[] = [];
-		for (let i = 0; i < filteredNodes.length; i++) {
-			const node = filteredNodes[i];
-			if (!node || node === true) {
-				continue;
-			}
-			if (typeof node === 'string') {
-				convertedNodes.push(toTextVNode(node));
-				continue;
-			}
-			if (isVNode(node) && node.deferredPropertiesCallback) {
-				const properties = node.deferredPropertiesCallback(false);
-				node.originalProperties = node.properties;
-				node.properties = { ...properties, ...node.properties };
-			}
-			if (isWNode(node) && !isWidgetBaseConstructor(node.widgetConstructor)) {
-				if (typeof node.widgetConstructor === 'function') {
-					let id = lazyWidgetIdMap.get(node.widgetConstructor);
-					if (!id) {
-						id = `__lazy_widget_${lazyWidgetId++}`;
-						lazyWidgetIdMap.set(node.widgetConstructor, id);
-						this.registry.define(id, node.widgetConstructor);
-					}
-					node.widgetConstructor = id;
-				} else if (isLazyDefine(node.widgetConstructor)) {
-					const { label, registryItem } = node.widgetConstructor;
-					if (!this.registry.has(label)) {
-						this.registry.define(label, registryItem);
-					}
-					node.widgetConstructor = label;
-				}
-
-				node.widgetConstructor =
-					this.registry.get<WidgetBase>(node.widgetConstructor) || node.widgetConstructor;
-			}
-			if (!node.bind) {
-				node.bind = this;
-			}
-			convertedNodes.push(node);
-			if (node.children && node.children.length) {
-				node.children = this._filterAndConvert(node.children);
-			}
-		}
-		return isArray ? convertedNodes : convertedNodes[0];
-	}
-
-	public __render__(): (WNode | VNode) | (WNode | VNode)[] {
+	public __render__(): RenderResult {
 		const instanceData = widgetInstanceMap.get(this);
 		if (instanceData) {
 			instanceData.dirty = false;
 		}
 		const render = this._runBeforeRenders();
-		const dNode = this._filterAndConvert(this._runAfterRenders(render()));
+		const dNode = this._runAfterRenders(render());
 		this._nodeHandler.clear();
 		return dNode;
 	}
@@ -437,37 +386,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		return allDecorators;
 	}
 
-	/**
-	 * Binds unbound property functions to the specified `bind` property
-	 *
-	 * @param properties properties to check for functions
-	 */
-	private _bindFunctionProperty(property: any, bind: any): any {
-		if (typeof property === 'function' && !property[noBind] && isWidgetBaseConstructor(property) === false) {
-			if (this._bindFunctionPropertyMap === undefined) {
-				this._bindFunctionPropertyMap = new WeakMap<
-					(...args: any[]) => any,
-					{ boundFunc: (...args: any[]) => any; scope: any }
-				>();
-			}
-			const bindInfo: Partial<BoundFunctionData> = this._bindFunctionPropertyMap.get(property) || {};
-			let { boundFunc, scope } = bindInfo;
-
-			if (boundFunc === undefined || scope !== bind) {
-				boundFunc = property.bind(bind) as (...args: any[]) => any;
-				this._bindFunctionPropertyMap.set(property, { boundFunc, scope: bind });
-			}
-			return boundFunc;
-		}
-		return property;
-	}
-
 	public get registry(): RegistryHandler {
-		if (this._registry === undefined) {
-			this._registry = new RegistryHandler();
-			this.own(this._registry);
-			this.own(this._registry.on('invalidate', this._boundInvalidate));
-		}
 		return this._registry;
 	}
 

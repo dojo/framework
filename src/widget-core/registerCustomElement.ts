@@ -1,4 +1,4 @@
-import { WidgetBase, noBind } from './WidgetBase';
+import { WidgetBase } from './WidgetBase';
 import { renderer } from './vdom';
 import { from } from '../shim/array';
 import { w, dom } from './d';
@@ -211,9 +211,6 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		private _setProperty(propertyName: string, value: any) {
-			if (typeof value === 'function') {
-				value[noBind] = true;
-			}
 			this._properties[propertyName] = value;
 			this._render();
 		}

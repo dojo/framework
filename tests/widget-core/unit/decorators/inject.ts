@@ -29,7 +29,7 @@ registerSuite('decorators/inject', {
 			class TestWidget extends WidgetBase<any> {}
 			const widget = new TestWidget();
 			widget.registry.base = registry;
-			widget.__setProperties__({}, widget);
+			widget.__setProperties__({});
 
 			assert.strictEqual(widget.properties.foo, 'bar');
 		},
@@ -46,7 +46,7 @@ registerSuite('decorators/inject', {
 			class TestWidget extends WidgetBase<any> {}
 			const widget = new TestWidget();
 			widget.registry.base = registry;
-			widget.__setProperties__({}, widget);
+			widget.__setProperties__({});
 			assert.strictEqual(widget.properties.foo, 'bar');
 			assert.strictEqual(widget.properties.bar, 'foo');
 		},
@@ -67,7 +67,7 @@ registerSuite('decorators/inject', {
 			}
 			const widget = new TestWidget();
 			widget.registry.base = registry;
-			widget.__setProperties__({}, widget);
+			widget.__setProperties__({});
 			assert.strictEqual(widget.properties.foo, 'bar');
 			assert.strictEqual(widget.properties.bar, 'foo');
 		},
