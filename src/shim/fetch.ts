@@ -1,6 +1,6 @@
 import dojoGlobal from './global';
 `!has('build-elide')`;
-import 'isomorphic-fetch';
+import 'cross-fetch/polyfill';
 import has from '../has/has';
 
 if (typeof global !== 'undefined' && (global as any).fetch && (global as any).fetch !== dojoGlobal.fetch) {

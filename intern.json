@@ -51,6 +51,11 @@
 						"name":  "immutable",
 						"location":  "./node_modules/immutable/dist",
 						"main": "immutable.js"
+					},
+					{
+						"name": "cross-fetch/polyfill",
+						"location": "./node_modules/cross-fetch/dist",
+						"main": "browser-polyfill.js"
 					}
 				],
 				"map": {
@@ -62,10 +67,13 @@
 		},
 		"suites+": [
 			"./dist/dev/tests/routing/unit/all.js",
-			"./dist/dev/tests/widget-core/unit/all.js"
+			"./dist/dev/tests/widget-core/unit/all.js",
+			"./dist/dev/tests/shim/unit/intersectionObserver.js",
+			"./dist/dev/tests/shim/unit/ResizeObserver.js",
+			"./dist/dev/tests/shim/unit/WebAnimations.js"
 		],
 		"plugins+": [
-			"./node_modules/whatwg-fetch/dist/fetch.umd.js",
+			"./node_modules/cross-fetch/dist/browser-polyfill.js",
 			{
 				"script": "./dist/dev/src/shim/browser.js",
 				"useLoader": true

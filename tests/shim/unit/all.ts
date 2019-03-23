@@ -5,6 +5,7 @@ import './support/queue';
 import './support/util';
 import './AbortController';
 import './array';
+import './fetch';
 import './global';
 import './iterator';
 import './main';

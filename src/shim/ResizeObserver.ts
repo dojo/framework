@@ -46,15 +46,15 @@ const Wrapper = class {
 		return new replacement(callback) as any;
 	}
 
-	observe(target: Element) {
+	static observe(target: Element) {
 		return replacement.observe(target);
 	}
 
-	unobserve(target: Element) {
+	static unobserve(target: Element) {
 		return replacement.unobserve(target);
 	}
 
-	disconnect() {
+	static disconnect() {
 		replacement.disconnect();
 	}
 };
