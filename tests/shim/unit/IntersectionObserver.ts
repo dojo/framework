@@ -1,4 +1,4 @@
-import IntersectionObserver, { replace } from '../../../src/shim/intersectionObserver';
+import IntersectionObserver, { replace } from '../../../src/shim/IntersectionObserver';
 import has, { add } from '../../../src/has/has';
 import * as sinon from 'sinon';
 const { registerSuite } = intern.getInterface('object');
