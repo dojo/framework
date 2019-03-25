@@ -68,7 +68,7 @@
 		"suites+": [
 			"./dist/dev/tests/routing/unit/all.js",
 			"./dist/dev/tests/widget-core/unit/all.js",
-			"./dist/dev/tests/shim/unit/intersectionObserver.js",
+			"./dist/dev/tests/shim/unit/IntersectionObserver.js",
 			"./dist/dev/tests/shim/unit/ResizeObserver.js",
 			"./dist/dev/tests/shim/unit/WebAnimations.js"
 		],
