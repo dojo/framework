@@ -53,9 +53,8 @@
 						"main": "immutable.js"
 					},
 					{
-						"name": "cross-fetch/polyfill",
-						"location": "./node_modules/cross-fetch/dist",
-						"main": "browser-polyfill.js"
+						"name": "cross-fetch",
+						"location": "./node_modules/cross-fetch"
 					}
 				],
 				"map": {
