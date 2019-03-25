@@ -1,13 +1,25 @@
 import dojoGlobal from './global';
-`!has('build-elide')`;
-import 'cross-fetch/polyfill';
 import has from '../has/has';
 
-if (typeof global !== 'undefined' && (global as any).fetch && (global as any).fetch !== dojoGlobal.fetch) {
-	dojoGlobal.fetch = (global as any).fetch;
+let fetchLoadedPromise: Promise<void>;
+if (!has('build-elide')) {
+	if (has('host-browser')) {
+		fetchLoadedPromise = import('cross-fetch/dist/browser-polyfill');
+	} else {
+		fetchLoadedPromise = import('cross-fetch/dist/node-polyfill');
+	}
+} else {
+	fetchLoadedPromise = Promise.resolve();
 }
 
-const _fetch = dojoGlobal.fetch.bind(dojoGlobal) as (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+fetchLoadedPromise.then(() => {
+	if (typeof global !== 'undefined' && (global as any).fetch && (global as any).fetch !== dojoGlobal.fetch) {
+		dojoGlobal.fetch = (global as any).fetch;
+	}
+});
+
+const _fetch = (input: RequestInfo, init?: RequestInit) => fetchLoadedPromise.then(() => dojoGlobal.fetch(input, init));
+
 let replacement: (input: RequestInfo, init?: RequestInit) => Promise<Response> = _fetch;
 
 export default function fetch(input: RequestInfo, init?: RequestInit) {
