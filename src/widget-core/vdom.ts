@@ -402,6 +402,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 	};
 	let _invalidationQueue: InvalidationQueueItem[] = [];
 	let _processQueue: (ProcessItem | DetachApplication | AttachApplication)[] = [];
+	let _deferredProcessQueue: (ProcessItem | DetachApplication | AttachApplication)[] = [];
 	let _applicationQueue: ApplicationInstruction[] = [];
 	let _eventMap = new WeakMap<Function, EventListener>();
 	let _instanceToWrapperMap = new WeakMap<WidgetBase, WNodeWrapper>();
@@ -828,12 +829,8 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			meta: { mergeNodes: arrayFrom(domNode.childNodes) }
 		});
 		_runProcessQueue();
-		let mergedNode: Node | undefined;
-		while ((mergedNode = _allMergedNodes.pop())) {
-			mergedNode.parentNode && mergedNode.parentNode.removeChild(mergedNode);
-		}
+		_cleanUpMergedNodes();
 		_runDomInstructionQueue();
-		_mountOptions.merge = false;
 		_insertBeforeMap = undefined;
 		_runCallbacks();
 	}
@@ -893,12 +890,27 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				if (item) {
 					_processQueue.push(item);
 					instance && _instanceToWrapperMap.set(instance, next);
+					if (_deferredProcessQueue.length) {
+						_processQueue = [..._processQueue, ..._deferredProcessQueue];
+						_deferredProcessQueue = [];
+					}
 					_runProcessQueue();
 				}
 			}
 		}
+		_cleanUpMergedNodes();
 		_runDomInstructionQueue();
 		_runCallbacks();
+	}
+
+	function _cleanUpMergedNodes() {
+		if (_deferredProcessQueue.length === 0) {
+			let mergedNode: Node | undefined;
+			while ((mergedNode = _allMergedNodes.pop())) {
+				mergedNode.parentNode && mergedNode.parentNode.removeChild(mergedNode);
+			}
+			_mountOptions.merge = false;
+		}
 	}
 
 	function _runProcessQueue() {
@@ -996,7 +1008,9 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				item.current.instance = undefined;
 			}
 		}
-		_nodeToInstanceMap = new WeakMap();
+		if (_deferredProcessQueue.length === 0) {
+			_nodeToInstanceMap = new WeakMap();
+		}
 	}
 
 	function _runCallbacks() {
@@ -1086,14 +1100,27 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		}
 
 		for (let i = 0; i < instructions.length; i++) {
-			const { item, dom, widget } = _processOne(instructions[i]);
+			const result = _processOne(instructions[i]);
+			if (result === false) {
+				if (_mountOptions.merge && mergeNodes.length) {
+					if (newIndex < nextLength) {
+						_processQueue.pop();
+					}
+					_processQueue.push({ next, current, meta });
+					_deferredProcessQueue = _processQueue;
+					_processQueue = [];
+					break;
+				}
+				continue;
+			}
+			const { widget, item, dom } = result;
 			widget && _processQueue.push(widget);
 			item && _processQueue.push(item);
 			dom && _applicationQueue.push(dom);
 		}
 	}
 
-	function _processOne({ current, next }: Instruction): ProcessResult {
+	function _processOne({ current, next }: Instruction): ProcessResult | false {
 		if (current !== next) {
 			if (!current && next) {
 				if (isVNodeWrapper(next)) {
@@ -1118,14 +1145,15 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		return {};
 	}
 
-	function _createWidget({ next }: CreateWidgetInstruction): ProcessResult {
+	function _createWidget({ next }: CreateWidgetInstruction): ProcessResult | false {
 		let {
 			node: { widgetConstructor }
 		} = next;
 		let { registry } = _mountOptions;
+		resolveRegistryItem(next);
 		const Constructor = next.registryItem || widgetConstructor;
 		if (!isWidgetBaseConstructor(Constructor)) {
-			return {};
+			return false;
 		}
 		const instance = new Constructor() as WidgetBase;
 		if (registry) {

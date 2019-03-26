@@ -461,6 +461,54 @@ jsdomDescribe('vdom', () => {
 			});
 		});
 
+		it('Should pause rendering while merging to allow lazily loaded widgets to be loaded', () => {
+			const iframe = document.createElement('iframe');
+			document.body.appendChild(iframe);
+			iframe.contentDocument.write(`<div><span>54321</span><span>12345</span></div>`);
+			iframe.contentDocument.close();
+
+			const root = iframe.contentDocument.body.firstChild as HTMLElement;
+			const lazySpan = root.childNodes[0] as HTMLSpanElement;
+			const span = root.childNodes[1] as HTMLSpanElement;
+
+			const registry = new Registry();
+			class Foo extends WidgetBase {
+				render() {
+					return v('span', ['54321']);
+				}
+			}
+
+			let resolver: any;
+			const promise = new Promise<any>((resolve) => {
+				resolver = resolve;
+			});
+
+			class App extends WidgetBase {
+				render() {
+					return v('div', [
+						w(
+							{
+								label: 'foo',
+								registryItem: () => {
+									return promise;
+								}
+							},
+							{}
+						),
+						v('span', ['12345'])
+					]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ registry, domNode: iframe.contentDocument.body, sync: true });
+			resolver(Foo);
+			return promise.then(() => {
+				assert.strictEqual(root.childNodes[1], span);
+				assert.strictEqual(root.childNodes[0], lazySpan);
+			});
+		});
+
 		it('registry items', () => {
 			let resolver = () => {};
 			const registry = new Registry();
