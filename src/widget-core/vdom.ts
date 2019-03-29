@@ -1210,17 +1210,18 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 				let wrappers = current.childrenWrappers || [];
 				let wrapper: DNodeWrapper | undefined;
 				while ((wrapper = wrappers.pop())) {
-					if (wrapper.childrenWrappers) {
-						wrappers.push(...wrapper.childrenWrappers);
-						wrapper.childrenWrappers = undefined;
-					}
 					if (isWNodeWrapper(wrapper)) {
+						wrapper = wrapper.instance ? _instanceToWrapperMap.get(wrapper.instance) || wrapper : wrapper;
 						if (wrapper.instance) {
 							_instanceToWrapperMap.delete(wrapper.instance);
 							const instanceData = widgetInstanceMap.get(wrapper.instance);
 							instanceData && instanceData.onDetach();
 						}
 						wrapper.instance = undefined;
+					}
+					if (wrapper.childrenWrappers) {
+						wrappers.push(...wrapper.childrenWrappers);
+						wrapper.childrenWrappers = undefined;
 					}
 					_wrapperSiblingMap.delete(wrapper);
 					_parentWrapperMap.delete(wrapper);

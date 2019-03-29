@@ -1304,6 +1304,63 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual((div.childNodes[0]!.childNodes[0] as Text).data, 'Child One');
 		});
 
+		it('should always use the latest wrapper when processing removed nodes', () => {
+			let invalidateFoo: any;
+			let fooRenderCount = 0;
+			class Foo extends WidgetBase {
+				constructor() {
+					super();
+					invalidateFoo = () => {
+						this.invalidate();
+					};
+				}
+				render() {
+					fooRenderCount++;
+					return 'Foo';
+				}
+			}
+
+			let switchFoo: any;
+			class Bar extends WidgetBase {
+				private _showFoo = false;
+				constructor() {
+					super();
+					switchFoo = () => {
+						this._showFoo = !this._showFoo;
+						this.invalidate();
+					};
+				}
+				render() {
+					return v('div', [v('div', [!this._showFoo ? v('div') : w(Foo, {})])]);
+				}
+			}
+
+			let showApp: any;
+			class App extends WidgetBase {
+				private _showApp = true;
+				constructor() {
+					super();
+					showApp = () => {
+						this._showApp = !this._showApp;
+						this.invalidate();
+					};
+				}
+				render() {
+					return this._showApp ? v('div', [w(Bar, {})]) : null;
+				}
+			}
+
+			const div = document.createElement('div');
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual(fooRenderCount, 0);
+			switchFoo();
+			assert.strictEqual(fooRenderCount, 1);
+			showApp();
+			invalidateFoo();
+			assert.strictEqual(fooRenderCount, 1);
+		});
+
 		it('should allow a widget returned from render', () => {
 			class Bar extends WidgetBase<any> {
 				render() {
