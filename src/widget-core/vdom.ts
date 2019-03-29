@@ -1150,10 +1150,13 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 			node: { widgetConstructor }
 		} = next;
 		let { registry } = _mountOptions;
-		resolveRegistryItem(next);
-		const Constructor = next.registryItem || widgetConstructor;
+		let Constructor = next.registryItem || widgetConstructor;
 		if (!isWidgetBaseConstructor(Constructor)) {
-			return false;
+			resolveRegistryItem(next);
+			if (!next.registryItem) {
+				return false;
+			}
+			Constructor = next.registryItem;
 		}
 		const instance = new Constructor() as WidgetBase;
 		if (registry) {
