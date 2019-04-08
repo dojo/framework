@@ -39,7 +39,7 @@ export default class MyWidget extends WidgetBase {
 
 ## Making a widget themeable
 
-Allowing a [widget's default styles to be overridden by a theme](./supplemental.md#making-themeable-widgets):
+Extending `ThemedMixin`, applying the `@theme()` decorator to a widget's imported CSS modules, and wrapping CSS class names in calls to `this.theme()` when rendering to allow a [widget's default styles to be overridden by a theme](./supplemental.md#making-themeable-widgets):
 
 > src/widgets/MyWidget.tsx
 
@@ -83,7 +83,7 @@ export default {
 
 ## Abstracting common theme properties
 
-Making use of [CSS custom properties](./supplemental.md#css-custom-properties):
+Importing a central `variables.css` regular CSS file that defines [CSS custom properties](./supplemental.md#css-custom-properties), then referring to the custom properties via `var()`:
 
 > src/themes/variables.css
 
@@ -107,7 +107,7 @@ Making use of [CSS custom properties](./supplemental.md#css-custom-properties):
 
 ## Specifying a default application theme
 
-Using the [theme injector function](./supplemental.md#making-themeable-applications) to automatically provide a custom theme to all themeable widgets in an application:
+Using the theme injector function, [`registerThemeInjector()`](./supplemental.md#making-themeable-applications), to automatically provide a custom theme to all themeable widgets in an application:
 
 > src/main.tsx
 
