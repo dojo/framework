@@ -21,6 +21,7 @@ export interface AssertionTemplateResult {
 	getProperty(selector: string, property: string): any;
 	getProperties(selector: string): any;
 	replace(selector: string, node: DNode): AssertionTemplateResult;
+	remove(selector: string): AssertionTemplateResult;
 }
 
 type NodeWithProperties = (VNode | WNode) & { properties: { [index: string]: any } };
@@ -158,6 +159,17 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			const children = [...parent.children];
 			children.splice(children.indexOf(node), 1);
 			parent.children = [node, ...children];
+			return render;
+		});
+	};
+	assertionTemplateResult.remove = (selector: string) => {
+		return assertionTemplate(() => {
+			const render = renderFunc();
+			const node = guard(findOne(render, selector));
+			const parent = (node as any).parent;
+			const children = [...parent.children];
+			children.splice(children.indexOf(node), 1);
+			parent.children = [...children];
 			return render;
 		});
 	};
