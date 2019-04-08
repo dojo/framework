@@ -1,7 +1,6 @@
-import global from './global';
 `!has('build-elide')`;
 import 'web-animations-js/web-animations-next-lite.min';
-import has from '../has/has';
+import wrapper from './util/wrapper';
 
 export type AnimationEffectTimingFillMode = 'none' | 'forwards' | 'backwards' | 'both' | 'auto';
 export type AnimationEffectTimingPlaybackDirection = 'normal' | 'reverse' | 'alternate' | 'alternate-reverse';
@@ -117,45 +116,5 @@ export interface AnimationConstructor {
 	new (effect?: AnimationEffectReadOnly, timeline?: AnimationTimeline): Animation;
 }
 
-const _Animation = global.Animation as AnimationConstructor;
-const _KeyframeEffect = global.KeyframeEffect as KeyframeEffectConstructor;
-let animationReplacement: AnimationConstructor = _Animation;
-let keyframeEffectReplacement: KeyframeEffectConstructor = _KeyframeEffect;
-export let KeyframeEffect = class {
-	constructor(
-		target: HTMLElement,
-		effect: AnimationKeyFrame | AnimationKeyFrame[],
-		timing: number | AnimationEffectTiming,
-		id?: string
-	) {
-		return new keyframeEffectReplacement(target, effect, timing, id);
-	}
-} as KeyframeEffectConstructor;
-
-export let Animation = class {
-	constructor(effect?: AnimationEffectReadOnly, timeline?: AnimationTimeline) {
-		return new animationReplacement(effect, timeline);
-	}
-} as AnimationConstructor;
-
-export function replaceAnimation(_Animation: AnimationConstructor): () => void {
-	if (has('test')) {
-		animationReplacement = _Animation;
-		return () => {
-			animationReplacement = global.Animation as AnimationConstructor;
-		};
-	} else {
-		throw new Error('Replacement functionality is only available in a test environment');
-	}
-}
-
-export function replaceKeyframeEffect(_KeyframeEffect: KeyframeEffectConstructor): () => void {
-	if (has('test')) {
-		keyframeEffectReplacement = _KeyframeEffect;
-		return () => {
-			keyframeEffectReplacement = global.KeyframeEffect as KeyframeEffectConstructor;
-		};
-	} else {
-		throw new Error('Replacement functionality is only available in a test environment');
-	}
-}
+export const Animation = wrapper('Animation', true) as AnimationConstructor;
+export const KeyframeEffect = wrapper('KeyframeEffect', true) as KeyframeEffectConstructor;

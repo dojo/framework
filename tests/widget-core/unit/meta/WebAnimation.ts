@@ -1,16 +1,16 @@
+import global from '../../../../src/shim/global';
 const { assert } = intern.getPlugin('chai');
 const { after, afterEach, beforeEach, before, describe, it } = intern.getInterface('bdd');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
-import has, { add } from '../../../../src/has/has';
-import { replaceAnimation, replaceKeyframeEffect, AnimationEffectTiming } from '../../../../src/shim/WebAnimations';
+import { AnimationEffectTiming } from '../../../../src/shim/WebAnimations';
 import WebAnimation from '../../../../src/widget-core/meta/WebAnimation';
 import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 import { v } from '../../../../src/widget-core/d';
 import { spy, stub } from 'sinon';
 
 let animationExists = false;
-let handles: Array<() => void> = [];
-let hasTest: any;
+let globalAnimation: any;
+let globalKeyframeEffect: any;
 
 jsdomDescribe('WebAnimation', () => {
 	let effects: any;
@@ -54,17 +54,14 @@ jsdomDescribe('WebAnimation', () => {
 	let metaStub: any;
 
 	before(async () => {
-		try {
-			hasTest = has('test');
-		} catch {}
-
-		add('test', true, true);
-		class KeyframeEffectMock {
+		globalAnimation = global.Animation;
+		globalKeyframeEffect = global.KeyframeEffect;
+		global.KeyframeEffect = class {
 			constructor(...args: any[]) {
 				keyframeCtorStub(...args);
 			}
-		}
-		class AnimationMock {
+		};
+		global.Animation = class {
 			constructor(...args: any[]) {
 				animationCtorStub(...args);
 			}
@@ -110,13 +107,12 @@ jsdomDescribe('WebAnimation', () => {
 			set playbackRate(rate: number) {
 				playbackRateStub(rate);
 			}
-		}
-		handles.push(replaceKeyframeEffect(KeyframeEffectMock as any), replaceAnimation(AnimationMock as any));
+		};
 	});
 
 	after(() => {
-		add('test', typeof hasTest !== 'undefined' ? hasTest : false, true);
-		handles.forEach((handle) => handle());
+		global.KeyframeEffect = globalKeyframeEffect;
+		global.Animation = globalAnimation;
 	});
 
 	beforeEach(() => {

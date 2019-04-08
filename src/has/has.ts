@@ -486,3 +486,5 @@ add('dom-resize-observer', () => has('host-browser') && global.ResizeObserver !=
 add('dom-pointer-events', () => has('host-browser') && global.onpointerdown !== undefined, true);
 
 add('build-elide', false);
+
+add('test', false);

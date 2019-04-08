@@ -2,26 +2,20 @@ const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { stub, spy, SinonSpy } from 'sinon';
 import { NodeHandler } from './../../../../src/widget-core/NodeHandler';
+import global from '../../../../src/shim/global';
 import WidgetBase from '../../../../src/widget-core/WidgetBase';
 import Intersection from '../../../../src/widget-core/meta/Intersection';
-import { replace } from '../../../../src/shim/IntersectionObserver';
-import has, { add } from '../../../../src/has/has';
 
 let intersectionObserver: any;
 let bindInstance: WidgetBase;
 const observers: ([object, Function])[] = [];
 let normal = true;
 let observeStub: any;
-let hasTest: any;
-let handle: () => void;
+let globalIntersectionObserver: any;
 
 registerSuite('meta - Intersection', {
 	async before() {
-		try {
-			hasTest = has('test');
-		} catch {}
-
-		add('test', true, true);
+		globalIntersectionObserver = global.IntersectionObserver;
 		bindInstance = new WidgetBase();
 		observeStub = stub();
 		intersectionObserver = stub().callsFake(function(callback: any) {
@@ -42,8 +36,7 @@ registerSuite('meta - Intersection', {
 				return observer;
 			}
 		});
-
-		handle = replace(intersectionObserver);
+		global.IntersectionObserver = intersectionObserver;
 	},
 
 	afterEach() {
@@ -54,8 +47,7 @@ registerSuite('meta - Intersection', {
 	},
 
 	after() {
-		add('test', typeof hasTest !== 'undefined' ? hasTest : false, true);
-		handle();
+		global.IntersectionObserver = globalIntersectionObserver;
 	},
 
 	tests: {

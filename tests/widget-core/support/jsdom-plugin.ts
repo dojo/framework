@@ -1,4 +1,5 @@
 import global from '../../../src/shim/global';
+import { add } from '../../../src/has/has';
 import { TddSuiteFactory } from 'intern/lib/interfaces/tdd';
 import { ObjectSuiteDescriptor, ObjectSuiteFactory, Tests } from 'intern/lib/interfaces/object';
 
@@ -66,10 +67,13 @@ intern.registerPlugin('jsdom', async () => {
 				return global.fakeActiveElement();
 			}
 		});
+
+		add('test', true, true);
 	};
 
 	const uninitialize = () => {
 		global.document = global.window = global.Element = global.requestAnimationFrame = global.cancelAnimationFrame = global.IntersectionObserver = global.fakeActiveElement = undefined;
+		add('test', false, true);
 	};
 
 	function isSuiteDescriptor(object: any): object is ObjectSuiteDescriptor {
