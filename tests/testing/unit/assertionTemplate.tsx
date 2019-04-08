@@ -12,11 +12,20 @@ class MyWidget extends WidgetBase<{
 	prependChild?: boolean;
 	appendChild?: boolean;
 	replaceChild?: boolean;
+	removeHeader?: boolean;
 	before?: boolean;
 	after?: boolean;
 }> {
 	render() {
-		const { toggleProperty, prependChild, appendChild, replaceChild, before, after } = this.properties;
+		const {
+			toggleProperty,
+			prependChild,
+			appendChild,
+			replaceChild,
+			removeHeader,
+			before,
+			after
+		} = this.properties;
 		let children = ['hello'];
 		if (prependChild) {
 			children = ['prepend', ...children];
@@ -28,7 +37,7 @@ class MyWidget extends WidgetBase<{
 			children = ['replace'];
 		}
 		return v('div', { classes: ['root'] }, [
-			v('h2', children),
+			removeHeader ? undefined : v('h2', children),
 			before ? v('span', ['before']) : undefined,
 			v('ul', [v('li', { foo: toggleProperty ? 'b' : 'a' }, ['one']), v('li', ['two']), v('li', ['three'])]),
 			after ? v('span', ['after']) : undefined
@@ -114,6 +123,12 @@ describe('assertionTemplate', () => {
 	it('can replace a node', () => {
 		const h = harness(() => w(MyWidget, {}));
 		const childAssertion = baseAssertion.replace('~header', v('h2', { '~key': 'header' }, ['hello']));
+		h.expect(childAssertion);
+	});
+
+	it('can remove a node', () => {
+		const h = harness(() => w(MyWidget, { removeHeader: true }));
+		const childAssertion = baseAssertion.remove('~header');
 		h.expect(childAssertion);
 	});
 
