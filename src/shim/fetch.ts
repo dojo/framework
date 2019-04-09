@@ -2,4 +2,4 @@
 import 'cross-fetch/polyfill';
 import wrapper from './util/wrapper';
 
-export default wrapper('fetch') as (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+export default wrapper('fetch', false, true) as (input: RequestInfo, init?: RequestInit) => Promise<Response>;

@@ -1,7 +1,7 @@
 import global from '../global';
 import has from '../../has/has';
 
-export default function wrapper(nameOnGlobal: string, constructor = false): any {
+export default function wrapper(nameOnGlobal: string, constructor = false, bind = false): any {
 	if (has('test')) {
 		if (constructor) {
 			return function(...args: any[]) {
@@ -14,5 +14,5 @@ export default function wrapper(nameOnGlobal: string, constructor = false): any 
 		}
 	}
 
-	return global[nameOnGlobal];
+	return bind ? global[nameOnGlobal].bind(global) : global[nameOnGlobal];
 }

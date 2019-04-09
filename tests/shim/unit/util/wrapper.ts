@@ -59,6 +59,28 @@ registerSuite('wrapper', {
 			assert.equal(unboundFetch, fetchSpy);
 			assert.deepEqual(fetchSpy.args, [['foo']]);
 			assert.isFalse(newFetchSpy.called);
+		},
+
+		'should optionally bind the function to the global object when not in a test environment'() {
+			sandbox.stub(has, 'default').returns(false);
+
+			const fetchSpy = sinon.spy();
+			const bindSpy = sinon.stub().returns(fetchSpy);
+			global.fetch = {
+				bind: bindSpy
+			};
+			const unboundFetch = wrapper('fetch', false, true);
+			assert.isTrue(bindSpy.calledOnce);
+			assert.equal(bindSpy.firstCall.args[0], global);
+
+			const newFetchSpy = sinon.spy();
+			global.fetch = newFetchSpy;
+
+			unboundFetch('foo');
+
+			assert.equal(unboundFetch, fetchSpy);
+			assert.deepEqual(fetchSpy.args, [['foo']]);
+			assert.isFalse(newFetchSpy.called);
 		}
 	}
 });
