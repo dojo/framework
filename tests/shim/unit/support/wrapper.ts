@@ -44,23 +44,19 @@ registerSuite('wrapper', {
 			assert.deepEqual(constructorSpy.args, [['bar']]);
 		},
 
-		'should return the function itself bound to the global object if not in a test environment'() {
+		'should return the function itself if not in a test environment'() {
 			sandbox.stub(has, 'default').returns(false);
 
 			const fetchSpy = sinon.spy();
-			const bindSpy = sinon.stub().returns(fetchSpy);
-			global.fetch = {
-				bind: bindSpy
-			};
+			global.fetch = fetchSpy;
 			const unboundFetch = wrapper('fetch');
-			assert.isTrue(bindSpy.calledOnce);
-			assert.equal(bindSpy.firstCall.args[0], global);
 
 			const newFetchSpy = sinon.spy();
 			global.fetch = newFetchSpy;
 
 			unboundFetch('foo');
 
+			assert.equal(unboundFetch, fetchSpy);
 			assert.deepEqual(fetchSpy.args, [['foo']]);
 			assert.isFalse(newFetchSpy.called);
 		}

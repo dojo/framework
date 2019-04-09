@@ -14,5 +14,5 @@ export default function wrapper(nameOnGlobal: string, constructor = false): any 
 		}
 	}
 
-	return global[nameOnGlobal].bind(global);
+	return global[nameOnGlobal];
 }
