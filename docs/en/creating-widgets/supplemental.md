@@ -1,24 +1,15 @@
-- [Features](#features)
-	- [Basic Widgets](#basic-widgets)
-		- [Rendering a Widget in the DOM](#rendering-a-widget-in-the-dom)
-		- [Widgets and Properties](#widgets-and-properties)
-		- [Internal Widget State](#internal-widget-state)
-		- [Composing Widgets](#composing-widgets)
-		- [Decomposing Widgets](#decomposing-widgets)
-	- [Mixins](#mixins)
-	- [Animation](#animation)
-		- [Basic Example](#basic-example)
-		- [Changing Animation](#changing-animation)
-		- [Passing an effects function](#passing-an-effects-function)
-		- [Get animation info](#get-animation-info)
+- [Basic Widgets](#basic-widgets)
+	- [Rendering a Widget in the DOM](#rendering-a-widget-in-the-dom)
+	- [Widgets and Properties](#widgets-and-properties)
+	- [Internal Widget State](#internal-widget-state)
+	- [Composing Widgets](#composing-widgets)
+	- [Decomposing Widgets](#decomposing-widgets)
+- [Mixins](#mixins)
 - [Key Principles](#key-principles)
 - [Advanced Concepts](#advanced-concepts)
 	- [Handling Focus](#handling-focus)
 	- [Advanced Properties](#advanced-properties)
 		- [Property Diffing Reactions](#property-diffing-reactions)
-	- [Registry](#registry)
-		- [Registry Decorator](#registry-decorator)
-		- [Loading esModules](#loading-esmodules)
 	- [Decorator Lifecycle Hooks](#decorator-lifecycle-hooks)
 		- [beforeProperties](#beforeproperties)
 		- [AlwaysRender](#alwaysrender)
@@ -27,31 +18,67 @@
 	- [Method Lifecycle Hooks](#method-lifecycle-hooks)
 		- [onAttach](#onattach)
 		- [onDetach](#ondetach)
-	- [Containers & Injectors](#containers--injectors)
-	- [Decorators](#decorators)
-	- [Meta Configuration](#meta-configuration)
-		- [Dimensions](#dimensions)
-		- [Intersection](#intersection)
-		- [Animations](#animations)
-		- [Drag](#drag)
-		- [Focus](#focus)
-		- [Resize](#resize)
-		- [Implementing Custom Meta](#implementing-custom-meta)
-	- [Inserting DOM nodes into the VDom Tree](#inserting-dom-nodes-into-the-vdom-tree)
 	- [JSX Support](#jsx-support)
-	- [Web Components](#web-components)
-		- [Attributes](#attributes)
-		- [Properties](#properties)
-		- [Events](#events)
-		- [Tag Name](#tag-name)
+- [Web Components](#web-components)
+	- [Attributes](#attributes)
+	- [Properties](#properties)
+	- [Events](#events)
+	- [Tag Name](#tag-name)
+- [Interacting with the DOM](#interacting-with-the-dom)
+	- [Inserting DOM nodes into the VDom Tree](#inserting-dom-nodes-into-the-vdom-tree)
+- [Meta Configuration](#meta-configuration)
+	- [Dimensions](#dimensions)
+	- [Intersection](#intersection)
+	- [Animation](#animation)
+		- [Basic Example](#basic-example)
+		- [Changing Animation](#changing-animation)
+		- [Passing an effects function](#passing-an-effects-function)
+		- [Get animation info](#get-animation-info)
+	- [Drag](#drag)
+	- [Focus](#focus)
+	- [Resize](#resize)
+	- [Implementing Custom Meta](#implementing-custom-meta)
+- [Registry](#registry)
+	- [Registry Decorator](#registry-decorator)
+	- [Loading esModules](#loading-esmodules)
+	- [Containers & Injectors](#containers--injectors)
 
-# Features
+# Rendering in Dojo
 
-## Basic Widgets
+Dojo uses a virtual DOM (VDOM) abstraction to represent items intended for display. Rather than directly manipulating DOM elements, applications instead declare their component structure in a reactive way and let the framework handle concrete rendering responsibilities. Dojo's renderer takes care of determining any changes to an application's intended output, and enacts those changes on the actual DOM.
 
-Dojo applications use the Virtual DOM (vdom) paradigm to represent what should be shown on the view. These vdom nodes are plain JavaScript objects that are more efficient to create from a performance perspective than browser DOM elements. Dojo uses these vdom elements to synchronize and update the browser DOM so that the application shows the expected view.
+Nodes in the VDOM are simple JavaScript objects, and are more efficient to work with than concrete DOM elements. Dojo's renderer uses the VDOM to determine specific subsets of nodes affected by a given change, and can efficiently update the corresponding subtrees within the DOM. This results in increased rendering performance and a better overall user interactive experience.
 
-There are two types of vdom within Dojo. The first type provides a pure representation of DOM elements, the fundamental building blocks of all Dojo applications. These are called `VNode`s and are created using the `v()` function available from the `@dojo/framework/widget-core/d` module.
+## Working with the VDOM
+
+### VDOM node types
+
+Dojo recognizes two types of nodes within its VDOM:
+
+-   `VNode`s, or _Virtual Nodes_
+    -   These correspond to virtual representations of concrete DOM elements, and serve as the lowest-level rendering output for all Dojo applications.
+-   `WNode`s, or _Widget Nodes_
+    -   These are components that tie together application logic with other nodes in the VDOM (of either type). Widgets act as the fundamental building blocks that all Dojo applications of any significant complexity are built from.
+
+### Instantiating VDOM nodes
+
+Components in a Dojo application can import either of two utility functions, `v()` and `w()`, from the `@dojo/framework/widget-core/d` module. These two function create `VNode`s and `WNode`s, respectively. Their signatures, in abstract terms, are:
+
+-   `v(tagName | VNode, properties?, children?)`:
+    -   `tagName | VNode`:
+        -   Typically, components will pass in `tagName` as a string, which identifies the corresponding DOM element tag that will be rendered for the `VNode`.
+        -   If another `VNode` is passed instead, the newly created `VNode` will act as a copy of the original. If a `properties` argument is given, the copy will receive a set of merged properties with any duplicates in `properties` overriding those from the original `VNode`. If a `children` argument is passed, it will completely override the original `VNode`'s children.
+-   `w(Widget | constructor, properties?, children?)`
+    -   `Widget | constructor`:
+        -   Typically, components will pass in `Widget` as a reference to an imported class that inherits from `WidgetBase`.
+        -   Several types of `constructor`s can also be passed, allowing Dojo to instantiate a widget in a variety of different ways. These allow for features such as deferred/lazy loading. TODO: more on this later
+-   _(both the above)_:
+    -   `properties` _(optional)_:
+        -   The set of properties used to configure the newly created VDOM node. Changes to these also control whether the node is considered 'updated', at which point a render update needs to be made for the node and its children. TODO: more on this later
+    -   `children` _(optional)_:
+        -   An array of nodes to render as children of the newly created node. This can also include any text node children as literal strings, as required.
+
+These `VNode`s are created using the `v()` function available from the `@dojo/framework/widget-core/d` module.
 
 The following will create a `VNode` that represents a simple `div` DOM element, with a text node child: `Hello, Dojo!`:
 
@@ -71,7 +98,7 @@ class HelloDojo extends WidgetBase {
 }
 ```
 
-### Rendering a Widget in the DOM
+## Rendering a Widget in the DOM
 
 To display your new component in the view you will to use the `renderer` from the `@dojo/framework/widget-core/vdom` module. The `renderer` function accepts function that returns your component using the `w()` pragma and calling `.mount()` on the returned API.
 
@@ -128,7 +155,7 @@ const r = renderer(() => w(HelloDojo, {}));
 r.mount({ domNode: root });
 ```
 
-### Widgets and Properties
+## Widgets and Properties
 
 We have created a widget used to project our `VNode`s into the DOM, however, widgets can be composed of other widgets and `properties` which are used to determine if a widget needs to be re-rendered.
 
@@ -162,7 +189,7 @@ DOCSONLY-->
 
 New properties are compared with the previous properties to determine if a widget requires re-rendering. By default Dojo uses the `auto` diffing strategy, that performs a shallow comparison for objects and arrays, ignores functions (except classes that extend `WidgetBase`) and a reference comparison for all other values.
 
-### Internal Widget State
+## Internal Widget State
 
 It is common for widgets to maintain internal state, that directly affects the results of the render output or passed as properties to child widgets. The most common pattern is that an action (often user initiated via an event) occurs which updates the internal state leaving the user to manually call `this.invalidate()` to trigger a re-render.
 
@@ -190,7 +217,7 @@ class Counter extends WidgetBase {
 }
 ```
 
-### Composing Widgets
+## Composing Widgets
 
 As mentioned, often widgets are composed of other widgets in their `render` output. This promotes widget reuse across an application (or multiple applications) and promotes widget best practices.
 
@@ -218,7 +245,7 @@ const r = renderer(() => w(App, {}));
 r.mount({ domNode: root });
 ```
 
-### Decomposing Widgets
+## Decomposing Widgets
 
 Splitting widgets into multiple smaller widgets is easy and helps to add extended functionality and promotes reuse.
 
@@ -336,7 +363,7 @@ DOCSONLY-->
 
 Additionally, the `ListItem` is now reusable in other areas of our application(s).
 
-## Mixins
+# Mixins
 
 Dojo makes use of mixins to decorate additional functionality and properties to existing widgets. Mixins provide a mechanism that allows loosely coupled design and composition of behaviors into existing widgets without having to change the base widget.
 
@@ -372,129 +399,6 @@ function StateMixin<T extends new (...args: any[]) => WidgetBase>(Base: T): T & 
 ```
 
 Examples of Dojo mixins can be seen with `ThemedMixin` and `I18nMixin` that are described in [Styling & Theming](#styling--theming) and [Internationalization](#internationalization) sections.
-
-## Animation
-
-Dojo widget-core provides a `WebAnimation` meta to apply web animations to VNodes.
-
-To specify the web animations pass an `AnimationProperties` object to the `WebAnimation` meta along with the key of the node you wish to animate. This can be a single animation or an array or animations.
-
-**Note**: The Web Animations API is not currently available even in the latest browsers. To use the Web Animations API, a polyfill needs to be included. Dojo does not include the polyfill by default, so will need to be added as a script tag in your index.html or alternatively imported in the application’s main.ts using `import 'web-animations-js/web-animations-next-lite.min';` after including the dependency in your source tree, or by importing `@dojo/framework/shim/browser`.
-
-### Basic Example
-
-```ts
-export default class AnimatedWidget extends WidgetBase {
-	protected render() {
-		const animate = {
-			id: 'rootAnimation',
-			effects: [{ height: '10px' }, { height: '100px' }],
-			controls: {
-				play: true
-			}
-		};
-
-		this.meta(WebAnimation).animate('root', animate);
-
-		return v('div', {
-			key: 'root'
-		});
-	}
-}
-```
-
-`controls` and `timing` are optional properties and are used to setup and control the animation. The `timing` property can only be set once, but the `controls` can be changed to apply stop, start, reverse, and other actions on the web animation.
-
-### Changing Animation
-
-Animations can be changed on each widget render in a reactive pattern, for example changing the animation from `slideUp` to `slideDown` on a title pane depending on the titlepane being open or not.
-
-```ts
-export default class AnimatedWidget extends WidgetBase {
-	private _open = false;
-
-	protected render() {
-		const animate = this._open
-			? {
-					id: 'upAnimation',
-					effects: [{ height: '100px' }, { height: '0px' }],
-					controls: {
-						play: true
-					}
-			  }
-			: {
-					id: 'downAnimation',
-					effects: [{ height: '0px' }, { height: '100px' }],
-					controls: {
-						play: true
-					}
-			  };
-
-		this.meta(WebAnimation).animate('root', animate);
-
-		return v('div', {
-			key: 'root'
-		});
-	}
-}
-```
-
-### Passing an effects function
-
-An `effects` function can be passed to the animation and evaluated at render time. This allows you to create programmatic effects such as those depending on measurements from the `Dimensions` `Meta`.
-
-```ts
-export default class AnimatedWidget extends WidgetBase {
-	private _getEffect() {
-		const { scroll } = this.meta(Dimensions).get('content');
-
-		return [{ height: '0px' }, { height: `${scroll.height}px` }];
-	}
-
-	protected render() {
-		const animate = {
-			id: 'upAnimation',
-			effects: this._getEffect(),
-			controls: {
-				play: true
-			}
-		};
-
-		this.meta(WebAnimation).animate('root', animate);
-
-		return v('div', {
-			key: 'root'
-		});
-	}
-}
-```
-
-### Get animation info
-
-The `WebAnimation` meta provides a `get` function that can be used to retrieve information about an animation via its `id`.
-This info contains the currentTime, playState, playbackRate and startTime of the animation. If no animation is found or the animation has been cleared this will return undefined.
-
-```ts
-export default class AnimatedWidget extends WidgetBase {
-	protected render() {
-		const animate = {
-			id: 'rootAnimation',
-			effects: [{ height: '10px' }, { height: '100px' }],
-			controls: {
-				play: true
-			}
-		};
-
-		this.meta(WebAnimation).animate('root', animate);
-
-		const info = this.meta(WebAnimation).get('rootAnimation');
-
-		return v('div', {
-			key: 'root'
-		});
-	}
-}
-```
 
 # Key Principles
 
@@ -702,81 +606,6 @@ class MyWidget extends WidgetBase {
 }
 ```
 
-## Registry
-
-The `Registry` provides a mechanism to define widgets and injectors (see the [`Containers & Injectors`](#containers--injectors) section), that can be dynamically/lazily loaded on request. Once the registry widget is loaded all widgets that need the newly loaded widget will be invalidated and re-rendered automatically.
-
-A main registry can be provided to the `renderer`, which will be automatically passed to all widgets within the tree (referred to as `baseRegistry`). Each widget also gets access to a private `Registry` instance that can be used to define registry items that are scoped to the widget. The locally defined registry items are considered a higher precedence than an item registered in the `baseRegistry`.
-
-```ts
-import { Registry } from '@dojo/framework/widget-core/Registry';
-import { w } from '@dojo/framework/widget-core/d';
-
-import MyWidget from './MyWidget';
-import MyAppContext from './MyAppContext';
-import App from './App';
-
-const registry = new Registry();
-
-registry.define('my-widget', MyWidget);
-
-registry.defineInjector('my-injector', (invalidator) => {
-	const appContext = new MyAppContext(invalidator);
-	return () => appContext;
-});
-
-const r = renderer(() => w(App, {}));
-r.registry = registry;
-```
-
-In some scenarios, it might be desirable to allow the `baseRegistry` to override an item defined in the local `registry`. Use true as the second argument of the registry.get function to override the local item.
-
-The Registry will automatically detect and handle widget constructors as default exports for imported esModules for you.
-
-### Registry Decorator
-
-A registry decorator is provided to make adding widgets to a local registry easier. The decorator can be stacked to register multiple entries.
-
-```ts
-// single entry
-@registry('loading', LoadingWidget)
-class MyWidget extends WidgetBase {
-	render() {
-		if (this.properties) {
-			const LoadingWidget = this.registry.get('loading', true);
-			return w(LoadingWidget, {});
-		}
-		return w(MyActualChildWidget, {});
-	}
-}
-
-// multiple entries
-@registry('loading', LoadingWidget)
-@registry('heading', () => import('./HeadingWidget'))
-class MyWidget extends WidgetBase {
-	render() {
-		if (this.properties) {
-			const LoadingWidget = this.registry.get('loading', true);
-			return w(LoadingWidget, {});
-		}
-		return w(MyActualChildWidget, {}, [w('heading', {})]);
-	}
-}
-```
-
-### Loading esModules
-
-The registry can handle the detection of imported esModules for you that have the widget constructor as the default export. This means that your callback function can simply return the `import` call. If the widget constructor is not the default export you will need to pass it manually.
-
-```ts
-@registry('Button', () => import('./Button')) // default export
-@registry('Table', async () => {
-	const module = await import('./HeadingWidget');
-	return module.table;
-})
-class MyWidget extends WidgetBase {}
-```
-
 ## Decorator Lifecycle Hooks
 
 Occasionally, in a mixin or a widget class, it may be required to provide logic that needs to be executed before properties are diffed using `beforeProperties`, either side of a widget's `render` call using `beforeRender` & `afterRender` or after a constructor using `afterContructor`.
@@ -876,83 +705,181 @@ class MyClass extends WidgetBase {
 }
 ```
 
-## Containers & Injectors
+## JSX Support
 
-There is built-in support for side-loading/injecting values into sections of the widget tree and mapping them to a widget's properties. This is achieved by registering an injector factory with a `registry` and setting the registry on the application's `renderer` to ensure the registry instance is available to your application.
+In addition to creating widgets functionally using the `v()` and `w()` functions from `@dojo/framework/widget-core/d`, Dojo optionally supports the use of the `jsx` syntax known as [`tsx`](https://www.typescriptlang.org/docs/handbook/jsx.html) in TypeScript.
 
-Create a factory function for a function that returns the required `payload`.
+To start to use `jsx` in your project, widgets need to be named with a `.tsx` extension and some configuration is required in the project's `tsconfig.json`:
 
-```ts
-registry.defineInjector('my-injector', () => {
-	return () => ({ foo: 'bar' });
-});
+Add the configuration options for `jsx`:
+
+```js
+"jsx": "react",
+"jsxFactory": "tsx",
 ```
 
-The injector factory gets passed an `invalidator` function that can get called when something has changed that requires connected widgets to `invalidate`.
+Include `.tsx` files in the project:
 
-```ts
-registry.defineInjector('my-injector', (invalidator) => {
-	// This could be a store, but for this example it is simply an instance
-	// that accepts the `invalidator` and calls it when any of its internal
-	// state has changed.
-	const appContext = new AppContext(invalidator);
-	return () => appContext;
-});
+```js
+ "include": [
+	"./src/**/*.ts",
+	"./src/**/*.tsx"
+ ]
 ```
 
-To connect the registered `payload` to a widget, we can use the `Container` HOC (higher order component) provided by `widget-core`. The `Container` accepts a widget `constructor`, `injector` label, and `getProperties` mapping function as arguments and returns a new class that returns the passed widget from its `render` function.
-
-`getProperties` receives the `payload` returned from the injector function and the `properties` passed to the container HOC component. These are used to map into the wrapped widget's properties.
+Once the project is configured, `tsx` can be used in a widget's `render` function simply by importing the `tsx` function as:
 
 ```ts
-import { Container } from '@dojo/framework/widget-core/Container';
-import { MyWidget } from './MyWidget';
-
-function getProperties(payload: any, properties: any) {
-	return {
-		foo: payload.foo
-	};
-}
-
-export const MyWidgetContainer = Container(MyWidget, 'my-injector', getProperties);
+import { tsx } from '@dojo/framework/widget-core/tsx';
 ```
 
-The returned class from `Container` HOC is then used in place of the widget it wraps, the container assumes the properties type of the wrapped widget, however, they all considered optional.
+```tsx
+class MyWidgetWithTsx extends Themed(WidgetBase)<MyProperties> {
+	protected render(): DNode {
+		const {
+			clear,
+			properties: { completed, count, activeCount, activeFilter }
+		} = this;
 
-```ts
-// import { MyWidget } from './MyWidget';
-import { MyWidgetContainer } from './MyWidgetContainer';
-
-interface AppProperties {
-	foo: string;
-}
-
-class App extends WidgetBase<AppProperties> {
-	render() {
-		return v('div', {}, [
-			// w(MyWidget, { foo: 'bar' })
-			w(MyWidgetContainer, {})
-		]);
+		return (
+			<footer classes={this.theme(css.footer)}>
+				<span classes={this.theme(css.count)}>
+					<strong>{`${activeCount}`}</strong>
+					<span>{`${count}`}</span>
+				</span>
+				<TodoFilter activeFilter={activeFilter} />
+				{completed ? <button onclick={clear} /> : null}
+			</footer>
+		);
 	}
 }
 ```
 
-## Decorators
+# Web Components
 
-All core decorators provided by widget-core, can be used in non-decorator environments (Either JavaScript/ES6 or a TypeScript project that does not have the experimental decorators configuration set to true in the `tsconfig`) programmatically by calling them directly, usually within a Widget class' `constructor`.
+Widgets can be turned into [Custom Elements](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) with
+minimal extra effort.
 
-Example usages:
+The `customElement` decorator can be used to annotate the widget class
+that should be converted to a custom element,
 
-```ts
-constructor() {
-	beforeProperties(this.myBeforeProperties)(this);
-	beforeRender(myBeforeRender)(this);
-	afterRender(this.myAfterRender)(this);
-	diffProperty('myProperty', this.myPropertyDiff)(this);
+```typescript
+interface MyWidgetProperties {
+	onClick: (event: Event) => void;
+	foo: string;
+	bar: string;
+}
+
+@customElement<MyWidgetProperties>({
+	tag: 'my-widget',
+	attributes: ['foo', 'bar'],
+	events: ['onClick']
+})
+class MyWidget extends WidgetBase<MyWidgetProperties> {
+	// ...
 }
 ```
 
-## Meta Configuration
+**Note**: The Custom Elements API is not available in all browsers. To use
+Custom Elements in all browsers supported by Dojo, a polyfill needs to be
+included such as webcomponents/custom-elements/master/custom-elements.min.js.
+Dojo does not include the polyfill by default, so will need to be
+added as a script tag in your index.html. Note that this polyfill cannot
+currently be ponyfilled like other polyfills used in Dojo, so it cannot
+be added with @dojo/framework/shim/browser or imported using ES modules.
+
+No additional steps are required. The custom element
+can be used in your application automatically. The decorator can be provided
+with configuration options to modify the functionality of the custom
+element.
+
+## Attributes
+
+An array of attribute names that should be set as properties on the widget.
+The attribute name should be the same as the corresponding property on the widget.
+
+## Properties
+
+An array of property names that will be accessible programmatically on the
+custom element but not as attributes. The property name must match
+the corresponding widget property.
+
+## Events
+
+Some widgets have function properties, like events, that need to be exposed to your element. You can use the
+`events` array to specify widget properties to map to DOM events.
+
+```ts
+{
+	events: ['onChange'];
+}
+```
+
+This will add a property to `onChange` that will emit the `change` custom event. You can listen like any other
+DOM event,
+
+```ts
+textWidget.addEventListener('change', function(event) {
+	// do something
+});
+```
+
+The name of the event is determined by removing the `'on'` prefix from the name
+and lower-casing the resulting name.
+
+## Tag Name
+
+Your widget will be registered with the browser using the provided tag name. The tag name **must** have a `-` in it.
+
+# Interacting with the DOM
+
+## Inserting DOM nodes into the VDom Tree
+
+The `dom()` function is used to wrap DOM that is created outside of Dojo. This is the only mechanism to integrate foreign DOM nodes into the virtual DOM system.
+
+`dom()` works much like `v()` but instead of taking a `tag` it accepts an existing DOM node and creates a `VNode` that references the DOM node and the vdom system will reuse this node. Unlike `v()` a `diffType` can be passed that indicates the mode to use when determining if a property or attribute has changed and needs to be applied, the default is `none`.
+
+-   `none`: This mode will always pass an empty object as the previous `attributes` and `properties` so the `props` and `attrs` passed to `dom()` will always be applied.
+-   `dom`: This mode uses the `attributes` and `properties` from the DOM node for the diff.
+-   `vdom`: This mode will use the previous `VNode` for the diff, this is the mode used normally during the vdom rendering.
+
+**Note:** All modes use the events from the previous VNode to ensure that they are correctly removed and applied each render.
+
+```ts
+const node = document.createElement('div');
+
+const vnode = dom({
+	node,
+	props: {
+		foo: 'foo',
+		bar: 1
+	},
+	attrs: {
+		baz: 'baz'
+	},
+	on: {
+		click: () => {
+			console.log('clicker');
+		}
+	},
+	diffType: 'none' | 'dom' | 'vdom'
+});
+```
+
+To execute a function after the node has been appended to the DOM, there is an `onAttach` property that will be executed immediately after the append has occurred.
+
+```ts
+const node = document.createElement('div');
+
+const vnode = dom({
+	node,
+	onAttach: () => {
+		// do things after the node has been attached
+	}
+});
+```
+
+# Meta Configuration
 
 Widget meta is used to access additional information about the widget, usually information only available through the rendered DOM element - for example, the dimensions of an HTML node. You can access and respond to metadata during a widget's render operation.
 
@@ -971,7 +898,7 @@ class TestWidget extends WidgetBase {
 
 If an HTML node is required to calculate the meta information, a sensible default will be returned and your widget will be automatically re-rendered to provide more accurate information.
 
-### Dimensions
+## Dimensions
 
 The `Dimensions` meta provides size/position information about a node.
 
@@ -1010,7 +937,7 @@ If the node has not yet been rendered, all values will contain `0`. If you need 
 const hasRootBeenRendered = this.meta(Dimensions).has('root');
 ```
 
-### Intersection
+## Intersection
 
 The Intersection Meta provides information on whether a Node is visible in the application's viewport using the [Intersection Observer API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API).
 
@@ -1060,11 +987,130 @@ class List extends WidgetBase {
 }
 ```
 
-### Animations
+## Animation
 
-See the [Animation](#animation) section more information.
+Dojo widget-core provides a `WebAnimation` meta to apply web animations to VNodes.
 
-### Drag
+To specify the web animations pass an `AnimationProperties` object to the `WebAnimation` meta along with the key of the node you wish to animate. This can be a single animation or an array or animations.
+
+**Note**: The Web Animations API is not currently available even in the latest browsers. To use the Web Animations API, a polyfill needs to be included. Dojo does not include the polyfill by default, so will need to be added as a script tag in your index.html or alternatively imported in the application’s main.ts using `import 'web-animations-js/web-animations-next-lite.min';` after including the dependency in your source tree, or by importing `@dojo/framework/shim/browser`.
+
+### Basic Example
+
+```ts
+export default class AnimatedWidget extends WidgetBase {
+	protected render() {
+		const animate = {
+			id: 'rootAnimation',
+			effects: [{ height: '10px' }, { height: '100px' }],
+			controls: {
+				play: true
+			}
+		};
+
+		this.meta(WebAnimation).animate('root', animate);
+
+		return v('div', {
+			key: 'root'
+		});
+	}
+}
+```
+
+`controls` and `timing` are optional properties and are used to setup and control the animation. The `timing` property can only be set once, but the `controls` can be changed to apply stop, start, reverse, and other actions on the web animation.
+
+### Changing Animation
+
+Animations can be changed on each widget render in a reactive pattern, for example changing the animation from `slideUp` to `slideDown` on a title pane depending on the titlepane being open or not.
+
+```ts
+export default class AnimatedWidget extends WidgetBase {
+	private _open = false;
+
+	protected render() {
+		const animate = this._open
+			? {
+					id: 'upAnimation',
+					effects: [{ height: '100px' }, { height: '0px' }],
+					controls: {
+						play: true
+					}
+			  }
+			: {
+					id: 'downAnimation',
+					effects: [{ height: '0px' }, { height: '100px' }],
+					controls: {
+						play: true
+					}
+			  };
+
+		this.meta(WebAnimation).animate('root', animate);
+
+		return v('div', {
+			key: 'root'
+		});
+	}
+}
+```
+
+### Passing an effects function
+
+An `effects` function can be passed to the animation and evaluated at render time. This allows you to create programmatic effects such as those depending on measurements from the `Dimensions` `Meta`.
+
+```ts
+export default class AnimatedWidget extends WidgetBase {
+	private _getEffect() {
+		const { scroll } = this.meta(Dimensions).get('content');
+
+		return [{ height: '0px' }, { height: `${scroll.height}px` }];
+	}
+
+	protected render() {
+		const animate = {
+			id: 'upAnimation',
+			effects: this._getEffect(),
+			controls: {
+				play: true
+			}
+		};
+
+		this.meta(WebAnimation).animate('root', animate);
+
+		return v('div', {
+			key: 'root'
+		});
+	}
+}
+```
+
+### Get animation info
+
+The `WebAnimation` meta provides a `get` function that can be used to retrieve information about an animation via its `id`.
+This info contains the currentTime, playState, playbackRate and startTime of the animation. If no animation is found or the animation has been cleared this will return undefined.
+
+```ts
+export default class AnimatedWidget extends WidgetBase {
+	protected render() {
+		const animate = {
+			id: 'rootAnimation',
+			effects: [{ height: '10px' }, { height: '100px' }],
+			controls: {
+				play: true
+			}
+		};
+
+		this.meta(WebAnimation).animate('root', animate);
+
+		const info = this.meta(WebAnimation).get('rootAnimation');
+
+		return v('div', {
+			key: 'root'
+		});
+	}
+}
+```
+
+## Drag
 
 The `Drag` meta allows a consuming widget to determine if its nodes are being dragged and by how much. The meta provider abstracts away the need for dealing with modeling specific mouse, pointer, and touch events to create a drag state.
 
@@ -1137,7 +1183,7 @@ class VerticalScrollBarController extends WidgetBase {
 As can be seen in the above code, the meta provider simply provides information which the widgets can react to. The implementation
 needs to react to these changes.
 
-### Focus
+## Focus
 
 The `Focus` meta determines whether a given node is focused or contains document focus. Calling `this.meta(Focus).get(key)` returns the following results object:
 
@@ -1191,7 +1237,7 @@ class MyWidget extends WidgetBase {
 }
 ```
 
-### Resize
+## Resize
 
 The resize observer meta uses the latest [`ResizeObserver`](https://wicg.github.io/ResizeObserver/) within Dojo based widgets.
 
@@ -1230,7 +1276,7 @@ class TestWidget extends WidgetBase {
 }
 ```
 
-### Implementing Custom Meta
+## Implementing Custom Meta
 
 You can create your own meta if you need access to DOM nodes.
 
@@ -1287,174 +1333,138 @@ class IsTallMeta extends MetaBase {
 }
 ```
 
-## Inserting DOM nodes into the VDom Tree
+# Registry
 
-The `dom()` function is used to wrap DOM that is created outside of Dojo. This is the only mechanism to integrate foreign DOM nodes into the virtual DOM system.
+The `Registry` provides a mechanism to define widgets and injectors (see the [`Containers & Injectors`](#containers--injectors) section), that can be dynamically/lazily loaded on request. Once the registry widget is loaded all widgets that need the newly loaded widget will be invalidated and re-rendered automatically.
 
-`dom()` works much like `v()` but instead of taking a `tag` it accepts an existing DOM node and creates a `VNode` that references the DOM node and the vdom system will reuse this node. Unlike `v()` a `diffType` can be passed that indicates the mode to use when determining if a property or attribute has changed and needs to be applied, the default is `none`.
-
--   `none`: This mode will always pass an empty object as the previous `attributes` and `properties` so the `props` and `attrs` passed to `dom()` will always be applied.
--   `dom`: This mode uses the `attributes` and `properties` from the DOM node for the diff.
--   `vdom`: This mode will use the previous `VNode` for the diff, this is the mode used normally during the vdom rendering.
-
-**Note:** All modes use the events from the previous VNode to ensure that they are correctly removed and applied each render.
+A main registry can be provided to the `renderer`, which will be automatically passed to all widgets within the tree (referred to as `baseRegistry`). Each widget also gets access to a private `Registry` instance that can be used to define registry items that are scoped to the widget. The locally defined registry items are considered a higher precedence than an item registered in the `baseRegistry`.
 
 ```ts
-const node = document.createElement('div');
+import { Registry } from '@dojo/framework/widget-core/Registry';
+import { w } from '@dojo/framework/widget-core/d';
 
-const vnode = dom({
-	node,
-	props: {
-		foo: 'foo',
-		bar: 1
-	},
-	attrs: {
-		baz: 'baz'
-	},
-	on: {
-		click: () => {
-			console.log('clicker');
+import MyWidget from './MyWidget';
+import MyAppContext from './MyAppContext';
+import App from './App';
+
+const registry = new Registry();
+
+registry.define('my-widget', MyWidget);
+
+registry.defineInjector('my-injector', (invalidator) => {
+	const appContext = new MyAppContext(invalidator);
+	return () => appContext;
+});
+
+const r = renderer(() => w(App, {}));
+r.registry = registry;
+```
+
+In some scenarios, it might be desirable to allow the `baseRegistry` to override an item defined in the local `registry`. Use true as the second argument of the registry.get function to override the local item.
+
+The Registry will automatically detect and handle widget constructors as default exports for imported esModules for you.
+
+## Registry Decorator
+
+A registry decorator is provided to make adding widgets to a local registry easier. The decorator can be stacked to register multiple entries.
+
+```ts
+// single entry
+@registry('loading', LoadingWidget)
+class MyWidget extends WidgetBase {
+	render() {
+		if (this.properties) {
+			const LoadingWidget = this.registry.get('loading', true);
+			return w(LoadingWidget, {});
 		}
-	},
-	diffType: 'none' | 'dom' | 'vdom'
-});
-```
-
-To execute a function after the node has been appended to the DOM, there is an `onAttach` property that will be executed immediately after the append has occurred.
-
-```ts
-const node = document.createElement('div');
-
-const vnode = dom({
-	node,
-	onAttach: () => {
-		// do things after the node has been attached
+		return w(MyActualChildWidget, {});
 	}
-});
-```
+}
 
-## JSX Support
-
-In addition to creating widgets functionally using the `v()` and `w()` functions from `@dojo/framework/widget-core/d`, Dojo optionally supports the use of the `jsx` syntax known as [`tsx`](https://www.typescriptlang.org/docs/handbook/jsx.html) in TypeScript.
-
-To start to use `jsx` in your project, widgets need to be named with a `.tsx` extension and some configuration is required in the project's `tsconfig.json`:
-
-Add the configuration options for `jsx`:
-
-```js
-"jsx": "react",
-"jsxFactory": "tsx",
-```
-
-Include `.tsx` files in the project:
-
-```js
- "include": [
-	"./src/**/*.ts",
-	"./src/**/*.tsx"
- ]
-```
-
-Once the project is configured, `tsx` can be used in a widget's `render` function simply by importing the `tsx` function as:
-
-```ts
-import { tsx } from '@dojo/framework/widget-core/tsx';
-```
-
-```tsx
-class MyWidgetWithTsx extends Themed(WidgetBase)<MyProperties> {
-	protected render(): DNode {
-		const {
-			clear,
-			properties: { completed, count, activeCount, activeFilter }
-		} = this;
-
-		return (
-			<footer classes={this.theme(css.footer)}>
-				<span classes={this.theme(css.count)}>
-					<strong>{`${activeCount}`}</strong>
-					<span>{`${count}`}</span>
-				</span>
-				<TodoFilter activeFilter={activeFilter} />
-				{completed ? <button onclick={clear} /> : null}
-			</footer>
-		);
+// multiple entries
+@registry('loading', LoadingWidget)
+@registry('heading', () => import('./HeadingWidget'))
+class MyWidget extends WidgetBase {
+	render() {
+		if (this.properties) {
+			const LoadingWidget = this.registry.get('loading', true);
+			return w(LoadingWidget, {});
+		}
+		return w(MyActualChildWidget, {}, [w('heading', {})]);
 	}
 }
 ```
 
-## Web Components
+## Loading esModules
 
-Widgets can be turned into [Custom Elements](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) with
-minimal extra effort.
+The registry can handle the detection of imported esModules for you that have the widget constructor as the default export. This means that your callback function can simply return the `import` call. If the widget constructor is not the default export you will need to pass it manually.
 
-The `customElement` decorator can be used to annotate the widget class
-that should be converted to a custom element,
-
-```typescript
-interface MyWidgetProperties {
-	onClick: (event: Event) => void;
-	foo: string;
-	bar: string;
-}
-
-@customElement<MyWidgetProperties>({
-	tag: 'my-widget',
-	attributes: ['foo', 'bar'],
-	events: ['onClick']
+```ts
+@registry('Button', () => import('./Button')) // default export
+@registry('Table', async () => {
+	const module = await import('./HeadingWidget');
+	return module.table;
 })
-class MyWidget extends WidgetBase<MyWidgetProperties> {
-	// ...
-}
+class MyWidget extends WidgetBase {}
 ```
 
-**Note**: The Custom Elements API is not available in all browsers. To use
-Custom Elements in all browsers supported by Dojo, a polyfill needs to be
-included such as webcomponents/custom-elements/master/custom-elements.min.js.
-Dojo does not include the polyfill by default, so will need to be
-added as a script tag in your index.html. Note that this polyfill cannot
-currently be ponyfilled like other polyfills used in Dojo, so it cannot
-be added with @dojo/framework/shim/browser or imported using ES modules.
+## Containers & Injectors
 
-No additional steps are required. The custom element
-can be used in your application automatically. The decorator can be provided
-with configuration options to modify the functionality of the custom
-element.
+There is built-in support for side-loading/injecting values into sections of the widget tree and mapping them to a widget's properties. This is achieved by registering an injector factory with a `registry` and setting the registry on the application's `renderer` to ensure the registry instance is available to your application.
 
-### Attributes
-
-An array of attribute names that should be set as properties on the widget.
-The attribute name should be the same as the corresponding property on the widget.
-
-### Properties
-
-An array of property names that will be accessible programmatically on the
-custom element but not as attributes. The property name must match
-the corresponding widget property.
-
-### Events
-
-Some widgets have function properties, like events, that need to be exposed to your element. You can use the
-`events` array to specify widget properties to map to DOM events.
+Create a factory function for a function that returns the required `payload`.
 
 ```ts
-{
-	events: ['onChange'];
-}
-```
-
-This will add a property to `onChange` that will emit the `change` custom event. You can listen like any other
-DOM event,
-
-```ts
-textWidget.addEventListener('change', function(event) {
-	// do something
+registry.defineInjector('my-injector', () => {
+	return () => ({ foo: 'bar' });
 });
 ```
 
-The name of the event is determined by removing the `'on'` prefix from the name
-and lower-casing the resulting name.
+The injector factory gets passed an `invalidator` function that can get called when something has changed that requires connected widgets to `invalidate`.
 
-### Tag Name
+```ts
+registry.defineInjector('my-injector', (invalidator) => {
+	// This could be a store, but for this example it is simply an instance
+	// that accepts the `invalidator` and calls it when any of its internal
+	// state has changed.
+	const appContext = new AppContext(invalidator);
+	return () => appContext;
+});
+```
 
-Your widget will be registered with the browser using the provided tag name. The tag name **must** have a `-` in it.
+To connect the registered `payload` to a widget, we can use the `Container` HOC (higher order component) provided by `widget-core`. The `Container` accepts a widget `constructor`, `injector` label, and `getProperties` mapping function as arguments and returns a new class that returns the passed widget from its `render` function.
+
+`getProperties` receives the `payload` returned from the injector function and the `properties` passed to the container HOC component. These are used to map into the wrapped widget's properties.
+
+```ts
+import { Container } from '@dojo/framework/widget-core/Container';
+import { MyWidget } from './MyWidget';
+
+function getProperties(payload: any, properties: any) {
+	return {
+		foo: payload.foo
+	};
+}
+
+export const MyWidgetContainer = Container(MyWidget, 'my-injector', getProperties);
+```
+
+The returned class from `Container` HOC is then used in place of the widget it wraps, the container assumes the properties type of the wrapped widget, however, they all considered optional.
+
+```ts
+// import { MyWidget } from './MyWidget';
+import { MyWidgetContainer } from './MyWidgetContainer';
+
+interface AppProperties {
+	foo: string;
+}
+
+class App extends WidgetBase<AppProperties> {
+	render() {
+		return v('div', {}, [
+			// w(MyWidget, { foo: 'bar' })
+			w(MyWidgetContainer, {})
+		]);
+	}
+}
+```
