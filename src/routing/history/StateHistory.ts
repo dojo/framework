@@ -53,6 +53,9 @@ export class StateHistory implements HistoryInterface {
 	}
 
 	public set(path: string) {
+		if (path === this._window.location.pathname) {
+			return;
+		}
 		this._window.history.pushState({}, '', this.prefix(stripBase(this._base, path)));
 		this._onChange();
 	}
