@@ -57,6 +57,16 @@ describe('StateHistory', () => {
 		assert.equal(sandbox.contentWindow!.location.pathname, '/foo');
 	});
 
+	it('update path, does not update path if path is set to the current value', () => {
+		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+		history.set('foo');
+		history.set('bar');
+		history.set('bar');
+		sandbox.contentWindow!.history.back();
+		assert.equal(history.current, '/foo');
+		assert.equal(sandbox.contentWindow!.location.pathname, '/foo');
+	});
+
 	it('update path, adds leading slash if necessary', () => {
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
 		history.set('foo');
