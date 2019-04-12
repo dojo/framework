@@ -2,6 +2,7 @@ import global from './global';
 import has from '../has/has';
 `!has('build-elide')`;
 import * as Resize from 'resize-observer-polyfill';
+import wrapper from './util/wrapper';
 
 export interface DOMRectReadOnly {
 	readonly x: number;
@@ -24,12 +25,15 @@ export interface ResizeObserverEntry {
 }
 
 export interface ResizeObserver {
-	prototype: ResizeObserver;
-	new (callback: ResizeObserverCallback): ResizeObserver;
 	observe(target: Element): void;
 	unobserve(target: Element): void;
 	disconnect(): void;
 }
+
+declare var ResizeObserver: {
+	prototype: ResizeObserver;
+	new (callback: ResizeObserverCallback): ResizeObserver;
+};
 
 if (!has('build-elide')) {
 	if (!global.ResizeObserver) {
@@ -38,4 +42,4 @@ if (!has('build-elide')) {
 	}
 }
 
-export default global.ResizeObserver as ResizeObserver;
+export default wrapper('ResizeObserver', true) as typeof ResizeObserver;

@@ -1,5 +1,5 @@
-import global from './global';
 `!has('build-elide')`;
 import 'intersection-observer';
+import wrapper from './util/wrapper';
 
-export default global.IntersectionObserver as typeof IntersectionObserver;
+export default wrapper('IntersectionObserver', true) as typeof IntersectionObserver;

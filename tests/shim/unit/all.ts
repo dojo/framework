@@ -3,6 +3,7 @@ import '../../../src/shim/main';
 import './support/decorators';
 import './support/queue';
 import './support/util';
+import './util/wrapper';
 import './AbortController';
 import './array';
 import './global';

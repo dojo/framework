@@ -1,22 +1,24 @@
 const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import global from '../../../../src/shim/global';
 import { stub, spy, SinonSpy } from 'sinon';
 import { NodeHandler } from './../../../../src/widget-core/NodeHandler';
+import global from '../../../../src/shim/global';
 import WidgetBase from '../../../../src/widget-core/WidgetBase';
+import Intersection from '../../../../src/widget-core/meta/Intersection';
 
 let intersectionObserver: any;
 let bindInstance: WidgetBase;
 const observers: ([object, Function])[] = [];
-let Intersection: any;
 let normal = true;
 let observeStub: any;
+let globalIntersectionObserver: any;
 
 registerSuite('meta - Intersection', {
 	async before() {
+		globalIntersectionObserver = global.IntersectionObserver;
 		bindInstance = new WidgetBase();
 		observeStub = stub();
-		intersectionObserver = stub(global, 'IntersectionObserver').callsFake(function(callback: any) {
+		intersectionObserver = stub().callsFake(function(callback: any) {
 			if (normal) {
 				const observer = {
 					observe: stub(),
@@ -34,7 +36,7 @@ registerSuite('meta - Intersection', {
 				return observer;
 			}
 		});
-		Intersection = (await import('../../../../src/widget-core/meta/Intersection')).default;
+		global.IntersectionObserver = intersectionObserver;
 	},
 
 	afterEach() {
@@ -42,6 +44,10 @@ registerSuite('meta - Intersection', {
 		observeStub.resetHistory();
 		intersectionObserver.resetHistory();
 		observers.length = 0;
+	},
+
+	after() {
+		global.IntersectionObserver = globalIntersectionObserver;
 	},
 
 	tests: {

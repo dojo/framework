@@ -1,14 +1,16 @@
 import global from '../../../../src/shim/global';
 const { assert } = intern.getPlugin('chai');
-const { afterEach, beforeEach, before, describe, it } = intern.getInterface('bdd');
+const { after, afterEach, beforeEach, before, describe, it } = intern.getInterface('bdd');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 import { AnimationEffectTiming } from '../../../../src/shim/WebAnimations';
+import WebAnimation from '../../../../src/widget-core/meta/WebAnimation';
 import { WidgetBase } from '../../../../src/widget-core/WidgetBase';
 import { v } from '../../../../src/widget-core/d';
 import { spy, stub } from 'sinon';
 
-let WebAnimation: any;
 let animationExists = false;
+let globalAnimation: any;
+let globalKeyframeEffect: any;
 
 jsdomDescribe('WebAnimation', () => {
 	let effects: any;
@@ -52,12 +54,14 @@ jsdomDescribe('WebAnimation', () => {
 	let metaStub: any;
 
 	before(async () => {
-		class KeyframeEffectMock {
+		globalAnimation = global.Animation;
+		globalKeyframeEffect = global.KeyframeEffect;
+		global.KeyframeEffect = class {
 			constructor(...args: any[]) {
 				keyframeCtorStub(...args);
 			}
-		}
-		class AnimationMock {
+		};
+		global.Animation = class {
 			constructor(...args: any[]) {
 				animationCtorStub(...args);
 			}
@@ -103,10 +107,12 @@ jsdomDescribe('WebAnimation', () => {
 			set playbackRate(rate: number) {
 				playbackRateStub(rate);
 			}
-		}
-		global.KeyframeEffect = KeyframeEffectMock;
-		global.Animation = AnimationMock;
-		WebAnimation = (await import('../../../../src/widget-core/meta/WebAnimation')).default;
+		};
+	});
+
+	after(() => {
+		global.KeyframeEffect = globalKeyframeEffect;
+		global.Animation = globalAnimation;
 	});
 
 	beforeEach(() => {

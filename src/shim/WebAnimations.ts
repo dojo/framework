@@ -1,6 +1,6 @@
-import global from './global';
 `!has('build-elide')`;
 import 'web-animations-js/web-animations-next-lite.min';
+import wrapper from './util/wrapper';
 
 export type AnimationEffectTimingFillMode = 'none' | 'forwards' | 'backwards' | 'both' | 'auto';
 export type AnimationEffectTimingPlaybackDirection = 'normal' | 'reverse' | 'alternate' | 'alternate-reverse';
@@ -116,5 +116,5 @@ export interface AnimationConstructor {
 	new (effect?: AnimationEffectReadOnly, timeline?: AnimationTimeline): Animation;
 }
 
-export const Animation = global.Animation as AnimationConstructor;
-export const KeyframeEffect = global.KeyframeEffect as KeyframeEffectConstructor;
+export const Animation = wrapper('Animation', true) as AnimationConstructor;
+export const KeyframeEffect = wrapper('KeyframeEffect', true) as KeyframeEffectConstructor;

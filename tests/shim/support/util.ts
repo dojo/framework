@@ -9,6 +9,6 @@ export function isEventuallyRejected<T>(promise: PromiseLike<T>): PromiseLike<bo
 	);
 }
 
-export function throwImmediatly() {
+export function throwImmediately() {
 	throw new Error('unexpected code path');
 }

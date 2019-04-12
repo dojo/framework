@@ -1,6 +1,7 @@
+import global from '../../../../src/shim/global';
 const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import global from '../../../../src/shim/global';
+import Resize from '../../../../src/widget-core/meta/Resize';
 import { stub, SinonStub } from 'sinon';
 
 import NodeHandler from '../../../../src/widget-core/NodeHandler';
@@ -11,12 +12,12 @@ let resizeCallback: ([]: any[]) => void;
 let bindInstance: WidgetBase;
 let isFoo: SinonStub;
 let isBar: SinonStub;
-let Resize: any;
 let observer: {
 	observe: SinonStub;
 	disconnect: SinonStub;
 };
 
+let globalResizeObserver: any;
 registerSuite('meta - Resize', {
 	async before() {
 		bindInstance = new WidgetBase();
@@ -24,8 +25,8 @@ registerSuite('meta - Resize', {
 			resizeCallback = callback;
 			return observer;
 		});
+		globalResizeObserver = global.ResizeObserver;
 		global.ResizeObserver = resizeObserver;
-		Resize = (await import('../../../../src/widget-core/meta/Resize')).default;
 	},
 
 	beforeEach() {
@@ -41,6 +42,10 @@ registerSuite('meta - Resize', {
 		isFoo.reset();
 		isBar.reset();
 		resizeObserver.resetHistory();
+	},
+
+	after() {
+		global.ResizeObserver = globalResizeObserver;
 	},
 
 	tests: {

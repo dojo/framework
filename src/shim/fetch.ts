@@ -1,5 +1,5 @@
-import global from './global';
 `!has('build-elide')`;
-import 'whatwg-fetch';
+import 'cross-fetch/polyfill';
+import wrapper from './util/wrapper';
 
-export default global.fetch.bind(global) as (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+export default wrapper('fetch', false, true) as (input: RequestInfo, init?: RequestInit) => Promise<Response>;

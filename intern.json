@@ -36,7 +36,8 @@
 		{
 			"script": "./dist/dev/tests/widget-core/support/jsdom-plugin.js",
 			"useLoader": true
-		}
+		},
+		"./dist/dev/tests/shim/support/has-plugin.js"
 	],
 
 	"browser": {
@@ -51,6 +52,10 @@
 						"name":  "immutable",
 						"location":  "./node_modules/immutable/dist",
 						"main": "immutable.js"
+					},
+					{
+						"name": "cross-fetch",
+						"location": "./node_modules/cross-fetch"
 					}
 				],
 				"map": {
@@ -65,7 +70,7 @@
 			"./dist/dev/tests/widget-core/unit/all.js"
 		],
 		"plugins+": [
-			"./node_modules/whatwg-fetch/dist/fetch.umd.js",
+			"./node_modules/cross-fetch/dist/browser-polyfill.js",
 			{
 				"script": "./dist/dev/src/shim/browser.js",
 				"useLoader": true
