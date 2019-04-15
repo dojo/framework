@@ -1,6 +1,6 @@
 # Introduction
 
-As a HTML-based technology, Dojo makes use of CSS for styling elements across the framework and for applications developed with it.
+As an HTML-based technology, Dojo makes use of CSS for styling elements across the framework and for applications developed with it.
 
 Dojo promotes encapsulated structural styling of individual widgets for maximum reuse, as well as simplified presentational theming across all widgets within an application. This pattern gives users a predictable way to style and theme their applications, even when using a mixture of widgets from [Dojo's `@dojo/widgets` library](https://github.com/dojo/widgets), a third-party provider, or any that may be developed in-house for a particular application.
 

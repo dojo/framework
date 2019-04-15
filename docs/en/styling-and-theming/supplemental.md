@@ -214,7 +214,7 @@ If using an [independently-distributed theme](#distributing-themes) in its entir
 @import '@{myThemePackageName}/{myThemeName}/index.css';
 ```
 
-By contrast, another way of using only portions of an eternally-built theme within a newly-created application theme is [via theme composition](#composing-off-dojo-themes).
+By contrast, another way of using only portions of an externally-built theme is [via theme composition](#composing-off-dojo-themes).
 
 ### Changing the currently active theme
 
@@ -323,8 +323,8 @@ Given the following CSS module file for a themeable widget:
 > src/styles/MyThemeableWidget.m.css
 
 ```css
-/* requirement 4, i.e. this widget is intended for wider distribution and therefore the main presentational styles for
-the widget that could be overridden with a custom theme are contained in this class : */
+/* requirement 4, i.e. this widget is intended for wider distribution,
+therefore its outer-most VDOM element uses the 'root' class: */
 .root {
 	font-family: sans-serif;
 }
@@ -356,7 +356,7 @@ import * as css from '../styles/MyThemeableWidget.m.css';
 export default class MyThemeableWidget /* requirement 2: */ extends ThemedMixin(WidgetBase) {
 	protected render() {
 		return v(
-			'div',
+			/* requirement 4: outer-most VDOM element */ 'div',
 			{
 				classes: [
 					/* requirement 3: */ ...this.theme([
@@ -405,7 +405,7 @@ export default class MyThemeableTsxWidget /* requirement 2: */ extends ThemedMix
 
 #### Using several CSS modules
 
-Widgets can also import and reference multiple CSS modules - this provides another way to abstract and reuse common styling properties through typescript code, in addition to the CSS-based methods described elsewhere in this guide ([CSS custom properties](#css-custom-properties) and [CSS module composition](#css-module-composition)).
+Widgets can also import and reference multiple CSS modules - this provides another way to abstract and reuse common styling properties through TypeScript code, in addition to the CSS-based methods described elsewhere in this guide ([CSS custom properties](#css-custom-properties) and [CSS module composition](#css-module-composition)).
 
 Extending the above example:
 
@@ -444,7 +444,7 @@ export default class MyThemedTsxWidget extends ThemedMixin(WidgetBase) {
 
 ### Overriding the theme of specific widget instances
 
-Users of a widget can override the theme of a specific instance by passing in a [valid theme](#writing-a-theme) to the instance's [`theme` widget property](#themedmixin-widget-properties). This is useful when needing to display a given widget in multiple ways across several occurrences within an application.
+Users of a widget can override the theme of a specific instance by passing in a [valid theme](#writing-a-theme) to the instance's [`theme` property](#themedmixin-widget-properties). This is useful when needing to display a given widget in multiple ways across several occurrences within an application.
 
 For example, building on the [themeable widget example](#themeable-widget-example):
 
@@ -673,7 +673,7 @@ Dojo's [`cli-build-theme`](https://github.com/dojo/cli-build-theme) package prov
 
 Note that when using [`dojo create theme`](#scaffolding-themes-for-third-party-widgets) to scaffold a new theme, there is no need to use `dojo build theme`, as all relevant files will already be in place. This applies to themes in projects that are built either via [`@dojo/cli-build-app`](https://github.com/dojo/cli-build-app) or [`@dojo/cli-build-widget`](https://github.com/dojo/cli-build-widget).
 
-To use the tooling, install `@dojo/cli-build-theme` locally in a themes project:
+To use the tooling, install `@dojo/cli-build-theme` locally in a theme project:
 
 ```sh
 npm install --save-dev @dojo/cli-build-theme
@@ -709,7 +709,7 @@ The [`@dojo/themes`](https://github.com/dojo/themes) package provides a collecti
     @import '~@dojo/themes/dojo/index.css';
     ```
 
-3.  Import the theme typescript module and use it [as per any other theme](#making-themeable-applications):
+3.  Import the theme TypeScript module and use it [as per any other theme](#making-themeable-applications):
 
     ```ts
     import theme from '@dojo/themes/dojo';
