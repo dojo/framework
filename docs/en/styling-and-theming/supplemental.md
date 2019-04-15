@@ -283,7 +283,7 @@ There are three requirements for widgets to be considered themeable:
 
 1.  The widget's class should have the `@theme()` decorator applied, passing in the widget's imported CSS module as a decorator argument.
     -   Note that widgets can import and reference multiple CSS modules, in which case additional `@theme()` decorators can be stacked, one for each corresponding CSS import intended to be themeable.
-2.  The widget's parent class should be wrapped with `ThemedMixin`.
+2.  The widget's parent class should extend `ThemedMixin`.
 3.  One or more of the widget's styling classes should be wrapped in a call to `this.theme()` when rendering the widget.
 
 By convention, there is a fourth requirement that is useful when developing widgets intended for distribution (this is a convention that widgets in Dojo's widget library follow):
