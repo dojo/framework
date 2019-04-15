@@ -58,7 +58,7 @@ Widgets are the fundamental building blocks that all Dojo applications are const
 
 ## Minimizing complexity
 
-A single widget typically represents a single responsibility within an application. Complex responsibilities can be decomposed into several widgets. Ensuring widgets are as simple as possible helps reduce complexity within an application.
+A single widget typically represents a single responsibility within an application. Complex responsibilities can be decomposed into several collaborating widgets. Ensuring widgets are as simple as possible helps reduce complexity within an application.
 
 Reducing complexity helps in many areas of application development. For a single widget, it means greater isolation of responsibility (reduced scope), simpler comprehensive testing, more targeted bugfixing, as well as a wider potential for component re-use. For complete applications, it allows for easier understanding of all constituent components as well as how they are combined. All these benefits result in simpler ongoing maintenance and an ultimate reduction in the overall cost of building and running an application.
 
@@ -70,9 +70,9 @@ Widgets are required to implement a `render()` method that should return any VDO
 
 Widgets rarely exist in total isolation so their implementation class will also typically include interactions with other collaborating widgets. This could for example include any child elements that the widget manages, a central data store acting as the authority for the widget's state, or a transport for interacting with any backend services associated with the widget's responsibility.
 
-Widgets are also intended as reusable components, so their implementation class is typically the default export from their TypeScript module. This provides a consistent way of interacting with widgets to their users.
+Widgets are intended to be reusable components, so their implementation class is typically the default export from their TypeScript module. This provides a consistent way of interacting with widgets to their users.
 
-Many widgets also have some form of presentation to end users, visual or otherwise. Widget presentation in Dojo is handled via CSS, so widgets of this sort will typically have an associated CSS module within the application codebase.
+Many widgets include some form of presentation to end users, visual or otherwise. Widget presentation in Dojo is handled via CSS, so widgets that require presentation will typically have an associated CSS module within the application codebase.
 
 ### Basic widget example
 
@@ -98,7 +98,7 @@ Most widgets however require some form of structural representation, so will ret
 
 Dojo uses a virtual DOM (VDOM) abstraction to represent items intended for display. Rather than directly manipulating DOM elements, Dojo applications instead declare their component structure in a reactive way and let the framework handle concrete rendering responsibilities. Dojo's renderer takes care of synchronizing an application's intended output with the actual DOM.
 
-Nodes in the VDOM are simple JavaScript objects, and are therefore more efficient to work with than actual DOM elements. Dojo's renderer uses the VDOM to determine specific subsets of nodes affected by a given change, and can efficiently update only the required corresponding subtrees within the DOM. This gives a better overall user interactive experience due to increased rendering performance under application state change.
+Nodes in the VDOM are simple JavaScript objects, designed to be more efficient to work with than actual DOM elements. Dojo also supports subtree rendering uses the VDOM to determine specific subsets of nodes affected by a given change, and can efficiently update only the required corresponding subtrees within the DOM. This gives a better overall user interactive experience due to increased rendering performance under application state change.
 
 ## Working with the VDOM
 
