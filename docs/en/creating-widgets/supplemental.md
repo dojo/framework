@@ -3,13 +3,16 @@
 	- [Basic widget structure](#basic-widget-structure)
 		- [Basic widget example](#basic-widget-example)
 - [Rendering in Dojo](#rendering-in-dojo)
+	- [TSX Support](#tsx-support)
+		- [TSX-enabled applications](#tsx-enabled-applications)
+		- [TSX widget example](#tsx-widget-example)
 	- [Working with the VDOM](#working-with-the-vdom)
 		- [VDOM node types](#vdom-node-types)
+		- [VDOM node properties](#vdom-node-properties)
 		- [Instantiating VDOM nodes](#instantiating-vdom-nodes)
-	- [JSX Support](#jsx-support)
-		- [TSX-enabled applications](#tsx-enabled-applications)
-		- [Using TSX in widgets](#using-tsx-in-widgets)
-	- [Rendering a Widget in the DOM](#rendering-a-widget-in-the-dom)
+		- [Virtual nodes example](#virtual-nodes-example)
+	- [Rendering to the DOM](#rendering-to-the-dom)
+		- [`MountOptions` properties](#mountoptions-properties)
 	- [Widgets and Properties](#widgets-and-properties)
 	- [Internal Widget State](#internal-widget-state)
 	- [Composing Widgets](#composing-widgets)
@@ -80,7 +83,7 @@ The following illustrates a trivial yet complete widget within a Dojo applicatio
 
 > src/widgets/MyWidget.ts
 
-```tsx
+```ts
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 
 export default class MyWidget extends WidgetBase {
@@ -92,13 +95,55 @@ export default class MyWidget extends WidgetBase {
 
 This widget does not return anything from its `render()` method, so has no structural representation within an application's output.
 
-Most widgets however require some form of structural representation, so will return one or more virtual DOM nodes from their `render()` method. The process of translating virtual DOM nodes to actual output on a web page is handled by Dojo's rendering system.
+Typical widgets will however return one or more virtual DOM nodes from their `render()` method. The process of translating virtual DOM nodes to output on a web page is handled by Dojo's rendering system.
 
 # Rendering in Dojo
 
-Dojo uses a virtual DOM (VDOM) abstraction to represent items intended for display. Rather than directly manipulating DOM elements, Dojo applications instead declare their component structure in a reactive way and let the framework handle concrete rendering responsibilities. Dojo's renderer takes care of synchronizing an application's intended output with the actual DOM.
+Dojo uses a virtual DOM (VDOM) concept to represent elements intended for output. Nodes in the VDOM are simple JavaScript objects, designed to be more efficient to work with than actual DOM elements.
 
-Nodes in the VDOM are simple JavaScript objects, designed to be more efficient to work with than actual DOM elements. Dojo also supports subtree rendering uses the VDOM to determine specific subsets of nodes affected by a given change, and can efficiently update only the required corresponding subtrees within the DOM. This gives a better overall user interactive experience due to increased rendering performance under application state change.
+Dojo applications declare their intended output structure as virtual nodes (typically as the return values from widgets' [`render()` methods](#basic-widget-structure)), then rely on the framework's [`renderer`](#rendering-to-the-dom) to synchronize the intended output with actual elements on a web page.
+
+Subtree rendering is also supported, meaning that when a change in state occurs, the framework is able to determine specific subsets of nodes affected by the change. Only the required corresponding subtrees within the DOM then need to be updated to reflect the change, increasing rendering performance and resulting in an improved user interactive experience.
+
+## TSX Support
+
+Dojo supports use of the `jsx` syntax extension known as [`tsx` in TypeScript](https://www.TypeScriptlang.org/docs/handbook/jsx.html). This syntax allows for a more direct representation of a widget's VDOM output that is closer to the resulting HTML within a built application.
+
+### TSX-enabled applications
+
+TSX-enabled projects can easily be scaffolded via the [`dojo create app --tsx` CLI command](https://github.com/dojo/cli-create-app).
+
+For Dojo projects that were not scaffolded in this way, TSX can be enabled with the following additions to the project's TypeScript config:
+
+> `./tsconfig.json`
+
+```json
+{
+	"compilerOptions": {
+		"jsx": "react",
+		"jsxFactory": "tsx"
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.tsx"
+	]
+}
+```
+
+### TSX widget example
+
+Widgets with a `.tsx` file extension can output TSX from their render function by simply importing the `tsx` function, for example:
+
+```tsx
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { tsx } from '@dojo/framework/widget-core/tsx';
+
+export default class MyTsxWidget extends WidgetBase {
+	protected render() {
+		return <div>Hello from a TSX widget!</div>;
+	}
+}
+```
 
 ## Working with the VDOM
 
@@ -109,15 +154,19 @@ Dojo recognizes two types of nodes within its VDOM:
 -   `VNode`s, or _Virtual Nodes_
     -   These correspond to virtual representations of concrete DOM elements, and serve as the lowest-level rendering output for all Dojo applications.
 -   `WNode`s, or _Widget Nodes_
-    -   These tie Dojo widgets to the virtual DOM
+    -   These tie Dojo widgets to the virtual DOM.
 
-Both `VNode`s and `WNode`s are considered subtypes of `DNode`s within Dojo's virtual DOM, but applications don't typically deal with `DNode`s in their abstract sense.
+Both `VNode`s and `WNode`s are considered subtypes of `DNode`s within Dojo's virtual DOM, but applications don't typically deal with `DNode`s in their abstract sense. Using [TSX syntax](#tsx-support) is also preferred as it allows applications to deal with both VDOM node types in a single, consistent manner.
 
-In addition to representing the structure of an application, virtual nodes also serve as a way to reactively inject state into each widget (or DOM element). This is done by providing a set of **node properties** when instantiating `VNode`s and `WNode`s.
+### VDOM node properties
+
+In addition to representing the structure of an application, virtual nodes also serve as a way to reactively inject state into each widget (or DOM element). This is done by providing a set of **properties** when instantiating `VNode`s and `WNode`s.
+
+These properties TODO
 
 ### Instantiating VDOM nodes
 
-Dojo widgets can import one or both of the `v()` and `w()` utility functions provided by the `@dojo/framework/widget-core/d` module. These two function create `VNode`s and `WNode`s, respectively, and can be used as part of the return value from a widget's `render()` method. Their signatures, in abstract terms, are:
+Dojo widgets that do not use [TSX output](#tsx-support) can import one or both of the `v()` and `w()` utility functions provided by the `@dojo/framework/widget-core/d` module. These create `VNode`s and `WNode`s, respectively, and can be used as part of the return value from a widget's `render()` method. Their signatures, in abstract terms, are:
 
 -   `v(tagName | VNode, properties?, children?)`:
     -   `tagName | VNode`:
@@ -133,91 +182,70 @@ Dojo widgets can import one or both of the `v()` and `w()` utility functions pro
     -   `children` _(optional)_:
         -   An array of nodes to render as children of the newly created node. This can also include any text node children as literal strings, as required.
 
-These `VNode`s are created using the `v()` function available from the `@dojo/framework/widget-core/d` module.
+### Virtual nodes example
 
-The following will create a `VNode` that represents a simple `div` DOM element, with a text node child: `Hello, Dojo!`:
+The following widget example includes a more typical `render()` method that actually returns a `VNode`. This widget has an intended structural representation of a simple `div` DOM element that includes a text child node:
+
+> src/widgets/MyWidget.ts
 
 ```ts
-v('div', ['Hello, Dojo!']);
-```
-
-## JSX Support
-
-Dojo supports use of the `jsx` syntax extension known as [`tsx` in TypeScript](https://www.TypeScriptlang.org/docs/handbook/jsx.html). This syntax allows for a clearer representation of a widget's VDOM output that is closer to the resulting HTML within a built application. It is also a simpler mechanism to output both `VNode`s and `WNode`s directly instead of using the `v()` and `w()` utility functions.
-
-### TSX-enabled applications
-
-Projects with TSX enabled by default can easily be scaffolded via the [`dojo create app --tsx` CLI command](https://github.com/dojo/cli-create-app).
-
-For Dojo projects that were not scaffolded in this way, TSX can be enabled with the following additions to the project's TypeScript config:
-
-> `./tsconfig.json`:
-
-```json
-{
-	"compilerOptions": {
-		"jsx": "react",
-		"jsxFactory": "tsx"
-	},
-	"include": [
-		"./src/**/*.ts",
-		"./src/**/*.tsx"
-	]
-}
-```
-
-### Using TSX in widgets
-
-Widgets with a `.tsx` file extension can output TSX from their render function by simply importing the `tsx` function, for example:
-
-```tsx
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import { v } from '@dojo/framework/widget-core/d';
 
-export default class MyTsxWidget extends WidgetBase {
+export default class MyWidget extends WidgetBase {
 	protected render() {
-		return <div>Hello from a TSX widget!</div>;
+		return v('div', ['Hello, Dojo!']);
 	}
 }
 ```
 
-## Rendering a Widget in the DOM
+Similarly, widgets can compose one another using the `w()` method, and also output several nodes to form a more complex structural hierarchy:
 
-To display your new component in the view you will to use the `renderer` from the `@dojo/framework/widget-core/vdom` module. The `renderer` function accepts function that returns your component using the `w()` pragma and calling `.mount()` on the returned API.
-
-<!--READMEONLY-->
+> src/widgets/MyOtherWidget.ts
 
 ```ts
-import renderer from '@dojo/framework/widget-core/vdom';
-import { w } from '@dojo/framework/widget-core/d';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { v, w } from '@dojo/framework/widget-core/d';
 
-const r = renderer(() => w(HelloDojo, {}));
+import MyWidget from './MyWidget';
+
+export default class MyOtherWidget extends WidgetBase {
+	protected render() {
+		return v('div', ['This widget outputs several virtual nodes', w(MyWidget, {})]);
+	}
+}
+```
+
+## Rendering to the DOM
+
+Dojo's `renderer()` method (provided by the `@dojo/framework/widget-core/vdom` module) is responsible for translating an application's intended virtual output to its concrete representation within a real DOM.
+
+Applications typically call `renderer()` in their main entry point (`main.tsx`/`main.ts`), and are required to pass in a function that returns the root node of the VDOM intended for output. The `Renderer` object returned by `renderer()` can then be mounted to a specific DOM element, or by default to `document.body` if no explicit element is provided.
+
+For example:
+
+> src/main.tsx
+
+```tsx
+import renderer from '@dojo/framework/widget-core/vdom';
+import { tsx } from '@dojo/framework/widget-core/tsx';
+
+import MyOtherWidget from './widgets/MyOtherWidget';
+
+const r = renderer(() => <MyOtherWidget />);
 r.mount();
 ```
 
-<!--widget-core-readme-01-->
+### `MountOptions` properties
 
-[![Edit widget-core-readme-01](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/300oxjkoyp)
+The `Renderer.mount()` method accepts an optional `MountOptions` argument that configures how the mount operation is performed.
 
-<!--READMEONLY-->
-
-<!--DOCSONLY
-<iframe src="https://codesandbox.io/embed/300oxjkoyp?autoresize=1&fontsize=12&hidenavigation=1&module=%2Fsrc%2Fmain.ts&view=editor" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
-DOCSONLY-->
-
-`renderer#mount` accepts an optional argument of `MountOptions` that controls configuration of the mount operation.
-
-```ts
-interface MountOptions {
-	sync: boolean; // (default `false`)
-
-	merge: boolean; // (default `true`)
-
-	domNode: HTMLElement; // (default `document.body)
-
-	transition: TransitionStrategy; // (default `cssTransitions`)
-}
-```
+-   `sync ?: boolean`
+    -   Default: `false`. If `true`, relevant [render lifecycle callbacks](#lifecycle-hooks) (specifically, `after` and `deferred` render callbacks) are run synchronously. If `false`, the callbacks are instead scheduled to run asynchronously before the next repaint via [`window.requestAnimationFrame()`](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame). Synchronous callbacks can be beneficial in instances where specific DOM nodes need to exist.
+-	`domNode ?: HTMLElement`
+	-   A reference to a specific DOM element that the VDOM should be rendered within. Defaults to `document.body` if not specified.
+-   `registry ?: Registry`
+    -   An optional `Registry` instance to use across the mounted VDOM.
 
 The renderer by default mounts to the `document.body` in the DOM, but this can be overridden by passing the preferred target dom node to the `.mount()` function.
 
@@ -487,7 +515,7 @@ Examples of Dojo mixins can be seen with `ThemedMixin` and `I18nMixin` that are 
 
 These are some of the **important** principles to keep in mind when creating and using widgets:
 
-1.  The widget's _`__render__`_, _`__setProperties__`_, _`__setChildren__`_ functions should **never** be called or overridden.
+1.  The widget's _`__render__`_, _`__setProperties__`_, _`__setChildren__`_ functions should **never** be called nor overridden.
     -   These are the internal methods of the widget APIs and their behavior can change in the future, causing regressions in your application.
 2.  You should **never** need to deal directly with widget instances
     -   The Dojo widget system manages all instances required including caching and destruction, trying to create and manage other widgets will cause issues and will not work as expected.
@@ -689,7 +717,7 @@ class MyWidget extends WidgetBase {
 }
 ```
 
-## Decorator Lifecycle Hooks
+## Lifecycle Hooks
 
 Occasionally, in a mixin or a widget class, it may be required to provide logic that needs to be executed before properties are diffed using `beforeProperties`, either side of a widget's `render` call using `beforeRender` & `afterRender` or after a constructor using `afterContructor`.
 
