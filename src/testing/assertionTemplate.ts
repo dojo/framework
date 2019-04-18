@@ -45,7 +45,7 @@ const findOne = (nodes: DNode | DNode[], selector: string): NodeWithProperties =
 	return node;
 };
 
-export class Mimic extends WidgetBase {}
+export class Ignore extends WidgetBase {}
 
 export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	const assertionTemplateResult: any = () => {

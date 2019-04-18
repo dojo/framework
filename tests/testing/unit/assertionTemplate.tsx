@@ -4,7 +4,7 @@ const { assert } = intern.getPlugin('chai');
 import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { v, w, tsx } from '../../../src/core/vdom';
-import assertionTemplate, { Mimic } from '../../../src/testing/assertionTemplate';
+import assertionTemplate, { Ignore } from '../../../src/testing/assertionTemplate';
 
 class MyWidget extends WidgetBase<{
 	toggleProperty?: boolean;
@@ -185,7 +185,7 @@ describe('assertionTemplate', () => {
 		const h = harness(() => w(ListWidget, {}));
 		const childListAssertion = baseListAssertion.replaceChildren('ul', [
 			v('li', ['item: 0']),
-			...new Array(28).fill(w(Mimic, {})),
+			...[...new Array(28)].map(() => w(Ignore, {})),
 			v('li', ['item: 29'])
 		]);
 		h.expect(childListAssertion);

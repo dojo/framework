@@ -5,7 +5,7 @@ import Set from '../../shim/Set';
 import Map from '../../shim/Map';
 import { from as arrayFrom } from '../../shim/array';
 import { isVNode, isWNode } from '../../core/vdom';
-import { Mimic } from '../assertionTemplate';
+import { Ignore } from '../assertionTemplate';
 
 let widgetClassCounter = 0;
 const widgetMap = new WeakMap<Constructor<DefaultWidgetBaseInterface>, number>();
@@ -101,7 +101,7 @@ function formatNode(node: WNode | VNode, tabs: any): string {
 
 const assertionWidgets = [
 	{
-		type: Mimic,
+		type: Ignore,
 		value(actual: DNode, expected: DNode) {
 			const node = actual ? actual : expected;
 			return [actual, node];
