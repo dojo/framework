@@ -48,7 +48,7 @@ const guard = (node: DNode): NodeWithProperties => {
 	return node;
 };
 
-export class Mimic extends WidgetBase {}
+export class Ignore extends WidgetBase {}
 
 export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	const assertionTemplateResult: any = () => {

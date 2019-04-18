@@ -5,7 +5,7 @@ import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import { v, w } from '../../../src/widget-core/d';
 import { tsx } from '../../../src/widget-core/tsx';
-import assertionTemplate, { Mimic } from '../../../src/testing/assertionTemplate';
+import assertionTemplate, { Ignore } from '../../../src/testing/assertionTemplate';
 
 class MyWidget extends WidgetBase<{
 	toggleProperty?: boolean;
@@ -178,7 +178,7 @@ describe('assertionTemplate', () => {
 		const h = harness(() => w(ListWidget, {}));
 		const childListAssertion = baseListAssertion.replaceChildren('ul', [
 			v('li', ['item: 0']),
-			...new Array(28).fill(w(Mimic, {})),
+			...[...new Array(28)].map(() => w(Ignore, {})),
 			v('li', ['item: 29'])
 		]);
 		h.expect(childListAssertion);
