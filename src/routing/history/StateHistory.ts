@@ -53,10 +53,12 @@ export class StateHistory implements HistoryInterface {
 	}
 
 	public set(path: string) {
-		if (path === this._window.location.pathname) {
+		const value = stripBase(this._base, path);
+		if (this._current === value) {
 			return;
 		}
-		this._window.history.pushState({}, '', this.prefix(stripBase(this._base, path)));
+
+		this._window.history.pushState({}, '', this.prefix(value));
 		this._onChange();
 	}
 
@@ -66,11 +68,8 @@ export class StateHistory implements HistoryInterface {
 
 	private _onChange = () => {
 		const pathName = this._window.location.pathname.replace(/\/$/, '');
-		const value = stripBase(this._base, pathName + this._window.location.search);
-		if (this._current === value) {
-			return;
-		}
-		this._current = value;
+		this._current = stripBase(this._base, pathName + this._window.location.search);
+
 		this._onChangeFunction(this._current);
 	};
 }
