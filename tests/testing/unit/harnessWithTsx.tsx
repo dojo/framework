@@ -1,4 +1,5 @@
 const { describe, it } = intern.getInterface('bdd');
+const { assert } = intern.getPlugin('chai');
 
 import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
@@ -181,16 +182,8 @@ describe('harness with tsx', () => {
 
 	it('trigger with non matching selector', () => {
 		const h = harness(() => <MyWidget />);
-		h.trigger('*[key="other"]', 'onclick');
-		h.expect(() => (
-			<div classes={['root', 'other']} onclick={noop}>
-				<span key="span" classes="span" style="widget: 100px" id="random-id" onclick={noop}>
-					hello 0
-				</span>
-				<ChildWidget key="widget" id="random-id" />
-				<RegistryWidget key="registry" id="random-id" />
-			</div>
-		));
+
+		assert.throws(() => h.trigger('*[key="other"]', 'onclick'));
 	});
 
 	it('custom compare for VNode', () => {
