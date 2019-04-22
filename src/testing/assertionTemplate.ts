@@ -16,7 +16,7 @@ export interface AssertionTemplateResult {
 	getProperty(selector: string, property: string): any;
 }
 
-const findOne = (nodes: DNode | DNode[], selector: string): DNode | undefined => {
+const findOne = (nodes: DNode | DNode[], selector: string): NodeWithProperties => {
 	let finalSelector = selector;
 	if (selector.indexOf('~') === 0) {
 		finalSelector = `[\\~key='${selector.substr(1)}']`;
@@ -26,20 +26,18 @@ const findOne = (nodes: DNode | DNode[], selector: string): DNode | undefined =>
 		finalSelector = `[assertion-key='${selector.substr(1)}']`;
 		[node] = select(finalSelector, nodes);
 	}
-	return node;
-};
 
-type NodeWithProperties = (VNode | WNode) & { properties: { [index: string]: any } };
-
-const guard = (node: DNode): NodeWithProperties => {
 	if (!node) {
-		throw Error('Node not found');
+		throw Error(`Cannot find node with selector ${selector}`);
 	}
 	if (!isWNode(node) && !isVNode(node)) {
 		throw Error('Cannot set or get on unknown node');
 	}
+
 	return node;
 };
+
+type NodeWithProperties = (VNode | WNode) & { properties: { [index: string]: any } };
 
 export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	const assertionTemplateResult: any = () => {
@@ -55,7 +53,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	assertionTemplateResult.setProperty = (selector: string, property: string, value: any) => {
 		return assertionTemplate(() => {
 			const render = renderFunc();
-			const node = guard(findOne(render, selector));
+			const node = findOne(render, selector);
 			node.properties[property] = value;
 			return render;
 		});
@@ -76,7 +74,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	) => {
 		return assertionTemplate(() => {
 			const render = renderFunc();
-			const node = guard(findOne(render, selector));
+			const node = findOne(render, selector);
 			node.children = node.children || [];
 			switch (type) {
 				case 'prepend':
@@ -105,7 +103,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	) => {
 		return assertionTemplate(() => {
 			const render = renderFunc();
-			const node = guard(findOne(render, selector));
+			const node = findOne(render, selector);
 			const parent = (node as any).parent;
 			const index = parent.children.indexOf(node);
 			let newChildren = [...parent.children];
@@ -124,12 +122,12 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	};
 	assertionTemplateResult.getProperty = (selector: string, property: string) => {
 		const render = renderFunc();
-		const node = guard(findOne(render, selector));
+		const node = findOne(render, selector);
 		return node.properties[property];
 	};
 	assertionTemplateResult.getChildren = (selector: string) => {
 		const render = renderFunc();
-		const node = guard(findOne(render, selector));
+		const node = findOne(render, selector);
 		return node.children || [];
 	};
 	return assertionTemplateResult as AssertionTemplateResult;
