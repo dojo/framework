@@ -133,16 +133,19 @@ export function harness(
 		trigger(selector: string, functionSelector: string | FunctionalSelector, ...args: any[]): any {
 			_tryRender();
 			const [firstItem] = select(selector, _getRender());
-			if (firstItem) {
-				let triggerFunction: Function | undefined;
-				if (typeof functionSelector === 'string') {
-					triggerFunction = (firstItem.properties as any)[functionSelector];
-				} else {
-					triggerFunction = functionSelector(firstItem);
-				}
-				if (triggerFunction) {
-					return triggerFunction.apply(widget, args);
-				}
+
+			if (!firstItem) {
+				throw new Error(`Cannot find node with selector ${selector}`);
+			}
+
+			let triggerFunction: Function | undefined;
+			if (typeof functionSelector === 'string') {
+				triggerFunction = (firstItem.properties as any)[functionSelector];
+			} else {
+				triggerFunction = functionSelector(firstItem);
+			}
+			if (triggerFunction) {
+				return triggerFunction.apply(widget, args);
 			}
 		},
 		getRender(index?: number): DNode | DNode[] {
