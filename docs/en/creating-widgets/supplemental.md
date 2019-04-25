@@ -21,19 +21,18 @@
 	- [Advanced: Dojo stores](#advanced-dojo-stores)
 - [Decomposing widgets](#decomposing-widgets)
 - [Mixins](#mixins)
-- [Key principles when developing widgets](#key-principles-when-developing-widgets)
+- [Widget development best practices](#widget-development-best-practices)
 - [Additional widget concepts](#additional-widget-concepts)
 	- [Handling Focus](#handling-focus)
-	- [Advanced widget diff strategies](#advanced-widget-diff-strategies)
-		- [Property Diffing Reactions](#property-diffing-reactions)
-	- [Widget lifecycle hooks](#widget-lifecycle-hooks)
-		- [beforeProperties](#beforeproperties)
-		- [AlwaysRender](#alwaysrender)
-		- [BeforeRender](#beforerender)
-		- [AfterRender](#afterrender)
-	- [Method lifecycle hooks](#method-lifecycle-hooks)
-		- [onAttach](#onattach)
-		- [onDetach](#ondetach)
+	- [Advanced diffing strategies](#advanced-diffing-strategies)
+		- [Property change hooks](#property-change-hooks)
+- [Widget lifecycle hooks](#widget-lifecycle-hooks)
+	- [`@beforeProperties` (decorator)](#beforeproperties-decorator)
+	- [`@alwaysRender` (decorator)](#alwaysrender-decorator)
+	- [`@beforeRender` (decorator)](#beforerender-decorator)
+	- [`@afterRender` (decorator)](#afterrender-decorator)
+	- [`onAttach` (method override)](#onattach-method-override)
+	- [`onDetach` (method override)](#ondetach-method-override)
 - [Converting widgets into web components](#converting-widgets-into-web-components)
 	- [Attributes](#attributes)
 	- [Properties](#properties)
@@ -97,7 +96,7 @@ export default class MyWidget extends WidgetBase {
 
 This widget does not return anything from its `render()` method, so has no structural representation within an application's output.
 
-Typical widgets will however return one or more virtual DOM nodes from their `render()` method. The process of translating virtual DOM nodes to output on a web page is handled by Dojo's rendering system.
+Typical widgets will however [return one or more virtual DOM nodes from their `render()` method](#virtual-nodes-example). The process of translating virtual DOM nodes to output on a web page is handled by Dojo's rendering system.
 
 # Rendering in Dojo
 
@@ -131,7 +130,9 @@ For Dojo projects that were not scaffolded in this way, TSX can be enabled with 
 
 ### TSX widget example
 
-Widgets with a `.tsx` file extension can output TSX from their render function by simply importing the `tsx` function, for example:
+Widgets with a `.tsx` file extension can output TSX from their render function by simply importing the `tsx` function from the `@dojo/framework/widget-core/tsx` module:
+
+> src/widgets/MyTsxWidget.tsx
 
 ```tsx
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
@@ -155,16 +156,16 @@ Dojo recognizes two types of nodes within its VDOM:
 -   `WNode`s, or _Widget Nodes_
     -   These tie Dojo widgets to the virtual DOM, and are used as a way to reactively inject state into a widget.
 
-Both `VNode`s and `WNode`s are considered subtypes of `DNode`s within Dojo's virtual DOM, but applications don't typically deal with `DNode`s in their abstract sense. Using [TSX syntax](#tsx-support) is also preferred as it allows applications to deal with both VDOM node types in a single, consistent manner.
+Both `VNode`s and `WNode`s are considered subtypes of `DNode`s within Dojo's virtual DOM, but applications don't typically deal with `DNode`s in their abstract sense. Using [TSX syntax](#tsx-support) is also preferred as it allows applications to deal with both virtual node types in a single, consistent manner.
 
 ### Instantiating VDOM nodes
 
-Dojo widgets that do not use [TSX output](#tsx-support) can import one or both of the `v()` and `w()` utility functions provided by the `@dojo/framework/widget-core/d` module. These create `VNode`s and `WNode`s, respectively, and can be used as part of the return value from a widget's `render()` method. Their signatures, in abstract terms, are:
+Dojo widgets that do not use [TSX output](#tsx-support) can import one or both of the `v()` and `w()` utility functions provided by the `@dojo/framework/widget-core/d` module. These create `VNode`s and `WNode`s, respectively, and can be used as part of the return value from a widget's [`render()` method](#basic-widget-structure). Their signatures, in abstract terms, are:
 
 -   `v(tagName | VNode, properties?, children?)`:
     -   `tagName | VNode`:
         -   Typically, components will pass in `tagName` as a string, which identifies the corresponding DOM element tag that will be rendered for the `VNode`.
-        -   If another `VNode` is passed instead, the newly created `VNode` will act as a copy of the original. If a `properties` argument is given, the copy will receive a set of merged properties with any duplicates in `properties` overriding those from the original `VNode`. If a `children` argument is passed, it will completely override the original `VNode`'s children.
+        -   If another `VNode` is passed instead, the newly created `VNode` will act as a copy of the original. If a `properties` argument is given, the copy will receive a set of merged properties with any duplicates in `properties` overriding those from the original `VNode`. If a `children` argument is passed, it will completely override the original `VNode`'s children in the new copy.
 -   `w(Widget | constructor, properties?, children?)`
     -   `Widget | constructor`:
         -   Typically, components will pass in `Widget` as a reference to an imported Widget implementation.
@@ -177,7 +178,7 @@ Dojo widgets that do not use [TSX output](#tsx-support) can import one or both o
 
 ### Virtual nodes example
 
-The following widget example includes a more typical `render()` method that actually returns a `VNode`. This widget has an intended structural representation of a simple `div` DOM element that includes a text child node:
+The following sample widget includes a more typical `render()` method that actually returns a `VNode`. This widget has an intended structural representation of a simple `div` DOM element that includes a text child node:
 
 > src/widgets/MyWidget.ts
 
@@ -206,7 +207,7 @@ import MyWidget from './MyWidget';
 
 export default class MyOtherWidget extends WidgetBase {
 	protected render() {
-		return v('div', ['This widget outputs several virtual nodes', w(MyWidget, {})]);
+		return v('div', ['This widget outputs several virtual nodes in a hierarchy', w(MyWidget, {})]);
 	}
 }
 ```
@@ -215,7 +216,7 @@ export default class MyOtherWidget extends WidgetBase {
 
 Dojo's `renderer()` method (provided by the `@dojo/framework/widget-core/vdom` module) is responsible for translating an application's intended virtual output to its concrete representation within a real DOM.
 
-Applications typically call `renderer()` in their main entry point (`main.tsx`/`main.ts`), and are required to pass in a function that returns the root node of the VDOM intended for output. The `Renderer` object returned by `renderer()` can then be mounted to a specific DOM element, or to `document.body` by default if no explicit element is provided.
+Applications typically call `renderer()` in their main entry point (`main.tsx`/`main.ts`), and are required to pass in a function that returns the root node of the VDOM intended as the application's output. The `Renderer` object returned by `renderer()` can then be mounted to a specific DOM element, or to `document.body` by default if no explicit element is provided.
 
 For example:
 
@@ -321,23 +322,27 @@ const vnode = dom({
 
 # Widget state management
 
-Applications typically rely on some form of data model to deliver their value, with their full data set persisted across one or more long-term storage layers (their "data authorities", or sources of truth). As users interact with the application, portions of the full data set are held as active state within the running application and displayed to end users in a variety of ways. Some data may also be modifiable, with any changes made by application users then persisted down to the long-term storage layers.
+For simple applications where data is not required to flow between many components, state management can be straightforward to deal with. Data can be encapsulated within individual widgets that need it as the most [basic form of state management](#basic-internal-widget-state) within a Dojo application.
 
-State management can be one of the most challenging aspects of an application, with developers needing to balance between data consistency, availability and tolerance to faults. While a lot of this complexity remains outside the scope of the web application layer, Dojo supports several mechanisms to simplify frontend state management and interaction with underlying data persistence layers.
+As applications grow in complexity and start requiring data to be shared and transferred between multiple widgets, a more robust form of state management is required. Here, Dojo begins to prove its value as a reactive framework, allowing applications to define how data should flow between components, then letting the framework manage change detection and re-rendering. This is done by [wiring widgets and properties together](#intermediate-widget-properties) when declaring VDOM output in a widget's `render()` method.
+
+For large applications, state management can be one of the most challenging aspects to deal with, requiring developers to balance between data consistency, availability and fault tolerance. While a lot of this complexity remains outside the scope of the web application layer, Dojo provides further solutions that help ensure data consistency. The Dojo Stores component gives applications a centralized state store with a consistent API for accessing and managing data from multiple locations.
+
+TODO: stores link somewhere? remove below?
 
 ## Basic: Internal Widget State
 
-Widgets often maintain their own internal state as private class fields. Data held in these fields may directly affect the widget's render output, or may be passed as properties to any child widgets where they in turn directly affect the children's render output. Widgets may also allow their internal state to be changed, for example in response to a user interaction event.
+Widgets can maintain their own internal state as private class fields. Data held in these fields may directly affect the widget's render output, or may be passed as properties to any child widgets where they in turn directly affect the children's render output. Widgets may also allow their internal state to be changed, for example in response to a user interaction event.
 
 The following example illustrates these patterns:
 
-> src/widgets/MyStatefulWidget.tsx
+> src/widgets/MyEncapsulatedStateWidget.tsx
 
 ```tsx
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { tsx } from '@dojo/framework/widget-core/tsx';
 
-export default class MyStatefulWidget extends WidgetBase {
+export default class MyEncapsulatedStateWidget extends WidgetBase {
 	private myState: string = 'Hello from a stateful widget!';
 	private counter: number = 0;
 
@@ -351,7 +356,7 @@ export default class MyStatefulWidget extends WidgetBase {
 						this.myState = 'State change iteration #' + ++this.counter;
 					}}
 				>
-					Change state
+					Change State
 				</button>
 			</div>
 		);
@@ -359,27 +364,30 @@ export default class MyStatefulWidget extends WidgetBase {
 }
 ```
 
-When running this example, clicking on the 'Change state' button won't actually alter the widget's render output. This is because Dojo is not aware of the change in state, so assumes there is no need to re-render anything.
+However, this example is not complete - clicking on the 'Change State' button in the running application will not have any effect on the widget's render output. This is because the state is fully encapsulated within `MyEncapsulatedStateWidget`, and Dojo is not aware of any changes made to it. Only the widget's initial render will be processed by the framework.
+
+In order to notify Dojo that a re-render is needed, widgets need to invalidate themselves.
 
 ### Invalidating a widget
 
-There are two ways a widget can notify Dojo that a re-render is required:
+There are two ways a widget can mark itself as invalid:
 
-1.  Explicitly calling `this.invalidate()` in an appropriate location where state is being changed, such as in the `onclick` handler in the above example.
-2.  Annotating any relevant fields with the `@watch()` decorator (from the `@dojo/framework/widget-core/decorators/watch` module). When these decorated fields are modified, `this.invalidate()` will implicitly be called - useful for state fields that always need to trigger a re-render when updated.
+1.  Explicitly calling `this.invalidate()` in an appropriate location where state is being changed.
+    -   In the `MyEncapsulatedStateWidget` example, this could be done in the 'Change State' button's `onclick` handler.
+2.  Annotating any relevant fields with the `@watch()` decorator (from the `@dojo/framework/widget-core/decorators/watch` module). When `@watch`ed fields are modified, `this.invalidate()` will implicitly be called - this can be useful for state fields that always need to trigger a re-render when updated.
 
 Note that calling `this.invalidate()` won't immediately re-render the widget - instead it acts as a notification to Dojo that the widget has been dirtied and should be updated and re-rendered in the next available render cycle. This means invalidating a widget multiple times within the same render frame won't have any negative impact on application performance.
 
-The following is an updated example that will correctly update its output, as expected. Here, both `myState` and `counter` are updated as part of the same application logic operation, so `@watch()` could be added to either or both of the fields, with the same net effect and the same application performance profile in all cases:
+The following is an updated `MyEncapsulatedStateWidget` example that will correctly update its output when its state is changed. Here, both `myState` and `counter` are updated as part of the same application logic operation, so `@watch()` could be added to either or both of the fields, with the same net effect and the same application performance profile in all cases:
 
-> src/widgets/MyStatefulWidget.tsx
+> src/widgets/MyEncapsulatedStateWidget.tsx
 
 ```tsx
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import watch from '@dojo/framework/widget-core/decorators/watch';
 import { tsx } from '@dojo/framework/widget-core/tsx';
 
-export default class MyStatefulWidget extends WidgetBase {
+export default class MyEncapsulatedStateWidget extends WidgetBase {
 	private myState: string = 'Hello from a stateful widget!';
 
 	@watch()
@@ -388,16 +396,15 @@ export default class MyStatefulWidget extends WidgetBase {
 	protected render() {
 		return (
 			<div>
-				<div>Current widget state: {this.myState}</div>
-				<div>
-					<button
-						onclick={() => {
-							this.myState = 'State change iteration #' + ++this.counter;
-						}}
-					>
-						Change State
-					</button>
-				</div>
+				Current widget state: {this.myState}
+				<br />
+				<button
+					onclick={() => {
+						this.myState = 'State change iteration #' + ++this.counter;
+					}}
+				>
+					Change State
+				</button>
 			</div>
 		);
 	}
@@ -406,7 +413,7 @@ export default class MyStatefulWidget extends WidgetBase {
 
 ## Intermediate: Widget Properties
 
-In addition to representing the structure of an application, virtual nodes also serve as a way to inject state into each corresponding widget or DOM element. This process doubles as a way for the framework to determine when a state change has occurred, meaning it can reactively re-render the affected widgets.
+Virtual nodes serve a second purpose of injecting state into each corresponding widget or DOM element. This process doubles as a way for the framework to determine when a state change has occurred, meaning it can reactively re-render the affected widgets.
 
 This is done by providing a set of **properties** when instantiating `VNode`s and `WNode`s.
 
@@ -564,6 +571,8 @@ Additionally, the `ListItem` is now reusable in other areas of our application(s
 
 # Mixins
 
+TODO: remove section?
+
 Dojo makes use of mixins to decorate additional functionality and properties to existing widgets. Mixins provide a mechanism that allows loosely coupled design and composition of behaviors into existing widgets without having to change the base widget.
 
 TypeScript supports mixins using a constructor type of `new (...args: any[]) => any;` that enables a class to be passed as a function argument and extended to add new functionality.
@@ -599,18 +608,15 @@ function StateMixin<T extends new (...args: any[]) => WidgetBase>(Base: T): T & 
 
 Examples of Dojo mixins can be seen with `ThemedMixin` and `I18nMixin` that are described in [Styling & Theming](#styling--theming) and [Internationalization](#internationalization) sections.
 
-# Key principles when developing widgets
+# Widget development best practices
 
-These are some of the **important** principles to keep in mind when creating and using widgets:
+When working with widgets, a few important principles should be kept in mind to avoid introducing anti-patterns into application code:
 
-1.  The widget's _`__render__`_, _`__setProperties__`_, _`__setChildren__`_ functions should **never** be called nor overridden.
-    -   These are the internal methods of the widget APIs and their behavior can change in the future, causing regressions in your application.
-2.  You should **never** need to deal directly with widget instances
-    -   The Dojo widget system manages all instances required including caching and destruction, trying to create and manage other widgets will cause issues and will not work as expected.
-3.  **Never** update `properties` within a widget instance, they should be considered pure.
-    -   Properties are considered read-only and should not be updated within a widget instance, updating properties could cause unexpected behavior and introduce bugs in your application.
-4.  Hyperscript should **always** be written using the `@dojo/framework/widget-core/d#v()` function.
-    -   The widget-core abstraction for Hyperscript is the only type of vdom that widget-core can process for standard DOM elements, any other mechanism will not work properly or at all.
+-   A widget's _`__render__`_, _`__setProperties__`_, and _`__setChildren__`_ functions are internal framework implementation details, and should never be called nor overridden in application code.
+-   Dojo fully manages the lifecycle of widget instances, including instantiation, caching and destruction. Applications only need to provide widgets to the framework as generic type parameters when calling [the `w()` method](#instantiating-vdom-nodes), or implicitly via [TSX tags](#tsx-widget-example), as VDOM render output.
+    -   Direct use of widget instances can cause unexpected behavior and introduce bugs into an application.
+-   Widgets should treat the properties passed to them as read-only.
+    -   Changing properties can cause unexpected behavior and introduce bugs into an application.
 
 # Additional widget concepts
 
@@ -729,7 +735,7 @@ class FocusParent extends Focus(WidgetBase) {
 <iframe src="https://codesandbox.io/embed/1vzlzn1nmj?autoresize=1&fontsize=12&hidenavigation=1&module=%2Fsrc%2FDemo.ts&view=editor" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
 DOCSONLY-->
 
-## Advanced widget diff strategies
+## Advanced diffing strategies
 
 Controlling the diffing strategy can be done at an individual property level using the `diffProperty` decorator on a widget class.
 
@@ -763,7 +769,7 @@ function customDiff(previousProperty: string, newProperty: string): PropertyChan
 class MyWidget extends WidgetBase<MyProperties> {}
 ```
 
-### Property Diffing Reactions
+### Property change hooks
 
 It can be necessary to perform some internal logic when one or more properties change, this can be done by registering a reaction callback.
 
@@ -805,7 +811,7 @@ class MyWidget extends WidgetBase {
 }
 ```
 
-## Widget lifecycle hooks
+# Widget lifecycle hooks
 
 Occasionally, in a mixin or a widget class, it may be required to provide logic that needs to be executed before properties are diffed using `beforeProperties`, either side of a widget's `render` call using `beforeRender` & `afterRender` or after a constructor using `afterContructor`.
 
@@ -813,7 +819,7 @@ This functionality is provided by the `beforeProperties`, `beforeRender`, `after
 
 **_Note:_** All lifecycle functions are executed in the order that they are specified from the superclass up to the final class.
 
-### beforeProperties
+## `@beforeProperties` (decorator)
 
 The `beforeProperties` lifecycle hook is called immediately before property diffing is executed. Functions registered for `beforeProperties` receive `properties` and are required to return any updated, changed `properties` that are mixed over (merged) the existing properties.
 
@@ -833,7 +839,7 @@ class MyClass extends WidgetBase<MyClassProperties> {
 }
 ```
 
-### AlwaysRender
+## `@alwaysRender` (decorator)
 
 The `alwaysRender` decorator is used to force a widget to always render regardless of whether the widget's properties are considered different.
 
@@ -842,7 +848,7 @@ The `alwaysRender` decorator is used to force a widget to always render regardle
 class MyClass extends WidgetBase {}
 ```
 
-### BeforeRender
+## `@beforeRender` (decorator)
 
 The `beforeRender` lifecycle hook receives the widget's `render` function, `properties`, and `children` and is expected to return a function that satisfies the `render` API. The `properties` and `children` are passed to enable them to be manipulated or decorated prior to `render` being called.
 
@@ -862,7 +868,7 @@ class MyClass extends WidgetBase {
 }
 ```
 
-### AfterRender
+## `@afterRender` (decorator)
 
 The `afterRender` lifecycle hook receives the returned `DNode`s from a widget's `render` call so that the nodes can be decorated, manipulated or swapped completely.
 
@@ -876,11 +882,7 @@ class MyBaseClass extends WidgetBase {
 }
 ```
 
-## Method lifecycle hooks
-
-These lifecycle hooks are used by overriding methods in a widget class. Currently, `onAttach` and `onDetach` are supported and provide callbacks for when a widget has been first attached and removed (destroyed) from the virtual dom.
-
-### onAttach
+## `onAttach` (method override)
 
 `onAttach` is called once when a widget is first rendered and attached to the DOM.
 
@@ -892,7 +894,7 @@ class MyClass extends WidgetBase {
 }
 ```
 
-### onDetach
+## `onDetach` (method override)
 
 `onDetach` is called when a widget is removed from the widget tree and therefore the DOM. `onDetach` is called recursively down the tree to ensure that even if a widget at the top of the tree is removed all the child widgets `onDetach` callbacks are fired.
 
