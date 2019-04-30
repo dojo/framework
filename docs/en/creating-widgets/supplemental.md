@@ -2,6 +2,7 @@
 	- [Minimizing complexity](#minimizing-complexity)
 	- [Basic widget structure](#basic-widget-structure)
 		- [Basic widget example](#basic-widget-example)
+	- [Scaffolding widgets](#scaffolding-widgets)
 - [Rendering in Dojo](#rendering-in-dojo)
 	- [TSX Support](#tsx-support)
 		- [TSX-enabled applications](#tsx-enabled-applications)
@@ -14,18 +15,36 @@
 	- [Rendering to the DOM](#rendering-to-the-dom)
 		- [`MountOptions` properties](#mountoptions-properties)
 	- [Adding external DOM nodes into the VDOM](#adding-external-dom-nodes-into-the-vdom)
-- [Widget state management](#widget-state-management)
-	- [Basic: Internal Widget State](#basic-internal-widget-state)
+- [Managing state](#managing-state)
+	- [Basic: widget-encapsulated state](#basic-widget-encapsulated-state)
 		- [Invalidating a widget](#invalidating-a-widget)
-	- [Intermediate: Widget Properties](#intermediate-widget-properties)
-	- [Advanced: Dojo stores](#advanced-dojo-stores)
-- [Decomposing widgets](#decomposing-widgets)
-- [Mixins](#mixins)
-- [Widget development best practices](#widget-development-best-practices)
-- [Additional widget concepts](#additional-widget-concepts)
+	- [Intermediate: passing widget properties](#intermediate-passing-widget-properties)
+		- [Advanced diffing strategies](#advanced-diffing-strategies)
+			- [Property change hooks](#property-change-hooks)
+	- [Advanced: abstracting and injecting state](#advanced-abstracting-and-injecting-state)
+		- [Creating an application context](#creating-an-application-context)
+		- [Injectors](#injectors)
+		- [Creating state containers](#creating-state-containers)
+		- [Using state containers](#using-state-containers)
+- [Effective widget development](#effective-widget-development)
+	- [Decomposing widgets](#decomposing-widgets)
+	- [Widget development best practices](#widget-development-best-practices)
+- [Widget interactivity](#widget-interactivity)
+	- [Responding to events](#responding-to-events)
+		- [Event listeners](#event-listeners)
+		- [Using event handlers](#using-event-handlers)
+		- [Final steps](#final-steps)
 	- [Handling Focus](#handling-focus)
-	- [Advanced diffing strategies](#advanced-diffing-strategies)
-		- [Property change hooks](#property-change-hooks)
+	- [Working with forms](#working-with-forms)
+		- [Forms](#forms)
+		- [Form widgets](#form-widgets)
+		- [Using forms](#using-forms)
+	- [Form validation](#form-validation)
+		- [Create a place to store form errors](#create-a-place-to-store-form-errors)
+		- [Tie validation to form inputs](#tie-validation-to-form-inputs)
+		- [Extending TextInput](#extending-textinput)
+		- [Making use of the blur event](#making-use-of-the-blur-event)
+		- [Validating on submit](#validating-on-submit)
 - [Widget lifecycle hooks](#widget-lifecycle-hooks)
 	- [`@beforeProperties` (decorator)](#beforeproperties-decorator)
 	- [`@alwaysRender` (decorator)](#alwaysrender-decorator)
@@ -34,14 +53,15 @@
 	- [`onAttach` (method override)](#onattach-method-override)
 	- [`onDetach` (method override)](#ondetach-method-override)
 - [Converting widgets into web components](#converting-widgets-into-web-components)
+	- [`@customElement()` properties](#customelement-properties)
 	- [Attributes](#attributes)
 	- [Properties](#properties)
 	- [Events](#events)
 	- [Tag Name](#tag-name)
-- [Meta Configuration](#meta-configuration)
-	- [Dimensions](#dimensions)
-	- [Intersection](#intersection)
-	- [Animation](#animation)
+- [Widget metadata](#widget-metadata)
+	- [`Dimensions`](#dimensions)
+	- [`Intersection`](#intersection)
+	- [`WebAnimation`](#webanimation)
 		- [Basic Example](#basic-example)
 		- [Changing Animation](#changing-animation)
 		- [Passing an effects function](#passing-an-effects-function)
@@ -97,6 +117,42 @@ export default class MyWidget extends WidgetBase {
 This widget does not return anything from its `render()` method, so has no structural representation within an application's output.
 
 Typical widgets will however [return one or more virtual DOM nodes from their `render()` method](#virtual-nodes-example). The process of translating virtual DOM nodes to output on a web page is handled by Dojo's rendering system.
+
+## Scaffolding widgets
+
+Dojo provides the [`dojo create widget`](https://github.com/dojo/cli-create-widget) CLI command to quickly scaffold new widgets. This command helps create:
+
+-   The main TypeScript module for a widget
+-   A unit test for the widget
+-   A CSS module to style the widget
+-   An optional custom element descriptor, if the widget is intended to be used as a Web Component
+
+The command can be installed globally via:
+
+```sh
+npm install -g @dojo/cli-create-widget
+```
+
+and used as:
+
+```sh
+dojo create widget --name <widget name> [--styles <CSS module path>] [--tests <test path>] [--component]
+```
+
+By default, running the command for a given `dojo create widget --name MyScaffoldedWidget` will create the following structure:
+
+    myscaffoldedwidget/
+    ├── MyScaffoldedWidget.ts
+    ├── styles/
+    │   ├── myscaffoldedwidget.m.css
+    │   └── myscaffoldedwidget.m.css.d.ts
+    └── tests/
+        └── unit
+            └── MyScaffoldedWidget.ts
+
+The location where styles and tests are created can be customized using the `--styles` and `--tests` arguments respectively.
+
+A [Custom Element](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) descriptor will be generated if the `--component` argument is passed. When doing so, the scaffolded widget will also include an appropriate `@customElement` decorator with an empty template object, ready for further configuration.
 
 # Rendering in Dojo
 
@@ -276,7 +332,7 @@ Dojo applications can wrap external DOM elements, effectively bringing them into
 
 This is accomplished with the `dom()` utility method from the `@dojo/framework/widget-core/d` module. It works similarly to the [`v()` utility method](#instantiating-vdom-nodes) from the same module, but takes an existing DOM node rather than an element tag string as its primary argument. It will similarly return a `VNode`, which references the DOM node passed into it rather than a newly created element.
 
-The Dojo application effectively takes ownership of the wrapped DOM node once the `VNode` returned by `dom()` has been added to the application's VDOM. Note that this process only works for nodes external to the Dojo application - either siblings of the element containing the mounted application, or newly-created nodes that are disconnected from the main webpage's DOM. Wrapping a node that is an ancestor or descendant of the application mount target element will not do anything.
+The Dojo application effectively takes ownership of the wrapped DOM node once the `VNode` returned by `dom()` has been added to the application's VDOM. Note that this process only works for nodes external to the Dojo application - either siblings of the element containing the mounted application, or newly-created nodes that are disconnected from the main webpage's DOM. Wrapping a node that is an ancestor or descendant of the application mount target element will not work.
 
 Unlike `v()`, `dom()` accepts a `diffType` property that can specify the diffing strategy to use when determining if a property or attribute has changed and needs to be applied to the wrapped DOM node. The default strategy is `none`, meaning Dojo will simply add the wrapped DOM element as-is within the application's output.
 
@@ -320,7 +376,7 @@ const vnode = dom({
 });
 ```
 
-# Widget state management
+# Managing state
 
 For simple applications where data is not required to flow between many components, state management can be straightforward to deal with. Data can be encapsulated within individual widgets that need it as the most [basic form of state management](#basic-internal-widget-state) within a Dojo application.
 
@@ -330,7 +386,7 @@ For large applications, state management can be one of the most challenging aspe
 
 TODO: stores link somewhere? remove below?
 
-## Basic: Internal Widget State
+## Basic: self-encapsulated widget state
 
 Widgets can maintain their own internal state as private class fields. Data held in these fields may directly affect the widget's render output, or may be passed as properties to any child widgets where they in turn directly affect the children's render output. Widgets may also allow their internal state to be changed, for example in response to a user interaction event.
 
@@ -376,9 +432,9 @@ There are two ways a widget can mark itself as invalid:
     -   In the `MyEncapsulatedStateWidget` example, this could be done in the 'Change State' button's `onclick` handler.
 2.  Annotating any relevant fields with the `@watch()` decorator (from the `@dojo/framework/widget-core/decorators/watch` module). When `@watch`ed fields are modified, `this.invalidate()` will implicitly be called - this can be useful for state fields that always need to trigger a re-render when updated.
 
-Note that calling `this.invalidate()` won't immediately re-render the widget - instead it acts as a notification to Dojo that the widget has been dirtied and should be updated and re-rendered in the next available render cycle. This means invalidating a widget multiple times within the same render frame won't have any negative impact on application performance.
+Note that calling `this.invalidate()` won't immediately re-render the widget - instead it acts as a notification to Dojo that the widget has been dirtied, so should be updated and re-rendered in the next available render cycle. This means invalidating a widget multiple times within the same render frame won't have any negative impact on application performance.
 
-The following is an updated `MyEncapsulatedStateWidget` example that will correctly update its output when its state is changed. Here, both `myState` and `counter` are updated as part of the same application logic operation, so `@watch()` could be added to either or both of the fields, with the same net effect and the same application performance profile in all cases:
+The following is an updated `MyEncapsulatedStateWidget` example that will correctly update its output when its state is changed. Here, both `myState` and `counter` are updated as part of the same application logic operation, so `@watch()` could be added to either or both of the fields, with the same net effect and performance profile in all cases:
 
 > src/widgets/MyEncapsulatedStateWidget.tsx
 
@@ -411,7 +467,7 @@ export default class MyEncapsulatedStateWidget extends WidgetBase {
 }
 ```
 
-## Intermediate: Widget Properties
+## Intermediate: passing widget properties
 
 Virtual nodes serve a second purpose of injecting state into each corresponding widget or DOM element. This process doubles as a way for the framework to determine when a state change has occurred, meaning it can reactively re-render the affected widgets.
 
@@ -447,11 +503,259 @@ DOCSONLY-->
 
 New properties are compared with the previous properties to determine if a widget requires re-rendering. By default Dojo uses the `auto` diffing strategy, that performs a shallow comparison for objects and arrays, ignores functions (except classes that extend `WidgetBase`) and a reference comparison for all other values.
 
-## Advanced: Dojo stores
+### Advanced diffing strategies
 
-TODO: link to stores refguide
+Controlling the diffing strategy can be done at an individual property level using the `diffProperty` decorator on a widget class.
 
-# Decomposing widgets
+`widget-core` provides a set of diffing strategy functions from `@dojo/framework/widget-core/diff.ts` that can be used. When these functions do not provide the required functionality a custom diffing function can be provided. Properties that have been configured with a specific diffing type will be excluded from the automatic diffing.
+
+| Diff Function | Description                                                                                                                  |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `always`      | Always report a property as changed.                                                                                         |
+| `auto`        | Ignore functions (except classes that extend `WidgetBase`), shallow compare objects, and reference compare all other values. |  |
+| `ignore`      | Never report a property as changed.                                                                                          |
+| `reference`   | Compare values by reference (`old === new`)                                                                                  |
+| `shallow`     | Treat the values as objects and compare their immediate values by reference.                                                 |
+
+**Important:** All diffing functions should be pure functions and are called _WITHOUT_ any scope.
+
+```ts
+// using a diff function provided by widget-core#diff
+@diffProperty('title', reference)
+class MyWidget extends WidgetBase<MyProperties> {}
+
+//custom diff function; A pure function with no side effects.
+function customDiff(previousProperty: string, newProperty: string): PropertyChangeRecord {
+	return {
+		changed: previousProperty !== newProperty,
+		value: newProperty
+	};
+}
+
+// using a custom diff function
+@diffProperty('title', customDiff)
+class MyWidget extends WidgetBase<MyProperties> {}
+```
+
+#### Property change hooks
+
+It can be necessary to perform some internal logic when one or more properties change, this can be done by registering a reaction callback.
+
+A reaction function is registered using the `diffProperty` decorator on a widget class method. This method will be called when the specified property has been detected as changed and receives both the old and new property values.
+
+```ts
+class MyWidget extends WidgetBase<MyProperties> {
+	@diffProperty('title', auto)
+	protected onTitleChange(previousProperties: any, newProperties: any): void {
+		this._previousTitle = previousProperties.title;
+	}
+}
+```
+
+`diffProperty` decorators can be stacked on a single class method and will be called if any of the specified properties are considered changed.
+
+```ts
+class MyWidget extends WidgetBase<MyProperties> {
+	@diffProperty('title', auto)
+	@diffProperty('subtitle', auto)
+	protected onTitleOrSubtitleChange(previousProperties: any, newProperties: any): void {
+		this._titlesUpdated = true;
+	}
+}
+```
+
+For non-decorator environments (Either JavaScript/ES6 or a TypeScript project that does not have the experimental decorators configuration set to true in the `tsconfig`), the functions need to be registered in the constructor using the `addDecorator` API with `diffProperty` as the key.
+
+```ts
+class MyWidget extends WidgetBase {
+	constructor() {
+		super();
+		diffProperty('foo', auto, this.diffFooReaction)(this);
+	}
+
+	diffFooReaction(previousProperty: any, newProperty: any) {
+		// do something to reaction to a diff of foo
+	}
+}
+```
+
+## Advanced: abstracting and injecting state
+
+Modern web applications are often required to manage complex state models which can involve fetching data from a remote service or multiple widgets requiring the same slices of state. While Dojo's widgets can manage application state, encapsulation and a clean separation of concerns may be lost if widgets manage their own visual representations, listen for interactions from the user, manage their children, and keep track of state information. Additionally, using widgets to pass state through an application often forces the widgets to be aware of state information for the sole purpose of passing that data down to their children. To allow widgets to remain focused on their primary roles of providing a visual representation of themselves and listening for user interactions, Dojo provides a mechanism using the `Registry` and `Container` classes, that is designed to coordinate an application's external state and connect and map this state to properties.
+
+In this tutorial, we will start with an application that is managing its state in the widgets themselves. We will then extract all of the state-related code out of the widgets and inject external state as properties only into widgets as is needed.
+
+Since Dojo widgets are TypeScript classes, they are capable of filling a large number of roles, including state management. With complex widgets, however, combining the responsibilities to manage the widget's visual representation as well as the state of its children can make them difficult to manage and test. Dojo defines the `Registry` and `Container` classes as a way to externalize state management from the app and centralize that management into mechanisms that are designed specifically to fill that role.
+
+### Creating an application context
+
+{% task 'Create a class to manage application state.' %}
+
+To begin our tutorial, let's review the initial version of `App`:
+
+{% include_codefile 'demo/initial/biz-e-corp/src/widgets/App.ts' %}
+
+Most of this widget is dedicated to holding and managing the `WorkerData` in the application. Notice, however, that it never actually uses that data itself. `App` is only containing the state and passing it to the children as required via properties. Lifting up state to the highest common widget in the tree is a valid pattern, but as an application's state grows in size and complexity, it is often desirable to decouple this from widgets. In larger applications, the `App` class would become complicated and more difficult to maintain due to the additional state information that it would be required to track. Since the state information is not a primary concern of the `App` class, let's refactor it out of `App` and into a new `ApplicationContext` class that extends the base `Injector`.
+
+{% instruction 'Add the following to the existing `ApplicationContext.ts` file in the `src` directory' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/ApplicationContext.ts' %}
+
+{% aside 'Invalidations' %}
+Dojo Widgets can invoke `invalidate()` directly, however, injector factories receive an `invalidator` that can be called to ensure that all connected widgets are invalidated
+{% endaside %}
+
+The code begins by importing some modules, including the `WorkerProperties` and `WorkerFormData` interfaces defined in the `Worker` and `WorkerForm` modules. These two interfaces define the shape of state that the `ApplicationContext` manages.
+
+The `ApplicationContext` contains the application state information. The constructor accepts two parameters, an `invalidator` that is called when the internal state changes and the initial state.
+
+`ApplicationContext` also has two private fields, `_workerData` and `_formData`, which contain the state, and two accessor methods to retrieve these fields.
+
+{% include_codefile 'demo/finished/biz-e-corp/src/ApplicationContext.ts' lines:26-35 %}
+
+The `formInput` method provides the same functionality as the `_onFormInput` method in the `App` class and the `submitForm` method is analogous to the `_addWorker` method from the `App` class. The implementations vary slightly as the `ApplicationContext` has dedicated fields to store the state information. Also, since the `ApplicationContext` is not a widget, it cannot call `invalidate();` to schedule a re-render. Instead the instance needs to call the `invalidator` function passed in and stored on construction.
+
+Notice that the `ApplicationContext` does not contain any code to load state information. Currently its only role is only to manage the application's state provided on initialization via its `constructor`. However as the requirements for the application become more advanced, the `ApplicationContext` could make requests to fetch and modify data from a remote service or local storage mechanism.
+
+Now that we have moved state management to a dedicated module, we need a way to register the state and connect it to sections of our application. We will do this by creating a registry and registering the `ApplicationContext` injector.
+
+{% section %}
+
+### Injectors
+
+{% task 'Register an injector factory that will allow state to be injected into widgets.' %}
+
+Currently, the application's `main` module is only responsible for creating the `Projector`, which provides the bridge between the application code and the DOM.
+
+{% include_codefile 'demo/initial/biz-e-corp/src/main.ts' %}
+
+Now, we need to:
+
+1. Create a `registry` and then define an injector factory that creates the `ApplicationContext` passing the invalidator and initial state. The injector factory returns a function that returns the `ApplicationContext` instance.
+2. To make the `registry` available within the widget tree, we need to pass the `registry` as a property to the `projector`
+
+{% instruction 'Import the `ApplicationContext` module and add this code to the `main` module:' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/main.ts' lines:5 %}
+
+{% aside 'Loading data' %}
+In a real-world application, this data would probably be loaded via a call to a web service or a local data store. To learn more, take a look at the [stores tutorial](../comingsoon.html).
+{% endaside %}
+
+The state stored in the `ApplicationContext` is the same data that was used in the previous version of the `App` module to initialize the `WorkerProperties`, but it is now decoupled into an isolated module that helps to understand and maintain the application. In general, the `main` module of an application should be concerned with initializing application-wide state. Also, as previously mentioned, the `App` class only needed to manage the `WorkerProperties` state so that it could coordinate change to its children.
+
+Now we need to create the registry, create the injector factory that creates and returns the `ApplicationContext` instance injector, and finally make the registry available to the widget tree.
+
+{% instruction 'Add the `Registry` import to the `main` module.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/main.ts' line:3 %}
+
+{% instruction 'Now, create an injector factory that creates and returns the application context' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/main.ts' lines:8-31 %}
+
+{% aside 'Registry' %}
+The registry provides a way to register a widget via a label, making it accessible to other parts of the application. You can learn more in the [registry tutorial](../1020_registries/).
+{% endaside %}
+
+The first statement creates a `registry` where the application context can be registered. The second statement registers an injector factory that creates the `ApplicationContext` instance passing in the `invalidator` function passed to the factory. The factory creates an injector function that returns the created `ApplicationContext` instance.
+
+{% instruction 'Pass the registry to the renderer when mounting' %}
+
+We need to pass the `registry` to the `renderer` as an option on the `mount` function. This ensures that the `registry` instance is available for all widget and container instances.
+
+{% include_codefile 'demo/finished/biz-e-corp/src/main.ts' line:34 %}
+
+Now that the `ApplicationContext` injector factory is defined, and the `registry` gets set on the `projector`, it is time to create the components that will use it. In the next section, we will create a non-visual widget called a `Container` that will allow injecting state into the `WorkerForm` and `WorkerContainer` widgets.
+
+{% section %}
+
+### Creating state containers
+
+{% task 'Create `Containers` that will allow state to be injected into widgets' %}
+
+On their own, the injector factories defined on the `registry` are not able to help us very much because widgets expect state to be passed to them via properties. Therefore an `injector` must be connected to interested widgets in order for their state to be mapped to `properties` that widgets can consume by using a `Container`. `Containers` are designed to coordinate the injection - they connect `injectors` to widgets and return `properties` from the `injector`'s state which are passed to the connected widgets.
+
+Normally, a separate `Container` is created for each widget that needs to have `properties` injected. In the demo application, we have two widgets that rely on application state - `WorkerContainer` and `WorkerForm`.
+
+Let's start with the `WorkerContainer`. As a best practice, you should give your containers the same name as their respective widgets, with a `Container` suffix.
+
+E.g. Widget name: `Foo`
+container name ‘FooContainer’. To keep things organized, they are also stored in a different directory - `containers`.
+
+{% instruction 'Add the following imports to the `WorkerContainerContainer` in the `containers` directory' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/containers/WorkerContainerContainer.ts' lines:1-4 %}
+
+* The first `import` gives the module access to the `Container` factory function which will be used to construct the container.
+* The second `import` allows the module to use the `ApplicationContext` to extract state
+* The third import enables the `WorkerContainerProperties` to receive properties from its parent, and wrap the `WorkerContainer` class with the `container`.
+
+Next, we need to address the fact that the container has two places to get properties from - its parent widget and the `ApplicationContext`. To tell the container how to manage this, we will create a function called `getProperties`.
+
+{% instruction 'Add the `getProperties` function to the `WorkerContainerContainer` module.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/containers/WorkerContainerContainer.ts' lines:6-8 %}
+
+The `getProperties` function receives two parameters. The first is the `payload` of the `injector` instance returned by the `injector` function returned by the registered factory. The second is the `properties` that have been passed to the container via the normal mechanism, `w(Container, properties)`. The properties will implement the properties interface defined by the wrapped widget (for example `WorkerContainerProperties`). The `getProperties` function must then return an object that holds the properties that will be passed to the widget itself. In this example, we are ignoring the properties provided by the parent and returning the `workerData` stored by the `ApplicationContext`. More advanced use cases where both sources are used to generate the properties are also possible.
+
+{% instruction 'Finish the `WorkerContainerContainer` by adding the following code.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/containers/WorkerContainerContainer.ts' lines:10-12 %}
+
+These final lines define the actual `WorkerContainerContainer` class and exports it. The `Container` function creates the class by accepting three parameters:
+
+* The widget's class definition (alternatively, a widget's registry key can be used)
+* The registry key for the `Injector`
+* An object literal that provides the mapping functions used to reconcile the two sets of properties and children that the container can receive (one from the `Injector` and one from the parent widget). The returned class is also a widget as it descends from `WidgetBase` and therefore may be used just like any other widget.
+
+The other container that we need is the `WorkerFormContainer`.
+
+{% instruction 'Add the following code to the `WorkerFormContainer` module in the `containers` sub-package.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/containers/WorkerFormContainer.ts' %}
+
+This module is almost identical to the `WorkerContainerContainer` except for additional properties that are required by the `WorkerForm` to allow it to respond to user interactions with the form. The `ApplicationContext` contains two methods for managing these events - `onFormInput` and `onFormSave`. These methods need to be passed into the `WorkerForm` to handle the events, but they need to execute in the context of the `ApplicationContext`. To handle this, `bind` is called on each of the methods to explicitly set their execution contexts.
+
+At this point, we have created the `ApplicationContext` to manage state, an `ApplicationContext` injector factory to inject state into the application's widgets, and `Containers` to manage how properties and children from the injector and parent widgets are combined. In the next section, we will integrate these components into our application.
+
+{% section %}
+
+### Using state containers
+
+{% task 'Integrate containers into an application.' %}
+
+As mentioned in the previous section, `Container` is a higher order component that extends `WidgetBase` and returns the wrapped widget and injected `properties` from the `render`. As such, it can be used just like any other widget. In our demo application, we can take advantage of its extension of `WidgetBase` by simply replacing the `WorkerForm` and `WorkerContainer` with their container equivalents.
+
+{% instruction 'Replace the imports in the `App` module with the following.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/App.ts' lines:1-5 %}
+
+There are two major changes to the `App` module's imports. First, the widgets (`WorkerForm` and `WorkerContainer`) have been replaced by their container equivalents (`WorkerFormContainer` and `WorkerContainerContainer`). Second, all of the interfaces, `WorkerFormData`, and `WorkerProperties` have been removed. These are no longer needed since the `App` class no longer needs to manage state.
+
+Also, the property and methods within `App` that are setting and managing state can be removed.
+
+{% instruction 'Remove the following code from the `App` class.' %}
+
+{% include_codefile 'demo/initial/biz-e-corp/src/widgets/App.ts' lines:9-44 %}
+
+The final change to `App` is to update the `render` method to use the containers. Since the containers already know how to manage their state and respond to events, no properties need to be passed directly to the `Container` by the `App` widget.
+
+{% instruction 'Replace the `render` method with the following code.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/App.ts' lines:9-15 %}
+
+With this last change, the `App` class is now only nine lines of code. All of the state management logic is still part of the application, but it has been refactored out of the `App` class to create a more efficient application architecture.
+
+Notice that the `WorkerForm` and `WorkerContainer` widgets were not changed at all! This is an important thing to keep in mind when designing widgets - a widget should never be tightly coupled to the source of its properties. By keeping the containers and widgets separate, we have helped to ensure that each widget or container has a narrowly defined set of responsibilities, creating a cleaner separation of concerns within our widgets and containers.
+
+At this point, you should reload your page and verify the application is working.
+
+{% section %}
+
+# Effective widget development
+
+## Decomposing widgets
 
 Splitting widgets into multiple smaller widgets is easy and helps to add extended functionality and promotes reuse.
 
@@ -569,46 +873,7 @@ DOCSONLY-->
 
 Additionally, the `ListItem` is now reusable in other areas of our application(s).
 
-# Mixins
-
-TODO: remove section?
-
-Dojo makes use of mixins to decorate additional functionality and properties to existing widgets. Mixins provide a mechanism that allows loosely coupled design and composition of behaviors into existing widgets without having to change the base widget.
-
-TypeScript supports mixins using a constructor type of `new (...args: any[]) => any;` that enables a class to be passed as a function argument and extended to add new functionality.
-
-Example mixin that adds method `setState` and `readonly` `state` property:
-
-```ts
-// interface for the extended API
-interface StateMixin {
-	readonly state: Readonly<any>;
-	setState(state: any): void;
-}
-
-// function that accepts a class that extends `WidgetBase` and returns the extended class with the `StateMixin`
-// behavior
-function StateMixin<T extends new (...args: any[]) => WidgetBase>(Base: T): T & (new (...args: any[]) => StateMixin) {
-	return class extends Base {
-		private _state: any;
-
-		public setState(state: any): void {
-			// shallow copy of the state
-			this._state = { ...this._state, ...state };
-			// invalidate the widget
-			this.invalidate();
-		}
-
-		public get state(): any {
-			return this._state;
-		}
-	};
-}
-```
-
-Examples of Dojo mixins can be seen with `ThemedMixin` and `I18nMixin` that are described in [Styling & Theming](#styling--theming) and [Internationalization](#internationalization) sections.
-
-# Widget development best practices
+## Widget development best practices
 
 When working with widgets, a few important principles should be kept in mind to avoid introducing anti-patterns into application code:
 
@@ -618,9 +883,125 @@ When working with widgets, a few important principles should be kept in mind to 
 -   Widgets should treat the properties passed to them as read-only.
     -   Changing properties can cause unexpected behavior and introduce bugs into an application.
 
-# Additional widget concepts
+# Widget interactivity
 
-This section provides some details on more advanced Dojo functionality and configuration that may be required to build more complex widgets and applications.
+## Responding to events
+
+### Event listeners
+
+{% task 'Create an event listener.' %}
+
+In [Creating widgets](../003_creating_widgets/), we created an application that contains several widgets that render worker information. In this tutorial, you will add event listeners to these widgets to show additional information about an employee when clicking on the widget.
+
+The first step is to add the listener itself. In Dojo, event listeners get assigned like any other property passed to the rendering function, `v`. Look at the `Worker` widget that is in `src/widgets`. Currently, the top level `DNode` has one property assigned: `classes`.
+
+{% instruction 'Update the object containing that property as follows.' %}
+
+```typescript
+{
+	classes: this.theme(css.worker),
+	onclick: this.flip
+}
+```
+
+The `onclick` property registers a function to call when clicking on the node to which it is attached. In this case, the registered function is a method called `flip`.
+
+{% instruction 'Add a basic implementation for that method within the Worker class.' %}
+
+```typescript
+flip(): void {
+	console.log('the flip method has been fired!');
+}
+```
+
+Now, run the app (using `dojo build -m dev -w -s`) and navigate to [localhost:9999](http://localhost:9999). Once there,
+
+{% instruction 'Open the console window and click on any of the worker widgets to confirm that the `flip` method gets called as expected.' %}
+
+{% aside 'Automatic Binding of Handlers' %}
+The context for event handlers and function properties are automatically bound to the `this` context of the widget that defined the `v()` or `w()` call. If you are just passing on a property that has already been bound, then this will _not_ be bound again.
+{% endaside %}
+
+{% section %}
+
+### Using event handlers
+
+{% task 'Add a second visual state.' %}
+
+Now that we have an event handler, it is time to extend the `render` method to show detailed information about a worker in addition to the current overview. For the sake of this tutorial, we will call the current view the front and the detailed view the back.
+
+We could add the additional rendering logic in the current `render` method, but that method could become difficult to maintain as it would have to contain all of the rendering code for both the front and back of the card. Instead, we will generate the two views using two private methods and then call them from the `render` method.
+
+{% instruction 'Create a new private method called `_renderFront` and move the existing render code inside it.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/Worker.ts' lines:27-45 %}
+
+{% instruction 'Create another private method called `_renderBack` to render the back view.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/Worker.ts' lines:47-88 %}
+
+This code is not doing anything new. We are composing together multiple virtual nodes to generate the elements required to render the detailed view. This method does, however, refer to some properties and CSS selectors that do not exist yet.
+
+We need to add three new properties to the `WorkerProperties` interface. These properties are the email address of the worker, the average number of hours they take to complete a task, and the active tasks for the worker.
+
+{% instruction 'Update the `WorkerProperties` interface.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/Worker.ts' lines:6-12 %}
+
+Now, we need to add the CSS selectors that will provide the rules for rendering this view's elements.
+
+{% instruction 'Open `worker.m.css` and replace the existing classes with the following.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/styles/worker.m.css' lang:css %}
+
+We also need to update the CSS selector for the front view by changing the selector from `css.worker` to `css.workerFront`.
+
+Finally, we need to update the `render` method to choose between the two rendering methods.
+
+{% instruction 'Add a private field to the class.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/Worker.ts' line:16 %}
+
+In general, the use of private state is discouraged. Dojo encourages the use of a form of the [inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) pattern, where the properties passed to the component by its parent control the behavior of the component. This pattern helps make components more modular and reusable since the parent component is in complete control of the child component's behavior and does not need to make any assumptions about its internal state. For widgets that have state, the use of a field to store this kind of data is standard practice in Dojo. Properties are used to allow other components to view and modify a widget's published state, and private fields are used to enable widgets to encapsulate state information that should not be exposed publicly.
+
+{% instruction 'Use that field\'s value to determine which side to show.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/Worker.ts' lines:18-25 %}
+
+Confirm that everything is working by viewing the application in a browser. All three cards should be showing their front faces. Now change the value of the `_isFlipped` field to `true` and, after the application re-compiles, all three widgets should be showing their back faces.
+
+To re-render our widget, we need to update the `flip` method to toggle the `_isFlipped` field and invalidate the widget
+
+{% instruction 'Replace the `flip` method with this one.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/Worker.ts' lines:90-93 %}
+
+Now, the widget may flip between its front and back sides by clicking on it.
+
+{% section %}
+
+### Final steps
+
+{% task 'Provide additional properties.' %}
+
+Currently, several of the properties are missing for the widgets. As an exercise, try to update the first widget to contain the following properties:
+
+```ts
+{
+	firstName: 'Tim',
+	lastName: 'Jones',
+	email: 'tim.jones@bizecorp.org',
+	tasks: [
+		'6267 - Untangle paperclips',
+		'4384 - Shred documents',
+		'9663 - Digitize 1985 archive'
+	]
+}
+```
+
+This change will pass the specified properties to the first worker. The widget's parent
+is responsible for passing properties to the widget. In this application, `Worker`
+widgets are receiving data from the `App` class via the `WorkerContainer`.
 
 ## Handling Focus
 
@@ -729,91 +1110,591 @@ class FocusParent extends Focus(WidgetBase) {
 }
 ```
 
-[![Edit widget-core-readme-04](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/1vzlzn1nmj)<!--READMEONLY-->
+## Working with forms
 
-<!--DOCSONLY
-<iframe src="https://codesandbox.io/embed/1vzlzn1nmj?autoresize=1&fontsize=12&hidenavigation=1&module=%2Fsrc%2FDemo.ts&view=editor" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
-DOCSONLY-->
+This tutorial will extend on [Responding to events](../004_user_interactions/), where we allowed the user to interact with the application by listening for click events. In this tutorial, we will add a form to the Biz-E-Worker page so that a user can add new workers to the application. This will be done by using some of Dojo's form widgets to allow the feature to be developed more rapidly.
 
-## Advanced diffing strategies
+### Forms
 
-Controlling the diffing strategy can be done at an individual property level using the `diffProperty` decorator on a widget class.
+{% task 'Create a form.' %}
 
-`widget-core` provides a set of diffing strategy functions from `@dojo/framework/widget-core/diff.ts` that can be used. When these functions do not provide the required functionality a custom diffing function can be provided. Properties that have been configured with a specific diffing type will be excluded from the automatic diffing.
+The first step to allowing the user to create new workers is to create a form. This form will contain the input elements that will accept the new worker's initial settings.
 
-| Diff Function | Description                                                                                                                  |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `always`      | Always report a property as changed.                                                                                         |
-| `auto`        | Ignore functions (except classes that extend `WidgetBase`), shallow compare objects, and reference compare all other values. |  |
-| `ignore`      | Never report a property as changed.                                                                                          |
-| `reference`   | Compare values by reference (`old === new`)                                                                                  |
-| `shallow`     | Treat the values as objects and compare their immediate values by reference.                                                 |
+{% instruction 'Add the following to `WorkerForm.ts`.' %}
 
-**Important:** All diffing functions should be pure functions and are called _WITHOUT_ any scope.
+```typescript
+import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import { v } from '@dojo/framework/widget-core/d';
+import { ThemedMixin, theme } from '@dojo/framework/widget-core/mixins/Themed';
+import * as css from '../styles/workerForm.m.css';
+
+export interface WorkerFormProperties {
+}
+
+@theme(css)
+export default class WorkerForm extends ThemedMixin(WidgetBase)<WorkerFormProperties> {
+
+	private _onSubmit(event: Event) {
+		event.preventDefault();
+	}
+
+	protected render() {
+		return v('form', {
+			classes: this.theme(css.workerForm),
+			onsubmit: this._onSubmit
+		});
+	}
+}
+```
+
+{% aside 'Reminder' %}
+If you cannot see the application, remember to run `dojo build -m dev -w -s` to build the application and start the development server.
+{% endaside %}
+
+This widget will render an empty form with a `submit` handler that prevents the form from being submitted to the server. Before we continue to expand on this starting point though, let's integrate the form into the application so we can observe the form as we add more features.
+
+{% instruction 'Add the following widget CSS rules to `workerForm.m.css`.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/styles/workerForm.m.css' lang:css %}
+
+{% instruction 'Now, add the `WorkerForm` to the `App` class.' %}
+
+Import the `WorkerForm` class and the `WorkerFormData` interface and update the `render` method to draw the `WorkerForm`. It should be included after the `Banner` and before the `WorkerContainer` so the `render` method should look like this:
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/App.ts' lines:46-49,53-58 %}
+
+Now, open the application in a browser and inspect it via the browser's developer tools. Notice that the empty form element is being rendered onto the page as expected.
+
+Next, we'll add the visual elements of the form.
+
+{% section %}
+
+### Form widgets
+
+{% task 'Populate the form.' %}
+
+Our form will contain fields allowing the user to create a new worker:
+
+* A first name field for the worker
+* A last name field for the worker
+* An e-mail address field
+* A save button that will use the form's data to create a new worker
+
+We could create these fields and buttons using the `v` function to create simple virtual DOM elements. If we did this, however, we would have to handle details such as theming, internationalization ([i18n](https://en.wikipedia.org/wiki/Internationalization_and_localization)) and accessibility ([a11y](https://en.wikipedia.org/wiki/Accessibility)) ourselves. Instead, we are going to leverage some of Dojo's built-in widgets that have been designed with these considerations in mind.
+
+{% instruction 'Add `w` to the imports from `@dojo/framework/widget-core/d` and add imports for the `Button` and `TextInput` classes to `WorkerForm.ts`.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/WorkerForm.ts' lines:3-5 %}
+
+These imports are for [built-in Dojo Widgets](https://github.com/dojo/widgets). You can explore other widgets in the [Dojo Widget Showcase](https://dojo.github.io/examples/widget-showcase/).
+
+The `Button` class will be used to provide the form's submit button and the `TextInput` class will provide the data entry fields for the worker data.
+
+{% instruction 'Replace your `render()` method with the definition below. The code below adds the necessary visual elements to the form' %}
 
 ```ts
-// using a diff function provided by widget-core#diff
-@diffProperty('title', reference)
-class MyWidget extends WidgetBase<MyProperties> {}
+	protected render() {
+		return v('form', {
+			classes: this.theme(css.workerForm),
+			onsubmit: this._onSubmit
+		}, [
+			v('fieldset', { classes: this.theme(css.nameField) }, [
+				v('legend', { classes: this.theme(css.nameLabel) }, [ 'Name' ]),
+				w(TextInput, {
+					key: 'firstNameInput',
+					label: 'First Name',
+					labelHidden: true,
+					placeholder: 'Given name',
+					required: true
+				}),
+				w(TextInput, {
+					key: 'lastNameInput',
+					label: 'Last Name',
+					labelHidden: true,
+					placeholder: 'Surname name',
+					required: true
+				})
+			]),
+			w(TextInput, {
+				label: 'Email address',
+				type: 'email',
+				required: true
+			}),
+			w(Button, {}, [ 'Save!' ])
+		]);
+	}
+```
 
-//custom diff function; A pure function with no side effects.
-function customDiff(previousProperty: string, newProperty: string): PropertyChangeRecord {
+At this point, the user interface for the form is available, but it does not do anything since we have not specified any event handlers. In the [last tutorial](../004_user_interactions/), we learned how to add event handlers to custom widgets by assigning a method to an event. When using pre-built widgets, however, we pass the handlers as properties. For example, we are going to need a way to handle each text field's `input` event. To do that, we provide the desired handler function as the `onInput` property that is passed to the widget.
+
+{% instruction 'Update the `render` method once again.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/WorkerForm.ts' lines:40-79 %}
+
+This form of the `render` method now does everything that we need: it creates the user interface and registers event handlers that will update the application as the user enters information. However, we need to add a few more methods to the `WorkerForm` to define the event handlers.
+
+{% instruction 'Add these methods:' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/WorkerForm.ts' lines:28-38 %}
+
+The `render` method starts by decomposing the properties into local constants. We still need to define those properties.
+
+{% instruction 'Update the `WorkerFormProperties` interface to include them, and add a `WorkerFormData` interface.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/WorkerForm.ts' lines:8-18 %}
+
+Most of these properties should be familiar by now, but notice the type signature for the `formData` property and the argument of the `onFormInput` property. They're both objects of type `Partial<WorkerFormData>`. The `Partial` type will convert all of the properties of the provided type (`WorkerFormData` in this case) to be optional. This will inform the consumer that it is not guaranteed to receive all of the `WorkerFormData` properties every time - it should be prepared to receive only part of the data and process only those values that it receives.
+
+There are two types of properties that we are using in this form. The `firstName`, `lastName` and `email` properties are grouped together in the `WorkerFormData` interface and are going to set the values that are displayed in the form fields. The `onFormInput` and `onFormSave` properties expose the events that the `WorkerForm` widget can emit. To see how these different property types are used, let's examine the properties that are being passed into the first `TextInput` widget:
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/WorkerForm.ts' lines:51-59 %}
+
+The first thing that we see is a `key` property. As mentioned before, a key is necessary whenever more than one of the same type of widget or virtual DOM element will be rendered by a widget. The `label`, `placeholder`, and `required` fields map to their expected properties.
+
+The `value` property renders the value of the field that is passed into the widget via its properties. Notice that there is no code that manipulates this value within the widget. As parts of a [reactive framework](https://en.wikipedia.org/wiki/Reactive_programming), Dojo widgets do not normally update their own state. Rather, they inform their parent that a change has occurred via events or some other mechanism. The parent will then pass updated properties back into the widget after all of the changes have been processed. This allows Dojo applications to centralize data and keep the entire application synchronized.
+
+The final property assigns the `onFirstNameInput` method to the `onInput` property. The `onFirstNameInput` method, in turn, calls the `onFormInput` property, informing the `WorkerForm`'s parent that a change has occurred. This is another common pattern within Dojo applications - the `WorkerForm` does not expose any of the components that it is using to build the form. Rather, the `WorkerForm` manages its children internally and, if necessary, calls its event properties to inform its parent of any changes. This decouples the consumers of the `WorkerForm` widget and frees them from having to understand the internal structure of the widget. Additionally, it allows the `WorkerForm` to change its implementation without affecting its parent as long as it continues to fulfill the `WorkerFormProperties` interface.
+
+The last change that needs to be made in the `WorkerForm` is to update the `_onSubmit` method to delegate to the `onFormSave` property when it is called.
+
+{% instruction 'Replace the `_onSubmit` method with.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/WorkerForm.ts' lines:23-26 %}
+
+The form is now ready to be integrated into the application. We will do that in the next step.
+
+{% section %}
+
+### Using forms
+
+{% task 'Integrate the form into the application.' %}
+
+Now that the `WorkerForm` widget is complete, we will update the `App` class to use it. First, we need to address how to store the user-completed form data. Recall that the `WorkerForm` will accept an `onFormInput` property that will allow the `App` class to be informed when a field value changes. However, the `App` class does not currently have a place to store those changes. We will add a private property to the `App` to store this state, and a method to update the state and re-render the parts of the application that have changed. As the application grows and needs to store more data, using private properties on a widget class can become difficult to maintain. Dojo uses containers and injectors to help manage the complexities of dealing with state in a large application. For more information, refer to the [Containers and Injecting State](../1010_containers_and_injecting_state/) article.
+
+{% instruction 'Import the `WorkerFormData` interface into `App.ts`.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/App.ts' line:4 %}
+
+{% instruction 'Add `_newWorker` as a private property.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/App.ts' line:9 %}
+
+Notice that `_newWorker` is a `Partial<WorkerFormData>`, since it may include only some, or none, of the `WorkerFormData` interface properties.
+
+{% instruction 'Update the `render` method to populate the `WorkerForm`\'s properties.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/App.ts' lines:46-58 %}
+
+The `onFormInput` handler is calling the `App`'s `_onFormInput` method.
+
+{% instruction 'Add the `_onFormInput` method.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/App.ts' lines:38-44 %}
+
+The `_onFormInput` method updates the `_newWorker` object with the latest form data and then invalidates the app so that the form field will be re-rendered with the new data.
+
+The `onFormSave` handler calls the `_addWorker` method.
+
+{% instruction 'Add the `_addWorker` method to the `App` class.' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/App.ts' lines:32-36 %}
+
+The `_addWorker` method sets `_workerData` to a new array that includes the `_newWorker` object (which is the current `WorkerFormData`), sets `_newWorker` to a new empty object, and then invalidates the `App` widget. The reason that `_workerData` is not updated in place is because Dojo decides whether a new render is needed by comparing the previous value of a property to the current value. If we are modifying the existing value then any comparison performed would report that the previous and current values are identical.
+
+With the `WidgetForm` in place and the `App` configured to handle it, let's try it. For now let's test the [happy path](https://en.wikipedia.org/wiki/Happy_path) by providing the expected values to the form. Provide values for the fields, for example: "Suzette McNamara (smcnamara359@email.com)" and click the `Save` button. As expected, the form is cleared and a new `Worker` widget is added to the page. Clicking on the new `Worker` widget shows the detailed information of the card where we find that the first name, last name, and email values have been properly rendered.
+
+## Form validation
+
+This tutorial will cover how to handle basic form validation within the context of the demo app. Handling form data has already been covered in the tutorial on [injecting state](../1010_containers_and_injecting_state); here we will build on those concepts to add a validation state and errors to the existing form. Over the course of the tutorial we will build an example pattern for creating both dynamic client-side validation and mock server-side validation.
+
+### Create a place to store form errors
+
+{% task 'Add form errors to the application context.' %}
+
+Right now the error object should mirror `WorkerFormData` in both `WorkerForm.ts` and `ApplicationContext.ts`. In the wild this error configuration could be handled in a number of ways; one might be to provide an option for multiple validation steps with individual error messages for a single input. Here we will go for the simplest solution with a boolean valid/invalid state for each input.
+
+{% instruction 'Create an interface for `WorkerFormErrors` in `WorkerForm.ts`' %}
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/WorkerForm.ts' lines:15-19 %}
+
+Defining the properties in the `WorkerFormErrors` interface as optional allows us to effectively create three possible states for form fields: unvalidated, valid, and invalid.
+
+{% instruction 'Next add a `formErrors` method to the `ApplicationContext` class' %}
+
+As an exercise, complete the following three steps:
+
+1. Create a private field for `_formErrors` in the ApplicationContext class
+2. Define a public getter for the `_formErrors` field within the `ApplicationContext`
+3. Update the `getProperties` function in the `WorkerFormContainer.ts` file to pass through the new error object
+
+Hint: Follow the existing `_formData` private field in the `ApplicationContext` class to see how it's used. The `_formErrors` variable you need to add can follow the same flow.
+
+Make sure the following lines are present somewhere in `ApplicationContext.ts`:
+```typescript
+// modify import to include WorkerFormErrors
+import { WorkerFormData, WorkerFormErrors } from './widgets/WorkerForm';
+
+// private field
+private _formErrors: WorkerFormErrors = {};
+
+// public getter
+get formErrors(): WorkerFormErrors {
+	return this._formErrors;
+}
+```
+
+The modified `getProperties` function in `WorkerFormContainer.ts`:
+```typescript
+function getProperties(inject: ApplicationContext, properties: any) {
+	const {
+		formData,
+		formErrors,
+		formInput: onFormInput,
+		submitForm: onFormSave
+	} = inject;
+
 	return {
-		changed: previousProperty !== newProperty,
-		value: newProperty
+		formData,
+		formErrors,
+		onFormInput: onFormInput.bind(inject),
+		onFormSave: onFormSave.bind(inject)
 	};
 }
-
-// using a custom diff function
-@diffProperty('title', customDiff)
-class MyWidget extends WidgetBase<MyProperties> {}
 ```
 
-### Property change hooks
-
-It can be necessary to perform some internal logic when one or more properties change, this can be done by registering a reaction callback.
-
-A reaction function is registered using the `diffProperty` decorator on a widget class method. This method will be called when the specified property has been detected as changed and receives both the old and new property values.
+{% instruction 'Finally, modify `WorkerFormProperties` in `WorkerForm.ts` to accept the `formErrors` object passed in by the application context:' %}
 
 ```ts
-class MyWidget extends WidgetBase<MyProperties> {
-	@diffProperty('title', auto)
-	protected onTitleChange(previousProperties: any, newProperties: any): void {
-		this._previousTitle = previousProperties.title;
+export interface WorkerFormProperties {
+	formData: WorkerFormData;
+	formErrors: WorkerFormErrors;
+	onFormInput: (data: Partial<WorkerFormData>) => void;
+	onFormSave: () => void;
+}
+```
+
+{% section %}
+
+### Tie validation to form inputs
+
+{% task 'Perform validation on `onInput`' %}
+
+We now have a place to store form errors in the application state, and those errors are passed into the form widget. The form still lacks any actual validation of the user input; for that, we need to dust off our regular expressions and write a basic validation function.
+
+{% instruction 'Create a private `_validateInput` method in `ApplicationContext.ts`' %}
+
+Like the existing `formInput` function, `_validateInput` should take a partial `WorkerFormData` input object. The validation function should return a `WorkerFormErrors` object. The example app shows only the most basic validation checks -- the email regex pattern for example is concise but somewhat lax. You are free to substitute a more robust email test, or add other modifications like a minimum character count for the first and last names.
+
+{% include_codefile 'demo/finished/biz-e-corp/src/ApplicationContext.ts' lines:32-50 %}
+
+For now, we will test our validation by calling it directly in every `onInput` event. Add the following line to `formInput` in `ApplicationContext.ts`:
+
+```ts
+this._formErrors = deepAssign({}, this._formErrors, this._validateInput(input));
+```
+
+{% instruction 'Update the render method of the `WorkerForm` class to display validation state' %}
+
+At this point in our progress, the `WorkerForm` widget holds the validation state of each form field in its `formErrors` property, updated every time an `onInput` handler is called. All that remains is to pass the valid/invalid property to the inputs themselves. Luckily the Dojo `TextInput` widget contains an `invalid` property that sets the `aria-invalid` attribute on a DOM node, and toggles classes used for visual styling.
+
+The updated render function in `WorkerForm.ts` should set the `invalid` property on all form field widgets to reflect `formErrors`. We also add a `novalidate` attribute to the form element to prevent native browser validation.
+
+```ts
+protected render() {
+	const {
+		formData: { firstName, lastName, email },
+		formErrors
+	} = this.properties;
+
+	return v('form', {
+		classes: this.theme(css.workerForm),
+		novalidate: 'true',
+		onsubmit: this._onSubmit
+	}, [
+		v('fieldset', { classes: this.theme(css.nameField) }, [
+			v('legend', { classes: this.theme(css.nameLabel) }, [ 'Name' ]),
+			w(TextInput, {
+				key: 'firstNameInput',
+				label:'First Name',
+				labelHidden: true,
+				placeholder: 'Given name',
+				value: firstName,
+				required: true,
+				invalid: this.properties.formErrors.firstName,
+				onInput: this.onFirstNameInput
+			}),
+			w(TextInput, {
+				key: 'lastNameInput',
+				label: 'Last Name',
+				labelHidden: true,
+				placeholder: 'Surname name',
+				value: lastName,
+				required: true,
+				invalid: this.properties.formErrors.lastName,
+				onInput: this.onLastNameInput
+			})
+		]),
+		w(TextInput, {
+			label: 'Email address',
+			type: 'email',
+			value: email,
+			required: true,
+			invalid: this.properties.formErrors.email,
+			onInput: this.onEmailInput
+		}),
+		w(Button, {}, [ 'Save' ])
+	]);
+}
+```
+
+Now when you view the app in the browser, the border color of each form field changes as you type. Next we'll add error messages and update `onInput` validation to only occur after the first blur event.
+
+{% section %}
+
+### Extending TextInput
+
+{% task 'Create an error message' %}
+
+Simply changing the border color of form fields to be red or green doesn't impart much information to the user -- we need to add some error message text along with invalid state. On a basic level, our error text must be associated with a form input, styleable, and accessible. A single form field with an error message might look something like this:
+
+```ts
+v('div', { classes: this.theme(css.inputWrapper) }, [
+	w(TextInput, {
+		...
+		aria: {
+			describedBy: this._errorId
+		},
+		onInput: this._onInput
+	}),
+	invalid === true ? v('span', {
+		id: this._errorId,
+		classes: this.theme(css.error),
+		'aria-live': 'polite'
+	}, [ 'Please enter valid text for this field' ]) : null
+])
+```
+
+The error message is associated with the text input through `aria-describedby`, and the `aria-live` attribute ensures it will be read if it is added to the DOM or changed. Wrapping both the input and the error message in a containing `<div>` allows us to position the error message relative to the input if desired.
+
+{% instruction 'Extend `TextInput` to create a `ValidatedTextInput` widget with an error message and `onValidate` method' %}
+
+Re-creating the same error message boilerplate for multiple text inputs seems overly repetitive, so we're going to extend `TextInput` instead. This will also allow us to have better control over when validation occurs, e.g. by adding it to blur events as well. For now, just create a `ValidatedTextInput` widget that accepts the same properties interface as `TextInput` but with an `errorMessage` string and `onValidate` method. It should return the same node structure modeled above.
+
+You will also need to create `validatedTextInput.m.css` with `error` and `inputWrapper` classes, although we will forgo adding specific styles in this tutorial:
+
+```css
+.inputWrapper {}
+
+.error {}
+```
+
+```ts
+import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import { TypedTargetEvent } from '@dojo/framework/widget-core/interfaces';
+import { v, w } from '@dojo/framework/widget-core/d';
+import uuid from '@dojo/framework/core/uuid';
+import { ThemedMixin, theme } from '@dojo/framework/widget-core/mixins/Themed';
+import TextInput, { TextInputProperties } from '@dojo/widgets/text-input';
+import * as css from '../styles/validatedTextInput.m.css';
+
+export interface ValidatedTextInputProperties extends TextInputProperties {
+	errorMessage?: string;
+	onValidate?: (value: string) => void;
+}
+
+export const ValidatedTextInputBase = ThemedMixin(WidgetBase);
+
+@theme(css)
+export default class ValidatedTextInput extends ValidatedTextInputBase<ValidatedTextInputProperties> {
+	private _errorId = uuid();
+
+	protected render() {
+		const {
+			disabled,
+			label,
+			maxLength,
+			minLength,
+			name,
+			placeholder,
+			readOnly,
+			required,
+			type = 'text',
+			value,
+			invalid,
+			errorMessage,
+			onBlur,
+			onInput
+		} = this.properties;
+
+		return v('div', { classes: this.theme(css.inputWrapper) }, [
+			w(TextInput, {
+				aria: {
+					describedBy: this._errorId
+				},
+				disabled,
+				invalid,
+				label,
+				maxLength,
+				minLength,
+				name,
+				placeholder,
+				readOnly,
+				required,
+				type,
+				value,
+				onBlur,
+				onInput
+			}),
+			invalid === true ? v('span', {
+				id: this._errorId,
+				classes: this.theme(css.error),
+				'aria-live': 'polite'
+			}, [ errorMessage ]) : null
+		]);
 	}
 }
 ```
 
-`diffProperty` decorators can be stacked on a single class method and will be called if any of the specified properties are considered changed.
+You may have noticed that we created `ValidatedTextInput` with an `onValidate` property, but we have yet to use it. This will become important in the next few steps by allowing us to have greater control over when validation occurs. For now, just treat it as a placeholder.
+
+{% instruction 'Use `ValidatedTextInput` within `WorkerForm`' %}
+
+Now that `ValidatedTextInput` exists, let's import it and swap it with `TextInput` in `WorkerForm`, and write some error message text while we're at it:
+
+**Import block**
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/WorkerForm.ts' lines:1-7 %}
+
+**Inside render()**
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/WorkerForm.ts' lines:72-108 %}
+
+{% task 'Create `onFormValidate` method separate from `onFormInput`' %}
+
+{% instruction 'Update the context to pass in an `onFormValidate` method' %}
+
+Currently the validation logic is unceremoniously dumped in `formInput` within `ApplicationContext.ts`. Now let's break that out into its own `formValidate` function, and borrow the `onFormInput` pattern to pass `onFormValidate` to `WorkerForm`. There are three steps to this:
+
+1. Add a `formValidate` method to `ApplicationContext.ts` and update `_formErrors` there instead of in `formInput`:
+	{% include_codefile 'demo/finished/biz-e-corp/src/ApplicationContext.ts' lines:72-80 %}
+2. Update `WorkerFormContainer` to pass `formValidate` as `onFormValidate`:
+	{% include_codefile 'demo/finished/biz-e-corp/src/containers/WorkerFormContainer.ts' lines:6-22 %}
+3. Within `WorkerForm` first add `onFormValidate` to the `WorkerFormProperties` interface:
+	{% include_codefile 'demo/finished/biz-e-corp/src/widgets/WorkerForm.ts' lines:21-27 %}
+	Then create internal methods for each form field's validation and pass those methods (e.g. `onFirstNameValidate`) to each `ValidatedTextInput` widget. This should follow the same pattern as `onFormInput` and `onFirstNameInput`, `onLastNameInput`, and `onEmailInput`:
+	{% include_codefile 'demo/finished/biz-e-corp/src/widgets/WorkerForm.ts' lines:49-59 %}
+
+{% instruction 'Handle calling `onValidate` within `ValidatedTextInput`' %}
+
+You might have noticed that the form no longer validates on user input events. This is because we no longer handle validation within `formInput` in `ApplicationContext.ts`, but we also haven't added it anywhere else. To do that, add the following private method to `ValidatedTextInput`:
 
 ```ts
-class MyWidget extends WidgetBase<MyProperties> {
-	@diffProperty('title', auto)
-	@diffProperty('subtitle', auto)
-	protected onTitleOrSubtitleChange(previousProperties: any, newProperties: any): void {
-		this._titlesUpdated = true;
-	}
+private _onInput(value: string) {
+	const { onInput, onValidate } = this.properties;
+	onInput && onInput(value);
+	onValidate && onValidate(value);
 }
 ```
 
-For non-decorator environments (Either JavaScript/ES6 or a TypeScript project that does not have the experimental decorators configuration set to true in the `tsconfig`), the functions need to be registered in the constructor using the `addDecorator` API with `diffProperty` as the key.
-
+Now pass it to `TextInput` in place of `this.properties.onInput`:
 ```ts
-class MyWidget extends WidgetBase {
-	constructor() {
-		super();
-		diffProperty('foo', auto, this.diffFooReaction)(this);
-	}
+w(TextInput, {
+	aria: {
+		describedBy: this._errorId
+	},
+	disabled,
+	invalid,
+	label,
+	maxLength,
+	minLength,
+	name,
+	placeholder,
+	readOnly,
+	required,
+	type,
+	value,
+	onBlur,
+	onInput: this._onInput
+})
+```
 
-	diffFooReaction(previousProperty: any, newProperty: any) {
-		// do something to reaction to a diff of foo
-	}
+Form errors should be back now, along with error messages for invalid fields.
+
+{% section %}
+
+### Making use of the blur event
+
+{% task 'Only begin validation after the first blur event' %}
+
+Right now the form displays validation as soon as the user begins typing in a field, which can be a poor user experience. Seeing "invalid email address" types of errors at the beginning of typing an email is both unnecessary and distracting. A better pattern would be to hold off on validation until the first blur event, and then begin updating the validation on input events.
+
+{% aside 'Blur events' %}
+The [blur](https://developer.mozilla.org/en-US/docs/Web/Events/blur) event fires when an element loses focus.
+{% endaside %}
+
+Now that calling `onValidate` is handled within the `ValidatedTextInput` widget, this is possible.
+
+{% instruction 'Create a private `_onBlur` function that calls `onValidate`' %}
+
+In `ValidatedTextInput.ts`:
+```ts
+private _onBlur(value: string) {
+	const { onBlur, onValidate } = this.properties;
+	onValidate && onValidate(value);
+	onBlur && onBlur();
 }
 ```
+
+We only need to use this function on the first blur event, since subsequent validation can be handled by `onInput`. The following code will use either `this._onBlur` or `this.properties.onBlur` depending on whether the input has been previously validated:
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/ValidatedTextInput.ts' lines:50-67 %}
+
+Now all that remains is to modify `_onInput` to only call `onValidate` if the field already has a validation state:
+
+{% include_codefile 'demo/finished/biz-e-corp/src/widgets/ValidatedTextInput.ts' lines:24-31 %}
+
+Try inputting an email address with these changes; it should only show an error message (or green border) after leaving the form field, while subsequent edits immediately trigger changes in validation.
+
+{% section %}
+
+### Validating on submit
+
+{% task 'Create mock server-side validation when the form is submitted' %}
+
+Thus far our code provides nice hints to the user, but does nothing to prevent bad data being submitted to our worker array. We need to add two separate checks to the `submitForm` action:
+
+1. Immediately fail to submit if the existing validation function catches any errors.
+2. Perform some additional checks (in this case we'll look for email uniqueness). This is where we would insert server-side validation in a real app.
+
+{% instruction 'Create a private `_validateOnSubmit` method in `ApplicationContext.ts`' %}
+
+The new `_validateOnSubmit` should start by running the existing input validation against all `_formData`, and returning false if there are any errors:
+
+```ts
+private _validateOnSubmit(): boolean {
+	const errors = this._validateInput(this._formData);
+	this._formErrors = deepAssign({ firstName: true, lastName: true, email: true }, errors);
+
+	if (this._formErrors.firstName || this._formErrors.lastName || this._formErrors.email) {
+		console.error('Form contains errors');
+		return false;
+	}
+
+	return true;
+}
+```
+
+Next let's add an extra check: let's say each worker's email must be unique, so we'll test the input email value against the `_workerData` array. Realistically this check would be performed server-side for security:
+
+{% include_codefile 'demo/finished/biz-e-corp/src/ApplicationContext.ts' lines:53-70 %}
+
+After modifying the `submitForm` function in `ApplicationContext.ts`, only valid worker entries should successfully submit. We also need to clear `_formErrors` along with `_formData` on a successful submission:
+
+{% include_codefile 'demo/finished/biz-e-corp/src/ApplicationContext.ts' lines:82-92 %}
 
 # Widget lifecycle hooks
 
-Occasionally, in a mixin or a widget class, it may be required to provide logic that needs to be executed before properties are diffed using `beforeProperties`, either side of a widget's `render` call using `beforeRender` & `afterRender` or after a constructor using `afterContructor`.
+In some circumstances, additional logic needs to be executed when Dojo is diffing node properties.
+
+Several  `beforeProperties`, either side of a widget's `render` call using `beforeRender` & `afterRender` or after a constructor using `afterContructor`.
 
 This functionality is provided by the `beforeProperties`, `beforeRender`, `afterRender` and `afterConstructor` decorators that can be found in the `decorators` directory.
 
@@ -908,28 +1789,46 @@ class MyClass extends WidgetBase {
 
 # Converting widgets into web components
 
-Widgets can be turned into [Custom Elements](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) with
-minimal extra effort.
+Widgets can easily be configured as [Custom Elements](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) by adding the `@customElement()` decorator (from the `@dojo/framework/widget-core/decorators/customElement` module) to their class. Doing so allows widgets to be used as generic web components in non-Dojo applications.
 
-The `customElement` decorator can be used to annotate the widget class
-that should be converted to a custom element,
+For example:
 
 ```ts
-interface MyWidgetProperties {
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+
+import customElement from '@dojo/framework/widget-core/decorators/customElement';
+
+export interface MyWebComponentWidgetProperties {
 	onClick: (event: Event) => void;
 	foo: string;
 	bar: string;
 }
 
-@customElement<MyWidgetProperties>({
+@customElement<MyWebComponentWidgetProperties>({
 	tag: 'my-widget',
 	attributes: ['foo', 'bar'],
+	properties: [],
 	events: ['onClick']
 })
-class MyWidget extends WidgetBase<MyWidgetProperties> {
-	// ...
+export default class MyWebComponentWidget extends WidgetBase<MyWebComponentWidgetProperties> {
+	protected render() {
+		return null;
+	}
 }
 ```
+
+## `@customElement()` properties
+
+The `@customElement<WidgetProperties>()` decorator accepts the following properties to help define the widget's web component interface:
+
+-	`tag?: string`
+	-   The tag name representing the custom element widget within an HTML document
+-   `properties?: CustomElementPropertyNames<P>`
+	-	The list of widget properties (from the `WidgetProperties` generic type argument) that should be exposed as properties on the custom element.
+-   `attributes?: CustomElementPropertyNames<P>`
+    -   The list of attributes on the custom element that should be mapped back to widget properties.
+-   `events?: CustomElementPropertyNames<P>`;
+	-   The list of widget events to expose on the custom element
 
 **Note**: The Custom Elements API is not available in all browsers. To use
 Custom Elements in all browsers supported by Dojo, a polyfill needs to be
@@ -938,11 +1837,6 @@ Dojo does not include the polyfill by default, so will need to be
 added as a script tag in your index.html. Note that this polyfill cannot
 currently be ponyfilled like other polyfills used in Dojo, so it cannot
 be added with @dojo/framework/shim/browser or imported using ES modules.
-
-No additional steps are required. The custom element
-can be used in your application automatically. The decorator can be provided
-with configuration options to modify the functionality of the custom
-element.
 
 ## Attributes
 
@@ -982,36 +1876,58 @@ and lower-casing the resulting name.
 
 Your widget will be registered with the browser using the provided tag name. The tag name **must** have a `-` in it.
 
-# Meta Configuration
+# Widget metadata
 
-Widget meta is used to access additional information about the widget, usually information only available through the rendered DOM element - for example, the dimensions of an HTML node. You can access and respond to metadata during a widget's render operation.
+Dojo provides a 'metadata' (or simply `meta`) concept to expose additional information about a widget, accessible reactively from within the widget itself. Widgets can access and respond to specific metadata from within their `render()` method, by calling `this.meta()`:
 
 ```ts
-class TestWidget extends WidgetBase {
-	render() {
-		const dimensions = this.meta(Dimensions).get('root');
+const metadata = this.meta(<MetaCollectionType>).get(<DOMElementKey);
+```
 
-		return v('div', {
-			key: 'root',
-			innerHTML: `Width: ${dimensions.width}`
-		});
+Typically, this metadata is related to one or more of a widget's rendered DOM elements (often the widget's root node). The `meta` system provides widgets more advanced control over their representation and interaction within a browser, and also allows them to make use of several upcoming web standards in a consistent manner.
+
+Sensible defaults will be returned if a widget's corresponding DOM node does not yet exist when attempting to access its metadata. Dojo will automatically re-render the affected widget, providing it more accurate metadata, once the concrete DOM node becomes available.
+
+Related metadata properties are contained within an appropriately named collection object. Widgets access particular metadata by specifying the appropriate `meta` collection object name in calls to `this.meta()`. For example:
+
+> src/widgets/WidgetMetadataExample.tsx
+
+```tsx
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { tsx } from '@dojo/framework/widget-core/tsx';
+import Dimensions from '@dojo/framework/widget-core/meta/Dimensions';
+
+export default class WidgetMetadataExample extends WidgetBase {
+	protected render() {
+		const myDimensions = this.meta(Dimensions).get('widgetMetaExample');
+		const myWidth = `My display width is: ${myDimensions.size.width}px`;
+
+		return <div key="widgetMetaExample">{myWidth}</div>;
 	}
 }
 ```
 
-If an HTML node is required to calculate the meta information, a sensible default will be returned and your widget will be automatically re-rendered to provide more accurate information.
+## Base meta
 
-## Dimensions
+All meta classes inherit from `Base`, giving widgets access to a common `has` method for any metadata that they may fetch. The `has` method can be used to determine if the widget's specified DOM node has been rendered yet.
 
-The `Dimensions` meta provides size/position information about a node.
+Finding out if a concrete DOM node is available or not can be useful when specific metadata needs to be available for a computation to be sensible. While the node remains unavailable, rendering can be short-circuited to avoid any unnecessary computation.
+
+For example:
 
 ```ts
-const dimensions = this.meta(Dimensions).get('root');
+const hasRootBeenRendered = this.meta(<AnyMeta>).has('root');
 ```
 
-In this simple snippet, `dimensions` would be an object containing `offset`, `position`, `scroll`, and `size` objects.
+## `Dimensions`
 
-The following fields are provided:
+The `Dimensions` meta provides size and position information about a node.
+
+```ts
+import Dimensions from '@dojo/framework/widget-core/meta/Dimensions';
+```
+
+The object returned contains the following properties mapped from the specified DOM element's sources:
 
 | Property          | Source                                |
 | ----------------- | ------------------------------------- |
@@ -1034,42 +1950,50 @@ The following fields are provided:
 | `offset.width`    | `node.offsetWidth`                    |
 | `offset.height`   | `node.offsetHeight`                   |
 
-If the node has not yet been rendered, all values will contain `0`. If you need more information about whether or not the node has been rendered you can use the `has` method:
+If the node has not yet been rendered, all returned values will be `0`.
+
+## `Intersection`
+
+The `Intersection` meta provides information on whether a node is visible in the application's viewport using the [Intersection Observer API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API).
 
 ```ts
-const hasRootBeenRendered = this.meta(Dimensions).has('root');
+import Intersection from '@dojo/framework/widget-core/meta/Intersection';
 ```
 
-## Intersection
+**Note:** To use the Intersection Observer API consistently in all browsers supported by Dojo, a polyfill needs to be included. Dojo does not include one by default, so it needs to be manually added to a project. This can be done via one of the following ways:
 
-The Intersection Meta provides information on whether a Node is visible in the application's viewport using the [Intersection Observer API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API).
+-   A script tag in your `index.html`, referencing an appropriate external script file
+-   Added as an application dependency, then imported in the application’s `main.ts` entry point, for example via `import 'intersection-observer';`
+-   By importing `@dojo/framework/shim/browser`
 
-**Note**: The Intersection Observer API is not available in all browsers. To use the Intersection Observer API in all browsers supported by Dojo, a polyfill needs to be included. Dojo does not include the polyfill by default, so will need to be added as a script tag in your index.html or alternatively imported in the application’s main.ts using `import 'intersection-observer';` after including the dependency in your source tree, or by importing `@dojo/framework/shim/browser`.
+The following example renders a list of images, where each image `src` is only added as the item intersects with the viewport. This allows for lazy-loading of images, with the user only downloading images that they scroll to.
 
-This example renders a list with images, the image src is only added when the item is in the viewport which prevents needlessly downloading images until the user scrolls to them:
+> src/widgets/LazyLoadingImageListWidget.ts
 
 ```ts
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { v, w } from '@dojo/framework/widget-core/d';
 import { DNode } from '@dojo/framework/widget-core/interfaces';
-import { Intersection } from '@dojo/framework/widget-core/meta/Intersection';
+import Intersection from '@dojo/framework/widget-core/meta/Intersection';
 
-// Add image URLs here to load
+// Add image URLs to load here
 const images = [];
 
-class Item extends WidgetBase<{ imageSrc: string }> {
+class ImageItem extends WidgetBase<{ imageSrc: string }> {
 	protected render() {
 		const { imageSrc } = this.properties;
 		const { isIntersecting } = this.meta(Intersection).get('root');
 		let imageProperties: any = {
 			key: 'root',
+			// Lazy-loading will only work if the image element's bounding box is known
+			// before the image is fetched and its actual dimensions can be obtained
 			styles: {
-				height: '200px',
-				width: '200px'
+				height: '300px',
+				width: '400px'
 			}
 		};
 
-		// Only adds the image source if the node is in the viewport
+		// Only add the image source attribute if the node is in the viewport
 		if (isIntersecting) {
 			imageProperties = { ...imageProperties, src: imageSrc };
 		}
@@ -1078,11 +2002,11 @@ class Item extends WidgetBase<{ imageSrc: string }> {
 	}
 }
 
-class List extends WidgetBase {
+export default class LazyLoadingImageListWidget extends WidgetBase {
 	protected render() {
 		let items: DNode[] = [];
 		for (let i = 0; i < images.length; i++) {
-			items.push(v('ul', { key: i }, [w(Item, { key: i, imageSrc: images[i] })]));
+			items.push(v('ul', { key: i }, [w(ImageItem, { key: i, imageSrc: images[i] })]));
 		}
 
 		return v('div', items);
@@ -1090,7 +2014,7 @@ class List extends WidgetBase {
 }
 ```
 
-## Animation
+## `WebAnimation`
 
 Dojo widget-core provides a `WebAnimation` meta to apply web animations to VNodes.
 
@@ -1286,7 +2210,7 @@ class VerticalScrollBarController extends WidgetBase {
 As can be seen in the above code, the meta provider simply provides information which the widgets can react to. The implementation
 needs to react to these changes.
 
-## Focus
+## `Focus`
 
 The `Focus` meta determines whether a given node is focused or contains document focus. Calling `this.meta(Focus).get(key)` returns the following results object:
 
@@ -1379,9 +2303,9 @@ class TestWidget extends WidgetBase {
 }
 ```
 
-## Implementing Custom Meta
+## Implementing custom meta
 
-You can create your own meta if you need access to DOM nodes.
+Widget implementors can create their own meta if they require access to any additional details about the widget's DOM nodes.
 
 ```ts
 import MetaBase from '@dojo/framework/widget-core/meta/Base';
