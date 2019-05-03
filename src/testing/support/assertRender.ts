@@ -99,16 +99,6 @@ function formatNode(node: WNode | VNode, tabs: any): string {
 	return `v("${node.tag}", ${properties}`;
 }
 
-const assertionWidgets = [
-	{
-		type: Ignore,
-		value(actual: DNode, expected: DNode) {
-			const node = actual ? actual : expected;
-			return [actual, node];
-		}
-	}
-];
-
 function isNode(node: any): node is VNode | WNode {
 	return isVNode(node) || isWNode(node);
 }
@@ -123,21 +113,14 @@ function decorate(actual: DNode | DNode[], expected: DNode | DNode[]): [DNode[],
 		let actualNode = actual[i];
 		let expectedNode = expected[i];
 
-		if (isWNode(expectedNode)) {
-			[actualNode, expectedNode] = assertionWidgets.reduce(
-				(result, assertionWidget) => {
-					if ((expectedNode as any).widgetConstructor === assertionWidget.type) {
-						return assertionWidget.value(result[0], result[1]);
-					}
-					return [result[0], result[1]];
-				},
-				[actualNode, expectedNode]
-			);
+		if (expectedNode && (expectedNode as any).widgetConstructor === Ignore) {
+			expectedNode = actualNode || expectedNode;
 		}
+
 		if (isNode(expectedNode)) {
 			if (typeof expectedNode.properties === 'function') {
 				const actualProperties = isNode(actualNode) ? actualNode.properties : {};
-				expectedNode.properties = expectedNode.properties(actualProperties);
+				expectedNode.properties = (expectedNode as any).properties(actualProperties);
 			}
 		}
 		const childrenA = isNode(actualNode) ? actualNode.children : [];

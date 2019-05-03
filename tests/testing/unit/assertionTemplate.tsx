@@ -181,7 +181,7 @@ describe('assertionTemplate', () => {
 		);
 	});
 
-	it('can use mimic', () => {
+	it('can use ignore', () => {
 		const h = harness(() => w(ListWidget, {}));
 		const childListAssertion = baseListAssertion.replaceChildren('ul', [
 			v('li', ['item: 0']),
