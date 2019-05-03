@@ -154,13 +154,13 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		const node = guard(findOne(render, selector));
 		return node.children || [];
 	};
-	assertionTemplateResult.replace = (selector: string, node: DNode) => {
+	assertionTemplateResult.replace = (selector: string, newNode: DNode) => {
 		return assertionTemplate(() => {
 			const render = renderFunc();
 			const node = guard(findOne(render, selector));
 			const parent = (node as any).parent;
 			const children = [...parent.children];
-			children.splice(children.indexOf(node), 1, node);
+			children.splice(children.indexOf(node), 1, newNode);
 			parent.children = children;
 			return render;
 		});
