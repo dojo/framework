@@ -631,13 +631,13 @@ It is likely that application themes will need to include styling of any third-p
 
 The [`@dojo/cli-create-theme`](https://github.com/dojo/cli-create-theme) package provides tooling support to quickly generate theme scaffolding for third party widgets, via its `dojo create theme` CLI command. It can be installed locally within an application via:
 
-```sh
+```bash
 npm install --save-dev @dojo/cli-create-theme
 ```
 
 and can be used as follows from a project's root directory:
 
-```sh
+```bash
 dojo create theme -n {myThemeName}
 ```
 
@@ -675,13 +675,13 @@ Note that when using [`dojo create theme`](#scaffolding-themes-for-third-party-w
 
 To use the tooling, install `@dojo/cli-build-theme` locally in a theme project:
 
-```sh
+```bash
 npm install --save-dev @dojo/cli-build-theme
 ```
 
 Then to build a theme, run the command and specify a theme name as well as an optional release version:
 
-```sh
+```bash
 dojo build theme --name={myThemeName} --release={releaseVersion}
 ```
 
