@@ -1,5 +1,5 @@
 import Registry from './Registry';
-import { renderer, w, dom, isTextNode, create as vdomCreate, diffProperty, invalidator } from './vdom';
+import { renderer, w, dom, isTextNode, create as vdomCreate, diffProperty, invalidator, isElementNode } from './vdom';
 import { from } from '../shim/array';
 import global from '../shim/global';
 import Injector from './Injector';
@@ -176,7 +176,26 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				}
 			}
 
-			from(children).forEach((childNode) => {
+			from(children).forEach((childNode: Node) => {
+				if (isElementNode(childNode)) {
+					const slotName = childNode.getAttribute('slot');
+
+					if (slotName) {
+						const slotArray = childNode.getAttribute('slot-array');
+
+						if (slotArray && slotArray.toLowerCase() === 'true') {
+							this._properties[slotName] = from(childNode.children).map((slotNode) => {
+								if (slotNode instanceof HTMLElement) {
+									childNode.removeChild(slotNode);
+									return w(DomToWidgetWrapper(slotNode), {});
+								}
+							});
+						} else if (childNode instanceof HTMLElement) {
+							this._properties[slotName] = w(DomToWidgetWrapper(childNode as HTMLElement), {});
+						}
+					}
+				}
+
 				if (this._childType === CustomElementChildType.DOJO) {
 					childNode.addEventListener('dojo-ce-render', () => this._render());
 					childNode.addEventListener('dojo-ce-connected', () => this._render());
