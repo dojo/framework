@@ -160,8 +160,8 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			const node = guard(findOne(render, selector));
 			const parent = (node as any).parent;
 			const children = [...parent.children];
-			children.splice(children.indexOf(node), 1);
-			parent.children = [node, ...children];
+			children.splice(children.indexOf(node), 1, node);
+			parent.children = children;
 			return render;
 		});
 	};
