@@ -161,7 +161,7 @@ However, careful use of this feature can be helpful in large applications. For e
 As styles in a Dojo application are mostly scoped to individual widgets, there is little need for complex selector targeting. Style application in Dojo should be as simple as possible - developers can achieve this by following a few simple recommendations:
 
 -   Maintain encapsulated widget styling
-    -   Only refer to classes relevant for the corresponding widget within a given CSS module
+    -   A single CSS module should address a single concern. For widget-aligned modules, this usually means only including styling classes for the single accompanying widget. CSS modules can also be shared across several widgets, for example an application could define a common typography module that is shared across an application. It is common practice for [widgets to reference several CSS modules](#using-several-css-modules) within their TypeScript code.
     -   Do not refer to a widget via its styling classes outside of its CSS module, or a theme that provides style overrides for the widget.
     -   Do not rely on styling class names in built applications, as Dojo obfuscates them.
 -   Prefer [class-level selector specificity](https://developer.mozilla.org/en-US/docs/Web/CSS/Class_selectors)
