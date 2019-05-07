@@ -6,9 +6,9 @@ The routing configuration API is constructed with the following properties:
 
 -   `path: string`: The routing path segment to match in the URL.
 -   `outlet: string`: The `outlet` id used to render widgets to the associated routing path.
--   `defaultRoute: boolean`(optional): Marks the outlet as default, the application will redirect to this route automatically if no route or an unknown routes is found on application load.
--   `defaultParams: { [index: string]: string }`(optional): Associated default parameters (`path` and `query`), required if the default route has required params.
--   `children: RouteConfig[]`(optional): Nested child routing configuration.
+-   `defaultRoute: boolean` (optional): Marks the outlet as default, the application will redirect to this route automatically if no route or an unknown route is found on application load.
+-   `defaultParams: { [index: string]: string }` (optional): Associated default parameters (`path` and `query`), required if the default route has required params.
+-   `children: RouteConfig[]` (optional): Nested child routing configuration.
 
 > src/routes.ts
 
@@ -60,7 +60,7 @@ The Dojo Router exposes an API that can be used to generate and navigate to link
 -   `link(outlet: string, params: Params = {}): string | undefined`: Generate a link based on the outlet id and optionally params. If no params are passed it will attempt to use the current routes parameters, then any default parameters provided in the routing configuration. If a link cannot be generated, `undefined` is returned.
 -   `setPath(path: string): void`: Sets the path in the router.
 -   `get currentParams(): { [string: index]: string }`: Returns parameters in the current route
--   `getOutlet(outletIdentifier: string): OutletContext | undefined`: Returns the `OutletContext` for an outlet id if it is currently matched. If the outlet id is not matched then returned `undefined`.
+-   `getOutlet(outletIdentifier: string): OutletContext | undefined`: Returns the `OutletContext` for an outlet id if it is currently matched. If the outlet id is not matched, then return `undefined`.
 
 ## Generating a Link for an Outlet
 
@@ -181,9 +181,9 @@ const outletContext = router.getOutlet('home');
 
 # Using the Outlet MatchDetails
 
-For every `outlet` that is match on a route change `MatchDetails` are injected into the `Outlet` widget's `renderer` property. The `MatchDetails` object contains specific details for the matched outlet.
+For every `outlet` that is matched on a route change, `MatchDetails` are injected into the `Outlet` widget's `renderer` property. The `MatchDetails` object contains specific details for the matched outlet.
 
--   `queryParams: { [index: string]: string }`: The query params from the matched routing.
+-   `queryParams: { [index: string]: string }`: The query params from the matched route.
 
 > src/routes.ts
 
@@ -196,7 +196,7 @@ export default [
 ];
 ```
 
--   `params: { [index: string]: string }`: The path params from the matched routing.
+-   `params: { [index: string]: string }`: The path params from the matched route.
 
 > src/routes.ts
 
@@ -245,7 +245,7 @@ export default [
 
 -   `type: 'index' | 'partial' | 'error'`: The type of match for the route, either `index`, `partial` or `error`. Using `type` should not be necessary, instead favouring a combination of `isExact` and `isError`.
 
--   `router: RouterInterface`: The router instance which can used to create links and initiate route changes. For more information on the [router API](./)
+-   `router: RouterInterface`: The router instance which can used to create links and initiate route changes. For more information see the router API.
 
 > src/routes.ts
 
@@ -292,7 +292,7 @@ export default class App extends WidgetBase {
 							return <div>Home Page</div>;
 						}
 						if (isError()) {
-							// The `home` segment of the path was matched but the next segment was not match
+							// The `home` segment of the path was matched but the next segment was not matched
 							// for example, `home/other`
 							return (
 								<div>
@@ -353,7 +353,7 @@ registerRouterInjector(routes, registry, { HistoryManager: StateHistory });
 
 ## HashHistory
 
-`HashHistory` uses the fragment identifier to process route changes, for example `https://foo.com/#home` would process the `home` as the route path. As `HashHistory` is the default manager, you do not need to import module.
+`HashHistory` uses the fragment identifier to process route changes, for example `https://foo.com/#home` would process the `home` as the route path. As `HashHistory` is the default manager, you do not need to import the module.
 
 ```ts
 import { Router } from '@dojo/framework/routing/Router';
@@ -412,7 +412,7 @@ These history managers work like adapters, meaning that custom history managers 
 
 # Error Outlet
 
-A special `outlet` called, `errorOutlet` is registered for that will match when the route doesn't match (`exact` or `partial`) any outlet in the routing configuration. You can use this `outlet` to render a widget to inform the user that the route does not exist.
+A special `outlet` called `errorOutlet` is registered for that will match when the route doesn't match (`exact` or `partial`) any outlet in the routing configuration. You can use this `outlet` to render a widget to inform the user that the route does not exist.
 
 ```tsx
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';

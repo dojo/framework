@@ -36,7 +36,7 @@ const r = renderer(() => <App />);
 r.mount({ registry });
 ```
 
-To display something when a route is matched, we use a widget called an `Outlet`. So lets add one to show `Home` when the `home` route is visited.
+To display something when a route is matched, we use a widget called an `Outlet`. So let's add one to show `Home` when the `home` route is visited.
 
 In the routing configuration the `home` route is associated with an outlet identifier, `home`, to associate the `Outlet` widget to the `home` route the outlet id is passed using the `id` property.
 
@@ -167,15 +167,13 @@ export default [
 
 ## Using Link Widgets
 
-The `Link` widget is a wrapper around an anchor tag that enables consumers to specify an `outlet` to create a link to. It is also possible to use a static route by setting the `isOutlet` property to `false`.
-
-If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
+The `Link` widget is a wrapper around an anchor tag that enables consumers to specify an `outlet` to create a link to. If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
 
 Link Properties:
 
 -   `to: string`: The `outlet` id.
 -   `params: { [index: string]: string }`: Params to generate the link with for the outlet.
--   `onClick: (event: MouseEvent) => void`(optional): Function that gets called when the `Link` is clicked.
+-   `onClick: (event: MouseEvent) => void` (optional): Function that gets called when the `Link` is clicked.
 
 In addition to the `Link` specific properties, all the standard `VNodeProperties` are available for the `Link` widget as they would be creating an anchor tag.
 
@@ -225,7 +223,7 @@ export default class App extends WidgetBase {
 
 ## Code Splitting By Route
 
-When using `@dojo/cli-build-app` Dojo supports automatically code splitting your application by default for all top level outlets. This means that all widgets referenced within the `Outlet`s `renderer` will included specific bundle for the outlet that will be loaded lazily when the user goes to the route.
+When using `@dojo/cli-build-app` Dojo supports automatically code splitting your application by default for all top level outlets. This means that all widgets referenced within the `Outlet`s `renderer` will include a specific bundle for the outlet that will be loaded lazily when the user goes to the route.
 
 To take advantage of the code splitting there are 4 rules:
 
