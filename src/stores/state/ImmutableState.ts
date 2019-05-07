@@ -15,6 +15,14 @@ function isString(segment?: string): segment is string {
 	return typeof segment === 'string';
 }
 
+function isList(value?: any): value is List<any> {
+	return Boolean(value && List.isList(value));
+}
+
+function isMap(value?: any): value is Map<any, any> {
+	return Boolean(value && Map.isMap(value));
+}
+
 function inverse(operation: PatchOperation, state: Map<any, any>): PatchOperation[] {
 	if (operation.op === OperationType.ADD) {
 		const op: RemovePatchOperation = {
@@ -92,7 +100,7 @@ export class ImmutableState<T = any> implements MutableState<T> {
 		const pointer = new Pointer(hasMultipleSegments ? stringSegments : stringSegments[0] || '');
 		let value = this._state.getIn(pointer.segments);
 
-		if (value instanceof List || value instanceof Map) {
+		if (isList(value) || isMap(value)) {
 			value = value.toJS();
 		}
 
@@ -177,14 +185,14 @@ export class ImmutableState<T = any> implements MutableState<T> {
 		}
 		segments = segments.slice();
 		const allSegments = segments.slice();
-		const lastSegment = segments.pop();
+		const lastSegment: any = segments.pop();
 		const parent = state.getIn(segments);
 
-		if (parent instanceof List && add) {
+		if (isList(parent) && add) {
 			state = state.setIn(segments, parent.insert(lastSegment, value));
 
 			return state;
-		} else if (parent instanceof Map || parent instanceof List) {
+		} else if (isList(parent) || isMap(parent)) {
 			state = state.setIn(allSegments, value);
 
 			return state;

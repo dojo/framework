@@ -17,7 +17,7 @@ function stripBase(base: string, path: string): string {
 }
 
 export class StateHistory implements HistoryInterface {
-	private _current: string;
+	private _current!: string;
 	private _onChangeFunction: OnChangeFunction;
 	private _window: Window;
 	private _base: string;

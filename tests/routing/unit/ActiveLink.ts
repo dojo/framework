@@ -49,9 +49,8 @@ const router = new Router(
 registry.defineInjector('router', () => () => router);
 
 class BaseActiveLink extends ActiveLink {
-	constructor(...args: any[]) {
-		super(...args);
-
+	constructor() {
+		super();
 		this.registry.base = registry;
 	}
 }

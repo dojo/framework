@@ -151,7 +151,7 @@ registerSuite('iterator', {
 					};
 				}
 			};
-			const results: (undefined | number)[] = [];
+			const results: (undefined | number | string)[] = [];
 			const expected = [1, 2, 3, 4];
 
 			forOf(iterable, (value) => {
@@ -211,7 +211,7 @@ registerSuite('iterator', {
 						};
 					}
 				};
-				const results: (undefined | number)[] = [];
+				const results: (undefined | number | string)[] = [];
 				const expected = [1, 2];
 
 				forOf(iterable, (value, obj, doBreak) => {

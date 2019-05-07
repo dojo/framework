@@ -464,10 +464,10 @@ jsdomDescribe('vdom', () => {
 		it('Should pause rendering while merging to allow lazily loaded widgets to be loaded', () => {
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);
-			iframe.contentDocument.write(`<div><span>54321</span><span>98765</span><span>12345</span></div>`);
-			iframe.contentDocument.close();
+			iframe.contentDocument!.write(`<div><span>54321</span><span>98765</span><span>12345</span></div>`);
+			iframe.contentDocument!.close();
 
-			const root = iframe.contentDocument.body.firstChild as HTMLElement;
+			const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 			const lazyFooSpan = root.childNodes[0] as HTMLSpanElement;
 			const lazyBarSpan = root.childNodes[1] as HTMLSpanElement;
 			const span = root.childNodes[2] as HTMLSpanElement;
@@ -511,7 +511,7 @@ jsdomDescribe('vdom', () => {
 			}
 
 			const r = renderer(() => w(App, {}));
-			r.mount({ registry, domNode: iframe.contentDocument.body, sync: true });
+			r.mount({ registry, domNode: iframe.contentDocument!.body, sync: true });
 			fooResolver(Foo);
 			return fooPromise.then(() => {
 				assert.strictEqual(root.childNodes[2], span);
@@ -2563,11 +2563,11 @@ jsdomDescribe('vdom', () => {
 			it('Supports merging DNodes onto existing HTML', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
-				iframe.contentDocument.write(
+				iframe.contentDocument!.write(
 					`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button></div>`
 				);
-				iframe.contentDocument.close();
-				const root = iframe.contentDocument.body.firstChild as HTMLElement;
+				iframe.contentDocument!.close();
+				const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 				const childElementCount = root.childElementCount;
 				const select = root.childNodes[1] as HTMLSelectElement;
 				const button = root.childNodes[2] as HTMLButtonElement;
@@ -2622,7 +2622,7 @@ jsdomDescribe('vdom', () => {
 					}
 				}
 				const r = renderer(() => w(Bar, {}));
-				r.mount({ domNode: iframe.contentDocument.body, sync: true });
+				r.mount({ domNode: iframe.contentDocument!.body, sync: true });
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 				assert.strictEqual(
 					root.childElementCount,
@@ -2650,11 +2650,11 @@ jsdomDescribe('vdom', () => {
 			it('Supports merging DNodes with widgets onto existing HTML', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
-				iframe.contentDocument.write(
+				iframe.contentDocument!.write(
 					`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button><span>label</span><div>last node</div></div>`
 				);
-				iframe.contentDocument.close();
-				const root = iframe.contentDocument.body.firstChild as HTMLElement;
+				iframe.contentDocument!.close();
+				const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 				const childElementCount = root.childElementCount;
 				const label = root.childNodes[0] as HTMLLabelElement;
 				const select = root.childNodes[1] as HTMLSelectElement;
@@ -2713,7 +2713,7 @@ jsdomDescribe('vdom', () => {
 					}
 				}
 				const r = renderer(() => w(Bar, {}));
-				r.mount({ domNode: iframe.contentDocument.body, sync: true });
+				r.mount({ domNode: iframe.contentDocument!.body, sync: true });
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 				assert.strictEqual(
 					root.childElementCount,
@@ -2744,7 +2744,7 @@ jsdomDescribe('vdom', () => {
 			it('Removes unknown nodes when merging', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
-				iframe.contentDocument.write(`
+				iframe.contentDocument!.write(`
 					<div class="foo">
 						<label for="baz">Select Me:</label>
 						<select type="text" name="baz" id="baz" disabled="disabled">
@@ -2756,8 +2756,8 @@ jsdomDescribe('vdom', () => {
 						<span>label</span>
 						<div>last node</div>
 					</div>`);
-				iframe.contentDocument.close();
-				const root = iframe.contentDocument.body.firstChild as HTMLElement;
+				iframe.contentDocument!.close();
+				const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 				const childElementCount = root.childElementCount;
 				const label = root.childNodes[1] as HTMLLabelElement;
 				const select = root.childNodes[3] as HTMLSelectElement;
@@ -2816,7 +2816,7 @@ jsdomDescribe('vdom', () => {
 					}
 				}
 				const r = renderer(() => w(Bar, {}));
-				r.mount({ domNode: iframe.contentDocument.body, sync: true });
+				r.mount({ domNode: iframe.contentDocument!.body, sync: true });
 				assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 				assert.strictEqual(
 					root.childElementCount,
@@ -2847,9 +2847,9 @@ jsdomDescribe('vdom', () => {
 			it('Should only merge on the first render', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
-				iframe.contentDocument.write(`<div>Loading</div>`);
-				iframe.contentDocument.close();
-				const root = iframe.contentDocument.body.firstChild as HTMLElement;
+				iframe.contentDocument!.write(`<div>Loading</div>`);
+				iframe.contentDocument!.close();
+				const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 
 				class Bar extends WidgetBase<any> {
 					render() {
@@ -2882,7 +2882,7 @@ jsdomDescribe('vdom', () => {
 					}
 				}
 				const r = renderer(() => w(Foo, {}));
-				r.mount({ domNode: iframe.contentDocument.body, sync: true });
+				r.mount({ domNode: iframe.contentDocument!.body, sync: true });
 				assert.lengthOf(root.childNodes, 1);
 				invalidate();
 				assert.strictEqual(root.childNodes.length, 3);
@@ -4625,11 +4625,11 @@ jsdomDescribe('vdom', () => {
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
 			r.mount({ domNode: div, sync: true });
-			const svg = (div.childNodes[0] as Element).childNodes[0];
+			const svg = (div.childNodes[0] as Element).children[0];
 			assert.strictEqual(svg.namespaceURI, 'http://www.w3.org/2000/svg');
-			const circle = svg.childNodes[0];
+			const circle = svg.children[0];
 			assert.strictEqual(circle.namespaceURI, 'http://www.w3.org/2000/svg');
-			const image = svg.childNodes[1];
+			const image = svg.children[1];
 			assert.strictEqual(image.attributes[0].namespaceURI, 'http://www.w3.org/1999/xlink');
 			const span = (div.childNodes[0] as Element).childNodes[1];
 			assert.strictEqual(span.namespaceURI, 'http://www.w3.org/1999/xhtml');
@@ -4669,11 +4669,11 @@ jsdomDescribe('vdom', () => {
 		it('Supports merging DNodes onto existing HTML', () => {
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);
-			iframe.contentDocument.write(
+			iframe.contentDocument!.write(
 				`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button></div>`
 			);
-			iframe.contentDocument.close();
-			const root = iframe.contentDocument.body.firstChild as HTMLElement;
+			iframe.contentDocument!.close();
+			const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 			const childElementCount = root.childElementCount;
 			const select = root.childNodes[1] as HTMLSelectElement;
 			const button = root.childNodes[2] as HTMLButtonElement;
@@ -4722,7 +4722,7 @@ jsdomDescribe('vdom', () => {
 				}
 			}
 			const r = renderer(() => w(Foo, {}));
-			r.mount({ domNode: iframe.contentDocument.body });
+			r.mount({ domNode: iframe.contentDocument!.body });
 			assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 			assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 			assert.strictEqual(select, root.childNodes[1], 'should have been reused');
@@ -4741,11 +4741,11 @@ jsdomDescribe('vdom', () => {
 		it('Supports merging DNodes with widgets onto existing HTML', () => {
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);
-			iframe.contentDocument.write(
+			iframe.contentDocument!.write(
 				`<div class="foo"><label for="baz">Select Me:</label><select type="text" name="baz" id="baz" disabled="disabled"><option value="foo">label foo</option><option value="bar" selected="">label bar</option><option value="baz">label baz</option></select><button type="button" disabled="disabled">Click Me!</button><span>label</span><div>last node</div></div>`
 			);
-			iframe.contentDocument.close();
-			const root = iframe.contentDocument.body.firstChild as HTMLElement;
+			iframe.contentDocument!.close();
+			const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 			const childElementCount = root.childElementCount;
 			const label = root.childNodes[0] as HTMLLabelElement;
 			const select = root.childNodes[1] as HTMLSelectElement;
@@ -4798,7 +4798,7 @@ jsdomDescribe('vdom', () => {
 				}
 			}
 			const r = renderer(() => w(Foo, {}));
-			r.mount({ domNode: iframe.contentDocument.body });
+			r.mount({ domNode: iframe.contentDocument!.body });
 			assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 			assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 			assert.strictEqual(label, root.childNodes[0], 'should have been reused');
@@ -4820,7 +4820,7 @@ jsdomDescribe('vdom', () => {
 		it('Removes unknown nodes when merging', () => {
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);
-			iframe.contentDocument.write(`
+			iframe.contentDocument!.write(`
 				<div class="foo">
 					<label for="baz">Select Me:</label>
 					<select type="text" name="baz" id="baz" disabled="disabled">
@@ -4832,8 +4832,8 @@ jsdomDescribe('vdom', () => {
 					<span>label</span>
 					<div>last node</div>
 				</div>`);
-			iframe.contentDocument.close();
-			const root = iframe.contentDocument.body.firstChild as HTMLElement;
+			iframe.contentDocument!.close();
+			const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 			const childElementCount = root.childElementCount;
 			const label = root.childNodes[1] as HTMLLabelElement;
 			const select = root.childNodes[3] as HTMLSelectElement;
@@ -4886,7 +4886,7 @@ jsdomDescribe('vdom', () => {
 				}
 			}
 			const r = renderer(() => w(Foo, {}));
-			r.mount({ domNode: iframe.contentDocument.body });
+			r.mount({ domNode: iframe.contentDocument!.body });
 			assert.strictEqual(root.className, 'foo bar', 'should have added bar class');
 			assert.strictEqual(root.childElementCount, childElementCount, 'should have the same number of children');
 			assert.strictEqual(label, root.childNodes[0], 'should have been reused');

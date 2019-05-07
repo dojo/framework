@@ -440,7 +440,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		previousValue?: Function
 	) {
 		if (previousValue) {
-			const previousEvent = _eventMap.get(previousValue);
+			const previousEvent = _eventMap.get(previousValue) || null;
 			domNode.removeEventListener(eventName, previousEvent);
 		}
 
@@ -1309,7 +1309,7 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		next.domNode = current.domNode;
 		next.namespace = current.namespace;
 		if (next.node.text && next.node.text !== current.node.text) {
-			const updatedTextNode = parentDomNode!.ownerDocument.createTextNode(next.node.text!);
+			const updatedTextNode = parentDomNode!.ownerDocument!.createTextNode(next.node.text!);
 			parentDomNode!.replaceChild(updatedTextNode, next.domNode!);
 			next.domNode = updatedTextNode;
 		} else if (next.node.children) {

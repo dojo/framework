@@ -76,7 +76,7 @@ describe('StateHistory', () => {
 	it('emits change when path is updated', () => {
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
 		assert.deepEqual(onChange.firstCall.args, [
-			sandbox.contentWindow.location.pathname + sandbox.contentWindow.location.search
+			sandbox.contentWindow!.location.pathname + sandbox.contentWindow!.location.search
 		]);
 		history.set('/foo');
 		assert.deepEqual(onChange.secondCall.args, ['/foo']);

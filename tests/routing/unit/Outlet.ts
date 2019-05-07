@@ -42,9 +42,8 @@ describe('Outlet', () => {
 	beforeEach(() => {
 		registry = new Registry();
 		BaseOutlet = class extends Outlet {
-			constructor(...args: any[]) {
-				super(...args);
-
+			constructor() {
+				super();
 				this.registry.base = registry;
 			}
 		};
