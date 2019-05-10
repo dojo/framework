@@ -88,14 +88,6 @@ Intern comes with support for running tests remotely on [BrowserStack](https://w
 
 More detailed information is available in the [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern) repository and from [Intern](https://theintern.io/).
 
-## Assets
-
-Many assets like CSS and images will be imported by modules and inlined automatically by the build process. However, sometimes it is necessary to serve static assets like the favicon or video files.
-
-Static assets can be added to an `assets/` directory at the project root. At build time, these assets are copied to an `assets/` directory along-side the built application.
-
-The build also parses `src/index.html` for CSS, JavaScript, and image assets, hashes them and includes them in the output directory. A favicon can be added to `src` and referenced by `src/index.html`. The build will then hash the file and copy it to the output directory with a file name of `favicon.[hash].ico`.
-
 ## Browser Support
 
 Dojo is an evergreen framework. By default the build will support the last two versions of the latest browsers when it was released. Any polyfills needed by Dojo to normalize functionality across browsers is conditionally provided by the `@dojo/framework/shim`. To support IE11 run the build with the `--legacy` flag.
