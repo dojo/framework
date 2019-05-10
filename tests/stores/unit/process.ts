@@ -795,6 +795,20 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 			const processExecutor = process(store);
 			return processExecutor({});
 		});
+
+		it('should be able to compose commands created by a command factory', () => {
+			const createCommand = createCommandFactory<any>();
+			const composedCommand = createCommand(({ path }) => {
+				return [add(path('foo'), 'bar')];
+			});
+			const command = createCommand((options) => {
+				return [...composedCommand(options)];
+			});
+			const process = createProcess('test', [command]);
+			const executor = process(store);
+			executor({});
+			assert.strictEqual(store.get(store.path('foo')), 'bar');
+		});
 	});
 };
 
