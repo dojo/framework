@@ -180,20 +180,8 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 			const createCommand = createCommandFactory<StateType>();
 
 			createProcess('test', [
-				createCommand(({ path }) => [
-					{
-						op: OperationType.ADD,
-						path: new Pointer(path('foo').path),
-						value: 3
-					}
-				]),
-				createCommand(({ path }) => [
-					{
-						op: OperationType.ADD,
-						path: new Pointer(path('a', 'b').path),
-						value: 'foo'
-					}
-				])
+				createCommand(({ path }) => [add(path('foo'), 3)]),
+				createCommand(({ path }) => [add(path('a', 'b'), 'foo')])
 			])(store)({});
 
 			assert.equal(store.get(store.path('a', 'b')), 'foo');
