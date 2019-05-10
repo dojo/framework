@@ -54,8 +54,39 @@ For more information on how to configure the build options see the [@dojo/cli-bu
 
 ## Testing
 
--   Talk about Intern
--   How testing is set up
+Dojo uses [Intern](https://theintern.io/) for running unit and functional tests. Intern supports two types of testing approaches unit and functional. Unit tests may be run in node using [jsdom](https://github.com/jsdom/jsdom) and using [Selenium](https://www.seleniumhq.org/). Functional tests are run using Selenium in the browser and test the overall functionality of the software as a user would interact with it.
+
+A new Dojo application will have example unit and function tests under the `tests` directory. Scripts for running tests are available in the `package.json` file.
+
+The fastest way to run tests is by running them in node using [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern)'s JIT builder.
+
+> Command line
+
+```bash
+npm test
+```
+
+This command uses [ts-node](https://www.npmjs.com/package/ts-node) to automatically build and execute unit tests located in `tests/unit` and build code from `src` on demand.
+
+> Command line
+
+```bash
+npm run test:unit
+```
+
+This command will build the Dojo application and tests into `dojo\test\unit` and use Intern to run tests locally using node and Chrome.
+
+> Command line
+
+```bash
+npm run test:functional
+```
+
+This command will build the Dojo application and functional tests into `dojo\test\functional` and use Intern to execute tests in Chrome using Selenium.
+
+Intern comes with support for running tests remotely on [BrowserStack](https://www.browserstack.com), [SauceLabs](https://saucelabs.com/), and [TestingBot](https://testingbot.com/). You may use one of these services by signing up for an account and providing your credentials to cli-test-intern. By default, all of the testing services will run tests against IE11, Firefox, and Chrome.
+
+More detailed information is available in the [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern) repository and from [Intern](https://theintern.io/).
 
 ## Assets
 
@@ -71,4 +102,25 @@ Dojo is an evergreen framework. By default the build will support the last two v
 
 # Dojo Configuration
 
--   Structure `{ "cli-command": { "feature": "configuration" } }`
+Additional configuration options can be added in `.dojorc`. The options generally expand on the settings available through the command line and allow for more advanced features such as internationalization, code splitting, PWA manifests, and eliding code.
+
+`.dojorc` contains a JSON object with configuration information for any of the commands that are run via the dojo command line tool. Each command is allocated a section within the configuration object where its settings can be stored.
+
+```json
+{
+	"build-app": {
+		"pwa": {
+			"manifest": {
+				"name": "My Application",
+				"description": "My amazing application"
+			}
+		}
+	},
+	"test-intern": {},
+	"create-widget": {
+		"tests": "tests/unit"
+	}
+}
+```
+
+In this example we have a section for each of the three CLI command modules: [@dojo/cli-build-app](https://github.com/dojo/cli-build-app/), [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern), and [@dojo/cli-create-widget](https://github.com/dojo/cli-create-widget). Configuration is _always_ hierarchical and in the order of command => feature => configuration.
