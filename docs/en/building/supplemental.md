@@ -94,7 +94,7 @@ In this case Dojo will create bundles named `fr.[hash].js` and `de.[hash].js`. F
 
 ## Bundling considerations
 
-<!-- TODO I am not confident in what I am saying here. Under what conditions will duplication of common/shared resources occur? How do we avoid this? Can we define a bundle for common widgets? -->
+<!-- TODO I am not confident in what I am saying here. Under what conditions will duplication of common/shared resources occur? How do we avoid this? Can we define a bundle for common widgets? Should I talk about the [bundle analyzer](https://github.com/dojo/cli-build-app/blob/master/README.md#bundle-analyzer) -->
 
 Under the covers Dojo uses Webpack with a number of custom plugins to provide intelligent application bundling. However, sometimes decisions made by the build tool or manually defined in `.dojorc` can create duplication of common resources shared by multiple bundles. Some of this is unavoidable. A good general rule of thumb for avoid duplication is to try to ensure that common code is at the outermost edges of your dependency tree. In other words, minimize dependencies as much as possible among shared code. If a significant amount of code may be shared among bundles (e.g. common widgets) consider bundling these assets together.
 
@@ -168,6 +168,8 @@ versions of files being cached.
     _ Benefits
     _ Better TTL/user experience \* Parts of a PWA (what makes a PWA a PWA)
 -   PWA via Configuration
+		- https://github.com/dojo/cli-build-app/blob/master/README.md#pwa-object
+		- https://github.com/dojo/webpack-contrib/#service-worker-plugin
 -   Custom Service Worker
 -->
 
@@ -178,6 +180,8 @@ versions of files being cached.
     _ dojo/has
     _ Possible usage (IE11/mobile/node)
 -   Configuration
+		- https://github.com/dojo/cli-build-app/blob/master/README.md#features-object
+		- https://github.com/dojo/webpack-contrib/#static-build-loader
 -   Example
 -->
 
@@ -186,10 +190,15 @@ versions of files being cached.
 <!-- TODO
 -   Overview
     _ Code rendered during build time
+    	- https://learn-dojo.com/build-time-rendering-in-dojo/
+    	- https://dojo.io/blog/2019/01/29/2019-01-29-Version-5-Dojo/
+    	- https://github.com/dojo/cli-build-app/blob/master/README.md#build-time-renderbtr-object
     _ Bundling \* has('build-time-render') for conditional code
 -->
 
 # Ejecting
+
+<!-- TODO do we want to add any information from here: https://github.com/dojo/cli-build-app/blob/master/README.md#eject -->
 
 Ejecting is a non-reversible, one-way process that exports the underlying configuration files used by Webpack, Intern, and other projects used by `dojo` commands. Rarely, **if ever**, should you need to separate a project from its build tools. If the provided build tools fail to provide a needed feature or functionality the recommended approach is to fork the specific build command and add the additional functionality to the tool. The Dojo CLI was specifically designed to be modular in nature with this use case in mind.
 
