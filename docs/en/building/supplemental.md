@@ -4,7 +4,7 @@ A bundle is a portion of code that represents a slice of functionality. Bundles 
 
 Dojo tries to make intelligent choices by using routes and outlets to automatically split code into smaller bundles. In general these bundles should all have code that is related and relevant. This comes for free as part of the build system and doesn't require any additional thought to use. However, for those with specific bundling needs Dojo also allows for bundles to be explicitly defined in the `.dojorc` configration file.
 
-By default a Dojo application only creates a single application bundle. However, there are a number of configuration options provided by [@dojo/cli-build-app]() that will help break down an application into smaller portions that can be progressively loaded.
+By default a Dojo application only creates a single application bundle. However, there are a number of configuration options provided by [@dojo/cli-build-app](https://github.com/dojo/cli-build-app) that will help break down an application into smaller portions that can be progressively loaded.
 
 ## Automatic bundling using routes
 
@@ -53,7 +53,7 @@ export default class App extends WidgetBase {
 
 The output will result in a separate bundle for each of the application's top level routes. In this example, there will be a main application bundle and bundles for `src/Home`, `src/About`, and `src/Profile`.
 
-To see automatic bundling in action create a new application using [@dojo/cli-create-app]() and run `npm run build`. Dojo will automatically create bundles along the various routes in the sample application.
+To see automatic bundling in action create a new application using [@dojo/cli-create-app](https://github.com/dojo/cli-create-app/) and run `npm run build`. Dojo will automatically create bundles along the various routes in the sample application.
 
 ## Manually specifying bundles
 
@@ -163,38 +163,382 @@ versions of files being cached.
 
 # Progressive Web Apps
 
-<!-- TODO
--   Overview
-    _ Benefits
-    _ Better TTL/user experience \* Parts of a PWA (what makes a PWA a PWA)
--   PWA via Configuration
-		- https://github.com/dojo/cli-build-app/blob/master/README.md#pwa-object
-		- https://github.com/dojo/webpack-contrib/#service-worker-plugin
--   Custom Service Worker
--->
+Progressive web applications are made up of a collection of technologies and patterns that improve the user experience and help create a more reliable and usable application. Mobile users in particular will see the application as more integrated into their device similar to an installed app.
+
+The core of a progressive web app is made up of two technologies: Service workers and a manifest. Dojo's build command supports both of these through `.dojorc` with the `pwa` object.
+
+## Manifest
+
+The [manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) describes an application in a JSON file and provides details so it may be installed on a device's homescreen directly from the web.
+
+> .dojorc
+
+```json
+{
+	"build-app": {
+		"pwa": {
+			"manifest": {
+				"name": "Todo MVC",
+				"description": "A simple to-do application created with Dojo",
+				"icons": [
+					{ "src": "./favicon-16x16.png", "sizes": "16x16", "type": "image/png" },
+					{ "src": "./favicon-32x32.png", "sizes": "32x32", "type": "image/png" },
+					{ "src": "./favicon-48x48.png", "sizes": "48x48", "type": "image/png" },
+					{ "src": "./favicon-256x256.png", "sizes": "256x256", "type": "image/png" }
+				]
+			}
+		}
+	}
+}
+```
+
+When a manifest is provided `dojo build` will inject the necessary `<meta>` tags in the applications `index.html`.
+
+-   `mobile-web-app-capable="yes"`: indicates to Chrome on Android that the application can be added to the user's homescreen.
+-   `apple-mobile-web-app-capable="yes"`: indicates to iOS devices that the application can be added to the user's homescreen.
+-   `apple-mobile-web-app-status-bar-style="default"`: indicates to iOS devices that the status bar should use the default appearance.
+-   `apple-touch-icon="{{icon}}"`: the equivalent of the manifests' icons since iOS does not currently read icons from the manifest. A separate meta tag is injected for each entry in the icons array.
+
+## Service worker
+
+A service worker is a type of web worker that is able to intercept network requests, cache, and provide resources. Dojo's build command can automatically build fully-functional service worker that is activated on startup and complete with precaching and custom route handling from a configuration file.
+
+For instance, we could write a configuration to create a simple service worker that cached all of the application bundles except the admin bundle and cached recent application images and articles.
+
+> .dojorc
+
+```json
+{
+	"build-app": {
+		"pwa": {
+			"serviceWorker": {
+				"cachePrefix": "my-app",
+				"excludeBundles": ["admin"],
+				"routes": [
+					{
+						"urlPattern": ".*\\.(png|jpg|gif|svg)",
+						"strategy": "cacheFirst",
+						"cacheName": "my-app-images",
+						"expiration": { "maxEntries": 10, "maxAgeSeconds": 604800 }
+					},
+					{
+						"urlPattern": "http://my-app-url.com/api/articles",
+						"strategy": "cacheFirst",
+						"expiration": { "maxEntries": 25, "maxAgeSeconds": 86400 }
+					}
+				]
+			}
+		}
+	}
+}
+```
+
+Alternatively we can use our own service worker written in JavaScript by providing its path in the configuration.
+
+> .dojorc
+
+```json
+{
+	"build-app": {
+		"pwa": {
+			"serviceWorker": "./support/service-worker.js"
+		}
+	}
+}
+```
+
+<!-- TODO this does not work at the time of writing. See https://github.com/dojo/cli-build-app/issues/276 -->
+
+The service worker will be copied over as part of the build process and registered when the application starts.
+
+## ServiceWorker Configuration
+
+Under the hood, the `ServicerWorkerPlugin` from `@dojo/webpack-contrib` is used to generate the service worker, and all of its options are valid `pwa.serviceWorker` properties.
+
+| Property       | Type       | Optional | Description                                                                                     |
+| -------------- | ---------- | -------- | ----------------------------------------------------------------------------------------------- |
+| bundles        | `string[]` | Yes      | An array of bundles to include in the precache. Defaults to all bundles.                        |
+| cachePrefix    | `string`   | Yes      | The prefix to use for the runtime precache cache.                                               |
+| clientsClaim   | `boolean`  | Yes      | Whether the service worker should start controlling clients on activation. Defaults to `false`. |
+| excludeBundles | `string[]` | Yes      | An array of bundles to include in the precache. Defaults to `[]`.                               |
+| importScripts  | `string[]` | Yes      | An array of script paths that should be loaded within the service worker                        |
+| precache       | `object`   | Yes      | An object of precache configuration options (see below)                                         |
+| routes         | `object[]` | Yes      | An array of runtime caching config objects (see below)                                          |
+| skipWaiting    | `boolean`  | Yes      | Whether the service worker should skip the waiting lifecycle                                    |
+
+### Precaching
+
+The `precache` option can take the following options to control precaching behavior:
+
+| Property     | Type                   | Optional | Description                                                                                                                                                    |
+| ------------ | ---------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| baseDir      | `string`               | Yes      | The base directory to match `include` against.                                                                                                                 |
+| ignore       | `string[]`             | Yes      | An array of glob pattern string matching files that should be ignored when generating the precache. Defaults to `[ 'node_modules/**/*' ]`.                     |
+| include      | `string` or `string[]` | Yes      | A glob pattern string or an array of glob pattern strings matching files that should be included in the precache. Defaults to all files in the build pipeline. |
+| index        | `string`               | Yes      | The index filename that should be checked if a request fails for a URL ending in `/`. Defaults to `'index.html'`.                                              |
+| maxCacheSize | `number`               | Yes      | The maximum size in bytes a file must not exceed to be added to the precache. Defaults to `2097152` (2 MB).                                                    |
+| strict       | `boolean`              | Yes      | If `true`, then the build will fail if an `include` pattern matches a non-existent directory. Defaults to `true`.                                              |
+| symlinks     | `boolean`              | Yes      | Whether to follow symlinks when generating the precache. Defaults to `true`.                                                                                   |
+
+### Runtime Caching
+
+In addition to precaching, strategies can be provided for specific routes to determine whether and how they can be cached. This `routes` option is an array of objects with the following properties:
+
+| Property              | Type     | Optional | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --------------------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| urlPattern            | `string` | No       | A pattern string (which will be converted a regular expression) that matches a specific route.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| strategy              | `string` | No       | The caching strategy (see below).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| options               | `object` | Yes      | An object of additional options, each detailed below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| cacheName             | `string` | Yes      | The name of the cache to use for the route. Note that the `cachePrefix` is _not_ prepended to the cache name. Defaults to the main runtime cache (`${cachePrefix}-runtime-${domain}`).                                                                                                                                                                                                                                                                                                                                                                            |
+| cacheableResponse     | `object` | Yes      | Uses HTTP status codes and or headers to determine whether a response can be cached. This object has two optional properties: `statuses` and `headers`. `statuses` is an array of HTTP status codes that should be considered valid for the cache. `headers` is an object of HTTP header and value pairs; at least one header must match for the response to be considered valid. Defaults to `{ statuses: [ 200 ] }` when the `strategy` is `'cacheFirst'`, and `{ statuses: [0, 200] }` when the `strategy` is either `networkFirst` or `staleWhileRevalidate`. |
+| expiration            | `object` | Yes      | Controls how the cache is invalidated. This object has two optional properties. `maxEntries` is the number of responses that can be cached at any given time. Once this max is exceeded, the oldest entry is removed. `maxAgeSeconds` is the oldest a cached response can be in seconds before it gets removed.                                                                                                                                                                                                                                                   |
+| networkTimeoutSeconds | `number` | Yes      | Used with the `networkFirst` strategy to specify how long in seconds to wait for a resource to load before falling back on the cache.                                                                                                                                                                                                                                                                                                                                                                                                                             |
+
+Four routing strategies are currently supported:
+
+-   `networkFirst` attempts to load a resource over the network, falling back on the cache if the request fails or times out. This is a useful strategy for assets that either change frequently or may change frequently (i.e., are not versioned).
+-   `cacheFirst` loads a resource from the cache unless it does not exist, in which case it is fetched over the network. This is best for resources that change infrequently or can be cached for a long time (e.g., versioned assets).
+-   `networkOnly` forces the resource to always be retrieved over the network, and is useful for requests that have no offline equivalent.
+-   `staleWhileRevalidate` requests resources from both the cache and the network simulaneously. The cache is updated with each successful network response. This strategy is best for resources that do not need to be continuously up-to-date, like user avatars. However, when fetching third-party resources that do not send CORS headers, it is not possible to read the contents of the response or verify the status code. As such, it is possible that a bad response could be cached. In such cases, the `networkFirst` strategy may be a better fit.
 
 # Conditional code
 
-<!-- TODO
--   Overview
-    _ dojo/has
-    _ Possible usage (IE11/mobile/node)
--   Configuration
-		- https://github.com/dojo/cli-build-app/blob/master/README.md#features-object
-		- https://github.com/dojo/webpack-contrib/#static-build-loader
--   Example
--->
+Webpack's static code analyzer is capable of removing dead code branch from the bundles it creates. The Dojo build tool leverages this capability to create branches of conditional code that can be removed at build time. Named conditional blocks are defined using Dojo framework's `has` module. Then those conditional blocks can be statically set to true or false through `.dojorc` and removed at build time.
+
+> main.ts
+
+```ts
+import has from '@dojo/framework/has';
+
+if (has('production')) {
+	console.log('Starting in production');
+} else {
+	console.log('Starting in dev mode');
+}
+
+export const mode = has('production') ? 'dist' : 'dev';
+```
+
+> .dojorc
+
+```json
+{
+	"build-app": {
+		"features": {
+			"production": true
+		}
+	}
+}
+```
+
+The above `production` feature will be set `true` for **production builds** (`dist` mode). The Dojo build system uses the [static-build-loader](https://github.com/dojo/webpack-contrib/#static-build-loader) to rewrite `has()` calls that have been statically asserted by the system as `true` or `false`. This allows Webpack to conditionally identify code as unreachable and remove those dead code branches from the build.
+
+For example, the above code would be rewritten as:
+
+> static-build-loader output
+
+```js
+import has from '@dojo/framework/has';
+
+if (true) {
+	console.log('Starting in production');
+} else {
+	console.log('Starting in dev mode');
+}
+
+export const mode = true ? 'dist' : 'dev';
+```
+
+Webpack's dead branch removal would then remove the unreachable code.
+
+> Uglify output
+
+```js
+console.log('Starting in production');
+export const mode = 'dist';
+```
+
+Any features which are not statically asserted, are not re-written. This allows the code to determine at run-time if the feature is present.
+
+## Elided Imports
+
+The Dojo build process allows for imports to be conditionally removed through the use of _has pragmas_. These pragmas are simply strings that refer to a specific feature. If the feature is statically set at build time then the build system will evaluate the pragma and if `true` the next import is removed.
+
+> .dojorc
+
+```json
+{
+	"build-app": {
+		"features": {
+			"foo": true,
+			"bar": false
+		}
+	}
+}
+```
+
+> main.ts
+
+```ts
+"has('foo')";
+import 'a'; // removed
+'!has("bar")';
+import 'b'; // removed
+'!has("foo")';
+import 'c';
+'has("baz")';
+import 'd';
+```
+
+In the above example, imports `a` and `b` would be removed because their values evaluate to `true`. Import `c` will remain because it evaluates to `false`. Import `d` will remain because the `baz` feature has not been statically defined.
+
+## Known features
+
+The following features are recognized by the Dojo system and may be used internally to optimize code or shim features. If multiple features are specified then the intersection of available features will be returned.
+
+-   android
+-   chrome
+-   edge
+-   firefox
+-   ie11
+-   ios
+-   node
+-   node8
+-   safari
+
+## Provided Features
+
+These features are provided by the build system to help identify a specific environment or mode of operation.
+
+| Feature Flag        | Description                                                                                                                                                                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `debug`             | Provides a way to create a code path for code that is only usable when debugging or providing enhanced diagnostics that are not desired in a _production_ build. Defaults to `true` but should be configured statically as `false` in production builds. |
+| `host-browser`      | Determines if the current environment contains a `window` and `document` object in the global context, therefore it is generally safe to assume the code is running in a browser environment.                                                            |
+| `host-node`         | Attempts to detect if the environment appears to be a node environment.                                                                                                                                                                                  |
+| `build-time-render` | Statically defined by the build-time rendering system during build-time rendering.                                                                                                                                                                       |
 
 # Build-time Rendering
 
-<!-- TODO
--   Overview
-    _ Code rendered during build time
-    	- https://learn-dojo.com/build-time-rendering-in-dojo/
-    	- https://dojo.io/blog/2019/01/29/2019-01-29-Version-5-Dojo/
-    	- https://github.com/dojo/cli-build-app/blob/master/README.md#build-time-renderbtr-object
-    _ Bundling \* has('build-time-render') for conditional code
--->
+BTR renders a route to HTML during the build process and in-lines critical CSS and assets needed to display the initial view. This allows Dojo to pre-render the initial HTML used by a route and inject it directly into the page immediately. Skipping the initial render by creating it during the build process gives us many of the same benefits of server side rendering (SSR) such as performance gains and search engine optimization without the complexities of SSR.
+
+## Using BTR
+
+First make sure `index.html` includes a DOM node with an `id` attribute. This node will be used by Dojo's virtual DOM to compare and render the application's HTML. BTR requires this setup so it can render the HTML generated at build time. This creates a very fast and responsive initial rendering of the route. Once the route has had a change to load and render the virtual DOM is able to diff against the BTR.
+
+> index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+        <title>sample-app</title>
+        <meta name="theme-color" content="#222127">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+        <div id="root"></div>
+</body>
+</html>
+```
+
+Make sure your application uses the DOM node to mount the renderer.
+
+> main.ts
+
+```ts
+const r = renderer(() => w(App, {}));
+const domNode = document.getElementById('root') as HTMLElement;
+r.mount({ registry, domNode });
+```
+
+Update the `.dojorc` configuration file with the `id` of the root DOM node and routes to render at build time.
+
+> .dojorc
+
+```json
+{
+	"build-app": {
+		"build-time-render": {
+			"root": "app",
+			"paths": [
+				"#home",
+				{
+					"path": "#comments/9999",
+					"match": ["#comments/.*"]
+				}
+			]
+		}
+	}
+}
+```
+
+This configuration describes two routes. A `home` route and a more complex `comments` route. The `comments` route is a more complex route with parameter data. A `match` is used to make sure that the build-time HTML created for this route is applied to any route that matches the regular expression.
+
+BTR generates a screenshot for each of the paths rendered during the build in the output/info/screenshots directory of your project.
+
+### Hash history
+
+Build time rendering supports applications that use either the `@dojo/framework/routing/history/HashHistory` or `@dojo/framework/routing/history/StateHistory` history managers. If your application uses the HashHistory, ensure that all paths are prefixed with a # character.
+
+## build-time-render feature
+
+Build time rendering exposes a `build-time-render` feature flag that can be used to skip functionality that cannot be executed at build time. This can be used to avoid making `fetch` calls to external systems and instead provide static data that can be used to create an initial render.
+
+```ts
+if (has('build-time-render')) {
+	const response = await fetch(/* remote JSON */);
+	return response.json();
+} else {
+	return Promise.resolve({
+		/* predefined Object */
+	});
+}
+```
+
+## Blocks meta
+
+Dojo Blocks allow executing code in Node.js as part of the build time rendering process. The results from the execution are written to a cache that can then be transparently used in the same way at runtime in the browser. This opens up new opportunities for performing operations that might be not possible or unperformant in a browser.
+
+For example, a Dojo Block module could read a group of markdown files, transform them into VNodes, and make them available to render in the application, all at build time. The result of this Dojo Block module is then cached into the application bundle for use at runtime in the browser.
+
+A Dojo Block module gets used like any other meta in any Dojo widget. As a result there is no extensive configuration or alternative authoring patterns needed.
+
+For example, a block module could read a text file and return the content to the application.
+
+> src/read-file.block.ts
+
+```ts
+import * as fs from 'fs';
+import { resolve } from 'path';
+
+export default (path: string) => {
+	path = resolve(__dirname, path);
+	return fs.readFileSync(path, 'utf8');
+};
+```
+
+> src/MyBlockWidget.ts
+
+```ts
+import Block from '@dojo/framework/widget-core/meta/Block';
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { v } from '@dojo/framework/widget-core/d';
+
+import readFile from './read-file.block';
+
+export default class MyBlockWidget extends WidgetBase {
+	protected render() {
+		const message = this.meta(Block).run(readFile)('../content/hello-dojo-blocks.txt');
+		return v('div', [message]);
+	}
+}
+```
+
+This widget runs the `read-file.block.ts` module at build time, loading the file path passed which gets used as the children in the widget.
+
+## Snapshots
+
+Build time rendering creates HTML snapshots by rendering an application at the provided route and capturing the output from the virtual DOM. Snapshots are not taken immediately after render, instead the BTR system waits until there hasn't been any active network request and all `Block` metas have been resolved.
 
 # Ejecting
 
