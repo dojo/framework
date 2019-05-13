@@ -233,25 +233,7 @@ For instance, we could write a configuration to create a simple service worker t
 }
 ```
 
-Alternatively we can use our own service worker written in JavaScript by providing its path in the configuration.
-
-> .dojorc
-
-```json
-{
-	"build-app": {
-		"pwa": {
-			"serviceWorker": "./support/service-worker.js"
-		}
-	}
-}
-```
-
-<!-- TODO this does not work at the time of writing. See https://github.com/dojo/cli-build-app/issues/276 -->
-
-The service worker will be copied over as part of the build process and registered when the application starts.
-
-## ServiceWorker Configuration
+### ServiceWorker Configuration
 
 Under the hood, the `ServicerWorkerPlugin` from `@dojo/webpack-contrib` is used to generate the service worker, and all of its options are valid `pwa.serviceWorker` properties.
 
@@ -266,7 +248,7 @@ Under the hood, the `ServicerWorkerPlugin` from `@dojo/webpack-contrib` is used 
 | routes         | `object[]` | Yes      | An array of runtime caching config objects (see below)                                          |
 | skipWaiting    | `boolean`  | Yes      | Whether the service worker should skip the waiting lifecycle                                    |
 
-### Precaching
+#### Precaching
 
 The `precache` option can take the following options to control precaching behavior:
 
@@ -280,7 +262,7 @@ The `precache` option can take the following options to control precaching behav
 | strict       | `boolean`              | Yes      | If `true`, then the build will fail if an `include` pattern matches a non-existent directory. Defaults to `true`.                                              |
 | symlinks     | `boolean`              | Yes      | Whether to follow symlinks when generating the precache. Defaults to `true`.                                                                                   |
 
-### Runtime Caching
+#### Runtime Caching
 
 In addition to precaching, strategies can be provided for specific routes to determine whether and how they can be cached. This `routes` option is an array of objects with the following properties:
 
