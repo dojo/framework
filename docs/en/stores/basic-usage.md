@@ -48,11 +48,11 @@ The above is a simple example for illustrative purposes. Examples in this refere
 
 ## Updating stores
 
-To work with Dojo Stores there are three core but simple concepts - Operations, Commands, and Processes.
+To work with Dojo Stores there are three core concepts.
 
 -   **Operations** are instructions to manipulate the state held by the store
 -   **Commands** are simple functions that perform business logic and return operations
--   **Processes** execute a group of commands and usually represent application behavior
+-   **Processes** execute a group of commands and represent application behavior
 
 ### Operations
 
@@ -60,11 +60,11 @@ Stores cannot be modified directly. Instead four operations are available for mo
 
 #### `path` and `at`
 
-The path is a `string` that describes the location where an operation is applied. The `path` and `at` functions are part of the `Store` and are accessible inside of a `Command`.
+The path is a `string` that describes the location where an operation is applied. The `path` and `at` functions are part of the `Store` and are accessible inside of a `Command` (which we will talk about later).
 
-Here are a couple examples to show how `path` and `at` describe a location in the store. The `State` provided is there to illustrate the location of a value and describe how the location functions are used to reference that location. Typically `path` and `at` are used in conjunction with operations inside of Commands, which we will show later.
+Here are a couple examples to show how `path` and `at` describe a location in the store. The `State` is the same as defined above in `interface.d.ts`. It is used by the `Store` to understand the shape of the state data.
 
-> `path` transverses an object hierarchy
+> `path` of the current user name
 
 ```ts
 const store = new Store<State>();
@@ -172,7 +172,7 @@ These operations set the current user unless a current user already exists.
 
 ### Commands
 
-Commands are simply functions that are called while executing a process and return an array of operations that modify the store. Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a type-safe way, a `get` function for access to the store's state, a `payload` object for the argument that the process executor was called with.
+Commands are simply functions that are called while executing a process. They return an array of operations that modify the store. Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a type-safe way, a `get` function for access to the store's state, a `payload` object for the argument that the process executor was called with.
 
 #### The command factory
 
@@ -193,7 +193,7 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 
 `createCommand` will ensure that the wrapped command has the correct typing and the passed `CommandRequest` functions will be typed to the `State` interface provided to `createCommandFactory`. While it is possible to manually type commands this guide will use `createCommand` in its examples.
 
-#### `get'
+#### `get`
 
 The `get` function returns a value from the store at a specified path or `undefined` if a value does not exist at that location.
 
@@ -362,7 +362,7 @@ login(store)({
 
 #### Initial State
 
-Initial application state can be defined on store creating by executing a process.
+Initial application state can be defined on a store creating by executing a process.
 
 > main.ts
 
