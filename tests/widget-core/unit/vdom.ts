@@ -4625,11 +4625,11 @@ jsdomDescribe('vdom', () => {
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
 			r.mount({ domNode: div, sync: true });
-			const svg = (div.childNodes[0] as Element).children[0];
+			const svg = (div.childNodes[0] as Element).childNodes[0];
 			assert.strictEqual(svg.namespaceURI, 'http://www.w3.org/2000/svg');
-			const circle = svg.children[0];
+			const circle = svg.childNodes[0];
 			assert.strictEqual(circle.namespaceURI, 'http://www.w3.org/2000/svg');
-			const image = svg.children[1];
+			const image = svg.childNodes[1] as HTMLImageElement;
 			assert.strictEqual(image.attributes[0].namespaceURI, 'http://www.w3.org/1999/xlink');
 			const span = (div.childNodes[0] as Element).childNodes[1];
 			assert.strictEqual(span.namespaceURI, 'http://www.w3.org/1999/xhtml');
