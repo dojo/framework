@@ -50,9 +50,8 @@ function createMockEvent(
 }
 
 class TestLink extends Link {
-	constructor(...args: any[]) {
-		super(...args);
-
+	constructor() {
+		super();
 		this.registry.base = registry;
 	}
 }

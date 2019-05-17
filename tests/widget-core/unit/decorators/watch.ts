@@ -7,7 +7,7 @@ describe('Watch', () => {
 	it('should invalidate on set', () => {
 		let invalidateCount = 0;
 		class A extends WidgetBase {
-			@watch() private _a: string;
+			@watch() private _a!: string;
 
 			invalidate() {
 				invalidateCount++;

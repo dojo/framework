@@ -14,7 +14,7 @@ class QueuingEvented<
 	T = EventType,
 	O extends EventObject<T> = EventObject<T>
 > extends Evented<M, T, O> {
-	private _queue: Map<string | symbol, EventObject[]> = new Map();
+	private _queue: Map<string | symbol, O[]> = new Map();
 
 	public maxEvents = 0;
 

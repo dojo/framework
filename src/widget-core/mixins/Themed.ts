@@ -140,7 +140,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		/**
 		 * Extra classes map
 		 */
-		private _classes: Classes;
+		private _classes!: Classes;
 
 		/**
 		 * Loaded theme

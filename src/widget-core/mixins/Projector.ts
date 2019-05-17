@@ -37,14 +37,14 @@ class ProjectorWidget extends WidgetBase<{ renderer: () => WNode }> {
 
 export function ProjectorMixin<P, T extends WidgetBase<P>>(Base: Constructor<T>): Constructor<ProjectorMixin<T>> {
 	class Projector {
-		public projectorState: ProjectorAttachState;
+		public projectorState!: ProjectorAttachState;
 		private _root: Element = document.body;
 		private _async = true;
-		private _children: DNode[];
+		private _children!: DNode[];
 		private _properties: P & ProjectorProperties = {} as P;
 		private _widget: Constructor<T> = Base;
 		private _renderer: Renderer | undefined;
-		private _renderResult: WNode;
+		private _renderResult!: WNode;
 
 		public append(root: Element = this._root): Handle {
 			this._root = root;

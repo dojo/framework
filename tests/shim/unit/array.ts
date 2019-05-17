@@ -21,8 +21,8 @@ function assertFrom(arrayable: any, expected: any[]): void {
 }
 
 class MyArray {
-	constructor() {
-		Array.apply(this, arguments);
+	constructor(...args: any[]) {
+		Array.apply(this, args);
 		return this;
 	}
 	static from = array.from;

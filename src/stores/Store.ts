@@ -14,10 +14,6 @@ export interface Path<M, T> {
 	value: T;
 }
 
-export type RequiredProps<T> = { [P in PurifyProps<keyof T>]: NonNullableProps<T[P]> };
-export type PurifyProps<T extends string> = { [P in T]: T }[T];
-export type NonNullableProps<T> = T & {};
-
 /**
  * An interface that enables typed traversal of an arbitrary type M. `path` and `at` can be used to generate
  * `Path`s that allow access to properties within M via the `get` method. The returned `Path`s can also be passed to the
@@ -30,42 +26,37 @@ export interface State<M> {
 }
 
 export interface StatePaths<M> {
-	<T, P0 extends keyof RequiredProps<T>>(path: Path<M, T>, a: P0): Path<M, RequiredProps<T>[P0]>;
-	<T, P0 extends keyof T, P1 extends keyof RequiredProps<T>[P0]>(path: Path<M, T>, a: P0, b: P1): Path<
+	<T, P0 extends keyof Required<T>>(path: Path<M, T>, a: P0): Path<M, Required<T>[P0]>;
+	<T, P0 extends keyof T, P1 extends keyof Required<T>[P0]>(path: Path<M, T>, a: P0, b: P1): Path<
 		M,
-		RequiredProps<RequiredProps<T>[P0]>[P1]
+		Required<Required<T>[P0]>[P1]
 	>;
-	<
-		T,
-		P0 extends keyof T,
-		P1 extends keyof RequiredProps<T>[P0],
-		P2 extends keyof RequiredProps<RequiredProps<T>[P0]>[P1]
-	>(
+	<T, P0 extends keyof T, P1 extends keyof Required<T>[P0], P2 extends keyof Required<Required<T>[P0]>[P1]>(
 		path: Path<M, T>,
 		a: P0,
 		b: P1,
 		c: P2
-	): Path<M, RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2]>;
+	): Path<M, Required<Required<Required<T>[P0]>[P1]>[P2]>;
 	<
 		T,
 		P0 extends keyof T,
-		P1 extends keyof RequiredProps<T>[P0],
-		P2 extends keyof RequiredProps<RequiredProps<T>[P0]>[P1],
-		P3 extends keyof RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2]
+		P1 extends keyof Required<T>[P0],
+		P2 extends keyof Required<Required<T>[P0]>[P1],
+		P3 extends keyof Required<Required<Required<T>[P0]>[P1]>[P2]
 	>(
 		path: Path<M, T>,
 		a: P0,
 		b: P1,
 		c: P2,
 		d: P3
-	): Path<M, RequiredProps<RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2]>[P3]>;
+	): Path<M, Required<Required<Required<Required<T>[P0]>[P1]>[P2]>[P3]>;
 	<
 		T,
 		P0 extends keyof T,
-		P1 extends keyof RequiredProps<T>[P0],
-		P2 extends keyof RequiredProps<RequiredProps<T>[P0]>[P1],
-		P3 extends keyof RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2],
-		P4 extends keyof RequiredProps<RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2]>[P3]
+		P1 extends keyof Required<T>[P0],
+		P2 extends keyof Required<Required<T>[P0]>[P1],
+		P3 extends keyof Required<Required<Required<T>[P0]>[P1]>[P2],
+		P4 extends keyof Required<Required<Required<Required<T>[P0]>[P1]>[P2]>[P3]
 	>(
 		path: Path<M, T>,
 		a: P0,
@@ -73,45 +64,38 @@ export interface StatePaths<M> {
 		c: P2,
 		d: P3,
 		e: P4
-	): Path<M, RequiredProps<RequiredProps<RequiredProps<RequiredProps<RequiredProps<T>[P0]>[P1]>[P2]>[P3]>[P4]>;
-	<P0 extends keyof M>(a: P0): Path<M, RequiredProps<M>[P0]>;
-	<P0 extends keyof M, P1 extends keyof RequiredProps<M>[P0]>(a: P0, b: P1): Path<
-		M,
-		RequiredProps<RequiredProps<M>[P0]>[P1]
-	>;
-	<
-		P0 extends keyof M,
-		P1 extends keyof RequiredProps<M>[P0],
-		P2 extends keyof RequiredProps<RequiredProps<M>[P0]>[P1]
-	>(
+	): Path<M, Required<Required<Required<Required<Required<T>[P0]>[P1]>[P2]>[P3]>[P4]>;
+	<P0 extends keyof M>(a: P0): Path<M, Required<M>[P0]>;
+	<P0 extends keyof M, P1 extends keyof Required<M>[P0]>(a: P0, b: P1): Path<M, Required<Required<M>[P0]>[P1]>;
+	<P0 extends keyof M, P1 extends keyof Required<M>[P0], P2 extends keyof Required<Required<M>[P0]>[P1]>(
 		a: P0,
 		b: P1,
 		c: P2
-	): Path<M, RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2]>;
+	): Path<M, Required<Required<Required<M>[P0]>[P1]>[P2]>;
 	<
 		P0 extends keyof M,
-		P1 extends keyof RequiredProps<M>[P0],
-		P2 extends keyof RequiredProps<RequiredProps<M>[P0]>[P1],
-		P3 extends keyof RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2]
+		P1 extends keyof Required<M>[P0],
+		P2 extends keyof Required<Required<M>[P0]>[P1],
+		P3 extends keyof Required<Required<Required<M>[P0]>[P1]>[P2]
 	>(
 		a: P0,
 		b: P1,
 		c: P2,
 		d: P3
-	): Path<M, RequiredProps<RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2]>[P3]>;
+	): Path<M, Required<Required<Required<Required<M>[P0]>[P1]>[P2]>[P3]>;
 	<
 		P0 extends keyof M,
-		P1 extends keyof RequiredProps<M>[P0],
-		P2 extends keyof RequiredProps<RequiredProps<M>[P0]>[P1],
-		P3 extends keyof RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2],
-		P4 extends keyof RequiredProps<RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2]>[P3]
+		P1 extends keyof Required<M>[P0],
+		P2 extends keyof Required<Required<M>[P0]>[P1],
+		P3 extends keyof Required<Required<Required<M>[P0]>[P1]>[P2],
+		P4 extends keyof Required<Required<Required<Required<M>[P0]>[P1]>[P2]>[P3]
 	>(
 		a: P0,
 		b: P1,
 		c: P2,
 		d: P3,
 		e: P4
-	): Path<M, RequiredProps<RequiredProps<RequiredProps<RequiredProps<RequiredProps<M>[P0]>[P1]>[P2]>[P3]>[P4]>;
+	): Path<M, Required<Required<Required<Required<Required<M>[P0]>[P1]>[P2]>[P3]>[P4]>;
 }
 
 interface OnChangeCallback {
@@ -266,7 +250,7 @@ export class Store<T = any> extends Evented implements MutableState<T> {
 			const { previousValue, callbacks } = value;
 			const pointer = new Pointer(path);
 			const newValue = pointer.segments.length
-				? this._adapter.path(pointer.segments[0] as keyof T, ...pointer.segments.slice(1)).value
+				? (this._adapter as any).path(pointer.segments[0] as keyof T, ...pointer.segments.slice(1)).value
 				: undefined;
 			if (previousValue !== newValue) {
 				this._changePaths.set(path, { callbacks, previousValue: newValue });
