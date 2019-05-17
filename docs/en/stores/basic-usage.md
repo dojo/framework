@@ -405,26 +405,88 @@ process(store)({ one: 'one', two: 'two' });
 
 ## Widgets and Stores
 
+There are two state containers available for widgets: `Container` and `StoreProvider`. These containers connect the application store with a widget.
+
+Note that the documentation in this section is intended to show how widgets and state are connected. For a more detailed look see the [Widgets]() reference guide.
+
 ### Container
 
--   Overview
-    _ wraps a Widget
-    _ has access to a store
-    _ provides dependencies
-    _ interfaces matches the widget
--   When should I use
-    _ Containers are useful when a 1:1 mapping is desired
-    _ Useful for connecting processes + store data
+A `Container` is a widget that fully encapsulates another widget. It connects the store to the widget with a `getProperties` function.
+
+> widget/User.ts
+
+```ts
+import { tsx } from '@dojo/framework/widget-core/tsx';
+import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+
+import * as css from './styles/Hello.m.css';
+
+interface UserProperties {
+	name?: string;
+}
+
+export class User extends WidgetBase<UserProperties> {
+	protected render() {
+		const { name = 'stranger' } = this.properties;
+		return <h1 classes={[css.root]}>{`Hello, ${name}`}</h1>;
+	}
+}
+```
+
+> widget/User.container.ts
+
+```ts
+import { createStoreContainer } from '@dojo/framework/stores/StoreInjector';
+import { Container } from '@dojo/framework/widget-core/Container';
+import { State } from '../interfaces';
+import User from './User';
+
+const StoreContainer = createStoreContainer<State>();
+
+const UserContainer = StoreContainer(User, 'state', {
+	getProperties({ get, path }) {
+		const name = get(path('user', 'current', 'name'));
+
+		return { name };
+	}
+});
+```
+
+In this example `UserContainer` wraps `User` to display the current user's name. `createStoreContainer` is wrapper that is used to ensure the proper typing of `getProperties`. `getProperties` is responsible for getting to data from the store and creating properties for the widget.
+
+The most important thing to note about a `Container` is its properties are a 1:1 mapping to the widget it wraps. In other words, all properties that appear on the widget should be provided by the `Container`.
 
 ### StoreProvider
 
--   Overview
-    _ has access to a store
-    _ has its own renderer
-    _ is usually encapsulated in a widget
-    _ therefore can have a different interface
--   When should I use
-    _ StoreProviders are more flexible than Containers
-    _ Useful for encapsulating widgets
-    _ Can do the same thing as Containers
-    _ Can change the interface of a wrapped widget
+A `StoreProvider` is a widget that has its own `renderer` and connects to the store. It is always encapsulated in another widget because a it does not have properties defined.
+
+Using `User.ts` from the example above, we can use a `StoreProvider` to provide application state.
+
+> widget/User.provider.ts
+
+```ts
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { w } from '@dojo/framework/widget-core/d';
+import StoreProvider from '@dojo/framework/stores/StoreProvider';
+import { State } from '../../interfaces';
+import User from './User';
+
+export class UserProvider extends WidgetBase {
+	protected render() {
+		return w<StoreProvider<State>>(StoreProvider, {
+			stateKey: 'state',
+			paths: (path) => [path('users', 'current')],
+			renderer: (store) => {
+				const { get, path } = store;
+				const name = get(path('users', 'current', 'name'));
+
+				return w(User, { name });
+			}
+		});
+	}
+}
+```
+
+`UserProvider` extends `WidgetBase` allowing us the opportunity to redefine the widget's properties. In this case `UserProvider` does not accept any properties. It gets all of the information it needs from the store. The `StoreProvider` occurs as part of `UserProvider`'s render and provides its own renderer just like any other widget.
+
+The `StoreProvider` is more robust than a `Container`. Since it is always wrapped by a widget it gives the opportunity to decide what properties should be provided by the outside widget and which should be provided from the store.
