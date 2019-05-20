@@ -1,4 +1,5 @@
-import * as math from '../../../src/shim/math';
+import Math, * as math from '../../../src/shim/math';
+import global from '../../../src/shim/global';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
@@ -10,174 +11,204 @@ function assertIsNaN(...results: number[]) {
 }
 
 registerSuite('math', {
+	polyfill() {
+		assert.equal(Math, global.Math);
+	},
 	'.acosh()'() {
-		assertIsNaN(math.acosh(NaN), math.acosh(0), math.acosh(0.9999999), math.acosh(-0.001));
-		assert.strictEqual(math.acosh(Infinity), Infinity);
-		assert.strictEqual(math.acosh(1), 0);
-		assert.closeTo(math.acosh(2), 1.3169578969248166, 1e-13);
-		assert.closeTo(math.acosh(3), 1.762747174039086, 1e-13);
+		for (let acosh of [Math.acosh, math.acosh]) {
+			assertIsNaN(acosh(NaN), acosh(0), acosh(0.9999999), acosh(-0.001));
+			assert.strictEqual(acosh(Infinity), Infinity);
+			assert.strictEqual(acosh(1), 0);
+			assert.closeTo(acosh(2), 1.3169578969248166, 1e-13);
+			assert.closeTo(acosh(3), 1.762747174039086, 1e-13);
+		}
 	},
 
 	'.asinh()'() {
-		assertIsNaN(math.asinh(NaN));
-		assert.strictEqual(math.asinh(Infinity), Infinity);
-		assert.strictEqual(math.asinh(-Infinity), -Infinity);
-		assert.strictEqual(math.asinh(0), 0);
-		assert.closeTo(math.asinh(1), 0.8813735870195429, 1e-13);
-		assert.closeTo(math.acosh(2), 1.3169578969248166, 1e-13);
+		for (let asinh of [Math.asinh, math.asinh]) {
+			assertIsNaN(asinh(NaN));
+			assert.strictEqual(asinh(Infinity), Infinity);
+			assert.strictEqual(asinh(-Infinity), -Infinity);
+			assert.strictEqual(asinh(0), 0);
+			assert.closeTo(asinh(1), 0.8813735870195429, 1e-13);
+		}
 	},
 
 	'.atanh()'() {
-		assertIsNaN(
-			math.atanh(NaN),
-			math.atanh(-1.00000001),
-			math.atanh(1.00000001),
-			math.atanh(-1e300),
-			math.atanh(1e300)
-		);
-		assert.strictEqual(math.atanh(0), 0);
-		assert.strictEqual(math.atanh(1), Infinity);
-		assert.strictEqual(math.atanh(-1), -Infinity);
-		assert.closeTo(math.atanh(0.5), 0.5493061443340549, 1e-13);
+		for (let atanh of [Math.atanh, math.atanh]) {
+			assertIsNaN(atanh(NaN), atanh(-1.00000001), atanh(1.00000001), atanh(-1e300), atanh(1e300));
+			assert.strictEqual(atanh(0), 0);
+			assert.strictEqual(atanh(1), Infinity);
+			assert.strictEqual(atanh(-1), -Infinity);
+			assert.closeTo(atanh(0.5), 0.5493061443340549, 1e-13);
+		}
 	},
 
 	'.cbrt()'() {
-		assert.strictEqual(math.cbrt(0), 0);
-		assert.strictEqual(math.cbrt(1), 1);
-		assert.strictEqual(math.cbrt(8), 2);
-		assert.strictEqual(math.cbrt(-1), -1);
-		assert.strictEqual(math.cbrt(-8), -2);
-		assert.strictEqual(math.cbrt(Infinity), Infinity);
-		assert.strictEqual(math.cbrt(-Infinity), -Infinity);
+		for (let cbrt of [Math.cbrt, math.cbrt]) {
+			assert.strictEqual(cbrt(0), 0);
+			assert.strictEqual(cbrt(1), 1);
+			assert.strictEqual(cbrt(8), 2);
+			assert.strictEqual(cbrt(-1), -1);
+			assert.strictEqual(cbrt(-8), -2);
+			assert.strictEqual(cbrt(Infinity), Infinity);
+			assert.strictEqual(cbrt(-Infinity), -Infinity);
+		}
 	},
 
 	'.clz32()'() {
-		assert.strictEqual(math.clz32(1), 31);
-		assert.strictEqual(math.clz32(0.1), 32);
-		assert.strictEqual(math.clz32(-1), 0);
-		assert.strictEqual(math.clz32(1000), 22);
-		assert.strictEqual(math.clz32(2), 30);
+		for (let clz32 of [Math.clz32, math.clz32]) {
+			assert.strictEqual(clz32(1), 31);
+			assert.strictEqual(clz32(0.1), 32);
+			assert.strictEqual(clz32(-1), 0);
+			assert.strictEqual(clz32(1000), 22);
+			assert.strictEqual(clz32(2), 30);
+		}
 	},
 
 	'.cosh()'() {
-		assertIsNaN(math.cosh(NaN));
-		assert.strictEqual(math.cosh(0), 1);
-		assert.strictEqual(math.cosh(-Infinity), Infinity);
-		assert.strictEqual(math.cosh(Infinity), Infinity);
-		assert.closeTo(math.cosh(-1), 1.5430806348152435, 1e-13);
-		assert.closeTo(math.cosh(1), 1.5430806348152437, 1e-13);
+		for (let cosh of [Math.cosh, math.cosh]) {
+			assertIsNaN(cosh(NaN));
+			assert.strictEqual(cosh(0), 1);
+			assert.strictEqual(cosh(-Infinity), Infinity);
+			assert.strictEqual(cosh(Infinity), Infinity);
+			assert.closeTo(cosh(-1), 1.5430806348152435, 1e-13);
+			assert.closeTo(cosh(1), 1.5430806348152437, 1e-13);
+		}
 	},
 
 	'.expm1()'() {
-		assertIsNaN(math.expm1(NaN));
-		assert.strictEqual(math.expm1(0), 0);
-		assert.strictEqual(math.expm1(Infinity), Infinity);
-		assert.strictEqual(math.expm1(-Infinity), -1);
-		assert.closeTo(math.expm1(-1), -0.6321205588285577, 1e-13);
-		assert.closeTo(math.expm1(1), 1.718281828459045, 1e-13);
+		for (let expm1 of [Math.expm1, math.expm1]) {
+			assertIsNaN(expm1(NaN));
+			assert.strictEqual(expm1(0), 0);
+			assert.strictEqual(expm1(Infinity), Infinity);
+			assert.strictEqual(expm1(-Infinity), -1);
+			assert.closeTo(expm1(-1), -0.6321205588285577, 1e-13);
+			assert.closeTo(expm1(1), 1.718281828459045, 1e-13);
+		}
 	},
 
 	'.fround()'() {
-		assert.strictEqual(math.fround(0), 0);
-		assert.strictEqual(math.fround(Infinity), Infinity);
-		assert.strictEqual(math.fround(-Infinity), -Infinity);
-		assert.strictEqual(math.fround(1), 1);
-		assert.strictEqual(math.fround(-1), -1);
-		assert.closeTo(math.fround(1.337), 1.3370000123977661, 1e-13);
-		assert.closeTo(math.fround(-1.337), -1.3370000123977661, 1e-13);
+		for (let fround of [Math.fround, math.fround]) {
+			assert.strictEqual(fround(0), 0);
+			assert.strictEqual(fround(Infinity), Infinity);
+			assert.strictEqual(fround(-Infinity), -Infinity);
+			assert.strictEqual(fround(1), 1);
+			assert.strictEqual(fround(-1), -1);
+			assert.closeTo(fround(1.337), 1.3370000123977661, 1e-13);
+			assert.closeTo(fround(-1.337), -1.3370000123977661, 1e-13);
 
-		assert.strictEqual(math.fround(Number.MAX_VALUE), Infinity);
-		assert.strictEqual(math.fround(-Number.MAX_VALUE), -Infinity);
-		assert.strictEqual(math.fround(Number.MIN_VALUE), 0);
-		assert.strictEqual(math.fround(-Number.MIN_VALUE), 0);
+			assert.strictEqual(fround(Number.MAX_VALUE), Infinity);
+			assert.strictEqual(fround(-Number.MAX_VALUE), -Infinity);
+			assert.strictEqual(fround(Number.MIN_VALUE), 0);
+			assert.strictEqual(fround(-Number.MIN_VALUE), 0);
 
-		const MAX_FLOAT32 = 3.4028234663852886e38;
-		const MIN_FLOAT32 = 1.401298464324817e-45;
-		assert.strictEqual(math.fround(MAX_FLOAT32), MAX_FLOAT32);
-		assert.strictEqual(math.fround(-MAX_FLOAT32), -MAX_FLOAT32);
-		assert.strictEqual(math.fround(MIN_FLOAT32), MIN_FLOAT32);
-		assert.strictEqual(math.fround(-MIN_FLOAT32), -MIN_FLOAT32);
+			const MAX_FLOAT32 = 3.4028234663852886e38;
+			const MIN_FLOAT32 = 1.401298464324817e-45;
+			assert.strictEqual(fround(MAX_FLOAT32), MAX_FLOAT32);
+			assert.strictEqual(fround(-MAX_FLOAT32), -MAX_FLOAT32);
+			assert.strictEqual(fround(MIN_FLOAT32), MIN_FLOAT32);
+			assert.strictEqual(fround(-MIN_FLOAT32), -MIN_FLOAT32);
+		}
 	},
 
 	'.hypot()'() {
-		assertIsNaN(math.hypot(NaN), math.hypot(1, NaN));
-		assert.strictEqual(math.hypot(), 0);
-		assert.strictEqual(math.hypot(0), 0);
-		assert.strictEqual(math.hypot(0, 0), 0);
-		assert.strictEqual(math.hypot(Infinity), Infinity);
-		assert.strictEqual(math.hypot(Infinity, NaN), Infinity);
-		assert.strictEqual(math.hypot(1, 2, 2), 3);
-		assert.closeTo(math.hypot(2, 4), 4.47213595499958, 1e-13);
-		assert.closeTo(math.hypot(2, 4, 6), 7.483314773547883, 1e-13);
+		for (let hypot of [Math.hypot, math.hypot]) {
+			assertIsNaN(hypot(NaN), hypot(1, NaN));
+			assert.strictEqual(hypot(), 0);
+			assert.strictEqual(hypot(0), 0);
+			assert.strictEqual(hypot(0, 0), 0);
+			assert.strictEqual(hypot(Infinity), Infinity);
+			assert.strictEqual(hypot(Infinity, NaN), Infinity);
+			assert.strictEqual(hypot(1, 2, 2), 3);
+			assert.closeTo(hypot(2, 4), 4.47213595499958, 1e-13);
+			assert.closeTo(hypot(2, 4, 6), 7.483314773547883, 1e-13);
+		}
 	},
 
 	'.imul()'() {
-		assert.strictEqual(math.imul(2, 4), 8);
-		assert.strictEqual(math.imul(-1, 8), -8);
-		assert.strictEqual(math.imul(-2, -2), 4);
-		assert.strictEqual(math.imul(0xffffffff, 5), -5);
-		assert.strictEqual(math.imul(0xfffffffe, 5), -10);
+		for (let imul of [Math.imul, math.imul]) {
+			assert.strictEqual(imul(2, 4), 8);
+			assert.strictEqual(imul(-1, 8), -8);
+			assert.strictEqual(imul(-2, -2), 4);
+			assert.strictEqual(imul(0xffffffff, 5), -5);
+			assert.strictEqual(imul(0xfffffffe, 5), -10);
+		}
 	},
 
 	'.log2()'() {
-		assertIsNaN(math.log2(NaN));
-		assert.strictEqual(math.log2(0), -Infinity);
-		assert.strictEqual(math.log2(Infinity), Infinity);
-		assert.strictEqual(math.log2(1), 0);
-		assert.strictEqual(math.log2(2), 1);
-		assert.closeTo(math.log2(3), 1.584962500721156, 1e-13);
+		for (let log2 of [Math.log2, math.log2]) {
+			assertIsNaN(log2(NaN));
+			assert.strictEqual(log2(0), -Infinity);
+			assert.strictEqual(log2(Infinity), Infinity);
+			assert.strictEqual(log2(1), 0);
+			assert.strictEqual(log2(2), 1);
+			assert.closeTo(log2(3), 1.584962500721156, 1e-13);
+		}
 	},
 
 	'.log10()'() {
-		assertIsNaN(math.log10(NaN));
-		assert.strictEqual(math.log10(0), -Infinity);
-		assert.strictEqual(math.log10(Infinity), Infinity);
-		assert.strictEqual(math.log10(1), 0);
-		assert.closeTo(math.log10(2), 0.3010299956639812, 1e-13);
+		for (let log10 of [Math.log10, math.log10]) {
+			assertIsNaN(log10(NaN));
+			assert.strictEqual(log10(0), -Infinity);
+			assert.strictEqual(log10(Infinity), Infinity);
+			assert.strictEqual(log10(1), 0);
+			assert.closeTo(log10(2), 0.3010299956639812, 1e-13);
+		}
 	},
 
 	'.log1p()'() {
-		assertIsNaN(math.log1p(NaN));
-		assert.strictEqual(math.log1p(Infinity), Infinity);
-		assert.strictEqual(math.log1p(-1), -Infinity);
-		assert.strictEqual(math.log1p(0), 0);
-		assert.closeTo(math.log1p(1), 0.6931471805599453, 1e-13);
+		for (let log1p of [Math.log1p, math.log1p]) {
+			assertIsNaN(log1p(NaN));
+			assert.strictEqual(log1p(Infinity), Infinity);
+			assert.strictEqual(log1p(-1), -Infinity);
+			assert.strictEqual(log1p(0), 0);
+			assert.closeTo(log1p(1), 0.6931471805599453, 1e-13);
+		}
 	},
 
 	'.sign()'() {
-		assertIsNaN(math.sign(NaN));
-		assert.strictEqual(math.sign(0), 0);
-		assert.strictEqual(math.sign(1), 1);
-		assert.strictEqual(math.sign(Infinity), 1);
-		assert.strictEqual(math.sign(-1), -1);
-		assert.strictEqual(math.sign(-Infinity), -1);
+		for (let sign of [Math.sign, math.sign]) {
+			assertIsNaN(sign(NaN));
+			assert.strictEqual(sign(0), 0);
+			assert.strictEqual(sign(1), 1);
+			assert.strictEqual(sign(Infinity), 1);
+			assert.strictEqual(sign(-1), -1);
+			assert.strictEqual(sign(-Infinity), -1);
+		}
 	},
 
 	'.sinh()'() {
-		assertIsNaN(math.sinh(NaN));
-		assert.strictEqual(math.sinh(0), 0);
-		assert.strictEqual(math.sinh(Infinity), Infinity);
-		assert.strictEqual(math.sinh(-Infinity), -Infinity);
-		assert.closeTo(math.sinh(1), 1.1752011936438014, 1e-13);
-		assert.closeTo(math.sinh(2), 3.6268604078470186, 1e-13);
+		for (let sinh of [Math.sinh, math.sinh]) {
+			assertIsNaN(sinh(NaN));
+			assert.strictEqual(sinh(0), 0);
+			assert.strictEqual(sinh(Infinity), Infinity);
+			assert.strictEqual(sinh(-Infinity), -Infinity);
+			assert.closeTo(sinh(1), 1.1752011936438014, 1e-13);
+			assert.closeTo(sinh(2), 3.6268604078470186, 1e-13);
+		}
 	},
 
 	'.tanh()'() {
-		assertIsNaN(math.tanh(NaN));
-		assert.strictEqual(math.tanh(0), 0);
-		assert.strictEqual(math.tanh(Infinity), 1);
-		assert.strictEqual(math.tanh(-Infinity), -1);
-		assert.strictEqual(math.tanh(90), 1);
-		assert.closeTo(math.tanh(1), 0.761594155955765, 1e-13);
+		for (let tanh of [Math.tanh, math.tanh]) {
+			assertIsNaN(tanh(NaN));
+			assert.strictEqual(tanh(0), 0);
+			assert.strictEqual(tanh(Infinity), 1);
+			assert.strictEqual(tanh(-Infinity), -1);
+			assert.strictEqual(tanh(90), 1);
+			assert.closeTo(tanh(1), 0.761594155955765, 1e-13);
+		}
 	},
 
 	'.trunc()'() {
-		assert.strictEqual(math.trunc(Infinity), Infinity);
-		assert.strictEqual(math.trunc(-Infinity), -Infinity);
-		assert.strictEqual(math.trunc(1.1), 1);
-		assert.strictEqual(math.trunc(1.9), 1);
-		assert.strictEqual(math.trunc(-1.1), -1);
-		assert.strictEqual(math.trunc(-1.9), -1);
-		assert.strictEqual(math.trunc(1), 1);
+		for (let trunc of [Math.trunc, math.trunc]) {
+			assert.strictEqual(trunc(Infinity), Infinity);
+			assert.strictEqual(trunc(-Infinity), -Infinity);
+			assert.strictEqual(trunc(1.1), 1);
+			assert.strictEqual(trunc(1.9), 1);
+			assert.strictEqual(trunc(-1.1), -1);
+			assert.strictEqual(trunc(-1.9), -1);
+			assert.strictEqual(trunc(1), 1);
+		}
 	}
 });
