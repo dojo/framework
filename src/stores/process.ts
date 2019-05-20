@@ -209,65 +209,65 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 			}
 		}
 
-		const proxies = new Map<string, any>();
-		const proxied = new Map<string, any>();
+		function createProxy() {
+			const proxies = new Map<string, any>();
+			const proxied = new Map<string, any>();
 
-		let proxyOperations: PatchOperation[] = [];
-		const createHandler = (partialPath?: Path<T, any>) => ({
-			get(obj: any, prop: string): any {
-				const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
-				const stringPath = fullPath.path;
+			const proxyOperations: PatchOperation[] = [];
+			const createHandler = (partialPath?: Path<T, any>) => ({
+				get(obj: any, prop: string): any {
+					const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
+					const stringPath = fullPath.path;
 
-				if (isSymbol(prop) && prop === valueSymbol) {
-					return proxied.get(stringPath);
-				}
+					if (isSymbol(prop) && prop === valueSymbol) {
+						return proxied.get(stringPath);
+					}
 
-				let value = partialPath || obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
+					let value = partialPath || obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
 
-				if (typeof value === 'object' && value !== null) {
-					let proxiedValue;
-					if (!proxies.has(stringPath)) {
-						if (Array.isArray(value)) {
-							value = value.slice();
+					if (typeof value === 'object' && value !== null) {
+						let proxiedValue;
+						if (!proxies.has(stringPath)) {
+							if (Array.isArray(value)) {
+								value = value.slice();
+							} else {
+								value = { ...value };
+							}
+							proxiedValue = new Proxy(value, createHandler(fullPath));
+							proxies.set(stringPath, proxiedValue);
+							proxied.set(stringPath, value);
 						} else {
-							value = { ...value };
+							proxiedValue = proxies.get(stringPath);
 						}
-						proxiedValue = new Proxy(value, createHandler(fullPath));
-						proxies.set(stringPath, proxiedValue);
-						proxied.set(stringPath, value);
-					} else {
-						proxiedValue = proxies.get(stringPath);
+
+						obj[prop] = value;
+						return proxiedValue;
 					}
 
 					obj[prop] = value;
-					return proxiedValue;
+					return value;
+				},
+
+				set(obj: any, prop: string, value: any) {
+					if (typeof value === 'object' && value !== null && value[valueSymbol]) {
+						value = value[valueSymbol];
+					}
+
+					proxyOperations.push(replace(partialPath ? path(partialPath, prop) : path(prop as keyof T), value));
+					obj[prop] = value;
+
+					return true;
+				},
+
+				deleteProperty(obj: any, prop: string) {
+					proxyOperations.push(remove(partialPath ? path(partialPath, prop) : path(prop as keyof T)));
+					delete obj[prop];
+
+					return true;
 				}
+			});
 
-				obj[prop] = value;
-				return value;
-			},
-
-			set(obj: any, prop: string, value: any) {
-				if (typeof value === 'object' && value !== null && value[valueSymbol]) {
-					value = value[valueSymbol];
-				}
-
-				proxyOperations.push(replace(partialPath ? path(partialPath, prop) : path(prop as keyof T), value));
-				obj[prop] = value;
-
-				return true;
-			},
-
-			deleteProperty(obj: any, prop: string) {
-				proxyOperations.push(remove(partialPath ? path(partialPath, prop) : path(prop as keyof T)));
-				delete obj[prop];
-
-				return true;
-			}
-		});
-		let state: T;
-		if (typeof Proxy !== 'undefined') {
-			state = new Proxy({}, createHandler()) as T;
+			return { proxy: new Proxy({}, createHandler()) as T, operations: proxyOperations };
 		}
 
 		try {
@@ -276,6 +276,13 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 				const commandArray = Array.isArray(command) ? command : [command];
 
 				results = commandArray.map((commandFunction: Command<T, P>) => {
+					let state: T;
+					let proxyOperations: PatchOperation[] = [];
+					if (typeof Proxy !== 'undefined') {
+						const { operations, proxy } = createProxy();
+						state = proxy;
+						proxyOperations = operations;
+					}
 					let result = commandFunction({
 						at,
 						get,
@@ -293,14 +300,12 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 					if (isThenable(result)) {
 						return result.then((result) => {
 							result = result ? [...proxyOperations, ...result] : [...proxyOperations];
-							proxyOperations = [];
 
 							return result;
 						});
 					} else {
 						result =
 							result && Array.isArray(result) ? [...proxyOperations, ...result] : [...proxyOperations];
-						proxyOperations = [];
 
 						return result;
 					}

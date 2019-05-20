@@ -574,7 +574,7 @@ const myProcess = createProcess('my-process', [commandOne, [concurrentCommandOne
 
 In this example, `commandOne` is executed, then both `concurrentCommandOne` and `concurrentCommandTwo` are executed concurrently. Once all of the concurrent commands are completed the results are applied in order before continuing with the process and executing `commandTwo`.
 
-**Note:** Concurrent commands are always assumed to be asynchronous and resolved using `Promise.all`.
+**Note:** Concurrent commands are all assumed to be asynchronous and resolved using `Promise.all` if any returns a `Promise`.
 
 ### Providing an alternative State implementation
 
