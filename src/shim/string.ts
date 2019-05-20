@@ -141,17 +141,9 @@ export let padEnd: (target: string, maxLength: number, fillString?: string) => s
  */
 export let padStart: (target: string, maxLength: number, fillString?: string) => string;
 
-if (has('es6-string') && has('es6-string-raw')) {
-	fromCodePoint = global.String.fromCodePoint;
-	raw = global.String.raw;
+const String: StringConstructor = global.String;
 
-	codePointAt = wrapNative(global.String.prototype.codePointAt);
-	endsWith = wrapNative(global.String.prototype.endsWith);
-	includes = wrapNative(global.String.prototype.includes);
-	normalize = wrapNative(global.String.prototype.normalize);
-	repeat = wrapNative(global.String.prototype.repeat);
-	startsWith = wrapNative(global.String.prototype.startsWith);
-} else {
+if (!has('es6-string')) {
 	/**
 	 * Validates that text is defined, and normalizes position (based on the given default if the input is NaN).
 	 * Used by startsWith, includes, and endsWith.
@@ -174,7 +166,7 @@ if (has('es6-string') && has('es6-string-raw')) {
 		return [text, String(search), Math.min(Math.max(position, 0), length)];
 	};
 
-	fromCodePoint = function fromCodePoint(...codePoints: number[]): string {
+	String.fromCodePoint = function fromCodePoint(...codePoints: number[]): string {
 		// Adapted from https://github.com/mathiasbynens/String.fromCodePoint
 		const length = arguments.length;
 		if (!length) {
@@ -217,28 +209,12 @@ if (has('es6-string') && has('es6-string-raw')) {
 		return result;
 	};
 
-	raw = function raw(callSite: TemplateStringsArray, ...substitutions: any[]): string {
-		let rawStrings = callSite.raw;
-		let result = '';
-		let numSubstitutions = substitutions.length;
-
-		if (callSite == null || callSite.raw == null) {
-			throw new TypeError('string.raw requires a valid callSite object with a raw value');
-		}
-
-		for (let i = 0, length = rawStrings.length; i < length; i++) {
-			result += rawStrings[i] + (i < numSubstitutions && i < length - 1 ? substitutions[i] : '');
-		}
-
-		return result;
-	};
-
-	codePointAt = function codePointAt(text: string, position: number = 0): number | undefined {
+	String.prototype.codePointAt = function codePointAt(position: number = 0): number | undefined {
 		// Adapted from https://github.com/mathiasbynens/String.prototype.codePointAt
-		if (text == null) {
+		if (this == null) {
 			throw new TypeError('string.codePointAt requries a valid string.');
 		}
-		const length = text.length;
+		const length = this.length;
 
 		if (position !== position) {
 			position = 0;
@@ -248,11 +224,11 @@ if (has('es6-string') && has('es6-string-raw')) {
 		}
 
 		// Get the first code unit
-		const first = text.charCodeAt(position);
+		const first = this.charCodeAt(position);
 		if (first >= HIGH_SURROGATE_MIN && first <= HIGH_SURROGATE_MAX && length > position + 1) {
 			// Start of a surrogate pair (high surrogate and there is a next code unit); check for low surrogate
 			// https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-			const second = text.charCodeAt(position + 1);
+			const second = this.charCodeAt(position + 1);
 			if (second >= LOW_SURROGATE_MIN && second <= LOW_SURROGATE_MAX) {
 				return (first - HIGH_SURROGATE_MIN) * 0x400 + second - LOW_SURROGATE_MIN + 0x10000;
 			}
@@ -260,7 +236,8 @@ if (has('es6-string') && has('es6-string-raw')) {
 		return first;
 	};
 
-	endsWith = function endsWith(text: string, search: string, endPosition?: number): boolean {
+	String.prototype.endsWith = function endsWith(search: string, endPosition?: number): boolean {
+		let text = this.toString();
 		if (search === '') {
 			return true;
 		}
@@ -281,13 +258,15 @@ if (has('es6-string') && has('es6-string-raw')) {
 		return text.slice(start, endPosition) === search;
 	};
 
-	includes = function includes(text: string, search: string, position: number = 0): boolean {
+	String.prototype.includes = function includes(search: string, position: number = 0): boolean {
+		let text = this.toString();
 		[text, search, position] = normalizeSubstringArgs('includes', text, search, position);
 		return text.indexOf(search, position) !== -1;
 	};
 
-	repeat = function repeat(text: string, count: number = 0): string {
+	String.prototype.repeat = function repeat(count: number = 0): string {
 		// Adapted from https://github.com/mathiasbynens/String.prototype.repeat
+		let text = this.toString();
 		if (text == null) {
 			throw new TypeError('string.repeat requires a valid string.');
 		}
@@ -311,7 +290,8 @@ if (has('es6-string') && has('es6-string-raw')) {
 		return result;
 	};
 
-	startsWith = function startsWith(text: string, search: string, position: number = 0): boolean {
+	String.prototype.startsWith = function startsWith(search: string, position: number = 0): boolean {
+		let text = this.toString();
 		search = String(search);
 		[text, search, position] = normalizeSubstringArgs('startsWith', text, search, position);
 
@@ -324,12 +304,27 @@ if (has('es6-string') && has('es6-string-raw')) {
 	};
 }
 
-if (has('es2017-string')) {
-	padEnd = wrapNative(global.String.prototype.padEnd);
-	padStart = wrapNative(global.String.prototype.padStart);
-} else {
-	padEnd = function padEnd(text: string, maxLength: number, fillString: string = ' '): string {
-		if (text === null || text === undefined) {
+if (!has('es6-string-raw')) {
+	String.raw = function raw(callSite: TemplateStringsArray, ...substitutions: any[]): string {
+		let rawStrings = callSite.raw;
+		let result = '';
+		let numSubstitutions = substitutions.length;
+
+		if (callSite == null || callSite.raw == null) {
+			throw new TypeError('string.raw requires a valid callSite object with a raw value');
+		}
+
+		for (let i = 0, length = rawStrings.length; i < length; i++) {
+			result += rawStrings[i] + (i < numSubstitutions && i < length - 1 ? substitutions[i] : '');
+		}
+
+		return result;
+	};
+}
+
+if (!has('es2017-string')) {
+	String.prototype.padEnd = function padEnd(maxLength: number, fillString: string = ' '): string {
+		if (this === null || this === undefined) {
 			throw new TypeError('string.repeat requires a valid string.');
 		}
 
@@ -341,7 +336,7 @@ if (has('es2017-string')) {
 			maxLength = 0;
 		}
 
-		let strText = String(text);
+		let strText = String(this);
 		const padding = maxLength - strText.length;
 
 		if (padding > 0) {
@@ -353,8 +348,8 @@ if (has('es2017-string')) {
 		return strText;
 	};
 
-	padStart = function padStart(text: string, maxLength: number, fillString: string = ' '): string {
-		if (text === null || text === undefined) {
+	String.prototype.padStart = function padStart(maxLength: number, fillString: string = ' '): string {
+		if (this === null || this === undefined) {
 			throw new TypeError('string.repeat requires a valid string.');
 		}
 
@@ -366,7 +361,7 @@ if (has('es2017-string')) {
 			maxLength = 0;
 		}
 
-		let strText = String(text);
+		let strText = String(this);
 		const padding = maxLength - strText.length;
 
 		if (padding > 0) {
@@ -379,3 +374,17 @@ if (has('es2017-string')) {
 		return strText;
 	};
 }
+
+fromCodePoint = global.String.fromCodePoint;
+raw = global.String.raw;
+
+codePointAt = wrapNative(global.String.prototype.codePointAt);
+endsWith = wrapNative(global.String.prototype.endsWith);
+includes = wrapNative(global.String.prototype.includes);
+normalize = wrapNative(global.String.prototype.normalize);
+repeat = wrapNative(global.String.prototype.repeat);
+startsWith = wrapNative(global.String.prototype.startsWith);
+padEnd = wrapNative(global.String.prototype.padEnd);
+padStart = wrapNative(global.String.prototype.padStart);
+
+export default String;
