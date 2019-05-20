@@ -218,11 +218,11 @@ describe('state/ImmutableState', () => {
 		const state = new ImmutableState();
 		state.apply([{ op: OperationType.ADD, path: new Pointer('foo'), value: [] }]);
 
-		assert.equal(state.path('foo', 'length').value, 0);
+		assert.equal(state.get(state.path('foo', 'length')), 0);
 
 		state.apply([{ op: OperationType.ADD, path: new Pointer('foo/0'), value: 'foo' }]);
 
-		assert.equal(state.path('foo', 'length').value, 1);
+		assert.equal(state.get(state.path('foo', 'length')), 1);
 	});
 
 	it('unknown', () => {
