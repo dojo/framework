@@ -360,27 +360,6 @@ login(store)({
 });
 ```
 
-#### Initial State
-
-Initial application state can be defined on a store creating by executing a process.
-
-> main.ts
-
-```ts
-const store = new Store<State>();
-const { path } = store;
-
-const createCommand = createCommandFactory<State>();
-
-const initialStateCommand = createCommand(({ path }) => {
-	return [add(path('auth'), { token: undefined }), add(path('users'), { list: [] })];
-});
-
-const initialStateProcess = createProcess('initial', [initialStateCommand]);
-
-initialStateProcess(store)({});
-```
-
 #### `payload` type
 
 The process executor's `payload` is inferred from the `payload` type of the commands. If the payloads differ then it is necessary to explictly define the `payload` type.
