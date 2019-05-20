@@ -103,7 +103,7 @@ export interface SetConstructor {
 export let Set: SetConstructor = global.Set;
 
 if (!has('es6-set')) {
-	Set = class Set<T> {
+	Set = global.Set = class Set<T> {
 		private readonly _setData: T[] = [];
 
 		static [Symbol.species] = Set;
