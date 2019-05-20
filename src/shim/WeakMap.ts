@@ -91,7 +91,7 @@ if (!has('es6-weakmap')) {
 		};
 	})();
 
-	WeakMap = class WeakMap<K, V> {
+	WeakMap = global.WeakMap = class WeakMap<K, V> {
 		private readonly _name: string;
 		private readonly _frozenEntries: Entry<K, V>[];
 
