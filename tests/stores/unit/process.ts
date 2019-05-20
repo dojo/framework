@@ -208,33 +208,35 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 		});
 
 		it('handles nested async commands modifying the state proxy', async () => {
-			await createProcess('test', [
-				({ state }) => {
-					state.foo = 0;
-				},
-				[
-					(({ state }: any) => {
-						return new Promise((resolve) => {
-							setTimeout(() => {
-								assert.equal(state.foo, 0);
-								state.foo += 10;
-								resolve();
-							}, 100);
-						});
-					}) as any,
-					(({ state }: any) => {
-						return new Promise((resolve) => {
-							setTimeout(() => {
-								assert.equal(state.foo, 0);
-								state.foo = state.foo / 2;
-								resolve();
-							}, 10);
-						});
-					}) as any
-				]
-			])(store)({});
+			await assertProxyError(async () => {
+				await createProcess('test', [
+					({ state }) => {
+						state.foo = 0;
+					},
+					[
+						(({ state }: any) => {
+							return new Promise((resolve) => {
+								setTimeout(() => {
+									assert.equal(state.foo, 0);
+									state.foo += 10;
+									resolve();
+								}, 100);
+							});
+						}) as any,
+						(({ state }: any) => {
+							return new Promise((resolve) => {
+								setTimeout(() => {
+									assert.equal(state.foo, 0);
+									state.foo = state.foo / 2;
+									resolve();
+								}, 10);
+							});
+						}) as any
+					]
+				])(store)({});
 
-			assert.equal(store.get(store.path('foo')), 0);
+				assert.equal(store.get(store.path('foo')), 0);
+			});
 		});
 
 		it('Can set a proxied property to itself', async () => {
