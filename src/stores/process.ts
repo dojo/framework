@@ -26,15 +26,36 @@ export interface CommandRequest<T = any, P extends object = DefaultPayload> exte
  * verify the type of multiple commands without explicitly specifying the generic for each command
  */
 export interface CommandFactory<T = any, P extends object = DefaultPayload> {
-	<R extends object = P>(command: Command<T, R>): Command<T, R>;
+	<R extends object = P>(command: AsyncCommandWithOps<T, R>): AsyncCommandWithOps<T, R>;
+	<R extends object = P>(command: SyncCommandWithOps<T, R>): SyncCommandWithOps<T, R>;
+	<R extends object = P>(command: AsyncCommand<T, R>): AsyncCommand<T, R>;
+	<R extends object = P>(command: SyncCommand<T, R>): SyncCommand<T, R>;
+}
+
+export interface AsyncCommandWithOps<T = any, P extends object = DefaultPayload> {
+	(request: CommandRequest<T, P>): Promise<PatchOperation<T>[]>;
+}
+
+export interface SyncCommandWithOps<T = any, P extends object = DefaultPayload> {
+	(request: CommandRequest<T, P>): PatchOperation<T>[];
+}
+
+export interface AsyncCommand<T = any, P extends object = DefaultPayload> {
+	(request: CommandRequest<T, P>): Promise<void>;
+}
+
+export interface SyncCommand<T = any, P extends object = DefaultPayload> {
+	(request: CommandRequest<T, P>): void;
 }
 
 /**
  * Command that returns patch operations based on the command request
  */
-export interface Command<T = any, P extends object = DefaultPayload> {
-	(request: CommandRequest<T, P>): Promise<PatchOperation<T>[]> | PatchOperation<T>[] | void | Promise<void>;
-}
+export type Command<T = any, P extends object = DefaultPayload> =
+	| SyncCommand<T, P>
+	| AsyncCommand<T, P>
+	| SyncCommandWithOps<T, P>
+	| AsyncCommandWithOps<T, P>;
 
 /**
  * Transformer function
@@ -132,7 +153,14 @@ export interface CreateProcess<T = any, P extends object = DefaultPayload> {
  * Creates a command factory with the specified type
  */
 export function createCommandFactory<T, P extends object = DefaultPayload>(): CommandFactory<T, P> {
-	return <R extends object = P>(command: Command<T, R>) => command;
+	function commandFactory<R extends object = P>(command: AsyncCommand<T, R>): AsyncCommand<T, R>;
+	function commandFactory<R extends object = P>(command: SyncCommand<T, R>): SyncCommand<T, R>;
+	function commandFactory<R extends object = P>(command: AsyncCommandWithOps<T, R>): AsyncCommandWithOps<T, R>;
+	function commandFactory<R extends object = P>(command: SyncCommandWithOps<T, R>): SyncCommandWithOps<T, R>;
+	function commandFactory<R extends object = P>(command: Command<T, R>): Command<T, R> {
+		return command;
+	}
+	return commandFactory;
 }
 
 /**
