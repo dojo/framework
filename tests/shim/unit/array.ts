@@ -1,5 +1,6 @@
-import * as array from '../../../src/shim/array';
-import has, { add as hasAdd } from '../../../src/core/has';
+import Array, * as array from '../../../src/shim/array';
+import global from '../../../src/shim/global';
+import has, { add as hasAdd } from '../../../src/has/has';
 import { Iterable, ShimIterator } from '../../../src/shim/iterator';
 import '../../../src/shim/Symbol';
 
@@ -13,11 +14,14 @@ function mixin(destination: any, source: any): any {
 	return destination;
 }
 
-function assertFrom<T>(arrayable: ArrayLike<T> | Iterable<T>, expected: T[]): void;
+function assertFrom<T>(arrayable: ArrayLike<T> | Iterable<T> | (() => ArrayLike<T> | Iterable<T>), expected: T[]): void;
 function assertFrom(arrayable: any, expected: any[]): void {
-	let actual = array.from(arrayable);
+	let actual = array.from(typeof arrayable === 'function' ? arrayable() : arrayable);
+	let actualFromPolyfill = Array.from(typeof arrayable === 'function' ? arrayable() : arrayable);
 	assert.isArray(actual);
+	assert.isArray(actualFromPolyfill);
 	assert.deepEqual(expected, actual);
+	assert.deepEqual(expected, actualFromPolyfill);
 }
 
 class MyArray {
@@ -78,6 +82,9 @@ function createNativeAndDojoArrayTests(feature: string, tests: {}) {
 }
 
 registerSuite('array', {
+	polyfill: function() {
+		assert.equal(Array, global.Array);
+	},
 	'.from()': createNativeAndDojoArrayTests('es6-array', {
 		'from undefined: throws': function() {
 			assert.throws(function() {
@@ -151,12 +158,13 @@ registerSuite('array', {
 		'from iterator': {
 			ShimIterator: function() {
 				assertFrom(
-					new ShimIterator({
-						0: 'zero',
-						1: 'one',
-						2: 'two',
-						length: 3
-					}),
+					() =>
+						new ShimIterator({
+							0: 'zero',
+							1: 'one',
+							2: 'two',
+							length: 3
+						}),
 					['zero', 'one', 'two']
 				);
 			},
@@ -246,10 +254,12 @@ registerSuite('array', {
 		'single argument': function() {
 			// This is the reason for using of() rather than Array()
 			assert.deepEqual(array.of(1), [1]);
+			assert.deepEqual(Array.of(1), [1]);
 		},
 
 		'multiple arguments': function() {
 			assert.deepEqual(array.of('one', 'two', 'three'), ['one', 'two', 'three']);
+			assert.deepEqual(Array.of('one', 'two', 'three'), ['one', 'two', 'three']);
 		}
 	}),
 
@@ -257,51 +267,61 @@ registerSuite('array', {
 		'basic fill array': function() {
 			let actual = array.fill([1, 2, 3], 9);
 			assert.deepEqual(actual, [9, 9, 9]);
+			assert.deepEqual([1, 2, 3].fill(9), [9, 9, 9]);
 		},
 
 		'fill with start': function() {
 			let actual = array.fill([1, 2, 3], 9, 1);
 			assert.deepEqual(actual, [1, 9, 9]);
+			assert.deepEqual([1, 2, 3].fill(9, 1), [1, 9, 9]);
 		},
 
 		'fill with negative start': function() {
 			let actual = array.fill([1, 2, 3], 9, -1);
 			assert.deepEqual(actual, [1, 2, 9]);
+			assert.deepEqual([1, 2, 3].fill(9, -1), [1, 2, 9]);
 		},
 
 		'fill with nonsense start results in 0 start': function() {
 			let expected = [9, 9, 9];
 			assert.deepEqual(array.fill([1, 2, 3], 9, NaN), expected);
+			assert.deepEqual([1, 2, 3].fill(9, NaN), expected);
 		},
 
 		'fill with start exceeding length results in nothing filled': function() {
 			let actual = array.fill([1, 2, 3], 9, Number.POSITIVE_INFINITY);
 			assert.deepEqual(actual, [1, 2, 3]);
+			assert.deepEqual([1, 2, 3].fill(9, Number.POSITIVE_INFINITY), [1, 2, 3]);
 		},
 
 		'fill with negative start larger than length results in 0 start': function() {
 			let actual = array.fill([1, 2, 3], 9, Number.NEGATIVE_INFINITY);
 			assert.deepEqual(actual, [9, 9, 9]);
+			assert.deepEqual([1, 2, 3].fill(9, Number.NEGATIVE_INFINITY), [9, 9, 9]);
 		},
 
 		'fill with valid start and end': function() {
 			let actual = array.fill([1, 2, 3], 9, 1, 2);
 			assert.deepEqual(actual, [1, 9, 3]);
+			assert.deepEqual([1, 2, 3].fill(9, 1, 2), [1, 9, 3]);
 		},
 
 		'fill with negative end': function() {
 			let actual = array.fill([1, 2, 3], 9, 0, -1);
 			assert.deepEqual(actual, [9, 9, 3]);
+			assert.deepEqual([1, 2, 3].fill(9, 0, -1), [9, 9, 3]);
 		},
 
 		'fill with nonsense end results in no change': function() {
 			let actual = array.fill([1, 2, 3], 9, 0, NaN);
 			assert.deepEqual(actual, [1, 2, 3]);
+			assert.deepEqual([1, 2, 3].fill(9, 0, NaN), [1, 2, 3]);
 		},
 
 		'fill with 0 start and negative end larger than length results in nothing filled': function() {
 			let actual = array.fill([1, 2, 3], 9, 0, -4);
 			assert.deepEqual(actual, [1, 2, 3]);
+			assert.deepEqual([1, 2, 3].fill(9, 0, -4), [1, 2, 3]);
 		},
 
 		'fill with array-like object': function() {
@@ -332,11 +352,13 @@ registerSuite('array', {
 				'item found': function() {
 					let haystack = ['duck', 'duck', 'goose'];
 					assert.strictEqual(array.findIndex(haystack, callback), 2);
+					assert.strictEqual(haystack.findIndex(callback), 2);
 				},
 
 				'item not found': function() {
 					let haystack = ['duck', 'duck', 'duck'];
 					assert.strictEqual(array.findIndex(haystack, callback), -1);
+					assert.strictEqual(haystack.findIndex(callback), -1);
 				},
 
 				'item found in array-like object': function() {
@@ -364,6 +386,7 @@ registerSuite('array', {
 					};
 					let haystack: number[] = [0, 1, 2, 3, 4];
 					assert.strictEqual(array.findIndex(haystack, thing.callback, thing), 3);
+					assert.strictEqual(haystack.findIndex(thing.callback, thing), 3);
 				}
 			};
 		})()
@@ -380,11 +403,13 @@ registerSuite('array', {
 				'item found': function() {
 					let haystack = [2, 4, 6, 8];
 					assert.strictEqual(array.find(haystack, callback), 6);
+					assert.strictEqual(haystack.find(callback), 6);
 				},
 
 				'item not found': function() {
 					let haystack = [1, 2, 3, 4];
 					assert.isUndefined(array.find(haystack, callback));
+					assert.isUndefined(haystack.find(callback));
 				}
 			};
 		})()
@@ -475,6 +500,10 @@ registerSuite('array', {
 					let actual = array.copyWithin(arr, offset, start, end);
 					assert.strictEqual(actual, arr, 'a new array should not be created');
 					assert.deepEqual(actual, expected);
+
+					arr = [1, 2, 3, 4, 5];
+					arr.copyWithin(offset, start, end);
+					assert.deepEqual(arr, expected);
 				};
 			});
 
@@ -493,23 +522,30 @@ registerSuite('array', {
 
 				'item found'() {
 					assert.isTrue(array.includes(arr, 2));
+					assert.isTrue(arr.includes(2));
 				},
 
 				'item not found from given starting index'() {
 					assert.isFalse(array.includes(arr, 1, 2));
+					assert.isFalse(arr.includes(1, 2));
 				},
 
 				'item not found'() {
 					assert.isFalse(array.includes(arr, 17));
+					assert.isFalse(arr.includes(17));
 				},
 
 				'NaN found'() {
 					assert.isTrue(array.includes(arr, NaN));
+					assert.isTrue(arr.includes(NaN));
 				},
 
 				'NaN not found'() {
 					assert.isFalse(array.includes(arr, NaN, 3));
 					assert.isFalse(array.includes([1, 2, 3], NaN));
+
+					assert.isFalse(arr.includes(NaN, 3));
+					assert.isFalse([1, 2, 3].includes(NaN));
 				}
 			};
 		})()
