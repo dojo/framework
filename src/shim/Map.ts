@@ -125,7 +125,7 @@ export interface MapConstructor {
 export let Map: MapConstructor = global.Map;
 
 if (!has('es6-map')) {
-	Map = class Map<K, V> {
+	Map = global.Map = class Map<K, V> {
 		protected readonly _keys: K[] = [];
 		protected readonly _values: V[] = [];
 
