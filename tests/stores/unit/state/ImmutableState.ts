@@ -214,6 +214,17 @@ describe('state/ImmutableState', () => {
 		});
 	});
 
+	it('should report the length of an array', () => {
+		const state = new ImmutableState();
+		state.apply([{ op: OperationType.ADD, path: new Pointer('foo'), value: [] }]);
+
+		assert.equal(state.path('foo', 'length').value, 0);
+
+		state.apply([{ op: OperationType.ADD, path: new Pointer('foo/0'), value: 'foo' }]);
+
+		assert.equal(state.path('foo', 'length').value, 1);
+	});
+
 	it('unknown', () => {
 		assert.throws(
 			() => {

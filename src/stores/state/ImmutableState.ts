@@ -100,6 +100,14 @@ export class ImmutableState<T = any> implements MutableState<T> {
 		const pointer = new Pointer(hasMultipleSegments ? stringSegments : stringSegments[0] || '');
 		let value = this._state.getIn(pointer.segments);
 
+		if (pointer.segments.length > 1 && pointer.segments[pointer.segments.length - 1] === 'length') {
+			const parent = pointer.segments.slice(0, pointer.segments.length - 1);
+			const parentState = this._state.getIn(parent);
+			if (isList(parentState)) {
+				value = parentState.size;
+			}
+		}
+
 		if (isList(value) || isMap(value)) {
 			value = value.toJS();
 		}
