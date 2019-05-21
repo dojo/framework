@@ -1,4 +1,3 @@
-import global from './global';
 import has from '../core/has';
 import { wrapNative } from './support/util';
 
@@ -140,8 +139,6 @@ export let padEnd: (target: string, maxLength: number, fillString?: string) => s
  *        The default value for this parameter is " " (U+0020).
  */
 export let padStart: (target: string, maxLength: number, fillString?: string) => string;
-
-const String: StringConstructor = global.String;
 
 if (!has('es6-string')) {
 	/**
@@ -375,8 +372,8 @@ if (!has('es2017-string')) {
 	};
 }
 
-fromCodePoint = global.String.fromCodePoint;
-raw = global.String.raw;
+fromCodePoint = String.fromCodePoint;
+raw = String.raw;
 
 codePointAt = wrapNative(String.prototype.codePointAt);
 endsWith = wrapNative(String.prototype.endsWith);
