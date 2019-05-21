@@ -73,6 +73,16 @@ const afterOnly: ProcessCallback = () => ({
 });
 ```
 
+The `result` implements the `ProcessResult` interface to provide information about the changes applied to the store and provide access to that store.
+
+-   `executor` allows additional processes to run against the store
+-   `store` a reference to the store
+-   `operations` a list of applied operations
+-   `undoOperations` a list of operations that can be used to reverse the applied operations
+-   `apply()` the apply method from the store
+-   `payload` the provided payload
+-   `id` the id used to name the process
+
 # Process Lifecycle
 
 A Process has an execution lifecycle that defines the flow of the behavior being defined.
@@ -85,16 +95,6 @@ A Process has an execution lifecycle that defines the flow of the behavior being
 1.  `after` middleware are executed synchronously in-order
 
 # Common Patterns
-
-## Local vs Global State
-
-_ local state
-_ stored while the widget is connected
-_ global state
-_ stored for the lifetime of the application \* easy to reinstate and alter
-\_ widgets should either fully control their state or be controlled
-_ initial state + local state
-_ external state
 
 ## Initial State
 
@@ -119,27 +119,175 @@ initialStateProcess(store)({});
 
 ## Undo
 
-<!-- TODO -->
+Dojo Stores tracks changes to the underlying store using patch operations. This makes it easy for Dojo to automatically create a set of operations to undo a set of operations and reinstate any data that has changed as part of a set of commands. The `undoOperations` are available in the `after` middleware as part of the `ProcessResult`.
+
+This is useful when a process involves several commands that alter the state of the store and one of them fails necessitating a rollback.
+
+> undo middleware
+
+```ts
+const undoOnFailure = () => {
+	return {
+		after: () => (error, result) {
+			if (error) {
+				result.store.apply(result.undoOperations);
+			}
+		}
+	};
+};
+
+const process = createProcess('do-something', [
+	command1, command2, command3
+], [ undoOnFailure ])
+```
+
+If any of the commands fail during their execution the `undoOnFailure` middleware will have an opportunity to apply `undoOperations`.
+
+It is important to note that `undoOperations` only apply to the commands fully executed during the process. It will not contain any operations to rollback state that changed as a result of other processes that may be executed asynchronously or state changes performed in middleware or directly on the store itself. These use cases are outside the scope of the undo system.
 
 ## Optimistic Updates
 
-https://github.com/dojo/framework/tree/master/src/stores#optimistic-update-pattern
+Optimistic updating can be used to build a responsive UI despite interactions that might take some time to respond, for example saving to a remote resource.
 
-## Transforming Process Arguments
+In the case of adding a todo item for instance, with optimistic updating, we can immediately add the todo before we even make a request to the server and avoid having an unnatural waiting period or loading indicator. When the server responds we can then reconcile the outcome based on whether it is successful or not.
 
-https://github.com/dojo/framework/tree/master/src/stores#transforming-executor-arguments
+In the success scenario, we might need to update the added Todo item with an id that was provided in the response from the server and change the color of the Todo item to green to indicate it was successfully saved.
+
+In the error scenario, it might be that we want to show a notification to say the request failed and turn the Todo item red, with a "retry" button. It's even possible to revert/undo the adding of the Todo item or anything else that happened in the process.
+
+> Undo example
+
+```ts
+const handleAddTodoErrorProcess = createProcess('error', [ () => [ add(path('failed'), true) ]; ]);
+
+const addTodoErrorMiddleware = () => {
+	return {
+		after: () => (error, result) {
+			if (error) {
+				result.store.apply(result.undoOperations);
+				result.executor(handleAddTodoErrorProcess);
+			}
+		}
+	};
+};
+
+const addTodoProcess = createProcess('add-todo', [
+		addTodoCommand,
+		calculateCountsCommand,
+		postTodoCommand,
+		calculateCountsCommand
+	],
+	[ addTodoCallback ]);
+```
+
+-   `addTodoCommand` adds the new todo into the application state
+-   `calculateCountsCommand` recalculates the count of completed and active todo items
+-   `postTodoCommand` posts the todo item to a remote service and using the process `after` middleware we can make changes if there is a failure
+    -   on _failure_ the changes are reverted and the failed state field is set to true
+    -   on _success_ update the todo item id field with the value received from the remote service
+-   `calculateCountsCommand` runs again after the success of `postTodoCommand`
+
+### Synchronized updates
+
+In some cases it is better to wait for the server to update for the process to wait until a remote call has been completed. For instance when a process will remove an element from the screen or when the outlet changes to display a different view. Restoring a state that triggered these type of actions can be surprising.
+
+Since processes support asynchronous commands simply return a `Promise` to wait for a result.
+
+> delete process
+
+```ts
+function byId(id: string) {
+	return (item: any) => id === item.id;
+}
+
+async function deleteTodoCommand({ get, payload: { id } }: CommandRequest) {
+	const { todo, index } = find(get('/todos'), byId(id));
+	await fetch(`/todo/${todo.id}`, { method: 'DELETE' });
+	return [remove(path('todos', index))];
+}
+
+const deleteTodoProcess = createProcess('delete', [deleteTodoCommand, calculateCountsCommand]);
+```
 
 ## Concurrent commands
 
-https://github.com/dojo/framework/tree/master/src/stores#executing-concurrent-commands
+A `Process` supports concurrent execution of multiple commands by specifying the commands in an array.
 
-## Immutable State
+> process.ts
 
-https://github.com/dojo/framework/tree/master/src/stores#immutablestate
+```ts
+createProcess('my-process', [commandLeft, [concurrentCommandOne, concurrentCommandTwo], commandRight]);
+```
+
+In this example, `commandLeft` is executed, then both `concurrentCommandOne` and `concurrentCommandTwo` are executed concurrently. Once all of the concurrent commands are completed the results are applied in order. If an error occurs in either of the concurrent commands then none of the operations are applied. Finally `commandRight` is executed.
+
+## Alternative State implementations
+
+When a store is instantiated an implementation of the `MutableState` interface is used by default. In most circumstances the default state interface is well optimized and sufficient to use for the general case. If a particular use case merits an alternative implementation.
+
+> Providing an alternative state
+
+```ts
+const store = new Store({ state: myStateImpl });
+```
+
+### `MutableState` API
+
+Any `State` implemention must provide four methods to properly apply operations to the state.
+
+-   `get<S>(path: Path<M, S>): S` takes a `Path` object and returns the value in the current state that that path points to
+-   `at<S extends Path<M, Array<any>>>(path: S, index: number): Path<M, S['value'][0]>` returns a `Path` object that points to the provided `index` in the array at the provided path
+-   `path: StatePaths<M>` is a typesafe way to generate a `Path` object for a given path in the state
+-   `apply(operations: PatchOperation<T>[]): PatchOperation<T>[]` applies the provided operations to the current state
+
+### ImmutableState
+
+Dojo Stores provide an implementation of the MutableState interface that leverages [Immutable](). This implementation may provide better performance if there are frequent, deep updates to the store's state. Performance should be tested and verified before fully committing to this implementation.
+
+> Using Immutable
+
+```ts
+import State from './interfaces';
+import Store from '@dojo/framework/stores/Store';
+import Registry from '@dojo/framework/widget-core/Registry';
+import ImmutableState from '@dojo/framework/stores/state/ImmutableState';
+
+const registry = new Registry();
+const customStore = new ImmutableState<State>();
+const store = new Store<State>({ store: customStore });
+```
 
 ## Local Storage
 
-https://github.com/dojo/framework/tree/master/src/stores#local-storage-middleware
+Dojo Stores provides a collection of tools to leverage local storage.
+
+The local storage middleware watches specified paths for changes and stores them locally on disk using the `id` provided to the `collector` and structure as defined by the path.
+
+> Local storage middleware
+
+```ts
+export const myProcess = createProcess(
+	'my-process',
+	[command],
+	collector('my-process', (path) => {
+		return [path('state', 'to', 'save'), path('other', 'state', 'to', 'save')];
+	})
+);
+```
+
+The `load` function hydrates a store from `LocalStorage`
+
+> Hydrating state
+
+```ts
+import { load } from '@dojo/framework/stores/middleware/localStorage';
+import { Store } from '@dojo/framework/stores/Store';
+
+const store = new Store();
+load('my-process', store);
+```
+
+Note that data is serialized for storage and the data is overwritten after each process call. This implementation is not appropriate for non-serializable data (e.g. `Date` and `ArrayBuffer`).
 
 # Subscribing to Store changes
 
