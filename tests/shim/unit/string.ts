@@ -5,7 +5,7 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
 function testCodePointAt(text: string, codePoint?: number, expected?: number) {
-	assert.strictEqual(stringUtil.codePointAt(text, codePoint), expected);
+	assert.strictEqual(stringUtil.codePointAt(text, codePoint as any), expected);
 
 	if (typeof codePoint !== 'undefined') {
 		assert.strictEqual(text.codePointAt(codePoint), expected);
@@ -79,10 +79,10 @@ registerSuite('shim - string functions', {
 	'.codePointAt()': {
 		'throws on undefined or null string'() {
 			assert.throws(function() {
-				stringUtil.codePointAt(<any>undefined);
+				stringUtil.codePointAt(<any>undefined, <any>undefined);
 			}, TypeError);
 			assert.throws(function() {
-				stringUtil.codePointAt(<any>null);
+				stringUtil.codePointAt(<any>null, <any>undefined);
 			}, TypeError);
 		},
 
@@ -359,10 +359,10 @@ registerSuite('shim - string functions', {
 	'.repeat()': {
 		'throws on undefined or null string'() {
 			assert.throws(function() {
-				stringUtil.repeat(<any>undefined);
+				stringUtil.repeat(<any>undefined, <any>undefined);
 			}, TypeError);
 			assert.throws(function() {
-				stringUtil.repeat(<any>null);
+				stringUtil.repeat(<any>null, <any>null);
 			}, TypeError);
 		},
 
@@ -381,7 +381,7 @@ registerSuite('shim - string functions', {
 		},
 
 		'returns empty string when passed 0, NaN, or no count'() {
-			assert.strictEqual(stringUtil.repeat('abc'), '');
+			assert.strictEqual((stringUtil.repeat as any)('abc'), '');
 			let counts = [<any>undefined, null, 0, NaN];
 			for (let count of counts) {
 				assert.strictEqual(stringUtil.repeat('abc', count), '');

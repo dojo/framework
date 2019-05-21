@@ -1,4 +1,3 @@
-import global from './global';
 import { isArrayLike, isIterable, Iterable } from './iterator';
 import { MAX_SAFE_INTEGER } from './number';
 import has from '../core/has';
@@ -113,8 +112,6 @@ export let findIndex: <T>(target: ArrayLike<T>, callback: FindCallback<T>, thisA
  * @return `true` if the array includes the element, otherwise `false`
  */
 export let includes: <T>(target: ArrayLike<T>, searchElement: T, fromIndex?: number) => boolean;
-
-const Array: ArrayConstructor = global.Array;
 
 // Util functions for filled implementations
 /**
@@ -314,12 +311,12 @@ if (!has('es7-array')) {
 	};
 }
 
-from = global.Array.from;
-of = global.Array.of;
-copyWithin = wrapNative(global.Array.prototype.copyWithin);
-fill = wrapNative(global.Array.prototype.fill);
-find = wrapNative(global.Array.prototype.find);
-findIndex = wrapNative(global.Array.prototype.findIndex);
-includes = wrapNative(global.Array.prototype.includes);
+from = Array.from;
+of = Array.of;
+copyWithin = wrapNative(Array.prototype.copyWithin);
+fill = wrapNative(Array.prototype.fill);
+find = wrapNative(Array.prototype.find);
+findIndex = wrapNative(Array.prototype.findIndex);
+includes = wrapNative(Array.prototype.includes);
 
 export default Array;

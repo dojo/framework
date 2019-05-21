@@ -1,4 +1,3 @@
-import global from './global';
 import has from '../core/has';
 import { isSymbol } from './Symbol';
 
@@ -117,20 +116,18 @@ export let entries: ObjectEnteries;
 
 export let values: ObjectValues;
 
-const ObjectShim: ObjectConstructor = global.Object;
-
 if (!has('es6-object')) {
-	ObjectShim.keys = function symbolAwareKeys(o: object): string[] {
-		return ObjectShim.keys(o).filter((key) => !Boolean(key.match(/^@@.+/)));
+	Object.keys = function symbolAwareKeys(o: object): string[] {
+		return Object.keys(o).filter((key) => !Boolean(key.match(/^@@.+/)));
 	};
 
-	ObjectShim.assign = function assign(target: any, ...sources: any[]) {
+	Object.assign = function assign(target: any, ...sources: any[]) {
 		if (target == null) {
 			// TypeError if undefined or null
 			throw new TypeError('Cannot convert undefined or null to object');
 		}
 
-		const to = ObjectShim(target);
+		const to = Object(target);
 		sources.forEach((nextSource) => {
 			if (nextSource) {
 				// Skip over if undefined or null
@@ -143,28 +140,25 @@ if (!has('es6-object')) {
 		return to;
 	};
 
-	ObjectShim.getOwnPropertyDescriptor = function<T, K extends keyof T>(
-		o: T,
-		prop: K
-	): PropertyDescriptor | undefined {
+	Object.getOwnPropertyDescriptor = function<T, K extends keyof T>(o: T, prop: K): PropertyDescriptor | undefined {
 		if (isSymbol(prop)) {
-			return ObjectShim.getOwnPropertyDescriptor(o, prop);
+			return Object.getOwnPropertyDescriptor(o, prop);
 		} else {
-			return ObjectShim.getOwnPropertyDescriptor(o, prop);
+			return Object.getOwnPropertyDescriptor(o, prop);
 		}
 	};
 
-	ObjectShim.getOwnPropertyNames = function getOwnPropertyNames(o: any): string[] {
-		return ObjectShim.getOwnPropertyNames(o).filter((key) => !Boolean(key.match(/^@@.+/)));
+	Object.getOwnPropertyNames = function getOwnPropertyNames(o: any): string[] {
+		return Object.getOwnPropertyNames(o).filter((key) => !Boolean(key.match(/^@@.+/)));
 	};
 
-	ObjectShim.getOwnPropertySymbols = function getOwnPropertySymbols(o: any): symbol[] {
-		return ObjectShim.getOwnPropertyNames(o)
+	Object.getOwnPropertySymbols = function getOwnPropertySymbols(o: any): symbol[] {
+		return Object.getOwnPropertyNames(o)
 			.filter((key) => Boolean(key.match(/^@@.+/)))
 			.map((key) => Symbol.for(key.substring(2)));
 	};
 
-	ObjectShim.is = function is(value1: any, value2: any): boolean {
+	Object.is = function is(value1: any, value2: any): boolean {
 		if (value1 === value2) {
 			return value1 !== 0 || 1 / value1 === 1 / value2; // -0
 		}
@@ -173,35 +167,35 @@ if (!has('es6-object')) {
 }
 
 if (!has('es2017-object')) {
-	ObjectShim.getOwnPropertyDescriptors = function getOwnPropertyDescriptors<T>(
+	Object.getOwnPropertyDescriptors = function getOwnPropertyDescriptors<T>(
 		o: T
 	): { [P in keyof T]: TypedPropertyDescriptor<T[P]> } & { [x: string]: PropertyDescriptor } {
-		return ObjectShim.getOwnPropertyNames(o).reduce(
+		return Object.getOwnPropertyNames(o).reduce(
 			(previous, key) => {
-				previous[key] = ObjectShim.getOwnPropertyDescriptor(o, key)!;
+				previous[key] = Object.getOwnPropertyDescriptor(o, key)!;
 				return previous;
 			},
 			{} as { [P in keyof T]: TypedPropertyDescriptor<T[P]> } & { [x: string]: PropertyDescriptor }
 		);
 	};
 
-	ObjectShim.entries = function entries(o: any): [string, any][] {
+	Object.entries = function entries(o: any): [string, any][] {
 		return keys(o).map((key) => [key, o[key]] as [string, any]);
 	};
 
-	ObjectShim.values = function values(o: any): any[] {
+	Object.values = function values(o: any): any[] {
 		return keys(o).map((key) => o[key]);
 	};
 }
 
-assign = ObjectShim.assign;
-getOwnPropertyDescriptor = ObjectShim.getOwnPropertyDescriptor;
-getOwnPropertyNames = ObjectShim.getOwnPropertyNames;
-getOwnPropertySymbols = ObjectShim.getOwnPropertySymbols;
-is = ObjectShim.is;
-keys = ObjectShim.keys;
-getOwnPropertyDescriptors = ObjectShim.getOwnPropertyDescriptors;
-entries = ObjectShim.entries;
-values = ObjectShim.values;
+assign = Object.assign;
+getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+getOwnPropertyNames = Object.getOwnPropertyNames;
+getOwnPropertySymbols = Object.getOwnPropertySymbols;
+is = Object.is;
+keys = Object.keys;
+getOwnPropertyDescriptors = Object.getOwnPropertyDescriptors;
+entries = Object.entries;
+values = Object.values;
 
-export default ObjectShim;
+export default Object;

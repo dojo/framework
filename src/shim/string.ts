@@ -69,7 +69,7 @@ export let raw: (template: TemplateStringsArray, ...substitutions: any[]) => str
  * If there is no element at that position, the result is undefined.
  * If a valid UTF-16 surrogate pair does not begin at pos, the result is the code unit at pos.
  */
-export let codePointAt: (target: string, pos?: number) => number | undefined;
+export let codePointAt: (target: string, pos: number) => number | undefined;
 
 /**
  * Returns true if the sequence of elements of searchString converted to a String is the
@@ -102,7 +102,7 @@ export let normalize: StringNormalize;
  * T is the empty String is returned.
  * @param count number of copies to append
  */
-export let repeat: (target: string, count?: number) => string;
+export let repeat: (target: string, count: number) => string;
 
 /**
  * Returns true if the sequence of elements of searchString converted to a String is the
@@ -378,13 +378,13 @@ if (!has('es2017-string')) {
 fromCodePoint = global.String.fromCodePoint;
 raw = global.String.raw;
 
-codePointAt = wrapNative(global.String.prototype.codePointAt);
-endsWith = wrapNative(global.String.prototype.endsWith);
-includes = wrapNative(global.String.prototype.includes);
-normalize = wrapNative(global.String.prototype.normalize);
-repeat = wrapNative(global.String.prototype.repeat);
-startsWith = wrapNative(global.String.prototype.startsWith);
-padEnd = wrapNative(global.String.prototype.padEnd);
-padStart = wrapNative(global.String.prototype.padStart);
+codePointAt = wrapNative(String.prototype.codePointAt);
+endsWith = wrapNative(String.prototype.endsWith);
+includes = wrapNative(String.prototype.includes);
+normalize = wrapNative(String.prototype.normalize);
+repeat = wrapNative(String.prototype.repeat);
+startsWith = wrapNative(String.prototype.startsWith);
+padEnd = wrapNative(String.prototype.padEnd);
+padStart = wrapNative(String.prototype.padStart);
 
 export default String;

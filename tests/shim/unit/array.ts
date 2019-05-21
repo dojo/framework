@@ -1,6 +1,6 @@
 import Array, * as array from '../../../src/shim/array';
 import global from '../../../src/shim/global';
-import has, { add as hasAdd } from '../../../src/has/has';
+import has, { add as hasAdd } from '../../../src/core/has';
 import { Iterable, ShimIterator } from '../../../src/shim/iterator';
 import '../../../src/shim/Symbol';
 
