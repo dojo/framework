@@ -4905,6 +4905,31 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(onclickListener.called, 'onclickListener should have been called');
 			document.body.removeChild(iframe);
 		});
+		it('should replace text node on merge when value is different', () => {
+			const iframe = document.createElement('iframe');
+			document.body.appendChild(iframe);
+			iframe.contentDocument!.write(`<div class="foo"><span>hello</span><span>world</span></div>`);
+			iframe.contentDocument!.close();
+			const div = iframe.contentDocument!.body.firstChild as HTMLElement;
+			const firstSpan = div.childNodes[0];
+			const firstText = firstSpan.childNodes[0] as Text;
+			const secondSpan = div.childNodes[1] as HTMLLabelElement;
+			const secondText = secondSpan.childNodes[0] as Text;
+			class App extends WidgetBase {
+				render() {
+					return v('div', [v('span', ['hello']), v('span', ['tests'])]);
+				}
+			}
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: iframe.contentDocument!.body });
+			assert.strictEqual(div, iframe.contentDocument!.body.firstChild);
+			assert.strictEqual(firstSpan, iframe.contentDocument!.body.firstChild!.childNodes[0]);
+			assert.strictEqual(firstText, iframe.contentDocument!.body.firstChild!.childNodes[0].childNodes[0]);
+			assert.strictEqual(secondSpan, iframe.contentDocument!.body.firstChild!.childNodes[1]);
+			assert.notStrictEqual(secondText, iframe.contentDocument!.body.firstChild!.childNodes[1].childNodes[0]);
+			assert.strictEqual(div.outerHTML, '<div class="foo"><span>hello</span><span>tests</span></div>');
+			document.body.removeChild(iframe);
+		});
 	});
 
 	describe('sync mode', () => {
