@@ -1050,52 +1050,88 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 		});
 	}
 
+	function createKeyMap(wrappers: DNodeWrapper[]): (string | number)[] | false {
+		const keys: (string | number)[] = [];
+		for (let i = 0; i < wrappers.length; i++) {
+			const wrapper = wrappers[i];
+			if (wrapper.node.properties.key != null) {
+				keys.push(wrapper.node.properties.key);
+			} else {
+				return false;
+			}
+		}
+		return keys;
+	}
+
 	function _process(current: DNodeWrapper[], next: DNodeWrapper[], meta: ProcessMeta = {}): void {
 		let { mergeNodes = [], oldIndex = 0, newIndex = 0 } = meta;
 		const currentLength = current.length;
 		const nextLength = next.length;
 		const hasPreviousSiblings = currentLength > 1 || (currentLength > 0 && currentLength < nextLength);
-		const instructions: Instruction[] = [];
-		if (newIndex < nextLength) {
-			let currentWrapper = oldIndex < currentLength ? current[oldIndex] : undefined;
-			const nextWrapper = next[newIndex];
-			nextWrapper.hasPreviousSiblings = hasPreviousSiblings;
-
-			_processMergeNodes(nextWrapper, mergeNodes);
-
-			if (currentWrapper && same(currentWrapper, nextWrapper)) {
-				oldIndex++;
-				newIndex++;
-				if (isVNodeWrapper(currentWrapper) && isVNodeWrapper(nextWrapper)) {
-					nextWrapper.inserted = currentWrapper.inserted;
+		let instructions: Instruction[] = [];
+		let replace = false;
+		if (oldIndex === 0 && newIndex === 0 && currentLength) {
+			const currentKeys = createKeyMap(current);
+			if (currentKeys) {
+				const nextKeys = createKeyMap(next);
+				if (nextKeys) {
+					for (let i = 0; i < currentKeys.length; i++) {
+						if (nextKeys.indexOf(currentKeys[i]) !== -1) {
+							instructions = [];
+							replace = false;
+							break;
+						}
+						replace = true;
+						instructions.push({ current: current[i], next: undefined });
+					}
 				}
-				instructions.push({ current: currentWrapper, next: nextWrapper });
-			} else if (!currentWrapper || findIndexOfChild(current, nextWrapper, oldIndex + 1) === -1) {
-				has('dojo-debug') && current.length && registerDistinguishableCallback(next, newIndex);
-				instructions.push({ current: undefined, next: nextWrapper });
-				newIndex++;
-			} else if (findIndexOfChild(next, currentWrapper, newIndex + 1) === -1) {
-				has('dojo-debug') && registerDistinguishableCallback(current, oldIndex);
-				instructions.push({ current: currentWrapper, next: undefined });
-				oldIndex++;
-			} else {
-				has('dojo-debug') && registerDistinguishableCallback(next, newIndex);
-				has('dojo-debug') && registerDistinguishableCallback(current, oldIndex);
-				instructions.push({ current: currentWrapper, next: undefined });
-				instructions.push({ current: undefined, next: nextWrapper });
-				oldIndex++;
-				newIndex++;
 			}
 		}
 
-		if (newIndex < nextLength) {
-			_processQueue.push({ current, next, meta: { mergeNodes, oldIndex, newIndex } });
-		}
+		if (replace || (currentLength === 0 && !_mountOptions.merge)) {
+			for (let i = 0; i < next.length; i++) {
+				instructions.push({ current: undefined, next: next[i] });
+			}
+		} else {
+			if (newIndex < nextLength) {
+				let currentWrapper = oldIndex < currentLength ? current[oldIndex] : undefined;
+				const nextWrapper = next[newIndex];
+				nextWrapper.hasPreviousSiblings = hasPreviousSiblings;
 
-		if (currentLength > oldIndex && newIndex >= nextLength) {
-			for (let i = oldIndex; i < currentLength; i++) {
-				has('dojo-debug') && registerDistinguishableCallback(current, i);
-				instructions.push({ current: current[i], next: undefined });
+				_processMergeNodes(nextWrapper, mergeNodes);
+
+				if (currentWrapper && same(currentWrapper, nextWrapper)) {
+					oldIndex++;
+					newIndex++;
+					if (isVNodeWrapper(currentWrapper) && isVNodeWrapper(nextWrapper)) {
+						nextWrapper.inserted = currentWrapper.inserted;
+					}
+					instructions.push({ current: currentWrapper, next: nextWrapper });
+				} else if (!currentWrapper || findIndexOfChild(current, nextWrapper, oldIndex + 1) === -1) {
+					has('dojo-debug') && current.length && registerDistinguishableCallback(next, newIndex);
+					instructions.push({ current: undefined, next: nextWrapper });
+					newIndex++;
+				} else if (findIndexOfChild(next, currentWrapper, newIndex + 1) === -1) {
+					has('dojo-debug') && registerDistinguishableCallback(current, oldIndex);
+					instructions.push({ current: currentWrapper, next: undefined });
+					oldIndex++;
+				} else {
+					has('dojo-debug') && registerDistinguishableCallback(next, newIndex);
+					has('dojo-debug') && registerDistinguishableCallback(current, oldIndex);
+					instructions.push({ current: currentWrapper, next: undefined });
+					instructions.push({ current: undefined, next: nextWrapper });
+					oldIndex++;
+					newIndex++;
+				}
+			}
+			if (newIndex < nextLength) {
+				_processQueue.push({ current, next, meta: { mergeNodes, oldIndex, newIndex } });
+			}
+			if (currentLength > oldIndex && newIndex >= nextLength) {
+				for (let i = oldIndex; i < currentLength; i++) {
+					has('dojo-debug') && registerDistinguishableCallback(current, i);
+					instructions.push({ current: current[i], next: undefined });
+				}
 			}
 		}
 
