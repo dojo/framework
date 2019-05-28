@@ -168,6 +168,10 @@ const NAMESPACE_XLINK = NAMESPACE_W3 + '1999/xlink';
 let lazyWidgetId = 0;
 const lazyWidgetIdMap = new WeakMap<LazyWidget, string>();
 
+function isTextNode(item: any): item is Text {
+	return item.nodeType === 3;
+}
+
 function isLazyDefine(item: any): item is LazyDefine {
 	return Boolean(item && item.label);
 }
@@ -1277,12 +1281,18 @@ export function renderer(renderer: () => WNode | VNode): Renderer {
 					_insertBeforeMap.set(next, _allMergedNodes[0]);
 				}
 			}
-		} else {
-			if (_mountOptions.merge) {
+		} else if (_mountOptions.merge) {
+			next.merged = true;
+			if (isTextNode(next.domNode)) {
+				if (next.domNode.data !== next.node.text) {
+					_allMergedNodes = [next.domNode, ..._allMergedNodes];
+					next.domNode = global.document.createTextNode(next.node.text);
+					next.merged = false;
+				}
+			} else {
 				mergeNodes = arrayFrom(next.domNode.childNodes);
 				_allMergedNodes = [..._allMergedNodes, ...mergeNodes];
 			}
-			next.merged = true;
 		}
 		if (next.domNode) {
 			if (next.node.children) {
