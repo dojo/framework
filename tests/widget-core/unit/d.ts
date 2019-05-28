@@ -110,18 +110,6 @@ registerSuite('d', {
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));
 		},
-		'create WNode with lazy function'() {
-			const properties: any = { id: 'id', classes: ['world'] };
-			const promise = new Promise<any>(() => {});
-			const lazyFunction = () => promise;
-			const dNode = w(lazyFunction, properties, [w(WidgetBase, properties)]);
-			assert.equal(dNode.type, WNODE);
-			assert.strictEqual(dNode.widgetConstructor, lazyFunction);
-			assert.deepEqual(dNode.properties, { id: 'id', classes: ['world'] } as any);
-			assert.lengthOf(dNode.children, 1);
-			assert.isTrue(isWNode(dNode));
-			assert.isFalse(isVNode(dNode));
-		},
 		'should merge properties onto a WNode'() {
 			class Foo extends WidgetBase<{ foo: string; bar: number }> {}
 			const dNode = w(Foo, { foo: 'foo', bar: 1 }, ['child']);
