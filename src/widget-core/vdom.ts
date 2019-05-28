@@ -426,7 +426,7 @@ function arrayFrom(arr: any) {
 	return Array.prototype.slice.call(arr);
 }
 
-const createWidget = create();
+const factory = create();
 
 function wrapNodes(renderer: () => RenderResult) {
 	const result = renderer();
@@ -435,21 +435,22 @@ function wrapNodes(renderer: () => RenderResult) {
 		return result;
 	};
 	callback.isWNodeWrapper = isWNodeWrapper;
-	return createWidget(callback);
+	return factory(callback);
 }
 
 const widgetMetaMap = new Map<string, WidgetMeta>();
 let wrapperId = 0;
 let metaId = 0;
 
-export function getInvalidator(id: string) {
+export const invalidator = factory(({ id }) => {
 	const [widgetId] = id.split('-');
-	const widgetMeta = widgetMetaMap.get(widgetId);
-	if (widgetMeta) {
-		return widgetMeta.invalidator;
-	}
-	return null;
-}
+	return () => {
+		const widgetMeta = widgetMetaMap.get(widgetId);
+		if (widgetMeta) {
+			return widgetMeta.invalidator();
+		}
+	};
+});
 
 export function renderer(renderer: () => RenderResult): Renderer {
 	let _mountOptions: MountOptions = {
