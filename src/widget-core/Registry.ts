@@ -13,14 +13,15 @@ import {
 	ESMDefaultWidgetBaseFunction,
 	Callback,
 	WNodeFactory,
-	RenderResult
+	RenderResult,
+	WidgetBaseTypes
 } from './interfaces';
 import { isWNodeFactory } from './d';
 
 export type RegistryItem =
 	| WidgetBaseConstructor
 	| WNodeFactory<any>
-	| Promise<WidgetBaseConstructor>
+	| Promise<WidgetBaseConstructor | WNodeFactory<any>>
 	| WidgetBaseConstructorFunction
 	| ESMDefaultWidgetBaseFunction;
 
@@ -31,7 +32,7 @@ export const WIDGET_BASE_TYPE = '__widget_base_type';
 
 export interface RegistryEventObject extends EventObject<RegistryLabel> {
 	action: string;
-	item: WidgetBaseConstructor | InjectorItem;
+	item: WNodeFactory<any> | WidgetBaseConstructor | InjectorItem;
 }
 /**
  * Widget Registry Interface
@@ -109,9 +110,14 @@ export function isWidget<T extends WidgetBaseInterface = any>(
 	return isWidgetBaseConstructor(item) || isWidgetFunction(item);
 }
 
-export function isWidgetConstructorDefaultExport<T>(item: any): item is ESMDefaultWidgetBase<T> {
+export function isWidgetConstructorDefaultExport<T extends WidgetBaseTypes>(
+	item: any
+): item is ESMDefaultWidgetBase<T> {
 	return Boolean(
-		item && item.hasOwnProperty('__esModule') && item.hasOwnProperty('default') && isWidget(item.default)
+		item &&
+			item.hasOwnProperty('__esModule') &&
+			item.hasOwnProperty('default') &&
+			(isWidget(item.default) || isWNodeFactory(item.default))
 	);
 }
 
@@ -129,7 +135,10 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 	/**
 	 * Emit loaded event for registry label
 	 */
-	private emitLoadedEvent(widgetLabel: RegistryLabel, item: WidgetBaseConstructor | InjectorItem): void {
+	private emitLoadedEvent(
+		widgetLabel: RegistryLabel,
+		item: WNodeFactory<any> | WidgetBaseConstructor | InjectorItem
+	): void {
 		this.emit({
 			type: widgetLabel,
 			action: 'loaded',

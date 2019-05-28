@@ -168,12 +168,12 @@ export function w<W extends WidgetBaseTypes>(
 		| Callback<any, any, RenderResult>,
 	properties: W['properties'],
 	children?: W['children']
-): WNode<{ properties: W['properties']; children: W['children'] }> {
+): WNode<W> {
 	if (isWNodeFactory<W>(widgetConstructorOrNode)) {
 		return widgetConstructorOrNode(properties, children);
 	}
 
-	if (isWNode(widgetConstructorOrNode)) {
+	if (isWNode<W>(widgetConstructorOrNode)) {
 		properties = { ...(widgetConstructorOrNode.properties as any), ...(properties as any) };
 		children = children ? children : widgetConstructorOrNode.children;
 		widgetConstructorOrNode = widgetConstructorOrNode.widgetConstructor;

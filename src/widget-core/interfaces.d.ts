@@ -343,13 +343,13 @@ export interface DomVNode extends VNode {
 	onAttach?: () => void;
 }
 
-export interface ESMDefaultWidgetBase<T> {
-	default: Constructor<T>;
+export interface ESMDefaultWidgetBase<T extends WidgetBaseTypes> {
+	default: Constructor<T> | WNodeFactory<T>;
 	__esModule?: boolean;
 }
 
 export type WidgetBaseConstructorFunction<W extends WidgetBaseTypes = DefaultWidgetBaseInterface> = () => Promise<
-	Constructor<W>
+	Constructor<W> | WNodeFactory<W>
 >;
 
 export type ESMDefaultWidgetBaseFunction<W extends WidgetBaseTypes = DefaultWidgetBaseInterface> = () => Promise<
@@ -389,7 +389,7 @@ export interface MiddlewareResultFactory<Props, Middleware, ReturnValue> {
 }
 
 export interface WNodeFactory<W extends WidgetBaseTypes> {
-	(properties: W['properties'], children?: W['children']): WNode<DefaultWidgetBaseInterface>;
+	(properties: W['properties'], children?: W['children']): WNode<W>;
 }
 
 export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((k: infer I) => void)
