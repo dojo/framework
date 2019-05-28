@@ -2559,6 +2559,55 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(deferredPropertyCallCount, 12);
 		});
 
+		it('should replace keyed nodes', () => {
+			let swap: any;
+			class App extends WidgetBase {
+				private _swap = false;
+				constructor() {
+					super();
+					swap = () => {
+						this._swap = !this._swap;
+						this.invalidate();
+					};
+				}
+				render() {
+					if (this._swap) {
+						return v('div', [
+							v('div', { id: '1', key: '1' }),
+							v('div', { id: '2', key: '2' }),
+							v('div', { id: '3', key: '3' }),
+							v('div', { id: '4', key: '4' }),
+							v('div', { id: '5', key: '5' }),
+							v('div', { id: '6', key: '6' }),
+							v('div', { id: '7', key: '7' })
+						]);
+					}
+					return v('div', [
+						v('div', { id: '11', key: '11' }),
+						v('div', { id: '12', key: '12' }),
+						v('div', { id: '13', key: '13' }),
+						v('div', { id: '14', key: '14' }),
+						v('div', { id: '15', key: '15' }),
+						v('div', { id: '16', key: '16' }),
+						v('div', { id: '17', key: '17' })
+					]);
+				}
+			}
+			const r = renderer(() => w(App, {}));
+			const root = document.createElement('div');
+			r.mount({ domNode: root });
+			assert.strictEqual(
+				root.outerHTML,
+				'<div><div><div id="11"></div><div id="12"></div><div id="13"></div><div id="14"></div><div id="15"></div><div id="16"></div><div id="17"></div></div></div>'
+			);
+			swap();
+			resolvers.resolve();
+			assert.strictEqual(
+				root.outerHTML,
+				'<div><div><div id="1"></div><div id="2"></div><div id="3"></div><div id="4"></div><div id="5"></div><div id="6"></div><div id="7"></div></div></div>'
+			);
+		});
+
 		describe('supports merging with a widget returned a the top level', () => {
 			it('Supports merging DNodes onto existing HTML', () => {
 				const iframe = document.createElement('iframe');
