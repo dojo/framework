@@ -52,15 +52,38 @@ function isDomMeta(meta: any): meta is Base {
 	return Boolean(meta.afterRender);
 }
 
-const IGNORE_LIST: (string | symbol)[] = ['constructor', 'render'];
+const IGNORE_LIST: (string | symbol)[] = ['render', ...Object.getOwnPropertyNames(Object.getPrototypeOf({}))];
+
+const autoBindCache = new Map<any, string[]>();
 
 function autoBind(instance: any) {
-	let keys: string[] = Object.getOwnPropertyNames(instance.constructor.prototype);
+	let prototype = instance.constructor.prototype;
+
+	let keys: string[] = [];
+
+	if (autoBindCache.has(prototype)) {
+		keys = autoBindCache.get(prototype) as string[];
+	} else {
+		while (prototype) {
+			const ownKeys = Object.getOwnPropertyNames(prototype);
+
+			if (prototype.constructor.hasOwnProperty('_type')) {
+				break;
+			}
+
+			keys = [...keys, ...ownKeys];
+
+			prototype = Object.getPrototypeOf(prototype);
+		}
+
+		keys = keys.filter((k) => typeof instance[k] === 'function' && IGNORE_LIST.indexOf(k) === -1);
+
+		autoBindCache.set(prototype, keys);
+	}
+
 	for (let i = 0; i < keys.length; i++) {
 		const key = keys[i];
-		if (typeof instance[key] !== 'function' || IGNORE_LIST.indexOf(key) > -1) {
-			continue;
-		}
+
 		const boundFunc = instance[key].bind(instance);
 		Object.defineProperty(instance, key, {
 			configurable: true,
