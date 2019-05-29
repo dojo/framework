@@ -67,11 +67,11 @@ function autoBind(instance: any) {
 		while (prototype) {
 			const ownKeys = Object.getOwnPropertyNames(prototype);
 
-			keys = [...keys, ...ownKeys];
-
-			if (prototype.constructor._type !== undefined) {
+			if (prototype.constructor.hasOwnProperty('_type')) {
 				break;
 			}
+
+			keys = [...keys, ...ownKeys];
 
 			prototype = Object.getPrototypeOf(prototype);
 		}

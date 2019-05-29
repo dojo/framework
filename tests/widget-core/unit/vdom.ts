@@ -5665,4 +5665,32 @@ jsdomDescribe('vdom', () => {
 		setProperties({ rtl: false });
 		assert.strictEqual(root.dir, 'ltr');
 	});
+
+	it('widget methods are bound correctly', () => {
+		const stubby = stub();
+		class Bar extends WidgetBase<any> {
+			render() {
+				this.properties.func();
+				return 'blah';
+			}
+		}
+		class Foo extends WidgetBase {
+			private _stub = stubby;
+
+			protected test() {
+				this._stub();
+			}
+		}
+
+		class FooSubClass extends Foo {
+			render() {
+				return w(Bar, { func: this.test });
+			}
+		}
+
+		const r = renderer(() => w(FooSubClass, {}));
+		const root: any = document.createElement('div');
+		r.mount({ domNode: root });
+		assert.isTrue(stubby.calledOnce);
+	});
 });
