@@ -64,16 +64,15 @@ function autoBind(instance: any) {
 	if (autoBindCache.has(prototype)) {
 		keys = autoBindCache.get(prototype) as string[];
 	} else {
-		let p = prototype;
-		while (p) {
-			const ownKeys = Object.getOwnPropertyNames(p);
+		while (prototype) {
+			const ownKeys = Object.getOwnPropertyNames(prototype);
 
 			if (ownKeys.indexOf('_type') !== -1) {
 				break;
 			}
 
 			keys = [...keys, ...ownKeys];
-			p = Object.getPrototypeOf(p);
+			prototype = Object.getPrototypeOf(prototype);
 		}
 
 		keys = keys.filter((k) => typeof instance[k] === 'function' && IGNORE_LIST.indexOf(k) === -1);
