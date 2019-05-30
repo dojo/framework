@@ -1,5 +1,5 @@
-import { DNode, WNode, VNode, DefaultWidgetBaseInterface, Constructor } from '../../widget-core/interfaces';
-import { isWNode, isVNode } from '../../widget-core/d';
+import { DNode, WNode, VNode, DefaultWidgetBaseInterface, Constructor } from '../../core/interfaces';
+import { isWNode, isVNode } from '../../core/d';
 import * as diff from 'diff';
 import WeakMap from '../../shim/WeakMap';
 import Set from '../../shim/Set';

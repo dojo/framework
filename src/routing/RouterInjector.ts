@@ -1,5 +1,5 @@
-import { Registry } from '../widget-core/Registry';
-import { RegistryLabel } from '../widget-core/interfaces';
+import { Registry } from '../core/Registry';
+import { RegistryLabel } from '../core/interfaces';
 
 import { Router } from './Router';
 import { RouteConfig, RouterOptions } from './interfaces';

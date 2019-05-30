@@ -48,8 +48,8 @@ This stylesheet can be used within a corresponding widget as follows:
 > src/widgets/MyWidget.ts
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { v } from '@dojo/framework/widget-core/d';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { v } from '@dojo/framework/core/d';
 
 import * as css from '../styles/MyWidget.m.css';
 
@@ -65,8 +65,8 @@ Similarly, if using TSX widget syntax:
 > src/widgets/MyTsxWidget.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { tsx } from '@dojo/framework/core/tsx';
 
 import * as css from '../styles/MyWidget.m.css';
 
@@ -180,17 +180,17 @@ Dojo applications need a way to present all the widgets they use in a consistent
 
 ## Making themeable applications
 
-In order to specify a theme for all themeable widgets in an application, `registerThemeInjector()` can be used in conjunction with the application's global registry. This injector utility function is available from the `@dojo/framework/widget-core/mixins/Themed` module.
+In order to specify a theme for all themeable widgets in an application, `registerThemeInjector()` can be used in conjunction with the application's global registry. This injector utility function is available from the `@dojo/framework/core/mixins/Themed` module.
 
 For example, specifying a primary application theme:
 
 > src/main.ts
 
 ```ts
-import renderer from '@dojo/framework/widget-core/vdom';
-import { w } from '@dojo/framework/widget-core/d';
-import Registry from '@dojo/framework/widget-core/Registry';
-import { registerThemeInjector } from '@dojo/framework/widget-core/mixins/Themed';
+import renderer from '@dojo/framework/core/vdom';
+import { w } from '@dojo/framework/core/d';
+import Registry from '@dojo/framework/core/Registry';
+import { registerThemeInjector } from '@dojo/framework/core/mixins/Themed';
 
 import myTheme from './src/themes/myTheme/theme';
 import App from './App';
@@ -220,7 +220,7 @@ By contrast, another way of using only portions of an externally-built theme is 
 
 `registerThemeInjector()` will return a handle to the `themeInjector` that can be used to change the active theme. Applications can call `themeInjector.set()`, passing in a new theme object, which will invalidate all themed widgets in the application tree and re-render them using the new theme.
 
-To simplify the process of changing themes and to allow for easier dynamic switching in a running application, a `ThemeSwitcher` utility widget is also available from `@dojo/framework/widget-core/mixins/Themed`.
+To simplify the process of changing themes and to allow for easier dynamic switching in a running application, a `ThemeSwitcher` utility widget is also available from `@dojo/framework/core/mixins/Themed`.
 
 #### `ThemeSwitcher` Properties
 
@@ -236,8 +236,8 @@ The following example shows a themeable widget that uses `ThemeSwitcher` to rend
 > src/widgets/MyApp.ts
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { ThemeSwitcher, theme, UpdateTheme } from '@dojo/framework/widget-core/mixins/Themed';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import ThemedMixin, { ThemeSwitcher, theme, UpdateTheme } from '@dojo/framework/core/mixins/Themed';
 
 import lightTheme from '../themes/light-theme/theme';
 import darkTheme from '../themes/dark-theme/theme';
@@ -290,7 +290,7 @@ By convention, there is a fourth requirement that is useful when developing widg
 
 4.  The widget's root VDOM node - that is, the outer-most node rendered by the widget - should include a styling class named `root`. Doing so provides a predictable way to target the top-level node of a third-party themeable widget when overriding its styles in a custom theme.
 
-`ThemedMixin` and the `@theme()` decorator can be imported from the `@dojo/framework/widget-core/mixins/Themed` module. Using `ThemedMixin` on a widget provides access to the `this.theme()` function.
+`ThemedMixin` and the `@theme()` decorator can be imported from the `@dojo/framework/core/mixins/Themed` module. Using `ThemedMixin` on a widget provides access to the `this.theme()` function.
 
 ### `ThemedMixin` `this.theme()` method
 
@@ -346,9 +346,9 @@ This stylesheet can be used within a corresponding themeable widget as follows:
 > src/widgets/MyThemeableWidget.ts
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
-import { v } from '@dojo/framework/widget-core/d';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import ThemedMixin, { theme } from '@dojo/framework/core/mixins/Themed';
+import { v } from '@dojo/framework/core/d';
 
 import * as css from '../styles/MyThemeableWidget.m.css';
 
@@ -377,9 +377,9 @@ Similarly, if using TSX widget syntax:
 > src/widgets/MyThemeableTsxWidget.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import ThemedMixin, { theme } from '@dojo/framework/core/mixins/Themed';
+import { tsx } from '@dojo/framework/core/tsx';
 
 import * as css from '../styles/MyThemeableWidget.m.css';
 
@@ -422,9 +422,9 @@ Extending the above example:
 > src/widgets/MyThemeableTsxWidget.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import ThemedMixin, { theme } from '@dojo/framework/core/mixins/Themed';
+import { tsx } from '@dojo/framework/core/tsx';
 
 import * as commonCss from '../styles/MyThemeCommonStyles.m.css';
 import * as css from '../styles/MyThemeableWidget.m.css';
@@ -469,9 +469,9 @@ export default {
 > src/widgets/MyApp.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import ThemedMixin, { theme } from '@dojo/framework/core/mixins/Themed';
+import { tsx } from '@dojo/framework/core/tsx';
 
 import MyThemeableTsxWidget from './src/widgets/MyThemeableTsxWidget.tsx';
 
@@ -532,8 +532,8 @@ As an example of providing extra classes, the following tweaks an instance of a 
 > src/widgets/MyWidget.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { tsx } from '@dojo/framework/core/tsx';
 
 import ComboBox from '@dojo/widgets/combobox';
 

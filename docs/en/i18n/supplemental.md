@@ -79,9 +79,9 @@ This can be imported and referenced within a widget such as:
 > widgets/MyI18nWidget.ts
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { v } from '@dojo/framework/widget-core/d';
-import I18nMixin from '@dojo/framework/widget-core/mixins/I18n';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { v } from '@dojo/framework/core/d';
+import I18nMixin from '@dojo/framework/core/mixins/I18n';
 
 import myWidgetMessageBundle from '../nls/MyI18nWidget.en.ts';
 
@@ -152,7 +152,7 @@ For example, with the following configuration, an application specifies that its
 
 ## Creating i18n-aware Widgets
 
-Individual widgets can be internationalized by adding the `I18nMixin` mixin from `@dojo/framework/widget-core/mixins/I18n`. This mixin adds some optional i18n-related widget properties, and also provides a `localizeBundle` method which is used to localize an imported message bundle to the widget's current locale.
+Individual widgets can be internationalized by adding the `I18nMixin` mixin from `@dojo/framework/core/mixins/I18n`. This mixin adds some optional i18n-related widget properties, and also provides a `localizeBundle` method which is used to localize an imported message bundle to the widget's current locale.
 
 ### `I18nMixin` Widget Properties
 
@@ -195,9 +195,9 @@ export default {
 > widgets/MyI18nWidget.ts
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { v, w } from '@dojo/framework/widget-core/d';
-import I18nMixin from '@dojo/framework/widget-core/mixins/I18n';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { v, w } from '@dojo/framework/core/d';
+import I18nMixin from '@dojo/framework/core/mixins/I18n';
 import Label from '@dojo/widgets/label';
 import Button from '@dojo/widgets/button';
 
@@ -237,15 +237,15 @@ Note that with this pattern it is possible for a widget to obtain its messages f
 
 The Dojo registry is used to manage i18n locale data throughout an application, where locale data is injected into all i18n-aware widgets that utilize `I18nMixin`. When the application locale is changed, the i18n `Injector` will propagate new locale properties to all `I18nMixin` widgets, after which the affected widgets will be invalidated and re-rendered with the updated locale data.
 
-This mechanism is enabled through `registerI18nInjector`, a convenience method provided by `@dojo/framework/widget-core/mixins/I18n`. Calling this method will register the `i18n` injector within a specific registry instance. Typically this is done at application bootstrap, where the i18n injector is registered against the global registry passed to the `renderer.mount()` method.
+This mechanism is enabled through `registerI18nInjector`, a convenience method provided by `@dojo/framework/core/mixins/I18n`. Calling this method will register the `i18n` injector within a specific registry instance. Typically this is done at application bootstrap, where the i18n injector is registered against the global registry passed to the `renderer.mount()` method.
 
 > main.ts
 
 ```ts
-import renderer from '@dojo/framework/widget-core/vdom';
-import { w } from '@dojo/framework/widget-core/d';
-import Registry from '@dojo/framework/widget-core/Registry';
-import { registerI18nInjector } from '@dojo/framework/widget-core/mixins/I18n';
+import renderer from '@dojo/framework/core/vdom';
+import { w } from '@dojo/framework/core/d';
+import Registry from '@dojo/framework/core/Registry';
+import { registerI18nInjector } from '@dojo/framework/core/mixins/I18n';
 
 import App from './App';
 
@@ -258,7 +258,7 @@ r.mount({ registry });
 
 ## Changing locales
 
-In combination with using the [i18n injector](#providing-locale-data-to-i18n-aware-widgets) to pass locale data to `I18nMixin` widgets, applications can use the `LocaleSwitcher` provider widget within `@dojo/framework/widget-core/mixins/I18n` to give users to ability to change locales. Applications can pass a `renderer` function property into a `LocaleSwitcher` instance, which will have an `updateLocale` function injected into it. The implementation of `renderer` should return `DNode | DNode[]`, similar to a regular widget `render` method. The implementation of the `renderer` function can then call `updateLocale` to enact a locale change throughout the application, for example in response to a user event when selecting a new locale from a list.
+In combination with using the [i18n injector](#providing-locale-data-to-i18n-aware-widgets) to pass locale data to `I18nMixin` widgets, applications can use the `LocaleSwitcher` provider widget within `@dojo/framework/core/mixins/I18n` to give users to ability to change locales. Applications can pass a `renderer` function property into a `LocaleSwitcher` instance, which will have an `updateLocale` function injected into it. The implementation of `renderer` should return `DNode | DNode[]`, similar to a regular widget `render` method. The implementation of the `renderer` function can then call `updateLocale` to enact a locale change throughout the application, for example in response to a user event when selecting a new locale from a list.
 
 ### LocaleSwitcher Properties
 
@@ -272,8 +272,8 @@ In combination with using the [i18n injector](#providing-locale-data-to-i18n-awa
 The following example shows an i18n-aware widget that uses `LocaleSwitcher` to render two buttons that allow switching the application locale between English and French.
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import I18nMixin, { LocaleSwitcher, UpdateLocale } from '@dojo/framework/widget-core/mixins/I18n';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import I18nMixin, { LocaleSwitcher, UpdateLocale } from '@dojo/framework/core/mixins/I18n';
 
 import nlsBundle from '../nls/main';
 
@@ -484,9 +484,9 @@ The `guestInfo` message can be rendered directly via `format`:
 > widgets/MyI18nWidget.ts
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { v } from '@dojo/framework/widget-core/d';
-import I18nMixin from '@dojo/framework/widget-core/mixins/I18n';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { v } from '@dojo/framework/core/d';
+import I18nMixin from '@dojo/framework/core/mixins/I18n';
 
 import nlsBundle from '../nls/main';
 
@@ -585,9 +585,9 @@ The ICU-formatted `guestInfo` message can then be rendered as:
 > widgets/MyI18nWidget.ts
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { v } from '@dojo/framework/widget-core/d';
-import I18nMixin from '@dojo/framework/widget-core/mixins/I18n';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { v } from '@dojo/framework/core/d';
+import I18nMixin from '@dojo/framework/core/mixins/I18n';
 
 import nlsBundle from '../nls/main';
 

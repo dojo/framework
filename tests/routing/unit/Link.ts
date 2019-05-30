@@ -2,8 +2,8 @@ const { beforeEach, afterEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { spy, SinonSpy } from 'sinon';
 
-import { v, w } from '../../../src/widget-core/d';
-import { Registry } from '../../../src/widget-core/Registry';
+import { v, w } from '../../../src/core/d';
+import { Registry } from '../../../src/core/Registry';
 import { Link } from '../../../src/routing/Link';
 import { Router } from '../../../src/routing/Router';
 import { MemoryHistory } from '../../../src/routing/history/MemoryHistory';

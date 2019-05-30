@@ -124,11 +124,11 @@ import { MemoryHistory } from '@dojo/framework/routing/MemoryHistory';
 const router = new Router(config, { HistoryManager: MemoryHistory });
 ```
 
-Once the router has been created with the application route configuration, it needs to be made available to all the components within your application. This is done using a `Registry` from `@dojo/framework/widget-core/Registry` and defining an injector that wires the `invalidator` to the router's `nav` event and returns the `router` instance. This injector is defined using a key, the default key for routing is `router`.
+Once the router has been created with the application route configuration, it needs to be made available to all the components within your application. This is done using a `Registry` from `@dojo/framework/core/Registry` and defining an injector that wires the `invalidator` to the router's `nav` event and returns the `router` instance. This injector is defined using a key, the default key for routing is `router`.
 
 ```ts
-import { Registry } from '@dojo/framework/widget-core/Registry';
-import { Injector } from '@dojo/framework/widget-core/Injector';
+import { Registry } from '@dojo/framework/core/Registry';
+import { Injector } from '@dojo/framework/core/Injector';
 
 const registry = new Registry();
 
@@ -203,7 +203,7 @@ router.on('outlet', ({ outlet, action }) => {
 The `RouterInjector` module exports a helper function, `registerRouterInjector`, that combines the instantiation of a `Router` instance, registering route configuration and defining injector in the provided registry. The `router` instance is returned.
 
 ```ts
-import { Registry } from '@dojo/framework/widget-core/Registry';
+import { Registry } from '@dojo/framework/core/Registry';
 import { registerRouterInjector } from '@dojo/framework/routing/RoutingInjector';
 
 const registry = new Registry();
@@ -213,7 +213,7 @@ const router = registerRouterInjector(config, registry);
 The defaults can be overridden using `RouterInjectorOptions`:
 
 ```ts
-import { Registry } from '@dojo/framework/widget-core/Registry';
+import { Registry } from '@dojo/framework/core/Registry';
 import { registerRouterInjector } from '@dojo/framework/routing/RoutingInjector';
 import { MemoryHistory } from './history/MemoryHistory';
 
@@ -327,7 +327,7 @@ render() {
 }
 ```
 
-All the standard `VNodeProperties` are available for the `Link` component as they would be creating an `a` DOM Element using `v()` with `@dojo/framework/widget-core`.
+All the standard `VNodeProperties` are available for the `Link` component as they would be creating an `a` DOM Element using `v()` with `@dojo/framework/core`.
 
 ### ActiveLink
 

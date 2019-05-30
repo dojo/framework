@@ -2,16 +2,16 @@ const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 
-import { Registry } from '../../../src/widget-core/Registry';
+import { Registry } from '../../../src/core/Registry';
 
 import { Router } from '../../../src/routing/Router';
 import { MemoryHistory } from '../../../src/routing/history/MemoryHistory';
 import Link from '../../../src/routing/Link';
 import ActiveLink from '../../../src/routing/ActiveLink';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
-import { w, v } from '../../../src/widget-core/d';
-import { renderer } from '../../../src/widget-core/vdom';
-import WidgetBase from '../../../src/widget-core/WidgetBase';
+import { w, v } from '../../../src/core/d';
+import { renderer } from '../../../src/core/vdom';
+import WidgetBase from '../../../src/core/WidgetBase';
 import harness from '../../../src/testing/harness';
 
 const registry = new Registry();

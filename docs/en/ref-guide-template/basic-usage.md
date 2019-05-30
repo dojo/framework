@@ -8,8 +8,8 @@ One line description of what this sample accomplishes, likely also [linking to m
 
 ```tsx
 // fully working & copy/paste-able sample code content...
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { tsx } from '@dojo/framework/core/tsx';
 
 export default class MyWidget extends WidgetBase {
 	protected render() {
