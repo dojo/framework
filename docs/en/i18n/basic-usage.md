@@ -18,7 +18,7 @@ Starting off with a single default language (English).
 
 ```ts
 import { WidgetBase } from '@dojo/framework/core/WidgetBase';
-import { v } from '@dojo/framework/core/d';
+import { v } from '@dojo/framework/core/vdom';
 
 import I18nMixin from '@dojo/framework/core/mixins/I18n';
 import myWidgetMessageBundle from '../nls/MyI18nWidget.en.ts';
@@ -89,7 +89,7 @@ Using the [i18n injector function](#providing-locale-data-to-i18n-aware-widgets)
 
 ```ts
 import renderer from '@dojo/framework/core/vdom';
-import { w } from '@dojo/framework/core/d';
+import { w } from '@dojo/framework/core/vdom';
 import Registry from '@dojo/framework/core/Registry';
 import { registerI18nInjector } from '@dojo/framework/core/mixins/I18n';
 

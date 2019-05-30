@@ -67,7 +67,7 @@ To display your new component in the view you will to use the `renderer` from th
 
 ```ts
 import renderer from '@dojo/framework/core/vdom';
-import { w } from '@dojo/framework/core/d';
+import { w } from '@dojo/framework/core/vdom';
 
 const r = renderer(() => w(HelloDojo, {}));
 r.mount();
@@ -109,7 +109,7 @@ You can target this Element:
 
 ```ts
 import renderer from '@dojo/framework/core/vdom';
-import { w } from '@dojo/framework/core/d';
+import { w } from '@dojo/framework/core/vdom';
 
 const root = document.getElementById('my-app');
 const r = renderer(() => w(HelloDojo, {}));
@@ -260,7 +260,7 @@ To resolve this, the list item can be extracted into a separate widget:
 
 ```ts
 import { WidgetBase } from '@dojo/framework/core/WidgetBase';
-import { v, w } from '@dojo/framework/core/d';
+import { v, w } from '@dojo/framework/core/vdom';
 
 interface ListItemProperties {
 	id: string;
@@ -809,7 +809,7 @@ A main registry can be provided to the `renderer`, which will be automatically p
 
 ```ts
 import { Registry } from '@dojo/framework/core/Registry';
-import { w } from '@dojo/framework/core/d';
+import { w } from '@dojo/framework/core/vdom';
 
 import MyWidget from './MyWidget';
 import MyAppContext from './MyAppContext';
@@ -1119,7 +1119,7 @@ This example renders a list with images, the image src is only added when the it
 
 ```ts
 import { WidgetBase } from '@dojo/framework/core/WidgetBase';
-import { v, w } from '@dojo/framework/core/d';
+import { v, w } from '@dojo/framework/core/vdom';
 import { DNode } from '@dojo/framework/core/interfaces';
 import { Intersection } from '@dojo/framework/core/meta/Intersection';
 
@@ -1457,7 +1457,7 @@ Include `.tsx` files in the project:
 Once the project is configured, `tsx` can be used in a widget's `render` function simply by importing the `tsx` function as:
 
 ```ts
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 ```
 
 ```tsx
