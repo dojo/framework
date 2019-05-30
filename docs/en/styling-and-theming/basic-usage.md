@@ -30,8 +30,8 @@ The application name becomes relevant when specifying [widget theme keys](./supp
 > src/widgets/MyWidget.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { tsx } from '@dojo/framework/core/tsx';
 
 import * as css from '../styles/MyWidget.m.css';
 
@@ -51,9 +51,9 @@ export default class MyWidget extends WidgetBase {
 > src/widgets/MyWidget.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import ThemedMixin, { theme } from '@dojo/framework/core/mixins/Themed';
+import { tsx } from '@dojo/framework/core/tsx';
 
 import * as css from '../styles/MyWidget.m.css';
 
@@ -121,10 +121,10 @@ export default {
 > src/main.tsx
 
 ```tsx
-import renderer from '@dojo/framework/widget-core/vdom';
-import { tsx } from '@dojo/framework/widget-core/tsx';
-import Registry from '@dojo/framework/widget-core/Registry';
-import { registerThemeInjector } from '@dojo/framework/widget-core/mixins/Themed';
+import renderer from '@dojo/framework/core/vdom';
+import { tsx } from '@dojo/framework/core/tsx';
+import Registry from '@dojo/framework/core/Registry';
+import { registerThemeInjector } from '@dojo/framework/core/mixins/Themed';
 
 import myTheme from './themes/MyTheme/theme';
 import App from './widgets/App';
@@ -145,9 +145,9 @@ r.mount({ registry });
 > src/widgets/App.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { ThemeSwitcher, theme, UpdateTheme } from '@dojo/framework/widget-core/mixins/Themed';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import ThemedMixin, { ThemeSwitcher, theme, UpdateTheme } from '@dojo/framework/core/mixins/Themed';
+import { tsx } from '@dojo/framework/core/tsx';
 
 import myTheme from '../themes/MyTheme/theme';
 import alternativeTheme from '../themes/MyAlternativeTheme/theme';

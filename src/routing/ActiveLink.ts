@@ -1,7 +1,7 @@
-import WidgetBase from '../widget-core/WidgetBase';
-import { WNode, SupportedClassName } from '../widget-core/interfaces';
-import { w } from '../widget-core/d';
-import diffProperty from '../widget-core/decorators/diffProperty';
+import WidgetBase from '../core/WidgetBase';
+import { WNode, SupportedClassName } from '../core/interfaces';
+import { w } from '../core/d';
+import diffProperty from '../core/decorators/diffProperty';
 import { LinkProperties } from './interfaces';
 import Link from './Link';
 import Router from './Router';

@@ -1,6 +1,6 @@
-import { WidgetBase } from '../widget-core/WidgetBase';
-import { v } from '../widget-core/d';
-import { VNode } from '../widget-core/interfaces';
+import { WidgetBase } from '../core/WidgetBase';
+import { v } from '../core/d';
+import { VNode } from '../core/interfaces';
 import { LinkProperties } from './interfaces';
 import { Router } from './Router';
 

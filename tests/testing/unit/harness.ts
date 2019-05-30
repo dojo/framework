@@ -2,11 +2,11 @@ const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
 import { harness } from '../../../src/testing/harness';
-import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import { v, w, isVNode } from '../../../src/widget-core/d';
+import { WidgetBase } from '../../../src/core/WidgetBase';
+import { v, w, isVNode } from '../../../src/core/d';
 import Set from '../../../src/shim/Set';
 import Map from '../../../src/shim/Map';
-import { VNode, WNode } from '../../../src/widget-core/interfaces';
+import { VNode, WNode } from '../../../src/core/interfaces';
 
 const noop: any = () => {};
 

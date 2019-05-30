@@ -1,6 +1,6 @@
 import select from './support/selector';
-import { isWNode, isVNode, decorate } from '../widget-core/d';
-import { VNode, WNode, DNode } from '../widget-core/interfaces';
+import { isWNode, isVNode, decorate } from '../core/d';
+import { VNode, WNode, DNode } from '../core/interfaces';
 
 export interface AssertionTemplateResult {
 	(): DNode | DNode[];

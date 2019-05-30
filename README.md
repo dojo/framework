@@ -19,7 +19,7 @@ There are eight sub-packages that form the framework for building a Dojo applica
 -   [`dojo/routing`](src/routing/README.md) - A routing service to build web applications with
 -   [`dojo/shim`](src/shim/README.md) - Modules that provide fills of ES6+ functionality
 -   [`dojo/stores`](src/stores/README.md) - A lightweight state container
--   [`dojo/widget-core`](src/widget-core/README.md) - The foundation code of Dojo widgets
+-   [`dojo/core`](src/core/README.md) - The foundation code of Dojo widgets
 -   [`dojo/testing`](src/testing/README.md) - A set of modules to help with testing Dojo
 
 ## External packages

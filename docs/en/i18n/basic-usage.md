@@ -17,10 +17,10 @@ Starting off with a single default language (English).
 > src/widgets/MyI18nWidget.ts
 
 ```ts
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
-import { v } from '@dojo/framework/widget-core/d';
+import { WidgetBase } from '@dojo/framework/core/WidgetBase';
+import { v } from '@dojo/framework/core/d';
 
-import I18nMixin from '@dojo/framework/widget-core/mixins/I18n';
+import I18nMixin from '@dojo/framework/core/mixins/I18n';
 import myWidgetMessageBundle from '../nls/MyI18nWidget.en.ts';
 
 export default class MyI18nWidget extends I18nMixin(WidgetBase) {
@@ -88,10 +88,10 @@ Using the [i18n injector function](#providing-locale-data-to-i18n-aware-widgets)
 > src/main.ts
 
 ```ts
-import renderer from '@dojo/framework/widget-core/vdom';
-import { w } from '@dojo/framework/widget-core/d';
-import Registry from '@dojo/framework/widget-core/Registry';
-import { registerI18nInjector } from '@dojo/framework/widget-core/mixins/I18n';
+import renderer from '@dojo/framework/core/vdom';
+import { w } from '@dojo/framework/core/d';
+import Registry from '@dojo/framework/core/Registry';
+import { registerI18nInjector } from '@dojo/framework/core/mixins/I18n';
 
 import App from './App';
 
@@ -109,8 +109,8 @@ Using the [LocaleSwitcher](#changing-locales) utility widget to allow users to c
 > src/widgets/LocaleChanger.ts
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { LocaleSwitcher, UpdateLocale } from '@dojo/framework/widget-core/mixins/I18n';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { LocaleSwitcher, UpdateLocale } from '@dojo/framework/core/mixins/I18n';
 
 class LocaleChanger extends WidgetBase {
 	protected render() {

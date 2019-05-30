@@ -267,8 +267,8 @@ export default [
 > src/App.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { tsx } from '@dojo/framework/core/tsx';
 import Outlet from '@dojo/framework/routing/Outlet';
 
 export default class App extends WidgetBase {
@@ -336,7 +336,7 @@ Or using the `registerRouterInjector` helper function:
 > src/main.ts
 
 ```ts
-import Registry from '@dojo/framework/widget-core/Registry';
+import Registry from '@dojo/framework/core/Registry';
 import { registerRouterInjector } from '@dojo/framework/routing/RouterInjector';
 import StateHistory from '@dojo/framework/routing/history/StateHistory';
 
@@ -393,8 +393,8 @@ const router = new Router(config, { HistoryManager: MemoryHistory });
 > src/main.tsx
 
 ```tsx
-import renderer from '@dojo/framework/widget-core/vdom';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import renderer from '@dojo/framework/core/vdom';
+import { tsx } from '@dojo/framework/core/tsx';
 import { registerRouterInjector } from '@dojo/framework/routing/RouterInjector';
 
 import routes from './routes';
@@ -415,8 +415,8 @@ These history managers work like adapters, meaning that custom history managers 
 A special `outlet` called `errorOutlet` is registered for that will match when the route doesn't match (`exact` or `partial`) any outlet in the routing configuration. You can use this `outlet` to render a widget to inform the user that the route does not exist.
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { tsx } from '@dojo/framework/core/tsx';
 import Outlet from '@dojo/framework/routing/Outlet';
 
 export default class App extends WidgetBase {

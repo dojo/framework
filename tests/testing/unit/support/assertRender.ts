@@ -4,8 +4,8 @@ const { assert } = intern.getPlugin('chai');
 import Set from '../../../../src/shim/Set';
 import Map from '../../../../src/shim/Map';
 import assertRender from '../../../../src/testing/support/assertRender';
-import { v, w } from '../../../../src/widget-core/d';
-import WidgetBase from '../../../../src/widget-core/WidgetBase';
+import { v, w } from '../../../../src/core/d';
+import WidgetBase from '../../../../src/core/WidgetBase';
 
 class MockWidget extends WidgetBase {
 	render() {

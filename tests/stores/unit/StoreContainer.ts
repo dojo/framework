@@ -1,8 +1,8 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import { v, WNODE } from '../../../src/widget-core/d';
-import { Registry } from '../../../src/widget-core/Registry';
+import { WidgetBase } from '../../../src/core/WidgetBase';
+import { v, WNODE } from '../../../src/core/d';
+import { Registry } from '../../../src/core/Registry';
 
 import DefaultStoreContainer, { createStoreContainer, StoreContainer } from '../../../src/stores/StoreContainer';
 import { Store } from '../../../src/stores/Store';
