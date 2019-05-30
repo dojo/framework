@@ -2,7 +2,8 @@ const { describe, it, beforeEach, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { spy, stub, SinonStub } from 'sinon';
 
-import { WidgetBase, widgetInstanceMap } from '../../../src/core/WidgetBase';
+import { WidgetBase } from '../../../src/core/WidgetBase';
+import { widgetInstanceMap } from '../../../src/core/vdom';
 import { v } from '../../../src/core/d';
 import { WIDGET_BASE_TYPE } from '../../../src/core/Registry';
 import { VNode, WidgetMetaConstructor, MetaBase } from '../../../src/core/interfaces';
