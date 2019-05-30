@@ -1,11 +1,11 @@
 import WidgetBase from '../core/WidgetBase';
 import { WNode, SupportedClassName } from '../core/interfaces';
-import { w } from '../core/d';
 import diffProperty from '../core/decorators/diffProperty';
 import { LinkProperties } from './interfaces';
 import Link from './Link';
 import Router from './Router';
 import { Handle } from '../shim/interfaces';
+import { w } from '../core/vdom';
 
 export interface ActiveLinkProperties extends LinkProperties {
 	activeClasses: SupportedClassName[];

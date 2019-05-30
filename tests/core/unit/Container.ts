@@ -1,10 +1,9 @@
 const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import { v, w } from '../../../src/core/d';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { Container } from '../../../src/core/Container';
 import { Registry } from '../../../src/core/Registry';
-import { renderer } from '../../../src/core/vdom';
+import { renderer, v, w } from '../../../src/core/vdom';
 
 interface TestWidgetProperties {
 	foo: string;

@@ -1,10 +1,10 @@
 import { DNode, WNode, VNode, DefaultWidgetBaseInterface, Constructor } from '../../core/interfaces';
-import { isWNode, isVNode } from '../../core/d';
 import * as diff from 'diff';
 import WeakMap from '../../shim/WeakMap';
 import Set from '../../shim/Set';
 import Map from '../../shim/Map';
 import { from as arrayFrom } from '../../shim/array';
+import { isVNode, isWNode } from '../../core/vdom';
 
 let widgetClassCounter = 0;
 const widgetMap = new WeakMap<Constructor<DefaultWidgetBaseInterface>, number>();

@@ -5,7 +5,7 @@ const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 import { AnimationEffectTiming } from '../../../../src/shim/WebAnimations';
 import WebAnimation from '../../../../src/core/meta/WebAnimation';
 import { WidgetBase } from '../../../../src/core/WidgetBase';
-import { v } from '../../../../src/core/d';
+import { v } from '../../../../src/core/vdom';
 import { spy, stub } from 'sinon';
 
 let animationExists = false;

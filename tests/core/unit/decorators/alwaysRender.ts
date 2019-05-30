@@ -3,8 +3,7 @@ const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 
 import { WidgetBase } from './../../../../src/core/WidgetBase';
-import { w } from './../../../../src/core/d';
-import { renderer } from './../../../../src/core/vdom';
+import { renderer, w } from './../../../../src/core/vdom';
 import { alwaysRender } from './../../../../src/core/decorators/alwaysRender';
 
 describe('decorators/alwaysRender', () => {

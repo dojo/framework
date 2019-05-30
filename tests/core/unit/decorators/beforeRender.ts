@@ -2,7 +2,7 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { stub, SinonStub } from 'sinon';
 
-import { v } from './../../../../src/core/d';
+import { v } from './../../../../src/core/vdom';
 import { DNode, Render } from './../../../../src/core/interfaces';
 import { beforeRender } from './../../../../src/core/decorators/beforeRender';
 import { WidgetBase } from './../../../../src/core/WidgetBase';

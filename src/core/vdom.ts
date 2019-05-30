@@ -18,15 +18,29 @@ import {
 	WNodeFactory,
 	UnionToIntersection,
 	WidgetProperties,
-	MiddlewareResultFactory
+	MiddlewareResultFactory,
+	WidgetBaseTypes,
+	RegistryLabel,
+	DeferredVirtualProperties,
+	DomOptions
 } from './interfaces';
 import transitionStrategy from './animations/cssTransitions';
-import { isVNode, isWNode, WNODE, v, isDomVNode, VNODE, isWNodeFactory } from './d';
-import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction } from './Registry';
+import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
 import RegistryHandler from './RegistryHandler';
-import { w } from './d';
 import { NodeHandler } from './NodeHandler';
+
+declare global {
+	namespace JSX {
+		type Element = WNode;
+		interface ElementAttributesProperty {
+			properties: {};
+		}
+		interface IntrinsicElements {
+			[key: string]: VNodeProperties;
+		}
+	}
+}
 
 export interface BaseNodeWrapper {
 	owningId: string;
@@ -196,6 +210,9 @@ const nodeOperations = ['focus', 'blur', 'scrollIntoView', 'click'];
 const NAMESPACE_W3 = 'http://www.w3.org/';
 const NAMESPACE_SVG = NAMESPACE_W3 + '2000/svg';
 const NAMESPACE_XLINK = NAMESPACE_W3 + '1999/xlink';
+const WNODE = '__WNODE_TYPE';
+const VNODE = '__VNODE_TYPE';
+const DOMVNODE = '__DOMVNODE_TYPE';
 
 function isTextNode(item: any): item is Text {
 	return item.nodeType === 3;
@@ -215,6 +232,24 @@ function isVNodeWrapper(child?: DNodeWrapper | null): child is VNodeWrapper {
 
 function isAttachApplication(value: any): value is AttachApplication | DetachApplication {
 	return !!value.type;
+}
+
+export function isWNode<W extends WidgetBaseTypes = any>(child: any): child is WNode<W> {
+	return Boolean(child && child !== true && typeof child !== 'string' && child.type === WNODE);
+}
+
+export function isVNode(child: DNode): child is VNode {
+	return Boolean(
+		child && child !== true && typeof child !== 'string' && (child.type === VNODE || child.type === DOMVNODE)
+	);
+}
+
+export function isDomVNode(child: DNode): child is DomVNode {
+	return Boolean(child && child !== true && typeof child !== 'string' && child.type === DOMVNODE);
+}
+
+export function isElementNode(value: any): value is Element {
+	return !!value.tagName;
 }
 
 function toTextVNode(data: any): VNode {
@@ -242,6 +277,156 @@ function updateAttributes(
 		if (attrValue !== previousAttrValue) {
 			updateAttribute(domNode, attrName, attrValue, namespace);
 		}
+	}
+}
+
+/**
+ * Wrapper function for calls to create a widget.
+ */
+export function w<W extends WidgetBaseTypes>(
+	node: WNode<W>,
+	properties: Partial<W['properties']>,
+	children?: W['children']
+): WNode<W>;
+export function w<W extends WidgetBaseTypes>(
+	widgetConstructor: Constructor<W> | RegistryLabel | WNodeFactory<W> | LazyDefine<W>,
+	properties: W['properties'],
+	children?: W['children']
+): WNode<W>;
+export function w<W extends WidgetBaseTypes>(
+	widgetConstructorOrNode:
+		| Constructor<W>
+		| RegistryLabel
+		| WNodeFactory<W>
+		| WNode<W>
+		| LazyDefine<W>
+		| Callback<any, any, RenderResult>,
+	properties: W['properties'],
+	children?: W['children']
+): WNode<W> {
+	if (isWNodeFactory<W>(widgetConstructorOrNode)) {
+		return widgetConstructorOrNode(properties, children);
+	}
+
+	if (isWNode<W>(widgetConstructorOrNode)) {
+		properties = { ...(widgetConstructorOrNode.properties as any), ...(properties as any) };
+		children = children ? children : widgetConstructorOrNode.children;
+		widgetConstructorOrNode = widgetConstructorOrNode.widgetConstructor;
+	}
+
+	return {
+		children: children || [],
+		widgetConstructor: widgetConstructorOrNode,
+		properties,
+		type: WNODE
+	};
+}
+
+/**
+ * Wrapper function for calls to create VNodes.
+ */
+export function v(node: VNode, properties: VNodeProperties, children: undefined | DNode[]): VNode;
+export function v(node: VNode, properties: VNodeProperties): VNode;
+export function v(tag: string, children: undefined | DNode[]): VNode;
+export function v(tag: string, properties: DeferredVirtualProperties | VNodeProperties, children?: DNode[]): VNode;
+export function v(tag: string): VNode;
+export function v(
+	tag: string | VNode,
+	propertiesOrChildren: VNodeProperties | DeferredVirtualProperties | DNode[] = {},
+	children: undefined | DNode[] = undefined
+): VNode {
+	let properties: VNodeProperties | DeferredVirtualProperties = propertiesOrChildren;
+	let deferredPropertiesCallback;
+
+	if (Array.isArray(propertiesOrChildren)) {
+		children = propertiesOrChildren;
+		properties = {};
+	}
+
+	if (typeof properties === 'function') {
+		deferredPropertiesCallback = properties;
+		properties = {};
+	}
+
+	if (isVNode(tag)) {
+		let { classes = [], styles = {}, ...newProperties } = properties;
+		let { classes: nodeClasses = [], styles: nodeStyles = {}, ...nodeProperties } = tag.properties;
+		nodeClasses = Array.isArray(nodeClasses) ? nodeClasses : [nodeClasses];
+		classes = Array.isArray(classes) ? classes : [classes];
+		styles = { ...nodeStyles, ...styles };
+		properties = { ...nodeProperties, ...newProperties, classes: [...nodeClasses, ...classes], styles };
+		children = children ? children : tag.children;
+		tag = tag.tag;
+	}
+
+	return {
+		tag,
+		deferredPropertiesCallback,
+		children,
+		properties,
+		type: VNODE
+	};
+}
+
+/**
+ * Create a VNode for an existing DOM Node.
+ */
+export function dom(
+	{ node, attrs = {}, props = {}, on = {}, diffType = 'none', onAttach }: DomOptions,
+	children?: DNode[]
+): DomVNode {
+	return {
+		tag: isElementNode(node) ? node.tagName.toLowerCase() : '',
+		properties: props,
+		attributes: attrs,
+		events: on,
+		children,
+		type: DOMVNODE,
+		domNode: node,
+		text: isElementNode(node) ? undefined : node.data,
+		diffType,
+		onAttach
+	};
+}
+
+export const REGISTRY_ITEM = '__registry_item';
+
+export class FromRegistry<P> {
+	static type = REGISTRY_ITEM;
+	properties: P = {} as P;
+	name: string | undefined;
+}
+
+export function fromRegistry<P>(tag: string): Constructor<FromRegistry<P>> {
+	return class extends FromRegistry<P> {
+		properties: P = {} as P;
+		static type = REGISTRY_ITEM;
+		name = tag;
+	};
+}
+
+function spreadChildren(children: any[], child: any): any[] {
+	if (Array.isArray(child)) {
+		return child.reduce(spreadChildren, children);
+	} else {
+		return [...children, child];
+	}
+}
+
+export function tsx(tag: any, properties = {}, ...children: any[]): DNode {
+	children = children.reduce(spreadChildren, []);
+	properties = properties === null ? {} : properties;
+	if (typeof tag === 'string') {
+		return v(tag, properties, children);
+	} else if (tag.type === 'registry' && (properties as any).__autoRegistryItem) {
+		const name = (properties as any).__autoRegistryItem;
+		delete (properties as any).__autoRegistryItem;
+		return w(name, properties, children);
+	} else if (tag.type === REGISTRY_ITEM) {
+		const registryItem = new tag();
+		return w(registryItem.name, properties, children);
+	} else {
+		return w(tag, properties, children);
 	}
 }
 

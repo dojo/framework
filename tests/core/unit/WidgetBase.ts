@@ -4,7 +4,7 @@ import { spy, stub, SinonStub } from 'sinon';
 
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { widgetInstanceMap } from '../../../src/core/vdom';
-import { v } from '../../../src/core/d';
+import { v } from '../../../src/core/vdom';
 import { WIDGET_BASE_TYPE } from '../../../src/core/Registry';
 import { VNode, WidgetMetaConstructor, MetaBase } from '../../../src/core/interfaces';
 import { handleDecorator } from '../../../src/core/decorators/handleDecorator';

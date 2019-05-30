@@ -2,8 +2,7 @@ import { Constructor, DNode, WNode } from '../interfaces';
 import WidgetBase from '../WidgetBase';
 import { Handle } from '../../core/Destroyable';
 import Registry from '../Registry';
-import { renderer, Renderer } from './../vdom';
-import { w } from '../d';
+import { renderer, Renderer, w } from './../vdom';
 import { alwaysRender } from '../decorators/alwaysRender';
 
 export enum ProjectorAttachState {

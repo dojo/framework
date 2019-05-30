@@ -9,8 +9,7 @@ import { MemoryHistory } from '../../../src/routing/history/MemoryHistory';
 import Link from '../../../src/routing/Link';
 import ActiveLink from '../../../src/routing/ActiveLink';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
-import { w, v } from '../../../src/core/d';
-import { renderer } from '../../../src/core/vdom';
+import { renderer, w, v } from '../../../src/core/vdom';
 import WidgetBase from '../../../src/core/WidgetBase';
 import harness from '../../../src/testing/harness';
 

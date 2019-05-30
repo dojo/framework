@@ -1,7 +1,7 @@
 import { WidgetBase } from './WidgetBase';
 import { inject, GetProperties } from './decorators/inject';
 import { Constructor, DNode, RegistryLabel } from './interfaces';
-import { w } from './d';
+import { w } from './vdom';
 import { alwaysRender } from './decorators/alwaysRender';
 
 export type Container<T extends WidgetBase> = Constructor<WidgetBase<Partial<T['properties']>>>;

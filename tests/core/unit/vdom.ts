@@ -6,8 +6,7 @@ import { add } from '../../../src/has/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
 
-import { create, renderer, invalidator, widgetInstanceMap } from '../../../src/core/vdom';
-import { v, w, dom as d, VNODE } from '../../../src/core/d';
+import { create, renderer, invalidator, widgetInstanceMap, v, w, dom as d } from '../../../src/core/vdom';
 import { VNode, DNode, DomVNode } from '../../../src/core/interfaces';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import Registry from '../../../src/core/Registry';
@@ -4798,7 +4797,7 @@ jsdomDescribe('vdom', () => {
 				properties: {},
 				children: undefined,
 				text: 'text-node',
-				type: VNODE
+				type: '__VNODE_TYPE'
 			};
 			const [Widget, meta] = getWidget(textVNode);
 			const r = renderer(() => w(Widget, {}));
@@ -4811,7 +4810,7 @@ jsdomDescribe('vdom', () => {
 				properties: {},
 				children: undefined,
 				text: 'text-other',
-				type: VNODE
+				type: '__VNODE_TYPE'
 			});
 			root = div.childNodes[0] as Text;
 			assert.strictEqual(root.data, 'text-other');
@@ -4825,7 +4824,7 @@ jsdomDescribe('vdom', () => {
 				children: undefined,
 				text: 'text-node',
 				domNode,
-				type: VNODE
+				type: '__VNODE_TYPE'
 			};
 			const [Widget] = getWidget(textVNode);
 			const r = renderer(() => w(Widget, {}));
@@ -4844,7 +4843,7 @@ jsdomDescribe('vdom', () => {
 				children: undefined,
 				text: undefined,
 				domNode,
-				type: VNODE
+				type: '__VNODE_TYPE'
 			};
 			const [Widget, meta] = getWidget(textVNode);
 			const r = renderer(() => w(Widget, {}));

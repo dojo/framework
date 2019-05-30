@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { Registry } from '../../../src/core/Registry';
 import { WNode } from '../../../src/core/interfaces';
-import { tsx, fromRegistry } from '../../../src/core/tsx';
+import { tsx, fromRegistry } from '../../../src/core/vdom';
 
 const registry = new Registry();
 

@@ -2,7 +2,7 @@ const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
 import { adapter, parseSelector } from '../../../../src/testing/support/selector';
-import { v, w } from '../../../../src/core/d';
+import { v, w } from '../../../../src/core/vdom';
 import { WidgetBase } from '../../../../src/core/WidgetBase';
 import { DNode, WNode } from '../../../../src/core/interfaces';
 

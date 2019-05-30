@@ -1,8 +1,8 @@
 import { WidgetBase } from '../core/WidgetBase';
-import { v } from '../core/d';
 import { VNode } from '../core/interfaces';
 import { LinkProperties } from './interfaces';
 import { Router } from './Router';
+import { v } from '../core/vdom';
 
 export class Link extends WidgetBase<LinkProperties> {
 	private _getProperties() {

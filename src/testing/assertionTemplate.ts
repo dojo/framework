@@ -1,6 +1,7 @@
 import select from './support/selector';
-import { isWNode, isVNode, decorate } from '../core/d';
 import { VNode, WNode, DNode } from '../core/interfaces';
+import { isWNode, isVNode } from '../core/vdom';
+import { decorate } from '../core/util';
 
 export interface AssertionTemplateResult {
 	(): DNode | DNode[];

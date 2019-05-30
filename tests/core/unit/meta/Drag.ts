@@ -1,13 +1,12 @@
 const { registerSuite } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { SinonSpy } from 'sinon';
-import { v, w } from '../../../../src/core/d';
 import DragCtor, { DragResults } from '../../../../src/core/meta/Drag';
 import { ThemedMixin } from '../../../../src/core/mixins/Themed';
 import { WidgetBase } from '../../../../src/core/WidgetBase';
 import sendEvent from '../../support/sendEvent';
 import { createResolvers } from './../../support/util';
-import { renderer } from '../../../../src/core/vdom';
+import { renderer, v, w } from '../../../../src/core/vdom';
 
 const resolvers = createResolvers();
 

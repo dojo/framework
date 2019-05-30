@@ -5,7 +5,7 @@ import customElement from '../../../src/core/decorators/customElement';
 import WidgetBase from '../../../src/core/WidgetBase';
 import Container from '../../../src/core/Container';
 import Registry from '../../../src/core/Registry';
-import { v, w } from '../../../src/core/d';
+import { v, w } from '../../../src/core/vdom';
 import register, { create, CustomElementChildType } from '../../../src/core/registerCustomElement';
 import { createResolvers } from '../support/util';
 import { ThemedMixin, theme } from '../../../src/core/mixins/Themed';

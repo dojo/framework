@@ -2,8 +2,7 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { VNode, WidgetProperties, WNode } from '../../../src/core/interfaces';
-import { tsx, fromRegistry, REGISTRY_ITEM } from '../../../src/core/tsx';
-import { VNODE } from '../../../src/core/d';
+import { tsx, fromRegistry, REGISTRY_ITEM, isVNode } from '../../../src/core/vdom';
 
 registerSuite('tsx', {
 	'create a registry wrapper'() {
@@ -21,7 +20,7 @@ registerSuite('tsx', {
 			assert.deepEqual(node.tag, 'div');
 			assert.deepEqual(node.properties, { hello: 'world' });
 			assert.deepEqual(node.children, ['child']);
-			assert.strictEqual(node.type, VNODE);
+			assert.isTrue(isVNode(node));
 		},
 		'tsx generate a WNode'() {
 			const node: WNode = tsx(WidgetBase, { hello: 'world' }, ['child']) as WNode;
@@ -49,21 +48,21 @@ registerSuite('tsx', {
 			assert.deepEqual(node.tag, 'div');
 			assert.deepEqual(node.properties, { hello: 'world' });
 			assert.deepEqual(node.children, ['child', 'child-2', 'child-3']);
-			assert.strictEqual(node.type, VNODE);
+			assert.isTrue(isVNode(node));
 		},
 		'defaults properties to empty object'() {
 			const node: VNode = tsx('div') as VNode;
 			assert.deepEqual(node.tag, 'div');
 			assert.deepEqual(node.properties, {});
 			assert.deepEqual(node.children, []);
-			assert.strictEqual(node.type, VNODE);
+			assert.isTrue(isVNode(node));
 		},
 		'defaults `null` properties to empty object'() {
 			const node: VNode = tsx('div', null as any) as VNode;
 			assert.deepEqual(node.tag, 'div');
 			assert.deepEqual(node.properties, {});
 			assert.deepEqual(node.children, []);
-			assert.strictEqual(node.type, VNODE);
+			assert.isTrue(isVNode(node));
 		}
 	}
 });

@@ -2,7 +2,7 @@ const { beforeEach, afterEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { spy, SinonSpy } from 'sinon';
 
-import { v, w } from '../../../src/core/d';
+import { v, w } from '../../../src/core/vdom';
 import { Registry } from '../../../src/core/Registry';
 import { Link } from '../../../src/routing/Link';
 import { Router } from '../../../src/routing/Router';
