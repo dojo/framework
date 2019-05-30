@@ -1,6 +1,6 @@
 import assertRender from './support/assertRender';
 import { decorateNodes, select } from './support/selector';
-import { WNode, DNode, WidgetBaseInterface, Constructor, VNode } from '../widget-core/interfaces';
+import { WNode, DNode, WidgetBaseTypes, Constructor, VNode } from '../widget-core/interfaces';
 import { WidgetBase } from '../widget-core/WidgetBase';
 
 export interface CustomComparator {
@@ -44,7 +44,7 @@ export interface HarnessAPI {
 }
 
 export function harness(
-	renderFunc: () => WNode<WidgetBaseInterface>,
+	renderFunc: () => WNode<WidgetBaseTypes>,
 	customComparator: CustomComparator[] = []
 ): HarnessAPI {
 	let invalidated = true;

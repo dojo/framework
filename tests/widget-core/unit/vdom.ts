@@ -6,7 +6,7 @@ import { add } from '../../../src/has/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
 
-import { renderer } from '../../../src/widget-core/vdom';
+import { create, renderer, invalidator } from '../../../src/widget-core/vdom';
 import { v, w, dom as d, VNODE } from '../../../src/widget-core/d';
 import { VNode, DNode, DomVNode } from '../../../src/widget-core/interfaces';
 import { WidgetBase, widgetInstanceMap } from '../../../src/widget-core/WidgetBase';
@@ -1093,20 +1093,23 @@ jsdomDescribe('vdom', () => {
 				}
 			}
 
-			let setProperties: any;
+			let changeWidget: any;
 			class Baz extends WidgetBase<any> {
+				private _widget = 'default';
 				constructor() {
 					super();
-					setProperties = this.__setProperties__.bind(this);
+					changeWidget = (widget: string) => {
+						this._widget = widget;
+						this.invalidate();
+					};
 				}
 				render() {
-					const { widget = 'default' } = this.properties;
 					return v('div', [
 						v('div', { key: '1' }, ['first']),
-						w(widget, { key: '2' }),
-						w(widget, { key: '3' }),
+						w(this._widget, { key: '2' }),
+						w(this._widget, { key: '3' }),
 						v('div', { key: '4' }, ['second']),
-						w(widget, { key: '5' })
+						w(this._widget, { key: '5' })
 					]);
 				}
 			}
@@ -1121,25 +1124,25 @@ jsdomDescribe('vdom', () => {
 			const root: any = div.childNodes[0] as Element;
 			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
 			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'second');
-			setProperties({ widget: 'other' });
+			changeWidget('other');
 			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
 			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'second');
-			setProperties({ widget: 'foo' });
+			changeWidget('foo');
 			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
 			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'foo');
 			assert.strictEqual(root.childNodes[2].childNodes[0].data, 'foo');
 			assert.strictEqual(root.childNodes[3].childNodes[0].data, 'second');
 			assert.strictEqual(root.childNodes[4].childNodes[0].data, 'foo');
-			setProperties({ widget: 'bar' });
+			changeWidget('bar');
 			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
 			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'bar');
 			assert.strictEqual(root.childNodes[2].childNodes[0].data, 'bar');
 			assert.strictEqual(root.childNodes[3].childNodes[0].data, 'second');
 			assert.strictEqual(root.childNodes[4].childNodes[0].data, 'bar');
-			setProperties({ widget: 'other' });
+			changeWidget('other');
 			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
 			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'second');
-			setProperties({ widget: 'bar' });
+			changeWidget('bar');
 			assert.strictEqual(root.childNodes[0].childNodes[0].data, 'first');
 			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'bar');
 			assert.strictEqual(root.childNodes[2].childNodes[0].data, 'bar');
@@ -2794,17 +2797,17 @@ jsdomDescribe('vdom', () => {
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
 				iframe.contentDocument!.write(`
-					<div class="foo">
-						<label for="baz">Select Me:</label>
-						<select type="text" name="baz" id="baz" disabled="disabled">
-							<option value="foo">label foo</option>
-							<option value="bar" selected="">label bar</option>
-							<option value="baz">label baz</option>
-						</select>
-						<button type="button" disabled="disabled">Click Me!</button>
-						<span>label</span>
-						<div>last node</div>
-					</div>`);
+				<div class="foo">
+					<label for="baz">Select Me:</label>
+					<select type="text" name="baz" id="baz" disabled="disabled">
+						<option value="foo">label foo</option>
+						<option value="bar" selected="">label bar</option>
+						<option value="baz">label baz</option>
+					</select>
+					<button type="button" disabled="disabled">Click Me!</button>
+					<span>label</span>
+					<div>last node</div>
+				</div>`);
 				iframe.contentDocument!.close();
 				const root = iframe.contentDocument!.body.firstChild as HTMLElement;
 				const childElementCount = root.childElementCount;
@@ -2971,6 +2974,229 @@ jsdomDescribe('vdom', () => {
 					div.outerHTML,
 					'<div><div><header id="header"></header><div id="my-body"></div><footer id="footer"><span>span</span></footer></div></div>'
 				);
+			});
+		});
+
+		describe('functional', () => {
+			it('Should render nodes in the correct order with mix of vnode and wnodes', () => {
+				const createWidget = create();
+
+				const WidgetOne = createWidget(() => WidgetTwo({}));
+				const WidgetTwo = createWidget(() => v('div', ['dom2']));
+				const WidgetThree = createWidget(() => ['dom3', 'dom3a']);
+				const WidgetFour = createWidget(() => WidgetFive({}));
+				const WidgetFive = createWidget(() => WidgetSix({}));
+				const WidgetSix = createWidget(() => 'dom5');
+				const App = createWidget(() => [
+					'dom1',
+					WidgetOne({}),
+					WidgetThree({}),
+					'dom4',
+					WidgetFour({}),
+					'dom6'
+				]);
+
+				const r = renderer(() => App({}));
+				const root: any = document.createElement('div');
+				r.mount({ domNode: root });
+				assert.strictEqual(root.childNodes[0].data, 'dom1');
+				assert.strictEqual(root.childNodes[1].childNodes[0].data, 'dom2');
+				assert.strictEqual(root.childNodes[2].data, 'dom3');
+				assert.strictEqual(root.childNodes[3].data, 'dom3a');
+				assert.strictEqual(root.childNodes[4].data, 'dom4');
+				assert.strictEqual(root.childNodes[5].data, 'dom5');
+				assert.strictEqual(root.childNodes[6].data, 'dom6');
+			});
+
+			it('Re-renders widget based on property changes', () => {
+				let label = 'default';
+				const createWidget = create({ invalidator });
+				const Foo = createWidget.properties<{ label: string; other: boolean }>()(
+					({ properties }) => properties.label
+				);
+				const App = createWidget.properties()(({ middleware }) => {
+					const setLabel = () => {
+						label = 'custom';
+						middleware.invalidator();
+					};
+					return v('div', [v('button', { onclick: setLabel }, ['Set']), Foo({ other: true, label })]);
+				});
+				const root = document.createElement('div');
+				const r = renderer(() => App({}));
+				r.mount({ domNode: root });
+				assert.strictEqual(root.outerHTML, '<div><div><button>Set</button>default</div></div>');
+				const button = root.childNodes[0].childNodes[0] as HTMLButtonElement;
+				sendEvent(button, 'click');
+				resolvers.resolve();
+				assert.strictEqual(root.outerHTML, '<div><div><button>Set</button>custom</div></div>');
+				sendEvent(button, 'click');
+				resolvers.resolve();
+				assert.strictEqual(root.outerHTML, '<div><div><button>Set</button>custom</div></div>');
+			});
+
+			it('supports widget registry items', () => {
+				const registry = new Registry();
+				const createWidget = create();
+				const Foo = createWidget.properties<{ text: string }>()(({ properties }) => v('h1', [properties.text]));
+				const Bar = createWidget.properties<{ text: string }>()(({ properties }) => v('h1', [properties.text]));
+
+				registry.define('foo', Foo);
+				registry.define('bar', Bar);
+				const Baz = createWidget(() => v('div', [w('foo', { text: 'foo' }), w('bar', { text: 'bar' })]));
+
+				const r = renderer(() => Baz({}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div, sync: true, registry });
+				const root = div.childNodes[0];
+				const headerOne = root.childNodes[0];
+				const headerOneText = headerOne.childNodes[0] as Text;
+				const headerTwo = root.childNodes[1];
+				const headerTwoText = headerTwo.childNodes[0] as Text;
+				assert.strictEqual(headerOneText.data, 'foo');
+				assert.strictEqual(headerTwoText.data, 'bar');
+			});
+
+			it('support top level registry items', () => {
+				const createWidget = create();
+				const registry = new Registry();
+				const Foo = createWidget(() => 'Top Level Registry');
+
+				let resolver: any;
+				const promise = new Promise<any>((resolve) => {
+					resolver = resolve;
+				});
+
+				const r = renderer(() =>
+					w(
+						{
+							label: 'foo',
+							registryItem: () => {
+								return promise;
+							}
+						},
+						{}
+					)
+				);
+				const div = document.createElement('div');
+				r.mount({ domNode: div, registry, sync: true });
+				resolver(Foo);
+				assert.strictEqual(div.outerHTML, '<div></div>');
+				return promise.then(() => {
+					assert.strictEqual(div.outerHTML, '<div>Top Level Registry</div>');
+				});
+			});
+
+			it('Should pause rendering while merging to allow lazily loaded widgets to be loaded', () => {
+				const createWidget = create();
+				const iframe = document.createElement('iframe');
+				document.body.appendChild(iframe);
+				iframe.contentDocument!.write(`<div><span>54321</span><span>98765</span><span>12345</span></div>`);
+				iframe.contentDocument!.close();
+
+				const root = iframe.contentDocument!.body.firstChild as HTMLElement;
+				const lazyFooSpan = root.childNodes[0] as HTMLSpanElement;
+				const lazyBarSpan = root.childNodes[1] as HTMLSpanElement;
+				const span = root.childNodes[2] as HTMLSpanElement;
+				const registry = new Registry();
+
+				const Bar = createWidget(() => v('span', ['98765']));
+
+				let barResolver: any;
+				const barPromise = new Promise<any>((resolve) => {
+					barResolver = resolve;
+				});
+
+				const Foo = createWidget(() => [
+					v('span', ['54321']),
+					w({ label: 'bar', registryItem: () => barPromise }, {})
+				]);
+
+				let fooResolver: any;
+				const fooPromise = new Promise<any>((resolve) => {
+					fooResolver = resolve;
+				});
+
+				const App = createWidget(() =>
+					v('div', [
+						w(
+							{
+								label: 'foo',
+								registryItem: () => fooPromise
+							},
+							{}
+						),
+						v('span', ['12345'])
+					])
+				);
+
+				const r = renderer(() => App({}));
+				r.mount({ registry, domNode: iframe.contentDocument!.body, sync: true });
+				fooResolver(Foo);
+				return fooPromise.then(() => {
+					assert.strictEqual(root.childNodes[2], span);
+					assert.strictEqual(root.childNodes[1], lazyBarSpan);
+					assert.strictEqual(root.childNodes[0], lazyFooSpan);
+					barResolver(Bar);
+					return barPromise.then(() => {
+						assert.strictEqual(root.childNodes[2], span);
+						assert.strictEqual(root.childNodes[1], lazyBarSpan);
+						assert.strictEqual(root.childNodes[0], lazyFooSpan);
+					});
+				});
+			});
+
+			it('registry items', () => {
+				const createWidget = create();
+				let resolver = () => {};
+				const registry = new Registry();
+				const Widget = createWidget(() => v('div', ['Hello, world!']));
+				const RegistryWidget = createWidget(() => v('div', ['Registry, world!']));
+				const promise = new Promise<any>((resolve) => {
+					resolver = () => {
+						resolve(RegistryWidget);
+					};
+				});
+				registry.define('registry-item', promise);
+				const App = createWidget(() => [w('registry-item', {}), w(Widget, {})]);
+				const r = renderer(() => App({}));
+				const root = document.createElement('div');
+				r.mount({ domNode: root, sync: true, registry });
+				assert.lengthOf(root.childNodes, 1);
+				assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'Hello, world!');
+				resolver();
+				return promise.then(() => {
+					assert.lengthOf(root.childNodes, 2);
+					assert.strictEqual((root.childNodes[0].childNodes[0] as Text).data, 'Registry, world!');
+					assert.strictEqual((root.childNodes[1].childNodes[0] as Text).data, 'Hello, world!');
+				});
+			});
+
+			it('removes existing widget and uses new widget when widget changes', () => {
+				const createWidget = create({ invalidator });
+
+				let visible = true;
+				let swap: any;
+
+				const Foo = createWidget.properties<{ text: string }>()(({ properties }) => properties.text);
+				const Bar = createWidget.properties<{ text: string }>()(({ properties }) => properties.text);
+				const App = createWidget(({ middleware }) => {
+					swap = () => {
+						visible = !visible;
+						middleware.invalidator();
+					};
+					return v('div', [
+						visible ? Foo({ text: 'foo' }) : Bar({ text: 'bar' }),
+						visible ? Bar({ key: '1', text: 'bar1' }) : Bar({ key: '2', text: 'bar2' })
+					]);
+				});
+				const r = renderer(() => App({}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div });
+				resolvers.resolve();
+				assert.strictEqual(div.outerHTML, '<div><div>foobar1</div></div>');
+				swap();
+				resolvers.resolve();
+				assert.strictEqual(div.outerHTML, '<div><div>barbar2</div></div>');
 			});
 		});
 	});
@@ -5719,24 +5945,34 @@ jsdomDescribe('vdom', () => {
 	});
 
 	it('i18n Mixin', () => {
-		let setProperties: any;
+		let changeRtl: any;
 		class MyWidget extends I18nMixin(WidgetBase) {
-			constructor() {
-				super();
-				setProperties = this.__setProperties__.bind(this);
-			}
 			render() {
 				return v('span');
 			}
 		}
-		const r = renderer(() => w(MyWidget, {}));
+
+		class App extends WidgetBase {
+			private _rtl: boolean | undefined = undefined;
+			constructor() {
+				super();
+				changeRtl = (rtl?: boolean) => {
+					this._rtl = rtl;
+					this.invalidate();
+				};
+			}
+			render() {
+				return w(MyWidget, { rtl: this._rtl });
+			}
+		}
+		const r = renderer(() => w(App, {}));
 		const div = document.createElement('div');
 		r.mount({ domNode: div, sync: true });
 		const root = div.childNodes[0] as HTMLElement;
 		assert.strictEqual(root.dir, '');
-		setProperties({ rtl: true });
+		changeRtl(true);
 		assert.strictEqual(root.dir, 'rtl');
-		setProperties({ rtl: false });
+		changeRtl(false);
 		assert.strictEqual(root.dir, 'ltr');
 	});
 

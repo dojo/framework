@@ -1,18 +1,18 @@
 import {
 	Constructor,
-	DefaultWidgetBaseInterface,
 	DeferredVirtualProperties,
 	DNode,
 	VNode,
 	RegistryLabel,
 	VNodeProperties,
-	WidgetBaseInterface,
 	WNode,
 	DomOptions,
 	RenderResult,
 	DomVNode,
-	LazyWidget,
-	LazyDefine
+	LazyDefine,
+	WidgetBaseTypes,
+	WNodeFactory,
+	Callback
 } from './interfaces';
 
 /**
@@ -33,10 +33,15 @@ export const DOMVNODE = '__DOMVNODE_TYPE';
 /**
  * Helper function that returns true if the `DNode` is a `WNode` using the `type` property
  */
-export function isWNode<W extends WidgetBaseInterface = DefaultWidgetBaseInterface>(
-	child: DNode<W> | any
-): child is WNode<W> {
+export function isWNode<W extends WidgetBaseTypes = any>(child: any): child is WNode<W> {
 	return Boolean(child && child !== true && typeof child !== 'string' && child.type === WNODE);
+}
+
+export function isWNodeFactory<W extends WidgetBaseTypes>(node: any): node is WNodeFactory<W> {
+	if (typeof node === 'function' && node.isFactory) {
+		return true;
+	}
+	return false;
 }
 
 /**
@@ -143,22 +148,32 @@ export function decorate(
 /**
  * Wrapper function for calls to create a widget.
  */
-export function w<W extends WidgetBaseInterface>(
+export function w<W extends WidgetBaseTypes>(
 	node: WNode<W>,
 	properties: Partial<W['properties']>,
 	children?: W['children']
 ): WNode<W>;
-export function w<W extends WidgetBaseInterface>(
-	widgetConstructor: Constructor<W> | RegistryLabel | LazyWidget<W> | LazyDefine<W>,
+export function w<W extends WidgetBaseTypes>(
+	widgetConstructor: Constructor<W> | RegistryLabel | WNodeFactory<W> | LazyDefine<W>,
 	properties: W['properties'],
 	children?: W['children']
 ): WNode<W>;
-export function w<W extends WidgetBaseInterface>(
-	widgetConstructorOrNode: Constructor<W> | RegistryLabel | WNode<W> | LazyWidget<W> | LazyDefine<W>,
+export function w<W extends WidgetBaseTypes>(
+	widgetConstructorOrNode:
+		| Constructor<W>
+		| RegistryLabel
+		| WNodeFactory<W>
+		| WNode<W>
+		| LazyDefine<W>
+		| Callback<any, any, RenderResult>,
 	properties: W['properties'],
 	children?: W['children']
 ): WNode<W> {
-	if (isWNode(widgetConstructorOrNode)) {
+	if (isWNodeFactory<W>(widgetConstructorOrNode)) {
+		return widgetConstructorOrNode(properties, children);
+	}
+
+	if (isWNode<W>(widgetConstructorOrNode)) {
 		properties = { ...(widgetConstructorOrNode.properties as any), ...(properties as any) };
 		children = children ? children : widgetConstructorOrNode.children;
 		widgetConstructorOrNode = widgetConstructorOrNode.widgetConstructor;

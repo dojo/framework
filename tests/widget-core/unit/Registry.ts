@@ -4,6 +4,7 @@ import Registry from '../../../src/widget-core/Registry';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import Promise from '../../../src/shim/Promise';
 import { ESMDefaultWidgetBase } from '../../../src/widget-core/interfaces';
+import { create } from '../../../src/widget-core/vdom';
 
 const testPayload = () => ({});
 const testInjector = () => testPayload;
@@ -169,13 +170,37 @@ registerSuite('Registry', {
 					const factory = factoryRegistry.get('my-widget');
 					assert.strictEqual(factory, WidgetBase);
 				});
+			},
+			'recognizes esm modules with widget factory as default'() {
+				let resolveFunction: (widget: ESMDefaultWidgetBase<any>) => void;
+				const promise: Promise<any> = new Promise((resolve) => {
+					resolveFunction = resolve;
+				});
+				const lazyFactory = () => promise;
+
+				const factoryRegistry = new Registry();
+				factoryRegistry.define('my-widget', lazyFactory);
+				factoryRegistry.get('my-widget');
+
+				const factory = create();
+				const Widget = factory(() => 'factory');
+
+				resolveFunction!({
+					default: Widget,
+					__esModule: true
+				});
+
+				return promise.then(() => {
+					const factory = factoryRegistry.get('my-widget');
+					assert.strictEqual(factory, Widget);
+				});
 			}
 		},
 		emit: {
 			'emits loaded event concrete Widget item'() {
 				let loadedEvent = false;
 				const registry = new Registry();
-				registry.on('foo', ({ type }) => {
+				registry.on('foo', () => {
 					loadedEvent = true;
 				});
 				registry.define('foo', WidgetBase);
@@ -184,7 +209,7 @@ registerSuite('Registry', {
 			'does not emits loaded event when defining a function'() {
 				let loadedEvent = false;
 				const registry = new Registry();
-				registry.on('foo', ({ type }) => {
+				registry.on('foo', () => {
 					loadedEvent = true;
 				});
 				registry.define('foo', () => Promise.resolve(WidgetBase));
