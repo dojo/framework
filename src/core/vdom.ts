@@ -23,10 +23,10 @@ import {
 import transitionStrategy from './animations/cssTransitions';
 import { isVNode, isWNode, WNODE, v, isDomVNode, VNODE, isWNodeFactory } from './d';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction } from './Registry';
-import { widgetInstanceMap } from './WidgetBase';
 import { auto } from './diff';
 import RegistryHandler from './RegistryHandler';
 import { w } from './d';
+import { NodeHandler } from './NodeHandler';
 
 export interface BaseNodeWrapper {
 	owningId: string;
@@ -59,6 +59,17 @@ export interface WidgetMeta {
 	registryHandler: any;
 	properties: any;
 	children?: DNode[];
+}
+
+export interface WidgetData {
+	onDetach: () => void;
+	onAttach: () => void;
+	dirty: boolean;
+	nodeHandler: NodeHandler;
+	invalidate?: Function;
+	rendering: boolean;
+	inputProperties: any;
+	registry: RegistryHandler;
 }
 
 export interface VNodeWrapper extends BaseNodeWrapper {
@@ -443,6 +454,7 @@ function wrapNodes(renderer: () => RenderResult) {
 	return factory(callback);
 }
 
+export const widgetInstanceMap = new WeakMap<WidgetBaseInterface, WidgetData>();
 const widgetMetaMap = new Map<string, WidgetMeta>();
 let wrapperId = 0;
 let metaId = 0;

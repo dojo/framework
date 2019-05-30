@@ -4,7 +4,8 @@ const { assert } = intern.getPlugin('chai');
 import { PropertyChangeRecord } from './../../../../src/core/interfaces';
 import { always, ignore } from './../../../../src/core/diff';
 import { diffProperty } from './../../../../src/core/decorators/diffProperty';
-import { WidgetBase, widgetInstanceMap } from './../../../../src/core/WidgetBase';
+import { WidgetBase } from './../../../../src/core/WidgetBase';
+import { widgetInstanceMap } from './../../../../src/core/vdom';
 
 interface TestProperties {
 	id?: string;

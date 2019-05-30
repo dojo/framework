@@ -6,10 +6,10 @@ import { add } from '../../../src/has/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
 
-import { create, renderer, invalidator } from '../../../src/core/vdom';
+import { create, renderer, invalidator, widgetInstanceMap } from '../../../src/core/vdom';
 import { v, w, dom as d, VNODE } from '../../../src/core/d';
 import { VNode, DNode, DomVNode } from '../../../src/core/interfaces';
-import { WidgetBase, widgetInstanceMap } from '../../../src/core/WidgetBase';
+import { WidgetBase } from '../../../src/core/WidgetBase';
 import Registry from '../../../src/core/Registry';
 import { I18nMixin } from '../../../src/core/mixins/I18n';
 import registry from '../../../src/core/decorators/registry';

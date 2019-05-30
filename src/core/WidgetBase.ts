@@ -20,28 +20,17 @@ import NodeHandler from './NodeHandler';
 import { WIDGET_BASE_TYPE } from './Registry';
 import { Handle } from '../core/Destroyable';
 import { Base } from './meta/Base';
+import { widgetInstanceMap } from './vdom';
 
 interface ReactionFunctionConfig {
 	propertyName: string;
 	reaction: DiffPropertyReaction;
 }
 
-export interface WidgetData {
-	onDetach: () => void;
-	onAttach: () => void;
-	dirty: boolean;
-	nodeHandler: NodeHandler;
-	invalidate?: Function;
-	rendering: boolean;
-	inputProperties: any;
-	registry: RegistryHandler;
-}
-
 export type BoundFunctionData = { boundFunc: (...args: any[]) => any; scope: any };
 
 const decoratorMap = new WeakMap<Function, Map<string, any[]>>();
 const builtDecoratorMap = new WeakMap<Function, Map<string, any[]>>();
-export const widgetInstanceMap = new WeakMap<WidgetBaseInterface, WidgetData>();
 const boundAuto = auto.bind(null);
 
 function isDomMeta(meta: any): meta is Base {
