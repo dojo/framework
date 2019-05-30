@@ -6,7 +6,7 @@ import { add } from '../../../src/has/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
 
-import { renderer, invalidator } from '../../../src/widget-core/vdom';
+import { create, renderer, invalidator } from '../../../src/widget-core/vdom';
 import { v, w, dom as d, VNODE } from '../../../src/widget-core/d';
 import { VNode, DNode, DomVNode } from '../../../src/widget-core/interfaces';
 import { WidgetBase, widgetInstanceMap } from '../../../src/widget-core/WidgetBase';
@@ -14,7 +14,6 @@ import Registry from '../../../src/widget-core/Registry';
 import { I18nMixin } from '../../../src/widget-core/mixins/I18n';
 import registry from '../../../src/widget-core/decorators/registry';
 import { alwaysRender } from '../../../src/widget-core/decorators/alwaysRender';
-import { create } from '../../../src/widget-core/tsx';
 
 const resolvers = createResolvers();
 

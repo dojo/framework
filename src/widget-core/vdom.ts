@@ -13,15 +13,20 @@ import {
 	Constructor,
 	RenderResult,
 	WidgetBaseInterface,
-	Callback
+	Callback,
+	MiddlewareMap,
+	WNodeFactory,
+	UnionToIntersection,
+	WidgetProperties,
+	MiddlewareResultFactory
 } from './interfaces';
 import transitionStrategy from './animations/cssTransitions';
 import { isVNode, isWNode, WNODE, v, isDomVNode, VNODE, isWNodeFactory } from './d';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction } from './Registry';
 import { widgetInstanceMap } from './WidgetBase';
 import { auto } from './diff';
-import { create } from './tsx';
 import RegistryHandler from './RegistryHandler';
+import { w } from './d';
 
 export interface BaseNodeWrapper {
 	owningId: string;
@@ -451,6 +456,54 @@ export const invalidator = factory(({ id }) => {
 		}
 	};
 });
+
+function createFactory(callback: any, middlewares: any): any {
+	const factory = (properties: any, children?: any) => {
+		if (properties) {
+			const result = w(callback, properties, children);
+			callback.isWidget = true;
+			callback.middlewares = middlewares;
+			return result;
+		}
+		return {
+			middlewares,
+			callback
+		};
+	};
+	factory.isFactory = true;
+	return factory;
+}
+
+export function create<T extends MiddlewareMap<any>, MiddlewareProps = ReturnType<T[keyof T]>['properties']>(
+	middlewares: T = {} as T
+) {
+	function properties<Props extends {}>() {
+		function returns<ReturnValue>(
+			callback: Callback<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, T, ReturnValue>
+		): ReturnValue extends RenderResult
+			? WNodeFactory<{
+					properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+					children: DNode[];
+			  }>
+			: MiddlewareResultFactory<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, T, ReturnValue> {
+			return createFactory(callback, middlewares);
+		}
+		return returns;
+	}
+
+	function returns<ReturnValue>(
+		callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, T, ReturnValue>
+	): ReturnValue extends RenderResult
+		? WNodeFactory<{
+				properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;
+				children: DNode[];
+		  }>
+		: MiddlewareResultFactory<WidgetProperties & UnionToIntersection<MiddlewareProps>, T, ReturnValue> {
+		return createFactory(callback, middlewares);
+	}
+	returns.properties = properties;
+	return returns;
+}
 
 export function renderer(renderer: () => RenderResult): Renderer {
 	let _mountOptions: MountOptions = {

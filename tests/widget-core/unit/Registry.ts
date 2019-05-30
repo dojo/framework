@@ -4,7 +4,7 @@ import Registry from '../../../src/widget-core/Registry';
 import { WidgetBase } from '../../../src/widget-core/WidgetBase';
 import Promise from '../../../src/shim/Promise';
 import { ESMDefaultWidgetBase } from '../../../src/widget-core/interfaces';
-import { create } from '../../../src/widget-core/tsx';
+import { create } from '../../../src/widget-core/vdom';
 
 const testPayload = () => ({});
 const testInjector = () => testPayload;

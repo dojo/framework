@@ -1,15 +1,5 @@
 import { v, w } from './d';
-import {
-	Constructor,
-	DNode,
-	MiddlewareMap,
-	Callback,
-	WNodeFactory,
-	UnionToIntersection,
-	WidgetProperties,
-	MiddlewareResultFactory,
-	RenderResult
-} from './interfaces';
+import { Constructor, DNode } from './interfaces';
 import { WNode, VNodeProperties } from './interfaces';
 
 declare global {
@@ -63,52 +53,4 @@ export function tsx(tag: any, properties = {}, ...children: any[]): DNode {
 	} else {
 		return w(tag, properties, children);
 	}
-}
-
-function createFactory(callback: any, middlewares: any): any {
-	const factory = (properties: any, children?: any) => {
-		if (properties) {
-			const result = w(callback, properties, children);
-			callback.isWidget = true;
-			callback.middlewares = middlewares;
-			return result;
-		}
-		return {
-			middlewares,
-			callback
-		};
-	};
-	factory.isFactory = true;
-	return factory;
-}
-
-export function create<T extends MiddlewareMap<any>, MiddlewareProps = ReturnType<T[keyof T]>['properties']>(
-	middlewares: T = {} as T
-) {
-	function properties<Props extends {}>() {
-		function returns<ReturnValue>(
-			callback: Callback<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, T, ReturnValue>
-		): ReturnValue extends RenderResult
-			? WNodeFactory<{
-					properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
-					children: DNode[];
-			  }>
-			: MiddlewareResultFactory<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, T, ReturnValue> {
-			return createFactory(callback, middlewares);
-		}
-		return returns;
-	}
-
-	function returns<ReturnValue>(
-		callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, T, ReturnValue>
-	): ReturnValue extends RenderResult
-		? WNodeFactory<{
-				properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;
-				children: DNode[];
-		  }>
-		: MiddlewareResultFactory<WidgetProperties & UnionToIntersection<MiddlewareProps>, T, ReturnValue> {
-		return createFactory(callback, middlewares);
-	}
-	returns.properties = properties;
-	return returns;
 }
