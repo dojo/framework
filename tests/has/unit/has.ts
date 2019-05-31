@@ -8,8 +8,7 @@ import has, {
 	testFunctions as hasTestFunctions,
 	add as hasAdd,
 	exists as hasExists,
-	normalize as hasNormalize,
-	load as hasLoad
+	normalize as hasNormalize
 } from '../../../src/has/has';
 
 let alreadyCached: { [feature: string]: boolean };
@@ -269,29 +268,6 @@ registerSuite('has', {
 
 				assert.isTrue(normalizeStub.calledOnce);
 				assert.strictEqual(normalizeStub.lastCall.args[0], 'intern');
-			},
-
-			'load test resourceId provided'() {
-				const stubbedRequire = sinon.stub().callsArg(1);
-				const loadedStub = sinon.stub();
-				hasAdd('abc', true);
-				const resourceId = 'src/has!abc?intern:intern!object';
-
-				hasLoad(resourceId, stubbedRequire as any, loadedStub);
-				assert.isTrue(stubbedRequire.calledOnce, 'Require should be called once');
-				assert.isTrue(loadedStub.calledOnce, 'Load stub should be called once');
-				assert.isTrue(loadedStub.calledAfter(stubbedRequire), 'Load stub should be called after require');
-				assert.strictEqual(stubbedRequire.firstCall.args[0][0], resourceId);
-				assert.strictEqual(stubbedRequire.firstCall.args[1], loadedStub);
-			},
-
-			'load test resourceId not provided'() {
-				const requireSpy = sinon.spy(require);
-				const loadedStub = sinon.stub();
-
-				hasLoad(null as any, require as any, loadedStub);
-				assert.isTrue(loadedStub.calledOnce);
-				assert.isFalse(requireSpy.calledOnce);
 			}
 		},
 

@@ -1,5 +1,4 @@
 import global from '../shim/global';
-import { Require, Config } from './loader';
 
 /**
  * The valid return types from a feature test
@@ -71,19 +70,6 @@ const staticCache: StaticHasFeatures = staticFeatures
 		: staticFeatures
 	: {}; /* Providing an empty cache, if none was in the environment
 
-/**
- * AMD plugin function.
- *
- * Conditional loads modules based on a has feature test value.
- *
- * @param resourceId Gives the resolved module id to load.
- * @param require The loader require function with respect to the module that contained the plugin resource in its
- *                dependency list.
- * @param load Callback to loader that consumes result of plugin demand.
- */
-export function load(resourceId: string, require: Require, load: (value?: any) => void, config?: Config): void {
-	resourceId ? require([resourceId], load) : load();
-}
 
 /**
  * AMD plugin function.
