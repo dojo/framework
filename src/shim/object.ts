@@ -146,7 +146,7 @@ if (!has('es6-object')) {
 	};
 
 	Object.getOwnPropertySymbols = function getOwnPropertySymbols(o: any): symbol[] {
-		return Object.getOwnPropertyNames(o)
+		return getOwnPropertyNames(o)
 			.filter((key) => Boolean(key.match(/^@@.+/)))
 			.map((key) => Symbol.for(key.substring(2)));
 	};
