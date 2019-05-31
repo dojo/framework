@@ -6,7 +6,17 @@ import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
 
-import { create, renderer, invalidator, widgetInstanceMap, v, w, dom as d } from '../../../src/core/vdom';
+import {
+	create,
+	renderer,
+	destroy,
+	invalidator,
+	getDom,
+	widgetInstanceMap,
+	v,
+	w,
+	dom as d
+} from '../../../src/core/vdom';
 import { VNode, DNode, DomVNode } from '../../../src/core/interfaces';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import Registry from '../../../src/core/Registry';
@@ -2556,6 +2566,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(deferredPropertyCallCount, 8);
 			invalidate();
 			resolvers.resolveRAF();
+			resolvers.resolveRAF();
 			assert.strictEqual(deferredPropertyCallCount, 12);
 			resolvers.resolveRIC();
 			assert.strictEqual(deferredPropertyCallCount, 12);
@@ -3196,6 +3207,96 @@ jsdomDescribe('vdom', () => {
 				swap();
 				resolvers.resolve();
 				assert.strictEqual(div.outerHTML, '<div><div>barbar2</div></div>');
+			});
+
+			describe('core middleware', () => {
+				describe('getNode', () => {
+					it('should invalidate widget once node is available', () => {
+						const createWidget = create({ getDom });
+						let divNode: any;
+						const App = createWidget(({ middleware }) => {
+							divNode = middleware.getDom('div');
+							return v('div', { key: 'div' });
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.isNull(divNode);
+						resolvers.resolve();
+						assert.strictEqual(root.childNodes[0], divNode);
+					});
+
+					it('should remove nodes from the map', () => {
+						const createWidget = create({ getDom, invalidator });
+						let divNode: any;
+						let show = true;
+						let invalidate: any;
+						const App = createWidget(({ middleware }) => {
+							divNode = middleware.getDom('div');
+							invalidate = middleware.invalidator;
+							return v('div', [show ? v('div', { key: 'div' }) : null]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.isNull(divNode);
+						resolvers.resolve();
+						let expectedDiv = root.childNodes[0].childNodes[0];
+						assert.strictEqual(expectedDiv, divNode);
+						show = false;
+						invalidate();
+						resolvers.resolve();
+						assert.strictEqual(expectedDiv, divNode);
+						show = true;
+						invalidate();
+						resolvers.resolve();
+						assert.isNull(divNode);
+						resolvers.resolve();
+						assert.strictEqual(root.childNodes[0].childNodes[0], divNode);
+					});
+				});
+
+				describe('destroy', () => {
+					it('should invalidate widget once node is available', () => {
+						const createWidget = create({ destroy, invalidator });
+						let fooDestroyStub = stub();
+						let barDestroyStub = stub();
+						let show = true;
+						let invalidate: any;
+						let fooInvalidate: any;
+						const Bar = createWidget(({ middleware }) => {
+							middleware.destroy(() => barDestroyStub());
+							return v('div', { key: 'div' });
+						});
+						const Foo = createWidget(({ middleware }) => {
+							fooInvalidate = middleware.invalidator;
+							middleware.destroy(() => fooDestroyStub());
+							return v('div', { key: 'div' }, [Bar({})]);
+						});
+						const App = createWidget(({ middleware }) => {
+							invalidate = middleware.invalidator;
+							return show ? Foo({}) : null;
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.isTrue(fooDestroyStub.notCalled);
+						assert.isTrue(barDestroyStub.notCalled);
+						fooInvalidate();
+						invalidate();
+						resolvers.resolve();
+						assert.isTrue(fooDestroyStub.notCalled);
+						assert.isTrue(barDestroyStub.notCalled);
+						show = false;
+						invalidate();
+						resolvers.resolve();
+						assert.isTrue(fooDestroyStub.calledOnce);
+						assert.isTrue(barDestroyStub.notCalled);
+						resolvers.resolve();
+						assert.isTrue(fooDestroyStub.calledOnce);
+						assert.isTrue(barDestroyStub.calledOnce);
+					});
+				});
 			});
 		});
 	});
@@ -5563,6 +5664,8 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(focusSpy.notCalled);
 			meta.setRenderResult(v('input', { focus: true }));
 			resolvers.resolve();
+			assert.isTrue(focusSpy.notCalled);
+			resolvers.resolve();
 			assert.isTrue(focusSpy.calledOnce);
 			document.body.removeChild(input);
 		});
@@ -5583,6 +5686,8 @@ jsdomDescribe('vdom', () => {
 			resolvers.resolve();
 			assert.isTrue(focusSpy.calledOnce);
 			meta.setRenderResult(v('input', { focus: shouldFocus }));
+			resolvers.resolve();
+			assert.isTrue(focusSpy.calledOnce);
 			resolvers.resolve();
 			assert.isTrue(focusSpy.calledTwice);
 			document.body.removeChild(input);
@@ -5640,6 +5745,8 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(blurSpy.notCalled);
 			meta.setRenderResult(v('input', { blur: true }));
 			resolvers.resolve();
+			assert.isTrue(blurSpy.notCalled);
+			resolvers.resolve();
 			assert.isTrue(blurSpy.calledOnce);
 			document.body.removeChild(input);
 		});
@@ -5660,6 +5767,8 @@ jsdomDescribe('vdom', () => {
 			resolvers.resolve();
 			assert.isTrue(blurSpy.calledOnce);
 			meta.setRenderResult(v('input', { blur: shouldBlur }));
+			resolvers.resolve();
+			assert.isTrue(blurSpy.calledOnce);
 			resolvers.resolve();
 			assert.isTrue(blurSpy.calledTwice);
 			document.body.removeChild(input);
@@ -5719,6 +5828,8 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(scrollIntoViewStub.notCalled);
 			meta.setRenderResult(v('input', { scrollIntoView: true }));
 			resolvers.resolve();
+			assert.isTrue(scrollIntoViewStub.notCalled);
+			resolvers.resolve();
 			assert.isTrue(scrollIntoViewStub.calledOnce);
 			document.body.removeChild(input);
 		});
@@ -5740,6 +5851,8 @@ jsdomDescribe('vdom', () => {
 			resolvers.resolve();
 			assert.isTrue(scrollIntoViewStub.calledOnce);
 			meta.setRenderResult(v('input', { scrollIntoView: shouldScroll }));
+			resolvers.resolve();
+			assert.isTrue(scrollIntoViewStub.calledOnce);
 			resolvers.resolve();
 			assert.isTrue(scrollIntoViewStub.calledTwice);
 			document.body.removeChild(input);
@@ -5798,6 +5911,8 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(clickSpy.notCalled);
 			meta.setRenderResult(v('input', { click: true }));
 			resolvers.resolve();
+			assert.isTrue(clickSpy.notCalled);
+			resolvers.resolve();
 			assert.isTrue(clickSpy.calledOnce);
 			document.body.removeChild(input);
 		});
@@ -5818,6 +5933,8 @@ jsdomDescribe('vdom', () => {
 			resolvers.resolve();
 			assert.isTrue(clickSpy.calledOnce);
 			meta.setRenderResult(v('input', { click: shouldClick }));
+			resolvers.resolve();
+			assert.isTrue(clickSpy.calledOnce);
 			resolvers.resolve();
 			assert.isTrue(clickSpy.calledTwice);
 			document.body.removeChild(input);
