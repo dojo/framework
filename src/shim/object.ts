@@ -1,5 +1,4 @@
 import has from '../core/has';
-import { isSymbol } from './Symbol';
 
 export interface ObjectAssign {
 	/**
@@ -117,8 +116,9 @@ export let entries: ObjectEnteries;
 export let values: ObjectValues;
 
 if (!has('es6-object')) {
+	const keys = Object.keys.bind(Object);
 	Object.keys = function symbolAwareKeys(o: object): string[] {
-		return Object.keys(o).filter((key) => !Boolean(key.match(/^@@.+/)));
+		return keys(o).filter((key) => !Boolean(key.match(/^@@.+/)));
 	};
 
 	Object.assign = function assign(target: any, ...sources: any[]) {
@@ -140,16 +140,9 @@ if (!has('es6-object')) {
 		return to;
 	};
 
-	Object.getOwnPropertyDescriptor = function<T, K extends keyof T>(o: T, prop: K): PropertyDescriptor | undefined {
-		if (isSymbol(prop)) {
-			return Object.getOwnPropertyDescriptor(o, prop);
-		} else {
-			return Object.getOwnPropertyDescriptor(o, prop);
-		}
-	};
-
-	Object.getOwnPropertyNames = function getOwnPropertyNames(o: any): string[] {
-		return Object.getOwnPropertyNames(o).filter((key) => !Boolean(key.match(/^@@.+/)));
+	const getOwnPropertyNames = Object.getOwnPropertyNames.bind(Object);
+	Object.getOwnPropertyNames = function symbolAwareGetOwnPropertyNames(o: any): string[] {
+		return getOwnPropertyNames(o).filter((key) => !Boolean(key.match(/^@@.+/)));
 	};
 
 	Object.getOwnPropertySymbols = function getOwnPropertySymbols(o: any): symbol[] {
