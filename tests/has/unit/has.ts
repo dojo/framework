@@ -9,7 +9,7 @@ import has, {
 	add as hasAdd,
 	exists as hasExists,
 	normalize as hasNormalize
-} from '../../../src/has/has';
+} from '../../../src/core/has';
 
 let alreadyCached: { [feature: string]: boolean };
 let alreadyTest: { [feature: string]: boolean };
@@ -291,7 +291,7 @@ registerSuite('has', {
 		'static has features': {
 			'staticFeatures object'() {
 				const dfd = this.async();
-				undef('../../../src/has/has');
+				undef('../../../src/core/has');
 				global.DojoHasEnvironment = {
 					staticFeatures: {
 						foo: 1,
@@ -300,7 +300,7 @@ registerSuite('has', {
 					}
 				};
 				// tslint:disable-next-line
-				import('../../../src/has/has').then(
+				import('../../../src/core/has').then(
 					dfd.callback((mod: { default: typeof has }) => {
 						const h = mod.default;
 						assert(!('DojoHasEnvironment' in global));
@@ -312,7 +312,7 @@ registerSuite('has', {
 			},
 			'staticFeatures function'() {
 				const dfd = this.async();
-				undef('../../../src/has/has');
+				undef('../../../src/core/has');
 				global.DojoHasEnvironment = {
 					staticFeatures: function() {
 						return {
@@ -323,7 +323,7 @@ registerSuite('has', {
 					}
 				};
 				// tslint:disable-next-line
-				import('../../../src/has/has').then(
+				import('../../../src/core/has').then(
 					dfd.callback((mod: { default: typeof has }) => {
 						const h = mod.default;
 						assert(!('DojoHasEnvironment' in global));
@@ -335,14 +335,14 @@ registerSuite('has', {
 			},
 			'can override run-time defined features'() {
 				const dfd = this.async();
-				undef('../../../src/has/has');
+				undef('../../../src/core/has');
 				global.DojoHasEnvironment = {
 					staticFeatures: {
 						debug: false
 					}
 				};
 				// tslint:disable-next-line
-				import('../../../src/has/has').then(
+				import('../../../src/core/has').then(
 					dfd.callback((mod: { default: typeof has; add: typeof hasAdd }) => {
 						const h = mod.default;
 						const hAdd = mod.add;

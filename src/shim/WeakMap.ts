@@ -1,6 +1,6 @@
 import global from './global';
 import { isArrayLike, Iterable } from './iterator';
-import has from '../has/has';
+import has from '../core/has';
 import './Symbol';
 
 export interface WeakMap<K extends object, V> {

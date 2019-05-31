@@ -1,6 +1,6 @@
 import global from '../../shim/global';
 import { History as HistoryInterface, HistoryOptions, OnChangeFunction } from './../interfaces';
-import has from '../../has/has';
+import has from '../../core/has';
 
 const trailingSlash = new RegExp(/\/$/);
 const leadingSlash = new RegExp(/^\//);
