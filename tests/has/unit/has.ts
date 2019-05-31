@@ -8,9 +8,8 @@ import has, {
 	testFunctions as hasTestFunctions,
 	add as hasAdd,
 	exists as hasExists,
-	normalize as hasNormalize,
-	load as hasLoad
-} from '../../../src/has/has';
+	normalize as hasNormalize
+} from '../../../src/core/has';
 
 let alreadyCached: { [feature: string]: boolean };
 let alreadyTest: { [feature: string]: boolean };
@@ -269,29 +268,6 @@ registerSuite('has', {
 
 				assert.isTrue(normalizeStub.calledOnce);
 				assert.strictEqual(normalizeStub.lastCall.args[0], 'intern');
-			},
-
-			'load test resourceId provided'() {
-				const stubbedRequire = sinon.stub().callsArg(1);
-				const loadedStub = sinon.stub();
-				hasAdd('abc', true);
-				const resourceId = 'src/has!abc?intern:intern!object';
-
-				hasLoad(resourceId, stubbedRequire as any, loadedStub);
-				assert.isTrue(stubbedRequire.calledOnce, 'Require should be called once');
-				assert.isTrue(loadedStub.calledOnce, 'Load stub should be called once');
-				assert.isTrue(loadedStub.calledAfter(stubbedRequire), 'Load stub should be called after require');
-				assert.strictEqual(stubbedRequire.firstCall.args[0][0], resourceId);
-				assert.strictEqual(stubbedRequire.firstCall.args[1], loadedStub);
-			},
-
-			'load test resourceId not provided'() {
-				const requireSpy = sinon.spy(require);
-				const loadedStub = sinon.stub();
-
-				hasLoad(null as any, require as any, loadedStub);
-				assert.isTrue(loadedStub.calledOnce);
-				assert.isFalse(requireSpy.calledOnce);
 			}
 		},
 
@@ -315,7 +291,7 @@ registerSuite('has', {
 		'static has features': {
 			'staticFeatures object'() {
 				const dfd = this.async();
-				undef('../../../src/has/has');
+				undef('../../../src/core/has');
 				global.DojoHasEnvironment = {
 					staticFeatures: {
 						foo: 1,
@@ -324,7 +300,7 @@ registerSuite('has', {
 					}
 				};
 				// tslint:disable-next-line
-				import('../../../src/has/has').then(
+				import('../../../src/core/has').then(
 					dfd.callback((mod: { default: typeof has }) => {
 						const h = mod.default;
 						assert(!('DojoHasEnvironment' in global));
@@ -336,7 +312,7 @@ registerSuite('has', {
 			},
 			'staticFeatures function'() {
 				const dfd = this.async();
-				undef('../../../src/has/has');
+				undef('../../../src/core/has');
 				global.DojoHasEnvironment = {
 					staticFeatures: function() {
 						return {
@@ -347,7 +323,7 @@ registerSuite('has', {
 					}
 				};
 				// tslint:disable-next-line
-				import('../../../src/has/has').then(
+				import('../../../src/core/has').then(
 					dfd.callback((mod: { default: typeof has }) => {
 						const h = mod.default;
 						assert(!('DojoHasEnvironment' in global));
@@ -359,14 +335,14 @@ registerSuite('has', {
 			},
 			'can override run-time defined features'() {
 				const dfd = this.async();
-				undef('../../../src/has/has');
+				undef('../../../src/core/has');
 				global.DojoHasEnvironment = {
 					staticFeatures: {
 						debug: false
 					}
 				};
 				// tslint:disable-next-line
-				import('../../../src/has/has').then(
+				import('../../../src/core/has').then(
 					dfd.callback((mod: { default: typeof has; add: typeof hasAdd }) => {
 						const h = mod.default;
 						const hAdd = mod.add;

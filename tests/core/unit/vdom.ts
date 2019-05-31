@@ -2,7 +2,7 @@ const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 import { match, spy, stub, SinonSpy, SinonStub } from 'sinon';
-import { add } from '../../../src/has/has';
+import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
 

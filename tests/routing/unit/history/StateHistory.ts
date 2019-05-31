@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 
 import global from '../../../../src/shim/global';
-import { add } from '../../../../src/has/has';
+import { add } from '../../../../src/core/has';
 import { StateHistory } from '../../../../src/routing/history/StateHistory';
 
 const onChange = stub();

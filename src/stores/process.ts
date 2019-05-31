@@ -3,7 +3,7 @@ import { PatchOperation } from './state/Patch';
 import { replace, remove } from './state/operations';
 import { Path, State, Store } from './Store';
 import Map from '../shim/Map';
-import has from '../has/has';
+import has from '../core/has';
 import Symbol, { isSymbol } from '../shim/Symbol';
 
 /**

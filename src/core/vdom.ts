@@ -1,5 +1,5 @@
 import global from '../shim/global';
-import has from '../has/has';
+import has from '../core/has';
 import { WeakMap } from '../shim/WeakMap';
 import {
 	WNode,
