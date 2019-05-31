@@ -711,9 +711,9 @@ function addNodeToMap(id: string, key: string | number, node: Node) {
 	}
 }
 
-function destroyHandles(handleMap: Map<string, () => void>) {
-	handleMap.forEach((cb) => cb());
-	handleMap.clear();
+function destroyHandles(destroyMap: Map<string, () => void>) {
+	destroyMap.forEach((destroy) => destroy());
+	destroyMap.clear();
 }
 
 export const invalidator = factory(({ id }) => {
