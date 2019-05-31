@@ -25,7 +25,7 @@ If you are upgrading from a version before 4.0.0, please see the [previous migra
 
 #### [`has` module consolidation](https://github.com/dojo/framework/pull/182)
 
-Building on the cleanup started with the 3.0 consolidation of packages into `@dojo/framework`, this release of Dojo moves all `has` related modules in a single `has` module, `@dojo/framework/core/has`. If you run the `dojo/cli-upgrade-app` command all references to removed `has` modules should be automatically updated.
+Building on the cleanup started with the 3.0 consolidation of packages into `@dojo/framework`, this release of Dojo moves all `has` related modules in a single `has` module, `@dojo/framework/has/has`. If you run the `dojo/cli-upgrade-app` command all references to removed `has` modules should be automatically updated.
 
 #### [`classes` property with the `Themed` mixin](https://github.com/dojo/framework/pull/164)
 
