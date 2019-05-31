@@ -16,7 +16,6 @@ import {
 	RenderResult,
 	WidgetBaseTypes
 } from './interfaces';
-import { isWNodeFactory } from './d';
 
 export type RegistryItem =
 	| WidgetBaseConstructor
@@ -102,6 +101,13 @@ export function isWidgetBaseConstructor<T extends WidgetBaseInterface = any>(ite
 
 export function isWidgetFunction(item: any): item is Callback<any, any, RenderResult> {
 	return Boolean(item && item.isWidget);
+}
+
+export function isWNodeFactory<W extends WidgetBaseTypes>(node: any): node is WNodeFactory<W> {
+	if (typeof node === 'function' && node.isFactory) {
+		return true;
+	}
+	return false;
 }
 
 export function isWidget<T extends WidgetBaseInterface = any>(

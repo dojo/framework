@@ -3,8 +3,7 @@ const { assert } = intern.getPlugin('chai');
 
 import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/core/WidgetBase';
-import { v, w } from '../../../src/core/d';
-import { tsx } from '../../../src/core/tsx';
+import { v, w, tsx } from '../../../src/core/vdom';
 import assertionTemplate from '../../../src/testing/assertionTemplate';
 
 class MyWidget extends WidgetBase<{

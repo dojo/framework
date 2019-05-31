@@ -9,7 +9,7 @@ import {
 } from '../../../../src/core/mixins/Themed';
 import { WidgetBase } from '../../../../src/core/WidgetBase';
 import { Registry } from '../../../../src/core/Registry';
-import { v } from '../../../../src/core/d';
+import { v } from '../../../../src/core/vdom';
 import { stub, SinonStub } from 'sinon';
 
 import * as baseThemeClasses1 from './../../support/styles/testWidget1.css';

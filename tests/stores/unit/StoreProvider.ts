@@ -1,7 +1,6 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import { v, w } from '../../../src/core/d';
 import { Registry } from '../../../src/core/Registry';
 
 import { StoreProvider } from '../../../src/stores/StoreProvider';
@@ -10,7 +9,7 @@ import { replace } from '../../../src/stores/state/operations';
 import { Store } from '../../../src/stores/Store';
 import { VNode } from '../../../src/core/interfaces';
 import { WidgetBase } from '../../../src/core/WidgetBase';
-import renderer from '../../../src/core/vdom';
+import renderer, { v, w } from '../../../src/core/vdom';
 
 interface State {
 	foo: string;

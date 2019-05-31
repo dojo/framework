@@ -1,13 +1,14 @@
 /* tslint:disable:interface-name */
 import i18n, { Bundle, formatMessage, getCachedMessages, Messages } from '../../i18n/i18n';
 import Map from '../../shim/Map';
-import { isVNode, decorate } from './../d';
+import { isVNode } from './../vdom';
 import { afterRender } from './../decorators/afterRender';
 import { inject } from './../decorators/inject';
 import { Constructor, DNode, VNodeProperties } from './../interfaces';
 import { Injector } from './../Injector';
 import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
+import { decorate } from '../util';
 
 export const INJECTOR_KEY = '__i18n_injector';
 

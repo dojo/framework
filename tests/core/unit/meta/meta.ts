@@ -4,9 +4,8 @@ import { Base as MetaBase } from '../../../../src/core/meta/Base';
 import { stub, spy } from 'sinon';
 import { createResolvers } from './../../support/util';
 import NodeHandler, { NodeEventType } from '../../../../src/core/NodeHandler';
-import { v, w } from '../../../../src/core/d';
 import { WidgetBase } from '../../../../src/core/WidgetBase';
-import { renderer } from '../../../../src/core/vdom';
+import { renderer, v, w } from '../../../../src/core/vdom';
 
 const resolvers = createResolvers();
 let bindInstance: WidgetBase;

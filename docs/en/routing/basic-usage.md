@@ -21,7 +21,7 @@ Then configure the application to be "routing" aware by registering the router w
 
 ```tsx
 import renderer from '@dojo/framework/core/vdom';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 import Registry from '@dojo/framework/core/Registry';
 import { registerRouterInjector } from '@dojo/framework/routing/RouterInjector';
 
@@ -44,7 +44,7 @@ In the routing configuration the `home` route is associated with an outlet ident
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
 export default class App extends WidgetBase {
@@ -79,7 +79,7 @@ The parameters values are injected into to matching `Outlets`'s `renderer` prope
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
 export default class App extends WidgetBase {
@@ -110,7 +110,7 @@ export default [
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
 export default class App extends WidgetBase {
@@ -181,7 +181,7 @@ In addition to the `Link` specific properties, all the standard `VNodeProperties
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 import { Link } from '@dojo/framework/routing/Link';
 
 export default class App extends WidgetBase {
@@ -205,7 +205,7 @@ ActiveLink Properties:
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 import { ActiveLink } from '@dojo/framework/routing/ActiveLink';
 
 export default class App extends WidgetBase {
@@ -267,7 +267,7 @@ With the routing configuration above the following example will generate 4 separ
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
 import Home from './Home';

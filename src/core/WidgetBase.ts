@@ -1,6 +1,5 @@
 import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
-import { v } from './d';
 import { auto } from './diff';
 import {
 	AfterRender,
@@ -20,7 +19,7 @@ import NodeHandler from './NodeHandler';
 import { WIDGET_BASE_TYPE } from './Registry';
 import { Handle } from '../core/Destroyable';
 import { Base } from './meta/Base';
-import { widgetInstanceMap } from './vdom';
+import { widgetInstanceMap, v } from './vdom';
 
 interface ReactionFunctionConfig {
 	propertyName: string;

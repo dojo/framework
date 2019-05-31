@@ -7,7 +7,7 @@ import { Registry } from '../../../../src/core/Registry';
 import { WidgetBase } from '../../../../src/core/WidgetBase';
 import bundle from '../../support/nls/greetings';
 import { fetchCldrData } from '../../support/util';
-import { v, w } from './../../../../src/core/d';
+import { v, w } from './../../../../src/core/vdom';
 import { ThemedMixin } from './../../../../src/core/mixins/Themed';
 
 class Localized extends I18nMixin(ThemedMixin(WidgetBase))<I18nProperties> {}

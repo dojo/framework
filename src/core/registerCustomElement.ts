@@ -1,8 +1,7 @@
 import Registry from './Registry';
 import { WidgetBase } from './WidgetBase';
-import { renderer } from './vdom';
+import { renderer, w, dom } from './vdom';
 import { from } from '../shim/array';
-import { w, dom } from './d';
 import global from '../shim/global';
 import { registerThemeInjector } from './mixins/Themed';
 import { alwaysRender } from './decorators/alwaysRender';

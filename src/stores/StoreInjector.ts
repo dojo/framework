@@ -1,6 +1,5 @@
 import WeakMap from '../shim/WeakMap';
 import { WidgetBase } from '../core/WidgetBase';
-import { w } from '../core/d';
 import { handleDecorator } from '../core/decorators/handleDecorator';
 import { beforeProperties } from '../core/decorators/beforeProperties';
 import { alwaysRender } from '../core/decorators/alwaysRender';
@@ -8,6 +7,7 @@ import { InjectorItem, RegistryLabel, Constructor, DNode } from '../core/interfa
 import { Store, Path } from './Store';
 import { Registry } from '../core/Registry';
 import { GetPaths } from './StoreProvider';
+import { w } from '../core/vdom';
 export { GetPaths } from './StoreProvider';
 const registeredInjectorsMap: WeakMap<WidgetBase, InjectorItem<Store>[]> = new WeakMap();
 

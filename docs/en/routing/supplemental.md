@@ -268,7 +268,7 @@ export default [
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
 export default class App extends WidgetBase {
@@ -394,7 +394,7 @@ const router = new Router(config, { HistoryManager: MemoryHistory });
 
 ```tsx
 import renderer from '@dojo/framework/core/vdom';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 import { registerRouterInjector } from '@dojo/framework/routing/RouterInjector';
 
 import routes from './routes';
@@ -416,7 +416,7 @@ A special `outlet` called `errorOutlet` is registered for that will match when t
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
 export default class App extends WidgetBase {

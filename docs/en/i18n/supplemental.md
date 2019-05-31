@@ -80,7 +80,7 @@ This can be imported and referenced within a widget such as:
 
 ```ts
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { v } from '@dojo/framework/core/d';
+import { v } from '@dojo/framework/core/vdom';
 import I18nMixin from '@dojo/framework/core/mixins/I18n';
 
 import myWidgetMessageBundle from '../nls/MyI18nWidget.en.ts';
@@ -196,7 +196,7 @@ export default {
 
 ```ts
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { v, w } from '@dojo/framework/core/d';
+import { v, w } from '@dojo/framework/core/vdom';
 import I18nMixin from '@dojo/framework/core/mixins/I18n';
 import Label from '@dojo/widgets/label';
 import Button from '@dojo/widgets/button';
@@ -243,7 +243,7 @@ This mechanism is enabled through `registerI18nInjector`, a convenience method p
 
 ```ts
 import renderer from '@dojo/framework/core/vdom';
-import { w } from '@dojo/framework/core/d';
+import { w } from '@dojo/framework/core/vdom';
 import Registry from '@dojo/framework/core/Registry';
 import { registerI18nInjector } from '@dojo/framework/core/mixins/I18n';
 
@@ -485,7 +485,7 @@ The `guestInfo` message can be rendered directly via `format`:
 
 ```ts
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { v } from '@dojo/framework/core/d';
+import { v } from '@dojo/framework/core/vdom';
 import I18nMixin from '@dojo/framework/core/mixins/I18n';
 
 import nlsBundle from '../nls/main';
@@ -586,7 +586,7 @@ The ICU-formatted `guestInfo` message can then be rendered as:
 
 ```ts
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { v } from '@dojo/framework/core/d';
+import { v } from '@dojo/framework/core/vdom';
 import I18nMixin from '@dojo/framework/core/mixins/I18n';
 
 import nlsBundle from '../nls/main';

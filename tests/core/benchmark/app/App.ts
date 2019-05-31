@@ -1,6 +1,6 @@
 import { DNode } from '../../../../src/core/interfaces';
 import { WidgetBase } from '../../../../src/core/WidgetBase';
-import { v, w } from '../../../../src/core/d';
+import { w, v } from '../../../../src/core/vdom';
 
 import { Row } from './Row';
 import { Buttons, ButtonConfig } from './Buttons';

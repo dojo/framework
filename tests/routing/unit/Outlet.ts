@@ -3,12 +3,11 @@ const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 
 import { WidgetBase } from '../../../src/core/WidgetBase';
-import { w, v } from '../../../src/core/d';
 import { MemoryHistory as HistoryManager, MemoryHistory } from '../../../src/routing/history/MemoryHistory';
 import { Outlet } from '../../../src/routing/Outlet';
 import { Registry } from '../../../src/core/Registry';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
-import { renderer } from '../../../src/core/vdom';
+import { renderer, w, v } from '../../../src/core/vdom';
 import harness from '../../../src/testing/harness';
 
 class Widget extends WidgetBase {

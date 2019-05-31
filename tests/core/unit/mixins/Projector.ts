@@ -4,7 +4,7 @@ const { assert } = intern.getPlugin('chai');
 
 import { WidgetBase } from '../../../../src/core/WidgetBase';
 import { ProjectorMixin } from '../../../../src/core/mixins/Projector';
-import { v } from '../../../../src/core/d';
+import { v } from '../../../../src/core/vdom';
 
 class App extends WidgetBase<{ child: string }> {
 	protected render() {

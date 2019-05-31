@@ -9,7 +9,7 @@ Further subsections describing particular topics for a given feature. Possibly a
 ```tsx
 // including fully-working embedded code snippets as further illustration
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 
 export default class MyWidget extends WidgetBase {
 	protected render() {

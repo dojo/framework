@@ -3,7 +3,8 @@ const { registerSuite } = intern.getPlugin('jsdom');
 import { assign } from '../../../src/shim/object';
 import { DNode, VNode, WNode } from '../../../src/core/interfaces';
 import { WidgetBase } from '../../../src/core/WidgetBase';
-import { dom, v, w, decorate, WNODE, VNODE, isWNode, isVNode } from '../../../src/core/d';
+import { dom, v, w, isWNode, isVNode } from '../../../src/core/vdom';
+import { decorate } from '../../../src/core/util';
 
 interface ChildProperties {
 	myChildProperty: string;
@@ -42,7 +43,6 @@ registerSuite('d', {
 			const properties: any = { id: 'id', classes: ['world'] };
 			const dNode = w(WidgetBase, properties);
 
-			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, WidgetBase);
 			assert.deepEqual(dNode.properties, properties);
 			assert.isTrue(isWNode(dNode));
@@ -52,7 +52,6 @@ registerSuite('d', {
 			const properties: any = { id: 'id', classes: ['world'] };
 			const dNode = w('my-widget', properties);
 
-			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, 'my-widget');
 			assert.deepEqual(dNode.properties, { id: 'id', classes: ['world'] } as any);
 			assert.isTrue(isWNode(dNode));
@@ -61,7 +60,6 @@ registerSuite('d', {
 		'create WNode wrapper using constructor with children'() {
 			const dNode = w(TestWidget, { required: true }, [w(TestChildWidget, { myChildProperty: '' })]);
 
-			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, TestWidget);
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
@@ -70,7 +68,6 @@ registerSuite('d', {
 		'create WNode wrapper using constructor with VNode children'() {
 			const dNode = w(TestChildWidget, { myChildProperty: '' }, [v('div')]);
 
-			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, TestChildWidget);
 			assert.lengthOf(dNode.children, 1);
 			assert.isTrue(isWNode(dNode));
@@ -80,7 +77,6 @@ registerSuite('d', {
 			const properties: any = { id: 'id', classes: ['world'] };
 			const dNode = w(WidgetBase, properties, [w(WidgetBase, properties)]);
 
-			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, WidgetBase);
 			assert.deepEqual(dNode.properties, properties);
 			assert.lengthOf(dNode.children, 1);
@@ -91,7 +87,6 @@ registerSuite('d', {
 			const properties: any = { id: 'id', classes: ['world'] };
 			const dNode = w('my-widget', properties, [w(WidgetBase, properties)]);
 
-			assert.equal(dNode.type, WNODE);
 			assert.deepEqual(dNode.widgetConstructor, 'my-widget');
 			assert.deepEqual(dNode.properties, { id: 'id', classes: ['world'] } as any);
 			assert.lengthOf(dNode.children, 1);
@@ -103,7 +98,6 @@ registerSuite('d', {
 			const symbolLabel = Symbol();
 
 			const dNode = w(symbolLabel, properties, [w(WidgetBase, properties)]);
-			assert.equal(dNode.type, WNODE);
 			assert.strictEqual(dNode.widgetConstructor, symbolLabel);
 			assert.deepEqual(dNode.properties, { id: 'id', classes: ['world'] } as any);
 			assert.lengthOf(dNode.children, 1);
@@ -113,7 +107,6 @@ registerSuite('d', {
 		'should merge properties onto a WNode'() {
 			class Foo extends WidgetBase<{ foo: string; bar: number }> {}
 			const dNode = w(Foo, { foo: 'foo', bar: 1 }, ['child']);
-			assert.equal(dNode.type, WNODE);
 			assert.strictEqual(dNode.widgetConstructor, Foo);
 			assert.deepEqual(dNode.properties, { foo: 'foo', bar: 1 });
 			assert.lengthOf(dNode.children, 1);
@@ -123,7 +116,6 @@ registerSuite('d', {
 			const mergedNode = w(dNode, { foo: 'bar' });
 			// maintains properties typings, this errors
 			// w(dNode, { foo: 1 });
-			assert.equal(mergedNode.type, WNODE);
 			assert.strictEqual(mergedNode.widgetConstructor, Foo);
 			assert.deepEqual(mergedNode.properties, { foo: 'bar', bar: 1 });
 			assert.lengthOf(mergedNode.children, 1);
@@ -134,7 +126,6 @@ registerSuite('d', {
 		'should replace children on a WNode'() {
 			class Foo extends WidgetBase<any, string> {}
 			const dNode = w(Foo, {}, ['original']);
-			assert.equal(dNode.type, WNODE);
 			assert.strictEqual(dNode.widgetConstructor, Foo);
 			assert.deepEqual(dNode.properties, {});
 			assert.lengthOf(dNode.children, 1);
@@ -144,7 +135,6 @@ registerSuite('d', {
 			const mergedNode = w(dNode, {}, ['updated', 'children']);
 			// maintains children typings, this errors
 			// w(dNode, { }, [ v('div') ]);
-			assert.equal(mergedNode.type, WNODE);
 			assert.strictEqual(mergedNode.widgetConstructor, Foo);
 			assert.deepEqual(mergedNode.properties, {});
 			assert.lengthOf(mergedNode.children, 2);
@@ -156,7 +146,6 @@ registerSuite('d', {
 		'should replace children with an empty array on a WNode'() {
 			class Foo extends WidgetBase<any, string> {}
 			const dNode = w(Foo, {}, ['original']);
-			assert.equal(dNode.type, WNODE);
 			assert.strictEqual(dNode.widgetConstructor, Foo);
 			assert.deepEqual(dNode.properties, {});
 			assert.lengthOf(dNode.children, 1);
@@ -164,7 +153,6 @@ registerSuite('d', {
 			assert.isTrue(isWNode(dNode));
 			assert.isFalse(isVNode(dNode));
 			const mergedNode = w(dNode, {}, []);
-			assert.equal(mergedNode.type, WNODE);
 			assert.strictEqual(mergedNode.widgetConstructor, Foo);
 			assert.deepEqual(mergedNode.properties, {});
 			assert.lengthOf(mergedNode.children, 0);
@@ -177,28 +165,24 @@ registerSuite('d', {
 			const vNode = v('div');
 			assert.isUndefined(vNode.children);
 			assert.equal(vNode.tag, 'div');
-			assert.equal(vNode.type, VNODE);
 			assert.isTrue(isVNode(vNode));
 			assert.isFalse(isWNode(vNode));
 		},
 		'create VNode wrapper with children'() {
 			const vNode = v('div', {}, [v('div'), v('div')]);
 			assert.lengthOf(vNode.children!, 2);
-			assert.equal(vNode.type, VNODE);
 			assert.isTrue(isVNode(vNode));
 			assert.isFalse(isWNode(vNode));
 		},
 		'create VNode wrapper with children as options param'() {
 			const vNode = v('div', [v('div'), v('div')]);
 			assert.lengthOf(vNode.children!, 2);
-			assert.equal(vNode.type, VNODE);
 			assert.isTrue(isVNode(vNode));
 			assert.isFalse(isWNode(vNode));
 		},
 		'create VNode wrapper with text node children'() {
 			const vNode = v('div', {}, ['This Text Node', 'That Text Node']);
 			assert.lengthOf(vNode.children!, 2);
-			assert.equal(vNode.type, VNODE);
 			assert.isTrue(isVNode(vNode));
 			assert.isFalse(isWNode(vNode));
 		},

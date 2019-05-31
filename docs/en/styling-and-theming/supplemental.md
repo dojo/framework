@@ -49,7 +49,7 @@ This stylesheet can be used within a corresponding widget as follows:
 
 ```ts
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { v } from '@dojo/framework/core/d';
+import { v } from '@dojo/framework/core/vdom';
 
 import * as css from '../styles/MyWidget.m.css';
 
@@ -66,7 +66,7 @@ Similarly, if using TSX widget syntax:
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 
 import * as css from '../styles/MyWidget.m.css';
 
@@ -188,7 +188,7 @@ For example, specifying a primary application theme:
 
 ```ts
 import renderer from '@dojo/framework/core/vdom';
-import { w } from '@dojo/framework/core/d';
+import { w } from '@dojo/framework/core/vdom';
 import Registry from '@dojo/framework/core/Registry';
 import { registerThemeInjector } from '@dojo/framework/core/mixins/Themed';
 
@@ -348,7 +348,7 @@ This stylesheet can be used within a corresponding themeable widget as follows:
 ```ts
 import WidgetBase from '@dojo/framework/core/WidgetBase';
 import ThemedMixin, { theme } from '@dojo/framework/core/mixins/Themed';
-import { v } from '@dojo/framework/core/d';
+import { v } from '@dojo/framework/core/vdom';
 
 import * as css from '../styles/MyThemeableWidget.m.css';
 
@@ -379,7 +379,7 @@ Similarly, if using TSX widget syntax:
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
 import ThemedMixin, { theme } from '@dojo/framework/core/mixins/Themed';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 
 import * as css from '../styles/MyThemeableWidget.m.css';
 
@@ -424,7 +424,7 @@ Extending the above example:
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
 import ThemedMixin, { theme } from '@dojo/framework/core/mixins/Themed';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 
 import * as commonCss from '../styles/MyThemeCommonStyles.m.css';
 import * as css from '../styles/MyThemeableWidget.m.css';
@@ -471,7 +471,7 @@ export default {
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
 import ThemedMixin, { theme } from '@dojo/framework/core/mixins/Themed';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 
 import MyThemeableTsxWidget from './src/widgets/MyThemeableTsxWidget.tsx';
 
@@ -533,7 +533,7 @@ As an example of providing extra classes, the following tweaks an instance of a 
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 
 import ComboBox from '@dojo/widgets/combobox';
 

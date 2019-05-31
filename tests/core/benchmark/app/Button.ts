@@ -1,5 +1,5 @@
 import { WidgetBase } from '../../../../src/core/WidgetBase';
-import { v } from '../../../../src/core/d';
+import { v } from '../../../../src/core/vdom';
 import { DNode } from '../../../../src/core/interfaces';
 
 export interface ButtonProperties {

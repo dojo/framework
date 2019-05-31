@@ -31,7 +31,7 @@ The application name becomes relevant when specifying [widget theme keys](./supp
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 
 import * as css from '../styles/MyWidget.m.css';
 
@@ -53,7 +53,7 @@ export default class MyWidget extends WidgetBase {
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
 import ThemedMixin, { theme } from '@dojo/framework/core/mixins/Themed';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 
 import * as css from '../styles/MyWidget.m.css';
 
@@ -122,7 +122,7 @@ export default {
 
 ```tsx
 import renderer from '@dojo/framework/core/vdom';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 import Registry from '@dojo/framework/core/Registry';
 import { registerThemeInjector } from '@dojo/framework/core/mixins/Themed';
 
@@ -147,7 +147,7 @@ r.mount({ registry });
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';
 import ThemedMixin, { ThemeSwitcher, theme, UpdateTheme } from '@dojo/framework/core/mixins/Themed';
-import { tsx } from '@dojo/framework/core/tsx';
+import { tsx } from '@dojo/framework/core/vdom';
 
 import myTheme from '../themes/MyTheme/theme';
 import alternativeTheme from '../themes/MyAlternativeTheme/theme';

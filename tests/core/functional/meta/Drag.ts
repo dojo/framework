@@ -1,4 +1,4 @@
-import { v } from '../../../../src/core/d';
+import { v } from '../../../../src/core/vdom';
 import WidgetBase from '../../../../src/core/WidgetBase';
 import Projector from '../../../../src/core/mixins/Projector';
 import Drag from '../../../../src/core/meta/Drag';
