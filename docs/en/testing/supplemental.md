@@ -252,8 +252,36 @@ expectPartial(selector: string, expectedRenderFunction: () => DNode | DNode[]);
 
 Example usage:
 
+> HelloWorld.tsx
+
 ```ts
-h.expectPartial('@child-widget', () => w(Widget, { key: 'child-widget' }));
+export interface HelloWorldProperties {
+    foo?: boolean;
+    bar?: boolean;
+}
+
+export default class HelloWorld extends WidgetBase<HelloWorldProperties> {
+    render() {
+        const { foo, bar } = this.properties;
+        return (
+            <div>
+                { foo && <span key="foo">Foo</span> }
+                <ul>
+                    <li>Hello</li>
+                    <li>World</li>
+                </ul>
+                { bar && <span key="bar">Bar</span> }
+            </div>
+        );
+    }
+}
+```
+
+```ts
+it('should render foo', () => {
+    const h = harness(() => <HelloWorld foo={ true } />);
+    h.expectPartial('~foo', () => <span>Foo</span>);
+});
 ```
 
 #### `harness.trigger`
@@ -415,6 +443,102 @@ getProperty(selector: string, property: string): any;
 ## Mocking
 
 ## Functional Tests
+
+Unlike unit tests that load and execute your code, functional tests load a page in the browser and test the interaction of your application.
+
+If you want to test the content of your page for a certain route, you can update the links to make this easier to test.
+
+
+> src/widgets/Menu.ts
+
+```ts
+export default class Menu extends WidgetBase {
+	protected render() {
+		return w(Toolbar, { heading: 'My Dojo App!', collapseWidth: 600 }, [
+			w(
+				Link,
+				{
+					id: 'home', // add id attribute
+					to: 'home',
+					classes: [ css.link ],
+					activeClasses: [ css.selected ]
+				},
+				[ 'Home' ]
+			),
+			w(
+				Link,
+				{
+					id: 'about', // add id attribute
+					to: 'about',
+					classes: [ css.link ],
+					activeClasses: [ css.selected ]
+				},
+				[ 'About' ]
+			),
+			w(
+				Link,
+				{
+					id: 'profile', // add id attribute
+					to: 'profile',
+					classes: [ css.link ],
+					activeClasses: [ css.selected ]
+				},
+				[ 'Profile' ]
+			)
+		]);
+	}
+}
+
+```
+
+During application use, you would expect to click on the `profile` link and directed to a page welcoming the user. You can write a functional test to verify this behavior.
+
+> tests/functional/main.ts
+
+```ts
+const { describe, it } = intern.getInterface('bdd');
+const { assert } = intern.getPlugin('chai');
+
+describe('routing', () => {
+	it('profile page correctly loads', ({ remote }) => {
+		return (
+			remote
+				// loads the HTML file in local node server
+				.get('../../output/dev/index.html')
+				// find the id of the anchor tag
+				.findById('profile')
+				// click on the link
+				.click()
+				// end this action
+				.end()
+				// find the h1 tag
+				.findByTagName('h1')
+				// get the text in the h1 tag
+				.getVisibleText()
+				.then((text) => {
+					// verify the content of the h1 tag on the profile page
+					assert.equal(text, 'Welcome Dojo User!');
+				})
+		);
+	});
+});
+```
+
+The `remote` object uses the [Leadfoot Command object](https://theintern.io/docs.html#Leadfoot/2/api/Command/command-1) to interact with the page. Because loading and interacting with the page is an asynchronous action, be sure to return the `remote` object in your test.
+
+Functional tests can be executed in the command line.
+
+> Command Line
+
+```bash
+npm run test:functional
+```
+
+This will load the html page into a remote instance of Chrome on your machine to test interactivity.
+
+Functional tests are very useful to to make sure that your application code works as intended when it is actually used inside a browser.
+
+You can read more details in the [Intern Function tests](https://theintern.io/docs.html#Intern/4/docs/docs%2Fwriting_tests.md/functional-tests) guide.
 
 [BrowserStack]: https://www.browserstack.com/
 [Dojo CLI]: https://github.com/dojo/cli

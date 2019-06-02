@@ -118,7 +118,6 @@ or with environment variables
 TESTINGBOT_SECRET=<secret> TESTINGBOT_KEY=<key> dojo test -a -c saucelabs
 ```
 
-
 ## Assertion Templates
 
 Assertion Templates provide a way to create a base assertion that would allow you to change parts of the expected output for each test.
