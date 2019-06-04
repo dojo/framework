@@ -726,18 +726,20 @@ export const invalidator = factory(({ id }) => {
 	};
 });
 
-export const getDom = factory(({ id }) => {
-	return (key: string) => {
-		const [widgetId] = id.split('-');
-		const widgetMeta = widgetMetaMap.get(widgetId);
-		if (widgetMeta) {
-			const node = widgetMeta.nodeMap.get(key);
-			if (node) {
-				return node;
+export const node = factory(({ id }) => {
+	return {
+		get(key: string | number) {
+			const [widgetId] = id.split('-');
+			const widgetMeta = widgetMetaMap.get(widgetId);
+			if (widgetMeta) {
+				const node = widgetMeta.nodeMap.get(key);
+				if (node) {
+					return node;
+				}
+				requestedDomNodes.add(`${widgetId}-${key}`);
 			}
-			requestedDomNodes.add(`${widgetId}-${key}`);
+			return null;
 		}
-		return null;
 	};
 });
 

@@ -11,7 +11,7 @@ import {
 	renderer,
 	destroy,
 	invalidator,
-	getDom,
+	node,
 	widgetInstanceMap,
 	v,
 	w,
@@ -3212,10 +3212,10 @@ jsdomDescribe('vdom', () => {
 			describe('core middleware', () => {
 				describe('getNode', () => {
 					it('should invalidate widget once node is available', () => {
-						const createWidget = create({ getDom });
+						const createWidget = create({ node });
 						let divNode: any;
 						const App = createWidget(({ middleware }) => {
-							divNode = middleware.getDom('div');
+							divNode = middleware.node.get('div');
 							return v('div', { key: 'div' });
 						});
 						const r = renderer(() => App({}));
@@ -3227,14 +3227,14 @@ jsdomDescribe('vdom', () => {
 					});
 
 					it('should remove nodes from the map', () => {
-						const createWidget = create({ getDom, invalidator });
+						const createWidget = create({ node, invalidator });
 						let divNode: any;
 						let show = true;
 						let invalidate: any;
 						const App = createWidget(({ middleware }) => {
-							divNode = middleware.getDom('div');
+							divNode = middleware.node.get(1);
 							invalidate = middleware.invalidator;
-							return v('div', [show ? v('div', { key: 'div' }) : null]);
+							return v('div', [show ? v('div', { key: 1 }) : null]);
 						});
 						const r = renderer(() => App({}));
 						const root = document.createElement('div');
