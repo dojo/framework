@@ -3210,7 +3210,7 @@ jsdomDescribe('vdom', () => {
 			});
 
 			describe('core middleware', () => {
-				describe('getNode', () => {
+				describe('node', () => {
 					it('should invalidate widget once node is available', () => {
 						const createWidget = create({ node });
 						let divNode: any;
