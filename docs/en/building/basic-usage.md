@@ -1,26 +1,6 @@
 # Basic Usage
 
-## Creating a Dojo application
-
-The first step for building a Dojo application is to install the CLI
-
-> Command line
-
-```bash
-npm install -g @dojo/cli @dojo/cli-create-app
-```
-
-This command installs the Dojo command-line tool (`@dojo/cli`) and the Dojo CLI module to create an application (`@dojo/cli-create-app`). There are a number of CLI modules that add commands and functionality to the dojo command-line.
-
-Now create an application using the dojo command.
-
-> Command line
-
-```bash
-dojo create app --name my-first-app
-```
-
-This command will generate a basic project structure in the `my-first-app` directory. This project will include a `package.json` file, an example Dojo application, and all of the project dependencies will be pre-installed. It will include two additional Dojo CLI modules. [@dojo/cli-build-app](https://github.com/dojo/cli-build-app) and [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern).
+Dojo provides a set of CLI commands that assist in creating and building an application. This guide assumes that `@dojo/cli` has been installed globally and [@dojo/cli-build-app](https://github.com/dojo/cli-build-app) and [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern) are available in the project. If the application was initialized using [@dojo/cli-create-app](https://github.com/dojo/cli-create-app) then these dependencies should already be present.
 
 ## Building
 
@@ -28,10 +8,8 @@ There are several types of build targets or `mode`s that Dojo's CLI tool support
 
 Run the following to create an optimized build ready for production.
 
-> Command line
-
 ```bash
-npm run build
+> dojo build --mode dist
 ```
 
 This build will use the `dist` mode to create an application bundle and output the results in the `output/dist` directory.
@@ -42,44 +20,34 @@ A web server can be started with the `--serve` flag while running in `dev` or `d
 
 The generated `package.json` includes the `dev` script which uses these flags to serve a built version of the application and automatically rebuild it when files change on disk.
 
-> Command line
-
 ```bash
-npm run dev
+> dojo build --mode dev --watch file --serve
 ```
 
 The application will also have source maps available. This allows the debugger to map the built JavaScript code back to the original TypeScript code that lives in the `src/` directory.
 
-For more information on how to configure the build options see the [@dojo/cli-build-app](https://github.com/dojo/cli-build-app/blob/master/README.md#configuration) README.
-
 ## Testing
 
-Dojo uses [Intern](https://theintern.io/) for running unit and functional tests. Intern supports two types of testing approaches unit and functional. Unit tests may be run in node using [jsdom](https://github.com/jsdom/jsdom) and using [Selenium](https://www.seleniumhq.org/). Functional tests are run using Selenium in the browser and test the overall functionality of the software as a user would interact with it.
+Dojo uses [Intern](https://theintern.io/) for running unit and functional tests.
 
-A new Dojo application will have example unit and function tests under the `tests` directory. Scripts for running tests are available in the `package.json` file.
-
-The fastest way to run tests is by running them in node using [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern)'s JIT builder.
-
-> Command line
+The fastest way to run unit tests in `tests/unit` is by running them using uses [ts-node](https://www.npmjs.com/package/ts-node) with [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern)'s JIT builder.
 
 ```bash
-npm test
+> dojo test
 ```
 
-This command uses [ts-node](https://www.npmjs.com/package/ts-node) to automatically build and execute unit tests located in `tests/unit` and build code from `src` on demand.
-
-> Command line
+Unit and functional tests
 
 ```bash
-npm run test:unit
+> dojo build --mode unit
+> dojo test --unit --config local
 ```
 
 This command will build the Dojo application and tests into `dojo\test\unit` and use Intern to run tests locally using node and Chrome.
 
-> Command line
-
 ```bash
-npm run test:functional
+> dojo build --mode functional
+> dojo test --functional --config local
 ```
 
 This command will build the Dojo application and functional tests into `dojo\test\functional` and use Intern to execute tests in Chrome using Selenium.
