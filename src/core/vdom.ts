@@ -1,6 +1,8 @@
 import global from '../shim/global';
 import has from '../core/has';
-import { WeakMap } from '../shim/WeakMap';
+import WeakMap from '../shim/WeakMap';
+import Set from '../shim/Set';
+import Map from '../shim/Map';
 import {
 	WNode,
 	VNode,
@@ -73,6 +75,8 @@ export interface WidgetMeta {
 	registryHandler: any;
 	properties: any;
 	children?: DNode[];
+	nodeMap: Map<string | number, Node>;
+	destroyMap: Map<string, () => void>;
 }
 
 export interface WidgetData {
@@ -627,33 +631,6 @@ function arrayFrom(arr: any) {
 	return Array.prototype.slice.call(arr);
 }
 
-const factory = create();
-
-function wrapNodes(renderer: () => RenderResult) {
-	const result = renderer();
-	const isWNodeWrapper = isWNode(result);
-	const callback = () => {
-		return result;
-	};
-	callback.isWNodeWrapper = isWNodeWrapper;
-	return factory(callback);
-}
-
-export const widgetInstanceMap = new WeakMap<WidgetBaseInterface, WidgetData>();
-const widgetMetaMap = new Map<string, WidgetMeta>();
-let wrapperId = 0;
-let metaId = 0;
-
-export const invalidator = factory(({ id }) => {
-	const [widgetId] = id.split('-');
-	return () => {
-		const widgetMeta = widgetMetaMap.get(widgetId);
-		if (widgetMeta) {
-			return widgetMeta.invalidator();
-		}
-	};
-});
-
 function createFactory(callback: any, middlewares: any): any {
 	const factory = (properties: any, children?: any) => {
 		if (properties) {
@@ -701,6 +678,82 @@ export function create<T extends MiddlewareMap<any>, MiddlewareProps = ReturnTyp
 	returns.properties = properties;
 	return returns;
 }
+
+const factory = create();
+
+function wrapNodes(renderer: () => RenderResult) {
+	const result = renderer();
+	const isWNodeWrapper = isWNode(result);
+	const callback = () => {
+		return result;
+	};
+	callback.isWNodeWrapper = isWNodeWrapper;
+	return factory(callback);
+}
+
+export const widgetInstanceMap = new WeakMap<WidgetBaseInterface, WidgetData>();
+const widgetMetaMap = new Map<string, WidgetMeta>();
+const requestedDomNodes = new Set();
+let wrapperId = 0;
+let metaId = 0;
+
+function addNodeToMap(id: string, key: string | number, node: Node) {
+	const widgetMeta = widgetMetaMap.get(id);
+	if (widgetMeta) {
+		const existingNode = widgetMeta.nodeMap.get(key);
+		if (!existingNode) {
+			widgetMeta.nodeMap.set(key, node);
+		}
+		if (requestedDomNodes.has(`${id}-${key}`)) {
+			widgetMeta.invalidator();
+			requestedDomNodes.delete(`${id}-${key}`);
+		}
+	}
+}
+
+function destroyHandles(destroyMap: Map<string, () => void>) {
+	destroyMap.forEach((destroy) => destroy());
+	destroyMap.clear();
+}
+
+export const invalidator = factory(({ id }) => {
+	const [widgetId] = id.split('-');
+	return () => {
+		const widgetMeta = widgetMetaMap.get(widgetId);
+		if (widgetMeta) {
+			return widgetMeta.invalidator();
+		}
+	};
+});
+
+export const node = factory(({ id }) => {
+	return {
+		get(key: string | number) {
+			const [widgetId] = id.split('-');
+			const widgetMeta = widgetMetaMap.get(widgetId);
+			if (widgetMeta) {
+				const node = widgetMeta.nodeMap.get(key);
+				if (node) {
+					return node;
+				}
+				requestedDomNodes.add(`${widgetId}-${key}`);
+			}
+			return null;
+		}
+	};
+});
+
+export const destroy = factory(({ id }) => {
+	return (destroyFunction: () => void): void => {
+		const [widgetId] = id.split('-');
+		const widgetMeta = widgetMetaMap.get(widgetId);
+		if (widgetMeta) {
+			if (!widgetMeta.destroyMap.has(id)) {
+				widgetMeta.destroyMap.set(id, destroyFunction);
+			}
+		}
+	};
+});
 
 export function renderer(renderer: () => RenderResult): Renderer {
 	let _mountOptions: MountOptions = {
@@ -1301,9 +1354,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				}
 				runEnterAnimation(next, _mountOptions.transition);
 				const owningWrapper = _nodeToWrapperMap.get(next.node);
-				if (owningWrapper && owningWrapper.instance && node.properties.key != null) {
-					const instanceData = widgetInstanceMap.get(owningWrapper.instance);
-					instanceData && instanceData.nodeHandler.add(domNode as HTMLElement, `${node.properties.key}`);
+				if (owningWrapper && node.properties.key != null) {
+					if (owningWrapper.instance) {
+						const instanceData = widgetInstanceMap.get(owningWrapper.instance);
+						instanceData && instanceData.nodeHandler.add(domNode as HTMLElement, `${node.properties.key}`);
+					} else {
+						addNodeToMap(owningWrapper.id, node.properties.key, domNode!);
+					}
 				}
 				item.next.inserted = true;
 			} else if (item.type === 'update') {
@@ -1610,7 +1667,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				registryHandler,
 				middleware: {},
 				properties: next.node.properties,
-				children: next.node.children
+				children: next.node.children,
+				nodeMap: new Map(),
+				destroyMap: new Map()
 			};
 			widgetMetaMap.set(next.id, widgetData);
 			widgetData.middleware = (Constructor as any).middlewares
@@ -1749,6 +1808,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const meta = widgetMetaMap.get(current.id);
 		if (meta) {
 			meta.registryHandler.destroy();
+			destroyHandles(meta.destroyMap);
 			meta.invalidator = undefined as any;
 			widgetMetaMap.delete(current.id);
 		}
@@ -1859,6 +1919,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	function _removeDom({ current }: RemoveDomInstruction): ProcessResult {
 		_wrapperSiblingMap.delete(current);
 		_parentWrapperMap.delete(current);
+		const widgetMeta = widgetMetaMap.get(current.owningId);
+		if (widgetMeta && current.node.properties.key) {
+			widgetMeta.nodeMap.delete(current.node.properties.key);
+		}
 		if (current.hasAnimations) {
 			return {
 				item: { current: current.childrenWrappers, meta: {} },
@@ -1882,6 +1946,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 							const meta = widgetMetaMap.get(wrapper.id);
 							if (meta) {
 								meta.registryHandler.destroy();
+								destroyHandles(meta.destroyMap);
 								widgetMetaMap.delete(wrapper.id);
 							}
 						}
