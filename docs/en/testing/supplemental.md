@@ -442,6 +442,45 @@ getProperty(selector: string, property: string): any;
 
 ## Mocking
 
+You may have noticed that when testing widgets, we are testing that the user interface is rendered correctly given various updates to its properties. There is no real business logic to them, but you may want to test that something like a button click does call a property method. This test is not concerned as to what the method does, just that the interface calls it as expected. You can use a library like [Sinon] to help you in these cases.
+
+> src/widgets/Action.ts
+
+```ts
+export default class Action extends WidgetBase<{ fetchItems: () => void }> {
+	protected render() {
+		return	v('div', { classes: [css.root] }, [
+			w(Button, { onClick: this.handleClick, key: 'button' }, ['Fetch'])
+		])
+	}
+	private handleClick() {
+		this.properties.fetchItems();
+	}
+}
+```
+
+You would want to test that the button will call the `this.properties.fetchItems` method when it is clicked.
+
+> tests/unit/widgets/Action.ts
+
+```ts
+describe('Action', () => {
+	const fetchItems = stub();
+	it('can fetch data on button click', () => {
+		const h = harness(() => w(Home, { fetchItems }));
+		h.expect(() => (
+			v('div', { classes: [css.root] }, [
+				w(Button, { onClick: () => {}, key: 'button' }, ['Fetch'])
+			])
+		));
+		h.trigger('@button', 'onClick');
+		assert.isTrue(fetchItems.calledOnce);
+	});
+});
+```
+
+In this case, you can provide a [Sinon stub](https://sinonjs.org/releases/latest/stubs/) to the Action widget that it will use to try and fetch items. You can then target the `@button` key to trigger the `onClick` of that button and then validate that the `fetchItems` stub was called once.
+
 ## Functional Tests
 
 Unlike unit tests that load and execute your code, functional tests load a page in the browser and test the interaction of your application.
@@ -545,4 +584,5 @@ You can read more details in the [Intern Function tests](https://theintern.io/do
 [Intern]: https://theintern.io/
 [SauceLabs]: https://saucelabs.com/
 [Selenium]: http://www.seleniumhq.org/
+[Sinon]: https://sinonjs.org/
 [TestingBot]: https://testingbot.com/
