@@ -481,6 +481,8 @@ describe('Action', () => {
 
 In this case, you can provide a [Sinon stub](https://sinonjs.org/releases/latest/stubs/) to the Action widget that it will use to try and fetch items. You can then target the `@button` key to trigger the `onClick` of that button and then validate that the `fetchItems` stub was called once.
 
+For more details on mocking, please read the [Sinon] documentation.
+
 ## Functional Tests
 
 Unlike unit tests that load and execute your code, functional tests load a page in the browser and test the interaction of your application.
