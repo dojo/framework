@@ -10,6 +10,7 @@ import {
 	create,
 	renderer,
 	destroy,
+	getRegistry,
 	invalidator,
 	node,
 	widgetInstanceMap,
@@ -3295,6 +3296,29 @@ jsdomDescribe('vdom', () => {
 						resolvers.resolve();
 						assert.isTrue(fooDestroyStub.calledOnce);
 						assert.isTrue(barDestroyStub.calledOnce);
+					});
+				});
+
+				describe('getRegistry', () => {
+					it('should return the scoped registry handler', () => {
+						const registry = new Registry();
+						registry.defineInjector('test', () => () => 'hello world');
+						const createWidget = create({ getRegistry });
+						const App = createWidget(function App({ middleware }) {
+							const registry = middleware.getRegistry();
+							let result = '';
+							if (registry) {
+								const item = registry.getInjector<string>('test');
+								if (item) {
+									result = item.injector();
+								}
+							}
+							return result;
+						});
+						const r = renderer(() => App({}));
+						const div = document.createElement('div');
+						r.mount({ domNode: div, registry });
+						assert.strictEqual(div.outerHTML, '<div>hello world</div>');
 					});
 				});
 			});
