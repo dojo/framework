@@ -28,10 +28,6 @@ A class-based widget is a TypeScript class that inherits from `WidgetBase` (prov
 
 These widgets are required to implement a `render()` method that should [return any VDOM nodes](#rendering-in-dojo) that constitute the widget's structural representation within a web page.
 
-### Widget styling
-
-Styling of a widget's DOM output is handled via CSS, with relevant style classes stored in a CSS module file parallel to the widget's TypeScript module. Styling is identical for both functional and class-based widget types. This topic is described in detail within the [Styling and Theming reference guide](../styling-and-theming/supplemental.md).
-
 ### Basic widget example
 
 The following illustrates a trivial yet complete widget within a Dojo application:
@@ -51,6 +47,10 @@ export default class MyWidget extends WidgetBase {
 This widget does not return anything from its `render()` method, so has no structural representation within an application's output.
 
 Typical widgets will however [return one or more virtual DOM nodes from their `render()` method](#virtual-nodes-example). The process of translating virtual DOM nodes to output on a web page is handled by Dojo's rendering system.
+
+### Widget styling
+
+Styling of a widget's DOM output is handled via CSS, with relevant style classes stored in a CSS module file parallel to the widget's TypeScript module. Styling is identical for both functional and class-based widget types. This topic is described in detail within the [Styling and Theming reference guide](../styling-and-theming/supplemental.md).
 
 ## Scaffolding widgets
 
