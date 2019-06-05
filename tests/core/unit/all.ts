@@ -17,3 +17,4 @@ import './NodeHandler';
 import './meta/all';
 import './vdom';
 import './registerCustomElement';
+import './middleware/all';
