@@ -77,6 +77,7 @@ export interface WidgetMeta {
 	children?: DNode[];
 	nodeMap: Map<string | number, Node>;
 	destroyMap: Map<string, () => void>;
+	deferRefs: number;
 }
 
 export interface WidgetData {
@@ -766,6 +767,24 @@ export const getRegistry = factory(({ id }) => {
 	};
 });
 
+export const defer = factory(({ id }) => {
+	const [widgetId] = id.split('-');
+	return {
+		pause() {
+			const widgetMeta = widgetMetaMap.get(widgetId);
+			if (widgetMeta) {
+				widgetMeta.deferRefs = widgetMeta.deferRefs + 1;
+			}
+		},
+		resume() {
+			const widgetMeta = widgetMetaMap.get(widgetId);
+			if (widgetMeta) {
+				widgetMeta.deferRefs = widgetMeta.deferRefs - 1;
+			}
+		}
+	};
+});
+
 export function renderer(renderer: () => RenderResult): Renderer {
 	let _mountOptions: MountOptions = {
 		sync: false,
@@ -1260,7 +1279,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function _runInvalidationQueue() {
 		_renderScheduled = undefined;
-		const invalidationQueue = [..._invalidationQueue];
+		let invalidationQueue = [..._invalidationQueue];
 		const previouslyRendered = [];
 		_invalidationQueue = [];
 		invalidationQueue.sort((a, b) => {
@@ -1270,6 +1289,15 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			}
 			return result;
 		});
+		if (_deferredProcessQueue.length) {
+			_processQueue = [..._deferredProcessQueue];
+			_deferredProcessQueue = [];
+			_runProcessQueue();
+			if (_deferredProcessQueue.length) {
+				_invalidationQueue = [...invalidationQueue];
+				invalidationQueue = [];
+			}
+		}
 		let item: InvalidationQueueItem | undefined;
 		while ((item = invalidationQueue.pop())) {
 			let { id } = item;
@@ -1296,13 +1324,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 				parent && _parentWrapperMap.set(next, parent);
 				sibling && _wrapperSiblingMap.set(next, sibling);
-				const { item } = _updateWidget({ current, next });
-				if (item) {
-					_processQueue.push(item);
-					if (_deferredProcessQueue.length) {
-						_processQueue = [..._processQueue, ..._deferredProcessQueue];
-						_deferredProcessQueue = [];
-					}
+				const result = _updateWidget({ current, next });
+				if (result && result.item) {
+					_processQueue.push(result.item);
 					_idToWrapperMap.set(id, next);
 					_runProcessQueue();
 				}
@@ -1650,49 +1674,58 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let rendered: RenderResult;
 		let invalidate: () => void;
 		next.properties = next.node.properties;
-		next.id = `${wrapperId++}`;
+		next.id = next.id || `${wrapperId++}`;
 		_idToWrapperMap.set(next.id, next);
 		let processResult: ProcessResult = {};
 		if (!isWidgetBaseConstructor(Constructor)) {
-			invalidate = () => {
-				const widgetMeta = widgetMetaMap.get(next.id);
-				if (widgetMeta) {
-					widgetMeta.dirty = true;
+			let widgetMeta = widgetMetaMap.get(next.id);
+			if (!widgetMeta) {
+				invalidate = () => {
+					const widgetMeta = widgetMetaMap.get(next.id);
+					if (widgetMeta) {
+						widgetMeta.dirty = true;
+					}
+					_invalidationQueue.push({
+						id: next.id,
+						depth: next.depth,
+						order: next.order
+					});
+					_schedule();
+				};
+				const registryHandler = new RegistryHandler();
+				registryHandler.on('invalidate', invalidate);
+				if (registry) {
+					registryHandler.base = registry;
 				}
-				_invalidationQueue.push({
-					id: next.id,
-					depth: next.depth,
-					order: next.order
-				});
-				_schedule();
-			};
-			const registryHandler = new RegistryHandler();
-			registryHandler.on('invalidate', invalidate);
-			if (registry) {
-				registryHandler.base = registry;
-			}
 
-			let widgetData = {
-				dirty: false,
-				invalidator: invalidate,
-				registryHandler,
-				middleware: {},
-				properties: next.node.properties,
-				children: next.node.children,
-				nodeMap: new Map(),
-				destroyMap: new Map()
-			};
-			widgetMetaMap.set(next.id, widgetData);
-			widgetData.middleware = (Constructor as any).middlewares
-				? resolveMiddleware((Constructor as any).middlewares, next.id)
-				: {};
+				widgetMeta = {
+					dirty: false,
+					invalidator: invalidate,
+					registryHandler,
+					middleware: {},
+					properties: next.node.properties,
+					children: next.node.children,
+					nodeMap: new Map(),
+					destroyMap: new Map(),
+					deferRefs: 0
+				};
+				widgetMetaMap.set(next.id, widgetMeta);
+				widgetMeta.middleware = (Constructor as any).middlewares
+					? resolveMiddleware((Constructor as any).middlewares, next.id)
+					: {};
+			} else {
+				invalidate = widgetMeta.invalidator;
+			}
 
 			rendered = Constructor({
 				id: next.id,
 				properties: next.node.properties,
 				children: next.node.children,
-				middleware: widgetData.middleware
+				middleware: widgetMeta.middleware
 			});
+			if (_mountOptions.merge && next.mergeNodes && next.mergeNodes.length && widgetMeta.deferRefs > 0) {
+				return false;
+			}
 		} else {
 			let instance = new Constructor() as WidgetBaseInterface & {
 				invalidate: any;
