@@ -72,7 +72,7 @@ export interface WidgetMeta {
 	dirty: boolean;
 	invalidator: () => void;
 	middleware: any;
-	registryHandler: any;
+	registryHandler: RegistryHandler;
 	properties: any;
 	children?: DNode[];
 	nodeMap: Map<string | number, Node>;
@@ -752,6 +752,17 @@ export const destroy = factory(({ id }) => {
 				widgetMeta.destroyMap.set(id, destroyFunction);
 			}
 		}
+	};
+});
+
+export const getRegistry = factory(({ id }) => {
+	const [widgetId] = id.split('-');
+	return (): RegistryHandler | null => {
+		const widgetMeta = widgetMetaMap.get(widgetId);
+		if (widgetMeta) {
+			return widgetMeta.registryHandler;
+		}
+		return null;
 	};
 });
 
