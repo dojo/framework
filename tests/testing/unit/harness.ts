@@ -6,7 +6,7 @@ import { WidgetBase } from '../../../src/core/WidgetBase';
 import { v, w, isVNode } from '../../../src/core/vdom';
 import Set from '../../../src/shim/Set';
 import Map from '../../../src/shim/Map';
-import { VNode, WNode } from '../../../src/core/interfaces';
+import { VNode, WNode, WidgetProperties } from '../../../src/core/interfaces';
 
 const noop: any = () => {};
 
@@ -114,6 +114,12 @@ describe('harness', () => {
 		it('Should support deferred properties', () => {
 			const h = harness(() => w(MyDeferredWidget, {}));
 			h.expect(() => v('div', { classes: ['root', 'other'], styles: { marginTop: '100px' } }));
+		});
+
+		it('Should support widgets that have typed children', () => {
+			class WidgetWithTypedChildren extends WidgetBase<WidgetProperties, WNode<MyDeferredWidget>> {}
+			const h = harness(() => w(WidgetWithTypedChildren, {}, [w(MyDeferredWidget, {})]));
+			h.expect(() => v('div', [w(MyDeferredWidget, {})]));
 		});
 
 		it('expect partial for WNode constructor', () => {
