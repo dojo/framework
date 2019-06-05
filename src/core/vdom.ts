@@ -769,17 +769,20 @@ export const getRegistry = factory(({ id }) => {
 
 export const defer = factory(({ id }) => {
 	const [widgetId] = id.split('-');
+	let isDeferred = false;
 	return {
 		pause() {
 			const widgetMeta = widgetMetaMap.get(widgetId);
-			if (widgetMeta) {
+			if (!isDeferred && widgetMeta) {
 				widgetMeta.deferRefs = widgetMeta.deferRefs + 1;
+				isDeferred = true;
 			}
 		},
 		resume() {
 			const widgetMeta = widgetMetaMap.get(widgetId);
-			if (widgetMeta) {
+			if (isDeferred && widgetMeta) {
 				widgetMeta.deferRefs = widgetMeta.deferRefs - 1;
+				isDeferred = false;
 			}
 		}
 	};
@@ -1723,7 +1726,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				children: next.node.children,
 				middleware: widgetMeta.middleware
 			});
-			if (_mountOptions.merge && next.mergeNodes && next.mergeNodes.length && widgetMeta.deferRefs > 0) {
+			if (widgetMeta.deferRefs > 0) {
 				return false;
 			}
 		} else {
@@ -1772,7 +1775,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		return processResult;
 	}
 
-	function _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult {
+	function _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult | false {
 		current = _idToWrapperMap.get(current.id) || current;
 		const { instance, domNode, hasAnimations } = current;
 		let {
@@ -1811,6 +1814,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						children: next.node.children,
 						middleware: widgetMeta.middleware
 					});
+					if (widgetMeta.deferRefs > 0) {
+						rendered = null;
+					}
 				}
 			}
 		} else {
