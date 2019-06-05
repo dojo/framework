@@ -39,4 +39,20 @@ describe('cache middleware', () => {
 		destroyStub.getCall(0).callArg(0);
 		assert.isUndefined(cache.get('test'));
 	});
+
+	it('should be able to clear the cache', () => {
+		const { callback } = cacheMiddleware();
+		const cache = callback({
+			id: 'test',
+			middleware: {
+				destroy: destroyStub
+			},
+			properties: {}
+		});
+		assert.isUndefined(cache.get('test'));
+		cache.set('test', 'value');
+		assert.strictEqual(cache.get('test'), 'value');
+		cache.clear();
+		assert.isUndefined(cache.get('test'));
+	});
 });
