@@ -1,9 +1,10 @@
-const { it, describe, afterEach } = intern.getInterface('bdd');
+const { it, describe, beforeEach, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
 
 import blockMiddleware from '../../../../src/core/middleware/block';
 import cacheMiddleware from '../../../../src/core/middleware/cache';
+import icacheMiddleware from '../../../../src/core/middleware/icache';
 
 const sb = sandbox.create();
 const invalidatorStub = sb.stub();
@@ -12,9 +13,18 @@ const deferStub = {
 	resume: sb.stub()
 };
 const { callback } = blockMiddleware();
-const cache = cacheMiddleware().callback({ id: 'cache-test', middleware: { destroy: sb.stub() }, properties: {} });
+let cache: any;
+let icache: any;
 
 describe('block middleware', () => {
+	beforeEach(() => {
+		cache = cacheMiddleware().callback({ id: 'cache-test', middleware: { destroy: sb.stub() }, properties: {} });
+		icache = icacheMiddleware().callback({
+			id: 'cache-test',
+			middleware: { cache, invalidator: invalidatorStub },
+			properties: {}
+		});
+	});
 	afterEach(() => {
 		sb.resetHistory();
 	});
@@ -24,7 +34,7 @@ describe('block middleware', () => {
 			id: 'test',
 			middleware: {
 				cache,
-				invalidator: invalidatorStub,
+				icache,
 				defer: deferStub
 			},
 			properties: {}
@@ -63,7 +73,6 @@ describe('block middleware', () => {
 		assert.isNull(resultTwo);
 		assert.isNull(resultThree);
 		assert.isTrue(deferStub.resume.notCalled);
-
 		resolverOne('resultOne');
 		resolverTwo('resultTwo');
 		resolverThree('resultThree');
@@ -78,26 +87,5 @@ describe('block middleware', () => {
 			assert.strictEqual(resultThree, 'resultThree');
 			assert.isTrue(deferStub.pause.calledThrice);
 		});
-	});
-
-	it('Should return the result immediately when sync', () => {
-		const block = callback({
-			id: 'test',
-			middleware: {
-				cache,
-				invalidator: invalidatorStub,
-				defer: deferStub
-			},
-			properties: {}
-		});
-
-		function testModule(a: string) {
-			return 'sync';
-		}
-
-		let resultOne = block.run(testModule)('test');
-		assert.strictEqual(resultOne, 'sync');
-		resultOne = block.run(testModule)('test');
-		assert.strictEqual(resultOne, 'sync');
 	});
 });
