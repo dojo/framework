@@ -3,15 +3,16 @@ const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
 
 import blockMiddleware from '../../../../src/core/middleware/block';
+import cacheMiddleware from '../../../../src/core/middleware/cache';
 
 const sb = sandbox.create();
-const destroyStub = sb.stub();
 const invalidatorStub = sb.stub();
 const deferStub = {
 	pause: sb.stub(),
 	resume: sb.stub()
 };
 const { callback } = blockMiddleware();
+const cache = cacheMiddleware().callback({ id: 'cache-test', middleware: { destroy: sb.stub() }, properties: {} });
 
 describe('block middleware', () => {
 	afterEach(() => {
@@ -22,7 +23,7 @@ describe('block middleware', () => {
 		const block = callback({
 			id: 'test',
 			middleware: {
-				destroy: destroyStub,
+				cache,
 				invalidator: invalidatorStub,
 				defer: deferStub
 			},
@@ -83,7 +84,7 @@ describe('block middleware', () => {
 		const block = callback({
 			id: 'test',
 			middleware: {
-				destroy: destroyStub,
+				cache,
 				invalidator: invalidatorStub,
 				defer: deferStub
 			},
@@ -98,38 +99,5 @@ describe('block middleware', () => {
 		assert.strictEqual(resultOne, 'sync');
 		resultOne = block.run(testModule)('test');
 		assert.strictEqual(resultOne, 'sync');
-	});
-
-	it('Should register destroy to clear module map', () => {
-		const block = callback({
-			id: 'test',
-			middleware: {
-				destroy: destroyStub,
-				invalidator: invalidatorStub,
-				defer: deferStub
-			},
-			properties: {}
-		});
-
-		assert.isTrue(destroyStub.calledOnce);
-
-		let resolverOne: any;
-		const promiseOne = new Promise<string>((resolve) => {
-			resolverOne = resolve;
-		});
-		function testModule(a: string) {
-			return promiseOne;
-		}
-
-		let resultOne = block.run(testModule)('test');
-		assert.isNull(resultOne);
-		resolverOne('resultOne');
-		return promiseOne.then(() => {
-			resultOne = block.run(testModule)('test');
-			assert.strictEqual(resultOne, 'resultOne');
-			destroyStub.getCall(0).callArg(0);
-			resultOne = block.run(testModule)('test');
-			assert.isNull(resultOne);
-		});
 	});
 });

@@ -1,18 +1,14 @@
-import Map from '../../shim/Map';
-import { create, invalidator, destroy, defer } from '../vdom';
+import { create, invalidator, defer } from '../vdom';
+import cache from './cache';
 
-const blockFactory = create({ invalidator, destroy, defer });
+const blockFactory = create({ invalidator, defer, cache });
 
-export const block = blockFactory(({ middleware: { invalidator, destroy, defer } }) => {
-	const moduleMap = new Map();
-	destroy(() => {
-		moduleMap.clear();
-	});
+export const block = blockFactory(({ middleware: { invalidator, cache, defer } }) => {
 	return {
 		run<T extends (...args: any[]) => any>(module: T) {
 			return (...args: any[]): (ReturnType<T> extends Promise<infer U> ? U : ReturnType<T>) | null => {
 				const argsString = JSON.stringify(args);
-				let valueMap = moduleMap.get(module);
+				let valueMap = cache.get(module);
 				if (valueMap) {
 					const cachedValue = valueMap.get(argsString);
 					if (cachedValue !== undefined) {
@@ -24,10 +20,10 @@ export const block = blockFactory(({ middleware: { invalidator, destroy, defer }
 					defer.pause();
 					result.then((result: any) => {
 						defer.resume();
-						valueMap = moduleMap.get(module);
+						valueMap = cache.get(module);
 						if (!valueMap) {
 							valueMap = new Map();
-							moduleMap.set(module, valueMap);
+							cache.set(module, valueMap);
 						}
 						valueMap.set(argsString, result);
 						invalidator();
