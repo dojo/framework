@@ -1,1 +1,2 @@
 import './cache';
+import './injector';
