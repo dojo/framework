@@ -9,7 +9,7 @@ export const cache = factory(({ middleware: { destroy } }) => {
 		cacheMap.clear();
 	});
 	return {
-		get<T = any>(key: any): T | null {
+		get<T = any>(key: any): T | undefined {
 			return cacheMap.get(key);
 		},
 		set<T = any>(key: any, value: T): void {
