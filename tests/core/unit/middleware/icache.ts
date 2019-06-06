@@ -28,7 +28,7 @@ describe('icache middleware', () => {
 			},
 			properties: {}
 		});
-		assert.isUndefined(icache.getOrSet('test'));
+		assert.isUndefined(icache.get('test'));
 		assert.strictEqual('test', icache.getOrSet('test', 'test'));
 		assert.isTrue(invalidatorStub.calledOnce);
 		assert.strictEqual('test-two', icache.getOrSet('test-two', () => 'test-two'));
@@ -93,9 +93,9 @@ describe('icache middleware', () => {
 			resolverTwo = resolve;
 		});
 		icache.set('test', () => promiseOne);
-		assert.isUndefined(icache.getOrSet('test'));
+		assert.isUndefined(icache.get('test'));
 		icache.set('test', () => promiseTwo);
-		assert.isUndefined(icache.getOrSet('test'));
+		assert.isUndefined(icache.get('test'));
 		resolverTwo('two');
 		return promiseTwo.then(() => {
 			assert.isTrue(invalidatorStub.calledOnce);
@@ -121,10 +121,10 @@ describe('icache middleware', () => {
 			},
 			properties: {}
 		});
-		assert.isUndefined(icache.getOrSet('test'));
+		assert.isUndefined(icache.get('test'));
 		icache.set('test', 'value');
-		assert.strictEqual(icache.getOrSet('test'), 'value');
+		assert.strictEqual(icache.get('test'), 'value');
 		icache.clear();
-		assert.isUndefined(icache.getOrSet('test'));
+		assert.isUndefined(icache.get('test'));
 	});
 });

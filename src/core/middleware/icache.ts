@@ -10,12 +10,19 @@ interface CacheWrapper<T = any> {
 
 export const icache = factory(({ middleware: { invalidator, cache } }) => {
 	return {
-		getOrSet<T = any>(key: any, value?: any): T | undefined {
+		getOrSet<T = any>(key: any, value: any): T | undefined {
 			let cachedValue = cache.get<CacheWrapper<T>>(key);
-			if (!cachedValue && value) {
+			if (!cachedValue) {
 				this.set(key, value);
 			}
 			cachedValue = cache.get<CacheWrapper<T>>(key);
+			if (!cachedValue || cachedValue.status === 'pending') {
+				return undefined;
+			}
+			return cachedValue.value;
+		},
+		get<T = any>(key: any): T | undefined {
+			const cachedValue = cache.get<CacheWrapper<T>>(key);
 			if (!cachedValue || cachedValue.status === 'pending') {
 				return undefined;
 			}
