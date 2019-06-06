@@ -9,6 +9,7 @@ import sendEvent from '../support/sendEvent';
 import {
 	create,
 	renderer,
+	defer,
 	destroy,
 	getRegistry,
 	invalidator,
@@ -3319,6 +3320,86 @@ jsdomDescribe('vdom', () => {
 						const div = document.createElement('div');
 						r.mount({ domNode: div, registry });
 						assert.strictEqual(div.outerHTML, '<div>hello world</div>');
+					});
+				});
+
+				describe('defer', () => {
+					it('should completely pause and resume rendering when merging', () => {
+						const iframe = document.createElement('iframe');
+						document.body.appendChild(iframe);
+						iframe.contentDocument!.write(`<div><div>Hello Dom Foo</div><div>Hello Dom Bar</div></div>`);
+						iframe.contentDocument!.close();
+						const createWidget = create({ defer, invalidator });
+						let shouldDefer = true;
+						let invalidateFoo: any;
+						const Foo = createWidget(function Foo({ middleware }) {
+							invalidateFoo = middleware.invalidator;
+							shouldDefer ? middleware.defer.pause() : middleware.defer.resume();
+							return v('div', ['Hello Foo']);
+						});
+						const Bar = createWidget(function Foo() {
+							return v('div', ['Hello Bar']);
+						});
+
+						const App = createWidget(function App() {
+							return v('div', [Foo({}), Bar({})]);
+						});
+						const r = renderer(() => App({}));
+						r.mount({ domNode: iframe.contentDocument!.body });
+						assert.strictEqual(
+							iframe.contentDocument!.body.outerHTML,
+							'<body><div><div>Hello Dom Foo</div><div>Hello Dom Bar</div></div></body>'
+						);
+						shouldDefer = false;
+						invalidateFoo();
+						resolvers.resolve();
+						assert.strictEqual(
+							iframe.contentDocument!.body.outerHTML,
+							'<body><div><div>Hello Foo</div><div>Hello Bar</div></div></body>'
+						);
+						document.body.removeChild(iframe);
+					});
+
+					it('should only pause the specific widget when not merging', () => {
+						const createWidget = create({ defer, invalidator });
+						let shouldDefer = true;
+						let invalidateFoo: any;
+						const Foo = createWidget(function Foo({ middleware }) {
+							invalidateFoo = middleware.invalidator;
+							shouldDefer ? middleware.defer.pause() : middleware.defer.resume();
+							return v('div', ['Hello Foo']);
+						});
+						const Bar = createWidget(function Foo() {
+							return v('div', ['Hello Bar']);
+						});
+
+						const App = createWidget(function App() {
+							return v('div', [Foo({}), Bar({})]);
+						});
+						const r = renderer(() => App({}));
+						const div = document.createElement('div');
+						r.mount({ domNode: div });
+						assert.strictEqual(div.outerHTML, '<div><div><div>Hello Bar</div></div></div>');
+						invalidateFoo();
+						resolvers.resolve();
+						assert.strictEqual(div.outerHTML, '<div><div><div>Hello Bar</div></div></div>');
+						shouldDefer = false;
+						invalidateFoo();
+						resolvers.resolve();
+						assert.strictEqual(
+							div.outerHTML,
+							'<div><div><div>Hello Foo</div><div>Hello Bar</div></div></div>'
+						);
+						invalidateFoo();
+						resolvers.resolve();
+						assert.strictEqual(
+							div.outerHTML,
+							'<div><div><div>Hello Foo</div><div>Hello Bar</div></div></div>'
+						);
+						shouldDefer = true;
+						invalidateFoo();
+						resolvers.resolve();
+						assert.strictEqual(div.outerHTML, '<div><div><div>Hello Bar</div></div></div>');
 					});
 				});
 			});
