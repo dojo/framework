@@ -12,20 +12,14 @@ export const icache = factory(({ middleware: { invalidator, cache } }) => {
 	return {
 		getOrSet<T = any>(key: any, value?: any): T | undefined {
 			let cachedValue = cache.get<CacheWrapper<T>>(key);
-			if (cachedValue && cachedValue.status !== 'pending') {
-				return cachedValue.value;
-			} else if (cachedValue && cachedValue.status === 'pending') {
+			if (!cachedValue && value) {
+				this.set(key, value);
+			}
+			cachedValue = cache.get<CacheWrapper<T>>(key);
+			if (!cachedValue || cachedValue.status === 'pending') {
 				return undefined;
 			}
-			if (value) {
-				this.set(key, value);
-				cachedValue = cache.get<CacheWrapper<T>>(key);
-				if (!cachedValue || cachedValue.status === 'pending') {
-					return undefined;
-				}
-				return cachedValue.value;
-			}
-			return undefined;
+			return cachedValue.value;
 		},
 		set(key: any, value: any): void {
 			if (typeof value === 'function') {
