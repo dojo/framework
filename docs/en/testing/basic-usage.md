@@ -2,7 +2,7 @@
 
 ## Testing Dojo Applications
 
-Dojo uses `@dojo/cli-test-intern` for running unit and functional tests in your `tests` folder using `@dojo/cli-test-intern`.
+Dojo uses `@dojo/cli-test-intern` for running unit and functional tests in your `tests` folder.
 
 You can quickly run your tests in node.
 
