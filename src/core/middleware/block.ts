@@ -13,7 +13,7 @@ export const block = blockFactory(({ middleware: { cache, icache, defer } }) => 
 				const moduleId = cache.get(module) || id++;
 				cache.set(module, moduleId);
 				const cachedValue = icache.getOrSet(`${moduleId}-${argsString}`, async () => {
-					const run = Promise.resolve(module(...args));
+					const run = module(...args);
 					defer.pause();
 					const result = await run;
 					defer.resume();
