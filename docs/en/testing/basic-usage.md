@@ -2,7 +2,7 @@
 
 ## Testing Dojo Applications
 
-Dojo uses [Intern] for running unit and functional tests in your `tests` folder using `@dojo/cli-test-intern`.
+Dojo uses `@dojo/cli-test-intern` for running unit and functional tests in your `tests` folder using `@dojo/cli-test-intern`.
 
 You can quickly run your tests in node.
 
@@ -14,7 +14,7 @@ npm test
 
 ## Running Tests
 
-Intern supports two types of testing approaches unit and functional. Unit tests are tests run via node and the local
+Dojo supports two types of testing approaches unit and functional. Unit tests are tests run via node and the local
 [Selenium] tunnel and test isolated blocks of code. Functional tests are run using Selenium in the browser and test
 the overall functionality of the software as a user would interact with it.
 
@@ -66,6 +66,38 @@ The `harness` API allows you to verify that the output of a rendered widget is w
 You can read more details in the [`harness` README](https://github.com/dojo/framework/tree/master/src/testing#harness).
 
 ## Functional Tests
+
+Functional tests allow you to load a page and execute your code in a browser to better test the behavior of your widgets.
+
+When you write a functional test, you can script out the interaction of the test with your page to click on buttons and validate the content of the page.
+
+> tests/functional/main.ts
+
+```ts
+describe('routing', () => {
+	it('profile page correctly loads', ({ remote }) => {
+		return (
+			remote
+				// loads the HTML file in local node server
+				.get('../../output/dev/index.html')
+				// find the id of the anchor tag
+				.findById('profile')
+				// click on the link
+				.click()
+				// end this action
+				.end()
+				// find the h1 tag
+				.findByTagName('h1')
+				// get the text in the h1 tag
+				.getVisibleText()
+				.then((text) => {
+					// verify the content of the h1 tag on the profile page
+					assert.equal(text, 'Welcome Dojo User!');
+				})
+		);
+	});
+});
+```
 
 ## Testing services
 

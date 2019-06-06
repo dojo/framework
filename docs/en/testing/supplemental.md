@@ -2,7 +2,7 @@
 
 ## Running Tests
 
-Dojo uses [Intern] for running unit and functional tests in your `tests` folder using `@dojo/cli-test-intern`.
+Dojo uses `@dojo/cli-test-intern` for running unit and functional tests in your `tests` folder.
 
 You can quickly run your tests in node.
 
@@ -12,7 +12,7 @@ You can quickly run your tests in node.
 npm test
 ```
 
-Intern supports two types of testing approaches unit and functional. Unit tests are tests run via node and the local
+Dojo supports two types of testing approaches unit and functional. Unit tests are tests run via node and the local
 [Selenium] tunnel and test isolated blocks of code. Functional tests are run using [Selenium] in the browser and test
 the overall functionality of the software as a user would interact with it.
 
@@ -32,7 +32,7 @@ This command will execute your functional tests locally in a headless Chrome ins
 npm run test:functional
 ```
 
-Intern comes with support for running tests remotely on [BrowserStack], [SauceLabs], and [TestingBot]. You may use one
+Dojo comes with support for running tests remotely on [BrowserStack], [SauceLabs], and [TestingBot]. You may use one
  of these services by signing up for an account and providing your credentials to cli-test-intern. By default, all of
  the testing services will run tests against IE11, Firefox, and Chrome. You can use the `dojo` command of the [Dojo CLI].
  
@@ -381,29 +381,62 @@ In your tests you can then write a base assertion which would be the default ren
 
 Given the following widget:
 
+> src/widgets/Profile.ts
+
 ```ts
-class Profile extends WidgetBase<{ username?: string }> {
+import WidgetBase from "@dojo/framework/widget-core/WidgetBase";
+import { v } from "@dojo/framework/widget-core/d";
+
+import * as css from "./styles/Profile.m.css";
+
+export interface ProfileProperties {
+  username?: string;
+}
+
+export default class Profile extends WidgetBase<ProfileProperties> {
   protected render() {
     const { username } = this.properties;
-    return v('h1', { classes: [css.root] }, [
-      `Welcome ${username || 'Stranger'}!`
+    return v("h1", { classes: [css.root] }, [
+      `Welcome ${username || "Stranger"}!`
     ]);
   }
 }
+
 ```
 
 The base assertion might look like:
 
-```ts
-const profileAssertion = assertionTemplate(() =>
-  v('h1', { classes: [css.root], '~key': 'message' }, ['Welcome Stranger!'])
-);
+> tests/unit/widgets/Profile.ts
 
+```ts
+const { describe, it } = intern.getInterface("bdd");
+import harness from "@dojo/framework/testing/harness";
+import assertionTemplate from "@dojo/framework/testing/assertionTemplate";
+import { w, v } from "@dojo/framework/widget-core/d";
+
+import Profile from "../../../src/widgets/Profile";
+import * as css from "../../../src/widgets/styles/Profile.m.css";
+
+const profileAssertion = assertionTemplate(() =>
+  v("h1", { classes: [css.root], "~key": "welcome" }, ["Welcome Stranger!"])
+);
 ```
 
 and in a test would look like:
 
+> tests/unit/widgets/Profile.ts
+
 ```ts
+const profileAssertion = assertionTemplate(() =>
+  v("h1", { classes: [css.root], "~key": "welcome" }, ["Welcome Stranger!"])
+);
+
+describe("Profile", () => {
+  it("default renders correctly", () => {
+    const h = harness(() => w(Profile, {}));
+    h.expect(profileAssertion);
+  });
+});
 it('default renders correctly', () => {
 	const h = harness(() => w(Profile, {}));
 	h.expect(profileAssertion);
@@ -412,14 +445,20 @@ it('default renders correctly', () => {
 
 now lets see how we'd test the output when the `username` property is passed to the `Profile`:
 
+> tests/unit/widgets/Profile.ts
+
 ```ts
-it('should render correctly when given the username property', () => {
-	// update the expected result with a given username
-	const namedAssertion = profileAssertion.setChildren('~message', [
-		'Welcome Kel Varnsen!'
-	]);
-	const h = harness(() => w(Profile, { username: 'Kel Varnsen' }));
-	h.expect(namedAssertion);
+describe("Profile", () => {
+	...
+
+  it("renders given username correctly", () => {
+    // update the expected result with a given username
+    const namedAssertion = profileAssertion.setChildren("~welcome", [
+      "Welcome Kel Varnsen!"
+    ]);
+    const h = harness(() => w(Profile, { username: "Kel Varnsen" }));
+    h.expect(namedAssertion);
+  });
 });
 ```
 
@@ -447,6 +486,12 @@ You may have noticed that when testing widgets, we are testing that the user int
 > src/widgets/Action.ts
 
 ```ts
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { v, w } from '@dojo/framework/widget-core/d';
+import Button from '@dojo/widgets/button'
+
+import * as css from './styles/Action.m.css';
+
 export default class Action extends WidgetBase<{ fetchItems: () => void }> {
 	protected render() {
 		return	v('div', { classes: [css.root] }, [
@@ -479,7 +524,7 @@ describe('Action', () => {
 });
 ```
 
-In this case, you can provide a [Sinon stub](https://sinonjs.org/releases/latest/stubs/) to the Action widget that it will use to try and fetch items. You can then target the `@button` key to trigger the `onClick` of that button and then validate that the `fetchItems` stub was called once.
+In this case, you can provide a mock of the `fetchItems` method to the Action widget that it will use to try and fetch items. Then you can target the `@button` key to trigger the `onClick` of that button and validate that the `fetchItems` method was called once.
 
 For more details on mocking, please read the [Sinon] documentation.
 
@@ -487,12 +532,19 @@ For more details on mocking, please read the [Sinon] documentation.
 
 Unlike unit tests that load and execute your code, functional tests load a page in the browser and test the interaction of your application.
 
-If you want to test the content of your page for a certain route, you can update the links to make this easier to test.
+If you want to validate the content of your page for a certain route, you can update the links to make this easier to test.
 
 
 > src/widgets/Menu.ts
 
 ```ts
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { w } from '@dojo/framework/widget-core/d';
+import Link from '@dojo/framework/routing/ActiveLink';
+import Toolbar from '@dojo/widgets/toolbar';
+
+import * as css from './styles/Menu.m.css';
+
 export default class Menu extends WidgetBase {
 	protected render() {
 		return w(Toolbar, { heading: 'My Dojo App!', collapseWidth: 600 }, [
@@ -529,10 +581,9 @@ export default class Menu extends WidgetBase {
 		]);
 	}
 }
-
 ```
 
-During application use, you would expect to click on the `profile` link and directed to a page welcoming the user. You can write a functional test to verify this behavior.
+During application use, you would expect to click on the `profile` link and be directed to a page welcoming the user. You can write a functional test to verify this behavior.
 
 > tests/functional/main.ts
 
@@ -565,7 +616,7 @@ describe('routing', () => {
 });
 ```
 
-The `remote` object uses the [Leadfoot Command object](https://theintern.io/docs.html#Leadfoot/2/api/Command/command-1) to interact with the page. Because loading and interacting with the page is an asynchronous action, be sure to return the `remote` object in your test.
+When running a functional test, Dojo will provide a `remote` object to interact with the page. Because loading and interacting with the page is an asynchronous action, be sure to return the `remote` object in your test.
 
 Functional tests can be executed in the command line.
 
