@@ -12,13 +12,12 @@ export const block = blockFactory(({ middleware: { cache, icache, defer } }) => 
 				const argsString = JSON.stringify(args);
 				const moduleId = cache.get(module) || id++;
 				cache.set(module, moduleId);
-				const cachedValue = icache.getOrSet(`${moduleId}-${argsString}`, () => {
+				const cachedValue = icache.getOrSet(`${moduleId}-${argsString}`, async () => {
 					const run = Promise.resolve(module(...args));
 					defer.pause();
-					return run.then((result: any) => {
-						defer.resume();
-						return result;
-					});
+					const result = await run;
+					defer.resume();
+					return result;
 				});
 				return cachedValue || null;
 			};

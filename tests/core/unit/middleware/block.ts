@@ -1,6 +1,6 @@
 const { it, describe, beforeEach, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import { sandbox } from 'sinon';
+import { sandbox, SinonStub } from 'sinon';
 
 import blockMiddleware from '../../../../src/core/middleware/block';
 import cacheMiddleware from '../../../../src/core/middleware/cache';
@@ -15,6 +15,10 @@ const deferStub = {
 const { callback } = blockMiddleware();
 let cache: any;
 let icache: any;
+
+function waitForCall(calls = 1, stub: SinonStub) {
+	return new Promise((res) => stub.onCall(calls - 1).callsFake(res));
+}
 
 describe('block middleware', () => {
 	beforeEach(() => {
@@ -63,6 +67,8 @@ describe('block middleware', () => {
 			return promiseTwo;
 		}
 
+		const waiter = waitForCall(3, invalidatorStub);
+
 		const resultOne = block.run(testModule)('test');
 		assert.isTrue(deferStub.pause.calledOnce);
 		const resultTwo = block.run(testModuleOther)('test');
@@ -76,7 +82,8 @@ describe('block middleware', () => {
 		resolverOne('resultOne');
 		resolverTwo('resultTwo');
 		resolverThree('resultThree');
-		return Promise.all([promiseOne, promiseTwo, promiseThree]).then(() => {
+
+		return waiter.then(() => {
 			assert.isTrue(deferStub.resume.calledThrice);
 			assert.isTrue(invalidatorStub.calledThrice);
 			const resultOne = block.run(testModule)('test');
