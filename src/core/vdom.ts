@@ -1775,7 +1775,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		return processResult;
 	}
 
-	function _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult | false {
+	function _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult {
 		current = _idToWrapperMap.get(current.id) || current;
 		const { instance, domNode, hasAnimations } = current;
 		let {
