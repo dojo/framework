@@ -9,6 +9,7 @@ import sendEvent from '../support/sendEvent';
 import {
 	create,
 	renderer,
+	diffProperties,
 	defer,
 	destroy,
 	getRegistry,
@@ -3400,6 +3401,38 @@ jsdomDescribe('vdom', () => {
 						invalidateFoo();
 						resolvers.resolve();
 						assert.strictEqual(div.outerHTML, '<div><div><div>Hello Bar</div></div></div>');
+					});
+				});
+
+				describe('diffProperties', () => {
+					it('Should call diff properties before rendering', () => {
+						const createWidget = create({ diffProperties, invalidator });
+						let counter = 0;
+						const Foo = createWidget(({ middleware }) => {
+							middleware.diffProperties((current: any, properties: any) => {
+								assert.deepEqual(current, { key: 'foo' });
+								assert.deepEqual(properties, { key: 'foo' });
+								middleware.invalidator();
+							});
+							return v('div', [`${counter++}`]);
+						});
+						const App = createWidget(({ middleware }) => {
+							return v('div', [
+								v('button', {
+									onclick: () => {
+										middleware.invalidator();
+									}
+								}),
+								Foo({ key: 'foo' })
+							]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>0</div></div></div>');
+						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
+						resolvers.resolve();
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>1</div></div></div>');
 					});
 				});
 			});
