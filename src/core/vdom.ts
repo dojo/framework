@@ -78,6 +78,7 @@ export interface WidgetMeta {
 	nodeMap: Map<string | number, Node>;
 	destroyMap: Map<string, () => void>;
 	deferRefs: number;
+	diffMap: Map<string, (current: any, next: any) => void>;
 }
 
 export interface WidgetData {
@@ -435,7 +436,7 @@ export function tsx(tag: any, properties = {}, ...children: any[]): DNode {
 	}
 }
 
-function diffProperties(current: any, next: any, invalidator: () => void) {
+function propertiesDiff(current: any, next: any, invalidator: () => void) {
 	const propertyNames = [...Object.keys(current), ...Object.keys(next)];
 	let diffedProperties = [];
 	for (let i = 0; i < propertyNames.length; i++) {
@@ -717,6 +718,12 @@ function destroyHandles(destroyMap: Map<string, () => void>) {
 	destroyMap.clear();
 }
 
+function runDiffs(meta: WidgetMeta, current: any, next: any) {
+	if (meta.diffMap.size) {
+		meta.diffMap.forEach((diff) => diff({ ...current }, { ...next }));
+	}
+}
+
 export const invalidator = factory(({ id }) => {
 	const [widgetId] = id.split('-');
 	return () => {
@@ -740,6 +747,18 @@ export const node = factory(({ id }) => {
 				requestedDomNodes.add(`${widgetId}-${key}`);
 			}
 			return null;
+		}
+	};
+});
+
+export const diffProperties = factory(({ id }) => {
+	return (diff: (current: any, next: any) => void) => {
+		const [widgetId] = id.split('-');
+		const widgetMeta = widgetMetaMap.get(widgetId);
+		if (widgetMeta) {
+			if (!widgetMeta.diffMap.has(id)) {
+				widgetMeta.diffMap.set(id, diff);
+			}
 		}
 	};
 });
@@ -1710,7 +1729,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					children: next.node.children,
 					nodeMap: new Map(),
 					destroyMap: new Map(),
-					deferRefs: 0
+					deferRefs: 0,
+					diffMap: new Map()
 				};
 				widgetMetaMap.set(next.id, widgetMeta);
 				widgetMeta.middleware = (Constructor as any).middlewares
@@ -1801,9 +1821,12 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			const widgetMeta = widgetMetaMap.get(next.id);
 			if (widgetMeta) {
 				widgetMeta.properties = next.properties;
-				diffProperties(current.properties, next.properties, () => {
-					widgetMeta.dirty = true;
-				});
+				runDiffs(widgetMeta, current.properties, next.properties);
+				if (!widgetMeta.dirty) {
+					propertiesDiff(current.properties, next.properties, () => {
+						widgetMeta.dirty = true;
+					});
+				}
 				if (widgetMeta.dirty) {
 					next.childrenWrappers = undefined;
 					didRender = true;
