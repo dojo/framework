@@ -4,6 +4,7 @@ const { assert } = intern.getPlugin('chai');
 import { sandbox, SinonStub } from 'sinon';
 
 import resizeMiddleware from '../../../../src/core/middleware/resize';
+import icacheMiddleware from '../../../../src/core/middleware/icache';
 import cacheMiddleware from '../../../../src/core/middleware/cache';
 
 const sb = sandbox.create();
@@ -54,13 +55,17 @@ describe('resize middleware', () => {
 			id: 'test-cache',
 			middleware: { destroy: destroyStub }
 		});
+		const icache = icacheMiddleware().callback({
+			properties: {},
+			id: 'test-cache',
+			middleware: { invalidator: invalidatorStub, cache }
+		});
 		const { callback } = resizeMiddleware();
 		const resize = callback({
 			id: 'test',
 			middleware: {
 				destroy: destroyStub,
-				cache,
-				invalidator: invalidatorStub,
+				icache,
 				node: nodeStub
 			},
 			properties: {}
@@ -93,13 +98,17 @@ describe('resize middleware', () => {
 			id: 'test-cache',
 			middleware: { destroy: sb.stub() }
 		});
+		const icache = icacheMiddleware().callback({
+			properties: {},
+			id: 'test-cache',
+			middleware: { invalidator: invalidatorStub, cache }
+		});
 		const { callback } = resizeMiddleware();
 		const resize = callback({
 			id: 'test',
 			middleware: {
 				destroy: destroyStub,
-				cache,
-				invalidator: invalidatorStub,
+				icache,
 				node: nodeStub
 			},
 			properties: {}

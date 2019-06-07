@@ -1,11 +1,10 @@
-import ResizeObserver from '../../shim/ResizeObserver';
-import { create, node, invalidator, destroy } from '../vdom';
-import { cache } from './cache';
-import { ContentRect } from '../meta/Resize';
+import ResizeObserver, { DOMRectReadOnly } from '../../shim/ResizeObserver';
+import { create, node, destroy } from '../vdom';
+import { icache } from './icache';
 
-const factory = create({ node, invalidator, destroy, cache });
+const factory = create({ node, destroy, icache });
 
-export const resize = factory(({ middleware: { node, invalidator, destroy, cache } }) => {
+export const resize = factory(({ middleware: { node, destroy, icache } }) => {
 	const keys: (string | number)[] = [];
 	const handles: Function[] = [];
 	destroy(() => {
@@ -15,7 +14,7 @@ export const resize = factory(({ middleware: { node, invalidator, destroy, cache
 		}
 	});
 	return {
-		get(key: string | number): ContentRect | null {
+		get(key: string | number): DOMRectReadOnly | null {
 			const domNode = node.get(key);
 			if (!domNode) {
 				return null;
@@ -24,13 +23,12 @@ export const resize = factory(({ middleware: { node, invalidator, destroy, cache
 			if (keys.indexOf(key) === -1) {
 				keys.push(key);
 				const resizeObserver = new ResizeObserver(([entry]) => {
-					cache.set(key, entry.contentRect);
-					invalidator();
+					icache.set(key, entry.contentRect);
 				});
 				resizeObserver.observe(domNode);
 				handles.push(() => resizeObserver.disconnect());
 			}
-			return cache.get<ContentRect>(key) || null;
+			return icache.get<DOMRectReadOnly>(key) || null;
 		}
 	};
 });
