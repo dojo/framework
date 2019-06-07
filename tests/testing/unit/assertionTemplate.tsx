@@ -119,6 +119,14 @@ describe('assertionTemplate', () => {
 		h.expect(propertyAssertion);
 	});
 
+	it('should throw an error when selector is not found', () => {
+		const h = harness(() => w(MyWidget, {}));
+		assert.throws(
+			() => h.expect(baseAssertion.setProperty('~cant-spell', 'foo', 'b')),
+			'Node not found for selector "~cant-spell"'
+		);
+	});
+
 	it('should be immutable', () => {
 		const fooAssertion = baseAssertion
 			.setChildren(':root', ['foo'])
