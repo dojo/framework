@@ -67,6 +67,7 @@ intern.registerPlugin('jsdom', async () => {
 			}
 		});
 	};
+	initialize();
 
 	const uninitialize = () => {
 		global.document = global.window = global.Element = global.requestAnimationFrame = global.cancelAnimationFrame = global.IntersectionObserver = global.fakeActiveElement = undefined;
