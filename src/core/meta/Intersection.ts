@@ -3,11 +3,11 @@ import Map from '../../shim/Map';
 import { Base } from './Base';
 import IntersectionObserver from '../../shim/IntersectionObserver';
 
-interface ExtendedIntersectionObserverEntry extends IntersectionObserverEntry {
+export interface ExtendedIntersectionObserverEntry extends IntersectionObserverEntry {
 	readonly isIntersecting: boolean;
 }
 
-interface IntersectionDetail extends IntersectionGetOptions {
+export interface IntersectionDetail extends IntersectionGetOptions {
 	entries: WeakMap<Element, IntersectionResult>;
 	observer: IntersectionObserver;
 }
