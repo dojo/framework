@@ -40,6 +40,28 @@ class DisplayElementDefault extends WidgetBase {
 	}
 }
 
+@customElement({
+	tag: 'delayed-children-element',
+	childType: CustomElementChildType.TEXT
+})
+class DelayedChildrenWidget extends WidgetBase {
+	render() {
+		return v(
+			'div',
+			{},
+			this.children.map((child, i) =>
+				v(
+					'div',
+					{
+						'data-key': `child-${i}`
+					},
+					[child]
+				)
+			)
+		);
+	}
+}
+
 function createTestWidget(options: any) {
 	const { properties, attributes, events, childType = CustomElementChildType.DOJO } = options;
 	@customElement<any>({
@@ -348,5 +370,40 @@ describe('registerCustomElement', () => {
 		document.body.appendChild(element);
 		const { display } = global.getComputedStyle(element);
 		assert.equal(display, 'block');
+	});
+
+	it('handles children being appended as document is still loading', () => {
+		register(DelayedChildrenWidget);
+
+		Object.defineProperty(document, 'readyState', {
+			configurable: true,
+			get() {
+				return 'loading';
+			}
+		});
+		element = document.createElement('delayed-children-element');
+		document.body.appendChild(element);
+
+		let child = document.createTextNode('foo');
+		element!.appendChild(child);
+
+		Object.defineProperty(document, 'readyState', {
+			configurable: true,
+			get() {
+				return 'complete';
+			}
+		});
+		child = document.createTextNode('bar');
+		element!.appendChild(child);
+
+		return new Promise((resolve) => {
+			setTimeout(() => {
+				assert.equal(
+					element!.outerHTML,
+					'<delayed-children-element style="display: block;"><div><div data-key="child-0">foo</div><div data-key="child-1">bar</div></div></delayed-children-element>'
+				);
+				resolve();
+			});
+		});
 	});
 });
