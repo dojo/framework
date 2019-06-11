@@ -12,6 +12,7 @@ const registry = {
 const getRegistry = sb.stub();
 const invalidator = sb.stub();
 const eventStub = sb.stub();
+const destroy = sb.stub();
 
 describe('injector middleware', () => {
 	beforeEach(() => {
@@ -34,7 +35,8 @@ describe('injector middleware', () => {
 				id: 'test',
 				middleware: {
 					getRegistry,
-					invalidator
+					invalidator,
+					destroy
 				},
 				properties: {}
 			});
@@ -49,7 +51,8 @@ describe('injector middleware', () => {
 				id: 'test',
 				middleware: {
 					getRegistry,
-					invalidator
+					invalidator,
+					destroy
 				},
 				properties: {}
 			});
@@ -64,7 +67,8 @@ describe('injector middleware', () => {
 				id: 'test',
 				middleware: {
 					getRegistry,
-					invalidator
+					invalidator,
+					destroy
 				},
 				properties: {}
 			});
@@ -84,7 +88,8 @@ describe('injector middleware', () => {
 				id: 'test',
 				middleware: {
 					getRegistry,
-					invalidator
+					invalidator,
+					destroy
 				},
 				properties: {}
 			});
@@ -105,7 +110,8 @@ describe('injector middleware', () => {
 				id: 'test',
 				middleware: {
 					getRegistry,
-					invalidator
+					invalidator,
+					destroy
 				},
 				properties: {}
 			});
@@ -123,7 +129,8 @@ describe('injector middleware', () => {
 				id: 'test',
 				middleware: {
 					getRegistry,
-					invalidator
+					invalidator,
+					destroy
 				},
 				properties: {}
 			});
@@ -143,12 +150,47 @@ describe('injector middleware', () => {
 				id: 'test',
 				middleware: {
 					getRegistry,
-					invalidator
+					invalidator,
+					destroy
 				},
 				properties: {}
 			});
 			injector.subscribe('test');
 			assert.isTrue(eventStub.notCalled);
+		});
+
+		it('should destory subscriptions', () => {
+			const handle = {
+				destroy: sb.stub()
+			};
+			registry.getInjector.returns({
+				invalidator: {
+					on: eventStub.returns(handle)
+				}
+			});
+			const { callback } = injectorMiddleware();
+			const injector = callback({
+				id: 'test',
+				middleware: {
+					getRegistry,
+					invalidator,
+					destroy
+				},
+				properties: {}
+			});
+			const customCallback = sb.stub();
+			const injectorHandle = injector.subscribe('test', customCallback);
+			assert.isTrue(eventStub.calledOnce);
+			eventStub.getCall(0).callArg(1);
+			assert.isTrue(customCallback.calledOnce);
+			injectorHandle!();
+			assert.isTrue(handle.destroy.calledOnce);
+			injectorHandle!();
+			assert.isTrue(handle.destroy.calledOnce);
+			injector.subscribe('test', customCallback);
+			assert.isTrue(eventStub.calledTwice);
+			destroy.getCall(0).callArg(0);
+			assert.isTrue(handle.destroy.calledTwice);
 		});
 	});
 });
