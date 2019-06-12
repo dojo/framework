@@ -14,7 +14,7 @@ npm test
 
 ## Running Tests
 
-Dojo supports two types of testing approaches unit and functional. Unit tests are tests run via node and the local
+Dojo supports two types of testing approaches, unit and functional. Unit tests are tests run via node and the local
 [Selenium] tunnel and test isolated blocks of code. Functional tests are run using Selenium in the browser and test
 the overall functionality of the software as a user would interact with it.
 

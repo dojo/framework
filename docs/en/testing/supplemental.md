@@ -118,6 +118,11 @@ The harness returns a `Harness` object that provides a small API for interacting
 Setting up a widget for testing is simple and familiar using the `w()` function from `@dojo/framework/core`:
 
 ```ts
+const { describe, it } = intern.getInterface('bdd');
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import harness from '@dojo/framework/testing/harness';
+import { w, v } from '@dojo/framework/widget-core/d';
+
 class MyWidget extends WidgetBase<{ foo: string }> {
 	protected render() {
 		const { foo } = this.properties;
@@ -139,16 +144,20 @@ const h = harness(() => <MyWidget foo="bar">child</MyWidget>);
 The `renderFunction` is lazily executed so it can include additional logic to manipulate the widget's `properties` and `children` between assertions.
 
 ```ts
-let foo = 'bar';
+describe('MyWidget', () => {
+  it('renders with foo correctly', () => {
+		let foo = 'bar';
 
-const h = harness(() => {
-	return w(MyWidget, { foo }, [ 'child' ]));
-};
+		const h = harness(() => {
+			return w(MyWidget, { foo }, [ 'child' ]));
+		};
 
-h.expect(/** assertion that includes bar **/);
-// update the property that is passed to the widget
-foo = 'foo';
-h.expect(/** assertion that includes foo **/)
+		h.expect(/** assertion that includes bar **/);
+		// update the property that is passed to the widget
+		foo = 'foo';
+		h.expect(/** assertion that includes foo **/)
+  });
+});
 ```
 
 ### Custom Comparators
@@ -255,6 +264,8 @@ Example usage:
 > HelloWorld.tsx
 
 ```ts
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+
 export interface HelloWorldProperties {
     foo?: boolean;
     bar?: boolean;
@@ -384,10 +395,10 @@ Given the following widget:
 > src/widgets/Profile.ts
 
 ```ts
-import WidgetBase from "@dojo/framework/widget-core/WidgetBase";
-import { v } from "@dojo/framework/widget-core/d";
+import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { v } from '@dojo/framework/widget-core/d';
 
-import * as css from "./styles/Profile.m.css";
+import * as css from './styles/Profile.m.css';
 
 export interface ProfileProperties {
   username?: string;
@@ -396,8 +407,8 @@ export interface ProfileProperties {
 export default class Profile extends WidgetBase<ProfileProperties> {
   protected render() {
     const { username } = this.properties;
-    return v("h1", { classes: [css.root] }, [
-      `Welcome ${username || "Stranger"}!`
+    return v('h1', { classes: [css.root] }, [
+      `Welcome ${username || 'Stranger'}!`
     ]);
   }
 }
@@ -409,16 +420,16 @@ The base assertion might look like:
 > tests/unit/widgets/Profile.ts
 
 ```ts
-const { describe, it } = intern.getInterface("bdd");
-import harness from "@dojo/framework/testing/harness";
-import assertionTemplate from "@dojo/framework/testing/assertionTemplate";
-import { w, v } from "@dojo/framework/widget-core/d";
+const { describe, it } = intern.getInterface('bdd');
+import harness from '@dojo/framework/testing/harness';
+import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import { w, v } from '@dojo/framework/widget-core/d';
 
-import Profile from "../../../src/widgets/Profile";
-import * as css from "../../../src/widgets/styles/Profile.m.css";
+import Profile from '../../../src/widgets/Profile';
+import * as css from '../../../src/widgets/styles/Profile.m.css';
 
 const profileAssertion = assertionTemplate(() =>
-  v("h1", { classes: [css.root], "~key": "welcome" }, ["Welcome Stranger!"])
+  v('h1', { classes: [css.root], '~key': 'welcome' }, ['Welcome Stranger!'])
 );
 ```
 
@@ -428,11 +439,11 @@ and in a test would look like:
 
 ```ts
 const profileAssertion = assertionTemplate(() =>
-  v("h1", { classes: [css.root], "~key": "welcome" }, ["Welcome Stranger!"])
+  v('h1', { classes: [css.root], '~key': 'welcome' }, ['Welcome Stranger!'])
 );
 
-describe("Profile", () => {
-  it("default renders correctly", () => {
+describe('Profile', () => {
+  it('default renders correctly', () => {
     const h = harness(() => w(Profile, {}));
     h.expect(profileAssertion);
   });
@@ -448,15 +459,15 @@ now lets see how we'd test the output when the `username` property is passed to 
 > tests/unit/widgets/Profile.ts
 
 ```ts
-describe("Profile", () => {
+describe('Profile', () => {
 	...
 
-  it("renders given username correctly", () => {
+  it('renders given username correctly', () => {
     // update the expected result with a given username
-    const namedAssertion = profileAssertion.setChildren("~welcome", [
-      "Welcome Kel Varnsen!"
+    const namedAssertion = profileAssertion.setChildren('~welcome', [
+      'Welcome Kel Varnsen!'
     ]);
-    const h = harness(() => w(Profile, { username: "Kel Varnsen" }));
+    const h = harness(() => w(Profile, { username: 'Kel Varnsen' }));
     h.expect(namedAssertion);
   });
 });
@@ -509,6 +520,13 @@ You would want to test that the button will call the `this.properties.fetchItems
 > tests/unit/widgets/Action.ts
 
 ```ts
+
+const { describe, it } = intern.getInterface('bdd');
+import harness from '@dojo/framework/testing/harness';
+import { w, v } from '@dojo/framework/widget-core/d';
+
+import { stub } from 'sinon';
+
 describe('Action', () => {
 	const fetchItems = stub();
 	it('can fetch data on button click', () => {
