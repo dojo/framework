@@ -107,7 +107,7 @@ export interface MountOptions {
 	merge: boolean;
 	transition: TransitionStrategy;
 	domNode: HTMLElement;
-	registry: Registry | null;
+	registry: Registry;
 }
 
 export interface Renderer {
@@ -818,7 +818,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		merge: true,
 		transition: transitionStrategy,
 		domNode: global.document.body,
-		registry: null
+		registry: new Registry()
 	};
 	let _invalidationQueue: InvalidationQueueItem[] = [];
 	let _processQueue: (ProcessItem | DetachApplication | AttachApplication)[] = [];
@@ -1720,10 +1720,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					_schedule();
 				};
 				const registryHandler = new RegistryHandler();
+				registryHandler.base = registry;
 				registryHandler.on('invalidate', invalidate);
-				if (registry) {
-					registryHandler.base = registry;
-				}
 
 				widgetMeta = {
 					dirty: false,
@@ -1760,9 +1758,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				invalidate: any;
 				registry: any;
 			};
-			if (registry) {
-				instance.registry.base = registry;
-			}
+			instance.registry.base = registry;
 			const instanceData = widgetInstanceMap.get(instance)!;
 			invalidate = () => {
 				instanceData.dirty = true;

@@ -4,3 +4,4 @@ import './icache';
 import './injector';
 import './intersection';
 import './resize';
+import './theme';

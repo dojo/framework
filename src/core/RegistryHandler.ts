@@ -11,7 +11,7 @@ export class RegistryHandler extends Evented<RegistryHandlerEventMap> {
 	private _registry = new Registry();
 	private _registryWidgetLabelMap: Map<Registry, RegistryLabel[]> = new Map();
 	private _registryInjectorLabelMap: Map<Registry, RegistryLabel[]> = new Map();
-	protected baseRegistry?: Registry;
+	protected baseRegistry!: Registry;
 
 	constructor() {
 		super();
@@ -20,7 +20,7 @@ export class RegistryHandler extends Evented<RegistryHandlerEventMap> {
 			if (this.baseRegistry) {
 				this._registryWidgetLabelMap.delete(this.baseRegistry);
 				this._registryInjectorLabelMap.delete(this.baseRegistry);
-				this.baseRegistry = undefined;
+				this.baseRegistry = undefined as any;
 			}
 		};
 		this.own({ destroy });
@@ -32,6 +32,10 @@ export class RegistryHandler extends Evented<RegistryHandlerEventMap> {
 			this._registryInjectorLabelMap.delete(this.baseRegistry);
 		}
 		this.baseRegistry = baseRegistry;
+	}
+
+	public get base(): Registry {
+		return this.baseRegistry;
 	}
 
 	public define(label: RegistryLabel, widget: RegistryItem): void {

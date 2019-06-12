@@ -1,83 +1,77 @@
-import { create, invalidator, diffProperties, injector } from '../vdom';
+import { create, invalidator, diffProperties, getRegistry } from '../vdom';
 import cache from './cache';
-import { SupportedClassName } from '../interfaces';
+import injector from './injector';
 import Injector from '../Injector';
-
-export interface ClassNames {
-	[key: string]: string;
-}
-
-/**
- * A lookup object for available widget classes names
- */
-export interface Theme {
-	[key: string]: object;
-}
-
-/**
- * Classes property interface
- */
-export interface Classes {
-	[widgetKey: string]: {
-		[classKey: string]: SupportedClassName[];
-	};
-}
+import { registerThemeInjector, Theme, Classes, ClassNames, INJECTED_THEME_KEY, THEME_KEY } from '../mixins/Themed';
 
 export interface ThemedProperties {
 	theme?: Theme;
 	classes?: Classes;
 }
 
-const THEME_KEY = ' _key';
+const factory = create({ invalidator, cache, diffProperties, injector, getRegistry }).properties<ThemedProperties>();
 
-const factory = create({ invalidator, cache, diffProperties, injector }).properties<ThemedProperties>();
-
-export const theme = factory(({ middleware: { invalidator, cache, diffProperties, injector }, properties }) => {
-	diffProperties((current: ThemedProperties, next: ThemedProperties) => {
-		if (current.theme !== next.theme) {
+export const theme = factory(
+	({ middleware: { invalidator, cache, diffProperties, injector, getRegistry }, properties }) => {
+		diffProperties((current: ThemedProperties, next: ThemedProperties) => {
+			if (current.theme !== next.theme) {
+				cache.clear();
+				invalidator();
+			}
+		});
+		const themeInjector = injector.get(INJECTED_THEME_KEY);
+		if (!themeInjector) {
+			const registry = getRegistry();
+			if (registry) {
+				registerThemeInjector(undefined, registry.base);
+			}
+		}
+		injector.subscribe(INJECTED_THEME_KEY, () => {
 			cache.clear();
 			invalidator();
-		}
-	});
-	injector.subscribe('__theme_injector', () => {
-		cache.clear();
-		invalidator();
-	});
-	return {
-		get<T extends ClassNames>(css: T): T {
-			let theme = cache.get<T>(css);
-			if (theme) {
-				return theme;
-			}
-			const { [THEME_KEY]: key, ...classes } = css;
-			theme = classes as T;
-			let currentTheme = properties.theme;
-			if (!currentTheme) {
-				const injectedTheme = injector.get<Injector<Theme | undefined>>('__theme_injector');
-				currentTheme = injectedTheme ? injectedTheme.get() : undefined;
-			}
-			if (currentTheme && currentTheme[key]) {
-				theme = { ...theme, ...currentTheme[key] };
-			}
-			if (properties.classes && properties.classes[key]) {
-				const classKeys = Object.keys(properties.classes[key]);
-				for (let i = 0; i < classKeys.length; i++) {
-					const classKey = classKeys[i];
-					if (theme[classKey]) {
-						theme[classKey] = `${theme[classKey]} ${properties.classes[key][classKey].join(' ')}`;
+		});
+		return {
+			classes<T extends ClassNames>(css: T): T {
+				let theme = cache.get<T>(css);
+				if (theme) {
+					return theme;
+				}
+				const { [THEME_KEY]: key, ...classes } = css;
+				theme = classes as T;
+				let currentTheme = properties.theme;
+				if (!currentTheme) {
+					const injectedTheme = injector.get<Injector<Theme>>(INJECTED_THEME_KEY);
+					currentTheme = injectedTheme ? injectedTheme.get() : undefined;
+				}
+				if (currentTheme && currentTheme[key]) {
+					theme = { ...theme, ...currentTheme[key] };
+				}
+				if (properties.classes && properties.classes[key]) {
+					const classKeys = Object.keys(properties.classes[key]);
+					for (let i = 0; i < classKeys.length; i++) {
+						const classKey = classKeys[i];
+						if (theme[classKey]) {
+							theme[classKey] = `${theme[classKey]} ${properties.classes[key][classKey].join(' ')}`;
+						}
 					}
 				}
+				cache.set(css, theme);
+				return theme;
+			},
+			set(css: Theme): void {
+				const currentTheme = injector.get<Injector<Theme | undefined>>(INJECTED_THEME_KEY);
+				if (currentTheme) {
+					currentTheme.set(css);
+				}
+			},
+			get(): Theme | undefined {
+				const currentTheme = injector.get<Injector<Theme | undefined>>(INJECTED_THEME_KEY);
+				if (currentTheme) {
+					return currentTheme.get();
+				}
 			}
-			cache.set(css, theme);
-			return theme;
-		},
-		set(css?: Theme) {
-			const currentTheme = injector.get<Injector<Theme | undefined>>('__theme_injector');
-			if (currentTheme) {
-				currentTheme.set(css);
-			}
-		}
-	};
-});
+		};
+	}
+);
 
 export default theme;
