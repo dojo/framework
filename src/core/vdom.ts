@@ -75,7 +75,7 @@ export interface WidgetMeta {
 	registryHandler: RegistryHandler;
 	properties: any;
 	children?: DNode[];
-	nodeMap: Map<string | number, Node>;
+	nodeMap: Map<string | number, HTMLElement>;
 	destroyMap: Map<string, () => void>;
 	deferRefs: number;
 	diffMap: Map<string, (current: any, next: any) => void>;
@@ -699,7 +699,7 @@ const requestedDomNodes = new Set();
 let wrapperId = 0;
 let metaId = 0;
 
-function addNodeToMap(id: string, key: string | number, node: Node) {
+function addNodeToMap(id: string, key: string | number, node: HTMLElement) {
 	const widgetMeta = widgetMetaMap.get(id);
 	if (widgetMeta) {
 		const existingNode = widgetMeta.nodeMap.get(key);
@@ -736,7 +736,7 @@ export const invalidator = factory(({ id }) => {
 
 export const node = factory(({ id }) => {
 	return {
-		get(key: string | number) {
+		get(key: string | number): HTMLElement | null {
 			const [widgetId] = id.split('-');
 			const widgetMeta = widgetMetaMap.get(widgetId);
 			if (widgetMeta) {
@@ -1416,7 +1416,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						const instanceData = widgetInstanceMap.get(owningWrapper.instance);
 						instanceData && instanceData.nodeHandler.add(domNode as HTMLElement, `${node.properties.key}`);
 					} else {
-						addNodeToMap(owningWrapper.id, node.properties.key, domNode!);
+						addNodeToMap(owningWrapper.id, node.properties.key, domNode as HTMLElement);
 					}
 				}
 				item.next.inserted = true;
