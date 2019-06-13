@@ -98,7 +98,7 @@ export function registerI18nInjector(localeData: LocaleData, registry: Registry)
 	const injector = new Injector(localeData);
 	registry.defineInjector(INJECTOR_KEY, (invalidator) => {
 		injector.setInvalidator(invalidator);
-		return () => injector.get();
+		return () => injector;
 	});
 	return injector;
 }
@@ -106,8 +106,8 @@ export function registerI18nInjector(localeData: LocaleData, registry: Registry)
 export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & Constructor<I18nMixin> {
 	@inject({
 		name: INJECTOR_KEY,
-		getProperties: (localeData: LocaleData, properties: I18nProperties) => {
-			const { locale = localeData.locale, rtl = localeData.rtl } = properties;
+		getProperties: (localeData: Injector<LocaleData>, properties: I18nProperties) => {
+			const { locale = localeData.get().locale, rtl = localeData.get().rtl } = properties;
 			return { locale, rtl };
 		}
 	})
