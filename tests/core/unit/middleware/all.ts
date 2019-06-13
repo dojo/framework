@@ -1,6 +1,7 @@
 import './block';
 import './cache';
 import './dimensions';
+import './i18n';
 import './icache';
 import './injector';
 import './intersection';
