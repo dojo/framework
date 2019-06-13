@@ -2,7 +2,9 @@ import { create, invalidator, diffProperties, getRegistry } from '../vdom';
 import cache from './cache';
 import injector from './injector';
 import Injector from '../Injector';
+import Set from '../../shim/Set';
 import { registerThemeInjector, Theme, Classes, ClassNames, INJECTED_THEME_KEY, THEME_KEY } from '../mixins/Themed';
+import { shallow } from '../diff';
 
 export interface ThemedProperties {
 	theme?: Theme;
@@ -13,12 +15,31 @@ const factory = create({ invalidator, cache, diffProperties, injector, getRegist
 
 export const theme = factory(
 	({ middleware: { invalidator, cache, diffProperties, injector, getRegistry }, properties }) => {
+		let themeKeys = new Set();
 		diffProperties((current: ThemedProperties, next: ThemedProperties) => {
-			if (current.theme !== next.theme) {
+			let result = false;
+			if (
+				current.theme !== next.theme ||
+				(current.classes && !next.classes) ||
+				(!current.classes && next.classes)
+			) {
+				result = true;
+			} else if (current.classes && next.classes) {
+				const keys = [...themeKeys.values()];
+				for (let i = 0; i < keys.length; i++) {
+					let key = keys[i];
+					result = shallow(current.classes[key], next.classes[key], 1).changed;
+					if (result) {
+						break;
+					}
+				}
+			}
+			if (result) {
 				cache.clear();
 				invalidator();
 			}
 		});
+
 		const themeInjector = injector.get(INJECTED_THEME_KEY);
 		if (!themeInjector) {
 			const registry = getRegistry();
@@ -37,6 +58,7 @@ export const theme = factory(
 					return theme;
 				}
 				const { [THEME_KEY]: key, ...classes } = css;
+				themeKeys.add(key);
 				theme = classes as T;
 				let currentTheme = properties.theme;
 				if (!currentTheme) {

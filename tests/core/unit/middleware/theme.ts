@@ -143,12 +143,12 @@ describe('theme middleware', () => {
 			},
 			properties: {
 				classes: {
+					other: {
+						bar: ['extra-extra-extra']
+					},
 					foo: {
 						bar: ['extra-extra'],
 						other: ['extra-extra-extra']
-					},
-					other: {
-						bar: ['extra-extra-extra']
 					}
 				}
 			}
@@ -163,11 +163,44 @@ describe('theme middleware', () => {
 				bar: 'themed-root'
 			}
 		});
+		const other = {
+			' _key': 'other',
+			bar: 'root'
+		};
+		const resultOne = theme.classes(other);
+		assert.deepEqual(resultOne, { bar: 'root extra-extra-extra' });
 		const css = {
 			' _key': 'foo',
 			bar: 'root'
 		};
-		const result = theme.classes(css);
-		assert.deepEqual(result, { bar: 'themed-root extra-extra' });
+		const resultTwo = theme.classes(css);
+		assert.deepEqual(resultTwo, { bar: 'themed-root extra-extra' });
+		assert.isTrue(invalidator.notCalled);
+		diffProperties.getCall(0).callArgWith(
+			0,
+			{
+				classes: {
+					other: {
+						bar: ['extra-extra-extra']
+					},
+					foo: {
+						bar: ['extra-extra'],
+						other: ['extra-extra-extra']
+					}
+				}
+			},
+			{
+				classes: {
+					other: {
+						bar: ['extra-extra-extra']
+					},
+					foo: {
+						bar: ['extra-extra'],
+						other: ['extra-extra']
+					}
+				}
+			}
+		);
+		assert.isTrue(invalidator.calledOnce);
 	});
 });
