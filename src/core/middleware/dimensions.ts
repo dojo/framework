@@ -1,12 +1,44 @@
 import { create, node } from '../vdom';
 import { resize } from './resize';
 import { cache } from './cache';
+import { DimensionResults } from '../meta/Dimensions';
 
 const factory = create({ node, resize, cache });
 
+const defaultDimensions = {
+	client: {
+		height: 0,
+		left: 0,
+		top: 0,
+		width: 0
+	},
+	offset: {
+		height: 0,
+		left: 0,
+		top: 0,
+		width: 0
+	},
+	position: {
+		bottom: 0,
+		left: 0,
+		right: 0,
+		top: 0
+	},
+	scroll: {
+		height: 0,
+		left: 0,
+		top: 0,
+		width: 0
+	},
+	size: {
+		width: 0,
+		height: 0
+	}
+};
+
 export const dimensions = factory(({ middleware: { node, resize, cache } }) => {
 	return {
-		get(key: string | number) {
+		get(key: string | number): Readonly<DimensionResults> {
 			const contentRect = resize.get(key);
 			if (contentRect) {
 				const cached = cache.get(contentRect);
@@ -17,7 +49,13 @@ export const dimensions = factory(({ middleware: { node, resize, cache } }) => {
 
 			const domNode = node.get(key);
 			if (!domNode) {
-				return null;
+				return {
+					client: { ...defaultDimensions.client },
+					offset: { ...defaultDimensions.offset },
+					position: { ...defaultDimensions.position },
+					scroll: { ...defaultDimensions.scroll },
+					size: { ...defaultDimensions.size }
+				};
 			}
 
 			const boundingDimensions = domNode.getBoundingClientRect();
@@ -52,6 +90,7 @@ export const dimensions = factory(({ middleware: { node, resize, cache } }) => {
 				}
 			};
 			cache.set(contentRect, result);
+			return result;
 		}
 	};
 });
