@@ -1,4 +1,4 @@
-import { create, invalidator, diffProperties, getRegistry } from '../vdom';
+import { create, invalidator, diffProperty, getRegistry } from '../vdom';
 import cache from './cache';
 import injector from './injector';
 import Injector from '../Injector';
@@ -11,18 +11,20 @@ export interface ThemedProperties {
 	classes?: Classes;
 }
 
-const factory = create({ invalidator, cache, diffProperties, injector, getRegistry }).properties<ThemedProperties>();
+const factory = create({ invalidator, cache, diffProperty, injector, getRegistry }).properties<ThemedProperties>();
 
 export const theme = factory(
-	({ middleware: { invalidator, cache, diffProperties, injector, getRegistry }, properties }) => {
+	({ middleware: { invalidator, cache, diffProperty, injector, getRegistry }, properties }) => {
 		let themeKeys = new Set();
-		diffProperties((current: ThemedProperties, next: ThemedProperties) => {
+		diffProperty('theme', (current: ThemedProperties, next: ThemedProperties) => {
+			if (current.theme !== next.theme) {
+				cache.clear();
+				invalidator();
+			}
+		});
+		diffProperty('classes', (current: ThemedProperties, next: ThemedProperties) => {
 			let result = false;
-			if (
-				current.theme !== next.theme ||
-				(current.classes && !next.classes) ||
-				(!current.classes && next.classes)
-			) {
+			if ((current.classes && !next.classes) || (!current.classes && next.classes)) {
 				result = true;
 			} else if (current.classes && next.classes) {
 				const keys = [...themeKeys.values()];

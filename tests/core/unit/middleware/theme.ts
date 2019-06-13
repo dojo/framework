@@ -8,7 +8,7 @@ import Injector from '../../../../src/core/Injector';
 
 const sb = sandbox.create();
 const invalidator = sb.stub();
-const diffProperties = sb.stub();
+const diffProperty = sb.stub();
 const injector = {
 	subscribe: sb.stub(),
 	get: sb.stub()
@@ -38,14 +38,14 @@ describe('theme middleware', () => {
 			middleware: {
 				invalidator,
 				cache,
-				diffProperties,
+				diffProperty,
 				injector,
 				getRegistry
 			},
 			properties: {}
 		});
 
-		assert.isTrue(diffProperties.calledOnce);
+		assert.isTrue(diffProperty.calledTwice);
 		assert.isTrue(injector.subscribe.calledOnce);
 		const testTheme = {
 			foo: {
@@ -90,7 +90,7 @@ describe('theme middleware', () => {
 			middleware: {
 				invalidator,
 				cache,
-				diffProperties,
+				diffProperty,
 				injector,
 				getRegistry
 			},
@@ -99,7 +99,7 @@ describe('theme middleware', () => {
 			}
 		});
 
-		assert.isTrue(diffProperties.calledOnce);
+		assert.isTrue(diffProperty.calledTwice);
 		assert.isTrue(injector.subscribe.calledOnce);
 		assert.isTrue(invalidator.notCalled);
 
@@ -116,11 +116,11 @@ describe('theme middleware', () => {
 		assert.deepEqual(result, { bar: 'other-themed-root' });
 		const currentTheme = { ...propertyTheme };
 		propertyTheme.foo.bar = 'updated-themed-root';
-		diffProperties.getCall(0).callArgWith(0, { theme: currentTheme }, { theme: propertyTheme });
+		diffProperty.getCall(0).callArgWith(1, { theme: currentTheme }, { theme: propertyTheme });
 		assert.isTrue(invalidator.calledOnce);
 		const resultTwo = theme.classes(css);
 		assert.deepEqual(resultTwo, { bar: 'updated-themed-root' });
-		diffProperties.getCall(0).callArgWith(0, { theme: propertyTheme }, { theme: propertyTheme });
+		diffProperty.getCall(0).callArgWith(1, { theme: propertyTheme }, { theme: propertyTheme });
 		assert.isTrue(invalidator.calledOnce);
 		const resultThree = theme.classes(css);
 		assert.deepEqual(resultThree, { bar: 'updated-themed-root' });
@@ -137,7 +137,7 @@ describe('theme middleware', () => {
 			middleware: {
 				invalidator,
 				cache,
-				diffProperties,
+				diffProperty,
 				injector,
 				getRegistry
 			},
@@ -154,7 +154,7 @@ describe('theme middleware', () => {
 			}
 		});
 
-		assert.isTrue(diffProperties.calledOnce);
+		assert.isTrue(diffProperty.calledTwice);
 		assert.isTrue(injector.subscribe.calledOnce);
 		assert.isTrue(invalidator.notCalled);
 
@@ -176,8 +176,8 @@ describe('theme middleware', () => {
 		const resultTwo = theme.classes(css);
 		assert.deepEqual(resultTwo, { bar: 'themed-root extra-extra' });
 		assert.isTrue(invalidator.notCalled);
-		diffProperties.getCall(0).callArgWith(
-			0,
+		diffProperty.getCall(1).callArgWith(
+			1,
 			{
 				classes: {
 					other: {
@@ -202,5 +202,39 @@ describe('theme middleware', () => {
 			}
 		);
 		assert.isTrue(invalidator.calledOnce);
+		diffProperty.getCall(1).callArgWith(
+			1,
+			{
+				classes: {
+					other: {
+						bar: ['extra-extra-extra']
+					},
+					foo: {
+						bar: ['extra-extra'],
+						other: ['extra-extra-extra']
+					}
+				}
+			},
+			{}
+		);
+		assert.isTrue(invalidator.calledTwice);
+		diffProperty.getCall(1).callArgWith(
+			1,
+			{},
+			{
+				classes: {
+					other: {
+						bar: ['extra-extra-extra']
+					},
+					foo: {
+						bar: ['extra-extra'],
+						other: ['extra-extra']
+					}
+				}
+			}
+		);
+		assert.isTrue(invalidator.calledThrice);
+		diffProperty.getCall(1).callArgWith(1, {}, {});
+		assert.isTrue(invalidator.calledThrice);
 	});
 });
