@@ -66,6 +66,18 @@ registerSuite('diff', {
 			result = diff.shallow(foo, qux);
 			assert.equal(result.value, qux);
 			assert.isTrue(result.changed);
+		},
+		deep() {
+			const foo = { foo: [1, 2, 3] };
+			const bar = { foo: [1, 2, 3] };
+			let result = diff.shallow(foo, bar, 1);
+			assert.equal(result.value, bar);
+			assert.isFalse(result.changed);
+
+			const qux = { foo: [1, 3, 2] };
+			result = diff.shallow(foo, qux, 1);
+			assert.equal(result.value, qux);
+			assert.isTrue(result.changed);
 		}
 	},
 	auto: {

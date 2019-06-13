@@ -39,7 +39,7 @@ export interface ThemedProperties<T = ClassNames> {
 	extraClasses?: { [P in keyof T]?: string };
 }
 
-const THEME_KEY = ' _key';
+export const THEME_KEY = ' _key';
 
 export const INJECTED_THEME_KEY = '__theme_injector';
 
@@ -93,7 +93,7 @@ export function registerThemeInjector(theme: any, themeRegistry: Registry): Inje
 	const themeInjector = new Injector(theme);
 	themeRegistry.defineInjector(INJECTED_THEME_KEY, (invalidator) => {
 		themeInjector.setInvalidator(invalidator);
-		return () => themeInjector.get();
+		return () => themeInjector;
 	});
 	return themeInjector;
 }
@@ -107,9 +107,9 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 ): Constructor<ThemedMixin<E>> & T {
 	@inject({
 		name: INJECTED_THEME_KEY,
-		getProperties: (theme: Theme, properties: ThemedProperties): ThemedProperties => {
+		getProperties: (theme: Injector<Theme>, properties: ThemedProperties): ThemedProperties => {
 			if (!properties.theme) {
-				return { theme };
+				return { theme: theme.get() };
 			}
 			return {};
 		}

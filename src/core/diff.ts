@@ -26,7 +26,7 @@ export function reference(previousProperty: any, newProperty: any): PropertyChan
 	};
 }
 
-export function shallow(previousProperty: any, newProperty: any): PropertyChangeRecord {
+export function shallow(previousProperty: any, newProperty: any, depth = 0): PropertyChangeRecord {
 	let changed = false;
 
 	const validOldProperty = previousProperty && isObjectOrArray(previousProperty);
@@ -46,6 +46,9 @@ export function shallow(previousProperty: any, newProperty: any): PropertyChange
 		changed = true;
 	} else {
 		changed = newKeys.some((key) => {
+			if (depth > 0) {
+				return shallow(newProperty[key], previousProperty[key], depth - 1).changed;
+			}
 			return newProperty[key] !== previousProperty[key];
 		});
 	}
