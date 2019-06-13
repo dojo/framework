@@ -78,7 +78,8 @@ export interface WidgetMeta {
 	nodeMap: Map<string | number, HTMLElement>;
 	destroyMap: Map<string, () => void>;
 	deferRefs: number;
-	diffMap: Map<string, (current: any, next: any) => void>;
+	customDiffProperties: Set<string>;
+	customDiffMap: Map<string, Map<string, (current: any, next: any) => void>>;
 }
 
 export interface WidgetData {
@@ -436,11 +437,10 @@ export function tsx(tag: any, properties = {}, ...children: any[]): DNode {
 	}
 }
 
-function propertiesDiff(current: any, next: any, invalidator: () => void) {
+function propertiesDiff(current: any, next: any, invalidator: () => void, ignoreProperties: string[]) {
 	const propertyNames = [...Object.keys(current), ...Object.keys(next)];
-	let diffedProperties = [];
 	for (let i = 0; i < propertyNames.length; i++) {
-		if (diffedProperties.indexOf(propertyNames[i]) > -1) {
+		if (ignoreProperties.indexOf(propertyNames[i]) > -1) {
 			continue;
 		}
 		const result = auto(current[propertyNames[i]], next[propertyNames[i]]);
@@ -448,7 +448,7 @@ function propertiesDiff(current: any, next: any, invalidator: () => void) {
 			invalidator();
 			break;
 		}
-		diffedProperties.push(propertyNames[i]);
+		ignoreProperties.push(propertyNames[i]);
 	}
 }
 
@@ -719,8 +719,10 @@ function destroyHandles(destroyMap: Map<string, () => void>) {
 }
 
 function runDiffs(meta: WidgetMeta, current: any, next: any) {
-	if (meta.diffMap.size) {
-		meta.diffMap.forEach((diff) => diff({ ...current }, { ...next }));
+	if (meta.customDiffMap.size) {
+		meta.customDiffMap.forEach((diffMap) => {
+			diffMap.forEach((diff) => diff({ ...current }, { ...next }));
+		});
 	}
 }
 
@@ -751,14 +753,17 @@ export const node = factory(({ id }) => {
 	};
 });
 
-export const diffProperties = factory(({ id }) => {
-	return (diff: (current: any, next: any) => void) => {
+export const diffProperty = factory(({ id }) => {
+	return (propertyName: string, diff: (current: any, next: any) => void) => {
 		const [widgetId] = id.split('-');
 		const widgetMeta = widgetMetaMap.get(widgetId);
 		if (widgetMeta) {
-			if (!widgetMeta.diffMap.has(id)) {
-				widgetMeta.diffMap.set(id, diff);
+			const propertyDiffMap = widgetMeta.customDiffMap.get(id) || new Map();
+			if (!propertyDiffMap.has(propertyName)) {
+				propertyDiffMap.set(propertyName, diff);
+				widgetMeta.customDiffProperties.add(propertyName);
 			}
+			widgetMeta.customDiffMap.set(id, propertyDiffMap);
 		}
 	};
 });
@@ -1730,7 +1735,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					nodeMap: new Map(),
 					destroyMap: new Map(),
 					deferRefs: 0,
-					diffMap: new Map()
+					customDiffMap: new Map(),
+					customDiffProperties: new Set()
 				};
 				widgetMetaMap.set(next.id, widgetMeta);
 				widgetMeta.middleware = (Constructor as any).middlewares
@@ -1823,9 +1829,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				widgetMeta.properties = next.properties;
 				runDiffs(widgetMeta, current.properties, next.properties);
 				if (!widgetMeta.dirty) {
-					propertiesDiff(current.properties, next.properties, () => {
-						widgetMeta.dirty = true;
-					});
+					propertiesDiff(
+						current.properties,
+						next.properties,
+						() => {
+							widgetMeta.dirty = true;
+						},
+						[...widgetMeta.customDiffProperties.values()]
+					);
 				}
 				if (widgetMeta.dirty) {
 					next.childrenWrappers = undefined;
