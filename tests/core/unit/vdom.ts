@@ -9,7 +9,7 @@ import sendEvent from '../support/sendEvent';
 import {
 	create,
 	renderer,
-	diffProperties,
+	diffProperty,
 	defer,
 	destroy,
 	getRegistry,
@@ -3404,12 +3404,12 @@ jsdomDescribe('vdom', () => {
 					});
 				});
 
-				describe('diffProperties', () => {
-					it('Should call diff properties before rendering', () => {
-						const createWidget = create({ diffProperties, invalidator });
+				describe('diffProperty', () => {
+					it('Should call registered custom diff property function before rendering', () => {
+						const createWidget = create({ diffProperty, invalidator });
 						let counter = 0;
 						const Foo = createWidget(({ middleware }) => {
-							middleware.diffProperties((current: any, properties: any) => {
+							middleware.diffProperty('key', (current: any, properties: any) => {
 								assert.deepEqual(current, { key: 'foo' });
 								assert.deepEqual(properties, { key: 'foo' });
 								middleware.invalidator();
@@ -3433,6 +3433,33 @@ jsdomDescribe('vdom', () => {
 						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
 						resolvers.resolve();
 						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>1</div></div></div>');
+					});
+
+					it('Should skip properties from the standard diff that have a custom diff registered', () => {
+						const createWidget = create({ diffProperty, invalidator }).properties<any>();
+						const Foo = createWidget(({ middleware, properties }) => {
+							middleware.diffProperty('text', (current: any, properties: any) => {});
+							return v('div', [properties.text]);
+						});
+						let text = 'first';
+						const App = createWidget(({ middleware }) => {
+							return v('div', [
+								v('button', {
+									onclick: () => {
+										text = 'second';
+										middleware.invalidator();
+									}
+								}),
+								Foo({ key: 'foo', text })
+							]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>first</div></div></div>');
+						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
+						resolvers.resolve();
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>first</div></div></div>');
 					});
 				});
 			});
