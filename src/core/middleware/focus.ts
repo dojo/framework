@@ -8,6 +8,7 @@ const factory = create({ icache, cache, diffProperty, node, destroy, invalidator
 
 export const focus = factory(({ middleware: { icache, cache, diffProperty, node, destroy, invalidator } }) => {
 	let initialized = false;
+	const nodeSet = new Set<HTMLElement>();
 	diffProperty('focus', (_: FocusProperties, next: FocusProperties) => {
 		const result = next.focus && next.focus();
 		if (result) {
@@ -16,11 +17,17 @@ export const focus = factory(({ middleware: { icache, cache, diffProperty, node,
 		}
 	});
 	function onFocusChange() {
-		invalidator();
+		const currentElement = cache.get('active-element');
+		const activeElement = global.document.activeElement;
+		if (nodeSet.has(currentElement) || nodeSet.has(activeElement)) {
+			invalidator();
+		}
+		cache.set('active-element', activeElement);
 	}
 	destroy(() => {
 		global.document.removeEventListener('focusin', onFocusChange);
 		global.document.removeEventListener('focusout', onFocusChange);
+		nodeSet.clear();
 	});
 	return {
 		shouldFocus(): boolean {
@@ -38,6 +45,7 @@ export const focus = factory(({ middleware: { icache, cache, diffProperty, node,
 			if (!domNode) {
 				return false;
 			}
+			nodeSet.add(domNode);
 			if (!initialized) {
 				global.document.addEventListener('focusin', onFocusChange);
 				global.document.addEventListener('focusout', onFocusChange);

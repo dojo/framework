@@ -2,7 +2,7 @@ import global from '../../../../src/shim/global';
 const { it, afterEach } = intern.getInterface('bdd');
 const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import { sandbox, SinonStub } from 'sinon';
+import { sandbox } from 'sinon';
 
 import focusMiddleware from '../../../../src/core/middleware/focus';
 import cacheMiddleware from '../../../../src/core/middleware/cache';
@@ -15,10 +15,6 @@ const nodeStub = {
 	get: sb.stub()
 };
 const invalidatorStub = sb.stub();
-
-function waitForCall(calls = 1, stub: SinonStub) {
-	return new Promise((res) => stub.onCall(calls - 1).callsFake(res));
-}
 
 function cacheFactory() {
 	return cacheMiddleware().callback({ id: 'test-cache', properties: {}, middleware: { destroy: sb.stub() } });
@@ -126,11 +122,11 @@ describe('focus middleware', () => {
 		const div = global.document.createElement('div');
 		const buttonOne = global.document.createElement('button');
 		const buttonTwo = global.document.createElement('button');
+		const buttonThree = global.document.createElement('button');
 		div.appendChild(buttonOne);
 		div.appendChild(buttonTwo);
+		div.appendChild(buttonThree);
 		global.document.body.appendChild(div);
-		const firstWait = waitForCall(1, invalidatorStub);
-		const secondWait = waitForCall(2, invalidatorStub);
 		const addEventListenerSpy = sb.spy(global.document, 'addEventListener');
 		const removeEventListener = sb.spy(global.document, 'removeEventListener');
 		nodeStub.get.withArgs('root').returns(buttonOne);
@@ -142,12 +138,17 @@ describe('focus middleware', () => {
 				.onFirstCall()
 				.returns(buttonOne)
 				.onSecondCall()
-				.returns(buttonTwo);
+				.returns(buttonOne)
+				.onThirdCall()
+				.returns(buttonTwo)
+				.onCall(3)
+				.returns(buttonTwo)
+				.onCall(4)
+				.returns(buttonThree);
 		}
 		let focusEvent = global.document.createEvent('Event');
 		focusEvent.initEvent('focusin', true, true);
 		global.document.dispatchEvent(focusEvent);
-		await firstWait;
 		assert.isTrue(invalidatorStub.calledOnce);
 		assert.isTrue(focus.isFocused('root'));
 		assert.isTrue(addEventListenerSpy.calledTwice);
@@ -155,10 +156,14 @@ describe('focus middleware', () => {
 		focusEvent = global.document.createEvent('Event');
 		focusEvent.initEvent('focusin', true, true);
 		global.document.dispatchEvent(focusEvent);
-		await secondWait;
 		assert.isTrue(invalidatorStub.calledTwice);
 		assert.isFalse(focus.isFocused('root'));
 		assert.isTrue(addEventListenerSpy.calledTwice);
+		buttonThree.focus();
+		focusEvent = global.document.createEvent('Event');
+		focusEvent.initEvent('focusin', true, true);
+		global.document.dispatchEvent(focusEvent);
+		assert.isTrue(invalidatorStub.calledTwice);
 		destroyStub.getCall(0).callArg(0);
 		assert.isTrue(removeEventListener.calledTwice);
 	});
