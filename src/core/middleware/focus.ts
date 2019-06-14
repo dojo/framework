@@ -12,7 +12,7 @@ export const focus = factory(({ middleware: { icache, cache, diffProperty, node,
 	diffProperty('focus', (_: FocusProperties, next: FocusProperties) => {
 		const result = next.focus && next.focus();
 		if (result) {
-			let current = icache.get('current') || 0;
+			const current = icache.get('current') || 0;
 			icache.set('current', current + 1);
 		}
 	});
@@ -37,7 +37,7 @@ export const focus = factory(({ middleware: { icache, cache, diffProperty, node,
 			return current !== previous;
 		},
 		focus(): void {
-			let current = cache.get('current') || 0;
+			const current = cache.get('current') || 0;
 			icache.set('current', current + 1);
 		},
 		isFocused(key: string | number): boolean {
