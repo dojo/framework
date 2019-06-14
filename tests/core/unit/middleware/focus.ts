@@ -121,8 +121,11 @@ describe('focus middleware', () => {
 		});
 		const div = global.document.createElement('div');
 		const buttonOne = global.document.createElement('button');
+		buttonOne.setAttribute('id', 'one');
 		const buttonTwo = global.document.createElement('button');
+		buttonTwo.setAttribute('id', 'two');
 		const buttonThree = global.document.createElement('button');
+		buttonThree.setAttribute('id', 'three');
 		div.appendChild(buttonOne);
 		div.appendChild(buttonTwo);
 		div.appendChild(buttonThree);

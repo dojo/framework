@@ -19,7 +19,7 @@ export const focus = factory(({ middleware: { icache, cache, diffProperty, node,
 	function onFocusChange() {
 		const currentElement = cache.get('active-element');
 		const activeElement = global.document.activeElement;
-		if (nodeSet.has(currentElement) || nodeSet.has(activeElement)) {
+		if ((nodeSet.has(currentElement) || nodeSet.has(activeElement)) && currentElement !== activeElement) {
 			invalidator();
 		}
 		cache.set('active-element', activeElement);
