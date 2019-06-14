@@ -1,9 +1,7 @@
 import { create, node } from '../vdom';
-import { resize } from './resize';
-import { cache } from './cache';
 import { DimensionResults } from '../meta/Dimensions';
 
-const factory = create({ node, resize, cache });
+const factory = create({ node });
 
 const defaultDimensions = {
 	client: {
@@ -36,17 +34,9 @@ const defaultDimensions = {
 	}
 };
 
-export const dimensions = factory(({ middleware: { node, resize, cache } }) => {
+export const dimensions = factory(({ middleware: { node } }) => {
 	return {
 		get(key: string | number): Readonly<DimensionResults> {
-			const contentRect = resize.get(key);
-			if (contentRect) {
-				const cached = cache.get(contentRect);
-				if (cached) {
-					return cached;
-				}
-			}
-
 			const domNode = node.get(key);
 			if (!domNode) {
 				return {
@@ -89,7 +79,6 @@ export const dimensions = factory(({ middleware: { node, resize, cache } }) => {
 					height: boundingDimensions.height
 				}
 			};
-			cache.set(contentRect, result);
 			return result;
 		}
 	};

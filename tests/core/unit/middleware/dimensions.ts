@@ -3,7 +3,6 @@ const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
 
 import dimensionsMiddleware from '../../../../src/core/middleware/dimensions';
-import cacheMiddleware from '../../../../src/core/middleware/cache';
 
 const sb = sandbox.create();
 const nodeStub = {
@@ -12,7 +11,6 @@ const nodeStub = {
 const resizeStub = {
 	get: sb.stub()
 };
-const destroyStub = sb.stub();
 
 describe('dimensions middleware', () => {
 	afterEach(() => {
@@ -24,15 +22,7 @@ describe('dimensions middleware', () => {
 		const dimensions = callback({
 			id: 'test',
 			middleware: {
-				node: nodeStub,
-				resize: resizeStub,
-				cache: cacheMiddleware().callback({
-					id: 'cache ',
-					properties: {},
-					middleware: {
-						destroy: destroyStub
-					}
-				})
+				node: nodeStub
 			},
 			properties: {}
 		});
@@ -69,17 +59,6 @@ describe('dimensions middleware', () => {
 			size,
 			client: { height: 4, left: 1, top: 2, width: 3 }
 		});
-		const secondDims = dimensions.get('root');
-		assert.strictEqual(secondDims, dims);
-		const thirdDims = dimensions.get('root');
-		assert.notStrictEqual(thirdDims, secondDims);
-		assert.deepEqual(thirdDims, {
-			offset: { height: 10, left: 10, top: 10, width: 10 },
-			scroll: { height: 10, left: 10, top: 10, width: 10 },
-			position,
-			size,
-			client: { height: 4, left: 1, top: 2, width: 3 }
-		});
 	});
 
 	it('Should clone default dimensions', () => {
@@ -87,15 +66,7 @@ describe('dimensions middleware', () => {
 		const dimensions = callback({
 			id: 'test',
 			middleware: {
-				node: nodeStub,
-				resize: resizeStub,
-				cache: cacheMiddleware().callback({
-					id: 'cache ',
-					properties: {},
-					middleware: {
-						destroy: destroyStub
-					}
-				})
+				node: nodeStub
 			},
 			properties: {}
 		});
