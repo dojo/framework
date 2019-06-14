@@ -9,6 +9,7 @@ import bundle from '../../support/nls/greetings';
 import { fetchCldrData } from '../../support/util';
 import { v, w } from './../../../../src/core/vdom';
 import { ThemedMixin } from './../../../../src/core/mixins/Themed';
+import Injector from '../../../../src/core/Injector';
 
 class Localized extends I18nMixin(ThemedMixin(WidgetBase))<I18nProperties> {}
 
@@ -190,7 +191,7 @@ registerSuite('mixins/I18nMixin', {
 		},
 		'locale data can be injected by defining an Injector with a registry': {
 			'defaults to the injector data'() {
-				const injector = () => () => ({ locale: 'ar', rtl: true });
+				const injector = () => () => new Injector({ locale: 'ar', rtl: true });
 				const registry = new Registry();
 
 				registry.defineInjector(INJECTOR_KEY, injector);

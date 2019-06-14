@@ -1,0 +1,104 @@
+/* tslint:disable:interface-name */
+import i18nCore, { Bundle, formatMessage, getCachedMessages, Messages } from '../../i18n/i18n';
+import { create, invalidator, getRegistry } from '../vdom';
+import injector from './injector';
+import Map from '../../shim/Map';
+import Injector from '../Injector';
+import { I18nProperties, LocaleData, LocalizedMessages, INJECTOR_KEY, registerI18nInjector } from '../mixins/I18n';
+
+const factory = create({ invalidator, injector, getRegistry }).properties<I18nProperties>();
+
+export const i18n = factory(({ middleware: { invalidator, injector, getRegistry }, properties }) => {
+	const i18nInjector = injector.get(INJECTOR_KEY);
+	if (!i18nInjector) {
+		const registry = getRegistry();
+		if (registry) {
+			registerI18nInjector({}, registry.base);
+		}
+	}
+	injector.subscribe(INJECTOR_KEY);
+
+	function getLocaleMessages(bundle: Bundle<Messages>): Messages | void {
+		let locale = properties.locale;
+		if (!locale) {
+			const injectedLocale = injector.get<Injector<LocaleData>>(INJECTOR_KEY);
+			if (injectedLocale) {
+				locale = injectedLocale.get().locale;
+			}
+		}
+		locale = locale || i18nCore.locale;
+		const localeMessages = getCachedMessages(bundle, locale);
+
+		if (localeMessages) {
+			return localeMessages;
+		}
+
+		i18nCore(bundle, locale).then(() => {
+			invalidator();
+		});
+	}
+
+	function resolveBundle<T extends Messages>(bundle: Bundle<T>): Bundle<T> {
+		let { i18nBundle } = properties;
+		if (i18nBundle) {
+			if (i18nBundle instanceof Map) {
+				i18nBundle = i18nBundle.get(bundle);
+
+				if (!i18nBundle) {
+					return bundle;
+				}
+			}
+
+			return i18nBundle as Bundle<T>;
+		}
+		return bundle;
+	}
+
+	function getBlankMessages<T extends Messages>(bundle: Bundle<T>): T {
+		const blank = {} as Messages;
+		return Object.keys(bundle.messages).reduce((blank, key) => {
+			blank[key] = '';
+			return blank;
+		}, blank) as T;
+	}
+
+	return {
+		localize<T extends Messages>(bundle: Bundle<T>, useDefaults = false): LocalizedMessages<T> {
+			bundle = resolveBundle(bundle);
+			const messages = getLocaleMessages(bundle);
+			const isPlaceholder = !messages;
+			let locale = properties.locale;
+			if (!locale) {
+				const injectedLocale = injector.get<Injector<LocaleData>>(INJECTOR_KEY);
+				if (injectedLocale) {
+					locale = injectedLocale.get().locale;
+				}
+			}
+
+			const format =
+				isPlaceholder && !useDefaults
+					? () => ''
+					: (key: string, options?: any) => formatMessage(bundle, key, options, locale);
+
+			return Object.create({
+				format,
+				isPlaceholder,
+				messages: messages || (useDefaults ? bundle.messages : getBlankMessages(bundle))
+			});
+		},
+		set(localeData?: LocaleData) {
+			const currentLocale = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
+			if (currentLocale) {
+				currentLocale.set(localeData);
+			}
+		},
+		get() {
+			const currentLocale = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
+			if (currentLocale) {
+				return currentLocale.get();
+			}
+		}
+	};
+});
+
+export default i18n;
