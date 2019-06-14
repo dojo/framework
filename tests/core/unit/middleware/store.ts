@@ -49,30 +49,6 @@ describe('store middleware', () => {
 		assert.strictEqual(result, 'test-data');
 	});
 
-	it('should not subscribe to store changes when subscribe options is false', () => {
-		const { callback } = storeMiddleware();
-		const store = callback({
-			id: 'test',
-			middleware: {
-				destroy: destroyStub,
-				invalidator: invalidatorStub,
-				injector: injectorStub
-			},
-			properties: {}
-		});
-		let result = store.get(store.path('my-state'), false);
-		assert.isUndefined(result);
-		const testProcess = createProcess('test', [
-			({ path }) => {
-				return [replace(path('my-state'), 'test-data')];
-			}
-		]);
-		store.executor(testProcess)({});
-		assert.isTrue(invalidatorStub.notCalled);
-		result = store.get(store.path('my-state'));
-		assert.strictEqual(result, 'test-data');
-	});
-
 	it('Should be able to work with arrays in the store', () => {
 		const { callback } = storeMiddleware();
 		const store = callback({

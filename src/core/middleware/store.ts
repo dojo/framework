@@ -29,8 +29,8 @@ export const createStoreMiddleware = <S = any>(initial?: (store: Store<S>) => vo
 			return (store as any).path(path, ...segments);
 		};
 		return {
-			get<U = any>(path: Path<S, U>, subscribe = true): U {
-				if (subscribe && registeredPaths.indexOf(path.path) === -1) {
+			get<U = any>(path: Path<S, U>): U {
+				if (registeredPaths.indexOf(path.path) === -1) {
 					const handle = store.onChange(path, () => {
 						invalidator();
 					});
