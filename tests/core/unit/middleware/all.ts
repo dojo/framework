@@ -2,6 +2,7 @@ import './block';
 import './cache';
 import './dimensions';
 import './i18n';
+import './focus';
 import './icache';
 import './injector';
 import './intersection';
