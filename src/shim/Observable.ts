@@ -1,6 +1,8 @@
 import global from './global';
+`!has('es6-iterator')`;
 import { isArrayLike, isIterable, Iterable } from './iterator';
 import has from '../core/has';
+`!has('es6-symbol')`;
 import './Symbol';
 
 export interface Observable<T> extends ObservableObject {

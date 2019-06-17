@@ -1,6 +1,8 @@
 import global from './global';
+`!has('es6-iterator')`;
 import { isArrayLike, Iterable } from './iterator';
 import has from '../core/has';
+`!has('es6-symbol')`;
 import './Symbol';
 
 export interface WeakMap<K extends object, V> {

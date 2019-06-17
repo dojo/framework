@@ -1,7 +1,9 @@
+`!has('es6-iterator')`;
 import { isArrayLike, Iterable, IterableIterator, ShimIterator } from './iterator';
 import global from './global';
 import { is as objectIs } from './object';
 import has from '../core/has';
+`!has('es6-symbol')`;
 import './Symbol';
 
 export interface Map<K, V> {

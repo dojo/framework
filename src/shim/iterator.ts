@@ -1,3 +1,4 @@
+`!has('es6-symbol')`;
 import './Symbol';
 import { HIGH_SURROGATE_MAX, HIGH_SURROGATE_MIN } from './string';
 
