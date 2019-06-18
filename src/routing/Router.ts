@@ -1,4 +1,4 @@
-import QueuingEvented from '../core/QueuingEvented';
+import Evented from '../core/Evented';
 import { RouteConfig, History, OutletContext, Params, RouterInterface, Route, RouterOptions } from './interfaces';
 import { HashHistory } from './history/HashHistory';
 import { EventObject } from '../core/Evented';
@@ -36,25 +36,22 @@ function matchingParams({ params: previousParams }: OutletContext, { params }: O
 	return Object.keys(params).every((key) => previousParams[key] === params[key]);
 }
 
-export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent }> implements RouterInterface {
+export class Router extends Evented<{ nav: NavEvent; outlet: OutletEvent }> implements RouterInterface {
 	private _routes: Route[] = [];
 	private _outletMap: { [index: string]: Route } = Object.create(null);
 	private _matchedOutlets: { [index: string]: OutletContext } = Object.create(null);
 	private _currentParams: Params = {};
 	private _currentQueryParams: Params = {};
 	private _defaultOutlet: string | undefined;
-	private _history: History;
+	private _history!: History;
+	private _options: any;
 
 	constructor(config: RouteConfig[], options: RouterOptions = {}) {
 		super();
-		const { HistoryManager = HashHistory, base, window } = options;
+		this._options = options;
 		this._register(config);
-		this._history = new HistoryManager({ onChange: this._onChange, base, window });
-		if (this._matchedOutlets.errorOutlet && this._defaultOutlet) {
-			const path = this.link(this._defaultOutlet);
-			if (path) {
-				this.setPath(path);
-			}
+		if (options.autostart || true) {
+			this.start();
 		}
 	}
 
@@ -65,6 +62,17 @@ export class Router extends QueuingEvented<{ nav: NavEvent; outlet: OutletEvent 
 	 */
 	public setPath(path: string): void {
 		this._history.set(path);
+	}
+
+	public start() {
+		const { HistoryManager = HashHistory, base, window } = this._options;
+		this._history = new HistoryManager({ onChange: this._onChange, base, window });
+		if (this._matchedOutlets.errorOutlet && this._defaultOutlet) {
+			const path = this.link(this._defaultOutlet);
+			if (path) {
+				this.setPath(path);
+			}
+		}
 	}
 
 	/**

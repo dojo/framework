@@ -104,6 +104,8 @@ export interface RouterInterface {
 	 * The current params for matched routes
 	 */
 	readonly currentParams: Params;
+
+	start: () => void;
 }
 
 export interface MatchDetails {
@@ -194,6 +196,7 @@ export interface History {
 }
 
 export interface RouterOptions {
+	autostart?: boolean;
 	window?: Window;
 	base?: string;
 	HistoryManager?: HistoryConstructor;
