@@ -1,3 +1,4 @@
+`!has('es6-iterator')`;
 import { isArrayLike, isIterable, Iterable } from './iterator';
 import { MAX_SAFE_INTEGER } from './number';
 import has from '../core/has';
@@ -114,53 +115,60 @@ export let findIndex: <T>(target: ArrayLike<T>, callback: FindCallback<T>, thisA
 export let includes: <T>(target: ArrayLike<T>, searchElement: T, fromIndex?: number) => boolean;
 
 // Util functions for filled implementations
-/**
- * Ensures a non-negative, non-infinite, safe integer.
- *
- * @param length The number to validate
- * @return A proper length
- */
-const toLength = function toLength(length: number): number {
-	if (isNaN(length)) {
-		return 0;
-	}
 
-	length = Number(length);
-	if (isFinite(length)) {
-		length = Math.floor(length);
-	}
-	// Ensure a non-negative, real, safe integer
-	return Math.min(Math.max(length, 0), MAX_SAFE_INTEGER);
-};
+let toLength: any;
+let toInteger: any;
+let normalizeOffset: any;
 
-/**
- * From ES6 7.1.4 ToInteger()
- *
- * @param value A value to convert
- * @return An integer
- */
-const toInteger = function toInteger(value: any): number {
-	value = Number(value);
-	if (isNaN(value)) {
-		return 0;
-	}
-	if (value === 0 || !isFinite(value)) {
-		return value;
-	}
+if (!has('es6-array') || !has('es6-array-fill') || !has('es7-array')) {
+	/**
+	 * Ensures a non-negative, non-infinite, safe integer.
+	 *
+	 * @param length The number to validate
+	 * @return A proper length
+	 */
+	toLength = function toLength(length: number): number {
+		if (isNaN(length)) {
+			return 0;
+		}
 
-	return (value > 0 ? 1 : -1) * Math.floor(Math.abs(value));
-};
+		length = Number(length);
+		if (isFinite(length)) {
+			length = Math.floor(length);
+		}
+		// Ensure a non-negative, real, safe integer
+		return Math.min(Math.max(length, 0), MAX_SAFE_INTEGER);
+	};
 
-/**
- * Normalizes an offset against a given length, wrapping it if negative.
- *
- * @param value The original offset
- * @param length The total length to normalize against
- * @return If negative, provide a distance from the end (length); otherwise provide a distance from 0
- */
-const normalizeOffset = function normalizeOffset(value: number, length: number): number {
-	return value < 0 ? Math.max(length + value, 0) : Math.min(value, length);
-};
+	/**
+	 * From ES6 7.1.4 ToInteger()
+	 *
+	 * @param value A value to convert
+	 * @return An integer
+	 */
+	toInteger = function toInteger(value: any): number {
+		value = Number(value);
+		if (isNaN(value)) {
+			return 0;
+		}
+		if (value === 0 || !isFinite(value)) {
+			return value;
+		}
+
+		return (value > 0 ? 1 : -1) * Math.floor(Math.abs(value));
+	};
+
+	/**
+	 * Normalizes an offset against a given length, wrapping it if negative.
+	 *
+	 * @param value The original offset
+	 * @param length The total length to normalize against
+	 * @return If negative, provide a distance from the end (length); otherwise provide a distance from 0
+	 */
+	normalizeOffset = function normalizeOffset(value: number, length: number): number {
+		return value < 0 ? Math.max(length + value, 0) : Math.min(value, length);
+	};
+}
 
 if (!has('es6-array')) {
 	Array.from = function from(
@@ -227,7 +235,7 @@ if (!has('es6-array')) {
 		offset = normalizeOffset(toInteger(offset), length);
 		start = normalizeOffset(toInteger(start), length);
 		end = normalizeOffset(end === undefined ? length : toInteger(end), length);
-		let count = Math.min(end - start, length - offset);
+		let count = Math.min(end! - start, length - offset);
 
 		let direction = 1;
 		if (offset > start && offset < start + count) {
@@ -279,13 +287,13 @@ if (!has('es6-array')) {
 	};
 }
 
-if (!has('es-array-fill')) {
+if (!has('es6-array-fill')) {
 	Array.prototype.fill = function fill(value: any, start?: number, end?: number) {
 		const length = toLength(this.length);
 		let i = normalizeOffset(toInteger(start), length);
 		end = normalizeOffset(end === undefined ? length : toInteger(end), length);
 
-		while (i < end) {
+		while (i < (end || 0)) {
 			this[i++] = value;
 		}
 

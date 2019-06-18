@@ -1,7 +1,8 @@
 import { Thenable } from './interfaces';
 import global from './global';
+`!has('microtasks')`;
 import { queueMicroTask } from './support/queue';
-import { Iterable } from './iterator';
+`!has('es6-symbol')`;
 import './Symbol';
 import has from '../core/has';
 

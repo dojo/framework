@@ -253,6 +253,8 @@ add(
 	true
 );
 
+add('es6-iterator', () => has('es6-map'));
+
 /* Math */
 add(
 	'es6-math',

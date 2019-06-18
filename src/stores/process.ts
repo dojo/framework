@@ -4,7 +4,6 @@ import { replace, remove } from './state/operations';
 import { Path, State, Store } from './Store';
 import Map from '../shim/Map';
 import has from '../core/has';
-import Symbol, { isSymbol } from '../shim/Symbol';
 
 /**
  * Default Payload interface
@@ -219,7 +218,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 					const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
 					const stringPath = fullPath.path;
 
-					if (isSymbol(prop) && prop === valueSymbol) {
+					if (typeof prop === 'symbol' && prop === valueSymbol) {
 						return proxied.get(stringPath);
 					}
 
