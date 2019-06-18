@@ -120,7 +120,7 @@ let toLength: any;
 let toInteger: any;
 let normalizeOffset: any;
 
-if (!has('es6-array') && !has('es6-array-fill') && !has('es7-array')) {
+if (!has('es6-array') || !has('es6-array-fill') || !has('es7-array')) {
 	/**
 	 * Ensures a non-negative, non-infinite, safe integer.
 	 *
