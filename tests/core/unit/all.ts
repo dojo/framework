@@ -1,6 +1,5 @@
 import './Destroyable';
 import './Evented';
-import './QueuingEvented';
 import './util';
 import './Container';
 import './WidgetBase';
