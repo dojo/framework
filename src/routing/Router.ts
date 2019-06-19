@@ -44,7 +44,7 @@ export class Router extends Evented<{ nav: NavEvent; outlet: OutletEvent }> impl
 	private _currentQueryParams: Params = {};
 	private _defaultOutlet: string | undefined;
 	private _history!: History;
-	private _options: any;
+	private _options: RouterOptions;
 
 	constructor(config: RouteConfig[], options: RouterOptions = {}) {
 		super();
