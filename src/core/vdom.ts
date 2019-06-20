@@ -1824,6 +1824,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			if (widgetMeta) {
 				widgetMeta.properties = next.properties;
 				runDiffs(widgetMeta, current.properties, next.properties);
+				if (current.node.children.length > 0 || next.node.children.length > 0) {
+					widgetMeta.dirty = true;
+				}
 				if (!widgetMeta.dirty) {
 					propertiesDiff(
 						current.properties,
