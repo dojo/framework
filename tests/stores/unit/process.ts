@@ -11,7 +11,8 @@ import {
 	ProcessCallback,
 	ProcessCallbackAfter,
 	ProcessError,
-	ProcessResult
+	ProcessResult,
+	valueSymbol
 } from '../../../src/stores/process';
 import { MutableState, Store } from '../../../src/stores/Store';
 import { add, replace } from '../../../src/stores/state/operations';
@@ -258,6 +259,23 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 				} else {
 					await Promise.all(promises);
 				}
+			});
+		});
+
+		it('removes nested proxy values', async () => {
+			await assertProxyError(async () => {
+				const process = createProcess('test', [
+					({ state }) => {
+						state.foo = [{ bar: 'baz' }, { bar: 'buzz' }, { bar: 'biz' }];
+					},
+					({ state }) => {
+						state.foo = state.foo.filter(({ bar }: any) => bar !== 'baz');
+						state.bar = 0;
+					}
+				]);
+				process(store)({});
+
+				assert.isUndefined(store.get(store.at(store.path('foo'), 0))[valueSymbol]);
 			});
 		});
 

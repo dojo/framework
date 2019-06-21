@@ -168,13 +168,35 @@ export function createCommandFactory<T, P extends object = DefaultPayload>(): Co
 export type Commands<T = any, P extends object = DefaultPayload> = (Command<T, P>[] | Command<T, P>)[];
 
 const processMap = new Map();
-const valueSymbol = Symbol('value');
+export const valueSymbol = Symbol('value');
 
 export function getProcess(id: string) {
 	return processMap.get(id);
 }
 
 const proxyError = 'State updates are not available on legacy browsers';
+
+function removeProxies(value: any) {
+	if (typeof value === 'object' && value !== null) {
+		if (value[valueSymbol]) {
+			value = value[valueSymbol];
+		}
+
+		if (Array.isArray(value)) {
+			value = value.map(removeProxies);
+		} else {
+			value = Object.keys(value).reduce(
+				(newValue, key) => {
+					newValue[key] = removeProxies(value[key]);
+					return newValue;
+				},
+				{} as typeof value
+			);
+		}
+	}
+
+	return value;
+}
 
 export function processExecutor<T = any, P extends object = DefaultPayload>(
 	id: string,
@@ -248,9 +270,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 				},
 
 				set(obj: any, prop: string, value: any) {
-					if (typeof value === 'object' && value !== null && value[valueSymbol]) {
-						value = value[valueSymbol];
-					}
+					value = removeProxies(value);
 
 					proxyOperations.push(replace(partialPath ? path(partialPath, prop) : path(prop as keyof T), value));
 					obj[prop] = value;
