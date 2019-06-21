@@ -9,6 +9,7 @@ import { v, w } from '../../../src/widget-core/d';
 import register, { create, CustomElementChildType } from '../../../src/widget-core/registerCustomElement';
 import { createResolvers } from '../support/util';
 import { theme, ThemedMixin } from '../../../src/widget-core/mixins/Themed';
+import { waitFor } from './waitFor';
 
 const { describe, it, beforeEach, afterEach, before } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
@@ -372,7 +373,7 @@ describe('registerCustomElement', () => {
 		assert.equal(display, 'block');
 	});
 
-	it('handles children being appended as document is still loading', () => {
+	it('handles children being appended as document is still loading', async () => {
 		register(DelayedChildrenWidget);
 
 		Object.defineProperty(document, 'readyState', {
@@ -396,14 +397,10 @@ describe('registerCustomElement', () => {
 		child = document.createTextNode('bar');
 		element!.appendChild(child);
 
-		return new Promise((resolve) => {
-			setTimeout(() => {
-				assert.equal(
-					element!.outerHTML,
-					'<delayed-children-element style="display: block;"><div><div data-key="child-0">foo</div><div data-key="child-1">bar</div></div></delayed-children-element>'
-				);
-				resolve();
-			});
-		});
+		waitFor(
+			() =>
+				element!.outerHTML ===
+				'<delayed-children-element style="display: block;"><div><div data-key="child-0">foo</div><div data-key="child-1">bar</div></div></delayed-children-element>'
+		);
 	});
 });
