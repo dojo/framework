@@ -275,7 +275,9 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 				]);
 				process(store)({});
 
-				assert.isUndefined(store.get(store.at(store.path('foo'), 0))[valueSymbol]);
+				if (typeof Proxy !== 'undefined') {
+					assert.isUndefined(store.get(store.at(store.path('foo'), 0))[valueSymbol]);
+				}
 			});
 		});
 
