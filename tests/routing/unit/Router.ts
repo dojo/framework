@@ -515,9 +515,9 @@ describe('Router', () => {
 		assert.isUndefined(link);
 	});
 
-	it('Queues the first event for the first registered listener', () => {
+	it('The router will not start automatically if autostart is set to false', () => {
 		let initialNavEvent = false;
-		const router = new Router(routeConfigDefaultRoute, { HistoryManager });
+		const router = new Router(routeConfigDefaultRoute, { HistoryManager, autostart: false });
 		let navCount = 0;
 		router.on('nav', (event) => {
 			navCount++;
@@ -532,6 +532,7 @@ describe('Router', () => {
 				initialNavEvent = true;
 			}
 		});
+		router.start();
 		assert.isTrue(initialNavEvent);
 	});
 });
