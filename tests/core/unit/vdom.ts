@@ -2991,6 +2991,30 @@ jsdomDescribe('vdom', () => {
 		});
 
 		describe('functional', () => {
+			it('children', () => {
+				const createWidget = create({ invalidator });
+
+				let text = 'first';
+				let updateText: any;
+
+				const Foo = createWidget(({ children }) => children);
+				const App = createWidget(({ middleware }) => {
+					updateText = () => {
+						text = 'second';
+						middleware.invalidator();
+					};
+					return v('div', [Foo({}, [text])]);
+				});
+				const r = renderer(() => App({}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div });
+				resolvers.resolve();
+				assert.strictEqual(div.outerHTML, '<div><div>first</div></div>');
+				updateText();
+				resolvers.resolve();
+				assert.strictEqual(div.outerHTML, '<div><div>second</div></div>');
+			});
+
 			it('Should render nodes in the correct order with mix of vnode and wnodes', () => {
 				const createWidget = create();
 
