@@ -404,4 +404,32 @@ describe('registerCustomElement', () => {
 				'<delayed-children-element style="display: block;"><div><div data-key="child-0">foo</div><div data-key="child-1">bar</div></div></delayed-children-element>'
 		);
 	});
+
+	it('eventually parses an element processed while loading', () => {
+		resolvers.restore();
+
+		Object.defineProperty(document, 'readyState', {
+			configurable: true,
+			get() {
+				return 'loading';
+			}
+		});
+		element = document.createElement('foo-element');
+		document.body.appendChild(element);
+
+		const nextSibling = document.createElement('div');
+		document.body.appendChild(nextSibling);
+
+		assert.notEqual(element.outerHTML, '<foo-element style="display: block;"><div>hello world</div></foo-element>');
+		return waitFor(
+			() => element!.outerHTML === '<foo-element style="display: block;"><div>hello world</div></foo-element>'
+		).finally(() => {
+			Object.defineProperty(document, 'readyState', {
+				configurable: true,
+				get() {
+					return 'complete';
+				}
+			});
+		});
+	});
 });
