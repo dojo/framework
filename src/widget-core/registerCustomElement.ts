@@ -53,40 +53,43 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		private _children: any[] = [];
 		private _eventProperties: any = {};
 		private _initialised = false;
-		private _parentNodes: any[] = [];
 
 		public connectedCallback() {
 			if (this._initialised) {
 				return;
 			}
-			// collect ancestor nodes
-			let el = this.parentNode;
-			while (el) {
-				this._parentNodes.push(el);
-				el = el.parentNode;
-			}
-			// check if the parser has already passed the end tag of the component
-			// in which case this element, or one of its parents, should have a nextSibling
-			// if not (no whitespace at all between tags and no nextElementSiblings either)
-			// resort to DOMContentLoaded or load having triggered
-			if ([this, ...this._parentNodes].some((el) => el.nextSibling) || document.readyState !== 'loading') {
-				this._childrenAvailableCallback();
-			} else {
-				const mutationObserver = new MutationObserver(() => {
-					if (
-						[this, ...this._parentNodes].some((el) => el.nextSibling) ||
-						document.readyState !== 'loading'
-					) {
-						this._childrenAvailableCallback();
-						mutationObserver.disconnect();
-					}
-				});
 
-				mutationObserver.observe(this, { childList: true });
+			this._waitTillReady();
+		}
+
+		private _hasBeenParsed() {
+			if (document.readyState !== 'loading') {
+				return true;
+			}
+
+			let element: any = this;
+			while (element) {
+				if (element.nextSibling) {
+					return true;
+				}
+
+				element = element.parentNode;
+			}
+
+			return false;
+		}
+
+		private _waitTillReady() {
+			if (this._hasBeenParsed()) {
+				this._readyCallback();
+			} else {
+				setTimeout(() => {
+					this._waitTillReady();
+				}, 100);
 			}
 		}
 
-		private _childrenAvailableCallback() {
+		private _readyCallback() {
 			const domProperties: any = {};
 			const { attributes, properties, events } = descriptor;
 
