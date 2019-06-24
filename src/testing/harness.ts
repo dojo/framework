@@ -1,9 +1,9 @@
 import assertRender from './support/assertRender';
 import { decorateNodes, select } from './support/selector';
-import { WNode, DNode, Constructor, VNode, Callback, RenderResult } from '../core/interfaces';
+import { WNode, DNode, Constructor, VNode, Callback, RenderResult, MiddlewareResultFactory } from '../core/interfaces';
 import { WidgetBase } from '../core/WidgetBase';
 import { isWidgetFunction } from '../core/Registry';
-import { invalidator, diffProperty, destroy } from '../core/vdom';
+import { invalidator, diffProperty, destroy, create } from '../core/vdom';
 
 export interface CustomComparator {
 	selector: string;
@@ -49,8 +49,10 @@ let middlewareId = 0;
 
 interface HarnessOptions {
 	customComparator?: CustomComparator[];
-	mockMiddlewareMap?: Map<any, any>;
+	middleware?: [MiddlewareResultFactory<any, any, any>, MiddlewareResultFactory<any, any, any>][];
 }
+
+const factory = create();
 
 export function harness(renderFunc: () => WNode, options?: HarnessOptions): HarnessAPI;
 export function harness(renderFunc: () => WNode, customComparator?: CustomComparator[]): HarnessAPI;
@@ -65,12 +67,12 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 	let customDiffs: any[] = [];
 	let customDiffNames: string[] = [];
 	let customComparator: CustomComparator[] = [];
-	let mockMiddlewareMap: Map<any, any> = new Map();
+	let mockMiddleware: [MiddlewareResultFactory<any, any, any>, MiddlewareResultFactory<any, any, any>][] = [];
 	if (Array.isArray(options)) {
 		customComparator = options;
 	} else {
-		if (options.mockMiddlewareMap) {
-			mockMiddlewareMap = options.mockMiddlewareMap;
+		if (options.middleware) {
+			mockMiddleware = options.middleware;
 		}
 		if (options.customComparator) {
 			customComparator = options.customComparator;
@@ -78,12 +80,13 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 	}
 
 	if (isWidgetFunction(wNode.widgetConstructor)) {
-		// resolve middlewares
 		widget = wNode.widgetConstructor;
-		const resolveMiddleware = (middlewares: any, mockMiddlewareMap: Map<any, any>) => {
+
+		const resolveMiddleware = (middlewares: any, mocks: any[]) => {
 			const keys = Object.keys(middlewares);
 			const results: any = {};
 			const uniqueId = `${middlewareId++}`;
+			const mockMiddlewareMap = new Map(mocks);
 
 			for (let i = 0; i < keys.length; i++) {
 				let isMock = false;
@@ -110,19 +113,15 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 					configurable: true
 				});
 				if (middleware.middlewares) {
-					const resolvedMiddleware = resolveMiddleware(middleware.middlewares, mockMiddlewareMap);
+					const resolvedMiddleware = resolveMiddleware(middleware.middlewares, mocks);
 					payload.middleware = resolvedMiddleware;
 					results[keys[i]] = middleware.callback(payload);
 				} else {
 					if (isMock) {
-						if ((middleware as any).isFactory === true) {
-							let result = middleware();
-							const resolvedMiddleware = resolveMiddleware(result.middlewares, mockMiddlewareMap);
-							payload.middleware = resolvedMiddleware;
-							results[keys[i]] = result.callback(payload);
-						} else {
-							results[keys[i]] = middleware(payload);
-						}
+						let result = middleware();
+						const resolvedMiddleware = resolveMiddleware(result.middlewares, mocks);
+						payload.middleware = resolvedMiddleware;
+						results[keys[i]] = result.callback(payload);
 					} else {
 						results[keys[i]] = middleware.callback(payload);
 					}
@@ -130,17 +129,23 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 			}
 			return results;
 		};
-		mockMiddlewareMap.set(invalidator, () => () => {
-			invalidated = true;
-		});
-		mockMiddlewareMap.set(destroy, () => () => {});
-		mockMiddlewareMap.set(diffProperty, () => (propName: string, func: any) => {
-			if (customDiffNames.indexOf(propName) === -1) {
-				customDiffNames.push(propName);
-				customDiffs.push(func);
-			}
-		});
-		middleware = resolveMiddleware((wNode.widgetConstructor as any).middlewares, mockMiddlewareMap);
+		mockMiddleware.push([
+			invalidator,
+			factory(() => () => {
+				invalidated = true;
+			})
+		]);
+		mockMiddleware.push([destroy, factory(() => () => {})]);
+		mockMiddleware.push([
+			diffProperty,
+			factory(() => (propName: string, func: any) => {
+				if (customDiffNames.indexOf(propName) === -1) {
+					customDiffNames.push(propName);
+					customDiffs.push(func);
+				}
+			})
+		]);
+		middleware = resolveMiddleware((wNode.widgetConstructor as any).middlewares, mockMiddleware);
 	} else {
 		const widgetConstructor = wNode.widgetConstructor as Constructor<WidgetBase>;
 		if (typeof widgetConstructor === 'function') {
@@ -163,7 +168,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 	function _runCompares(nodes: DNode | DNode[], isExpected: boolean = false) {
 		customComparator.forEach(({ selector, property, comparator }) => {
 			const items = select(selector, nodes);
-			items.forEach((item: any, index: number) => {
+			items.forEach((item: any) => {
 				const comparatorName = `comparator(selector=${selector}, ${property})`;
 				if (item && item.properties && item.properties[property] !== undefined) {
 					const comparatorResult = comparator(item.properties[property])
