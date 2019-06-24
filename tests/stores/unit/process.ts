@@ -830,23 +830,26 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 		});
 
 		it('passes process id to middleware callbacks', () => {
-			let beforeId = '';
-			let afterId = '';
+			let before: string[] = [];
+			let after: string[] = [];
 
-			const process = createProcess('test', [], () => ({
-				before(payload, store, id) {
-					beforeId = id;
-				},
-				after(errorState, result) {
-					afterId = result.id;
-				}
-			}));
+			function middleware(): ProcessCallback {
+				return () => ({
+					before(payload, store, id) {
+						before.push(id);
+					},
+					after(errorState, result) {
+						after.push(result.id);
+					}
+				});
+			}
 
+			const process = createProcess('test', [], [middleware(), middleware()]);
 			const executor = process(store);
 			executor({});
 
-			assert.strictEqual(beforeId, 'test');
-			assert.strictEqual(afterId, 'test');
+			assert.deepEqual(before, ['test', 'test']);
+			assert.deepEqual(after, ['test', 'test']);
 		});
 	});
 };
