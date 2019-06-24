@@ -943,8 +943,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function mapNodeToInstance(nodes: DNode[], wrapper: WNodeWrapper) {
-		let node: DNode;
-		while ((node = nodes.pop())) {
+		while (nodes.length) {
+			let node = nodes.pop();
 			if (isWNode(node) || isVNode(node)) {
 				if (!_nodeToWrapperMap.has(node)) {
 					_nodeToWrapperMap.set(node, wrapper);
