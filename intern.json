@@ -28,6 +28,11 @@
 	],
 
 	"plugins": [
+		"./dist/dev/tests/shim/support/has-plugin.js",
+		{
+			"script": "./dist/dev/src/core/features.js",
+			"useLoader": true
+		},
 		{
 			"script": "./dist/dev/src/shim/main",
 			"useLoader": true
@@ -35,9 +40,7 @@
 		{
 			"script": "./dist/dev/tests/core/support/jsdom-plugin.js",
 			"useLoader": true
-		},
-		"./dist/dev/tests/shim/support/has-plugin.js",
-		"./dist/dev/src/core/features.js"
+		}
 	],
 
 	"browser": {
