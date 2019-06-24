@@ -828,6 +828,26 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 			executor({});
 			assert.strictEqual(store.get(store.path('foo')), 'bar');
 		});
+
+		it('passes process id to middleware callbacks', () => {
+			let beforeId = '';
+			let afterId = '';
+
+			const process = createProcess('test', [], () => ({
+				before(payload, store, id) {
+					beforeId = id;
+				},
+				after(errorState, result) {
+					afterId = result.id;
+				}
+			}));
+
+			const executor = process(store);
+			executor({});
+
+			assert.strictEqual(beforeId, 'test');
+			assert.strictEqual(afterId, 'test');
+		});
 	});
 };
 

@@ -124,7 +124,7 @@ export interface ProcessCallbackAfter<T = any> {
 }
 
 export interface ProcessCallbackBefore<T = any, P extends object = DefaultPayload> {
-	(payload: P, store: Store<T>): void | Promise<void>;
+	(payload: P, store: Store<T>, id: string): void | Promise<void>;
 }
 
 /**
@@ -202,7 +202,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 		const payload = transformer ? transformer(executorPayload) : executorPayload;
 
 		if (before) {
-			let result = before(payload, store);
+			let result = before(payload, store, id);
 			if (result) {
 				await result;
 			}
@@ -374,7 +374,7 @@ export function createProcess<T = any, P extends object = DefaultPayload>(
 
 	const callback = callbacks.length
 		? callbacks.reduce((callback, nextCallback) => {
-				return combineCallbacks(nextCallback)(callback);
+				return combineCallbacks(nextCallback, id)(callback);
 		  })
 		: undefined;
 
@@ -403,8 +403,9 @@ export function createProcessFactoryWith(callbacks: ProcessCallback[]) {
 /**
  * Creates a `ProcessCallbackDecorator` from a `ProcessCallback`.
  * @param processCallback the process callback to convert to a decorator.
+ * @param id process id to be passed to the before callback
  */
-function combineCallbacks(processCallback: ProcessCallback): ProcessCallbackDecorator {
+function combineCallbacks(processCallback: ProcessCallback, id: string): ProcessCallbackDecorator {
 	const { before, after } = processCallback();
 	return (previousCallback?: ProcessCallback) => {
 		const { before: previousBefore = undefined, after: previousAfter = undefined } = previousCallback
@@ -422,11 +423,11 @@ function combineCallbacks(processCallback: ProcessCallback): ProcessCallbackDeco
 			},
 			before(payload: DefaultPayload, store: Store<any>) {
 				if (previousBefore) {
-					previousBefore(payload, store);
+					previousBefore(payload, store, id);
 				}
 
 				if (before) {
-					before(payload, store);
+					before(payload, store, id);
 				}
 			}
 		});
