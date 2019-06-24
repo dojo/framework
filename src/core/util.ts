@@ -1,12 +1,12 @@
 import { Handle } from './Destroyable';
-import { DNode, RenderResult } from './interfaces';
+import { DNode, RenderResult, VNode, WNode } from './interfaces';
 import { isWNode, isVNode } from './vdom';
 
 const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 export interface Modifier<T extends DNode> {
-	(dNode: T, breaker: () => void): void | DNode;
+	(dNode: T, breaker: () => void): void | VNode | WNode | null | string | boolean;
 }
 
 export interface Predicate<T extends DNode> {
