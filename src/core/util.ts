@@ -6,7 +6,7 @@ const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 export interface Modifier<T extends DNode> {
-	(dNode: T, breaker: () => void): void;
+	(dNode: T, breaker: () => void): void | DNode;
 }
 
 export interface Predicate<T extends DNode> {
@@ -368,20 +368,45 @@ export function decorate(
 		shallow = optionsOrModifier.shallow || false;
 	}
 
-	let nodes = Array.isArray(dNodes) ? [...dNodes] : [dNodes];
+	let shouldDrain = false;
 	function breaker() {
-		nodes = [];
+		shouldDrain = true;
 	}
-	while (nodes.length) {
-		const node = nodes.shift();
+
+	let nodes = Array.isArray(dNodes) ? [...dNodes] : [dNodes];
+	for (let i = 0; i < nodes.length; i++) {
+		const node = nodes[i];
 		if (node && node !== true) {
-			if (!shallow && (isWNode(node) || isVNode(node)) && node.children) {
-				nodes = [...nodes, ...node.children];
-			}
 			if (!predicate || predicate(node)) {
-				modifier(node, breaker);
+				nodes[i] = modifier(node, breaker) || node;
+			}
+		}
+		if (shouldDrain) {
+			break;
+		}
+	}
+
+	const rootNodes = nodes.slice();
+
+	if (!shallow) {
+		while (nodes.length) {
+			const node = nodes.shift();
+			if ((isWNode(node) || isVNode(node)) && node.children) {
+				for (let i = 0; i < node.children.length; i++) {
+					const child = node.children[i];
+					if (child && child !== true) {
+						if (!predicate || predicate(child)) {
+							node.children[i] = modifier(child, breaker) || child;
+						}
+					}
+					nodes.push(node.children[i]);
+					if (shouldDrain) {
+						nodes = [];
+					}
+				}
 			}
 		}
 	}
-	return dNodes;
+
+	return Array.isArray(dNodes) ? rootNodes : rootNodes[0];
 }
