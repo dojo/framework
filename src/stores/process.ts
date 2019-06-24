@@ -182,17 +182,13 @@ function removeProxies(value: any) {
 			value = value[valueSymbol];
 		}
 
-		if (Array.isArray(value)) {
-			value = value.map(removeProxies);
-		} else {
-			value = Object.keys(value).reduce(
-				(newValue, key) => {
-					newValue[key] = removeProxies(value[key]);
-					return newValue;
-				},
-				{} as typeof value
-			);
+		const newValue: typeof value = Array.isArray(value) ? [] : {};
+		const keys = Object.keys(value);
+		for (let i = 0; i < keys.length; i++) {
+			newValue[keys[i]] = removeProxies(value[keys[i]]);
 		}
+
+		value = newValue;
 	}
 
 	return value;
