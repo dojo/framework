@@ -373,7 +373,8 @@ describe('registerCustomElement', () => {
 		assert.equal(display, 'block');
 	});
 
-	it('handles children being appended as document is still loading', async () => {
+	it('handles children being appended as document is still loading', () => {
+		resolvers.restore();
 		register(DelayedChildrenWidget);
 
 		Object.defineProperty(document, 'readyState', {
@@ -397,7 +398,7 @@ describe('registerCustomElement', () => {
 		child = document.createTextNode('bar');
 		element!.appendChild(child);
 
-		waitFor(
+		return waitFor(
 			() =>
 				element!.outerHTML ===
 				'<delayed-children-element style="display: block;"><div><div data-key="child-0">foo</div><div data-key="child-1">bar</div></div></delayed-children-element>'
