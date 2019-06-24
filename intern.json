@@ -36,7 +36,8 @@
 			"script": "./dist/dev/tests/core/support/jsdom-plugin.js",
 			"useLoader": true
 		},
-		"./dist/dev/tests/shim/support/has-plugin.js"
+		"./dist/dev/tests/shim/support/has-plugin.js",
+		"./dist/dev/src/core/features.js"
 	],
 
 	"browser": {

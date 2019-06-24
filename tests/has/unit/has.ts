@@ -372,6 +372,7 @@ registerSuite('has', {
 				'es6-string',
 				'es6-string-raw',
 				'es6-symbol',
+				'es6-iterator',
 				'es6-weakmap',
 				'es7-array',
 				'microtasks',
