@@ -373,12 +373,17 @@ export function decorate(
 		shouldDrain = true;
 	}
 
+	function modifyNode(modifier: Modifier<DNode>, node: DNode) {
+		const modifiedNode = modifier(node, breaker);
+		return modifiedNode === undefined ? node : modifiedNode;
+	}
+
 	let nodes = Array.isArray(dNodes) ? [...dNodes] : [dNodes];
 	for (let i = 0; i < nodes.length; i++) {
 		const node = nodes[i];
 		if (node && node !== true) {
 			if (!predicate || predicate(node)) {
-				nodes[i] = modifier(node, breaker) || node;
+				nodes[i] = modifyNode(modifier, node);
 			}
 		}
 		if (shouldDrain) {
@@ -396,7 +401,7 @@ export function decorate(
 					const child = node.children[i];
 					if (child && child !== true) {
 						if (!predicate || predicate(child)) {
-							node.children[i] = modifier(child, breaker) || child;
+							node.children[i] = modifyNode(modifier, child);
 						}
 					}
 					nodes.push(node.children[i]);
