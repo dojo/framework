@@ -6,15 +6,21 @@ import WidgetBase from '../core/WidgetBase';
 
 export type PropertiesComparatorFunction = (actualProperties: any) => any;
 
+export type TemplateChildren = DNode[] | (() => DNode[]);
+
 export interface AssertionTemplateResult {
 	(): DNode | DNode[];
-	append(selector: string, children: DNode[]): AssertionTemplateResult;
-	prepend(selector: string, children: DNode[]): AssertionTemplateResult;
-	replaceChildren(selector: string, children: DNode[]): AssertionTemplateResult;
-	insertBefore(selector: string, children: DNode[]): AssertionTemplateResult;
-	insertAfter(selector: string, children: DNode[]): AssertionTemplateResult;
-	insertSiblings(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
-	setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
+	append(selector: string, children: TemplateChildren): AssertionTemplateResult;
+	prepend(selector: string, children: TemplateChildren): AssertionTemplateResult;
+	replaceChildren(selector: string, children: TemplateChildren): AssertionTemplateResult;
+	insertBefore(selector: string, children: TemplateChildren): AssertionTemplateResult;
+	insertAfter(selector: string, children: TemplateChildren): AssertionTemplateResult;
+	insertSiblings(selector: string, children: TemplateChildren, type?: 'before' | 'after'): AssertionTemplateResult;
+	setChildren(
+		selector: string,
+		children: TemplateChildren,
+		type?: 'prepend' | 'replace' | 'append'
+	): AssertionTemplateResult;
 	setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
 	setProperties(selector: string, value: any | PropertiesComparatorFunction): AssertionTemplateResult;
 	getChildren(selector: string): DNode[];
@@ -74,24 +80,31 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			return render;
 		});
 	};
-	assertionTemplateResult.append = (selector: string, children: DNode[]) => {
+	assertionTemplateResult.append = (selector: string, children: TemplateChildren) => {
 		return assertionTemplateResult.setChildren(selector, children, 'append');
 	};
-	assertionTemplateResult.prepend = (selector: string, children: DNode[]) => {
+	assertionTemplateResult.prepend = (selector: string, children: TemplateChildren) => {
 		return assertionTemplateResult.setChildren(selector, children, 'prepend');
 	};
-	assertionTemplateResult.replaceChildren = (selector: string, children: DNode[]) => {
+	assertionTemplateResult.replaceChildren = (selector: string, children: TemplateChildren) => {
 		return assertionTemplateResult.setChildren(selector, children, 'replace');
 	};
 	assertionTemplateResult.setChildren = (
 		selector: string,
-		children: DNode[],
+		children: TemplateChildren,
 		type: 'prepend' | 'replace' | 'append' = 'replace'
 	) => {
 		return assertionTemplate(() => {
 			const render = renderFunc();
 			const node = findOne(render, selector);
 			node.children = node.children || [];
+			if (typeof children === 'function') {
+				children = children();
+			} else {
+				console.warn(
+					'The array API (`children: DNode[]`) has been deprecated. Replacing children should use a factory to avoid issues with mutation.'
+				);
+			}
 			switch (type) {
 				case 'prepend':
 					node.children = [...children, ...node.children];
@@ -106,15 +119,15 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			return render;
 		});
 	};
-	assertionTemplateResult.insertBefore = (selector: string, children: DNode[]) => {
+	assertionTemplateResult.insertBefore = (selector: string, children: TemplateChildren) => {
 		return assertionTemplateResult.insertSiblings(selector, children, 'before');
 	};
-	assertionTemplateResult.insertAfter = (selector: string, children: DNode[]) => {
+	assertionTemplateResult.insertAfter = (selector: string, children: TemplateChildren) => {
 		return assertionTemplateResult.insertSiblings(selector, children, 'after');
 	};
 	assertionTemplateResult.insertSiblings = (
 		selector: string,
-		children: DNode[],
+		children: TemplateChildren,
 		type: 'before' | 'after' = 'after'
 	) => {
 		return assertionTemplate(() => {
@@ -123,6 +136,13 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			const parent = (node as any).parent;
 			const index = parent.children.indexOf(node);
 			let newChildren = [...parent.children];
+			if (typeof children === 'function') {
+				children = children();
+			} else {
+				console.warn(
+					'The array API (`children: DNode[]`) has been deprecated. Replacing children should use a factory to avoid issues with mutation.'
+				);
+			}
 			switch (type) {
 				case 'before':
 					newChildren.splice(index, 0, ...children);
