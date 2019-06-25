@@ -69,7 +69,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	assertionTemplateResult.setProperties = (selector: string, value: any | PropertiesComparatorFunction) => {
 		return assertionTemplate(() => {
 			const render = renderFunc();
-			const node = guard(findOne(render, selector));
+			const node = findOne(render, selector);
 			node.properties = value;
 			return render;
 		});
@@ -143,7 +143,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	};
 	assertionTemplateResult.getProperties = (selector: string, property: string) => {
 		const render = renderFunc();
-		const node = guard(findOne(render, selector));
+		const node = findOne(render, selector);
 		return node.properties;
 	};
 	assertionTemplateResult.getChildren = (selector: string) => {
@@ -154,7 +154,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	assertionTemplateResult.replace = (selector: string, newNode: DNode) => {
 		return assertionTemplate(() => {
 			const render = renderFunc();
-			const node = guard(findOne(render, selector));
+			const node = findOne(render, selector);
 			const parent = (node as any).parent;
 			const children = [...parent.children];
 			children.splice(children.indexOf(node), 1, newNode);
@@ -165,7 +165,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	assertionTemplateResult.remove = (selector: string) => {
 		return assertionTemplate(() => {
 			const render = renderFunc();
-			const node = guard(findOne(render, selector));
+			const node = findOne(render, selector);
 			const parent = (node as any).parent;
 			const children = [...parent.children];
 			children.splice(children.indexOf(node), 1);
