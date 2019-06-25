@@ -320,13 +320,13 @@ Here we're using the `setChildren()` api on the baseAssertion, and we're using t
 Assertion Template has the following api's:
 
 ```
-insertBefore(selector: string, children: DNode[]): AssertionTemplateResult;
-insertAfter(selector: string, children: DNode[]): AssertionTemplateResult;
-insertSiblings(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
-append(selector: string, children: DNode[]): AssertionTemplateResult;
-prepend(selector: string, children: DNode[]): AssertionTemplateResult;
-replaceChildren(selector: string, children: DNode[]): AssertionTemplateResult;
-setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
+insertBefore(selector: string, children: DNode[] | (() => DNode[])): AssertionTemplateResult;
+insertAfter(selector: string, children: DNode[] | (() => DNode[])): AssertionTemplateResult;
+insertSiblings(selector: string, children: DNode[] | (() => DNode[]), type?: 'before' | 'after'): AssertionTemplateResult;
+append(selector: string, children: DNode[] | (() => DNode[])): AssertionTemplateResult;
+prepend(selector: string, children: DNode[] | (() => DNode[])): AssertionTemplateResult;
+replaceChildren(selector: string, children: DNode[] | (() => DNode[])): AssertionTemplateResult;
+setChildren(selector: string, children: DNode[] | (() => DNode[]), type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
 setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
 setProperties(selector: string, value: any | PropertiesComparatorFunction): AssertionTemplateResult;
 getChildren(selector: string): DNode[];
