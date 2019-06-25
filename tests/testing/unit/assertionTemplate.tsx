@@ -183,9 +183,13 @@ describe('assertionTemplate', () => {
 
 	it('can use ignore', () => {
 		const h = harness(() => w(ListWidget, {}));
+		const nodes = [];
+		for (let i = 0; i < 28; i++) {
+			nodes.push(w(Ignore, {}));
+		}
 		const childListAssertion = baseListAssertion.replaceChildren('ul', [
 			v('li', ['item: 0']),
-			...[...new Array(28)].map(() => w(Ignore, {})),
+			...nodes,
 			v('li', ['item: 29'])
 		]);
 		h.expect(childListAssertion);
