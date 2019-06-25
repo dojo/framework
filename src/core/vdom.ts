@@ -437,7 +437,7 @@ export function tsx(tag: any, properties = {}, ...children: any[]): DNode {
 	}
 }
 
-function propertiesDiff(current: any, next: any, invalidator: () => void, ignoreProperties: string[]) {
+export function propertiesDiff(current: any, next: any, invalidator: () => void, ignoreProperties: string[]) {
 	const propertyNames = [...Object.keys(current), ...Object.keys(next)];
 	for (let i = 0; i < propertyNames.length; i++) {
 		if (ignoreProperties.indexOf(propertyNames[i]) > -1) {

@@ -25,11 +25,12 @@ Simple API for testing and asserting Dojo widget's expected virtual DOM and beha
 ### API
 
 ```ts
-harness(renderFunction: () => WNode, customComparators?: CustomComparator[]): Harness;
+harness(renderFunction: () => WNode, customComparatorsOrOptions?: CustomComparator[] | HarnessOptions): Harness;
 ```
 
 -   `renderFunction`: A function that returns a WNode for the widget under test
 -   [`customComparators`](custom-comparators): Array of custom comparator descriptors. Each provides a comparator function to be used during the comparison for `properties` located using a `selector` and `property` name
+-   ['options']: options object that can be used to define custom comparators or mock middleware.
 
 The harness returns a `Harness` object that provides a small API for interacting with the widget under test:
 
@@ -91,6 +92,42 @@ const h = harness(() => w(MyWidget, {}), [compareId]);
 ```
 
 For all assertions, using the returned `harness` API will now only test identified `id` properties using the `comparator` instead of the standard equality.
+
+### Middlewares
+
+The middlewares harness option, is for functional widgets that utilize middlewares. The option accepts a tuple the original middleware and a mock middleware that will be injected into the any widgets or middleware used by the widget under test.
+
+```tsx
+import realMiddleware from './realMiddleware';
+import mockMiddleware from './mockMiddleware';
+
+const h = harness(() => <MyWidget />, {
+	middleware: [ [ realMiddleware: mockMiddleware ] ]
+});
+```
+
+Core middleware provided by `@dojo/framework/core/vdom` such as `destroy`, `diffProperty` and `invalidator` are automatically mocked for all middlewares. All other middleware will need to be manually mocked, Dojo provides a selection of mocks:
+
+-   node
+-   resize
+-   intersection
+
+Example:
+
+```tsx
+const resizeMock = createResizeMock();
+const factory = create({ resize });
+const App = factory(({ middleware: { resize } }) => {
+	const rects = resize.get('root');
+	return <div key="root">{JSON.stringify(rects)}</div>;
+});
+const h = harness(() => <App key="app" />, { middleware: [[resize, resizeMock]] });
+h.expect(() => <div key="root">null</div>);
+resizeMock('root', { width: 100 });
+h.expect(() => <div key="root">{`{"width":100}`}</div>);
+resizeMock('root', { width: 101 });
+h.expect(() => <div key="root">{`{"width":101}`}</div>);
+```
 
 ## selectors
 

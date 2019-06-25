@@ -3,10 +3,11 @@ const { assert } = intern.getPlugin('chai');
 
 import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/core/WidgetBase';
-import { v, w, isVNode } from '../../../src/core/vdom';
+import { v, w, isVNode, tsx, create, diffProperty, invalidator } from '../../../src/core/vdom';
 import Set from '../../../src/shim/Set';
 import Map from '../../../src/shim/Map';
 import { VNode, WNode, WidgetProperties } from '../../../src/core/interfaces';
+import icache from '../../../src/core/middleware/icache';
 
 const noop: any = () => {};
 
@@ -569,6 +570,104 @@ describe('harness', () => {
 				w(ChildWidget, { key: 'widget', id: 'random-id' }),
 				w<ChildWidget>('registry-item', { key: 'registry', id: '' })
 			]);
+		});
+	});
+
+	describe('functional widgets', () => {
+		it('should inject invalidator mock', () => {
+			const factory = create({ icache });
+
+			const App = factory(({ middleware: { icache } }) => {
+				const counter = icache.get<number>('counter') || 0;
+				return (
+					<div>
+						<button
+							key="click-me"
+							onclick={() => {
+								const counter = icache.get<number>('counter') || 0;
+								icache.set('counter', counter + 1);
+							}}
+						>{`Click Me ${counter}`}</button>
+					</div>
+				);
+			});
+			const h = harness(() => <App />);
+			h.expect(() => (
+				<div>
+					<button key="click-me" onclick={() => {}}>
+						Click Me 0
+					</button>
+				</div>
+			));
+			h.trigger('@click-me', 'onclick');
+			h.expect(() => (
+				<div>
+					<button key="click-me" onclick={() => {}}>
+						Click Me 1
+					</button>
+				</div>
+			));
+		});
+
+		it('should run diffProperty middleware', () => {
+			const factory = create({ diffProperty, invalidator });
+			let id = 0;
+			const App = factory(({ middleware: { diffProperty, invalidator } }) => {
+				diffProperty('key', () => {
+					id++;
+					invalidator();
+				});
+				return (
+					<div>
+						<button key="click-me">{`Click Me ${id}`}</button>
+					</div>
+				);
+			});
+			const h = harness(() => <App />);
+			h.expect(() => (
+				<div>
+					<button key="click-me">Click Me 0</button>
+				</div>
+			));
+			h.expect(() => (
+				<div>
+					<button key="click-me">Click Me 1</button>
+				</div>
+			));
+			h.expect(() => (
+				<div>
+					<button key="click-me">Click Me 2</button>
+				</div>
+			));
+		});
+
+		it('should support conditional logic in diffProperty middleware', () => {
+			const factory = create({ diffProperty, invalidator });
+			let id = 0;
+			const App = factory(({ middleware: { diffProperty, invalidator }, properties }) => {
+				diffProperty('key', (prev: any, current: any) => {
+					if (prev.key === 'app' && current.key === 'app') {
+						id++;
+						invalidator();
+					}
+				});
+				return (
+					<div>
+						<button key="click-me">{`${properties.key} ${id}`}</button>
+					</div>
+				);
+			});
+			const h = harness(() => <App key="app" />);
+			h.expect(() => (
+				<div>
+					<button key="click-me">app 0</button>
+				</div>
+			));
+			h.expect(() => (
+				<div>
+					<button key="click-me">app 1</button>
+				</div>
+			));
 		});
 	});
 });
