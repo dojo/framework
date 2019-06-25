@@ -94,16 +94,17 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		children: TemplateChildren,
 		type: 'prepend' | 'replace' | 'append' = 'replace'
 	) => {
+		if (Array.isArray(children)) {
+			console.warn(
+				'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
+			);
+		}
 		return assertionTemplate(() => {
 			const render = renderFunc();
 			const node = findOne(render, selector);
 			node.children = node.children || [];
 			if (typeof children === 'function') {
 				children = children();
-			} else {
-				console.warn(
-					'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
-				);
 			}
 			switch (type) {
 				case 'prepend':
@@ -130,6 +131,11 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		children: TemplateChildren,
 		type: 'before' | 'after' = 'after'
 	) => {
+		if (Array.isArray(children)) {
+			console.warn(
+				'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
+			);
+		}
 		return assertionTemplate(() => {
 			const render = renderFunc();
 			const node = findOne(render, selector);
@@ -138,10 +144,6 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			let newChildren = [...parent.children];
 			if (typeof children === 'function') {
 				children = children();
-			} else {
-				console.warn(
-					'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
-				);
 			}
 			switch (type) {
 				case 'before':
