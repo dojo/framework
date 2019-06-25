@@ -149,7 +149,7 @@ describe('assertionTemplate', () => {
 		assert.isTrue(consoleStub.calledOnce);
 		assert.strictEqual(
 			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Replacing children should use a factory to avoid issues with mutation.'
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
 		);
 	});
 
@@ -166,7 +166,7 @@ describe('assertionTemplate', () => {
 		assert.isTrue(consoleStub.calledOnce);
 		assert.strictEqual(
 			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Replacing children should use a factory to avoid issues with mutation.'
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
 		);
 	});
 
@@ -183,7 +183,7 @@ describe('assertionTemplate', () => {
 		assert.isTrue(consoleStub.calledOnce);
 		assert.strictEqual(
 			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Replacing children should use a factory to avoid issues with mutation.'
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
 		);
 	});
 
@@ -200,7 +200,7 @@ describe('assertionTemplate', () => {
 		assert.isTrue(consoleStub.calledOnce);
 		assert.strictEqual(
 			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Replacing children should use a factory to avoid issues with mutation.'
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
 		);
 	});
 
@@ -217,7 +217,7 @@ describe('assertionTemplate', () => {
 		assert.isTrue(consoleStub.calledOnce);
 		assert.strictEqual(
 			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Replacing children should use a factory to avoid issues with mutation.'
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
 		);
 	});
 
@@ -234,7 +234,7 @@ describe('assertionTemplate', () => {
 		assert.isTrue(consoleStub.calledOnce);
 		assert.strictEqual(
 			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Replacing children should use a factory to avoid issues with mutation.'
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
 		);
 	});
 

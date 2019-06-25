@@ -102,7 +102,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 				children = children();
 			} else {
 				console.warn(
-					'The array API (`children: DNode[]`) has been deprecated. Replacing children should use a factory to avoid issues with mutation.'
+					'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
 				);
 			}
 			switch (type) {
@@ -140,7 +140,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 				children = children();
 			} else {
 				console.warn(
-					'The array API (`children: DNode[]`) has been deprecated. Replacing children should use a factory to avoid issues with mutation.'
+					'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
 				);
 			}
 			switch (type) {
