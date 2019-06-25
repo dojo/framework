@@ -1,5 +1,6 @@
-const { describe, it } = intern.getInterface('bdd');
+const { describe, it, after, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
+import { stub } from 'sinon';
 
 import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/core/WidgetBase';
@@ -78,7 +79,17 @@ const tsxAssertion = assertionTemplate(() => (
 	</div>
 ));
 
+let consoleStub = stub(console, 'warn');
+
 describe('assertionTemplate', () => {
+	afterEach(() => {
+		consoleStub.resetHistory();
+	});
+
+	after(() => {
+		consoleStub.restore();
+	});
+
 	it('can get a property', () => {
 		const classes = baseAssertion.getProperty('~root', 'classes');
 		assert.deepEqual(classes, ['root']);
@@ -134,36 +145,102 @@ describe('assertionTemplate', () => {
 	it('can set a child', () => {
 		const h = harness(() => w(MyWidget, { replaceChild: true }));
 		const childAssertion = baseAssertion.setChildren('~header', ['replace']);
+		assert.isTrue(consoleStub.calledOnce);
+		assert.strictEqual(
+			consoleStub.firstCall.args[0],
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
+		);
+		h.expect(childAssertion);
+	});
+
+	it('can set a child with a factory function', () => {
+		const h = harness(() => w(MyWidget, { replaceChild: true }));
+		const childAssertion = baseAssertion.setChildren('~header', () => ['replace']);
 		h.expect(childAssertion);
 	});
 
 	it('can set a child with replace', () => {
 		const h = harness(() => w(MyWidget, { replaceChild: true }));
 		const childAssertion = baseAssertion.replaceChildren('~header', ['replace']);
+		assert.isTrue(consoleStub.calledOnce);
+		assert.strictEqual(
+			consoleStub.firstCall.args[0],
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
+		);
+		h.expect(childAssertion);
+	});
+
+	it('can set a child with replace with a factory function', () => {
+		const h = harness(() => w(MyWidget, { replaceChild: true }));
+		const childAssertion = baseAssertion.replaceChildren('~header', () => ['replace']);
 		h.expect(childAssertion);
 	});
 
 	it('can set a child with prepend', () => {
 		const h = harness(() => w(MyWidget, { prependChild: true }));
 		const childAssertion = baseAssertion.prepend('~header', ['prepend']);
+		assert.isTrue(consoleStub.calledOnce);
+		assert.strictEqual(
+			consoleStub.firstCall.args[0],
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
+		);
+		h.expect(childAssertion);
+	});
+
+	it('can set a child with prepend with a factory function', () => {
+		const h = harness(() => w(MyWidget, { prependChild: true }));
+		const childAssertion = baseAssertion.prepend('~header', () => ['prepend']);
 		h.expect(childAssertion);
 	});
 
 	it('can set a child with append', () => {
 		const h = harness(() => w(MyWidget, { appendChild: true }));
 		const childAssertion = baseAssertion.append('~header', ['append']);
+		assert.isTrue(consoleStub.calledOnce);
+		assert.strictEqual(
+			consoleStub.firstCall.args[0],
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
+		);
+		h.expect(childAssertion);
+	});
+
+	it('can set a child with append with a factory function', () => {
+		const h = harness(() => w(MyWidget, { appendChild: true }));
+		const childAssertion = baseAssertion.append('~header', () => ['append']);
 		h.expect(childAssertion);
 	});
 
 	it('can set children after with insert', () => {
 		const h = harness(() => w(MyWidget, { after: true }));
 		const childAssertion = baseAssertion.insertAfter('ul', [v('span', ['after'])]);
+		assert.isTrue(consoleStub.calledOnce);
+		assert.strictEqual(
+			consoleStub.firstCall.args[0],
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
+		);
+		h.expect(childAssertion);
+	});
+
+	it('can set children after with insert with a factory function', () => {
+		const h = harness(() => w(MyWidget, { after: true }));
+		const childAssertion = baseAssertion.insertAfter('ul', () => [v('span', ['after'])]);
 		h.expect(childAssertion);
 	});
 
 	it('can set children before with insert', () => {
 		const h = harness(() => w(MyWidget, { before: true }));
 		const childAssertion = baseAssertion.insertBefore('ul', [v('span', ['before'])]);
+		assert.isTrue(consoleStub.calledOnce);
+		assert.strictEqual(
+			consoleStub.firstCall.args[0],
+			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
+		);
+		h.expect(childAssertion);
+	});
+
+	it('can set children before with insert with a factory function', () => {
+		const h = harness(() => w(MyWidget, { before: true }));
+		const childAssertion = baseAssertion.insertBefore('ul', () => [v('span', ['before'])]);
 		h.expect(childAssertion);
 	});
 
