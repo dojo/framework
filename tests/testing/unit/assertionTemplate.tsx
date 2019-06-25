@@ -4,18 +4,27 @@ const { assert } = intern.getPlugin('chai');
 import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { v, w, tsx } from '../../../src/core/vdom';
-import assertionTemplate from '../../../src/testing/assertionTemplate';
+import assertionTemplate, { Ignore } from '../../../src/testing/assertionTemplate';
 
 class MyWidget extends WidgetBase<{
 	toggleProperty?: boolean;
 	prependChild?: boolean;
 	appendChild?: boolean;
 	replaceChild?: boolean;
+	removeHeader?: boolean;
 	before?: boolean;
 	after?: boolean;
 }> {
 	render() {
-		const { toggleProperty, prependChild, appendChild, replaceChild, before, after } = this.properties;
+		const {
+			toggleProperty,
+			prependChild,
+			appendChild,
+			replaceChild,
+			removeHeader,
+			before,
+			after
+		} = this.properties;
 		let children = ['hello'];
 		if (prependChild) {
 			children = ['prepend', ...children];
@@ -27,7 +36,7 @@ class MyWidget extends WidgetBase<{
 			children = ['replace'];
 		}
 		return v('div', { classes: ['root'] }, [
-			v('h2', children),
+			removeHeader ? undefined : v('h2', children),
 			before ? v('span', ['before']) : undefined,
 			v('ul', [v('li', { foo: toggleProperty ? 'b' : 'a' }, ['one']), v('li', ['two']), v('li', ['three'])]),
 			after ? v('span', ['after']) : undefined
@@ -38,9 +47,23 @@ class MyWidget extends WidgetBase<{
 const baseAssertion = assertionTemplate(() =>
 	v('div', { '~key': 'root', classes: ['root'] }, [
 		v('h2', { '~key': 'header' }, ['hello']),
-		v('ul', [v('li', { '~key': 'li-one', foo: 'a' }, ['one']), v('li', ['two']), v('li', ['three'])])
+		undefined,
+		v('ul', [v('li', { '~key': 'li-one', foo: 'a' }, ['one']), v('li', ['two']), v('li', ['three'])]),
+		undefined
 	])
 );
+
+class ListWidget extends WidgetBase {
+	render() {
+		let children = [];
+		for (let i = 0; i < 30; i++) {
+			children.push(v('li', [`item: ${i}`]));
+		}
+		return v('div', { classes: ['root'] }, [v('ul', children)]);
+	}
+}
+
+const baseListAssertion = assertionTemplate(() => v('div', { classes: ['root'] }, [v('ul', [])]));
 
 const tsxAssertion = assertionTemplate(() => (
 	<div classes={['root']}>
@@ -61,6 +84,11 @@ describe('assertionTemplate', () => {
 		assert.deepEqual(classes, ['root']);
 	});
 
+	it('can get properties', () => {
+		const properties = baseAssertion.getProperties('~root');
+		assert.deepEqual(properties, { '~key': 'root', classes: ['root'] });
+	});
+
 	it('can get a child', () => {
 		const children = baseAssertion.getChildren('~header');
 		assert.equal(children[0], 'hello');
@@ -77,6 +105,32 @@ describe('assertionTemplate', () => {
 		h.expect(propertyAssertion);
 	});
 
+	it('can set properties', () => {
+		const h = harness(() => w(MyWidget, { toggleProperty: true }));
+		const propertyAssertion = baseAssertion.setProperties('~li-one', { foo: 'b' });
+		h.expect(propertyAssertion);
+	});
+
+	it('can set properties and use the actual properties', () => {
+		const h = harness(() => w(MyWidget, { toggleProperty: true }));
+		const propertyAssertion = baseAssertion.setProperties('~li-one', (actualProps: any) => {
+			return actualProps;
+		});
+		h.expect(propertyAssertion);
+	});
+
+	it('can replace a node', () => {
+		const h = harness(() => w(MyWidget, {}));
+		const childAssertion = baseAssertion.replace('~header', v('h2', { '~key': 'header' }, ['hello']));
+		h.expect(childAssertion);
+	});
+
+	it('can remove a node', () => {
+		const h = harness(() => w(MyWidget, { removeHeader: true }));
+		const childAssertion = baseAssertion.remove('~header');
+		h.expect(childAssertion);
+	});
+
 	it('can set a child', () => {
 		const h = harness(() => w(MyWidget, { replaceChild: true }));
 		const childAssertion = baseAssertion.setChildren('~header', ['replace']);
@@ -85,7 +139,7 @@ describe('assertionTemplate', () => {
 
 	it('can set a child with replace', () => {
 		const h = harness(() => w(MyWidget, { replaceChild: true }));
-		const childAssertion = baseAssertion.replace('~header', ['replace']);
+		const childAssertion = baseAssertion.replaceChildren('~header', ['replace']);
 		h.expect(childAssertion);
 	});
 
@@ -125,6 +179,20 @@ describe('assertionTemplate', () => {
 			() => h.expect(baseAssertion.setProperty('~cant-spell', 'foo', 'b')),
 			'Node not found for selector "~cant-spell"'
 		);
+	});
+
+	it('can use ignore', () => {
+		const h = harness(() => w(ListWidget, {}));
+		const nodes = [];
+		for (let i = 0; i < 28; i++) {
+			nodes.push(w(Ignore, {}));
+		}
+		const childListAssertion = baseListAssertion.replaceChildren('ul', [
+			v('li', ['item: 0']),
+			...nodes,
+			v('li', ['item: 29'])
+		]);
+		h.expect(childListAssertion);
 	});
 
 	it('should be immutable', () => {

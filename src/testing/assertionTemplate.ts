@@ -2,19 +2,26 @@ import select from './support/selector';
 import { VNode, WNode, DNode } from '../core/interfaces';
 import { isWNode, isVNode } from '../core/vdom';
 import { decorate } from '../core/util';
+import WidgetBase from '../core/WidgetBase';
+
+export type PropertiesComparatorFunction = (actualProperties: any) => any;
 
 export interface AssertionTemplateResult {
 	(): DNode | DNode[];
 	append(selector: string, children: DNode[]): AssertionTemplateResult;
 	prepend(selector: string, children: DNode[]): AssertionTemplateResult;
-	replace(selector: string, children: DNode[]): AssertionTemplateResult;
+	replaceChildren(selector: string, children: DNode[]): AssertionTemplateResult;
 	insertBefore(selector: string, children: DNode[]): AssertionTemplateResult;
 	insertAfter(selector: string, children: DNode[]): AssertionTemplateResult;
 	insertSiblings(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
 	setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
 	setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
+	setProperties(selector: string, value: any | PropertiesComparatorFunction): AssertionTemplateResult;
 	getChildren(selector: string): DNode[];
 	getProperty(selector: string, property: string): any;
+	getProperties(selector: string): any;
+	replace(selector: string, node: DNode): AssertionTemplateResult;
+	remove(selector: string): AssertionTemplateResult;
 }
 
 type NodeWithProperties = (VNode | WNode) & { properties: { [index: string]: any } };
@@ -38,6 +45,8 @@ const findOne = (nodes: DNode | DNode[], selector: string): NodeWithProperties =
 	return node;
 };
 
+export class Ignore extends WidgetBase {}
+
 export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	const assertionTemplateResult: any = () => {
 		const render = renderFunc();
@@ -57,13 +66,21 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			return render;
 		});
 	};
+	assertionTemplateResult.setProperties = (selector: string, value: any | PropertiesComparatorFunction) => {
+		return assertionTemplate(() => {
+			const render = renderFunc();
+			const node = findOne(render, selector);
+			node.properties = value;
+			return render;
+		});
+	};
 	assertionTemplateResult.append = (selector: string, children: DNode[]) => {
 		return assertionTemplateResult.setChildren(selector, children, 'append');
 	};
 	assertionTemplateResult.prepend = (selector: string, children: DNode[]) => {
 		return assertionTemplateResult.setChildren(selector, children, 'prepend');
 	};
-	assertionTemplateResult.replace = (selector: string, children: DNode[]) => {
+	assertionTemplateResult.replaceChildren = (selector: string, children: DNode[]) => {
 		return assertionTemplateResult.setChildren(selector, children, 'replace');
 	};
 	assertionTemplateResult.setChildren = (
@@ -124,10 +141,37 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		const node = findOne(render, selector);
 		return node.properties[property];
 	};
+	assertionTemplateResult.getProperties = (selector: string, property: string) => {
+		const render = renderFunc();
+		const node = findOne(render, selector);
+		return node.properties;
+	};
 	assertionTemplateResult.getChildren = (selector: string) => {
 		const render = renderFunc();
 		const node = findOne(render, selector);
 		return node.children || [];
+	};
+	assertionTemplateResult.replace = (selector: string, newNode: DNode) => {
+		return assertionTemplate(() => {
+			const render = renderFunc();
+			const node = findOne(render, selector);
+			const parent = (node as any).parent;
+			const children = [...parent.children];
+			children.splice(children.indexOf(node), 1, newNode);
+			parent.children = children;
+			return render;
+		});
+	};
+	assertionTemplateResult.remove = (selector: string) => {
+		return assertionTemplate(() => {
+			const render = renderFunc();
+			const node = findOne(render, selector);
+			const parent = (node as any).parent;
+			const children = [...parent.children];
+			children.splice(children.indexOf(node), 1);
+			parent.children = [...children];
+			return render;
+		});
 	};
 	return assertionTemplateResult as AssertionTemplateResult;
 }
