@@ -1,10 +1,9 @@
+import { create, diffProperty, invalidator } from '../core/vdom';
+import injector from '../core/middleware/injector';
+import cache from '../core/middleware/cache';
 import { DNode } from '../core/interfaces';
-import { WidgetBase } from '../core/WidgetBase';
-import { alwaysRender } from '../core/decorators/alwaysRender';
 import { MatchDetails } from './interfaces';
-import { Router } from './Router';
-import { diffProperty } from '../core/decorators/diffProperty';
-import { Handle } from '../core/Destroyable';
+import Router from './Router';
 
 export interface OutletProperties {
 	renderer: (matchDetails: MatchDetails) => DNode | DNode[];
@@ -12,49 +11,46 @@ export interface OutletProperties {
 	routerKey?: string;
 }
 
-@alwaysRender()
-export class Outlet extends WidgetBase<OutletProperties> {
-	private _handle: Handle | undefined;
+const factory = create({ cache, injector, diffProperty, invalidator }).properties<OutletProperties>();
 
-	@diffProperty('routerKey')
-	protected onRouterKeyChange(current: OutletProperties, next: OutletProperties) {
+export const Outlet = factory(function Outlet({
+	middleware: { cache, injector, diffProperty, invalidator },
+	properties
+}) {
+	const { renderer, id, routerKey = 'router' } = properties;
+	const currentHandle = cache.get<Function>('handle');
+	if (!currentHandle) {
+		const handle = injector.subscribe(routerKey);
+		if (handle) {
+			cache.set('handle', handle);
+		}
+	}
+	diffProperty('routerKey', (current: OutletProperties, next: OutletProperties) => {
+		const { routerKey: currentRouterKey = 'router' } = current;
 		const { routerKey = 'router' } = next;
-		const item = this.registry.getInjector<Router>(routerKey);
-		if (this._handle) {
-			this._handle.destroy();
-			this._handle = undefined;
-		}
-		if (item) {
-			this._handle = item.invalidator.on('invalidate', () => {
-				this.invalidate();
-			});
-			this.own(this._handle);
-		}
-	}
-
-	protected onAttach() {
-		if (!this._handle) {
-			this.onRouterKeyChange(this.properties, this.properties);
-		}
-	}
-
-	protected render(): DNode | DNode[] {
-		const { renderer, id, routerKey = 'router' } = this.properties;
-		const item = this.registry.getInjector<Router>(routerKey);
-
-		if (item) {
-			const router = item.injector();
-			const outletContext = router.getOutlet(id);
-			if (outletContext) {
-				const { queryParams, params, type, isError, isExact } = outletContext;
-				const result = renderer({ queryParams, params, type, isError, isExact, router });
-				if (result) {
-					return result;
-				}
+		if (routerKey !== currentRouterKey) {
+			const currentHandle = cache.get<Function>('handle');
+			if (currentHandle) {
+				currentHandle();
+			}
+			const handle = injector.subscribe(routerKey);
+			if (handle) {
+				cache.set('handle', handle);
 			}
 		}
-		return null;
-	}
-}
+		invalidator();
+	});
+	const router = injector.get<Router>(routerKey);
 
-export default Outlet;
+	if (router) {
+		const outletContext = router.getOutlet(id);
+		if (outletContext) {
+			const { queryParams, params, type, isError, isExact } = outletContext;
+			const result = renderer({ queryParams, params, type, isError, isExact, router });
+			if (result) {
+				return result;
+			}
+		}
+	}
+	return null;
+});
