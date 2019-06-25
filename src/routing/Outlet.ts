@@ -54,3 +54,5 @@ export const Outlet = factory(function Outlet({
 	}
 	return null;
 });
+
+export default Outlet;
