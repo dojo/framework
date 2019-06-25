@@ -3,7 +3,7 @@ import { decorateNodes, select } from './support/selector';
 import { WNode, DNode, Constructor, VNode, Callback, RenderResult, MiddlewareResultFactory } from '../core/interfaces';
 import { WidgetBase } from '../core/WidgetBase';
 import { isWidgetFunction } from '../core/Registry';
-import { invalidator, diffProperty, destroy, create } from '../core/vdom';
+import { invalidator, diffProperty, destroy, create, propertiesDiff } from '../core/vdom';
 
 export interface CustomComparator {
 	selector: string;
@@ -61,9 +61,9 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 	let wNode = renderFunc();
 	const renderStack: (DNode | DNode[])[] = [];
 	let widget: WidgetBase | Callback<any, any, RenderResult>;
-	let middleware: any;
-	let properties: any;
-	let children: any;
+	let middleware: any = {};
+	let properties: any = {};
+	let children: any = [];
 	let customDiffs: any[] = [];
 	let customDiffNames: string[] = [];
 	let customComparator: CustomComparator[] = [];
@@ -184,8 +184,18 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 		let render: RenderResult;
 		const wNode = renderFunc();
 		if (isWidgetFunction(widget)) {
-			// need to do a diff
 			customDiffs.forEach((diff) => diff(properties, wNode.properties));
+			propertiesDiff(
+				properties,
+				wNode.properties,
+				() => {
+					invalidated = true;
+				},
+				[...customDiffNames]
+			);
+			if (children.length || wNode.children.length) {
+				invalidated = true;
+			}
 			properties = { ...wNode.properties };
 			children = wNode.children;
 			if (invalidated) {
