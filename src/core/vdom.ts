@@ -26,7 +26,6 @@ import {
 	DeferredVirtualProperties,
 	DomOptions
 } from './interfaces';
-import transitionStrategy from './animations/cssTransitions';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
 import RegistryHandler from './RegistryHandler';
@@ -105,7 +104,7 @@ export type DNodeWrapper = VNodeWrapper | WNodeWrapper;
 export interface MountOptions {
 	sync: boolean;
 	merge: boolean;
-	transition: TransitionStrategy;
+	transition?: TransitionStrategy;
 	domNode: HTMLElement;
 	registry: Registry;
 }
@@ -598,37 +597,6 @@ function updateAttribute(domNode: Element, attrName: string, attrValue: string |
 	}
 }
 
-function runEnterAnimation(next: VNodeWrapper, transitions: TransitionStrategy) {
-	const {
-		domNode,
-		node: { properties },
-		node: {
-			properties: { enterAnimation }
-		}
-	} = next;
-	if (enterAnimation && enterAnimation !== true) {
-		if (typeof enterAnimation === 'function') {
-			return enterAnimation(domNode as Element, properties);
-		}
-		transitions.enter(domNode as Element, properties, enterAnimation);
-	}
-}
-
-function runExitAnimation(current: VNodeWrapper, transitions: TransitionStrategy, exitAnimation: string | Function) {
-	const {
-		domNode,
-		node: { properties }
-	} = current;
-	const removeDomNode = () => {
-		domNode && domNode.parentNode && domNode.parentNode.removeChild(domNode);
-		current.domNode = undefined;
-	};
-	if (typeof exitAnimation === 'function') {
-		return exitAnimation(domNode as Element, removeDomNode, properties);
-	}
-	transitions.exit(domNode as Element, properties, exitAnimation, removeDomNode);
-}
-
 function arrayFrom(arr: any) {
 	return Array.prototype.slice.call(arr);
 }
@@ -816,7 +784,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	let _mountOptions: MountOptions = {
 		sync: false,
 		merge: true,
-		transition: transitionStrategy,
+		transition: undefined,
 		domNode: global.document.body,
 		registry: new Registry()
 	};
@@ -1414,7 +1382,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				if ((domNode as HTMLElement).tagName === 'OPTION' && domNode!.parentElement) {
 					setValue(domNode!.parentElement);
 				}
-				runEnterAnimation(next, _mountOptions.transition);
+				const { enterAnimation, enterAnimationActive } = node.properties;
+				if (_mountOptions.transition && enterAnimation && enterAnimation !== true) {
+					_mountOptions.transition.enter(domNode as HTMLElement, enterAnimation, enterAnimationActive);
+				}
 				const owningWrapper = _nodeToWrapperMap.get(next.node);
 				if (owningWrapper && node.properties.key != null) {
 					if (owningWrapper.instance) {
@@ -1450,9 +1421,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				}
 			} else if (item.type === 'delete') {
 				const { current } = item;
-				const { exitAnimation } = current.node.properties;
-				if (exitAnimation && exitAnimation !== true) {
-					runExitAnimation(current, _mountOptions.transition, exitAnimation);
+				const { exitAnimation, exitAnimationActive } = current.node.properties;
+				if (_mountOptions.transition && exitAnimation && exitAnimation !== true) {
+					_mountOptions.transition.exit(current.domNode as HTMLElement, exitAnimation, exitAnimationActive);
 				} else {
 					current.domNode!.parentNode!.removeChild(current.domNode!);
 					current.domNode = undefined;
