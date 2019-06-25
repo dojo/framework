@@ -325,9 +325,13 @@ insertAfter(selector: string, children: DNode[]): AssertionTemplateResult;
 insertSiblings(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
 append(selector: string, children: DNode[]): AssertionTemplateResult;
 prepend(selector: string, children: DNode[]): AssertionTemplateResult;
-replace(selector: string, children: DNode[]): AssertionTemplateResult;
+replaceChildren(selector: string, children: DNode[]): AssertionTemplateResult;
 setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
 setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
+setProperties(selector: string, value: any | PropertiesComparatorFunction): AssertionTemplateResult;
 getChildren(selector: string): DNode[];
 getProperty(selector: string, property: string): any;
+getProperties(selector: string): any;
+replace(selector: string, node: DNode): AssertionTemplateResult;
+remove(selector: string): AssertionTemplateResult;
 ```
