@@ -1,7 +1,7 @@
 const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
-import { match, spy, stub, SinonSpy, SinonStub } from 'sinon';
+import { spy, stub, SinonSpy, SinonStub } from 'sinon';
 import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
@@ -5588,15 +5588,6 @@ jsdomDescribe('vdom', () => {
 
 	describe('animations', () => {
 		describe('enterAnimation', () => {
-			it('is invoked when a new node is added to an existing parent node', () => {
-				const enterAnimation = stub();
-				const [Widget, meta] = getWidget(v('div', []));
-				const r = renderer(() => w(Widget, {}));
-				const div = document.createElement('div');
-				r.mount({ domNode: div, sync: true });
-				meta.setRenderResult(v('div', [v('span', { enterAnimation })]));
-				assert.isTrue(enterAnimation.calledWith((div.childNodes[0] as Element).childNodes[0], match({})));
-			});
 			it('Does not invoke transition when null passed as enterAnimation', () => {
 				const transition = {
 					enter: stub(),
@@ -5643,20 +5634,6 @@ jsdomDescribe('vdom', () => {
 			});
 		});
 		describe('exitAnimation', () => {
-			it('is invoked when a node is removed from an existing parent node', () => {
-				const exitAnimation = stub();
-				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation })]));
-				const r = renderer(() => w(Widget, {}));
-				const div = document.createElement('div');
-				r.mount({ domNode: div, sync: true });
-				meta.setRenderResult(v('div', []));
-				assert.isTrue(
-					exitAnimation.calledWithExactly((div.childNodes[0] as Element).childNodes[0], match({}), match({}))
-				);
-				assert.lengthOf((div.childNodes[0] as Element).childNodes, 1);
-				exitAnimation.lastCall.callArg(1); // arg1: removeElement
-				assert.lengthOf((div.childNodes[0] as Element).childNodes, 0);
-			});
 			it('Does not invoke transition when null passed as exitAnimation', () => {
 				const transition = {
 					enter: stub(),
@@ -5717,8 +5694,8 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(
 					transitionStrategy.enter.calledWithExactly(
 						(div.childNodes[0] as Element).firstChild,
-						match({}),
-						'fadeIn'
+						'fadeIn',
+						undefined
 					)
 				);
 			});
@@ -5732,13 +5709,10 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(
 					transitionStrategy.exit.calledWithExactly(
 						(div.childNodes[0] as Element).firstChild,
-						match({}),
 						'fadeOut',
-						match({})
+						undefined
 					)
 				);
-				transitionStrategy.exit.lastCall.callArg(3);
-				assert.lengthOf((div.childNodes[0] as Element).childNodes, 0);
 			});
 			it('Should run enter animations when a widget is added', () => {
 				const transitionStrategy = { enter: stub(), exit: stub() };
@@ -5769,16 +5743,16 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(
 					transitionStrategy.enter.calledWithExactly(
 						(div.childNodes[0] as Element).children[0],
-						match({}),
-						'enter'
+						'enter',
+						undefined
 					)
 				);
 				addItem();
 				assert.isTrue(
 					transitionStrategy.enter.calledWithExactly(
 						(div.childNodes[0] as Element).children[1],
-						match({}),
-						'enter'
+						'enter',
+						undefined
 					)
 				);
 			});
@@ -5810,7 +5784,7 @@ jsdomDescribe('vdom', () => {
 				r.mount({ domNode: div, sync: true, transition: transitionStrategy });
 				const node = (div.childNodes[0] as Element).children[1];
 				removeItem();
-				assert.isTrue(transitionStrategy.exit.calledWithExactly(node, match({}), 'exit', match({})));
+				assert.isTrue(transitionStrategy.exit.calledWithExactly(node, 'exit', undefined));
 			});
 		});
 	});
