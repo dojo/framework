@@ -84,6 +84,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		private _waitTillReady() {
+			this._initialised = true;
 			if (this._hasBeenParsed()) {
 				this._readyCallback();
 			} else {
@@ -178,7 +179,6 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				this.style.display = display;
 			}
 
-			this._initialised = true;
 			this.dispatchEvent(
 				new CustomEvent('dojo-ce-connected', {
 					bubbles: true,
