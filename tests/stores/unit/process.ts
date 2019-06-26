@@ -12,7 +12,7 @@ import {
 	ProcessCallbackAfter,
 	ProcessError,
 	ProcessResult,
-	valueSymbol
+	isStateProxy
 } from '../../../src/stores/process';
 import { MutableState, Store } from '../../../src/stores/Store';
 import { add, replace } from '../../../src/stores/state/operations';
@@ -262,21 +262,29 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 			});
 		});
 
-		it('removes nested proxy values', async () => {
+		it('returns proxies when accessing state objects, and removes proxies from all store values', async () => {
 			await assertProxyError(async () => {
 				const process = createProcess('test', [
 					({ state }) => {
 						state.foo = [{ bar: 'baz' }, { bar: 'buzz' }, { bar: 'biz' }];
 					},
 					({ state }) => {
+						assert.isTrue(isStateProxy(state.foo));
+						assert.isTrue(isStateProxy(state.foo[0]));
 						state.foo = state.foo.filter(({ bar }: any) => bar !== 'baz');
+						assert.isTrue(isStateProxy(state.foo));
+						assert.isTrue(isStateProxy(state.foo[0]));
 						state.bar = 0;
 					}
 				]);
 				await process(store)({});
 
 				if (typeof Proxy !== 'undefined') {
-					assert.isUndefined(store.get(store.at(store.path('foo'), 0))[valueSymbol]);
+					const foos = store.get(store.path('foo'));
+					assert.deepEqual(foos, [{ bar: 'buzz' }, { bar: 'biz' }]);
+					assert.isFalse(isStateProxy(foos));
+					assert.isFalse(isStateProxy(foos[0]));
+					assert.isFalse(isStateProxy(store.get(store.at(store.path('foo'), 0))));
 				}
 			});
 		});

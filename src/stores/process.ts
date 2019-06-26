@@ -168,7 +168,15 @@ export function createCommandFactory<T, P extends object = DefaultPayload>(): Co
 export type Commands<T = any, P extends object = DefaultPayload> = (Command<T, P>[] | Command<T, P>)[];
 
 const processMap = new Map();
-export const valueSymbol = Symbol('value');
+const valueSymbol = Symbol('value');
+
+export function isStateProxy(value: any) {
+	if (typeof value !== 'object' || value === null) {
+		return false;
+	}
+
+	return Boolean(value[valueSymbol]);
+}
 
 export function getProcess(id: string) {
 	return processMap.get(id);
