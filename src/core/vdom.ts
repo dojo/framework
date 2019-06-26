@@ -618,7 +618,7 @@ function createFactory(callback: any, middlewares: any): any {
 	return factory;
 }
 
-export function create<T extends MiddlewareMap<any>, MiddlewareProps = ReturnType<T[keyof T]>['properties']>(
+export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[keyof T]>['properties']>(
 	middlewares: T = {} as T
 ) {
 	function properties<Props extends {}>() {

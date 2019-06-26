@@ -345,7 +345,9 @@ export type LazyDefine<W extends WidgetBaseTypes = DefaultWidgetBaseInterface> =
 	registryItem: LazyWidget<W>;
 };
 
-export interface MiddlewareMap<Middleware extends () => { api: any; properties: any }> {
+export interface MiddlewareMap<
+	Middleware extends () => { api: {}; properties: {} } = () => { api: {}; properties: {} }
+> {
 	[index: string]: Middleware;
 }
 
