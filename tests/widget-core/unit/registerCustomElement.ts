@@ -8,7 +8,8 @@ import Registry from '../../../src/widget-core/Registry';
 import { v, w } from '../../../src/widget-core/d';
 import register, { create, CustomElementChildType } from '../../../src/widget-core/registerCustomElement';
 import { createResolvers } from '../support/util';
-import { ThemedMixin, theme } from '../../../src/widget-core/mixins/Themed';
+import { theme, ThemedMixin } from '../../../src/widget-core/mixins/Themed';
+import { waitFor } from './waitFor';
 
 const { describe, it, beforeEach, afterEach, before } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
@@ -37,6 +38,28 @@ class DisplayElement extends WidgetBase {
 class DisplayElementDefault extends WidgetBase {
 	render() {
 		return v('div', ['hello world']);
+	}
+}
+
+@customElement({
+	tag: 'delayed-children-element',
+	childType: CustomElementChildType.TEXT
+})
+class DelayedChildrenWidget extends WidgetBase {
+	render() {
+		return v(
+			'div',
+			{},
+			this.children.map((child, i) =>
+				v(
+					'div',
+					{
+						'data-key': `child-${i}`
+					},
+					[child]
+				)
+			)
+		);
 	}
 }
 
@@ -348,5 +371,65 @@ describe('registerCustomElement', () => {
 		document.body.appendChild(element);
 		const { display } = global.getComputedStyle(element);
 		assert.equal(display, 'block');
+	});
+
+	it('handles children being appended as document is still loading', () => {
+		resolvers.restore();
+		register(DelayedChildrenWidget);
+
+		Object.defineProperty(document, 'readyState', {
+			configurable: true,
+			get() {
+				return 'loading';
+			}
+		});
+		element = document.createElement('delayed-children-element');
+		document.body.appendChild(element);
+
+		let child = document.createTextNode('foo');
+		element!.appendChild(child);
+
+		Object.defineProperty(document, 'readyState', {
+			configurable: true,
+			get() {
+				return 'complete';
+			}
+		});
+		child = document.createTextNode('bar');
+		element!.appendChild(child);
+
+		return waitFor(
+			() =>
+				element!.outerHTML ===
+				'<delayed-children-element style="display: block;"><div><div data-key="child-0">foo</div><div data-key="child-1">bar</div></div></delayed-children-element>'
+		);
+	});
+
+	it('eventually parses an element processed while loading', () => {
+		resolvers.restore();
+
+		Object.defineProperty(document, 'readyState', {
+			configurable: true,
+			get() {
+				return 'loading';
+			}
+		});
+		element = document.createElement('foo-element');
+		document.body.appendChild(element);
+
+		const nextSibling = document.createElement('div');
+		document.body.appendChild(nextSibling);
+
+		assert.notEqual(element.outerHTML, '<foo-element style="display: block;"><div>hello world</div></foo-element>');
+		return waitFor(
+			() => element!.outerHTML === '<foo-element style="display: block;"><div>hello world</div></foo-element>'
+		).finally(() => {
+			Object.defineProperty(document, 'readyState', {
+				configurable: true,
+				get() {
+					return 'complete';
+				}
+			});
+		});
 	});
 });

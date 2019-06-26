@@ -59,6 +59,38 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				return;
 			}
 
+			this._waitTillReady();
+		}
+
+		private _hasBeenParsed() {
+			if (document.readyState !== 'loading') {
+				return true;
+			}
+
+			let element: any = this;
+			while (element) {
+				if (element.nextSibling) {
+					return true;
+				}
+
+				element = element.parentNode;
+			}
+
+			return false;
+		}
+
+		private _waitTillReady() {
+			this._initialised = true;
+			if (this._hasBeenParsed()) {
+				this._readyCallback();
+			} else {
+				setTimeout(() => {
+					this._waitTillReady();
+				}, 100);
+			}
+		}
+
+		private _readyCallback() {
 			const domProperties: any = {};
 			const { attributes, properties, events } = descriptor;
 
@@ -143,7 +175,6 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				this.style.display = display;
 			}
 
-			this._initialised = true;
 			this.dispatchEvent(
 				new CustomEvent('dojo-ce-connected', {
 					bubbles: true,
