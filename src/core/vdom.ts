@@ -651,7 +651,7 @@ function createFactory(callback: any, middlewares: any): any {
 }
 
 export function create<T extends MiddlewareMap<any>, MiddlewareProps = ReturnType<T[keyof T]>['properties']>(
-	middlewares: T = {} as T
+	middlewares: T
 ) {
 	function properties<Props extends {}>() {
 		function returns<ReturnValue>(
@@ -681,7 +681,7 @@ export function create<T extends MiddlewareMap<any>, MiddlewareProps = ReturnTyp
 	return returns;
 }
 
-const factory = create();
+const factory = create({});
 
 function wrapNodes(renderer: () => RenderResult) {
 	const result = renderer();

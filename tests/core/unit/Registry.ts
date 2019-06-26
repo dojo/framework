@@ -182,7 +182,7 @@ registerSuite('Registry', {
 				factoryRegistry.define('my-widget', lazyFactory);
 				factoryRegistry.get('my-widget');
 
-				const factory = create();
+				const factory = create({});
 				const Widget = factory(() => 'factory');
 
 				resolveFunction!({

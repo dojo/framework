@@ -51,7 +51,7 @@ function createMockEvent(
 
 const noop: any = () => {};
 
-const factory = create();
+const factory = create({});
 
 const mockGetRegistry = factory(() => {
 	return () => {

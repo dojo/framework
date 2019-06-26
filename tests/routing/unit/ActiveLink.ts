@@ -43,7 +43,7 @@ const router = new Router(
 
 registry.defineInjector('router', () => () => router);
 
-const factory = create();
+const factory = create({});
 
 const mockGetRegistry = factory(() => {
 	return () => {

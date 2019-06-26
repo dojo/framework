@@ -34,7 +34,7 @@ const routeConfig = [
 	}
 ];
 
-const factory = create();
+const factory = create({});
 
 const mockGetRegistry = factory(() => {
 	return () => {

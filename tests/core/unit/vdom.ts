@@ -3016,7 +3016,7 @@ jsdomDescribe('vdom', () => {
 			});
 
 			it('Should render nodes in the correct order with mix of vnode and wnodes', () => {
-				const createWidget = create();
+				const createWidget = create({});
 
 				const WidgetOne = createWidget(() => WidgetTwo({}));
 				const WidgetTwo = createWidget(() => v('div', ['dom2']));
@@ -3073,7 +3073,7 @@ jsdomDescribe('vdom', () => {
 
 			it('supports widget registry items', () => {
 				const registry = new Registry();
-				const createWidget = create();
+				const createWidget = create({});
 				const Foo = createWidget.properties<{ text: string }>()(({ properties }) => v('h1', [properties.text]));
 				const Bar = createWidget.properties<{ text: string }>()(({ properties }) => v('h1', [properties.text]));
 
@@ -3094,7 +3094,7 @@ jsdomDescribe('vdom', () => {
 			});
 
 			it('support top level registry items', () => {
-				const createWidget = create();
+				const createWidget = create({});
 				const registry = new Registry();
 				const Foo = createWidget(() => 'Top Level Registry');
 
@@ -3124,7 +3124,7 @@ jsdomDescribe('vdom', () => {
 			});
 
 			it('Should pause rendering while merging to allow lazily loaded widgets to be loaded', () => {
-				const createWidget = create();
+				const createWidget = create({});
 				const iframe = document.createElement('iframe');
 				document.body.appendChild(iframe);
 				iframe.contentDocument!.write(`<div><span>54321</span><span>98765</span><span>12345</span></div>`);
@@ -3183,7 +3183,7 @@ jsdomDescribe('vdom', () => {
 			});
 
 			it('registry items', () => {
-				const createWidget = create();
+				const createWidget = create({});
 				let resolver = () => {};
 				const registry = new Registry();
 				const Widget = createWidget(() => v('div', ['Hello, world!']));

@@ -52,7 +52,7 @@ interface HarnessOptions {
 	middleware?: [MiddlewareResultFactory<any, any, any>, MiddlewareResultFactory<any, any, any>][];
 }
 
-const factory = create();
+const factory = create({});
 
 export function harness(renderFunc: () => WNode, options?: HarnessOptions): HarnessAPI;
 export function harness(renderFunc: () => WNode, customComparator?: CustomComparator[]): HarnessAPI;
