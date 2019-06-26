@@ -274,6 +274,8 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 						state.foo = state.foo.filter(({ bar }: any) => bar !== 'baz');
 						assert.isTrue(isStateProxy(state.foo));
 						assert.isTrue(isStateProxy(state.foo[0]));
+						// Literals should be returned as is
+						assert.isFalse(isStateProxy(state.foo[0].bar));
 						state.bar = 0;
 					}
 				]);
