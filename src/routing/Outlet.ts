@@ -37,8 +37,8 @@ export const Outlet = factory(function Outlet({
 			if (handle) {
 				cache.set('handle', handle);
 			}
+			invalidator();
 		}
-		invalidator();
 	});
 	const router = injector.get<Router>(routerKey);
 
