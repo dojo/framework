@@ -414,7 +414,8 @@ import intersection from '@dojo/framework/core/middleware/intersection';
 
 The `options` argument allows for more control on how intersection is calculated. The available fields are the same as those for the [intersection observer API options](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API#Intersection_observer_options).
 
-`IntersectionResult` properties
+`IntersectionResult` properties:
+
 | Property | Type | Description |
 |---|---|---|
 |`intersectionRatio`|`number`|The ratio of the element's bounding box that is intersecting the root element's viewport, from `0.0` to `1.0`. By default the root element is considered the browser's viewport unless an element is specified via the `options.root` argument.|
