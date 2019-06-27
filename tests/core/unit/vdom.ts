@@ -36,7 +36,8 @@ function getWidget(renderResult: any) {
 			private _renderResult: any | (() => any) = renderResult;
 			private _nodeHandlerStub = {
 				add: stub(),
-				addRoot: stub()
+				addRoot: stub(),
+				remove: stub()
 			};
 			private _onElementCreatedStub = stub();
 			private _onElementUpdatedStub = stub();
@@ -5540,11 +5541,6 @@ jsdomDescribe('vdom', () => {
 			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.add.called);
 			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '1'));
-			meta.nodeHandlerStub.add.resetHistory();
-			meta.setRenderResult(v('div', { key: '1' }));
-
-			assert.isTrue(meta.nodeHandlerStub.add.called);
-			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '1'));
 		});
 
 		it('element added on update to node handler for nodes with a key of 0', () => {
@@ -5554,11 +5550,18 @@ jsdomDescribe('vdom', () => {
 			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.add.called);
 			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '0'));
-			meta.nodeHandlerStub.add.resetHistory();
-			meta.setRenderResult(v('div', { key: 0 }));
+		});
 
+		it('element removed when dom node removed', () => {
+			const [Widget, meta] = getWidget(v('div', { key: '1' }));
+			const r = renderer(() => w(Widget, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.add.called);
-			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '0'));
+			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '1'));
+			meta.setRenderResult(null);
+			assert.isTrue(meta.nodeHandlerStub.remove.called);
+			assert.isTrue(meta.nodeHandlerStub.remove.calledWith('1'));
 		});
 
 		it('addRoot called on node handler for created widgets with a zero key', () => {
