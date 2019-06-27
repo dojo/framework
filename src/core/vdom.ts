@@ -1402,23 +1402,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					next: { domNode },
 					current
 				} = item;
-				const parent = _parentWrapperMap.get(next);
-				if (parent && isWNodeWrapper(parent) && parent.instance) {
-					const instanceData = widgetInstanceMap.get(parent.instance);
-					instanceData && instanceData.nodeHandler.addRoot();
-				}
-
 				const previousProperties = buildPreviousProperties(domNode, current);
 				processProperties(next, previousProperties);
 				runDeferredProperties(next);
-
-				/*const owningWrapper = _nodeToWrapperMap.get(next.node);
-				if (owningWrapper && owningWrapper.instance) {
-					const instanceData = widgetInstanceMap.get(owningWrapper.instance);
-					if (instanceData && next.node.properties.key != null) {
-						instanceData.nodeHandler.add(next.domNode as HTMLElement, `${next.node.properties.key}`);
-					}
-				}*/
 			} else if (item.type === 'delete') {
 				const { current } = item;
 				const { exitAnimation, exitAnimationActive } = current.node.properties;

@@ -5570,11 +5570,6 @@ jsdomDescribe('vdom', () => {
 			const div = document.createElement('div');
 			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.addRoot.called);
-			meta.nodeHandlerStub.addRoot.resetHistory();
-			meta.invalidate();
-
-			assert.isTrue(meta.nodeHandlerStub.addRoot.called);
-			meta.nodeHandlerStub.addRoot.resetHistory();
 		});
 
 		it('addRoot called on node handler for updated widgets with key', () => {
@@ -5582,9 +5577,6 @@ jsdomDescribe('vdom', () => {
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
 			r.mount({ domNode: div, sync: true });
-			assert.isTrue(meta.nodeHandlerStub.addRoot.called);
-			meta.nodeHandlerStub.addRoot.resetHistory();
-			meta.invalidate();
 			assert.isTrue(meta.nodeHandlerStub.addRoot.called);
 		});
 	});
