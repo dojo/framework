@@ -1927,14 +1927,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			}
 		}
 		setDomNodeOnParentWrapper(next);
-		let dom: ApplicationInstruction | undefined;
-		if (!isVirtual) {
-			dom = {
-				next: next!,
-				parentDomNode: parentDomNode,
-				type: 'create'
-			};
-		}
+		const dom: ApplicationInstruction | undefined = isVirtual
+			? undefined
+			: {
+					next: next!,
+					parentDomNode: parentDomNode,
+					type: 'create'
+			  };
 		if (next.childrenWrappers) {
 			return {
 				item: {
