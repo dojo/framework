@@ -74,6 +74,7 @@ export interface WidgetMeta {
 	registryHandler: RegistryHandler;
 	properties: any;
 	children?: DNode[];
+	rendering: boolean;
 	nodeMap: Map<string | number, HTMLElement>;
 	destroyMap: Map<string, () => void>;
 	deferRefs: number;
@@ -1022,11 +1023,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		if (deferredPropertiesCallback) {
 			const properties = next.node.properties;
 			_deferredRenderCallbacks.push(() => {
-				const deferredProperties = next.deferredProperties;
-				next.deferredProperties = deferredPropertiesCallback(true);
-				processProperties(next, {
-					properties: { ...deferredProperties, ...properties }
-				});
+				if (_idToWrapperMap.has(next.owningId)) {
+					const deferredProperties = next.deferredProperties;
+					next.deferredProperties = deferredPropertiesCallback(true);
+					processProperties(next, {
+						properties: { ...deferredProperties, ...properties }
+					});
+				}
 			});
 		}
 	}
@@ -1670,13 +1673,15 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					const widgetMeta = widgetMetaMap.get(next.id);
 					if (widgetMeta) {
 						widgetMeta.dirty = true;
+						if (!widgetMeta.rendering && _idToWrapperMap.has(next.id)) {
+							_invalidationQueue.push({
+								id: next.id,
+								depth: next.depth,
+								order: next.order
+							});
+							_schedule();
+						}
 					}
-					_invalidationQueue.push({
-						id: next.id,
-						depth: next.depth,
-						order: next.order
-					});
-					_schedule();
 				};
 				const registryHandler = new RegistryHandler();
 				registryHandler.base = registry;
@@ -1693,7 +1698,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					destroyMap: new Map(),
 					deferRefs: 0,
 					customDiffMap: new Map(),
-					customDiffProperties: new Set()
+					customDiffProperties: new Set(),
+					rendering: false
 				};
 				widgetMetaMap.set(next.id, widgetMeta);
 				widgetMeta.middleware = (Constructor as any).middlewares
@@ -1782,6 +1788,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			const widgetMeta = widgetMetaMap.get(next.id);
 			if (widgetMeta) {
 				widgetMeta.properties = next.properties;
+				widgetMeta.rendering = true;
 				runDiffs(widgetMeta, current.properties, next.properties);
 				if (current.node.children.length > 0 || next.node.children.length > 0) {
 					widgetMeta.dirty = true;
@@ -1806,6 +1813,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						children: next.node.children,
 						middleware: widgetMeta.middleware
 					});
+					widgetMeta.rendering = false;
 					if (widgetMeta.deferRefs > 0) {
 						rendered = null;
 					}
