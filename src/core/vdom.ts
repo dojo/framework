@@ -1885,7 +1885,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	function _createDom({ next }: CreateDomInstruction): ProcessResult {
 		let mergeNodes: Node[] = [];
 		const parentDomNode = findParentDomNode(next)!;
-		const isFragment = next.node.tag === 'fragment';
+		const isVirtual = next.node.tag === 'virtual';
 		if (!next.domNode) {
 			if ((next.node as any).domNode) {
 				next.domNode = (next.node as any).domNode;
@@ -1893,7 +1893,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				if (next.node.tag === 'svg') {
 					next.namespace = NAMESPACE_SVG;
 				}
-				if (next.node.tag && !isFragment) {
+				if (next.node.tag && !isVirtual) {
 					if (next.namespace) {
 						next.domNode = global.document.createElementNS(next.namespace, next.node.tag);
 					} else {
@@ -1921,14 +1921,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				_allMergedNodes = [..._allMergedNodes, ...mergeNodes];
 			}
 		}
-		if (next.domNode || isFragment) {
+		if (next.domNode || isVirtual) {
 			if (next.node.children && next.node.children.length) {
 				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
 			}
 		}
 		setDomNodeOnParentWrapper(next);
 		let dom: ApplicationInstruction | undefined;
-		if (!isFragment) {
+		if (!isVirtual) {
 			dom = {
 				next: next!,
 				parentDomNode: parentDomNode,
@@ -1971,7 +1971,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _removeDom({ current }: RemoveDomInstruction): ProcessResult {
-		const isFragment = current.node.tag === 'fragment';
+		const isVirtual = current.node.tag === 'virtual';
 		_wrapperSiblingMap.delete(current);
 		_parentWrapperMap.delete(current);
 		if (current.node.properties.key) {
@@ -1984,10 +1984,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				instanceData && instanceData.nodeHandler.remove(current.node.properties.key);
 			}
 		}
-		if (current.hasAnimations || isFragment) {
+		if (current.hasAnimations || isVirtual) {
 			return {
 				item: { current: current.childrenWrappers, meta: {} },
-				dom: isFragment ? undefined : { type: 'delete', current }
+				dom: isVirtual ? undefined : { type: 'delete', current }
 			};
 		}
 
