@@ -3598,6 +3598,53 @@ jsdomDescribe('vdom', () => {
 		});
 	});
 
+	describe('fragment', () => {
+		it('can use a fragment', () => {
+			const [Widget, meta] = getWidget(v('fragment', [v('div', ['one', 'two', v('div', ['three'])])]));
+			const r = renderer(() => w(Widget, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div });
+			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>onetwo<div>three</div></div>');
+			meta.setRenderResult(v('fragment', [v('div', ['four', 'five', v('div', ['six'])])]));
+			resolvers.resolve();
+			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>fourfive<div>six</div></div>');
+			meta.setRenderResult(v('div', ['one', 'two', v('div', ['three'])]));
+			resolvers.resolve();
+			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>onetwo<div>three</div></div>');
+			meta.setRenderResult(v('fragment', [v('div', ['four', 'five', v('div', ['six'])])]));
+			resolvers.resolve();
+			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>fourfive<div>six</div></div>');
+		});
+
+		it('can use a fragment with widgets', () => {
+			class Foo extends WidgetBase<any> {
+				render() {
+					return v('div', [this.properties.text]);
+				}
+			}
+			const [Widget, meta] = getWidget(
+				v('fragment', [w(Foo, { text: 'one' }), w(Foo, { text: 'two' }), w(Foo, { text: 'three' })])
+			);
+			const r = renderer(() => w(Widget, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div });
+			assert.strictEqual(div.outerHTML, '<div><div>one</div><div>two</div><div>three</div></div>');
+			meta.setRenderResult(
+				v('fragment', [w(Foo, { text: 'four' }), w(Foo, { text: 'five' }), w(Foo, { text: 'six' })])
+			);
+			resolvers.resolve();
+			assert.strictEqual(div.outerHTML, '<div><div>four</div><div>five</div><div>six</div></div>');
+			meta.setRenderResult([w(Foo, { text: 'one' }), w(Foo, { text: 'two' }), w(Foo, { text: 'three' })]);
+			resolvers.resolve();
+			assert.strictEqual(div.outerHTML, '<div><div>one</div><div>two</div><div>three</div></div>');
+			meta.setRenderResult(
+				v('fragment', [w(Foo, { text: 'four' }), w(Foo, { text: 'five' }), w(Foo, { text: 'six' })])
+			);
+			resolvers.resolve();
+			assert.strictEqual(div.outerHTML, '<div><div>four</div><div>five</div><div>six</div></div>');
+		});
+	});
+
 	describe('properties', () => {
 		it('does not add "key" to the dom node', () => {
 			const [Widget] = getWidget(v('div', { key: '1' }));
