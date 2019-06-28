@@ -1402,23 +1402,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					next: { domNode },
 					current
 				} = item;
-				const parent = _parentWrapperMap.get(next);
-				if (parent && isWNodeWrapper(parent) && parent.instance) {
-					const instanceData = widgetInstanceMap.get(parent.instance);
-					instanceData && instanceData.nodeHandler.addRoot();
-				}
-
 				const previousProperties = buildPreviousProperties(domNode, current);
 				processProperties(next, previousProperties);
 				runDeferredProperties(next);
-
-				const owningWrapper = _nodeToWrapperMap.get(next.node);
-				if (owningWrapper && owningWrapper.instance) {
-					const instanceData = widgetInstanceMap.get(owningWrapper.instance);
-					if (instanceData && next.node.properties.key != null) {
-						instanceData.nodeHandler.add(next.domNode as HTMLElement, `${next.node.properties.key}`);
-					}
-				}
 			} else if (item.type === 'delete') {
 				const { current } = item;
 				const { exitAnimation, exitAnimationActive } = current.node.properties;
@@ -1431,8 +1417,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			} else if (item.type === 'attach') {
 				const { instance, attached } = item;
 				const instanceData = widgetInstanceMap.get(instance);
-				instanceData && instanceData.nodeHandler.addRoot();
-				attached && instanceData && instanceData.onAttach();
+				if (instanceData) {
+					instanceData.nodeHandler.addRoot();
+					attached && instanceData.onAttach();
+				}
 			} else if (item.type === 'detach') {
 				if (item.current.instance) {
 					const instanceData = widgetInstanceMap.get(item.current.instance);
@@ -1973,10 +1961,17 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	function _removeDom({ current }: RemoveDomInstruction): ProcessResult {
 		_wrapperSiblingMap.delete(current);
 		_parentWrapperMap.delete(current);
-		const widgetMeta = widgetMetaMap.get(current.owningId);
-		if (widgetMeta && current.node.properties.key) {
-			widgetMeta.nodeMap.delete(current.node.properties.key);
+		if (current.node.properties.key) {
+			const widgetMeta = widgetMetaMap.get(current.owningId);
+			const parentWrapper = _idToWrapperMap.get(current.owningId);
+			if (widgetMeta) {
+				widgetMeta.nodeMap.delete(current.node.properties.key);
+			} else if (parentWrapper && parentWrapper.instance) {
+				const instanceData = widgetInstanceMap.get(parentWrapper.instance);
+				instanceData && instanceData.nodeHandler.remove(current.node.properties.key);
+			}
 		}
+
 		if (current.hasAnimations) {
 			return {
 				item: { current: current.childrenWrappers, meta: {} },
