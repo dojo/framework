@@ -1885,6 +1885,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	function _createDom({ next }: CreateDomInstruction): ProcessResult {
 		let mergeNodes: Node[] = [];
 		const parentDomNode = findParentDomNode(next)!;
+		const isVirtual = next.node.tag === 'virtual';
 		if (!next.domNode) {
 			if ((next.node as any).domNode) {
 				next.domNode = (next.node as any).domNode;
@@ -1892,7 +1893,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				if (next.node.tag === 'svg') {
 					next.namespace = NAMESPACE_SVG;
 				}
-				if (next.node.tag) {
+				if (next.node.tag && !isVirtual) {
 					if (next.namespace) {
 						next.domNode = global.document.createElementNS(next.namespace, next.node.tag);
 					} else {
@@ -1920,17 +1921,19 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				_allMergedNodes = [..._allMergedNodes, ...mergeNodes];
 			}
 		}
-		if (next.domNode) {
-			if (next.node.children) {
+		if (next.domNode || isVirtual) {
+			if (next.node.children && next.node.children.length) {
 				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
 			}
 		}
 		setDomNodeOnParentWrapper(next);
-		const dom: ApplicationInstruction = {
-			next: next!,
-			parentDomNode: parentDomNode,
-			type: 'create'
-		};
+		const dom: ApplicationInstruction | undefined = isVirtual
+			? undefined
+			: {
+					next: next!,
+					parentDomNode: parentDomNode,
+					type: 'create'
+			  };
 		if (next.childrenWrappers) {
 			return {
 				item: {
@@ -1967,6 +1970,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _removeDom({ current }: RemoveDomInstruction): ProcessResult {
+		const isVirtual = current.node.tag === 'virtual';
 		_wrapperSiblingMap.delete(current);
 		_parentWrapperMap.delete(current);
 		if (current.node.properties.key) {
@@ -1979,11 +1983,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				instanceData && instanceData.nodeHandler.remove(current.node.properties.key);
 			}
 		}
-
-		if (current.hasAnimations) {
+		if (current.hasAnimations || isVirtual) {
 			return {
 				item: { current: current.childrenWrappers, meta: {} },
-				dom: { type: 'delete', current }
+				dom: isVirtual ? undefined : { type: 'delete', current }
 			};
 		}
 
