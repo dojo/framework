@@ -1,6 +1,5 @@
 `!has('es6-iterator')`;
 import { isArrayLike, isIterable, Iterable } from './iterator';
-import { MAX_SAFE_INTEGER } from './number';
 import has from '../core/has';
 import { wrapNative } from './support/util';
 
@@ -121,6 +120,8 @@ let toInteger: any;
 let normalizeOffset: any;
 
 if (!has('es6-array') || !has('es6-array-fill') || !has('es7-array')) {
+	const MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+
 	/**
 	 * Ensures a non-negative, non-infinite, safe integer.
 	 *
