@@ -1813,11 +1813,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						children: next.node.children,
 						middleware: widgetMeta.middleware
 					});
-					widgetMeta.rendering = false;
 					if (widgetMeta.deferRefs > 0) {
 						rendered = null;
 					}
 				}
+				widgetMeta.rendering = false;
 			}
 		} else {
 			const instanceData = widgetInstanceMap.get(instance!)!;
