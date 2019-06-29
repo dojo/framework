@@ -32,7 +32,7 @@ export function createMockStoreMiddleware<T = any>() {
 			executor: <T extends Process<any, any>>(process: T): ReturnType<T> => {
 				const executorMock = (...args: any[]) => {
 					const callArgs = calledProcesses.get(process) || [];
-					callArgs.push(...args);
+					callArgs.push(args);
 					calledProcesses.set(process, callArgs);
 				};
 				return executorMock as any;
