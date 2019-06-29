@@ -8,10 +8,10 @@ import { Process } from '../../../stores/process';
 
 const factory = create({ destroy, invalidator, injector });
 
-export function createMockStoreMiddleware<T = any>() {
+export function createMockStoreMiddleware<T = any>(processes: [Process<any, any>, any][] = []) {
 	const store = createStoreMiddleware();
-	const calledProcesses = new Map();
 	const storeMock = new Store<T>();
+	const processMockMap = new Map(processes);
 	const injectorStub = {
 		get: (): any => {
 			return storeMock;
@@ -30,12 +30,11 @@ export function createMockStoreMiddleware<T = any>() {
 			get: mock.get.bind(mock),
 			path: mock.path.bind(mock),
 			executor: <T extends Process<any, any>>(process: T): ReturnType<T> => {
-				const executorMock = (...args: any[]) => {
-					const callArgs = calledProcesses.get(process) || [];
-					callArgs.push(args);
-					calledProcesses.set(process, callArgs);
-				};
-				return executorMock as any;
+				const mock = processMockMap.get(process);
+				if (mock) {
+					return mock;
+				}
+				return (() => {}) as any;
 			},
 			at: mock.at.bind(mock)
 		};
@@ -50,24 +49,6 @@ export function createMockStoreMiddleware<T = any>() {
 			return mockStoreMiddleware();
 		}
 	}
-
-	// I think we should expose a way of asserting against processes that are called
-	// not sure whether we should return things for the consumer to assert or assert
-	// internally.
-
-	mockStore.getProcessCall = (process: any, call: number) => {
-		const calls = calledProcesses.get(process);
-		if (calls && calls[call]) {
-			return calls[call];
-		}
-		return null;
-	};
-
-	mockStore.processCallCount = (process: any) => {
-		const calls = calledProcesses.get(process) || [];
-		return calls.length;
-	};
-
 	return mockStore;
 }
 
