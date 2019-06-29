@@ -3237,6 +3237,55 @@ jsdomDescribe('vdom', () => {
 				assert.strictEqual(div.outerHTML, '<div><div>barbar2</div></div>');
 			});
 
+			it('Should warn when adding nodes that are not distinguishable', () => {
+				const createWidget = create({ invalidator });
+
+				let visible = true;
+				let swap: any;
+
+				const App = createWidget(function App({ middleware }) {
+					swap = () => {
+						visible = !visible;
+						middleware.invalidator();
+					};
+					return v('div', [v('div'), visible && v('div'), v('div')]);
+				});
+				const r = renderer(() => App({}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div });
+				assert.isTrue(consoleWarnStub.notCalled);
+				swap();
+				resolvers.resolve();
+				assert.isTrue(consoleWarnStub.calledOnce);
+			});
+
+			it('Should warn when adding widgets that are not distinguishable', () => {
+				const createWidget = create({ invalidator });
+
+				let visible = true;
+				let swap: any;
+
+				const Foo = createWidget(function Foo() {
+					return v('div');
+				});
+
+				const App = createWidget(function App({ middleware }) {
+					swap = () => {
+						visible = !visible;
+						middleware.invalidator();
+					};
+					return v('div', [w(Foo, {}), visible && w(Foo, {}), w(Foo, {})]);
+				});
+				const r = renderer(() => App({}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div });
+				assert.isTrue(consoleWarnStub.notCalled);
+				swap();
+				resolvers.resolve();
+				console.log(consoleWarnStub.firstCall.args);
+				assert.isTrue(consoleWarnStub.calledOnce);
+			});
+
 			describe('core middleware', () => {
 				describe('node', () => {
 					it('should invalidate widget once node is available', () => {
