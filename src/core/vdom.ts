@@ -173,13 +173,15 @@ interface RemoveDomInstruction {
 
 interface AttachApplication {
 	type: 'attach';
-	instance: WidgetBaseInterface;
-	attached: boolean;
+	id: string;
+	instance?: WidgetBaseInterface;
+	attached?: boolean;
 }
 
 interface DetachApplication {
 	type: 'detach';
 	current: WNodeWrapper;
+	instance?: WidgetBaseInterface;
 }
 
 interface CreateDomApplication {
@@ -210,7 +212,7 @@ type ApplicationInstruction =
 	| CreateDomApplication
 	| UpdateDomApplication
 	| DeleteDomApplication
-	| AttachApplication
+	| Required<AttachApplication>
 	| DetachApplication;
 
 const EMPTY_ARRAY: DNodeWrapper[] = [];
@@ -1354,7 +1356,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let item: DetachApplication | AttachApplication | ProcessItem | undefined;
 		while ((item = _processQueue.pop())) {
 			if (isAttachApplication(item)) {
-				_applicationQueue.push(item);
+				item.type === 'attach' && setDomNodeOnParentWrapper(item.id);
+				if (item.instance) {
+					_applicationQueue.push(item as any);
+				}
 			} else {
 				const { current, next, meta } = item;
 				_process(current || EMPTY_ARRAY, next || EMPTY_ARRAY, meta);
@@ -1670,7 +1675,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		next.properties = next.node.properties;
 		next.id = next.id || `${wrapperId++}`;
 		_idToWrapperMap.set(next.id, next);
-		let processResult: ProcessResult = {};
 		if (!isWidgetBaseConstructor(Constructor)) {
 			let widgetMeta = widgetMetaMap.get(next.id);
 			if (!widgetMeta) {
@@ -1741,7 +1745,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			next.instance = instance;
 			rendered = instance.__render__();
 			instanceData.rendering = false;
-			processResult.widget = { type: 'attach', instance, attached: true };
 		}
 
 		if (rendered) {
@@ -1753,11 +1756,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			parentInvalidate = invalidate;
 		}
 
-		processResult.item = {
-			next: next.childrenWrappers,
-			meta: { mergeNodes: next.mergeNodes }
+		return {
+			item: {
+				next: next.childrenWrappers,
+				meta: { mergeNodes: next.mergeNodes }
+			},
+			widget: { type: 'attach', instance: next.instance, id: next.id, attached: true }
 		};
-		return processResult;
 	}
 
 	function _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult {
@@ -1828,10 +1833,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				next.childrenWrappers = undefined;
 				rendered = instance!.__render__();
 			}
-			processResult.widget = { type: 'attach', instance, attached: false };
 			instanceData.rendering = false;
 		}
 		_idToWrapperMap.set(next.id, next);
+		processResult.widget = { type: 'attach', instance, id: next.id, attached: false };
 
 		if (rendered) {
 			rendered = Array.isArray(rendered) ? rendered : [rendered];
@@ -1854,28 +1859,38 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_parentWrapperMap.delete(current);
 		_idToWrapperMap.delete(current.id);
 		const meta = widgetMetaMap.get(current.id);
+		let processResult: ProcessResult = {
+			item: {
+				current: current.childrenWrappers,
+				meta: {}
+			}
+		};
 		if (meta) {
 			meta.registryHandler && meta.registryHandler.destroy();
 			meta.destroyMap && destroyHandles(meta.destroyMap);
 			widgetMetaMap.delete(current.id);
+		} else {
+			processResult.widget = { type: 'detach', current, instance: current.instance };
 		}
 
-		return {
-			item: { current: current.childrenWrappers, meta: {} },
-			widget: { type: 'detach', current }
-		};
+		return processResult;
 	}
 
-	function setDomNodeOnParentWrapper(next: VNodeWrapper) {
-		let parentWNodeWrapper = _idToWrapperMap.get(next.owningId);
-		while (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
-			parentWNodeWrapper.domNode = next.domNode;
-			const nextParent = _parentWrapperMap.get(parentWNodeWrapper);
-			if (nextParent && isWNodeWrapper(nextParent)) {
-				parentWNodeWrapper = nextParent;
-				continue;
+	function setDomNodeOnParentWrapper(id: string) {
+		let wrapper = _idToWrapperMap.get(id)!;
+		let children = wrapper && wrapper.childrenWrappers ? [...wrapper.childrenWrappers] : [];
+		let child: DNodeWrapper | undefined;
+		while (children.length && !wrapper.domNode) {
+			child = children.shift();
+			if (child) {
+				if (child.domNode) {
+					wrapper.domNode = child.domNode;
+					break;
+				}
+				if (child.childrenWrappers) {
+					children = [...child.childrenWrappers, ...children];
+				}
 			}
-			parentWNodeWrapper = undefined;
 		}
 	}
 
@@ -1923,7 +1938,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
 			}
 		}
-		setDomNodeOnParentWrapper(next);
 		const dom: ApplicationInstruction | undefined = isVirtual
 			? undefined
 			: {

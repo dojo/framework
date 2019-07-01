@@ -1367,6 +1367,74 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'insert before me');
 		});
 
+		it('should insert deeply nested nodes in the correct position', () => {
+			class Qux extends WidgetBase {
+				render() {
+					return v('qux');
+				}
+			}
+			class Baz extends WidgetBase {
+				render() {
+					return v('baz');
+				}
+			}
+
+			class Bar extends WidgetBase {
+				render() {
+					return w(Baz, {});
+				}
+			}
+
+			class Foo extends WidgetBase {
+				render() {
+					return [w(Bar, {}), w(Qux, {})];
+				}
+			}
+
+			class FooBaz extends WidgetBase {
+				render() {
+					return v('foobar');
+				}
+			}
+
+			class FooBar extends WidgetBase {
+				render() {
+					return w(FooBaz, {});
+				}
+			}
+
+			class Renderer extends WidgetBase {
+				render() {
+					return this.children;
+				}
+			}
+
+			let invalidator: any;
+			let count = 0;
+			class App extends WidgetBase {
+				constructor() {
+					super();
+					invalidator = () => {
+						this.invalidate();
+					};
+				}
+				render() {
+					if (count === 0) {
+						count++;
+						return w(Renderer, {}, [v('div')]);
+					}
+					return w(Renderer, {}, [v('div', [w(FooBar, {}), w(Foo, {})])]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div });
+			invalidator();
+			resolvers.resolve();
+			assert.strictEqual(div.outerHTML, '<div><div><foobar></foobar><baz></baz><qux></qux></div></div>');
+		});
+
 		it('Should insert result from widget in correct position', () => {
 			class Menu extends WidgetBase {
 				render() {
